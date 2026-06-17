@@ -1,2 +1,2 @@
-Error in interface_missing_impl.rexx @ 9:1 - #INTERFACE_MEMBER_NOT_IMPLEMENTED, "interface_missing_impl.vehicle", "describe", "car: class implements .vehicle"
+Error in interface_missing_impl.crexx @ 9:1 - #INTERFACE_MEMBER_NOT_IMPLEMENTED, "interface_missing_impl.vehicle", "describe", "car: class implements .vehicle"
 1 error(s) in source file

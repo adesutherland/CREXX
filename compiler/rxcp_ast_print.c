@@ -414,6 +414,7 @@ walker_result pdot_walker_handler(walker_direction direction,
             case OP_IDIV:
             case OP_MOD:
             case OP_OR:
+            case OP_XOR:
             case OP_POWER:
             case OP_NOT:
             case OP_PLUS:

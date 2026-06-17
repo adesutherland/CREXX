@@ -1,12 +1,12 @@
-Warning in test_global_nested_complex.rexx @ 12:5 - #SHADOWING, original definition "test_complex.x" @ 2:31, "x"
-Warning in test_global_nested_complex.rexx @ 13:5 - #SHADOWING, original definition "test_complex.x" @ 2:31, "x"
-Warning in test_global_nested_complex.rexx @ 15:24 - #SHADOWING, original definition "test_complex.x" @ 2:31, "x"
-Warning in test_global_nested_complex.rexx @ 19:7 - #SHADOWING, original definition "test_complex.y" @ 2:33, "y"
-Warning in test_global_nested_complex.rexx @ 20:7 - #SHADOWING, original definition "test_complex.y" @ 2:33, "y"
-Warning in test_global_nested_complex.rexx @ 21:7 - #SHADOWING, original definition "test_complex.x" @ 2:31, "x"
-Warning in test_global_nested_complex.rexx @ 23:28 - #SHADOWING, original definition "test_complex.x" @ 2:31, "x"
-Warning in test_global_nested_complex.rexx @ 23:36 - #SHADOWING, original definition "test_complex.y" @ 2:33, "y"
-Warning in test_global_nested_complex.rexx @ 26:29 - #SHADOWING, original definition "test_complex.x" @ 2:31, "x"
+Warning in test_global_nested_complex.crexx @ 12:5 - #SHADOWING, original definition "test_complex.x" @ 2:31, "x"
+Warning in test_global_nested_complex.crexx @ 13:5 - #SHADOWING, original definition "test_complex.x" @ 2:31, "x"
+Warning in test_global_nested_complex.crexx @ 15:24 - #SHADOWING, original definition "test_complex.x" @ 2:31, "x"
+Warning in test_global_nested_complex.crexx @ 19:7 - #SHADOWING, original definition "test_complex.y" @ 2:33, "y"
+Warning in test_global_nested_complex.crexx @ 20:7 - #SHADOWING, original definition "test_complex.y" @ 2:33, "y"
+Warning in test_global_nested_complex.crexx @ 21:7 - #SHADOWING, original definition "test_complex.x" @ 2:31, "x"
+Warning in test_global_nested_complex.crexx @ 23:28 - #SHADOWING, original definition "test_complex.x" @ 2:31, "x"
+Warning in test_global_nested_complex.crexx @ 23:36 - #SHADOWING, original definition "test_complex.y" @ 2:33, "y"
+Warning in test_global_nested_complex.crexx @ 26:29 - #SHADOWING, original definition "test_complex.x" @ 2:31, "x"
 9 warning(s) in source file
 Initial: x=1 y=2 z=3
   Sub 1: x=10 y=20 z=3

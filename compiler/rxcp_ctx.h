@@ -53,6 +53,7 @@ struct Context {
     int stop_after_parse;
     char* location;
     char* file_name;
+    char *initial_source_extension;
     char** import_locations;
     char import_locations_owns_buffer;
     char** source_import_locations;
@@ -83,6 +84,7 @@ struct Context {
     ASTNode* namespace;
     ASTNode* temp_node; /* Temporary node store to pass node between functions */
     Scope *current_scope;
+    void *detached_scope_array; /* Context-owned scopes not reachable from the source scope tree */
     void* importable_function_tree;
     void* importable_class_tree;
     size_t importable_function_count;
@@ -98,6 +100,7 @@ struct Context {
     char processedOptions;
     char source_has_options;
     RexxLevel level;
+    RexxLevel cli_level_override;
     RexxLevel cli_default_level;
     char comments_hash;
     char comments_dash;
@@ -180,6 +183,7 @@ struct importable_file {
     char *location;
     char imported;
     char source_root;
+    RexxLevel source_default_level;
     time_t mtime;
     char *namespace_name;
     char header_scanned;
@@ -201,6 +205,12 @@ void RexxB(void *parser, int token, Token *minor, Context *context);
 void RexxBFree(void *parser, void (*freeProc)(void*));
 void RexxBTrace(FILE *stream, char *zPrefix);
 
+/* Level C Parser */
+void *RexxCAlloc(void *(*mallocProc)(size_t));
+void RexxC(void *parser, int token, Token *minor, Context *context);
+void RexxCFree(void *parser, void (*freeProc)(void*));
+void RexxCTrace(FILE *stream, char *zPrefix);
+
 /* Context Factory */
 Context *cntx_f();
 /* Set Context Buffer */
@@ -210,6 +220,47 @@ void fre_cntx(Context *context);
 
 int rexbscan(Context* s);
 int rexbpars(Context *context);
+int rexcscan(Context* s);
+int rexcpars(Context *context);
+void rxcp_levelc_prepare_source_ast(Context *context);
+char *rxcp_levelc_diag_format(const char *standard_code,
+                              const char *insert_name,
+                              const char *insert_value);
+char *rxcp_levelc_diag_format2(const char *standard_code,
+                               const char *insert_name1,
+                               const char *insert_value1,
+                               const char *insert_name2,
+                               const char *insert_value2);
+ASTNode *rxcp_levelc_ast_error(Context *context,
+                               const char *standard_code,
+                               Token *token);
+ASTNode *rxcp_levelc_ast_error_insert(Context *context,
+                                      const char *standard_code,
+                                      Token *token,
+                                      const char *insert_name,
+                                      const char *insert_value);
+ASTNode *rxcp_levelc_ast_error_insert2(Context *context,
+                                       const char *standard_code,
+                                       Token *token,
+                                       const char *insert_name1,
+                                       const char *insert_value1,
+                                       const char *insert_name2,
+                                       const char *insert_value2);
+ASTNode *rxcp_levelc_ast_error_token(Context *context,
+                                     const char *standard_code,
+                                     Token *token);
+ASTNode *rxcp_levelc_add_error(ASTNode *node,
+                               const char *standard_code,
+                               const char *insert_name,
+                               const char *insert_value);
+ASTNode *rxcp_levelc_add_error2(ASTNode *node,
+                                const char *standard_code,
+                                const char *insert_name1,
+                                const char *insert_value1,
+                                const char *insert_name2,
+                                const char *insert_value2);
+int rxcp_levelc_run_fallback_diagnostics(Context *context);
+int rxcp_levelc_validate_control_diagnostics(Context *context);
 int opt_scan(Context* s);
 int opt_pars(Context *context);
 int rxcp_scan_source_header(const char *location, const char *file_name, RexxLevel cli_default_level,
@@ -234,6 +285,15 @@ int sym_is_class_contract_symbol(Symbol *symbol);
 int symbol_names_equivalent(Context *context, const char *left_name, const char *right_name);
 int symbol_name_assignable_to(Context *context, const char *from_name, const char *to_name);
 Symbol *find_unique_implementing_class(Context *context, Symbol *interface_symbol, int *candidate_count);
+int rxcp_import_name_may_load_namespace(Context *context,
+                                        const char *import_name,
+                                        const char *namespace_name);
+int rxcp_import_name_has_interface_provider(Context *context,
+                                            const char *import_name,
+                                            const char *interface_fqname);
+int rxcp_import_namespace_has_interface_provider(Context *context,
+                                                 const char *namespace_name,
+                                                 const char *interface_fqname);
 
 /* Set the type of a symbol from imported modules */
 void sym_imva(Context *context, Symbol *symbol);

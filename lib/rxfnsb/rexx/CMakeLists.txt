@@ -12,6 +12,7 @@ set(BIFS
 		abs
 		b2x
 		b2d
+		binary
 		c2x
 		c2d
 		center
@@ -86,6 +87,7 @@ set(BIFS
 		x2b
 		x2c
 		x2d
+		random
 		reradix
 		sequence
 		find
@@ -99,6 +101,22 @@ set(BIFS
 		splice
 		arrayinsert
 		arraydelete
+		arrayappend
+		arrayprepend
+		objectarrayinsert
+		objectarraydelete
+		objectarrayappend
+		objectarrayprepend
+		objectarraydrop
+		objectarraymove
+		arraypop
+		arrayshift
+		arrayget
+		arrayset
+		arraycontains
+		arrayindexof
+		arrayreverse
+		arrayjoin
 		arraysort
 		arraycopy
 		arraydrop
@@ -114,14 +132,18 @@ set(BIFS
 		rxjson
 		rxsocket
 		rxhttp
+		wordrep
+		evaluate
 )
 
 foreach (BIF ${BIFS})
 	set(REXXBINS ${REXXBINS} ${BIF}.rxbin)
-	set(REXXSRC ${REXXSRC} ${BIF}.rexx)
+	set(REXXSRC ${REXXSRC} ${BIF}.crexx)
 endforeach ()
 
 set(RXXFNSB_REXX_SELECTORS ${BIFS} PARENT_SCOPE)
+set(RXXFNSB_REXX_ARCHIVE "${CMAKE_CURRENT_BINARY_DIR}/library-rexx.rxbin")
+set(RXXFNSB_REXX_ARCHIVE "${RXXFNSB_REXX_ARCHIVE}" PARENT_SCOPE)
 set(REXX_IMPORT_RXAS
 		${CMAKE_CURRENT_SOURCE_DIR}/../rxas/_rxvml_address_native.rxas
 )
@@ -132,7 +154,7 @@ foreach(_binfile ${REXXBINS})
 	set(_rxc_import_args -i ${CMAKE_CURRENT_SOURCE_DIR}/../rxas)
 	add_custom_command(
 		  COMMAND ${CMAKE_COMMAND} -E rm -f ${_basename}.rxas
-		  COMMAND $<TARGET_FILE:rxc> -x --import-rxas -o ${_basename} ${_rxc_import_args} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}
+		  COMMAND $<TARGET_FILE:rxc> -x --import-rxas -o ${_basename} ${_rxc_import_args} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx
 		  COMMAND $<TARGET_FILE:rxas> ${_basename}
 		  DEPENDS rxas rxc library-rxas ${REXXSRC} ${REXX_IMPORT_RXAS} ${_prev_target}
 		  OUTPUT ${_binfile}
@@ -143,10 +165,11 @@ foreach(_binfile ${REXXBINS})
 endforeach()
 
 add_custom_command(
- 		OUTPUT library-rexx.rxbin
-		COMMAND ${CMAKE_COMMAND} -E cat ${REXXBINS} > library-rexx.rxbin
+		OUTPUT "${RXXFNSB_REXX_ARCHIVE}"
+		COMMAND ${CMAKE_COMMAND} -E cat ${REXXBINS} > "${RXXFNSB_REXX_ARCHIVE}"
 		COMMENT "cREXX REXX Library Archive ..."
 		DEPENDS ${REXXBINS}
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
-add_custom_target(library-rexx ALL DEPENDS library-rexx.rxbin)
+add_custom_target(library-rexx ALL DEPENDS "${RXXFNSB_REXX_ARCHIVE}")

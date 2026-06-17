@@ -1,67 +1,74 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_nested_scope_do.rexx
- * BUILT                  : 2026-03-26 17:25:07
+ * SOURCE                 : inline_test_nested_scope_do.crexx
+ * BUILT                  : 2026-05-27 17:53:45
  */
 
-.srcfile="inline_test_nested_scope_do.rexx"
 .globals=0
 
 main() .locals=6
    .meta "inline_test_nested_scope_do.main"="b" ".int" main() ""
-   .src 3:1="main: procedure = .int"
+   .srcstep 10 10 17 "inline_test_nested_scope_do.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:3="say \"Starting nested scope do inline test...\""
+   .srcstep 1 1 17 "inline_test_nested_scope_do.crexx" 4 3 48 "  say \"Starting nested scope do inline test...\""
    say "Starting nested scope do inline test..."
-   .src 5:3="do"
-   .src 5:6="i = 1"
+   .srcstep 6 6 17 "inline_test_nested_scope_do.crexx" 5 3 5 "  do i = 1 to 3"
+   .srcstep 2 2 17 "inline_test_nested_scope_do.crexx" 5 6 11 "  do i = 1 to 3"
    .meta "inline_test_nested_scope_do.main.i"="b" ".int" r0
    load r0,1
-   .src 5:12="to 3"
+   .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "i" ""
+   .srcstep 3 3 17 "inline_test_nested_scope_do.crexx" 5 12 16 "  do i = 1 to 3"
    load r1,3
+   .traceevent "L" 4 "R" "I" "r" 1 0 0 0 "" ""
 l8dostart:
-   .src 5:12="to 3"
+   .srcstep 3 3 17 "inline_test_nested_scope_do.crexx" 5 12 16 "  do i = 1 to 3"
    igt r2,r0,r1
    brt l8doend,r2
-   .src 6:5="say scopedAdd(i)"
+   .srcstep 5 5 17 "inline_test_nested_scope_do.crexx" 6 5 21 "    say scopedAdd(i)"
+   .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
    load r3,1
    swap r4,r0
    call r5,scopedAdd(),r3
    swap r0,r4
    itos r5
+   .traceevent "F" 4 "R" "S" "r" 5 5 5 0 "scopedadd" ""
    say r5
 l8doinc:
-   .src 5:6="i"
+   .srcstep 4 4 17 "inline_test_nested_scope_do.crexx" 5 6 7 "  do i = 1 to 3"
    inc r0
-   .src 7:3="end"
+   .srcstep 7 7 17 "inline_test_nested_scope_do.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
-   .src 8:3="say \"Nested scope do inline test finished.\""
+   .srcstep 8 8 17 "inline_test_nested_scope_do.crexx" 8 3 46 "  say \"Nested scope do inline test finished.\""
    say "Nested scope do inline test finished."
-   .src 9:3="return 0"
+   .srcstep 9 9 17 "inline_test_nested_scope_do.crexx" 9 3 11 "  return 0"
    ret 0
 
 scopedAdd() .locals=2
    .meta "inline_test_nested_scope_do.scopedadd"="b" ".int" scopedAdd() "val=.int"
-   .src 11:1="scopedAdd: procedure = .int"
+   .srcstep 16 16 17 "inline_test_nested_scope_do.crexx" 11 1 28 "scopedAdd: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 12:7="val = .int"
+   .srcstep 11 11 17 "inline_test_nested_scope_do.crexx" 12 7 17 "  arg val = .int"
    .meta "inline_test_nested_scope_do.scopedadd.val"="b" ".int" a1
    .meta "inline_test_nested_scope_do.scopedadd.step"="b" ".int" r1
-   .src 14:5="step = .int"
+   .srcstep 12 12 17 "inline_test_nested_scope_do.crexx" 14 5 16 "    step = .int"
    null r1
-   .src 15:5="step = val + 2"
+   .srcstep 13 13 17 "inline_test_nested_scope_do.crexx" 15 5 19 "    step = val + 2"
+   .traceevent "V" 6 "R" "I" "a" 1 13 13 0 "val" ""
    iadd r1,a1,2
-   .src 16:5="return step"
+   .traceevent "O" 4 "R" "I" "r" 1 13 13 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 13 13 0 "step" ""
+   .srcstep 14 14 17 "inline_test_nested_scope_do.crexx" 16 5 16 "    return step"
+   .traceevent "V" 6 "R" "I" "r" 1 14 14 0 "step" ""
    ret r1
-   .src 18:3="return 0"
+   .srcstep 15 15 17 "inline_test_nested_scope_do.crexx" 18 3 11 "  return 0"
    ret 0
    .meta "inline_test_nested_scope_do.scopedadd.val"

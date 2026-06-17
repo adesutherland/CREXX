@@ -32,6 +32,7 @@
 #include <string.h>
 #include "platform.h"
 #include "rxcpmain.h"
+#include "rxcp_source_ext.h"
 #include "rxcp_source_tree.h"
 #include "../binutils/include/rxdefs.h"
 #include "rxcpdary.h"
@@ -61,11 +62,16 @@ static void append_cli_import_name(char ***imports, size_t *count, const char *n
     if (!imports || !count || !name || !name[0]) return;
 
     new_imports = realloc(*imports, sizeof(char*) * (*count + 1));
-    if (!new_imports) error_and_exit(255, "Out of memory appending --import");
+    if (!new_imports) {
+        RX_PANIC_OOM("realloc rxc --import list",
+                     sizeof(char*) * (*count + 1), name);
+    }
 
     *imports = new_imports;
     (*imports)[*count] = strdup(name);
-    if (!(*imports)[*count]) error_and_exit(255, "Out of memory copying --import");
+    if (!(*imports)[*count]) {
+        RX_PANIC_OOM("strdup rxc --import entry", strlen(name) + 1, name);
+    }
     (*count)++;
 }
 
@@ -77,14 +83,19 @@ static void append_location_arg(char **locations, const char *value) {
     if (!locations || !value || !value[0]) return;
     if (!*locations) {
         *locations = strdup(value);
-        if (!*locations) error_and_exit(255, "Out of memory copying location list");
+        if (!*locations) {
+            RX_PANIC_OOM("strdup rxc location list", strlen(value) + 1, value);
+        }
         return;
     }
 
     old_len = strlen(*locations);
     value_len = strlen(value);
     combined = realloc(*locations, old_len + 1 + value_len + 1);
-    if (!combined) error_and_exit(255, "Out of memory extending location list");
+    if (!combined) {
+        RX_PANIC_OOM("realloc rxc location list",
+                     old_len + 1 + value_len + 1, value);
+    }
     combined[old_len] = ';';
     memcpy(combined + old_len + 1, value, value_len + 1);
     *locations = combined;
@@ -105,10 +116,15 @@ static char **split_location_list(const char *locations) {
     }
 
     result = calloc(count + 1, sizeof(char *));
-    if (!result) error_and_exit(255, "Out of memory splitting location list");
+    if (!result) {
+        RX_PANIC_OOM("calloc rxc split location list",
+                     (count + 1) * sizeof(char *), locations);
+    }
 
     copy = strdup(locations);
-    if (!copy) error_and_exit(255, "Out of memory copying location list");
+    if (!copy) {
+        RX_PANIC_OOM("strdup rxc split location list", strlen(locations) + 1, locations);
+    }
 
     index = 0;
     result[index++] = copy;
@@ -139,12 +155,12 @@ static void help() {
             "  --level level   Default source level when OPTIONS omits one\n"
             "  --import ns     Inject a file-level IMPORT namespace (repeatable)\n"
             "  --import-rxas   Enable auto-import scanning of .rxas in binary roots\n"
-            "  -o output_file  REXX Assembler Output File\n"
+            "  -o output_stem  RXAS output stem or .rxas file\n"
             "  -n              No Optimising\n"
             "  -x              Disable compiler exits\n"
 #ifdef ENABLE_PARSER_MODE
-            "  --parser        Run as a language server (stdio mode)\n"
-            "  --port port     Run as a language server (socket mode on port)\n"
+            "  --syntaxhighlight  Run as a DSLSH syntax-highlighting server (stdio mode)\n"
+            "  --port port     Run as a DSLSH syntax-highlighting server (socket mode on port)\n"
 #endif
             ;
 
@@ -162,8 +178,10 @@ static void license() {
 Context *cntx_f() {
     Context *context;
     context = calloc(1, sizeof(Context)); /* Zero Contents */
+    if (!context) RX_PANIC_OOM("calloc rxc context", sizeof(Context), 0);
 
     context->level = UNKNOWN;
+    context->cli_level_override = UNKNOWN;
     context->cli_default_level = UNKNOWN;
     context->lexer_stem_mode = 0;
     context->comments_hash = 1; /* This is the recommended & default line comment style */
@@ -229,6 +247,7 @@ void fre_cntx(Context *context)  {
 
     /* Deallocate Scope and Symbols */
     if (context->ast &&  context->ast->scope) scp_free(context->ast->scope);
+    scp_free_detached(context);
 
     /* Deallocate AST */
     free_ast(context);
@@ -279,6 +298,8 @@ void fre_cntx(Context *context)  {
 
     if (context->traceFile) fclose(context->traceFile);
 
+    if (context->initial_source_extension) free(context->initial_source_extension);
+
     free(context);
 }
 
@@ -304,6 +325,8 @@ int rxcmain(int argc, char *argv[]) {
     int disable_exits = 0;
     int auto_import_rxas = 0;
     char *file_directory = 0;
+    char *input_source_extension = 0;
+    const char* filename_extension;
     RexxLevel cli_default_level = UNKNOWN;
     char **cli_import_names = 0;
     size_t cli_import_count = 0;
@@ -318,8 +341,13 @@ int rxcmain(int argc, char *argv[]) {
     for (i = 1; i < argc; i++) {
         if (argv[i][0] != '-') break; /* End of options */
 
+        if (strcmp(argv[i], "--help") == 0) {
+            help();
+            exit(0);
+        }
+
 #ifdef ENABLE_PARSER_MODE
-        if (strcmp(argv[i], "--syntaxhighlight") == 0) {
+        if (strcmp(argv[i], "--syntaxhighlight") == 0 || strcmp(argv[i], "--parser") == 0) {
             parser_mode = 1;
             parser_stdio = 1;
             continue;
@@ -473,11 +501,23 @@ int rxcmain(int argc, char *argv[]) {
     /* Add the executable-path binary import root. */
     exe_path = exepath();
     if (import_locations) {
-        combined_import_locations = malloc(strlen(import_locations) + strlen(exe_path) + 2);
-        sprintf(combined_import_locations, "%s;%s", import_locations, exe_path);
+        char *user_import_locations = import_locations;
+        size_t combined_import_locations_size = strlen(import_locations) + strlen(exe_path) + 2;
+        combined_import_locations = malloc(combined_import_locations_size);
+        if (!combined_import_locations) {
+            RX_PANIC_OOM("malloc rxc binary import locations",
+                         combined_import_locations_size, import_locations);
+        }
+        sprintf(combined_import_locations, "%s;%s", user_import_locations, exe_path);
+        free(user_import_locations);
         import_locations = combined_import_locations;
     } else {
-        combined_import_locations = malloc(strlen(exe_path) + 1);
+        size_t combined_import_locations_size = strlen(exe_path) + 1;
+        combined_import_locations = malloc(combined_import_locations_size);
+        if (!combined_import_locations) {
+            RX_PANIC_OOM("malloc rxc binary import locations",
+                         combined_import_locations_size, exe_path);
+        }
         sprintf(combined_import_locations, "%s", exe_path);
         import_locations = combined_import_locations;
     }
@@ -485,15 +525,32 @@ int rxcmain(int argc, char *argv[]) {
     if (source_import_locations && debug_mode >= 2) fprintf(stderr, "Combined source import roots: %s\n", source_import_locations);
     if (import_locations && debug_mode >= 2) fprintf(stderr, "Combined binary import roots: %s\n", import_locations);
 
+    filename_extension = filenext(file_name);
+    input_source_extension = rxcp_source_extension_copy(file_name);
+    if (!input_source_extension) {
+        RX_PANIC_OOM("malloc rxc source extension", RX_OOM_UNKNOWN_SIZE, file_name);
+    }
+    if (!input_source_extension[0]) {
+        free(input_source_extension);
+        input_source_extension = strdup("crexx");
+        if (!input_source_extension) {
+            RX_PANIC_OOM("strdup rxc default source extension", strlen("crexx") + 1, file_name);
+        }
+    }
+
     char *allocated_output_file_name = 0;
     if (!output_file_name) {
-        allocated_output_file_name = strip_rightmost_extension_if(file_name, "rexx");
+        allocated_output_file_name = strip_rightmost_extension_if(file_name, input_source_extension);
         output_file_name = allocated_output_file_name;
     }
 
     /* Context Structure */
     context = cntx_f();
-    context->cli_default_level = cli_default_level;
+    context->initial_source_extension = input_source_extension;
+    context->cli_level_override = cli_default_level;
+    context->cli_default_level = cli_default_level != UNKNOWN ?
+                                 cli_default_level :
+                                 rxcp_source_default_level_for_extension(context->initial_source_extension);
     context->cli_import_names = cli_import_names;
     context->cli_import_count = cli_import_count;
 
@@ -508,11 +565,10 @@ int rxcmain(int argc, char *argv[]) {
     if (debug_mode >= 2) fprintf(stderr, "Input file is %s\n", file_name);
 
     /* Open input file */
-    const char* filename_extension = filenext(file_name);
     if (filename_extension[0] == 0)
       {
-        context->file_pointer = openfile(file_name,"rexx", location, "r");
-        context->file_name = mprintf("%s.rexx", filename(file_name));
+        context->file_pointer = openfile(file_name,"crexx", location, "r");
+        context->file_name = mprintf("%s.crexx", filename(file_name));
       }
     else {
         context->file_pointer = openfile(file_name,"", location, "r");
@@ -525,7 +581,14 @@ int rxcmain(int argc, char *argv[]) {
     context->master_context = context;
     context->loading_files_count = 1;
     context->loading_files = malloc(sizeof(char*));
+    if (!context->loading_files) {
+        RX_PANIC_OOM("malloc rxc loading file list", sizeof(char*), context->file_name);
+    }
     context->loading_files[0] = strdup(context->file_name);
+    if (!context->loading_files[0]) {
+        RX_PANIC_OOM("strdup rxc loading file name",
+                     strlen(context->file_name) + 1, context->file_name);
+    }
 
     /* Open trace file */
 #ifndef NDEBUG
@@ -600,10 +663,13 @@ int rxcmain(int argc, char *argv[]) {
 
     /* Parse program for real */
     switch (context->level){
-        case LEVELA:
         case LEVELC:
+            fprintf(stderr,"REXX Level C (Classic REXX) is currently supported only for DSLSH syntax highlighting. Compilation is not supported yet\n");
+            break;
+
+        case LEVELA:
         case LEVELD:
-            fprintf(stderr,"REXX Level A/C/D (cREXX Classic) - Not supported yet\n");
+            fprintf(stderr,"REXX Level A/D (cREXX Classic) - Not supported yet\n");
             break;
 
         case LEVELB:

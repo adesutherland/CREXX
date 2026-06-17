@@ -1,7 +1,6 @@
 /*
  * wrapperasm.pulse: procedure = .int
  */
-.srcfile="wrapperasm.rxas"
 .globals=0
 
 pulse() .locals=0 .expose=wrapperasm.pulse

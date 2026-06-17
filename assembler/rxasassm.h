@@ -40,10 +40,14 @@ void rxasque2(Assembler_Context *context, Assembler_Token *instrToken, Assembler
 void rxasque3(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
               Assembler_Token *operand2Token, Assembler_Token *operand3Token);
 void rxasqlbl(Assembler_Context *context, Assembler_Token *labelToken);
-/* Source filename */
-void rxasqmfl(Assembler_Context *context, Assembler_Token *file);
-/* Source Line */
-void rxasqmsr(Assembler_Context *context, Assembler_Token *line, Assembler_Token *column, Assembler_Token *source);
+/* Source Step */
+void rxasqmstp(Assembler_Context *context, Assembler_Token *step, Assembler_Token *clause, Assembler_Token *flags,
+               Assembler_Token *file, Assembler_Token *line, Assembler_Token *start, Assembler_Token *end,
+               Assembler_Token *source);
+void rxasqmte(Assembler_Context *context, Assembler_Token *kind, Assembler_Token *mode_mask,
+              Assembler_Token *value_source, Assembler_Token *value_type, Assembler_Token *register_type,
+              Assembler_Token *value_ref, Assembler_Token *source_step, Assembler_Token *clause,
+              Assembler_Token *flags, Assembler_Token *symbol, Assembler_Token *resolved_name);
 /* Function Metadata */
 void rxasqmfu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args);
 /* Register Metadata */
@@ -85,10 +89,14 @@ void rxassetg(Assembler_Context *context, Assembler_Token *globalsToken);
 void rxasexre(Assembler_Context *context, Assembler_Token *registerToken, Assembler_Token *exposeToken);
 void rxasexpc(Assembler_Context *context, Assembler_Token *funcToken, Assembler_Token *localsToken, Assembler_Token *exposeToken);
 void rxasdecl(Assembler_Context *context, Assembler_Token *funcToken, Assembler_Token *exposeToken);
-/* Source filename */
-void rxasmefl(Assembler_Context *context, Assembler_Token *file);
-/* Source Line */
-void rxasmesr(Assembler_Context *context, Assembler_Token *line, Assembler_Token *column, Assembler_Token *source);
+/* Source Step */
+void rxasmestp(Assembler_Context *context, Assembler_Token *step, Assembler_Token *clause, Assembler_Token *flags,
+               Assembler_Token *file, Assembler_Token *line, Assembler_Token *start, Assembler_Token *end,
+               Assembler_Token *source);
+void rxasmete(Assembler_Context *context, Assembler_Token *kind, Assembler_Token *mode_mask,
+              Assembler_Token *value_source, Assembler_Token *value_type, Assembler_Token *register_type,
+              Assembler_Token *value_ref, Assembler_Token *source_step, Assembler_Token *clause,
+              Assembler_Token *flags, Assembler_Token *symbol, Assembler_Token *resolved_name);
 /* Function Metadata */
 void rxasmefu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Token *option, Assembler_Token *type, Assembler_Token *func, Assembler_Token *args);
 /* Register Metadata */

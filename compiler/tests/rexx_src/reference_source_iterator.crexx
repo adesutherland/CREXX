@@ -1,0 +1,217 @@
+options levelb
+import rxfnsb
+namespace reference_source_iterator
+
+main: procedure = .int
+  list = .LiveList()
+  call list.add("red")
+  call list.add("blue")
+
+  snapshot_parent = list.snapshotParentIterator()
+  snapshot_backing = list.snapshotBackingIterator()
+  dynamic_parent = list.dynamicParentIterator()
+  dynamic_backing = list.dynamicBackingIterator()
+
+  call list.set(2, "cyan")
+  call list.add("green")
+
+  if snapshot_parent.isLive() <> 1 then return fail("snapshot parent live")
+  if snapshot_backing.isLive() <> 1 then return fail("snapshot backing live")
+  if dynamic_parent.isLive() <> 1 then return fail("dynamic parent live")
+  if dynamic_backing.isLive() <> 1 then return fail("dynamic backing live")
+
+  if snapshot_parent.next() <> "red" then return fail("snapshot parent first")
+  if snapshot_parent.next() <> "blue" then return fail("snapshot parent stable value")
+  if snapshot_parent.hasNext() <> 0 then return fail("snapshot parent ignores append")
+
+  if snapshot_backing.next() <> "red" then return fail("snapshot backing first")
+  if snapshot_backing.next() <> "blue" then return fail("snapshot backing stable value")
+  if snapshot_backing.hasNext() <> 0 then return fail("snapshot backing ignores append")
+
+  if dynamic_parent.next() <> "red" then return fail("dynamic parent first")
+  if dynamic_parent.next() <> "cyan" then return fail("dynamic parent observes mutation")
+  if dynamic_parent.hasNext() <> 1 then return fail("dynamic parent sees append")
+  if dynamic_parent.next() <> "green" then return fail("dynamic parent appended value")
+  if dynamic_parent.hasNext() <> 0 then return fail("dynamic parent end")
+
+  if dynamic_backing.next() <> "red" then return fail("dynamic backing first")
+  if dynamic_backing.next() <> "cyan" then return fail("dynamic backing observes mutation")
+  if dynamic_backing.hasNext() <> 1 then return fail("dynamic backing sees append")
+  if dynamic_backing.next() <> "green" then return fail("dynamic backing appended value")
+  if dynamic_backing.hasNext() <> 0 then return fail("dynamic backing end")
+
+  dead_snapshot_parent = makeDeadSnapshotParentIterator()
+  if dead_snapshot_parent.isLive() <> 1 then return fail("dead snapshot parent still live")
+  if dead_snapshot_parent.next() <> "stale" then return fail("dead snapshot parent value")
+
+  dead_snapshot_backing = makeDeadSnapshotBackingIterator()
+  if dead_snapshot_backing.isLive() <> 1 then return fail("dead snapshot backing still live")
+  if dead_snapshot_backing.next() <> "stale" then return fail("dead snapshot backing value")
+
+  dead_dynamic_parent = makeDeadDynamicParentIterator()
+  if dead_dynamic_parent.isLive() <> 0 then return fail("dead dynamic parent invalid")
+
+  dead_dynamic_backing = makeDeadDynamicBackingIterator()
+  if dead_dynamic_backing.isLive() <> 0 then return fail("dead dynamic backing invalid")
+
+  say "PASS: Reference Source Iterator"
+  return 0
+
+makeDeadSnapshotParentIterator: procedure = .SnapshotParentIterator
+  temp = .LiveList()
+  call temp.add("stale")
+  return temp.snapshotParentIterator()
+
+makeDeadSnapshotBackingIterator: procedure = .SnapshotBackingIterator
+  temp = .LiveList()
+  call temp.add("stale")
+  return temp.snapshotBackingIterator()
+
+makeDeadDynamicParentIterator: procedure = .DynamicParentIterator
+  temp = .LiveList()
+  call temp.add("stale")
+  return temp.dynamicParentIterator()
+
+makeDeadDynamicBackingIterator: procedure = .DynamicBackingIterator
+  temp = .LiveList()
+  call temp.add("stale")
+  return temp.dynamicBackingIterator()
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1
+
+LiveList: class
+  values = .string[]
+  count = .int
+
+  *: factory
+    initial = .string[]
+    values = initial
+    count = 0
+    return
+
+  add: method = .void
+    arg value = .string
+    call arrayappend values, value
+    count = count + 1
+    return
+
+  set: method = .void
+    arg index = .int, value = .string
+    values[index] = value
+    return
+
+  get: method = .string
+    arg index = .int
+    return values[index]
+
+  size: method = .int
+    return count
+
+  snapshotParentIterator: method = .SnapshotParentIterator
+    return .SnapshotParentIterator(reference self)
+
+  snapshotBackingIterator: method = .SnapshotBackingIterator
+    return .SnapshotBackingIterator(reference values, reference count)
+
+  dynamicParentIterator: method = .DynamicParentIterator
+    return .DynamicParentIterator(reference self)
+
+  dynamicBackingIterator: method = .DynamicBackingIterator
+    return .DynamicBackingIterator(reference values, reference count)
+
+SnapshotParentIterator: class
+  list_copy = .LiveList
+  index = .int
+
+  *: factory
+    arg list = reference .LiveList
+    list_copy = snapshot list
+    index = 0
+    return
+
+  isLive: method = .int
+    return 1
+
+  hasNext: method = .int
+    if index < list_copy.size() then return 1
+    return 0
+
+  next: method = .string
+    index = index + 1
+    return list_copy.get(index)
+
+SnapshotBackingIterator: class
+  values_copy = .string[]
+  count_copy = .int
+  index = .int
+
+  *: factory
+    arg values = reference .string[], count = reference .int
+    values_copy = snapshot values
+    count_copy = snapshot count
+    index = 0
+    return
+
+  isLive: method = .int
+    return 1
+
+  hasNext: method = .int
+    if index < count_copy then return 1
+    return 0
+
+  next: method = .string
+    index = index + 1
+    return values_copy[index]
+
+DynamicParentIterator: class
+  list_ref = reference .LiveList
+  index = .int
+
+  *: factory
+    arg list = reference .LiveList
+    list_ref = list
+    index = 0
+    return
+
+  isLive: method = .int
+    if refvalid(list_ref) then return 1
+    return 0
+
+  hasNext: method = .int
+    list = dereference list_ref
+    if index < list.size() then return 1
+    return 0
+
+  next: method = .string
+    list = dereference list_ref
+    index = index + 1
+    return list.get(index)
+
+DynamicBackingIterator: class
+  values_ref = reference .string[]
+  count_ref = reference .int
+  index = .int
+
+  *: factory
+    arg values = reference .string[], count = reference .int
+    values_ref = values
+    count_ref = count
+    index = 0
+    return
+
+  isLive: method = .int
+    if refvalid(values_ref) & refvalid(count_ref) then return 1
+    return 0
+
+  hasNext: method = .int
+    count = dereference count_ref
+    if index < count then return 1
+    return 0
+
+  next: method = .string
+    values = dereference values_ref
+    index = index + 1
+    return values[index]

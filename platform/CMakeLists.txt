@@ -6,3 +6,6 @@ set(CMAKE_C_STANDARD 90)
 
 add_library(platform platform.h platform.c)
 target_include_directories(platform PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+if(WIN32)
+    target_link_libraries(platform PUBLIC psapi)
+endif()

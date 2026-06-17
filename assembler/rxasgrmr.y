@@ -70,7 +70,6 @@ headers ::= headers header.
 header ::= globals.
 header ::= global_reg.
 header ::= global_meta.
-header ::= file.
 header ::= NEWLINE.
 
 // Header error messages
@@ -79,10 +78,6 @@ header ::= ANYTHING(T) error NEWLINE. {rxaserat(context, T, "Invalid header dire
 // Global directive
 globals ::= KW_GLOBALS EQUAL INT(G) NEWLINE. {rxassetg(context,G);}
 globals ::= KW_GLOBALS(T) error NEWLINE. {rxaseaft(context, T, "Expecting \"={integer}\"");}
-
-// File directive
-file ::= KW_SRCFILE EQUAL STRING(F) NEWLINE. {rxasqmfl(context,F);}
-file ::= KW_SRCFILE(T) error NEWLINE. {rxaserat(context, T, "Expecting .srcfile = {filename}");}
 
 // Global register directive
 global_reg ::= GREG(R) KW_EXPOSE EQUAL ID(I) NEWLINE. {rxasexre(context,R,I);}
@@ -134,7 +129,10 @@ instructions ::= instruction.
 instructions ::= instructions instruction.
 instruction ::= instr NEWLINE.
 instruction ::= LABEL(L). {rxasqlbl(context,L);}
-instruction ::= KW_SRC INT(L) COLON INT(C) EQUAL STRING(S) NEWLINE. {rxasqmsr(context, L, C, S);}
+instruction ::= KW_SRCSTEP INT(ST) INT(CL) INT(FL) STRING(F) INT(L) INT(SC) INT(EC) STRING(S) NEWLINE.
+                {rxasqmstp(context, ST, CL, FL, F, L, SC, EC, S);}
+instruction ::= KW_TRACEEVENT STRING(K) INT(M) STRING(VS) STRING(VT) STRING(RT) INT(VR) INT(ST) INT(CL) INT(FL) STRING(SYM) STRING(RN) NEWLINE.
+                {rxasqmte(context, K, M, VS, VT, RT, VR, ST, CL, FL, SYM, RN);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) reg(R) NEWLINE. {rxasqmre(context,V,OP,T,R);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) NEWLINE. {rxasqmfu(context,V,OP,T,F,A);}
 instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(P) NEWLINE. {rxasqmil(context,V,OP,P);}
@@ -145,28 +143,25 @@ instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) KW_INTERFACE NEWLIN
 instruction ::= KW_META STRING(V) EQUAL STRING(I) KW_IMPLEMENTS NEWLINE. {rxasqmimpl(context,V,I);}
 instruction ::= KW_META STRING(O) EQUAL STRING(K) STRING(M) STRING(T) STRING(A) KW_MEMBER NEWLINE. {rxasqmmemb(context,O,K,M,T,A);}
 instruction ::= KW_META STRING(V) NEWLINE. {rxasqmcl(context,V);}
-instruction ::= KW_SRCFILE EQUAL STRING(F) NEWLINE. {rxasqmfl(context,F);}
 instruction ::= NEWLINE.
 
 // Instruction error messages
-instruction ::= KW_SRCFILE(T) error NEWLINE. {rxaserat(context, T, "Expecting .srcfile = {filename}");}
 instruction ::= KW_META(T) error NEWLINE. {rxaseaft(context, T, "Expecting {string} = {meta definition}");}
 instruction ::= ANYTHING(T) error NEWLINE. {rxaserat(context, T, "Invalid label, opcode or directive");}
-instruction ::= KW_SRC(T) error NEWLINE. {rxaserat(context, T, "Expecting .src {line}:{col} = \"{source}\"");}
+instruction ::= KW_SRCSTEP(T) error NEWLINE. {rxaserat(context, T, "Expecting .srcstep {step} {clause} {flags} \"{file}\" {line} {start-col} {end-col} \"{source line}\"");}
+instruction ::= KW_TRACEEVENT(T) error NEWLINE. {rxaserat(context, T, "Expecting .traceevent \"{kind}\" {mode-mask} \"{value-source}\" \"{value-type}\" \"{register-type}\" {value-ref} {source-step} {clause} {flags} \"{symbol}\" \"{resolved-name}\"");}
 
 // Instructions in a function declaration
 decl_instructions ::= decl_instruction.
 decl_instructions ::= decl_instructions decl_instruction.
-decl_instruction ::= KW_SRCFILE EQUAL STRING(F) NEWLINE. {rxasqmfl(context,F);}
 decl_instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(T) FUNC(F) STRING(A) NEWLINE. {rxasqmfu(context,V,OP,T,F,A);}
 decl_instruction ::= KW_META STRING(V) EQUAL STRING(OP) STRING(P) NEWLINE. {rxasqmil(context,V,OP,P);}
 decl_instruction ::= NEWLINE.
 
 // Declaration instruction error messages
-decl_instruction ::= KW_SRCFILE(T) error NEWLINE. {rxaserat(context, T, "Expecting .srcfile = {filename}");}
 decl_instruction ::= ANYTHING(T) error NEWLINE. {rxaserat(context, T, "Invalid label, opcode or directive");}
-decl_instruction ::= KW_SRC(T) error NEWLINE. {rxaserat(context, T, "Expecting .src {line}:{col} = \"{source}\"");}
-decl_instruction ::= KW_SRC(E) INT COLON INT EQUAL STRING NEWLINE. {rxaserat(context, E, "Cannot define source line here");}
+decl_instruction ::= KW_SRCSTEP(T) error NEWLINE. {rxaserat(context, T, "Cannot define source step here");}
+decl_instruction ::= KW_TRACEEVENT(T) error NEWLINE. {rxaserat(context, T, "Cannot define trace event here");}
 decl_instruction ::= KW_META STRING EQUAL STRING STRING reg(E) NEWLINE. {rxaserat(context, E, "Cannot set register metadata here");}
 decl_instruction ::= KW_META STRING(E) NEWLINE. {rxaserat(context, E, "Cannot clear metadata here");}
 decl_instruction ::= KW_META STRING(E) EQUAL STRING STRING STRING NEWLINE. {rxaserat(context, E, "Cannot set constant metadata here");}

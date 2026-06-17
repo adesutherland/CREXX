@@ -1,6 +1,6 @@
 # Classes and Interfaces {#classes-and-interfaces}
 
-Level B now implements the core class/interface model:
+Level B implements the core class/interface model:
 
 - interfaces and classes
 - classes implementing one or more interfaces
@@ -23,7 +23,7 @@ Interfaces define callable contracts. Classes implement those contracts.
 Factory declarations do not carry an explicit return type. The return contract
 is implied by the owner: an interface factory returns that interface contract,
 and a class factory returns that concrete class. In a class factory, bare
-`return` returns the constructed object; there is no source-level `this` value
+`return` returns the constructed object; there is no source-level `self` value
 to return explicitly.
 
 ```rexx
@@ -109,6 +109,13 @@ concrete class value to an implemented interface. In practice that means a
 statement such as `iface = .widget(...)` is supported, while interface-to-interface
 assignment should not be relied on.
 
+The factory call brackets are semantically significant. `.widget()` calls the
+default factory and returns an initialized object. Bare `.widget` is the typed
+default object value for that class and is not initialized. It can still satisfy
+type-contract checks such as `value is .object`, but using it as a receiver
+raises the catchable `OBJECT_NOT_INITIALIZED` signal. Use `initialized(value)`
+when code needs to distinguish these states explicitly.
+
 ## Class State
 
 Class attributes are declared in the class block:
@@ -148,6 +155,25 @@ through hand-written assembler. It is valid for VM-integration classes to define
 more than one typed view over the same physical slot, as shown for a signal
 payload/message slot above. Ordinary application classes should not use explicit
 register mappings unless they are matching a fixed VM or native object layout.
+
+## Receiver Storage
+
+Inside a method, `self` names the receiver storage. It is mainly useful when a
+method needs to pass or return a live reference to its receiver:
+
+```rexx
+iterator: method = .StringIterator
+  return .StringArrayListIterator(reference self)
+```
+
+Bare `self` is not an implicit reference. Use `reference self` when a formal
+requires `reference .Class`, and use an ordinary method call for normal receiver
+access.
+
+The standard class-library collection direction uses that explicit receiver
+reference for live iterators: `iterator()` returns an unsynchronized live
+iterator, and `snapshotIterator()` names the explicit factory-time snapshot
+variant.
 
 ## Factory Selection with `match`
 
@@ -255,7 +281,7 @@ say fallback.describe()   /* cache:memo:1 */
 ```
 
 This complete example is mirrored by the test
-`compiler/tests/rexx_src/interface_showcase_same_module.rexx`.
+`compiler/tests/rexx_src/interface_showcase_same_module.crexx`.
 
 ## Multiple Interfaces
 
@@ -296,7 +322,7 @@ say by_size.size()
 ```
 
 This example is mirrored by the test
-`compiler/tests/rexx_src/interface_multi_interface_same_module.rexx`.
+`compiler/tests/rexx_src/interface_multi_interface_same_module.crexx`.
 
 ## Namespace Qualification
 
@@ -348,7 +374,7 @@ implementation with the same factory name and argument signature; its concrete
 class return is accepted because the class implements the interface.
 
 This same-file shape is mirrored by
-`compiler/tests/rexx_src/interface_dep_contract.rexx`.
+`compiler/tests/rexx_src/interface_dep_contract.crexx`.
 
 ## Split-File Contract and Provider Pattern
 
@@ -402,6 +428,10 @@ mycar: class implements .vehicle
 
 Pure contract modules are valid: a source file that contains only interface or
 class/interface metadata can compile and assemble into a metadata-only `.rxbin`.
+A provider that consumes that binary contract must compile with the contract's
+directory on the binary import path, for example `rxc -i build-dir provider.rexx`.
+Keeping source roots and binary roots separate prevents stale `.rxbin` side
+products beside edited source from silently satisfying interface imports.
 
 The class factory must have the same argument signature as the interface
 factory. The return contract is implicit on both sides: the interface factory
@@ -409,27 +439,28 @@ returns the interface, and the class factory returns the concrete class. The
 compiler checks that the concrete class value is assignable to the interface
 return type.
 
-If a provider reports `#INTERFACE_MEMBER_SIGNATURE_MISMATCH` for member `*`,
-check these first:
+If a provider reports `#INTERFACE_NOT_FOUND` or
+`#INTERFACE_MEMBER_SIGNATURE_MISMATCH`, check these first:
 
-- the provider compile can find the source or binary module that exposes the
-  interface
+- the provider compile can find the source module (`.crexx`, `.crx`, `.rexx`,
+  or the initial file's arbitrary extension in a source root) or binary module
+  (`.rxbin` in a directory passed with `-i`) that exposes the interface
 - the class factory argument list exactly matches the interface factory argument
   list
-- stale `.rxas` or `.rxbin` artifacts for the interface are not being found
-  before the updated source
+- a binary contract is intentional; sibling `.rxbin` files are not searched
+  unless their directory is a binary root
 - the provider module is loaded or linked into any program that calls the
   interface factory
 
 This example is mirrored by:
 
-- `compiler/tests/rexx_src/qualified_interface_main.rexx`
-- `compiler/tests/rexx_src/qualified_interface_dep_a.rexx`
-- `compiler/tests/rexx_src/qualified_interface_dep_b.rexx`
+- `compiler/tests/rexx_src/qualified_interface_main.crexx`
+- `compiler/tests/rexx_src/qualified_interface_dep_a.crexx`
+- `compiler/tests/rexx_src/qualified_interface_dep_b.crexx`
 
 ## Casts and Type Tests
 
-Level B now supports explicit object casts and runtime type inspection:
+Level B supports explicit object casts and runtime type inspection:
 
 ```rexx
 vehicle = .car("roadster") as .vehicle
@@ -454,8 +485,8 @@ Rules:
 
 These operations are mirrored by:
 
-- `compiler/tests/rexx_src/type_ops_showcase.rexx`
-- `compiler/tests/rexx_src/type_ops_fail.rexx`
+- `compiler/tests/rexx_src/type_ops_showcase.crexx`
+- `compiler/tests/rexx_src/type_ops_fail.crexx`
 
 ## Notes and Current Boundaries
 

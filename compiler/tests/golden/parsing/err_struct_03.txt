@@ -10,10 +10,10 @@ REXX_UNIVERSE : "" (-1:-1) [Type: .unknown]
         ERROR : "UNEXPECTED_ELSE" (-1:-1) [Type: .unknown]
       TOKEN : "say" (-1:-1) [Type: .unknown]
         ERROR : "EXTRANEOUS" (-1:-1) [Type: .unknown]
-Error in err_struct_03.rexx @ 2:6 - #UNEXPECTED_ELSE, "else"
-Error in err_struct_03.rexx @ 2:11 - #EXTRANEOUS, "say"
+Error in err_struct_03.crexx @ 2:6 - #UNEXPECTED_ELSE, "else"
+Error in err_struct_03.crexx @ 2:11 - #EXTRANEOUS, "say"
 2 error(s) in source file
-Error in err_struct_03.rexx @ 2:6 - #UNEXPECTED_ELSE, "else"
-Error in err_struct_03.rexx @ 2:11 - #EXTRANEOUS, "say"
+Error in err_struct_03.crexx @ 2:6 - #UNEXPECTED_ELSE, "else"
+Error in err_struct_03.crexx @ 2:11 - #EXTRANEOUS, "say"
 2 error(s) in source file
 [INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : val_magic_02.rexx
- * BUILT                  : 2026-03-18 11:58:57
+ * SOURCE                 : val_magic_02.crexx
+ * BUILT                  : 2026-06-13 15:11:36
  */
 
-.srcfile="val_magic_02.rexx"
 .globals=0
 
 main() .locals=4
@@ -14,61 +12,84 @@ main() .locals=4
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:1="say \"Testing Implicit Rewrites...\""
+   .srcstep 1 1 17 "val_magic_02.crexx" 4 1 35 "say \"Testing Implicit Rewrites...\""
    say "Testing Implicit Rewrites..."
-   .src 13:1="a = 'Hello' || 'World'"
+   .srcstep 2 2 17 "val_magic_02.crexx" 13 1 23 "a = 'Hello' || 'World'"
    .meta "val_magic_02.main.a"="b" ".string" r0
    load r3,"World"
+   .traceevent "L" 4 "R" "S" "r" 3 2 2 0 "" ""
    concat r0,"Hello",r3
-   .src 14:1="say 'CONCAT test (a = \"Hello\" || \"World\"): ' || a"
+   .traceevent "O" 4 "R" "S" "r" 0 2 2 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 0 2 2 0 "a" ""
+   .srcstep 3 3 17 "val_magic_02.crexx" 14 1 50 "say 'CONCAT test (a = \"Hello\" || \"World\"): ' || a"
+   .traceevent "V" 6 "R" "S" "r" 0 3 3 0 "a" ""
    concat r3,"CONCAT test (a = \"Hello\" || \"World\"): ",r0
+   .traceevent "O" 4 "R" "S" "r" 3 3 3 0 "" ""
    say r3
-   .src 15:0="if a \= 'HelloWorld'"
-   sne r3,r0,"HelloWorld"
+   .srcstep 6 6 17 "val_magic_02.crexx" 15 1 21 "if a \\= 'HelloWorld' then do"
+   .traceevent "V" 6 "R" "S" "r" 0 6 6 0 "a" ""
+   rne r3,r0,"HelloWorld"
+   .traceevent "O" 4 "R" "B" "r" 3 6 6 0 "" ""
    brf l23iffalse,r3
-   .src 15:22="then"
-   .src 16:5="say 'FAILED: CONCAT should result in \"HelloWorld\"'"
+   .srcstep 7 7 17 "val_magic_02.crexx" 15 22 26 "if a \\= 'HelloWorld' then do"
+   .srcstep 4 4 17 "val_magic_02.crexx" 16 5 55 "    say 'FAILED: CONCAT should result in \"HelloWorld\"'"
    say "FAILED: CONCAT should result in \"HelloWorld\""
-   .src 17:5="return 1"
+   .srcstep 5 5 17 "val_magic_02.crexx" 17 5 13 "    return 1"
    ret 1
 l23iffalse:
-   .src 20:1="b = 'Hello' 'World'"
+   .srcstep 8 8 17 "val_magic_02.crexx" 20 1 20 "b = 'Hello' 'World'"
    .meta "val_magic_02.main.b"="b" ".string" r1
    load r3,"World"
+   .traceevent "L" 4 "R" "S" "r" 3 8 8 0 "" ""
    sconcat r1,"Hello",r3
-   .src 21:1="say 'SCONCAT test (b = \"Hello\" \"World\"): ' || b"
+   .traceevent "O" 4 "R" "S" "r" 1 8 8 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 1 8 8 0 "b" ""
+   .srcstep 9 9 17 "val_magic_02.crexx" 21 1 48 "say 'SCONCAT test (b = \"Hello\" \"World\"): ' || b"
+   .traceevent "V" 6 "R" "S" "r" 1 9 9 0 "b" ""
    concat r3,"SCONCAT test (b = \"Hello\" \"World\"): ",r1
+   .traceevent "O" 4 "R" "S" "r" 3 9 9 0 "" ""
    say r3
-   .src 22:0="if b \= 'Hello World'"
-   sne r3,r1,"Hello World"
+   .srcstep 12 12 17 "val_magic_02.crexx" 22 1 22 "if b \\= 'Hello World' then do"
+   .traceevent "V" 6 "R" "S" "r" 1 12 12 0 "b" ""
+   rne r3,r1,"Hello World"
+   .traceevent "O" 4 "R" "B" "r" 3 12 12 0 "" ""
    brf l41iffalse,r3
-   .src 22:23="then"
-   .src 23:5="say 'FAILED: SCONCAT should result in \"Hello World\"'"
+   .srcstep 13 13 17 "val_magic_02.crexx" 22 23 27 "if b \\= 'Hello World' then do"
+   .srcstep 10 10 17 "val_magic_02.crexx" 23 5 57 "    say 'FAILED: SCONCAT should result in \"Hello World\"'"
    say "FAILED: SCONCAT should result in \"Hello World\""
-   .src 24:5="return 1"
+   .srcstep 11 11 17 "val_magic_02.crexx" 24 5 13 "    return 1"
    ret 1
 l41iffalse:
-   .src 30:1="c = \"Hello\"'World'"
+   .srcstep 14 14 17 "val_magic_02.crexx" 30 1 19 "c = \"Hello\"'World'"
    .meta "val_magic_02.main.c"="b" ".string" r2
    load r3,"World"
+   .traceevent "L" 4 "R" "S" "r" 3 14 14 0 "" ""
    concat r2,"Hello",r3
-   .src 31:1="say 'SCONCAT (diff quotes) test (c = \"Hello\"' || \"'World'): \" || c"
+   .traceevent "O" 4 "R" "S" "r" 2 14 14 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 2 14 14 0 "c" ""
+   .srcstep 15 15 17 "val_magic_02.crexx" 31 1 67 "say 'SCONCAT (diff quotes) test (c = \"Hello\"' || \"'World'): \" || c"
    load r3,"\'World\'): "
+   .traceevent "L" 4 "R" "S" "r" 3 15 15 0 "" ""
    concat r3,"SCONCAT (diff quotes) test (c = \"Hello\"",r3
+   .traceevent "O" 4 "R" "S" "r" 3 15 15 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 2 15 15 0 "c" ""
    concat r3,r3,r2
+   .traceevent "O" 4 "R" "S" "r" 3 15 15 0 "" ""
    say r3
-   .src 32:0="if c \= 'HelloWorld'"
-   sne r3,r2,"HelloWorld"
+   .srcstep 18 18 17 "val_magic_02.crexx" 32 1 21 "if c \\= 'HelloWorld' then do"
+   .traceevent "V" 6 "R" "S" "r" 2 18 18 0 "c" ""
+   rne r3,r2,"HelloWorld"
+   .traceevent "O" 4 "R" "B" "r" 3 18 18 0 "" ""
    brf l61iffalse,r3
-   .src 32:22="then"
-   .src 33:5="say 'FAILED: SCONCAT (diff quotes) should result in \"HelloWorld\"'"
+   .srcstep 19 19 17 "val_magic_02.crexx" 32 22 26 "if c \\= 'HelloWorld' then do"
+   .srcstep 16 16 17 "val_magic_02.crexx" 33 5 70 "    say 'FAILED: SCONCAT (diff quotes) should result in \"HelloWorld\"'"
    say "FAILED: SCONCAT (diff quotes) should result in \"HelloWorld\""
-   .src 34:5="return 1"
+   .srcstep 17 17 17 "val_magic_02.crexx" 34 5 13 "    return 1"
    ret 1
 l61iffalse:
-   .src 37:1="say \"Implicit Rewrites Test PASSED\""
+   .srcstep 20 20 17 "val_magic_02.crexx" 37 1 36 "say \"Implicit Rewrites Test PASSED\""
    say "Implicit Rewrites Test PASSED"
-   .src 38:1="return 0"
+   .srcstep 21 21 17 "val_magic_02.crexx" 38 1 9 "return 0"
    ret 0
    .meta "val_magic_02.main.a"
    .meta "val_magic_02.main.b"

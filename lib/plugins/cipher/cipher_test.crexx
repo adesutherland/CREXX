@@ -1,0 +1,7 @@
+/* Cipher Plugin Test */
+options levelb
+import cipher
+
+say md5("hello")
+
+say "end"

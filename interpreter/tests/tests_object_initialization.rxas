@@ -1,0 +1,42 @@
+/*
+ * CREXX Interpreter tests for object initialization lifecycle instructions.
+ */
+
+.globals=0
+
+main() .locals=8
+    say "Test Suite: Object Initialization RXAS Operations"
+
+    setobjuninit r1,"object_initialization.box"
+    isinitialized r2,r1
+    ieq r0,r2,0
+    brf fail_uninitialized_state,r0
+
+    istype r3,r1,".object"
+    ieq r0,r3,1
+    brf fail_object_contract,r0
+
+    sigbr caught_uninitialized,"OBJECT_NOT_INITIALIZED"
+    assertinitialized r1
+    signal "FAILURE","assertinitialized did not signal"
+
+caught_uninitialized:
+    say "caught-object-not-initialized"
+    setattrs r1,0
+    setobjtype r1,"object_initialization.box"
+    isinitialized r2,r1
+    ieq r0,r2,1
+    brf fail_initialized_state,r0
+    assertinitialized r1
+
+    say "PASS: Object Initialization RXAS Ops"
+    ret 0
+
+fail_uninitialized_state:
+    signal "FAILURE","setobjuninit did not mark the object uninitialized"
+
+fail_object_contract:
+    signal "FAILURE","uninitialized object did not match .object"
+
+fail_initialized_state:
+    signal "FAILURE","setobjtype did not mark the object initialized"

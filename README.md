@@ -5,13 +5,13 @@ compiler-to-bytecode toolchain. Source programs are compiled to cREXX assembler,
 assembled into `rxbin` bytecode, optionally linked into a deployable image, and
 run by the CREXX virtual machine.
 
-Current baseline: `crexx-1.0.0-beta.1`.
+Current documentation baseline: `crexx-1.0.0-beta.2`.
 
 ## What Is Included
 
 The core toolchain is:
 
-- `rxc`: compiles `.rexx` source to `.rxas` assembler
+- `rxc`: compiles cREXX source to `.rxas` assembler
 - `rxas`: assembles `.rxas` to `.rxbin` bytecode
 - `rxlink`: combines one or more `.rxbin` modules into a linked image
 - `rxvm` / `rxvme`: executes `rxbin` bytecode
@@ -49,25 +49,37 @@ cmake -S . -B cmake-build-debug -DDSLSH_PREFER_LOCAL=OFF
 For the usual workflow, use the `crexx` driver:
 
 ```bash
-cmake-build-debug/bin/crexx path/to/program.rexx
+cmake-build-debug/bin/crexx path/to/program.crexx
 ```
 
 The individual stages are also available:
 
 ```bash
-cmake-build-debug/bin/rxc path/to/program.rexx
+cmake-build-debug/bin/rxc path/to/program.crexx
 cmake-build-debug/bin/rxas path/to/program.rxas
 cmake-build-debug/bin/rxvm path/to/program.rxbin
 ```
 
+Current source convention: `.crexx` is the canonical cREXX source extension.
+When `rxc` is given an extensionless initial source name, it falls back to
+`.crexx`. `.crx` is also accepted, `.rexx` remains supported for explicit
+Classic/compatibility sources, and an arbitrary extension on the initial source
+is searched for same-extension imports.
+
 ## Documentation
 
-- [Release notes](docs/releases/v1.0.0-beta.1.md) summarize the beta 1 scope,
+- [Release notes](docs/releases/v1.0.0-beta.2.md) summarize the beta 2 scope,
   signing status, and known limitations.
+- [Release 1 plan](docs/release-1-plan.md) tracks the fixed-date path to
+  Release 1, including scope tiers, gates, and provisional issue owners.
 - [Release documentation](docs/index.md) is the main entry point for current
   as-built user and technical documentation.
+- [Roadmap](docs/ROADMAP.md) collects future direction and non-release
+  commitments separately from current technical documentation.
 - [Documentation map](docs/DOCS_MAP.md) explains which documentation area to
   use and how much authority each area has.
+- [Level B tutorial](docs/books/crexx_programming_guide/levelb_tutorial.md)
+  teaches practical Level B for Rexx programmers with tested examples.
 - [Language reference](docs/books/crexx_language_reference/about.md) covers the
   implemented language surface.
 - [Programming guide](docs/books/crexx_programming_guide/about.md) covers tools,

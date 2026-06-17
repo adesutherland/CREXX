@@ -64,7 +64,10 @@ int rxasmble(Assembler_Context *scanner) {
     rxasperr(scanner);
 
     /* Output rxbin */
-    if (rxasoutf(scanner)) return -1;
+    if (rxasoutf(scanner)) {
+        rxasclrc(scanner);
+        return -1;
+    }
 
     /* That's it */
     if (scanner->debug_mode) printf("Assembling complete\n");
@@ -87,6 +90,10 @@ int rxasmble(Assembler_Context *scanner) {
  *   scanner->buff_end
  */
 int rxasinbf(Assembler_Context *scanner) {
+    size_t optimiser_queue_count;
+    size_t optimiser_queue_bytes;
+    char detail[256];
+
     /* Initialize scanner */
     scanner->top = scanner->buff;
     scanner->cursor = scanner->buff;
@@ -97,9 +104,17 @@ int rxasinbf(Assembler_Context *scanner) {
     scanner->token_counter = 0;
     scanner->error_tail = 0;
     scanner->severity = 0;
-    scanner->optimiser_queue = calloc(sizeof(instruction_queue),
-                                      OPTIMISER_TARGET_MAX_QUEUE_SIZE +
-                                      OPTIMISER_QUEUE_EXTRA_BUFFER_SIZE);
+    optimiser_queue_count = OPTIMISER_TARGET_MAX_QUEUE_SIZE +
+                            OPTIMISER_QUEUE_EXTRA_BUFFER_SIZE;
+    optimiser_queue_bytes = sizeof(instruction_queue) * optimiser_queue_count;
+    scanner->optimiser_queue = calloc(optimiser_queue_count,
+                                      sizeof(instruction_queue));
+    if (!scanner->optimiser_queue) {
+        snprintf(detail, sizeof(detail), "input=%s; queue_items=%llu",
+                 scanner->file_name ? scanner->file_name : "(none)",
+                 (unsigned long long)optimiser_queue_count);
+        RX_PANIC_OOM("calloc rxas optimiser queue", optimiser_queue_bytes, detail);
+    }
     scanner->optimiser_queue_items = 0;
     scanner->optimiser_counter = 0;
 
@@ -109,10 +124,23 @@ int rxasinbf(Assembler_Context *scanner) {
 
     scanner->inst_buffer_size = 1024;
     scanner->binary.binary = malloc(scanner->inst_buffer_size * sizeof(bin_code));
+    if (!scanner->binary.binary) {
+        snprintf(detail, sizeof(detail), "input=%s; inst_buffer=%llu",
+                 scanner->file_name ? scanner->file_name : "(none)",
+                 (unsigned long long)scanner->inst_buffer_size);
+        RX_PANIC_OOM("malloc rxas instruction buffer",
+                     scanner->inst_buffer_size * sizeof(bin_code), detail);
+    }
     memset(scanner->binary.binary,0,scanner->inst_buffer_size * sizeof(bin_code));
 
     scanner->const_buffer_size = sizeof(unsigned char) * 1024;
     scanner->binary.const_pool = malloc(scanner->const_buffer_size);
+    if (!scanner->binary.const_pool) {
+        snprintf(detail, sizeof(detail), "input=%s; const_buffer=%llu",
+                 scanner->file_name ? scanner->file_name : "(none)",
+                 (unsigned long long)scanner->const_buffer_size);
+        RX_PANIC_OOM("malloc rxas constant pool", scanner->const_buffer_size, detail);
+    }
     memset(scanner->binary.const_pool,0,scanner->const_buffer_size);
 
     scanner->string_constants_tree = 0;
@@ -132,6 +160,11 @@ int rxasinbf(Assembler_Context *scanner) {
 
     /* Create parser and set up tracing */
     scanner->parser = RxasmAlloc(malloc);
+    if (!scanner->parser) {
+        snprintf(detail, sizeof(detail), "input=%s",
+                 scanner->file_name ? scanner->file_name : "(none)");
+        RX_PANIC_OOM("malloc rxas parser", RX_OOM_UNKNOWN_SIZE, detail);
+    }
 #ifndef NDEBUG
     if (scanner->debug_mode && scanner->traceFile) RxasmTrace(scanner->traceFile, "parser >> ");
 #endif

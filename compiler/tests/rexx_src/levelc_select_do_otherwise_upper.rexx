@@ -1,0 +1,7 @@
+READY = 0
+SELECT
+  WHEN READY THEN DO
+    SAY 'ready'
+  END
+  OTHERWISE SAY 'fallback'
+END

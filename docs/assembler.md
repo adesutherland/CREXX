@@ -1,7 +1,7 @@
 # RXAS Assembler Notes
 
 This root-level page is retained as a short wayfinder. The maintained RXAS
-documentation for Release 1 beta 1 is in:
+documentation for the Release 1 beta line is in:
 
 - [rxas tool reference](books/crexx_programming_guide/rxas.md)
 - [Assembler programming guide](books/crexx_programming_guide/rxas_programming_guide.md)

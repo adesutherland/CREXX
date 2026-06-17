@@ -1,0 +1,20 @@
+/* caesar.crexx
+   A Caesar cipher shifts each character by a fixed number of
+   positions within a predefined alphabet. Applying the inverse
+   shift restores the original text.
+*/
+options levelb
+import rxfnsb
+
+text  = 'The quick brown BROWN fox jumps over the lazy dog'
+shift = 7
+
+/* Characters that participate in the encryption */
+alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz<> ,;.:-_#+*!"§$%&/()=?"^[]{}0123456789'
+
+/* Rotated alphabet used as substitution table */
+rotated  = substr(alphabet, shift + 1) || substr(alphabet, 1, shift)
+
+say 'Original :' text
+say 'Encoded  :' translate(text, rotated, alphabet)
+say 'Decoded  :' translate(translate(text, rotated, alphabet), alphabet, rotated)

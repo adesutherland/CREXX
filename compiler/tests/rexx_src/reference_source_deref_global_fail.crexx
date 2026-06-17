@@ -1,0 +1,9 @@
+options levelb
+namespace reference_source_deref_global_fail expose global_value
+
+main: procedure = .int
+  target = .int
+  target = 7
+  r = reference target
+  global_value = dereference r
+  return 0

@@ -1,0 +1,2 @@
+Error in reference_source_refvalid_nonref_fail.crexx @ 6:6 - #TYPE_MISMATCH, "refvalid(value)"
+1 error(s) in source file

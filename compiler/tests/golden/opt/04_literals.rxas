@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : 04_literals.rexx
- * BUILT                  : 2026-03-18 11:58:53
+ * SOURCE                 : 04_literals.crexx
+ * BUILT                  : 2026-05-27 17:52:41
  */
 
-.srcfile="04_literals.rexx"
 .globals=0
 
 main() .locals=0
@@ -14,14 +12,14 @@ main() .locals=0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 8:1="say a b c d e"
+   .srcstep 1 1 17 "04_literals.crexx" 8 1 14 "say a b c d e"
    .meta "04_literals.main.a"="b" ".int" "123"
    .meta "04_literals.main.b"="b" ".string" "String"
    .meta "04_literals.main.c"="b" ".string" "String"
    .meta "04_literals.main.d"="b" ".string" "ABC"
    .meta "04_literals.main.e"="b" ".string" "\n"
    say "123 String String ABC \n"
-   .src 8:14=""
+   .srcstep 2 2 1 "04_literals.crexx" 8 14 14 "say a b c d e"
    ret
    .meta "04_literals.main.a"
    .meta "04_literals.main.b"

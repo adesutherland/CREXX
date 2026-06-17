@@ -30,14 +30,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include <errno.h>
 
 #ifdef __linux__
 #include <unistd.h>
 #include <dirent.h>
+#include <sys/sysinfo.h>
 #endif
 
 #ifdef _WIN32
 #include <windows.h>
+#include <psapi.h>
 #endif
 
 #ifndef _MSC_VER // Windows Visual Studio
@@ -51,6 +54,140 @@
 #endif
 
 #include "platform.h"
+
+static void rx_print_bytes(FILE *out, const char *label, unsigned long long bytes) {
+    fprintf(out, "  %s: %llu bytes (%.2f MiB)\n",
+            label, bytes, (double)bytes / 1048576.0);
+}
+
+static unsigned long rx_process_id(void) {
+#ifdef _WIN32
+    return (unsigned long)GetCurrentProcessId();
+#elif defined(__linux__) || defined(__APPLE__)
+    return (unsigned long)getpid();
+#else
+    return 0;
+#endif
+}
+
+#ifdef _WIN32
+static void rx_print_windows_commit_status(FILE *out, const MEMORYSTATUSEX *status) {
+    PERFORMANCE_INFORMATION performance;
+    unsigned long long commit_total;
+    unsigned long long commit_limit;
+
+    rx_print_bytes(out, "commit available to this process", (unsigned long long)status->ullAvailPageFile);
+
+    memset(&performance, 0, sizeof(performance));
+    performance.cb = sizeof(performance);
+    if (GetPerformanceInfo(&performance, (DWORD)sizeof(performance))) {
+        commit_total = (unsigned long long)performance.CommitTotal * (unsigned long long)performance.PageSize;
+        commit_limit = (unsigned long long)performance.CommitLimit * (unsigned long long)performance.PageSize;
+        rx_print_bytes(out, "system commit total", commit_total);
+        rx_print_bytes(out, "system commit limit", commit_limit);
+        if (commit_limit >= commit_total) {
+            rx_print_bytes(out, "system commit available", commit_limit - commit_total);
+        } else {
+            fprintf(out, "  system commit available: unavailable (total exceeds limit)\n");
+        }
+    } else {
+        fprintf(out, "  system commit total: unavailable (GetPerformanceInfo failed)\n");
+        fprintf(out, "  system commit limit: unavailable (GetPerformanceInfo failed)\n");
+        fprintf(out, "  system commit available: unavailable (GetPerformanceInfo failed)\n");
+    }
+}
+#endif
+
+static void rx_print_memory_status(FILE *out) {
+#ifdef _WIN32
+    MEMORYSTATUSEX status;
+    status.dwLength = sizeof(status);
+    if (GlobalMemoryStatusEx(&status)) {
+        fprintf(out, "  system memory load: %lu%%\n", (unsigned long)status.dwMemoryLoad);
+        rx_print_windows_commit_status(out, &status);
+        rx_print_bytes(out, "physical memory available", (unsigned long long)status.ullAvailPhys);
+        rx_print_bytes(out, "physical memory total", (unsigned long long)status.ullTotalPhys);
+        rx_print_bytes(out, "page file total", (unsigned long long)status.ullTotalPageFile);
+        rx_print_bytes(out, "virtual memory available", (unsigned long long)status.ullAvailVirtual);
+        rx_print_bytes(out, "virtual memory total", (unsigned long long)status.ullTotalVirtual);
+    } else {
+        fprintf(out, "  system memory: unavailable (GlobalMemoryStatusEx failed)\n");
+    }
+#elif defined(__linux__)
+    struct sysinfo info;
+    if (sysinfo(&info) == 0) {
+        unsigned long long unit = info.mem_unit ? (unsigned long long)info.mem_unit : 1ULL;
+        rx_print_bytes(out, "physical memory free", (unsigned long long)info.freeram * unit);
+        rx_print_bytes(out, "physical memory total", (unsigned long long)info.totalram * unit);
+        rx_print_bytes(out, "shared memory", (unsigned long long)info.sharedram * unit);
+        rx_print_bytes(out, "buffer memory", (unsigned long long)info.bufferram * unit);
+        rx_print_bytes(out, "swap free", (unsigned long long)info.freeswap * unit);
+        rx_print_bytes(out, "swap total", (unsigned long long)info.totalswap * unit);
+    } else {
+        fprintf(out, "  system memory: unavailable (sysinfo failed)\n");
+    }
+#elif defined(__APPLE__)
+    long page_size = -1;
+    long total_pages = -1;
+    long available_pages = -1;
+#ifdef _SC_PAGESIZE
+    page_size = sysconf(_SC_PAGESIZE);
+#endif
+#ifdef _SC_PHYS_PAGES
+    total_pages = sysconf(_SC_PHYS_PAGES);
+#endif
+#ifdef _SC_AVPHYS_PAGES
+    available_pages = sysconf(_SC_AVPHYS_PAGES);
+#endif
+    if (page_size > 0 && total_pages > 0) {
+        if (available_pages > 0) {
+            rx_print_bytes(out, "physical memory available",
+                           (unsigned long long)available_pages * (unsigned long long)page_size);
+        }
+        rx_print_bytes(out, "physical memory total",
+                       (unsigned long long)total_pages * (unsigned long long)page_size);
+    } else {
+        fprintf(out, "  system memory: unavailable\n");
+    }
+#else
+    fprintf(out, "  system memory: unavailable\n");
+#endif
+}
+
+void rx_report_out_of_memory(const char *operation, size_t requested_bytes,
+                             const char *detail, const char *source_file,
+                             int source_line, const char *function_name) {
+    int saved_errno = errno;
+    unsigned long pid = rx_process_id();
+
+    fprintf(stderr, "PANIC: Out of memory\n");
+    if (pid) fprintf(stderr, "  process id: %lu\n", pid);
+    if (operation && operation[0]) fprintf(stderr, "  allocation: %s\n", operation);
+    if (requested_bytes == RX_OOM_UNKNOWN_SIZE) {
+        fprintf(stderr, "  requested bytes: unknown\n");
+    } else {
+        rx_print_bytes(stderr, "requested bytes", (unsigned long long)requested_bytes);
+    }
+    if (detail && detail[0]) fprintf(stderr, "  detail: %s\n", detail);
+    if (source_file && source_file[0]) {
+        fprintf(stderr, "  source: %s:%d", source_file, source_line);
+        if (function_name && function_name[0]) fprintf(stderr, " (%s)", function_name);
+        fprintf(stderr, "\n");
+    }
+    fprintf(stderr, "  errno: %d", saved_errno);
+    if (saved_errno) fprintf(stderr, " (%s)", strerror(saved_errno));
+    else fprintf(stderr, " (not set)");
+    fprintf(stderr, "\n");
+    rx_print_memory_status(stderr);
+}
+
+void rx_panic_out_of_memory(const char *operation, size_t requested_bytes,
+                            const char *detail, const char *source_file,
+                            int source_line, const char *function_name) {
+    rx_report_out_of_memory(operation, requested_bytes, detail,
+                            source_file, source_line, function_name);
+    exit(-1);
+}
 
 /*
  * Read a file into a returned buffer
@@ -76,7 +213,10 @@ char* file2buf(FILE *file, size_t *bytes) {
 
     /* Allocate buffer and read */
     buff = (char*) malloc((*bytes + 2) * sizeof(char) );
-    if (!buff) return 0;
+    if (!buff) {
+        RX_REPORT_OOM("malloc file read buffer", *bytes + 2, "file2buf");
+        return 0;
+    }
     n = fread(buff, 1, *bytes, file);
     if (n == 0 && *bytes > 0) {
         free(buff);
@@ -122,11 +262,18 @@ char *strip_rightmost_extension_if(const char *name, const char *ext) {
         size_t name_len = strlen(name);
         size_t ext_len = strlen(ext);
         char *new_name = malloc(name_len - ext_len); /* -ext_len - 1 (for dot) + 1 (for null) = -ext_len */
+        if (!new_name) {
+            RX_PANIC_OOM("malloc stripped file name", name_len - ext_len, name);
+        }
         strncpy(new_name, name, name_len - ext_len - 1);
         new_name[name_len - ext_len - 1] = 0;
         return new_name;
     }
-    return strdup(name);
+    {
+        char *copy = strdup(name);
+        if (!copy) RX_PANIC_OOM("strdup file name", strlen(name) + 1, name);
+        return copy;
+    }
 }
 
 #if !defined(_WIN32) && !defined(__CMS__)
@@ -202,6 +349,7 @@ int fileexists(char *name, char *type, char *dir) {
         /* Single attempt with current directory */
         len = strlen(name) + strlen(type) + 2;
         file_name = malloc(len);
+        if (!file_name) RX_PANIC_OOM("malloc file existence path", len, name);
         if (type[0] == 0 || has_extension(name, type)) snprintf(file_name, len, "%s", name);
         else snprintf(file_name, len, "%s.%s", name, type);
 #if defined(__linux__) || defined(__APPLE__)
@@ -216,6 +364,7 @@ int fileexists(char *name, char *type, char *dir) {
 
     /* Multiple directories support */
     dir_copy = strdup(dir);
+    if (!dir_copy) RX_PANIC_OOM("strdup file existence directory list", strlen(dir) + 1, dir);
     token = dir_copy;
     while (token) {
         next_token = strchr(token, ';');
@@ -224,6 +373,7 @@ int fileexists(char *name, char *type, char *dir) {
         if (*token) {
             len = strlen(name) + strlen(type) + strlen(token) + 3;
             file_name = malloc(len);
+            if (!file_name) RX_PANIC_OOM("malloc file existence path", len, name);
             if (type[0] == 0 || has_extension(name, type)) snprintf(file_name, len, "%s/%s", token, name);
             else snprintf(file_name, len, "%s/%s.%s", token, name, type);
 #if defined(__linux__) || defined(__APPLE__)
@@ -265,6 +415,7 @@ FILE *openfile(char *name, char *type, char *dir, char *mode) {
         /* Single attempt with current directory */
         len = strlen(name) + strlen(type) + 2;
         file_name = malloc(len);
+        if (!file_name) RX_PANIC_OOM("malloc openfile path", len, name);
         if (type[0] == 0 || has_extension(name, type)) snprintf(file_name, len, "%s", name);
         else snprintf(file_name, len, "%s.%s", name, type);
         stream = fopen(file_name, mode);
@@ -274,6 +425,7 @@ FILE *openfile(char *name, char *type, char *dir, char *mode) {
 
     /* Multiple directories support */
     dir_copy = strdup(dir);
+    if (!dir_copy) RX_PANIC_OOM("strdup openfile directory list", strlen(dir) + 1, dir);
     token = dir_copy;
     while (token) {
         next_token = strchr(token, ';');
@@ -282,6 +434,7 @@ FILE *openfile(char *name, char *type, char *dir, char *mode) {
         if (*token) {
             len = strlen(name) + strlen(type) + strlen(token) + 3;
             file_name = malloc(len);
+            if (!file_name) RX_PANIC_OOM("malloc openfile path", len, name);
             if (type[0] == 0 || has_extension(name, type)) snprintf(file_name, len, "%s/%s", token, name);
             else snprintf(file_name, len, "%s/%s.%s", token, name, type);
             stream = fopen(file_name, mode);
@@ -323,6 +476,7 @@ char *dirfstfl(const char *dir, char* prefix, char *type, void **dir_ptr) {
 #if defined(__APPLE__) || defined(__linux__)
 
     struct fl_dir *ptr = malloc(sizeof(struct fl_dir));
+    if (!ptr) RX_PANIC_OOM("malloc directory iterator", sizeof(struct fl_dir), dir);
     *dir_ptr = ptr;
 
     ptr->type = type;
@@ -342,6 +496,7 @@ char *dirfstfl(const char *dir, char* prefix, char *type, void **dir_ptr) {
 #elif defined(_WIN32)
 
     struct WIN_FILE_DATA *win_data = malloc(sizeof(struct WIN_FILE_DATA));
+    if (!win_data) RX_PANIC_OOM("malloc Windows directory iterator", sizeof(struct WIN_FILE_DATA), dir);
     if (dir && strlen(dir)) strncpy(win_data->dir, dir, MAXFILEPATH);
     else strncpy(win_data->dir, ".", MAXFILEPATH);
     if (prefix) {
@@ -468,6 +623,7 @@ char* exepath()
 char* exefqname()
 {
     char *exePath = malloc(MAXFILEPATH);
+    if (!exePath) RX_PANIC_OOM("malloc executable path", MAXFILEPATH, 0);
 
 #ifdef _WIN32
 
@@ -552,11 +708,13 @@ char *file_dir(const char *path)
         {
             if (i == 1) {
                 result = malloc(2);
+                if (!result) RX_PANIC_OOM("malloc file directory", 2, path);
                 result[0] = path[0];
                 result[1] = 0;
                 return result;
             }
             result = malloc(i);
+            if (!result) RX_PANIC_OOM("malloc file directory", i, path);
             result[i-1] = 0;
             memcpy(result, path, i-1);
             return result;

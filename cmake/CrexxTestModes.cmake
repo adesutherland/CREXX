@@ -9,7 +9,7 @@ function(_crexx_register_linked_opt_artifact TARGET_NAME)
 endfunction()
 
 function(_crexx_register_runtime_test)
-    set(options)
+    set(options PASS_TEST_NAME_ARGUMENT)
     set(oneValueArgs NAME RUNNER PROGRAM WORKING_DIRECTORY)
     set(multiValueArgs RUNTIME_ARGS TEST_LABELS)
     cmake_parse_arguments(CREXX "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -20,6 +20,10 @@ function(_crexx_register_runtime_test)
     endif()
 
     set(_crexx_labels ${CREXX_TEST_LABELS})
+    set(_crexx_runtime_args ${CREXX_RUNTIME_ARGS})
+    if(CREXX_PASS_TEST_NAME_ARGUMENT)
+        list(APPEND _crexx_runtime_args -a ${CREXX_NAME})
+    endif()
     if(CREXX_NAME MATCHES "_opt$")
         set(_crexx_script "${CMAKE_CURRENT_BINARY_DIR}/${CREXX_NAME}_linked_runtime.cmake")
         crexx_write_linked_runtime_script(
@@ -29,7 +33,7 @@ function(_crexx_register_runtime_test)
                 RUNNER "${_crexx_runner_cmd}"
                 RXLINK "$<TARGET_FILE:rxlink>"
                 PROGRAM "${CREXX_PROGRAM}"
-                EXTRA_ARGS ${CREXX_RUNTIME_ARGS}
+                EXTRA_ARGS ${_crexx_runtime_args}
         )
         add_test(
                 NAME ${CREXX_NAME}
@@ -40,7 +44,7 @@ function(_crexx_register_runtime_test)
     else()
         add_test(
                 NAME ${CREXX_NAME}
-                COMMAND ${_crexx_runner_cmd} ${CREXX_PROGRAM} ${CREXX_RUNTIME_ARGS}
+                COMMAND ${_crexx_runner_cmd} ${CREXX_PROGRAM} ${_crexx_runtime_args}
                 WORKING_DIRECTORY ${CREXX_WORKING_DIRECTORY}
         )
     endif()
@@ -54,7 +58,7 @@ function(_crexx_register_runtime_test)
 endfunction()
 
 function(crexx_add_rexx_opt_matrix)
-    set(options)
+    set(options PASS_TEST_NAME_ARGUMENT)
     set(oneValueArgs NAME SOURCE WORKING_DIRECTORY TARGET_GROUP RUNNER COMPILER_TARGET ASSEMBLER_TARGET)
     set(multiValueArgs DEPENDS IMPORT_PATHS RXC_FLAGS RXAS_FLAGS RUNTIME_ARGS TEST_LABELS)
     cmake_parse_arguments(CREXX "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -125,6 +129,10 @@ function(crexx_add_rexx_opt_matrix)
             _crexx_register_linked_opt_artifact(${_crexx_artifact_target})
         endif()
 
+        set(_crexx_runtime_test_args)
+        if(CREXX_PASS_TEST_NAME_ARGUMENT)
+            list(APPEND _crexx_runtime_test_args PASS_TEST_NAME_ARGUMENT)
+        endif()
         _crexx_register_runtime_test(
                 NAME ${CREXX_NAME}_${_crexx_mode}
                 RUNNER ${CREXX_RUNNER}
@@ -132,12 +140,13 @@ function(crexx_add_rexx_opt_matrix)
                 WORKING_DIRECTORY ${CREXX_WORKING_DIRECTORY}
                 RUNTIME_ARGS ${CREXX_RUNTIME_ARGS}
                 TEST_LABELS ${CREXX_TEST_LABELS}
+                ${_crexx_runtime_test_args}
         )
     endforeach()
 endfunction()
 
 function(crexx_add_rxas_opt_matrix)
-    set(options)
+    set(options PASS_TEST_NAME_ARGUMENT)
     set(oneValueArgs NAME SOURCE WORKING_DIRECTORY TARGET_GROUP RUNNER ASSEMBLER_TARGET)
     set(multiValueArgs DEPENDS RXAS_FLAGS RUNTIME_ARGS TEST_LABELS)
     cmake_parse_arguments(CREXX "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -183,6 +192,10 @@ function(crexx_add_rxas_opt_matrix)
             _crexx_register_linked_opt_artifact(${_crexx_artifact_target})
         endif()
 
+        set(_crexx_runtime_test_args)
+        if(CREXX_PASS_TEST_NAME_ARGUMENT)
+            list(APPEND _crexx_runtime_test_args PASS_TEST_NAME_ARGUMENT)
+        endif()
         _crexx_register_runtime_test(
                 NAME ${CREXX_NAME}_${_crexx_mode}
                 RUNNER ${CREXX_RUNNER}
@@ -190,6 +203,7 @@ function(crexx_add_rxas_opt_matrix)
                 WORKING_DIRECTORY ${CREXX_WORKING_DIRECTORY}
                 RUNTIME_ARGS ${CREXX_RUNTIME_ARGS}
                 TEST_LABELS ${CREXX_TEST_LABELS}
+                ${_crexx_runtime_test_args}
         )
     endforeach()
 endfunction()

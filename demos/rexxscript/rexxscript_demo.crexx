@@ -1,0 +1,38 @@
+options levelb
+import rxfnsb
+
+main: procedure
+  out = .string[]
+  raw = .string[]
+  customer = .string
+  score = .string
+  decision = .string
+
+  /* RexxScript decision rule - configurable by the customer */
+  decision_rule = "say 'Script sees customer ' || customer; score = score + 5; if score >= 10 then decision = 'APPROVE' else decision = 'REVIEW'; say 'Script score now ' || score"
+
+  customer = "Mr Smith"
+  score = "8"
+  decision = "PENDING"
+
+  say "cREXX RexxScript demo"
+  say "Host before:"
+  say "  customer =" customer
+  say "  score    =" score
+  say "  decision =" decision
+  say
+
+  REXXSCRIPT decision_rule EXPOSE customer, score, decision OUTPUT out RESULT raw
+
+  say "Captured RexxScript output:"
+  do i = 1 to out[0]
+    say "  " || out[i]
+  end
+  say
+
+  say "Host after:"
+  say "  customer =" customer
+  say "  score    =" score
+  say "  decision =" decision
+  say "  status   =" raw[1]
+  return

@@ -1,0 +1,5 @@
+options levelb
+
+main: procedure
+  trace potato
+  return

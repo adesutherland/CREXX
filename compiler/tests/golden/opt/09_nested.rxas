@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : 09_nested.rexx
- * BUILT                  : 2026-03-18 11:58:55
+ * SOURCE                 : 09_nested.crexx
+ * BUILT                  : 2026-05-27 17:52:51
  */
 
-.srcfile="09_nested.rexx"
 .globals=0
 
 main() .locals=0
@@ -14,11 +12,11 @@ main() .locals=0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 6:20="say \"A>5 B<30\""
+   .srcstep 1 1 17 "09_nested.crexx" 6 20 34 "    if b < 30 then say \"A>5 B<30\""
    .meta "09_nested.main.a"="b" ".int" "10"
    .meta "09_nested.main.b"="b" ".int" "20"
    say "A>5 B<30"
-   .src 5:96=""
+   .srcstep 2 2 1 "09_nested.crexx" 5 16 16 "else say \"A<=5\""
    ret
    .meta "09_nested.main.a"
    .meta "09_nested.main.b"

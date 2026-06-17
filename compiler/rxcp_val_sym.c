@@ -206,7 +206,7 @@ walker_result structure_symbols_walker(walker_direction direction,
             normalize_symbol_label(node);
 
             /* Set the return value node value_type */
-            n = ast_chld(node, CLASS, VOID);
+            n = ast_type_child(node);
             if (n) {
                 size_t dims = 0;
                 int *db = 0, *de = 0;
@@ -1155,13 +1155,18 @@ walker_result exposed_symbols_walker(walker_direction direction,
                             }
                         }
                         else {
-                            /* Either we have already processed this symbol (duplicate) or it is not used in the proc at all */
+                            /* Either we have already processed this expose node
+                             * or the symbol is not used in the procedure body.
+                             */
                             ASTNode *instr = ast_chld(node->parent, INSTRUCTIONS, NOP);
-                            if (instr && symislnk(instr, symbol)) {
-                                /* It's linked to the procedure's instructions - therefore a duplicate */
-                                /* Add a warning - if it has not already errored/warned */
-                                if (!context->after_rewrite && ast_chld(n, ERROR, WARNING) == 0)
-                                    mknd_war(n, "DUPLICATE_SYMBOL");
+                            if (symislnk(n, symbol)) {
+                                /* An earlier symbol pass already seeded and linked
+                                 * this procedure-level EXPOSE item. Re-visiting it
+                                 * here is normal fixed-point validation work.
+                                 */
+                                if (instr && !symislnk(instr, symbol)) {
+                                    sym_adnd(symbol, instr, 0, 0);
+                                }
                             }
                             else {
                                 /* Not yet linked to this procedure's instructions - so link it now */
@@ -1360,10 +1365,11 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                     }
                     ast_svtp(defining_node_link->node, symbol);
                 } else {
-                    p_type = ast_chld(defining_node_link->node, CLASS, VOID);
+                    p_type = ast_type_child(defining_node_link->node);
                     symbol->type = node_to_type(context, p_type,
                                                 &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
                                                 &(symbol->value_class));
+                    rxcp_set_symbol_reference_type_from_node(symbol, p_type);
 
                     ast_svtp(defining_node_link->node, symbol);
                     ast_svtp(p_type, symbol);
@@ -1375,6 +1381,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                 symbol->type = node_to_type(context, defining_node_link->node->sibling,
                                             &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
                                             &(symbol->value_class));
+                rxcp_set_symbol_reference_type_from_node(symbol, defining_node_link->node->sibling);
                 ast_svtp(defining_node_link->node, symbol);
                 ast_svtn(defining_node_link->node->parent, defining_node_link->node);
                 break;
@@ -1384,6 +1391,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                 symbol->type = node_to_type(context, defining_node_link->node->sibling,
                                             &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
                                             &(symbol->value_class));
+                rxcp_set_symbol_reference_type_from_node(symbol, defining_node_link->node->sibling);
 
                 /* The dimensions can be defined on the left-hand side (lhs) or rhs but not both and not if the rhs is a class */
                 /* node_to_type(context, ) above has checked the rhs - so now we look at the lhs */
@@ -1424,10 +1432,11 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
                 }
                 ast_svtp(defining_node_link->node, symbol);
                 } else {
-                p_type = ast_chld(defining_node_link->node, CLASS, VOID);
+                p_type = ast_type_child(defining_node_link->node);
                 symbol->type = node_to_type(context, p_type,
                                             &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
                                             &(symbol->value_class));
+                rxcp_set_symbol_reference_type_from_node(symbol, p_type);
 
                 ast_svtp(defining_node_link->node, symbol);
                 ast_svtp(p_type, symbol);
@@ -1440,6 +1449,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
             symbol->type = node_to_type(context, defining_node_link->node->sibling,
                                         &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
                                         &(symbol->value_class));
+            rxcp_set_symbol_reference_type_from_node(symbol, defining_node_link->node->sibling);
             ast_svtp(defining_node_link->node, symbol);
             ast_svtn(defining_node_link->node->parent, defining_node_link->node);
             
@@ -1450,6 +1460,7 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
             symbol->type = node_to_type(context, defining_node_link->node->sibling,
                                         &(symbol->value_dims), &(symbol->dim_base), &(symbol->dim_elements),
                                         &(symbol->value_class));
+            rxcp_set_symbol_reference_type_from_node(symbol, defining_node_link->node->sibling);
 
             /* The dimensions can be defined on the left-hand side (lhs) or rhs but not both and not if the rhs is a class */
             /* node_to_type(context, ) above has checked the rhs - so now we look at the lhs */

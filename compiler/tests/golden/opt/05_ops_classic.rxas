@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : 05_ops_classic.rexx
- * BUILT                  : 2026-03-18 11:58:54
+ * SOURCE                 : 05_ops_classic.crexx
+ * BUILT                  : 2026-05-27 17:52:43
  */
 
-.srcfile="05_ops_classic.rexx"
 .globals=0
 
 main() .locals=0
@@ -14,11 +12,11 @@ main() .locals=0
    setnumfrm 1
    setnumcas 1
    setnumstd 2
-   .src 8:1="say res1 res2"
+   .srcstep 1 1 17 "05_ops_classic.crexx" 8 1 14 "say res1 res2"
    .meta "05_ops_classic.main.res1"="b" ".int" "9"
    .meta "05_ops_classic.main.res2"="b" ".int" "64"
    say "9 64"
-   .src 8:14=""
+   .srcstep 2 2 1 "05_ops_classic.crexx" 8 14 14 "say res1 res2"
    ret
    .meta "05_ops_classic.main.res1"
    .meta "05_ops_classic.main.res2"

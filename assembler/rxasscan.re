@@ -53,15 +53,15 @@ int rx_scan(Assembler_Context* s, char *buff_end) {
     any = [^] \ eof ;
 
     slit = ["] ( (any\["\n\r]) | ( [\\]["] ) )* ["];
-    clit = (['] (any\['\n\r]) [']) | ("\'\\" (any\[\n\r]) [']);
+    clit = (['] (any\['\n\r]) [']) | ("'\\" (any\[\n\r]) [']);
 
     // floating literals
     fsig = digit* "." digit+ | digit+ ".";
     fexp = [eE] [+-]? digit+;
     float = [-+]? (fsig fexp? | digit+ fexp);
 
-    // hex literals
-    hex =  ("0x" | "OX")[0-9a-fA-F][0-9a-fA-F]([0-9a-fA-F][0-9a-fA-F])*;
+    // binary literals
+    hex =  ("0x" | "0X")([0-9a-fA-F][0-9a-fA-F])*;
 
     integer = [-+]? digit+;
     rreg = 'r' digit+;
@@ -84,7 +84,7 @@ int rx_scan(Assembler_Context* s, char *buff_end) {
        return(NEWLINE);
     }
 
-    "*" [^\r\n]* { goto regular; }
+    "*" (any\[\r\n])* { goto regular; }
 
     float "d" {return(DECIMAL);}
     float {return(FLOAT);}
@@ -100,13 +100,12 @@ int rx_scan(Assembler_Context* s, char *buff_end) {
     id ":" {return(LABEL);}
     id {return(ID);}
     '=' {return(EQUAL);}
-    ':' {return(COLON);}
     ',' {return(COMMA);}
     '.globals' { return(KW_GLOBALS); }
     '.locals' { return(KW_LOCALS); }
     '.expose' { return(KW_EXPOSE); }
-    '.src' { return(KW_SRC); }
-    '.srcfile' { return(KW_SRCFILE); }
+    '.traceevent' { return(KW_TRACEEVENT); }
+    '.srcstep' { return(KW_SRCSTEP); }
     '.meta' { return(KW_META); }
     '.class' { return(KW_CLASS); }
     '.attr' { return(KW_ATTR); }

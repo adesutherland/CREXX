@@ -29,6 +29,15 @@ static void expect_true(int condition, const char *message) {
     failures = 1;
 }
 
+static void free_code_buffer_with_ep_rules(CodeBuffer *cb) {
+    if (!cb) return;
+    if (cb->ep_rules) {
+        cb_free_ep_rules(cb->ep_rules);
+        cb->ep_rules = NULL;
+    }
+    free_code_buffer(cb);
+}
+
 static int ast_name_equals(ASTNode *node, const char *name) {
     size_t length;
 
@@ -208,7 +217,7 @@ static void test_highlight_semantic_projection(void) {
     load = create_initial_load("stage5_semantics.rexx", test_source);
     expect_true(load != 0, "initial load should be created");
     if (!load) {
-        free_code_buffer(cb);
+        free_code_buffer_with_ep_rules(cb);
         return;
     }
 
@@ -251,7 +260,7 @@ static void test_highlight_semantic_projection(void) {
         }
     }
 
-    free_code_buffer(cb);
+    free_code_buffer_with_ep_rules(cb);
     rxcp_highlight_controller_reset_cache();
 }
 

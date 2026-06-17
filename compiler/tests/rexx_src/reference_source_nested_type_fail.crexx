@@ -1,0 +1,6 @@
+options levelb
+namespace reference_source_nested_type_fail
+
+main: procedure = .int
+  nested = reference reference .int
+  return 0

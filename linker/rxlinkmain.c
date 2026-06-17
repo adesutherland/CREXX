@@ -47,6 +47,8 @@ typedef struct link_module_info {
     string_list defined_interfaces;
     string_list implemented_interfaces;
     string_list referenced_interfaces;
+    string_list provided_methods;
+    string_list referenced_methods;
     string_list unresolved_imports;
     int has_main;
     int selected;
@@ -83,6 +85,8 @@ typedef struct rxlink_output_module {
     const_map_entry *maps;
     size_t map_count;
     size_t map_capacity;
+    size_t *map_hash_slots;
+    size_t map_hash_capacity;
 } rxlink_output_module;
 
 typedef struct rxlink_output_list {
@@ -95,6 +99,7 @@ typedef struct leaf_dedupe_entry {
     enum const_pool_type type;
     size_t size_in_pool;
     size_t output_offset;
+    size_t hash;
 } leaf_dedupe_entry;
 
 typedef struct rxlink_build_context {
@@ -102,6 +107,8 @@ typedef struct rxlink_build_context {
     leaf_dedupe_entry *leaf_entries;
     size_t leaf_count;
     size_t leaf_capacity;
+    size_t *leaf_hash_slots;
+    size_t leaf_hash_capacity;
     int strip_source_metadata;
     int strip_inline_metadata;
 } rxlink_build_context;
@@ -138,12 +145,17 @@ static int string_list_append(string_list *list, const char *value) {
     char *copy;
 
     copy = strdup(value);
-    if (!copy) return 0;
+    if (!copy) {
+        RX_REPORT_OOM("strdup rxlink string list entry", strlen(value) + 1, value);
+        return 0;
+    }
 
     if (list->count == list->capacity) {
         new_capacity = list->capacity ? list->capacity * 2 : 8;
         new_items = realloc(list->items, sizeof(char *) * new_capacity);
         if (!new_items) {
+            RX_REPORT_OOM("realloc rxlink string list",
+                          sizeof(char *) * new_capacity, value);
             free(copy);
             return 0;
         }
@@ -167,13 +179,38 @@ static int module_list_append(module_list *list, link_module_info *item) {
     if (list->count == list->capacity) {
         new_capacity = list->capacity ? list->capacity * 2 : 16;
         new_items = realloc(list->items, sizeof(link_module_info) * new_capacity);
-        if (!new_items) return 0;
+        if (!new_items) {
+            RX_REPORT_OOM("realloc rxlink module list",
+                          sizeof(link_module_info) * new_capacity, 0);
+            return 0;
+        }
         list->items = new_items;
         list->capacity = new_capacity;
     }
 
     list->items[list->count++] = *item;
     return 1;
+}
+
+static const char *module_string_constant(module_file *module, size_t offset) {
+    string_constant *value;
+
+    if (!module || offset >= module->header.constant_size) return 0;
+    value = (string_constant *)((unsigned char *)module->constant + offset);
+    if (value->base.type != STRING_CONST) return 0;
+    return value->string;
+}
+
+static int append_method_name_from_symbol(string_list *list, const char *symbol) {
+    const char *last_dot;
+    const char *method_name;
+
+    if (!list || !symbol) return 1;
+    last_dot = strrchr(symbol, '.');
+    if (!last_dot || !last_dot[1]) return 1;
+    method_name = last_dot + 1;
+    if (strcmp(method_name, "\xC2\xA7" "factory") == 0) return 1;
+    return string_list_append_unique(list, method_name);
 }
 
 static void module_list_free(module_list *list) {
@@ -189,6 +226,8 @@ static void module_list_free(module_list *list) {
         string_list_free(&list->items[i].defined_interfaces);
         string_list_free(&list->items[i].implemented_interfaces);
         string_list_free(&list->items[i].referenced_interfaces);
+        string_list_free(&list->items[i].provided_methods);
+        string_list_free(&list->items[i].referenced_methods);
         string_list_free(&list->items[i].unresolved_imports);
     }
     free(list->items);
@@ -204,7 +243,11 @@ static int output_list_append(rxlink_output_list *list, rxlink_output_module *it
     if (list->count == list->capacity) {
         new_capacity = list->capacity ? list->capacity * 2 : 8;
         new_items = realloc(list->items, sizeof(rxlink_output_module) * new_capacity);
-        if (!new_items) return 0;
+        if (!new_items) {
+            RX_REPORT_OOM("realloc rxlink output list",
+                          sizeof(rxlink_output_module) * new_capacity, 0);
+            return 0;
+        }
         list->items = new_items;
         list->capacity = new_capacity;
     }
@@ -220,6 +263,7 @@ static void output_list_free(rxlink_output_list *list) {
     for (i = 0; i < list->count; i++) {
         if (list->items[i].module) free_module(list->items[i].module);
         free(list->items[i].maps);
+        free(list->items[i].map_hash_slots);
     }
     free(list->items);
     list->items = 0;
@@ -232,6 +276,8 @@ static void build_context_init(rxlink_build_context *context) {
     context->leaf_entries = 0;
     context->leaf_count = 0;
     context->leaf_capacity = 0;
+    context->leaf_hash_slots = 0;
+    context->leaf_hash_capacity = 0;
     context->strip_source_metadata = 0;
     context->strip_inline_metadata = 1;
 }
@@ -239,9 +285,12 @@ static void build_context_init(rxlink_build_context *context) {
 static void build_context_free(rxlink_build_context *context) {
     rxbin_byte_buffer_free(&context->shared_pool);
     free(context->leaf_entries);
+    free(context->leaf_hash_slots);
     context->leaf_entries = 0;
     context->leaf_count = 0;
     context->leaf_capacity = 0;
+    context->leaf_hash_slots = 0;
+    context->leaf_hash_capacity = 0;
 }
 
 static int keyword_equals(const char *left, const char *right) {
@@ -303,7 +352,10 @@ static void free_link_config(link_config *config) {
 
 static int set_single_path(char **target, const char *value) {
     char *copy = strdup(value);
-    if (!copy) return 0;
+    if (!copy) {
+        RX_REPORT_OOM("strdup rxlink path", strlen(value) + 1, value);
+        return 0;
+    }
     if (*target) free(*target);
     *target = copy;
     return 1;
@@ -388,7 +440,7 @@ static int parse_control_file(link_config *config, const char *path) {
     return 1;
 
 oom:
-    fprintf(stderr, "PANIC: Out of memory while reading control file %s\n", path);
+    RX_REPORT_OOM("reading rxlink control file", RX_OOM_UNKNOWN_SIZE, path);
     fclose(fp);
     return 0;
 }
@@ -400,9 +452,10 @@ static int module_selector_matches(const link_module_info *module, const char *s
         size_t input_len = (size_t)(separator - selector);
         const char *member = separator + 2;
         const char *module_basename = filename(module->module->name);
+        size_t module_input_len = strlen(module->input_path);
 
-        if (module->input_path[input_len] != '\0') return 0;
-        if (strncmp(selector, module->input_path, input_len) != 0) return 0;
+        if (module_input_len != input_len) return 0;
+        if (memcmp(selector, module->input_path, input_len) != 0) return 0;
         if (!*member) return 0;
 
         return strcmp(member, module->module->name) == 0 ||
@@ -437,6 +490,7 @@ static int load_module_metadata(link_module_info *info) {
                 if (!string_list_append_unique(&info->imports, exposed->index)) return 0;
             } else {
                 if (!string_list_append_unique(&info->exports, exposed->index)) return 0;
+                if (!append_method_name_from_symbol(&info->provided_methods, exposed->index)) return 0;
             }
             ix = exposed->next;
         } else if (entry->type == EXPOSE_REG_CONST) {
@@ -450,6 +504,12 @@ static int load_module_metadata(link_module_info *info) {
     while (ix != -1) {
         meta_entry *entry = (meta_entry *)((unsigned char *)module->constant + (size_t)ix);
         switch (entry->base.type) {
+            case META_FUNC: {
+                meta_func_constant *func = (meta_func_constant *)entry;
+                const char *symbol_name = module_string_constant(module, func->symbol);
+                if (!append_method_name_from_symbol(&info->provided_methods, symbol_name)) return 0;
+                break;
+            }
             case META_INTERFACE: {
                 meta_interface_constant *iface = (meta_interface_constant *)entry;
                 string_constant *symbol = (string_constant *)((unsigned char *)module->constant + iface->symbol);
@@ -460,6 +520,16 @@ static int load_module_metadata(link_module_info *info) {
                 meta_implements_constant *impl = (meta_implements_constant *)entry;
                 string_constant *iface = (string_constant *)((unsigned char *)module->constant + impl->interface_symbol);
                 if (!string_list_append_unique(&info->implemented_interfaces, iface->string)) return 0;
+                break;
+            }
+            case META_MEMBER: {
+                meta_member_constant *member = (meta_member_constant *)entry;
+                const char *member_name = module_string_constant(module, member->member);
+                if (member_name &&
+                    strcmp(member_name, "*") != 0 &&
+                    !string_list_append_unique(&info->provided_methods, member_name)) {
+                    return 0;
+                }
                 break;
             }
             default:
@@ -497,12 +567,30 @@ static int load_module_metadata(link_module_info *info) {
                     if (!interface_length) continue;
 
                     interface_name = malloc(interface_length + 1);
-                    if (!interface_name) return 0;
+                    if (!interface_name) {
+                        RX_REPORT_OOM("malloc rxlink interface reference name",
+                                      interface_length + 1, info->input_path);
+                        return 0;
+                    }
                     memcpy(interface_name, selector->string, interface_length);
                     interface_name[interface_length] = '\0';
                     ok = string_list_append_unique(&info->referenced_interfaces, interface_name);
                     free(interface_name);
                     if (!ok) return 0;
+                }
+            }
+        } else if (opcode == OP_SRCMETHOD_REG_REG_STRING) {
+            for (operand_index = 0; operand_index < operand_count; operand_index++) {
+                if (types[operand_index] == OP_STRING) {
+                    size_t member_offset;
+                    const char *member_name;
+
+                    member_offset = ((bin_code *)module->instructions)[code_index + (size_t)operand_index + 1].index;
+                    member_name = module_string_constant(module, member_offset);
+                    if (member_name &&
+                        !string_list_append_unique(&info->referenced_methods, member_name)) {
+                        return 0;
+                    }
                 }
             }
         }
@@ -539,9 +627,17 @@ static int load_input_modules(module_list *modules, const link_config *config) {
                 string_list_init(&info.defined_interfaces);
                 string_list_init(&info.implemented_interfaces);
                 string_list_init(&info.referenced_interfaces);
+                string_list_init(&info.provided_methods);
+                string_list_init(&info.referenced_methods);
                 string_list_init(&info.unresolved_imports);
                 info.module = module;
                 info.input_path = strdup(input_path);
+                if (!info.input_path) {
+                    RX_REPORT_OOM("strdup rxlink input path", strlen(input_path) + 1, input_path);
+                    free_module(module);
+                    fclose(fp);
+                    return 0;
+                }
                 info.input_index = input_index;
                 info.member_index = member_index++;
                 info.selector_name = strip_rightmost_extension_if(filename(module->name), "rxas");
@@ -555,6 +651,8 @@ static int load_input_modules(module_list *modules, const link_config *config) {
                     string_list_free(&info.defined_interfaces);
                     string_list_free(&info.implemented_interfaces);
                     string_list_free(&info.referenced_interfaces);
+                    string_list_free(&info.provided_methods);
+                    string_list_free(&info.referenced_methods);
                     string_list_free(&info.unresolved_imports);
                     fclose(fp);
                     return 0;
@@ -579,7 +677,11 @@ static int add_to_queue(size_t **queue_ref, size_t *queue_count, size_t *queue_c
     if (*queue_count == *queue_capacity) {
         new_capacity = *queue_capacity ? *queue_capacity * 2 : 16;
         new_queue = realloc(*queue_ref, sizeof(size_t) * new_capacity);
-        if (!new_queue) return 0;
+        if (!new_queue) {
+            RX_REPORT_OOM("realloc rxlink selection queue",
+                          sizeof(size_t) * new_capacity, 0);
+            return 0;
+        }
         *queue_ref = new_queue;
         *queue_capacity = new_capacity;
     }
@@ -723,6 +825,7 @@ static int select_modules(module_list *modules, const link_config *config) {
         link_module_info *module = &modules->items[queue[queue_pos++]];
         size_t import_index;
         size_t iface_index;
+        size_t method_index;
 
         for (import_index = 0; import_index < module->imports.count; import_index++) {
             size_t provider_index = 0;
@@ -797,6 +900,20 @@ static int select_modules(module_list *modules, const link_config *config) {
                 }
             }
         }
+
+        for (method_index = 0; method_index < module->referenced_methods.count; method_index++) {
+            size_t candidate;
+            for (candidate = 0; candidate < modules->count; candidate++) {
+                if (modules->items[candidate].omitted) continue;
+                if (string_list_contains(&modules->items[candidate].provided_methods,
+                                         module->referenced_methods.items[method_index])) {
+                    if (!select_module_by_index(modules, &queue, &queue_count, &queue_capacity, candidate)) {
+                        free(queue);
+                        return 0;
+                    }
+                }
+            }
+        }
     }
 
     for (i = 0; i < modules->count; i++) {
@@ -826,7 +943,10 @@ static int reserve_pool_entry(rxlink_build_context *context, size_t size_in_pool
                               size_t *offset_out) {
     size_t offset = context->shared_pool.size;
 
-    if (!rxbin_byte_buffer_reserve(&context->shared_pool, size_in_pool)) return 0;
+    if (!rxbin_byte_buffer_reserve(&context->shared_pool, size_in_pool)) {
+        RX_REPORT_OOM("reserve rxlink shared constant pool", size_in_pool, 0);
+        return 0;
+    }
     memset(context->shared_pool.data + context->shared_pool.size, 0, size_in_pool);
     context->shared_pool.size += size_in_pool;
     ((chameleon_constant *)(context->shared_pool.data + offset))->size_in_pool = size_in_pool;
@@ -835,8 +955,106 @@ static int reserve_pool_entry(rxlink_build_context *context, size_t size_in_pool
     return 1;
 }
 
+static size_t rxlink_next_hash_capacity(size_t needed) {
+    size_t capacity = 16;
+    size_t target;
+
+    if (needed > SIZE_MAX / 2) return 0;
+    target = needed * 2;
+    while (capacity < target) {
+        if (capacity > SIZE_MAX / 2) return 0;
+        capacity *= 2;
+    }
+    return capacity;
+}
+
+static size_t rxlink_hash_size_value(size_t value) {
+    value ^= value >> 16;
+    value *= (size_t)0x7feb352dU;
+    value ^= value >> 15;
+    value *= (size_t)0x846ca68bU;
+    value ^= value >> 16;
+    return value;
+}
+
+static size_t rxlink_hash_bytes(const void *data, size_t size) {
+    const unsigned char *bytes = (const unsigned char *)data;
+    size_t hash;
+    size_t i;
+
+#if SIZE_MAX > UINT32_MAX
+    hash = (size_t)1469598103934665603ULL;
+    for (i = 0; i < size; i++) {
+        hash ^= (size_t)bytes[i];
+        hash *= (size_t)1099511628211ULL;
+    }
+#else
+    hash = (size_t)2166136261UL;
+    for (i = 0; i < size; i++) {
+        hash ^= (size_t)bytes[i];
+        hash *= (size_t)16777619UL;
+    }
+#endif
+
+    return hash ? hash : 1;
+}
+
+static void insert_const_map_hash_slot(rxlink_output_module *module, size_t map_index) {
+    size_t mask = module->map_hash_capacity - 1;
+    size_t slot = rxlink_hash_size_value(module->maps[map_index].old_offset >> 3) & mask;
+
+    while (module->map_hash_slots[slot]) {
+        slot = (slot + 1) & mask;
+    }
+    module->map_hash_slots[slot] = map_index + 1;
+}
+
+static int rebuild_const_map_hash(rxlink_output_module *module, size_t new_capacity) {
+    size_t *new_slots;
+    size_t i;
+
+    new_slots = calloc(new_capacity, sizeof(size_t));
+    if (!new_slots) {
+        RX_REPORT_OOM("calloc rxlink constant map hash",
+                      sizeof(size_t) * new_capacity, 0);
+        return 0;
+    }
+
+    free(module->map_hash_slots);
+    module->map_hash_slots = new_slots;
+    module->map_hash_capacity = new_capacity;
+    for (i = 0; i < module->map_count; i++) {
+        insert_const_map_hash_slot(module, i);
+    }
+    return 1;
+}
+
+static int ensure_const_map_hash_capacity(rxlink_output_module *module, size_t needed) {
+    size_t new_capacity;
+
+    if (module->map_hash_capacity && needed <= module->map_hash_capacity / 2) return 1;
+    new_capacity = rxlink_next_hash_capacity(needed);
+    if (!new_capacity) {
+        RX_REPORT_OOM("grow rxlink constant map hash", RX_OOM_UNKNOWN_SIZE, 0);
+        return 0;
+    }
+    return rebuild_const_map_hash(module, new_capacity);
+}
+
 static const_map_entry *find_const_map(rxlink_output_module *module, size_t old_offset) {
     size_t i;
+
+    if (module->map_hash_slots && module->map_hash_capacity) {
+        size_t mask = module->map_hash_capacity - 1;
+        size_t slot = rxlink_hash_size_value(old_offset >> 3) & mask;
+        while (module->map_hash_slots[slot]) {
+            const_map_entry *entry = &module->maps[module->map_hash_slots[slot] - 1];
+            if (entry->old_offset == old_offset) return entry;
+            slot = (slot + 1) & mask;
+        }
+        return 0;
+    }
+
     for (i = 0; i < module->map_count; i++) {
         if (module->maps[i].old_offset == old_offset) return &module->maps[i];
     }
@@ -852,31 +1070,108 @@ static int add_const_map(rxlink_output_module *module, size_t old_offset, size_t
     if (module->map_count == module->map_capacity) {
         new_capacity = module->map_capacity ? module->map_capacity * 2 : 32;
         new_entries = realloc(module->maps, sizeof(const_map_entry) * new_capacity);
-        if (!new_entries) return 0;
+        if (!new_entries) {
+            RX_REPORT_OOM("realloc rxlink constant map",
+                          sizeof(const_map_entry) * new_capacity, 0);
+            return 0;
+        }
         module->maps = new_entries;
         module->map_capacity = new_capacity;
     }
 
+    if (!ensure_const_map_hash_capacity(module, module->map_count + 1)) return 0;
     module->maps[module->map_count].old_offset = old_offset;
     module->maps[module->map_count].new_offset = new_offset;
+    insert_const_map_hash_slot(module, module->map_count);
     module->map_count++;
     return 1;
 }
 
-static size_t dedupe_leaf_constant(rxlink_build_context *context, const chameleon_constant *entry, int *ok) {
+static void insert_leaf_hash_slot(rxlink_build_context *context, size_t leaf_index) {
+    size_t mask = context->leaf_hash_capacity - 1;
+    size_t slot = context->leaf_entries[leaf_index].hash & mask;
+
+    while (context->leaf_hash_slots[slot]) {
+        slot = (slot + 1) & mask;
+    }
+    context->leaf_hash_slots[slot] = leaf_index + 1;
+}
+
+static int rebuild_leaf_hash(rxlink_build_context *context, size_t new_capacity) {
+    size_t *new_slots;
     size_t i;
-    size_t offset;
-    leaf_dedupe_entry *new_entries;
+
+    new_slots = calloc(new_capacity, sizeof(size_t));
+    if (!new_slots) {
+        RX_REPORT_OOM("calloc rxlink leaf dedupe hash",
+                      sizeof(size_t) * new_capacity, 0);
+        return 0;
+    }
+
+    free(context->leaf_hash_slots);
+    context->leaf_hash_slots = new_slots;
+    context->leaf_hash_capacity = new_capacity;
+    for (i = 0; i < context->leaf_count; i++) {
+        insert_leaf_hash_slot(context, i);
+    }
+    return 1;
+}
+
+static int ensure_leaf_hash_capacity(rxlink_build_context *context, size_t needed) {
     size_t new_capacity;
+
+    if (context->leaf_hash_capacity && needed <= context->leaf_hash_capacity / 2) return 1;
+    new_capacity = rxlink_next_hash_capacity(needed);
+    if (!new_capacity) {
+        RX_REPORT_OOM("grow rxlink leaf dedupe hash", RX_OOM_UNKNOWN_SIZE, 0);
+        return 0;
+    }
+    return rebuild_leaf_hash(context, new_capacity);
+}
+
+static leaf_dedupe_entry *find_leaf_dedupe(rxlink_build_context *context,
+                                           const chameleon_constant *entry,
+                                           size_t hash) {
+    size_t i;
+
+    if (context->leaf_hash_slots && context->leaf_hash_capacity) {
+        size_t mask = context->leaf_hash_capacity - 1;
+        size_t slot = hash & mask;
+        while (context->leaf_hash_slots[slot]) {
+            leaf_dedupe_entry *candidate = &context->leaf_entries[context->leaf_hash_slots[slot] - 1];
+            if (candidate->hash == hash &&
+                candidate->type == entry->type &&
+                candidate->size_in_pool == entry->size_in_pool &&
+                memcmp(context->shared_pool.data + candidate->output_offset,
+                       entry, entry->size_in_pool) == 0) {
+                return candidate;
+            }
+            slot = (slot + 1) & mask;
+        }
+        return 0;
+    }
 
     for (i = 0; i < context->leaf_count; i++) {
         if (context->leaf_entries[i].type == entry->type &&
             context->leaf_entries[i].size_in_pool == entry->size_in_pool &&
             memcmp(context->shared_pool.data + context->leaf_entries[i].output_offset,
                    entry, entry->size_in_pool) == 0) {
-            return context->leaf_entries[i].output_offset;
+            return &context->leaf_entries[i];
         }
     }
+    return 0;
+}
+
+static size_t dedupe_leaf_constant(rxlink_build_context *context, const chameleon_constant *entry, int *ok) {
+    size_t offset;
+    size_t hash;
+    leaf_dedupe_entry *existing;
+    leaf_dedupe_entry *new_entries;
+    size_t new_capacity;
+
+    hash = rxlink_hash_bytes(entry, entry->size_in_pool);
+    existing = find_leaf_dedupe(context, entry, hash);
+    if (existing) return existing->output_offset;
 
     if (!reserve_pool_entry(context, entry->size_in_pool, entry->type, &offset)) {
         *ok = 0;
@@ -889,6 +1184,8 @@ static size_t dedupe_leaf_constant(rxlink_build_context *context, const chameleo
         new_capacity = context->leaf_capacity ? context->leaf_capacity * 2 : 32;
         new_entries = realloc(context->leaf_entries, sizeof(leaf_dedupe_entry) * new_capacity);
         if (!new_entries) {
+            RX_REPORT_OOM("realloc rxlink leaf dedupe table",
+                          sizeof(leaf_dedupe_entry) * new_capacity, 0);
             *ok = 0;
             return 0;
         }
@@ -896,9 +1193,15 @@ static size_t dedupe_leaf_constant(rxlink_build_context *context, const chameleo
         context->leaf_capacity = new_capacity;
     }
 
+    if (!ensure_leaf_hash_capacity(context, context->leaf_count + 1)) {
+        *ok = 0;
+        return 0;
+    }
     context->leaf_entries[context->leaf_count].type = entry->type;
     context->leaf_entries[context->leaf_count].size_in_pool = entry->size_in_pool;
     context->leaf_entries[context->leaf_count].output_offset = offset;
+    context->leaf_entries[context->leaf_count].hash = hash;
+    insert_leaf_hash_slot(context, context->leaf_count);
     context->leaf_count++;
     return offset;
 }
@@ -908,8 +1211,8 @@ static size_t link_constant_offset(rxlink_build_context *context, rxlink_output_
 
 static int is_meta_constant_type(enum const_pool_type type) {
     switch (type) {
-        case META_SRC:
-        case META_FILE:
+        case META_SOURCE_STEP:
+        case META_TRACE_EVENT:
         case META_FUNC:
         case META_REG:
         case META_CONST:
@@ -927,7 +1230,8 @@ static int is_meta_constant_type(enum const_pool_type type) {
 }
 
 static int should_strip_meta_constant(const rxlink_build_context *context, enum const_pool_type type) {
-    if (context->strip_source_metadata && (type == META_SRC || type == META_FILE)) return 1;
+    if (context->strip_source_metadata && type == META_SOURCE_STEP) return 1;
+    if (context->strip_source_metadata && type == META_TRACE_EVENT) return 1;
     if (context->strip_inline_metadata && type == META_INLINE) return 1;
     return 0;
 }
@@ -936,22 +1240,32 @@ static int rewrite_meta_constant(rxlink_build_context *context, rxlink_output_mo
                                  module_file *input_module, chameleon_constant *entry,
                                  size_t new_offset, int prev_offset, int next_offset, int *ok) {
     switch (entry->type) {
-        case META_SRC: {
-            meta_src_constant *source = (meta_src_constant *)entry;
-            size_t source_offset = link_constant_offset(context, output_module, input_module, source->source, ok);
-            meta_src_constant *meta = (meta_src_constant *)(context->shared_pool.data + new_offset);
-            meta->base.prev = prev_offset;
-            meta->base.next = next_offset;
-            meta->source = source_offset;
-            return *ok;
-        }
-        case META_FILE: {
-            meta_file_constant *source = (meta_file_constant *)entry;
+        case META_SOURCE_STEP: {
+            meta_source_step_constant *source = (meta_source_step_constant *)entry;
             size_t file_offset = link_constant_offset(context, output_module, input_module, source->file, ok);
-            meta_file_constant *meta = (meta_file_constant *)(context->shared_pool.data + new_offset);
+            size_t source_line_offset = link_constant_offset(context, output_module, input_module, source->source_line, ok);
+            meta_source_step_constant *meta = (meta_source_step_constant *)(context->shared_pool.data + new_offset);
             meta->base.prev = prev_offset;
             meta->base.next = next_offset;
             meta->file = file_offset;
+            meta->source_line = source_line_offset;
+            return *ok;
+        }
+        case META_TRACE_EVENT: {
+            meta_trace_event_constant *source = (meta_trace_event_constant *)entry;
+            meta_trace_event_constant *meta = (meta_trace_event_constant *)(context->shared_pool.data + new_offset);
+            meta->base.prev = prev_offset;
+            meta->base.next = next_offset;
+            if (source->value_source == RXBIN_TRACE_VALUE_CONSTANT &&
+                source->value_ref != RXBIN_TRACE_REF_NONE) {
+                meta->value_ref = link_constant_offset(context, output_module, input_module, source->value_ref, ok);
+            }
+            if (source->symbol != RXBIN_TRACE_REF_NONE) {
+                meta->symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
+            }
+            if (source->resolved_name != RXBIN_TRACE_REF_NONE) {
+                meta->resolved_name = link_constant_offset(context, output_module, input_module, source->resolved_name, ok);
+            }
             return *ok;
         }
         case META_FUNC: {
@@ -1229,8 +1543,8 @@ static size_t link_constant_offset(rxlink_build_context *context, rxlink_output_
             proc->procedure = procedure;
             break;
         }
-        case META_SRC:
-        case META_FILE:
+        case META_SOURCE_STEP:
+        case META_TRACE_EVENT:
         case META_FUNC:
         case META_REG:
         case META_CONST:
@@ -1265,13 +1579,28 @@ static int rewrite_module_code(rxlink_build_context *context, rxlink_output_modu
     size_t index;
 
     output_module->module = malloc(sizeof(module_file));
-    if (!output_module->module) return 0;
+    if (!output_module->module) {
+        RX_REPORT_OOM("malloc rxlink output module", sizeof(module_file),
+                      input_info->input_path);
+        return 0;
+    }
     init_module(output_module->module);
     output_module->module->fromfile = 1;
     output_module->module->header.record_type = RXBIN_RECORD_MODULE_SHARED;
     output_module->module->name = strdup(input->name ? input->name : "");
     output_module->module->description = strdup(input->description ? input->description : "");
-    if (!output_module->module->name || !output_module->module->description) return 0;
+    if (!output_module->module->name) {
+        RX_REPORT_OOM("strdup rxlink output module name",
+                      strlen(input->name ? input->name : "") + 1,
+                      input_info->input_path);
+        return 0;
+    }
+    if (!output_module->module->description) {
+        RX_REPORT_OOM("strdup rxlink output module description",
+                      strlen(input->description ? input->description : "") + 1,
+                      input_info->input_path);
+        return 0;
+    }
     output_module->module->header.name_size = strlen(output_module->module->name) + 1;
     output_module->module->header.description_size = strlen(output_module->module->description) + 1;
     output_module->module->header.instruction_size = input->header.instruction_size;
@@ -1287,7 +1616,12 @@ static int rewrite_module_code(rxlink_build_context *context, rxlink_output_modu
 
     if (input->header.instruction_size) {
         output_module->module->instructions = malloc(sizeof(bin_code) * input->header.instruction_size);
-        if (!output_module->module->instructions) return 0;
+        if (!output_module->module->instructions) {
+            RX_REPORT_OOM("malloc rxlink output instruction copy",
+                          sizeof(bin_code) * input->header.instruction_size,
+                          input_info->input_path);
+            return 0;
+        }
         memcpy(output_module->module->instructions, input->instructions, sizeof(bin_code) * input->header.instruction_size);
     }
 
@@ -1345,6 +1679,7 @@ static int build_linked_modules(rxlink_build_context *context, module_list *modu
             !output_list_append(outputs, &output_module)) {
             if (output_module.module) free_module(output_module.module);
             free(output_module.maps);
+            free(output_module.map_hash_slots);
             return 0;
         }
     }
@@ -1386,9 +1721,7 @@ static int write_linked_image(const link_config *config, rxlink_build_context *c
     FILE *fp;
     module_file shared_pool_record;
     size_t i;
-    const char *type_bin = has_any_extension(config->output_path) ? "" : "rxbin";
-
-    fp = openfile(config->output_path, (char *)type_bin, config->location, "wb");
+    fp = openfile(config->output_path, "rxbin", config->location, "wb");
     if (!fp) {
         fprintf(stderr, "ERROR: opening output %s\n", config->output_path);
         return 0;
@@ -1429,12 +1762,12 @@ static void print_help(void) {
     printf("cREXX Linker\n");
     printf("Usage: rxlink [options] input_file [input_file ...]\n");
     printf("Options:\n");
-    printf("  -o output_file  Linked output file\n");
+    printf("  -o output_stem  Linked output stem or .rxbin file\n");
     printf("  -c control_file Control file with INPUT/ROOT/INCLUDE/OMIT/OUTPUT/MAP/STRIP\n");
     printf("  -r root_member  Root module selector (may be repeated)\n");
     printf("  -m map_file     Write a simple link map\n");
     printf("  -l location     Working location for input/output resolution\n");
-    printf("  -s              Strip source/file metadata from linked output\n");
+    printf("  -s              Strip source/TRACE debug metadata from linked output\n");
     printf("  -i              Preserve inline-body metadata in linked output\n");
     printf("  -d              Debug mode\n");
     printf("  -h              Help\n");

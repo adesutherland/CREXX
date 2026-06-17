@@ -1,45 +1,81 @@
 /*
- * cREXX COMPILER VERSION : crexx-DEV2507
- * SOURCE                 : utf1.rexx
- * BUILT                  : 2024-06-30 18:27:51
+ * SOURCE                 : utf1.crexx
+ * BUILT                  : 2026-05-27 18:08:11
  */
 
-.srcfile="utf1.rexx"
 .globals=0
 
-main() .locals=3
+main() .locals=6
    .meta "utf1.main"="b" ".void" main() ""
-   .src 5:1="SAY 多变的"
-   .meta "utf1.main.多变的"="b" ".string" "\xe5\xa4\x9a\xe5\x8f\x98\xe7\x9a\x84 is \'variable\' in Chinese (according to Google!)"
-   say "\xe5\xa4\x9a\xe5\x8f\x98\xe7\x9a\x84 is \'variable\' in Chinese (according to Google!)"
-   .src 7:1="équipe = \"René Vincent Jansen\""
-   .meta "utf1.main.équipe"="b" ".string" r1
-   load r1,"Ren\xc3\xa9 Vincent Jansen"
-   .src 8:1="équipe = équipe \", Mike Großmann\""
-   sconcat r1,r1,", Mike Gro\xc3\x9fmann"
-   .src 9:1="équipe = équipe \" and all the rest (this is just a UTF-8 test! 😊)\""
-   sconcat r1,r1," and all the rest (this is just a UTF-8 test! \xf0\x9f\x98\x8a)"
-   .src 11:1="Say \"cREXX Équipe:\" ÉQUIPE"
-   sconcat r2,"cREXX \xc3\x89quipe:",r1
-   say r2
-   .src 14:1="Großmann = 1"
-   .meta "utf1.main.großmann"="b" ".int" r2
-   load r2,1
-   .src 15:1="GROßMANN = 2"
-   load r2,2
-   .src 19:1="say Großmann"
-   .meta "utf1.main.grossmann"="b" ".int" "4"
-   .meta "utf1.main.groẞmann"="b" ".int" "3"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 1 1 17 "utf1.crexx" 4 1 72 "多变的 = \"多变的 is 'variable' in Chinese (according to Google!)\""
+   .meta "utf1.main.多变的"="b" ".string" r4
+   load r4,"\xe5\xa4\x9a\xe5\x8f\x98\xe7\x9a\x84 is \'variable\' in Chinese (according to Google!)"
+   .traceevent "L" 4 "R" "S" "r" 4 1 1 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 4 1 1 0 "多变的" ""
+   .srcstep 2 2 17 "utf1.crexx" 5 1 14 "SAY 多变的"
+   .traceevent "V" 6 "R" "S" "r" 4 2 2 0 "多变的" ""
+   say r4
+   .srcstep 3 3 17 "utf1.crexx" 7 1 33 "équipe = \"René Vincent Jansen\""
+   .meta "utf1.main.équipe"="b" ".string" r3
+   load r3,"Ren\xc3\xa9 Vincent Jansen"
+   .traceevent "L" 4 "R" "S" "r" 3 3 3 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 3 3 0 "équipe" ""
+   .srcstep 4 4 17 "utf1.crexx" 8 1 37 "équipe = équipe \", Mike Großmann\""
+   .traceevent "V" 6 "R" "S" "r" 3 4 4 0 "équipe" ""
+   sconcat r3,r3,", Mike Gro\xc3\x9fmann"
+   .traceevent "O" 4 "R" "S" "r" 3 4 4 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 4 4 0 "équipe" ""
+   .srcstep 5 5 17 "utf1.crexx" 9 1 72 "équipe = équipe \" and all the rest (this is just a UTF-8 test! 😊)\""
+   .traceevent "V" 6 "R" "S" "r" 3 5 5 0 "équipe" ""
+   sconcat r3,r3," and all the rest (this is just a UTF-8 test! \xf0\x9f\x98\x8a)"
+   .traceevent "O" 4 "R" "S" "r" 3 5 5 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 5 5 0 "équipe" ""
+   .srcstep 6 6 17 "utf1.crexx" 11 1 29 "Say \"cREXX Équipe:\" ÉQUIPE"
+   .traceevent "V" 6 "R" "S" "r" 3 6 6 0 "équipe" ""
+   sconcat r5,"cREXX \xc3\x89quipe:",r3
+   .traceevent "O" 4 "R" "S" "r" 5 6 6 0 "" ""
+   say r5
+   .srcstep 7 7 17 "utf1.crexx" 14 1 14 "Großmann = 1"
+   .meta "utf1.main.großmann"="b" ".int" r1
+   load r1,1
+   .traceevent "L" 4 "R" "I" "r" 1 7 7 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 7 7 0 "großmann" ""
+   .srcstep 8 8 17 "utf1.crexx" 15 1 14 "GROßMANN = 2"
+   load r1,2
+   .traceevent "L" 4 "R" "I" "r" 1 8 8 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 8 8 0 "großmann" ""
+   .srcstep 9 9 17 "utf1.crexx" 16 1 15 "GROẞMANN = 3 /* The new capital ẞ - TODO fix utp.h */"
+   .meta "utf1.main.groẞmann"="b" ".int" r2
+   load r2,3
+   .traceevent "L" 4 "R" "I" "r" 2 9 9 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 9 9 0 "groẞmann" ""
+   .srcstep 10 10 17 "utf1.crexx" 17 1 14 "GROSSMANN = 4"
+   .meta "utf1.main.grossmann"="b" ".int" r0
+   load r0,4
+   .traceevent "L" 4 "R" "I" "r" 0 10 10 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 10 10 0 "grossmann" ""
+   .srcstep 11 11 17 "utf1.crexx" 19 1 14 "say Großmann"
+   itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 11 11 0 "großmann" ""
+   say r1
+   .srcstep 12 12 17 "utf1.crexx" 20 1 14 "say GROßMANN"
+   itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 12 12 0 "großmann" ""
+   say r1
+   .srcstep 13 13 17 "utf1.crexx" 21 1 15 "say GROẞMANN"
    itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 13 13 0 "groẞmann" ""
    say r2
-   .src 20:1="say GROßMANN"
-   itos r2
-   say r2
-   .src 21:1="say GROẞMANN"
-   say "3"
-   .src 22:1="say GROSSMANN"
-   say "4"
-   .src 22:14=""
+   .srcstep 14 14 17 "utf1.crexx" 22 1 14 "say GROSSMANN"
+   itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 14 14 0 "grossmann" ""
+   say r0
+   .srcstep 15 15 1 "utf1.crexx" 22 14 14 "say GROSSMANN"
    ret
    .meta "utf1.main.grossmann"
    .meta "utf1.main.großmann"

@@ -71,9 +71,25 @@ int aTestBeyondLimits(char* input) {
     return errors;
 }
 
+static int aTestFromToIntSamples(const int64_t *samples, size_t sample_count) {
+    char input[32];
+    int errors = 0;
+    size_t i;
+
+    for (i = 0; i < sample_count; i++) {
+        int written = snprintf(input, sizeof(input), "%lld", (long long)samples[i]);
+        if (written < 0 || (size_t)written >= sizeof(input)) {
+            printf("Error - could not format integer sample %lld\n", (long long)samples[i]);
+            errors++;
+            continue;
+        }
+        errors += aTestFromToInt(input, samples[i]);
+    }
+
+    return errors;
+}
+
 static int test_int_tofrom_conversions() {
-    char* input;
-    int64_t int_input;
     int errors = 0;
 
     printf("\nTesting integer conversions\n");
@@ -153,30 +169,22 @@ static int test_int_tofrom_conversions() {
     /* All 9's: -999999999999999999 */
     errors += aTestFromToInt("-999999999999999999", -999999999999999999);
 
-    /* Loop and Generate a few random 19-digit numbers and test both positive and negative forms */
-    input = malloc(40);
-    int i;
-    for (i = 0; i < 10; i++) {
-        int_input = rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-
-        sprintf(input, "%lld", (long long)int_input);
-        errors += aTestFromToInt(input, int_input);
-        sprintf(input, "%lld", (long long)(-int_input));
-        errors += aTestFromToInt(input, -int_input);
+    /* Deterministic representative values replace undefined signed-overflow random generation. */
+    {
+        static const int64_t samples[] = {
+            1234567890123456789LL, -1234567890123456789LL,
+            3141592653589793238LL, -3141592653589793238LL,
+            2718281828459045235LL, -2718281828459045235LL,
+            9007199254740991999LL, -9007199254740991999LL,
+            1123581321345589144LL, -1123581321345589144LL,
+            7071067811865475244LL, -7071067811865475244LL,
+            5555555555555555555LL, -5555555555555555555LL,
+            1000000000000000001LL, -1000000000000000001LL,
+            8080174247945128755LL, -8080174247945128755LL,
+            9223372036854775804LL, -9223372036854775804LL
+        };
+        errors += aTestFromToIntSamples(samples, sizeof(samples) / sizeof(samples[0]));
     }
-    free(input);
 
     return errors;
 } // test_int_conversion

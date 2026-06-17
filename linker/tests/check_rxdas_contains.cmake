@@ -32,10 +32,11 @@ if(_index_1 EQUAL -1 OR _index_2 EQUAL -1)
             "Expected 2: ${EXPECT_TEXT_2}")
 endif()
 
-foreach(_absent_var IN ITEMS EXPECT_ABSENT_1 EXPECT_ABSENT_2)
+foreach(_absent_index RANGE 1 8)
+    set(_absent_var "EXPECT_ABSENT_${_absent_index}")
     if(DEFINED ${_absent_var} AND NOT "${${_absent_var}}" STREQUAL "")
-        string(FIND "${_text}" "${${_absent_var}}" _absent_index)
-        if(NOT _absent_index EQUAL -1)
+        string(FIND "${_text}" "${${_absent_var}}" _found_index)
+        if(NOT _found_index EQUAL -1)
             message(FATAL_ERROR
                     "Unexpected text present in ${OUTPUT_RXAS}\n"
                     "Unexpected: ${${_absent_var}}")

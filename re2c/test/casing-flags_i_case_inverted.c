@@ -6,19 +6,19 @@
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'A':
-	case 'a':	goto yy3;
-	case 'b':	goto yy5;
-	default:	goto yy2;
+		case 'A':
+		case 'a': goto yy2;
+		case 'b': goto yy3;
+		default: goto yy1;
 	}
+yy1:
 yy2:
-yy3:
 	++YYCURSOR;
 	{return 'a';}
-yy5:
+yy3:
 	++YYCURSOR;
 	{return 'b';}
 }
 
 }
-casing-flags_i_case_inverted.re:5:2: warning: control flow is undefined for strings that match '[\x0-\x40\x42-\x60\x63-\xFF]', use default rule '*' [-Wundefined-control-flow]
+casing-flags_i_case_inverted.re:2:0: warning: control flow is undefined for strings that match '[\x0-\x40\x42-\x60\x63-\xFF]', use default rule '*' [-Wundefined-control-flow]

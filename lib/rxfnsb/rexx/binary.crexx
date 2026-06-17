@@ -1,0 +1,182 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb numeric_classic
+
+namespace rxfnsb expose binlength binbyte binsetbyte binsubstr binconcat binoverlay bininsert bindelstr binpos bincompare bin2x x2bin
+
+binlength: procedure = .int
+  arg data = .binary
+  len = 0
+  assembler blen len,data
+  return len
+
+binbyte: procedure = .int
+  arg data = .binary, position = .int
+  offset = position - 1
+  byte = 0
+  assembler getbyte byte,data,offset
+  return byte
+
+binsetbyte: procedure = .binary
+  arg data = .binary, position = .int, byte = .int
+  offset = position - 1
+  result = .binary
+  result = data
+  assembler setbyte result,offset,byte
+  return result
+
+binsubstr: procedure = .binary
+  arg data = .binary, start = .int, count = -1
+  result = .binary
+  total = 0
+  offset = start - 1
+  assembler blen total,data
+  if start < 1 then offset = 0
+  if count < 0 then count = total - offset
+  if count <= 0 then return result
+  assembler setbinpos data,offset
+  assembler bslice result,data,count
+  return result
+
+binconcat: procedure = .binary
+  arg left = .binary, right = .binary
+  result = .binary
+  assembler bconcat result,left,right
+  return result
+
+binoverlay: procedure = .binary
+  arg new = .binary, target = .binary, start = .int
+  result = .binary
+  offset = start - 1
+  result = target
+  assembler bupdate result,offset,new
+  return result
+
+bininsert: procedure = .binary
+  arg new = .binary, target = .binary, before = .int
+  total = binlength(target)
+  if before <= 1 then return new || target
+  if before > total then return target || new
+  prefix = binsubstr(target,1,before - 1)
+  suffix = binsubstr(target,before)
+  return prefix || new || suffix
+
+bindelstr: procedure = .binary
+  arg target = .binary, start = .int, count = 0
+  total = binlength(target)
+  empty = .binary
+  if start < 1 then start = 1
+  if start > total then return target
+  prefix = binsubstr(target,1,start - 1)
+  if count <= 0 then return prefix
+  suffix = binsubstr(target,start + count)
+  return prefix || suffix
+
+binpos: procedure = .int
+  arg needle = .binary, haystack = .binary, start = 1
+  needle_len = binlength(needle)
+  haystack_len = binlength(haystack)
+  if needle_len = 0 then return 0
+  if haystack_len = 0 then return 0
+  if start < 1 then start = 1
+  last = haystack_len - needle_len + 1
+  if start > last then return 0
+  do i = start to last
+    matched = 1
+    do j = 1 to needle_len
+      if binbyte(needle,j) <> binbyte(haystack,i + j - 1) then do
+        matched = 0
+        leave
+      end
+    end
+    if matched then return i
+  end
+  return 0
+
+bincompare: procedure = .int
+  arg left = .binary, right = .binary
+  left_len = binlength(left)
+  right_len = binlength(right)
+  scan_len = left_len
+  if right_len < scan_len then scan_len = right_len
+  do i = 1 to scan_len
+    if binbyte(left,i) <> binbyte(right,i) then return i
+  end
+  if left_len <> right_len then return scan_len + 1
+  return 0
+
+bin2x: procedure = .string
+  arg data = .binary
+  table = "0123456789ABCDEF"
+  out = ""
+  len = binlength(data)
+  do i = 1 to len
+    byte = binbyte(data,i)
+    high = byte % 16
+    low = byte // 16
+    char = 0
+    assembler strchar char,table,high
+    assembler appendchar out,char
+    assembler strchar char,table,low
+    assembler appendchar out,char
+  end
+  return out
+
+x2bin: procedure = .binary
+  arg hex = .string
+  table = "0123456789ABCDEFabcdef"
+  blank = " "
+  clean = ""
+  result = .binary
+  empty = .binary
+  zero = "00"x as .binary
+  assembler dropchar clean,hex,blank
+  len = 0
+  assembler strlen len,clean
+  if len = 0 then return result
+  if len // 2 = 1 then do
+    clean = "0" || clean
+    len = len + 1
+  end
+  outpos = 0
+  do i = 0 to len - 1 by 2
+    char1 = 0
+    char2 = 0
+    high = 0
+    low = 0
+    j = i + 1
+    assembler strchar char1,clean,i
+    assembler strchar char2,clean,j
+    assembler poschar high,table,char1
+    assembler poschar low,table,char2
+    if high < 0 | low < 0 then return empty
+    if high > 15 then high = high - 6
+    if low > 15 then low = low - 6
+    byte = high * 16 + low
+    assembler bappend result,zero
+    assembler setbyte result,outpos,byte
+    outpos = outpos + 1
+  end
+  return result

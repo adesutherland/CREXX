@@ -32,16 +32,28 @@ jobs:
           # no Windows, as Kleenex generates non-portable C code
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
+      - name: Checkout Code
+        uses: actions/checkout@v6
 
-      - name: Setup
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.8'
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'adopt'
+          java-version: '24'
+
+      - name: Setup Common Prerequisites
         run: |
           case ${{ runner.os }} in
             Linux*)
               echo "CC=gcc" >> $GITHUB_ENV
               echo "CXX=g++" >> $GITHUB_ENV
-              sudo apt-get install libre2-dev libbenchmark-dev
+              sudo apt update
+              sudo apt install libre2-dev libbenchmark-dev
               ;;
             macOS*)
               sudo xcode-select -switch /Applications/Xcode.app
@@ -52,13 +64,24 @@ jobs:
               brew install re2 google-benchmark
               ;;
           esac
+          pip install psutil
 
       - name: Configure
         run: |
           cmake -S . -B .build \
             -G "Unix Makefiles" \
             -DRE2C_BUILD_LIBS=ON \
+            -DRE2C_BUILD_RE2D=OFF \
             -DRE2C_BUILD_RE2GO=OFF \
+            -DRE2C_BUILD_RE2HS=OFF \
+            -DRE2C_BUILD_RE2JAVA=OFF \
+            -DRE2C_BUILD_RE2JS=OFF \
+            -DRE2C_BUILD_RE2OCAML=OFF \
+            -DRE2C_BUILD_RE2PY=OFF \
+            -DRE2C_BUILD_RE2RUST=OFF \
+            -DRE2C_BUILD_RE2SWIFT=OFF \
+            -DRE2C_BUILD_RE2V=OFF \
+            -DRE2C_BUILD_RE2ZIG=OFF \
             -DRE2C_BUILD_BENCHMARKS=ON \
             -DCMAKE_CXX_FLAGS="-O3"
 
@@ -66,16 +89,20 @@ jobs:
         run: cmake --build .build
 
       - name: Run submatch DFA AOT benchmark
-        working-directory: .build/benchmarks/submatch_dfa_aot
+        working-directory: .build/benchmarks/c
         run: |
-          ./run.py --quickverify \
-            && ./run.py --repetitions 5 --output results.json \
+          ./run.py --verify \
+            && ./run.py --output results.json \
             && cat results.json
 
       - name: Run submatch DFA JIT benchmark
-        working-directory: .build/benchmarks/submatch_dfa_jit
-        run: ./bench_submatch_dfa_jit
+        working-directory: .build/benchmarks/c/libre2c/jit
+        run: ./bench_submatch_jit
+
+      - name: Run submatch Java benchmark (ReTdfa)
+        working-directory: .build/benchmarks/c/libre2c/java
+        run: ./run.py
 
       - name: Run submatch NFA benchmark
-        working-directory: .build/benchmarks/submatch_nfa
+        working-directory: .build/benchmarks/c/libre2c/nfa
         run: ./bench_submatch_nfa

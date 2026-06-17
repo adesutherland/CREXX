@@ -1,0 +1,211 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash
+namespace data_StringList expose StringArrayList
+import rxfnsb
+import data_StringIterable
+
+/**
+ * A dynamic, ordered collection backed by a stringarray
+ *
+ * The List supports 1-based indexed access via the [] operator and grows
+ * automatically as elements are appended.
+ *
+ * Internal representation:
+ *   val.1 .. val.n   - elements (stem tails)
+ *   size_             - number of elements in the list
+ *
+ * This class is optimized for:
+ *   - fast append (O(1))
+ *   - fast indexed access (O(1))
+ *
+ * Insertions/removals in the middle are delegated to the standard array BIFs.
+ * Release builds inline those BIFs when the imported library preserves inline
+ * metadata.
+ */
+StringArrayList: class implements .StringIterable
+ size_ = .int
+ val = .string[]
+ 
+ /**
+  * Factory method, returns a List object, which initially is empty
+  */
+  *: factory
+    size_ = 0
+    return
+    
+ /**
+  * Initializes an empty list.
+  */
+  init: method = .int
+    size_ = 0
+    return 1
+    
+    /**
+     * Appends an element to the end of the list.
+     *
+     * @param item  The element to add.
+     */
+  add: method = .int
+    arg item = .string
+    size_ = size_ + 1
+    val.size_ = item
+    return 1
+
+  append: method = .int
+    arg item = .string
+    size_ = size_ + 1
+    val.size_ = item
+    return 1
+
+  prepend: method = .int
+    arg item = .string
+    call arrayinsert val, 1, 1, item
+    size_ = val[0]
+    return 1
+    
+    
+    /**
+     * Returns the element at the specified index.
+     *
+     * @param index  1-based index of the element.
+     * @return       The element at the given index, or 0 if out of bounds. TODO exception
+     */
+  get: method = .string
+    arg index = .int
+    if index < 1 then return 0 -- TODO exception
+    if index > size_ then return 0 -- TODO exception
+    return val.index
+      
+      
+      /**
+       * Replaces the element at the specified index.
+       *
+       * @param index  1-based index of the element.
+       * @param item   The new value.
+       */
+  set: method = .int
+    arg index = .int, item = .string
+    if index >= 1 then if index <= size_ then
+      val.index = item
+      return 1
+      
+      /**
+       * Inserts an element at the specified index.
+       *
+       * Elements at and after the index are shifted to the right.
+       *
+       * @param index  1-based index where the element will be inserted.
+       * @param item   The element to insert.
+       */
+  insert: method = .int
+    arg index = .int, item = .string
+    
+    if index < 1 then index = 1
+    if index > size_ + 1 then index = size_ + 1
+
+    call arrayinsert val, index, 1, item
+    size_ = val[0]
+    return 1
+    
+    
+    /**
+     * Removes and returns the element at the specified index.
+     *
+     * Elements after the index are shifted left.
+     *
+     * @param index  1-based index of the element to remove.
+     * @return       The removed element, or 0 if out of bounds.
+     */
+  remove: method = .string
+     arg index = .int
+    
+    if index < 1 | index > size_ then
+      return 0 -- TODO raise exception
+      
+      item = val.index
+      
+      call arraydelete val, index, 1
+      size_ = val[0]
+      
+      return item
+
+  indexOf: method = .int
+    arg item = .string, from = 1
+
+    if from < 1 then from = 1
+    if from > size_ then return 0
+
+    do i = from to size_
+      if val[i] = item then return i
+    end
+    return 0
+
+  contains: method = .int
+    arg item = .string
+
+    do i = 1 to size_
+      if val[i] = item then return 1
+    end
+    return 0
+      
+      
+      /**
+       * Returns the number of elements in the list.
+       *
+       * @return The size of the list.
+       */
+  size: method = .int
+    return size_
+    
+    
+    /**
+     * Tests whether the list is empty.
+     *
+     * @return 1 if empty, 0 otherwise.
+     */
+  isEmpty: method = .int
+    return size_ = 0
+    
+    /**
+     * Returns an iterator over this list.
+     *
+     * @return A ListIterator.
+     */
+  iterator: method = .StringArrayListIterator
+    return .StringArrayListIterator(reference val, reference size_, 0)
+
+  snapshotIterator: method = .StringArrayListIterator
+    return .StringArrayListIterator(reference val, reference size_, 1)
+    
+    /**
+     * Removes all elements from the list.
+     */
+  clear: method = .void
+    call arraydrop val
+    size_ = 0
+    return
+    
+    

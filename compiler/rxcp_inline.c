@@ -67,11 +67,14 @@ typedef struct {
 
 typedef struct {
     ASTNode *root_proc;
+    Context *context;
     int node_count;
     int return_count;
     int has_unsupported_varg_access;
     int has_unsupported_assembler_alias;
     int has_unsupported_assembler_effect;
+    int has_unsupported_reference;
+    int has_class_attribute_write;
     int has_unportable_class_attribute_shape;
     size_t max_required_varg_index;
     int ref_varg_mode;
@@ -87,6 +90,32 @@ typedef struct {
     int top_level_return_count;
     int final_is_return;
 } InlineReturnShape;
+
+typedef enum {
+    INLINE_ELIGIBILITY_OK = 0,
+    INLINE_ELIGIBILITY_MISSING_ARGS_OR_INSTRS,
+    INLINE_ELIGIBILITY_MISSING_INSTRS,
+    INLINE_ELIGIBILITY_RETURN_REFERENCE_CLASS,
+    INLINE_ELIGIBILITY_VARG_FORMAL_FOLLOWED,
+    INLINE_ELIGIBILITY_RETURN_SHAPE_FAILED,
+    INLINE_ELIGIBILITY_VALUE_NOT_FINAL_RETURN,
+    INLINE_ELIGIBILITY_VALUE_NO_RETURN,
+    INLINE_ELIGIBILITY_NODE_CUTOFF,
+    INLINE_ELIGIBILITY_RETURN_COUNT_MISMATCH,
+    INLINE_ELIGIBILITY_ASSEMBLER_ALIAS,
+    INLINE_ELIGIBILITY_ASSEMBLER_EFFECT,
+    INLINE_ELIGIBILITY_UNSUPPORTED_REFERENCE,
+    INLINE_ELIGIBILITY_UNSUPPORTED_VARG_ACCESS,
+    INLINE_ELIGIBILITY_UNPORTABLE_CLASS_ATTRIBUTE_SHAPE
+} InlineEligibilityReject;
+
+typedef struct {
+    ASTNode *args;
+    ASTNode *instrs;
+    InlineReturnShape return_shape;
+    InlinableCheck check;
+    InlineEligibilityReject reject;
+} InlineEligibility;
 
 typedef enum {
     INLINE_EXPR_CONTEXT_NONE = 0,
@@ -129,6 +158,24 @@ static ASTNode *inline_create_temp_value_ref(Context *context,
                                              InlineCloneState *state,
                                              const char *prefix,
                                              size_t suffix);
+static int inline_capture_scoped_call_actuals(Context *context,
+                                              ASTNode *instr_list,
+                                              Scope *inline_scope,
+                                              ASTNode *proc_def,
+                                              ASTNode *call_node,
+                                              InlineCloneState *clone_state,
+                                              Symbol **captured_receiver_out,
+                                              Symbol ***captured_symbols_out,
+                                              size_t *captured_count_out);
+static int inline_capture_varg_captured_actuals(Context *context,
+                                                ASTNode *instr_list,
+                                                Scope *inline_scope,
+                                                ASTNode *varg_arg,
+                                                ASTNode *actual_arg,
+                                                InlineCloneState *state,
+                                                Symbol **captured_symbols,
+                                                size_t captured_count,
+                                                size_t first_actual_index);
 static int inline_initialise_varg_array(Context *context,
                                         ASTNode *instr_list,
                                         Scope *inline_scope,
@@ -143,8 +190,12 @@ static ASTNode *inline_call_receiver(ASTNode *call_node);
 static int inline_call_arity_matches(ASTNode *call_node, Symbol *proc_sym, size_t *varg_count_out);
 static int inline_analyse_varg_usage(ASTNode *proc_def, int *unsupported_out, size_t *max_required_index_out);
 static int inline_call_is_recursive(ASTNode *call_node, Symbol *proc_sym);
+static int inline_numeric_context_compatible(const numeric_context *caller, const numeric_context *callee);
 static int inline_analyse_return_shape(ASTNode *proc_def, InlineReturnShape *shape_out);
 static int inline_method_writes_class_attribute(ASTNode *proc_def);
+static int inline_symbol_writes_class_attribute(Symbol *symbol);
+static int inline_subtree_reads_class_attribute(ASTNode *node);
+static int inline_sibling_list_reads_class_attribute(ASTNode *node);
 static int inline_assembler_has_unsupported_aliasing(ASTNode *node);
 static int inline_assembler_has_unsupported_effect(ASTNode *node);
 static int inline_proc_has_procedure_expose(ASTNode *node);
@@ -487,8 +538,62 @@ static int inline_symbol_is_class_attribute(Symbol *symbol) {
     return symbol &&
            symbol->symbol_type == VARIABLE_SYMBOL &&
            symbol->scope &&
-           symbol->scope->defining_node &&
-           symbol->scope->defining_node->node_type == CLASS_DEF;
+           (symbol->scope->type == SCOPE_CLASS ||
+            (symbol->scope->defining_node &&
+             symbol->scope->defining_node->node_type == CLASS_DEF));
+}
+
+static Symbol *inline_resolve_class_symbol(Context *context, Scope *scope, const char *class_name) {
+    Symbol *class_symbol;
+    const char *lookup_name;
+    Scope *namespace_scope;
+    char *fq_name;
+
+    if (!context || !context->ast || !class_name || !*class_name) return NULL;
+
+    lookup_name = class_name;
+    while (*lookup_name == '.') lookup_name++;
+
+    class_symbol = sym_rfqn(context->ast, lookup_name);
+    if (class_symbol) return class_symbol;
+
+    if (strchr(lookup_name, '.')) return NULL;
+
+    namespace_scope = scope;
+    while (namespace_scope && namespace_scope->type != SCOPE_NAMESPACE) {
+        namespace_scope = namespace_scope->parent;
+    }
+    if (!namespace_scope || !namespace_scope->name || !*namespace_scope->name) return NULL;
+
+    fq_name = mprintf("%s.%s", namespace_scope->name, lookup_name);
+    if (!fq_name) return NULL;
+    class_symbol = sym_rfqn(context->ast, fq_name);
+    free(fq_name);
+    return class_symbol;
+}
+
+static int inline_class_has_reference_attribute(Context *context, Scope *scope, const char *class_name) {
+    Symbol *class_symbol;
+    Symbol **symbols;
+    size_t i;
+    int result = 0;
+
+    class_symbol = inline_resolve_class_symbol(context, scope, class_name);
+    if (!class_symbol || !class_symbol->defines_scope) return 0;
+
+    symbols = scp_syms(class_symbol->defines_scope);
+    if (!symbols) return 0;
+
+    for (i = 0; symbols[i]; i++) {
+        if (inline_symbol_is_class_attribute(symbols[i]) &&
+            symbols[i]->type == TP_REFERENCE) {
+            result = 1;
+            break;
+        }
+    }
+
+    free(symbols);
+    return result;
 }
 
 static int inline_class_attribute_shape_is_portable(Symbol *symbol) {
@@ -593,6 +698,66 @@ static int inline_parent_is_eager_operator(ASTNode *parent) {
     }
 }
 
+static int inline_node_is_constant_literal(ASTNode *node) {
+    if (!node) return 0;
+
+    switch (node->node_type) {
+        case CONSTANT:
+        case CONST_SYMBOL:
+        case STRING:
+        case FLOAT:
+        case DECIMAL:
+        case BINARY:
+        case INTEGER:
+        case CLASS:
+            return node->value_type == node->target_type;
+
+        default:
+            return 0;
+    }
+}
+
+static int inline_node_is_plain_stable_value(ASTNode *node) {
+    Symbol *symbol;
+
+    if (!node || node->node_type != VAR_SYMBOL || node->child) return 0;
+    if (!node->symbolNode || !node->symbolNode->symbol) return 0;
+
+    symbol = node->symbolNode->symbol;
+    if (symbol->symbol_type == FUNCTION_SYMBOL) return 0;
+    return !inline_symbol_is_class_attribute(symbol);
+}
+
+static int inline_eager_operator_context_is_safe(ASTNode *node) {
+    ASTNode *parent;
+
+    if (!node) return 0;
+
+    parent = node->parent;
+    if (!inline_parent_is_eager_operator(parent)) return 0;
+
+    if (parent->child == node) return 1;
+
+    return inline_node_is_constant_literal(parent->child) ||
+           inline_node_is_plain_stable_value(parent->child);
+}
+
+static int inline_rhs_eager_operator_needs_left_capture(ASTNode *node) {
+    ASTNode *parent;
+    ASTNode *left;
+
+    if (!node) return 0;
+
+    parent = node->parent;
+    if (!inline_parent_is_eager_operator(parent)) return 0;
+
+    left = parent->child;
+    if (!left || left == node) return 0;
+    if (left->sibling != node || node->sibling) return 0;
+
+    return !inline_eager_operator_context_is_safe(node);
+}
+
 static int inline_parent_is_short_circuit_operator(ASTNode *parent) {
     return parent &&
            (parent->node_type == OP_AND ||
@@ -625,14 +790,17 @@ static int inline_node_needs_attr_copy(ASTNode *node) {
 
     return node->value_type == TP_OBJECT ||
            node->value_type == TP_BINARY ||
+           node->value_type == TP_REFERENCE ||
            node->target_type == TP_OBJECT ||
-           node->target_type == TP_BINARY;
+           node->target_type == TP_BINARY ||
+           node->target_type == TP_REFERENCE;
 }
 
 static int inline_formal_needs_isolated_copy(ASTNode *formal_target, ASTNode *param_arg) {
     if (!formal_target) return 0;
     if (inline_node_has_array_shape(formal_target)) return 1;
-    if (formal_target->value_type == TP_BINARY || formal_target->target_type == TP_BINARY) return 1;
+    if (formal_target->value_type == TP_BINARY || formal_target->target_type == TP_BINARY ||
+        formal_target->value_type == TP_REFERENCE || formal_target->target_type == TP_REFERENCE) return 1;
 
     return inline_node_is_plain_object(formal_target) && !(param_arg && param_arg->is_const_arg);
 }
@@ -756,6 +924,369 @@ static ASTNode *inline_create_temp_value_ref(Context *context,
                         source_node->target_class);
 
     return temp_ref;
+}
+
+static int inline_should_capture_scoped_actual(ASTNode *param_arg, ASTNode *actual_arg) {
+    ASTNode *formal_target;
+
+    if (!param_arg || !actual_arg) return 0;
+    if (inline_is_missing_actual(actual_arg)) return 0;
+    if (param_arg->is_ref_arg) return 0;
+    if (!inline_subtree_reads_class_attribute(actual_arg)) return 0;
+
+    formal_target = inline_formal_target(param_arg);
+    if (inline_node_is_plain_object(formal_target) && param_arg->is_const_arg) return 0;
+
+    return 1;
+}
+
+static int inline_subtree_reads_class_attribute(ASTNode *node) {
+    ASTNode *child;
+
+    if (!node) return 0;
+    if (inline_node_is_callable_def(node)) return 0;
+
+    if (node->node_type == VAR_SYMBOL &&
+        node->symbolNode &&
+        inline_symbol_is_class_attribute(node->symbolNode->symbol)) {
+        return 1;
+    }
+
+    child = node->child;
+    while (child) {
+        if (inline_subtree_reads_class_attribute(child)) return 1;
+        child = child->sibling;
+    }
+
+    return 0;
+}
+
+static int inline_sibling_list_reads_class_attribute(ASTNode *node) {
+    while (node) {
+        if (inline_subtree_reads_class_attribute(node)) return 1;
+        node = node->sibling;
+    }
+
+    return 0;
+}
+
+static Scope *inline_find_callsite_instance_scope(ASTNode *call_node) {
+    ASTNode *node;
+
+    node = call_node;
+    while (node) {
+        ASTNode *association;
+
+        association = node->association;
+        if (association &&
+            (association->node_type == METHOD || association->node_type == FACTORY) &&
+            node->scope) {
+            ASTNode lookup_node;
+            const char *name;
+
+            name = association->node_type == FACTORY ? "\xc2\xa7" "factory" : "\xc2\xa7" "this";
+            memset(&lookup_node, 0, sizeof(lookup_node));
+            lookup_node.node_string = (char *)name;
+            lookup_node.node_string_length = strlen(name);
+
+            if (sym_lrsv(node->scope, &lookup_node)) return node->scope;
+        }
+
+        node = node->parent;
+    }
+
+    return call_node ? call_node->scope : NULL;
+}
+
+static ASTNode *inline_scope_callable_association(Scope *scope) {
+    while (scope) {
+        ASTNode *defining_node;
+
+        defining_node = scope->defining_node;
+        if (inline_node_is_callable_def(defining_node)) return defining_node;
+        if (defining_node && inline_node_is_callable_def(defining_node->association)) {
+            return defining_node->association;
+        }
+
+        scope = scope->parent;
+    }
+
+    return NULL;
+}
+
+static int inline_scoped_call_needs_actual_capture(ASTNode *proc_def, ASTNode *call_node) {
+    ASTNode *param_list;
+    ASTNode *param_arg;
+    ASTNode *actual_arg;
+    ASTNode *varg_arg;
+
+    if (!proc_def || !call_node) return 0;
+    if (proc_def->node_type != FACTORY && proc_def->node_type != METHOD) return 0;
+
+    param_list = ast_chld(proc_def, ARGS, 0);
+    param_arg = param_list ? param_list->child : NULL;
+    actual_arg = inline_call_first_user_actual(call_node);
+    varg_arg = inline_find_varg_arg(proc_def);
+
+    while (param_arg && actual_arg) {
+        if (param_arg == varg_arg) {
+            if (param_arg->is_ref_arg) return 0;
+            return inline_sibling_list_reads_class_attribute(actual_arg);
+        }
+
+        if (inline_should_capture_scoped_actual(param_arg, actual_arg)) return 1;
+
+        param_arg = param_arg->sibling;
+        actual_arg = actual_arg->sibling;
+    }
+
+    return 0;
+}
+
+static Symbol *inline_capture_method_receiver_for_scoped_args(Context *context,
+                                                              ASTNode *instr_list,
+                                                              Scope *caller_scope,
+                                                              ASTNode *proc_def,
+                                                              ASTNode *call_node,
+                                                              InlineCloneState *clone_state) {
+    ASTNode *receiver;
+    Symbol *temp_symbol;
+    ASTNode *capture_assign;
+    ASTNode *capture_lhs;
+    ASTNode *capture_rhs;
+
+    if (!context || !instr_list || !caller_scope || !proc_def || !call_node || !clone_state) return NULL;
+    if (proc_def->node_type != METHOD) return NULL;
+
+    receiver = inline_call_receiver(call_node);
+    if (!receiver) return NULL;
+
+    temp_symbol = inline_create_temp_symbol(context,
+                                            caller_scope,
+                                            receiver,
+                                            "__inline_method_receiver",
+                                            0);
+    if (!temp_symbol) return NULL;
+
+    capture_assign = ast_f(context, ASSIGN, receiver->token);
+    if (!capture_assign) return NULL;
+    capture_assign->association = inline_scope_callable_association(caller_scope);
+    capture_assign->scope = caller_scope;
+    capture_assign->inherit_parent_scope = 1;
+    capture_assign->value_type = receiver->value_type;
+    capture_assign->target_type = receiver->target_type;
+
+    capture_lhs = inline_create_symbol_node(context,
+                                            caller_scope,
+                                            receiver,
+                                            temp_symbol,
+                                            VAR_TARGET,
+                                            0,
+                                            1);
+    capture_rhs = inline_clone_subtree_in_scope(context, receiver, clone_state, caller_scope);
+    if (!capture_lhs || !capture_rhs) return NULL;
+
+    add_ast(capture_assign, capture_lhs);
+    add_ast(capture_assign, capture_rhs);
+    add_ast(instr_list, capture_assign);
+
+    return temp_symbol;
+}
+
+static int inline_capture_scoped_call_actuals(Context *context,
+                                              ASTNode *instr_list,
+                                              Scope *inline_scope,
+                                              ASTNode *proc_def,
+                                              ASTNode *call_node,
+                                              InlineCloneState *clone_state,
+                                              Symbol **captured_receiver_out,
+                                              Symbol ***captured_symbols_out,
+                                              size_t *captured_count_out) {
+    Scope *caller_scope;
+    ASTNode *param_list;
+    ASTNode *param_arg;
+    ASTNode *actual_arg;
+    ASTNode *varg_arg;
+    Symbol **captured_symbols;
+    size_t actual_count;
+    size_t actual_index;
+    int capture_varg_actuals;
+
+    if (captured_receiver_out) *captured_receiver_out = NULL;
+    if (captured_symbols_out) *captured_symbols_out = NULL;
+    if (captured_count_out) *captured_count_out = 0;
+
+    if (!context || !instr_list || !inline_scope || !proc_def || !call_node || !clone_state ||
+        !captured_receiver_out || !captured_symbols_out || !captured_count_out) {
+        return 0;
+    }
+    if (proc_def->node_type != FACTORY && proc_def->node_type != METHOD) return 1;
+    if (!inline_scoped_call_needs_actual_capture(proc_def, call_node)) return 1;
+
+    actual_arg = inline_call_first_user_actual(call_node);
+    actual_count = inline_count_siblings(actual_arg);
+    if (actual_count == 0) return 1;
+
+    caller_scope = inline_find_callsite_instance_scope(call_node);
+    if (!caller_scope) caller_scope = call_node->scope ? call_node->scope : inline_scope->parent;
+    if (!caller_scope) return 0;
+
+    if (proc_def->node_type == METHOD) {
+        *captured_receiver_out = inline_capture_method_receiver_for_scoped_args(context,
+                                                                               instr_list,
+                                                                               caller_scope,
+                                                                               proc_def,
+                                                                               call_node,
+                                                                               clone_state);
+        if (!*captured_receiver_out) return 0;
+    }
+
+    captured_symbols = calloc(actual_count, sizeof(Symbol *));
+    if (!captured_symbols) return 0;
+
+    param_list = ast_chld(proc_def, ARGS, 0);
+    param_arg = param_list ? param_list->child : NULL;
+    varg_arg = inline_find_varg_arg(proc_def);
+    actual_index = 0;
+    capture_varg_actuals = 0;
+
+    while (param_arg && actual_arg) {
+        ASTNode *capture_assign;
+        ASTNode *capture_lhs;
+        ASTNode *capture_rhs;
+        Symbol *temp_symbol;
+
+        if (param_arg == varg_arg && param_arg->is_ref_arg) break;
+
+        if (param_arg != varg_arg && !inline_should_capture_scoped_actual(param_arg, actual_arg)) {
+            param_arg = param_arg->sibling;
+            actual_arg = actual_arg->sibling;
+            actual_index++;
+            continue;
+        }
+        if (param_arg == varg_arg && !capture_varg_actuals) {
+            capture_varg_actuals = inline_sibling_list_reads_class_attribute(actual_arg);
+        }
+        if (param_arg == varg_arg &&
+            (inline_is_missing_actual(actual_arg) || !capture_varg_actuals)) {
+            actual_arg = actual_arg->sibling;
+            actual_index++;
+            continue;
+        }
+
+        temp_symbol = inline_create_temp_symbol(context,
+                                                caller_scope,
+                                                actual_arg,
+                                                "__inline_scoped_arg",
+                                                actual_index);
+        if (!temp_symbol) {
+            free(captured_symbols);
+            return 0;
+        }
+
+        capture_assign = ast_f(context, ASSIGN, actual_arg->token);
+        if (!capture_assign) {
+            free(captured_symbols);
+            return 0;
+        }
+        capture_assign->association = inline_scope_callable_association(caller_scope);
+        capture_assign->scope = caller_scope;
+        capture_assign->inherit_parent_scope = 1;
+        capture_assign->value_type = actual_arg->value_type;
+        capture_assign->target_type = actual_arg->target_type;
+
+        capture_lhs = inline_create_symbol_node(context,
+                                                caller_scope,
+                                                actual_arg,
+                                                temp_symbol,
+                                                VAR_TARGET,
+                                                0,
+                                                1);
+        capture_rhs = inline_clone_subtree_in_scope(context, actual_arg, clone_state, caller_scope);
+        if (!capture_lhs || !capture_rhs) {
+            free(captured_symbols);
+            return 0;
+        }
+
+        add_ast(capture_assign, capture_lhs);
+        add_ast(capture_assign, capture_rhs);
+        add_ast(instr_list, capture_assign);
+
+        captured_symbols[actual_index] = temp_symbol;
+        if (param_arg != varg_arg) param_arg = param_arg->sibling;
+        actual_arg = actual_arg->sibling;
+        actual_index++;
+    }
+
+    *captured_symbols_out = captured_symbols;
+    *captured_count_out = actual_count;
+    return 1;
+}
+
+static int inline_capture_varg_captured_actuals(Context *context,
+                                                ASTNode *instr_list,
+                                                Scope *inline_scope,
+                                                ASTNode *varg_arg,
+                                                ASTNode *actual_arg,
+                                                InlineCloneState *state,
+                                                Symbol **captured_symbols,
+                                                size_t captured_count,
+                                                size_t first_actual_index) {
+    ASTNode *varg_type;
+    ASTNode *source_template;
+    size_t child_index;
+
+    if (!context || !instr_list || !inline_scope || !varg_arg || !state) return 0;
+
+    varg_type = inline_formal_default(varg_arg);
+    source_template = varg_type ? varg_type : varg_arg;
+
+    if (!actual_arg) {
+        state->varg_symbols = NULL;
+        state->varg_count = 0;
+        return inline_initialise_varg_array(context, instr_list, inline_scope, varg_arg, source_template, state);
+    }
+
+    source_template = varg_type ? varg_type : actual_arg;
+    state->varg_count = inline_count_siblings(actual_arg);
+    state->varg_symbols = calloc(state->varg_count, sizeof(Symbol *));
+    if (!state->varg_symbols) return 0;
+
+    child_index = 0;
+    while (actual_arg) {
+        Symbol *captured_symbol;
+
+        if (actual_arg->node_type == NOVAL) return 0;
+        if (first_actual_index + child_index >= captured_count) return 0;
+
+        captured_symbol = captured_symbols ? captured_symbols[first_actual_index + child_index] : NULL;
+        if (!captured_symbol) return 0;
+
+        state->varg_symbols[child_index] = captured_symbol;
+        child_index++;
+        actual_arg = actual_arg->sibling;
+    }
+
+    return inline_initialise_varg_array(context, instr_list, inline_scope, varg_arg, source_template, state);
+}
+
+static int inline_varg_actuals_are_captured(Symbol **captured_symbols,
+                                            size_t captured_count,
+                                            size_t first_actual_index,
+                                            ASTNode *actual_arg) {
+    size_t actual_index;
+
+    if (!captured_symbols || !actual_arg) return 0;
+
+    actual_index = first_actual_index;
+    while (actual_arg) {
+        if (actual_arg->node_type == NOVAL) return 0;
+        if (actual_index >= captured_count || !captured_symbols[actual_index]) return 0;
+        actual_arg = actual_arg->sibling;
+        actual_index++;
+    }
+
+    return 1;
 }
 
 static ASTNode *inline_find_varg_arg(ASTNode *proc_def) {
@@ -969,6 +1500,7 @@ static ASTNode *inline_clone_ref_actual(Context *context,
         formal_child = formal_child->sibling;
     }
 
+    inline_copy_replacement_semantics(replacement, formal_node);
     return replacement;
 }
 
@@ -1491,7 +2023,8 @@ static int inline_bind_method_receiver(Context *context,
                                        Scope *inline_scope,
                                        ASTNode *proc_def,
                                        ASTNode *call_node,
-                                       InlineCloneState *clone_state) {
+                                       InlineCloneState *clone_state,
+                                       Symbol *captured_receiver_symbol) {
     Symbol *this_symbol;
     ASTNode *receiver;
     ASTNode *assign_node;
@@ -1520,7 +2053,17 @@ static int inline_bind_method_receiver(Context *context,
                                            VAR_TARGET,
                                            0,
                                            1);
-    assign_rhs = inline_clone_subtree(context, receiver, clone_state);
+    if (captured_receiver_symbol) {
+        assign_rhs = inline_create_symbol_node(context,
+                                               inline_scope,
+                                               receiver,
+                                               captured_receiver_symbol,
+                                               VAR_SYMBOL,
+                                               1,
+                                               0);
+    } else {
+        assign_rhs = inline_clone_subtree(context, receiver, clone_state);
+    }
     if (!assign_lhs || !assign_rhs) return 0;
 
     add_ast(assign_node, assign_lhs);
@@ -1675,9 +2218,7 @@ static ASTNode *inline_build_dynamic_varg_value(Context *context,
     block_expr = ast_dup(context, node);
     if (!block_expr) return NULL;
     block_expr->node_type = BLOCK_EXPR;
-    block_expr->node_string = "do";
-    block_expr->node_string_length = 2;
-    block_expr->free_node_string = 0;
+    ast_str(block_expr, "do");
 
     inline_scope = scp_f(context, current_scope, block_expr, NULL, SCOPE_LOCAL);
     if (!inline_scope) return NULL;
@@ -1758,9 +2299,7 @@ static ASTNode *inline_build_dynamic_varg_exists(Context *context,
     block_expr = ast_dup(context, node);
     if (!block_expr) return NULL;
     block_expr->node_type = BLOCK_EXPR;
-    block_expr->node_string = "do";
-    block_expr->node_string_length = 2;
-    block_expr->free_node_string = 0;
+    ast_str(block_expr, "do");
 
     inline_scope = scp_f(context, current_scope, block_expr, NULL, SCOPE_LOCAL);
     if (!inline_scope) return NULL;
@@ -1845,12 +2384,42 @@ static int inline_bind_call_arguments(Context *context,
     ASTNode *param_arg;
     ASTNode *actual_arg;
     ASTNode *varg_arg;
+    Symbol *captured_method_receiver;
+    Symbol **captured_scoped_actuals;
+    size_t captured_scoped_actual_count;
+    size_t actual_index;
+
+#define INLINE_BIND_RETURN(value) do { free(captured_scoped_actuals); return (value); } while (0)
 
     if (!context || !instr_list || !inline_scope || !proc_def || !call_node || !proc_sym || !clone_state) return 0;
 
-    if (!inline_call_arity_matches(call_node, proc_sym, NULL)) return 0;
-    if (!inline_initialise_factory_instance(context, instr_list, inline_scope, proc_def, clone_state)) return 0;
-    if (!inline_bind_method_receiver(context, instr_list, inline_scope, proc_def, call_node, clone_state)) return 0;
+    captured_scoped_actuals = NULL;
+    captured_method_receiver = NULL;
+    captured_scoped_actual_count = 0;
+    actual_index = 0;
+
+    if (!inline_call_arity_matches(call_node, proc_sym, NULL)) INLINE_BIND_RETURN(0);
+    if (!inline_capture_scoped_call_actuals(context,
+                                            instr_list,
+                                            inline_scope,
+                                            proc_def,
+                                            call_node,
+                                            clone_state,
+                                            &captured_method_receiver,
+                                            &captured_scoped_actuals,
+                                            &captured_scoped_actual_count)) {
+        INLINE_BIND_RETURN(0);
+    }
+    if (!inline_initialise_factory_instance(context, instr_list, inline_scope, proc_def, clone_state)) INLINE_BIND_RETURN(0);
+    if (!inline_bind_method_receiver(context,
+                                     instr_list,
+                                     inline_scope,
+                                     proc_def,
+                                     call_node,
+                                     clone_state,
+                                     captured_method_receiver)) {
+        INLINE_BIND_RETURN(0);
+    }
 
     param_list = ast_chld(proc_def, ARGS, 0);
     param_arg = param_list ? param_list->child : NULL;
@@ -1864,34 +2433,39 @@ static int inline_bind_call_arguments(Context *context,
         ASTNode *bind_lhs;
         ASTNode *bind_rhs;
         ASTNode *bind_source;
+        Symbol *captured_actual_symbol;
 
         if (param_arg == varg_arg) break;
 
         formal_target = inline_formal_target(param_arg);
         formal_default = inline_formal_default(param_arg);
-        if (!formal_target || !actual_arg) return 0;
+        captured_actual_symbol = actual_index < captured_scoped_actual_count ?
+                                 captured_scoped_actuals[actual_index] : NULL;
+        if (!formal_target || !actual_arg) INLINE_BIND_RETURN(0);
 
         if (param_arg->is_ref_arg && !inline_is_missing_actual(actual_arg)) {
             if (!inline_register_ref_actual(context, instr_list, inline_scope, formal_target, actual_arg, clone_state)) {
-                return 0;
+                INLINE_BIND_RETURN(0);
             }
             param_arg = param_arg->sibling;
             actual_arg = actual_arg->sibling;
+            actual_index++;
             continue;
         }
 
         if (inline_is_missing_actual(actual_arg)) {
-            if (!param_arg->is_opt_arg || !formal_default) return 0;
+            if (!param_arg->is_opt_arg || !formal_default) INLINE_BIND_RETURN(0);
         }
 
         if (inline_node_is_plain_object(formal_target) &&
             param_arg->is_const_arg &&
             !inline_is_missing_actual(actual_arg)) {
             if (!inline_register_ref_actual(context, instr_list, inline_scope, formal_target, actual_arg, clone_state)) {
-                return 0;
+                INLINE_BIND_RETURN(0);
             }
             param_arg = param_arg->sibling;
             actual_arg = actual_arg->sibling;
+            actual_index++;
             continue;
         }
 
@@ -1903,11 +2477,21 @@ static int inline_bind_call_arguments(Context *context,
         bind_lhs = inline_clone_subtree(context, formal_target, clone_state);
         if (inline_is_missing_actual(actual_arg)) {
             bind_source = formal_default;
+        } else if (captured_actual_symbol) {
+            bind_source = actual_arg;
         } else {
             bind_source = actual_arg;
         }
 
-        if (inline_formal_needs_isolated_copy(formal_target, param_arg) &&
+        if (captured_actual_symbol) {
+            bind_rhs = inline_create_symbol_node(context,
+                                                 inline_scope,
+                                                 actual_arg,
+                                                 captured_actual_symbol,
+                                                 VAR_SYMBOL,
+                                                 1,
+                                                 0);
+        } else if (inline_formal_needs_isolated_copy(formal_target, param_arg) &&
             !inline_is_direct_symbol_actual(bind_source)) {
             bind_rhs = inline_create_temp_value_ref(context,
                                                     instr_list,
@@ -1924,7 +2508,7 @@ static int inline_bind_call_arguments(Context *context,
             bind_source = actual_arg;
         }
 
-        if (!bind_lhs || !bind_rhs) return 0;
+        if (!bind_lhs || !bind_rhs) INLINE_BIND_RETURN(0);
 
         if (inline_formal_needs_isolated_copy(formal_target, param_arg)) {
             ASTNode *bind_copy;
@@ -1932,7 +2516,7 @@ static int inline_bind_call_arguments(Context *context,
 
             bind_copy = inline_create_register_copy_instr(context, inline_scope, "copy", bind_lhs, bind_rhs);
             attr_copy = inline_create_register_copy_instr(context, inline_scope, "acopy", bind_lhs, bind_rhs);
-            if (!bind_copy || !attr_copy) return 0;
+            if (!bind_copy || !attr_copy) INLINE_BIND_RETURN(0);
 
             add_ast(instr_list, bind_copy);
             add_ast(instr_list, attr_copy);
@@ -1944,25 +2528,43 @@ static int inline_bind_call_arguments(Context *context,
 
         param_arg = param_arg->sibling;
         actual_arg = actual_arg->sibling;
+        actual_index++;
     }
 
     if (varg_arg) {
         if (varg_arg->is_ref_arg) {
             if (!inline_capture_ref_varg_actuals(context, instr_list, inline_scope, actual_arg, clone_state)) {
-                return 0;
+                INLINE_BIND_RETURN(0);
+            }
+        } else if ((proc_def->node_type == FACTORY || proc_def->node_type == METHOD) &&
+                   inline_varg_actuals_are_captured(captured_scoped_actuals,
+                                                    captured_scoped_actual_count,
+                                                    actual_index,
+                                                    actual_arg)) {
+            if (!inline_capture_varg_captured_actuals(context,
+                                                      instr_list,
+                                                      inline_scope,
+                                                      varg_arg,
+                                                      actual_arg,
+                                                      clone_state,
+                                                      captured_scoped_actuals,
+                                                      captured_scoped_actual_count,
+                                                      actual_index)) {
+                INLINE_BIND_RETURN(0);
             }
         } else {
             if (!inline_capture_varg_actuals(context, instr_list, inline_scope, varg_arg, actual_arg, clone_state)) {
-                return 0;
+                INLINE_BIND_RETURN(0);
             }
         }
         actual_arg = NULL;
         param_arg = varg_arg ? varg_arg->sibling : param_arg;
     }
 
-    if (actual_arg || param_arg) return 0;
+    if (actual_arg || param_arg) INLINE_BIND_RETURN(0);
 
-    return 1;
+    INLINE_BIND_RETURN(1);
+#undef INLINE_BIND_RETURN
 }
 
 static int inline_append_scope_map_entry(InlineCloneState *state, Scope *old_scope, Scope *new_scope) {
@@ -2072,6 +2674,13 @@ static Scope *inline_prepare_cloned_node_scope(Context *context,
     if (!new_node) return NULL;
 
     node_scope = current_scope ? current_scope : old_node->scope;
+
+    if (old_node->inherit_parent_scope && old_node->scope) {
+        Scope *mapped_scope;
+
+        mapped_scope = inline_find_mapped_scope(state, old_node->scope);
+        if (mapped_scope) node_scope = mapped_scope;
+    }
 
     if (old_node->scope && old_node->scope->defining_node == old_node) {
         node_scope = inline_find_mapped_scope(state, old_node->scope);
@@ -2395,9 +3004,23 @@ static InlineExprContext inline_classify_expr_context(ASTNode *node) {
                    INLINE_EXPR_CONTEXT_SHORT_CIRCUIT_OPERATOR :
                    INLINE_EXPR_CONTEXT_NONE;
 
+        case OP_TYPE_CAST:
+        case OP_TYPE_IS:
+        case OP_TYPEOF:
+            /*
+             * Type operators are direct value consumers: the first child is
+             * evaluated before the cast/test/typeof operation, while any type
+             * descriptor child is metadata-only for register purposes.
+             */
+            return parent->child == node ?
+                   INLINE_EXPR_CONTEXT_EAGER_VALUE_CONSUMER :
+                   INLINE_EXPR_CONTEXT_NONE;
+
         default:
             if (inline_parent_is_eager_operator(parent)) {
-                return INLINE_EXPR_CONTEXT_EAGER_OPERATOR;
+                return inline_eager_operator_context_is_safe(node) ?
+                       INLINE_EXPR_CONTEXT_EAGER_OPERATOR :
+                       INLINE_EXPR_CONTEXT_NONE;
             }
             return inline_is_direct_single_value_consumer(node) ?
                    INLINE_EXPR_CONTEXT_EAGER_VALUE_CONSUMER :
@@ -2546,6 +3169,21 @@ static int inline_call_is_recursive(ASTNode *call_node, Symbol *proc_sym) {
     return is_recursive;
 }
 
+static int inline_numeric_setting_compatible(int caller_value, int callee_value, int inherited_value) {
+    if (callee_value == inherited_value) return 1;
+    return caller_value == callee_value;
+}
+
+static int inline_numeric_context_compatible(const numeric_context *caller, const numeric_context *callee) {
+    if (!caller || !callee) return 0;
+
+    return inline_numeric_setting_compatible(caller->digits, callee->digits, -1) &&
+           inline_numeric_setting_compatible(caller->fuzz, callee->fuzz, -1) &&
+           inline_numeric_setting_compatible(caller->form, callee->form, NUMERIC_FORM_INHERIT) &&
+           inline_numeric_setting_compatible(caller->casetype, callee->casetype, CASE_INHERIT) &&
+           inline_numeric_setting_compatible(caller->standard, callee->standard, NUMERIC_STANDARD_INHERIT);
+}
+
 static int inline_callable_writes_class_attribute(Symbol *start,
                                                   Symbol ***visited,
                                                   size_t *visited_count);
@@ -2598,19 +3236,25 @@ static int inline_callable_writes_class_attribute(Symbol *start,
 }
 
 static int inline_method_writes_class_attribute(ASTNode *proc_def) {
-    Symbol **visited;
-    size_t visited_count;
     Symbol *proc_symbol;
-    int result;
 
     if (!proc_def || proc_def->node_type != METHOD) return 0;
 
     proc_symbol = inline_symbol_from_proc_def(proc_def);
     if (!proc_symbol) return 0;
 
+    return inline_symbol_writes_class_attribute(proc_symbol);
+}
+
+static int inline_symbol_writes_class_attribute(Symbol *symbol) {
+    Symbol **visited;
+    size_t visited_count;
+    int result;
+
+    if (!symbol) return 0;
     visited = NULL;
     visited_count = 0;
-    result = inline_callable_writes_class_attribute(proc_symbol, &visited, &visited_count);
+    result = inline_callable_writes_class_attribute(symbol, &visited, &visited_count);
     free(visited);
     return result;
 }
@@ -2630,6 +3274,12 @@ static int inline_validate_call_site(Context *context,
     }
     if (!inline_call_arity_matches(call_node, proc_sym, &varg_count)) {
         inline_debug_fail_closed(context, call_node, proc_sym, "call arity does not match formal arguments");
+        return 0;
+    }
+    if (!call_node->scope ||
+        !proc_def->scope ||
+        !inline_numeric_context_compatible(&call_node->scope->num_context, &proc_def->scope->num_context)) {
+        inline_debug_fail_closed(context, call_node, proc_sym, "callee numeric context differs from caller context");
         return 0;
     }
     if (!proc_sym->has_vargs) return 1;
@@ -2817,9 +3467,7 @@ static int inline_rewrite_return_nodes(Context *context,
     }
 
     node->node_type = LEAVE_WITH;
-    node->node_string = "leave";
-    node->node_string_length = 5;
-    node->free_node_string = 0;
+    ast_str(node, "leave");
     node->association = block_expr;
     node->value_type = node->child ? node->child->value_type : TP_VOID;
     node->target_type = node->child ? node->child->target_type : TP_VOID;
@@ -2873,9 +3521,7 @@ static ASTNode *inline_build_block_expr(Context *context,
     }
 
     block_expr->node_type = BLOCK_EXPR;
-    block_expr->node_string = "do";
-    block_expr->node_string_length = 2;
-    block_expr->free_node_string = 0;
+    ast_str(block_expr, "do");
     block_expr->association = proc_def;
 
     if (allow_dummy_return && proc_sym->type == TP_VOID) {
@@ -3393,6 +4039,164 @@ static int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *p
     return 1;
 }
 
+static int ast_inline_rhs_eager_operator(Context *context,
+                                         ASTNode *op_node,
+                                         ASTNode *rhs_call,
+                                         Symbol *proc_sym) {
+    ASTNode *left;
+    ASTNode *block_expr;
+    ASTNode *instr_list;
+    ASTNode *assign_node;
+    ASTNode *assign_lhs;
+    ASTNode *assign_rhs;
+    ASTNode *leave_node;
+    ASTNode *op_expr;
+    ASTNode *temp_ref;
+    ASTNode *rhs_expr;
+    Scope *parent_scope;
+    Scope *inline_scope;
+    Symbol *left_symbol;
+    InlineCloneState clone_state;
+
+    if (!context || !op_node || !rhs_call) return 0;
+    if (!inline_parent_is_eager_operator(op_node)) return 0;
+
+    left = op_node->child;
+    if (!left || left->sibling != rhs_call || rhs_call->sibling) return 0;
+
+    parent_scope = op_node->scope ? op_node->scope :
+                   (rhs_call->scope ? rhs_call->scope : left->scope);
+    if (!parent_scope) {
+        inline_debug_fail_closed(context, rhs_call, proc_sym,
+                                 "RHS eager-operator inline requires a parent scope");
+        return 0;
+    }
+
+    block_expr = ast_dup(context, op_node);
+    if (!block_expr) {
+        inline_debug_fail_closed(context, rhs_call, proc_sym,
+                                 "failed to create RHS eager-operator BLOCK_EXPR");
+        return 0;
+    }
+    block_expr->node_type = BLOCK_EXPR;
+    ast_str(block_expr, "do");
+
+    inline_scope = scp_f(context, parent_scope, block_expr, NULL, SCOPE_LOCAL);
+    if (!inline_scope) {
+        inline_debug_fail_closed(context, rhs_call, proc_sym,
+                                 "failed to create RHS eager-operator inline scope");
+        return 0;
+    }
+    block_expr->scope = inline_scope;
+
+    instr_list = ast_f(context, INSTRUCTIONS, op_node->token);
+    if (!instr_list) {
+        inline_debug_fail_closed(context, rhs_call, proc_sym,
+                                 "failed to create RHS eager-operator instruction list");
+        return 0;
+    }
+    instr_list->scope = inline_scope;
+    instr_list->value_type = TP_VOID;
+    instr_list->target_type = TP_VOID;
+    add_ast(block_expr, instr_list);
+
+    left_symbol = inline_create_temp_symbol(context,
+                                            inline_scope,
+                                            left,
+                                            "__inline_lhs",
+                                            (size_t)op_node->node_number);
+    if (!left_symbol) {
+        inline_debug_fail_closed(context, rhs_call, proc_sym,
+                                 "failed to create RHS eager-operator left temp");
+        return 0;
+    }
+
+    memset(&clone_state, 0, sizeof(clone_state));
+    clone_state.inline_scope = inline_scope;
+
+    assign_rhs = inline_clone_subtree_in_scope(context, left, &clone_state, inline_scope);
+    if (!assign_rhs) {
+        inline_debug_fail_closed(context, rhs_call, proc_sym,
+                                 "failed to clone RHS eager-operator left operand");
+        inline_free_symbol_map(&clone_state);
+        return 0;
+    }
+
+    rhs_expr = inline_clone_subtree_in_scope(context, rhs_call, &clone_state, inline_scope);
+    if (!rhs_expr) {
+        inline_debug_fail_closed(context, rhs_call, proc_sym,
+                                 "failed to clone RHS eager-operator right operand");
+        inline_free_symbol_map(&clone_state);
+        return 0;
+    }
+
+    assign_node = ast_f(context, ASSIGN, left->token ? left->token : op_node->token);
+    if (!assign_node) {
+        inline_free_symbol_map(&clone_state);
+        return 0;
+    }
+    assign_node->scope = inline_scope;
+    assign_node->value_type = assign_rhs->value_type;
+    assign_node->target_type = assign_rhs->target_type;
+
+    assign_lhs = inline_create_symbol_node(context,
+                                           inline_scope,
+                                           left,
+                                           left_symbol,
+                                           VAR_TARGET,
+                                           0,
+                                           1);
+    if (!assign_lhs) {
+        inline_free_symbol_map(&clone_state);
+        return 0;
+    }
+
+    add_ast(assign_node, assign_lhs);
+    add_ast(assign_node, assign_rhs);
+    add_ast(instr_list, assign_node);
+
+    op_expr = ast_dup(context, op_node);
+    if (!op_expr) {
+        inline_free_symbol_map(&clone_state);
+        return 0;
+    }
+    op_expr->scope = inline_scope;
+
+    temp_ref = inline_create_symbol_node(context,
+                                         inline_scope,
+                                         left,
+                                         left_symbol,
+                                         VAR_SYMBOL,
+                                         1,
+                                         0);
+    if (!temp_ref) {
+        inline_free_symbol_map(&clone_state);
+        return 0;
+    }
+
+    add_ast(op_expr, temp_ref);
+    add_ast(op_expr, rhs_expr);
+
+    leave_node = ast_f(context, LEAVE_WITH, op_node->token);
+    if (!leave_node) {
+        inline_free_symbol_map(&clone_state);
+        return 0;
+    }
+    leave_node->scope = inline_scope;
+    leave_node->association = block_expr;
+    leave_node->value_type = op_expr->value_type;
+    leave_node->target_type = op_expr->target_type;
+
+    add_ast(leave_node, op_expr);
+    add_ast(instr_list, leave_node);
+
+    ast_rpl(op_node, block_expr);
+    inline_disconnect_subtree_symbols(op_node);
+    inline_free_symbol_map(&clone_state);
+
+    return 1;
+}
+
 /* Walker to find statement-shaped call sites and inline them */
 walker_result inline_procedure_walker(walker_direction direction, ASTNode *node, void *payload) {
     InlineWalkerPayload *inline_payload;
@@ -3407,11 +4211,28 @@ walker_result inline_procedure_walker(walker_direction direction, ASTNode *node,
 
     if (direction == in) return result_normal;
 
+    if (inline_parent_is_eager_operator(node)) {
+        lhs = node->child;
+        rhs = lhs ? lhs->sibling : NULL;
+
+        if (rhs && !rhs->sibling &&
+            inline_node_is_inlineable_call(rhs, &proc_sym) &&
+            inline_rhs_eager_operator_needs_left_capture(rhs)) {
+            if (ast_inline_rhs_eager_operator(context, node, rhs, proc_sym) && inline_payload) {
+                inline_payload->changed = 1;
+            }
+        }
+        return result_normal;
+    }
+
     if (node->node_type == FUNCTION ||
         node->node_type == MEMBER_CALL ||
         node->node_type == FACTORY_CALL) {
         if (inline_node_is_inlineable_call(node, &proc_sym)) {
-            if (ast_inline_expression(context, node, proc_sym) && inline_payload) inline_payload->changed = 1;
+            if (!inline_rhs_eager_operator_needs_left_capture(node) &&
+                ast_inline_expression(context, node, proc_sym) && inline_payload) {
+                inline_payload->changed = 1;
+            }
         }
         return result_normal;
     }
@@ -3458,6 +4279,33 @@ static walker_result inlinable_check_walker(walker_direction direction, ASTNode 
             check->has_unsupported_assembler_effect = 1;
         }
 
+        if (node->node_type == OP_REFERENCE ||
+            node->node_type == OP_DEREFERENCE ||
+            node->node_type == OP_SNAPSHOT ||
+            node->node_type == OP_REFVALID ||
+            node->node_type == TYPE_REFERENCE ||
+            node->value_type == TP_REFERENCE ||
+            node->target_type == TP_REFERENCE ||
+            (node->value_type == TP_OBJECT &&
+             inline_class_has_reference_attribute(check->context, node->scope, node->value_class)) ||
+            (node->target_type == TP_OBJECT &&
+             inline_class_has_reference_attribute(check->context, node->scope, node->target_class)) ||
+            (node->symbolNode && node->symbolNode->symbol &&
+             (node->symbolNode->symbol->type == TP_REFERENCE ||
+              (node->symbolNode->symbol->type == TP_OBJECT &&
+               inline_class_has_reference_attribute(check->context,
+                                                    node->symbolNode->symbol->scope,
+                                                    node->symbolNode->symbol->value_class))))) {
+            check->has_unsupported_reference = 1;
+        }
+
+        if (node->symbolNode &&
+            node->symbolNode->symbol &&
+            (node->node_type == VAR_TARGET || node->node_type == VAR_REFERENCE) &&
+            inline_symbol_is_class_attribute(node->symbolNode->symbol)) {
+            check->has_class_attribute_write = 1;
+        }
+
         if (node->symbolNode &&
             node->symbolNode->symbol &&
             !inline_class_attribute_shape_is_portable(node->symbolNode->symbol)) {
@@ -3485,6 +4333,226 @@ static walker_result inlinable_check_walker(walker_direction direction, ASTNode 
     return result_normal;
 }
 
+static InlineEligibilityReject inline_analyse_callable_eligibility(Context *context,
+                                                                   ASTNode *callable,
+                                                                   Symbol *symbol,
+                                                                   int require_args,
+                                                                   int reject_unportable_class_attribute_shape,
+                                                                   InlineEligibility *eligibility) {
+    ASTNode *arg;
+    ASTNode *varg_arg;
+
+    if (!eligibility) return INLINE_ELIGIBILITY_MISSING_INSTRS;
+
+    memset(eligibility, 0, sizeof(*eligibility));
+    eligibility->reject = INLINE_ELIGIBILITY_OK;
+
+    eligibility->args = ast_chld(callable, ARGS, 0);
+    eligibility->instrs = ast_chld(callable, INSTRUCTIONS, 0);
+    if (require_args && !eligibility->args) {
+        eligibility->reject = INLINE_ELIGIBILITY_MISSING_ARGS_OR_INSTRS;
+        return eligibility->reject;
+    }
+    if (!eligibility->instrs) {
+        eligibility->reject = require_args ?
+                              INLINE_ELIGIBILITY_MISSING_ARGS_OR_INSTRS :
+                              INLINE_ELIGIBILITY_MISSING_INSTRS;
+        return eligibility->reject;
+    }
+
+    if (symbol &&
+        symbol->type == TP_OBJECT &&
+        inline_class_has_reference_attribute(context, symbol->scope, symbol->value_class)) {
+        eligibility->reject = INLINE_ELIGIBILITY_RETURN_REFERENCE_CLASS;
+        return eligibility->reject;
+    }
+
+    if (eligibility->args) {
+        arg = eligibility->args->child;
+        while (arg) {
+            if (arg->is_varg && arg->sibling) {
+                eligibility->reject = INLINE_ELIGIBILITY_VARG_FORMAL_FOLLOWED;
+                return eligibility->reject;
+            }
+            arg = arg->sibling;
+        }
+    }
+
+    if (!inline_analyse_return_shape(callable, &eligibility->return_shape)) {
+        eligibility->reject = INLINE_ELIGIBILITY_RETURN_SHAPE_FAILED;
+        return eligibility->reject;
+    }
+    if (symbol &&
+        !eligibility->return_shape.final_is_return &&
+        symbol->type != TP_VOID) {
+        eligibility->reject = INLINE_ELIGIBILITY_VALUE_NOT_FINAL_RETURN;
+        return eligibility->reject;
+    }
+    if (symbol &&
+        symbol->type != TP_VOID &&
+        eligibility->return_shape.return_count == 0) {
+        eligibility->reject = INLINE_ELIGIBILITY_VALUE_NO_RETURN;
+        return eligibility->reject;
+    }
+
+    memset(&eligibility->check, 0, sizeof(eligibility->check));
+    eligibility->check.root_proc = callable;
+    eligibility->check.context = context;
+    varg_arg = inline_find_varg_arg(callable);
+    eligibility->check.ref_varg_mode = eligibility->args && varg_arg && varg_arg->is_ref_arg;
+    ast_wlkr(callable, inlinable_check_walker, &eligibility->check);
+
+    if (eligibility->check.node_count > INLINE_MAX_NODES) {
+        eligibility->reject = INLINE_ELIGIBILITY_NODE_CUTOFF;
+    } else if (eligibility->check.return_count != eligibility->return_shape.return_count) {
+        eligibility->reject = INLINE_ELIGIBILITY_RETURN_COUNT_MISMATCH;
+    } else if (eligibility->check.has_unsupported_assembler_alias) {
+        eligibility->reject = INLINE_ELIGIBILITY_ASSEMBLER_ALIAS;
+    } else if (eligibility->check.has_unsupported_assembler_effect) {
+        eligibility->reject = INLINE_ELIGIBILITY_ASSEMBLER_EFFECT;
+    } else if (eligibility->check.has_unsupported_reference) {
+        eligibility->reject = INLINE_ELIGIBILITY_UNSUPPORTED_REFERENCE;
+    } else if (eligibility->check.has_unsupported_varg_access) {
+        eligibility->reject = INLINE_ELIGIBILITY_UNSUPPORTED_VARG_ACCESS;
+    } else if (reject_unportable_class_attribute_shape &&
+               (callable->node_type == METHOD || callable->node_type == FACTORY) &&
+               eligibility->check.has_unportable_class_attribute_shape) {
+        eligibility->reject = INLINE_ELIGIBILITY_UNPORTABLE_CLASS_ATTRIBUTE_SHAPE;
+    }
+
+    return eligibility->reject;
+}
+
+static int inline_eligibility_reject_is_scan_summary(InlineEligibilityReject reject) {
+    return reject == INLINE_ELIGIBILITY_NODE_CUTOFF ||
+           reject == INLINE_ELIGIBILITY_RETURN_COUNT_MISMATCH ||
+           reject == INLINE_ELIGIBILITY_ASSEMBLER_ALIAS ||
+           reject == INLINE_ELIGIBILITY_ASSEMBLER_EFFECT ||
+           reject == INLINE_ELIGIBILITY_UNSUPPORTED_REFERENCE ||
+           reject == INLINE_ELIGIBILITY_UNSUPPORTED_VARG_ACCESS;
+}
+
+static void inline_debug_log_eligibility_reject(Context *context,
+                                               ASTNode *callable,
+                                               Symbol *symbol,
+                                               const InlineEligibility *eligibility) {
+    if (!eligibility) {
+        inline_debug_log(context, callable, symbol, "DEBUG_INLINE",
+                         "reject: inline eligibility analysis failed");
+        return;
+    }
+
+    switch (eligibility->reject) {
+        case INLINE_ELIGIBILITY_MISSING_ARGS_OR_INSTRS:
+        case INLINE_ELIGIBILITY_MISSING_INSTRS:
+            inline_debug_log(context, callable, symbol, "DEBUG_INLINE",
+                             "reject: procedure has no instruction list");
+            return;
+        case INLINE_ELIGIBILITY_RETURN_REFERENCE_CLASS:
+            inline_debug_log(context, callable, symbol, "DEBUG_INLINE",
+                             "reject: returns reference-bearing class");
+            return;
+        case INLINE_ELIGIBILITY_VARG_FORMAL_FOLLOWED:
+            inline_debug_log(context, callable, symbol, "DEBUG_INLINE",
+                             "reject: vararg formal is followed by additional formals");
+            return;
+        case INLINE_ELIGIBILITY_RETURN_SHAPE_FAILED:
+            inline_debug_log(context, callable, symbol, "DEBUG_INLINE",
+                             "reject: failed to analyse return shape");
+            return;
+        case INLINE_ELIGIBILITY_VALUE_NOT_FINAL_RETURN:
+            inline_debug_log(context, callable, symbol, "DEBUG_INLINE",
+                             "reject: value-returning procedure does not end in RETURN");
+            return;
+        case INLINE_ELIGIBILITY_VALUE_NO_RETURN:
+            inline_debug_log(context, callable, symbol, "DEBUG_INLINE",
+                             "reject: value-returning procedure has no RETURN");
+            return;
+        default:
+            break;
+    }
+
+    if (inline_eligibility_reject_is_scan_summary(eligibility->reject)) {
+        inline_debug_log(context, callable, symbol, "DEBUG_INLINE",
+                         "reject: nodes=%d returns=%d final_return=%d assembler_alias=%d assembler_effect=%d unsupported_reference=%d class_attribute_write=%d unsupported_varg=%d cutoff=%d",
+                         eligibility->check.node_count,
+                         eligibility->check.return_count,
+                         eligibility->return_shape.final_is_return,
+                         eligibility->check.has_unsupported_assembler_alias,
+                         eligibility->check.has_unsupported_assembler_effect,
+                         eligibility->check.has_unsupported_reference,
+                         eligibility->check.has_class_attribute_write,
+                         eligibility->check.has_unsupported_varg_access,
+                         INLINE_MAX_NODES);
+        return;
+    }
+
+    inline_debug_log(context, callable, symbol, "DEBUG_INLINE",
+                     "reject: inline eligibility analysis failed");
+}
+
+static void inline_export_debug_eligibility_reject(Context *context,
+                                                  ASTNode *callable,
+                                                  Symbol *symbol,
+                                                  const InlineEligibility *eligibility) {
+    if (!eligibility) {
+        inline_export_debug_reject(context, callable, symbol, "inline eligibility analysis failed");
+        return;
+    }
+
+    switch (eligibility->reject) {
+        case INLINE_ELIGIBILITY_MISSING_ARGS_OR_INSTRS:
+        case INLINE_ELIGIBILITY_MISSING_INSTRS:
+            inline_export_debug_reject(context, callable, symbol, "missing args or instruction list");
+            return;
+        case INLINE_ELIGIBILITY_RETURN_REFERENCE_CLASS:
+            inline_export_debug_reject(context, callable, symbol, "returns reference-bearing class");
+            return;
+        case INLINE_ELIGIBILITY_VARG_FORMAL_FOLLOWED:
+            inline_export_debug_reject(context, callable, symbol, "unsupported vararg formal shape");
+            return;
+        case INLINE_ELIGIBILITY_RETURN_SHAPE_FAILED:
+            inline_export_debug_reject(context, callable, symbol, "failed to analyse return shape");
+            return;
+        case INLINE_ELIGIBILITY_VALUE_NOT_FINAL_RETURN:
+            inline_export_debug_reject(context, callable, symbol, "value procedure lacks final RETURN");
+            return;
+        case INLINE_ELIGIBILITY_VALUE_NO_RETURN:
+            inline_export_debug_reject(context, callable, symbol, "value procedure has no RETURN");
+            return;
+        case INLINE_ELIGIBILITY_NODE_CUTOFF:
+            inline_export_debug_reject(context,
+                                       callable,
+                                       symbol,
+                                       "node count %d exceeds cutoff %d",
+                                       eligibility->check.node_count,
+                                       INLINE_MAX_NODES);
+            return;
+        case INLINE_ELIGIBILITY_RETURN_COUNT_MISMATCH:
+            inline_export_debug_reject(context, callable, symbol, "return-shape mismatch");
+            return;
+        case INLINE_ELIGIBILITY_ASSEMBLER_ALIAS:
+            inline_export_debug_reject(context, callable, symbol, "assembler aliasing instruction");
+            return;
+        case INLINE_ELIGIBILITY_ASSEMBLER_EFFECT:
+            inline_export_debug_reject(context, callable, symbol, "assembler stateful instruction");
+            return;
+        case INLINE_ELIGIBILITY_UNSUPPORTED_REFERENCE:
+            inline_export_debug_reject(context, callable, symbol, "reference operation or type");
+            return;
+        case INLINE_ELIGIBILITY_UNSUPPORTED_VARG_ACCESS:
+            inline_export_debug_reject(context, callable, symbol, "unsupported vararg access");
+            return;
+        case INLINE_ELIGIBILITY_UNPORTABLE_CLASS_ATTRIBUTE_SHAPE:
+            inline_export_debug_reject(context, callable, symbol, "unportable class attribute shape");
+            return;
+        case INLINE_ELIGIBILITY_OK:
+            break;
+    }
+
+    inline_export_debug_reject(context, callable, symbol, "inline eligibility analysis failed");
+}
+
 /* Walker to identify inlinable procedures */
 walker_result identify_inlinable_walker(walker_direction direction, ASTNode *node, void *payload) {
     Context *context = (Context *)payload;
@@ -3495,13 +4563,7 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
         node->node_type == METHOD ||
         node->node_type == FACTORY) {
         Symbol *sym;
-        ASTNode *args;
-        ASTNode *arg;
-        ASTNode *formal_target;
-        Symbol *formal_symbol;
-        ASTNode *instrs;
-        InlineReturnShape return_shape;
-        InlinableCheck check;
+        InlineEligibility eligibility;
 
         sym = node->symbolNode ? node->symbolNode->symbol : NULL;
         if (sym && sym->is_inlinable && inline_symbol_has_callable_template(sym) &&
@@ -3524,83 +4586,17 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
             return result_normal;
         }
 
-        args = ast_chld(node, ARGS, 0);
-        if (args) {
-            arg = args->child;
-            while (arg) {
-                if (arg->is_varg) {
-                    if (arg->sibling) {
-                        inline_debug_log(context, node, sym, "DEBUG_INLINE",
-                                         "reject: vararg formal is followed by additional formals");
-                        sym->is_inlinable = 0;
-                        return result_normal;
-                    }
-                }
-
-                formal_target = ast_chdn(arg, 0);
-                if (arg->is_varg) {
-                    formal_target = arg->sibling;
-                }
-
-                formal_symbol = formal_target && formal_target->symbolNode ? formal_target->symbolNode->symbol : NULL;
-                (void)formal_symbol;
-                arg = arg->sibling;
-            }
-        }
-
-        instrs = ast_chld(node, INSTRUCTIONS, 0);
-        if (!instrs) {
-            inline_debug_log(context, node, sym, "DEBUG_INLINE", "reject: procedure has no instruction list");
-            sym->is_inlinable = 0;
-            return result_normal;
-        }
-
-        if (!inline_analyse_return_shape(node, &return_shape)) {
-            inline_debug_log(context, node, sym, "DEBUG_INLINE", "reject: failed to analyse return shape");
-            sym->is_inlinable = 0;
-            return result_normal;
-        }
-        if (!return_shape.final_is_return && sym->type != TP_VOID) {
-            inline_debug_log(context, node, sym, "DEBUG_INLINE",
-                             "reject: value-returning procedure does not end in RETURN");
-            sym->is_inlinable = 0;
-            return result_normal;
-        }
-        if (sym->type != TP_VOID && return_shape.return_count == 0) {
-            inline_debug_log(context, node, sym, "DEBUG_INLINE",
-                             "reject: value-returning procedure has no RETURN");
-            sym->is_inlinable = 0;
-            return result_normal;
-        }
-
-        memset(&check, 0, sizeof(check));
-        check.root_proc = node;
-        check.ref_varg_mode = args && inline_find_varg_arg(node) && inline_find_varg_arg(node)->is_ref_arg;
-        ast_wlkr(node, inlinable_check_walker, &check);
-
-        if (check.node_count > INLINE_MAX_NODES ||
-            check.return_count != return_shape.return_count ||
-            check.has_unsupported_assembler_alias ||
-            check.has_unsupported_assembler_effect ||
-            check.has_unsupported_varg_access) {
-            inline_debug_log(context, node, sym, "DEBUG_INLINE",
-                             "reject: nodes=%d returns=%d final_return=%d assembler_alias=%d assembler_effect=%d unsupported_varg=%d cutoff=%d",
-                             check.node_count,
-                             check.return_count,
-                             return_shape.final_is_return,
-                             check.has_unsupported_assembler_alias,
-                             check.has_unsupported_assembler_effect,
-                             check.has_unsupported_varg_access,
-                             INLINE_MAX_NODES);
+        if (inline_analyse_callable_eligibility(context, node, sym, 0, 0, &eligibility) != INLINE_ELIGIBILITY_OK) {
+            inline_debug_log_eligibility_reject(context, node, sym, &eligibility);
             sym->is_inlinable = 0;
             return result_normal;
         }
 
         inline_debug_log(context, node, sym, "DEBUG_INLINE",
                          "accept: nodes=%d returns=%d final_return=%d cutoff=%d",
-                         check.node_count,
-                         check.return_count,
-                         return_shape.final_is_return,
+                         eligibility.check.node_count,
+                         eligibility.check.return_count,
+                         eligibility.return_shape.final_is_return,
                          INLINE_MAX_NODES);
         sym->is_inlinable = 1;
         sym->ast_template = node;
@@ -3803,7 +4799,8 @@ typedef struct {
 typedef struct {
     const char *file_name;
     int line;
-    int column;
+    int active_start_column;
+    int active_end_column;
     char provenance;
     const char *source_start;
     size_t source_length;
@@ -4347,23 +5344,100 @@ static int inline_meta_collect_file(InlineMetaExport *meta, const char *file_nam
     return 1;
 }
 
+static int inline_meta_pointer_in_range(const char *ptr, const char *range_start, const char *range_end) {
+    return ptr && range_start && range_end && ptr >= range_start && ptr <= range_end;
+}
+
+static int inline_meta_context_range(Context *context, const char *ptr, const char **range_start, const char **range_end) {
+    if (!context || !context->buff_start || !context->buff_end || !ptr) return 0;
+    if (ptr < context->buff_start || ptr > context->buff_end) return 0;
+    if (range_start) *range_start = context->buff_start;
+    if (range_end) *range_end = context->buff_end;
+    return 1;
+}
+
+static int inline_meta_owned_source_range(SourceNode *source_node,
+                                          const char *ptr,
+                                          const char **range_start,
+                                          const char **range_end) {
+    size_t length;
+
+    if (!source_node || !source_node->owned_source_text || !ptr) return 0;
+    length = strlen(source_node->owned_source_text);
+    if (!inline_meta_pointer_in_range(ptr, source_node->owned_source_text, source_node->owned_source_text + length)) return 0;
+    if (range_start) *range_start = source_node->owned_source_text;
+    if (range_end) *range_end = source_node->owned_source_text + length;
+    return 1;
+}
+
+static int inline_meta_source_range(ASTNode *node,
+                                    const char *source_start,
+                                    const char **range_start,
+                                    const char **range_end) {
+    if (!node || !source_start) return 0;
+    if (inline_meta_owned_source_range(node->source_node, source_start, range_start, range_end)) return 1;
+    if (inline_meta_context_range(node->context, source_start, range_start, range_end)) return 1;
+    if (node->source_node && inline_meta_context_range(node->source_node->context, source_start, range_start, range_end)) return 1;
+    return 0;
+}
+
+static int inline_meta_line_bounds(const char *ptr,
+                                   const char *range_start,
+                                   const char *range_end,
+                                   const char **line_start_out,
+                                   const char **line_end_out) {
+    const char *line_start;
+    const char *line_end;
+
+    if (!ptr || !range_start || !range_end || ptr < range_start || ptr > range_end) return 0;
+    if (ptr == range_end && ptr > range_start) ptr--;
+
+    line_start = ptr;
+    while (line_start > range_start &&
+           line_start[-1] != '\n' &&
+           line_start[-1] != '\r') {
+        line_start--;
+    }
+
+    line_end = ptr;
+    while (line_end < range_end &&
+           *line_end != '\n' &&
+           *line_end != '\r' &&
+           *line_end != 0) {
+        line_end++;
+    }
+
+    if (line_start_out) *line_start_out = line_start;
+    if (line_end_out) *line_end_out = line_end;
+    return 1;
+}
+
 static int inline_meta_node_source_data(ASTNode *node,
                                         const char **file_name_out,
                                         int *line_out,
-                                        int *column_out,
+                                        int *active_start_column_out,
+                                        int *active_end_column_out,
                                         char *provenance_out,
                                         const char **source_start_out,
                                         size_t *source_length_out) {
     const char *source_start;
     const char *source_end;
+    const char *range_start;
+    const char *range_end;
+    const char *line_start;
+    const char *line_end;
+    const char *active_end;
     const char *file_name;
     int line;
     int column;
+    int active_start_column;
+    int active_end_column;
     char provenance;
 
     if (file_name_out) *file_name_out = NULL;
     if (line_out) *line_out = -1;
-    if (column_out) *column_out = -1;
+    if (active_start_column_out) *active_start_column_out = -1;
+    if (active_end_column_out) *active_end_column_out = -1;
     if (provenance_out) *provenance_out = AST_SOURCE_NONE;
     if (source_start_out) *source_start_out = NULL;
     if (source_length_out) *source_length_out = 0;
@@ -4385,15 +5459,35 @@ static int inline_meta_node_source_data(ASTNode *node,
     }
 
     if (!source_start || !source_end || source_end < source_start) return 0;
-    if ((size_t)(source_end - source_start) + 1 > INLINE_META_MAX_SOURCE_SPAN) return 0;
-    if (memchr(source_start, 0, (size_t)(source_end - source_start) + 1)) return 0;
+
+    range_start = 0;
+    range_end = 0;
+    line_start = source_start;
+    line_end = source_end + 1;
+    active_start_column = column >= 0 ? column + 1 : 1;
+    active_end_column = active_start_column + (int)(source_end - source_start) + 1;
+    if (inline_meta_source_range(node, source_start, &range_start, &range_end) &&
+        inline_meta_line_bounds(source_start, range_start, range_end, &line_start, &line_end)) {
+        active_end = source_end;
+        if (active_end >= line_end && line_end > line_start) active_end = line_end - 1;
+        active_start_column = (int)(source_start - line_start) + 1;
+        active_end_column = (int)(active_end - line_start) + 2;
+        if (active_end_column > (int)(line_end - line_start) + 1) {
+            active_end_column = (int)(line_end - line_start) + 1;
+        }
+    }
+
+    if (line_end < line_start) return 0;
+    if ((size_t)(line_end - line_start) > INLINE_META_MAX_SOURCE_SPAN) return 0;
+    if (memchr(line_start, 0, (size_t)(line_end - line_start))) return 0;
 
     if (file_name_out) *file_name_out = file_name;
     if (line_out) *line_out = line;
-    if (column_out) *column_out = column;
+    if (active_start_column_out) *active_start_column_out = active_start_column;
+    if (active_end_column_out) *active_end_column_out = active_end_column;
     if (provenance_out) *provenance_out = provenance;
-    if (source_start_out) *source_start_out = source_start;
-    if (source_length_out) *source_length_out = (size_t)(source_end - source_start) + 1;
+    if (source_start_out) *source_start_out = line_start;
+    if (source_length_out) *source_length_out = (size_t)(line_end - line_start);
     return 1;
 }
 
@@ -4402,7 +5496,8 @@ static int inline_meta_find_source_id(InlineMetaExport *meta, ASTNode *node, siz
     const char *source_start;
     size_t source_length;
     int line;
-    int column;
+    int active_start_column;
+    int active_end_column;
     char provenance;
     size_t i;
 
@@ -4410,7 +5505,8 @@ static int inline_meta_find_source_id(InlineMetaExport *meta, ASTNode *node, siz
     if (!inline_meta_node_source_data(node,
                                       &file_name,
                                       &line,
-                                      &column,
+                                      &active_start_column,
+                                      &active_end_column,
                                       &provenance,
                                       &source_start,
                                       &source_length)) {
@@ -4420,7 +5516,8 @@ static int inline_meta_find_source_id(InlineMetaExport *meta, ASTNode *node, siz
     for (i = 0; i < meta->source_count; i++) {
         InlineMetaSourceEntry *source = &meta->sources[i];
         if (source->line == line &&
-            source->column == column &&
+            source->active_start_column == active_start_column &&
+            source->active_end_column == active_end_column &&
             source->provenance == provenance &&
             source->source_length == source_length &&
             ((source->file_name == file_name) ||
@@ -4441,7 +5538,8 @@ static int inline_meta_collect_source(InlineMetaExport *meta, ASTNode *node) {
     size_t source_length;
     size_t file_id;
     int line;
-    int column;
+    int active_start_column;
+    int active_end_column;
     char provenance;
 
     if (!meta || !node) return 0;
@@ -4449,7 +5547,8 @@ static int inline_meta_collect_source(InlineMetaExport *meta, ASTNode *node) {
     if (!inline_meta_node_source_data(node,
                                       &file_name,
                                       &line,
-                                      &column,
+                                      &active_start_column,
+                                      &active_end_column,
                                       &provenance,
                                       &source_start,
                                       &source_length)) {
@@ -4465,7 +5564,8 @@ static int inline_meta_collect_source(InlineMetaExport *meta, ASTNode *node) {
     meta->sources = new_sources;
     meta->sources[meta->source_count].file_name = file_name;
     meta->sources[meta->source_count].line = line;
-    meta->sources[meta->source_count].column = column;
+    meta->sources[meta->source_count].active_start_column = active_start_column;
+    meta->sources[meta->source_count].active_end_column = active_end_column;
     meta->sources[meta->source_count].provenance = provenance;
     meta->sources[meta->source_count].source_start = source_start;
     meta->sources[meta->source_count].source_length = source_length;
@@ -4782,11 +5882,12 @@ static int inline_meta_emit_sources(InlineMetaText *text, InlineMetaExport *meta
         char *source_hex = inline_meta_hex_encode(source->source_start, source->source_length);
         if (!source_hex) return 0;
         if (!inline_meta_text_appendf(text,
-                                      ";u,%zu,%ld,%d,%d,%d,%s",
+                                      ";u,%zu,%ld,%d,%d,%d,%d,%s",
                                       source->id,
                                       file_id,
                                       source->line,
-                                      source->column,
+                                      source->active_start_column,
+                                      source->active_end_column,
                                       (int)source->provenance,
                                       source_hex)) {
             free(source_hex);
@@ -5028,10 +6129,7 @@ static int inline_meta_emit_node(InlineMetaText *text, InlineMetaExport *meta, A
 
 char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
     Symbol *symbol;
-    ASTNode *args;
-    ASTNode *instrs;
-    InlineReturnShape return_shape;
-    InlinableCheck check;
+    InlineEligibility eligibility;
     InlineMetaExport meta;
     InlineMetaText text;
 
@@ -5056,58 +6154,8 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
         return strdup("");
     }
 
-    args = ast_chld(callable, ARGS, 0);
-    instrs = ast_chld(callable, INSTRUCTIONS, 0);
-    if (!args || !instrs) {
-        inline_export_debug_reject(context, callable, symbol, "missing args or instruction list");
-        return strdup("");
-    }
-
-    if (!inline_analyse_return_shape(callable, &return_shape)) {
-        inline_export_debug_reject(context, callable, symbol, "failed to analyse return shape");
-        return strdup("");
-    }
-    if (!return_shape.final_is_return && symbol->type != TP_VOID) {
-        inline_export_debug_reject(context, callable, symbol, "value procedure lacks final RETURN");
-        return strdup("");
-    }
-    if (symbol->type != TP_VOID && return_shape.return_count == 0) {
-        inline_export_debug_reject(context, callable, symbol, "value procedure has no RETURN");
-        return strdup("");
-    }
-
-    memset(&check, 0, sizeof(check));
-    check.root_proc = callable;
-    check.ref_varg_mode = args && inline_find_varg_arg(callable) && inline_find_varg_arg(callable)->is_ref_arg;
-    ast_wlkr(callable, inlinable_check_walker, &check);
-    if (check.node_count > INLINE_MAX_NODES) {
-        inline_export_debug_reject(context,
-                                   callable,
-                                   symbol,
-                                   "node count %d exceeds cutoff %d",
-                                   check.node_count,
-                                   INLINE_MAX_NODES);
-        return strdup("");
-    }
-    if (check.return_count != return_shape.return_count) {
-        inline_export_debug_reject(context, callable, symbol, "return-shape mismatch");
-        return strdup("");
-    }
-    if (check.has_unsupported_assembler_alias) {
-        inline_export_debug_reject(context, callable, symbol, "assembler aliasing instruction");
-        return strdup("");
-    }
-    if (check.has_unsupported_assembler_effect) {
-        inline_export_debug_reject(context, callable, symbol, "assembler stateful instruction");
-        return strdup("");
-    }
-    if (check.has_unsupported_varg_access) {
-        inline_export_debug_reject(context, callable, symbol, "unsupported vararg access");
-        return strdup("");
-    }
-    if ((callable->node_type == METHOD || callable->node_type == FACTORY) &&
-        check.has_unportable_class_attribute_shape) {
-        inline_export_debug_reject(context, callable, symbol, "unportable class attribute shape");
+    if (inline_analyse_callable_eligibility(context, callable, symbol, 1, 1, &eligibility) != INLINE_ELIGIBILITY_OK) {
+        inline_export_debug_eligibility_reject(context, callable, symbol, &eligibility);
         return strdup("");
     }
 
@@ -5118,9 +6166,9 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
         free(meta.scopes);
         return strdup("");
     }
-    if (!inline_meta_collect(args, &meta) ||
-        !inline_meta_collect(instrs, &meta)) {
-        inline_meta_debug_collect_failure(context, callable, symbol, &meta, args, instrs);
+    if (!inline_meta_collect(eligibility.args, &meta) ||
+        !inline_meta_collect(eligibility.instrs, &meta)) {
+        inline_meta_debug_collect_failure(context, callable, symbol, &meta, eligibility.args, eligibility.instrs);
         free(meta.scopes);
         free(meta.symbols);
         free(meta.files);
@@ -5131,16 +6179,16 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
 
     inline_meta_text_init(&text);
     if (!text.ok ||
-        !inline_meta_text_append(&text, "I4") ||
+        !inline_meta_text_append(&text, "I5") ||
         !inline_meta_emit_files(&text, &meta) ||
         !inline_meta_emit_sources(&text, &meta) ||
         !inline_meta_emit_scopes(&text, &meta) ||
         !inline_meta_emit_symbols(&text, &meta) ||
         !inline_meta_emit_dependencies(&text, &meta) ||
         !inline_meta_text_append(&text, ";a") ||
-        !inline_meta_emit_node(&text, &meta, args) ||
+        !inline_meta_emit_node(&text, &meta, eligibility.args) ||
         !inline_meta_text_append(&text, ";b") ||
-        !inline_meta_emit_node(&text, &meta, instrs)) {
+        !inline_meta_emit_node(&text, &meta, eligibility.instrs)) {
         inline_export_debug_reject(context, callable, symbol, "failed to emit inline metadata");
         free(meta.scopes);
         free(meta.symbols);
@@ -5160,7 +6208,7 @@ char *rxcp_inline_export_payload(Context *context, ASTNode *callable) {
 }
 
 int rxcp_inline_payload_is_supported(const char *payload) {
-    return payload && payload[0] == 'I' && payload[1] == '4' &&
+    return payload && payload[0] == 'I' && (payload[1] == '4' || payload[1] == '5') &&
            (payload[2] == 0 || payload[2] == ';');
 }
 
@@ -5333,14 +6381,19 @@ static int inline_meta_import_source(Context *context, InlineMetaImport *meta, c
     char *id_field;
     char *file_field;
     char *line_field;
-    char *column_field;
+    char *start_column_field;
+    char *end_column_field;
     char *provenance_field;
     char *source_field;
     char *source_text;
     char *file_name;
     size_t id;
     size_t source_length;
+    size_t start_offset;
+    size_t end_offset;
     long file_id;
+    int start_column;
+    int end_column;
     SourceNode *source_node;
 
     if (!context || !meta || !record) return 0;
@@ -5349,10 +6402,13 @@ static int inline_meta_import_source(Context *context, InlineMetaImport *meta, c
     id_field = inline_meta_next_field(&cursor);
     file_field = inline_meta_next_field(&cursor);
     line_field = inline_meta_next_field(&cursor);
-    column_field = inline_meta_next_field(&cursor);
+    start_column_field = inline_meta_next_field(&cursor);
+    end_column_field = NULL;
+    if (meta->version >= 5) end_column_field = inline_meta_next_field(&cursor);
     provenance_field = inline_meta_next_field(&cursor);
     source_field = inline_meta_next_field(&cursor);
-    if (!id_field || !file_field || !line_field || !column_field || !provenance_field || !source_field) return 0;
+    if (!id_field || !file_field || !line_field || !start_column_field || !provenance_field || !source_field) return 0;
+    if (meta->version >= 5 && !end_column_field) return 0;
 
     id = (size_t)strtoul(id_field, NULL, 10);
     if (!inline_meta_ensure_source_slot(meta, id)) return 0;
@@ -5378,10 +6434,26 @@ static int inline_meta_import_source(Context *context, InlineMetaImport *meta, c
     source_node->owned_file_name = file_name ? strdup(file_name) : NULL;
     source_node->file_name = source_node->owned_file_name;
     source_node->owned_source_text = source_text;
-    source_node->source_start = source_text;
-    source_node->source_end = source_length ? source_text + source_length - 1 : source_text;
     source_node->line = atoi(line_field);
-    source_node->column = atoi(column_field);
+    if (meta->version >= 5) {
+        start_column = atoi(start_column_field);
+        end_column = atoi(end_column_field);
+        if (start_column < 1) start_column = 1;
+        if (end_column < start_column) end_column = start_column;
+        start_offset = (size_t)(start_column - 1);
+        end_offset = (size_t)(end_column - 1);
+        if (start_offset > source_length) start_offset = source_length;
+        if (end_offset > source_length) end_offset = source_length;
+        if (end_offset < start_offset) end_offset = start_offset;
+        source_node->source_start = source_text + start_offset;
+        if (end_offset > start_offset) source_node->source_end = source_text + end_offset - 1;
+        else source_node->source_end = source_node->source_start;
+        source_node->column = start_column - 1;
+    } else {
+        source_node->source_start = source_text;
+        source_node->source_end = source_length ? source_text + source_length - 1 : source_text;
+        source_node->column = atoi(start_column_field);
+    }
     source_node->free_list = context->source_free_list;
     if (source_node->free_list) source_node->node_number = source_node->free_list->node_number + 1;
     else source_node->node_number = 1;
@@ -6043,6 +7115,7 @@ static ASTNode *inline_meta_create_template_proc(Context *context,
                            NULL,
                            SCOPE_PROCEDURE);
     if (!template_scope) return NULL;
+    if (!template_scope->parent && !scp_track_detached(context, template_scope)) return NULL;
     if (proc->node_type == METHOD || proc->node_type == FACTORY) template_proc->parent = proc->parent;
     if (proc->scope->name) template_scope->name = strdup(proc->scope->name);
     inline_copy_numeric_context(template_scope, proc->scope);
@@ -6083,11 +7156,30 @@ static int inline_meta_finish_template(ASTNode *proc,
     return 1;
 }
 
+static char *inline_meta_next_record(char **cursor) {
+    char *record;
+    char *separator;
+
+    if (!cursor || !*cursor) return NULL;
+
+    record = *cursor;
+    separator = strchr(record, ';');
+    if (separator) {
+        *separator = '\0';
+        *cursor = separator + 1;
+    } else {
+        *cursor = NULL;
+    }
+
+    return record;
+}
+
 static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const char *payload) {
     InlineMetaImport meta;
     ASTNode *template_proc;
     Scope *template_scope;
     char *copy;
+    char *cursor;
     char *record;
 
     if (!context || !rxcp_inline_payload_is_supported(payload)) return 0;
@@ -6099,7 +7191,8 @@ static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const cha
     copy = strdup(payload);
     if (!copy) return 0;
 
-    record = strtok(copy, ";");
+    cursor = copy;
+    record = inline_meta_next_record(&cursor);
     if (!record) {
         free(copy);
         return 0;
@@ -6108,6 +7201,7 @@ static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const cha
     else if (strcmp(record, "I2") == 0) meta.version = 2;
     else if (strcmp(record, "I3") == 0) meta.version = 3;
     else if (strcmp(record, "I4") == 0) meta.version = 4;
+    else if (strcmp(record, "I5") == 0) meta.version = 5;
     else {
         free(copy);
         return 0;
@@ -6129,7 +7223,7 @@ static int inline_meta_attach_to_proc(Context *context, ASTNode *proc, const cha
     }
     meta.scopes[0] = meta.scope;
 
-    while ((record = strtok(NULL, ";")) != NULL) {
+    while ((record = inline_meta_next_record(&cursor)) != NULL) {
         if (strcmp(record, "<") == 0) {
             if (!meta.stack_count) {
                 meta.ok = 0;

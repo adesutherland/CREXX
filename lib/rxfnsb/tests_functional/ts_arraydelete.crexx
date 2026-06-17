@@ -1,0 +1,179 @@
+/* rexx test array helper bifs */
+options levelb
+import rxfnsb
+
+failures = 0
+
+failures = failures + test_delete("delete middle", "A B C D E F", 3, 2, "A B E F")
+failures = failures + test_delete("delete first element", "A B C D", 1, 1, "B C D")
+failures = failures + test_delete("delete last element", "A B C D", 4, 1, "A B C")
+failures = failures + test_delete("delete entire array", "A B C", 1, 10, "")
+failures = failures + test_delete("delete beyond end no-op", "A B C", 5, 2, "A B C")
+failures = failures + test_delete("delete count zero no-op", "A B C", 2, 0, "A B C")
+failures = failures + test_delete("delete low index no-op", "A B C", 0, 2, "A B C")
+failures = failures + test_delete("delete tail clamp", "A B C D E", 3, 10, "A B")
+
+failures = failures + test_insert("insert middle default", "A B D", 2, 1, "C", "A C B D")
+failures = failures + test_insert("insert two middle", "A D", 2, 2, "X", "A X X D")
+failures = failures + test_insert("insert append clamp", "A B", 20, 1, "Z", "A B Z")
+failures = failures + test_insert("insert count zero no-op", "A B", 2, 0, "Z", "A B")
+failures = failures + test_insert("insert low index no-op", "A B", 0, 1, "Z", "A B")
+
+failures = failures + test_move("move middle to front", "A B C D E", 3, 2, 1, "C D A B E")
+failures = failures + test_move("move first block to append", "A B C D E", 1, 2, 6, "C D E A B")
+failures = failures + test_move("move after removed block", "A B C D E", 2, 2, 5, "A D B C E")
+failures = failures + test_move("move inside block no-op", "A B C D E", 2, 2, 3, "A B C D E")
+failures = failures + test_move("move tail clamp", "A B C D E", 4, 9, 1, "D E A B C")
+
+failures = failures + test_stack_queue_helpers()
+failures = failures + test_access_search_helpers()
+failures = failures + test_reverse_join_helpers()
+failures = failures + test_hi_drop_copy()
+
+if failures <> 0 then do
+  say "array helper failures:" failures
+  exit 1
+end
+
+say "PASS: array helpers"
+exit 0
+
+test_delete: procedure=.int
+  arg label=.string, data=.string, from=.int, count=.int, expected=.string
+
+  a = .string[]
+  call load_array a, data
+  call arraydelete a, from, count
+return check_join(label, a, expected)
+
+test_insert: procedure=.int
+  arg label=.string, data=.string, from=.int, count=.int, default=.string, expected=.string
+
+  a = .string[]
+  call load_array a, data
+  call arrayinsert a, from, count, default
+return check_join(label, a, expected)
+
+test_move: procedure=.int
+  arg label=.string, data=.string, from=.int, count=.int, tto=.int, expected=.string
+
+  a = .string[]
+  call load_array a, data
+  call arraymove a, from, count, tto
+return check_join(label, a, expected)
+
+test_stack_queue_helpers: procedure=.int
+  failures = 0
+
+  a = .string[]
+  failures = failures + check_int("arrayappend one rc", arrayappend(a, "B"), 1)
+  failures = failures + check_int("arrayappend repeat rc", arrayappend(a, "C", 2), 3)
+  failures = failures + check_int("arrayprepend one rc", arrayprepend(a, "A"), 4)
+  failures = failures + check_join("append/prepend data", a, "A B C C")
+
+  failures = failures + check_string("arraypop value", arraypop(a, "?"), "C")
+  failures = failures + check_string("arrayshift value", arrayshift(a, "?"), "A")
+  failures = failures + check_join("pop/shift data", a, "B C")
+
+  call arraydrop a
+  failures = failures + check_string("arraypop empty default", arraypop(a, "?"), "?")
+  failures = failures + check_string("arrayshift empty default", arrayshift(a, "?"), "?")
+return failures
+
+test_access_search_helpers: procedure=.int
+  failures = 0
+
+  a = .string[]
+  failures = failures + check_int("arrayset grow rc", arrayset(a, 3, "C", "_"), 3)
+  failures = failures + check_join("arrayset grow data", a, "_ _ C")
+  failures = failures + check_int("arrayset middle rc", arrayset(a, 2, "B"), 3)
+  failures = failures + check_int("arrayset first rc", arrayset(a, 1, "A"), 3)
+  failures = failures + check_join("arrayset data", a, "A B C")
+
+  failures = failures + check_string("arrayget present", arrayget(a, 2, "?"), "B")
+  failures = failures + check_string("arrayget default", arrayget(a, 9, "?"), "?")
+  failures = failures + check_int("arraycontains exact", arraycontains(a, "B"), 1)
+  failures = failures + check_int("arraycontains missing exact", arraycontains(a, "b"), 0)
+  failures = failures + check_int("arraycontains nocase", arraycontains(a, "b", 0), 1)
+  failures = failures + check_int("arrayindexof exact", arrayindexof(a, "C"), 3)
+  failures = failures + check_int("arrayindexof from", arrayindexof(a, "A", 2), 0)
+  failures = failures + check_int("arrayindexof nocase", arrayindexof(a, "c", 1, 0), 3)
+return failures
+
+test_reverse_join_helpers: procedure=.int
+  failures = 0
+
+  a = .string[]
+  call load_array a, "A B C"
+  failures = failures + check_int("arrayreverse rc", arrayreverse(a), 3)
+  failures = failures + check_join("arrayreverse data", a, "C B A")
+  failures = failures + check_string("arrayjoin comma", arrayjoin(a, ","), "C,B,A")
+  failures = failures + check_string("arrayjoin empty separator", arrayjoin(a), "CBA")
+return failures
+
+test_hi_drop_copy: procedure=.int
+  failures = 0
+
+  a = .string[]
+  call load_array a, "A B C D"
+  failures = failures + check_int("arrayhi get", arrayhi(a), 4)
+  failures = failures + check_int("arrayhi shrink", arrayhi(a, "SET", 2), 2)
+  failures = failures + check_join("arrayhi shrink data", a, "A B")
+  failures = failures + check_int("arrayhi grow ignored", arrayhi(a, "SET", 5), 2)
+  failures = failures + check_join("arrayhi grow ignored data", a, "A B")
+
+  b = arraycopy(a)
+  failures = failures + check_join("arraycopy full", b, "A B")
+  b = arraycopy(a, -1)
+  failures = failures + check_join("arraycopy negative from", b, "B")
+
+  failures = failures + check_int("arraydrop rc", arraydrop(a), 0)
+  failures = failures + check_join("arraydrop data", a, "")
+return failures
+
+load_array: procedure
+  arg expose a=.string[], data=.string
+
+  call arraydrop a
+  do i = 1 to words(data)
+    a[i] = word(data, i)
+  end
+return
+
+check_join: procedure=.int
+  arg label=.string, a=.string[], expected=.string
+
+  actual = join(a)
+  if actual <> expected then do
+    say label": expected ["expected"] got ["actual"]"
+    return 1
+  end
+return 0
+
+check_int: procedure=.int
+  arg label=.string, actual=.int, expected=.int
+
+  if actual <> expected then do
+    say label": expected" expected "got" actual
+    return 1
+  end
+return 0
+
+check_string: procedure=.int
+  arg label=.string, actual=.string, expected=.string
+
+  if actual <> expected then do
+    say label": expected ["expected"] got ["actual"]"
+    return 1
+  end
+return 0
+
+join: procedure=.string
+  arg a=.string[]
+
+  out = ""
+  do i = 1 to a[0]
+    out = out || a[i]
+    if i < a[0] then out = out || " "
+  end
+return out

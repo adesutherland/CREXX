@@ -9,7 +9,9 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 set(REXXBINS
         tlinesz.rxbin
         ts_abbrev.rxbin
-	    ts_address.rxbin
+	ts_abs.rxbin
+	ts_address.rxbin
+        ts_binary.rxbin
         ts_c2x.rxbin
         ts_center.rxbin
         ts_changestr.rxbin
@@ -21,6 +23,8 @@ set(REXXBINS
         ts_date2.rxbin
         ts_delstr.rxbin
         ts_delword.rxbin
+        ts_evaluate.rxbin
+        ts_fileio_chars.rxbin
         ts_format.rxbin
         ts_insert.rxbin
         ts_left.rxbin
@@ -68,6 +72,7 @@ set(REXXBINS
         ts_numeric.rxbin
         ts_splice.rxbin
         ts_arraydelete.rxbin
+        ts_objectarray.rxbin
         ts_stem.rxbin
         ts_rxjson.rxbin
         ts_rxsocket.rxbin
@@ -83,12 +88,12 @@ unset(_prev_target)
 foreach(_binfile ${REXXBINS})
     get_filename_component(_basename ${_binfile} NAME_WE)
 
-    set(_rexx_file "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx")
-    set(_rexx_dep "${_basename}.rexx")
+    set(_rexx_file "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx")
+    set(_rexx_dep "${_basename}.crexx")
 
     # if("${_basename}" STREQUAL "ts_parse2")
     #     # Technical Debt: ts_parse2 is pre-compiled from .rxpp
-    #     set(_rexx_file "${CMAKE_CURRENT_BINARY_DIR}/${_basename}.rexx")
+    #     set(_rexx_file "${CMAKE_CURRENT_BINARY_DIR}/${_basename}.crexx")
     #     set(_rexx_dep "${_rexx_file}")
     #     add_custom_command(
     #             OUTPUT ${_rexx_file}
@@ -104,6 +109,10 @@ foreach(_binfile ${REXXBINS})
     if("${_basename}" STREQUAL "ts_address")
         set(_rxc_flags)
     endif()
+    set(_pass_test_name_argument)
+    if("${_basename}" STREQUAL "ts_fileio_chars")
+        set(_pass_test_name_argument PASS_TEST_NAME_ARGUMENT)
+    endif()
     crexx_add_rexx_opt_matrix(
             NAME ${_basename}
             SOURCE ${_rexx_file}
@@ -112,6 +121,7 @@ foreach(_binfile ${REXXBINS})
             RXC_FLAGS ${_rxc_flags}
             DEPENDS library ${_rexx_dep} ${_prev_target}
             RUNTIME_ARGS ${LIBRPATH}
+            ${_pass_test_name_argument}
     )
     set(_prev_target ${_basename}_noopt_artifact ${_basename}_opt_artifact)
 endforeach()
@@ -128,3 +138,11 @@ set_tests_properties(ts_trace_noopt ts_trace_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: trace helpers")
 set_tests_properties(ts_version_noopt ts_version_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: version helper")
+set_tests_properties(ts_binary_noopt ts_binary_opt
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: binary helpers")
+set_tests_properties(ts_evaluate_noopt ts_evaluate_opt
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: evaluate helpers")
+set_tests_properties(ts_fileio_chars_noopt ts_fileio_chars_opt
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: file character helpers" RUN_SERIAL TRUE)
+set_tests_properties(ts_arraydelete_noopt ts_arraydelete_opt
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: array helpers")

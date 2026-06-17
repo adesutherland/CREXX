@@ -5,6 +5,8 @@
  *   slot 2 ->  1.5
  *   slot 5 ->  1.5
  *   slot 8 -> -0.0
+ *   slot 11 -> 3.141592653589793238462643383279
+ *   slot 15 -> 3.141593
  */
 
 .globals=0
@@ -13,6 +15,9 @@ main() .locals=8
     load r1, 1.5
     load r2, 1.5
     load r3, -0.0
+    load r7, 3.141592653589793238462643383279
+    feq r0, r7, 3.141593
+    brt fail_precision, r0
 
     load r4, 1
     load r5, 2
@@ -29,4 +34,8 @@ main() .locals=8
 
 fail:
     say "FAIL: float pool operand decode"
+    ret 1
+
+fail_precision:
+    say "FAIL: long float literal collapsed to six-decimal rounded value"
     ret 1

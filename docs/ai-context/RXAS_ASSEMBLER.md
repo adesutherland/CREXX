@@ -9,6 +9,9 @@ The assembler processes source files through a pipelined, pseudo-two-pass archit
 1. **Lexical Analysis (`re2c`)**:
    - Source defined in `assembler/rxasscan.re`.
    - Tokenizes input into REXX Assembly primitives: registers (`RREG`, `GREG`, `AREG`), literal types (`STRING`, `INT`, `FLOAT`, `DECIMAL`, `HEX`), symbols (`ID`, `LABEL`, `FUNC`), and assembler directives (e.g., `.locals`, `.globals`, `.expose`, `.meta`).
+   - `HEX` is the RXAS binary-literal token. It accepts byte-paired
+     `0x...`/`0X...` text, including empty `0x`, and is stored as
+     `OP_BINARY` rather than as an integer literal.
    - The lexer also recognizes the interface metadata keywords used at the end of
      `.meta` records: `.interface`, `.implements`, and `.member`.
 
@@ -16,15 +19,17 @@ The assembler processes source files through a pipelined, pseudo-two-pass archit
    - Grammar defined in `assembler/rxasgrmr.y`.
    - Enforces the structural integrity of the `.rxas` file (headers, function definitions, variable declarations, and instruction sequences).
    - The parser actions invoke Builder API functions directly (e.g., `rxasgen*`, `rxaslabl`, `rxasproc`), translating syntax rules into buffered internal data structures.
-   - Instruction names are derived from `binutils/include/rxops.h`, so new VM
-     opcodes become assembler mnemonics through that shared table. Recent core
-     runtime additions include the object/interface instructions and the
-     `sock*` TCP socket instructions.
+   - Instruction names are derived from `binutils/include/rxops.h`, with a
+     public-source filter for bytecode/runtime-only entries. `RESERVED_*`,
+     `INULL`, `INTERRUPT`, and `IUNKNOWN` remain opcode-table entries but are
+     deliberately rejected as RXAS mnemonics. Recent core runtime additions
+     include the object/interface instructions and the `sock*` TCP socket
+     instructions.
 
 3. **In-Memory Buffering & Constant Pooling**:
    - Handled in `assembler/rxasassm.c`.
    - Instructions and operand slots are appended sequentially into a dynamic array of `bin_code` elements.
-   - Complex and pooled literal types (Strings, Floats, Decimals, Procedure Headers, Metadata) are deduplicated via AVL Trees and injected into a variable-length **Constant Pool**.
+   - Complex and pooled literal types (Strings, Binary literals, Floats, Decimals, Procedure Headers, Metadata) are deduplicated via AVL Trees and injected into a variable-length **Constant Pool**.
 
 4. **Backpatching & Optimization (Second Pass)**:
    - Forward references (branches to undefined labels, calls to undefined procedures) are logged as a linked list of references.
@@ -47,8 +52,8 @@ context->binary.binary[context->binary.inst_size++].iconst = token->integer;
 ```
 
 ### Constant Pool
-Strings, pooled float literals, procedure mappings, debug metadata, and exported symbols are packed into `const_pool`. This is a sequential buffer of dynamically sized records. Every record starts with a `chameleon_constant` header dictating its type and byte size.
-Types include: `STRING_CONST`, `FLOAT_CONST`, `PROC_CONST`, `EXPOSE_REG_CONST`, `EXPOSE_PROC_CONST`, `META_FUNC`, `META_INLINE`, `META_REG`, etc.
+Strings, binary literals, pooled float literals, procedure mappings, debug metadata, and exported symbols are packed into `const_pool`. This is a sequential buffer of dynamically sized records. Every record starts with a `chameleon_constant` header dictating its type and byte size.
+Types include: `STRING_CONST`, `BINARY_CONST`, `FLOAT_CONST`, `PROC_CONST`, `EXPOSE_REG_CONST`, `EXPOSE_PROC_CONST`, `META_FUNC`, `META_INLINE`, `META_REG`, etc.
 
 The serialized `expose_head` chain includes both `EXPOSE_REG_CONST` and
 `EXPOSE_PROC_CONST` records. Runtime linking and other module-local walkers now
@@ -76,6 +81,39 @@ spelling so source, RXAS, and binary import paths do not drift. Linked final
 images normally strip `META_INLINE`; library artifacts preserve it for
 downstream `rxc` optimisation.
 
+Source/debug metadata now has two separate identities:
+
+- `.srcstep` `step-id` is a module-local id for one concrete source anchor:
+  pooled file name, whole source line, active range, and provenance flags. It is
+  not an instruction address or a source line number.
+- `.srcstep` and `.traceevent` `clause-id` is a module-local grouping key for
+  all anchors and semantic events that belong to one logical authored clause.
+  Simple clauses often use the same value for both ids; split clauses, generated
+  helper code, loop pieces, or inlined fragments may use several step ids for one
+  clause id.
+
+`0` means there is no source/clause anchor. In a linked image, consumers should
+treat identity as module plus id because ids are only local to their original
+module.
+
+The RXAS spellings are:
+
+```rxas
+.srcstep <step-id> <clause-id> <flags> "<file>" <line> <start-col> <end-col> "<whole-source-line>"
+.traceevent "<kind>" <mode-mask> "<value-source>" "<value-type>" "<register-type>" <value-ref> <source-step-id> <clause-id> <flags> "<symbol>" "<resolved-name>"
+```
+
+TRACE event records deliberately store compact codes, not presentation strings.
+Current event kinds include `A` assignment, `V` variable read, `C` resolved
+compound name, `L` literal, `O` binary operation, `P` prefix operation, `F`
+function result, and `M` message. The TRACE exit handler maps those to classic
+prefixes such as `>=>`, `>V>`, `>C>`, `>L>`, `>O>`, `>P>`, `>F>`, and `+++`.
+The mode mask controls visibility in modes such as Results and Intermediates.
+`value-source` is `R` for a register, `K` for a constant-pool value, or `N`
+when no value is attached. Register-backed events must name an actual available
+register at that address; handlers must not infer values from source text or
+scope metadata.
+
 Metadata-only modules are valid. For example, an interface contract file may
 compile to `.rxas` containing `.meta` records and no function bodies; `rxas`
 must still emit a `.rxbin` so import and runtime factory resolution can load
@@ -84,6 +122,92 @@ the contract metadata.
 For interface methods, the member-kind string now distinguishes:
 - `method` for an abstract interface method
 - `method final` for a Level B final/default interface method body
+
+### Binary Literals
+RXAS binary literals are written as byte-paired hex with a `0x` or `0X`
+prefix. `0x00ff` stores two bytes (`00 ff`) in a `BINARY_CONST`, and `0x`
+stores an empty binary constant. `rxdas` emits the canonical lowercase
+`0x...` spelling.
+
+`load rDst,0x...` uses `LOAD_REG_BINARY` and loads the VM register's binary
+slot, not its string slot. Binary-buffer VM instructions exposed at RXAS are:
+
+- `blen rOut,rBin`
+- `getbyte rOut,rBin,rIndex`
+- `setbyte rBin,rIndex,rByte`
+- `bconcat rDst,rLeft,rRight`
+- `bappend rDst,rRight`
+- `setbinpos rBin,rOffset`
+- `getbinpos rOut,rBin`
+- `bslice rDst,rSrc,rLen`
+- `bupdate rDst,rOffset,rSrc`
+- `stobin rReg`
+- `bintos rReg`
+
+Indexes and lengths are bytes and zero-based. `bslice` reads from the source
+binary cursor and truncates at end-of-buffer. `setbyte` and `bupdate` are
+strict and raise `OUT_OF_RANGE` for invalid indexes, bytes outside `0..255`, or
+overlay writes past the destination length. `stobin` copies the register's
+current string bytes into its binary slot. `bintos` validates the register's
+current binary bytes as UTF-8 and copies them into its string slot; invalid
+bytes raise `UNICODE_ERROR` in UTF builds.
+
+Level B exposes these byte-buffer instructions through the `rxfnsb` binary
+helpers (`binlength`, `binbyte`, `binsetbyte`, `binsubstr`, `binconcat`,
+`binoverlay`, `bininsert`, `bindelstr`, `binpos`, `bincompare`, `bin2x`,
+`x2bin`). The source-level `||` operator also lowers to `bconcat` when either
+operand is `.binary`; blank concat remains a text-only operation.
+
+### Attribute Array Helpers
+
+RXAS exposes VM attribute-array operations for array/object backing storage:
+
+- `getattrs rOut,rArray`
+- `setattrs rArray,rCount` / `setattrs rArray,count`
+- `minattrs rArray,rCount` / `minattrs rArray,count`
+- `linkattr` / `linkattr1`, `linktoattr` / `linktoattr1`, and
+  `unlinkattr` / `unlinkattr1`
+- `insattrs rArray,index,count` and `delattrs rArray,index,count`
+- `insattrs1 rArray,index,count` and `delattrs1 rArray,index,count`
+
+The forms without a `1` suffix use zero-based indexes. The `*1` forms use
+one-based indexes and are the usual fit for Level B array BIFs. Bulk insert
+accepts an index in `0..num_attributes` (`1..num_attributes+1` for `*1`) and
+inserts before that position. Bulk delete is strict: the requested range must
+fit inside the current attributes. Passing a count of zero is a no-op, but the
+index still must be in range. Invalid ranges raise `OUT_OF_RANGE`.
+
+### Reference Helpers
+
+RXAS exposes the VM-first reference surface before any Rexx source syntax is
+finalized:
+
+- `mkref rRef,rSource` creates a reference value to the storage currently named
+  by `rSource`, after existing local links have resolved to their target
+  storage.
+- `deref rDest,rRef` copies the current referenced value into `rDest`. This is
+  a snapshot copy, including nested attributes, not a live alias.
+- `linkref rLocal,rRef` links a local register to the referenced storage until
+  the existing `unlink rLocal` restores its base storage.
+- `setref rRef,rSource` copies `rSource` into the referenced storage.
+- `refvalid rOut,rRef` stores `1` when the reference is still valid and `0`
+  otherwise.
+- `unref rRef` clears a reference value and releases its reference-cell retain.
+
+Invalid reference use raises `REFERENCE_INVALID`; `refvalid` is the non-raising
+probe. A reference becomes invalid when its target storage lifetime ends, such
+as deleted/shrunk attribute storage or frame-owned local storage after return.
+Plain overwrite of still-live storage keeps the reference valid. These
+instructions are optimiser barriers until reference alias effects are modelled
+more deeply. Assigning a scalar value into the register that holds a reference
+value clears that register's reference payload; it does not invalidate the
+referenced target storage.
+
+In UTF builds, RXAS string constants are text, not byte containers. Hand-written
+string operands are unescaped and validated before entering the constant pool;
+invalid UTF-8 is an assembly error with guidance to use `0x...` binary
+literals. Use `load rDst,0x...`, `freadb`, `fwriteb`, `sockrecvb`, or
+`socksendb` for arbitrary bytes.
 
 ### Symbol Tracking (AVL Trees)
 To deduplicate constants and resolve identifiers in `O(log N)` time, the assembler leverages a custom AVL tree implementation (`avl_tree.h`). Active trees include:
@@ -132,6 +256,11 @@ As of format version `002` and later, float operands are no longer stored inline
 `double` payloads in operand slots. Instead, the operand slot carries an index
 to a deduplicated `FLOAT_CONST` record in the constant pool.
 
+`rxdas` emits float operands and `FLOAT_CONST` pool entries with enough
+significant digits to distinguish binary64 values that would otherwise share a
+six-decimal rendering, while keeping integer-looking values parseable as RXAS
+float tokens (for example, `-0.0` rather than `-0`).
+
 As of the current `003` layout, `rxas` still builds the normal in-memory
 `bin_code[]` and raw constant pool first. The section compaction step happens
 when `write_module()` serializes the module:
@@ -147,7 +276,15 @@ The current interface runtime slice relies on three assembler-visible opcodes
 and the metadata records above:
 
 - `setobjtype rX,"fully.qualified.class"` stamps a newly created object value
-  with its concrete runtime class identity
+  with its concrete runtime class identity and clears any uninitialized-object
+  marker
+- `setobjuninit rX,"fully.qualified.class"` writes a typed object placeholder
+  and marks it uninitialized; the compiler uses this for bare object class
+  defaults such as `.SomeClass`
+- `assertinitialized rX` raises `OBJECT_NOT_INITIALIZED` if `rX` is a typed
+  uninitialized object value
+- `isinitialized rOut,rX` stores `0` for a typed uninitialized object and `1`
+  otherwise
 - `srcmethod rProc,rObj,"member"` resolves a concrete procedure from an object
   value plus a member name
 - `srcfproc rProc,"fully.qualified.interface",rArgs` resolves the default `*`
@@ -159,6 +296,10 @@ and the metadata records above:
   class, or `.object`
 - `asserttype rObj,"type"` raises `CONVERSION_ERROR` if the object value does
   not match the requested interface, class, or `.object`
+
+`istype` and `asserttype` check only object/class/interface compatibility.
+Initialization is a separate lifecycle check. `assertinitialized` is the
+raising check; `isinitialized` is the non-raising probe.
 
 `srcfproc` now supports both the default `*` surface and named factory
 selectors. Provider selection is a VM concern: the assembler simply emits the

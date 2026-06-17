@@ -2,18 +2,26 @@
 
 These instructions are for binary packages downloaded from the
 [CREXX GitHub Releases](https://github.com/adesutherland/CREXX/releases) page.
+Versioned releases are stable distribution points. The `CREXX Dev Snapshot`
+pre-release is a moving interim build from the `develop` branch; its assets are
+replaced by the next successful `develop` build.
 
-Each package expands to a platform directory such as `CREXX-linux-x64`,
-`CREXX-windows-x64`, `CREXX-macos-arm64`, or `CREXX-macos-x86_64`.
+ZIP packages expand to a platform directory such as `CREXX-linux-x64`,
+`CREXX-windows-x64`, `CREXX-macos-arm64`, or `CREXX-macos-x86_64`. macOS
+`.pkg` packages use the standard macOS Installer flow instead.
 
 The main tools and runtime files are in `bin/`. The release package also
-contains `README.md`, `LICENSE`, `SECURITY.md`, `VERSION`, this file, and a
-small `examples/` directory.
+contains `README.md`, `LICENSE`, `SECURITY.md`, `VERSION`, `BUILDINFO`, this
+file, and a small `examples/` directory.
+
+`VERSION` contains the exact build identity reported by the packaged tools.
+`BUILDINFO` includes the base version, build channel, timestamp, and source
+commit used to produce the package.
 
 You can run tools by using their full path, for example:
 
 ```sh
-./bin/crexx examples/hello.rexx
+./bin/crexx examples/hello.crexx
 ```
 
 For day-to-day use, add the package `bin/` directory to your `PATH`. The
@@ -32,9 +40,15 @@ Download the `windows-x64` ZIP archive and unblock it before extracting:
 Add the extracted package `bin` directory to your user or system `PATH`, or run
 the tools by their full path.
 
-Windows binaries are not code-signed in beta 1. Windows download warnings and
-SmartScreen prompts are expected. Windows code signing is planned for a later
-beta.
+Prefer the `windows-x64-signed` ZIP asset. The signed package contains
+Authenticode-signed Windows executables, libraries, and native plugin binaries.
+After the local signing script has uploaded the signed ZIP and verified that it
+is visible on the release, it deletes the matching unsigned Windows ZIP.
+
+For the moving dev snapshot, prefer `CREXX-dev-snapshot-windows-x64-signed.zip`
+when it is present. The unsigned `CREXX-dev-snapshot-windows-x64.zip` asset is
+published by CI first and is normally removed by the local signing script after
+the signed asset is uploaded successfully.
 
 ## Linux
 
@@ -47,6 +61,20 @@ If the executable bits are not preserved by your unzip tool, restore them with:
 chmod +x bin/*
 ```
 
+The moving dev snapshot also publishes a prototype Debian package:
+`CREXX-dev-snapshot-linux-x64.deb`. Install it with:
+
+```sh
+sudo apt install ./CREXX-dev-snapshot-linux-x64.deb
+```
+
+The Debian package installs CREXX under `/opt/crexx` and creates command
+symlinks in `/usr/bin`. Remove it with:
+
+```sh
+sudo apt remove crexx
+```
+
 ## macOS
 
 Choose the package for your Mac:
@@ -54,18 +82,66 @@ Choose the package for your Mac:
 - Apple Silicon: `macos-arm64`
 - Intel: `macos-x86_64`
 
-Unpack the ZIP with Finder or with `ditto`:
+### Recommended `.pkg` Install
+
+When a `.pkg` asset is available, prefer it for normal installation. The `.pkg`
+is signed, notarized, and stapled so Gatekeeper can validate it locally after
+download. It installs CREXX under `/usr/local/crexx` and creates command
+symlinks in `/usr/local/bin`.
+
+Install with Finder:
+
+1. Download the matching `.pkg` file.
+2. Double-click it.
+3. Follow the macOS Installer prompts. macOS may ask for an administrator
+   password because the package installs into `/usr/local`.
+
+This is the expected graphical install path for end users.
+
+Optional checks before installing:
 
 ```sh
-ditto -x -k CREXX-v1.0.0-beta.1-macos-arm64.zip "$HOME/CREXX"
+pkgutil --check-signature CREXX-v1.0.0-beta.2-macos-arm64.pkg
+spctl --assess --type install --verbose=4 CREXX-v1.0.0-beta.2-macos-arm64.pkg
+```
+
+For scripted installs, use Terminal:
+
+```sh
+sudo installer -pkg CREXX-v1.0.0-beta.2-macos-arm64.pkg -target /
+```
+
+Use the matching `macos-x86_64.pkg` filename on Intel Macs.
+
+After installation, run the included hello world example:
+
+```sh
+crexx /usr/local/crexx/examples/hello.crexx
+```
+
+Remove the installed files manually if needed:
+
+```sh
+sudo find /usr/local/bin -type l -lname '/usr/local/crexx/bin/*' -exec rm -f {} +
+sudo rm -rf /usr/local/crexx
+sudo pkgutil --forget org.crexx.crexx
+```
+
+### Portable ZIP Install
+
+The ZIP remains available as a portable archive for CI, testing, and users who
+do not want a system install. Unpack it with Finder or with `ditto`:
+
+```sh
+ditto -x -k CREXX-v1.0.0-beta.2-macos-arm64.zip "$HOME/CREXX"
 cd "$HOME/CREXX/CREXX-macos-arm64"
 ```
 
-The beta 1 macOS packages are Developer ID signed and notarized during the
-release workflow. You should not need to remove quarantine attributes as a
-normal installation step.
+The macOS ZIP packages are Developer ID signed and submitted to Apple
+notarization during the release workflow. They are still portable ZIP archives,
+not stapled installer packages.
 
-To verify the signature and signing identity:
+To verify the ZIP payload signature and signing identity:
 
 ```sh
 codesign --verify --strict --verbose=2 bin/crexx
@@ -95,7 +171,7 @@ Use the matching extracted directory name if you installed the Intel package.
 From the extracted package directory, run the included hello world example:
 
 ```sh
-bin/crexx examples/hello.rexx
+bin/crexx examples/hello.crexx
 ```
 
 Expected output:
@@ -107,7 +183,7 @@ hello CREXX world!
 After adding `bin/` to `PATH`, the same command can be run as:
 
 ```sh
-crexx examples/hello.rexx
+crexx examples/hello.crexx
 ```
 
 For more detail while learning the toolchain, use `-verbose1` through
@@ -134,7 +210,7 @@ Terminal window usually prompts macOS to install them if they are missing.
 Then run:
 
 ```sh
-crexx examples/hello.rexx -native
+crexx examples/hello.crexx -native
 ```
 
 Native executables and user-built native plugins may have platform-specific

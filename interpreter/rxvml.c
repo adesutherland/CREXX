@@ -159,14 +159,17 @@ static int rxvml_invoke_external_proc(
     size_t argc,
     rxvml_value** args,
     const char* dummy_argv0,
-    rxvml_value** response_out) {
+    rxvml_value** response_out,
+    int* run_status_out) {
 
     rxvml_external_call_state saved_state;
     rxvml_context* previous_active_context;
     value** call_args = NULL;
     value* call_ret;
     char* dummy_argv[1];
+    int run_status;
 
+    if (run_status_out) *run_status_out = 0;
     if (!ctx || !proc) return -1;
     if (argc > (size_t)INT_MAX) {
         ctx->last_error = "Too many rxvml call arguments";
@@ -216,8 +219,9 @@ static int rxvml_invoke_external_proc(
     rxvml_active_context = ctx;
     rxvm_prepare(&ctx->vm);
     dummy_argv[0] = (char*)(dummy_argv0 ? dummy_argv0 : "rxvml_call");
-    run(&ctx->vm, 0, dummy_argv);
+    run_status = run(&ctx->vm, 0, dummy_argv);
     rxvml_active_context = previous_active_context;
+    if (run_status_out) *run_status_out = run_status;
 
     if (response_out) {
         *response_out = (rxvml_value*)call_ret;
@@ -239,22 +243,23 @@ static const char* rxvml_value_cstr(value* v) {
     return v->string_value ? v->string_value : "";
 }
 
-static void rxvml_set_value_cstr(value* v, const char* s) {
-    set_null_string(v, s ? s : "");
+static int rxvml_set_value_cstr(value* v, const char* s) {
+    return set_null_string_validated(v, s ? s : "");
 }
 
-static void rxvml_populate_address_binding_value(value* binding_value, const rxvml_address_binding* binding) {
+static int rxvml_populate_address_binding_value(value* binding_value, const rxvml_address_binding* binding) {
     clear_value(binding_value);
     value_init(binding_value);
     binding_value->object_type_name = RXVML_ADDRESS_BINDING_TYPE_NAME;
     binding_value->object_type_name_length = sizeof(RXVML_ADDRESS_BINDING_TYPE_NAME) - 1;
     set_num_attributes(binding_value, RXVML_ADDRESS_BINDING_ATTR_COUNT);
 
-    rxvml_set_value_cstr(binding_value->attributes[RXVML_ADDRESS_BINDING_EXTERNAL_ALIAS], binding ? binding->external_alias : "");
-    rxvml_set_value_cstr(binding_value->attributes[RXVML_ADDRESS_BINDING_FLAGS], binding ? binding->flags : "");
-    rxvml_set_value_cstr(binding_value->attributes[RXVML_ADDRESS_BINDING_INTERNAL_NAME], binding ? binding->internal_name : "");
-    rxvml_set_value_cstr(binding_value->attributes[RXVML_ADDRESS_BINDING_KIND], binding ? binding->kind : "var");
-    rxvml_set_value_cstr(binding_value->attributes[RXVML_ADDRESS_BINDING_VALUE], binding ? binding->value : "");
+    if (rxvml_set_value_cstr(binding_value->attributes[RXVML_ADDRESS_BINDING_EXTERNAL_ALIAS], binding ? binding->external_alias : "") != 0) return -1;
+    if (rxvml_set_value_cstr(binding_value->attributes[RXVML_ADDRESS_BINDING_FLAGS], binding ? binding->flags : "") != 0) return -1;
+    if (rxvml_set_value_cstr(binding_value->attributes[RXVML_ADDRESS_BINDING_INTERNAL_NAME], binding ? binding->internal_name : "") != 0) return -1;
+    if (rxvml_set_value_cstr(binding_value->attributes[RXVML_ADDRESS_BINDING_KIND], binding ? binding->kind : "var") != 0) return -1;
+    if (rxvml_set_value_cstr(binding_value->attributes[RXVML_ADDRESS_BINDING_VALUE], binding ? binding->value : "") != 0) return -1;
+    return 0;
 }
 
 static int rxvml_copy_address_response_updates(value* response_value, const rxvml_address_response* response) {
@@ -274,7 +279,7 @@ static int rxvml_copy_address_response_updates(value* response_value, const rxvm
     set_num_attributes(updated_bindings, response->updated_binding_count);
 
     for (i = 0; i < response->updated_binding_count; i++) {
-        rxvml_populate_address_binding_value(updated_bindings->attributes[i], &response->updated_bindings[i]);
+        if (rxvml_populate_address_binding_value(updated_bindings->attributes[i], &response->updated_bindings[i]) != 0) return -1;
     }
 
     return 0;
@@ -367,6 +372,7 @@ static int rxvml_standard_string_map_find(value* sandbox, const char* name) {
 
 static int rxvml_standard_string_map_set(value* map, const char* name, const char* value_text) {
     char key[256];
+    const char *safe_value_text;
     value* key_count_value;
     value* keys;
     value* present;
@@ -376,6 +382,12 @@ static int rxvml_standard_string_map_set(value* map, const char* name, const cha
 
     if (!rxvml_is_standard_address_sandbox(map) && !rxvml_is_standard_address_stem(map)) return -2;
     if (map->num_attributes < RXVML_STANDARD_ADDRESS_SANDBOX_ATTR_COUNT) return -2;
+
+    safe_value_text = value_text ? value_text : "";
+#ifndef NUTF8
+    if (validate_utf8_bytes(name ? name : "", strlen(name ? name : ""), NULL) != 0) return -1;
+    if (validate_utf8_bytes(safe_value_text, strlen(safe_value_text), NULL) != 0) return -1;
+#endif
 
     key_count_value = map->attributes[RXVML_STANDARD_ADDRESS_SANDBOX_KEY_COUNT];
     keys = map->attributes[RXVML_STANDARD_ADDRESS_SANDBOX_KEYS];
@@ -404,7 +416,7 @@ static int rxvml_standard_string_map_set(value* map, const char* name, const cha
     }
 
     set_int(present->attributes[index - 1], 1);
-    rxvml_set_value_cstr(values->attributes[index - 1], value_text ? value_text : "");
+    if (rxvml_set_value_cstr(values->attributes[index - 1], safe_value_text) != 0) return -1;
     return 0;
 }
 
@@ -460,7 +472,9 @@ int rxvml_address_sandbox_set(
 
     sandbox = (value*)request->sandbox;
     if (rxvml_is_standard_address_sandbox(sandbox)) {
-        return rxvml_standard_string_map_set(sandbox, name, value_text);
+        rc = rxvml_standard_string_map_set(sandbox, name, value_text);
+        if (rc != 0) ctx->last_error = "Invalid UTF-8 in ADDRESS sandbox text";
+        return rc;
     }
 
     if (!sandbox->object_type_name || sandbox->object_type_name_length == 0 ||
@@ -481,8 +495,13 @@ int rxvml_address_sandbox_set(
         return -3;
     }
 
-    rxvml_set_str(name_arg, name, strlen(name));
-    rxvml_set_str(value_arg, value_text ? value_text : "", strlen(value_text ? value_text : ""));
+    if (rxvml_set_str(name_arg, name, strlen(name)) != 0 ||
+        rxvml_set_str(value_arg, value_text ? value_text : "", strlen(value_text ? value_text : "")) != 0) {
+        rxvml_value_free(name_arg);
+        rxvml_value_free(value_arg);
+        ctx->last_error = "Invalid UTF-8 in ADDRESS sandbox set arguments";
+        return -3;
+    }
 
     args[0] = name_arg;
     args[1] = value_arg;
@@ -505,6 +524,15 @@ static int rxvml_address_emit_to_endpoint(
 
     (void)ctx;
     if (!text) text = "";
+
+#ifndef NUTF8
+    if (validate_utf8_bytes(text, strlen(text), NULL) != 0) {
+        if (ctx) ctx->last_error = is_error
+            ? "Invalid UTF-8 in native ADDRESS error text"
+            : "Invalid UTF-8 in native ADDRESS output text";
+        return -1;
+    }
+#endif
 
     if (!endpoint_value || !endpoint_value->binary_value ||
         endpoint_value->binary_length == 0) {
@@ -640,7 +668,9 @@ int rxvml_address_stem_set(
     }
 
     if (rxvml_is_standard_address_stem(stem)) {
-        return rxvml_standard_string_map_set(stem, name, value_text);
+        rc = rxvml_standard_string_map_set(stem, name, value_text);
+        if (rc != 0) ctx->last_error = "Invalid UTF-8 in ADDRESS stem text";
+        return rc;
     }
 
     if (!stem->object_type_name || stem->object_type_name_length == 0 ||
@@ -661,8 +691,13 @@ int rxvml_address_stem_set(
         return -3;
     }
 
-    rxvml_set_str(name_arg, name, strlen(name));
-    rxvml_set_str(value_arg, value_text ? value_text : "", strlen(value_text ? value_text : ""));
+    if (rxvml_set_str(name_arg, name, strlen(name)) != 0 ||
+        rxvml_set_str(value_arg, value_text ? value_text : "", strlen(value_text ? value_text : "")) != 0) {
+        rxvml_value_free(name_arg);
+        rxvml_value_free(value_arg);
+        ctx->last_error = "Invalid UTF-8 in ADDRESS stem set arguments";
+        return -3;
+    }
 
     args[0] = name_arg;
     args[1] = value_arg;
@@ -968,20 +1003,20 @@ static int rxvml_copy_address_function_response(
     if (!response_value || !response ||
         response_value->num_attributes < RXVML_ADDRESS_FUNCTION_RESPONSE_ATTR_COUNT) return -1;
 
-    rxvml_set_value_cstr(
-        response_value->attributes[RXVML_ADDRESS_FUNCTION_RESPONSE_CONDITION_NAME],
-        response->condition_name ? response->condition_name : "");
+    if (rxvml_set_value_cstr(
+            response_value->attributes[RXVML_ADDRESS_FUNCTION_RESPONSE_CONDITION_NAME],
+            response->condition_name ? response->condition_name : "") != 0) return -1;
     set_int(response_value->attributes[RXVML_ADDRESS_FUNCTION_RESPONSE_RC],
             (rxinteger)response->rc);
-    rxvml_set_value_cstr(
-        response_value->attributes[RXVML_ADDRESS_FUNCTION_RESPONSE_RESULT],
-        response->result ? response->result : "");
+    if (rxvml_set_value_cstr(
+            response_value->attributes[RXVML_ADDRESS_FUNCTION_RESPONSE_RESULT],
+            response->result ? response->result : "") != 0) return -1;
 
     diagnostics = response_value->attributes[RXVML_ADDRESS_FUNCTION_RESPONSE_DIAGNOSTICS];
     if (response->diagnostic && diagnostics) {
         set_int(response_value->attributes[RXVML_ADDRESS_FUNCTION_RESPONSE_DIAGNOSTIC_COUNT], 1);
         set_num_attributes(diagnostics, 1);
-        rxvml_set_value_cstr(diagnostics->attributes[0], response->diagnostic);
+        if (rxvml_set_value_cstr(diagnostics->attributes[0], response->diagnostic) != 0) return -1;
     } else {
         set_int(response_value->attributes[RXVML_ADDRESS_FUNCTION_RESPONSE_DIAGNOSTIC_COUNT], 0);
         if (diagnostics) set_num_attributes(diagnostics, 0);
@@ -1205,9 +1240,9 @@ void rxvml_set_int(rxvml_value* v, rxinteger i) {
     set_int((value*)v, i);
 }
 
-void rxvml_set_str(rxvml_value* v, const char* s, size_t len) {
-    if (s) set_string((value*)v, (char*)s, len);
-    else set_null_string((value*)v, "");
+int rxvml_set_str(rxvml_value* v, const char* s, size_t len) {
+    if (!v) return -1;
+    return set_string_validated((value*)v, s ? s : "", s ? len : 0);
 }
 
 int rxvml_set_native_payload(rxvml_value* v, const void* payload, size_t len,
@@ -1378,7 +1413,7 @@ int rxvml_call_procedure(
         return -1;
     }
 
-    return rxvml_invoke_external_proc(ctx, p, argc, args, "rxc_bridge_proc", response_out);
+    return rxvml_invoke_external_proc(ctx, p, argc, args, "rxc_bridge_proc", response_out, NULL);
 }
 
 static proc_runtime* rxvml_find_last_module_procedure(rxvm_context* vm, const char* name) {
@@ -1391,7 +1426,7 @@ static proc_runtime* rxvml_find_last_module_procedure(rxvm_context* vm, const ch
         while (i != -1) {
             proc_constant* definition = (proc_constant*)(mod->segment.const_pool + i);
             if (definition->base.type == PROC_CONST && strcmp(definition->name, name) == 0) {
-                return mod->proc_runtime_lookup[(size_t)i >> 3];
+                return rxvm_get_module_runtime_procedure(mod, (size_t)i);
             }
             i = definition->next;
         }
@@ -1412,6 +1447,7 @@ int rxvml_run(
     rxinteger int_result = 0;
     int i;
     int rc = -1;
+    int run_status = 0;
 
     if (program_rc) *program_rc = 0;
     if (!ctx || argc < 0) return -1;
@@ -1431,7 +1467,11 @@ int rxvml_run(
             ctx->last_error = "Failed to allocate rxvml run argument";
             goto cleanup;
         }
-        rxvml_set_str(arg_value, argv[i] ? argv[i] : "", strlen(argv[i] ? argv[i] : ""));
+        if (rxvml_set_str(arg_value, argv[i] ? argv[i] : "", strlen(argv[i] ? argv[i] : "")) != 0) {
+            rxvml_value_free(arg_value);
+            ctx->last_error = "Invalid UTF-8 in rxvml run argument";
+            goto cleanup;
+        }
         if (rxvml_array_set(ctx, arg_array, (size_t)i + 1, arg_value) != 0) {
             rxvml_value_free(arg_value);
             ctx->last_error = "Failed to set rxvml run argument";
@@ -1450,12 +1490,16 @@ int rxvml_run(
     }
 
     arg_values[0] = arg_array;
-    if (rxvml_invoke_external_proc(ctx, main_proc, 1, arg_values, "rxvml_run", &result) != 0) {
+    if (rxvml_invoke_external_proc(ctx, main_proc, 1, arg_values, "rxvml_run", &result, &run_status) != 0) {
         goto cleanup;
     }
 
-    if (result && rxvml_to_int(ctx, result, &int_result) == 0 && program_rc) {
-        *program_rc = (int)int_result;
+    if (program_rc) {
+        if (run_status != 0) {
+            *program_rc = run_status;
+        } else if (result && rxvml_to_int(ctx, result, &int_result) == 0) {
+            *program_rc = (int)int_result;
+        }
     }
     rc = 0;
 
@@ -1517,7 +1561,8 @@ int rxvml_call_method(
             argc + 1,
             method_args,
             "rxc_plugin_method",
-            response_out);
+            response_out,
+            NULL);
 
         free(method_args);
         return rc;
@@ -1594,7 +1639,11 @@ int rxvml_address_register_environment(
         return -1;
     }
 
-    rxvml_set_str(name_arg, env_name, strlen(env_name));
+    if (rxvml_set_str(name_arg, env_name, strlen(env_name)) != 0) {
+        rxvml_value_free(name_arg);
+        ctx->last_error = "Invalid UTF-8 in address environment name";
+        return -1;
+    }
     args[0] = name_arg;
     args[1] = env_obj;
 
@@ -1676,7 +1725,11 @@ int rxvml_address_create_environment(
         return -1;
     }
 
-    rxvml_set_str(name_arg, env_name, strlen(env_name));
+    if (rxvml_set_str(name_arg, env_name, strlen(env_name)) != 0) {
+        rxvml_value_free(name_arg);
+        ctx->last_error = "Invalid UTF-8 in address environment name";
+        return -1;
+    }
     args[0] = name_arg;
 
     if (rxvml_call_procedure(ctx, RXVML_ADDRESS_ENVIRONMENT_FACTORY_PROC, 1, args, env_obj_out) != 0 || !*env_obj_out) {
@@ -1708,7 +1761,11 @@ int rxvml_address_set_environment(
         return -1;
     }
 
-    rxvml_set_str(name_arg, env_name, strlen(env_name));
+    if (rxvml_set_str(name_arg, env_name, strlen(env_name)) != 0) {
+        rxvml_value_free(name_arg);
+        ctx->last_error = "Invalid UTF-8 in address environment name";
+        return -1;
+    }
     args[0] = name_arg;
 
     if (rxvml_call_int_procedure(ctx, "_rxsysb._set_address_environment", 1, args, &rc_value) != 0) {

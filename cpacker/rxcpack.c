@@ -76,6 +76,7 @@ int main(int argc, char *argv[])
 {
     char *buf;
     size_t i, file_size, j = 0, a;
+    long file_size_long;
     char need_comma = 0;
     char n_input[NAME_BUFFER_SIZE], n_output[NAME_BUFFER_SIZE];
     FILE *f_input, *f_output;
@@ -140,14 +141,37 @@ int main(int argc, char *argv[])
         }
 
         // Get the file length
-        fseek(f_input, 0, SEEK_END);
-        file_size = ftell(f_input);
-        fseek(f_input, 0, SEEK_SET);
+        if (fseek(f_input, 0, SEEK_END) != 0) {
+            fprintf(stderr, "%s: can't seek %s\n", argv[0], n_input);
+            fclose(f_input);
+            fclose(f_output);
+            return 2;
+        }
+        file_size_long = ftell(f_input);
+        if (file_size_long < 0) {
+            fprintf(stderr, "%s: can't determine size of %s\n", argv[0], n_input);
+            fclose(f_input);
+            fclose(f_output);
+            return 2;
+        }
+        file_size = (size_t)file_size_long;
+        if (fseek(f_input, 0, SEEK_SET) != 0) {
+            fprintf(stderr, "%s: can't rewind %s\n", argv[0], n_input);
+            fclose(f_input);
+            fclose(f_output);
+            return 2;
+        }
 
-        buf = (char *) malloc(file_size);
+        buf = (char *) malloc(file_size ? file_size : 1);
         assert(buf);
 
-        fread(buf, file_size, 1, f_input);
+        if (file_size && fread(buf, 1, file_size, f_input) != file_size) {
+            fprintf(stderr, "%s: can't read %s\n", argv[0], n_input);
+            free(buf);
+            fclose(f_input);
+            fclose(f_output);
+            return 2;
+        }
         fclose(f_input);
 
         for (i = 0; i < file_size; ++i) {

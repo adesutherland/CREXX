@@ -43,6 +43,22 @@
 #include <ctype.h>
 #include <string.h>
 #include "rxcpmain.h"
+
+static int token_text_equals_ci(Token *token, const char *text) {
+    size_t i;
+    size_t length;
+
+    if (!token || !token->token_string || !text) return 0;
+    length = strlen(text);
+    if (token->length != length) return 0;
+    for (i = 0; i < length; i++) {
+        if (tolower((unsigned char) token->token_string[i]) !=
+            tolower((unsigned char) text[i])) {
+            return 0;
+        }
+    }
+    return 1;
+}
 }
 
 %token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT TK_EXIT_PRIMARY TK_EXIT_TOKEN TK_QUALIFIED_SYMBOL.
@@ -164,6 +180,8 @@ class(C)                 ::= TK_CLASS_TYPE(T).
                              { C = ast_f(context, CLASS, T); }
 type_def(A)              ::= class(S).
                              { A = S; }
+type_def(A)              ::= TK_REFERENCE(R) type_def(T).
+                             { A = ast_f(context, TYPE_REFERENCE, R); add_ast(A,T); }
 type_def(A)              ::= class(S) array_def_parameters(P).
                              { A = S; if (P) add_ast(A,P); }
 type_def(A)              ::= TK_CLASS_STEM(S) stem_def_parts(P).
@@ -1268,7 +1286,15 @@ expression_list(L)     ::= expression_list(L1) TK_COMMA.
 
 /* Expression terminal nodes */
 term(F)                ::= TK_VAR_SYMBOL(S) function_parameters(P).
-                           { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
+                           {
+                               F = ast_f(context, token_text_equals_ci(S, "initialized") ? OP_INITIALIZED : FUNCTION, S);
+                               if (P) add_ast(F,P);
+                           }
+term(F)                ::= TK_VAR_SYMBOL(S) TK_OPEN_BRACKET TK_CLASS_TYPE(C) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
+                           {
+                               F = ast_f(context, token_text_equals_ci(S, "initialized") ? OP_INITIALIZED : FUNCTION, S);
+                               add_ast(F, ast_f(context, CLASS, C));
+                           }
 term(F)                ::= TK_QUALIFIED_SYMBOL(S) function_parameters(P).
                            { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
 term(F)                ::= TK_STEM(S) stemparts(P) function_parameters(PP).
@@ -1320,6 +1346,8 @@ function_parameters(P) ::= TK_OPEN_BRACKET expression_list(E) TK_CLOSE_BRACKET. 
                            { P = E; }
 term(A)                ::= var_symbol(B). [TK_VAR_SYMBOL]
                          { A = B; }
+term(A)                ::= TK_SELF(S).
+                         { A = ast_f(context, VAR_SYMBOL, S); ast_sstr(A, strdup("\xc2\xa7" "this"), 6); }
 term(A)                ::= TK_FLOAT(S).
                          { A = ast_f(context, FLOAT,S); }
 term(A)                ::= TK_DECIMAL(S).
@@ -1366,6 +1394,14 @@ term(F)                ::= TK_TYPEOF TK_OPEN_BRACKET(A) error TK_CLOSE_BRACKET.
                            { F = ast_err(context, "INVALID_TYPEOF_SYNTAX", A); }
 term(F)                ::= TK_TYPEOF TK_OPEN_BRACKET ANYTHING(A).
                            { F = ast_err(context, "INVALID_TYPEOF_SYNTAX", A); }
+
+/* Reference intrinsics */
+term(F)                ::= TK_REFVALID(A) TK_OPEN_BRACKET expression(E) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
+                           { F = ast_f(context, OP_REFVALID, A); add_ast(F, E); }
+term(F)                ::= TK_REFVALID TK_OPEN_BRACKET(A) error TK_CLOSE_BRACKET.
+                           { F = ast_err(context, "INVALID_REFVALID_SYNTAX", A); }
+term(F)                ::= TK_REFVALID TK_OPEN_BRACKET ANYTHING(A).
+                           { F = ast_err(context, "INVALID_REFVALID_SYNTAX", A); }
 
 /* Special Operator - ? */
 term(F)                ::= TK_OPTIONAL TK_VAR_SYMBOL(S). [TK_VAR_SYMBOL]
@@ -1468,6 +1504,12 @@ command_prefix_expression(A) ::= TK_PLUS(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_PLUS, O); add_ast(A,C); }
 command_prefix_expression(A) ::= TK_HIGH_PRIORITY_MINUS(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_NEG, O); add_ast(A,C); }
+command_prefix_expression(A) ::= TK_REFERENCE(O) prefix_expression(C). [TK_NOT]
+                         { A = ast_f(context, OP_REFERENCE, O); add_ast(A,C); }
+command_prefix_expression(A) ::= TK_DEREFERENCE(O) prefix_expression(C). [TK_NOT]
+                         { A = ast_f(context, OP_DEREFERENCE, O); add_ast(A,C); }
+command_prefix_expression(A) ::= TK_SNAPSHOT(O) prefix_expression(C). [TK_NOT]
+                         { A = ast_f(context, OP_SNAPSHOT, O); add_ast(A,C); }
 command_power_expression_L(A) ::= command_power_expression_L(B) TK_POWER_L(O) prefix_expression(C).
                           { A = ast_f(context, OP_POWER, O); add_ast(A,B); add_ast(A,C); }
 command_power_expression_L(P) ::= command_prefix_expression(E).  { P = E; }
@@ -1534,6 +1576,8 @@ command_or_expression(P)     ::= command_comparison(E).
                          { P = E; }
 command_or_expression(A)     ::= command_or_expression(B) TK_OR(O) comparison(C).
                          { A = ast_f(context, OP_OR, O); add_ast(A,B); add_ast(A,C); }
+command_or_expression(A)     ::= command_or_expression(B) TK_XOR(O) comparison(C).
+                         { A = ast_f(context, OP_XOR, O); add_ast(A,B); add_ast(A,C); }
 command_and_expression(P)    ::= command_or_expression(E).
                          { P = E; }
 command_and_expression(A)    ::= command_and_expression(B) TK_AND(O) or_expression(C).
@@ -1563,6 +1607,12 @@ prefix_expression(A) ::= TK_PLUS(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_PLUS, O); add_ast(A,C); }
 prefix_expression(A) ::= TK_HIGH_PRIORITY_MINUS(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_NEG, O); add_ast(A,C); }
+prefix_expression(A) ::= TK_REFERENCE(O) prefix_expression(C). [TK_NOT]
+                         { A = ast_f(context, OP_REFERENCE, O); add_ast(A,C); }
+prefix_expression(A) ::= TK_DEREFERENCE(O) prefix_expression(C). [TK_NOT]
+                         { A = ast_f(context, OP_DEREFERENCE, O); add_ast(A,C); }
+prefix_expression(A) ::= TK_SNAPSHOT(O) prefix_expression(C). [TK_NOT]
+                         { A = ast_f(context, OP_SNAPSHOT, O); add_ast(A,C); }
 /*
  * power_expression contains rules for both left and right-associative power operators.
  * The lexer ensures only one of TK_POWER_L or TK_POWER_R is present in the
@@ -1621,6 +1671,12 @@ prefix_expression_c(P) ::= postfix_c(B). [ANYTHING] { P = B; }
 
 prefix_expression_c(A) ::= TK_NOT(O) prefix_expression_c(C).
                          { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
+prefix_expression_c(A) ::= TK_REFERENCE(O) prefix_expression_c(C). [TK_NOT]
+                         { A = ast_f(context, OP_REFERENCE, O); add_ast(A,C); }
+prefix_expression_c(A) ::= TK_DEREFERENCE(O) prefix_expression_c(C). [TK_NOT]
+                         { A = ast_f(context, OP_DEREFERENCE, O); add_ast(A,C); }
+prefix_expression_c(A) ::= TK_SNAPSHOT(O) prefix_expression_c(C). [TK_NOT]
+                         { A = ast_f(context, OP_SNAPSHOT, O); add_ast(A,C); }
 
 // Rule for the Left-associative power operator - NUMERIC_CLASSIC
 power_expression_L_c(A) ::= power_expression_L_c(B) TK_POWER_L(O) prefix_expression_c(C).
@@ -1689,6 +1745,8 @@ or_expression(P)     ::= comparison(E).
                          { P = E; }
 or_expression(A)     ::= or_expression(B) TK_OR(O) comparison(C).
                          { A = ast_f(context, OP_OR, O); add_ast(A,B); add_ast(A,C); }
+or_expression(A)     ::= or_expression(B) TK_XOR(O) comparison(C).
+                         { A = ast_f(context, OP_XOR, O); add_ast(A,B); add_ast(A,C); }
 and_expression(P)    ::= or_expression(E).
                          { P = E; }
 and_expression(A)    ::= and_expression(B) TK_AND(O) or_expression(C).
@@ -1716,6 +1774,7 @@ and_expression(E)  ::= TK_S_GTE(U) error. { E = ast_err(context, "BADEXPR", U); 
 and_expression(E)  ::= TK_S_LTE(U) error. { E = ast_err(context, "BADEXPR", U); }
 and_expression(E)  ::= TK_AND(U) error. { E = ast_err(context, "BADEXPR", U); }
 and_expression(E)  ::= TK_OR(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_XOR(U) error. { E = ast_err(context, "BADEXPR", U); }
 
 expression(P)  ::= and_expression(E). { P = E; }
 expression(E)  ::= TK_COMMA(U) error. { E = ast_err(context, "BADEXPR", U); }

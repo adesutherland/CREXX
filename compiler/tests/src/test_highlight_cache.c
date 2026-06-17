@@ -42,6 +42,15 @@ static int expect_true(int condition, const char *message) {
     return 0;
 }
 
+static void free_code_buffer_with_ep_rules(CodeBuffer *cb) {
+    if (!cb) return;
+    if (cb->ep_rules) {
+        cb_free_ep_rules(cb->ep_rules);
+        cb->ep_rules = NULL;
+    }
+    free_code_buffer(cb);
+}
+
 static const char *external_function_source =
         "options levelb\n"
         "import rxfnsb\n"
@@ -182,13 +191,13 @@ static int parse_document(const char *document_path, const char *content) {
 
     load = create_initial_load(document_path, content);
     if (!load) {
-        free_code_buffer(cb);
+        free_code_buffer_with_ep_rules(cb);
         return 0;
     }
 
     base_load_initial_content(cb, load);
     ok = cb->parse_tree && cb->parse_tree->root && cb->parse_tree->root->type == PARSE_TREE_FILE;
-    free_code_buffer(cb);
+    free_code_buffer_with_ep_rules(cb);
     return ok;
 }
 
@@ -406,7 +415,9 @@ int main(void) {
                      "Exit reuse should preserve registered exit count")) goto fail;
 
     rxcp_highlight_controller_reset_cache();
-    rxcp_test_chdir(original_cwd);
+    if (rxcp_test_chdir(original_cwd) != 0) {
+        fprintf(stderr, "Failed to return to original working directory during cleanup\n");
+    }
     cleanup_test_paths(main_a, dep_a, dir_a);
     cleanup_test_paths(main_b, dep_b, dir_b);
     rxcp_test_rmdir(sandbox);
@@ -421,7 +432,9 @@ int main(void) {
 
 fail:
     rxcp_highlight_controller_reset_cache();
-    rxcp_test_chdir(original_cwd);
+    if (rxcp_test_chdir(original_cwd) != 0) {
+        fprintf(stderr, "Failed to return to original working directory during cleanup\n");
+    }
     cleanup_test_paths(main_a, dep_a, dir_a);
     cleanup_test_paths(main_b, dep_b, dir_b);
     rxcp_test_rmdir(sandbox);

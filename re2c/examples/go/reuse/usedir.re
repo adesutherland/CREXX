@@ -1,14 +1,11 @@
-//go:generate re2go $INPUT -o $OUTPUT
+//go:generate re2go $INPUT -o $OUTPUT --api simple
+package main
 
 // This example shows how to combine reusable re2c blocks: two blocks
 // ('colors' and 'fish') are merged into one. The 'salmon' rule occurs
 // in both blocks; the 'fish' block takes priority because it is used
 // earlier. Default rule * occurs in all three blocks; the local (not
 // inherited) definition takes priority.
-
-package main
-
-import "testing"
 
 const (
 	Color = iota
@@ -26,24 +23,20 @@ const (
 	"haddock" | "salmon" | "eel" { return Fish }
 */
 
-func lex(str string) int {
-	var cursor, marker int
+func lex(yyinput string) int {
+	var yycursor, yymarker int
 	/*!re2c
-	re2c:yyfill:enable = 0;
-	re2c:define:YYCTYPE   = byte;
-	re2c:define:YYPEEK    = "str[cursor]";
-	re2c:define:YYSKIP    = "cursor += 1";
-	re2c:define:YYBACKUP  = "marker = cursor";
-	re2c:define:YYRESTORE = "cursor = marker";
+		re2c:yyfill:enable = 0;
+		re2c:YYCTYPE = byte;
 
-	!use:fish;
-	!use:colors;
-	* { return Dunno }
+		!use:fish;
+		!use:colors;
+		* { return Dunno }  // overrides inherited '*' rules
 	*/
 }
 
-func TestLex(t *testing.T) {
-	if lex("salmon") != Fish || lex("what?") != Dunno {
-		t.Errorf("lex failed")
-	}
+func main() {
+	assert_eq := func(x, y int) { if x != y { panic("error") } }
+	assert_eq(lex("salmon"), Fish);
+	assert_eq(lex("what?"), Dunno);
 }

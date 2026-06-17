@@ -10,6 +10,7 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 add_subdirectory(native_signals)
 add_subdirectory(levelb)
 add_subdirectory(performance)
+add_subdirectory(reference_iterators)
 add_subdirectory(rxpa)
 
 set(CMAKE_C_STANDARD 90)
@@ -60,6 +61,7 @@ crexx_add_rxas_optimizer_check(barrier_call barrier_call.rxas barrier_call)
 crexx_add_rxas_optimizer_check(barrier_dcall barrier_dcall.rxas barrier_dcall)
 crexx_add_rxas_optimizer_check(barrier_srcfproc barrier_srcfproc.rxas barrier_srcfproc)
 crexx_add_rxas_optimizer_check(barrier_asserttype barrier_asserttype.rxas barrier_asserttype)
+crexx_add_rxas_optimizer_check(barrier_assertinitialized barrier_assertinitialized.rxas barrier_assertinitialized)
 crexx_add_rxas_optimizer_check(barrier_ichkrng barrier_ichkrng.rxas barrier_ichkrng)
 crexx_add_rxas_optimizer_check(barrier_signal barrier_signal.rxas barrier_signal)
 crexx_add_rxas_optimizer_check(barrier_igtbr barrier_igtbr.rxas barrier_igtbr)
@@ -99,7 +101,7 @@ foreach(_binfile ${REXXTESTBINS})
    add_custom_target(${_basename} ALL)
    crexx_add_rexx_opt_matrix(
            NAME ${_basename}
-           SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx
+           SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx
            TARGET_GROUP ${_basename}
            DEPENDS library compiler_exit_bin ${_prev_dependency}
    )

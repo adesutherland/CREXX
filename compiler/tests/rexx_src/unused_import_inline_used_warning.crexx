@@ -1,0 +1,6 @@
+options levelb
+import inline_cross_file_dep
+
+main: procedure
+  say inc(41)
+  return

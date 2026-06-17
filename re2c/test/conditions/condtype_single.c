@@ -10,8 +10,8 @@
 yyc_a:
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
-	if (yych == 'a') goto yy3;
-yy3:
+	if (yych == 'a') goto yy1;
+yy1:
 	++YYCURSOR;
 #line 3 "conditions/condtype_single.re"
 	{}
@@ -19,4 +19,4 @@ yy3:
 }
 #line 4 "conditions/condtype_single.re"
 
-conditions/condtype_single.re:4:2: warning: control flow in condition 'a' is undefined for strings that match '[\x0-\x60\x62-\xFF]', use default rule '*' [-Wundefined-control-flow]
+conditions/condtype_single.re:2:0: warning: control flow in condition 'a' is undefined for strings that match '[\x0-\x60\x62-\xFF]', use default rule '*' [-Wundefined-control-flow]

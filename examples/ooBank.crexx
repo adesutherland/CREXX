@@ -1,0 +1,92 @@
+/* ------------------------------------------------------------------
+ * Object-Oriented Programming Example
+ *
+ * This example demonstrates basic object-oriented programming in
+ * CREXX.
+ *
+ * Features shown:
+ *   - Class definition
+ *   - Object creation using a factory method
+ *   - Instance attributes
+ *   - Method invocation
+ *   - Encapsulation of object state
+ *
+ * A simple bank account class is implemented with methods for
+ * deposits, withdrawals and account summaries.
+ * ------------------------------------------------------------------
+ */
+
+options levelb comments_dash
+namespace samples expose BankAccount
+
+import rxfnsb
+
+/* Create a new bank account object. */
+account = .BankAccount("Peter", 100)
+
+/* Invoke methods on the object. */
+call account.deposit(50)
+call account.withdraw(30)
+
+/* Display a summary of the account state. */
+say account.summary()
+
+exit 0
+
+/* ------------------------------------------------------------------
+ * BankAccount Class
+ *
+ * Represents a simple bank account with:
+ *   - an owner name
+ *   - a current balance
+ * ------------------------------------------------------------------
+ */
+BankAccount: class
+
+  /* Instance attributes */
+  owner   = .string
+  balance = .int
+
+  /* --------------------------------------------------------------
+   * Factory (constructor)
+   *
+   * Called when a new object is created:
+   *
+   *   account = .BankAccount("Peter", 100)
+   * --------------------------------------------------------------
+   */
+  *: factory
+    arg account_owner = .string, opening_balance = .int
+
+    owner   = account_owner
+    balance = opening_balance
+    say 'Open Account:' owner "'"balance"'" opening_balance
+  return
+
+  /* Deposit money into the account. */
+  deposit: method = .int
+    arg amount = .int
+
+    if amount < 0 then return 0
+    balance = balance + amount
+    say 'New balance:' balance', deposit:' amount
+  return 1
+
+  /* Withdraw money from the account. */
+  withdraw: method = .int
+    arg amount = .int
+
+    if amount < 0 then return 0
+    if amount > balance then return 0
+    balance = balance - amount
+
+    say 'New balance:' balance', withdraw:' amount
+  return 1
+
+  /* Return the current account balance. */
+  get_balance: method = .int
+    return balance
+
+  /* Return a formatted account summary. */
+  summary: method = .string
+    return "Account owner=" || owner || ", balance=" || balance

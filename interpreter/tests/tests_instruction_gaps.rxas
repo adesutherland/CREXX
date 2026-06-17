@@ -1,0 +1,546 @@
+/*
+ * Focused deterministic RXAS instruction coverage for families not exercised
+ * by the broader semantic suites.
+ */
+
+.globals=0
+
+main() .locals=90
+    /*
+     * Keep these first: the metadata operand checks below use their fixed
+     * instruction-stream operand addresses.
+     */
+    load r20,12345
+    load r21,"meta-string"
+    load r19,0
+    call r22,meta_target(),r19
+    brf fail_meta_call, r22
+
+    cnop
+
+    call r0,test_data_movement(),r19
+    brf fail_data_movement, r0
+
+    call r0,test_numeric_misc(),r19
+    brf fail_numeric_misc, r0
+
+    call r0,test_string_misc(),r19
+    brf fail_string_misc, r0
+
+    call r0,test_flow_misc(),r19
+    brf fail_flow_misc, r0
+
+    call r0,test_fixed_register_shortcuts(),r19
+    brf fail_fixed_register_shortcuts, r0
+
+    call r0,test_signal_misc(),r19
+    brf fail_signal_misc, r0
+
+    call r0,test_attribute_misc(),r19
+    brf fail_attribute_misc, r0
+
+    call r0,test_meta_misc(),r19
+    brf fail_meta_misc, r0
+
+    call r0,test_system_misc(),r19
+    brf fail_system_misc, r0
+
+    say "PASS: RXAS Instruction Gap Coverage"
+    ret 0
+
+fail_meta_call:
+    say "FAIL: metadata anchor call"
+    ret 1
+fail_data_movement:
+    say "FAIL: data movement gap coverage"
+    ret 1
+fail_numeric_misc:
+    say "FAIL: numeric gap coverage"
+    ret 1
+fail_string_misc:
+    say "FAIL: string gap coverage"
+    ret 1
+fail_flow_misc:
+    say "FAIL: flow gap coverage"
+    ret 1
+fail_fixed_register_shortcuts:
+    say "FAIL: fixed register shortcut gap coverage"
+    ret 1
+fail_signal_misc:
+    say "FAIL: signal gap coverage"
+    ret 1
+fail_attribute_misc:
+    say "FAIL: attribute gap coverage"
+    ret 1
+fail_meta_misc:
+    say "FAIL: metadata gap coverage"
+    ret 1
+fail_system_misc:
+    say "FAIL: system/io gap coverage"
+    ret 1
+
+meta_target() .locals=0
+    ret 1
+
+test_data_movement() .locals=20
+    load r1,2.5
+    fcopy r2,r1
+    feq r0,r2,2.5
+    brf data_fail, r0
+
+    loadsettp r1,1,256
+    setortp r1,512
+    acopy r2,r1
+    getandtp r3,r2,768
+    ieq r0,r3,768
+    brf data_fail, r0
+
+    load r1,"moved"
+    move r2,r1
+    seq r0,r2,"moved"
+    brf data_fail, r0
+
+    loadsettp r1,7,256
+    erase r1
+    gettp r2,r1
+    ieq r0,r2,0
+    brf data_fail, r0
+    ieq r0,r1,0
+    brf data_fail, r0
+
+    ret 1
+data_fail:
+    ret 0
+
+test_numeric_misc() .locals=30
+    load r1,7
+    itof r1
+    feq r0,r1,7.0
+    brf numeric_fail, r0
+
+    load r1,2
+    load r2,5
+    ipow r3,r1,r2
+    ieq r0,r3,32
+    brf numeric_fail, r0
+
+    load r1,5.5
+    load r2,2.0
+    fmod r3,r1,r2
+    feq r0,r3,1.5
+    brf numeric_fail, r0
+
+    fidiv r3,r1,r2
+    feq r0,r3,2.0
+    brf numeric_fail, r0
+
+    fne r0,r1,r2
+    cnop
+    brf numeric_fail, r0
+    fgt r0,r1,r2
+    cnop
+    brf numeric_fail, r0
+    fgte r0,r1,5.5
+    cnop
+    brf numeric_fail, r0
+    flt r0,r2,r1
+    cnop
+    brf numeric_fail, r0
+    flte r0,2.0,r2
+    cnop
+    brf numeric_fail, r0
+
+    load r4,0.0
+    ftob r4
+    ieq r0,r4,0
+    brf numeric_fail, r0
+
+    load r4,1
+    btof r4
+    feq r0,r4,1.0
+    brf numeric_fail, r0
+
+    load r4,1
+    btos r4
+    seq r0,r4,"1"
+    brf numeric_fail, r0
+
+    load r4,"1"
+    stob r4
+    ieq r0,r4,1
+    brf numeric_fail, r0
+
+    load r1,12.5
+    load r2,"%.1f"
+    fformat r3,r1,r2
+    seq r0,r3,"12.5"
+    brf numeric_fail, r0
+
+    numsci 9,1,1
+    getnumdgts r5
+    ieq r0,r5,9
+    brf numeric_fail, r0
+    getnumfrm r5
+    ieq r0,r5,1
+    brf numeric_fail, r0
+    getnumcas r5
+    ieq r0,r5,1
+    brf numeric_fail, r0
+    getnumstd r5
+    ieq r0,r5,1
+    brf numeric_fail, r0
+
+    setnumfuz 2
+    getnumfuz r5
+    ieq r0,r5,2
+    brf numeric_fail, r0
+
+    numeng 12,2,2
+    getnumdgts r5
+    ieq r0,r5,12
+    brf numeric_fail, r0
+    getnumfrm r5
+    ieq r0,r5,2
+    brf numeric_fail, r0
+
+    ret 1
+numeric_fail:
+    ret 0
+
+test_string_misc() .locals=30
+    load r1,"  abc  "
+    load r2,"abc"
+    rseq r0,r1,r2
+    brf string_fail, r0
+
+    load r1,"b"
+    load r2,"a"
+    sgte r0,r1,r2
+    brf string_fail, r0
+    slt r0,r2,r1
+    brf string_fail, r0
+    slte r0,r2,"a"
+    brf string_fail, r0
+
+    load r1,"A"
+    load r2,"XYZ"
+    load r3,1
+    concchar r1,r2,r3
+    seq r0,r1,"AY"
+    brf string_fail, r0
+
+    load r1,"ABCD"
+    load r2,67
+    poschar r3,r1,r2
+    ieq r0,r3,2
+    brf string_fail, r0
+
+    load r1,66
+    load r2,"xy"
+    load r3,"AB"
+    transchar r1,r2,r3
+    ieq r0,r1,121
+    brf string_fail, r0
+
+    load r1,""
+    load r2,"banana"
+    load r3,"an"
+    dropchar r1,r2,r3
+    seq r0,r1,"b"
+    brf string_fail, r0
+
+    load r1,"abcdef"
+    load r2,2
+    setstrpos r1,r2
+    load r3,3
+    substring r4,r1,r3
+    seq r0,r4,"cde"
+    brf string_fail, r0
+
+    load r1,""
+    load r2,42
+    load r3,3
+    padstr r1,r2,r3
+    seq r0,r1,"***"
+    brf string_fail, r0
+
+    load r1,"abcdef"
+    load r2,3
+    trunc r3,r1,r2
+    seq r0,r3,"abc"
+    brf string_fail, r0
+
+    load r1,"ABC"
+    stobin r1
+    blen r2,r1
+    ieq r0,r2,3
+    brf string_fail, r0
+    bintos r1
+    seq r0,r1,"ABC"
+    brf string_fail, r0
+
+    ret 1
+string_fail:
+    ret 0
+
+test_flow_misc() .locals=20
+    load r1,1
+    brtf brtf_true,flow_fail,r1
+flow_fail_after_true:
+    load r1,0
+    brtf flow_fail,brtf_false,r1
+flow_after_brtf:
+    load r1,5
+    load r2,5
+    bge bge_pass,r1,r2
+    br flow_fail
+bge_pass:
+    ble ble_pass,r1,5
+    br flow_fail
+ble_pass:
+    load r1,2
+    load r2,0
+bctnm_loop:
+    bctnm bctnm_loop,r1,r2
+    ieq r0,r2,3
+    brf flow_fail, r0
+
+    load r1,0
+    bctp bctp_done,r1
+    br flow_fail
+bctp_done:
+    ieq r0,r1,1
+    brf flow_fail, r0
+
+    load r1,2
+    load r2,0
+    bcf bcf_done,r1,r2
+    bcf bcf_done,r1,r2
+    bcf bcf_done,r1,r2
+    br flow_fail
+bcf_done:
+    ieq r0,r1,0
+    brf flow_fail, r0
+    ieq r0,r2,2
+    brf flow_fail, r0
+
+    ret 1
+brtf_true:
+    br flow_fail_after_true
+brtf_false:
+    br flow_after_brtf
+flow_fail:
+    ret 0
+
+test_fixed_register_shortcuts() .locals=5
+    load r0,10
+    dec0
+    ieq r3,r0,9
+    brf fixed_shortcut_fail, r3
+
+    load r1,20
+    inc1
+    ieq r3,r1,21
+    brf fixed_shortcut_fail, r3
+    dec1
+    ieq r3,r1,20
+    brf fixed_shortcut_fail, r3
+
+    load r2,30
+    inc2
+    ieq r3,r2,31
+    brf fixed_shortcut_fail, r3
+    dec2
+    ieq r3,r2,30
+    brf fixed_shortcut_fail, r3
+
+    ret 1
+fixed_shortcut_fail:
+    ret 0
+
+test_signal_misc() .locals=10
+    sigbr signalt_hit,"OTHER"
+    load r1,1
+    signalt "OTHER",r1
+    br signal_fail
+signalt_hit:
+    sigbr signalf_hit,"OTHER"
+    load r1,0
+    signalf "OTHER","conditional message",r1
+    br signal_fail
+signalf_hit:
+    sigignore "OTHER"
+    ret 1
+signal_fail:
+    ret 0
+
+test_attribute_misc() .locals=30
+    load r1,"target"
+    link r2,r1
+    load r2,"changed"
+    seq r0,r1,"changed"
+    brf attr_fail, r0
+    unlink r2
+    load r2,"separate"
+    seq r0,r1,"changed"
+    brf attr_fail, r0
+
+    load r3,"array"
+    minattrs r3,3
+    getattrs r4,r3
+    ieq r0,r4,3
+    brf attr_fail, r0
+    minattrs r3,2
+    getattrs r4,r3
+    ieq r0,r4,3
+    brf attr_fail, r0
+    load r5,1
+    minattrs r3,r5,4
+    getattrs r4,r3
+    ieq r0,r4,5
+    brf attr_fail, r0
+    getabufs r4,r3
+    igte r0,r4,5
+    brf attr_fail, r0
+
+    setattrs r6,2
+    load r7,"external"
+    linktoattr1 2,r6,r7
+    linkattr1 r8,r6,2
+    seq r0,r8,"external"
+    brf attr_fail, r0
+    load r7,"updated"
+    seq r0,r8,"updated"
+    brf attr_fail, r0
+    unlinkattr1 2,r6
+    load r7,"after-unlink"
+    linkattr1 r8,r6,2
+    seq r0,r8,""
+    brf attr_fail, r0
+
+    ret 1
+attr_fail:
+    ret 0
+
+test_meta_misc() .locals=30
+    load r1,1
+
+    load r2,2
+    metaloadioperand r3,r1,r2
+    ieq r0,r3,12345
+    brf meta_fail, r0
+
+    load r2,5
+    metaloadsoperand r3,r1,r2
+    seq r0,r3,"meta-string"
+    brf meta_fail, r0
+
+    load r2,11
+    metaloadpoperand r3,r1,r2
+    seq r0,r3,"meta_target"
+    brf meta_fail, r0
+
+    metaloadedprocs r4,r1
+    igt r0,r4,0
+    brf meta_fail, r0
+
+    metaloadedeprocs r5,r1
+    igte r0,r5,0
+    brf meta_fail, r0
+
+    load r6,"__definitely_missing_crexx_module_586__"
+    metaloadmodule r7,r6
+    ilte r0,r7,0
+    brf meta_fail, r0
+
+    load r10,"parent-visible"
+    load r11,0
+    call r12,caller_probe(),r11
+    brf meta_fail, r12
+
+    ret 1
+meta_fail:
+    ret 0
+
+caller_probe() .locals=10
+    load r1,10
+    metalinkpreg r2,r1
+    seq r0,r2,"parent-visible"
+    brf caller_fail, r0
+
+    metaloadcalleraddr r3
+    linkattr r4,r3,0
+    igt r0,r4,0
+    brf caller_fail, r0
+    linkattr r4,r3,1
+    igte r0,r4,0
+    brf caller_fail, r0
+
+    ret 1
+caller_fail:
+    ret 0
+
+test_system_misc() .locals=30
+    mtime r1
+    igt r0,r1,0
+    brf system_fail, r0
+
+    xtime r1,"C"
+    igt r0,r1,0
+    brf system_fail, r0
+
+    getenv r1,"__CREXX_TEST_ENV_VALUE_THAT_SHOULD_NOT_EXIST_586__"
+    seq r0,r1,""
+    brf system_fail, r0
+
+    irand r1,1
+    igte r0,r1,0
+    brf system_fail, r0
+
+    load r2,"abc"
+    load r3,3
+    rxhash r1,r2,r3
+    igt r0,r1,0
+    brf system_fail, r0
+
+    load r1,"test_instruction_gaps_io.tmp"
+    load r2,"wb"
+    fopen r3,r1,r2
+    ine r0,r3,0
+    brf system_fail, r0
+    icopy r4,r3
+    load r5,65
+    fwritebyte r3,r5
+    load r5,233
+    fwritecdpt r3,r5
+    fflush r3,r3
+    fclose r0,r4
+
+    load r2,"rb"
+    fopen r3,r1,r2
+    ine r0,r3,0
+    brf system_fail, r0
+    freadbyte r5,r3
+    ieq r0,r5,65
+    brf system_fail, r0
+    freadcdpt r5,r3
+    ieq r0,r5,233
+    brf system_fail, r0
+    ferror r6,r3
+    ieq r0,r6,0
+    brf system_fail, r0
+    freadbyte r5,r3
+    ieq r0,r5,-1
+    brf system_fail, r0
+    feof r6,r3
+    ine r0,r6,0
+    brf system_fail, r0
+    fclearerr r3
+    feof r6,r3
+    ieq r0,r6,0
+    brf system_fail, r0
+    fclose r0,r3
+
+    ret 1
+system_fail:
+    ret 0

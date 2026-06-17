@@ -1,0 +1,101 @@
+options levelb
+import rxcptest
+import rxcpexits
+import rxcp
+
+main: procedure
+  failures = .int
+  failures = 0
+
+  failures = failures + test_descriptor()
+  failures = failures + test_output_result_rewrite()
+  failures = failures + test_expose_rewrite()
+  failures = failures + test_missing_script()
+
+  call report_result failures
+  return
+
+test_descriptor: procedure = .int
+  failures = .int
+  rxs = .rexxscriptexit(3000)
+  desc = .exitdescriptor
+  failures = 0
+
+  desc = rxs.describe()
+  if check_equal("rexxscript protocol version", "2", desc.get_protocol_version()) = 0 then failures = failures + 1
+  if check_equal("rexxscript primary keyword", "REXXSCRIPT", desc.get_primary_keyword()) = 0 then failures = failures + 1
+  if check_true("rexxscript default import", find_descriptor_import(desc, "rxfnsb") > 0, "missing rxfnsb import") = 0 then failures = failures + 1
+
+  return failures
+
+test_output_result_rewrite: procedure = .int
+  failures = .int
+  rxs = .rexxscriptexit(3001)
+  plan = .exitplan
+  result = .exitresult
+  replacement = .string
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "REXXSCRIPT"
+  call pushstring tokens, '"a = 1; say a"'
+  call pushidentifier tokens, "OUTPUT"
+  call pushidentifier tokens, "out", ".string[]", 1
+  call pushidentifier tokens, "RESULT"
+  call pushidentifier tokens, "raw", ".string[]", 1
+
+  plan = rxs.pre_process(tokens)
+  if check_equal("rexxscript pre_process", "READY", plan.get_status()) = 0 then failures = failures + 1
+
+  result = rxs.process(tokens)
+  if check_equal("rexxscript process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+
+  replacement = join_result_lines(result)
+  if check_contains("rexxscript evaluate", replacement, '__rexxscript_result = evaluate("a = 1; say a", 0)') = 0 then failures = failures + 1
+  if check_contains("rexxscript output", replacement, "out = rexxscript_output()") = 0 then failures = failures + 1
+  if check_contains("rexxscript result", replacement, "raw = __rexxscript_result") = 0 then failures = failures + 1
+
+  return failures
+
+test_expose_rewrite: procedure = .int
+  failures = .int
+  rxs = .rexxscriptexit(3003)
+  result = .exitresult
+  replacement = .string
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "REXXSCRIPT"
+  call pushstring tokens, '"a = a + 4; message = ''done''"'
+  call pushidentifier tokens, "EXPOSE"
+  call pushidentifier tokens, "a", ".string", 0
+  call pushcomma tokens
+  call pushidentifier tokens, "message", ".string", 0
+  call pushidentifier tokens, "OUTPUT"
+  call pushidentifier tokens, "out", ".string[]", 1
+
+  result = rxs.process(tokens)
+  if check_equal("rexxscript expose process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
+
+  replacement = join_result_lines(result)
+  if check_contains("rexxscript expose names", replacement, "__rexxscript_names[1] = 'a'") = 0 then failures = failures + 1
+  if check_contains("rexxscript expose values", replacement, "__rexxscript_values[2] = message") = 0 then failures = failures + 1
+  if check_contains("rexxscript exposed evaluate", replacement, "evaluate_exposed(") = 0 then failures = failures + 1
+  if check_contains("rexxscript expose copyback a", replacement, "a = rexxscript_value('a')") = 0 then failures = failures + 1
+  if check_contains("rexxscript expose output", replacement, "out = rexxscript_output()") = 0 then failures = failures + 1
+
+  return failures
+
+test_missing_script: procedure = .int
+  failures = .int
+  rxs = .rexxscriptexit(3002)
+  result = .exitresult
+  failures = 0
+
+  tokens = newtokens()
+  call pushidentifier tokens, "REXXSCRIPT"
+
+  result = rxs.process(tokens)
+  if check_equal("rexxscript missing script", "ERROR", result.get_status()) = 0 then failures = failures + 1
+
+  return failures

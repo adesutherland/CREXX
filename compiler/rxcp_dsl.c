@@ -69,6 +69,15 @@
 #include "serialization.h"
 #include "dslsyntax_log.h"
 
+static void rxc_free_code_buffer(CodeBuffer *cb) {
+    if (!cb) return;
+    if (cb->ep_rules) {
+        cb_free_ep_rules(cb->ep_rules);
+        cb->ep_rules = NULL;
+    }
+    free_code_buffer(cb);
+}
+
 /* Map cREXX token types to DSL platform node types */
 static CB_NodeType map_c_token_to_cb_type(int token_type) {
     switch (token_type) {
@@ -119,6 +128,7 @@ static CB_NodeType map_c_token_to_cb_type(int token_type) {
         case TK_S_LTE:
         case TK_AND:
         case TK_OR:
+        case TK_XOR:
         case TK_NOT: return LEXER_OPERATOR_LOGICAL;
         case TK_OPEN_BRACKET:
         case TK_OPEN_SBRACKET: return LEXER_LH_EXPR;
@@ -266,7 +276,7 @@ int rxc_parser_mode_main(int stdio_mode, int port, const char *file_name, int de
 
     const char *crexx_config = 
         "[.rexx]\n"
-        "keywords=say,if,then,else,do,end,procedure,expose,return,exit,pull,parse,arg\n"
+        "keywords=say,if,then,else,select,when,otherwise,do,end,to,by,for,while,until,forever,leave,iterate,procedure,expose,return,exit,pull,parse,arg\n"
         "operators=+,-,*,/,=,<,>,(,),{,},,,;\n"
         "line_comment=--\n"
         "block_start=/*\n"
@@ -288,7 +298,7 @@ int rxc_parser_mode_main(int stdio_mode, int port, const char *file_name, int de
         cb_start_server(cb, "127.0.0.1", port);
     }
 
-    free_code_buffer(cb);
+    rxc_free_code_buffer(cb);
     if (debug_mode) cb_log_close();
 
     return 0;

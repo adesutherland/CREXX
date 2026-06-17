@@ -2,7 +2,6 @@
  * Disassembler imported procedure roundtrip coverage.
  */
 
-.srcfile="tests_disassembler_imported.rexx"
 .globals=0
 
 word() .expose=rxfnsb.word

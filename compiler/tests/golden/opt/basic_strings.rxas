@@ -1,74 +1,292 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : basic_strings.rexx
- * BUILT                  : 2026-04-30 20:04:10
+ * SOURCE                 : basic_strings.crexx
+ * BUILT                  : 2026-06-13 15:11:36
  */
 
-.srcfile="basic_strings.rexx"
 .globals=0
 
-main() .locals=7
+main() .locals=20
    .meta "basic_strings.main"="b" ".void" main() ""
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 5:1="c = a || \" \" || b"
+   .srcstep 1 1 17 "basic_strings.crexx" 5 1 18 "c = a || \" \" || b"
    .meta "basic_strings.main.a"="b" ".string" "Hello"
    .meta "basic_strings.main.b"="b" ".string" "World"
    .meta "basic_strings.main.c"="b" ".string" r0
    load r0,"Hello World"
-   .src 6:1="say c"
+   .traceevent "L" 4 "R" "S" "r" 0 1 1 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 0 1 1 0 "c" ""
+   .srcstep 2 2 17 "basic_strings.crexx" 6 1 6 "say c"
+   .traceevent "V" 6 "R" "S" "r" 0 2 2 0 "c" ""
    say r0
-   .src 9:1="say d"
+   .srcstep 3 3 17 "basic_strings.crexx" 9 1 6 "say d"
    .meta "basic_strings.main.d"="b" ".string" "Hello   World"
    say "Hello   World"
-   .src 11:1="say length(c)"
-   load r1,1
-   swap r2,r0
-   call r3,rxfnsb.length(),r1
-   swap r0,r2
-   itos r3
-   say r3
-   .src 12:1="say substr(c, 1, 5)"
-   load r3,1
+   .srcstep 8 8 17 "basic_strings.crexx" 11 1 14 "say length(c)"
+   .srcstep 7 7 17 "basic_strings.crexx" 11 5 11 "say length(c)"
+   .srcstep 4 4 25 "length.crexx" 35 3 13 "  result = 0"
+   load r1,0
+   .traceevent "L" 4 "R" "I" "r" 1 4 4 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 4 4 0 "result" ""
+   .srcstep 5 5 25 "length.crexx" 36 13 34 "  assembler strlen result,string1"
+   .traceevent "V" 6 "R" "I" "r" 1 8 8 0 "result" ""
+   .traceevent "V" 6 "R" "S" "r" 0 8 8 0 "c" ""
+   strlen r1,r0
+   .srcstep 6 6 25 "length.crexx" 37 3 16 "  return result"
+   .traceevent "V" 6 "R" "I" "r" 1 8 8 0 "result" ""
+   icopy r14,r1
+   acopy r14,r1
+   br l286bexprend
+l286bexprend:
+   itos r14
+   say r14
+   .srcstep 43 43 17 "basic_strings.crexx" 12 1 20 "say substr(c, 1, 5)"
+   .srcstep 42 42 17 "basic_strings.crexx" 12 5 11 "say substr(c, 1, 5)"
+   .meta "basic_strings.main.outputstring"="b" ".string" r5
+   .srcstep 9 9 25 "substr.crexx" 55 3 25 "  outputstring = .string"
+   null r5
+   .srcstep 10 10 33 "basic_strings.crexx" 12 11 11 "say substr(c, 1, 5)"
+   .traceevent "V" 6 "R" "S" "r" 0 10 10 0 "c" ""
+   scopy r10,r0
+   .traceevent "A" 6 "R" "S" "r" 10 10 10 0 "string1" ""
+   .srcstep 11 11 33 "basic_strings.crexx" 12 11 11 "say substr(c, 1, 5)"
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 11 11 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 9 11 11 0 "start" ""
+   .srcstep 12 12 33 "basic_strings.crexx" 12 11 11 "say substr(c, 1, 5)"
    load r4,5
-   load r1,4
-   settp r0,1
-   swap r2,r0
-   settp r4,1
-   settp r5,2
-   call r6,rxfnsb.substr(),r1
-   swap r0,r2
-   say r6
-   .src 13:1="say pos(\"World\", c)"
-   load r4,"World"
-   load r3,3
-   settp r4,3
-   settp r0,1
-   swap r5,r0
-   settp r6,0
-   call r2,rxfnsb.pos(),r3
-   swap r0,r5
-   itos r2
-   say r2
-   .src 14:1="return"
+   .traceevent "L" 4 "R" "I" "r" 4 12 12 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 12 12 0 "len" ""
+   .srcstep 13 13 33 "basic_strings.crexx" 12 11 11 "say substr(c, 1, 5)"
+   load r6," "
+   .traceevent "L" 4 "R" "S" "r" 6 13 13 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 6 13 13 0 "pad" ""
+   .srcstep 14 14 25 "substr.crexx" 36 3 19 "  inputLength  = 0"
+   load r3,0
+   .traceevent "L" 4 "R" "I" "r" 3 14 14 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 14 14 0 "inputlength" ""
+   .srcstep 15 15 25 "substr.crexx" 37 13 40 "  assembler strlen inputLength, string1          /* this is the total string length */"
+   .traceevent "V" 6 "R" "I" "r" 3 43 43 0 "inputlength" ""
+   .traceevent "V" 6 "R" "S" "r" 10 43 43 0 "string1" ""
+   strlen r3,r10
+   .traceevent "V" 6 "R" "I" "r" 4 43 43 0 "len" ""
+   ieq r14,r4,-256
+   .traceevent "O" 4 "R" "B" "r" 14 43 43 0 "" ""
+   brf l316iffalse,r14
+   .srcstep 16 16 25 "substr.crexx" 38 20 47 "  if len=-256 then len=inputLength + 1 - start   /* len was not set, use the faster assembler instruction to retrieve and calculate the length */"
+   .traceevent "V" 6 "R" "I" "r" 3 16 16 0 "inputlength" ""
+   iadd r15,r3,1
+   .traceevent "O" 4 "R" "I" "r" 15 16 16 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 9 16 16 0 "start" ""
+   isub r4,r15,r9
+   .traceevent "O" 4 "R" "I" "r" 4 16 16 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 16 16 0 "len" ""
+l316iffalse:
+   .traceevent "V" 6 "R" "I" "r" 9 43 43 0 "start" ""
+   ilt r15,r9,1
+   .traceevent "O" 4 "R" "B" "r" 15 43 43 0 "" ""
+   brf l327iffalse,r15
+   .srcstep 17 17 41 "basic_strings.crexx" 40 56 56 "  if start < 1 then call raise \"syntax\", \"40.13\", start"
+   itos r9
+   .traceevent "V" 6 "R" "S" "r" 9 17 17 0 "start" ""
+   scopy r11,r9
+   .traceevent "A" 6 "R" "S" "r" 11 17 17 0 "parm1" ""
+   .srcstep 18 18 25 "raise.crexx" 34 3 41 "  say \"RUNTIME\" type \"ERROR:\" code parm1"
+   .traceevent "V" 6 "R" "S" "r" 11 18 18 0 "parm1" ""
+   sconcat r14,"RUNTIME syntax ERROR: 40.13",r11
+   .traceevent "O" 4 "R" "S" "r" 14 18 18 0 "" ""
+   say r14
+l327iffalse:
+   .traceevent "V" 6 "R" "I" "r" 4 43 43 0 "len" ""
+   ilte r15,r4,0
+   .traceevent "O" 4 "R" "B" "r" 15 43 43 0 "" ""
+   brf l339iffalse,r15
+   .srcstep 19 19 25 "substr.crexx" 42 22 31 "  if len   <= 0 then return ''"
+   load r14,""
+   .traceevent "L" 4 "R" "S" "r" 14 43 43 0 "" ""
+   scopy r16,r14
+   acopy r16,r14
+   br l296bexprend
+l339iffalse:
+   .srcstep 20 20 25 "substr.crexx" 44 3 20 "  start = start - 1"
+   .traceevent "V" 6 "R" "I" "r" 9 20 20 0 "start" ""
+   isub r9,r9,1
+   .traceevent "O" 4 "R" "I" "r" 9 20 20 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 9 20 20 0 "start" ""
+   .traceevent "V" 6 "R" "I" "r" 9 43 43 0 "start" ""
+   ieq r15,r9,0
+   .traceevent "O" 4 "R" "B" "r" 15 43 43 0 "" ""
+   brf l350iffalse,r15
+   .traceevent "V" 6 "R" "I" "r" 4 43 43 0 "len" ""
+   .traceevent "V" 6 "R" "I" "r" 3 43 43 0 "inputlength" ""
+   ieq r16,r4,r3
+   .traceevent "O" 4 "R" "B" "r" 16 43 43 0 "" ""
+   brf l355iffalse,r16
+   .srcstep 21 21 25 "substr.crexx" 48 32 46 "     if len = inputLength then return string1  /* same length, return immediately */"
+   .traceevent "V" 6 "R" "S" "r" 10 43 43 0 "string1" ""
+   scopy r16,r10
+   acopy r16,r10
+   br l296bexprend
+l355iffalse:
+   .traceevent "V" 6 "R" "I" "r" 4 43 43 0 "len" ""
+   .traceevent "V" 6 "R" "I" "r" 3 43 43 0 "inputlength" ""
+   ilte r16,r4,r3
+   .traceevent "O" 4 "R" "B" "r" 16 43 43 0 "" ""
+   brf l361iffalse,r16
+   .srcstep 22 22 25 "substr.crexx" 50 19 39 "        assembler substcut string1,len         /* no length checking necessary, handled in substcut */"
+   .traceevent "V" 6 "R" "S" "r" 10 43 43 0 "string1" ""
+   .traceevent "V" 6 "R" "I" "r" 4 43 43 0 "len" ""
+   substcut r10,r4
+   .srcstep 23 23 25 "substr.crexx" 51 9 23 "        return string1"
+   .traceevent "V" 6 "R" "S" "r" 10 43 43 0 "string1" ""
+   scopy r16,r10
+   acopy r16,r10
+   br l296bexprend
+l361iffalse:
+l350iffalse:
+   .traceevent "V" 6 "R" "I" "r" 9 43 43 0 "start" ""
+   .traceevent "V" 6 "R" "I" "r" 4 43 43 0 "len" ""
+   iadd r16,r9,r4
+   .traceevent "O" 4 "R" "I" "r" 16 43 43 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 3 43 43 0 "inputlength" ""
+   ilte r16,r16,r3
+   .traceevent "O" 4 "R" "B" "r" 16 43 43 0 "" ""
+   brf l374iffalse,r16
+   .srcstep 24 24 25 "substr.crexx" 57 16 39 "     assembler SETSTRPOS string1,start"
+   .traceevent "V" 6 "R" "S" "r" 10 43 43 0 "string1" ""
+   .traceevent "V" 6 "R" "I" "r" 9 43 43 0 "start" ""
+   setstrpos r10,r9
+   .srcstep 25 25 25 "substr.crexx" 58 16 50 "     assembler substring outputstring,string1,len"
+   .traceevent "V" 6 "R" "S" "r" 5 43 43 0 "outputstring" ""
+   .traceevent "V" 6 "R" "S" "r" 10 43 43 0 "string1" ""
+   .traceevent "V" 6 "R" "I" "r" 4 43 43 0 "len" ""
+   substring r5,r10,r4
+   .srcstep 26 26 25 "substr.crexx" 59 6 25 "     return outputstring"
+   .traceevent "V" 6 "R" "S" "r" 5 43 43 0 "outputstring" ""
+   scopy r16,r5
+   acopy r16,r5
+   br l296bexprend
+l374iffalse:
+   .srcstep 27 27 25 "substr.crexx" 63 3 19 "  padchar      = 0  /* Holds Unicode codepoint */"
+   load r7,0
+   .traceevent "L" 4 "R" "I" "r" 7 27 27 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 7 27 27 0 "padchar" ""
+   .srcstep 28 28 25 "substr.crexx" 65 3 19 "  padLength    = 0"
+   load r8,0
+   .traceevent "L" 4 "R" "I" "r" 8 28 28 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 8 28 28 0 "padlength" ""
+   .traceevent "V" 6 "R" "S" "r" 6 43 43 0 "pad" ""
+   req r16,r6,""
+   .traceevent "O" 4 "R" "B" "r" 16 43 43 0 "" ""
+   brf l396iffalse,r16
+   .srcstep 29 29 25 "substr.crexx" 68 20 29 "  if pad = '' then pad = ' '"
+   load r6," "
+   .traceevent "L" 4 "R" "S" "r" 6 29 29 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 6 29 29 0 "pad" ""
+l396iffalse:
+   .srcstep 30 30 25 "substr.crexx" 69 13 34 "  assembler strlen padLength, pad"
+   .traceevent "V" 6 "R" "I" "r" 8 43 43 0 "padlength" ""
+   .traceevent "V" 6 "R" "S" "r" 6 43 43 0 "pad" ""
+   strlen r8,r6
+   .traceevent "V" 6 "R" "I" "r" 8 43 43 0 "padlength" ""
+   igt r16,r8,1
+   .traceevent "O" 4 "R" "B" "r" 16 43 43 0 "" ""
+   brf l406iffalse,r16
+   .srcstep 31 31 41 "basic_strings.crexx" 70 58 58 "  if padLength > 1 then call raise \"syntax\", \"40.23\", pad"
+   .traceevent "V" 6 "R" "S" "r" 6 31 31 0 "pad" ""
+   scopy r12,r6
+   .traceevent "A" 6 "R" "S" "r" 12 31 31 0 "parm1" ""
+   .srcstep 32 32 25 "raise.crexx" 34 3 41 "  say \"RUNTIME\" type \"ERROR:\" code parm1"
+   .traceevent "V" 6 "R" "S" "r" 12 32 32 0 "parm1" ""
+   sconcat r15,"RUNTIME syntax ERROR: 40.23",r12
+   .traceevent "O" 4 "R" "S" "r" 15 32 32 0 "" ""
+   say r15
+l406iffalse:
+   .srcstep 33 33 25 "substr.crexx" 71 13 33 "  assembler strchar padchar, pad   /* padchar= utf8codepoint(pad) */"
+   .traceevent "V" 6 "R" "I" "r" 7 43 43 0 "padchar" ""
+   .traceevent "V" 6 "R" "S" "r" 6 43 43 0 "pad" ""
+   strchar r7,r6
+   .srcstep 34 34 25 "substr.crexx" 74 3 36 "  inputLength = inputLength - start              /* calculate usable length after positioning substr */"
+   .traceevent "V" 6 "R" "I" "r" 3 34 34 0 "inputlength" ""
+   .traceevent "V" 6 "R" "I" "r" 9 34 34 0 "start" ""
+   isub r3,r3,r9
+   .traceevent "O" 4 "R" "I" "r" 3 34 34 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 34 34 0 "inputlength" ""
+   .srcstep 35 35 25 "substr.crexx" 77 13 37 "  assembler SETSTRPOS string1, start"
+   .traceevent "V" 6 "R" "S" "r" 10 43 43 0 "string1" ""
+   .traceevent "V" 6 "R" "I" "r" 9 43 43 0 "start" ""
+   setstrpos r10,r9
+   .traceevent "V" 6 "R" "I" "r" 3 43 43 0 "inputlength" ""
+   ilte r16,r3,0
+   .traceevent "O" 4 "R" "B" "r" 16 43 43 0 "" ""
+   brf l429iffalse,r16
+   .srcstep 36 36 25 "substr.crexx" 80 16 49 "     assembler padstr outputstring, padchar, len"
+   .traceevent "V" 6 "R" "S" "r" 5 43 43 0 "outputstring" ""
+   .traceevent "V" 6 "R" "I" "r" 7 43 43 0 "padchar" ""
+   .traceevent "V" 6 "R" "I" "r" 4 43 43 0 "len" ""
+   padstr r5,r7,r4
+   br l429ifend
+l429iffalse:
+   .traceevent "V" 6 "R" "I" "r" 4 43 43 0 "len" ""
+   .traceevent "V" 6 "R" "I" "r" 3 43 43 0 "inputlength" ""
+   ilte r15,r4,r3
+   .traceevent "O" 4 "R" "B" "r" 15 43 43 0 "" ""
+   brf l438iffalse,r15
+   .srcstep 37 37 25 "substr.crexx" 83 16 52 "     assembler substring outputstring, string1, len"
+   .traceevent "V" 6 "R" "S" "r" 5 43 43 0 "outputstring" ""
+   .traceevent "V" 6 "R" "S" "r" 10 43 43 0 "string1" ""
+   .traceevent "V" 6 "R" "I" "r" 4 43 43 0 "len" ""
+   substring r5,r10,r4
+   br l438ifend
+l438iffalse:
+   .srcstep 38 38 25 "substr.crexx" 86 16 60 "     assembler substring outputstring, string1, inputLength"
+   .traceevent "V" 6 "R" "S" "r" 5 43 43 0 "outputstring" ""
+   .traceevent "V" 6 "R" "S" "r" 10 43 43 0 "string1" ""
+   .traceevent "V" 6 "R" "I" "r" 3 43 43 0 "inputlength" ""
+   substring r5,r10,r3
+   .srcstep 39 39 25 "substr.crexx" 87 6 32 "     pcount = len - inputLength"
+   .traceevent "V" 6 "R" "I" "r" 4 39 39 0 "len" ""
+   .traceevent "V" 6 "R" "I" "r" 3 39 39 0 "inputlength" ""
+   isub r13,r4,r3
+   .traceevent "O" 4 "R" "I" "r" 13 39 39 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 13 39 39 0 "pcount" ""
+   .srcstep 40 40 25 "substr.crexx" 88 16 52 "     assembler padstr outputstring, padchar, pcount"
+   .traceevent "V" 6 "R" "S" "r" 5 43 43 0 "outputstring" ""
+   .traceevent "V" 6 "R" "I" "r" 7 43 43 0 "padchar" ""
+   .traceevent "V" 6 "R" "I" "r" 13 43 43 0 "pcount" ""
+   padstr r5,r7,r13
+l438ifend:
+l429ifend:
+   .srcstep 41 41 25 "substr.crexx" 90 3 22 "  return outputstring"
+   .traceevent "V" 6 "R" "S" "r" 5 43 43 0 "outputstring" ""
+   scopy r16,r5
+   acopy r16,r5
+   br l296bexprend
+l296bexprend:
+   say r16
+   .srcstep 44 44 17 "basic_strings.crexx" 13 1 20 "say pos(\"World\", c)"
+   load r16,"World"
+   .traceevent "L" 4 "R" "S" "r" 16 44 44 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 0 44 44 0 "c" ""
+   load r15,3
+   settp r16,768
+   settp r0,256
+   swap r17,r0
+   settp r18,0
+   call r19,rxfnsb.pos(),r15
+   swap r0,r17
+   itos r19
+   .traceevent "F" 4 "R" "S" "r" 19 44 44 0 "pos" ""
+   say r19
+   .srcstep 45 45 17 "basic_strings.crexx" 14 1 7 "return"
    ret
    .meta "basic_strings.main.a"
    .meta "basic_strings.main.b"
    .meta "basic_strings.main.c"
    .meta "basic_strings.main.d"
-
-/* Imported Declaration from file: length@library.rxbin */
-
-rxfnsb.length() .expose=rxfnsb.length
-   .meta "rxfnsb.length"="b" ".int" rxfnsb.length() "expose string1=.string"
-
-/* Imported Declaration from file: substr@library.rxbin */
-
-rxfnsb.substr() .expose=rxfnsb.substr
-   .meta "rxfnsb.substr"="b" ".string" rxfnsb.substr() "string1=.string,start=.int,?len=.int,?pad=.string"
 
 /* Imported Declaration from file: pos@library.rxbin */
 

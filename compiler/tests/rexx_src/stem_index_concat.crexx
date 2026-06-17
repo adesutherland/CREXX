@@ -1,0 +1,11 @@
+options levelb
+
+main: procedure = .int
+  stylespans = .string[]
+  stylespans[1] = "bold"
+  stylespans[2] = "italic"
+  i = 1
+  say "emsg " || stylespans[i]
+  i = 2
+  say "emsg " || stylespans[i]
+  return 0

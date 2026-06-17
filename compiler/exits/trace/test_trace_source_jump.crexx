@@ -1,0 +1,9 @@
+options levelb
+import tracejumphelper
+
+main: procedure
+  trace results
+  say "TRACE SOURCE JUMP MAIN"
+  call helper()
+  say "TRACE SOURCE JUMP BACK"
+  return

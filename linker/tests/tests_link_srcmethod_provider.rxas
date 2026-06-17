@@ -1,0 +1,14 @@
+/*
+ * linker/tests/tests_link_srcmethod_provider.rxas
+ */
+
+.meta "link_dyn.box"="b" ".unknown" .class
+
+.globals=0
+
+§link_dyn.box.describe() .locals=2
+   .meta "link_dyn.box.describe"="b" ".string" §link_dyn.box.describe() ""
+   .meta "link_dyn.box.describe.§this"="b" ".box" a1
+   load r1,"dynamic-box"
+   ret r1
+   .meta "link_dyn.box.describe.§this"

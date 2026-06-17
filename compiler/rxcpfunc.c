@@ -36,10 +36,12 @@
 #include "platform.h"
 #include "rxcpmain.h"
 #include "rxcp_emit.h"
+#include "rxcp_source_ext.h"
 #include "rxbin.h"
 #include "rxas.h"
 #include "rxpa.h"
 #include "rxcp_val.h"
+#include "rxcp_util.h"
 #ifndef NUTF8
 #include "utf.h"
 #endif
@@ -164,6 +166,151 @@ static int src_class(Context *context, char* fqname, struct imported_class **cls
     else return 0;
 }
 
+static int imported_class_metadata_implements(Context *context, const char *class_fqname, const char *interface_fqname) {
+    struct imported_class *cls = 0;
+    size_t i;
+
+    if (!context || !context->master_context || !class_fqname || !interface_fqname) return 0;
+    if (!src_class(context, (char *)class_fqname, &cls) || !cls) return 0;
+
+    for (i = 0; i < cls->implements_count; i++) {
+        if (cls->implements_fqnames[i] && strcmp(cls->implements_fqnames[i], interface_fqname) == 0) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+int rxcp_import_namespace_has_interface_provider(Context *context,
+                                                 const char *namespace_name,
+                                                 const char *interface_fqname) {
+    struct class_tree_wrapper *it;
+
+    if (!context || !context->master_context || !namespace_name || !interface_fqname) return 0;
+    if (!context->master_context->importable_class_tree) return 0;
+
+    avl_tree_for_each_in_order(it,
+                               context->master_context->importable_class_tree,
+                               struct class_tree_wrapper,
+                               index_node) {
+        struct imported_class *candidate = it->cls;
+        size_t i;
+
+        if (!candidate || candidate->contract_type != CLASS_DEF) continue;
+        if (!candidate->namespace || strcmp(candidate->namespace, namespace_name) != 0) continue;
+
+        for (i = 0; i < candidate->implements_count; i++) {
+            if (candidate->implements_fqnames[i] &&
+                strcmp(candidate->implements_fqnames[i], interface_fqname) == 0) {
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+static int imported_file_stem_matches_import_name(const char *file_name, const char *import_name) {
+    const char *base_name;
+    const char *module_separator;
+    size_t stem_len;
+    char *normalized_stem;
+    int result;
+
+    if (!file_name || !import_name || !import_name[0]) return 0;
+
+    base_name = filename(file_name);
+    stem_len = module_stem_length(base_name);
+    normalized_stem = rxcp_normalize_source_symbol_name(base_name, stem_len, 0, 0);
+    if (!normalized_stem) return 0;
+
+    result = strcmp(normalized_stem, import_name) == 0;
+    free(normalized_stem);
+    if (result) return 1;
+
+    module_separator = strrchr(file_name, '@');
+    if (!module_separator || !module_separator[1]) return 0;
+
+    base_name = filename(module_separator + 1);
+    stem_len = module_stem_length(base_name);
+    normalized_stem = rxcp_normalize_source_symbol_name(base_name, stem_len, 0, 0);
+    if (!normalized_stem) return 0;
+
+    result = strcmp(normalized_stem, import_name) == 0;
+    free(normalized_stem);
+    return result;
+}
+
+int rxcp_import_name_may_load_namespace(Context *context,
+                                        const char *import_name,
+                                        const char *namespace_name) {
+    struct tree_wrapper *fit;
+    struct class_tree_wrapper *cit;
+
+    if (!context || !context->master_context || !import_name || !namespace_name) return 0;
+    if (strcmp(import_name, namespace_name) == 0) return 1;
+
+    if (context->master_context->importable_function_tree) {
+        avl_tree_for_each_in_order(fit,
+                                   context->master_context->importable_function_tree,
+                                   struct tree_wrapper,
+                                   index_node) {
+            imported_func *func = fit->func;
+            if (func && func->namespace &&
+                strcmp(func->namespace, namespace_name) == 0 &&
+                imported_file_stem_matches_import_name(func->file_name, import_name)) {
+                return 1;
+            }
+        }
+    }
+
+    if (context->master_context->importable_class_tree) {
+        avl_tree_for_each_in_order(cit,
+                                   context->master_context->importable_class_tree,
+                                   struct class_tree_wrapper,
+                                   index_node) {
+            struct imported_class *cls = cit->cls;
+            if (cls && cls->namespace &&
+                strcmp(cls->namespace, namespace_name) == 0 &&
+                imported_file_stem_matches_import_name(cls->file_name, import_name)) {
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
+int rxcp_import_name_has_interface_provider(Context *context,
+                                            const char *import_name,
+                                            const char *interface_fqname) {
+    struct class_tree_wrapper *it;
+
+    if (!context || !context->master_context || !import_name || !interface_fqname) return 0;
+    if (!context->master_context->importable_class_tree) return 0;
+
+    avl_tree_for_each_in_order(it,
+                               context->master_context->importable_class_tree,
+                               struct class_tree_wrapper,
+                               index_node) {
+        struct imported_class *candidate = it->cls;
+        size_t i;
+
+        if (!candidate || candidate->contract_type != CLASS_DEF || !candidate->namespace) continue;
+        if (!rxcp_import_name_may_load_namespace(context, import_name, candidate->namespace)) continue;
+
+        for (i = 0; i < candidate->implements_count; i++) {
+            if (candidate->implements_fqnames[i] &&
+                strcmp(candidate->implements_fqnames[i], interface_fqname) == 0) {
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
 // Search for a class from namespace and name in the master context
 // Returns 1 if found and sets value
 // Returns 0 if not found
@@ -239,13 +386,8 @@ static int src_fqcl(Context *context, char* name, struct imported_class **cls) {
 
     if (rxcp_split_internal_symbol_name(name, &namespace, 0)) {
         int found = 0;
-        char *short_name = 0;
-        rxcp_split_internal_symbol_name(name, 0, &short_name);
-        if (short_name && find_visible_namespace_scope(context, 0, namespace)) {
-            found = src_nscl(context, namespace, short_name, cls);
-        }
+        found = src_class(context, name, cls);
         free(namespace);
-        if (short_name) free(short_name);
         return found;
     }
 
@@ -307,6 +449,7 @@ static int loaded_class_implements_interface(Context *context, Symbol *class_sym
     ASTNode *class_node;
     ASTNode *implements_node;
     ASTNode *iface_ref;
+    char *class_fqname = 0;
     char *interface_fqname = 0;
     int matched = 0;
 
@@ -317,10 +460,16 @@ static int loaded_class_implements_interface(Context *context, Symbol *class_sym
     class_node = class_symbol->defines_scope->defining_node;
     if (!class_node) return 0;
 
-    implements_node = ast_chld(class_node, IMPLEMENTS, 0);
-    if (!implements_node) return 0;
-
+    class_fqname = sym_frnm(class_symbol);
     interface_fqname = sym_frnm(interface_symbol);
+    if (class_fqname && interface_fqname &&
+        imported_class_metadata_implements(context, class_fqname, interface_fqname)) {
+        matched = 1;
+        goto done;
+    }
+
+    implements_node = ast_chld(class_node, IMPLEMENTS, 0);
+    if (!implements_node) goto done;
 
     iface_ref = implements_node->child;
     while (iface_ref) {
@@ -347,6 +496,8 @@ static int loaded_class_implements_interface(Context *context, Symbol *class_sym
         iface_ref = iface_ref->sibling;
     }
 
+done:
+    if (class_fqname) free(class_fqname);
     if (interface_fqname) free(interface_fqname);
     return matched;
 }
@@ -358,6 +509,7 @@ int symbol_name_assignable_to(Context *context, const char *from_name, const cha
     if (!from_name || !to_name) return 0;
     if (symbol_names_equivalent(context, from_name, to_name)) return 1;
     if (!context) return 0;
+    if (imported_class_metadata_implements(context, from_name, to_name)) return 1;
 
     from_symbol = resolve_contract_symbol(context, from_name);
     to_symbol = resolve_contract_symbol(context, to_name);
@@ -780,14 +932,12 @@ static void attach_imported_member_inline_payloads(Context *context, ASTNode *no
 }
 
 static int imported_class_has_source_contract(struct imported_class *cls) {
-    const char *name;
-    size_t len;
+    const char *extension;
 
     if (!cls || !cls->file_name) return 0;
 
-    name = cls->file_name;
-    len = strlen(name);
-    return len >= 5 && strcmp(name + len - 5, ".rexx") == 0;
+    extension = filenext(cls->file_name);
+    return extension && extension[0] && !rxcp_source_extension_is_reserved(extension);
 }
 
 static Symbol *load_imported_contract(Context *context, struct imported_class *found_cls) {
@@ -797,7 +947,7 @@ static Symbol *load_imported_contract(Context *context, struct imported_class *f
         return 0;
     }
 
-    found_symbol = sym_rfqn(context->ast, found_cls->fqname);
+    found_symbol = sym_rfqv(context->ast, found_cls->fqname);
     if (found_symbol) return found_symbol;
 
     ASTNode *new_stub = add_dast(context->ast, found_cls->context->ast->child);
@@ -810,7 +960,7 @@ static Symbol *load_imported_contract(Context *context, struct imported_class *f
         context->current_scope = old_scope;
     }
 
-    found_symbol = sym_rfqn(context->ast, found_cls->fqname);
+    found_symbol = sym_rfqv(context->ast, found_cls->fqname);
     if (found_symbol) {
         found_symbol->exposed = 1;
         found_symbol->status = SYM_STATUS_RESOLVED_GLOBAL;
@@ -1081,7 +1231,13 @@ static char **collect_implemented_interface_fqnames(Context *context, ASTNode *c
     for (iface_ref = implements_node->child; iface_ref; iface_ref = iface_ref->sibling) {
         Symbol *iface_symbol = iface_ref->symbolNode ? iface_ref->symbolNode->symbol : 0;
         char *fqname;
-        if (!iface_symbol) iface_symbol = sym_rvfc(context->ast, iface_ref);
+        if (!iface_symbol) {
+            iface_symbol = sym_rvfc(context->ast, iface_ref);
+            if (!iface_symbol) {
+                ensure_class_imported(context, iface_ref->node_string, iface_ref->node_string_length);
+                iface_symbol = sym_rvfc(context->ast, iface_ref);
+            }
+        }
         if (!iface_symbol) continue;
         fqname = sym_frnm(iface_symbol);
         if (!fqname) continue;
@@ -1143,7 +1299,7 @@ static void append_class_attribute_stub_lines(ASTNode *contract_node, char **buf
 
         if (m->node_type != DEFINE) continue;
         target = ast_chld(m, VAR_TARGET, 0);
-        type_node = ast_chld(m, CLASS, 0);
+        type_node = ast_type_child(m);
         if (!target || !target->node_string || !target->node_string_length || !type_node) continue;
 
         type = ast_n2tp(type_node);
@@ -1175,7 +1331,9 @@ static void append_class_attribute_stub_lines(ASTNode *contract_node, char **buf
 }
 
 /* Build a minimal contract stub source for an exposed class or interface */
-static char* generate_contract_stub_source(ASTNode *contract_node) {
+static char* generate_contract_stub_source(ASTNode *contract_node,
+                                           char **implements_fqnames,
+                                           size_t implements_count) {
     Symbol *cls_sym;
     char *fq = 0;
     char *ns = 0;
@@ -1208,31 +1366,37 @@ static char* generate_contract_stub_source(ASTNode *contract_node) {
     const char *cls_name = fq + dot + 1;
 
     /* Start stub source */
+    buffer = mprintf("options levelb\nnamespace %s\n", ns);
     if (contract_node->node_type == CLASS_DEF) {
-        ASTNode *implements_node = ast_chld(contract_node, IMPLEMENTS, 0);
-        if (implements_node && implements_node->child) {
-            ASTNode *iface_ref = implements_node->child;
-            buffer = mprintf("options levelb\nnamespace %s\n%s: class", ns, cls_name);
-            while (iface_ref) {
-                char *tmp = mprintf("%s%s %.*s",
-                                    buffer,
-                                    iface_ref == implements_node->child ? " implements" : "",
-                                    (int)iface_ref->node_string_length,
-                                    iface_ref->node_string);
+        if (implements_count) {
+            size_t i;
+            char *tmp = mprintf("%s%s: class", buffer, cls_name);
+            free(buffer);
+            buffer = tmp;
+            for (i = 0; i < implements_count; i++) {
+                char *iface_source;
+                if (!implements_fqnames[i]) continue;
+                iface_source = rxcp_internal_name_to_source_qualified(implements_fqnames[i], 1);
+                tmp = mprintf("%s%s %s",
+                              buffer,
+                              i == 0 ? " implements" : "",
+                              iface_source ? iface_source : implements_fqnames[i]);
                 free(buffer);
                 buffer = tmp;
-                iface_ref = iface_ref->sibling;
+                if (iface_source) free(iface_source);
             }
-            {
-                char *tmp = mprintf("%s\n", buffer);
-                free(buffer);
-                buffer = tmp;
-            }
+            tmp = mprintf("%s\n", buffer);
+            free(buffer);
+            buffer = tmp;
         } else {
-            buffer = mprintf("options levelb\nnamespace %s\n%s: class\n", ns, cls_name);
+            char *tmp = mprintf("%s%s: class\n", buffer, cls_name);
+            free(buffer);
+            buffer = tmp;
         }
     } else {
-        buffer = mprintf("options levelb\nnamespace %s\n%s: interface\n", ns, cls_name);
+        char *tmp = mprintf("%s%s: interface\n", buffer, cls_name);
+        free(buffer);
+        buffer = tmp;
     }
 
     append_class_attribute_stub_lines(contract_node, &buffer);
@@ -1266,7 +1430,7 @@ static char* generate_contract_stub_source(ASTNode *contract_node) {
             mname[m->node_string_length] = 0;
 
             /* Return type (default .void added by grammar) */
-            ASTNode *ret = ast_chld(m, CLASS, VOID);
+            ASTNode *ret = ast_type_child(m);
             char *rtype = ast_n2tp(ret);
 
             char *tmp = mprintf("%s  %s: method = %s\n", buffer, mname, rtype);
@@ -1345,7 +1509,7 @@ static walker_result class_signature_walker(walker_direction direction,
             if (fqname) {
                 size_t implements_count = 0;
                 char **implements_fqnames = collect_implemented_interface_fqnames(p->import_context, node, &implements_count);
-                char *stub_source = generate_contract_stub_source(node);
+                char *stub_source = generate_contract_stub_source(node, implements_fqnames, implements_count);
                 register_source_import_member_inline_payloads(p->import_context, node);
                 if (stub_source) {
                     Context *stub_ctx = parseRexx(p->parent_context, p->import_context->location, p->import_context->file_name,
@@ -1397,7 +1561,7 @@ static walker_result procedure_signature_walker(walker_direction direction,
     if (direction == out) {
         /* OUT - BOTTOM UP */
         if (node->node_type == PROCEDURE) {
-            type_node = ast_chld(node, CLASS, VOID);
+            type_node = ast_type_child(node);
             args_node = ast_chld(node, ARGS, 0);
             impl_node = ast_chld(node, INSTRUCTIONS, NOP);
             fqname = sym_frnm(node->symbolNode->symbol);
@@ -1709,29 +1873,11 @@ static void import_class_meta_aggs(Context *context, char *full_file_name, class
             char *stub_source;
             if (a->contract_type == INTERFACE_DEF) {
                 stub_source = mprintf("options levelb\nnamespace %s\n%s: interface\n%s",
-                                      a->ns, a->name, a->methods ? a->methods : "");
-            } else if (a->implements_count) {
-                size_t j;
-                stub_source = mprintf("options levelb\nnamespace %s\n%s: class", a->ns, a->name);
-                for (j = 0; j < a->implements_count; j++) {
-                    char *iface_name = rxcp_internal_name_to_source_qualified(a->implements_fqnames[j], 1);
-                    char *tmp = mprintf("%s%s %s",
-                                        stub_source,
-                                        j == 0 ? " implements" : "",
-                                        iface_name);
-                    free(iface_name);
-                    free(stub_source);
-                    stub_source = tmp;
-                }
-                {
-                    char *tmp = mprintf("%s\n%s%s",
-                                        stub_source,
-                                        a->attributes ? a->attributes : "",
-                                        a->methods ? a->methods : "");
-                    free(stub_source);
-                    stub_source = tmp;
-                }
+                                      a->ns,
+                                      a->name,
+                                      a->methods ? a->methods : "");
             } else {
+                /* Implements metadata is kept as FQNs on imported_class; source stubs only provide members. */
                 stub_source = mprintf("options levelb\nnamespace %s\n%s: class\n%s%s",
                                       a->ns,
                                       a->name,
@@ -2400,12 +2546,14 @@ static void parseRxbinFileForFunctions(Context *context, char* file_name, char* 
     fclose(fp);
 }
 
-static void parseRexxFileForFunctions(Context *parent_context, char* file_name, char* location) {
+static void parseRexxFileForFunctions(Context *parent_context, char* file_name, char* location,
+                                      RexxLevel source_default_level) {
     size_t bytes;
     Context *context;
     char *buff_start;
     imported_func *global;
     size_t i;
+    RexxLevel cli_level_override;
 
     if (parent_context->debug_mode >= 2) printf("Importing Procedures - Reading REXX file %s for possible procedure imports\n", file_name);
 
@@ -2441,6 +2589,16 @@ static void parseRexxFileForFunctions(Context *parent_context, char* file_name, 
     context->location = parent_context->location;
     context->file_name = (char*) filename(file_name);
     context->disable_exits = parent_context->disable_exits;
+    context->decimal_plugin = parent_context->decimal_plugin;
+    cli_level_override = parent_context->master_context ?
+                         parent_context->master_context->cli_level_override :
+                         parent_context->cli_level_override;
+    context->cli_level_override = cli_level_override;
+    context->cli_default_level = cli_level_override != UNKNOWN ?
+                                 cli_level_override :
+                                 (source_default_level != UNKNOWN ?
+                                  source_default_level :
+                                  rxcp_source_default_level_for_file(file_name));
 
     /* Propagate the master_context */
     context->master_context = parent_context->master_context;
@@ -2549,12 +2707,15 @@ static char *default_import_namespace_from_file_name(const char *file_name) {
     return rxcp_normalize_source_symbol_name(base_name, stem_len, 0, 0);
 }
 
-static void ensure_importable_source_header(importable_file *file, RexxLevel cli_default_level) {
+static void ensure_importable_source_header(importable_file *file, RexxLevel cli_level_override) {
     char *raw_namespace = 0;
+    RexxLevel default_level;
 
     if (!file || file->type != REXX_FILE || file->header_scanned) return;
 
-    rxcp_scan_source_header(file->location, file->name, cli_default_level, 0, &raw_namespace);
+    default_level = cli_level_override != UNKNOWN ? cli_level_override : file->source_default_level;
+    if (default_level == UNKNOWN) default_level = rxcp_source_default_level_for_file(file->name);
+    rxcp_scan_source_header(file->location, file->name, default_level, 0, &raw_namespace);
     if (raw_namespace) {
         file->namespace_name = rxcp_normalize_source_symbol_name(raw_namespace, strlen(raw_namespace), 0, 1);
         free(raw_namespace);
@@ -2568,7 +2729,10 @@ static void ensure_importable_source_header(importable_file *file, RexxLevel cli
 static int source_import_file_is_visible(Context *context, importable_file *file) {
     if (!file || file->type != REXX_FILE) return 1;
 
-    ensure_importable_source_header(file, context ? context->cli_default_level : UNKNOWN);
+    ensure_importable_source_header(file,
+                                    context && context->master_context ?
+                                    context->master_context->cli_level_override :
+                                    UNKNOWN);
     if (!file->namespace_name || !file->namespace_name[0]) return 1;
     if (!context || !context->ast || !context->ast->scope) return 1;
 
@@ -2621,6 +2785,7 @@ static Context *parseRexx(Context* parent_context, char *location, char* file_na
             context->debug_mode = debug_mode;
             context->master_context = parent_context->master_context;
             context->disable_exits = parent_context->disable_exits;
+            context->decimal_plugin = parent_context->decimal_plugin;
 
             rexbpars(context);
             break;
@@ -2691,7 +2856,8 @@ static int load_another_file(Context *context) {
                 case REXX_FILE:
                     parseRexxFileForFunctions(context,
                                               master_context->importable_file_list[f]->name,
-                                              master_context->importable_file_list[f]->location);
+                                              master_context->importable_file_list[f]->location,
+                                              master_context->importable_file_list[f]->source_default_level);
                     break;
                 case RXBIN_FILE:
                     parseRxbinFileForFunctions(context,
@@ -2744,6 +2910,7 @@ static int load_another_file(Context *context) {
 
 static ValueType type_from_string(char* type) {
     if (!type) return TP_UNKNOWN;
+    if (strncmp(type, "reference ", 10) == 0) return TP_REFERENCE;
     if (strcmp(type, ".int") == 0) return TP_INTEGER;
     if (strcmp(type, ".float") == 0) return TP_FLOAT;
     if (strcmp(type, ".decimal") == 0) return TP_DECIMAL;
@@ -3373,6 +3540,7 @@ static importable_file* importable_file_f(char* name, file_type type, char *loca
     else file->location = 0;
     file->imported = 0;
     file->source_root = 0;
+    file->source_default_level = UNKNOWN;
     file->mtime = read_importable_mtime(location, name);
     file->namespace_name = 0;
     file->header_scanned = 0;
@@ -3432,6 +3600,33 @@ static void list_files_in_dir(char *directory, file_type type, char* skip_name, 
     dirclose(&dir_ptr);
 }
 
+static void list_source_files_in_dir(char *directory, const char *extension, RexxLevel default_level,
+                                     char* skip_name, char *skip_module,
+                                     importable_file ***list, size_t *number, int debug_mode, char source_root) {
+
+    void *dir_ptr;
+    char* name;
+    importable_file *file;
+
+    if (!extension || !extension[0]) return;
+
+    name = dirfstfl(directory, 0, (char*) extension, &dir_ptr);
+    while (name) {
+        if ((!skip_name || strcmp(name, skip_name) != 0) &&
+            (!skip_module || !module_name_equals(name, skip_module))) {
+            if (debug_mode >= 2) fprintf(stderr, "Found importable source file: %s in %s\n", name, directory);
+            file = importable_file_f(name, REXX_FILE, directory);
+            if (file) {
+                file->source_root = source_root;
+                file->source_default_level = default_level;
+                add_file_to_list(file, number, list);
+            }
+        }
+        name = dirnxtfl(&dir_ptr);
+    }
+    dirclose(&dir_ptr);
+}
+
 static importable_file *find_stage_module(importable_file **list, int stage, const char *name) {
     size_t i;
 
@@ -3467,6 +3662,28 @@ static void collect_root_files(char *directory, file_type type, char *skip_name,
     root_count = 0;
 
     list_files_in_dir(directory, type, skip_name, skip_module, &root_list, &root_count, debug_mode, source_root);
+    for (i = 0; i < root_count; i++) {
+        add_unique_stage_file(list, number, root_list[i]);
+    }
+    free(root_list);
+}
+
+static void collect_source_root_files(char *directory, const RxcpSourceExtension *extension,
+                                      char *skip_name, char *skip_module,
+                                      importable_file ***list, size_t *number, int debug_mode, char source_root) {
+    importable_file **root_list;
+    size_t root_count;
+    size_t i;
+
+    if (!extension || !extension->extension) return;
+
+    root_list = malloc(sizeof(importable_file *));
+    if (!root_list) return;
+    root_list[0] = 0;
+    root_count = 0;
+
+    list_source_files_in_dir(directory, extension->extension, extension->default_level,
+                             skip_name, skip_module, &root_list, &root_count, debug_mode, source_root);
     for (i = 0; i < root_count; i++) {
         add_unique_stage_file(list, number, root_list[i]);
     }
@@ -3533,21 +3750,32 @@ importable_file **rxfl_lst(Context *context) {
     importable_file **list = 0;
     char *skip_module;
     size_t d;
+    RxcpSourceExtension source_extensions[RXCP_SOURCE_EXTENSION_MAX];
+    size_t source_extension_count;
+    size_t e;
 
     list = malloc(sizeof(importable_file *));
     if (!list) return 0;
     list[0] = 0;
     skip_module = context ? context->file_name : 0;
+    source_extension_count = rxcp_source_extension_list(context ? context->initial_source_extension : 0,
+                                                        source_extensions);
 
     if (context->debug_mode >= 2) {
         fprintf(stderr, "Scanning source import roots. Primary source root: %s\n", context->location ? context->location : ".");
     }
 
-    collect_root_files(context->location, REXX_FILE, context->file_name, skip_module, &list, &number, context->debug_mode, 1);
+    for (e = 0; e < source_extension_count; e++) {
+        collect_source_root_files(context->location, &source_extensions[e], context->file_name, skip_module,
+                                  &list, &number, context->debug_mode, 1);
+    }
     if (context->source_import_locations) {
         for (d = 0; context->source_import_locations[d]; d++) {
             if (context->debug_mode >= 2) fprintf(stderr, "Scanning source import root: %s\n", context->source_import_locations[d]);
-            collect_root_files(context->source_import_locations[d], REXX_FILE, 0, skip_module, &list, &number, context->debug_mode, 1);
+            for (e = 0; e < source_extension_count; e++) {
+                collect_source_root_files(context->source_import_locations[d], &source_extensions[e], 0, skip_module,
+                                          &list, &number, context->debug_mode, 1);
+            }
         }
     }
 

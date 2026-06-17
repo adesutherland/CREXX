@@ -43,6 +43,8 @@
 # define CREXXSAA_GETPID() _getpid()
 # define CREXXSAA_STAT_STRUCT struct _stat
 # define CREXXSAA_STAT(path, st) _stat((path), (st))
+# define CREXXSAA_FSTAT(fd, st) _fstat((fd), (st))
+# define CREXXSAA_FILENO(file) _fileno(file)
 #else
 # include <dirent.h>
 # include <limits.h>
@@ -54,14 +56,20 @@
 # define CREXXSAA_GETPID() getpid()
 # define CREXXSAA_STAT_STRUCT struct stat
 # define CREXXSAA_STAT(path, st) stat((path), (st))
+# define CREXXSAA_FSTAT(fd, st) fstat((fd), (st))
+# define CREXXSAA_FILENO(file) fileno(file)
 #endif
 
 #ifndef PATH_MAX
 # define PATH_MAX 4096
 #endif
+#if !defined(S_IFDIR) && defined(_S_IFDIR)
+# define S_IFDIR _S_IFDIR
+#endif
 
 #include "crexxsaa.h"
 #include "rxvml.h"
+#include "utf.h"
 
 #define CREXXSAA_CACHE_SCHEMA "1"
 #define CREXXSAA_FNV_OFFSET UINT64_C(1469598103934665603)
@@ -120,6 +128,27 @@ static void crexxsaa_set_errorf(crexxsaa_context* ctx, const char* format, ...) 
     vsnprintf(ctx->last_error, sizeof(ctx->last_error), format, args);
     va_end(args);
     ctx->last_error[sizeof(ctx->last_error) - 1] = '\0';
+}
+
+static int crexxsaa_validate_utf8_text(
+    crexxsaa_context* ctx,
+    const char* label,
+    const char* text,
+    size_t len) {
+
+#ifndef NUTF8
+    size_t chars = 0;
+    if ((!text && len != 0) || utf8nvalid_count(text ? text : "", len, &chars)) {
+        crexxsaa_set_errorf(ctx, "Invalid UTF-8 in %s", label ? label : "CREXXSAA text value");
+        return -1;
+    }
+#else
+    (void)ctx;
+    (void)label;
+    (void)text;
+    (void)len;
+#endif
+    return 0;
 }
 
 static void crexxsaa_copy_rxvml_error(crexxsaa_context* ctx, const char* fallback) {
@@ -292,6 +321,13 @@ static int crexxsaa_add_var_update(
     int rc;
 
     if (!ctx || !binding || !ctx->active_address_response) return CREXXSAA_VARIABLE_NO_ACTIVE_REQUEST;
+    if (crexxsaa_validate_utf8_text(
+            ctx,
+            "CREXXSAA ADDRESS variable update",
+            value ? value : "",
+            strlen(value ? value : "")) != 0) {
+        return CREXXSAA_VARIABLE_UNSUPPORTED;
+    }
 
     value_copy = crexxsaa_track_response_string(ctx, value);
     if (!value_copy) return CREXXSAA_VARIABLE_NO_MEMORY;
@@ -365,6 +401,16 @@ static const char* crexxsaa_env_value(const char* name) {
     const char* value = getenv(name);
     return (value && *value) ? value : NULL;
 }
+
+#ifdef _WIN32
+static int crexxsaa_is_windows_native_temp_dir(const char* path) {
+    CREXXSAA_STAT_STRUCT st;
+    if (!path || !*path) return 0;
+    if (path[0] == '/') return 0;
+    if (CREXXSAA_STAT(path, &st) != 0) return 0;
+    return (st.st_mode & S_IFDIR) != 0;
+}
+#endif
 
 static const char* crexxsaa_rxc_path(crexxsaa_context* ctx) {
     const char* value = crexxsaa_env_value("CREXXSAA_RXC");
@@ -571,14 +617,14 @@ static int crexxsaa_file_digest_read(
         crexxsaa_set_error(ctx, "Invalid source digest arguments");
         return -1;
     }
-    if (CREXXSAA_STAT(path, &st) != 0) {
-        crexxsaa_set_errorf(ctx, "Unable to stat CREXX source '%s': %s", path, strerror(errno));
-        return -1;
-    }
-
     file = fopen(path, "rb");
     if (!file) {
         crexxsaa_set_errorf(ctx, "Unable to read CREXX source '%s': %s", path, strerror(errno));
+        return -1;
+    }
+    if (CREXXSAA_FSTAT(CREXXSAA_FILENO(file), &st) != 0) {
+        crexxsaa_set_errorf(ctx, "Unable to stat CREXX source '%s': %s", path, strerror(errno));
+        fclose(file);
         return -1;
     }
 
@@ -670,15 +716,21 @@ static char* crexxsaa_canonical_path(const char* path) {
 
 static char* crexxsaa_temp_dir(void) {
     const char* value;
+#ifdef _WIN32
+    value = crexxsaa_env_value("TEMP");
+    if (crexxsaa_is_windows_native_temp_dir(value)) return crexxsaa_strdup(value);
+    value = crexxsaa_env_value("TMP");
+    if (crexxsaa_is_windows_native_temp_dir(value)) return crexxsaa_strdup(value);
+    value = crexxsaa_env_value("TMPDIR");
+    if (crexxsaa_is_windows_native_temp_dir(value)) return crexxsaa_strdup(value);
+    return crexxsaa_strdup(".");
+#else
     value = crexxsaa_env_value("TMPDIR");
     if (value) return crexxsaa_strdup(value);
     value = crexxsaa_env_value("TEMP");
     if (value) return crexxsaa_strdup(value);
     value = crexxsaa_env_value("TMP");
     if (value) return crexxsaa_strdup(value);
-#ifdef _WIN32
-    return crexxsaa_strdup(".");
-#else
     return crexxsaa_strdup("/tmp");
 #endif
 }
@@ -865,28 +917,41 @@ static int crexxsaa_write_manifest(
     return rc;
 }
 
+#ifdef _WIN32
+static int crexxsaa_run_tool_argv(
+    crexxsaa_context* ctx,
+    const char* label,
+    const char* executable,
+    const char* const argv[]) {
+
+    intptr_t rc;
+    if (!executable || !*executable || !argv) {
+        crexxsaa_set_error(ctx, "Invalid CREXX compiler command");
+        return -1;
+    }
+
+    rc = _spawnvp(_P_WAIT, executable, argv);
+    if (rc == -1) {
+        crexxsaa_set_errorf(ctx, "%s launch failed: %s", label, strerror(errno));
+        return -1;
+    }
+    if (rc != 0) {
+        crexxsaa_set_errorf(ctx, "%s failed with status %ld", label, (long)rc);
+        return -1;
+    }
+    return 0;
+}
+#else
 static size_t crexxsaa_shell_quote_length(const char* value) {
     size_t len = 2;
     while (value && *value) {
-#ifdef _WIN32
-        len += (*value == '"') ? 2 : 1;
-#else
         len += (*value == '\'') ? 4 : 1;
-#endif
         value++;
     }
     return len;
 }
 
 static char* crexxsaa_append_shell_quoted(char* target, const char* value) {
-#ifdef _WIN32
-    *target++ = '"';
-    while (value && *value) {
-        if (*value == '"') *target++ = '\\';
-        *target++ = *value++;
-    }
-    *target++ = '"';
-#else
     *target++ = '\'';
     while (value && *value) {
         if (*value == '\'') {
@@ -901,7 +966,6 @@ static char* crexxsaa_append_shell_quoted(char* target, const char* value) {
         value++;
     }
     *target++ = '\'';
-#endif
     *target = '\0';
     return target;
 }
@@ -975,6 +1039,7 @@ static int crexxsaa_run_tool(crexxsaa_context* ctx, const char* label, char* com
     free(command);
     return 0;
 }
+#endif
 
 static int crexxsaa_compile_source(
     crexxsaa_context* ctx,
@@ -998,24 +1063,41 @@ static int crexxsaa_compile_source(
         return -1;
     }
 
-    if (crexxsaa_run_tool(
-            ctx,
-            "rxc",
-            crexxsaa_build_rxc_command(ctx, source_path, output_base)) != 0) {
+#ifdef _WIN32
+    {
+        const char* rxc = crexxsaa_rxc_path(ctx);
+        const char* rxas = crexxsaa_rxas_path(ctx);
+        const char* import_dir = crexxsaa_import_dir(ctx);
+        const char* const rxc_argv[] = { rxc, "-i", import_dir, "-o", output_base, source_path, NULL };
+        const char* const rxas_argv[] = { rxas, "-o", output_base, rxas_path, NULL };
+
+        if (crexxsaa_run_tool_argv(ctx, "rxc", rxc, rxc_argv) != 0) {
+            free(rxas_path);
+            free(rxbin_path);
+            return -1;
+        }
+
+        if (crexxsaa_run_tool_argv(ctx, "rxas", rxas, rxas_argv) != 0) {
+            CREXXSAA_UNLINK(rxas_path);
+            free(rxas_path);
+            free(rxbin_path);
+            return -1;
+        }
+    }
+#else
+    if (crexxsaa_run_tool(ctx, "rxc", crexxsaa_build_rxc_command(ctx, source_path, output_base)) != 0) {
         free(rxas_path);
         free(rxbin_path);
         return -1;
     }
 
-    if (crexxsaa_run_tool(
-            ctx,
-            "rxas",
-            crexxsaa_build_rxas_command(ctx, rxas_path, output_base)) != 0) {
+    if (crexxsaa_run_tool(ctx, "rxas", crexxsaa_build_rxas_command(ctx, rxas_path, output_base)) != 0) {
         CREXXSAA_UNLINK(rxas_path);
         free(rxas_path);
         free(rxbin_path);
         return -1;
     }
+#endif
 
     if (rxas_path_out) *rxas_path_out = rxas_path;
     else free(rxas_path);
@@ -1288,6 +1370,14 @@ int crexxsaa_address_variable_set(
     if (rc != CREXXSAA_VARIABLE_OK) {
         crexxsaa_set_error(ctx, "Invalid CREXXSAA variable name");
         return rc;
+    }
+
+    if (crexxsaa_validate_utf8_text(
+            ctx,
+            "CREXXSAA variable value",
+            value,
+            value ? value_len : 0) != 0) {
+        return CREXXSAA_VARIABLE_UNSUPPORTED;
     }
 
     value_text = crexxsaa_strndup(value ? value : "", value ? value_len : 0);

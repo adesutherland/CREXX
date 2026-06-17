@@ -1,0 +1,23 @@
+/* gcd.crexx
+   The greatest common divisor (GCD) is the largest integer
+   that divides two numbers without leaving a remainder.
+   Euclid's algorithm repeatedly replaces (a,b) with
+   (b, a mod b) until b becomes zero.
+*/
+options levelb
+
+say gcd(1071, 462)      /* 21 */
+say gcd(4096, 24)       /* 8  */
+
+return
+
+gcd: procedure = .int
+  arg a = .int, b = .int
+
+  do while b <> 0
+    t = a % b           /* Remainder of a divided by b */
+    a = b               /* Shift divisor to a */
+    b = t               /* Continue with the remainder */
+  end
+
+return a                /* Final non-zero value is the GCD */

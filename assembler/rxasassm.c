@@ -35,6 +35,7 @@
 static int get_operand_types(OpFormat format, OperandType *types) {
     switch (format) {
         case FMT_EMPTY: return 0;
+        case FMT_B: types[0] = OP_BINARY; return 1;
         case FMT_C: types[0] = OP_CHAR; return 1;
         case FMT_F: types[0] = OP_FLOAT; return 1;
         case FMT_I: types[0] = OP_INT; return 1;
@@ -54,6 +55,7 @@ static int get_operand_types(OpFormat format, OperandType *types) {
         case FMT_P: types[0] = OP_FUNC; return 1;
         case FMT_P_S: types[0] = OP_FUNC; types[1] = OP_STRING; return 2;
         case FMT_R: types[0] = OP_REG; return 1;
+        case FMT_R_B: types[0] = OP_REG; types[1] = OP_BINARY; return 2;
         case FMT_R_C: types[0] = OP_REG; types[1] = OP_CHAR; return 2;
         case FMT_R_D: types[0] = OP_REG; types[1] = OP_DECIMAL; return 2;
         case FMT_R_D_R: types[0] = OP_REG; types[1] = OP_DECIMAL; types[2] = OP_REG; return 3;
@@ -111,6 +113,7 @@ static int mnemonic_matches(const char *mnemonic, const char *table_name) {
 static const OpInfo* find_opcode(const char *mnemonic, OperandType t1, OperandType t2, OperandType t3) {
     int i;
     for (i = 0; op_table[i].mnemonic != NULL; i++) {
+        if (!rxop_is_source_mnemonic(op_table[i].mnemonic)) continue;
         if (match_format(op_table[i].format, t1, t2, t3)) {
             if (mnemonic_matches(mnemonic, op_table[i].mnemonic)) {
                 return &op_table[i];
@@ -158,8 +161,44 @@ static int compare_float_node_value(const void *value,
     return 0;
 }
 
-static int add_float_node(struct avl_tree_node **root, uint64_t bits, size_t value) {
+static void rxas_panic_oom_at(Assembler_Context *context, const char *operation,
+                              size_t requested_bytes, const char *extra_detail,
+                              const char *source_file, int source_line,
+                              const char *function_name) {
+    char detail[512];
+
+    if (context) {
+        snprintf(detail, sizeof(detail),
+                 "input=%s; output=%s; source line=%d; inst_size=%llu; inst_buffer=%llu; const_size=%llu; const_buffer=%llu%s%s",
+                 context->file_name ? context->file_name : "(none)",
+                 context->output_file_name ? context->output_file_name : "(none)",
+                 context->line,
+                 (unsigned long long)context->binary.inst_size,
+                 (unsigned long long)context->inst_buffer_size,
+                 (unsigned long long)context->binary.const_size,
+                 (unsigned long long)context->const_buffer_size,
+                 extra_detail && extra_detail[0] ? "; " : "",
+                 extra_detail && extra_detail[0] ? extra_detail : "");
+    } else {
+        snprintf(detail, sizeof(detail), "%s",
+                 extra_detail && extra_detail[0] ? extra_detail : "");
+    }
+
+    rx_panic_out_of_memory(operation, requested_bytes, detail,
+                           source_file, source_line, function_name);
+}
+
+#define RXAS_PANIC_OOM(context, operation, requested_bytes, extra_detail) \
+    rxas_panic_oom_at((context), (operation), (requested_bytes), (extra_detail), \
+                      __FILE__, __LINE__, RX_FUNCTION_NAME)
+
+static int add_float_node(Assembler_Context *context, struct avl_tree_node **root,
+                          uint64_t bits, size_t value) {
     struct float_wrapper *entry = malloc(sizeof(struct float_wrapper));
+    if (!entry) {
+        RXAS_PANIC_OOM(context, "malloc rxas float constant tree node",
+                       sizeof(struct float_wrapper), 0);
+    }
     entry->bits = bits;
     entry->value = value;
     if (avl_tree_insert(root, &entry->index_node, compare_float_node_node)) {
@@ -425,15 +464,22 @@ static size_t reserve_in_const_pool(Assembler_Context *context, size_t size,
                                     enum const_pool_type type) {
     size_t index, new_size;
     chameleon_constant * entry;
+    void *new_pool;
+    char detail[128];
 
     /* Extend the buffer if we need to */
     while (size + 8 > context->const_buffer_size - context->binary.const_size) { // +8 for the 8 bit alignment
         new_size = context->const_buffer_size * 2;
-        context->binary.const_pool = realloc(context->binary.const_pool, new_size);
-        if (!context->binary.const_pool) {
-            fprintf(stderr, "PANIC: Out of memory\n");
-            exit(-1);
+        new_pool = realloc(context->binary.const_pool, new_size);
+        if (!new_pool) {
+            snprintf(detail, sizeof(detail),
+                     "entry_size=%llu; old_const_buffer=%llu; const_type=%d",
+                     (unsigned long long)size,
+                     (unsigned long long)context->const_buffer_size,
+                     (int)type);
+            RXAS_PANIC_OOM(context, "realloc rxas constant pool", new_size, detail);
         }
+        context->binary.const_pool = new_pool;
         memset(context->binary.const_pool + context->const_buffer_size, 0, context->const_buffer_size);
         context->const_buffer_size = new_size;
     }
@@ -489,6 +535,10 @@ void rxassetg(Assembler_Context *context, Assembler_Token *globalsToken) {
     else {
         context->binary.globals = (int) globalsToken->token_value.integer;
         context->extern_regs = calloc(context->binary.globals, sizeof(char));
+        if (!context->extern_regs && context->binary.globals) {
+            RXAS_PANIC_OOM(context, "calloc rxas extern register map",
+                           (size_t)context->binary.globals * sizeof(char), 0);
+        }
     }
 }
 
@@ -551,9 +601,15 @@ void rxasexre(Assembler_Context *context, Assembler_Token *registerToken,
 static void gen_instr(Assembler_Context *context, int opcode, int operands) {
     /* Extend the buffer if we need to */
     size_t new_size;
+    void *new_binary;
     if (context->inst_buffer_size <= context->binary.inst_size + 1) { /* +1 = Make room for the end null */
         new_size = context->inst_buffer_size * 2;
-        context->binary.binary = realloc(context->binary.binary, new_size * sizeof(bin_code));
+        new_binary = realloc(context->binary.binary, new_size * sizeof(bin_code));
+        if (!new_binary) {
+            RXAS_PANIC_OOM(context, "realloc rxas instruction buffer",
+                           new_size * sizeof(bin_code), 0);
+        }
+        context->binary.binary = new_binary;
         memset(context->binary.binary + context->inst_buffer_size, 0,
                context->inst_buffer_size * sizeof(bin_code));
         context->inst_buffer_size = new_size;
@@ -563,29 +619,54 @@ static void gen_instr(Assembler_Context *context, int opcode, int operands) {
     context->binary.binary[context->binary.inst_size++].instruction.no_ops = operands;
 }
 
-static size_t add_string_to_pool(Assembler_Context *context, char* string) {
+static size_t add_string_to_pool(Assembler_Context *context, Assembler_Token *token, char* string) {
     string_constant *sentry;
     size_t entry_index;
     size_t entry_size;
+    size_t string_len;
+    char *unescaped;
 
     /* Search if the constant already exists */
     if (!src_node(context->string_constants_tree,string,&entry_index)) {
         /* No it doesn't create one */
         entry_size = sizeof(string_constant) + strlen(string);
+        unescaped = malloc(entry_size);
+        if (!unescaped) {
+            RXAS_PANIC_OOM(context, "malloc rxas unescape buffer", entry_size, 0);
+        }
+        string_len = unescape_string(unescaped, string);
+        unescaped[string_len] = 0; /* Add a null ... just for safety */
+#ifndef NUTF8
+        {
+            size_t string_chars;
+            void *invalid = utf8nvalid_count(unescaped, string_len, &string_chars);
+            if (invalid) {
+                char errorBuffer[MAX_ERROR_LENGTH];
+                snprintf(errorBuffer, sizeof(errorBuffer),
+                         "string constant is not valid UTF-8 at byte %lu; use .binary for byte data",
+                         (unsigned long)((char *)invalid - unescaped));
+                if (token) rxaserat(context, token, errorBuffer);
+                else rxaserrf(context, context->line, 1, 1, errorBuffer);
+                free(unescaped);
+                return SIZE_MAX;
+            }
+        }
+#endif
         entry_index = reserve_in_const_pool(context, entry_size,STRING_CONST);
 
         sentry = (string_constant *) (context->binary.const_pool + entry_index);
-        sentry-> string_len = unescape_string(sentry->string, string);
-        sentry->string[sentry->string_len] = 0; /* Add a null ... just for safety */
+        sentry-> string_len = string_len;
+        memcpy(sentry->string, unescaped, string_len + 1);
 
 #ifndef NUTF8
-        sentry-> string_chars = utf8nlen(sentry->string, sentry->string_len);
+        utf8nvalid_count(sentry->string, sentry->string_len, &sentry->string_chars);
 #endif
 
         /* TODO resize/shrink entry after unescaping */
 
         /* Save it in the tree */
         add_node(&context->string_constants_tree, string,entry_index);
+        free(unescaped);
     }
     return entry_index;
 }
@@ -614,6 +695,38 @@ static size_t add_decimal_to_pool(Assembler_Context *context, char* decimal) {
     return entry_index;
 }
 
+static uint8_t trace_code_from_token(Assembler_Context *context, Assembler_Token *token, uint8_t empty_value) {
+    char *value;
+
+    if (!token) return empty_value;
+    value = (char *) token->token_value.string;
+    if (!value || !value[0]) return empty_value;
+    if (value[1]) {
+        rxaserat(context, token, "trace event code must be a one-character string");
+        return empty_value;
+    }
+    return (uint8_t) value[0];
+}
+
+static size_t trace_ref_from_token(Assembler_Token *token) {
+    if (!token || token->token_value.integer < 0) return RXBIN_TRACE_REF_NONE;
+    return (size_t) token->token_value.integer;
+}
+
+static uint32_t trace_u32_from_token(Assembler_Token *token) {
+    if (!token || token->token_value.integer < 0) return 0;
+    return (uint32_t) token->token_value.integer;
+}
+
+static size_t add_optional_string_to_pool(Assembler_Context *context, Assembler_Token *token) {
+    char *value;
+
+    if (!token) return RXBIN_TRACE_REF_NONE;
+    value = (char *) token->token_value.string;
+    if (!value || !value[0]) return RXBIN_TRACE_REF_NONE;
+    return add_string_to_pool(context, token, value);
+}
+
 static size_t add_float_to_pool(Assembler_Context *context, double value) {
     float_constant *entry;
     size_t entry_index;
@@ -623,7 +736,7 @@ static size_t add_float_to_pool(Assembler_Context *context, double value) {
         entry_index = reserve_in_const_pool(context, sizeof(float_constant), FLOAT_CONST);
         entry = FLOAT_CONST_AT(context->binary.const_pool, entry_index);
         entry->double_value = value;
-        add_float_node(&context->float_constants_tree, bits, entry_index);
+        add_float_node(context, &context->float_constants_tree, bits, entry_index);
     }
 
     return entry_index;
@@ -692,6 +805,10 @@ static size_t add_func_to_pool(Assembler_Context *context, Assembler_Token* toke
         /* No - Create entry in the tree */
         proc_constant *centry;
         ref_header = malloc(sizeof(struct backpatching));
+        if (!ref_header) {
+            RXAS_PANIC_OOM(context, "malloc rxas procedure backpatch header",
+                           sizeof(struct backpatching), 0);
+        }
         add_node(&context->proc_constants_tree,
                  (char*)token->token_value.string,
                  (size_t) ref_header);
@@ -720,6 +837,10 @@ static size_t add_func_to_pool(Assembler_Context *context, Assembler_Token* toke
     if (ref_header->defined == 0) {
         /* keep references for error messages generated during backpatching */
         struct backpatching_references* ref = malloc(sizeof(struct backpatching_references));
+        if (!ref) {
+            RXAS_PANIC_OOM(context, "malloc rxas procedure backpatch reference",
+                           sizeof(struct backpatching_references), 0);
+        }
         ref->index = -1; /* No back-patching */
         ref->token = token;
         ref->link = ref_header->refs;
@@ -753,9 +874,15 @@ static void gen_operand(Assembler_Context *context, Assembler_Token *operandToke
     size_t s_index;
     /* Extend the buffer if we need to */
     size_t new_size;
+    void *new_binary;
     if (context->inst_buffer_size <= context->binary.inst_size + 1) { /* +1 = Make room for the end null */
         new_size = context->inst_buffer_size * 2;
-        context->binary.binary = realloc(context->binary.binary, new_size * sizeof(bin_code));
+        new_binary = realloc(context->binary.binary, new_size * sizeof(bin_code));
+        if (!new_binary) {
+            RXAS_PANIC_OOM(context, "realloc rxas instruction buffer for operand",
+                           new_size * sizeof(bin_code), 0);
+        }
+        context->binary.binary = new_binary;
         memset(context->binary.binary + context->inst_buffer_size, 0,
                context->inst_buffer_size * sizeof(bin_code));
         context->inst_buffer_size = new_size;
@@ -776,6 +903,10 @@ static void gen_operand(Assembler_Context *context, Assembler_Token *operandToke
             else {
                 /* No - Create entry in the tree */
                 ref_header = malloc(sizeof(struct backpatching));
+                if (!ref_header) {
+                    RXAS_PANIC_OOM(context, "malloc rxas label backpatch header",
+                                   sizeof(struct backpatching), 0);
+                }
                 add_node(&context->label_constants_tree,
                          (char*)operandToken->token_value.string,
                          (size_t) ref_header);
@@ -788,6 +919,10 @@ static void gen_operand(Assembler_Context *context, Assembler_Token *operandToke
 
             /* keep references for backpatching the above */
             struct backpatching_references* ref = malloc(sizeof(struct backpatching_references));
+            if (!ref) {
+                RXAS_PANIC_OOM(context, "malloc rxas label backpatch reference",
+                               sizeof(struct backpatching_references), 0);
+            }
             ref->index = context->binary.inst_size;
             ref->token = operandToken;
             ref->link = ref_header->refs;
@@ -820,7 +955,7 @@ static void gen_operand(Assembler_Context *context, Assembler_Token *operandToke
                     (char)operandToken->token_value.character;
             return;
         case STRING:
-            s_index = add_string_to_pool(context, (char*)operandToken->token_value.string);;
+            s_index = add_string_to_pool(context, operandToken, (char*)operandToken->token_value.string);;
             context->binary.binary[context->binary.inst_size++].index = s_index;
             return;
         case DECIMAL:
@@ -960,6 +1095,7 @@ static const OpInfo *validate_instruction(Assembler_Context* context, Assembler_
     /* Make a useful error message */
     errorBuffer[0] = 0;
     for (j = 0; op_table[j].mnemonic != NULL; j++) {
+        if (!rxop_is_source_mnemonic(op_table[j].mnemonic)) continue;
         if (mnemonic_matches(mnemonic, op_table[j].mnemonic)) {
             if (first) {
                 strncpy(errorBuffer, "invalid operand, expecting ", MAX_ERROR_LENGTH - 1);
@@ -1027,6 +1163,7 @@ void rxasgen(Assembler_Context *context, Assembler_Token *instrToken, Assembler_
             case FMT_L:
             case FMT_P:
             case FMT_R:
+            case FMT_B:
             case FMT_S:
                 gen_operand(context, operand1Token);
                 break;
@@ -1037,6 +1174,7 @@ void rxasgen(Assembler_Context *context, Assembler_Token *instrToken, Assembler_
             case FMT_L_S:
             case FMT_P_S:
             case FMT_R_C:
+            case FMT_R_B:
             case FMT_R_D:
             case FMT_R_F:
             case FMT_R_I:
@@ -1101,6 +1239,10 @@ static size_t define_proc(Assembler_Context *context, Assembler_Token *funcToken
     else {
         /* No - Create entry in the tree */
         ref_header = malloc(sizeof(struct backpatching));
+        if (!ref_header) {
+            RXAS_PANIC_OOM(context, "malloc rxas defined procedure backpatch header",
+                           sizeof(struct backpatching), 0);
+        }
         add_node(&context->proc_constants_tree,
                  (char*)funcToken->token_value.string,
                  (size_t)ref_header);
@@ -1182,6 +1324,10 @@ void rxaslabl(Assembler_Context *context, Assembler_Token *labelToken) {
     else {
         /* No - Create entry in the tree */
         ref_header = malloc(sizeof(struct backpatching));
+        if (!ref_header) {
+            RXAS_PANIC_OOM(context, "malloc rxas defined label backpatch header",
+                           sizeof(struct backpatching), 0);
+        }
         add_node(&context->label_constants_tree,
                  (char*)labelToken->token_value.string,
                  (size_t)ref_header);
@@ -1329,25 +1475,48 @@ static size_t add_meta_entry(Assembler_Context *context, size_t entry_size, enum
     return entry_index;
 }
 
-/* Source filename */
-void rxasmefl(Assembler_Context *context, Assembler_Token *file) {
-    size_t entry = add_meta_entry(context,sizeof(meta_file_constant),META_FILE);
-    size_t sentry = add_string_to_pool(context, (char*)file->token_value.string);
+/* Source Step */
+void rxasmestp(Assembler_Context *context, Assembler_Token *step, Assembler_Token *clause, Assembler_Token *flags,
+               Assembler_Token *file, Assembler_Token *line, Assembler_Token *start, Assembler_Token *end,
+               Assembler_Token *source) {
+    size_t entry = add_meta_entry(context, sizeof(meta_source_step_constant), META_SOURCE_STEP);
+    size_t file_entry = add_string_to_pool(context, file, (char*)file->token_value.string);
+    size_t source_entry = add_string_to_pool(context, source, (char*)source->token_value.string);
+    meta_source_step_constant *meta;
 
-    /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
-    ((meta_file_constant*)(context->binary.const_pool + entry))->file = sentry;
+    meta = (meta_source_step_constant*)(context->binary.const_pool + entry);
+    meta->file = file_entry;
+    meta->source_line = source_entry;
+    meta->step_id = (uint32_t) step->token_value.integer;
+    meta->clause_id = (uint32_t) clause->token_value.integer;
+    meta->line = (uint32_t) line->token_value.integer;
+    meta->active_start_column = (uint32_t) start->token_value.integer;
+    meta->active_end_column = (uint32_t) end->token_value.integer;
+    meta->flags = (uint32_t) flags->token_value.integer;
 }
 
-/* Source Line */
-void rxasmesr(Assembler_Context *context, Assembler_Token *line, Assembler_Token *column, Assembler_Token *source) {
-    size_t entry = add_meta_entry(context,sizeof(meta_src_constant),META_SRC);
-    size_t sentry;
+/* Trace Event */
+void rxasmete(Assembler_Context *context, Assembler_Token *kind, Assembler_Token *mode_mask,
+              Assembler_Token *value_source, Assembler_Token *value_type, Assembler_Token *register_type,
+              Assembler_Token *value_ref, Assembler_Token *source_step, Assembler_Token *clause,
+              Assembler_Token *flags, Assembler_Token *symbol, Assembler_Token *resolved_name) {
+    size_t entry = add_meta_entry(context, sizeof(meta_trace_event_constant), META_TRACE_EVENT);
+    size_t symbol_entry = add_optional_string_to_pool(context, symbol);
+    size_t resolved_name_entry = add_optional_string_to_pool(context, resolved_name);
+    meta_trace_event_constant *meta;
 
-    /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
-    ((meta_src_constant*)(context->binary.const_pool + entry))->line = line->token_value.integer;
-    ((meta_src_constant*)(context->binary.const_pool + entry))->column = column->token_value.integer;
-    sentry = add_string_to_pool(context, (char*)source->token_value.string);
-    ((meta_src_constant*)(context->binary.const_pool + entry))->source = sentry;
+    meta = (meta_trace_event_constant*)(context->binary.const_pool + entry);
+    meta->kind = trace_code_from_token(context, kind, 0);
+    meta->mode_mask = trace_u32_from_token(mode_mask);
+    meta->value_source = trace_code_from_token(context, value_source, RXBIN_TRACE_VALUE_NONE);
+    meta->value_type = trace_code_from_token(context, value_type, 0);
+    meta->register_type = trace_code_from_token(context, register_type, 0);
+    meta->value_ref = trace_ref_from_token(value_ref);
+    meta->source_step_id = trace_u32_from_token(source_step);
+    meta->clause_id = trace_u32_from_token(clause);
+    meta->flags = trace_u32_from_token(flags);
+    meta->symbol = symbol_entry;
+    meta->resolved_name = resolved_name_entry;
 }
 
 /* Function Metadata */
@@ -1356,15 +1525,15 @@ void rxasmefu(Assembler_Context *context, Assembler_Token *symbol, Assembler_Tok
     size_t sentry;
 
     /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
-    sentry = add_string_to_pool(context, (char*)symbol->token_value.string);
+    sentry = add_string_to_pool(context, symbol, (char*)symbol->token_value.string);
     ((meta_func_constant*)(context->binary.const_pool + entry))->symbol = sentry;
-    sentry = add_string_to_pool(context, (char*)option->token_value.string);
+    sentry = add_string_to_pool(context, option, (char*)option->token_value.string);
     ((meta_func_constant*)(context->binary.const_pool + entry))->option = sentry;
-    sentry = add_string_to_pool(context, (char*)type->token_value.string);
+    sentry = add_string_to_pool(context, type, (char*)type->token_value.string);
     ((meta_func_constant*)(context->binary.const_pool + entry))->type = sentry;
     sentry = add_func_to_pool(context, func);
     ((meta_func_constant*)(context->binary.const_pool + entry))->func = sentry;
-    sentry = add_string_to_pool(context, (char*)args->token_value.string);
+    sentry = add_string_to_pool(context, args, (char*)args->token_value.string);
     ((meta_func_constant*)(context->binary.const_pool + entry))->args = sentry;
 }
 
@@ -1374,11 +1543,11 @@ void rxasmere(Assembler_Context *context, Assembler_Token *symbol, Assembler_Tok
     size_t sentry;
 
     /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
-    sentry = add_string_to_pool(context, (char*)symbol->token_value.string);
+    sentry = add_string_to_pool(context, symbol, (char*)symbol->token_value.string);
     ((meta_reg_constant*)(context->binary.const_pool + entry))->symbol = sentry;
-    sentry = add_string_to_pool(context, (char*)option->token_value.string);
+    sentry = add_string_to_pool(context, option, (char*)option->token_value.string);
     ((meta_reg_constant*)(context->binary.const_pool + entry))->option = sentry;
-    sentry = add_string_to_pool(context, (char*)type->token_value.string);
+    sentry = add_string_to_pool(context, type, (char*)type->token_value.string);
     ((meta_reg_constant*)(context->binary.const_pool + entry))->type = sentry;
     ((meta_reg_constant*)(context->binary.const_pool + entry))->reg = get_reg_number(context, reg);
 }
@@ -1389,20 +1558,20 @@ void rxasmect(Assembler_Context *context, Assembler_Token *symbol, Assembler_Tok
     size_t sentry;
 
     /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
-    sentry = add_string_to_pool(context, (char*)symbol->token_value.string);
+    sentry = add_string_to_pool(context, symbol, (char*)symbol->token_value.string);
     ((meta_const_constant*)(context->binary.const_pool + entry))->symbol = sentry;
-    sentry = add_string_to_pool(context, (char*)option->token_value.string);
+    sentry = add_string_to_pool(context, option, (char*)option->token_value.string);
     ((meta_const_constant*)(context->binary.const_pool + entry))->option = sentry;
-    sentry = add_string_to_pool(context, (char*)type->token_value.string);
+    sentry = add_string_to_pool(context, type, (char*)type->token_value.string);
     ((meta_const_constant*)(context->binary.const_pool + entry))->type = sentry;
-    sentry = add_string_to_pool(context, (char*)constant->token_value.string);
+    sentry = add_string_to_pool(context, constant, (char*)constant->token_value.string);
     ((meta_const_constant*)(context->binary.const_pool + entry))->constant = sentry;
 }
 
 /* Clear Symbol Metadata */
 void rxasmecl(Assembler_Context *context, Assembler_Token *symbol) {
     size_t entry = add_meta_entry(context,sizeof(meta_clear_constant),META_CLEAR);
-    size_t sentry = add_string_to_pool(context, (char*)symbol->token_value.string);
+    size_t sentry = add_string_to_pool(context, symbol, (char*)symbol->token_value.string);
 
     /* NOTE the address in memory of the entry may change as we add (and therefor grow) the constant pool */
     ((meta_clear_constant*)(context->binary.const_pool + entry))->symbol = sentry;
@@ -1413,9 +1582,9 @@ void rxasmeclss(Assembler_Context *context, Assembler_Token *symbol, Assembler_T
     size_t entry = add_meta_entry(context, sizeof(meta_class_constant), META_CLASS);
     size_t s_sym, s_opt, s_typ;
 
-    s_sym = add_string_to_pool(context, (char*)symbol->token_value.string);
-    s_opt = add_string_to_pool(context, (char*)option->token_value.string);
-    s_typ = add_string_to_pool(context, (char*)type->token_value.string);
+    s_sym = add_string_to_pool(context, symbol, (char*)symbol->token_value.string);
+    s_opt = add_string_to_pool(context, option, (char*)option->token_value.string);
+    s_typ = add_string_to_pool(context, type, (char*)type->token_value.string);
 
     /* Recalculate pointer after potential pool growth */
     meta_class_constant *mentry = (meta_class_constant*)(context->binary.const_pool + entry);
@@ -1429,9 +1598,9 @@ void rxasmeattr(Assembler_Context *context, Assembler_Token *symbol, Assembler_T
     size_t entry = add_meta_entry(context, sizeof(meta_attr_constant), META_ATTR);
     size_t s_sym, s_opt, s_typ;
 
-    s_sym = add_string_to_pool(context, (char*)symbol->token_value.string);
-    s_opt = add_string_to_pool(context, (char*)option->token_value.string);
-    s_typ = add_string_to_pool(context, (char*)type->token_value.string);
+    s_sym = add_string_to_pool(context, symbol, (char*)symbol->token_value.string);
+    s_opt = add_string_to_pool(context, option, (char*)option->token_value.string);
+    s_typ = add_string_to_pool(context, type, (char*)type->token_value.string);
 
     /* Recalculate pointer after potential pool growth */
     meta_attr_constant *mentry = (meta_attr_constant*)(context->binary.const_pool + entry);
@@ -1446,9 +1615,9 @@ void rxasmeintf(Assembler_Context *context, Assembler_Token *symbol, Assembler_T
     size_t entry = add_meta_entry(context, sizeof(meta_interface_constant), META_INTERFACE);
     size_t s_sym, s_opt, s_typ;
 
-    s_sym = add_string_to_pool(context, (char*)symbol->token_value.string);
-    s_opt = add_string_to_pool(context, (char*)option->token_value.string);
-    s_typ = add_string_to_pool(context, (char*)type->token_value.string);
+    s_sym = add_string_to_pool(context, symbol, (char*)symbol->token_value.string);
+    s_opt = add_string_to_pool(context, option, (char*)option->token_value.string);
+    s_typ = add_string_to_pool(context, type, (char*)type->token_value.string);
 
     meta_interface_constant *mentry = (meta_interface_constant*)(context->binary.const_pool + entry);
     mentry->symbol = s_sym;
@@ -1461,8 +1630,8 @@ void rxasmeimpl(Assembler_Context *context, Assembler_Token *symbol, Assembler_T
     size_t entry = add_meta_entry(context, sizeof(meta_implements_constant), META_IMPLEMENTS);
     size_t s_sym, s_iface;
 
-    s_sym = add_string_to_pool(context, (char*)symbol->token_value.string);
-    s_iface = add_string_to_pool(context, (char*)interface_symbol->token_value.string);
+    s_sym = add_string_to_pool(context, symbol, (char*)symbol->token_value.string);
+    s_iface = add_string_to_pool(context, interface_symbol, (char*)interface_symbol->token_value.string);
 
     meta_implements_constant *mentry = (meta_implements_constant*)(context->binary.const_pool + entry);
     mentry->symbol = s_sym;
@@ -1474,11 +1643,11 @@ void rxasmememb(Assembler_Context *context, Assembler_Token *owner, Assembler_To
     size_t entry = add_meta_entry(context, sizeof(meta_member_constant), META_MEMBER);
     size_t s_owner, s_kind, s_member, s_type, s_args;
 
-    s_owner = add_string_to_pool(context, (char*)owner->token_value.string);
-    s_kind = add_string_to_pool(context, (char*)kind->token_value.string);
-    s_member = add_string_to_pool(context, (char*)member->token_value.string);
-    s_type = add_string_to_pool(context, (char*)type->token_value.string);
-    s_args = add_string_to_pool(context, (char*)args->token_value.string);
+    s_owner = add_string_to_pool(context, owner, (char*)owner->token_value.string);
+    s_kind = add_string_to_pool(context, kind, (char*)kind->token_value.string);
+    s_member = add_string_to_pool(context, member, (char*)member->token_value.string);
+    s_type = add_string_to_pool(context, type, (char*)type->token_value.string);
+    s_args = add_string_to_pool(context, args, (char*)args->token_value.string);
 
     meta_member_constant *mentry = (meta_member_constant*)(context->binary.const_pool + entry);
     mentry->owner = s_owner;
@@ -1501,8 +1670,8 @@ void rxasmeil(Assembler_Context *context, Assembler_Token *symbol, Assembler_Tok
     }
 
     entry = add_meta_entry(context, sizeof(meta_inline_constant), META_INLINE);
-    s_sym = add_string_to_pool(context, (char*)symbol->token_value.string);
-    s_payload = add_string_to_pool(context, (char*)payload->token_value.string);
+    s_sym = add_string_to_pool(context, symbol, (char*)symbol->token_value.string);
+    s_payload = add_string_to_pool(context, payload, (char*)payload->token_value.string);
 
     mentry = (meta_inline_constant*)(context->binary.const_pool + entry);
     mentry->symbol = s_sym;

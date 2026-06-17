@@ -1,63 +1,72 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_bool_expr_negative.rexx
- * BUILT                  : 2026-04-30 16:45:20
+ * SOURCE                 : inline_test_bool_expr_negative.crexx
+ * BUILT                  : 2026-05-27 17:53:39
  */
 
-.srcfile="inline_test_bool_expr_negative.rexx"
 .globals=0
 
 main() .locals=8
    .meta "inline_test_bool_expr_negative.main"="b" ".int" main() ""
-   .src 3:1="main: procedure = .int"
+   .srcstep 17 17 17 "inline_test_bool_expr_negative.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:3="say \"Starting bool inline negative test...\""
+   .srcstep 1 1 17 "inline_test_bool_expr_negative.crexx" 4 3 46 "  say \"Starting bool inline negative test...\""
    say "Starting bool inline negative test..."
-   .src 5:3="do"
-   .src 5:6="i = 1"
+   .srcstep 13 13 17 "inline_test_bool_expr_negative.crexx" 5 3 5 "  do i = 1 to 3"
+   .srcstep 2 2 17 "inline_test_bool_expr_negative.crexx" 5 6 11 "  do i = 1 to 3"
    .meta "inline_test_bool_expr_negative.main.i"="b" ".int" r0
    load r0,1
-   .src 5:12="to 3"
+   .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "i" ""
+   .srcstep 3 3 17 "inline_test_bool_expr_negative.crexx" 5 12 16 "  do i = 1 to 3"
    load r2,3
+   .traceevent "L" 4 "R" "I" "r" 2 0 0 0 "" ""
 l8dostart:
-   .src 5:12="to 3"
+   .srcstep 3 3 17 "inline_test_bool_expr_negative.crexx" 5 12 16 "  do i = 1 to 3"
    igt r3,r0,r2
    brt l8doend,r3
-   .src 6:4="if isTwo(i)"
-   .src 6:8="isTwo"
-   .src 13:7="val"
+   .srcstep 10 10 17 "inline_test_bool_expr_negative.crexx" 6 5 16 "    if isTwo(i) | 0 then say \"truthy\" i"
+   .srcstep 7 7 17 "inline_test_bool_expr_negative.crexx" 6 8 13 "    if isTwo(i) | 0 then say \"truthy\" i"
+   .srcstep 5 5 33 "inline_test_bool_expr_negative.crexx" 13 7 10 "  arg val = .int"
+   .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
    icopy r1,r0
-   .src 14:3="return val = 2"
+   .traceevent "A" 6 "R" "I" "r" 1 5 5 0 "val" ""
+   .srcstep 6 6 17 "inline_test_bool_expr_negative.crexx" 14 3 17 "  return val = 2"
+   .traceevent "V" 6 "R" "I" "r" 1 10 10 0 "val" ""
    ieq r4,r1,2
    btoi r4
+   .traceevent "O" 4 "R" "I" "r" 4 10 10 0 "" ""
    icopy r5,r4
    br l49bexprend
 l49bexprend:
    brf l27iffalse,r5
-   .src 6:17="|"
-   .src 6:26="say \"truthy\" i"
+   .srcstep 11 11 17 "inline_test_bool_expr_negative.crexx" 6 17 18 "    if isTwo(i) | 0 then say \"truthy\" i"
+   .srcstep 8 8 17 "inline_test_bool_expr_negative.crexx" 6 26 40 "    if isTwo(i) | 0 then say \"truthy\" i"
    itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 8 8 0 "i" ""
    sconcat r6,"truthy",r0
+   .traceevent "O" 4 "R" "S" "r" 6 8 8 0 "" ""
    say r6
    br l27ifend
-   .src 7:5="else"
+   .srcstep 12 12 17 "inline_test_bool_expr_negative.crexx" 7 5 9 "    else say \"falsey\" i"
 l27iffalse:
-   .src 7:10="say \"falsey\" i"
+   .srcstep 9 9 17 "inline_test_bool_expr_negative.crexx" 7 10 24 "    else say \"falsey\" i"
    itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 9 9 0 "i" ""
    sconcat r7,"falsey",r0
+   .traceevent "O" 4 "R" "S" "r" 7 9 9 0 "" ""
    say r7
 l27ifend:
 l8doinc:
-   .src 5:6="i"
+   .srcstep 4 4 17 "inline_test_bool_expr_negative.crexx" 5 6 7 "  do i = 1 to 3"
    inc r0
-   .src 8:3="end"
+   .srcstep 14 14 17 "inline_test_bool_expr_negative.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
-   .src 9:3="say \"Bool inline negative test finished.\""
+   .srcstep 15 15 17 "inline_test_bool_expr_negative.crexx" 9 3 44 "  say \"Bool inline negative test finished.\""
    say "Bool inline negative test finished."
-   .src 10:3="return 0"
+   .srcstep 16 16 17 "inline_test_bool_expr_negative.crexx" 10 3 11 "  return 0"
    ret 0

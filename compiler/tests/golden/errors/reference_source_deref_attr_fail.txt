@@ -1,0 +1,2 @@
+Error in reference_source_deref_attr_fail.crexx @ 23:13 - #DEREFERENCE_TARGET_NOT_LOCAL, "dereference r"
+1 error(s) in source file

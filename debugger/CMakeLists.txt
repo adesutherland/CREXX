@@ -9,7 +9,7 @@ add_custom_command(
                 ${CMAKE_CURRENT_BINARY_DIR}/rxdb_gui.rxas
         COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o rxdb_gui ${CMAKE_CURRENT_SOURCE_DIR}/rxdb_gui
         COMMAND $<TARGET_FILE:rxas> rxdb_gui
-        DEPENDS rxas rxc rxdb_gui.rexx library compiler_exit_bin
+        DEPENDS rxas rxc rxdb_gui.crexx library compiler_exit_bin
         OUTPUT rxdb_gui.rxbin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "cREXX compile and assemble rxdb_gui ..."
@@ -23,7 +23,7 @@ add_custom_command(
         COMMAND $<TARGET_FILE:rxas> rxdb
         COMMAND $<TARGET_FILE:rxlink> -s -o rxdb_linked rxdb rxdb_gui ${CMAKE_BINARY_DIR}/bin/library
         COMMAND $<TARGET_FILE:rxcpack> -o rxdb rxdb_linked
-        DEPENDS rxas rxc rxlink rxdb.rexx rxdb_gui.rxbin library compiler_exit_bin rxcpack
+        DEPENDS rxas rxc rxlink rxdb.crexx rxdb_gui.rxbin library compiler_exit_bin rxcpack
         OUTPUT rxdb.c
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "cREXX compile, assemble, link and package rxdb ..."

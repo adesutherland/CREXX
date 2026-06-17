@@ -45,8 +45,10 @@
 #define RXSIGNAL_FUNCTION_NOT_FOUND   11 /* An unknown function */
 #define RXSIGNAL_NOT_IMPLEMENTED      12 /* Instruction not implemented */
 #define RXSIGNAL_INVALID_SIGNAL_CODE  13 /* Invalid signal code */
+#define RXSIGNAL_REFERENCE_INVALID    14 /* Reference value no longer points to live storage */
 
 #define RXSIGNAL_NOTREADY             15 /* Input/output error, e.g., file not ready (POSIX SIGPIPE) */
+#define RXSIGNAL_OBJECT_NOT_INITIALIZED 16 /* Object value has a compatible type but no initialized instance */
 
 #define RXSIGNAL_QUIT                 19 /* Request to halt execution (POSIX SIGQUIT / Windows SIGBREAK) */
 #define RXSIGNAL_TERM                 20 /* Request to halt execution (POSIX SIGTERM) */

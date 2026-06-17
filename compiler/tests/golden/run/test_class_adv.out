@@ -1,5 +1,5 @@
 Testing Advanced Classes and Properties...
 Static array [1]: 42
 Dynamic array [1]: 99
-Chained methods completed, chain_val = 
+Chained methods completed, chain_val = 100
 Final chain_val: 100

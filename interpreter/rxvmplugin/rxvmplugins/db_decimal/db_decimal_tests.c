@@ -84,9 +84,25 @@ int aTestBeyondLimits(char* input) {
     return errors;
 }
 
+static int aTestFromToIntSamples(const int64_t *samples, size_t sample_count) {
+    char input[32];
+    int errors = 0;
+    size_t i;
+
+    for (i = 0; i < sample_count; i++) {
+        int written = snprintf(input, sizeof(input), "%lld", (long long)samples[i]);
+        if (written < 0 || (size_t)written >= sizeof(input)) {
+            printf("Error - could not format integer sample %lld\n", (long long)samples[i]);
+            errors++;
+            continue;
+        }
+        errors += aTestFromToInt(input, samples[i]);
+    }
+
+    return errors;
+}
+
 static int test_int_tofrom_conversions() {
-    char* input;
-    int64_t int_input;
     int errors = 0;
 
     printf("\nTesting integer conversions\n");
@@ -197,37 +213,37 @@ static int test_int_tofrom_conversions() {
     else
         errors += aTestFromToInt("-999999999999999", -999999999999999);
 
-    /* Loop and Generate a few random 18-digit numbers and test both positive and negative forms */
-    input = malloc(40);
-    int i;
-    for (i = 0; i < 10; i++) {
-        int_input = rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        int_input = int_input * rand(); // NOLINT(cert-msc50-cpp)
-        if (max_digits_supported < 18) {
-            // Make sure it is only 15 digits
-            int_input = int_input % 1000000000000000;
-        }
-        else {
-            // Make sure it is only 18 digits
-            int_input = int_input % 1000000000000000000;
-        }
-        sprintf(input, "%lld", (long long)int_input);
-        errors += aTestFromToInt(input, int_input);
-        sprintf(input, "%lld", (long long)(-int_input));
-        errors += aTestFromToInt(input, -int_input);
+    /* Deterministic representative values replace undefined signed-overflow random generation. */
+    if (max_digits_supported < 18) {
+        static const int64_t samples_15[] = {
+            123456789012345LL, -123456789012345LL,
+            987654321098765LL, -987654321098765LL,
+            314159265358979LL, -314159265358979LL,
+            271828182845904LL, -271828182845904LL,
+            900719925474099LL, -900719925474099LL,
+            112358132134558LL, -112358132134558LL,
+            707106781186547LL, -707106781186547LL,
+            555555555555555LL, -555555555555555LL,
+            100000000000001LL, -100000000000001LL,
+            999999999999998LL, -999999999999998LL
+        };
+        errors += aTestFromToIntSamples(samples_15, sizeof(samples_15) / sizeof(samples_15[0]));
     }
-    free(input);
+    else {
+        static const int64_t samples_18[] = {
+            123456789012345678LL, -123456789012345678LL,
+            987654321098765432LL, -987654321098765432LL,
+            314159265358979323LL, -314159265358979323LL,
+            271828182845904523LL, -271828182845904523LL,
+            900719925474099199LL, -900719925474099199LL,
+            112358132134558914LL, -112358132134558914LL,
+            707106781186547524LL, -707106781186547524LL,
+            555555555555555555LL, -555555555555555555LL,
+            100000000000000001LL, -100000000000000001LL,
+            999999999999999998LL, -999999999999999998LL
+        };
+        errors += aTestFromToIntSamples(samples_18, sizeof(samples_18) / sizeof(samples_18[0]));
+    }
 
     return errors;
 } // test_int_conversion

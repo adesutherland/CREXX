@@ -1,15 +1,16 @@
-# rxlink - the \crexx{} Linker
+# rxlink - the cRexx Linker
 
 `rxlink` combines one or more `.rxbin` modules into a linked image with a shared constant pool. The result is still a normal `003` format record stream and can be loaded by `rxvm`, `rxbvm`, or passed on to `rxcpack`.
 
 ## Command Line Options
 
+
 \fontspec{IBM Plex Mono}
-\begin{shaded}
-  \small
-  \obeylines \splice{rxlink -h | sed "s/&/\and/g"}
- \end{shaded}
- \fontspec{TeX Gyre Pagella}
+\begin{terminaloutput}
+\small
+\obeylines \splice{rxlink -h | sed 's/\&/\\\&/g'}
+\end{terminaloutput}
+\fontspec{TeX Gyre Pagella}
 
 ## What It Produces
 
@@ -30,7 +31,7 @@ single deployable linked image:
 - to reduce duplicated constant-pool data before `rxcpack`
 - to produce a tidier deployable artifact than a loose set of `.rxbin`
   files
-- to remove source/file metadata from a deployment image
+- to remove source/TRACE debug metadata from a deployment image
 
 The linker does not try to replace all runtime loading. It links the
 modules you give it, resolves what it can within that set, and leaves
@@ -81,13 +82,17 @@ ignored, and lines beginning with `*` or `#` are treated as comments.
 
 The supported directives are:
 
-- `INPUT path`
-- `ROOT selector`
-- `INCLUDE selector`
-- `OMIT selector`
-- `OUTPUT path`
-- `MAP path`
-- `STRIP SOURCE`
+|Parm | Arg  |
+|-----|------|
+|INPUT| path |
+|ROOT| selector|
+|INCLUDE| selector|
+|OMIT| selector|
+|OUTPUT| path|
+|MAP| path|
+|STRIP| SOURCE|
+
+Table: Linker Directives. {#tbl:id}
 
 Selectors can use a module name, basename, stem, or `input_path::member` form.
 
@@ -100,7 +105,7 @@ The most common pattern is:
 
 ### Minimal Application Control File
 
-```text
+```bash
 * app.ctl
 INPUT build/app.rxbin
 INPUT build/library.rxbin
@@ -110,7 +115,7 @@ OUTPUT build/app_linked
 ```
 
 This tells `rxlink` to start from module `app`, pull in the providers it
-needs from the given inputs, strip source/file metadata, and write
+needs from the given inputs, strip source/TRACE debug metadata, and write
 `build/app_linked.rxbin`.
 
 Run it with:
@@ -121,7 +126,7 @@ rxlink -c app.ctl
 
 ### Advanced Include Example
 
-```text
+```bash
 # app_with_optional_provider.ctl
 INPUT build/app.rxbin
 INPUT build/providers.rxbin
@@ -137,7 +142,7 @@ the normal static reachability analysis can see.
 
 ### Omit One Provider Variant
 
-```text
+```bash
 * app_choose_provider.ctl
 INPUT build/app.rxbin
 INPUT build/provider_a.rxbin
@@ -152,7 +157,7 @@ the choice explicitly at packaging time.
 
 ### Add A Map File
 
-```text
+```bash
 INPUT build/app.rxbin
 INPUT build/library.rxbin
 ROOT app
@@ -170,17 +175,20 @@ metadata is intended for library artifacts consumed by `rxc`; it is not needed
 after a final linked image has been built. Use `rxlink -i` to preserve it for
 diagnostic or tooling builds. The equivalent control-file form is:
 
-```text
+```bash
 PRESERVE INLINE
 ```
 
-`rxlink -s` strips source/file metadata from the linked output. The equivalent control-file form is:
+`rxlink -s` strips source/TRACE debug metadata from the linked output. The equivalent control-file form is:
 
-```text
+```bash
 STRIP SOURCE
 ```
 
-This removes the serialized source/file metadata records while preserving runtime metadata such as exposed symbols and interface/class contract data.
+This removes the serialized source-step records and semantic TRACE event
+records while preserving runtime metadata such as exposed symbols and
+interface/class contract data. Keep the linked image unstripped when classic
+TRACE, `TRACE LLM`, or RXDB source-level debugging is needed.
 
 This option is intended for deployable `.rxbin` artifacts and for downstream `rxcpack` / wrapped images where source breadcrumbs are not needed.
 
@@ -191,6 +199,9 @@ rxlink -o app linked_root.rxbin helpers.rxbin
 rxvm app
 ```
 
+`rxlink -o` names a linked-image stem unless the value already ends in
+`.rxbin`, so the first command writes `app.rxbin`.
+
 To produce a smaller deployable linked image:
 
 ```sh
@@ -199,7 +210,7 @@ rxlink -s -o app_small linked_root.rxbin helpers.rxbin
 
 The equivalent control-file driven form is:
 
-```text
+```bash
 INPUT linked_root.rxbin
 INPUT helpers.rxbin
 ROOT linked_root

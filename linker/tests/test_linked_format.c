@@ -25,7 +25,19 @@ static int module_has_source_metadata(const module_file *module) {
 
     while (meta != -1) {
         const meta_entry *entry = (const meta_entry *)(module->constant + meta);
-        if (entry->base.type == META_SRC || entry->base.type == META_FILE) return 1;
+        if (entry->base.type == META_SOURCE_STEP) return 1;
+        meta = entry->next;
+    }
+
+    return 0;
+}
+
+static int module_has_trace_event_metadata(const module_file *module) {
+    int meta = module->header.meta_head;
+
+    while (meta != -1) {
+        const meta_entry *entry = (const meta_entry *)(module->constant + meta);
+        if (entry->base.type == META_TRACE_EVENT) return 1;
         meta = entry->next;
     }
 
@@ -124,6 +136,10 @@ static int check_linked_success_format(void) {
         fprintf(stderr, "Default linked image still contains inline metadata\n");
         goto done;
     }
+    if (!module_has_trace_event_metadata(module_a)) {
+        fprintf(stderr, "Default linked image lost trace-event metadata\n");
+        goto done;
+    }
 
     rc = 0;
 
@@ -190,7 +206,11 @@ static int check_stripped_format(void) {
     }
 
     if (module_has_source_metadata(module_a) || module_has_source_metadata(module_b)) {
-        fprintf(stderr, "Stripped linked image still contains source/file metadata\n");
+        fprintf(stderr, "Stripped linked image still contains source-step metadata\n");
+        goto done;
+    }
+    if (module_has_trace_event_metadata(module_a) || module_has_trace_event_metadata(module_b)) {
+        fprintf(stderr, "Stripped linked image still contains trace-event metadata\n");
         goto done;
     }
 

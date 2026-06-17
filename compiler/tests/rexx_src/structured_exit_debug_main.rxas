@@ -1,10 +1,8 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : structured_exit_debug_main.rexx
+ * SOURCE                 : structured_exit_debug_main.crexx
  * BUILT                  : 2026-04-21 14:30:04
  */
-
-.srcfile="structured_exit_debug_main.rexx"
 .globals=0
 
 main() .locals=8
@@ -15,9 +13,7 @@ main() .locals=8
    setnumcas 1
    setnumstd 1
    .meta "structured_exit_debug_main.main.rc"="b" ".int" r0
-   .src 3:1="nest"
    null r0
-   .src 2:1="rc=_address('',nest,_noredir(),_noredir(),_noredir"
    load r1,5
    load r2,""
    load r3,"nest"
@@ -27,15 +23,13 @@ main() .locals=8
    call r5,_rxsysb._noredir(),r7
    load r7,0
    call r6,_rxsysb._noredir(),r7
-   settp r2,3
-   settp r3,1
-   settp r4,1
-   settp r5,1
-   settp r6,1
+   settp r2,768
+   settp r3,256
+   settp r4,256
+   settp r5,256
+   settp r6,256
    call r0,_rxsysb._address(),r1
-   .src 4:1="say \"done\""
    say "done"
-   .src 4:11=""
    ret
    .meta "structured_exit_debug_main.main.rc"
 

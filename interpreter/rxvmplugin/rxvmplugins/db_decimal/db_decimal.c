@@ -37,6 +37,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "platform.h"
 #include "rxvmplugin.h"
 
 /* Private Context */
@@ -243,8 +244,7 @@ static void EnsureCapacity(value *number) {
 
             /* If the reallocation was unsuccessful, panic as per crexx standard behavior */
             if (new_value == NULL) {
-                fprintf(stderr, "PANIC: Unable to reallocate memory for decNumber\n");
-                exit(1);
+                RX_PANIC_OOM("realloc db_decimal value", size, "decimal value");
             }
             number->decimal_value = new_value;
             number->decimal_buffer_length = size;

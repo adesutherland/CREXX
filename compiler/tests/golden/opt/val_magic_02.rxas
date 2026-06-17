@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : val_magic_02.rexx
- * BUILT                  : 2026-03-18 11:58:57
+ * SOURCE                 : val_magic_02.crexx
+ * BUILT                  : 2026-05-27 17:53:00
  */
 
-.srcfile="val_magic_02.rexx"
 .globals=0
 
 main() .locals=0
@@ -14,20 +12,20 @@ main() .locals=0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:1="say \"Testing Implicit Rewrites...\""
+   .srcstep 1 1 17 "val_magic_02.crexx" 4 1 35 "say \"Testing Implicit Rewrites...\""
    say "Testing Implicit Rewrites..."
-   .src 14:1="say 'CONCAT test (a = \"Hello\" || \"World\"): ' || a"
+   .srcstep 2 2 17 "val_magic_02.crexx" 14 1 50 "say 'CONCAT test (a = \"Hello\" || \"World\"): ' || a"
    .meta "val_magic_02.main.a"="b" ".string" "HelloWorld"
    say "CONCAT test (a = \"Hello\" || \"World\"): HelloWorld"
-   .src 21:1="say 'SCONCAT test (b = \"Hello\" \"World\"): ' || b"
+   .srcstep 3 3 17 "val_magic_02.crexx" 21 1 48 "say 'SCONCAT test (b = \"Hello\" \"World\"): ' || b"
    .meta "val_magic_02.main.b"="b" ".string" "Hello World"
    say "SCONCAT test (b = \"Hello\" \"World\"): Hello World"
-   .src 31:1="say 'SCONCAT (diff quotes) test (c = \"Hello\"' || \"'World'): \" || c"
+   .srcstep 4 4 17 "val_magic_02.crexx" 31 1 67 "say 'SCONCAT (diff quotes) test (c = \"Hello\"' || \"'World'): \" || c"
    .meta "val_magic_02.main.c"="b" ".string" "HelloWorld"
    say "SCONCAT (diff quotes) test (c = \"Hello\"\'World\'): HelloWorld"
-   .src 37:1="say \"Implicit Rewrites Test PASSED\""
+   .srcstep 5 5 17 "val_magic_02.crexx" 37 1 36 "say \"Implicit Rewrites Test PASSED\""
    say "Implicit Rewrites Test PASSED"
-   .src 38:1="return 0"
+   .srcstep 6 6 17 "val_magic_02.crexx" 38 1 9 "return 0"
    ret 0
    .meta "val_magic_02.main.a"
    .meta "val_magic_02.main.b"

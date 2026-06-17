@@ -1,0 +1,6 @@
+options levelb
+
+main: procedure = .int
+  trace rexx to stderr
+  flag = 1
+  return \flag

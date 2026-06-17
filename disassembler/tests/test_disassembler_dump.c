@@ -68,23 +68,23 @@ static size_t add_expose_proc_entry(unsigned char *pool, size_t *used, const cha
     return offset;
 }
 
-static size_t add_meta_file_entry(unsigned char *pool, size_t *used, size_t address, size_t file) {
-    size_t offset = reserve_entry(pool, used, sizeof(meta_file_constant), META_FILE);
-    meta_file_constant *entry = (meta_file_constant *)(pool + offset);
+static size_t add_meta_source_step_entry(unsigned char *pool, size_t *used, size_t address,
+                                         size_t file, size_t source, uint32_t step_id,
+                                         uint32_t clause_id, uint32_t flags,
+                                         uint32_t line, uint32_t start_column,
+                                         uint32_t end_column) {
+    size_t offset = reserve_entry(pool, used, sizeof(meta_source_step_constant), META_SOURCE_STEP);
+    meta_source_step_constant *entry = (meta_source_step_constant *)(pool + offset);
     entry->base.next = -1;
     entry->base.address = address;
     entry->file = file;
-    return offset;
-}
-
-static size_t add_meta_src_entry(unsigned char *pool, size_t *used, size_t address, int line, int column, size_t source) {
-    size_t offset = reserve_entry(pool, used, sizeof(meta_src_constant), META_SRC);
-    meta_src_constant *entry = (meta_src_constant *)(pool + offset);
-    entry->base.next = -1;
-    entry->base.address = address;
+    entry->source_line = source;
+    entry->step_id = step_id;
+    entry->clause_id = clause_id;
+    entry->flags = flags;
     entry->line = line;
-    entry->column = column;
-    entry->source = source;
+    entry->active_start_column = start_column;
+    entry->active_end_column = end_column;
     return offset;
 }
 
@@ -275,7 +275,6 @@ int main(void) {
     size_t expose_reg;
     size_t expose_word;
     size_t expose_helper;
-    size_t meta_file;
     size_t meta_class;
     size_t meta_attr;
     size_t meta_interface;
@@ -284,7 +283,7 @@ int main(void) {
     size_t meta_word_func;
     size_t meta_word_inline;
     size_t meta_main_func;
-    size_t meta_main_src;
+    size_t meta_main_source_step;
     size_t meta_main_reg;
     size_t meta_main_const;
     size_t meta_helper_func;
@@ -346,7 +345,6 @@ int main(void) {
     ((expose_reg_constant *)(pool + expose_reg))->next = (int)expose_word;
     ((expose_proc_constant *)(pool + expose_word))->next = (int)expose_helper;
 
-    meta_file = add_meta_file_entry(pool, &used, 0u, s_file);
     meta_class = add_meta_class_entry(pool, &used, 0u, s_box_symbol, s_b, s_unknown);
     meta_attr = add_meta_attr_entry(pool, &used, 0u, s_box_attr_symbol, s_b, s_string_type, 1u);
     meta_interface = add_meta_interface_entry(pool, &used, 0u, s_shape_symbol, s_b, s_unknown);
@@ -355,13 +353,14 @@ int main(void) {
     meta_word_func = add_meta_func_entry(pool, &used, 0u, s_word_symbol, s_b, s_string_type, proc_word, s_word_args);
     meta_word_inline = add_meta_inline_entry(pool, &used, 0u, s_word_symbol, s_inline_payload);
     meta_main_func = add_meta_func_entry(pool, &used, 0u, s_main_symbol, s_b, s_void, proc_main, s_empty);
-    meta_main_src = add_meta_src_entry(pool, &used, 0u, 1, 1, s_source);
+    meta_main_source_step = add_meta_source_step_entry(pool, &used, 0u, s_file, s_source, 1u, 1u,
+                                                       RXBIN_SOURCE_AUTHORED | RXBIN_SOURCE_EXACT,
+                                                       1u, 1u, 13u);
     meta_main_reg = add_meta_reg_entry(pool, &used, 0u, s_local_symbol, s_b, s_string_type, 0u);
     meta_main_const = add_meta_const_entry(pool, &used, 0u, s_answer_symbol, s_b, s_string_type, s_answer_value);
     meta_helper_func = add_meta_func_entry(pool, &used, 1u, s_helper_symbol, s_b, s_void, proc_helper, s_empty);
     meta_clear = add_meta_clear_entry(pool, &used, 2u, s_local_symbol);
 
-    ((meta_entry *)(pool + meta_file))->next = (int)meta_class;
     ((meta_entry *)(pool + meta_class))->next = (int)meta_attr;
     ((meta_entry *)(pool + meta_attr))->next = (int)meta_interface;
     ((meta_entry *)(pool + meta_interface))->next = (int)meta_implements;
@@ -369,8 +368,8 @@ int main(void) {
     ((meta_entry *)(pool + meta_member))->next = (int)meta_word_func;
     ((meta_entry *)(pool + meta_word_func))->next = (int)meta_word_inline;
     ((meta_entry *)(pool + meta_word_inline))->next = (int)meta_main_func;
-    ((meta_entry *)(pool + meta_main_func))->next = (int)meta_main_src;
-    ((meta_entry *)(pool + meta_main_src))->next = (int)meta_main_reg;
+    ((meta_entry *)(pool + meta_main_func))->next = (int)meta_main_source_step;
+    ((meta_entry *)(pool + meta_main_source_step))->next = (int)meta_main_reg;
     ((meta_entry *)(pool + meta_main_reg))->next = (int)meta_main_const;
     ((meta_entry *)(pool + meta_main_const))->next = (int)meta_helper_func;
     ((meta_entry *)(pool + meta_helper_func))->next = (int)meta_clear;
@@ -384,7 +383,7 @@ int main(void) {
     module.header.globals = 1;
     module.header.proc_head = (int)proc_main;
     module.header.expose_head = (int)expose_reg;
-    module.header.meta_head = (int)meta_file;
+    module.header.meta_head = (int)meta_class;
 
     pgm.globals = 1;
     pgm.inst_size = 2u;
@@ -418,13 +417,13 @@ int main(void) {
 
     rc |= require_contains(output, "STRING \"hello\"");
     rc |= require_contains(output, "DECIMAL \"12.5\"");
-    rc |= require_contains(output, "FLOAT 1.500000");
+    rc |= require_contains(output, "FLOAT 1.5");
     rc |= require_contains(output, "BINARY 0x414243");
     rc |= require_contains(output, "EXPOSED-REG g0 <-> as synthetic.shared");
     rc |= require_contains(output, "EXPOSED-PROC word() <-- as rxfnsb.word");
     rc |= require_contains(output, "EXPOSED-PROC helper() --> as synthetic.helper");
     rc |= require_contains(output, "word() .expose=rxfnsb.word");
-    rc |= require_contains(output, ".srcfile=\"synthetic.rexx\"");
+    rc |= require_contains(output, ".srcstep 1 1 17 \"synthetic.rexx\" 1 1 13 \"say synthetic\"");
     rc |= require_contains(output, ".meta \"synthetic.box\"=\"b\" \".unknown\" .class");
     rc |= require_contains(output, ".meta \"synthetic.box.value\"=\"b\" \".string\" .attr 1");
     rc |= require_contains(output, ".meta \"synthetic.shape\"=\"b\" \".unknown\" .interface");

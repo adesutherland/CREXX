@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : 02_flow.rexx
- * BUILT                  : 2026-03-18 11:58:53
+ * SOURCE                 : 02_flow.crexx
+ * BUILT                  : 2026-05-27 17:52:39
  */
 
-.srcfile="02_flow.rexx"
 .globals=0
 
 main() .locals=3
@@ -14,28 +12,32 @@ main() .locals=3
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:15="say \"Big\""
+   .srcstep 1 1 17 "02_flow.crexx" 4 15 24 "if a > 3 then say \"Big\""
    .meta "02_flow.main.a"="b" ".int" "5"
    say "Big"
-   .src 7:1="do"
-   .src 7:4="i = 1"
+   .srcstep 6 6 17 "02_flow.crexx" 7 1 3 "do i = 1 to 3"
+   .srcstep 2 2 17 "02_flow.crexx" 7 4 9 "do i = 1 to 3"
    .meta "02_flow.main.i"="b" ".int" r0
    load r0,1
-   .src 7:10="to 3"
+   .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "i" ""
+   .srcstep 3 3 17 "02_flow.crexx" 7 10 14 "do i = 1 to 3"
    load r1,3
+   .traceevent "L" 4 "R" "I" "r" 1 0 0 0 "" ""
 l15dostart:
-   .src 7:10="to 3"
+   .srcstep 3 3 17 "02_flow.crexx" 7 10 14 "do i = 1 to 3"
    igt r2,r0,r1
    brt l15doend,r2
-   .src 8:5="say i"
+   .srcstep 5 5 17 "02_flow.crexx" 8 5 10 "    say i"
    itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 5 5 0 "i" ""
    say r0
 l15doinc:
-   .src 7:4="i"
+   .srcstep 4 4 17 "02_flow.crexx" 7 4 5 "do i = 1 to 3"
    inc r0
-   .src 9:1="end"
+   .srcstep 7 7 17 "02_flow.crexx" 9 1 4 "end"
    br l15dostart
 l15doend:
-   .src 7:24=""
+   .srcstep 8 8 1 "02_flow.crexx" 7 10 10 "    say i"
    ret
    .meta "02_flow.main.a"

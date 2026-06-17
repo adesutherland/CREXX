@@ -41,7 +41,7 @@
 #include "platform.h"
 #include "rxdefs.h"
 
-#define BIN_VERSION "003"
+#define BIN_VERSION "005"
 
 #define BIN_HEADER "cReXx" /* Do not change */
 
@@ -80,8 +80,9 @@ struct bin_space {
 
 enum const_pool_type {
     STRING_CONST, BINARY_CONST, DECIMAL_CONST, FLOAT_CONST, PROC_CONST, EXPOSE_REG_CONST, EXPOSE_PROC_CONST,
-    META_SRC, META_FILE, META_FUNC, META_REG, META_CONST, META_CLEAR,
-    META_CLASS, META_ATTR, META_INTERFACE, META_IMPLEMENTS, META_MEMBER, META_INLINE
+    META_FUNC, META_REG, META_CONST, META_CLEAR,
+    META_CLASS, META_ATTR, META_INTERFACE, META_IMPLEMENTS, META_MEMBER, META_INLINE, META_SOURCE_STEP,
+    META_TRACE_EVENT
 };
 
 /* cREXX chameleon entry in the constant pool
@@ -148,19 +149,67 @@ typedef struct meta_entry {
     size_t address;
 } meta_entry;
 
-/* cREXX Meta Source entry in the constant pool */
-typedef struct meta_src_constant {
-    meta_entry base;
-    size_t line;
-    size_t column;
-    size_t source;
-} meta_src_constant;
+#define RXBIN_SOURCE_AUTHORED   0x00000001u
+#define RXBIN_SOURCE_GENERATED  0x00000002u
+#define RXBIN_SOURCE_SYNTHETIC  0x00000004u
+#define RXBIN_SOURCE_INLINED    0x00000008u
+#define RXBIN_SOURCE_EXACT      0x00000010u
+#define RXBIN_SOURCE_INHERITED  0x00000020u
+#define RXBIN_SOURCE_COMPOSITE  0x00000040u
 
-/* cREXX Meta File entry in the constant pool */
-typedef struct meta_file_constant {
+typedef struct meta_source_step_constant {
     meta_entry base;
     size_t file;
-} meta_file_constant;
+    size_t source_line;
+    uint32_t step_id;
+    uint32_t clause_id;
+    uint32_t line;
+    uint32_t active_start_column;
+    uint32_t active_end_column;
+    uint32_t flags;
+} meta_source_step_constant;
+
+#define RXBIN_TRACE_REF_NONE ((size_t)-1)
+
+#define RXBIN_TRACE_KIND_SOURCE      'S'
+#define RXBIN_TRACE_KIND_VARIABLE    'V'
+#define RXBIN_TRACE_KIND_ASSIGNMENT  'A'
+#define RXBIN_TRACE_KIND_COMPOUND    'C'
+#define RXBIN_TRACE_KIND_LITERAL     'L'
+#define RXBIN_TRACE_KIND_BINARY_OP   'O'
+#define RXBIN_TRACE_KIND_PREFIX_OP   'P'
+#define RXBIN_TRACE_KIND_FUNCTION    'F'
+#define RXBIN_TRACE_KIND_RESULT      'R'
+#define RXBIN_TRACE_KIND_MESSAGE     'M'
+
+#define RXBIN_TRACE_VALUE_NONE       'N'
+#define RXBIN_TRACE_VALUE_REGISTER   'R'
+#define RXBIN_TRACE_VALUE_CONSTANT   'K'
+
+#define RXBIN_TRACE_MODE_A           0x00000001u
+#define RXBIN_TRACE_MODE_R           0x00000002u
+#define RXBIN_TRACE_MODE_I           0x00000004u
+#define RXBIN_TRACE_MODE_C           0x00000008u
+#define RXBIN_TRACE_MODE_E           0x00000010u
+#define RXBIN_TRACE_MODE_F           0x00000020u
+#define RXBIN_TRACE_MODE_L           0x00000040u
+#define RXBIN_TRACE_MODE_ASM         0x00000080u
+#define RXBIN_TRACE_MODE_LLM         0x00000100u
+
+typedef struct meta_trace_event_constant {
+    meta_entry base;
+    uint8_t kind;
+    uint8_t value_source;
+    uint8_t value_type;
+    uint8_t register_type;
+    uint32_t mode_mask;
+    uint32_t flags;
+    size_t value_ref;
+    size_t symbol;
+    size_t resolved_name;
+    uint32_t source_step_id;
+    uint32_t clause_id;
+} meta_trace_event_constant;
 
 typedef struct meta_func_constant {
     meta_entry base;
@@ -314,6 +363,65 @@ typedef struct rxbin_var_reader {
 #define RXBIN_LZSS_MIN_MATCH 3u
 #define RXBIN_LZSS_MAX_MATCH 18u
 #define RXBIN_LZSS_MAX_CHAIN 64u
+#define RXBIN_LZSS_PREV_SIZE (RXBIN_LZSS_WINDOW + 1u)
+#define RXBIN_MAX_HEADER_TEXT_SIZE ((size_t)16u * 1024u * 1024u)
+
+static int rxbin_size_mul_overflow(size_t left, size_t right, size_t *result) {
+    if (left && right > SIZE_MAX / left) return 1;
+    *result = left * right;
+    return 0;
+}
+
+static int rxbin_packed_instruction_size_plausible(size_t stored_size, size_t instruction_size) {
+    if (!instruction_size) return stored_size == 0;
+    if (!stored_size) return 0;
+    if (stored_size > SIZE_MAX / 2u) return 1;
+    return instruction_size <= stored_size * 2u;
+}
+
+static int rxbin_packed_constant_size_plausible(size_t stored_size, size_t constant_size) {
+    if (!constant_size) return stored_size == 0;
+    if (!stored_size) return 0;
+    if (stored_size > SIZE_MAX / RXBIN_LZSS_MAX_MATCH) return 1;
+    return constant_size <= stored_size * RXBIN_LZSS_MAX_MATCH;
+}
+
+static int rxbin_header_section_sizes_valid(const module_header *header) {
+    size_t expanded_instruction_bytes;
+
+    if (header->name_size > RXBIN_MAX_HEADER_TEXT_SIZE ||
+        header->description_size > RXBIN_MAX_HEADER_TEXT_SIZE) {
+        return 0;
+    }
+
+    if (header->record_type != RXBIN_RECORD_POOL_SHARED) {
+        if (rxbin_size_mul_overflow(header->instruction_size, sizeof(bin_code),
+                                    &expanded_instruction_bytes)) {
+            return 0;
+        }
+        if (header->section_flags & RXBIN_SECTION_INST_PACKED) {
+            if (!rxbin_packed_instruction_size_plausible(header->instruction_stored_size,
+                                                        header->instruction_size)) {
+                return 0;
+            }
+        } else if (header->instruction_stored_size != expanded_instruction_bytes) {
+            return 0;
+        }
+    }
+
+    if (header->record_type != RXBIN_RECORD_MODULE_SHARED) {
+        if (header->section_flags & RXBIN_SECTION_CONST_PACKED) {
+            if (!rxbin_packed_constant_size_plausible(header->constant_stored_size,
+                                                     header->constant_size)) {
+                return 0;
+            }
+        } else if (header->constant_stored_size != header->constant_size) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
 
 /* Sets Header Version and initialises the header */
 static void init_module(module_file *module) {
@@ -341,12 +449,14 @@ static int check_header_version(module_header *header) {
         if (header->constant_size || header->constant_stored_size) return 2;
         if (header->section_flags & RXBIN_SECTION_CONST_PACKED) return 2;
     }
+    if (!rxbin_header_section_sizes_valid(header)) return 2;
     return 0;
 }
 
 static int rxbin_get_operand_types(OpFormat format, OperandType *types) {
     switch (format) {
         case FMT_EMPTY: return 0;
+        case FMT_B: types[0] = OP_BINARY; return 1;
         case FMT_C: types[0] = OP_CHAR; return 1;
         case FMT_F: types[0] = OP_FLOAT; return 1;
         case FMT_I: types[0] = OP_INT; return 1;
@@ -366,6 +476,7 @@ static int rxbin_get_operand_types(OpFormat format, OperandType *types) {
         case FMT_P: types[0] = OP_FUNC; return 1;
         case FMT_P_S: types[0] = OP_FUNC; types[1] = OP_STRING; return 2;
         case FMT_R: types[0] = OP_REG; return 1;
+        case FMT_R_B: types[0] = OP_REG; types[1] = OP_BINARY; return 2;
         case FMT_R_C: types[0] = OP_REG; types[1] = OP_CHAR; return 2;
         case FMT_R_D: types[0] = OP_REG; types[1] = OP_DECIMAL; return 2;
         case FMT_R_D_R: types[0] = OP_REG; types[1] = OP_DECIMAL; types[2] = OP_REG; return 3;
@@ -798,14 +909,15 @@ static int rxbin_lzss_match_length(const unsigned char *input, size_t input_size
 static void rxbin_lzss_index_position(const unsigned char *input, size_t input_size, size_t position,
                                       size_t *last_positions, size_t *prev_positions) {
     unsigned int hash;
+    size_t slot = position % RXBIN_LZSS_PREV_SIZE;
 
     if (position + RXBIN_LZSS_MIN_MATCH > input_size) {
-        prev_positions[position] = SIZE_MAX;
+        prev_positions[slot] = SIZE_MAX;
         return;
     }
 
     hash = rxbin_lzss_hash(input + position);
-    prev_positions[position] = last_positions[hash];
+    prev_positions[slot] = last_positions[hash];
     last_positions[hash] = position;
 }
 
@@ -821,10 +933,11 @@ static int rxbin_compress_constant_pool(const unsigned char *input, size_t input
 
     if (!input_size) return 1;
 
-    prev_positions = malloc(sizeof(size_t) * input_size);
+    prev_positions = malloc(sizeof(size_t) * RXBIN_LZSS_PREV_SIZE);
     if (!prev_positions) return 0;
 
     for (i = 0; i < RXBIN_LZSS_HASH_SIZE; i++) last_positions[i] = SIZE_MAX;
+    for (i = 0; i < RXBIN_LZSS_PREV_SIZE; i++) prev_positions[i] = SIZE_MAX;
 
     while (position < input_size) {
         size_t best_length = 0;
@@ -854,7 +967,7 @@ static int rxbin_compress_constant_pool(const unsigned char *input, size_t input
                     best_distance = position - candidate;
                     if (best_length == RXBIN_LZSS_MAX_MATCH) break;
                 }
-                candidate = prev_positions[candidate];
+                candidate = prev_positions[candidate % RXBIN_LZSS_PREV_SIZE];
                 chain++;
             }
         }
@@ -987,11 +1100,12 @@ static void rxbin_shared_pool_release(rxbin_shared_constant_pool **pool_ref) {
 }
 
 static int rxbin_decode_instruction_section(module_file *module, const unsigned char *stored_data) {
-    size_t expanded_size = module->header.instruction_size * sizeof(bin_code);
+    size_t expanded_size;
 
     module->instructions = 0;
 
     if (!module->header.instruction_size) return 1;
+    if (rxbin_size_mul_overflow(module->header.instruction_size, sizeof(bin_code), &expanded_size)) return 0;
 
     module->instructions = malloc(expanded_size);
     if (!module->instructions) return 0;
@@ -1072,11 +1186,14 @@ static int rxbin_prepare_header_for_write(module_file *module, rxbin_byte_buffer
                                           rxbin_byte_buffer *constant_section) {
     rxbin_byte_buffer packed_instructions;
     rxbin_byte_buffer packed_constants;
-    size_t raw_instruction_bytes = module->header.instruction_size * sizeof(bin_code);
+    size_t raw_instruction_bytes;
     unsigned int section_flags = 0;
 
     rxbin_byte_buffer_init(&packed_instructions);
     rxbin_byte_buffer_init(&packed_constants);
+    if (rxbin_size_mul_overflow(module->header.instruction_size, sizeof(bin_code), &raw_instruction_bytes)) {
+        return 0;
+    }
 
     if (module->header.record_type != RXBIN_RECORD_POOL_SHARED &&
         module->header.instruction_size &&

@@ -1,0 +1,2 @@
+Error in err_xor_common.crexx @ 3:7 - #EXTRANEOUS, "&&"
+1 error(s) in source file

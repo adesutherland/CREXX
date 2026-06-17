@@ -34,11 +34,10 @@
 #include "rxcp_val.h"
 #include "rxcp_util.h"
 
-#define REGTP_VAL 1
-#define REGTP_NOTSYM 2
-
 static int symbol_has_live_node_in_proc(Symbol *symbol, ASTNode *proc_node) {
     size_t i;
+
+    if (symbol && symbol->name && strncmp(symbol->name, "__inline_", 9) == 0) return 0;
 
     for (i = 0; i < sym_nond(symbol); i++) {
         SymbolNode *sn = sym_trnd(symbol, i);
@@ -94,12 +93,98 @@ static const char *interface_member_kind_string(ASTNode *member) {
     return "";
 }
 
+static Symbol *resolve_metadata_class_name(Context *context, const char *class_name) {
+    Symbol *symbol = 0;
+
+    if (!context || !context->ast || !class_name || !*class_name) return 0;
+
+    if (strchr(class_name, '.')) symbol = sym_rfqv(context->ast, class_name);
+    else symbol = sym_rvfn(context->ast, (char *)class_name);
+
+    if (!symbol) {
+        ensure_class_imported(context, class_name, strlen(class_name));
+        if (strchr(class_name, '.')) symbol = sym_rfqv(context->ast, class_name);
+        else symbol = sym_rvfn(context->ast, (char *)class_name);
+    }
+
+    if (!symbol || symbol->symbol_type != CLASS_SYMBOL) return 0;
+    return symbol;
+}
+
+static char *metadata_type_string(Context *context,
+                                  ValueType type,
+                                  size_t dims,
+                                  int *dim_base,
+                                  int *dim_elements,
+                                  const char *class_name) {
+    char *base;
+    char *array;
+    char *result;
+    char *resolved_class_name = 0;
+    int free_base = 0;
+
+    if (type == TP_OBJECT && class_name && *class_name) {
+        Symbol *class_symbol = resolve_metadata_class_name(context, class_name);
+        if (class_symbol) resolved_class_name = sym_frnm(class_symbol);
+        base = rxcp_internal_name_to_source_qualified(resolved_class_name ? resolved_class_name : class_name, 1);
+        free_base = 1;
+    } else {
+        base = type_nm(type);
+    }
+
+    array = ast_astr(dims, dim_base, dim_elements);
+    result = malloc(strlen(base) + strlen(array) + 1);
+    strcpy(result, base);
+    strcat(result, array);
+
+    if (resolved_class_name) free(resolved_class_name);
+    if (free_base) free(base);
+    free(array);
+
+    return result;
+}
+
+static char *metadata_reference_type_string(Context *context,
+                                            ValueType reference_type,
+                                            size_t reference_dims,
+                                            int *reference_dim_base,
+                                            int *reference_dim_elements,
+                                            const char *reference_class) {
+    char *referent = metadata_type_string(context,
+                                          reference_type,
+                                          reference_dims,
+                                          reference_dim_base,
+                                          reference_dim_elements,
+                                          reference_class);
+    char *result = malloc(strlen("reference ") + strlen(referent) + 1);
+    strcpy(result, "reference ");
+    strcat(result, referent);
+    free(referent);
+    return result;
+}
+
 char *callable_effective_return_type(ASTNode *node) {
     ASTNode *return_node;
+    Context *context;
 
     if (!node) return strdup(".void");
+    context = node->context;
 
-    return_node = ast_chld(node, CLASS, VOID);
+    if (node->symbolNode && node->symbolNode->symbol &&
+        (node->symbolNode->symbol->type != TP_UNKNOWN ||
+         node->symbolNode->symbol->value_class ||
+         node->symbolNode->symbol->value_dims)) {
+        Symbol *symbol = node->symbolNode->symbol;
+        if (symbol->type == TP_REFERENCE) return sym_2tp(symbol);
+        return metadata_type_string(context,
+                                    symbol->type,
+                                    symbol->value_dims,
+                                    symbol->dim_base,
+                                    symbol->dim_elements,
+                                    symbol->value_class);
+    }
+
+    return_node = ast_type_child(node);
     if (!return_node) return strdup(".void");
     if (node->node_type == FACTORY && return_node && return_node->node_type == VOID) {
         ASTNode *owner = node->parent;
@@ -110,30 +195,51 @@ char *callable_effective_return_type(ASTNode *node) {
             const char *name = 0;
             char *normalized = 0;
             char *result;
-            size_t len;
 
             if (owner->symbolNode && owner->symbolNode->symbol && owner->symbolNode->symbol->name) {
-                name = owner->symbolNode->symbol->name;
+                normalized = sym_frnm(owner->symbolNode->symbol);
+                name = normalized;
             }
             else if (owner->node_string) {
                 normalized = rxcp_normalize_source_symbol_name(owner->node_string,
                                                                owner->node_string_length,
-                                                               1,
+                                                               0,
                                                                1);
                 name = normalized;
             }
 
             if (name && name[0]) {
-                len = strlen(name);
-                result = malloc(len + 2);
-                result[0] = '.';
-                memcpy(result + 1, name, len);
-                result[len + 1] = 0;
+                result = metadata_type_string(context, TP_OBJECT, 0, 0, 0, name);
                 if (normalized) free(normalized);
                 return result;
             }
             if (normalized) free(normalized);
         }
+    }
+
+    if (context) {
+        size_t dims = 0;
+        int *dim_base = 0;
+        int *dim_elements = 0;
+        char *class_name = 0;
+        ValueType type = node_to_type(context, return_node, &dims, &dim_base, &dim_elements, &class_name);
+        char *result;
+        if (type == TP_REFERENCE) {
+            result = metadata_reference_type_string(context,
+                                                    return_node->value_reference_type,
+                                                    return_node->value_reference_dims,
+                                                    return_node->value_reference_dim_base,
+                                                    return_node->value_reference_dim_elements,
+                                                    return_node->value_reference_class);
+        } else {
+            result = metadata_type_string(context, type, dims, dim_base, dim_elements, class_name);
+        }
+
+        if (dim_base) free(dim_base);
+        if (dim_elements) free(dim_elements);
+        if (class_name) free(class_name);
+
+        return result;
     }
 
     return ast_n2tp(return_node);
@@ -341,11 +447,13 @@ void meta_set_global_symbol(Symbol *symbol, void *payload) {
         /* Is the global used in the procedure? */
         if ( symislnk(ast_chld(node, INSTRUCTIONS, NOP), symbol) ) {
             symbol_fqn = sym_frnm(symbol);
+            char *type = sym_2tp(symbol);
             buffer = mprintf("   .meta \"%s\"=\"b\" \"%s\" %c%d\n",
                              symbol_fqn,
-                             type_nm(symbol->type),
+                             type,
                              symbol->register_type, symbol->register_num
             );
+            free(type);
             free(symbol_fqn);
 
             /* Add the metadata to the output fragment */
@@ -577,11 +685,12 @@ void add_class_symbol(Symbol *symbol, void *payload) {
                                     reg_index = (int)strtol(nr->child->token->token_string, NULL, 10);
                                 }
                                 char *attr_fqn = sym_frnm(s);
-                                char *type_str = type_nm(s->type);
+                                char *type_str = sym_2tp(s);
                                 char *buf2 = mprintf(".meta \"%s\"=\"b\" \"%s\" .attr %d\n",
                                                      attr_fqn, type_str, reg_index);
                                 output_append_text(output, buf2);
                                 free(buf2);
+                                free(type_str);
                                 free(attr_fqn);
                                 break; /* Found it */
                             }

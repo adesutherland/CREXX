@@ -3,7 +3,7 @@
 // multiple scanners, error
 
 enum YYCONDTYPE {
-	yycc1,
+	yycc1
 };
 
 
@@ -12,14 +12,14 @@ void scan(unsigned char* in)
 
 {
 	YYCTYPE yych;
-	static void *yyctable[1] = {
-		&&yyc_c1,
+	static const void* yyctable[1] = {
+		&&yyc_c1
 	};
 	goto *yyctable[YYGETCONDITION()];
 /* *********************************** */
 yyc_c1:
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
-	yych = *YYCURSOR++;
+	++YYCURSOR;
 	{}
 }
 

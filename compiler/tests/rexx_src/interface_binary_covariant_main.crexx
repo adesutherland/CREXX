@@ -1,0 +1,9 @@
+options levelb
+namespace interface_binary_covariant_main
+import interface_binary_covariant_provider
+
+main: procedure
+  current = .IterableProvider()
+  it = current.iterator()
+  say it.next()
+  return

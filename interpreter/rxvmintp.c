@@ -60,6 +60,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
+#include <limits.h>
 #ifdef _WIN32
 #include <windows.h>
 #include <io.h>
@@ -77,6 +79,7 @@
 #include "platform.h"
 #include "rxas.h"
 #include "../binutils/include/rxdefs.h"
+#include "../binutils/include/rxflags.h"
 #include "rxastree.h"
 #include "rxvmintp.h"
 /* #include <complex.h> */
@@ -88,6 +91,483 @@
 #include "rxvmsock.h"
 
 int rxvm_link(rxvm_context *ctx);
+
+#define RXVM_FFORMAT_MAX_FIELD 1000
+
+static int rxvm_padded_string_compare(const char *left, size_t left_len, const char *right, size_t right_len) {
+    size_t max_len = left_len > right_len ? left_len : right_len;
+    size_t i;
+
+    for (i = 0; i < max_len; i++) {
+        unsigned char left_ch = i < left_len ? (unsigned char) left[i] : (unsigned char) ' ';
+        unsigned char right_ch = i < right_len ? (unsigned char) right[i] : (unsigned char) ' ';
+        if (left_ch != right_ch) return left_ch > right_ch ? 1 : -1;
+    }
+
+    return 0;
+}
+
+static int rxvm_trimmed_space_equal(const char *left, size_t left_len, const char *right, size_t right_len) {
+    while (left_len > 0 && left[left_len - 1] == ' ') left_len--;
+    while (right_len > 0 && right[right_len - 1] == ' ') right_len--;
+    while (left_len > 0 && *left == ' ') {
+        left++;
+        left_len--;
+    }
+    while (right_len > 0 && *right == ' ') {
+        right++;
+        right_len--;
+    }
+    return left_len == right_len && memcmp(left, right, left_len) == 0;
+}
+
+static int rxvm_loose_compare_text(const char *left, size_t left_len, const char *right, size_t right_len) {
+    double left_number;
+    double right_number;
+    int left_numeric = string2float(&left_number, (char *) left, left_len) == 0;
+    int right_numeric = string2float(&right_number, (char *) right, right_len) == 0;
+
+    if (left_numeric && right_numeric) {
+        if (left_number > right_number) return 1;
+        if (left_number < right_number) return -1;
+        return 0;
+    }
+
+    return rxvm_padded_string_compare(left, left_len, right, right_len);
+}
+
+static int rxvm_loose_compare_values(value *left, value *right) {
+    return rxvm_loose_compare_text(left->string_value, left->string_length,
+                                   right->string_value, right->string_length);
+}
+
+static int rxvm_loose_compare_value_const(value *left, string_constant *right) {
+    return rxvm_loose_compare_text(left->string_value, left->string_length,
+                                   right->string, right->string_len);
+}
+
+static int rxvm_loose_compare_const_value(string_constant *left, value *right) {
+    return rxvm_loose_compare_text(left->string, left->string_len,
+                                   right->string_value, right->string_length);
+}
+
+static char *rxvm_format_buffer_at(char *buffer, size_t buffer_len, size_t used) {
+    if (buffer_len == 0) return buffer;
+    return buffer + (used < buffer_len ? used : buffer_len - 1);
+}
+
+static size_t rxvm_format_buffer_remaining(size_t buffer_len, size_t used) {
+    return used < buffer_len ? buffer_len - used : 0;
+}
+
+static size_t rxvm_format_append_literal(char *buffer, size_t buffer_len, size_t used, const char *text, size_t text_len) {
+    if (buffer_len > 0) {
+        size_t offset = used < buffer_len ? used : buffer_len - 1;
+        size_t writable = buffer_len - offset;
+        if (writable > 0) {
+            size_t copy_len;
+            writable--;
+            copy_len = text_len < writable ? text_len : writable;
+            if (copy_len > 0) memcpy(buffer + offset, text, copy_len);
+            buffer[offset + copy_len] = 0;
+        }
+    }
+    return used + text_len;
+}
+
+static int rxvm_checked_size_add(size_t left, size_t right, size_t *result) {
+    if (left > (size_t)-1 - right) return 0;
+    *result = left + right;
+    return 1;
+}
+
+static int rxvm_checked_size_mul(size_t left, size_t right, size_t *result) {
+    if (left != 0 && right > (size_t)-1 / left) return 0;
+    *result = left * right;
+    return 1;
+}
+
+#if defined(__has_builtin)
+#if __has_builtin(__builtin_mul_overflow)
+#define RXVM_HAS_BUILTIN_MUL_OVERFLOW 1
+#endif
+#elif defined(__GNUC__)
+#define RXVM_HAS_BUILTIN_MUL_OVERFLOW 1
+#endif
+#ifndef RXVM_HAS_BUILTIN_MUL_OVERFLOW
+#define RXVM_HAS_BUILTIN_MUL_OVERFLOW 0
+#endif
+
+#if !RXVM_HAS_BUILTIN_MUL_OVERFLOW
+static uintmax_t rxvm_rxinteger_positive_limit(void) {
+    uintmax_t bits = UINTMAX_MAX;
+    size_t rxinteger_bits = sizeof(rxinteger) * CHAR_BIT;
+    size_t uintmax_bits = sizeof(uintmax_t) * CHAR_BIT;
+
+    if (rxinteger_bits < uintmax_bits) bits >>= uintmax_bits - rxinteger_bits;
+    return bits >> 1;
+}
+
+static uintmax_t rxvm_rxinteger_magnitude(rxinteger value) {
+    if (value >= 0) return (uintmax_t)value;
+    return (uintmax_t)(-(value + 1)) + 1;
+}
+#endif
+
+static int rxvm_checked_rxinteger_mul(rxinteger left, rxinteger right, rxinteger *result) {
+#if RXVM_HAS_BUILTIN_MUL_OVERFLOW
+    return !__builtin_mul_overflow(left, right, result);
+#else
+    uintmax_t left_mag = rxvm_rxinteger_magnitude(left);
+    uintmax_t right_mag = rxvm_rxinteger_magnitude(right);
+    int negative = (left < 0) != (right < 0);
+    uintmax_t limit = rxvm_rxinteger_positive_limit() + (negative ? 1 : 0);
+    uintmax_t product;
+
+    if (left_mag == 0 || right_mag == 0) {
+        *result = 0;
+        return 1;
+    }
+
+    if (right_mag > limit / left_mag) return 0;
+    product = left_mag * right_mag;
+
+    if (negative) {
+        *result = -(rxinteger)(product - 1) - 1;
+    }
+    else {
+        *result = (rxinteger)product;
+    }
+
+    return 1;
+#endif
+}
+
+static int rxvm_format_parse_field_number(const char **cursor, const char *end, int *present, int *value) {
+    const char *p = *cursor;
+    int parsed_value = 0;
+
+    *present = 0;
+    while (p < end && *p >= '0' && *p <= '9') {
+        int digit = *p - '0';
+        *present = 1;
+        if (parsed_value <= (RXVM_FFORMAT_MAX_FIELD - digit) / 10) {
+            parsed_value = parsed_value * 10 + digit;
+        }
+        else {
+            parsed_value = RXVM_FFORMAT_MAX_FIELD;
+        }
+        p++;
+    }
+    *value = parsed_value;
+    *cursor = p;
+    return 1;
+}
+
+static int rxvm_format_is_float_conversion(char ch) {
+    return ch == 'a' || ch == 'A' ||
+           ch == 'e' || ch == 'E' ||
+           ch == 'f' || ch == 'F' ||
+           ch == 'g' || ch == 'G';
+}
+
+static int rxvm_format_parse_float_conversion(const char *format,
+                                              size_t format_len,
+                                              size_t percent_index,
+                                              size_t *next_index,
+                                              int *width_present,
+                                              int *width,
+                                              int *precision_present,
+                                              int *precision,
+                                              char *conversion) {
+    const char *p = format + percent_index + 1;
+    const char *end = format + format_len;
+
+    if (p >= end) return 0;
+    if (*p == '*') return 0;
+
+    rxvm_format_parse_field_number(&p, end, width_present, width);
+
+    if (p < end && *p == '.') {
+        p++;
+        *precision_present = 1;
+        *precision = 0;
+        if (p < end && *p == '*') return 0;
+        rxvm_format_parse_field_number(&p, end, precision_present, precision);
+        *precision_present = 1;
+    }
+    else {
+        *precision_present = 0;
+        *precision = 0;
+    }
+
+    if (p >= end || !rxvm_format_is_float_conversion(*p)) return 0;
+    *conversion = *p++;
+    *next_index = (size_t)(p - format);
+    return 1;
+}
+
+static size_t rxvm_format_append_double(char *buffer,
+                                        size_t buffer_len,
+                                        size_t used,
+                                        int width_present,
+                                        int width,
+                                        int precision_present,
+                                        int precision,
+                                        char conversion,
+                                        double value) {
+    char *out = rxvm_format_buffer_at(buffer, buffer_len, used);
+    size_t remaining = rxvm_format_buffer_remaining(buffer_len, used);
+    int written = -1;
+
+#define RXVM_APPEND_DOUBLE_CASE(ch, no_width, with_width, with_precision, with_width_precision) \
+    case ch: \
+        if (width_present && precision_present) written = snprintf(out, remaining, with_width_precision, width, precision, value); \
+        else if (width_present) written = snprintf(out, remaining, with_width, width, value); \
+        else if (precision_present) written = snprintf(out, remaining, with_precision, precision, value); \
+        else written = snprintf(out, remaining, no_width, value); \
+        break
+
+    switch (conversion) {
+        RXVM_APPEND_DOUBLE_CASE('a', "%a", "%*a", "%.*a", "%*.*a");
+        RXVM_APPEND_DOUBLE_CASE('A', "%A", "%*A", "%.*A", "%*.*A");
+        RXVM_APPEND_DOUBLE_CASE('e', "%e", "%*e", "%.*e", "%*.*e");
+        RXVM_APPEND_DOUBLE_CASE('E', "%E", "%*E", "%.*E", "%*.*E");
+        RXVM_APPEND_DOUBLE_CASE('f', "%f", "%*f", "%.*f", "%*.*f");
+        RXVM_APPEND_DOUBLE_CASE('F', "%F", "%*F", "%.*F", "%*.*F");
+        RXVM_APPEND_DOUBLE_CASE('g', "%g", "%*g", "%.*g", "%*.*g");
+        RXVM_APPEND_DOUBLE_CASE('G', "%G", "%*G", "%.*G", "%*.*G");
+        default:
+            break;
+    }
+
+#undef RXVM_APPEND_DOUBLE_CASE
+
+    return written < 0 ? used : used + (size_t)written;
+}
+
+static size_t rxvm_format_float_with_checked_format(char *buffer,
+                                                    size_t buffer_len,
+                                                    const char *format,
+                                                    double value) {
+    size_t format_len;
+    size_t i = 0;
+    size_t used = 0;
+    int converted = 0;
+
+    if (buffer_len > 0) buffer[0] = 0;
+    if (!format) return 0;
+
+    format_len = strlen(format);
+    while (i < format_len) {
+        if (format[i] != '%') {
+            used = rxvm_format_append_literal(buffer, buffer_len, used, format + i, 1);
+            i++;
+            continue;
+        }
+
+        if (i + 1 < format_len && format[i + 1] == '%') {
+            used = rxvm_format_append_literal(buffer, buffer_len, used, "%", 1);
+            i += 2;
+            continue;
+        }
+
+        if (!converted) {
+            size_t next_index;
+            int width_present;
+            int width;
+            int precision_present;
+            int precision;
+            char conversion;
+
+            if (rxvm_format_parse_float_conversion(format,
+                                                   format_len,
+                                                   i,
+                                                   &next_index,
+                                                   &width_present,
+                                                   &width,
+                                                   &precision_present,
+                                                   &precision,
+                                                   &conversion)) {
+                used = rxvm_format_append_double(buffer,
+                                                 buffer_len,
+                                                 used,
+                                                 width_present,
+                                                 width,
+                                                 precision_present,
+                                                 precision,
+                                                 conversion,
+                                                 value);
+                converted = 1;
+                i = next_index;
+                continue;
+            }
+        }
+
+        used = rxvm_format_append_literal(buffer, buffer_len, used, format + i, format_len - i);
+        break;
+    }
+
+    return used;
+}
+
+static int rxvm_insert_attributes_checked(value *array, rxinteger index, rxinteger count) {
+    size_t insert_index;
+    size_t insert_count;
+
+    if (!array || index < 0 || count < 0) return -1;
+
+    insert_index = (size_t)index;
+    insert_count = (size_t)count;
+    if (insert_index > array->num_attributes) return -1;
+    if (insert_count > SIZE_MAX - array->num_attributes) return -1;
+
+    insert_attributes(array, insert_index, insert_count);
+    return 0;
+}
+
+static int rxvm_insert_attributes1_checked(value *array, rxinteger index, rxinteger count) {
+    if (index <= 0) return -1;
+    return rxvm_insert_attributes_checked(array, index - 1, count);
+}
+
+static int rxvm_delete_attributes_checked(value *array, rxinteger index, rxinteger count) {
+    size_t delete_index;
+    size_t delete_count;
+
+    if (!array || index < 0 || count < 0) return -1;
+
+    delete_index = (size_t)index;
+    delete_count = (size_t)count;
+    if (delete_count == 0) {
+        if (delete_index > array->num_attributes) return -1;
+        return 0;
+    }
+    if (delete_index >= array->num_attributes) return -1;
+    if (delete_count > array->num_attributes - delete_index) return -1;
+
+    delete_attributes(array, delete_index, delete_count);
+    return 0;
+}
+
+static int rxvm_delete_attributes1_checked(value *array, rxinteger index, rxinteger count) {
+    if (index <= 0) return -1;
+    return rxvm_delete_attributes_checked(array, index - 1, count);
+}
+
+static int rxvm_reference_storage_in_value_tree(value *root, value *storage) {
+    size_t i;
+
+    if (!root || !storage) return 0;
+    if (root == storage) return 1;
+
+    if (root->unlinked_attributes) {
+        for (i = 0; i < root->max_num_attributes; i++) {
+            if (rxvm_reference_storage_in_value_tree(root->unlinked_attributes[i], storage)) return 1;
+        }
+    }
+
+    return 0;
+}
+
+static stack_frame *rxvm_reference_lifetime_owner_frame(stack_frame *frame,
+                                                        value *storage) {
+    size_t i;
+
+    while (frame) {
+        if (frame->procedure) {
+            size_t locals = (size_t)frame->procedure->locals;
+            size_t globals = frame->procedure->binarySpace
+                             ? (size_t)frame->procedure->binarySpace->globals
+                             : 0;
+            size_t a0_index = locals + globals;
+
+            if (locals > frame->number_locals) locals = frame->number_locals;
+            for (i = 0; i < locals; i++) {
+                if (rxvm_reference_storage_in_value_tree(frame->baselocals[i], storage)) return frame;
+            }
+
+            if (a0_index < frame->number_locals &&
+                rxvm_reference_storage_in_value_tree(frame->baselocals[a0_index], storage)) {
+                return frame;
+            }
+        }
+
+        frame = frame->parent;
+    }
+
+    return 0;
+}
+
+static void rxvm_mark_reference_lifetime_owner(stack_frame *current_frame,
+                                               value *storage) {
+    stack_frame *owner_frame = rxvm_reference_lifetime_owner_frame(current_frame,
+                                                                   storage);
+    if (owner_frame) owner_frame->has_reference_lifetimes = 1;
+}
+
+static rxvm_ref_owner_kind rxvm_reference_owner_kind_for_storage(stack_frame *frame,
+                                                                 size_t register_index,
+                                                                 value *storage,
+                                                                 void **owner) {
+    size_t i;
+    size_t locals;
+    size_t globals;
+    int found_base_storage = 0;
+
+    if (owner) *owner = frame;
+    if (!frame || !storage || !frame->procedure) return RXVM_REF_OWNER_NONE;
+
+    locals = (size_t)frame->procedure->locals;
+    globals = frame->procedure->binarySpace ? (size_t)frame->procedure->binarySpace->globals : 0;
+
+    for (i = 0; i < frame->number_locals; i++) {
+        if (frame->baselocals[i] == storage) {
+            register_index = i;
+            found_base_storage = 1;
+            break;
+        }
+    }
+
+    if (!found_base_storage) {
+        if (owner) *owner = 0;
+        return RXVM_REF_ATTRIBUTE;
+    }
+
+    if (register_index < locals) return RXVM_REF_LOCAL;
+    if (register_index < locals + globals) {
+        if (owner) *owner = frame->procedure->binarySpace ? frame->procedure->binarySpace->module : 0;
+        return RXVM_REF_GLOBAL;
+    }
+    if (register_index < frame->number_locals) return RXVM_REF_ARGUMENT;
+
+    return RXVM_REF_ATTRIBUTE;
+}
+
+static rxvm_reference_cell *rxvm_reference_payload_cell(value *reference_value) {
+    if (!reference_value) return 0;
+    return reference_value->reference_payload;
+}
+
+static void rxvm_release_frame_reference_lifetimes(stack_frame *frame) {
+    size_t i;
+    size_t globals;
+    size_t a0_index;
+
+    if (!frame || !frame->procedure || !frame->has_reference_lifetimes) return;
+
+    for (i = 0; i < (size_t)frame->procedure->locals; i++) {
+        release_value_reference_lifetime(frame->baselocals[i]);
+    }
+
+    globals = frame->procedure->binarySpace ? (size_t)frame->procedure->binarySpace->globals : 0;
+    a0_index = (size_t)frame->procedure->locals + globals;
+    if (a0_index < frame->number_locals) {
+        release_value_reference_lifetime(frame->baselocals[a0_index]);
+    }
+
+    frame->has_reference_lifetimes = 0;
+}
 
 /* This defines the expected max number of args - if a call has more args than
  * this then an oversized block will be malloced
@@ -145,7 +625,7 @@ static proc_runtime *resolve_runtime_procedure(rxvm_context *context, const char
                 if (symbol_name->base.type == STRING_CONST &&
                     symbol_name->string_len == proc_name_length &&
                     memcmp(symbol_name->string, proc_name, proc_name_length) == 0) {
-                    return mod->proc_runtime_lookup[meta_func->func >> 3];
+                    return rxvm_get_module_runtime_procedure(mod, meta_func->func);
                 }
             }
 
@@ -219,6 +699,17 @@ static int runtime_type_name_is_builtin(const char *type_name, size_t type_name_
     return 0;
 }
 
+static int runtime_type_name_is_object_contract(const char *type_name, size_t type_name_length) {
+    static const char object_name[] = ".object";
+    size_t i;
+
+    if (!type_name || type_name_length != sizeof(object_name) - 1) return 0;
+    for (i = 0; i < sizeof(object_name) - 1; i++) {
+        if (tolower((unsigned char)type_name[i]) != object_name[i]) return 0;
+    }
+    return 1;
+}
+
 static char *runtime_normalize_type_name(const char *type_name, size_t type_name_length) {
     size_t i;
     size_t out_length;
@@ -227,6 +718,9 @@ static char *runtime_normalize_type_name(const char *type_name, size_t type_name
     size_t start;
 
     if (!type_name) return 0;
+    if (runtime_type_name_is_object_contract(type_name, type_name_length)) {
+        return strdup(".object");
+    }
     if (runtime_type_name_is_builtin(type_name, type_name_length)) {
         return dup_runtime_name(type_name, type_name_length);
     }
@@ -383,7 +877,7 @@ static int runtime_value_matches_object_type(rxvm_context *context,
     normalized_type_name = runtime_normalize_type_name(type_name, type_name_length);
     if (!normalized_type_name) return 0;
 
-    if (strcmp(normalized_type_name, ".object") == 0) {
+    if (runtime_type_name_is_object_contract(normalized_type_name, strlen(normalized_type_name))) {
         free(normalized_type_name);
         return object_value->object_type_name && object_value->object_type_name_length > 0;
     }
@@ -443,6 +937,28 @@ static char *build_runtime_cast_error(value *object_value,
     }
     free(source_type_name);
     free(target_source_name);
+    return buffer;
+}
+
+static char *build_runtime_uninitialized_object_error(value *object_value) {
+    char *source_type_name;
+    char *buffer;
+    size_t buffer_length;
+
+    if (object_value && object_value->object_type_name && object_value->object_type_name_length > 0) {
+        source_type_name = runtime_internal_type_to_source_name(object_value->object_type_name,
+                                                                object_value->object_type_name_length);
+    } else {
+        source_type_name = strdup(".object");
+    }
+    if (!source_type_name) return 0;
+
+    buffer_length = strlen("Object ") + strlen(source_type_name) + strlen(" is not initialized") + 1;
+    buffer = malloc(buffer_length);
+    if (buffer) {
+        snprintf(buffer, buffer_length, "Object %s is not initialized", source_type_name);
+    }
+    free(source_type_name);
     return buffer;
 }
 
@@ -526,6 +1042,10 @@ typedef struct rxvm_source_context {
     string_constant *source;
     size_t line;
     size_t column;
+    size_t active_end_column;
+    uint32_t step_id;
+    uint32_t clause_id;
+    uint32_t flags;
 } rxvm_source_context;
 
 static void resolve_runtime_source_context(module *mod, size_t address, rxvm_source_context *source_context) {
@@ -535,6 +1055,10 @@ static void resolve_runtime_source_context(module *mod, size_t address, rxvm_sou
     source_context->source = 0;
     source_context->line = 0;
     source_context->column = 0;
+    source_context->active_end_column = 0;
+    source_context->step_id = 0;
+    source_context->clause_id = 0;
+    source_context->flags = 0;
 
     if (!mod) return;
 
@@ -543,14 +1067,16 @@ static void resolve_runtime_source_context(module *mod, size_t address, rxvm_sou
         meta_entry *meta = (meta_entry *) (mod->segment.const_pool + meta_ix);
         if (meta->address > address) break;
 
-        if (meta->base.type == META_FILE) {
-            meta_file_constant *file_meta = (meta_file_constant *) meta;
-            source_context->file = get_runtime_string_constant(mod, file_meta->file);
-        } else if (meta->base.type == META_SRC) {
-            meta_src_constant *src_meta = (meta_src_constant *) meta;
-            source_context->line = src_meta->line;
-            source_context->column = src_meta->column;
-            source_context->source = get_runtime_string_constant(mod, src_meta->source);
+        if (meta->base.type == META_SOURCE_STEP) {
+            meta_source_step_constant *step_meta = (meta_source_step_constant *) meta;
+            source_context->file = get_runtime_string_constant(mod, step_meta->file);
+            source_context->source = get_runtime_string_constant(mod, step_meta->source_line);
+            source_context->line = step_meta->line;
+            source_context->column = step_meta->active_start_column;
+            source_context->active_end_column = step_meta->active_end_column;
+            source_context->step_id = step_meta->step_id;
+            source_context->clause_id = step_meta->clause_id;
+            source_context->flags = step_meta->flags;
         }
 
         meta_ix = meta->next;
@@ -1225,99 +1751,41 @@ const char compile_date[8+1] =
                 '\0'
         };
 
-/* Fast integer pow calculation - loop unwound - based / from https://gist.github.com/orlp/3551590
- * by Orson Peters / orlp / Leiden, Netherlands / orsonpeters@gmail.com
- * Returns the result or 0 for overflow / underflow
- * todo can overflow on 32 bit (update the table) */
-RX_INLINE rxinteger ipow(rxinteger base, rxinteger exp_int) {
-    static const uint8_t highest_bit_set[] = {
-            0, 1, 2, 2, 3, 3, 3, 3,
-            4, 4, 4, 4, 4, 4, 4, 4,
-            5, 5, 5, 5, 5, 5, 5, 5,
-            5, 5, 5, 5, 5, 5, 5, 5,
-            6, 6, 6, 6, 6, 6, 6, 6,
-            6, 6, 6, 6, 6, 6, 6, 6,
-            6, 6, 6, 6, 6, 6, 6, 6,
-            6, 6, 6, 6, 6, 6, 6, 255, // anything past 63 is a guaranteed overflow with base > 1
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-            255, 255, 255, 255, 255, 255, 255, 255,
-    };
+RX_INLINE int ipow(rxinteger base, rxinteger exp_int, rxinteger *result_out) {
+    rxinteger result = 1;
 
-    /* Adrian added this bit to check for negative / oversize exp
-     * the original used uint8 for exp so not needed */
-    if (exp_int > 255 || exp_int < 0) {
+    if (exp_int < 0) {
         if (base == 1) {
+            *result_out = 1;
             return 1;
         }
 
         if (base == -1) {
-            return 1 - 2 * (exp_int & 1);
+            *result_out = (exp_int & 1) ? -1 : 1;
+            return 1;
         }
 
-        return 0; /* Overflow / underflow */
+        *result_out = 0;
+        return 0;
     }
 
-    rxinteger result = 1;
-    uint8_t exp = (uint8_t) exp_int;
-
-    switch (highest_bit_set[exp]) {
-        case 255: // we use 255 as an overflow marker and return 0 on overflow/underflow
-            if (base == 1) {
-                return 1;
+    while (exp_int > 0) {
+        if (exp_int & 1) {
+            if (!rxvm_checked_rxinteger_mul(result, base, &result)) {
+                *result_out = 0;
+                return 0;
             }
+        }
 
-            if (base == -1) {
-                return 1 - 2 * (exp & 1);
-            }
-
-            return 0; /* Overflow / underflow */
-        case 6:
-            if (exp & 1) result *= base;
-            exp >>= 1;
-            base *= base;
-        case 5:
-            if (exp & 1) result *= base;
-            exp >>= 1;
-            base *= base;
-        case 4:
-            if (exp & 1) result *= base;
-            exp >>= 1;
-            base *= base;
-        case 3:
-            if (exp & 1) result *= base;
-            exp >>= 1;
-            base *= base;
-        case 2:
-            if (exp & 1) result *= base;
-            exp >>= 1;
-            base *= base;
-        case 1:
-            if (exp & 1) result *= base;
-        default:
-            return result;
+        exp_int >>= 1;
+        if (exp_int > 0 && !rxvm_checked_rxinteger_mul(base, base, &base)) {
+            *result_out = 0;
+            return 0;
+        }
     }
+
+    *result_out = result;
+    return 1;
 }
 
 /* Function to convert an interrupt to a string: interrupt_entry -> Code Description Massage */
@@ -1339,6 +1807,10 @@ const char *interrupt_to_string(unsigned char interrupt) {
             return "NOT_IMPLEMENTED";
         case RXSIGNAL_INVALID_SIGNAL_CODE:
             return "INVALID_SIGNAL_CODE";
+        case RXSIGNAL_REFERENCE_INVALID:
+            return "REFERENCE_INVALID";
+        case RXSIGNAL_OBJECT_NOT_INITIALIZED:
+            return "OBJECT_NOT_INITIALIZED";
         case RXSIGNAL_OUT_OF_RANGE:
             return "OUT_OF_RANGE";
         case RXSIGNAL_FAILURE:
@@ -1384,6 +1856,8 @@ unsigned char string_to_interrupt(const char *interrupt) {
     if (strcmp(interrupt, "FUNCTION_NOT_FOUND") == 0) return RXSIGNAL_FUNCTION_NOT_FOUND;
     if (strcmp(interrupt, "NOT_IMPLEMENTED") == 0) return RXSIGNAL_NOT_IMPLEMENTED;
     if (strcmp(interrupt, "INVALID_SIGNAL_CODE") == 0) return RXSIGNAL_INVALID_SIGNAL_CODE;
+    if (strcmp(interrupt, "REFERENCE_INVALID") == 0) return RXSIGNAL_REFERENCE_INVALID;
+    if (strcmp(interrupt, "OBJECT_NOT_INITIALIZED") == 0) return RXSIGNAL_OBJECT_NOT_INITIALIZED;
     if (strcmp(interrupt, "OUT_OF_RANGE") == 0) return RXSIGNAL_OUT_OF_RANGE;
     if (strcmp(interrupt, "FAILURE") == 0) return RXSIGNAL_FAILURE;
     if (strcmp(interrupt, "QUIT") == 0) return RXSIGNAL_QUIT;
@@ -1492,19 +1966,36 @@ RX_INLINE stack_frame *frame_f(
                     bin_code *return_pc,
                     value *return_reg) {
     stack_frame *this;
-    int num_locals;
-    int nominal_num_locals;
+    size_t num_locals;
+    size_t nominal_num_locals;
+    size_t local_count;
+    size_t global_count = 0;
+    size_t arg_count;
+    size_t pointer_count;
+    size_t pointer_bytes;
+    size_t value_count;
+    size_t value_bytes;
     int i, j;
     size_t frame_size;
     value *value_buffer;
 
-    if (procedure->binarySpace == 0) {
-        num_locals = procedure->locals + no_args + 1;
-        nominal_num_locals = procedure->locals + NOMINAL_NUM_ARGS + 1;
-    } else {
-        num_locals = procedure->locals + procedure->binarySpace->globals + no_args + 1;
-        nominal_num_locals = procedure->locals + procedure->binarySpace->globals + NOMINAL_NUM_ARGS + 1;
+    if (!procedure || procedure->locals < 0 || no_args < 0) return 0;
+    if (procedure->binarySpace && procedure->binarySpace->globals < 0) return 0;
+
+    local_count = (size_t)procedure->locals;
+    arg_count = (size_t)no_args;
+    if (procedure->binarySpace) global_count = (size_t)procedure->binarySpace->globals;
+
+    if (!rxvm_checked_size_add(local_count, global_count, &num_locals) ||
+        !rxvm_checked_size_add(num_locals, arg_count, &num_locals) ||
+        !rxvm_checked_size_add(num_locals, 1, &num_locals) ||
+        !rxvm_checked_size_add(local_count, global_count, &nominal_num_locals) ||
+        !rxvm_checked_size_add(nominal_num_locals, NOMINAL_NUM_ARGS, &nominal_num_locals) ||
+        !rxvm_checked_size_add(nominal_num_locals, 1, &nominal_num_locals)) {
+        return 0;
     }
+
+    if (num_locals > (size_t)INT_MAX || nominal_num_locals > (size_t)INT_MAX) return 0;
 
     /* Do we need an oversized block */
     if (num_locals > nominal_num_locals) nominal_num_locals = num_locals;
@@ -1537,11 +2028,17 @@ RX_INLINE stack_frame *frame_f(
     }
     else {
         /* Need a new stack frame - allocate all the memory in one go */
-        frame_size = sizeof(stack_frame) +
-                     ( sizeof(value*) * nominal_num_locals * 2 ) +
-                     ( sizeof(value) * (procedure->locals + 1)); /* +1 is for a0 */
+        if (!rxvm_checked_size_mul(nominal_num_locals, 2, &pointer_count) ||
+            !rxvm_checked_size_mul(sizeof(value*), pointer_count, &pointer_bytes) ||
+            !rxvm_checked_size_add(local_count, 1, &value_count) ||
+            !rxvm_checked_size_mul(sizeof(value), value_count, &value_bytes) ||
+            !rxvm_checked_size_add(sizeof(stack_frame), pointer_bytes, &frame_size) ||
+            !rxvm_checked_size_add(frame_size, value_bytes, &frame_size)) {
+            return 0;
+        }
 
         this = (stack_frame *) malloc( frame_size );
+        if (!this) return 0;
         this->prev_free = 0;
 
         this->baselocals = (value**)(this + 1);
@@ -1606,6 +2103,8 @@ RX_INLINE stack_frame *frame_f(
         this->interrupt_table[RXSIGNAL_UNKNOWN_INSTRUCTION-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_NOT_IMPLEMENTED-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_FUNCTION_NOT_FOUND-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_REFERENCE_INVALID-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_OBJECT_NOT_INITIALIZED-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_OUT_OF_RANGE-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_FAILURE-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_QUIT-1].response = RXSIGNAL_RESPONSE_HALT;
@@ -1642,6 +2141,7 @@ RX_INLINE stack_frame *frame_f(
     this->number_args = no_args;
     this->return_reg = return_reg;
     this->procedure = procedure;
+    this->has_reference_lifetimes = 0;
     this->is_interrupt_action = 0;
 
     return this;
@@ -1671,9 +2171,27 @@ RX_INLINE void clear_frame(stack_frame *frame) {
 /* Free Stack Frame */
 RX_INLINE void free_frame(stack_frame *frame) {
     rxsignal_clear_handler_stack(frame);
+    rxvm_release_frame_reference_lifetimes(frame);
     /* Add to free list */
     frame->prev_free = *(frame->procedure->frame_free_list);
     *(frame->procedure->frame_free_list) = frame;
+}
+
+static void free_external_entry_arguments(stack_frame *frame) {
+    size_t i;
+    size_t j;
+
+    if (!frame || frame->parent || !frame->procedure || !frame->procedure->binarySpace) return;
+
+    j = (size_t)frame->procedure->binarySpace->globals + (size_t)frame->procedure->locals + 1;
+    for (i = 0; i < frame->number_args; i++, j++) {
+        value *arg = frame->baselocals[j];
+        if (!arg) continue;
+        clear_value(arg);
+        free(arg);
+        frame->baselocals[j] = 0;
+        frame->locals[j] = 0;
+    }
 }
 
 static stack_frame *rxsignal_unwind_to_frame(stack_frame *current, stack_frame *target) {
@@ -1775,6 +2293,19 @@ else { SET_SIGNAL_MSG(signal__, (message)); } }
 { unsigned char signal__ = string_to_interrupt((name)); \
 if (signal__ == RXSIGNAL_MAX) { SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE); } \
 else { SET_SIGNAL_PAYLOAD(signal__, (payload)); } }
+
+#ifndef NUTF8
+#define REQUIRE_VALID_UTF8_REGISTER(reg) \
+do { \
+    if (!has_utf8_valid_count_or_empty((reg))) refresh_utf8_flags((reg)); \
+    if (!has_utf8_valid_count_or_empty((reg))) { \
+        SET_SIGNAL_MSG(RXSIGNAL_UNICODE_ERROR, "Invalid UTF-8 string operand"); \
+        DISPATCH; \
+    } \
+} while (0)
+#else
+#define REQUIRE_VALID_UTF8_REGISTER(reg) do { } while (0)
+#endif
 
 // Macro and function to detect and throw a signal if a RXPA plugin-raised error is present
 #define INTERRUPT_FROM_RXPA_SIGNAL(signal) if ((signal)->int_value || (signal)->string_length) { if (!current_frame->is_interrupt) interrupted_pc = pc; interrupt_from_rxpa_signal(signal,interrupt_object); }
@@ -1939,6 +2470,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
      * Instruction database - loaded from a generated header file
      */
 #define FMT_EMPTY_MAP 0, OP_NONE, OP_NONE, OP_NONE
+#define FMT_B_MAP 1, OP_BINARY, OP_NONE, OP_NONE
 #define FMT_C_MAP 1, OP_CHAR, OP_NONE, OP_NONE
 #define FMT_F_MAP 1, OP_FLOAT, OP_NONE, OP_NONE
 #define FMT_I_MAP 1, OP_INT, OP_NONE, OP_NONE
@@ -1958,6 +2490,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
 #define FMT_P_MAP 1, OP_FUNC, OP_NONE, OP_NONE
 #define FMT_P_S_MAP 2, OP_FUNC, OP_STRING, OP_NONE
 #define FMT_R_MAP 1, OP_REG, OP_NONE, OP_NONE
+#define FMT_R_B_MAP 2, OP_REG, OP_BINARY, OP_NONE
 #define FMT_R_C_MAP 2, OP_REG, OP_CHAR, OP_NONE
 #define FMT_R_D_MAP 2, OP_REG, OP_DECIMAL, OP_NONE
 #define FMT_R_D_R_MAP 3, OP_REG, OP_DECIMAL, OP_REG
@@ -2021,8 +2554,9 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             if (!mod->prepared_dispatch && mod->segment.inst_size) {
                 mod->prepared_dispatch = malloc(sizeof(void *) * mod->segment.inst_size);
                 if (!mod->prepared_dispatch) {
-                    fprintf(stderr, "PANIC: Out of memory\n");
-                    exit(-1);
+                    RX_PANIC_OOM("malloc rxvm prepared dispatch table",
+                                 sizeof(void *) * mod->segment.inst_size,
+                                 mod->name);
                 }
             }
             while (i < context->modules[mod_index]->segment.inst_size) {
@@ -2056,7 +2590,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
                                            i);
                 if (definition->base.type == PROC_CONST &&
                     strcmp(definition->name, "main") == 0) {
-                    procedure = context->modules[mod_index]->proc_runtime_lookup[i >> 3];
+                    procedure = rxvm_get_module_runtime_procedure(context->modules[mod_index], (size_t)i);
                     break;
                 }
                 i = definition->next;
@@ -2074,6 +2608,11 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
     DEBUG("Create first Stack Frame\n");
     if (context->ext_proc) {
         current_frame = frame_f(procedure, context->ext_argc, 0, 0, context->ext_ret);
+        if (!current_frame) {
+            fprintf(stderr, "PANIC - Unable to allocate stack frame\n");
+            rc = RXSIGNAL_FAILURE;
+            goto interprt_finished;
+        }
         /* Arguments (passed as individual objects) */
         {
             int i;
@@ -2086,6 +2625,11 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
         }
     } else {
         current_frame = frame_f(procedure, 1, 0, 0, 0);
+        if (!current_frame) {
+            fprintf(stderr, "PANIC - Unable to allocate stack frame\n");
+            rc = RXSIGNAL_FAILURE;
+            goto interprt_finished;
+        }
         /* Arguments (passed in an array) */
         /* a0 is already set by frame_f() */
         /* a1 is the array  */
@@ -2258,7 +2802,12 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             } else {
                 /* A CREXX Procedure */
                 if (action_aware) value_zero(interrupt_action_value);
-                current_frame = frame_f(intr_function, 1, current_frame, pc, action_aware ? interrupt_action_value : 0);
+                temp_frame = frame_f(intr_function, 1, current_frame, pc, action_aware ? interrupt_action_value : 0);
+                if (!temp_frame) {
+                    SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
+                    DISPATCH
+                }
+                current_frame = temp_frame;
 
                 /* Prepare dispatch to procedure as early as possible */
 #ifndef NTHREADED
@@ -2663,8 +3212,9 @@ START_OF_INSTRUCTIONS
                         if (!loaded_module->prepared_dispatch && loaded_module->segment.inst_size) {
                             loaded_module->prepared_dispatch = malloc(sizeof(void *) * loaded_module->segment.inst_size);
                             if (!loaded_module->prepared_dispatch) {
-                                fprintf(stderr, "PANIC: Out of memory\n");
-                                exit(-1);
+                                RX_PANIC_OOM("malloc rxvm loaded-module prepared dispatch table",
+                                             sizeof(void *) * loaded_module->segment.inst_size,
+                                             loaded_module->name);
                             }
                         }
                         while (i < context->modules[mod]->segment.inst_size) {
@@ -2750,7 +3300,8 @@ START_OF_INSTRUCTIONS
                             set_num_attributes(entry, 2);
                             set_null_string(entry->attributes[0], e_entry->index);
                             entry->attributes[1]->int_value =
-                                    (rxinteger) context->modules[mod]->proc_runtime_lookup[e_entry->procedure >> 3];
+                                    (rxinteger) rxvm_get_module_runtime_procedure(context->modules[mod],
+                                                                                  e_entry->procedure);
 
                             entries++;
                         }
@@ -2803,7 +3354,7 @@ START_OF_INSTRUCTIONS
                         set_num_attributes(entry, 2);
                         set_null_string(entry->attributes[0], p_entry->name);
                         entry->attributes[1]->int_value =
-                                (rxinteger) context->modules[mod]->proc_runtime_lookup[i >> 3];
+                                (rxinteger) rxvm_get_module_runtime_procedure(context->modules[mod], (size_t)i);
                         entries++;
                     }
                     i = p_entry->next;
@@ -2873,12 +3424,14 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(METALOADDATA_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - METALOADDATA R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
             {
-                unsigned char *pool = context->modules[op2R->int_value - 1]->segment.const_pool;
-                int i = context->modules[op2R->int_value - 1]->meta_head;
+                module *metadata_module = context->modules[op2R->int_value - 1];
+                unsigned char *pool = metadata_module->segment.const_pool;
+                int i = metadata_module->meta_head;
                 int j;
                 size_t x;
                 meta_entry *meta = 0;
                 int size = 0;
+                string_constant *string_entry;
 
                 /* Clear return object */
                 value_zero(op1R);
@@ -2911,22 +3464,62 @@ START_OF_INSTRUCTIONS
                 for (j = 0, i = start; j < size; j++, i = ((meta_entry *) (pool + i))->next) {
                     value_zero(op1R->attributes[j]);
                     switch (((meta_entry *) (pool + i))->base.type) {
-                        case META_SRC:
-                            /* TODO we are using the string to hold the object type - final approach tbc */
-                            set_null_string(op1R->attributes[j], ".meta_src");
-                            set_num_attributes(op1R->attributes[j], 3);
-                            op1R->attributes[j]->attributes[0]->int_value = (rxinteger) ((meta_src_constant *) (pool +
-                                                                                                                i))->line;
-                            op1R->attributes[j]->attributes[1]->int_value = (rxinteger) ((meta_src_constant *) (pool +
-                                                                                                                i))->column;
-                            x = (rxinteger) ((meta_src_constant *) (pool + i))->source;
-                            set_const_string(op1R->attributes[j]->attributes[2], (string_constant *) (pool + x));
+                        case META_SOURCE_STEP:
+                            set_null_string(op1R->attributes[j], ".meta_source_step");
+                            set_num_attributes(op1R->attributes[j], 8);
+                            op1R->attributes[j]->attributes[0]->int_value =
+                                    (rxinteger) ((meta_source_step_constant *) (pool + i))->step_id;
+                            op1R->attributes[j]->attributes[1]->int_value =
+                                    (rxinteger) ((meta_source_step_constant *) (pool + i))->clause_id;
+                            op1R->attributes[j]->attributes[2]->int_value =
+                                    (rxinteger) ((meta_source_step_constant *) (pool + i))->flags;
+                            x = (rxinteger) ((meta_source_step_constant *) (pool + i))->file;
+                            set_const_string(op1R->attributes[j]->attributes[3], (string_constant *) (pool + x));
+                            op1R->attributes[j]->attributes[4]->int_value =
+                                    (rxinteger) ((meta_source_step_constant *) (pool + i))->line;
+                            op1R->attributes[j]->attributes[5]->int_value =
+                                    (rxinteger) ((meta_source_step_constant *) (pool + i))->active_start_column;
+                            op1R->attributes[j]->attributes[6]->int_value =
+                                    (rxinteger) ((meta_source_step_constant *) (pool + i))->active_end_column;
+                            x = (rxinteger) ((meta_source_step_constant *) (pool + i))->source_line;
+                            set_const_string(op1R->attributes[j]->attributes[7], (string_constant *) (pool + x));
                             break;
-                        case META_FILE:
-                            set_null_string(op1R->attributes[j], ".meta_file");
-                            set_num_attributes(op1R->attributes[j], 1);
-                            x = (rxinteger) ((meta_file_constant *) (pool + i))->file;
-                            set_const_string(op1R->attributes[j]->attributes[0], (string_constant *) (pool + x));
+                        case META_TRACE_EVENT:
+                            set_null_string(op1R->attributes[j], ".meta_trace_event");
+                            set_num_attributes(op1R->attributes[j], 11);
+                            op1R->attributes[j]->attributes[0]->int_value =
+                                    (rxinteger) ((meta_trace_event_constant *) (pool + i))->kind;
+                            op1R->attributes[j]->attributes[1]->int_value =
+                                    (rxinteger) ((meta_trace_event_constant *) (pool + i))->mode_mask;
+                            op1R->attributes[j]->attributes[2]->int_value =
+                                    (rxinteger) ((meta_trace_event_constant *) (pool + i))->value_source;
+                            op1R->attributes[j]->attributes[3]->int_value =
+                                    (rxinteger) ((meta_trace_event_constant *) (pool + i))->value_type;
+                            op1R->attributes[j]->attributes[4]->int_value =
+                                    (rxinteger) ((meta_trace_event_constant *) (pool + i))->register_type;
+                            op1R->attributes[j]->attributes[5]->int_value =
+                                    ((meta_trace_event_constant *) (pool + i))->value_ref == RXBIN_TRACE_REF_NONE ?
+                                    (rxinteger)-1 : (rxinteger) ((meta_trace_event_constant *) (pool + i))->value_ref;
+                            op1R->attributes[j]->attributes[6]->int_value =
+                                    (rxinteger) ((meta_trace_event_constant *) (pool + i))->source_step_id;
+                            op1R->attributes[j]->attributes[7]->int_value =
+                                    (rxinteger) ((meta_trace_event_constant *) (pool + i))->clause_id;
+                            op1R->attributes[j]->attributes[8]->int_value =
+                                    (rxinteger) ((meta_trace_event_constant *) (pool + i))->flags;
+                            x = (rxinteger) ((meta_trace_event_constant *) (pool + i))->symbol;
+                            if ((size_t)x == RXBIN_TRACE_REF_NONE) set_null_string(op1R->attributes[j]->attributes[9], "");
+                            else {
+                                string_entry = get_runtime_string_constant(metadata_module, x);
+                                if (string_entry) set_const_string(op1R->attributes[j]->attributes[9], string_entry);
+                                else set_null_string(op1R->attributes[j]->attributes[9], "");
+                            }
+                            x = (rxinteger) ((meta_trace_event_constant *) (pool + i))->resolved_name;
+                            if ((size_t)x == RXBIN_TRACE_REF_NONE) set_null_string(op1R->attributes[j]->attributes[10], "");
+                            else {
+                                string_entry = get_runtime_string_constant(metadata_module, x);
+                                if (string_entry) set_const_string(op1R->attributes[j]->attributes[10], string_entry);
+                                else set_null_string(op1R->attributes[j]->attributes[10], "");
+                            }
                             break;
                         case META_FUNC:
                             set_null_string(op1R->attributes[j], ".meta_func");
@@ -3073,6 +3666,15 @@ START_OF_INSTRUCTIONS
                   (CONSTSTRING_OP(2))->string);
             set_const_string(op1R, CONSTSTRING_OP(2));
             DISPATCH
+
+        START_INSTRUCTION(LOAD_REG_BINARY) CALC_DISPATCH(2)
+            DEBUG("TRACE - LOAD R%lu,binary[%zu]\n",
+                  REG_IDX(1), (CONSTSTRING_OP(2))->string_len);
+            if (set_binary(op1R, (CONSTSTRING_OP(2))->string, (CONSTSTRING_OP(2))->string_len) != 0) {
+                SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+            }
+            DISPATCH
+
         START_INSTRUCTION(LOAD_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - LOAD R%lu,R%lu\n",
                   REG_IDX(1), REG_IDX(2));
@@ -3107,7 +3709,9 @@ START_OF_INSTRUCTIONS
                 op1R->string_pos = 0;
 #ifndef NUTF8
                 op1R->string_char_pos = 0;
-                op1R->string_chars = utf8nlen(op1R->string_value, op1R->string_length);
+                refresh_utf8_flags(op1R);
+#else
+                clear_vm_private_flags(op1R);
 #endif
             }
             DISPATCH
@@ -4068,7 +4672,12 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
                     /* This is a CREXX Procedure */
-                    current_frame = frame_f(called_function, 0, current_frame, next_pc, 0);
+                    temp_frame = frame_f(called_function, 0, current_frame, next_pc, 0);
+                    if (!temp_frame) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
+                        DISPATCH
+                    }
+                    current_frame = temp_frame;
                     /* Prepare dispatch to procedure as early as possible */
 #ifndef NTHREADED
                     current_module = current_frame->procedure->binarySpace->module;
@@ -4100,7 +4709,12 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 } else {
                     /* This is a CREXX Procedure */
                     /* New stackframe - grabbing a procedure object from the caller frame */
-                    current_frame = frame_f(called_function, 0, current_frame, next_pc, op1R);
+                    temp_frame = frame_f(called_function, 0, current_frame, next_pc, op1R);
+                    if (!temp_frame) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
+                        DISPATCH
+                    }
+                    current_frame = temp_frame;
 
                     /* Prepare dispatch to procedure as early as possible */
 #ifndef NTHREADED
@@ -4130,7 +4744,12 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 } else {
                     /* This is a CREXX Procedure */
                     /* New stackframe - grabbing a procedure object from the caller frame */
-                    current_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
+                    temp_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
+                    if (!temp_frame) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
+                        DISPATCH
+                    }
+                    current_frame = temp_frame;
                     /* Prepare dispatch to procedure as early as possible */
 #ifndef NTHREADED
                     current_module = current_frame->procedure->binarySpace->module;
@@ -4170,7 +4789,12 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
                     /* This is a CREXX Procedure */
-                    current_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
+                    temp_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
+                    if (!temp_frame) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
+                        DISPATCH
+                    }
+                    current_frame = temp_frame;
 
                     /* Prepare dispatch to procedure as early as possible */
 #ifndef NTHREADED
@@ -4521,6 +5145,87 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
             }
             DISPATCH
 
+        START_INSTRUCTION(MKREF_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - MKREF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            {
+                void *owner = 0;
+                rxvm_ref_owner_kind owner_kind;
+                rxvm_reference_cell *cell;
+
+                owner_kind = rxvm_reference_owner_kind_for_storage(current_frame,
+                                                                   REG_IDX(2),
+                                                                   op2R,
+                                                                   &owner);
+                cell = rxvm_reference_identity_for_context(&context->references,
+                                                           op2R,
+                                                           owner_kind,
+                                                           owner,
+                                                           REG_IDX(2),
+                                                           0);
+                if (!cell) {
+                    SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+                    DISPATCH
+                }
+
+                rxvm_mark_reference_lifetime_owner(current_frame, op2R);
+                clear_value_contents(op1R);
+                rxvm_reference_value_set_payload(op1R, cell);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(DEREF_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - DEREF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            {
+                rxvm_reference_cell *cell = rxvm_reference_payload_cell(op2R);
+                value *target = rxvm_reference_cell_target(cell);
+                if (!target) {
+                    SET_SIGNAL_MSG(RXSIGNAL_REFERENCE_INVALID, "Reference is invalid");
+                    DISPATCH
+                }
+                copy_value(op1R, target);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(LINKREF_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - LINKREF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            {
+                rxvm_reference_cell *cell = rxvm_reference_payload_cell(op2R);
+                value *target = rxvm_reference_cell_target(cell);
+                if (!target) {
+                    SET_SIGNAL_MSG(RXSIGNAL_REFERENCE_INVALID, "Reference is invalid");
+                    DISPATCH
+                }
+                op1R = target;
+            }
+            DISPATCH
+
+        START_INSTRUCTION(SETREF_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - SETREF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            {
+                rxvm_reference_cell *cell = rxvm_reference_payload_cell(op1R);
+                value *target = rxvm_reference_cell_target(cell);
+                if (!target) {
+                    SET_SIGNAL_MSG(RXSIGNAL_REFERENCE_INVALID, "Reference is invalid");
+                    DISPATCH
+                }
+                copy_value(target, op2R);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(REFVALID_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - REFVALID R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            {
+                int valid = rxvm_reference_cell_is_valid(rxvm_reference_payload_cell(op2R));
+                value_zero(op1R);
+                op1R->int_value = valid ? 1 : 0;
+            }
+            DISPATCH
+
+        START_INSTRUCTION(UNREF_REG) CALC_DISPATCH(1)
+            DEBUG("TRACE - UNREF R%lu\n", REG_IDX(1));
+            clear_value_contents(op1R);
+            DISPATCH
+
         /* Link attribute op3 of op2 to op1 */
         START_INSTRUCTION(LINKATTR_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - LINKATTR R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
@@ -4634,7 +5339,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
             DISPATCH
 
         /* Unlink attribute op1 of op2 */
-        START_INSTRUCTION(UNLINKATTR_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(UNLINKATTR_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - UNLINKATTR R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             if (op1R->int_value < 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
@@ -4648,7 +5353,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
             DISPATCH
 
         /* Unlink attribute op1 of op2 */
-        START_INSTRUCTION(UNLINKATTR_INT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(UNLINKATTR_INT_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - UNLINKATTR %d,R%lu\n", (int)op1I, REG_IDX(2));
             if ((int)op1I < 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
@@ -4662,7 +5367,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
             DISPATCH
 
         /* Unlink attribute op1 (1 base) of op2 */
-        START_INSTRUCTION(UNLINKATTR1_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(UNLINKATTR1_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - UNLINKATTR1 R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             if (op1R->int_value - 1 < 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
@@ -4676,7 +5381,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
             DISPATCH
 
         /* Unlink attribute op1 (1 base) of op2 */
-        START_INSTRUCTION(UNLINKATTR1_INT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(UNLINKATTR1_INT_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - UNLINKATTR1 %d,R%lu\n", (int)op1I, REG_IDX(2));
             if ((int)op1I - 1 < 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
@@ -4803,6 +5508,118 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         START_INSTRUCTION(GETABUFS_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - GETABUFS R%lu,R%lu\n", REG_IDX(1),REG_IDX(1));
             REG_RETURN_INT(op2R->max_num_attributes)
+            DISPATCH
+
+        START_INSTRUCTION(INSATTRS_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - INSATTRS R%lu,R%lu,R%lu\n", REG_IDX(1),REG_IDX(2),REG_IDX(3));
+            if (rxvm_insert_attributes_checked(op1R, op2RI, op3RI) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(INSATTRS_REG_REG_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - INSATTRS R%lu,R%lu,%d\n", REG_IDX(1),REG_IDX(2),(int)op3I);
+            if (rxvm_insert_attributes_checked(op1R, op2RI, op3I) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(INSATTRS_REG_INT_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - INSATTRS R%lu,%d,R%lu\n", REG_IDX(1),(int)op2I,REG_IDX(3));
+            if (rxvm_insert_attributes_checked(op1R, op2I, op3RI) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(INSATTRS_REG_INT_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - INSATTRS R%lu,%d,%d\n", REG_IDX(1),(int)op2I,(int)op3I);
+            if (rxvm_insert_attributes_checked(op1R, op2I, op3I) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(INSATTRS1_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - INSATTRS1 R%lu,R%lu,R%lu\n", REG_IDX(1),REG_IDX(2),REG_IDX(3));
+            if (rxvm_insert_attributes1_checked(op1R, op2RI, op3RI) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(INSATTRS1_REG_REG_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - INSATTRS1 R%lu,R%lu,%d\n", REG_IDX(1),REG_IDX(2),(int)op3I);
+            if (rxvm_insert_attributes1_checked(op1R, op2RI, op3I) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(INSATTRS1_REG_INT_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - INSATTRS1 R%lu,%d,R%lu\n", REG_IDX(1),(int)op2I,REG_IDX(3));
+            if (rxvm_insert_attributes1_checked(op1R, op2I, op3RI) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(INSATTRS1_REG_INT_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - INSATTRS1 R%lu,%d,%d\n", REG_IDX(1),(int)op2I,(int)op3I);
+            if (rxvm_insert_attributes1_checked(op1R, op2I, op3I) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(DELATTRS_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - DELATTRS R%lu,R%lu,R%lu\n", REG_IDX(1),REG_IDX(2),REG_IDX(3));
+            if (rxvm_delete_attributes_checked(op1R, op2RI, op3RI) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(DELATTRS_REG_REG_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - DELATTRS R%lu,R%lu,%d\n", REG_IDX(1),REG_IDX(2),(int)op3I);
+            if (rxvm_delete_attributes_checked(op1R, op2RI, op3I) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(DELATTRS_REG_INT_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - DELATTRS R%lu,%d,R%lu\n", REG_IDX(1),(int)op2I,REG_IDX(3));
+            if (rxvm_delete_attributes_checked(op1R, op2I, op3RI) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(DELATTRS_REG_INT_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - DELATTRS R%lu,%d,%d\n", REG_IDX(1),(int)op2I,(int)op3I);
+            if (rxvm_delete_attributes_checked(op1R, op2I, op3I) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(DELATTRS1_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - DELATTRS1 R%lu,R%lu,R%lu\n", REG_IDX(1),REG_IDX(2),REG_IDX(3));
+            if (rxvm_delete_attributes1_checked(op1R, op2RI, op3RI) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(DELATTRS1_REG_REG_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - DELATTRS1 R%lu,R%lu,%d\n", REG_IDX(1),REG_IDX(2),(int)op3I);
+            if (rxvm_delete_attributes1_checked(op1R, op2RI, op3I) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(DELATTRS1_REG_INT_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - DELATTRS1 R%lu,%d,R%lu\n", REG_IDX(1),(int)op2I,REG_IDX(3));
+            if (rxvm_delete_attributes1_checked(op1R, op2I, op3RI) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            DISPATCH
+
+        START_INSTRUCTION(DELATTRS1_REG_INT_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - DELATTRS1 R%lu,%d,%d\n", REG_IDX(1),(int)op2I,(int)op3I);
+            if (rxvm_delete_attributes1_checked(op1R, op2I, op3I) != 0) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
             DISPATCH
 
         START_INSTRUCTION(DEC0) CALC_DISPATCH(0)
@@ -4949,11 +5766,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         START_INSTRUCTION(TRIMR_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - TRIMR (DEPRECATED) R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
             {
-                int i = op1R->string_length - 1;
-                while (i >= 0 && op1R->string_value[i] == ' ') {
+                size_t i = op1R->string_length;
+                while (i > 0 && op1R->string_value[i - 1] == ' ') {
                     i--;
                 }
-                op1R->string_length = i + 1;
+                op1R->string_length = i;
                 null_terminate_string_buffer(op1R);
             }
             DISPATCH
@@ -4966,11 +5783,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
             DEBUG("TRACE - TRIML (DEPRECATED) R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
             /* TODO - UTF etc */
             {
-                int j = op1R->string_length - 1;
-                int i = 0;
-                while (i <= j && op1R->string_value[i] == ' ') i++;
+                size_t i = 0;
+                while (i < op1R->string_length && op1R->string_value[i] == ' ') i++;
 
-                if (i >= j) {
+                if (i >= op1R->string_length) {
                     op1R->string_length = 0;
                     null_terminate_string_buffer(op1R);
                 } else {
@@ -5431,54 +6247,21 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  *  -----------------------------------------------------------------------------------
 */
         START_INSTRUCTION(RSEQ_REG_REG_REG) CALC_DISPATCH(3)
-        {
             DEBUG("TRACE - RSEQ R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            int ch;
-            int p1, p2;
-            int len1, len2;
-
-            GETSTRLEN(len1, op2R)
-            GETSTRLEN(len2, op3R)
-
-            // step 1 find last not blank character
-            for (p1 = len1 - 1; p1 >= 0; p1--, len1--) {
-                GETSTRCHAR(ch, op2R, p1)
-                if (ch != ' ') break;
-            }
-            for (p2 = len2 - 1; p2 >= 0; p2--, len2--) {
-                GETSTRCHAR(ch, op3R, p2)
-                if (ch != ' ') break;
-            }
-
-            // step 2 find first non blank
-            for (p1 = 0; p1 < len1; p1++) {
-                GETSTRCHAR(ch, op2R, p1)
-                if (ch != ' ') break;
-            }
-            for (p2 = 0; p2 < len2; p2++) {
-                GETSTRCHAR(ch, op3R, p2)
-                if (ch != ' ') break;
-            }
-            if (len1 - p1 != len2 - p2) REG_RETURN_INT(0)
-            else {
-                if (string_cmp(op2R->string_value + p1, len1 - p1,
-                           op3R->string_value + p2, len2 - p2) == 0)
-                    REG_RETURN_INT(1)
-                else REG_RETURN_INT(0)
-            }
-        }
-        DISPATCH
+            REG_RETURN_INT(rxvm_trimmed_space_equal(op2R->string_value, op2R->string_length,
+                                                    op3R->string_value, op3R->string_length))
+            DISPATCH
 
 /* ------------------------------------------------------------------------------------
  *  RSEQ_REG_REG_STRING String Equals op1=(op2=op3)  non strict REXX comparison
- *  TODO !!! not yet implemented !!!
  *  -----------------------------------------------------------------------------------
 */
         START_INSTRUCTION(RSEQ_REG_REG_STRING) CALC_DISPATCH(3)
             DEBUG("TRACE - RSEQ R%lu,R%lu,\"%.*s\"\n", REG_IDX(1),
                   REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                   (CONSTSTRING_OP(3))->string);
-            REG_RETURN_INT(0)
+            REG_RETURN_INT(rxvm_trimmed_space_equal(op2R->string_value, op2R->string_length,
+                                                    op3S->string, op3S->string_len))
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -5628,6 +6411,33 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 (CONSTSTRING_OP(2))->string, REG_IDX(3));
             REG_RETURN_INT(string_cmp_const(op3R, op2S) >= 0)
             DISPATCH
+
+#define RXVM_LOOSE_COMPARE_INSTRUCTIONS(name, cmpop) \
+        START_INSTRUCTION(name##_REG_REG_REG) CALC_DISPATCH(3) \
+            DEBUG("TRACE - " #name " R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3)); \
+            REG_RETURN_INT(rxvm_loose_compare_values(op2R, op3R) cmpop 0) \
+            DISPATCH \
+        START_INSTRUCTION(name##_REG_REG_STRING) CALC_DISPATCH(3) \
+            DEBUG("TRACE - " #name " R%lu,R%lu,\"%.*s\"\n", REG_IDX(1), \
+                REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len, \
+                (CONSTSTRING_OP(3))->string); \
+            REG_RETURN_INT(rxvm_loose_compare_value_const(op2R, op3S) cmpop 0) \
+            DISPATCH \
+        START_INSTRUCTION(name##_REG_STRING_REG) CALC_DISPATCH(3) \
+            DEBUG("TRACE - " #name " R%lu,\"%.*s\",R%lu\n", REG_IDX(1), \
+                (int) (CONSTSTRING_OP(2))->string_len, \
+                (CONSTSTRING_OP(2))->string, REG_IDX(3)); \
+            REG_RETURN_INT(rxvm_loose_compare_const_value(op2S, op3R) cmpop 0) \
+            DISPATCH
+
+        RXVM_LOOSE_COMPARE_INSTRUCTIONS(REQ, ==)
+        RXVM_LOOSE_COMPARE_INSTRUCTIONS(RNE, !=)
+        RXVM_LOOSE_COMPARE_INSTRUCTIONS(RGT, >)
+        RXVM_LOOSE_COMPARE_INSTRUCTIONS(RGTE, >=)
+        RXVM_LOOSE_COMPARE_INSTRUCTIONS(RLT, <)
+        RXVM_LOOSE_COMPARE_INSTRUCTIONS(RLTE, <=)
+
+#undef RXVM_LOOSE_COMPARE_INSTRUCTIONS
 
 /* ------------------------------------------------------------------------------------
  *  COPY_REG_REG  Copy op2 to op1
@@ -6131,8 +6941,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     START_INSTRUCTION(IPOW_REG_REG_REG) CALC_DISPATCH(3)
         DEBUG("TRACE - IPOW R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
 
-        op1R->int_value = ipow(op2R->int_value, op3R->int_value);
-        if (!op1R->int_value) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+        if (!ipow(op2R->int_value, op3R->int_value, &op1R->int_value)) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
         DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -6142,8 +6951,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     START_INSTRUCTION(IPOW_REG_REG_INT) CALC_DISPATCH(3)
         DEBUG("TRACE - IPOW R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
 
-        op1R->int_value = ipow(op2R->int_value, op3I);
-        if (!op1R->int_value) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+        if (!ipow(op2R->int_value, op3I, &op1R->int_value)) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
         DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -6153,8 +6961,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     START_INSTRUCTION(IPOW_REG_INT_REG) CALC_DISPATCH(3)
         DEBUG("TRACE - IPOW R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
 
-        op1R->int_value = ipow(op2I, op3R->int_value);
-        if (!op1R->int_value) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+        if (!ipow(op2I, op3R->int_value, &op1R->int_value)) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
         DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -6304,7 +7111,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - FFORMAT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             prep_string_buffer(op1R,SMALLEST_STRING_BUFFER_LENGTH); // Large enough for a float
             null_terminate_string_buffer(op3R);    // terminate format string explicitly, rexx vars aren't!
-            op1R->string_length = snprintf(op1R->string_value,SMALLEST_STRING_BUFFER_LENGTH,op3R->string_value,op2R->float_value);
+            op1R->string_length = rxvm_format_float_with_checked_format(op1R->string_value,SMALLEST_STRING_BUFFER_LENGTH,op3R->string_value,op2R->float_value);
             op1R->string_pos = 0;
   #ifndef NUTF8
             op1R->string_char_pos = 0;
@@ -6339,6 +7146,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 char *c;
                 for (c = op1R->string_value; *c; ++c) *c = (char)tolower(*c);
 #else
+                REQUIRE_VALID_UTF8_REGISTER(op1R);
                 utf8lwr(op1R->string_value);
 #endif
             }
@@ -6358,6 +7166,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 char *c;
                 for (c = op1R->string_value ; *c; ++c) *c = (char)toupper(*c);
 #else
+                REQUIRE_VALID_UTF8_REGISTER(op1R);
                 utf8upr(op1R->string_value);
 #endif
             }
@@ -6372,6 +7181,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             {
 #ifndef NUTF8
                 int result;
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
                 string_set_byte_pos(op2R, op3R->int_value);
                 utf8codepoint(op2R->string_value + op2R->string_pos, &result);
                 REG_RETURN_INT(result)
@@ -6408,6 +7218,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 
                 char *start, *end;
 #ifndef NUTF8
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
                 setCodePointETC()   //calculate Codepoint/length, etc. in a macro, character is in ch
 #else
                 ch=op2R->string_value[op3R->int_value];
@@ -6419,6 +7230,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
    /* ----- create full UTF8 code -------------- */
                 hexm2:
 #ifndef NUTF8
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
                 setCodePointETC()   //calculate Codepoint/length, etc. in a macro, character is in ch
                 for (i = 0; i < bytelen && i < 4; ++i) {
                     bytebuf[i] = (unsigned char) start[i];
@@ -6436,6 +7248,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     /* ----- add UTF8 code depending on length -------------- */
             hexm3:
 #ifndef NUTF8
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
                 setCodePointETC()   //calculate Codepoint/length, etc. in a macro
 #else
                 ch=op2R->string_value[op3R->int_value];
@@ -6460,6 +7273,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 rxinteger result = -1, i;
                 int ch;
 
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
                 for (i = 0; i < op2R->string_length; i++) {
 #ifndef NUTF8
                     string_set_byte_pos(op2R, i);
@@ -6711,6 +7525,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 rxinteger len;
                 rxinteger result;
                 int ch;
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
 #ifndef NUTF8
                 len = (rxinteger) op2R->string_chars;
 #if ASCII_FAST_PATH
@@ -6759,6 +7574,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 rxinteger result;
                 rxinteger len;
                 int ch;
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
 
 #ifndef NUTF8
              len = (rxinteger)op2R->string_chars;
@@ -6818,9 +7634,161 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     START_INSTRUCTION(GETBYTE_REG_REG_REG) CALC_DISPATCH(3)
     DEBUG("TRACE - GETBYTE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
 
-    /* TODO */
-    REG_RETURN_INT(0)
+    if (op3R->int_value < 0 || (size_t)op3R->int_value >= op2R->binary_length) {
+        REG_RETURN_INT(-1)
+    }
+    else {
+        REG_RETURN_INT((unsigned char)op2R->binary_value[op3R->int_value])
+    }
     DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  BLEN_REG_REG  Int op1 = byte length of op2
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BLEN_REG_REG) CALC_DISPATCH(2)
+    DEBUG("TRACE - BLEN R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+    REG_RETURN_INT((rxinteger)op2R->binary_length)
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  SETBYTE_REG_REG_REG  op1[op2] = op3
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(SETBYTE_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - SETBYTE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    if (op2R->int_value < 0 || (size_t)op2R->int_value >= op1R->binary_length ||
+        op3R->int_value < 0 || op3R->int_value > 255) {
+        SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+    }
+    else {
+        op1R->binary_value[(size_t)op2R->int_value] = (char)(unsigned char)op3R->int_value;
+        clear_vm_private_flags(op1R);
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  BCONCAT_REG_REG_REG  op1 = op2 || op3
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BCONCAT_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BCONCAT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    if (concat_binary(op1R, op2R, op3R) != 0) {
+        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  BAPPEND_REG_REG  op1 = op1 || op2
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BAPPEND_REG_REG) CALC_DISPATCH(2)
+    DEBUG("TRACE - BAPPEND R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+    if (append_binary_value(op1R, op2R) != 0) {
+        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  SETBINPOS_REG_REG  op1 binary cursor = clamp(op2, 0..len)
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(SETBINPOS_REG_REG) CALC_DISPATCH(2)
+    DEBUG("TRACE - SETBINPOS R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+    if (op2R->int_value < 0) {
+        op1R->binary_pos = 0;
+    }
+    else if ((size_t)op2R->int_value > op1R->binary_length) {
+        op1R->binary_pos = op1R->binary_length;
+    }
+    else {
+        op1R->binary_pos = (size_t)op2R->int_value;
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  GETBINPOS_REG_REG  Int op1 = op2 binary cursor
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(GETBINPOS_REG_REG) CALC_DISPATCH(2)
+    DEBUG("TRACE - GETBINPOS R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+    REG_RETURN_INT((rxinteger)op2R->binary_pos)
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  BSLICE_REG_REG_REG  op1 = op2[op2.binary_pos..op2.binary_pos + op3)
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BSLICE_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BSLICE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    if (op3R->int_value < 0) {
+        SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+    }
+    else if (slice_binary(op1R, op2R, op2R->binary_pos, (size_t)op3R->int_value) != 0) {
+        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  BUPDATE_REG_REG_REG  overlay op3 into op1 at byte offset op2
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BUPDATE_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BUPDATE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    if (op2R->int_value < 0 || (size_t)op2R->int_value > op1R->binary_length) {
+        SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+    }
+    else {
+        size_t offset = (size_t)op2R->int_value;
+        if (op3R->binary_length > op1R->binary_length - offset) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            if (op3R->binary_length) {
+                memmove(op1R->binary_value + offset, op3R->binary_value, op3R->binary_length);
+            }
+            clear_vm_private_flags(op1R);
+        }
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  STOBIN_REG  op1.binary = op1.string bytes
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(STOBIN_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - STOBIN R%d\n", (int)REG_IDX(1));
+    if (set_binary(op1R, op1R->string_value, op1R->string_length) != 0) {
+        SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  BINTOS_REG  op1.string = op1.binary bytes, validated as UTF-8
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BINTOS_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - BINTOS R%d\n", (int)REG_IDX(1));
+#ifndef NUTF8
+    {
+        size_t chars = 0;
+        if (utf8nvalid_count(op1R->binary_value, op1R->binary_length, &chars)) {
+            SET_SIGNAL_MSG(RXSIGNAL_UNICODE_ERROR, "Invalid UTF-8 in binary-to-string conversion");
+        } else {
+            set_string(op1R,
+                       op1R->binary_value ? op1R->binary_value : "",
+                       op1R->binary_length);
+            op1R->string_chars = chars;
+            mark_utf8_valid_count(op1R);
+        }
+    }
+#else
+    set_string(op1R,
+               op1R->binary_value ? op1R->binary_value : "",
+               op1R->binary_length);
+#endif
+    DISPATCH
+
 /* ------------------------------------------------------------------------------------
  *  CONCCHAR_REG_REG_REG  op1=op2[op3]                                pej 27 August 2021
  *  -----------------------------------------------------------------------------------
@@ -6831,6 +7799,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 rxinteger temp = op3R->int_value;   // save offset, we misuse v3 later
 #ifndef NUTF8
                 int ch;
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
                 string_set_byte_pos(op2R, op3R->int_value);
                 utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
                 op3R->int_value = ch;
@@ -6853,6 +7822,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 rxinteger len, i;
                 int ch;
 
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
+                REQUIRE_VALID_UTF8_REGISTER(op3R);
                 GETSTRLEN(len, op3R)
 
                 for (i = 0; i < len; i++) {
@@ -6877,6 +7848,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 rxinteger i, len1, len2;
                 int found;
                 int ch;
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
+                REQUIRE_VALID_UTF8_REGISTER(op3R);
                 GETSTRLEN(len1, op2R)
                 GETSTRLEN(len2, op3R)
                 if (len2 == 0) len2 = (rxinteger) op3R->string_length;
@@ -6910,6 +7883,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - SUBSTR R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             {
                 rxinteger length = op3R->int_value;
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
                 if (length <= 0) {
                     PUTSTRLEN(op1R, 0);
                 } else {
@@ -6926,6 +7900,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - SUBSTCUT R%lu R%lu\n", REG_IDX(1), REG_IDX(2));
 
         /* input parm op2 defines how many leading codepoints remain in the string */
+           REQUIRE_VALID_UTF8_REGISTER(op1R);
            string_truncate_chars(op1R, (size_t) op2R->int_value);
            DISPATCH
 
@@ -6965,6 +7940,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 char *charpos;
                 rxinteger start_pos = op1RI;
 
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
+                REQUIRE_VALID_UTF8_REGISTER(op3R);
                 if (start_pos <= 0) {
                     REG_RETURN_INT(0);
                 } else {
@@ -7045,6 +8022,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         START_INSTRUCTION(STRLEN_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - STRLEN R%lu R%lu\n", REG_IDX(1),
                   REG_IDX(2));
+            REQUIRE_VALID_UTF8_REGISTER(op2R);
 #ifndef NUTF8
             op1R->int_value = (rxinteger)op2R->string_chars;
 #else
@@ -7058,6 +8036,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         START_INSTRUCTION(SETSTRPOS_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - SETSTRPOS R%lu R%lu\n", REG_IDX(1),
                   REG_IDX(2));
+            REQUIRE_VALID_UTF8_REGISTER(op1R);
 #ifndef NUTF8
             string_set_byte_pos(op1R, op2R->int_value);
 #else
@@ -7087,6 +8066,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             {
                 int ch;
 #ifndef NUTF8
+                REQUIRE_VALID_UTF8_REGISTER(op2R);
                 utf8codepoint(op2R->string_value + op2R->string_pos, &ch);
                 op1R->int_value = ch;
 #else
@@ -7096,91 +8076,91 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             DISPATCH
 
 /*
- * GETTP_REG_REG gets the register type flag (op1 = op2.typeflag)
+ * GETTP_REG_REG gets readable register status flags (op1 = op2.flags)
  */
         START_INSTRUCTION(GETTP_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - GETTP R%d R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
-            op1R->int_value = op2R->status.all_type_flags;
+            op1R->int_value = (rxinteger)(op2R->status.all_type_flags & RXFLAG_READABLE_MASK);
             DISPATCH
 
 /*
- * SETTP_REG_INT sets the register type flag (op1.typeflag = op2)
+ * SETTP_REG_INT sets externally writable register status flags
  */
         START_INSTRUCTION(SETTP_REG_INT) CALC_DISPATCH(2)
             DEBUG("TRACE - SETTP R%d %d\n", (int)REG_IDX(1), (int)op2I);
-            op1R->status.all_type_flags = op2I;
+            op1R->status.all_type_flags = RXFLAGS_PUBLIC_WRITE(op1R->status.all_type_flags, (uint32_t)op2I);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
- *  LOADSETTP_REG_INT load register & set the register type flag pej 11 November 2021
- *   op1=op2 and (op1.typeflag = op3)
+ *  LOADSETTP_REG_INT load register and set externally writable status flags
+ *   op1=op2 and (op1.flags = op3)
  *  -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(LOADSETTP_REG_INT_INT) CALC_DISPATCH(3)
         DEBUG("TRACE - LOADSETTP R%d %d %d\n", (int)REG_IDX(1),(int)op2I,(int)op3I);
 
             op1R->int_value = op2I;
-            op1R->status.all_type_flags = op3I;
+            op1R->status.all_type_flags = RXFLAGS_PUBLIC_REPLACE((uint32_t)op3I);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
- *  LOADSETTP_REG_string load string to register & set the register type flag pej 11 November 2021
- *   op1=op2 and (op1.typeflag = op3)
+ *  LOADSETTP_REG_string load string to register and set externally writable status flags
+ *   op1=op2 and (op1.flags = op3)
  *  -----------------------------------------------------------------------------------
  */
             START_INSTRUCTION(LOADSETTP_REG_STRING_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - LOADSETTP R%d %s %d\n", (int)REG_IDX(1),op2S->string,(int) op3I);
 
             set_const_string(op1R, op2S);
-            op1R->status.all_type_flags = op3I;
+            op1R->status.all_type_flags = RXFLAGS_PUBLIC_WRITE(op1R->status.all_type_flags, (uint32_t)op3I);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
- *  LOADSETTP_REG_FLOAT float to load register & set the register type flag pej 11 November 2021
- *   op1=op2 and (op1.typeflag = op3)
+ *  LOADSETTP_REG_FLOAT float to load register and set externally writable status flags
+ *   op1=op2 and (op1.flags = op3)
  *  -----------------------------------------------------------------------------------
  */
             START_INSTRUCTION(LOADSETTP_REG_FLOAT_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - LOADSETTP R%d %.15g %d\n", (int)REG_IDX(1), op2F,(int) op3I);
             op1R->float_value = op2F;
-            op1R->status.all_type_flags = op3I;
+            op1R->status.all_type_flags = RXFLAGS_PUBLIC_REPLACE((uint32_t)op3I);
             DISPATCH
 
 /*
- * SETORTP_REG_INT or the register type flag (op1.typeflag = op1.typeflag || op2)
+ * SETORTP_REG_INT or externally writable register status flags
  */
         START_INSTRUCTION(SETORTP_REG_INT) CALC_DISPATCH(2)
             DEBUG("TRACE - SETORTP R%d %d\n", (int)REG_IDX(1), (int)op2I);
-            op1R->status.all_type_flags = op1R->status.all_type_flags | op2I;
+            op1R->status.all_type_flags = RXFLAGS_PUBLIC_OR(op1R->status.all_type_flags, (uint32_t)op2I);
             DISPATCH
 
 /*
- * GETANDTP_REG_REG_INT get the register type flag with mask (op1(int) = op2.typeflag & op3)
+ * GETANDTP_REG_REG_INT get readable register status flags with mask
  */
         START_INSTRUCTION(GETANDTP_REG_REG_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - GETANDTP R%d R%d %d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
-            op1R->int_value = op2R->status.all_type_flags & op3I;
+            op1R->int_value = (rxinteger)((op2R->status.all_type_flags & RXFLAG_READABLE_MASK) & (uint32_t)op3I);
             DISPATCH
 
 /*
- * BRTPT_ID_REG if op2.typeflag true then goto op1
+ * BRTPT_ID_REG if op2 has public status flags then goto op1
  */
         START_INSTRUCTION(BRTPT_ID_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - BRTPT_ID_REG 0x%x R%d\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2));
-            if (op2R->status.all_type_flags) {
+            if (op2R->status.all_type_flags & RXFLAG_PUBLIC_TEST_MASK) {
                 next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL
             }
             DISPATCH
 
 /*
- * BRTPANDT_ID_REG_INT if op2.typeflag && op3 true then goto op1
+ * BRTPANDT_ID_REG_INT if op2 readable status flags & op3 true then goto op1
 */
         START_INSTRUCTION(BRTPANDT_ID_REG_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - BRTPANDT_ID_REG_INT 0x%x R%d %d\n",
                   (unsigned int)REG_IDX(1),
                   (int)REG_IDX(2),(int)op3I);
-            if (op2R->status.all_type_flags & op3I) {
+            if ((op2R->status.all_type_flags & RXFLAG_READABLE_MASK) & (uint32_t)op3I) {
                 next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL
             }
@@ -7239,29 +8219,29 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     START_INSTRUCTION(RXVERS_REG) CALC_DISPATCH(1)
     DEBUG("TRACE - RXVERS R%d\n", (int) REG_IDX(1));
     {
-        char vers[64];
+        char vers[256];
+        const char *platform;
+        const char *bits;
 
 #if defined(__linux__)
-        strcpy(vers, "linux ");
+        platform = "linux";
 #elif defined(_WIN32)
-        strcpy(vers, "windows ");
+        platform = "windows";
 #elif defined(__APPLE__)
-        strcpy(vers, "macOS ");
+        platform = "macOS";
 #elif defined(__CMS__)
-        strcpy(vers, "cms ");
+        platform = "cms";
 #else
-        strcpy(vers, "unknown ");
+        platform = "unknown";
 #endif
 
 #ifdef __32BIT__
-        strcat(vers, "32 ");
+        bits = "32";
 #else
-        strcat(vers, "64 ");
+        bits = "64";
 #endif
 
-        strcat(vers, rxversion);
-        strcat(vers, " ");
-        strcat(vers, compile_date); /* compile_date defined earlier in this file */
+        snprintf(vers, sizeof(vers), "%s %s %s %s", platform, bits, rxversion, compile_date);
 
         set_null_string(op1R, vers);
     }
@@ -7284,6 +8264,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         uint64_t hash=0;
 #endif
         int i1,len;
+        REQUIRE_VALID_UTF8_REGISTER(op2R);
         GETSTRLEN(len, op2R);
         if(len<=0) len=op2R->string_length;
         else if(op2R->string_length<len) len=op2R->string_length;
@@ -7299,93 +8280,6 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         op1R->int_value = hash;
      }
      DISPATCH
-/* ------------------------------------------------------------------------------------------
- *  OPENDLL_REG_REG Open DLL                                            pej 24. February 2022
- *  -----------------------------------------------------------------------------------------
- */
-
-//    typedef char * (*strSubproc)(int arg1, int arg2, char str1[32]);   // for string
-    typedef int    (*intSubproc)(int arg1, int arg2, char str1[32]);
-
-START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
-     DEBUG("TRACE - OPENDLL R%d R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(1),(int)REG_IDX(3));
-#ifdef _WIN32
-     HINSTANCE hDLL;               // Handle to DLL
-//     strSubproc strProc;
-     intSubproc intProc;
-     HRESULT hrReturnVal;
-     rxinteger i1=-16;
-    // rxfuncadd(rexxname,module,sysname)
-    null_terminate_string_buffer(op2R);
-    null_terminate_string_buffer(op3R);
-    printf("Module %s\n",op3R->string_value);
-
-    hDLL = LoadLibrary(op2R->string_value);
-    printf("DLL ADDR %d %s %d %d\n",hDLL, op2R->string_value,op2R->string_length,hDLL);
-
-    if (hDLL==0 ) i1=-8;
-    else {
-         intProc = (intSubproc) GetProcAddress(hDLL, op3R->string_value);
-        printf("Module ADDR %d\n",intProc);
-        if (intProc==0 ) i1=-12 ;
-        else i1 = (rxinteger)intProc;
-      }
-    FreeLibrary(hDLL);
-    REG_RETURN_INT(i1);
-#endif
-#ifdef __APPLE__
-    void *dl_handle;
-    int (*func) (float);
-    char *error;
-    rxinteger i1=-16;
-    // rxfuncadd(rexxname,module,sysname)
-    null_terminate_string_buffer(op2R);
-    null_terminate_string_buffer(op3R);
-    printf("Module %s\n",op3R->string_value);
-    
-    /* Open the shared object */
-    dl_handle = dlopen( op2R->string_value, RTLD_LAZY );
-    if (dl_handle) i1=-8;
-    else {
-      func = dlsym( dl_handle, op3R->string_value );
-      if (func==0 ) i1=-12 ;
-      else i1= (rxinteger)func;
-      }
-    error = dlerror();
-    if (error != NULL) {
-      printf( "!!! %s\n", error );
-      rc = (int)i1;
-      goto interprt_finished;
-    }
-    /* Close the object */
-    dlclose( dl_handle );
-    REG_RETURN_INT(i1)
-#endif
-    DISPATCH
-
-    START_INSTRUCTION(DLLPARMS_REG_REG_REG) CALC_DISPATCH(3)
-
-        DEBUG("TRACE - DLLPARMS R%d R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(2),(int)REG_IDX(3));
-       /* Arguments - complex lets never have to change this code! */
-        printf("Register containing number of Arguments %d\n",(int) REG_IDX(3));
-        printf("                    number of Arguments %d\n",(int)op3RI);
-   //     current_frame->locals[(pc + (3))->index];
-
-        size_t j =
-                current_frame->procedure->binarySpace->globals +
-                current_frame->procedure->locals + 1; /* Callee register index */
-        size_t k = (pc + 3)->index + 1; /* Caller register index */
-        size_t i;
-        printf("                    first data register %d\n",(int)k);
-        for ( i = 0;
-              i < op3RI;
-              i++, j++,k++) {
-              printf("                         Data register %d\n",(int)k);
-         //   printf("              Register contentLocal Variables %d\n",current_frame->procedure->locals->???);
-        }
-    REG_RETURN_INT(i)
-    DISPATCH
-
     /* Spawn - Spawn a process with io redirects - Spawn Process op1 = exec op2 redirect op3
      * reg 1 will be the return code of the process
      * reg 2 is the command (the path environment variable is used for search resolution)
@@ -7529,28 +8423,26 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     /* fflush - op1 rc(int) = fflush op2 file*(int) */
     START_INSTRUCTION(FFLUSH_REG_REG) CALC_DISPATCH(2)
         DEBUG("TRACE - FFLUSH R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
-        op1R->int_value = fflush((FILE*)op1R->int_value);
+        op1R->int_value = fflush((FILE*)op2R->int_value);
         DISPATCH
 
     /* freadb - op1(binary) = fread op2 file*(int) op3 bytes(int) */
     START_INSTRUCTION(FREADB_REG_REG_REG) CALC_DISPATCH(3)
         DEBUG("TRACE - FREADB R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
         {
-            if (op3R->int_value == 0) {
-                clear_binary_payload(op1R);
+            if (op3R->int_value < 0) {
+                SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Invalid binary read size");
             }
-
+            else if (op3R->int_value == 0) {
+                if (prep_binary_buffer(op1R, 0) != 0) SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+            }
+            else if (reserve_binary_buffer(op1R, (size_t)op3R->int_value) != 0) {
+                SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+            }
             else {
-                /* If the binary size is the same (and this is likely to be the case if we are in a loop) we can just
-                 * reuse the buffer - otherwise free/malloc */
-                if (op1R->native_payload_ops || op1R->binary_length != op3R->int_value) {
-                    clear_binary_payload(op1R);
-                    op1R->binary_value = malloc(op3R->int_value);
-                    op1R->binary_length = op3R->int_value;
-                    op1R->binary_buffer_length = op1R->binary_length;
-                }
-
-                op1R->binary_length = fread(op1R->binary_value, op1R->binary_length, 1, (FILE *) op2R->int_value);
+                op1R->binary_length = fread(op1R->binary_value, 1, (size_t)op3R->int_value, (FILE *) op2R->int_value);
+                op1R->binary_pos = 0;
+                clear_vm_private_flags(op1R);
             }
         }
         DISPATCH
@@ -7574,12 +8466,22 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
             while ((ch = fgetc((FILE*)op2R->int_value)) != EOF) {
 
                 /* End of line detection (LF) */
-                if (ch == '\n') break;
+                if (ch == '\n') {
+                    ch = fgetc((FILE*)op2R->int_value);
+                    if (ch != EOF) ungetc(ch, (FILE*)op2R->int_value);
+                    else if (op1R->string_length == 0) clearerr((FILE*)op2R->int_value);
+                    break;
+                }
 
                 /* End of line detection (CR LF, or CR (old macs) */
                 if (ch == '\r') {
-                    ch = fgetc((FILE*)op2R->int_value);\
-                    if (ch != '\n') ungetc(ch, (FILE*)op2R->int_value);
+                    ch = fgetc((FILE*)op2R->int_value);
+                    if (ch == '\n') {
+                        ch = fgetc((FILE*)op2R->int_value);
+                        if (ch != EOF) ungetc(ch, (FILE*)op2R->int_value);
+                        else if (op1R->string_length == 0) clearerr((FILE*)op2R->int_value);
+                    }
+                    else if (ch != EOF) ungetc(ch, (FILE*)op2R->int_value);
                     break;
                 }
 
@@ -7590,8 +8492,18 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
         }
         }
 #ifndef NUTF8
-        op1R->string_char_pos = 0;
-        op1R->string_chars = utf8nlen(op1R->string_value, op1R->string_length);
+        {
+            size_t chars = 0;
+            if (validate_utf8_bytes(op1R->string_value, op1R->string_length, &chars) != 0) {
+                SET_SIGNAL_MSG(RXSIGNAL_UNICODE_ERROR, "Invalid UTF-8 in text file read");
+            } else {
+                op1R->string_char_pos = 0;
+                op1R->string_chars = chars;
+                mark_utf8_valid_count(op1R);
+            }
+        }
+#else
+        clear_vm_private_flags(op1R);
 #endif
         DISPATCH
 
@@ -7607,39 +8519,76 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
         {
 #ifndef NUTF8
             int codepoint;
+            int first_byte;
+            int next_byte;
+            int invalid = 0;
+            size_t chars = 0;
             op1R->string_pos = 0;
             prep_string_buffer(op1R, 4);
 
             /* Read the first byte - determines length */
-            op1R->string_value[0] = (char)fgetc((FILE *)op2R->int_value);
-
-            /* Read the rest of the code point */
-            if ((unsigned char)op1R->string_value[0] < 128) {
-                op1R->string_length = 1;
-            } else if ((unsigned char)op1R->string_value[0] < 224) {
-                op1R->string_length = 2;
-                op1R->string_value[1] = (char)fgetc((FILE *)op2R->int_value);
-            } else if ((unsigned char)op1R->string_value[0] < 240) {
-                op1R->string_length = 3;
-                op1R->string_value[1] = (char)fgetc((FILE *)op2R->int_value);
-                op1R->string_value[2] = (char)fgetc((FILE *)op2R->int_value);
+            first_byte = fgetc((FILE *)op2R->int_value);
+            if (first_byte == EOF) {
+                op1R->int_value = -1;
+                op1R->string_length = 0;
+                op1R->string_char_pos = 0;
+                op1R->string_chars = 0;
+                mark_utf8_valid_count(op1R);
             } else {
-                op1R->string_length = 4;
-                op1R->string_value[1] = (char)fgetc((FILE *)op2R->int_value);
-                op1R->string_value[2] = (char)fgetc((FILE *)op2R->int_value);
-                op1R->string_value[3] = (char)fgetc((FILE *)op2R->int_value);
-            }
+                op1R->string_value[0] = (char)first_byte;
 
-            utf8codepoint(op1R->string_value, &codepoint);
-            op1R->int_value = codepoint;
-            op1R->string_char_pos = 0;
-            op1R->string_chars = 1;
-#elif
-            prep_string_buffer(op1R, 1);
-            op1R->int_value = (unsigned char)fgetc( (FILE*)op2R->int_value );
-            op1R->string_value[0] = op1R->int_value;
-            op1R->string_length = 1;
+                /* Read the rest of the code point */
+                if ((unsigned char)op1R->string_value[0] < 128) {
+                    op1R->string_length = 1;
+                } else if ((unsigned char)op1R->string_value[0] < 224) {
+                    op1R->string_length = 2;
+                } else if ((unsigned char)op1R->string_value[0] < 240) {
+                    op1R->string_length = 3;
+                } else {
+                    op1R->string_length = 4;
+                }
+
+                if (op1R->string_length > 1) {
+                    next_byte = fgetc((FILE *)op2R->int_value);
+                    if (next_byte == EOF) invalid = 1;
+                    else op1R->string_value[1] = (char)next_byte;
+                }
+                if (op1R->string_length > 2) {
+                    next_byte = fgetc((FILE *)op2R->int_value);
+                    if (next_byte == EOF) invalid = 1;
+                    else op1R->string_value[2] = (char)next_byte;
+                }
+                if (op1R->string_length > 3) {
+                    next_byte = fgetc((FILE *)op2R->int_value);
+                    if (next_byte == EOF) invalid = 1;
+                    else op1R->string_value[3] = (char)next_byte;
+                }
+
+                if (invalid || validate_utf8_bytes(op1R->string_value, op1R->string_length, &chars) != 0) {
+                    SET_SIGNAL_MSG(RXSIGNAL_UNICODE_ERROR, "Invalid UTF-8 codepoint in text file read");
+                } else {
+                    utf8codepoint(op1R->string_value, &codepoint);
+                    op1R->int_value = codepoint;
+                    op1R->string_char_pos = 0;
+                    op1R->string_chars = chars;
+                    mark_utf8_valid_count(op1R);
+                }
+            }
+#else
+            {
+                int byte = fgetc( (FILE*)op2R->int_value );
+                if (byte == EOF) {
+                    op1R->int_value = -1;
+                    op1R->string_length = 0;
+                } else {
+                    prep_string_buffer(op1R, 1);
+                    op1R->int_value = (unsigned char)byte;
+                    op1R->string_value[0] = op1R->int_value;
+                    op1R->string_length = 1;
+                }
+            }
             op1R->string_pos = 0;
+            clear_vm_private_flags(op1R);
 #endif
         }
         DISPATCH
@@ -7673,7 +8622,7 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
 
             end_of_codepoint = utf8catcodepoint(codepoint, op2R->int_value, 4);
             length_of_codepoint = end_of_codepoint - codepoint;
-#elif
+#else
             length_of_codepoint = 1;
             codepoint[0] = op2R->int_value;
 #endif
@@ -7760,13 +8709,15 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
         START_INSTRUCTION(TRIMR_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - TRIMR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             {
-                rxinteger i;
                 if (op1R != op2R) set_value_string(op1R, op2R);
-                i = op1R->string_length - 1;
-                while (i >= 0 && op1R->string_value[i] == op3R->string_value[0]) {
-                    i--;
+                if (op3R->string_length > 0) {
+                    char trim_char = op3R->string_value[0];
+                    size_t i = op1R->string_length;
+                    while (i > 0 && op1R->string_value[i - 1] == trim_char) {
+                        i--;
+                    }
+                    op1R->string_length = i;
                 }
-                op1R->string_length = i + 1;
                 null_terminate_string_buffer(op1R);
             }
             DISPATCH
@@ -7778,13 +8729,14 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
         START_INSTRUCTION(TRIML_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - TRIML R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             {
-                rxinteger i = 0;
-                rxinteger j;
+                size_t i = 0;
                 if (op1R != op2R) set_value_string(op1R, op2R);
-                j = op1R->string_length - 1;
-                while (i <= j && op1R->string_value[i] == op3R->string_value[0]) i++;
+                if (op3R->string_length > 0) {
+                    char trim_char = op3R->string_value[0];
+                    while (i < op1R->string_length && op1R->string_value[i] == trim_char) i++;
+                }
 
-                if (i > j) {
+                if (i >= op1R->string_length) {
                     op1R->string_length = 0;
                 } else {
                     op1R->string_length = op1R->string_length - i;
@@ -7835,6 +8787,35 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - SETOBJTYPE R%lu,\"%.*s\"\n", REG_IDX(1), (int) op2S->string_len, op2S->string);
             op1R->object_type_name = op2S->string;
             op1R->object_type_name_length = op2S->string_len;
+            clear_value_uninitialized_object(op1R);
+            DISPATCH
+
+        START_INSTRUCTION(SETOBJUNINIT_REG_STRING) CALC_DISPATCH(2)
+            DEBUG("TRACE - SETOBJUNINIT R%lu,\"%.*s\"\n", REG_IDX(1), (int) op2S->string_len, op2S->string);
+            value_zero(op1R);
+            op1R->object_type_name = op2S->string;
+            op1R->object_type_name_length = op2S->string_len;
+            mark_value_uninitialized_object(op1R);
+            DISPATCH
+
+        START_INSTRUCTION(ASSERTINITIALIZED_REG) CALC_DISPATCH(1)
+            DEBUG("TRACE - ASSERTINITIALIZED R%lu\n", REG_IDX(1));
+            if (value_is_uninitialized_object(op1R)) {
+                char *error_message = build_runtime_uninitialized_object_error(op1R);
+                if (error_message) {
+                    SET_SIGNAL_MSG(RXSIGNAL_OBJECT_NOT_INITIALIZED, error_message);
+                    free(error_message);
+                } else {
+                    SET_SIGNAL(RXSIGNAL_OBJECT_NOT_INITIALIZED);
+                }
+                DISPATCH
+            }
+            DISPATCH
+
+        START_INSTRUCTION(ISINITIALIZED_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - ISINITIALIZED R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            value_zero(op1R);
+            set_int(op1R, value_is_uninitialized_object(op2R) ? 0 : 1);
             DISPATCH
 
         START_INSTRUCTION(SRCMETHOD_REG_REG_STRING) CALC_DISPATCH(3)
@@ -7845,6 +8826,17 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
 
                 DEBUG("TRACE - SRCMETHOD R%lu,R%lu,\"%.*s\"\n", REG_IDX(1), REG_IDX(2),
                       (int) op3S->string_len, op3S->string);
+
+                if (value_is_uninitialized_object(op2R)) {
+                    char *error_message = build_runtime_uninitialized_object_error(op2R);
+                    if (error_message) {
+                        SET_SIGNAL_MSG(RXSIGNAL_OBJECT_NOT_INITIALIZED, error_message);
+                        free(error_message);
+                    } else {
+                        SET_SIGNAL(RXSIGNAL_OBJECT_NOT_INITIALIZED);
+                    }
+                    DISPATCH
+                }
 
                 class_name = op2R->object_type_name;
                 class_name_length = op2R->object_type_name_length;
@@ -8076,9 +9068,6 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
             rxvm_socket_connect_tls(context, op1R->int_value, op2R, op3R->int_value);
             DISPATCH
 
-        RESERVED_IMPL(RESERVED_084)
-        RESERVED_IMPL(RESERVED_085)
-        RESERVED_IMPL(RESERVED_086)
         RESERVED_IMPL(RESERVED_087)
         RESERVED_IMPL(RESERVED_088)
         RESERVED_IMPL(RESERVED_089)
@@ -8092,23 +9081,6 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
         RESERVED_IMPL(RESERVED_097)
         RESERVED_IMPL(RESERVED_098)
         RESERVED_IMPL(RESERVED_099)
-        RESERVED_IMPL(RESERVED_183)
-        RESERVED_IMPL(RESERVED_184)
-        RESERVED_IMPL(RESERVED_185)
-        RESERVED_IMPL(RESERVED_186)
-        RESERVED_IMPL(RESERVED_187)
-        RESERVED_IMPL(RESERVED_188)
-        RESERVED_IMPL(RESERVED_189)
-        RESERVED_IMPL(RESERVED_190)
-        RESERVED_IMPL(RESERVED_191)
-        RESERVED_IMPL(RESERVED_192)
-        RESERVED_IMPL(RESERVED_193)
-        RESERVED_IMPL(RESERVED_194)
-        RESERVED_IMPL(RESERVED_195)
-        RESERVED_IMPL(RESERVED_196)
-        RESERVED_IMPL(RESERVED_197)
-        RESERVED_IMPL(RESERVED_198)
-        RESERVED_IMPL(RESERVED_199)
         RESERVED_IMPL(RESERVED_263)
         RESERVED_IMPL(RESERVED_264)
         RESERVED_IMPL(RESERVED_265)
@@ -8195,6 +9167,8 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
         RESERVED_IMPL(RESERVED_447)
         RESERVED_IMPL(RESERVED_448)
         RESERVED_IMPL(RESERVED_449)
+        RESERVED_IMPL(RESERVED_514)
+        RESERVED_IMPL(RESERVED_515)
 
     END_OF_INSTRUCTIONS
 
@@ -8206,6 +9180,9 @@ START_INSTRUCTION(OPENDLL_REG_REG_REG) CALC_DISPATCH(3)
     /* Unwind any stack frames */
     while (current_frame) {
         temp_frame = current_frame->parent;
+        if (context->ext_proc && !current_frame->parent) {
+            free_external_entry_arguments(current_frame);
+        }
         free_frame(current_frame);
         current_frame = temp_frame;
     }

@@ -32,12 +32,27 @@ add_custom_command(
         COMMENT "Create REXX B Lexer..."
 )
 
+add_custom_command(
+        COMMAND $<TARGET_FILE:lemon> -p -q -c -d${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/rxcpcgmr.y
+        DEPENDS rxcpcgmr.y lemon
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/rxcpcgmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpcgmr.h
+        COMMENT "Create REXX C Parser..."
+)
+
+add_custom_command(
+        COMMAND $<TARGET_FILE:re2c> -I ${CMAKE_CURRENT_SOURCE_DIR}/../utf8 -8 -o ${CMAKE_CURRENT_BINARY_DIR}/rexcscan.c ${CMAKE_CURRENT_SOURCE_DIR}/rxcpcscn.re
+        DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/../utf8/encoding.re rxcpcscn.re ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.h re2c
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/rexcscan.c
+        COMMENT "Create REXX C Lexer..."
+)
+
 # Compiler Library - can be used to link plugins to make a extended compiler
 add_library(rxclib STATIC
         rxcpmain.c rxcp_ast_core.c rxcp_ast_print.c rxcp_ast_walk.c rxcpmain.h rxcp_util.c rxcp_diag_fallback.c
-        rxcp_dsl.c rxcp_highlight_controller.c rxcp_source_tree.c
+        rxcp_dsl.c rxcp_highlight_controller.c rxcp_source_tree.c rxcp_source_ext.c rxcp_source_ext.h
         ${CMAKE_CURRENT_BINARY_DIR}/rxcposcn.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.h rxcpopar.c
         ${CMAKE_CURRENT_BINARY_DIR}/rexbscan.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.h rxcpbpar.c
+        ${CMAKE_CURRENT_BINARY_DIR}/rexcscan.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpcgmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpcgmr.h rxcpcpar.c rxcpcdiag.c rxcpcsym.c rxcpcsym.h rxcpcval.c
         ${CMAKE_SOURCE_DIR}/assembler/rxas.h
         rxcp_val_sym.c rxcp_val_type.c rxcp_val_trans.c rxcp_ast_rewrite.c rxcp_val_check.c rxcp_val_plugin.c rxcp_val_orch.c rxcpsymb.c rxcp_fixup.c rxcp_ast_val.c
         rxcp_inline.c

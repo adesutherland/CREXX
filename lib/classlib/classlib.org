@@ -9,6 +9,17 @@
 :ID: classlib
 :END:
 
+Collection class names are contract-tagged in Level B because the language does
+not yet have generics: =String...= stores string values, =Object...= stores
+object values, and =StringObject...= maps string keys to object values. Bare
+collection names are reserved for future Level G generic or generic-like
+surfaces.
+
+The concrete class source files and =CMakeLists.txt= entries are the source of
+truth for currently built exports. The planning tables below are retained as an
+export checklist and may still contain legacy namespace labels from the
+pre-generic naming pass.
+
 ** SPEC crypto_des
 :PROPERTIES:
 :ID:    ns-crypto_des
@@ -65,18 +76,18 @@
 :SIG:   = .string
 :END:
 
-** SPEC data_LinkedList
+** SPEC data_StringLinkedList
 :PROPERTIES:
 :ID:    ns-data-linkedlist
 :KIND:  namespace
-:NS:    data_LinkedList
+:NS:    data_StringLinkedList
 :END:
 
-*** SPEC LinkedList
+*** SPEC StringLinkedList
 :PROPERTIES:
 :ID:         class-linkedlist
 :KIND:       class
-:CLASS:      LinkedList
+:CLASS:      StringLinkedList
 :RETURNTYPE: class
 :END:
 
@@ -108,18 +119,18 @@
 :SIG:        =.void
 :END:
 
-** BUILD data_Stack
+** BUILD data_StringStack
 :PROPERTIES:
 :ID:    ns-data-stack
 :KIND:  namespace
-:NS:    data_Stack
+:NS:    data_StringStack
 :END:
 
-*** BUILD Stack
+*** BUILD StringStack
 :PROPERTIES:
 :ID:    class-stack
 :KIND:  class
-:CLASS: Stack
+:CLASS: StringStack
 :END:
 
 **** BUILD push
@@ -143,18 +154,18 @@
 :SIG:        =.void
 :END:
 
-** BUILD data_TreeMap
+** BUILD data_StringTreeMap
 :PROPERTIES:
 :ID:    ns-data-treemap
 :KIND:  namespace
-:NS:    data_TreeMap
+:NS:    data_StringTreeMap
 :END:
 
-*** BUILD TreeMap
+*** BUILD StringTreeMap
 :PROPERTIES:
 :ID:    class-treemap
 :KIND:  class
-:CLASS: TreeMap
+:CLASS: StringTreeMap
 :END:
 
 **** BUILD put
@@ -322,22 +333,22 @@
 |                 | des        | SPEC   | aes             | class     |            |                            |
 |                 | des        | SPEC   | encrypt         | method    |            | = .string                  |
 |                 | des        | SPEC   | decrypt         | method    |            | = .string                  |
-| data_LinkedList |            | SPEC   | data_LinkedList | namespace |            |                            |
-| data_LinkedList | LinkedList | SPEC   | LinkedList      | class     | class      |                            |
-| data_LinkedList | LinkedList | SPEC   | add             | method    | = .int     | element=.string            |
-| data_LinkedList | LinkedList | SPEC   | addFirst        | method    | = .int     | element=.string            |
-| data_LinkedList | LinkedList | SPEC   | addLast         | method    | = .int     | element=.string            |
-| data_LinkedList | LinkedList | SPEC   | tostring        | method    | = .string  | =.void                     |
-| data_Stack      |            | BUILD  | data_Stack      | namespace |            |                            |
-| data_Stack      | Stack      | BUILD  | Stack           | class     |            |                            |
-| data_Stack      | Stack      | BUILD  | push            | method    | = .void    | value=.string              |
-| data_Stack      | Stack      | BUILD  | pop             | method    | = .string  | =.void                     |
-| data_Stack      | Stack      | BUILD  | tostring        | method    | = .string  | =.void                     |
-| data_TreeMap    |            | BUILD  | data_TreeMap    | namespace |            |                            |
-| data_TreeMap    | TreeMap    | BUILD  | TreeMap         | class     |            |                            |
-| data_TreeMap    | TreeMap    | BUILD  | put             | method    | = .void    | key=.string, value=.string |
-| data_TreeMap    | TreeMap    | BUILD  | get             | method    | = .string  | key=.string                |
-| data_TreeMap    | TreeMap    | DESIGN | tostring        | method    | = .string  | =.void                     |
+| data_StringLinkedList |            | SPEC   | data_StringLinkedList | namespace |            |                            |
+| data_StringLinkedList | StringLinkedList | SPEC   | StringLinkedList      | class     | class      |                            |
+| data_StringLinkedList | StringLinkedList | SPEC   | add             | method    | = .int     | element=.string            |
+| data_StringLinkedList | StringLinkedList | SPEC   | addFirst        | method    | = .int     | element=.string            |
+| data_StringLinkedList | StringLinkedList | SPEC   | addLast         | method    | = .int     | element=.string            |
+| data_StringLinkedList | StringLinkedList | SPEC   | tostring        | method    | = .string  | =.void                     |
+| data_StringStack      |            | BUILD  | data_StringStack      | namespace |            |                            |
+| data_StringStack      | StringStack      | BUILD  | StringStack           | class     |            |                            |
+| data_StringStack      | StringStack      | BUILD  | push            | method    | = .void    | value=.string              |
+| data_StringStack      | StringStack      | BUILD  | pop             | method    | = .string  | =.void                     |
+| data_StringStack      | StringStack      | BUILD  | tostring        | method    | = .string  | =.void                     |
+| data_StringTreeMap    |            | BUILD  | data_StringTreeMap    | namespace |            |                            |
+| data_StringTreeMap    | StringTreeMap    | BUILD  | StringTreeMap         | class     |            |                            |
+| data_StringTreeMap    | StringTreeMap    | BUILD  | put             | method    | = .void    | key=.string, value=.string |
+| data_StringTreeMap    | StringTreeMap    | BUILD  | get             | method    | = .string  | key=.string                |
+| data_StringTreeMap    | StringTreeMap    | DESIGN | tostring        | method    | = .string  | =.void                     |
 | rxmath_math     |            | DESIGN | rxmath.math     | namespace |            |                            |
 |                 | math       | SPEC   | math            | class     |            |                            |
 |                 | math       | SPEC   | pi              | method    |            | = .void                    |
@@ -371,16 +382,16 @@
 |                 | des        | SPEC   | decrypt  |            | = .string                  |
 |                 | des        | SPEC   | encrypt  |            | = .string                  |
 |                 | des        | SPEC   | decrypt  |            | = .string                  |
-| data_LinkedList | LinkedList | SPEC   | add      | = .int     | element=.string            |
-| data_LinkedList | LinkedList | SPEC   | addFirst | = .int     | element=.string            |
-| data_LinkedList | LinkedList | SPEC   | addLast  | = .int     | element=.string            |
-| data_LinkedList | LinkedList | SPEC   | tostring | = .string  | =.void                     |
-| data_Stack      | Stack      | BUILD  | push     | = .void    | value=.string              |
-| data_Stack      | Stack      | BUILD  | pop      | = .string  | =.void                     |
-| data_Stack      | Stack      | BUILD  | tostring | = .string  | =.void                     |
-| data_TreeMap    | TreeMap    | BUILD  | put      | = .void    | key=.string, value=.string |
-| data_TreeMap    | TreeMap    | BUILD  | get      | = .string  | key=.string                |
-| data_TreeMap    | TreeMap    | DESIGN | tostring | = .string  | =.void                     |
+| data_StringLinkedList | StringLinkedList | SPEC   | add      | = .int     | element=.string            |
+| data_StringLinkedList | StringLinkedList | SPEC   | addFirst | = .int     | element=.string            |
+| data_StringLinkedList | StringLinkedList | SPEC   | addLast  | = .int     | element=.string            |
+| data_StringLinkedList | StringLinkedList | SPEC   | tostring | = .string  | =.void                     |
+| data_StringStack      | StringStack      | BUILD  | push     | = .void    | value=.string              |
+| data_StringStack      | StringStack      | BUILD  | pop      | = .string  | =.void                     |
+| data_StringStack      | StringStack      | BUILD  | tostring | = .string  | =.void                     |
+| data_StringTreeMap    | StringTreeMap    | BUILD  | put      | = .void    | key=.string, value=.string |
+| data_StringTreeMap    | StringTreeMap    | BUILD  | get      | = .string  | key=.string                |
+| data_StringTreeMap    | StringTreeMap    | DESIGN | tostring | = .string  | =.void                     |
 |                 | math       | SPEC   | pi       |            | = .void                    |
 |                 | math       | SPEC   | sin      |            | = .float                   |
 |                 | math       | SPEC   | square   |            | = .float                   |
@@ -409,7 +420,7 @@
 :VISIBILITY: folded
 :END:
 
-** LinkedList
+** StringLinkedList
 
 *** Overview
 #+BEGIN: columnview :id "class-linkedlist" :maxlevel 2 :format "%10TODO %25ITEM %12KIND %14RETURNTYPE %50SIG"
@@ -436,7 +447,7 @@
 |------+------+------|
 #+END:
 
-** Stack
+** StringStack
 
 *** Overview
 #+BEGIN: columnview :id "class-stack" :maxlevel 2 :format "%10TODO %25ITEM %12KIND %14RETURNTYPE %50SIG"
@@ -462,7 +473,7 @@
 |------+------+------|
 #+END:
 
-** TreeMap
+** StringTreeMap
 
 *** Overview
 #+BEGIN: columnview :id "class-treemap" :maxlevel 2 :format "%10TODO %25ITEM %12KIND %14RETURNTYPE %50SIG"

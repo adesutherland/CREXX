@@ -9,7 +9,9 @@
 #include <stdio.h>
 #include <string.h>
 
+#line 13 "strip_001.c"
 #define YYMAXFILL 2
+#line 38 "strip_001.re"
 
 #define	BSIZE	128
 
@@ -79,83 +81,83 @@ int scan(FILE *fp)
 	{
 		s.tok = s.cur;
 
-#line 83 "strip_001.c"
+#line 85 "strip_001.c"
 		{
 			YYCTYPE yych;
 			if ((YYLIMIT - YYCURSOR) < 2) YYFILL(2);
 			yych = *YYCURSOR;
-			if (yych == '/') goto yy4;
+			if (yych == '/') goto yy2;
 			++YYCURSOR;
-yy3:
+yy1:
 #line 114 "strip_001.re"
 			{ fputc(*s.tok, stdout); continue; }
-#line 93 "strip_001.c"
-yy4:
+#line 95 "strip_001.c"
+yy2:
 			yych = *++YYCURSOR;
-			if (yych == '*') goto yy5;
-			if (yych == '/') goto yy7;
-			goto yy3;
-yy5:
+			if (yych == '*') goto yy3;
+			if (yych == '/') goto yy4;
+			goto yy1;
+yy3:
 			++YYCURSOR;
 #line 113 "strip_001.re"
 			{ goto comment; }
-#line 103 "strip_001.c"
-yy7:
+#line 105 "strip_001.c"
+yy4:
 			++YYCURSOR;
 #line 112 "strip_001.re"
 			{ goto cppcomment; }
-#line 108 "strip_001.c"
+#line 110 "strip_001.c"
 		}
 #line 115 "strip_001.re"
 
 comment:
 		s.tok = s.cur;
 
-#line 115 "strip_001.c"
+#line 117 "strip_001.c"
 		{
 			YYCTYPE yych;
 			if ((YYLIMIT - YYCURSOR) < 2) YYFILL(2);
 			yych = *YYCURSOR;
-			if (yych == '*') goto yy13;
+			if (yych == '*') goto yy7;
 			++YYCURSOR;
-yy12:
+yy6:
 #line 120 "strip_001.re"
 			{ goto comment; }
-#line 125 "strip_001.c"
-yy13:
+#line 127 "strip_001.c"
+yy7:
 			yych = *++YYCURSOR;
-			if (yych != '/') goto yy12;
+			if (yych != '/') goto yy6;
 			++YYCURSOR;
 #line 119 "strip_001.re"
 			{ continue; }
-#line 132 "strip_001.c"
+#line 134 "strip_001.c"
 		}
 #line 121 "strip_001.re"
 
 cppcomment:
 		s.tok = s.cur;
 
-#line 139 "strip_001.c"
+#line 141 "strip_001.c"
 		{
 			YYCTYPE yych;
 			if ((YYLIMIT - YYCURSOR) < 2) YYFILL(2);
 			yych = *YYCURSOR;
-			if (yych == '\n') goto yy20;
-			if (yych == '\r') goto yy22;
+			if (yych == '\n') goto yy10;
+			if (yych == '\r') goto yy11;
 			++YYCURSOR;
-yy19:
+yy9:
 #line 126 "strip_001.re"
 			{ goto cppcomment; }
-#line 150 "strip_001.c"
-yy20:
+#line 152 "strip_001.c"
+yy10:
 			++YYCURSOR;
 #line 125 "strip_001.re"
 			{ fwrite(s.tok, 1, s.cur - s.tok, stdout); continue; }
-#line 155 "strip_001.c"
-yy22:
+#line 157 "strip_001.c"
+yy11:
 			yych = *++YYCURSOR;
-			if (yych == '\n') goto yy20;
-			goto yy19;
+			if (yych == '\n') goto yy10;
+			goto yy9;
 		}
 #line 127 "strip_001.re"
 

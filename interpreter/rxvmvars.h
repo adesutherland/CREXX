@@ -32,6 +32,8 @@
 #ifndef NUTF8
 #include "utf.h"
 #endif
+#include "../binutils/include/rxflags.h"
+#include "rxvmref.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -45,6 +47,93 @@
 static void extract_double_decimal(numeric_context* num_context, value *coefficient, value *exponent, double value);
 static void extract_integer_decimal(numeric_context* num_context, value *coefficient, value *exponent, rxinteger value);
 static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_value, value *exponent_value, value *formatted_output_value);
+RX_MOSTLYINLINE void clear_value_contents(value* v);
+RX_MOSTLYINLINE void reset_value_storage_for_reuse(value* v);
+RX_MOSTLYINLINE void destroy_value_storage(value* v);
+RX_MOSTLYINLINE void clear_value(value* v);
+RX_MOSTLYINLINE void release_value_reference_lifetime(value* v);
+RX_INLINE void move_value(value *dest, value *source);
+RX_MOSTLYINLINE void maybe_trim_attribute_storage(value *v);
+
+RX_INLINE void clear_vm_private_flags(value *v) {
+    v->status.all_type_flags &= ~RXFLAG_VM_PRIVATE_MASK;
+}
+
+RX_INLINE void set_vm_private_flags(value *v, uint32_t flags) {
+    v->status.all_type_flags = (v->status.all_type_flags & ~RXFLAG_VM_PRIVATE_MASK) |
+                               (flags & RXFLAG_VM_PRIVATE_MASK);
+}
+
+RX_INLINE void copy_vm_private_flags(value *dest, const value *source) {
+    set_vm_private_flags(dest, source->status.all_type_flags);
+}
+
+RX_INLINE int value_is_uninitialized_object(const value *v) {
+    return v &&
+           (v->status.all_type_flags & RXFLAG_VM_OBJECT_UNINITIALIZED) != 0;
+}
+
+RX_INLINE void mark_value_uninitialized_object(value *v) {
+    if (!v) return;
+    set_vm_private_flags(v, v->status.all_type_flags | RXFLAG_VM_OBJECT_UNINITIALIZED);
+}
+
+RX_INLINE void clear_value_uninitialized_object(value *v) {
+    if (!v) return;
+    set_vm_private_flags(v, v->status.all_type_flags & ~RXFLAG_VM_OBJECT_UNINITIALIZED);
+}
+
+#ifndef NUTF8
+RX_INLINE int has_utf8_valid_count(const value *v) {
+    return (v->status.all_type_flags & (RXFLAG_VM_UTF8_VALID | RXFLAG_VM_UTF8_COUNT_VALID)) ==
+           (RXFLAG_VM_UTF8_VALID | RXFLAG_VM_UTF8_COUNT_VALID);
+}
+
+RX_INLINE int has_utf8_valid_count_or_empty(const value *v) {
+    return v->string_length == 0 || has_utf8_valid_count(v);
+}
+
+RX_INLINE void mark_utf8_valid_count(value *v) {
+    set_vm_private_flags(v, RXFLAG_VM_UTF8_VALID | RXFLAG_VM_UTF8_COUNT_VALID);
+}
+
+RX_INLINE void mark_ascii_string_valid_count(value *v) {
+    v->string_chars = v->string_length;
+    v->string_char_pos = 0;
+    mark_utf8_valid_count(v);
+}
+
+RX_INLINE void refresh_utf8_flags(value *v) {
+    size_t chars = 0;
+    if (!utf8nvalid_count(v->string_value, v->string_length, &chars)) {
+        v->string_chars = chars;
+        mark_utf8_valid_count(v);
+    } else {
+        v->string_chars = utf8nlen(v->string_value, v->string_length);
+        clear_vm_private_flags(v);
+    }
+}
+
+RX_INLINE void set_utf8_known_concat_flags(value *dest, int left_known, int right_known) {
+    if (left_known && right_known) mark_utf8_valid_count(dest);
+    else clear_vm_private_flags(dest);
+}
+
+RX_INLINE int validate_utf8_bytes(const void *bytes, size_t length, size_t *chars) {
+    size_t local_chars = 0;
+    const void *source = bytes ? bytes : "";
+
+    if (!bytes && length != 0) return -1;
+    if (utf8nvalid_count(source, length, &local_chars)) return -1;
+    if (chars) *chars = local_chars;
+    return 0;
+}
+
+RX_INLINE int is_valid_unicode_scalar(rxinteger codepoint) {
+    return codepoint >= 0 && codepoint <= 0x10ffff &&
+           !(codepoint >= 0xd800 && codepoint <= 0xdfff);
+}
+#endif
 
 /* Clears the binary payload and runs native cleanup if the payload owns native resources. */
 RX_INLINE void clear_binary_payload(value *v) {
@@ -55,6 +144,7 @@ RX_INLINE void clear_binary_payload(value *v) {
     if (v->binary_value) free(v->binary_value);
     v->binary_value = 0;
     v->binary_length = 0;
+    v->binary_pos = 0;
     v->binary_buffer_length = 0;
     v->native_payload_ops = 0;
     v->native_payload_flags = 0;
@@ -62,6 +152,21 @@ RX_INLINE void clear_binary_payload(value *v) {
 
 /* Zeros a register value */
 RX_INLINE void value_zero(value *v) {
+    size_t i;
+
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
+
+    if (v->num_attributes) {
+        for (i = 0; i < v->num_attributes; i++) {
+            value *attribute = v->unlinked_attributes ? v->unlinked_attributes[i] :
+                               (v->attributes ? v->attributes[i] : 0);
+            if (attribute) reset_value_storage_for_reuse(attribute);
+            if (v->attributes && v->unlinked_attributes) {
+                v->attributes[i] = v->unlinked_attributes[i];
+            }
+        }
+    }
+
     if (v->native_payload_ops) {
         clear_binary_payload(v);
     }
@@ -83,6 +188,7 @@ RX_INLINE void value_zero(value *v) {
 
     /* Lazy Free binary - just zero the used length */
     v->binary_length = 0;
+    v->binary_pos = 0;
 }
 
 /* Setup a new value structure */
@@ -94,10 +200,14 @@ RX_INLINE void value_init(value *v) {
     v->attribute_buffers = 0;
     v->num_attribute_buffers = 0;
     v->max_num_attributes = 0;
+    v->num_attributes = 0;
     v->binary_value = 0;
+    v->binary_pos = 0;
     v->binary_buffer_length = 0;
     v->native_payload_ops = 0;
     v->native_payload_flags = 0;
+    v->reference_identity = 0;
+    v->reference_payload = 0;
     v->decimal_value = 0;
     v->decimal_value_length = 0;
     v->decimal_buffer_length = 0;
@@ -138,8 +248,13 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
     value *a;
 
     if (num <= v->num_attributes) {
-        /* Reducing the number of attributes is easy */
+        /* Reducing invalidates removed child storage but keeps it reusable. */
+        for (i = num; i < v->num_attributes; i++) {
+            v->attributes[i] = v->unlinked_attributes[i];
+            reset_value_storage_for_reuse(v->attributes[i]);
+        }
         v->num_attributes = num;
+        maybe_trim_attribute_storage(v);
         return;
     }
 
@@ -147,7 +262,7 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
         /* Just need to reset the recycled attributes */
         for (i = v->num_attributes; i < num; i++) {
             v->attributes[i] = v->unlinked_attributes[i]; /* Ensure Attribute is unlinked */
-            value_zero(v->attributes[i]);
+            clear_value_contents(v->attributes[i]);
         }
         v->num_attributes = num;
         return;
@@ -158,7 +273,7 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
     /* We first need to recycle any unused attributes */
     for (i = v->num_attributes; i < v->max_num_attributes; i++) {
         v->attributes[i] = v->unlinked_attributes[i]; /* Ensure Attribute is unlinked */
-        value_zero(v->attributes[i]);
+        clear_value_contents(v->attributes[i]);
     }
 
     /* Calculate the new maximum number of attributes using bit-twiddling */
@@ -213,6 +328,121 @@ RX_INLINE size_t buffer_size(size_t value) {
     return power_of_two_size(value);
 }
 
+RX_INLINE int reserve_binary_buffer(value *v, size_t length) {
+    if (v->native_payload_ops) clear_binary_payload(v);
+    if (length > v->binary_buffer_length) {
+        size_t new_size = buffer_size(length);
+        void *new_buffer;
+
+        if (v->binary_value) new_buffer = realloc(v->binary_value, new_size);
+        else new_buffer = malloc(new_size);
+
+        if (!new_buffer) return -1;
+
+        v->binary_value = new_buffer;
+        v->binary_buffer_length = new_size;
+    }
+    return 0;
+}
+
+RX_INLINE int prep_binary_buffer(value *v, size_t length) {
+    if (reserve_binary_buffer(v, length) != 0) return -1;
+    v->binary_length = length;
+    return 0;
+}
+
+RX_INLINE int set_binary(value *v, const void *data, size_t length) {
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
+    if (prep_binary_buffer(v, length) != 0) return -1;
+    if (length && data) memcpy(v->binary_value, data, length);
+    else if (length) memset(v->binary_value, 0, length);
+    v->binary_pos = 0;
+    clear_vm_private_flags(v);
+    return 0;
+}
+
+RX_INLINE int set_buffer_binary(value *v, char *buffer, size_t length, size_t buffer_length) {
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
+    if (v->native_payload_ops) clear_binary_payload(v);
+    if (v->binary_value) free(v->binary_value);
+    v->binary_value = buffer;
+    v->binary_length = length;
+    v->binary_pos = 0;
+    v->binary_buffer_length = buffer_length;
+    clear_vm_private_flags(v);
+    return 0;
+}
+
+RX_INLINE int append_binary(value *v, const void *data, size_t length) {
+    size_t start = v->binary_length;
+    if (prep_binary_buffer(v, start + length) != 0) return -1;
+    if (length && data) memcpy(v->binary_value + start, data, length);
+    else if (length) memset(v->binary_value + start, 0, length);
+    if (v->binary_pos > v->binary_length) v->binary_pos = v->binary_length;
+    clear_vm_private_flags(v);
+    return 0;
+}
+
+RX_INLINE int append_binary_value(value *dest, value *source) {
+    size_t source_length = source->binary_length;
+    if (dest == source) {
+        if (prep_binary_buffer(dest, source_length * 2) != 0) return -1;
+        if (source_length) memcpy(dest->binary_value + source_length, dest->binary_value, source_length);
+        if (dest->binary_pos > dest->binary_length) dest->binary_pos = dest->binary_length;
+        clear_vm_private_flags(dest);
+        return 0;
+    }
+    return append_binary(dest, source->binary_value, source_length);
+}
+
+RX_INLINE int concat_binary(value *dest, value *left, value *right) {
+    size_t left_length = left->binary_length;
+    size_t right_length = right->binary_length;
+    size_t total_length = left_length + right_length;
+
+    if (total_length == 0) return set_binary(dest, 0, 0);
+
+    if (dest == left || dest == right) {
+        size_t buffer_length = buffer_size(total_length);
+        char *buffer = malloc(buffer_length);
+        if (!buffer) return -1;
+        if (left_length) memcpy(buffer, left->binary_value, left_length);
+        if (right_length) memcpy(buffer + left_length, right->binary_value, right_length);
+        set_buffer_binary(dest, buffer, total_length, buffer_length);
+        return 0;
+    }
+
+    if (prep_binary_buffer(dest, total_length) != 0) return -1;
+    if (left_length) memcpy(dest->binary_value, left->binary_value, left_length);
+    if (right_length) memcpy(dest->binary_value + left_length, right->binary_value, right_length);
+    dest->binary_pos = 0;
+    clear_vm_private_flags(dest);
+    return 0;
+}
+
+RX_INLINE int slice_binary(value *dest, value *source, size_t offset, size_t length) {
+    size_t actual_length;
+
+    if (offset >= source->binary_length) actual_length = 0;
+    else {
+        actual_length = source->binary_length - offset;
+        if (length < actual_length) actual_length = length;
+    }
+
+    if (dest == source) {
+        if (actual_length) memmove(dest->binary_value, source->binary_value + offset, actual_length);
+        dest->binary_length = actual_length;
+        dest->binary_pos = 0;
+        clear_vm_private_flags(dest);
+        return 0;
+    }
+
+    if (prep_binary_buffer(dest, actual_length) != 0) return -1;
+    if (actual_length) memcpy(dest->binary_value, source->binary_value + offset, actual_length);
+    dest->binary_pos = 0;
+    return 0;
+}
+
 RX_INLINE void prep_string_buffer(value *v, size_t length) {
     v->string_length = length;
     if (v->string_length > v->string_buffer_length) {
@@ -250,15 +480,32 @@ RX_INLINE void null_terminate_string_buffer(value *v) {
     v->string_value[v->string_length] = 0;
 }
 
-/* Clears a value of all its children and other malloced buffers */
-RX_MOSTLYINLINE void clear_value(value* v) {
+/* Releases reference identities/payload retains for storage whose lifetime ended.
+ * Reusable buffers and ordinary value contents are intentionally left intact.
+ */
+RX_MOSTLYINLINE void release_value_reference_lifetime(value* v) {
+    size_t i;
+
+    if (!v) return;
+    if (v->reference_identity) rxvm_reference_identity_release(v);
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
+
+    if (v->unlinked_attributes) {
+        for (i = 0; i < v->max_num_attributes; i++) {
+            release_value_reference_lifetime(v->unlinked_attributes[i]);
+        }
+    }
+}
+
+/* Clears a value's contents while preserving its own storage reference identity. */
+RX_MOSTLYINLINE void clear_value_contents(value* v) {
     int i;
 
     /* Clear attribute values */
     if (v->unlinked_attributes) {
         for (i = 0; i < v->max_num_attributes; i++) {
             if (v->unlinked_attributes[i]) {
-                clear_value(v->unlinked_attributes[i]);
+                destroy_value_storage(v->unlinked_attributes[i]);
             }
         }
         free(v->unlinked_attributes);
@@ -306,6 +553,98 @@ RX_MOSTLYINLINE void clear_value(value* v) {
     clear_binary_payload(v);
 
     value_zero(v);
+}
+
+/* Resets a storage location for later reuse without freeing reusable buffers. */
+RX_MOSTLYINLINE void reset_value_storage_for_reuse(value* v) {
+    if (!v) return;
+    if (v->reference_identity) rxvm_reference_identity_release(v);
+    value_zero(v);
+}
+
+/* Destroys a storage location, invalidating references to that location. */
+RX_MOSTLYINLINE void destroy_value_storage(value* v) {
+    if (v && v->reference_identity) rxvm_reference_identity_release(v);
+    clear_value_contents(v);
+}
+
+/* Backward-compatible storage teardown helper. */
+RX_MOSTLYINLINE void clear_value(value* v) {
+    destroy_value_storage(v);
+}
+
+RX_INLINE void reverse_attribute_pointers(value **items, size_t start, size_t count) {
+    size_t left;
+    size_t right;
+
+    if (!items || count < 2) return;
+
+    left = start;
+    right = start + count - 1;
+    while (left < right) {
+        value *tmp = items[left];
+        items[left] = items[right];
+        items[right] = tmp;
+        left++;
+        right--;
+    }
+}
+
+RX_INLINE void rotate_attribute_pointer_blocks(value **items, size_t start, size_t left_count, size_t right_count) {
+    if (!items || left_count == 0 || right_count == 0) return;
+
+    /* Swap adjacent blocks [left][right] into [right][left] without a temp buffer. */
+    reverse_attribute_pointers(items, start, left_count);
+    reverse_attribute_pointers(items, start + left_count, right_count);
+    reverse_attribute_pointers(items, start, left_count + right_count);
+}
+
+RX_INLINE void insert_attributes(value *v, size_t index, size_t count) {
+    size_t old_num;
+    size_t i;
+
+    if (!v || count == 0) return;
+
+    old_num = v->num_attributes;
+    set_num_attributes(v, old_num + count);
+
+    if (index < old_num) {
+        rotate_attribute_pointer_blocks(v->attributes, index, old_num - index, count);
+        rotate_attribute_pointer_blocks(v->unlinked_attributes, index, old_num - index, count);
+    }
+
+    for (i = index; i < index + count; i++) {
+        v->attributes[i] = v->unlinked_attributes[i];
+        reset_value_storage_for_reuse(v->attributes[i]);
+    }
+}
+
+RX_INLINE void delete_attributes(value *v, size_t index, size_t count) {
+    size_t old_num;
+    size_t new_num;
+    size_t tail_count;
+    size_t i;
+
+    if (!v || count == 0) return;
+
+    old_num = v->num_attributes;
+    if (index > old_num) return;
+    tail_count = old_num - index;
+    if (count > tail_count) return;
+    tail_count -= count;
+
+    if (tail_count > 0) {
+        rotate_attribute_pointer_blocks(v->attributes, index, count, tail_count);
+        rotate_attribute_pointer_blocks(v->unlinked_attributes, index, count, tail_count);
+    }
+
+    new_num = old_num - count;
+    for (i = new_num; i < old_num; i++) {
+        v->attributes[i] = v->unlinked_attributes[i];
+        reset_value_storage_for_reuse(v->attributes[i]);
+    }
+    v->num_attributes = new_num;
+    maybe_trim_attribute_storage(v);
 }
 
 /* Int Flag */
@@ -386,27 +725,33 @@ RX_INLINE void unset_type(value *v) {
 */
 
 RX_INLINE void set_int(value *v, rxinteger value) {
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
     if (v->native_payload_ops) clear_binary_payload(v);
     v->int_value = value;
 }
 RX_INLINE void set_float(value *v, double value) {
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
     if (v->native_payload_ops) clear_binary_payload(v);
     v->float_value = value;
 }
 
 RX_INLINE void set_string(value *v, char *value, size_t length) {
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
     if (v->native_payload_ops) clear_binary_payload(v);
     prep_string_buffer(v,length);
     memcpy(v->string_value, value, v->string_length);
     v->string_pos = 0;
 #ifndef NUTF8
     v->string_char_pos = 0;
-    v->string_chars = utf8nlen(v->string_value, v->string_length); /* SLOW! */
+    refresh_utf8_flags(v);
+#else
+    clear_vm_private_flags(v);
 #endif
 }
 
 /* set value string from null string value */
 RX_INLINE void set_null_string(value *v, const char *from) {
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
     if (v->native_payload_ops) clear_binary_payload(v);
     if (v->string_value == from) return;
     prep_string_buffer(v, strlen(from));
@@ -414,11 +759,34 @@ RX_INLINE void set_null_string(value *v, const char *from) {
     v->string_pos = 0;
 #ifndef NUTF8
     v->string_char_pos = 0;
-    v->string_chars = utf8nlen(v->string_value, v->string_length);
+    refresh_utf8_flags(v);
+#else
+    clear_vm_private_flags(v);
 #endif
 }
 
+RX_INLINE int set_string_validated(value *v, const char *from, size_t length) {
+    if (!from && length != 0) return -1;
+#ifndef NUTF8
+    size_t chars = 0;
+    if (validate_utf8_bytes(from, length, &chars) != 0) return -1;
+#endif
+    set_string(v, (char *)(from ? from : ""), length);
+#ifndef NUTF8
+    v->string_chars = chars;
+    v->string_char_pos = 0;
+    mark_utf8_valid_count(v);
+#endif
+    return 0;
+}
+
+RX_INLINE int set_null_string_validated(value *v, const char *from) {
+    const char *text = from ? from : "";
+    return set_string_validated(v, text, strlen(text));
+}
+
 RX_INLINE void set_const_string(value *v, string_constant *from) {
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
     if (v->native_payload_ops) clear_binary_payload(v);
     prep_string_buffer(v,from->string_len);
     memcpy(v->string_value, from->string, v->string_length);
@@ -426,11 +794,15 @@ RX_INLINE void set_const_string(value *v, string_constant *from) {
 #ifndef NUTF8
     v->string_char_pos = 0;
     v->string_chars = from->string_chars;
+    mark_utf8_valid_count(v);
+#else
+    clear_vm_private_flags(v);
 #endif
 }
 
 RX_INLINE void set_value_string(value *v, value *from) {
     if (v == from) return;
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
     if (v->native_payload_ops) clear_binary_payload(v);
     prep_string_buffer(v, from->string_length);
     memcpy(v->string_value, from->string_value, v->string_length);
@@ -438,6 +810,9 @@ RX_INLINE void set_value_string(value *v, value *from) {
 #ifndef NUTF8
     v->string_char_pos = 0;
     v->string_chars = from->string_chars;
+    copy_vm_private_flags(v, from);
+#else
+    clear_vm_private_flags(v);
 #endif
 }
 
@@ -450,6 +825,7 @@ RX_INLINE void set_buffer_string(
         , size_t string_chars
 #endif
 ) {
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
     if (v->native_payload_ops) clear_binary_payload(v);
     if (v->string_value != v->small_string_buffer) free(v->string_value);
     v->string_value = buffer;
@@ -460,6 +836,7 @@ RX_INLINE void set_buffer_string(
     v->string_char_pos = 0;
     v->string_chars = string_chars;
 #endif
+    clear_vm_private_flags(v);
 }
 
 RX_INLINE int set_native_payload(value *v,
@@ -469,14 +846,10 @@ RX_INLINE int set_native_payload(value *v,
                                  unsigned int flags) {
     if (!v) return -1;
 
+    if (v->reference_payload) rxvm_reference_value_release_payload(v);
     clear_binary_payload(v);
     if (length) {
-        v->binary_value = malloc(length);
-        if (!v->binary_value) return -1;
-        if (payload) memcpy(v->binary_value, payload, length);
-        else memset(v->binary_value, 0, length);
-        v->binary_length = length;
-        v->binary_buffer_length = length;
+        if (set_binary(v, payload, length) != 0) return -1;
     }
     v->native_payload_ops = ops;
     v->native_payload_flags = flags;
@@ -498,6 +871,10 @@ RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
     size_t i;
 
     if (dest == source) return;
+
+    if (dest->reference_payload || source->reference_payload) {
+        rxvm_reference_value_copy_payload(dest, source);
+    }
 
     if (dest->native_payload_ops || source->native_payload_ops) {
         clear_binary_payload(dest);
@@ -540,22 +917,22 @@ RX_MOSTLYINLINE void copy_value(value *dest, value *source) {
         dest->string_char_pos = 0;;
 #endif
     }
+    copy_vm_private_flags(dest, source);
 
     /* Copy Binary */
     if (source->native_payload_ops && source->native_payload_ops->copy) {
         source->native_payload_ops->copy(dest, source);
     }
     else if (source->binary_length) {
-        dest->binary_length = source->binary_length;
-        dest->binary_buffer_length = dest->binary_length;
-        if (dest->binary_value) dest->binary_value = realloc(dest->binary_value, dest->binary_length);
-        else dest->binary_value = malloc(dest->binary_length);
+        if (prep_binary_buffer(dest, source->binary_length) != 0) abort();
         memcpy(dest->binary_value, source->binary_value, dest->binary_length);
+        dest->binary_pos = source->binary_pos;
         dest->native_payload_ops = source->native_payload_ops;
         dest->native_payload_flags = source->native_payload_flags;
     }
     else {
         dest->binary_length = 0;
+        dest->binary_pos = 0;
         dest->native_payload_ops = 0;
         dest->native_payload_flags = 0;
     }
@@ -571,7 +948,7 @@ RX_INLINE void move_value(value *dest, value *source) {
     if (dest == source) return;
 
     /* Clear out destination - including string / attributes */
-    clear_value(dest);
+    destroy_value_storage(dest);
     value_init(dest);
 
     /* Copy basic values */
@@ -621,12 +998,14 @@ RX_INLINE void move_value(value *dest, value *source) {
     /* Move Binary */
     if (source->binary_value) {
         dest->binary_length = source->binary_length;
+        dest->binary_pos = source->binary_pos;
         dest->binary_value = source->binary_value;
         dest->binary_buffer_length = source->binary_buffer_length;
         dest->native_payload_ops = source->native_payload_ops;
         dest->native_payload_flags = source->native_payload_flags;
         source->binary_value = 0;
         source->binary_length = 0;
+        source->binary_pos = 0;
         source->binary_buffer_length = 0;
         source->native_payload_ops = 0;
         source->native_payload_flags = 0;
@@ -646,8 +1025,128 @@ RX_INLINE void move_value(value *dest, value *source) {
     dest->num_attributes = source->num_attributes;
     dest->num_attribute_buffers = source->num_attribute_buffers;
 
+    if (dest->reference_identity || source->reference_identity) {
+        rxvm_reference_identity_move(dest, source);
+    }
+    if (dest->reference_payload || source->reference_payload) {
+        rxvm_reference_value_move_payload(dest, source);
+    }
+
     /* Reset / fixup source */
     value_init(source);
+}
+
+RX_INLINE value *map_trimmed_attribute_pointer(value *old_attribute,
+                                               value **old_unlinked_attributes,
+                                               value *new_storage,
+                                               size_t active_count) {
+    size_t i;
+
+    for (i = 0; i < active_count; i++) {
+        if (old_attribute == old_unlinked_attributes[i]) return &new_storage[i];
+    }
+    return old_attribute;
+}
+
+RX_MOSTLYINLINE void maybe_trim_attribute_storage(value *v) {
+    value **old_attributes;
+    value **old_unlinked_attributes;
+    value **old_attribute_buffers;
+    value **new_attributes;
+    value **new_unlinked_attributes;
+    value **new_attribute_buffers;
+    value *new_storage;
+    size_t old_max;
+    size_t old_buffer_count;
+    size_t new_max;
+    size_t i;
+
+    if (!v || v->max_num_attributes < 64) return;
+    if (v->num_attributes &&
+        v->max_num_attributes <= v->num_attributes * 4) return;
+
+    old_max = v->max_num_attributes;
+    old_attributes = v->attributes;
+    old_unlinked_attributes = v->unlinked_attributes;
+    old_attribute_buffers = v->attribute_buffers;
+    old_buffer_count = v->num_attribute_buffers;
+
+    if (v->num_attributes == 0) {
+        if (old_unlinked_attributes) {
+            for (i = 0; i < old_max; i++) {
+                if (old_unlinked_attributes[i]) clear_value_contents(old_unlinked_attributes[i]);
+            }
+        }
+        if (old_attribute_buffers) {
+            for (i = 0; i < old_buffer_count; i++) {
+                if (old_attribute_buffers[i]) free(old_attribute_buffers[i]);
+            }
+            free(old_attribute_buffers);
+        }
+        if (old_attributes) free(old_attributes);
+        if (old_unlinked_attributes) free(old_unlinked_attributes);
+        v->attributes = 0;
+        v->unlinked_attributes = 0;
+        v->attribute_buffers = 0;
+        v->num_attribute_buffers = 0;
+        v->max_num_attributes = 0;
+        return;
+    }
+
+    new_max = power_of_two_size(v->num_attributes);
+    if (new_max >= old_max) return;
+
+    new_attributes = malloc(sizeof(value*) * new_max);
+    new_unlinked_attributes = malloc(sizeof(value*) * new_max);
+    new_attribute_buffers = malloc(sizeof(value*));
+    new_storage = malloc(sizeof(value) * new_max);
+    if (!new_attributes || !new_unlinked_attributes || !new_attribute_buffers || !new_storage) {
+        if (new_attributes) free(new_attributes);
+        if (new_unlinked_attributes) free(new_unlinked_attributes);
+        if (new_attribute_buffers) free(new_attribute_buffers);
+        if (new_storage) free(new_storage);
+        return;
+    }
+
+    for (i = 0; i < new_max; i++) {
+        value_init(&new_storage[i]);
+        new_unlinked_attributes[i] = &new_storage[i];
+    }
+
+    for (i = 0; i < v->num_attributes; i++) {
+        move_value(&new_storage[i], old_unlinked_attributes[i]);
+    }
+
+    for (i = 0; i < v->num_attributes; i++) {
+        new_attributes[i] = map_trimmed_attribute_pointer(old_attributes[i],
+                                                          old_unlinked_attributes,
+                                                          new_storage,
+                                                          v->num_attributes);
+    }
+    for (i = v->num_attributes; i < new_max; i++) {
+        new_attributes[i] = new_unlinked_attributes[i];
+    }
+
+    if (old_unlinked_attributes) {
+        for (i = 0; i < old_max; i++) {
+            if (old_unlinked_attributes[i]) clear_value_contents(old_unlinked_attributes[i]);
+        }
+    }
+    if (old_attribute_buffers) {
+        for (i = 0; i < old_buffer_count; i++) {
+            if (old_attribute_buffers[i]) free(old_attribute_buffers[i]);
+        }
+        free(old_attribute_buffers);
+    }
+    if (old_attributes) free(old_attributes);
+    if (old_unlinked_attributes) free(old_unlinked_attributes);
+
+    new_attribute_buffers[0] = new_storage;
+    v->attributes = new_attributes;
+    v->unlinked_attributes = new_unlinked_attributes;
+    v->attribute_buffers = new_attribute_buffers;
+    v->num_attribute_buffers = 1;
+    v->max_num_attributes = new_max;
 }
 
 /* Copy string value */
@@ -671,6 +1170,7 @@ RX_INLINE void copy_string_value(value *dest, value *source) {
         dest->string_char_pos = 0;
 #endif
     }
+    copy_vm_private_flags(dest, source);
 }
 
 /* Compares two strings. returns -1, 0, 1 as appropriate */
@@ -707,6 +1207,7 @@ RX_INLINE void string_slice_from_cursor(value *dest, value *source, size_t char_
     if (actual_chars == 0) {
         if (dest->string_buffer_length > 0) dest->string_value[0] = '\0';
         string_set_ascii_length(dest, 0);
+        mark_utf8_valid_count(dest);
         return;
     }
 
@@ -720,7 +1221,7 @@ RX_INLINE void string_slice_from_cursor(value *dest, value *source, size_t char_
         for (i = 0; i < actual_chars; ++i) {
             end_pos += utf8codepointcalcsize(source->string_value + end_pos);
         }
-        byte_length = end_pos - byte_pos;
+        byte_length = end_pos >= byte_pos ? end_pos - byte_pos : 0;
     }
 
     if (dest == source) {
@@ -732,12 +1233,17 @@ RX_INLINE void string_slice_from_cursor(value *dest, value *source, size_t char_
 
     string_set_lengths(dest, byte_length, actual_chars);
     null_terminate_string_buffer(dest);
+    if (has_utf8_valid_count(source)) mark_utf8_valid_count(dest);
+    else clear_vm_private_flags(dest);
 }
 
 RX_INLINE void string_truncate_chars(value *v, size_t char_count) {
+    int was_valid = has_utf8_valid_count_or_empty(v);
     string_set_byte_pos(v, char_count);
     string_set_lengths(v, v->string_pos, v->string_char_pos);
     null_terminate_string_buffer(v);
+    if (was_valid || v->string_length == 0) mark_utf8_valid_count(v);
+    else clear_vm_private_flags(v);
 }
 #else
 RX_INLINE void string_reset_cursor(value *v) {
@@ -766,6 +1272,7 @@ RX_INLINE void string_slice_from_cursor(value *dest, value *source, size_t char_
     if (byte_length == 0) {
         if (dest->string_buffer_length > 0) dest->string_value[0] = '\0';
         string_set_ascii_length(dest, 0);
+        clear_vm_private_flags(dest);
         return;
     }
 
@@ -778,12 +1285,14 @@ RX_INLINE void string_slice_from_cursor(value *dest, value *source, size_t char_
 
     string_set_ascii_length(dest, byte_length);
     null_terminate_string_buffer(dest);
+    clear_vm_private_flags(dest);
 }
 
 RX_INLINE void string_truncate_chars(value *v, size_t char_count) {
     size_t new_length = MIN(char_count, v->string_length);
     string_set_ascii_length(v, new_length);
     null_terminate_string_buffer(v);
+    clear_vm_private_flags(v);
 }
 #endif
 
@@ -791,7 +1300,10 @@ RX_INLINE int string_cmp(char *value1, size_t length1, char *value2, size_t leng
     int ret;
 
     ret = memcmp(value1, value2, MIN(length1, length2));
-    if (!ret) ret = length1 - length2;
+    if (!ret) {
+        if (length1 > length2) ret = 1;
+        else if (length1 < length2) ret = -1;
+    }
     ret = ret > 0 ? 1 : (ret < 0 ? -1 : 0);
 
     return ret;
@@ -809,18 +1321,30 @@ RX_INLINE int string_cmp_const(value *v1, string_constant *v2) {
 
 RX_INLINE void string_append(value *v1, value *v2) {
     size_t start = v1->string_length;
+    size_t append_length = v2->string_length;
+#ifndef NUTF8
+    size_t append_chars = v2->string_chars;
+    int left_known = has_utf8_valid_count_or_empty(v1);
+    int right_known = has_utf8_valid_count_or_empty(v2);
+#endif
 
-    extend_string_buffer(v1, v1->string_length + v2->string_length);
-    memcpy(v1->string_value + start, v2->string_value, v2->string_length);
+    extend_string_buffer(v1, v1->string_length + append_length);
+    memcpy(v1->string_value + start, v2->string_value, append_length);
     v1->string_pos = 0;
 #ifndef NUTF8
     v1->string_char_pos = 0;
-    v1->string_chars += v2->string_chars;
+    v1->string_chars += append_chars;
+    set_utf8_known_concat_flags(v1, left_known, right_known);
+#else
+    clear_vm_private_flags(v1);
 #endif
 }
 
 RX_INLINE void string_append_chars(value *v1, char *value, size_t length) {
     size_t start = v1->string_length;
+#ifndef NUTF8
+    int had_valid = has_utf8_valid_count_or_empty(v1);
+#endif
 
     extend_string_buffer(v1, v1->string_length + length);
     memcpy(v1->string_value + start, value, length);
@@ -828,20 +1352,41 @@ RX_INLINE void string_append_chars(value *v1, char *value, size_t length) {
     v1->string_pos = 0;
 #ifndef NUTF8
     v1->string_char_pos = 0;
-    v1->string_chars += utf8nlen(value, length); /* SLOW! */
+    {
+        size_t chars = 0;
+        if (!utf8nvalid_count(value, length, &chars)) {
+            v1->string_chars += chars;
+            if (had_valid) mark_utf8_valid_count(v1);
+            else clear_vm_private_flags(v1);
+        } else {
+            v1->string_chars += utf8nlen(value, length); /* SLOW! */
+            clear_vm_private_flags(v1);
+        }
+    }
+#else
+    clear_vm_private_flags(v1);
 #endif
 }
 
 RX_INLINE void string_sappend(value *v1, value *v2) {
     size_t start = v1->string_length;
+    size_t append_length = v2->string_length;
+#ifndef NUTF8
+    size_t append_chars = v2->string_chars;
+    int left_known = has_utf8_valid_count_or_empty(v1);
+    int right_known = has_utf8_valid_count_or_empty(v2);
+#endif
 
-    extend_string_buffer(v1, v1->string_length + v2->string_length + 1);
+    extend_string_buffer(v1, v1->string_length + append_length + 1);
     v1->string_value[start++] = ' ';
-    memcpy(v1->string_value + start, v2->string_value, v2->string_length);
+    memcpy(v1->string_value + start, v2->string_value, append_length);
     v1->string_pos = 0;
 #ifndef NUTF8
     v1->string_char_pos = 0;
-    v1->string_chars += v2->string_chars + 1;
+    v1->string_chars += append_chars + 1;
+    set_utf8_known_concat_flags(v1, left_known, right_known);
+#else
+    clear_vm_private_flags(v1);
 #endif
 }
 
@@ -849,6 +1394,12 @@ RX_INLINE void string_concat(value *v1, value *v2, value *v3) {
     size_t len = v2->string_length + v3->string_length ;
     size_t buffer_len = buffer_size(len);
     char *buffer;
+#ifndef NUTF8
+    size_t left_chars = v2->string_chars;
+    size_t right_chars = v3->string_chars;
+    int left_known = has_utf8_valid_count_or_empty(v2);
+    int right_known = has_utf8_valid_count_or_empty(v3);
+#endif
     if (v1 == v2 || v1 == v3) {
         /* Need to use a buffer */
         buffer = malloc(buffer_len);
@@ -860,7 +1411,7 @@ RX_INLINE void string_concat(value *v1, value *v2, value *v3) {
 #ifdef NUTF8
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
-        set_buffer_string(v1, buffer, len, buffer_len, v2->string_chars + v3->string_chars);
+        set_buffer_string(v1, buffer, len, buffer_len, left_chars + right_chars);
         v1->string_char_pos = 0;
 #endif
     }
@@ -871,16 +1422,27 @@ RX_INLINE void string_concat(value *v1, value *v2, value *v3) {
         memcpy(v1->string_value + v2->string_length, v3->string_value, v3->string_length);
         v1->string_pos = 0;
 #ifndef NUTF8
-        v1->string_chars = v2->string_chars + v3->string_chars;
+        v1->string_chars = left_chars + right_chars;
         v1->string_char_pos = 0;
 #endif
     }
+#ifndef NUTF8
+    set_utf8_known_concat_flags(v1, left_known, right_known);
+#else
+    clear_vm_private_flags(v1);
+#endif
 }
 
 RX_INLINE void string_sconcat(value *v1, value *v2, value *v3) {
     size_t len = v2->string_length + v3->string_length + 1;
     size_t buffer_len = buffer_size(len);
     char *buffer;
+#ifndef NUTF8
+    size_t left_chars = v2->string_chars;
+    size_t right_chars = v3->string_chars;
+    int left_known = has_utf8_valid_count_or_empty(v2);
+    int right_known = has_utf8_valid_count_or_empty(v3);
+#endif
     if (v1 == v2 || v1 == v3) {
         /* Need to use a buffer */
         buffer = malloc(buffer_len);
@@ -892,7 +1454,7 @@ RX_INLINE void string_sconcat(value *v1, value *v2, value *v3) {
 #ifdef NUTF8
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
-        set_buffer_string(v1, buffer, len, buffer_len, v2->string_chars + v3->string_chars + 1);
+        set_buffer_string(v1, buffer, len, buffer_len, left_chars + right_chars + 1);
         v1->string_char_pos = 0;
 #endif
     }
@@ -904,16 +1466,25 @@ RX_INLINE void string_sconcat(value *v1, value *v2, value *v3) {
         memcpy(v1->string_value + v2->string_length + 1, v3->string_value, v3->string_length);
         v1->string_pos = 0;
 #ifndef NUTF8
-        v1->string_chars = v2->string_chars + v3->string_chars + 1;
+        v1->string_chars = left_chars + right_chars + 1;
         v1->string_char_pos = 0;
 #endif
     }
+#ifndef NUTF8
+    set_utf8_known_concat_flags(v1, left_known, right_known);
+#else
+    clear_vm_private_flags(v1);
+#endif
 }
 
 RX_INLINE void string_concat_var_const(value *v1, value *v2, string_constant *v3) {
     size_t len = v2->string_length + v3->string_len;
     size_t buffer_len = buffer_size(len);
     char *buffer;
+#ifndef NUTF8
+    size_t left_chars = v2->string_chars;
+    int left_known = has_utf8_valid_count_or_empty(v2);
+#endif
     if (v1 == v2) {
         /* Need to use a buffer */
         buffer = malloc(buffer_len);
@@ -926,7 +1497,7 @@ RX_INLINE void string_concat_var_const(value *v1, value *v2, string_constant *v3
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
         set_buffer_string(v1, buffer, len, buffer_len,
-                          v2->string_chars + v3->string_chars);
+                          left_chars + v3->string_chars);
         v1->string_char_pos = 0;
 #endif
     }
@@ -937,16 +1508,25 @@ RX_INLINE void string_concat_var_const(value *v1, value *v2, string_constant *v3
         memcpy(v1->string_value + v2->string_length, v3->string, v3->string_len);
         v1->string_pos = 0;
 #ifndef NUTF8
-        v1->string_chars = v2->string_chars + v3->string_chars;
+        v1->string_chars = left_chars + v3->string_chars;
         v1->string_char_pos = 0;
 #endif
     }
+#ifndef NUTF8
+    set_utf8_known_concat_flags(v1, left_known, 1);
+#else
+    clear_vm_private_flags(v1);
+#endif
 }
 
 RX_INLINE void string_sconcat_var_const(value *v1, value *v2, string_constant *v3) {
     size_t len = v2->string_length + v3->string_len + 1;
     size_t buffer_len = buffer_size(len);
     char *buffer;
+#ifndef NUTF8
+    size_t left_chars = v2->string_chars;
+    int left_known = has_utf8_valid_count_or_empty(v2);
+#endif
     if (v1 == v2) {
         /* Need to use a buffer */
         buffer = malloc(buffer_len);
@@ -960,7 +1540,7 @@ RX_INLINE void string_sconcat_var_const(value *v1, value *v2, string_constant *v
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
         set_buffer_string(v1, buffer, len, buffer_len,
-                          v2->string_chars + v3->string_chars + 1);
+                          left_chars + v3->string_chars + 1);
         v1->string_char_pos = 0;
 #endif
     }
@@ -972,16 +1552,25 @@ RX_INLINE void string_sconcat_var_const(value *v1, value *v2, string_constant *v
         memcpy(v1->string_value + v2->string_length + 1, v3->string, v3->string_len);
         v1->string_pos = 0;
 #ifndef NUTF8
-        v1->string_chars = v2->string_chars + v3->string_chars + 1;
+        v1->string_chars = left_chars + v3->string_chars + 1;
         v1->string_char_pos = 0;
 #endif
     }
+#ifndef NUTF8
+    set_utf8_known_concat_flags(v1, left_known, 1);
+#else
+    clear_vm_private_flags(v1);
+#endif
 }
 
 RX_INLINE void string_concat_const_var(value *v1, string_constant *v2, value *v3) {
     size_t len = v2->string_len + v3->string_length;
     size_t buffer_len = buffer_size(len);
     char *buffer;
+#ifndef NUTF8
+    size_t right_chars = v3->string_chars;
+    int right_known = has_utf8_valid_count_or_empty(v3);
+#endif
     if (v1 == v3) {
         /* Need to use a buffer */
         buffer = malloc(buffer_len);
@@ -994,7 +1583,7 @@ RX_INLINE void string_concat_const_var(value *v1, string_constant *v2, value *v3
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
         set_buffer_string(v1, buffer, len, buffer_len,
-                          v2->string_chars + v3->string_chars);
+                          v2->string_chars + right_chars);
         v1->string_char_pos = 0;
 #endif
     }
@@ -1006,16 +1595,25 @@ RX_INLINE void string_concat_const_var(value *v1, string_constant *v2, value *v3
         memcpy(v1->string_value + v2->string_len, v3->string_value, v3->string_length);
         v1->string_pos = 0;
 #ifndef NUTF8
-        v1->string_chars = v2->string_chars + v3->string_chars;
+        v1->string_chars = v2->string_chars + right_chars;
         v1->string_char_pos = 0;
 #endif
     }
+#ifndef NUTF8
+    set_utf8_known_concat_flags(v1, 1, right_known);
+#else
+    clear_vm_private_flags(v1);
+#endif
 }
 
 RX_INLINE void string_sconcat_const_var(value *v1, string_constant *v2, value *v3) {
     size_t len = v2->string_len + v3->string_length + 1;
     size_t buffer_len = buffer_size(len);
     char *buffer;
+#ifndef NUTF8
+    size_t right_chars = v3->string_chars;
+    int right_known = has_utf8_valid_count_or_empty(v3);
+#endif
     if (v1 == v3) {
         /* Need to use a buffer */
         buffer = malloc(buffer_len);
@@ -1030,7 +1628,7 @@ RX_INLINE void string_sconcat_const_var(value *v1, string_constant *v2, value *v
         set_buffer_string(v1, buffer, len, buffer_len);
 #else
         set_buffer_string(v1, buffer, len, buffer_len,
-                          v2->string_chars + v3->string_chars + 1);
+                          v2->string_chars + right_chars + 1);
         v1->string_char_pos = 0;
 #endif
     }
@@ -1043,10 +1641,15 @@ RX_INLINE void string_sconcat_const_var(value *v1, string_constant *v2, value *v
                v3->string_length);
         v1->string_pos = 0;
 #ifndef NUTF8
-        v1->string_chars = v2->string_chars + v3->string_chars + 1;
+        v1->string_chars = v2->string_chars + right_chars + 1;
         v1->string_char_pos = 0;
 #endif
     }
+#ifndef NUTF8
+    set_utf8_known_concat_flags(v1, 1, right_known);
+#else
+    clear_vm_private_flags(v1);
+#endif
 }
 
 #ifndef NUTF8
@@ -1160,6 +1763,10 @@ RX_INLINE void string_set_byte_pos(value *v, size_t new_string_char_pos) {
 RX_INLINE void string_concat_char(value *v1, value *v2) {
     int char_size;
     char *insert_at;
+#ifndef NUTF8
+    int was_valid = has_utf8_valid_count_or_empty(v1);
+    int scalar_valid = is_valid_unicode_scalar(v2->int_value);
+#endif
 
     v1->string_pos = v1->string_length;
 #ifdef NUTF8
@@ -1174,9 +1781,11 @@ RX_INLINE void string_concat_char(value *v1, value *v2) {
 
 #ifdef NUTF8
     *insert_at = (unsigned char)v2->int_value;
+    clear_vm_private_flags(v1);
 #else
     v1->string_chars += 1;
     utf8catcodepoint(insert_at, v2->int_value, char_size);
+    set_utf8_known_concat_flags(v1, was_valid, scalar_valid);
 #endif
 }
 
@@ -1196,8 +1805,7 @@ RX_INLINE void int_to_string(numeric_context *cnt, value *temp, value *v) {
 #endif
         v->string_pos = 0;
 #ifndef NUTF8
-        v->string_char_pos = 0;
-        v->string_chars = v->string_length;
+        mark_ascii_string_valid_count(v);
 #endif
         return;
     }
@@ -1452,8 +2060,7 @@ static void extract_double_decimal(numeric_context* num_context, value *coeffici
         coefficient->string_length = 3;
         coefficient->string_pos = 0;
 #ifndef NUTF8
-        coefficient->string_chars = coefficient->string_length;
-        coefficient->string_char_pos = 0;
+        mark_ascii_string_valid_count(coefficient);
 #endif
         return;
     }
@@ -1465,8 +2072,7 @@ static void extract_double_decimal(numeric_context* num_context, value *coeffici
         coefficient->string_length = signbit(value) ? 4 : 3;
         coefficient->string_pos = 0;
 #ifndef NUTF8
-        coefficient->string_chars = coefficient->string_length;
-        coefficient->string_char_pos = 0;
+        mark_ascii_string_valid_count(coefficient);
 #endif
         return;
     }
@@ -1477,8 +2083,7 @@ static void extract_double_decimal(numeric_context* num_context, value *coeffici
         coefficient->string_length = 1;
         coefficient->string_pos = 0;
 #ifndef NUTF8
-        coefficient->string_chars = coefficient->string_length;
-        coefficient->string_char_pos = 0;
+        mark_ascii_string_valid_count(coefficient);
 #endif
         return;
     }
@@ -1535,8 +2140,7 @@ static void extract_double_decimal(numeric_context* num_context, value *coeffici
     coefficient->string_length = strlen(coefficient->string_value);
     coefficient->string_pos = 0;
 #ifndef NUTF8
-    coefficient->string_chars = coefficient->string_length;
-    coefficient->string_char_pos = 0;
+    mark_ascii_string_valid_count(coefficient);
 #endif
 }
 
@@ -1602,8 +2206,7 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
     formatted_output_value->string_value[0] = 0; // Null-terminate - just in case
     formatted_output_value->string_pos = 0;
 #ifndef NUTF8
-    formatted_output_value->string_chars = formatted_output_value->string_length;
-    formatted_output_value->string_char_pos = 0;
+    mark_ascii_string_valid_count(formatted_output_value);
 #endif
     char *formatted_output = formatted_output_value->string_value;
 
@@ -1638,8 +2241,7 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
         formatted_output_value->string_length = strlen(formatted_output_value->string_value);
         formatted_output_value->string_pos = 0;
 #ifndef NUTF8
-        formatted_output_value->string_chars = formatted_output_value->string_length;
-        formatted_output_value->string_char_pos = 0;
+        mark_ascii_string_valid_count(formatted_output_value);
 #endif
         return;
     }
@@ -1656,8 +2258,7 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
             formatted_output_value->string_length = strlen(formatted_output_value->string_value);
             formatted_output_value->string_pos = 0;
 #ifndef NUTF8
-            formatted_output_value->string_chars = formatted_output_value->string_length;
-            formatted_output_value->string_char_pos = 0;
+            mark_ascii_string_valid_count(formatted_output_value);
 #endif
             return;
         }
@@ -1735,8 +2336,7 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
         formatted_output_value->string_length = strlen(formatted_output_value->string_value);
         formatted_output_value->string_pos = 0;
 #ifndef NUTF8
-            formatted_output_value->string_chars = formatted_output_value->string_length;
-            formatted_output_value->string_char_pos = 0;
+            mark_ascii_string_valid_count(formatted_output_value);
 #endif
         return;
     }
@@ -1789,8 +2389,7 @@ static void RexxDecimalFormat(numeric_context* num_context, value *coefficient_v
     formatted_output_value->string_length = strlen(formatted_output_value->string_value);
     formatted_output_value->string_pos = 0;
 #ifndef NUTF8
-    formatted_output_value->string_chars = formatted_output_value->string_length;
-    formatted_output_value->string_char_pos = 0;
+    mark_ascii_string_valid_count(formatted_output_value);
 #endif
 }
 
@@ -1805,8 +2404,7 @@ static void extract_integer_decimal(numeric_context* num_context, value *coeffic
         coefficient->string_length = 1;
         coefficient->string_pos = 0;
 #ifndef NUTF8
-        coefficient->string_char_pos = 0;
-        coefficient->string_chars = 1;
+        mark_ascii_string_valid_count(coefficient);
 #endif
         exponent->int_value = 0;
         return;
@@ -1856,8 +2454,7 @@ static void extract_integer_decimal(numeric_context* num_context, value *coeffic
 
     // Set the utf8 values
 #ifndef NUTF8
-    coefficient->string_char_pos = 0;
-    coefficient->string_chars = coefficient->string_length;
+    mark_ascii_string_valid_count(coefficient);
 #endif
 }
 

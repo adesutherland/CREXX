@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : block_expr_short_circuit.rexx
- * BUILT                  : 2026-03-24 17:43:22
+ * SOURCE                 : block_expr_short_circuit.crexx
+ * BUILT                  : 2026-05-27 17:53:14
  */
 
-.srcfile="block_expr_short_circuit.rexx"
 .globals=0
 
 main() .locals=3
@@ -14,30 +12,39 @@ main() .locals=3
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 3:1="calls = 0"
+   .srcstep 1 1 17 "block_expr_short_circuit.crexx" 3 1 10 "calls = 0"
    .meta "block_expr_short_circuit.main.calls"="b" ".int" r0
    load r0,0
-   .src 9:1="say calls"
+   .traceevent "L" 4 "R" "I" "r" 0 1 1 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 1 1 0 "calls" ""
+   .srcstep 2 2 17 "block_expr_short_circuit.crexx" 9 1 10 "say calls"
    itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 2 2 0 "calls" ""
    say r0
-   .src 15:1="say calls"
+   .srcstep 3 3 17 "block_expr_short_circuit.crexx" 15 1 10 "say calls"
    itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 3 3 0 "calls" ""
    say r0
-   .src 17:0="if 1 & do\n  calls = calls + 100\n  leave with 1"
-   .src 17:8="do"
-   .src 18:3="calls = calls + 100"
+   .srcstep 8 8 17 "block_expr_short_circuit.crexx" 17 1 10 "if 1 & do"
+   .srcstep 6 6 17 "block_expr_short_circuit.crexx" 17 8 10 "if 1 & do"
+   .srcstep 4 4 17 "block_expr_short_circuit.crexx" 18 3 22 "  calls = calls + 100"
+   .traceevent "V" 6 "R" "I" "r" 0 4 4 0 "calls" ""
    iadd r0,r0,100
-   .src 19:3="leave with 1"
+   .traceevent "O" 4 "R" "I" "r" 0 4 4 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 4 4 0 "calls" ""
+   .srcstep 5 5 17 "block_expr_short_circuit.crexx" 19 3 15 "  leave with 1"
    load r1,1
+   .traceevent "L" 4 "R" "I" "r" 1 8 8 0 "" ""
    icopy r2,r1
    br l47bexprend
 l47bexprend:
    brf l51iffalse,r2
-   .src 20:1="end"
-   .src 20:10="say calls"
+   .srcstep 9 9 17 "block_expr_short_circuit.crexx" 20 1 4 "end then say calls"
+   .srcstep 7 7 17 "block_expr_short_circuit.crexx" 20 10 19 "end then say calls"
    itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 7 7 0 "calls" ""
    say r0
 l51iffalse:
-   .src 17:66=""
+   .srcstep 10 10 1 "block_expr_short_circuit.crexx" 17 19 19 "end then say calls"
    ret
    .meta "block_expr_short_circuit.main.calls"

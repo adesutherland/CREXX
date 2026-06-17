@@ -359,6 +359,10 @@ static size_t encode_line_source(char* buffer, size_t buffer_len, const char* st
                 ADD_CHAR_TO_BUFFER('\\')
                 ADD_CHAR_TO_BUFFER('\"')
                 break;
+            case '\\':
+                ADD_CHAR_TO_BUFFER('\\')
+                ADD_CHAR_TO_BUFFER('\\')
+                break;
             case '\t':
                 ADD_CHAR_TO_BUFFER('\\')
                 ADD_CHAR_TO_BUFFER('t')
@@ -386,23 +390,52 @@ static size_t encode_line_source(char* buffer, size_t buffer_len, const char* st
     return out_len;
 }
 
-char* encode_line_source_malloc(const char* string, size_t length) {
+static size_t encoded_line_source_length(const char* string, size_t length, int *ok) {
+    size_t out_len = 0;
+    size_t add;
+
+    *ok = 1;
+    while (length) {
+        switch (*string) {
+            case '\n':
+            case '\"':
+            case '\\':
+            case '\t':
+            case '\f':
+            case '\r':
+            case 0:
+                add = 2;
+                break;
+            default:
+                add = 1;
+                break;
+        }
+        if (out_len > (size_t)-1 - add) {
+            *ok = 0;
+            return 0;
+        }
+        out_len += add;
+        string++;
+        length--;
+    }
+    return out_len;
+}
+
+char* encode_line_source_buffer(const char* string, size_t length) {
     char *buffer;
     size_t buffer_len;
-    size_t needed_len;
+    size_t encoded_len;
+    int ok;
 
-    /* Guess a length which is likely to be big enough */
-    buffer_len = (length * 2) + 1;
+    if (!string && length) return 0;
+    encoded_len = encoded_line_source_length(string ? string : "", length, &ok);
+    if (!ok || encoded_len == (size_t)-1) return 0;
+
+    buffer_len = encoded_len + 1;
     buffer = malloc(buffer_len);
+    if (!buffer) return 0;
 
-    needed_len = encode_line_source(buffer, buffer_len, string, length) + 1;
-    if (needed_len > buffer_len) {
-        /* Buffer not big enough - do it again */
-        buffer_len = needed_len;
-        free(buffer);
-        buffer = malloc(buffer_len);
-        encode_line_source(buffer, buffer_len, string, length);
-    }
+    encode_line_source(buffer, buffer_len, string ? string : "", length);
     return buffer;
 }
 
@@ -585,6 +618,7 @@ const char* token_to_string(int token_id) {
         case TK_CONCAT: return "TK_CONCAT";
         case TK_AND: return "TK_AND";
         case TK_OR: return "TK_OR";
+        case TK_XOR: return "TK_XOR";
         case TK_NOT: return "TK_NOT";
         case TK_EQUAL: return "TK_EQUAL";
         case TK_NEQ: return "TK_NEQ";
@@ -1094,6 +1128,7 @@ const char* node_type_to_string(NodeType type) {
         case OP_IDIV: return "OP_IDIV";
         case OP_MOD: return "OP_MOD";
         case OP_OR: return "OP_OR";
+        case OP_XOR: return "OP_XOR";
         case OP_POWER: return "OP_POWER";
         case OP_NOT: return "OP_NOT";
         case OP_NEG: return "OP_NEG";
@@ -1113,6 +1148,11 @@ const char* node_type_to_string(NodeType type) {
         case OP_TYPE_IS: return "OP_TYPE_IS";
         case OP_TYPE_CAST: return "OP_TYPE_CAST";
         case OP_TYPEOF: return "OP_TYPEOF";
+        case OP_REFERENCE: return "OP_REFERENCE";
+        case OP_DEREFERENCE: return "OP_DEREFERENCE";
+        case OP_SNAPSHOT: return "OP_SNAPSHOT";
+        case OP_REFVALID: return "OP_REFVALID";
+        case OP_INITIALIZED: return "OP_INITIALIZED";
         case OP_SCONCAT: return "OP_SCONCAT";
         case OPTIONS: return "OPTIONS";
         case PARSE: return "PARSE";
@@ -1168,6 +1208,18 @@ const char* node_type_to_string(NodeType type) {
         case SIGNAL_HANDLER: return "SIGNAL_HANDLER";
         case SIGNAL_NAMES: return "SIGNAL_NAMES";
         case SIGNAL_NAME: return "SIGNAL_NAME";
+        case AST_SEMANTIC_CONTEXT: return "AST_SEMANTIC_CONTEXT";
+        case TYPE_REFERENCE: return "TYPE_REFERENCE";
+        case LEVELC_ADDRESS: return "LEVELC_ADDRESS";
+        case LEVELC_ARG: return "LEVELC_ARG";
+        case LEVELC_DROP: return "LEVELC_DROP";
+        case LEVELC_INTERPRET: return "LEVELC_INTERPRET";
+        case LEVELC_NUMERIC: return "LEVELC_NUMERIC";
+        case LEVELC_PROCEDURE: return "LEVELC_PROCEDURE";
+        case LEVELC_PUSH: return "LEVELC_PUSH";
+        case LEVELC_QUEUE: return "LEVELC_QUEUE";
+        case LEVELC_SIGNAL: return "LEVELC_SIGNAL";
+        case LEVELC_TRACE: return "LEVELC_TRACE";
     }
     return "UNKNOWN";
 }

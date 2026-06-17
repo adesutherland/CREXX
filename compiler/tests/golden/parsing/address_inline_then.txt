@@ -149,7 +149,9 @@ Scope [0]: Unnamed
       err (Variable) -> .binary
       in (Variable) -> .binary
       out (Variable) -> .binary
-DEBUG_INLINE _noredir @ _address@library.rxbin:2 - reject: procedure has no instruction list
+DEBUG_INLINE _address @ _address@library.rxbin:2 - reject: procedure has no instruction list
+DEBUG_INLINE _address @ _address@library.rxbin:2 - reject: procedure has no instruction list
+DEBUG_INLINE _address @ _address@library.rxbin:2 - reject: procedure has no instruction list
 DEBUG_INLINE _address @ _address@library.rxbin:2 - reject: procedure has no instruction list
 
 --- STAGE_FINAL ---
@@ -173,9 +175,27 @@ REXX_UNIVERSE : "" (0:1) [Type: .void]
               FUNCTION : "_address" (1:3) [Type: .int]
                 CONSTANT : "system" (1:12) [Type: .string]
                 CONSTANT : "echo ok" (1:21) [Type: .string]
-                FUNCTION : "_noredir" (1:31) [Type: .binary]
-                FUNCTION : "_noredir" (1:42) [Type: .binary]
-                FUNCTION : "_noredir" (1:53) [Type: .binary]
+                BLOCK_EXPR : "do" (1:31) [Type: .binary]
+                  INSTRUCTIONS : "_noredir" (1:31) [Type: .void]
+                    DEFINE : "=" (1518:4) [Type: .binary]
+                      VAR_TARGET : "handle" (1518:4) [Type: .binary]
+                      CLASS : ".binary" (1518:13) [Type: .binary]
+                    LEAVE_WITH : "leave" (1519:4) [Type: .binary]
+                      VAR_SYMBOL : "handle" (1519:11) [Type: .binary]
+                BLOCK_EXPR : "do" (1:42) [Type: .binary]
+                  INSTRUCTIONS : "_noredir" (1:42) [Type: .void]
+                    DEFINE : "=" (1518:4) [Type: .binary]
+                      VAR_TARGET : "handle" (1518:4) [Type: .binary]
+                      CLASS : ".binary" (1518:13) [Type: .binary]
+                    LEAVE_WITH : "leave" (1519:4) [Type: .binary]
+                      VAR_SYMBOL : "handle" (1519:11) [Type: .binary]
+                BLOCK_EXPR : "do" (1:53) [Type: .binary]
+                  INSTRUCTIONS : "_noredir" (1:53) [Type: .void]
+                    DEFINE : "=" (1518:4) [Type: .binary]
+                      VAR_TARGET : "handle" (1518:4) [Type: .binary]
+                      CLASS : ".binary" (1518:13) [Type: .binary]
+                    LEAVE_WITH : "leave" (1519:4) [Type: .binary]
+                      VAR_SYMBOL : "handle" (1519:11) [Type: .binary]
         RETURN : "return" (4:2) [Type: .void]
   IMPORTED_FILE : "_rxsysb" (0:1) [Type: .void]
     REXX_OPTIONS : "options" (0:1) [Type: .void]
@@ -222,6 +242,12 @@ Scope [0]: Unnamed
       rc (Variable) -> .int
       system (Constant) -> .string
       Scope [3]: Unnamed
+        Scope [4]: Unnamed
+          handle (Variable) -> .binary
+        Scope [4]: Unnamed
+          handle (Variable) -> .binary
+        Scope [4]: Unnamed
+          handle (Variable) -> .binary
   Scope [1]: _rxsysb
     _address (Function) -> .int [EXPOSED]
     _noredir (Function) -> .binary [EXPOSED]

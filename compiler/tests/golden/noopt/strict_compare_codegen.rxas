@@ -1,48 +1,55 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : strict_compare_codegen.rexx
- * BUILT                  : 2026-04-21 17:35:06
+ * SOURCE                 : strict_compare_codegen.crexx
+ * BUILT                  : 2026-05-27 17:52:43
  */
 
-.srcfile="strict_compare_codegen.rexx"
 .globals=0
 
 main() .locals=3
    .meta "strict_compare_codegen.main"="b" ".int" main() ""
-   .src 3:1="main: procedure = .int"
+   .srcstep 12 12 17 "strict_compare_codegen.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
    .meta "strict_compare_codegen.main.left"="b" ".int" r0
-   .src 4:3="left = .int"
+   .srcstep 1 1 17 "strict_compare_codegen.crexx" 4 3 14 "  left = .int"
    null r0
    .meta "strict_compare_codegen.main.right"="b" ".int" r1
-   .src 5:3="right = .int"
+   .srcstep 2 2 17 "strict_compare_codegen.crexx" 5 3 15 "  right = .int"
    null r1
-   .src 7:3="left = 2"
+   .srcstep 3 3 17 "strict_compare_codegen.crexx" 7 3 11 "  left = 2"
    load r0,2
-   .src 8:3="right = 10"
+   .traceevent "L" 4 "R" "I" "r" 0 3 3 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 3 3 0 "left" ""
+   .srcstep 4 4 17 "strict_compare_codegen.crexx" 8 3 13 "  right = 10"
    load r1,10
-   .src 10:2="if left == \"2\""
+   .traceevent "L" 4 "R" "I" "r" 1 4 4 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 4 4 0 "right" ""
+   .srcstep 6 6 17 "strict_compare_codegen.crexx" 10 3 17 "  if left == \"2\" then return 1"
    itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 6 6 0 "left" ""
    seq r2,r0,"2"
+   .traceevent "O" 4 "R" "B" "r" 2 6 6 0 "" ""
    brf l23iffalse,r2
-   .src 10:18="then"
-   .src 10:23="return 1"
+   .srcstep 7 7 17 "strict_compare_codegen.crexx" 10 18 22 "  if left == \"2\" then return 1"
+   .srcstep 5 5 17 "strict_compare_codegen.crexx" 10 23 31 "  if left == \"2\" then return 1"
    ret 1
 l23iffalse:
-   .src 12:2="if left >> right"
+   .srcstep 9 9 17 "strict_compare_codegen.crexx" 12 3 19 "  if left >> right then return 2"
    itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 9 9 0 "left" ""
    itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 9 9 0 "right" ""
    sgt r2,r0,r1
+   .traceevent "O" 4 "R" "B" "r" 2 9 9 0 "" ""
    brf l29iffalse,r2
-   .src 12:20="then"
-   .src 12:25="return 2"
+   .srcstep 10 10 17 "strict_compare_codegen.crexx" 12 20 24 "  if left >> right then return 2"
+   .srcstep 8 8 17 "strict_compare_codegen.crexx" 12 25 33 "  if left >> right then return 2"
    ret 2
 l29iffalse:
-   .src 14:3="return 0"
+   .srcstep 11 11 17 "strict_compare_codegen.crexx" 14 3 11 "  return 0"
    ret 0
    .meta "strict_compare_codegen.main.left"
    .meta "strict_compare_codegen.main.right"

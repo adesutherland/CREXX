@@ -1,0 +1,45 @@
+options levelb
+import rxfnsb
+
+main: procedure = .int
+  start = word("9 cell", 1)
+  cell = length("0123456789")
+
+  if start > cell then say "direct-gt-bad"
+  else say "direct-gt-ok"
+
+  if start < cell then say "direct-lt-ok"
+  else say "direct-lt-bad"
+
+  gap = start - cell
+  say "gap=" || gap
+  if gap > 0 then say "gap-gt-bad"
+  else say "gap-gt-ok"
+
+  if "11" > cell then say "string-numeric-gt-ok"
+  else say "string-numeric-gt-bad"
+
+  if "9" >> cell then say "strict-string-gt-ok"
+  else say "strict-string-gt-bad"
+
+  if "a" > 1 then say "literal-string-fallback-ok"
+  else say "literal-string-fallback-bad"
+
+  text = nonnumeric()
+  if text = 0 then say "dynamic-eq-bad"
+  else say "dynamic-eq-ok"
+
+  if text > 1 then say "dynamic-gt-string-ok"
+  else say "dynamic-gt-string-bad"
+
+  numeric_text = numerictext()
+  if numeric_text = 9 then say "dynamic-eq-numeric-ok"
+  else say "dynamic-eq-numeric-bad"
+
+  return 0
+
+nonnumeric: procedure = .string
+  return "a"
+
+numerictext: procedure = .string
+  return "09"

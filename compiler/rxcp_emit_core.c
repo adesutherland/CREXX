@@ -29,41 +29,39 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
+#include <limits.h>
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 #include "rxcp_source_tree.h"
+#include "rxcp_util.h"
+#include "rxbin.h"
 
 /* Type promotion matrix for numeric operators */
-const char* emit_promotion[9][9] = {
-/*                  TP_UNKNOWN,TP_VOID,TP_BOOLEAN,TP_INTEGER,TP_FLOAT, TP_DECIMAL, TP_STRING,TP_BINARY,TP_OBJECT */
+const char* emit_promotion[10][10] = {
+/*                  TP_UNKNOWN,TP_VOID,TP_BOOLEAN,TP_INTEGER,TP_FLOAT, TP_DECIMAL, TP_STRING,TP_BINARY,TP_OBJECT,TP_REFERENCE */
 
-/* TP_UNKNOWN */   {0,         0,      0,         0,         0,      0,         0,        0,        0},
-/* TP_VOID    */   {0,         0,      0,         0,         0,      0,         0,        0,        0},
-/* TP_BOOLEAN */   {0,         0,      0,         "btoi",    "btof", "btod",    "btos",   0,        0},
-/* TP_INTEGER */   {0,         0,      0,         0,         "itof", "itod",    "itos",   0,        0},
-/* TP_FLOAT   */   {0,         0,      "ftob",    "ftoi",    0,      "ftod",    "ftos",   0,        0},
-/* TP_DECIMAL */   {0,         0,      "dtob",    "dtoi",    "dtof", 0,         "dtos",   0,        0},
-/* TP_STRING  */   {0,         0,      "stoi",    "stoi",    "stof", "stod",    0,        0,        0},
-/* TP_BINARY  */   {0,         0,      0,         0,         0,      0,         0,        0,        0},
-/* TP_OBJECT  */   {0,         0,      0,         0,         0,      0,         0,        0,        0},
+/* TP_UNKNOWN  */  {0,         0,      0,         0,         0,      0,         0,        0,        0,        0},
+/* TP_VOID     */  {0,         0,      0,         0,         0,      0,         0,        0,        0,        0},
+/* TP_BOOLEAN  */  {0,         0,      0,         "btoi",    "btof", "btod",    "btos",   0,        0,        0},
+/* TP_INTEGER  */  {0,         0,      0,         0,         "itof", "itod",    "itos",   0,        0,        0},
+/* TP_FLOAT    */  {0,         0,      "ftob",    "ftoi",    0,      "ftod",    "ftos",   0,        0,        0},
+/* TP_DECIMAL  */  {0,         0,      "dtob",    "dtoi",    "dtof", 0,         "dtos",   0,        0,        0},
+/* TP_STRING   */  {0,         0,      "stoi",    "stoi",    "stof", "stod",    0,        "stobin", 0,        0},
+/* TP_BINARY   */  {0,         0,      0,         0,         0,      0,         "bintos", 0,        0,        0},
+/* TP_OBJECT   */  {0,         0,      0,         0,         0,      0,         0,        0,        0,        0},
+/* TP_REFERENCE*/  {0,         0,      0,         0,         0,      0,         0,        0,        0,        0},
 };
 
-static const char *active_source_file = NULL;
+static unsigned int next_source_step_id = 1;
 
-void reset_metaline_source_file(const char *file_name) {
-    active_source_file = file_name;
+static int printf_string_precision(size_t length) {
+    return length > (size_t)INT_MAX ? INT_MAX : (int)length;
 }
 
-static char *prefix_source_file_if_needed(char *line, const char *file_name) {
-    char *result;
-
-    if (!line || !line[0] || !file_name) return line;
-    if (active_source_file && strcmp(active_source_file, file_name) == 0) return line;
-
-    result = mprintf("   .srcfile=\"%s\"\n%s", file_name, line);
-    free(line);
-    active_source_file = file_name;
-    return result;
+void reset_metaline_source_file(const char *file_name) {
+    (void)file_name;
+    next_source_step_id = 1;
 }
 
 static int source_span_is_emit_safe(const char *start, const char *end) {
@@ -74,6 +72,327 @@ static int source_span_is_emit_safe(const char *start, const char *end) {
     length = (size_t)(end - start) + 1;
     if (length > 2048) return 0;
     return memchr(start, 0, length) == NULL;
+}
+
+static char *empty_metaline(void) {
+    char *result;
+
+    result = malloc(1);
+    if (result) result[0] = 0;
+    return result;
+}
+
+static char trace_value_type_code(ValueType type) {
+    switch (type) {
+        case TP_BOOLEAN: return 'B';
+        case TP_INTEGER: return 'I';
+        case TP_FLOAT: return 'F';
+        case TP_DECIMAL: return 'D';
+        case TP_STRING: return 'S';
+        case TP_BINARY: return 'X';
+        case TP_OBJECT: return 'O';
+        case TP_REFERENCE: return 'R';
+        case TP_VOID: return 'V';
+        case TP_UNKNOWN:
+        default:
+            return 0;
+    }
+}
+
+static void parse_source_step_ids(const char *metaline, unsigned int *step_id, unsigned int *clause_id) {
+    const char *srcstep;
+    unsigned int step = 0;
+    unsigned int clause = 0;
+
+    if (step_id) *step_id = 0;
+    if (clause_id) *clause_id = 0;
+    if (!metaline) return;
+
+    srcstep = strstr(metaline, ".srcstep ");
+    if (!srcstep) return;
+    if (sscanf(srcstep, ".srcstep %u %u", &step, &clause) < 1) return;
+
+    if (step_id) *step_id = step;
+    if (clause_id) *clause_id = clause;
+}
+
+unsigned int trace_source_step_id_from_metaline(const char *metaline) {
+    unsigned int step_id = 0;
+    parse_source_step_ids(metaline, &step_id, 0);
+    return step_id;
+}
+
+unsigned int trace_clause_id_from_metaline(const char *metaline) {
+    unsigned int clause_id = 0;
+    parse_source_step_ids(metaline, 0, &clause_id);
+    return clause_id;
+}
+
+char *trace_symbol_name_malloc(ASTNode *node) {
+    Symbol *symbol;
+    char *result;
+
+    if (!node) return 0;
+    symbol = node->symbolNode ? node->symbolNode->symbol : 0;
+    if (symbol && symbol->name) return strdup(symbol->name);
+    if (!node->node_string || node->node_string_length == 0) return 0;
+
+    result = malloc(node->node_string_length + 1);
+    if (!result) return 0;
+    memcpy(result, node->node_string, node->node_string_length);
+    result[node->node_string_length] = 0;
+    return result;
+}
+
+char *trace_event_metaline(char kind,
+                           unsigned int mode_mask,
+                           char value_source,
+                           ValueType value_type,
+                           char register_type,
+                           int value_ref,
+                           unsigned int source_step_id,
+                           unsigned int clause_id,
+                           unsigned int flags,
+                           const char *symbol,
+                           const char *resolved_name) {
+    char type_code;
+    char value_type_text[2];
+    char register_type_text[2];
+    char *encoded_symbol;
+    char *encoded_resolved_name;
+    char *result;
+
+    if (!kind) return empty_metaline();
+
+    type_code = trace_value_type_code(value_type);
+    value_type_text[0] = type_code;
+    value_type_text[1] = 0;
+    register_type_text[0] = register_type;
+    register_type_text[1] = 0;
+
+    if (!value_source) value_source = RXBIN_TRACE_VALUE_NONE;
+    if (!register_type) value_ref = -1;
+    if (value_ref < 0) value_source = RXBIN_TRACE_VALUE_NONE;
+
+    encoded_symbol = encode_line_source_buffer(symbol ? symbol : "", symbol ? strlen(symbol) : 0);
+    encoded_resolved_name = encode_line_source_buffer(resolved_name ? resolved_name : "",
+                                                      resolved_name ? strlen(resolved_name) : 0);
+    if (!encoded_symbol || !encoded_resolved_name) {
+        if (encoded_symbol) free(encoded_symbol);
+        if (encoded_resolved_name) free(encoded_resolved_name);
+        return empty_metaline();
+    }
+
+    result = mprintf("   .traceevent \"%c\" %u \"%c\" \"%s\" \"%s\" %d %u %u %u \"%s\" \"%s\"\n",
+                     kind,
+                     mode_mask,
+                     value_source,
+                     value_type_text,
+                     register_type ? register_type_text : "",
+                     value_ref,
+                     source_step_id,
+                     clause_id,
+                     flags,
+                     encoded_symbol,
+                     encoded_resolved_name);
+    free(encoded_symbol);
+    free(encoded_resolved_name);
+    return result;
+}
+
+char *trace_event_register_metaline(char kind,
+                                    unsigned int mode_mask,
+                                    ASTNode *value_node,
+                                    unsigned int source_step_id,
+                                    unsigned int clause_id,
+                                    const char *symbol,
+                                    const char *resolved_name) {
+    ValueType value_type;
+
+    if (!value_node || value_node->register_num < 0 || !value_node->register_type) return empty_metaline();
+    value_type = value_node->target_type != TP_UNKNOWN ? value_node->target_type : value_node->value_type;
+    return trace_event_metaline(kind,
+                                mode_mask,
+                                RXBIN_TRACE_VALUE_REGISTER,
+                                value_type,
+                                value_node->register_type,
+                                value_node->register_num,
+                                source_step_id,
+                                clause_id,
+                                0,
+                                symbol,
+                                resolved_name);
+}
+
+static unsigned int source_step_flags(char provenance, int compiler_added, SourceNode *source_node) {
+    unsigned int flags;
+
+    flags = RXBIN_SOURCE_AUTHORED;
+    switch ((ASTSourceProvenance)provenance) {
+        case AST_SOURCE_EXACT:
+            flags |= RXBIN_SOURCE_EXACT;
+            break;
+        case AST_SOURCE_INHERITED:
+            flags |= RXBIN_SOURCE_INHERITED;
+            break;
+        case AST_SOURCE_SYNTHETIC:
+            flags &= ~RXBIN_SOURCE_AUTHORED;
+            flags |= RXBIN_SOURCE_SYNTHETIC | RXBIN_SOURCE_GENERATED;
+            break;
+        case AST_SOURCE_COMPOSITE:
+            flags |= RXBIN_SOURCE_COMPOSITE;
+            break;
+        case AST_SOURCE_NONE:
+        default:
+            break;
+    }
+    if (compiler_added) flags |= RXBIN_SOURCE_GENERATED;
+    if (source_node && source_node->owned_source_text) flags |= RXBIN_SOURCE_INLINED;
+    return flags;
+}
+
+static int pointer_in_range(const char *ptr, const char *range_start, const char *range_end) {
+    return ptr && range_start && range_end && ptr >= range_start && ptr <= range_end;
+}
+
+static int context_source_range(Context *context, const char *ptr, const char **range_start, const char **range_end) {
+    if (!context || !context->buff_start || !context->buff_end || !ptr) return 0;
+    if (ptr < context->buff_start || ptr > context->buff_end) return 0;
+    if (range_start) *range_start = context->buff_start;
+    if (range_end) *range_end = context->buff_end;
+    return 1;
+}
+
+static int owned_source_range(SourceNode *source_node, const char *ptr, const char **range_start, const char **range_end) {
+    size_t length;
+
+    if (!source_node || !source_node->owned_source_text || !ptr) return 0;
+    length = strlen(source_node->owned_source_text);
+    if (!pointer_in_range(ptr, source_node->owned_source_text, source_node->owned_source_text + length)) return 0;
+    if (range_start) *range_start = source_node->owned_source_text;
+    if (range_end) *range_end = source_node->owned_source_text + length;
+    return 1;
+}
+
+static int source_line_bounds(const char *ptr,
+                              const char *range_start,
+                              const char *range_end,
+                              const char **line_start_out,
+                              const char **line_end_out) {
+    const char *line_start;
+    const char *line_end;
+
+    if (!ptr || !range_start || !range_end || ptr < range_start || ptr > range_end) return 0;
+    if (ptr == range_end && ptr > range_start) ptr--;
+
+    line_start = ptr;
+    while (line_start > range_start &&
+           line_start[-1] != '\n' &&
+           line_start[-1] != '\r') {
+        line_start--;
+    }
+
+    line_end = ptr;
+    while (line_end < range_end &&
+           *line_end != '\n' &&
+           *line_end != '\r' &&
+           *line_end != 0) {
+        line_end++;
+    }
+
+    if (line_start_out) *line_start_out = line_start;
+    if (line_end_out) *line_end_out = line_end;
+    return 1;
+}
+
+static int source_anchor_range(Context *context,
+                               SourceNode *source_node,
+                               const char *source_start,
+                               const char **range_start,
+                               const char **range_end) {
+    if (owned_source_range(source_node, source_start, range_start, range_end)) return 1;
+    if (context_source_range(context, source_start, range_start, range_end)) return 1;
+    if (source_node && context_source_range(source_node->context, source_start, range_start, range_end)) return 1;
+    return 0;
+}
+
+static char *source_step_metaline(Context *context,
+                                  SourceNode *source_node,
+                                  const char *file_name,
+                                  int line,
+                                  int column,
+                                  const char *source_start,
+                                  const char *source_end,
+                                  unsigned int flags) {
+    const char *range_start;
+    const char *range_end;
+    const char *line_start;
+    const char *line_end;
+    const char *active_start;
+    const char *active_end;
+    size_t line_length;
+    unsigned int step_id;
+    int active_start_column;
+    int active_end_column;
+    char *encoded_file;
+    char *encoded_line;
+    char *result;
+
+    if (!source_start || !source_end || line < 0) return empty_metaline();
+    if (!source_span_is_emit_safe(source_start, source_end)) return empty_metaline();
+
+    range_start = 0;
+    range_end = 0;
+    line_start = source_start;
+    line_end = source_end >= source_start ? source_end + 1 : source_start;
+    active_start = source_start;
+    active_end = source_end >= source_start ? source_end : source_start;
+
+    if (source_anchor_range(context, source_node, source_start, &range_start, &range_end) &&
+        source_line_bounds(source_start, range_start, range_end, &line_start, &line_end)) {
+        if (active_start < line_start) active_start = line_start;
+        if (active_start > line_end) active_start = line_end;
+        if (active_end < active_start) active_end = active_start;
+        if (active_end > line_end) active_end = line_end;
+        active_start_column = (int)(active_start - line_start) + 1;
+        active_end_column = source_end >= source_start ? (int)(active_end - line_start) + 2 : active_start_column;
+    } else {
+        if (column < 0) column = 0;
+        active_start_column = 1;
+        active_end_column = source_end >= source_start ? (int)(line_end - line_start) + 1 : active_start_column;
+    }
+
+    line_length = (size_t)(line_end - line_start);
+    if (line_length == 0) return empty_metaline();
+    if (line_length > 4096 || memchr(line_start, 0, line_length)) return empty_metaline();
+
+    if (active_end_column < active_start_column) active_end_column = active_start_column;
+    if (active_end_column > (int)line_length + 1) active_end_column = (int)line_length + 1;
+    if (active_start_column < 1) active_start_column = 1;
+    if (active_start_column > (int)line_length + 1) active_start_column = (int)line_length + 1;
+
+    encoded_file = encode_line_source_buffer(file_name ? file_name : "", file_name ? strlen(file_name) : 0);
+    encoded_line = encode_line_source_buffer(line_start, line_length);
+    if (!encoded_file || !encoded_line) {
+        if (encoded_file) free(encoded_file);
+        if (encoded_line) free(encoded_line);
+        return empty_metaline();
+    }
+
+    if (!flags) flags = RXBIN_SOURCE_AUTHORED;
+    step_id = next_source_step_id++;
+    result = mprintf("   .srcstep %u %u %u \"%s\" %d %d %d \"%s\"\n",
+                     step_id,
+                     step_id,
+                     flags,
+                     encoded_file,
+                     line + 1,
+                     active_start_column,
+                     active_end_column,
+                     encoded_line);
+    free(encoded_file);
+    free(encoded_line);
+    return result;
 }
 
 /* Output Marshalling Functions */
@@ -140,6 +459,200 @@ void output_append_text(OutputFragment* before, char* after) {
     }
 }
 
+void output_append_trace_event_register(OutputFragment *output,
+                                        char kind,
+                                        unsigned int mode_mask,
+                                        ASTNode *value_node,
+                                        unsigned int source_step_id,
+                                        unsigned int clause_id,
+                                        const char *symbol,
+                                        const char *resolved_name) {
+    char *event;
+
+    if (!output) return;
+    event = trace_event_register_metaline(kind,
+                                          mode_mask,
+                                          value_node,
+                                          source_step_id,
+                                          clause_id,
+                                          symbol,
+                                          resolved_name);
+    if (event && event[0]) output_append_text(output, event);
+    if (event) free(event);
+}
+
+static const char *trace_skip_space(const char *p, const char *end) {
+    while (p < end && isspace((unsigned char)*p)) p++;
+    return p;
+}
+
+static int trace_skip_quoted(const char **cursor, const char *end) {
+    const char *p = trace_skip_space(*cursor, end);
+
+    if (p >= end || *p != '"') return 0;
+    p++;
+    while (p < end) {
+        if (*p == '\\' && p + 1 < end) {
+            p += 2;
+        } else if (*p == '"') {
+            *cursor = p + 1;
+            return 1;
+        } else {
+            p++;
+        }
+    }
+    return 0;
+}
+
+static int trace_skip_integer(const char **cursor, const char *end) {
+    const char *p = trace_skip_space(*cursor, end);
+
+    if (p < end && (*p == '-' || *p == '+')) p++;
+    if (p >= end || !isdigit((unsigned char)*p)) return 0;
+    while (p < end && isdigit((unsigned char)*p)) p++;
+    *cursor = p;
+    return 1;
+}
+
+static int trace_read_unsigned(const char **cursor,
+                               const char *end,
+                               const char **start_out,
+                               const char **end_out,
+                               unsigned int *value_out) {
+    const char *p = trace_skip_space(*cursor, end);
+    char *number_end;
+    unsigned long value;
+
+    if (p >= end || !isdigit((unsigned char)*p)) return 0;
+    value = strtoul(p, &number_end, 10);
+    if (number_end == p || number_end > end) return 0;
+
+    if (start_out) *start_out = p;
+    if (end_out) *end_out = number_end;
+    if (value_out) *value_out = (unsigned int)value;
+    *cursor = number_end;
+    return 1;
+}
+
+static char *trace_event_line_with_source_ids(const char *line,
+                                              size_t line_len,
+                                              unsigned int source_step_id,
+                                              unsigned int clause_id) {
+    const char *end = line + line_len;
+    const char *p = trace_skip_space(line, end);
+    const char *step_start;
+    const char *step_end;
+    const char *clause_start;
+    const char *clause_end;
+    unsigned int current_step;
+    unsigned int current_clause;
+    size_t prefix_len;
+    size_t suffix_len;
+    char *replacement;
+    char *result;
+
+    if (source_step_id == 0 && clause_id == 0) return 0;
+    if ((size_t)(end - p) < 11 || strncmp(p, ".traceevent", 11) != 0) return 0;
+    p += 11;
+
+    if (!trace_skip_quoted(&p, end)) return 0;   /* kind */
+    if (!trace_read_unsigned(&p, end, 0, 0, 0)) return 0; /* mode mask */
+    if (!trace_skip_quoted(&p, end)) return 0;   /* value source */
+    if (!trace_skip_quoted(&p, end)) return 0;   /* value type */
+    if (!trace_skip_quoted(&p, end)) return 0;   /* register type */
+    if (!trace_skip_integer(&p, end)) return 0;  /* value ref */
+    if (!trace_read_unsigned(&p, end, &step_start, &step_end, &current_step)) return 0;
+    if (!trace_read_unsigned(&p, end, &clause_start, &clause_end, &current_clause)) return 0;
+
+    (void)step_end;
+    (void)clause_start;
+    if (current_step != 0 || current_clause != 0) return 0;
+
+    replacement = mprintf("%u %u", source_step_id, clause_id);
+    prefix_len = (size_t)(step_start - line);
+    suffix_len = (size_t)(end - clause_end);
+    result = malloc(prefix_len + strlen(replacement) + suffix_len + 1);
+    if (!result) {
+        free(replacement);
+        return 0;
+    }
+
+    memcpy(result, line, prefix_len);
+    memcpy(result + prefix_len, replacement, strlen(replacement));
+    memcpy(result + prefix_len + strlen(replacement), clause_end, suffix_len);
+    result[prefix_len + strlen(replacement) + suffix_len] = 0;
+    free(replacement);
+    return result;
+}
+
+static char *trace_output_with_source_ids(const char *text,
+                                          unsigned int source_step_id,
+                                          unsigned int clause_id) {
+    const char *line_start;
+    const char *line_end;
+    char *result;
+    size_t result_len;
+
+    if (!text || (source_step_id == 0 && clause_id == 0)) return 0;
+    result = malloc(1);
+    if (!result) return 0;
+    result[0] = 0;
+    result_len = 0;
+
+    line_start = text;
+    while (*line_start) {
+        char *replacement;
+        size_t line_len;
+
+        line_end = strchr(line_start, '\n');
+        if (line_end) line_len = (size_t)(line_end - line_start + 1);
+        else line_len = strlen(line_start);
+
+        replacement = trace_event_line_with_source_ids(line_start,
+                                                       line_len,
+                                                       source_step_id,
+                                                       clause_id);
+        if (replacement) {
+            size_t replacement_len = strlen(replacement);
+            result = realloc(result, result_len + replacement_len + 1);
+            memcpy(result + result_len, replacement, replacement_len + 1);
+            result_len += replacement_len;
+            free(replacement);
+        } else {
+            result = realloc(result, result_len + line_len + 1);
+            memcpy(result + result_len, line_start, line_len);
+            result_len += line_len;
+            result[result_len] = 0;
+        }
+
+        line_start += line_len;
+    }
+
+    return result;
+}
+
+void output_apply_trace_source_ids(OutputFragment *output,
+                                   unsigned int source_step_id,
+                                   unsigned int clause_id) {
+    OutputFragment *fragment;
+
+    if (!output || (source_step_id == 0 && clause_id == 0)) return;
+    fragment = output;
+    while (fragment->before) fragment = fragment->before;
+    while (fragment) {
+        if (fragment->output && strstr(fragment->output, ".traceevent")) {
+            char *updated = trace_output_with_source_ids(fragment->output,
+                                                        source_step_id,
+                                                        clause_id);
+            if (updated) {
+                free(fragment->output);
+                fragment->output = updated;
+            }
+        }
+        fragment = fragment->after;
+    }
+}
+
 void output_prepend_text(char* before, OutputFragment* after) {
     char* buffer;
     while (after->before) after = after->before;
@@ -164,8 +677,6 @@ void print_output(FILE* file, OutputFragment* existing) {
 }
 
 static char *get_source_node_metaline(SourceNode *node) {
-    char *result;
-    char *src;
     int line;
     int column;
     char *source_start;
@@ -177,9 +688,7 @@ static char *get_source_node_metaline(SourceNode *node) {
     source_end = 0;
 
     if (!node) {
-        result = malloc(1);
-        result[0] = 0;
-        return result;
+        return empty_metaline();
     }
 
     line = node->line;
@@ -194,17 +703,14 @@ static char *get_source_node_metaline(SourceNode *node) {
         if (!source_end) source_end = node->token->token_string + node->token->length - 1;
     }
 
-    if (!source_span_is_emit_safe(source_start, source_end)) {
-        result = malloc(1);
-        result[0] = 0;
-        return result;
-    }
-
-    src = encode_line_source_malloc(source_start,
-                                    (int)(source_end - source_start) + 1);
-    result = mprintf("   .src %d:%d=\"%s\"\n", line + 1, column + 1, src);
-    free(src);
-    return prefix_source_file_if_needed(result, node->file_name);
+    return source_step_metaline(node->context,
+                                node,
+                                node->file_name,
+                                line,
+                                column,
+                                source_start,
+                                source_end,
+                                source_step_flags(AST_SOURCE_EXACT, 0, node));
 }
 
 static void append_metaline_buffer(char **buffer, size_t *buffer_len, char *line) {
@@ -248,18 +754,15 @@ char* get_reporting_metalines(ASTNode *node) {
     return result;
 }
 
-/* Returns the meta .src line in a malloced buffer */
+/* Returns the source-step metadata line in a malloced buffer */
 char* get_metaline(ASTNode *node) {
-    char *result, *src;
     int line, column;
     char *source_start, *source_end;
 
     if (node->is_compiler_added &&
         node->source_provenance == AST_SOURCE_SYNTHETIC &&
         node->node_type == INSTRUCTIONS) {
-        result = malloc(1);
-        result[0] = 0;
-        return result;
+        return empty_metaline();
     }
 
     line = node->line;
@@ -275,22 +778,18 @@ char* get_metaline(ASTNode *node) {
         if (!source_end) source_end = node->token->token_string + node->token->length - 1;
     }
 
-    if (!source_span_is_emit_safe(source_start, source_end)) {
-        result = malloc(1);
-        result[0] = 0;
-    }
-    else {
-        src = encode_line_source_malloc(source_start,
-                                        (int) (source_end - source_start) + 1);
-        result = mprintf("   .src %d:%d=\"%s\"\n", line + 1, column + 1, src);
-        free(src);
-    }
-    return prefix_source_file_if_needed(result, node->file_name);
+    return source_step_metaline(node->context,
+                                node->source_node,
+                                node->file_name,
+                                line,
+                                column,
+                                source_start,
+                                source_end,
+                                source_step_flags(node->source_provenance, node->is_compiler_added, node->source_node));
 }
 
-/* Returns the meta .src line in a malloced buffer */
+/* Returns the source-step metadata line in a malloced buffer */
 char* get_metaline_range(ASTNode *from, ASTNode *to) {
-    char *result, *src;
     int from_line, from_column;
     char *from_source_start, *from_source_end;
     int to_line, to_column;
@@ -319,22 +818,22 @@ char* get_metaline_range(ASTNode *from, ASTNode *to) {
         if (!to_source_end) to_source_end = to->token_end->token_string + to->token_end->length - 1;
     }
 
-    if (!source_span_is_emit_safe(from_source_start, to_source_end)) {
-        result = malloc(1);
-        result[0] = 0;
-    }
-    else {
-        src = encode_line_source_malloc(from_source_start,
-                                        (int) (to_source_end - from_source_start) + 1);
-        result = mprintf("   .src %d:%d=\"%s\"\n", from_line + 1, from_column, src);
-        free(src);
-    }
-    return result;
+    (void)from_source_end;
+    (void)to_line;
+    (void)to_column;
+    (void)to_source_start;
+    return source_step_metaline(from->context,
+                                from->source_node,
+                                from->file_name,
+                                from_line,
+                                from_column,
+                                from_source_start,
+                                to_source_end,
+                                source_step_flags(from->source_provenance, from->is_compiler_added, from->source_node));
 }
 
-/* Returns the meta .src line in a malloced buffer */
+/* Returns the source-step metadata line in a malloced buffer */
 char* get_metaline_between(ASTNode *from, ASTNode *to) {
-    char *result, *src;
     Token *start = 0;
     Token *end = 0;
 
@@ -360,21 +859,20 @@ char* get_metaline_between(ASTNode *from, ASTNode *to) {
 
     if (!start || !end ||
         !source_span_is_emit_safe(start->token_string, end->token_string + end->length - 1)) {
-        result = malloc(1);
-        result[0] = 0;
+        return empty_metaline();
     }
-    else {
-        src = encode_line_source_malloc(start->token_string,
-                                        (int) (end->token_string - start->token_string) + end->length);
-        result = mprintf("   .src %d:%d=\"%s\"\n", start->line + 1, start->column + 1, src);
-        free(src);
-    }
-    return result;
+    return source_step_metaline(from->context,
+                                from->source_node,
+                                from->file_name,
+                                start->line,
+                                start->column,
+                                start->token_string,
+                                end->token_string + end->length - 1,
+                                source_step_flags(from->source_provenance, from->is_compiler_added, from->source_node));
 }
 
-/* Returns the meta .src line in a malloced buffer */
+/* Returns the source-step metadata line in a malloced buffer */
 char* get_metaline_token_after(ASTNode *node) {
-    char *result, *src;
     Token *start = 0;
 
     if (node->token_end) start = node->token_end->token_next;
@@ -386,29 +884,27 @@ char* get_metaline_token_after(ASTNode *node) {
     }
 
     if (!start || !source_span_is_emit_safe(start->token_string, start->token_string + start->length - 1)) {
-        result = malloc(1);
-        result[0] = 0;
+        return empty_metaline();
     }
-    else {
-        src = encode_line_source_malloc(start->token_string,
-                                        start->length);
-        result = mprintf("   .src %d:%d=\"%s\"\n", start->line + 1, start->column + 1, src);
-        free(src);
-    }
-    return result;
+    return source_step_metaline(node->context,
+                                node->source_node,
+                                node->file_name,
+                                start->line,
+                                start->column,
+                                start->token_string,
+                                start->token_string + start->length - 1,
+                                source_step_flags(node->source_provenance, node->is_compiler_added, node->source_node));
 }
 
-/* Returns the meta .src line in a malloced buffer */
+/* Returns the source-step metadata line in a malloced buffer */
 char* get_metaline_clause(ASTNode *node) {
-    char *result, *src;
     Token *start = 0;
     Token *end = 0;
 
     if (node->token_start) start = node->token_start;
 
     if (!start || !source_span_is_emit_safe(start->token_string, start->token_string + start->length - 1)) {
-        result = malloc(1);
-        result[0] = 0;
+        return empty_metaline();
     }
     else {
         end = start;
@@ -416,21 +912,22 @@ char* get_metaline_clause(ASTNode *node) {
             end = end->token_next;
 
         if (!source_span_is_emit_safe(start->token_string, end->token_string + end->length - 1)) {
-            result = malloc(1);
-            result[0] = 0;
+            return empty_metaline();
         } else {
-            src = encode_line_source_malloc(start->token_string,
-                                            (int) (end->token_string - start->token_string) + end->length);
-            result = mprintf("   .src %d:%d=\"%s\"\n", start->line + 1, start->column + 1, src);
-            free(src);
+            return source_step_metaline(node->context,
+                                        node->source_node,
+                                        node->file_name,
+                                        start->line,
+                                        start->column,
+                                        start->token_string,
+                                        end->token_string + end->length - 1,
+                                        source_step_flags(node->source_provenance, node->is_compiler_added, node->source_node));
         }
     }
-    return result;
 }
 
-/* Returns the meta .src line in a malloced buffer */
+/* Returns the source-step metadata line in a malloced buffer */
 char* get_metaline_token_at(ASTNode *node) {
-    char *result, *src;
     Token *start = 0;
 
     if (node->token_start) start = node->token_start;
@@ -442,16 +939,16 @@ char* get_metaline_token_at(ASTNode *node) {
     }
 
     if (!start) {
-        result = malloc(1);
-        result[0] = 0;
+        return empty_metaline();
     }
-    else {
-        src = encode_line_source_malloc(start->token_string,
-                                        start->length);
-        result = mprintf("   .src %d:%d=\"%s\"\n", start->line + 1, start->column + 1, src);
-        free(src);
-    }
-    return result;
+    return source_step_metaline(node->context,
+                                node->source_node,
+                                node->file_name,
+                                start->line,
+                                start->column,
+                                start->token_string,
+                                start->token_string + start->length - 1,
+                                source_step_flags(node->source_provenance, node->is_compiler_added, node->source_node));
 }
 
 /* Get Comment from a node (in a malloced buffer) */
@@ -495,6 +992,76 @@ void type_promotion(ASTNode *node) {
     }
 }
 
+static int rxas_hex_value(char ch) {
+    if (ch >= '0' && ch <= '9') return ch - '0';
+    if (ch >= 'a' && ch <= 'f') return ch - 'a' + 10;
+    if (ch >= 'A' && ch <= 'F') return ch - 'A' + 10;
+    return -1;
+}
+
+static void append_hex_byte(char *buffer, size_t *pos, unsigned char byte) {
+    static const char hex[] = "0123456789abcdef";
+    buffer[(*pos)++] = hex[(byte >> 4) & 0x0f];
+    buffer[(*pos)++] = hex[byte & 0x0f];
+}
+
+static char *format_rxas_escaped_string_as_binary(ASTNode *node) {
+    char *buffer;
+    size_t i;
+    size_t out;
+    unsigned char byte;
+    char esc;
+    int hi;
+    int lo;
+
+    buffer = malloc(3 + (node->node_string_length * 2));
+    buffer[0] = '0';
+    buffer[1] = 'x';
+    out = 2;
+
+    for (i = 0; i < node->node_string_length; i++) {
+        byte = (unsigned char)node->node_string[i];
+        if (byte == '\\' && i + 1 < node->node_string_length) {
+            esc = node->node_string[++i];
+            switch (esc) {
+                case '\\': byte = '\\'; break;
+                case 'n': byte = '\n'; break;
+                case 't': byte = '\t'; break;
+                case 'a': byte = '\a'; break;
+                case 'b': byte = '\b'; break;
+                case 'f': byte = '\f'; break;
+                case 'r': byte = '\r'; break;
+                case 'v': byte = '\v'; break;
+                case '\'': byte = '\''; break;
+                case '\"': byte = '\"'; break;
+                case '0': byte = '\0'; break;
+                case '?': byte = '\?'; break;
+                case 'x':
+                    if (i + 2 < node->node_string_length) {
+                        hi = rxas_hex_value(node->node_string[i + 1]);
+                        lo = rxas_hex_value(node->node_string[i + 2]);
+                        if (hi != -1 && lo != -1) {
+                            byte = (unsigned char)((hi << 4) | lo);
+                            i += 2;
+                            break;
+                        }
+                    }
+                    append_hex_byte(buffer, &out, '\\');
+                    byte = (unsigned char)esc;
+                    break;
+                default:
+                    append_hex_byte(buffer, &out, '\\');
+                    byte = (unsigned char)esc;
+                    break;
+            }
+        }
+        append_hex_byte(buffer, &out, byte);
+    }
+
+    buffer[out] = 0;
+    return buffer;
+}
+
 /* Formats a constant value returned as a malloced buffer */
 char* format_constant(ValueType type, ASTNode* node) {
     char *buffer;
@@ -503,7 +1070,7 @@ char* format_constant(ValueType type, ASTNode* node) {
 
     if (type == TP_STRING) {
         buffer = mprintf("\"%.*s\"",
-                         node->node_string_length,
+                         printf_string_precision(node->node_string_length),
                          node->node_string);
     }
     else if (type == TP_FLOAT) {
@@ -518,22 +1085,32 @@ char* format_constant(ValueType type, ASTNode* node) {
         }
         if (flag)
             buffer = mprintf("%.*s.0",
-                             node->node_string_length,
+                             printf_string_precision(node->node_string_length),
                              node->node_string);
         else
             buffer = mprintf("%.*s",
-                             node->node_string_length,
+                             printf_string_precision(node->node_string_length),
                              node->node_string);
     }
     else if (type == TP_DECIMAL) {
         buffer = mprintf("%.*sd",
-                        node->node_string_length,
+                        printf_string_precision(node->node_string_length),
                         node->node_string);
+    }
+    else if (type == TP_BINARY) {
+        if (node->node_type == BINARY || node->value_type == TP_BINARY) {
+            buffer = mprintf("%.*s",
+                             printf_string_precision(node->node_string_length),
+                             node->node_string);
+        }
+        else {
+            buffer = format_rxas_escaped_string_as_binary(node);
+        }
     }
     else {
         /* Integer */
         buffer = mprintf("%.*s",
-                         node->node_string_length,
+                         printf_string_precision(node->node_string_length),
                          node->node_string);
     }
     return buffer;
@@ -550,6 +1127,8 @@ char* type_to_prefix(ValueType value_type) {
             return "f";
         case TP_DECIMAL:
             return "d";
+        case TP_BINARY:
+            return "";
         default:
             return "";
     }
@@ -563,6 +1142,7 @@ int is_constant(ASTNode* node) {
         case STRING: /* This and the following will exist if the optimiser has not been run */
         case FLOAT:
         case DECIMAL:
+        case BINARY:
         case INTEGER:
         case CLASS:
             if (node->value_type == node->target_type)

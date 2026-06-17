@@ -4,7 +4,7 @@
 #line 5 "conditions/condtype_decl.c"
 enum YYCONDTYPE {
 	yyca,
-	yycb,
+	yycb
 };
 #line 2 "conditions/condtype_decl.re"
 
@@ -18,33 +18,30 @@ int main ()
 #line 19 "conditions/condtype_decl.c"
 {
 	unsigned char yych;
-	if (YYGETCONDITION() < 1) {
-		goto yyc_a;
-	} else {
-		goto yyc_b;
-	}
+	if (YYGETCONDITION() < 1) goto yyc_a;
+	else goto yyc_b;
 /* *********************************** */
 yyc_a:
 	yych = *YYCURSOR;
-	if (yych == 'a') goto yy3;
-yy3:
+	if (yych == 'a') goto yy1;
+yy1:
 	++YYCURSOR;
 #line 12 "conditions/condtype_decl.re"
 	{}
-#line 35 "conditions/condtype_decl.c"
+#line 32 "conditions/condtype_decl.c"
 /* *********************************** */
 yyc_b:
 	yych = *YYCURSOR;
-	if (yych == 'b') goto yy8;
-yy8:
+	if (yych == 'b') goto yy3;
+yy3:
 	++YYCURSOR;
 #line 13 "conditions/condtype_decl.re"
 	{}
-#line 44 "conditions/condtype_decl.c"
+#line 41 "conditions/condtype_decl.c"
 }
 #line 14 "conditions/condtype_decl.re"
 
 	return 0;
 }
-conditions/condtype_decl.re:14:2: warning: control flow in condition 'a' is undefined for strings that match '[\x0-\x60\x62-\xFF]', use default rule '*' [-Wundefined-control-flow]
-conditions/condtype_decl.re:14:2: warning: control flow in condition 'b' is undefined for strings that match '[\x0-\x61\x63-\xFF]', use default rule '*' [-Wundefined-control-flow]
+conditions/condtype_decl.re:9:0: warning: control flow in condition 'a' is undefined for strings that match '[\x0-\x60\x62-\xFF]', use default rule '*' [-Wundefined-control-flow]
+conditions/condtype_decl.re:9:0: warning: control flow in condition 'b' is undefined for strings that match '[\x0-\x61\x63-\xFF]', use default rule '*' [-Wundefined-control-flow]

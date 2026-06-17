@@ -146,9 +146,9 @@ int rexbscan(Context* s) {
     ">" ob ">" ob "=" | not ob "<" ob "<" { RET(TK_S_GTE); }
     "<" ob "<" ob "=" | not ob ">" ob ">" { RET(TK_S_LTE); }
 
+    "&" ob "&" { RET(s->numeric_standard ? TK_XOR : TK_UNKNOWN); }
     "&" { RET(TK_AND); }
     "|" { RET(TK_OR); }
-  //  "&" ob "&" { RET(TK_OR); } // TODO Check
     not { RET(TK_NOT); }         // Note that '/' will be treated as divide as it is listed first
     "," { RET(TK_COMMA); }
     "..." { RET(TK_ELLIPSIS); }
@@ -163,6 +163,10 @@ int rexbscan(Context* s) {
     'AS' ob ":" { RET(TK_RESERVED_LABEL); }
     'IS' ob ":" { RET(TK_RESERVED_LABEL); }
     'TYPEOF' ob ":" { RET(TK_RESERVED_LABEL); }
+    'REFERENCE' ob ":" { RET(TK_RESERVED_LABEL); }
+    'DEREFERENCE' ob ":" { RET(TK_RESERVED_LABEL); }
+    'REFVALID' ob ":" { RET(TK_RESERVED_LABEL); }
+    'SELF' ob ":" { RET(TK_RESERVED_LABEL); }
     'ASSEMBLER' { RET(TK_ASSEMBLER); }
     'ARG' { RET(TK_ARG); }
     'AS' { RET(TK_AS); }
@@ -202,6 +206,11 @@ int rexbscan(Context* s) {
       RET(TK_REGISTER);
     }
     'REGISTER' { RET(TK_REGISTER); }
+    'REFERENCE' { RET(TK_REFERENCE); }
+    'DEREFERENCE' { RET(TK_DEREFERENCE); }
+    'SNAPSHOT' { RET(TK_SNAPSHOT); }
+    'REFVALID' { RET(TK_REFVALID); }
+    'SELF' { RET(TK_SELF); }
   //  'PULL' { RET(TK_PULL); }
   //  'PUSH' { RET(TK_PUSH); }
   //  'QUEUE' { RET(TK_QUEUE); }
@@ -277,7 +286,7 @@ int rexbscan(Context* s) {
        RET(TK_EOL);
     }
     "." { RET(TK_DOT); }
-    any {
+    * {
       RET(TK_UNKNOWN);
     }
   */
@@ -325,6 +334,10 @@ int rexbscan(Context* s) {
        RET(TK_STEMNOVAL);
     }
     $ { RET(TK_EOS); }
+    * {
+       s->lexer_stem_mode = 0;
+       RET(TK_UNKNOWN);
+    }
 */
     comment:
 /*!re2c
@@ -367,7 +380,7 @@ int rexbscan(Context* s) {
       s->cursor = s->top + 2; /* To get the '/ *' */
       RET(TK_BADCOMMENT);
   }
-  any { goto comment; }
+  * { goto comment; }
 */
 
 skip_line_comment:
@@ -388,7 +401,7 @@ skip_line_comment:
   }
   eof { RET(TK_EOS); }
   $ { RET(TK_EOS); }
-  any {
+  * {
     goto skip_line_comment;
   }
 */

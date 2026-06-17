@@ -1,60 +1,67 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_say_expr_negative.rexx
- * BUILT                  : 2026-04-29 14:16:44
+ * SOURCE                 : inline_test_say_expr_negative.crexx
+ * BUILT                  : 2026-05-27 17:53:22
  */
 
-.srcfile="inline_test_say_expr_negative.rexx"
 .globals=0
 
 main() .locals=6
    .meta "inline_test_say_expr_negative.main"="b" ".int" main() ""
-   .src 3:1="main: procedure = .int"
+   .srcstep 16 16 17 "inline_test_say_expr_negative.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:3="say \"Starting say inline negative test...\""
+   .srcstep 1 1 17 "inline_test_say_expr_negative.crexx" 4 3 45 "  say \"Starting say inline negative test...\""
    say "Starting say inline negative test..."
-   .src 5:3="do"
-   .src 5:6="i = 1"
+   .srcstep 12 12 17 "inline_test_say_expr_negative.crexx" 5 3 5 "  do i = 1 to 3"
+   .srcstep 2 2 17 "inline_test_say_expr_negative.crexx" 5 6 11 "  do i = 1 to 3"
    .meta "inline_test_say_expr_negative.main.i"="b" ".int" r0
    load r0,1
-   .src 5:12="to 3"
+   .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "i" ""
+   .srcstep 3 3 17 "inline_test_say_expr_negative.crexx" 5 12 16 "  do i = 1 to 3"
    load r2,3
+   .traceevent "L" 4 "R" "I" "r" 2 0 0 0 "" ""
 l8dostart:
-   .src 5:12="to 3"
+   .srcstep 3 3 17 "inline_test_say_expr_negative.crexx" 5 12 16 "  do i = 1 to 3"
    igt r3,r0,r2
    brt l8doend,r3
-   .src 6:5="say asString(i)"
-   .src 6:9="asString"
-   .src 12:7="val"
+   .srcstep 11 11 17 "inline_test_say_expr_negative.crexx" 6 5 20 "    say asString(i)"
+   .srcstep 10 10 17 "inline_test_say_expr_negative.crexx" 6 9 17 "    say asString(i)"
+   .srcstep 5 5 33 "inline_test_say_expr_negative.crexx" 12 7 10 "  arg val = .int"
+   .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
    icopy r1,r0
-   .src 13:2="if val = 2"
+   .traceevent "A" 6 "R" "I" "r" 1 5 5 0 "val" ""
+   .srcstep 7 7 17 "inline_test_say_expr_negative.crexx" 13 3 13 "  if val = 2 then return \"two\""
+   .traceevent "V" 6 "R" "I" "r" 1 7 7 0 "val" ""
    ieq r4,r1,2
+   .traceevent "O" 4 "R" "B" "r" 4 7 7 0 "" ""
    brf l48iffalse,r4
-   .src 13:14="then"
-   .src 13:19="return \"two\""
+   .srcstep 8 8 17 "inline_test_say_expr_negative.crexx" 13 14 18 "  if val = 2 then return \"two\""
+   .srcstep 6 6 17 "inline_test_say_expr_negative.crexx" 13 19 31 "  if val = 2 then return \"two\""
    load r5,"two"
+   .traceevent "L" 4 "R" "S" "r" 5 11 11 0 "" ""
    scopy r4,r5
    acopy r4,r5
    br l43bexprend
 l48iffalse:
-   .src 14:3="return val"
+   .srcstep 9 9 17 "inline_test_say_expr_negative.crexx" 14 3 13 "  return val"
    itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 11 11 0 "val" ""
    scopy r4,r1
    acopy r4,r1
    br l43bexprend
 l43bexprend:
    say r4
 l8doinc:
-   .src 5:6="i"
+   .srcstep 4 4 17 "inline_test_say_expr_negative.crexx" 5 6 7 "  do i = 1 to 3"
    inc r0
-   .src 7:3="end"
+   .srcstep 13 13 17 "inline_test_say_expr_negative.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
-   .src 8:3="say \"Say inline negative test finished.\""
+   .srcstep 14 14 17 "inline_test_say_expr_negative.crexx" 8 3 43 "  say \"Say inline negative test finished.\""
    say "Say inline negative test finished."
-   .src 9:3="return 0"
+   .srcstep 15 15 17 "inline_test_say_expr_negative.crexx" 9 3 11 "  return 0"
    ret 0

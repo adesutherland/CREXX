@@ -439,9 +439,9 @@ rule rules[] =
                                 OP_CODE, "igtbr", 'b', 3, 'r', 1, 'r', 2},
             {END_OF_RULE},
 
-            /* replace fgt/brf by igtbr instruction:     fgt r0,r3,r4; brf label,r0 => fgtbr label,r3,r4  */
+            /* replace fgt/brt by fgtbr instruction:     fgt r0,r3,r4; brt label,r0 => fgtbr label,r3,r4  */
             {ANY_GAP,   OP_CODE, "fgt",   'r', 4, 'r', 1, 'r', 2},
-            {NO_GAP,   OP_CODE, "brf",   'b', 3, 'r', 4,  0,  0,
+            {NO_GAP,   OP_CODE, "brt",   'b', 3, 'r', 4,  0,  0,
                     OP_CODE, "fgtbr", 'b', 3, 'r', 1, 'r', 2},
             {END_OF_RULE},
 
@@ -602,6 +602,7 @@ static const OpInfo *find_optimiser_opcode(Assembler_Token *instrToken,
     if (operand3Token) actual_operands = 3;
 
     for (i = 0; op_table[i].mnemonic != NULL; i++) {
+        if (!rxop_is_source_mnemonic(op_table[i].mnemonic)) continue;
         if (op_operands_match(op_table[i].format, t1, t2, t3, actual_operands) &&
             mnemonic_matches(mnemonic, op_table[i].mnemonic)) {
             return &op_table[i];
@@ -1418,21 +1419,29 @@ static void executeQueuedItem(Assembler_Context *context, instruction_queue *ite
         case INLINE_META:
             rxasmeil(context, item->instrToken, item->operand1Token, item->operand2Token);
             break;
-        case SRC_LINE:
-            /* Queue Source Line */
-            rxasmesr(context, item->instrToken, item->operand1Token, item->operand2Token);
+        case SRC_STEP:
+            /* Queue Source Step */
+            rxasmestp(context, item->instrToken, item->operand1Token, item->operand2Token,
+                      item->operand3Token, item->operand4Token, item->operand5Token,
+                      item->operand6Token, item->operand7Token);
             break;
-        case SRC_FILE:
-            /* Source File */
-            rxasmefl(context, item->instrToken);
+        case TRACE_EVENT:
+            /* Queue Trace Event */
+            rxasmete(context, item->instrToken, item->operand1Token, item->operand2Token,
+                     item->operand3Token, item->operand4Token, item->operand5Token,
+                     item->operand6Token, item->operand7Token, item->operand8Token,
+                     item->operand9Token, item->operand10Token);
             break;
         default:;
     }
 }
 
-static void queue_instruction(Assembler_Context *context, enum queue_item_type type,
-                              Assembler_Token *instrToken, Assembler_Token *operand1Token, Assembler_Token *operand2Token,
-                              Assembler_Token *operand3Token, Assembler_Token *operand4Token, Assembler_Token *operand5Token) {
+static void queue_instruction_ext_full(Assembler_Context *context, enum queue_item_type type,
+                                       Assembler_Token *instrToken, Assembler_Token *operand1Token, Assembler_Token *operand2Token,
+                                       Assembler_Token *operand3Token, Assembler_Token *operand4Token, Assembler_Token *operand5Token,
+                                       Assembler_Token *operand6Token, Assembler_Token *operand7Token,
+                                       Assembler_Token *operand8Token, Assembler_Token *operand9Token,
+                                       Assembler_Token *operand10Token) {
 
     /* Remove old instructions to get queue down to the target length */
     /* Note that instruction rules can add instructions to the queue  */
@@ -1456,10 +1465,43 @@ static void queue_instruction(Assembler_Context *context, enum queue_item_type t
     context->optimiser_queue[context->optimiser_queue_items].operand3Token = operand3Token;
     context->optimiser_queue[context->optimiser_queue_items].operand4Token = operand4Token;
     context->optimiser_queue[context->optimiser_queue_items].operand5Token = operand5Token;
+    context->optimiser_queue[context->optimiser_queue_items].operand6Token = operand6Token;
+    context->optimiser_queue[context->optimiser_queue_items].operand7Token = operand7Token;
+    context->optimiser_queue[context->optimiser_queue_items].operand8Token = operand8Token;
+    context->optimiser_queue[context->optimiser_queue_items].operand9Token = operand9Token;
+    context->optimiser_queue[context->optimiser_queue_items].operand10Token = operand10Token;
     context->optimiser_queue_items++;
 
     /* Optimise */
     optimise(context);
+}
+
+static void queue_instruction_ext(Assembler_Context *context, enum queue_item_type type,
+                                  Assembler_Token *instrToken, Assembler_Token *operand1Token, Assembler_Token *operand2Token,
+                                  Assembler_Token *operand3Token, Assembler_Token *operand4Token, Assembler_Token *operand5Token,
+                                  Assembler_Token *operand6Token, Assembler_Token *operand7Token) {
+    queue_instruction_ext_full(context, type, instrToken, operand1Token, operand2Token,
+                               operand3Token, operand4Token, operand5Token,
+                               operand6Token, operand7Token, 0, 0, 0);
+}
+
+static void queue_trace_event(Assembler_Context *context,
+                              Assembler_Token *kind, Assembler_Token *mode_mask,
+                              Assembler_Token *value_source, Assembler_Token *value_type,
+                              Assembler_Token *register_type, Assembler_Token *value_ref,
+                              Assembler_Token *source_step, Assembler_Token *clause,
+                              Assembler_Token *flags, Assembler_Token *symbol,
+                              Assembler_Token *resolved_name) {
+    queue_instruction_ext_full(context, TRACE_EVENT, kind, mode_mask, value_source, value_type,
+                               register_type, value_ref, source_step, clause,
+                               flags, symbol, resolved_name);
+}
+
+static void queue_instruction(Assembler_Context *context, enum queue_item_type type,
+                              Assembler_Token *instrToken, Assembler_Token *operand1Token, Assembler_Token *operand2Token,
+                              Assembler_Token *operand3Token, Assembler_Token *operand4Token, Assembler_Token *operand5Token) {
+    queue_instruction_ext(context, type, instrToken, operand1Token, operand2Token,
+                          operand3Token, operand4Token, operand5Token, 0, 0);
 }
 
 /* Queue code for the keyhole optimiser */
@@ -1511,20 +1553,27 @@ void rxasqlbl(Assembler_Context *context, Assembler_Token *labelToken) {
     else rxaslabl(context, labelToken);
 }
 
-/* Queue Source filename */
-void rxasqmfl(Assembler_Context *context, Assembler_Token *file) {
+/* Queue Source Step */
+void rxasqmstp(Assembler_Context *context, Assembler_Token *step, Assembler_Token *clause, Assembler_Token *flags,
+               Assembler_Token *file, Assembler_Token *line, Assembler_Token *start, Assembler_Token *end,
+               Assembler_Token *source) {
     if (context->optimise) {
-        queue_instruction(context, SRC_FILE, file, 0, 0, 0, 0, 0);
+        queue_instruction_ext(context, SRC_STEP, step, clause, flags, file, line, start, end, source);
     }
-    else rxasmefl(context, file);
+    else rxasmestp(context, step, clause, flags, file, line, start, end, source);
 }
 
-/* Queue Source Line */
-void rxasqmsr(Assembler_Context *context, Assembler_Token *line, Assembler_Token *column, Assembler_Token *source) {
+/* Queue Trace Event */
+void rxasqmte(Assembler_Context *context, Assembler_Token *kind, Assembler_Token *mode_mask,
+              Assembler_Token *value_source, Assembler_Token *value_type, Assembler_Token *register_type,
+              Assembler_Token *value_ref, Assembler_Token *source_step, Assembler_Token *clause,
+              Assembler_Token *flags, Assembler_Token *symbol, Assembler_Token *resolved_name) {
     if (context->optimise) {
-        queue_instruction(context, SRC_LINE, line, column, source, 0, 0, 0);
+        queue_trace_event(context, kind, mode_mask, value_source, value_type, register_type, value_ref,
+                          source_step, clause, flags, symbol, resolved_name);
     }
-    else rxasmesr(context, line, column, source);
+    else rxasmete(context, kind, mode_mask, value_source, value_type, register_type, value_ref,
+                  source_step, clause, flags, symbol, resolved_name);
 }
 
 /* Queue Function Metadata */

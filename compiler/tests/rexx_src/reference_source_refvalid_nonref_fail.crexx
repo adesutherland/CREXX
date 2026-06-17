@@ -1,0 +1,7 @@
+options levelb
+namespace reference_source_refvalid_nonref_fail
+
+main: procedure = .int
+  value = 1
+  if refvalid(value) then return 1
+  return 0

@@ -52,11 +52,21 @@ struct ASTNode {
     int *value_dim_base;     /* Array of starting element number for array dimension - malloced or zero */
     int *value_dim_elements; /* Array of max number of elements for array dimension (0=infinite) - malloced or zero */
     char* value_class;       /* Value class name - malloced or zero */
+    ValueType value_reference_type;    /* Referenced value type for TP_REFERENCE values */
+    size_t value_reference_dims;       /* Referenced value dimensions */
+    int *value_reference_dim_base;     /* Referenced array base metadata - malloced or zero */
+    int *value_reference_dim_elements; /* Referenced array size metadata - malloced or zero */
+    char* value_reference_class;       /* Referenced class name - malloced or zero */
     int *target_dim_base;    /* Array of starting element number for target array dimension - malloced or zero */
     int *target_dim_elements;/* Array of max number of elements for target array dimension (0=infinite) - malloced or zero */
     ValueType target_type;   /* Target type */
     size_t target_dims;      /* Target dimensions */
     char* target_class;      /* Target class name - malloced or zero */
+    ValueType target_reference_type;    /* Referenced target type for TP_REFERENCE targets */
+    size_t target_reference_dims;       /* Referenced target dimensions */
+    int *target_reference_dim_base;     /* Referenced target array base metadata - malloced or zero */
+    int *target_reference_dim_elements; /* Referenced target array size metadata - malloced or zero */
+    char* target_reference_class;       /* Referenced target class name - malloced or zero */
     int high_ordinal; /* Order of node after validation but before any optimisations / tree re-writing - highest in this tree root */
     int low_ordinal;  /* lowest in this tree root - makes a range for the subtree */
     int register_num;
@@ -88,6 +98,7 @@ struct ASTNode {
     size_t reporting_source_capacity;
     ASTNode *parent, *child, *sibling;
     ASTNode *association; /* E.g. for LEAVE / ITERATE relevant DO node or LEAVE_WITH relevant BLOCK_EXPR */
+    ASTNode *semantic_context; /* AST_SEMANTIC_CONTEXT sidecar note for emitters and exits */
     Token *token;
     Scope *scope;
     char *node_string;
@@ -138,6 +149,12 @@ void ast_copy_source_anchor(ASTNode *node, ASTNode *source_node, ASTSourceProven
 void ast_enable_primary_reporting_anchor(ASTNode *node);
 int ast_add_reporting_source_node(ASTNode *node, SourceNode *source_node);
 void ast_clear_reporting_source_nodes(ASTNode *node);
+ASTNode *ast_make_semantic_context(Context *context,
+                                   ASTSemanticContextKind kind,
+                                   ASTNode *source_node,
+                                   const char *label);
+void ast_attach_semantic_context(ASTNode *node, ASTNode *semantic_context);
+ASTSemanticContextKind ast_semantic_context_kind(ASTNode *node);
 /* Find first node of a certain type in a tree */
 ASTNode *ast_fndn(Context* ctx, ASTNode* node, NodeType type);
 /* Graft a Rexx source fragment into the AST replacing target_node */
@@ -211,6 +228,8 @@ ASTNode* ast_ns(ASTNode *node);
 ASTNode* ast_do(ASTNode *node);
 /* Get the child node of a certain type1 or type2 (or null) */
 ASTNode * ast_chld(ASTNode *parent, NodeType type1, NodeType type2);
+/* Get a child node that represents a type definition (or null) */
+ASTNode * ast_type_child(ASTNode *parent);
 /* Returns 1 if the node is an error or warning node, or has any descendant error or warning node */
 int ast_hase(ASTNode *node);
 /* Prune all nodes except ERRORs and WARNINGs */
@@ -256,6 +275,21 @@ void ast_sttn(ASTNode* node, ASTNode* from_node);
 
 /* Set Node Value (and Target) Type from the from_node target type */
 void ast_svtn(ASTNode* node, ASTNode* from_node);
+
+void ast_clear_value_reference_type(ASTNode *node);
+void ast_clear_target_reference_type(ASTNode *node);
+void ast_set_value_reference_type(ASTNode *node, ValueType type, size_t dims,
+                                  const int *dim_base, const int *dim_elements,
+                                  const char *class_name);
+void ast_set_target_reference_type(ASTNode *node, ValueType type, size_t dims,
+                                   const int *dim_base, const int *dim_elements,
+                                   const char *class_name);
+void ast_copy_value_reference_type_from_symbol(ASTNode *node, const Symbol *symbol);
+void ast_copy_target_reference_type_from_symbol(ASTNode *node, const Symbol *symbol);
+void ast_copy_value_reference_type_from_value(ASTNode *node, const ASTNode *from_node);
+void ast_copy_value_reference_type_from_target(ASTNode *node, const ASTNode *from_node);
+void ast_copy_target_reference_type_from_value(ASTNode *node, const ASTNode *from_node);
+void ast_copy_target_reference_type_from_target(ASTNode *node, const ASTNode *from_node);
 
 void ast_set_file_name(Context *context, char *file_name);
 void rxcp_validate_ast_and_symbols(ASTNode *root);

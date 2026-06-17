@@ -1,51 +1,61 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_nested_scope_if_do.rexx
- * BUILT                  : 2026-04-29 14:16:43
+ * SOURCE                 : inline_test_nested_scope_if_do.crexx
+ * BUILT                  : 2026-05-27 17:53:46
  */
 
-.srcfile="inline_test_nested_scope_if_do.rexx"
 .globals=0
 
 main() .locals=6
    .meta "inline_test_nested_scope_if_do.main"="b" ".int" main() ""
-   .src 3:1="main: procedure = .int"
+   .srcstep 18 18 17 "inline_test_nested_scope_if_do.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:3="say \"Starting nested scope if-do inline test...\""
+   .srcstep 1 1 17 "inline_test_nested_scope_if_do.crexx" 4 3 51 "  say \"Starting nested scope if-do inline test...\""
    say "Starting nested scope if-do inline test..."
-   .src 5:3="do"
-   .src 5:6="i = 0"
+   .srcstep 14 14 17 "inline_test_nested_scope_if_do.crexx" 5 3 5 "  do i = 0 to 2"
+   .srcstep 2 2 17 "inline_test_nested_scope_if_do.crexx" 5 6 11 "  do i = 0 to 2"
    .meta "inline_test_nested_scope_if_do.main.i"="b" ".int" r0
    load r0,0
-   .src 5:12="to 2"
+   .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "i" ""
+   .srcstep 3 3 17 "inline_test_nested_scope_if_do.crexx" 5 12 16 "  do i = 0 to 2"
    load r3,2
+   .traceevent "L" 4 "R" "I" "r" 3 0 0 0 "" ""
 l8dostart:
-   .src 5:12="to 2"
+   .srcstep 3 3 17 "inline_test_nested_scope_if_do.crexx" 5 12 16 "  do i = 0 to 2"
    igt r4,r0,r3
    brt l8doend,r4
-   .src 6:5="say classify(i)"
-   .src 6:9="classify"
-   .src 12:7="val"
+   .srcstep 13 13 17 "inline_test_nested_scope_if_do.crexx" 6 5 20 "    say classify(i)"
+   .srcstep 12 12 17 "inline_test_nested_scope_if_do.crexx" 6 9 17 "    say classify(i)"
+   .srcstep 5 5 33 "inline_test_nested_scope_if_do.crexx" 12 7 10 "  arg val = .int"
+   .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
    icopy r1,r0
-   .src 13:2="if val > 0"
+   .traceevent "A" 6 "R" "I" "r" 1 5 5 0 "val" ""
+   .srcstep 9 9 17 "inline_test_nested_scope_if_do.crexx" 13 3 13 "  if val > 0 then do"
+   .traceevent "V" 6 "R" "I" "r" 1 9 9 0 "val" ""
    igt r5,r1,0
+   .traceevent "O" 4 "R" "B" "r" 5 9 9 0 "" ""
    brf l57iffalse,r5
-   .src 13:14="then"
+   .srcstep 10 10 17 "inline_test_nested_scope_if_do.crexx" 13 14 18 "  if val > 0 then do"
    .meta "inline_test_nested_scope_if_do.main.tmp"="b" ".int" r2
-   .src 14:5="tmp = .int"
+   .srcstep 6 6 17 "inline_test_nested_scope_if_do.crexx" 14 5 15 "    tmp = .int"
    null r2
-   .src 15:5="tmp = val * 10"
+   .srcstep 7 7 17 "inline_test_nested_scope_if_do.crexx" 15 5 19 "    tmp = val * 10"
+   .traceevent "V" 6 "R" "I" "r" 1 7 7 0 "val" ""
    imult r2,r1,10
-   .src 16:5="return tmp"
+   .traceevent "O" 4 "R" "I" "r" 2 7 7 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 7 7 0 "tmp" ""
+   .srcstep 8 8 17 "inline_test_nested_scope_if_do.crexx" 16 5 15 "    return tmp"
+   .traceevent "V" 6 "R" "I" "r" 2 13 13 0 "tmp" ""
    icopy r5,r2
    acopy r5,r2
    br l52bexprend
 l57iffalse:
-   .src 18:3="return val"
+   .srcstep 11 11 17 "inline_test_nested_scope_if_do.crexx" 18 3 13 "  return val"
+   .traceevent "V" 6 "R" "I" "r" 1 13 13 0 "val" ""
    icopy r5,r1
    acopy r5,r1
    br l52bexprend
@@ -53,12 +63,12 @@ l52bexprend:
    itos r5
    say r5
 l8doinc:
-   .src 5:6="i"
+   .srcstep 4 4 17 "inline_test_nested_scope_if_do.crexx" 5 6 7 "  do i = 0 to 2"
    inc r0
-   .src 7:3="end"
+   .srcstep 15 15 17 "inline_test_nested_scope_if_do.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
-   .src 8:3="say \"Nested scope if-do inline test finished.\""
+   .srcstep 16 16 17 "inline_test_nested_scope_if_do.crexx" 8 3 49 "  say \"Nested scope if-do inline test finished.\""
    say "Nested scope if-do inline test finished."
-   .src 9:3="return 0"
+   .srcstep 17 17 17 "inline_test_nested_scope_if_do.crexx" 9 3 11 "  return 0"
    ret 0

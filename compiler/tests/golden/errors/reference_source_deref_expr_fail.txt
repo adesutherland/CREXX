@@ -1,0 +1,2 @@
+Error in reference_source_deref_expr_fail.crexx @ 7:6 - #DEREFERENCE_REQUIRES_ASSIGNMENT, "dereference r"
+1 error(s) in source file

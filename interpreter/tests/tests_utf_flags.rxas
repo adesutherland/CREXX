@@ -1,0 +1,98 @@
+/*
+ * CREXX Interpreter test for VM-private UTF status flags.
+ */
+
+.globals=0
+
+main() .locals=8
+   load r0,"A©"
+
+   getandtp r1,r0,3
+   ieq r2,r1,3
+   brf fail_load_flags,r2
+
+   brtpt fail_low_branch,r0
+
+   scopy r3,r0
+   getandtp r1,r3,3
+   ieq r2,r1,3
+   brf fail_scopy_flags,r2
+
+   concat r4,r3,"!"
+   getandtp r1,r4,3
+   ieq r2,r1,3
+   brf fail_const_concat_flags,r2
+
+   concat r4,r4,"?"
+   getandtp r1,r4,3
+   ieq r2,r1,3
+   brf fail_alias_concat_flags,r2
+
+   load r5,1
+   setstrpos r4,r5
+   load r5,2
+   substr r6,r4,r5
+   getandtp r1,r6,3
+   ieq r2,r1,3
+   brf fail_substr_flags,r2
+
+   loadsettp r7,"ok",256
+   getandtp r1,r7,259
+   ieq r2,r1,259
+   brf fail_loadsettp_flags,r2
+
+   brtpt public_branch,r7
+   br fail_public_branch
+
+public_branch:
+   settp r7,512
+   getandtp r1,r7,3
+   ieq r2,r1,3
+   brf fail_settp_preserve_flags,r2
+
+   getandtp r1,r7,768
+   ieq r2,r1,512
+   brf fail_settp_public_replace,r2
+
+   say "PASS: UTF Flag Cache"
+   ret 0
+
+fail_load_flags:
+   say "FAIL: LOAD did not mark UTF flags"
+   ret 1
+
+fail_low_branch:
+   say "FAIL: BRTPT branched on VM-private UTF flags"
+   ret 1
+
+fail_scopy_flags:
+   say "FAIL: SCOPY did not preserve UTF flags"
+   ret 1
+
+fail_const_concat_flags:
+   say "FAIL: CONCAT reg,const did not preserve UTF flags"
+   ret 1
+
+fail_alias_concat_flags:
+   say "FAIL: alias CONCAT did not preserve UTF flags"
+   ret 1
+
+fail_substr_flags:
+   say "FAIL: SUBSTR did not preserve UTF flags"
+   ret 1
+
+fail_loadsettp_flags:
+   say "FAIL: LOADSETTP did not combine UTF and public flags"
+   ret 1
+
+fail_public_branch:
+   say "FAIL: BRTPT did not branch on public flags"
+   ret 1
+
+fail_settp_preserve_flags:
+   say "FAIL: SETTP did not preserve VM-private UTF flags"
+   ret 1
+
+fail_settp_public_replace:
+   say "FAIL: SETTP did not replace public flags"
+   ret 1

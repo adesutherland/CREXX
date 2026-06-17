@@ -31,6 +31,7 @@
 #define CREXX_VALUE_H
 
 #include <stddef.h>
+#include <stdint.h>
 
 #define SMALLEST_STRING_BUFFER_LENGTH 32
 
@@ -97,6 +98,46 @@ typedef struct numeric_context {
 } numeric_context;
 
 typedef struct value value;
+typedef struct rxvm_reference_cell rxvm_reference_cell;
+typedef struct rxvm_reference_context rxvm_reference_context;
+
+#define RXVM_REFERENCE_ROOT_BUCKETS 64
+#define RXVM_REFERENCE_FREE_LIST_SOFT_LIMIT 1024
+
+typedef enum rxvm_ref_state {
+    RXVM_REF_INVALID = 0,
+    RXVM_REF_VALID = 1
+} rxvm_ref_state;
+
+typedef enum rxvm_ref_owner_kind {
+    RXVM_REF_OWNER_NONE = 0,
+    RXVM_REF_LOCAL,
+    RXVM_REF_ARGUMENT,
+    RXVM_REF_GLOBAL,
+    RXVM_REF_ATTRIBUTE
+} rxvm_ref_owner_kind;
+
+struct rxvm_reference_cell {
+    uint64_t id;
+    unsigned int retain_count;
+    rxvm_ref_state state;
+    rxvm_ref_owner_kind owner_kind;
+    value *target;
+    void *owner;
+    uint64_t owner_generation;
+    const char *debug_name;
+    rxvm_reference_context *context;
+    rxvm_reference_cell *next_active;
+    rxvm_reference_cell *next_free;
+};
+
+struct rxvm_reference_context {
+    uint64_t next_reference_id;
+    rxvm_reference_cell *active_buckets[RXVM_REFERENCE_ROOT_BUCKETS];
+    rxvm_reference_cell *free_list;
+    size_t active_count;
+    size_t free_count;
+};
 
 #ifndef RXVM_NATIVE_PAYLOAD_OPS_DEFINED
 #define RXVM_NATIVE_PAYLOAD_OPS_DEFINED
@@ -110,17 +151,8 @@ typedef struct rxvm_native_payload_ops {
 #endif
 
 typedef union {
-    /* todo - these flag definitions are not used and are not correct */
-    /*
-    struct {
-        unsigned int type_object : 1;
-        unsigned int type_string : 1;
-        unsigned int type_decimal : 1;
-        unsigned int type_float : 1;
-        unsigned int type_int : 1;
-    };
-    */
-    unsigned int all_type_flags;
+    /* Register/value status flags. Masks are centralized in binutils/include/rxflags.h. */
+    uint32_t all_type_flags;
 } value_type;
 
 struct value {
@@ -143,9 +175,12 @@ struct value {
 #endif
     char *binary_value; // Must be malloced
     size_t binary_length; // binary_value length
+    size_t binary_pos; // byte cursor for binary operations
     size_t binary_buffer_length; // binary_value buffer length
     const rxvm_native_payload_ops *native_payload_ops; // Shared native payload operations, or NULL
     unsigned int native_payload_flags;
+    rxvm_reference_cell *reference_identity; // This value is a reference target
+    rxvm_reference_cell *reference_payload; // This value is itself a reference
     const char *object_type_name; // Runtime concrete class name, may point into a module constant pool
     size_t object_type_name_length;
     value **attributes;

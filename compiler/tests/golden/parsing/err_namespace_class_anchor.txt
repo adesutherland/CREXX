@@ -9,8 +9,8 @@ REXX_UNIVERSE : "" (-1:-1) [Type: .unknown]
           LITERAL : "List" (-1:-1) [Type: .unknown]
         ERROR : "SYNTAX_ERROR" (-1:-1) [Type: .unknown]
           TOKEN : "class" (-1:-1) [Type: .unknown]
-Error in err_namespace_class_anchor.rexx @ 5:1 - #SYNTAX_ERROR, "class"
+Error in err_namespace_class_anchor.crexx @ 5:1 - #SYNTAX_ERROR, "class"
 1 error(s) in source file
-Error in err_namespace_class_anchor.rexx @ 5:1 - #SYNTAX_ERROR, "class"
+Error in err_namespace_class_anchor.crexx @ 5:1 - #SYNTAX_ERROR, "class"
 1 error(s) in source file
 [INFO] Stopping compilation after Parser/Fixup/Validation (-dp).

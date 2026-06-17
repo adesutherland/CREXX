@@ -1,20 +1,38 @@
-# rxc - the \crexx{} Compiler
+# rxc - the cRexx Compiler
 
 ## Command Line Options
 
 \fontspec{IBM Plex Mono}
-\begin{shaded}
-  \small
-  \obeylines \splice{rxc -h | sed "s/&/\and/g"}
- \end{shaded}
- \fontspec{TeX Gyre Pagella}
+\begin{terminaloutput}
+\small
+\obeylines \splice{rxc -h | sed 's/\&/\\\&/g'}
+\end{terminaloutput}
+\fontspec{TeX Gyre Pagella}
 
 ## Import Search Roots
 
-`rxc` now separates automatic import discovery into two root classes:
+`rxc` separates automatic import discovery into two root classes:
 
-- source roots, searched for `.rexx` project sources
+- source roots, searched for cRexx source files
 - binary roots, searched for `.rxbin`, optional `.rxas`, and `.rxplugin`
+
+The recommended source extensions are:
+
+- `.crexx`: canonical cRexx source, defaulting to Level G when no
+  `options level...` clause is present
+- `.crx`: short cRexx source alias, also defaulting to Level G
+- `.rexx`: compatibility/classic source, defaulting to Level C
+
+An initial source file may also use another extension, such as `.the` for an
+editor macro integration. That extension is added to source-root discovery for
+that compile and defaults to Level G unless the source states another level
+explicitly. This supports host-specific source names without making every
+possible extension a recommended cRexx extension.
+
+`.rxpp` remains the preprocessor-oriented source extension for existing RXPP
+workflows. Longer term, preprocessing may become idempotent and better
+integrated so ordinary `.crexx` and `.crx` sources can pass through it safely,
+but that is separate from the source import extension rules.
 
 The primary source root is the directory of the source file being
 compiled. If the source file name does not include a directory, the
@@ -25,6 +43,9 @@ Binary roots are controlled separately with `-i`. The compiler always
 includes the executable directory in the binary-root set so deployed
 libraries remain visible without adding them explicitly. `-i` can be
 repeated, and repeated `-s` options are accumulated in the same way.
+The source file's directory is not automatically treated as a binary root; pass
+`-i .` or `-i build-dir` when a sibling or build-output `.rxbin` is an intended
+compile-time dependency.
 
 Search order is:
 
@@ -36,11 +57,12 @@ Search order is:
 
 This keeps same-project source imports preferred over deployed binary
 artifacts, while stopping the compiler from treating every binary
-directory as a source tree.
+directory as a source tree. It also prevents stale generated `.rxbin` files
+left beside edited source files from silently satisfying imports.
 
 ## Import Discovery Notes
 
-Automatic `.rxas` import scanning is now disabled by default. It can be
+Automatic `.rxas` import scanning is disabled by default. It can be
 re-enabled with `--import-rxas` for workflows that intentionally use
 assembler modules as import sources.
 
@@ -49,13 +71,18 @@ full parse. That scan reads the leading `options`, `namespace`, and
 `import` clauses so the compiler can reject namespace-mismatched source
 files early and avoid unnecessary full validation work.
 
+Within each source root, the compiler looks for `.crexx`, `.crx`, `.rexx`, and
+the initial file's extension when it is different from those standard names.
+Source files with the same module stem are de-duplicated within that source
+stage so one source module is imported for a stem.
+
 Within a single binary root, when multiple artifacts share the same
 module stem, the compiler keeps only the freshest candidate. If
 timestamps tie, `.rxbin` wins over `.rxas`.
 
  \section{Inline Assembler}
  On page \pageref{inlineAssembly} the inline assembler function of
- the \crexx{} compiler is discussed. This enables the incorporation
+ the cRexx compiler is discussed. This enables the incorporation
  of \code{rxas} assembler instructions into a \textsc{Rexx} source
  file.
 
@@ -66,17 +93,15 @@ timestamps tie, `.rxbin` wins over `.rxas`.
  operation can be done at compile time, to avoid instruction scheduling and execution at
  runtime:
  
-\lstinputlisting[language=rexx,label=fpow_example]{examples/fpowtest.rexx}
-\fontspec{IBM Plex Mono}
-\splice{rxc examples/fpowtest}
-\splice{rxas examples/fpowtest}
-\begin{shaded}
-  \small
-\obeylines \splice{rxvm examples/fpowtest}
-\end{shaded}
-\lstinputlisting[language=rxas,label=fpow_example_rxas,caption=optimization]{examples/fpowtest.rxas}
-\fontspec{TeX Gyre Pagella}
- 
+```rexx <!--fpowtest.crexx-->
+options levelb
+say 0.5**2 'should be 0.25'
+```
+
+<!--splice--crexx fpowtest -->
+
+\lstinputlisting[language=rxas,label=fpow_example]{fpowtest.rxas}
+
  This works because, for a large number of operations, the \code{rxc} compiler can assume the result is never going to be different, and will determine that result during compile time. In the same vein, results from operations that are not displayed or handled further in the program, will lead to the operation being skipped entirely.
 
 ## Debugging and Validation

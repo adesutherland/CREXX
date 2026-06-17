@@ -1,0 +1,65 @@
+options levelb
+import rxfnsb
+namespace reference_source_dereference_live
+
+main: procedure = .int
+  left = .int
+  right = .int
+  left_ref = reference .int
+  right_ref = reference .int
+
+  left = 1
+  right = 2
+  left_ref = reference left
+  right_ref = reference right
+  if \refvalid(left_ref) | \refvalid(right_ref) then return fail("initial refvalid")
+
+  do
+    linked = dereference left_ref
+    linked = 10
+    linked = dereference right_ref
+    linked = 20
+  end
+
+  if left <> 10 then return fail("left write through")
+  if right <> 20 then return fail("right write through")
+
+  left_copy = snapshot left_ref
+  left = 11
+  if left_copy <> 10 then return fail("snapshot stable")
+
+  returned = returnLinked(left_ref)
+  if returned <> 12 then return fail("return linked value")
+  if left <> 12 then return fail("return linked target")
+
+  if expectInvalid(makeDeadRef()) <> 1 then return fail("invalid dereference signal")
+
+  say "PASS: Reference Source Dereference Live"
+  return 0
+
+returnLinked: procedure = .int
+  arg r = reference .int
+  linked = dereference r
+  linked = linked + 1
+  return linked
+
+makeDeadRef: procedure = reference .int
+  value = .int
+  value = 99
+  return reference value
+
+expectInvalid: procedure = .int
+  arg r = reference .int
+  caught = 0
+  do
+    linked = dereference r
+    linked = 1
+  on signal reference_invalid as problem
+    if problem.name() = "REFERENCE_INVALID" then caught = 1
+  end
+  return caught
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1

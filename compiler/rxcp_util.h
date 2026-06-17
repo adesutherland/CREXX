@@ -61,8 +61,8 @@ char* encdstrg(const char* string, size_t length);
 /* Encodes a string into a malloced buffer for comments */
 char* encode_comment_malloc(const char* string, size_t length);
 
-/* Encodes a string into a malloced buffer for line source metadata */
-char* encode_line_source_malloc(const char* string, size_t length);
+/* Encodes a string into a malloced buffer for line source metadata. */
+char* encode_line_source_buffer(const char* string, size_t length);
 
 /* Utility to check if a token (typically an IDENTIFIER) is a certain value */
 int tokenis(Token *token, const char* value);

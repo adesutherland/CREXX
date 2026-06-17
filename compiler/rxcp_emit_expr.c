@@ -32,6 +32,17 @@
 #include "rxcpbgmr.h"
 #include "rxcp_emit.h"
 
+static Symbol *dereference_assignment_target(ASTNode *node) {
+    ASTNode *assign;
+    ASTNode *target;
+
+    if (!node || !node->parent || node->parent->node_type != ASSIGN) return 0;
+    assign = node->parent;
+    target = ast_chdn(assign, 0);
+    if (!target || !target->symbolNode) return 0;
+    return target->symbolNode->symbol;
+}
+
 static int is_interface_member_call(ASTNode *node) {
     Symbol *fsym;
     SymbolNode *defsn;
@@ -101,9 +112,100 @@ static char *build_source_type_name(ValueType type, const char *internal_class_n
 }
 
 static int is_builtin_object_contract_name(const char *name) {
-    return name &&
-           (strcmp(name, "object") == 0 ||
-            strcmp(name, ".object") == 0);
+    static const char object_name[] = "object";
+    size_t i;
+    size_t start;
+
+    if (!name) return 0;
+    start = name[0] == '.' ? 1 : 0;
+    if (strlen(name + start) != sizeof(object_name) - 1) return 0;
+    for (i = 0; i < sizeof(object_name) - 1; i++) {
+        if (tolower((unsigned char) name[start + i]) != object_name[i]) return 0;
+    }
+    return 1;
+}
+
+static int semantic_context_is_sugar_get(ASTSemanticContextKind kind) {
+    return kind == AST_SEMANTIC_CONTEXT_PROPERTY_GET ||
+           kind == AST_SEMANTIC_CONTEXT_INDEX_GET;
+}
+
+static int semantic_context_is_sugar_set(ASTSemanticContextKind kind) {
+    return kind == AST_SEMANTIC_CONTEXT_PROPERTY_SET ||
+           kind == AST_SEMANTIC_CONTEXT_INDEX_SET;
+}
+
+static int semantic_context_is_sugar_access(ASTSemanticContextKind kind) {
+    return semantic_context_is_sugar_get(kind) ||
+           semantic_context_is_sugar_set(kind);
+}
+
+static int semantic_context_is_internal_operand(ASTSemanticContextKind kind) {
+    return kind == AST_SEMANTIC_CONTEXT_INTERNAL_OPERAND;
+}
+
+static void append_semantic_compound_trace_event(OutputFragment *output,
+                                                 ASTNode *receiver_node,
+                                                 ASTNode *tail_node) {
+    char *symbol_name;
+
+    if (!output || !tail_node || tail_node->register_num < 0) return;
+    symbol_name = trace_symbol_name_malloc(receiver_node);
+    output_append_trace_event_register(output,
+                                       RXBIN_TRACE_KIND_COMPOUND,
+                                       RXBIN_TRACE_MODE_I,
+                                       tail_node,
+                                       0,
+                                       0,
+                                       symbol_name,
+                                       "");
+    if (symbol_name) free(symbol_name);
+}
+
+static void append_semantic_access_value_trace_event(OutputFragment *output,
+                                                     ASTSemanticContextKind kind,
+                                                     ASTNode *receiver_node,
+                                                     ASTNode *result_node,
+                                                     ASTNode *value_node) {
+    char *symbol_name;
+
+    if (!output) return;
+    symbol_name = trace_symbol_name_malloc(receiver_node);
+    if (semantic_context_is_sugar_set(kind)) {
+        output_append_trace_event_register(output,
+                                           RXBIN_TRACE_KIND_ASSIGNMENT,
+                                           RXBIN_TRACE_MODE_R | RXBIN_TRACE_MODE_I,
+                                           value_node,
+                                           0,
+                                           0,
+                                           symbol_name,
+                                           "");
+    } else if (semantic_context_is_sugar_get(kind)) {
+        output_append_trace_event_register(output,
+                                           RXBIN_TRACE_KIND_VARIABLE,
+                                           RXBIN_TRACE_MODE_R | RXBIN_TRACE_MODE_I,
+                                           result_node,
+                                           0,
+                                           0,
+                                           symbol_name,
+                                           "");
+    }
+    if (symbol_name) free(symbol_name);
+}
+
+static void append_semantic_operation_trace_event(OutputFragment *output,
+                                                  int trace_kind,
+                                                  ASTSemanticContextKind semantic_kind,
+                                                  ASTNode *node) {
+    if (semantic_context_is_internal_operand(semantic_kind)) return;
+    output_append_trace_event_register(output,
+                                       trace_kind,
+                                       RXBIN_TRACE_MODE_I,
+                                       node,
+                                       0,
+                                       0,
+                                       "",
+                                       "");
 }
 
 static ValueType operand_type_from_prefix(char *tp_prefix, ASTNode *node) {
@@ -151,11 +253,13 @@ void emit_expression(ASTNode *node, void *payload) {
     char *comment_meta;
     ASTNode *n;
     int i, j, k;
+    int loose_string_compare = 0;
     char ret_type;
     int ret_num;
     ASTNode *child1 = node->child;
     ASTNode *child2 = node->child ? node->child->sibling : 0;
     ASTNode *child3 = node->child && node->child->sibling ? node->child->sibling->sibling : 0;
+    ASTSemanticContextKind semantic_kind = ast_semantic_context_kind(node);
 
     switch (node->node_type) {
 
@@ -183,6 +287,11 @@ void emit_expression(ASTNode *node, void *payload) {
             n = child1;
             while (n) {
                 if (n->output) output_concat(node->output, n->output);
+                if (node->node_type == MEMBER_CALL &&
+                    semantic_context_is_sugar_access(semantic_kind) &&
+                    n == child2) {
+                    append_semantic_compound_trace_event(node->output, child1, child2);
+                }
                 n = n->sibling;
             }
 
@@ -210,7 +319,8 @@ void emit_expression(ASTNode *node, void *payload) {
                  * set (2) means that it is not a symbol so its value does not need
                  * preserving */
                 if (!n->is_ref_arg &&
-                    (n->value_dims || n->target_type == TP_STRING || n->target_type == TP_OBJECT || n->target_type == TP_BINARY)) {
+                    (n->value_dims || n->target_type == TP_STRING || n->target_type == TP_OBJECT ||
+                     n->target_type == TP_BINARY || n->target_type == TP_REFERENCE)) {
                     k = 1; /* This means we will settp */
                     if (!n->symbolNode) j |= REGTP_NOTSYM; /* Mark it as not a symbol */
                 }
@@ -354,16 +464,55 @@ void emit_expression(ASTNode *node, void *payload) {
                 }
                 if (n->cleanup) output_concat(node->output, n->cleanup);
                 n = n->sibling; i++;
-            }
+	            }
 
-            type_promotion(node);
-            break;
+	            type_promotion(node);
+	            if (semantic_context_is_sugar_access(semantic_kind)) {
+	                append_semantic_access_value_trace_event(node->output,
+	                                                         semantic_kind,
+	                                                         child1,
+	                                                         node,
+	                                                         child3);
+	            } else {
+	                char *symbol_name = trace_symbol_name_malloc(node);
+	                output_append_trace_event_register(node->output,
+	                                                   RXBIN_TRACE_KIND_FUNCTION,
+	                                                   RXBIN_TRACE_MODE_I,
+	                                                   node,
+	                                                   0,
+	                                                   0,
+	                                                   symbol_name,
+	                                                   "");
+	                if (symbol_name) free(symbol_name);
+	            }
+	            break;
 
         case OP_CONCAT:
             op="concat";
         case OP_SCONCAT:
             if (!op) op="sconcat";
             if (!node->output) node->output = output_f();
+            if (node->value_type == TP_BINARY || node->target_type == TP_BINARY) {
+                if (child1->output) output_concat(node->output, child1->output);
+                if (child2->output) output_concat(node->output, child2->output);
+                temp1 = mprintf("   bconcat %c%d,%c%d,%c%d\n",
+                                node->register_type,
+                                node->register_num,
+                                child1->register_type,
+                                child1->register_num,
+                                child2->register_type,
+                                child2->register_num);
+                output_append_text(node->output, temp1);
+                free(temp1);
+                if (child2->cleanup) output_concat(node->output, child2->cleanup);
+                if (child1->cleanup) output_concat(node->output, child1->cleanup);
+	            type_promotion(node);
+	            append_semantic_operation_trace_event(node->output,
+	                                                  RXBIN_TRACE_KIND_BINARY_OP,
+	                                                  semantic_kind,
+	                                                  node);
+	            break;
+            }
             /* One or other of the operands may be a constant */
             /* If the register is not set then the child is a constant */
             if (child1->register_num == DONT_ASSIGN_REGISTER) {
@@ -417,21 +566,79 @@ void emit_expression(ASTNode *node, void *payload) {
                 if (child1->cleanup) output_concat(node->output, child1->cleanup);
             }
 
-            type_promotion(node);
-            break;
+	            type_promotion(node);
+	            append_semantic_operation_trace_event(node->output,
+	                                                  RXBIN_TRACE_KIND_BINARY_OP,
+	                                                  semantic_kind,
+	                                                  node);
+	            break;
+
+        case OP_XOR:
+            if (!node->output) node->output = output_f();
+            if (child1->output) output_concat(node->output, child1->output);
+            if (child2->output) output_concat(node->output, child2->output);
+
+            temp1 = mprintf(
+                    "   brf l%dxorleftfalse,%c%d\n"
+                    "   brf l%dxortrue,%c%d\n"
+                    "   load %c%d,0\n"
+                    "   br l%dxorend\n"
+                    "l%dxorleftfalse:\n"
+                    "   brt l%dxortrue,%c%d\n"
+                    "   load %c%d,0\n"
+                    "   br l%dxorend\n"
+                    "l%dxortrue:\n"
+                    "   load %c%d,1\n"
+                    "l%dxorend:\n",
+                    node->node_number,
+                    child1->register_type,
+                    child1->register_num,
+                    node->node_number,
+                    child2->register_type,
+                    child2->register_num,
+                    node->register_type,
+                    node->register_num,
+                    node->node_number,
+                    node->node_number,
+                    node->node_number,
+                    child2->register_type,
+                    child2->register_num,
+                    node->register_type,
+                    node->register_num,
+                    node->node_number,
+                    node->node_number,
+                    node->register_type,
+                    node->register_num,
+                    node->node_number);
+            output_append_text(node->output, temp1);
+            free(temp1);
+            if (child2->cleanup) output_concat(node->output, child2->cleanup);
+            if (child1->cleanup) output_concat(node->output, child1->cleanup);
+	            type_promotion(node);
+	            append_semantic_operation_trace_event(node->output,
+	                                                  RXBIN_TRACE_KIND_BINARY_OP,
+	                                                  semantic_kind,
+	                                                  node);
+	            break;
 
         /* These operators have a prefix type of that of the first child */
         case OP_COMPARE_EQUAL:
+            loose_string_compare = 1;
             if (!op) op="eq";
         case OP_COMPARE_NEQ:
+            loose_string_compare = 1;
             if (!op) op="ne";
         case OP_COMPARE_GT:
+            loose_string_compare = 1;
             if (!op) op="gt";
         case OP_COMPARE_LT:
+            loose_string_compare = 1;
             if (!op) op="lt";
         case OP_COMPARE_GTE:
+            loose_string_compare = 1;
             if (!op) op="gte";
         case OP_COMPARE_LTE:
+            loose_string_compare = 1;
             if (!op) op="lte";
         case OP_COMPARE_S_EQ:
             if (!op) op="eq";
@@ -447,6 +654,7 @@ void emit_expression(ASTNode *node, void *payload) {
             if (!op) op="lte";
 
             tp_prefix = type_to_prefix(child1->target_type);
+            if (loose_string_compare && child1->target_type == TP_STRING) tp_prefix = "r";
 
         /* These operators use the type prefix already set (i.e. of their type) */
         case OP_ADD:
@@ -528,8 +736,12 @@ void emit_expression(ASTNode *node, void *payload) {
                 if (child1->cleanup) output_concat(node->output, child1->cleanup);
             }
 
-            type_promotion(node);
-            break;
+	            type_promotion(node);
+	            append_semantic_operation_trace_event(node->output,
+	                                                  RXBIN_TRACE_KIND_BINARY_OP,
+	                                                  semantic_kind,
+	                                                  node);
+	            break;
 
         case OP_AND:
             if (!node->output) node->output = output_f();
@@ -624,8 +836,12 @@ void emit_expression(ASTNode *node, void *payload) {
                 if (child1->cleanup) output_concat(node->output, child1->cleanup);
                 if (child2->cleanup) output_concat(node->output, child2->cleanup);
             }
-            type_promotion(node);
-            break;
+	            type_promotion(node);
+	            append_semantic_operation_trace_event(node->output,
+	                                                  RXBIN_TRACE_KIND_BINARY_OP,
+	                                                  semantic_kind,
+	                                                  node);
+	            break;
 
         case OP_OR:
             if (!node->output) node->output = output_f();
@@ -722,6 +938,10 @@ void emit_expression(ASTNode *node, void *payload) {
                 if (child2->cleanup) output_concat(node->output, child2->cleanup);
             }
             type_promotion(node);
+            append_semantic_operation_trace_event(node->output,
+                                                  RXBIN_TRACE_KIND_BINARY_OP,
+                                                  semantic_kind,
+                                                  node);
             break;
 
         case OP_NOT:
@@ -736,8 +956,12 @@ void emit_expression(ASTNode *node, void *payload) {
             free(temp1);
             if (child1->cleanup) output_concat(node->output, child1->cleanup);
 
-            type_promotion(node);
-            break;
+	            type_promotion(node);
+	            append_semantic_operation_trace_event(node->output,
+	                                                  RXBIN_TRACE_KIND_PREFIX_OP,
+	                                                  semantic_kind,
+	                                                  node);
+	            break;
 
         case OP_NEG:
             if (!node->output) node->output = output_f();
@@ -767,8 +991,12 @@ void emit_expression(ASTNode *node, void *payload) {
             free(temp1);
             if (child1->cleanup) output_concat(node->output, child1->cleanup);
 
-            type_promotion(node);
-            break;
+	            type_promotion(node);
+	            append_semantic_operation_trace_event(node->output,
+	                                                  RXBIN_TRACE_KIND_PREFIX_OP,
+	                                                  semantic_kind,
+	                                                  node);
+	            break;
 
         case OP_PLUS:
             /* Same as assignment really */
@@ -794,6 +1022,84 @@ void emit_expression(ASTNode *node, void *payload) {
             free(temp1);
             if (child1->cleanup) output_concat(node->output, child1->cleanup);
 
+            type_promotion(node);
+            append_semantic_operation_trace_event(node->output,
+                                                  RXBIN_TRACE_KIND_PREFIX_OP,
+                                                  semantic_kind,
+                                                  node);
+            break;
+
+        case OP_REFERENCE:
+            if (!node->output) node->output = output_f();
+            if (child1->output) output_concat(node->output, child1->output);
+            temp1 = mprintf("   mkref %c%d,%c%d\n",
+                            node->register_type,
+                            node->register_num,
+                            child1->register_type,
+                            child1->register_num);
+            output_append_text(node->output, temp1);
+            free(temp1);
+            if (child1->cleanup) output_concat(node->output, child1->cleanup);
+            type_promotion(node);
+            break;
+
+        case OP_DEREFERENCE:
+            if (!node->output) node->output = output_f();
+            if (child1->output) output_concat(node->output, child1->output);
+            temp1 = mprintf("   unlink %c%d\n"
+                            "   linkref %c%d,%c%d\n",
+                            node->register_type,
+                            node->register_num,
+                            node->register_type,
+                            node->register_num,
+                            child1->register_type,
+                            child1->register_num);
+            output_append_text(node->output, temp1);
+            free(temp1);
+            if (child1->cleanup) output_concat(node->output, child1->cleanup);
+            scp_add_dereference_symbol(node->scope, dereference_assignment_target(node));
+            type_promotion(node);
+            break;
+
+        case OP_SNAPSHOT:
+            if (!node->output) node->output = output_f();
+            if (child1->output) output_concat(node->output, child1->output);
+            temp1 = mprintf("   deref %c%d,%c%d\n",
+                            node->register_type,
+                            node->register_num,
+                            child1->register_type,
+                            child1->register_num);
+            output_append_text(node->output, temp1);
+            free(temp1);
+            if (child1->cleanup) output_concat(node->output, child1->cleanup);
+            type_promotion(node);
+            break;
+
+        case OP_REFVALID:
+            if (!node->output) node->output = output_f();
+            if (child1->output) output_concat(node->output, child1->output);
+            temp1 = mprintf("   refvalid %c%d,%c%d\n",
+                            node->register_type,
+                            node->register_num,
+                            child1->register_type,
+                            child1->register_num);
+            output_append_text(node->output, temp1);
+            free(temp1);
+            if (child1->cleanup) output_concat(node->output, child1->cleanup);
+            type_promotion(node);
+            break;
+
+        case OP_INITIALIZED:
+            if (!node->output) node->output = output_f();
+            if (child1->output) output_concat(node->output, child1->output);
+            temp1 = mprintf("   isinitialized %c%d,%c%d\n",
+                            node->register_type,
+                            node->register_num,
+                            child1->register_type,
+                            child1->register_num);
+            output_append_text(node->output, temp1);
+            free(temp1);
+            if (child1->cleanup) output_concat(node->output, child1->cleanup);
             type_promotion(node);
             break;
 
@@ -901,7 +1207,8 @@ void emit_expression(ASTNode *node, void *payload) {
                 output_append_text(node->output, temp1);
                 free(temp1);
             } else {
-                temp2 = build_source_type_name(child1 ? child1->value_type : TP_UNKNOWN, 0);
+                if (child1 && child1->value_type == TP_REFERENCE) temp2 = ast_n2tp(child1);
+                else temp2 = build_source_type_name(child1 ? child1->value_type : TP_UNKNOWN, 0);
                 if (!temp2) break;
                 temp1 = mprintf("   load %c%d,\"%s\"\n",
                                 node->register_type,
@@ -922,14 +1229,23 @@ void emit_expression(ASTNode *node, void *payload) {
         case CONSTANT:
         case CONST_SYMBOL:
         case STRING:
+        case BINARY:
         case FLOAT:
         case DECIMAL:
         case INTEGER:
             /* If register is not set then the parent node will handle this
              * as a constant - we just set the value as a string */
             if (node->register_num != DONT_ASSIGN_REGISTER) {
+                ValueType load_type = node->value_type;
+                int skip_promotion = 0;
+                if (node->target_type == TP_BINARY &&
+                    (node->value_type == TP_STRING || node->value_type == TP_BINARY)) {
+                    load_type = TP_BINARY;
+                    if (node->value_type == TP_STRING) skip_promotion = 1;
+                }
+
                 /* Get the constant string */
-                temp2 = format_constant(node->value_type, node);
+                temp2 = format_constant(load_type, node);
 
                 /* Make the register load instruction */
                 temp1 = mprintf("   load %c%d,%s\n",
@@ -944,8 +1260,18 @@ void emit_expression(ASTNode *node, void *payload) {
                 free(temp2);
 
                 /* Do any type promotion */
-                type_promotion(node);
-            }
+	                if (!skip_promotion) type_promotion(node);
+	                if (ast_semantic_context_kind(node) != AST_SEMANTIC_CONTEXT_INTERNAL_OPERAND) {
+	                    output_append_trace_event_register(node->output,
+	                                                       RXBIN_TRACE_KIND_LITERAL,
+	                                                       RXBIN_TRACE_MODE_I,
+	                                                       node,
+	                                                       0,
+	                                                       0,
+	                                                       "",
+	                                                       "");
+	                }
+	            }
             break;
 
         case BLOCK_EXPR:
@@ -959,6 +1285,17 @@ void emit_expression(ASTNode *node, void *payload) {
             temp1 = mprintf("l%dbexprend:\n", node->node_number);
             output_append_text(node->output, temp1);
             free(temp1);
+
+            if (node->scope && node->scope->defining_node == node) {
+                size_t i;
+                for (i = scp_dereference_symbol_count(node->scope); i > 0; i--) {
+                    Symbol *symbol = scp_dereference_symbol_at(node->scope, i - 1);
+                    if (!symbol || symbol->register_num < 0 || symbol->register_type != 'r') continue;
+                    temp1 = mprintf("   unlink %c%d\n", symbol->register_type, symbol->register_num);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                }
+            }
 
             type_promotion(node);
             break;

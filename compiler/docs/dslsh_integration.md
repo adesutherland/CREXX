@@ -54,8 +54,8 @@ The mutable work tree carries explicit links back to source-owned state:
 - `source_provenance` records whether that mapping is exact, inherited,
   synthetic, or composite,
 - transformed output paths can preserve additional reporting anchors where a
-  removed authored construct still needs to appear in diagnostics or `.src`
-  metadata.
+  removed authored construct still needs to appear in diagnostics or
+  source-step metadata.
 
 User-visible state lives on the source tree:
 
@@ -102,6 +102,34 @@ then calls the same cREXX parser-mode entry point. The committed parser mirror
 and the editor's real `CodeBuffer` version are not advanced. This is intended
 for completion previews and similar "what would this look like?" queries.
 
+## Manual Parser-Mode Testing
+
+The ctest syntax-highlighting fixtures use DSLSH's `parser_tester` tool. The
+test helper launches the parser command through DSLSH's parser-mode wrapper, so
+tests pass the bare compiler path:
+
+```sh
+cmake-build-debug/dslsyntax-tools/parser_tester \
+  -q \
+  -p cmake-build-debug/bin/rxc \
+  -s compiler/tests/rexx_src/levelc_tracer.rexx \
+  compiler/tests/highlighting/dump_ast.txt
+```
+
+For a real editor integration such as THE, configure the parser command to run
+`rxc --syntaxhighlight` directly. Add `-d` only when you want parser-mode debug
+logging:
+
+```sh
+/Users/adrian/CLionProjects/CREXX/cmake-build-debug/bin/rxc --syntaxhighlight
+```
+
+Level C parser-mode support now uses the dedicated Classic REXX scanner, glue,
+Lemon grammar, and validation path documented in
+[Level C Syntax Highlighting And Integration Plan](levelc_syntax_highlighting.md).
+Use `OPTIONS LEVELC` at the top of manual Classic REXX smoke tests unless you
+are intentionally checking headerless parser-mode defaulting.
+
 ## DSLSH Features Used
 
 cREXX parser mode currently uses these DSLSH concepts:
@@ -146,6 +174,11 @@ These container nodes are the basis for:
 - outline-style navigation,
 - subtree-aware selection,
 - future scope-aware editor features.
+
+Parser mode only emits a structural container when that source node has its own
+authored span. Empty helper nodes must not fall back to a parent span for DSLSH
+projection, because a zero-content structural node would otherwise become a
+leaf token and overwrite real token highlighting during DSLSH flattening.
 
 ### Leaf token mapping
 
@@ -313,6 +346,8 @@ The current implementation is spread across a small number of files:
 | `compiler/rxcp_source_tree.h` / `compiler/rxcp_source_tree.c` | immutable source tree, source-owned diagnostics, source-owned semantic sidecars |
 | `compiler/rxcp_val_orch.c` | build order for source-tree creation and validation pipeline |
 | `compiler/rxcpmain.c` | normal compiler path sync of source-owned diagnostics and semantics |
+| `compiler/rxcpcscn.re` / `rxcpcpar.c` / `rxcpcgmr.y` | Level C scanner, contextual adapter, and Lemon grammar |
+| `compiler/rxcpcdiag.c` / `rxcpcval.c` / `rxcpcsym.c` | Level C standard diagnostics, source-tree preparation, and symbol helpers |
 | `compiler/tests/src/test_highlight_cache.c` | retained-cache regression coverage |
 | `compiler/tests/src/test_source_semantics.c` | semantic sync and `identifier_id` coverage |
 | `compiler/tests/src/test_highlight_editor_diagnostics.c` | real editor-path diagnostics coverage |
@@ -343,5 +378,7 @@ The current implementation is spread across a small number of files:
 - decide which fold kinds should be promoted from editor heuristics to explicit
   emitted structure,
 - add grouped comment containers if multi-line comment folding is wanted,
+- keep Level C parser-mode fixtures in lockstep with tree-surgery lowering so
+  the highlighter remains the static syntax canary,
 - expand source-owned semantic metadata so hover, completion, and navigation can
   reuse the same source-tree path.

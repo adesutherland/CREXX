@@ -1,25 +1,19 @@
 /*
  * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : test_dump.rexx
+ * SOURCE                 : test_dump.crexx
  * BUILT                  : 2026-03-07 21:15:54
  */
-
-.srcfile="test_dump.rexx"
 .globals=0
 
 main() .locals=0
    .meta "test_dump.main"="b" ".void" main() ""
-   .src 4:1="main: procedure"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 2:1="say 'x (.int) = ' || x"
    say "x (.int) = 100"
-   .src 2:24="say 'y (.string) = ' || y"
    say "y (.string) = Hello World"
-   .src 9:9=""
    .meta "test_dump.main.x"="b" ".int" "100"
    .meta "test_dump.main.y"="b" ".string" "Hello World"
    ret

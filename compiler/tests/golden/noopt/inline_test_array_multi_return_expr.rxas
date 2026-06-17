@@ -1,122 +1,149 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_array_multi_return_expr.rexx
- * BUILT                  : 2026-04-30 20:04:09
+ * SOURCE                 : inline_test_array_multi_return_expr.crexx
+ * BUILT                  : 2026-05-27 17:53:55
  */
 
-.srcfile="inline_test_array_multi_return_expr.rexx"
 .globals=0
 
 main() .locals=5
    .meta "inline_test_array_multi_return_expr.main"="b" ".int" main() ""
-   .src 3:1="main: procedure = .int"
+   .srcstep 7 7 17 "inline_test_array_multi_return_expr.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:3="say \"Starting array multi return expr inline test...\""
+   .srcstep 1 1 17 "inline_test_array_multi_return_expr.crexx" 4 3 56 "  say \"Starting array multi return expr inline test...\""
    say "Starting array multi return expr inline test..."
-   .src 5:3="say renderArray(selectArray(-1))"
+   .srcstep 2 2 17 "inline_test_array_multi_return_expr.crexx" 5 3 35 "  say renderArray(selectArray(-1))"
    load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 2 2 0 "" ""
    isub r3,0,r4
+   .traceevent "P" 4 "R" "I" "r" 3 2 2 0 "" ""
    load r2,1
    call r1,selectArray(),r2
+   .traceevent "F" 4 "R" "S" "r" 1 2 2 0 "selectarray" ""
    load r0,1
-   settp r1,1
+   settp r1,256
    call r3,renderArray(),r0
+   .traceevent "F" 4 "R" "S" "r" 3 2 2 0 "renderarray" ""
    say r3
-   .src 6:3="say renderArray(selectArray(0))"
+   .srcstep 3 3 17 "inline_test_array_multi_return_expr.crexx" 6 3 34 "  say renderArray(selectArray(0))"
    load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 3 3 0 "" ""
    load r1,1
    call r4,selectArray(),r1
+   .traceevent "F" 4 "R" "S" "r" 4 3 3 0 "selectarray" ""
    load r3,1
-   settp r4,1
+   settp r4,256
    call r2,renderArray(),r3
+   .traceevent "F" 4 "R" "S" "r" 2 3 3 0 "renderarray" ""
    say r2
-   .src 7:3="say renderArray(selectArray(1))"
+   .srcstep 4 4 17 "inline_test_array_multi_return_expr.crexx" 7 3 34 "  say renderArray(selectArray(1))"
    load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 4 4 0 "" ""
    load r1,1
    call r4,selectArray(),r1
+   .traceevent "F" 4 "R" "S" "r" 4 4 4 0 "selectarray" ""
    load r3,1
-   settp r4,1
+   settp r4,256
    call r2,renderArray(),r3
+   .traceevent "F" 4 "R" "S" "r" 2 4 4 0 "renderarray" ""
    say r2
-   .src 8:3="say \"Array multi return expr inline test finished.\""
+   .srcstep 5 5 17 "inline_test_array_multi_return_expr.crexx" 8 3 54 "  say \"Array multi return expr inline test finished.\""
    say "Array multi return expr inline test finished."
-   .src 9:3="return 0"
+   .srcstep 6 6 17 "inline_test_array_multi_return_expr.crexx" 9 3 11 "  return 0"
    ret 0
 
 selectArray() .locals=6
    .meta "inline_test_array_multi_return_expr.selectarray"="b" ".string[*]" selectArray() "flag=.int"
-   .src 11:1="selectArray: procedure = .string[]"
+   .srcstep 25 25 17 "inline_test_array_multi_return_expr.crexx" 11 1 35 "selectArray: procedure = .string[]"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 12:7="flag = .int"
+   .srcstep 8 8 17 "inline_test_array_multi_return_expr.crexx" 12 7 18 "  arg flag = .int"
    .meta "inline_test_array_multi_return_expr.selectarray.flag"="b" ".int" a1
    .meta "inline_test_array_multi_return_expr.selectarray.neg"="b" ".string[*]" r1
-   .src 13:3="neg = .string"
+   .srcstep 9 9 17 "inline_test_array_multi_return_expr.crexx" 13 3 16 "  neg = .string[]"
    null r1
    .meta "inline_test_array_multi_return_expr.selectarray.pos"="b" ".string[*]" r2
-   .src 15:3="pos = .string"
+   .srcstep 10 10 17 "inline_test_array_multi_return_expr.crexx" 15 3 16 "  pos = .string[]"
    null r2
    .meta "inline_test_array_multi_return_expr.selectarray.zero"="b" ".string[*]" r3
-   .src 14:3="zero = .string"
+   .srcstep 11 11 17 "inline_test_array_multi_return_expr.crexx" 14 3 17 "  zero = .string[]"
    null r3
-   .src 16:3="neg[1] = \"neg\""
+   .srcstep 12 12 17 "inline_test_array_multi_return_expr.crexx" 16 3 17 "  neg[1] = \"neg\""
    minattrs r1,1
    linkattr1 r4,r1,1
    load r5,"neg"
+   .traceevent "L" 4 "R" "S" "r" 5 12 12 0 "" ""
    scopy r4,r5
+   .traceevent "A" 6 "R" "S" "r" 4 12 12 0 "neg" ""
    unlink r4
-   .src 17:3="neg[2] = \"path\""
+   .srcstep 13 13 17 "inline_test_array_multi_return_expr.crexx" 17 3 18 "  neg[2] = \"path\""
    minattrs r1,2
    linkattr1 r5,r1,2
    load r4,"path"
+   .traceevent "L" 4 "R" "S" "r" 4 13 13 0 "" ""
    scopy r5,r4
+   .traceevent "A" 6 "R" "S" "r" 5 13 13 0 "neg" ""
    unlink r5
-   .src 18:3="zero[1] = \"zero\""
+   .srcstep 14 14 17 "inline_test_array_multi_return_expr.crexx" 18 3 19 "  zero[1] = \"zero\""
    minattrs r3,1
    linkattr1 r5,r3,1
    load r4,"zero"
+   .traceevent "L" 4 "R" "S" "r" 4 14 14 0 "" ""
    scopy r5,r4
+   .traceevent "A" 6 "R" "S" "r" 5 14 14 0 "zero" ""
    unlink r5
-   .src 19:3="zero[2] = \"path\""
+   .srcstep 15 15 17 "inline_test_array_multi_return_expr.crexx" 19 3 19 "  zero[2] = \"path\""
    minattrs r3,2
    linkattr1 r5,r3,2
    load r4,"path"
+   .traceevent "L" 4 "R" "S" "r" 4 15 15 0 "" ""
    scopy r5,r4
+   .traceevent "A" 6 "R" "S" "r" 5 15 15 0 "zero" ""
    unlink r5
-   .src 20:3="pos[1] = \"pos\""
+   .srcstep 16 16 17 "inline_test_array_multi_return_expr.crexx" 20 3 17 "  pos[1] = \"pos\""
    minattrs r2,1
    linkattr1 r5,r2,1
    load r4,"pos"
+   .traceevent "L" 4 "R" "S" "r" 4 16 16 0 "" ""
    scopy r5,r4
+   .traceevent "A" 6 "R" "S" "r" 5 16 16 0 "pos" ""
    unlink r5
-   .src 21:3="pos[2] = \"path\""
+   .srcstep 17 17 17 "inline_test_array_multi_return_expr.crexx" 21 3 18 "  pos[2] = \"path\""
    minattrs r2,2
    linkattr1 r5,r2,2
    load r4,"path"
+   .traceevent "L" 4 "R" "S" "r" 4 17 17 0 "" ""
    scopy r5,r4
+   .traceevent "A" 6 "R" "S" "r" 5 17 17 0 "pos" ""
    unlink r5
-   .src 22:2="if flag < 0"
+   .srcstep 19 19 17 "inline_test_array_multi_return_expr.crexx" 22 3 14 "  if flag < 0 then return neg"
+   .traceevent "V" 6 "R" "I" "a" 1 19 19 0 "flag" ""
    ilt r5,a1,0
+   .traceevent "O" 4 "R" "B" "r" 5 19 19 0 "" ""
    brf l81iffalse,r5
-   .src 22:15="then"
-   .src 22:20="return neg"
+   .srcstep 20 20 17 "inline_test_array_multi_return_expr.crexx" 22 15 19 "  if flag < 0 then return neg"
+   .srcstep 18 18 17 "inline_test_array_multi_return_expr.crexx" 22 20 30 "  if flag < 0 then return neg"
+   .traceevent "V" 6 "R" "S" "r" 1 18 18 0 "neg" ""
    ret r1
 l81iffalse:
-   .src 23:2="if flag > 0"
+   .srcstep 22 22 17 "inline_test_array_multi_return_expr.crexx" 23 3 14 "  if flag > 0 then return pos"
+   .traceevent "V" 6 "R" "I" "a" 1 22 22 0 "flag" ""
    igt r5,a1,0
+   .traceevent "O" 4 "R" "B" "r" 5 22 22 0 "" ""
    brf l87iffalse,r5
-   .src 23:15="then"
-   .src 23:20="return pos"
+   .srcstep 23 23 17 "inline_test_array_multi_return_expr.crexx" 23 15 19 "  if flag > 0 then return pos"
+   .srcstep 21 21 17 "inline_test_array_multi_return_expr.crexx" 23 20 30 "  if flag > 0 then return pos"
+   .traceevent "V" 6 "R" "S" "r" 2 21 21 0 "pos" ""
    ret r2
 l87iffalse:
-   .src 24:3="return zero"
+   .srcstep 24 24 17 "inline_test_array_multi_return_expr.crexx" 24 3 14 "  return zero"
+   .traceevent "V" 6 "R" "S" "r" 3 24 24 0 "zero" ""
    ret r3
    .meta "inline_test_array_multi_return_expr.selectarray.flag"
    .meta "inline_test_array_multi_return_expr.selectarray.neg"
@@ -125,22 +152,26 @@ l87iffalse:
 
 renderArray() .locals=4
    .meta "inline_test_array_multi_return_expr.renderarray"="b" ".string" renderArray() "value=.string[*]"
-   .src 26:1="renderArray: procedure = .string"
+   .srcstep 28 28 17 "inline_test_array_multi_return_expr.crexx" 26 1 33 "renderArray: procedure = .string"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 27:7="value = .string"
+   .srcstep 26 26 17 "inline_test_array_multi_return_expr.crexx" 27 7 22 "  arg value = .string[]"
    .meta "inline_test_array_multi_return_expr.renderarray.value"="b" ".string[*]" a1
-   .src 28:3="return value[1] || \":\" || value[2"
+   .srcstep 27 27 17 "inline_test_array_multi_return_expr.crexx" 28 3 36 "  return value[1] || \":\" || value[2]"
    minattrs a1,1
    linkattr1 r1,a1,1
+   .traceevent "V" 6 "R" "S" "r" 1 27 27 0 "value" ""
    concat r2,r1,":"
    unlink r1
+   .traceevent "O" 4 "R" "S" "r" 2 27 27 0 "" ""
    minattrs a1,2
    linkattr1 r3,a1,2
+   .traceevent "V" 6 "R" "S" "r" 3 27 27 0 "value" ""
    concat r2,r2,r3
    unlink r3
+   .traceevent "O" 4 "R" "S" "r" 2 27 27 0 "" ""
    ret r2
    .meta "inline_test_array_multi_return_expr.renderarray.value"

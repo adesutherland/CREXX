@@ -39,5 +39,5 @@ run_test "set4_main" "${TEST_DIR}/set4_mid.rxbin ${TEST_DIR}/set4_base.rxbin"
 
 # Set 5: Private vs Public (Expected Compile Error)
 echo "--- Testing set5_main (Expected Compile Error) ---"
-$BIN_DIR/rxc -i $TEST_DIR -o ${TEST_DIR}/set5_lib ${TEST_DIR}/set5_lib.rexx > /dev/null 2>&1
-$BIN_DIR/rxc -i $TEST_DIR -o ${TEST_DIR}/set5_main ${TEST_DIR}/set5_main.rexx 2>&1 | grep "FUNCTION_NOT_FOUND"
+$BIN_DIR/rxc -i $TEST_DIR -o ${TEST_DIR}/set5_lib ${TEST_DIR}/set5_lib.crexx > /dev/null 2>&1
+$BIN_DIR/rxc -i $TEST_DIR -o ${TEST_DIR}/set5_main ${TEST_DIR}/set5_main.crexx 2>&1 | grep "FUNCTION_NOT_FOUND"

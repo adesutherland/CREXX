@@ -1,0 +1,7 @@
+options levelb
+import rxfnsb
+
+value = "abcdef"
+result = "prefix:" || left(value, 3) || ":" || substr(value, 4)
+say result
+exit 0

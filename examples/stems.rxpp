@@ -1,0 +1,50 @@
+/* ------------------------------------------------------------------
+ * FOREACH Statement Prototype
+ *
+ * Example of extending the CREXX language using only preprocessor
+ * macros. This demonstrates how domain-specific statements can be
+ * prototyped and evaluated before considering native compiler
+ * support.
+ *
+ * The FOREACH statement iterates over all keys of a STEM object and
+ * supports an optional WHERE clause for filtering.
+ * ------------------------------------------------------------------
+ */
+##cflag nstrictmacrocheck 3buf
+/* ------------------------------------------------------------------
+ * Define FOREACH statement.
+ * The WHERE clause is optional. Without it, the macro expands to
+ * `if \1 then iterate`, which the compiler optimiser will eliminate.
+ * ------------------------------------------------------------------
+ */
+##define cmd foreach(inkey inkw stem where=1) \
+        {__keys = stem.tails(); \
+         do current_index = 1 to __keys[0]; \
+            inkey = __keys[current_index]; \
+            if \(where) then iterate; }
+
+
+/* ................ Example code demonstrating the FOREACH statement ................ */
+parts = .stem()
+text = 'Living without REXX makes as much sense as coding without coffee.'
+
+/* ................ Create stem ................ */
+do indx=1 while text <> ''
+   parse var text subpart text
+   parts.subpart.indx = subpart
+end
+
+/* FOREACH expands into a DO loop.
+ * Therefore, a matching END statement must be supplied explicitly.
+ * The WHERE clause is optional; if omitted, all stem entries
+ * are processed.
+ */
+foreach mykey IN parts
+  say current_index left(mykey,12) parts.mykey length(parts.mykey)
+end
+
+/* ................ Report only entries whose value length exceeds 5 ................ */
+say 'Report only entries whose value length exceeds 5'
+foreach mykey IN parts where(length(parts.mykey)>5)
+  say current_index left(mykey,12) left(parts.mykey,16) length(parts.mykey)
+end

@@ -39,6 +39,36 @@ If you want the entire repository test suite instead of just compiler coverage:
 ctest --test-dir cmake-build-debug --output-on-failure
 ```
 
+For cREXX system work that touches libraries, BIFs, plugins, TRACE, or linked
+artifacts, use the focused system subsets before the full suite:
+
+```bash
+# Rexx BIF/library functional tests
+cmake --build cmake-build-debug --target testbifs
+ctest --test-dir cmake-build-debug -R '^ts_.*_(noopt|opt)$' --output-on-failure
+
+# Native system plugin smoke test
+ctest --test-dir cmake-build-debug -R '^test_system$' --output-on-failure
+
+# TRACE/debug metadata and source-stripped linker behavior
+ctest --test-dir cmake-build-debug \
+  -R '^(trace_event_metadata|test_trace_|ts_trace_|rxlink_format_check|rxlink_rxdas_strip_smoke)' \
+  --output-on-failure
+```
+
+The BIF build is intentionally different from a user program build. Most
+`lib/rxfnsb/rexx/*.crexx` files are compiled with `rxc -x`, which disables
+certified compiler exits to avoid bootstrap cycles while building the library
+that exits depend on. An explicit `TRACE`, `PARSE`, or `ADDRESS` statement in a
+BIF source file will therefore fail with `#CERTIFIED_EXIT_DISABLED`.
+
+To debug a Rexx BIF or standard-library helper, prefer a normal fixture or
+scratch program that imports `rxfnsb` and calls the BIF with exits enabled. If
+you need to see library frames, add `TRACE UNSUPPRESS NAMESPACE rxfnsb`; TRACE
+hides standard library and `_rxsys*` namespaces by default. For native or linked
+debugging, keep source/TRACE metadata with `crexx -native --link-keep-source`
+or an unstripped `rxlink` image.
+
 To run a specific test:
 
 ```bash
@@ -62,7 +92,7 @@ Example of manually updating a single golden file:
 ./compiler/tests/crexx_test_driver --update-gold \
   ../compiler/tests/golden/noopt/01_assign.rxas \
   ./01_assign_noopt.rxas \
-  ./compiler/rxc -n -o ./01_assign_noopt ../compiler/tests/rexx_src/01_assign.rexx
+  ./compiler/rxc -n -o ./01_assign_noopt ../compiler/tests/rexx_src/01_assign.crexx
 ```
 
 ### Batch Update
@@ -75,6 +105,32 @@ ctest -R "_noopt|_opt" -VV | grep "crexx_test_driver" | sed 's/.*Test command: /
 ```
 
 **Warning:** Always verify that the changes in the golden files are actually what you expect before committing them. Use `git diff` to review the changes in `compiler/tests/golden/`.
+
+### BIF/library changes and import goldens
+
+Standard-library BIF changes can alter consumer `.rxas` import declarations even
+when the tests never call the new BIF entry point. If a change under
+`lib/rxfnsb/rexx/` makes compiler golden tests fail while the matching runtime
+tests still pass, first rebuild the linked library image so the compiler imports
+the current provider metadata:
+
+```bash
+cmake --build cmake-build-debug --target library
+cmake --build cmake-build-debug --target testbifs
+```
+
+Then rerun the focused compiler tests, inspect the generated/golden diff, and
+only update the goldens if the RXAS shape change is intentional:
+
+```bash
+ctest --test-dir cmake-build-debug/compiler/tests -R '13_stems' --output-on-failure
+ctest --test-dir cmake-build-debug -R '^ts_stem_(noopt|opt)$' --output-on-failure
+git diff -- compiler/tests/golden
+```
+
+When the diff is only an import snapshot change, prefer checking whether the
+consumer RXAS still imports exactly the callables it needs for link/runtime
+rather than treating every added provider method as a required golden update.
 
 ## 4. Adding New Tests
 

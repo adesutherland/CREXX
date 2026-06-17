@@ -1,0 +1,27 @@
+options levelb
+import rxfnsb
+
+main: procedure = .int
+  tmp = .string[]
+  tmperr = .string[]
+  trash = .string[]
+  trasherr = .string[]
+  out = .string[]
+  err = .string[]
+
+  address command "mktemp crexx-lineout-flush-visible.XXXXXX" output tmp error tmperr
+  if rc \= 0 | tmp[0] = 0 then return 1
+  path = tmp[1]
+
+  write_rc = lineout(path, "payload")
+  address command "cat " || path output out error err
+  cat_rc = rc
+  call lineout(path)
+  address command "rm -f " || path output trash error trasherr
+
+  say "write-rc=" || write_rc
+  say "cat-rc=" || cat_rc
+  say "out0=" || out[0]
+  if out[0] > 0 then say "out1=" || out[1]
+  say "err0=" || err[0]
+  return 0

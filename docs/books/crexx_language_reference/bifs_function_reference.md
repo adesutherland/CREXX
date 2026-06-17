@@ -1,8 +1,8 @@
-# Built-in functions for \crexx{} strings
+# Built-in functions for cRexx strings and binary values
 
-The `.string` type is central to the \rexx{} language and all its variants. This is true for \crexx{} and this implementation also contains the expected *built-in-functions*.[^bif]
+The `.string` type is central to the Rexx language and all its variants. This is true for cRexx and this implementation also contains the expected *built-in-functions*.[^bif] Level B also provides byte-oriented helpers for the `.binary` type.
 
-Use of these functions needs import of the rxfnsb pachage:
+Use of these functions needs import of the `rxfnsb` package:
 ```rexx
 import rxfnsb
 ```
@@ -22,10 +22,13 @@ import rxfnsb
 | D2C             | D2C(n)                                       |
 | D2X             | D2X(n)                                       |
 | X2B             | X2B(x)                                       |
+| X2BIN           | X2BIN(x)                                     |
 | X2C             | X2C(x)                                       |
 | X2D             | X2D(x)                                       |
 | CENTER          | CENTER(s, n, pad)                            |
 | CENTRE          | CENTRE(s, n, pad)                            |
+| CHARIN          | CHARIN(name, count)                          |
+| CHAROUT         | CHAROUT(name, string)                        |
 | COPIES          | COPIES(s, n)                                 |
 | DELSTR          | DELSTR(s, start, length)                     |
 | DELWORD         | DELWORD(s, start, n)                         |
@@ -33,6 +36,9 @@ import rxfnsb
 | JUSTIFY         | JUSTIFY(s, width, pad)                       |
 | LEFT            | LEFT(s, n, pad)                              |
 | LENGTH          | LENGTH(s)                                    |
+| LINEIN          | LINEIN(name)                                 |
+| LINEOUT         | LINEOUT(name, string)                        |
+| LINES           | LINES(name)                                  |
 | LOWER           | LOWER(s)                                     |
 | OVERLAY         | OVERLAY(s, target, position, length, pad)    |
 | POS             | POS(needle, haystack, start)                 |
@@ -51,7 +57,7 @@ import rxfnsb
 | DATATYPE        | DATATYPE(s, type)                            |
 | RANDOM          | RANDOM(min, max, seed)                       |
 | TIME            | TIME(option)                                 |
-| DATE            | DATE(option)                                 |
+| DATE            | DATE(oformat, date, iformat, osep, isep)     |
 | SOURCELINE      | SOURCELINE(n)                                |
 | ARG             | ARG(n)                                       |
 | STORAGE         | STORAGE(address, length, newvalue)           |
@@ -72,10 +78,163 @@ Table: SAA Rexx Built-In-Functions. {#tbl:id}
 | FUZZ       | FUZZ()                              |
 | QUEUED     | QUEUED()                            |
 
-
 Table: Non-SAA Functions. {#tbl:id}
 
+
+| Function | Signature                  |
+|----------|----------------------------|
+| ARRAYAPPEND | ARRAYAPPEND(array, value [,count]) |
+| ARRAYCONTAINS | ARRAYCONTAINS(array, value [,case]) |
+| ARRAYCOPY | ARRAYCOPY(array, from [, count]) |
+| ARRAYDELETE | ARRAYDELETE(array, from, count) |
+| ARRAYDROP | ARRAYDROP(array) |
+| ARRAYDUMP | ARRAYDUMP(array[, from[, to[, flags[, hdr[, prefix]]]]]) |
+| ARRAYFIND | ARRAYFIND(find, array[, from[, case]]) |
+| ARRAYFORMAT | ARRAYFORMAT(array[, from[, to[, flags[, hdr[, prefix]]]]]) |
+| ARRAYGET | ARRAYGET(array=, index [, default]) |
+| ARRAYHI | ARRAYHI(array[, 'GET' | 'SET'[, new_hi]]) |
+| ARRAYINDEXOF | ARRAYINDEXOF(array, value,[from] ,[case]) |
+| ARRAYINSERT | ARRAYINSERT(array, from, count[, default]) |
+| ARRAYJOIN | ARRAYJOIN(array, [, separator]) |
+| ARRAYMOVE | ARRAYMOVE(array, from, count, to) |
+| ARRAYPOP | ARRAYPOP(array, [default]) |
+| ARRAYPREPEND | ARRAYPREPEND(array, value [,default]) |
+| ARRAYREVERSE | ARRAYREVERSE(array) |
+| ARRAYSET | ARRAYSET(array, index, value [, fill]) | 
+| ARRAYSHIFT | ARRAYSHIFT(array [,default]) |
+| ARRAYSORT | ARRAYSORT(array [, offset] [, order] [,debug]) |
+| BIN2X           | BIN2X(binary)                                |
+| BINBYTE         | BINBYTE(binary, position)                    |
+| BINCOMPARE      | BINCOMPARE(left, right)                      |
+| BINCONCAT       | BINCONCAT(left, right)                       |
+| BINDELSTR       | BINDELSTR(binary, start, length)             |
+| BININSERT       | BININSERT(new, target, before)               |
+| BINLENGTH       | BINLENGTH(binary)                            |
+| BINOVERLAY      | BINOVERLAY(new, target, start)               |
+| BINPOS          | BINPOS(needle, haystack, start)              |
+| BINSETBYTE      | BINSETBYTE(binary, position, byte)           |
+| BINSUBSTR       | BINSUBSTR(binary, start, length)             |
+| QEXTRACTALL | QEXTRACTALL(open, close, text [, start])      |
+| QEXTRACTPAIR | QEXTRACTPAIR(open, close, text, start, mode=')   |
+| QPOS | QPOS(needle, text [, start]) |
+| QREMOVEALL | QREMOVEALL(open, close, text [, mode])   |
+| QSPLIT | QSPLIT(text, sep) |
+| QSPLITSAFE | QSPLITSAFE(text, sep, start, pairs) |
+| QSTRIPCOMMENT | QSTRIPCOMMENT(open, close, text) |
+| QSUBWORD | QSUBWORD(string,wordnum)|
+| QWORD | QWORD(line, wanted) |
+| QWORDINDEX | QWORDINDEX(string,wordnum) |
+| QWORDLENGTH | QWORDLENGTH(string,wordnum) |
+| QWORDPOS | QWORDPOS(search, string [,start])  |
+| QWORDS | QWORDS(string) |
+| RERADIX | RERADIX(subject, fromradix, toradix) |
+| SEQUENCE | SEQUENCE(from, to) |
+| SPLICE | SPLICE(needle, haystack, at, len) |
+| VERSION | VERSION() |
+
+
+Table: cRexx additional functions. {#tbl:id}
+
+
+
+
 [^bif]: also colloqually referred to with the jargon-like expression BIFs.
+
+## Level B text file I/O
+
+The sequential file BIFs in `rxfnsb` are Level B UTF text functions. They
+operate on `.string` values and validate text read from files according to the
+normal Level B UTF-8 contract. They are not byte-oriented binary I/O BIFs.
+
+| Function | Result | Notes |
+|----------|--------|-------|
+| `LINEIN(name)` | `.string` | Read one line from the named text stream, without the line terminator. |
+| `LINEOUT(name [, string])` | `.int` | With `string`, write the text followed by a newline. Without `string`, close the named stream. |
+| `CHARIN(name [, count])` | `.string` | Read up to `count` UTF codepoints from the named text stream; the default count is `1`. |
+| `CHAROUT(name [, string])` | `.int` | With `string`, write text without appending a newline. Without `string`, close the named stream. |
+| `LINES(name)` | `.int` | Return `1` when more text can be read from the stream, otherwise `0`. |
+
+Future binary file BIFs should use `.binary` values and the VM byte I/O path.
+Do not use these text BIFs for arbitrary byte payloads.
+
+## Binary byte helpers
+
+These Level B helpers operate on `.binary` byte buffers, not `.string`
+codepoints. Positions are 1-based at the Rexx surface; byte values are integers
+in the range `0..255`. Invalid text is never routed through these functions.
+
+| Function | Result | Notes |
+|----------|--------|-------|
+| `BINLENGTH(data)` | `.int` | Byte length. |
+| `BINBYTE(data, position)` | `.int` | Byte at position, or `-1` if out of range. |
+| `BINSETBYTE(data, position, byte)` | `.binary` | Copy with one byte replaced; invalid byte/position raises `OUT_OF_RANGE`. |
+| `BINSUBSTR(data, start, length)` | `.binary` | Byte slice; omitted/negative length means to the end. |
+| `BINCONCAT(left, right)` | `.binary` | Byte concatenation. The `||` operator does the same when either operand is `.binary`. |
+| `BINOVERLAY(new, target, start)` | `.binary` | Fixed-size byte overlay; writes past target raise `OUT_OF_RANGE`. |
+| `BININSERT(new, target, before)` | `.binary` | Insert before the 1-based byte position; past the end appends. |
+| `BINDELSTR(target, start, length)` | `.binary` | Delete a byte range; length `0` deletes to the end. |
+| `BINPOS(needle, haystack, start)` | `.int` | 1-based byte search, `0` when not found. |
+| `BINCOMPARE(left, right)` | `.int` | `0` if equal, otherwise first differing byte position. |
+| `BIN2X(data)` | `.string` | Uppercase hexadecimal text for the bytes. |
+| `X2BIN(hex)` | `.binary` | Hex text to bytes; blanks are ignored and an odd nibble is left-padded with `0`. |
+
+The `||` operator also performs byte concatenation when either operand is
+`.binary`. In that case the result is `.binary`; a `.string` operand is copied
+as its exact UTF-8 bytes. Blank concatenation remains a text operation and is
+not for binary payload construction.
+
+## Array helpers
+
+Level B arrays use `array[0]` as the high-water mark. User elements are stored
+in `array[1]` through `array[array[0]]`. The `array*` helpers below live in
+`rxfnsb`; mutating helpers take the array by `expose` and update it in place.
+They are the supported array surface for new code. The older native arrays
+plugin is deprecated.
+
+| Function | Result | Notes |
+|----------|--------|-------|
+| `ARRAYHI(array, mode, newhi)` | `.int` | Get the high-water mark, or shrink it with mode `SET`. |
+| `ARRAYDROP(array)` | `.int` | Clear the array in place and return `0`. |
+| `ARRAYINSERT(array, from, count, default)` | `.int` | Open a gap at `from`, fill it, and return the new high-water mark. |
+| `ARRAYDELETE(array, from, count)` | `.int` | Delete a range and return the new high-water mark. |
+| `ARRAYAPPEND(array, value, count)` | `.int` | Append `value` `count` times. |
+| `ARRAYPREPEND(array, value, count)` | `.int` | Prepend `value` `count` times. |
+| `ARRAYPOP(array, default)` | `.string` | Remove and return the last element, or `default` when empty. |
+| `ARRAYSHIFT(array, default)` | `.string` | Remove and return the first element, or `default` when empty. |
+| `ARRAYSET(array, index, value, fill)` | `.int` | Set an element; growing gaps are initialised with `fill`. |
+| `ARRAYGET(array, index, default)` | `.string` | Return an element, or `default` for an out-of-range index. |
+| `ARRAYCOPY(array, from, count)` | `.string[]` | Return a copied slice; negative `from` counts from the end. |
+| `ARRAYMOVE(array, from, count, to)` | `.int` | Move a range within the same array. |
+| `ARRAYREVERSE(array)` | `.int` | Reverse the array in place. |
+| `ARRAYSORT(array, offset, order, debug)` | `.int` | Sort strings by a substring key. |
+| `ARRAYFIND(find, array, from, case)` | `.int` | Find the first element containing a substring. |
+| `ARRAYINDEXOF(array, value, from, case)` | `.int` | Find the first element equal to `value`. |
+| `ARRAYCONTAINS(array, value, case)` | `.int` | Return `1` when an element equals `value`, else `0`. |
+| `ARRAYJOIN(array, separator)` | `.string` | Join all elements with `separator`. |
+| `ARRAYFORMAT(array, from, to, flags, hdr, prefix)` | `.string[]` | Return a formatted dump as an array. |
+| `ARRAYDUMP(array, from, to, flags, hdr, prefix)` | `.int` | Print a formatted dump and return the printed count. |
+
+Insert, delete, append, prepend, pop, shift, shrink, and clear operations use
+the VM array attribute instructions, so the pointer array can be adjusted
+without a Rexx-level per-element copy loop. Element values are still ordinary
+Rexx strings and keep the usual copy and lifetime rules.
+
+## Quote-aware helpers
+
+The `q*` helpers perform string operations while ignoring separators or words
+that appear inside quoted text. They are ordinary `rxfnsb` functions and follow
+the current implementation in `lib/rxfnsb/rexx`.
+
+`QPOS(needle, text [, start])` returns the 1-based position of `needle` outside
+single- or double-quoted regions, or `0` when it is not found. The current
+quote scan treats matching single and double quote characters as delimiters.
+
+`QSPLIT(text, sep)` splits `text` on `sep` only when the separator is outside
+quoted regions. It returns a `.string[]` array of parts.
+
+`QSPLITSAFE(text, sep, start, pairs)` is the nested-safe splitter. In addition
+to quote tracking, it tracks paired delimiters from the `pairs` string, such as
+the default `()`, and only splits at depth zero.
 
 
 ## ABS(x)
@@ -331,6 +490,185 @@ B2X('10111')     == '17'
 B2X('0101')      == '5'
 B2X('101')       == '5'
 B2X('111110000') == '1F0'
+```
+
+
+## BINLENGTH(data)
+
+Binary byte length.
+Returns the number of bytes stored in `.binary` value *data*.
+This is a byte count, not a UTF-8 codepoint count.
+
+**Examples:**
+```rexx
+BINLENGTH("ff0041"x as .binary) == 3
+empty = .binary
+BINLENGTH(empty)                == 0
+BINLENGTH("α" as .binary)       == 2
+```
+
+
+## BINBYTE(data, position)
+
+Binary byte lookup.
+Returns the byte at 1-based byte *position* in `.binary` value *data* as an
+integer in the range `0..255`. If *position* is outside the byte buffer, `-1`
+is returned.
+
+**Examples:**
+```rexx
+BINBYTE("ff0041"x as .binary, 1) == 255
+BINBYTE("ff0041"x as .binary, 3) == 65
+BINBYTE("ff0041"x as .binary, 4) == -1
+```
+
+
+## BINSETBYTE(data, position, byte)
+
+Binary byte replacement.
+Returns a copy of `.binary` value *data* with the byte at 1-based byte
+*position* replaced by *byte*. *byte* must be in the range `0..255`; invalid
+positions or byte values raise `OUT_OF_RANGE`.
+
+**Examples:**
+```rexx
+BIN2X(BINSETBYTE("001122"x as .binary, 2, 255)) == "00FF22"
+```
+
+
+## BINSUBSTR(data, start, length)
+
+Binary substring.
+Returns a `.binary` byte slice from `.binary` value *data*, starting at 1-based
+byte position *start*. If *length* is omitted or negative, the slice continues
+to the end of the buffer. If the requested range extends past the end, the
+result is truncated at the end of *data*.
+
+**Examples:**
+```rexx
+BIN2X(BINSUBSTR("001122ff"x as .binary, 2, 2)) == "1122"
+BIN2X(BINSUBSTR("001122ff"x as .binary, 3))    == "22FF"
+BIN2X(BINSUBSTR("001122ff"x as .binary, 9))    == ""
+```
+
+
+## BINCONCAT(left, right)
+
+Binary concatenation.
+Returns the byte concatenation of `.binary` values *left* and *right*. The
+source-level `||` operator performs the same byte concatenation when either
+operand is `.binary`.
+
+**Examples:**
+```rexx
+BIN2X(BINCONCAT("0011"x as .binary, "22ff"x as .binary)) == "001122FF"
+BIN2X(("ff"x as .binary) || "A")                         == "FF41"
+```
+
+
+## BINOVERLAY(new, target, start)
+
+Binary overlay.
+Returns a copy of `.binary` value *target* with the bytes from `.binary` value
+*new* overlaid starting at 1-based byte position *start*. The overlay is
+fixed-size: it must fit inside *target*, or `OUT_OF_RANGE` is raised.
+
+**Examples:**
+```rexx
+BIN2X(BINOVERLAY("abcd"x as .binary, "001122ff"x as .binary, 2)) == "00ABCDFF"
+```
+
+
+## BININSERT(new, target, before)
+
+Binary insert.
+Returns a copy of `.binary` value *target* with `.binary` value *new* inserted
+before 1-based byte position *before*. If *before* is less than or equal to 1,
+*new* is prepended. If *before* is beyond the end of *target*, *new* is
+appended.
+
+**Examples:**
+```rexx
+BIN2X(BININSERT("abcd"x as .binary, "001122ff"x as .binary, 3))  == "0011ABCD22FF"
+BIN2X(BININSERT("abcd"x as .binary, "001122ff"x as .binary, 99)) == "001122FFABCD"
+```
+
+
+## BINDELSTR(target, start, length)
+
+Binary delete substring.
+Returns a copy of `.binary` value *target* with a byte range removed. Deletion
+starts at 1-based byte position *start*. If *length* is omitted or `0`, bytes
+from *start* to the end are removed.
+
+**Examples:**
+```rexx
+BIN2X(BINDELSTR("001122ff"x as .binary, 2, 2)) == "00FF"
+BIN2X(BINDELSTR("001122ff"x as .binary, 3))    == "0011"
+```
+
+
+## BINPOS(needle, haystack, start)
+
+Binary position.
+Searches `.binary` value *haystack* for `.binary` value *needle*, starting at
+1-based byte position *start* (default `1`). Returns the 1-based byte position
+of the first match, or `0` if no match is found. A zero-length *needle* returns
+`0`.
+
+**Examples:**
+```rexx
+BINPOS("1122"x as .binary, "001122ff"x as .binary)    == 2
+BINPOS("22"x as .binary, "001122ff"x as .binary, 3)   == 3
+BINPOS("33"x as .binary, "001122ff"x as .binary)      == 0
+```
+
+
+## BINCOMPARE(left, right)
+
+Binary compare.
+Compares two `.binary` values byte by byte. Returns `0` when they are equal.
+Otherwise, returns the 1-based position of the first differing byte. If one
+value is a prefix of the other, the first differing position is one past the
+shorter value.
+
+**Examples:**
+```rexx
+BINCOMPARE("001122ff"x as .binary, "001122ff"x as .binary) == 0
+BINCOMPARE("001122ff"x as .binary, "001123ff"x as .binary) == 3
+BINCOMPARE("001122ff"x as .binary, "001122"x as .binary)   == 4
+```
+
+
+## BIN2X(data)
+
+Binary bytes to hexadecimal.
+Converts `.binary` value *data* to uppercase hexadecimal text. Each byte becomes
+two hexadecimal characters, so the output length is always twice the input byte
+length.
+
+**Examples:**
+```rexx
+BIN2X("ff0041"x as .binary) == "FF0041"
+empty = .binary
+BIN2X(empty)                == ""
+BIN2X("α" as .binary)       == "CEB1"
+```
+
+
+## X2BIN(hex)
+
+Hexadecimal to binary bytes.
+Converts hexadecimal text *hex* to a `.binary` byte buffer. Blanks are ignored.
+If there is an odd number of hexadecimal digits, a leading `0` nibble is
+assumed. If any non-blank character is not a hexadecimal digit, the current
+implementation returns an empty `.binary` value.
+
+**Examples:**
+```rexx
+BIN2X(X2BIN("ff 00 aa")) == "FF00AA"
+BIN2X(X2BIN("f"))        == "0F"
+BINLENGTH(X2BIN("zz"))   == 0
 ```
 
 
@@ -1149,41 +1487,113 @@ were the corresponding Arabic numeral.
 
 ## RANDOM(min, max, seed)
 
+Returns a pseudo-random integer in the inclusive range `min` through `max`.
+When omitted, `min` defaults to `0`, `max` defaults to `999`, and `seed`
+defaults to `-1`. The current implementation raises a syntax condition for a
+negative minimum or for `min > max`.
 
+`seed` is passed to the VM `irand` instruction. The default `-1` asks the
+instruction to choose its normal seed behavior.
 
 
 ## TIME(option)
 
+Returns time information. The option is case-insensitive and defaults to `N`.
+
+| Option | Result |
+|--------|--------|
+| `N` | Local time as `hh:mm:ss`. |
+| `L` | Local time as `hh:mm:ss.ffffff`. |
+| `H` | Hour since midnight. |
+| `M` | Minutes since midnight. |
+| `S` | Seconds since midnight. |
+| `US` | Microseconds since midnight. |
+| `E` | Elapsed seconds. |
+| `R` | Reset/read the elapsed timer. |
+| `C` | Civil-style time with `am` or `pm`. |
+| `UTC` | UTC time using the normal `hh:mm:ss` format. |
+| `ZD` | UTC offset in seconds. |
+| `T` | CPU ticks since program start. |
+| `TS` | Ticks per second. |
+| `ZN` | Time zone name. |
+
+An unsupported option currently returns the string `time invalid option`.
+
+
+## DATE(oformat, date, iformat, osep, isep)
+
+Converts dates between supported date formats. With no `date` argument, it
+uses the current local date. Empty `oformat` or `iformat` values default to
+`NORMAL`; `osep` and `isep` can override the output or input separator.
+
+Input formats are matched by abbreviation and currently include `NORMAL`,
+`STANDARD`, `ORDERED`, `EUROPEAN`, `GERMAN`, `USA`, `INTERNATIONAL`,
+`QUALIFIED`, `JULIAN`, `BASE`, `UNIX`, and `EPOCH`.
+
+Output formats are also matched by abbreviation and currently include
+`NORMAL`, `XNORMAL`, `STANDARD`, `ORDERED`, `XORDERED`, `EUROPEAN`,
+`XEUROPEAN`, `GERMAN`, `XGERMAN`, `USA`, `XUSA`, `INTERNATIONAL`,
+`QUALIFIED`, `JULIAN`, `DAYS`, `WEEKDAY`, `MONTH`, `CENTURY`, `BASE`,
+`UNIX`, `JDN`, `EPOCH`, `DEC`, and `XDEC`.
+
+
+## SEQUENCE(from, to)
+
+Returns the sequence of characters from `from` through `to`, using Unicode
+codepoint values. It is the Unicode-capable replacement for byte-oriented
+`XRANGE`; unlike `XRANGE`, it does not wrap around when `from` is greater than
+`to`. The current implementation prints a diagnostic and returns `BAD` for a
+descending range.
+
+
+<!-- ## SOURCELINE(n) -->
 
 
 
-## DATE(option)
+
+<!-- ## ARG(n) -->
 
 
 
 
-## SOURCELINE(n)
-
-
-
-
-## ARG(n)
-
-
-
-
-## STORAGE(address, length, newvalue)
+<!-- ## STORAGE(address, length, newvalue) -->
 
 
 
 
 ## TRACE(option)
 
+The SAA `TRACE(option)` built-in function name is reserved for compatibility.
+In the current beta, use the `TRACE` statement to set tracing:
+
+```rexx
+trace off
+trace normal
+trace results
+trace value option
+```
+
+`TRACE VALUE option` evaluates `option` at runtime and applies the same option
+rules as a static `TRACE` statement. See the `TRACE` statement reference for
+the supported modes, output targets, and namespace suppression controls.
 
 
 
-## VALUE(symbol, newvalue, selector)
+<!-- ## VALUE(symbol, newvalue, selector) -->
 
+
+## VERSION()
+
+Returns a string with implementation and build information supplied by the VM
+`rxvers` instruction. The current string layout is:
+
+```bash
+platform bits crexx-version build-date
+```
+
+`platform` is one of the VM's compiled platform names, such as `linux`,
+`windows`, `macOS`, `cms`, or `unknown`. `bits` is `32` or `64`. The function
+does not currently expose endianness as a separate field.
 
 
 
@@ -1224,31 +1634,29 @@ select  /* keyword1 is to be the default */
 
 
 
-## ADDRESS()
+<!-- ## ADDRESS() -->
 
 
 
 
-## CONDITION([info])
+<!-- ## CONDITION([info]) -->
 
 
 
 
-## DIGITS()
+<!-- ## DIGITS() -->
 
 
 
 
-## FORM()
+<!-- ## FORM() -->
 
 
 
 
-## FUZZ()
+<!-- ## FUZZ() -->
 
 
 
 
-## QUEUED()
-
-
+<!-- ## QUEUED() -->

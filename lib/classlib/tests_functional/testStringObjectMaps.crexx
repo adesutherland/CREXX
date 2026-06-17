@@ -1,0 +1,171 @@
+options levelb comments_dash
+import data_StringObjectHashMap
+import data_StringObjectTreeMap
+import data_StringIterable
+
+failures = 0
+
+call_h = .StringObjectHashMap()
+call call_h.put("x", .box("ex") as .object)
+call call_h.put("y", .box("why") as .object)
+failures = failures + check_int("call hash object map size", call_h.size(), 2)
+failures = failures + check_box("call hash object map x", call_h.get("x"), "ex")
+failures = failures + check_box("call hash object map y", call_h.get("y"), "why")
+call_h_it = call_h.iterator()
+call_h_seen = 0
+loop while call_h_it.hasNext()
+  call_h_key = call_h_it.next()
+  if call_h_key = "x" | call_h_key = "y" then call_h_seen = call_h_seen + 1
+end
+failures = failures + check_int("call hash iterator count", call_h_seen, 2)
+
+h = .StringObjectHashMap()
+rc = h.put("b", .box("bee") as .object)
+rc = h.put("a", .box("aye") as .object)
+failures = failures + check_int("hash object map size", h.size(), 2)
+failures = failures + check_int("hash object map contains", h.containsKey("b"), 1)
+failures = failures + check_box("hash object map get", h.get("b"), "bee")
+
+rc = h.put("b", .box("BEE") as .object)
+failures = failures + check_int("hash object map update size", h.size(), 2)
+failures = failures + check_box("hash object map update", h.get("b"), "BEE")
+
+it = h.iterator()
+seen = 0
+loop while it.hasNext()
+  key = it.next()
+  item = it.value() as .box
+  if key = "a" then do
+    failures = failures + check_string("hash iterator a", item.name(), "aye")
+    seen = seen + 1
+  end
+  if key = "b" then do
+    failures = failures + check_string("hash iterator b", item.name(), "BEE")
+    seen = seen + 1
+  end
+end
+failures = failures + check_int("hash iterator count", seen, 2)
+
+hash_next_value = h.iterator()
+first_hash_key = hash_next_value.next()
+first_hash_value = hash_next_value.nextValue() as .box
+if first_hash_key = "a" then do
+  failures = failures + check_string("hash nextValue a", first_hash_value.name(), "aye")
+end
+if first_hash_key = "b" then do
+  failures = failures + check_string("hash nextValue b", first_hash_value.name(), "BEE")
+end
+if first_hash_key <> "a" & first_hash_key <> "b" then do
+  say "hash nextValue unexpected key:" first_hash_key
+  failures = failures + 1
+end
+failures = failures + check_int("hash iterable interface count", count_string_iterable(h), 2)
+
+values = .object[]
+values = h.valueArray()
+failures = failures + check_int("hash values count", values[0], 2)
+rc = h.remove("a")
+failures = failures + check_int("hash remove size", h.size(), 1)
+failures = failures + check_int("hash remove contains", h.containsKey("a"), 0)
+
+t = .StringObjectTreeMap()
+rc = t.put("b", .box("bee") as .object)
+rc = t.put("a", .box("aye") as .object)
+rc = t.put("c", .box("see") as .object)
+failures = failures + check_int("tree object map size", t.size(), 3)
+failures = failures + check_string("tree first key", t.firstKey(), "a")
+failures = failures + check_string("tree last key", t.lastKey(), "c")
+failures = failures + check_box("tree object map get", t.get("c"), "see")
+
+keys = .string[]
+keys = t.keyArray()
+failures = failures + check_int("tree key count", keys[0], 3)
+failures = failures + check_string("tree key first", keys[1], "a")
+failures = failures + check_string("tree key second", keys[2], "b")
+failures = failures + check_string("tree key third", keys[3], "c")
+
+vals = .object[]
+vals = t.valueArray()
+failures = failures + check_box("tree value first", vals[1], "aye")
+failures = failures + check_box("tree value second", vals[2], "bee")
+failures = failures + check_box("tree value third", vals[3], "see")
+
+tree_it = t.iterator()
+failures = failures + check_string("tree iterator first key", tree_it.next(), "a")
+failures = failures + check_box("tree iterator first value", tree_it.value(), "aye")
+failures = failures + check_string("tree iterator second key", tree_it.next(), "b")
+failures = failures + check_box("tree iterator second value", tree_it.value(), "bee")
+failures = failures + check_string("tree iterator third key", tree_it.next(), "c")
+failures = failures + check_box("tree iterator third value", tree_it.value(), "see")
+failures = failures + check_int("tree iterator end", tree_it.hasNext(), 0)
+
+tree_next_value = t.iterator()
+failures = failures + check_box("tree nextValue advances first value", tree_next_value.nextValue(), "aye")
+failures = failures + check_string("tree nextValue current key", tree_next_value.nextKey(), "b")
+failures = failures + check_box("tree nextValue current value", tree_next_value.nextValue(), "bee")
+failures = failures + check_int("tree iterable interface count", count_string_iterable(t), 3)
+
+call_t = .StringObjectTreeMap()
+call call_t.put("a", .box("aye") as .object)
+call call_t.put("b", .box("bee") as .object)
+failures = failures + check_int("call tree object map size", call_t.size(), 2)
+call_t_it = call_t.iterator()
+failures = failures + check_string("call tree iterator first key", call_t_it.next(), "a")
+failures = failures + check_box("call tree iterator first value", call_t_it.value(), "aye")
+failures = failures + check_string("call tree iterator second key", call_t_it.next(), "b")
+failures = failures + check_box("call tree iterator second value", call_t_it.value(), "bee")
+failures = failures + check_int("call tree iterator end", call_t_it.hasNext(), 0)
+
+if failures <> 0 then do
+  say "String object map failures:" failures
+  exit 1
+end
+
+say "PASS: StringObjectMaps"
+exit 0
+
+check_int: procedure=.int
+  arg label=.string, actual=.int, expected=.int
+
+  if actual <> expected then do
+    say label": expected" expected "got" actual
+    return 1
+  end
+return 0
+
+check_string: procedure=.int
+  arg label=.string, actual=.string, expected=.string
+
+  if actual <> expected then do
+    say label": expected ["expected"] got ["actual"]"
+    return 1
+  end
+return 0
+
+check_box: procedure=.int
+  arg label=.string, actual=.object, expected=.string
+
+  item = actual as .box
+  return check_string(label, item.name(), expected)
+
+count_string_iterable: procedure=.int
+  arg collection=.StringIterable
+
+  it = collection.iterator()
+  count = 0
+  loop while it.hasNext()
+    key = it.next()
+    count = count + 1
+  end
+return count
+
+box: class
+  name_ = .string
+
+  *: factory
+    arg name = .string
+    name_ = name
+    return
+
+  name: method = .string
+    return name_

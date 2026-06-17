@@ -1,7 +1,9 @@
 # Modules
 
-Each `.rexx` source file compiles to a module. The compiler writes RXAS
-assembly (`.rxas`), and the assembler writes RXBIN bytecode (`.rxbin`).
+Each source file compiles to a module. New cRexx source normally uses `.crexx`
+or `.crx`; `.rexx` remains the compatibility/classic extension. The compiler
+writes RXAS assembly (`.rxas`), and the assembler writes RXBIN bytecode
+(`.rxbin`).
 
 A module can contain:
 
@@ -40,9 +42,18 @@ import rxfnsb
 say date("w")
 ```
 
-The compiler searches source roots for `.rexx` imports and binary roots for
+The compiler searches source roots for source imports and binary roots for
 `.rxbin`, optional `.rxas`, and `.rxplugin` imports. `rxc -s` adds source roots;
 `rxc -i` adds binary roots. Repeated `-s` and `-i` options are accumulated.
+The source file's directory is a source root only, not an implicit binary root;
+use `-i .` or `-i build-dir` when a nearby `.rxbin` should satisfy compile-time
+imports.
+
+Source roots search `.crexx`, `.crx`, and `.rexx`. If the initial source file
+uses another extension, such as `.the`, that extension is searched as source
+for this compile too. Default levels are Level G for `.crexx`, `.crx`, and
+arbitrary initial extensions, and Level C for `.rexx`, unless the source has an
+explicit `options level...` clause.
 
 Qualified references use the imported namespace:
 
@@ -59,9 +70,9 @@ Multiple `.rxbin` modules can be loaded together by the VM. For deployable
 images, use `rxlink`. It combines selected modules into one linked image with a
 shared constant pool while preserving module boundaries and runtime metadata.
 
-`rxlink` can also strip source/file metadata for smaller deployable artifacts.
-Runtime contract metadata for imports, interfaces, implementations, members,
-and factories is preserved by the current linker.
+`rxlink` can also strip source/TRACE debug metadata for smaller deployable
+artifacts. Runtime contract metadata for imports, interfaces, implementations,
+members, and factories is preserved by the current linker.
 
 Simple bytecode concatenation can still be useful for development or archive
 experiments, but `rxlink` is the release path for compact deployable images.

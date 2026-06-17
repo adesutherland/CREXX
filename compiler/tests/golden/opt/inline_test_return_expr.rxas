@@ -1,41 +1,46 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_return_expr.rexx
- * BUILT                  : 2026-04-29 14:16:44
+ * SOURCE                 : inline_test_return_expr.crexx
+ * BUILT                  : 2026-05-27 17:53:23
  */
 
-.srcfile="inline_test_return_expr.rexx"
 .globals=0
 
 main() .locals=7
    .meta "inline_test_return_expr.main"="b" ".int" main() ""
-   .src 3:1="main: procedure = .int"
+   .srcstep 13 13 17 "inline_test_return_expr.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:3="say \"Starting return inline expr test...\""
+   .srcstep 1 1 17 "inline_test_return_expr.crexx" 4 3 44 "  say \"Starting return inline expr test...\""
    say "Starting return inline expr test..."
-   .src 5:3="do"
-   .src 5:6="i = 1"
+   .srcstep 9 9 17 "inline_test_return_expr.crexx" 5 3 5 "  do i = 1 to 3"
+   .srcstep 2 2 17 "inline_test_return_expr.crexx" 5 6 11 "  do i = 1 to 3"
    .meta "inline_test_return_expr.main.i"="b" ".int" r0
    load r0,1
-   .src 5:12="to 3"
+   .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "i" ""
+   .srcstep 3 3 17 "inline_test_return_expr.crexx" 5 12 16 "  do i = 1 to 3"
    load r2,3
+   .traceevent "L" 4 "R" "I" "r" 2 0 0 0 "" ""
 l8dostart:
-   .src 5:12="to 3"
+   .srcstep 3 3 17 "inline_test_return_expr.crexx" 5 12 16 "  do i = 1 to 3"
    igt r3,r0,r2
    brt l8doend,r3
-   .src 6:5="say wrap(i)"
-   .src 6:9="wrap"
-   .src 12:7="val"
+   .srcstep 8 8 17 "inline_test_return_expr.crexx" 6 5 16 "    say wrap(i)"
+   .srcstep 7 7 17 "inline_test_return_expr.crexx" 6 9 13 "    say wrap(i)"
+   .srcstep 5 5 33 "inline_test_return_expr.crexx" 12 7 10 "  arg val = .int"
+   .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
    icopy r1,r0
-   .src 13:3="return addOne(val)"
+   .traceevent "A" 6 "R" "I" "r" 1 5 5 0 "val" ""
+   .srcstep 6 6 17 "inline_test_return_expr.crexx" 13 3 21 "  return addOne(val)"
+   .traceevent "V" 6 "R" "I" "r" 1 8 8 0 "val" ""
    load r4,1
    swap r5,r1
    call r6,addOne(),r4
    swap r1,r5
+   .traceevent "F" 4 "R" "I" "r" 6 8 8 0 "addone" ""
    icopy r5,r6
    acopy r5,r6
    br l49bexprend
@@ -43,27 +48,29 @@ l49bexprend:
    itos r5
    say r5
 l8doinc:
-   .src 5:6="i"
+   .srcstep 4 4 17 "inline_test_return_expr.crexx" 5 6 7 "  do i = 1 to 3"
    inc r0
-   .src 7:3="end"
+   .srcstep 10 10 17 "inline_test_return_expr.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
-   .src 8:3="say \"Return inline expr test finished.\""
+   .srcstep 11 11 17 "inline_test_return_expr.crexx" 8 3 42 "  say \"Return inline expr test finished.\""
    say "Return inline expr test finished."
-   .src 9:3="return 0"
+   .srcstep 12 12 17 "inline_test_return_expr.crexx" 9 3 11 "  return 0"
    ret 0
 
 addOne() .locals=2
    .meta "inline_test_return_expr.addone"="b" ".int" addOne() "val=.int"
-   .src 15:1="addOne: procedure = .int"
+   .srcstep 21 21 17 "inline_test_return_expr.crexx" 15 1 25 "addOne: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 16:7="val = .int"
+   .srcstep 19 19 17 "inline_test_return_expr.crexx" 16 7 17 "  arg val = .int"
    .meta "inline_test_return_expr.addone.val"="b" ".int" a1
-   .src 17:3="return val + 1"
+   .srcstep 20 20 17 "inline_test_return_expr.crexx" 17 3 17 "  return val + 1"
+   .traceevent "V" 6 "R" "I" "a" 1 20 20 0 "val" ""
    iadd r1,a1,1
+   .traceevent "O" 4 "R" "I" "r" 1 20 20 0 "" ""
    ret r1
    .meta "inline_test_return_expr.addone.val"

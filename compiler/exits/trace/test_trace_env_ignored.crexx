@@ -1,0 +1,7 @@
+options levelb
+
+main: procedure
+  trace off
+  x = random(42, 42)
+  say "TRACE ENV IGNORED" x
+  return

@@ -3,68 +3,60 @@
 #include <limits.h>
 #include <assert.h>
 
-static const uint64_t ERROR = ~0lu;
-/*!types:re2c*/
+static const uint64_t ERROR = UINT64_MAX;
 
-template<int BASE> static void adddgt(uint64_t &u, unsigned int d)
-{
-    u = u * BASE + d;
-    if (u > UINT32_MAX) u = ERROR;
-}
+#define CHECK(n) if (n > UINT32_MAX) return ERROR;
 
-static uint64_t parse_u32(const char *s)
-{
-    const char *YYMARKER;
+static uint64_t parse_u32(const char *s) {
+    const char *YYCURSOR = s, *YYMARKER;
     uint64_t u = 0;
 
     /*!re2c
-    re2c:yyfill:enable = 0;
-    re2c:define:YYCTYPE = char;
-    re2c:define:YYCURSOR = s;
+        re2c:yyfill:enable = 0;
+        re2c:define:YYCTYPE = "unsigned char";
 
-    end = "\x00";
+        end = "\x00";
 
-    '0b' / [01]        { goto bin; }
-    "0"                { goto oct; }
-    "" / [1-9]         { goto dec; }
-    '0x' / [0-9a-fA-F] { goto hex; }
-    *                  { return ERROR; }
+        '0b' / [01]        { goto bin; }
+        "0"                { goto oct; }
+        "" / [1-9]         { goto dec; }
+        '0x' / [0-9a-fA-F] { goto hex; }
+        *                  { return ERROR; }
     */
 bin:
     /*!re2c
-    end   { return u; }
-    [01]  { adddgt<2>(u, s[-1] - '0'); goto bin; }
-    *     { return ERROR; }
+        end   { return u; }
+        [01]  { u = u * 2 + (YYCURSOR[-1] - '0'); CHECK(u); goto bin; }
+        *     { return ERROR; }
     */
 oct:
     /*!re2c
-    end   { return u; }
-    [0-7] { adddgt<8>(u, s[-1] - '0'); goto oct; }
-    *     { return ERROR; }
+        end   { return u; }
+        [0-7] { u = u * 8 + (YYCURSOR[-1] - '0'); CHECK(u); goto oct; }
+        *     { return ERROR; }
     */
 dec:
     /*!re2c
-    end   { return u; }
-    [0-9] { adddgt<10>(u, s[-1] - '0'); goto dec; }
-    *     { return ERROR; }
+        end   { return u; }
+        [0-9] { u = u * 10 + (YYCURSOR[-1] - '0'); CHECK(u); goto dec; }
+        *     { return ERROR; }
     */
 hex:
     /*!re2c
-    end   { return u; }
-    [0-9] { adddgt<16>(u, s[-1] - '0');      goto hex; }
-    [a-f] { adddgt<16>(u, s[-1] - 'a' + 10); goto hex; }
-    [A-F] { adddgt<16>(u, s[-1] - 'A' + 10); goto hex; }
-    *     { return ERROR; }
+        end   { return u; }
+        [0-9] { u = u * 16 + (YYCURSOR[-1] - '0');      CHECK(u); goto hex; }
+        [a-f] { u = u * 16 + (YYCURSOR[-1] - 'a' + 10); CHECK(u); goto hex; }
+        [A-F] { u = u * 16 + (YYCURSOR[-1] - 'A' + 10); CHECK(u); goto hex; }
+        *     { return ERROR; }
     */
 }
 
-int main()
-{
+int main() {
+    assert(parse_u32("") == ERROR);
     assert(parse_u32("1234567890") == 1234567890);
     assert(parse_u32("0b1101") == 13);
     assert(parse_u32("0x7Fe") == 2046);
     assert(parse_u32("0644") == 420);
     assert(parse_u32("9999999999") == ERROR);
-    assert(parse_u32("") == ERROR);
     return 0;
 }

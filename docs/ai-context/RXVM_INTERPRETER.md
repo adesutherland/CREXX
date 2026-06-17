@@ -81,6 +81,7 @@ struct stack_frame {
     proc_runtime *procedure;         /* Executing runtime procedure state */
     bin_code *return_pc;             /* Program Counter to return to */
     value *return_reg;               /* Target register for return values */
+    unsigned char has_reference_lifetimes; /* Frame-owned storage has references */
     size_t number_locals;            /* Number of local registers */
     size_t nominal_number_locals;    /* Procedure-declared local count */
     size_t number_args;              /* Argument count for the frame */
@@ -96,6 +97,22 @@ struct stack_frame {
     value **locals;                  /* Active pointer map to variable values */
 };
 ```
+
+Frame recycling is a performance feature, not a semantic shortcut. When a
+frame is reused, the VM relinks local register pointers back to their base
+storage, relinks globals, and resets the argument-count register. Ordinary
+return places the frame on the procedure recycler; full value teardown happens
+when recycled frames are drained. Because references are rare, frames carry a
+small flag that is set on the frame that owns referenced storage. A helper may
+execute `MKREF` against caller-owned receiver storage, so the VM finds and marks
+the owner frame rather than assuming the current frame owns the target. Only
+flagged frames run the reference-lifetime cleanup on return, invalidating
+frame-owned local and `a0` storage plus nested attribute storage without freeing
+reusable buffers.
+`clear_frame()` performs full storage cleanup, remaining signal-handler stack
+cleanup, and any VM plugin instance cleanup when a frame is finally destroyed.
+The `SAFE_RECYCLED_STACKFRAMES` build-time debug guard can additionally zero
+locals on reuse.
 
 ### Signal / Interrupt Handling
 The VM signal model is implemented directly in the interpreter loop. Each
@@ -115,6 +132,19 @@ and `CALL_BRANCH`, exposed in RXAS as `sigignore`, `sighalt`, `sigshalt`,
 `sigret`, `sigbr`, `sigbrv`, `sigcall`, and `sigcallbr`. `KILL` is always
 halt-only. `BREAKPOINT` is the debugger/trace signal rather than an ordinary
 error condition.
+
+`REFERENCE_INVALID` is the dedicated signal for a reference value whose target
+storage has been destroyed or invalidated. It defaults to halt, participates in
+normal signal handling, and can be probed without raising through the RXAS
+`refvalid` instruction. Raising operations include `deref`, `linkref`, and
+`setref`; using a non-reference value with those operations is treated as an
+invalid reference.
+
+`OBJECT_NOT_INITIALIZED` is the dedicated signal for a typed object value that
+has not completed factory initialization. It defaults to halt and participates
+in normal signal handling. The raising check is `assertinitialized`; the
+non-raising probe is `isinitialized`. Type compatibility remains separate:
+`istype` and `asserttype` can succeed for a typed uninitialized object.
 
 `sigcalla` installs an action-aware call handler. It receives the same raw
 five-attribute interrupt object as `sigcall`, but the handler's return string
@@ -161,8 +191,30 @@ Address semantics matter. VM-raised fault signals stamp the faulting
 instruction address before dispatch advances. `BREAKPOINT` and native or
 asynchronous interrupts use the next-instruction/resume address. Panic/error
 reporting should resolve closest preceding source metadata for a fault address;
-REXX-level stepping should usually use exact-address `.src` metadata so it
-stops on authored clause boundaries.
+REXX-level stepping should usually use exact-address `.meta_source_step`
+metadata so it stops on authored clause boundaries or debugger-selected active
+ranges.
+
+`metaloaddata` exposes structured metadata records to Level B handlers. The
+record string is the value itself, and numbered attributes carry the payload:
+
+- `.meta_source_step`: `[step_id, clause_id, flags, file, line,
+  active_start_column, active_end_column, whole_source_line]`
+- `.meta_trace_event`: `[kind, mode_mask, value_source, value_type,
+  register_type, value_ref, source_step_id, clause_id, flags, symbol,
+  resolved_name]`
+
+The trace-event code fields are compact numeric character codes in the VM
+payload. TRACE handlers map them to presentation prefixes later and may read
+frame-local registers only when `value_source` names a register and `value_ref`
+is non-negative.
+
+Unstripped images may expose trace-event metadata. `metaloaddata` treats
+optional trace-event strings such as `symbol` and `resolved_name` defensively:
+absent or invalid references are reported as empty strings rather than causing
+metadata inspection to fail. Linked images built with `STRIP SOURCE` do not
+carry `META_SOURCE_STEP` or `META_TRACE_EVENT`; they are not source-level TRACE
+or RXDB debug artifacts.
 
 ### `value` (Dynamic Typing Representation)
 Classic REXX is a dynamically typed language where "everything is a string" conceptually, but performance dictates native type usage when possible. The `value` struct (from `interpreter/rxvalue.h`) is a polymorphic container storing a REXX variable's state. 
@@ -171,7 +223,7 @@ To limit memory fragmentation, strings shorter than `SMALLEST_STRING_BUFFER_LENG
 
 ```c
 struct value {
-    value_type status;               /* Bit flag tracker for types */
+    value_type status;               /* Partitioned status/cache flags */
     rxinteger int_value;             /* 64-bit/32-bit native integer */
     double float_value;              /* Native floating point */
     
@@ -197,15 +249,98 @@ struct value {
     char small_string_buffer[SMALLEST_STRING_BUFFER_LENGTH]; 
 };
 ```
-Variables (`locals` arrays) consist of arrays of `value*` pointers managed strictly by the VM frames. There is no automated background Garbage Collector (GC). Instead, frame-bound variables are deterministically cleared (`clear_value`) and memory released when a `stack_frame` dies and exits scope.
+Variables (`locals` arrays) consist of arrays of `value*` pointers managed
+strictly by the VM frames. There is no automated background Garbage Collector
+(GC). Frame-bound variables are either recycled for later calls or
+deterministically cleared (`clear_value`) when a `stack_frame` is finally
+destroyed. Reference identities for frame-owned storage are invalidated on
+ordinary frame exit for frames that own referenced storage, even if the
+reference was created by a callee helper. Recycled stack storage therefore
+cannot keep an escaped weak reference valid.
+
+Attribute arrays use two parallel pointer arrays:
+
+- `attributes`: the live logical slots
+- `unlinked_attributes`: the VM-owned backing values used when a slot is
+  unlinked or recycled
+
+`set_num_attributes()` owns allocation and capacity growth. Bulk attribute
+insert/delete instructions (`INSATTRS`/`INSATTRS1` and
+`DELATTRS`/`DELATTRS1`) manipulate the pointer arrays directly by rotating
+both arrays together, then clearing only the VM-owned backing values for
+inserted or removed slots. This preserves the `UNLINKATTR` invariant and avoids
+clearing an externally linked register when a logical attribute slot is deleted.
+
+`status.all_type_flags` is a partitioned 32-bit status word stored as
+`uint32_t`. The masks live in `binutils/include/rxflags.h` so
+compiler-emitted RXAS and VM code agree:
+
+- `0x000000FF`: VM-private/read-only outside the VM
+- `0x0000FF00`: compiler call ABI flags
+- `0x00FF0000`: stable library/runtime ABI flags
+- `0x7F000000`: user/experimental flags
+- `0x80000000`: reserved
+
+The first VM-private allocations are reserved for UTF-8 validity,
+codepoint-count validity, and known Unicode normalization forms. `SETTP`,
+`SETORTP`, and `LOADSETTP` mask external writes; they cannot set or clear the
+VM-private band except through VM-owned content setters. `GETTP` and
+`GETANDTP` return readable flags, while unmasked `BRTPT` only tests public
+flag bands so private cache bits do not change legacy branch behavior.
+Status flag instructions still take normal `rxinteger` operands in RXAS/RXBIN;
+the VM applies only the low 32 bits when reading a flag mask.
+
+In normal UTF builds, `RXFLAG_VM_UTF8_VALID` and
+`RXFLAG_VM_UTF8_COUNT_VALID` mean the string byte span is known well-formed
+UTF-8 and `string_chars` is a validated codepoint count. Constant loads mark
+the cache as trusted, bounded string setters and text reads validate before
+marking it, copy/move/string-copy preserve it, and codepoint-safe concat/slice/
+truncate/append paths propagate it. Level B text ingress rejects invalid UTF-8:
+public RXVML setters return failure, `freadline`/`freadcdpt` and `bintos` raise
+`UNICODE_ERROR`, socket text receive reports an invalid text status, and RXPA
+native calls recursively validate returned values plus updated argument and
+signal trees after the callback returns. Raw VM helpers can still clear the
+cache for internal materialization, but arbitrary bytes belong on the `.binary`
+path. `CREXX_RXPA_DISABLE_UTF8_CHECKS=1` disables the RXPA post-call check for
+developer migration/debugging; normal builds should leave it enabled.
 
 The two `object_type_name` fields are the current Level B hook for interface
 dispatch. Class factories stamp object values with `setobjtype`, and later VM
 lookups use that concrete class identity when resolving interface member calls.
+Bare object class defaults are represented as ordinary object type metadata plus
+the VM-private `RXFLAG_VM_OBJECT_UNINITIALIZED` flag. `setobjuninit` creates
+that state, while `setobjtype` clears it when a factory has produced an
+initialized object. The VM-private flag partition keeps this lifecycle marker
+out of public register flag writes such as `settp`.
 In UTF builds, `string_length` is the byte length while `string_chars` is the
 codepoint count. Any instruction that synthesizes or truncates a string must
 keep both in sync and reset `string_pos` / `string_char_pos` to the start of
 the new value.
+
+The `xtos` family of scalar-to-string conversions is allowed to mutate the
+destination value to materialize its string representation. This is acceptable
+for linked values, including object attributes, as representation
+materialization rather than user-visible assignment. The current VM does not
+maintain a validity flag for a cached string representation, so repeated
+conversions still perform the conversion work and the compiler does not rely on
+string-form reuse.
+
+### Decimal Plugin Runtime
+
+`.decimal` values are stored in the `value` decimal slot as plugin-owned byte
+content. The VM loads the default decimal plugin before executing the first
+frame, attaches it to the frame numeric context, and syncs that plugin whenever
+a child frame inherits a copied numeric context. A frame that loads its own
+decimal plugin marks `decimal_loaded_here`, so cleanup can free it when that
+frame exits.
+
+The decimal plugin interface is the boundary between VM instructions and the
+concrete decimal engine. The current `decplugin` API covers numeric-context
+sync, required string sizing, conversion to and from string, integer, and
+double values, coefficient/exponent extraction, arithmetic operations
+(`add`, `sub`, `mul`, `div`, `pow`, `neg`), comparisons, zero testing,
+truncate, and round. Decimal instructions in `rxvm` should go through that API
+rather than depending on one decimal backend's internal representation.
 
 ### Copy, Move, and Native Payloads
 
@@ -235,6 +370,26 @@ carrier, but only with an explicit `rxvm_native_payload_ops` descriptor when
 the payload owns native resources. The descriptor is normally a static provider
 object shared by many values; the value stores just a pointer to it plus flags,
 so there is no per-instance ops allocation.
+
+Ordinary `.binary` payloads should be built through the shared helpers in
+`rxvmvars.h`: `reserve_binary_buffer()`, `prep_binary_buffer()`, `set_binary()`,
+`append_binary()`, `append_binary_value()`, `concat_binary()`, and
+`slice_binary()`. These helpers keep `binary_length` and
+`binary_buffer_length` consistent, reuse existing capacity where possible, and
+clear native payload finalizers before replacing a native-backed object with an
+ordinary byte sequence. The register also carries `binary_pos`, a byte cursor
+used by `SETBINPOS`, `GETBINPOS`, and cursor-based `BSLICE`.
+
+RXAS-level binary opcodes operate only on the binary slot. `LOAD_REG_BINARY`
+loads a `BINARY_CONST` from `0x...` RXAS syntax. `GETBYTE` reads zero-based
+binary offsets and returns `-1` for out-of-range reads. `SETBYTE` and
+`BUPDATE` are strict and raise `OUT_OF_RANGE` for invalid byte indexes or
+fixed-size overlay writes past the destination length. `BCONCAT`, `BAPPEND`,
+and `BSLICE` build ordinary byte buffers without UTF-8 validation and clear
+VM-private UTF cache flags on the destination.
+
+`FREADB` reads bytes with `fread(ptr, 1, n, file)`, so `binary_length` is the
+actual byte count read, not a C item count.
 
 When `native_payload_ops` is set:
 
@@ -373,6 +528,13 @@ instance id, so both `ADDRESS env "command"` and explicit
 `(addressenv(env) as .addressfunctionenvironment).invoke(...)` reach
 the same host environment instance.
 
+Native ADDRESS text uses the same Level B UTF-8 boundary as RXVML. CREXXSAA
+validates variable setter values before buffering write-back records, and the
+lower RXVML ADDRESS helpers validate command text, output/error text, sandbox
+updates, and stem updates before copying them into VM strings. Invalid bytes
+should be passed through `.binary` or native payload APIs rather than through
+text callbacks.
+
 As of `RXVML_ABI_VERSION` 7, native `rxvml_address_request` also carries
 `stdin_endpoint`, `stdout_endpoint`, and `stderr_endpoint` VM values. Native
 providers should use `rxvml_address_emit_output(ctx, request, text)` and
@@ -393,13 +555,20 @@ host variable return a normal `var` updated binding, so the existing ADDRESS
 write-back path handles both explicit `EXPOSE` variables and auto-exposed
 anchors.
 
+The built-in system-like environments (`COMMAND`, `CMD`, `SYSTEM`, `SHELL`,
+and `PATH`) route through the VM spawn helper, which parses the command into an
+argv vector before executing the program. This is not a full shell-quoting
+contract. For nested shell quoting, here-doc-like content, or multiple shell
+statements, invoke an explicit shell such as `address command "sh" input lines`
+and pass the script through the ADDRESS input redirect.
+
 `demos/native/sqlite/` shows the database-oriented form of the native provider
 model. The provider routes by the ADDRESS environment name carried in the
 request (`SQLITE` initially), looks up a driver table, and then treats SQL
 named parameters such as `:name` as handler-specific uses of ADDRESS
 host-variable bindings. This is the intended shape for later database drivers.
 
-`demos/llm/llm_address_environment.rexx` shows the same idea for Rexx-hosted
+`demos/llm/llm_address_environment.crexx` shows the same idea for Rexx-hosted
 providers. One Rexx environment class claims a family of model-shaped
 environment names (`LLM_GPT_4_1`, `CLAUDE_SONNET_4_5`, `GEMINI_2_5_FLASH`,
 `GEMMA4_LATEST`) and routes internally to the `rxfnsg` LLM drivers. This keeps
@@ -432,7 +601,13 @@ Instructions are executed via macro-driven blocks. For example, moving to the ne
 #define CALC_DISPATCH(n) { next_pc = pc + (n) + 1; next_inst = current_module->prepared_dispatch[next_pc - current_module->segment.binary]; }
 #define DISPATCH         { pc = next_pc; if (interrupts && !current_frame->is_interrupt) goto INTERRUPT; goto *next_inst; }
 ```
-`DISPATCH` actively checks a global `interrupts` bit-flag to immediately branch into signal exception handling if an error occurred natively. Internal signal-raising macros stamp `interrupted_pc` with the faulting instruction before dispatch advances `pc`; breakpoint and asynchronous interrupts leave it unset so their handlers continue to receive the next instruction/resume address. The default fallback panic report uses the stamped address when present to print the module/address and, when `META_FILE` / `META_SRC` metadata is present, the closest preceding REXX source line. Linked images built with source stripping may only have the module/address.
+`DISPATCH` actively checks a global `interrupts` bit-flag to immediately branch into signal exception handling if an error occurred natively. Internal signal-raising macros stamp `interrupted_pc` with the faulting instruction before dispatch advances `pc`; breakpoint and asynchronous interrupts leave it unset so their handlers continue to receive the next instruction/resume address. The default fallback panic report uses the stamped address when present to print the module/address and, when `META_SOURCE_STEP` metadata is present, the closest preceding REXX source line. Linked images built with source stripping have only the module/address for this fallback context.
+
+`INTERRUPT` is the internal dispatch target used by this macro, not a source
+instruction. `INULL` and `IUNKNOWN` are runtime sentinel handlers that raise
+`UNKNOWN_INSTRUCTION`; `rxas` intentionally rejects all three names as source
+mnemonics. Opcode slots 514 and 515 are reserved after removal of the legacy DLL
+loader instructions, preserving later opcode numbers.
 
 ### Instruction Flow Example
 Inside the `run()` loop, implementations are declared using `START_INSTRUCTION`. The assembler passes operands inline sequentially in the binary array.

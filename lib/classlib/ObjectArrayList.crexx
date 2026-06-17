@@ -1,0 +1,216 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash
+namespace data_ObjectList expose ObjectArrayList
+import rxfnsb
+import data_ObjectIterable
+
+/**
+ * A dynamic, ordered collection backed by an object array.
+ *
+ * This class stores object values and deliberately does not provide
+ * equality-based helpers such as contains/indexOf. Those need an object
+ * equality contract before they can be specified cleanly.
+ */
+ObjectArrayList: class implements .ObjectIterable
+size_ = .int
+val = .object[]
+
+  *: factory
+    size_ = 0
+    return
+
+  /**
+   * Initializes an empty ObjectArrayList.
+   *
+   * @return 1 on success
+   */
+  init: method = .int
+    size_ = 0
+    return 1
+
+  /**
+   * Appends an object to the end of the list.
+   *
+   * @param item Object to add
+   * @return 1 on success
+   */
+  add: method = .int
+    arg item = .object
+    size_ = objectarrayappend(val, item)
+    return 1
+
+  /**
+   * Appends an object to the end of the list.
+   *
+   * This method is synonymous with add().
+   *
+   * @param item Object to append
+   * @return 1 on success
+   */
+  append: method = .int
+    arg item = .object
+    size_ = objectarrayappend(val, item)
+    return 1
+
+  /**
+   * Inserts an object at the beginning of the list.
+   *
+   * Existing elements are shifted one position to the right.
+   *
+   * @param item Object to prepend
+   * @return 1 on success
+   */
+  prepend: method = .int
+    arg item = .object
+    size_ = objectarrayprepend(val, item)
+    return 1
+
+  /**
+   * Returns the object at the specified position.
+   *
+   * Indices are one-based.
+   *
+   * @param index Element position
+   * @return The object at the specified position, or an empty
+   *         .object instance if the index is out of range
+   */
+  get: method = .object
+    arg index = .int
+    if index < 1 then do
+      none = .object
+      return none
+    end
+    if index > size_ then do
+      none = .object
+      return none
+    end
+    return val.index
+
+  /**
+   * Replaces the object at the specified position.
+   *
+   * Indices are one-based.
+   *
+   * @param index Element position
+   * @param item Replacement object
+   * @return 1 if the replacement succeeded, 0 otherwise
+   */
+  set: method = .int
+    arg index = .int, item = .object
+    if index >= 1 then if index <= size_ then do
+      val.index = item
+      return 1
+    end
+    return 0
+
+  /**
+   * Inserts an object at the specified position.
+   *
+   * Elements at and after the insertion point are shifted to the right.
+   * If the index is less than 1, the element is inserted at the beginning
+   * of the list. If the index is greater than size() + 1, the element is
+   * appended.
+   *
+   * @param index Insertion position
+   * @param item Object to insert
+   * @return 1 on success
+   */
+  insert: method = .int
+    arg index = .int, item = .object
+
+    if index < 1 then index = 1
+    if index > size_ + 1 then index = size_ + 1
+
+    size_ = objectarrayinsert(val, index, 1, item)
+    return 1
+
+  /**
+   * Removes and returns the object at the specified position.
+   *
+   * Elements after the removed element are shifted left.
+   *
+   * @param index Element position
+   * @return The removed object, or an empty .object instance if the index
+   *         is out of range
+   */
+  remove: method = .object
+    arg index = .int
+
+    if index < 1 | index > size_ then do
+      none = .object
+      return none
+    end
+
+    item = val.index
+    size_ = objectarraydelete(val, index, 1)
+    return item
+
+  /**
+   * Returns the number of elements currently stored in the list.
+   *
+   * @return Number of elements
+   */
+  size: method = .int
+    return size_
+
+  /**
+   * Determines whether the list contains any elements.
+   *
+   * @return 1 if the list is empty, 0 otherwise
+   */
+  isEmpty: method = .int
+    return size_ = 0
+
+  /**
+   * Returns an iterator over the current list.
+   *
+   * Modifications made to the list after the iterator has been created
+   * may be visible to the iterator.
+   *
+   * @return ObjectArrayListIterator
+   */
+  iterator: method = .ObjectArrayListIterator
+    return .ObjectArrayListIterator(reference val, reference size_, 0)
+
+  /**
+   * Returns an iterator that operates on a snapshot of the list.
+   *
+   * Subsequent modifications to the list do not affect the elements
+   * returned by this iterator.
+   *
+   * @return ObjectArrayListIterator
+   */
+  snapshotIterator: method = .ObjectArrayListIterator
+    return .ObjectArrayListIterator(reference val, reference size_, 1)
+
+  /**
+   * Removes all elements from the list.
+   */
+  clear: method = .void
+    call objectarraydrop val
+    size_ = 0
+    return
+

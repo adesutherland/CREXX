@@ -16,16 +16,16 @@ set_target_properties(desbase_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_
 # Rexx Test
 add_custom_target(DESRexxTest ALL
         BYPRODUCTS RxDesTst.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\" -o RxDesTst ${CMAKE_CURRENT_SOURCE_DIR}/RxDesTst && $<TARGET_FILE:rxas> RxDesTst
-        DEPENDS rxas rxc library compiler_exit_bin des RxDesTst.rexx
+        COMMAND $<TARGET_FILE:rxc> -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\" -o RxDesTst ${CMAKE_CURRENT_SOURCE_DIR}/RxDesTst.crexx && $<TARGET_FILE:rxas> RxDesTst
+        DEPENDS rxas rxc library compiler_exit_bin des RxDesTst.crexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 # Rexx Error Test
 add_custom_target(DESRexxInvalidTest ALL
         BYPRODUCTS RxDesTstInvalid.rxbin
-        COMMAND $<TARGET_FILE:rxc> -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\" -o RxDesTstInvalid ${CMAKE_CURRENT_SOURCE_DIR}/RxDesTstInvalid && $<TARGET_FILE:rxas> RxDesTstInvalid
-        DEPENDS rxas rxc library compiler_exit_bin des RxDesTstInvalid.rexx
+        COMMAND $<TARGET_FILE:rxc> -i \"${CMAKE_BINARY_DIR}/bin\;${CMAKE_CURRENT_BINARY_DIR}\" -o RxDesTstInvalid ${CMAKE_CURRENT_SOURCE_DIR}/RxDesTstInvalid.crexx && $<TARGET_FILE:rxas> RxDesTstInvalid
+        DEPENDS rxas rxc library compiler_exit_bin des RxDesTstInvalid.crexx
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 

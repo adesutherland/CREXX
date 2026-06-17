@@ -334,20 +334,23 @@ Instructions}\label{dynamic-type-instructions}}
 
 The compiler will be able to manage which registers have what values
 most of the time but there will be certain dynamic situations where the
-value type or status is not known. To handle this the compiler use the
-registers type flag:
+value type or status is not known. To handle this the compiler uses the
+register status flags:
 
 \begin{verbatim}
-gettp - gets the register type flag (op1 = op2.typeflag)
-settp - sets the register type flag (op1.typeflag = op2)
-setortp - or the register type flag (op1.typeflag = op1.typeflag || op2)
-brtpt - if op2.typeflag true then goto op1
-brtpandt - if op2.typeflag && op3 true then goto op1
+gettp - gets the readable register status flags (op1 = op2.flags)
+settp - sets externally writable register status flags, preserving VM-private flags
+setortp - or externally writable register status flags (op1.flags = op1.flags | op2)
+brtpt - if op2 has externally writable status flags then goto op1
+brtpandt - if op2 readable status flags & op3 true then goto op1
 \end{verbatim}
 
-The typeflag is a 64bit integer and its usage is defined by convention
-only \protect\hyperlink{crexx-calling-convention}{see cREXX Calling
-Convention}.
+The status flag word is 32-bit storage: the low byte is VM-private/read-only
+outside the VM, the next byte is compiler call ABI state, and higher bands are
+reserved for library/runtime and user contracts
+\protect\hyperlink{crexx-calling-convention}{see cREXX Calling Convention}.
+The RXAS integer operand format is wider on 64-bit builds, but status flag
+instructions apply masks to the low 32 bits of the register status word.
 
 \hypertarget{dynamic-procedure-pointers}{%
 \subsubsection{Dynamic Procedure
@@ -440,7 +443,7 @@ etc).
 \item
   {[}s/i/f/d{]}load - lost loads the corresponding type value only
 \item
-  load (i.e.~with no prefix) copies all values and the type flag to the
+  load (i.e.~with no prefix) copies all values and the status flags to the
   target register
 \end{itemize}
 
@@ -512,26 +515,26 @@ procedures. Although not necessary, it is recommended to also use this
 convention between RXAS procedures.
 
 In this convention the caller is responsible for setting argument
-registers' typeflag. This is used to indicate if an optional argument is
+registers' compiler status flags. This is used to indicate if an optional argument is
 present, and if a pass-by-value string or object argument needs
 preserving.
 
 The callee (procedure) is responsible for applying default values for
 optional arguments, and for ensuring that pass-by-value arguments are
 kept constant (so they are not changed, effecting the caller logic) if
-required. The callee uses the typeflag for this.
+required. The callee uses those compiler status flags for this.
 
-\textbf{Register Type Flag Byte Values}
+\textbf{Compiler Register Flag Values}
 
-The register typeflag is used to optimise function arguments.
+The compiler register flag band is used to optimise function arguments.
 
 \begin{itemize}
 \item
-  Bit 1 - REGTP\_VAL - ONLY used for optional arguments; setting (1)
-  means the register has a specified value
+  REGTP\_VAL - ONLY used for optional arguments; setting
+  \texttt{0x00000100} means the register has a specified value
 \item
-  Bit 2 - REGTP\_NOTSYM - ONLY used for ``pass be value'' and ONLY large
-  (strings, objects) registers; setting (2) means that it is not a
+  REGTP\_NOTSYM - ONLY used for ``pass be value'' and ONLY large
+  (strings, objects) registers; setting \texttt{0x00000200} means that it is not a
   symbol so does not need copying as, even if it is changed, the caller
   will not use its original value. Note: Small registers (int, float)
   are always copied as this is faster than setting and checking this
@@ -623,18 +626,17 @@ REXX programmers
 \hypertarget{register-data}{%
 \paragraph{Register Data}\label{register-data}}
 
-Each register holds 5 values - String, float, integer and object, and a
-type flag which is used to indicate which values are valid. Note that
-arbitrary position maths is handled as objects.
+Each register holds String, float, integer, decimal, binary, object, and
+attribute storage plus a partitioned status flag word. Note that arbitrary
+precision maths is handled by decimal/object storage.
 
 In most cases it is for the compiler to decide what values to use, and
-how/if to set the type flag. Only a few dynamic scenarios will need some
-extended functions (see following). The type values are 0=unset,
-1=string, 2=float, 4=integer, 8=object, 16=interface. Each register can
-have multiple types set as valid. The compiler sets the valid types
-explicitly with instructions - this is not an automatic runtime
-capability. At runtime the VM has no need nor the \emph{ability} to
-validate data. Any caching has to be achieved by compiler logic.
+how/if to set the compiler status flags. Only a few dynamic scenarios will need
+some extended functions (see following). The low status byte is VM-private and
+must not be written by RXAS code; compiler call flags begin at
+\texttt{0x00000100}. RXAS instructions set public flag bands explicitly; this is
+not an automatic runtime type-validation mechanism. VM-private cache flags are
+maintained by VM-owned content operations.
 
 An Object has an pointer to its static ptable entry in the constant pool
 as well as an array of sub-registers. These sub-registers are the

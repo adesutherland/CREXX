@@ -1,0 +1,55 @@
+/* rexx test abs bif */
+options levelb comments_dash
+import rxfnsb
+
+errors = 0
+
+if abs('12.3') <> '12.3' then do
+  errors=errors+1
+  say 'ABS failed in test 1'
+end
+
+if abs(' -0.307') <> '0.307' then do
+  errors=errors+1
+  say 'ABS failed in test 2'
+end
+
+if abs(-12.345) <> "12.345" then do
+  errors=errors+1
+  say 'ABS failed in test 3'
+end
+
+if abs(12.345) <>  12.345 then do
+  errors=errors+1
+  say 'ABS failed in test 4'
+end
+
+if abs('-1') <> '1' then do
+  errors=errors+1
+  say 'ABS failed in test 5'
+end
+
+if abs('0') <> '0' then do
+  errors=errors+1
+  say 'ABS failed in test 6'
+end
+
+if abs('+1') <> '1' then do
+  errors=errors+1
+  say 'ABS failed in test 7'
+end
+
+if abs(' - 12345678        ') <> '12345678' then do
+  errors=errors+1
+  say 'ABS failed in test 8'
+end
+
+if abs('- 1234567.7654321') <> '1234567.7654321' then do
+  errors=errors+1
+  say 'ABS failed in test 9'
+end
+
+-- s = .rexx('123.45E+16')
+-- flag=flag & s.abs().toString() =.rexx('1.2345E+18').toString()
+
+return errors<>0

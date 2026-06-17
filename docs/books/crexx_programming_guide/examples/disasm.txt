@@ -1,42 +1,55 @@
 *******************************************************************************
-* MODULE - examples/sumLoop1000
-* DESCRIPTION - examples/sumLoop1000
+* MODULE - docs/books/crexx_programming_guide/examples/sumLoop1000.rxas
+* DESCRIPTION - docs/books/crexx_programming_guide/examples/sumLoop1000.rxas
 
-* CONSTANT POOL - Size 0x7c0.  Dump of EXPOSED entries only (option -p not used):
+* CONSTANT POOL - Size 0xb28.  Dump of EXPOSED entries only (option -p not used):
 
 
-* CODE SEGMENT - Size 0x21
+* CODE SEGMENT - Size 0x27
 
 .globals=0
-.srcfile="sumLoop1000.rexx"
 
 main()          .locals=4
-                .meta "sumloop1000.rexx.main"="b" ".void" main() ""
-                .src 4:1="sum = 0"
-                .meta "sumloop1000.rexx.main.sum"="b" ".int" r1
-                load r1,0                                    * 0x000000:00c2 Load op1 with op2
-                .src 5:1="do"
-                .src 5:4="i=1"
-                .meta "sumloop1000.rexx.main.i"="b" ".int" r2
-                load r2,1                                    * 0x000003:00c2 Load op1 with op2
-                .src 5:8="to 100000"
-                load r3,100000                               * 0x000006:00c2 Load op1 with op2
-                .src 5:8="to 100000"
-lb_9:           igt r0,r2,r3                                 * 0x000009:0068 Int Greater than op1=(op2>op3)
-                brt lb_18,r0                                 * 0x00000d:00b4 Branch to op1 if op2 true
-                .src 6:4="sum = i+sum"
-                iadd r1,r2,r1                                * 0x000010:000f Integer Add (op1=op2+op3)
-                .src 5:4="i"
-                inc r2                                       * 0x000014:0038 Increment Int (op1++)
-                .src 7:1="end"
-                br lb_9                                      * 0x000016:00b3 Branch to op1
-                .src 8:1="say \"the sum of the numbers 1 to 100000 is:\" sum"
-lb_18:          itos r1                                      * 0x000018:00d1 Set register string value from its int value
-                sconcat r3,"the sum of the numbers 1 to 100000 is:",r1 * 0x00001a:004e String Concat with space (op1=op2||op3)
-                say r3                                       * 0x00001e:00c6 Say op1
-                .src 9:1="return"
-                ret                                          * 0x000020:00ad Return VOID
-                .meta "sumloop1000.rexx.main.i"
-                .meta "sumloop1000.rexx.main.sum"
+                .meta "sumloop1000.main"="b" ".void" main() ""
+                setnumdgts 18                                * 0x000000:00f6 Set Numeric Digits digits=op1 (>4)
+                setnumfuz 0                                  * 0x000002:00f9 Set Numeric Fuzz digits=op1 (>=0)
+                setnumfrm 1                                  * 0x000004:00fc Set Numeric Form=op1 (1=sci,2=eng)
+                setnumcas 1                                  * 0x000006:00ff Set Numeric Case=op1 (1=lower,2=upper)
+                setnumstd 1                                  * 0x000008:0102 Set Numeric Standard=op1 (1=common,2=classic)
+                .srcstep 1 1 17 "sumLoop1000.crexx" 4 1 8 "sum = 0"
+                .meta "sumloop1000.main.sum"="b" ".int" r0
+                load r0,0                                    * 0x00000a:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 0 1 1 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 0 1 1 0 "sum" ""
+                .srcstep 6 6 17 "sumLoop1000.crexx" 5 1 3 "do i=1 to 100000"
+                .srcstep 2 2 17 "sumLoop1000.crexx" 5 4 7 "do i=1 to 100000"
+                .meta "sumloop1000.main.i"="b" ".int" r1
+                load r1,1                                    * 0x00000d:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "i" ""
+                .srcstep 3 3 17 "sumLoop1000.crexx" 5 8 17 "do i=1 to 100000"
+                load r2,100000                               * 0x000010:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 2 0 0 0 "" ""
+                .srcstep 3 3 17 "sumLoop1000.crexx" 5 8 17 "do i=1 to 100000"
+lb_13:          igtbr lb_1e,r1,r2                            * 0x000013:0157 Int Greater than if (op2>op3) goto op1
+                .srcstep 5 5 17 "sumLoop1000.crexx" 6 4 15 "   sum = i+sum"
+                .traceevent "V" 6 "R" "I" "r" 1 5 5 0 "i" ""
+                .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "sum" ""
+                iadd r0,r1,r0                                * 0x000017:000f Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 0 5 5 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 0 5 5 0 "sum" ""
+                .srcstep 4 4 17 "sumLoop1000.crexx" 5 4 5 "do i=1 to 100000"
+                inc1                                         * 0x00001b:0020 Increment R1++ Int
+                .srcstep 7 7 17 "sumLoop1000.crexx" 7 1 4 "end"
+                br lb_13                                     * 0x00001c:0024 Branch to op1
+                .srcstep 8 8 17 "sumLoop1000.crexx" 8 1 49 "say \"the sum of the numbers 1 to 100000 is:\" sum"
+lb_1e:          itos r0                                      * 0x00001e:00e5 Set register string value from its int value
+                .traceevent "V" 6 "R" "S" "r" 0 8 8 0 "sum" ""
+                sconcat r3,"the sum of the numbers 1 to 100000 is:",r0 * 0x000020:008b String Concat with space (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 3 8 8 0 "" ""
+                say r3                                       * 0x000024:01c2 Say op1
+                .srcstep 9 9 17 "sumLoop1000.crexx" 9 1 7 "return"
+                ret                                          * 0x000026:0030 Return VOID
+                .meta "sumloop1000.main.sum"
 *******************************************************************************
 

@@ -1,0 +1,203 @@
+options levelb comments_dash
+import rexx
+import data_ObjectList
+import data_ObjectStack
+import data_ObjectLinkedList
+import data_ObjectIterable
+
+failures = 0
+
+l = .ObjectArrayList()
+failures = failures + check_int("new object list size", l.size(), 0)
+failures = failures + check_int("new object list empty", l.isEmpty(), 1)
+failures = failures + check_int("bare class expression initialized", initialized(.ObjectArrayList), 0)
+failures = failures + check_int("factory expression initialized", initialized(.ObjectArrayList()), 1)
+failures = failures + check_int("int is not object", 42 is .object, 0)
+
+bare = .ObjectArrayList
+failures = failures + check_int("bare object list initialized", initialized(bare), 0)
+failures = failures + check_int("bare object list is object", bare is .object, 1)
+bare_signal = 0
+do
+  rc = bare.add(.box("unused") as .object)
+on signal object_not_initialized as problem
+  if problem.name() = "OBJECT_NOT_INITIALIZED" then bare_signal = 1
+end
+failures = failures + check_int("bare object list signal", bare_signal, 1)
+
+dups = .ObjectArrayList()
+same = .box("dup")
+rc = dups.add(same as .object)
+rc = dups.add(same as .Object)
+rc = dups.add(.box("second") as .object)
+failures = failures + check_int("duplicate object list size", dups.size(), 3)
+dups_it = dups.iterator()
+failures = failures + check_box("duplicate object first", dups_it.next(), "dup")
+failures = failures + check_box("duplicate object second", dups_it.next(), "dup")
+failures = failures + check_box("duplicate object third", dups_it.next(), "second")
+failures = failures + check_int("duplicate object iterator end", dups_it.hasNext(), 0)
+
+strings = .ObjectArrayList()
+rx = .rexx("a rexx string")
+rc = strings.add(rx as .object)
+rc = strings.add(rx as .Object)
+rc = strings.add(.rexx("a second rexx string") as .object)
+strings_it = strings.iterator()
+failures = failures + check_string("rexx string first", (strings_it.next() as .rexx).toString(), "a rexx string")
+failures = failures + check_string("rexx string duplicate", (strings_it.next() as .rexx).toString(), "a rexx string")
+failures = failures + check_string("rexx string second", (strings_it.next() as .rexx).toString(), "a second rexx string")
+failures = failures + check_int("rexx string iterator end", strings_it.hasNext(), 0)
+
+call_strings = .ObjectArrayList()
+call_rx = .rexx("call rexx string")
+call call_strings.add(call_rx as .object)
+call call_strings.add(call_rx as .Object)
+call call_strings.add(.rexx("call second rexx string") as .object)
+failures = failures + check_int("call rexx string size", call_strings.size(), 3)
+call_strings_it = call_strings.iterator()
+failures = failures + check_string("call rexx string first", (call_strings_it.next() as .rexx).toString(), "call rexx string")
+failures = failures + check_string("call rexx string duplicate", (call_strings_it.next() as .rexx).toString(), "call rexx string")
+failures = failures + check_string("call rexx string second", (call_strings_it.next() as .rexx).toString(), "call second rexx string")
+failures = failures + check_int("call rexx string iterator end", call_strings_it.hasNext(), 0)
+failures = failures + check_int("optional bare class default", default_bare(), 0)
+failures = failures + check_int("optional factory default", default_factory(), 1)
+
+rc = l.add(.box("B") as .object)
+rc = l.append(.box("C") as .object)
+rc = l.prepend(.box("A") as .object)
+failures = failures + check_int("object list size", l.size(), 3)
+failures = failures + check_box("object list first", l.get(1), "A")
+failures = failures + check_box("object list second", l.get(2), "B")
+failures = failures + check_box("object list third", l.get(3), "C")
+
+rc = l.insert(2, .box("X") as .object)
+failures = failures + check_int("object list insert size", l.size(), 4)
+failures = failures + check_box("object list inserted", l.get(2), "X")
+failures = failures + check_box("object list shifted", l.get(3), "B")
+
+removed = l.remove(2)
+failures = failures + check_box("object list removed", removed, "X")
+failures = failures + check_int("object list remove size", l.size(), 3)
+failures = failures + check_box("object list remove shifted", l.get(2), "B")
+
+rc = l.set(2, .box("D") as .object)
+failures = failures + check_box("object list set", l.get(2), "D")
+
+live = l.iterator()
+snapshot_it = l.snapshotIterator()
+
+rc = l.set(2, .box("Y") as .object)
+rc = l.add(.box("E") as .object)
+
+failures = failures + check_box("object snapshot first", snapshot_it.next(), "A")
+failures = failures + check_box("object snapshot stable changed", snapshot_it.next(), "D")
+failures = failures + check_box("object snapshot stable appended", snapshot_it.next(), "C")
+failures = failures + check_int("object snapshot ignores append", snapshot_it.hasNext(), 0)
+
+failures = failures + check_box("object live first", live.next(), "A")
+failures = failures + check_box("object live observes change", live.next(), "Y")
+failures = failures + check_box("object live third", live.next(), "C")
+failures = failures + check_int("object live sees append", live.hasNext(), 1)
+failures = failures + check_box("object live appended", live.next(), "E")
+failures = failures + check_int("object live end", live.hasNext(), 0)
+failures = failures + check_int("object iterable interface count", count_object_iterable(l), 4)
+
+call l.clear()
+failures = failures + check_int("object clear size", l.size(), 0)
+failures = failures + check_int("object clear empty", l.isEmpty(), 1)
+
+s = .ObjectStack()
+rc = s.push(.box("bottom") as .object)
+rc = s.push(.box("top") as .object)
+failures = failures + check_int("object stack size", s.size(), 2)
+failures = failures + check_box("object stack peek", s.peek(), "top")
+failures = failures + check_box("object stack pop top", s.pop(), "top")
+failures = failures + check_box("object stack pop bottom", s.pop(), "bottom")
+failures = failures + check_int("object stack empty", s.isEmpty(), 1)
+
+ll = .ObjectLinkedList()
+rc = ll.append(.box("A") as .object)
+rc = ll.append(.box("B") as .object)
+rc = ll.prepend(.box("Z") as .object)
+failures = failures + check_int("object linked size", ll.size(), 3)
+rc = ll.setFirst()
+failures = failures + check_box("object linked first", ll.current(), "Z")
+failures = failures + check_box("object linked next", ll.next(), "A")
+rc = ll.insertAfterCurrent(.box("X") as .object)
+failures = failures + check_box("object linked inserted next", ll.next(), "X")
+rc = ll.setLast()
+failures = failures + check_box("object linked last", ll.current(), "B")
+failures = failures + check_box("object linked previous", ll.previous(), "X")
+
+arr = .object[]
+arr = ll.toArray()
+failures = failures + check_int("object linked array size", arr[0], 4)
+failures = failures + check_box("object linked array first", arr[1], "Z")
+failures = failures + check_box("object linked array fourth", arr[4], "B")
+
+if failures <> 0 then do
+  say "Object collection failures:" failures
+  exit 1
+end
+
+say "PASS: ObjectCollections"
+exit 0
+
+check_int: procedure=.int
+  arg label=.string, actual=.int, expected=.int
+
+  if actual <> expected then do
+    say label": expected" expected "got" actual
+    return 1
+  end
+return 0
+
+check_box: procedure=.int
+  arg label=.string, actual=.object, expected=.string
+
+  item = actual as .box
+  value = item.name()
+  if value <> expected then do
+    say label": expected ["expected"] got ["value"]"
+    return 1
+  end
+return 0
+
+check_string: procedure=.int
+  arg label=.string, actual=.string, expected=.string
+
+  if actual <> expected then do
+    say label": expected ["expected"] got ["actual"]"
+    return 1
+  end
+return 0
+
+count_object_iterable: procedure=.int
+  arg collection=.ObjectIterable
+
+  it = collection.iterator()
+  count = 0
+  loop while it.hasNext()
+    item = it.next()
+    count = count + 1
+  end
+return count
+
+box: class
+  name_ = .string
+
+  *: factory
+    arg name = .string
+    name_ = name
+    return
+
+  name: method = .string
+    return name_
+
+default_bare: procedure = .int
+  arg ?item = .box
+  return initialized(item)
+
+default_factory: procedure = .int
+  arg ?item = .box("default")
+  return initialized(item)

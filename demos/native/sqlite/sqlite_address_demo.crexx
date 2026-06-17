@@ -1,0 +1,63 @@
+options levelb
+namespace sqlite_address_demo expose main
+
+main: procedure = .int
+  rows = .string[]
+  dbpath = .string
+  name = .string
+  role = .string
+  total = .string
+  env_instance = .addressenvironment
+
+  say "cREXX native SQLite ADDRESS demo"
+
+  address sqlite
+
+  dbpath = ":memory:"
+  "OPEN ${dbpath}"
+
+  "EXEC CREATE TABLE people (id INTEGER PRIMARY KEY, name TEXT, role TEXT)"
+
+  name = "Ada"
+  role = "compiler"
+  "EXEC INSERT INTO people(name, role) VALUES(:name, :role)"
+
+  name = "Grace"
+  role = "runtime"
+  "EXEC INSERT INTO people(name, role) VALUES(:name, :role)"
+
+  "QUERY SELECT id, name, role FROM people ORDER BY id" output rows
+  call show_lines("QUERY people", rows)
+
+  total = ""
+  "VALUE SELECT count(*) FROM people INTO ${total}"
+  call show_value("COUNT via INTO", total)
+
+  say "DRIVER() => " || addresscall("sqlite", "driver")
+  say "VERSION() => " || addresscall("sqlite", "version")
+  say "SCALAR(count) => " || addresscall("sqlite", "scalar", "SELECT count(*) FROM people")
+  say "CHANGES() => " || addresscall("sqlite", "changes")
+
+  env_instance = addressenv("sqlite")
+  say ""
+  say "ADDRESS instance => name=" || env_instance.environment_name() || " id=" || env_instance.environment_id()
+
+  return 0
+
+show_lines: procedure = .void
+  arg label = .string, lines = .string[]
+  say ""
+  say "== " || label
+  if lines.0 < 1 then do
+    say "(no output)"
+    return
+  end
+  do i = 1 to lines.0
+    say lines[i]
+  end
+  return
+
+show_value: procedure = .void
+  arg label = .string, value = .string
+  say label || " => " || value
+  return

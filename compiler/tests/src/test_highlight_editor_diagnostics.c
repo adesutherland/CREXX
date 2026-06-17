@@ -56,6 +56,15 @@ static void expect_true(int condition, const char *message) {
     failures = 1;
 }
 
+static void free_code_buffer_with_ep_rules(CodeBuffer *cb) {
+    if (!cb) return;
+    if (cb->ep_rules) {
+        cb_free_ep_rules(cb->ep_rules);
+        cb->ep_rules = NULL;
+    }
+    free_code_buffer(cb);
+}
+
 typedef struct TreeDiagnosticMatch {
     char severity;
     const char *message_substring;
@@ -126,7 +135,7 @@ static CodeBuffer *load_document_in_editor(const char *document_id,
     load = create_initial_load(document_id, source);
     expect_true(load != 0, "initial load should be created");
     if (!load) {
-        free_code_buffer(cb);
+        free_code_buffer_with_ep_rules(cb);
         free_stdio_communication_functions(comm);
         return 0;
     }
@@ -147,7 +156,7 @@ static CodeBuffer *load_document_in_editor(const char *document_id,
 
 static void free_editor_parse(CodeBuffer *cb, CommunicationFunctions *comm) {
     if (editor_is_parsing_thread_active()) join_parser_thread();
-    if (cb) free_code_buffer(cb);
+    free_code_buffer_with_ep_rules(cb);
     if (comm) free_stdio_communication_functions(comm);
 }
 
@@ -158,7 +167,7 @@ static void test_editor_receives_syntax_error_diagnostics(void) {
     BufferDiagnosticMatch buffer_match;
 
     comm = 0;
-    cb = load_document_in_editor("err_02_syntax.rexx", syntax_error_source, &comm);
+    cb = load_document_in_editor("err_02_syntax.crexx", syntax_error_source, &comm);
     if (!cb) return;
 
     memset(&tree_match, 0, sizeof(tree_match));
@@ -184,7 +193,7 @@ static void test_editor_receives_warning_diagnostics(void) {
     BufferDiagnosticMatch buffer_match;
 
     comm = 0;
-    cb = load_document_in_editor("test_disjoint_detailed.rexx", warning_source, &comm);
+    cb = load_document_in_editor("test_disjoint_detailed.crexx", warning_source, &comm);
     if (!cb) return;
 
     memset(&tree_match, 0, sizeof(tree_match));

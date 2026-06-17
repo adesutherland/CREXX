@@ -2,9 +2,9 @@
 
 ## Expression Operators
 
-Level B incorporates the Classic \rexx{} operators, which function similarly to their counterparts in 
-other programming languages. However, as a language with a strong typing system, \crexx{} Level B 
-introduces rules for type promotion that differ significantly from Classic \rexx{}'s string-based model.
+Level B incorporates the Classic Rexx operators, which function similarly to their counterparts in 
+other programming languages. However, as a language with a strong typing system, cRexx Level B 
+introduces rules for type promotion that differ significantly from Classic Rexx's string-based model.
 
 > **Note: Influence of `OPTIONS` and `NUMERIC`**
 >
@@ -41,13 +41,13 @@ The `OPTIONS {NUMERIC_CLASSIC|NUMERIC_COMMON}` setting determines which symbols 
 * Under **`OPTIONS NUMERIC_COMMON`**:
     * **`%`** performs the **remainder** operation.
     * **`/`** performs **integer division** if both operands are integers; otherwise, it performs normal division.
-    * **`//`** is not strickly a valid operator, however, to support legacy code, it is treated as an alias for `%`.
+    * **`//`** is not strictly a valid operator, however, to support legacy code, it is treated as an alias for `%`.
 
 ## Comparison operators
 
 ### Strict Operators renamed to String Comparison Operators
 
-\crexx{} Level B refers to what other \rexx{} dialects call strict comparison (e.g., ==, >>) as string comparison.
+cRexx Level B refers to what other Rexx dialects call strict comparison (e.g., ==, >>) as string comparison.
 
 This terminology is used intentionally to make the operator's semantics explicit within a typed language. 
 The core principle of a string comparison is that it unconditionally promotes both of its operands to the 
@@ -57,34 +57,32 @@ which clarifies its behaviour and purpose.
 
 ### Comparison Operator Categories
 
-\crexx{} provides a comprehensive set of comparison operators that fall into four categories based on two distinctions: **loose vs. string** and **case-sensitive vs. case-insensitive**.
+cRexx provides comparison operators that fall into two main categories:
+**loose** and **string**.
 
 * **Loose** operators (like `=`) perform padding to make strings of unequal length comparable and can be numeric-aware.
 * **String** operators (like `==`) require strings to be identical in length and always operate on the string representation of terms.
-* **Case-Sensitive** operators distinguish between uppercase and lowercase letters.
-* **Case-Insensitive** operators (`~~`, `~~~`) treat uppercase and lowercase letters as equivalent.
 
 The complete set of equality operators is summarised below:
 
-| Operator  | Type       | Case-Sensitive?   | Padding?   | Description                                        |
-|:----------|:-----------|:------------------|:-----------|:---------------------------------------------------|
-| `=`       | Loose      | Yes               | **Yes**    | Standard Rexx equality (numeric or padded string). |
-| `==`      | **String** | Yes               | No         | **String** character-for-character equality.       |
-| `~~`      | **Loose**  | **No**            | **Yes**    | **Case-insensitive, padded string equality.**      |
-| `~~~`     | **String** | **No**            | No         | **String, case-insensitive equality.**             |
+| Operator  | Type       | Padding?   | Description                                        |
+|:----------|:-----------|:-----------|:---------------------------------------------------|
+| `=`       | Loose      | **Yes**    | Standard Rexx equality (numeric or padded string). |
+| `==`      | **String** | No         | **String** character-for-character equality.       |
 
 Table: Comparison Operator Categories {#tbl:id}
 
 ### Standard Comparison (Case-Sensitive, Loose)
 
-These operators perform a numeric comparison if either operand is a numeric type (causing a runtime error if conversion fails).
-Otherwise, they perform a character comparison where the shorter string is padded with blanks.
+These operators perform a numeric comparison only when both operands are numeric by value after any required type conversion.
+If either operand is not numeric, they fall back to a character comparison where the shorter string is padded with blanks.
+For example, `"09" = 9` is true numerically, while `"a" > 1` is a padded string comparison and does not raise a numeric conversion error.
 
 * The numeric comparison is affected by the **`NUMERIC FUZZ`** setting.
 
-> **\crexx{} Level B Unicode String Comparison**
+> **cRexx Level B Unicode String Comparison**
 >
-> To ensure accuracy with Unicode, \crexx{} Level B enhances the standard string comparison. Before the padding and 
+> To ensure accuracy with Unicode, cRexx Level B enhances the standard string comparison. Before the padding and 
 > comparison steps, both strings are first brought into a consistent representation by applying Unicode Normalization 
 > Form C (NFC). 
 
@@ -105,7 +103,7 @@ Table: Standard Comparison Operators {#tbl:id}
 ### String Comparison (Case-Sensitive) a.k.a. Strict Comparison
 
 These operators perform what is known in other rexx dialects as a **strict** comparison. 
-\crexx{} refers to them as **string comparisons** to emphasize their semantics: they *always* operate on the string 
+cRexx refers to them as **string comparisons** to emphasize their semantics: they *always* operate on the string 
 representation of the terms.
 
 Before the comparison, both operands are **promoted to the `.string` type**. This forces a character-by-character comparison 
@@ -132,38 +130,11 @@ Numeric literals are compared by their numeric value after stringification, not 
 
 Table: String Comparison Operators {#tbl:id}
 
-### Approximate Comparison (Case-Insensitive, Loose) `~~`
-
-The `~~` operator is the case-insensitive equivalent of the standard `=` operator. It performs a **loose** comparison.
-
-1.  Both strings undergo a full Unicode case-fold.
-2.  The shorter of the two resulting strings is padded on the right with blanks to match the length of the longer string.
-3.  The strings are then compared.
-
-<!-- end list -->
-
-* `'Hello' ~~ 'hello '` -\> **true** (After case-folding, `'hello'` is padded to match.)
-* The negated forms are `¬~~` and `/~~`.
-
-### String Approximate Comparison (Case-Insensitive) `~~~`
-
-The `~~~` operator is the case-insensitive version of the string comparison operator `==`. Like `==`, it 
-first **promotes both operands to their string representation**.
-
-1.  Both strings undergo a full Unicode case-fold.
-2.  The strings are then compared directly with **no padding**. They must be identical in content and length after case-folding.
-
-<!-- end list -->
-
-* `'Hello' ~~~ 'hello'` -\> **true**
-* `'Hello' ~~~ 'hello '` -\> **false** (Lengths are different.)
-* The negated forms are `¬~~~` and `/~~~`.
-
 ## String Concatenation
 
 | Operator        | Description                                                                 |
 |:----------------|:----------------------------------------------------------------------------|
-| `\|\|`          | Concatenate terms (with no blank between them)                              |
+| `||`            | Concatenate terms (with no blank between them)                              |
 | space (`     `) | Concatenate with a single space added between terms                         |
 | abuttal         | Concatenate without a space (i.e., no space between a literal and variable) |
 
@@ -174,7 +145,7 @@ Table: String Concatenation Operators {#tbl:id}
 | Operator   | Description                                                     |
 |:-----------|:----------------------------------------------------------------|
 | `&`        | AND (returns `1` if both terms are true)                        |
-| `\|`       | Inclusive OR (returns `1` if either term is true)               |
+| `|`        | Inclusive OR (returns `1` if either term is true)               |
 | `&&`       | Exclusive OR (returns `1` if either term is true, but not both) |
 | Prefix `¬` | Logical NOT (negates; `1` becomes `0` and vice versa)           |
 
@@ -189,20 +160,53 @@ Table: Logical Operators {#tbl:id}
 
 Table: Term Operators {#tbl:id}
 
+## Reference Expressions
+
+Level B reference operations use word-form expressions:
+
+| Form | Description |
+|:-----|:------------|
+| `reference target` | Create a weak reference to aliasable storage. |
+| `local = dereference ref` | Link a current-scope local variable to the current reference target until scope exit. |
+| `snapshot ref` | Make an explicit deep copy of the current reference target. |
+| `refvalid(ref)` | Return whether the weak reference currently has a valid target. |
+
+The operand of `reference` must be storage such as a local, exposed argument or
+global, method `self`, an object/array attribute, or an array element. It must
+not be a temporary expression. `dereference` and `snapshot` raise
+`REFERENCE_INVALID` if the target has expired.
+
+`dereference` must be used as the right side of an assignment to a local
+variable in the current procedure or block scope. It cannot assign through an
+attribute, array element, exposed global, argument, or expression. Use
+`snapshot ref` when a value copy is needed.
+
+Level B does not implicitly treat a reference value as the referenced target for
+member calls or index operations. Code must write `local = dereference ref` for
+a scoped live link, `snapshot ref` for a deep copy, or pass a `reference .T`
+value to code that expects a reference. Convenience forms such as
+`itemsRef[i]`, `itemsRef[i] = value`, and `listRef.add(value)` are reserved for
+possible Level G live-access syntax.
+
 ## Operator Precedence
 
 The order of priority of the operators (from highest to lowest). Note that the `OPTIONS` instruction affects the precedence and associativity of certain operators.
 
-| Priority  | Operators                      | Description                         | Notes                                                                                                                                                             |
-|:----------|:-------------------------------|:------------------------------------|:------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| 1         | `()` `[]` `.`                  | Term operators (grouping, indexing) |                                                                                                                                                                   |
-| 2         | Prefix `+` `-` `¬`             | Unary operators                     | **`OPTIONS NUMERIC_CLASSIC`**: Prefix `-` has higher priority than `**`.                                                                                           |
-| 3         | `**`                           | Exponentiation                      | **`NUMERIC_CLASSIC`**: Left-associative and has lower priority than Prefix `-`.<br>**`NUMERIC_COMMON`**: Right-associative and has higher priority than Prefix `-`. |
-| 4         | `*` `/` `%` `//`               | Multiply and divide                 | Which operators are valid depends on `OPTIONS`.                                                                                                                   |
-| 5         | `+` `-`                        | Add and subtract                    |                                                                                                                                                                   |
-| 6         | `\|\|` (space, abuttal)        | Concatenation                       |                                                                                                                                                                   |
-| 7         | `=` `>` `<` `==` `~~` `~~~`... | All comparison operators            |                                                                                                                                                                   |
-| 8         | `&`                            | Logical AND                         |                                                                                                                                                                   |
-| 9         | `\|` `&&`                      | Logical OR and exclusive OR         |                                                                                                                                                                   |
+| Priority  | Operators                      | Description                         | Notes  |
+|-----------|--------------------------------|-------------------------------------|--------|
+| 1         | `()` `[]` `.`                  | Term operators (grouping, indexing) |        |
+| 2         | Prefix `+` `-` `¬`             | Unary operators                     | [^1]   |
+| 3         | `**`                           | Exponentiation                      | [^2],[^3] |
+| 4         | `*` `/` `%` `//`               | Multiply and divide                 | [^4]   |
+| 5         | `+` `-`                        | Add and subtract                    |        |
+| 6         | `||` (space, abuttal)          | Concatenation                       |        |
+| 7         | `=` `>` `<` `==`...            | All comparison operators            |        |
+| 8         | `&`                            | Logical AND                         |        |
+| 9         | `|` `&&`                       | Logical OR and exclusive OR         |        |
 
 Table: Operator Priorities {#tbl:id}
+
+[^1]: **`OPTIONS NUMERIC_CLASSIC`**: Prefix `-` has higher priority than `**`.
+[^2]: **`NUMERIC_CLASSIC`**: Left-associative and has lower priority than Prefix `-`. 
+[^3]: **`NUMERIC_COMMON`**: Right-associative and has higher priority than Prefix `-`.
+[^4]: Which operators are valid depends on `OPTIONS`.

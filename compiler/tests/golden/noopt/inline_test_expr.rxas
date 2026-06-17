@@ -1,65 +1,74 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_expr.rexx
- * BUILT                  : 2026-03-26 08:59:13
+ * SOURCE                 : inline_test_expr.crexx
+ * BUILT                  : 2026-05-27 17:53:17
  */
 
-.srcfile="inline_test_expr.rexx"
 .globals=0
 
 main() .locals=7
    .meta "inline_test_expr.main"="b" ".int" main() ""
-   .src 3:1="main: procedure = .int"
+   .srcstep 11 11 17 "inline_test_expr.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:3="say \"Starting inline expr test...\""
+   .srcstep 1 1 17 "inline_test_expr.crexx" 4 3 37 "  say \"Starting inline expr test...\""
    say "Starting inline expr test..."
-   .src 5:3="do"
-   .src 5:6="i = 1"
+   .srcstep 7 7 17 "inline_test_expr.crexx" 5 3 5 "  do i = 1 to 4"
+   .srcstep 2 2 17 "inline_test_expr.crexx" 5 6 11 "  do i = 1 to 4"
    .meta "inline_test_expr.main.i"="b" ".int" r0
    load r0,1
-   .src 5:12="to 4"
+   .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "i" ""
+   .srcstep 3 3 17 "inline_test_expr.crexx" 5 12 16 "  do i = 1 to 4"
    load r2,4
+   .traceevent "L" 4 "R" "I" "r" 2 0 0 0 "" ""
 l8dostart:
-   .src 5:12="to 4"
+   .srcstep 3 3 17 "inline_test_expr.crexx" 5 12 16 "  do i = 1 to 4"
    igt r3,r0,r2
    brt l8doend,r3
-   .src 6:5="result = 10 + addOne(i)"
+   .srcstep 5 5 17 "inline_test_expr.crexx" 6 5 28 "    result = 10 + addOne(i)"
    .meta "inline_test_expr.main.result"="b" ".int" r1
+   .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
    load r4,1
    swap r5,r0
    call r6,addOne(),r4
    swap r0,r5
+   .traceevent "F" 4 "R" "I" "r" 6 5 5 0 "addone" ""
    iadd r1,r6,10
-   .src 7:5="say \"Computed\" result"
+   .traceevent "O" 4 "R" "I" "r" 1 5 5 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 5 5 0 "result" ""
+   .srcstep 6 6 17 "inline_test_expr.crexx" 7 5 26 "    say \"Computed\" result"
    itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 6 6 0 "result" ""
    sconcat r6,"Computed",r1
+   .traceevent "O" 4 "R" "S" "r" 6 6 6 0 "" ""
    say r6
 l8doinc:
-   .src 5:6="i"
+   .srcstep 4 4 17 "inline_test_expr.crexx" 5 6 7 "  do i = 1 to 4"
    inc r0
-   .src 8:3="end"
+   .srcstep 8 8 17 "inline_test_expr.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
-   .src 9:3="say \"Inline expr test finished.\""
+   .srcstep 9 9 17 "inline_test_expr.crexx" 9 3 35 "  say \"Inline expr test finished.\""
    say "Inline expr test finished."
-   .src 10:3="return 0"
+   .srcstep 10 10 17 "inline_test_expr.crexx" 10 3 11 "  return 0"
    ret 0
 
 addOne() .locals=2
    .meta "inline_test_expr.addone"="b" ".int" addOne() "val=.int"
-   .src 12:1="addOne: procedure = .int"
+   .srcstep 14 14 17 "inline_test_expr.crexx" 12 1 25 "addOne: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 13:7="val = .int"
+   .srcstep 12 12 17 "inline_test_expr.crexx" 13 7 17 "  arg val = .int"
    .meta "inline_test_expr.addone.val"="b" ".int" a1
-   .src 14:3="return val + 1"
+   .srcstep 13 13 17 "inline_test_expr.crexx" 14 3 17 "  return val + 1"
+   .traceevent "V" 6 "R" "I" "a" 1 13 13 0 "val" ""
    iadd r1,a1,1
+   .traceevent "O" 4 "R" "I" "r" 1 13 13 0 "" ""
    ret r1
    .meta "inline_test_expr.addone.val"

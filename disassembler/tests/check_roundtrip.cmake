@@ -32,8 +32,22 @@ if(NOT _rxdas_rc EQUAL 0)
             "stderr:\n${_rxdas_err}")
 endif()
 
+set(_needs_disassembly_text OFF)
 if(DEFINED REQUIRE_NO_UNKNOWN AND REQUIRE_NO_UNKNOWN)
+    set(_needs_disassembly_text ON)
+endif()
+foreach(_expect_index RANGE 1 8)
+    set(_expect_var "EXPECT_DISASSEMBLY_TEXT_${_expect_index}")
+    if(DEFINED ${_expect_var} AND NOT "${${_expect_var}}" STREQUAL "")
+        set(_needs_disassembly_text ON)
+    endif()
+endforeach()
+
+if(_needs_disassembly_text)
     file(READ "${_disassembly}" _disassembly_text)
+endif()
+
+if(DEFINED REQUIRE_NO_UNKNOWN AND REQUIRE_NO_UNKNOWN)
     string(FIND "${_disassembly_text}" "UNKNOWN" _unknown_index)
     if(NOT _unknown_index EQUAL -1)
         message(FATAL_ERROR
@@ -41,6 +55,19 @@ if(DEFINED REQUIRE_NO_UNKNOWN AND REQUIRE_NO_UNKNOWN)
                 "disassembly: ${_disassembly}")
     endif()
 endif()
+
+foreach(_expect_index RANGE 1 8)
+    set(_expect_var "EXPECT_DISASSEMBLY_TEXT_${_expect_index}")
+    if(DEFINED ${_expect_var} AND NOT "${${_expect_var}}" STREQUAL "")
+        string(FIND "${_disassembly_text}" "${${_expect_var}}" _expect_found)
+        if(_expect_found EQUAL -1)
+            message(FATAL_ERROR
+                    "Expected text missing from disassembly for ${INPUT_RXBIN}\n"
+                    "expected: ${${_expect_var}}\n"
+                    "disassembly: ${_disassembly}")
+        endif()
+    endif()
+endforeach()
 
 execute_process(
         COMMAND "${RXAS}" -o "${_reassembled_base}" "${_disassembly}"

@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : 11_scope.rexx
- * BUILT                  : 2026-03-18 11:58:55
+ * SOURCE                 : 11_scope.crexx
+ * BUILT                  : 2026-05-27 17:52:53
  */
 
-.srcfile="11_scope.rexx"
 .globals=0
 
 main() .locals=3
@@ -14,43 +12,52 @@ main() .locals=3
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 3:1="a = 50"
+   .srcstep 1 1 17 "11_scope.crexx" 3 1 7 "a = 50"
    .meta "11_scope.main.a"="b" ".int" r0
    load r0,50
-   .src 4:1="call Inner"
+   .traceevent "L" 4 "R" "I" "r" 0 1 1 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 1 1 0 "a" ""
+   .srcstep 2 2 17 "11_scope.crexx" 4 1 11 "call Inner"
    load r1,0
    call r2,Inner(),r1
-   .src 5:0="if a = 50"
+   .traceevent "F" 4 "R" "V" "r" 2 2 2 0 "inner" ""
+   .srcstep 5 5 17 "11_scope.crexx" 5 1 10 "if a = 50 then say \"Outer A Preserved\""
+   .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "a" ""
    ieq r1,r0,50
+   .traceevent "O" 4 "R" "B" "r" 1 5 5 0 "" ""
    brf l17iffalse,r1
-   .src 5:11="then"
-   .src 5:16="say \"Outer A Preserved\""
+   .srcstep 6 6 17 "11_scope.crexx" 5 11 15 "if a = 50 then say \"Outer A Preserved\""
+   .srcstep 3 3 17 "11_scope.crexx" 5 16 39 "if a = 50 then say \"Outer A Preserved\""
    say "Outer A Preserved"
    br l17ifend
-   .src 6:1="else"
+   .srcstep 7 7 17 "11_scope.crexx" 6 1 5 "else say \"Outer A Corrupted\""
 l17iffalse:
-   .src 6:6="say \"Outer A Corrupted\""
+   .srcstep 4 4 17 "11_scope.crexx" 6 6 29 "else say \"Outer A Corrupted\""
    say "Outer A Corrupted"
 l17ifend:
-   .src 7:1="return"
+   .srcstep 8 8 17 "11_scope.crexx" 7 1 7 "return"
    ret
    .meta "11_scope.main.a"
 
 Inner() .locals=2
    .meta "11_scope.inner"="b" ".void" Inner() ""
-   .src 9:1="Inner: procedure"
+   .srcstep 12 12 17 "11_scope.crexx" 9 1 17 "Inner: procedure"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 10:3="a = 10"
+   .srcstep 9 9 17 "11_scope.crexx" 10 3 9 "  a = 10"
    .meta "11_scope.inner.a"="b" ".int" r0
    load r0,10
-   .src 11:3="say \"Inner A is\" a"
+   .traceevent "L" 4 "R" "I" "r" 0 9 9 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 9 9 0 "a" ""
+   .srcstep 10 10 17 "11_scope.crexx" 11 3 21 "  say \"Inner A is\" a"
    itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 10 10 0 "a" ""
    sconcat r1,"Inner A is",r0
+   .traceevent "O" 4 "R" "S" "r" 1 10 10 0 "" ""
    say r1
-   .src 12:3="return"
+   .srcstep 11 11 17 "11_scope.crexx" 12 3 9 "  return"
    ret
    .meta "11_scope.inner.a"

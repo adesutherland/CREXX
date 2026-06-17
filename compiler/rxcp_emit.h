@@ -30,21 +30,11 @@
 #define CREXX_RXCP_EMIT_H
 
 #include "rxcp_types.h"
+#include "rxflags.h"
+#include "rxbin.h"
 
 #define UNSET_REGISTER (-1)
 #define DONT_ASSIGN_REGISTER (-2)
-
-/* Register Type Flag Byte Values */
-/* Used for optional arguments ONLY
- * set (1) means the register has a specified value */
-#define REGTP_VAL 1
-
-/* Used for "pass be value" large (strings, objects) registers ONLY
- * set (2) means that it is not a symbol so does not need copying as even if it is
- * changed the caller will not use its original value
- * Note: Small registers (int, float) are always copied as this is faster than
- *       setting and checking this flag anyway */
-#define REGTP_NOTSYM 2
 
 typedef struct walker_payload {
     Context *context;
@@ -59,7 +49,7 @@ struct OutputFragment {
     char *output;
 };
 
-extern const char* emit_promotion[9][9];
+extern const char* emit_promotion[10][10];
 
 OutputFragment *output_f();
 OutputFragment *output_fs(char* text);
@@ -81,6 +71,38 @@ char* get_metaline_clause(ASTNode *node);
 char* get_metaline_token_at(ASTNode *node);
 char* get_comment(ASTNode *node, char* prefix);
 char* get_comment_line_number_only(ASTNode *node, char* comment_text);
+unsigned int trace_source_step_id_from_metaline(const char *metaline);
+unsigned int trace_clause_id_from_metaline(const char *metaline);
+char *trace_symbol_name_malloc(ASTNode *node);
+char *trace_event_metaline(char kind,
+                           unsigned int mode_mask,
+                           char value_source,
+                           ValueType value_type,
+                           char register_type,
+                           int value_ref,
+                           unsigned int source_step_id,
+                           unsigned int clause_id,
+                           unsigned int flags,
+                           const char *symbol,
+                           const char *resolved_name);
+char *trace_event_register_metaline(char kind,
+                                    unsigned int mode_mask,
+                                    ASTNode *value_node,
+                                    unsigned int source_step_id,
+                                    unsigned int clause_id,
+                                    const char *symbol,
+                                    const char *resolved_name);
+void output_append_trace_event_register(OutputFragment *output,
+                                        char kind,
+                                        unsigned int mode_mask,
+                                        ASTNode *value_node,
+                                        unsigned int source_step_id,
+                                        unsigned int clause_id,
+                                        const char *symbol,
+                                        const char *resolved_name);
+void output_apply_trace_source_ids(OutputFragment *output,
+                                   unsigned int source_step_id,
+                                   unsigned int clause_id);
 
 void type_promotion(ASTNode *node);
 void add_variable_metadata(ASTNode* node);

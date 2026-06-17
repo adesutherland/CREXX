@@ -23,7 +23,7 @@ on:
 jobs:
   analyze:
     name: Analyze
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
@@ -42,7 +42,7 @@ jobs:
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
-      uses: github/codeql-action/init@v3
+      uses: github/codeql-action/init@v4
       with:
         languages: ${{ matrix.language }}
         # If you wish to specify custom queries, you can do so here or in a config file.
@@ -53,7 +53,7 @@ jobs:
     # Autobuild attempts to build any compiled languages  (C/C++, C#, or Java).
     # If this step fails, then you should remove it and run the build manually (see below)
     # - name: Autobuild
-    #  uses: github/codeql-action/autobuild@v3
+    #  uses: github/codeql-action/autobuild@v4
 
     # ℹ️ Command-line programs to run using the OS shell.
     # 📚 https://git.io/JvXDl
@@ -65,12 +65,16 @@ jobs:
     #- run: |
     #   make bootstrap
     #   make release
-    - name: Run CMAKE
-      uses: lukka/run-cmake@v3
-      with:
-        # Select the build configuration, typically Debug or Release.
-        cmakeBuildType: Debug # optional, default is Debug
-        buildDirectory: "${{ runner.temp }}/build"
+    - name: Configure CMake
+      shell: bash
+      run: |
+        cmake -S . -G Ninja -B "${{ runner.temp }}/build" \
+          -DCMAKE_BUILD_TYPE=Debug
+
+    - name: Build
+      shell: bash
+      run: |
+        cmake --build "${{ runner.temp }}/build" --parallel 2
 
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v3
+      uses: github/codeql-action/analyze@v4

@@ -1,6 +1,6 @@
-# Running \crexx{} on Linux, macOS, and Windows
+# Running cRexx on Linux, macOS, and Windows
 
-\crexx{} programs are compiled before they run. The compiler emits RXAS
+cRexx programs are compiled before they run. The compiler emits RXAS
 assembly, the assembler emits RXBIN bytecode, and a VM executable runs the
 bytecode.
 
@@ -8,7 +8,7 @@ For most users, the `crexx` driver is the simplest entry point.
 
 ## A First Program
 
-Create `hello.rexx`:
+Create `hello.crexx`:
 
 ```rexx
 options levelb
@@ -22,7 +22,7 @@ return 0
 Run it with:
 
 ```bash
-crexx hello.rexx
+crexx hello.crexx
 ```
 
 The driver compiles, assembles, and executes the program. It keeps
@@ -48,7 +48,7 @@ from driver convenience.
 The equivalent explicit tool sequence is:
 
 ```bash
-rxc hello.rexx
+rxc hello.crexx
 rxas hello.rxas
 rxvme hello.rxbin
 ```
@@ -81,6 +81,11 @@ import roots. With the `crexx` driver, `-s[path]` and `-i[path]` affect the
 compiler phase only. Runtime/native loading still uses the runtime library path
 controlled by `-l`.
 
+The source file's directory is not an implicit binary import root. If a local
+`.rxbin` is meant to provide compile-time signatures or class/interface
+metadata, pass that directory with `-i`; this keeps stale generated `.rxbin`
+files from unexpectedly winning over source edits.
+
 ## Linked Images
 
 For deployable bytecode, link the needed modules:
@@ -99,7 +104,7 @@ load as a normal RXBIN file.
 The `crexx` driver can package a native executable:
 
 ```bash
-crexx hello.rexx -native
+crexx hello.crexx -native
 ```
 
 Native packaging links the bytecode image, serializes it with `rxcpack`, and

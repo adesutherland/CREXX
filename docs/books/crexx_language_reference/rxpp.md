@@ -1,6 +1,6 @@
 # The Preprocessor
 
-`rxpp` is a precompiler for \rexx{} scripts designed to run within the \crexx{} environment. It provides a lightweight macro system that allows developers to define and expand code snippets before the script is interpreted.
+`rxpp` is a preprocessor for Rexx scripts designed to run within the cRexx environment. It provides a lightweight macro system that allows developers to define and expand code snippets before the script is interpreted.
 
 
 
@@ -10,8 +10,8 @@ RXPP macros:
 
 * Define code templates that can be reused
 * Allow parameter substitution (including variadic parameters)
-* Are expanded at *compile time* (before \crexx{} execution)
-* Help simplify and modularize REXX code
+* Are expanded at *compile time* (before cRexx execution)
+* Help simplify and modularize Rexx code
 
 ## Macro Definition
 
@@ -27,8 +27,8 @@ Or, without arguments:
 ##define MACRONAME {macro body}
 ```
 
-* Macros must be defined **before** they're used as the pre-compiler is a one-pass compiler
-* Multiple REXX statements within a macro must be separated by a semicolon (`;`)
+* Macros must be defined *before* they arere used as the pre-compiler is a one-pass compiler
+* Multiple Rexx statements within a macro must be separated by a semicolon (`;`)
 * The macro body is enclosed in `{}` and treated as replacement text
 * RXPP supports multi-line macro definitions using C-style line continuation syntax!
 
@@ -44,14 +44,14 @@ However, /* ... */-style comments may appear before the backslash. ## comments a
 
 ## Macro Invocation
 
-A macro can be invoked like a function in REXX:
+A macro can be invoked like a function in Rexx:
 
 ```rexx <!--rxppfile4.rxpp-->
 say DOUBLE(4)
 say debug()       /* note: macros defined without parameters must be called with an empty parameter list */
 ```
 
-They can also act as commands which expand into a series of REXX statements. For example:
+They can also act as commands which expand into a series of Rexx statements. For example:
 
 ```rexx <!--rxppfile5.rxpp-->
 ##define Liststem(stem) {do _indx=1 to stem.0; say stem._indx ; end}
@@ -112,7 +112,7 @@ RXPP -i input.rexx -o output.rexx -m macro_library.rexx
 
 This method automatically includes the macro library at the start of preprocessing, making it ideal for standard or shared macro definitions.
 
-These options allow for clean, modular macro organization and reuse across multiple REXX programs.
+These options allow for clean, modular macro organization and reuse across multiple Rexx programs.
 
 
 
@@ -155,8 +155,6 @@ This will repeat the macro body as many times as there are variadic arguments.
 * Final expanded code lines are stored in `outbuf.` and written to the output file
 * Original macro lines are commented out to preserve source readability and prevent reprocessing
 
-
-
 ## Example
 
 ### Input:
@@ -173,16 +171,12 @@ say DOUBLE(4)
 say 2*4
 ```
 
-
-
 ##  Benefits
 
 * Lightweight and fast preprocessing
 * Makes code more readable and reusable
 * Supports complex patterns like loops and variadic templates
-* Plays well with standard \crexx{} tooling
-
-
+* Plays well with standard cRexx tooling
 
 ## Common Use Cases
 
@@ -190,8 +184,6 @@ say 2*4
 * **Loop templates** (`foreach(stem, index)`)
 * **Inline math expressions** (`SQUARE(x)`, `DOUBLE(x)`)
 * **Data initialization** (`stemlist(name, ...)`)
-
-
 
 ## Invocation Syntax
 
@@ -201,8 +193,8 @@ RXPP is called with the following syntax:
 RXPP -i input-rexx-to-be-compiled -o compiled-rexx -m optional-macro-library
 ```
 
-* `-i`: Input REXX file to be precompiled
-* `-o`: Output file with expanded REXX code
+* `-i`: Input Rexx file to be precompiled
+* `-o`: Output file with expanded Rexx code
 * `-m`: Optional macro library file to include
 
 
@@ -221,19 +213,19 @@ Here are some useful sample macros and their purposes:
 ##define log(msg) {call lineout('log.txt', msg)}   /* Write a log message to a file */
 ```
 
-These macros simplify routine tasks and make your REXX code shorter and clearer.
+These macros simplify routine tasks and make your Rexx code shorter and clearer.
 
 
 ##  RXPP Preprocessor Directives 
 
-RXPP supports a set of preprocessor-style directives for conditional compilation, macro expansion control, and variable handling. These are executed during preprocessing, before REXX interpretation.
+RXPP supports a set of preprocessor-style directives for conditional compilation, macro expansion control, and variable handling. These are executed during preprocessing, before Rexx interpretation.
 
 
 
 
 ### `##USE file`
 
-Like `##INCLUDE`, this directive injects the contents of the specified file into the source code, **but defers its inclusion to the end of the resulting REXX script**.
+Like `##INCLUDE`, this directive injects the contents of the specified file into the source code, **but defers its inclusion to the end of the resulting Rexx script**.
 
 This is particularly useful for appending utility code, subroutines, or deferred content without disrupting the main control flow of the primary script.
 
@@ -243,7 +235,7 @@ This is particularly useful for appending utility code, subroutines, or deferred
 ##USE myfooter.rexx
 ```
 
-**Behavior:**
+**Behaviour:**
 
 - Contents of `myfooter.rexx` are read during preprocessing.
 - The code is **appended** at the **end** of the final output file.
@@ -253,7 +245,7 @@ This is particularly useful for appending utility code, subroutines, or deferred
 
 ### `##DATA array-name`
 
-The **##DATA** directive allows you to define literal data lines directly within the source rxppfile. These lines are assigned to a REXX stem array under the specified array-name.
+The **##DATA** directive allows you to define literal data lines directly within the source rxppfile. These lines are assigned to a Rexx stem array under the specified array-name.
 
 Each line is initially read as written, with surrounding quotes (single or double) preserved to retain the intended string content. Quotes within strings are not escaped or altered during this step.
 
@@ -271,7 +263,7 @@ cherry
 ##end
 ```
 
-**Behavior:**
+**Behaviour:**
 
 - Populates the stem `fruits.` as follows:
 
@@ -312,7 +304,7 @@ param2
 param3
 ##end
 
-Behavior:
+Behaviour:
 
 Creates a stem SYSIN. with each line as an entry:
 
@@ -360,15 +352,15 @@ Use the following flags in `cflags` to control diagnostic output during the pre-
 
 | Option       | Description                                                                                                                      |
 |--------------|----------------------------------------------------------------------------------------------------------------------------------|
-| **def**      | Displays all `##DEFINE` instructions present in the source file. Definitions from `maclib` are never shown.                      |
-| **set**      | Displays all `##SET` instructions. If not set, these instructions are suppressed from output.                                    |
-| **iflink**   | Shows the linkage between `##IF` / `##IFN` and their corresponding `##ELSE` and `##ENDIF` instructions.                          |
-| **1buf**     | Displays the raw source input immediately after it is read from the file.                                                        |
-| **2buf**     | Displays the source buffer after the second processing pass, where conditional instructions (`##IF` / `##ENDIF`) are structured. |
-| **3buf**     | Displays the final source buffer just before it is passed to the pre-compiler.                                                   |
-| **vars**     | Prints all defined variables, including internal variables and those set via `##SET`.                                            |
-| **maclist**  | Displays all loaded macro definitions, including those imported via `maclib`.                                                    |
-| **includes** | Lists all modules imported via `##INCLUDE` and `##USE` directives, including recursively nested dependencies.                    |
+| def      | Displays all `##DEFINE` instructions present in the source file. Definitions from `maclib` are never shown.                      |
+| set      | Displays all `##SET` instructions. If not set, these instructions are suppressed from output.                                    |
+| iflink   | Shows the linkage between `##IF` / `##IFN` and their corresponding `##ELSE` and `##ENDIF` instructions.                          |
+| 1buf     | Displays the raw source input immediately after it is read from the file.                                                        |
+| 2buf     | Displays the source buffer after the second processing pass, where conditional instructions (`##IF` / `##ENDIF`) are structured. |
+| 3buf     | Displays the final source buffer just before it is passed to the pre-compiler.                                                   |
+| vars     | Prints all defined variables, including internal variables and those set via `##SET`.                                            |
+| maclist  | Displays all loaded macro definitions, including those imported via `maclib`.                                                    |
+| includes | Lists all modules imported via `##INCLUDE` and `##USE` directives, including recursively nested dependencies.                    |
 If a specific flag is not set, the corresponding option is disabled by default. Alternatively, you can explicitly disable an option by prefixing the flag with n (e.g., nset, n1buf, etc.)
 
 **Example:**
@@ -379,7 +371,7 @@ If a specific flag is not set, the corresponding option is disabled by default. 
 
 ### `##SET var value`
 
-Defines or updates a preprocessor variable. These variables can be embedded within standard REXX statements, macros, or ##DATA content definitions.
+Defines or updates a preprocessor variable. These variables can be embedded within standard Rexx statements, macros, or ##DATA content definitions.
 
 The value assigned is processed as follows:
 * Any trailing comment (defined by ##comment or /* comment */) on the same line is removed.
@@ -405,13 +397,13 @@ Usage:
 #end  
 ```
 
-The **PRINTGEN** variable controls whether generation steps are logged as comments in the generated REXX script. This does not affect whether the generation steps are performed — it only affects what is visible in the output.
+The **PRINTGEN** variable controls whether generation steps are logged as comments in the generated Rexx script. This does not affect whether the generation steps are performed — it only affects what is visible in the output.
 
 ```rexx <!--rxppfile22.rxpp-->
 ##SET PRINTGEN ALL
 ```
 
-Logs all generation steps, including nested ones, as comments in the generated REXX script.
+Logs all generation steps, including nested ones, as comments in the generated Rexx script.
 
 ```rexx <!--rxppfile23.rxpp-->
 ##SET PRINTGEN NONE
@@ -562,11 +554,11 @@ Closes the nearest open `##IF` or `##IFN` block.
 
 
 
-## Behavior Notes
+## Behaviour Notes
 
 | Feature                        | Description                                                          |
 | ------------------------------ | -------------------------------------------------------------------- |
-| **Nested `##IF`/`##IFN` blocks** | Fully supported, including combinations (e.g., `##IF` inside `##IFN`) |
+| Nested `##IF`/`##IFN` blocks | Fully supported, including combinations (e.g., `##IF` inside `##IFN`) |
 | Case                        | Variable names are case-insensitive                                  |
 | Variable scope              | All variables are global to the precompiler pass                     |
 | Processing stages           | All `##IF`/`##IFN` are evaluated before macro expansion              |
@@ -599,33 +591,33 @@ Silent debug
 
 
 
-<!-- ## RXPP + \crexx{} Build System Documentation -->
+<!-- ## RXPP + cRexx Build System Documentation -->
 
 
-<!-- This document combines the functionality of the RXPP macro preprocessor and the full \crexx{} script processing pipeline, including both Windows batch and Linux shell versions. -->
+<!-- This document combines the functionality of the RXPP macro preprocessor and the full cRexx script processing pipeline, including both Windows batch and Linux shell versions. -->
 
 
 
 <!-- ### Overview -->
 
-<!-- * **RXPP** handles macro expansion for \crexx{} source files. -->
-<!-- * **rxCREXX** is the master script (batch or shell) that handles: precompile → compile → assemble → run phases based on input flags. -->
-<!-- * Scripts are modular and support plugin-based builds using REXX virtual machine tools. -->
+<!-- * **RXPP** handles macro expansion for cRexx source files. -->
+<!-- * **rxCRexx** is the master script (batch or shell) that handles: precompile → compile → assemble → run phases based on input flags. -->
+<!-- * Scripts are modular and support plugin-based builds using Rexx virtual machine tools. -->
 
 
 
 <!-- ## 🚀 Usage Example -->
 
-<!-- To execute a full CREXX processing pipeline: -->
+<!-- To execute a full CRexx processing pipeline: -->
 
 <!-- ```bash -->
-<!-- ./rxCREXX.sh PCAR macro1.rxpp macro1.rexx maclib.rexx -->
+<!-- ./rxCRexx.sh PCAR macro1.rxpp macro1.rexx maclib.rexx -->
 <!-- ``` -->
 
 <!-- Or on Windows: -->
 
 <!-- ```bat -->
-<!-- rxCREXX.bat PCAR macro1.rxpp macro1.rexx maclib.rexx -->
+<!-- rxCRexx.bat PCAR macro1.rxpp macro1.rexx maclib.rexx -->
 <!-- ``` -->
 
 <!-- **Where:** -->
@@ -651,7 +643,7 @@ Silent debug
 
 <!-- **Generated Files:** -->
 
-<!-- * `macro1.rexx`: RXPP-expanded output (precompiled REXX) -->
+<!-- * `macro1.rexx`: RXPP-expanded output (precompiled Rexx) -->
 <!-- * `macro1.obj` or similar: compiled object/bytecode -->
 <!-- * Final executable or linked result (e.g., binary or VM-loadable code) -->
 
@@ -672,7 +664,7 @@ Silent debug
 <!--    [Precompile - RXPP] -->
 <!--         │     (rxprecomp.sh → macro1.rexx) -->
 <!--         ▼ -->
-<!--   macro1.rexx (generated REXX) -->
+<!--   macro1.rexx (generated Rexx) -->
 <!--         │ -->
 <!--         ▼ -->
 <!--    [Compile - rxc] -->
@@ -696,7 +688,7 @@ Silent debug
 | ------------------------------ | -------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `command not found`            | Script path or permissions                   | Ensure `chmod +x *.sh` is run and the script is in your PATH or called directly (`./script.sh`) |
 | `No such file or directory`    | File path typo or missing input              | Check that input files like `macro1.rxpp` or `maclib.rexx` exist and match case exactly         |
-| Compilation fails              | Missing macro expansion or syntax error      | Verify `rxpp` macro resolves correctly and input REXX syntax is valid                           |
+| Compilation fails              | Missing macro expansion or syntax error      | Verify `rxpp` macro resolves correctly and input Rexx syntax is valid                           |
 | `member` variable is empty     | `basename` failed or wrong file name passed  | Make sure the third parameter is a valid filename (e.g. `macro1.rexx`)                          |
 | Output missing                 | Incorrect config path or script failure      | Check values in `rxconfig.sh` and run with `set -x` to debug                                    |
 | No execution / No output shown | `RUN` flag missing or script silently failed | Include `R` in flags and add `echo`/`set -x` in run script to trace it                          |

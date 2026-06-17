@@ -1,9 +1,0 @@
-options levelb comments_dash
-import rexx
-
-flag=.boolean
-flag=1
-v=.rexx(' - 12.73')
-flag=flag & (v.format() = '-12.73')
-
-say \flag

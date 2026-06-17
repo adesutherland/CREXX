@@ -1,84 +1,94 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_object_writable_arg.rexx
- * BUILT                  : 2026-04-30 20:04:11
+ * SOURCE                 : inline_test_object_writable_arg.crexx
+ * BUILT                  : 2026-06-12 20:26:06
  */
 
 .meta "inline_test_object_writable_arg.box"="b" ".unknown" .class
 .meta "inline_test_object_writable_arg.box.name"="b" ".string" .attr 1
-.srcfile="inline_test_object_writable_arg.rexx"
 .globals=0
 
 main() .locals=4
    .meta "inline_test_object_writable_arg.main"="b" ".int" main() ""
-   .src 3:1="main: procedure = .int"
+   .srcstep 7 7 17 "inline_test_object_writable_arg.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:3="say \"Starting object writable-arg inline test...\""
+   .srcstep 1 1 17 "inline_test_object_writable_arg.crexx" 4 3 52 "  say \"Starting object writable-arg inline test...\""
    say "Starting object writable-arg inline test..."
-   .src 5:3="box = .Box(\"alpha\")"
+   .srcstep 2 2 17 "inline_test_object_writable_arg.crexx" 5 3 22 "  box = .Box(\"alpha\")"
    .meta "inline_test_object_writable_arg.main.box"="b" ".box" r0
    load r2,"alpha"
+   .traceevent "L" 4 "R" "S" "r" 2 2 2 0 "" ""
    load r1,1
-   settp r2,3
+   settp r2,768
    call r0,§inline_test_object_writable_arg.box.§factory(),r1
-   .src 6:3="say replaceBox(box)"
+   .traceevent "F" 4 "R" "O" "r" 0 2 2 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 0 2 2 0 "box" ""
+   .srcstep 3 3 17 "inline_test_object_writable_arg.crexx" 6 3 22 "  say replaceBox(box)"
+   .traceevent "V" 6 "R" "O" "r" 0 3 3 0 "box" ""
    load r1,1
-   settp r0,1
+   settp r0,256
    swap r2,r0
    call r3,replaceBox(),r1
    swap r0,r2
+   .traceevent "F" 4 "R" "S" "r" 3 3 3 0 "replacebox" ""
    say r3
-   .src 7:3="say box.getName"
+   .srcstep 4 4 17 "inline_test_object_writable_arg.crexx" 7 3 18 "  say box.getName()"
+   .traceevent "V" 6 "R" "O" "r" 0 4 4 0 "box" ""
    load r2,1
-   settp r0,1
+   settp r0,256
    swap r3,r0
    call r1,§inline_test_object_writable_arg.box.getname(),r2
    swap r0,r3
+   .traceevent "F" 4 "R" "S" "r" 1 4 4 0 "getname" ""
    say r1
-   .src 8:3="say \"Object writable-arg inline test finished.\""
+   .srcstep 5 5 17 "inline_test_object_writable_arg.crexx" 8 3 50 "  say \"Object writable-arg inline test finished.\""
    say "Object writable-arg inline test finished."
-   .src 9:3="return 0"
+   .srcstep 6 6 17 "inline_test_object_writable_arg.crexx" 9 3 11 "  return 0"
    ret 0
    .meta "inline_test_object_writable_arg.main.box"
 
 replaceBox() .locals=4
    .meta "inline_test_object_writable_arg.replacebox"="b" ".string" replaceBox() "value=.box"
-   .src 11:1="replaceBox: procedure = .string"
+   .srcstep 11 11 17 "inline_test_object_writable_arg.crexx" 11 1 32 "replaceBox: procedure = .string"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 12:7="value = .Box"
+   .srcstep 8 8 17 "inline_test_object_writable_arg.crexx" 12 7 19 "  arg value = .Box"
    .meta "inline_test_object_writable_arg.replacebox.value"="b" ".box" r0
-   brtpandt l26c,a1,2
+   brtpandt l26c,a1,512
    copy r0,a1
    acopy r0,a1
    br l26d
 l26c:
    swap r0,a1
 l26d:
-   .src 13:3="value = .Box(\"local\")"
+   .srcstep 9 9 17 "inline_test_object_writable_arg.crexx" 13 3 24 "  value = .Box(\"local\")"
    load r2,"local"
+   .traceevent "L" 4 "R" "S" "r" 2 9 9 0 "" ""
    load r1,1
-   settp r2,3
+   settp r2,768
    call r0,§inline_test_object_writable_arg.box.§factory(),r1
-   .src 14:3="return value.getName"
+   .traceevent "F" 4 "R" "O" "r" 0 9 9 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 0 9 9 0 "value" ""
+   .srcstep 10 10 17 "inline_test_object_writable_arg.crexx" 14 3 23 "  return value.getName()"
+   .traceevent "V" 6 "R" "O" "r" 0 10 10 0 "value" ""
    load r1,1
-   settp r0,1
+   settp r0,256
    swap r2,r0
    call r3,§inline_test_object_writable_arg.box.getname(),r1
    swap r0,r2
+   .traceevent "F" 4 "R" "S" "r" 3 10 10 0 "getname" ""
    ret r3
    .meta "inline_test_object_writable_arg.replacebox.value"
 
 §inline_test_object_writable_arg.box.§factory() .locals=3
-   .meta "inline_test_object_writable_arg.box.§factory"="b" ".box" §inline_test_object_writable_arg.box.§factory() "initial=.string"
-   .src 19:3="*: factory"
+   .meta "inline_test_object_writable_arg.box.§factory"="b" ".inline_test_object_writable_arg..box" §inline_test_object_writable_arg.box.§factory() "initial=.string"
+   .srcstep 15 15 17 "inline_test_object_writable_arg.crexx" 19 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_object_writable_arg.box"
    setnumdgts 18
@@ -86,28 +96,32 @@ l26d:
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 20:9="initial = .string"
+   .srcstep 12 12 17 "inline_test_object_writable_arg.crexx" 20 9 26 "    arg initial = .string"
    .meta "inline_test_object_writable_arg.box.§factory.initial"="b" ".string" a1
    .meta "inline_test_object_writable_arg.box.§factory.§factory"="b" ".box" r1
-   .src 21:5="name = initial"
+   .srcstep 13 13 17 "inline_test_object_writable_arg.crexx" 21 5 19 "    name = initial"
+   .traceevent "V" 6 "R" "S" "a" 1 13 13 0 "initial" ""
    linkattr1 r2,r1,1
    scopy r2,a1
    unlink r2
-   .src 22:5="return"
+   .srcstep 14 14 17 "inline_test_object_writable_arg.crexx" 22 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 1 14 14 0 "§factory" ""
    ret r1
    .meta "inline_test_object_writable_arg.box.§factory.initial"
    .meta "inline_test_object_writable_arg.box.§factory.§factory"
 
 §inline_test_object_writable_arg.box.getname() .locals=2
    .meta "inline_test_object_writable_arg.box.getname"="b" ".string" §inline_test_object_writable_arg.box.getname() ""
-   .src 24:3="getName: method = .string"
+   .srcstep 17 17 17 "inline_test_object_writable_arg.crexx" 24 3 28 "  getName: method = .string"
+   assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 25:5="return name"
+   .srcstep 16 16 17 "inline_test_object_writable_arg.crexx" 25 5 16 "    return name"
    .meta "inline_test_object_writable_arg.box.getname.§this"="b" ".box" a1
    linkattr1 r1,a1,1
+   .traceevent "V" 6 "R" "S" "r" 1 16 16 0 "name" ""
    ret r1
    .meta "inline_test_object_writable_arg.box.getname.§this"

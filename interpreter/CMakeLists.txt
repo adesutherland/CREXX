@@ -1,11 +1,89 @@
 cmake_minimum_required(VERSION 3.24)
 
-add_subdirectory(rxvmplugin)
-
 project(Interpreter C)
 
 set(CMAKE_C_STANDARD 99) # enables inline keyword
 set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG") # Can do more I am sure but this is about as good as it get in practice
+
+set(_rxvmintp_sanitizer_flags
+        "${CMAKE_C_FLAGS} ${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_SHARED_LINKER_FLAGS}")
+if(CMAKE_BUILD_TYPE)
+    string(TOUPPER "${CMAKE_BUILD_TYPE}" _rxvmintp_build_type)
+    string(APPEND _rxvmintp_sanitizer_flags
+            " ${CMAKE_C_FLAGS_${_rxvmintp_build_type}}"
+            " ${CMAKE_EXE_LINKER_FLAGS_${_rxvmintp_build_type}}"
+            " ${CMAKE_SHARED_LINKER_FLAGS_${_rxvmintp_build_type}}")
+endif()
+string(FIND "${_rxvmintp_sanitizer_flags}" "-fsanitize=address" _rxvmintp_asan_flag)
+if(NOT _rxvmintp_asan_flag EQUAL -1
+        AND (CMAKE_BUILD_TYPE STREQUAL "Release" OR CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo"))
+    # GCC 11 spends tens of minutes compiling this translation unit at -O2 with ASan.
+    set_source_files_properties(rxvmintp.c PROPERTIES COMPILE_OPTIONS "-O1")
+endif()
+
+set(RXVM_CORE_OBJECT_SOURCES
+        rxvmintp.h
+        rxvmintp.c
+        rxvmload.c
+        interrupt.c
+        ../avl_tree/rxastree.h
+        rxsignal.h
+        ../utf8/utf.h
+        ../binutils/include/rxbin.h
+        rxspawn.c
+        exitfunc.c
+        rxpafuncs.c
+        rxvml/rxvm_run.c)
+
+function(crexx_add_rxvm_core_objects target_name)
+    add_library(${target_name} OBJECT ${RXVM_CORE_OBJECT_SOURCES})
+    target_include_directories(${target_name} PRIVATE
+            .
+            ./rxvmplugin
+            ../assembler
+            ../binutils/include
+            ${CMAKE_SOURCE_DIR}/rxpa
+            ../platform
+            ../avl_tree
+            ../utf8
+            ../inc
+            rxvmplugin/rxvmplugins/mc_decimal/decnumber)
+    # These objects are also archived into rxvml, which is linked into
+    # libcrexxsaa.so on ELF platforms.
+    set_target_properties(${target_name} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endfunction()
+
+set(RXVM_PLATFORM_OBJECT_SOURCES
+        rxvmsock.c
+        rxvmsock.h)
+
+function(crexx_add_rxvm_platform_objects target_name)
+    add_library(${target_name} OBJECT ${RXVM_PLATFORM_OBJECT_SOURCES})
+    target_include_directories(${target_name} PRIVATE
+            .
+            ./rxvmplugin
+            ../assembler
+            ../binutils/include
+            ${CMAKE_SOURCE_DIR}/rxpa
+            ../platform
+            ../avl_tree
+            ../utf8
+            ../inc
+            rxvmplugin/rxvmplugins/mc_decimal/decnumber)
+    # These objects are also archived into rxvml, which is linked into
+    # libcrexxsaa.so on ELF platforms.
+    set_target_properties(${target_name} PROPERTIES POSITION_INDEPENDENT_CODE ON)
+endfunction()
+
+crexx_add_rxvm_core_objects(rxvm_core_objects)
+crexx_add_rxvm_core_objects(rxbvm_core_objects)
+target_compile_definitions(rxbvm_core_objects PRIVATE NTHREADED=1)
+crexx_add_rxvm_platform_objects(rxvm_platform_notls_objects)
+
+add_library(rxvmref STATIC rxvmref.c rxvmref.h)
+target_include_directories(rxvmref PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
+
+add_subdirectory(rxvmplugin)
 
 set(CREXX_SOCKET_TARGET_LIBS)
 set(CREXX_SOCKET_MANUAL_LINK_LIBS)
@@ -71,11 +149,20 @@ set(CREXX_NATIVE_RUNTIME_LINK_FLAGS_TEXT "${CREXX_NATIVE_RUNTIME_LINK_FLAGS_TEXT
         CACHE INTERNAL "Native executable link flags required by the configured VM runtime" FORCE)
 message(STATUS "cREXX VM core socket TLS backend: ${CREXX_ENABLE_TLS_NORMALIZED}")
 
+crexx_add_rxvm_platform_objects(rxvm_platform_objects)
+if(CREXX_ENABLE_TLS_NORMALIZED STREQUAL "OPENSSL")
+    target_compile_definitions(rxvm_platform_objects PRIVATE CREXX_TLS_OPENSSL=1)
+elseif(CREXX_ENABLE_TLS_NORMALIZED STREQUAL "NETWORK")
+    target_compile_definitions(rxvm_platform_objects PRIVATE CREXX_TLS_NETWORK=1)
+    target_compile_options(rxvm_platform_objects PRIVATE -fblocks)
+elseif(CREXX_ENABLE_TLS_NORMALIZED STREQUAL "SCHANNEL")
+    target_compile_definitions(rxvm_platform_objects PRIVATE CREXX_TLS_SCHANNEL=1)
+endif()
+
 ##########################################
 # Bare Interpreter
 # Threaded Version
-add_executable(rxvm rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c interrupt.c ../avl_tree/rxastree.h rxsignal.h
-        ../utf8/utf.h ../binutils/include/rxbin.h rxspawn.c exitfunc.c rxpafuncs.c rxvml/rxvm_run.c)
+add_executable(rxvm rxvmmain.c $<TARGET_OBJECTS:rxvm_core_objects>)
 # set_property(TARGET rxvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 # set_property(TARGET rxvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
 # set_property(TARGET rxvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
@@ -84,8 +171,7 @@ target_include_directories(rxvm PRIVATE . ./rxvmplugin
         ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
 
 # Bytecode Version
-add_executable(rxbvm rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c interrupt.c ../avl_tree/rxastree.h rxsignal.h
-        ../utf8/utf.h ../binutils/include/rxbin.h rxspawn.c exitfunc.c rxpafuncs.c rxvml/rxvm_run.c)
+add_executable(rxbvm rxvmmain.c $<TARGET_OBJECTS:rxbvm_core_objects>)
 target_link_libraries(rxbvm rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
 target_include_directories(rxbvm PRIVATE . ./rxvmplugin
         ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
@@ -105,9 +191,7 @@ add_custom_command(
 add_custom_target(packed_library ALL DEPENDS library.c)
 
 # Threaded Version
-add_executable(rxvme rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c interrupt.c ../avl_tree/rxastree.h rxsignal.h
-		../utf8/utf.h ../binutils/include/rxbin.h rxspawn.c exitfunc.c rxpafuncs.c
-		${CMAKE_CURRENT_BINARY_DIR}/library.c rxvml/rxvm_run.c)
+add_executable(rxvme rxvmmain.c ${CMAKE_CURRENT_BINARY_DIR}/library.c $<TARGET_OBJECTS:rxvm_core_objects>)
 target_compile_definitions(rxvme PRIVATE LINK_CREXX_LIB=1)
 # set_property(TARGET rxvme PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 # set_property(TARGET rxvme PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
@@ -118,9 +202,7 @@ target_include_directories(rxvme PRIVATE . ./rxvmplugin
 add_dependencies(rxvme packed_library)
 
 # Bytecode Version
-add_executable(rxbvme rxvmmain.c rxvmintp.h rxvmintp.c rxvmload.c interrupt.c ../avl_tree/rxastree.h rxsignal.h
-		../utf8/utf.h ../binutils/include/rxbin.h rxspawn.c exitfunc.c rxpafuncs.c
-		${CMAKE_CURRENT_BINARY_DIR}/library.c rxvml/rxvm_run.c)
+add_executable(rxbvme rxvmmain.c ${CMAKE_CURRENT_BINARY_DIR}/library.c $<TARGET_OBJECTS:rxbvm_core_objects>)
 target_compile_definitions(rxbvme PRIVATE NTHREADED=1 LINK_CREXX_LIB=1)
 target_link_libraries(rxbvme rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
 target_include_directories(rxbvme PRIVATE . ./rxvmplugin
@@ -131,8 +213,7 @@ add_dependencies(rxbvme packed_library)
 # C Library Interpreter -  to be linked to make a standalone CREXX exe
 
 # Threaded Version
-add_library(rxvml STATIC rxvmlib.c rxvml.c rxvmintp.h rxvmintp.c rxvmload.c interrupt.c ../avl_tree/rxastree.h rxsignal.h
-        ../utf8/utf.h ../binutils/include/rxbin.h rxspawn.c exitfunc.c rxpafuncs.c rxvml/rxvm_run.c)
+add_library(rxvml STATIC rxvmlib.c rxvml.c $<TARGET_OBJECTS:rxvm_core_objects>)
 # set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 # set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
 # set_property(TARGET rxvml PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
@@ -141,35 +222,27 @@ target_include_directories(rxvml PRIVATE . ./rxvmplugin
 		../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
 
 # Bytecode Version
-add_library(rxbvml STATIC rxvmlib.c rxvml.c rxvmintp.h rxvmintp.c rxvmload.c interrupt.c ../avl_tree/rxastree.h rxsignal.h
-		../utf8/utf.h ../binutils/include/rxbin.h rxspawn.c exitfunc.c rxpafuncs.c rxvml/rxvm_run.c)
+add_library(rxbvml STATIC rxvmlib.c rxvml.c $<TARGET_OBJECTS:rxbvm_core_objects>)
 target_link_libraries(rxbvml rxvmplugin mc_decimal_manual avl_tree rxpa)
 target_include_directories(rxbvml PRIVATE . ./rxvmplugin
 		../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
 target_compile_definitions(rxbvml PRIVATE NTHREADED=1)
 
-function(crexx_enable_core_sockets target_name)
-    target_sources(${target_name} PRIVATE rxvmsock.c rxvmsock.h)
-    if(CREXX_ENABLE_TLS_NORMALIZED STREQUAL "OPENSSL")
-        target_compile_definitions(${target_name} PRIVATE CREXX_TLS_OPENSSL=1)
-    elseif(CREXX_ENABLE_TLS_NORMALIZED STREQUAL "NETWORK")
-        target_compile_definitions(${target_name} PRIVATE CREXX_TLS_NETWORK=1)
-        target_compile_options(${target_name} PRIVATE -fblocks)
-    elseif(CREXX_ENABLE_TLS_NORMALIZED STREQUAL "SCHANNEL")
-        target_compile_definitions(${target_name} PRIVATE CREXX_TLS_SCHANNEL=1)
-    endif()
+function(crexx_enable_vm_platform target_name)
+    target_sources(${target_name} PRIVATE $<TARGET_OBJECTS:rxvm_platform_objects>)
     if(CREXX_SOCKET_TARGET_LIBS)
         target_link_libraries(${target_name} ${CREXX_SOCKET_TARGET_LIBS})
     endif()
 endfunction()
 
 foreach(_rxvm_core_target rxvm rxbvm rxvme rxbvme rxvml rxbvml)
-    crexx_enable_core_sockets(${_rxvm_core_target})
+    target_link_libraries(${_rxvm_core_target} rxvmref)
+    crexx_enable_vm_platform(${_rxvm_core_target})
 endforeach()
 
 # libcrexxsaa is intentionally thin and shared. On ELF platforms, every static
 # archive pulled into it must be compiled as PIC.
-foreach(_crexxsaa_static_dep rxvml rxvmplugin mc_decimal_manual avl_tree rxpa platform decnumber)
+foreach(_crexxsaa_static_dep rxvml rxvmref rxvmplugin mc_decimal_manual avl_tree rxpa platform decnumber)
     if(TARGET ${_crexxsaa_static_dep})
         set_target_properties(${_crexxsaa_static_dep} PROPERTIES POSITION_INDEPENDENT_CODE ON)
     endif()
@@ -223,7 +296,20 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 # Value test executable
 add_executable(ts_regvalue_tester tests/ts_regvalue_tester.c rxvalue.h rxvmvars.h)
 target_include_directories(ts_regvalue_tester PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} . ../utf8 ../platform ../binutils/include)
-target_link_libraries(ts_regvalue_tester m)
+target_link_libraries(ts_regvalue_tester rxvmref m)
+
+add_executable(test_rxpa_utf_validation tests/test_rxpa_utf_validation.c rxpafuncs.c rxvalue.h rxvmvars.h)
+target_include_directories(test_rxpa_utf_validation PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
+        .
+        ../assembler
+        ../binutils/include
+        ${CMAKE_SOURCE_DIR}/rxpa
+        ../platform
+        ../avl_tree
+        ../utf8
+        ../inc)
+target_link_libraries(test_rxpa_utf_validation rxvmref m)
 
 # Enable testing
 enable_testing()
@@ -239,6 +325,12 @@ add_test(
         COMMAND crexxsaa_tool --cache-dir ${CMAKE_CURRENT_BINARY_DIR}/crexxsaa-cache-tool-test --clear --list)
 set_tests_properties(crexxsaa_cache_tool_clear PROPERTIES
         PASS_REGULAR_EXPRESSION "cleared")
+
+add_test(
+        NAME rxpa_utf_validation
+        COMMAND test_rxpa_utf_validation
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxpa_utf_validation PROPERTIES LABELS "interpreter;rxpa;utf")
 
 function(crexx_add_vm_dual_test)
     set(options)
@@ -273,6 +365,44 @@ function(crexx_add_rxas_vm_binary SOURCE_NAME DESCRIPTION)
     )
 
     add_custom_target(run_${SOURCE_NAME} ALL DEPENDS ${SOURCE_NAME}.rxbin)
+endfunction()
+
+function(crexx_add_rxas_vm_failure_regex NAME SOURCE_NAME EXPECTED_REGEX)
+    set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
+    set(SCRIPT_CONTENT "")
+    set(DOLLAR "$")
+
+    string(APPEND SCRIPT_CONTENT
+            "execute_process(\n"
+            "  COMMAND \"$<TARGET_FILE:rxas>\" -o \"${SOURCE_NAME}\" \"${CMAKE_CURRENT_SOURCE_DIR}/tests/${SOURCE_NAME}.rxas\"\n"
+            "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+            "  OUTPUT_VARIABLE rxas_out\n"
+            "  ERROR_VARIABLE rxas_err\n"
+            "  RESULT_VARIABLE rxas_res\n"
+            ")\n"
+            "if(NOT rxas_res EQUAL 0)\n"
+            "  message(FATAL_ERROR \"rxas failed for ${SOURCE_NAME}.\\nSTDOUT:\\n${DOLLAR}{rxas_out}\\nSTDERR:\\n${DOLLAR}{rxas_err}\")\n"
+            "endif()\n"
+            "execute_process(\n"
+            "  COMMAND \"$<TARGET_FILE:rxvm>\" \"${SOURCE_NAME}\"\n"
+            "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+            "  OUTPUT_VARIABLE rxvm_out\n"
+            "  ERROR_VARIABLE rxvm_err\n"
+            "  RESULT_VARIABLE rxvm_res\n"
+            ")\n"
+            "set(full_out \"${DOLLAR}{rxvm_out}${DOLLAR}{rxvm_err}\")\n"
+            "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"${DOLLAR}{full_out}\")\n"
+            "if(NOT full_out MATCHES \"${EXPECTED_REGEX}\")\n"
+            "  message(FATAL_ERROR \"Expected ${SOURCE_NAME} to report ${EXPECTED_REGEX}.\\nSTDOUT/STDERR:\\n${DOLLAR}{full_out}\\nExit: ${DOLLAR}{rxvm_res}\")\n"
+            "endif()\n")
+
+    file(GENERATE OUTPUT "${SCRIPT_FILE}" CONTENT "${SCRIPT_CONTENT}")
+
+    add_test(
+            NAME ${NAME}
+            COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(${NAME} PROPERTIES LABELS "interpreter;rxas;utf")
 endfunction()
 
 # Value Tests
@@ -322,6 +452,31 @@ add_custom_command(
 add_custom_target(run_tests_breakpoint_address ALL DEPENDS tests_breakpoint_address.rxbin)
 
 crexx_add_vm_dual_test(NAME rxasbreakpointaddresstests RXVM_ARGS tests_breakpoint_address PASS_REGULAR_EXPRESSION "bp-source: say 'target'")
+crexx_add_vm_dual_test(NAME rxasbreakpointtraceeventtests RXVM_ARGS tests_breakpoint_address PASS_REGULAR_EXPRESSION "bp-symbol: target")
+
+# Instruction Sanity Tests - register flag partitioning
+crexx_add_rxas_vm_binary(tests_register_flags "register flag partitioning")
+crexx_add_vm_dual_test(NAME rxasregisterflagtests RXVM_ARGS tests_register_flags PASS_REGULAR_EXPRESSION "PASS: Register Flag Partition")
+
+# Instruction Sanity Tests - UTF status cache flags
+crexx_add_rxas_vm_binary(tests_utf_flags "UTF flag cache")
+crexx_add_vm_dual_test(NAME rxasutfflagtests RXVM_ARGS tests_utf_flags PASS_REGULAR_EXPRESSION "PASS: UTF Flag Cache")
+crexx_add_rxas_vm_failure_regex(rxasutfboundaryfreadlinetests tests_utf_freadline_boundary "UNICODE_ERROR")
+crexx_add_rxas_vm_failure_regex(rxasutfboundaryfreadcdpttests tests_utf_freadcdpt_boundary "UNICODE_ERROR")
+
+# Instruction Sanity Tests - bulk attribute insert/delete
+crexx_add_rxas_vm_binary(tests_attributes "attribute bulk insert/delete")
+crexx_add_vm_dual_test(NAME rxasattributebulktests RXVM_ARGS tests_attributes PASS_REGULAR_EXPRESSION "PASS: Attribute Bulk Ops")
+
+# Instruction Sanity Tests - reference values
+crexx_add_rxas_vm_binary(tests_references "reference value instructions")
+crexx_add_vm_dual_test(NAME rxasreferencetests RXVM_ARGS tests_references PASS_REGULAR_EXPRESSION "PASS: Reference RXAS Ops")
+crexx_add_vm_dual_test(NAME rxasreferencecatchtests RXVM_ARGS tests_references PASS_REGULAR_EXPRESSION "caught-reference-invalid")
+
+# Instruction Sanity Tests - object initialization lifecycle
+crexx_add_rxas_vm_binary(tests_object_initialization "object initialization lifecycle instructions")
+crexx_add_vm_dual_test(NAME rxasobjectinitializationtests RXVM_ARGS tests_object_initialization PASS_REGULAR_EXPRESSION "PASS: Object Initialization RXAS Ops")
+crexx_add_vm_dual_test(NAME rxasobjectinitializationcatchtests RXVM_ARGS tests_object_initialization PASS_REGULAR_EXPRESSION "caught-object-not-initialized")
 
 # Instruction Sanity Tests - focused signal handler mode coverage
 crexx_add_rxas_vm_binary(tests_signal_call_attrs "signal call argument attributes")
@@ -484,6 +639,10 @@ add_custom_target(run_tests_system_io ALL DEPENDS tests_system_io.rxbin)
 
 crexx_add_vm_dual_test(NAME rxassystemiotests RXVM_ARGS tests_system_io)
 
+# Binary Buffer and I/O Instruction Tests
+crexx_add_rxas_vm_binary(tests_binary "binary buffer and I/O")
+crexx_add_vm_dual_test(NAME rxasbinarytests RXVM_ARGS tests_binary PASS_REGULAR_EXPRESSION "PASS: Binary Buffer IO")
+
 # Socket Instruction Tests
 add_custom_command(
 		OUTPUT tests_socket.rxbin
@@ -583,14 +742,18 @@ add_custom_target(run_tests_stress ALL DEPENDS tests_stress.rxbin)
 
 crexx_add_vm_dual_test(NAME rxasstresstests RXVM_ARGS tests_stress)
 
+# Focused deterministic coverage for remaining RXAS instruction families
+crexx_add_rxas_vm_binary(tests_instruction_gaps "remaining deterministic instruction gaps")
+crexx_add_vm_dual_test(NAME rxasinstructiongaptests RXVM_ARGS tests_instruction_gaps PASS_REGULAR_EXPRESSION "PASS: RXAS Instruction Gap Coverage")
+
 # Re-entrancy Test
 add_custom_command(
         OUTPUT test_reentrancy.rxbin
-        COMMAND $<TARGET_FILE:rxc> -o test_reentrancy ${CMAKE_CURRENT_SOURCE_DIR}/tests/rexx/test_reentrancy.rexx
+        COMMAND $<TARGET_FILE:rxc> -o test_reentrancy ${CMAKE_CURRENT_SOURCE_DIR}/tests/rexx/test_reentrancy.crexx
         COMMAND $<TARGET_FILE:rxas> test_reentrancy
-        DEPENDS tests/rexx/test_reentrancy.rexx rxc rxas compiler_exit_bin
+        DEPENDS tests/rexx/test_reentrancy.crexx rxc rxas compiler_exit_bin
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Compiling test_reentrancy.rexx ..."
+        COMMENT "Compiling test_reentrancy.crexx ..."
 )
 add_custom_target(test_reentrancy_bin ALL DEPENDS test_reentrancy.rxbin)
 
@@ -602,9 +765,19 @@ add_dependencies(test_reentrancy test_reentrancy_bin)
 add_test(NAME reentrancy_check COMMAND test_reentrancy WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 # Archive-link regression test for manual db_decimal packaging.
+set(_crexx_archive_link_c_flags_text "${CMAKE_C_FLAGS}")
+set(_crexx_archive_link_exe_flags_text "${CMAKE_EXE_LINKER_FLAGS}")
+if(CMAKE_BUILD_TYPE)
+    string(TOUPPER "${CMAKE_BUILD_TYPE}" _crexx_archive_link_build_type)
+    string(APPEND _crexx_archive_link_c_flags_text " ${CMAKE_C_FLAGS_${_crexx_archive_link_build_type}}")
+    string(APPEND _crexx_archive_link_exe_flags_text " ${CMAKE_EXE_LINKER_FLAGS_${_crexx_archive_link_build_type}}")
+endif()
+separate_arguments(_crexx_archive_link_c_flags NATIVE_COMMAND "${_crexx_archive_link_c_flags_text}")
+separate_arguments(_crexx_archive_link_exe_flags NATIVE_COMMAND "${_crexx_archive_link_exe_flags_text}")
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/test_db_decimal_archive_link
         COMMAND ${CMAKE_C_COMPILER}
+                ${_crexx_archive_link_c_flags}
                 -O0
                 -I${CMAKE_CURRENT_SOURCE_DIR}
                 -I${CMAKE_CURRENT_SOURCE_DIR}/rxvmplugin
@@ -614,10 +787,12 @@ add_custom_command(
                 $<TARGET_FILE:rxvml>
                 $<TARGET_FILE:rxpashim>
                 $<TARGET_FILE:rxvmplugin>
+                $<TARGET_FILE:rxvmref>
                 $<TARGET_FILE:platform>
                 $<TARGET_FILE:decnumber>
                 $<TARGET_FILE:avl_tree>
                 $<TARGET_FILE:rxpa>
+                ${_crexx_archive_link_exe_flags}
                 -lm
                 $<TARGET_FILE:db_decimal_manual>
                 ${CREXX_SOCKET_MANUAL_LINK_LIBS}
@@ -626,6 +801,7 @@ add_custom_command(
                 rxvml
                 rxpashim
                 rxvmplugin
+                rxvmref
                 platform
                 decnumber
                 avl_tree

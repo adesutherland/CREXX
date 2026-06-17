@@ -1,6 +1,6 @@
 ## Performance
 
-For precise technical documentation, we refer to the \emph{\crexx{} VM Specification} publication, which contains the last word on the architecture and implementation of the bytecode compiler, the assembler and the first two virtual machines. One of these is a conventional byte code interpreter, the other is a \emph{threaded code interpreter}. These share over 99\% of their source code.
+For precise technical documentation, we refer to the \emph{cRexx VM Specification} publication, which contains the last word on the architecture and implementation of the bytecode compiler, the assembler and the first two virtual machines. One of these is a conventional byte code interpreter, the other is a \emph{threaded code interpreter}. These share over 99\% of their source code.
 
 The virtual machine executing the \code{rxas} assembler instructions is written according to a strict set of rules that limits the possibility of pipeline stalls in modern processor architectures.
 
@@ -13,7 +13,7 @@ emitting `rxas` assembly. If that proof is not available, the call is left as an
 ordinary call. This means inlining should be treated as an implementation
 optimisation, not as a source-language guarantee.
 
-The implementation is deliberately conservative because cREXX inlining is not
+The implementation is deliberately conservative because cRexx inlining is not
 simple text substitution. The compiler rewrites the already-validated abstract
 syntax tree and then continues through the normal compiler pipeline. That tree
 surgery must preserve:
@@ -24,7 +24,7 @@ surgery must preserve:
 - nested scopes, local variables, and source/debug locations
 - method receiver state and copyback for mutating methods
 - factory setup and object initialization
-- multi-level imports, where source, RXAS, RXDAS, binary metadata, and linked
+- multi-level imports, where source, rxas, rxdas, binary metadata, and linked
   libraries must all describe the same callable contracts
 
 Some cases are intentionally left as calls. Examples include procedure-level
@@ -45,9 +45,9 @@ comparing generated assembly or investigating optimiser behaviour.
 ## Native executables
 
 Level B can produced native[^1] executables which can be distributed
-and run on machines that do not have any \crexx{} infrastructure
+and run on machines that do not have any cRexx infrastructure
 installed. These contain a compiled version of the programs linked
-into it, as well as their own version of the \crexx{} virtual machine;
+into it, as well as their own version of the cRexx virtual machine;
 the startup of these programs is very fast because the compilation,
 assembly and linkedit steps can be skipped.
 

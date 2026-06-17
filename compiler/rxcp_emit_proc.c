@@ -33,6 +33,41 @@
 #include "rxcp_emit.h"
 #include "rxcp_val.h"
 
+static int node_is_inside_imported_file(ASTNode *node) {
+    while (node) {
+        if (node->node_type == IMPORTED_FILE) return 1;
+        if (node->node_type == PROGRAM_FILE) return 0;
+        node = node->parent;
+    }
+    return 0;
+}
+
+static int node_is_runtime_callable_reference(ASTNode *node) {
+    if (!node) return 0;
+    return node->node_type == FUNCTION ||
+           node->node_type == MEMBER_CALL ||
+           node->node_type == FACTORY_CALL ||
+           node->node_type == FUNC_SYMBOL;
+}
+
+static int imported_declaration_has_runtime_reference(ASTNode *node) {
+    Symbol *symbol;
+    size_t i;
+
+    if (!node || !node->symbolNode || !node->symbolNode->symbol) return 0;
+
+    symbol = node->symbolNode->symbol;
+    for (i = 0; i < sym_nond(symbol); i++) {
+        SymbolNode *sn = sym_trnd(symbol, i);
+        ASTNode *use = sn ? sn->node : 0;
+        if (!use || use == node) continue;
+        if (node_is_inside_imported_file(use)) continue;
+        if (node_is_runtime_callable_reference(use)) return 1;
+    }
+
+    return 0;
+}
+
 void emit_proc(ASTNode *node, void *pl) {
     walker_payload *payload = (walker_payload*) pl;
     ASTNode *child1, *child2, *child3, *n;
@@ -53,12 +88,10 @@ void emit_proc(ASTNode *node, void *pl) {
         case REXX_UNIVERSE:
         {
             char *buf = mprintf("/*\n"
-                                " * cREXX COMPILER VERSION : %s\n"
                                 " * SOURCE                 : %s\n"
                                 " * BUILT                  : %d-%02d-%02d %02d:%02d:%02d\n"
                                 " */\n"
                                 "\n",
-                                rxversion,
                                 payload->context->file_name,
                                 tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
@@ -88,10 +121,7 @@ void emit_proc(ASTNode *node, void *pl) {
 
         case PROGRAM_FILE:
         {
-            char *buf = mprintf(".srcfile=\"%s\"\n"
-                                ".globals=%d\n",
-                                payload->context->file_name,
-                                payload->globals);
+            char *buf = mprintf(".globals=%d\n", payload->globals);
 
             if (node->output) output_prepend_text(buf, node->output);
             else node->output = output_fs(buf);
@@ -143,6 +173,12 @@ void emit_proc(ASTNode *node, void *pl) {
             ASTNode *body_marker = ast_chld(node, INSTRUCTIONS, NOP);
             if (!body_marker || body_marker->node_type == NOP) {
                 /* A declaration - external */
+                /* Imported declarations are consumer snapshots; emit only callables the generated RXAS still references. */
+                if (node_is_inside_imported_file(node) &&
+                    !imported_declaration_has_runtime_reference(node)) {
+                    if (!node->output) node->output = output_f();
+                    break;
+                }
                 char* type = callable_effective_return_type(node);
                 char* args = meta_narg(ast_chld(node, ARGS, 0));
                 char *proc_label, *proc_expose, *proc_fqn;
@@ -309,7 +345,10 @@ void emit_proc(ASTNode *node, void *pl) {
                         free(class_fq);
                     }
                 } else if (node->node_type == METHOD) {
-                    /* Associated in register_walker */
+                    /* Methods require an initialized receiver in a1. */
+                    temp1 = mprintf("   assertinitialized a1\n");
+                    output_append_text(node->output, temp1);
+                    free(temp1);
                 }
 
                 /* If numeric options have non-inherited values, set them */

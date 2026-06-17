@@ -722,6 +722,7 @@ static CB_NodeType map_c_token_to_cb_type(int token_type) {
         case TK_S_LTE:
         case TK_AND:
         case TK_OR:
+        case TK_XOR:
         case TK_NOT: return LEXER_OPERATOR_LOGICAL;
         case TK_OPEN_BRACKET:
         case TK_OPEN_SBRACKET: return LEXER_LH_EXPR;
@@ -777,6 +778,36 @@ static int source_node_span_utf8(Context *context, SourceNode *node, size_t *pos
     if (token_span_utf8(context, node->token, pos, len)) return 1;
     if (node->parent) return source_node_span_utf8(context, node->parent, pos, len);
     return 0;
+}
+
+static int source_node_own_span_utf8(Context *context, SourceNode *node, size_t *pos, size_t *len) {
+    size_t start_offset;
+    size_t byte_length;
+
+    if (!context || !node || !pos || !len) return 0;
+    if (node->source_start && node->source_end &&
+        node->source_start >= context->buff_start &&
+        node->source_end >= node->source_start) {
+        start_offset = (size_t)(node->source_start - context->buff_start);
+        byte_length = (size_t)(node->source_end - node->source_start) + 1;
+        *pos = utf8nlen(context->buff_start, start_offset);
+        *len = utf8nlen(node->source_start, byte_length);
+        return *len > 0;
+    }
+
+    if (node->token_start && node->token_end &&
+        node->token_start->token_string && node->token_end->token_string &&
+        node->token_start->token_string >= context->buff_start &&
+        node->token_end->token_string >= node->token_start->token_string) {
+        start_offset = (size_t)(node->token_start->token_string - context->buff_start);
+        byte_length = (size_t)(node->token_end->token_string - node->token_start->token_string) +
+                      (size_t)node->token_end->length;
+        *pos = utf8nlen(context->buff_start, start_offset);
+        *len = utf8nlen(node->token_start->token_string, byte_length);
+        return *len > 0;
+    }
+
+    return token_span_utf8(context, node->token, pos, len);
 }
 
 static int source_diagnostic_span_utf8(Context *context, SourceDiagnostic *diag, size_t *pos, size_t *len) {
@@ -1038,14 +1069,28 @@ static int source_container_type(SourceNode *node, CB_NodeType *type) {
             return 1;
         case IF:
         case ASSIGN:
+        case LEVELC_ADDRESS:
+        case LEVELC_ARG:
+        case LEVELC_DROP:
+        case LEVELC_INTERPRET:
+        case LEVELC_NUMERIC:
+        case LEVELC_PROCEDURE:
+        case LEVELC_PUSH:
+        case LEVELC_QUEUE:
+        case LEVELC_SIGNAL:
+        case LEVELC_TRACE:
         case CALL:
+        case NOP:
         case RETURN:
         case EXIT:
         case EXIT_EXTENDED:
         case IMPLICIT_CMD:
+        case ITERATE:
+        case LEAVE:
         case SAY:
         case PULL:
         case PARSE:
+        case REXX_OPTIONS:
             *type = PARSE_TREE_STATEMENT;
             return 1;
         case BLOCK_EXPR:
@@ -1060,6 +1105,7 @@ static int source_container_type(SourceNode *node, CB_NodeType *type) {
         case OP_SCONCAT:
         case OP_AND:
         case OP_OR:
+        case OP_XOR:
         case OP_COMPARE_EQUAL:
         case OP_COMPARE_NEQ:
         case OP_COMPARE_GT:
@@ -1167,7 +1213,7 @@ static void emit_source_projection(CB_ParseTree *tb,
     while (child) {
         if (child->node_type != RXCP_ERROR && child->node_type != RXCP_WARNING &&
             source_container_type(child, &child_type) &&
-            source_node_span_utf8(context, child, &child_pos, &child_len)) {
+            source_node_own_span_utf8(context, child, &child_pos, &child_len)) {
             emit_tokens_until(tb, cursor, child_pos);
             child_node = cb_create_node(child_type, child_pos, child_len);
             cb_add_child_node(tb, child_node);
@@ -1216,6 +1262,18 @@ static char *format_ast_diagnostic_message(ASTNode *diag) {
                           diag->node_string ? diag->node_string : "Syntax Error");
     }
     return message;
+}
+
+static void free_transient_cb_node_strings(CB_Node *node) {
+    if (!node) return;
+    if (node->message_code) {
+        free(node->message_code);
+        node->message_code = 0;
+    }
+    if (node->message) {
+        free(node->message);
+        node->message = 0;
+    }
 }
 
 typedef struct HighlightDiagnosticSelection {
@@ -1351,6 +1409,7 @@ static void emit_diagnostics_from_source_state(CB_ParseTree *tb, Context *contex
             diag_node.message = format_source_diagnostic_message(diag);
             cb_set_current_parent_to_root_node(tb);
             cb_add_child_node(tb, diag_node);
+            free_transient_cb_node_strings(&diag_node);
         }
         diag = diag->next_in_context;
     }
@@ -1369,6 +1428,7 @@ static void emit_diagnostics_from_detached_ast(CB_ParseTree *tb, Context *contex
             diag_node.message = format_ast_diagnostic_message(diag);
             cb_set_current_parent_to_root_node(tb);
             cb_add_child_node(tb, diag_node);
+            free_transient_cb_node_strings(&diag_node);
         }
         diag = diag->sibling;
     }
@@ -1555,7 +1615,6 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
     context->debug_mode = 0;
     context->stop_after_parse = 1;
     context->optimise = 0;
-    context->level = LEVELB;
     context->disable_exits = root_context ? root_context->disable_exits : (have_doc_info ? doc_info.disable_exits : 0);
     context->location = root_context ? root_context->location : (have_doc_info ? doc_info.document_dir : 0);
 
@@ -1569,14 +1628,21 @@ void rxc_highlight_controller_parse(CodeBuffer *cb) {
         if (!context->disable_exits) rxcp_init_exits(context);
         if (!context->importable_file_list) context->importable_file_list = rxfl_lst(context);
     }
-    rexbpars(context);
-
-    if (!context->ast) {
-        rxcp_run_fallback_diagnostics(context);
+    if (context->level == LEVELC) {
+        rexcpars(context);
     } else {
-        rxcp_prepare_source_ast(context);
+        rexbpars(context);
+    }
+
+    if (!context->ast && !context->diagnostics_list) {
+        rxcp_run_fallback_diagnostics(context);
+    }
+
+    if (context->ast) {
+        if (context->level == LEVELC) rxcp_levelc_prepare_source_ast(context);
+        else rxcp_prepare_source_ast(context);
         source_tree_sync_diagnostics(context);
-        if (!highlight_has_source_errors(context)) {
+        if (context->level != LEVELC && !highlight_has_source_errors(context)) {
             validate_ast(context);
             source_tree_sync_diagnostics(context);
             source_tree_sync_semantics(context);

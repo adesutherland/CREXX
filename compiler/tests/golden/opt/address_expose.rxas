@@ -1,56 +1,85 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : address_expose.rexx
- * BUILT                  : 2026-04-30 20:04:08
+ * SOURCE                 : address_expose.crexx
+ * BUILT                  : 2026-05-27 17:52:44
  */
 
-.srcfile="address_expose.rexx"
 .globals=0
 
-main() .locals=11
+main() .locals=16
    .meta "address_expose.main"="b" ".void" main() ""
-   .src 3:1="main: procedure"
+   .srcstep 14 14 17 "address_expose.crexx" 3 1 16 "main: procedure"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
    .meta "address_expose.main.rc"="b" ".int" r0
-   .src 5:3="address system \"echo EXPOSE_OK\" expose userid"
+   .srcstep 1 1 6 "address_expose.crexx" 5 3 48 "  address system \"echo EXPOSE_OK\" expose userid"
    null r0
-   .src 4:3="userid = \"ALICE\""
+   .srcstep 2 2 17 "address_expose.crexx" 4 3 19 "  userid = \"ALICE\""
    .meta "address_expose.main.userid"="b" ".string" r1
    load r1,"ALICE"
-   .srcfile="exit_fragment"
-   .src 2:1="rc=_address('system',\"echo EXPOSE_OK\",_noredir(),_noredir(),_noredir(), 'userid', userid)"
-   load r3,"system"
-   load r4,"echo EXPOSE_OK"
-   load r10,0
-   call r5,_rxsysb._noredir(),r10
-   load r10,0
-   call r6,_rxsysb._noredir(),r10
-   load r10,0
-   call r7,_rxsysb._noredir(),r10
-   load r8,"userid"
-   load r2,7
-   settp r3,3
-   settp r4,3
-   settp r5,1
-   settp r6,1
-   settp r7,1
-   swap r9,r1
-   call r0,_rxsysb._address(),r2
-   swap r1,r9
-   .srcfile="address_expose.rexx"
-   .src 6:3="return"
+   .traceevent "L" 4 "R" "S" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 1 2 2 0 "userid" ""
+   .srcstep 12 12 33 "exit_fragment" 2 1 90 "rc=_address('system',\"echo EXPOSE_OK\",_noredir(),_noredir(),_noredir(), 'userid', userid)"
+   load r6,"system"
+   .traceevent "L" 4 "R" "S" "r" 6 12 12 0 "" ""
+   load r7,"echo EXPOSE_OK"
+   .traceevent "L" 4 "R" "S" "r" 7 12 12 0 "" ""
+   .srcstep 5 5 33 "exit_fragment" 2 1 9 "_noredir"
+   .meta "address_expose.main.handle"="b" ".binary" r2
+   .srcstep 3 3 25 "_address.crexx" 1519 5 21 "    handle = .binary"
+   null r2
+   .srcstep 4 4 25 "_address.crexx" 1520 5 18 "    return handle"
+   .traceevent "V" 6 "R" "X" "r" 2 12 12 0 "handle" ""
+   copy r13,r2
+   acopy r13,r2
+   br l83bexprend
+l83bexprend:
+   .srcstep 8 8 33 "exit_fragment" 2 1 9 "_noredir"
+   .meta "address_expose.main.handle"="b" ".binary" r3
+   .srcstep 6 6 25 "_address.crexx" 1519 5 21 "    handle = .binary"
+   null r3
+   .srcstep 7 7 25 "_address.crexx" 1520 5 18 "    return handle"
+   .traceevent "V" 6 "R" "X" "r" 3 12 12 0 "handle" ""
+   copy r14,r3
+   acopy r14,r3
+   br l90bexprend
+l90bexprend:
+   .srcstep 11 11 33 "exit_fragment" 2 1 9 "_noredir"
+   .meta "address_expose.main.handle"="b" ".binary" r4
+   .srcstep 9 9 25 "_address.crexx" 1519 5 21 "    handle = .binary"
+   null r4
+   .srcstep 10 10 25 "_address.crexx" 1520 5 18 "    return handle"
+   .traceevent "V" 6 "R" "X" "r" 4 12 12 0 "handle" ""
+   copy r15,r4
+   acopy r15,r4
+   br l97bexprend
+l97bexprend:
+   load r11,"userid"
+   .traceevent "L" 4 "R" "S" "r" 11 12 12 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 1 12 12 0 "userid" ""
+   load r5,7
+   settp r6,768
+   settp r7,768
+   settp r13,768
+   swap r8,r13
+   settp r14,768
+   swap r9,r14
+   settp r15,768
+   swap r10,r15
+   swap r12,r1
+   call r0,_rxsysb._address(),r5
+   swap r13,r8
+   swap r14,r9
+   swap r15,r10
+   swap r1,r12
+   .traceevent "F" 4 "R" "I" "r" 0 12 12 0 "_address" ""
+   .traceevent "A" 6 "R" "I" "r" 0 12 12 0 "rc" ""
+   .srcstep 13 13 17 "address_expose.crexx" 6 3 9 "  return"
    ret
    .meta "address_expose.main.rc"
    .meta "address_expose.main.userid"
-
-/* Imported Declaration from file: _address@library.rxbin */
-
-_rxsysb._noredir() .expose=_rxsysb._noredir
-   .meta "_rxsysb._noredir"="b" ".binary" _rxsysb._noredir() ""
 
 /* Imported Declaration from file: _address@library.rxbin */
 

@@ -131,6 +131,7 @@ Scope *scp_f(Context* context, Scope *parent, ASTNode *node, Symbol* symbol, Sco
     scope->num_registers = 0; /* Changed from 1 - r0 is no longer a hardcoded temp register */
     scope->free_registers_array = dpa_f();
     scope->deferred_registers_array = dpa_f();
+    scope->dereference_symbols_array = dpa_f();
     scope->child_array  = dpa_f();
     scope->temp_flag = 0;
     if (parent) dpa_add((dpa*)(parent->child_array), scope);
@@ -142,6 +143,18 @@ Scope *scp_f(Context* context, Scope *parent, ASTNode *node, Symbol* symbol, Sco
     }
 
     return scope;
+}
+
+int scp_track_detached(Context *context, Scope *scope) {
+    if (!context || !scope) return 0;
+
+    if (!context->detached_scope_array) {
+        context->detached_scope_array = dpa_f();
+        if (!context->detached_scope_array) return 0;
+    }
+
+    dpa_add((dpa *)context->detached_scope_array, scope);
+    return 1;
 }
 
 /* Calls the handler for each symbol in scope */
@@ -215,7 +228,52 @@ void scp_free(Scope *scope) {
     free_dpa(scope->child_array);
     free_dpa(scope->free_registers_array);
     free_dpa(scope->deferred_registers_array);
+    free_dpa(scope->dereference_symbols_array);
     free(scope);
+}
+
+void scp_free_detached(Context *context) {
+    dpa *scopes;
+    size_t i;
+
+    if (!context || !context->detached_scope_array) return;
+
+    scopes = (dpa *)context->detached_scope_array;
+    for (i = 0; i < scopes->size; i++) {
+        scp_free((Scope *)scopes->pointers[i]);
+    }
+    free_dpa(scopes);
+    context->detached_scope_array = 0;
+}
+
+void scp_add_dereference_symbol(Scope *scope, Symbol *symbol) {
+    size_t i;
+    dpa *symbols;
+
+    if (!scope || !symbol) return;
+    symbols = (dpa *)scope->dereference_symbols_array;
+    if (!symbols) return;
+    for (i = 0; i < symbols->size; i++) {
+        if (symbols->pointers[i] == symbol) return;
+    }
+    dpa_add(symbols, symbol);
+}
+
+size_t scp_dereference_symbol_count(Scope *scope) {
+    dpa *symbols;
+
+    if (!scope || !scope->dereference_symbols_array) return 0;
+    symbols = (dpa *)scope->dereference_symbols_array;
+    return symbols->size;
+}
+
+Symbol *scp_dereference_symbol_at(Scope *scope, size_t index) {
+    dpa *symbols;
+
+    if (!scope || !scope->dereference_symbols_array) return 0;
+    symbols = (dpa *)scope->dereference_symbols_array;
+    if (index >= symbols->size) return 0;
+    return (Symbol *)symbols->pointers[index];
 }
 
 /* Removes a Symbol from a scope - does not free symbol, see free_sym() */
@@ -425,9 +483,57 @@ char* type_nm(ValueType type) {
         case TP_STRING: return ".string";
         case TP_BINARY: return ".binary";
         case TP_OBJECT: return ".object";
+        case TP_REFERENCE: return "reference .unknown";
         case TP_VOID: return ".void";
         default: return ".unknown";
     }
+}
+
+void sym_clear_reference_type(Symbol *symbol) {
+    if (!symbol) return;
+    if (symbol->reference_dim_base) {
+        free(symbol->reference_dim_base);
+        symbol->reference_dim_base = 0;
+    }
+    if (symbol->reference_dim_elements) {
+        free(symbol->reference_dim_elements);
+        symbol->reference_dim_elements = 0;
+    }
+    if (symbol->reference_class) {
+        free(symbol->reference_class);
+        symbol->reference_class = 0;
+    }
+    symbol->reference_type = TP_UNKNOWN;
+    symbol->reference_dims = 0;
+}
+
+void sym_set_reference_type(Symbol *symbol, ValueType type, size_t dims,
+                            const int *dim_base, const int *dim_elements,
+                            const char *class_name) {
+    size_t i;
+    if (!symbol) return;
+
+    sym_clear_reference_type(symbol);
+    symbol->reference_type = type;
+    symbol->reference_dims = dims;
+
+    if (dims > 0) {
+        symbol->reference_dim_base = malloc(sizeof(int) * dims);
+        symbol->reference_dim_elements = malloc(sizeof(int) * dims);
+        for (i = 0; i < dims; i++) {
+            symbol->reference_dim_base[i] = dim_base ? dim_base[i] : 1;
+            symbol->reference_dim_elements[i] = dim_elements ? dim_elements[i] : 0;
+        }
+    }
+
+    if (class_name) symbol->reference_class = strdup(class_name);
+}
+
+void sym_copy_reference_type(Symbol *dest, const Symbol *src) {
+    if (!dest || !src) return;
+    sym_set_reference_type(dest, src->reference_type, src->reference_dims,
+                           src->reference_dim_base, src->reference_dim_elements,
+                           src->reference_class);
 }
 
 
@@ -437,6 +543,29 @@ char* sym_2tp(Symbol *symbol) {
     char *array;
     char *result;
     int free_buffer = 0;
+
+    if (symbol->type == TP_REFERENCE) {
+        char *ref_base;
+        int free_ref_base = 0;
+
+        if (symbol->reference_class) {
+            ref_base = rxcp_internal_name_to_source_qualified(symbol->reference_class, 1);
+            free_ref_base = 1;
+        } else {
+            ref_base = type_nm(symbol->reference_type);
+        }
+
+        array = ast_astr(symbol->reference_dims,
+                         symbol->reference_dim_base,
+                         symbol->reference_dim_elements);
+        result = malloc(strlen("reference ") + strlen(ref_base) + strlen(array) + 1);
+        strcpy(result, "reference ");
+        strcat(result, ref_base);
+        strcat(result, array);
+        free(array);
+        if (free_ref_base) free(ref_base);
+        return result;
+    }
 
     if (symbol->value_class) {
         buffer = rxcp_internal_name_to_source_qualified(symbol->value_class, 1);
@@ -495,6 +624,11 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->dim_base = 0;
     symbol->dim_elements = 0;
     symbol->value_class = 0;
+    symbol->reference_type = TP_UNKNOWN;
+    symbol->reference_dims = 0;
+    symbol->reference_dim_base = 0;
+    symbol->reference_dim_elements = 0;
+    symbol->reference_class = 0;
     symbol->needs_default_initiation = 0;
     symbol->register_num = -1;
     symbol->name = (char*)malloc(name_length + 1);
@@ -520,6 +654,7 @@ Symbol *sym_fn(Scope *scope, const char* name, size_t name_length) {
     symbol->is_shadowing = 0;
     symbol->shadowed_symbol = 0;
     symbol->is_global_var = 0;
+    symbol->has_reference_target = 0;
     symbol->is_inlinable = 0;
     symbol->ast_template = 0;
     symbol->creation_ordinal = -1;
@@ -720,23 +855,39 @@ Symbol *sym_afqn(ASTNode *root, const char* fqname) {
     return 0;
 }
 
+static Symbol *sym_rfqv_in_scope(Scope *scope, const char *namespace_name, const char *short_name, const char *fqname) {
+    Symbol *result = 0;
+    size_t i;
+
+    if (!scope || !namespace_name || !short_name || !fqname) return 0;
+
+    if (scope->name && strcmp(scope->name, namespace_name) == 0) {
+        result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), short_name);
+        if (result) {
+            char *resolved_name = sym_frnm(result);
+            int matches = resolved_name && strcmp(resolved_name, fqname) == 0;
+            if (resolved_name) free(resolved_name);
+            if (matches) return result;
+        }
+    }
+
+    for (i = 0; i < scp_noch(scope); i++) {
+        result = sym_rfqv_in_scope(scp_chd(scope, i), namespace_name, short_name, fqname);
+        if (result) return result;
+    }
+
+    return 0;
+}
+
 Symbol *sym_rfqv(ASTNode *root, const char* fqname) {
     char *namespace_name = 0;
     char *short_name = 0;
     Symbol *result = 0;
-    size_t i;
 
     if (!root || !root->scope || !fqname) return 0;
     if (!rxcp_split_internal_symbol_name(fqname, &namespace_name, &short_name)) return 0;
 
-    for (i = 0; i < scp_noch(root->scope); i++) {
-        Scope *scope = scp_chd(root->scope, i);
-        if (!scope || !scope->name) continue;
-        if (strcmp(scope->name, namespace_name) != 0) continue;
-
-        result = src_symbol((struct avl_tree_node *)(scope->symbols_tree), short_name);
-        break;
-    }
+    result = sym_rfqv_in_scope(root->scope, namespace_name, short_name, fqname);
 
     if (namespace_name) free(namespace_name);
     if (short_name) free(short_name);
@@ -961,6 +1112,8 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
             memcpy(new_symbol->dim_elements, symbol->dim_elements, sizeof(int) * symbol->value_dims);
         }
         if (symbol->value_class) new_symbol->value_class = strdup(symbol->value_class);
+        sym_copy_reference_type(new_symbol, symbol);
+        new_symbol->has_reference_target = symbol->has_reference_target;
     } else {
         /* Merge status and type if the incoming symbol has more info */
         if (new_symbol->status == SYM_STATUS_UNRESOLVED) new_symbol->status = symbol->status;
@@ -976,7 +1129,11 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
                 memcpy(new_symbol->dim_elements, symbol->dim_elements, sizeof(int) * symbol->value_dims);
             }
             if (symbol->value_class && !new_symbol->value_class) new_symbol->value_class = strdup(symbol->value_class);
+            if (symbol->type == TP_REFERENCE && new_symbol->reference_type == TP_UNKNOWN) {
+                sym_copy_reference_type(new_symbol, symbol);
+            }
         }
+        if (symbol->has_reference_target) new_symbol->has_reference_target = 1;
     }
 
     /* Move all the node/symbol connectors */
@@ -991,6 +1148,10 @@ Symbol *sym_merg(Scope *new_scope, Symbol *symbol) {
 
     /* Delete the old symbol */
     free(symbol->name);
+    if (symbol->value_class) free(symbol->value_class);
+    if (symbol->dim_base) free(symbol->dim_base);
+    if (symbol->dim_elements) free(symbol->dim_elements);
+    sym_clear_reference_type(symbol);
     free_dpa(symbol->ast_node_array);
     free(symbol);
 
@@ -1042,6 +1203,7 @@ Symbol *sym_dup(Scope *new_scope, Symbol *symbol) {
         memcpy(new_symbol->dim_elements, symbol->dim_elements, sizeof(int) * symbol->value_dims);
     }
     if (symbol->value_class) new_symbol->value_class = strdup(symbol->value_class);
+    sym_copy_reference_type(new_symbol, symbol);
     new_symbol->register_num = symbol->register_num;
     new_symbol->register_type = symbol->register_type;
     new_symbol->fixed_args = symbol->fixed_args;
@@ -1056,6 +1218,7 @@ Symbol *sym_dup(Scope *new_scope, Symbol *symbol) {
     new_symbol->is_rc = symbol->is_rc;
     new_symbol->is_this = symbol->is_this;
     new_symbol->is_factory = symbol->is_factory;
+    new_symbol->has_reference_target = symbol->has_reference_target;
     new_symbol->is_inlinable = symbol->is_inlinable;
     new_symbol->ast_template = symbol->ast_template;
 
@@ -1098,6 +1261,7 @@ void free_sym(Symbol *symbol) {
     if (symbol->value_class) free(symbol->value_class);
     if (symbol->dim_base) free(symbol->dim_base);
     if (symbol->dim_elements) free(symbol->dim_elements);
+    sym_clear_reference_type(symbol);
 
     /* Free SymbolNode Connectors */
     for (i=0; i < ((dpa*)(symbol->ast_node_array))->size; i++) {

@@ -1,0 +1,264 @@
+/*
+ * CREXX Interpreter test for binary byte buffers.
+ */
+
+.globals=0
+
+main() .locals=20
+   load r1,"test_binary_in.tmp"
+   load r2,"wb"
+   fopen r3,r1,r2
+   ine r0,r3,0
+   brf fail_open_write,r0
+
+   load r4,"ABC"
+   fwrite r3,r4
+   fclose r0,r3
+
+   load r2,"rb"
+   fopen r3,r1,r2
+   ine r0,r3,0
+   brf fail_open_read,r0
+
+   load r4,10
+   freadb r5,r3,r4
+   fclose r0,r3
+
+   load r7,0
+   getbyte r6,r5,r7
+   ieq r0,r6,65
+   brf fail_byte0,r0
+
+   load r7,1
+   getbyte r6,r5,r7
+   ieq r0,r6,66
+   brf fail_byte1,r0
+
+   load r7,2
+   getbyte r6,r5,r7
+   ieq r0,r6,67
+   brf fail_byte2,r0
+
+   load r7,3
+   getbyte r6,r5,r7
+   ieq r0,r6,-1
+   brf fail_eob,r0
+
+   load r1,"test_binary_out.tmp"
+   load r2,"wb"
+   fopen r3,r1,r2
+   ine r0,r3,0
+   brf fail_open_binary_write,r0
+
+   fwriteb r3,r5
+   fclose r0,r3
+
+   load r2,"r"
+   fopen r3,r1,r2
+   ine r0,r3,0
+   brf fail_open_verify,r0
+
+   freadline r8,r3
+   fclose r0,r3
+   seq r0,r8,"ABC"
+   brf fail_binary_write,r0
+
+   load r9,0x0041ff
+   blen r10,r9
+   ieq r0,r10,3
+   brf fail_blen,r0
+
+   load r7,0
+   getbyte r6,r9,r7
+   ieq r0,r6,0
+   brf fail_literal_byte0,r0
+
+   load r7,2
+   getbyte r6,r9,r7
+   ieq r0,r6,255
+   brf fail_literal_byte2,r0
+
+   load r7,1
+   load r6,66
+   setbyte r9,r7,r6
+   getbyte r6,r9,r7
+   ieq r0,r6,66
+   brf fail_setbyte,r0
+
+   load r11,0xaa
+   bconcat r12,r11,r9
+   blen r10,r12
+   ieq r0,r10,4
+   brf fail_bconcat_len,r0
+
+   load r7,0
+   getbyte r6,r12,r7
+   ieq r0,r6,170
+   brf fail_bconcat_byte0,r0
+
+   load r7,2
+   getbyte r6,r12,r7
+   ieq r0,r6,66
+   brf fail_bconcat_byte2,r0
+
+   bappend r11,r11
+   blen r10,r11
+   ieq r0,r10,2
+   brf fail_bappend_len,r0
+
+   load r7,1
+   getbyte r6,r11,r7
+   ieq r0,r6,170
+   brf fail_bappend_byte1,r0
+
+   setbinpos r12,r7
+   getbinpos r10,r12
+   ieq r0,r10,1
+   brf fail_binpos,r0
+
+   load r13,2
+   bslice r14,r12,r13
+   blen r10,r14
+   ieq r0,r10,2
+   brf fail_bslice_len,r0
+
+   load r7,0
+   getbyte r6,r14,r7
+   ieq r0,r6,0
+   brf fail_bslice_byte0,r0
+
+   load r7,1
+   getbyte r6,r14,r7
+   ieq r0,r6,66
+   brf fail_bslice_byte1,r0
+
+   load r15,0xccdd
+   bupdate r12,r7,r15
+
+   load r7,1
+   getbyte r6,r12,r7
+   ieq r0,r6,204
+   brf fail_bupdate_byte1,r0
+
+   load r7,2
+   getbyte r6,r12,r7
+   ieq r0,r6,221
+   brf fail_bupdate_byte2,r0
+
+   load r16,0X
+   blen r10,r16
+   ieq r0,r10,0
+   brf fail_empty_binary_len,r0
+
+   load r7,99
+   setbinpos r16,r7
+   getbinpos r10,r16
+   ieq r0,r10,0
+   brf fail_empty_binary_pos,r0
+
+   say "PASS: Binary Buffer IO and Ops"
+   ret 0
+
+fail_open_write:
+   say "FAIL: could not open binary input for write"
+   ret 1
+
+fail_open_read:
+   say "FAIL: could not open binary input for read"
+   ret 1
+
+fail_byte0:
+   say "FAIL: binary byte 0 mismatch"
+   ret 1
+
+fail_byte1:
+   say "FAIL: binary byte 1 mismatch"
+   ret 1
+
+fail_byte2:
+   say "FAIL: binary byte 2 mismatch"
+   ret 1
+
+fail_eob:
+   say "FAIL: binary end-of-buffer sentinel mismatch"
+   ret 1
+
+fail_open_binary_write:
+   say "FAIL: could not open binary output for write"
+   ret 1
+
+fail_open_verify:
+   say "FAIL: could not open binary output for verify"
+   ret 1
+
+fail_binary_write:
+   say "FAIL: binary write verification mismatch"
+   ret 1
+
+fail_blen:
+   say "FAIL: binary literal length mismatch"
+   ret 1
+
+fail_literal_byte0:
+   say "FAIL: binary literal byte 0 mismatch"
+   ret 1
+
+fail_literal_byte2:
+   say "FAIL: binary literal byte 2 mismatch"
+   ret 1
+
+fail_setbyte:
+   say "FAIL: setbyte mismatch"
+   ret 1
+
+fail_bconcat_len:
+   say "FAIL: bconcat length mismatch"
+   ret 1
+
+fail_bconcat_byte0:
+   say "FAIL: bconcat byte 0 mismatch"
+   ret 1
+
+fail_bconcat_byte2:
+   say "FAIL: bconcat byte 2 mismatch"
+   ret 1
+
+fail_bappend_len:
+   say "FAIL: bappend length mismatch"
+   ret 1
+
+fail_bappend_byte1:
+   say "FAIL: bappend self byte mismatch"
+   ret 1
+
+fail_binpos:
+   say "FAIL: binary cursor mismatch"
+   ret 1
+
+fail_bslice_len:
+   say "FAIL: bslice length mismatch"
+   ret 1
+
+fail_bslice_byte0:
+   say "FAIL: bslice byte 0 mismatch"
+   ret 1
+
+fail_bslice_byte1:
+   say "FAIL: bslice byte 1 mismatch"
+   ret 1
+
+fail_bupdate_byte1:
+   say "FAIL: bupdate byte 1 mismatch"
+   ret 1
+
+fail_bupdate_byte2:
+   say "FAIL: bupdate byte 2 mismatch"
+   ret 1
+
+fail_empty_binary_len:
+   say "FAIL: empty binary literal length mismatch"
+   ret 1
+
+fail_empty_binary_pos:
+   say "FAIL: empty binary cursor clamp mismatch"
+   ret 1

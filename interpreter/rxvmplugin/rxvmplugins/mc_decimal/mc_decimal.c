@@ -45,6 +45,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "platform.h"
 #include "rxvmplugin.h"
 #include "decNumber.h"
 #include "decNumberLocal.h"
@@ -131,8 +132,7 @@ static void EnsureCapacity(value *number, size_t digits) {
 
             /* If the reallocation was unsuccessful, panic as per crexx standard behavior */
             if (new_value == NULL) {
-                fprintf(stderr, "PANIC: Unable to reallocate memory for decNumber\n");
-                exit(1);
+                RX_PANIC_OOM("realloc mc_decimal decNumber", size, "decimal value");
             }
             number->decimal_value = new_value;
             number->decimal_buffer_length = size;
@@ -370,8 +370,7 @@ void decimalToDouble(decplugin *plugin, const value *input, double *result) {
     size_t bufferSize = getRequiredStringSize(plugin);
     char *buffer = malloc(bufferSize);
     if (buffer == NULL) {
-        fprintf(stderr, "PANIC: Failed to allocate memory for double conversion\n");
-        exit(1);
+        RX_PANIC_OOM("malloc mc_decimal double conversion buffer", bufferSize, "decimal value");
     }
 
     decNumberToString(dn, buffer);

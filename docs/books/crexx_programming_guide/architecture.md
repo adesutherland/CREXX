@@ -1,10 +1,10 @@
 # Architecture Overview
 
-\crexx{} is a compiler toolchain and runtime rather than a single monolithic
+cRexx is a compiler toolchain and runtime rather than a single monolithic
 interpreter. The main flow is:
 
-```text
-.rexx source -> rxc -> .rxas assembly -> rxas -> .rxbin bytecode -> rxvm
+```bash
+.crexx source -> rxc -> .rxas assembly -> rxas -> .rxbin bytecode -> rxvm
 ```
 
 `rxlink` can combine bytecode modules into a shared-pool linked image, and
@@ -43,9 +43,9 @@ direct VM instructions, but most application code should stay at Level B.
 constant pool. It preserves module boundaries while resolving imports and
 interface-provider relationships that are visible in the selected link set.
 
-The linker can strip source/file metadata for deployment while keeping the
-runtime metadata needed for modules, imports, classes, interfaces, methods, and
-factories.
+The linker can strip source/TRACE debug metadata for deployment while keeping
+the runtime metadata needed for modules, imports, classes, interfaces, methods,
+and factories.
 
 ## Virtual Machine
 
@@ -58,7 +58,7 @@ builds the registries used for class/interface method and factory dispatch.
 
 ## Libraries and Plugins
 
-The standard library is mostly ordinary \crexx{} code compiled to RXBIN, with
+The standard library is mostly ordinary cRexx code compiled to RXBIN, with
 native support where the runtime needs platform access. The plugin architecture
 lets native code expose callable functions without Level B source needing a
 different call form.

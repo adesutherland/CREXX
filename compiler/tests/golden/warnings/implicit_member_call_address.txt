@@ -1,0 +1,2 @@
+Warning in implicit_member_call_address_warning.crexx @ 4:1 - #IMPLICIT_ADDRESS, "b.add(\"alpha\")"
+1 warning(s) in source file

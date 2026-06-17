@@ -1,10 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : block_expr_basic.rexx
- * BUILT                  : 2026-04-30 16:47:30
+ * SOURCE                 : block_expr_basic.crexx
+ * BUILT                  : 2026-05-27 17:53:13
  */
 
-.srcfile="block_expr_basic.rexx"
 .globals=0
 
 main() .locals=11
@@ -14,73 +12,96 @@ main() .locals=11
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 3:1="total = 10 + do\n  a = 5\n  if a > 0 then leave with a * 2\n  leave with 0"
-   .src 3:14="do"
-   .src 4:3="a = 5"
+   .srcstep 7 7 17 "block_expr_basic.crexx" 3 1 16 "total = 10 + do"
+   .srcstep 6 6 17 "block_expr_basic.crexx" 3 14 16 "total = 10 + do"
+   .srcstep 1 1 17 "block_expr_basic.crexx" 4 3 8 "  a = 5"
    .meta "block_expr_basic.main.a"="b" ".int" r2
    .meta "block_expr_basic.main.total"="b" ".int" r1
    load r2,5
-   .src 5:2="if a > 0"
+   .traceevent "L" 4 "R" "I" "r" 2 1 1 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 1 1 0 "a" ""
+   .srcstep 3 3 17 "block_expr_basic.crexx" 5 3 11 "  if a > 0 then leave with a * 2"
+   .traceevent "V" 6 "R" "I" "r" 2 3 3 0 "a" ""
    igt r5,r2,0
+   .traceevent "O" 4 "R" "B" "r" 5 3 3 0 "" ""
    brf l16iffalse,r5
-   .src 5:12="then"
-   .src 5:17="leave with a * 2"
+   .srcstep 4 4 17 "block_expr_basic.crexx" 5 12 16 "  if a > 0 then leave with a * 2"
+   .srcstep 2 2 17 "block_expr_basic.crexx" 5 17 33 "  if a > 0 then leave with a * 2"
+   .traceevent "V" 6 "R" "I" "r" 2 7 7 0 "a" ""
    imult r6,r2,2
+   .traceevent "O" 4 "R" "I" "r" 6 7 7 0 "" ""
    icopy r7,r6
    br l19bexprend
 l16iffalse:
-   .src 6:3="leave with 0"
+   .srcstep 5 5 17 "block_expr_basic.crexx" 6 3 15 "  leave with 0"
    load r5,0
+   .traceevent "L" 4 "R" "I" "r" 5 7 7 0 "" ""
    icopy r7,r5
    br l19bexprend
 l19bexprend:
    iadd r1,r7,10
-   .src 8:1="say total"
+   .traceevent "O" 4 "R" "I" "r" 1 7 7 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 7 7 0 "total" ""
+   .srcstep 8 8 17 "block_expr_basic.crexx" 8 1 10 "say total"
    itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 8 8 0 "total" ""
    say r1
-   .src 10:1="nested = do\n  leave with 100 + do\n    x = 3\n    if x = 3 then leave with 7\n    leave with 0"
-   .src 10:10="do"
-   .src 11:3="leave with 100 + do\n    x = 3\n    if x = 3 then leave with 7\n    leave with 0"
-   .src 11:20="do"
-   .src 12:5="x = 3"
+   .srcstep 17 17 17 "block_expr_basic.crexx" 10 1 12 "nested = do"
+   .srcstep 16 16 17 "block_expr_basic.crexx" 10 10 12 "nested = do"
+   .srcstep 15 15 17 "block_expr_basic.crexx" 11 3 22 "  leave with 100 + do"
+   .srcstep 14 14 17 "block_expr_basic.crexx" 11 20 22 "  leave with 100 + do"
+   .srcstep 9 9 17 "block_expr_basic.crexx" 12 5 10 "    x = 3"
    .meta "block_expr_basic.main.x"="b" ".int" r3
    .meta "block_expr_basic.main.nested"="b" ".int" r0
    load r3,3
-   .src 13:4="if x = 3"
+   .traceevent "L" 4 "R" "I" "r" 3 9 9 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 9 9 0 "x" ""
+   .srcstep 11 11 17 "block_expr_basic.crexx" 13 5 13 "    if x = 3 then leave with 7"
+   .traceevent "V" 6 "R" "I" "r" 3 11 11 0 "x" ""
    ieq r7,r3,3
+   .traceevent "O" 4 "R" "B" "r" 7 11 11 0 "" ""
    brf l36iffalse,r7
-   .src 13:14="then"
-   .src 13:19="leave with 7"
+   .srcstep 12 12 17 "block_expr_basic.crexx" 13 14 18 "    if x = 3 then leave with 7"
+   .srcstep 10 10 17 "block_expr_basic.crexx" 13 19 31 "    if x = 3 then leave with 7"
    load r8,7
+   .traceevent "L" 4 "R" "I" "r" 8 17 17 0 "" ""
    icopy r9,r8
    br l39bexprend
 l36iffalse:
-   .src 14:5="leave with 0"
+   .srcstep 13 13 17 "block_expr_basic.crexx" 14 5 17 "    leave with 0"
    load r7,0
+   .traceevent "L" 4 "R" "I" "r" 7 17 17 0 "" ""
    icopy r9,r7
    br l39bexprend
 l39bexprend:
    iadd r9,r9,100
+   .traceevent "O" 4 "R" "I" "r" 9 17 17 0 "" ""
    icopy r10,r9
    br l43bexprend
 l43bexprend:
    icopy r0,r10
-   .src 17:1="say nested"
+   .traceevent "A" 6 "R" "I" "r" 0 17 17 0 "nested" ""
+   .srcstep 18 18 17 "block_expr_basic.crexx" 17 1 11 "say nested"
    itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 18 18 0 "nested" ""
    say r0
-   .src 19:1="say 1 + do\n  y = 1\n  leave with y"
-   .src 19:9="do"
-   .src 20:3="y = 1"
+   .srcstep 22 22 17 "block_expr_basic.crexx" 19 1 11 "say 1 + do"
+   .srcstep 21 21 17 "block_expr_basic.crexx" 19 9 11 "say 1 + do"
+   .srcstep 19 19 17 "block_expr_basic.crexx" 20 3 8 "  y = 1"
    .meta "block_expr_basic.main.y"="b" ".int" r4
    load r4,1
-   .src 21:3="leave with y"
+   .traceevent "L" 4 "R" "I" "r" 4 19 19 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 19 19 0 "y" ""
+   .srcstep 20 20 17 "block_expr_basic.crexx" 21 3 15 "  leave with y"
+   .traceevent "V" 6 "R" "I" "r" 4 22 22 0 "y" ""
    icopy r10,r4
    br l54bexprend
 l54bexprend:
    iadd r10,r10,1
    itos r10
+   .traceevent "O" 4 "R" "S" "r" 10 22 22 0 "" ""
    say r10
-   .src 19:34=""
+   .srcstep 23 23 1 "block_expr_basic.crexx" 19 15 15 "  leave with y"
    ret
    .meta "block_expr_basic.main.nested"
    .meta "block_expr_basic.main.total"

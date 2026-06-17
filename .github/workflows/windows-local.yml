@@ -70,10 +70,12 @@ jobs:
           	  
           # Docs
           cp LICENSE README.md SECURITY.md INSTALL-RUN.md "${{ runner.temp }}/exe/"
+          cp "${{ runner.temp }}/release/generated/VERSION" "${{ runner.temp }}/exe/VERSION"
+          cp "${{ runner.temp }}/release/generated/BUILDINFO" "${{ runner.temp }}/exe/BUILDINFO"
 
       - name: Upload Executable
         if: env.RELEASE_ID
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: CREXX-Windows
           path: |

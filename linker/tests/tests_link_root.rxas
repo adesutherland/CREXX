@@ -10,6 +10,7 @@ helper() .expose=linktest.helper
 main() .locals=2
    .meta "linktest.root.main"="b" ".void" main() ""
    load r1,0
+   .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "linktest.root.main.r1" ""
    call r0,helper(),r1
    say "PASS: Root Returned"
    itos r0

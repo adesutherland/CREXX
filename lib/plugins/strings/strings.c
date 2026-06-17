@@ -345,13 +345,21 @@ PROCEDURE(SUBWORD) {
     int numberOfWords = GETINT(ARG2); // Get the number of words to extract
     char *delim = GETSTRING(ARG3);       // Get the delimiter
     int curword = 1;                 // Counter for the current word
-    int plen=strlen(phrase);
-    char *result = (char *)malloc(plen); // Buffer for the result (adjust size as needed)
-    int resultLength = 0;            // Length of the result
+    size_t plen;
+    char *result;
+    size_t resultLength = 0;         // Length of the result
 
  // Check for NULL input
     if (phrase == NULL || position < 1) {
         RETURNSTRX(""); // Return empty string if input is invalid
+    }
+    plen = strlen(phrase);
+    if (plen == (size_t)-1) {
+        RETURNSTRX(""); // Avoid wraparound when reserving the terminator byte
+    }
+    result = (char *)calloc(plen + 1, 1);
+    if (result == NULL) {
+        RETURNSTRX(""); // Return empty string if allocation fails
     }
     if (delim == NULL || strlen(delim) == 0) {
         delim = " "; // Default delimiter
@@ -365,12 +373,18 @@ PROCEDURE(SUBWORD) {
     char *token = strtok(phrase, delim); // Tokenize using space as delimiter
     while (token != NULL) {
         if (curword >= position && resultLength < plen) { // Check if within range and buffer limit
+            size_t tokenLength = strlen(token);
+            size_t separatorLength = resultLength > 0 ? 1 : 0;
+            size_t remainingLength = plen - resultLength;
+            if (separatorLength > remainingLength || tokenLength > remainingLength - separatorLength) {
+                break;
+            }
             if (resultLength > 0) {
                 strcat(result, " "); // Add space before the next word
                 resultLength++;
             }
             strcat(result, token); // Append the word to the result
-            resultLength += strlen(token);
+            resultLength += tokenLength;
             if (--numberOfWords == 0) {
                 break; // Stop if the required number of words is extracted
             }
@@ -1035,4 +1049,3 @@ LOADFUNCS
    ADDPROC(PARSE, "strings.parse", "b", ".int", "input_string=.string, parse_template=.string, expose varnames=.string[], expose varvalues=.string[]");
    ADDPROC(fquoted,      "strings.find_quoted",  "b",  ".int",   "string=.string, expose tokens=.string[],expose types=.string[]");
 ENDLOADFUNCS
-

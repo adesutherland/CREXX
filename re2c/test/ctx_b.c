@@ -50,62 +50,60 @@ std:
 #line 51 "ctx_b.c"
 {
 	YYCTYPE yych;
-	static const unsigned char yybm[] = {
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		128, 128, 128, 128, 128, 128, 128, 128, 
-		128, 128,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
-		  0,   0,   0,   0,   0,   0,   0,   0, 
+	static const unsigned char yybm[256] = {
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		128, 128, 128, 128, 128, 128, 128, 128,
+		128, 128,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0,
+		  0,   0,   0,   0,   0,   0,   0,   0
 	};
 	if ((YYLIMIT - YYCURSOR) < 3) YYFILL(3);
 	yych = *YYCURSOR;
-	if (yybm[0+yych] & 128) {
-		goto yy6;
-	}
+	if (yybm[0+yych] & 128) goto yy4;
 	if (yych <= 0x1F) {
-		if (yych <= 0x08) goto yy2;
-		if (yych <= '\n') goto yy4;
+		if (yych <= 0x08) goto yy1;
+		if (yych <= '\n') goto yy3;
 	} else {
-		if (yych <= ' ') goto yy4;
-		if (yych <= '`') goto yy2;
-		if (yych <= 'b') goto yy9;
+		if (yych <= ' ') goto yy3;
+		if (yych <= '`') goto yy1;
+		if (yych <= 'b') goto yy5;
 	}
-yy2:
+yy1:
 	++YYCURSOR;
-yy3:
+yy2:
 #line 61 "ctx_b.re"
 	{
 		return UNEXPECTED;
 	}
-#line 108 "ctx_b.c"
-yy4:
+#line 106 "ctx_b.c"
+yy3:
 	++YYCURSOR;
 #line 54 "ctx_b.re"
 	{
@@ -114,52 +112,52 @@ yy4:
 		cursor = s.cur;
 		goto std;
 	}
-#line 118 "ctx_b.c"
+#line 116 "ctx_b.c"
+yy4:
+	++YYCURSOR;
+	if (YYLIMIT <= YYCURSOR) YYFILL(1);
+	yych = *YYCURSOR;
+	if (yybm[0+yych] & 128) goto yy4;
+#line 51 "ctx_b.re"
+	{ return NUMBER;  }
+#line 124 "ctx_b.c"
+yy5:
+	yych = *++YYCURSOR;
+	if (yych <= '/') goto yy2;
+	if (yych == '1') {
+		YYCTXMARKER = YYCURSOR;
+		goto yy8;
+	}
+	if (yych >= ':') goto yy2;
+	YYCTXMARKER = YYCURSOR;
 yy6:
 	++YYCURSOR;
 	if (YYLIMIT <= YYCURSOR) YYFILL(1);
 	yych = *YYCURSOR;
-	if (yybm[0+yych] & 128) {
-		goto yy6;
-	}
-#line 51 "ctx_b.re"
-	{ return NUMBER;  }
-#line 128 "ctx_b.c"
-yy9:
-	yych = *++YYCURSOR;
-	if (yych <= '/') goto yy3;
-	if (yych == '1') {
-		YYCTXMARKER = YYCURSOR;
-		goto yy13;
-	}
-	if (yych >= ':') goto yy3;
-	YYCTXMARKER = YYCURSOR;
-yy10:
-	++YYCURSOR;
-	if (YYLIMIT <= YYCURSOR) YYFILL(1);
-	yych = *YYCURSOR;
-	if (yych <= '/') goto yy12;
-	if (yych <= '9') goto yy10;
-yy12:
+	if (yych <= '/') goto yy7;
+	if (yych <= '9') goto yy6;
+yy7:
 	YYCURSOR = YYCTXMARKER;
 #line 50 "ctx_b.re"
 	{ return KEYWORD; }
-#line 148 "ctx_b.c"
-yy13:
+#line 144 "ctx_b.c"
+yy8:
 	yych = *++YYCURSOR;
-	if (yych <= '/') goto yy14;
-	if (yych <= '9') goto yy10;
-yy14:
+	if (yych <= '/') goto yy9;
+	if (yych <= '9') goto yy6;
+yy9:
 	YYCURSOR -= 1;
 #line 49 "ctx_b.re"
 	{ return KEYWORD; }
-#line 157 "ctx_b.c"
+#line 153 "ctx_b.c"
 }
 #line 64 "ctx_b.re"
 
 }
 
+#line 159 "ctx_b.c"
 #define YYMAXFILL 3
+#line 67 "ctx_b.re"
 
 
 int main(int,char**)

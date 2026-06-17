@@ -6,6 +6,7 @@
 #include <limits.h>
 #include <string.h>
 #include <ctype.h>
+#include <errno.h>
 
 #include "crexxpa.h"      // crexx/pa - Plugin Architecture header file
 #ifdef _WIN32
@@ -271,7 +272,7 @@ char outext[FILENAME_MAX] = member_extension; // eho 20071202
 char extract_member[FILENAME_MAX]="";
 char zsinglemem[9] = "";                 // eho 20071202
 char zsinglemempath[FILENAME_MAX] = "";  // eho 20071202
-char exportpath[512] = "";  // eho 20071202
+char exportpath[1024] = "";  // eho 20071202
 long zsinglebyteswritten = 0;             // eho 20071202
 long zsinglerecswritten = 0;              // eho 20071202
 int zsingleorc = 0;                      // eho 20071202
@@ -1458,18 +1459,18 @@ int printdirmem() {
 char *ispfdate(char *pdirent) {
     int		year, yearday;			// year, Julian day of year (1 - 365)
     int		month, monthday;		// month, day of month (1 - 31)
-    char	work[12];
+    char	work[32];
 
     memset(datestr, 0, sizeof(datestr));
     unpackdate(&block[pos+16], &year, &yearday);
     juliangreg(year, yearday, &month, &monthday);
-    sprintf(datestr, " %.4d/%.2d/%.2d", year, month, monthday);
+    snprintf(datestr, sizeof(datestr), " %.4d/%.2d/%.2d", year, month, monthday);
 
     unpackdate(&block[pos+20], &year, &yearday);
     juliangreg(year, yearday, &month, &monthday);
     memset(work, 0, sizeof(work));
-    sprintf(work, " %.4d/%.2d/%.2d", year, month, monthday);
-    strcat(datestr, work);
+    snprintf(work, sizeof(work), " %.4d/%.2d/%.2d", year, month, monthday);
+    strncat(datestr, work, sizeof(datestr) - strlen(datestr) - 1);
     return datestr;
 } /* ispfdate */
 
@@ -2324,7 +2325,8 @@ int jmmsnap( void *ptr, int len, int offset, char *title)
 //--------------------------------------------------------------------
 
 int halt(char *msg) {
-    char	buf[4];
+    char	buf[4] = "";
+    const char *message = msg ? msg : "Press enter to continue, or type 'x' to exit";
 
     if (opthalt=='-')
         return 0;
@@ -2334,8 +2336,9 @@ int halt(char *msg) {
     else
         fprintf(stderr, "%s\n", msg);
 */
-    MSGE(540, "%s\n", msg);
-    fgets(buf,sizeof(buf), stdin);
+    MSGE(540, "%s\n", message);
+    if (fgets(buf,sizeof(buf), stdin) == NULL)
+        return 0;
     if (buf[0] == 'x')
         return 1;
     return 0;								// continue
@@ -2650,6 +2653,7 @@ PROCEDURE(xmit_unpack) {
     char *infile = GETSTRING(ARG0);
     char cwd[1024];
     char pathbuf[1024];
+    int cwd_saved = 0;
     ResetOptions();
 // set options required for this function
     optwrite='+';
@@ -2658,18 +2662,30 @@ PROCEDURE(xmit_unpack) {
 
     get_path(infile, pathbuf, sizeof(pathbuf));
     if(pathbuf[0]!=0) {
-       if (getcwd(cwd, sizeof(cwd)) != NULL) {  // works in Windows/Linux/Mac
-           chdir(pathbuf);     // works in Windows/Linux/Mac
+       if (getcwd(cwd, sizeof(cwd)) == NULL) {  // works in Windows/Linux/Mac
+           MSGE(550, "cannot get current directory: %s\n", strerror(errno));
+           RETURNINTX(-8);
+       }
+       cwd_saved = 1;
+       if (chdir(pathbuf) != 0) {     // works in Windows/Linux/Mac
+           MSGE(560, "cannot change directory to %s: %s\n", pathbuf, strerror(errno));
+           RETURNINTX(-8);
        }
     }
-    getcwd(pathbuf, sizeof(pathbuf));
+    if (getcwd(pathbuf, sizeof(pathbuf)) == NULL) {
+        MSGE(550, "cannot get current directory: %s\n", strerror(errno));
+        if (cwd_saved && chdir(cwd) != 0)
+            MSGW(570, "cannot restore directory to %s: %s\n", cwd, strerror(errno));
+        RETURNINTX(-8);
+    }
     printf("Unpack file(s) into '%s'\n", pathbuf);
-        strcpy(exportpath,pathbuf);
+        snprintf(exportpath, sizeof(exportpath), "%s", pathbuf);
 
     int rc = recv390_unpack(infile);
 
-    if(pathbuf[0]!=0) {       // reset it to the original work directory
-        chdir(cwd);      // works in Windows/Linux/Mac
+    if(cwd_saved) {       // reset it to the original work directory
+        if (chdir(cwd) != 0 && rc == 0)
+            rc = 8;      // works in Windows/Linux/Mac
       //  getcwd(pathbuf, sizeof(pathbuf));
       //  printf("CWD reset to %s\n", pathbuf);
     }
@@ -2701,6 +2717,7 @@ PROCEDURE(xmit_extract) {
     char *member = GETSTRING(ARG1);
     char cwd[1024];
     char pathbuf[1024];
+    int cwd_saved = 0;
     ResetOptions();
 
     // Full unpack mode (reset any single-member settings)
@@ -2716,20 +2733,32 @@ PROCEDURE(xmit_extract) {
         strncpy(extract_member, member, 8);
         get_path(infile, pathbuf, sizeof(pathbuf));
         if(pathbuf[0]!=0) {
-            if (getcwd(cwd, sizeof(cwd)) != NULL) {  // works in Windows/Linux/Mac
-                chdir(pathbuf);     // works in Windows/Linux/Mac
+            if (getcwd(cwd, sizeof(cwd)) == NULL) {  // works in Windows/Linux/Mac
+                MSGE(550, "cannot get current directory: %s\n", strerror(errno));
+                RETURNINTX(-8);
+            }
+            cwd_saved = 1;
+            if (chdir(pathbuf) != 0) {     // works in Windows/Linux/Mac
+                MSGE(560, "cannot change directory to %s: %s\n", pathbuf, strerror(errno));
+                RETURNINTX(-8);
             }
         }
-        getcwd(pathbuf, sizeof(pathbuf));
+        if (getcwd(pathbuf, sizeof(pathbuf)) == NULL) {
+            MSGE(550, "cannot get current directory: %s\n", strerror(errno));
+            if (cwd_saved && chdir(cwd) != 0)
+                MSGW(570, "cannot restore directory to %s: %s\n", cwd, strerror(errno));
+            RETURNINTX(-8);
+        }
         printf("Unpack file(s) into '%s'\n", pathbuf);
-        strcpy(exportpath,pathbuf);
+        snprintf(exportpath, sizeof(exportpath), "%s", pathbuf);
         strncpy(zsinglemem, member, 8);
         zsinglemem[8] = '\0';
 
         int rc = recv390_unpack(infile);
 
-        if(pathbuf[0]!=0) {       // reset it to the original work directory
-            chdir(cwd);      // works in Windows/Linux
+        if(cwd_saved) {       // reset it to the original work directory
+            if (chdir(cwd) != 0 && rc == 0)
+                rc = 8;      // works in Windows/Linux
         }
     RETURNINTX(-rc);
  ENDPROC

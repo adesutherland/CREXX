@@ -1,0 +1,10 @@
+options levelb
+
+main: procedure
+  trace suppress namespace rxfnsg
+  trace unsuppress namespace rxfnsg
+  trace add suppressed namespace rxfnsl
+  trace remove suppressed namespace rxfnsl
+  trace reset namespaces
+  say "TRACE NAMESPACE COMMANDS DONE"
+  return

@@ -1,0 +1,78 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb
+namespace rxfnsb expose wordrep
+
+/**
+ * Replaces a word within a string.
+ *
+ * <p>Syntax:</p>
+ *
+ * <pre>
+ * WORDREP(string, wordnum, newword [, mode])
+ * </pre>
+ *
+ * @param string  source string
+ * @param wordnum word number to replace, 1-based
+ * @param newword replacement word
+ * @param mode    replacement mode:
+ *                <ul>
+ *                  <li>{@code N} normal replacement, default; replacement may
+ *                      change string length and subsequent words may shift</li>
+ *                  <li>{@code P} preserve original word width; replacement
+ *                      occurs in-place, shorter replacements are blank padded,
+ *                      longer replacements are truncated, and subsequent
+ *                      columns remain aligned</li>
+ *                </ul>
+ *
+ * @return modified string; if {@code wordnum} does not exist, the original
+ *         string is returned unchanged
+ *
+ * @example
+ * WORDREP(line,3,'BIF')
+ * WORDREP(line,3,'BUILTIN','N')
+ * WORDREP(line,3,'BIF','P')
+ * @author Peter Jacob
+ */
+wordrep: procedure=.string
+  arg string=.string, wordnum=.int, newword=.string, mode='NOPRESERVE'
+
+  mode = translate(substr(mode,1,1))          /* Use first mode character only */
+  p = wordindex(string, wordnum)              /* Locate word position          */
+  if p = 0 then return string                 /* Word not present              */
+
+  oldword = word(string, wordnum)             /* Extract original word         */
+  if mode = 'P' then do                       /* Preserve-layout replacement   */
+     width = length(oldword)                  /* Keep original field width     */
+     repl = left(newword, width)              /* Truncate or blank-pad replacement */
+     return overlay(repl, string, p)          /* Overlay replacement in-place  */
+  end
+  else do                                     /* Normal variable-length replacement */
+     leftpart = substr(string, 1, p - 1)      /* Left side before target word  */
+     afterpos = p + length(oldword)           /* Position after original word  */
+     rightpart = substr(string, afterpos)     /* Remaining text after target word  */
+     return leftpart || newword || rightpart  /* Rebuild string */
+  end
+return string

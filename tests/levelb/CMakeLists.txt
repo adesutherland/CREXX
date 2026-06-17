@@ -9,7 +9,7 @@ set(TESTS
 
 foreach (BIF ${TESTS})
   set(REXXBINS ${REXXBINS} ${BIF}.rxbin)
-  set(REXXSRC ${REXXSRC} ${BIF}.rexx)
+  set(REXXSRC ${REXXSRC} ${BIF}.crexx)
 endforeach ()
 
 unset(_prev_target)
@@ -18,7 +18,7 @@ foreach(_binfile ${REXXBINS})
   add_custom_target(${_basename}_artifact ALL)
   crexx_add_rexx_opt_matrix(
           NAME ${_basename}
-          SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx
+          SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx
           TARGET_GROUP ${_basename}_artifact
           RXC_FLAGS -x
           DEPENDS ${_prev_target}

@@ -1,5 +1,5 @@
-Error in type_ops_reserved_keyword.rexx @ 4:1 - #KEYWORD, "arg:"
-Error in type_ops_reserved_keyword.rexx @ 7:1 - #KEYWORD, "as:"
-Error in type_ops_reserved_keyword.rexx @ 10:1 - #KEYWORD, "is:"
-Error in type_ops_reserved_keyword.rexx @ 13:1 - #KEYWORD, "typeof:"
+Error in type_ops_reserved_keyword.crexx @ 4:1 - #KEYWORD, "arg:"
+Error in type_ops_reserved_keyword.crexx @ 7:1 - #KEYWORD, "as:"
+Error in type_ops_reserved_keyword.crexx @ 10:1 - #KEYWORD, "is:"
+Error in type_ops_reserved_keyword.crexx @ 13:1 - #KEYWORD, "typeof:"
 4 error(s) in source file

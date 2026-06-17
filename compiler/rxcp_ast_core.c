@@ -34,6 +34,9 @@
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 #include "rxcp_source_tree.h"
+#ifndef NUTF8
+#include "utf.h"
+#endif
 
 static void ast_copy_reporting_anchors(ASTNode *dest, ASTNode *src) {
     size_t i;
@@ -253,6 +256,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->child = 0;
     node->sibling = 0;
     node->association = 0;
+    node->semantic_context = 0;
     node->token = 0;
     node->symbolNode = 0;
     node->scope = 0;
@@ -268,11 +272,21 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->value_dim_base = 0;
     node->value_dim_elements = 0;
     node->value_class = 0;
+    node->value_reference_type = TP_UNKNOWN;
+    node->value_reference_dims = 0;
+    node->value_reference_dim_base = 0;
+    node->value_reference_dim_elements = 0;
+    node->value_reference_class = 0;
     node->target_type = TP_UNKNOWN;
     node->target_dims = 0;
     node->target_dim_base = 0;
     node->target_dim_elements = 0;
     node->target_class = 0;
+    node->target_reference_type = TP_UNKNOWN;
+    node->target_reference_dims = 0;
+    node->target_reference_dim_base = 0;
+    node->target_reference_dim_elements = 0;
+    node->target_reference_class = 0;
     node->node_string = "";
     node->node_string_length = 0;
     node->free_node_string = 0;
@@ -374,6 +388,7 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
         new_node->value_class = malloc(strlen(node->value_class) + 1);
         strcpy(new_node->value_class, node->value_class);
     }
+    ast_copy_value_reference_type_from_value(new_node, node);
 
     new_node->target_type = node->target_type;
     new_node->target_dims = node->target_dims;
@@ -389,6 +404,7 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
         new_node->target_class = malloc(strlen(node->target_class) + 1);
         strcpy(new_node->target_class, node->target_class);
     }
+    ast_copy_target_reference_type_from_target(new_node, node);
 
     new_node->register_num = node->register_num;
     new_node->register_type = node->register_type;
@@ -443,8 +459,37 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     new_node->line = node->line;
     new_node->column = node->column;
     new_node->file_name = node->file_name;
+    if (node->semantic_context) {
+        new_node->semantic_context = ast_dup_subtree(new_context, node->semantic_context);
+    }
 
     return new_node;
+}
+
+ASTNode *ast_make_semantic_context(Context *context,
+                                   ASTSemanticContextKind kind,
+                                   ASTNode *source_node,
+                                   const char *label) {
+    ASTNode *semantic_context;
+
+    semantic_context = ast_ft(context, AST_SEMANTIC_CONTEXT);
+    semantic_context->int_value = (rxinteger)kind;
+    if (label) ast_sstr(semantic_context, strdup(label), strlen(label));
+    if (source_node) ast_copy_source_anchor(semantic_context, source_node, AST_SOURCE_EXACT);
+    return semantic_context;
+}
+
+void ast_attach_semantic_context(ASTNode *node, ASTNode *semantic_context) {
+    if (!node) return;
+    node->semantic_context = semantic_context;
+}
+
+ASTSemanticContextKind ast_semantic_context_kind(ASTNode *node) {
+    if (!node || !node->semantic_context ||
+        node->semantic_context->node_type != AST_SEMANTIC_CONTEXT) {
+        return AST_SEMANTIC_CONTEXT_NONE;
+    }
+    return (ASTSemanticContextKind)node->semantic_context->int_value;
 }
 
 void ast_mark_compiler_generated_block(ASTNode *node) {
@@ -538,6 +583,7 @@ walker_result add_dast_walker_handler1(walker_direction direction,
                 new_symbol->is_ref_arg = symbol->is_ref_arg;
                 new_symbol->is_const_arg = symbol->is_const_arg;
                 new_symbol->is_opt_arg = symbol->is_opt_arg;
+                new_symbol->has_reference_target = symbol->has_reference_target;
 
                 sym_adnd(new_symbol, new_node, node->symbolNode->readUsage, node->symbolNode->writeUsage);
             } else {
@@ -576,6 +622,60 @@ ASTNode *add_dast(ASTNode *dest, ASTNode *source) {
     return node;
 }
 
+static int ast_is_valid_utf8_string_literal(const unsigned char *bytes, size_t length) {
+#ifndef NUTF8
+    size_t chars;
+
+    return utf8nvalid_count(bytes, length, &chars) == 0;
+#else
+    (void)bytes;
+    (void)length;
+    return 1;
+#endif
+}
+
+static char *ast_escape_bytes_for_rxas(const unsigned char *bytes,
+                                       size_t byte_length,
+                                       size_t *processed_length) {
+    char *processed_string;
+    char *buffer;
+    char *escaped_char;
+    size_t i;
+
+    *processed_length = 0;
+    processed_string = malloc(byte_length * 4);
+    buffer = processed_string;
+
+    for (i = 0; i < byte_length; i++) {
+        escaped_char = escape_character(bytes[i]);
+        while (*escaped_char) {
+            (*processed_length)++;
+            *(buffer++) = *(escaped_char++);
+        }
+    }
+
+    return processed_string;
+}
+
+static char *ast_binary_literal_from_bytes(const unsigned char *bytes,
+                                           size_t byte_length,
+                                           size_t *processed_length) {
+    static const char hex[] = "0123456789abcdef";
+    char *processed_string;
+    size_t i;
+
+    *processed_length = 2 + (byte_length * 2);
+    processed_string = malloc(*processed_length + 1);
+    processed_string[0] = '0';
+    processed_string[1] = 'x';
+    for (i = 0; i < byte_length; i++) {
+        processed_string[2 + (i * 2)] = hex[(bytes[i] >> 4) & 0x0f];
+        processed_string[3 + (i * 2)] = hex[bytes[i] & 0x0f];
+    }
+    processed_string[*processed_length] = 0;
+    return processed_string;
+}
+
 /* ASTNode Factory - adds a STRING token removing the leading & trailing speech marks
  * and decoding / encoding the string nicely - or converting to an error string */
 #define ADD_CHAR_TO_BUFFER(ch) { processed_length++; *(buffer++) = (ch); }
@@ -584,6 +684,9 @@ ASTNode *ast_fstr(Context* context, Token *token) {
     char* raw_string;
     size_t raw_length;
     size_t hex_bin_length;
+    size_t decoded_length;
+    size_t decoded_index;
+    unsigned char *decoded_string;
     char *processed_string;
     char *buffer;
     char c;
@@ -656,9 +759,9 @@ ASTNode *ast_fstr(Context* context, Token *token) {
             hex_bin_length++;
         }
 
-        processed_length = 0;
-        processed_string = malloc(raw_length * 4); /* Worse case */
-        buffer = processed_string;
+        decoded_length = (hex_bin_length + 1) / 2;
+        decoded_string = malloc(decoded_length);
+        decoded_index = 0;
 
         /* Output the hex string */
         if (hex_bin_length % 2) { /* Odd number of digits - add a leading zero */
@@ -667,23 +770,31 @@ ASTNode *ast_fstr(Context* context, Token *token) {
         }
         else hex_buffer_len = 0;
 
-        while (raw_length) {
-            if (*raw_string != ' ') {
-                hex_bin_buffer[hex_buffer_len] = (char)tolower(*raw_string);
+        for (i = 0; i < raw_length; i++) {
+            if (raw_string[i] != ' ') {
+                hex_bin_buffer[hex_buffer_len] = (char)tolower(raw_string[i]);
                 hex_buffer_len++;
                 if (hex_buffer_len == 2) {
-
-                    escaped_char = escape_character(
+                    decoded_string[decoded_index++] = (unsigned char)(
                             (hexchar2int(hex_bin_buffer[0]) * 16) +
                             hexchar2int(hex_bin_buffer[1]));
-
-                    while (*escaped_char) ADD_CHAR_TO_BUFFER(*(escaped_char++));
                     hex_buffer_len = 0;
                 }
             }
-            raw_string++;
-            raw_length--;
         }
+
+        if (!ast_is_valid_utf8_string_literal(decoded_string, decoded_index)) {
+            node->node_type = BINARY;
+            processed_string = ast_binary_literal_from_bytes(decoded_string, decoded_index, &processed_length);
+            free(decoded_string);
+            node->node_string = processed_string;
+            node->node_string_length = processed_length;
+            node->free_node_string = 1;
+            return node;
+        }
+
+        processed_string = ast_escape_bytes_for_rxas(decoded_string, decoded_index, &processed_length);
+        free(decoded_string);
     }
 
     else  { /* Binary String */
@@ -698,31 +809,40 @@ ASTNode *ast_fstr(Context* context, Token *token) {
             hex_bin_length++;
         }
 
-        processed_length = 0;
-        processed_string = malloc(raw_length * 4); /* Worse case */
-        buffer = processed_string;
+        decoded_length = (hex_bin_length + 7) / 8;
+        decoded_string = malloc(decoded_length);
+        decoded_index = 0;
 
         /* Output the bin string */
         /* Add leaving '0's */
         hex_buffer_len = (hex_bin_length % 8) ? 8 - (int)(hex_bin_length % 8) : 0;
         for (i=0;i<hex_buffer_len;i++) hex_bin_buffer[i]='0';
 
-        while (raw_length) {
-            if (*raw_string != ' ') {
-                hex_bin_buffer[hex_buffer_len] = (char)tolower(*raw_string);
+        for (i = 0; i < raw_length; i++) {
+            if (raw_string[i] != ' ') {
+                hex_bin_buffer[hex_buffer_len] = (char)tolower(raw_string[i]);
                 hex_buffer_len++;
                 if (hex_buffer_len == 8) {
-                    escaped_char = escape_character(
+                    decoded_string[decoded_index++] = (unsigned char)(
                             (binchar2int(hex_bin_buffer) * 16) +
                             binchar2int(hex_bin_buffer + 4));
-
-                    while (*escaped_char) ADD_CHAR_TO_BUFFER(*(escaped_char++));
                     hex_buffer_len = 0;
                 }
             }
-            raw_string++;
-            raw_length--;
         }
+
+        if (!ast_is_valid_utf8_string_literal(decoded_string, decoded_index)) {
+            node->node_type = BINARY;
+            processed_string = ast_binary_literal_from_bytes(decoded_string, decoded_index, &processed_length);
+            free(decoded_string);
+            node->node_string = processed_string;
+            node->node_string_length = processed_length;
+            node->free_node_string = 1;
+            return node;
+        }
+
+        processed_string = ast_escape_bytes_for_rxas(decoded_string, decoded_index, &processed_length);
+        free(decoded_string);
     }
 
     /* Get rid of excess memory */
@@ -1175,6 +1295,8 @@ const char *ast_ndtp(NodeType type) {
             return "OP_MOD";
         case OP_OR:
             return "OP_OR";
+        case OP_XOR:
+            return "OP_XOR";
         case OP_POWER:
             return "OP_POWER";
         case OP_NOT:
@@ -1213,6 +1335,16 @@ const char *ast_ndtp(NodeType type) {
             return "OP_TYPE_CAST";
         case OP_TYPEOF:
             return "OP_TYPEOF";
+        case OP_REFERENCE:
+            return "OP_REFERENCE";
+        case OP_DEREFERENCE:
+            return "OP_DEREFERENCE";
+        case OP_SNAPSHOT:
+            return "OP_SNAPSHOT";
+        case OP_REFVALID:
+            return "OP_REFVALID";
+        case OP_INITIALIZED:
+            return "OP_INITIALIZED";
         case OP_SCONCAT:
             return "OP_SCONCAT";
         case OPTIONS:
@@ -1319,6 +1451,30 @@ const char *ast_ndtp(NodeType type) {
             return "SIGNAL_NAMES";
         case SIGNAL_NAME:
             return "SIGNAL_NAME";
+        case AST_SEMANTIC_CONTEXT:
+            return "AST_SEMANTIC_CONTEXT";
+        case TYPE_REFERENCE:
+            return "TYPE_REFERENCE";
+        case LEVELC_ADDRESS:
+            return "LEVELC_ADDRESS";
+        case LEVELC_ARG:
+            return "LEVELC_ARG";
+        case LEVELC_DROP:
+            return "LEVELC_DROP";
+        case LEVELC_INTERPRET:
+            return "LEVELC_INTERPRET";
+        case LEVELC_NUMERIC:
+            return "LEVELC_NUMERIC";
+        case LEVELC_PROCEDURE:
+            return "LEVELC_PROCEDURE";
+        case LEVELC_PUSH:
+            return "LEVELC_PUSH";
+        case LEVELC_QUEUE:
+            return "LEVELC_QUEUE";
+        case LEVELC_SIGNAL:
+            return "LEVELC_SIGNAL";
+        case LEVELC_TRACE:
+            return "LEVELC_TRACE";
         default: return "*UNKNOWN*";
     }
 }
@@ -1509,9 +1665,15 @@ void free_ast(Context *context) {
         if (t->value_dim_base) free(t->value_dim_base);
         if (t->value_dim_elements) free(t->value_dim_elements);
         if (t->value_class) free(t->value_class);
+        if (t->value_reference_dim_base) free(t->value_reference_dim_base);
+        if (t->value_reference_dim_elements) free(t->value_reference_dim_elements);
+        if (t->value_reference_class) free(t->value_reference_class);
         if (t->target_dim_base) free(t->target_dim_base);
         if (t->target_dim_elements) free(t->target_dim_elements);
         if (t->target_class) free(t->target_class);
+        if (t->target_reference_dim_base) free(t->target_reference_dim_base);
+        if (t->target_reference_dim_elements) free(t->target_reference_dim_elements);
+        if (t->target_reference_class) free(t->target_reference_class);
         if (t->reporting_source_nodes) free(t->reporting_source_nodes);
         if (t->output) f_output(t->output);
         if (t->cleanup) f_output(t->cleanup);
@@ -1583,6 +1745,44 @@ char* ast_n2tp(ASTNode *node) {
             dim_base = s->dim_base;
             dim_elements = s->dim_elements;
         }
+    }
+
+    if (type == TP_REFERENCE) {
+        ValueType ref_type = node->value_reference_type;
+        size_t ref_dims = node->value_reference_dims;
+        int *ref_dim_base = node->value_reference_dim_base;
+        int *ref_dim_elements = node->value_reference_dim_elements;
+        const char *ref_class = node->value_reference_class;
+        char *ref_base;
+        char *ref_array;
+        int free_ref_base = 0;
+
+        if (node->symbolNode && node->symbolNode->symbol &&
+            node->symbolNode->symbol->type == TP_REFERENCE &&
+            ref_type == TP_UNKNOWN) {
+            Symbol *s = node->symbolNode->symbol;
+            ref_type = s->reference_type;
+            ref_dims = s->reference_dims;
+            ref_dim_base = s->reference_dim_base;
+            ref_dim_elements = s->reference_dim_elements;
+            ref_class = s->reference_class;
+        }
+
+        if (ref_class) {
+            ref_base = rxcp_internal_name_to_source_qualified(ref_class, 1);
+            free_ref_base = 1;
+        } else {
+            ref_base = type_nm(ref_type);
+        }
+
+        ref_array = ast_astr(ref_dims, ref_dim_base, ref_dim_elements);
+        result = malloc(strlen("reference ") + strlen(ref_base) + strlen(ref_array) + 1);
+        strcpy(result, "reference ");
+        strcat(result, ref_base);
+        strcat(result, ref_array);
+        if (free_ref_base) free(ref_base);
+        free(ref_array);
+        return result;
     }
 
     if (type == TP_OBJECT) {
@@ -1690,6 +1890,18 @@ ASTNode * ast_chld(ASTNode *parent, NodeType type1, NodeType type2) {
     return 0;
 }
 
+/* Get a child node that represents a type definition (or null) */
+ASTNode * ast_type_child(ASTNode *parent) {
+    ASTNode *n = parent ? parent->child : 0;
+    while (n) {
+        if (n->node_type == CLASS ||
+            n->node_type == VOID ||
+            n->node_type == TYPE_REFERENCE) return n;
+        n = n->sibling;
+    }
+    return 0;
+}
+
 /* Returns 1 if the node is an error or warning node, or has any descendant error or warning node */
 int ast_hase(ASTNode *node) {
     if (node->node_type == ERROR || node->node_type == WARNING) return 1;
@@ -1750,6 +1962,132 @@ int nodeis(ASTNode *node, const char* value) {
     return 0;
 }
 
+static void ast_set_reference_type_fields(ValueType *type,
+                                          size_t *dims,
+                                          int **dim_base,
+                                          int **dim_elements,
+                                          char **class_name,
+                                          ValueType new_type,
+                                          size_t new_dims,
+                                          const int *new_dim_base,
+                                          const int *new_dim_elements,
+                                          const char *new_class_name) {
+    size_t i;
+
+    if (*dim_base) {
+        free(*dim_base);
+        *dim_base = 0;
+    }
+    if (*dim_elements) {
+        free(*dim_elements);
+        *dim_elements = 0;
+    }
+    if (*class_name) {
+        free(*class_name);
+        *class_name = 0;
+    }
+
+    *type = new_type;
+    *dims = new_dims;
+
+    if (new_dims > 0) {
+        *dim_base = malloc(sizeof(int) * new_dims);
+        *dim_elements = malloc(sizeof(int) * new_dims);
+        for (i = 0; i < new_dims; i++) {
+            (*dim_base)[i] = new_dim_base ? new_dim_base[i] : 1;
+            (*dim_elements)[i] = new_dim_elements ? new_dim_elements[i] : 0;
+        }
+    }
+
+    if (new_class_name) *class_name = strdup(new_class_name);
+}
+
+void ast_clear_value_reference_type(ASTNode *node) {
+    if (!node) return;
+    ast_set_reference_type_fields(&node->value_reference_type,
+                                  &node->value_reference_dims,
+                                  &node->value_reference_dim_base,
+                                  &node->value_reference_dim_elements,
+                                  &node->value_reference_class,
+                                  TP_UNKNOWN, 0, 0, 0, 0);
+}
+
+void ast_clear_target_reference_type(ASTNode *node) {
+    if (!node) return;
+    ast_set_reference_type_fields(&node->target_reference_type,
+                                  &node->target_reference_dims,
+                                  &node->target_reference_dim_base,
+                                  &node->target_reference_dim_elements,
+                                  &node->target_reference_class,
+                                  TP_UNKNOWN, 0, 0, 0, 0);
+}
+
+void ast_set_value_reference_type(ASTNode *node, ValueType type, size_t dims,
+                                  const int *dim_base, const int *dim_elements,
+                                  const char *class_name) {
+    if (!node) return;
+    ast_set_reference_type_fields(&node->value_reference_type,
+                                  &node->value_reference_dims,
+                                  &node->value_reference_dim_base,
+                                  &node->value_reference_dim_elements,
+                                  &node->value_reference_class,
+                                  type, dims, dim_base, dim_elements, class_name);
+}
+
+void ast_set_target_reference_type(ASTNode *node, ValueType type, size_t dims,
+                                   const int *dim_base, const int *dim_elements,
+                                   const char *class_name) {
+    if (!node) return;
+    ast_set_reference_type_fields(&node->target_reference_type,
+                                  &node->target_reference_dims,
+                                  &node->target_reference_dim_base,
+                                  &node->target_reference_dim_elements,
+                                  &node->target_reference_class,
+                                  type, dims, dim_base, dim_elements, class_name);
+}
+
+void ast_copy_value_reference_type_from_symbol(ASTNode *node, const Symbol *symbol) {
+    if (!node || !symbol) return;
+    ast_set_value_reference_type(node, symbol->reference_type, symbol->reference_dims,
+                                 symbol->reference_dim_base, symbol->reference_dim_elements,
+                                 symbol->reference_class);
+}
+
+void ast_copy_target_reference_type_from_symbol(ASTNode *node, const Symbol *symbol) {
+    if (!node || !symbol) return;
+    ast_set_target_reference_type(node, symbol->reference_type, symbol->reference_dims,
+                                  symbol->reference_dim_base, symbol->reference_dim_elements,
+                                  symbol->reference_class);
+}
+
+void ast_copy_value_reference_type_from_value(ASTNode *node, const ASTNode *from_node) {
+    if (!node || !from_node) return;
+    ast_set_value_reference_type(node, from_node->value_reference_type, from_node->value_reference_dims,
+                                 from_node->value_reference_dim_base, from_node->value_reference_dim_elements,
+                                 from_node->value_reference_class);
+}
+
+void ast_copy_value_reference_type_from_target(ASTNode *node, const ASTNode *from_node) {
+    if (!node || !from_node) return;
+    ast_set_value_reference_type(node, from_node->target_reference_type, from_node->target_reference_dims,
+                                 from_node->target_reference_dim_base, from_node->target_reference_dim_elements,
+                                 from_node->target_reference_class);
+}
+
+void ast_copy_target_reference_type_from_value(ASTNode *node, const ASTNode *from_node) {
+    if (!node || !from_node) return;
+    ast_set_target_reference_type(node, from_node->value_reference_type, from_node->value_reference_dims,
+                                  from_node->value_reference_dim_base, from_node->value_reference_dim_elements,
+                                  from_node->value_reference_class);
+}
+
+void ast_copy_target_reference_type_from_target(ASTNode *node, const ASTNode *from_node) {
+    if (!node || !from_node) return;
+    ast_set_target_reference_type(node, from_node->target_reference_type, from_node->target_reference_dims,
+                                  from_node->target_reference_dim_base, from_node->target_reference_dim_elements,
+                                  from_node->target_reference_class);
+}
+
 /* Set Node Value and Target Type from Symbol */
 void ast_svtp(ASTNode* node, Symbol* symbol) {
     node->value_type = symbol->type;
@@ -1795,6 +2133,9 @@ void ast_svtp(ASTNode* node, Symbol* symbol) {
         node->target_class = malloc(strlen(symbol->value_class) + 1);
         strcpy(node->target_class, symbol->value_class);
     } else node->target_class = 0;
+
+    ast_copy_value_reference_type_from_symbol(node, symbol);
+    ast_copy_target_reference_type_from_symbol(node, symbol);
 }
 
 /* Set Node Target Value Type from Symbol */
@@ -1822,6 +2163,8 @@ void ast_sttp(ASTNode* node, Symbol* symbol) {
         node->target_class = malloc(strlen(symbol->value_class) + 1);
         strcpy(node->target_class, symbol->value_class);
     } else node->target_class = 0;
+
+    ast_copy_target_reference_type_from_symbol(node, symbol);
 }
 
 /* Set Node Target Value Type from Target Type of from_node */
@@ -1849,6 +2192,8 @@ void ast_sttn(ASTNode* node, ASTNode* from_node) {
         node->target_class = malloc(strlen(from_node->target_class) + 1);
         strcpy(node->target_class, from_node->target_class);
     } else node->target_class = 0;
+
+    ast_copy_target_reference_type_from_target(node, from_node);
 }
 
 /* Set Node Value (and Target) Type from the from_node target type */
@@ -1896,6 +2241,9 @@ void ast_svtn(ASTNode* node, ASTNode* from_node) {
         node->value_class = 0;
         node->target_class = 0;
     }
+
+    ast_copy_value_reference_type_from_target(node, from_node);
+    ast_copy_target_reference_type_from_target(node, from_node);
 }
 
 /* Reset Node Target Type to be the same as the node value type */
@@ -1922,6 +2270,8 @@ void ast_rttp(ASTNode* node) {
         node->target_class = malloc(strlen(node->value_class) + 1);
         strcpy(node->target_class, node->value_class);
     } else node->target_class = 0;
+
+    ast_copy_target_reference_type_from_value(node, node);
 }
 
 /* Returns the index number of a child of its parent (or -1 on error) */

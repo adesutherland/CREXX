@@ -404,7 +404,7 @@ PROCEDURE(append_binary_file) {
 
 #define MARKER "cReXx"
 #define MARKER_LEN 5
-#define NAME_OFFSET 64
+#define NAME_OFFSET 88
 #define MAX_NAME_LEN 32  // Adjust based on your format expectations
 
 PROCEDURE(rxbin_modules) {
@@ -413,18 +413,33 @@ PROCEDURE(rxbin_modules) {
     if (!file) RETURNINTX(-8);
 
     // Get file size
-    fseek(file, 0, SEEK_END);
+    if (fseek(file, 0, SEEK_END) != 0) {
+        fclose(file);
+        RETURNINTX(-12);
+    }
     long filesize = ftell(file);
-    rewind(file);
+    if (filesize < 0) {
+        fclose(file);
+        RETURNINTX(-12);
+    }
+    if (fseek(file, 0, SEEK_SET) != 0) {
+        fclose(file);
+        RETURNINTX(-12);
+    }
 
     // Read file into memory
-    unsigned char *buffer = malloc(filesize);
+    unsigned char *buffer = malloc((size_t)(filesize > 0 ? filesize : 1));
     if (!buffer) {
         perror("Memory allocation failed");
         fclose(file);
-        return;
+        RETURNINTX(-16);
     }
-    fread(buffer, 1, filesize, file);
+    if (filesize > 0 && fread(buffer, 1, (size_t)filesize, file) != (size_t)filesize) {
+        perror("Failed to read file");
+        free(buffer);
+        fclose(file);
+        RETURNINTX(-16);
+    }
     fclose(file);
 
     // Scan for components
@@ -480,6 +495,58 @@ PROCEDURE(rxbin_modules) {
   ENDPROC
 }
 
+/* PROCEDURE(rxbin_modules) { */
+/*     char *filename = GETSTRING(ARG0); */
+/*     FILE *file; */
+/*     module_file *module = NULL; */
+/*     long modnum = 0; */
+/*     int rc; */
+
+/*     if (!filename) RETURNINTX(-1); */
+
+/*     file = fopen(filename, "rb"); */
+/*     if (!file) RETURNINTX(-8); */
+
+/*     printf("List Library content\n"); */
+/*     printf("--------------------------------------------------------------------------------\n"); */
+
+/*     while ((rc = read_module(&module, file)) == 0) { */
+/*         int proc; */
+
+/*         printf("Module: %-40s\n", module->name ? module->name : ""); */
+
+/*         proc = module->header.proc_head; */
+/*         while (proc != -1) { */
+/*             proc_constant *pentry; */
+
+/*             pentry = (proc_constant *)(module->constant + proc); */
+/*             if (pentry->base.type != PROC_CONST) break; */
+
+/*             printf("  Function: %s()\n", pentry->name ? pentry->name : ""); */
+
+/*             proc = pentry->next; */
+/*         } */
+
+/*         free_module(module); */
+/*         module = NULL; */
+/*         modnum++; */
+/*     } */
+
+/*     if (module) { */
+/*         free_module(module); */
+/*         module = NULL; */
+/*     } */
+
+/*     fclose(file); */
+
+/*     if (rc != 1) {          /\* 1 is EOF in rxdamain.c *\/ */
+/*         RETURNINTX(-8); */
+/*     } */
+
+/*     printf("Library contains %ld modules\n", modnum); */
+/*     RETURNINTX(0); */
+/* ENDPROC */
+/* } */
 
 
 int nextdel(char * strg,int i, int plen,char pchar) {

@@ -1,0 +1,321 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/*
+   Prototype CREXX Debugger
+   Not complete but showing concepts around the introspection meta-instructions
+
+   Version 0.1 - and that is being kind!
+*/
+options levelb
+namespace rxdb expose stephandler
+import rxfnsb
+import rxdbgui
+
+main: procedure = .int expose controller gui next_instruction last_instruction mode watch auto_steps_remaining
+    arg cmd_line = .string[]
+    ui_mode = "ansi"
+
+    /* Very Rudermentary Command Line Parsing */
+    if cmd_line.0 > 1 then do
+        gui = .rxdbtextgui("text")
+        call gui.usage()
+        return 0
+    end
+    if cmd_line.0 = 1 then do
+        option = lower(cmd_line.1)
+        if option = "text" | option = "plain" | option = "llm" then ui_mode = option
+        else do
+            gui = .rxdbtextgui("text")
+            call gui.usage()
+            return 0
+        end
+    end
+
+    controller = .tracecontroller()
+    gui = .rxdbtextgui(ui_mode)
+
+    call gui.banner()
+    say "Loading CREXX Runtime Library Modules"
+    if controller.load_library("../cmake-build-debug/lib/rxfnsb") = 0 then say "Error Loading CREXX Runtime Library Modules"
+
+    last_loaded_module = ""
+    first_client_module = 0
+    assembler metaloadedmodules first_client_module /* get the number of modules making the debugger - the next modules will be the client  */
+    first_client_module = first_client_module + 1
+    call controller.set_first_client_module(first_client_module)
+    call controller.set_latest_module_only(1)
+
+    /* REXX MODE */
+    mode = 'REXX'
+    call controller.set_mode(mode)
+    watch = ""
+    auto_steps_remaining = 0
+
+    do forever
+        cmd = ""
+        call gui.non_running_prompt(mode)
+        assembler readline cmd
+
+        c1 = word(cmd,1)
+        c2 = word(cmd,2)
+
+        if cmd = 'h' then do
+           call gui.print_non_running_help()
+        end
+        else if cmd = 'q' then do
+          leave
+        end
+        else if cmd = 'm' then do
+           mode = controller.toggle_mode()
+        end
+        else if cmd = 'e' then do
+          call gui.print_procs(controller, controller.loaded_module_count())
+        end
+        else if cmd = 'a' then do
+          call gui.print_procs(controller, 0)
+        end
+        else if c1 = 'l' then do
+          if c2 = "" then say "File name missing"
+          else do
+            mod_num = controller.load_module(c2)
+            if mod_num = 0 then say "Error Loading module" c2
+            else do
+              say "Module" c2 "loaded #"mod_num
+              last_loaded_module = c2
+            end
+          end
+        end
+        else if c1 = 'r' then do
+          if controller.loaded_module_count() < first_client_module then say "No client module loaded"
+          else do
+            call_id = controller.find_proc(first_client_module,"main")
+            if call_id = 0 then say "Entry point not found in module" last_loaded_module
+            else do
+              rc = 0
+              no_args = 0
+              call gui.clear_run_screen()
+              assembler sigcall stephandler(),"BREAKPOINT"
+              last_instruction = ""
+              next_instruction = ""
+              call controller.enable_breakpoints()
+              assembler dcall rc,call_id,no_args
+              call controller.disable_breakpoints()
+              say gui.green() || "RXDB:" c2 "returned" rc
+            end
+          end
+        end
+        else say 'unknown command'
+    end
+
+    call gui.exit_line("RXDB Exiting")
+return 0
+
+/* This is the interrupt handler that is called before every rxas instruction */
+/* Note that interrupts are automatically disabled */
+stephandler: procedure = .int expose controller gui next_instruction last_instruction mode watch auto_steps_remaining
+  arg expose address_object = .trace_interrupt_raw;
+  cmd = ""
+  addr = 0
+  module = 0
+  r = 0
+  event = .tracecontext
+  event = .tracecontext(address_object.module(), address_object.address(), mode, address_object.code(), address_object.name())
+  module = event.module()
+  addr = event.address()
+
+  if controller.should_trace(event) = 0 then return 0
+
+  instruction = next_instruction
+  if mode = "REXX" then do
+    if event.has_source() = 0 then return 0 /* Not a rexx clause */
+    next_instruction = event.source_line()
+  end
+  else do
+    next_instruction = event.asm_line()
+  end
+  last_instruction = instruction
+
+  reset = gui.reset()
+  clearline = gui.clear_line()
+  bottom = gui.bottom()
+  do forever
+    call gui.render_step_header(last_instruction, next_instruction, mode)
+
+    /* Print watches - can't move into a procedure because it needs to
+       access the child's stackframe */
+    do k = 2
+      reg = word(watch,k)
+      if reg = "" then leave
+      value = ""
+      ires = 0
+      fres = 0.0
+      sres = ""
+      if isint(reg) then do
+        /* Register Print */
+        r = reg
+        assembler metalinkpreg ires,r       /* Link parent-frame-register */
+        ires_copy = ires /* Don't want to alter ires with any side effects */
+        assembler unlink ires
+        value = "int=" || ires_copy
+
+        assembler metalinkpreg fres,r       /* Link parent-frame-register */
+        fres_copy = fres
+        assembler unlink fres
+        value = value "float=" || fres_copy
+
+        assembler metalinkpreg sres,r       /* Link parent-frame-register */
+        sres_copy = sres
+        assembler unlink sres
+        value = value "string='" || sres_copy || "'"
+
+        say clearline || "r" || r ":" value
+      end
+
+      else do
+        /* REXX Variable Print */
+        reg = lower(reg)
+        symbol = ""
+        type = ""
+        meta_array = 0
+        meta_entry = ""
+        v = ""
+        r_num = 0
+        /* Read the addresses backwards but from the address before the code about to be executed */
+        do a = addr - 1 to 0 by -1
+          /* Get the metadata for that addr */
+          assembler metaloaddata meta_array,module,a
+          do i = 1 to meta_array
+            assembler linkattr1 meta_entry,meta_array,i
+
+            if meta_entry = ".meta_clear" then do /* Object type */
+              assembler linkattr1 symbol,meta_entry,1
+              if pos("."reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
+                leave a
+              end
+            end
+
+            else if meta_entry = ".meta_const" then do /* Object type */
+              assembler linkattr1 symbol,meta_entry,1
+              if pos("."reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
+                assembler linkattr1 type,meta_entry,3
+                assembler linkattr1 v,meta_entry,4
+                value = "(CONSTANT" type")" v
+                leave a
+              end
+            end
+
+            else if meta_entry = ".meta_reg" then do /* Object type */
+              assembler linkattr1 symbol,meta_entry,1
+              if pos("."reg"@",symbol"@") > 0 then do /* TODO - Rough and ready find */
+                assembler linkattr1 type,meta_entry,3
+                assembler linkattr1 r_num,meta_entry,4
+
+                if type = ".int" then do
+                  assembler metalinkpreg ires,r_num       /* Link parent-frame-register */
+                  ires_copy = ires /* Don't want to alter ires with any side effects */
+                  assembler unlink ires
+                  value = "(r"r_num ".int)" ires_copy
+                end
+
+                else if type = ".float" then do
+                  assembler metalinkpreg fres,r_num       /* Link parent-frame-register */
+                  fres_copy = fres
+                  assembler unlink fres
+                  value = "(r"r_num ".float)" fres_copy
+                end
+
+                else do
+                  assembler metalinkpreg sres,r_num       /* Link parent-frame-register */
+                  sres_copy = sres
+                  assembler unlink sres
+                  value = "(r"r_num ".STRING)" sres_copy
+                end
+
+              end
+            end
+          end
+          assembler unlink symbol
+          assembler unlink type
+          assembler unlink meta_array
+          assembler unlink meta_entry
+          assembler unlink v
+          assembler unlink r_num
+        end
+        if value = "" then value = "(TAKEN CONSTANT)" reg
+        say clearline || reg ":" value
+      end
+    end
+
+    if gui.step_batch() > 1 & auto_steps_remaining > 0 then do
+      auto_steps_remaining = auto_steps_remaining - 1
+      say reset || bottom
+      return 0
+    end
+
+    call gui.running_prompt(mode)
+
+    assembler readline cmd
+
+    c1 = word(cmd,1)
+
+    if cmd = '' then do
+      if gui.step_batch() > 1 then auto_steps_remaining = gui.step_batch() - 1
+      leave
+    end
+    else if cmd = 'h' then do
+       call gui.print_running_help()
+    end
+    else if cmd = 'q' then do
+      say reset"Exiting"
+      assembler exit
+    end
+    else if cmd = 'm' then do
+      mode = controller.toggle_mode()
+    end
+    else if cmd = 'e' then do
+      call gui.print_procs(controller, module)
+    end
+    else if cmd = 'a' then do
+      call gui.print_procs(controller, 0)
+    end
+    else if c1 = 'w' then do
+      watch = cmd;
+    end
+    else say clearline'unknown command'
+  end
+  say reset || bottom
+  return 0
+
+/* Poor mans datatype */
+isint: procedure = .int
+  arg expose val = .string
+  len = length(val)
+  if len = 0 then return 0
+  do i = 1 to len
+    c = substr(val,i,1)
+    if c > '9' then return 0
+    if c < '0' then return 0
+  end
+  return 1

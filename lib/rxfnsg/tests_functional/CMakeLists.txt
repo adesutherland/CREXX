@@ -20,7 +20,7 @@ unset(_prev_target)
 foreach(_binfile IN LISTS REXXBINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
 
-  set(_rexx_file "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx")
+  set(_rexx_file "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx")
 
   add_custom_target("${_basename}")
   add_dependencies(testrxfnsg "${_basename}")

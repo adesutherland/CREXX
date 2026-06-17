@@ -22,13 +22,14 @@ The pipeline of transforming REXX source code into executable bytecode is struct
 3. **AST (Abstract Syntax Tree) & Compiler Exits**
    - The primary data structure bridging the parser and the code emitter.
    - Built using a hierarchical structure of `ASTNode` C structs that capture operations, scopes, typing, and tree associations.
+   - Standard comparison operators (`=`, `<>`, `>`, `<`, `>=`, `<=`) retain loose REXX comparison semantics for string-targeted operands. The compiler emits the `r*` opcode family (`req`, `rne`, `rgt`, `rlt`, `rgte`, `rlte`), and the VM compares numerically only when both runtime string forms parse as numbers; otherwise it performs blank-padded string comparison. This prevents dynamic nonnumeric text such as `"a" > 1` from raising `CONVERSION_ERROR`.
    - String comparison operators (`==`, `>>`, `<<`, `>>=`, `<<=`) are carried as a distinct `OP_COMPARE_S_*` family. During type validation both operands are retargeted to `TP_STRING`, but the optimiser still preserves intrinsic numeric constant types long enough to stringify from value rather than source spelling. That keeps folded behaviour aligned with runtime cases like `01 == 1`.
    - Inline cloning must preserve the callee scope's numeric context when it builds replacement scopes. Without that, folded float/decimal string comparisons can silently drift from runtime behaviour under local `NUMERIC DIGITS` / `FORM` / `CASE` settings.
    - Expression-level control flow is supported through `BLOCK_EXPR` (`DO ... END` used as an expression) and `LEAVE_WITH` (`LEAVE WITH expr`). The `association` pointer links each `LEAVE_WITH` back to its owning `BLOCK_EXPR`, similar to how loop `LEAVE` / `ITERATE` link to `DO`.
-   - Contains the **Exit Bridge Framework** (`rxcp_exit.c`), which intercepts unrecognized `IMPLICIT_CMD` nodes, invokes user-provided `rxplugin` macros to generate replacement source code, parses the interpolated strings (preserving literal quotes), and surgically grafts the resulting AST back into the main tree without violating return-type constraints.
+   - Contains the **Exit Bridge Framework** (`rxcp_exit.c`), which intercepts unrecognized `IMPLICIT_CMD` nodes, invokes user-provided `rxplugin` macros to generate replacement source code, parses the interpolated strings (preserving literal quotes), and surgically grafts the resulting AST back into the main tree without violating return-type constraints. Compiler-exit dispatch is keyed by the first source token in the instruction, not by the first marshalled AST node; this matters for command-position member calls such as `x.add(...)`, whose AST node token is the member name but whose command head is `x`. A non-implicit exit that returns `REJECT` falls through to the certified implicit ADDRESS exit; `ERROR` remains a compiler error.
    - **Implicit Main Argument Bridge**: when the compiler synthesizes the file-level `main()` wrapper, that procedure is marked `is_implicit_main`. Later typing and emission use that marker to interpret classic `arg()` / `arg[]` / `arg[n]` access against the hidden command-line `.string[]` that the VM already passes to `main`. Ordinary procedures still use normal vararg semantics, and explicit zero-argument `main()` does not gain accidental source-level visibility of the hidden VM argv payload.
    - **Exit Fragment Scope Lifecycle**: replacement fragments from exits are parsed and structurally normalized before grafting, but any new lexical block scopes created by structured replacements are finalized later during symbol structuring/build. Nested `DO` / `IF` / `INSTRUCTIONS` emitted by exits are therefore a supported shape, and debug validation is staged after that scope rebuild so the validator sees the stabilized tree rather than the transient pre-scope fragment form.
-   - **Auto-Expose Mechanics**: Implements automatic scope resolution that allows `namespace ... expose` global variables to implicitly bind into local `PROCEDURE` scopes, eliminating legacy `PROCEDURE EXPOSE` boilerplate.
+   - **Expose Mechanics**: Implements automatic scope resolution that allows `namespace ... expose` global variables to implicitly bind into local `PROCEDURE` scopes. Procedure-level `name: procedure [= .type] expose var ...` remains the local form for selected private module state shared by specific procedures.
    - **Automatic Register Allocation**: Within `rxcp_val_sym.c` (Step 3 - Pass 3), the compiler walks the AST (`build_symbols_walker`) to identify explicit `NODE_REGISTER` allocations via the `with register.N[.view]` clause on class attributes. It then automatically maps any remaining unmapped attributes of a class to unused VM registers (`r1`, `r2`, etc.) by synthesizing implicit `NODE_REGISTER` AST nodes. For normal classes, prefer this implicit allocation and keep callers on factories/methods; explicit `with register...` mappings should be reserved for genuine physical interop where a fixed layout is required.
 
 4. **Emitter (IR -> Assembly)**
@@ -41,7 +42,13 @@ The pipeline of transforming REXX source code into executable bytecode is struct
      policy, not as a semantic safety boundary. Unsupported semantic gates
      still fail closed, including procedure-level `expose`, assembler aliasing,
      dynamic-index varargs, receiver/copyback shapes without proof, and
-     interface/member dispatch that cannot be proved monomorphic.
+     interface/member dispatch that cannot be proved monomorphic. When a
+     right-hand eager-operator call is inlineable but the left operand is
+     already a computed value, the inliner rewrites the whole operator to a
+     `BLOCK_EXPR`: first capture the left operand in a compiler temp, then
+     `LEAVE WITH temp <op> call(...)`. The next fixed-point pass can inline
+     the call with a stable left operand, avoiding BLOCK_EXPR result-register
+     aliasing without giving up the inline opportunity.
    - Inlining is implemented as AST tree surgery, not textual substitution.
      The cloned body must preserve callee-local scopes, remap symbols, bind
      arguments exactly as a real call would, preserve source/debug metadata,
@@ -60,19 +67,230 @@ The pipeline of transforming REXX source code into executable bytecode is struct
 6. **Linker (`rxlink`, optional)**
    - Combines one or more `.rxbin` modules into a single linked image with one shared constant-pool record and one shared-backed module record per selected module.
    - Resolves imports and interface-provider relationships up front, while preserving the module boundaries needed by the VM loader.
-   - Can strip source/file metadata (`META_SRC` and `META_FILE`) for smaller deployable artifacts without removing runtime contract metadata.
+   - Can strip source-level debug metadata (`META_SOURCE_STEP` and `META_TRACE_EVENT`) for smaller deployable artifacts without removing runtime contract metadata.
 
 7. **Interpreter (`rxvm`)**
    - `rxvm` reads and executes the `rxbin` bytecode.
    - Modules are loaded via `rxldmod`.
    - The execution loop happens inside the `rxvm_run` function (e.g., in `rxvmmain.c` / `rxvmintp.c`).
 
+## Text, UTF-8, and Binary Data
+
+In normal UTF builds, `.string` register data is stored as UTF-8 bytes while
+the VM exposes character operations as codepoint operations. A VM `value`
+tracks `string_length` as the byte length and, in UTF builds, also tracks
+`string_chars` plus a byte/codepoint cursor pair (`string_pos` and
+`string_char_pos`). Instructions such as `strlen`, `strchar`,
+`setstrpos`/`getstrpos`, `substr`, `strpos`, `appendchar`, `fndblnk`, and
+`fndnblnk` operate in codepoint space and use helpers such as
+`string_set_byte_pos()`, `string_slice_from_cursor()`, and
+`string_concat_char()` to walk or synthesize the underlying UTF-8 bytes. Some
+scan paths have ASCII fast paths when byte length and codepoint count match.
+These string instructions assume valid UTF-8 in the register payload. NUTF8
+builds collapse this model back to byte positions and byte lengths.
+
+Numeric-to-string promotion opcodes such as `itos`, `btos`, `ftos`, and `dtos`
+may mutate the target VM value to materialize its string representation. That is
+valid even when the target register is linked to caller-visible storage, such as
+a class attribute, because this is representation materialization rather than a
+source-level assignment. The compiler must therefore emit normal type promotion
+for linked expression values too. The VM does not currently set or consume a
+"string representation is valid" cache flag, and the compiler does not reuse a
+previously materialized string form across multiple uses; this remains a
+potential performance improvement rather than current behaviour.
+
+Hex and binary suffixed source strings now split by decoded byte content.
+`ast_fstr()` validates the hex or binary digit syntax and decodes the bytes.
+When the decoded span is valid UTF-8, the literal remains a `STRING` AST node
+and follows the normal escaped RXAS string path. When the decoded span is not
+valid UTF-8, the literal becomes a `BINARY` AST node with canonical `0x...`
+RXAS text. That keeps arbitrary bytes out of string-only character opcodes:
+using such a byte literal in a text context is rejected as `CANNOT_CAST_BINARY`,
+while assigning it to `.binary`, or writing `literal as .binary`, emits an RXAS
+binary load. A first untyped assignment such as `x = 'ffff'x` is deliberately
+treated as a text context, so invalid UTF-8 byte literals do not silently infer
+`.binary`. Ordinary strings can still be converted to `.binary`; the conversion
+stores the exact current UTF-8 byte sequence with no normalization. Constant
+strings in an explicitly binary target may be folded into a binary load, and
+runtime string expressions use the VM `stobin` instruction. The reverse
+conversion is explicit-only: `.binary as .string` validates the bytes as UTF-8.
+Valid constant binary values may be folded back into string literals, while
+invalid constant binary-to-string casts are rejected as `CANNOT_CAST_BINARY` and
+invalid runtime binary values raise `UNICODE_ERROR` through `bintos`.
+
+`.binary` is present in the Level B surface and compiler metadata as
+`TP_BINARY`. The VM `value` has a separate `binary_value`, `binary_length`, and
+`binary_pos`, and `binary_buffer_length` slot. Copies and moves preserve that
+slot, socket and file byte operations use it (`socksendb`, `sockrecvb`,
+`freadb`, `fwriteb`), and native payloads reuse it with
+`rxvm_native_payload_ops`. The VM has shared binary buffer helpers for
+reserve/set/append/concat/slice operations. `GETBYTE` reads a zero-based byte
+index and returns `-1` when the requested byte is outside the current binary
+length. `FREADB` and socket binary receive reuse the binary buffer growth
+machinery instead of reallocating to exact byte counts.
+
+At the Level B source surface, `||` is byte concatenation when either operand is
+`.binary`; the compiler targets both operands as `.binary` and emits `bconcat`.
+This means a string operand in a binary concat is converted to its exact UTF-8
+bytes with `stobin`, while binary bytes are never routed through `.string` or
+`bintos`. Blank concatenation (`OP_SCONCAT`) remains a text-only operation for
+now and binary use is a type mismatch.
+
+The public byte-helper BIFs live in `lib/rxfnsb/rexx/binary.crexx`: `binlength`,
+`binbyte`, `binsetbyte`, `binsubstr`, `binconcat`, `binoverlay`, `bininsert`,
+`bindelstr`, `binpos`, `bincompare`, `bin2x`, and `x2bin`. They are thin Level B
+wrappers over the RXAS byte-buffer instructions plus small loops for search and
+hex conversion.
+
+At the RXAS level, `BINARY_CONST` and `OP_BINARY` support exist and `0x...`
+operands are constant-pool binary records. `load rN,0x...` lowers to
+`LOAD_REG_BINARY` and populates the register's binary slot rather than the
+string slot. Binary literals are byte-paired hex (`0x00ff` is two bytes);
+`0x`/`0X` is the empty binary literal, and disassembly canonicalizes as
+lowercase `0x...`. RXAS also exposes byte-buffer instructions for length,
+single-byte update, concat, append, byte-cursor get/set, cursor-based slice,
+fixed-size overlay update, `stobin` string-byte conversion, and `bintos`
+binary-to-string conversion. Binary-buffer instructions never validate UTF-8 and
+clear VM-private UTF cache flags on the destination. `bintos` is the exception:
+it validates the source bytes and raises `UNICODE_ERROR` in UTF builds when they
+are not valid text. Most character and string opcodes still take string operands
+and assume valid UTF-8 in UTF builds.
+
+Level C text and binary behavior should be treated as design space, not as
+settled current compiler behavior. Classic REXX is byte-oriented and commonly
+stores binary data in the same text values used for strings, while current
+Level B separates the intended surfaces as `.string` and `.binary`. Any Level C
+compatibility mode therefore has to choose where Classic byte-text semantics
+map: to UTF-8 `.string` semantics, to `.binary`, or to an explicit option such
+as `bytetext`. Classic REXX BIFs will need to be audited against that decision.
+Level G and library work have a separate Unicode extension path for grapheme,
+word, and sentence boundaries, normalization, and case operations through the
+Unicode plugin hooks; those features sit above the core codepoint-level VM
+string contract.
+
+### Locked Direction
+
+The architecture direction is:
+
+- `.string` means valid UTF-8 text in normal UTF builds.
+- `.binary` means arbitrary bytes.
+- Level B keeps those surfaces strict and typed; invalid byte streams should not
+  silently become `.string` values.
+- Level C may provide Classic REXX byte-text compatibility through an explicit
+  compatibility mode such as `bytetext`, but that mode must not weaken the
+  Level B/G `.string` contract.
+- Level G should build richer Unicode services through the existing Unicode
+  plugin hooks. `utf8proc` is the preferred first implementation candidate for
+  normalization, case folding, Unicode property checks, and grapheme/word/
+  sentence segmentation because it is a small C library under MIT expat plus
+  Unicode data license terms.
+
+Trust boundaries for `.string` validation are compiler/assembler string
+constants, RXVML string setters, CREXXSAA ADDRESS variable setters, RXPA native
+function returns and updated argument trees, text file and socket reads,
+ADDRESS callbacks, and any explicit byte-to-text conversion API. Internal
+operations that preserve validity, such as copying, concatenating two already-valid
+strings, slicing on codepoint boundaries, and appending a valid Unicode scalar,
+should propagate cached validity/count state rather than rescanning.
+
+The VM now maintains the first two VM-private status bits as a UTF-8 cache:
+`RXFLAG_VM_UTF8_VALID` and `RXFLAG_VM_UTF8_COUNT_VALID`. Trusted string
+constants set both bits, bounded native setters validate and count before
+setting them, and operations that preserve validity copy or propagate the bits.
+Internal raw setters can still clear the cache when they are used to materialize
+bytes, but Level B user-facing text boundaries reject invalid UTF-8 instead of
+letting those bytes become `.string` values. RXAS string constants, source
+literals in text context, RXVML setters, CREXXSAA variable setters, RXPA native
+return/argument trees, command-line arguments, ADDRESS callback text/result
+copying, `freadline`, `freadcdpt`, socket text receive, and explicit
+`.binary as .string` all validate. RXPA validation is recursive over child
+attributes and is enabled by default; developers can temporarily opt out with
+`CREXX_RXPA_DISABLE_UTF8_CHECKS=1` while migrating plugins. Invalid byte input
+must stay on the binary path (`.binary`, `freadb`, `fwriteb`, `sockrecvb`, and
+`socksendb`) until it is decoded explicitly.
+
+The VM register/value status word is a `uint32_t` field partitioned in
+`binutils/include/rxflags.h` instead of adding a second flag field:
+
+- `0x000000FF`: VM-private, externally readable but not writable through RXAS
+  flag instructions. This band is reserved first for UTF-8 validity/count and
+  Unicode normalization-form cache bits.
+- `0x0000FF00`: compiler call ABI flags. The current bits are `REGTP_VAL`
+  (`0x00000100`) and `REGTP_NOTSYM` (`0x00000200`).
+- `0x00FF0000`: stable library/runtime ABI flags.
+- `0x7F000000`: user/experimental flags.
+- `0x80000000`: reserved to avoid signed integer ambiguity.
+
+`SETTP`, `SETORTP`, and `LOADSETTP` mask external writes so VM-private bits are
+preserved or cleared only by VM internals. `GETTP`, `GETANDTP`, and explicit
+`BRTPANDT` masks may observe readable VM-private bits; unmasked `BRTPT` only
+tests public/external flag bands so VM cache bits do not change old branch
+semantics.
+
+RXAS/RXBIN integer operands remain `rxinteger`; status instructions cast masks
+to the 32-bit flag word before applying the partition.
+
+Regression coverage for the partition and UTF cache contract lives in
+`interpreter/tests/tests_register_flags.rxas`,
+`interpreter/tests/tests_utf_flags.rxas`, and
+`interpreter/tests/ts_regvalue_tester.c`.
+Compiler and runtime regression coverage for `.string`/`.binary` coexistence
+lives in `compiler/tests/rexx_src/binary_literal_load.crexx`,
+`compiler/tests/rexx_src/scalar_type_casts.crexx`, and the generated negative
+tests in `compiler/tests/CMakeLists.txt`. Boundary regressions include direct
+RXAS invalid string constants, `compiler/tests/src/test_rxvml_utf_boundaries.c`,
+and `interpreter/tests/tests_utf_freadline_boundary.rxas` /
+`interpreter/tests/tests_utf_freadcdpt_boundary.rxas`.
+
+The completed UTF baseline is:
+
+1. Bounded UTF-8 validate-and-count support exists through `utf8nvalid_count()`
+   and is used by VM string cache refresh paths.
+2. Compiler source hex/binary literals are decoded as bytes, stay `.string`
+   only when valid UTF-8, and otherwise require explicit `.binary`.
+3. The register status word is partitioned in `rxflags.h`; VM-private UTF cache
+   bits are preserved from external writes.
+4. `.binary` has growable buffer helpers plus RXAS/VM literal load, length,
+   byte get/set, append, concat, cursor, slice, and overlay instructions.
+5. Explicit `.string`/`.binary` coexistence is first class in Level B:
+   `as .binary` stores exact UTF-8 bytes through `stobin`, `as .string`
+   validates bytes through `bintos`, and valid constant casts fold in both
+   directions. Invalid constant byte-to-text casts fail as `CANNOT_CAST_BINARY`;
+   invalid runtime byte-to-text conversions raise `UNICODE_ERROR`.
+6. Direct RXAS string constants are part of the same contract: hand-written
+   RXAS `STRING_CONST` / `OP_STRING` creation validates and rejects invalid
+   UTF-8 with guidance to use binary literals.
+7. External Level B text ingress validates. The public `rxvml_set_str()` returns
+   non-zero for invalid UTF-8, RXVML run arguments and ADDRESS native callback
+   text are checked, CREXXSAA rejects invalid variable setter values
+   immediately, RXPA recursively validates returned values and updated
+   arguments after native calls, `freadline`/`freadcdpt` raise `UNICODE_ERROR`,
+   and socket text receive reports an invalid text status. Character-walking
+   opcodes require valid UTF cache state before using codepoint iterators.
+
+The open work has moved to its owning levels:
+
+- Level G owns normalization cache semantics and richer Unicode services. The
+  VM-private status band reserves space for normalization knowledge, but NFC,
+  NFD, NFKC, and NFKD bits should only become meaningful when Level G
+  normalization APIs set and consume them. The preferred first Unicode plugin
+  candidate is `utf8proc`, subject to vendoring/build work and carrying its MIT
+  expat plus Unicode data license notices. Initial coverage should target
+  normalization, case folding, Unicode property checks, and grapheme/word/
+  sentence segmentation. There is also room for a Level B cREXX proof of
+  concept of UTF helper libraries while Level G remains design work.
+- Level C owns Classic REXX migration and byte-text compatibility. Classic
+  byte-text behavior should be isolated behind an explicit compatibility option
+  such as `bytetext`; Classic BIFs then need auditing so users can choose UTF
+  text semantics, byte semantics, or explicit `.binary` operations predictably.
+
 ## Compiler Import Discovery
 
 `rxc` does not treat every import location as both source and binary
 space anymore. Import discovery is now split into two root classes:
 
-- source roots for `.rexx`
+- source roots for `.crexx`, `.crx`, `.rexx`, and the arbitrary extension used
+  by the initial source file, if any
 - binary roots for `.rxbin`, optional `.rxas`, and `.rxplugin`
 
 The primary source root is the directory containing the source file
@@ -80,6 +298,11 @@ being compiled. Additional source roots come from `-s`. Binary roots
 come from any `-i` paths and the compiler executable directory.
 Repeated `-i` and `-s` options are accumulated in order. Search order
 keeps project source files ahead of deployed binary artifacts.
+
+An extensionless initial `rxc` input falls back to `.crexx`. Headerless
+`.crexx`, `.crx`, and arbitrary-extension sources default to Level G;
+headerless `.rexx` defaults to Level C. `.rxpp` is reserved for the
+preprocessor and is not scanned as an import source extension.
 
 For source discovery the compiler now performs a lightweight header scan
 before any full parse. That scan reads the leading `options`,
@@ -90,6 +313,14 @@ import candidate.
 
 Within a binary root, same-stem artifacts are collapsed to the freshest
 candidate. If timestamps tie, `.rxbin` is preferred over `.rxas`.
+
+Compiler-generated consumer `.rxas` treats imported declaration blocks as a
+runtime dependency snapshot, not as a copy of the provider's full public
+surface. The provider artifact's exports and metadata remain definitive. When
+`rxc` emits a consumer `.rxas`, it re-emits only imported callable declarations
+that the generated instruction stream still needs for linking or runtime
+lookup. If optimization or inlining removes every runtime reference to an
+imported file, the imported declaration block is suppressed entirely.
 
 ## Level B Classes and Interfaces
 

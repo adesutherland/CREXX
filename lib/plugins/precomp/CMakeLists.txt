@@ -9,7 +9,7 @@ include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 # Create the static link module
 add_static_plugin_target(precomp precomp.c)
 
-# Create the dynamic link module - this is needed for rxc to compile rxpp.rexx
+# Create the dynamic link module - this is needed for rxc to compile rxpp.crexx
 add_dynamic_plugin_target(precomp precomp.c)
 
 add_custom_command(
@@ -20,7 +20,7 @@ add_custom_command(
         COMMAND $<TARGET_FILE:rxas> rxpp
         COMMAND $<TARGET_FILE:rxlink> -s -o rxpp_linked rxpp ${CMAKE_BINARY_DIR}/bin/library
         COMMAND $<TARGET_FILE:rxcpack> -o rxpp rxpp_linked
-        DEPENDS precomp rxas rxc rxlink rxpp.rexx library compiler_exit_bin rxcpack rxpa
+        DEPENDS precomp rxas rxc rxlink rxpp.crexx library compiler_exit_bin rxcpack rxpa
         OUTPUT rxpp.c
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "rxpp compile, assemble, link and package rxpp ..."

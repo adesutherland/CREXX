@@ -1,0 +1,85 @@
+/* rexx test object array helper bifs */
+options levelb
+import rxfnsb
+
+failures = 0
+
+a = .object[]
+
+failures = failures + check_int("objectarrayappend one rc", objectarrayappend(a, .box("B") as .object), 1)
+failures = failures + check_int("objectarrayappend repeat rc", objectarrayappend(a, .box("C") as .object, 2), 3)
+failures = failures + check_int("objectarrayprepend one rc", objectarrayprepend(a, .box("A") as .object), 4)
+failures = failures + check_join("append/prepend data", a, "A B C C")
+
+failures = failures + check_int("objectarrayinsert middle rc", objectarrayinsert(a, 3, 1, .box("X") as .object), 5)
+failures = failures + check_join("insert middle data", a, "A B X C C")
+
+failures = failures + check_int("objectarraydelete middle rc", objectarraydelete(a, 3, 2), 3)
+failures = failures + check_join("delete middle data", a, "A B C")
+
+failures = failures + check_int("objectarrayinsert append clamp rc", objectarrayinsert(a, 20, 1, .box("Z") as .object), 4)
+failures = failures + check_join("insert append clamp data", a, "A B C Z")
+
+failures = failures + check_int("objectarraydelete tail clamp rc", objectarraydelete(a, 3, 10), 2)
+failures = failures + check_join("delete tail clamp data", a, "A B")
+
+call objectarraydrop a
+rc = objectarrayappend(a, .box("A") as .object)
+rc = objectarrayappend(a, .box("B") as .object)
+rc = objectarrayappend(a, .box("C") as .object)
+rc = objectarrayappend(a, .box("D") as .object)
+rc = objectarrayappend(a, .box("E") as .object)
+failures = failures + check_int("objectarraymove middle rc", objectarraymove(a, 3, 2, 1), 5)
+failures = failures + check_join("objectarraymove middle data", a, "C D A B E")
+
+failures = failures + check_int("objectarraydrop rc", objectarraydrop(a), 0)
+failures = failures + check_int("objectarraydrop count", a[0], 0)
+
+if failures <> 0 then do
+  say "object array helper failures:" failures
+  exit 1
+end
+
+say "PASS: object array helpers"
+exit 0
+
+check_join: procedure=.int
+  arg label=.string, a=.object[], expected=.string
+
+  actual = join(a)
+  if actual <> expected then do
+    say label": expected ["expected"] got ["actual"]"
+    return 1
+  end
+return 0
+
+check_int: procedure=.int
+  arg label=.string, actual=.int, expected=.int
+
+  if actual <> expected then do
+    say label": expected" expected "got" actual
+    return 1
+  end
+return 0
+
+join: procedure=.string
+  arg a=.object[]
+
+  out = ""
+  do i = 1 to a[0]
+    item = a[i] as .box
+    out = out || item.name()
+    if i < a[0] then out = out || " "
+  end
+return out
+
+box: class
+  name_ = .string
+
+  *: factory
+    arg name = .string
+    name_ = name
+    return
+
+  name: method = .string
+    return name_

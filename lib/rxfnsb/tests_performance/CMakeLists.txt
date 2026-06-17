@@ -23,7 +23,7 @@ foreach(_binfile ${REXXBINS})
     add_dependencies(testperfbifs ${_basename})
     crexx_add_rexx_opt_matrix(
             NAME ${_basename}
-            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rexx
+            SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx
             TARGET_GROUP ${_basename}
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
             DEPENDS library ${_prev_target}

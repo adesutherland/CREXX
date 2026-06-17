@@ -1,0 +1,27 @@
+/* anagram.crexx
+   Two words are anagrams if they contain the same letters
+   in a different order. By sorting the letters alphabetically,
+   both words produce the same normalized representation.
+*/
+options levelb
+import rxfnsb
+
+say normalize('listen')    /* EILNST */
+say normalize('silent')    /* EILNST */
+
+normalize: procedure=.string
+  arg s=.string
+  s = upper(s)             /* Ignore differences in letter case */
+
+  chars = .string[]        /* Create an array of single characters */
+  do i = 1 to length(s)
+     chars.i = substr(s, i, 1)
+  end
+
+  call arraysort chars     /* Sort letters alphabetically */
+
+  out = ''
+  do i = 1 to length(s)
+     out = out || chars.i  /* Rebuild the sorted string */
+  end
+return out

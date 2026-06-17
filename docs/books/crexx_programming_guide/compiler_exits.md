@@ -1,6 +1,6 @@
 # Compiler exits
 
-This chapter introduces cREXX compiler exits: what they are, how to enable them, and how to use them effectively. It also shows concrete examples, including how variable shadowing works inside exit-generated code.
+This chapter introduces cRexx compiler exits: what they are, how to enable them, and how to use them effectively. It also shows concrete examples, including how variable shadowing works inside exit-generated code.
 
 ## What are compiler exits?
 

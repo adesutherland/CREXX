@@ -10,10 +10,10 @@ substr()  .locals=18 .expose=substr.substr
     load  r7," " /* the default pad character */
     load  r6,0   /* the length field initialized to 0 */
     /* here we need to substract the left-out optionals from the argcount */    
-    brtpandt havethree,a3,1
+    brtpandt havethree,a3,256
     isub  a0,a0,1
 havethree:
-    brtpandt havefour,a4,1
+    brtpandt havefour,a4,256
     isub  a0,a0,1
 havefour:   
     /* now we have the correct number */

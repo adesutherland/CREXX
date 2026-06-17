@@ -68,6 +68,7 @@
 #include "rxvmplugin_framework.h"
 #include "rxbin.h" /* Needed for rxvmvars.h */
 #include "rxcp_val.h"
+#include "rxcp_util.h"
 #include "rxvmvars.h"
 #include "rxvalue.h"
 
@@ -85,7 +86,41 @@ static void rewrite_to_float_constant(ASTNode* node, Payload* payload, double va
 static void rewrite_to_decimal_constant(ASTNode* node, Payload* payload, char* value);
 static void rewrite_to_integer_constant(ASTNode* node, Payload* payload, rxinteger value);
 static void rewrite_to_boolean_constant(ASTNode* node, Payload* payload, int value);
+static void rewrite_to_binary_constant(ASTNode* node, Payload* payload, char* string, size_t length);
+static void rewrite_to_parsed_literal_constant(ASTNode* node, Payload* payload, ASTNode* literal, ValueType literal_type);
 static int strict_string_compare_operand(ASTNode *node);
+
+static int semantic_context_is_internal_operand(ASTNode *node) {
+    return ast_semantic_context_kind(node) == AST_SEMANTIC_CONTEXT_INTERNAL_OPERAND;
+}
+
+static int folded_concat_is_internal_operand(ASTNode *node) {
+    ASTNode *child;
+
+    if (!node) return 0;
+    if (semantic_context_is_internal_operand(node)) return 1;
+    if (node->node_type != OP_CONCAT && node->node_type != OP_SCONCAT) return 0;
+
+    child = node->child;
+    if (!child) return 0;
+    while (child) {
+        if (!folded_concat_is_internal_operand(child)) return 0;
+        child = child->sibling;
+    }
+    return 1;
+}
+
+static void preserve_folded_semantic_context(ASTNode *node, Payload *payload) {
+    if (!node || !payload || !payload->context) return;
+    if (!folded_concat_is_internal_operand(node)) return;
+    if (semantic_context_is_internal_operand(node)) return;
+
+    ast_attach_semantic_context(node,
+                                ast_make_semantic_context(payload->context,
+                                                          AST_SEMANTIC_CONTEXT_INTERNAL_OPERAND,
+                                                          node,
+                                                          "semantic-folded-key"));
+}
 
 /*
  * Create a number_context of a node
@@ -253,9 +288,163 @@ static void update_string(ASTNode* node) {
     }
 }
 
+static int opt_hex_value(char ch) {
+    if (ch >= '0' && ch <= '9') return ch - '0';
+    if (ch >= 'a' && ch <= 'f') return ch - 'a' + 10;
+    if (ch >= 'A' && ch <= 'F') return ch - 'A' + 10;
+    return -1;
+}
+
+static void opt_append_hex_byte(char *buffer, size_t *pos, unsigned char byte) {
+    static const char hex[] = "0123456789abcdef";
+    buffer[(*pos)++] = hex[(byte >> 4) & 0x0f];
+    buffer[(*pos)++] = hex[byte & 0x0f];
+}
+
+static unsigned char *rxas_escaped_string_to_bytes(const char *string,
+                                                   size_t length,
+                                                   size_t *byte_length) {
+    unsigned char *buffer;
+    size_t i;
+    size_t out = 0;
+
+    buffer = malloc(length ? length : 1);
+    if (!buffer) return 0;
+
+    for (i = 0; i < length; i++) {
+        unsigned char byte = (unsigned char)string[i];
+        if (byte == '\\' && i + 1 < length) {
+            char esc = string[++i];
+            switch (esc) {
+                case '\\': byte = '\\'; break;
+                case 'n': byte = '\n'; break;
+                case 't': byte = '\t'; break;
+                case 'a': byte = '\a'; break;
+                case 'b': byte = '\b'; break;
+                case 'f': byte = '\f'; break;
+                case 'r': byte = '\r'; break;
+                case 'v': byte = '\v'; break;
+                case '\'': byte = '\''; break;
+                case '\"': byte = '\"'; break;
+                case '0': byte = '\0'; break;
+                case '?': byte = '\?'; break;
+                case 'x':
+                    if (i + 2 < length) {
+                        int hi = opt_hex_value(string[i + 1]);
+                        int lo = opt_hex_value(string[i + 2]);
+                        if (hi != -1 && lo != -1) {
+                            byte = (unsigned char)((hi << 4) | lo);
+                            i += 2;
+                            break;
+                        }
+                    }
+                    buffer[out++] = '\\';
+                    byte = (unsigned char)esc;
+                    break;
+                default:
+                    buffer[out++] = '\\';
+                    byte = (unsigned char)esc;
+                    break;
+            }
+        }
+        buffer[out++] = byte;
+    }
+
+    *byte_length = out;
+    return buffer;
+}
+
+static char *bytes_to_binary_literal(const unsigned char *bytes,
+                                     size_t byte_length,
+                                     size_t *literal_length) {
+    char *buffer;
+    size_t i;
+    size_t out = 2;
+
+    *literal_length = 2 + (byte_length * 2);
+    buffer = malloc(*literal_length + 1);
+    if (!buffer) return 0;
+
+    buffer[0] = '0';
+    buffer[1] = 'x';
+    for (i = 0; i < byte_length; i++) {
+        opt_append_hex_byte(buffer, &out, bytes[i]);
+    }
+    buffer[out] = 0;
+    return buffer;
+}
+
+static char *rxas_escaped_string_to_binary_literal(ASTNode *node,
+                                                   size_t *literal_length) {
+    unsigned char *bytes;
+    size_t byte_length = 0;
+    char *literal;
+
+    bytes = rxas_escaped_string_to_bytes(node->node_string,
+                                         node->node_string_length,
+                                         &byte_length);
+    if (!bytes) return 0;
+
+    literal = bytes_to_binary_literal(bytes, byte_length, literal_length);
+    free(bytes);
+    return literal;
+}
+
+static unsigned char *binary_literal_to_bytes(ASTNode *node, size_t *byte_length) {
+    unsigned char *bytes;
+    size_t i;
+
+    if (!node || !node->node_string || node->node_string_length < 2) return 0;
+    if (node->node_string[0] != '0' ||
+        (node->node_string[1] != 'x' && node->node_string[1] != 'X')) return 0;
+    if ((node->node_string_length - 2) % 2) return 0;
+
+    *byte_length = (node->node_string_length - 2) / 2;
+    bytes = malloc(*byte_length ? *byte_length : 1);
+    if (!bytes) return 0;
+
+    for (i = 0; i < *byte_length; i++) {
+        int hi = opt_hex_value(node->node_string[2 + (i * 2)]);
+        int lo = opt_hex_value(node->node_string[3 + (i * 2)]);
+        if (hi < 0 || lo < 0) {
+            free(bytes);
+            return 0;
+        }
+        bytes[i] = (unsigned char)((hi << 4) | lo);
+    }
+
+    return bytes;
+}
+
+static char *bytes_to_rxas_escaped_string(const unsigned char *bytes,
+                                          size_t byte_length,
+                                          size_t *string_length) {
+    char *buffer;
+    char *out;
+    size_t i;
+
+    *string_length = 0;
+    buffer = malloc((byte_length * 4) + 1);
+    if (!buffer) return 0;
+    out = buffer;
+
+    for (i = 0; i < byte_length; i++) {
+        char *escaped = escape_character(bytes[i]);
+        while (*escaped) {
+            *out++ = *escaped++;
+            (*string_length)++;
+        }
+    }
+
+    *out = 0;
+    return buffer;
+}
+
 /* Convert a CONSTANT node from a STRING to new_type */
 static void string_to_type(ASTNode* node, ValueType new_type) {
         double f, floor_val;
+        char *buffer;
+        size_t length;
         switch (new_type) {
             case TP_FLOAT:
                 node->value_type = TP_FLOAT;
@@ -267,6 +456,10 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
             case TP_DECIMAL:
                 node->value_type = TP_DECIMAL;
                 node->target_type = TP_DECIMAL;
+                if (node->decimal_value) {
+                    free(node->decimal_value);
+                    node->decimal_value = 0;
+                }
                 if (stringtodecimal(&node->decimal_value,node->node_string,node->node_string_length)) {
                     mknd_err(node, "BAD_CONVERSION");
                 }
@@ -311,22 +504,156 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
                 return;
 
             case TP_STRING:
+                if (node->value_type != TP_STRING) {
+                    update_string(node);
+                }
                 node->value_type = TP_STRING;
                 node->target_type = TP_STRING;
+                return;
+
+            case TP_BINARY:
+                buffer = rxas_escaped_string_to_binary_literal(node, &length);
+                if (!buffer) {
+                    mknd_err(node, "BAD_CONVERSION");
+                    return;
+                }
+                node->value_type = TP_BINARY;
+                node->target_type = TP_BINARY;
+                ast_sstr(node, buffer, length);
                 return;
 
             default: ;
         }
     }
 
+    static void binary_to_type(ASTNode* node, ValueType new_type) {
+        unsigned char *bytes;
+        size_t byte_length = 0;
+        char *buffer;
+        size_t length;
+
+        switch (new_type) {
+            case TP_BINARY:
+                node->value_type = TP_BINARY;
+                node->target_type = TP_BINARY;
+                return;
+
+            case TP_STRING:
+                bytes = binary_literal_to_bytes(node, &byte_length);
+                if (!bytes) {
+                    mknd_err(node, "BAD_CONVERSION");
+                    return;
+                }
+#ifndef NUTF8
+                {
+                    size_t chars = 0;
+                    if (utf8nvalid_count(bytes, byte_length, &chars)) {
+                        free(bytes);
+                        mknd_err(node, "CANNOT_CAST_BINARY");
+                        return;
+                    }
+                }
+#endif
+                buffer = bytes_to_rxas_escaped_string(bytes, byte_length, &length);
+                free(bytes);
+                if (!buffer) {
+                    mknd_err(node, "BAD_CONVERSION");
+                    return;
+                }
+                node->value_type = TP_STRING;
+                node->target_type = TP_STRING;
+                ast_sstr(node, buffer, length);
+                return;
+
+            default:
+                mknd_err(node, "CANNOT_CAST_BINARY");
+                return;
+        }
+    }
+
     /* Note the string has to be malloced and memory management is then owned by the
      * node (ie. malloc string but DONT free it after the call */
     static void rewrite_to_string_constant(ASTNode* node, Payload* payload, char* string, size_t length) {
+        preserve_folded_semantic_context(node, payload);
         ast_prnc(node);
         node->value_type = TP_STRING;
         node->node_type = CONSTANT;
         ast_sstr(node, string, length);
         string_to_type(node, node->target_type);
+        payload->changed = 1;
+    }
+
+    static void rewrite_to_binary_constant(ASTNode* node, Payload* payload, char* string, size_t length) {
+        ast_prnc(node);
+        node->value_type = TP_BINARY;
+        node->node_type = CONSTANT;
+        ast_sstr(node, string, length);
+        binary_to_type(node, node->target_type);
+        payload->changed = 1;
+    }
+
+    static int literal_node_value_type(NodeType node_type, ValueType *value_type) {
+        if (!value_type) return 0;
+
+        switch (node_type) {
+            case FLOAT:
+                *value_type = TP_FLOAT;
+                return 1;
+
+            case DECIMAL:
+                *value_type = TP_DECIMAL;
+                return 1;
+
+            case INTEGER:
+                *value_type = TP_INTEGER;
+                return 1;
+
+            default:
+                return 0;
+        }
+    }
+
+    static char *copy_literal_string(ASTNode *literal, size_t *length) {
+        char *buffer;
+        size_t literal_length;
+
+        literal_length = (literal && literal->node_string) ? literal->node_string_length : 0;
+        buffer = malloc(literal_length ? literal_length : 1);
+        if (!buffer) return NULL;
+        if (literal_length) memcpy(buffer, literal->node_string, literal_length);
+        else buffer[0] = 0;
+        if (length) *length = literal_length;
+        return buffer;
+    }
+
+    static void parse_literal_string_value(ASTNode *node, NodeType literal_node_type) {
+        ValueType literal_type;
+
+        if (!literal_node_value_type(literal_node_type, &literal_type)) return;
+        string_to_type(node, literal_type);
+    }
+
+    static void rewrite_to_parsed_literal_constant(ASTNode* node,
+                                                   Payload* payload,
+                                                   ASTNode* literal,
+                                                   ValueType literal_type) {
+        char *buffer;
+        size_t length;
+        ValueType target_type;
+
+        buffer = copy_literal_string(literal, &length);
+        if (!buffer) {
+            mknd_err(node, "BAD_CONVERSION");
+            return;
+        }
+
+        target_type = node->target_type;
+        ast_prnc(node);
+        node->value_type = TP_STRING;
+        node->node_type = CONSTANT;
+        ast_sstr(node, buffer, length);
+        string_to_type(node, literal_type);
+        string_to_type(node, target_type);
         payload->changed = 1;
     }
 
@@ -345,6 +672,7 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
         ast_prnc(node);
         node->value_type = TP_DECIMAL;
         node->node_type = CONSTANT;
+        if (node->decimal_value) free(node->decimal_value);
         node->decimal_value = malloc(length + 1); // +1 for null terminator
         strcpy(node->decimal_value, value);
         update_string(node);
@@ -373,8 +701,9 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
         payload->changed = 1;
     }
 
-/* Compares two nodes returns -1, 0, 1 as appropriate */
 #define MIN(a,b) (((a)<(b))?(a):(b))
+
+/* Compares two typed numeric/string nodes returns -1, 0, 1 as appropriate. */
 static int compare_nodes(ASTNode* node1, ASTNode* node2, Scope* scope) {
     double fdiff;
     rxinteger idiff;
@@ -404,7 +733,7 @@ static int compare_nodes(ASTNode* node1, ASTNode* node2, Scope* scope) {
         value* val2 = value_f();
         decplugin->decimalFromString(decplugin, val1, node1->decimal_value);
         decplugin->decimalFromString(decplugin, val2, node2->decimal_value);
-        int cmp = decplugin->decimalCompare(decplugin, val1, val2);
+        cmp = decplugin->decimalCompare(decplugin, val1, val2);
         clear_value(val1);
         free(val1);
         clear_value(val2);
@@ -548,6 +877,61 @@ static int compare_effective_strings(ASTNode *node1, ASTNode *node2) {
     if (left_length > right_length) return 1;
     if (left_length < right_length) return -1;
     return 0;
+}
+
+static int compare_padded_strings(const char *left, size_t left_length, const char *right, size_t right_length) {
+    size_t max_length = left_length > right_length ? left_length : right_length;
+    size_t i;
+
+    for (i = 0; i < max_length; i++) {
+        unsigned char left_ch = i < left_length ? (unsigned char) left[i] : (unsigned char) ' ';
+        unsigned char right_ch = i < right_length ? (unsigned char) right[i] : (unsigned char) ' ';
+        if (left_ch != right_ch) return left_ch > right_ch ? 1 : -1;
+    }
+
+    return 0;
+}
+
+static int compare_loose_effective_strings(ASTNode *node1, ASTNode *node2) {
+    char *left;
+    char *right;
+    size_t left_length;
+    size_t right_length;
+    double left_number;
+    double right_number;
+    int left_numeric;
+    int right_numeric;
+    int cmp;
+
+    left = constant_node_to_effective_string(node1, &left_length);
+    right = constant_node_to_effective_string(node2, &right_length);
+    if (!left || !right) {
+        if (left) free(left);
+        if (right) free(right);
+        return 0;
+    }
+
+    left_numeric = string2float(&left_number, left, left_length) == 0;
+    right_numeric = string2float(&right_number, right, right_length) == 0;
+
+    if (left_numeric && right_numeric) {
+        if (left_number > right_number) cmp = 1;
+        else if (left_number < right_number) cmp = -1;
+        else cmp = 0;
+    } else {
+        cmp = compare_padded_strings(left, left_length, right, right_length);
+    }
+
+    free(left);
+    free(right);
+    return cmp;
+}
+
+static int compare_standard_constants(ASTNode *node, ASTNode *child1, ASTNode *child2) {
+    if (child1->target_type == TP_STRING || child2->target_type == TP_STRING) {
+        return compare_loose_effective_strings(child1, child2);
+    }
+    return compare_nodes(child1, child2, node->scope);
 }
 
 static int strict_string_compare_operand(ASTNode *node) {
@@ -760,6 +1144,25 @@ static walker_result opt1_walker(walker_direction direction,
             }
         }
 
+        else if (node->node_type == OP_XOR) {
+            /* Are both operands constants? - If so fold */
+            if (child1->node_type == CONSTANT && child2->node_type == CONSTANT)
+                rewrite_to_boolean_constant(node, payload,
+                                            (child1->int_value != 0) !=
+                                            (child2->int_value != 0));
+
+            /* x XOR 0 == x, once operands have been boolean-targeted. */
+            else if (child1->node_type == CONSTANT && !child1->int_value) {
+                ast_rpl(node, child2);
+                payload->changed = 1;
+            }
+
+            else if (child2->node_type == CONSTANT && !child2->int_value) {
+                ast_rpl(node, child1);
+                payload->changed = 1;
+            }
+        }
+
         else {
             /* 'Normal' Cases */
 
@@ -768,42 +1171,105 @@ static walker_result opt1_walker(walker_direction direction,
             if (child1) arity++;
             if (child2) arity++;
             if (child3) arity++;
+            if (node->node_type == OP_TYPE_CAST) arity = 1;
 
             can_do_code_folding = can_code_fold(node, arity);
 
             if (can_do_code_folding)
                 switch (node->node_type) {
+                    case OP_TYPE_CAST:
+                        if (child1 && child2 &&
+                            (child1->node_type == CONSTANT ||
+                             child1->node_type == STRING ||
+                             child1->node_type == BINARY ||
+                             child1->node_type == FLOAT ||
+                             child1->node_type == DECIMAL ||
+                             child1->node_type == INTEGER)) {
+                            switch (child1->value_type) {
+                                case TP_STRING:
+                                    buffer = malloc(child1->node_string_length ? child1->node_string_length : 1);
+                                    if (buffer && child1->node_string_length) {
+                                        memcpy(buffer, child1->node_string, child1->node_string_length);
+                                    }
+                                    if (!buffer) {
+                                        mknd_err(node, "BAD_CONVERSION");
+                                        break;
+                                    }
+                                    rewrite_to_string_constant(node, payload, buffer, child1->node_string_length);
+                                    break;
+
+                                case TP_BINARY:
+                                    buffer = malloc(child1->node_string_length ? child1->node_string_length : 1);
+                                    if (buffer && child1->node_string_length) {
+                                        memcpy(buffer, child1->node_string, child1->node_string_length);
+                                    }
+                                    if (!buffer) {
+                                        mknd_err(node, "BAD_CONVERSION");
+                                        break;
+                                    }
+                                    rewrite_to_binary_constant(node, payload, buffer, child1->node_string_length);
+                                    break;
+
+                                case TP_FLOAT:
+                                    if (child1->node_type == FLOAT)
+                                        rewrite_to_parsed_literal_constant(node, payload, child1, TP_FLOAT);
+                                    else
+                                        rewrite_to_float_constant(node, payload, child1->float_value);
+                                    break;
+
+                                case TP_DECIMAL:
+                                    if (child1->node_type == DECIMAL) {
+                                        rewrite_to_parsed_literal_constant(node, payload, child1, TP_DECIMAL);
+                                    }
+                                    else if (child1->decimal_value) {
+                                        rewrite_to_decimal_constant(node, payload, child1->decimal_value);
+                                    }
+                                    break;
+
+                                case TP_BOOLEAN:
+                                case TP_INTEGER:
+                                    if (child1->node_type == INTEGER)
+                                        rewrite_to_parsed_literal_constant(node, payload, child1, TP_INTEGER);
+                                    else
+                                        rewrite_to_integer_constant(node, payload, child1->int_value);
+                                    break;
+
+                                default:
+                                    break;
+                            }
+                        }
+                        break;
 
                     case OP_COMPARE_EQUAL:
-                        compare = compare_nodes(child1, child2, node->scope);
+                        compare = compare_standard_constants(node, child1, child2);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare == 0);
                         break;
 
                     case OP_COMPARE_NEQ:
-                        compare = compare_nodes(child1, child2, node->scope);
+                        compare = compare_standard_constants(node, child1, child2);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare != 0);
                         break;
 
                     case OP_COMPARE_GT:
-                        compare = compare_nodes(child1, child2, node->scope);
+                        compare = compare_standard_constants(node, child1, child2);
                         rewrite_to_boolean_constant(node, payload, compare > 0);
                         break;
 
                     case OP_COMPARE_LT:
-                        compare = compare_nodes(child1, child2, node->scope);
+                        compare = compare_standard_constants(node, child1, child2);
                         rewrite_to_boolean_constant(node, payload, compare < 0);
                         break;
 
                     case OP_COMPARE_GTE:
-                        compare = compare_nodes(child1, child2, node->scope);
+                        compare = compare_standard_constants(node, child1, child2);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare >= 0);
                         break;
 
                     case OP_COMPARE_LTE:
-                        compare = compare_nodes(child1, child2, node->scope);
+                        compare = compare_standard_constants(node, child1, child2);
                         rewrite_to_boolean_constant(node, payload,
                                                     compare <= 0);
                         break;
@@ -843,6 +1309,7 @@ static walker_result opt1_walker(walker_direction direction,
                         break;
 
                     case OP_SCONCAT:
+                        if (node->value_type == TP_BINARY || node->target_type == TP_BINARY) break;
                         buffer_length =
                                 child1->node_string_length +
                                 child2->node_string_length + 1;
@@ -857,6 +1324,7 @@ static walker_result opt1_walker(walker_direction direction,
                         break;
 
                     case OP_CONCAT:
+                        if (node->value_type == TP_BINARY || node->target_type == TP_BINARY) break;
                         buffer_length =
                                 child1->node_string_length +
                                 child2->node_string_length;
@@ -1225,6 +1693,7 @@ static walker_result opt1_walker(walker_direction direction,
                     case FLOAT:
                     case DECIMAL:
                     case INTEGER:
+                    case BINARY:
                     case STRING: {
                         ValueType literal_type;
                         NodeType literal_node_type;
@@ -1251,15 +1720,27 @@ static walker_result opt1_walker(walker_direction direction,
                                     literal_type = TP_STRING;
                                     break;
 
+                                case BINARY:
+                                    literal_type = TP_BINARY;
+                                    break;
+
                                 default:
                                     if (node->value_type != TP_STRING) literal_type = node->value_type;
                                     break;
                             }
 
-                            string_to_type(node, literal_type);
+                            if (node->value_type == TP_BINARY) binary_to_type(node, literal_type);
+                            else string_to_type(node, literal_type);
                         }
                         else {
-                            string_to_type(node, node->target_type);
+                            ValueType target_type = node->target_type;
+
+                            if (target_type == TP_STRING) {
+                                parse_literal_string_value(node, literal_node_type);
+                            }
+
+                            if (node->value_type == TP_BINARY) binary_to_type(node, target_type);
+                            else string_to_type(node, target_type);
                         }
                         update_string(node);
                         payload->changed = 1;
@@ -1323,8 +1804,9 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
 
     if (symbol->symbol_type == CONSTANT_SYMBOL) return; /* already done */
     if (symbol->scope && symbol->scope->type == SCOPE_CLASS) return; /* Attributes must not be optimized away */
+    if (symbol->has_reference_target) return; /* Referenced storage is alias-observable */
     if (symbol->value_dims) return; /* Arrays are never constants */
-    if (symbol->type == TP_BINARY || symbol->type == TP_OBJECT) return; /* Binary and Objects are never constants */
+    if (symbol->type == TP_BINARY || symbol->type == TP_OBJECT || symbol->type == TP_REFERENCE) return; /* Binary, objects and references are never constants */
     if (!sym_nond(symbol)) return; /* No nodes - weird - return */
 
 

@@ -292,6 +292,85 @@ static int type_specificity(ValueType type) {
     }
 }
 
+void rxcp_set_symbol_reference_type_from_node(Symbol *symbol, ASTNode *type_node) {
+    if (!symbol) return;
+    if (symbol->type == TP_REFERENCE && type_node) {
+        sym_set_reference_type(symbol,
+                               type_node->value_reference_type,
+                               type_node->value_reference_dims,
+                               type_node->value_reference_dim_base,
+                               type_node->value_reference_dim_elements,
+                               type_node->value_reference_class);
+    } else {
+        sym_clear_reference_type(symbol);
+    }
+}
+
+void rxcp_set_node_value_reference_type_from_node(ASTNode *node, ASTNode *type_node) {
+    if (!node) return;
+    if (node->value_type == TP_REFERENCE && type_node) {
+        ast_set_value_reference_type(node,
+                                     type_node->value_reference_type,
+                                     type_node->value_reference_dims,
+                                     type_node->value_reference_dim_base,
+                                     type_node->value_reference_dim_elements,
+                                     type_node->value_reference_class);
+    } else {
+        ast_clear_value_reference_type(node);
+    }
+}
+
+static int same_reference_type(ValueType left_type,
+                               size_t left_dims,
+                               const int *left_base,
+                               const int *left_elements,
+                               const char *left_class,
+                               ValueType right_type,
+                               size_t right_dims,
+                               const int *right_base,
+                               const int *right_elements,
+                               const char *right_class) {
+    size_t i;
+
+    if (left_type != right_type || left_dims != right_dims) return 0;
+    for (i = 0; i < left_dims; i++) {
+        if (!left_base || !right_base || !left_elements || !right_elements) return 0;
+        if (left_base[i] != right_base[i]) return 0;
+        if (left_elements[i] != right_elements[i]) return 0;
+    }
+
+    if (left_class && right_class) return strcmp(left_class, right_class) == 0;
+    return left_class == 0 && right_class == 0;
+}
+
+int rxcp_same_reference_value_and_target_type(ASTNode *node) {
+    if (!node) return 0;
+    return same_reference_type(node->value_reference_type,
+                               node->value_reference_dims,
+                               node->value_reference_dim_base,
+                               node->value_reference_dim_elements,
+                               node->value_reference_class,
+                               node->target_reference_type,
+                               node->target_reference_dims,
+                               node->target_reference_dim_base,
+                               node->target_reference_dim_elements,
+                               node->target_reference_class);
+}
+
+int rxcp_same_reference_value_type(ASTNode *left, ASTNode *right) {
+    if (!left || !right) return 0;
+    return same_reference_type(left->value_reference_type,
+                               left->value_reference_dims,
+                               left->value_reference_dim_base,
+                               left->value_reference_dim_elements,
+                               left->value_reference_class,
+                               right->value_reference_type,
+                               right->value_reference_dims,
+                               right->value_reference_dim_base,
+                               right->value_reference_dim_elements,
+                               right->value_reference_class);
+}
+
 /* Monotonic Gatekeepers */
 
 void sym_promote_type(Context *context, Symbol *sym, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name) {
@@ -327,6 +406,7 @@ void sym_promote_type(Context *context, Symbol *sym, ValueType type, size_t dims
             if (sym->value_class) free(sym->value_class);
             sym->value_class = strdup(class_name);
         }
+        if (type != TP_REFERENCE) sym_clear_reference_type(sym);
         context->changed_flags |= FLAG_VAL_TYPE;
     }
 }
@@ -400,6 +480,7 @@ void ast_promote_type(Context *context, ASTNode *node, ValueType type, size_t di
             if (node->value_class) free(node->value_class);
             node->value_class = strdup(class_name);
         }
+        if (type != TP_REFERENCE) ast_clear_value_reference_type(node);
         context->changed_flags |= FLAG_VAL_TYPE;
     }
 }
@@ -444,6 +525,7 @@ void ast_set_value_type(Context *context, ASTNode *node, ValueType type, size_t 
     if (class_name) {
         node->value_class = strdup(class_name);
     }
+    if (type != TP_REFERENCE) ast_clear_value_reference_type(node);
 }
 
 void ast_set_target_type(Context *context, ASTNode *node, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name) {
@@ -484,6 +566,7 @@ void ast_set_target_type(Context *context, ASTNode *node, ValueType type, size_t
     if (class_name) {
         node->target_class = strdup(class_name);
     }
+    if (type != TP_REFERENCE) ast_clear_target_reference_type(node);
 }
 
 void ast_promote_target_type(Context *context, ASTNode *node, ValueType type, size_t dims, int *dim_base, int *dim_elements, char *class_name) {
@@ -519,6 +602,7 @@ void ast_promote_target_type(Context *context, ASTNode *node, ValueType type, si
             if (node->target_class) free(node->target_class);
             node->target_class = strdup(class_name);
         }
+        if (type != TP_REFERENCE) ast_clear_target_reference_type(node);
         context->changed_flags |= FLAG_VAL_TYPE;
     }
 }
@@ -587,6 +671,33 @@ ValueType node_to_type(Context* context, ASTNode *node, size_t *dims, int **dim_
             result = s->type;
             goto exit;
         }
+    }
+
+    /* If we don't let's see if we can determine it now */
+    if (node->node_type == TYPE_REFERENCE) {
+        ASTNode *referent = ast_chdn(node, 0);
+        size_t ref_dims = 0;
+        int *ref_dim_base = 0;
+        int *ref_dim_elements = 0;
+        char *ref_class_name = 0;
+        ValueType ref_type = node_to_type(context, referent, &ref_dims,
+                                          &ref_dim_base, &ref_dim_elements,
+                                          &ref_class_name);
+
+        ast_set_value_reference_type(node, ref_type, ref_dims,
+                                     ref_dim_base, ref_dim_elements,
+                                     ref_class_name);
+        ast_set_target_reference_type(node, ref_type, ref_dims,
+                                      ref_dim_base, ref_dim_elements,
+                                      ref_class_name);
+
+        if (ref_dim_base) free(ref_dim_base);
+        if (ref_dim_elements) free(ref_dim_elements);
+        if (ref_class_name) free(ref_class_name);
+
+        local_dims = 0;
+        result = TP_REFERENCE;
+        goto exit;
     }
 
     /* If we don't let's see if we can determine it now */
@@ -749,6 +860,16 @@ void promote_symbol_from_target(Context *context, ASTNode *node) {
                     if (s->value_class) free(s->value_class);
                     s->value_class = node->target_class ? strdup(node->target_class) : 0;
                 }
+                if (node->target_type == TP_REFERENCE) {
+                    sym_set_reference_type(s,
+                                           node->target_reference_type,
+                                           node->target_reference_dims,
+                                           node->target_reference_dim_base,
+                                           node->target_reference_dim_elements,
+                                           node->target_reference_class);
+                } else {
+                    sym_clear_reference_type(s);
+                }
                 if (context) {
                     context->changed_flags |= FLAG_VAL_TYPE;
                 }
@@ -825,6 +946,17 @@ void validate_node_promotion(Context *context, ASTNode* node) {
         node->target_type != TP_BINARY) mknd_err(node, "CANNOT_CAST_BINARY");
 
     if (node->value_type != TP_VOID && node->target_type == TP_VOID) mknd_err(node, "UNEXPECTED_VALUE");
+
+    if (node->value_type == TP_REFERENCE || node->target_type == TP_REFERENCE) {
+        if (node->value_type != node->target_type) {
+            mknd_err(node, "TYPE_MISMATCH");
+            return;
+        }
+        if (!rxcp_same_reference_value_and_target_type(node)) {
+            mknd_err(node, "REFERENCE_TYPE_MISMATCH");
+            return;
+        }
+    }
 
     /* Taken constant check: If target is numeric (TP_INTEGER, TP_FLOAT, TP_DECIMAL)
      * and source is a TAKEN CONSTANT (CONSTANT_SYMBOL), it's a compile-time failure.
@@ -985,6 +1117,376 @@ static walker_result disjoint_scope_warning_walker(walker_direction direction,
         }
     }
     return result_normal;
+}
+
+typedef struct unused_import_entry {
+    ASTNode *name_node;
+    char *namespace_name;
+    int used;
+} unused_import_entry;
+
+typedef struct unused_import_payload {
+    Context *context;
+    dpa *entries;
+} unused_import_payload;
+
+static int unused_import_node_is_inside_imported_file(ASTNode *node) {
+    while (node) {
+        if (node->node_type == IMPORTED_FILE) return 1;
+        if (node->node_type == PROGRAM_FILE) return 0;
+        node = node->parent;
+    }
+    return 0;
+}
+
+static int unused_import_node_is_inside_import(ASTNode *node) {
+    while (node) {
+        if (node->node_type == IMPORT) return 1;
+        if (node->node_type == PROGRAM_FILE || node->node_type == IMPORTED_FILE) return 0;
+        node = node->parent;
+    }
+    return 0;
+}
+
+static int unused_import_node_has_source(ASTNode *node) {
+    return node &&
+           (node->source_start ||
+            node->source_node ||
+            node->source_provenance != AST_SOURCE_NONE ||
+            (node->line >= 0 && node->column >= 0));
+}
+
+static ASTNode *unused_import_primary_program_file(Context *context) {
+    ASTNode *child;
+
+    if (!context || !context->ast) return 0;
+
+    child = context->ast->child;
+    while (child) {
+        if (child->node_type == PROGRAM_FILE) return child;
+        child = child->sibling;
+    }
+
+    return 0;
+}
+
+static int unused_import_internal_name_uses_entry(unused_import_payload *payload,
+                                                  const char *name,
+                                                  unused_import_entry *entry) {
+    char *actual_namespace;
+    int result;
+
+    if (!payload || !entry || !name || !entry->namespace_name) return 0;
+
+    actual_namespace = 0;
+    if (!rxcp_split_internal_symbol_name(name, &actual_namespace, 0)) return 0;
+
+    result = actual_namespace &&
+             rxcp_import_name_may_load_namespace(payload->context,
+                                                 entry->namespace_name,
+                                                 actual_namespace);
+    if (actual_namespace) free(actual_namespace);
+    return result;
+}
+
+static void unused_import_mark_name(unused_import_payload *payload, const char *internal_name) {
+    size_t i;
+
+    if (!payload || !payload->entries || !internal_name) return;
+
+    for (i = 0; i < payload->entries->size; i++) {
+        unused_import_entry *entry = (unused_import_entry *)payload->entries->pointers[i];
+        if (entry && !entry->used &&
+            unused_import_internal_name_uses_entry(payload, internal_name, entry)) {
+            entry->used = 1;
+        }
+    }
+}
+
+static void unused_import_mark_symbol(unused_import_payload *payload, Symbol *symbol) {
+    char *fqn;
+
+    if (!payload || !symbol) return;
+
+    fqn = sym_frnm(symbol);
+    unused_import_mark_name(payload, fqn);
+    free(fqn);
+
+    unused_import_mark_name(payload, symbol->value_class);
+}
+
+static int unused_import_node_type_can_be_qualified(ASTNode *node) {
+    if (!node) return 0;
+
+    switch (node->node_type) {
+        case CLASS:
+        case CONST_SYMBOL:
+        case FACTORY_CALL:
+        case FUNC_SYMBOL:
+        case FUNCTION:
+        case MEMBER_CALL:
+        case VAR_REFERENCE:
+        case VAR_SYMBOL:
+        case VAR_TARGET:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static void unused_import_mark_qualified_source(unused_import_payload *payload, ASTNode *node) {
+    char *internal_name;
+
+    if (!payload || !node || !node->node_string || !node->node_string_length) return;
+    if (!unused_import_node_type_can_be_qualified(node)) return;
+    if (!rxcp_source_symbol_is_qualified(node->node_string, node->node_string_length)) return;
+
+    internal_name = rxcp_normalize_source_symbol_name(node->node_string,
+                                                     node->node_string_length,
+                                                     1,
+                                                     0);
+    unused_import_mark_name(payload, internal_name);
+    free(internal_name);
+}
+
+static void unused_import_mark_unqualified_class_symbol(unused_import_payload *payload, ASTNode *node) {
+    Symbol *symbol;
+
+    if (!payload || !payload->context || !payload->context->ast || !node) return;
+    if (node->node_type != CLASS || !node->node_string || !node->node_string_length) return;
+    if (rxcp_source_symbol_is_qualified(node->node_string, node->node_string_length)) return;
+
+    symbol = sym_rvfc(payload->context->ast, node);
+    if (symbol && symbol->symbol_type == CLASS_SYMBOL) {
+        unused_import_mark_symbol(payload, symbol);
+    }
+}
+
+static void unused_import_mark_unqualified_import_reference(unused_import_payload *payload, ASTNode *node) {
+    char *name;
+    size_t i;
+
+    if (!payload || !payload->entries || !node || !node->node_string || !node->node_string_length) return;
+    if (node->node_type != CLASS && node->node_type != FACTORY_CALL) return;
+    if (rxcp_source_symbol_is_qualified(node->node_string, node->node_string_length)) return;
+
+    name = rxcp_normalize_source_symbol_name(node->node_string,
+                                             node->node_string_length,
+                                             1,
+                                             1);
+    if (!name) return;
+
+    for (i = 0; i < payload->entries->size; i++) {
+        unused_import_entry *entry = (unused_import_entry *)payload->entries->pointers[i];
+        if (entry && !entry->used && strcmp(name, entry->namespace_name) == 0) {
+            entry->used = 1;
+        }
+    }
+
+    free(name);
+}
+
+static ASTNode *unused_import_find_factory_definition(Symbol *symbol) {
+    size_t i;
+
+    if (!symbol) return 0;
+
+    for (i = 0; i < sym_nond(symbol); i++) {
+        SymbolNode *sn = sym_trnd(symbol, i);
+        ASTNode *node = sn ? sn->node : 0;
+        if (node && node->node_type == FACTORY) return node;
+    }
+
+    return 0;
+}
+
+static void unused_import_mark_interface_factory_providers(unused_import_payload *payload, ASTNode *node) {
+    ASTNode *factory_def;
+    Symbol *interface_symbol;
+    char *interface_fqname;
+    char *interface_namespace;
+    size_t i;
+    int matched_provider;
+
+    if (!payload || !payload->context || !payload->entries || !node) return;
+    if (node->node_type != FACTORY_CALL || !node->symbolNode || !node->symbolNode->symbol) return;
+
+    factory_def = unused_import_find_factory_definition(node->symbolNode->symbol);
+    if (!factory_def || !factory_def->parent || factory_def->parent->node_type != INTERFACE_DEF) return;
+    if (!factory_def->parent->symbolNode || !factory_def->parent->symbolNode->symbol) return;
+
+    interface_symbol = factory_def->parent->symbolNode->symbol;
+    interface_fqname = sym_frnm(interface_symbol);
+    if (!interface_fqname) return;
+
+    interface_namespace = 0;
+    rxcp_split_internal_symbol_name(interface_fqname, &interface_namespace, 0);
+    matched_provider = 0;
+
+    for (i = 0; i < payload->entries->size; i++) {
+        unused_import_entry *entry = (unused_import_entry *)payload->entries->pointers[i];
+        if (entry && !entry->used &&
+            rxcp_import_name_has_interface_provider(payload->context,
+                                                    entry->namespace_name,
+                                                    interface_fqname)) {
+            entry->used = 1;
+            matched_provider = 1;
+        }
+    }
+
+    if (!matched_provider) {
+        /* Binary provider imports may not have class metadata loaded in rxc even
+         * though the linked VM image can use them through srcfproc. Avoid
+         * warning on remaining non-contract imports in that shape. */
+        for (i = 0; i < payload->entries->size; i++) {
+            unused_import_entry *entry = (unused_import_entry *)payload->entries->pointers[i];
+            if (entry && !entry->used &&
+                (!interface_namespace ||
+                 !rxcp_import_name_may_load_namespace(payload->context,
+                                                      entry->namespace_name,
+                                                      interface_namespace))) {
+                entry->used = 1;
+            }
+        }
+    }
+
+    if (interface_namespace) free(interface_namespace);
+    free(interface_fqname);
+}
+
+static walker_result unused_import_usage_walker(walker_direction direction,
+                                                ASTNode* node,
+                                                void *payload) {
+    unused_import_payload *pl = (unused_import_payload *)payload;
+
+    if (direction != in || !node || !pl) return result_normal;
+
+    if (node->node_type == IMPORTED_FILE) return request_skip;
+    if (node->node_type == IMPORT) return request_skip;
+    if (unused_import_node_is_inside_imported_file(node)) return result_normal;
+    if (unused_import_node_is_inside_import(node)) return result_normal;
+    if (!unused_import_node_has_source(node)) return result_normal;
+
+    if (node->symbolNode) unused_import_mark_symbol(pl, node->symbolNode->symbol);
+    unused_import_mark_name(pl, node->value_class);
+    unused_import_mark_name(pl, node->target_class);
+    unused_import_mark_qualified_source(pl, node);
+    unused_import_mark_unqualified_class_symbol(pl, node);
+    unused_import_mark_unqualified_import_reference(pl, node);
+    unused_import_mark_interface_factory_providers(pl, node);
+
+    return result_normal;
+}
+
+static void unused_import_add_entry(dpa *entries, ASTNode *import_node) {
+    unused_import_entry *entry;
+    char *namespace_name;
+
+    if (!entries || !import_node || import_node->node_type != IMPORT ||
+        !import_node->child || !unused_import_node_has_source(import_node->child)) {
+        return;
+    }
+
+    namespace_name = rxcp_normalize_source_symbol_name(import_node->child->node_string,
+                                                       import_node->child->node_string_length,
+                                                       0,
+                                                       1);
+    if (!namespace_name || !namespace_name[0]) {
+        if (namespace_name) free(namespace_name);
+        return;
+    }
+
+    entry = malloc(sizeof(unused_import_entry));
+    if (!entry) {
+        free(namespace_name);
+        return;
+    }
+
+    entry->name_node = import_node->child;
+    entry->namespace_name = namespace_name;
+    entry->used = 0;
+    dpa_add(entries, entry);
+}
+
+static walker_result unused_import_collect_walker(walker_direction direction,
+                                                  ASTNode* node,
+                                                  void *payload) {
+    if (direction != in || !node) return result_normal;
+    if (node->node_type == IMPORTED_FILE) return request_skip;
+    if (node->node_type == IMPORT) {
+        unused_import_add_entry((dpa *)payload, node);
+        return request_skip;
+    }
+    return result_normal;
+}
+
+static void unused_import_collect_entries(Context *context, dpa *entries) {
+    ASTNode *program_file;
+
+    if (!context || !entries) return;
+
+    program_file = unused_import_primary_program_file(context);
+    if (!program_file) return;
+
+    ast_wlkr(program_file, unused_import_collect_walker, entries);
+}
+
+static int unused_import_context_is_rxpp_generated(Context *context) {
+    char *p;
+
+    if (!context || !context->buff_start) return 0;
+
+    p = context->buff_start;
+    while (p < context->buff_end && isspace((unsigned char)*p)) p++;
+    return p + 10 <= context->buff_end && strncmp(p, "/* RXPP */", 10) == 0;
+}
+
+static void unused_import_mark_rxpp_generated_imports(Context *context, dpa *entries) {
+    size_t i;
+
+    if (!unused_import_context_is_rxpp_generated(context) || !entries) return;
+
+    for (i = 0; i < entries->size; i++) {
+        unused_import_entry *entry = (unused_import_entry *)entries->pointers[i];
+        if (entry && strcmp(entry->namespace_name, "rxfnsb") == 0) {
+            entry->used = 1;
+        }
+    }
+}
+
+static void add_unused_import_warnings(Context *context) {
+    dpa *entries;
+    unused_import_payload payload;
+    size_t i;
+
+    if (!context || !context->ast) return;
+
+    entries = dpa_f();
+    if (!entries) return;
+
+    unused_import_collect_entries(context, entries);
+    if (entries->size) {
+        payload.context = context;
+        payload.entries = entries;
+        ast_wlkr(unused_import_primary_program_file(context), unused_import_usage_walker, (void *)&payload);
+        unused_import_mark_rxpp_generated_imports(context, entries);
+
+        for (i = 0; i < entries->size; i++) {
+            unused_import_entry *entry = (unused_import_entry *)entries->pointers[i];
+            if (entry && !entry->used) {
+                mknd_war(entry->name_node, "UNUSED_IMPORT");
+            }
+        }
+    }
+
+    for (i = 0; i < entries->size; i++) {
+        unused_import_entry *entry = (unused_import_entry *)entries->pointers[i];
+        if (entry) {
+            free(entry->namespace_name);
+            free(entry);
+        }
+    }
+    free_dpa(entries);
 }
 
 struct seen_warning {
@@ -1333,6 +1835,9 @@ void validate_ast(Context *context) {
     /* Add disjoint scope warnings */
     context->current_scope = 0;
     ast_wlkr(context->ast, disjoint_scope_warning_walker, (void *)context);
+
+    /* Add unused import warnings before optimisation/inlining can remove references */
+    add_unused_import_warnings(context);
 
     /* Deduplicate warnings */
     {

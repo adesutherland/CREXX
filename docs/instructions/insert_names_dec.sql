@@ -227,7 +227,6 @@ insert into inst_name VALUES('null','');
 insert into inst_name VALUES('nullredir','');
 insert into inst_name VALUES('not','');
 insert into inst_name VALUES('or','');
-insert into inst_name VALUES('opendll','');
 insert into inst_name VALUES('padstr','');
 insert into inst_name VALUES('pmap','');
 insert into inst_name VALUES('poschar','');

@@ -50,6 +50,6 @@ address system '"' || crexx_home || '/rxlink" -s -o "' || linkedName || '" "' ||
 if rc<>0 then exit rc
 address system '"' || crexx_home || '/rxcpack" -o "' || execName || '" "' || linkedName || '"'
 if rc<>0 then exit rc
-address system 'gcc -O3 -DNDEBUG -o ' || execName || ' -L "' || crexx_home || '" -lrxvml -lrxpashim -lrxvmplugin -lplatform "' || crexx_home || '/rxvm_mc_decimal_manual.a" -ldecnumber -lavl_tree -lrxpa -lm' || socketLib || ' ' || execName || '.c'
+address system 'gcc -O3 -DNDEBUG -o ' || execName || ' -L "' || crexx_home || '" -lrxvml -lrxpashim -lrxvmplugin -lrxvmref -lplatform "' || crexx_home || '/rxvm_mc_decimal_manual.a" -ldecnumber -lavl_tree -lrxpa -lm' || socketLib || ' ' || execName || '.c'
 if rc<>0 then exit rc
 exit 0

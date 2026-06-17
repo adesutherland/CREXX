@@ -43,6 +43,7 @@ struct Scope {
     size_t num_registers;
     void *free_registers_array;
     void *deferred_registers_array;
+    void *dereference_symbols_array;
     size_t temp_flag;
     struct Scope *reg_scope;
 };
@@ -66,6 +67,11 @@ struct Symbol {
     int *dim_base;        /* Array of starting element number for array dimension - malloced or zero */
     int *dim_elements;    /* Array of max number of elements for array dimension (0=infinite) - malloced or zero */
     char* value_class;    /* Value class name - malloced or zero */
+    ValueType reference_type;    /* Referenced value type for TP_REFERENCE symbols */
+    size_t reference_dims;       /* Referenced value dimensions */
+    int *reference_dim_base;     /* Referenced array base metadata - malloced or zero */
+    int *reference_dim_elements; /* Referenced array size metadata - malloced or zero */
+    char* reference_class;       /* Referenced class name - malloced or zero */
     SymbolType symbol_type;
     SymbolStatus status;
     int register_num;
@@ -87,6 +93,7 @@ struct Symbol {
     char is_shadowing; /* Set if this symbol is incorrectly shadowing a global variable */
     struct Symbol *shadowed_symbol; /* Pointer to the symbol being shadowed */
     char is_global_var; /* Set if this symbol is an exposed global variable */
+    char has_reference_target; /* Storage was the target of a reference expression */
     char is_inlinable;  /* Set if this procedure is inlinable */
     ASTNode *ast_template; /* AST template for inlining */
     int creation_ordinal; /* Ordinal value when the symbol was first created */
@@ -99,14 +106,27 @@ char* type_nm(ValueType type);
 /* Returns string name of a SymbolValue type */
 char* stype_nm(SymbolType type);
 
+void sym_clear_reference_type(Symbol *symbol);
+void sym_set_reference_type(Symbol *symbol, ValueType type, size_t dims,
+                            const int *dim_base, const int *dim_elements,
+                            const char *class_name);
+void sym_copy_reference_type(Symbol *dest, const Symbol *src);
+
 /* Scope Factory */
 Scope *scp_f(Context *context, Scope *parent, ASTNode *node, Symbol* symbol, ScopeType type);
+int scp_track_detached(Context *context, Scope *scope);
+void scp_free_detached(Context *context);
 
 /* Calls the handler for each symbol in scope */
 void scp_4all(Scope *scope, symbol_worker worker, void *payload);
 
 /* Returns all the symbols in a scope as a null terminated malloced array (must be freed) */
 Symbol **scp_syms(Scope *scope);
+
+/* Tracks locals linked by source dereference assignments for scope-exit unlink emission. */
+void scp_add_dereference_symbol(Scope *scope, Symbol *symbol);
+size_t scp_dereference_symbol_count(Scope *scope);
+Symbol *scp_dereference_symbol_at(Scope *scope, size_t index);
 
 /* Get the index sub-scope */
 Scope* scp_chd(Scope *scope, size_t index);

@@ -1,0 +1,722 @@
+options levelb
+import rxfnsb
+
+namespace scanlex expose rxScanLex rxScanJSON scanlex_token
+
+/**
+ * Module scanlex provides lightweight lexical scanners.
+ *
+ * The module exposes:
+ *
+ * - rxScanLex(source)
+ *   Generic scanner for Rexx-like source text.
+ *
+ * - rxScanJSON(source)
+ *   JSON-specific scanner using the same token class.
+ *
+ * - scanlex_token
+ *   Immutable token object containing type, text, and source position.
+ *
+ * rxScanLex supports identifiers, numbers, strings, comments, operators,
+ * brackets, commas, separators, and fallback "other" tokens.
+ *
+ * rxScanJSON supports JSON object/array structure, colon/comma separators,
+ * double-quoted strings, signed numbers, booleans, and null.
+ *
+ * Both scanners return .scanlex_token[].
+ *
+ * @author Peter Jacob
+ */
+
+/**
+ * class scanlex_token represents one lexical token.
+ *
+ * A token stores its logical type, original source text, and 1-based
+ * character position in the scanned input.
+ *
+ * Typical token types include:
+ * identifier, int_literal, decimal_literal, string_literal, operator,
+ * bracket, comma, separator, comment, object_start, object_end,
+ * array_start, array_end, colon, boolean_literal, null_literal, other.
+ */
+scanlex_token: class
+    _type = .string
+    _text = .string
+    _pos  = .int
+
+    *: factory
+        arg type=.string, text=.string, pos=.int
+        _type = type
+        _text = text
+        _pos  = pos
+
+    get_type: method=.string
+        return _type
+
+    get_text: method=.string
+        return _text
+
+    get_pos: method=.int
+        return _pos
+
+/**
+ * Tokenizes Rexx-like source text.
+ *
+ * @param  .string source
+ * @return .scanlex_token[]
+ */
+rxScanLex: procedure=.scanlex_token[]
+  arg source=.string
+
+  say "String to Tokenize: "source
+
+  toks = .scanlex_token[]
+  out = 0
+  n = length(source)
+
+  letters     = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  digits      = "0123456789"
+  ident_start = letters || "_"
+  ident_body  = letters || digits || "_."
+  brackets    = "()[]{}"
+  separators  = ";"
+
+/* Current 1-based input position. */
+  i = 1
+
+  do while i <= n
+     if scan_whitespace(source, i, n) then iterate                /* Skip blanks, tabs, CR, LF. */
+     if scan_comment(toks, out, i, source, n) then iterate        /* -- line comments and slash-star block comments. */
+     if scan_identifier(toks, out, i, source, n, ident_start, ident_body) then iterate  /* Variable names, function names, stem references. */
+     if scan_number(toks, out, i, source, n, digits) then iterate /* Integer, decimal, and exponent notation numbers. */
+     if scan_string(toks, out, i, source, n) then iterate         /* Single and double quoted strings. */
+     if scan_operator(toks, out, i, source, n) then iterate       /* One- and two-character operators. */
+     if scan_charclass(toks, out, i, source, brackets, "bracket") then iterate   /* Brackets: ()[]{} */
+     if scan_charclass(toks, out, i, source, ",", "comma") then iterate /* Comma token. */
+     if scan_charclass(toks, out, i, source, separators, "separator") then iterate  /* Statement separators such as ';'. */
+     out = addtok(toks, out, "other", substr(source, i, 1), i)    /* Fallback: preserve unknown characters. */
+     i = i + 1
+  end
+return toks
+
+/**
+ * Tokenizes JSON source text.
+ *
+ * @param  .string source
+ * @return .scanlex_token[]
+ */
+rxScanJSON: procedure=.scanlex_token[]
+  arg source=.string
+
+  toks = .scanlex_token[]
+  out = 0
+  n = length(source)
+
+  say "JSON definition to Tokenize: "source
+
+  letters     = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  digits      = "0123456789"
+  ident_start = letters || "_"
+  ident_body  = letters || digits || "_."
+
+/* Current 1-based input position. */
+  i = 1
+
+  do while i <= n
+     if scan_whitespace(source, i, n) then iterate                /* Skip blanks, tabs, CR, LF. */
+     if scan_identifier(toks, out, i, source, n, ident_start, ident_body) then iterate  /* Variable names, function names, stem references. */
+     if scan_numberJSON(toks, out, i, source, n, digits) then iterate /* Integer, decimal, and exponent notation numbers. */
+     if scan_stringJSON(toks, out, i, source, n) then iterate     /* Single and double quoted strings. */
+
+     if scan_charclass(toks, out, i, source, "{", "object_start") then iterate
+     if scan_charclass(toks, out, i, source, "}", "object_end") then iterate
+     if scan_charclass(toks, out, i, source, "[", "array_start") then iterate
+     if scan_charclass(toks, out, i, source, "]", "array_end") then iterate
+
+     if scan_charclass(toks, out, i, source, ",", "comma") then iterate /* Comma token. */
+     if scan_charclass(toks, out, i, source, ":", "colon") then iterate /* Colon token. */
+     if scan_charclass(toks, out, i, source, separators, "separator") then iterate  /* Statement separators such as ';'. */
+     out = addtok(toks, out, "other", substr(source, i, 1), i)    /* Fallback: preserve unknown characters. */
+     i = i + 1
+  end
+return toks
+/* -------------------------------------------------------------------------------------------------------------------
+ * scan_whitespace()
+ * -------------------------------------------------------------------------------------------------------------------
+ * Skip consecutive whitespace characters.
+ *
+ * Recognized whitespace:
+ *   - Space
+ *   - Horizontal tab
+ *   - Line feed
+ *   - Carriage return
+ *
+ * Input:
+ *   SOURCE   Source text being scanned.
+ *   I        Current input position (passed by EXPOSE).
+ *   N        Length of SOURCE.
+ *
+ * Behavior:
+ *   - Advances I to the first non-whitespace character.
+ *   - Produces no token.
+ *
+ * Returns:
+ *   1  Whitespace was found and skipped.
+ *   0  Current character is not whitespace.
+ * -------------------------------------------------------------------------------------------------------------------
+ */
+scan_whitespace: procedure=.int
+  arg source=.string, expose i=.int, n=.int
+
+  ch = substr(source, i, 1)
+
+  if pos(ch, " " || "09"x || "0A"x || "0D"x) = 0 then return 0
+
+  do while i <= n
+     ch = substr(source, i, 1)
+     if pos(ch, " " || "09"x || "0A"x || "0D"x) = 0 then leave
+     i = i + 1
+  end
+
+return 1
+
+/* -------------------------------------------------------------------------------------------------------------------
+ * scan_comment()
+ * -------------------------------------------------------------------------------------------------------------------
+ * Recognize comments.
+ *
+ * Supported forms:
+ *   -- line comment
+ *   slash-star block comment star-slash
+ *
+ * Input:
+ *   TOKS, OUT  Output token array and token count (passed by EXPOSE).
+ *   I          Current input position (passed by EXPOSE).
+ *   SOURCE     Source text.
+ *   N          Length of SOURCE.
+ *
+ * Behavior:
+ *   - Emits one token of type "comment".
+ *   - Advances I to the first character after the comment.
+ *   - Unterminated block comments consume the remainder of SOURCE.
+ *
+ * Returns:
+ *   1  A comment was recognized.
+ *   0  No comment starts at position I.
+ * -------------------------------------------------------------------------------------------------------------------
+ */
+scan_comment: procedure=.int
+  arg expose toks=.scanlex_token[], expose out=.int, expose i=.int, source=.string, n=.int
+
+  if i + 1 > n then return 0
+
+  two = substr(source, i, 2)
+
+  /* Line comment: -- ... end-of-line */
+  if two = "--" then do
+     start = i
+     i = i + 2
+
+     do while i <= n
+        ch = substr(source, i, 1)
+        if ch = "0A"x | ch = "0D"x then leave
+        i = i + 1
+     end
+
+     out = addtok(toks, out, "comment", substr(source, start, i - start), start)
+     return 1
+  end
+
+  /* Block comment handling. */
+  if two = "/" || "*" then do
+     start = i
+     i = i + 2
+
+     do while i <= n - 1
+        if substr(source, i, 2) = "*" || "/" then do
+           i = i + 2
+           out = addtok(toks, out, "comment", substr(source, start, i - start), start)
+           return 1
+        end
+        i = i + 1
+     end
+
+     /* Unterminated comment: consume to end. */
+     i = n + 1
+     out = addtok(toks, out, "comment", substr(source, start), start)
+     return 1
+  end
+
+return 0
+
+/* -------------------------------------------------------------------------------------------------------------------
+ * scan_identifier()
+ * -------------------------------------------------------------------------------------------------------------------
+ * Recognize identifiers.
+ *
+ * Identifier rules:
+ *   Start characters:
+ *     A-Z, a-z, _
+ *
+ *   Body characters:
+ *     A-Z, a-z, 0-9, _, .
+ *
+ * Examples:
+ *   name
+ *   customer.name
+ *   stem.1
+ *
+ * Input:
+ *   IDENT_START  Allowed first characters.
+ *   IDENT_BODY   Allowed subsequent characters.
+ *
+ * Behavior:
+ *   - Emits one token of type "identifier".
+ *   - Advances I to the first character after the identifier.
+ *
+ * Returns:
+ *   1  Identifier recognized.
+ *   0  Current character is not a valid identifier start.
+ * -------------------------------------------------------------------------------------------------------------------
+ */
+scan_identifier: procedure=.int
+  arg expose toks=.scanlex_token[], expose out=.int, expose i=.int, source=.string, n=.int, ident_start=.string, ident_body=.string
+
+  ch = substr(source, i, 1)
+  if pos(ch, ident_start) = 0 then return 0
+
+  start = i
+  i = i + 1
+
+  do while i <= n
+     ch = substr(source, i, 1)
+     if pos(ch, ident_body) = 0 then leave
+     i = i + 1
+  end
+
+  text = substr(source, start, i - start)
+  utext = upper(text)
+
+    /* Optional classification of well-known literals.
+     *
+     * Useful for JSON and similar data formats:
+     *   true   -> boolean_literal
+     *   false  -> boolean_literal
+     *   null   -> null_literal
+     *
+     * In normal Rexx code these are still valid identifiers, so this logic
+     * can be removed or made configurable if strict Rexx behavior is desired.
+     */
+    if utext = "TRUE" | utext = "FALSE" then type = "boolean_literal"
+    else if utext = "NULL" then type = "null_literal"
+    else type = "identifier"
+
+    out = addtok(toks, out, type, text, start)
+
+return 1
+
+/* -------------------------------------------------------------------------------------------------------------------
+ * scan_number()
+ * -------------------------------------------------------------------------------------------------------------------
+ * Recognize numeric literals.
+ *
+ * Supported formats:
+ *   123
+ *   123.45
+ *   1E6
+ *   1E+6
+ *   1.23E-6
+ *
+ * Notes:
+ *   - Leading sign is not included.
+ *   - Example: -12 becomes:
+ *       operator "-"
+ *       int_literal "12"
+ *
+ * Behavior:
+ *   - Emits either:
+ *       int_literal
+ *       decimal_literal
+ *   - Advances I to the first character after the number.
+ *
+ * Returns:
+ *   1  Numeric literal recognized.
+ *   0  Current character is not a digit.
+ * -------------------------------------------------------------------------------------------------------------------
+ */
+scan_number: procedure=.int
+  arg expose toks=.scanlex_token[], expose out=.int, expose i=.int, source=.string, n=.int, digits=.string
+
+  ch = substr(source, i, 1)
+  if pos(ch, digits) = 0 then return 0
+
+  start = i
+  seen_dot = 0
+  seen_exp = 0
+  is_decimal = 0
+
+  i = i + 1
+
+  do while i <= n
+     ch = substr(source, i, 1)
+
+     if pos(ch, digits) > 0 then do
+        i = i + 1
+        iterate
+     end
+
+     if ch = "." & seen_dot = 0 & seen_exp = 0 then do
+        seen_dot = 1
+        is_decimal = 1
+        i = i + 1
+        iterate
+     end
+
+     if (ch = "E" | ch = "e") & seen_exp = 0 then do
+        if i + 1 <= n then do
+           nextch = substr(source, i + 1, 1)
+
+           if pos(nextch, digits) > 0 then do
+              seen_exp = 1
+              is_decimal = 1
+              i = i + 2
+              iterate
+           end
+
+           if (nextch = "+" | nextch = "-") & i + 2 <= n then do
+              nextch2 = substr(source, i + 2, 1)
+              if pos(nextch2, digits) > 0 then do
+                 seen_exp = 1
+                 is_decimal = 1
+                 i = i + 3
+                 iterate
+              end
+           end
+        end
+     end
+
+     leave
+  end
+
+  text = substr(source, start, i - start)
+
+  if is_decimal then out = addtok(toks, out, "decimal_literal", text, start)
+  else out = addtok(toks, out, "int_literal", text, start)
+
+return 1
+
+/* -------------------------------------------------------------------------------------------------------------------
+ * scan_numberJSON()
+ * -------------------------------------------------------------------------------------------------------------------
+ * Recognize numeric literals.
+ *
+ * Supported formats:
+ *   123
+ *   123.45
+ *   1E6
+ *   1E+6
+ *   1.23E-6
+ *
+ * Notes:
+ *   - Leading sign is included.
+ *   - Example: -12 becomes:
+ *       int_literal "-12"
+ *
+ * Behavior:
+ *   - Emits either:
+ *       int_literal
+ *       decimal_literal
+ *   - Advances I to the first character after the number.
+ *
+ * Returns:
+ *   1  Numeric literal recognized.
+ *   0  Current character is not a digit.
+ * -------------------------------------------------------------------------------------------------------------------
+ */
+scan_numberJSON: procedure=.int
+  arg expose toks=.scanlex_token[], expose out=.int, expose i=.int, source=.string, n=.int, digits=.string
+
+  ch = substr(source, i, 1)
+
+   /* JSON allows a leading minus sign as part of the number. */
+   if ch = "-" then do
+      if i + 1 > n then return 0
+      if pos(substr(source, i + 1, 1), digits) = 0 then return 0
+   end
+   else if pos(ch, digits) = 0 then return 0
+
+   start = i
+   seen_dot = 0
+   seen_exp = 0
+   is_decimal = 0
+
+   /* Consume optional leading minus. */
+   if ch = "-" then i = i + 1
+
+   /* Consume integer part. */
+   do while i <= n
+      ch = substr(source, i, 1)
+      if pos(ch, digits) = 0 then leave
+      i = i + 1
+   end
+
+   /* Optional fractional part. */
+   if i <= n & substr(source, i, 1) = "." then do
+      if i + 1 <= n & pos(substr(source, i + 1, 1), digits) > 0 then do
+         seen_dot = 1
+         is_decimal = 1
+         i = i + 1
+
+         do while i <= n
+            ch = substr(source, i, 1)
+            if pos(ch, digits) = 0 then leave
+            i = i + 1
+         end
+      end
+   end
+
+   /* Optional exponent part. */
+   if i <= n then do
+      ch = substr(source, i, 1)
+
+      if ch = "E" | ch = "e" then do
+         exp_start = i
+
+         if i + 1 <= n then do
+            i = i + 1
+            ch = substr(source, i, 1)
+
+            if ch = "+" | ch = "-" then do
+               if i + 1 <= n then i = i + 1
+               else i = exp_start
+            end
+
+            if i <= n & pos(substr(source, i, 1), digits) > 0 then do
+               seen_exp = 1
+               is_decimal = 1
+
+               do while i <= n
+                  ch = substr(source, i, 1)
+                  if pos(ch, digits) = 0 then leave
+                  i = i + 1
+               end
+            end
+            else do
+               /* Invalid exponent; leave E for later tokenization. */
+               i = exp_start
+            end
+         end
+      end
+   end
+
+   text = substr(source, start, i - start)
+
+   if is_decimal then out = addtok(toks, out, "decimal_literal", text, start)
+   else out = addtok(toks, out, "int_literal", text, start)
+
+ return 1
+
+/* -------------------------------------------------------------------------------------------------------------------
+ * scan_string()
+ * -------------------------------------------------------------------------------------------------------------------
+ * Recognize quoted string literals.
+ *
+ * Supported quoting:
+ *   'text'
+ *   "text"
+ *
+ * Escaped quotes are represented by doubled quote characters:
+ *   'That''s fine'
+ *
+ * Behavior:
+ *   - Emits one token of type "string_literal".
+ *   - Advances I to the first character after the closing quote.
+ *   - Unterminated strings consume the remainder of SOURCE.
+ *
+ * Returns:
+ *   1  String literal recognized.
+ *   0  Current character is not a quote.
+ * -------------------------------------------------------------------------------------------------------------------
+ */
+scan_string: procedure=.int
+  arg expose toks=.scanlex_token[], expose out=.int, expose i=.int, source=.string, n=.int
+
+  ch = substr(source, i, 1)
+  if ch \= "'" & ch \= '"' then return 0
+
+  quote = ch
+  start = i
+  i = i + 1
+
+  do while i <= n
+     ch = substr(source, i, 1)
+
+     if ch = quote then do
+        if i + 1 <= n & substr(source, i + 1, 1) = quote then do
+           i = i + 2
+           iterate
+        end
+
+        i = i + 1
+        out = addtok(toks, out, "string_literal", substr(source, start, i - start), start)
+        return 1
+     end
+
+     i = i + 1
+  end
+
+  out = addtok(toks, out, "string_literal", substr(source, start), start)
+return 1
+
+/* -------------------------------------------------------------------------------------------------------------------
+ * scan_stringJSON()
+ * -------------------------------------------------------------------------------------------------------------------
+ * Recognize quoted string literals.
+ *
+ * Supported quoting:
+ *   "text"
+ *
+ *
+ * Behavior:
+ *   - Emits one token of type "string_literal".
+ *   - Advances I to the first character after the closing quote.
+ *   - Unterminated strings consume the remainder of SOURCE.
+ *
+ * Returns:
+ *   1  String literal recognized.
+ *   0  Current character is not a quote.
+ * -------------------------------------------------------------------------------------------------------------------
+ */
+scan_stringJson: procedure=.int
+  arg expose toks=.scanlex_token[], expose out=.int, expose i=.int, source=.string, n=.int
+
+  /* JSON strings must begin with a double quote. */
+  if substr(source, i, 1) \= '"' then return 0
+
+  quote = '"'
+  start = i
+  i = i + 1
+
+  do while i <= n
+     ch = substr(source, i, 1)
+
+     /* JSON escape sequence. Skip escaped character. */
+     if ch = "\" then do
+        if i + 1 <= n then
+           i = i + 2
+        else
+           i = i + 1
+        iterate
+     end
+
+     /* Closing quote. */
+     if ch = quote then do
+        i = i + 1
+        out = addtok(toks, out, "string_literal", ,
+                     substr(source, start, i - start), start)
+        return 1
+     end
+
+     i = i + 1
+  end
+
+  /* Unterminated string: consume to end of source. */
+  out = addtok(toks, out, "string_literal", substr(source, start), start)
+return 1
+
+/* -------------------------------------------------------------------------------------------------------------------
+ * scan_operator()
+ * -------------------------------------------------------------------------------------------------------------------
+ * Recognize operators.
+ *
+ * Supported two-character operators:
+ *   <=  >=  <>  \=  ==  &&  ||
+ *
+ * Supported single-character operators:
+ *   + - * / % = < > | & \ ^
+ *
+ * Behavior:
+ *   - Emits one token of type "operator".
+ *   - Advances I by one or two characters.
+ *
+ * Returns:
+ *   1  Operator recognized.
+ *   0  No operator starts at position I.
+ * -------------------------------------------------------------------------------------------------------------------
+ */
+scan_operator: procedure=.int
+  arg expose toks=.scanlex_token[], expose out=.int, expose i=.int, source=.string, n=.int
+
+  if i + 1 <= n then do
+     two = substr(source, i, 2)
+
+     if pos(" " || two || " ", " <= >= <> \= == && || ") > 0 then do
+        out = addtok(toks, out, "operator", two, i)
+        i = i + 2
+        return 1
+     end
+  end
+
+  ch = substr(source, i, 1)
+
+  if pos(ch, "+-*/%=<>|&\^") = 0 then return 0
+
+  out = addtok(toks, out, "operator", ch, i)
+  i = i + 1
+return 1
+
+/* -------------------------------------------------------------------------------------------------------------------
+ * scan_charclass()
+ * -------------------------------------------------------------------------------------------------------------------
+ * Generic scanner for single-character token classes.
+ *
+ * Examples:
+ *   Brackets:   ()[]{}
+ *   Comma:      ,
+ *   Separator:  ;
+ *
+ * Input:
+ *   CHARS       Set of recognized characters.
+ *   TOKEN_TYPE  Token type to assign.
+ *
+ * Behavior:
+ *   - If SOURCE[I] is contained in CHARS:
+ *       - Emits one token of type TOKEN_TYPE.
+ *       - Advances I by one.
+ *
+ * Returns:
+ *   1  Character matched CHARS.
+ *   0  No match.
+ * -------------------------------------------------------------------------------------------------------------------
+ */
+scan_charclass: procedure=.int
+  arg expose toks=.scanlex_token[], expose out=.int, expose i=.int, source=.string, chars=.string, token_type=.string
+
+  ch = substr(source, i, 1)
+  if pos(ch, chars) = 0 then return 0
+
+  out = addtok(toks, out, token_type, ch, i)
+  i = i + 1
+return 1
+/* -------------------------------------------------------------------------------------------------------------------
+ * addtok()
+ * -------------------------------------------------------------------------------------------------------------------
+ * Append a token to the output array.
+ *
+ * Input:
+ *   TOKS   Token array (passed by EXPOSE).
+ *   OUT    Current token count.
+ *   TYPE   Token classification.
+ *   TEXT   Token source text.
+ *   POS    1-based position in SOURCE.
+ *
+ * Returns:
+ *   Updated token count.
+ * -------------------------------------------------------------------------------------------------------------------
+ */
+addtok: procedure=.int
+  arg expose toks=.scanlex_token[], out=.int, type=.string, text=.string, pos=.int
+
+  out = out + 1
+  toks[out] = .scanlex_token(type, text, pos)
+return out

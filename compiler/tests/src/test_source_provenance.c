@@ -119,7 +119,7 @@ static void test_source_diagnostics_sync_to_source_tree(void) {
     static char source_line[] = "say 'hello'\n";
 
     context = cntx_f();
-    context->file_name = "test.rexx";
+    context->file_name = "test.crexx";
     root = ast_ft(context, REXX_UNIVERSE);
     file_node = ast_ft(context, PROGRAM_FILE);
     instructions = ast_ft(context, INSTRUCTIONS);
@@ -170,7 +170,7 @@ static void test_synthetic_diagnostics_mark_internal(void) {
     static char call_line[] = "call work()\n";
 
     context = cntx_f();
-    context->file_name = "test.rexx";
+    context->file_name = "test.crexx";
     root = ast_ft(context, REXX_UNIVERSE);
     file_node = ast_ft(context, PROGRAM_FILE);
     instructions = ast_ft(context, INSTRUCTIONS);
@@ -225,7 +225,7 @@ static void test_reporting_anchor_helpers(void) {
     static char call_b_line[] = "call b()\n";
 
     context = cntx_f();
-    context->file_name = "test.rexx";
+    context->file_name = "test.crexx";
     root = ast_ft(context, REXX_UNIVERSE);
     file_node = ast_ft(context, PROGRAM_FILE);
     instructions = ast_ft(context, INSTRUCTIONS);
@@ -263,9 +263,10 @@ static void test_reporting_anchor_helpers(void) {
 
     {
         char *metalines = get_reporting_metalines(synthetic_block);
-        expect_true(strstr(metalines, ".src 1:1=\"call a()\"") != 0,
+        expect_true(strstr(metalines, ".srcstep ") != 0 &&
+                    strstr(metalines, "\"call a()\"") != 0,
                     "primary reporting anchor should emit the original source line");
-        expect_true(strstr(metalines, ".src 2:1=\"call b()\"") != 0,
+        expect_true(strstr(metalines, "\"call b()\"") != 0,
                     "additional reporting anchors should emit extra source lines");
         free(metalines);
     }
@@ -284,7 +285,7 @@ static void test_detached_diagnostics_do_not_duplicate_on_repeat_sync(void) {
     static char source_line[] = "say 'hello'\n";
 
     context = cntx_f();
-    context->file_name = "test.rexx";
+    context->file_name = "test.crexx";
     root = ast_ft(context, REXX_UNIVERSE);
     file_node = ast_ft(context, PROGRAM_FILE);
     instructions = ast_ft(context, INSTRUCTIONS);

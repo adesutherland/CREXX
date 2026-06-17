@@ -1,0 +1,24 @@
+options levelb
+namespace reference_source_deref_attr_fail
+
+main: procedure = .int
+  box = .Box(1)
+  r = reference .int
+  target = .int
+  target = 2
+  r = reference target
+  call box.replace(r)
+  return 0
+
+Box: class
+  value = .int
+
+  *: factory
+    arg initial = .int
+    value = initial
+    return
+
+  replace: method = .void
+    arg r = reference .int
+    value = dereference r
+    return

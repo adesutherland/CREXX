@@ -1,0 +1,175 @@
+/*
+ * interpreter/tests/tests_attributes.rxas
+ */
+
+.globals=0
+
+main() .locals=20
+    say "Test Suite: Attribute Bulk Operations"
+
+    load r1, "array"
+    setattrs r1, 3
+    linkattr1 r2, r1, 1
+    load r2, "A"
+    linkattr1 r2, r1, 2
+    load r2, "B"
+    linkattr1 r2, r1, 3
+    load r2, "C"
+
+    load r4, 2
+    load r5, 2
+    insattrs1 r1, r4, r5
+    getattrs r6, r1
+    ieq r0, r6, 5
+    brf fail_insert_size, r0
+
+    linkattr1 r2, r1, 1
+    seq r0, r2, "A"
+    brf fail_insert_keep_before, r0
+    linkattr1 r2, r1, 2
+    seq r0, r2, ""
+    brf fail_insert_blank_first, r0
+    linkattr1 r2, r1, 3
+    seq r0, r2, ""
+    brf fail_insert_blank_second, r0
+    linkattr1 r2, r1, 4
+    seq r0, r2, "B"
+    brf fail_insert_shift_first, r0
+    linkattr1 r2, r1, 5
+    seq r0, r2, "C"
+    brf fail_insert_shift_second, r0
+
+    linkattr1 r2, r1, 2
+    load r2, "X"
+    linkattr1 r2, r1, 3
+    load r2, "Y"
+
+    delattrs1 r1, 3, 2
+    getattrs r6, r1
+    ieq r0, r6, 3
+    brf fail_delete_size, r0
+    linkattr1 r2, r1, 1
+    seq r0, r2, "A"
+    brf fail_delete_first, r0
+    linkattr1 r2, r1, 2
+    seq r0, r2, "X"
+    brf fail_delete_second, r0
+    linkattr1 r2, r1, 3
+    seq r0, r2, "C"
+    brf fail_delete_third, r0
+
+    insattrs r1, 1, 1
+    getattrs r6, r1
+    ieq r0, r6, 4
+    brf fail_zero_insert_size, r0
+    linkattr r2, r1, 1
+    load r2, "Q"
+    linkattr r2, r1, 2
+    seq r0, r2, "X"
+    brf fail_zero_insert_shift, r0
+
+    delattrs r1, 0, 1
+    getattrs r6, r1
+    ieq r0, r6, 3
+    brf fail_zero_delete_size, r0
+    linkattr r2, r1, 0
+    seq r0, r2, "Q"
+    brf fail_zero_delete_first, r0
+    linkattr r2, r1, 1
+    seq r0, r2, "X"
+    brf fail_zero_delete_second, r0
+    linkattr r2, r1, 2
+    seq r0, r2, "C"
+    brf fail_zero_delete_third, r0
+
+    setattrs r7, 2
+    linkattr r8, r7, 0
+    load r8, "A"
+    linkattr r8, r7, 1
+    load r8, "B"
+    insattrs r7, 0, 1
+    linkattr r8, r7, 0
+    load r8, "Z"
+    unlinkattr 0, r7
+    linkattr r8, r7, 0
+    load r8, "Q"
+    linkattr r9, r7, 1
+    seq r0, r9, "A"
+    brf fail_unlink_after_insert, r0
+
+    setattrs r10, 3
+    linkattr r11, r10, 0
+    load r11, "A"
+    linkattr r11, r10, 1
+    load r11, "B"
+    linkattr r11, r10, 2
+    load r11, "C"
+    load r13, "external"
+    linktoattr 1, r10, r13
+    delattrs r10, 1, 1
+    seq r0, r13, "external"
+    brf fail_delete_linked_external, r0
+    linkattr r11, r10, 1
+    seq r0, r11, "C"
+    brf fail_delete_linked_shift, r0
+
+    say "PASS: Attribute Bulk Ops"
+    ret 0
+
+fail_insert_size:
+    say "FAIL: insert size"
+    ret 1
+fail_insert_keep_before:
+    say "FAIL: insert keep before"
+    ret 1
+fail_insert_blank_first:
+    say "FAIL: insert blank first"
+    ret 1
+fail_insert_blank_second:
+    say "FAIL: insert blank second"
+    ret 1
+fail_insert_shift_first:
+    say "FAIL: insert shift first"
+    ret 1
+fail_insert_shift_second:
+    say "FAIL: insert shift second"
+    ret 1
+fail_delete_size:
+    say "FAIL: delete size"
+    ret 1
+fail_delete_first:
+    say "FAIL: delete first"
+    ret 1
+fail_delete_second:
+    say "FAIL: delete second"
+    ret 1
+fail_delete_third:
+    say "FAIL: delete third"
+    ret 1
+fail_zero_insert_size:
+    say "FAIL: zero insert size"
+    ret 1
+fail_zero_insert_shift:
+    say "FAIL: zero insert shift"
+    ret 1
+fail_zero_delete_size:
+    say "FAIL: zero delete size"
+    ret 1
+fail_zero_delete_first:
+    say "FAIL: zero delete first"
+    ret 1
+fail_zero_delete_second:
+    say "FAIL: zero delete second"
+    ret 1
+fail_zero_delete_third:
+    say "FAIL: zero delete third"
+    ret 1
+fail_unlink_after_insert:
+    say "FAIL: unlink after insert"
+    ret 1
+fail_delete_linked_external:
+    say "FAIL: delete linked external"
+    ret 1
+fail_delete_linked_shift:
+    say "FAIL: delete linked shift"
+    ret 1

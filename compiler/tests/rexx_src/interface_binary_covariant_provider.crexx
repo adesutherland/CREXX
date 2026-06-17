@@ -1,0 +1,25 @@
+options levelb
+namespace interface_binary_covariant_provider expose BinaryIterator IterableProvider
+import interface_binary_covariant_contract
+
+BinaryIterator: class implements .Iterator
+  done = .int
+
+  *: factory
+    done = 0
+    return
+
+  hasNext: method = .int
+    return done = 0
+
+  next: method = .string
+    if done then return ""
+    done = 1
+    return "ok"
+
+IterableProvider: class implements .Iterable
+  *: factory
+    return
+
+  iterator: method = .BinaryIterator
+    return .BinaryIterator()

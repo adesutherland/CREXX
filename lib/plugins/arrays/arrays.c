@@ -1,5 +1,6 @@
 //
-// System Information Plugin for crexx/pa - Plugin Architecture
+// Deprecated legacy array plugin for crexx/pa - Plugin Architecture.
+// Prefer the standard rxfnsb array BIFs for new code.
 //
 #include <stdio.h>
 #include <stdlib.h>

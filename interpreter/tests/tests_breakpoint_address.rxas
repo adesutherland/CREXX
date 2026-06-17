@@ -2,23 +2,30 @@
  * CREXX Interpreter test that BREAKPOINT reports the next instruction address.
  */
 
-.srcfile="breakpoint_source.rexx"
 .globals=0
 
 main() .locals=1
     sigcall trace(),"BREAKPOINT"
     bpon
-    .src 5:1="say 'target'"
+    .srcstep 1 1 17 "breakpoint_source.rexx" 5 1 12 "say 'target'"
+    .traceevent "V" 6 "R" "S" "s" 0 0 0 0 "target" ""
     say "target"
     ret 0
 
-trace() .locals=5
+trace() .locals=8
     linkattr1 r0,a1,2
     linkattr1 r1,a1,3
     metaloaddata r2,r0,r1
     linkattr1 r3,r2,1
-    linkattr1 r4,r3,3
+    linkattr1 r4,r3,8
     sayx "bp-source: "
     say r4
+    linkattr1 r5,r2,2
+    linkattr1 r6,r5,1
+    linkattr1 r7,r5,10
+    sayx "bp-event: "
+    say r6
+    sayx "bp-symbol: "
+    say r7
     bpoff
     ret 0

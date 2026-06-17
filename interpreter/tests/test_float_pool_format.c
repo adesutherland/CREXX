@@ -6,6 +6,9 @@
 #include "rxbin.h"
 #include "rxdefs.h"
 
+#define LONG_PI_BITS UINT64_C(0x400921fb54442d18)
+#define ROUNDED_PI_BITS UINT64_C(0x400921fb82c2bd7f)
+
 static uint64_t bits_of(double value) {
     uint64_t bits = 0;
     memcpy(&bits, &value, sizeof(bits));
@@ -22,6 +25,8 @@ int main(void) {
     size_t first_index;
     size_t second_index;
     size_t third_index;
+    size_t fourth_index;
+    size_t fifth_index;
 
     if (!fp) {
         fprintf(stderr, "Failed to open tests_float_pool.rxbin\n");
@@ -38,7 +43,9 @@ int main(void) {
     code = (bin_code *)module->instructions;
     if (code[0].instruction.opcode != OP_LOAD_REG_FLOAT ||
         code[3].instruction.opcode != OP_LOAD_REG_FLOAT ||
-        code[6].instruction.opcode != OP_LOAD_REG_FLOAT) {
+        code[6].instruction.opcode != OP_LOAD_REG_FLOAT ||
+        code[9].instruction.opcode != OP_LOAD_REG_FLOAT ||
+        code[12].instruction.opcode != OP_FEQ_REG_REG_FLOAT) {
         fprintf(stderr, "Unexpected instruction layout in float pool fixture\n");
         free_module(module);
         return 1;
@@ -47,6 +54,8 @@ int main(void) {
     first_index = code[2].index;
     second_index = code[5].index;
     third_index = code[8].index;
+    fourth_index = code[11].index;
+    fifth_index = code[15].index;
 
     if (first_index != second_index) {
         fprintf(stderr, "Repeated float literals were not deduplicated\n");
@@ -54,14 +63,17 @@ int main(void) {
         return 1;
     }
 
-    if (first_index == third_index) {
+    if (first_index == third_index || first_index == fourth_index || first_index == fifth_index ||
+        third_index == fourth_index || third_index == fifth_index || fourth_index == fifth_index) {
         fprintf(stderr, "Distinct float literals were incorrectly merged\n");
         free_module(module);
         return 1;
     }
 
     if (FLOAT_CONST_AT(module->constant, first_index)->base.type != FLOAT_CONST ||
-        FLOAT_CONST_AT(module->constant, third_index)->base.type != FLOAT_CONST) {
+        FLOAT_CONST_AT(module->constant, third_index)->base.type != FLOAT_CONST ||
+        FLOAT_CONST_AT(module->constant, fourth_index)->base.type != FLOAT_CONST ||
+        FLOAT_CONST_AT(module->constant, fifth_index)->base.type != FLOAT_CONST) {
         fprintf(stderr, "Float operands do not point at FLOAT_CONST entries\n");
         free_module(module);
         return 1;
@@ -79,6 +91,18 @@ int main(void) {
         return 1;
     }
 
+    if (bits_of(FLOAT_CONST_VALUE(module->constant, fourth_index)) != LONG_PI_BITS) {
+        fprintf(stderr, "Stored long pi literal does not match the expected IEEE-64 payload\n");
+        free_module(module);
+        return 1;
+    }
+
+    if (bits_of(FLOAT_CONST_VALUE(module->constant, fifth_index)) != ROUNDED_PI_BITS) {
+        fprintf(stderr, "Stored six-decimal pi literal does not match the expected IEEE-64 payload\n");
+        free_module(module);
+        return 1;
+    }
+
     i = 0;
     while (i < module->header.constant_size) {
         entry = (chameleon_constant *)(module->constant + i);
@@ -88,8 +112,8 @@ int main(void) {
         i += entry->size_in_pool;
     }
 
-    if (float_count != 2) {
-        fprintf(stderr, "Expected 2 FLOAT_CONST entries, found %lu\n", (unsigned long)float_count);
+    if (float_count != 4) {
+        fprintf(stderr, "Expected 4 FLOAT_CONST entries, found %lu\n", (unsigned long)float_count);
         free_module(module);
         return 1;
     }

@@ -1,0 +1,158 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash
+namespace data_StringTreeSet expose StringTreeSet
+import treemap -- the plugin, not the class
+import data_StringIterable
+
+/**
+ * class StringTreeSet implements a Set, backed by a treemap instance.
+ * It stores the elements, which are strings, in their natural order.
+ *
+ * @author René Vincent Jansen
+ * @author Peter Jacob
+ */
+
+StringTreeSet: class implements .StringIterable
+val = .int
+
+/**
+ * the class factory returns an instance of the StringTreeSet class
+ */
+  *: factory
+    val = tmcreate('set')
+    return
+
+    /** method add adds the specified element to this set
+     * if it is not already present. Otherwise it will leave
+     * the set unchanged. It will be added according to its
+     * natural order..
+     * @parm .string element
+     * @return .int
+     */
+  add: method = .int
+    arg key = .string
+    return tmput(val, key, key)
+
+   /**
+    * method fromArray adds elements to this StringTreeSet instance
+    * from an array, and deduplicates and orders them.
+    * @parm .string items
+    * @result .int added
+    */
+  fromArray: method = .int
+    arg items = .string[]
+    added = 0
+    loop i = 1 to items.0
+      rc = add(items.i)
+      if rc = 0 then added = added + 1
+    end
+    return added
+
+    /**
+     * method contains returns 1 (true) if this set contains
+     * the specified element.
+     * @parm .string element
+     * @return .int
+     */
+  contains: method = .int
+    arg key = .string
+    return tmcontainsKey(val, key)
+
+    /**
+     * method remove removes an element from this StringTreeSet
+     * @parm .string key
+     * @return .int 0 for success, 4 for failure
+     */
+  remove: method = .int
+    arg key = .string
+    return tmremove(val, key)
+
+    /**
+     * Returns the number of elements in this StringTreeSet.
+     * return .int size
+     */
+  size: method = .int
+    return tmsize(val)
+
+    /**
+     * method first returns the first (lowest) element
+     * currently in this set.
+     * @return .int
+     */
+  first: method = .string
+    return tmfirstkey(val)
+
+    /**
+     * method last returns the last (highest) element
+     * currently in this set.
+     * @return .int
+     */
+  last: method = .string
+    return tmlastkey(val)
+
+    /**
+     * method iterator returns a StringTreeSetIterator
+     * which iterates over the elements currently in this set.
+     * @return .StringTreeSetIterator
+     */
+  iterator: method = .StringTreeSetIterator
+    return .StringTreeSetIterator(val)
+
+    /**
+     * method toArray returns the items in this StringTreeSet
+     * as a rexx array
+     */
+  toArray: method = .string[]
+    list = .string[]
+    n = tmkeys(val, list)
+    return list
+
+    /**
+     * method keystem returns the elements in this StringTreeSet
+     * as a string
+     */
+  toString: method = .string
+    if size() = 0 then return '{}'
+
+    it = iterator()
+    result = '{'
+    first = 1
+
+    loop while it.hasNext()
+      key = it.next()
+      if first then first = 0
+      else result = result || ', '
+      result = result || key
+    end
+
+    call it.close()
+    return result || '}'
+
+  free: method = .int
+    if val = 0 then return 0
+    rc = tmfree(val)
+    val = 0
+    return rc

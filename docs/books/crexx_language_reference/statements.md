@@ -18,6 +18,17 @@ address command "echo #42" output out error err
 say out
 ```
 
+The built-in `COMMAND`/`CMD`/`SYSTEM`/`SHELL` and `PATH` environments execute a
+program with parsed arguments; they are not an interactive shell parser. Simple
+quoted arguments are supported, but complex nested shell quoting should be
+passed to an explicit shell through stdin:
+
+```rexx
+command_lines = .string[]
+command_lines[1] = "printf '%s\n' alpha beta"
+address command "sh" input command_lines output out error err
+```
+
 ADDRESS host-variable anchors such as `:name` and `${name}` are compiler
 auto-expose syntax. Their command meaning belongs to the selected environment
 handler; the VM carries binding values and write-back updates.
@@ -116,13 +127,42 @@ Current implementation status:
 
 ## PROCEDURE
 
-See Procedures and Arguments Section.
+`PROCEDURE` starts a named local routine and optionally declares its return
+type and the module-global variables that routine can see.
+
+Common forms:
+
+```rexx
+name: procedure
+name: procedure = .int
+name: procedure = .void expose state count
+```
+
+Procedure-level `expose` is local to that procedure declaration. The listed
+names are bound to module-global storage shared with other procedures that
+also expose the same names. A procedure that does not list the name does not
+see that exposed storage unless the name is also exposed by the file-level
+`namespace ... expose ...` declaration.
+
+```rexx
+proc1: procedure = .void expose var
+  var = "Hello World"
+  return
+
+proc2: procedure = .void expose var
+  say "var is" var
+  return
+```
+
+This is distinct from `ARG expose`, which exposes a call argument by reference.
 
 ## SAY
 
 SAY \[ expr \] ;
 
-Evaluates the expression expr and prints the resulting string onto the standard output stream.
+Evaluates the expression expr and prints the resulting string onto the standard output stream.[^newline]
+
+[^newline]: with an added newline. For cases where no newline is wanted, the conventional way of using `call lineout` can be used, or the `sayx` assembler instruction.
 
 ## SELECT/WHEN/OTHERWISE
 
@@ -135,8 +175,10 @@ END [;]
 
 The SELECT statement allows you to conditionally evaluate multiple expressions and execute corresponding instructions based on the first expression that evaluates to true (1).
 
-There are two styles of the SELECT statement in cREXX:
+There are two styles of the SELECT statement in cRexx:
+
 1. **Classic SELECT:** Does not include an initial `expression` after the `SELECT` keyword. Each `WHEN` expression is evaluated as a standalone boolean condition.
+
 2. **C-Style SELECT (SWITCH):** Includes an initial `expression` after the `SELECT` keyword. The `expression` is evaluated once, and its result is implicitly compared for equality (`=`) against each `WHEN` expression.
 
 If a `WHEN` condition is met, its associated `THEN` instruction is executed, and control exits the `SELECT` block. If no `WHEN` condition is met, the `OTHERWISE` block (if present) is executed. If no `WHEN` condition is met and an `OTHERWISE` block is absent, the `SELECT` statement acts as a `NOP` (null operation) and does nothing.
@@ -201,25 +243,180 @@ directly. To protect code inside a loop, put a simple signal-handling
 `TRACE` enables or disables VM breakpoint-backed tracing for the current call
 frame and procedures called from it.
 
-The initial supported forms are:
+Supported forms are:
 
 ```rexx
 trace off
 trace normal
+trace results
 trace rexx
 trace asm
+trace as
+trace llm
+trace ll
+trace env
+trace value expr
+trace suppress namespace name
+trace unsuppress namespace name
+trace add suppressed namespace name
+trace remove suppressed namespace name
+trace reset namespaces
+trace results to stderr
+trace llm to file "trace.jsonl"
 ```
 
-`TRACE NORMAL` and `TRACE REXX` currently both trace authored Rexx clauses and
-skip the runtime/debugger internals by default. `TRACE ASM` traces VM/RXAS
-instruction information and includes source text where metadata is available.
-`TRACE OFF` disables breakpoint tracing and resets the trace runtime state.
+The standard Rexx option letters `A`, `C`, `E`, `F`, `I`, `L`, `N`, `O`, and
+`R` are accepted, including a leading `?` prefix and signed integer settings.
+Options use a minimum-abbreviation rule: the spelling must be a left-prefix of
+the full option word. For example, `TRACE R`, `TRACE RE`, `TRACE RES`,
+`TRACE RESULT`, and `TRACE RESULTS` all select Results, while `TRACE RAS` is
+invalid. The cRexx extensions use `AS` as the minimum abbreviation for `ASM`
+and `LL` as the minimum abbreviation for `LLM`; `ENV` is an exact cRexx
+extension spelling. `TRACE REXX` remains supported as an exact legacy cRexx
+source-trace spelling; it is not abbreviated because `R` and `RE...` belong to
+Results.
+This is not yet full semantic compatibility, but the noninteractive output
+shape follows the standard prefix vocabulary for implemented events:
+
+```
+       >  >   escaped-source-file
+     5 *-* escaped-source
+       >=>   "escaped-assignment-result"
+       +++   RC=-3 ENVIRONMENT escaped-command
+```
+
+`TRACE N` is the quiet/default mode: it does not trace ordinary statements and
+emits `+++` only for failing ADDRESS commands. `TRACE C`, `TRACE E`, and
+`TRACE F` are ADDRESS-command driven. `TRACE A` traces source clauses.
+Classic `TRACE R` traces source clauses, variable substitutions, and assignment
+or expression results. cRexx emits source clauses from `.srcstep` metadata and
+semantic value records from `.traceevent` metadata, including initial `>=>`
+assignment, `>V>` variable, `>L>` literal, and `>O>`/`>P>` operation coverage
+where the compiler can point at an available register or constant. `TRACE I`
+uses the same metadata path and adds intermediate-event visibility as coverage
+grows. `TRACE L` is accepted, but label-pass events are not emitted yet.
+`O`/`OFF` disables breakpoint tracing. `TRACE ASM` traces VM/RXAS instruction
+information and includes source text where metadata is available.
+
+When traced execution moves between source files, cRexx emits a source-file
+transition line:
+
+```bash
+       >  >   helper.crexx
+```
+
+The first visible source file is not printed, so single-file traces keep their
+classic shape. Later file changes are printed before the next `*-*` source
+line, including when execution returns to the original file. This is a cRexx
+extension; classic Regina-style output does not provide an equivalent filename
+record.
+
+This TRACE implementation is still beta. Source reporting now uses
+self-contained source-step metadata, and text TRACE no longer guesses
+assignment results from source text. Result coverage is still deliberately
+partial: optimized-away or folded values may have no trace event, and some
+compound-variable details such as final resolved-name reporting remain a
+compiler/runtime coverage task.
+
+`TRACE LLM` is a cRexx extension that emits one JSON-lines-style trace record
+per event. It is intended for debugger automation and for validating emitted
+`.srcstep` metadata; source text is escaped so control characters and
+backslashes remain visible. `TRACE VALUE expr` evaluates `expr` at runtime and
+normalizes it using the same trace option rules.
+
+Trace output defaults to stdout. Add `TO STDERR`, `TO STDOUT`, `TO FILE expr`,
+or `TO expr` to choose a sink. `TO FILE` opens the selected file in append mode
+for each trace record.
+
+TRACE normally hides events from system library and debugger namespaces so a
+user trace follows the program being debugged instead of the machinery that
+implements tracing. The default suppressed namespaces are `rxfnsb`, `_rxsysb`,
+`rxfnsg`, `_rxsysg`, `rxfnsl`, `_rxsysl`, `rxfnsc`, `_rxsysc`, `rxcp`,
+`rxcpexits`, `rxcptest`, `rxdb`, `rxdbgui`, `runtime_signal`, `signalaction`,
+and `library`. The TRACE runtime internals themselves are always hidden.
+
+Use namespace controls when you need to include or exclude a library while
+debugging:
+
+```rexx
+trace results
+trace unsuppress namespace rxfnsg
+trace suppress namespace myframework
+trace reset namespaces
+```
+
+`TRACE SUPPRESS NAMESPACE name` and `TRACE ADD SUPPRESSED NAMESPACE name`
+suppress a namespace. `TRACE UNSUPPRESS NAMESPACE name` and
+`TRACE REMOVE SUPPRESSED NAMESPACE name` make that namespace visible again.
+`TRACE RESET NAMESPACES` restores the default suppression list and clears
+per-session changes. Namespace names may be bare identifiers or string
+literals; matching is by namespace or path component, not by arbitrary
+substring, so suppressing `rxfnsg` does not suppress `myrxfnsghelper`.
+
+`TRACE ENV` explicitly checks two environment variables at that point in the
+program. `CREXX_TRACE` supplies the mode using the same option rules as
+`TRACE VALUE`, and `CREXX_TRACE_TO` supplies the sink using the same rules as
+`TO`. For example, `CREXX_TRACE=results CREXX_TRACE_TO=stderr` can switch
+tracing on at a compiled `TRACE ENV` marker without editing the source. If
+`CREXX_TRACE` is unset or empty, `TRACE ENV` turns tracing off. If `CREXX_TRACE`
+has an invalid value, `TRACE ENV` turns tracing off and emits a `+++` trace
+message naming the invalid value.
 
 TRACE is implemented as a certified compiler exit. It requires normal compiler
 exit loading; compiling with exits disabled rejects the statement rather than
 treating it as an implicit command.
 
+The cRexx standard-library/BIF build deliberately compiles most  
+`lib/rxfnsb/rexx/*.crexx` files with compiler exits disabled (`rxc -x`) to avoid
+bootstrap and circular-dependency problems while building the library that the
+exits themselves use. Adding `TRACE RESULTS`, `TRACE R`, or another explicit
+TRACE instruction directly to a BIF source file such as `abs.crexx` therefore
+produces `#CERTIFIED_EXIT_DISABLED`. Debug BIF or library behavior from a
+normal test program instead: call the BIF from a fixture that compiles with
+exits enabled, use `TRACE UNSUPPRESS NAMESPACE rxfnsb` if you need to see
+library frames, and keep linked/native images unstripped with
+`--link-keep-source` when source-level TRACE metadata is needed.
+
+Implementation status and compatibility requirements are tracked in
+`docs/ai-context/CREXX_TRACE_REQUIREMENTS.md`.
+
 # Procedures and Arguments
+
+## Procedure-Level Expose
+
+`procedure expose` is the local procedure form for sharing module-global state:
+
+```rexx
+main: procedure
+  call proc1
+  call proc2
+  say "but var in main is" var
+  return
+
+proc1: procedure = .void expose var
+  var = "Hello World"
+  return
+
+proc2: procedure = .void expose var
+  say "var is" var
+  return
+```
+
+Here `proc1` and `proc2` share the exposed global `var`. `main` does not list
+`var`, so its bare `var` reference is not the same exposed variable. To let
+`main` read or write the shared value, declare `main: procedure expose var` as
+well.
+
+The `expose` list follows the return type if a return type is present. The
+items in the procedure-level list are bare variable names:
+
+```rexx
+worker: procedure = .int expose state errors
+```
+
+For globally published module variables, prefer file-level
+`namespace name expose var`; those namespace-exposed globals auto-bind into
+procedures in the same source file.
 
 ## Function Arguments
 
@@ -241,8 +438,11 @@ ARG a1 \= 0, a2 \= .int, expose a3 \= .aclass, ?a4 \= .aclass, a5 \= .string\[\]
 * Arg a1 is an optional integer (and 0 if not specified in the call)  
 * Arg a2 is a mandatory integer (pass by value)  
 * Arg a3 is a mandatory class aclass pass by reference  
-* Arg a4 is a optional class aclass pass by value, value from the default factory if not specified in the call  
+* Arg a4 is an optional class aclass pass by value; the default expression is the bare typed class value `.aclass`, not a factory call
 * Arg a5 is an array of strings and is one way to allow an arbitrary number of strings to be passed to the procedure (see also Ellipsis later)
+
+Optional defaults evaluate exactly as written. Use `?x = .SomeClass` for the
+bare typed class value and `?x = .SomeClass()` to call the default factory.
 
 Examples:
 
@@ -289,7 +489,7 @@ The type of this Pseudo is the type of the '...' argument
 
 ## arg() Operator
 
-The compatibility arg() operator is designed to provide some compatibility with classic REXX; by example:
+The compatibility arg() operator is designed to provide some compatibility with Classic Rexx; by example:
 
 * arg() is equivalent to arg.0 etc. Type Integer.  
 * arg(1) is equivalent to arg.1 etc. The type of this operator is the same as the '...' argument and like arg.1 can signal OUTOFRANGE  
@@ -299,4 +499,4 @@ The compatibility arg() operator is designed to provide some compatibility with 
 
 ## Implicit Main Procedure
 
-In the event that a module file contains instructions preceding a PROCEDURE instruction, an implicit procedure named main() is automatically generated within the namespace of the module file. The arguments for this procedure can be accessed through the pseudo array arg or arg() operator. This implicit main() case is the compatibility bridge that maps classic `arg(n)` access onto command-line arguments when no explicit signature is present. The return type of the implicitly defined main() procedure is automatically set to either int or void.
+In the event that a module file contains instructions preceding a `PROCEDURE` instruction, an implicit procedure named main() is automatically generated within the namespace of the module file. The arguments for this procedure can be accessed through the pseudo array arg or arg() operator. This implicit main() case is the compatibility bridge that maps classic `arg(n)` access onto command-line arguments when no explicit signature is present. The return type of the implicitly defined main() procedure is automatically set to either int or void.

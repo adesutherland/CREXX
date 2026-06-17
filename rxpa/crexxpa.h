@@ -86,6 +86,8 @@ typedef enum rxsignal {
     SIGNAL_UNKNOWN_INSTRUCTION = 10, /* Triggered when the REXX program attempts to execute an unknown RXAS instruction */
     SIGNAL_FUNCTION_NOT_FOUND = 11,  /* Triggered when the REXX program attempts to execute an unknown function */
     SIGNAL_OUT_OF_RANGE = 8,         /* Triggered when the REXX program attempts to access an array element that is out of range */
+    SIGNAL_REFERENCE_INVALID = 14,   /* Triggered when a reference value no longer points to live storage */
+    SIGNAL_OBJECT_NOT_INITIALIZED = 16, /* Triggered when a typed object value is used before an instance is initialized */
     SIGNAL_FAILURE = 2,              /* Triggered when an error occurs in an external function or subroutine called by the REXX program */
     SIGNAL_HALT = 20,                /* Triggered when the REXX program receives an external request to halt (term) its execution */
     SIGNAL_NOTREADY = 15,            /* Triggered when there is an input/output error, such as a file not being ready for reading or writing */

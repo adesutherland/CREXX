@@ -36,12 +36,12 @@ main() .locals=10
 
    load r1,1
    load r2,"duo"
-   settp r2,3
+   settp r2,768
    srcfproc r0,"interface_factory_tiebreak.vehicle",r1
    dcall r0,r0,r1
 
    load r1,1
-   settp r0,1
+   settp r0,256
    swap r2,r0
    srcmethod r3,r2,"describe"
    dcall r3,r3,r1
@@ -51,12 +51,12 @@ main() .locals=10
 
    load r1,1
    load r2,"duo"
-   settp r2,3
+   settp r2,768
    srcfproc r0,"interface_factory_tiebreak.vehicle..from_name",r1
    dcall r0,r0,r1
 
    load r1,1
-   settp r0,1
+   settp r0,256
    swap r2,r0
    srcmethod r3,r2,"describe"
    dcall r3,r3,r1
@@ -69,7 +69,7 @@ main() .locals=10
    dcall r0,r0,r1
 
    load r1,1
-   settp r0,1
+   settp r0,256
    swap r2,r0
    srcmethod r3,r2,"describe"
    dcall r3,r3,r1
@@ -158,7 +158,7 @@ fail_istype_class:
 
 §interface_factory_tiebreak.car.§factory.from_name() .locals=4
    .meta "interface_factory_tiebreak.car.§factory.from_name"="b" ".vehicle" §interface_factory_tiebreak.car.§factory.from_name() "name=.string"
-   .src 1:1="from_name"
+   .srcstep 1 1 17 "tests_interfaces.rxas" 1 1 9 "from_name"
    setattrs r1,2
    setobjtype r1,"interface_factory_tiebreak.car"
    setnumdgts 18
@@ -222,7 +222,7 @@ fail_istype_class:
 
 §interface_factory_tiebreak.truck.§factory.from_name() .locals=4
    .meta "interface_factory_tiebreak.truck.§factory.from_name"="b" ".vehicle" §interface_factory_tiebreak.truck.§factory.from_name() "name=.string"
-   .src 1:1="from_name"
+   .srcstep 2 2 17 "tests_interfaces.rxas" 1 1 9 "from_name"
    setattrs r1,2
    setobjtype r1,"interface_factory_tiebreak.truck"
    setnumdgts 18
@@ -284,14 +284,14 @@ fail_istype_class:
    setnumstd 1
    .meta "interface_default_vm.shape.describe.§this"="b" ".shape" a1
    load r1,1
-   settp a1,1
+   settp a1,256
    swap r2,a1
    srcmethod r3,r2,"prefix"
    dcall r3,r3,r1
    swap a1,r2
    concat r3,r3,":"
    load r1,1
-   settp a1,1
+   settp a1,256
    swap r2,a1
    srcmethod r4,r2,"summary"
    dcall r4,r4,r1

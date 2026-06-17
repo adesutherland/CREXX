@@ -59,8 +59,10 @@ static void prt_ops_new() {
         char buffer[100];
         OperandType types[3];
         int num_ops = 0;
+        if (!rxop_is_source_mnemonic(op_table[i].mnemonic)) continue;
         switch (op_table[i].format) {
             case FMT_EMPTY: num_ops = 0; break;
+            case FMT_B: types[0] = OP_BINARY; num_ops = 1; break;
             case FMT_C: types[0] = OP_CHAR; num_ops = 1; break;
             case FMT_F: types[0] = OP_FLOAT; num_ops = 1; break;
             case FMT_I: types[0] = OP_INT; num_ops = 1; break;
@@ -80,6 +82,7 @@ static void prt_ops_new() {
             case FMT_P: types[0] = OP_FUNC; num_ops = 1; break;
             case FMT_P_S: types[0] = OP_FUNC; types[1] = OP_STRING; num_ops = 2; break;
             case FMT_R: types[0] = OP_REG; num_ops = 1; break;
+            case FMT_R_B: types[0] = OP_REG; types[1] = OP_BINARY; num_ops = 2; break;
             case FMT_R_C: types[0] = OP_REG; types[1] = OP_CHAR; num_ops = 2; break;
             case FMT_R_D: types[0] = OP_REG; types[1] = OP_DECIMAL; num_ops = 2; break;
             case FMT_R_D_R: types[0] = OP_REG; types[1] = OP_DECIMAL; types[2] = OP_REG; num_ops = 3; break;
@@ -141,7 +144,7 @@ static void help() {
         "  -i              Print Instructions\n"
         "  -d              Debug/Verbose Mode\n"
         "  -l location     Working Location (directory)\n"
-        "  -o output_file  Binary Output File\n"
+        "  -o output_stem  RXBIN output stem or .rxbin file\n"
         "  -n              No Optimising\n"
         "Notes   :\n"
         "- source_file : The source file to be assembled; filetype (rxas) is added to the name.\n";
@@ -169,6 +172,8 @@ int main(int argc, char *argv[]) {
     Assembler_Context scanner;
     char *combined_location = 0;
     char *exe_path = 0;
+    FILE *trace_file = 0;
+    int assemble_rc;
     int i;
 #ifdef ENABLE_PARSER_MODE
     int parser_mode = 0;
@@ -180,6 +185,8 @@ int main(int argc, char *argv[]) {
 
     /* Load Instruction Database */
     /* init_ops(); - NO LONGER NEEDED */
+
+    memset(&scanner, 0, sizeof(scanner));
 
     /* scanner context parameter */
     scanner.debug_mode = 0;
@@ -286,11 +293,20 @@ int main(int argc, char *argv[]) {
     /* Add current and executable path to location */
     exe_path = exepath();
     if (scanner.location) {
-        combined_location = malloc(strlen(scanner.location) + strlen(exe_path) + 5);
+        size_t combined_location_size = strlen(scanner.location) + strlen(exe_path) + 5;
+        combined_location = malloc(combined_location_size);
+        if (!combined_location) {
+            RX_PANIC_OOM("malloc rxas location list", combined_location_size,
+                         scanner.location);
+        }
         sprintf(combined_location, ".;%s;%s", scanner.location, exe_path);
         scanner.location = combined_location;
     } else {
-        combined_location = malloc(strlen(exe_path) + 5);
+        size_t combined_location_size = strlen(exe_path) + 5;
+        combined_location = malloc(combined_location_size);
+        if (!combined_location) {
+            RX_PANIC_OOM("malloc rxas location list", combined_location_size, exe_path);
+        }
         sprintf(combined_location, ".;%s", exe_path);
         scanner.location = combined_location;
     }
@@ -307,17 +323,21 @@ int main(int argc, char *argv[]) {
         scanner.traceFile = openfile("trace", "out", scanner.location, "w");
         if (scanner.traceFile == NULL) {
             fprintf(stderr, "Can't open trace file\n");
-            exit(-1);
+            free(combined_location);
+            return -1;
         }
+        trace_file = scanner.traceFile;
     }
 
     /* Assemble */
-    if (rxasmble(&scanner)) exit(-1);
+    assemble_rc = rxasmble(&scanner);
 
     /* Free Instruction Database */
     /* init_ops() / free_ops() - NO LONGER NEEDED */
 
-    if (scanner.traceFile) fclose(scanner.traceFile);
+    if (trace_file) fclose(trace_file);
+    free(combined_location);
 
-    return(scanner.severity);
+    if (assemble_rc) return -1;
+    return 0;
 }

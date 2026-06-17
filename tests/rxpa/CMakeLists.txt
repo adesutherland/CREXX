@@ -18,10 +18,10 @@ function(localize_test_plugin_output target)
     )
 endfunction()
 
-function(enable_test_vm_core_sockets target)
-    target_sources(${target} PRIVATE
-            ${CMAKE_SOURCE_DIR}/interpreter/rxvmsock.c
-            ${CMAKE_SOURCE_DIR}/interpreter/rxvmsock.h)
+function(enable_rxpa_test_vm_platform target)
+    # These static-plugin harness VMs need the core socket symbols, but they
+    # intentionally keep the historical no-TLS test configuration.
+    target_sources(${target} PRIVATE $<TARGET_OBJECTS:rxvm_platform_notls_objects>)
     if(WIN32)
         target_link_libraries(${target} ws2_32)
     endif()
@@ -66,27 +66,17 @@ add_static_plugin_target(_rxpalink rxpa_staticlink.c)
 # Basic Build
 add_executable(testvm
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmmain.c
-        ${CMAKE_SOURCE_DIR}/interpreter/rxvmintp.h
-        ${CMAKE_SOURCE_DIR}/interpreter/rxvmintp.c
-        ${CMAKE_SOURCE_DIR}/interpreter/rxvmload.c
-        ${CMAKE_SOURCE_DIR}/interpreter/interrupt.c
-        ${CMAKE_SOURCE_DIR}/avl_tree/rxastree.h
-        ${CMAKE_SOURCE_DIR}/utf8/utf.h
-        ${CMAKE_SOURCE_DIR}/binutils/include/rxbin.h
-        ${CMAKE_SOURCE_DIR}/interpreter/rxspawn.c
-        ${CMAKE_SOURCE_DIR}/interpreter/exitfunc.c
-        ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c
-        ${CMAKE_SOURCE_DIR}/interpreter/rxvml/rxvm_run.c)
+        $<TARGET_OBJECTS:rxvm_core_objects>)
 # Set the performance properties
 # set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 # set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
 # set_property(TARGET testvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
 # Ensure the linker includes the plugin
 configure_linker_for_static_lib(testvm _rxpalink)
-enable_test_vm_core_sockets(testvm)
+enable_rxpa_test_vm_platform(testvm)
 # Add the dependencies and link libraries
 add_dependencies(testvm avl_tree rxpa platform _rxpalink_static)
-target_link_libraries(testvm rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim _rxpalink_static)
+target_link_libraries(testvm rxvmplugin rxvmref mc_decimal_manual avl_tree rxpa rxpashim _rxpalink_static)
 target_include_directories(testvm PRIVATE
         ${CMAKE_SOURCE_DIR}/interpreter
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
@@ -101,7 +91,7 @@ target_include_directories(testvm PRIVATE
 add_custom_target(rxpa_dynlink_run ALL)
 crexx_add_rexx_opt_matrix(
         NAME rxpa_dynlink_run
-        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink.rexx
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_dynlink.crexx
         TARGET_GROUP rxpa_dynlink_run
         IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
         DEPENDS library _rxpa_dynlink
@@ -111,7 +101,7 @@ crexx_add_rexx_opt_matrix(
 add_custom_target(rxpa_staticlink_run ALL)
 crexx_add_rexx_opt_matrix(
         NAME rxpa_staticlink_run
-        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink.rexx
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_staticlink.crexx
         TARGET_GROUP rxpa_staticlink_run
         COMPILER_TARGET rxc_staticlink
         IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
@@ -143,13 +133,13 @@ foreach(_mode IN ITEMS noopt opt)
 
     add_test(
             NAME rxpa_classdecl_dynamic_compile_${_mode}
-            COMMAND $<TARGET_FILE:rxc> -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}" ${_mode_flag} -o rxpa_classdecl_dynamic_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_classdecl.rexx
+            COMMAND $<TARGET_FILE:rxc> -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}" ${_mode_flag} -o rxpa_classdecl_dynamic_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_classdecl.crexx
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 
     add_test(
             NAME rxpa_classdecl_static_compile_${_mode}
-            COMMAND $<TARGET_FILE:rxc_classdecl_static> -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}" ${_mode_flag} -o rxpa_classdecl_static_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_classdecl.rexx
+            COMMAND $<TARGET_FILE:rxc_classdecl_static> -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}" ${_mode_flag} -o rxpa_classdecl_static_compile_${_mode} ${CMAKE_CURRENT_SOURCE_DIR}/rxpa_classdecl.crexx
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
 endforeach()
@@ -167,28 +157,17 @@ add_static_plugin_target(_testfuncs rxpa_functests.c)
 # Basic Build
 add_executable(funcvm
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmmain.c
-        ${CMAKE_SOURCE_DIR}/interpreter/rxvmintp.h
-        ${CMAKE_SOURCE_DIR}/interpreter/rxvmintp.c
-        ${CMAKE_SOURCE_DIR}/interpreter/rxvmload.c
-        ${CMAKE_SOURCE_DIR}/interpreter/interrupt.c
-        ${CMAKE_SOURCE_DIR}/avl_tree/rxastree.h
-        ${CMAKE_SOURCE_DIR}/utf8/utf.h
-        ${CMAKE_SOURCE_DIR}/binutils/include/rxbin.h
-        ${CMAKE_SOURCE_DIR}/interpreter/rxspawn.c
-        ${CMAKE_SOURCE_DIR}/interpreter/exitfunc.c
-        ${CMAKE_SOURCE_DIR}/interpreter/rxpafuncs.c
-        ${CMAKE_SOURCE_DIR}/interpreter/rxvml/rxvm_run.c
-)
+        $<TARGET_OBJECTS:rxvm_core_objects>)
 # Set the performance properties
 # set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
 # set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_DEBUG FALSE)
 # set_property(TARGET funcvm PROPERTY INTERPROCEDURAL_OPTIMIZATION_MINSIZEREL TRUE)
 # Ensure the linker includes the plugin
 configure_linker_for_static_lib(funcvm _testfuncs)
-enable_test_vm_core_sockets(funcvm)
+enable_rxpa_test_vm_platform(funcvm)
 # Add the dependencies and link libraries
 add_dependencies(funcvm avl_tree rxpa platform _testfuncs_static)
-target_link_libraries(funcvm rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim _testfuncs_static)
+target_link_libraries(funcvm rxvmplugin rxvmref mc_decimal_manual avl_tree rxpa rxpashim _testfuncs_static)
 target_include_directories(funcvm PRIVATE
         ${CMAKE_SOURCE_DIR}/interpreter
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
@@ -223,7 +202,7 @@ math(EXPR num_tests "${num_tests} - 1") # Correct upper bound for RANGE
 foreach(idx RANGE 0 ${num_tests})  # Iterate from 0 to len-1
     list(GET FUNC_TESTS ${idx} _rexxtest)
     list(GET OUTPUTS ${idx} _expected_output)
-    set(_rexxtest_source ${_rexxtest}.rexx)
+    set(_rexxtest_source ${_rexxtest}.crexx)
     add_custom_target(rxpa_${_rexxtest}_dynamic ALL)
     crexx_add_rexx_opt_matrix(
             NAME rxpa_${_rexxtest}_dynamic

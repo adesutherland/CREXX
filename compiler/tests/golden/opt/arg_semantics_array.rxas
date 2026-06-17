@@ -1,207 +1,283 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : arg_semantics_array.rexx
- * BUILT                  : 2026-04-30 20:04:11
+ * SOURCE                 : arg_semantics_array.crexx
+ * BUILT                  : 2026-05-27 17:53:08
  */
 
-.srcfile="arg_semantics_array.rexx"
 .globals=0
 
-main() .locals=16
+main() .locals=23
    .meta "arg_semantics_array.main"="b" ".int" main() ""
-   .src 4:1="main: procedure = .int"
+   .srcstep 48 48 17 "arg_semantics_array.crexx" 4 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
    .meta "arg_semantics_array.main.arr"="b" ".string[*]" r0
-   .src 5:3="arr = .string"
+   .srcstep 1 1 17 "arg_semantics_array.crexx" 5 3 16 "  arr = .string[]"
    null r0
-   .src 6:3="arr[1] = \"red\""
-   minattrs r0,1
-   linkattr1 r8,r0,1
-   load r9,"red"
-   scopy r8,r9
-   unlink r8
-   .src 7:3="arr[2] = \"blue\""
-   minattrs r0,2
-   linkattr1 r9,r0,2
-   load r8,"blue"
-   scopy r9,r8
-   unlink r9
-   .src 9:3="say \"array-read=\" || readArray(arr)"
-   .src 9:24="readArray"
-   .src 18:7="value"
-   copy r1,r0
-   .src 18:7="value"
-   acopy r1,r0
-   .src 19:3="return value[1] || \":\" || value[2"
-   minattrs r1,1
-   linkattr1 r9,r1,1
-   concat r8,r9,":"
-   unlink r9
-   minattrs r1,2
-   linkattr1 r10,r1,2
-   concat r8,r8,r10
-   unlink r10
-   scopy r10,r8
-   acopy r10,r8
-   br l169bexprend
-l169bexprend:
-   concat r10,"array-read=",r10
-   say r10
-   .src 10:3="say \"array-mut=\" || mutateArrayLocal(arr)"
-   .src 10:23="mutateArrayLocal"
-   .src 22:7="value"
-   copy r2,r0
-   .src 22:7="value"
-   acopy r2,r0
-   .src 23:3="value[1] = upper(value[1"
-   minattrs r2,1
-   linkattr1 r10,r2,1
-   minattrs r2,1
-   linkattr1 r9,r2,1
-   load r11,1
-   swap r12,r9
-   call r13,rxfnsb.upper(),r11
-   swap r9,r12
-   unlink r9
-   scopy r10,r13
-   unlink r10
-   .src 24:3="value[2] = \"local\""
-   minattrs r2,2
-   linkattr1 r13,r2,2
-   load r12,"local"
-   scopy r13,r12
-   unlink r13
-   .src 25:3="return value[1] || \":\" || value[2"
-   minattrs r2,1
-   linkattr1 r13,r2,1
-   concat r12,r13,":"
-   unlink r13
-   minattrs r2,2
-   linkattr1 r11,r2,2
-   concat r12,r12,r11
-   unlink r11
-   scopy r13,r12
-   acopy r13,r12
-   br l188bexprend
-l188bexprend:
-   concat r13,"array-mut=",r13
-   say r13
-   .src 11:3="say \"array-after=\" || arr[1] || \":\" || arr[2"
-   minattrs r0,1
-   linkattr1 r13,r0,1
-   concat r11,"array-after=",r13
-   unlink r13
-   concat r11,r11,":"
-   minattrs r0,2
-   linkattr1 r10,r0,2
-   concat r11,r11,r10
-   unlink r10
-   say r11
-   .src 12:3="say \"array-temp=\" || mutateArrayLocal(makeArray"
-   .src 12:24="mutateArrayLocal"
-   .meta "arg_semantics_array.main.__inline_bind_217_0"="b" ".string[*]" r4
-   .src 12:41="makeArray"
-   null r4
-   .src 12:41="makeArray"
-   .src 12:41="makeArray"
-   .meta "arg_semantics_array.main.temp"="b" ".string[*]" r6
-   .src 34:3="temp = .string"
-   null r6
-   .src 35:3="temp[1] = \"temp\""
-   minattrs r6,1
-   linkattr1 r13,r6,1
-   load r11,"temp"
-   scopy r13,r11
-   unlink r13
-   .src 36:3="temp[2] = \"seed\""
-   minattrs r6,2
-   linkattr1 r13,r6,2
-   load r11,"seed"
-   scopy r13,r11
-   unlink r13
-   .src 37:3="return temp"
-   copy r13,r6
-   acopy r13,r6
-   br l241bexprend
-l241bexprend:
-   copy r4,r13
-   acopy r4,r13
-   .src 22:7="value"
-   copy r5,r4
-   .src 22:7="value"
-   acopy r5,r4
-   .src 23:3="value[1] = upper(value[1"
-   minattrs r5,1
-   linkattr1 r13,r5,1
-   minattrs r5,1
-   linkattr1 r9,r5,1
-   load r10,1
-   swap r11,r9
-   call r14,rxfnsb.upper(),r10
-   swap r9,r11
-   unlink r9
-   scopy r13,r14
-   unlink r13
-   .src 24:3="value[2] = \"local\""
-   minattrs r5,2
-   linkattr1 r14,r5,2
-   load r13,"local"
-   scopy r14,r13
-   unlink r14
-   .src 25:3="return value[1] || \":\" || value[2"
-   minattrs r5,1
-   linkattr1 r14,r5,1
-   concat r13,r14,":"
-   unlink r14
-   minattrs r5,2
-   linkattr1 r11,r5,2
-   concat r13,r13,r11
-   unlink r11
-   scopy r14,r13
-   acopy r14,r13
-   br l235bexprend
-l235bexprend:
-   concat r14,"array-temp=",r14
-   say r14
-   .src 13:3="call mutateArrayRef(arr)"
-   .src 29:3="value[1] = \"ref\""
+   .srcstep 2 2 17 "arg_semantics_array.crexx" 6 3 17 "  arr[1] = \"red\""
    minattrs r0,1
    linkattr1 r14,r0,1
-   load r11,"ref"
-   scopy r14,r11
-   unlink r14
-   .src 30:3="value[2] = upper(value[2"
-   minattrs r0,2
-   linkattr1 r14,r0,2
-   minattrs r0,2
-   linkattr1 r9,r0,2
-   load r10,1
-   swap r11,r9
-   call r15,rxfnsb.upper(),r10
-   swap r9,r11
-   unlink r9
+   load r15,"red"
+   .traceevent "L" 4 "R" "S" "r" 15 2 2 0 "" ""
    scopy r14,r15
+   .traceevent "A" 6 "R" "S" "r" 14 2 2 0 "arr" ""
    unlink r14
-   .src 14:3="say \"array-ref=\" || arr[1] || \":\" || arr[2"
-   minattrs r0,1
-   linkattr1 r15,r0,1
-   concat r14,"array-ref=",r15
-   unlink r15
-   concat r14,r14,":"
+   .srcstep 3 3 17 "arg_semantics_array.crexx" 7 3 18 "  arr[2] = \"blue\""
    minattrs r0,2
-   linkattr1 r11,r0,2
-   concat r14,r14,r11
-   unlink r11
-   say r14
-   .src 15:3="return 0"
+   linkattr1 r15,r0,2
+   load r14,"blue"
+   .traceevent "L" 4 "R" "S" "r" 14 3 3 0 "" ""
+   scopy r15,r14
+   .traceevent "A" 6 "R" "S" "r" 15 3 3 0 "arr" ""
+   unlink r15
+   .srcstep 8 8 17 "arg_semantics_array.crexx" 9 3 38 "  say \"array-read=\" || readArray(arr)"
+   .srcstep 7 7 17 "arg_semantics_array.crexx" 9 24 33 "  say \"array-read=\" || readArray(arr)"
+   .srcstep 4 4 6 "arg_semantics_array.crexx" 18 7 12 "  arg value = .string[]"
+   .traceevent "V" 6 "R" "S" "r" 0 8 8 0 "arr" ""
+   copy r1,r0
+   .srcstep 5 5 6 "arg_semantics_array.crexx" 18 7 12 "  arg value = .string[]"
+   .traceevent "V" 6 "R" "S" "r" 0 8 8 0 "arr" ""
+   acopy r1,r0
+   .srcstep 6 6 17 "arg_semantics_array.crexx" 19 3 36 "  return value[1] || \":\" || value[2]"
+   minattrs r1,1
+   linkattr1 r15,r1,1
+   .traceevent "V" 6 "R" "S" "r" 15 8 8 0 "value" ""
+   concat r14,r15,":"
+   unlink r15
+   .traceevent "O" 4 "R" "S" "r" 14 8 8 0 "" ""
+   minattrs r1,2
+   linkattr1 r16,r1,2
+   .traceevent "V" 6 "R" "S" "r" 16 8 8 0 "value" ""
+   concat r14,r14,r16
+   unlink r16
+   .traceevent "O" 4 "R" "S" "r" 14 8 8 0 "" ""
+   scopy r16,r14
+   acopy r16,r14
+   br l184bexprend
+l184bexprend:
+   concat r16,"array-read=",r16
+   .traceevent "O" 4 "R" "S" "r" 16 8 8 0 "" ""
+   say r16
+   .srcstep 19 19 17 "arg_semantics_array.crexx" 10 3 44 "  say \"array-mut=\" || mutateArrayLocal(arr)"
+   .srcstep 18 18 17 "arg_semantics_array.crexx" 10 23 39 "  say \"array-mut=\" || mutateArrayLocal(arr)"
+   .srcstep 9 9 6 "arg_semantics_array.crexx" 22 7 12 "  arg value = .string[]"
+   .traceevent "V" 6 "R" "S" "r" 0 19 19 0 "arr" ""
+   copy r2,r0
+   .srcstep 10 10 6 "arg_semantics_array.crexx" 22 7 12 "  arg value = .string[]"
+   .traceevent "V" 6 "R" "S" "r" 0 19 19 0 "arr" ""
+   acopy r2,r0
+   .srcstep 15 15 17 "arg_semantics_array.crexx" 23 3 27 "  value[1] = upper(value[1])"
+   minattrs r2,1
+   linkattr1 r16,r2,1
+   .srcstep 14 14 17 "arg_semantics_array.crexx" 23 14 19 "  value[1] = upper(value[1])"
+   .srcstep 11 11 25 "upper.crexx" 33 3 12 "  newstr=\"\""
+   load r3,""
+   .traceevent "L" 4 "R" "S" "r" 3 11 11 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 11 11 0 "newstr" ""
+   .srcstep 12 12 25 "upper.crexx" 34 13 35 "  assembler strupper newstr,string"
+   .traceevent "V" 6 "R" "S" "r" 3 15 15 0 "newstr" ""
+   minattrs r2,1
+   linkattr1 r15,r2,1
+   .traceevent "V" 6 "R" "S" "r" 15 15 15 0 "value" ""
+   strupper r3,r15
+   unlink r15
+   .srcstep 13 13 25 "upper.crexx" 35 1 14 "return newstr"
+   .traceevent "V" 6 "R" "S" "r" 3 15 15 0 "newstr" ""
+   scopy r17,r3
+   acopy r17,r3
+   br l338bexprend
+l338bexprend:
+   scopy r16,r17
+   .traceevent "A" 6 "R" "S" "r" 16 15 15 0 "value" ""
+   unlink r16
+   .srcstep 16 16 17 "arg_semantics_array.crexx" 24 3 21 "  value[2] = \"local\""
+   minattrs r2,2
+   linkattr1 r17,r2,2
+   load r16,"local"
+   .traceevent "L" 4 "R" "S" "r" 16 16 16 0 "" ""
+   scopy r17,r16
+   .traceevent "A" 6 "R" "S" "r" 17 16 16 0 "value" ""
+   unlink r17
+   .srcstep 17 17 17 "arg_semantics_array.crexx" 25 3 36 "  return value[1] || \":\" || value[2]"
+   minattrs r2,1
+   linkattr1 r17,r2,1
+   .traceevent "V" 6 "R" "S" "r" 17 19 19 0 "value" ""
+   concat r16,r17,":"
+   unlink r17
+   .traceevent "O" 4 "R" "S" "r" 16 19 19 0 "" ""
+   minattrs r2,2
+   linkattr1 r18,r2,2
+   .traceevent "V" 6 "R" "S" "r" 18 19 19 0 "value" ""
+   concat r16,r16,r18
+   unlink r18
+   .traceevent "O" 4 "R" "S" "r" 16 19 19 0 "" ""
+   scopy r18,r16
+   acopy r18,r16
+   br l203bexprend
+l203bexprend:
+   concat r18,"array-mut=",r18
+   .traceevent "O" 4 "R" "S" "r" 18 19 19 0 "" ""
+   say r18
+   .srcstep 20 20 17 "arg_semantics_array.crexx" 11 3 47 "  say \"array-after=\" || arr[1] || \":\" || arr[2]"
+   minattrs r0,1
+   linkattr1 r18,r0,1
+   .traceevent "V" 6 "R" "S" "r" 18 20 20 0 "arr" ""
+   concat r17,"array-after=",r18
+   unlink r18
+   .traceevent "O" 4 "R" "S" "r" 17 20 20 0 "" ""
+   concat r17,r17,":"
+   .traceevent "O" 4 "R" "S" "r" 17 20 20 0 "" ""
+   minattrs r0,2
+   linkattr1 r19,r0,2
+   .traceevent "V" 6 "R" "S" "r" 19 20 20 0 "arr" ""
+   concat r17,r17,r19
+   unlink r19
+   .traceevent "O" 4 "R" "S" "r" 17 20 20 0 "" ""
+   say r17
+   .srcstep 38 38 17 "arg_semantics_array.crexx" 12 3 50 "  say \"array-temp=\" || mutateArrayLocal(makeArray())"
+   .srcstep 37 37 17 "arg_semantics_array.crexx" 12 24 40 "  say \"array-temp=\" || mutateArrayLocal(makeArray())"
+   .meta "arg_semantics_array.main.__inline_bind_232_0"="b" ".string[*]" r6
+   .srcstep 21 21 33 "arg_semantics_array.crexx" 12 41 50 "  say \"array-temp=\" || mutateArrayLocal(makeArray())"
+   null r6
+   .srcstep 27 27 33 "arg_semantics_array.crexx" 12 41 50 "  say \"array-temp=\" || mutateArrayLocal(makeArray())"
+   .srcstep 26 26 17 "arg_semantics_array.crexx" 12 41 50 "  say \"array-temp=\" || mutateArrayLocal(makeArray())"
+   .meta "arg_semantics_array.main.temp"="b" ".string[*]" r8
+   .srcstep 22 22 17 "arg_semantics_array.crexx" 34 3 17 "  temp = .string[]"
+   null r8
+   .srcstep 23 23 17 "arg_semantics_array.crexx" 35 3 19 "  temp[1] = \"temp\""
+   minattrs r8,1
+   linkattr1 r19,r8,1
+   load r18,"temp"
+   .traceevent "L" 4 "R" "S" "r" 18 23 23 0 "" ""
+   scopy r19,r18
+   .traceevent "A" 6 "R" "S" "r" 19 23 23 0 "temp" ""
+   unlink r19
+   .srcstep 24 24 17 "arg_semantics_array.crexx" 36 3 19 "  temp[2] = \"seed\""
+   minattrs r8,2
+   linkattr1 r19,r8,2
+   load r18,"seed"
+   .traceevent "L" 4 "R" "S" "r" 18 24 24 0 "" ""
+   scopy r19,r18
+   .traceevent "A" 6 "R" "S" "r" 19 24 24 0 "temp" ""
+   unlink r19
+   .srcstep 25 25 17 "arg_semantics_array.crexx" 37 3 14 "  return temp"
+   .traceevent "V" 6 "R" "S" "r" 8 27 27 0 "temp" ""
+   copy r19,r8
+   acopy r19,r8
+   br l256bexprend
+l256bexprend:
+   copy r6,r19
+   acopy r6,r19
+   .traceevent "A" 6 "R" "S" "r" 6 27 27 0 "__inline_bind_232_0" ""
+   .srcstep 28 28 6 "arg_semantics_array.crexx" 22 7 12 "  arg value = .string[]"
+   .traceevent "V" 6 "R" "S" "r" 6 38 38 0 "__inline_bind_232_0" ""
+   copy r7,r6
+   .srcstep 29 29 6 "arg_semantics_array.crexx" 22 7 12 "  arg value = .string[]"
+   .traceevent "V" 6 "R" "S" "r" 6 38 38 0 "__inline_bind_232_0" ""
+   acopy r7,r6
+   .srcstep 34 34 17 "arg_semantics_array.crexx" 23 3 27 "  value[1] = upper(value[1])"
+   minattrs r7,1
+   linkattr1 r19,r7,1
+   .srcstep 33 33 17 "arg_semantics_array.crexx" 23 14 19 "  value[1] = upper(value[1])"
+   .srcstep 30 30 25 "upper.crexx" 33 3 12 "  newstr=\"\""
+   load r9,""
+   .traceevent "L" 4 "R" "S" "r" 9 30 30 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 9 30 30 0 "newstr" ""
+   .srcstep 31 31 25 "upper.crexx" 34 13 35 "  assembler strupper newstr,string"
+   .traceevent "V" 6 "R" "S" "r" 9 34 34 0 "newstr" ""
+   minattrs r7,1
+   linkattr1 r18,r7,1
+   .traceevent "V" 6 "R" "S" "r" 18 34 34 0 "value" ""
+   strupper r9,r18
+   unlink r18
+   .srcstep 32 32 25 "upper.crexx" 35 1 14 "return newstr"
+   .traceevent "V" 6 "R" "S" "r" 9 34 34 0 "newstr" ""
+   scopy r17,r9
+   acopy r17,r9
+   br l352bexprend
+l352bexprend:
+   scopy r19,r17
+   .traceevent "A" 6 "R" "S" "r" 19 34 34 0 "value" ""
+   unlink r19
+   .srcstep 35 35 17 "arg_semantics_array.crexx" 24 3 21 "  value[2] = \"local\""
+   minattrs r7,2
+   linkattr1 r19,r7,2
+   load r17,"local"
+   .traceevent "L" 4 "R" "S" "r" 17 35 35 0 "" ""
+   scopy r19,r17
+   .traceevent "A" 6 "R" "S" "r" 19 35 35 0 "value" ""
+   unlink r19
+   .srcstep 36 36 17 "arg_semantics_array.crexx" 25 3 36 "  return value[1] || \":\" || value[2]"
+   minattrs r7,1
+   linkattr1 r19,r7,1
+   .traceevent "V" 6 "R" "S" "r" 19 38 38 0 "value" ""
+   concat r17,r19,":"
+   unlink r19
+   .traceevent "O" 4 "R" "S" "r" 17 38 38 0 "" ""
+   minattrs r7,2
+   linkattr1 r20,r7,2
+   .traceevent "V" 6 "R" "S" "r" 20 38 38 0 "value" ""
+   concat r17,r17,r20
+   unlink r20
+   .traceevent "O" 4 "R" "S" "r" 17 38 38 0 "" ""
+   scopy r20,r17
+   acopy r20,r17
+   br l250bexprend
+l250bexprend:
+   concat r20,"array-temp=",r20
+   .traceevent "O" 4 "R" "S" "r" 20 38 38 0 "" ""
+   say r20
+   .srcstep 45 45 17 "arg_semantics_array.crexx" 13 3 27 "  call mutateArrayRef(arr)"
+   .srcstep 39 39 17 "arg_semantics_array.crexx" 29 3 19 "  value[1] = \"ref\""
+   minattrs r0,1
+   linkattr1 r20,r0,1
+   load r19,"ref"
+   .traceevent "L" 4 "R" "S" "r" 19 39 39 0 "" ""
+   scopy r20,r19
+   .traceevent "A" 6 "R" "S" "r" 20 39 39 0 "arr" ""
+   unlink r20
+   .srcstep 44 44 17 "arg_semantics_array.crexx" 30 3 27 "  value[2] = upper(value[2])"
+   minattrs r0,2
+   linkattr1 r20,r0,2
+   .srcstep 43 43 17 "arg_semantics_array.crexx" 30 14 19 "  value[2] = upper(value[2])"
+   .srcstep 40 40 25 "upper.crexx" 33 3 12 "  newstr=\"\""
+   load r12,""
+   .traceevent "L" 4 "R" "S" "r" 12 40 40 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 12 40 40 0 "newstr" ""
+   .srcstep 41 41 25 "upper.crexx" 34 13 35 "  assembler strupper newstr,string"
+   .traceevent "V" 6 "R" "S" "r" 12 44 44 0 "newstr" ""
+   minattrs r0,2
+   linkattr1 r19,r0,2
+   .traceevent "V" 6 "R" "S" "r" 19 44 44 0 "arr" ""
+   strupper r12,r19
+   unlink r19
+   .srcstep 42 42 25 "upper.crexx" 35 1 14 "return newstr"
+   .traceevent "V" 6 "R" "S" "r" 12 44 44 0 "newstr" ""
+   scopy r21,r12
+   acopy r21,r12
+   br l366bexprend
+l366bexprend:
+   scopy r20,r21
+   .traceevent "A" 6 "R" "S" "r" 20 44 44 0 "arr" ""
+   unlink r20
+   .srcstep 46 46 17 "arg_semantics_array.crexx" 14 3 45 "  say \"array-ref=\" || arr[1] || \":\" || arr[2]"
+   minattrs r0,1
+   linkattr1 r21,r0,1
+   .traceevent "V" 6 "R" "S" "r" 21 46 46 0 "arr" ""
+   concat r20,"array-ref=",r21
+   unlink r21
+   .traceevent "O" 4 "R" "S" "r" 20 46 46 0 "" ""
+   concat r20,r20,":"
+   .traceevent "O" 4 "R" "S" "r" 20 46 46 0 "" ""
+   minattrs r0,2
+   linkattr1 r22,r0,2
+   .traceevent "V" 6 "R" "S" "r" 22 46 46 0 "arr" ""
+   concat r20,r20,r22
+   unlink r22
+   .traceevent "O" 4 "R" "S" "r" 20 46 46 0 "" ""
+   say r20
+   .srcstep 47 47 17 "arg_semantics_array.crexx" 15 3 11 "  return 0"
    ret 0
    .meta "arg_semantics_array.main.arr"
-
-/* Imported Declaration from file: upper@library.rxbin */
-
-rxfnsb.upper() .expose=rxfnsb.upper
-   .meta "rxfnsb.upper"="b" ".string" rxfnsb.upper() "expose string=.string"

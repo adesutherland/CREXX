@@ -5,7 +5,7 @@ fixtures and into a place where it can be run by hand.
 
 The provider is implemented in Rexx:
 
-- `cms_address_environment.rexx` publishes a `CMS` ADDRESS environment.
+- `cms_address_environment.crexx` publishes a `CMS` ADDRESS environment.
 - It implements `.addressenvironment` for instructions and normal
   `environment_name()` / `environment_id()` identity.
 - It implements `.addressfunctionenvironment` so Rexx code can call CMS-style

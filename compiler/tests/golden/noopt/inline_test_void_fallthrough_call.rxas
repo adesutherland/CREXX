@@ -1,90 +1,106 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_void_fallthrough_call.rexx
- * BUILT                  : 2026-04-30 20:04:09
+ * SOURCE                 : inline_test_void_fallthrough_call.crexx
+ * BUILT                  : 2026-05-27 17:53:52
  */
 
-.srcfile="inline_test_void_fallthrough_call.rexx"
 .globals=0
 
 main() .locals=7
    .meta "inline_test_void_fallthrough_call.main"="b" ".int" main() ""
-   .src 3:1="main: procedure = .int"
+   .srcstep 7 7 17 "inline_test_void_fallthrough_call.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:3="say \"Starting void fallthrough inline test...\""
+   .srcstep 1 1 17 "inline_test_void_fallthrough_call.crexx" 4 3 49 "  say \"Starting void fallthrough inline test...\""
    say "Starting void fallthrough inline test..."
-   .src 5:3="call maybeLog(0)"
+   .srcstep 2 2 17 "inline_test_void_fallthrough_call.crexx" 5 3 19 "  call maybeLog(0)"
    load r1,0
+   .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
    load r0,1
    call r2,maybeLog(),r0
-   .src 6:3="call maybeLog(2)"
+   .traceevent "F" 4 "R" "V" "r" 2 2 2 0 "maybelog" ""
+   .srcstep 3 3 17 "inline_test_void_fallthrough_call.crexx" 6 3 19 "  call maybeLog(2)"
    load r1,2
+   .traceevent "L" 4 "R" "I" "r" 1 3 3 0 "" ""
    load r0,1
    call r3,maybeLog(),r0
-   .src 7:3="call tracePair(1, 3)"
+   .traceevent "F" 4 "R" "V" "r" 3 3 3 0 "maybelog" ""
+   .srcstep 4 4 17 "inline_test_void_fallthrough_call.crexx" 7 3 23 "  call tracePair(1, 3)"
    load r5,1
+   .traceevent "L" 4 "R" "I" "r" 5 4 4 0 "" ""
    load r6,3
+   .traceevent "L" 4 "R" "I" "r" 6 4 4 0 "" ""
    load r4,2
    call r1,tracePair(),r4
-   .src 8:3="say \"Void fallthrough inline test finished.\""
+   .traceevent "F" 4 "R" "V" "r" 1 4 4 0 "tracepair" ""
+   .srcstep 5 5 17 "inline_test_void_fallthrough_call.crexx" 8 3 47 "  say \"Void fallthrough inline test finished.\""
    say "Void fallthrough inline test finished."
-   .src 9:3="return 0"
+   .srcstep 6 6 17 "inline_test_void_fallthrough_call.crexx" 9 3 11 "  return 0"
    ret 0
 
 maybeLog() .locals=2
    .meta "inline_test_void_fallthrough_call.maybelog"="b" ".void" maybeLog() "val=.int"
-   .src 11:1="maybeLog: procedure = .void"
+   .srcstep 14 14 17 "inline_test_void_fallthrough_call.crexx" 11 1 28 "maybeLog: procedure = .void"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 12:7="val = .int"
+   .srcstep 8 8 17 "inline_test_void_fallthrough_call.crexx" 12 7 17 "  arg val = .int"
    .meta "inline_test_void_fallthrough_call.maybelog.val"="b" ".int" a1
-   .src 13:2="if val = 0"
+   .srcstep 10 10 17 "inline_test_void_fallthrough_call.crexx" 13 3 13 "  if val = 0 then return"
+   .traceevent "V" 6 "R" "I" "a" 1 10 10 0 "val" ""
    ieq r1,a1,0
+   .traceevent "O" 4 "R" "B" "r" 1 10 10 0 "" ""
    brf l32iffalse,r1
-   .src 13:14="then"
-   .src 13:19="return"
+   .srcstep 11 11 17 "inline_test_void_fallthrough_call.crexx" 13 14 18 "  if val = 0 then return"
+   .srcstep 9 9 17 "inline_test_void_fallthrough_call.crexx" 13 19 25 "  if val = 0 then return"
    ret
 l32iffalse:
-   .src 14:3="say \"value\" val"
+   .srcstep 12 12 17 "inline_test_void_fallthrough_call.crexx" 14 3 18 "  say \"value\" val"
    itos a1
+   .traceevent "V" 6 "R" "S" "a" 1 12 12 0 "val" ""
    sconcat r1,"value",a1
+   .traceevent "O" 4 "R" "S" "r" 1 12 12 0 "" ""
    say r1
-   .src 14:18=""
+   .srcstep 13 13 33 "inline_test_void_fallthrough_call.crexx" 14 18 18 "  say \"value\" val"
    ret
    .meta "inline_test_void_fallthrough_call.maybelog.val"
 
 tracePair() .locals=3
    .meta "inline_test_void_fallthrough_call.tracepair"="b" ".void" tracePair() "left=.int,right=.int"
-   .src 16:1="tracePair: procedure = .void"
+   .srcstep 22 22 17 "inline_test_void_fallthrough_call.crexx" 16 1 29 "tracePair: procedure = .void"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 17:7="left = .int"
+   .srcstep 15 15 17 "inline_test_void_fallthrough_call.crexx" 17 7 18 "  arg left = .int, right = .int"
    .meta "inline_test_void_fallthrough_call.tracepair.left"="b" ".int" a1
-   .src 17:20="right = .int"
+   .srcstep 16 16 17 "inline_test_void_fallthrough_call.crexx" 17 20 32 "  arg left = .int, right = .int"
    .meta "inline_test_void_fallthrough_call.tracepair.right"="b" ".int" a2
-   .src 18:2="if left > right"
+   .srcstep 18 18 17 "inline_test_void_fallthrough_call.crexx" 18 3 18 "  if left > right then return"
+   .traceevent "V" 6 "R" "I" "a" 1 18 18 0 "left" ""
+   .traceevent "V" 6 "R" "I" "a" 2 18 18 0 "right" ""
    igt r2,a1,a2
+   .traceevent "O" 4 "R" "B" "r" 2 18 18 0 "" ""
    brf l50iffalse,r2
-   .src 18:19="then"
-   .src 18:24="return"
+   .srcstep 19 19 17 "inline_test_void_fallthrough_call.crexx" 18 19 23 "  if left > right then return"
+   .srcstep 17 17 17 "inline_test_void_fallthrough_call.crexx" 18 24 30 "  if left > right then return"
    ret
 l50iffalse:
-   .src 19:3="say \"pair\" left + right"
+   .srcstep 20 20 17 "inline_test_void_fallthrough_call.crexx" 19 3 26 "  say \"pair\" left + right"
+   .traceevent "V" 6 "R" "I" "a" 1 20 20 0 "left" ""
+   .traceevent "V" 6 "R" "I" "a" 2 20 20 0 "right" ""
    iadd r2,a1,a2
    itos r2
+   .traceevent "O" 4 "R" "S" "r" 2 20 20 0 "" ""
    sconcat r2,"pair",r2
+   .traceevent "O" 4 "R" "S" "r" 2 20 20 0 "" ""
    say r2
-   .src 19:26=""
+   .srcstep 21 21 33 "inline_test_void_fallthrough_call.crexx" 19 26 26 "  say \"pair\" left + right"
    ret
    .meta "inline_test_void_fallthrough_call.tracepair.left"
    .meta "inline_test_void_fallthrough_call.tracepair.right"

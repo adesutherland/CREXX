@@ -1,6 +1,6 @@
 # CREXX Documentation
 
-_Release documentation for `crexx-1.0.0-beta.1`._
+_Release documentation for `crexx-1.0.0-beta.2`._
 
 This site is the public entry point for current CREXX documentation. It should
 describe what is implemented in the release branch, not old plans or speculative
@@ -9,16 +9,18 @@ designs.
 ## Start Here
 
 - [README](https://github.com/adesutherland/CREXX/blob/develop/README.md): short project overview, build commands, and first run
-- [Release notes](releases/v1.0.0-beta.1.md): what is included in CREXX 1.0.0 beta 1
+- [Release notes](releases/v1.0.0-beta.2.md): what is included in CREXX 1.0.0 beta 2
 - [Documentation map](DOCS_MAP.md): where each kind of information belongs
 - [Building CREXX](books/crexx_programming_guide/Building_cRexx.md)
 - [Running CREXX](books/crexx_programming_guide/running.md)
+- [Level B tutorial](books/crexx_programming_guide/levelb_tutorial.md)
 - [Toolchain overview](books/crexx_programming_guide/toolchain.md)
 - [Architecture overview](books/crexx_programming_guide/architecture.md)
 
 ## Language
 
 - [Language reference](books/crexx_language_reference/about.md)
+- [Level B tutorial](books/crexx_programming_guide/levelb_tutorial.md)
 - [Language levels](books/crexx_language_reference/crexx_levels.md)
 - [Data types](books/crexx_language_reference/data_types.md)
 - [Statements](books/crexx_language_reference/statements.md)
@@ -60,6 +62,10 @@ designs.
 
 ## Project Direction
 
-The [GitHub wiki](https://github.com/adesutherland/CREXX/wiki) is retained for
-project vision, direction, and history. It is intentionally not the technical
-source of truth for the current release.
+- [Release 1 plan](release-1-plan.md): fixed-date path to Release 1, scope
+  tiers, gates, provisional owners, and issue candidates
+- [Roadmap](ROADMAP.md): future direction, research themes, and non-commitment
+  planning notes
+- The [GitHub wiki](https://github.com/adesutherland/CREXX/wiki) is retained
+  for project vision, direction, and history. It is intentionally not the
+  technical source of truth for the current release.

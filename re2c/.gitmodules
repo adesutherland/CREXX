@@ -1,0 +1,3 @@
+[submodule "benchmarks/c/libre2c/java/REgen"]
+	path = benchmarks/c/libre2c/java/REgen
+	url = https://github.com/skvadrik/REgen.git

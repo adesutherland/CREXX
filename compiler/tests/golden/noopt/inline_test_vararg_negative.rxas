@@ -1,35 +1,45 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : inline_test_vararg_negative.rexx
- * BUILT                  : 2026-03-26 14:14:57
+ * SOURCE                 : inline_test_vararg_negative.crexx
+ * BUILT                  : 2026-05-27 17:53:42
  */
 
-.srcfile="inline_test_vararg_negative.rexx"
 .globals=0
 
 main() .locals=10
    .meta "inline_test_vararg_negative.main"="b" ".int" main() ""
-   .src 3:1="main: procedure = .int"
+   .srcstep 10 10 17 "inline_test_vararg_negative.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 4:3="say \"Starting vararg inline negative test...\""
+   .srcstep 1 1 17 "inline_test_vararg_negative.crexx" 4 3 48 "  say \"Starting vararg inline negative test...\""
    say "Starting vararg inline negative test..."
-   .src 5:3="idx = 2"
+   .srcstep 2 2 17 "inline_test_vararg_negative.crexx" 5 3 10 "  idx = 2"
    .meta "inline_test_vararg_negative.main.idx"="b" ".int" r3
    load r3,2
-   .src 6:3="a = 10"
+   .traceevent "L" 4 "R" "I" "r" 3 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 2 2 0 "idx" ""
+   .srcstep 3 3 17 "inline_test_vararg_negative.crexx" 6 3 9 "  a = 10"
    .meta "inline_test_vararg_negative.main.a"="b" ".int" r0
    load r0,10
-   .src 7:3="b = 20"
+   .traceevent "L" 4 "R" "I" "r" 0 3 3 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 3 3 0 "a" ""
+   .srcstep 4 4 17 "inline_test_vararg_negative.crexx" 7 3 9 "  b = 20"
    .meta "inline_test_vararg_negative.main.b"="b" ".int" r1
    load r1,20
-   .src 8:3="c = 30"
+   .traceevent "L" 4 "R" "I" "r" 1 4 4 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 4 4 0 "b" ""
+   .srcstep 5 5 17 "inline_test_vararg_negative.crexx" 8 3 9 "  c = 30"
    .meta "inline_test_vararg_negative.main.c"="b" ".int" r2
    load r2,30
-   .src 9:3="say dynamicPick(idx, a, b, c)"
+   .traceevent "L" 4 "R" "I" "r" 2 5 5 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 5 5 0 "c" ""
+   .srcstep 6 6 17 "inline_test_vararg_negative.crexx" 9 3 32 "  say dynamicPick(idx, a, b, c)"
+   .traceevent "V" 6 "R" "I" "r" 3 6 6 0 "idx" ""
+   .traceevent "V" 6 "R" "I" "r" 0 6 6 0 "a" ""
+   .traceevent "V" 6 "R" "I" "r" 1 6 6 0 "b" ""
+   .traceevent "V" 6 "R" "I" "r" 2 6 6 0 "c" ""
    load r4,4
    swap r5,r3
    swap r6,r0
@@ -41,8 +51,12 @@ main() .locals=10
    swap r1,r7
    swap r2,r8
    itos r9
+   .traceevent "F" 4 "R" "S" "r" 9 6 6 0 "dynamicpick" ""
    say r9
-   .src 10:3="say refTailCount(a, b, c)"
+   .srcstep 7 7 17 "inline_test_vararg_negative.crexx" 10 3 28 "  say refTailCount(a, b, c)"
+   .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "a" ""
+   .traceevent "V" 6 "R" "I" "r" 1 7 7 0 "b" ""
+   .traceevent "V" 6 "R" "I" "r" 2 7 7 0 "c" ""
    load r6,3
    swap r7,r0
    swap r8,r1
@@ -52,10 +66,11 @@ main() .locals=10
    swap r1,r8
    swap r2,r9
    itos r5
+   .traceevent "F" 4 "R" "S" "r" 5 7 7 0 "reftailcount" ""
    say r5
-   .src 11:3="say \"Vararg inline negative test finished.\""
+   .srcstep 8 8 17 "inline_test_vararg_negative.crexx" 11 3 46 "  say \"Vararg inline negative test finished.\""
    say "Vararg inline negative test finished."
-   .src 12:3="return 0"
+   .srcstep 9 9 17 "inline_test_vararg_negative.crexx" 12 3 11 "  return 0"
    ret 0
    .meta "inline_test_vararg_negative.main.a"
    .meta "inline_test_vararg_negative.main.b"
@@ -64,16 +79,16 @@ main() .locals=10
 
 dynamicPick() .locals=2
    .meta "inline_test_vararg_negative.dynamicpick"="b" ".int" dynamicPick() "which=.int,...=.int"
-   .src 14:1="dynamicPick: procedure = .int"
+   .srcstep 14 14 17 "inline_test_vararg_negative.crexx" 14 1 30 "dynamicPick: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 15:7="which = .int"
+   .srcstep 11 11 17 "inline_test_vararg_negative.crexx" 15 7 19 "  arg which = .int, ... = .int"
    .meta "inline_test_vararg_negative.dynamicpick.which"="b" ".int" a1
-   .src 15:21="... = .int"
-   .src 16:3="return arg[which"
+   .srcstep 12 12 17 "inline_test_vararg_negative.crexx" 15 21 31 "  arg which = .int, ... = .int"
+   .srcstep 13 13 17 "inline_test_vararg_negative.crexx" 16 3 19 "  return arg[which]"
    icopy r1,a0
    isub r1,r1,1
    ichkrng a1,1,r1
@@ -83,14 +98,14 @@ dynamicPick() .locals=2
 
 refTailCount() .locals=1
    .meta "inline_test_vararg_negative.reftailcount"="b" ".int" refTailCount() "expose ...=.int"
-   .src 18:1="refTailCount: procedure = .int"
+   .srcstep 17 17 17 "inline_test_vararg_negative.crexx" 18 1 31 "refTailCount: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 19:14="... = .int"
-   .src 20:3="return arg"
+   .srcstep 15 15 17 "inline_test_vararg_negative.crexx" 19 14 24 "  arg expose ... = .int"
+   .srcstep 16 16 17 "inline_test_vararg_negative.crexx" 20 3 13 "  return arg[]"
    icopy r0,a0
    isub r0,r0,0
    ret r0

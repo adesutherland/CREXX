@@ -6,28 +6,51 @@
 
 #ifdef _WIN32
 #include <direct.h>
+#include <fcntl.h>
+#include <io.h>
 #include <process.h>
+#include <sys/stat.h>
 #define CREXX_GETCWD _getcwd
 #define CREXX_CHDIR _chdir
 #define CREXX_MKDIR(path) _mkdir(path)
 #define CREXX_RMDIR _rmdir
 #define CREXX_GETPID _getpid
+#define CREXX_OPEN _open
+#define CREXX_CLOSE _close
+#define CREXX_DUP _dup
+#define CREXX_DUP2 _dup2
+#define CREXX_OPEN_FLAGS (O_WRONLY | O_CREAT | O_TRUNC | O_BINARY)
+#define CREXX_OPEN_MODE (_S_IREAD | _S_IWRITE)
 #else
+#include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #define CREXX_GETCWD getcwd
 #define CREXX_CHDIR chdir
 #define CREXX_MKDIR(path) mkdir(path, 0700)
 #define CREXX_RMDIR rmdir
 #define CREXX_GETPID getpid
+#define CREXX_OPEN open
+#define CREXX_CLOSE close
+#define CREXX_DUP dup
+#define CREXX_DUP2 dup2
+#define CREXX_OPEN_FLAGS (O_WRONLY | O_CREAT | O_TRUNC)
+#define CREXX_OPEN_MODE 0600
 #endif
+
+static int open_redirect_file(const char *path) {
+    return CREXX_OPEN(path, CREXX_OPEN_FLAGS, CREXX_OPEN_MODE);
+}
 
 /* Function to copy a file - C90 compliant */
 static int copy_file(const char *src_path, const char *dst_path) {
     FILE *src, *dst;
     char buffer[4096];
     size_t n;
+    int src_close;
+    int dst_close;
 
     src = fopen(src_path, "rb");
     if (!src) return 0;
@@ -45,9 +68,15 @@ static int copy_file(const char *src_path, const char *dst_path) {
         }
     }
 
-    fclose(src);
-    fclose(dst);
-    return 1;
+    if (ferror(src)) {
+        fclose(src);
+        fclose(dst);
+        return 0;
+    }
+
+    src_close = fclose(src);
+    dst_close = fclose(dst);
+    return src_close == 0 && dst_close == 0;
 }
 
 /* Function to get base name of a path */
@@ -86,6 +115,136 @@ static int create_temp_workspace(char *path, size_t path_size) {
     return 0;
 }
 
+#ifdef _WIN32
+static int replace_fd_with_file(int target_fd, const char *path, int *saved_fd) {
+    int file_fd;
+
+    *saved_fd = CREXX_DUP(target_fd);
+    if (*saved_fd < 0) return 0;
+
+    file_fd = open_redirect_file(path);
+    if (file_fd < 0) {
+        CREXX_CLOSE(*saved_fd);
+        *saved_fd = -1;
+        return 0;
+    }
+
+    if (CREXX_DUP2(file_fd, target_fd) < 0) {
+        CREXX_CLOSE(file_fd);
+        CREXX_CLOSE(*saved_fd);
+        *saved_fd = -1;
+        return 0;
+    }
+
+    CREXX_CLOSE(file_fd);
+    return 1;
+}
+
+static int restore_fd(int target_fd, int saved_fd) {
+    int ok;
+
+    if (saved_fd < 0) return 1;
+    ok = CREXX_DUP2(saved_fd, target_fd) == 0;
+    CREXX_CLOSE(saved_fd);
+    return ok;
+}
+
+static int run_compiler_process(char **args,
+                                const char *stdout_file,
+                                const char *stderr_file,
+                                int merge_stderr) {
+    int saved_stdout = -1;
+    int saved_stderr = -1;
+    int ret;
+    int ok = 1;
+
+    if (stdout_file && !replace_fd_with_file(1, stdout_file, &saved_stdout)) {
+        perror("stdout redirection failed");
+        return 127;
+    }
+
+    if (merge_stderr) {
+        saved_stderr = CREXX_DUP(2);
+        if (saved_stderr < 0 || CREXX_DUP2(1, 2) < 0) {
+            perror("stderr redirection failed");
+            ok = 0;
+        }
+    } else if (stderr_file && !replace_fd_with_file(2, stderr_file, &saved_stderr)) {
+        perror("stderr redirection failed");
+        ok = 0;
+    }
+
+    if (ok) {
+        ret = _spawnvp(_P_WAIT, args[0], (const char * const *)args);
+        if (ret < 0) {
+            perror("compiler launch failed");
+            ret = 127;
+        }
+    } else {
+        ret = 127;
+    }
+
+    restore_fd(2, saved_stderr);
+    restore_fd(1, saved_stdout);
+    return ret;
+}
+#else
+static int redirect_child_fd(int target_fd, const char *path) {
+    int file_fd;
+
+    file_fd = open_redirect_file(path);
+    if (file_fd < 0) return 0;
+    if (CREXX_DUP2(file_fd, target_fd) < 0) {
+        CREXX_CLOSE(file_fd);
+        return 0;
+    }
+    CREXX_CLOSE(file_fd);
+    return 1;
+}
+
+static int run_compiler_process(char **args,
+                                const char *stdout_file,
+                                const char *stderr_file,
+                                int merge_stderr) {
+    pid_t pid;
+    int status;
+
+    pid = fork();
+    if (pid < 0) {
+        perror("fork failed");
+        return 127;
+    }
+
+    if (pid == 0) {
+        if (stdout_file && !redirect_child_fd(1, stdout_file)) {
+            perror("stdout redirection failed");
+            _exit(127);
+        }
+        if (merge_stderr) {
+            if (CREXX_DUP2(1, 2) < 0) {
+                perror("stderr redirection failed");
+                _exit(127);
+            }
+        } else if (stderr_file && !redirect_child_fd(2, stderr_file)) {
+            perror("stderr redirection failed");
+            _exit(127);
+        }
+
+        execvp(args[0], args);
+        perror("compiler launch failed");
+        _exit(127);
+    }
+
+    if (waitpid(pid, &status, 0) < 0) {
+        perror("waitpid failed");
+        return 127;
+    }
+    if (WIFEXITED(status)) return WEXITSTATUS(status);
+    if (WIFSIGNALED(status)) return 128 + WTERMSIG(status);
+    return 127;
+}
+#endif
+
 static void cleanup_workspace(const char *original_work_dir,
                               const char *temp_work_dir,
                               const char *temp_source_file,
@@ -97,7 +256,9 @@ static void cleanup_workspace(const char *original_work_dir,
     int i;
 
     if (temp_work_dir && temp_work_dir[0]) {
-        CREXX_CHDIR(temp_work_dir);
+        if (CREXX_CHDIR(temp_work_dir) != 0) {
+            /* Best-effort cleanup; continue with absolute cleanup paths. */
+        }
     }
     if (temp_source_file && temp_source_file[0]) remove(temp_source_file);
     if (temp_rxas && temp_rxas[0]) remove(temp_rxas);
@@ -105,7 +266,9 @@ static void cleanup_workspace(const char *original_work_dir,
         if (copied_files[i]) remove(copied_files[i]);
     }
     if (original_work_dir && original_work_dir[0]) {
-        CREXX_CHDIR(original_work_dir);
+        if (CREXX_CHDIR(original_work_dir) != 0) {
+            /* Best-effort cleanup. */
+        }
     }
     if (temp_work_dir && temp_work_dir[0]) {
         CREXX_RMDIR(temp_work_dir);
@@ -144,9 +307,6 @@ static int is_volatile(const char *line) {
             return 1;
         }
     }
-    if (strstr(line, ".srcfile")) {
-        return 1;
-    }
     if (strcmp(line, "/*") == 0 || strcmp(line, " */") == 0) {
         return 1;
     }
@@ -164,9 +324,8 @@ int main(int argc, char *argv[]) {
     char compiler_output_base[2048];
     char stderr_file[2100];
     char original_work_dir[2048];
-    char temp_work_dir[2048];
+    char temp_work_dir[4096];
     char temp_path[4096];
-    char command[8192];
     int i;
     int ret;
     int normal_output_mode = 0;
@@ -184,6 +343,11 @@ int main(int argc, char *argv[]) {
     int arg_ptr = 1;
     char *copied_files[100];
     int num_copied = 0;
+    char **compiler_args = 0;
+    int compiler_arg_count = 0;
+    const char *stdout_redirect = 0;
+    const char *stderr_redirect = 0;
+    int merge_stderr = 0;
 
     temp_source_file[0] = '\0';
     temp_rxas[0] = '\0';
@@ -204,7 +368,12 @@ int main(int argc, char *argv[]) {
         CREXX_RMDIR(temp_work_dir);
         return 1;
     }
-    snprintf(temp_work_dir, sizeof(temp_work_dir), "%s", temp_path);
+    if (snprintf(temp_work_dir, sizeof(temp_work_dir), "%s", temp_path) <= 0 ||
+        strlen(temp_path) >= sizeof(temp_work_dir)) {
+        fprintf(stderr, "Temporary test workspace path is too long\n");
+        CREXX_RMDIR(temp_path);
+        return 1;
+    }
 
     while (arg_ptr < argc && argv[arg_ptr][0] == '-') {
         if (strcmp(argv[arg_ptr], "--expect-fail") == 0) {
@@ -260,19 +429,39 @@ int main(int argc, char *argv[]) {
     base_name = get_base_name(original_source);
 
     /* Setup temp filenames based on original base name to preserve .meta info */
-    strcpy(temp_source_file, base_name);
-    strcpy(temp_source_name, base_name);
+    if (snprintf(temp_source_file, sizeof(temp_source_file), "%s", base_name) <= 0 ||
+        strlen(base_name) >= sizeof(temp_source_file) ||
+        snprintf(temp_source_name, sizeof(temp_source_name), "%s", base_name) <= 0 ||
+        strlen(base_name) >= sizeof(temp_source_name)) {
+        fprintf(stderr, "Temporary source name is too long for %s\n", base_name);
+        cleanup_workspace(original_work_dir, temp_work_dir, temp_source_file, temp_rxas,
+                          copied_files, num_copied, stderr_file, normal_output_mode);
+        return 1;
+    }
     {
         char *dot = strrchr(temp_source_name, '.');
         if (dot) *dot = '\0';
     }
-    snprintf(temp_rxas, sizeof(temp_rxas), "%s.rxas", temp_source_name);
-    snprintf(compiler_output_base, sizeof(compiler_output_base), "%s", output_file);
+    if (snprintf(temp_rxas, sizeof(temp_rxas), "%s.rxas", temp_source_name) <= 0 ||
+        strlen(temp_source_name) + 5 >= sizeof(temp_rxas) ||
+        snprintf(compiler_output_base, sizeof(compiler_output_base), "%s", output_file) <= 0 ||
+        strlen(output_file) >= sizeof(compiler_output_base)) {
+        fprintf(stderr, "Compiler output path is too long\n");
+        cleanup_workspace(original_work_dir, temp_work_dir, temp_source_file, temp_rxas,
+                          copied_files, num_copied, stderr_file, normal_output_mode);
+        return 1;
+    }
     {
         char *dot = strrchr(compiler_output_base, '.');
         if (dot && strcmp(dot, ".rxas") == 0) *dot = '\0';
     }
-    snprintf(stderr_file, sizeof(stderr_file), "%s.err", output_file);
+    if (snprintf(stderr_file, sizeof(stderr_file), "%s.err", output_file) <= 0 ||
+        strlen(output_file) + 4 >= sizeof(stderr_file)) {
+        fprintf(stderr, "Compiler stderr path is too long\n");
+        cleanup_workspace(original_work_dir, temp_work_dir, temp_source_file, temp_rxas,
+                          copied_files, num_copied, stderr_file, normal_output_mode);
+        return 1;
+    }
 
     /* Sandbox: copy source and dependencies into a per-test working directory. */
     if (!join_path(temp_path, sizeof(temp_path), temp_work_dir, temp_source_file)) {
@@ -294,56 +483,45 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    /* Reconstruct command: Replace original source with temp_source_name (or file), and remove -o */
-    command[0] = '\0';
+    /* Reconstruct argv: replace original source with temp_source_name and normalize -o. */
+    compiler_args = (char **)calloc((size_t)(argc - arg_ptr + 3), sizeof(char *));
+    if (!compiler_args) {
+        fprintf(stderr, "Could not allocate compiler argument vector\n");
+        cleanup_workspace(original_work_dir, temp_work_dir, temp_source_file, temp_rxas,
+                          copied_files, num_copied, stderr_file, normal_output_mode);
+        return 1;
+    }
     for (i = arg_ptr; i < argc; i++) {
         if (strcmp(argv[i], "-o") == 0) {
             if (normal_output_mode) {
-                if (command[0] != '\0') {
-                    strcat(command, " ");
-                }
-                strcat(command, "\"-o\" \"");
-                strcat(command, compiler_output_base);
-                strcat(command, "\"");
+                compiler_args[compiler_arg_count++] = "-o";
+                compiler_args[compiler_arg_count++] = compiler_output_base;
                 output_replaced = 1;
             }
             i++; /* Skip -o and its value */
             continue;
         }
-        if (command[0] != '\0') {
-            strcat(command, " ");
-        }
-        strcat(command, "\"");
         if (i == argc - 1) {
-            /* Pass the name without extension so rxc adds .rexx and .rxas correctly */
-            strcat(command, temp_source_name);
+            /* Pass the name without extension so rxc adds .crexx and .rxas correctly */
+            compiler_args[compiler_arg_count++] = temp_source_name;
         } else {
-            strcat(command, argv[i]);
+            compiler_args[compiler_arg_count++] = argv[i];
         }
-        strcat(command, "\"");
     }
     if (normal_output_mode && !output_replaced) {
-        if (command[0] != '\0') {
-            strcat(command, " ");
-        }
-        strcat(command, "\"-o\" \"");
-        strcat(command, compiler_output_base);
-        strcat(command, "\"");
+        compiler_args[compiler_arg_count++] = "-o";
+        compiler_args[compiler_arg_count++] = compiler_output_base;
     }
+    compiler_args[compiler_arg_count] = 0;
 
     /* Redirect output */
     if (ast_mode) {
-        strcat(command, " > \"");
-        strcat(command, output_file);
-        strcat(command, "\" 2>&1");
+        stdout_redirect = output_file;
+        merge_stderr = 1;
     } else if (normal_output_mode) {
-        strcat(command, " 2> \"");
-        strcat(command, stderr_file);
-        strcat(command, "\"");
+        stderr_redirect = stderr_file;
     } else {
-        strcat(command, " 2> \"");
-        strcat(command, output_file);
-        strcat(command, "\"");
+        stderr_redirect = output_file;
     }
 
     if (normal_output_mode) {
@@ -352,15 +530,9 @@ int main(int argc, char *argv[]) {
         remove(temp_rxas);
     }
 
-#ifdef _WIN32
-    {
-        char wrapped_command[8200];
-        sprintf(wrapped_command, "\"%s\"", command);
-        ret = system(wrapped_command);
-    }
-#else
-    ret = system(command);
-#endif
+    ret = run_compiler_process(compiler_args, stdout_redirect, stderr_redirect, merge_stderr);
+    free(compiler_args);
+    compiler_args = 0;
 
     if (!ast_mode) {
         if (expect_fail) {

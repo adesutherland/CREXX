@@ -1,0 +1,1204 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/* REXX Level B trace runtime internals */
+options levelb
+
+namespace rxfnsb expose tracecontext tracecontroller trace_interrupt_raw _trace_set _trace_set_from_env _trace_set_format _trace_set_output _trace_suppress_namespace _trace_unsuppress_namespace _trace_reset_namespace_filters _trace_current_mode _trace_current_format _trace_mode_from_option _trace_needs_breakpoints _trace_context_from_raw _trace_should_trace_module _trace_should_trace_context _trace_should_emit_key _trace_capture_result_target _trace_pending_parent_register _trace_supply_parent_value _trace_pending_result _trace_pending_module _trace_pending_prefix _trace_pending_has_const _trace_pending_const _trace_supplied_result _trace_supplied_value _trace_clear_pending_result _trace_escape_text _trace_write_line _trace_command_before _trace_command_after
+
+trace_interrupt_raw: class
+  _code = .int with register.1.int
+  _module = .int with register.2.int
+  _address = .int with register.3.int
+  _name = .string with register.4.string
+
+  code: method = .int
+    return _code
+
+  module: method = .int
+    return _module
+
+  address: method = .int
+    return _address
+
+  name: method = .string
+    return _name
+
+tracecontext: class
+  _signal_code = .int
+  _signal_name = .string
+  _module = .int
+  _address = .int
+  _mode = .string
+  _source_file = .string
+  _line = .int
+  _column = .int
+  _source = .string
+  _source_line = .string
+  _has_source = .int
+  _closest_source_line = .string
+  _asm_line = .string
+  _procedure = .string
+
+  *: factory
+    arg module = .int, addr = .int, mode = "REXX", signal_code = 31, signal_name = "BREAKPOINT"
+    _module = module
+    _address = addr
+    _mode = upper(mode)
+    _signal_code = signal_code
+    _signal_name = signal_name
+    _source_file = ""
+    _line = 0
+    _column = 0
+    _source = ""
+    _source_line = ""
+    _closest_source_line = ""
+    _asm_line = ""
+    _procedure = ""
+    _has_source = _trace_exact_source(_module, _address, _line, _column, _source, _source_line)
+    if _has_source <> 0 then _source_file = _trace_exact_source_file(_module, _address)
+    _closest_source_line = _trace_closest_source_line(_module, _address)
+    _asm_line = _trace_asm_line(_module, _address)
+    _procedure = _trace_procedure_name(_module, _address)
+    return
+
+  signal_code: method = .int
+    return _signal_code
+
+  signal_name: method = .string
+    return _signal_name
+
+  module: method = .int
+    return _module
+
+  address: method = .int
+    return _address
+
+  mode: method = .string
+    return _mode
+
+  source_file: method = .string
+    return _source_file
+
+  line: method = .int
+    return _line
+
+  column: method = .int
+    return _column
+
+  source: method = .string
+    return _source
+
+  source_line: method = .string
+    return _source_line
+
+  has_source: method = .int
+    return _has_source
+
+  closest_source_line: method = .string
+    return _closest_source_line
+
+  asm_line: method = .string
+    return _asm_line
+
+  procedure: method = .string
+    return _procedure
+
+tracecontroller: class
+  _mode = .string
+  _first_client_module = .int
+  _latest_module_only = .int
+  _include_runtime = .int
+  _suppressed_namespace_count = .int
+  _suppressed_namespaces = .string[]
+  _included_namespace_count = .int
+  _included_namespaces = .string[]
+  _suppression_cache_name_1 = .string
+  _suppression_cache_result_1 = .int
+  _suppression_cache_name_2 = .string
+  _suppression_cache_result_2 = .int
+  _pending_result = .int
+  _pending_module = .int
+  _pending_prefix = .string
+  _pending_type = .string
+  _pending_register = .int
+  _pending_const = .string
+  _pending_has_const = .int
+  _supplied_result = .int
+  _supplied_value = .string
+
+  *: factory
+    _mode = "REXX"
+    _first_client_module = 1
+    _latest_module_only = 0
+    _include_runtime = 0
+    _suppressed_namespace_count = 0
+    _included_namespace_count = 0
+    _suppression_cache_name_1 = ""
+    _suppression_cache_result_1 = 0
+    _suppression_cache_name_2 = ""
+    _suppression_cache_result_2 = 0
+    _pending_result = 0
+    _pending_module = 0
+    _pending_prefix = ">>>"
+    _pending_type = ""
+    _pending_register = -1
+    _pending_const = ""
+    _pending_has_const = 0
+    _supplied_result = 0
+    _supplied_value = ""
+    return
+
+  mode: method = .string
+    return _mode
+
+  set_mode: method = .void
+    arg mode = .string
+    mode = upper(mode)
+    if mode = "" then mode = "N"
+    _mode = mode
+    return
+
+  toggle_mode: method = .string
+    if _mode = "REXX" then _mode = "ASM"
+    else _mode = "REXX"
+    return _mode
+
+  set_first_client_module: method = .void
+    arg module = .int
+    if module < 1 then module = 1
+    _first_client_module = module
+    return
+
+  first_client_module: method = .int
+    return _first_client_module
+
+  set_latest_module_only: method = .void
+    arg enabled = 1
+    if enabled = 0 then _latest_module_only = 0
+    else _latest_module_only = 1
+    return
+
+  latest_module_only: method = .int
+    return _latest_module_only
+
+  set_include_runtime: method = .void
+    arg enabled = 0
+    if enabled = 0 then _include_runtime = 0
+    else _include_runtime = 1
+    return
+
+  include_runtime: method = .int
+    return _include_runtime
+
+  reset_namespace_filters: method = .void
+    _suppressed_namespace_count = 0
+    _included_namespace_count = 0
+    call clear_namespace_cache()
+    call add_suppressed_namespace("rxfnsb")
+    call add_suppressed_namespace("_rxsysb")
+    call add_suppressed_namespace("rxfnsg")
+    call add_suppressed_namespace("_rxsysg")
+    call add_suppressed_namespace("rxfnsl")
+    call add_suppressed_namespace("_rxsysl")
+    call add_suppressed_namespace("rxfnsc")
+    call add_suppressed_namespace("_rxsysc")
+    call add_suppressed_namespace("rxcp")
+    call add_suppressed_namespace("rxcpexits")
+    call add_suppressed_namespace("rxcptest")
+    call add_suppressed_namespace("rxdb")
+    call add_suppressed_namespace("rxdbgui")
+    call add_suppressed_namespace("runtime_signal")
+    call add_suppressed_namespace("signalaction")
+    call add_suppressed_namespace("library")
+    return
+
+  suppress_namespace: method = .void
+    arg namespace_name = .string
+    normalized = _trace_normalize_namespace(namespace_name)
+    if normalized = "" then return
+    call clear_namespace_cache()
+    call remove_included_namespace(normalized)
+    call add_suppressed_namespace(normalized)
+    return
+
+  unsuppress_namespace: method = .void
+    arg namespace_name = .string
+    normalized = _trace_normalize_namespace(namespace_name)
+    if normalized = "" then return
+    call clear_namespace_cache()
+    call remove_suppressed_namespace(normalized)
+    call add_included_namespace(normalized)
+    return
+
+  namespace_is_suppressed: method = .int
+    arg name = .string
+    normalized = _trace_normalize_namespace(name)
+    if normalized = "" then return 0
+    if normalized = _suppression_cache_name_1 then return _suppression_cache_result_1
+    if normalized = _suppression_cache_name_2 then return _suppression_cache_result_2
+    result = 0
+    if namespace_list_matches(_included_namespaces, _included_namespace_count, normalized) <> 0 then result = 0
+    else result = namespace_list_matches(_suppressed_namespaces, _suppressed_namespace_count, normalized)
+    _suppression_cache_name_2 = _suppression_cache_name_1
+    _suppression_cache_result_2 = _suppression_cache_result_1
+    _suppression_cache_name_1 = normalized
+    _suppression_cache_result_1 = result
+    return result
+
+  clear_namespace_cache: method = .void
+    _suppression_cache_name_1 = ""
+    _suppression_cache_result_1 = 0
+    _suppression_cache_name_2 = ""
+    _suppression_cache_result_2 = 0
+    return
+
+  add_suppressed_namespace: method = .void
+    arg namespace_name = .string
+    normalized = _trace_normalize_namespace(namespace_name)
+    if normalized = "" then return
+    if namespace_list_contains(_suppressed_namespaces, _suppressed_namespace_count, normalized) <> 0 then return
+    _suppressed_namespace_count = _suppressed_namespace_count + 1
+    _suppressed_namespaces[_suppressed_namespace_count] = normalized
+    return
+
+  add_included_namespace: method = .void
+    arg namespace_name = .string
+    normalized = _trace_normalize_namespace(namespace_name)
+    if normalized = "" then return
+    if namespace_list_contains(_included_namespaces, _included_namespace_count, normalized) <> 0 then return
+    _included_namespace_count = _included_namespace_count + 1
+    _included_namespaces[_included_namespace_count] = normalized
+    return
+
+  remove_suppressed_namespace: method = .void
+    arg namespace_name = .string
+    normalized = _trace_normalize_namespace(namespace_name)
+    if normalized = "" then return
+    out = 0
+    do i = 1 to _suppressed_namespace_count
+      if _suppressed_namespaces[i] \= normalized then do
+        out = out + 1
+        _suppressed_namespaces[out] = _suppressed_namespaces[i]
+      end
+    end
+    _suppressed_namespace_count = out
+    return
+
+  remove_included_namespace: method = .void
+    arg namespace_name = .string
+    normalized = _trace_normalize_namespace(namespace_name)
+    if normalized = "" then return
+    out = 0
+    do i = 1 to _included_namespace_count
+      if _included_namespaces[i] \= normalized then do
+        out = out + 1
+        _included_namespaces[out] = _included_namespaces[i]
+      end
+    end
+    _included_namespace_count = out
+    return
+
+  namespace_list_contains: method = .int
+    arg namespaces = .string[], count = .int, namespace_name = .string
+    do i = 1 to count
+      if namespaces[i] = namespace_name then return 1
+    end
+    return 0
+
+  namespace_list_matches: method = .int
+    arg namespaces = .string[], count = .int, name = .string
+    do i = 1 to count
+      if _trace_namespace_matches(namespaces[i], name) <> 0 then return 1
+    end
+    return 0
+
+  enable_breakpoints: method = .void
+    assembler bpon
+    return
+
+  disable_breakpoints: method = .void
+    assembler bpoff
+    return
+
+  context: method = .tracecontext
+    arg module = .int, addr = .int, mode = .string
+    if mode = "" then mode = _mode
+    return .tracecontext(module, addr, mode)
+
+  context_from_interrupt: method = .tracecontext
+    arg interrupt = .trace_interrupt_raw
+    return .tracecontext(interrupt.module(), interrupt.address(), _mode, interrupt.code(), interrupt.name())
+
+  should_trace: method = .int
+    arg event = .tracecontext
+    module = event.module()
+    if should_trace_module(module) = 0 then return 0
+    proc_name = event.procedure()
+    if _trace_is_trace_runtime(proc_name) <> 0 then return 0
+    if _include_runtime = 0 then do
+      if namespace_is_suppressed(proc_name) then return 0
+    end
+    return 1
+
+  should_trace_module: method = .int
+    arg module = .int
+    if module < _first_client_module then return 0
+    if _latest_module_only <> 0 then do
+      modules = loaded_module_count()
+      if module <> modules then return 0
+    end
+    if _include_runtime = 0 then do
+      mod_name = module_name(module)
+      if namespace_is_suppressed(mod_name) then return 0
+    end
+    return 1
+
+  exact_source_line: method = .string
+    arg module = .int, addr = .int
+    line = .int
+    column = .int
+    source = .string
+    result = .string
+    if _trace_exact_source(module, addr, line, column, source, result) = 0 then return ""
+    return result
+
+  closest_source_line: method = .string
+    arg module = .int, addr = .int
+    return _trace_closest_source_line(module, addr)
+
+  asm_line: method = .string
+    arg module = .int, addr = .int
+    return _trace_asm_line(module, addr)
+
+  procedure_name: method = .string
+    arg module = .int, addr = .int
+    return _trace_procedure_name(module, addr)
+
+  loaded_module_count: method = .int
+    modules = 0
+    assembler metaloadedmodules modules
+    return modules
+
+  module_name: method = .string
+    arg module = .int
+    return _trace_module_name(module)
+
+  load_module: method = .int
+    arg module_name = .string
+    mod_num = 0
+    assembler metaloadmodule mod_num, module_name
+    return mod_num
+
+  load_library: method = .int
+    arg dir = .string
+    return load_module(dir || "/library")
+
+  loaded_proc_count: method = .int
+    arg module_index = .int
+    procs = 0
+    if module_index <= 0 then return 0
+    assembler metaloadedprocs procs, module_index
+    return procs
+
+  loaded_proc_name: method = .string
+    arg module_index = .int, proc_index = .int
+    procs = 0
+    proc = 0
+    result = ""
+    if module_index <= 0 then return ""
+    if proc_index <= 0 then return ""
+    assembler metaloadedprocs procs, module_index
+    if proc_index > procs then return ""
+    assembler linkattr1 proc, procs, proc_index
+    assembler linkattr1 result, proc, 1
+    return result
+
+  loaded_proc_id: method = .int
+    arg module_index = .int, proc_index = .int
+    procs = 0
+    proc = 0
+    result = 0
+    if module_index <= 0 then return 0
+    if proc_index <= 0 then return 0
+    assembler metaloadedprocs procs, module_index
+    if proc_index > procs then return 0
+    assembler linkattr1 proc, procs, proc_index
+    assembler linkattr1 result, proc, 2
+    return result
+
+  find_proc: method = .int
+    arg mod_num = .int, name = .string
+    return _trace_find_proc(mod_num, name)
+
+  clear_pending_result: method = .void
+    _pending_result = 0
+    _pending_module = 0
+    _pending_prefix = ">>>"
+    _pending_type = ""
+    _pending_register = -1
+    _pending_const = ""
+    _pending_has_const = 0
+    _supplied_result = 0
+    _supplied_value = ""
+    return
+
+  capture_result_target: method = .void
+    arg module = .int, addr = .int
+    meta_array = 0
+    meta_entry = ""
+    kind = 0
+    mode_mask = 0
+    value_source = 0
+    value_type = 0
+    register_type = 0
+    reg = 0
+
+    call clear_pending_result()
+
+    assembler metaloaddata meta_array, module, addr
+    do i = 1 to meta_array
+      assembler linkattr1 meta_entry, meta_array, i
+      if meta_entry = ".meta_trace_event" then do
+        assembler linkattr1 kind, meta_entry, 1
+        assembler linkattr1 mode_mask, meta_entry, 2
+        if _trace_event_visible_in_mode(mode_mask, _mode) <> 0 then do
+          assembler linkattr1 value_source, meta_entry, 3
+          assembler linkattr1 value_type, meta_entry, 4
+          assembler linkattr1 register_type, meta_entry, 5
+          assembler linkattr1 reg, meta_entry, 6
+          if value_source = 82 & reg >= 0 then do
+            _pending_prefix = _trace_prefix_from_kind(kind)
+            _pending_type = _trace_type_name_from_codes(value_type, register_type)
+            _pending_register = reg
+            _pending_has_const = 0
+            _pending_module = module
+            _pending_result = 1
+            return
+          end
+        end
+      end
+    end
+    return
+
+  pending_result: method = .int
+    return _pending_result
+
+  pending_module: method = .int
+    return _pending_module
+
+  pending_prefix: method = .string
+    return _pending_prefix
+
+  pending_type: method = .string
+    return _pending_type
+
+  pending_register: method = .int
+    return _pending_register
+
+  pending_const: method = .string
+    return _pending_const
+
+  pending_has_const: method = .int
+    return _pending_has_const
+
+  supply_parent_value: method = .void
+    arg value = .string
+    _supplied_value = value
+    _supplied_result = 1
+    return
+
+  supplied_result: method = .int
+    return _supplied_result
+
+  supplied_value: method = .string
+    return _supplied_value
+
+_trace_set: procedure = .void expose _trace_runtime_ready _trace_controller _trace_last_line _trace_format _trace_active
+  arg mode = .string
+  call _trace_ensure_runtime
+  normalized = _trace_normalize_mode(mode)
+  _trace_last_line = ""
+  call _trace_controller.clear_pending_result()
+
+  if normalized = "OFF" then do
+    _trace_active = 0
+    call _trace_controller.disable_breakpoints()
+    return
+  end
+
+  _trace_active = 1
+  if normalized = "LLM" then do
+    _trace_format = "LLM"
+    call _trace_controller.set_mode("LLM")
+    return
+  end
+
+  _trace_format = "TEXT"
+  call _trace_controller.set_mode(normalized)
+  if _trace_needs_breakpoints(normalized) = 0 then call _trace_controller.disable_breakpoints()
+  return
+
+_trace_set_from_env: procedure = .void expose _trace_runtime_ready _trace_output_target
+  arg allow_output = .int
+  call _trace_ensure_runtime
+  if allow_output <> 0 then do
+    env_output = getenv("CREXX_TRACE_TO")
+    if strip(env_output) <> "" then _trace_output_target = _trace_normalize_output_target(env_output)
+  end
+  env_mode = getenv("CREXX_TRACE")
+  if strip(env_mode) = "" then do
+    call _trace_set("OFF")
+    return
+  end
+  normalized = _trace_normalize_mode(env_mode)
+  if normalized = "" then do
+    call _trace_set("OFF")
+    call _trace_write_line(_trace_format_message("TRACE ENV invalid CREXX_TRACE value " || _trace_quote_result(env_mode)))
+    return
+  end
+  call _trace_set(normalized)
+  return
+
+_trace_set_format: procedure = .void expose _trace_runtime_ready _trace_format
+  arg format = .string
+  call _trace_ensure_runtime
+  normalized = upper(strip(format))
+  if normalized = "JSON" then normalized = "LLM"
+  if normalized = "META" then normalized = "LLM"
+  if normalized = "METADATA" then normalized = "LLM"
+  if normalized <> "LLM" then normalized = "TEXT"
+  _trace_format = normalized
+  return
+
+_trace_set_output: procedure = .void expose _trace_runtime_ready _trace_output_target
+  arg target = .string
+  call _trace_ensure_runtime
+  _trace_output_target = _trace_normalize_output_target(target)
+  return
+
+_trace_suppress_namespace: procedure = .void expose _trace_runtime_ready _trace_controller
+  arg namespace_name = .string
+  call _trace_ensure_runtime
+  call _trace_controller.suppress_namespace(namespace_name)
+  return
+
+_trace_unsuppress_namespace: procedure = .void expose _trace_runtime_ready _trace_controller
+  arg namespace_name = .string
+  call _trace_ensure_runtime
+  call _trace_controller.unsuppress_namespace(namespace_name)
+  return
+
+_trace_reset_namespace_filters: procedure = .void expose _trace_runtime_ready _trace_controller
+  call _trace_ensure_runtime
+  call _trace_controller.reset_namespace_filters()
+  return
+
+_trace_normalize_output_target: procedure = .string
+  arg target = .string
+  target = strip(target)
+  if target = "" then target = "stdout"
+  normalized = lower(target)
+  if normalized = "out" then target = "stdout"
+  else if normalized = "output" then target = "stdout"
+  else if normalized = "stdout" then target = "stdout"
+  else if normalized = "err" then target = "stderr"
+  else if normalized = "error" then target = "stderr"
+  else if normalized = "stderr" then target = "stderr"
+  return target
+
+_trace_current_mode: procedure = .string expose _trace_runtime_ready _trace_controller _trace_active
+  call _trace_ensure_runtime
+  if _trace_active = 0 then return "OFF"
+  return _trace_controller.mode()
+
+_trace_current_format: procedure = .string expose _trace_runtime_ready _trace_format
+  call _trace_ensure_runtime
+  return _trace_format
+
+_trace_context_from_raw: procedure = .tracecontext expose _trace_runtime_ready _trace_controller
+  arg expose raw = .trace_interrupt_raw
+  call _trace_ensure_runtime
+  return _trace_controller.context_from_interrupt(raw)
+
+_trace_should_trace_module: procedure = .int expose _trace_runtime_ready _trace_controller
+  arg module = .int
+  call _trace_ensure_runtime
+  return _trace_controller.should_trace_module(module)
+
+_trace_should_trace_context: procedure = .int expose _trace_runtime_ready _trace_controller
+  arg event = .tracecontext
+  call _trace_ensure_runtime
+  return _trace_controller.should_trace(event)
+
+_trace_should_emit_key: procedure = .int expose _trace_runtime_ready _trace_last_line
+  arg key = .string
+  call _trace_ensure_runtime
+  if key = _trace_last_line then return 0
+  _trace_last_line = key
+  return 1
+
+_trace_ensure_runtime: procedure expose _trace_runtime_ready _trace_controller _trace_last_line _trace_format _trace_output_target _trace_active
+  if _trace_runtime_ready = 1 then return
+  _trace_controller = .tracecontroller()
+  call _trace_controller.reset_namespace_filters()
+  _trace_last_line = ""
+  _trace_format = "TEXT"
+  _trace_output_target = "stdout"
+  _trace_active = 0
+  _trace_runtime_ready = 1
+  return
+
+_trace_normalize_mode: procedure = .string
+  arg mode = .string
+  normalized = upper(strip(mode))
+  if normalized = "" then return "N"
+  do while left(normalized, 1) = "?"
+    normalized = substr(normalized, 2)
+  end
+  if _trace_is_signed_integer(normalized) <> 0 then do
+    if normalized + 0 = 0 then return "OFF"
+    return "N"
+  end
+  if normalized = "REXX" then return "REXX"
+  if _trace_option_prefix(normalized, "ASM", 2) <> 0 then return "ASM"
+  if _trace_option_prefix(normalized, "LLM", 2) <> 0 then return "LLM"
+  if normalized = "JSON" then return "LLM"
+  if normalized = "META" then return "LLM"
+  if normalized = "METADATA" then return "LLM"
+  if _trace_option_prefix(normalized, "ALL", 1) <> 0 then return "A"
+  if _trace_option_prefix(normalized, "COMMAND", 1) <> 0 then return "C"
+  if _trace_option_prefix(normalized, "COMMANDS", 1) <> 0 then return "C"
+  if _trace_option_prefix(normalized, "ERROR", 1) <> 0 then return "E"
+  if _trace_option_prefix(normalized, "ERRORS", 1) <> 0 then return "E"
+  if _trace_option_prefix(normalized, "FAILURE", 1) <> 0 then return "F"
+  if _trace_option_prefix(normalized, "FAILURES", 1) <> 0 then return "F"
+  if _trace_option_prefix(normalized, "INTERMEDIATE", 1) <> 0 then return "I"
+  if _trace_option_prefix(normalized, "INTERMEDIATES", 1) <> 0 then return "I"
+  if _trace_option_prefix(normalized, "LABEL", 1) <> 0 then return "L"
+  if _trace_option_prefix(normalized, "LABELS", 1) <> 0 then return "L"
+  if _trace_option_prefix(normalized, "NORMAL", 1) <> 0 then return "N"
+  if _trace_option_prefix(normalized, "OFF", 1) <> 0 then return "OFF"
+  if _trace_option_prefix(normalized, "RESULT", 1) <> 0 then return "R"
+  if _trace_option_prefix(normalized, "RESULTS", 1) <> 0 then return "R"
+  return ""
+
+_trace_mode_from_option: procedure = .string
+  arg option = .string
+  return _trace_normalize_mode(option)
+
+_trace_option_prefix: procedure = .int
+  arg option = .string, word = .string, minimum = .int
+  option = upper(strip(option))
+  word = upper(strip(word))
+  if length(option) < minimum then return 0
+  if length(option) > length(word) then return 0
+  if left(word, length(option)) = option then return 1
+  return 0
+
+_trace_needs_breakpoints: procedure = .int
+  arg mode = .string
+  normalized = _trace_normalize_mode(mode)
+  if normalized = "ASM" then return 1
+  if normalized = "LLM" then return 1
+  if normalized = "A" then return 1
+  if normalized = "I" then return 1
+  if normalized = "R" then return 1
+  if normalized = "REXX" then return 1
+  return 0
+
+_trace_is_signed_integer: procedure = .int
+  arg text = .string
+  if text = "" then return 0
+  if left(text, 1) = "+" | left(text, 1) = "-" then text = substr(text, 2)
+  if text = "" then return 0
+  do i = 1 to length(text)
+    if pos(substr(text, i, 1), "0123456789") = 0 then return 0
+  end
+  return 1
+
+_trace_format_message: procedure = .string
+  arg text = .string
+  return "       +++   " || _trace_escape_text(text)
+
+_trace_quote_result: procedure = .string
+  arg value = .string
+  return '"' || _trace_escape_text(value) || '"'
+
+_trace_command_before: procedure = .void expose _trace_runtime_ready _trace_controller _trace_format _trace_active
+  arg environment = .string, command = .string
+  call _trace_ensure_runtime
+  if _trace_active = 0 then return
+  mode = _trace_controller.mode()
+  if mode <> "C" then return
+  if _trace_format = "LLM" then return
+  call _trace_write_line("       *-* " || _trace_escape_text(command))
+  return
+
+_trace_command_after: procedure = .void expose _trace_runtime_ready _trace_controller _trace_format _trace_active
+  arg environment = .string, command = .string, rc = .int, condition = .string
+  call _trace_ensure_runtime
+  if _trace_active = 0 then return
+  mode = _trace_controller.mode()
+  if _trace_should_report_command(mode, rc, condition) = 0 then return
+  if _trace_format = "LLM" then return
+  call _trace_write_line(_trace_format_message("RC=" || rc || " " || environment || " " || command))
+  return
+
+_trace_should_report_command: procedure = .int
+  arg mode = .string, rc = .int, condition = .string
+  normalized = _trace_normalize_mode(mode)
+  condition = upper(strip(condition))
+  if normalized = "C" then do
+    if rc <> 0 then return 1
+    if condition <> "" then return 1
+    return 0
+  end
+  if normalized = "E" then do
+    if rc <> 0 then return 1
+    if condition <> "" then return 1
+    return 0
+  end
+  if normalized = "F" then do
+    if rc < 0 then return 1
+    if condition = "FAILURE" then return 1
+    return 0
+  end
+  if normalized = "N" then do
+    if rc <> 0 then return 1
+    if condition <> "" then return 1
+    return 0
+  end
+  return 0
+
+_trace_capture_result_target: procedure = .void expose _trace_runtime_ready _trace_controller
+  arg module = .int, addr = .int
+  call _trace_ensure_runtime
+  call _trace_controller.capture_result_target(module, addr)
+  return
+
+_trace_pending_result: procedure = .int expose _trace_runtime_ready _trace_controller
+  call _trace_ensure_runtime
+  return _trace_controller.pending_result()
+
+_trace_pending_module: procedure = .int expose _trace_runtime_ready _trace_controller
+  call _trace_ensure_runtime
+  return _trace_controller.pending_module()
+
+_trace_pending_prefix: procedure = .string expose _trace_runtime_ready _trace_controller
+  call _trace_ensure_runtime
+  return _trace_controller.pending_prefix()
+
+_trace_pending_has_const: procedure = .int expose _trace_runtime_ready _trace_controller
+  call _trace_ensure_runtime
+  return _trace_controller.pending_has_const()
+
+_trace_pending_const: procedure = .string expose _trace_runtime_ready _trace_controller
+  call _trace_ensure_runtime
+  return _trace_controller.pending_const()
+
+_trace_supplied_result: procedure = .int expose _trace_runtime_ready _trace_controller
+  call _trace_ensure_runtime
+  return _trace_controller.supplied_result()
+
+_trace_supplied_value: procedure = .string expose _trace_runtime_ready _trace_controller
+  call _trace_ensure_runtime
+  return _trace_controller.supplied_value()
+
+_trace_clear_pending_result: procedure = .void expose _trace_runtime_ready _trace_controller
+  call _trace_ensure_runtime
+  call _trace_controller.clear_pending_result()
+  return
+
+_trace_pending_parent_register: procedure = .int expose _trace_runtime_ready _trace_controller
+  arg module = .int, expose type = .string, expose value = .string
+  call _trace_ensure_runtime
+  type = ""
+  value = ""
+  if _trace_controller.pending_result() = 0 then return -1
+  if module <> _trace_controller.pending_module() then return -1
+  type = _trace_controller.pending_type()
+  if _trace_controller.pending_has_const() <> 0 then do
+    value = _trace_controller.pending_const()
+    return -2
+  end
+  return _trace_controller.pending_register()
+
+_trace_supply_parent_value: procedure = .void expose _trace_runtime_ready _trace_controller
+  arg value = .string
+  call _trace_ensure_runtime
+  call _trace_controller.supply_parent_value(value)
+  return
+
+_trace_event_visible_in_mode: procedure = .int
+  arg mode_mask = .int, mode = .string
+  mode = upper(strip(mode))
+  if mode = "A" then return 1
+  if mode = "I" then do
+    if _trace_mask_has(mode_mask, 4) <> 0 then return 1
+    return 0
+  end
+  if mode = "R" then do
+    if _trace_mask_has(mode_mask, 2) <> 0 then return 1
+    return 0
+  end
+  if mode = "C" then do
+    if _trace_mask_has(mode_mask, 8) <> 0 then return 1
+    return 0
+  end
+  if mode = "E" then do
+    if _trace_mask_has(mode_mask, 16) <> 0 then return 1
+    return 0
+  end
+  if mode = "F" then do
+    if _trace_mask_has(mode_mask, 32) <> 0 then return 1
+    return 0
+  end
+  if mode = "L" then do
+    if _trace_mask_has(mode_mask, 64) <> 0 then return 1
+    return 0
+  end
+  if mode = "ASM" then do
+    if _trace_mask_has(mode_mask, 128) <> 0 then return 1
+    return 0
+  end
+  if mode = "LLM" then do
+    if _trace_mask_has(mode_mask, 256) <> 0 then return 1
+    return 0
+  end
+  return 0
+
+_trace_mask_has: procedure = .int
+  arg mask = .int, bit = .int
+  if bit <= 0 then return 0
+  period = bit * 2
+  do while mask >= period
+    mask = mask - period
+  end
+  if mask >= bit then return 1
+  return 0
+
+_trace_type_name_from_codes: procedure = .string
+  arg value_type = .int, register_type = .int
+  if register_type = 105 | register_type = 73 then return ".int"
+  if register_type = 102 | register_type = 70 then return ".float"
+  if register_type = 115 | register_type = 83 then return ".string"
+  if value_type = 73 then return ".int"
+  if value_type = 70 then return ".float"
+  if value_type = 66 then return ".int"
+  return ".string"
+
+_trace_prefix_from_kind: procedure = .string
+  arg kind = .int
+  if kind = 65 then return ">=>"
+  if kind = 67 then return ">C>"
+  if kind = 70 then return ">F>"
+  if kind = 76 then return ">L>"
+  if kind = 79 then return ">O>"
+  if kind = 80 then return ">P>"
+  if kind = 86 then return ">V>"
+  if kind = 77 then return "+++"
+  return ">>>"
+
+_trace_escape_text: procedure = .string
+  arg text = .string
+  result = ""
+  do i = 1 to length(text)
+    ch = substr(text, i, 1)
+    if ch = '\' then result = result || '\\'
+    else if ch = '"' then result = result || '\"'
+    else if ch = '09'x then result = result || '\t'
+    else if ch = '0a'x then result = result || '\n'
+    else if ch = '0c'x then result = result || '\f'
+    else if ch = '0d'x then result = result || '\r'
+    else do
+      code = x2d(c2x(ch))
+      if code < 32 then result = result || '\x' || right(c2x(ch), 2, "0")
+      else result = result || ch
+    end
+  end
+  return result
+
+_trace_write_line: procedure = .void expose _trace_output_target
+  arg line = .string
+  target = _trace_output_target
+  if target = "" then target = "stdout"
+
+  nl = '0a'x
+  mode = "a"
+  if target = "stdout" | target = "stderr" then mode = "w"
+
+  fileid = 0
+  assembler fopen fileid, target, mode
+  if fileid = 0 then do
+    say "TRACE output target" target "could not open"
+    return
+  end
+
+  assembler fwrite fileid, line
+  assembler fwrite fileid, nl
+
+  if target <> "stdout" & target <> "stderr" then do
+    rc = 0
+    assembler fclose rc, fileid
+  end
+  return
+
+_trace_exact_source: procedure = .int
+  arg module = .int, addr = .int, expose line = .int, expose column = .int, expose source = .string, expose result = .string
+  meta_array = 0
+  meta_entry = ""
+  line = 0
+  column = 0
+  source = ""
+  result = ""
+  found = 0
+  line_value = 0
+  column_value = 0
+  source_value = ""
+
+  if module <= 0 then return 0
+  if addr < 0 then return 0
+
+  assembler metaloaddata meta_array, module, addr
+  do i = 1 to meta_array
+    assembler linkattr1 meta_entry, meta_array, i
+    if meta_entry = ".meta_source_step" then do
+      assembler linkattr1 line_value, meta_entry, 5
+      assembler linkattr1 column_value, meta_entry, 6
+      assembler linkattr1 source_value, meta_entry, 8
+      line = line_value
+      column = column_value
+      source = source_value
+      result = result || "(" || line_value || ":" || column_value || ") '" || source_value || "'; "
+      found = 1
+    end
+  end
+
+  return found
+
+_trace_exact_source_file: procedure = .string
+  arg module = .int, addr = .int
+  meta_array = 0
+  meta_entry = ""
+  result = ""
+
+  if module <= 0 then return ""
+  if addr < 0 then return ""
+
+  assembler metaloaddata meta_array, module, addr
+  do i = 1 to meta_array
+    assembler linkattr1 meta_entry, meta_array, i
+    if meta_entry = ".meta_source_step" then assembler linkattr1 result, meta_entry, 4
+  end
+
+  return result
+
+_trace_closest_source_line: procedure = .string
+  arg module = .int, addr = .int
+  line = .int
+  column = .int
+  source = .string
+  result = .string
+
+  if module <= 0 then return ""
+  if addr < 0 then return ""
+
+  do a = addr to 0 by -1
+    if _trace_exact_source(module, a, line, column, source, result) <> 0 then return result
+  end
+
+  return ""
+
+_trace_procedure_name: procedure = .string
+  arg module = .int, addr = .int
+  meta_array = 0
+  meta_entry = ""
+  result = ""
+
+  if module <= 0 then return ""
+  if addr < 0 then return ""
+
+  do a = addr to 0 by -1
+    assembler metaloaddata meta_array, module, a
+    do i = 1 to meta_array
+      assembler linkattr1 meta_entry, meta_array, i
+      if meta_entry = ".meta_func" then do
+        assembler linkattr1 result, meta_entry, 1
+        return result
+      end
+    end
+  end
+
+  return ""
+
+_trace_asm_line: procedure = .string
+  arg module = .int, addr = .int
+  opcode = 0
+  instruction = ""
+  description = ""
+  no_operands = 0
+  op1_type = 0
+  op2_type = 0
+  op3_type = 0
+  instruction_object = 0
+
+  if module <= 0 then return ""
+  if addr < 0 then return ""
+
+  assembler metaloadinst opcode, module, addr
+  assembler metadecodeinst instruction_object, opcode
+  assembler linkattr1 instruction, instruction_object, 2
+  assembler linkattr1 description, instruction_object, 3
+  assembler linkattr1 no_operands, instruction_object, 4
+  assembler linkattr1 op1_type, instruction_object, 5
+  assembler linkattr1 op2_type, instruction_object, 6
+  assembler linkattr1 op3_type, instruction_object, 7
+
+  return " " right(d2x(opcode), 3, "0") "@" right(d2x(module), 3, "0")":"right(d2x(addr), 4, "0") instruction,
+         _trace_operand_description(op1_type, module, addr + 1)","_trace_operand_description(op2_type, module, addr + 2)","_trace_operand_description(op3_type, module, addr + 3),
+         "*" description
+
+_trace_operand_description: procedure = .string
+  arg code = .int, module = .int, addr = .int
+  desc = "unknown"
+  int_val = 0
+  float_val = 0.0
+  string_val = ""
+
+  if code = 0 then desc = ""
+  else if code = 1 then do
+    assembler metaloadioperand int_val, module, addr
+    desc = "@" || right(d2x(int_val), 4, '0')
+  end
+  else if code = 2 then do
+    assembler metaloadioperand int_val, module, addr
+    desc = "r" || int_val
+  end
+  else if code = 3 then do
+    assembler metaloadpoperand string_val, module, addr
+    desc = string_val || "()"
+  end
+  else if code = 4 then do
+    assembler metaloadioperand int_val, module, addr
+    desc = int_val
+  end
+  else if code = 5 then do
+    assembler metaloadfoperand float_val, module, addr
+    desc = float_val || "f"
+  end
+  else if code = 6 then do
+    assembler metaloadioperand int_val, module, addr
+    desc = int_val || "c"
+  end
+  else if code = 7 then do
+    assembler metaloadsoperand string_val, module, addr
+    desc = '"' || string_val || '"'
+  end
+
+  return desc
+
+_trace_module_name: procedure = .string
+  arg module = .int
+  modules = 0
+  result = ""
+
+  if module <= 0 then return ""
+  assembler metaloadedmodules modules
+  if module > modules then return ""
+  assembler linkattr1 result, modules, module
+  return result
+
+_trace_normalize_namespace: procedure = .string
+  arg name = .string
+  n = lower(strip(name))
+  if n = "" then return ""
+  do while left(n, 1) = "."
+    n = substr(n, 2)
+  end
+  do while right(n, 1) = "."
+    n = left(n, length(n) - 1)
+  end
+  return n
+
+_trace_namespace_matches: procedure = .int
+  arg namespace_name = .string, candidate = .string
+  namespace_name = _trace_normalize_namespace(namespace_name)
+  candidate = _trace_normalize_namespace(candidate)
+  if namespace_name = "" then return 0
+  if candidate = "" then return 0
+  if candidate = namespace_name then return 1
+  if left(candidate, length(namespace_name) + 1) = namespace_name || "." then return 1
+  if right(candidate, length(namespace_name) + 1) = "." || namespace_name then return 1
+  if pos("." || namespace_name || ".", candidate) > 0 then return 1
+  if right(candidate, length(namespace_name) + 1) = "/" || namespace_name then return 1
+  if right(candidate, length(namespace_name) + 1) = '\' || namespace_name then return 1
+  if pos("/" || namespace_name || "/", candidate) > 0 then return 1
+  if pos('\' || namespace_name || '\', candidate) > 0 then return 1
+  return 0
+
+_trace_is_trace_runtime: procedure = .int
+  arg name = .string
+  n = _trace_normalize_namespace(name)
+  if n = "" then return 0
+  if left(n, 7) = "_trace_" then return 1
+  if pos("._trace_", n) > 0 then return 1
+  if pos("__rxtrace_handler", n) > 0 then return 1
+  if _trace_namespace_matches("tracecontroller", n) <> 0 then return 1
+  if _trace_namespace_matches("tracecontext", n) <> 0 then return 1
+  if _trace_namespace_matches("trace_interrupt_raw", n) <> 0 then return 1
+  return 0
+
+_trace_find_proc: procedure = .int
+  arg mod_num = .int, name = .string
+  modules = 0
+  module = ""
+  proc_name = ""
+  proc_id = 0
+  proc = 0
+  procs = 0
+  start = 0
+  finish = 0
+
+  assembler metaloadedmodules modules
+  if mod_num = 0 then do
+    start = 1
+    finish = modules
+  end
+  else do
+    start = mod_num
+    finish = mod_num
+  end
+
+  do module_index = start to finish
+    assembler linkattr1 module, modules, module_index
+    assembler metaloadedprocs procs, module_index
+    do j = 1 to procs
+      assembler linkattr1 proc, procs, j
+      assembler linkattr1 proc_name, proc, 1
+      assembler linkattr1 proc_id, proc, 2
+      if proc_name = name then return proc_id
+    end
+  end
+  return 0

@@ -12,7 +12,7 @@ Branching
 : Selecting one of several lists of instructions to process. The branching instructions are `IF` and `SELECT`.
 
 Looping
-: Repeating a list of instructions, either for a speficied number of times or as long as some condition is satisfied. The `LOOP` or `DO` instruction (when used with keywords like `UNTIL` and `WHILE` do the looping in \rexx{}.
+: Repeating a list of instructions, either for a speficied number of times or as long as some condition is satisfied. The `LOOP` or `DO` instruction (when used with keywords like `UNTIL` and `WHILE`) do the looping in Rexx.
 
 Exiting
 : A program that is a single list ends when it reaches the last instruction. To explicity end a program, use the instructions `EXIT` and `RETURN`. 
@@ -30,7 +30,7 @@ DO
 END
 ```
 
-If the keyword `DO` is a clause by itself, the list of clauses that follows (up to the `END` keyword) is processed once (no loop is implied). This form of the `DO` instruction and the `END` keyword associated with it tell \rexx{} to treat the enclosed instructions as a single instruction.
+If the keyword `DO` is a clause by itself, the list of clauses that follows (up to the `END` keyword) is processed once (no loop is implied). This form of the `DO` instruction and the `END` keyword associated with it tell Rexx to treat the enclosed instructions as a single instruction.
 
 ## Testing Conditions
 
@@ -52,18 +52,18 @@ say reply = "MAYBE" /* displays '0' - false */
 say reply = "YES"   /* displays '1' - true  */
 ```
 
-<!--splice--comparisons.rexx-->
+<!--splice--crexx comparisons.rexx-->
 
 ## Simple Branching
 
-To tell \rexx{} how to make a decision about a single instruction, use:
+To tell Rexx how to make a decision about a single instruction, use:
 
 ```rexx <!--ifthen.rexx-->
 IF expression
 THEN instruction
 ```
 
-\rexx{} processes `instruction` only if `expression` is true.
+Rexx processes `instruction` only if `expression` is true.
 
 ```rexx <!--confirmation.rexx-->
 options levelb
@@ -73,7 +73,7 @@ if reply = "YES" then say "OK!"
 /* program continues from here ...*/
 ```
 
-<!--splice--confirmation.rexx-->
+<!--splice--crexx confirmation.rexx-->
 
 The instruction `say "OK!"` is only executed if the variable `reply` has the value `YES`. 
 
@@ -104,7 +104,7 @@ instruction3
 END
 ```
 
-With the `DO` and `END` keywords bracketing the list, \rexx{} knows to treat the
+With the `DO` and `END` keywords bracketing the list, Rexx knows to treat the
 listed instructions as a unit to:
 
 - Process all of them if `expression` is true
@@ -123,7 +123,7 @@ then
   end
 ```
 
-<!--splice--wakeup.rexx-->
+<!--splice--crexx wakeup.rexx-->
 
 The flowchart diagram would look like this:
 
@@ -187,7 +187,7 @@ The flowchart diagram would look like this:
 ## The SELECT instruction
 
 You are not limited to two choices. You can use the `SELECT` instruction to have a
-\rexx{} program select one of any number of branches. For example:
+Rexx program select one of any number of branches. For example:
 
 ```rexx <!--select.rexx-->
 SELECT
@@ -220,6 +220,8 @@ The `DO` instruction also controls iteration. There are three common forms:
 - Simple `DO … END` (grouping only; runs once)
 - Counted `DO` (with a control variable and optional `TO`/`BY`/`FOR`)
 - Conditional `DO WHILE` / `DO UNTIL`
+
+Like in other Rexx variants the keyword `loop` can be used instead of `do` for the purpose of iteration; this will emphasize a loop to distinguish it from the other uses of `do`. 
 
 ### Simple DO (grouping only)
 ```rexx <!--simpledo.rexx-->
@@ -299,7 +301,7 @@ Because block expressions are ordinary expressions, they can be nested and used 
 
 ### Variable shadowing and Scoping (Level B)
 
-\crexx{} Level B introduces block-level scoping for certain control structures. It is important to distinguish between single-instruction branches and grouped instructions (DO blocks).
+cRexx Level B introduces block-level scoping for certain control structures. It is important to distinguish between single-instruction branches and grouped instructions (DO blocks).
 
 - **Single-instruction branches**: These execute in the current (procedure) scope.
 
@@ -363,6 +365,8 @@ This difference in behavior between single-instruction branches and `DO` blocks 
     /* i is still 100 here (outer one wasn't modified) */
 ```
 
-Note: This syntax candy (`do i = .int(1) to 3`) desugars into a wrapped block (`do; i = .int; do i = 1 to 3; ...; end; end`). It is only supported for fundamental types (`.int`, `.string`, `.float`, `.boolean`, `.decimal`). Attempting to instantiate a non-fundamental class in a loop initialization (e.g. `do i = a_class(5) to 10`) will result in a `#LOOP_CLASSES_NOT_SUPPORTED` compilation error.
+Note: This syntax candy `do i = .int(1) to 3` desugars into a wrapped block `do; i = .int; do i = 1 to 3; ...; end; end`.
 
-Rationale: typed declarations always define intent and should introduce a new local; untyped uses favor existing bindings to reduce surprises, while remaining safe by creating a loop-local when none exists.
+It is only supported for fundamental types (`.int`, `.string`, `.float`, `.boolean`, `.decimal`). Attempting to instantiate a non-fundamental class in a loop initialization (e.g. `do i = a_class(5) to 10`) will result in a `\#LOOP_CLASSES_NOT_SUPPORTED` compilation error.
+
+Rationale: typed declarations always define intent and should introduce a new local; untyped uses favour existing bindings to reduce surprises, while remaining safe by creating a loop-local when none exists.

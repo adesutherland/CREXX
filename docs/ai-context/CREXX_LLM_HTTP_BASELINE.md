@@ -23,10 +23,10 @@ socket communication into the VM, adding a reusable HTTP layer above
   `/api/generate` with `stream:false`.
 - `rxfnsg.openai`, `rxfnsg.anthropic`, and `rxfnsg.gemini` are Rexx
   implementations for hosted providers using `rxhttp` over VM TLS sockets.
-- `demos/llm/ollama_generate.rexx` demonstrates calling a local Ollama model
+- `demos/llm/ollama_generate.crexx` demonstrates calling a local Ollama model
   through `rxfnsg`, `rxhttp`, `rxjson`, and the core socket VM support.
-- `demos/llm/openai_generate.rexx`, `anthropic_generate.rexx`, and
-  `gemini_generate.rexx` read API keys from environment variables and call
+- `demos/llm/openai_generate.crexx`, `anthropic_generate.crexx`, and
+  `gemini_generate.crexx` read API keys from environment variables and call
   hosted providers over HTTPS.
 
 ## Verified Locally
@@ -37,7 +37,7 @@ The following commands passed locally on macOS:
 cmake --build cmake-build-debug --target library rxfnsg testbifs testrxfnsg -- -j2
 ctest --test-dir cmake-build-debug -R 'ts_rxhttp|ts_socket_tls_live|ts_llm_ollama|ts_llm_providers' --output-on-failure
 cmake --build cmake-build-debug --target rxvme rxbvme crexx -- -j2
-./cmake-build-debug/bin/crexx -lrxfnsg demos/llm/ollama_generate.rexx
+./cmake-build-debug/bin/crexx -lrxfnsg demos/llm/ollama_generate.crexx
 ```
 
 The live Ollama check was run against `gemma4:latest` on

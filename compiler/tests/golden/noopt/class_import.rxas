@@ -1,9 +1,8 @@
 /*
- * cREXX COMPILER VERSION : crexx-dev-260110
- * SOURCE                 : class_import_main.rexx
- * BUILT                  : 2026-03-18 11:58:58
+ * SOURCE                 : class_import_main.crexx
+ * BUILT                  : 2026-06-05 19:41:24
  */
-.srcfile="class_import_main.rexx"
+
 .globals=0
 
 main() .locals=5
@@ -13,32 +12,38 @@ main() .locals=5
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .src 5:1="c = .Counter"
+   .srcstep 1 1 17 "class_import_main.crexx" 5 1 13 "c = .Counter()"
    .meta "class_import_main.main.c"="b" ".counter" r0
    load r1,0
    call r0,§class_import_lib.counter.§factory(),r1
-   .src 6:1="call c.inc"
+   .traceevent "F" 4 "R" "O" "r" 0 1 1 0 "§factory" ""
+   .traceevent "A" 6 "R" "O" "r" 0 1 1 0 "c" ""
+   .srcstep 2 2 17 "class_import_main.crexx" 6 1 11 "call c.inc()"
+   .traceevent "V" 6 "R" "O" "r" 0 2 2 0 "c" ""
    load r1,1
-   settp r0,1
+   settp r0,256
    swap r2,r0
    call r3,§class_import_lib.counter.inc(),r1
    swap r0,r2
-   .src 7:1="say c.value"
+   .traceevent "F" 4 "R" "V" "r" 3 2 2 0 "inc" ""
+   .srcstep 3 3 17 "class_import_main.crexx" 7 1 12 "say c.value()"
+   .traceevent "V" 6 "R" "O" "r" 0 3 3 0 "c" ""
    load r1,1
-   settp r0,1
+   settp r0,256
    swap r2,r0
    call r4,§class_import_lib.counter.value(),r1
    swap r0,r2
    itos r4
+   .traceevent "F" 4 "R" "S" "r" 4 3 3 0 "value" ""
    say r4
-   .src 8:1="return 0"
+   .srcstep 4 4 17 "class_import_main.crexx" 8 1 9 "return 0"
    ret 0
    .meta "class_import_main.main.c"
 
-/* Imported Declaration from file: class_import_lib.rexx */
+/* Imported Declaration from file: class_import_lib.crexx */
 
 §class_import_lib.counter.§factory() .expose=class_import_lib.counter.§factory
-   .meta "class_import_lib.counter.§factory"="b" ".counter" §class_import_lib.counter.§factory() ""
+   .meta "class_import_lib.counter.§factory"="b" ".class_import_lib..counter" §class_import_lib.counter.§factory() ""
 
 §class_import_lib.counter.inc() .expose=class_import_lib.counter.inc
    .meta "class_import_lib.counter.inc"="b" ".void" §class_import_lib.counter.inc() ""

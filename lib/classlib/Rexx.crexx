@@ -1,0 +1,593 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexx expose rexx
+import _rxsysb
+import rxfnsb
+
+/**
+Return .rexx:
+  abs, b2x, b2d, c2x, center, centre, changestr, copies,
+  d2b, d2c, d2x, delstr, delword, format, insert, lower,
+  overlay, left, right, reverse, sign, space, strip, substr,
+  translate, trunc, upper, word, subword, x2b, x2c, reradix,
+  sequence, value, toString maybe not
+
+Return .int:
+  c2d, compare, countstr, length, linesize, pos, lastpos,
+  verify, words, wordindex, wordlength, wordpos, x2d
+
+Return .boolean:
+  abbrev, datatype when called with a type argument
+
+Return .string:
+  datatype with no type argument
+  symbol
+  raw/string escape hatch: asString or stringValue
+*/
+
+
+/**
+ * Rexx string object wrapper.
+ *
+ * The class stores a native .string value and exposes Rexx built-in functions
+ * as object methods. Methods that produce a Rexx value return .rexx to support
+ * fluent chaining. Methods that produce observations, positions, counts or
+ * predicates return the appropriate scalar type.
+ */
+rexx: class
+val = .string
+
+/**
+ * Construct a Rexx string object from a native string.
+ *
+ * @param s the initial string value.
+ * @return a new rexx object.
+ */
+  *: factory
+    arg s = .string
+    val = s
+    return
+
+/**
+ * Test whether this string is an abbreviation of another string.
+ *
+ * @param astr the full string to compare with.
+ * @param len the minimum abbreviation length.
+ * @return true if this string is a valid abbreviation.
+ */
+  abbrev: method = .boolean
+    arg astr = .string, len = 0
+    return .rxfnsb..abbrev(val,astr,len)
+
+/**
+ * Return the absolute value of this numeric string.
+ *
+ * @return the absolute value as a Rexx string object.
+ */
+  abs: method = .rexx
+    return .rexx(.rxfnsb..abs(val))
+
+/**
+ * Convert a binary string to hexadecimal.
+ *
+ * @return the hexadecimal result as a Rexx string object.
+ */
+  b2x: method = .rexx
+    return .rexx(.rxfnsb..b2x(val))
+
+/**
+ * Convert a binary string to decimal.
+ *
+ * @return the decimal result as a Rexx string object.
+ */
+  b2d: method = .rexx
+    return .rexx(.rxfnsb..b2d(val))
+
+/**
+ * Convert characters to hexadecimal.
+ *
+ * @return the hexadecimal result as a Rexx string object.
+ */
+  c2x: method = .rexx
+    return .rexx(.rxfnsb..c2x(val))
+
+/**
+ * Convert characters to decimal.
+ *
+ * @return the decimal value.
+ */
+  c2d: method = .int
+    return .rxfnsb..c2d(val)
+
+/**
+ * Center this string in a field.
+ *
+ * @param centlen the target field length.
+ * @param pad the padding character or string.
+ * @return the centered value as a Rexx string object.
+ */
+  center: method = .rexx
+    arg expose centlen = .int, pad = " "
+    return .rexx(.rxfnsb..center(val,centlen,pad))
+
+/**
+ * Centre this string in a field.
+ *
+ * @param centlen the target field length.
+ * @param pad the padding character or string.
+ * @return the centred value as a Rexx string object.
+ */
+  centre: method = .rexx
+    arg centlen = .int, pad = " "
+    return .rexx(.rxfnsb..centre(val,centlen,pad))
+
+/**
+ * Replace all occurrences of a substring.
+ *
+ * @param needle the substring to replace.
+ * @param nneedle the replacement substring.
+ * @return the changed value as a Rexx string object.
+ */
+  changestr: method = .rexx
+    arg needle = .string, nneedle = .string
+    return .rexx(.rxfnsb..changestr(needle,val,nneedle))
+
+/**
+ * Compare this string with another string.
+ *
+ * @param astr the string to compare with.
+ * @param pad the pad character used for comparison.
+ * @return the first differing position, or zero if equal.
+ */
+  compare: method = .int
+    arg astr = .string, pad = " "
+    return .rxfnsb..compare(val,astr,pad)
+
+/**
+ * Repeat this string a number of times.
+ *
+ * @param count the number of copies.
+ * @return the repeated value as a Rexx string object.
+ */
+  copies: method = .rexx
+    arg count=.int
+    return .rexx(.rxfnsb..copies(val,count))
+
+/**
+ * Count occurrences of a substring.
+ *
+ * @param needle the substring to count.
+ * @return the number of occurrences.
+ */
+  countstr: method = .int
+    arg needle = .string
+    return .rxfnsb..countstr(needle,val)
+
+/**
+ * Convert a decimal string to binary.
+ *
+ * @return the binary result as a Rexx string object.
+ */
+  d2b: method = .rexx
+    return .rexx(.rxfnsb..d2b(val))
+
+/**
+ * Convert a decimal string to characters.
+ *
+ * @return the character result as a Rexx string object.
+ */
+  d2c: method = .rexx
+    return .rexx(.rxfnsb..d2c(val))
+
+/**
+ * Convert a decimal string to hexadecimal.
+ *
+ * @return the hexadecimal result as a Rexx string object.
+ */
+  d2x: method = .rexx
+    -- assembler stoi val
+    return .rexx(.rxfnsb..d2x(val))
+
+/**
+ * Delete a substring by position and length.
+ *
+ * @param position the 1-based start position.
+ * @param dellen the number of characters to delete.
+ * @return the resulting value as a Rexx string object.
+ */
+  delstr: method = .rexx
+    arg position = .int, dellen = 0
+    return .rexx(.rxfnsb..delstr(val,position,dellen))
+
+/**
+ * Delete words by word number and count.
+ *
+ * @param wnum the 1-based first word number.
+ * @param wcount the number of words to delete.
+ * @return the resulting value as a Rexx string object.
+ */
+  delword: method = .rexx
+    arg wnum = .int, wcount = -1
+    return .rexx(.rxfnsb..delword(val,wnum,wcount))
+
+/**
+ * Format this numeric string.
+ *
+ * @param before digits before the decimal point.
+ * @param after digits after the decimal point.
+ * @param expp exponent trigger.
+ * @param expt exponent width.
+ * @return the formatted value as a Rexx string object.
+ */
+  format: method = .rexx
+    arg before = 0, after = 0, expp = 0, expt=-1
+    return .rexx(.rxfnsb..format(val,before,after,expp,expt))
+
+/**
+ * Insert another string into this string.
+ *
+ * @param string the string to insert.
+ * @param position the insertion position.
+ * @param len the target insertion length.
+ * @param pad the padding character or string.
+ * @return the resulting value as a Rexx string object.
+ */
+  insert: method = .rexx
+    arg string = .string, position = -1, len = -1, pad = " "
+    return .rexx(.rxfnsb..insert(val,string,position,len,pad))
+
+/**
+ * Return the length of this string.
+ *
+ * @return the string length.
+ */
+  length: method = .int
+    return .rxfnsb..length(val)
+
+/**
+ * Return the current line size.
+ *
+ * @return the line size.
+ */
+  linesize: method = .int
+    return .rxfnsb..linesize()
+
+/**
+ * Convert this string to lowercase.
+ *
+ * @return the lowercase value as a Rexx string object.
+ */
+  lower: method = .rexx
+    return .rexx(.rxfnsb..lower(val))
+
+/**
+ * Overlay another string onto this string.
+ *
+ * @param string the overlay string.
+ * @param position the 1-based overlay position.
+ * @param len the overlay length.
+ * @param pad the padding character or string.
+ * @return the resulting value as a Rexx string object.
+ */
+  overlay: method = .rexx
+    arg string = .string, position = .int, len = 0, pad = ""
+    return .rexx(.rxfnsb..overlay(val,string,position,len,pad))
+
+/**
+ * Locate this string within another string.
+ *
+ * @param haystack the string to search.
+ * @param start the 1-based start position.
+ * @return the position of this string, or zero if not found.
+ */
+  pos: method = .int
+    arg haystack=.string, start=1
+    return .rxfnsb..pos(val,haystack,start)
+
+/**
+ * Locate the last occurrence of this string within another string.
+ *
+ * @param haystack the string to search.
+ * @param upto the highest position to search up to.
+ * @return the last position of this string, or zero if not found.
+ */
+  lastpos: method = .int
+    arg haystack=.string, upto=0
+    return .rxfnsb..lastpos(val,haystack,upto)
+
+/**
+ * Return the leftmost characters of this string.
+ *
+ * @param number the number of characters to return.
+ * @return the resulting value as a Rexx string object.
+ */
+  left: method = .rexx
+    arg number = .int
+    return .rexx(.rxfnsb..left(val,number))
+
+/**
+ * Return the rightmost characters of this string.
+ *
+ * @param number the number of characters to return.
+ * @return the resulting value as a Rexx string object.
+ */
+  right: method = .rexx
+    arg number = .int
+    return .rexx(.rxfnsb..right(val,number))
+
+/**
+ * Reverse this string.
+ *
+ * @return the reversed value as a Rexx string object.
+ */
+  reverse: method = .rexx
+    return .rexx(.rxfnsb..reverse(val))
+
+/**
+ * Return the sign of this numeric string.
+ *
+ * @return the sign as a Rexx string object.
+ */
+  sign: method = .rexx
+    return .rexx(.rxfnsb..sign(val))
+
+/**
+ * Normalize spacing between words.
+ *
+ * @param spacenr the number of spaces between words.
+ * @param pad the padding character or string.
+ * @return the spaced value as a Rexx string object.
+ */
+  space: method = .rexx
+    arg spacenr = 1, pad = " "
+    return .rexx(.rxfnsb..space(val,spacenr,pad))
+
+/**
+ * Strip leading, trailing, or both kinds of characters.
+ *
+ * @param option the strip option.
+ * @param schar the character set to strip.
+ * @return the stripped value as a Rexx string object.
+ */
+  strip: method = .rexx
+    arg option = "B", schar= "UTF8WSP"
+    return .rexx(.rxfnsb..strip(val,option,schar))
+
+/**
+ * Return a substring.
+ *
+ * @param start the 1-based start position.
+ * @param len the substring length.
+ * @param pad the padding character or string.
+ * @return the substring as a Rexx string object.
+ */
+  substr: method = .rexx
+    arg start = .int, len =-256, pad = ' '  /* set len default to -256, to avoid a call to the length function */
+    return .rexx(.rxfnsb..substr(val,start,len,pad))
+
+/**
+ * Classify this string as a symbol.
+ *
+ * @return the symbol classification.
+ */
+  symbol: method = .string
+    return .rxfnsb..symbol(val)
+
+/**
+ * Translate characters in this string.
+ *
+ * @param tochar replacement characters.
+ * @param fromchar characters to replace.
+ * @param pad the padding character or string.
+ * @return the translated value as a Rexx string object.
+ */
+  translate: method = .rexx
+    arg tochar = "?????", fromchar = "?????", pad=" "
+    return .rexx(.rxfnsb..translate(val,tochar,fromchar,pad))
+
+/**
+ * Truncate this numeric string.
+ *
+ * @param fraction the number of fractional digits to retain.
+ * @return the truncated value as a Rexx string object.
+ */
+  trunc: method = .rexx
+    arg fraction = 0
+    return .rexx(.rxfnsb..trunc(val,fraction))
+
+/**
+ * Convert this string to uppercase.
+ *
+ * @return the uppercase value as a Rexx string object.
+ */
+  upper: method = .rexx
+    return .rexx(.rxfnsb..upper(val))
+
+/**
+ * Return the value of the variable named by this string.
+ *
+ * @return the variable value as a Rexx string object.
+ */
+  value: method = .rexx
+    return .rexx(.rxfnsb..value(val))
+
+/**
+ * Verify whether characters are present or absent from a reference table.
+ *
+ * @param intab the reference character table.
+ * @param match_mode the verify mode.
+ * @param spos the 1-based start position.
+ * @return the first matching or non-matching position, or zero.
+ */
+  verify: method = .int
+    arg intab = .string, match_mode='N', spos=1
+    return .rxfnsb..verify(val,intab,match_mode,spos)
+
+/**
+ * Return a word by word number.
+ *
+ * @param wordnum the 1-based word number.
+ * @return the selected word as a Rexx string object.
+ */
+  word: method = .rexx
+    arg wordnum=.int
+    return .rexx(.rxfnsb..word(val,wordnum))
+
+/**
+ * Count the words in this string.
+ *
+ * @return the number of words.
+ */
+  words: method = .int
+    return .rxfnsb..words(val)
+
+/**
+ * Return the character position of a word.
+ *
+ * @param wordnum the 1-based word number.
+ * @return the 1-based character position, or zero.
+ */
+  wordindex: method = .int
+    arg wordnum=.int
+    return .rxfnsb..wordindex(val,wordnum)
+
+/**
+ * Return a subword sequence.
+ *
+ * @param wordnum the 1-based first word number.
+ * @return the selected words as a Rexx string object.
+ */
+  subword: method = .rexx
+    arg wordnum=.int
+    return .rexx(.rxfnsb..subword(val,wordnum))
+
+/**
+ * Return the length of a word.
+ *
+ * @param wordnum the 1-based word number.
+ * @return the length of the word.
+ */
+  wordlength: method = .int
+    arg wordnum = .int
+    return .rxfnsb..wordlength(val,wordnum)
+
+/**
+ * Locate a word sequence within this string.
+ *
+ * @param string the word sequence to locate.
+ * @param start the 1-based word start position.
+ * @return the word position, or zero if not found.
+ */
+  wordpos: method = .int
+    arg string = .string, start = 1
+    return .rxfnsb..wordpos(val,string,start)
+
+/**
+ * Convert hexadecimal to binary.
+ *
+ * @param slen the source length.
+ * @return the binary result as a Rexx string object.
+ */
+  x2b: method = .rexx
+    arg slen=-1
+    return .rexx(.rxfnsb..x2b(val,slen))
+
+/**
+ * Convert hexadecimal to characters.
+ *
+ * @return the character result as a Rexx string object.
+ */
+  x2c: method = .rexx
+    return .rexx(.rxfnsb..x2c(val))
+
+/**
+ * Convert hexadecimal to decimal.
+ *
+ * @param slen the source length.
+ * @return the decimal value.
+ */
+  x2d: method = .int
+    arg slen=-1
+    return .rxfnsb..x2d(val,slen)
+
+/**
+ * Convert this value between arbitrary radices.
+ *
+ * @param fromRadix the input radix.
+ * @param toRadix the output radix.
+ * @return the converted value as a Rexx string object.
+ */
+  reradix: method = .rexx
+    arg fromRadix = .int, toRadix = .int
+    return .rexx(._rxsysb..reradix(val,fromRadix,toRadix))
+
+/**
+ * Generate a character sequence from this value to another value.
+ *
+ * @param tos the end of the sequence.
+ * @return the sequence as a Rexx string object.
+ */
+  sequence: method = .rexx
+    arg tos = .string
+    return .rexx(.rxfnsb..sequence(val,tos))
+
+/**
+ * Deprecated alias for sequence.
+ *
+ * @param tos the end of the sequence.
+ * @return a deprecation message as a Rexx string object.
+ * @deprecated use sequence instead.
+ */
+  xrange: method = .rexx
+    arg tos = .string
+    say 'xrange is deprecated; use sequence'
+    return .rexx('xrange is deprecated; use sequence')
+
+/**
+ * Return the datatype classification or test a datatype.
+ *
+ * @param type optional datatype test code.
+ * @return the datatype result returned by the Rexx DATATYPE built-in.
+ */
+  datatype: method = .string
+    arg type=""
+    return .rxfnsb..datatype(val,type)
+
+/**
+ * Return the wrapped native string value.
+ *
+ * @return the raw string value.
+ */
+  stringValue: method = .string
+    return val
+
+/**
+ * Return the wrapped native string value.
+ *
+ * @return the raw string value.
+ */
+  toString: method = .string
+    return val

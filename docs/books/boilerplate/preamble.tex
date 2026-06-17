@@ -8,7 +8,8 @@
 \usepackage{fontspec}
 \usepackage{tocloft}
 \usepackage{titlesec}
-\setmainfont[Mapping=tex-text]{TeX Gyre Pagella}
+%\setmainfont[Mapping=tex-text]{TeX Gyre Pagella}
+\setmainfont[Mapping=tex-text]{Minion Pro}
 \setmonofont[Mapping=tex-text,Scale=0.82]{IBM Plex Mono}
 \usepackage{tabularx}
 \usepackage{booktabs}
@@ -16,6 +17,7 @@
 \usepackage{color}
 \usepackage{xcolor}
 \usepackage{listings}
+\usepackage{mdframed}
 
 %fancyhdr for page headers, footers, numbers
 \usepackage{fancyhdr}
@@ -95,7 +97,7 @@
 \usepackage{makeidx}
 \usepackage{framed}
 \usepackage{alltt}
-\usepackage{barracuda}
+%% \usepackage{barracuda}
 \usepackage{longtable}
 \usepackage{graphicx}
 \usepackage{wrapfig}
@@ -127,7 +129,9 @@
 \newcommand{\simularelease}{12.00, date of release  9 aug 1985}
 
 %% the font used for tables
-\AtBeginEnvironment{longtable}{\fontspec{1403 Vintage Mono Pro}\small}
+%%\AtBeginEnvironment{longtable}{\fontspec{1403 Vintage Mono
+%%Pro}\small}
+\AtBeginEnvironment{longtable}{\fontspec{Avenir Next}\small}
 
 %% \setlength{\labelsep}{2em} % Distance between label and text
 \setlength{\labelwidth}{75pt} % Width of the label box  
@@ -203,3 +207,18 @@ the#1\endcsname\quad}}
 % pandoc regression fix
 \newcounter{none}
 
+\let\PROTECT\protect
+\let\HYPERLINK\hyperlink
+
+\definecolor{outputrule}{gray}{0.65}
+\newmdenv[
+  linecolor=outputrule,
+  linewidth=0.6pt,
+  leftline=true,
+  rightline=false,
+  topline=false,
+  bottomline=false,
+  innerleftmargin=8pt,
+  skipabove=\baselineskip,
+  skipbelow=\baselineskip
+]{terminaloutput}

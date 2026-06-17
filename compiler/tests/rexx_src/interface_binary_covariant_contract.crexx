@@ -1,0 +1,9 @@
+options levelb
+namespace interface_binary_covariant_contract expose Iterator Iterable
+
+Iterator: interface
+  next: method = .string
+  hasNext: method = .int
+
+Iterable: interface
+  iterator: method = .Iterator

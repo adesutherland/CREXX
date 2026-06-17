@@ -182,4 +182,50 @@ zero_pass:
     say "PASS: Zero Multiply"
 zero_end:
 
+    /* IPOW */
+    load r1, 2
+    ipow r2, r1, 10
+    ieq r0, r2, 1024
+    brt ipow_basic_pass, r0
+    say "FAIL: IPOW Basic"
+    ret 1
+ipow_basic_pass:
+    say "PASS: IPOW Basic"
+
+    load r1, 0
+    ipow r2, r1, 5
+    ieq r0, r2, 0
+    brt ipow_zero_pass, r0
+    say "FAIL: IPOW Zero Result"
+    ret 1
+ipow_zero_pass:
+    say "PASS: IPOW Zero Result"
+
+    load r1, 2
+    ipow r2, r1, 62
+    ieq r0, r2, 4611686018427387904
+    brt ipow_positive_limit_pass, r0
+    say "FAIL: IPOW Positive Limit"
+    ret 1
+ipow_positive_limit_pass:
+    say "PASS: IPOW Positive Limit"
+
+    load r1, -2
+    ipow r2, r1, 63
+    ieq r0, r2, -9223372036854775808
+    brt ipow_negative_limit_pass, r0
+    say "FAIL: IPOW Negative Limit"
+    ret 1
+ipow_negative_limit_pass:
+    say "PASS: IPOW Negative Limit"
+
+    sigbr ipow_overflow_caught, "OVERFLOW_UNDERFLOW"
+    load r1, 2
+    ipow r2, r1, 63
+    say "FAIL: IPOW Overflow Signal"
+    ret 1
+ipow_overflow_caught:
+    sighalt "OVERFLOW_UNDERFLOW"
+    say "PASS: IPOW Overflow Signal"
+
     ret 0

@@ -1,5 +1,6 @@
 ## Unicode 
-One of the design goals of \crexx{} is to enable the use of Unicode in
+
+One of the design goals of cRexx is to enable the use of Unicode in
 the \textsc{Rexx} language on all
 platforms that support its use. 
 Unicode is an important standard that helps ensure that different computer systems and software programs can handle and display text correctly, regardless of language, script, or writing system.
@@ -32,7 +33,7 @@ and information sharing across different cultures and languages, and
 is essential for creating a more connected and inclusive digital
 world.
 
-<!-- \subsection{Unicode in \crexx{}} -->
+<!-- \subsection{Unicode in cRexx} -->
 <!-- Consider the following program: -->
 <!--  \setmainfont{Courier New} -->
 <!--  \newfontfamily\myregularfont{Courier New} -->
@@ -40,7 +41,7 @@ world.
 <!-- \setTransitionsForCJK{\mychinesefont}{\myregularfont} -->
 
 <!-- \fontspec{Courier New} -->
-<!-- \lstinputlisting[language=rexx,label=itf1,caption=utf example.]{../../examples/utf1.rexx} -->
+<!-- \lstinputlisting[language=rexx,label=itf1,caption=utf example.]{../../examples/utf1.crexx} -->
 <!-- \begin{shaded} -->
 <!--   \small -->
 <!--   \splice{rxc examples/utf1} \splice{rxas examples/utf1} \obeylines \splice{rxvm examples/utf1} -->

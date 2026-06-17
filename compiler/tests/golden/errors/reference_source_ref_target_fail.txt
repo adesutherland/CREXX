@@ -1,0 +1,2 @@
+Error in reference_source_ref_target_fail.crexx @ 8:12 - #TYPE_MISMATCH, "reference ref"
+1 error(s) in source file

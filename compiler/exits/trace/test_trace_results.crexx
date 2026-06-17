@@ -1,0 +1,7 @@
+options levelb
+
+main: procedure
+  trace res
+  x = random(42, 42)
+  say "TRACE RESULTS DONE" x
+  return

@@ -32,25 +32,19 @@
 #include <string.h>
 #include <time.h>
 #include <ctype.h>
+#include <limits.h>
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 #include "rxcp_emit.h"
 #include "rxcp_val.h"
+#include "rxcp_util.h"
 
 #define UNSET_REGISTER (-1)
 #define DONT_ASSIGN_REGISTER (-2)
 
-/* Register Type Flag Byte Values */
-/* Used for optional arguments ONLY
- * set (1) means the register has a specified value */
-#define REGTP_VAL 1
-
-/* Used for "pass be value" large (strings, objects) registers ONLY
- * set (2) means that it is not a symbol so does not need copying as even if it is
- * changed the caller will not use its original value
- * Note: Small registers (int, float) are always copied as this is faster than
- *       setting and checking this flag anyway */
-#define REGTP_NOTSYM 2
+static int printf_string_precision(size_t length) {
+    return length > (size_t)INT_MAX ? INT_MAX : (int)length;
+}
 
 static int is_large_value(ASTNode *node) {
     if (!node) return 0;
@@ -60,9 +54,53 @@ static int is_large_value(ASTNode *node) {
     return node->value_type == TP_STRING ||
            node->value_type == TP_OBJECT ||
            node->value_type == TP_BINARY ||
+           node->value_type == TP_REFERENCE ||
            node->target_type == TP_STRING ||
            node->target_type == TP_OBJECT ||
-           node->target_type == TP_BINARY;
+           node->target_type == TP_BINARY ||
+           node->target_type == TP_REFERENCE;
+}
+
+static void append_symbol_trace_event(OutputFragment *output,
+                                      char kind,
+                                      unsigned int mode_mask,
+                                      ASTNode *symbol_node,
+                                      ASTNode *value_node,
+                                      unsigned int source_step_id,
+                                      unsigned int clause_id) {
+    char *symbol_name;
+
+    if (ast_semantic_context_kind(symbol_node) == AST_SEMANTIC_CONTEXT_INTERNAL_OPERAND) return;
+    symbol_name = trace_symbol_name_malloc(symbol_node);
+    output_append_trace_event_register(output,
+                                       kind,
+                                       mode_mask,
+                                       value_node,
+                                       source_step_id,
+                                       clause_id,
+                                       symbol_name,
+                                       "");
+    if (symbol_name) free(symbol_name);
+}
+
+static void append_compound_trace_event(OutputFragment *output,
+                                        ASTNode *compound_node,
+                                        ASTNode *tail_node,
+                                        unsigned int source_step_id,
+                                        unsigned int clause_id) {
+    char *symbol_name;
+
+    if (!tail_node || tail_node->register_num < 0) return;
+    symbol_name = trace_symbol_name_malloc(compound_node);
+    output_append_trace_event_register(output,
+                                       RXBIN_TRACE_KIND_COMPOUND,
+                                       RXBIN_TRACE_MODE_I,
+                                       tail_node,
+                                       source_step_id,
+                                       clause_id,
+                                       symbol_name,
+                                       "");
+    if (symbol_name) free(symbol_name);
 }
 
 static Symbol *current_procedure_symbol(ASTNode *node) {
@@ -76,6 +114,23 @@ static Symbol *current_procedure_symbol(ASTNode *node) {
 static int uses_implicit_main_args(ASTNode *node) {
     Symbol *symbol = current_procedure_symbol(node);
     return symbol && symbol->is_implicit_main;
+}
+
+static int output_has_text(OutputFragment *fragment) {
+    while (fragment) {
+        if (fragment->output && fragment->output[0]) return 1;
+        fragment = fragment->after;
+    }
+    return 0;
+}
+
+static void node_cleanup_replace_text(ASTNode *node, char *text) {
+    if (!node || !text) return;
+    if (node->cleanup) {
+        f_output(node->cleanup);
+        node->cleanup = 0;
+    }
+    node->cleanup = output_fs(text);
 }
 
 static int visible_fixed_arg_count(ASTNode *node) {
@@ -230,6 +285,8 @@ static walker_result emit_walker(walker_direction direction,
     struct tm tm = *localtime(&t);
     char ret_type;
     int ret_num;
+    unsigned int trace_step_id;
+    unsigned int trace_clause_id;
 
     child1 = node->child;
     if (child1) child2 = child1->sibling;
@@ -259,18 +316,25 @@ static walker_result emit_walker(walker_direction direction,
 
             case IMPORTED_FILE:
             {
-                char *buf = mprintf("\n/* Imported Declaration from file: %s */\n",
-                                    node->file_name);
+                int has_imported_output = 0;
 
-                if (node->output) output_prepend_text(buf, node->output);
-                else node->output = output_fs(buf);
-                free(buf);
+                if (!node->output) node->output = output_f();
 
                 n = child1;
                 while (n) {
+                    if (output_has_text(n->output) || output_has_text(n->cleanup)) {
+                        has_imported_output = 1;
+                    }
                     if (n->output) output_concat(node->output, n->output);
                     if (n->cleanup) output_concat(node->output, n->cleanup);
                     n = n->sibling;
+                }
+
+                if (has_imported_output) {
+                    char *buf = mprintf("\n/* Imported Declaration from file: %s */\n",
+                                        node->file_name);
+                    output_prepend_text(buf, node->output);
+                    free(buf);
                 }
             }
             break;
@@ -441,6 +505,8 @@ static walker_result emit_walker(walker_direction direction,
             case CALL:
                 /* Add source metadata */
                 comment_meta = get_metaline(node);
+                trace_step_id = trace_source_step_id_from_metaline(comment_meta);
+                trace_clause_id = trace_clause_id_from_metaline(comment_meta);
                 if (node->output) output_prepend_text(comment_meta, node->output);
                 else node->output = output_fs(comment_meta);
                 free(comment_meta);
@@ -450,6 +516,7 @@ static walker_result emit_walker(walker_direction direction,
 
                 /* TODO - set result */
                 output_concat(node->output, child1->output);
+                output_apply_trace_source_ids(node->output, trace_step_id, trace_clause_id);
                 if (child1->cleanup) output_concat(node->output, child1->cleanup);
                 break;
 
@@ -479,6 +546,7 @@ static walker_result emit_walker(walker_direction direction,
             case OP_COMPARE_S_LT:
             case OP_COMPARE_S_GTE:
             case OP_COMPARE_S_LTE:
+            case OP_XOR:
 
             /* These operators use the type prefix already set (i.e. of their type) */
             case OP_ADD:
@@ -621,7 +689,7 @@ static walker_result emit_walker(walker_direction direction,
 
                 /* Set cleanup action */
                 temp1 = mprintf("   unlink r%d\n", node->register_num);
-                node->cleanup = output_fs(temp1);
+                node_cleanup_replace_text(node, temp1);
                 free(temp1);
                 break;
 
@@ -711,14 +779,19 @@ static walker_result emit_walker(walker_direction direction,
             case OP_NOT:
             case OP_NEG:
             case OP_PLUS:
+            case OP_REFERENCE:
+            case OP_DEREFERENCE:
+            case OP_SNAPSHOT:
+            case OP_REFVALID:
+            case OP_INITIALIZED:
             case OP_TYPE_CAST:
             case OP_TYPE_IS:
             case OP_TYPEOF:
                 emit_expression(node, payload);
                 break;
 
-            case VAR_SYMBOL:
-            case VAR_TARGET:
+	            case VAR_SYMBOL:
+	            case VAR_TARGET:
                 /* If we are a define no code is generated */
                 if (node->parent->node_type == DEFINE) break;
 
@@ -752,10 +825,19 @@ static walker_result emit_walker(walker_direction direction,
 
                     /* Cleanup */
                     temp1 = mprintf("   unlink %c%d\n", node->register_type, node->register_num);
-                    node->cleanup = output_fs(temp1);
-                    free(temp1);
-                    break;
-                } else if (child1) {
+	                    node_cleanup_replace_text(node, temp1);
+	                    free(temp1);
+
+	                    type_promotion(node);
+	                    append_symbol_trace_event(node->output,
+	                                              RXBIN_TRACE_KIND_VARIABLE,
+	                                              RXBIN_TRACE_MODE_R | RXBIN_TRACE_MODE_I,
+	                                              node,
+	                                              node,
+	                                              0,
+	                                              0);
+	                    break;
+	                } else if (child1) {
                     /* We are an array */
                     /* Essentially, we are linking the found array element as the nodes result - which will need unlinking later */
                     char from_reg_type = node->symbolNode->symbol->register_type;
@@ -794,7 +876,7 @@ static walker_result emit_walker(walker_direction direction,
 
                         /* Add cleanup to unlink this property reference */
                         temp1 = mprintf("   unlink r%d\n", node->additional_registers);
-                        node->cleanup = output_fs(temp1);
+                        node_cleanup_replace_text(node, temp1);
                         free(temp1);
 
                         from_reg_type = 'r';
@@ -803,12 +885,13 @@ static walker_result emit_walker(walker_direction direction,
                     int math_reg = node->additional_registers + is_property;
 
                     /* Now we need to link the array elements */
-                    while (child1) {
-                        int base = node->symbolNode->symbol->dim_base[ast_chdi(child1)];
+	                    while (child1) {
+	                        int base = node->symbolNode->symbol->dim_base[ast_chdi(child1)];
 
-                        if (child1->output) output_concat(node->output, child1->output);
+	                        if (child1->output) output_concat(node->output, child1->output);
+	                        append_compound_trace_event(node->output, node, child1, 0, 0);
 
-                        if (node->node_type == VAR_SYMBOL && child1->node_type == NOVAL) {
+	                        if (node->node_type == VAR_SYMBOL && child1->node_type == NOVAL) {
                             /* This is the logic for getting the number of elements in an array */
                             /* This is last parameter - we may have done earlier parameters */
 
@@ -954,14 +1037,23 @@ static walker_result emit_walker(walker_direction direction,
                     /* Set cleanup action */
                     if (unlink_needed) {
                         temp1 = mprintf("   unlink r%d\n", node->register_num);
-                        node->cleanup = output_fs(temp1);
+                        node_cleanup_replace_text(node, temp1);
                         free(temp1);
                     }
                 }
-                var_symbol_end:
+	                var_symbol_end:
 
-                if (node->node_type == VAR_SYMBOL) type_promotion(node);
-                break;
+	                if (node->node_type == VAR_SYMBOL) {
+	                    type_promotion(node);
+	                    append_symbol_trace_event(node->output,
+	                                              RXBIN_TRACE_KIND_VARIABLE,
+	                                              RXBIN_TRACE_MODE_R | RXBIN_TRACE_MODE_I,
+	                                              node,
+	                                              node,
+	                                              0,
+	                                              0);
+	                }
+	                break;
 
             case VAR_REFERENCE:
                 break;
@@ -972,10 +1064,42 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case CLASS:
-                /* A class literal (e.g. .int) used as a value - this represents the default value
-                 * of that class. For Level B this is always null / zero */
+                /* A scalar object class literal is a typed but uninitialized object.
+                 * Scalar built-ins and arrays keep the historical null/default value. */
                 if (!node->output) node->output = output_f();
-                temp1 = mprintf("   null %c%d\n", node->register_type, node->register_num);
+                ret_type = node->register_type;
+                ret_num = node->register_num;
+                if (ret_num < 0 &&
+                    node->parent &&
+                    (node->parent->node_type == DEFINE ||
+                     node->parent->node_type == ASSIGN ||
+                     node->parent->node_type == ARG)) {
+                    ASTNode *target_node = ast_chdn(node->parent, 0);
+                    if (target_node) {
+                        ret_type = target_node->register_type;
+                        ret_num = target_node->register_num;
+                        if (ret_num < 0 &&
+                            target_node->symbolNode &&
+                            target_node->symbolNode->symbol) {
+                            ret_type = target_node->symbolNode->symbol->register_type;
+                            ret_num = target_node->symbolNode->symbol->register_num;
+                        }
+                    }
+                }
+                if (node->value_type == TP_OBJECT && node->value_dims == 0) {
+                    char *class_name = node->value_class ? strdup(node->value_class) :
+                            rxcp_normalize_source_symbol_name(node->node_string,
+                                                              node->node_string_length,
+                                                              1,
+                                                              0);
+                    temp1 = mprintf("   setobjuninit %c%d,\"%s\"\n",
+                                    ret_type,
+                                    ret_num,
+                                    class_name ? class_name : "");
+                    if (class_name) free(class_name);
+                } else {
+                    temp1 = mprintf("   null %c%d\n", ret_type, ret_num);
+                }
                 output_append_text(node->output, temp1);
                 free(temp1);
                 break;
@@ -983,6 +1107,7 @@ static walker_result emit_walker(walker_direction direction,
             case CONSTANT:
             case CONST_SYMBOL:
             case STRING:
+            case BINARY:
             case FLOAT:
             case DECIMAL:
             case INTEGER:
@@ -1005,7 +1130,7 @@ static walker_result emit_walker(walker_direction direction,
                 /* We will build the assembler instruction */
                 /* First the command */
                 char* inst = mprintf("   %.*s",
-                                     node->node_string_length, node->node_string);
+                                     printf_string_precision(node->node_string_length), node->node_string);
 
                 /* Lower case the instruction */
                 int l;
@@ -1016,7 +1141,7 @@ static walker_result emit_walker(walker_direction direction,
                 /* Argument 1 */
                 if (child1) {
                     if (child1->node_type == FUNC_SYMBOL) {
-                        arg1 = mprintf("%.*s()", child1->node_string_length, child1->node_string);
+                        arg1 = mprintf("%.*s()", printf_string_precision(child1->node_string_length), child1->node_string);
                     }
                     else if (child1->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
                         arg1 = format_constant(child1->target_type, child1);
@@ -1031,7 +1156,7 @@ static walker_result emit_walker(walker_direction direction,
                 /* Argument 2 */
                 if (child2) {
                     if (child2->node_type == FUNC_SYMBOL) {
-                        arg2 = mprintf("%.*s()", child2->node_string_length, child2->node_string);
+                        arg2 = mprintf("%.*s()", printf_string_precision(child2->node_string_length), child2->node_string);
                     }
                     else if (child2->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
                         arg2 = format_constant(child2->target_type, child2);
@@ -1046,7 +1171,7 @@ static walker_result emit_walker(walker_direction direction,
                 /* Argument 3 */
                 if (child3) {
                     if (child3->node_type == FUNC_SYMBOL) {
-                        arg3 = mprintf("%.*s()", child3->node_string_length, child3->node_string);
+                        arg3 = mprintf("%.*s()", printf_string_precision(child3->node_string_length), child3->node_string);
                     }
                     else if (child3->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
                         arg3 = format_constant(child3->target_type, child3);
@@ -1080,19 +1205,50 @@ static walker_result emit_walker(walker_direction direction,
             }
             break;
 
-            case ASSIGN:
-                /* Add source metadata */
-                comment_meta = get_metaline(node);
-                if (node->output) output_prepend_text(comment_meta, node->output);
-                else node->output = output_fs(comment_meta);
-                free(comment_meta);
+            case DEFINE:
+                if (node->scope &&
+                    node->scope->type != SCOPE_CLASS &&
+                    child1 &&
+                    child2 &&
+                    child2->node_type == CLASS &&
+                    child2->value_type == TP_OBJECT &&
+                    child2->value_dims == 0) {
+                    char *class_name;
+                    if (!node->output) node->output = output_f();
+                    class_name = child2->value_class ? strdup(child2->value_class) :
+                            rxcp_normalize_source_symbol_name(child2->node_string,
+                                                              child2->node_string_length,
+                                                              1,
+                                                              0);
+                    temp1 = mprintf("   setobjuninit %c%d,\"%s\"\n",
+                                    child1->register_num < 0 && child1->symbolNode && child1->symbolNode->symbol ?
+                                            child1->symbolNode->symbol->register_type : child1->register_type,
+                                    child1->register_num < 0 && child1->symbolNode && child1->symbolNode->symbol ?
+                                            child1->symbolNode->symbol->register_num : child1->register_num,
+                                    class_name ? class_name : "");
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                    if (class_name) free(class_name);
+                }
+                break;
+
+	            case ASSIGN: {
+	                int trace_assignment_event = 1;
+	                /* Add source metadata */
+	                comment_meta = get_metaline(node);
+	                trace_step_id = trace_source_step_id_from_metaline(comment_meta);
+	                trace_clause_id = trace_clause_id_from_metaline(comment_meta);
+	                if (node->output) output_prepend_text(comment_meta, node->output);
+	                else node->output = output_fs(comment_meta);
+	                free(comment_meta);
 
                 /* Add Variable Metadata */
                 add_variable_metadata(node);
-                output_concat(node->output, child1->output);
-                output_concat(node->output, child2->output);
+		                output_concat(node->output, child1->output);
+		                output_concat(node->output, child2->output);
+		                output_apply_trace_source_ids(node->output, trace_step_id, trace_clause_id);
 
-                if (child1->symbolNode && child1->symbolNode->symbol && child1->symbolNode->symbol->scope &&
+	                if (child1->symbolNode && child1->symbolNode->symbol && child1->symbolNode->symbol->scope &&
                     !child1->child &&
                     child1->symbolNode->symbol->scope->defining_node &&
                     child1->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) {
@@ -1112,9 +1268,9 @@ static walker_result emit_walker(walker_direction direction,
 
                     char this_type = 'a'; int this_num = 1; /* Default for METHOD */
                     attribute_owner_register(node, child1, &this_type, &this_num);
-                    temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n"
-                                    "   %scopy %c%d,%c%d\n"
-                                    "   unlink %c%d\n",
+	                    temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n"
+	                                    "   %scopy %c%d,%c%d\n"
+	                                    "   unlink %c%d\n",
                                     child1->register_type, child1->register_num,
                                     this_type, this_num,
                                     index,
@@ -1122,16 +1278,19 @@ static walker_result emit_walker(walker_direction direction,
                                     child1->register_type, child1->register_num,
                                     child2->register_type, child2->register_num,
                                     child1->register_type, child1->register_num);
-                    output_append_text(node->output, temp1);
-                    free(temp1);
-                } else if (child1->register_num != child2->register_num ||
+	                    output_append_text(node->output, temp1);
+	                    free(temp1);
+	                    trace_assignment_event = 0;
+	                } else if (child1->register_num != child2->register_num ||
                     child1->register_type != child2->register_type) {
                     int aggregate_assign =
                             !child1->child &&
                             (child1->value_dims > 0 || child1->target_dims > 0 ||
                              child2->value_dims > 0 || child2->target_dims > 0 ||
                              child1->value_type == TP_BINARY || child1->target_type == TP_BINARY ||
-                             child2->value_type == TP_BINARY || child2->target_type == TP_BINARY);
+                             child2->value_type == TP_BINARY || child2->target_type == TP_BINARY ||
+                             child1->value_type == TP_REFERENCE || child1->target_type == TP_REFERENCE ||
+                             child2->value_type == TP_REFERENCE || child2->target_type == TP_REFERENCE);
 
                     if (aggregate_assign) {
                         temp1 = mprintf("   copy %c%d,%c%d\n"
@@ -1152,17 +1311,27 @@ static walker_result emit_walker(walker_direction direction,
                                         child2->register_type,
                                         child2->register_num);
                     }
-                    output_append_text(node->output, temp1);
-                    free(temp1);
-                }
-                output_concat(node->output, child2->cleanup);
+	                    output_append_text(node->output, temp1);
+	                    free(temp1);
+	                }
+	                if (trace_assignment_event) {
+	                    append_symbol_trace_event(node->output,
+	                                              RXBIN_TRACE_KIND_ASSIGNMENT,
+	                                              RXBIN_TRACE_MODE_R | RXBIN_TRACE_MODE_I,
+	                                              child1,
+	                                              child1,
+	                                              trace_step_id,
+	                                              trace_clause_id);
+	                }
+	                output_concat(node->output, child2->cleanup);
                 if (node->parent->node_type == REPEAT) {
                     /* Defer cleanup for repeat - the inc/to needs the register */
                     node->cleanup = child1->cleanup;
                     child1->cleanup = 0;
                 }
                 else output_concat(node->output, child1->cleanup);
-                break;
+	                break;
+	            }
 
             case NOP:
                 emit_flow(node, pl);

@@ -1,22 +1,28 @@
-# crexxsaa host integration
+# Crexxsaa host integration
 
-`crexxsaa` is the initial CREXX compatibility API for C hosts that want a
+`crexxsaa` is the initial cRexx compatibility API for C hosts that want a
 REXXSAA-shaped entry point without taking on the full historical REXXSAA ABI.
-It is deliberately small: the API is a stable facade over the current CREXX
+It is deliberately small: the API is a stable facade over the current cRexx
 `rxvml`, `ADDRESS`, sandbox, and exposed-variable contracts.
+
+This enables the use of cRexx as an integrated part of applications or operating environments; it enables cRexx to function as a universal macro language. Supplied examples show how cRexx functions as an edit macro language[^xedit] or to enable the use of embedded SQL[^sqlite] in a cRexx program.
+
+[^xedit]: In the THE editor, a faithful reproduction of the VM system editor by Mark Hessling.
+[^sqlite]: For sqlite, the universally used in-process SQL engine.
+
 
 The first supported host model is command-environment execution:
 
 - host C code creates a `crexxsaa_context`
 - the host registers one or more `ADDRESS` callback environments
-- the host configures the CREXX compiler, assembler, import directory, and
+- the host configures the cRexx compiler, assembler, import directory, and
   optional cache directory
 - the host runs either an existing `.rxbin` or a source file that `crexxsaa`
   compiles and caches
 
 This is not a full `RexxStart()` or `RexxVariablePool()` clone. Future adapter
 entry points may be added where real integrations need them, but the internal
-runtime model remains the modern CREXX `ADDRESS` model.
+runtime model remains the modern cRexx `ADDRESS` model.
 
 ## Writing hosted source
 
@@ -48,6 +54,11 @@ crexxsaa_run_source(ctx, profile_path, "THE", 0, argc, argv, &program_rc);
 crexxsaa_destroy(ctx);
 ```
 
+`crexxsaa_run_source()` and `crexxsaa_run_rxbin()` return zero when the host
+API successfully compiled, loaded, and ran the program. The Rexx program status
+is returned separately through `program_rc`: an integer `main` return value and
+a top-level `exit n` both set `program_rc` to `n`.
+
 The cache namespace argument, `"THE"` in this example, is part of the cache
 identity. Different hosts can compile the same source path without sharing a
 cache bucket accidentally.
@@ -55,14 +66,14 @@ cache bucket accidentally.
 ## ADDRESS callbacks
 
 A host registers an environment with
-`crexxsaa_register_address_environment()`. When CREXX executes a command in
+`crexxsaa_register_address_environment()`. When cRexx executes a command in
 that environment, the callback receives a `crexxsaa_address_request` containing
 the environment name, command text, and active context.
 
 The callback fills a `crexxsaa_address_response`:
 
 - `rc`: command return code
-- `condition_name`: optional CREXX condition name
+- `condition_name`: optional cRexx condition name
 - `diagnostic`: optional diagnostic text
 
 The callback should return zero for a successfully handled dispatch. Non-zero
@@ -84,13 +95,13 @@ resolve variables in this order:
 3. The active `ADDRESS ... SANDBOX pool` object.
 4. The request's standard sandbox fallback.
 
-The host gets one API, while the CREXX script chooses whether a command uses
+The host gets one API, while the cRexx script chooses whether a command uses
 direct exposure or sandbox storage.
 
 Compound names such as `FILENAME.1` are mapped to exposed stems by splitting at
 the first dot and using the remaining text as the stem key. Names are matched
 case-insensitively at this facade layer to fit legacy host expectations. The
-standard CREXX sandbox already normalises keys internally.
+standard cRexx sandbox already normalises keys internally.
 
 For compatibility with command processors that treat a scalar result as a
 one-item stem, an exposed scalar also has a limited compound view:
@@ -104,12 +115,12 @@ This rule is applied only when no exposed stem with the same base name exists.
 Real `EXPOSE name[]` stems keep their normal stem semantics.
 
 The variable facade is not a general variable-pool enumerator and does not
-provide arbitrary access to unexposed CREXX locals.
+provide arbitrary access to unexposed cRexx locals.
 
 ## Source cache
 
 `crexxsaa_run_source()` compiles source through `rxc` and `rxas`, then stores the
-resulting `.rxbin` in a disposable cache. Normal source edits, CREXX rebuilds,
+resulting `.rxbin` in a disposable cache. Normal source edits, cRexx rebuilds,
 compiler path changes, and library rebuilds cause a recompile without manual
 cache clearing.
 
@@ -143,7 +154,7 @@ Compiler path controls:
 
 ## Cache maintenance tool
 
-The CREXX build/install includes a `crexxsaa` maintenance binary in the normal
+The cRexx build/install includes a `crexxsaa` maintenance binary in the normal
 `bin` directory. It is a troubleshooting tool for the compiled-script cache,
 not a script runner.
 
@@ -162,7 +173,7 @@ entries. `--location` alone prints only the resolved cache directory.
 
 Example list output:
 
-```text
+```bash
 cache: /Users/adrian/Library/Caches/crexx/crexxsaa
 source: /path/to/profile.the
   bucket: 0379ad70148bf7ca
@@ -176,7 +187,7 @@ source: /path/to/profile.the
 
 The cache schema is versioned. Current entries live under `v1`:
 
-```text
+```bash
 <cache-root>/v1/<source-key>/
   manifest
   <object-hash>.rxbin
@@ -190,7 +201,7 @@ includes the source content hash and compiler/library configuration hash.
 
 Manifest fields:
 
-```text
+```bash
 version=1
 source_path=/absolute/or/supplied/source/path
 source_hash=<16-hex-content-hash>
@@ -239,4 +250,3 @@ program semantics. The current implementation uses atomic file replacement for
 compiled objects and manifests, but it is not a full cross-process locking
 protocol. For troubleshooting, clear the cache while the host application is
 idle.
-

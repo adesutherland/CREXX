@@ -26,10 +26,12 @@
 #define RXDEFS_H
 
 #include <stdint.h>
+#include <string.h>
 
 /* Operand Formats */
 typedef enum {
     FMT_EMPTY,
+    FMT_B,
     FMT_C,
     FMT_F,
     FMT_I,
@@ -49,6 +51,7 @@ typedef enum {
     FMT_P,
     FMT_P_S,
     FMT_R,
+    FMT_R_B,
     FMT_R_C,
     FMT_R_D,
     FMT_R_D_R,
@@ -127,6 +130,15 @@ typedef struct {
     int         flags;
     const char* description;
 } OpInfo;
+
+static inline int rxop_is_source_mnemonic(const char *mnemonic) {
+    if (!mnemonic) return 0;
+    if (strncmp(mnemonic, "RESERVED_", 9) == 0) return 0;
+    if (strcmp(mnemonic, "INULL") == 0) return 0;
+    if (strcmp(mnemonic, "INTERRUPT") == 0) return 0;
+    if (strcmp(mnemonic, "IUNKNOWN") == 0) return 0;
+    return 1;
+}
 
 extern const OpInfo op_table[];
 

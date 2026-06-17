@@ -1,0 +1,7 @@
+options levelb
+namespace reference_source_deref_nonref_fail
+
+main: procedure = .int
+  value = 1
+  copy = dereference value
+  return copy

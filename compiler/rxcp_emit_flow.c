@@ -39,15 +39,17 @@ static int flow_needs_attr_copy(ASTNode *node) {
     return node->value_type == TP_STRING ||
            node->value_type == TP_OBJECT ||
            node->value_type == TP_BINARY ||
+           node->value_type == TP_REFERENCE ||
            node->target_type == TP_STRING ||
            node->target_type == TP_OBJECT ||
-           node->target_type == TP_BINARY;
+           node->target_type == TP_BINARY ||
+           node->target_type == TP_REFERENCE;
 }
 
 static const char *signal_block_catch_all_names[] = {
         "FAILURE", "ERROR", "OVERFLOW_UNDERFLOW", "DIVISION_BY_ZERO",
         "CONVERSION_ERROR", "INVALID_ARGUMENTS", "OUT_OF_RANGE", "UNICODE_ERROR",
-        "UNKNOWN_INSTRUCTION", "FUNCTION_NOT_FOUND", "NOT_IMPLEMENTED",
+        "REFERENCE_INVALID", "OBJECT_NOT_INITIALIZED", "UNKNOWN_INSTRUCTION", "FUNCTION_NOT_FOUND", "NOT_IMPLEMENTED",
         "INVALID_SIGNAL_CODE", "NOTREADY", "QUIT", "TERM", "POSIX_INT",
         "POSIX_HUP", "POSIX_USR1", "POSIX_USR2", "POSIX_CHLD", "OTHER", 0
 };
@@ -78,6 +80,25 @@ static void signal_emit_names_free(signal_emit_names *names) {
     names->items = 0;
     names->count = 0;
     names->capacity = 0;
+}
+
+static int flow_scope_owns_cleanup(ASTNode *node) {
+    return node && node->scope && node->scope->defining_node == node;
+}
+
+static void flow_emit_scope_dereference_unlinks(OutputFragment *output, Scope *scope) {
+    size_t i;
+
+    if (!output || !scope) return;
+    for (i = scp_dereference_symbol_count(scope); i > 0; i--) {
+        Symbol *symbol = scp_dereference_symbol_at(scope, i - 1);
+        char *line;
+
+        if (!symbol || symbol->register_num < 0 || symbol->register_type != 'r') continue;
+        line = mprintf("   unlink %c%d\n", symbol->register_type, symbol->register_num);
+        output_append_text(output, line);
+        free(line);
+    }
 }
 
 static char *signal_emit_canonical_name(ASTNode *node) {
@@ -151,6 +172,8 @@ void emit_flow(ASTNode *node, void *pl) {
     char *comment_meta;
     char *op;
     int j;
+    unsigned int trace_step_id;
+    unsigned int trace_clause_id;
 
     child1 = node->child;
     if (child1) child2 = child1->sibling;
@@ -182,6 +205,9 @@ void emit_flow(ASTNode *node, void *pl) {
                 if (n->output) output_concat(node->output, n->output);
                 if (n->cleanup) output_concat(node->output, n->cleanup);
                 n = ast_nsib(n);
+            }
+            if (flow_scope_owns_cleanup(node)) {
+                flow_emit_scope_dereference_unlinks(node->output, node->scope);
             }
             comment_meta = get_reporting_metalines(node);
             if (comment_meta[0]) output_prepend_text(comment_meta, node->output);
@@ -273,6 +299,9 @@ void emit_flow(ASTNode *node, void *pl) {
             temp1 = mprintf("l%dsignalend:\n", node->node_number);
             output_append_text(node->output, temp1);
             free(temp1);
+            if (flow_scope_owns_cleanup(node)) {
+                flow_emit_scope_dereference_unlinks(node->output, node->scope);
+            }
             signal_emit_names_free(&installed);
             break;
         }
@@ -284,6 +313,8 @@ void emit_flow(ASTNode *node, void *pl) {
         case SAY:
             /* Add source metadata */
             comment_meta = get_metaline(node);
+            trace_step_id = trace_source_step_id_from_metaline(comment_meta);
+            trace_clause_id = trace_clause_id_from_metaline(comment_meta);
             if (node->output) output_prepend_text(comment_meta, node->output);
             else node->output = output_fs(comment_meta);
             free(comment_meta);
@@ -300,6 +331,7 @@ void emit_flow(ASTNode *node, void *pl) {
             }
             else {
                 output_concat(node->output, child1->output);
+                output_apply_trace_source_ids(node->output, trace_step_id, trace_clause_id);
                 temp1 = mprintf("   say %c%d\n",
                                 child1->register_type,
                                 child1->register_num);
@@ -314,6 +346,8 @@ void emit_flow(ASTNode *node, void *pl) {
         case RETURN:
             /* Add source metadata */
             comment_meta = get_metaline(node);
+            trace_step_id = trace_source_step_id_from_metaline(comment_meta);
+            trace_clause_id = trace_clause_id_from_metaline(comment_meta);
             if (node->output) output_prepend_text(comment_meta, node->output);
             else node->output = output_fs(comment_meta);
             free(comment_meta);
@@ -333,6 +367,7 @@ void emit_flow(ASTNode *node, void *pl) {
             }
             else {
                 output_concat(node->output, child1->output);
+                output_apply_trace_source_ids(node->output, trace_step_id, trace_clause_id);
                 temp1 = mprintf("   ret %c%d\n",
                                 child1->register_type,
                                 child1->register_num);
@@ -345,11 +380,14 @@ void emit_flow(ASTNode *node, void *pl) {
         case IF:
             /* Add source metadata */
             comment_meta = get_metaline_range(node, child1);
+            trace_step_id = trace_source_step_id_from_metaline(comment_meta);
+            trace_clause_id = trace_clause_id_from_metaline(comment_meta);
             if (node->output) output_prepend_text(comment_meta, node->output);
             else node->output = output_fs(comment_meta);
             free(comment_meta);
 
             if (child1->output) output_concat(node->output, child1->output);
+            output_apply_trace_source_ids(node->output, trace_step_id, trace_clause_id);
             comment_meta = get_metaline_token_after(child1);
             temp1 = mprintf("   brf l%diffalse,%c%d\n%s",
                             node->node_number,
@@ -438,6 +476,9 @@ void emit_flow(ASTNode *node, void *pl) {
                             node->node_number, node->node_number);
             output_append_text(node->output, temp1);
             if (child1->cleanup) output_concat(node->output, child1->cleanup);
+            if (flow_scope_owns_cleanup(node)) {
+                flow_emit_scope_dereference_unlinks(node->output, node->scope);
+            }
             free(temp1);
             free(comment_meta);
             break;

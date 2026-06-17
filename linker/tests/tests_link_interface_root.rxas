@@ -14,7 +14,7 @@ main() .locals=6
    dcall r0,r0,r1
 
    load r1,1
-   settp r0,1
+   settp r0,256
    swap r2,r0
    srcmethod r3,r2,"describe"
    dcall r3,r3,r1

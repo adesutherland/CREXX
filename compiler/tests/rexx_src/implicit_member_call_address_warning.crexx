@@ -1,0 +1,17 @@
+options levelb comments_dash
+
+b = .box()
+b.add("alpha")
+exit 0
+
+box: class
+  count = .int
+
+  *: factory
+    count = 0
+    return
+
+  add: method = .int
+    arg value = .string
+    count = count + 1
+    return count

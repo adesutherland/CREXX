@@ -27,8 +27,6 @@ typedef struct TreeMapRegistry {
     struct TreeMapRegistry *next;
 } TreeMapRegistry;
 
-static TreeMapRegistry *registry_head = NULL;
-
 // TreeMap API
 TreeMap *TreeMap_create();
 int TreeMap_remove(TreeMap *map, const char *key);
@@ -46,4 +44,3 @@ TreeNode *TreeMapIterator_next(TreeMapIterator *it);
 void TreeMapIterator_destroy(TreeMapIterator *it);
 
 #endif // TREEMAP_H
-

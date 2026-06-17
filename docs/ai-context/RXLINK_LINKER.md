@@ -9,7 +9,7 @@ Use `rxlink` when you want to:
 - bundle a root module with the providers it needs
 - turn a loose module set into one deployable linked image
 - shrink downstream `rxcpack` / wrapped artifacts by removing duplicated pool entries
-- optionally strip source/file metadata from deployable images
+- optionally strip source/TRACE debug metadata from deployable images
 
 This is now the normal native-packaging route for the shipped drivers too:
 `crexx`, `crxc`, `rxpp`, and related wrapped tools link a deployable image
@@ -52,7 +52,11 @@ Selectors match by:
 - `proc_head` is used to find procedures and detect `main`
 - `expose_head` is used to discover imports and exports
 - `meta_head` is scanned for `META_INTERFACE` and `META_IMPLEMENTS` so interface definitions and implementations pull each other in
-- the instruction stream is scanned for `srcfproc` selector strings so modules referenced only through runtime interface-factory lookup are still retained
+- the instruction stream is scanned for `srcfproc` selector strings so modules
+  referenced only through runtime interface-factory lookup are still retained
+- the instruction stream is scanned for `srcmethod` member names. Because the
+  receiver's concrete class can be known only at runtime, modules that expose
+  or declare a matching member name are selected conservatively.
 
 The linker preserves the metadata chain in output because the VM and tooling still consume it at runtime.
 
@@ -83,8 +87,14 @@ Current conservative strip support has two independent axes:
 
 `STRIP SOURCE` removes:
 
-- `META_SRC`
-- `META_FILE`
+- `META_SOURCE_STEP`
+- `META_TRACE_EVENT`
+
+Trace-event metadata is source-level debugging metadata. Without source-step
+anchors, classic `TRACE` value events are not coherent enough to keep in a
+deployable stripped image, and they may still expose variable names, compound
+names, constants, or live values. Keep the linked image unstripped when TRACE,
+RXDB source stepping, or source-level diagnostics are needed.
 
 Inline-body metadata is different from runtime contract metadata. It is useful
 to libraries consumed by `rxc`, but it is not needed once a final linked image
@@ -100,7 +110,7 @@ It intentionally does not remove runtime contract metadata such as:
 - `META_IMPLEMENTS`
 - `META_MEMBER`
 
-That keeps interface/class dispatch and metadata-aware tooling behaviour stable while still removing the source text/file path payload that most affects linked image size.
+That keeps interface/class dispatch and metadata-aware tooling behaviour stable while still removing source text/file path payloads and source-level TRACE value metadata.
 
 ## Control Files
 
@@ -130,4 +140,7 @@ images in normal `ctest` coverage. For a focused rerun, use:
 - `ctest -L linked_opt --output-on-failure`
 - `cmake --build <build-dir> --target linked_opt_sweep`
 
-Be conservative with stripping. If a proposed change removes more than `META_SRC` / `META_FILE`, verify both runtime contract lookup and metadata introspection in `rxvm` before assuming it is safe.
+Be conservative with stripping. If a proposed change removes anything beyond
+the current source-level debug set (`META_SOURCE_STEP` and `META_TRACE_EVENT`),
+verify both runtime contract lookup and metadata introspection in `rxvm` before
+assuming it is safe.

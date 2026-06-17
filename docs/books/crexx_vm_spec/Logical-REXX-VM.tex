@@ -39,7 +39,10 @@ we need to invoke functions.
 \item An infinite and regular register set per function call. Functions can access
 any element in the register array, whereas a stack can only access elements
 at the end. Registers hold integer, float, string and object values, plus flags
-that can be used to dynamically store which value formats are valid.
+that can be used to dynamically store value status. The flag word is
+partitioned: low bits are VM-private/read-only outside the VM, the next byte is
+compiler call ABI state, and higher bands are reserved for library/runtime and
+user-visible contracts.
 
 \end{itemize}
 

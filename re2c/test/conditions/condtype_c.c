@@ -11,41 +11,39 @@ int main ()
 {
 	unsigned char yych;
 	switch (YYGETCONDITION()) {
-	case yyca:
-		goto yyc_a;
-	case yycb:
-		goto yyc_b;
+		case yyca: goto yyc_a;
+		case yycb: goto yyc_b;
 	}
 /* *********************************** */
 yyc_a:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'a':	goto yy3;
-	default:	goto yy2;
+		case 'a': goto yy2;
+		default: goto yy1;
 	}
+yy1:
 yy2:
-yy3:
 	++YYCURSOR;
 #line 10 "conditions/condtype_c.re"
 	{}
-#line 32 "conditions/condtype_c.c"
+#line 30 "conditions/condtype_c.c"
 /* *********************************** */
 yyc_b:
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'b':	goto yy8;
-	default:	goto yy7;
+		case 'b': goto yy5;
+		default: goto yy4;
 	}
-yy7:
-yy8:
+yy4:
+yy5:
 	++YYCURSOR;
 #line 11 "conditions/condtype_c.re"
 	{}
-#line 45 "conditions/condtype_c.c"
+#line 43 "conditions/condtype_c.c"
 }
 #line 12 "conditions/condtype_c.re"
 
 	return 0;
 }
-conditions/condtype_c.re:12:2: warning: control flow in condition 'a' is undefined for strings that match '[\x0-\x60\x62-\xFF]', use default rule '*' [-Wundefined-control-flow]
-conditions/condtype_c.re:12:2: warning: control flow in condition 'b' is undefined for strings that match '[\x0-\x61\x63-\xFF]', use default rule '*' [-Wundefined-control-flow]
+conditions/condtype_c.re:7:0: warning: control flow in condition 'a' is undefined for strings that match '[\x0-\x60\x62-\xFF]', use default rule '*' [-Wundefined-control-flow]
+conditions/condtype_c.re:7:0: warning: control flow in condition 'b' is undefined for strings that match '[\x0-\x61\x63-\xFF]', use default rule '*' [-Wundefined-control-flow]

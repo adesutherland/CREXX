@@ -4,10 +4,8 @@
 {
 	YYCTYPE yych;
 	switch (YYGETCONDITION()) {
-	case yycc1:
-		goto yyc_c1;
-	case yycc2:
-		goto yyc_c2;
+		case yycc1: goto yyc_c1;
+		case yycc2: goto yyc_c2;
 	}
 /* *********************************** */
 yyc_c1:
@@ -23,31 +21,31 @@ yyc_c2:
 	if ((YYLIMIT - YYCURSOR) < 3) YYFILL(3);
 	yych = *YYCURSOR;
 	switch (yych) {
-	case 'd':	goto yy6;
-	default:	goto yy5;
+		case 'd': goto yy4;
+		default: goto yy3;
 	}
-yy5:
+yy3:
 	YYCURSOR = YYMARKER;
-	goto yy7;
-yy6:
+	goto yy5;
+yy4:
 	yych = *(YYMARKER = ++YYCURSOR);
 	switch (yych) {
-	case 'd':	goto yy8;
-	default:	goto yy7;
+		case 'd': goto yy6;
+		default: goto yy5;
 	}
-yy7:
+yy5:
 	{}
-yy8:
+yy6:
 	yych = *++YYCURSOR;
 	switch (yych) {
-	case 'd':	goto yy9;
-	default:	goto yy5;
+		case 'd': goto yy7;
+		default: goto yy3;
 	}
-yy9:
+yy7:
 	++YYCURSOR;
 	{}
 }
 
 bug60_redundant_yymarker.re:4:14: warning: unreachable rule in condition 'c1'  [-Wunreachable-rules]
 bug60_redundant_yymarker.re:5:9: warning: unreachable rule in condition 'c1'  [-Wunreachable-rules]
-bug60_redundant_yymarker.re:10:2: warning: control flow in condition 'c2' is undefined for strings that match '[\x0-\x63\x65-\xFF]', use default rule '*' [-Wundefined-control-flow]
+bug60_redundant_yymarker.re:2:0: warning: control flow in condition 'c2' is undefined for strings that match '[\x0-\x63\x65-\xFF]', use default rule '*' [-Wundefined-control-flow]

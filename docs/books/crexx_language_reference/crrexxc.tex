@@ -1,4 +1,4 @@
-\chapter{Built-in functions for the .rexx class}
+\chapter{Built-in methods of the .rexx class}
 
 This section describes the set of methods defined for the \rexx{} class,
 a container for a \crexx{} string which enables object-oriented
@@ -6,21 +6,18 @@ manipulation. These methods implement the traditional \emph{built-in
 functions}, and include character manipulation, word manipulation,
 conversion, and arithmetic functions.
  
-Implementations will also provide other functions for the \keyword{R\textsc{exx}}
-class (for example, to implement the \crexx{} operators or to provide
-constructors with primitive arguments), but these are not part of the
-\crexx{} language.
+Use of these methods needs import of the \code{rexx} package:
 
-Use of these functions needs import of the rxfnsb pachage:
-\code{import rexx}.
+\code{import rexx}
+
 \rexx{} strings must be constructed with a \code{var =
   .rexx('astring')} factory constructor.
 
-\textbf{General notes on the built-in functions:}
+\textbf{General notes on the built-in methods:}
 \begin{enumerate}
-\item All functions work on a \crexx{} string of type \keyword{R\textsc{exx}}; this
+\item All methods work on a \crexx{} string of type \keyword{R\textsc{exx}}; this
 is referred to by the name \emph{string} in the descriptions of the
-functions.  For example, if the \textbf{word} method were invoked using
+methods.  For example, if the \textbf{word} method were invoked using
 the term:
 \begin{lstlisting}
 v=.rexx("Three word phrase"); v.word(2)
@@ -29,7 +26,7 @@ then in the description of \textbf{word} the name
 \emph{string} refers to the string "\textbf{Three word
 phrase}", and the name \emph{n} refers to the string
 "\textbf{2}".
-\item All method arguments are of type \keyword{R\textsc{exx}} and all functions
+\item All method arguments are of type \keyword{R\textsc{exx}} and all methods
 return a string of type \keyword{R\textsc{exx}}; if a number is returned, it
 will be formatted as though 0 had been added with no rounding.
 \item 
@@ -118,7 +115,7 @@ y=.rexx('- 1234567.7654321'); y.abs == 1234567.7654321
 \index{Method, built-in,B2D}
 \index{Conversion,binary to decimal}
 \index{Binary,conversion to decimal}
-\marginnote{\color{gray}3.02} Binary to decimal.
+Binary to decimal.
 Converts \emph{string}, a string of at least one binary
 (\textbf{0} and/or \textbf{1}) digits, to an equivalent string of
 decimal characters (a number), without rounding.
@@ -235,12 +232,14 @@ v=.rexx('elephant'); v.changestr('','!!')    == 'elephant'
 %%  The  \textbf{countstr} method (see page \pageref{refcoustr})  can be used to
 %% count the number of changes that could be made to a string in this
 %% fashion.
-%% \section{charin(name, [start{]}, [length{]})} returns a string read from the stream named by the first
-%% argument, see page \pageref{refrexxstream} for Class \keyword{RexxStream} information.
-%% \section{charout(name,[char{]},[start{]})} returns the count of characters remaining after attempting to
-%% write the second argument to the stream named by the first argument,
-%% see page \pageref{refrexxstream} for Class \keyword{RexxStream}
-%% information.
+%% \section{charin(name, [count])} returns up to \emph{count} UTF text characters
+%% from the stream named by the first argument. The default count is 1. This is a
+%% Level B \texttt{.string} text function, not a binary byte input function.
+
+%% \section{charout(name,[string])} returns 0 after writing the supplied UTF text
+%% string to the stream named by the first argument. No newline is appended. When
+%% the second argument is omitted, the named stream is closed. This is a Level B
+%% \texttt{.string} text function, not a binary byte output function.
 %% \section{chars(name)} indicates whether there are characters remaining in the named
 %% stream. Optionally, it returns a count of the characters remaining and
 %% immediately available, see page \pageref{refrexxstream} for Class \keyword{RexxStream} information.
@@ -535,7 +534,7 @@ x=.rexx('Now  time'); x.delword(5)          == 'Now  time'
 \index{Binary,from decimal}
 \index{Binary,from decimal}
 \section{d2b([n{]})}\label{refd2b}
-\marginnote{\color{gray}3.02} Decimal to binary.
+
 Returns a string of binary characters of length as needed or of length
 n, which is the binary representation of the decimal number. The
 returned string will use 0 and 1 characters for binary values. string
@@ -862,12 +861,19 @@ v=.rexx('abcdefgh'); v.length == 8
 w=.rexx(''); w.length         == 0
 \end{lstlisting}
 
-\section{linein(name,string)} reads a line from the stream named by the first argument,
-unless the third argument is zero, see page %% \pageref{refrexxstream}
-for Class \keyword{RexxStream} information.
+\section{linein(name)} reads a UTF text line from the stream named by the first
+argument and returns it without the line terminator. A final line terminator at
+physical end-of-file does not create an extra empty record, although physical
+blank lines are preserved. This is a Level B \texttt{.string} text function,
+not a binary byte input function. The companion \texttt{lines(name)} predicate
+returns \texttt{-1} when the stream cannot be opened, \texttt{0} at end of file,
+and \texttt{1} when a record can be read.
 
-\section{lineout(name,string)} returns '1' or '0', indicating whether the second argument has been successfully written to the stream named by the first argument. A result of '1' means an unsuccessful write, see page %% \pageref{refrexxstream}
-for Class \keyword{RexxStream} information.
+\section{lineout(name,string)} returns 0 after writing the second argument as
+UTF text followed by a newline to the stream named by the first argument. When
+the second argument is omitted, the named stream is closed. This is a Level B
+\texttt{.string} text function, not a binary byte output function. Separate
+binary file BIFs are expected to use \texttt{.binary} values.
 
 \section{lower([n [,length{]}])}\label{reflower}
 \index{LOWER method,}
@@ -1083,18 +1089,17 @@ w=.rexx('0.0'); w.sign     ==  0
 x=.rexx(' -0.307'); x.sign == -1
 \end{lstlisting}
 
-\index{SOUNDEX method,}
-\index{Method, built-in,SOUNDEX}
-\index{Normalizing a string by its sound,SOUNDEX}
-\section{soundex()}\label{refsoundex}
-\marginnote{\color{gray}3.08}
- returns the normalized soundex value of the string. This implementation
-is for the English language.  
+%% \index{SOUNDEX method,}
+%% \index{Method, built-in,SOUNDEX}
+%% \index{Normalizing a string by its sound,SOUNDEX}
+%% \section{soundex()}\label{refsoundex}
+%%  returns the normalized soundex value of the string. This implementation
+%% is for the English language.  
 
-\textbf{Examples:}
-\begin{lstlisting}
-v=.rexx('EULER'); v.soundex()  == 'E460'
-\end{lstlisting}
+%% \textbf{Examples:}
+%% \begin{lstlisting}
+%% v=.rexx('EULER'); v.soundex()  == 'E460'
+%% \end{lstlisting}
 
 \index{SPACE method,}
 \index{Method, built-in,SPACE}
@@ -1119,10 +1124,9 @@ v=.rexx('abc  def  '); v.space(0)     == 'abcdef'
 v=.rexx('abc  def  '); v.space(2,'+') == 'abc++def'
 \end{lstlisting}
 
-\section{stream(name, [operation{]}, [stream\_command{]})}q (Operations)
-  returns a description of the state of, or the result of an operation upon, the stream named by the first argument, %% see page \pageref{refrexxstream}
-  for Class \keyword{RexxStream} information.
-
+%% \section{stream(name, [operation{]}, [stream\_command{]})}q (Operations)
+%%   returns a description of the state of, or the result of an operation upon, the stream named by the first argument, %% see page \pageref{refrexxstream}
+%%   for Class \keyword{RexxStream} information.
   
 \index{STRIP method,}
 \index{Method, built-in,STRIP}
