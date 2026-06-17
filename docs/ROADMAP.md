@@ -22,9 +22,11 @@ roadmap remains the home for broader future direction and research themes.
 
 ## Packaging Roadmap
 
-Beta 2 is in feature freeze. Do not add new installer formats to beta 2 unless
-they are already part of the release close-out path. The beta 2 packaging goal is
-to verify and document the assets that exist, not to expand platform scope.
+Beta 2 keeps the package formats that were already in the release close-out
+path: portable ZIPs, signed Windows ZIPs through the maintainer signing flow,
+macOS `.pkg` installers when Apple signing and notarization are configured, and
+prototype Linux `.deb` packaging through the moving dev snapshot. New installer
+formats belong after beta 2 unless they fix a release-blocking packaging defect.
 
 For beta 3, improve the end-user install experience while keeping portable ZIP
 assets available for CI, testing, and users who do not want a system install:

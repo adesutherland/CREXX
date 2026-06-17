@@ -16,7 +16,7 @@ else()
 endif()
 
 if(NOT CREXX_VERSION_SOURCE MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)(-[0-9A-Za-z.-]+)?(\\+([0-9A-Za-z.-]+))?$")
-    message(FATAL_ERROR "CREXX version must be a semantic version such as 1.0.0, 1.0.0-beta.1, or 1.0.0-beta.1+build.7")
+    message(FATAL_ERROR "CREXX version must be a semantic version such as 1.0.0, 1.0.0-beta.2, or 1.0.0-beta.2+build.7")
 endif()
 set(CREXX_VERSION_MAJOR "${CMAKE_MATCH_1}")
 set(CREXX_VERSION_MINOR "${CMAKE_MATCH_2}")

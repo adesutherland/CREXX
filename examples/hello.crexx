@@ -1,4 +1,4 @@
-/* Minimal CREXX Release 1 beta 1 example. */
+/* Minimal CREXX Release 1 beta 2 example. */
 options levelb
 import rxfnsb
 mystem =.stem()

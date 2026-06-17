@@ -1,13 +1,14 @@
 # CREXX Release 1 Plan
 
-Status: draft plan for maintainer review and GitHub discussion.
-Date: 2026-06-12.
+Status: draft plan for maintainer review and GitHub discussion, updated after
+beta 2 release-note alignment.
+Date: 2026-06-17.
 Target release: end of August 2026.
 
-This plan describes the intended path from `v1.0.0-beta.2` to Release 1. It is
-not itself a release contract. After the GitHub discussion is approved, create
-the issue candidates below as GitHub issues with owners, labels, acceptance
-criteria, and fallback decisions.
+This plan describes the intended path from the `v1.0.0-beta.2` release baseline
+to Release 1. It is not itself a release contract. After the GitHub discussion
+is approved, create the issue candidates below as GitHub issues with owners,
+labels, acceptance criteria, and fallback decisions.
 
 The release date is fixed. Scope is managed by tiering.
 
@@ -26,7 +27,7 @@ complete by 2026-08-14 unless it is fixing a must-ship release defect.
 
 | Date | Gate | Exit condition |
 | --- | --- | --- |
-| 2026-06-15 | Beta 2 close | Beta 2 release note is real, tag/package status is clear, beta 1 to beta 2 delta is documented, and post-tag `develop` is labelled beta 3 WIP. |
+| 2026-06-15 | Beta 2 close | Beta 2 release note is finalized, tag/package status is explicit, beta 1 to beta 2 delta is documented, and post-tag `develop` is labelled beta 3 WIP. |
 | 2026-07-03 | Design lock | Level B/G split, plugin policy, UTF ownership, Level C MVP, GPU/threading scope, and issue owners/labels are approved. |
 | 2026-07-31 | Foundation go/no-go | High-risk VM/compiler foundations either landed with tests or moved out; large constants, perfect-hash select, and Level C execution proof have explicit go/no-go decisions. |
 | 2026-08-14 | Feature complete | User-facing surface is frozen; demos and tutorials are ready for manual testing; known limitations are drafted. |
@@ -38,9 +39,10 @@ Must-ship items are part of the Release 1 contract or release process.
 
 1. Beta 2 closure
 
-   Finish `v1.0.0-beta.2` release notes by 2026-06-15, including beta 1 to beta
-   2 deltas. Confirm whether beta 2 is tagged and align README and docs. After
-   the beta 2 tag, describe `develop` as beta 3 WIP.
+   Keep `v1.0.0-beta.2` release notes aligned with the beta 1 to beta 2 delta,
+   including the final ASan, build, packaging, and regression fixes. Confirm
+   whether beta 2 is tagged before making shipped-release claims. After the beta
+   2 tag, describe `develop` as beta 3 WIP.
 
 2. Release 1 governance
 
@@ -102,10 +104,10 @@ Must-ship items are part of the Release 1 contract or release process.
 
 11. Packaging status discipline
 
-    During the beta 2 feature freeze, package only the formats already in the
-    release close-out path and document their status clearly. Treat new
-    installer formats, especially the Windows click-through installer, as beta 3
-    work unless they are needed to fix a release-blocking packaging defect.
+    For the beta 2 release line, package only the formats already in the release
+    close-out path and document their status clearly. Treat new installer
+    formats, especially the Windows click-through installer, as beta 3 work
+    unless they are needed to fix a release-blocking packaging defect.
 
 ## Should Ship
 
@@ -283,9 +285,10 @@ Technical dependencies:
 
 Documentation dependencies:
 
-- Beta 2 release notes need real delta content and final package status.
-- README, `docs/releases`, and language reference need to agree on beta 2
-  status.
+- Beta 2 release notes carry the beta 1 to beta 2 delta; keep final package
+  status in sync with the actual tag assets.
+- README, `docs/releases`, security policy, examples, and language reference
+  need to agree on beta 2 status.
 - `docs/ai-context/CREXX_LIBS.md` should describe `rxfnsc` as planned or
   reserved until a real Level C library directory exists.
 

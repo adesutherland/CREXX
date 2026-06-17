@@ -8,7 +8,8 @@ according to impact and release risk.
 
 | Version | Security status |
 | --- | --- |
-| `1.0.0-beta.1` | Supported for beta security triage and fixes |
+| `1.0.0-beta.2` | Supported for beta security triage and fixes |
+| `1.0.0-beta.1` | Superseded by beta 2; use beta 2 unless reproducing a beta 1-only issue |
 | Test tags and older development snapshots | Not supported |
 
 Until the first stable Release 1, security fixes may be delivered on `develop`
@@ -30,9 +31,12 @@ Important beta security assumptions:
   permissions of the current operating-system user.
 - Compiler exits and ADDRESS environments are extension points. Treat them as
   trusted code unless a future release documents a stronger boundary.
-- macOS beta 1 release packages are Developer ID signed and notarized.
-- Windows beta 1 release packages are not yet code-signed, so Windows download
-  warnings and SmartScreen prompts are expected.
+- macOS beta 2 release packages use Developer ID signing and notarization when
+  the release workflow has the required Apple secrets. The stapled `.pkg`
+  installer is the preferred macOS user package when present.
+- Windows beta 2 packages should use the signed ZIP after the maintainer signing
+  flow has run. Unsigned Windows ZIPs may exist as intermediate CI assets before
+  signing is completed.
 
 The project welcomes hardening work, especially around malformed source,
 malformed bytecode, plugin loading, native API boundaries, file handling, and
