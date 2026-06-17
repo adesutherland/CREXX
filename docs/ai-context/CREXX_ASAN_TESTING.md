@@ -76,6 +76,12 @@ source_import_.*
 interface_.*import.*
 ```
 
+The focused phase intentionally builds `rxdas`, `crexx`,
+`linked_opt_runtime_artifacts`, and the static plugin archives used by native
+driver smoke coverage. Missing those build prerequisites can produce false
+focused failures from absent disassembly tools or native link inputs rather
+than ASan/LSan regressions.
+
 ## Full Workflow
 
 For a proper full ASan/LSan check:
@@ -208,6 +214,24 @@ Validation on 2026-06-16:
   syntax-highlighting tests and 4 RXAS parser tests.
 * Full CREXX ASan/LSan CTest passed: 1295/1295, log directory
   `cmake-build-debugasan/asan-logs/20260616-110335-full`.
+
+## 2026-06-17 Baseline Notes
+
+On the Linux ARM64 VM, both Debug ASan/LSan and ReleaseASAN completed full
+build plus full CTest with leak detection enabled:
+
+* Focused Debug ASan/LSan passed: 27/27, log directory
+  `cmake-build-debugasan/asan-logs/20260617-144357-focused-lsan`.
+* Full Debug ASan/LSan passed: 1295/1295, log directory
+  `cmake-build-debugasan/asan-logs/20260617-144430-full`.
+* Full ReleaseASAN passed: 1295/1295, log directory
+  `cmake-build-releaseasan/asan-logs/20260617-144706-full`.
+
+The ReleaseASAN build still spends a long time in the two concurrent
+`rxvmintp.c` compiles for `rxvm_core_objects` and `rxbvm_core_objects`. The
+generated commands include `-O3 -O1`; GCC uses the later `-O1`, so this is the
+intended ASan-specific override for that translation unit, not a request to run
+both optimization levels.
 
 ## 2026-06-16 Baseline Notes
 

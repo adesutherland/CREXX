@@ -336,7 +336,8 @@ fi
 timestamp=$(date +%Y%m%d-%H%M%S)
 log_dir="$log_root/$timestamp-$phase"
 mkdir -p "$log_dir"
-ln -sfn "$log_dir" "$log_root/latest"
+log_dir_abs=$(cd "$log_dir" && pwd)
+ln -sfn "$log_dir_abs" "$log_root/latest"
 
 cat > "$log_dir/run.env" <<EOF
 phase=$phase
@@ -379,7 +380,8 @@ case "$phase" in
         run_ctest ctest
         ;;
     focused-lsan)
-        run_cmake_build focused-build --target rxc crexx linked_opt_runtime_artifacts
+        run_cmake_build focused-build --target rxc rxdas crexx linked_opt_runtime_artifacts \
+            _system_static _treemap_static _llist_static _keyaccess_static _id_static
         run_ctest focused-lsan
         ;;
     rerun-failed)
