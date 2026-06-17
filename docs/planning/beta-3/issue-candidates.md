@@ -34,6 +34,35 @@ Create these immediately with the beta 3 milestone:
 Create the remaining foundation implementation issues after their design-lock
 decisions are approved or narrowed.
 
+## Created First-Wave Issues
+
+Created on 2026-06-17 under GitHub milestone
+[`1.0.0-beta.3`](https://github.com/adesutherland/CREXX/milestone/1).
+
+| Candidate id | GitHub issue | Owner | Role |
+| --- | --- | --- | --- |
+| B3-DL-00 | [#606](https://github.com/adesutherland/CREXX/issues/606) | Adrian | Parent tracker |
+| B3-FT-00 | [#607](https://github.com/adesutherland/CREXX/issues/607) | Adrian | Parent tracker |
+| B3-PKG-00 | [#608](https://github.com/adesutherland/CREXX/issues/608) | Rene | Parent tracker |
+| B3-DOC-00 | [#609](https://github.com/adesutherland/CREXX/issues/609) | Rene | Parent tracker |
+| B3-DL-01 | [#610](https://github.com/adesutherland/CREXX/issues/610) | Adrian | Design lock |
+| B3-DL-02 | [#611](https://github.com/adesutherland/CREXX/issues/611) | Adrian | Design lock |
+| B3-DL-03 | [#612](https://github.com/adesutherland/CREXX/issues/612) | Adrian | Design lock |
+| B3-DL-04 | [#613](https://github.com/adesutherland/CREXX/issues/613) | Adrian | Design lock |
+| B3-DL-05 | [#614](https://github.com/adesutherland/CREXX/issues/614) | Adrian | Design lock |
+| B3-DL-06 | [#615](https://github.com/adesutherland/CREXX/issues/615) | Rene | Design lock |
+| B3-DL-07 | [#616](https://github.com/adesutherland/CREXX/issues/616) | Adrian | Design lock |
+| B3-DL-08 | [#617](https://github.com/adesutherland/CREXX/issues/617) | Peter | Design lock |
+| B3-DL-09 | [#618](https://github.com/adesutherland/CREXX/issues/618) | Adrian | Design lock |
+| B3-DL-10 | [#619](https://github.com/adesutherland/CREXX/issues/619) | Adrian | Design lock |
+| B3-DL-11 | [#620](https://github.com/adesutherland/CREXX/issues/620) | Adrian | Design lock, high risk |
+| B3-DL-12 | [#621](https://github.com/adesutherland/CREXX/issues/621) | Adrian | Design lock |
+| B3-F-06 | [#622](https://github.com/adesutherland/CREXX/issues/622) | Peter | Foundation starter |
+| B3-F-13 | [#623](https://github.com/adesutherland/CREXX/issues/623) | Rene | Foundation starter |
+| B3-F-14 | [#624](https://github.com/adesutherland/CREXX/issues/624) | Rene | Foundation starter |
+| B3-F-15 | [#625](https://github.com/adesutherland/CREXX/issues/625) | Rene | Foundation starter |
+| B3-F-16 | [#626](https://github.com/adesutherland/CREXX/issues/626) | Adrian | Foundation starter, high risk |
+
 ## Team Guidance To Capture
 
 These principles should be turned into issue text, acceptance criteria, or
