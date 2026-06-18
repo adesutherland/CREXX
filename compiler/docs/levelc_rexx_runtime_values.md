@@ -51,12 +51,20 @@ attribute slots. `register.1` and above remain one-based child attribute slots.
 Attributes mapped to `register.0`, and attributes sharing the same physical
 `register.N` slot with another typed view, are complex attributes. Compiler
 emission must treat a complex attribute read as a copy boundary: link the
-physical storage into a scratch register, copy the requested typed view into an
-ordinary local register, then unlink the scratch before expression lowering,
-type promotion, or operator code can manipulate the value. Writes and
-materializers copy the updated representation back through the linked physical
-slot. This prevents compiler-generated arithmetic, casts, and helper calls from
-accidentally corrupting another view of the same underlying VM value.
+physical storage into a scratch register, copy the requested typed view and the
+register status flags into an ordinary local register, then unlink the scratch
+before expression lowering, type promotion, or operator code can manipulate the
+value. Writes and materializers copy the updated representation and status
+flags back through the linked physical slot. This prevents compiler-generated
+arithmetic, casts, and helper calls from accidentally corrupting another view
+of the same underlying VM value.
+
+The generic compiler rule is intentionally conservative. Direct `register.N`
+views are a system-programmer construct for runtime/library implementation, not
+general application syntax and not a Level G feature. Runtime classes such as
+`RexxValue` may still hand-optimize reviewed hot methods with inline assembler
+when that avoids redundant copies, but those optimizations must preserve the
+same link/copy/unlink safety boundary for naive source-level use.
 
 RXAS already has a queue-based keyhole optimiser in `assembler/rxas_opt.c`.
 That is the right hook for later cleanup of redundant special-attribute access,
@@ -79,6 +87,12 @@ representations are known current:
 
 VM-private bits remain VM-owned. Library code may read VM-private bits through
 normal flag instructions, but must not depend on writing them.
+
+Compiler call-ABI flags and runtime value-cache flags share the same status
+word. Call setup must therefore update only the compiler flag band, using the
+requested value AND the compiler-band mask, and leave the library/runtime band
+intact. The `setortp` instruction remains the explicit OR operation for code
+that deliberately accumulates flags.
 
 Binary and text validity are deliberately separate claims. A value may have a
 current binary byte representation without yet having a current `.string`

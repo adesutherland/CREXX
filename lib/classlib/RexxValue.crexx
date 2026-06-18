@@ -1,0 +1,325 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxvalue expose RexxValue
+
+/**
+ * Classic Rexx scalar value proof.
+ *
+ * All typed views below are mapped to register.0: the containing VM value
+ * itself. The cache flags live in that same value's status word.
+ */
+RexxValue: class
+  string_value = .string with register.0.string
+  int_value = .int with register.0.int
+  float_value = .float with register.0.float
+  decimal_value = .decimal with register.0.decimal
+  binary_value = .binary with register.0.binary
+
+  *: factory
+    arg value = .string
+    temp = .string
+    temp = value
+    assembler settp temp,2162688       -- string current | valid text
+    string_value = temp
+    return
+
+  fromInt: factory
+    arg value = .int
+    temp = 0
+    temp = value
+    assembler settp temp,131072        -- int current
+    int_value = temp
+    return
+
+  fromFloat: factory
+    arg value = .float
+    temp = 0 as .float
+    temp = value
+    assembler settp temp,262144        -- float current
+    float_value = temp
+    return
+
+  fromDecimal: factory
+    arg value = .decimal
+    temp = "0" as .decimal
+    temp = value
+    assembler settp temp,524288        -- decimal current
+    decimal_value = temp
+    return
+
+  fromBinary: factory
+    arg value = .binary
+    temp = .binary
+    temp = value
+    assembler settp temp,1048576       -- binary current
+    binary_value = temp
+    return
+
+  fromBinaryText: factory
+    arg value = .binary
+    bytes = .binary
+    text = .string
+    bytes = value
+    text = bytes as .string            -- validates the bytes as Level B text
+    assembler settp bytes,3211264      -- string | binary | valid text
+    binary_value = bytes
+    assembler settp text,3211264
+    string_value = text
+    return
+
+  setString: method = .void
+    arg value = .string
+    temp = .string
+    temp = value
+    assembler settp temp,2162688
+    string_value = temp
+    return
+
+  setInt: method = .void
+    arg value = .int
+    temp = 0
+    temp = value
+    assembler settp temp,131072
+    int_value = temp
+    return
+
+  setFloat: method = .void
+    arg value = .float
+    temp = 0 as .float
+    temp = value
+    assembler settp temp,262144
+    float_value = temp
+    return
+
+  setDecimal: method = .void
+    arg value = .decimal
+    temp = "0" as .decimal
+    temp = value
+    assembler settp temp,524288
+    decimal_value = temp
+    return
+
+  setBinary: method = .void
+    arg value = .binary
+    temp = .binary
+    temp = value
+    assembler settp temp,1048576
+    binary_value = temp
+    return
+
+  setBinaryText: method = .void
+    arg value = .binary
+    bytes = .binary
+    text = .string
+    bytes = value
+    text = bytes as .string
+    assembler settp bytes,3211264
+    binary_value = bytes
+    assembler settp text,3211264
+    string_value = text
+    return
+
+  cacheFlags: method = .int
+    flags = 0
+    assembler getandtp flags,string_value,4128768
+    return flags
+
+  hasString: method = .boolean
+    flags = 0
+    assembler getandtp flags,string_value,65536
+    if flags <> 0 then return 1
+    return 0
+
+  hasInt: method = .boolean
+    flags = 0
+    assembler getandtp flags,string_value,131072
+    if flags <> 0 then return 1
+    return 0
+
+  hasFloat: method = .boolean
+    flags = 0
+    assembler getandtp flags,string_value,262144
+    if flags <> 0 then return 1
+    return 0
+
+  hasDecimal: method = .boolean
+    flags = 0
+    assembler getandtp flags,string_value,524288
+    if flags <> 0 then return 1
+    return 0
+
+  hasBinary: method = .boolean
+    flags = 0
+    assembler getandtp flags,string_value,1048576
+    if flags <> 0 then return 1
+    return 0
+
+  hasText: method = .boolean
+    flags = 0
+    assembler getandtp flags,string_value,2097152
+    if flags <> 0 then return 1
+    return 0
+
+  asString: method = .string
+    temp = .string
+    if hasString() then return string_value
+    if hasDecimal() then do
+      temp = decimal_value as .string
+      assembler acopy temp,decimal_value
+      assembler setortp temp,2162688
+      string_value = temp
+      return temp
+    end
+    if hasInt() then do
+      temp = int_value as .string
+      assembler acopy temp,int_value
+      assembler setortp temp,2162688
+      string_value = temp
+      return temp
+    end
+    if hasFloat() then do
+      temp = float_value as .string
+      assembler acopy temp,float_value
+      assembler setortp temp,2162688
+      string_value = temp
+      return temp
+    end
+    if hasBinary() then do
+      temp = binary_value as .string
+      assembler acopy temp,binary_value
+      assembler setortp temp,2162688
+      string_value = temp
+      return temp
+    end
+    return ""
+
+  asInt: method = .int
+    temp = 0
+    if hasInt() then return int_value
+    temp = asString() as .int
+    assembler acopy temp,string_value
+    assembler setortp temp,131072
+    int_value = temp
+    return temp
+
+  asFloat: method = .float
+    temp = 0 as .float
+    if hasFloat() then return float_value
+    temp = asString() as .float
+    assembler acopy temp,string_value
+    assembler setortp temp,262144
+    float_value = temp
+    return temp
+
+  asDecimal: method = .decimal
+    temp = "0" as .decimal
+    if hasDecimal() then return decimal_value
+    temp = asString() as .decimal
+    assembler acopy temp,string_value
+    assembler setortp temp,524288
+    decimal_value = temp
+    return temp
+
+  asBinary: method = .binary
+    temp = .binary
+    if hasBinary() then return binary_value
+    temp = asString() as .binary
+    assembler acopy temp,string_value
+    assembler setortp temp,1048576
+    binary_value = temp
+    return temp
+
+  validateText: method = .boolean
+    if hasText() then return 1
+    if hasBinary() then do
+      text = .string
+      bytes = .binary
+      text = binary_value as .string
+      assembler acopy text,binary_value
+      assembler setortp text,2162688
+      string_value = text
+      bytes = binary_value
+      assembler acopy bytes,string_value
+      assembler setortp bytes,2097152
+      binary_value = bytes
+      return 1
+    end
+    text = asString()
+    return 1
+
+  binaryLength: method = .int
+    len = 0
+    bytes = .binary
+    bytes = asBinary()
+    assembler blen len,bytes
+    return len
+
+  copyFrom: method = .void
+    arg other = .RexxValue
+    if other.hasBinary() & \other.hasText() then do
+      call setBinary(other.asBinary())
+      return
+    end
+    call setString(other.asString())
+    return
+
+  concat: method = .RexxValue
+    arg other = .RexxValue
+    return .RexxValue(asString() || other.asString())
+
+  add: method = .RexxValue
+    arg other = .RexxValue
+    result = "0" as .decimal
+    result = asDecimal() + other.asDecimal()
+    return .RexxValue.fromDecimal(result)
+
+  subtract: method = .RexxValue
+    arg other = .RexxValue
+    result = "0" as .decimal
+    result = asDecimal() - other.asDecimal()
+    return .RexxValue.fromDecimal(result)
+
+  multiply: method = .RexxValue
+    arg other = .RexxValue
+    result = "0" as .decimal
+    result = asDecimal() * other.asDecimal()
+    return .RexxValue.fromDecimal(result)
+
+  divide: method = .RexxValue
+    arg other = .RexxValue
+    result = "0" as .decimal
+    result = asDecimal() / other.asDecimal()
+    return .RexxValue.fromDecimal(result)
+
+  equals: method = .boolean
+    arg other = .RexxValue
+    if asString() = other.asString() then return 1
+    return 0
+
+  compare: method = .int
+    arg other = .RexxValue
+    left = asString()
+    right = other.asString()
+    if left = right then return 0
+    if left < right then return -1
+    return 1

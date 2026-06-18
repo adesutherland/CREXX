@@ -284,9 +284,13 @@ compiler-emitted RXAS and VM code agree:
 The first VM-private allocations are reserved for UTF-8 validity,
 codepoint-count validity, and known Unicode normalization forms. `SETTP`,
 `SETORTP`, and `LOADSETTP` mask external writes; they cannot set or clear the
-VM-private band except through VM-owned content setters. `GETTP` and
-`GETANDTP` return readable flags, while unmasked `BRTPT` only tests public
-flag bands so private cache bits do not change legacy branch behavior.
+VM-private band except through VM-owned content setters. `SETTP` replaces only
+the non-zero public flag bands present in the requested value, with
+`SETTP reg,0` retaining the explicit "clear all public flags" behavior. This
+keeps compiler call-ABI flag writes from clearing library/runtime cache flags
+on one-register values. `GETTP` and `GETANDTP` return readable flags, while
+unmasked `BRTPT` only tests public flag bands so private cache bits do not
+change legacy branch behavior.
 Status flag instructions still take normal `rxinteger` operands in RXAS/RXBIN;
 the VM applies only the low 32 bits when reading a flag mask.
 

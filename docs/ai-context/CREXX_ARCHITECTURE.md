@@ -30,7 +30,7 @@ The pipeline of transforming REXX source code into executable bytecode is struct
    - **Implicit Main Argument Bridge**: when the compiler synthesizes the file-level `main()` wrapper, that procedure is marked `is_implicit_main`. Later typing and emission use that marker to interpret classic `arg()` / `arg[]` / `arg[n]` access against the hidden command-line `.string[]` that the VM already passes to `main`. Ordinary procedures still use normal vararg semantics, and explicit zero-argument `main()` does not gain accidental source-level visibility of the hidden VM argv payload.
    - **Exit Fragment Scope Lifecycle**: replacement fragments from exits are parsed and structurally normalized before grafting, but any new lexical block scopes created by structured replacements are finalized later during symbol structuring/build. Nested `DO` / `IF` / `INSTRUCTIONS` emitted by exits are therefore a supported shape, and debug validation is staged after that scope rebuild so the validator sees the stabilized tree rather than the transient pre-scope fragment form.
    - **Expose Mechanics**: Implements automatic scope resolution that allows `namespace ... expose` global variables to implicitly bind into local `PROCEDURE` scopes. Procedure-level `name: procedure [= .type] expose var ...` remains the local form for selected private module state shared by specific procedures.
-   - **Automatic Register Allocation**: Within `rxcp_val_sym.c` (Step 3 - Pass 3), the compiler walks the AST (`build_symbols_walker`) to identify explicit `NODE_REGISTER` allocations via the `with register.N[.view]` clause on class attributes. `register.0` is the source-level convention for a typed view of the containing value itself; `register.1` and above are one-based child attribute slots. `register.0` and duplicate typed views of the same physical `register.N` slot are complex attributes: emitted reads copy the linked physical view into a local register before expression manipulation, and writes copy back through the physical slot. The compiler automatically maps any remaining unmapped attributes of a class to unused VM registers (`r1`, `r2`, etc.) by synthesizing implicit `NODE_REGISTER` AST nodes. For normal classes, prefer this implicit allocation and keep callers on factories/methods; explicit `with register...` mappings should be reserved for genuine physical interop where a fixed layout is required.
+   - **Automatic Register Allocation**: Within `rxcp_val_sym.c` (Step 3 - Pass 3), the compiler walks the AST (`build_symbols_walker`) to identify explicit `NODE_REGISTER` allocations via the `with register.N[.view]` clause on class attributes. `register.0` is the source-level convention for a typed view of the containing value itself; `register.1` and above are one-based child attribute slots. `register.0` and duplicate typed views of the same physical `register.N` slot are complex attributes: emitted reads copy the linked physical view and register status flags into a local register before expression manipulation, and writes copy both back through the physical slot. The compiler automatically maps any remaining unmapped attributes of a class to unused VM registers (`r1`, `r2`, etc.) by synthesizing implicit `NODE_REGISTER` AST nodes. For normal classes, prefer this implicit allocation and keep callers on factories/methods; explicit `with register...` mappings should be reserved for genuine physical interop where a fixed layout is required.
 
 4. **Emitter (IR -> Assembly)**
    - AST walkers (e.g., `rxcp_ast_walk.c`, `rxcp_emit_*.c`) traverse the tree.
@@ -222,10 +222,14 @@ The VM register/value status word is a `uint32_t` field partitioned in
 - `0x80000000`: reserved to avoid signed integer ambiguity.
 
 `SETTP`, `SETORTP`, and `LOADSETTP` mask external writes so VM-private bits are
-preserved or cleared only by VM internals. `GETTP`, `GETANDTP`, and explicit
-`BRTPANDT` masks may observe readable VM-private bits; unmasked `BRTPT` only
-tests public/external flag bands so VM cache bits do not change old branch
-semantics.
+preserved or cleared only by VM internals. `SETTP` is partition-aware for the
+public bands: a non-zero compiler-band write replaces only compiler flags, a
+non-zero library-band write replaces only library flags, and `SETTP reg,0`
+clears all public flags. This lets compiler call-ABI setup update `REGTP_*`
+without destroying runtime/library cache flags stored on the same value.
+`GETTP`, `GETANDTP`, and explicit `BRTPANDT` masks may observe readable
+VM-private bits; unmasked `BRTPT` only tests public/external flag bands so VM
+cache bits do not change old branch semantics.
 
 RXAS/RXBIN integer operands remain `rxinteger`; status instructions cast masks
 to the 32-bit flag word before applying the partition.

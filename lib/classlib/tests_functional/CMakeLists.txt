@@ -18,6 +18,7 @@ set(REXXBINS
   testStringStack
   testObjectCollections
   testStringObjectMaps
+  testRexxValue
   ts_StringTreeMap
   testQfind
   testTokenise
