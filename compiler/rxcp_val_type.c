@@ -998,8 +998,20 @@ walker_result set_node_types_walker(walker_direction direction,
             case OP_COMPARE_S_LTE:
             case OP_ARG_EXISTS:
             case OP_ARG_IX_EXISTS:
+            case OP_FLAG_HAS:
                 if (node->value_type == TP_UNKNOWN) {
                     /* context->changed_flags |= FLAG_VAL_TYPE; */ set_node_type(node, TP_BOOLEAN);
+                }
+                break;
+
+            case OP_BIT_AND:
+            case OP_BIT_OR:
+            case OP_BIT_XOR:
+            case OP_BIT_NOT:
+            case OP_BIT_SHL:
+            case OP_BIT_SHR:
+                if (node->value_type == TP_UNKNOWN) {
+                    set_node_type(node, TP_INTEGER);
                 }
                 break;
 
@@ -1757,6 +1769,20 @@ walker_result type_safety_walker(walker_direction direction,
             case OP_XOR:
                 set_node_target_type(context, child1, TP_BOOLEAN);
                 set_node_target_type(context, child2, TP_BOOLEAN);
+                break;
+
+            case OP_BIT_AND:
+            case OP_BIT_OR:
+            case OP_BIT_XOR:
+            case OP_BIT_SHL:
+            case OP_BIT_SHR:
+            case OP_FLAG_HAS:
+                set_node_target_type(context, child1, TP_INTEGER);
+                set_node_target_type(context, child2, TP_INTEGER);
+                break;
+
+            case OP_BIT_NOT:
+                set_node_target_type(context, child1, TP_INTEGER);
                 break;
 
             case OP_COMPARE_EQUAL:

@@ -465,6 +465,10 @@ walker_result register_walker(walker_direction direction,
             case OP_COMPARE_S_NEQ:
             case OP_ADD:
             case OP_MULT:
+            case OP_BIT_AND:
+            case OP_BIT_OR:
+            case OP_BIT_XOR:
+            case OP_FLAG_HAS:
                 if (is_constant(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
                 else if (is_constant(child1)) {
                     /* We need to swap the two children round because the last one needs
@@ -501,6 +505,15 @@ walker_result register_walker(walker_direction direction,
                     if (is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
                     else if (is_constant(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
                 }
+                break;
+
+            case OP_BIT_SHL:
+            case OP_BIT_SHR:
+                if (is_constant(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
+                break;
+
+            case OP_BIT_NOT:
+                if (is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
                 break;
 
             case OP_AND:
@@ -569,6 +582,12 @@ walker_result register_walker(walker_direction direction,
             case OP_XOR:
             case OP_ADD:
             case OP_MULT:
+            case OP_BIT_AND:
+            case OP_BIT_OR:
+            case OP_BIT_XOR:
+            case OP_BIT_SHL:
+            case OP_BIT_SHR:
+            case OP_FLAG_HAS:
 
             /* The order of the operands of these instructions are significant
              * however the instructions do not support both being a constant */
@@ -634,6 +653,7 @@ walker_result register_walker(walker_direction direction,
                 break;
 
             case OP_NOT:
+            case OP_BIT_NOT:
             case OP_NEG:
             case OP_PLUS:
             case OP_REFERENCE:

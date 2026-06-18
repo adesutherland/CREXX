@@ -151,6 +151,42 @@ Table: String Concatenation Operators {#tbl:id}
 
 Table: Logical Operators {#tbl:id}
 
+## Level B named integer operators
+
+Level B also provides a fixed set of system-programmer named operators for
+integer bit and flag work. The syntax is a single contiguous `<id>` token; blanks
+or comments are not allowed inside the angle brackets. Operator names are
+case-insensitive.
+
+These operators are Level B syntax and do not change Classic Rexx / Level C
+operator semantics.
+
+| Operator      | Description                                      |
+|:--------------|:-------------------------------------------------|
+| `<and>`       | Bitwise integer AND                              |
+| `<or>`        | Bitwise integer inclusive OR                     |
+| `<xor>`       | Bitwise integer exclusive OR                     |
+| Prefix `<not>` | Bitwise integer NOT                            |
+| `<idiv>`      | Integer division, independent of numeric mode operator-token rules |
+| `<mod>`       | Remainder, independent of numeric mode operator-token rules |
+| `<rem>`       | Alias for `<mod>`                                |
+| `<shl>`       | Integer shift left                               |
+| `<shr>`       | Integer shift right                              |
+| `<has>`       | Test whether any masked bit is present           |
+| `<set>`       | Set masked bits, equivalent to `<or>`            |
+| `<clear>`     | Clear masked bits, equivalent to `<and> <not>`   |
+
+Examples:
+
+```rexx
+flags = flags <set> RV_FLAG_INT
+if flags <has> RV_FLAG_TEXT then say "text"
+flags = flags <clear> RV_FLAG_BINARY
+mask = 1 <shl> bit
+```
+
+Table: Level B Named Integer Operators {#tbl:id}
+
 ## Term Operators
 
 | Operator    | Description            |
@@ -195,14 +231,18 @@ The order of priority of the operators (from highest to lowest). Note that the `
 | Priority  | Operators                      | Description                         | Notes  |
 |-----------|--------------------------------|-------------------------------------|--------|
 | 1         | `()` `[]` `.`                  | Term operators (grouping, indexing) |        |
-| 2         | Prefix `+` `-` `¬`             | Unary operators                     | [^1]   |
+| 2         | Prefix `+` `-` `¬` `<not>`     | Unary operators                     | [^1]   |
 | 3         | `**`                           | Exponentiation                      | [^2],[^3] |
-| 4         | `*` `/` `%` `//`               | Multiply and divide                 | [^4]   |
+| 4         | `*` `/` `%` `//` `<idiv>` `<mod>` `<rem>` | Multiply and divide                 | [^4]   |
 | 5         | `+` `-`                        | Add and subtract                    |        |
-| 6         | `||` (space, abuttal)          | Concatenation                       |        |
-| 7         | `=` `>` `<` `==`...            | All comparison operators            |        |
-| 8         | `&`                            | Logical AND                         |        |
-| 9         | `|` `&&`                       | Logical OR and exclusive OR         |        |
+| 6         | `<shl>` `<shr>`                | Level B named integer shifts        |        |
+| 7         | `<and>` `<has>` `<clear>`      | Level B named integer AND/flag-test |        |
+| 8         | `<xor>`                        | Level B named integer XOR           |        |
+| 9         | `<or>` `<set>`                 | Level B named integer OR/flag-set   |        |
+| 10        | `||` (space, abuttal)          | Concatenation                       |        |
+| 11        | `=` `>` `<` `==`...            | All comparison operators            |        |
+| 12        | `&`                            | Logical AND                         |        |
+| 13        | `|` `&&`                       | Logical OR and exclusive OR         |        |
 
 Table: Operator Priorities {#tbl:id}
 

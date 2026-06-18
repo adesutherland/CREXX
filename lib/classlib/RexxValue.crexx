@@ -156,67 +156,67 @@ RexxValue: class
 
   hasString: method = .boolean
     flags = cache_flags
-    if (flags % RV_FLAG_STRING) // 2 <> 0 then return 1
+    if (flags <has> RV_FLAG_STRING) then return 1
     return 0
 
   hasInt: method = .boolean
     flags = cache_flags
-    if (flags % RV_FLAG_INT) // 2 <> 0 then return 1
+    if (flags <has> RV_FLAG_INT) then return 1
     return 0
 
   hasFloat: method = .boolean
     flags = cache_flags
-    if (flags % RV_FLAG_FLOAT) // 2 <> 0 then return 1
+    if (flags <has> RV_FLAG_FLOAT) then return 1
     return 0
 
   hasDecimal: method = .boolean
     flags = cache_flags
-    if (flags % RV_FLAG_DECIMAL) // 2 <> 0 then return 1
+    if (flags <has> RV_FLAG_DECIMAL) then return 1
     return 0
 
   hasBinary: method = .boolean
     flags = cache_flags
-    if (flags % RV_FLAG_BINARY) // 2 <> 0 then return 1
+    if (flags <has> RV_FLAG_BINARY) then return 1
     return 0
 
   hasText: method = .boolean
     flags = cache_flags
-    if (flags % RV_FLAG_TEXT) // 2 <> 0 then return 1
+    if (flags <has> RV_FLAG_TEXT) then return 1
     return 0
 
   asString: method = .string
     temp = .string
     flags = cache_flags
-    if (flags % RV_FLAG_STRING) // 2 <> 0 then return string_value
-    if (flags % RV_FLAG_DECIMAL) // 2 <> 0 then do
+    if (flags <has> RV_FLAG_STRING) then return string_value
+    if (flags <has> RV_FLAG_DECIMAL) then do
       temp = decimal_value as .string
       string_value = temp
-      new_flags = flags + RV_FLAG_STRING
-      if (flags % RV_FLAG_TEXT) // 2 = 0 then new_flags = new_flags + RV_FLAG_TEXT
+      new_flags = flags <set> RV_FLAG_STRING
+      if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
       cache_flags = new_flags
       return temp
     end
-    if (flags % RV_FLAG_INT) // 2 <> 0 then do
+    if (flags <has> RV_FLAG_INT) then do
       temp = int_value as .string
       string_value = temp
-      new_flags = flags + RV_FLAG_STRING
-      if (flags % RV_FLAG_TEXT) // 2 = 0 then new_flags = new_flags + RV_FLAG_TEXT
+      new_flags = flags <set> RV_FLAG_STRING
+      if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
       cache_flags = new_flags
       return temp
     end
-    if (flags % RV_FLAG_FLOAT) // 2 <> 0 then do
+    if (flags <has> RV_FLAG_FLOAT) then do
       temp = float_value as .string
       string_value = temp
-      new_flags = flags + RV_FLAG_STRING
-      if (flags % RV_FLAG_TEXT) // 2 = 0 then new_flags = new_flags + RV_FLAG_TEXT
+      new_flags = flags <set> RV_FLAG_STRING
+      if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
       cache_flags = new_flags
       return temp
     end
-    if (flags % RV_FLAG_BINARY) // 2 <> 0 then do
+    if (flags <has> RV_FLAG_BINARY) then do
       temp = binary_value as .string
       string_value = temp
-      new_flags = flags + RV_FLAG_STRING
-      if (flags % RV_FLAG_TEXT) // 2 = 0 then new_flags = new_flags + RV_FLAG_TEXT
+      new_flags = flags <set> RV_FLAG_STRING
+      if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
       cache_flags = new_flags
       return temp
     end
@@ -225,123 +225,123 @@ RexxValue: class
   asInt: method = .int
     temp = 0
     flags = cache_flags
-    if (flags % RV_FLAG_INT) // 2 <> 0 then return int_value
-    if (flags % RV_FLAG_DECIMAL) // 2 <> 0 then
+    if (flags <has> RV_FLAG_INT) then return int_value
+    if (flags <has> RV_FLAG_DECIMAL) then
       temp = decimal_value as .int
-    else if (flags % RV_FLAG_FLOAT) // 2 <> 0 then
+    else if (flags <has> RV_FLAG_FLOAT) then
       temp = float_value as .int
-    else if (flags % RV_FLAG_STRING) // 2 <> 0 then
+    else if (flags <has> RV_FLAG_STRING) then
       temp = string_value as .int
-    else if (flags % RV_FLAG_BINARY) // 2 <> 0 then do
+    else if (flags <has> RV_FLAG_BINARY) then do
       text = .string
       text = binary_value as .string
       string_value = text
-      new_flags = flags + RV_FLAG_STRING
-      if (flags % RV_FLAG_TEXT) // 2 = 0 then new_flags = new_flags + RV_FLAG_TEXT
+      new_flags = flags <set> RV_FLAG_STRING
+      if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
       cache_flags = new_flags
       temp = text as .int
     end
     else
       temp = string_value as .int
     int_value = temp
-    cache_flags = cache_flags + RV_FLAG_INT
+    cache_flags = cache_flags <set> RV_FLAG_INT
     return temp
 
   asFloat: method = .float
     temp = 0 as .float
     flags = cache_flags
-    if (flags % RV_FLAG_FLOAT) // 2 <> 0 then return float_value
-    if (flags % RV_FLAG_DECIMAL) // 2 <> 0 then
+    if (flags <has> RV_FLAG_FLOAT) then return float_value
+    if (flags <has> RV_FLAG_DECIMAL) then
       temp = decimal_value as .float
-    else if (flags % RV_FLAG_INT) // 2 <> 0 then
+    else if (flags <has> RV_FLAG_INT) then
       temp = int_value as .float
-    else if (flags % RV_FLAG_STRING) // 2 <> 0 then
+    else if (flags <has> RV_FLAG_STRING) then
       temp = string_value as .float
-    else if (flags % RV_FLAG_BINARY) // 2 <> 0 then do
+    else if (flags <has> RV_FLAG_BINARY) then do
       text = .string
       text = binary_value as .string
       string_value = text
-      new_flags = flags + RV_FLAG_STRING
-      if (flags % RV_FLAG_TEXT) // 2 = 0 then new_flags = new_flags + RV_FLAG_TEXT
+      new_flags = flags <set> RV_FLAG_STRING
+      if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
       cache_flags = new_flags
       temp = text as .float
     end
     else
       temp = string_value as .float
     float_value = temp
-    cache_flags = cache_flags + RV_FLAG_FLOAT
+    cache_flags = cache_flags <set> RV_FLAG_FLOAT
     return temp
 
   asDecimal: method = .decimal
     temp = "0" as .decimal
     flags = cache_flags
-    if (flags % RV_FLAG_DECIMAL) // 2 <> 0 then return decimal_value
-    if (flags % RV_FLAG_INT) // 2 <> 0 then
+    if (flags <has> RV_FLAG_DECIMAL) then return decimal_value
+    if (flags <has> RV_FLAG_INT) then
       temp = int_value as .decimal
-    else if (flags % RV_FLAG_FLOAT) // 2 <> 0 then
+    else if (flags <has> RV_FLAG_FLOAT) then
       temp = float_value as .decimal
-    else if (flags % RV_FLAG_STRING) // 2 <> 0 then
+    else if (flags <has> RV_FLAG_STRING) then
       temp = string_value as .decimal
-    else if (flags % RV_FLAG_BINARY) // 2 <> 0 then do
+    else if (flags <has> RV_FLAG_BINARY) then do
       text = .string
       text = binary_value as .string
       string_value = text
-      new_flags = flags + RV_FLAG_STRING
-      if (flags % RV_FLAG_TEXT) // 2 = 0 then new_flags = new_flags + RV_FLAG_TEXT
+      new_flags = flags <set> RV_FLAG_STRING
+      if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
       cache_flags = new_flags
       temp = text as .decimal
     end
     else
       temp = string_value as .decimal
     decimal_value = temp
-    cache_flags = cache_flags + RV_FLAG_DECIMAL
+    cache_flags = cache_flags <set> RV_FLAG_DECIMAL
     return temp
 
   asBinary: method = .binary
     temp = .binary
     flags = cache_flags
-    if (flags % RV_FLAG_BINARY) // 2 <> 0 then return binary_value
-    if (flags % RV_FLAG_STRING) // 2 <> 0 then
+    if (flags <has> RV_FLAG_BINARY) then return binary_value
+    if (flags <has> RV_FLAG_STRING) then
       temp = string_value as .binary
-    else if (flags % RV_FLAG_DECIMAL) // 2 <> 0 then do
+    else if (flags <has> RV_FLAG_DECIMAL) then do
       text = decimal_value as .string
       string_value = text
-      new_flags = flags + RV_FLAG_STRING
-      if (flags % RV_FLAG_TEXT) // 2 = 0 then new_flags = new_flags + RV_FLAG_TEXT
+      new_flags = flags <set> RV_FLAG_STRING
+      if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
       cache_flags = new_flags
       temp = text as .binary
     end
-    else if (flags % RV_FLAG_INT) // 2 <> 0 then do
+    else if (flags <has> RV_FLAG_INT) then do
       text = int_value as .string
       string_value = text
-      new_flags = flags + RV_FLAG_STRING
-      if (flags % RV_FLAG_TEXT) // 2 = 0 then new_flags = new_flags + RV_FLAG_TEXT
+      new_flags = flags <set> RV_FLAG_STRING
+      if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
       cache_flags = new_flags
       temp = text as .binary
     end
-    else if (flags % RV_FLAG_FLOAT) // 2 <> 0 then do
+    else if (flags <has> RV_FLAG_FLOAT) then do
       text = float_value as .string
       string_value = text
-      new_flags = flags + RV_FLAG_STRING
-      if (flags % RV_FLAG_TEXT) // 2 = 0 then new_flags = new_flags + RV_FLAG_TEXT
+      new_flags = flags <set> RV_FLAG_STRING
+      if (flags <has> RV_FLAG_TEXT) = 0 then new_flags = new_flags <set> RV_FLAG_TEXT
       cache_flags = new_flags
       temp = text as .binary
     end
     else
       temp = "" as .binary
     binary_value = temp
-    cache_flags = cache_flags + RV_FLAG_BINARY
+    cache_flags = cache_flags <set> RV_FLAG_BINARY
     return temp
 
   validateText: method = .boolean
     flags = cache_flags
-    if (flags % RV_FLAG_TEXT) // 2 <> 0 then return 1
-    if (flags % RV_FLAG_BINARY) // 2 <> 0 then do
+    if (flags <has> RV_FLAG_TEXT) then return 1
+    if (flags <has> RV_FLAG_BINARY) then do
       text = .string
       text = binary_value as .string
       string_value = text
-      new_flags = flags + RV_FLAG_TEXT
-      if (flags % RV_FLAG_STRING) // 2 = 0 then new_flags = new_flags + RV_FLAG_STRING
+      new_flags = flags <set> RV_FLAG_TEXT
+      if (flags <has> RV_FLAG_STRING) = 0 then new_flags = new_flags <set> RV_FLAG_STRING
       cache_flags = new_flags
       return 1
     end

@@ -673,6 +673,12 @@ static walker_result emit_walker(walker_direction direction,
             case OP_DIV:
             case OP_IDIV:
             case OP_MOD:
+            case OP_BIT_AND:
+            case OP_BIT_OR:
+            case OP_BIT_XOR:
+            case OP_BIT_SHL:
+            case OP_BIT_SHR:
+            case OP_FLAG_HAS:
                 emit_expression(node, payload);
                 break;
 
@@ -894,6 +900,7 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case OP_NOT:
+            case OP_BIT_NOT:
             case OP_NEG:
             case OP_PLUS:
             case OP_REFERENCE:

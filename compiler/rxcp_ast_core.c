@@ -1346,6 +1346,20 @@ const char *ast_ndtp(NodeType type) {
             return "OP_COMPARE_S_GTE";
         case OP_COMPARE_S_LTE:
             return "OP_COMPARE_S_LTE";
+        case OP_BIT_AND:
+            return "OP_BIT_AND";
+        case OP_BIT_OR:
+            return "OP_BIT_OR";
+        case OP_BIT_XOR:
+            return "OP_BIT_XOR";
+        case OP_BIT_NOT:
+            return "OP_BIT_NOT";
+        case OP_BIT_SHL:
+            return "OP_BIT_SHL";
+        case OP_BIT_SHR:
+            return "OP_BIT_SHR";
+        case OP_FLAG_HAS:
+            return "OP_FLAG_HAS";
         case OP_TYPE_IS:
             return "OP_TYPE_IS";
         case OP_TYPE_CAST:

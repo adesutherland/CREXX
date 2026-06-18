@@ -707,7 +707,13 @@ static CB_NodeType map_c_token_to_cb_type(int token_type) {
         case TK_MOD:
         case TK_IDIV:
         case TK_POWER_L:
-        case TK_POWER_R: return LEXER_OPERATOR_ARITHMETIC;
+        case TK_POWER_R:
+        case TK_NAMED_MULT_OPERATOR: return LEXER_OPERATOR_ARITHMETIC;
+        case TK_NAMED_SHIFT_OPERATOR:
+        case TK_NAMED_AND_OPERATOR:
+        case TK_NAMED_XOR_OPERATOR:
+        case TK_NAMED_OR_OPERATOR:
+        case TK_NAMED_OPERATOR: return LEXER_OPERATOR;
         case TK_EQUAL: return LEXER_OPERATOR_ASSIGN;
         case TK_NEQ:
         case TK_GT:

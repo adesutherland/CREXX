@@ -1,0 +1,149 @@
+/*
+ * SOURCE                 : named_operators.crexx
+ * BUILT                  : 2026-06-18 18:55:46
+ */
+
+.globals=0
+
+main() .locals=5
+   .meta "named_operators.main"="b" ".int" main() ""
+   .srcstep 21 21 17 "named_operators.crexx" 3 1 23 "main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 1 1 17 "named_operators.crexx" 4 3 12 "  flags = 0"
+   .meta "named_operators.main.flags"="b" ".int" r1
+   load r1,0
+   .traceevent "L" 4 "R" "I" "r" 1 1 1 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 1 1 0 "flags" ""
+   .srcstep 2 2 17 "named_operators.crexx" 5 3 10 "  bit = 1"
+   .meta "named_operators.main.bit"="b" ".int" r0
+   load r0,1
+   .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "bit" ""
+   .srcstep 3 3 17 "named_operators.crexx" 6 3 25 "  mask = 1 <shl> bit + 1"
+   .meta "named_operators.main.mask"="b" ".int" r2
+   load r3,1
+   .traceevent "L" 4 "R" "I" "r" 3 3 3 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 0 3 3 0 "bit" ""
+   iadd r4,r0,1
+   .traceevent "O" 4 "R" "I" "r" 4 3 3 0 "" ""
+   ishl r2,r3,r4
+   .traceevent "O" 4 "R" "I" "r" 2 3 3 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 3 3 0 "mask" ""
+   .srcstep 4 4 17 "named_operators.crexx" 7 3 27 "  flags = flags <set> mask"
+   .traceevent "V" 6 "R" "I" "r" 1 4 4 0 "flags" ""
+   .traceevent "V" 6 "R" "I" "r" 2 4 4 0 "mask" ""
+   ior r1,r1,r2
+   .traceevent "O" 4 "R" "I" "r" 1 4 4 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 4 4 0 "flags" ""
+   .srcstep 5 5 17 "named_operators.crexx" 8 3 23 "  flags = flags <or> 1"
+   .traceevent "V" 6 "R" "I" "r" 1 5 5 0 "flags" ""
+   ior r1,r1,1
+   .traceevent "O" 4 "R" "I" "r" 1 5 5 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 5 5 0 "flags" ""
+   .srcstep 6 6 17 "named_operators.crexx" 9 3 12 "  say flags"
+   itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 6 6 0 "flags" ""
+   say r1
+   .srcstep 7 7 17 "named_operators.crexx" 10 3 20 "  say flags <has> 4"
+   .traceevent "V" 6 "R" "I" "r" 1 7 7 0 "flags" ""
+   iand r4,r1,4
+   ine r4,r4,0
+   btos r4
+   .traceevent "O" 4 "R" "S" "r" 4 7 7 0 "" ""
+   say r4
+   .srcstep 8 8 17 "named_operators.crexx" 11 3 20 "  say flags <has> 2"
+   .traceevent "V" 6 "R" "I" "r" 1 8 8 0 "flags" ""
+   iand r4,r1,2
+   ine r4,r4,0
+   btos r4
+   .traceevent "O" 4 "R" "S" "r" 4 8 8 0 "" ""
+   say r4
+   .srcstep 9 9 17 "named_operators.crexx" 12 3 26 "  flags = flags <clear> 1"
+   .traceevent "V" 6 "R" "I" "r" 1 9 9 0 "flags" ""
+   inot r4,1
+   .traceevent "P" 4 "R" "I" "r" 4 9 9 0 "" ""
+   iand r1,r1,r4
+   .traceevent "O" 4 "R" "I" "r" 1 9 9 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 9 9 0 "flags" ""
+   .srcstep 10 10 17 "named_operators.crexx" 13 3 12 "  say flags"
+   itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 10 10 0 "flags" ""
+   say r1
+   .srcstep 11 11 17 "named_operators.crexx" 14 3 20 "  say flags <and> 4"
+   .traceevent "V" 6 "R" "I" "r" 1 11 11 0 "flags" ""
+   iand r4,r1,4
+   itos r4
+   .traceevent "O" 4 "R" "S" "r" 4 11 11 0 "" ""
+   say r4
+   .srcstep 12 12 17 "named_operators.crexx" 15 3 21 "  say flags <xor> 12"
+   .traceevent "V" 6 "R" "I" "r" 1 12 12 0 "flags" ""
+   ixor r4,r1,12
+   itos r4
+   .traceevent "O" 4 "R" "S" "r" 4 12 12 0 "" ""
+   say r4
+   .srcstep 13 13 17 "named_operators.crexx" 16 3 30 "  say 1 <set> 1 <shl> bit + 1"
+   load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 13 13 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 0 13 13 0 "bit" ""
+   iadd r3,r0,1
+   .traceevent "O" 4 "R" "I" "r" 3 13 13 0 "" ""
+   ishl r4,r4,r3
+   .traceevent "O" 4 "R" "I" "r" 4 13 13 0 "" ""
+   ior r4,r4,1
+   itos r4
+   .traceevent "O" 4 "R" "S" "r" 4 13 13 0 "" ""
+   say r4
+   .srcstep 14 14 17 "named_operators.crexx" 17 3 24 "  say 5 <has> 1 <shl> 2"
+   load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 14 14 0 "" ""
+   ishl r4,r4,2
+   .traceevent "O" 4 "R" "I" "r" 4 14 14 0 "" ""
+   iand r4,r4,5
+   ine r4,r4,0
+   btos r4
+   .traceevent "O" 4 "R" "S" "r" 4 14 14 0 "" ""
+   say r4
+   .srcstep 15 15 17 "named_operators.crexx" 18 3 24 "  say 7 <xor> 3 <and> 1"
+   load r4,3
+   .traceevent "L" 4 "R" "I" "r" 4 15 15 0 "" ""
+   iand r4,r4,1
+   .traceevent "O" 4 "R" "I" "r" 4 15 15 0 "" ""
+   ixor r4,r4,7
+   itos r4
+   .traceevent "O" 4 "R" "S" "r" 4 15 15 0 "" ""
+   say r4
+   .srcstep 16 16 17 "named_operators.crexx" 19 3 14 "  say <not> 0"
+   inot r4,0
+   itos r4
+   .traceevent "P" 4 "R" "S" "r" 4 16 16 0 "" ""
+   say r4
+   .srcstep 17 17 17 "named_operators.crexx" 20 3 17 "  say 7 <idiv> 2"
+   load r4,2
+   .traceevent "L" 4 "R" "I" "r" 4 17 17 0 "" ""
+   idiv r4,7,r4
+   itos r4
+   .traceevent "O" 4 "R" "S" "r" 4 17 17 0 "" ""
+   say r4
+   .srcstep 18 18 17 "named_operators.crexx" 21 3 16 "  say 7 <mod> 2"
+   load r4,2
+   .traceevent "L" 4 "R" "I" "r" 4 18 18 0 "" ""
+   imod r4,7,r4
+   itos r4
+   .traceevent "O" 4 "R" "S" "r" 4 18 18 0 "" ""
+   say r4
+   .srcstep 19 19 17 "named_operators.crexx" 22 3 16 "  say 7 <rem> 2"
+   load r4,2
+   .traceevent "L" 4 "R" "I" "r" 4 19 19 0 "" ""
+   imod r4,7,r4
+   itos r4
+   .traceevent "O" 4 "R" "S" "r" 4 19 19 0 "" ""
+   say r4
+   .srcstep 20 20 17 "named_operators.crexx" 23 3 11 "  return 0"
+   ret 0
+   .meta "named_operators.main.bit"
+   .meta "named_operators.main.flags"
+   .meta "named_operators.main.mask"

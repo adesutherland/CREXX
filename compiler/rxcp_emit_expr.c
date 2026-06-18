@@ -743,6 +743,85 @@ void emit_expression(ASTNode *node, void *payload) {
 	                                                  node);
 	            break;
 
+        case OP_BIT_AND:
+            op = "iand";
+        case OP_BIT_OR:
+            if (!op) op = "ior";
+        case OP_BIT_XOR:
+            if (!op) op = "ixor";
+        case OP_BIT_SHL:
+            if (!op) op = "ishl";
+        case OP_BIT_SHR:
+            if (!op) op = "ishr";
+        case OP_FLAG_HAS:
+            if (!op) op = "iand";
+
+            if (!node->output) node->output = output_f();
+
+            if (child1->register_num == DONT_ASSIGN_REGISTER) {
+                if (child2->output) output_concat(node->output, child2->output);
+                temp2 = format_constant(TP_INTEGER, child1);
+                temp1 = mprintf("   %s %c%d,%c%d,%s\n",
+                                op,
+                                node->register_type,
+                                node->register_num,
+                                child2->register_type,
+                                child2->register_num,
+                                temp2);
+                output_append_text(node->output, temp1);
+                free(temp1);
+                free(temp2);
+                if (child2->cleanup) output_concat(node->output, child2->cleanup);
+            }
+            else if (child2->register_num == DONT_ASSIGN_REGISTER) {
+                if (child1->output) output_concat(node->output, child1->output);
+                temp2 = format_constant(TP_INTEGER, child2);
+                temp1 = mprintf("   %s %c%d,%c%d,%s\n",
+                                op,
+                                node->register_type,
+                                node->register_num,
+                                child1->register_type,
+                                child1->register_num,
+                                temp2);
+                output_append_text(node->output, temp1);
+                free(temp1);
+                free(temp2);
+                if (child1->cleanup) output_concat(node->output, child1->cleanup);
+            }
+            else {
+                if (child1->output) output_concat(node->output, child1->output);
+                if (child2->output) output_concat(node->output, child2->output);
+                temp1 = mprintf("   %s %c%d,%c%d,%c%d\n",
+                                op,
+                                node->register_type,
+                                node->register_num,
+                                child1->register_type,
+                                child1->register_num,
+                                child2->register_type,
+                                child2->register_num);
+                output_append_text(node->output, temp1);
+                free(temp1);
+                if (child2->cleanup) output_concat(node->output, child2->cleanup);
+                if (child1->cleanup) output_concat(node->output, child1->cleanup);
+            }
+
+            if (node->node_type == OP_FLAG_HAS) {
+                temp1 = mprintf("   ine %c%d,%c%d,0\n",
+                                node->register_type,
+                                node->register_num,
+                                node->register_type,
+                                node->register_num);
+                output_append_text(node->output, temp1);
+                free(temp1);
+            }
+
+            type_promotion(node);
+            append_semantic_operation_trace_event(node->output,
+                                                  RXBIN_TRACE_KIND_BINARY_OP,
+                                                  semantic_kind,
+                                                  node);
+            break;
+
         case OP_AND:
             if (!node->output) node->output = output_f();
             if (node->register_num == child1->register_num &&
@@ -962,6 +1041,37 @@ void emit_expression(ASTNode *node, void *payload) {
 	                                                  semantic_kind,
 	                                                  node);
 	            break;
+
+        case OP_BIT_NOT:
+            if (!node->output) node->output = output_f();
+            if (child1->register_num == DONT_ASSIGN_REGISTER) {
+                temp2 = format_constant(TP_INTEGER, child1);
+                temp1 = mprintf("   inot %c%d,%s\n",
+                                node->register_type,
+                                node->register_num,
+                                temp2);
+                output_append_text(node->output, temp1);
+                free(temp1);
+                free(temp2);
+            }
+            else {
+                if (child1->output) output_concat(node->output, child1->output);
+                temp1 = mprintf("   inot %c%d,%c%d\n",
+                                node->register_type,
+                                node->register_num,
+                                child1->register_type,
+                                child1->register_num);
+                output_append_text(node->output, temp1);
+                free(temp1);
+                if (child1->cleanup) output_concat(node->output, child1->cleanup);
+            }
+
+            type_promotion(node);
+            append_semantic_operation_trace_event(node->output,
+                                                  RXBIN_TRACE_KIND_PREFIX_OP,
+                                                  semantic_kind,
+                                                  node);
+            break;
 
         case OP_NEG:
             if (!node->output) node->output = output_f();

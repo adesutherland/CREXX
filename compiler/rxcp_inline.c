@@ -738,6 +738,13 @@ static int inline_parent_is_eager_operator(ASTNode *parent) {
         case OP_NEG:
         case OP_PLUS:
         case OP_NOT:
+        case OP_BIT_AND:
+        case OP_BIT_OR:
+        case OP_BIT_XOR:
+        case OP_BIT_NOT:
+        case OP_BIT_SHL:
+        case OP_BIT_SHR:
+        case OP_FLAG_HAS:
             return 1;
 
         default:
@@ -5345,6 +5352,13 @@ static int inline_meta_node_is_exportable(ASTNode *node) {
         case OP_AND:
         case OP_OR:
         case OP_NOT:
+        case OP_BIT_AND:
+        case OP_BIT_OR:
+        case OP_BIT_XOR:
+        case OP_BIT_NOT:
+        case OP_BIT_SHL:
+        case OP_BIT_SHR:
+        case OP_FLAG_HAS:
         case OP_COMPARE_EQUAL:
         case OP_COMPARE_NEQ:
         case OP_COMPARE_GT:

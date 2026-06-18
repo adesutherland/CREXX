@@ -616,6 +616,12 @@ const char* token_to_string(int token_id) {
         case TK_POWER_L: return "TK_POWER_L";
         case TK_POWER_R: return "TK_POWER_R";
         case TK_CONCAT: return "TK_CONCAT";
+        case TK_NAMED_MULT_OPERATOR: return "TK_NAMED_MULT_OPERATOR";
+        case TK_NAMED_SHIFT_OPERATOR: return "TK_NAMED_SHIFT_OPERATOR";
+        case TK_NAMED_AND_OPERATOR: return "TK_NAMED_AND_OPERATOR";
+        case TK_NAMED_XOR_OPERATOR: return "TK_NAMED_XOR_OPERATOR";
+        case TK_NAMED_OR_OPERATOR: return "TK_NAMED_OR_OPERATOR";
+        case TK_NAMED_OPERATOR: return "TK_NAMED_OPERATOR";
         case TK_AND: return "TK_AND";
         case TK_OR: return "TK_OR";
         case TK_XOR: return "TK_XOR";
@@ -1208,6 +1214,13 @@ const char* node_type_to_string(NodeType type) {
         case SIGNAL_BLOCK: return "SIGNAL_BLOCK";
         case SIGNAL_HANDLER: return "SIGNAL_HANDLER";
         case SIGNAL_NAMES: return "SIGNAL_NAMES";
+        case OP_BIT_AND: return "OP_BIT_AND";
+        case OP_BIT_OR: return "OP_BIT_OR";
+        case OP_BIT_XOR: return "OP_BIT_XOR";
+        case OP_BIT_NOT: return "OP_BIT_NOT";
+        case OP_BIT_SHL: return "OP_BIT_SHL";
+        case OP_BIT_SHR: return "OP_BIT_SHR";
+        case OP_FLAG_HAS: return "OP_FLAG_HAS";
         case SIGNAL_NAME: return "SIGNAL_NAME";
         case AST_SEMANTIC_CONTEXT: return "AST_SEMANTIC_CONTEXT";
         case TYPE_REFERENCE: return "TYPE_REFERENCE";

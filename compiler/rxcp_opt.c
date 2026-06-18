@@ -1604,6 +1604,35 @@ static walker_result opt1_walker(walker_direction direction,
                         }
                         break;
 
+                    case OP_BIT_AND:
+                        rewrite_to_integer_constant(node, payload,
+                                                    child1->int_value &
+                                                    child2->int_value);
+                        break;
+
+                    case OP_BIT_OR:
+                        rewrite_to_integer_constant(node, payload,
+                                                    child1->int_value |
+                                                    child2->int_value);
+                        break;
+
+                    case OP_BIT_XOR:
+                        rewrite_to_integer_constant(node, payload,
+                                                    child1->int_value ^
+                                                    child2->int_value);
+                        break;
+
+                    case OP_BIT_NOT:
+                        rewrite_to_integer_constant(node, payload,
+                                                    ~child1->int_value);
+                        break;
+
+                    case OP_FLAG_HAS:
+                        rewrite_to_boolean_constant(node, payload,
+                                                    (child1->int_value &
+                                                     child2->int_value) != 0);
+                        break;
+
                     case OP_NOT:
                         if (node->value_type == TP_FLOAT) {
                             rewrite_to_boolean_constant(node, payload,
