@@ -20,7 +20,7 @@
  */
 
 options levelb comments_dash numeric_classic
-namespace rexxvalue expose RexxValue
+namespace rexxvalue expose RexxValue rexxvalue_numeric_mode rexxvalue_set_numeric_mode
 
 -- RexxValue cache flags live in the VM value status word.
 constant RV_FLAG_STRING = 0x00010000   -- 65536: string view current
@@ -34,6 +34,26 @@ constant RV_FLAGS_STRING_TEXT = RV_FLAG_STRING + RV_FLAG_TEXT
 constant RV_FLAGS_BINARY_TEXT = RV_FLAG_BINARY + RV_FLAG_TEXT
 constant RV_FLAGS_STRING_BINARY_TEXT = RV_FLAG_STRING + RV_FLAG_BINARY + RV_FLAG_TEXT
 constant RV_FLAGS_ALL_CACHE = RV_FLAG_STRING + RV_FLAG_INT + RV_FLAG_FLOAT + RV_FLAG_DECIMAL + RV_FLAG_BINARY + RV_FLAG_TEXT
+
+constant RV_NUMERIC_DECIMAL = 0
+constant RV_NUMERIC_FLOAT = 1
+
+rexxvalue_numeric_mode: procedure = .int expose _rv_numeric_mode _rv_numeric_ready
+  call ensure_rexxvalue_numeric_mode
+  return _rv_numeric_mode
+
+rexxvalue_set_numeric_mode: procedure = .int expose _rv_numeric_mode _rv_numeric_ready
+  arg mode = .int
+  call ensure_rexxvalue_numeric_mode
+  if mode = RV_NUMERIC_FLOAT then _rv_numeric_mode = RV_NUMERIC_FLOAT
+  else _rv_numeric_mode = RV_NUMERIC_DECIMAL
+  return _rv_numeric_mode
+
+ensure_rexxvalue_numeric_mode: procedure expose _rv_numeric_mode _rv_numeric_ready
+  if _rv_numeric_ready = 1 then return
+  _rv_numeric_mode = RV_NUMERIC_DECIMAL
+  _rv_numeric_ready = 1
+  return
 
 /**
  * Classic Rexx scalar value proof.
@@ -370,24 +390,44 @@ RexxValue: class
 
   add: method = .RexxValue
     arg other = .RexxValue
+    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+      float_result = 0 as .float
+      float_result = asFloat() + other.asFloat()
+      return .RexxValue.fromFloat(float_result)
+    end
     result = "0" as .decimal
     result = asDecimal() + other.asDecimal()
     return .RexxValue.fromDecimal(result)
 
   subtract: method = .RexxValue
     arg other = .RexxValue
+    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+      float_result = 0 as .float
+      float_result = asFloat() - other.asFloat()
+      return .RexxValue.fromFloat(float_result)
+    end
     result = "0" as .decimal
     result = asDecimal() - other.asDecimal()
     return .RexxValue.fromDecimal(result)
 
   multiply: method = .RexxValue
     arg other = .RexxValue
+    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+      float_result = 0 as .float
+      float_result = asFloat() * other.asFloat()
+      return .RexxValue.fromFloat(float_result)
+    end
     result = "0" as .decimal
     result = asDecimal() * other.asDecimal()
     return .RexxValue.fromDecimal(result)
 
   divide: method = .RexxValue
     arg other = .RexxValue
+    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+      float_result = 0 as .float
+      float_result = asFloat() / other.asFloat()
+      return .RexxValue.fromFloat(float_result)
+    end
     result = "0" as .decimal
     result = asDecimal() / other.asDecimal()
     return .RexxValue.fromDecimal(result)

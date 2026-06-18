@@ -12,8 +12,12 @@ constant RV_FLAG_TEXT = 0x00200000
 constant RV_FLAGS_STRING_TEXT = RV_FLAG_STRING + RV_FLAG_TEXT
 constant RV_FLAGS_STRING_INT_TEXT = RV_FLAG_STRING + RV_FLAG_INT + RV_FLAG_TEXT
 constant RV_FLAGS_INT_DECIMAL = RV_FLAG_INT + RV_FLAG_DECIMAL
+constant RV_NUMERIC_DECIMAL = 0
+constant RV_NUMERIC_FLOAT = 1
 
 errors = 0
+
+errors = errors + check(rexxvalue_numeric_mode() = RV_NUMERIC_DECIMAL, "default numeric mode")
 
 v = .RexxValue("41")
 errors = errors + check(v.asString() = "41", "string factory value")
@@ -47,6 +51,19 @@ prod = .RexxValue("6").multiply(.RexxValue("7"))
 errors = errors + check(prod.asString() = "42", "multiply")
 quot = .RexxValue("8").divide(.RexxValue("2"))
 errors = errors + check(quot.asString() = "4", "divide")
+
+errors = errors + check(rexxvalue_set_numeric_mode(RV_NUMERIC_FLOAT) = RV_NUMERIC_FLOAT, "set float numeric mode")
+sumf = .RexxValue.fromInt(5).add(.RexxValue("7"))
+errors = errors + check(sumf.hasFloat(), "float mode add result float current")
+errors = errors + check(\sumf.hasDecimal(), "float mode add result decimal lazy")
+errors = errors + check(sumf.asFloat() = 12 as .float, "float mode add")
+prodf = .RexxValue("6").multiply(.RexxValue("7"))
+errors = errors + check(prodf.hasFloat(), "float mode multiply result float current")
+errors = errors + check(prodf.asFloat() = 42 as .float, "float mode multiply")
+errors = errors + check(rexxvalue_set_numeric_mode(999) = RV_NUMERIC_DECIMAL, "invalid numeric mode resets decimal")
+sumd = .RexxValue.fromInt(1).add(.RexxValue.fromInt(2))
+errors = errors + check(sumd.hasDecimal(), "decimal mode restored")
+errors = errors + check(sumd.asString() = "3", "decimal mode restored add")
 
 c = .RexxValue("ab").concat(.RexxValue("cd"))
 errors = errors + check(c.asString() = "abcd", "concat")

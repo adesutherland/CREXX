@@ -231,10 +231,13 @@ The first `RexxValue` proof should include:
 - `add`, `subtract`, `multiply`, and `divide`
 - loose comparison helpers for equality/order
 
-The initial arithmetic implementation may prefer decimal semantics where both
-operands can materialize as decimals. Exact Classic numeric policy, including
-`NUMERIC DIGITS`, `FORM`, `FUZZ`, `%`, `//`, and error-number mapping, belongs
-to the Level C lowering/BIF migration slice.
+The initial arithmetic implementation can select decimal or float execution
+through `rexxvalue_numeric_mode()` and `rexxvalue_set_numeric_mode(mode)`;
+decimal remains the default. This is only a representation/execution choice.
+Exact Classic numeric policy, including `NUMERIC DIGITS`, `FORM`, `FUZZ`, `%`,
+`//`, and error-number mapping, belongs to the Level C lowering/BIF migration
+slice and must be integrated as a Rexx numeric context rather than ad hoc
+operator branches.
 
 ## QA Expectations
 

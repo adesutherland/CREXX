@@ -54,11 +54,25 @@ The gap is a typed binary payload copy for register views.
 
 ## 3. Numeric Operator Mode
 
-RexxValue arithmetic now avoids string conversion, but all operators currently
-promote through decimal. Add an explicit arithmetic mode, probably a process or
-runtime global initially, to choose decimal or float numeric execution. Avoid a
-three-way int/decimal/string decision tree in ordinary operators; use int fast
-paths only where they are clearly worth the added complexity.
+Status: completed. `RexxValue` now has module-level numeric-mode procedures:
+`rexxvalue_numeric_mode()` reads the current mode and
+`rexxvalue_set_numeric_mode(mode)` selects decimal mode (`0`) or float mode
+(`1`). Decimal remains the default and invalid setter values normalize back to
+decimal. Arithmetic operators branch once on the mode and then use either
+decimal materializers/results or float materializers/results.
+
+This is only the execution-representation switch. Full classic Rexx numeric
+semantics will also need a numeric context for settings such as `DIGITS` and
+`FUZZ`; do not treat the mode switch alone as the complete Level C numeric
+contract. The optimized classlib RXAS now shows the four arithmetic methods at
+about 63 locals each because both decimal and float materializer paths are
+present in the method body; item 4 owns that register-pressure follow-up.
+
+RexxValue arithmetic now avoids string conversion, but the first implementation
+promoted all operators through decimal. The explicit arithmetic mode lets
+runtime users choose decimal or float numeric execution. Avoid a three-way
+int/decimal/string decision tree in ordinary operators; use int fast paths only
+where they are clearly worth the added complexity.
 
 Expected first shape:
 
@@ -66,15 +80,23 @@ Expected first shape:
 - float mode: float promotion/fallback
 - optional later int/int fast path if measured worthwhile
 
+## 3a. Classic Rexx Numeric Settings
+
+Status: pending. Add the classic Rexx numeric context needed by Level C,
+starting with `DIGITS` and `FUZZ` and later any related settings such as
+numeric form if required. This should integrate with the `RexxValue` arithmetic
+mode rather than adding separate ad hoc arithmetic paths.
+
 ## 4. Inlining And Register Pressure
 
 The core materializers are acceptable, but expression-shaped RexxValue methods
-show large register counts after inlining. Recent review observed:
+show large register counts after inlining. Current optimized classlib RXAS
+observed after the numeric-mode change:
 
 - `asString`: around 10 locals
 - `asInt`, `asFloat`, `asDecimal`: around 12 locals
 - `asBinary`: around 15 locals
-- `add`/`subtract`/`multiply`/`divide`: around 35 locals
+- `add`/`subtract`/`multiply`/`divide`: around 63 locals
 - `equals`: around 44 locals
 - `concat`: around 63 locals
 - `copyFrom`: around 75 locals
