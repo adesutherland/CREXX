@@ -5,7 +5,21 @@ file when the items below have either been implemented or deliberately rejected.
 
 Reviewed: 2026-06-18.
 
-## 1. Binary Register-View Copy
+## 1. Flag Test Syntax And Codegen
+
+RexxValue currently spells flag checks as `(flags % RV_FLAG_X) // 2` because
+Level B has no direct integer bit-test surface. The emitted code uses integer
+divide plus modulo plus compare for each test.
+
+The VM/RXAS layer already has integer bitwise instructions: `iand`, `ior`, and
+`ixor`, including immediate forms. This item is therefore primarily compiler
+surface/codegen work, not VM instruction work.
+
+Add a Level B integer bitwise/test feature and lower it directly to the existing
+integer bitwise instructions or a status-mask predicate. Then rewrite RexxValue
+flag tests and flag set/clear code for readability and performance.
+
+## 2. Binary Register-View Copy
 
 RexxValue `.binary with register.0.binary` currently emits the generic `copy`
 instruction for binary view reads and writes. Unlike `scopy`, `icopy`, `fcopy`,
@@ -28,16 +42,6 @@ unlink rTmp
 This is not about missing binary BIFs or byte operators. The language already
 has binary literals, string/binary conversion instructions, and binary BIFs.
 The gap is a typed binary payload copy for register views.
-
-## 2. Flag Test Syntax And Codegen
-
-RexxValue currently spells flag checks as `(flags % RV_FLAG_X) // 2` because
-Level B has no direct integer bit-test surface. The emitted code uses integer
-divide plus modulo plus compare for each test.
-
-Add a Level B integer bitwise/test feature and lower it directly to cheap
-integer operations or a status-mask predicate. Then rewrite RexxValue flag tests
-and flag set/clear code for readability and performance.
 
 ## 3. Numeric Operator Mode
 
