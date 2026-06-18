@@ -36,6 +36,7 @@ one physical VM attribute slot:
   _int     = .int     with register.0.int
   _float   = .float   with register.0.float
   _decimal = .decimal with register.0.decimal
+  _flags   = .int     with register.0.flags.library
 ```
 
 The design rule is strict: these are views of one VM `value`, not separate
@@ -50,14 +51,22 @@ attribute slots. `register.1` and above remain one-based child attribute slots.
 
 Attributes mapped to `register.0`, and attributes sharing the same physical
 `register.N` slot with another typed view, are complex attributes. Compiler
-emission must treat a complex attribute read as a copy boundary: link the
-physical storage into a scratch register, copy the requested typed view and the
-register status flags into an ordinary local register, then unlink the scratch
-before expression lowering, type promotion, or operator code can manipulate the
-value. Writes and materializers copy the updated representation and status
-flags back through the linked physical slot. This prevents compiler-generated
-arithmetic, casts, and helper calls from accidentally corrupting another view
-of the same underlying VM value.
+emission must treat a complex typed-view read as a local payload boundary: link
+the physical storage into a scratch register, copy the requested typed view into
+an ordinary local register, then unlink the scratch before expression lowering,
+type promotion, or operator code can manipulate the value. Writes copy the
+requested typed view back through the linked physical slot. The compiler does
+not use `acopy` as hidden cache-flag maintenance for these views.
+
+The VM fields inside one value are independent storage. Cache coherency belongs
+to `RexxValue`: a method that materializes or invalidates a string, binary,
+integer, float, or decimal representation must update the library/user flags
+it owns through the flag-view attribute. The compiler lowers a flag expression
+such as `_flags = _flags + RV_FLAG_INT` as a direct masked status read, local
+integer expression, and masked status write; it must not copy the object payload
+or use `acopy` to maintain these flags. The compiler only protects
+VM/compiler-reserved flag partitions by validating flag-view writes and lowering
+writable source views to masked status replacement.
 
 The generic compiler rule is intentionally conservative. Direct `register.N`
 views are a system-programmer construct for runtime/library implementation, not
@@ -66,13 +75,12 @@ general application syntax and not a Level G feature. Runtime classes such as
 when that avoids redundant copies, but those optimizations must preserve the
 same link/copy/unlink safety boundary for naive source-level use.
 
-RXAS already has a queue-based keyhole optimiser in `assembler/rxas_opt.c`.
-That is the right hook for later cleanup of redundant special-attribute access,
-for example repeated link/copy/unlink sequences over the same physical slot
-where the hazard rules prove no intervening instruction can observe or mutate
-the slot. The compiler must still emit the conservative copy boundary; RXAS
-optimisation is an implementation improvement, not part of the semantic
-contract.
+RXAS has a queue-based keyhole optimiser in `assembler/rxas_opt.c`. It is the
+right hook for cleanup of redundant special-attribute access, for example
+repeated link/copy/unlink sequences over the same physical slot where the hazard
+rules prove no intervening instruction can observe or mutate the slot. The
+compiler must still emit locally correct access sequences; RXAS optimisation is
+an implementation improvement, not part of the semantic contract.
 
 The value uses the stable library/runtime status-flag band to record which
 representations are known current:
@@ -186,6 +194,11 @@ host-adapter policy, not the core pool model.
 - Operators should be available as helper methods/functions that the compiler
   can lower to directly, for example `add(result, left, right)` or an
   equivalent method shape.
+- Materializers and operators should prefer already-current typed views before
+  parsing through `.string`. String remains the semantic default and fallback
+  for Classic Rexx values, but it must not become the internal bus for every
+  numeric promotion. For example, int-to-decimal promotion should use the
+  current `.int` view directly and then set the decimal-current flag.
 - Materialization of a cached representation is not a source-level assignment.
   It may mutate the VM value slot to fill another representation and set the
   matching cache bit.

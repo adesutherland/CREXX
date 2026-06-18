@@ -212,9 +212,11 @@ classes may map attributes to fixed register storage:
 ```
 
 `register.0` is the containing value, not RXAS attribute zero. Duplicate typed
-views over the same physical `register.N` slot are complex attributes and the
-compiler emits conservative copy boundaries. Flag views are direct status-word
-views: `.flags.vm`, `.flags.compiler`, and `.flags.readable` are read-only;
+views over the same physical `register.N` slot are complex attributes. The
+compiler copies only the selected typed payload view across the link boundary;
+library/user cache flags are explicit runtime code, not hidden compiler
+side effects. Flag views are direct status-word views: `.flags.vm`,
+`.flags.compiler`, and `.flags.readable` are read-only;
 `.flags.library`, `.flags.user`, and `.flags.public` are writable. Flag views
 must be `.int`.
 

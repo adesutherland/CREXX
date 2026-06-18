@@ -323,6 +323,13 @@ effects are not represented as normal operands. For example, `inc0`, `dec0`,
 as using the corresponding fixed local register when checking whether an
 intervening instruction is relevant to a rule.
 
+Attribute/register-view cleanup is also a keyhole concern. A full `copy`
+already copies the VM value status word, so `copy rA,rB` followed immediately
+by `acopy rA,rB` is reduced to the full copy. Duplicate `link`/typed-copy/
+`unlink` reads, and equivalent `linkattr1` reads for the same owner and
+one-based attribute slot, may reuse the first detached copy when no barrier or
+mapped-register use intervenes.
+
 Signal support adds action-aware and dynamic-name forms:
 
 - `sigcalla proc(),"NAME"` installs a handler that returns an internal action

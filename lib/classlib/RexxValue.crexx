@@ -47,45 +47,46 @@ RexxValue: class
   float_value = .float with register.0.float
   decimal_value = .decimal with register.0.decimal
   binary_value = .binary with register.0.binary
+  cache_flags = .int with register.0.flags.library
 
   *: factory
     arg value = .string
     temp = .string
     temp = value
-    assembler settp temp,RV_FLAGS_STRING_TEXT
     string_value = temp
+    cache_flags = RV_FLAGS_STRING_TEXT
     return
 
   fromInt: factory
     arg value = .int
     temp = 0
     temp = value
-    assembler settp temp,RV_FLAG_INT
     int_value = temp
+    cache_flags = RV_FLAG_INT
     return
 
   fromFloat: factory
     arg value = .float
     temp = 0 as .float
     temp = value
-    assembler settp temp,RV_FLAG_FLOAT
     float_value = temp
+    cache_flags = RV_FLAG_FLOAT
     return
 
   fromDecimal: factory
     arg value = .decimal
     temp = "0" as .decimal
     temp = value
-    assembler settp temp,RV_FLAG_DECIMAL
     decimal_value = temp
+    cache_flags = RV_FLAG_DECIMAL
     return
 
   fromBinary: factory
     arg value = .binary
     temp = .binary
     temp = value
-    assembler settp temp,RV_FLAG_BINARY
     binary_value = temp
+    cache_flags = RV_FLAG_BINARY
     return
 
   fromBinaryText: factory
@@ -94,50 +95,49 @@ RexxValue: class
     text = .string
     bytes = value
     text = bytes as .string            -- validates the bytes as Level B text
-    assembler settp bytes,RV_FLAGS_STRING_BINARY_TEXT
     binary_value = bytes
-    assembler settp text,RV_FLAGS_STRING_BINARY_TEXT
     string_value = text
+    cache_flags = RV_FLAGS_STRING_BINARY_TEXT
     return
 
   setString: method = .void
     arg value = .string
     temp = .string
     temp = value
-    assembler settp temp,RV_FLAGS_STRING_TEXT
     string_value = temp
+    cache_flags = RV_FLAGS_STRING_TEXT
     return
 
   setInt: method = .void
     arg value = .int
     temp = 0
     temp = value
-    assembler settp temp,RV_FLAG_INT
     int_value = temp
+    cache_flags = RV_FLAG_INT
     return
 
   setFloat: method = .void
     arg value = .float
     temp = 0 as .float
     temp = value
-    assembler settp temp,RV_FLAG_FLOAT
     float_value = temp
+    cache_flags = RV_FLAG_FLOAT
     return
 
   setDecimal: method = .void
     arg value = .decimal
     temp = "0" as .decimal
     temp = value
-    assembler settp temp,RV_FLAG_DECIMAL
     decimal_value = temp
+    cache_flags = RV_FLAG_DECIMAL
     return
 
   setBinary: method = .void
     arg value = .binary
     temp = .binary
     temp = value
-    assembler settp temp,RV_FLAG_BINARY
     binary_value = temp
+    cache_flags = RV_FLAG_BINARY
     return
 
   setBinaryText: method = .void
@@ -146,135 +146,203 @@ RexxValue: class
     text = .string
     bytes = value
     text = bytes as .string
-    assembler settp bytes,RV_FLAGS_STRING_BINARY_TEXT
     binary_value = bytes
-    assembler settp text,RV_FLAGS_STRING_BINARY_TEXT
     string_value = text
+    cache_flags = RV_FLAGS_STRING_BINARY_TEXT
     return
 
   cacheFlags: method = .int
-    flags = 0
-    assembler getandtp flags,string_value,RV_FLAGS_ALL_CACHE
-    return flags
+    return cache_flags
 
   hasString: method = .boolean
-    flags = 0
-    assembler getandtp flags,string_value,RV_FLAG_STRING
-    if flags <> 0 then return 1
+    flags = cache_flags
+    if (flags % RV_FLAG_STRING) // 2 <> 0 then return 1
     return 0
 
   hasInt: method = .boolean
-    flags = 0
-    assembler getandtp flags,string_value,RV_FLAG_INT
-    if flags <> 0 then return 1
+    flags = cache_flags
+    if (flags % RV_FLAG_INT) // 2 <> 0 then return 1
     return 0
 
   hasFloat: method = .boolean
-    flags = 0
-    assembler getandtp flags,string_value,RV_FLAG_FLOAT
-    if flags <> 0 then return 1
+    flags = cache_flags
+    if (flags % RV_FLAG_FLOAT) // 2 <> 0 then return 1
     return 0
 
   hasDecimal: method = .boolean
-    flags = 0
-    assembler getandtp flags,string_value,RV_FLAG_DECIMAL
-    if flags <> 0 then return 1
+    flags = cache_flags
+    if (flags % RV_FLAG_DECIMAL) // 2 <> 0 then return 1
     return 0
 
   hasBinary: method = .boolean
-    flags = 0
-    assembler getandtp flags,string_value,RV_FLAG_BINARY
-    if flags <> 0 then return 1
+    flags = cache_flags
+    if (flags % RV_FLAG_BINARY) // 2 <> 0 then return 1
     return 0
 
   hasText: method = .boolean
-    flags = 0
-    assembler getandtp flags,string_value,RV_FLAG_TEXT
-    if flags <> 0 then return 1
+    flags = cache_flags
+    if (flags % RV_FLAG_TEXT) // 2 <> 0 then return 1
     return 0
 
   asString: method = .string
     temp = .string
-    if hasString() then return string_value
-    if hasDecimal() then do
+    flags = cache_flags
+    if (flags % RV_FLAG_STRING) // 2 <> 0 then return string_value
+    if (flags % RV_FLAG_DECIMAL) // 2 <> 0 then do
       temp = decimal_value as .string
-      assembler acopy temp,decimal_value
-      assembler setortp temp,RV_FLAGS_STRING_TEXT
       string_value = temp
+      new_flags = flags + RV_FLAG_STRING
+      if (flags % RV_FLAG_TEXT) // 2 = 0 then new_flags = new_flags + RV_FLAG_TEXT
+      cache_flags = new_flags
       return temp
     end
-    if hasInt() then do
+    if (flags % RV_FLAG_INT) // 2 <> 0 then do
       temp = int_value as .string
-      assembler acopy temp,int_value
-      assembler setortp temp,RV_FLAGS_STRING_TEXT
       string_value = temp
+      new_flags = flags + RV_FLAG_STRING
+      if (flags % RV_FLAG_TEXT) // 2 = 0 then new_flags = new_flags + RV_FLAG_TEXT
+      cache_flags = new_flags
       return temp
     end
-    if hasFloat() then do
+    if (flags % RV_FLAG_FLOAT) // 2 <> 0 then do
       temp = float_value as .string
-      assembler acopy temp,float_value
-      assembler setortp temp,RV_FLAGS_STRING_TEXT
       string_value = temp
+      new_flags = flags + RV_FLAG_STRING
+      if (flags % RV_FLAG_TEXT) // 2 = 0 then new_flags = new_flags + RV_FLAG_TEXT
+      cache_flags = new_flags
       return temp
     end
-    if hasBinary() then do
+    if (flags % RV_FLAG_BINARY) // 2 <> 0 then do
       temp = binary_value as .string
-      assembler acopy temp,binary_value
-      assembler setortp temp,RV_FLAGS_STRING_TEXT
       string_value = temp
+      new_flags = flags + RV_FLAG_STRING
+      if (flags % RV_FLAG_TEXT) // 2 = 0 then new_flags = new_flags + RV_FLAG_TEXT
+      cache_flags = new_flags
       return temp
     end
     return ""
 
   asInt: method = .int
     temp = 0
-    if hasInt() then return int_value
-    temp = asString() as .int
-    assembler acopy temp,string_value
-    assembler setortp temp,RV_FLAG_INT
+    flags = cache_flags
+    if (flags % RV_FLAG_INT) // 2 <> 0 then return int_value
+    if (flags % RV_FLAG_DECIMAL) // 2 <> 0 then
+      temp = decimal_value as .int
+    else if (flags % RV_FLAG_FLOAT) // 2 <> 0 then
+      temp = float_value as .int
+    else if (flags % RV_FLAG_STRING) // 2 <> 0 then
+      temp = string_value as .int
+    else if (flags % RV_FLAG_BINARY) // 2 <> 0 then do
+      text = .string
+      text = binary_value as .string
+      string_value = text
+      new_flags = flags + RV_FLAG_STRING
+      if (flags % RV_FLAG_TEXT) // 2 = 0 then new_flags = new_flags + RV_FLAG_TEXT
+      cache_flags = new_flags
+      temp = text as .int
+    end
+    else
+      temp = string_value as .int
     int_value = temp
+    cache_flags = cache_flags + RV_FLAG_INT
     return temp
 
   asFloat: method = .float
     temp = 0 as .float
-    if hasFloat() then return float_value
-    temp = asString() as .float
-    assembler acopy temp,string_value
-    assembler setortp temp,RV_FLAG_FLOAT
+    flags = cache_flags
+    if (flags % RV_FLAG_FLOAT) // 2 <> 0 then return float_value
+    if (flags % RV_FLAG_DECIMAL) // 2 <> 0 then
+      temp = decimal_value as .float
+    else if (flags % RV_FLAG_INT) // 2 <> 0 then
+      temp = int_value as .float
+    else if (flags % RV_FLAG_STRING) // 2 <> 0 then
+      temp = string_value as .float
+    else if (flags % RV_FLAG_BINARY) // 2 <> 0 then do
+      text = .string
+      text = binary_value as .string
+      string_value = text
+      new_flags = flags + RV_FLAG_STRING
+      if (flags % RV_FLAG_TEXT) // 2 = 0 then new_flags = new_flags + RV_FLAG_TEXT
+      cache_flags = new_flags
+      temp = text as .float
+    end
+    else
+      temp = string_value as .float
     float_value = temp
+    cache_flags = cache_flags + RV_FLAG_FLOAT
     return temp
 
   asDecimal: method = .decimal
     temp = "0" as .decimal
-    if hasDecimal() then return decimal_value
-    temp = asString() as .decimal
-    assembler acopy temp,string_value
-    assembler setortp temp,RV_FLAG_DECIMAL
+    flags = cache_flags
+    if (flags % RV_FLAG_DECIMAL) // 2 <> 0 then return decimal_value
+    if (flags % RV_FLAG_INT) // 2 <> 0 then
+      temp = int_value as .decimal
+    else if (flags % RV_FLAG_FLOAT) // 2 <> 0 then
+      temp = float_value as .decimal
+    else if (flags % RV_FLAG_STRING) // 2 <> 0 then
+      temp = string_value as .decimal
+    else if (flags % RV_FLAG_BINARY) // 2 <> 0 then do
+      text = .string
+      text = binary_value as .string
+      string_value = text
+      new_flags = flags + RV_FLAG_STRING
+      if (flags % RV_FLAG_TEXT) // 2 = 0 then new_flags = new_flags + RV_FLAG_TEXT
+      cache_flags = new_flags
+      temp = text as .decimal
+    end
+    else
+      temp = string_value as .decimal
     decimal_value = temp
+    cache_flags = cache_flags + RV_FLAG_DECIMAL
     return temp
 
   asBinary: method = .binary
     temp = .binary
-    if hasBinary() then return binary_value
-    temp = asString() as .binary
-    assembler acopy temp,string_value
-    assembler setortp temp,RV_FLAG_BINARY
+    flags = cache_flags
+    if (flags % RV_FLAG_BINARY) // 2 <> 0 then return binary_value
+    if (flags % RV_FLAG_STRING) // 2 <> 0 then
+      temp = string_value as .binary
+    else if (flags % RV_FLAG_DECIMAL) // 2 <> 0 then do
+      text = decimal_value as .string
+      string_value = text
+      new_flags = flags + RV_FLAG_STRING
+      if (flags % RV_FLAG_TEXT) // 2 = 0 then new_flags = new_flags + RV_FLAG_TEXT
+      cache_flags = new_flags
+      temp = text as .binary
+    end
+    else if (flags % RV_FLAG_INT) // 2 <> 0 then do
+      text = int_value as .string
+      string_value = text
+      new_flags = flags + RV_FLAG_STRING
+      if (flags % RV_FLAG_TEXT) // 2 = 0 then new_flags = new_flags + RV_FLAG_TEXT
+      cache_flags = new_flags
+      temp = text as .binary
+    end
+    else if (flags % RV_FLAG_FLOAT) // 2 <> 0 then do
+      text = float_value as .string
+      string_value = text
+      new_flags = flags + RV_FLAG_STRING
+      if (flags % RV_FLAG_TEXT) // 2 = 0 then new_flags = new_flags + RV_FLAG_TEXT
+      cache_flags = new_flags
+      temp = text as .binary
+    end
+    else
+      temp = "" as .binary
     binary_value = temp
+    cache_flags = cache_flags + RV_FLAG_BINARY
     return temp
 
   validateText: method = .boolean
-    if hasText() then return 1
-    if hasBinary() then do
+    flags = cache_flags
+    if (flags % RV_FLAG_TEXT) // 2 <> 0 then return 1
+    if (flags % RV_FLAG_BINARY) // 2 <> 0 then do
       text = .string
-      bytes = .binary
       text = binary_value as .string
-      assembler acopy text,binary_value
-      assembler setortp text,RV_FLAGS_STRING_TEXT
       string_value = text
-      bytes = binary_value
-      assembler acopy bytes,string_value
-      assembler setortp bytes,RV_FLAG_TEXT
-      binary_value = bytes
+      new_flags = flags + RV_FLAG_TEXT
+      if (flags % RV_FLAG_STRING) // 2 = 0 then new_flags = new_flags + RV_FLAG_STRING
+      cache_flags = new_flags
       return 1
     end
     text = asString()

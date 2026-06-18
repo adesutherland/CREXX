@@ -4,11 +4,14 @@ import rxfnsb
 
 constant RV_FLAG_STRING = 0x00010000
 constant RV_FLAG_INT = 0x00020000
+constant RV_FLAG_FLOAT = 0x00040000
+constant RV_FLAG_DECIMAL = 0x00080000
 constant RV_FLAG_BINARY = 0x00100000
 constant RV_FLAG_TEXT = 0x00200000
 
 constant RV_FLAGS_STRING_TEXT = RV_FLAG_STRING + RV_FLAG_TEXT
 constant RV_FLAGS_STRING_INT_TEXT = RV_FLAG_STRING + RV_FLAG_INT + RV_FLAG_TEXT
+constant RV_FLAGS_INT_DECIMAL = RV_FLAG_INT + RV_FLAG_DECIMAL
 
 errors = 0
 
@@ -24,8 +27,10 @@ errors = errors + check(v.cacheFlags() = RV_FLAGS_STRING_INT_TEXT, "string and i
 
 i = .RexxValue.fromInt(7)
 errors = errors + check(i.cacheFlags() = RV_FLAG_INT, "int factory flags")
+errors = errors + check(i.asDecimal() = "7" as .decimal, "int to decimal")
+errors = errors + check(i.cacheFlags() = RV_FLAGS_INT_DECIMAL, "int to decimal avoids string cache")
 errors = errors + check(i.asString() = "7", "int to string")
-errors = errors + check(i.cacheFlags() = RV_FLAGS_STRING_INT_TEXT, "int to string flags")
+errors = errors + check(i.cacheFlags() = RV_FLAGS_STRING_INT_TEXT + RV_FLAG_DECIMAL, "int to string flags")
 
 d = .RexxValue.fromDecimal("2.5" as .decimal)
 errors = errors + check(d.asString() = "2.5", "decimal to string")
@@ -33,6 +38,8 @@ errors = errors + check(d.hasDecimal(), "decimal current")
 errors = errors + check(d.hasString(), "decimal string current")
 
 sum = .RexxValue.fromInt(5).add(.RexxValue("7"))
+errors = errors + check(sum.hasDecimal(), "add result decimal current")
+errors = errors + check(\sum.hasString(), "add result string lazy")
 errors = errors + check(sum.asString() = "12", "add")
 diff = .RexxValue("9").subtract(.RexxValue.fromInt(4))
 errors = errors + check(diff.asString() = "5", "subtract")

@@ -180,9 +180,11 @@ it to a direct receiver/factory link, while `register.1` and above continue to
 name one-based child attributes. `register.0` and duplicate typed mappings to
 the same `register.N` slot are treated as complex attributes: compiler-generated
 reads copy the selected view into a local register before expression code
-manipulates it, and writes copy back through the physical slot. This is a
-low-level system-programmer facility for runtime and VM-integration classes;
-ordinary programs should use normal class attributes and methods.
+manipulates it, and writes copy the selected payload view back through the
+physical slot. Status/cache flag updates for these typed views are explicit
+runtime code, not hidden compiler side effects. This is a low-level
+system-programmer facility for runtime and VM-integration classes; ordinary
+programs should use normal class attributes and methods.
 
 Flag views are the exception to the complex typed-view copy rule: reads access
 the status word directly and do not copy the register's string, binary, numeric,

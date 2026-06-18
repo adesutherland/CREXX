@@ -963,11 +963,8 @@ static walker_result emit_walker(walker_direction direction,
 
                         if (complex) {
                             temp1 = mprintf("   %scopy %c%d,r%d\n"
-                                            "   acopy %c%d,r%d\n"
                                             "   unlink r%d\n",
                                             tp_prefix,
-                                            node->register_type, node->register_num,
-                                            link_reg_num,
                                             node->register_type, node->register_num,
                                             link_reg_num,
                                             link_reg_num);
@@ -1448,13 +1445,10 @@ static walker_result emit_walker(walker_direction direction,
                         if (class_attribute_is_complex(child1->symbolNode->symbol)) {
                             temp1 = mprintf("   link %c%d,%c%d\n"
                                             "   %scopy %c%d,%c%d\n"
-                                            "   acopy %c%d,%c%d\n"
                                             "   unlink %c%d\n",
                                             child1->register_type, child1->register_num,
                                             this_type, this_num,
                                             tp_prefix,
-                                            child1->register_type, child1->register_num,
-                                            child2->register_type, child2->register_num,
                                             child1->register_type, child1->register_num,
                                             child2->register_type, child2->register_num,
                                             child1->register_type, child1->register_num);
@@ -1473,14 +1467,11 @@ static walker_result emit_walker(walker_direction direction,
                         if (class_attribute_is_complex(child1->symbolNode->symbol)) {
                             temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n"
                                             "   %scopy %c%d,%c%d\n"
-                                            "   acopy %c%d,%c%d\n"
                                             "   unlink %c%d\n",
                                             child1->register_type, child1->register_num,
                                             this_type, this_num,
                                             index,
                                             tp_prefix,
-                                            child1->register_type, child1->register_num,
-                                            child2->register_type, child2->register_num,
                                             child1->register_type, child1->register_num,
                                             child2->register_type, child2->register_num,
                                             child1->register_type, child1->register_num);
