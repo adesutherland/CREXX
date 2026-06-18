@@ -629,6 +629,20 @@ static int inline_class_attribute_register_num(Symbol *symbol) {
         idx = ast_chld(reg_node, INTEGER, 0);
         if (idx) return node_to_integer(idx);
         if (reg_node->int_value) return (int)reg_node->int_value;
+        if (reg_node->child && reg_node->child->token) {
+            return (int)strtol(reg_node->child->token->token_string, NULL, 10);
+        }
+        if (reg_node->child && reg_node->child->node_string && reg_node->child->node_string_length) {
+            char *buffer = malloc(reg_node->child->node_string_length + 1);
+            int result;
+
+            if (!buffer) return UNSET_REGISTER;
+            memcpy(buffer, reg_node->child->node_string, reg_node->child->node_string_length);
+            buffer[reg_node->child->node_string_length] = 0;
+            result = (int)strtol(buffer, NULL, 10);
+            free(buffer);
+            return result;
+        }
     }
 
     return symbol->register_num;
@@ -1983,7 +1997,6 @@ static Symbol *inline_find_instance_symbol(ASTNode *proc_def,
 
 static int inline_count_factory_attributes(ASTNode *factory_def) {
     ASTNode *class_node;
-    ASTNode *attr;
     int count;
 
     if (!factory_def) return 0;
@@ -1992,27 +2005,63 @@ static int inline_count_factory_attributes(ASTNode *factory_def) {
     while (class_node && class_node->node_type != CLASS_DEF) class_node = class_node->parent;
     if (!class_node) return 0;
 
-    count = 0;
-    attr = class_node->child;
-    while (attr) {
-        if (attr->node_type == DEFINE) {
-            int index;
-            ASTNode *nr;
+    {
+        Scope *class_scope = 0;
 
-            index = -1;
-            nr = ast_chld(attr, NODE_REGISTER, 0);
-            if (nr) {
-                ASTNode *idx;
-
-                idx = ast_chld(nr, INTEGER, 0);
-                if (idx) index = node_to_integer(idx);
-                else if (nr->int_value) index = (int)nr->int_value;
-            }
-
-            if (index >= count) count = index + 1;
-            else if (index == -1) count++;
+        if (class_node->symbolNode && class_node->symbolNode->symbol) {
+            class_scope = class_node->symbolNode->symbol->defines_scope;
         }
-        attr = attr->sibling;
+        if (!class_scope) class_scope = class_node->scope;
+
+        if (class_scope) {
+            Symbol **symbols = scp_syms(class_scope);
+            if (symbols) {
+                int i;
+
+                count = 0;
+                for (i = 0; symbols[i]; i++) {
+                    Symbol *s = symbols[i];
+                    int index;
+
+                    if (s->symbol_type != VARIABLE_SYMBOL) continue;
+                    index = inline_class_attribute_register_num(s);
+                    if (index == 0) {
+                        /* register.0 is the containing value, not a child slot. */
+                    } else if (index >= count) count = index + 1;
+                    else if (index == UNSET_REGISTER) count++;
+                }
+                free(symbols);
+                return count;
+            }
+        }
+    }
+
+    count = 0;
+    {
+        ASTNode *attr = class_node->child;
+        while (attr) {
+            if (attr->node_type == DEFINE) {
+                int index;
+                ASTNode *nr;
+
+                index = -1;
+                nr = ast_chld(attr, NODE_REGISTER, 0);
+                if (nr) {
+                    ASTNode *idx;
+
+                    idx = ast_chld(nr, INTEGER, 0);
+                    if (idx) index = node_to_integer(idx);
+                    else if (nr->int_value) index = (int)nr->int_value;
+                    else if (nr->child && nr->child->token) index = (int)strtol(nr->child->token->token_string, NULL, 10);
+                }
+
+                if (index == 0) {
+                    /* register.0 is the containing value, not a child slot. */
+                } else if (index >= count) count = index + 1;
+                else if (index == -1) count++;
+            }
+            attr = attr->sibling;
+        }
     }
 
     return count;

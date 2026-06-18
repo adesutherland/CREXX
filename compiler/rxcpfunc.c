@@ -1253,6 +1253,8 @@ static const char *register_view_for_type(const char *type) {
     if (!type) return "object";
     if (strcmp(type, ".int") == 0 || strcmp(type, ".bool") == 0) return "int";
     if (strcmp(type, ".float") == 0) return "float";
+    if (strcmp(type, ".decimal") == 0) return "decimal";
+    if (strcmp(type, ".binary") == 0) return "binary";
     if (strcmp(type, ".string") == 0) return "string";
     return "object";
 }
@@ -1264,6 +1266,18 @@ static int register_index_from_node(ASTNode *node) {
     idx = ast_chld(node, INTEGER, 0);
     if (idx) return node_to_integer(idx);
     if (node->int_value) return (int)node->int_value;
+    if (node->child && node->child->token) return (int)strtol(node->child->token->token_string, NULL, 10);
+    if (node->child && node->child->node_string && node->child->node_string_length) {
+        char *buffer = malloc(node->child->node_string_length + 1);
+        int result;
+
+        if (!buffer) return -1;
+        memcpy(buffer, node->child->node_string, node->child->node_string_length);
+        buffer[node->child->node_string_length] = 0;
+        result = (int)strtol(buffer, NULL, 10);
+        free(buffer);
+        return result;
+    }
     return -1;
 }
 
@@ -1308,7 +1322,7 @@ static void append_class_attribute_stub_lines(ASTNode *contract_node, char **buf
         reg_index = register_index_from_node(reg_node);
         view = register_view_from_node(reg_node, type);
 
-        if (reg_index > 0) {
+        if (reg_index >= 0) {
             tmp = mprintf("%s  %.*s = %s with register.%d.%s\n",
                           *buffer,
                           (int)target->node_string_length,

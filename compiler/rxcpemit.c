@@ -265,6 +265,66 @@ static void attribute_owner_register(ASTNode *scope_anchor,
     }
 }
 
+static int class_attribute_register_index(Symbol *symbol) {
+    int i;
+
+    if (!symbol) return 0;
+    for (i = 0; i < (int)sym_nond(symbol); i++) {
+        ASTNode *def_node = sym_trnd(symbol, i)->node;
+        if (def_node && def_node->parent && def_node->parent->node_type == DEFINE) {
+            ASTNode *nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
+            if (nr) {
+                ASTNode *idx = ast_chld(nr, INTEGER, 0);
+                if (idx) return node_to_integer(idx);
+                if (nr->int_value) return (int)nr->int_value;
+                if (nr->child && nr->child->token) {
+                    return (int)strtol(nr->child->token->token_string, NULL, 10);
+                }
+                if (nr->child && nr->child->node_string && nr->child->node_string_length) {
+                    char *buffer = malloc(nr->child->node_string_length + 1);
+                    int result;
+
+                    if (!buffer) return 0;
+                    memcpy(buffer, nr->child->node_string, nr->child->node_string_length);
+                    buffer[nr->child->node_string_length] = 0;
+                    result = (int)strtol(buffer, NULL, 10);
+                    free(buffer);
+                    return result;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+static int class_attribute_is_complex(Symbol *symbol) {
+    int index;
+    Symbol **symbols;
+    int i;
+
+    if (!symbol) return 0;
+    index = class_attribute_register_index(symbol);
+    if (index == 0) return 1;
+    if (index < 0 || !symbol->scope) return 0;
+
+    symbols = scp_syms(symbol->scope);
+    if (!symbols) return 0;
+
+    for (i = 0; symbols[i]; i++) {
+        Symbol *other = symbols[i];
+
+        if (other == symbol) continue;
+        if (other->symbol_type != VARIABLE_SYMBOL) continue;
+        if (class_attribute_register_index(other) == index) {
+            free(symbols);
+            return 1;
+        }
+    }
+
+    free(symbols);
+    return 0;
+}
+
 static walker_result emit_walker(walker_direction direction,
                                   ASTNode* node,
                                   void *pl) {
@@ -802,31 +862,40 @@ static walker_result emit_walker(walker_direction direction,
                     node->symbolNode->symbol->scope->defining_node &&
                     node->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) {
                     /* Attribute Read */
-                    int index = 0;
-                    if (sym_nond(node->symbolNode->symbol) > 0) {
-                        ASTNode *def_node = sym_trnd(node->symbolNode->symbol, 0)->node;
-                        if (def_node && def_node->parent && def_node->parent->node_type == DEFINE) {
-                            ASTNode *nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
-                            if (nr) {
-                                ASTNode *idx = ast_chld(nr, INTEGER, 0);
-                                if (idx) index = node_to_integer(idx);
-                                else if (nr->int_value) index = (int)nr->int_value;
-                            }
-                        }
-                    }
+                    int index = class_attribute_register_index(node->symbolNode->symbol);
+                    int complex = class_attribute_is_complex(node->symbolNode->symbol);
+                    int link_reg_num = complex ? node->additional_registers : node->register_num;
+                    char link_reg_type = complex ? 'r' : node->register_type;
 
                     char this_type = 'a'; int this_num = 1; /* Default for METHOD */
                     attribute_owner_register(node, node, &this_type, &this_num);
-                    temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n",
-                                    node->register_type, node->register_num,
-                                    this_type, this_num, index);
+                    if (index == 0) {
+                        temp1 = mprintf("   link %c%d,%c%d\n",
+                                        link_reg_type, link_reg_num,
+                                        this_type, this_num);
+                    } else {
+                        temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n",
+                                        link_reg_type, link_reg_num,
+                                        this_type, this_num, index);
+                    }
                     output_append_text(node->output, temp1);
                     free(temp1);
 
-                    /* Cleanup */
-                    temp1 = mprintf("   unlink %c%d\n", node->register_type, node->register_num);
-	                    node_cleanup_replace_text(node, temp1);
-	                    free(temp1);
+                    if (complex) {
+                        temp1 = mprintf("   %scopy %c%d,r%d\n"
+                                        "   unlink r%d\n",
+                                        tp_prefix,
+                                        node->register_type, node->register_num,
+                                        link_reg_num,
+                                        link_reg_num);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    } else {
+                        /* Cleanup */
+                        temp1 = mprintf("   unlink %c%d\n", node->register_type, node->register_num);
+                            node_cleanup_replace_text(node, temp1);
+                            free(temp1);
+                    }
 
 	                    type_promotion(node);
 	                    append_symbol_trace_event(node->output,
@@ -844,45 +913,56 @@ static walker_result emit_walker(walker_direction direction,
                     int from_reg_num = node->symbolNode->symbol->register_num;
                     char unlink_needed = 0;
 
-                    char is_property = 0;
+                    char property_regs = 0;
                     if (node->symbolNode && node->symbolNode->symbol &&
                         node->symbolNode->symbol->scope &&
                         node->symbolNode->symbol->scope->defining_node &&
                         node->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) {
-                        is_property = 1;
+                        int complex;
+                        int link_reg_num;
+                        int base_reg_num;
                         
                         /* Attribute Read - link the array into the first additional register */
-                        int index = 0;
-                        if (sym_nond(node->symbolNode->symbol) > 0) {
-                            ASTNode *def_node = sym_trnd(node->symbolNode->symbol, 0)->node;
-                            if (def_node && def_node->parent && def_node->parent->node_type == DEFINE) {
-                                ASTNode *nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
-                                if (nr) {
-                                    ASTNode *idx = ast_chld(nr, INTEGER, 0);
-                                    if (idx) index = node_to_integer(idx);
-                                    else if (nr->int_value) index = (int)nr->int_value;
-                                }
-                            }
-                        }
+                        int index = class_attribute_register_index(node->symbolNode->symbol);
 
                         char this_type = 'a'; int this_num = 1; /* Default for METHOD */
                         attribute_owner_register(node, node, &this_type, &this_num);
+                        complex = class_attribute_is_complex(node->symbolNode->symbol);
+                        property_regs = complex ? 2 : 1;
+                        link_reg_num = node->additional_registers;
+                        base_reg_num = complex ? node->additional_registers + 1 : node->additional_registers;
 
-                        temp1 = mprintf("   linkattr1 r%d,%c%d,%d\n",
-                                        node->additional_registers,
-                                        this_type, this_num, index);
+                        if (index == 0) {
+                            temp1 = mprintf("   link r%d,%c%d\n",
+                                            link_reg_num,
+                                            this_type, this_num);
+                        } else {
+                            temp1 = mprintf("   linkattr1 r%d,%c%d,%d\n",
+                                            link_reg_num,
+                                            this_type, this_num, index);
+                        }
                         output_append_text(node->output, temp1);
                         free(temp1);
 
-                        /* Add cleanup to unlink this property reference */
-                        temp1 = mprintf("   unlink r%d\n", node->additional_registers);
-                        node_cleanup_replace_text(node, temp1);
-                        free(temp1);
+                        if (complex) {
+                            temp1 = mprintf("   copy r%d,r%d\n"
+                                            "   unlink r%d\n",
+                                            base_reg_num,
+                                            link_reg_num,
+                                            link_reg_num);
+                            output_append_text(node->output, temp1);
+                            free(temp1);
+                        } else {
+                            /* Add cleanup to unlink this property reference */
+                            temp1 = mprintf("   unlink r%d\n", base_reg_num);
+                            node_cleanup_replace_text(node, temp1);
+                            free(temp1);
+                        }
 
                         from_reg_type = 'r';
-                        from_reg_num = node->additional_registers;
+                        from_reg_num = base_reg_num;
                     }
-                    int math_reg = node->additional_registers + is_property;
+                    int math_reg = node->additional_registers + property_regs;
 
                     /* Now we need to link the array elements */
 	                    while (child1) {
@@ -1253,34 +1333,35 @@ static walker_result emit_walker(walker_direction direction,
                     child1->symbolNode->symbol->scope->defining_node &&
                     child1->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) {
                     /* Attribute Write */
-                    int index = 0;
-                    if (sym_nond(child1->symbolNode->symbol) > 0) {
-                        ASTNode *def_node = sym_trnd(child1->symbolNode->symbol, 0)->node;
-                        if (def_node && def_node->parent && def_node->parent->node_type == DEFINE) {
-                            ASTNode *nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
-                            if (nr) {
-                                ASTNode *idx = ast_chld(nr, INTEGER, 0);
-                                if (idx) index = node_to_integer(idx);
-                                else if (nr->int_value) index = (int)nr->int_value;
-                            }
-                        }
-                    }
+                    int index = class_attribute_register_index(child1->symbolNode->symbol);
 
                     char this_type = 'a'; int this_num = 1; /* Default for METHOD */
                     attribute_owner_register(node, child1, &this_type, &this_num);
-	                    temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n"
-	                                    "   %scopy %c%d,%c%d\n"
-	                                    "   unlink %c%d\n",
-                                    child1->register_type, child1->register_num,
-                                    this_type, this_num,
-                                    index,
-                                    tp_prefix,
-                                    child1->register_type, child1->register_num,
-                                    child2->register_type, child2->register_num,
-                                    child1->register_type, child1->register_num);
-	                    output_append_text(node->output, temp1);
-	                    free(temp1);
-	                    trace_assignment_event = 0;
+                    if (index == 0) {
+                        temp1 = mprintf("   link %c%d,%c%d\n"
+                                        "   %scopy %c%d,%c%d\n"
+                                        "   unlink %c%d\n",
+                                        child1->register_type, child1->register_num,
+                                        this_type, this_num,
+                                        tp_prefix,
+                                        child1->register_type, child1->register_num,
+                                        child2->register_type, child2->register_num,
+                                        child1->register_type, child1->register_num);
+                    } else {
+                        temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n"
+                                        "   %scopy %c%d,%c%d\n"
+                                        "   unlink %c%d\n",
+                                        child1->register_type, child1->register_num,
+                                        this_type, this_num,
+                                        index,
+                                        tp_prefix,
+                                        child1->register_type, child1->register_num,
+                                        child2->register_type, child2->register_num,
+                                        child1->register_type, child1->register_num);
+                    }
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                    trace_assignment_event = 0;
 	                } else if (child1->register_num != child2->register_num ||
                     child1->register_type != child2->register_type) {
                     int aggregate_assign =

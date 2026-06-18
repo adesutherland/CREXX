@@ -1,0 +1,82 @@
+options levelb
+namespace class_attr_register_views
+
+slot = .MappedSlot()
+
+call slot.setString("41")
+say "string=" || slot.asString()
+
+call slot.setInt(42)
+say "int=" || slot.asIntText()
+call slot.increment()
+say "increment=" || slot.asIntText()
+
+f = 3.5 as .float
+call slot.setFloat(f)
+say "float=" || slot.asFloatText()
+
+d = "12" as .decimal
+call slot.setDecimal(d)
+say "decimal=" || slot.asDecimalText()
+
+call slot.setBinary("4142"x as .binary)
+say "binary-length=" || slot.asBinaryLength()
+
+exit 0
+
+MappedSlot: class
+  text = .string with register.0.string
+  number = .int with register.0.int
+  approx = .float with register.0.float
+  exact = .decimal with register.0.decimal
+  bytes = .binary with register.0.binary
+
+  *: factory
+    text = ""
+    return
+
+  setString: method = .void
+    arg value = .string
+    text = value
+    return
+
+  setInt: method = .void
+    arg value = .int
+    number = value
+    return
+
+  increment: method = .void
+    number = number + 1
+    return
+
+  setFloat: method = .void
+    arg value = .float
+    approx = value
+    return
+
+  setDecimal: method = .void
+    arg value = .decimal
+    exact = value
+    return
+
+  setBinary: method = .void
+    arg value = .binary
+    bytes = value
+    return
+
+  asString: method = .string
+    return text
+
+  asIntText: method = .string
+    return number as .string
+
+  asFloatText: method = .string
+    return approx as .string
+
+  asDecimalText: method = .string
+    return exact as .string
+
+  asBinaryLength: method = .int
+    len = 0
+    assembler blen len,bytes
+    return len

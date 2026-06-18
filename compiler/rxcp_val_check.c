@@ -255,6 +255,8 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                 if (!nodeis(attr, "int") &&
                     !nodeis(attr, "string") &&
                     !nodeis(attr, "object") &&
+                    !nodeis(attr, "decimal") &&
+                    !nodeis(attr, "binary") &&
                     !nodeis(attr, "float")) {
                     mknd_err(attr, "INVALID_REGISTER_ATTRIBUTE");
                 }
@@ -806,6 +808,8 @@ walker_result ast_source_structure_walker(walker_direction direction,
             if (!nodeis(attr, "int") &&
                 !nodeis(attr, "string") &&
                 !nodeis(attr, "object") &&
+                !nodeis(attr, "decimal") &&
+                !nodeis(attr, "binary") &&
                 !nodeis(attr, "float")) {
                 mknd_err(attr, "INVALID_REGISTER_ATTRIBUTE");
             }

@@ -30,6 +30,7 @@
 #include <string.h>
 #include "rxcpmain.h"
 #include "rxcp_emit.h"
+#include "rxcp_val.h"
 
 static int symbol_is_class_attribute(Symbol *symbol) {
     return symbol &&
@@ -37,6 +38,66 @@ static int symbol_is_class_attribute(Symbol *symbol) {
            (symbol->scope->type == SCOPE_CLASS ||
             (symbol->scope->defining_node &&
              symbol->scope->defining_node->node_type == CLASS_DEF));
+}
+
+static int class_attribute_register_index(Symbol *symbol) {
+    int i;
+
+    if (!symbol) return -1;
+    for (i = 0; i < (int)sym_nond(symbol); i++) {
+        ASTNode *def_node = sym_trnd(symbol, i)->node;
+        if (def_node && def_node->parent && def_node->parent->node_type == DEFINE) {
+            ASTNode *nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
+            if (nr) {
+                ASTNode *idx = ast_chld(nr, INTEGER, 0);
+                if (idx) return node_to_integer(idx);
+                if (nr->int_value) return (int)nr->int_value;
+                if (nr->child && nr->child->token) {
+                    return (int)strtol(nr->child->token->token_string, NULL, 10);
+                }
+                if (nr->child && nr->child->node_string && nr->child->node_string_length) {
+                    char *buffer = malloc(nr->child->node_string_length + 1);
+                    int result;
+
+                    if (!buffer) return -1;
+                    memcpy(buffer, nr->child->node_string, nr->child->node_string_length);
+                    buffer[nr->child->node_string_length] = 0;
+                    result = (int)strtol(buffer, NULL, 10);
+                    free(buffer);
+                    return result;
+                }
+            }
+        }
+    }
+    return -1;
+}
+
+static int class_attribute_is_complex(Symbol *symbol) {
+    int index;
+    Symbol **symbols;
+    int i;
+
+    if (!symbol_is_class_attribute(symbol)) return 0;
+    index = class_attribute_register_index(symbol);
+    if (index == 0) return 1;
+    if (index < 0 || !symbol->scope) return 0;
+
+    symbols = scp_syms(symbol->scope);
+    if (!symbols) return 0;
+
+    for (i = 0; symbols[i]; i++) {
+        Symbol *other = symbols[i];
+
+        if (other == symbol) continue;
+        if (other->symbol_type != VARIABLE_SYMBOL) continue;
+        if (class_attribute_register_index(other) == index) {
+            free(symbols);
+            return 1;
+        }
+    }
+
+    free(symbols);
+    return 0;
 }
 
 /* Tests if a node uses a symbol register */
@@ -611,7 +672,7 @@ walker_result register_walker(walker_direction direction,
 
                     char needs_prop_reg = 0;
                     if (node->symbolNode && symbol_is_class_attribute(node->symbolNode->symbol)) {
-                        needs_prop_reg = 1;
+                        needs_prop_reg = class_attribute_is_complex(node->symbolNode->symbol) ? 2 : 1;
                     }
 
                     if (needs_extra_reg || needs_prop_reg) {
@@ -636,6 +697,11 @@ walker_result register_walker(walker_direction direction,
                         /* Attribute - needs a temporary register */
                         node->register_num = get_reg(node->scope);
                         node->register_type = 'r';
+                        if (class_attribute_is_complex(node->symbolNode->symbol)) {
+                            node->num_additional_registers = 1;
+                            node->additional_registers = get_reg(node->scope);
+                            ret_reg(node->scope, node->additional_registers);
+                        }
                     } else if (node->symbolNode && node->symbolNode->symbol) {
                         node->register_num = node->symbolNode->symbol->register_num;
                         node->register_type = node->symbolNode->symbol->register_type;

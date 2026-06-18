@@ -142,7 +142,8 @@ raw_event: class
 ```
 
 The optional suffix after the index is the VM register value view to use for the
-slot. Valid views are `.int`, `.float`, `.string`, and `.object`:
+slot. Valid views are `.int`, `.float`, `.decimal`, `.binary`, `.string`, and
+`.object`:
 
 ```rexx
   _message = .string with register.5.string
@@ -155,6 +156,14 @@ through hand-written assembler. It is valid for VM-integration classes to define
 more than one typed view over the same physical slot, as shown for a signal
 payload/message slot above. Ordinary application classes should not use explicit
 register mappings unless they are matching a fixed VM or native object layout.
+
+`register.0` is reserved for a typed view of the containing value itself. This
+is a Rexx source-level convention, not RXAS attribute zero. The compiler lowers
+it to a direct receiver/factory link, while `register.1` and above continue to
+name one-based child attributes. `register.0` and duplicate typed mappings to
+the same `register.N` slot are treated as complex attributes: compiler-generated
+reads copy the selected view into a local register before expression code
+manipulates it, and writes copy back through the physical slot.
 
 ## Receiver Storage
 
