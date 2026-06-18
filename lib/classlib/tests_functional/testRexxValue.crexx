@@ -14,10 +14,14 @@ constant RV_FLAGS_STRING_INT_TEXT = RV_FLAG_STRING + RV_FLAG_INT + RV_FLAG_TEXT
 constant RV_FLAGS_INT_DECIMAL = RV_FLAG_INT + RV_FLAG_DECIMAL
 constant RV_NUMERIC_DECIMAL = 0
 constant RV_NUMERIC_FLOAT = 1
+constant RV_NUMERIC_DEFAULT_DIGITS = 18
+constant RV_NUMERIC_DEFAULT_FUZZ = 0
 
 errors = 0
 
 errors = errors + check(rexxvalue_numeric_mode() = RV_NUMERIC_DECIMAL, "default numeric mode")
+errors = errors + check(rexxvalue_numeric_digits() = RV_NUMERIC_DEFAULT_DIGITS, "default numeric digits")
+errors = errors + check(rexxvalue_numeric_fuzz() = RV_NUMERIC_DEFAULT_FUZZ, "default numeric fuzz")
 
 v = .RexxValue("41")
 errors = errors + check(v.asString() = "41", "string factory value")
@@ -64,6 +68,20 @@ errors = errors + check(rexxvalue_set_numeric_mode(999) = RV_NUMERIC_DECIMAL, "i
 sumd = .RexxValue.fromInt(1).add(.RexxValue.fromInt(2))
 errors = errors + check(sumd.hasDecimal(), "decimal mode restored")
 errors = errors + check(sumd.asString() = "3", "decimal mode restored add")
+
+errors = errors + check(rexxvalue_set_numeric_digits(5) = 5, "set numeric digits")
+errors = errors + check(rexxvalue_set_numeric_fuzz(2) = 2, "set numeric fuzz")
+errors = errors + check(rexxvalue_numeric_digits() = 5, "numeric digits getter")
+errors = errors + check(rexxvalue_numeric_fuzz() = 2, "numeric fuzz getter")
+errors = errors + check(rexxvalue_set_numeric_digits(2) = -1, "reject digits not above fuzz")
+errors = errors + check(rexxvalue_numeric_digits() = 5, "digits unchanged after reject")
+errors = errors + check(rexxvalue_set_numeric_fuzz(5) = -1, "reject fuzz not below digits")
+errors = errors + check(rexxvalue_numeric_fuzz() = 2, "fuzz unchanged after reject")
+errors = errors + check(rexxvalue_set_numeric_fuzz(0) = 0, "reset numeric fuzz")
+rounded = .RexxValue("1.23456789").add(.RexxValue("1.23456789"))
+errors = errors + check(rounded.asString() = "2.4692", "decimal digits applied")
+errors = errors + check(rexxvalue_set_numeric_digits(RV_NUMERIC_DEFAULT_DIGITS) = RV_NUMERIC_DEFAULT_DIGITS, "reset numeric digits")
+errors = errors + check(rexxvalue_set_numeric_fuzz(RV_NUMERIC_DEFAULT_FUZZ) = RV_NUMERIC_DEFAULT_FUZZ, "reset numeric fuzz")
 
 c = .RexxValue("ab").concat(.RexxValue("cd"))
 errors = errors + check(c.asString() = "abcd", "concat")

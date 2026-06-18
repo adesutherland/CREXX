@@ -233,11 +233,14 @@ The first `RexxValue` proof should include:
 
 The initial arithmetic implementation can select decimal or float execution
 through `rexxvalue_numeric_mode()` and `rexxvalue_set_numeric_mode(mode)`;
-decimal remains the default. This is only a representation/execution choice.
-Exact Classic numeric policy, including `NUMERIC DIGITS`, `FORM`, `FUZZ`, `%`,
-`//`, and error-number mapping, belongs to the Level C lowering/BIF migration
-slice and must be integrated as a Rexx numeric context rather than ad hoc
-operator branches.
+decimal remains the default. Decimal execution also has `DIGITS` and `FUZZ`
+settings through `rexxvalue_numeric_digits()`,
+`rexxvalue_set_numeric_digits(digits)`, `rexxvalue_numeric_fuzz()`, and
+`rexxvalue_set_numeric_fuzz(fuzz)`. These settings are applied only to the
+decimal path for now; float mode deliberately ignores them. Exact Classic
+numeric policy, including `NUMERIC FORM`, `%`, `//`, and error-number mapping,
+belongs to the Level C lowering/BIF migration slice and must be integrated as a
+Rexx numeric context rather than ad hoc operator branches.
 
 ## QA Expectations
 

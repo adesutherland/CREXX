@@ -82,24 +82,33 @@ Expected first shape:
 
 ## 3a. Classic Rexx Numeric Settings
 
-Status: pending. Add the classic Rexx numeric context needed by Level C,
-starting with `DIGITS` and `FUZZ` and later any related settings such as
-numeric form if required. This should integrate with the `RexxValue` arithmetic
-mode rather than adding separate ad hoc arithmetic paths.
+Status: completed for decimal `DIGITS` and `FUZZ`. `RexxValue` now exposes
+`rexxvalue_numeric_digits()`, `rexxvalue_set_numeric_digits(digits)`,
+`rexxvalue_numeric_fuzz()`, and `rexxvalue_set_numeric_fuzz(fuzz)`.
+Digits defaults to 18, fuzz defaults to 0, and invalid updates leave the
+current setting unchanged and return `-1`. Decimal materialization and decimal
+arithmetic apply these settings with the VM `setnumdgts` and `setnumfuz`
+instructions in the active method frame. Float mode deliberately ignores these
+settings for now.
+
+Further numeric context work remains for Level C, especially numeric form and
+exact error-number mapping. Any later settings should integrate with this
+RexxValue numeric context rather than adding separate ad hoc arithmetic paths.
 
 ## 4. Inlining And Register Pressure
 
 The core materializers are acceptable, but expression-shaped RexxValue methods
 show large register counts after inlining. Current optimized classlib RXAS
-observed after the numeric-mode change:
+observed after the decimal digits/fuzz change:
 
-- `asString`: around 10 locals
-- `asInt`, `asFloat`, `asDecimal`: around 12 locals
-- `asBinary`: around 15 locals
-- `add`/`subtract`/`multiply`/`divide`: around 63 locals
-- `equals`: around 44 locals
-- `concat`: around 63 locals
-- `copyFrom`: around 75 locals
+- `asString`: around 12 locals
+- `asInt`, `asFloat`: around 13 locals
+- `asDecimal`: around 14 locals
+- `asBinary`: around 17 locals
+- `add`/`subtract`/`multiply`/`divide`: around 77 locals
+- `equals`: around 50 locals
+- `concat`: around 71 locals
+- `copyFrom`: around 83 locals
 
 This appears to be part of the broader compiler register-pressure problem.
 Investigate inliner budget controls, no-inline annotations, or
