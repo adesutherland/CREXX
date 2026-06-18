@@ -164,6 +164,8 @@ The supported partitions are `.vm`, `.compiler`, `.library`, `.user`,
 `.library` and `.user` are writable. `.public` is writable but covers only the
 library and user bands, not compiler call-ABI flags. Assigning a writable flag
 view replaces only that masked band; other status-word bits are preserved.
+Flag views must be declared as `.int`; unknown partitions are rejected during
+source validation.
 
 The compiler emits the attribute linking code for methods that read or write
 these attributes. Source code should still access them through methods, not

@@ -97,8 +97,8 @@ replace its band with zero without clearing unrelated flags. The `setortp`
 instruction remains the explicit OR operation for code that deliberately
 accumulates flags.
 
-Two compiler features are approved follow-ups to make this code maintainable
-and fast enough for Level C:
+Two compiler features are now part of the initial Level B support needed to
+make this code maintainable enough for Level C:
 
 1. First-class named constants. Level B source may declare compile-time
    constants, for example `constant RV_FLAG_STRING = 0x00010000`. The
@@ -196,9 +196,10 @@ host-adapter policy, not the core pool model.
   current/text-valid flags. A string-to-binary materializer may mark both the
   binary-current and text-valid flags because Level B strings are already valid
   UTF-8.
-- Flag access starts through RXAS flag instructions from Level B methods. The
-  approved `.flags.<partition>` register-view suffix requires dedicated emitter
-  semantics and is not a general replacement for typed register views.
+- Level B source can access register status partitions through
+  `.flags.<partition>` class attributes. Reads lower to masked flag reads.
+  Writes are allowed only for source-writable partitions and lower to masked
+  replacement, not generic typed register copies.
 
 ## Initial Operator Surface
 

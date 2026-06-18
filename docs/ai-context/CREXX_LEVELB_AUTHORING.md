@@ -187,6 +187,37 @@ References:
 - `docs/books/crexx_programming_guide/global_variables.md`
 - `debugger/rxdb.crexx`
 
+### Named constants are compile-time values
+
+Use `constant NAME = expression` for Level B masks, flags, and shared literal
+payloads that must not allocate runtime storage:
+
+```rexx
+constant RV_FLAG_STRING = 0x00010000
+constant SAMPLE_BYTES = "41424344"x as .binary
+```
+
+The initializer must fold at compile time. Integer constants used as assembler
+immediates are emitted as literals; string, decimal, float, and binary constants
+use the normal constant-pool machinery.
+
+### Explicit register views are system-programmer syntax
+
+Normal classes should use ordinary attributes. Runtime and VM-integration
+classes may map attributes to fixed register storage:
+
+```rexx
+  _string = .string with register.0.string
+  _flags = .int with register.0.flags.library
+```
+
+`register.0` is the containing value, not RXAS attribute zero. Duplicate typed
+views over the same physical `register.N` slot are complex attributes and the
+compiler emits conservative copy boundaries. Flag views are direct status-word
+views: `.flags.vm`, `.flags.compiler`, and `.flags.readable` are read-only;
+`.flags.library`, `.flags.user`, and `.flags.public` are writable. Flag views
+must be `.int`.
+
 ### Arrays are first-class Level B objects
 
 Do not reason about them as loose classic stem variables only.

@@ -50,6 +50,21 @@ See Procedures and Arguments Section
 
 CALL routine \[ parameter \] \[, \[ parameter \] ... \] 
 
+## CONSTANT
+
+Level B supports named compile-time constants:
+
+```rexx
+constant FLAG_STRING = 0x00010000
+constant PAYLOAD = "41424344"x as .binary
+```
+
+The initializer must be a compile-time constant expression. The declared name
+is immutable after declaration and can be used in ordinary expressions or as an
+inline assembler literal operand. Integer constants used as assembler immediates
+are substituted directly; string, decimal, float, and binary payload constants
+are stored through the normal RXBIN constant-pool path.
+
 ## DO/END
 
 DO \[ repetitor \] \[ conditional \] ; \[ clauses \]

@@ -1,0 +1,2 @@
+Error in err_register_flag_type.crexx @ 5:38 - #REGISTER_FLAG_VIEW_REQUIRES_INT, "flags"
+1 error(s) in source file

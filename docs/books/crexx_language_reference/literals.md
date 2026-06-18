@@ -29,7 +29,12 @@ The initializer must be a compile-time constant expression. A named constant is
 immutable, can be used in ordinary expressions, and can be used where inline
 assembler expects a literal operand. Runtime payload constants such as strings,
 decimals, floats, and binary byte sequences are stored through the RXBIN
-constant pool.
+constant pool. Object, reference, and array constants are not part of this
+Level B surface.
+
+Assigning to a named constant after declaration is a compile-time error. A
+constant declaration also cannot reuse an already declared variable name in the
+same scope.
 
 ## Hex/Binary Literals
 
