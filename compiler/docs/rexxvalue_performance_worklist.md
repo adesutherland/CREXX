@@ -134,11 +134,15 @@ hazards, but does not yet deliver scoped register reuse.
 For real source-level named locals, fixed register numbers remain the expected
 model within their live scope for readability, tracing, and simple metadata. The
 useful refinement is fixed registers within a scope, with registers returned
-after a provably local scope is complete. This applies to generated inline
-`BLOCK_EXPR` scopes and to real named locals declared in nested code blocks such
-as `DO`, `SIGNAL_BLOCK`, and explicit local `INSTRUCTIONS` scopes. Synthetic
-blocks that deliberately inherit their parent scope/register behavior are not
-reuse boundaries.
+after a provably local scope is complete. The first safe target is real named
+locals declared in nested statement scopes such as `DO`, `SIGNAL_BLOCK`, and
+explicit local `INSTRUCTIONS` scopes. Expression `BLOCK_EXPR` scopes are not
+recycled yet: an inlined `BLOCK_EXPR` can sit inside an attribute or array
+assignment where linked target helper registers remain live across the
+expression. Until the allocator models those live linked helpers, `BLOCK_EXPR`
+locals must keep stable non-recycled registers. Synthetic blocks that
+deliberately inherit their parent scope/register behavior are not reuse
+boundaries.
 
 The hand-tuned ideal for `RexxValue.add` would keep the real method locals
 fixed, then reuse a compact scratch window across operand materialization,
@@ -151,9 +155,8 @@ hand-tuned implementation.
 Preferred next work:
 
 - Exploit the existing AST surgery first: allocate named locals in eligible
-  `SCOPE_LOCAL` scopes from the reusable register pool and return them when that
-  scope is complete. Start with generated inline `BLOCK_EXPR` scopes, then apply
-  the same rule to real nested code-block locals.
+  real statement `SCOPE_LOCAL` scopes from the reusable register pool and return
+  them when that scope is complete.
 - Keep procedure-level source locals fixed and permanent for now.
 - Add inliner policy as a fallback/secondary control: a no-inline annotation or
   caller-side budget based on estimated local pressure, not only the existing
@@ -193,9 +196,16 @@ Register-assignment improvements still wanted:
 - Track and report register allocation categories in a compiler diagnostic
   mode: source locals, inlined locals, synthetic inline temporaries, expression
   temporaries, call frames, and complex attribute helpers.
-- Implement scoped allocation/release for eligible `SCOPE_LOCAL` symbols,
-  starting with generated inline `BLOCK_EXPR` scopes and extending to real
-  nested code-block locals.
+- Implement scoped allocation/release for eligible `SCOPE_LOCAL` symbols.
+  The first increment is deliberately conservative: only known scalar locals
+  (`.boolean`, `.int`, `.float`, `.decimal`, `.string`) are recycled, and
+  object, reference, binary, array, exposed, argument, receiver/factory,
+  reference-target, generated `__inline*`, and trace-helper `__rxtrace*`
+  symbols remain procedure-lifetime registers. `BLOCK_EXPR` scopes also remain
+  non-recycled because inlined expression scopes can run while linked attribute
+  or array target helpers are still live. This keeps reference lifetime
+  invalidation separate from register reuse until object/reference/array,
+  system-helper, and expression-link liveness is proven.
 - Rework scoped metadata emission with the allocation change. Current variable
   metadata is symbol-keyed via `meta_emitted` and normally cleared at procedure
   end. If registers are reused between block locals, the emitter must clear a

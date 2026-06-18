@@ -1405,6 +1405,8 @@ void emit_expression(ASTNode *node, void *payload) {
                     output_append_text(node->output, temp1);
                     free(temp1);
                 }
+                emit_scope_reference_lifetimes(node);
+                clear_scope_variable_metadata(node);
             }
 
             type_promotion(node);

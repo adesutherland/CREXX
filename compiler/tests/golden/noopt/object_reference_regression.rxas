@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : object_reference_regression.crexx
- * BUILT                  : 2026-06-13 15:11:36
+ * BUILT                  : 2026-06-18 22:09:04
  */
 
 .meta "object_reference_regression.largepayload"="b" ".unknown" .class
@@ -308,9 +308,9 @@ l95d:
    null r1
    .srcstep 40 40 17 "object_reference_regression.crexx" 68 5 17 "    name = label"
    .traceevent "V" 6 "R" "S" "a" 1 40 40 0 "label" ""
-   linkattr1 r4,r2,10
-   scopy r4,a1
-   unlink r4
+   linkattr1 r3,r2,10
+   scopy r3,a1
+   unlink r3
    .srcstep 45 45 17 "object_reference_regression.crexx" 69 5 7 "    do i = 1 to 40"
    .srcstep 41 41 17 "object_reference_regression.crexx" 69 8 13 "    do i = 1 to 40"
    .meta "object_reference_regression.largepayload.§factory.i"="b" ".int" r3
@@ -345,6 +345,8 @@ l191doinc:
    .srcstep 46 46 17 "object_reference_regression.crexx" 71 5 8 "    end"
    br l191dostart
 l191doend:
+   endlife r3
+   .meta "object_reference_regression.largepayload.§factory.i"
    .srcstep 47 47 17 "object_reference_regression.crexx" 72 5 22 "    values = t_values"
    .traceevent "V" 6 "R" "S" "r" 1 47 47 0 "t_values" ""
    linkattr1 r7,r2,11

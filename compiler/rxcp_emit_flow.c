@@ -71,6 +71,13 @@ static int flow_scope_owns_cleanup(ASTNode *node) {
     return node && node->scope && node->scope->defining_node == node;
 }
 
+static int flow_scope_owns_recyclable_registers(ASTNode *node) {
+    if (!flow_scope_owns_cleanup(node)) return 0;
+    if (node->inherit_parent_reg_scope) return 0;
+    if (node->scope->type != SCOPE_LOCAL) return 0;
+    return 1;
+}
+
 static void flow_emit_scope_dereference_unlinks(OutputFragment *output, Scope *scope) {
     size_t i;
 
@@ -84,6 +91,37 @@ static void flow_emit_scope_dereference_unlinks(OutputFragment *output, Scope *s
         output_append_text(output, line);
         free(line);
     }
+}
+
+static int flow_symbol_owns_scope_lifetime(Symbol *symbol) {
+    if (!symbol || symbol->symbol_type != VARIABLE_SYMBOL) return 0;
+    if (symbol->exposed || symbol->is_arg || symbol->is_this || symbol->is_factory) return 0;
+    if (symbol->register_type != 'r' || symbol->register_num < 0) return 0;
+    if (symbol->name && strncmp(symbol->name, "__inline", 8) == 0) return 0;
+    return 1;
+}
+
+void emit_scope_reference_lifetimes(ASTNode *node) {
+    Symbol **symbols;
+    size_t i;
+
+    if (!node || !node->output || !flow_scope_owns_recyclable_registers(node)) return;
+
+    symbols = scp_syms(node->scope);
+    if (!symbols) return;
+
+    for (i = 0; symbols[i]; i++) {
+        Symbol *symbol = symbols[i];
+        char *line;
+
+        if (!flow_symbol_owns_scope_lifetime(symbol)) continue;
+
+        line = mprintf("   endlife %c%d\n", symbol->register_type, symbol->register_num);
+        output_append_text(node->output, line);
+        free(line);
+    }
+
+    free(symbols);
 }
 
 static char *signal_emit_canonical_name(ASTNode *node) {
@@ -193,6 +231,8 @@ void emit_flow(ASTNode *node, void *pl) {
             }
             if (flow_scope_owns_cleanup(node)) {
                 flow_emit_scope_dereference_unlinks(node->output, node->scope);
+                emit_scope_reference_lifetimes(node);
+                clear_scope_variable_metadata(node);
             }
             comment_meta = get_reporting_metalines(node);
             if (comment_meta[0]) output_prepend_text(comment_meta, node->output);
@@ -286,6 +326,8 @@ void emit_flow(ASTNode *node, void *pl) {
             free(temp1);
             if (flow_scope_owns_cleanup(node)) {
                 flow_emit_scope_dereference_unlinks(node->output, node->scope);
+                emit_scope_reference_lifetimes(node);
+                clear_scope_variable_metadata(node);
             }
             signal_emit_names_free(&installed);
             break;
@@ -463,6 +505,8 @@ void emit_flow(ASTNode *node, void *pl) {
             if (child1->cleanup) output_concat(node->output, child1->cleanup);
             if (flow_scope_owns_cleanup(node)) {
                 flow_emit_scope_dereference_unlinks(node->output, node->scope);
+                emit_scope_reference_lifetimes(node);
+                clear_scope_variable_metadata(node);
             }
             free(temp1);
             free(comment_meta);

@@ -1,0 +1,21 @@
+options levelb
+namespace scoped_register_reuse
+
+main: procedure = .int
+  total = .int
+  total = 0
+
+  do
+    left = .int
+    left = 10
+    total = total + left
+  end
+
+  do
+    right = .int
+    right = 32
+    total = total + right
+  end
+
+  if total <> 42 then return 1
+  return 0

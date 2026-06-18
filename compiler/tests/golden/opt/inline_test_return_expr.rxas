@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_return_expr.crexx
- * BUILT                  : 2026-05-27 17:53:23
+ * BUILT                  : 2026-06-18 22:09:10
  */
 
 .globals=0
@@ -22,24 +22,24 @@ main() .locals=7
    .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "i" ""
    .srcstep 3 3 17 "inline_test_return_expr.crexx" 5 12 16 "  do i = 1 to 3"
-   load r2,3
-   .traceevent "L" 4 "R" "I" "r" 2 0 0 0 "" ""
+   load r1,3
+   .traceevent "L" 4 "R" "I" "r" 1 0 0 0 "" ""
 l8dostart:
    .srcstep 3 3 17 "inline_test_return_expr.crexx" 5 12 16 "  do i = 1 to 3"
-   igt r3,r0,r2
-   brt l8doend,r3
+   igt r2,r0,r1
+   brt l8doend,r2
    .srcstep 8 8 17 "inline_test_return_expr.crexx" 6 5 16 "    say wrap(i)"
    .srcstep 7 7 17 "inline_test_return_expr.crexx" 6 9 13 "    say wrap(i)"
    .srcstep 5 5 33 "inline_test_return_expr.crexx" 12 7 10 "  arg val = .int"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   icopy r1,r0
-   .traceevent "A" 6 "R" "I" "r" 1 5 5 0 "val" ""
+   icopy r3,r0
+   .traceevent "A" 6 "R" "I" "r" 3 5 5 0 "val" ""
    .srcstep 6 6 17 "inline_test_return_expr.crexx" 13 3 21 "  return addOne(val)"
-   .traceevent "V" 6 "R" "I" "r" 1 8 8 0 "val" ""
+   .traceevent "V" 6 "R" "I" "r" 3 8 8 0 "val" ""
    load r4,1
-   swap r5,r1
+   swap r5,r3
    call r6,addOne(),r4
-   swap r1,r5
+   swap r3,r5
    .traceevent "F" 4 "R" "I" "r" 6 8 8 0 "addone" ""
    icopy r5,r6
    br l49bexprend
@@ -52,6 +52,8 @@ l8doinc:
    .srcstep 10 10 17 "inline_test_return_expr.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
+   endlife r0
+   .meta "inline_test_return_expr.main.i"
    .srcstep 11 11 17 "inline_test_return_expr.crexx" 8 3 42 "  say \"Return inline expr test finished.\""
    say "Return inline expr test finished."
    .srcstep 12 12 17 "inline_test_return_expr.crexx" 9 3 11 "  return 0"

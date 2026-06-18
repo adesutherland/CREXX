@@ -148,6 +148,60 @@ static int use_symbol_reg(ASTNode* node) {
 
 static int defer_reg_return(ASTNode* node);
 
+static int scope_assigns_named_registers(Scope *scope) {
+    ASTNode *owner;
+
+    if (!scope || scope->type != SCOPE_LOCAL) return 0;
+    owner = scope->defining_node;
+    if (!owner) return 0;
+    return 1;
+}
+
+static int scope_recycles_named_registers(Scope *scope) {
+    ASTNode *owner;
+
+    if (!scope_assigns_named_registers(scope)) return 0;
+    owner = scope->defining_node;
+    if (owner->inherit_parent_reg_scope) return 0;
+    /* Inlined expressions can run while linked assignment-target helpers are live. */
+    if (owner->node_type == BLOCK_EXPR) return 0;
+    return 1;
+}
+
+static int symbol_name_starts_with(Symbol *symbol, const char *prefix) {
+    size_t len;
+
+    if (!symbol || !symbol->name || !prefix) return 0;
+    len = strlen(prefix);
+    return strncmp(symbol->name, prefix, len) == 0;
+}
+
+static int symbol_has_recyclable_scalar_type(Symbol *symbol) {
+    if (!symbol || symbol->value_dims > 0) return 0;
+
+    switch (symbol->type) {
+        case TP_BOOLEAN:
+        case TP_INTEGER:
+        case TP_FLOAT:
+        case TP_DECIMAL:
+        case TP_STRING:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static int symbol_uses_scoped_register(Symbol *symbol) {
+    if (!symbol || symbol->symbol_type != VARIABLE_SYMBOL) return 0;
+    if (!scope_recycles_named_registers(symbol->scope)) return 0;
+    if (symbol->exposed || symbol->is_arg || symbol->is_ref_arg ||
+        symbol->is_this || symbol->is_factory) return 0;
+    if (symbol->has_reference_target) return 0;
+    if (symbol_name_starts_with(symbol, "__inline")) return 0;
+    if (symbol_name_starts_with(symbol, "__rxtrace")) return 0;
+    return symbol_has_recyclable_scalar_type(symbol);
+}
+
 static void assign_symbol_registers_worker(Symbol *symbol, void *payload) {
     walker_payload *pl = (walker_payload*)payload;
     if (symbol->symbol_type == VARIABLE_SYMBOL) {
@@ -158,7 +212,11 @@ static void assign_symbol_registers_worker(Symbol *symbol, void *payload) {
             } else if (!(symbol->scope &&
                          symbol->scope->defining_node &&
                          symbol->scope->defining_node->node_type == CLASS_DEF)) {
-                symbol->register_num = get_reg_perm(symbol->scope);
+                if (symbol_uses_scoped_register(symbol)) {
+                    symbol->register_num = get_reg(symbol->scope);
+                } else {
+                    symbol->register_num = get_reg_perm(symbol->scope);
+                }
                 symbol->register_type = 'r';
             }
         }
@@ -166,15 +224,77 @@ static void assign_symbol_registers_worker(Symbol *symbol, void *payload) {
 }
 
 static void assign_registers_in_scope(Scope *scope, walker_payload *payload) {
-    size_t i;
     if (!scope) return;
     scp_4all(scope, assign_symbol_registers_worker, payload);
-    for (i = 0; i < scp_noch(scope); i++) {
-        Scope *child = scp_chd(scope, i);
-        if (child && child->type == SCOPE_LOCAL) {
-            assign_registers_in_scope(child, payload);
-        }
+}
+
+static void assign_scoped_registers_for_node(ASTNode *node, walker_payload *payload) {
+    if (!node || !scope_assigns_named_registers(node->scope)) return;
+    if (node->scope->defining_node != node) return;
+    assign_registers_in_scope(node->scope, payload);
+}
+
+static int int_compare(const void *left, const void *right) {
+    int l = *(const int *)left;
+    int r = *(const int *)right;
+
+    if (l < r) return -1;
+    if (l > r) return 1;
+    return 0;
+}
+
+static void release_scoped_registers_for_node(ASTNode *node) {
+    Scope *scope;
+    Symbol **symbols;
+    int *registers;
+    size_t count;
+    size_t i;
+
+    if (!node) return;
+    scope = node->scope;
+    if (!scope_recycles_named_registers(scope)) return;
+    if (scope->defining_node != node) return;
+
+    symbols = scp_syms(scope);
+    if (!symbols) return;
+
+    count = 0;
+    for (i = 0; symbols[i]; i++) {
+        Symbol *symbol = symbols[i];
+
+        if (!symbol_uses_scoped_register(symbol)) continue;
+        if (symbol->register_type != 'r' || symbol->register_num < 0) continue;
+        count++;
     }
+
+    if (!count) {
+        free(symbols);
+        return;
+    }
+
+    registers = malloc(sizeof(int) * count);
+    if (!registers) {
+        free(symbols);
+        return;
+    }
+
+    count = 0;
+    for (i = 0; symbols[i]; i++) {
+        Symbol *symbol = symbols[i];
+
+        if (!symbol_uses_scoped_register(symbol)) continue;
+        if (symbol->register_type != 'r' || symbol->register_num < 0) continue;
+        registers[count++] = symbol->register_num;
+    }
+
+    qsort(registers, count, sizeof(int), int_compare);
+    for (i = 0; i < count; i++) {
+        if (i && registers[i] == registers[i - 1]) continue;
+        ret_reg(scope, registers[i]);
+    }
+
+    free(registers);
+    free(symbols);
 }
 
 /* Returns a child's register to the pool, potentially deferring it if linked */
@@ -294,7 +414,7 @@ walker_result register_walker(walker_direction direction,
                 c = ast_type_child(node);
                 if (c) c->register_num = DONT_ASSIGN_REGISTER;
 
-                /* Pre-assign registers for all locals in this procedure, including nested SCOPE_LOCAL blocks */
+                /* Pre-assign procedure locals; eligible SCOPE_LOCAL blocks allocate on entry. */
                 if (node->scope) assign_registers_in_scope(node->scope, payload);
 
                 if (node->node_type == FACTORY) {
@@ -321,6 +441,13 @@ walker_result register_walker(walker_direction direction,
                     }
                 }
 
+                break;
+
+            case DO:
+            case SIGNAL_BLOCK:
+            case BLOCK_EXPR:
+            case INSTRUCTIONS:
+                assign_scoped_registers_for_node(node, payload);
                 break;
 
             case ARGS:
@@ -544,7 +671,11 @@ walker_result register_walker(walker_direction direction,
                                 symbol->register_num = payload->globals++;
                                 symbol->register_type = 'g';
                             } else {
-                                symbol->register_num = get_reg_perm(symbol->scope);
+                                if (symbol_uses_scoped_register(symbol)) {
+                                    symbol->register_num = get_reg(symbol->scope);
+                                } else {
+                                    symbol->register_num = get_reg_perm(symbol->scope);
+                                }
                                 symbol->register_type = 'r';
                             }
                         }
@@ -1028,6 +1159,8 @@ walker_result register_walker(walker_direction direction,
         if (node->parent && node->parent->node_type == INSTRUCTIONS) {
             ret_reg_all_deferred(node->scope);
         }
+
+        release_scoped_registers_for_node(node);
     }
 
     return result_normal;

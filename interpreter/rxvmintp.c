@@ -5226,6 +5226,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
             clear_value_contents(op1R);
             DISPATCH
 
+        START_INSTRUCTION(ENDLIFE_REG) CALC_DISPATCH(1)
+            DEBUG("TRACE - ENDLIFE R%lu\n", REG_IDX(1));
+            release_value_reference_lifetime(op1R);
+            DISPATCH
+
         /* Link attribute op3 of op2 to op1 */
         START_INSTRUCTION(LINKATTR_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - LINKATTR R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
@@ -9187,7 +9192,6 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         RESERVED_IMPL(RESERVED_447)
         RESERVED_IMPL(RESERVED_448)
         RESERVED_IMPL(RESERVED_449)
-        RESERVED_IMPL(RESERVED_514)
 
     END_OF_INSTRUCTIONS
 

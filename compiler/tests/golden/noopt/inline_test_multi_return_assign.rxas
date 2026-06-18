@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_multi_return_assign.crexx
- * BUILT                  : 2026-05-27 17:53:48
+ * BUILT                  : 2026-06-18 22:09:11
  */
 
 .globals=0
@@ -49,6 +49,10 @@ l8doinc:
    .srcstep 8 8 17 "inline_test_multi_return_assign.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
+   endlife r0
+   endlife r1
+   .meta "inline_test_multi_return_assign.main.i"
+   .meta "inline_test_multi_return_assign.main.result"
    .srcstep 9 9 17 "inline_test_multi_return_assign.crexx" 9 3 50 "  say \"Multi return assign inline test finished.\""
    say "Multi return assign inline test finished."
    .srcstep 10 10 17 "inline_test_multi_return_assign.crexx" 10 3 11 "  return 0"

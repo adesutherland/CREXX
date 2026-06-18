@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : block_expr_basic.crexx
- * BUILT                  : 2026-05-27 17:53:14
+ * BUILT                  : 2026-06-18 22:09:20
  */
 
 .globals=0
@@ -27,6 +27,7 @@ main() .locals=9
    icopy r4,r3
    br l19bexprend
 l19bexprend:
+   .meta "block_expr_basic.main.a"
    iadd r1,r4,10
    .traceevent "O" 4 "R" "I" "r" 1 4 4 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 1 4 4 0 "total" ""
@@ -51,6 +52,7 @@ l19bexprend:
    icopy r6,r5
    br l39bexprend
 l39bexprend:
+   .meta "block_expr_basic.main.x"
    iadd r6,r6,100
    .traceevent "O" 4 "R" "I" "r" 6 11 11 0 "" ""
    icopy r7,r6
@@ -71,6 +73,7 @@ l43bexprend:
    icopy r8,r7
    br l54bexprend
 l54bexprend:
+   .meta "block_expr_basic.main.y"
    iadd r8,r8,1
    itos r8
    .traceevent "O" 4 "R" "S" "r" 8 15 15 0 "" ""

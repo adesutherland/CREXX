@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_compare_expr.crexx
- * BUILT                  : 2026-05-27 17:53:24
+ * BUILT                  : 2026-06-18 22:09:09
  */
 
 .globals=0
@@ -61,6 +61,8 @@ l8doinc:
    .srcstep 11 11 17 "inline_test_compare_expr.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
+   endlife r0
+   .meta "inline_test_compare_expr.main.i"
    .srcstep 12 12 17 "inline_test_compare_expr.crexx" 9 3 43 "  say \"Compare inline expr test finished.\""
    say "Compare inline expr test finished."
    .srcstep 13 13 17 "inline_test_compare_expr.crexx" 10 3 11 "  return 0"

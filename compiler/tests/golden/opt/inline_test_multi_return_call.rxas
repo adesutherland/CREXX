@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_multi_return_call.crexx
- * BUILT                  : 2026-05-27 17:53:52
+ * BUILT                  : 2026-06-18 22:09:18
  */
 
 .globals=0
@@ -22,22 +22,22 @@ main() .locals=8
    .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "i" ""
    .srcstep 3 3 17 "inline_test_multi_return_call.crexx" 5 12 16 "  do i = 0 to 2"
-   load r3,2
-   .traceevent "L" 4 "R" "I" "r" 3 0 0 0 "" ""
+   load r1,2
+   .traceevent "L" 4 "R" "I" "r" 1 0 0 0 "" ""
 l8dostart:
    .srcstep 3 3 17 "inline_test_multi_return_call.crexx" 5 12 16 "  do i = 0 to 2"
-   igt r4,r0,r3
-   brt l8doend,r4
+   igt r2,r0,r1
+   brt l8doend,r2
    .srcstep 13 13 17 "inline_test_multi_return_call.crexx" 6 5 21 "    call maybeLog(i)"
    .srcstep 12 12 33 "inline_test_multi_return_call.crexx" 6 10 18 "    call maybeLog(i)"
    .srcstep 11 11 17 "inline_test_multi_return_call.crexx" 6 10 18 "    call maybeLog(i)"
    .srcstep 5 5 33 "inline_test_multi_return_call.crexx" 12 7 10 "  arg val = .int"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   icopy r2,r0
-   .traceevent "A" 6 "R" "I" "r" 2 5 5 0 "val" ""
+   icopy r4,r0
+   .traceevent "A" 6 "R" "I" "r" 4 5 5 0 "val" ""
    .srcstep 7 7 17 "inline_test_multi_return_call.crexx" 13 3 13 "  if val = 0 then return"
-   .traceevent "V" 6 "R" "I" "r" 2 7 7 0 "val" ""
-   ieq r5,r2,0
+   .traceevent "V" 6 "R" "I" "r" 4 7 7 0 "val" ""
+   ieq r5,r4,0
    .traceevent "O" 4 "R" "B" "r" 5 7 7 0 "" ""
    brf l51iffalse,r5
    .srcstep 8 8 17 "inline_test_multi_return_call.crexx" 13 14 18 "  if val = 0 then return"
@@ -48,9 +48,9 @@ l8dostart:
    br l46bexprend
 l51iffalse:
    .srcstep 9 9 17 "inline_test_multi_return_call.crexx" 14 3 18 "  say \"value\" val"
-   itos r2
-   .traceevent "V" 6 "R" "S" "r" 2 9 9 0 "val" ""
-   sconcat r5,"value",r2
+   itos r4
+   .traceevent "V" 6 "R" "S" "r" 4 9 9 0 "val" ""
+   sconcat r5,"value",r4
    .traceevent "O" 4 "R" "S" "r" 5 9 9 0 "" ""
    say r5
    .srcstep 10 10 17 "inline_test_multi_return_call.crexx" 15 3 9 "  return"
@@ -59,14 +59,16 @@ l51iffalse:
    icopy r7,r5
    br l46bexprend
 l46bexprend:
-   icopy r1,r7
-   .traceevent "A" 6 "R" "I" "r" 1 12 12 0 "__inline_unused_17" ""
+   icopy r3,r7
+   .traceevent "A" 6 "R" "I" "r" 3 12 12 0 "__inline_unused_17" ""
 l8doinc:
    .srcstep 4 4 17 "inline_test_multi_return_call.crexx" 5 6 7 "  do i = 0 to 2"
    inc r0
    .srcstep 15 15 17 "inline_test_multi_return_call.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
+   endlife r0
+   .meta "inline_test_multi_return_call.main.i"
    .srcstep 16 16 17 "inline_test_multi_return_call.crexx" 8 3 48 "  say \"Multi return call inline test finished.\""
    say "Multi return call inline test finished."
    .srcstep 17 17 17 "inline_test_multi_return_call.crexx" 9 3 11 "  return 0"

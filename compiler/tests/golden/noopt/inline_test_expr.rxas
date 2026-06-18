@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_expr.crexx
- * BUILT                  : 2026-05-27 17:53:17
+ * BUILT                  : 2026-06-18 22:09:08
  */
 
 .globals=0
@@ -51,6 +51,10 @@ l8doinc:
    .srcstep 8 8 17 "inline_test_expr.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
+   endlife r0
+   endlife r1
+   .meta "inline_test_expr.main.i"
+   .meta "inline_test_expr.main.result"
    .srcstep 9 9 17 "inline_test_expr.crexx" 9 3 35 "  say \"Inline expr test finished.\""
    say "Inline expr test finished."
    .srcstep 10 10 17 "inline_test_expr.crexx" 10 3 11 "  return 0"

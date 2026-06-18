@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_condition_contexts.crexx
- * BUILT                  : 2026-05-27 17:53:29
+ * BUILT                  : 2026-06-18 22:09:11
  */
 
 .globals=0
@@ -18,12 +18,12 @@ main() .locals=10
    .srcstep 6 6 17 "inline_test_condition_contexts.crexx" 6 3 14 "  if isOne(1) then say \"if-yes\""
    .srcstep 3 3 17 "inline_test_condition_contexts.crexx" 6 6 11 "  if isOne(1) then say \"if-yes\""
    .srcstep 2 2 17 "inline_test_condition_contexts.crexx" 29 3 19 "  return value = 1"
-   load r4,1
-   .traceevent "L" 4 "R" "I" "r" 4 6 6 0 "" ""
-   icopy r5,r4
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 6 6 0 "" ""
+   icopy r3,r2
    br l99bexprend
 l99bexprend:
-   brf l14iffalse,r5
+   brf l14iffalse,r3
    .srcstep 7 7 17 "inline_test_condition_contexts.crexx" 6 15 19 "  if isOne(1) then say \"if-yes\""
    .srcstep 4 4 17 "inline_test_condition_contexts.crexx" 6 20 32 "  if isOne(1) then say \"if-yes\""
    say "if-yes"
@@ -36,12 +36,12 @@ l14ifend:
    .srcstep 13 13 17 "inline_test_condition_contexts.crexx" 9 3 14 "  if isOne(2) then say \"bad-if-no\""
    .srcstep 10 10 17 "inline_test_condition_contexts.crexx" 9 6 11 "  if isOne(2) then say \"bad-if-no\""
    .srcstep 9 9 17 "inline_test_condition_contexts.crexx" 29 3 19 "  return value = 1"
-   load r5,0
-   .traceevent "L" 4 "R" "I" "r" 5 13 13 0 "" ""
-   icopy r6,r5
+   load r3,0
+   .traceevent "L" 4 "R" "I" "r" 3 13 13 0 "" ""
+   icopy r4,r3
    br l108bexprend
 l108bexprend:
-   brf l21iffalse,r6
+   brf l21iffalse,r4
    .srcstep 14 14 17 "inline_test_condition_contexts.crexx" 9 15 19 "  if isOne(2) then say \"bad-if-no\""
    .srcstep 11 11 17 "inline_test_condition_contexts.crexx" 9 20 35 "  if isOne(2) then say \"bad-if-no\""
    say "bad-if-no"
@@ -62,23 +62,23 @@ l25dostart:
    .srcstep 19 19 17 "inline_test_condition_contexts.crexx" 13 12 20 "  do while belowTwo(i)"
    .srcstep 17 17 33 "inline_test_condition_contexts.crexx" 32 7 12 "  arg value = .int"
    .traceevent "V" 6 "R" "I" "r" 0 17 17 0 "i" ""
-   icopy r2,r0
-   .traceevent "A" 6 "R" "I" "r" 2 17 17 0 "value" ""
+   icopy r5,r0
+   .traceevent "A" 6 "R" "I" "r" 5 17 17 0 "value" ""
    .srcstep 18 18 17 "inline_test_condition_contexts.crexx" 33 3 19 "  return value < 2"
-   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "value" ""
-   ilt r6,r2,2
-   btoi r6
-   .traceevent "O" 4 "R" "I" "r" 6 0 0 0 "" ""
-   icopy r7,r6
+   .traceevent "V" 6 "R" "I" "r" 5 0 0 0 "value" ""
+   ilt r4,r5,2
+   btoi r4
+   .traceevent "O" 4 "R" "I" "r" 4 0 0 0 "" ""
+   icopy r6,r4
    br l117bexprend
 l117bexprend:
-   brf l25doend,r7
+   brf l25doend,r6
    .srcstep 21 21 17 "inline_test_condition_contexts.crexx" 14 5 18 "    say \"while\" i"
    itos r0
    .traceevent "V" 6 "R" "S" "r" 0 21 21 0 "i" ""
-   sconcat r8,"while",r0
-   .traceevent "O" 4 "R" "S" "r" 8 21 21 0 "" ""
-   say r8
+   sconcat r7,"while",r0
+   .traceevent "O" 4 "R" "S" "r" 7 21 21 0 "" ""
+   say r7
    .srcstep 22 22 17 "inline_test_condition_contexts.crexx" 15 5 14 "    i = i + 1"
    .traceevent "V" 6 "R" "I" "r" 0 22 22 0 "i" ""
    iadd r0,r0,1
@@ -111,17 +111,17 @@ l43doinc:
    .srcstep 28 28 17 "inline_test_condition_contexts.crexx" 19 12 22 "  do until atLeastTwo(j)"
    .srcstep 26 26 33 "inline_test_condition_contexts.crexx" 36 7 12 "  arg value = .int"
    .traceevent "V" 6 "R" "I" "r" 1 26 26 0 "j" ""
-   icopy r3,r1
-   .traceevent "A" 6 "R" "I" "r" 3 26 26 0 "value" ""
+   icopy r8,r1
+   .traceevent "A" 6 "R" "I" "r" 8 26 26 0 "value" ""
    .srcstep 27 27 17 "inline_test_condition_contexts.crexx" 37 3 20 "  return value >= 2"
-   .traceevent "V" 6 "R" "I" "r" 3 0 0 0 "value" ""
-   igte r8,r3,2
-   btoi r8
-   .traceevent "O" 4 "R" "I" "r" 8 0 0 0 "" ""
-   icopy r7,r8
+   .traceevent "V" 6 "R" "I" "r" 8 0 0 0 "value" ""
+   igte r7,r8,2
+   btoi r7
+   .traceevent "O" 4 "R" "I" "r" 7 0 0 0 "" ""
+   icopy r6,r7
    br l126bexprend
 l126bexprend:
-   brt l43doend,r7
+   brt l43doend,r6
    .srcstep 33 33 17 "inline_test_condition_contexts.crexx" 22 3 6 "  end"
    br l43dostart
 l43doend:

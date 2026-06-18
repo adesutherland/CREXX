@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_void_fallthrough_call.crexx
- * BUILT                  : 2026-05-27 17:53:53
+ * BUILT                  : 2026-06-18 22:09:09
  */
 
 .globals=0
@@ -19,19 +19,19 @@ main() .locals=8
    .srcstep 6 6 33 "inline_test_void_fallthrough_call.crexx" 5 8 16 "  call maybeLog(0)"
    .srcstep 5 5 17 "inline_test_void_fallthrough_call.crexx" 5 8 16 "  call maybeLog(0)"
    .srcstep 2 2 17 "inline_test_void_fallthrough_call.crexx" 13 19 25 "  if val = 0 then return"
-   load r3,0
-   .traceevent "L" 4 "R" "I" "r" 3 6 6 0 "" ""
-   icopy r5,r3
+   load r1,0
+   .traceevent "L" 4 "R" "I" "r" 1 6 6 0 "" ""
+   icopy r3,r1
    br l66bexprend
    .srcstep 3 3 17 "inline_test_void_fallthrough_call.crexx" 14 3 18 "  say \"value\" val"
    say "value 0"
    .srcstep 4 4 33 "inline_test_void_fallthrough_call.crexx" 14 18 18 "  say \"value\" val"
-   load r4,0
-   .traceevent "L" 4 "R" "I" "r" 4 6 6 0 "" ""
-   icopy r5,r4
+   load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 6 6 0 "" ""
+   icopy r3,r2
    br l66bexprend
 l66bexprend:
-   icopy r0,r5
+   icopy r0,r3
    .traceevent "A" 6 "R" "I" "r" 0 6 6 0 "__inline_unused_10" ""
    .srcstep 12 12 17 "inline_test_void_fallthrough_call.crexx" 6 3 19 "  call maybeLog(2)"
    .srcstep 11 11 33 "inline_test_void_fallthrough_call.crexx" 6 8 16 "  call maybeLog(2)"
@@ -39,26 +39,26 @@ l66bexprend:
    .srcstep 8 8 17 "inline_test_void_fallthrough_call.crexx" 14 3 18 "  say \"value\" val"
    say "value 2"
    .srcstep 9 9 33 "inline_test_void_fallthrough_call.crexx" 14 18 18 "  say \"value\" val"
-   load r5,0
-   .traceevent "L" 4 "R" "I" "r" 5 11 11 0 "" ""
-   icopy r6,r5
+   load r3,0
+   .traceevent "L" 4 "R" "I" "r" 3 11 11 0 "" ""
+   icopy r5,r3
    br l86bexprend
 l86bexprend:
-   icopy r1,r6
-   .traceevent "A" 6 "R" "I" "r" 1 11 11 0 "__inline_unused_13" ""
+   icopy r4,r5
+   .traceevent "A" 6 "R" "I" "r" 4 11 11 0 "__inline_unused_13" ""
    .srcstep 17 17 17 "inline_test_void_fallthrough_call.crexx" 7 3 23 "  call tracePair(1, 3)"
    .srcstep 16 16 33 "inline_test_void_fallthrough_call.crexx" 7 8 17 "  call tracePair(1, 3)"
    .srcstep 15 15 17 "inline_test_void_fallthrough_call.crexx" 7 8 17 "  call tracePair(1, 3)"
    .srcstep 13 13 17 "inline_test_void_fallthrough_call.crexx" 19 3 26 "  say \"pair\" left + right"
    say "pair 4"
    .srcstep 14 14 33 "inline_test_void_fallthrough_call.crexx" 19 26 26 "  say \"pair\" left + right"
-   load r6,0
-   .traceevent "L" 4 "R" "I" "r" 6 16 16 0 "" ""
-   icopy r7,r6
+   load r5,0
+   .traceevent "L" 4 "R" "I" "r" 5 16 16 0 "" ""
+   icopy r7,r5
    br l106bexprend
 l106bexprend:
-   icopy r2,r7
-   .traceevent "A" 6 "R" "I" "r" 2 16 16 0 "__inline_unused_17" ""
+   icopy r6,r7
+   .traceevent "A" 6 "R" "I" "r" 6 16 16 0 "__inline_unused_17" ""
    .srcstep 18 18 17 "inline_test_void_fallthrough_call.crexx" 8 3 47 "  say \"Void fallthrough inline test finished.\""
    say "Void fallthrough inline test finished."
    .srcstep 19 19 17 "inline_test_void_fallthrough_call.crexx" 9 3 11 "  return 0"

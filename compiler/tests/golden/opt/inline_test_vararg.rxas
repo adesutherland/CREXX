@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_vararg.crexx
- * BUILT                  : 2026-05-27 17:53:40
+ * BUILT                  : 2026-06-18 22:09:19
  */
 
 .globals=0
@@ -20,71 +20,74 @@ main() .locals=24
    .meta "inline_test_vararg.main.__inline_varg_array_50"="b" ".int[1]" r1
    null r1
    .srcstep 2 2 17 "inline_test_vararg.crexx" 17 3 20 "  return base + arg[]"
-   load r7,10
-   .traceevent "L" 4 "R" "I" "r" 7 4 4 0 "" ""
-   icopy r8,r7
+   load r2,10
+   .traceevent "L" 4 "R" "I" "r" 2 4 4 0 "" ""
+   icopy r3,r2
    br l105bexprend
 l105bexprend:
-   itos r8
-   say r8
+   .meta "inline_test_vararg.main.__inline_varg_array_50"
+   itos r3
+   say r3
    .srcstep 10 10 17 "inline_test_vararg.crexx" 6 3 28 "  say tailCount(10, 20, 30)"
    .srcstep 9 9 17 "inline_test_vararg.crexx" 6 7 16 "  say tailCount(10, 20, 30)"
-   .meta "inline_test_vararg.main.__inline_varg_array_50"="b" ".int[2]" r2
+   .meta "inline_test_vararg.main.__inline_varg_array_50"="b" ".int[2]" r4
    .srcstep 5 5 33 "inline_test_vararg.crexx" 16 26 30 "  arg base = .int, ... = .int"
-   null r2
+   null r4
    .srcstep 6 6 33 "inline_test_vararg.crexx" 16 26 30 "  arg base = .int, ... = .int"
-   setattrs r2,2
-   linkattr1 r8,r2,1
-   load r9,20
-   .traceevent "L" 4 "R" "I" "r" 9 6 6 0 "" ""
-   icopy r8,r9
-   .traceevent "A" 6 "R" "I" "r" 8 6 6 0 "__inline_varg_array_50" ""
-   unlink r8
+   setattrs r4,2
+   linkattr1 r3,r4,1
+   load r5,20
+   .traceevent "L" 4 "R" "I" "r" 5 6 6 0 "" ""
+   icopy r3,r5
+   .traceevent "A" 6 "R" "I" "r" 3 6 6 0 "__inline_varg_array_50" ""
+   unlink r3
    .srcstep 7 7 33 "inline_test_vararg.crexx" 16 26 30 "  arg base = .int, ... = .int"
-   setattrs r2,2
-   linkattr1 r8,r2,2
-   load r10,30
-   .traceevent "L" 4 "R" "I" "r" 10 7 7 0 "" ""
-   icopy r8,r10
-   .traceevent "A" 6 "R" "I" "r" 8 7 7 0 "__inline_varg_array_50" ""
-   unlink r8
+   setattrs r4,2
+   linkattr1 r3,r4,2
+   load r6,30
+   .traceevent "L" 4 "R" "I" "r" 6 7 7 0 "" ""
+   icopy r3,r6
+   .traceevent "A" 6 "R" "I" "r" 3 7 7 0 "__inline_varg_array_50" ""
+   unlink r3
    .srcstep 8 8 17 "inline_test_vararg.crexx" 17 3 20 "  return base + arg[]"
-   load r8,12
-   .traceevent "L" 4 "R" "I" "r" 8 10 10 0 "" ""
-   icopy r11,r8
+   load r3,12
+   .traceevent "L" 4 "R" "I" "r" 3 10 10 0 "" ""
+   icopy r7,r3
    br l114bexprend
 l114bexprend:
-   itos r11
-   say r11
+   .meta "inline_test_vararg.main.__inline_varg_array_50"
+   itos r7
+   say r7
    .srcstep 16 16 17 "inline_test_vararg.crexx" 7 3 35 "  total = 1 + secondOnly(5, 7, 11)"
    .meta "inline_test_vararg.main.total"="b" ".int" r0
    .srcstep 15 15 17 "inline_test_vararg.crexx" 7 15 25 "  total = 1 + secondOnly(5, 7, 11)"
-   .meta "inline_test_vararg.main.__inline_varg_array_64"="b" ".int[2]" r3
+   .meta "inline_test_vararg.main.__inline_varg_array_64"="b" ".int[2]" r8
    .srcstep 11 11 33 "inline_test_vararg.crexx" 20 26 30 "  arg base = .int, ... = .int"
-   null r3
+   null r8
    .srcstep 12 12 33 "inline_test_vararg.crexx" 20 26 30 "  arg base = .int, ... = .int"
-   setattrs r3,2
-   linkattr1 r11,r3,1
-   load r12,7
-   .traceevent "L" 4 "R" "I" "r" 12 12 12 0 "" ""
-   icopy r11,r12
-   .traceevent "A" 6 "R" "I" "r" 11 12 12 0 "__inline_varg_array_64" ""
-   unlink r11
+   setattrs r8,2
+   linkattr1 r7,r8,1
+   load r9,7
+   .traceevent "L" 4 "R" "I" "r" 9 12 12 0 "" ""
+   icopy r7,r9
+   .traceevent "A" 6 "R" "I" "r" 7 12 12 0 "__inline_varg_array_64" ""
+   unlink r7
    .srcstep 13 13 33 "inline_test_vararg.crexx" 20 26 30 "  arg base = .int, ... = .int"
-   setattrs r3,2
-   linkattr1 r11,r3,2
-   load r13,11
-   .traceevent "L" 4 "R" "I" "r" 13 13 13 0 "" ""
-   icopy r11,r13
-   .traceevent "A" 6 "R" "I" "r" 11 13 13 0 "__inline_varg_array_64" ""
-   unlink r11
+   setattrs r8,2
+   linkattr1 r7,r8,2
+   load r10,11
+   .traceevent "L" 4 "R" "I" "r" 10 13 13 0 "" ""
+   icopy r7,r10
+   .traceevent "A" 6 "R" "I" "r" 7 13 13 0 "__inline_varg_array_64" ""
+   unlink r7
    .srcstep 14 14 17 "inline_test_vararg.crexx" 21 3 22 "  return base + arg[2]"
-   load r11,16
-   .traceevent "L" 4 "R" "I" "r" 11 16 16 0 "" ""
-   icopy r14,r11
+   load r7,16
+   .traceevent "L" 4 "R" "I" "r" 7 16 16 0 "" ""
+   icopy r11,r7
    br l137bexprend
 l137bexprend:
-   iadd r0,r14,1
+   .meta "inline_test_vararg.main.__inline_varg_array_64"
+   iadd r0,r11,1
    .traceevent "O" 4 "R" "I" "r" 0 16 16 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 16 16 0 "total" ""
    .srcstep 17 17 17 "inline_test_vararg.crexx" 8 3 12 "  say total"
@@ -93,90 +96,92 @@ l137bexprend:
    say r0
    .srcstep 23 23 17 "inline_test_vararg.crexx" 9 3 21 "  say hasThird(1, 2)"
    .srcstep 22 22 17 "inline_test_vararg.crexx" 9 7 15 "  say hasThird(1, 2)"
-   .meta "inline_test_vararg.main.__inline_varg_array_74"="b" ".int[2]" r4
+   .meta "inline_test_vararg.main.__inline_varg_array_74"="b" ".int[2]" r12
    .srcstep 18 18 33 "inline_test_vararg.crexx" 24 13 17 "  arg ... = .int"
-   null r4
+   null r12
    .srcstep 19 19 33 "inline_test_vararg.crexx" 24 13 17 "  arg ... = .int"
-   setattrs r4,2
-   linkattr1 r14,r4,1
-   load r15,1
-   .traceevent "L" 4 "R" "I" "r" 15 19 19 0 "" ""
-   icopy r14,r15
-   .traceevent "A" 6 "R" "I" "r" 14 19 19 0 "__inline_varg_array_74" ""
-   unlink r14
+   setattrs r12,2
+   linkattr1 r11,r12,1
+   load r13,1
+   .traceevent "L" 4 "R" "I" "r" 13 19 19 0 "" ""
+   icopy r11,r13
+   .traceevent "A" 6 "R" "I" "r" 11 19 19 0 "__inline_varg_array_74" ""
+   unlink r11
    .srcstep 20 20 33 "inline_test_vararg.crexx" 24 13 17 "  arg ... = .int"
-   setattrs r4,2
-   linkattr1 r14,r4,2
-   load r16,2
-   .traceevent "L" 4 "R" "I" "r" 16 20 20 0 "" ""
-   icopy r14,r16
-   .traceevent "A" 6 "R" "I" "r" 14 20 20 0 "__inline_varg_array_74" ""
-   unlink r14
+   setattrs r12,2
+   linkattr1 r11,r12,2
+   load r14,2
+   .traceevent "L" 4 "R" "I" "r" 14 20 20 0 "" ""
+   icopy r11,r14
+   .traceevent "A" 6 "R" "I" "r" 11 20 20 0 "__inline_varg_array_74" ""
+   unlink r11
    .srcstep 21 21 17 "inline_test_vararg.crexx" 25 3 15 "  return arg(3, \"E\")"
-   load r14,0
-   .traceevent "L" 4 "R" "B" "r" 14 23 23 0 "" ""
-   icopy r17,r14
+   load r11,0
+   .traceevent "L" 4 "R" "B" "r" 11 23 23 0 "" ""
+   icopy r15,r11
    br l160bexprend
 l160bexprend:
-   itos r17
-   say r17
+   .meta "inline_test_vararg.main.__inline_varg_array_74"
+   itos r15
+   say r15
    .srcstep 30 30 17 "inline_test_vararg.crexx" 10 3 24 "  say hasThird(1, 2, 3)"
    .srcstep 29 29 17 "inline_test_vararg.crexx" 10 7 15 "  say hasThird(1, 2, 3)"
-   .meta "inline_test_vararg.main.__inline_varg_array_74"="b" ".int[3]" r5
+   .meta "inline_test_vararg.main.__inline_varg_array_74"="b" ".int[3]" r16
    .srcstep 24 24 33 "inline_test_vararg.crexx" 24 13 17 "  arg ... = .int"
-   null r5
+   null r16
    .srcstep 25 25 33 "inline_test_vararg.crexx" 24 13 17 "  arg ... = .int"
-   setattrs r5,3
-   linkattr1 r17,r5,1
-   load r18,1
-   .traceevent "L" 4 "R" "I" "r" 18 25 25 0 "" ""
-   icopy r17,r18
-   .traceevent "A" 6 "R" "I" "r" 17 25 25 0 "__inline_varg_array_74" ""
-   unlink r17
-   .srcstep 26 26 33 "inline_test_vararg.crexx" 24 13 17 "  arg ... = .int"
-   setattrs r5,3
-   linkattr1 r17,r5,2
-   load r19,2
-   .traceevent "L" 4 "R" "I" "r" 19 26 26 0 "" ""
-   icopy r17,r19
-   .traceevent "A" 6 "R" "I" "r" 17 26 26 0 "__inline_varg_array_74" ""
-   unlink r17
-   .srcstep 27 27 33 "inline_test_vararg.crexx" 24 13 17 "  arg ... = .int"
-   setattrs r5,3
-   linkattr1 r17,r5,3
-   load r20,3
-   .traceevent "L" 4 "R" "I" "r" 20 27 27 0 "" ""
-   icopy r17,r20
-   .traceevent "A" 6 "R" "I" "r" 17 27 27 0 "__inline_varg_array_74" ""
-   unlink r17
-   .srcstep 28 28 17 "inline_test_vararg.crexx" 25 3 15 "  return arg(3, \"E\")"
+   setattrs r16,3
+   linkattr1 r15,r16,1
    load r17,1
-   .traceevent "L" 4 "R" "B" "r" 17 30 30 0 "" ""
-   icopy r21,r17
+   .traceevent "L" 4 "R" "I" "r" 17 25 25 0 "" ""
+   icopy r15,r17
+   .traceevent "A" 6 "R" "I" "r" 15 25 25 0 "__inline_varg_array_74" ""
+   unlink r15
+   .srcstep 26 26 33 "inline_test_vararg.crexx" 24 13 17 "  arg ... = .int"
+   setattrs r16,3
+   linkattr1 r15,r16,2
+   load r18,2
+   .traceevent "L" 4 "R" "I" "r" 18 26 26 0 "" ""
+   icopy r15,r18
+   .traceevent "A" 6 "R" "I" "r" 15 26 26 0 "__inline_varg_array_74" ""
+   unlink r15
+   .srcstep 27 27 33 "inline_test_vararg.crexx" 24 13 17 "  arg ... = .int"
+   setattrs r16,3
+   linkattr1 r15,r16,3
+   load r19,3
+   .traceevent "L" 4 "R" "I" "r" 19 27 27 0 "" ""
+   icopy r15,r19
+   .traceevent "A" 6 "R" "I" "r" 15 27 27 0 "__inline_varg_array_74" ""
+   unlink r15
+   .srcstep 28 28 17 "inline_test_vararg.crexx" 25 3 15 "  return arg(3, \"E\")"
+   load r15,1
+   .traceevent "L" 4 "R" "B" "r" 15 30 30 0 "" ""
+   icopy r20,r15
    br l178bexprend
 l178bexprend:
-   itos r21
-   say r21
+   .meta "inline_test_vararg.main.__inline_varg_array_74"
+   itos r20
+   say r20
    .srcstep 35 35 17 "inline_test_vararg.crexx" 11 3 27 "  call logSecond(3, 9, 12)"
-   .meta "inline_test_vararg.main.__inline_varg_array_87"="b" ".int[2]" r6
+   .meta "inline_test_vararg.main.__inline_varg_array_87"="b" ".int[2]" r21
    .srcstep 31 31 33 "inline_test_vararg.crexx" 28 26 30 "  arg base = .int, ... = .int"
-   null r6
+   null r21
    .srcstep 32 32 33 "inline_test_vararg.crexx" 28 26 30 "  arg base = .int, ... = .int"
-   setattrs r6,2
-   linkattr1 r21,r6,1
+   setattrs r21,2
+   linkattr1 r20,r21,1
    load r22,9
    .traceevent "L" 4 "R" "I" "r" 22 32 32 0 "" ""
-   icopy r21,r22
-   .traceevent "A" 6 "R" "I" "r" 21 32 32 0 "__inline_varg_array_87" ""
-   unlink r21
+   icopy r20,r22
+   .traceevent "A" 6 "R" "I" "r" 20 32 32 0 "__inline_varg_array_87" ""
+   unlink r20
    .srcstep 33 33 33 "inline_test_vararg.crexx" 28 26 30 "  arg base = .int, ... = .int"
-   setattrs r6,2
-   linkattr1 r21,r6,2
+   setattrs r21,2
+   linkattr1 r20,r21,2
    load r23,12
    .traceevent "L" 4 "R" "I" "r" 23 33 33 0 "" ""
-   icopy r21,r23
-   .traceevent "A" 6 "R" "I" "r" 21 33 33 0 "__inline_varg_array_87" ""
-   unlink r21
+   icopy r20,r23
+   .traceevent "A" 6 "R" "I" "r" 20 33 33 0 "__inline_varg_array_87" ""
+   unlink r20
    .srcstep 34 34 17 "inline_test_vararg.crexx" 29 3 19 "  say base + arg[2]"
    say "15"
    .srcstep 36 36 17 "inline_test_vararg.crexx" 12 3 37 "  say \"Vararg inline test finished.\""

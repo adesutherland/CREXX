@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_vararg_dynamic_loop.crexx
- * BUILT                  : 2026-05-27 17:53:41
+ * BUILT                  : 2026-06-18 22:09:14
  */
 
 .globals=0
@@ -103,6 +103,8 @@ l29doinc:
    .srcstep 15 15 17 "inline_test_vararg_dynamic_loop.crexx" 13 3 6 "  end"
    br l29dostart
 l29doend:
+   endlife r1
+   .meta "inline_test_vararg_dynamic_loop.localmax.i"
    .srcstep 16 16 17 "inline_test_vararg_dynamic_loop.crexx" 14 1 9 "return m"
    .traceevent "V" 6 "R" "F" "r" 0 16 16 0 "m" ""
    ret r0

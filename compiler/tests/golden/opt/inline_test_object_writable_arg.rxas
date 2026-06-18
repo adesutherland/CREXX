@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_object_writable_arg.crexx
- * BUILT                  : 2026-06-12 20:26:06
+ * BUILT                  : 2026-06-18 22:09:17
  */
 
 .meta "inline_test_object_writable_arg.box"="b" ".unknown" .class
@@ -23,11 +23,11 @@ main() .locals=10
    .srcstep 3 3 6 "inline_test_object_writable_arg.crexx" 19 3 13 "  *: factory"
    setobjtype r1,"inline_test_object_writable_arg.box"
    .srcstep 4 4 17 "inline_test_object_writable_arg.crexx" 21 5 19 "    name = initial"
-   load r6,"alpha"
-   .traceevent "L" 4 "R" "S" "r" 6 4 4 0 "" ""
-   linkattr1 r5,r1,1
-   scopy r5,r6
-   unlink r5
+   load r3,"alpha"
+   .traceevent "L" 4 "R" "S" "r" 3 4 4 0 "" ""
+   linkattr1 r2,r1,1
+   scopy r2,r3
+   unlink r2
    .srcstep 5 5 33 "inline_test_object_writable_arg.crexx" 22 5 11 "    return"
    .traceevent "V" 6 "R" "O" "r" 1 5 5 0 "§factory" ""
    copy r0,r1
@@ -37,48 +37,48 @@ main() .locals=10
    .srcstep 14 14 17 "inline_test_object_writable_arg.crexx" 6 7 17 "  say replaceBox(box)"
    .srcstep 7 7 6 "inline_test_object_writable_arg.crexx" 12 7 12 "  arg value = .Box"
    .traceevent "V" 6 "R" "O" "r" 0 15 15 0 "box" ""
-   copy r2,r0
+   copy r4,r0
    .srcstep 12 12 17 "inline_test_object_writable_arg.crexx" 13 3 24 "  value = .Box(\"local\")"
    .srcstep 8 8 6 "inline_test_object_writable_arg.crexx" 19 3 13 "  *: factory"
-   setattrs r3,2
+   setattrs r5,2
    .srcstep 9 9 6 "inline_test_object_writable_arg.crexx" 19 3 13 "  *: factory"
-   setobjtype r3,"inline_test_object_writable_arg.box"
+   setobjtype r5,"inline_test_object_writable_arg.box"
    .srcstep 10 10 17 "inline_test_object_writable_arg.crexx" 21 5 19 "    name = initial"
-   load r7,"local"
-   .traceevent "L" 4 "R" "S" "r" 7 10 10 0 "" ""
-   linkattr1 r5,r3,1
-   scopy r5,r7
-   unlink r5
+   load r6,"local"
+   .traceevent "L" 4 "R" "S" "r" 6 10 10 0 "" ""
+   linkattr1 r2,r5,1
+   scopy r2,r6
+   unlink r2
    .srcstep 11 11 33 "inline_test_object_writable_arg.crexx" 22 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 3 11 11 0 "§factory" ""
-   copy r2,r3
-   .traceevent "A" 6 "R" "O" "r" 2 11 11 0 "value" ""
+   .traceevent "V" 6 "R" "O" "r" 5 11 11 0 "§factory" ""
+   copy r4,r5
+   .traceevent "A" 6 "R" "O" "r" 4 11 11 0 "value" ""
    .srcstep 13 13 17 "inline_test_object_writable_arg.crexx" 14 3 23 "  return value.getName()"
-   .traceevent "V" 6 "R" "O" "r" 2 15 15 0 "value" ""
-   load r8,1
-   settp r2,256
-   swap r9,r2
-   call r5,§inline_test_object_writable_arg.box.getname(),r8
-   swap r2,r9
-   .traceevent "F" 4 "R" "S" "r" 5 15 15 0 "getname" ""
-   scopy r9,r5
+   .traceevent "V" 6 "R" "O" "r" 4 15 15 0 "value" ""
+   load r7,1
+   settp r4,256
+   swap r8,r4
+   call r2,§inline_test_object_writable_arg.box.getname(),r7
+   swap r4,r8
+   .traceevent "F" 4 "R" "S" "r" 2 15 15 0 "getname" ""
+   scopy r8,r2
    br l100bexprend
 l100bexprend:
-   say r9
+   say r8
    .srcstep 19 19 17 "inline_test_object_writable_arg.crexx" 7 3 18 "  say box.getName()"
    .srcstep 18 18 17 "inline_test_object_writable_arg.crexx" 7 7 10 "  say box.getName()"
    .srcstep 16 16 33 "inline_test_object_writable_arg.crexx" 7 7 10 "  say box.getName()"
    .traceevent "V" 6 "R" "O" "r" 0 16 16 0 "box" ""
-   copy r4,r0
-   .traceevent "A" 6 "R" "O" "r" 4 16 16 0 "§this" ""
+   copy r9,r0
+   .traceevent "A" 6 "R" "O" "r" 9 16 16 0 "§this" ""
    .srcstep 17 17 17 "inline_test_object_writable_arg.crexx" 25 5 16 "    return name"
-   linkattr1 r9,r4,1
-   .traceevent "V" 6 "R" "S" "r" 9 19 19 0 "name" ""
-   scopy r8,r9
-   unlink r9
+   linkattr1 r8,r9,1
+   .traceevent "V" 6 "R" "S" "r" 8 19 19 0 "name" ""
+   scopy r7,r8
+   unlink r8
    br l127bexprend
 l127bexprend:
-   say r8
+   say r7
    .srcstep 20 20 17 "inline_test_object_writable_arg.crexx" 8 3 50 "  say \"Object writable-arg inline test finished.\""
    say "Object writable-arg inline test finished."
    .srcstep 21 21 17 "inline_test_object_writable_arg.crexx" 9 3 11 "  return 0"

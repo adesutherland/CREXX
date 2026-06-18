@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : block_expr_basic.crexx
- * BUILT                  : 2026-05-27 17:53:13
+ * BUILT                  : 2026-06-18 22:09:18
  */
 
 .globals=0
@@ -22,24 +22,26 @@ main() .locals=11
    .traceevent "A" 6 "R" "I" "r" 2 1 1 0 "a" ""
    .srcstep 3 3 17 "block_expr_basic.crexx" 5 3 11 "  if a > 0 then leave with a * 2"
    .traceevent "V" 6 "R" "I" "r" 2 3 3 0 "a" ""
-   igt r5,r2,0
-   .traceevent "O" 4 "R" "B" "r" 5 3 3 0 "" ""
-   brf l16iffalse,r5
+   igt r3,r2,0
+   .traceevent "O" 4 "R" "B" "r" 3 3 3 0 "" ""
+   brf l16iffalse,r3
    .srcstep 4 4 17 "block_expr_basic.crexx" 5 12 16 "  if a > 0 then leave with a * 2"
    .srcstep 2 2 17 "block_expr_basic.crexx" 5 17 33 "  if a > 0 then leave with a * 2"
    .traceevent "V" 6 "R" "I" "r" 2 7 7 0 "a" ""
-   imult r6,r2,2
-   .traceevent "O" 4 "R" "I" "r" 6 7 7 0 "" ""
-   icopy r7,r6
+   imult r4,r2,2
+   .traceevent "O" 4 "R" "I" "r" 4 7 7 0 "" ""
+   icopy r5,r4
    br l19bexprend
 l16iffalse:
    .srcstep 5 5 17 "block_expr_basic.crexx" 6 3 15 "  leave with 0"
-   load r5,0
-   .traceevent "L" 4 "R" "I" "r" 5 7 7 0 "" ""
-   icopy r7,r5
+   load r3,0
+   .traceevent "L" 4 "R" "I" "r" 3 7 7 0 "" ""
+   icopy r5,r3
    br l19bexprend
 l19bexprend:
-   iadd r1,r7,10
+   endlife r2
+   .meta "block_expr_basic.main.a"
+   iadd r1,r5,10
    .traceevent "O" 4 "R" "I" "r" 1 7 7 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 1 7 7 0 "total" ""
    .srcstep 8 8 17 "block_expr_basic.crexx" 8 1 10 "say total"
@@ -51,35 +53,37 @@ l19bexprend:
    .srcstep 15 15 17 "block_expr_basic.crexx" 11 3 22 "  leave with 100 + do"
    .srcstep 14 14 17 "block_expr_basic.crexx" 11 20 22 "  leave with 100 + do"
    .srcstep 9 9 17 "block_expr_basic.crexx" 12 5 10 "    x = 3"
-   .meta "block_expr_basic.main.x"="b" ".int" r3
+   .meta "block_expr_basic.main.x"="b" ".int" r6
    .meta "block_expr_basic.main.nested"="b" ".int" r0
-   load r3,3
-   .traceevent "L" 4 "R" "I" "r" 3 9 9 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 3 9 9 0 "x" ""
+   load r6,3
+   .traceevent "L" 4 "R" "I" "r" 6 9 9 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 6 9 9 0 "x" ""
    .srcstep 11 11 17 "block_expr_basic.crexx" 13 5 13 "    if x = 3 then leave with 7"
-   .traceevent "V" 6 "R" "I" "r" 3 11 11 0 "x" ""
-   ieq r7,r3,3
-   .traceevent "O" 4 "R" "B" "r" 7 11 11 0 "" ""
-   brf l36iffalse,r7
+   .traceevent "V" 6 "R" "I" "r" 6 11 11 0 "x" ""
+   ieq r5,r6,3
+   .traceevent "O" 4 "R" "B" "r" 5 11 11 0 "" ""
+   brf l36iffalse,r5
    .srcstep 12 12 17 "block_expr_basic.crexx" 13 14 18 "    if x = 3 then leave with 7"
    .srcstep 10 10 17 "block_expr_basic.crexx" 13 19 31 "    if x = 3 then leave with 7"
-   load r8,7
-   .traceevent "L" 4 "R" "I" "r" 8 17 17 0 "" ""
-   icopy r9,r8
+   load r7,7
+   .traceevent "L" 4 "R" "I" "r" 7 17 17 0 "" ""
+   icopy r8,r7
    br l39bexprend
 l36iffalse:
    .srcstep 13 13 17 "block_expr_basic.crexx" 14 5 17 "    leave with 0"
-   load r7,0
-   .traceevent "L" 4 "R" "I" "r" 7 17 17 0 "" ""
-   icopy r9,r7
+   load r5,0
+   .traceevent "L" 4 "R" "I" "r" 5 17 17 0 "" ""
+   icopy r8,r5
    br l39bexprend
 l39bexprend:
-   iadd r9,r9,100
-   .traceevent "O" 4 "R" "I" "r" 9 17 17 0 "" ""
-   icopy r10,r9
+   endlife r6
+   .meta "block_expr_basic.main.x"
+   iadd r8,r8,100
+   .traceevent "O" 4 "R" "I" "r" 8 17 17 0 "" ""
+   icopy r9,r8
    br l43bexprend
 l43bexprend:
-   icopy r0,r10
+   icopy r0,r9
    .traceevent "A" 6 "R" "I" "r" 0 17 17 0 "nested" ""
    .srcstep 18 18 17 "block_expr_basic.crexx" 17 1 11 "say nested"
    itos r0
@@ -88,19 +92,21 @@ l43bexprend:
    .srcstep 22 22 17 "block_expr_basic.crexx" 19 1 11 "say 1 + do"
    .srcstep 21 21 17 "block_expr_basic.crexx" 19 9 11 "say 1 + do"
    .srcstep 19 19 17 "block_expr_basic.crexx" 20 3 8 "  y = 1"
-   .meta "block_expr_basic.main.y"="b" ".int" r4
-   load r4,1
-   .traceevent "L" 4 "R" "I" "r" 4 19 19 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 4 19 19 0 "y" ""
+   .meta "block_expr_basic.main.y"="b" ".int" r10
+   load r10,1
+   .traceevent "L" 4 "R" "I" "r" 10 19 19 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 10 19 19 0 "y" ""
    .srcstep 20 20 17 "block_expr_basic.crexx" 21 3 15 "  leave with y"
-   .traceevent "V" 6 "R" "I" "r" 4 22 22 0 "y" ""
-   icopy r10,r4
+   .traceevent "V" 6 "R" "I" "r" 10 22 22 0 "y" ""
+   icopy r9,r10
    br l54bexprend
 l54bexprend:
-   iadd r10,r10,1
-   itos r10
-   .traceevent "O" 4 "R" "S" "r" 10 22 22 0 "" ""
-   say r10
+   endlife r10
+   .meta "block_expr_basic.main.y"
+   iadd r9,r9,1
+   itos r9
+   .traceevent "O" 4 "R" "S" "r" 9 22 22 0 "" ""
+   say r9
    .srcstep 23 23 1 "block_expr_basic.crexx" 19 15 15 "  leave with y"
    ret
    .meta "block_expr_basic.main.nested"

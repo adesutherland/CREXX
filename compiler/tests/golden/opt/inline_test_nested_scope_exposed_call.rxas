@@ -1,11 +1,11 @@
 /*
  * SOURCE                 : inline_test_nested_scope_exposed_call.crexx
- * BUILT                  : 2026-05-27 17:53:47
+ * BUILT                  : 2026-06-18 22:09:17
  */
 
 .globals=0
 
-main() .locals=9
+main() .locals=8
    .meta "inline_test_nested_scope_exposed_call.main"="b" ".int" main() ""
    .srcstep 18 18 17 "inline_test_nested_scope_exposed_call.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -22,51 +22,55 @@ main() .locals=9
    .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "i" ""
    .srcstep 3 3 17 "inline_test_nested_scope_exposed_call.crexx" 5 12 16 "  do i = 1 to 3"
-   load r4,3
-   .traceevent "L" 4 "R" "I" "r" 4 0 0 0 "" ""
+   load r1,3
+   .traceevent "L" 4 "R" "I" "r" 1 0 0 0 "" ""
 l8dostart:
    .srcstep 3 3 17 "inline_test_nested_scope_exposed_call.crexx" 5 12 16 "  do i = 1 to 3"
-   igt r5,r0,r4
-   brt l8doend,r5
+   igt r2,r0,r1
+   brt l8doend,r2
    .srcstep 13 13 17 "inline_test_nested_scope_exposed_call.crexx" 6 5 17 "    say outer(i)"
    .srcstep 12 12 17 "inline_test_nested_scope_exposed_call.crexx" 6 9 14 "    say outer(i)"
    .srcstep 5 5 33 "inline_test_nested_scope_exposed_call.crexx" 12 7 10 "  arg val = .int"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   icopy r1,r0
-   .traceevent "A" 6 "R" "I" "r" 1 5 5 0 "val" ""
-   .meta "inline_test_nested_scope_exposed_call.main.tmp"="b" ".int" r2
+   icopy r3,r0
+   .traceevent "A" 6 "R" "I" "r" 3 5 5 0 "val" ""
+   .meta "inline_test_nested_scope_exposed_call.main.tmp"="b" ".int" r4
    .srcstep 6 6 17 "inline_test_nested_scope_exposed_call.crexx" 14 5 15 "    tmp = .int"
-   null r2
+   null r4
    .srcstep 9 9 17 "inline_test_nested_scope_exposed_call.crexx" 15 5 22 "    tmp = addOne(val)"
    .srcstep 7 7 33 "inline_test_nested_scope_exposed_call.crexx" 21 7 10 "  arg val = .int"
-   .traceevent "V" 6 "R" "I" "r" 1 7 7 0 "val" ""
-   icopy r3,r1
-   .traceevent "A" 6 "R" "I" "r" 3 7 7 0 "val" ""
+   .traceevent "V" 6 "R" "I" "r" 3 7 7 0 "val" ""
+   icopy r5,r3
+   .traceevent "A" 6 "R" "I" "r" 5 7 7 0 "val" ""
    .srcstep 8 8 33 "inline_test_nested_scope_exposed_call.crexx" 22 3 9 "  return val + 1"
-   .traceevent "V" 6 "R" "I" "r" 3 8 8 0 "val" ""
-   iadd r2,r3,1
-   .traceevent "O" 4 "R" "I" "r" 2 8 8 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 2 8 8 0 "tmp" ""
+   .traceevent "V" 6 "R" "I" "r" 5 8 8 0 "val" ""
+   iadd r4,r5,1
+   .traceevent "O" 4 "R" "I" "r" 4 8 8 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 8 8 0 "tmp" ""
    .srcstep 10 10 17 "inline_test_nested_scope_exposed_call.crexx" 16 5 19 "    return tmp * 2"
-   .traceevent "V" 6 "R" "I" "r" 2 13 13 0 "tmp" ""
-   imult r6,r2,2
+   .traceevent "V" 6 "R" "I" "r" 4 13 13 0 "tmp" ""
+   imult r6,r4,2
    .traceevent "O" 4 "R" "I" "r" 6 13 13 0 "" ""
-   icopy r8,r6
+   icopy r7,r6
    br l60bexprend
+   endlife r4
+   .meta "inline_test_nested_scope_exposed_call.main.tmp"
    .srcstep 11 11 17 "inline_test_nested_scope_exposed_call.crexx" 18 3 11 "  return 0"
-   load r7,0
-   .traceevent "L" 4 "R" "I" "r" 7 13 13 0 "" ""
-   icopy r8,r7
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 13 13 0 "" ""
+   icopy r7,r4
    br l60bexprend
 l60bexprend:
-   itos r8
-   say r8
+   itos r7
+   say r7
 l8doinc:
    .srcstep 4 4 17 "inline_test_nested_scope_exposed_call.crexx" 5 6 7 "  do i = 1 to 3"
    inc r0
    .srcstep 15 15 17 "inline_test_nested_scope_exposed_call.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
+   endlife r0
+   .meta "inline_test_nested_scope_exposed_call.main.i"
    .srcstep 16 16 17 "inline_test_nested_scope_exposed_call.crexx" 8 3 56 "  say \"Nested scope exposed call inline test finished.\""
    say "Nested scope exposed call inline test finished."
    .srcstep 17 17 17 "inline_test_nested_scope_exposed_call.crexx" 9 3 11 "  return 0"

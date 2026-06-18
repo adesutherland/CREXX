@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_call.crexx
- * BUILT                  : 2026-05-27 17:53:16
+ * BUILT                  : 2026-06-18 22:09:12
  */
 
 .globals=0
@@ -41,6 +41,8 @@ l8doinc:
    .srcstep 7 7 17 "inline_test_call.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
+   endlife r0
+   .meta "inline_test_call.main.i"
    .srcstep 8 8 17 "inline_test_call.crexx" 8 3 35 "  say \"Inline call test finished.\""
    say "Inline call test finished."
    .srcstep 9 9 17 "inline_test_call.crexx" 9 3 11 "  return 0"

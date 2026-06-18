@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : 07_loops.crexx
- * BUILT                  : 2026-05-27 17:52:48
+ * BUILT                  : 2026-06-18 22:09:18
  */
 
 .globals=0
@@ -38,6 +38,8 @@ l3doinc:
    .srcstep 6 6 17 "07_loops.crexx" 6 1 4 "end"
    br l3dostart
 l3doend:
+   endlife r1
+   .meta "07_loops.main.i"
    .srcstep 7 7 17 "07_loops.crexx" 9 1 6 "j = 0"
    .meta "07_loops.main.j"="b" ".int" r0
    load r0,0

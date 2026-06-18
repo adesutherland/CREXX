@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_array_return_assign.crexx
- * BUILT                  : 2026-05-27 17:53:53
+ * BUILT                  : 2026-06-18 22:09:36
  */
 
 .globals=0
@@ -28,83 +28,87 @@ main() .locals=12
    null r2
    .srcstep 5 5 17 "inline_test_array_return_assign.crexx" 15 3 17 "  temp[1] = left"
    minattrs r2,1
-   linkattr1 r5,r2,1
-   load r6,"red"
-   .traceevent "L" 4 "R" "S" "r" 6 5 5 0 "" ""
-   scopy r5,r6
-   .traceevent "A" 6 "R" "S" "r" 5 5 5 0 "temp" ""
-   unlink r5
+   linkattr1 r3,r2,1
+   load r4,"red"
+   .traceevent "L" 4 "R" "S" "r" 4 5 5 0 "" ""
+   scopy r3,r4
+   .traceevent "A" 6 "R" "S" "r" 3 5 5 0 "temp" ""
+   unlink r3
    .srcstep 6 6 17 "inline_test_array_return_assign.crexx" 16 3 18 "  temp[2] = right"
    minattrs r2,2
-   linkattr1 r5,r2,2
-   load r7,"blue"
-   .traceevent "L" 4 "R" "S" "r" 7 6 6 0 "" ""
-   scopy r5,r7
-   .traceevent "A" 6 "R" "S" "r" 5 6 6 0 "temp" ""
-   unlink r5
+   linkattr1 r3,r2,2
+   load r5,"blue"
+   .traceevent "L" 4 "R" "S" "r" 5 6 6 0 "" ""
+   scopy r3,r5
+   .traceevent "A" 6 "R" "S" "r" 3 6 6 0 "temp" ""
+   unlink r3
    .srcstep 7 7 17 "inline_test_array_return_assign.crexx" 17 3 14 "  return temp"
    .traceevent "V" 6 "R" "S" "r" 2 9 9 0 "temp" ""
-   copy r5,r2
+   copy r3,r2
    br l84bexprend
 l84bexprend:
-   copy r1,r5
+   endlife r2
+   .meta "inline_test_array_return_assign.main.temp"
+   copy r1,r3
    .traceevent "A" 6 "R" "S" "r" 1 9 9 0 "values" ""
    .srcstep 10 10 17 "inline_test_array_return_assign.crexx" 6 3 35 "  say values[1] || \":\" || values[2]"
    minattrs r1,1
-   linkattr1 r5,r1,1
-   .traceevent "V" 6 "R" "S" "r" 5 10 10 0 "values" ""
-   concat r8,r5,":"
-   unlink r5
-   .traceevent "O" 4 "R" "S" "r" 8 10 10 0 "" ""
+   linkattr1 r3,r1,1
+   .traceevent "V" 6 "R" "S" "r" 3 10 10 0 "values" ""
+   concat r6,r3,":"
+   unlink r3
+   .traceevent "O" 4 "R" "S" "r" 6 10 10 0 "" ""
    minattrs r1,2
-   linkattr1 r9,r1,2
-   .traceevent "V" 6 "R" "S" "r" 9 10 10 0 "values" ""
-   concat r8,r8,r9
-   unlink r9
-   .traceevent "O" 4 "R" "S" "r" 8 10 10 0 "" ""
-   say r8
+   linkattr1 r7,r1,2
+   .traceevent "V" 6 "R" "S" "r" 7 10 10 0 "values" ""
+   concat r6,r6,r7
+   unlink r7
+   .traceevent "O" 4 "R" "S" "r" 6 10 10 0 "" ""
+   say r6
    .srcstep 16 16 17 "inline_test_array_return_assign.crexx" 7 3 37 "  more = buildArray(\"green\", \"gold\")"
    .srcstep 15 15 17 "inline_test_array_return_assign.crexx" 7 10 20 "  more = buildArray(\"green\", \"gold\")"
-   .meta "inline_test_array_return_assign.main.temp"="b" ".string[*]" r3
+   .meta "inline_test_array_return_assign.main.temp"="b" ".string[*]" r8
    .srcstep 11 11 17 "inline_test_array_return_assign.crexx" 14 3 17 "  temp = .string[]"
-   null r3
+   null r8
    .srcstep 12 12 17 "inline_test_array_return_assign.crexx" 15 3 17 "  temp[1] = left"
-   minattrs r3,1
-   linkattr1 r9,r3,1
-   load r8,"green"
-   .traceevent "L" 4 "R" "S" "r" 8 12 12 0 "" ""
-   scopy r9,r8
-   .traceevent "A" 6 "R" "S" "r" 9 12 12 0 "temp" ""
-   unlink r9
+   minattrs r8,1
+   linkattr1 r7,r8,1
+   load r6,"green"
+   .traceevent "L" 4 "R" "S" "r" 6 12 12 0 "" ""
+   scopy r7,r6
+   .traceevent "A" 6 "R" "S" "r" 7 12 12 0 "temp" ""
+   unlink r7
    .srcstep 13 13 17 "inline_test_array_return_assign.crexx" 16 3 18 "  temp[2] = right"
-   minattrs r3,2
-   linkattr1 r9,r3,2
-   load r5,"gold"
-   .traceevent "L" 4 "R" "S" "r" 5 13 13 0 "" ""
-   scopy r9,r5
-   .traceevent "A" 6 "R" "S" "r" 9 13 13 0 "temp" ""
-   unlink r9
+   minattrs r8,2
+   linkattr1 r7,r8,2
+   load r3,"gold"
+   .traceevent "L" 4 "R" "S" "r" 3 13 13 0 "" ""
+   scopy r7,r3
+   .traceevent "A" 6 "R" "S" "r" 7 13 13 0 "temp" ""
+   unlink r7
    .srcstep 14 14 17 "inline_test_array_return_assign.crexx" 17 3 14 "  return temp"
-   .traceevent "V" 6 "R" "S" "r" 3 16 16 0 "temp" ""
-   copy r9,r3
+   .traceevent "V" 6 "R" "S" "r" 8 16 16 0 "temp" ""
+   copy r7,r8
    br l108bexprend
 l108bexprend:
-   copy r0,r9
+   endlife r8
+   .meta "inline_test_array_return_assign.main.temp"
+   copy r0,r7
    .traceevent "A" 6 "R" "S" "r" 0 16 16 0 "more" ""
    .srcstep 20 20 17 "inline_test_array_return_assign.crexx" 8 3 24 "  say renderArray(more)"
    .srcstep 19 19 17 "inline_test_array_return_assign.crexx" 8 7 18 "  say renderArray(more)"
    .srcstep 17 17 6 "inline_test_array_return_assign.crexx" 20 7 12 "  arg value = .string[]"
    .traceevent "V" 6 "R" "S" "r" 0 20 20 0 "more" ""
-   copy r4,r0
+   copy r9,r0
    .srcstep 18 18 17 "inline_test_array_return_assign.crexx" 21 3 36 "  return value[1] || \":\" || value[2]"
-   minattrs r4,1
-   linkattr1 r9,r4,1
-   .traceevent "V" 6 "R" "S" "r" 9 20 20 0 "value" ""
-   concat r10,r9,":"
-   unlink r9
+   minattrs r9,1
+   linkattr1 r7,r9,1
+   .traceevent "V" 6 "R" "S" "r" 7 20 20 0 "value" ""
+   concat r10,r7,":"
+   unlink r7
    .traceevent "O" 4 "R" "S" "r" 10 20 20 0 "" ""
-   minattrs r4,2
-   linkattr1 r11,r4,2
+   minattrs r9,2
+   linkattr1 r11,r9,2
    .traceevent "V" 6 "R" "S" "r" 11 20 20 0 "value" ""
    concat r10,r10,r11
    unlink r11

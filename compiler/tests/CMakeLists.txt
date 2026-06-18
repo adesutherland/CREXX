@@ -525,6 +525,58 @@ add_test(NAME rxc_register_flag_views
          COMMAND ${CMAKE_COMMAND} -P "${RXC_REGISTER_FLAG_VIEWS_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+set(RXC_SCOPED_REGISTER_REUSE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_scoped_register_reuse.cmake")
+set(RXC_SCOPED_REGISTER_REUSE_CONTENT "")
+foreach(_mode IN ITEMS noopt)
+    if(_mode STREQUAL "noopt")
+        set(_flag "-n")
+    else()
+        set(_flag "")
+    endif()
+    string(APPEND RXC_SCOPED_REGISTER_REUSE_CONTENT
+           "execute_process(\n"
+           "  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${_flag} -o \"scoped_register_reuse_${_mode}\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/scoped_register_reuse.crexx\"\n"
+           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+           "  OUTPUT_VARIABLE rxc_${_mode}_out\n"
+           "  ERROR_VARIABLE rxc_${_mode}_err\n"
+           "  RESULT_VARIABLE rxc_${_mode}_res\n"
+           ")\n"
+           "set(full_${_mode}_out \"${RXAS_DIAG_DOLLAR}{rxc_${_mode}_out}${RXAS_DIAG_DOLLAR}{rxc_${_mode}_err}\")\n"
+           "string(REPLACE \"\\r\\n\" \"\\n\" full_${_mode}_out \"${RXAS_DIAG_DOLLAR}{full_${_mode}_out}\")\n"
+           "if(NOT rxc_${_mode}_res EQUAL 0)\n"
+           "  message(FATAL_ERROR \"rxc ${_mode} failed for scoped register reuse.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_${_mode}_out}\")\n"
+           "endif()\n"
+           "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/scoped_register_reuse_${_mode}.rxas\" rxas_${_mode}_out)\n"
+           "string(REPLACE \"\\r\\n\" \"\\n\" rxas_${_mode}_out \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "string(REGEX MATCH [=[\\.meta \"scoped_register_reuse.main.left\"=\"b\" \"\\.int\" r([0-9]+)]=] left_match \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "if(NOT left_match)\n"
+           "  message(FATAL_ERROR \"Left scoped local metadata missing in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "set(left_reg \"${RXAS_DIAG_DOLLAR}{CMAKE_MATCH_1}\")\n"
+           "string(REGEX MATCH [=[\\.meta \"scoped_register_reuse.main.right\"=\"b\" \"\\.int\" r([0-9]+)]=] right_match \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "if(NOT right_match)\n"
+           "  message(FATAL_ERROR \"Right scoped local metadata missing in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "set(right_reg \"${RXAS_DIAG_DOLLAR}{CMAKE_MATCH_1}\")\n"
+           "if(NOT left_reg STREQUAL right_reg)\n"
+           "  message(FATAL_ERROR \"Scoped scalar locals did not reuse a register in ${_mode}: left=r${RXAS_DIAG_DOLLAR}{left_reg}, right=r${RXAS_DIAG_DOLLAR}{right_reg}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "string(REGEX MATCHALL [=[\\.meta \"scoped_register_reuse.main.left\"]=] left_meta_entries \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "list(LENGTH left_meta_entries left_meta_count)\n"
+           "if(NOT left_meta_count EQUAL 2)\n"
+           "  message(FATAL_ERROR \"Expected definition and clear metadata records for left scoped local in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "if(NOT rxas_${_mode}_out MATCHES \"endlife r${RXAS_DIAG_DOLLAR}{left_reg}\")\n"
+           "  message(FATAL_ERROR \"Scoped local reference lifetime cleanup missing before register reuse in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n")
+endforeach()
+file(GENERATE OUTPUT "${RXC_SCOPED_REGISTER_REUSE_SCRIPT}" CONTENT "${RXC_SCOPED_REGISTER_REUSE_CONTENT}")
+
+add_test(NAME rxc_scoped_register_reuse
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_SCOPED_REGISTER_REUSE_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxc_scoped_register_reuse PROPERTIES LABELS "compiler;registers")
+
 # Robustness tests
 macro(add_crexx_robustness_test NAME MAIN_FILE)
     # The list of dependencies are passed as additional arguments
@@ -929,7 +981,7 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
     set_tests_properties(${NAME} PROPERTIES LABELS "${LABELS}")
 endfunction()
 
-foreach(_crexx_reference_fixture IN ITEMS reference_source_explicit reference_source_contract reference_source_iterator reference_source_dereference_live reference_source_inline_lifetime)
+foreach(_crexx_reference_fixture IN ITEMS reference_source_explicit reference_source_contract reference_source_iterator reference_source_dereference_live reference_source_inline_lifetime reference_source_block_lifetime)
     foreach(_crexx_runner IN ITEMS rxvm rxbvm)
         foreach(_crexx_mode IN ITEMS noopt opt)
             add_crexx_reference_source_test(${_crexx_reference_fixture} ${_crexx_runner} ${_crexx_mode})

@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_multi_return_expr.crexx
- * BUILT                  : 2026-05-27 17:53:50
+ * BUILT                  : 2026-06-18 22:09:15
  */
 
 .globals=0
@@ -22,21 +22,21 @@ main() .locals=8
    .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "i" ""
    .srcstep 3 3 17 "inline_test_multi_return_expr.crexx" 5 13 17 "  do i = -1 to 1"
-   load r2,1
-   .traceevent "L" 4 "R" "I" "r" 2 0 0 0 "" ""
+   load r1,1
+   .traceevent "L" 4 "R" "I" "r" 1 0 0 0 "" ""
 l8dostart:
    .srcstep 3 3 17 "inline_test_multi_return_expr.crexx" 5 13 17 "  do i = -1 to 1"
-   igt r3,r0,r2
-   brt l8doend,r3
+   igt r2,r0,r1
+   brt l8doend,r2
    .srcstep 14 14 17 "inline_test_multi_return_expr.crexx" 6 5 25 "    say 10 + classify(i)"
    .srcstep 13 13 17 "inline_test_multi_return_expr.crexx" 6 14 22 "    say 10 + classify(i)"
    .srcstep 5 5 33 "inline_test_multi_return_expr.crexx" 12 7 10 "  arg val = .int"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   icopy r1,r0
-   .traceevent "A" 6 "R" "I" "r" 1 5 5 0 "val" ""
+   icopy r3,r0
+   .traceevent "A" 6 "R" "I" "r" 3 5 5 0 "val" ""
    .srcstep 7 7 17 "inline_test_multi_return_expr.crexx" 13 3 13 "  if val < 0 then return -1"
-   .traceevent "V" 6 "R" "I" "r" 1 7 7 0 "val" ""
-   ilt r4,r1,0
+   .traceevent "V" 6 "R" "I" "r" 3 7 7 0 "val" ""
+   ilt r4,r3,0
    .traceevent "O" 4 "R" "B" "r" 4 7 7 0 "" ""
    brf l58iffalse,r4
    .srcstep 8 8 17 "inline_test_multi_return_expr.crexx" 13 14 18 "  if val < 0 then return -1"
@@ -47,8 +47,8 @@ l8dostart:
    br l53bexprend
 l58iffalse:
    .srcstep 10 10 17 "inline_test_multi_return_expr.crexx" 14 3 13 "  if val > 0 then return 1"
-   .traceevent "V" 6 "R" "I" "r" 1 10 10 0 "val" ""
-   igt r4,r1,0
+   .traceevent "V" 6 "R" "I" "r" 3 10 10 0 "val" ""
+   igt r4,r3,0
    .traceevent "O" 4 "R" "B" "r" 4 10 10 0 "" ""
    brf l65iffalse,r4
    .srcstep 11 11 17 "inline_test_multi_return_expr.crexx" 14 14 18 "  if val > 0 then return 1"
@@ -74,6 +74,8 @@ l8doinc:
    .srcstep 16 16 17 "inline_test_multi_return_expr.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
+   endlife r0
+   .meta "inline_test_multi_return_expr.main.i"
    .srcstep 17 17 17 "inline_test_multi_return_expr.crexx" 8 3 48 "  say \"Multi return expr inline test finished.\""
    say "Multi return expr inline test finished."
    .srcstep 18 18 17 "inline_test_multi_return_expr.crexx" 9 3 11 "  return 0"

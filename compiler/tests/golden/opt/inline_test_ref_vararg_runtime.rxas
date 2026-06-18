@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_ref_vararg_runtime.crexx
- * BUILT                  : 2026-05-27 17:53:37
+ * BUILT                  : 2026-06-18 22:09:18
  */
 
 .globals=0
@@ -184,7 +184,7 @@ bumpOne() .locals=1
    ret a1
    .meta "inline_test_ref_vararg_runtime.bumpone.value"
 
-mutateTailIndirect() .locals=7
+mutateTailIndirect() .locals=5
    .meta "inline_test_ref_vararg_runtime.mutatetailindirect"="b" ".int" mutateTailIndirect() "which=.int,expose ...=.int"
    .srcstep 33 33 17 "inline_test_ref_vararg_runtime.crexx" 35 1 37 "mutateTailIndirect: procedure = .int"
    setnumdgts 18
@@ -196,15 +196,15 @@ mutateTailIndirect() .locals=7
    .meta "inline_test_ref_vararg_runtime.mutatetailindirect.which"="b" ".int" a1
    .srcstep 31 31 17 "inline_test_ref_vararg_runtime.crexx" 36 28 38 "  arg which = .int, expose ... = .int"
    .srcstep 32 32 17 "inline_test_ref_vararg_runtime.crexx" 37 3 27 "  return bumpOne(arg[which])"
-   icopy r5,a0
-   isub r5,r5,1
-   ichkrng a1,1,r5
-   linkarg r5,a1,1
-   load r3,1
-   swap r4,r5
-   call r6,bumpOne(),r3
-   swap r5,r4
-   unlink r5
-   .traceevent "F" 4 "R" "I" "r" 6 32 32 0 "bumpone" ""
-   ret r6
+   icopy r3,a0
+   isub r3,r3,1
+   ichkrng a1,1,r3
+   linkarg r3,a1,1
+   load r1,1
+   swap r2,r3
+   call r4,bumpOne(),r1
+   swap r3,r2
+   unlink r3
+   .traceevent "F" 4 "R" "I" "r" 4 32 32 0 "bumpone" ""
+   ret r4
    .meta "inline_test_ref_vararg_runtime.mutatetailindirect.which"

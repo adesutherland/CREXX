@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_object_const_arg_mutation.crexx
- * BUILT                  : 2026-06-12 20:26:06
+ * BUILT                  : 2026-06-18 22:09:17
  */
 
 .meta "inline_test_object_const_arg_mutation.box"="b" ".unknown" .class
@@ -23,11 +23,11 @@ main() .locals=9
    .srcstep 3 3 6 "inline_test_object_const_arg_mutation.crexx" 19 3 13 "  *: factory"
    setobjtype r1,"inline_test_object_const_arg_mutation.box"
    .srcstep 4 4 17 "inline_test_object_const_arg_mutation.crexx" 21 5 19 "    name = initial"
-   load r6,"seed"
-   .traceevent "L" 4 "R" "S" "r" 6 4 4 0 "" ""
-   linkattr1 r5,r1,1
-   scopy r5,r6
-   unlink r5
+   load r3,"seed"
+   .traceevent "L" 4 "R" "S" "r" 3 4 4 0 "" ""
+   linkattr1 r2,r1,1
+   scopy r2,r3
+   unlink r2
    .srcstep 5 5 33 "inline_test_object_const_arg_mutation.crexx" 22 5 11 "    return"
    .traceevent "V" 6 "R" "O" "r" 1 5 5 0 "§factory" ""
    copy r0,r1
@@ -36,29 +36,29 @@ main() .locals=9
    .srcstep 10 10 17 "inline_test_object_const_arg_mutation.crexx" 13 3 32 "  call value.setName(\"changed\")"
    .srcstep 7 7 33 "inline_test_object_const_arg_mutation.crexx" 13 8 13 "  call value.setName(\"changed\")"
    .traceevent "V" 6 "R" "O" "r" 0 7 7 0 "box" ""
-   copy r3,r0
-   .traceevent "A" 6 "R" "O" "r" 3 7 7 0 "§this" ""
+   copy r5,r0
+   .traceevent "A" 6 "R" "O" "r" 5 7 7 0 "§this" ""
    .srcstep 8 8 17 "inline_test_object_const_arg_mutation.crexx" 26 5 16 "    name = next"
-   load r7,"changed"
-   .traceevent "L" 4 "R" "S" "r" 7 8 8 0 "" ""
-   linkattr1 r5,r3,1
-   scopy r5,r7
-   unlink r5
+   load r6,"changed"
+   .traceevent "L" 4 "R" "S" "r" 6 8 8 0 "" ""
+   linkattr1 r2,r5,1
+   scopy r2,r6
+   unlink r2
    .srcstep 9 9 6 "inline_test_object_const_arg_mutation.crexx" 13 8 32 "  call value.setName(\"changed\")"
-   .traceevent "V" 6 "R" "O" "r" 3 0 0 0 "§this" ""
-   copy r0,r3
+   .traceevent "V" 6 "R" "O" "r" 5 0 0 0 "§this" ""
+   copy r0,r5
    .srcstep 15 15 17 "inline_test_object_const_arg_mutation.crexx" 7 3 18 "  say box.getName()"
    .meta "inline_test_object_const_arg_mutation.main.box"="b" ".box" r0
    .srcstep 14 14 17 "inline_test_object_const_arg_mutation.crexx" 7 7 10 "  say box.getName()"
    .srcstep 12 12 33 "inline_test_object_const_arg_mutation.crexx" 7 7 10 "  say box.getName()"
    .traceevent "V" 6 "R" "O" "r" 0 12 12 0 "box" ""
-   copy r4,r0
-   .traceevent "A" 6 "R" "O" "r" 4 12 12 0 "§this" ""
+   copy r7,r0
+   .traceevent "A" 6 "R" "O" "r" 7 12 12 0 "§this" ""
    .srcstep 13 13 17 "inline_test_object_const_arg_mutation.crexx" 30 5 16 "    return name"
-   linkattr1 r5,r4,1
-   .traceevent "V" 6 "R" "S" "r" 5 15 15 0 "name" ""
-   scopy r8,r5
-   unlink r5
+   linkattr1 r2,r7,1
+   .traceevent "V" 6 "R" "S" "r" 2 15 15 0 "name" ""
+   scopy r8,r2
+   unlink r2
    br l121bexprend
 l121bexprend:
    say r8

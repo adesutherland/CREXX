@@ -1,6 +1,6 @@
 /*
  * SOURCE                 : inline_test_say_expr_negative.crexx
- * BUILT                  : 2026-05-27 17:53:22
+ * BUILT                  : 2026-06-18 22:09:19
  */
 
 .globals=0
@@ -22,21 +22,21 @@ main() .locals=6
    .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "i" ""
    .srcstep 3 3 17 "inline_test_say_expr_negative.crexx" 5 12 16 "  do i = 1 to 3"
-   load r2,3
-   .traceevent "L" 4 "R" "I" "r" 2 0 0 0 "" ""
+   load r1,3
+   .traceevent "L" 4 "R" "I" "r" 1 0 0 0 "" ""
 l8dostart:
    .srcstep 3 3 17 "inline_test_say_expr_negative.crexx" 5 12 16 "  do i = 1 to 3"
-   igt r3,r0,r2
-   brt l8doend,r3
+   igt r2,r0,r1
+   brt l8doend,r2
    .srcstep 11 11 17 "inline_test_say_expr_negative.crexx" 6 5 20 "    say asString(i)"
    .srcstep 10 10 17 "inline_test_say_expr_negative.crexx" 6 9 17 "    say asString(i)"
    .srcstep 5 5 33 "inline_test_say_expr_negative.crexx" 12 7 10 "  arg val = .int"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   icopy r1,r0
-   .traceevent "A" 6 "R" "I" "r" 1 5 5 0 "val" ""
+   icopy r3,r0
+   .traceevent "A" 6 "R" "I" "r" 3 5 5 0 "val" ""
    .srcstep 7 7 17 "inline_test_say_expr_negative.crexx" 13 3 13 "  if val = 2 then return \"two\""
-   .traceevent "V" 6 "R" "I" "r" 1 7 7 0 "val" ""
-   ieq r4,r1,2
+   .traceevent "V" 6 "R" "I" "r" 3 7 7 0 "val" ""
+   ieq r4,r3,2
    .traceevent "O" 4 "R" "B" "r" 4 7 7 0 "" ""
    brf l48iffalse,r4
    .srcstep 8 8 17 "inline_test_say_expr_negative.crexx" 13 14 18 "  if val = 2 then return \"two\""
@@ -47,9 +47,9 @@ l8dostart:
    br l43bexprend
 l48iffalse:
    .srcstep 9 9 17 "inline_test_say_expr_negative.crexx" 14 3 13 "  return val"
-   itos r1
-   .traceevent "V" 6 "R" "S" "r" 1 11 11 0 "val" ""
-   scopy r4,r1
+   itos r3
+   .traceevent "V" 6 "R" "S" "r" 3 11 11 0 "val" ""
+   scopy r4,r3
    br l43bexprend
 l43bexprend:
    say r4
@@ -59,6 +59,8 @@ l8doinc:
    .srcstep 13 13 17 "inline_test_say_expr_negative.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
+   endlife r0
+   .meta "inline_test_say_expr_negative.main.i"
    .srcstep 14 14 17 "inline_test_say_expr_negative.crexx" 8 3 43 "  say \"Say inline negative test finished.\""
    say "Say inline negative test finished."
    .srcstep 15 15 17 "inline_test_say_expr_negative.crexx" 9 3 11 "  return 0"

@@ -108,7 +108,12 @@ execute `MKREF` against caller-owned receiver storage, so the VM finds and marks
 the owner frame rather than assuming the current frame owns the target. Only
 flagged frames run the reference-lifetime cleanup on return, invalidating
 frame-owned local and `a0` storage plus nested attribute storage without freeing
-reusable buffers.
+reusable buffers. Lexical scopes that recycle local registers emit `endlife`
+for each storage-owning local before the compiler returns those registers to
+the reuse pool; arguments, receiver/factory pseudo-locals, exposed symbols, and
+compiler-generated `__inline_*` scaffolding are not treated as owned storage.
+This is the same lifetime invalidation operation as frame cleanup, but scoped
+to the storage whose block lifetime has ended.
 `clear_frame()` performs full storage cleanup, remaining signal-handler stack
 cleanup, and any VM plugin instance cleanup when a frame is finally destroyed.
 The `SAFE_RECYCLED_STACKFRAMES` build-time debug guard can additionally zero
@@ -138,7 +143,10 @@ storage has been destroyed or invalidated. It defaults to halt, participates in
 normal signal handling, and can be probed without raising through the RXAS
 `refvalid` instruction. Raising operations include `deref`, `linkref`, and
 `setref`; using a non-reference value with those operations is treated as an
-invalid reference.
+invalid reference. `endlife rLocal` is the RXAS storage-lifetime primitive used
+by compiler-generated scope cleanup. It invalidates references to `rLocal` and
+nested attribute storage, and releases any reference payload held by that
+register, but it does not clear ordinary register contents.
 
 `OBJECT_NOT_INITIALIZED` is the dedicated signal for a typed object value that
 has not completed factory initialization. It defaults to halt and participates
@@ -621,8 +629,8 @@ Instructions are executed via macro-driven blocks. For example, moving to the ne
 `INTERRUPT` is the internal dispatch target used by this macro, not a source
 instruction. `INULL` and `IUNKNOWN` are runtime sentinel handlers that raise
 `UNKNOWN_INSTRUCTION`; `rxas` intentionally rejects all three names as source
-mnemonics. Opcode slots 514 and 515 are reserved after removal of the legacy DLL
-loader instructions, preserving later opcode numbers.
+mnemonics. Opcode slot 514 is now `ENDLIFE_REG`; the later opcode numbers are
+preserved.
 
 ### Instruction Flow Example
 Inside the `run()` loop, implementations are declared using `START_INSTRUCTION`. The assembler passes operands inline sequentially in the binary array.
