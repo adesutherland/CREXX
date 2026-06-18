@@ -1198,6 +1198,9 @@ static walker_result emit_walker(walker_direction direction,
                 emit_expression(node, payload);
                 break;
 
+            case CONSTANT_DEF:
+                break;
+
             case ASSEMBLER: {
                 char *arg1 = 0, *arg2 = 0, *arg3 = 0;
 

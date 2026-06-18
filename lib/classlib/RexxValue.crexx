@@ -22,6 +22,19 @@
 options levelb comments_dash numeric_classic
 namespace rexxvalue expose RexxValue
 
+-- RexxValue cache flags live in the VM value status word.
+constant RV_FLAG_STRING = 0x00010000   -- 65536: string view current
+constant RV_FLAG_INT = 0x00020000      -- 131072: int view current
+constant RV_FLAG_FLOAT = 0x00040000    -- 262144: float view current
+constant RV_FLAG_DECIMAL = 0x00080000  -- 524288: decimal view current
+constant RV_FLAG_BINARY = 0x00100000   -- 1048576: binary view current
+constant RV_FLAG_TEXT = 0x00200000     -- 2097152: binary contents are valid text
+
+constant RV_FLAGS_STRING_TEXT = RV_FLAG_STRING + RV_FLAG_TEXT
+constant RV_FLAGS_BINARY_TEXT = RV_FLAG_BINARY + RV_FLAG_TEXT
+constant RV_FLAGS_STRING_BINARY_TEXT = RV_FLAG_STRING + RV_FLAG_BINARY + RV_FLAG_TEXT
+constant RV_FLAGS_ALL_CACHE = RV_FLAG_STRING + RV_FLAG_INT + RV_FLAG_FLOAT + RV_FLAG_DECIMAL + RV_FLAG_BINARY + RV_FLAG_TEXT
+
 /**
  * Classic Rexx scalar value proof.
  *
@@ -39,7 +52,7 @@ RexxValue: class
     arg value = .string
     temp = .string
     temp = value
-    assembler settp temp,2162688       -- string current | valid text
+    assembler settp temp,RV_FLAGS_STRING_TEXT
     string_value = temp
     return
 
@@ -47,7 +60,7 @@ RexxValue: class
     arg value = .int
     temp = 0
     temp = value
-    assembler settp temp,131072        -- int current
+    assembler settp temp,RV_FLAG_INT
     int_value = temp
     return
 
@@ -55,7 +68,7 @@ RexxValue: class
     arg value = .float
     temp = 0 as .float
     temp = value
-    assembler settp temp,262144        -- float current
+    assembler settp temp,RV_FLAG_FLOAT
     float_value = temp
     return
 
@@ -63,7 +76,7 @@ RexxValue: class
     arg value = .decimal
     temp = "0" as .decimal
     temp = value
-    assembler settp temp,524288        -- decimal current
+    assembler settp temp,RV_FLAG_DECIMAL
     decimal_value = temp
     return
 
@@ -71,7 +84,7 @@ RexxValue: class
     arg value = .binary
     temp = .binary
     temp = value
-    assembler settp temp,1048576       -- binary current
+    assembler settp temp,RV_FLAG_BINARY
     binary_value = temp
     return
 
@@ -81,9 +94,9 @@ RexxValue: class
     text = .string
     bytes = value
     text = bytes as .string            -- validates the bytes as Level B text
-    assembler settp bytes,3211264      -- string | binary | valid text
+    assembler settp bytes,RV_FLAGS_STRING_BINARY_TEXT
     binary_value = bytes
-    assembler settp text,3211264
+    assembler settp text,RV_FLAGS_STRING_BINARY_TEXT
     string_value = text
     return
 
@@ -91,7 +104,7 @@ RexxValue: class
     arg value = .string
     temp = .string
     temp = value
-    assembler settp temp,2162688
+    assembler settp temp,RV_FLAGS_STRING_TEXT
     string_value = temp
     return
 
@@ -99,7 +112,7 @@ RexxValue: class
     arg value = .int
     temp = 0
     temp = value
-    assembler settp temp,131072
+    assembler settp temp,RV_FLAG_INT
     int_value = temp
     return
 
@@ -107,7 +120,7 @@ RexxValue: class
     arg value = .float
     temp = 0 as .float
     temp = value
-    assembler settp temp,262144
+    assembler settp temp,RV_FLAG_FLOAT
     float_value = temp
     return
 
@@ -115,7 +128,7 @@ RexxValue: class
     arg value = .decimal
     temp = "0" as .decimal
     temp = value
-    assembler settp temp,524288
+    assembler settp temp,RV_FLAG_DECIMAL
     decimal_value = temp
     return
 
@@ -123,7 +136,7 @@ RexxValue: class
     arg value = .binary
     temp = .binary
     temp = value
-    assembler settp temp,1048576
+    assembler settp temp,RV_FLAG_BINARY
     binary_value = temp
     return
 
@@ -133,50 +146,50 @@ RexxValue: class
     text = .string
     bytes = value
     text = bytes as .string
-    assembler settp bytes,3211264
+    assembler settp bytes,RV_FLAGS_STRING_BINARY_TEXT
     binary_value = bytes
-    assembler settp text,3211264
+    assembler settp text,RV_FLAGS_STRING_BINARY_TEXT
     string_value = text
     return
 
   cacheFlags: method = .int
     flags = 0
-    assembler getandtp flags,string_value,4128768
+    assembler getandtp flags,string_value,RV_FLAGS_ALL_CACHE
     return flags
 
   hasString: method = .boolean
     flags = 0
-    assembler getandtp flags,string_value,65536
+    assembler getandtp flags,string_value,RV_FLAG_STRING
     if flags <> 0 then return 1
     return 0
 
   hasInt: method = .boolean
     flags = 0
-    assembler getandtp flags,string_value,131072
+    assembler getandtp flags,string_value,RV_FLAG_INT
     if flags <> 0 then return 1
     return 0
 
   hasFloat: method = .boolean
     flags = 0
-    assembler getandtp flags,string_value,262144
+    assembler getandtp flags,string_value,RV_FLAG_FLOAT
     if flags <> 0 then return 1
     return 0
 
   hasDecimal: method = .boolean
     flags = 0
-    assembler getandtp flags,string_value,524288
+    assembler getandtp flags,string_value,RV_FLAG_DECIMAL
     if flags <> 0 then return 1
     return 0
 
   hasBinary: method = .boolean
     flags = 0
-    assembler getandtp flags,string_value,1048576
+    assembler getandtp flags,string_value,RV_FLAG_BINARY
     if flags <> 0 then return 1
     return 0
 
   hasText: method = .boolean
     flags = 0
-    assembler getandtp flags,string_value,2097152
+    assembler getandtp flags,string_value,RV_FLAG_TEXT
     if flags <> 0 then return 1
     return 0
 
@@ -186,28 +199,28 @@ RexxValue: class
     if hasDecimal() then do
       temp = decimal_value as .string
       assembler acopy temp,decimal_value
-      assembler setortp temp,2162688
+      assembler setortp temp,RV_FLAGS_STRING_TEXT
       string_value = temp
       return temp
     end
     if hasInt() then do
       temp = int_value as .string
       assembler acopy temp,int_value
-      assembler setortp temp,2162688
+      assembler setortp temp,RV_FLAGS_STRING_TEXT
       string_value = temp
       return temp
     end
     if hasFloat() then do
       temp = float_value as .string
       assembler acopy temp,float_value
-      assembler setortp temp,2162688
+      assembler setortp temp,RV_FLAGS_STRING_TEXT
       string_value = temp
       return temp
     end
     if hasBinary() then do
       temp = binary_value as .string
       assembler acopy temp,binary_value
-      assembler setortp temp,2162688
+      assembler setortp temp,RV_FLAGS_STRING_TEXT
       string_value = temp
       return temp
     end
@@ -218,7 +231,7 @@ RexxValue: class
     if hasInt() then return int_value
     temp = asString() as .int
     assembler acopy temp,string_value
-    assembler setortp temp,131072
+    assembler setortp temp,RV_FLAG_INT
     int_value = temp
     return temp
 
@@ -227,7 +240,7 @@ RexxValue: class
     if hasFloat() then return float_value
     temp = asString() as .float
     assembler acopy temp,string_value
-    assembler setortp temp,262144
+    assembler setortp temp,RV_FLAG_FLOAT
     float_value = temp
     return temp
 
@@ -236,7 +249,7 @@ RexxValue: class
     if hasDecimal() then return decimal_value
     temp = asString() as .decimal
     assembler acopy temp,string_value
-    assembler setortp temp,524288
+    assembler setortp temp,RV_FLAG_DECIMAL
     decimal_value = temp
     return temp
 
@@ -245,7 +258,7 @@ RexxValue: class
     if hasBinary() then return binary_value
     temp = asString() as .binary
     assembler acopy temp,string_value
-    assembler setortp temp,1048576
+    assembler setortp temp,RV_FLAG_BINARY
     binary_value = temp
     return temp
 
@@ -256,11 +269,11 @@ RexxValue: class
       bytes = .binary
       text = binary_value as .string
       assembler acopy text,binary_value
-      assembler setortp text,2162688
+      assembler setortp text,RV_FLAGS_STRING_TEXT
       string_value = text
       bytes = binary_value
       assembler acopy bytes,string_value
-      assembler setortp bytes,2097152
+      assembler setortp bytes,RV_FLAG_TEXT
       binary_value = bytes
       return 1
     end

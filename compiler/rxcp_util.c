@@ -1093,6 +1093,7 @@ const char* node_type_to_string(NodeType type) {
         case DEC_CASE: return "DEC_CASE";
         case DEC_STANDARD: return "DEC_STANDARD";
         case DEFINE: return "DEFINE";
+        case CONSTANT_DEF: return "CONSTANT_DEF";
         case DO: return "DO";
         case ENVIRONMENT: return "ENVIRONMENT";
         case ERROR: return "ERROR";

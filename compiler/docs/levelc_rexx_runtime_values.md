@@ -94,6 +94,41 @@ requested value AND the compiler-band mask, and leave the library/runtime band
 intact. The `setortp` instruction remains the explicit OR operation for code
 that deliberately accumulates flags.
 
+Two compiler features are approved follow-ups to make this code maintainable
+and fast enough for Level C:
+
+1. First-class named constants. Level B source may declare compile-time
+   constants, for example `constant RV_FLAG_STRING = 0x00010000`. The
+   initializer must fold at compile time and the symbol is immutable. Constants
+   may be used in ordinary expressions and as inline assembler operands; integer
+   constants used as RXAS immediates are substituted by the compiler without
+   allocating a runtime register. Runtime-value constants, including large
+   `.binary` payloads, are emitted through the normal RXBIN constant-pool
+   mechanism and exported/imported as typed constant metadata so a dependent
+   module can use the same symbol names.
+2. Register flag views. Level B class attributes may expose a masked view of a
+   register status word, for example
+   `cache_flags = .int with register.0.flags.library`. Flag views are direct
+   status-word views, not typed payload views, so reads must not materialize the
+   complex register payload or emit the link/copy/unlink sequence used by
+   `.string`, `.int`, `.decimal`, `.binary`, and `.object` views.
+
+The approved flag-view partitions are:
+
+- `.flags.vm`: VM-private band, read-only.
+- `.flags.compiler`: compiler call-ABI band, read-only from Level B source.
+- `.flags.library`: stable runtime/library band, read/write.
+- `.flags.user`: user/experimental band, read/write.
+- `.flags.public`: library and user bands only, read/write. The compiler band
+  is excluded because compiler call-ABI flags are owned by generated call
+  setup/dispatch code.
+- `.flags.readable`: all readable non-reserved flags, read-only.
+
+Writes through writable flag views replace only the selected masked band:
+`new_flags = (old_flags & ~view_mask) | (value & view_mask)`. They must not
+clear unrelated public bands and must never write the VM-private or reserved
+bits.
+
 Binary and text validity are deliberately separate claims. A value may have a
 current binary byte representation without yet having a current `.string`
 representation. When binary bytes are accepted from a host, BIF, or RexxScript
@@ -155,9 +190,9 @@ host-adapter policy, not the core pool model.
   current/text-valid flags. A string-to-binary materializer may mark both the
   binary-current and text-valid flags because Level B strings are already valid
   UTF-8.
-- Flag access starts through RXAS flag instructions from Level B methods. A
-  later `.flags` register-view suffix would require dedicated emitter
-  semantics and should be treated as syntax sugar, not part of this proof.
+- Flag access starts through RXAS flag instructions from Level B methods. The
+  approved `.flags.<partition>` register-view suffix requires dedicated emitter
+  semantics and is not a general replacement for typed register views.
 
 ## Initial Operator Surface
 

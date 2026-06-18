@@ -385,6 +385,7 @@ instruction(E)         ::= error.
 
 single_instruction(I)  ::= assignment(B). { I = B; }
 single_instruction(I)  ::= define(B). { I = B; }
+single_instruction(I)  ::= constant_def(B). { I = B; }
 single_instruction(I)  ::= exit_extended(B). { I = B; }
 single_instruction(I)  ::= command(B). { I = B; }
 single_instruction(I)  ::= keyword_instruction(B). { I = B; }
@@ -600,6 +601,12 @@ define(I) ::=  var_symbol(V) TK_EQUAL(T) type_def(E) opt_with(W).
     {
         I = ast_f(context, DEFINE, T); add_ast(I,V); add_ast(I,E);
         if (W) add_ast(I,W);
+        V->node_type = VAR_TARGET;
+    }
+
+constant_def(I) ::= TK_CONSTANT(K) var_symbol(V) TK_EQUAL expression(E).
+    {
+        I = ast_f(context, CONSTANT_DEF, K); add_ast(I,V); add_ast(I,E);
         V->node_type = VAR_TARGET;
     }
 

@@ -316,6 +316,9 @@ walker_result register_walker(walker_direction direction,
                 }
                 break;
 
+            case CONSTANT_DEF:
+                break;
+
             case DEFINE:
             case ASSIGN:
                 /*
@@ -829,6 +832,9 @@ walker_result register_walker(walker_direction direction,
                     c = c->sibling;
                 }
 
+                break;
+
+            case CONSTANT_DEF:
                 break;
 
             case DEFINE:

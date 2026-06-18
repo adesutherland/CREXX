@@ -364,6 +364,7 @@ walker_result pdot_walker_handler(walker_direction direction,
             case ASSIGN:
             case CALL:
             case DEFINE:
+            case CONSTANT_DEF:
             case DEC_DIGITS:
             case DEC_FUZZ:
             case DEC_FORM:

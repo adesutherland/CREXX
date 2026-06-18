@@ -511,7 +511,8 @@ walker_result build_symbols_walker(walker_direction direction,
                 if (node->parent->node_type == ARG) {
                     /* Arguments are local to the current scope */
                     symbol = sym_lrsv(context->current_scope, node);
-                } else if (node->parent->node_type == DEFINE) {
+                } else if (node->parent->node_type == DEFINE ||
+                           node->parent->node_type == CONSTANT_DEF) {
                     /* Typed declarations shadow in local blocks, but assert in procedures/namespaces */
                     if (context->current_scope->type == SCOPE_LOCAL) {
                         /* Force shadowing in local blocks */
@@ -553,7 +554,9 @@ walker_result build_symbols_walker(walker_direction direction,
 
                     symbol = sym_f(target_scope, node);
                     sym_promote_status(context, symbol, SYM_STATUS_LOCAL_VAR);
-                } else if (node->parent->node_type == DEFINE && symbol->type != TP_UNKNOWN) {
+                } else if ((node->parent->node_type == DEFINE ||
+                            node->parent->node_type == CONSTANT_DEF) &&
+                           symbol->type != TP_UNKNOWN) {
                     mknd_err(node, "ALREADY_DECLARED");
                 }
 
@@ -566,7 +569,11 @@ walker_result build_symbols_walker(walker_direction direction,
                     if (symbol->creation_node == 0 || symbol->creation_node == node) {
                         symbol->creation_node = node;
                         symbol->creation_ordinal = node->high_ordinal;
-                    } else if (node->parent->node_type == DEFINE && symbol->creation_node->parent && symbol->creation_node->parent->node_type != DEFINE) {
+                    } else if ((node->parent->node_type == DEFINE ||
+                                node->parent->node_type == CONSTANT_DEF) &&
+                               symbol->creation_node->parent &&
+                               symbol->creation_node->parent->node_type != DEFINE &&
+                               symbol->creation_node->parent->node_type != CONSTANT_DEF) {
                         symbol->creation_node = node;
                         symbol->creation_ordinal = node->high_ordinal;
                     } else if (node->high_ordinal < symbol->creation_ordinal) {
@@ -667,7 +674,11 @@ walker_result build_symbols_walker(walker_direction direction,
                     if (symbol->creation_node == 0 || symbol->creation_node == node) {
                         symbol->creation_node = node;
                         symbol->creation_ordinal = node->high_ordinal;
-                    } else if (node->parent->node_type == DEFINE && symbol->creation_node->parent && symbol->creation_node->parent->node_type != DEFINE) {
+                    } else if ((node->parent->node_type == DEFINE ||
+                                node->parent->node_type == CONSTANT_DEF) &&
+                               symbol->creation_node->parent &&
+                               symbol->creation_node->parent->node_type != DEFINE &&
+                               symbol->creation_node->parent->node_type != CONSTANT_DEF) {
                         symbol->creation_node = node;
                         symbol->creation_ordinal = node->high_ordinal;
                     } else if (node->high_ordinal < symbol->creation_ordinal) {
@@ -678,8 +689,15 @@ walker_result build_symbols_walker(walker_direction direction,
 
                 if (node->parent->node_type == ASSEMBLER) {
                     /* If an assembler instruction we need to assume read/write
-                     * access - and therefore disable some optimisations */
-                    sym_adnd(symbol, node, 1, 1);
+                     * access for registers. Explicit constants are immediate
+                     * operands, so keep those references read-only. */
+                    int write_access = 1;
+                    if (symbol->creation_node &&
+                        symbol->creation_node->parent &&
+                        symbol->creation_node->parent->node_type == CONSTANT_DEF) {
+                        write_access = 0;
+                    }
+                    sym_adnd(symbol, node, 1, write_access);
                 } else sym_adnd(symbol, node, 1, 0);
             }
         }

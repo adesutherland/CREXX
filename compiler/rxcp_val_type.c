@@ -96,6 +96,7 @@ static int origin_subtree_has_error(ASTNode *node) {
         switch (current->node_type) {
             case ASSIGN:
             case DEFINE:
+            case CONSTANT_DEF:
             case REPEAT:
             case DO:
             case SAY:
@@ -1565,6 +1566,24 @@ walker_result set_node_types_walker(walker_direction direction,
                 }
                 break;
 
+            case CONSTANT_DEF:
+                if (node->value_type == TP_UNKNOWN) {
+                    set_node_type(node, TP_VOID);
+                }
+                if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                    child1->symbolNode->symbol->type =
+                            node_to_type(context, child2,
+                                         &(child1->symbolNode->symbol->value_dims),
+                                         &(child1->symbolNode->symbol->dim_base),
+                                         &(child1->symbolNode->symbol->dim_elements),
+                                         &(child1->symbolNode->symbol->value_class));
+                    rxcp_set_symbol_reference_type_from_node(child1->symbolNode->symbol, child2);
+                    if (child1->symbolNode->symbol->type != TP_UNKNOWN) {
+                        ast_svtp(child1, child1->symbolNode->symbol);
+                    }
+                }
+                break;
+
             case ARG:
                 if (node->value_type == TP_UNKNOWN) {
                     if (node->child->node_type == VARG || node->child->node_type == VARG_REFERENCE) {
@@ -1858,7 +1877,9 @@ walker_result type_safety_walker(walker_direction direction,
                 break;
 
             case VAR_SYMBOL:
-                if (node->parent->node_type != NODE_REGISTER && node->parent->node_type != DEFINE) {
+                if (node->parent->node_type != NODE_REGISTER &&
+                    node->parent->node_type != DEFINE &&
+                    node->parent->node_type != CONSTANT_DEF) {
                     int skip_svtp = 0;
                     if (node->symbolNode && node->symbolNode->symbol) {
                         if (node->value_type == TP_UNKNOWN) {
@@ -2045,6 +2066,33 @@ walker_result type_safety_walker(walker_direction direction,
                 validate_node_promotion(context, child2);
                 ast_svtn(node, child1);
                 ast_rttp(node);
+                break;
+
+            case CONSTANT_DEF:
+                if (child2->value_type == TP_VOID) {
+                    mknd_err(child2, "RETURNS_VOID");
+                }
+                else {
+                    if (child1->symbolNode->symbol->type == TP_UNKNOWN) {
+                        child1->symbolNode->symbol->type =
+                                node_to_type(context, child2,
+                                             &(child1->symbolNode->symbol->value_dims),
+                                             &(child1->symbolNode->symbol->dim_base),
+                                             &(child1->symbolNode->symbol->dim_elements),
+                                             &(child1->symbolNode->symbol->value_class));
+                        rxcp_set_symbol_reference_type_from_node(child1->symbolNode->symbol, child2);
+                    }
+                    ast_svtp(child1, child1->symbolNode->symbol);
+
+                    if (ast_nchd(child1)) {
+                        mknd_err(ast_chdn(child1,0), "INVALID_LHS_ARRAY");
+                    }
+
+                    ast_sttn(child2, child1);
+                    validate_node_promotion(context, child2);
+                    ast_svtn(node, child1);
+                    ast_rttp(node);
+                }
                 break;
 
             case ASSIGN:

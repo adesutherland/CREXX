@@ -79,6 +79,7 @@ typedef struct Payload {
     Context *context;
     Scope *current_scope;
     char changed;
+    char explicit_constants_only;
 } Payload;
 
 static void rewrite_to_string_constant(ASTNode* node, Payload* payload, char* string, size_t length);
@@ -1786,6 +1787,168 @@ static walker_result opt1_walker(walker_direction direction,
 }
 
 
+static int constant_definition_for_symbol(Symbol *symbol, ASTNode **target_out, ASTNode **value_out) {
+    size_t i;
+
+    if (target_out) *target_out = 0;
+    if (value_out) *value_out = 0;
+    if (!symbol) return 0;
+
+    for (i = 0; i < sym_nond(symbol); i++) {
+        ASTNode *node = sym_trnd(symbol, i)->node;
+        if (node && node->node_type == VAR_TARGET &&
+            node->parent && node->parent->node_type == CONSTANT_DEF) {
+            if (target_out) *target_out = node;
+            if (value_out) *value_out = node->sibling;
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+static int can_capture_constant_value(ASTNode *node) {
+    if (!node) return 0;
+    if (node->value_type == TP_UNKNOWN || node->value_type == TP_VOID) return 0;
+
+    switch (node->node_type) {
+        case CONSTANT:
+        case STRING:
+        case BINARY:
+        case FLOAT:
+        case DECIMAL:
+        case INTEGER:
+            return 1;
+
+        default:
+            return 0;
+    }
+}
+
+static void copy_string_payload_to_node(ASTNode *node, const char *string, size_t length) {
+    char *buffer;
+
+    buffer = malloc(length ? length : 1);
+    if (!buffer) return;
+    if (length) memcpy(buffer, string, length);
+    else buffer[0] = 0;
+    ast_sstr(node, buffer, length);
+}
+
+static void copy_constant_value_to_symbol_nodes(Symbol *symbol, Payload *payload, ASTNode *value_node) {
+    ValueType value_type;
+    rxinteger int_value;
+    int bool_value;
+    double float_value;
+    char *decimal_value;
+    char *node_string;
+    size_t node_string_length;
+    size_t i;
+
+    value_type = value_node->value_type;
+    int_value = value_node->int_value;
+    bool_value = value_node->bool_value;
+    float_value = value_node->float_value;
+    decimal_value = value_node->decimal_value;
+    node_string = value_node->node_string;
+    node_string_length = value_node->node_string_length;
+
+    symbol->symbol_type = CONSTANT_SYMBOL;
+    payload->changed = 1;
+
+    for (i = 0; i < sym_nond(symbol); i++) {
+        ASTNode *n = sym_trnd(symbol, i)->node;
+
+        n->node_type = CONSTANT;
+        n->value_type = value_type;
+        if (n->target_type == TP_UNKNOWN) n->target_type = value_type;
+        n->int_value = int_value;
+        n->float_value = float_value;
+        n->bool_value = bool_value;
+
+        if (decimal_value) {
+            if (n->decimal_value) free(n->decimal_value);
+            n->decimal_value = malloc(strlen(decimal_value) + 1);
+            strcpy(n->decimal_value, decimal_value);
+        }
+        else {
+            if (n->decimal_value) {
+                free(n->decimal_value);
+                n->decimal_value = 0;
+            }
+        }
+
+        if (node_string) copy_string_payload_to_node(n, node_string, node_string_length);
+        else if (n->free_node_string) {
+            free(n->node_string);
+            n->node_string = 0;
+            n->node_string_length = 0;
+            n->free_node_string = 0;
+        }
+
+        if (!(n->target_type == TP_STRING &&
+              n->value_type != TP_STRING &&
+              strict_string_compare_operand(n))) {
+            if (n->value_type == TP_BINARY) binary_to_type(n, n->target_type);
+            else string_to_type(n, n->target_type);
+        }
+        update_string(n);
+        payload->changed = 1;
+    }
+}
+
+static int symbol_has_non_declaration_write(Symbol *symbol, ASTNode *declaration_target, Context *context) {
+    size_t i;
+    int found = 0;
+
+    for (i = 0; i < sym_nond(symbol); i++) {
+        SymbolNode *symbol_node = sym_trnd(symbol, i);
+        if (!symbol_node || !symbol_node->writeUsage) continue;
+        if (symbol_node->node == declaration_target) continue;
+        found = 1;
+        if (context && context->is_final_pass) {
+            mknd_err(symbol_node->node, "UPDATING_TAKEN_CONSTANT");
+        }
+    }
+
+    return found;
+}
+
+static void explicit_constant_in_scope(Symbol *symbol, Payload *payload) {
+    ASTNode *target_node;
+    ASTNode *value_node;
+
+    if (symbol->symbol_type == CONSTANT_SYMBOL) return;
+    if (!constant_definition_for_symbol(symbol, &target_node, &value_node)) return;
+    if (!value_node) return;
+
+    if (symbol_has_non_declaration_write(symbol, target_node, payload->context)) {
+        return;
+    }
+
+    if (symbol->value_dims ||
+        symbol->type == TP_OBJECT ||
+        symbol->type == TP_REFERENCE) {
+        if (payload->context && payload->context->is_final_pass && !ast_hase(target_node)) {
+            mknd_err(target_node, "CONSTANT_REQUIRES_CONSTANT_EXPRESSION");
+        }
+        return;
+    }
+
+    ast_wlkr(value_node, opt1_walker, payload);
+    value_node = target_node->sibling;
+
+    if (!can_capture_constant_value(value_node)) {
+        if (payload->context && payload->context->is_final_pass) {
+            mknd_err(target_node->parent, "CONSTANT_REQUIRES_CONSTANT_EXPRESSION");
+        }
+        return;
+    }
+
+    copy_constant_value_to_symbol_nodes(symbol, payload, value_node);
+    ast_prun(target_node->parent);
+}
+
 /* Propagate constant symbols handler */
 static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
     /* TODO the logic here must be revisited once we have control flow analysis */
@@ -1801,6 +1964,11 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
     char *decimal_value;
     char *node_string;
     size_t node_string_length;
+
+    if (payload->explicit_constants_only) {
+        explicit_constant_in_scope(symbol, payload);
+        return;
+    }
 
     if (symbol->symbol_type == CONSTANT_SYMBOL) return; /* already done */
     if (symbol->scope && symbol->scope->type == SCOPE_CLASS) return; /* Attributes must not be optimized away */
@@ -1948,6 +2116,27 @@ static void propagete_constant_symbols(Scope* scope, Payload* payload) {
     }
 }
 
+void propagate_explicit_constants(Context *context) {
+    Payload payload;
+    char changed = 0;
+
+    if (!context || !context->ast || !context->ast->scope) return;
+
+    payload.current_scope = 0;
+    payload.context = context;
+    payload.explicit_constants_only = 1;
+
+    do {
+        payload.changed = 0;
+        propagete_constant_symbols(context->ast->scope, &payload);
+        if (payload.changed) changed = 1;
+    } while (payload.changed);
+
+    if (changed) {
+        context->changed_flags |= FLAG_VAL_TRANS;
+    }
+}
+
 /* Step 2
  * - Mark pass-by-value formals that are provably read-only so the emitter can
  *   reuse the incoming argument register instead of materialising a defensive
@@ -2005,6 +2194,8 @@ void mark_const_args(Context *context) {
 
     payload.current_scope = 0;
     payload.context = context;
+    payload.changed = 0;
+    payload.explicit_constants_only = 0;
     /* This pass is intentionally callable outside optimise() so no-opt builds
      * use the same semantic copy-elision rule as optimised builds. */
     ast_wlkr(context->ast, opt2_walker, (void *) &payload);
@@ -2016,6 +2207,8 @@ void optimise(Context *context) {
 
     payload.current_scope = 0;
     payload.context = context;
+    payload.changed = 0;
+    payload.explicit_constants_only = 0;
 
     /* Inlining Pass */
     if (context->optimise) {

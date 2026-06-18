@@ -2,22 +2,30 @@ options levelb comments_dash numeric_classic
 import rexxvalue
 import rxfnsb
 
+constant RV_FLAG_STRING = 0x00010000
+constant RV_FLAG_INT = 0x00020000
+constant RV_FLAG_BINARY = 0x00100000
+constant RV_FLAG_TEXT = 0x00200000
+
+constant RV_FLAGS_STRING_TEXT = RV_FLAG_STRING + RV_FLAG_TEXT
+constant RV_FLAGS_STRING_INT_TEXT = RV_FLAG_STRING + RV_FLAG_INT + RV_FLAG_TEXT
+
 errors = 0
 
 v = .RexxValue("41")
 errors = errors + check(v.asString() = "41", "string factory value")
-errors = errors + check(v.cacheFlags() = 2162688, "string factory flags")
+errors = errors + check(v.cacheFlags() = RV_FLAGS_STRING_TEXT, "string factory flags")
 errors = errors + check(v.hasString(), "string current")
 errors = errors + check(v.hasText(), "text valid")
 errors = errors + check(\v.hasInt(), "int not yet current")
 errors = errors + check(v.asInt() = 41, "lazy int")
 errors = errors + check(v.hasInt(), "int current after materialize")
-errors = errors + check(v.cacheFlags() = 2293760, "string and int flags")
+errors = errors + check(v.cacheFlags() = RV_FLAGS_STRING_INT_TEXT, "string and int flags")
 
 i = .RexxValue.fromInt(7)
-errors = errors + check(i.cacheFlags() = 131072, "int factory flags")
+errors = errors + check(i.cacheFlags() = RV_FLAG_INT, "int factory flags")
 errors = errors + check(i.asString() = "7", "int to string")
-errors = errors + check(i.cacheFlags() = 2293760, "int to string flags")
+errors = errors + check(i.cacheFlags() = RV_FLAGS_STRING_INT_TEXT, "int to string flags")
 
 d = .RexxValue.fromDecimal("2.5" as .decimal)
 errors = errors + check(d.asString() = "2.5", "decimal to string")
@@ -39,7 +47,7 @@ errors = errors + check(.RexxValue("same").equals(.RexxValue("same")), "equals")
 errors = errors + check(.RexxValue("a").compare(.RexxValue("b")) = -1, "compare less")
 
 b = .RexxValue.fromBinary("4142"x as .binary)
-errors = errors + check(b.cacheFlags() = 1048576, "binary factory flags")
+errors = errors + check(b.cacheFlags() = RV_FLAG_BINARY, "binary factory flags")
 errors = errors + check(\b.hasText(), "binary not marked text")
 errors = errors + check(b.binaryLength() = 2, "binary length")
 errors = errors + check(b.validateText(), "binary validates as text")

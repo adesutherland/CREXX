@@ -444,6 +444,42 @@ add_test(NAME rxc_binary_literal_load
          COMMAND ${CMAKE_COMMAND} -P "${RXC_BINARY_LITERAL_LOAD_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+set(RXC_CONSTANTS_LEVELB_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_constants_levelb.cmake")
+set(RXC_CONSTANTS_LEVELB_CONTENT "")
+foreach(_mode IN ITEMS noopt opt)
+    if(_mode STREQUAL "noopt")
+        set(_flag "-n")
+    else()
+        set(_flag "")
+    endif()
+    string(APPEND RXC_CONSTANTS_LEVELB_CONTENT
+           "execute_process(\n"
+           "  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${_flag} -o \"constants_levelb_${_mode}\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/constants_levelb.crexx\"\n"
+           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+           "  OUTPUT_VARIABLE rxc_${_mode}_out\n"
+           "  ERROR_VARIABLE rxc_${_mode}_err\n"
+           "  RESULT_VARIABLE rxc_${_mode}_res\n"
+           ")\n"
+           "set(full_${_mode}_out \"${RXAS_DIAG_DOLLAR}{rxc_${_mode}_out}${RXAS_DIAG_DOLLAR}{rxc_${_mode}_err}\")\n"
+           "string(REPLACE \"\\r\\n\" \"\\n\" full_${_mode}_out \"${RXAS_DIAG_DOLLAR}{full_${_mode}_out}\")\n"
+           "if(NOT rxc_${_mode}_res EQUAL 0)\n"
+           "  message(FATAL_ERROR \"rxc ${_mode} failed for constants_levelb.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_${_mode}_out}\")\n"
+           "endif()\n"
+           "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/constants_levelb_${_mode}.rxas\" rxas_${_mode}_out)\n"
+           "string(REPLACE \"\\r\\n\" \"\\n\" rxas_${_mode}_out \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "if(NOT rxas_${_mode}_out MATCHES [=[settp r[0-9]+,196608]=])\n"
+           "  message(FATAL_ERROR \"Named constants did not fold to an assembler immediate in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "if(NOT rxas_${_mode}_out MATCHES [=[(load r[0-9]+,196608|ret 196608)]=])\n"
+           "  message(FATAL_ERROR \"Named constants did not fold to a normal integer immediate in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n")
+endforeach()
+file(GENERATE OUTPUT "${RXC_CONSTANTS_LEVELB_SCRIPT}" CONTENT "${RXC_CONSTANTS_LEVELB_CONTENT}")
+
+add_test(NAME rxc_constants_levelb
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_CONSTANTS_LEVELB_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 # Robustness tests
 macro(add_crexx_robustness_test NAME MAIN_FILE)
     # The list of dependencies are passed as additional arguments

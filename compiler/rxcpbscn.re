@@ -85,6 +85,7 @@ int rexbscan(Context* s) {
   fsig = digit* "." digit+ | digit+ ".";
   fexp = [eE] [+-]? digit+;
   float = (fsig fexp? | digit+ fexp);
+  hexint = "0" [xX] hex+;
   integer = digit+;
   decimal = float [d] | integer [d];
   simple = fsymchr symchr*;
@@ -172,6 +173,7 @@ int rexbscan(Context* s) {
     'AS' { RET(TK_AS); }
     'CALL' { RET(TK_CALL); }
     'CLASS' { RET(TK_CLASS); }
+    'CONSTANT' { RET(TK_CONSTANT); }
     'DO' { RET(TK_DO); }
     'LOOP' { RET(TK_LOOP); }
     'IMPLEMENTS' { RET(TK_IMPLEMENTS); }
@@ -248,6 +250,7 @@ int rexbscan(Context* s) {
     class { RET(TK_CLASS_TYPE); }
     float { RET(TK_FLOAT); }
     decimal { RET(TK_DECIMAL); }
+    hexint { RET(TK_INTEGER); }
     integer { RET(TK_INTEGER); }
     qualified { RET(TK_QUALIFIED_SYMBOL); }
     'ARG' / [.] {

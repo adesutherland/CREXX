@@ -294,6 +294,13 @@ change legacy branch behavior.
 Status flag instructions still take normal `rxinteger` operands in RXAS/RXBIN;
 the VM applies only the low 32 bits when reading a flag mask.
 
+Level B register flag views expose masked status-word partitions for
+system-programmer classes. VM-private, compiler call-ABI, and all-readable views
+are read-only at source level. Library and user views are writable; a public
+write view covers library and user flags only, not compiler flags. Source-level
+flag-view writes replace only the selected masked band and must preserve all
+other status bits.
+
 In normal UTF builds, `RXFLAG_VM_UTF8_VALID` and
 `RXFLAG_VM_UTF8_COUNT_VALID` mean the string byte span is known well-formed
 UTF-8 and `string_chars` is a validated codepoint count. Constant loads mark

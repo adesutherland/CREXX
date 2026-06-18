@@ -150,6 +150,20 @@ slot. Valid views are `.int`, `.float`, `.decimal`, `.binary`, `.string`, and
   _payload = .object with register.5.object
 ```
 
+System classes can also expose masked status-flag views using
+`register.N.flags.<partition>`. These views are `.int` attributes over the VM
+status word rather than value-payload views:
+
+```rexx
+  _cache_flags = .int with register.0.flags.library
+  _vm_flags = .int with register.0.flags.vm
+```
+
+The supported partitions are `.vm`, `.compiler`, `.library`, `.user`,
+`.public`, and `.readable`. `.vm`, `.compiler`, and `.readable` are read-only.
+`.library` and `.user` are writable. `.public` is writable but covers only the
+library and user bands, not compiler call-ABI flags.
+
 The compiler emits the attribute linking code for methods that read or write
 these attributes. Source code should still access them through methods, not
 through hand-written assembler. It is valid for VM-integration classes to define
@@ -166,6 +180,11 @@ reads copy the selected view into a local register before expression code
 manipulates it, and writes copy back through the physical slot. This is a
 low-level system-programmer facility for runtime and VM-integration classes;
 ordinary programs should use normal class attributes and methods.
+
+Flag views are the exception to the complex typed-view copy rule: reads access
+the status word directly and do not copy the register's string, binary, numeric,
+or object payload. Writes through writable flag views replace only the selected
+flag partition.
 
 ## Receiver Storage
 
