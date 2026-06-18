@@ -132,10 +132,13 @@ entry. The tree surgery therefore preserves semantics and avoids call/link
 hazards, but does not yet deliver scoped register reuse.
 
 For real source-level named locals, fixed register numbers remain the expected
-model for readability, tracing, and simple metadata. The useful refinement is
-fixed registers within a scope, with registers returned after a provably local
-scope is complete. Generated inline `BLOCK_EXPR` scopes are the first candidate
-because they were introduced precisely to contain inlined lifetime.
+model within their live scope for readability, tracing, and simple metadata. The
+useful refinement is fixed registers within a scope, with registers returned
+after a provably local scope is complete. This applies to generated inline
+`BLOCK_EXPR` scopes and to real named locals declared in nested code blocks such
+as `DO`, `SIGNAL_BLOCK`, and explicit local `INSTRUCTIONS` scopes. Synthetic
+blocks that deliberately inherit their parent scope/register behavior are not
+reuse boundaries.
 
 The hand-tuned ideal for `RexxValue.add` would keep the real method locals
 fixed, then reuse a compact scratch window across operand materialization,
@@ -148,13 +151,17 @@ hand-tuned implementation.
 Preferred next work:
 
 - Exploit the existing AST surgery first: allocate named locals in eligible
-  `SCOPE_LOCAL` / inline `BLOCK_EXPR` scopes from the reusable register pool and
-  return them when that scope is complete.
+  `SCOPE_LOCAL` scopes from the reusable register pool and return them when that
+  scope is complete. Start with generated inline `BLOCK_EXPR` scopes, then apply
+  the same rule to real nested code-block locals.
 - Keep procedure-level source locals fixed and permanent for now.
 - Add inliner policy as a fallback/secondary control: a no-inline annotation or
   caller-side budget based on estimated local pressure, not only the existing
   per-callee node cutoff.
 - Improve scratch/call-frame reuse and synthetic inline temporary handling.
+- Preserve metadata correctness while reusing registers: scoped metadata must
+  open when the block-local symbol becomes live and close before its register is
+  returned/reused.
 - Use the baseline examples above to judge improvements before changing
   RexxValue operators again.
 
@@ -165,8 +172,8 @@ from the immediate inliner-pressure fix.
 
 Design constraint: real named locals can keep fixed register numbers within the
 scope where they are live. Procedure-level source locals remain fixed for the
-whole procedure. Block-local and generated inline locals can be challenged
-because the AST already carries their scope boundaries.
+whole procedure. Block-local and generated inline locals can be recycled after
+scope exit because the AST already carries their scope boundaries.
 
 Current findings:
 
@@ -187,7 +194,14 @@ Register-assignment improvements still wanted:
   mode: source locals, inlined locals, synthetic inline temporaries, expression
   temporaries, call frames, and complex attribute helpers.
 - Implement scoped allocation/release for eligible `SCOPE_LOCAL` symbols,
-  starting with generated inline `BLOCK_EXPR` scopes.
+  starting with generated inline `BLOCK_EXPR` scopes and extending to real
+  nested code-block locals.
+- Rework scoped metadata emission with the allocation change. Current variable
+  metadata is symbol-keyed via `meta_emitted` and normally cleared at procedure
+  end. If registers are reused between block locals, the emitter must clear a
+  block-local symbol's metadata at block exit before returning its register,
+  then emit metadata for the next symbol that reuses that register. Otherwise
+  RXAS/debug consumers can see one register as two live names.
 - Consider lifetime packing for synthetic inline temporaries.
 - Keep inliner policy work as a complementary guard if scoped allocation does
   not sufficiently reduce the hot cases.
