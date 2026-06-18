@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <stdarg.h>
 #include "rxcp_val.h"
 #include "rxcp_ast.h"
@@ -596,10 +597,42 @@ static int inline_class_has_reference_attribute(Context *context, Scope *scope, 
     return result;
 }
 
+static ASTNode *inline_class_attribute_register_view(Symbol *symbol) {
+    int i;
+
+    if (!symbol) return NULL;
+    for (i = 0; i < (int)sym_nond(symbol); i++) {
+        ASTNode *node = sym_trnd(symbol, i)->node;
+        ASTNode *reg_node;
+        ASTNode *child;
+
+        if (!node || !node->parent || node->parent->node_type != DEFINE) continue;
+        reg_node = ast_chld(node->parent, NODE_REGISTER, 0);
+        if (!reg_node) continue;
+
+        for (child = reg_node->child; child; child = child->sibling) {
+            if (child->node_type == INTEGER || child->node_type == CONSTANT) continue;
+            return child;
+        }
+    }
+
+    return NULL;
+}
+
+static int inline_class_attribute_is_flag_view(Symbol *symbol) {
+    ASTNode *view = inline_class_attribute_register_view(symbol);
+
+    return view &&
+           view->node_string &&
+           view->node_string_length > 6 &&
+           strncasecmp(view->node_string, "flags.", 6) == 0;
+}
+
 static int inline_class_attribute_shape_is_portable(Symbol *symbol) {
     if (!inline_symbol_is_class_attribute(symbol)) return 1;
     if (symbol->is_this || symbol->is_factory) return 1;
     if (symbol->value_dims > 0) return 0;
+    if (inline_class_attribute_is_flag_view(symbol)) return 0;
 
     switch (symbol->type) {
         case TP_INTEGER:

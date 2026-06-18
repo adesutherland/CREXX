@@ -162,7 +162,8 @@ status word rather than value-payload views:
 The supported partitions are `.vm`, `.compiler`, `.library`, `.user`,
 `.public`, and `.readable`. `.vm`, `.compiler`, and `.readable` are read-only.
 `.library` and `.user` are writable. `.public` is writable but covers only the
-library and user bands, not compiler call-ABI flags.
+library and user bands, not compiler call-ABI flags. Assigning a writable flag
+view replaces only that masked band; other status-word bits are preserved.
 
 The compiler emits the attribute linking code for methods that read or write
 these attributes. Source code should still access them through methods, not

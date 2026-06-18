@@ -43,6 +43,7 @@
 #define RXFLAG_READABLE_MASK         UINT32_C(0x7FFFFFFF)
 #define RXFLAG_PUBLIC_WRITABLE_MASK  (RXFLAG_COMPILER_MASK | RXFLAG_LIBRARY_MASK | RXFLAG_USER_MASK)
 #define RXFLAG_PUBLIC_TEST_MASK      RXFLAG_PUBLIC_WRITABLE_MASK
+#define RXFLAG_SOURCE_WRITABLE_MASK  (RXFLAG_LIBRARY_MASK | RXFLAG_USER_MASK)
 
 /* VM-private string content/cache flags. */
 #define RXFLAG_VM_UTF8_VALID         UINT32_C(0x00000001)
@@ -88,5 +89,9 @@ static inline uint32_t rxflags_public_write(uint32_t current_flags,
 
 #define RXFLAGS_PUBLIC_REPLACE(requested_flags) \
     ((requested_flags) & RXFLAG_PUBLIC_WRITABLE_MASK)
+
+#define RXFLAGS_SOURCE_MASKED_REPLACE(current_flags, requested_flags, mask) \
+    (((current_flags) & ~((uint32_t)(mask) & RXFLAG_SOURCE_WRITABLE_MASK)) | \
+     ((requested_flags) & ((uint32_t)(mask) & RXFLAG_SOURCE_WRITABLE_MASK)))
 
 #endif

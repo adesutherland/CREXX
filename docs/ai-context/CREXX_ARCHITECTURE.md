@@ -233,6 +233,10 @@ cache bits do not change old branch semantics.
 
 RXAS/RXBIN integer operands remain `rxinteger`; status instructions cast masks
 to the 32-bit flag word before applying the partition.
+Level B flag-view assignments use `SETTPMASK`, a masked replacement operation
+restricted to the source-writable library/user bands, so `.flags.compiler`
+remains read-only to source code while generated call setup can still maintain
+the compiler ABI flags.
 
 Regression coverage for the partition and UTF cache contract lives in
 `interpreter/tests/tests_register_flags.rxas`,

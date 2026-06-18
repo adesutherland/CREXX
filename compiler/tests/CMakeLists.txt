@@ -480,6 +480,45 @@ add_test(NAME rxc_constants_levelb
          COMMAND ${CMAKE_COMMAND} -P "${RXC_CONSTANTS_LEVELB_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+set(RXC_REGISTER_FLAG_VIEWS_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_register_flag_views.cmake")
+set(RXC_REGISTER_FLAG_VIEWS_CONTENT "")
+foreach(_mode IN ITEMS noopt opt)
+    if(_mode STREQUAL "noopt")
+        set(_flag "-n")
+    else()
+        set(_flag "")
+    endif()
+    string(APPEND RXC_REGISTER_FLAG_VIEWS_CONTENT
+           "execute_process(\n"
+           "  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${_flag} -o \"register_flag_views_${_mode}\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/class_attr_register_views.crexx\"\n"
+           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+           "  OUTPUT_VARIABLE rxc_${_mode}_out\n"
+           "  ERROR_VARIABLE rxc_${_mode}_err\n"
+           "  RESULT_VARIABLE rxc_${_mode}_res\n"
+           ")\n"
+           "set(full_${_mode}_out \"${RXAS_DIAG_DOLLAR}{rxc_${_mode}_out}${RXAS_DIAG_DOLLAR}{rxc_${_mode}_err}\")\n"
+           "string(REPLACE \"\\r\\n\" \"\\n\" full_${_mode}_out \"${RXAS_DIAG_DOLLAR}{full_${_mode}_out}\")\n"
+           "if(NOT rxc_${_mode}_res EQUAL 0)\n"
+           "  message(FATAL_ERROR \"rxc ${_mode} failed for register flag views.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_${_mode}_out}\")\n"
+           "endif()\n"
+           "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/register_flag_views_${_mode}.rxas\" rxas_${_mode}_out)\n"
+           "string(REPLACE \"\\r\\n\" \"\\n\" rxas_${_mode}_out \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "if(NOT rxas_${_mode}_out MATCHES [=[getandtp r[0-9]+,a1,65280]=])\n"
+           "  message(FATAL_ERROR \"Compiler flag view did not lower to masked getandtp in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "if(NOT rxas_${_mode}_out MATCHES [=[settpmask a1,r[0-9]+,16711680]=])\n"
+           "  message(FATAL_ERROR \"Library flag view write did not lower to settpmask in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "if(NOT rxas_${_mode}_out MATCHES [=[settpmask a1,r[0-9]+,2147418112]=])\n"
+           "  message(FATAL_ERROR \"Public flag view write did not lower to source-writable settpmask in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n")
+endforeach()
+file(GENERATE OUTPUT "${RXC_REGISTER_FLAG_VIEWS_SCRIPT}" CONTENT "${RXC_REGISTER_FLAG_VIEWS_CONTENT}")
+
+add_test(NAME rxc_register_flag_views
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_REGISTER_FLAG_VIEWS_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 # Robustness tests
 macro(add_crexx_robustness_test NAME MAIN_FILE)
     # The list of dependencies are passed as additional arguments
@@ -589,6 +628,7 @@ add_crexx_compiler_fail_test(err_loop_class rexx_src/err_loop_class.crexx err_lo
 add_crexx_compiler_fail_test(err_select_no_when rexx_src/err_select_no_when.crexx err_select_no_when.txt)
 add_crexx_compiler_fail_test(err_select_c_no_when rexx_src/err_select_c_no_when.crexx err_select_c_no_when.txt)
 add_crexx_compiler_fail_test(err_class_assign rexx_src/err_class_assign.crexx err_class_assign.txt)
+add_crexx_compiler_fail_test(err_register_flag_compiler_write rexx_src/err_register_flag_compiler_write.crexx err_register_flag_compiler_write.txt)
 add_crexx_compiler_fail_test(err_address_commandless_sandbox rexx_src/err_address_commandless_sandbox.crexx err_address_commandless_sandbox.txt)
 add_crexx_compiler_fail_test(err_block_expr_type_mismatch rexx_src/err_block_expr_type_mismatch.crexx err_block_expr_type_mismatch.txt)
 add_crexx_compiler_fail_test(err_block_expr_no_leave rexx_src/err_block_expr_no_leave.crexx err_block_expr_no_leave.txt)

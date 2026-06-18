@@ -1908,3 +1908,24 @@ opt_register_attribute(A) ::= TK_STEMVAR(T).
   T->length--;
   A = ast_f(context, VAR_SYMBOL, T);
 }
+opt_register_attribute(A) ::= TK_STEMVAR(T) TK_STEMVAR(P).
+{
+  char *combined;
+  size_t length;
+
+  /* Remove leading dot from .attribute.partition */
+  T->token_string++;
+  T->length--;
+  P->token_string++;
+  P->length--;
+  A = ast_f(context, VAR_SYMBOL, T);
+  length = (size_t)T->length + 1 + (size_t)P->length;
+  combined = malloc(length + 1);
+  if (combined) {
+    memcpy(combined, T->token_string, (size_t)T->length);
+    combined[T->length] = '.';
+    memcpy(combined + T->length + 1, P->token_string, (size_t)P->length);
+    combined[length] = 0;
+    ast_sstr(A, combined, length);
+  }
+}

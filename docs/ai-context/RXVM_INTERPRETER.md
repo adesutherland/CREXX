@@ -299,7 +299,9 @@ system-programmer classes. VM-private, compiler call-ABI, and all-readable views
 are read-only at source level. Library and user views are writable; a public
 write view covers library and user flags only, not compiler flags. Source-level
 flag-view writes replace only the selected masked band and must preserve all
-other status bits.
+other status bits. The compiler emits `settpmask target,value,mask` for these
+writes; the VM applies `(old & ~mask) | (value & mask)` after restricting the
+mask to source-writable library/user bands.
 
 In normal UTF builds, `RXFLAG_VM_UTF8_VALID` and
 `RXFLAG_VM_UTF8_COUNT_VALID` mean the string byte span is known well-formed

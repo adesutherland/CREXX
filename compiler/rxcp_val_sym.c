@@ -32,6 +32,63 @@
 #include "utf.h"
 #include "rxcp_val.h"
 
+static int attr_text_equals_ci(ASTNode *node, const char *value) {
+    size_t i;
+    size_t length;
+
+    if (!node || !node->node_string || !value) return 0;
+    length = strlen(value);
+    if (node->node_string_length != length) return 0;
+    for (i = 0; i < length; i++) {
+        if (tolower((unsigned char)node->node_string[i]) !=
+            tolower((unsigned char)value[i])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static ASTNode *symbol_register_attribute(Symbol *symbol) {
+    int i;
+
+    if (!symbol) return 0;
+    for (i = 0; i < (int)sym_nond(symbol); i++) {
+        ASTNode *def_node = sym_trnd(symbol, i)->node;
+        ASTNode *nr;
+        ASTNode *child;
+
+        if (!def_node || !def_node->parent || def_node->parent->node_type != DEFINE) continue;
+        nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
+        if (!nr) continue;
+        for (child = nr->child; child; child = child->sibling) {
+            if (child->node_type == INTEGER || child->node_type == CONSTANT) continue;
+            return child;
+        }
+    }
+    return 0;
+}
+
+static int symbol_is_readonly_flag_view(Symbol *symbol) {
+    ASTNode *attr = symbol_register_attribute(symbol);
+
+    return attr_text_equals_ci(attr, "flags.vm") ||
+           attr_text_equals_ci(attr, "flags.compiler") ||
+           attr_text_equals_ci(attr, "flags.readable");
+}
+
+static void validate_readonly_flag_view_writes(Symbol *symbol) {
+    int i;
+
+    if (!symbol_is_readonly_flag_view(symbol)) return;
+    for (i = 0; i < (int)sym_nond(symbol); i++) {
+        SymbolNode *link = sym_trnd(symbol, i);
+
+        if (link->writeUsage) {
+            mknd_err(link->node, "READ_ONLY_REGISTER_FLAG_VIEW");
+        }
+    }
+}
+
 static char *build_factory_symbol_name(ASTNode *node) {
     static const char factory_prefix[] = "\xc2\xa7" "factory";
 
@@ -1515,6 +1572,8 @@ static void validate_symbol_in_scope(Symbol *symbol, void *payload) {
             }
         }
     }
+
+    validate_readonly_flag_view_writes(symbol);
 
 exit:
     if (symbol->type != old_type || symbol->value_dims != old_dims) {

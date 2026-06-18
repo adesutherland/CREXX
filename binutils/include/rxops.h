@@ -537,7 +537,7 @@ X(LINKARG_REG_INT, 511, FMT_R_I, FLOW_NEXT, FLG_IMPLICIT_REG_USE, "Link args[op2
 X(LINKARG_REG_REG_INT, 512, FMT_R_R_I, FLOW_NEXT, FLG_OPT_BARRIER, "Link args[op2+op3] to op1")
 X(RXHASH_REG_REG_REG, 513, FMT_R_R_R, FLOW_NEXT, 0, "returns hash value, etc, op1=hash(op2,len(op3))")
 X(RESERVED_514, 514, FMT_EMPTY, FLOW_NEXT, 0, "Reserved")
-X(RESERVED_515, 515, FMT_EMPTY, FLOW_NEXT, 0, "Reserved")
+X(SETTPMASK_REG_REG_INT, 515, FMT_R_R_I, FLOW_NEXT, 0, "masked replace of source-writable status flags (op1.flags=(op1.flags&~op3)|(op2&op3))")
 X(GETTP_REG_REG, 516, FMT_R_R, FLOW_NEXT, 0, "gets the readable register status flags (op1 = op2.flags)")
 X(SETTP_REG_INT, 517, FMT_R_I, FLOW_NEXT, 0, "sets externally writable register status flags, preserving VM-private flags")
 X(LOADSETTP_REG_INT_INT, 518, FMT_R_I_I, FLOW_NEXT, 0, "load register and sets externally writable status flags load op1=op2 (op1.flags = op3)")

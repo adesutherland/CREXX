@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
+#include <strings.h>
 #include <time.h>
 #include <ctype.h>
 #include <limits.h>
@@ -294,6 +295,62 @@ static int class_attribute_register_index(Symbol *symbol) {
             }
         }
     }
+    return 0;
+}
+
+static ASTNode *class_attribute_register_view(Symbol *symbol) {
+    int i;
+
+    if (!symbol) return 0;
+    for (i = 0; i < (int)sym_nond(symbol); i++) {
+        ASTNode *def_node = sym_trnd(symbol, i)->node;
+        ASTNode *nr;
+        ASTNode *child;
+
+        if (!def_node || !def_node->parent || def_node->parent->node_type != DEFINE) continue;
+        nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
+        if (!nr) continue;
+        for (child = nr->child; child; child = child->sibling) {
+            if (child->node_type == INTEGER || child->node_type == CONSTANT) continue;
+            return child;
+        }
+    }
+    return 0;
+}
+
+static int class_attribute_view_equals(Symbol *symbol, const char *value) {
+    ASTNode *view = class_attribute_register_view(symbol);
+    size_t i;
+    size_t length;
+
+    if (!view || !view->node_string || !value) return 0;
+    length = strlen(value);
+    if (view->node_string_length != length) return 0;
+    for (i = 0; i < length; i++) {
+        if ((char)tolower((unsigned char)view->node_string[i]) !=
+            (char)tolower((unsigned char)value[i])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static int class_attribute_is_flag_view(Symbol *symbol) {
+    ASTNode *view = class_attribute_register_view(symbol);
+
+    return view &&
+           view->node_string &&
+           view->node_string_length > 6 &&
+           strncasecmp(view->node_string, "flags.", 6) == 0;
+}
+
+static unsigned int class_attribute_flag_mask(Symbol *symbol) {
+    if (class_attribute_view_equals(symbol, "flags.vm")) return RXFLAG_VM_PRIVATE_MASK;
+    if (class_attribute_view_equals(symbol, "flags.compiler")) return RXFLAG_COMPILER_MASK;
+    if (class_attribute_view_equals(symbol, "flags.library")) return RXFLAG_LIBRARY_MASK;
+    if (class_attribute_view_equals(symbol, "flags.user")) return RXFLAG_USER_MASK;
+    if (class_attribute_view_equals(symbol, "flags.public")) return RXFLAG_SOURCE_WRITABLE_MASK;
+    if (class_attribute_view_equals(symbol, "flags.readable")) return RXFLAG_READABLE_MASK;
     return 0;
 }
 
@@ -863,41 +920,65 @@ static walker_result emit_walker(walker_direction direction,
                     node->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) {
                     /* Attribute Read */
                     int index = class_attribute_register_index(node->symbolNode->symbol);
-                    int complex = class_attribute_is_complex(node->symbolNode->symbol);
-                    int link_reg_num = complex ? node->additional_registers : node->register_num;
-                    char link_reg_type = complex ? 'r' : node->register_type;
-
                     char this_type = 'a'; int this_num = 1; /* Default for METHOD */
                     attribute_owner_register(node, node, &this_type, &this_num);
-                    if (index == 0) {
-                        temp1 = mprintf("   link %c%d,%c%d\n",
-                                        link_reg_type, link_reg_num,
-                                        this_type, this_num);
-                    } else {
-                        temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n",
-                                        link_reg_type, link_reg_num,
-                                        this_type, this_num, index);
-                    }
-                    output_append_text(node->output, temp1);
-                    free(temp1);
 
-                    if (complex) {
-                        temp1 = mprintf("   %scopy %c%d,r%d\n"
-                                        "   acopy %c%d,r%d\n"
-                                        "   unlink r%d\n",
-                                        tp_prefix,
-                                        node->register_type, node->register_num,
-                                        link_reg_num,
-                                        node->register_type, node->register_num,
-                                        link_reg_num,
-                                        link_reg_num);
+                    if (class_attribute_is_flag_view(node->symbolNode->symbol)) {
+                        unsigned int mask = class_attribute_flag_mask(node->symbolNode->symbol);
+
+                        if (index == 0) {
+                            temp1 = mprintf("   getandtp %c%d,%c%d,%u\n",
+                                            node->register_type, node->register_num,
+                                            this_type, this_num,
+                                            mask);
+                        } else {
+                            temp1 = mprintf("   linkattr1 r%d,%c%d,%d\n"
+                                            "   getandtp %c%d,r%d,%u\n"
+                                            "   unlink r%d\n",
+                                            node->additional_registers,
+                                            this_type, this_num, index,
+                                            node->register_type, node->register_num,
+                                            node->additional_registers,
+                                            mask,
+                                            node->additional_registers);
+                        }
                         output_append_text(node->output, temp1);
                         free(temp1);
                     } else {
-                        /* Cleanup */
-                        temp1 = mprintf("   unlink %c%d\n", node->register_type, node->register_num);
+                        int complex = class_attribute_is_complex(node->symbolNode->symbol);
+                        int link_reg_num = complex ? node->additional_registers : node->register_num;
+                        char link_reg_type = complex ? 'r' : node->register_type;
+
+                        if (index == 0) {
+                            temp1 = mprintf("   link %c%d,%c%d\n",
+                                            link_reg_type, link_reg_num,
+                                            this_type, this_num);
+                        } else {
+                            temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n",
+                                            link_reg_type, link_reg_num,
+                                            this_type, this_num, index);
+                        }
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+
+                        if (complex) {
+                            temp1 = mprintf("   %scopy %c%d,r%d\n"
+                                            "   acopy %c%d,r%d\n"
+                                            "   unlink r%d\n",
+                                            tp_prefix,
+                                            node->register_type, node->register_num,
+                                            link_reg_num,
+                                            node->register_type, node->register_num,
+                                            link_reg_num,
+                                            link_reg_num);
+                            output_append_text(node->output, temp1);
+                            free(temp1);
+                        } else {
+                            /* Cleanup */
+                            temp1 = mprintf("   unlink %c%d\n", node->register_type, node->register_num);
                             node_cleanup_replace_text(node, temp1);
                             free(temp1);
+                        }
                     }
 
 	                    type_promotion(node);
@@ -1343,7 +1424,27 @@ static walker_result emit_walker(walker_direction direction,
 
                     char this_type = 'a'; int this_num = 1; /* Default for METHOD */
                     attribute_owner_register(node, child1, &this_type, &this_num);
-                    if (index == 0) {
+                    if (class_attribute_is_flag_view(child1->symbolNode->symbol)) {
+                        unsigned int mask = class_attribute_flag_mask(child1->symbolNode->symbol);
+
+                        if (index == 0) {
+                            temp1 = mprintf("   settpmask %c%d,%c%d,%u\n",
+                                            this_type, this_num,
+                                            child2->register_type, child2->register_num,
+                                            mask);
+                        } else {
+                            temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n"
+                                            "   settpmask %c%d,%c%d,%u\n"
+                                            "   unlink %c%d\n",
+                                            child1->register_type, child1->register_num,
+                                            this_type, this_num,
+                                            index,
+                                            child1->register_type, child1->register_num,
+                                            child2->register_type, child2->register_num,
+                                            mask,
+                                            child1->register_type, child1->register_num);
+                        }
+                    } else if (index == 0) {
                         if (class_attribute_is_complex(child1->symbolNode->symbol)) {
                             temp1 = mprintf("   link %c%d,%c%d\n"
                                             "   %scopy %c%d,%c%d\n"

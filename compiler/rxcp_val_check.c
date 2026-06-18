@@ -27,9 +27,74 @@
  */
 
 #include <string.h>
+#include <strings.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include "rxcp_val.h"
+
+static int node_text_equals_ci(ASTNode *node, const char *value) {
+    size_t i;
+    size_t length;
+
+    if (!node || !node->node_string || !value) return 0;
+    length = strlen(value);
+    if (node->node_string_length != length) return 0;
+    for (i = 0; i < length; i++) {
+        if (tolower((unsigned char)node->node_string[i]) !=
+            tolower((unsigned char)value[i])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static int register_attr_is_flag_view(ASTNode *attr) {
+    return attr &&
+           attr->node_type == VAR_SYMBOL &&
+           attr->node_string &&
+           attr->node_string_length > 6 &&
+           strncasecmp(attr->node_string, "flags.", 6) == 0;
+}
+
+static int register_flag_partition_is_valid(ASTNode *attr) {
+    return node_text_equals_ci(attr, "flags.vm") ||
+           node_text_equals_ci(attr, "flags.compiler") ||
+           node_text_equals_ci(attr, "flags.library") ||
+           node_text_equals_ci(attr, "flags.user") ||
+           node_text_equals_ci(attr, "flags.public") ||
+           node_text_equals_ci(attr, "flags.readable");
+}
+
+static int register_flag_view_type_is_int(ASTNode *node) {
+    ASTNode *type;
+
+    if (!node || !node->parent || node->parent->node_type != DEFINE) return 1;
+    type = node->parent->child ? node->parent->child->sibling : 0;
+    return type && type->node_type == CLASS && nodeis(type, ".int");
+}
+
+static int register_attr_is_value_view(ASTNode *attr) {
+    return nodeis(attr, "int") ||
+           nodeis(attr, "string") ||
+           nodeis(attr, "object") ||
+           nodeis(attr, "decimal") ||
+           nodeis(attr, "binary") ||
+           nodeis(attr, "float");
+}
+
+static void validate_register_attribute(ASTNode *node, ASTNode *attr) {
+    if (!attr || attr->node_type != VAR_SYMBOL) return;
+
+    if (register_attr_is_flag_view(attr)) {
+        if (!register_flag_partition_is_valid(attr)) {
+            mknd_err(attr, "INVALID_REGISTER_FLAG_VIEW");
+        } else if (!register_flag_view_type_is_int(node)) {
+            mknd_err(attr, "REGISTER_FLAG_VIEW_REQUIRES_INT");
+        }
+    } else if (!register_attr_is_value_view(attr)) {
+        mknd_err(attr, "INVALID_REGISTER_ATTRIBUTE");
+    }
+}
 
 /* Get the assembler operandtype from the AST node for the ASSEMBLER instruction */
 static OperandType node_to_assembler_operandtype(ASTNode *node) {
@@ -346,16 +411,7 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                 }
             }
             ASTNode *attr = index ? index->sibling : NULL;
-            if (attr && attr->node_type == VAR_SYMBOL) {
-                if (!nodeis(attr, "int") &&
-                    !nodeis(attr, "string") &&
-                    !nodeis(attr, "object") &&
-                    !nodeis(attr, "decimal") &&
-                    !nodeis(attr, "binary") &&
-                    !nodeis(attr, "float")) {
-                    mknd_err(attr, "INVALID_REGISTER_ATTRIBUTE");
-                }
-            }
+            validate_register_attribute(node, attr);
         }
         else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY || node->node_type == MATCH) {
             if (node->node_type == PROCEDURE && node->parent->node_type != PROGRAM_FILE) {
@@ -900,16 +956,7 @@ walker_result ast_source_structure_walker(walker_direction direction,
             if (idx < 0) mknd_err(index, "REGISTER_INDEX_OUT_OF_RANGE");
         }
         attr = index ? index->sibling : 0;
-        if (attr && attr->node_type == VAR_SYMBOL) {
-            if (!nodeis(attr, "int") &&
-                !nodeis(attr, "string") &&
-                !nodeis(attr, "object") &&
-                !nodeis(attr, "decimal") &&
-                !nodeis(attr, "binary") &&
-                !nodeis(attr, "float")) {
-                mknd_err(attr, "INVALID_REGISTER_ATTRIBUTE");
-            }
-        }
+        validate_register_attribute(node, attr);
     }
     else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY || node->node_type == MATCH) {
         structure_callable_body(context, node, 0, 0);

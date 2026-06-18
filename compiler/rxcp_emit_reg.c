@@ -28,6 +28,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include "rxcpmain.h"
 #include "rxcp_emit.h"
 #include "rxcp_val.h"
@@ -72,6 +73,35 @@ static int class_attribute_register_index(Symbol *symbol) {
     return -1;
 }
 
+static ASTNode *class_attribute_register_view(Symbol *symbol) {
+    int i;
+
+    if (!symbol) return 0;
+    for (i = 0; i < (int)sym_nond(symbol); i++) {
+        ASTNode *def_node = sym_trnd(symbol, i)->node;
+        ASTNode *nr;
+        ASTNode *child;
+
+        if (!def_node || !def_node->parent || def_node->parent->node_type != DEFINE) continue;
+        nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
+        if (!nr) continue;
+        for (child = nr->child; child; child = child->sibling) {
+            if (child->node_type == INTEGER || child->node_type == CONSTANT) continue;
+            return child;
+        }
+    }
+    return 0;
+}
+
+static int class_attribute_is_flag_view(Symbol *symbol) {
+    ASTNode *view = class_attribute_register_view(symbol);
+
+    return view &&
+           view->node_string &&
+           view->node_string_length > 6 &&
+           strncasecmp(view->node_string, "flags.", 6) == 0;
+}
+
 static int class_attribute_is_complex(Symbol *symbol) {
     int index;
     Symbol **symbols;
@@ -98,6 +128,11 @@ static int class_attribute_is_complex(Symbol *symbol) {
 
     free(symbols);
     return 0;
+}
+
+static int class_attribute_needs_read_link_register(Symbol *symbol) {
+    if (!class_attribute_is_flag_view(symbol)) return class_attribute_is_complex(symbol);
+    return class_attribute_register_index(symbol) > 0;
 }
 
 /* Tests if a node uses a symbol register */
@@ -700,7 +735,7 @@ walker_result register_walker(walker_direction direction,
                         /* Attribute - needs a temporary register */
                         node->register_num = get_reg(node->scope);
                         node->register_type = 'r';
-                        if (class_attribute_is_complex(node->symbolNode->symbol)) {
+                        if (class_attribute_needs_read_link_register(node->symbolNode->symbol)) {
                             node->num_additional_registers = 1;
                             node->additional_registers = get_reg(node->scope);
                             ret_reg(node->scope, node->additional_registers);

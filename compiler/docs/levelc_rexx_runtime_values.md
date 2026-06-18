@@ -89,10 +89,13 @@ VM-private bits remain VM-owned. Library code may read VM-private bits through
 normal flag instructions, but must not depend on writing them.
 
 Compiler call-ABI flags and runtime value-cache flags share the same status
-word. Call setup must therefore update only the compiler flag band, using the
-requested value AND the compiler-band mask, and leave the library/runtime band
-intact. The `setortp` instruction remains the explicit OR operation for code
-that deliberately accumulates flags.
+word. Call setup must therefore update only the compiler flag band and leave
+the library/runtime band intact. The general `settp` instruction keeps its
+call-ABI-friendly partition semantics, while source-level flag-view assignment
+uses the masked replacement instruction `settpmask` so a writable view can
+replace its band with zero without clearing unrelated flags. The `setortp`
+instruction remains the explicit OR operation for code that deliberately
+accumulates flags.
 
 Two compiler features are approved follow-ups to make this code maintainable
 and fast enough for Level C:
@@ -127,7 +130,10 @@ The approved flag-view partitions are:
 Writes through writable flag views replace only the selected masked band:
 `new_flags = (old_flags & ~view_mask) | (value & view_mask)`. They must not
 clear unrelated public bands and must never write the VM-private or reserved
-bits.
+bits. The compiler lowers these writes to `settpmask target,value,mask`, with
+`mask` restricted to the writable source-level bands. `.flags.compiler` is a
+read-only view even though generated call setup still owns and updates the
+compiler flag band internally.
 
 Binary and text validity are deliberately separate claims. A value may have a
 current binary byte representation without yet having a current `.string`
