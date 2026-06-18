@@ -110,16 +110,90 @@ observed after the decimal digits/fuzz change:
 - `concat`: around 71 locals
 - `copyFrom`: around 83 locals
 
-This appears to be part of the broader compiler register-pressure problem.
-Investigate inliner budget controls, no-inline annotations, or
-register-pressure-aware inlining before adding more RexxValue operator surface.
+Baseline inspection, 2026-06-18:
+
+| Example | No-opt locals | Opt locals | Observation |
+| --- | ---: | ---: | --- |
+| `RexxValue.add` | 11 | 77 | `asFloat`, `asDecimal`, and factory bodies inline into both operands/branches. |
+| `RexxValue.concat` | 8 | 71 | `asString` materializers dominate the inlined body. |
+| `RexxValue.copyFrom` | 10 | 83 | Multiple materializers and setter paths inline together. |
+| `RexxValue.equals` | 6 | 50 | Inlined `asString` calls dominate. |
+| `testRexxValue.main` | 27 | 235 | Imported classlib inlining greatly reduces calls but raises local high-water. |
+| `inline_test_composed_expr_contexts.main` | 7 | 42 | Golden compiler example showing the same call-removal/local-growth tradeoff. |
+
+The current allocator does recycle expression temporaries through `get_reg()` and
+`ret_reg()`, so register recycling is not simply absent. The immediate pressure
+comes from aggressive inlining plus fixed registers for named locals from each
+inlined body. AST-level inlining already creates `BLOCK_EXPR` / `SCOPE_LOCAL`
+structure that should make these lifetimes visible, but the register pass does
+not currently use it: `SCOPE_LOCAL` shares the parent register scope, and
+`assign_registers_in_scope()` pre-assigns nested local-scope symbols at procedure
+entry. The tree surgery therefore preserves semantics and avoids call/link
+hazards, but does not yet deliver scoped register reuse.
+
+For real source-level named locals, fixed register numbers remain the expected
+model for readability, tracing, and simple metadata. The useful refinement is
+fixed registers within a scope, with registers returned after a provably local
+scope is complete. Generated inline `BLOCK_EXPR` scopes are the first candidate
+because they were introduced precisely to contain inlined lifetime.
+
+The hand-tuned ideal for `RexxValue.add` would keep the real method locals
+fixed, then reuse a compact scratch window across operand materialization,
+branch-local work, and factory result creation. Current optimized output instead
+clones named locals such as `temp`, `flags`, `text`, `numeric_digits`, and
+`numeric_fuzz` for each inlined materializer instance, plus synthetic inline
+leave registers. That makes the optimized shape correct but much larger than a
+hand-tuned implementation.
+
+Preferred next work:
+
+- Exploit the existing AST surgery first: allocate named locals in eligible
+  `SCOPE_LOCAL` / inline `BLOCK_EXPR` scopes from the reusable register pool and
+  return them when that scope is complete.
+- Keep procedure-level source locals fixed and permanent for now.
+- Add inliner policy as a fallback/secondary control: a no-inline annotation or
+  caller-side budget based on estimated local pressure, not only the existing
+  per-callee node cutoff.
+- Improve scratch/call-frame reuse and synthetic inline temporary handling.
+- Use the baseline examples above to judge improvements before changing
+  RexxValue operators again.
 
 ## 5. Register Assignment
 
-Add register assignment as a dedicated compiler TODO/work item. The current
-register numbering can become large in inlined expression code and makes RXAS
-harder to inspect. Better assignment should also make keyhole optimisation more
-effective.
+Add register assignment as a dedicated compiler TODO/work item, but split it
+from the immediate inliner-pressure fix.
+
+Design constraint: real named locals can keep fixed register numbers within the
+scope where they are live. Procedure-level source locals remain fixed for the
+whole procedure. Block-local and generated inline locals can be challenged
+because the AST already carries their scope boundaries.
+
+Current findings:
+
+- Anonymous expression temporaries are recycled today.
+- Call argument frames require contiguous `rN` ranges and can raise the
+  procedure `.locals` high-water even when returned immediately.
+- Complex attribute and array access reserve extra helper registers; these are
+  returned, but still contribute to high-water when the surrounding method has
+  already accumulated many fixed locals.
+- Inlined callee locals are ordinary named locals after cloning, and every
+  repeated inline of `asString`, `asFloat`, or `asDecimal` currently adds
+  another procedure-lifetime fixed local set even though the cloned inline scope
+  is local.
+
+Register-assignment improvements still wanted:
+
+- Track and report register allocation categories in a compiler diagnostic
+  mode: source locals, inlined locals, synthetic inline temporaries, expression
+  temporaries, call frames, and complex attribute helpers.
+- Implement scoped allocation/release for eligible `SCOPE_LOCAL` symbols,
+  starting with generated inline `BLOCK_EXPR` scopes.
+- Consider lifetime packing for synthetic inline temporaries.
+- Keep inliner policy work as a complementary guard if scoped allocation does
+  not sufficiently reduce the hot cases.
+- Keep item 6 separate: keyhole link/copy cleanup can reduce emitted work, but
+  it cannot by itself lower `.locals` unless a later RXAS renumbering pass is
+  added.
 
 ## 6. Link/Unlink Keyhole Follow-Up
 
