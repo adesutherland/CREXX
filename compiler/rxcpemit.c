@@ -524,51 +524,33 @@ static walker_result emit_walker(walker_direction direction,
                                         "l%da:\n"
                                         "   brtpandt l%dc,%c%d,%d\n"
                                         "   %scopy %c%d,%c%d\n"
-                                        "   acopy %c%d,%c%d\n"
                                         "   br l%dd\n"
                                         "l%dc:\n"
                                         "   swap %c%d,%c%d\n"
                                         "l%dd:\n",
-                                        child1->node_number, /* br l%dd */
-                                        child1->node_number, /* l%da: */
-
-                                        /* brtpandt l%dc,%c%d,%d */
+                                        child1->node_number,
+                                        child1->node_number,
                                         child1->node_number, node->register_type, node->register_num, REGTP_NOTSYM,
-
-                                        /* %scopy %c%d,%c%d */
                                         tp_prefix,
                                         child1->register_type, child1->register_num,
                                         node->register_type, node->register_num,
-
-                                        /* acopy %c%d,%c%d */
+                                        child1->node_number,
+                                        child1->node_number,
                                         child1->register_type, child1->register_num,
                                         node->register_type, node->register_num,
-
-                                        child1->node_number, /* br l%dd */
-                                        child1->node_number, /* l%dc: */
-
-                                        /* swap %c%d,%c%d */
-                                        child1->register_type, child1->register_num,
-                                        node->register_type, node->register_num,
-
-                                        child1->node_number); /* l%dd: */
+                                        child1->node_number);
                                 output_append_text(node->output, temp1);
                                 free(temp1);
                             } else {
                                 temp1 = mprintf("   br l%db\n"
                                                 "l%da:\n"
                                                 "   %scopy %c%d,%c%d\n"
-                                                "   acopy %c%d,%c%d\n"
                                                 "l%db:\n",
                                                 child1->node_number, /* br l%db */
                                                 child1->node_number, /* l%da: */
 
                                                 /* %scopy %c%d,%c%d */
                                                 tp_prefix,
-                                                child1->register_type, child1->register_num,
-                                                node->register_type, node->register_num,
-
-                                                /* acopy %c%d,%c%d */
                                                 child1->register_type, child1->register_num,
                                                 node->register_type, node->register_num,
 
@@ -586,7 +568,6 @@ static walker_result emit_walker(walker_direction direction,
                         if (is_large_value(node)) {
                             temp1 = mprintf("   brtpandt l%dc,%c%d,%d\n"
                                             "   %scopy %c%d,%c%d\n"
-                                            "   acopy %c%d,%c%d\n"
                                             "   br l%dd\n"
                                             "l%dc:\n"
                                             "   swap %c%d,%c%d\n"
@@ -595,8 +576,6 @@ static walker_result emit_walker(walker_direction direction,
                                             node->register_type, node->register_num,
                                             REGTP_NOTSYM,
                                             tp_prefix,
-                                            child1->register_type, child1->register_num,
-                                            node->register_type, node->register_num,
                                             child1->register_type, child1->register_num,
                                             node->register_type, node->register_num,
                                             child1->node_number,
@@ -1504,18 +1483,11 @@ static walker_result emit_walker(walker_direction direction,
                             !child1->child &&
                             (child1->value_dims > 0 || child1->target_dims > 0 ||
                              child2->value_dims > 0 || child2->target_dims > 0 ||
-                             child1->value_type == TP_BINARY || child1->target_type == TP_BINARY ||
-                             child2->value_type == TP_BINARY || child2->target_type == TP_BINARY ||
                              child1->value_type == TP_REFERENCE || child1->target_type == TP_REFERENCE ||
                              child2->value_type == TP_REFERENCE || child2->target_type == TP_REFERENCE);
 
                     if (aggregate_assign) {
-                        temp1 = mprintf("   copy %c%d,%c%d\n"
-                                        "   acopy %c%d,%c%d\n",
-                                        child1->register_type,
-                                        child1->register_num,
-                                        child2->register_type,
-                                        child2->register_num,
+                        temp1 = mprintf("   copy %c%d,%c%d\n",
                                         child1->register_type,
                                         child1->register_num,
                                         child2->register_type,

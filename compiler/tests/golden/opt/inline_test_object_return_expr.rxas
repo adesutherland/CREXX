@@ -37,7 +37,6 @@ main() .locals=16
    .srcstep 7 7 17 "inline_test_object_return_expr.crexx" 13 3 15 "  return value"
    .traceevent "V" 6 "R" "O" "r" 0 9 9 0 "value" ""
    copy r12,r0
-   acopy r12,r0
    br l73bexprend
 l73bexprend:
    load r10,1
@@ -67,7 +66,6 @@ l73bexprend:
    .srcstep 15 15 17 "inline_test_object_return_expr.crexx" 13 3 15 "  return value"
    .traceevent "V" 6 "R" "O" "r" 3 17 17 0 "value" ""
    copy r12,r3
-   acopy r12,r3
    br l86bexprend
 l86bexprend:
    load r14,1
@@ -102,7 +100,6 @@ describeBox() .locals=4
    linkattr1 r2,r1,1
    .traceevent "V" 6 "R" "S" "r" 2 33 33 0 "name" ""
    scopy r3,r2
-   acopy r3,r2
    unlink r2
    br l115bexprend
 l115bexprend:

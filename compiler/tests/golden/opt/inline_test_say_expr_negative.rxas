@@ -44,14 +44,12 @@ l8dostart:
    load r5,"two"
    .traceevent "L" 4 "R" "S" "r" 5 11 11 0 "" ""
    scopy r4,r5
-   acopy r4,r5
    br l43bexprend
 l48iffalse:
    .srcstep 9 9 17 "inline_test_say_expr_negative.crexx" 14 3 13 "  return val"
    itos r1
    .traceevent "V" 6 "R" "S" "r" 1 11 11 0 "val" ""
    scopy r4,r1
-   acopy r4,r1
    br l43bexprend
 l43bexprend:
    say r4

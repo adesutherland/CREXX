@@ -75,7 +75,6 @@ main() .locals=6
    linkattr1 r5,r0,r1
    .traceevent "V" 6 "R" "I" "r" 5 10 10 0 "values" ""
    icopy r4,r5
-   acopy r4,r5
    unlink r5
    br l65bexprend
 l65bexprend:

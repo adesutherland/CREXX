@@ -89,7 +89,6 @@ l125bexprend:
    unlink r14
    .traceevent "O" 4 "R" "I" "r" 15 21 21 0 "" ""
    icopy r14,r15
-   acopy r14,r15
    br l118bexprend
 l118bexprend:
    itos r14

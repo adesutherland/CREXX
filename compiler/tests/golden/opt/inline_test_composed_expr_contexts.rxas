@@ -40,7 +40,6 @@ l307bexprend:
    itos r17
    .traceevent "O" 4 "R" "S" "r" 17 9 9 0 "" ""
    icopy r18,r17
-   acopy r18,r17
    br l183bexprend
 l183bexprend:
    itos r18
@@ -67,7 +66,6 @@ l238bexprend:
    concat r19,r19,"]"
    .traceevent "O" 4 "R" "S" "r" 19 15 15 0 "" ""
    scopy r20,r19
-   acopy r20,r19
    br l234bexprend
 l234bexprend:
    concat r20,"prefix:",r20
@@ -82,13 +80,11 @@ l234bexprend:
    load r20,"5"
    .traceevent "L" 4 "R" "S" "r" 20 20 20 0 "" ""
    scopy r21,r20
-   acopy r21,r20
    br l316bexprend
 l316bexprend:
    concat r21,r6,r21
    .traceevent "O" 4 "R" "S" "r" 21 20 20 0 "" ""
    scopy r22,r21
-   acopy r22,r21
    br l229bexprend
 l229bexprend:
    say r22
@@ -115,7 +111,6 @@ l274bexprend:
    iadd r23,r9,r10
    .traceevent "O" 4 "R" "I" "r" 23 28 28 0 "" ""
    icopy r24,r23
-   acopy r24,r23
    br l270bexprend
 l270bexprend:
    itos r24

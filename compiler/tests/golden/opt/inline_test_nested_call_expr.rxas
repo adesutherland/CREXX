@@ -48,7 +48,6 @@ l62bexprend:
    .srcstep 9 9 17 "inline_test_nested_call_expr.crexx" 13 3 13 "  return val"
    .traceevent "V" 6 "R" "I" "r" 2 11 11 0 "val" ""
    icopy r7,r2
-   acopy r7,r2
    br l58bexprend
 l58bexprend:
    itos r7

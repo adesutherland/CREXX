@@ -394,12 +394,14 @@ ordinary byte sequence. The register also carries `binary_pos`, a byte cursor
 used by `SETBINPOS`, `GETBINPOS`, and cursor-based `BSLICE`.
 
 RXAS-level binary opcodes operate only on the binary slot. `LOAD_REG_BINARY`
-loads a `BINARY_CONST` from `0x...` RXAS syntax. `GETBYTE` reads zero-based
-binary offsets and returns `-1` for out-of-range reads. `SETBYTE` and
-`BUPDATE` are strict and raise `OUT_OF_RANGE` for invalid byte indexes or
-fixed-size overlay writes past the destination length. `BCONCAT`, `BAPPEND`,
-and `BSLICE` build ordinary byte buffers without UTF-8 validation and clear
-VM-private UTF cache flags on the destination.
+loads a `BINARY_CONST` from `0x...` RXAS syntax. `BCOPY_REG_REG` copies only
+the binary payload and byte cursor; it deliberately does not copy
+public/compiler/library status flags. `GETBYTE` reads zero-based binary
+offsets and returns `-1` for out-of-range reads. `SETBYTE` and `BUPDATE` are
+strict and raise `OUT_OF_RANGE` for invalid byte indexes or fixed-size overlay
+writes past the destination length. `BCONCAT`, `BAPPEND`, and `BSLICE` build
+ordinary byte buffers without UTF-8 validation and clear VM-private UTF cache
+flags on the destination.
 
 `FREADB` reads bytes with `fread(ptr, 1, n, file)`, so `binary_length` is the
 actual byte count read, not a C item count.

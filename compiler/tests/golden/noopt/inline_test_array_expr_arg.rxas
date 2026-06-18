@@ -38,7 +38,6 @@ bumpFirst() .locals=4
    .meta "inline_test_array_expr_arg.bumpfirst.pair"="b" ".int[2]" r0
    brtpandt l14c,a1,512
    copy r0,a1
-   acopy r0,a1
    br l14d
 l14c:
    swap r0,a1

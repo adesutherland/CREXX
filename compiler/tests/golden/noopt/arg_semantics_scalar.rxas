@@ -192,7 +192,6 @@ shoutText() .locals=3
    .meta "arg_semantics_scalar.shouttext.text"="b" ".string" r0
    brtpandt l103c,a1,512
    scopy r0,a1
-   acopy r0,a1
    br l103d
 l103c:
    swap r0,a1

@@ -2256,7 +2256,6 @@ static int inline_append_method_receiver_copyback(Context *context,
     ASTNode *copy_lhs;
     ASTNode *copy_rhs;
     ASTNode *value_copy;
-    ASTNode *attr_copy;
 
     if (!context || !instr_list || !inline_scope || !source_node || !clone_state) return 0;
     if (!clone_state->method_receiver_needs_copyback) return 1;
@@ -2279,11 +2278,9 @@ static int inline_append_method_receiver_copyback(Context *context,
     if (!copy_lhs || !copy_rhs) return 0;
 
     value_copy = inline_create_register_copy_instr(context, inline_scope, "copy", copy_lhs, copy_rhs);
-    attr_copy = inline_create_register_copy_instr(context, inline_scope, "acopy", copy_lhs, copy_rhs);
-    if (!value_copy || !attr_copy) return 0;
+    if (!value_copy) return 0;
 
     add_ast(instr_list, value_copy);
-    add_ast(instr_list, attr_copy);
     return 1;
 }
 
@@ -2601,14 +2598,11 @@ static int inline_bind_call_arguments(Context *context,
 
         if (inline_formal_needs_isolated_copy(formal_target, param_arg)) {
             ASTNode *bind_copy;
-            ASTNode *attr_copy;
 
             bind_copy = inline_create_register_copy_instr(context, inline_scope, "copy", bind_lhs, bind_rhs);
-            attr_copy = inline_create_register_copy_instr(context, inline_scope, "acopy", bind_lhs, bind_rhs);
-            if (!bind_copy || !attr_copy) INLINE_BIND_RETURN(0);
+            if (!bind_copy) INLINE_BIND_RETURN(0);
 
             add_ast(instr_list, bind_copy);
-            add_ast(instr_list, attr_copy);
         } else {
             add_ast(bind_assign, bind_lhs);
             add_ast(bind_assign, bind_rhs);
@@ -3824,7 +3818,6 @@ static int ast_inline_statement(Context *context,
                 (inline_node_needs_attr_copy(ret_expr) &&
                  (ret_expr->value_type == TP_BINARY || ret_expr->target_type == TP_BINARY))) {
                 ASTNode *ret_copy;
-                ASTNode *attr_copy;
 
                 ret_rhs = inline_clone_subtree(context, ret_expr, &clone_state);
                 if (!ret_rhs) {
@@ -3850,14 +3843,12 @@ static int ast_inline_statement(Context *context,
                 }
 
                 ret_copy = inline_create_register_copy_instr(context, inline_scope, "copy", ret_lhs, ret_rhs);
-                attr_copy = inline_create_register_copy_instr(context, inline_scope, "acopy", ret_lhs, ret_rhs);
-                if (!ret_copy || !attr_copy) {
+                if (!ret_copy) {
                     inline_debug_fail_closed(context, call_node, proc_sym, "failed to create aggregate return copy instructions");
                     inline_free_symbol_map(&clone_state);
                     return 0;
                 }
                 add_ast(instr_list, ret_copy);
-                add_ast(instr_list, attr_copy);
             } else {
                 ret_rhs = inline_clone_subtree(context, ret_expr, &clone_state);
                 if (!ret_rhs) {

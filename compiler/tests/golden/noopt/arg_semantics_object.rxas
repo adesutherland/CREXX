@@ -126,7 +126,6 @@ replaceBox() .locals=4
    .meta "arg_semantics_object.replacebox.value"="b" ".box" r0
    brtpandt l58c,a1,512
    copy r0,a1
-   acopy r0,a1
    br l58d
 l58c:
    swap r0,a1

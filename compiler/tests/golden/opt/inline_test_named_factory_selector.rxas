@@ -64,7 +64,6 @@ main() .locals=6
    swap r0,r5
    .traceevent "F" 4 "R" "S" "r" 3 6 6 0 "describe" ""
    scopy r5,r3
-   acopy r5,r3
    br l137bexprend
 l137bexprend:
    say r5

@@ -51,13 +51,11 @@ l8dostart:
    .srcstep 8 8 17 "inline_test_nested_scope_if_do.crexx" 16 5 15 "    return tmp"
    .traceevent "V" 6 "R" "I" "r" 2 13 13 0 "tmp" ""
    icopy r5,r2
-   acopy r5,r2
    br l52bexprend
 l57iffalse:
    .srcstep 11 11 17 "inline_test_nested_scope_if_do.crexx" 18 3 13 "  return val"
    .traceevent "V" 6 "R" "I" "r" 1 13 13 0 "val" ""
    icopy r5,r1
-   acopy r5,r1
    br l52bexprend
 l52bexprend:
    itos r5

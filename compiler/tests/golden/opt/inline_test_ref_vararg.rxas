@@ -26,7 +26,6 @@ main() .locals=7
    load r1,3
    .traceevent "L" 4 "R" "I" "r" 1 4 4 0 "" ""
    icopy r2,r1
-   acopy r2,r1
    br l117bexprend
 l117bexprend:
    itos r2
@@ -36,7 +35,6 @@ l117bexprend:
    .srcstep 5 5 17 "inline_test_ref_vararg.crexx" 24 3 15 "  return arg[2]"
    .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "second" ""
    icopy r2,r0
-   acopy r2,r0
    br l121bexprend
 l121bexprend:
    itos r2
@@ -47,7 +45,6 @@ l121bexprend:
    load r2,1
    .traceevent "L" 4 "R" "B" "r" 2 10 10 0 "" ""
    icopy r3,r2
-   acopy r3,r2
    br l125bexprend
 l125bexprend:
    itos r3
@@ -58,7 +55,6 @@ l125bexprend:
    load r3,0
    .traceevent "L" 4 "R" "B" "r" 3 13 13 0 "" ""
    icopy r4,r3
-   acopy r4,r3
    br l129bexprend
 l129bexprend:
    itos r4
@@ -73,7 +69,6 @@ l129bexprend:
    swap r0,r5
    .traceevent "F" 4 "R" "I" "r" 6 16 16 0 "bumpone" ""
    icopy r5,r6
-   acopy r5,r6
    br l133bexprend
 l133bexprend:
    itos r5

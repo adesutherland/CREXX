@@ -45,13 +45,11 @@ l8dostart:
    .srcstep 8 8 17 "inline_test_nested_scope_do.crexx" 16 5 16 "    return step"
    .traceevent "V" 6 "R" "I" "r" 2 11 11 0 "step" ""
    icopy r6,r2
-   acopy r6,r2
    br l48bexprend
    .srcstep 9 9 17 "inline_test_nested_scope_do.crexx" 18 3 11 "  return 0"
    load r5,0
    .traceevent "L" 4 "R" "I" "r" 5 11 11 0 "" ""
    icopy r6,r5
-   acopy r6,r5
    br l48bexprend
 l48bexprend:
    itos r6

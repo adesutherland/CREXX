@@ -26,7 +26,7 @@ main() .locals=7
    .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "§factory" ""
    copy r0,r1
    .traceevent "A" 6 "R" "O" "r" 0 0 0 0 "c" ""
-   .srcstep 9 9 17 "class_import_main.crexx" 6 1 11 "call c.inc()"
+   .srcstep 8 8 17 "class_import_main.crexx" 6 1 11 "call c.inc()"
    .srcstep 5 5 33 "class_import_main.crexx" 6 6 7 "call c.inc()"
    .traceevent "V" 6 "R" "O" "r" 0 5 5 0 "c" ""
    copy r2,r0
@@ -43,26 +43,22 @@ main() .locals=7
    .srcstep 7 7 6 "class_import_main.crexx" 6 6 11 "call c.inc()"
    .traceevent "V" 6 "R" "O" "r" 2 0 0 0 "§this" ""
    copy r0,r2
-   .srcstep 8 8 6 "class_import_main.crexx" 6 6 11 "call c.inc()"
-   .traceevent "V" 6 "R" "O" "r" 2 0 0 0 "§this" ""
-   acopy r0,r2
-   .srcstep 13 13 17 "class_import_main.crexx" 7 1 12 "say c.value()"
+   .srcstep 12 12 17 "class_import_main.crexx" 7 1 12 "say c.value()"
    .meta "class_import_main.main.c"="b" ".counter" r0
-   .srcstep 12 12 17 "class_import_main.crexx" 7 5 6 "say c.value()"
-   .srcstep 10 10 33 "class_import_main.crexx" 7 5 6 "say c.value()"
-   .traceevent "V" 6 "R" "O" "r" 0 10 10 0 "c" ""
+   .srcstep 11 11 17 "class_import_main.crexx" 7 5 6 "say c.value()"
+   .srcstep 9 9 33 "class_import_main.crexx" 7 5 6 "say c.value()"
+   .traceevent "V" 6 "R" "O" "r" 0 9 9 0 "c" ""
    copy r3,r0
-   .traceevent "A" 6 "R" "O" "r" 3 10 10 0 "§this" ""
-   .srcstep 11 11 25 "class_import_lib.crexx" 17 5 15 "    return val"
+   .traceevent "A" 6 "R" "O" "r" 3 9 9 0 "§this" ""
+   .srcstep 10 10 25 "class_import_lib.crexx" 17 5 15 "    return val"
    linkattr1 r6,r3,1
-   .traceevent "V" 6 "R" "I" "r" 6 13 13 0 "val" ""
+   .traceevent "V" 6 "R" "I" "r" 6 12 12 0 "val" ""
    icopy r5,r6
-   acopy r5,r6
    unlink r6
-   br l107bexprend
-l107bexprend:
+   br l104bexprend
+l104bexprend:
    itos r5
    say r5
-   .srcstep 14 14 17 "class_import_main.crexx" 8 1 9 "return 0"
+   .srcstep 13 13 17 "class_import_main.crexx" 8 1 9 "return 0"
    ret 0
    .meta "class_import_main.main.c"

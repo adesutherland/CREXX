@@ -38,7 +38,6 @@ main() .locals=20
    .srcstep 6 6 25 "length.crexx" 37 3 16 "  return result"
    .traceevent "V" 6 "R" "I" "r" 1 8 8 0 "result" ""
    icopy r14,r1
-   acopy r14,r1
    br l286bexprend
 l286bexprend:
    itos r14
@@ -108,7 +107,6 @@ l327iffalse:
    load r14,""
    .traceevent "L" 4 "R" "S" "r" 14 43 43 0 "" ""
    scopy r16,r14
-   acopy r16,r14
    br l296bexprend
 l339iffalse:
    .srcstep 20 20 25 "substr.crexx" 44 3 20 "  start = start - 1"
@@ -128,7 +126,6 @@ l339iffalse:
    .srcstep 21 21 25 "substr.crexx" 48 32 46 "     if len = inputLength then return string1  /* same length, return immediately */"
    .traceevent "V" 6 "R" "S" "r" 10 43 43 0 "string1" ""
    scopy r16,r10
-   acopy r16,r10
    br l296bexprend
 l355iffalse:
    .traceevent "V" 6 "R" "I" "r" 4 43 43 0 "len" ""
@@ -143,7 +140,6 @@ l355iffalse:
    .srcstep 23 23 25 "substr.crexx" 51 9 23 "        return string1"
    .traceevent "V" 6 "R" "S" "r" 10 43 43 0 "string1" ""
    scopy r16,r10
-   acopy r16,r10
    br l296bexprend
 l361iffalse:
 l350iffalse:
@@ -167,7 +163,6 @@ l350iffalse:
    .srcstep 26 26 25 "substr.crexx" 59 6 25 "     return outputstring"
    .traceevent "V" 6 "R" "S" "r" 5 43 43 0 "outputstring" ""
    scopy r16,r5
-   acopy r16,r5
    br l296bexprend
 l374iffalse:
    .srcstep 27 27 25 "substr.crexx" 63 3 19 "  padchar      = 0  /* Holds Unicode codepoint */"
@@ -263,7 +258,6 @@ l429ifend:
    .srcstep 41 41 25 "substr.crexx" 90 3 22 "  return outputstring"
    .traceevent "V" 6 "R" "S" "r" 5 43 43 0 "outputstring" ""
    scopy r16,r5
-   acopy r16,r5
    br l296bexprend
 l296bexprend:
    say r16

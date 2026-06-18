@@ -70,7 +70,6 @@ main() .locals=9
    .srcstep 12 12 17 "inline_test2.crexx" 34 3 11 "  return x"
    .traceevent "V" 6 "R" "I" "r" 1 14 14 0 "x" ""
    icopy r4,r1
-   acopy r4,r1
    br l169bexprend
 l169bexprend:
    itos r4
@@ -86,7 +85,6 @@ l169bexprend:
    call r6,helper(),r4
    .traceevent "F" 4 "R" "I" "r" 6 17 17 0 "helper" ""
    icopy r5,r6
-   acopy r5,r6
    br l238bexprend
 l238bexprend:
    itos r5
@@ -113,7 +111,6 @@ l238bexprend:
    load r5,40
    .traceevent "L" 4 "R" "I" "r" 5 25 25 0 "" ""
    icopy r4,r5
-   acopy r4,r5
    br l265bexprend
 l265bexprend:
    itos r4
@@ -126,13 +123,11 @@ l265bexprend:
    load r4,1
    .traceevent "L" 4 "R" "I" "r" 4 29 29 0 "" ""
    icopy r8,r4
-   acopy r8,r4
    br l277bexprend
    .srcstep 27 27 17 "inline_test2.crexx" 58 3 11 "  return 0"
    load r7,0
    .traceevent "L" 4 "R" "I" "r" 7 29 29 0 "" ""
    icopy r8,r7
-   acopy r8,r7
    br l277bexprend
 l277bexprend:
    itos r8

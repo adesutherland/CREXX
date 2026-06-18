@@ -1173,6 +1173,31 @@ RX_INLINE void copy_string_value(value *dest, value *source) {
     copy_vm_private_flags(dest, source);
 }
 
+/* Copy binary payload only. Public/compiler/library status flags are not copied. */
+RX_INLINE void copy_binary_value(value *dest, value *source) {
+    if (dest == source) return;
+
+    if (dest->reference_payload) rxvm_reference_value_release_payload(dest);
+    if (dest->native_payload_ops) clear_binary_payload(dest);
+
+    if (source->native_payload_ops && source->native_payload_ops->copy) {
+        source->native_payload_ops->copy(dest, source);
+    }
+    else if (source->binary_length) {
+        if (prep_binary_buffer(dest, source->binary_length) != 0) abort();
+        memcpy(dest->binary_value, source->binary_value, dest->binary_length);
+        dest->binary_pos = source->binary_pos;
+        dest->native_payload_ops = source->native_payload_ops;
+        dest->native_payload_flags = source->native_payload_flags;
+    }
+    else {
+        dest->binary_length = 0;
+        dest->binary_pos = 0;
+        dest->native_payload_ops = 0;
+        dest->native_payload_flags = 0;
+    }
+}
+
 /* Compares two strings. returns -1, 0, 1 as appropriate */
 #define MIN(a,b) (((a)<(b))?(a):(b))
 

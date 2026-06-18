@@ -1253,18 +1253,26 @@ static int rewrite_meta_constant(rxlink_build_context *context, rxlink_output_mo
         }
         case META_TRACE_EVENT: {
             meta_trace_event_constant *source = (meta_trace_event_constant *)entry;
-            meta_trace_event_constant *meta = (meta_trace_event_constant *)(context->shared_pool.data + new_offset);
-            meta->base.prev = prev_offset;
-            meta->base.next = next_offset;
+            size_t value_ref = source->value_ref;
+            size_t symbol = source->symbol;
+            size_t resolved_name = source->resolved_name;
             if (source->value_source == RXBIN_TRACE_VALUE_CONSTANT &&
                 source->value_ref != RXBIN_TRACE_REF_NONE) {
-                meta->value_ref = link_constant_offset(context, output_module, input_module, source->value_ref, ok);
+                value_ref = link_constant_offset(context, output_module, input_module, source->value_ref, ok);
             }
             if (source->symbol != RXBIN_TRACE_REF_NONE) {
-                meta->symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
+                symbol = link_constant_offset(context, output_module, input_module, source->symbol, ok);
             }
             if (source->resolved_name != RXBIN_TRACE_REF_NONE) {
-                meta->resolved_name = link_constant_offset(context, output_module, input_module, source->resolved_name, ok);
+                resolved_name = link_constant_offset(context, output_module, input_module, source->resolved_name, ok);
+            }
+            {
+                meta_trace_event_constant *meta = (meta_trace_event_constant *)(context->shared_pool.data + new_offset);
+                meta->base.prev = prev_offset;
+                meta->base.next = next_offset;
+                meta->value_ref = value_ref;
+                meta->symbol = symbol;
+                meta->resolved_name = resolved_name;
             }
             return *ok;
         }

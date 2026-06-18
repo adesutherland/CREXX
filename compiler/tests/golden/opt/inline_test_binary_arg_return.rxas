@@ -7,7 +7,7 @@
 
 main() .locals=6
    .meta "inline_test_binary_arg_return.main"="b" ".int" main() ""
-   .srcstep 14 14 17 "inline_test_binary_arg_return.crexx" 3 1 23 "main: procedure = .int"
+   .srcstep 12 12 17 "inline_test_binary_arg_return.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -16,7 +16,7 @@ main() .locals=6
    .meta "inline_test_binary_arg_return.main.data"="b" ".binary" r0
    .srcstep 1 1 17 "inline_test_binary_arg_return.crexx" 4 3 17 "  data = .binary"
    null r0
-   .srcstep 11 11 17 "inline_test_binary_arg_return.crexx" 5 3 32 "  data = relayBinary(makeBinary())"
+   .srcstep 9 9 17 "inline_test_binary_arg_return.crexx" 5 3 32 "  data = relayBinary(makeBinary())"
    .srcstep 6 6 33 "inline_test_binary_arg_return.crexx" 5 22 32 "  data = relayBinary(makeBinary())"
    .srcstep 5 5 17 "inline_test_binary_arg_return.crexx" 5 22 32 "  data = relayBinary(makeBinary())"
    .meta "inline_test_binary_arg_return.main.data"="b" ".binary" r4
@@ -28,27 +28,19 @@ main() .locals=6
    .traceevent "A" 6 "R" "X" "r" 4 3 3 0 "data" ""
    .srcstep 4 4 17 "inline_test_binary_arg_return.crexx" 16 3 14 "  return data"
    .traceevent "V" 6 "R" "X" "r" 4 6 6 0 "data" ""
-   copy r5,r4
-   acopy r5,r4
+   bcopy r5,r4
    br l58bexprend
 l58bexprend:
-   copy r2,r5
-   acopy r2,r5
+   bcopy r2,r5
    .traceevent "A" 6 "R" "X" "r" 2 6 6 0 "__inline_bind_43_0" ""
    .srcstep 7 7 6 "inline_test_binary_arg_return.crexx" 10 7 11 "  arg data = .binary"
    .traceevent "V" 6 "R" "X" "r" 2 0 0 0 "__inline_bind_43_0" ""
    copy r3,r2
-   .srcstep 8 8 6 "inline_test_binary_arg_return.crexx" 10 7 11 "  arg data = .binary"
-   .traceevent "V" 6 "R" "X" "r" 2 0 0 0 "__inline_bind_43_0" ""
-   acopy r3,r2
-   .srcstep 9 9 6 "inline_test_binary_arg_return.crexx" 5 3 7 "  data = relayBinary(makeBinary())"
+   .srcstep 8 8 6 "inline_test_binary_arg_return.crexx" 5 3 7 "  data = relayBinary(makeBinary())"
    .traceevent "V" 6 "R" "X" "r" 3 0 0 0 "data" ""
    copy r0,r3
-   .srcstep 10 10 6 "inline_test_binary_arg_return.crexx" 5 3 7 "  data = relayBinary(makeBinary())"
-   .traceevent "V" 6 "R" "X" "r" 3 0 0 0 "data" ""
-   acopy r0,r3
-   .srcstep 12 12 17 "inline_test_binary_arg_return.crexx" 6 3 11 "  say \"ok\""
+   .srcstep 10 10 17 "inline_test_binary_arg_return.crexx" 6 3 11 "  say \"ok\""
    say "ok"
-   .srcstep 13 13 17 "inline_test_binary_arg_return.crexx" 7 3 11 "  return 0"
+   .srcstep 11 11 17 "inline_test_binary_arg_return.crexx" 7 3 11 "  return 0"
    ret 0
    .meta "inline_test_binary_arg_return.main.data"

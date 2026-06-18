@@ -353,6 +353,15 @@ void test_binary_buffers() {
     CHECK_BINARY(&copy, appended, sizeof(appended));
     CHECK_SIZE_EQUAL(copy.binary_pos, 1, "binary_pos after binary copy");
 
+    copy.status.all_type_flags = 0x00010000;
+    v.status.all_type_flags = 0x00020000;
+    v.binary_pos = 2;
+    copy_binary_value(&copy, &v);
+    CHECK_BINARY(&copy, appended, sizeof(appended));
+    CHECK_SIZE_EQUAL(copy.binary_pos, 2, "binary_pos after binary-only copy");
+    CHECK_STATUS(&copy, 0x00ff0000, 0x00010000);
+
+    v.binary_pos = 1;
     CHECK_RC_ZERO(append_binary_value(&v, &v));
     CHECK_BINARY(&v, doubled, sizeof(doubled));
     CHECK_SIZE_EQUAL(v.binary_pos, 1, "binary_pos after self append");

@@ -52,13 +52,11 @@ l8dostart:
    imult r6,r2,2
    .traceevent "O" 4 "R" "I" "r" 6 13 13 0 "" ""
    icopy r8,r6
-   acopy r8,r6
    br l60bexprend
    .srcstep 11 11 17 "inline_test_nested_scope_exposed_call.crexx" 18 3 11 "  return 0"
    load r7,0
    .traceevent "L" 4 "R" "I" "r" 7 13 13 0 "" ""
    icopy r8,r7
-   acopy r8,r7
    br l60bexprend
 l60bexprend:
    itos r8

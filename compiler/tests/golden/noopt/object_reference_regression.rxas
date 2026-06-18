@@ -201,7 +201,6 @@ replacePayloadLocal() .locals=5
    .meta "object_reference_regression.replacepayloadlocal.item"="b" ".largepayload" r0
    brtpandt l95c,a1,512
    copy r0,a1
-   acopy r0,a1
    br l95d
 l95c:
    swap r0,a1
@@ -444,7 +443,6 @@ l191doend:
    linkattr1 r3,a1,11
    .traceevent "V" 6 "R" "S" "r" 3 61 61 0 "values" ""
    copy r1,r3
-   acopy r1,r3
    .traceevent "A" 6 "R" "S" "r" 1 61 61 0 "t_values" ""
    unlink r3
    .srcstep 62 62 17 "object_reference_regression.crexx" 87 5 17 "    name = label"

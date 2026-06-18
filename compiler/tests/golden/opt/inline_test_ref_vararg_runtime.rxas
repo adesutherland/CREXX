@@ -34,7 +34,6 @@ main() .locals=10
    load r3,3
    .traceevent "L" 4 "R" "I" "r" 3 6 6 0 "" ""
    icopy r4,r3
-   acopy r4,r3
    br l120bexprend
 l120bexprend:
    itos r4

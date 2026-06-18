@@ -42,7 +42,6 @@ l8dostart:
    swap r1,r5
    .traceevent "F" 4 "R" "I" "r" 6 8 8 0 "addone" ""
    icopy r5,r6
-   acopy r5,r6
    br l49bexprend
 l49bexprend:
    itos r5

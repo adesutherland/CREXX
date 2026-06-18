@@ -30,7 +30,6 @@ main() .locals=5
    .srcstep 4 4 17 "inline_test_ref_opt.crexx" 16 3 15 "  return value"
    .traceevent "V" 6 "R" "I" "r" 0 6 6 0 "x" ""
    icopy r2,r0
-   acopy r2,r0
    br l60bexprend
 l60bexprend:
    itos r2
@@ -45,7 +44,6 @@ l60bexprend:
    load r2,15
    .traceevent "L" 4 "R" "I" "r" 2 10 10 0 "" ""
    icopy r3,r2
-   acopy r3,r2
    br l69bexprend
 l69bexprend:
    itos r3
@@ -56,7 +54,6 @@ l69bexprend:
    load r3,8
    .traceevent "L" 4 "R" "I" "r" 3 13 13 0 "" ""
    icopy r4,r3
-   acopy r4,r3
    br l81bexprend
 l81bexprend:
    itos r4

@@ -39,7 +39,6 @@ main() .locals=6
    load r5,3
    .traceevent "L" 4 "R" "I" "r" 5 5 5 0 "" ""
    icopy r4,r5
-   acopy r4,r5
    br l62bexprend
 l62bexprend:
    itos r4

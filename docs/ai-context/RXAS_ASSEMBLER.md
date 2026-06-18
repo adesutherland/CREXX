@@ -325,9 +325,14 @@ intervening instruction is relevant to a rule.
 
 Attribute/register-view cleanup is also a keyhole concern. A full `copy`
 already copies the VM value status word, so `copy rA,rB` followed immediately
-by `acopy rA,rB` is reduced to the full copy. Duplicate `link`/typed-copy/
-`unlink` reads, and equivalent `linkattr1` reads for the same owner and
-one-based attribute slot, may reuse the first detached copy when no barrier or
+by `acopy rA,rB` is reduced to the full copy for hand-written or legacy RXAS.
+Compiler-generated RXAS should not emit that pair for typed payload access. A
+future explicit flag-copy operation would use `acopy`, but there is no current
+compiler use case. Typed payload copies are `icopy`, `fcopy`, `scopy`, `dcopy`,
+and `bcopy`; `bcopy` copies only the binary payload and byte cursor, not
+public/compiler/library status flags. Duplicate `link`/typed-copy/`unlink`
+reads, and equivalent `linkattr1` reads for the same owner and one-based
+attribute slot, may reuse the first detached copy when no barrier or
 mapped-register use intervenes.
 
 Signal support adds action-aware and dynamic-name forms:

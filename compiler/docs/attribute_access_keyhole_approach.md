@@ -16,9 +16,10 @@ safe-access cleanup belongs in the RXAS keyhole optimiser.
 - Complex typed register views are copied by payload view only. A
   `register.0.string`, `register.0.int`, or duplicate typed view over a
   physical `register.N` slot links the physical value, emits the requested
-  typed copy (`scopy`, `icopy`, `fcopy`, `dcopy`, `copy`, and so on), and then
+  typed copy (`scopy`, `icopy`, `fcopy`, `dcopy`, `bcopy`, and so on), and then
   unlinks. The compiler must not use `acopy` as hidden RexxValue cache-flag
-  maintenance for these views.
+  maintenance for these views. A future explicit compiler flag-copy semantic
+  would have to lower to `acopy`, but there is no current compiler use case.
 - `RexxValue` owns its cache coherency. The VM value fields for string, binary,
   integer, float, decimal, object, and the public status-flag bands are
   independent storage. A library method that materializes or invalidates a
@@ -44,7 +45,9 @@ redundancy when the queue hazard model proves it safe:
 
 - `copy rA,rB` followed immediately by `acopy rA,rB` keeps the full `copy` and
   drops the redundant status-only copy because VM `copy_value()` already copies
-  the value status word.
+  the value status word. The compiler should not emit this pair; the rule is a
+  cleanup for hand-written or legacy RXAS, not hidden permission to attach
+  `acopy` to typed payload copies.
 - Duplicate linked reads over the same owner register may reuse the first
   detached copy:
 

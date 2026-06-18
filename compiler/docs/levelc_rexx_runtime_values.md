@@ -57,6 +57,12 @@ an ordinary local register, then unlink the scratch before expression lowering,
 type promotion, or operator code can manipulate the value. Writes copy the
 requested typed view back through the linked physical slot. The compiler does
 not use `acopy` as hidden cache-flag maintenance for these views.
+If a future compiler feature needs an explicit status-flag copy then `acopy`
+is the correct RXAS primitive, but RexxValue typed payload access is not such a
+case.
+Binary views use the binary-only `bcopy` instruction rather than generic
+`copy`, so `.binary with register.N.binary` access moves byte payload and byte
+cursor state without moving public/compiler/library status flags.
 
 The VM fields inside one value are independent storage. Cache coherency belongs
 to `RexxValue`: a method that materializes or invalidates a string, binary,

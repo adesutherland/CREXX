@@ -32,8 +32,7 @@ main() .locals=16
    null r2
    .srcstep 4 4 25 "_address.crexx" 1520 5 18 "    return handle"
    .traceevent "V" 6 "R" "X" "r" 2 12 12 0 "handle" ""
-   copy r13,r2
-   acopy r13,r2
+   bcopy r13,r2
    br l83bexprend
 l83bexprend:
    .srcstep 8 8 33 "exit_fragment" 2 1 9 "_noredir"
@@ -42,8 +41,7 @@ l83bexprend:
    null r3
    .srcstep 7 7 25 "_address.crexx" 1520 5 18 "    return handle"
    .traceevent "V" 6 "R" "X" "r" 3 12 12 0 "handle" ""
-   copy r14,r3
-   acopy r14,r3
+   bcopy r14,r3
    br l90bexprend
 l90bexprend:
    .srcstep 11 11 33 "exit_fragment" 2 1 9 "_noredir"
@@ -52,8 +50,7 @@ l90bexprend:
    null r4
    .srcstep 10 10 25 "_address.crexx" 1520 5 18 "    return handle"
    .traceevent "V" 6 "R" "X" "r" 4 12 12 0 "handle" ""
-   copy r15,r4
-   acopy r15,r4
+   bcopy r15,r4
    br l97bexprend
 l97bexprend:
    load r11,"userid"

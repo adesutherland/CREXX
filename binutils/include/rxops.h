@@ -603,3 +603,4 @@ X(RLT_REG_STRING_REG, 577, FMT_R_S_R, FLOW_NEXT, 0, "Loose REXX Less than op1=(o
 X(RLTE_REG_REG_REG, 578, FMT_R_R_R, FLOW_NEXT, 0, "Loose REXX Less than equals op1=(op2<=op3)")
 X(RLTE_REG_REG_STRING, 579, FMT_R_R_S, FLOW_NEXT, 0, "Loose REXX Less than equals op1=(op2<=op3)")
 X(RLTE_REG_STRING_REG, 580, FMT_R_S_R, FLOW_NEXT, 0, "Loose REXX Less than equals op1=(op2<=op3)")
+X(BCOPY_REG_REG, 581, FMT_R_R, FLOW_NEXT, 0, "Copy Binary op2 to op1")

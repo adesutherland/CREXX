@@ -55,13 +55,11 @@ l68bexprend:
    load r8,100
    .traceevent "L" 4 "R" "I" "r" 8 14 14 0 "" ""
    icopy r7,r8
-   acopy r7,r8
    br l64bexprend
 l77iffalse:
    .srcstep 12 12 17 "inline_test_call_arg_expr.crexx" 14 3 13 "  return val"
    .traceevent "V" 6 "R" "I" "r" 2 14 14 0 "val" ""
    icopy r7,r2
-   acopy r7,r2
    br l64bexprend
 l64bexprend:
    itos r7

@@ -62,7 +62,6 @@ replaceBox() .locals=4
    .meta "inline_test_object_writable_arg.replacebox.value"="b" ".box" r0
    brtpandt l26c,a1,512
    copy r0,a1
-   acopy r0,a1
    br l26d
 l26c:
    swap r0,a1

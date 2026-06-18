@@ -25,11 +25,9 @@ main() .locals=4
    call r3,buildPair(),r1
    .traceevent "F" 4 "R" "I" "r" 3 4 4 0 "buildpair" ""
    copy r2,r3
-   acopy r2,r3
    br l69bexprend
 l69bexprend:
    copy r0,r2
-   acopy r0,r2
    .traceevent "A" 6 "R" "I" "r" 0 4 4 0 "pair" ""
    .srcstep 5 5 17 "inline_test_array_return_temp.crexx" 6 3 13 "  say pair[1]"
    setattrs r0,2

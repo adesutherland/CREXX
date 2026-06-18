@@ -43,7 +43,6 @@ main() .locals=11
    linkattr1 r6,r0,1
    .traceevent "V" 6 "R" "S" "r" 6 11 11 0 "name" ""
    scopy r8,r6
-   acopy r8,r6
    unlink r6
    br l63bexprend
 l63bexprend:
@@ -74,7 +73,6 @@ l63bexprend:
    linkattr1 r8,r3,1
    .traceevent "V" 6 "R" "S" "r" 8 21 21 0 "name" ""
    scopy r10,r8
-   acopy r10,r8
    unlink r8
    br l71bexprend
 l71bexprend:

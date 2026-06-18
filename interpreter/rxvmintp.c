@@ -6458,6 +6458,15 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
+ *  BCOPY_REG_REG  Copy Binary op2 to op1
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(BCOPY_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - BCOPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            copy_binary_value(op1R, op2R);
+            DISPATCH
+
+/* ------------------------------------------------------------------------------------
  *  ICOPY_REG_REG  Copy Integer op2 to op1
  *  -----------------------------------------------------------------------------------
  */

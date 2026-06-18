@@ -39,7 +39,6 @@ l8dostart:
    itos r2
    .traceevent "V" 6 "R" "S" "r" 2 8 8 0 "val" ""
    scopy r5,r2
-   acopy r5,r2
    br l42bexprend
 l42bexprend:
    concat r1,"Value=",r5

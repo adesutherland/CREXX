@@ -7,7 +7,7 @@
 
 main() .locals=12
    .meta "inline_test_array_return_assign.main"="b" ".int" main() ""
-   .srcstep 24 24 17 "inline_test_array_return_assign.crexx" 3 1 23 "main: procedure = .int"
+   .srcstep 23 23 17 "inline_test_array_return_assign.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -45,11 +45,9 @@ main() .locals=12
    .srcstep 7 7 17 "inline_test_array_return_assign.crexx" 17 3 14 "  return temp"
    .traceevent "V" 6 "R" "S" "r" 2 9 9 0 "temp" ""
    copy r5,r2
-   acopy r5,r2
    br l84bexprend
 l84bexprend:
    copy r1,r5
-   acopy r1,r5
    .traceevent "A" 6 "R" "S" "r" 1 9 9 0 "values" ""
    .srcstep 10 10 17 "inline_test_array_return_assign.crexx" 6 3 35 "  say values[1] || \":\" || values[2]"
    minattrs r1,1
@@ -89,41 +87,35 @@ l84bexprend:
    .srcstep 14 14 17 "inline_test_array_return_assign.crexx" 17 3 14 "  return temp"
    .traceevent "V" 6 "R" "S" "r" 3 16 16 0 "temp" ""
    copy r9,r3
-   acopy r9,r3
    br l108bexprend
 l108bexprend:
    copy r0,r9
-   acopy r0,r9
    .traceevent "A" 6 "R" "S" "r" 0 16 16 0 "more" ""
-   .srcstep 21 21 17 "inline_test_array_return_assign.crexx" 8 3 24 "  say renderArray(more)"
-   .srcstep 20 20 17 "inline_test_array_return_assign.crexx" 8 7 18 "  say renderArray(more)"
+   .srcstep 20 20 17 "inline_test_array_return_assign.crexx" 8 3 24 "  say renderArray(more)"
+   .srcstep 19 19 17 "inline_test_array_return_assign.crexx" 8 7 18 "  say renderArray(more)"
    .srcstep 17 17 6 "inline_test_array_return_assign.crexx" 20 7 12 "  arg value = .string[]"
-   .traceevent "V" 6 "R" "S" "r" 0 21 21 0 "more" ""
+   .traceevent "V" 6 "R" "S" "r" 0 20 20 0 "more" ""
    copy r4,r0
-   .srcstep 18 18 6 "inline_test_array_return_assign.crexx" 20 7 12 "  arg value = .string[]"
-   .traceevent "V" 6 "R" "S" "r" 0 21 21 0 "more" ""
-   acopy r4,r0
-   .srcstep 19 19 17 "inline_test_array_return_assign.crexx" 21 3 36 "  return value[1] || \":\" || value[2]"
+   .srcstep 18 18 17 "inline_test_array_return_assign.crexx" 21 3 36 "  return value[1] || \":\" || value[2]"
    minattrs r4,1
    linkattr1 r9,r4,1
-   .traceevent "V" 6 "R" "S" "r" 9 21 21 0 "value" ""
+   .traceevent "V" 6 "R" "S" "r" 9 20 20 0 "value" ""
    concat r10,r9,":"
    unlink r9
-   .traceevent "O" 4 "R" "S" "r" 10 21 21 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 10 20 20 0 "" ""
    minattrs r4,2
    linkattr1 r11,r4,2
-   .traceevent "V" 6 "R" "S" "r" 11 21 21 0 "value" ""
+   .traceevent "V" 6 "R" "S" "r" 11 20 20 0 "value" ""
    concat r10,r10,r11
    unlink r11
-   .traceevent "O" 4 "R" "S" "r" 10 21 21 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 10 20 20 0 "" ""
    scopy r11,r10
-   acopy r11,r10
    br l132bexprend
 l132bexprend:
    say r11
-   .srcstep 22 22 17 "inline_test_array_return_assign.crexx" 9 3 50 "  say \"Array return assign inline test finished.\""
+   .srcstep 21 21 17 "inline_test_array_return_assign.crexx" 9 3 50 "  say \"Array return assign inline test finished.\""
    say "Array return assign inline test finished."
-   .srcstep 23 23 17 "inline_test_array_return_assign.crexx" 10 3 11 "  return 0"
+   .srcstep 22 22 17 "inline_test_array_return_assign.crexx" 10 3 11 "  return 0"
    ret 0
    .meta "inline_test_array_return_assign.main.more"
    .meta "inline_test_array_return_assign.main.values"

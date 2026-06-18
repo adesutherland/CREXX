@@ -7,8 +7,12 @@ Reviewed: 2026-06-18.
 
 ## 1. Flag Test Syntax And Codegen
 
-RexxValue currently spells flag checks as `(flags % RV_FLAG_X) // 2` because
-Level B has no direct integer bit-test surface. The emitted code uses integer
+Status: completed. Level B named operators now provide direct flag/bit syntax
+such as `<has>`, `<set>`, `<clear>`, `<and>`, `<or>`, `<xor>`, and `<not>`.
+`RexxValue` has been rewritten to use that surface.
+
+RexxValue previously spelled flag checks as `(flags % RV_FLAG_X) // 2` because
+Level B had no direct integer bit-test surface. The emitted code used integer
 divide plus modulo plus compare for each test.
 
 The VM/RXAS layer already has integer bitwise instructions: `iand`, `ior`, and
@@ -21,10 +25,15 @@ flag tests and flag set/clear code for readability and performance.
 
 ## 2. Binary Register-View Copy
 
-RexxValue `.binary with register.0.binary` currently emits the generic `copy`
+Status: completed. RXAS/VM now has `bcopy`, a binary-payload copy instruction.
+The compiler maps `.binary` typed register-view access to `bcopy` through
+`type_to_prefix()`, and the existing duplicate linked-read peephole rules cover
+`bcopy` as a typed copy family.
+
+RexxValue `.binary with register.0.binary` previously emitted the generic `copy`
 instruction for binary view reads and writes. Unlike `scopy`, `icopy`, `fcopy`,
 and `dcopy`, generic `copy` copies the whole VM value payload and status state.
-That is functionally safe in the current RexxValue code because cache flags are
+That was functionally safe in the current RexxValue code because cache flags are
 then managed explicitly via `.flags.library`, but it is less precise than the
 other typed views and can move status attributes through temporary registers.
 

@@ -38,7 +38,6 @@ l8dostart:
    itos r1
    .traceevent "V" 6 "R" "S" "r" 1 8 8 0 "val" ""
    scopy r4,r1
-   acopy r4,r1
    br l37bexprend
 l37bexprend:
    say r4
