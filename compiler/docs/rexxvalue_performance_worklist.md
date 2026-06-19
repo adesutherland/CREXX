@@ -181,6 +181,10 @@ scope exit because the AST already carries their scope boundaries.
 Current findings:
 
 - Anonymous expression temporaries are recycled today.
+- Recycled VM stack frames do not zero locals in the normal build because
+  `SAFE_RECYCLED_STACKFRAMES` is disabled. Scoped named-local reuse therefore
+  relies on the compiler's symbol initiator path emitting `null rN` before a
+  newly live local first uses a recycled register.
 - Call argument frames require contiguous `rN` ranges and can raise the
   procedure `.locals` high-water even when returned immediately.
 - Complex attribute and array access reserve extra helper registers; these are
@@ -197,15 +201,14 @@ Register-assignment improvements still wanted:
   mode: source locals, inlined locals, synthetic inline temporaries, expression
   temporaries, call frames, and complex attribute helpers.
 - Implement scoped allocation/release for eligible `SCOPE_LOCAL` symbols.
-  The first increment is deliberately conservative: only known scalar locals
-  (`.boolean`, `.int`, `.float`, `.decimal`, `.string`) are recycled, and
-  object, reference, binary, array, exposed, argument, receiver/factory,
-  reference-target, generated `__inline*`, and trace-helper `__rxtrace*`
+  Storage-bearing block locals are now recyclable for known scalar values,
+  `.binary`, object values, reference values, arrays, and `TP_UNKNOWN` compiler
+  symbols. Eligibility is still conservative at the ownership boundary:
+  exposed symbols, arguments, receivers/factories, variables whose storage is a
+  reference target, generated `__inline*`, and trace-helper `__rxtrace*`
   symbols remain procedure-lifetime registers. `BLOCK_EXPR` scopes also remain
   non-recycled because inlined expression scopes can run while linked attribute
-  or array target helpers are still live. This keeps reference lifetime
-  invalidation separate from register reuse until object/reference/array,
-  system-helper, and expression-link liveness is proven.
+  or array target helpers are still live.
 - Rework scoped metadata emission with the allocation change. Current variable
   metadata is symbol-keyed via `meta_emitted` and normally cleared at procedure
   end. If registers are reused between block locals, the emitter must clear a

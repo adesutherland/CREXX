@@ -176,15 +176,19 @@ static int symbol_name_starts_with(Symbol *symbol, const char *prefix) {
     return strncmp(symbol->name, prefix, len) == 0;
 }
 
-static int symbol_has_recyclable_scalar_type(Symbol *symbol) {
-    if (!symbol || symbol->value_dims > 0) return 0;
+static int symbol_has_recyclable_local_storage_type(Symbol *symbol) {
+    if (!symbol) return 0;
 
     switch (symbol->type) {
+        case TP_UNKNOWN:
         case TP_BOOLEAN:
         case TP_INTEGER:
         case TP_FLOAT:
         case TP_DECIMAL:
         case TP_STRING:
+        case TP_BINARY:
+        case TP_OBJECT:
+        case TP_REFERENCE:
             return 1;
         default:
             return 0;
@@ -199,7 +203,7 @@ static int symbol_uses_scoped_register(Symbol *symbol) {
     if (symbol->has_reference_target) return 0;
     if (symbol_name_starts_with(symbol, "__inline")) return 0;
     if (symbol_name_starts_with(symbol, "__rxtrace")) return 0;
-    return symbol_has_recyclable_scalar_type(symbol);
+    return symbol_has_recyclable_local_storage_type(symbol);
 }
 
 static void assign_symbol_registers_worker(Symbol *symbol, void *payload) {

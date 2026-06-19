@@ -113,23 +113,23 @@ l196dostart:
    minattrs r6,r8,0
    linkattr1 r15,r6,r8
    .traceevent "V" 6 "R" "O" "r" 15 25 25 0 "items" ""
-   copy r11,r15
-   .traceevent "A" 6 "R" "O" "r" 11 25 25 0 "it_i" ""
+   copy r3,r15
+   .traceevent "A" 6 "R" "O" "r" 3 25 25 0 "it_i" ""
    unlink r15
    .srcstep 28 28 17 "18_array_class_main.crexx" 27 9 29 "        val_i = it_i.get_val()"
    .srcstep 26 26 33 "18_array_class_main.crexx" 27 17 21 "        val_i = it_i.get_val()"
-   .traceevent "V" 6 "R" "O" "r" 11 26 26 0 "it_i" ""
-   copy r16,r11
+   .traceevent "V" 6 "R" "O" "r" 3 26 26 0 "it_i" ""
+   copy r16,r3
    .traceevent "A" 6 "R" "O" "r" 16 26 26 0 "§this" ""
    .srcstep 27 27 33 "18_array_class_main.crexx" 27 21 21 "        val_i = it_i.get_val()"
    linkattr1 r15,r16,1
    .traceevent "V" 6 "R" "S" "r" 15 27 27 0 "val" ""
-   copy r3,r15
-   .traceevent "A" 6 "R" "S" "r" 3 27 27 0 "val_i" ""
+   copy r11,r15
+   .traceevent "A" 6 "R" "S" "r" 11 27 27 0 "val_i" ""
    unlink r15
    .srcstep 29 29 17 "18_array_class_main.crexx" 28 9 18 "        say val_i"
-   .traceevent "V" 6 "R" "S" "r" 3 29 29 0 "val_i" ""
-   say r3
+   .traceevent "V" 6 "R" "S" "r" 11 29 29 0 "val_i" ""
+   say r11
 l196doinc:
    .srcstep 24 24 17 "18_array_class_main.crexx" 25 8 9 "    do i = 1 to items.0"
    inc r8
@@ -137,8 +137,8 @@ l196doinc:
    br l196dostart
 l196doend:
    endlife r8
-   endlife r11
    endlife r3
+   endlife r11
    .srcstep 32 32 17 "18_array_class_main.crexx" 30 5 15 "    return val"
    .traceevent "V" 6 "R" "S" "r" 7 34 34 0 "val" ""
    scopy r15,r7
