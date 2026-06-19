@@ -42,6 +42,7 @@ l8dostart:
    icopy r6,r5
    br l62bexprend
 l62bexprend:
+   endlife r4
    icopy r3,r6
    .traceevent "A" 6 "R" "I" "r" 3 8 8 0 "val" ""
    .srcstep 9 9 17 "inline_test_nested_call_expr.crexx" 13 3 13 "  return val"
@@ -49,6 +50,7 @@ l62bexprend:
    icopy r6,r3
    br l58bexprend
 l58bexprend:
+   endlife r3
    itos r6
    say r6
 l8doinc:

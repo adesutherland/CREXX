@@ -98,23 +98,24 @@ l108bexprend:
    .srcstep 19 19 17 "inline_test_array_return_assign.crexx" 8 7 18 "  say renderArray(more)"
    .srcstep 17 17 6 "inline_test_array_return_assign.crexx" 20 7 12 "  arg value = .string[]"
    .traceevent "V" 6 "R" "S" "r" 0 20 20 0 "more" ""
-   copy r8,r0
+   copy r6,r0
    .srcstep 18 18 17 "inline_test_array_return_assign.crexx" 21 3 36 "  return value[1] || \":\" || value[2]"
-   minattrs r8,1
-   linkattr1 r6,r8,1
-   .traceevent "V" 6 "R" "S" "r" 6 20 20 0 "value" ""
-   concat r3,r6,":"
-   unlink r6
-   .traceevent "O" 4 "R" "S" "r" 3 20 20 0 "" ""
-   minattrs r8,2
-   linkattr1 r9,r8,2
+   minattrs r6,1
+   linkattr1 r3,r6,1
+   .traceevent "V" 6 "R" "S" "r" 3 20 20 0 "value" ""
+   concat r8,r3,":"
+   unlink r3
+   .traceevent "O" 4 "R" "S" "r" 8 20 20 0 "" ""
+   minattrs r6,2
+   linkattr1 r9,r6,2
    .traceevent "V" 6 "R" "S" "r" 9 20 20 0 "value" ""
-   concat r3,r3,r9
+   concat r8,r8,r9
    unlink r9
-   .traceevent "O" 4 "R" "S" "r" 3 20 20 0 "" ""
-   scopy r10,r3
+   .traceevent "O" 4 "R" "S" "r" 8 20 20 0 "" ""
+   scopy r10,r8
    br l132bexprend
 l132bexprend:
+   endlife r6
    say r10
    .srcstep 21 21 17 "inline_test_array_return_assign.crexx" 9 3 50 "  say \"Array return assign inline test finished.\""
    say "Array return assign inline test finished."

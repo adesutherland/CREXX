@@ -39,6 +39,7 @@ l8dostart:
    scopy r4,r3
    br l37bexprend
 l37bexprend:
+   endlife r3
    say r4
 l8doinc:
    .srcstep 4 4 17 "inline_test_say_expr.crexx" 5 6 7 "  do i = 1 to 3"

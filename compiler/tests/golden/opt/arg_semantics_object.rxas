@@ -6,7 +6,7 @@
 .meta "arg_semantics_object.box.name"="b" ".string" .attr 1
 .globals=0
 
-main() .locals=26
+main() .locals=20
    .meta "arg_semantics_object.main"="b" ".int" main() ""
    .srcstep 51 51 17 "arg_semantics_object.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -36,18 +36,19 @@ main() .locals=26
    .srcstep 8 8 17 "arg_semantics_object.crexx" 15 10 15 "  return value.getName()"
    .srcstep 6 6 33 "arg_semantics_object.crexx" 15 10 15 "  return value.getName()"
    .traceevent "V" 6 "R" "O" "r" 0 6 6 0 "box" ""
-   copy r5,r0
-   .traceevent "A" 6 "R" "O" "r" 5 6 6 0 "§this" ""
+   copy r4,r0
+   .traceevent "A" 6 "R" "O" "r" 4 6 6 0 "§this" ""
    .srcstep 7 7 17 "arg_semantics_object.crexx" 36 5 16 "    return name"
-   linkattr1 r2,r5,1
-   .traceevent "V" 6 "R" "S" "r" 2 11 11 0 "name" ""
-   scopy r6,r2
-   unlink r2
+   linkattr1 r5,r4,1
+   .traceevent "V" 6 "R" "S" "r" 5 11 11 0 "name" ""
+   scopy r6,r5
+   unlink r5
    br l171bexprend
 l171bexprend:
    scopy r7,r6
    br l168bexprend
 l168bexprend:
+   endlife r2
    concat r7,"object-read=",r7
    .traceevent "O" 4 "R" "S" "r" 7 11 11 0 "" ""
    say r7
@@ -55,137 +56,139 @@ l168bexprend:
    .srcstep 19 19 17 "arg_semantics_object.crexx" 6 24 34 "  say \"object-mut=\" || replaceBox(box)"
    .srcstep 12 12 6 "arg_semantics_object.crexx" 18 7 12 "  arg value = .Box"
    .traceevent "V" 6 "R" "O" "r" 0 20 20 0 "box" ""
-   copy r8,r0
+   copy r7,r0
    .srcstep 17 17 17 "arg_semantics_object.crexx" 19 3 24 "  value = .Box(\"local\")"
    .srcstep 13 13 6 "arg_semantics_object.crexx" 30 3 13 "  *: factory"
-   setattrs r9,2
+   setattrs r8,2
    .srcstep 14 14 6 "arg_semantics_object.crexx" 30 3 13 "  *: factory"
-   setobjtype r9,"arg_semantics_object.box"
+   setobjtype r8,"arg_semantics_object.box"
    .srcstep 15 15 17 "arg_semantics_object.crexx" 32 5 19 "    name = initial"
-   load r10,"local"
-   .traceevent "L" 4 "R" "S" "r" 10 15 15 0 "" ""
-   linkattr1 r7,r9,1
-   scopy r7,r10
-   unlink r7
+   load r5,"local"
+   .traceevent "L" 4 "R" "S" "r" 5 15 15 0 "" ""
+   linkattr1 r6,r8,1
+   scopy r6,r5
+   unlink r6
    .srcstep 16 16 33 "arg_semantics_object.crexx" 33 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 9 16 16 0 "§factory" ""
-   copy r8,r9
-   .traceevent "A" 6 "R" "O" "r" 8 16 16 0 "value" ""
+   .traceevent "V" 6 "R" "O" "r" 8 16 16 0 "§factory" ""
+   copy r7,r8
+   .traceevent "A" 6 "R" "O" "r" 7 16 16 0 "value" ""
    .srcstep 18 18 17 "arg_semantics_object.crexx" 20 3 23 "  return value.getName()"
-   .traceevent "V" 6 "R" "O" "r" 8 20 20 0 "value" ""
-   load r11,1
-   settp r8,256
-   swap r12,r8
-   call r7,§arg_semantics_object.box.getname(),r11
-   swap r8,r12
-   .traceevent "F" 4 "R" "S" "r" 7 20 20 0 "getname" ""
-   scopy r12,r7
+   .traceevent "V" 6 "R" "O" "r" 7 20 20 0 "value" ""
+   load r9,1
+   settp r7,256
+   swap r10,r7
+   call r6,§arg_semantics_object.box.getname(),r9
+   swap r7,r10
+   .traceevent "F" 4 "R" "S" "r" 6 20 20 0 "getname" ""
+   scopy r10,r6
    br l178bexprend
 l178bexprend:
-   concat r12,"object-mut=",r12
-   .traceevent "O" 4 "R" "S" "r" 12 20 20 0 "" ""
-   say r12
+   endlife r7
+   concat r10,"object-mut=",r10
+   .traceevent "O" 4 "R" "S" "r" 10 20 20 0 "" ""
+   say r10
    .srcstep 24 24 17 "arg_semantics_object.crexx" 7 3 37 "  say \"object-after=\" || box.getName()"
    .srcstep 23 23 17 "arg_semantics_object.crexx" 7 26 29 "  say \"object-after=\" || box.getName()"
    .srcstep 21 21 33 "arg_semantics_object.crexx" 7 26 29 "  say \"object-after=\" || box.getName()"
    .traceevent "V" 6 "R" "O" "r" 0 21 21 0 "box" ""
-   copy r13,r0
-   .traceevent "A" 6 "R" "O" "r" 13 21 21 0 "§this" ""
+   copy r11,r0
+   .traceevent "A" 6 "R" "O" "r" 11 21 21 0 "§this" ""
    .srcstep 22 22 17 "arg_semantics_object.crexx" 36 5 16 "    return name"
-   linkattr1 r12,r13,1
-   .traceevent "V" 6 "R" "S" "r" 12 24 24 0 "name" ""
-   scopy r11,r12
-   unlink r12
+   linkattr1 r10,r11,1
+   .traceevent "V" 6 "R" "S" "r" 10 24 24 0 "name" ""
+   scopy r9,r10
+   unlink r10
    br l205bexprend
 l205bexprend:
-   concat r11,"object-after=",r11
-   .traceevent "O" 4 "R" "S" "r" 11 24 24 0 "" ""
-   say r11
+   concat r9,"object-after=",r9
+   .traceevent "O" 4 "R" "S" "r" 9 24 24 0 "" ""
+   say r9
    .srcstep 39 39 17 "arg_semantics_object.crexx" 8 3 49 "  say \"object-temp=\" || replaceBox(.Box(\"temp\"))"
    .srcstep 38 38 17 "arg_semantics_object.crexx" 8 25 35 "  say \"object-temp=\" || replaceBox(.Box(\"temp\"))"
    .srcstep 30 30 33 "arg_semantics_object.crexx" 8 36 40 "  say \"object-temp=\" || replaceBox(.Box(\"temp\"))"
    .srcstep 29 29 17 "arg_semantics_object.crexx" 8 35 36 "  say \"object-temp=\" || replaceBox(.Box(\"temp\"))"
    .srcstep 25 25 6 "arg_semantics_object.crexx" 30 3 13 "  *: factory"
-   setattrs r16,2
+   setattrs r13,2
    .srcstep 26 26 6 "arg_semantics_object.crexx" 30 3 13 "  *: factory"
-   setobjtype r16,"arg_semantics_object.box"
+   setobjtype r13,"arg_semantics_object.box"
    .srcstep 27 27 17 "arg_semantics_object.crexx" 32 5 19 "    name = initial"
-   load r17,"temp"
-   .traceevent "L" 4 "R" "S" "r" 17 27 27 0 "" ""
-   linkattr1 r11,r16,1
-   scopy r11,r17
-   unlink r11
+   load r7,"temp"
+   .traceevent "L" 4 "R" "S" "r" 7 27 27 0 "" ""
+   linkattr1 r9,r13,1
+   scopy r9,r7
+   unlink r9
    .srcstep 28 28 17 "arg_semantics_object.crexx" 33 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 16 30 30 0 "§factory" ""
-   copy r11,r16
+   .traceevent "V" 6 "R" "O" "r" 13 30 30 0 "§factory" ""
+   copy r9,r13
    br l234bexprend
 l234bexprend:
-   copy r14,r11
-   .traceevent "A" 6 "R" "O" "r" 14 30 30 0 "__inline_bind_212_0" ""
+   copy r12,r9
+   .traceevent "A" 6 "R" "O" "r" 12 30 30 0 "__inline_bind_212_0" ""
    .srcstep 31 31 6 "arg_semantics_object.crexx" 18 7 12 "  arg value = .Box"
-   .traceevent "V" 6 "R" "O" "r" 14 39 39 0 "__inline_bind_212_0" ""
-   copy r15,r14
+   .traceevent "V" 6 "R" "O" "r" 12 39 39 0 "__inline_bind_212_0" ""
+   copy r10,r12
    .srcstep 36 36 17 "arg_semantics_object.crexx" 19 3 24 "  value = .Box(\"local\")"
    .srcstep 32 32 6 "arg_semantics_object.crexx" 30 3 13 "  *: factory"
-   setattrs r18,2
+   setattrs r14,2
    .srcstep 33 33 6 "arg_semantics_object.crexx" 30 3 13 "  *: factory"
-   setobjtype r18,"arg_semantics_object.box"
+   setobjtype r14,"arg_semantics_object.box"
    .srcstep 34 34 17 "arg_semantics_object.crexx" 32 5 19 "    name = initial"
-   load r19,"local"
-   .traceevent "L" 4 "R" "S" "r" 19 34 34 0 "" ""
-   linkattr1 r11,r18,1
-   scopy r11,r19
-   unlink r11
+   load r6,"local"
+   .traceevent "L" 4 "R" "S" "r" 6 34 34 0 "" ""
+   linkattr1 r9,r14,1
+   scopy r9,r6
+   unlink r9
    .srcstep 35 35 33 "arg_semantics_object.crexx" 33 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 18 35 35 0 "§factory" ""
-   copy r15,r18
-   .traceevent "A" 6 "R" "O" "r" 15 35 35 0 "value" ""
+   .traceevent "V" 6 "R" "O" "r" 14 35 35 0 "§factory" ""
+   copy r10,r14
+   .traceevent "A" 6 "R" "O" "r" 10 35 35 0 "value" ""
    .srcstep 37 37 17 "arg_semantics_object.crexx" 20 3 23 "  return value.getName()"
-   .traceevent "V" 6 "R" "O" "r" 15 39 39 0 "value" ""
-   load r20,1
-   settp r15,256
-   swap r21,r15
-   call r11,§arg_semantics_object.box.getname(),r20
-   swap r15,r21
-   .traceevent "F" 4 "R" "S" "r" 11 39 39 0 "getname" ""
-   scopy r21,r11
+   .traceevent "V" 6 "R" "O" "r" 10 39 39 0 "value" ""
+   load r15,1
+   settp r10,256
+   swap r16,r10
+   call r9,§arg_semantics_object.box.getname(),r15
+   swap r10,r16
+   .traceevent "F" 4 "R" "S" "r" 9 39 39 0 "getname" ""
+   scopy r16,r9
    br l228bexprend
 l228bexprend:
-   concat r21,"object-temp=",r21
-   .traceevent "O" 4 "R" "S" "r" 21 39 39 0 "" ""
-   say r21
+   endlife r10
+   concat r16,"object-temp=",r16
+   .traceevent "O" 4 "R" "S" "r" 16 39 39 0 "" ""
+   say r16
    .srcstep 45 45 17 "arg_semantics_object.crexx" 9 3 26 "  call replaceBoxRef(box)"
    .srcstep 44 44 17 "arg_semantics_object.crexx" 24 3 22 "  value = .Box(\"ref\")"
    .srcstep 40 40 6 "arg_semantics_object.crexx" 30 3 13 "  *: factory"
-   setattrs r23,2
+   setattrs r18,2
    .srcstep 41 41 6 "arg_semantics_object.crexx" 30 3 13 "  *: factory"
-   setobjtype r23,"arg_semantics_object.box"
+   setobjtype r18,"arg_semantics_object.box"
    .srcstep 42 42 17 "arg_semantics_object.crexx" 32 5 19 "    name = initial"
-   load r20,"ref"
-   .traceevent "L" 4 "R" "S" "r" 20 42 42 0 "" ""
-   linkattr1 r21,r23,1
-   scopy r21,r20
-   unlink r21
+   load r15,"ref"
+   .traceevent "L" 4 "R" "S" "r" 15 42 42 0 "" ""
+   linkattr1 r16,r18,1
+   scopy r16,r15
+   unlink r16
    .srcstep 43 43 33 "arg_semantics_object.crexx" 33 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 23 43 43 0 "§factory" ""
-   copy r0,r23
+   .traceevent "V" 6 "R" "O" "r" 18 43 43 0 "§factory" ""
+   copy r0,r18
    .traceevent "A" 6 "R" "O" "r" 0 43 43 0 "box" ""
    .srcstep 49 49 17 "arg_semantics_object.crexx" 10 3 35 "  say \"object-ref=\" || box.getName()"
    .srcstep 48 48 17 "arg_semantics_object.crexx" 10 24 27 "  say \"object-ref=\" || box.getName()"
    .srcstep 46 46 33 "arg_semantics_object.crexx" 10 24 27 "  say \"object-ref=\" || box.getName()"
    .traceevent "V" 6 "R" "O" "r" 0 46 46 0 "box" ""
-   copy r24,r0
-   .traceevent "A" 6 "R" "O" "r" 24 46 46 0 "§this" ""
+   copy r19,r0
+   .traceevent "A" 6 "R" "O" "r" 19 46 46 0 "§this" ""
    .srcstep 47 47 17 "arg_semantics_object.crexx" 36 5 16 "    return name"
-   linkattr1 r21,r24,1
-   .traceevent "V" 6 "R" "S" "r" 21 49 49 0 "name" ""
-   scopy r25,r21
-   unlink r21
+   linkattr1 r16,r19,1
+   .traceevent "V" 6 "R" "S" "r" 16 49 49 0 "name" ""
+   scopy r10,r16
+   unlink r16
    br l297bexprend
 l297bexprend:
-   concat r25,"object-ref=",r25
-   .traceevent "O" 4 "R" "S" "r" 25 49 49 0 "" ""
-   say r25
+   concat r10,"object-ref=",r10
+   .traceevent "O" 4 "R" "S" "r" 10 49 49 0 "" ""
+   say r10
    .srcstep 50 50 17 "arg_semantics_object.crexx" 11 3 11 "  return 0"
    ret 0
    .meta "arg_semantics_object.main.box"

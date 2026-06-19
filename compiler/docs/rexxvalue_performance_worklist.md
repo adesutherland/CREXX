@@ -98,28 +98,30 @@ RexxValue numeric context rather than adding separate ad hoc arithmetic paths.
 ## 4. Inlining And Register Pressure
 
 The core materializers are acceptable, but expression-shaped RexxValue methods
-show large register counts after inlining. Current optimized classlib RXAS
-observed after the decimal digits/fuzz change:
+still show large register counts after inlining. Current optimized classlib RXAS
+observed after scoped local reuse and the safe `LEAVE_WITH` child-temporary
+release:
 
-- `asString`: around 12 locals
-- `asInt`, `asFloat`: around 13 locals
-- `asDecimal`: around 14 locals
-- `asBinary`: around 17 locals
-- `add`/`subtract`/`multiply`/`divide`: around 77 locals
-- `equals`: around 50 locals
-- `concat`: around 71 locals
-- `copyFrom`: around 83 locals
+- `asString`: 9 locals
+- `asInt`, `asFloat`: 11 locals
+- `asDecimal`: 14 locals
+- `asBinary`: 11 locals
+- `add`/`subtract`/`multiply`/`divide`: 35 locals
+- `equals`: 24 locals
+- `concat`: 28 locals
+- `copyFrom`: 35 locals
 
-Baseline inspection, 2026-06-18:
+Baseline inspection refreshed after scoped reuse, 2026-06-19:
 
 | Example | No-opt locals | Opt locals | Observation |
 | --- | ---: | ---: | --- |
-| `RexxValue.add` | 11 | 77 | `asFloat`, `asDecimal`, and factory bodies inline into both operands/branches. |
-| `RexxValue.concat` | 8 | 71 | `asString` materializers dominate the inlined body. |
-| `RexxValue.copyFrom` | 10 | 83 | Multiple materializers and setter paths inline together. |
-| `RexxValue.equals` | 6 | 50 | Inlined `asString` calls dominate. |
-| `testRexxValue.main` | 27 | 235 | Imported classlib inlining greatly reduces calls but raises local high-water. |
-| `inline_test_composed_expr_contexts.main` | 7 | 42 | Golden compiler example showing the same call-removal/local-growth tradeoff. |
+| `RexxValue.add` | 11 | 35 | `asFloat`, `asDecimal`, and factory bodies still inline into both operands/branches, but inline-scope locals are now reused. |
+| `RexxValue.concat` | 8 | 28 | `asString` materializers still dominate, with a much smaller scratch window. |
+| `RexxValue.copyFrom` | 10 | 35 | Multiple materializers and setter paths inline together; scoped reuse removes most cloned-local accumulation. |
+| `RexxValue.equals` | 6 | 24 | Inlined `asString` calls still dominate. |
+| `testRexxValue.main` | 27 | 34 | Imported classlib inlining still raises high-water, but scoped reuse and by-value formal normalization cut the worst local growth. |
+| `inline_test_composed_expr_contexts.main` | 7 | 19 | Golden compiler example showing the same call-removal/local-growth tradeoff with scoped reuse. |
+| `inline_test_byvalue_arg_reuse.main` | 6 | 4 | Regression guard for inlined by-value formals becoming recyclable scoped locals. |
 
 The current allocator does recycle expression temporaries through `get_reg()` and
 `ret_reg()`, so register recycling is not simply absent. The immediate pressure
@@ -161,6 +163,9 @@ Preferred next work:
 - Preserve metadata correctness while reusing registers: scoped metadata must
   open when the block-local symbol becomes live and close before its register is
   returned/reused.
+- Keep `LEAVE_WITH` release conservative. It may release only the value child
+  temporary; flushing all deferred block-scope locals at a block-expression
+  return corrupted object/reference results in compiler-exit direct tests.
 - Use the baseline examples above to judge improvements before changing
   RexxValue operators again.
 
@@ -205,6 +210,22 @@ Register-assignment improvements still wanted:
   symbols remain procedure-lifetime registers. Real `BLOCK_EXPR` scopes are now
   included in scoped reuse; inherited-register synthetic blocks are still not
   reuse boundaries.
+- Treat inlined by-value formals as scoped local storage once cloned and bound.
+  They are no longer VM argument slots inside the inline clone, so they can be
+  recycled with other eligible inline-scope locals. `.ref` formals remain
+  fenced because they alias caller-visible storage.
+- Revisit the remaining fences rather than leaving them as accidental permanent
+  limits. Receiver/factory pseudo-locals, generated inline helpers, vararg
+  helpers, and reference/alias cases should either gain explicit safe reuse
+  rules or stay documented as closed with the semantic reason. Imported inline
+  templates should remain faithful to the source definition; if call-only
+  decoration such as argument flags is irrelevant after cloning, prefer
+  normalizing the per-inline clone until there is a clearer AST-cleanup pass for
+  imported templates.
+- Keep assembler helpers with array-shaped operands fenced from inlining until
+  the inline substitution model can represent assembler array operands without
+  revalidating them as illegal caller-site array values. Scalar assembler
+  helpers can remain eligible under the existing read/write operand rules.
 - Keep the reuse/cleanup distinction explicit:
 
   | Pattern | Scoped register reuse | Lifetime / metadata cleanup |
@@ -214,7 +235,9 @@ Register-assignment improvements still wanted:
   | `BLOCK_EXPR` locals | reusable after owning expression scope | `endlife` plus scoped metadata closeout |
   | inherited-register scopes | not a reuse boundary | parent scope owns cleanup |
   | exposed variables | fixed global/exposed slot | not local-owned |
-  | arguments and `.ref` arguments | fixed ABI/alias slot | call/frame semantics own lifetime |
+  | real procedure arguments | fixed ABI slot | call/frame semantics own lifetime |
+  | inlined by-value formals | reusable after owning inline scope | inline-scope metadata closeout |
+  | `.ref` arguments | fixed alias/caller-visible slot | call/frame or reference semantics own lifetime |
   | receiver / factory pseudo-locals | fixed ABI/object identity | call/frame semantics own lifetime |
   | reference-targeted locals | not reused while alias-visible | `endlife` remains required at scope exit |
   | generated `__inline*` helpers | tactical non-reuse until helper roles are explicit | inline scaffolding is not treated as source-owned storage |
@@ -246,25 +269,26 @@ Register-assignment improvements still wanted:
   exit. This means eligible cloned callee locals can plausibly be returned at
   block exit without changing value-return semantics.
 
-  A controlled local experiment removed the `BLOCK_EXPR` exclusion from
-  `scope_recycles_named_registers()` and then tightened deferred-register
-  handling around linked helpers. Focused runtime tests for array/object
-  `BLOCK_EXPR` returns, call-argument expression blocks, imported BIF expression
-  lifetimes, array-attribute call-result lifetimes, the live-sibling regression,
-  and `testRexxValue` all passed. Opt RXAS goldens changed only where expected
-  because `.locals` shrank and registers were repacked. Measured examples from
-  that experiment:
+  The implemented pass removed the `BLOCK_EXPR` exclusion from
+  `scope_recycles_named_registers()`, tightened deferred-register handling
+  around linked helpers, and normalized cloned by-value formals so they recycle
+  as scoped locals instead of remaining fixed argument slots. Focused runtime
+  tests for array/object `BLOCK_EXPR` returns, call-argument expression blocks,
+  imported BIF expression lifetimes, array-attribute call-result lifetimes, the
+  live-sibling regression, and `testRexxValue` all passed. Opt RXAS goldens
+  changed only where expected because `.locals` shrank and registers were
+  repacked. Current measurements:
 
-  | Example | Current opt locals | Experimental opt locals |
+  | Example | Pre-change opt locals | Current opt locals |
   | --- | ---: | ---: |
-  | `inline_test_array_return_expr.main` | 14 | 12 |
-  | `inline_test_array_multi_return_expr.main` | 20 | 13 |
+  | `inline_test_array_return_expr.main` | 14 | 11 |
+  | `inline_test_array_multi_return_expr.main` | 20 | 9 |
   | `inline_test_object_return_expr.main` | 10 | 9 |
   | `inline_test_array_expr_arg.main` | 6 | 5 |
   | `inline_test_object_expr_arg.main` | 7 | 6 |
-  | `testRexxValue.main` | 215 | 211 |
-  | `RexxValue.add` / `subtract` / `multiply` / `divide` | 48 | 38 |
-  | `RexxValue.copyFrom` | 43 | 39 |
+  | `testRexxValue.main` | 215 | 34 |
+  | `RexxValue.add` / `subtract` / `multiply` / `divide` | 48 | 35 |
+  | `RexxValue.copyFrom` | 43 | 35 |
   | `RexxValue.concat` | 30 | 28 |
   | `RexxValue.equals` | 26 | 24 |
 

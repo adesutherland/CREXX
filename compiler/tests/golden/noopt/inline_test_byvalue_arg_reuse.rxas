@@ -1,0 +1,239 @@
+/*
+ * SOURCE                 : inline_test_byvalue_arg_reuse.crexx
+ */
+
+.globals=0
+
+main() .locals=6
+   .meta "inline_test_byvalue_arg_reuse.main"="b" ".int" main() ""
+   .srcstep 16 16 17 "inline_test_byvalue_arg_reuse.crexx" 3 1 23 "main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 1 1 17 "inline_test_byvalue_arg_reuse.crexx" 4 3 13 "  errors = 0"
+   .meta "inline_test_byvalue_arg_reuse.main.errors"="b" ".int" r0
+   load r0,0
+   .traceevent "L" 4 "R" "I" "r" 0 1 1 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 1 1 0 "errors" ""
+   .srcstep 2 2 17 "inline_test_byvalue_arg_reuse.crexx" 6 3 42 "  errors = errors + check(same(1), \"one\")"
+   .traceevent "V" 6 "R" "I" "r" 0 2 2 0 "errors" ""
+   load r5,1
+   .traceevent "L" 4 "R" "I" "r" 5 2 2 0 "" ""
+   load r4,1
+   call r2,same(),r4
+   .traceevent "F" 4 "R" "B" "r" 2 2 2 0 "same" ""
+   load r3,"one"
+   .traceevent "L" 4 "R" "S" "r" 3 2 2 0 "" ""
+   load r1,2
+   settp r3,768
+   call r5,check(),r1
+   .traceevent "F" 4 "R" "I" "r" 5 2 2 0 "check" ""
+   iadd r0,r0,r5
+   .traceevent "O" 4 "R" "I" "r" 0 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "errors" ""
+   .srcstep 3 3 17 "inline_test_byvalue_arg_reuse.crexx" 7 3 42 "  errors = errors + check(same(2), \"two\")"
+   .traceevent "V" 6 "R" "I" "r" 0 3 3 0 "errors" ""
+   load r2,2
+   .traceevent "L" 4 "R" "I" "r" 2 3 3 0 "" ""
+   load r1,1
+   call r4,same(),r1
+   .traceevent "F" 4 "R" "B" "r" 4 3 3 0 "same" ""
+   load r5,"two"
+   .traceevent "L" 4 "R" "S" "r" 5 3 3 0 "" ""
+   load r3,2
+   settp r5,768
+   call r2,check(),r3
+   .traceevent "F" 4 "R" "I" "r" 2 3 3 0 "check" ""
+   iadd r0,r0,r2
+   .traceevent "O" 4 "R" "I" "r" 0 3 3 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 3 3 0 "errors" ""
+   .srcstep 4 4 17 "inline_test_byvalue_arg_reuse.crexx" 8 3 44 "  errors = errors + check(same(3), \"three\")"
+   .traceevent "V" 6 "R" "I" "r" 0 4 4 0 "errors" ""
+   load r2,3
+   .traceevent "L" 4 "R" "I" "r" 2 4 4 0 "" ""
+   load r1,1
+   call r4,same(),r1
+   .traceevent "F" 4 "R" "B" "r" 4 4 4 0 "same" ""
+   load r5,"three"
+   .traceevent "L" 4 "R" "S" "r" 5 4 4 0 "" ""
+   load r3,2
+   settp r5,768
+   call r2,check(),r3
+   .traceevent "F" 4 "R" "I" "r" 2 4 4 0 "check" ""
+   iadd r0,r0,r2
+   .traceevent "O" 4 "R" "I" "r" 0 4 4 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 4 4 0 "errors" ""
+   .srcstep 5 5 17 "inline_test_byvalue_arg_reuse.crexx" 9 3 43 "  errors = errors + check(same(4), \"four\")"
+   .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "errors" ""
+   load r2,4
+   .traceevent "L" 4 "R" "I" "r" 2 5 5 0 "" ""
+   load r1,1
+   call r4,same(),r1
+   .traceevent "F" 4 "R" "B" "r" 4 5 5 0 "same" ""
+   load r5,"four"
+   .traceevent "L" 4 "R" "S" "r" 5 5 5 0 "" ""
+   load r3,2
+   settp r5,768
+   call r2,check(),r3
+   .traceevent "F" 4 "R" "I" "r" 2 5 5 0 "check" ""
+   iadd r0,r0,r2
+   .traceevent "O" 4 "R" "I" "r" 0 5 5 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 5 5 0 "errors" ""
+   .srcstep 6 6 17 "inline_test_byvalue_arg_reuse.crexx" 10 3 43 "  errors = errors + check(same(5), \"five\")"
+   .traceevent "V" 6 "R" "I" "r" 0 6 6 0 "errors" ""
+   load r2,5
+   .traceevent "L" 4 "R" "I" "r" 2 6 6 0 "" ""
+   load r1,1
+   call r4,same(),r1
+   .traceevent "F" 4 "R" "B" "r" 4 6 6 0 "same" ""
+   load r5,"five"
+   .traceevent "L" 4 "R" "S" "r" 5 6 6 0 "" ""
+   load r3,2
+   settp r5,768
+   call r2,check(),r3
+   .traceevent "F" 4 "R" "I" "r" 2 6 6 0 "check" ""
+   iadd r0,r0,r2
+   .traceevent "O" 4 "R" "I" "r" 0 6 6 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 6 6 0 "errors" ""
+   .srcstep 7 7 17 "inline_test_byvalue_arg_reuse.crexx" 11 3 42 "  errors = errors + check(same(6), \"six\")"
+   .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "errors" ""
+   load r2,6
+   .traceevent "L" 4 "R" "I" "r" 2 7 7 0 "" ""
+   load r1,1
+   call r4,same(),r1
+   .traceevent "F" 4 "R" "B" "r" 4 7 7 0 "same" ""
+   load r5,"six"
+   .traceevent "L" 4 "R" "S" "r" 5 7 7 0 "" ""
+   load r3,2
+   settp r5,768
+   call r2,check(),r3
+   .traceevent "F" 4 "R" "I" "r" 2 7 7 0 "check" ""
+   iadd r0,r0,r2
+   .traceevent "O" 4 "R" "I" "r" 0 7 7 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 7 7 0 "errors" ""
+   .srcstep 8 8 17 "inline_test_byvalue_arg_reuse.crexx" 12 3 44 "  errors = errors + check(same(7), \"seven\")"
+   .traceevent "V" 6 "R" "I" "r" 0 8 8 0 "errors" ""
+   load r2,7
+   .traceevent "L" 4 "R" "I" "r" 2 8 8 0 "" ""
+   load r1,1
+   call r4,same(),r1
+   .traceevent "F" 4 "R" "B" "r" 4 8 8 0 "same" ""
+   load r5,"seven"
+   .traceevent "L" 4 "R" "S" "r" 5 8 8 0 "" ""
+   load r3,2
+   settp r5,768
+   call r2,check(),r3
+   .traceevent "F" 4 "R" "I" "r" 2 8 8 0 "check" ""
+   iadd r0,r0,r2
+   .traceevent "O" 4 "R" "I" "r" 0 8 8 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 8 8 0 "errors" ""
+   .srcstep 9 9 17 "inline_test_byvalue_arg_reuse.crexx" 13 3 44 "  errors = errors + check(same(8), \"eight\")"
+   .traceevent "V" 6 "R" "I" "r" 0 9 9 0 "errors" ""
+   load r2,8
+   .traceevent "L" 4 "R" "I" "r" 2 9 9 0 "" ""
+   load r1,1
+   call r4,same(),r1
+   .traceevent "F" 4 "R" "B" "r" 4 9 9 0 "same" ""
+   load r5,"eight"
+   .traceevent "L" 4 "R" "S" "r" 5 9 9 0 "" ""
+   load r3,2
+   settp r5,768
+   call r2,check(),r3
+   .traceevent "F" 4 "R" "I" "r" 2 9 9 0 "check" ""
+   iadd r0,r0,r2
+   .traceevent "O" 4 "R" "I" "r" 0 9 9 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 9 9 0 "errors" ""
+   .srcstep 10 10 17 "inline_test_byvalue_arg_reuse.crexx" 14 3 43 "  errors = errors + check(same(9), \"nine\")"
+   .traceevent "V" 6 "R" "I" "r" 0 10 10 0 "errors" ""
+   load r2,9
+   .traceevent "L" 4 "R" "I" "r" 2 10 10 0 "" ""
+   load r1,1
+   call r4,same(),r1
+   .traceevent "F" 4 "R" "B" "r" 4 10 10 0 "same" ""
+   load r5,"nine"
+   .traceevent "L" 4 "R" "S" "r" 5 10 10 0 "" ""
+   load r3,2
+   settp r5,768
+   call r2,check(),r3
+   .traceevent "F" 4 "R" "I" "r" 2 10 10 0 "check" ""
+   iadd r0,r0,r2
+   .traceevent "O" 4 "R" "I" "r" 0 10 10 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 10 10 0 "errors" ""
+   .srcstep 11 11 17 "inline_test_byvalue_arg_reuse.crexx" 15 3 43 "  errors = errors + check(same(10), \"ten\")"
+   .traceevent "V" 6 "R" "I" "r" 0 11 11 0 "errors" ""
+   load r2,10
+   .traceevent "L" 4 "R" "I" "r" 2 11 11 0 "" ""
+   load r1,1
+   call r4,same(),r1
+   .traceevent "F" 4 "R" "B" "r" 4 11 11 0 "same" ""
+   load r5,"ten"
+   .traceevent "L" 4 "R" "S" "r" 5 11 11 0 "" ""
+   load r3,2
+   settp r5,768
+   call r2,check(),r3
+   .traceevent "F" 4 "R" "I" "r" 2 11 11 0 "check" ""
+   iadd r0,r0,r2
+   .traceevent "O" 4 "R" "I" "r" 0 11 11 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 11 11 0 "errors" ""
+   .srcstep 13 13 17 "inline_test_byvalue_arg_reuse.crexx" 17 3 16 "  if errors = 0 then say \"ok\""
+   .traceevent "V" 6 "R" "I" "r" 0 13 13 0 "errors" ""
+   ieq r5,r0,0
+   .traceevent "O" 4 "R" "B" "r" 5 13 13 0 "" ""
+   brf l94iffalse,r5
+   .srcstep 14 14 17 "inline_test_byvalue_arg_reuse.crexx" 17 17 21 "  if errors = 0 then say \"ok\""
+   .srcstep 12 12 17 "inline_test_byvalue_arg_reuse.crexx" 17 22 30 "  if errors = 0 then say \"ok\""
+   say "ok"
+l94iffalse:
+   .srcstep 15 15 17 "inline_test_byvalue_arg_reuse.crexx" 18 3 16 "  return errors"
+   .traceevent "V" 6 "R" "I" "r" 0 15 15 0 "errors" ""
+   ret r0
+   .meta "inline_test_byvalue_arg_reuse.main.errors"
+
+same() .locals=2
+   .meta "inline_test_byvalue_arg_reuse.same"="b" ".boolean" same() "value=.int"
+   .srcstep 19 19 17 "inline_test_byvalue_arg_reuse.crexx" 20 1 27 "same: procedure = .boolean"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 17 17 17 "inline_test_byvalue_arg_reuse.crexx" 21 7 19 "  arg value = .int"
+   .meta "inline_test_byvalue_arg_reuse.same.value"="b" ".int" a1
+   .srcstep 18 18 17 "inline_test_byvalue_arg_reuse.crexx" 22 3 23 "  return value = value"
+   .traceevent "V" 6 "R" "I" "a" 1 18 18 0 "value" ""
+   .traceevent "V" 6 "R" "I" "a" 1 18 18 0 "value" ""
+   ieq r1,a1,a1
+   .traceevent "O" 4 "R" "B" "r" 1 18 18 0 "" ""
+   ret r1
+   .meta "inline_test_byvalue_arg_reuse.same.value"
+
+check() .locals=3
+   .meta "inline_test_byvalue_arg_reuse.check"="b" ".int" check() "passed=.boolean,label=.string"
+   .srcstep 27 27 17 "inline_test_byvalue_arg_reuse.crexx" 24 1 24 "check: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 20 20 17 "inline_test_byvalue_arg_reuse.crexx" 25 7 24 "  arg passed = .boolean, label = .string"
+   .meta "inline_test_byvalue_arg_reuse.check.passed"="b" ".boolean" a1
+   .srcstep 21 21 17 "inline_test_byvalue_arg_reuse.crexx" 25 26 41 "  arg passed = .boolean, label = .string"
+   .meta "inline_test_byvalue_arg_reuse.check.label"="b" ".string" a2
+   .srcstep 23 23 17 "inline_test_byvalue_arg_reuse.crexx" 26 3 12 "  if passed then return 0"
+   .traceevent "V" 6 "R" "B" "a" 1 23 23 0 "passed" ""
+   brf l119iffalse,a1
+   .srcstep 24 24 17 "inline_test_byvalue_arg_reuse.crexx" 26 13 17 "  if passed then return 0"
+   .srcstep 22 22 17 "inline_test_byvalue_arg_reuse.crexx" 26 18 26 "  if passed then return 0"
+   ret 0
+l119iffalse:
+   .srcstep 25 25 17 "inline_test_byvalue_arg_reuse.crexx" 27 3 19 "  say \"FAIL\" label"
+   .traceevent "V" 6 "R" "S" "a" 2 25 25 0 "label" ""
+   sconcat r2,"FAIL",a2
+   .traceevent "O" 4 "R" "S" "r" 2 25 25 0 "" ""
+   say r2
+   .srcstep 26 26 17 "inline_test_byvalue_arg_reuse.crexx" 28 3 11 "  return 1"
+   ret 1
+   .meta "inline_test_byvalue_arg_reuse.check.label"
+   .meta "inline_test_byvalue_arg_reuse.check.passed"

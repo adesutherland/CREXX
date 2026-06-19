@@ -36,33 +36,34 @@ main() .locals=10
    .srcstep 14 14 17 "inline_test_object_writable_arg.crexx" 6 7 17 "  say replaceBox(box)"
    .srcstep 7 7 6 "inline_test_object_writable_arg.crexx" 12 7 12 "  arg value = .Box"
    .traceevent "V" 6 "R" "O" "r" 0 15 15 0 "box" ""
-   copy r4,r0
+   copy r2,r0
    .srcstep 12 12 17 "inline_test_object_writable_arg.crexx" 13 3 24 "  value = .Box(\"local\")"
    .srcstep 8 8 6 "inline_test_object_writable_arg.crexx" 19 3 13 "  *: factory"
-   setattrs r5,2
+   setattrs r4,2
    .srcstep 9 9 6 "inline_test_object_writable_arg.crexx" 19 3 13 "  *: factory"
-   setobjtype r5,"inline_test_object_writable_arg.box"
+   setobjtype r4,"inline_test_object_writable_arg.box"
    .srcstep 10 10 17 "inline_test_object_writable_arg.crexx" 21 5 19 "    name = initial"
    load r6,"local"
    .traceevent "L" 4 "R" "S" "r" 6 10 10 0 "" ""
-   linkattr1 r2,r5,1
-   scopy r2,r6
-   unlink r2
+   linkattr1 r5,r4,1
+   scopy r5,r6
+   unlink r5
    .srcstep 11 11 33 "inline_test_object_writable_arg.crexx" 22 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 5 11 11 0 "§factory" ""
-   copy r4,r5
-   .traceevent "A" 6 "R" "O" "r" 4 11 11 0 "value" ""
+   .traceevent "V" 6 "R" "O" "r" 4 11 11 0 "§factory" ""
+   copy r2,r4
+   .traceevent "A" 6 "R" "O" "r" 2 11 11 0 "value" ""
    .srcstep 13 13 17 "inline_test_object_writable_arg.crexx" 14 3 23 "  return value.getName()"
-   .traceevent "V" 6 "R" "O" "r" 4 15 15 0 "value" ""
+   .traceevent "V" 6 "R" "O" "r" 2 15 15 0 "value" ""
    load r7,1
-   settp r4,256
-   swap r8,r4
-   call r2,§inline_test_object_writable_arg.box.getname(),r7
-   swap r4,r8
-   .traceevent "F" 4 "R" "S" "r" 2 15 15 0 "getname" ""
-   scopy r8,r2
+   settp r2,256
+   swap r8,r2
+   call r5,§inline_test_object_writable_arg.box.getname(),r7
+   swap r2,r8
+   .traceevent "F" 4 "R" "S" "r" 5 15 15 0 "getname" ""
+   scopy r8,r5
    br l100bexprend
 l100bexprend:
+   endlife r2
    say r8
    .srcstep 19 19 17 "inline_test_object_writable_arg.crexx" 7 3 18 "  say box.getName()"
    .srcstep 18 18 17 "inline_test_object_writable_arg.crexx" 7 7 10 "  say box.getName()"

@@ -629,6 +629,38 @@ add_test(NAME rxc_scoped_register_reuse
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(rxc_scoped_register_reuse PROPERTIES LABELS "compiler;registers")
 
+set(RXC_INLINE_BYVALUE_ARG_REUSE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_inline_byvalue_arg_reuse.cmake")
+set(RXC_INLINE_BYVALUE_ARG_REUSE_CONTENT "")
+string(APPEND RXC_INLINE_BYVALUE_ARG_REUSE_CONTENT
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"inline_test_byvalue_arg_reuse_diag\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_test_byvalue_arg_reuse.crexx\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE rxc_out\n"
+       "  ERROR_VARIABLE rxc_err\n"
+       "  RESULT_VARIABLE rxc_res\n"
+       ")\n"
+       "set(full_out \"${RXAS_DIAG_DOLLAR}{rxc_out}${RXAS_DIAG_DOLLAR}{rxc_err}\")\n"
+       "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "if(NOT rxc_res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"rxc failed for inline by-value arg reuse.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n"
+       "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/inline_test_byvalue_arg_reuse_diag.rxas\" rxas_out)\n"
+       "string(REPLACE \"\\r\\n\" \"\\n\" rxas_out \"${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "string(REGEX MATCH [=[main\\(\\) \\.locals=([0-9]+)]=] main_locals_match \"${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "if(NOT main_locals_match)\n"
+       "  message(FATAL_ERROR \"main locals record missing for inline by-value arg reuse.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "endif()\n"
+       "set(main_locals \"${RXAS_DIAG_DOLLAR}{CMAKE_MATCH_1}\")\n"
+       "if(main_locals GREATER 12)\n"
+       "  message(FATAL_ERROR \"Inlined by-value formals were not recycled; main locals=${RXAS_DIAG_DOLLAR}{main_locals}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "endif()\n")
+file(GENERATE OUTPUT "${RXC_INLINE_BYVALUE_ARG_REUSE_SCRIPT}" CONTENT "${RXC_INLINE_BYVALUE_ARG_REUSE_CONTENT}")
+
+add_test(NAME rxc_inline_byvalue_arg_reuse
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_INLINE_BYVALUE_ARG_REUSE_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxc_inline_byvalue_arg_reuse PROPERTIES LABELS "compiler;registers")
+
 # Robustness tests
 macro(add_crexx_robustness_test NAME MAIN_FILE)
     # The list of dependencies are passed as additional arguments
@@ -851,6 +883,7 @@ add_crexx_compiler_test(inline_test_call_arg_expr rexx_src/inline_test_call_arg_
 add_crexx_compiler_test(inline_test_call_like_arg_expr rexx_src/inline_test_call_like_arg_expr.crexx)
 add_crexx_compiler_test(inline_test_short_circuit_expr rexx_src/inline_test_short_circuit_expr.crexx)
 add_crexx_compiler_test(inline_test_composed_expr_contexts rexx_src/inline_test_composed_expr_contexts.crexx)
+add_crexx_compiler_test(inline_test_byvalue_arg_reuse rexx_src/inline_test_byvalue_arg_reuse.crexx)
 add_crexx_compiler_test(inline_test_stateful_assembler rexx_src/inline_test_stateful_assembler.crexx)
 add_crexx_compiler_test(inline_test_condition_contexts rexx_src/inline_test_condition_contexts.crexx)
 add_crexx_compiler_test(inline_test_loop_bound_expr rexx_src/inline_test_loop_bound_expr.crexx)
@@ -1984,6 +2017,7 @@ add_crexx_run_test(inline_test_call_arg_expr rexx_src/inline_test_call_arg_expr.
 add_crexx_run_test(inline_test_call_like_arg_expr rexx_src/inline_test_call_like_arg_expr.crexx)
 add_crexx_run_test(inline_test_short_circuit_expr rexx_src/inline_test_short_circuit_expr.crexx)
 add_crexx_run_test(inline_test_composed_expr_contexts rexx_src/inline_test_composed_expr_contexts.crexx)
+add_crexx_run_test(inline_test_byvalue_arg_reuse rexx_src/inline_test_byvalue_arg_reuse.crexx)
 add_crexx_run_test(inline_test_stateful_assembler rexx_src/inline_test_stateful_assembler.crexx)
 add_crexx_run_test(inline_test_condition_contexts rexx_src/inline_test_condition_contexts.crexx)
 add_crexx_run_test(inline_test_loop_bound_expr rexx_src/inline_test_loop_bound_expr.crexx)

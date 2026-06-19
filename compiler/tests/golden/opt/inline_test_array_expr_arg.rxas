@@ -70,6 +70,7 @@ l175bexprend:
    unlink r4
    br l169bexprend
 l169bexprend:
+   endlife r1
    .meta "inline_test_array_expr_arg.main.__inline_bind_105_0"
    itos r3
    say r3

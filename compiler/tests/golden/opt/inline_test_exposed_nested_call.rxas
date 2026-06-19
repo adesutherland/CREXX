@@ -45,6 +45,7 @@ l8dostart:
    icopy r7,r6
    br l75bexprend
 l75bexprend:
+   endlife r5
    iadd r1,r7,10
    .traceevent "O" 4 "R" "I" "r" 1 9 9 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 1 9 9 0 "result" ""

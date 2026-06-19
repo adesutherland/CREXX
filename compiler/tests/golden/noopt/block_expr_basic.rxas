@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=9
+main() .locals=5
    .meta "block_expr_basic.main"="b" ".void" main() ""
    setnumdgts 18
    setnumfuz 0
@@ -29,18 +29,18 @@ main() .locals=9
    .traceevent "V" 6 "R" "I" "r" 2 7 7 0 "a" ""
    imult r4,r2,2
    .traceevent "O" 4 "R" "I" "r" 4 7 7 0 "" ""
-   icopy r5,r4
+   icopy r3,r4
    br l19bexprend
 l16iffalse:
    .srcstep 5 5 17 "block_expr_basic.crexx" 6 3 15 "  leave with 0"
-   load r3,0
-   .traceevent "L" 4 "R" "I" "r" 3 7 7 0 "" ""
-   icopy r5,r3
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 7 7 0 "" ""
+   icopy r3,r4
    br l19bexprend
 l19bexprend:
    endlife r2
    .meta "block_expr_basic.main.a"
-   iadd r1,r5,10
+   iadd r1,r3,10
    .traceevent "O" 4 "R" "I" "r" 1 7 7 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 1 7 7 0 "total" ""
    .srcstep 8 8 17 "block_expr_basic.crexx" 8 1 10 "say total"
@@ -52,37 +52,36 @@ l19bexprend:
    .srcstep 15 15 17 "block_expr_basic.crexx" 11 3 22 "  leave with 100 + do"
    .srcstep 14 14 17 "block_expr_basic.crexx" 11 20 22 "  leave with 100 + do"
    .srcstep 9 9 17 "block_expr_basic.crexx" 12 5 10 "    x = 3"
-   .meta "block_expr_basic.main.x"="b" ".int" r5
+   .meta "block_expr_basic.main.x"="b" ".int" r4
    .meta "block_expr_basic.main.nested"="b" ".int" r0
-   load r5,3
-   .traceevent "L" 4 "R" "I" "r" 5 9 9 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 5 9 9 0 "x" ""
+   load r4,3
+   .traceevent "L" 4 "R" "I" "r" 4 9 9 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 9 9 0 "x" ""
    .srcstep 11 11 17 "block_expr_basic.crexx" 13 5 13 "    if x = 3 then leave with 7"
-   .traceevent "V" 6 "R" "I" "r" 5 11 11 0 "x" ""
-   ieq r2,r5,3
-   .traceevent "O" 4 "R" "B" "r" 2 11 11 0 "" ""
-   brf l36iffalse,r2
+   .traceevent "V" 6 "R" "I" "r" 4 11 11 0 "x" ""
+   ieq r3,r4,3
+   .traceevent "O" 4 "R" "B" "r" 3 11 11 0 "" ""
+   brf l36iffalse,r3
    .srcstep 12 12 17 "block_expr_basic.crexx" 13 14 18 "    if x = 3 then leave with 7"
    .srcstep 10 10 17 "block_expr_basic.crexx" 13 19 31 "    if x = 3 then leave with 7"
-   load r6,7
-   .traceevent "L" 4 "R" "I" "r" 6 17 17 0 "" ""
-   icopy r7,r6
+   load r2,7
+   .traceevent "L" 4 "R" "I" "r" 2 17 17 0 "" ""
    br l39bexprend
 l36iffalse:
    .srcstep 13 13 17 "block_expr_basic.crexx" 14 5 17 "    leave with 0"
-   load r2,0
-   .traceevent "L" 4 "R" "I" "r" 2 17 17 0 "" ""
-   icopy r7,r2
+   load r3,0
+   .traceevent "L" 4 "R" "I" "r" 3 17 17 0 "" ""
+   icopy r2,r3
    br l39bexprend
 l39bexprend:
-   endlife r5
+   endlife r4
    .meta "block_expr_basic.main.x"
-   iadd r7,r7,100
-   .traceevent "O" 4 "R" "I" "r" 7 17 17 0 "" ""
-   icopy r5,r7
+   iadd r4,r2,100
+   .traceevent "O" 4 "R" "I" "r" 4 17 17 0 "" ""
+   icopy r2,r4
    br l43bexprend
 l43bexprend:
-   icopy r0,r5
+   icopy r0,r2
    .traceevent "A" 6 "R" "I" "r" 0 17 17 0 "nested" ""
    .srcstep 18 18 17 "block_expr_basic.crexx" 17 1 11 "say nested"
    itos r0
@@ -91,21 +90,21 @@ l43bexprend:
    .srcstep 22 22 17 "block_expr_basic.crexx" 19 1 11 "say 1 + do"
    .srcstep 21 21 17 "block_expr_basic.crexx" 19 9 11 "say 1 + do"
    .srcstep 19 19 17 "block_expr_basic.crexx" 20 3 8 "  y = 1"
-   .meta "block_expr_basic.main.y"="b" ".int" r5
-   load r5,1
-   .traceevent "L" 4 "R" "I" "r" 5 19 19 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 5 19 19 0 "y" ""
+   .meta "block_expr_basic.main.y"="b" ".int" r4
+   load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 19 19 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 19 19 0 "y" ""
    .srcstep 20 20 17 "block_expr_basic.crexx" 21 3 15 "  leave with y"
-   .traceevent "V" 6 "R" "I" "r" 5 22 22 0 "y" ""
-   icopy r8,r5
+   .traceevent "V" 6 "R" "I" "r" 4 22 22 0 "y" ""
+   icopy r3,r4
    br l54bexprend
 l54bexprend:
-   endlife r5
+   endlife r4
    .meta "block_expr_basic.main.y"
-   iadd r8,r8,1
-   itos r8
-   .traceevent "O" 4 "R" "S" "r" 8 22 22 0 "" ""
-   say r8
+   iadd r4,r3,1
+   itos r4
+   .traceevent "O" 4 "R" "S" "r" 4 22 22 0 "" ""
+   say r4
    .srcstep 23 23 1 "block_expr_basic.crexx" 19 15 15 "  leave with y"
    ret
    .meta "block_expr_basic.main.nested"

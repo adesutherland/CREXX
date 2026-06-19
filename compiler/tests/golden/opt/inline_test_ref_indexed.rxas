@@ -76,18 +76,18 @@ l67bexprend:
    say r1
    .srcstep 11 11 17 "inline_test_ref_indexed.crexx" 11 1 13 "say values[1]"
    setattrs g1,3
-   linkattr1 r1,g1,1
-   itos r1
-   .traceevent "V" 6 "R" "S" "r" 1 11 11 0 "values" ""
-   say r1
-   unlink r1
+   linkattr1 r4,g1,1
+   itos r4
+   .traceevent "V" 6 "R" "S" "r" 4 11 11 0 "values" ""
+   say r4
+   unlink r4
    .srcstep 12 12 17 "inline_test_ref_indexed.crexx" 12 1 13 "say values[2]"
    setattrs g1,3
-   linkattr1 r1,g1,2
-   itos r1
-   .traceevent "V" 6 "R" "S" "r" 1 12 12 0 "values" ""
-   say r1
-   unlink r1
+   linkattr1 r4,g1,2
+   itos r4
+   .traceevent "V" 6 "R" "S" "r" 4 12 12 0 "values" ""
+   say r4
+   unlink r4
    .srcstep 13 13 17 "inline_test_ref_indexed.crexx" 13 1 40 "say \"Indexed ref inline test finished.\""
    say "Indexed ref inline test finished."
    .srcstep 14 14 17 "inline_test_ref_indexed.crexx" 14 1 9 "return 0"

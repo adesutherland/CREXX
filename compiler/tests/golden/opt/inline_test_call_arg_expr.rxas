@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=8
+main() .locals=7
    .meta "inline_test_call_arg_expr.main"="b" ".int" main() ""
    .srcstep 19 19 17 "inline_test_call_arg_expr.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -42,6 +42,7 @@ l8dostart:
    icopy r6,r5
    br l68bexprend
 l68bexprend:
+   endlife r4
    icopy r3,r6
    .traceevent "A" 6 "R" "I" "r" 3 8 8 0 "val" ""
    .srcstep 10 10 17 "inline_test_call_arg_expr.crexx" 13 3 15 "  if val > 100 then return 100"
@@ -51,9 +52,9 @@ l68bexprend:
    brf l77iffalse,r6
    .srcstep 11 11 17 "inline_test_call_arg_expr.crexx" 13 16 20 "  if val > 100 then return 100"
    .srcstep 9 9 17 "inline_test_call_arg_expr.crexx" 13 21 31 "  if val > 100 then return 100"
-   load r7,100
-   .traceevent "L" 4 "R" "I" "r" 7 14 14 0 "" ""
-   icopy r6,r7
+   load r5,100
+   .traceevent "L" 4 "R" "I" "r" 5 14 14 0 "" ""
+   icopy r6,r5
    br l64bexprend
 l77iffalse:
    .srcstep 12 12 17 "inline_test_call_arg_expr.crexx" 14 3 13 "  return val"
@@ -61,6 +62,7 @@ l77iffalse:
    icopy r6,r3
    br l64bexprend
 l64bexprend:
+   endlife r3
    itos r6
    say r6
 l8doinc:

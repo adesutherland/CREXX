@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=8
+main() .locals=7
    .meta "inline_test_compare_expr.main"="b" ".int" main() ""
    .srcstep 17 17 17 "inline_test_compare_expr.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -40,6 +40,7 @@ l8dostart:
    icopy r5,r4
    br l49bexprend
 l49bexprend:
+   endlife r3
    ieq r5,r5,3
    .traceevent "O" 4 "R" "B" "r" 5 10 10 0 "" ""
    brf l27iffalse,r5
@@ -47,18 +48,18 @@ l49bexprend:
    .srcstep 8 8 17 "inline_test_compare_expr.crexx" 6 27 42 "    if addOne(i) = 3 then say \"matched\" i"
    itos r0
    .traceevent "V" 6 "R" "S" "r" 0 8 8 0 "i" ""
-   sconcat r6,"matched",r0
-   .traceevent "O" 4 "R" "S" "r" 6 8 8 0 "" ""
-   say r6
+   sconcat r3,"matched",r0
+   .traceevent "O" 4 "R" "S" "r" 3 8 8 0 "" ""
+   say r3
    br l27ifend
    .srcstep 12 12 17 "inline_test_compare_expr.crexx" 7 5 9 "    else say \"missed\" i"
 l27iffalse:
    .srcstep 9 9 17 "inline_test_compare_expr.crexx" 7 10 24 "    else say \"missed\" i"
    itos r0
    .traceevent "V" 6 "R" "S" "r" 0 9 9 0 "i" ""
-   sconcat r7,"missed",r0
-   .traceevent "O" 4 "R" "S" "r" 7 9 9 0 "" ""
-   say r7
+   sconcat r6,"missed",r0
+   .traceevent "O" 4 "R" "S" "r" 6 9 9 0 "" ""
+   say r6
 l27ifend:
 l8doinc:
    .srcstep 4 4 17 "inline_test_compare_expr.crexx" 5 6 7 "  do i = 1 to 4"

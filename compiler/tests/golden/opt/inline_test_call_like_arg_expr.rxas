@@ -6,7 +6,7 @@
 .meta "inline_test_call_like_arg_expr.box.val"="b" ".int" .attr 1
 .globals=0
 
-main() .locals=15
+main() .locals=11
    .meta "inline_test_call_like_arg_expr.main"="b" ".int" main() ""
    .srcstep 26 26 17 "inline_test_call_like_arg_expr.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -47,6 +47,7 @@ l8dostart:
    icopy r8,r7
    br l94bexprend
 l94bexprend:
+   endlife r6
    icopy r4,r8
    .traceevent "A" 6 "R" "I" "r" 4 10 10 0 "initialvalue" ""
    .srcstep 11 11 17 "inline_test_call_like_arg_expr.crexx" 21 5 23 "    val = initialValue"
@@ -63,35 +64,37 @@ l94bexprend:
    .srcstep 20 20 17 "inline_test_call_like_arg_expr.crexx" 7 9 12 "    say box.bump(addOne(i))"
    .srcstep 14 14 33 "inline_test_call_like_arg_expr.crexx" 7 9 12 "    say box.bump(addOne(i))"
    .traceevent "V" 6 "R" "O" "r" 0 14 14 0 "box" ""
-   copy r10,r0
-   .traceevent "A" 6 "R" "O" "r" 10 14 14 0 "§this" ""
+   copy r9,r0
+   .traceevent "A" 6 "R" "O" "r" 9 14 14 0 "§this" ""
    .srcstep 18 18 33 "inline_test_call_like_arg_expr.crexx" 25 9 15 "    arg amount = .int"
    .srcstep 17 17 17 "inline_test_call_like_arg_expr.crexx" 7 18 24 "    say box.bump(addOne(i))"
    .srcstep 15 15 33 "inline_test_call_like_arg_expr.crexx" 13 7 10 "  arg val = .int"
    .traceevent "V" 6 "R" "I" "r" 1 15 15 0 "i" ""
-   icopy r11,r1
-   .traceevent "A" 6 "R" "I" "r" 11 15 15 0 "val" ""
+   icopy r7,r1
+   .traceevent "A" 6 "R" "I" "r" 7 15 15 0 "val" ""
    .srcstep 16 16 17 "inline_test_call_like_arg_expr.crexx" 14 3 17 "  return val + 1"
-   .traceevent "V" 6 "R" "I" "r" 11 18 18 0 "val" ""
-   iadd r8,r11,1
-   .traceevent "O" 4 "R" "I" "r" 8 18 18 0 "" ""
-   icopy r12,r8
+   .traceevent "V" 6 "R" "I" "r" 7 18 18 0 "val" ""
+   iadd r6,r7,1
+   .traceevent "O" 4 "R" "I" "r" 6 18 18 0 "" ""
+   icopy r10,r6
    br l125bexprend
 l125bexprend:
-   icopy r9,r12
-   .traceevent "A" 6 "R" "I" "r" 9 18 18 0 "amount" ""
+   endlife r7
+   icopy r8,r10
+   .traceevent "A" 6 "R" "I" "r" 8 18 18 0 "amount" ""
    .srcstep 19 19 17 "inline_test_call_like_arg_expr.crexx" 26 5 24 "    return val + amount"
-   linkattr1 r12,r10,1
-   .traceevent "V" 6 "R" "I" "r" 12 21 21 0 "val" ""
-   .traceevent "V" 6 "R" "I" "r" 9 21 21 0 "amount" ""
-   iadd r13,r12,r9
-   unlink r12
-   .traceevent "O" 4 "R" "I" "r" 13 21 21 0 "" ""
-   icopy r14,r13
+   linkattr1 r10,r9,1
+   .traceevent "V" 6 "R" "I" "r" 10 21 21 0 "val" ""
+   .traceevent "V" 6 "R" "I" "r" 8 21 21 0 "amount" ""
+   iadd r7,r10,r8
+   unlink r10
+   .traceevent "O" 4 "R" "I" "r" 7 21 21 0 "" ""
+   icopy r6,r7
    br l118bexprend
 l118bexprend:
-   itos r14
-   say r14
+   endlife r8
+   itos r6
+   say r6
 l8doinc:
    .srcstep 4 4 17 "inline_test_call_like_arg_expr.crexx" 5 6 7 "  do i = 1 to 3"
    inc r1

@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=5
+main() .locals=4
    .meta "inline_test_ref_opt.main"="b" ".int" main() ""
    .srcstep 16 16 17 "inline_test_ref_opt.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -52,11 +52,11 @@ l69bexprend:
    .srcstep 11 11 17 "inline_test_ref_opt.crexx" 20 3 15 "  return a + b"
    load r3,8
    .traceevent "L" 4 "R" "I" "r" 3 13 13 0 "" ""
-   icopy r4,r3
+   icopy r2,r3
    br l81bexprend
 l81bexprend:
-   itos r4
-   say r4
+   itos r2
+   say r2
    .srcstep 14 14 17 "inline_test_ref_opt.crexx" 10 3 38 "  say \"Ref/opt inline test finished.\""
    say "Ref/opt inline test finished."
    .srcstep 15 15 17 "inline_test_ref_opt.crexx" 11 3 11 "  return 0"

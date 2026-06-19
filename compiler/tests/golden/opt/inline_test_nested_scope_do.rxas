@@ -53,6 +53,7 @@ l8dostart:
    icopy r5,r4
    br l48bexprend
 l48bexprend:
+   endlife r3
    itos r5
    say r5
 l8doinc:

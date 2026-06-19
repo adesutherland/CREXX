@@ -40,6 +40,7 @@ l8dostart:
    scopy r5,r4
    br l42bexprend
 l42bexprend:
+   endlife r4
    concat r1,"Value=",r5
    .traceevent "O" 4 "R" "S" "r" 1 8 8 0 "" ""
    .traceevent "A" 6 "R" "S" "r" 1 8 8 0 "msg" ""

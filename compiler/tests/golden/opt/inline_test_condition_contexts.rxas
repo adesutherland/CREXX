@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=10
+main() .locals=5
    .meta "inline_test_condition_contexts.main"="b" ".int" main() ""
    .srcstep 36 36 17 "inline_test_condition_contexts.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -37,10 +37,10 @@ l14ifend:
    .srcstep 9 9 17 "inline_test_condition_contexts.crexx" 29 3 19 "  return value = 1"
    load r3,0
    .traceevent "L" 4 "R" "I" "r" 3 13 13 0 "" ""
-   icopy r4,r3
+   icopy r2,r3
    br l108bexprend
 l108bexprend:
-   brf l21iffalse,r4
+   brf l21iffalse,r2
    .srcstep 14 14 17 "inline_test_condition_contexts.crexx" 9 15 19 "  if isOne(2) then say \"bad-if-no\""
    .srcstep 11 11 17 "inline_test_condition_contexts.crexx" 9 20 35 "  if isOne(2) then say \"bad-if-no\""
    say "bad-if-no"
@@ -61,23 +61,24 @@ l25dostart:
    .srcstep 19 19 17 "inline_test_condition_contexts.crexx" 13 12 20 "  do while belowTwo(i)"
    .srcstep 17 17 33 "inline_test_condition_contexts.crexx" 32 7 12 "  arg value = .int"
    .traceevent "V" 6 "R" "I" "r" 0 17 17 0 "i" ""
-   icopy r5,r0
-   .traceevent "A" 6 "R" "I" "r" 5 17 17 0 "value" ""
+   icopy r3,r0
+   .traceevent "A" 6 "R" "I" "r" 3 17 17 0 "value" ""
    .srcstep 18 18 17 "inline_test_condition_contexts.crexx" 33 3 19 "  return value < 2"
-   .traceevent "V" 6 "R" "I" "r" 5 0 0 0 "value" ""
-   ilt r4,r5,2
-   btoi r4
-   .traceevent "O" 4 "R" "I" "r" 4 0 0 0 "" ""
-   icopy r6,r4
+   .traceevent "V" 6 "R" "I" "r" 3 0 0 0 "value" ""
+   ilt r2,r3,2
+   btoi r2
+   .traceevent "O" 4 "R" "I" "r" 2 0 0 0 "" ""
+   icopy r4,r2
    br l117bexprend
 l117bexprend:
-   brf l25doend,r6
+   endlife r3
+   brf l25doend,r4
    .srcstep 21 21 17 "inline_test_condition_contexts.crexx" 14 5 18 "    say \"while\" i"
    itos r0
    .traceevent "V" 6 "R" "S" "r" 0 21 21 0 "i" ""
-   sconcat r7,"while",r0
-   .traceevent "O" 4 "R" "S" "r" 7 21 21 0 "" ""
-   say r7
+   sconcat r3,"while",r0
+   .traceevent "O" 4 "R" "S" "r" 3 21 21 0 "" ""
+   say r3
    .srcstep 22 22 17 "inline_test_condition_contexts.crexx" 15 5 14 "    i = i + 1"
    .traceevent "V" 6 "R" "I" "r" 0 22 22 0 "i" ""
    iadd r0,r0,1
@@ -97,9 +98,9 @@ l43dostart:
    .srcstep 30 30 17 "inline_test_condition_contexts.crexx" 20 5 18 "    say \"until\" j"
    itos r1
    .traceevent "V" 6 "R" "S" "r" 1 30 30 0 "j" ""
-   sconcat r9,"until",r1
-   .traceevent "O" 4 "R" "S" "r" 9 30 30 0 "" ""
-   say r9
+   sconcat r4,"until",r1
+   .traceevent "O" 4 "R" "S" "r" 4 30 30 0 "" ""
+   say r4
    .srcstep 31 31 17 "inline_test_condition_contexts.crexx" 21 5 14 "    j = j + 1"
    .traceevent "V" 6 "R" "I" "r" 1 31 31 0 "j" ""
    iadd r1,r1,1
@@ -110,17 +111,18 @@ l43doinc:
    .srcstep 28 28 17 "inline_test_condition_contexts.crexx" 19 12 22 "  do until atLeastTwo(j)"
    .srcstep 26 26 33 "inline_test_condition_contexts.crexx" 36 7 12 "  arg value = .int"
    .traceevent "V" 6 "R" "I" "r" 1 26 26 0 "j" ""
-   icopy r8,r1
-   .traceevent "A" 6 "R" "I" "r" 8 26 26 0 "value" ""
+   icopy r4,r1
+   .traceevent "A" 6 "R" "I" "r" 4 26 26 0 "value" ""
    .srcstep 27 27 17 "inline_test_condition_contexts.crexx" 37 3 20 "  return value >= 2"
-   .traceevent "V" 6 "R" "I" "r" 8 0 0 0 "value" ""
-   igte r7,r8,2
-   btoi r7
-   .traceevent "O" 4 "R" "I" "r" 7 0 0 0 "" ""
-   icopy r6,r7
+   .traceevent "V" 6 "R" "I" "r" 4 0 0 0 "value" ""
+   igte r3,r4,2
+   btoi r3
+   .traceevent "O" 4 "R" "I" "r" 3 0 0 0 "" ""
+   icopy r2,r3
    br l126bexprend
 l126bexprend:
-   brt l43doend,r6
+   endlife r4
+   brt l43doend,r2
    .srcstep 33 33 17 "inline_test_condition_contexts.crexx" 22 3 6 "  end"
    br l43dostart
 l43doend:

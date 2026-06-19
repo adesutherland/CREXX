@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=8
+main() .locals=7
    .meta "inline_test_nested_scope_exposed_call.main"="b" ".int" main() ""
    .srcstep 18 18 17 "inline_test_nested_scope_exposed_call.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -50,18 +50,19 @@ l8dostart:
    .traceevent "V" 6 "R" "I" "r" 4 13 13 0 "tmp" ""
    imult r6,r4,2
    .traceevent "O" 4 "R" "I" "r" 6 13 13 0 "" ""
-   icopy r7,r6
+   icopy r4,r6
    br l60bexprend
    endlife r4
    .meta "inline_test_nested_scope_exposed_call.main.tmp"
    .srcstep 11 11 17 "inline_test_nested_scope_exposed_call.crexx" 18 3 11 "  return 0"
-   load r4,0
-   .traceevent "L" 4 "R" "I" "r" 4 13 13 0 "" ""
-   icopy r7,r4
+   load r6,0
+   .traceevent "L" 4 "R" "I" "r" 6 13 13 0 "" ""
+   icopy r4,r6
    br l60bexprend
 l60bexprend:
-   itos r7
-   say r7
+   endlife r3
+   itos r4
+   say r4
 l8doinc:
    .srcstep 4 4 17 "inline_test_nested_scope_exposed_call.crexx" 5 6 7 "  do i = 1 to 3"
    inc r0

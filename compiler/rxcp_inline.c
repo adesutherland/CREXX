@@ -2715,6 +2715,15 @@ static int inline_duplicate_scope_symbols(Scope *old_scope,
         new_symbol->defines_scope = NULL;
         new_symbol->ast_template = NULL;
         new_symbol->is_inlinable = 0;
+        /*
+         * Once a by-value formal has been cloned into an inline body it is
+         * bound into local storage by inline_bind_call_arguments(); it is no
+         * longer a VM argument slot. Keep `.ref` formals fenced because they
+         * alias caller-visible storage.
+         */
+        if (old_symbol->is_arg && !old_symbol->is_ref_arg) {
+            new_symbol->is_arg = 0;
+        }
 
         if (!inline_append_symbol_map_entry(state, old_symbol, new_symbol)) {
             free(symbols);
@@ -4738,16 +4747,33 @@ static int inline_assembler_has_unsupported_aliasing(ASTNode *node) {
 }
 
 static int inline_assembler_has_unsupported_effect(ASTNode *node) {
+    ASTNode *child;
+
+    if (!node || node->node_type != ASSEMBLER) return 0;
+
     /*
-     * Reserved for non-aliasing assembler effects that are not represented by
-     * ordinary AST read/write links. Stateful string helpers are intentionally
-     * not rejected here: assembler operands are marked read/write by symbol
-     * validation, so writable by-value formals are materialised through the same
-     * copy semantics as normal calls. SCOPY resets copied string cursor state,
-     * which preserves the call prologue boundary for setstrpos/substcut/dropchar
+     * Array operands cannot be safely represented by the current inline
+     * substitution model for assembler statements. The normal call path can
+     * pass the array/ref shape through the callee signature, but an inlined
+     * assembler operand is validated directly at the caller site and array
+     * actuals are rejected there.
+     *
+     * Stateful scalar string helpers are intentionally not rejected here:
+     * assembler operands are marked read/write by symbol validation, so
+     * writable by-value formals are materialised through the same copy
+     * semantics as normal calls. SCOPY resets copied string cursor state, which
+     * preserves the call prologue boundary for setstrpos/substcut/dropchar
      * style helpers.
      */
-    (void)node;
+    for (child = node->child; child; child = child->sibling) {
+        if (inline_node_has_array_shape(child)) return 1;
+        if (child->symbolNode &&
+            child->symbolNode->symbol &&
+            child->symbolNode->symbol->value_dims > 0) {
+            return 1;
+        }
+    }
+
     return 0;
 }
 

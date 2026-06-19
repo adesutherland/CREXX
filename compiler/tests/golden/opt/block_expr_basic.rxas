@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=9
+main() .locals=6
    .meta "block_expr_basic.main"="b" ".void" main() ""
    setnumdgts 18
    setnumfuz 0
@@ -43,21 +43,21 @@ l19bexprend:
    .meta "block_expr_basic.main.nested"="b" ".int" r0
    load r4,7
    .traceevent "L" 4 "R" "I" "r" 4 11 11 0 "" ""
-   icopy r6,r4
+   icopy r2,r4
    br l39bexprend
    .srcstep 7 7 17 "block_expr_basic.crexx" 14 5 17 "    leave with 0"
-   load r5,0
-   .traceevent "L" 4 "R" "I" "r" 5 11 11 0 "" ""
-   icopy r6,r5
+   load r3,0
+   .traceevent "L" 4 "R" "I" "r" 3 11 11 0 "" ""
+   icopy r2,r3
    br l39bexprend
 l39bexprend:
    .meta "block_expr_basic.main.x"
-   iadd r6,r6,100
-   .traceevent "O" 4 "R" "I" "r" 6 11 11 0 "" ""
-   icopy r7,r6
+   iadd r2,r2,100
+   .traceevent "O" 4 "R" "I" "r" 2 11 11 0 "" ""
+   icopy r5,r2
    br l43bexprend
 l43bexprend:
-   icopy r0,r7
+   icopy r0,r5
    .traceevent "A" 6 "R" "I" "r" 0 11 11 0 "nested" ""
    .srcstep 12 12 17 "block_expr_basic.crexx" 17 1 11 "say nested"
    itos r0
@@ -67,16 +67,16 @@ l43bexprend:
    .srcstep 14 14 17 "block_expr_basic.crexx" 19 9 11 "say 1 + do"
    .srcstep 13 13 17 "block_expr_basic.crexx" 21 3 15 "  leave with y"
    .meta "block_expr_basic.main.y"="b" ".int" "1"
-   load r7,1
-   .traceevent "L" 4 "R" "I" "r" 7 15 15 0 "" ""
-   icopy r8,r7
+   load r5,1
+   .traceevent "L" 4 "R" "I" "r" 5 15 15 0 "" ""
+   icopy r4,r5
    br l54bexprend
 l54bexprend:
    .meta "block_expr_basic.main.y"
-   iadd r8,r8,1
-   itos r8
-   .traceevent "O" 4 "R" "S" "r" 8 15 15 0 "" ""
-   say r8
+   iadd r4,r4,1
+   itos r4
+   .traceevent "O" 4 "R" "S" "r" 4 15 15 0 "" ""
+   say r4
    .srcstep 16 16 1 "block_expr_basic.crexx" 19 15 15 "  leave with y"
    ret
    .meta "block_expr_basic.main.nested"

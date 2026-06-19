@@ -6,7 +6,7 @@
 .meta "inline_test_member_receiver_expr.box.name"="b" ".string" .attr 1
 .globals=0
 
-main() .locals=11
+main() .locals=10
    .meta "inline_test_member_receiver_expr.main"="b" ".int" main() ""
    .srcstep 24 24 17 "inline_test_member_receiver_expr.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -55,10 +55,10 @@ l63bexprend:
    .srcstep 13 13 6 "inline_test_member_receiver_expr.crexx" 18 3 13 "  *: factory"
    setobjtype r8,"inline_test_member_receiver_expr.box"
    .srcstep 14 14 17 "inline_test_member_receiver_expr.crexx" 20 5 19 "    name = initial"
-   load r9,"temp"
-   .traceevent "L" 4 "R" "S" "r" 9 14 14 0 "" ""
+   load r3,"temp"
+   .traceevent "L" 4 "R" "S" "r" 3 14 14 0 "" ""
    linkattr1 r5,r8,1
-   scopy r5,r9
+   scopy r5,r3
    unlink r5
    .srcstep 15 15 33 "inline_test_member_receiver_expr.crexx" 21 5 11 "    return"
    .traceevent "V" 6 "R" "O" "r" 8 15 15 0 "§factory" ""
@@ -71,11 +71,11 @@ l63bexprend:
    .srcstep 19 19 17 "inline_test_member_receiver_expr.crexx" 24 5 16 "    return name"
    linkattr1 r5,r6,1
    .traceevent "V" 6 "R" "S" "r" 5 21 21 0 "name" ""
-   scopy r10,r5
+   scopy r9,r5
    unlink r5
    br l71bexprend
 l71bexprend:
-   say r10
+   say r9
    .srcstep 22 22 17 "inline_test_member_receiver_expr.crexx" 7 3 46 "  say \"Member receiver inline test finished.\""
    say "Member receiver inline test finished."
    .srcstep 23 23 17 "inline_test_member_receiver_expr.crexx" 8 3 11 "  return 0"

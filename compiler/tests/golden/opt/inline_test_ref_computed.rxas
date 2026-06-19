@@ -85,11 +85,11 @@ l65bexprend:
    say g0
    .srcstep 12 12 17 "inline_test_ref_computed.crexx" 12 3 15 "  say values[2]"
    setattrs r0,3
-   linkattr1 r2,r0,2
-   itos r2
-   .traceevent "V" 6 "R" "S" "r" 2 12 12 0 "values" ""
-   say r2
-   unlink r2
+   linkattr1 r5,r0,2
+   itos r5
+   .traceevent "V" 6 "R" "S" "r" 5 12 12 0 "values" ""
+   say r5
+   unlink r5
    .srcstep 13 13 17 "inline_test_ref_computed.crexx" 13 3 11 "  return 0"
    ret 0
    .meta "refcomputed.main.values"

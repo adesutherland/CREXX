@@ -5,7 +5,7 @@
 .meta "inline_test2.myclass"="b" ".unknown" .class
 .globals=0
 
-main() .locals=8
+main() .locals=6
    .meta "inline_test2.main"="b" ".int" main() ""
    .srcstep 31 31 17 "inline_test2.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -108,32 +108,32 @@ l238bexprend:
    copy r5,r0
    .traceevent "A" 6 "R" "O" "r" 5 22 22 0 "§this" ""
    .srcstep 23 23 17 "inline_test2.crexx" 52 5 17 "    return v * 2"
-   load r2,40
-   .traceevent "L" 4 "R" "I" "r" 2 25 25 0 "" ""
-   icopy r1,r2
+   load r3,40
+   .traceevent "L" 4 "R" "I" "r" 3 25 25 0 "" ""
+   icopy r2,r3
    br l265bexprend
 l265bexprend:
-   itos r1
-   sconcat r1,"Method result:",r1
-   .traceevent "O" 4 "R" "S" "r" 1 25 25 0 "" ""
-   say r1
+   itos r2
+   sconcat r2,"Method result:",r2
+   .traceevent "O" 4 "R" "S" "r" 2 25 25 0 "" ""
+   say r2
    .srcstep 29 29 17 "inline_test2.crexx" 17 3 43 "  say \"MultiReturn result:\" multiReturn(1)"
    .srcstep 28 28 17 "inline_test2.crexx" 17 29 40 "  say \"MultiReturn result:\" multiReturn(1)"
    .srcstep 26 26 17 "inline_test2.crexx" 57 17 25 "  if v > 0 then return 1"
-   load r1,1
-   .traceevent "L" 4 "R" "I" "r" 1 29 29 0 "" ""
-   icopy r7,r1
+   load r3,1
+   .traceevent "L" 4 "R" "I" "r" 3 29 29 0 "" ""
+   icopy r1,r3
    br l277bexprend
    .srcstep 27 27 17 "inline_test2.crexx" 58 3 11 "  return 0"
-   load r6,0
-   .traceevent "L" 4 "R" "I" "r" 6 29 29 0 "" ""
-   icopy r7,r6
+   load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 29 29 0 "" ""
+   icopy r1,r2
    br l277bexprend
 l277bexprend:
-   itos r7
-   sconcat r7,"MultiReturn result:",r7
-   .traceevent "O" 4 "R" "S" "r" 7 29 29 0 "" ""
-   say r7
+   itos r1
+   sconcat r1,"MultiReturn result:",r1
+   .traceevent "O" 4 "R" "S" "r" 1 29 29 0 "" ""
+   say r1
    .srcstep 30 30 17 "inline_test2.crexx" 19 3 11 "  return 0"
    ret 0
    .meta "inline_test2.main.o"

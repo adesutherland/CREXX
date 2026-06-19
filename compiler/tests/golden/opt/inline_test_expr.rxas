@@ -41,6 +41,7 @@ l8dostart:
    icopy r6,r5
    br l46bexprend
 l46bexprend:
+   endlife r4
    iadd r1,r6,10
    .traceevent "O" 4 "R" "I" "r" 1 8 8 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 1 8 8 0 "result" ""

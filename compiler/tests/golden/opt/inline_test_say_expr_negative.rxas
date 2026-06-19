@@ -42,16 +42,16 @@ l8dostart:
    .srcstep 6 6 17 "inline_test_say_expr_negative.crexx" 13 19 31 "  if val = 2 then return \"two\""
    load r5,"two"
    .traceevent "L" 4 "R" "S" "r" 5 11 11 0 "" ""
-   scopy r4,r5
    br l43bexprend
 l48iffalse:
    .srcstep 9 9 17 "inline_test_say_expr_negative.crexx" 14 3 13 "  return val"
    itos r3
    .traceevent "V" 6 "R" "S" "r" 3 11 11 0 "val" ""
-   scopy r4,r3
+   scopy r5,r3
    br l43bexprend
 l43bexprend:
-   say r4
+   endlife r3
+   say r5
 l8doinc:
    .srcstep 4 4 17 "inline_test_say_expr_negative.crexx" 5 6 7 "  do i = 1 to 3"
    inc r0

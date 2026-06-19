@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=9
+main() .locals=7
    .meta "inline_test_multi_return_assign.main"="b" ".int" main() ""
    .srcstep 20 20 17 "inline_test_multi_return_assign.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -43,28 +43,28 @@ l8dostart:
    .srcstep 6 6 17 "inline_test_multi_return_assign.crexx" 14 19 28 "  if val < 0 then return -1"
    load r6,-1
    .traceevent "L" 4 "R" "I" "r" 6 14 14 0 "" ""
-   icopy r8,r6
+   icopy r5,r6
    br l54bexprend
 l59iffalse:
    .srcstep 10 10 17 "inline_test_multi_return_assign.crexx" 15 3 13 "  if val > 0 then return 1"
    .traceevent "V" 6 "R" "I" "r" 4 10 10 0 "val" ""
-   igt r5,r4,0
-   .traceevent "O" 4 "R" "B" "r" 5 10 10 0 "" ""
-   brf l66iffalse,r5
+   igt r6,r4,0
+   .traceevent "O" 4 "R" "B" "r" 6 10 10 0 "" ""
+   brf l66iffalse,r6
    .srcstep 11 11 17 "inline_test_multi_return_assign.crexx" 15 14 18 "  if val > 0 then return 1"
    .srcstep 9 9 17 "inline_test_multi_return_assign.crexx" 15 19 27 "  if val > 0 then return 1"
-   load r7,1
-   .traceevent "L" 4 "R" "I" "r" 7 14 14 0 "" ""
-   icopy r8,r7
+   load r5,1
+   .traceevent "L" 4 "R" "I" "r" 5 14 14 0 "" ""
    br l54bexprend
 l66iffalse:
    .srcstep 12 12 17 "inline_test_multi_return_assign.crexx" 16 3 11 "  return 0"
-   load r5,0
-   .traceevent "L" 4 "R" "I" "r" 5 14 14 0 "" ""
-   icopy r8,r5
+   load r6,0
+   .traceevent "L" 4 "R" "I" "r" 6 14 14 0 "" ""
+   icopy r5,r6
    br l54bexprend
 l54bexprend:
-   icopy r1,r8
+   endlife r4
+   icopy r1,r5
    .traceevent "A" 6 "R" "I" "r" 1 14 14 0 "result" ""
    .srcstep 15 15 17 "inline_test_multi_return_assign.crexx" 7 5 15 "    say result"
    itos r1

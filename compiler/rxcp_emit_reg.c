@@ -1100,6 +1100,17 @@ walker_result register_walker(walker_direction direction,
                 }
                 break;
 
+            case LEAVE_WITH:
+                /*
+                 * LEAVE_WITH is the statement form used by BLOCK_EXPR returns.
+                 * The value child is copied/loaded into the block result by the
+                 * emitter, so only the child temporary is safe to release here.
+                 * Do not flush deferred block-scope locals: object/reference
+                 * locals may still be needed by the copied block result.
+                 */
+                if (child1) return_child_reg(child1);
+                break;
+
             case BLOCK_EXPR:
                 node->register_num = get_reg(node->scope);
                 node->register_type = 'r';
