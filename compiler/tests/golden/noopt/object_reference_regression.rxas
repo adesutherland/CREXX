@@ -502,7 +502,7 @@ l191doend:
    .meta "object_reference_regression.largepayload.rename.t_values"
    .meta "object_reference_regression.largepayload.rename.§this"
 
-§object_reference_regression.largepayload.summary() .locals=8
+§object_reference_regression.largepayload.summary() .locals=10
    .meta "object_reference_regression.largepayload.summary"="b" ".string" §object_reference_regression.largepayload.summary() ""
    .srcstep 72 72 17 "object_reference_regression.crexx" 95 3 28 "  summary: method = .string"
    assertinitialized a1
@@ -534,35 +534,37 @@ l191doend:
    minattrs r6,1
    linkattr1 r5,r6,1
    .traceevent "V" 6 "R" "S" "r" 5 71 71 0 "values" ""
-   concat r6,r2,r5
+   concat r2,r2,r5
    unlink r5
-   .traceevent "O" 4 "R" "S" "r" 6 71 71 0 "" ""
-   concat r6,r6,"|"
-   .traceevent "O" 4 "R" "S" "r" 6 71 71 0 "" ""
-   linkattr1 r7,a1,11
-   minattrs r7,40
-   linkattr1 r2,r7,40
-   .traceevent "V" 6 "R" "S" "r" 2 71 71 0 "values" ""
-   concat r7,r6,r2
-   unlink r2
-   .traceevent "O" 4 "R" "S" "r" 7 71 71 0 "" ""
-   concat r7,r7,"|"
-   .traceevent "O" 4 "R" "S" "r" 7 71 71 0 "" ""
-   .traceevent "V" 6 "R" "S" "r" 0 71 71 0 "child_name" ""
-   concat r7,r7,r0
-   .traceevent "O" 4 "R" "S" "r" 7 71 71 0 "" ""
-   concat r7,r7,"|"
-   .traceevent "O" 4 "R" "S" "r" 7 71 71 0 "" ""
-   linkattr1 r6,a1,9
-   .traceevent "V" 6 "R" "S" "r" 6 71 71 0 "marker8" ""
-   concat r7,r7,r6
    unlink r6
-   .traceevent "O" 4 "R" "S" "r" 7 71 71 0 "" ""
-   ret r7
+   .traceevent "O" 4 "R" "S" "r" 2 71 71 0 "" ""
+   concat r2,r2,"|"
+   .traceevent "O" 4 "R" "S" "r" 2 71 71 0 "" ""
+   linkattr1 r8,a1,11
+   minattrs r8,40
+   linkattr1 r7,r8,40
+   .traceevent "V" 6 "R" "S" "r" 7 71 71 0 "values" ""
+   concat r2,r2,r7
+   unlink r7
+   unlink r8
+   .traceevent "O" 4 "R" "S" "r" 2 71 71 0 "" ""
+   concat r2,r2,"|"
+   .traceevent "O" 4 "R" "S" "r" 2 71 71 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 0 71 71 0 "child_name" ""
+   concat r2,r2,r0
+   .traceevent "O" 4 "R" "S" "r" 2 71 71 0 "" ""
+   concat r2,r2,"|"
+   .traceevent "O" 4 "R" "S" "r" 2 71 71 0 "" ""
+   linkattr1 r9,a1,9
+   .traceevent "V" 6 "R" "S" "r" 9 71 71 0 "marker8" ""
+   concat r2,r2,r9
+   unlink r9
+   .traceevent "O" 4 "R" "S" "r" 2 71 71 0 "" ""
+   ret r2
    .meta "object_reference_regression.largepayload.summary.child_name"
    .meta "object_reference_regression.largepayload.summary.§this"
 
-§object_reference_regression.largepayload.check() .locals=4
+§object_reference_regression.largepayload.check() .locals=5
    .meta "object_reference_regression.largepayload.check"="b" ".string" §object_reference_regression.largepayload.check() ""
    .srcstep 83 83 17 "object_reference_regression.crexx" 99 3 26 "  check: method = .string"
    assertinitialized a1
@@ -576,48 +578,49 @@ l191doend:
    minattrs r2,17
    linkattr1 r1,r2,17
    .traceevent "V" 6 "R" "S" "r" 1 74 74 0 "values" ""
-   linkattr1 r2,a1,10
-   .traceevent "V" 6 "R" "S" "r" 2 74 74 0 "name" ""
-   concat r3,r2,":17"
-   unlink r2
-   .traceevent "O" 4 "R" "S" "r" 3 74 74 0 "" ""
-   rne r3,r1,r3
+   linkattr1 r3,a1,10
+   .traceevent "V" 6 "R" "S" "r" 3 74 74 0 "name" ""
+   concat r4,r3,":17"
+   unlink r3
+   .traceevent "O" 4 "R" "S" "r" 4 74 74 0 "" ""
+   rne r4,r1,r4
    unlink r1
-   .traceevent "O" 4 "R" "B" "r" 3 74 74 0 "" ""
-   brf l335iffalse,r3
+   unlink r2
+   .traceevent "O" 4 "R" "B" "r" 4 74 74 0 "" ""
+   brf l335iffalse,r4
    .srcstep 75 75 17 "object_reference_regression.crexx" 100 36 40 "    if values[17] \\= name || \":17\" then return \"bad-17\""
    .srcstep 73 73 17 "object_reference_regression.crexx" 100 41 56 "    if values[17] \\= name || \":17\" then return \"bad-17\""
    .meta "object_reference_regression.largepayload.check.§this"="b" ".largepayload" a1
    ret "bad-17"
 l335iffalse:
    .srcstep 77 77 17 "object_reference_regression.crexx" 101 5 32 "    if marker1 \\= name || \":m1\" then return \"bad-m1\""
-   linkattr1 r3,a1,2
-   .traceevent "V" 6 "R" "S" "r" 3 77 77 0 "marker1" ""
-   linkattr1 r2,a1,10
-   .traceevent "V" 6 "R" "S" "r" 2 77 77 0 "name" ""
-   concat r1,r2,":m1"
-   unlink r2
-   .traceevent "O" 4 "R" "S" "r" 1 77 77 0 "" ""
-   rne r1,r3,r1
+   linkattr1 r4,a1,2
+   .traceevent "V" 6 "R" "S" "r" 4 77 77 0 "marker1" ""
+   linkattr1 r3,a1,10
+   .traceevent "V" 6 "R" "S" "r" 3 77 77 0 "name" ""
+   concat r2,r3,":m1"
    unlink r3
-   .traceevent "O" 4 "R" "B" "r" 1 77 77 0 "" ""
-   brf l343iffalse,r1
+   .traceevent "O" 4 "R" "S" "r" 2 77 77 0 "" ""
+   rne r2,r4,r2
+   unlink r4
+   .traceevent "O" 4 "R" "B" "r" 2 77 77 0 "" ""
+   brf l343iffalse,r2
    .srcstep 78 78 17 "object_reference_regression.crexx" 101 33 37 "    if marker1 \\= name || \":m1\" then return \"bad-m1\""
    .srcstep 76 76 17 "object_reference_regression.crexx" 101 38 53 "    if marker1 \\= name || \":m1\" then return \"bad-m1\""
    ret "bad-m1"
 l343iffalse:
    .srcstep 80 80 17 "object_reference_regression.crexx" 102 5 32 "    if marker8 \\= name || \":m8\" then return \"bad-m8\""
-   linkattr1 r3,a1,9
-   .traceevent "V" 6 "R" "S" "r" 3 80 80 0 "marker8" ""
-   linkattr1 r2,a1,10
-   .traceevent "V" 6 "R" "S" "r" 2 80 80 0 "name" ""
-   concat r1,r2,":m8"
-   unlink r2
-   .traceevent "O" 4 "R" "S" "r" 1 80 80 0 "" ""
-   rne r1,r3,r1
+   linkattr1 r4,a1,9
+   .traceevent "V" 6 "R" "S" "r" 4 80 80 0 "marker8" ""
+   linkattr1 r3,a1,10
+   .traceevent "V" 6 "R" "S" "r" 3 80 80 0 "name" ""
+   concat r2,r3,":m8"
    unlink r3
-   .traceevent "O" 4 "R" "B" "r" 1 80 80 0 "" ""
-   brf l351iffalse,r1
+   .traceevent "O" 4 "R" "S" "r" 2 80 80 0 "" ""
+   rne r2,r4,r2
+   unlink r4
+   .traceevent "O" 4 "R" "B" "r" 2 80 80 0 "" ""
+   brf l351iffalse,r2
    .srcstep 81 81 17 "object_reference_regression.crexx" 102 33 37 "    if marker8 \\= name || \":m8\" then return \"bad-m8\""
    .srcstep 79 79 17 "object_reference_regression.crexx" 102 38 53 "    if marker8 \\= name || \":m8\" then return \"bad-m8\""
    ret "bad-m8"

@@ -125,24 +125,20 @@ The current allocator does recycle expression temporaries through `get_reg()` an
 `ret_reg()`, so register recycling is not simply absent. The immediate pressure
 comes from aggressive inlining plus fixed registers for named locals from each
 inlined body. AST-level inlining already creates `BLOCK_EXPR` / `SCOPE_LOCAL`
-structure that should make these lifetimes visible, but the register pass does
-not currently use it: `SCOPE_LOCAL` shares the parent register scope, and
-`assign_registers_in_scope()` pre-assigns nested local-scope symbols at procedure
-entry. The tree surgery therefore preserves semantics and avoids call/link
-hazards, but does not yet deliver scoped register reuse.
+structure that makes these lifetimes visible. Scoped allocation now returns
+eligible named locals when real local scopes complete, including expression
+`BLOCK_EXPR` scopes. The tree surgery therefore preserves semantics and avoids
+call/link hazards while allowing the allocator to reuse the cloned local
+register window.
 
 For real source-level named locals, fixed register numbers remain the expected
 model within their live scope for readability, tracing, and simple metadata. The
 useful refinement is fixed registers within a scope, with registers returned
 after a provably local scope is complete. The first safe target is real named
-locals declared in nested statement scopes such as `DO`, `SIGNAL_BLOCK`, and
-explicit local `INSTRUCTIONS` scopes. Expression `BLOCK_EXPR` scopes are not
-recycled yet: an inlined `BLOCK_EXPR` can sit inside an attribute or array
-assignment where linked target helper registers remain live across the
-expression. Until the allocator models those live linked helpers, `BLOCK_EXPR`
-locals must keep stable non-recycled registers. Synthetic blocks that
-deliberately inherit their parent scope/register behavior are not reuse
-boundaries.
+locals declared in nested statement scopes such as `DO`, `SIGNAL_BLOCK`,
+explicit local `INSTRUCTIONS` scopes, and real expression `BLOCK_EXPR` scopes.
+Synthetic blocks that deliberately inherit their parent scope/register behavior
+are not reuse boundaries.
 
 The hand-tuned ideal for `RexxValue.add` would keep the real method locals
 fixed, then reuse a compact scratch window across operand materialization,
@@ -206,9 +202,91 @@ Register-assignment improvements still wanted:
   symbols. Eligibility is still conservative at the ownership boundary:
   exposed symbols, arguments, receivers/factories, variables whose storage is a
   reference target, generated `__inline*`, and trace-helper `__rxtrace*`
-  symbols remain procedure-lifetime registers. `BLOCK_EXPR` scopes also remain
-  non-recycled because inlined expression scopes can run while linked attribute
-  or array target helpers are still live.
+  symbols remain procedure-lifetime registers. Real `BLOCK_EXPR` scopes are now
+  included in scoped reuse; inherited-register synthetic blocks are still not
+  reuse boundaries.
+- Keep the reuse/cleanup distinction explicit:
+
+  | Pattern | Scoped register reuse | Lifetime / metadata cleanup |
+  | --- | --- | --- |
+  | procedure-level source locals | fixed for procedure | procedure cleanup |
+  | eligible nested `SCOPE_LOCAL` locals | reusable after owning scope | `endlife` plus scoped metadata closeout |
+  | `BLOCK_EXPR` locals | reusable after owning expression scope | `endlife` plus scoped metadata closeout |
+  | inherited-register scopes | not a reuse boundary | parent scope owns cleanup |
+  | exposed variables | fixed global/exposed slot | not local-owned |
+  | arguments and `.ref` arguments | fixed ABI/alias slot | call/frame semantics own lifetime |
+  | receiver / factory pseudo-locals | fixed ABI/object identity | call/frame semantics own lifetime |
+  | reference-targeted locals | not reused while alias-visible | `endlife` remains required at scope exit |
+  | generated `__inline*` helpers | tactical non-reuse until helper roles are explicit | inline scaffolding is not treated as source-owned storage |
+  | generated `__rxtrace*` helpers | non-reuse; trace-only generated path | normal block cleanup may still close generated trace locals |
+
+- Treat inline-helper classification as a priority item for the `BLOCK_EXPR`
+  register-pressure pass. The inliner already knows whether a helper is a
+  call-frame/alias capture, order-sensitive materialisation temp, or pure
+  evaluation-order scratch when it creates the AST. Preserve that role on the
+  generated symbol instead of teaching the allocator to infer semantics from
+  `__inline*` names. Until that metadata exists, the blanket `__inline*`
+  non-reuse rule remains the correct tactical fence.
+- `BLOCK_EXPR` deep-dive, 2026-06-19:
+
+  The real optimisation target is named locals in real expression `BLOCK_EXPR`
+  scopes created by the inliner. It is not compiler-generated statement blocks
+  that inherit the parent register scope, and it is not generated `__inline*`
+  helper symbols until those helpers carry explicit lifetime roles.
+
+  Existing safety machinery is stronger than the original blanket fence assumed:
+  `LEAVE_WITH` copies the yielded value into the parent `BLOCK_EXPR` result
+  register before branching to the common block-exit label; deferred cleanup for
+  linked child helpers must therefore stay pending through `LEAVE_WITH` register
+  allocation so the `BLOCK_EXPR` result cannot reuse a register that will still
+  be unlinked by the emitted cleanup; the allocator assigns the `BLOCK_EXPR`
+  result register before releasing the block's scoped named locals, so the
+  result cannot reuse a local that is about to die; and block emission already
+  performs dereference unlinks, `endlife`, and metadata closeout at that common
+  exit. This means eligible cloned callee locals can plausibly be returned at
+  block exit without changing value-return semantics.
+
+  A controlled local experiment removed the `BLOCK_EXPR` exclusion from
+  `scope_recycles_named_registers()` and then tightened deferred-register
+  handling around linked helpers. Focused runtime tests for array/object
+  `BLOCK_EXPR` returns, call-argument expression blocks, imported BIF expression
+  lifetimes, array-attribute call-result lifetimes, the live-sibling regression,
+  and `testRexxValue` all passed. Opt RXAS goldens changed only where expected
+  because `.locals` shrank and registers were repacked. Measured examples from
+  that experiment:
+
+  | Example | Current opt locals | Experimental opt locals |
+  | --- | ---: | ---: |
+  | `inline_test_array_return_expr.main` | 14 | 12 |
+  | `inline_test_array_multi_return_expr.main` | 20 | 13 |
+  | `inline_test_object_return_expr.main` | 10 | 9 |
+  | `inline_test_array_expr_arg.main` | 6 | 5 |
+  | `inline_test_object_expr_arg.main` | 7 | 6 |
+  | `testRexxValue.main` | 215 | 211 |
+  | `RexxValue.add` / `subtract` / `multiply` / `divide` | 48 | 38 |
+  | `RexxValue.copyFrom` | 43 | 39 |
+  | `RexxValue.concat` | 30 | 28 |
+  | `RexxValue.equals` | 26 | 24 |
+
+  Hazards verified during the implementation:
+
+  - generated RXAS for the affected opt goldens was inspected to confirm every
+    repacked block still has the expected copy-to-result, `endlife`, and metadata
+    closeout order;
+  - keep generated `__inline*` helpers fixed until helper lifetime roles are
+    explicit, because helper values such as call-frame captures and alias-visible
+    references are not ordinary cloned source locals;
+  - keep arguments, `.ref` arguments, exposed variables, receiver/factory
+    pseudo-locals, and reference-targeted storage fixed for the same reasons as
+    ordinary scoped reuse;
+  - rerun the broader inline/reference/runtime slice, then the compiler suite,
+    then full CTest before committing.
+
+  Implementation step: removed the `BLOCK_EXPR` owner exclusion in
+  `scope_recycles_named_registers()`, kept `LEAVE_WITH` child cleanup registers
+  deferred until the owning expression has a result register, hardened duplicate
+  deferred/free-list handling, updated the affected opt goldens after inspection,
+  and left helper classification as the next standalone change.
 - Rework scoped metadata emission with the allocation change. Current variable
   metadata is symbol-keyed via `meta_emitted` and normally cleared at procedure
   end. If registers are reused between block locals, the emitter must clear a

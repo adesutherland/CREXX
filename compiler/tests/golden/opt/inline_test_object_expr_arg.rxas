@@ -7,7 +7,7 @@
 .meta "inline_test_object_expr_arg.box.name"="b" ".string" .attr 1
 .globals=0
 
-main() .locals=7
+main() .locals=6
    .meta "inline_test_object_expr_arg.main"="b" ".int" main() ""
    .srcstep 10 10 17 "inline_test_object_expr_arg.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -41,10 +41,10 @@ l78bexprend:
    load r0,1
    settp r4,768
    swap r1,r4
-   call r6,renameBox(),r0
+   call r2,renameBox(),r0
    swap r4,r1
-   .traceevent "F" 4 "R" "S" "r" 6 8 8 0 "renamebox" ""
-   say r6
+   .traceevent "F" 4 "R" "S" "r" 2 8 8 0 "renamebox" ""
+   say r2
    .srcstep 9 9 17 "inline_test_object_expr_arg.crexx" 5 3 11 "  return 0"
    ret 0
 

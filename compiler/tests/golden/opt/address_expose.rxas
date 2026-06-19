@@ -5,7 +5,7 @@
 
 .globals=0
 
-main() .locals=16
+main() .locals=14
    .meta "address_expose.main"="b" ".void" main() ""
    .srcstep 14 14 17 "address_expose.crexx" 3 1 16 "main: procedure"
    setnumdgts 18
@@ -38,26 +38,26 @@ l83bexprend:
    endlife r10
    .meta "address_expose.main.handle"
    .srcstep 8 8 33 "exit_fragment" 2 1 9 "_noredir"
-   .meta "address_expose.main.handle"="b" ".binary" r12
+   .meta "address_expose.main.handle"="b" ".binary" r10
    .srcstep 6 6 25 "_address.crexx" 1519 5 21 "    handle = .binary"
-   null r12
+   null r10
    .srcstep 7 7 25 "_address.crexx" 1520 5 18 "    return handle"
-   .traceevent "V" 6 "R" "X" "r" 12 12 12 0 "handle" ""
-   bcopy r13,r12
+   .traceevent "V" 6 "R" "X" "r" 10 12 12 0 "handle" ""
+   bcopy r12,r10
    br l90bexprend
 l90bexprend:
-   endlife r12
+   endlife r10
    .meta "address_expose.main.handle"
    .srcstep 11 11 33 "exit_fragment" 2 1 9 "_noredir"
-   .meta "address_expose.main.handle"="b" ".binary" r14
+   .meta "address_expose.main.handle"="b" ".binary" r10
    .srcstep 9 9 25 "_address.crexx" 1519 5 21 "    handle = .binary"
-   null r14
+   null r10
    .srcstep 10 10 25 "_address.crexx" 1520 5 18 "    return handle"
-   .traceevent "V" 6 "R" "X" "r" 14 12 12 0 "handle" ""
-   bcopy r15,r14
+   .traceevent "V" 6 "R" "X" "r" 10 12 12 0 "handle" ""
+   bcopy r13,r10
    br l97bexprend
 l97bexprend:
-   endlife r14
+   endlife r10
    .meta "address_expose.main.handle"
    load r8,"userid"
    .traceevent "L" 4 "R" "S" "r" 8 12 12 0 "" ""
@@ -67,15 +67,15 @@ l97bexprend:
    settp r4,768
    settp r11,768
    swap r5,r11
+   settp r12,768
+   swap r6,r12
    settp r13,768
-   swap r6,r13
-   settp r15,768
-   swap r7,r15
+   swap r7,r13
    swap r9,r1
    call r0,_rxsysb._address(),r2
    swap r11,r5
-   swap r13,r6
-   swap r15,r7
+   swap r12,r6
+   swap r13,r7
    swap r1,r9
    .traceevent "F" 4 "R" "I" "r" 0 12 12 0 "_address" ""
    .traceevent "A" 6 "R" "I" "r" 0 12 12 0 "rc" ""

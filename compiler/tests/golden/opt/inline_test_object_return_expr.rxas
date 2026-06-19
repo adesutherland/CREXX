@@ -7,7 +7,7 @@
 .meta "inline_test_object_return_expr.box.name"="b" ".string" .attr 1
 .globals=0
 
-main() .locals=10
+main() .locals=9
    .meta "inline_test_object_return_expr.main"="b" ".int" main() ""
    .srcstep 20 20 17 "inline_test_object_return_expr.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -43,40 +43,40 @@ l73bexprend:
    load r0,1
    settp r4,768
    swap r1,r4
-   call r6,describeBox(),r0
+   call r2,describeBox(),r0
    swap r4,r1
-   .traceevent "F" 4 "R" "S" "r" 6 9 9 0 "describebox" ""
-   say r6
+   .traceevent "F" 4 "R" "S" "r" 2 9 9 0 "describebox" ""
+   say r2
    .srcstep 17 17 17 "inline_test_object_return_expr.crexx" 6 3 36 "  say describeBox(buildBox(\"temp\"))"
    .srcstep 16 16 17 "inline_test_object_return_expr.crexx" 6 19 27 "  say describeBox(buildBox(\"temp\"))"
    .srcstep 14 14 17 "inline_test_object_return_expr.crexx" 12 3 24 "  value = .Box(initial)"
    .srcstep 10 10 6 "inline_test_object_return_expr.crexx" 22 3 13 "  *: factory"
-   setattrs r9,2
+   setattrs r8,2
    .srcstep 11 11 6 "inline_test_object_return_expr.crexx" 22 3 13 "  *: factory"
-   setobjtype r9,"inline_test_object_return_expr.box"
+   setobjtype r8,"inline_test_object_return_expr.box"
    .srcstep 12 12 17 "inline_test_object_return_expr.crexx" 24 5 19 "    name = initial"
    load r1,"temp"
    .traceevent "L" 4 "R" "S" "r" 1 12 12 0 "" ""
-   linkattr1 r4,r9,1
-   scopy r4,r1
-   unlink r4
+   linkattr1 r2,r8,1
+   scopy r2,r1
+   unlink r2
    .srcstep 13 13 33 "inline_test_object_return_expr.crexx" 25 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 9 13 13 0 "§factory" ""
-   copy r8,r9
-   .traceevent "A" 6 "R" "O" "r" 8 13 13 0 "value" ""
-   .srcstep 15 15 17 "inline_test_object_return_expr.crexx" 13 3 15 "  return value"
-   .traceevent "V" 6 "R" "O" "r" 8 17 17 0 "value" ""
+   .traceevent "V" 6 "R" "O" "r" 8 13 13 0 "§factory" ""
    copy r4,r8
+   .traceevent "A" 6 "R" "O" "r" 4 13 13 0 "value" ""
+   .srcstep 15 15 17 "inline_test_object_return_expr.crexx" 13 3 15 "  return value"
+   .traceevent "V" 6 "R" "O" "r" 4 17 17 0 "value" ""
+   copy r2,r4
    br l86bexprend
 l86bexprend:
-   endlife r8
+   endlife r4
    load r6,1
-   settp r4,768
-   swap r7,r4
-   call r0,describeBox(),r6
-   swap r4,r7
-   .traceevent "F" 4 "R" "S" "r" 0 17 17 0 "describebox" ""
-   say r0
+   settp r2,768
+   swap r7,r2
+   call r4,describeBox(),r6
+   swap r2,r7
+   .traceevent "F" 4 "R" "S" "r" 4 17 17 0 "describebox" ""
+   say r4
    .srcstep 18 18 17 "inline_test_object_return_expr.crexx" 7 3 49 "  say \"Object return expr inline test finished.\""
    say "Object return expr inline test finished."
    .srcstep 19 19 17 "inline_test_object_return_expr.crexx" 8 3 11 "  return 0"

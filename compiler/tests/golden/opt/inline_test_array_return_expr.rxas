@@ -5,7 +5,7 @@
 
 .globals=0
 
-main() .locals=14
+main() .locals=13
    .meta "inline_test_array_return_expr.main"="b" ".int" main() ""
    .srcstep 26 26 17 "inline_test_array_return_expr.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -57,16 +57,16 @@ l103bexprend:
    minattrs r1,1
    linkattr1 r3,r1,1
    .traceevent "V" 6 "R" "S" "r" 3 12 12 0 "value" ""
-   concat r6,r3,":"
+   concat r2,r3,":"
    unlink r3
-   .traceevent "O" 4 "R" "S" "r" 6 12 12 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 2 12 12 0 "" ""
    minattrs r1,2
-   linkattr1 r7,r1,2
-   .traceevent "V" 6 "R" "S" "r" 7 12 12 0 "value" ""
-   concat r6,r6,r7
-   unlink r7
-   .traceevent "O" 4 "R" "S" "r" 6 12 12 0 "" ""
-   scopy r7,r6
+   linkattr1 r6,r1,2
+   .traceevent "V" 6 "R" "S" "r" 6 12 12 0 "value" ""
+   concat r2,r2,r6
+   unlink r6
+   .traceevent "O" 4 "R" "S" "r" 2 12 12 0 "" ""
+   scopy r7,r2
    br l97bexprend
 l97bexprend:
    .meta "inline_test_array_return_expr.main.__inline_bind_73_0"
@@ -78,33 +78,33 @@ l97bexprend:
    null r8
    .srcstep 19 19 33 "inline_test_array_return_expr.crexx" 6 19 29 "  say renderArray(buildArray(\"green\", \"gold\"))"
    .srcstep 18 18 17 "inline_test_array_return_expr.crexx" 6 19 29 "  say renderArray(buildArray(\"green\", \"gold\"))"
-   .meta "inline_test_array_return_expr.main.temp"="b" ".string[*]" r10
+   .meta "inline_test_array_return_expr.main.temp"="b" ".string[*]" r7
    .srcstep 14 14 17 "inline_test_array_return_expr.crexx" 12 3 17 "  temp = .string[]"
-   null r10
+   null r7
    .srcstep 15 15 17 "inline_test_array_return_expr.crexx" 13 3 17 "  temp[1] = left"
-   minattrs r10,1
-   linkattr1 r7,r10,1
+   minattrs r7,1
+   linkattr1 r6,r7,1
    load r3,"green"
    .traceevent "L" 4 "R" "S" "r" 3 15 15 0 "" ""
-   scopy r7,r3
-   .traceevent "A" 6 "R" "S" "r" 7 15 15 0 "temp" ""
-   unlink r7
+   scopy r6,r3
+   .traceevent "A" 6 "R" "S" "r" 6 15 15 0 "temp" ""
+   unlink r6
    .srcstep 16 16 17 "inline_test_array_return_expr.crexx" 14 3 18 "  temp[2] = right"
-   minattrs r10,2
-   linkattr1 r7,r10,2
-   load r11,"gold"
-   .traceevent "L" 4 "R" "S" "r" 11 16 16 0 "" ""
-   scopy r7,r11
-   .traceevent "A" 6 "R" "S" "r" 7 16 16 0 "temp" ""
-   unlink r7
+   minattrs r7,2
+   linkattr1 r6,r7,2
+   load r10,"gold"
+   .traceevent "L" 4 "R" "S" "r" 10 16 16 0 "" ""
+   scopy r6,r10
+   .traceevent "A" 6 "R" "S" "r" 6 16 16 0 "temp" ""
+   unlink r6
    .srcstep 17 17 17 "inline_test_array_return_expr.crexx" 15 3 14 "  return temp"
-   .traceevent "V" 6 "R" "S" "r" 10 19 19 0 "temp" ""
-   copy r7,r10
+   .traceevent "V" 6 "R" "S" "r" 7 19 19 0 "temp" ""
+   copy r6,r7
    br l169bexprend
 l169bexprend:
-   endlife r10
+   endlife r7
    .meta "inline_test_array_return_expr.main.temp"
-   copy r8,r7
+   copy r8,r6
    .traceevent "A" 6 "R" "S" "r" 8 19 19 0 "__inline_bind_139_0" ""
    .srcstep 20 20 6 "inline_test_array_return_expr.crexx" 18 7 12 "  arg value = .string[]"
    .traceevent "V" 6 "R" "S" "r" 8 23 23 0 "__inline_bind_139_0" ""
@@ -113,20 +113,20 @@ l169bexprend:
    minattrs r9,1
    linkattr1 r7,r9,1
    .traceevent "V" 6 "R" "S" "r" 7 23 23 0 "value" ""
-   concat r12,r7,":"
+   concat r6,r7,":"
    unlink r7
-   .traceevent "O" 4 "R" "S" "r" 12 23 23 0 "" ""
+   .traceevent "O" 4 "R" "S" "r" 6 23 23 0 "" ""
    minattrs r9,2
-   linkattr1 r13,r9,2
-   .traceevent "V" 6 "R" "S" "r" 13 23 23 0 "value" ""
-   concat r12,r12,r13
-   unlink r13
-   .traceevent "O" 4 "R" "S" "r" 12 23 23 0 "" ""
-   scopy r13,r12
+   linkattr1 r11,r9,2
+   .traceevent "V" 6 "R" "S" "r" 11 23 23 0 "value" ""
+   concat r6,r6,r11
+   unlink r11
+   .traceevent "O" 4 "R" "S" "r" 6 23 23 0 "" ""
+   scopy r12,r6
    br l163bexprend
 l163bexprend:
    .meta "inline_test_array_return_expr.main.__inline_bind_139_0"
-   say r13
+   say r12
    .srcstep 24 24 17 "inline_test_array_return_expr.crexx" 7 3 48 "  say \"Array return expr inline test finished.\""
    say "Array return expr inline test finished."
    .srcstep 25 25 17 "inline_test_array_return_expr.crexx" 8 3 11 "  return 0"

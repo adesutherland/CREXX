@@ -5,7 +5,7 @@
 
 .globals=0
 
-main() .locals=6
+main() .locals=5
    .meta "inline_test_array_expr_arg.main"="b" ".int" main() ""
    .srcstep 14 14 17 "inline_test_array_expr_arg.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -57,22 +57,22 @@ l175bexprend:
    setattrs r1,2
    linkattr1 r3,r1,1
    .traceevent "V" 6 "R" "I" "r" 3 9 9 0 "pair" ""
-   iadd r5,r3,5
+   iadd r2,r3,5
    unlink r3
-   .traceevent "O" 4 "R" "I" "r" 5 9 9 0 "" ""
-   icopy r4,r5
+   .traceevent "O" 4 "R" "I" "r" 2 9 9 0 "" ""
+   icopy r4,r2
    .traceevent "A" 6 "R" "I" "r" 4 9 9 0 "pair" ""
    unlink r4
    .srcstep 10 10 17 "inline_test_array_expr_arg.crexx" 10 3 16 "  return pair[1]"
    setattrs r1,2
-   linkattr1 r5,r1,1
-   .traceevent "V" 6 "R" "I" "r" 5 12 12 0 "pair" ""
-   icopy r4,r5
-   unlink r5
+   linkattr1 r4,r1,1
+   .traceevent "V" 6 "R" "I" "r" 4 12 12 0 "pair" ""
+   icopy r3,r4
+   unlink r4
    br l169bexprend
 l169bexprend:
    .meta "inline_test_array_expr_arg.main.__inline_bind_105_0"
-   itos r4
-   say r4
+   itos r3
+   say r3
    .srcstep 13 13 17 "inline_test_array_expr_arg.crexx" 5 3 11 "  return 0"
    ret 0

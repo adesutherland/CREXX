@@ -6,7 +6,7 @@
 .meta "inline_test2.myclass"="b" ".unknown" .class
 .globals=0
 
-main() .locals=9
+main() .locals=8
    .meta "inline_test2.main"="b" ".int" main() ""
    .srcstep 31 31 17 "inline_test2.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -80,61 +80,61 @@ l169bexprend:
    .srcstep 17 17 17 "inline_test2.crexx" 10 3 50 "  say \"NestedCallProc result:\" nestedCallProc(10)"
    .srcstep 16 16 17 "inline_test2.crexx" 10 32 46 "  say \"NestedCallProc result:\" nestedCallProc(10)"
    .srcstep 15 15 17 "inline_test2.crexx" 39 3 21 "  return helper(val)"
-   load r3,10
-   .traceevent "L" 4 "R" "I" "r" 3 17 17 0 "" ""
-   load r2,1
-   call r4,helper(),r2
-   .traceevent "F" 4 "R" "I" "r" 4 17 17 0 "helper" ""
-   icopy r3,r4
+   load r2,10
+   .traceevent "L" 4 "R" "I" "r" 2 17 17 0 "" ""
+   load r1,1
+   call r3,helper(),r1
+   .traceevent "F" 4 "R" "I" "r" 3 17 17 0 "helper" ""
+   icopy r2,r3
    br l238bexprend
 l238bexprend:
-   itos r3
-   sconcat r3,"NestedCallProc result:",r3
-   .traceevent "O" 4 "R" "S" "r" 3 17 17 0 "" ""
-   say r3
+   itos r2
+   sconcat r2,"NestedCallProc result:",r2
+   .traceevent "O" 4 "R" "S" "r" 2 17 17 0 "" ""
+   say r2
    .srcstep 21 21 17 "inline_test2.crexx" 13 3 15 "  o = .MyClass()"
    .srcstep 18 18 6 "inline_test2.crexx" 47 3 13 "  *: factory"
-   setattrs r5,0
+   setattrs r4,0
    .srcstep 19 19 6 "inline_test2.crexx" 47 3 13 "  *: factory"
-   setobjtype r5,"inline_test2.myclass"
+   setobjtype r4,"inline_test2.myclass"
    .srcstep 20 20 33 "inline_test2.crexx" 48 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 5 20 20 0 "§factory" ""
-   copy r0,r5
+   .traceevent "V" 6 "R" "O" "r" 4 20 20 0 "§factory" ""
+   copy r0,r4
    .traceevent "A" 6 "R" "O" "r" 0 20 20 0 "o" ""
    .srcstep 25 25 17 "inline_test2.crexx" 14 3 38 "  say \"Method result:\" o.myMethod(20)"
    .meta "inline_test2.main.o"="b" ".myclass" r0
    .srcstep 24 24 17 "inline_test2.crexx" 14 24 25 "  say \"Method result:\" o.myMethod(20)"
    .srcstep 22 22 33 "inline_test2.crexx" 14 24 25 "  say \"Method result:\" o.myMethod(20)"
    .traceevent "V" 6 "R" "O" "r" 0 22 22 0 "o" ""
-   copy r6,r0
-   .traceevent "A" 6 "R" "O" "r" 6 22 22 0 "§this" ""
+   copy r5,r0
+   .traceevent "A" 6 "R" "O" "r" 5 22 22 0 "§this" ""
    .srcstep 23 23 17 "inline_test2.crexx" 52 5 17 "    return v * 2"
-   load r3,40
-   .traceevent "L" 4 "R" "I" "r" 3 25 25 0 "" ""
-   icopy r2,r3
+   load r2,40
+   .traceevent "L" 4 "R" "I" "r" 2 25 25 0 "" ""
+   icopy r1,r2
    br l265bexprend
 l265bexprend:
-   itos r2
-   sconcat r2,"Method result:",r2
-   .traceevent "O" 4 "R" "S" "r" 2 25 25 0 "" ""
-   say r2
+   itos r1
+   sconcat r1,"Method result:",r1
+   .traceevent "O" 4 "R" "S" "r" 1 25 25 0 "" ""
+   say r1
    .srcstep 29 29 17 "inline_test2.crexx" 17 3 43 "  say \"MultiReturn result:\" multiReturn(1)"
    .srcstep 28 28 17 "inline_test2.crexx" 17 29 40 "  say \"MultiReturn result:\" multiReturn(1)"
    .srcstep 26 26 17 "inline_test2.crexx" 57 17 25 "  if v > 0 then return 1"
-   load r2,1
-   .traceevent "L" 4 "R" "I" "r" 2 29 29 0 "" ""
-   icopy r8,r2
+   load r1,1
+   .traceevent "L" 4 "R" "I" "r" 1 29 29 0 "" ""
+   icopy r7,r1
    br l277bexprend
    .srcstep 27 27 17 "inline_test2.crexx" 58 3 11 "  return 0"
-   load r7,0
-   .traceevent "L" 4 "R" "I" "r" 7 29 29 0 "" ""
-   icopy r8,r7
+   load r6,0
+   .traceevent "L" 4 "R" "I" "r" 6 29 29 0 "" ""
+   icopy r7,r6
    br l277bexprend
 l277bexprend:
-   itos r8
-   sconcat r8,"MultiReturn result:",r8
-   .traceevent "O" 4 "R" "S" "r" 8 29 29 0 "" ""
-   say r8
+   itos r7
+   sconcat r7,"MultiReturn result:",r7
+   .traceevent "O" 4 "R" "S" "r" 7 29 29 0 "" ""
+   say r7
    .srcstep 30 30 17 "inline_test2.crexx" 19 3 11 "  return 0"
    ret 0
    .meta "inline_test2.main.o"

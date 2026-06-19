@@ -108,12 +108,17 @@ execute `MKREF` against caller-owned receiver storage, so the VM finds and marks
 the owner frame rather than assuming the current frame owns the target. Only
 flagged frames run the reference-lifetime cleanup on return, invalidating
 frame-owned local and `a0` storage plus nested attribute storage without freeing
-reusable buffers. Lexical scopes that recycle local registers emit `endlife`
-for each storage-owning local before the compiler returns those registers to
-the reuse pool; arguments, receiver/factory pseudo-locals, exposed symbols, and
-compiler-generated `__inline_*` scaffolding are not treated as owned storage.
-This is the same lifetime invalidation operation as frame cleanup, but scoped
-to the storage whose block lifetime has ended.
+reusable buffers. Lexical scopes that own local storage emit `endlife` for each
+storage-owning local before block metadata is closed and, when eligible, before
+the compiler returns those registers to the reuse pool. Register reuse is more
+conservative than lexical cleanup: arguments, `.ref` arguments,
+receiver/factory pseudo-locals, exposed symbols, reference-targeted storage,
+and compiler-generated inline scaffolding are not packed into the scoped reuse
+pool. Generated trace-helper locals are not a normal-program hot path; they may
+still receive ordinary block `endlife` / metadata closeout inside the generated
+TRACE helper, but they are excluded from scoped reuse allocation. This is the
+same lifetime invalidation operation as frame cleanup, but scoped to the
+storage whose block lifetime has ended.
 `clear_frame()` performs full storage cleanup, remaining signal-handler stack
 cleanup, and any VM plugin instance cleanup when a frame is finally destroyed.
 The `SAFE_RECYCLED_STACKFRAMES` build-time debug guard can additionally zero

@@ -148,6 +148,17 @@ static int use_symbol_reg(ASTNode* node) {
 
 static int defer_reg_return(ASTNode* node);
 
+static int node_is_block_expr_leave(ASTNode *node) {
+    ASTNode *parent;
+
+    if (!node || node->node_type != LEAVE_WITH) return 0;
+    parent = node->parent;
+    return parent &&
+           parent->node_type == INSTRUCTIONS &&
+           parent->parent &&
+           parent->parent->node_type == BLOCK_EXPR;
+}
+
 static int scope_assigns_named_registers(Scope *scope) {
     ASTNode *owner;
 
@@ -163,8 +174,6 @@ static int scope_recycles_named_registers(Scope *scope) {
     if (!scope_assigns_named_registers(scope)) return 0;
     owner = scope->defining_node;
     if (owner->inherit_parent_reg_scope) return 0;
-    /* Inlined expressions can run while linked assignment-target helpers are live. */
-    if (owner->node_type == BLOCK_EXPR) return 0;
     return 1;
 }
 
@@ -268,6 +277,8 @@ static void release_scoped_registers_for_node(ASTNode *node) {
 
         if (!symbol_uses_scoped_register(symbol)) continue;
         if (symbol->register_type != 'r' || symbol->register_num < 0) continue;
+        if (node->register_type == symbol->register_type &&
+            node->register_num == symbol->register_num) continue;
         count++;
     }
 
@@ -288,6 +299,8 @@ static void release_scoped_registers_for_node(ASTNode *node) {
 
         if (!symbol_uses_scoped_register(symbol)) continue;
         if (symbol->register_type != 'r' || symbol->register_num < 0) continue;
+        if (node->register_type == symbol->register_type &&
+            node->register_num == symbol->register_num) continue;
         registers[count++] = symbol->register_num;
     }
 
@@ -323,6 +336,15 @@ static void return_child_reg_now(ASTNode* child) {
     if (use_symbol_reg(child)) return;
     if (!defer_reg_return(child)) {
         ret_reg(child->scope, child->register_num);
+    }
+}
+
+static void return_additional_regs_later(ASTNode *node) {
+    int i;
+
+    if (!node || node->additional_registers < 0 || node->num_additional_registers <= 0) return;
+    for (i = 0; i < node->num_additional_registers; i++) {
+        ret_reg_later(node->scope, node->additional_registers + i);
     }
 }
 
@@ -872,8 +894,8 @@ walker_result register_walker(walker_direction direction,
                         /* Yes we do need an additional register */
                         node->num_additional_registers = needs_extra_reg + needs_prop_reg;
                         node->additional_registers = get_regs(node->scope, node->num_additional_registers);
-                        /* We return it straight away - we only need it for this node */
-                        ret_reg(node->scope, node->additional_registers);
+                        /* Array/property helpers may stay linked until the parent emits cleanup. */
+                        return_additional_regs_later(node);
                     }
 
                     /* Release child registers */
@@ -1160,7 +1182,8 @@ walker_result register_walker(walker_direction direction,
         }
 
         /* If this is a statement level node, return all deferred registers */
-        if (node->parent && node->parent->node_type == INSTRUCTIONS) {
+        if (node->parent && node->parent->node_type == INSTRUCTIONS &&
+            !node_is_block_expr_leave(node)) {
             ret_reg_all_deferred(node->scope);
         }
 

@@ -12,7 +12,7 @@
 .meta "inline_test_block_expr_live_sibling.holder.right"="b" ".string" .attr 4
 .globals=0
 
-main() .locals=12
+main() .locals=13
    .meta "inline_test_block_expr_live_sibling.main"="b" ".int" main() ""
    .srcstep 24 24 17 "inline_test_block_expr_live_sibling.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -114,10 +114,10 @@ l207bexprend:
    concat r4,r4,r11
    unlink r11
    .traceevent "O" 4 "R" "S" "r" 4 22 22 0 "" ""
-   scopy r11,r4
+   scopy r12,r4
    br l199bexprend
 l199bexprend:
-   say r11
+   say r12
    .srcstep 23 23 17 "inline_test_block_expr_live_sibling.crexx" 6 3 11 "  return 0"
    ret 0
    .meta "inline_test_block_expr_live_sibling.main.holder"

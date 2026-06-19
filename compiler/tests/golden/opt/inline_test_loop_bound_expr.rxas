@@ -5,7 +5,7 @@
 
 .globals=0
 
-main() .locals=8
+main() .locals=9
    .meta "inline_test_loop_bound_expr.main"="b" ".int" main() ""
    .srcstep 22 22 17 "inline_test_loop_bound_expr.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -50,26 +50,26 @@ l73bexprend:
    .srcstep 11 11 17 "inline_test_loop_bound_expr.crexx" 25 3 11 "  return 5"
    load r4,5
    .traceevent "L" 4 "R" "I" "r" 4 0 0 0 "" ""
-   icopy r3,r4
+   icopy r5,r4
    br l77bexprend
 l77bexprend:
    .srcstep 16 16 17 "inline_test_loop_bound_expr.crexx" 10 32 43 "  do i = startAt() to stopAt() by stepSize()"
    .srcstep 15 15 17 "inline_test_loop_bound_expr.crexx" 10 35 43 "  do i = startAt() to stopAt() by stepSize()"
    .srcstep 14 14 17 "inline_test_loop_bound_expr.crexx" 28 3 11 "  return 2"
-   load r6,2
-   .traceevent "L" 4 "R" "I" "r" 6 0 0 0 "" ""
-   icopy r7,r6
+   load r7,2
+   .traceevent "L" 4 "R" "I" "r" 7 0 0 0 "" ""
+   icopy r8,r7
    br l81bexprend
 l81bexprend:
 l16dostart:
    .srcstep 13 13 17 "inline_test_loop_bound_expr.crexx" 10 20 29 "  do i = startAt() to stopAt() by stepSize()"
-   ilt r5,r7,0
-   brt l16doneg1,r5
-   igt r5,r1,r3
-   brtf l16doend,l16doneg2,r5
+   ilt r6,r8,0
+   brt l16doneg1,r6
+   igt r6,r1,r5
+   brtf l16doend,l16doneg2,r6
 l16doneg1:
-   ilt r5,r1,r3
-   brt l16doend,r5
+   ilt r6,r1,r5
+   brt l16doend,r6
 l16doneg2:
    .srcstep 17 17 17 "inline_test_loop_bound_expr.crexx" 11 5 10 "    say i"
    itos r1
@@ -77,7 +77,7 @@ l16doneg2:
    say r1
 l16doinc:
    .srcstep 16 16 17 "inline_test_loop_bound_expr.crexx" 10 32 43 "  do i = startAt() to stopAt() by stepSize()"
- iadd r1,r7,r1
+ iadd r1,r8,r1
    .srcstep 19 19 17 "inline_test_loop_bound_expr.crexx" 12 3 6 "  end"
    br l16dostart
 l16doend:

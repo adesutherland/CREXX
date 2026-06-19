@@ -869,6 +869,36 @@ often a fail-closed debug line appears. In particular, a repeated
 `DEBUG_INLINE_FAILCLOSED` line can be caused by the fixed-point pass revisiting
 an intentionally excluded site.
 
+### Priority: Inline Helper Register Classification
+
+The current register allocator deliberately treats generated `__inline*`
+symbols as non-recyclable. That is safe, but too broad for the next
+register-pressure pass: the inliner already knows the semantic role of each
+helper when it creates the AST, while later allocation mostly sees only the
+name prefix.
+
+This should be handled as a priority companion item to the `BLOCK_EXPR` scoped
+reuse work. Do not solve it by inferring meaning from helper names in the
+allocator. Preserve the helper role on the generated symbol, for example as a
+small enum or explicit lifetime class, so allocation, metadata emission, and
+lifetime cleanup can make the same decision.
+
+Initial semantic split:
+
+- call-frame or alias-visible helpers stay fixed for the inline body:
+  `__inline_method_receiver`, `__inline_scoped_arg`, `__inline_ref`,
+  `__inline_ref_varg`, `__inline_varg`, and `__inline_varg_array`
+- order-sensitive value materialisation helpers are possible reuse candidates
+  only after their live range is explicit: `__inline_bind`, `__inline_ret`,
+  and `__inline_leave`
+- pure evaluation-order/index/sink helpers should be the first reuse
+  candidates once `BLOCK_EXPR` helper lifetimes are modelled:
+  `__inline_arg_ix`, `__inline_lhs`, and `__inline_unused`
+
+Until that classification exists, keeping the blanket `__inline*` exclusion is
+the correct conservative behaviour. The exclusion is therefore not semantically
+closed; it is a tactical fence around missing inline-helper lifetime metadata.
+
 ### Inline gate inventory
 
 This inventory is the working tracker for closed inline paths. It separates

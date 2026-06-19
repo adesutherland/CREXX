@@ -12,7 +12,7 @@
 .meta "inline_test_named_factory_selector.vehicle"="factory" "from_name" ".inline_test_named_factory_selector..vehicle" "name=.string" .member
 .globals=0
 
-main() .locals=6
+main() .locals=5
    .meta "inline_test_named_factory_selector.main"="b" ".int" main() ""
    .srcstep 8 8 17 "inline_test_named_factory_selector.crexx" 4 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -46,28 +46,28 @@ main() .locals=6
    .srcstep 6 6 17 "inline_test_named_factory_selector.crexx" 7 3 30 "  say describedNamed(\"gamma\")"
    .srcstep 5 5 17 "inline_test_named_factory_selector.crexx" 7 7 21 "  say describedNamed(\"gamma\")"
    .srcstep 3 3 17 "inline_test_named_factory_selector.crexx" 23 3 37 "  current = .vehicle.from_name(name)"
-   load r4,"gamma"
-   .traceevent "L" 4 "R" "S" "r" 4 3 3 0 "" ""
-   load r3,1
-   settp r4,256
-   srcfproc r5,"inline_test_named_factory_selector.vehicle..from_name",r3
-   dcall r5,r5,r3
-   .traceevent "F" 4 "R" "O" "r" 5 3 3 0 "§factory.from_name" ""
-   .traceevent "A" 6 "R" "O" "r" 5 3 3 0 "current" ""
+   load r3,"gamma"
+   .traceevent "L" 4 "R" "S" "r" 3 3 3 0 "" ""
+   load r2,1
+   settp r3,256
+   srcfproc r4,"inline_test_named_factory_selector.vehicle..from_name",r2
+   dcall r4,r4,r2
+   .traceevent "F" 4 "R" "O" "r" 4 3 3 0 "§factory.from_name" ""
+   .traceevent "A" 6 "R" "O" "r" 4 3 3 0 "current" ""
    .srcstep 4 4 17 "inline_test_named_factory_selector.crexx" 24 3 26 "  return current.describe()"
-   .traceevent "V" 6 "R" "O" "r" 5 6 6 0 "current" ""
-   load r3,1
-   settp r5,256
-   swap r4,r5
-   srcmethod r2,r4,"describe"
-   dcall r2,r2,r3
-   swap r5,r4
-   .traceevent "F" 4 "R" "S" "r" 2 6 6 0 "describe" ""
-   scopy r4,r2
+   .traceevent "V" 6 "R" "O" "r" 4 6 6 0 "current" ""
+   load r2,1
+   settp r4,256
+   swap r3,r4
+   srcmethod r1,r3,"describe"
+   dcall r1,r1,r2
+   swap r4,r3
+   .traceevent "F" 4 "R" "S" "r" 1 6 6 0 "describe" ""
+   scopy r3,r1
    br l137bexprend
 l137bexprend:
-   endlife r5
-   say r4
+   endlife r4
+   say r3
    .srcstep 7 7 17 "inline_test_named_factory_selector.crexx" 8 3 11 "  return 0"
    ret 0
 

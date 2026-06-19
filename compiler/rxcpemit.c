@@ -134,6 +134,15 @@ static void node_cleanup_replace_text(ASTNode *node, char *text) {
     node->cleanup = output_fs(text);
 }
 
+static void node_cleanup_prepend_text(ASTNode *node, char *text) {
+    if (!node || !text) return;
+    if (node->cleanup) {
+        output_prepend_text(text, node->cleanup);
+    } else {
+        node->cleanup = output_fs(text);
+    }
+}
+
 static int visible_fixed_arg_count(ASTNode *node) {
     Symbol *symbol = current_procedure_symbol(node);
     int fixed_args;
@@ -1184,7 +1193,7 @@ static walker_result emit_walker(walker_direction direction,
                     /* Set cleanup action */
                     if (unlink_needed) {
                         temp1 = mprintf("   unlink r%d\n", node->register_num);
-                        node_cleanup_replace_text(node, temp1);
+                        node_cleanup_prepend_text(node, temp1);
                         free(temp1);
                     }
                 }
