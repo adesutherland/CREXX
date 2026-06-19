@@ -31,7 +31,6 @@
 #include <stdarg.h>
 #include <string.h>
 #include <strings.h>
-#include <time.h>
 #include <ctype.h>
 #include <limits.h>
 #include "rxcpmain.h"
@@ -407,8 +406,6 @@ static walker_result emit_walker(walker_direction direction,
     int flag;
     int fixed_arg_count;
     int implicit_main_args;
-    time_t t = time(NULL);
-    struct tm tm = *localtime(&t);
     char ret_type;
     int ret_num;
     unsigned int trace_step_id;

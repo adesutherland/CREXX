@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test_block_expr_live_sibling.crexx
- * BUILT                  : 2026-06-18 22:09:02
  */
 
 .meta "inline_test_block_expr_live_sibling.child"="b" ".unknown" .class

@@ -26,7 +26,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include <time.h>
 #include <ctype.h>
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
@@ -158,8 +157,6 @@ void emit_proc(ASTNode *node, void *pl) {
     ASTNode *child1, *child2, *child3, *n;
     char *temp1;
     char *comment_meta;
-    time_t t = time(NULL);
-    struct tm tm = *localtime(&t);
 
     child1 = node->child;
     if (child1) child2 = child1->sibling;
@@ -174,11 +171,9 @@ void emit_proc(ASTNode *node, void *pl) {
         {
             char *buf = mprintf("/*\n"
                                 " * SOURCE                 : %s\n"
-                                " * BUILT                  : %d-%02d-%02d %02d:%02d:%02d\n"
                                 " */\n"
                                 "\n",
-                                payload->context->file_name,
-                                tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+                                payload->context->file_name);
 
             if (node->output) output_prepend_text(buf, node->output);
             else node->output = output_fs(buf);

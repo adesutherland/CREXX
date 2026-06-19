@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : object_reference_regression.crexx
- * BUILT                  : 2026-06-18 22:09:04
  */
 
 .meta "object_reference_regression.largepayload"="b" ".unknown" .class

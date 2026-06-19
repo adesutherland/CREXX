@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test_object_const_arg_mutation.crexx
- * BUILT                  : 2026-06-12 20:26:06
  */
 
 .meta "inline_test_object_const_arg_mutation.box"="b" ".unknown" .class
