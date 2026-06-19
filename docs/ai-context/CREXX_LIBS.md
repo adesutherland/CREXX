@@ -5,8 +5,8 @@ The `crexx` toolchain implements its Standard Libraries and Built-In Functions (
 Libraries are housed in the `lib/` directory, which is divided into domains like:
 - `lib/rxfnsb/` (Classic REXX Built-In Functions for Level B)
 - `lib/rxfnsg/` (Level G class-shaped general-purpose interfaces)
-- `lib/rxfnsc/` (reserved/planned Level C standard library functions; no
-  directory exists until the Level C release surface is approved)
+- `lib/rxfnsc/` (shared Level C/RexxScript runtime foundation, currently
+  housing the Rexx value, stem, and variable-pool classes)
 - `lib/rxmath/` (Math extensions)
 - `lib/plugins/` (General-purpose extensions like `fileio`, `regex`, `strings`, `socket`, etc.)
 

@@ -245,8 +245,8 @@ common `rel1` label plus the tier and area labels shown here.
 | 27 | Define Level G first library baseline | Rene | `rel1`, `should`, `level-g`, `library` | Document the existing LLM surface as the first baseline and move extra APIs post-release. |
 | 28 | Add Level G tutorial and demos | Rene | `rel1`, `should`, `level-g`, `docs` | Ship one tutorial plus known limitations if the broader demo set is not ready. |
 | 29 | Define initial Level C Release 1 milestone | Adrian | `rel1`, `should`, `level-c`, `planning` | Ship parser/highlighter milestone plus canonical-AST lowering plan. |
-| 30 | Implement first Level C canonical-AST lowering proof if approved | Adrian | `rel1`, `should`, `level-c`, `compiler` | Keep normal Level C compilation unsupported and document the next phase. |
-| 31 | Decide whether to create `lib/rxfnsc` for initial Level C | Adrian | `rel1`, `should`, `level-c`, `library` | Reserve the namespace in docs without creating a library directory. |
+| 30 | Implement first Level C canonical-AST lowering/execution proof if approved | Adrian | `rel1`, `should`, `level-c`, `compiler` | Keep normal Level C compilation unsupported and document the next phase. |
+| 31 | Establish `lib/rxfnsc` as the initial shared Level C/RexxScript runtime foundation | Adrian | `rel1`, `should`, `level-c`, `library` | Keep the current scalar/stem/pool runtime surface small and document later BIF/lowering work. |
 | 32 | Add Level C demo and known-limits documentation | Peter | `rel1`, `should`, `level-c`, `docs` | Ship DSLSH/highlighter demo with explicit no-compile limitation. |
 | 33 | Define RexxScript beta 3 integration slice | Adrian | `rel1`, `should`, `rexxscript`, `planning` | RexxScript is documented as an interpreted strings-only modern Rexx surface, not the Level C compiler path. |
 | 34 | Curate shared Rexx BIF surface for RexxScript and Level C | Rene | `rel1`, `should`, `bifs`, `level-c`, `rexxscript` | First BIF list separates string-first RexxScript use from Classic value/pool needs. |
@@ -307,8 +307,8 @@ Documentation dependencies:
 - Beta 3 release notes carry the current WIP scope and timetable; keep README,
   `docs/releases`, security policy, examples, install docs, and language
   reference aligned on beta 3 WIP versus completed beta 2 status.
-- `docs/ai-context/CREXX_LIBS.md` should describe `rxfnsc` as planned or
-  reserved until a real Level C library directory exists.
+- `docs/ai-context/CREXX_LIBS.md` should describe `rxfnsc` as the Level
+  C/RexxScript runtime foundation now that the library directory exists.
 
 ## Final-Sprint Focus
 

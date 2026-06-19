@@ -1,0 +1,321 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxpool expose RexxVariablePool
+import rexxvalue
+import rexxstem
+import rxfnsb
+import data_StringHashMap
+
+constant RVP_BINDING_DROPPED = 0
+constant RVP_BINDING_VALUE = 1
+constant RVP_BINDING_STEM = 2
+constant RVP_BINDING_ALIAS_VALUE = 3
+constant RVP_BINDING_ALIAS_STEM = 4
+
+RexxPoolAlias: class
+  parent_ref = reference .RexxVariablePool
+  parent_name = .string
+
+  *: factory
+    arg parent = reference .RexxVariablePool, name = .string
+    parent_ref = parent
+    parent_name = name
+    return
+
+  parent: method = .RexxVariablePool
+    pool = dereference parent_ref
+    return pool
+
+  name: method = .string
+    return parent_name
+
+  isDropped: method = .boolean
+    pool = dereference parent_ref
+    return pool.isDropped(parent_name)
+
+  value: method = .RexxValue
+    pool = dereference parent_ref
+    return pool.value(parent_name)
+
+  setValue: method = .void
+    arg item = .RexxValue
+    pool = dereference parent_ref
+    call pool.setValue(parent_name, item)
+    return
+
+  stem: method = .RexxStem
+    pool = dereference parent_ref
+    return pool.stem(parent_name)
+
+  setStem: method = .void
+    arg item = .RexxStem
+    pool = dereference parent_ref
+    call pool.setStem(parent_name, item)
+    return
+
+  setStemValue: method = .void
+    arg tail = .string, item = .RexxValue
+    pool = dereference parent_ref
+    call pool.setStemValue(parent_name, tail, item)
+    return
+
+  drop: method = .void
+    pool = dereference parent_ref
+    call pool.drop(parent_name)
+    return
+
+RexxVariablePool: class
+  slots = .StringHashMap
+  kinds = .int[]
+  values = .RexxValue[]
+  stems = .RexxStem[]
+  aliases = .RexxPoolAlias[]
+  next_slot = .int
+
+  *: factory
+    slots = .StringHashMap()
+    next_slot = 0
+    return
+
+  normalizeName: method = .string
+    arg name = .string
+    return upper(strip(name))
+
+  normalizeStemName: method = .string
+    arg name = .string
+    normalized = normalizeName(name)
+    if right(normalized, 1) <> "." then normalized = normalized || "."
+    return normalized
+
+  slotFor: method = .int
+    arg normalized = .string
+    return slots.get(normalized) as .int
+
+  createSlot: method = .int
+    arg normalized = .string
+    next_slot = next_slot + 1
+    rc = slots.put(normalized, next_slot as .string)
+    return next_slot
+
+  hasBinding: method = .boolean
+    arg name = .string
+    normalized = normalizeName(name)
+    if \slots.containsKey(normalized) then return 0
+    slot = slotFor(normalized)
+    if kinds[slot] = RVP_BINDING_DROPPED then return 0
+    if kinds[slot] = RVP_BINDING_ALIAS_VALUE | kinds[slot] = RVP_BINDING_ALIAS_STEM then do
+      alias = aliases[slot]
+      return \alias.isDropped()
+    end
+    return 1
+
+  bindingKind: method = .int
+    arg name = .string
+    normalized = normalizeName(name)
+    if \slots.containsKey(normalized) then return RVP_BINDING_DROPPED
+    slot = slotFor(normalized)
+    return kinds[slot]
+
+  value: method = .RexxValue
+    arg name = .string
+    normalized = normalizeName(name)
+    if slots.containsKey(normalized) then do
+      slot = slotFor(normalized)
+      if kinds[slot] = RVP_BINDING_VALUE then return values[slot]
+      if kinds[slot] = RVP_BINDING_ALIAS_VALUE then do
+        alias = aliases[slot]
+        return alias.value()
+      end
+    end
+    item = .RexxValue("")
+    call setValue(normalized, item)
+    return item
+
+  setValue: method = .void
+    arg name = .string, item = .RexxValue
+    normalized = normalizeName(name)
+    slot = 0
+    if slots.containsKey(normalized) then do
+      slot = slotFor(normalized)
+      if kinds[slot] = RVP_BINDING_ALIAS_VALUE then do
+        alias = aliases[slot]
+        call alias.setValue(item)
+        return
+      end
+    end
+    else do
+      slot = createSlot(normalized)
+    end
+    if slot < 1 then slot = createSlot(normalized)
+    kinds[slot] = RVP_BINDING_VALUE
+    values[slot] = item
+    return
+
+  setString: method = .void
+    arg name = .string, text = .string
+    item = .RexxValue(text)
+    call setValue(name, item)
+    return
+
+  stem: method = .RexxStem
+    arg name = .string
+    normalized = normalizeStemName(name)
+    if slots.containsKey(normalized) then do
+      slot = slotFor(normalized)
+      if kinds[slot] = RVP_BINDING_STEM then return stems[slot]
+      if kinds[slot] = RVP_BINDING_ALIAS_STEM then do
+        alias = aliases[slot]
+        return alias.stem()
+      end
+    end
+    item = .RexxStem()
+    call setStem(normalized, item)
+    return item
+
+  setStem: method = .void
+    arg name = .string, item = .RexxStem
+    normalized = normalizeStemName(name)
+    slot = 0
+    if slots.containsKey(normalized) then do
+      slot = slotFor(normalized)
+      if kinds[slot] = RVP_BINDING_ALIAS_STEM then do
+        alias = aliases[slot]
+        call alias.setStem(item)
+        return
+      end
+    end
+    else do
+      slot = createSlot(normalized)
+    end
+    if slot < 1 then slot = createSlot(normalized)
+    kinds[slot] = RVP_BINDING_STEM
+    stems[slot] = item
+    return
+
+  stemValue: method = .RexxValue
+    arg name = .string, tail = .string
+    item_stem = stem(name)
+    return item_stem.value(tail)
+
+  setStemValue: method = .void
+    arg name = .string, tail = .string, item = .RexxValue
+    normalized = normalizeStemName(name)
+    slot = 0
+    item_stem = .RexxStem()
+    if slots.containsKey(normalized) then do
+      slot = slotFor(normalized)
+      if kinds[slot] = RVP_BINDING_ALIAS_STEM then do
+        alias = aliases[slot]
+        call alias.setStemValue(tail, item)
+        return
+      end
+      if kinds[slot] = RVP_BINDING_STEM then item_stem = stems[slot]
+    end
+    else do
+      slot = createSlot(normalized)
+    end
+    if slot < 1 then slot = createSlot(normalized)
+    call item_stem.setValue(tail, item)
+    kinds[slot] = RVP_BINDING_STEM
+    stems[slot] = item_stem
+    return
+
+  setStemString: method = .void
+    arg name = .string, tail = .string, text = .string
+    item = .RexxValue(text)
+    call setStemValue(name, tail, item)
+    return
+
+  exposeValue: method = .void
+    arg name = .string, parent = reference .RexxVariablePool, parent_name = .string
+    normalized = normalizeName(name)
+    if parent_name = "" then parent_name = normalized
+    else parent_name = normalizeName(parent_name)
+    slot = 0
+    if slots.containsKey(normalized) then do
+      slot = slotFor(normalized)
+    end
+    else do
+      slot = createSlot(normalized)
+    end
+    if slot < 1 then slot = createSlot(normalized)
+    kinds[slot] = RVP_BINDING_ALIAS_VALUE
+    aliases[slot] = .RexxPoolAlias(parent, parent_name)
+    return
+
+  exposeStem: method = .void
+    arg name = .string, parent = reference .RexxVariablePool, parent_name = .string
+    normalized = normalizeStemName(name)
+    if parent_name = "" then parent_name = normalized
+    else parent_name = normalizeStemName(parent_name)
+    slot = 0
+    if slots.containsKey(normalized) then do
+      slot = slotFor(normalized)
+    end
+    else do
+      slot = createSlot(normalized)
+    end
+    if slot < 1 then slot = createSlot(normalized)
+    kinds[slot] = RVP_BINDING_ALIAS_STEM
+    aliases[slot] = .RexxPoolAlias(parent, parent_name)
+    return
+
+  drop: method = .void
+    arg name = .string
+    normalized = normalizeName(name)
+    if slots.containsKey(normalized) then do
+      slot = slotFor(normalized)
+      if kinds[slot] = RVP_BINDING_ALIAS_VALUE | kinds[slot] = RVP_BINDING_ALIAS_STEM then do
+        alias = aliases[slot]
+        call alias.drop()
+        return
+      end
+      kinds[slot] = RVP_BINDING_DROPPED
+      return
+    end
+    slot = createSlot(normalized)
+    kinds[slot] = RVP_BINDING_DROPPED
+    return
+
+  dropStem: method = .void
+    arg name = .string
+    normalized = normalizeStemName(name)
+    call drop(normalized)
+    return
+
+  isDropped: method = .boolean
+    arg name = .string
+    normalized = normalizeName(name)
+    if \slots.containsKey(normalized) then return 1
+    slot = slotFor(normalized)
+    if kinds[slot] = RVP_BINDING_ALIAS_VALUE | kinds[slot] = RVP_BINDING_ALIAS_STEM then do
+      alias = aliases[slot]
+      return alias.isDropped()
+    end
+    return kinds[slot] = RVP_BINDING_DROPPED
+
+  free: method = .int
+    return slots.free()

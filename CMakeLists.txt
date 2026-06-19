@@ -280,7 +280,7 @@ add_subdirectory(bin crexx_driver)
 if(TARGET linked_opt_runtime_artifacts)
     # Linked-opt tests consume the shared runtime images; classlib member
     # rebuilds remove the consolidated image until the classlib target relinks it.
-    foreach(_crexx_linked_opt_runtime_dependency IN ITEMS library classlib)
+    foreach(_crexx_linked_opt_runtime_dependency IN ITEMS library classlib rxfnsc)
         if(TARGET ${_crexx_linked_opt_runtime_dependency})
             add_dependencies(linked_opt_runtime_artifacts ${_crexx_linked_opt_runtime_dependency})
         endif()

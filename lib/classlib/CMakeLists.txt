@@ -19,7 +19,6 @@ set(CLSS
   KeyDB
   StringLinkedList
   ObjectLinkedList
-  RexxValue
   Rexx
   StringStack
   ObjectStack

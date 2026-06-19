@@ -1,7 +1,7 @@
 # Level C Rexx Runtime Values
 
-Status: approved initial implementation slice for Level C/RexxScript runtime
-foundation.
+Status: initial `rxfnsc` runtime implementation in progress for
+Level C/RexxScript runtime foundation.
 
 This note records the first shared runtime layer for Classic Rexx-compatible
 execution. It is intentionally smaller than full Level C lowering. The goal is
@@ -17,9 +17,15 @@ The approved first slice covers:
    by scalar Rexx values.
 3. An initial `RexxValue` class that uses one physical VM value slot with lazy
    cached representations and operator helper methods.
+4. Initial `RexxStem` and `RexxVariablePool` classes in the same runtime
+   library, with variable-pool bindings able to target either scalar values or
+   stems.
 
-Stems, variable pools, BIF migration, and Level C lowering are the follow-on
-slices once the one-slot scalar value proof is stable.
+The shared runtime library lives in `lib/rxfnsc` and links to
+`bin/rxfnsc.rxbin`. Level C compiled code and RexxScript should import the
+needed namespaces from that library rather than carrying separate scalar,
+stem, or variable-pool implementations. BIF migration and Level C lowering
+remain follow-on slices once this runtime foundation is stable.
 
 ## Core Objects
 
@@ -164,8 +170,8 @@ RexxScript can share the same decision point later.
 
 ### `RexxStem`
 
-`RexxStem` will represent one Classic Rexx stem binding. It is a string-keyed
-map from tail text to `RexxValue`. Tails preserve Classic compound-variable
+`RexxStem` represents one Classic Rexx stem binding. It is a string-keyed map
+from tail text to `RexxValue`. Tails preserve Classic compound-variable
 derivation semantics; the stem name is normalized by the variable pool.
 
 This is a separate binding from the scalar with the same root:
@@ -181,15 +187,28 @@ points to either a scalar value or a stem:
 
 ```text
 RexxBinding
-  kind: VALUE | STEM
+  kind: VALUE | STEM | ALIAS_VALUE | ALIAS_STEM | DROPPED
   target: RexxValue | RexxStem
-  ownership: owned | alias-to-parent
+  parent: weak reference to RexxVariablePool plus parent name when aliased
   state: defined | dropped
 ```
 
 `PROCEDURE EXPOSE`, RexxScript `EXPOSE`, and host-variable anchors should alias
 bindings where Classic semantics require shared storage. Copy-in/copy-out is a
 host-adapter policy, not the core pool model.
+
+Pool-to-parent exposure uses Level B references. The parent pool must outlive
+the child pool or the reference becomes invalid by normal Level B reference
+lifetime rules.
+
+Assignment through a variable pool should use the pool write surface
+(`setValue`, `setString`, `setStemValue`, `setStemString`, and later
+typed/BIF-specific setters). A scalar value returned by `value(name)`, or a stem
+returned by `stem(name)`, is suitable for reading and expression evaluation, but
+ordinary Level B return/copy rules mean the compiler must not depend on mutating
+that returned object as the way to assign the variable. This aligns with the
+broader Level C lowering model: reads feed expressions, and assignment updates
+the pool binding.
 
 ## Design Constraints
 
