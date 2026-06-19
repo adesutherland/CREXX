@@ -121,6 +121,19 @@ Common examples in-tree:
 - `arg cmd_line = .string[]`
 - `arg expose tokens = .token[]`
 
+Use bare type expressions to declare a typed local before later assignment when
+that makes scope or intent clearer:
+
+```rexx
+slot = .int
+if map.containsKey(key) then slot = existingSlot(key)
+else slot = createSlot(key)
+```
+
+Prefer this to a dummy literal such as `slot = 0` when the value is not
+semantically a sentinel. This is especially useful when a local is assigned in
+both sides of a branch and then read after the branch.
+
 References:
 - `lib/rxfnsb/rexx/abs.crexx`
 - `debugger/rxdb.crexx`

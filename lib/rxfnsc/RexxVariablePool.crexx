@@ -157,7 +157,7 @@ RexxVariablePool: class
   setValue: method = .void
     arg name = .string, item = .RexxValue
     normalized = normalizeName(name)
-    slot = 0
+    slot = .int
     if slots.containsKey(normalized) then do
       slot = slotFor(normalized)
       if kinds[slot] = RVP_BINDING_ALIAS_VALUE then do
@@ -198,7 +198,7 @@ RexxVariablePool: class
   setStem: method = .void
     arg name = .string, item = .RexxStem
     normalized = normalizeStemName(name)
-    slot = 0
+    slot = .int
     if slots.containsKey(normalized) then do
       slot = slotFor(normalized)
       if kinds[slot] = RVP_BINDING_ALIAS_STEM then do
@@ -223,7 +223,7 @@ RexxVariablePool: class
   setStemValue: method = .void
     arg name = .string, tail = .string, item = .RexxValue
     normalized = normalizeStemName(name)
-    slot = 0
+    slot = .int
     item_stem = .RexxStem()
     if slots.containsKey(normalized) then do
       slot = slotFor(normalized)
@@ -254,7 +254,7 @@ RexxVariablePool: class
     normalized = normalizeName(name)
     if parent_name = "" then parent_name = normalized
     else parent_name = normalizeName(parent_name)
-    slot = 0
+    slot = .int
     if slots.containsKey(normalized) then do
       slot = slotFor(normalized)
     end
@@ -271,7 +271,7 @@ RexxVariablePool: class
     normalized = normalizeStemName(name)
     if parent_name = "" then parent_name = normalized
     else parent_name = normalizeStemName(parent_name)
-    slot = 0
+    slot = .int
     if slots.containsKey(normalized) then do
       slot = slotFor(normalized)
     end
