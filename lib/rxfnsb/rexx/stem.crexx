@@ -27,14 +27,13 @@ options levelb comments_dash
 
 namespace rxfnsb expose stem stemIterator
 
-/* ------------------------------------------------------------------
+/** ------------------------------------------------------------------
  *  stem
  *
  *  A string-to-string hash map implementing classic Rexx compound
  *  variables behaviour.
  *
  * ------------------------------------------------------------------ */
-
 stem: class
   num_buckets = .int
   buckets = .int[256]
@@ -43,11 +42,24 @@ stem: class
   next = .int[]
   count = .int
 
+ /**
+  * Constructs an empty stem.
+  *
+  * Initialises the hash table with 256 buckets.
+  */
   *: factory
     num_buckets = 256
     count = 0
     return
 
+ /**
+  * Computes the hash bucket for a key.
+  *
+  * Uses a simple polynomial rolling hash (multiplier 31).
+  *
+  * @param key key to hash
+  * @return bucket number (1..num_buckets)
+  */
   hash: method = .int
     arg key = .string
     
@@ -65,6 +77,12 @@ stem: class
     if rem < 0 then rem = -rem
     return rem + 1
 
+ /**
+  * Retrieves the value associated with a key.
+  *
+  * @param key key to search for
+  * @return associated value, or an empty string if not found
+  */
   get: method = .string
     arg key = .string
     
@@ -78,6 +96,15 @@ stem: class
     
     return ""
 
+ /**
+  * Adds or updates a key/value pair.
+  *
+  * If the key already exists, its value is replaced.
+  * Otherwise a new entry is inserted.
+  *
+  * @param key key to store
+  * @param value value to associate with the key
+  */
   set: method = .void
     arg key = .string, value = .string
     
@@ -112,21 +139,49 @@ stem: class
     
     return
 
+ /**
+  * Returns the number of stored entries.
+  *
+  * @return entry count
+  */
   size: method = .int
     return count
 
+ /**
+  * Returns the key at a given insertion index.
+  *
+  * @param ix insertion index (1-based)
+  * @return key
+  */
   key: method = .string
     arg ix = .int
     return keys[ix]
 
+ /**
+  * Returns a value using an internal array index.
+  *
+  * @param kv internal value index
+  * @return value
+  */
   value: method = .string
     arg kv = .string
     return vals[kv]
 
+ /**
+  * Returns a value at a given insertion index.
+  *
+  * @param ix insertion index (1-based)
+  * @return value
+  */
   valueAt: method = .string
     arg ix = .int
     return vals[ix]
 
+ /**
+  * Returns all keys.
+  *
+  * @return array containing all keys in insertion order
+  */
   tails: method = .string[]
     result = .string[]
     do i = 1 to count
@@ -134,6 +189,11 @@ stem: class
     end
     return result
 
+ /**
+  * Returns all values.
+  *
+  * @return array containing all values in insertion order
+  */
   values: method = .string[]
     result = .string[]
     do i = 1 to count
@@ -141,12 +201,42 @@ stem: class
     end
     return result
 
+ /**
+  * Creates a live iterator.
+  *
+  * The iterator reflects subsequent modifications to the stem.
+  *
+  * @return stemIterator instance
+  */
   iterator: method = .stemIterator
     return .stemIterator(reference self, 0)
 
+ /**
+  * Creates a snapshot iterator.
+  *
+  * The iterator traverses a copy of the contents that existed
+  * at the time of creation.
+  *
+  * @return stemIterator instance
+  */
   snapshotIterator: method = .stemIterator
     return .stemIterator(reference self, 1)
 
+ /** ------------------------------------------------------------------
+  * stemIterator
+  *
+  * Iterator for traversing stem contents.
+  *
+  * Two operating modes exist:
+  *
+  * - Live mode
+  *     Reads directly from the underlying stem.
+  *
+  * - Snapshot mode
+  *     Operates on an internal copy of the stem contents.
+  *
+  * Iteration proceeds in insertion order.
+  * ------------------------------------------------------------------ */
 stemIterator: class
   stem_ref = reference .stem
   keys_copy = .string[]
@@ -156,6 +246,14 @@ stemIterator: class
   index_ = .int
   current_tail_ = .string
 
+ /**
+  * Creates a new iterator.
+  *
+  * @param source stem to iterate over
+  * @param snapshot_flag
+  *        0 = live iterator
+  *        1 = snapshot iterator
+  */
   *: factory
     arg source = reference .stem, snapshot_flag = 0
     snapshot_ = snapshot_flag
@@ -173,6 +271,11 @@ stemIterator: class
     end
     return
 
+ /**
+  * Indicates whether another element exists.
+  *
+  * @return 1 if another element is available, otherwise 0
+  */
   hasNext: method = .int
     if snapshot_ = 1 then
       return index_ < count_copy
@@ -180,6 +283,11 @@ stemIterator: class
     stem = dereference stem_ref
     return index_ < stem.size()
 
+ /**
+  * Advances to the next key.
+  *
+  * @return next key, or an empty string when exhausted
+  */
   next: method = .string
     if snapshot_ = 1 then do
       if index_ >= count_copy then return ""
@@ -194,6 +302,13 @@ stemIterator: class
     current_tail_ = stem.key(index_)
     return current_tail_
 
+ /**
+  * Returns the value corresponding to the current key.
+  *
+  * next() must have been called successfully first.
+  *
+  * @return current value
+  */
   value: method = .string
     if index_ < 1 then return ""
 
@@ -205,14 +320,28 @@ stemIterator: class
     stem = dereference stem_ref
     return stem.get(current_tail_)
 
+ /**
+  * Returns the current iterator position.
+  *
+  * @return 1-based index
+  */
   index: method = .int
     return index_
 
+ /**
+  * Resets the iterator to its initial position.
+  */
   reset: method = .void
     index_ = 0
     current_tail_ = ""
     return
 
+ /**
+  * Indicates whether the iterator is operating in live mode
+  * and whether the underlying stem reference is still valid.
+  *
+  * @return 1 if live and valid, otherwise 0
+  */
   isLive: method = .int
     if snapshot_ = 1 then return 0
     if refvalid(stem_ref) then return 1
