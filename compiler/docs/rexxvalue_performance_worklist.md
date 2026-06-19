@@ -104,9 +104,9 @@ release:
 
 - `asString`: 9 locals
 - `asInt`, `asFloat`: 11 locals
-- `asDecimal`: 14 locals
+- `asDecimal`: 13 locals
 - `asBinary`: 11 locals
-- `add`/`subtract`/`multiply`/`divide`: 35 locals
+- `add`/`subtract`/`multiply`/`divide`: 34 locals
 - `equals`: 24 locals
 - `concat`: 28 locals
 - `copyFrom`: 35 locals
@@ -115,7 +115,7 @@ Baseline inspection refreshed after scoped reuse, 2026-06-19:
 
 | Example | No-opt locals | Opt locals | Observation |
 | --- | ---: | ---: | --- |
-| `RexxValue.add` | 11 | 35 | `asFloat`, `asDecimal`, and factory bodies still inline into both operands/branches, but inline-scope locals are now reused. |
+| `RexxValue.add` | 11 | 34 | `asFloat`, `asDecimal`, and factory bodies still inline into both operands/branches, but inline-scope locals are now reused. |
 | `RexxValue.concat` | 8 | 28 | `asString` materializers still dominate, with a much smaller scratch window. |
 | `RexxValue.copyFrom` | 10 | 35 | Multiple materializers and setter paths inline together; scoped reuse removes most cloned-local accumulation. |
 | `RexxValue.equals` | 6 | 24 | Inlined `asString` calls still dominate. |
@@ -307,7 +307,7 @@ Register-assignment improvements still wanted:
   | `inline_test_array_expr_arg.main` | 6 | 5 |
   | `inline_test_object_expr_arg.main` | 7 | 6 |
   | `testRexxValue.main` | 215 | 34 |
-  | `RexxValue.add` / `subtract` / `multiply` / `divide` | 48 | 35 |
+  | `RexxValue.add` / `subtract` / `multiply` / `divide` | 48 | 34 |
   | `RexxValue.copyFrom` | 43 | 35 |
   | `RexxValue.concat` | 30 | 28 |
   | `RexxValue.equals` | 26 | 24 |
@@ -358,10 +358,11 @@ after inlining.
   `dcopy`: first detached read is kept, second link/read/unlink is replaced by a
   copy from the first detached value when no relevant opcode or barrier
   intervenes.
-- Current optimized `RexxValue.rxas` still shows about 150 detached-copy chains
-  of the form `link` / typed-copy / `unlink` / typed-copy-from-detached-temp`.
-  About 50 of those are conversion chains such as detached `dcopy` followed by
-  another `dcopy` into the conversion register and `dtos`/`itos`/`ftos`/`bintos`.
+- Before the compiler-side cast change, optimized `RexxValue.rxas` still showed
+  about 150 detached-copy chains of the form `link` / typed-copy / `unlink` /
+  typed-copy-from-detached-temp`. About 50 of those were conversion chains such
+  as detached `dcopy` followed by another `dcopy` into the conversion register
+  and `dtos`/`itos`/`ftos`/`bintos`.
 - A simple table-rule cleanup is not safe while trace/source metadata remains in
   the optimizer queue as metadata-only items. For example, rewriting the first
   copy to write the final destination and deleting the second copy would leave
@@ -372,6 +373,21 @@ after inlining.
   compiler emission task, not as a quick declarative peephole. Any implementation
   must prove the detached temp has no later semantic use and must either preserve
   or update trace/register metadata before deleting its producer.
+- Compiler-side route implemented: for scalar casts fed by detached
+  class-attribute reads, assign the cast result register before the attribute
+  read and let the attribute read copy directly into that register. This
+  preserves the existing trace order because the variable trace still appears
+  after the read and before the destructive conversion instruction. Do not apply
+  this to normal symbol reads or linked non-complex attributes, because sharing
+  those registers would convert live storage in place.
+- Post-change optimized `RexxValue.rxas` has zero conversion-copy chains of the
+  `link` / typed-copy / `unlink` / typed-copy / conversion form, and about 22
+  remaining detached-copy chains.
+- Optimizer-side hardening implemented: NO_HAZARD/NO_GAP matching now treats
+  register-token metadata such as `.meta ... rN` and register-backed
+  `.traceevent` references as relevant register uses before rules are allowed
+  to skip metadata around mapped registers. Source-step and symbol metadata
+  remain non-value metadata and do not block rules by themselves.
 
 ## 7. Minor RexxValue Cleanup
 

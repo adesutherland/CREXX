@@ -894,6 +894,35 @@ static int is_relevant(op_map *map, Assembler_Token *opToken) {
 
 static int instruction_is_relevant(op_map *map, instruction_queue *instruction) {
     const OpInfo *op_info;
+    Assembler_Token *value_source;
+    Assembler_Token *register_type_token;
+    Assembler_Token *value_ref;
+    char register_type;
+
+    if (instruction->instrType == TRACE_EVENT) {
+        value_source = instruction->operand2Token;
+        register_type_token = instruction->operand4Token;
+        value_ref = instruction->operand5Token;
+
+        if (value_source &&
+            value_source->token_type == STRING &&
+            value_source->token_value.string &&
+            value_source->token_value.string[0] == 'R' &&
+            value_source->token_value.string[1] == 0 &&
+            register_type_token &&
+            register_type_token->token_type == STRING &&
+            register_type_token->token_value.string &&
+            register_type_token->token_value.string[0] &&
+            register_type_token->token_value.string[1] == 0 &&
+            value_ref &&
+            value_ref->token_type == INT &&
+            value_ref->token_value.integer >= 0) {
+            register_type = (char)tolower((unsigned char)register_type_token->token_value.string[0]);
+            if (map_has_register(map, register_type, (size_t)value_ref->token_value.integer)) {
+                return 1;
+            }
+        }
+    }
 
     if (is_relevant(map, instruction->operand1Token) ||
         is_relevant(map, instruction->operand2Token) ||
@@ -1379,9 +1408,14 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
                 r++;
             } else {
                 /* Not a match - we need to check that skipping the instruction does not break the rule */
+                if ((r->flag == NO_GAP || r->flag == NO_HAZARD) &&
+                    instruction_is_relevant(map, &context->optimiser_queue[inst_no])) {
+                    return 0;
+                }
+
                 if (    context->optimiser_queue[inst_no].instrType == OP_CODE ||
                         context->optimiser_queue[inst_no].instrType == ASM_LABEL ) {
-                    /* Meta entries are always ignored */
+                    /* Non-value metadata is ignored; relevant metadata was handled above. */
 
                     if (r->flag == NO_GAP) return 0; /* No gap allowed! */
                     if (r->flag == NO_HAZARD) {

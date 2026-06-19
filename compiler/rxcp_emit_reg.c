@@ -135,6 +135,68 @@ static int class_attribute_needs_read_link_register(Symbol *symbol) {
     return class_attribute_register_index(symbol) > 0;
 }
 
+static int use_symbol_reg(ASTNode* node);
+
+static int value_type_in_promotion_matrix(ValueType type) {
+    return type >= TP_UNKNOWN && type <= TP_REFERENCE;
+}
+
+static int node_is_detached_class_attribute_read(ASTNode *node) {
+    Symbol *symbol;
+
+    if (!node || node->node_type != VAR_SYMBOL || node->child) return 0;
+    if (!node->symbolNode || !node->symbolNode->symbol) return 0;
+
+    symbol = node->symbolNode->symbol;
+    if (!symbol_is_class_attribute(symbol)) return 0;
+    if (class_attribute_is_flag_view(symbol)) return 1;
+    return class_attribute_is_complex(symbol);
+}
+
+static int cast_can_share_detached_attribute_read(ASTNode *node) {
+    ASTNode *child;
+
+    if (!node || node->node_type != OP_TYPE_CAST) return 0;
+    child = node->child;
+    if (!node_is_detached_class_attribute_read(child)) return 0;
+    if (!value_type_in_promotion_matrix(child->value_type) ||
+        !value_type_in_promotion_matrix(node->target_type)) {
+        return 0;
+    }
+    if (!emit_promotion[child->value_type][node->target_type]) return 0;
+    return 1;
+}
+
+static int node_has_concrete_register(ASTNode *node) {
+    return node && node->register_num >= 0;
+}
+
+static void assign_cast_child_to_result_register(ASTNode *node) {
+    ASTNode *child;
+
+    if (!cast_can_share_detached_attribute_read(node)) return;
+    if (!node_has_concrete_register(node)) return;
+
+    child = node->child;
+    child->register_num = node->register_num;
+    child->register_type = node->register_type ? node->register_type : 'r';
+}
+
+static int assign_cast_result_to_target_register(ASTNode *cast_node, ASTNode *target_node) {
+    Symbol *symbol;
+
+    if (!cast_can_share_detached_attribute_read(cast_node)) return 0;
+    if (!use_symbol_reg(target_node)) return 0;
+    if (!target_node->symbolNode || !target_node->symbolNode->symbol) return 0;
+
+    symbol = target_node->symbolNode->symbol;
+    if (symbol->register_num < 0) return 0;
+
+    cast_node->register_num = symbol->register_num;
+    cast_node->register_type = symbol->register_type;
+    return 1;
+}
+
 /* Tests if a node uses a symbol register */
 static int use_symbol_reg(ASTNode* node) {
     if (    node->symbolNode                 // It's a symbol
@@ -517,8 +579,10 @@ walker_result register_walker(walker_direction direction,
                  */
                 if (use_symbol_reg(child1) &&
                     child2->node_type != BLOCK_EXPR &&
-                    (!use_symbol_reg(child2) || is_constant(child2)))
-                    child2->register_num = DONT_ASSIGN_REGISTER; /* DONT_ASSIGN_REGISTER Don't assign register */
+                    (!use_symbol_reg(child2) || is_constant(child2))) {
+                    if (!assign_cast_result_to_target_register(child2, child1))
+                        child2->register_num = DONT_ASSIGN_REGISTER; /* DONT_ASSIGN_REGISTER Don't assign register */
+                }
                 break;
 
             case ARG:
@@ -721,6 +785,14 @@ walker_result register_walker(walker_direction direction,
             case OP_TYPE_IS:
             case OP_TYPE_CAST:
                 if (child2) child2->register_num = DONT_ASSIGN_REGISTER;
+                if (node->node_type == OP_TYPE_CAST &&
+                    cast_can_share_detached_attribute_read(node)) {
+                    if (node->register_num == UNSET_REGISTER) {
+                        node->register_num = get_reg(node->scope);
+                        node->register_type = 'r';
+                    }
+                    assign_cast_child_to_result_register(node);
+                }
                 break;
 
             default:
@@ -910,8 +982,13 @@ walker_result register_walker(walker_direction direction,
                     /* The node uses the symbol register number */
                     if (node->symbolNode && symbol_is_class_attribute(node->symbolNode->symbol)) {
                         /* Attribute - needs a temporary register */
-                        node->register_num = get_reg(node->scope);
-                        node->register_type = 'r';
+                        if (node->register_num == UNSET_REGISTER ||
+                            node->register_num == DONT_ASSIGN_REGISTER) {
+                            node->register_num = get_reg(node->scope);
+                            node->register_type = 'r';
+                        } else if (!node->register_type) {
+                            node->register_type = 'r';
+                        }
                         if (class_attribute_needs_read_link_register(node->symbolNode->symbol)) {
                             node->num_additional_registers = 1;
                             node->additional_registers = get_reg(node->scope);
@@ -951,7 +1028,7 @@ walker_result register_walker(walker_direction direction,
                 break;
 
             case OP_TYPE_CAST:
-                if (node->register_num != DONT_ASSIGN_REGISTER)
+                if (node->register_num == UNSET_REGISTER)
                     node->register_num = get_reg(node->scope);
                 return_child_reg_after_parent(node, child1);
                 break;
@@ -1056,6 +1133,10 @@ walker_result register_walker(walker_direction direction,
                     /* Move the RHS temporary register to the target symbol register */
                     child2->register_num = child1->register_num;
                     child2->register_type = child1->register_type;
+                    propagated = 1;
+                }
+                else if (child2->register_num == child1->register_num &&
+                         child2->register_type == child1->register_type) {
                     propagated = 1;
                 }
                 else {
