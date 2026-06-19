@@ -25,7 +25,8 @@
 /* rexx */
 options levelb
 
-namespace rxfnsb expose evaluate evaluate_exposed rexxscriptevaluator rexxscript_output rexxscript_value
+namespace rexxscript expose rexxscript_evaluate rexxscript_evaluate_exposed rexxscriptevaluator rexxscript_output rexxscript_value
+import rxfnsb
 
 rexxscriptevaluator: class
   *: factory
@@ -41,12 +42,12 @@ rexxscriptevaluator: class
     arg statements = .string, names = .string[], values = .string[], debug = 0
     return _evaluate_impl(statements, debug, names, values)
 
-evaluate: procedure = .string[]
+rexxscript_evaluate: procedure = .string[]
   arg statements = .string, debug = 0
   evaluator = .rexxscriptevaluator()
   return evaluator.evaluate(statements, debug)
 
-evaluate_exposed: procedure = .string[]
+rexxscript_evaluate_exposed: procedure = .string[]
   arg statements = .string, names = .string[], values = .string[], debug = 0
   evaluator = .rexxscriptevaluator()
   return evaluator.evaluate_exposed(statements, names, values, debug)

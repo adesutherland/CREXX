@@ -41,6 +41,20 @@ add_test(NAME crexx_explicit_header_smoke
          COMMAND ${CMAKE_COMMAND} -P "${CREXX_EXPLICIT_SMOKE_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+set(CREXX_REXXSCRIPT_SMOKE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_crexx_rexxscript_smoke.cmake")
+set(CREXX_REXXSCRIPT_SMOKE_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/rexxscript_smoke_ws\")\n")
+string(APPEND CREXX_REXXSCRIPT_SMOKE_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+string(APPEND CREXX_REXXSCRIPT_SMOKE_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
+string(APPEND CREXX_REXXSCRIPT_SMOKE_CONTENT "file(WRITE \"\${work}/rexxscript_smoke.crexx\" \"options levelb\\nimport rexxscript\\nrule = \\\"say 'inside'; a = a + 2\\\"\\na = \\\"3\\\"\\nout = .string[]\\nraw = .string[]\\nREXXSCRIPT rule EXPOSE a OUTPUT out RESULT raw\\nsay raw[1] || \\\"-\\\" || a || \\\"-\\\" || out[1]\\n\")\n")
+string(APPEND CREXX_REXXSCRIPT_SMOKE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"rexxscript_smoke.crexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND CREXX_REXXSCRIPT_SMOKE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"crexx RexxScript smoke failed: \\n\${out}\")\nendif()\n")
+string(APPEND CREXX_REXXSCRIPT_SMOKE_CONTENT "if(NOT out STREQUAL \"OK-5-inside\\n\")\n  message(FATAL_ERROR \"Unexpected RexxScript smoke output. Got: \\n\${out}\")\nendif()\n")
+file(GENERATE OUTPUT "${CREXX_REXXSCRIPT_SMOKE_SCRIPT}" CONTENT "${CREXX_REXXSCRIPT_SMOKE_CONTENT}")
+
+add_test(NAME crexx_rexxscript_smoke
+         COMMAND ${CMAKE_COMMAND} -P "${CREXX_REXXSCRIPT_SMOKE_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 set(CREXX_STATUS_DIAGNOSTICS_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_crexx_status_diagnostics.cmake")
 set(CREXX_STATUS_DIAGNOSTICS_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/status_diagnostics_ws\")\n")
 string(APPEND CREXX_STATUS_DIAGNOSTICS_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
@@ -148,6 +162,7 @@ add_test(NAME crexx_tool_output_path_policy
 set_tests_properties(crexx_help_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_headerless_simple_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_explicit_header_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
+set_tests_properties(crexx_rexxscript_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_status_diagnostics PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_spaced_source_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_crxc_noargs_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})

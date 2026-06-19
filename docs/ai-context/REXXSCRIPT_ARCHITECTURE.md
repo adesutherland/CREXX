@@ -6,7 +6,7 @@ This document describes the architecture, design goals, and planned evolution of
 
 RexxScript is exposed to CREXX applications through the `REXXSCRIPT` command and provides a lightweight scripting environment for configurable business rules, calculations, decision logic, and generated code execution.
 
-The current implementation is built upon an execution engine that evolved from the original `EVALUATE()` prototype. While that implementation remains important internally, RexxScript should be viewed as the primary architectural concept and user-facing feature.
+The current implementation is built upon an execution engine that evolved from the original `EVALUATE()` prototype. RexxScript now owns that engine as a first-class runtime product; `EVALUATE()` is a compatibility facade.
 
 The intent is evolutionary rather than revolutionary: build on the current working implementation, gain practical experience, and introduce additional capabilities only when there is a demonstrated requirement.
 
@@ -16,11 +16,21 @@ This document focuses on architectural decisions and implementation direction. F
 
 ## Current Status
 
-RexxScript is now a working structured execution environment integrated into CREXX through the `REXXSCRIPT` command.
+RexxScript is now a working structured execution environment integrated into CREXX through the `REXXSCRIPT` command and through a direct runtime namespace.
 
 The implementation supports structured control flow, local variable management, intrinsic functions, output capture, and host variable exchange through explicit exposure semantics.
 
-Internally, the runtime evolved from the original `EVALUATE()` prototype, but the primary architectural focus is now RexxScript as a language feature rather than the underlying implementation entry point.
+The runtime lives under `rexxscript/` and builds `bin/rexxscript.rxbin`. Its primary namespace is `rexxscript`, exposing:
+
+```text
+rexxscript_evaluate
+rexxscript_evaluate_exposed
+rexxscript_output
+rexxscript_value
+rexxscriptevaluator
+```
+
+The `REXXSCRIPT` compiler exit is an adapter: it lowers the statement syntax to calls into the `rexxscript` namespace and asks the compiler to import that namespace. The old `rxfnsb.evaluate`, `rxfnsb.evaluate_exposed`, `rxfnsb.rexxscript_output`, `rxfnsb.rexxscript_value`, and `rxfnsb.rexxscriptevaluator` surface is kept as a compatibility module in `bin/rexxscript.rxbin`, not in the base Level B `library.rxbin`.
 
 The current implementation serves as both:
 
@@ -224,7 +234,9 @@ script_status
 
 The underlying evaluator remains an implementation detail and may evolve without affecting the external RexxScript programming model.
 
-The communication layer between CREXX and RexxScript is still considered an active design area and may evolve as additional experience is gained.
+At runtime, applications using the command, direct `rexxscript_*` calls, or compatibility `evaluate()` calls must load `bin/rexxscript.rxbin` along with the base `bin/library.rxbin`. The `crexx` driver includes the RexxScript image in its default runtime set; direct VM invocations must pass it explicitly.
+
+The communication layer between CREXX and RexxScript is still considered an active design area and may evolve as additional experience is gained. The next architectural step is to move RexxScript variable/value handling toward the shared `rxfnsc` `RexxValue`, `RexxStem`, and `RexxVariablePool` classes.
 
 ---
 

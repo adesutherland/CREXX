@@ -8,6 +8,12 @@ It provides a simple integration layer between CREXX and the RexxScript executio
 
 The command is intended for configurable business rules, decision logic, data transformations, and other situations where small scripts need to be evaluated dynamically.
 
+RexxScript is provided by the first-class runtime image `bin/rexxscript.rxbin`.
+Programs using the `REXXSCRIPT` command should import `rexxscript`. The
+`crexx` driver loads `rexxscript.rxbin` as part of its default runtime set;
+direct `rxvm`/`rxvme` runs should pass `rexxscript.rxbin` alongside the base
+`library.rxbin`.
+
 ---
 
 ## Syntax
@@ -182,7 +188,7 @@ The result array is primarily useful for diagnostics, testing, and future extens
 
 ```rexx
 options levelb
-import rxfnsb
+import rexxscript
 
 main: procedure
 

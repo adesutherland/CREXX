@@ -24,7 +24,7 @@ test_descriptor: procedure = .int
   desc = rxs.describe()
   if check_equal("rexxscript protocol version", "2", desc.get_protocol_version()) = 0 then failures = failures + 1
   if check_equal("rexxscript primary keyword", "REXXSCRIPT", desc.get_primary_keyword()) = 0 then failures = failures + 1
-  if check_true("rexxscript default import", find_descriptor_import(desc, "rxfnsb") > 0, "missing rxfnsb import") = 0 then failures = failures + 1
+  if check_true("rexxscript default import", find_descriptor_import(desc, "rexxscript") > 0, "missing rexxscript import") = 0 then failures = failures + 1
 
   return failures
 
@@ -51,7 +51,7 @@ test_output_result_rewrite: procedure = .int
   if check_equal("rexxscript process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
 
   replacement = join_result_lines(result)
-  if check_contains("rexxscript evaluate", replacement, '__rexxscript_result = evaluate("a = 1; say a", 0)') = 0 then failures = failures + 1
+  if check_contains("rexxscript evaluate", replacement, '__rexxscript_result = rexxscript_evaluate("a = 1; say a", 0)') = 0 then failures = failures + 1
   if check_contains("rexxscript output", replacement, "out = rexxscript_output()") = 0 then failures = failures + 1
   if check_contains("rexxscript result", replacement, "raw = __rexxscript_result") = 0 then failures = failures + 1
 
@@ -80,7 +80,7 @@ test_expose_rewrite: procedure = .int
   replacement = join_result_lines(result)
   if check_contains("rexxscript expose names", replacement, "__rexxscript_names[1] = 'a'") = 0 then failures = failures + 1
   if check_contains("rexxscript expose values", replacement, "__rexxscript_values[2] = message") = 0 then failures = failures + 1
-  if check_contains("rexxscript exposed evaluate", replacement, "evaluate_exposed(") = 0 then failures = failures + 1
+  if check_contains("rexxscript exposed evaluate", replacement, "rexxscript_evaluate_exposed(") = 0 then failures = failures + 1
   if check_contains("rexxscript expose copyback a", replacement, "a = rexxscript_value('a')") = 0 then failures = failures + 1
   if check_contains("rexxscript expose output", replacement, "out = rexxscript_output()") = 0 then failures = failures + 1
 
