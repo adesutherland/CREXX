@@ -1826,6 +1826,33 @@ add_test(NAME source_import_contract_stub_covariant_cycle
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(source_import_contract_stub_covariant_cycle PROPERTIES LABELS "compiler;imports")
 
+set(MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_mixed_aggregate_source_contract_stub_covariant.cmake")
+set(MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/mixed_aggregate_source_contract_stub_covariant_ws\")\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "file(MAKE_DIRECTORY \"\${work}/src\" \"\${work}/binroot\" \"\${work}/build\")\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "file(WRITE \"\${work}/src/Iterator.crexx\" \"options levelb\\nnamespace aggregate_iterator expose Iterator\\n\\nIterator: interface\\n  next: method = .string\\n\")\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "file(WRITE \"\${work}/src/Iterable.crexx\" \"options levelb\\nnamespace aggregate_iterable expose Iterable\\nimport aggregate_iterator\\n\\nIterable: interface\\n  iterator: method = .Iterator\\n\")\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "file(WRITE \"\${work}/src/BinaryIterator.crexx\" \"options levelb\\nnamespace aggregate_provider expose BinaryIterator\\nimport aggregate_iterator\\n\\nBinaryIterator: class implements .Iterator\\n  *: factory\\n    return\\n  next: method = .string\\n    return \\\"ok\\\"\\n\")\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "file(WRITE \"\${work}/src/Provider.crexx\" \"options levelb\\nnamespace aggregate_provider expose Provider\\nimport aggregate_iterable\\n\\nProvider: class implements .Iterable\\n  *: factory\\n    return\\n  iterator: method = .BinaryIterator\\n    return .BinaryIterator()\\n\")\n")
+foreach(_mixed_source IN ITEMS Iterator Iterable BinaryIterator)
+    string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"\${work}/build/${_mixed_source}\" \"\${work}/src/${_mixed_source}.crexx\" WORKING_DIRECTORY \"\${work}/build\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on aggregate dependency ${_mixed_source}: \${out}\")\nendif()\n")
+    string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"\${work}/build/${_mixed_source}.rxbin\" \"\${work}/build/${_mixed_source}\" WORKING_DIRECTORY \"\${work}/build\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on aggregate dependency ${_mixed_source}: \${out}\")\nendif()\n")
+endforeach()
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "file(WRITE \"\${work}/build/aggregate.ctl\" \"INPUT \${work}/build/Iterator.rxbin\\nINPUT \${work}/build/Iterable.rxbin\\nINPUT \${work}/build/BinaryIterator.rxbin\\nINCLUDE Iterator\\nINCLUDE Iterable\\nINCLUDE BinaryIterator\\nOUTPUT \${work}/binroot/aggregate\\n\")\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxlink>\" -c \"\${work}/build/aggregate.ctl\" WORKING_DIRECTORY \"\${work}/build\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxlink failed on aggregate contract fixture: \${out}\")\nendif()\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"\${work}/binroot\" -o \"\${work}/build/Provider\" \"\${work}/src/Provider.crexx\" WORKING_DIRECTORY \"\${work}/build\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on mixed aggregate/source covariant contract test: \${out}\")\nendif()\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "if(NOT EXISTS \"\${work}/build/Provider.rxas\")\n  message(FATAL_ERROR \"Expected Provider.rxas was not produced\")\nendif()\n")
+file(GENERATE OUTPUT "${MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_SCRIPT}" CONTENT "${MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT}")
+
+add_test(NAME mixed_aggregate_source_contract_stub_covariant
+         COMMAND ${CMAKE_COMMAND} -P "${MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(mixed_aggregate_source_contract_stub_covariant PROPERTIES LABELS "compiler;imports")
+
 set(SOURCE_EXTENSION_DIRECT_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_source_extension_direct_defaults.cmake")
 set(SOURCE_EXTENSION_DIRECT_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/source_extension_direct_defaults_ws\")\n")
 string(APPEND SOURCE_EXTENSION_DIRECT_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
