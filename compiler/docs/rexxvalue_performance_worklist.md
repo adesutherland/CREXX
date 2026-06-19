@@ -226,6 +226,11 @@ Register-assignment improvements still wanted:
   the inline substitution model can represent assembler array operands without
   revalidating them as illegal caller-site array values. Scalar assembler
   helpers can remain eligible under the existing read/write operand rules.
+- Add caller-side inline budgeting as explicit inliner policy work. The budget
+  should estimate caller register pressure and expected cloned-local growth, not
+  just use the existing per-callee node cutoff. This is separate from scoped
+  register reuse: reuse reduces pressure after inlining, while budgeting decides
+  whether a call should be inlined at all.
 - Keep the reuse/cleanup distinction explicit:
 
   | Pattern | Scoped register reuse | Lifetime / metadata cleanup |
@@ -247,9 +252,24 @@ Register-assignment improvements still wanted:
   register-pressure pass. The inliner already knows whether a helper is a
   call-frame/alias capture, order-sensitive materialisation temp, or pure
   evaluation-order scratch when it creates the AST. Preserve that role on the
-  generated symbol instead of teaching the allocator to infer semantics from
-  `__inline*` names. Until that metadata exists, the blanket `__inline*`
-  non-reuse rule remains the correct tactical fence.
+  generated symbol and export/import it with inline template metadata instead
+  of teaching the allocator to infer semantics from `__inline*` names. Until
+  that metadata exists, the blanket `__inline*` non-reuse rule remains the
+  correct tactical fence.
+- Do not relax these fences without a new semantic proof:
+  - `.ref` arguments remain caller-visible alias storage.
+  - receiver/factory pseudo-locals carry object identity and copyback semantics.
+  - exposed variables are global/exposed slots, not locally owned storage.
+  - reference-targeted locals remain alias-observable until reference lifetime
+    invalidation is explicitly represented.
+  - generated trace helpers stay fixed unless tracing-disabled overhead is
+    measured as material.
+  - assembler helpers with array operands stay call-shaped until inline
+    substitution can preserve their array operand legality.
+- Treat call-frame and scratch high-water as a measured follow-up. Additional
+  call argument registers are already returned, but contiguous call-frame
+  ranges can still raise `.locals`. Add allocation-category diagnostics before
+  changing call-frame layout so improvements can be separated from ABI hazards.
 - `BLOCK_EXPR` deep-dive, 2026-06-19:
 
   The real optimisation target is named locals in real expression `BLOCK_EXPR`
@@ -330,6 +350,28 @@ The duplicate linked-read optimizer is present, but RexxValue still has many
 `link`/typed-copy/`unlink` sequences after assembly. Review real emitted shapes
 and add narrowly safe peephole rules where repeated reads or copy chains remain
 after inlining.
+
+2026-06-19 inspection:
+
+- Existing table rules already cover the safe repeated-read shape for `link`
+  and `linkattr1` across `copy`, `bcopy`, `icopy`, `scopy`, `fcopy`, and
+  `dcopy`: first detached read is kept, second link/read/unlink is replaced by a
+  copy from the first detached value when no relevant opcode or barrier
+  intervenes.
+- Current optimized `RexxValue.rxas` still shows about 150 detached-copy chains
+  of the form `link` / typed-copy / `unlink` / typed-copy-from-detached-temp`.
+  About 50 of those are conversion chains such as detached `dcopy` followed by
+  another `dcopy` into the conversion register and `dtos`/`itos`/`ftos`/`bintos`.
+- A simple table-rule cleanup is not safe while trace/source metadata remains in
+  the optimizer queue as metadata-only items. For example, rewriting the first
+  copy to write the final destination and deleting the second copy would leave
+  intervening `.traceevent` records pointing at the old detached temporary unless
+  the optimizer also rewrites those trace references. Keeping the detached temp
+  preserves trace correctness but does not remove an instruction.
+- Treat the remaining copy-chain cleanup as a trace-aware optimizer task or a
+  compiler emission task, not as a quick declarative peephole. Any implementation
+  must prove the detached temp has no later semantic use and must either preserve
+  or update trace/register metadata before deleting its producer.
 
 ## 7. Minor RexxValue Cleanup
 
