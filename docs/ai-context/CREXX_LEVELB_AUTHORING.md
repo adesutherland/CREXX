@@ -121,6 +121,19 @@ Common examples in-tree:
 - `arg cmd_line = .string[]`
 - `arg expose tokens = .token[]`
 
+Use bare type expressions to declare a typed local before later assignment when
+that makes scope or intent clearer:
+
+```rexx
+slot = .int
+if map.containsKey(key) then slot = existingSlot(key)
+else slot = createSlot(key)
+```
+
+Prefer this to a dummy literal such as `slot = 0` when the value is not
+semantically a sentinel. This is especially useful when a local is assigned in
+both sides of a branch and then read after the branch.
+
 References:
 - `lib/rxfnsb/rexx/abs.crexx`
 - `debugger/rxdb.crexx`
@@ -186,6 +199,39 @@ References:
 - `docs/ai-context/CREXX_ARCHITECTURE.md`
 - `docs/books/crexx_programming_guide/global_variables.md`
 - `debugger/rxdb.crexx`
+
+### Named constants are compile-time values
+
+Use `constant NAME = expression` for Level B masks, flags, and shared literal
+payloads that must not allocate runtime storage:
+
+```rexx
+constant RV_FLAG_STRING = 0x00010000
+constant SAMPLE_BYTES = "41424344"x as .binary
+```
+
+The initializer must fold at compile time. Integer constants used as assembler
+immediates are emitted as literals; string, decimal, float, and binary constants
+use the normal constant-pool machinery.
+
+### Explicit register views are system-programmer syntax
+
+Normal classes should use ordinary attributes. Runtime and VM-integration
+classes may map attributes to fixed register storage:
+
+```rexx
+  _string = .string with register.0.string
+  _flags = .int with register.0.flags.library
+```
+
+`register.0` is the containing value, not RXAS attribute zero. Duplicate typed
+views over the same physical `register.N` slot are complex attributes. The
+compiler copies only the selected typed payload view across the link boundary;
+library/user cache flags are explicit runtime code, not hidden compiler
+side effects. Flag views are direct status-word views: `.flags.vm`,
+`.flags.compiler`, and `.flags.readable` are read-only;
+`.flags.library`, `.flags.user`, and `.flags.public` are writable. Flag views
+must be `.int`.
 
 ### Arrays are first-class Level B objects
 

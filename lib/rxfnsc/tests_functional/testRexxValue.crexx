@@ -1,0 +1,125 @@
+options levelb comments_dash numeric_classic
+import rexxvalue
+import rxfnsb
+
+constant RV_FLAG_STRING = 0x00010000
+constant RV_FLAG_INT = 0x00020000
+constant RV_FLAG_FLOAT = 0x00040000
+constant RV_FLAG_DECIMAL = 0x00080000
+constant RV_FLAG_BINARY = 0x00100000
+constant RV_FLAG_TEXT = 0x00200000
+
+constant RV_FLAGS_STRING_TEXT = RV_FLAG_STRING + RV_FLAG_TEXT
+constant RV_FLAGS_STRING_INT_TEXT = RV_FLAG_STRING + RV_FLAG_INT + RV_FLAG_TEXT
+constant RV_FLAGS_INT_DECIMAL = RV_FLAG_INT + RV_FLAG_DECIMAL
+constant RV_NUMERIC_DECIMAL = 0
+constant RV_NUMERIC_FLOAT = 1
+constant RV_NUMERIC_DEFAULT_DIGITS = 18
+constant RV_NUMERIC_DEFAULT_FUZZ = 0
+
+errors = 0
+
+errors = errors + check(rexxvalue_numeric_mode() = RV_NUMERIC_DECIMAL, "default numeric mode")
+errors = errors + check(rexxvalue_numeric_digits() = RV_NUMERIC_DEFAULT_DIGITS, "default numeric digits")
+errors = errors + check(rexxvalue_numeric_fuzz() = RV_NUMERIC_DEFAULT_FUZZ, "default numeric fuzz")
+
+v = .RexxValue("41")
+errors = errors + check(v.asString() = "41", "string factory value")
+errors = errors + check(v.cacheFlags() = RV_FLAGS_STRING_TEXT, "string factory flags")
+errors = errors + check(v.hasString(), "string current")
+errors = errors + check(v.hasText(), "text valid")
+errors = errors + check(\v.hasInt(), "int not yet current")
+errors = errors + check(v.asInt() = 41, "lazy int")
+errors = errors + check(v.hasInt(), "int current after materialize")
+errors = errors + check(v.cacheFlags() = RV_FLAGS_STRING_INT_TEXT, "string and int flags")
+
+i = .RexxValue.fromInt(7)
+errors = errors + check(i.cacheFlags() = RV_FLAG_INT, "int factory flags")
+errors = errors + check(i.asDecimal() = "7" as .decimal, "int to decimal")
+errors = errors + check(i.cacheFlags() = RV_FLAGS_INT_DECIMAL, "int to decimal avoids string cache")
+errors = errors + check(i.asString() = "7", "int to string")
+errors = errors + check(i.cacheFlags() = RV_FLAGS_STRING_INT_TEXT + RV_FLAG_DECIMAL, "int to string flags")
+
+d = .RexxValue.fromDecimal("2.5" as .decimal)
+errors = errors + check(d.asString() = "2.5", "decimal to string")
+errors = errors + check(d.hasDecimal(), "decimal current")
+errors = errors + check(d.hasString(), "decimal string current")
+
+left_int = .RexxValue.fromInt(5)
+right_int = .RexxValue.fromInt(7)
+sum_ints = left_int.add(right_int)
+errors = errors + check(\left_int.hasString(), "int add left remains string lazy")
+errors = errors + check(\right_int.hasString(), "int add right remains string lazy")
+errors = errors + check(sum_ints.hasDecimal(), "int add result decimal current")
+errors = errors + check(\sum_ints.hasString(), "int add result string lazy")
+errors = errors + check(sum_ints.asString() = "12", "int add result string materialize")
+sum = .RexxValue.fromInt(5).add(.RexxValue("7"))
+errors = errors + check(sum.hasDecimal(), "add result decimal current")
+errors = errors + check(\sum.hasString(), "add result string lazy")
+errors = errors + check(sum.asString() = "12", "add")
+diff = .RexxValue("9").subtract(.RexxValue.fromInt(4))
+errors = errors + check(diff.asString() = "5", "subtract")
+prod = .RexxValue("6").multiply(.RexxValue("7"))
+errors = errors + check(prod.asString() = "42", "multiply")
+quot = .RexxValue("8").divide(.RexxValue("2"))
+errors = errors + check(quot.asString() = "4", "divide")
+
+errors = errors + check(rexxvalue_set_numeric_mode(RV_NUMERIC_FLOAT) = RV_NUMERIC_FLOAT, "set float numeric mode")
+sumf = .RexxValue.fromInt(5).add(.RexxValue("7"))
+errors = errors + check(sumf.hasFloat(), "float mode add result float current")
+errors = errors + check(\sumf.hasDecimal(), "float mode add result decimal lazy")
+errors = errors + check(sumf.asFloat() = 12 as .float, "float mode add")
+prodf = .RexxValue("6").multiply(.RexxValue("7"))
+errors = errors + check(prodf.hasFloat(), "float mode multiply result float current")
+errors = errors + check(prodf.asFloat() = 42 as .float, "float mode multiply")
+errors = errors + check(rexxvalue_set_numeric_mode(999) = RV_NUMERIC_DECIMAL, "invalid numeric mode resets decimal")
+sumd = .RexxValue.fromInt(1).add(.RexxValue.fromInt(2))
+errors = errors + check(sumd.hasDecimal(), "decimal mode restored")
+errors = errors + check(sumd.asString() = "3", "decimal mode restored add")
+
+errors = errors + check(rexxvalue_set_numeric_digits(5) = 5, "set numeric digits")
+errors = errors + check(rexxvalue_set_numeric_fuzz(2) = 2, "set numeric fuzz")
+errors = errors + check(rexxvalue_numeric_digits() = 5, "numeric digits getter")
+errors = errors + check(rexxvalue_numeric_fuzz() = 2, "numeric fuzz getter")
+errors = errors + check(rexxvalue_set_numeric_digits(2) = -1, "reject digits not above fuzz")
+errors = errors + check(rexxvalue_numeric_digits() = 5, "digits unchanged after reject")
+errors = errors + check(rexxvalue_set_numeric_fuzz(5) = -1, "reject fuzz not below digits")
+errors = errors + check(rexxvalue_numeric_fuzz() = 2, "fuzz unchanged after reject")
+errors = errors + check(rexxvalue_set_numeric_fuzz(0) = 0, "reset numeric fuzz")
+rounded = .RexxValue("1.23456789").add(.RexxValue("1.23456789"))
+errors = errors + check(rounded.asString() = "2.4692", "decimal digits applied")
+errors = errors + check(rexxvalue_set_numeric_digits(RV_NUMERIC_DEFAULT_DIGITS) = RV_NUMERIC_DEFAULT_DIGITS, "reset numeric digits")
+errors = errors + check(rexxvalue_set_numeric_fuzz(RV_NUMERIC_DEFAULT_FUZZ) = RV_NUMERIC_DEFAULT_FUZZ, "reset numeric fuzz")
+
+c = .RexxValue("ab").concat(.RexxValue("cd"))
+errors = errors + check(c.asString() = "abcd", "concat")
+errors = errors + check(.RexxValue("same").equals(.RexxValue("same")), "equals")
+errors = errors + check(.RexxValue("a").compare(.RexxValue("b")) = -1, "compare less")
+
+b = .RexxValue.fromBinary("4142"x as .binary)
+errors = errors + check(b.cacheFlags() = RV_FLAG_BINARY, "binary factory flags")
+errors = errors + check(\b.hasText(), "binary not marked text")
+errors = errors + check(b.binaryLength() = 2, "binary length")
+errors = errors + check(b.validateText(), "binary validates as text")
+errors = errors + check(b.asString() = "AB", "binary to string")
+errors = errors + check(b.hasBinary(), "binary still current after text validation")
+errors = errors + check(b.hasText(), "binary text flag after validation")
+errors = errors + check(.rxfnsb..bin2x(b.asBinary()) = "4142", "binary bytes retained")
+
+bt = .RexxValue.fromBinaryText("4344"x as .binary)
+errors = errors + check(bt.asString() = "CD", "binary text factory string")
+errors = errors + check(bt.hasBinary(), "binary text factory binary current")
+errors = errors + check(bt.hasText(), "binary text factory text valid")
+
+copy = .RexxValue("")
+call copy.copyFrom(b)
+errors = errors + check(copy.asString() = "AB", "copy text-capable value")
+
+if errors = 0 then say "ok"
+return errors
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL" label
+  return 1

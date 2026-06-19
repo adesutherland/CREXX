@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test_stateful_assembler.crexx
- * BUILT                  : 2026-05-27 17:53:28
  */
 
 .globals=0
@@ -99,7 +98,6 @@ char_at() .locals=5
    .meta "inline_test_stateful_assembler.char_at.text"="b" ".string" r4
    brtpandt l43c,a1,512
    scopy r4,a1
-   acopy r4,a1
    br l43d
 l43c:
    swap r4,a1
@@ -150,7 +148,6 @@ left_copy() .locals=2
    .meta "inline_test_stateful_assembler.left_copy.text"="b" ".string" r1
    brtpandt l72c,a1,512
    scopy r1,a1
-   acopy r1,a1
    br l72d
 l72c:
    swap r1,a1

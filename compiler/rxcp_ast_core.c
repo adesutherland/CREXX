@@ -349,8 +349,23 @@ ASTNode *ast_f(Context* context, NodeType type, Token *token) {
     ASTNode *node = ast_ft(context, type);
     node->token = token;
     if (token) {
-        node->node_string = token->token_string;
-        node->node_string_length = token->length;
+        if (type == INTEGER && token->length > 2 &&
+            token->token_string[0] == '0' &&
+            (token->token_string[1] == 'x' || token->token_string[1] == 'X')) {
+            char *end = 0;
+            unsigned long long value = strtoull(token->token_string + 2, &end, 16);
+            char buffer[64];
+            (void)end;
+            snprintf(buffer, sizeof(buffer), "%llu", value);
+            node->node_string = malloc(strlen(buffer) + 1);
+            strcpy(node->node_string, buffer);
+            node->node_string_length = strlen(buffer);
+            node->free_node_string = 1;
+            node->int_value = (rxinteger)value;
+        } else {
+            node->node_string = token->token_string;
+            node->node_string_length = token->length;
+        }
     } else {
         node->node_string = "";
         node->node_string_length = 0;
@@ -1219,6 +1234,8 @@ const char *ast_ndtp(NodeType type) {
             return "DEC_STANDARD";
         case DEFINE:
             return "DEFINE";
+        case CONSTANT_DEF:
+            return "CONSTANT_DEF";
         case DO:
             return "DO";
         case ENVIRONMENT:
@@ -1329,6 +1346,20 @@ const char *ast_ndtp(NodeType type) {
             return "OP_COMPARE_S_GTE";
         case OP_COMPARE_S_LTE:
             return "OP_COMPARE_S_LTE";
+        case OP_BIT_AND:
+            return "OP_BIT_AND";
+        case OP_BIT_OR:
+            return "OP_BIT_OR";
+        case OP_BIT_XOR:
+            return "OP_BIT_XOR";
+        case OP_BIT_NOT:
+            return "OP_BIT_NOT";
+        case OP_BIT_SHL:
+            return "OP_BIT_SHL";
+        case OP_BIT_SHR:
+            return "OP_BIT_SHR";
+        case OP_FLAG_HAS:
+            return "OP_FLAG_HAS";
         case OP_TYPE_IS:
             return "OP_TYPE_IS";
         case OP_TYPE_CAST:

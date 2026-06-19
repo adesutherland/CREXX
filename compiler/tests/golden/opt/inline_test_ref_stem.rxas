@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test_ref_stem.crexx
- * BUILT                  : 2026-05-27 17:53:35
  */
 
 .globals=2
@@ -18,12 +17,12 @@ main() .locals=4
    say "Starting stem ref inline test..."
    .srcstep 2 2 17 "inline_test_ref_stem.crexx" 6 1 24 "outbuf[2] = \"untouched\""
    minattrs g1,2
-   linkattr1 r2,g1,2
-   load r3,"untouched"
-   .traceevent "L" 4 "R" "S" "r" 3 2 2 0 "" ""
-   scopy r2,r3
-   .traceevent "A" 6 "R" "S" "r" 2 2 2 0 "outbuf" ""
-   unlink r2
+   linkattr1 r0,g1,2
+   load r1,"untouched"
+   .traceevent "L" 4 "R" "S" "r" 1 2 2 0 "" ""
+   scopy r0,r1
+   .traceevent "A" 6 "R" "S" "r" 0 2 2 0 "outbuf" ""
+   unlink r0
    .srcstep 3 3 17 "inline_test_ref_stem.crexx" 7 1 9 "lino = 1"
    load g0,1
    .traceevent "L" 4 "R" "I" "g" 0 3 3 0 "" ""
@@ -31,35 +30,35 @@ main() .locals=4
    .srcstep 7 7 17 "inline_test_ref_stem.crexx" 9 1 27 "call fillSlot(outbuf.lino)"
    .srcstep 4 4 33 "inline_test_ref_stem.crexx" 9 22 26 "call fillSlot(outbuf.lino)"
    .traceevent "V" 6 "R" "I" "g" 0 4 4 0 "lino" ""
-   icopy r0,g0
-   .traceevent "A" 6 "R" "I" "r" 0 4 4 0 "__inline_ref_24_0" ""
+   icopy r2,g0
+   .traceevent "A" 6 "R" "I" "r" 2 4 4 0 "__inline_ref_24_0" ""
    .srcstep 5 5 17 "inline_test_ref_stem.crexx" 17 3 18 "  lino = lino + 1"
    .traceevent "V" 6 "R" "I" "g" 0 5 5 0 "lino" ""
    iadd g0,g0,1
    .traceevent "O" 4 "R" "I" "g" 0 5 5 0 "" ""
    .traceevent "A" 6 "R" "I" "g" 0 5 5 0 "lino" ""
    .srcstep 6 6 17 "inline_test_ref_stem.crexx" 18 3 20 "  slot = \"slot-one\""
-   .traceevent "V" 6 "R" "I" "r" 0 6 6 0 "__inline_ref_24_0" ""
-   .traceevent "C" 4 "R" "I" "r" 0 6 6 0 "outbuf" ""
-   minattrs g1,r0,0
-   linkattr1 r3,g1,r0
-   load r2,"slot-one"
-   .traceevent "L" 4 "R" "S" "r" 2 6 6 0 "" ""
-   scopy r3,r2
-   .traceevent "A" 6 "R" "S" "r" 3 6 6 0 "outbuf" ""
-   unlink r3
+   .traceevent "V" 6 "R" "I" "r" 2 6 6 0 "__inline_ref_24_0" ""
+   .traceevent "C" 4 "R" "I" "r" 2 6 6 0 "outbuf" ""
+   minattrs g1,r2,0
+   linkattr1 r1,g1,r2
+   load r0,"slot-one"
+   .traceevent "L" 4 "R" "S" "r" 0 6 6 0 "" ""
+   scopy r1,r0
+   .traceevent "A" 6 "R" "S" "r" 1 6 6 0 "outbuf" ""
+   unlink r1
    .srcstep 8 8 17 "inline_test_ref_stem.crexx" 10 1 13 "say outbuf[1]"
    minattrs g1,1
-   linkattr1 r3,g1,1
-   .traceevent "V" 6 "R" "S" "r" 3 8 8 0 "outbuf" ""
-   say r3
-   unlink r3
+   linkattr1 r1,g1,1
+   .traceevent "V" 6 "R" "S" "r" 1 8 8 0 "outbuf" ""
+   say r1
+   unlink r1
    .srcstep 9 9 17 "inline_test_ref_stem.crexx" 11 1 13 "say outbuf[2]"
    minattrs g1,2
-   linkattr1 r3,g1,2
-   .traceevent "V" 6 "R" "S" "r" 3 9 9 0 "outbuf" ""
-   say r3
-   unlink r3
+   linkattr1 r1,g1,2
+   .traceevent "V" 6 "R" "S" "r" 1 9 9 0 "outbuf" ""
+   say r1
+   unlink r1
    .srcstep 10 10 17 "inline_test_ref_stem.crexx" 12 1 37 "say \"Stem ref inline test finished.\""
    say "Stem ref inline test finished."
    .srcstep 11 11 17 "inline_test_ref_stem.crexx" 13 1 9 "return 0"

@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : arg_semantics_array.crexx
- * BUILT                  : 2026-05-27 17:53:08
  */
 
 .globals=0
@@ -146,7 +145,6 @@ mutateArrayLocal() .locals=6
    .meta "arg_semantics_array.mutatearraylocal.value"="b" ".string[*]" r0
    brtpandt l82c,a1,512
    copy r0,a1
-   acopy r0,a1
    br l82d
 l82c:
    swap r0,a1

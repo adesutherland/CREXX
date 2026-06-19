@@ -1,0 +1,28 @@
+options levelb
+
+main: procedure = .int
+  errors = 0
+
+  errors = errors + check(same(1), "one")
+  errors = errors + check(same(2), "two")
+  errors = errors + check(same(3), "three")
+  errors = errors + check(same(4), "four")
+  errors = errors + check(same(5), "five")
+  errors = errors + check(same(6), "six")
+  errors = errors + check(same(7), "seven")
+  errors = errors + check(same(8), "eight")
+  errors = errors + check(same(9), "nine")
+  errors = errors + check(same(10), "ten")
+
+  if errors = 0 then say "ok"
+  return errors
+
+same: procedure = .boolean
+  arg value = .int
+  return value = value
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL" label
+  return 1

@@ -356,6 +356,187 @@ rule rules[] =
                          0},
             {END_OF_RULE},
 
+            /* Full copy already copies status flags; drop redundant acopy. */
+            {NO_GAP, OP_CODE,"copy", 'r', 0, 'r', 1, 0, 0,
+                        OP_CODE,"copy", 'r', 0, 'r', 1, 0, 0},
+            {NO_GAP, OP_CODE,"acopy", 'r', 0, 'r', 1, 0, 0,
+                         0},
+            {END_OF_RULE},
+
+            /* Duplicate linked register read: reuse the first detached copy if
+             * no barrier or relevant register use intervenes. */
+            {NO_HAZARD, OP_CODE,"link", 'r', 0, 'r', 1, 0, 0,
+                        OP_CODE,"link", 'r', 0, 'r', 1, 0, 0},
+            {NO_GAP, OP_CODE,"copy", 'r', 2, 'r', 0, 0, 0,
+                        OP_CODE,"copy", 'r', 2, 'r', 0, 0, 0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
+                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
+            {NO_HAZARD, OP_CODE,"link", 'r', 3, 'r', 1, 0, 0,
+                        OP_CODE,"copy", 'r', 4, 'r', 2, 0, 0},
+            {NO_GAP, OP_CODE,"copy", 'r', 4, 'r', 3, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
+                         0},
+            {END_OF_RULE},
+
+            {NO_HAZARD, OP_CODE,"link", 'r', 0, 'r', 1, 0, 0,
+                        OP_CODE,"link", 'r', 0, 'r', 1, 0, 0},
+            {NO_GAP, OP_CODE,"bcopy", 'r', 2, 'r', 0, 0, 0,
+                        OP_CODE,"bcopy", 'r', 2, 'r', 0, 0, 0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
+                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
+            {NO_HAZARD, OP_CODE,"link", 'r', 3, 'r', 1, 0, 0,
+                        OP_CODE,"bcopy", 'r', 4, 'r', 2, 0, 0},
+            {NO_GAP, OP_CODE,"bcopy", 'r', 4, 'r', 3, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
+                         0},
+            {END_OF_RULE},
+
+            {NO_HAZARD, OP_CODE,"link", 'r', 0, 'r', 1, 0, 0,
+                        OP_CODE,"link", 'r', 0, 'r', 1, 0, 0},
+            {NO_GAP, OP_CODE,"icopy", 'r', 2, 'r', 0, 0, 0,
+                        OP_CODE,"icopy", 'r', 2, 'r', 0, 0, 0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
+                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
+            {NO_HAZARD, OP_CODE,"link", 'r', 3, 'r', 1, 0, 0,
+                        OP_CODE,"icopy", 'r', 4, 'r', 2, 0, 0},
+            {NO_GAP, OP_CODE,"icopy", 'r', 4, 'r', 3, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
+                         0},
+            {END_OF_RULE},
+
+            {NO_HAZARD, OP_CODE,"link", 'r', 0, 'r', 1, 0, 0,
+                        OP_CODE,"link", 'r', 0, 'r', 1, 0, 0},
+            {NO_GAP, OP_CODE,"scopy", 'r', 2, 'r', 0, 0, 0,
+                        OP_CODE,"scopy", 'r', 2, 'r', 0, 0, 0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
+                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
+            {NO_HAZARD, OP_CODE,"link", 'r', 3, 'r', 1, 0, 0,
+                        OP_CODE,"scopy", 'r', 4, 'r', 2, 0, 0},
+            {NO_GAP, OP_CODE,"scopy", 'r', 4, 'r', 3, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
+                         0},
+            {END_OF_RULE},
+
+            {NO_HAZARD, OP_CODE,"link", 'r', 0, 'r', 1, 0, 0,
+                        OP_CODE,"link", 'r', 0, 'r', 1, 0, 0},
+            {NO_GAP, OP_CODE,"fcopy", 'r', 2, 'r', 0, 0, 0,
+                        OP_CODE,"fcopy", 'r', 2, 'r', 0, 0, 0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
+                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
+            {NO_HAZARD, OP_CODE,"link", 'r', 3, 'r', 1, 0, 0,
+                        OP_CODE,"fcopy", 'r', 4, 'r', 2, 0, 0},
+            {NO_GAP, OP_CODE,"fcopy", 'r', 4, 'r', 3, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
+                         0},
+            {END_OF_RULE},
+
+            {NO_HAZARD, OP_CODE,"link", 'r', 0, 'r', 1, 0, 0,
+                        OP_CODE,"link", 'r', 0, 'r', 1, 0, 0},
+            {NO_GAP, OP_CODE,"dcopy", 'r', 2, 'r', 0, 0, 0,
+                        OP_CODE,"dcopy", 'r', 2, 'r', 0, 0, 0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
+                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
+            {NO_HAZARD, OP_CODE,"link", 'r', 3, 'r', 1, 0, 0,
+                        OP_CODE,"dcopy", 'r', 4, 'r', 2, 0, 0},
+            {NO_GAP, OP_CODE,"dcopy", 'r', 4, 'r', 3, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
+                         0},
+            {END_OF_RULE},
+
+            /* Same duplicate-read optimisation for one-based attribute links.
+             * The integer operand is the one-based attribute slot and must
+             * match; two attributes on the same object are independent values.
+             */
+            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5,
+                        OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5},
+            {NO_GAP, OP_CODE,"copy", 'r', 2, 'r', 0, 0, 0,
+                        OP_CODE,"copy", 'r', 2, 'r', 0, 0, 0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
+                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
+            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 3, 'r', 1, 'i', 5,
+                        OP_CODE,"copy", 'r', 4, 'r', 2, 0, 0},
+            {NO_GAP, OP_CODE,"copy", 'r', 4, 'r', 3, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
+                         0},
+            {END_OF_RULE},
+
+            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5,
+                        OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5},
+            {NO_GAP, OP_CODE,"bcopy", 'r', 2, 'r', 0, 0, 0,
+                        OP_CODE,"bcopy", 'r', 2, 'r', 0, 0, 0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
+                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
+            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 3, 'r', 1, 'i', 5,
+                        OP_CODE,"bcopy", 'r', 4, 'r', 2, 0, 0},
+            {NO_GAP, OP_CODE,"bcopy", 'r', 4, 'r', 3, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
+                         0},
+            {END_OF_RULE},
+
+            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5,
+                        OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5},
+            {NO_GAP, OP_CODE,"icopy", 'r', 2, 'r', 0, 0, 0,
+                        OP_CODE,"icopy", 'r', 2, 'r', 0, 0, 0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
+                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
+            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 3, 'r', 1, 'i', 5,
+                        OP_CODE,"icopy", 'r', 4, 'r', 2, 0, 0},
+            {NO_GAP, OP_CODE,"icopy", 'r', 4, 'r', 3, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
+                         0},
+            {END_OF_RULE},
+
+            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5,
+                        OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5},
+            {NO_GAP, OP_CODE,"scopy", 'r', 2, 'r', 0, 0, 0,
+                        OP_CODE,"scopy", 'r', 2, 'r', 0, 0, 0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
+                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
+            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 3, 'r', 1, 'i', 5,
+                        OP_CODE,"scopy", 'r', 4, 'r', 2, 0, 0},
+            {NO_GAP, OP_CODE,"scopy", 'r', 4, 'r', 3, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
+                         0},
+            {END_OF_RULE},
+
+            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5,
+                        OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5},
+            {NO_GAP, OP_CODE,"fcopy", 'r', 2, 'r', 0, 0, 0,
+                        OP_CODE,"fcopy", 'r', 2, 'r', 0, 0, 0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
+                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
+            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 3, 'r', 1, 'i', 5,
+                        OP_CODE,"fcopy", 'r', 4, 'r', 2, 0, 0},
+            {NO_GAP, OP_CODE,"fcopy", 'r', 4, 'r', 3, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
+                         0},
+            {END_OF_RULE},
+
+            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5,
+                        OP_CODE,"linkattr1", 'r', 0, 'r', 1, 'i', 5},
+            {NO_GAP, OP_CODE,"dcopy", 'r', 2, 'r', 0, 0, 0,
+                        OP_CODE,"dcopy", 'r', 2, 'r', 0, 0, 0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0,
+                        OP_CODE,"unlink", 'r', 0, 0, 0, 0, 0},
+            {NO_HAZARD, OP_CODE,"linkattr1", 'r', 3, 'r', 1, 'i', 5,
+                        OP_CODE,"dcopy", 'r', 4, 'r', 2, 0, 0},
+            {NO_GAP, OP_CODE,"dcopy", 'r', 4, 'r', 3, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"unlink", 'r', 3, 0, 0, 0, 0,
+                         0},
+            {END_OF_RULE},
+
             /* sconcat to sappend: sconcat r0,r0,r1 to sappend r0,r1 */
             {NO_HAZARD, OP_CODE,"sconcat", 'r', 0, 'r', 0, 'r', 1,
                         OP_CODE,"sappend", 'r', 0, 'r', 1, 0, 0},
@@ -713,6 +894,35 @@ static int is_relevant(op_map *map, Assembler_Token *opToken) {
 
 static int instruction_is_relevant(op_map *map, instruction_queue *instruction) {
     const OpInfo *op_info;
+    Assembler_Token *value_source;
+    Assembler_Token *register_type_token;
+    Assembler_Token *value_ref;
+    char register_type;
+
+    if (instruction->instrType == TRACE_EVENT) {
+        value_source = instruction->operand2Token;
+        register_type_token = instruction->operand4Token;
+        value_ref = instruction->operand5Token;
+
+        if (value_source &&
+            value_source->token_type == STRING &&
+            value_source->token_value.string &&
+            value_source->token_value.string[0] == 'R' &&
+            value_source->token_value.string[1] == 0 &&
+            register_type_token &&
+            register_type_token->token_type == STRING &&
+            register_type_token->token_value.string &&
+            register_type_token->token_value.string[0] &&
+            register_type_token->token_value.string[1] == 0 &&
+            value_ref &&
+            value_ref->token_type == INT &&
+            value_ref->token_value.integer >= 0) {
+            register_type = (char)tolower((unsigned char)register_type_token->token_value.string[0]);
+            if (map_has_register(map, register_type, (size_t)value_ref->token_value.integer)) {
+                return 1;
+            }
+        }
+    }
 
     if (is_relevant(map, instruction->operand1Token) ||
         is_relevant(map, instruction->operand2Token) ||
@@ -1198,9 +1408,14 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
                 r++;
             } else {
                 /* Not a match - we need to check that skipping the instruction does not break the rule */
+                if ((r->flag == NO_GAP || r->flag == NO_HAZARD) &&
+                    instruction_is_relevant(map, &context->optimiser_queue[inst_no])) {
+                    return 0;
+                }
+
                 if (    context->optimiser_queue[inst_no].instrType == OP_CODE ||
                         context->optimiser_queue[inst_no].instrType == ASM_LABEL ) {
-                    /* Meta entries are always ignored */
+                    /* Non-value metadata is ignored; relevant metadata was handled above. */
 
                     if (r->flag == NO_GAP) return 0; /* No gap allowed! */
                     if (r->flag == NO_HAZARD) {

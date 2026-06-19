@@ -1,11 +1,10 @@
 /*
  * SOURCE                 : block_expr_short_circuit.crexx
- * BUILT                  : 2026-05-27 17:53:14
  */
 
 .globals=0
 
-main() .locals=8
+main() .locals=6
    .meta "block_expr_short_circuit.main"="b" ".void" main() ""
    setnumdgts 18
    setnumfuz 0
@@ -46,9 +45,9 @@ l20iffalse:
    .traceevent "V" 6 "R" "S" "r" 0 8 8 0 "calls" ""
    say r0
    .srcstep 12 12 17 "block_expr_short_circuit.crexx" 11 1 10 "if 1 | do"
-   load r5,1
-   .traceevent "L" 4 "R" "B" "r" 5 12 12 0 "" ""
-   brt l33orend,r5
+   load r4,1
+   .traceevent "L" 4 "R" "B" "r" 4 12 12 0 "" ""
+   brt l33orend,r4
    .srcstep 11 11 17 "block_expr_short_circuit.crexx" 11 8 10 "if 1 | do"
    .srcstep 9 9 17 "block_expr_short_circuit.crexx" 12 3 21 "  calls = calls + 10"
    .traceevent "V" 6 "R" "I" "r" 0 9 9 0 "calls" ""
@@ -58,13 +57,13 @@ l20iffalse:
    .srcstep 10 10 17 "block_expr_short_circuit.crexx" 13 3 15 "  leave with 0"
    load r3,0
    .traceevent "L" 4 "R" "I" "r" 3 12 12 0 "" ""
-   icopy r4,r3
+   icopy r1,r3
    br l32bexprend
 l32bexprend:
-   icopy r5,r4
+   icopy r4,r1
 l33orend:
-   .traceevent "O" 4 "R" "B" "r" 5 12 12 0 "" ""
-   brf l35iffalse,r5
+   .traceevent "O" 4 "R" "B" "r" 4 12 12 0 "" ""
+   brf l35iffalse,r4
    .srcstep 13 13 17 "block_expr_short_circuit.crexx" 14 1 4 "end then nop"
 l35iffalse:
    .srcstep 14 14 17 "block_expr_short_circuit.crexx" 15 1 10 "say calls"
@@ -72,9 +71,9 @@ l35iffalse:
    .traceevent "V" 6 "R" "S" "r" 0 14 14 0 "calls" ""
    say r0
    .srcstep 19 19 17 "block_expr_short_circuit.crexx" 17 1 10 "if 1 & do"
-   load r7,1
-   .traceevent "L" 4 "R" "B" "r" 7 19 19 0 "" ""
-   brf l48andend,r7
+   load r5,1
+   .traceevent "L" 4 "R" "B" "r" 5 19 19 0 "" ""
+   brf l48andend,r5
    .srcstep 17 17 17 "block_expr_short_circuit.crexx" 17 8 10 "if 1 & do"
    .srcstep 15 15 17 "block_expr_short_circuit.crexx" 18 3 22 "  calls = calls + 100"
    .traceevent "V" 6 "R" "I" "r" 0 15 15 0 "calls" ""
@@ -82,15 +81,15 @@ l35iffalse:
    .traceevent "O" 4 "R" "I" "r" 0 15 15 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 15 15 0 "calls" ""
    .srcstep 16 16 17 "block_expr_short_circuit.crexx" 19 3 15 "  leave with 1"
-   load r5,1
-   .traceevent "L" 4 "R" "I" "r" 5 19 19 0 "" ""
-   icopy r6,r5
+   load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 19 19 0 "" ""
+   icopy r3,r4
    br l47bexprend
 l47bexprend:
-   icopy r7,r6
+   icopy r5,r3
 l48andend:
-   .traceevent "O" 4 "R" "B" "r" 7 19 19 0 "" ""
-   brf l51iffalse,r7
+   .traceevent "O" 4 "R" "B" "r" 5 19 19 0 "" ""
+   brf l51iffalse,r5
    .srcstep 20 20 17 "block_expr_short_circuit.crexx" 20 1 4 "end then say calls"
    .srcstep 18 18 17 "block_expr_short_circuit.crexx" 20 10 19 "end then say calls"
    itos r0

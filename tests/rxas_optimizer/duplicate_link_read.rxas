@@ -1,0 +1,15 @@
+* Optimiser duplicate link/copy/unlink read coverage.
+
+main() .locals=5
+    load r0,"payload"
+
+    link r1,r0
+    scopy r2,r1
+    unlink r1
+
+    link r3,r0
+    scopy r4,r3
+    unlink r3
+
+    say r4
+    ret

@@ -108,7 +108,17 @@ execute `MKREF` against caller-owned receiver storage, so the VM finds and marks
 the owner frame rather than assuming the current frame owns the target. Only
 flagged frames run the reference-lifetime cleanup on return, invalidating
 frame-owned local and `a0` storage plus nested attribute storage without freeing
-reusable buffers.
+reusable buffers. Lexical scopes that own local storage emit `endlife` for each
+storage-owning local before block metadata is closed and, when eligible, before
+the compiler returns those registers to the reuse pool. Register reuse is more
+conservative than lexical cleanup: arguments, `.ref` arguments,
+receiver/factory pseudo-locals, exposed symbols, reference-targeted storage,
+and compiler-generated inline scaffolding are not packed into the scoped reuse
+pool. Generated trace-helper locals are not a normal-program hot path; they may
+still receive ordinary block `endlife` / metadata closeout inside the generated
+TRACE helper, but they are excluded from scoped reuse allocation. This is the
+same lifetime invalidation operation as frame cleanup, but scoped to the
+storage whose block lifetime has ended.
 `clear_frame()` performs full storage cleanup, remaining signal-handler stack
 cleanup, and any VM plugin instance cleanup when a frame is finally destroyed.
 The `SAFE_RECYCLED_STACKFRAMES` build-time debug guard can additionally zero
@@ -138,7 +148,10 @@ storage has been destroyed or invalidated. It defaults to halt, participates in
 normal signal handling, and can be probed without raising through the RXAS
 `refvalid` instruction. Raising operations include `deref`, `linkref`, and
 `setref`; using a non-reference value with those operations is treated as an
-invalid reference.
+invalid reference. `endlife rLocal` is the RXAS storage-lifetime primitive used
+by compiler-generated scope cleanup. It invalidates references to `rLocal` and
+nested attribute storage, and releases any reference payload held by that
+register, but it does not clear ordinary register contents.
 
 `OBJECT_NOT_INITIALIZED` is the dedicated signal for a typed object value that
 has not completed factory initialization. It defaults to halt and participates
@@ -284,11 +297,24 @@ compiler-emitted RXAS and VM code agree:
 The first VM-private allocations are reserved for UTF-8 validity,
 codepoint-count validity, and known Unicode normalization forms. `SETTP`,
 `SETORTP`, and `LOADSETTP` mask external writes; they cannot set or clear the
-VM-private band except through VM-owned content setters. `GETTP` and
-`GETANDTP` return readable flags, while unmasked `BRTPT` only tests public
-flag bands so private cache bits do not change legacy branch behavior.
+VM-private band except through VM-owned content setters. `SETTP` replaces only
+the non-zero public flag bands present in the requested value, with
+`SETTP reg,0` retaining the explicit "clear all public flags" behavior. This
+keeps compiler call-ABI flag writes from clearing library/runtime cache flags
+on one-register values. `GETTP` and `GETANDTP` return readable flags, while
+unmasked `BRTPT` only tests public flag bands so private cache bits do not
+change legacy branch behavior.
 Status flag instructions still take normal `rxinteger` operands in RXAS/RXBIN;
 the VM applies only the low 32 bits when reading a flag mask.
+
+Level B register flag views expose masked status-word partitions for
+system-programmer classes. VM-private, compiler call-ABI, and all-readable views
+are read-only at source level. Library and user views are writable; a public
+write view covers library and user flags only, not compiler flags. Source-level
+flag-view writes replace only the selected masked band and must preserve all
+other status bits. The compiler emits `settpmask target,value,mask` for these
+writes; the VM applies `(old & ~mask) | (value & mask)` after restricting the
+mask to source-writable library/user bands.
 
 In normal UTF builds, `RXFLAG_VM_UTF8_VALID` and
 `RXFLAG_VM_UTF8_COUNT_VALID` mean the string byte span is known well-formed
@@ -381,12 +407,14 @@ ordinary byte sequence. The register also carries `binary_pos`, a byte cursor
 used by `SETBINPOS`, `GETBINPOS`, and cursor-based `BSLICE`.
 
 RXAS-level binary opcodes operate only on the binary slot. `LOAD_REG_BINARY`
-loads a `BINARY_CONST` from `0x...` RXAS syntax. `GETBYTE` reads zero-based
-binary offsets and returns `-1` for out-of-range reads. `SETBYTE` and
-`BUPDATE` are strict and raise `OUT_OF_RANGE` for invalid byte indexes or
-fixed-size overlay writes past the destination length. `BCONCAT`, `BAPPEND`,
-and `BSLICE` build ordinary byte buffers without UTF-8 validation and clear
-VM-private UTF cache flags on the destination.
+loads a `BINARY_CONST` from `0x...` RXAS syntax. `BCOPY_REG_REG` copies only
+the binary payload and byte cursor; it deliberately does not copy
+public/compiler/library status flags. `GETBYTE` reads zero-based binary
+offsets and returns `-1` for out-of-range reads. `SETBYTE` and `BUPDATE` are
+strict and raise `OUT_OF_RANGE` for invalid byte indexes or fixed-size overlay
+writes past the destination length. `BCONCAT`, `BAPPEND`, and `BSLICE` build
+ordinary byte buffers without UTF-8 validation and clear VM-private UTF cache
+flags on the destination.
 
 `FREADB` reads bytes with `fread(ptr, 1, n, file)`, so `binary_length` is the
 actual byte count read, not a C item count.
@@ -606,8 +634,8 @@ Instructions are executed via macro-driven blocks. For example, moving to the ne
 `INTERRUPT` is the internal dispatch target used by this macro, not a source
 instruction. `INULL` and `IUNKNOWN` are runtime sentinel handlers that raise
 `UNKNOWN_INSTRUCTION`; `rxas` intentionally rejects all three names as source
-mnemonics. Opcode slots 514 and 515 are reserved after removal of the legacy DLL
-loader instructions, preserving later opcode numbers.
+mnemonics. Opcode slot 514 is now `ENDLIFE_REG`; the later opcode numbers are
+preserved.
 
 ### Instruction Flow Example
 Inside the `run()` loop, implementations are declared using `START_INSTRUCTION`. The assembler passes operands inline sequentially in the binary array.

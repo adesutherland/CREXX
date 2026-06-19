@@ -274,3 +274,15 @@ label = "ready" /* .string */
 Use explicit constructors or declarations when the intended type is not obvious
 from the initializer, when a signature is being published, or when a value must
 be an object or array contract.
+
+A bare type expression can also declare a typed local before the value is known:
+
+```rexx
+slot = .int
+if found then slot = existing
+else slot = created
+```
+
+Use this form when the declaration is the important point. Use a literal
+initializer, such as `slot = 0`, only when that literal value is part of the
+program logic.

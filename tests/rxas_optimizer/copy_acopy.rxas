@@ -1,0 +1,8 @@
+* Optimiser redundant full-copy/status-copy coverage.
+
+main() .locals=3
+    load r0,"payload"
+    copy r1,r0
+    acopy r1,r0
+    say r1
+    ret

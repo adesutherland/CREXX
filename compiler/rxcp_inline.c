@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <stdarg.h>
 #include "rxcp_val.h"
 #include "rxcp_ast.h"
@@ -596,10 +597,42 @@ static int inline_class_has_reference_attribute(Context *context, Scope *scope, 
     return result;
 }
 
+static ASTNode *inline_class_attribute_register_view(Symbol *symbol) {
+    int i;
+
+    if (!symbol) return NULL;
+    for (i = 0; i < (int)sym_nond(symbol); i++) {
+        ASTNode *node = sym_trnd(symbol, i)->node;
+        ASTNode *reg_node;
+        ASTNode *child;
+
+        if (!node || !node->parent || node->parent->node_type != DEFINE) continue;
+        reg_node = ast_chld(node->parent, NODE_REGISTER, 0);
+        if (!reg_node) continue;
+
+        for (child = reg_node->child; child; child = child->sibling) {
+            if (child->node_type == INTEGER || child->node_type == CONSTANT) continue;
+            return child;
+        }
+    }
+
+    return NULL;
+}
+
+static int inline_class_attribute_is_flag_view(Symbol *symbol) {
+    ASTNode *view = inline_class_attribute_register_view(symbol);
+
+    return view &&
+           view->node_string &&
+           view->node_string_length > 6 &&
+           strncasecmp(view->node_string, "flags.", 6) == 0;
+}
+
 static int inline_class_attribute_shape_is_portable(Symbol *symbol) {
     if (!inline_symbol_is_class_attribute(symbol)) return 1;
     if (symbol->is_this || symbol->is_factory) return 1;
     if (symbol->value_dims > 0) return 0;
+    if (inline_class_attribute_is_flag_view(symbol)) return 0;
 
     switch (symbol->type) {
         case TP_INTEGER:
@@ -629,6 +662,20 @@ static int inline_class_attribute_register_num(Symbol *symbol) {
         idx = ast_chld(reg_node, INTEGER, 0);
         if (idx) return node_to_integer(idx);
         if (reg_node->int_value) return (int)reg_node->int_value;
+        if (reg_node->child && reg_node->child->token) {
+            return (int)strtol(reg_node->child->token->token_string, NULL, 10);
+        }
+        if (reg_node->child && reg_node->child->node_string && reg_node->child->node_string_length) {
+            char *buffer = malloc(reg_node->child->node_string_length + 1);
+            int result;
+
+            if (!buffer) return UNSET_REGISTER;
+            memcpy(buffer, reg_node->child->node_string, reg_node->child->node_string_length);
+            buffer[reg_node->child->node_string_length] = 0;
+            result = (int)strtol(buffer, NULL, 10);
+            free(buffer);
+            return result;
+        }
     }
 
     return symbol->register_num;
@@ -691,6 +738,13 @@ static int inline_parent_is_eager_operator(ASTNode *parent) {
         case OP_NEG:
         case OP_PLUS:
         case OP_NOT:
+        case OP_BIT_AND:
+        case OP_BIT_OR:
+        case OP_BIT_XOR:
+        case OP_BIT_NOT:
+        case OP_BIT_SHL:
+        case OP_BIT_SHR:
+        case OP_FLAG_HAS:
             return 1;
 
         default:
@@ -1983,7 +2037,6 @@ static Symbol *inline_find_instance_symbol(ASTNode *proc_def,
 
 static int inline_count_factory_attributes(ASTNode *factory_def) {
     ASTNode *class_node;
-    ASTNode *attr;
     int count;
 
     if (!factory_def) return 0;
@@ -1992,27 +2045,63 @@ static int inline_count_factory_attributes(ASTNode *factory_def) {
     while (class_node && class_node->node_type != CLASS_DEF) class_node = class_node->parent;
     if (!class_node) return 0;
 
-    count = 0;
-    attr = class_node->child;
-    while (attr) {
-        if (attr->node_type == DEFINE) {
-            int index;
-            ASTNode *nr;
+    {
+        Scope *class_scope = 0;
 
-            index = -1;
-            nr = ast_chld(attr, NODE_REGISTER, 0);
-            if (nr) {
-                ASTNode *idx;
-
-                idx = ast_chld(nr, INTEGER, 0);
-                if (idx) index = node_to_integer(idx);
-                else if (nr->int_value) index = (int)nr->int_value;
-            }
-
-            if (index >= count) count = index + 1;
-            else if (index == -1) count++;
+        if (class_node->symbolNode && class_node->symbolNode->symbol) {
+            class_scope = class_node->symbolNode->symbol->defines_scope;
         }
-        attr = attr->sibling;
+        if (!class_scope) class_scope = class_node->scope;
+
+        if (class_scope) {
+            Symbol **symbols = scp_syms(class_scope);
+            if (symbols) {
+                int i;
+
+                count = 0;
+                for (i = 0; symbols[i]; i++) {
+                    Symbol *s = symbols[i];
+                    int index;
+
+                    if (s->symbol_type != VARIABLE_SYMBOL) continue;
+                    index = inline_class_attribute_register_num(s);
+                    if (index == 0) {
+                        /* register.0 is the containing value, not a child slot. */
+                    } else if (index >= count) count = index + 1;
+                    else if (index == UNSET_REGISTER) count++;
+                }
+                free(symbols);
+                return count;
+            }
+        }
+    }
+
+    count = 0;
+    {
+        ASTNode *attr = class_node->child;
+        while (attr) {
+            if (attr->node_type == DEFINE) {
+                int index;
+                ASTNode *nr;
+
+                index = -1;
+                nr = ast_chld(attr, NODE_REGISTER, 0);
+                if (nr) {
+                    ASTNode *idx;
+
+                    idx = ast_chld(nr, INTEGER, 0);
+                    if (idx) index = node_to_integer(idx);
+                    else if (nr->int_value) index = (int)nr->int_value;
+                    else if (nr->child && nr->child->token) index = (int)strtol(nr->child->token->token_string, NULL, 10);
+                }
+
+                if (index == 0) {
+                    /* register.0 is the containing value, not a child slot. */
+                } else if (index >= count) count = index + 1;
+                else if (index == -1) count++;
+            }
+            attr = attr->sibling;
+        }
     }
 
     return count;
@@ -2167,7 +2256,6 @@ static int inline_append_method_receiver_copyback(Context *context,
     ASTNode *copy_lhs;
     ASTNode *copy_rhs;
     ASTNode *value_copy;
-    ASTNode *attr_copy;
 
     if (!context || !instr_list || !inline_scope || !source_node || !clone_state) return 0;
     if (!clone_state->method_receiver_needs_copyback) return 1;
@@ -2190,11 +2278,9 @@ static int inline_append_method_receiver_copyback(Context *context,
     if (!copy_lhs || !copy_rhs) return 0;
 
     value_copy = inline_create_register_copy_instr(context, inline_scope, "copy", copy_lhs, copy_rhs);
-    attr_copy = inline_create_register_copy_instr(context, inline_scope, "acopy", copy_lhs, copy_rhs);
-    if (!value_copy || !attr_copy) return 0;
+    if (!value_copy) return 0;
 
     add_ast(instr_list, value_copy);
-    add_ast(instr_list, attr_copy);
     return 1;
 }
 
@@ -2512,14 +2598,11 @@ static int inline_bind_call_arguments(Context *context,
 
         if (inline_formal_needs_isolated_copy(formal_target, param_arg)) {
             ASTNode *bind_copy;
-            ASTNode *attr_copy;
 
             bind_copy = inline_create_register_copy_instr(context, inline_scope, "copy", bind_lhs, bind_rhs);
-            attr_copy = inline_create_register_copy_instr(context, inline_scope, "acopy", bind_lhs, bind_rhs);
-            if (!bind_copy || !attr_copy) INLINE_BIND_RETURN(0);
+            if (!bind_copy) INLINE_BIND_RETURN(0);
 
             add_ast(instr_list, bind_copy);
-            add_ast(instr_list, attr_copy);
         } else {
             add_ast(bind_assign, bind_lhs);
             add_ast(bind_assign, bind_rhs);
@@ -2632,6 +2715,15 @@ static int inline_duplicate_scope_symbols(Scope *old_scope,
         new_symbol->defines_scope = NULL;
         new_symbol->ast_template = NULL;
         new_symbol->is_inlinable = 0;
+        /*
+         * Once a by-value formal has been cloned into an inline body it is
+         * bound into local storage by inline_bind_call_arguments(); it is no
+         * longer a VM argument slot. Keep `.ref` formals fenced because they
+         * alias caller-visible storage.
+         */
+        if (old_symbol->is_arg && !old_symbol->is_ref_arg) {
+            new_symbol->is_arg = 0;
+        }
 
         if (!inline_append_symbol_map_entry(state, old_symbol, new_symbol)) {
             free(symbols);
@@ -3735,7 +3827,6 @@ static int ast_inline_statement(Context *context,
                 (inline_node_needs_attr_copy(ret_expr) &&
                  (ret_expr->value_type == TP_BINARY || ret_expr->target_type == TP_BINARY))) {
                 ASTNode *ret_copy;
-                ASTNode *attr_copy;
 
                 ret_rhs = inline_clone_subtree(context, ret_expr, &clone_state);
                 if (!ret_rhs) {
@@ -3761,14 +3852,12 @@ static int ast_inline_statement(Context *context,
                 }
 
                 ret_copy = inline_create_register_copy_instr(context, inline_scope, "copy", ret_lhs, ret_rhs);
-                attr_copy = inline_create_register_copy_instr(context, inline_scope, "acopy", ret_lhs, ret_rhs);
-                if (!ret_copy || !attr_copy) {
+                if (!ret_copy) {
                     inline_debug_fail_closed(context, call_node, proc_sym, "failed to create aggregate return copy instructions");
                     inline_free_symbol_map(&clone_state);
                     return 0;
                 }
                 add_ast(instr_list, ret_copy);
-                add_ast(instr_list, attr_copy);
             } else {
                 ret_rhs = inline_clone_subtree(context, ret_expr, &clone_state);
                 if (!ret_rhs) {
@@ -4658,16 +4747,33 @@ static int inline_assembler_has_unsupported_aliasing(ASTNode *node) {
 }
 
 static int inline_assembler_has_unsupported_effect(ASTNode *node) {
+    ASTNode *child;
+
+    if (!node || node->node_type != ASSEMBLER) return 0;
+
     /*
-     * Reserved for non-aliasing assembler effects that are not represented by
-     * ordinary AST read/write links. Stateful string helpers are intentionally
-     * not rejected here: assembler operands are marked read/write by symbol
-     * validation, so writable by-value formals are materialised through the same
-     * copy semantics as normal calls. SCOPY resets copied string cursor state,
-     * which preserves the call prologue boundary for setstrpos/substcut/dropchar
+     * Array operands cannot be safely represented by the current inline
+     * substitution model for assembler statements. The normal call path can
+     * pass the array/ref shape through the callee signature, but an inlined
+     * assembler operand is validated directly at the caller site and array
+     * actuals are rejected there.
+     *
+     * Stateful scalar string helpers are intentionally not rejected here:
+     * assembler operands are marked read/write by symbol validation, so
+     * writable by-value formals are materialised through the same copy
+     * semantics as normal calls. SCOPY resets copied string cursor state, which
+     * preserves the call prologue boundary for setstrpos/substcut/dropchar
      * style helpers.
      */
-    (void)node;
+    for (child = node->child; child; child = child->sibling) {
+        if (inline_node_has_array_shape(child)) return 1;
+        if (child->symbolNode &&
+            child->symbolNode->symbol &&
+            child->symbolNode->symbol->value_dims > 0) {
+            return 1;
+        }
+    }
+
     return 0;
 }
 
@@ -5263,6 +5369,13 @@ static int inline_meta_node_is_exportable(ASTNode *node) {
         case OP_AND:
         case OP_OR:
         case OP_NOT:
+        case OP_BIT_AND:
+        case OP_BIT_OR:
+        case OP_BIT_XOR:
+        case OP_BIT_NOT:
+        case OP_BIT_SHL:
+        case OP_BIT_SHR:
+        case OP_FLAG_HAS:
         case OP_COMPARE_EQUAL:
         case OP_COMPARE_NEQ:
         case OP_COMPARE_GT:

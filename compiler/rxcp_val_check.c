@@ -27,20 +27,171 @@
  */
 
 #include <string.h>
+#include <strings.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include "rxcp_val.h"
 
-/* Get the assembler operandtype from the astnode type for the ASSEMBLER instruction */
-static OperandType nodetype_to_operandtype(NodeType ntype) {
-    switch (ntype) {
+static int node_text_equals_ci(ASTNode *node, const char *value) {
+    size_t i;
+    size_t length;
+
+    if (!node || !node->node_string || !value) return 0;
+    length = strlen(value);
+    if (node->node_string_length != length) return 0;
+    for (i = 0; i < length; i++) {
+        if (tolower((unsigned char)node->node_string[i]) !=
+            tolower((unsigned char)value[i])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static int register_attr_is_flag_view(ASTNode *attr) {
+    return attr &&
+           attr->node_type == VAR_SYMBOL &&
+           attr->node_string &&
+           attr->node_string_length > 6 &&
+           strncasecmp(attr->node_string, "flags.", 6) == 0;
+}
+
+static int register_flag_partition_is_valid(ASTNode *attr) {
+    return node_text_equals_ci(attr, "flags.vm") ||
+           node_text_equals_ci(attr, "flags.compiler") ||
+           node_text_equals_ci(attr, "flags.library") ||
+           node_text_equals_ci(attr, "flags.user") ||
+           node_text_equals_ci(attr, "flags.public") ||
+           node_text_equals_ci(attr, "flags.readable");
+}
+
+static int register_flag_view_type_is_int(ASTNode *node) {
+    ASTNode *type;
+
+    if (!node || !node->parent || node->parent->node_type != DEFINE) return 1;
+    type = node->parent->child ? node->parent->child->sibling : 0;
+    return type && type->node_type == CLASS && nodeis(type, ".int");
+}
+
+static int register_attr_is_value_view(ASTNode *attr) {
+    return nodeis(attr, "int") ||
+           nodeis(attr, "string") ||
+           nodeis(attr, "object") ||
+           nodeis(attr, "decimal") ||
+           nodeis(attr, "binary") ||
+           nodeis(attr, "float");
+}
+
+static void validate_register_attribute(ASTNode *node, ASTNode *attr) {
+    if (!attr || attr->node_type != VAR_SYMBOL) return;
+
+    if (register_attr_is_flag_view(attr)) {
+        if (!register_flag_partition_is_valid(attr)) {
+            mknd_err(attr, "INVALID_REGISTER_FLAG_VIEW");
+        } else if (!register_flag_view_type_is_int(node)) {
+            mknd_err(attr, "REGISTER_FLAG_VIEW_REQUIRES_INT");
+        }
+    } else if (!register_attr_is_value_view(attr)) {
+        mknd_err(attr, "INVALID_REGISTER_ATTRIBUTE");
+    }
+}
+
+/* Get the assembler operandtype from the AST node for the ASSEMBLER instruction */
+static OperandType node_to_assembler_operandtype(ASTNode *node) {
+    if (!node) return OP_NONE;
+
+    switch (node->node_type) {
         case INTEGER: return OP_INT;
         case FLOAT: return OP_FLOAT;
         case DECIMAL:  return OP_DECIMAL;
         case STRING: return OP_STRING;
+        case BINARY: return OP_BINARY;
         case FUNC_SYMBOL: return OP_FUNC;
-        default: return OP_REG;
+
+        case CONSTANT:
+            switch (node->target_type != TP_UNKNOWN ? node->target_type : node->value_type) {
+                case TP_BOOLEAN:
+                case TP_INTEGER:
+                    return OP_INT;
+
+                case TP_FLOAT:
+                    return OP_FLOAT;
+
+                case TP_DECIMAL:
+                    return OP_DECIMAL;
+
+                case TP_STRING:
+                    return OP_STRING;
+
+                case TP_BINARY:
+                    return OP_BINARY;
+
+                default:
+                    return OP_REG;
+            }
+
+        default:
+            return OP_REG;
     }
+}
+
+static int assembler_has_unresolved_symbol_operand(ASTNode *node) {
+    ASTNode *child;
+
+    if (!node) return 0;
+    for (child = node->child; child; child = child->sibling) {
+        if (child->node_type == VAR_SYMBOL || child->node_type == VAR_TARGET) return 1;
+    }
+    return 0;
+}
+
+static void validate_assembler_node(Context *context, ASTNode *node) {
+    ASTNode *child;
+    OperandType type1, type2, type3;
+    char *buffer;
+    char *c;
+
+    if (context->level != LEVELB) {
+        /* ASSEMBLER is only valid in level b */
+        mknd_err_unique(node, "ASSEMBLER_ONLY_LEVELB");
+        return;
+    }
+
+    child = node->child;
+    if (child) {
+        type1 = node_to_assembler_operandtype(child);
+        child = child->sibling;
+        if (child) {
+            type2 = node_to_assembler_operandtype(child);
+            child = child->sibling;
+            if (child) type3 = node_to_assembler_operandtype(child);
+            else type3 = OP_NONE;
+        }
+        else {
+            type2 = OP_NONE;
+            type3 = OP_NONE;
+        }
+    }
+    else {
+        type1 = OP_NONE;
+        type2 = OP_NONE;
+        type3 = OP_NONE;
+    }
+
+    /* We need to copy it to a null terminated buffer and lowercase it! */
+    buffer = malloc(node->node_string_length + 1);
+    memcpy(buffer, node->node_string, node->node_string_length);
+    buffer[node->node_string_length] = 0;
+    for (c = buffer; *c; ++c) *c = (char) tolower(*c);
+
+    if (!src_inst(buffer, type1, type2, type3)) {
+        if (!context->is_final_pass && assembler_has_unresolved_symbol_operand(node)) {
+            free(buffer);
+            return;
+        }
+        mknd_err_unique(node, "INVALID_ASSEMBLER");
+    }
+    free(buffer);
 }
 
 static int has_no_concat_gap(ASTNode *left, ASTNode *right) {
@@ -175,32 +326,41 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
             }
             else return result_normal; /* No instructions at all! */
 
-            if (node->child->sibling && node->child->sibling->node_type != PROCEDURE && node->child->sibling->node_type != CLASS_DEF) {
+            last = node->child;
+            child = node->child->sibling;
+            while (child && child->node_type == CONSTANT_DEF) {
+                last = child;
+                child = child->sibling;
+            }
+
+            if (child && child->node_type != PROCEDURE &&
+                child->node_type != CLASS_DEF &&
+                child->node_type != INTERFACE_DEF) {
                 /* If the first instruction is not a PROCEDURE or CLASS, then we need to
-                * add an implicit "main" PROCEDURE */
-                child = ast_ftt(context, PROCEDURE, "main:");
-                child->is_implicit_main = 1;
-                child->parent = node;
-                child->sibling = node->child->sibling;
-                node->child->sibling = child;
+                * add an implicit "main" PROCEDURE after any file-scope declarations. */
+                new_child = ast_ftt(context, PROCEDURE, "main:");
+                new_child->is_implicit_main = 1;
+                new_child->parent = node;
+                new_child->sibling = child;
+                last->sibling = new_child;
 
                 /* Add a function return type */
                 /* To work out the return type we walk the tree from here until we find the first return, a procedure or a class */
-                n = child->sibling;
+                n = new_child->sibling;
                 while (1) {
                     if (!n) {
                         /* No return statement so must be returning null */
-                        add_ast(child,ast_ft(context, VOID));
+                        add_ast(new_child,ast_ft(context, VOID));
                         break;
                     }
-                    if (n->node_type == PROCEDURE || n->node_type == CLASS_DEF) {
+                    if (n->node_type == PROCEDURE || n->node_type == CLASS_DEF || n->node_type == INTERFACE_DEF) {
                         /* No return statement so must be returning null */
-                        add_ast(child,ast_ft(context, VOID));
+                        add_ast(new_child,ast_ft(context, VOID));
                         break;
                     }
                     if (n->node_type == RETURN) {
-                        if (n->child) add_ast(child,ast_ftt(context, CLASS, ".int")); /* Must return an int */
-                        else add_ast(child,ast_ft(context, VOID)); /* No return value - returning void */
+                        if (n->child) add_ast(new_child,ast_ftt(context, CLASS, ".int")); /* Must return an int */
+                        else add_ast(new_child,ast_ft(context, VOID)); /* No return value - returning void */
                         break;
                     }
 
@@ -210,7 +370,7 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                     else {
                         n = n->parent;
                         while (n) {
-                            if (n == child->sibling->parent) n = 0; /* end of sub-tree */
+                            if (n == new_child->sibling->parent) n = 0; /* end of sub-tree */
                             else if (n->sibling) {
                                 n = n->sibling;
                                 break;
@@ -251,14 +411,7 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
                 }
             }
             ASTNode *attr = index ? index->sibling : NULL;
-            if (attr && attr->node_type == VAR_SYMBOL) {
-                if (!nodeis(attr, "int") &&
-                    !nodeis(attr, "string") &&
-                    !nodeis(attr, "object") &&
-                    !nodeis(attr, "float")) {
-                    mknd_err(attr, "INVALID_REGISTER_ATTRIBUTE");
-                }
-            }
+            validate_register_attribute(node, attr);
         }
         else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY || node->node_type == MATCH) {
             if (node->node_type == PROCEDURE && node->parent->node_type != PROGRAM_FILE) {
@@ -713,7 +866,8 @@ static int is_program_header_node(ASTNode *node) {
     return node &&
            (node->node_type == REXX_OPTIONS ||
             node->node_type == NAMESPACE ||
-            node->node_type == IMPORT);
+            node->node_type == IMPORT ||
+            node->node_type == CONSTANT_DEF);
 }
 
 static int is_top_level_callable_boundary(ASTNode *node) {
@@ -802,14 +956,7 @@ walker_result ast_source_structure_walker(walker_direction direction,
             if (idx < 0) mknd_err(index, "REGISTER_INDEX_OUT_OF_RANGE");
         }
         attr = index ? index->sibling : 0;
-        if (attr && attr->node_type == VAR_SYMBOL) {
-            if (!nodeis(attr, "int") &&
-                !nodeis(attr, "string") &&
-                !nodeis(attr, "object") &&
-                !nodeis(attr, "float")) {
-                mknd_err(attr, "INVALID_REGISTER_ATTRIBUTE");
-            }
-        }
+        validate_register_attribute(node, attr);
     }
     else if (node->node_type == PROCEDURE || node->node_type == METHOD || node->node_type == FACTORY || node->node_type == MATCH) {
         structure_callable_body(context, node, 0, 0);
@@ -1009,10 +1156,9 @@ walker_result source_location_walker(walker_direction direction,
  * - Fixes SCONCAT to CONCAT, removes NOPs, options, etc.
  */
 walker_result syntax_validation_walker(walker_direction direction,
-                                       ASTNode* node, __attribute__((unused)) void *payload) {
+                                       ASTNode* node, void *payload) {
     ASTNode *child, *next_child;
     int has_to = 0, has_for = 0, has_by = 0, has_assign = 0;
-    char *buffer, *c;
     Context *context = (Context*)payload;
 
     if (direction == out) {
@@ -1207,52 +1353,7 @@ walker_result syntax_validation_walker(walker_direction direction,
         }
 
         else if (node->node_type == ASSEMBLER) {
-            /* ASSEMBLER operand types */
-            OperandType type1, type2, type3;
-
-            if (context->level != LEVELB) {
-                /* ASSEMBLER is only valid in level b */
-                mknd_err(node, "ASSEMBLER_ONLY_LEVELB");
-            }
-
-            else {
-
-                child = node->child;
-                if (child) {
-                    type1 = nodetype_to_operandtype(child->node_type);
-                    child = child->sibling;
-                    if (child) {
-                        type2 = nodetype_to_operandtype(child->node_type);
-                        child = child->sibling;
-                        if (child) type3 = nodetype_to_operandtype(child->node_type);
-                        else type3 = OP_NONE;
-                    }
-                    else {
-                        type2 = OP_NONE;
-                        type3 = OP_NONE;
-                    }
-                }
-                else {
-                    type1 = OP_NONE;
-                    type2 = OP_NONE;
-                    type3 = OP_NONE;
-                }
-
-                /* Lookup Instruction */
-
-                /* We need to copy it to a null terminated buffer and lowercase it! */
-                buffer = malloc(node->node_string_length + 1);
-                memcpy(buffer, node->node_string, node->node_string_length);
-                buffer[node->node_string_length] = 0;
-                for (c = buffer; *c; ++c) *c = (char) tolower(*c);
-
-                /* Lookup */
-                if (!src_inst(buffer, type1, type2, type3)) {
-                    /* Invalid Instruction */
-                    mknd_err(node, "INVALID_ASSEMBLER");
-                }
-                free(buffer);
-            }
+            validate_assembler_node(context, node);
         }
 
         /* OP_ARG_VALUE to OP_ARGS Rewrites */
@@ -1263,6 +1364,15 @@ walker_result syntax_validation_walker(walker_direction direction,
                 node->node_type = OP_ARGS;
             }
         }
+    }
+    return result_normal;
+}
+
+walker_result assembler_validation_walker(walker_direction direction,
+                                          ASTNode* node,
+                                          void *payload) {
+    if (direction == out && node->node_type == ASSEMBLER) {
+        validate_assembler_node((Context*)payload, node);
     }
     return result_normal;
 }

@@ -1,13 +1,12 @@
 /*
  * SOURCE                 : inline_test_object_expr_arg.crexx
- * BUILT                  : 2026-06-12 20:26:07
  */
 
 .meta "inline_test_object_expr_arg.box"="b" ".unknown" .class
 .meta "inline_test_object_expr_arg.box.name"="b" ".string" .attr 1
 .globals=0
 
-main() .locals=10
+main() .locals=6
    .meta "inline_test_object_expr_arg.main"="b" ".int" main() ""
    .srcstep 10 10 17 "inline_test_object_expr_arg.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -19,38 +18,38 @@ main() .locals=10
    .srcstep 7 7 17 "inline_test_object_expr_arg.crexx" 4 17 24 "  say renameBox(makeBox())"
    .srcstep 5 5 17 "inline_test_object_expr_arg.crexx" 13 3 21 "  box = .Box(\"seed\")"
    .srcstep 1 1 6 "inline_test_object_expr_arg.crexx" 19 3 13 "  *: factory"
-   setattrs r1,2
+   setattrs r3,2
    .srcstep 2 2 6 "inline_test_object_expr_arg.crexx" 19 3 13 "  *: factory"
-   setobjtype r1,"inline_test_object_expr_arg.box"
+   setobjtype r3,"inline_test_object_expr_arg.box"
    .srcstep 3 3 17 "inline_test_object_expr_arg.crexx" 21 5 19 "    name = initial"
-   load r8,"seed"
-   .traceevent "L" 4 "R" "S" "r" 8 3 3 0 "" ""
-   linkattr1 r7,r1,1
-   scopy r7,r8
-   unlink r7
+   load r5,"seed"
+   .traceevent "L" 4 "R" "S" "r" 5 3 3 0 "" ""
+   linkattr1 r4,r3,1
+   scopy r4,r5
+   unlink r4
    .srcstep 4 4 33 "inline_test_object_expr_arg.crexx" 22 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 1 4 4 0 "§factory" ""
-   copy r0,r1
-   .traceevent "A" 6 "R" "O" "r" 0 4 4 0 "box" ""
+   .traceevent "V" 6 "R" "O" "r" 3 4 4 0 "§factory" ""
+   copy r2,r3
+   .traceevent "A" 6 "R" "O" "r" 2 4 4 0 "box" ""
    .srcstep 6 6 17 "inline_test_object_expr_arg.crexx" 14 3 13 "  return box"
-   .traceevent "V" 6 "R" "O" "r" 0 8 8 0 "box" ""
-   copy r7,r0
-   acopy r7,r0
+   .traceevent "V" 6 "R" "O" "r" 2 8 8 0 "box" ""
+   copy r4,r2
    br l78bexprend
 l78bexprend:
-   load r5,1
-   settp r7,768
-   swap r6,r7
-   call r9,renameBox(),r5
-   swap r7,r6
-   .traceevent "F" 4 "R" "S" "r" 9 8 8 0 "renamebox" ""
-   say r9
+   endlife r2
+   load r0,1
+   settp r4,768
+   swap r1,r4
+   call r2,renameBox(),r0
+   swap r4,r1
+   .traceevent "F" 4 "R" "S" "r" 2 8 8 0 "renamebox" ""
+   say r2
    .srcstep 9 9 17 "inline_test_object_expr_arg.crexx" 5 3 11 "  return 0"
    ret 0
 
 renameBox() .locals=6
    .meta "inline_test_object_expr_arg.renamebox"="b" ".string" renameBox() "box=.box"
-   .srcstep 21 21 17 "inline_test_object_expr_arg.crexx" 7 1 31 "renameBox: procedure = .string"
+   .srcstep 20 20 17 "inline_test_object_expr_arg.crexx" 7 1 31 "renameBox: procedure = .string"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
@@ -58,43 +57,39 @@ renameBox() .locals=6
    setnumstd 1
    .srcstep 11 11 17 "inline_test_object_expr_arg.crexx" 8 7 17 "  arg box = .Box"
    .meta "inline_test_object_expr_arg.renamebox.box"="b" ".box" a1
-   .srcstep 16 16 17 "inline_test_object_expr_arg.crexx" 9 3 30 "  call box.setName(\"changed\")"
+   .srcstep 15 15 17 "inline_test_object_expr_arg.crexx" 9 3 30 "  call box.setName(\"changed\")"
    .srcstep 12 12 33 "inline_test_object_expr_arg.crexx" 9 8 11 "  call box.setName(\"changed\")"
    .traceevent "V" 6 "R" "O" "a" 1 12 12 0 "box" ""
    copy r1,a1
    .traceevent "A" 6 "R" "O" "r" 1 12 12 0 "§this" ""
    .srcstep 13 13 17 "inline_test_object_expr_arg.crexx" 26 5 17 "    name = value"
-   load r4,"changed"
-   .traceevent "L" 4 "R" "S" "r" 4 13 13 0 "" ""
-   linkattr1 r3,r1,1
-   scopy r3,r4
-   unlink r3
+   load r3,"changed"
+   .traceevent "L" 4 "R" "S" "r" 3 13 13 0 "" ""
+   linkattr1 r2,r1,1
+   scopy r2,r3
+   unlink r2
    .srcstep 14 14 6 "inline_test_object_expr_arg.crexx" 9 8 30 "  call box.setName(\"changed\")"
    .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "§this" ""
    copy a1,r1
-   .srcstep 15 15 6 "inline_test_object_expr_arg.crexx" 9 8 30 "  call box.setName(\"changed\")"
-   .traceevent "V" 6 "R" "O" "r" 1 0 0 0 "§this" ""
-   acopy a1,r1
-   .srcstep 20 20 17 "inline_test_object_expr_arg.crexx" 10 3 21 "  return box.getName()"
-   .srcstep 19 19 17 "inline_test_object_expr_arg.crexx" 10 10 13 "  return box.getName()"
-   .srcstep 17 17 33 "inline_test_object_expr_arg.crexx" 10 10 13 "  return box.getName()"
-   .traceevent "V" 6 "R" "O" "a" 1 17 17 0 "box" ""
-   copy r2,a1
-   .traceevent "A" 6 "R" "O" "r" 2 17 17 0 "§this" ""
-   .srcstep 18 18 17 "inline_test_object_expr_arg.crexx" 30 5 16 "    return name"
-   linkattr1 r3,r2,1
-   .traceevent "V" 6 "R" "S" "r" 3 20 20 0 "name" ""
-   scopy r5,r3
-   acopy r5,r3
-   unlink r3
-   br l140bexprend
-l140bexprend:
+   .srcstep 19 19 17 "inline_test_object_expr_arg.crexx" 10 3 21 "  return box.getName()"
+   .srcstep 18 18 17 "inline_test_object_expr_arg.crexx" 10 10 13 "  return box.getName()"
+   .srcstep 16 16 33 "inline_test_object_expr_arg.crexx" 10 10 13 "  return box.getName()"
+   .traceevent "V" 6 "R" "O" "a" 1 16 16 0 "box" ""
+   copy r4,a1
+   .traceevent "A" 6 "R" "O" "r" 4 16 16 0 "§this" ""
+   .srcstep 17 17 17 "inline_test_object_expr_arg.crexx" 30 5 16 "    return name"
+   linkattr1 r2,r4,1
+   .traceevent "V" 6 "R" "S" "r" 2 19 19 0 "name" ""
+   scopy r5,r2
+   unlink r2
+   br l137bexprend
+l137bexprend:
    ret r5
    .meta "inline_test_object_expr_arg.renamebox.box"
 
 §inline_test_object_expr_arg.box.§factory() .locals=3
    .meta "inline_test_object_expr_arg.box.§factory"="b" ".inline_test_object_expr_arg..box" §inline_test_object_expr_arg.box.§factory() "initial=.string"
-   .srcstep 31 31 17 "inline_test_object_expr_arg.crexx" 19 3 13 "  *: factory"
+   .srcstep 30 30 17 "inline_test_object_expr_arg.crexx" 19 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_object_expr_arg.box"
    setnumdgts 18
@@ -102,54 +97,54 @@ l140bexprend:
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .srcstep 28 28 17 "inline_test_object_expr_arg.crexx" 20 9 26 "    arg initial = .string"
+   .srcstep 27 27 17 "inline_test_object_expr_arg.crexx" 20 9 26 "    arg initial = .string"
    .meta "inline_test_object_expr_arg.box.§factory.initial"="b" ".string" a1
    .meta "inline_test_object_expr_arg.box.§factory.§factory"="b" ".box" r1
-   .srcstep 29 29 17 "inline_test_object_expr_arg.crexx" 21 5 19 "    name = initial"
-   .traceevent "V" 6 "R" "S" "a" 1 29 29 0 "initial" ""
+   .srcstep 28 28 17 "inline_test_object_expr_arg.crexx" 21 5 19 "    name = initial"
+   .traceevent "V" 6 "R" "S" "a" 1 28 28 0 "initial" ""
    linkattr1 r2,r1,1
    scopy r2,a1
    unlink r2
-   .srcstep 30 30 17 "inline_test_object_expr_arg.crexx" 22 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 1 30 30 0 "§factory" ""
+   .srcstep 29 29 17 "inline_test_object_expr_arg.crexx" 22 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 1 29 29 0 "§factory" ""
    ret r1
    .meta "inline_test_object_expr_arg.box.§factory.initial"
    .meta "inline_test_object_expr_arg.box.§factory.§factory"
 
 §inline_test_object_expr_arg.box.setname() .locals=3
    .meta "inline_test_object_expr_arg.box.setname"="b" ".void" §inline_test_object_expr_arg.box.setname() "value=.string"
-   .srcstep 35 35 17 "inline_test_object_expr_arg.crexx" 24 3 18 "  setName: method"
+   .srcstep 34 34 17 "inline_test_object_expr_arg.crexx" 24 3 18 "  setName: method"
    assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .srcstep 32 32 17 "inline_test_object_expr_arg.crexx" 25 9 24 "    arg value = .string"
+   .srcstep 31 31 17 "inline_test_object_expr_arg.crexx" 25 9 24 "    arg value = .string"
    .meta "inline_test_object_expr_arg.box.setname.value"="b" ".string" a2
    .meta "inline_test_object_expr_arg.box.setname.§this"="b" ".box" a1
-   .srcstep 33 33 17 "inline_test_object_expr_arg.crexx" 26 5 17 "    name = value"
-   .traceevent "V" 6 "R" "S" "a" 2 33 33 0 "value" ""
+   .srcstep 32 32 17 "inline_test_object_expr_arg.crexx" 26 5 17 "    name = value"
+   .traceevent "V" 6 "R" "S" "a" 2 32 32 0 "value" ""
    linkattr1 r2,a1,1
    scopy r2,a2
    unlink r2
-   .srcstep 34 34 17 "inline_test_object_expr_arg.crexx" 27 5 11 "    return"
+   .srcstep 33 33 17 "inline_test_object_expr_arg.crexx" 27 5 11 "    return"
    ret
    .meta "inline_test_object_expr_arg.box.setname.value"
    .meta "inline_test_object_expr_arg.box.setname.§this"
 
 §inline_test_object_expr_arg.box.getname() .locals=2
    .meta "inline_test_object_expr_arg.box.getname"="b" ".string" §inline_test_object_expr_arg.box.getname() ""
-   .srcstep 37 37 17 "inline_test_object_expr_arg.crexx" 29 3 28 "  getName: method = .string"
+   .srcstep 36 36 17 "inline_test_object_expr_arg.crexx" 29 3 28 "  getName: method = .string"
    assertinitialized a1
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .srcstep 36 36 17 "inline_test_object_expr_arg.crexx" 30 5 16 "    return name"
+   .srcstep 35 35 17 "inline_test_object_expr_arg.crexx" 30 5 16 "    return name"
    .meta "inline_test_object_expr_arg.box.getname.§this"="b" ".box" a1
    linkattr1 r1,a1,1
-   .traceevent "V" 6 "R" "S" "r" 1 36 36 0 "name" ""
+   .traceevent "V" 6 "R" "S" "r" 1 35 35 0 "name" ""
    ret r1
    .meta "inline_test_object_expr_arg.box.getname.§this"

@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test_named_factory_selector.crexx
- * BUILT                  : 2026-06-13 15:11:36
  */
 
 .meta "inline_test_named_factory_selector.car"="b" ".unknown" .class
@@ -72,7 +71,7 @@ directNamed() .locals=3
    .traceevent "F" 4 "R" "O" "r" 2 6 6 0 "§factory.from_name" ""
    ret r2
 
-assignedNamed() .locals=5
+assignedNamed() .locals=4
    .meta "inline_test_named_factory_selector.assignednamed"="b" ".inline_test_named_factory_selector..vehicle" assignedNamed() "name=.string"
    .srcstep 14 14 17 "inline_test_named_factory_selector.crexx" 13 1 36 "assignedNamed: procedure = .vehicle"
    setnumdgts 18
@@ -85,25 +84,27 @@ assignedNamed() .locals=5
    .srcstep 9 9 17 "inline_test_named_factory_selector.crexx" 15 3 37 "  current = .vehicle.from_name(name)"
    .meta "inline_test_named_factory_selector.assignednamed.current"="b" ".vehicle" r0
    .traceevent "V" 6 "R" "S" "a" 1 9 9 0 "name" ""
-   load r3,1
+   load r2,1
    settp a1,256
-   swap r4,a1
-   srcfproc r0,"inline_test_named_factory_selector.vehicle..from_name",r3
-   dcall r0,r0,r3
-   swap a1,r4
+   swap r3,a1
+   srcfproc r0,"inline_test_named_factory_selector.vehicle..from_name",r2
+   dcall r0,r0,r2
+   swap a1,r3
    .traceevent "F" 4 "R" "O" "r" 0 9 9 0 "§factory.from_name" ""
    .traceevent "A" 6 "R" "O" "r" 0 9 9 0 "current" ""
    .srcstep 11 11 17 "inline_test_named_factory_selector.crexx" 16 3 19 "  if name = \"beta\" then do"
    .traceevent "V" 6 "R" "S" "a" 1 11 11 0 "name" ""
-   req r4,a1,"beta"
-   .traceevent "O" 4 "R" "B" "r" 4 11 11 0 "" ""
-   brf l47iffalse,r4
+   req r3,a1,"beta"
+   .traceevent "O" 4 "R" "B" "r" 3 11 11 0 "" ""
+   brf l47iffalse,r3
    .srcstep 12 12 17 "inline_test_named_factory_selector.crexx" 16 20 24 "  if name = \"beta\" then do"
    .srcstep 10 10 17 "inline_test_named_factory_selector.crexx" 17 5 15 "    marker = 1"
    .meta "inline_test_named_factory_selector.assignednamed.marker"="b" ".int" r2
    load r2,1
    .traceevent "L" 4 "R" "I" "r" 2 10 10 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 2 10 10 0 "marker" ""
+   endlife r2
+   .meta "inline_test_named_factory_selector.assignednamed.marker"
 l47iffalse:
    .srcstep 13 13 17 "inline_test_named_factory_selector.crexx" 19 3 17 "  return current"
    .traceevent "V" 6 "R" "O" "r" 0 13 13 0 "current" ""

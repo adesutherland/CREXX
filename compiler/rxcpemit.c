@@ -30,7 +30,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include <time.h>
+#include <strings.h>
 #include <ctype.h>
 #include <limits.h>
 #include "rxcpmain.h"
@@ -131,6 +131,15 @@ static void node_cleanup_replace_text(ASTNode *node, char *text) {
         node->cleanup = 0;
     }
     node->cleanup = output_fs(text);
+}
+
+static void node_cleanup_prepend_text(ASTNode *node, char *text) {
+    if (!node || !text) return;
+    if (node->cleanup) {
+        output_prepend_text(text, node->cleanup);
+    } else {
+        node->cleanup = output_fs(text);
+    }
 }
 
 static int visible_fixed_arg_count(ASTNode *node) {
@@ -265,6 +274,122 @@ static void attribute_owner_register(ASTNode *scope_anchor,
     }
 }
 
+static int class_attribute_register_index(Symbol *symbol) {
+    int i;
+
+    if (!symbol) return 0;
+    for (i = 0; i < (int)sym_nond(symbol); i++) {
+        ASTNode *def_node = sym_trnd(symbol, i)->node;
+        if (def_node && def_node->parent && def_node->parent->node_type == DEFINE) {
+            ASTNode *nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
+            if (nr) {
+                ASTNode *idx = ast_chld(nr, INTEGER, 0);
+                if (idx) return node_to_integer(idx);
+                if (nr->int_value) return (int)nr->int_value;
+                if (nr->child && nr->child->token) {
+                    return (int)strtol(nr->child->token->token_string, NULL, 10);
+                }
+                if (nr->child && nr->child->node_string && nr->child->node_string_length) {
+                    char *buffer = malloc(nr->child->node_string_length + 1);
+                    int result;
+
+                    if (!buffer) return 0;
+                    memcpy(buffer, nr->child->node_string, nr->child->node_string_length);
+                    buffer[nr->child->node_string_length] = 0;
+                    result = (int)strtol(buffer, NULL, 10);
+                    free(buffer);
+                    return result;
+                }
+            }
+        }
+    }
+    return 0;
+}
+
+static ASTNode *class_attribute_register_view(Symbol *symbol) {
+    int i;
+
+    if (!symbol) return 0;
+    for (i = 0; i < (int)sym_nond(symbol); i++) {
+        ASTNode *def_node = sym_trnd(symbol, i)->node;
+        ASTNode *nr;
+        ASTNode *child;
+
+        if (!def_node || !def_node->parent || def_node->parent->node_type != DEFINE) continue;
+        nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
+        if (!nr) continue;
+        for (child = nr->child; child; child = child->sibling) {
+            if (child->node_type == INTEGER || child->node_type == CONSTANT) continue;
+            return child;
+        }
+    }
+    return 0;
+}
+
+static int class_attribute_view_equals(Symbol *symbol, const char *value) {
+    ASTNode *view = class_attribute_register_view(symbol);
+    size_t i;
+    size_t length;
+
+    if (!view || !view->node_string || !value) return 0;
+    length = strlen(value);
+    if (view->node_string_length != length) return 0;
+    for (i = 0; i < length; i++) {
+        if ((char)tolower((unsigned char)view->node_string[i]) !=
+            (char)tolower((unsigned char)value[i])) {
+            return 0;
+        }
+    }
+    return 1;
+}
+
+static int class_attribute_is_flag_view(Symbol *symbol) {
+    ASTNode *view = class_attribute_register_view(symbol);
+
+    return view &&
+           view->node_string &&
+           view->node_string_length > 6 &&
+           strncasecmp(view->node_string, "flags.", 6) == 0;
+}
+
+static unsigned int class_attribute_flag_mask(Symbol *symbol) {
+    if (class_attribute_view_equals(symbol, "flags.vm")) return RXFLAG_VM_PRIVATE_MASK;
+    if (class_attribute_view_equals(symbol, "flags.compiler")) return RXFLAG_COMPILER_MASK;
+    if (class_attribute_view_equals(symbol, "flags.library")) return RXFLAG_LIBRARY_MASK;
+    if (class_attribute_view_equals(symbol, "flags.user")) return RXFLAG_USER_MASK;
+    if (class_attribute_view_equals(symbol, "flags.public")) return RXFLAG_SOURCE_WRITABLE_MASK;
+    if (class_attribute_view_equals(symbol, "flags.readable")) return RXFLAG_READABLE_MASK;
+    return 0;
+}
+
+static int class_attribute_is_complex(Symbol *symbol) {
+    int index;
+    Symbol **symbols;
+    int i;
+
+    if (!symbol) return 0;
+    index = class_attribute_register_index(symbol);
+    if (index == 0) return 1;
+    if (index < 0 || !symbol->scope) return 0;
+
+    symbols = scp_syms(symbol->scope);
+    if (!symbols) return 0;
+
+    for (i = 0; symbols[i]; i++) {
+        Symbol *other = symbols[i];
+
+        if (other == symbol) continue;
+        if (other->symbol_type != VARIABLE_SYMBOL) continue;
+        if (class_attribute_register_index(other) == index) {
+            free(symbols);
+            return 1;
+        }
+    }
+
+    free(symbols);
+    return 0;
+}
+
 static walker_result emit_walker(walker_direction direction,
                                   ASTNode* node,
                                   void *pl) {
@@ -281,8 +406,6 @@ static walker_result emit_walker(walker_direction direction,
     int flag;
     int fixed_arg_count;
     int implicit_main_args;
-    time_t t = time(NULL);
-    struct tm tm = *localtime(&t);
     char ret_type;
     int ret_num;
     unsigned int trace_step_id;
@@ -407,51 +530,33 @@ static walker_result emit_walker(walker_direction direction,
                                         "l%da:\n"
                                         "   brtpandt l%dc,%c%d,%d\n"
                                         "   %scopy %c%d,%c%d\n"
-                                        "   acopy %c%d,%c%d\n"
                                         "   br l%dd\n"
                                         "l%dc:\n"
                                         "   swap %c%d,%c%d\n"
                                         "l%dd:\n",
-                                        child1->node_number, /* br l%dd */
-                                        child1->node_number, /* l%da: */
-
-                                        /* brtpandt l%dc,%c%d,%d */
+                                        child1->node_number,
+                                        child1->node_number,
                                         child1->node_number, node->register_type, node->register_num, REGTP_NOTSYM,
-
-                                        /* %scopy %c%d,%c%d */
                                         tp_prefix,
                                         child1->register_type, child1->register_num,
                                         node->register_type, node->register_num,
-
-                                        /* acopy %c%d,%c%d */
+                                        child1->node_number,
+                                        child1->node_number,
                                         child1->register_type, child1->register_num,
                                         node->register_type, node->register_num,
-
-                                        child1->node_number, /* br l%dd */
-                                        child1->node_number, /* l%dc: */
-
-                                        /* swap %c%d,%c%d */
-                                        child1->register_type, child1->register_num,
-                                        node->register_type, node->register_num,
-
-                                        child1->node_number); /* l%dd: */
+                                        child1->node_number);
                                 output_append_text(node->output, temp1);
                                 free(temp1);
                             } else {
                                 temp1 = mprintf("   br l%db\n"
                                                 "l%da:\n"
                                                 "   %scopy %c%d,%c%d\n"
-                                                "   acopy %c%d,%c%d\n"
                                                 "l%db:\n",
                                                 child1->node_number, /* br l%db */
                                                 child1->node_number, /* l%da: */
 
                                                 /* %scopy %c%d,%c%d */
                                                 tp_prefix,
-                                                child1->register_type, child1->register_num,
-                                                node->register_type, node->register_num,
-
-                                                /* acopy %c%d,%c%d */
                                                 child1->register_type, child1->register_num,
                                                 node->register_type, node->register_num,
 
@@ -469,7 +574,6 @@ static walker_result emit_walker(walker_direction direction,
                         if (is_large_value(node)) {
                             temp1 = mprintf("   brtpandt l%dc,%c%d,%d\n"
                                             "   %scopy %c%d,%c%d\n"
-                                            "   acopy %c%d,%c%d\n"
                                             "   br l%dd\n"
                                             "l%dc:\n"
                                             "   swap %c%d,%c%d\n"
@@ -478,8 +582,6 @@ static walker_result emit_walker(walker_direction direction,
                                             node->register_type, node->register_num,
                                             REGTP_NOTSYM,
                                             tp_prefix,
-                                            child1->register_type, child1->register_num,
-                                            node->register_type, node->register_num,
                                             child1->register_type, child1->register_num,
                                             node->register_type, node->register_num,
                                             child1->node_number,
@@ -556,6 +658,12 @@ static walker_result emit_walker(walker_direction direction,
             case OP_DIV:
             case OP_IDIV:
             case OP_MOD:
+            case OP_BIT_AND:
+            case OP_BIT_OR:
+            case OP_BIT_XOR:
+            case OP_BIT_SHL:
+            case OP_BIT_SHR:
+            case OP_FLAG_HAS:
                 emit_expression(node, payload);
                 break;
 
@@ -777,6 +885,7 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case OP_NOT:
+            case OP_BIT_NOT:
             case OP_NEG:
             case OP_PLUS:
             case OP_REFERENCE:
@@ -802,31 +911,64 @@ static walker_result emit_walker(walker_direction direction,
                     node->symbolNode->symbol->scope->defining_node &&
                     node->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) {
                     /* Attribute Read */
-                    int index = 0;
-                    if (sym_nond(node->symbolNode->symbol) > 0) {
-                        ASTNode *def_node = sym_trnd(node->symbolNode->symbol, 0)->node;
-                        if (def_node && def_node->parent && def_node->parent->node_type == DEFINE) {
-                            ASTNode *nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
-                            if (nr) {
-                                ASTNode *idx = ast_chld(nr, INTEGER, 0);
-                                if (idx) index = node_to_integer(idx);
-                                else if (nr->int_value) index = (int)nr->int_value;
-                            }
-                        }
-                    }
-
+                    int index = class_attribute_register_index(node->symbolNode->symbol);
                     char this_type = 'a'; int this_num = 1; /* Default for METHOD */
                     attribute_owner_register(node, node, &this_type, &this_num);
-                    temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n",
-                                    node->register_type, node->register_num,
-                                    this_type, this_num, index);
-                    output_append_text(node->output, temp1);
-                    free(temp1);
 
-                    /* Cleanup */
-                    temp1 = mprintf("   unlink %c%d\n", node->register_type, node->register_num);
-	                    node_cleanup_replace_text(node, temp1);
-	                    free(temp1);
+                    if (class_attribute_is_flag_view(node->symbolNode->symbol)) {
+                        unsigned int mask = class_attribute_flag_mask(node->symbolNode->symbol);
+
+                        if (index == 0) {
+                            temp1 = mprintf("   getandtp %c%d,%c%d,%u\n",
+                                            node->register_type, node->register_num,
+                                            this_type, this_num,
+                                            mask);
+                        } else {
+                            temp1 = mprintf("   linkattr1 r%d,%c%d,%d\n"
+                                            "   getandtp %c%d,r%d,%u\n"
+                                            "   unlink r%d\n",
+                                            node->additional_registers,
+                                            this_type, this_num, index,
+                                            node->register_type, node->register_num,
+                                            node->additional_registers,
+                                            mask,
+                                            node->additional_registers);
+                        }
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    } else {
+                        int complex = class_attribute_is_complex(node->symbolNode->symbol);
+                        int link_reg_num = complex ? node->additional_registers : node->register_num;
+                        char link_reg_type = complex ? 'r' : node->register_type;
+
+                        if (index == 0) {
+                            temp1 = mprintf("   link %c%d,%c%d\n",
+                                            link_reg_type, link_reg_num,
+                                            this_type, this_num);
+                        } else {
+                            temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n",
+                                            link_reg_type, link_reg_num,
+                                            this_type, this_num, index);
+                        }
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+
+                        if (complex) {
+                            temp1 = mprintf("   %scopy %c%d,r%d\n"
+                                            "   unlink r%d\n",
+                                            tp_prefix,
+                                            node->register_type, node->register_num,
+                                            link_reg_num,
+                                            link_reg_num);
+                            output_append_text(node->output, temp1);
+                            free(temp1);
+                        } else {
+                            /* Cleanup */
+                            temp1 = mprintf("   unlink %c%d\n", node->register_type, node->register_num);
+                            node_cleanup_replace_text(node, temp1);
+                            free(temp1);
+                        }
+                    }
 
 	                    type_promotion(node);
 	                    append_symbol_trace_event(node->output,
@@ -844,45 +986,56 @@ static walker_result emit_walker(walker_direction direction,
                     int from_reg_num = node->symbolNode->symbol->register_num;
                     char unlink_needed = 0;
 
-                    char is_property = 0;
+                    char property_regs = 0;
                     if (node->symbolNode && node->symbolNode->symbol &&
                         node->symbolNode->symbol->scope &&
                         node->symbolNode->symbol->scope->defining_node &&
                         node->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) {
-                        is_property = 1;
+                        int complex;
+                        int link_reg_num;
+                        int base_reg_num;
                         
                         /* Attribute Read - link the array into the first additional register */
-                        int index = 0;
-                        if (sym_nond(node->symbolNode->symbol) > 0) {
-                            ASTNode *def_node = sym_trnd(node->symbolNode->symbol, 0)->node;
-                            if (def_node && def_node->parent && def_node->parent->node_type == DEFINE) {
-                                ASTNode *nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
-                                if (nr) {
-                                    ASTNode *idx = ast_chld(nr, INTEGER, 0);
-                                    if (idx) index = node_to_integer(idx);
-                                    else if (nr->int_value) index = (int)nr->int_value;
-                                }
-                            }
-                        }
+                        int index = class_attribute_register_index(node->symbolNode->symbol);
 
                         char this_type = 'a'; int this_num = 1; /* Default for METHOD */
                         attribute_owner_register(node, node, &this_type, &this_num);
+                        complex = class_attribute_is_complex(node->symbolNode->symbol);
+                        property_regs = complex ? 2 : 1;
+                        link_reg_num = node->additional_registers;
+                        base_reg_num = complex ? node->additional_registers + 1 : node->additional_registers;
 
-                        temp1 = mprintf("   linkattr1 r%d,%c%d,%d\n",
-                                        node->additional_registers,
-                                        this_type, this_num, index);
+                        if (index == 0) {
+                            temp1 = mprintf("   link r%d,%c%d\n",
+                                            link_reg_num,
+                                            this_type, this_num);
+                        } else {
+                            temp1 = mprintf("   linkattr1 r%d,%c%d,%d\n",
+                                            link_reg_num,
+                                            this_type, this_num, index);
+                        }
                         output_append_text(node->output, temp1);
                         free(temp1);
 
-                        /* Add cleanup to unlink this property reference */
-                        temp1 = mprintf("   unlink r%d\n", node->additional_registers);
-                        node_cleanup_replace_text(node, temp1);
-                        free(temp1);
+                        if (complex) {
+                            temp1 = mprintf("   copy r%d,r%d\n"
+                                            "   unlink r%d\n",
+                                            base_reg_num,
+                                            link_reg_num,
+                                            link_reg_num);
+                            output_append_text(node->output, temp1);
+                            free(temp1);
+                        } else {
+                            /* Add cleanup to unlink this property reference */
+                            temp1 = mprintf("   unlink r%d\n", base_reg_num);
+                            node_cleanup_replace_text(node, temp1);
+                            free(temp1);
+                        }
 
                         from_reg_type = 'r';
-                        from_reg_num = node->additional_registers;
+                        from_reg_num = base_reg_num;
                     }
-                    int math_reg = node->additional_registers + is_property;
+                    int math_reg = node->additional_registers + property_regs;
 
                     /* Now we need to link the array elements */
 	                    while (child1) {
@@ -1037,7 +1190,7 @@ static walker_result emit_walker(walker_direction direction,
                     /* Set cleanup action */
                     if (unlink_needed) {
                         temp1 = mprintf("   unlink r%d\n", node->register_num);
-                        node_cleanup_replace_text(node, temp1);
+                        node_cleanup_prepend_text(node, temp1);
                         free(temp1);
                     }
                 }
@@ -1113,6 +1266,9 @@ static walker_result emit_walker(walker_direction direction,
             case INTEGER:
             case BLOCK_EXPR:
                 emit_expression(node, payload);
+                break;
+
+            case CONSTANT_DEF:
                 break;
 
             case ASSEMBLER: {
@@ -1253,52 +1409,91 @@ static walker_result emit_walker(walker_direction direction,
                     child1->symbolNode->symbol->scope->defining_node &&
                     child1->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) {
                     /* Attribute Write */
-                    int index = 0;
-                    if (sym_nond(child1->symbolNode->symbol) > 0) {
-                        ASTNode *def_node = sym_trnd(child1->symbolNode->symbol, 0)->node;
-                        if (def_node && def_node->parent && def_node->parent->node_type == DEFINE) {
-                            ASTNode *nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
-                            if (nr) {
-                                ASTNode *idx = ast_chld(nr, INTEGER, 0);
-                                if (idx) index = node_to_integer(idx);
-                                else if (nr->int_value) index = (int)nr->int_value;
-                            }
-                        }
-                    }
+                    int index = class_attribute_register_index(child1->symbolNode->symbol);
 
                     char this_type = 'a'; int this_num = 1; /* Default for METHOD */
                     attribute_owner_register(node, child1, &this_type, &this_num);
-	                    temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n"
-	                                    "   %scopy %c%d,%c%d\n"
-	                                    "   unlink %c%d\n",
-                                    child1->register_type, child1->register_num,
-                                    this_type, this_num,
-                                    index,
-                                    tp_prefix,
-                                    child1->register_type, child1->register_num,
-                                    child2->register_type, child2->register_num,
-                                    child1->register_type, child1->register_num);
-	                    output_append_text(node->output, temp1);
-	                    free(temp1);
-	                    trace_assignment_event = 0;
+                    if (class_attribute_is_flag_view(child1->symbolNode->symbol)) {
+                        unsigned int mask = class_attribute_flag_mask(child1->symbolNode->symbol);
+
+                        if (index == 0) {
+                            temp1 = mprintf("   settpmask %c%d,%c%d,%u\n",
+                                            this_type, this_num,
+                                            child2->register_type, child2->register_num,
+                                            mask);
+                        } else {
+                            temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n"
+                                            "   settpmask %c%d,%c%d,%u\n"
+                                            "   unlink %c%d\n",
+                                            child1->register_type, child1->register_num,
+                                            this_type, this_num,
+                                            index,
+                                            child1->register_type, child1->register_num,
+                                            child2->register_type, child2->register_num,
+                                            mask,
+                                            child1->register_type, child1->register_num);
+                        }
+                    } else if (index == 0) {
+                        if (class_attribute_is_complex(child1->symbolNode->symbol)) {
+                            temp1 = mprintf("   link %c%d,%c%d\n"
+                                            "   %scopy %c%d,%c%d\n"
+                                            "   unlink %c%d\n",
+                                            child1->register_type, child1->register_num,
+                                            this_type, this_num,
+                                            tp_prefix,
+                                            child1->register_type, child1->register_num,
+                                            child2->register_type, child2->register_num,
+                                            child1->register_type, child1->register_num);
+                        } else {
+                            temp1 = mprintf("   link %c%d,%c%d\n"
+                                            "   %scopy %c%d,%c%d\n"
+                                            "   unlink %c%d\n",
+                                            child1->register_type, child1->register_num,
+                                            this_type, this_num,
+                                            tp_prefix,
+                                            child1->register_type, child1->register_num,
+                                            child2->register_type, child2->register_num,
+                                            child1->register_type, child1->register_num);
+                        }
+                    } else {
+                        if (class_attribute_is_complex(child1->symbolNode->symbol)) {
+                            temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n"
+                                            "   %scopy %c%d,%c%d\n"
+                                            "   unlink %c%d\n",
+                                            child1->register_type, child1->register_num,
+                                            this_type, this_num,
+                                            index,
+                                            tp_prefix,
+                                            child1->register_type, child1->register_num,
+                                            child2->register_type, child2->register_num,
+                                            child1->register_type, child1->register_num);
+                        } else {
+                            temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n"
+                                            "   %scopy %c%d,%c%d\n"
+                                            "   unlink %c%d\n",
+                                            child1->register_type, child1->register_num,
+                                            this_type, this_num,
+                                            index,
+                                            tp_prefix,
+                                            child1->register_type, child1->register_num,
+                                            child2->register_type, child2->register_num,
+                                            child1->register_type, child1->register_num);
+                        }
+                    }
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                    trace_assignment_event = 0;
 	                } else if (child1->register_num != child2->register_num ||
                     child1->register_type != child2->register_type) {
                     int aggregate_assign =
                             !child1->child &&
                             (child1->value_dims > 0 || child1->target_dims > 0 ||
                              child2->value_dims > 0 || child2->target_dims > 0 ||
-                             child1->value_type == TP_BINARY || child1->target_type == TP_BINARY ||
-                             child2->value_type == TP_BINARY || child2->target_type == TP_BINARY ||
                              child1->value_type == TP_REFERENCE || child1->target_type == TP_REFERENCE ||
                              child2->value_type == TP_REFERENCE || child2->target_type == TP_REFERENCE);
 
                     if (aggregate_assign) {
-                        temp1 = mprintf("   copy %c%d,%c%d\n"
-                                        "   acopy %c%d,%c%d\n",
-                                        child1->register_type,
-                                        child1->register_num,
-                                        child2->register_type,
-                                        child2->register_num,
+                        temp1 = mprintf("   copy %c%d,%c%d\n",
                                         child1->register_type,
                                         child1->register_num,
                                         child2->register_type,

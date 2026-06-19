@@ -1,0 +1,12 @@
+options levelb
+namespace consttest expose ConstThing
+
+constant FLAG_STRING = 0x00010000
+constant FLAG_INT = 0x00020000
+constant FLAGS = FLAG_STRING + FLAG_INT
+
+ConstThing: class
+  value: method = .int
+    r = 0
+    assembler settp r,FLAGS
+    return FLAGS

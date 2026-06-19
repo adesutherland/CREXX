@@ -1,0 +1,24 @@
+* Optimiser must not merge reads from different linkattr1 slots.
+
+main() .locals=7
+    setattrs r0,2
+    linkattr1 r5,r0,1
+    load r6,"payload-1"
+    scopy r5,r6
+    unlink r5
+
+    linkattr1 r5,r0,2
+    load r6,"payload-2"
+    scopy r5,r6
+    unlink r5
+
+    linkattr1 r1,r0,1
+    scopy r2,r1
+    unlink r1
+
+    linkattr1 r3,r0,2
+    scopy r4,r3
+    unlink r3
+
+    say r4
+    ret

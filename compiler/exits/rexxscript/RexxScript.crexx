@@ -38,7 +38,7 @@ rexxscriptexit: class
     describe: method = .exitdescriptor
         desc = .exitdescriptor
         desc = .exitdescriptor("REXXSCRIPT")
-        call desc.add_import("rxfnsb", "descriptor", "")
+        call desc.add_import("rexxscript", "descriptor", "")
         return desc
 
     pre_process: method = .exitplan
@@ -145,13 +145,13 @@ rexxscriptexit: class
                 call result.add_replacement_line("__rexxscript_names[" || i || "] = '" || name || "'")
                 call result.add_replacement_line("__rexxscript_values[" || i || "] = " || name)
             end
-            call result.add_replacement_line("__rexxscript_result = evaluate_exposed(" || script_expr || ", __rexxscript_names, __rexxscript_values, "debug_flag")")
+            call result.add_replacement_line("__rexxscript_result = rexxscript_evaluate_exposed(" || script_expr || ", __rexxscript_names, __rexxscript_values, "debug_flag")")
             do i = 1 to expose_names[0]
                 name = expose_names[i]
                 call result.add_replacement_line(name || " = rexxscript_value('" || name || "')")
             end
         end
-        else call result.add_replacement_line("__rexxscript_result = evaluate(" || script_expr || ", "debug_flag")")
+        else call result.add_replacement_line("__rexxscript_result = rexxscript_evaluate(" || script_expr || ", "debug_flag")")
         if output_name <> "" then call result.add_replacement_line(output_name || " = rexxscript_output()")
         if result_name <> "" then call result.add_replacement_line(result_name || " = __rexxscript_result")
         call result.add_replacement_line("script_status=__rexxscript_result[1]")

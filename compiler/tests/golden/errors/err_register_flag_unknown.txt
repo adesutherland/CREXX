@@ -1,0 +1,2 @@
+Error in err_register_flag_unknown.crexx @ 5:35 - #INVALID_REGISTER_FLAG_VIEW, "flags"
+1 error(s) in source file

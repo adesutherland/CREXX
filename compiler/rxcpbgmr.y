@@ -59,9 +59,76 @@ static int token_text_equals_ci(Token *token, const char *text) {
     }
     return 1;
 }
+
+static int named_operator_equals(Token *token, const char *text) {
+    size_t i;
+    size_t length;
+
+    if (!token || !token->token_string || !text) return 0;
+    length = strlen(text);
+    if (token->length != length + 2) return 0;
+    if (token->token_string[0] != '<' ||
+        token->token_string[token->length - 1] != '>') {
+        return 0;
+    }
+    for (i = 0; i < length; i++) {
+        if (tolower((unsigned char) token->token_string[i + 1]) !=
+            tolower((unsigned char) text[i])) {
+            return 0;
+        }
+    }
+    return 1;
 }
 
-%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT TK_EXIT_PRIMARY TK_EXIT_TOKEN TK_QUALIFIED_SYMBOL.
+static ASTNode *named_prefix_operator(Context *context, Token *token, ASTNode *child) {
+    ASTNode *node;
+
+    if (named_operator_equals(token, "not")) {
+        node = ast_f(context, OP_BIT_NOT, token);
+    } else {
+        node = ast_err(context, "UNKNOWN_NAMED_OPERATOR", token);
+    }
+    add_ast(node, child);
+    return node;
+}
+
+static ASTNode *named_binary_operator(Context *context, Token *token, ASTNode *left, ASTNode *right) {
+    ASTNode *node;
+    ASTNode *not_node;
+    NodeType type = TOKEN;
+
+    if (named_operator_equals(token, "and")) type = OP_BIT_AND;
+    else if (named_operator_equals(token, "or")) type = OP_BIT_OR;
+    else if (named_operator_equals(token, "set")) type = OP_BIT_OR;
+    else if (named_operator_equals(token, "xor")) type = OP_BIT_XOR;
+    else if (named_operator_equals(token, "idiv")) type = OP_IDIV;
+    else if (named_operator_equals(token, "mod")) type = OP_MOD;
+    else if (named_operator_equals(token, "rem")) type = OP_MOD;
+    else if (named_operator_equals(token, "shl")) type = OP_BIT_SHL;
+    else if (named_operator_equals(token, "shr")) type = OP_BIT_SHR;
+    else if (named_operator_equals(token, "has")) type = OP_FLAG_HAS;
+
+    if (named_operator_equals(token, "clear")) {
+        not_node = ast_f(context, OP_BIT_NOT, token);
+        add_ast(not_node, right);
+        node = ast_f(context, OP_BIT_AND, token);
+        add_ast(node, left);
+        add_ast(node, not_node);
+        return node;
+    }
+
+    if (type == TOKEN) {
+        node = ast_err(context, "UNKNOWN_NAMED_OPERATOR", token);
+    } else {
+        node = ast_f(context, type, token);
+    }
+    add_ast(node, left);
+    add_ast(node, right);
+    return node;
+}
+}
+
+%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT TK_EXIT_PRIMARY TK_EXIT_TOKEN TK_QUALIFIED_SYMBOL TK_NAMED_OPERATOR TK_NAMED_MULT_OPERATOR TK_NAMED_SHIFT_OPERATOR TK_NAMED_AND_OPERATOR TK_NAMED_XOR_OPERATOR TK_NAMED_OR_OPERATOR.
 %wildcard ANYTHING.
 
 /* Low precedence */
@@ -70,6 +137,7 @@ static int token_text_equals_ci(Token *token, const char *text) {
 %left TK_EOC.
 %left TK_END.
 %left IMPLICIT_CONCAT.
+%left TK_NAMED_OPERATOR TK_NAMED_OR_OPERATOR TK_NAMED_XOR_OPERATOR TK_NAMED_AND_OPERATOR TK_NAMED_SHIFT_OPERATOR.
 %left TK_DOT TK_CLASS_TYPE.
 
 /* 0 Sets the stack to grow dynamically! */
@@ -385,6 +453,7 @@ instruction(E)         ::= error.
 
 single_instruction(I)  ::= assignment(B). { I = B; }
 single_instruction(I)  ::= define(B). { I = B; }
+single_instruction(I)  ::= constant_def(B). { I = B; }
 single_instruction(I)  ::= exit_extended(B). { I = B; }
 single_instruction(I)  ::= command(B). { I = B; }
 single_instruction(I)  ::= keyword_instruction(B). { I = B; }
@@ -600,6 +669,12 @@ define(I) ::=  var_symbol(V) TK_EQUAL(T) type_def(E) opt_with(W).
     {
         I = ast_f(context, DEFINE, T); add_ast(I,V); add_ast(I,E);
         if (W) add_ast(I,W);
+        V->node_type = VAR_TARGET;
+    }
+
+constant_def(I) ::= TK_CONSTANT(K) var_symbol(V) TK_EQUAL expression(E).
+    {
+        I = ast_f(context, CONSTANT_DEF, K); add_ast(I,V); add_ast(I,E);
         V->node_type = VAR_TARGET;
     }
 
@@ -1500,6 +1575,8 @@ command_postfix(A)   ::= command_postfix(B) TK_AS(O) type_def(T). [TK_CLASS_TYPE
 command_prefix_expression(P) ::= command_postfix(B). [ANYTHING] { P = B; }
 command_prefix_expression(A) ::= TK_NOT(O) prefix_expression(C).
                          { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
+command_prefix_expression(A) ::= TK_NAMED_OPERATOR(O) prefix_expression(C).
+                         { A = named_prefix_operator(context, O, C); }
 command_prefix_expression(A) ::= TK_PLUS(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_PLUS, O); add_ast(A,C); }
 command_prefix_expression(A) ::= TK_HIGH_PRIORITY_MINUS(O) prefix_expression(C). [TK_NOT]
@@ -1530,6 +1607,8 @@ command_multiplication(A)    ::= command_multiplication(B) TK_IDIV(O) low_prefix
                          { A = ast_f(context, OP_IDIV, O); add_ast(A,B); add_ast(A,C); }
 command_multiplication(A)    ::= command_multiplication(B) TK_MOD(O) low_prefix_expression(C).
                          { A = ast_f(context, OP_MOD, O); add_ast(A,B); add_ast(A,C); }
+command_multiplication(A)    ::= command_multiplication(B) TK_NAMED_MULT_OPERATOR(O) low_prefix_expression(C).
+                         { A = named_binary_operator(context, O, B, C); }
 command_addition(P)          ::= command_multiplication(E).
                          { P = E; }
 command_addition(A)          ::= command_addition(B) TK_PLUS(O) multiplication(C).
@@ -1538,11 +1617,31 @@ command_addition(A)          ::= command_addition(B) TK_MINUS(O) multiplication(
                          { A = ast_f(context, OP_MINUS, O); add_ast(A,B); add_ast(A,C); }
 command_addition(A)          ::= command_addition(B) TK_HIGH_PRIORITY_MINUS(O) multiplication(C).
                          { A = ast_f(context, OP_MINUS, O); add_ast(A,B); add_ast(A,C); }
-command_concatenation(P)     ::= command_addition(E).
+command_shift_operator(P)    ::= command_addition(E).
                          { P = E; }
-command_concatenation(A)     ::= command_concatenation(B) TK_CONCAT(O) addition(C).
+command_shift_operator(A)    ::= command_shift_operator(B) TK_NAMED_SHIFT_OPERATOR(O) addition(C).
+                         { A = named_binary_operator(context, O, B, C); }
+command_bit_and_operator(P)  ::= command_shift_operator(E).
+                         { P = E; }
+command_bit_and_operator(A)  ::= command_bit_and_operator(B) TK_NAMED_AND_OPERATOR(O) shift_operator(C).
+                         { A = named_binary_operator(context, O, B, C); }
+command_bit_xor_operator(P)  ::= command_bit_and_operator(E).
+                         { P = E; }
+command_bit_xor_operator(A)  ::= command_bit_xor_operator(B) TK_NAMED_XOR_OPERATOR(O) bit_and_operator(C).
+                         { A = named_binary_operator(context, O, B, C); }
+command_bit_or_operator(P)   ::= command_bit_xor_operator(E).
+                         { P = E; }
+command_bit_or_operator(A)   ::= command_bit_or_operator(B) TK_NAMED_OR_OPERATOR(O) bit_xor_operator(C).
+                         { A = named_binary_operator(context, O, B, C); }
+command_named_operator(P)    ::= command_bit_or_operator(E).
+                         { P = E; }
+command_named_operator(A)    ::= command_named_operator(B) TK_NAMED_OPERATOR(O) bit_or_operator(C).
+                         { A = named_binary_operator(context, O, B, C); }
+command_concatenation(P)     ::= command_named_operator(E). [IMPLICIT_CONCAT]
+                         { P = E; }
+command_concatenation(A)     ::= command_concatenation(B) TK_CONCAT(O) named_operator(C). [IMPLICIT_CONCAT]
                          { A = ast_f(context, OP_CONCAT, O); add_ast(A,B); add_ast(A,C); }
-command_concatenation(A)     ::= command_concatenation(B) addition_c(C). [IMPLICIT_CONCAT]
+command_concatenation(A)     ::= command_concatenation(B) named_operator_c(C). [IMPLICIT_CONCAT]
                          { A = ast_ft(context, OP_SCONCAT); add_ast(A,B); add_ast(A,C); }
 command_comparison(P)        ::= command_concatenation(E).
                          { P = E; }
@@ -1603,6 +1702,8 @@ postfix(A)           ::= postfix(B) TK_AS(O) type_def(T). [TK_CLASS_TYPE]
 prefix_expression(P) ::= postfix(B). [ANYTHING] { P = B; }
 prefix_expression(A) ::= TK_NOT(O) prefix_expression(C).
                          { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
+prefix_expression(A) ::= TK_NAMED_OPERATOR(O) prefix_expression(C).
+                         { A = named_prefix_operator(context, O, C); }
 prefix_expression(A) ::= TK_PLUS(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_PLUS, O); add_ast(A,C); }
 prefix_expression(A) ::= TK_HIGH_PRIORITY_MINUS(O) prefix_expression(C). [TK_NOT]
@@ -1642,6 +1743,8 @@ multiplication(A)    ::= multiplication(B) TK_IDIV(O) low_prefix_expression(C).
                          { A = ast_f(context, OP_IDIV, O); add_ast(A,B); add_ast(A,C); }
 multiplication(A)    ::= multiplication(B) TK_MOD(O) low_prefix_expression(C).
                          { A = ast_f(context, OP_MOD, O); add_ast(A,B); add_ast(A,C); }
+multiplication(A)    ::= multiplication(B) TK_NAMED_MULT_OPERATOR(O) low_prefix_expression(C).
+                         { A = named_binary_operator(context, O, B, C); }
 addition(P)          ::= multiplication(E).
                          { P = E; }
 addition(A)          ::= addition(B) TK_PLUS(O) multiplication(C).
@@ -1650,6 +1753,27 @@ addition(A)          ::= addition(B) TK_MINUS(O) multiplication(C).
                          { A = ast_f(context, OP_MINUS, O); add_ast(A,B); add_ast(A,C); }
 addition(A)          ::= addition(B) TK_HIGH_PRIORITY_MINUS(O) multiplication(C).
                          { A = ast_f(context, OP_MINUS, O); add_ast(A,B); add_ast(A,C); }
+
+shift_operator(P)    ::= addition(E).
+                         { P = E; }
+shift_operator(A)    ::= shift_operator(B) TK_NAMED_SHIFT_OPERATOR(O) addition(C).
+                         { A = named_binary_operator(context, O, B, C); }
+bit_and_operator(P)  ::= shift_operator(E).
+                         { P = E; }
+bit_and_operator(A)  ::= bit_and_operator(B) TK_NAMED_AND_OPERATOR(O) shift_operator(C).
+                         { A = named_binary_operator(context, O, B, C); }
+bit_xor_operator(P)  ::= bit_and_operator(E).
+                         { P = E; }
+bit_xor_operator(A)  ::= bit_xor_operator(B) TK_NAMED_XOR_OPERATOR(O) bit_and_operator(C).
+                         { A = named_binary_operator(context, O, B, C); }
+bit_or_operator(P)   ::= bit_xor_operator(E).
+                         { P = E; }
+bit_or_operator(A)   ::= bit_or_operator(B) TK_NAMED_OR_OPERATOR(O) bit_xor_operator(C).
+                         { A = named_binary_operator(context, O, B, C); }
+named_operator(P)    ::= bit_or_operator(E).
+                         { P = E; }
+named_operator(A)    ::= named_operator(B) TK_NAMED_OPERATOR(O) bit_or_operator(C).
+                         { A = named_binary_operator(context, O, B, C); }
 
 /* These are for expressions "after" a concat defined by a whitespace to avoid
  * ambiguous issues with prefix operators (i.e. these miss out the +/- prefixes)
@@ -1671,6 +1795,8 @@ prefix_expression_c(P) ::= postfix_c(B). [ANYTHING] { P = B; }
 
 prefix_expression_c(A) ::= TK_NOT(O) prefix_expression_c(C).
                          { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
+prefix_expression_c(A) ::= TK_NAMED_OPERATOR(O) prefix_expression_c(C).
+                         { A = named_prefix_operator(context, O, C); }
 prefix_expression_c(A) ::= TK_REFERENCE(O) prefix_expression_c(C). [TK_NOT]
                          { A = ast_f(context, OP_REFERENCE, O); add_ast(A,C); }
 prefix_expression_c(A) ::= TK_DEREFERENCE(O) prefix_expression_c(C). [TK_NOT]
@@ -1697,6 +1823,8 @@ multiplication_c(A)  ::= multiplication_c(B) TK_IDIV(O) power_expression_R_c(C).
                          { A = ast_f(context, OP_IDIV, O); add_ast(A,B); add_ast(A,C); }
 multiplication_c(A)  ::= multiplication_c(B) TK_MOD(O) power_expression_R_c(C).
                          { A = ast_f(context, OP_MOD, O); add_ast(A,B); add_ast(A,C); }
+multiplication_c(A)  ::= multiplication_c(B) TK_NAMED_MULT_OPERATOR(O) power_expression_R_c(C).
+                         { A = named_binary_operator(context, O, B, C); }
 addition_c(P)        ::= multiplication_c(E).
                          { P = E; }
 addition_c(A)        ::= addition_c(B) TK_PLUS(O) multiplication_c(C).
@@ -1706,12 +1834,33 @@ addition_c(A)        ::= addition_c(B) TK_MINUS(O) multiplication_c(C).
 addition_c(A)        ::= addition_c(B) TK_HIGH_PRIORITY_MINUS(O) multiplication_c(C).
                          { A = ast_f(context, OP_MINUS, O); add_ast(A,B); add_ast(A,C); }
 
-/* Back to normal expressions in the usual unambiguous form */
-concatenation(P)     ::= addition(E).
+shift_operator_c(P)  ::= addition_c(E).
                          { P = E; }
-concatenation(A)     ::= concatenation(B) TK_CONCAT(O) addition(C).
+shift_operator_c(A)  ::= shift_operator_c(B) TK_NAMED_SHIFT_OPERATOR(O) addition_c(C).
+                         { A = named_binary_operator(context, O, B, C); }
+bit_and_operator_c(P) ::= shift_operator_c(E).
+                         { P = E; }
+bit_and_operator_c(A) ::= bit_and_operator_c(B) TK_NAMED_AND_OPERATOR(O) shift_operator_c(C).
+                         { A = named_binary_operator(context, O, B, C); }
+bit_xor_operator_c(P) ::= bit_and_operator_c(E).
+                         { P = E; }
+bit_xor_operator_c(A) ::= bit_xor_operator_c(B) TK_NAMED_XOR_OPERATOR(O) bit_and_operator_c(C).
+                         { A = named_binary_operator(context, O, B, C); }
+bit_or_operator_c(P) ::= bit_xor_operator_c(E).
+                         { P = E; }
+bit_or_operator_c(A) ::= bit_or_operator_c(B) TK_NAMED_OR_OPERATOR(O) bit_xor_operator_c(C).
+                         { A = named_binary_operator(context, O, B, C); }
+named_operator_c(P)  ::= bit_or_operator_c(E).
+                         { P = E; }
+named_operator_c(A)  ::= named_operator_c(B) TK_NAMED_OPERATOR(O) bit_or_operator_c(C).
+                         { A = named_binary_operator(context, O, B, C); }
+
+/* Back to normal expressions in the usual unambiguous form */
+concatenation(P)     ::= named_operator(E). [IMPLICIT_CONCAT]
+                         { P = E; }
+concatenation(A)     ::= concatenation(B) TK_CONCAT(O) named_operator(C). [IMPLICIT_CONCAT]
                          { A = ast_f(context, OP_CONCAT, O); add_ast(A,B); add_ast(A,C); }
-concatenation(A)     ::= concatenation(B) addition_c(C). [IMPLICIT_CONCAT] /* Note the addition_c */
+concatenation(A)     ::= concatenation(B) named_operator_c(C). [IMPLICIT_CONCAT] /* Note the addition_c */
                          { A = ast_ft(context, OP_SCONCAT); add_ast(A,B); add_ast(A,C); }
 comparison(P)        ::= concatenation(E).
                          { P = E; }
@@ -1775,6 +1924,12 @@ and_expression(E)  ::= TK_S_LTE(U) error. { E = ast_err(context, "BADEXPR", U); 
 and_expression(E)  ::= TK_AND(U) error. { E = ast_err(context, "BADEXPR", U); }
 and_expression(E)  ::= TK_OR(U) error. { E = ast_err(context, "BADEXPR", U); }
 and_expression(E)  ::= TK_XOR(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_NAMED_OPERATOR(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_NAMED_MULT_OPERATOR(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_NAMED_SHIFT_OPERATOR(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_NAMED_AND_OPERATOR(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_NAMED_XOR_OPERATOR(U) error. { E = ast_err(context, "BADEXPR", U); }
+and_expression(E)  ::= TK_NAMED_OR_OPERATOR(U) error. { E = ast_err(context, "BADEXPR", U); }
 
 expression(P)  ::= and_expression(E). { P = E; }
 expression(E)  ::= TK_COMMA(U) error. { E = ast_err(context, "BADEXPR", U); }
@@ -1900,4 +2055,25 @@ opt_register_attribute(A) ::= TK_STEMVAR(T).
   T->token_string++;
   T->length--;
   A = ast_f(context, VAR_SYMBOL, T);
+}
+opt_register_attribute(A) ::= TK_STEMVAR(T) TK_STEMVAR(P).
+{
+  char *combined;
+  size_t length;
+
+  /* Remove leading dot from .attribute.partition */
+  T->token_string++;
+  T->length--;
+  P->token_string++;
+  P->length--;
+  A = ast_f(context, VAR_SYMBOL, T);
+  length = (size_t)T->length + 1 + (size_t)P->length;
+  combined = malloc(length + 1);
+  if (combined) {
+    memcpy(combined, T->token_string, (size_t)T->length);
+    combined[T->length] = '.';
+    memcpy(combined + T->length + 1, P->token_string, (size_t)P->length);
+    combined[length] = 0;
+    ast_sstr(A, combined, length);
+  }
 }

@@ -1,11 +1,10 @@
 /*
  * SOURCE                 : inline_test_unary_expr.crexx
- * BUILT                  : 2026-05-27 17:53:24
  */
 
 .globals=0
 
-main() .locals=9
+main() .locals=6
    .meta "inline_test_unary_expr.main"="b" ".int" main() ""
    .srcstep 17 17 17 "inline_test_unary_expr.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -22,52 +21,56 @@ main() .locals=9
    .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "i" ""
    .srcstep 3 3 17 "inline_test_unary_expr.crexx" 5 12 16 "  do i = 1 to 3"
-   load r3,3
-   .traceevent "L" 4 "R" "I" "r" 3 0 0 0 "" ""
+   load r1,3
+   .traceevent "L" 4 "R" "I" "r" 1 0 0 0 "" ""
 l8dostart:
    .srcstep 3 3 17 "inline_test_unary_expr.crexx" 5 12 16 "  do i = 1 to 3"
-   igt r4,r0,r3
-   brt l8doend,r4
+   igt r2,r0,r1
+   brt l8doend,r2
    .srcstep 8 8 17 "inline_test_unary_expr.crexx" 6 5 19 "    say -addOne(i)"
    .srcstep 7 7 17 "inline_test_unary_expr.crexx" 6 10 16 "    say -addOne(i)"
    .srcstep 5 5 33 "inline_test_unary_expr.crexx" 13 7 10 "  arg val = .int"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   icopy r1,r0
-   .traceevent "A" 6 "R" "I" "r" 1 5 5 0 "val" ""
+   icopy r3,r0
+   .traceevent "A" 6 "R" "I" "r" 3 5 5 0 "val" ""
    .srcstep 6 6 17 "inline_test_unary_expr.crexx" 14 3 17 "  return val + 1"
-   .traceevent "V" 6 "R" "I" "r" 1 8 8 0 "val" ""
-   iadd r5,r1,1
-   .traceevent "O" 4 "R" "I" "r" 5 8 8 0 "" ""
-   icopy r6,r5
+   .traceevent "V" 6 "R" "I" "r" 3 8 8 0 "val" ""
+   iadd r4,r3,1
+   .traceevent "O" 4 "R" "I" "r" 4 8 8 0 "" ""
+   icopy r5,r4
    br l44bexprend
 l44bexprend:
-   isub r7,0,r6
-   itos r7
-   .traceevent "P" 4 "R" "S" "r" 7 8 8 0 "" ""
-   say r7
+   endlife r3
+   isub r3,0,r5
+   itos r3
+   .traceevent "P" 4 "R" "S" "r" 3 8 8 0 "" ""
+   say r3
    .srcstep 12 12 17 "inline_test_unary_expr.crexx" 7 5 19 "    say +addOne(i)"
    .srcstep 11 11 17 "inline_test_unary_expr.crexx" 7 10 16 "    say +addOne(i)"
    .srcstep 9 9 33 "inline_test_unary_expr.crexx" 13 7 10 "  arg val = .int"
    .traceevent "V" 6 "R" "I" "r" 0 9 9 0 "i" ""
-   icopy r2,r0
-   .traceevent "A" 6 "R" "I" "r" 2 9 9 0 "val" ""
+   icopy r5,r0
+   .traceevent "A" 6 "R" "I" "r" 5 9 9 0 "val" ""
    .srcstep 10 10 17 "inline_test_unary_expr.crexx" 14 3 17 "  return val + 1"
-   .traceevent "V" 6 "R" "I" "r" 2 12 12 0 "val" ""
-   iadd r7,r2,1
-   .traceevent "O" 4 "R" "I" "r" 7 12 12 0 "" ""
-   icopy r6,r7
+   .traceevent "V" 6 "R" "I" "r" 5 12 12 0 "val" ""
+   iadd r4,r5,1
+   .traceevent "O" 4 "R" "I" "r" 4 12 12 0 "" ""
+   icopy r3,r4
    br l53bexprend
 l53bexprend:
-   icopy r8,r6
-   itos r8
-   .traceevent "P" 4 "R" "S" "r" 8 12 12 0 "" ""
-   say r8
+   endlife r5
+   icopy r5,r3
+   itos r5
+   .traceevent "P" 4 "R" "S" "r" 5 12 12 0 "" ""
+   say r5
 l8doinc:
    .srcstep 4 4 17 "inline_test_unary_expr.crexx" 5 6 7 "  do i = 1 to 3"
    inc r0
    .srcstep 14 14 17 "inline_test_unary_expr.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
+   endlife r0
+   .meta "inline_test_unary_expr.main.i"
    .srcstep 15 15 17 "inline_test_unary_expr.crexx" 9 3 41 "  say \"Unary inline expr test finished.\""
    say "Unary inline expr test finished."
    .srcstep 16 16 17 "inline_test_unary_expr.crexx" 10 3 11 "  return 0"

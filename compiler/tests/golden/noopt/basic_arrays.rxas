@@ -1,11 +1,10 @@
 /*
  * SOURCE                 : basic_arrays.crexx
- * BUILT                  : 2026-05-27 17:53:12
  */
 
 .globals=0
 
-main() .locals=8
+main() .locals=7
    .meta "basic_arrays.main"="b" ".void" main() ""
    setnumdgts 18
    setnumfuz 0
@@ -22,65 +21,69 @@ main() .locals=8
    .traceevent "L" 4 "R" "I" "r" 2 2 2 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 2 2 2 0 "i" ""
    .srcstep 3 3 17 "basic_arrays.crexx" 3 10 14 "do i = 1 to 3"
-   load r4,3
-   .traceevent "L" 4 "R" "I" "r" 4 0 0 0 "" ""
+   load r3,3
+   .traceevent "L" 4 "R" "I" "r" 3 0 0 0 "" ""
 l10dostart:
    .srcstep 3 3 17 "basic_arrays.crexx" 3 10 14 "do i = 1 to 3"
-   igt r5,r2,r4
-   brt l10doend,r5
+   igt r4,r2,r3
+   brt l10doend,r4
    .srcstep 5 5 17 "basic_arrays.crexx" 4 3 22 "  s[i] = \"Item \" || i"
    .traceevent "V" 6 "R" "I" "r" 2 5 5 0 "i" ""
    .traceevent "C" 4 "R" "I" "r" 2 5 5 0 "s" ""
    setattrs r1,10
-   linkattr1 r6,r1,r2
+   linkattr1 r5,r1,r2
    itos r2
    .traceevent "V" 6 "R" "S" "r" 2 5 5 0 "i" ""
-   concat r7,"Item ",r2
-   .traceevent "O" 4 "R" "S" "r" 7 5 5 0 "" ""
-   scopy r6,r7
-   .traceevent "A" 6 "R" "S" "r" 6 5 5 0 "s" ""
-   unlink r6
+   concat r6,"Item ",r2
+   .traceevent "O" 4 "R" "S" "r" 6 5 5 0 "" ""
+   scopy r5,r6
+   .traceevent "A" 6 "R" "S" "r" 5 5 5 0 "s" ""
+   unlink r5
 l10doinc:
    .srcstep 4 4 17 "basic_arrays.crexx" 3 4 5 "do i = 1 to 3"
    inc r2
    .srcstep 7 7 17 "basic_arrays.crexx" 5 1 4 "end"
    br l10dostart
 l10doend:
+   endlife r2
+   .meta "basic_arrays.main.i"
    .srcstep 12 12 17 "basic_arrays.crexx" 7 1 3 "do i = 1 to 3"
    .srcstep 8 8 17 "basic_arrays.crexx" 7 4 9 "do i = 1 to 3"
-   .meta "basic_arrays.main.i"="b" ".int" r3
-   load r3,1
-   .traceevent "L" 4 "R" "I" "r" 3 8 8 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 3 8 8 0 "i" ""
+   .meta "basic_arrays.main.i"="b" ".int" r6
+   load r6,1
+   .traceevent "L" 4 "R" "I" "r" 6 8 8 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 6 8 8 0 "i" ""
    .srcstep 9 9 17 "basic_arrays.crexx" 7 10 14 "do i = 1 to 3"
-   load r7,3
-   .traceevent "L" 4 "R" "I" "r" 7 0 0 0 "" ""
+   load r5,3
+   .traceevent "L" 4 "R" "I" "r" 5 0 0 0 "" ""
 l24dostart:
    .srcstep 9 9 17 "basic_arrays.crexx" 7 10 14 "do i = 1 to 3"
-   igt r6,r3,r7
-   brt l24doend,r6
+   igt r4,r6,r5
+   brt l24doend,r4
    .srcstep 11 11 17 "basic_arrays.crexx" 8 3 33 "  say \"Arr \" || i || \": \" || s[i]"
-   itos r3
-   .traceevent "V" 6 "R" "S" "r" 3 11 11 0 "i" ""
-   concat r5,"Arr ",r3
-   .traceevent "O" 4 "R" "S" "r" 5 11 11 0 "" ""
-   concat r5,r5,": "
-   .traceevent "O" 4 "R" "S" "r" 5 11 11 0 "" ""
-   .traceevent "V" 6 "R" "I" "r" 3 11 11 0 "i" ""
-   .traceevent "C" 4 "R" "I" "r" 3 11 11 0 "s" ""
+   itos r6
+   .traceevent "V" 6 "R" "S" "r" 6 11 11 0 "i" ""
+   concat r3,"Arr ",r6
+   .traceevent "O" 4 "R" "S" "r" 3 11 11 0 "" ""
+   concat r3,r3,": "
+   .traceevent "O" 4 "R" "S" "r" 3 11 11 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 6 11 11 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 6 11 11 0 "s" ""
    setattrs r1,10
-   linkattr1 r4,r1,r3
-   .traceevent "V" 6 "R" "S" "r" 4 11 11 0 "s" ""
-   concat r5,r5,r4
-   unlink r4
-   .traceevent "O" 4 "R" "S" "r" 5 11 11 0 "" ""
-   say r5
+   linkattr1 r2,r1,r6
+   .traceevent "V" 6 "R" "S" "r" 2 11 11 0 "s" ""
+   concat r3,r3,r2
+   unlink r2
+   .traceevent "O" 4 "R" "S" "r" 3 11 11 0 "" ""
+   say r3
 l24doinc:
    .srcstep 10 10 17 "basic_arrays.crexx" 7 4 5 "do i = 1 to 3"
-   inc r3
+   inc r6
    .srcstep 13 13 17 "basic_arrays.crexx" 8 33 34 "  say \"Arr \" || i || \": \" || s[i]"
    br l24dostart
 l24doend:
+   endlife r6
+   .meta "basic_arrays.main.i"
    .srcstep 14 14 17 "basic_arrays.crexx" 12 1 8 "idx = 4"
    .meta "basic_arrays.main.idx"="b" ".int" r0
    load r0,4
@@ -90,36 +93,36 @@ l24doend:
    .traceevent "V" 6 "R" "I" "r" 0 15 15 0 "idx" ""
    .traceevent "C" 4 "R" "I" "r" 0 15 15 0 "s" ""
    setattrs r1,10
-   linkattr1 r7,r1,r0
-   load r6,"Item 4"
-   .traceevent "L" 4 "R" "S" "r" 6 15 15 0 "" ""
-   scopy r7,r6
-   .traceevent "A" 6 "R" "S" "r" 7 15 15 0 "s" ""
-   unlink r7
+   linkattr1 r6,r1,r0
+   load r5,"Item 4"
+   .traceevent "L" 4 "R" "S" "r" 5 15 15 0 "" ""
+   scopy r6,r5
+   .traceevent "A" 6 "R" "S" "r" 6 15 15 0 "s" ""
+   unlink r6
    .srcstep 16 16 17 "basic_arrays.crexx" 14 1 21 "say \"Arr 4: \" || s.4"
    setattrs r1,10
-   linkattr1 r7,r1,4
-   .traceevent "V" 6 "R" "S" "r" 7 16 16 0 "s" ""
-   concat r6,"Arr 4: ",r7
-   unlink r7
-   .traceevent "O" 4 "R" "S" "r" 6 16 16 0 "" ""
-   say r6
+   linkattr1 r6,r1,4
+   .traceevent "V" 6 "R" "S" "r" 6 16 16 0 "s" ""
+   concat r5,"Arr 4: ",r6
+   unlink r6
+   .traceevent "O" 4 "R" "S" "r" 5 16 16 0 "" ""
+   say r5
    .srcstep 17 17 17 "basic_arrays.crexx" 17 1 15 "s.5 = \"Item 5\""
    setattrs r1,10
-   linkattr1 r7,r1,5
-   load r6,"Item 5"
-   .traceevent "L" 4 "R" "S" "r" 6 17 17 0 "" ""
-   scopy r7,r6
-   .traceevent "A" 6 "R" "S" "r" 7 17 17 0 "s" ""
-   unlink r7
+   linkattr1 r6,r1,5
+   load r5,"Item 5"
+   .traceevent "L" 4 "R" "S" "r" 5 17 17 0 "" ""
+   scopy r6,r5
+   .traceevent "A" 6 "R" "S" "r" 6 17 17 0 "s" ""
+   unlink r6
    .srcstep 18 18 17 "basic_arrays.crexx" 18 1 21 "say \"Arr 5: \" || s.5"
    setattrs r1,10
-   linkattr1 r7,r1,5
-   .traceevent "V" 6 "R" "S" "r" 7 18 18 0 "s" ""
-   concat r6,"Arr 5: ",r7
-   unlink r7
-   .traceevent "O" 4 "R" "S" "r" 6 18 18 0 "" ""
-   say r6
+   linkattr1 r6,r1,5
+   .traceevent "V" 6 "R" "S" "r" 6 18 18 0 "s" ""
+   concat r5,"Arr 5: ",r6
+   unlink r6
+   .traceevent "O" 4 "R" "S" "r" 5 18 18 0 "" ""
+   say r5
    .srcstep 19 19 17 "basic_arrays.crexx" 20 1 7 "return"
    ret
    .meta "basic_arrays.main.idx"

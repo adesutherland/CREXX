@@ -334,9 +334,17 @@ int get_reg_perm(Scope *scope) {
     return (int)((rs->num_registers)++);
 }
 
-/* Return a no longer used register to the scope */
-void ret_reg(Scope *scope, int reg) {
+static int reg_in_array(dpa *array, int reg) {
     size_t i;
+
+    if (!array || reg < 0) return 0;
+    for (i=0; i<array->size; i++) {
+        if (reg == (int)(size_t)array->pointers[i]) return 1;
+    }
+    return 0;
+}
+
+static void ret_reg_free(Scope *scope, int reg) {
     dpa *free_array;
     Scope *rs = scope->reg_scope ? scope->reg_scope : scope;
     free_array = (dpa*)(rs->free_registers_array);
@@ -345,12 +353,10 @@ void ret_reg(Scope *scope, int reg) {
         return;
     }
 
-    for (i=0; i<free_array->size; i++) {
-        if (reg == (size_t)free_array->pointers[i]) {
+    if (reg_in_array(free_array, reg)) {
 //            printf("Reg %d already freed - free array remains ", reg);
 //            {int ii; for (ii=0; ii<free_array->size; ii++) printf("%d ",(int)(size_t)free_array->pointers[ii]);printf("\n");}
-            return;
-        }
+        return;
     }
     dpa_ado(free_array, (void*)(size_t)reg);
 
@@ -359,22 +365,33 @@ void ret_reg(Scope *scope, int reg) {
 //    printf("\n");
 }
 
-/* Return a linked register later (end of statement) */
-void ret_reg_later(Scope *scope, int reg) {
-    size_t i;
+/* Return a no longer used register to the scope */
+void ret_reg(Scope *scope, int reg) {
     dpa *deferred_array;
     Scope *rs = scope->reg_scope ? scope->reg_scope : scope;
+
+    if (reg < 0) {
+        return;
+    }
+
+    deferred_array = (dpa*)(rs->deferred_registers_array);
+    if (reg_in_array(deferred_array, reg)) return;
+    ret_reg_free(rs, reg);
+}
+
+/* Return a linked register later (end of statement) */
+void ret_reg_later(Scope *scope, int reg) {
+    dpa *free_array;
+    dpa *deferred_array;
+    Scope *rs = scope->reg_scope ? scope->reg_scope : scope;
+    free_array = (dpa*)(rs->free_registers_array);
     deferred_array = (dpa*)(rs->deferred_registers_array);
 
     if (reg < 0) {
         return;
     }
 
-    for (i=0; i<deferred_array->size; i++) {
-        if (reg == (size_t)deferred_array->pointers[i]) {
-            return;
-        }
-    }
+    if (reg_in_array(free_array, reg) || reg_in_array(deferred_array, reg)) return;
     dpa_add(deferred_array, (void*)(size_t)reg);
 }
 
@@ -386,7 +403,7 @@ void ret_reg_all_deferred(Scope *scope) {
     deferred_array = (dpa*)(rs->deferred_registers_array);
 
     for (i=0; i<deferred_array->size; i++) {
-        ret_reg(rs, (int)(size_t)deferred_array->pointers[i]);
+        ret_reg_free(rs, (int)(size_t)deferred_array->pointers[i]);
     }
     deferred_array->size = 0;
 }

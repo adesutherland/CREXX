@@ -1,11 +1,10 @@
 /*
  * SOURCE                 : inline_test_ref_vararg.crexx
- * BUILT                  : 2026-05-27 17:53:36
  */
 
 .globals=0
 
-main() .locals=7
+main() .locals=4
    .meta "inline_test_ref_vararg.main"="b" ".int" main() ""
    .srcstep 21 21 17 "inline_test_ref_vararg.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -26,7 +25,6 @@ main() .locals=7
    load r1,3
    .traceevent "L" 4 "R" "I" "r" 1 4 4 0 "" ""
    icopy r2,r1
-   acopy r2,r1
    br l117bexprend
 l117bexprend:
    itos r2
@@ -36,7 +34,6 @@ l117bexprend:
    .srcstep 5 5 17 "inline_test_ref_vararg.crexx" 24 3 15 "  return arg[2]"
    .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "second" ""
    icopy r2,r0
-   acopy r2,r0
    br l121bexprend
 l121bexprend:
    itos r2
@@ -46,38 +43,35 @@ l121bexprend:
    .srcstep 8 8 17 "inline_test_ref_vararg.crexx" 28 3 15 "  return arg(2, \"E\")"
    load r2,1
    .traceevent "L" 4 "R" "B" "r" 2 10 10 0 "" ""
-   icopy r3,r2
-   acopy r3,r2
+   icopy r1,r2
    br l125bexprend
 l125bexprend:
-   itos r3
-   say r3
+   itos r1
+   say r1
    .srcstep 13 13 17 "inline_test_ref_vararg.crexx" 11 3 37 "  say hasFifth(first, second, third)"
    .srcstep 12 12 17 "inline_test_ref_vararg.crexx" 11 7 15 "  say hasFifth(first, second, third)"
    .srcstep 11 11 17 "inline_test_ref_vararg.crexx" 32 3 15 "  return arg(5, \"E\")"
-   load r3,0
-   .traceevent "L" 4 "R" "B" "r" 3 13 13 0 "" ""
-   icopy r4,r3
-   acopy r4,r3
+   load r2,0
+   .traceevent "L" 4 "R" "B" "r" 2 13 13 0 "" ""
+   icopy r1,r2
    br l129bexprend
 l129bexprend:
-   itos r4
-   say r4
+   itos r1
+   say r1
    .srcstep 16 16 17 "inline_test_ref_vararg.crexx" 12 3 41 "  say mutateSecond(first, second, third)"
    .srcstep 15 15 17 "inline_test_ref_vararg.crexx" 12 7 19 "  say mutateSecond(first, second, third)"
    .srcstep 14 14 17 "inline_test_ref_vararg.crexx" 41 3 23 "  return bumpOne(arg[2])"
    .traceevent "V" 6 "R" "I" "r" 0 16 16 0 "second" ""
-   load r4,1
-   swap r5,r0
-   call r6,bumpOne(),r4
-   swap r0,r5
-   .traceevent "F" 4 "R" "I" "r" 6 16 16 0 "bumpone" ""
-   icopy r5,r6
-   acopy r5,r6
+   load r1,1
+   swap r2,r0
+   call r3,bumpOne(),r1
+   swap r0,r2
+   .traceevent "F" 4 "R" "I" "r" 3 16 16 0 "bumpone" ""
+   icopy r2,r3
    br l133bexprend
 l133bexprend:
-   itos r5
-   say r5
+   itos r2
+   say r2
    .srcstep 17 17 17 "inline_test_ref_vararg.crexx" 13 3 12 "  say first"
    say "10"
    .srcstep 18 18 17 "inline_test_ref_vararg.crexx" 14 3 13 "  say second"

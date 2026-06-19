@@ -1757,6 +1757,9 @@ void validate_ast(Context *context) {
             rxcp_validate_ast_and_symbols(context->ast);
         }
 
+        /* Explicit constants are language semantics, not just optimiser hints. */
+        propagate_explicit_constants(context);
+
         /* Syntactic Sugar
          * Progress: syntax_sugar_walker is idempotent. Verified by stress testing.
          * MOVED here so that types are known!
@@ -1813,6 +1816,11 @@ void validate_ast(Context *context) {
     context->is_final_pass = 1;
     context->current_scope = 0;
     ast_wlkr(context->ast, set_node_types_walker, (void *) context);
+    propagate_explicit_constants(context);
+    context->current_scope = 0;
+    ast_wlkr(context->ast, set_node_types_walker, (void *) context);
+    context->current_scope = 0;
+    ast_wlkr(context->ast, assembler_validation_walker, (void *) context);
     context->current_scope = 0;
     ast_wlkr(context->ast, type_safety_walker, (void *)context);
 

@@ -5226,6 +5226,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
             clear_value_contents(op1R);
             DISPATCH
 
+        START_INSTRUCTION(ENDLIFE_REG) CALC_DISPATCH(1)
+            DEBUG("TRACE - ENDLIFE R%lu\n", REG_IDX(1));
+            release_value_reference_lifetime(op1R);
+            DISPATCH
+
         /* Link attribute op3 of op2 to op1 */
         START_INSTRUCTION(LINKATTR_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - LINKATTR R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
@@ -6455,6 +6460,15 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         START_INSTRUCTION(SCOPY_REG_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - SCOPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             copy_string_value(op1R, op2R);
+            DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  BCOPY_REG_REG  Copy Binary op2 to op1
+ *  -----------------------------------------------------------------------------------
+ */
+        START_INSTRUCTION(BCOPY_REG_REG) CALC_DISPATCH(2)
+            DEBUG("TRACE - BCOPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
+            copy_binary_value(op1R, op2R);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -8076,6 +8090,17 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             DISPATCH
 
 /*
+ * SETTPMASK_REG_REG_INT masked replace of source-writable status flags
+ */
+        START_INSTRUCTION(SETTPMASK_REG_REG_INT) CALC_DISPATCH(3)
+            DEBUG("TRACE - SETTPMASK R%d R%d %d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
+            op1R->status.all_type_flags =
+                RXFLAGS_SOURCE_MASKED_REPLACE(op1R->status.all_type_flags,
+                                              (uint32_t)op2R->int_value,
+                                              (uint32_t)op3I);
+            DISPATCH
+
+/*
  * GETTP_REG_REG gets readable register status flags (op1 = op2.flags)
  */
         START_INSTRUCTION(GETTP_REG_REG) CALC_DISPATCH(2)
@@ -9167,8 +9192,6 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         RESERVED_IMPL(RESERVED_447)
         RESERVED_IMPL(RESERVED_448)
         RESERVED_IMPL(RESERVED_449)
-        RESERVED_IMPL(RESERVED_514)
-        RESERVED_IMPL(RESERVED_515)
 
     END_OF_INSTRUCTIONS
 

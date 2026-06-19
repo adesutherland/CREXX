@@ -1128,7 +1128,7 @@ char* type_to_prefix(ValueType value_type) {
         case TP_DECIMAL:
             return "d";
         case TP_BINARY:
-            return "";
+            return "b";
         default:
             return "";
     }

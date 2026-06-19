@@ -26,7 +26,6 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include <time.h>
 #include <ctype.h>
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
@@ -68,13 +67,96 @@ static int imported_declaration_has_runtime_reference(ASTNode *node) {
     return 0;
 }
 
+static int class_attribute_register_index(Symbol *symbol) {
+    size_t i;
+
+    if (!symbol) return -1;
+    for (i = 0; i < sym_nond(symbol); i++) {
+        ASTNode *def_node = sym_trnd(symbol, i)->node;
+        if (def_node && def_node->parent && def_node->parent->node_type == DEFINE) {
+            ASTNode *nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
+            if (nr) {
+                ASTNode *idx = ast_chld(nr, INTEGER, 0);
+                if (idx) return node_to_integer(idx);
+                if (nr->int_value) return (int)nr->int_value;
+                if (nr->child && nr->child->token) {
+                    return (int)strtol(nr->child->token->token_string, NULL, 10);
+                }
+                if (nr->child && nr->child->node_string && nr->child->node_string_length) {
+                    char *buffer = malloc(nr->child->node_string_length + 1);
+                    int result;
+
+                    memcpy(buffer, nr->child->node_string, nr->child->node_string_length);
+                    buffer[nr->child->node_string_length] = 0;
+                    result = (int)strtol(buffer, NULL, 10);
+                    free(buffer);
+                    return result;
+                }
+            }
+        }
+    }
+    return -1;
+}
+
+static int class_attribute_count(ASTNode *class_node) {
+    int n_attrs = 0;
+    Scope *class_scope = 0;
+
+    if (class_node && class_node->symbolNode && class_node->symbolNode->symbol) {
+        class_scope = class_node->symbolNode->symbol->defines_scope;
+    }
+    if (!class_scope && class_node) class_scope = class_node->scope;
+
+    if (class_scope) {
+        Symbol **symbols = scp_syms(class_scope);
+        if (symbols) {
+            int i;
+
+            for (i = 0; symbols[i]; i++) {
+                Symbol *s = symbols[i];
+                int index;
+
+                if (s->symbol_type != VARIABLE_SYMBOL) continue;
+                index = class_attribute_register_index(s);
+                if (index == 0) {
+                    /* register.0 is the containing value, not a child slot. */
+                } else if (index >= n_attrs) n_attrs = index + 1;
+                else if (index == -1) n_attrs++;
+            }
+            free(symbols);
+            return n_attrs;
+        }
+    }
+
+    if (class_node) {
+        ASTNode *attr = class_node->child;
+        while (attr) {
+            if (attr->node_type == DEFINE) {
+                int index = -1;
+                ASTNode *nr = ast_chld(attr, NODE_REGISTER, 0);
+                if (nr) {
+                    ASTNode *idx = ast_chld(nr, INTEGER, 0);
+                    if (idx) index = node_to_integer(idx);
+                    else if (nr->int_value) index = (int)nr->int_value;
+                    else if (nr->child && nr->child->token) index = (int)strtol(nr->child->token->token_string, NULL, 10);
+                }
+                if (index == 0) {
+                    /* register.0 is the containing value, not a child slot. */
+                } else if (index >= n_attrs) n_attrs = index + 1;
+                else if (index == -1) n_attrs++;
+            }
+            attr = attr->sibling;
+        }
+    }
+
+    return n_attrs;
+}
+
 void emit_proc(ASTNode *node, void *pl) {
     walker_payload *payload = (walker_payload*) pl;
     ASTNode *child1, *child2, *child3, *n;
     char *temp1;
     char *comment_meta;
-    time_t t = time(NULL);
-    struct tm tm = *localtime(&t);
 
     child1 = node->child;
     if (child1) child2 = child1->sibling;
@@ -89,11 +171,9 @@ void emit_proc(ASTNode *node, void *pl) {
         {
             char *buf = mprintf("/*\n"
                                 " * SOURCE                 : %s\n"
-                                " * BUILT                  : %d-%02d-%02d %02d:%02d:%02d\n"
                                 " */\n"
                                 "\n",
-                                payload->context->file_name,
-                                tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+                                payload->context->file_name);
 
             if (node->output) output_prepend_text(buf, node->output);
             else node->output = output_fs(buf);
@@ -289,41 +369,12 @@ void emit_proc(ASTNode *node, void *pl) {
 
                 /* Level B Class Preamble */
                 if (node->node_type == FACTORY) {
-                    int n_attrs = 0;
+                    int n_attrs;
                     char *class_fq = 0;
                     ASTNode *cls = node->parent;
                     /* Ensure we are looking at the CLASS_DEF */
                     while (cls && cls->node_type != CLASS_DEF) cls = cls->parent;
-                    if (cls) {
-                        ASTNode *attr = cls->child;
-                        while (attr) {
-                            if (attr->node_type == DEFINE) {
-                                int index = -1;
-                                ASTNode *nr = ast_chld(attr, NODE_REGISTER, 0);
-                                if (nr) {
-                                    ASTNode *idx = ast_chld(nr, INTEGER, 0);
-                                    if (idx) {
-                                        /* Basic inline node_to_integer logic */
-                                        char *s = idx->node_string;
-                                        size_t l = idx->node_string_length;
-                                        if (s && l) {
-                                            while (l && (*s == '.' || *s == ' ')) { s++; l--; }
-                                            if (l) {
-                                                char *buffer = malloc(l + 1);
-                                                memcpy(buffer, s, l); buffer[l] = 0;
-                                                index = atoi(buffer);
-                                                free(buffer);
-                                            }
-                                        }
-                                    }
-                                    else if (nr->int_value) index = (int)nr->int_value;
-                                }
-                                if (index >= n_attrs) n_attrs = index + 1;
-                                else if (index == -1) n_attrs++;
-                            }
-                            attr = attr->sibling;
-                        }
-                    }
+                    n_attrs = class_attribute_count(cls);
 
                     /* Assign r_this from symbol §factory */
                     ASTNode star_node;

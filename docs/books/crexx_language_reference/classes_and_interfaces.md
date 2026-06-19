@@ -142,12 +142,30 @@ raw_event: class
 ```
 
 The optional suffix after the index is the VM register value view to use for the
-slot. Valid views are `.int`, `.float`, `.string`, and `.object`:
+slot. Valid views are `.int`, `.float`, `.decimal`, `.binary`, `.string`, and
+`.object`:
 
 ```rexx
   _message = .string with register.5.string
   _payload = .object with register.5.object
 ```
+
+System classes can also expose masked status-flag views using
+`register.N.flags.<partition>`. These views are `.int` attributes over the VM
+status word rather than value-payload views:
+
+```rexx
+  _cache_flags = .int with register.0.flags.library
+  _vm_flags = .int with register.0.flags.vm
+```
+
+The supported partitions are `.vm`, `.compiler`, `.library`, `.user`,
+`.public`, and `.readable`. `.vm`, `.compiler`, and `.readable` are read-only.
+`.library` and `.user` are writable. `.public` is writable but covers only the
+library and user bands, not compiler call-ABI flags. Assigning a writable flag
+view replaces only that masked band; other status-word bits are preserved.
+Flag views must be declared as `.int`; unknown partitions are rejected during
+source validation.
 
 The compiler emits the attribute linking code for methods that read or write
 these attributes. Source code should still access them through methods, not
@@ -155,6 +173,23 @@ through hand-written assembler. It is valid for VM-integration classes to define
 more than one typed view over the same physical slot, as shown for a signal
 payload/message slot above. Ordinary application classes should not use explicit
 register mappings unless they are matching a fixed VM or native object layout.
+
+`register.0` is reserved for a typed view of the containing value itself. This
+is a Rexx source-level convention, not RXAS attribute zero. The compiler lowers
+it to a direct receiver/factory link, while `register.1` and above continue to
+name one-based child attributes. `register.0` and duplicate typed mappings to
+the same `register.N` slot are treated as complex attributes: compiler-generated
+reads copy the selected view into a local register before expression code
+manipulates it, and writes copy the selected payload view back through the
+physical slot. Status/cache flag updates for these typed views are explicit
+runtime code, not hidden compiler side effects. This is a low-level
+system-programmer facility for runtime and VM-integration classes; ordinary
+programs should use normal class attributes and methods.
+
+Flag views are the exception to the complex typed-view copy rule: reads access
+the status word directly and do not copy the register's string, binary, numeric,
+or object payload. Writes through writable flag views replace only the selected
+flag partition.
 
 ## Receiver Storage
 

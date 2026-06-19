@@ -1,0 +1,88 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxstem expose RexxStem
+import rexxvalue
+import data_StringHashMap
+
+/**
+ * Classic Rexx stem proof.
+ *
+ * The variable pool owns stem-name normalization. This class maps already
+ * derived tail text to RexxValue objects.
+ */
+RexxStem: class
+  slots = .StringHashMap
+  values = .RexxValue[]
+  next_slot = .int
+
+  *: factory
+    arg expected = 1024
+    slots = .StringHashMap(expected)
+    next_slot = 0
+    return
+
+  value: method = .RexxValue
+    arg tail = .string
+    if \slots.containsKey(tail) then do
+      item = .RexxValue("")
+      call setValue(tail, item)
+      return item
+    end
+    slot = slots.get(tail) as .int
+    return values[slot]
+
+  setValue: method = .void
+    arg tail = .string, item = .RexxValue
+    if slots.containsKey(tail) then do
+      slot = slots.get(tail) as .int
+      values[slot] = item
+      return
+    end
+    next_slot = next_slot + 1
+    values[next_slot] = item
+    rc = slots.put(tail, next_slot as .string)
+    return
+
+  setString: method = .void
+    arg tail = .string, text = .string
+    item = .RexxValue(text)
+    call setValue(tail, item)
+    return
+
+  containsTail: method = .boolean
+    arg tail = .string
+    return slots.containsKey(tail)
+
+  dropTail: method = .int
+    arg tail = .string
+    if \slots.containsKey(tail) then return 0
+    return slots.remove(tail)
+
+  size: method = .int
+    return slots.size()
+
+  free: method = .int
+    return slots.free()

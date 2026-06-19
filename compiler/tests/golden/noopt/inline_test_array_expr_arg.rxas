@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test_array_expr_arg.crexx
- * BUILT                  : 2026-05-27 17:53:59
  */
 
 .globals=0
@@ -38,7 +37,6 @@ bumpFirst() .locals=4
    .meta "inline_test_array_expr_arg.bumpfirst.pair"="b" ".int[2]" r0
    brtpandt l14c,a1,512
    copy r0,a1
-   acopy r0,a1
    br l14d
 l14c:
    swap r0,a1

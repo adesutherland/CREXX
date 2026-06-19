@@ -25,6 +25,17 @@ main() .locals=4
    br fail_public_branch
 
 public_branch:
+   settp r0,2162688
+   settp r0,256
+   getandtp r1,r0,2162944
+   ieq r2,r1,2162944
+   brf fail_band_preserve,r2
+
+   settp r0,512
+   getandtp r1,r0,2163456
+   ieq r2,r1,2163200
+   brf fail_band_replace,r2
+
    settp r0,0
    gettp r1,r0
    ieq r2,r1,0
@@ -51,6 +62,14 @@ fail_public_mask:
 
 fail_public_branch:
    say "FAIL: compiler flag band did not branch through BRTPANDT"
+   ret 1
+
+fail_band_preserve:
+   say "FAIL: SETTP compiler band write did not preserve library flags"
+   ret 1
+
+fail_band_replace:
+   say "FAIL: SETTP compiler band write did not replace compiler flags"
    ret 1
 
 fail_public_clear:

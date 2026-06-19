@@ -444,6 +444,223 @@ add_test(NAME rxc_binary_literal_load
          COMMAND ${CMAKE_COMMAND} -P "${RXC_BINARY_LITERAL_LOAD_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+set(RXC_CONSTANTS_LEVELB_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_constants_levelb.cmake")
+set(RXC_CONSTANTS_LEVELB_CONTENT "")
+foreach(_mode IN ITEMS noopt opt)
+    if(_mode STREQUAL "noopt")
+        set(_flag "-n")
+    else()
+        set(_flag "")
+    endif()
+    string(APPEND RXC_CONSTANTS_LEVELB_CONTENT
+           "execute_process(\n"
+           "  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${_flag} -o \"constants_levelb_${_mode}\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/constants_levelb.crexx\"\n"
+           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+           "  OUTPUT_VARIABLE rxc_${_mode}_out\n"
+           "  ERROR_VARIABLE rxc_${_mode}_err\n"
+           "  RESULT_VARIABLE rxc_${_mode}_res\n"
+           ")\n"
+           "set(full_${_mode}_out \"${RXAS_DIAG_DOLLAR}{rxc_${_mode}_out}${RXAS_DIAG_DOLLAR}{rxc_${_mode}_err}\")\n"
+           "string(REPLACE \"\\r\\n\" \"\\n\" full_${_mode}_out \"${RXAS_DIAG_DOLLAR}{full_${_mode}_out}\")\n"
+           "if(NOT rxc_${_mode}_res EQUAL 0)\n"
+           "  message(FATAL_ERROR \"rxc ${_mode} failed for constants_levelb.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_${_mode}_out}\")\n"
+           "endif()\n"
+           "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/constants_levelb_${_mode}.rxas\" rxas_${_mode}_out)\n"
+           "string(REPLACE \"\\r\\n\" \"\\n\" rxas_${_mode}_out \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "if(NOT rxas_${_mode}_out MATCHES [=[settp r[0-9]+,196608]=])\n"
+           "  message(FATAL_ERROR \"Named constants did not fold to an assembler immediate in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "if(NOT rxas_${_mode}_out MATCHES [=[(load r[0-9]+,196608|ret 196608)]=])\n"
+           "  message(FATAL_ERROR \"Named constants did not fold to a normal integer immediate in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n")
+endforeach()
+file(GENERATE OUTPUT "${RXC_CONSTANTS_LEVELB_SCRIPT}" CONTENT "${RXC_CONSTANTS_LEVELB_CONTENT}")
+
+add_test(NAME rxc_constants_levelb
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_CONSTANTS_LEVELB_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+set(RXC_REGISTER_FLAG_VIEWS_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_register_flag_views.cmake")
+set(RXC_REGISTER_FLAG_VIEWS_CONTENT "")
+foreach(_mode IN ITEMS noopt opt)
+    if(_mode STREQUAL "noopt")
+        set(_flag "-n")
+    else()
+        set(_flag "")
+    endif()
+    string(APPEND RXC_REGISTER_FLAG_VIEWS_CONTENT
+           "execute_process(\n"
+           "  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${_flag} -o \"register_flag_views_${_mode}\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/class_attr_register_views.crexx\"\n"
+           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+           "  OUTPUT_VARIABLE rxc_${_mode}_out\n"
+           "  ERROR_VARIABLE rxc_${_mode}_err\n"
+           "  RESULT_VARIABLE rxc_${_mode}_res\n"
+           ")\n"
+           "set(full_${_mode}_out \"${RXAS_DIAG_DOLLAR}{rxc_${_mode}_out}${RXAS_DIAG_DOLLAR}{rxc_${_mode}_err}\")\n"
+           "string(REPLACE \"\\r\\n\" \"\\n\" full_${_mode}_out \"${RXAS_DIAG_DOLLAR}{full_${_mode}_out}\")\n"
+           "if(NOT rxc_${_mode}_res EQUAL 0)\n"
+           "  message(FATAL_ERROR \"rxc ${_mode} failed for register flag views.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_${_mode}_out}\")\n"
+           "endif()\n"
+           "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/register_flag_views_${_mode}.rxas\" rxas_${_mode}_out)\n"
+           "string(REPLACE \"\\r\\n\" \"\\n\" rxas_${_mode}_out \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "if(NOT rxas_${_mode}_out MATCHES [=[getandtp r[0-9]+,a1,65280]=])\n"
+           "  message(FATAL_ERROR \"Compiler flag view did not lower to masked getandtp in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "if(NOT rxas_${_mode}_out MATCHES [=[bcopy r[0-9]+,(a1|r[0-9]+)]=])\n"
+           "  message(FATAL_ERROR \"Binary register view did not lower through bcopy in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "if(rxas_${_mode}_out MATCHES [=[(^|\\n)[ \\t]*acopy[ \\t]]=])\n"
+           "  message(FATAL_ERROR \"Register view codegen emitted acopy in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "if(NOT rxas_${_mode}_out MATCHES [=[settpmask a1,r[0-9]+,16711680]=])\n"
+           "  message(FATAL_ERROR \"Library flag view write did not lower to settpmask in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "if(NOT rxas_${_mode}_out MATCHES [=[settpmask a1,r[0-9]+,2147418112]=])\n"
+           "  message(FATAL_ERROR \"Public flag view write did not lower to source-writable settpmask in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n")
+endforeach()
+file(GENERATE OUTPUT "${RXC_REGISTER_FLAG_VIEWS_SCRIPT}" CONTENT "${RXC_REGISTER_FLAG_VIEWS_CONTENT}")
+
+add_test(NAME rxc_register_flag_views
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_REGISTER_FLAG_VIEWS_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+set(RXC_SCOPED_REGISTER_REUSE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_scoped_register_reuse.cmake")
+set(RXC_SCOPED_REGISTER_REUSE_CONTENT "")
+foreach(_mode IN ITEMS noopt)
+    if(_mode STREQUAL "noopt")
+        set(_flag "-n")
+    else()
+        set(_flag "")
+    endif()
+    string(APPEND RXC_SCOPED_REGISTER_REUSE_CONTENT
+           "execute_process(\n"
+           "  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${_flag} -o \"scoped_register_reuse_${_mode}\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/scoped_register_reuse.crexx\"\n"
+           "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+           "  OUTPUT_VARIABLE rxc_${_mode}_out\n"
+           "  ERROR_VARIABLE rxc_${_mode}_err\n"
+           "  RESULT_VARIABLE rxc_${_mode}_res\n"
+           ")\n"
+           "set(full_${_mode}_out \"${RXAS_DIAG_DOLLAR}{rxc_${_mode}_out}${RXAS_DIAG_DOLLAR}{rxc_${_mode}_err}\")\n"
+           "string(REPLACE \"\\r\\n\" \"\\n\" full_${_mode}_out \"${RXAS_DIAG_DOLLAR}{full_${_mode}_out}\")\n"
+           "if(NOT rxc_${_mode}_res EQUAL 0)\n"
+           "  message(FATAL_ERROR \"rxc ${_mode} failed for scoped register reuse.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_${_mode}_out}\")\n"
+           "endif()\n"
+           "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/scoped_register_reuse_${_mode}.rxas\" rxas_${_mode}_out)\n"
+           "string(REPLACE \"\\r\\n\" \"\\n\" rxas_${_mode}_out \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "string(REGEX MATCH [=[\\.meta \"scoped_register_reuse.main.left\"=\"b\" \"\\.int\" r([0-9]+)]=] left_match \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "if(NOT left_match)\n"
+           "  message(FATAL_ERROR \"Left scoped local metadata missing in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "set(left_reg \"${RXAS_DIAG_DOLLAR}{CMAKE_MATCH_1}\")\n"
+           "string(REGEX MATCH [=[\\.meta \"scoped_register_reuse.main.right\"=\"b\" \"\\.int\" r([0-9]+)]=] right_match \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "if(NOT right_match)\n"
+           "  message(FATAL_ERROR \"Right scoped local metadata missing in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "set(right_reg \"${RXAS_DIAG_DOLLAR}{CMAKE_MATCH_1}\")\n"
+           "if(NOT left_reg STREQUAL right_reg)\n"
+           "  message(FATAL_ERROR \"Scoped scalar locals did not reuse a register in ${_mode}: left=r${RXAS_DIAG_DOLLAR}{left_reg}, right=r${RXAS_DIAG_DOLLAR}{right_reg}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "string(REGEX MATCH [=[\\.meta \"scoped_register_reuse.main.object_left\"=\"b\" \"\\.box\" r([0-9]+)]=] object_left_match \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "if(NOT object_left_match)\n"
+           "  message(FATAL_ERROR \"Object-left scoped local metadata missing in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "set(object_left_reg \"${RXAS_DIAG_DOLLAR}{CMAKE_MATCH_1}\")\n"
+           "string(REGEX MATCH [=[\\.meta \"scoped_register_reuse.main.object_right\"=\"b\" \"\\.box\" r([0-9]+)]=] object_right_match \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "if(NOT object_right_match)\n"
+           "  message(FATAL_ERROR \"Object-right scoped local metadata missing in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "set(object_right_reg \"${RXAS_DIAG_DOLLAR}{CMAKE_MATCH_1}\")\n"
+           "if(NOT object_left_reg STREQUAL object_right_reg)\n"
+           "  message(FATAL_ERROR \"Scoped object locals did not reuse a register in ${_mode}: object_left=r${RXAS_DIAG_DOLLAR}{object_left_reg}, object_right=r${RXAS_DIAG_DOLLAR}{object_right_reg}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "string(REGEX MATCH [=[\\.meta \"scoped_register_reuse.main.reference_left\"=\"b\" \"reference \\.int\" r([0-9]+)]=] reference_left_match \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "if(NOT reference_left_match)\n"
+           "  message(FATAL_ERROR \"Reference-left scoped local metadata missing in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "set(reference_left_reg \"${RXAS_DIAG_DOLLAR}{CMAKE_MATCH_1}\")\n"
+           "string(REGEX MATCH [=[\\.meta \"scoped_register_reuse.main.reference_right\"=\"b\" \"reference \\.int\" r([0-9]+)]=] reference_right_match \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "if(NOT reference_right_match)\n"
+           "  message(FATAL_ERROR \"Reference-right scoped local metadata missing in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "set(reference_right_reg \"${RXAS_DIAG_DOLLAR}{CMAKE_MATCH_1}\")\n"
+           "if(NOT reference_left_reg STREQUAL reference_right_reg)\n"
+           "  message(FATAL_ERROR \"Scoped reference locals did not reuse a register in ${_mode}: reference_left=r${RXAS_DIAG_DOLLAR}{reference_left_reg}, reference_right=r${RXAS_DIAG_DOLLAR}{reference_right_reg}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "string(REGEX MATCH [=[\\.meta \"scoped_register_reuse.main.binary_left\"=\"b\" \"\\.binary\" r([0-9]+)]=] binary_left_match \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "if(NOT binary_left_match)\n"
+           "  message(FATAL_ERROR \"Binary-left scoped local metadata missing in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "set(binary_left_reg \"${RXAS_DIAG_DOLLAR}{CMAKE_MATCH_1}\")\n"
+           "string(REGEX MATCH [=[\\.meta \"scoped_register_reuse.main.binary_right\"=\"b\" \"\\.binary\" r([0-9]+)]=] binary_right_match \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "if(NOT binary_right_match)\n"
+           "  message(FATAL_ERROR \"Binary-right scoped local metadata missing in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "set(binary_right_reg \"${RXAS_DIAG_DOLLAR}{CMAKE_MATCH_1}\")\n"
+           "if(NOT binary_left_reg STREQUAL binary_right_reg)\n"
+           "  message(FATAL_ERROR \"Scoped binary locals did not reuse a register in ${_mode}: binary_left=r${RXAS_DIAG_DOLLAR}{binary_left_reg}, binary_right=r${RXAS_DIAG_DOLLAR}{binary_right_reg}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "string(REGEX MATCH [=[\\.meta \"scoped_register_reuse.main.array_left\"=\"b\" \"\\.int\\[2\\]\" r([0-9]+)]=] array_left_match \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "if(NOT array_left_match)\n"
+           "  message(FATAL_ERROR \"Array-left scoped local metadata missing in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "set(array_left_reg \"${RXAS_DIAG_DOLLAR}{CMAKE_MATCH_1}\")\n"
+           "string(REGEX MATCH [=[\\.meta \"scoped_register_reuse.main.array_right\"=\"b\" \"\\.int\\[2\\]\" r([0-9]+)]=] array_right_match \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "if(NOT array_right_match)\n"
+           "  message(FATAL_ERROR \"Array-right scoped local metadata missing in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "set(array_right_reg \"${RXAS_DIAG_DOLLAR}{CMAKE_MATCH_1}\")\n"
+           "if(NOT array_left_reg STREQUAL array_right_reg)\n"
+           "  message(FATAL_ERROR \"Scoped array locals did not reuse a register in ${_mode}: array_left=r${RXAS_DIAG_DOLLAR}{array_left_reg}, array_right=r${RXAS_DIAG_DOLLAR}{array_right_reg}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "string(REGEX MATCHALL [=[\\.meta \"scoped_register_reuse.main.left\"]=] left_meta_entries \"${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "list(LENGTH left_meta_entries left_meta_count)\n"
+           "if(NOT left_meta_count EQUAL 2)\n"
+           "  message(FATAL_ERROR \"Expected definition and clear metadata records for left scoped local in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n"
+           "if(NOT rxas_${_mode}_out MATCHES \"endlife r${RXAS_DIAG_DOLLAR}{left_reg}\")\n"
+           "  message(FATAL_ERROR \"Scoped local reference lifetime cleanup missing before register reuse in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
+           "endif()\n")
+endforeach()
+file(GENERATE OUTPUT "${RXC_SCOPED_REGISTER_REUSE_SCRIPT}" CONTENT "${RXC_SCOPED_REGISTER_REUSE_CONTENT}")
+
+add_test(NAME rxc_scoped_register_reuse
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_SCOPED_REGISTER_REUSE_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxc_scoped_register_reuse PROPERTIES LABELS "compiler;registers")
+
+set(RXC_INLINE_BYVALUE_ARG_REUSE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_inline_byvalue_arg_reuse.cmake")
+set(RXC_INLINE_BYVALUE_ARG_REUSE_CONTENT "")
+string(APPEND RXC_INLINE_BYVALUE_ARG_REUSE_CONTENT
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"inline_test_byvalue_arg_reuse_diag\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_test_byvalue_arg_reuse.crexx\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE rxc_out\n"
+       "  ERROR_VARIABLE rxc_err\n"
+       "  RESULT_VARIABLE rxc_res\n"
+       ")\n"
+       "set(full_out \"${RXAS_DIAG_DOLLAR}{rxc_out}${RXAS_DIAG_DOLLAR}{rxc_err}\")\n"
+       "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "if(NOT rxc_res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"rxc failed for inline by-value arg reuse.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n"
+       "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/inline_test_byvalue_arg_reuse_diag.rxas\" rxas_out)\n"
+       "string(REPLACE \"\\r\\n\" \"\\n\" rxas_out \"${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "string(REGEX MATCH [=[main\\(\\) \\.locals=([0-9]+)]=] main_locals_match \"${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "if(NOT main_locals_match)\n"
+       "  message(FATAL_ERROR \"main locals record missing for inline by-value arg reuse.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "endif()\n"
+       "set(main_locals \"${RXAS_DIAG_DOLLAR}{CMAKE_MATCH_1}\")\n"
+       "if(main_locals GREATER 12)\n"
+       "  message(FATAL_ERROR \"Inlined by-value formals were not recycled; main locals=${RXAS_DIAG_DOLLAR}{main_locals}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "endif()\n")
+file(GENERATE OUTPUT "${RXC_INLINE_BYVALUE_ARG_REUSE_SCRIPT}" CONTENT "${RXC_INLINE_BYVALUE_ARG_REUSE_CONTENT}")
+
+add_test(NAME rxc_inline_byvalue_arg_reuse
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_INLINE_BYVALUE_ARG_REUSE_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxc_inline_byvalue_arg_reuse PROPERTIES LABELS "compiler;registers")
+
 # Robustness tests
 macro(add_crexx_robustness_test NAME MAIN_FILE)
     # The list of dependencies are passed as additional arguments
@@ -521,6 +738,7 @@ add_crexx_compiler_test(address_expose rexx_src/address_expose.crexx)
 add_crexx_compiler_test(div_ops_common rexx_src/div_ops_common.crexx)
 add_crexx_compiler_test(div_ops_classic rexx_src/div_ops_classic.crexx)
 add_crexx_compiler_test(06_logic rexx_src/06_logic.crexx)
+add_crexx_compiler_test(named_operators rexx_src/named_operators.crexx)
 add_crexx_compiler_test(07_loops rexx_src/07_loops.crexx)
 add_crexx_compiler_test(08_select rexx_src/08_select.crexx)
 add_crexx_compiler_test(test_select_classic rexx_src/test_select_classic.crexx)
@@ -553,6 +771,9 @@ add_crexx_compiler_fail_test(err_loop_class rexx_src/err_loop_class.crexx err_lo
 add_crexx_compiler_fail_test(err_select_no_when rexx_src/err_select_no_when.crexx err_select_no_when.txt)
 add_crexx_compiler_fail_test(err_select_c_no_when rexx_src/err_select_c_no_when.crexx err_select_c_no_when.txt)
 add_crexx_compiler_fail_test(err_class_assign rexx_src/err_class_assign.crexx err_class_assign.txt)
+add_crexx_compiler_fail_test(err_register_flag_compiler_write rexx_src/err_register_flag_compiler_write.crexx err_register_flag_compiler_write.txt)
+add_crexx_compiler_fail_test(err_register_flag_unknown rexx_src/err_register_flag_unknown.crexx err_register_flag_unknown.txt)
+add_crexx_compiler_fail_test(err_register_flag_type rexx_src/err_register_flag_type.crexx err_register_flag_type.txt)
 add_crexx_compiler_fail_test(err_address_commandless_sandbox rexx_src/err_address_commandless_sandbox.crexx err_address_commandless_sandbox.txt)
 add_crexx_compiler_fail_test(err_block_expr_type_mismatch rexx_src/err_block_expr_type_mismatch.crexx err_block_expr_type_mismatch.txt)
 add_crexx_compiler_fail_test(err_block_expr_no_leave rexx_src/err_block_expr_no_leave.crexx err_block_expr_no_leave.txt)
@@ -662,6 +883,7 @@ add_crexx_compiler_test(inline_test_call_arg_expr rexx_src/inline_test_call_arg_
 add_crexx_compiler_test(inline_test_call_like_arg_expr rexx_src/inline_test_call_like_arg_expr.crexx)
 add_crexx_compiler_test(inline_test_short_circuit_expr rexx_src/inline_test_short_circuit_expr.crexx)
 add_crexx_compiler_test(inline_test_composed_expr_contexts rexx_src/inline_test_composed_expr_contexts.crexx)
+add_crexx_compiler_test(inline_test_byvalue_arg_reuse rexx_src/inline_test_byvalue_arg_reuse.crexx)
 add_crexx_compiler_test(inline_test_stateful_assembler rexx_src/inline_test_stateful_assembler.crexx)
 add_crexx_compiler_test(inline_test_condition_contexts rexx_src/inline_test_condition_contexts.crexx)
 add_crexx_compiler_test(inline_test_loop_bound_expr rexx_src/inline_test_loop_bound_expr.crexx)
@@ -844,7 +1066,7 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
     set_tests_properties(${NAME} PROPERTIES LABELS "${LABELS}")
 endfunction()
 
-foreach(_crexx_reference_fixture IN ITEMS reference_source_explicit reference_source_contract reference_source_iterator reference_source_dereference_live reference_source_inline_lifetime)
+foreach(_crexx_reference_fixture IN ITEMS reference_source_explicit reference_source_contract reference_source_iterator reference_source_dereference_live reference_source_inline_lifetime reference_source_block_lifetime)
     foreach(_crexx_runner IN ITEMS rxvm rxbvm)
         foreach(_crexx_mode IN ITEMS noopt opt)
             add_crexx_reference_source_test(${_crexx_reference_fixture} ${_crexx_runner} ${_crexx_mode})
@@ -1301,6 +1523,8 @@ add_crexx_run_test(test_implicit_address rexx_src/test_implicit_address.crexx)
 add_crexx_run_test(test_parse_statement rexx_src/test_parse_statement.crexx)
 add_crexx_isolated_run_test(qualified_namespace_same_module rexx_src/qualified_namespace_same_module.crexx)
 add_crexx_isolated_run_test(class_attr_string_promotion rexx_src/class_attr_string_promotion.crexx)
+add_crexx_run_test(class_attr_register_views rexx_src/class_attr_register_views.crexx)
+add_crexx_run_test(constants_levelb_payloads rexx_src/constants_levelb_payloads.crexx)
 add_crexx_isolated_run_test(qualified_bif_direct_namespace rexx_src/qualified_bif_direct_namespace.crexx)
 add_crexx_dual_import_run_test(qualified_namespace_import_source rexx_src/qualified_namespace_main.crexx rexx_src/qualified_namespace_dep_a.crexx rexx_src/qualified_namespace_dep_b.crexx source)
 add_crexx_dual_import_run_test(qualified_namespace_import_binary rexx_src/qualified_namespace_main.crexx rexx_src/qualified_namespace_dep_a.crexx rexx_src/qualified_namespace_dep_b.crexx binary)
@@ -1602,6 +1826,33 @@ add_test(NAME source_import_contract_stub_covariant_cycle
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(source_import_contract_stub_covariant_cycle PROPERTIES LABELS "compiler;imports")
 
+set(MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_mixed_aggregate_source_contract_stub_covariant.cmake")
+set(MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/mixed_aggregate_source_contract_stub_covariant_ws\")\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "file(MAKE_DIRECTORY \"\${work}/src\" \"\${work}/binroot\" \"\${work}/build\")\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "file(WRITE \"\${work}/src/Iterator.crexx\" \"options levelb\\nnamespace aggregate_iterator expose Iterator\\n\\nIterator: interface\\n  next: method = .string\\n\")\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "file(WRITE \"\${work}/src/Iterable.crexx\" \"options levelb\\nnamespace aggregate_iterable expose Iterable\\nimport aggregate_iterator\\n\\nIterable: interface\\n  iterator: method = .Iterator\\n\")\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "file(WRITE \"\${work}/src/BinaryIterator.crexx\" \"options levelb\\nnamespace aggregate_provider expose BinaryIterator\\nimport aggregate_iterator\\n\\nBinaryIterator: class implements .Iterator\\n  *: factory\\n    return\\n  next: method = .string\\n    return \\\"ok\\\"\\n\")\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "file(WRITE \"\${work}/src/Provider.crexx\" \"options levelb\\nnamespace aggregate_provider expose Provider\\nimport aggregate_iterable\\n\\nProvider: class implements .Iterable\\n  *: factory\\n    return\\n  iterator: method = .BinaryIterator\\n    return .BinaryIterator()\\n\")\n")
+foreach(_mixed_source IN ITEMS Iterator Iterable BinaryIterator)
+    string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"\${work}/build/${_mixed_source}\" \"\${work}/src/${_mixed_source}.crexx\" WORKING_DIRECTORY \"\${work}/build\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on aggregate dependency ${_mixed_source}: \${out}\")\nendif()\n")
+    string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" -o \"\${work}/build/${_mixed_source}.rxbin\" \"\${work}/build/${_mixed_source}\" WORKING_DIRECTORY \"\${work}/build\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed on aggregate dependency ${_mixed_source}: \${out}\")\nendif()\n")
+endforeach()
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "file(WRITE \"\${work}/build/aggregate.ctl\" \"INPUT \${work}/build/Iterator.rxbin\\nINPUT \${work}/build/Iterable.rxbin\\nINPUT \${work}/build/BinaryIterator.rxbin\\nINCLUDE Iterator\\nINCLUDE Iterable\\nINCLUDE BinaryIterator\\nOUTPUT \${work}/binroot/aggregate\\n\")\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxlink>\" -c \"\${work}/build/aggregate.ctl\" WORKING_DIRECTORY \"\${work}/build\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxlink failed on aggregate contract fixture: \${out}\")\nendif()\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"\${work}/binroot\" -o \"\${work}/build/Provider\" \"\${work}/src/Provider.crexx\" WORKING_DIRECTORY \"\${work}/build\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on mixed aggregate/source covariant contract test: \${out}\")\nendif()\n")
+string(APPEND MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT "if(NOT EXISTS \"\${work}/build/Provider.rxas\")\n  message(FATAL_ERROR \"Expected Provider.rxas was not produced\")\nendif()\n")
+file(GENERATE OUTPUT "${MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_SCRIPT}" CONTENT "${MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_CONTENT}")
+
+add_test(NAME mixed_aggregate_source_contract_stub_covariant
+         COMMAND ${CMAKE_COMMAND} -P "${MIXED_AGGREGATE_SOURCE_CONTRACT_STUB_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(mixed_aggregate_source_contract_stub_covariant PROPERTIES LABELS "compiler;imports")
+
 set(SOURCE_EXTENSION_DIRECT_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_source_extension_direct_defaults.cmake")
 set(SOURCE_EXTENSION_DIRECT_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/source_extension_direct_defaults_ws\")\n")
 string(APPEND SOURCE_EXTENSION_DIRECT_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
@@ -1768,6 +2019,7 @@ add_crexx_run_test(test_lib_boundary rexx_src/test_lib_boundary.crexx)
 add_crexx_run_test(div_ops_common rexx_src/div_ops_common.crexx)
 add_crexx_run_test(div_ops_classic rexx_src/div_ops_classic.crexx)
 add_crexx_run_test(classic_xor rexx_src/classic_xor.crexx)
+add_crexx_run_test(named_operators rexx_src/named_operators.crexx)
 
 # Shadowing behavior in simple DO blocks
 add_crexx_run_test(do_scope_typed_shadows rexx_src/do_scope_typed_shadows.crexx)
@@ -1792,6 +2044,7 @@ add_crexx_run_test(inline_test_call_arg_expr rexx_src/inline_test_call_arg_expr.
 add_crexx_run_test(inline_test_call_like_arg_expr rexx_src/inline_test_call_like_arg_expr.crexx)
 add_crexx_run_test(inline_test_short_circuit_expr rexx_src/inline_test_short_circuit_expr.crexx)
 add_crexx_run_test(inline_test_composed_expr_contexts rexx_src/inline_test_composed_expr_contexts.crexx)
+add_crexx_run_test(inline_test_byvalue_arg_reuse rexx_src/inline_test_byvalue_arg_reuse.crexx)
 add_crexx_run_test(inline_test_stateful_assembler rexx_src/inline_test_stateful_assembler.crexx)
 add_crexx_run_test(inline_test_condition_contexts rexx_src/inline_test_condition_contexts.crexx)
 add_crexx_run_test(inline_test_loop_bound_expr rexx_src/inline_test_loop_bound_expr.crexx)
@@ -1830,6 +2083,8 @@ add_crexx_run_test(inline_test_array_expr_arg rexx_src/inline_test_array_expr_ar
 add_crexx_run_test(inline_test_object_expr_arg rexx_src/inline_test_object_expr_arg.crexx)
 add_crexx_run_test(inline_test_array_return_temp rexx_src/inline_test_array_return_temp.crexx)
 add_crexx_run_test(inline_test_block_expr_live_sibling rexx_src/inline_test_block_expr_live_sibling.crexx)
+add_crexx_run_test(inline_test_imported_bif_block_expr_lifetime rexx_src/inline_test_imported_bif_block_expr_lifetime.crexx)
+add_crexx_run_test(attr_array_call_result_lifetime rexx_src/attr_array_call_result_lifetime.crexx)
 add_crexx_run_test(inline_test_complex_lhs_assign rexx_src/inline_test_complex_lhs_assign.crexx)
 add_crexx_run_test(inline_test_binary_arg_return rexx_src/inline_test_binary_arg_return.crexx)
 add_crexx_run_test(inline_test_class_methods rexx_src/inline_test_class_methods.crexx)

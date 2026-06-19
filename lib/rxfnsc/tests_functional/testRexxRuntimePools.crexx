@@ -1,0 +1,56 @@
+options levelb comments_dash numeric_classic
+import rexxvalue
+import rexxstem
+import rexxpool
+
+constant RV_FLAG_INT = 0x00020000
+
+errors = 0
+
+stem = .RexxStem()
+call stem.setString("1", "alpha")
+call stem.setValue("2", .RexxValue.fromInt(42))
+errors = errors + check(stem.containsTail("1"), "stem contains tail")
+errors = errors + check(stem.value("1").asString() = "alpha", "stem string value")
+errors = errors + check(stem.value("2").asInt() = 42, "stem RexxValue value")
+errors = errors + check(stem.value("2").cacheFlags() = RV_FLAG_INT, "stem keeps value flags")
+errors = errors + check(stem.size() = 2, "stem size")
+call stem.dropTail("1")
+errors = errors + check(\stem.containsTail("1"), "stem drop tail")
+
+pool = .RexxVariablePool()
+call pool.setString("answer", "41")
+errors = errors + check(pool.value("ANSWER").asString() = "41", "pool normalizes scalar names")
+call pool.setValue("answer", .RexxValue.fromInt(42))
+errors = errors + check(pool.value("answer").asInt() = 42, "pool scalar replacement")
+errors = errors + check(pool.value("answer").cacheFlags() = RV_FLAG_INT, "pool scalar uses RexxValue cache")
+
+call pool.setStemString("items", "A", "aye")
+items_a = pool.stemValue("ITEMS.", "A")
+errors = errors + check(items_a.asString() = "aye", "pool stem root normalization")
+errors = errors + check(pool.value("items").asString() = "", "pool scalar and stem roots are separate")
+
+child = .RexxVariablePool()
+call child.exposeValue("local_answer", reference pool, "answer")
+call child.setString("local_answer", "parent-updated")
+errors = errors + check(pool.value("answer").asString() = "parent-updated", "exposed scalar aliases parent")
+
+call child.exposeStem("local_items", reference pool, "items.")
+call child.setStemString("local_items", "B", "bee")
+items_b = pool.stemValue("items", "B")
+errors = errors + check(items_b.asString() = "bee", "exposed stem aliases parent")
+
+call child.drop("local_answer")
+errors = errors + check(pool.isDropped("answer"), "dropping exposed scalar drops parent binding")
+call pool.setString("answer", "restored")
+errors = errors + check(\pool.isDropped("answer"), "set clears dropped scalar state")
+errors = errors + check(pool.value("answer").asString() = "restored", "scalar restored after drop")
+
+if errors = 0 then say "ok"
+return errors
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL" label
+  return 1

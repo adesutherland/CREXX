@@ -82,6 +82,7 @@ walker_result type_safety_walker(walker_direction direction, ASTNode* node, void
 walker_result func_type_safety_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result float2decimal_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result decimal2float_walker(walker_direction direction, ASTNode* node, void *payload);
+void propagate_explicit_constants(Context *context);
 
 /* trans */
 walker_result rewrite_constructor_walker(walker_direction direction, ASTNode* node, void *payload);
@@ -100,6 +101,7 @@ walker_result ast_work_structure_walker(walker_direction direction, ASTNode* nod
 walker_result ast_structure_fixup_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result source_location_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result syntax_validation_walker(walker_direction direction, ASTNode* node, void *payload);
+walker_result assembler_validation_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result decimal_parameters_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result exit_dispatch_walker(walker_direction direction, ASTNode* node, void *payload);
 walker_result exit_plan_walker(walker_direction direction, ASTNode* node, void *payload);

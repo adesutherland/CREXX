@@ -1,0 +1,8 @@
+options levelb
+namespace err_register_flag_type
+
+FlagBox: class
+  bad_flags = .string with register.0.flags.library
+
+  *: factory
+    return

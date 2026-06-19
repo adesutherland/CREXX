@@ -60,7 +60,6 @@ This program, when compiled by the 'rxc' compiler, produces the following assemb
 ```rxas <!--sumloop.rxas-->
 /*
  * SOURCE                 : sumLoop1000.crexx
- * BUILT                  : 2026-05-27 18:03:17
  */
 
 .globals=0

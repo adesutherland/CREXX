@@ -36,6 +36,13 @@ main() .locals=32
     seq r0, r1, "delta"
     brf fail_linkref_write, r0
 
+    endlife r1
+    refvalid r3, r2
+    ieq r0, r3, 0
+    brf fail_endlife, r0
+    seq r0, r1, "delta"
+    brf fail_endlife_contents, r0
+
     unref r2
     refvalid r3, r2
     ieq r0, r3, 0
@@ -183,6 +190,12 @@ fail_setref:
     ret 1
 fail_linkref_write:
     say "FAIL: linkref write"
+    ret 1
+fail_endlife:
+    say "FAIL: endlife refvalid"
+    ret 1
+fail_endlife_contents:
+    say "FAIL: endlife contents"
     ret 1
 fail_unref:
     say "FAIL: unref"

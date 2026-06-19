@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test1.crexx
- * BUILT                  : 2026-05-27 17:53:15
  */
 
 .globals=0
@@ -22,20 +21,20 @@ main() .locals=6
    .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "i" ""
    .srcstep 3 3 17 "inline_test1.crexx" 7 12 16 "  do i = 1 to 5"
-   load r3,5
-   .traceevent "L" 4 "R" "I" "r" 3 0 0 0 "" ""
+   load r2,5
+   .traceevent "L" 4 "R" "I" "r" 2 0 0 0 "" ""
 l8dostart:
    .srcstep 3 3 17 "inline_test1.crexx" 7 12 16 "  do i = 1 to 5"
-   igt r4,r0,r3
-   brt l8doend,r4
+   igt r3,r0,r2
+   brt l8doend,r3
    .srcstep 7 7 17 "inline_test1.crexx" 8 5 30 "    result = multiplyByTwo(i)"
    .srcstep 5 5 33 "inline_test1.crexx" 15 7 10 "  arg val = .int"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   icopy r2,r0
-   .traceevent "A" 6 "R" "I" "r" 2 5 5 0 "val" ""
+   icopy r4,r0
+   .traceevent "A" 6 "R" "I" "r" 4 5 5 0 "val" ""
    .srcstep 6 6 33 "inline_test1.crexx" 17 3 9 "  return val * 2"
-   .traceevent "V" 6 "R" "I" "r" 2 6 6 0 "val" ""
-   imult r1,r2,2
+   .traceevent "V" 6 "R" "I" "r" 4 6 6 0 "val" ""
+   imult r1,r4,2
    .traceevent "O" 4 "R" "I" "r" 1 6 6 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 1 6 6 0 "result" ""
    .srcstep 8 8 17 "inline_test1.crexx" 9 5 52 "    say \"Result of multiplyByTwo for\" i \"is\" result"
@@ -57,6 +56,10 @@ l8doinc:
    .srcstep 10 10 17 "inline_test1.crexx" 10 3 6 "  end"
    br l8dostart
 l8doend:
+   endlife r0
+   endlife r1
+   .meta "inline_test1.main.i"
+   .meta "inline_test1.main.result"
    .srcstep 11 11 17 "inline_test1.crexx" 11 3 23 "  say \"Loop finished.\""
    say "Loop finished."
    .srcstep 12 12 17 "inline_test1.crexx" 12 3 11 "  return 0"

@@ -1,0 +1,56 @@
+options levelb
+namespace scoped_register_reuse
+
+main: procedure = .int
+  total = .int
+  total = 0
+
+  do
+    left = .int
+    left = 10
+    total = total + left
+  end
+
+  do
+    right = .int
+    right = 32
+    total = total + right
+  end
+
+  do
+    object_left = .Box
+  end
+
+  do
+    object_right = .Box
+  end
+
+  do
+    reference_left = reference .int
+  end
+
+  do
+    reference_right = reference .int
+  end
+
+  do
+    binary_left = .binary
+  end
+
+  do
+    binary_right = .binary
+  end
+
+  do
+    array_left = .int[2]
+  end
+
+  do
+    array_right = .int[2]
+  end
+
+  if total <> 42 then return 1
+  return 0
+
+Box: class
+  value = .int

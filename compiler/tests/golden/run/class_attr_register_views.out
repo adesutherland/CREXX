@@ -1,0 +1,11 @@
+string=41
+int=42
+increment=43
+float=3.5
+decimal=12
+binary-length=2
+flags-public=16842752
+flags-library=65536
+flags-user=16777216
+flags-after-clear-library=16777216
+flags-public-keeps-compiler=1

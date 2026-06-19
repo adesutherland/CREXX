@@ -1,0 +1,19 @@
+* Optimiser duplicate linkattr1/bcopy/unlink read coverage.
+
+main() .locals=7
+    setattrs r0,1
+    linkattr1 r5,r0,1
+    load r6,0x4142
+    bcopy r5,r6
+    unlink r5
+
+    linkattr1 r1,r0,1
+    bcopy r2,r1
+    unlink r1
+
+    linkattr1 r3,r0,1
+    bcopy r4,r3
+    unlink r3
+
+    blen r0,r4
+    ret

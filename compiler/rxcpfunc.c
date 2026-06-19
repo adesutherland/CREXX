@@ -796,6 +796,47 @@ static void free_imported_class_payload(struct imported_class *cls, int free_ide
     if (cls->context) fre_cntx(cls->context);
 }
 
+static int imported_class_has_implements(const struct imported_class *cls, const char *interface_fqname) {
+    size_t i;
+
+    if (!cls || !interface_fqname) return 0;
+    for (i = 0; i < cls->implements_count; i++) {
+        if (cls->implements_fqnames[i] && strcmp(cls->implements_fqnames[i], interface_fqname) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static void imported_class_append_implements_copy(struct imported_class *cls, const char *interface_fqname) {
+    char **new_implements;
+
+    if (!cls || !interface_fqname || imported_class_has_implements(cls, interface_fqname)) return;
+
+    new_implements = realloc(cls->implements_fqnames, sizeof(char *) * (cls->implements_count + 1));
+    if (!new_implements) {
+        RX_PANIC_OOM("realloc imported class implements",
+                     sizeof(char *) * (cls->implements_count + 1), cls->fqname);
+    }
+    cls->implements_fqnames = new_implements;
+    cls->implements_fqnames[cls->implements_count] = strdup(interface_fqname);
+    if (!cls->implements_fqnames[cls->implements_count]) {
+        RX_PANIC_OOM("strdup imported class implements",
+                     strlen(interface_fqname) + 1, cls->fqname);
+    }
+    cls->implements_count++;
+}
+
+static void merge_imported_class_implements(struct imported_class *target,
+                                            const struct imported_class *source) {
+    size_t i;
+
+    if (!target || !source) return;
+    for (i = 0; i < source->implements_count; i++) {
+        imported_class_append_implements_copy(target, source->implements_fqnames[i]);
+    }
+}
+
 /* Adds a class to the master context*/
 /* Returns 0 on success, 1 on duplicate */
 static int add_class(Context *context, struct imported_class *cls) {
@@ -807,6 +848,7 @@ static int add_class(Context *context, struct imported_class *cls) {
     if ( src_class(context, cls->fqname, &existing_cls) ) {
         if (existing_cls &&
             imported_contract_member_count(existing_cls->context) < imported_contract_member_count(cls->context)) {
+            merge_imported_class_implements(cls, existing_cls);
             free(existing_cls->file_name);
             if (existing_cls->implements_fqnames) {
                 size_t k;
@@ -828,7 +870,7 @@ static int add_class(Context *context, struct imported_class *cls) {
             return 1;
         }
 
-        /* Yes a duplicate - we don't care if it's consistent for now, just free the new one */
+        merge_imported_class_implements(existing_cls, cls);
         free_imported_class_payload(cls, 1);
         free(cls);
         return 1;
@@ -1253,6 +1295,8 @@ static const char *register_view_for_type(const char *type) {
     if (!type) return "object";
     if (strcmp(type, ".int") == 0 || strcmp(type, ".bool") == 0) return "int";
     if (strcmp(type, ".float") == 0) return "float";
+    if (strcmp(type, ".decimal") == 0) return "decimal";
+    if (strcmp(type, ".binary") == 0) return "binary";
     if (strcmp(type, ".string") == 0) return "string";
     return "object";
 }
@@ -1264,6 +1308,18 @@ static int register_index_from_node(ASTNode *node) {
     idx = ast_chld(node, INTEGER, 0);
     if (idx) return node_to_integer(idx);
     if (node->int_value) return (int)node->int_value;
+    if (node->child && node->child->token) return (int)strtol(node->child->token->token_string, NULL, 10);
+    if (node->child && node->child->node_string && node->child->node_string_length) {
+        char *buffer = malloc(node->child->node_string_length + 1);
+        int result;
+
+        if (!buffer) return -1;
+        memcpy(buffer, node->child->node_string, node->child->node_string_length);
+        buffer[node->child->node_string_length] = 0;
+        result = (int)strtol(buffer, NULL, 10);
+        free(buffer);
+        return result;
+    }
     return -1;
 }
 
@@ -1308,7 +1364,7 @@ static void append_class_attribute_stub_lines(ASTNode *contract_node, char **buf
         reg_index = register_index_from_node(reg_node);
         view = register_view_from_node(reg_node, type);
 
-        if (reg_index > 0) {
+        if (reg_index >= 0) {
             tmp = mprintf("%s  %.*s = %s with register.%d.%s\n",
                           *buffer,
                           (int)target->node_string_length,
@@ -1430,8 +1486,7 @@ static char* generate_contract_stub_source(ASTNode *contract_node,
             mname[m->node_string_length] = 0;
 
             /* Return type (default .void added by grammar) */
-            ASTNode *ret = ast_type_child(m);
-            char *rtype = ast_n2tp(ret);
+            char *rtype = callable_effective_return_type(m);
 
             char *tmp = mprintf("%s  %s: method = %s\n", buffer, mname, rtype);
             free(buffer);

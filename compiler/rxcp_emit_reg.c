@@ -28,8 +28,10 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include "rxcpmain.h"
 #include "rxcp_emit.h"
+#include "rxcp_val.h"
 
 static int symbol_is_class_attribute(Symbol *symbol) {
     return symbol &&
@@ -37,6 +39,162 @@ static int symbol_is_class_attribute(Symbol *symbol) {
            (symbol->scope->type == SCOPE_CLASS ||
             (symbol->scope->defining_node &&
              symbol->scope->defining_node->node_type == CLASS_DEF));
+}
+
+static int class_attribute_register_index(Symbol *symbol) {
+    int i;
+
+    if (!symbol) return -1;
+    for (i = 0; i < (int)sym_nond(symbol); i++) {
+        ASTNode *def_node = sym_trnd(symbol, i)->node;
+        if (def_node && def_node->parent && def_node->parent->node_type == DEFINE) {
+            ASTNode *nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
+            if (nr) {
+                ASTNode *idx = ast_chld(nr, INTEGER, 0);
+                if (idx) return node_to_integer(idx);
+                if (nr->int_value) return (int)nr->int_value;
+                if (nr->child && nr->child->token) {
+                    return (int)strtol(nr->child->token->token_string, NULL, 10);
+                }
+                if (nr->child && nr->child->node_string && nr->child->node_string_length) {
+                    char *buffer = malloc(nr->child->node_string_length + 1);
+                    int result;
+
+                    if (!buffer) return -1;
+                    memcpy(buffer, nr->child->node_string, nr->child->node_string_length);
+                    buffer[nr->child->node_string_length] = 0;
+                    result = (int)strtol(buffer, NULL, 10);
+                    free(buffer);
+                    return result;
+                }
+            }
+        }
+    }
+    return -1;
+}
+
+static ASTNode *class_attribute_register_view(Symbol *symbol) {
+    int i;
+
+    if (!symbol) return 0;
+    for (i = 0; i < (int)sym_nond(symbol); i++) {
+        ASTNode *def_node = sym_trnd(symbol, i)->node;
+        ASTNode *nr;
+        ASTNode *child;
+
+        if (!def_node || !def_node->parent || def_node->parent->node_type != DEFINE) continue;
+        nr = ast_chld(def_node->parent, NODE_REGISTER, 0);
+        if (!nr) continue;
+        for (child = nr->child; child; child = child->sibling) {
+            if (child->node_type == INTEGER || child->node_type == CONSTANT) continue;
+            return child;
+        }
+    }
+    return 0;
+}
+
+static int class_attribute_is_flag_view(Symbol *symbol) {
+    ASTNode *view = class_attribute_register_view(symbol);
+
+    return view &&
+           view->node_string &&
+           view->node_string_length > 6 &&
+           strncasecmp(view->node_string, "flags.", 6) == 0;
+}
+
+static int class_attribute_is_complex(Symbol *symbol) {
+    int index;
+    Symbol **symbols;
+    int i;
+
+    if (!symbol_is_class_attribute(symbol)) return 0;
+    index = class_attribute_register_index(symbol);
+    if (index == 0) return 1;
+    if (index < 0 || !symbol->scope) return 0;
+
+    symbols = scp_syms(symbol->scope);
+    if (!symbols) return 0;
+
+    for (i = 0; symbols[i]; i++) {
+        Symbol *other = symbols[i];
+
+        if (other == symbol) continue;
+        if (other->symbol_type != VARIABLE_SYMBOL) continue;
+        if (class_attribute_register_index(other) == index) {
+            free(symbols);
+            return 1;
+        }
+    }
+
+    free(symbols);
+    return 0;
+}
+
+static int class_attribute_needs_read_link_register(Symbol *symbol) {
+    if (!class_attribute_is_flag_view(symbol)) return class_attribute_is_complex(symbol);
+    return class_attribute_register_index(symbol) > 0;
+}
+
+static int use_symbol_reg(ASTNode* node);
+
+static int value_type_in_promotion_matrix(ValueType type) {
+    return type >= TP_UNKNOWN && type <= TP_REFERENCE;
+}
+
+static int node_is_detached_class_attribute_read(ASTNode *node) {
+    Symbol *symbol;
+
+    if (!node || node->node_type != VAR_SYMBOL || node->child) return 0;
+    if (!node->symbolNode || !node->symbolNode->symbol) return 0;
+
+    symbol = node->symbolNode->symbol;
+    if (!symbol_is_class_attribute(symbol)) return 0;
+    if (class_attribute_is_flag_view(symbol)) return 1;
+    return class_attribute_is_complex(symbol);
+}
+
+static int cast_can_share_detached_attribute_read(ASTNode *node) {
+    ASTNode *child;
+
+    if (!node || node->node_type != OP_TYPE_CAST) return 0;
+    child = node->child;
+    if (!node_is_detached_class_attribute_read(child)) return 0;
+    if (!value_type_in_promotion_matrix(child->value_type) ||
+        !value_type_in_promotion_matrix(node->target_type)) {
+        return 0;
+    }
+    if (!emit_promotion[child->value_type][node->target_type]) return 0;
+    return 1;
+}
+
+static int node_has_concrete_register(ASTNode *node) {
+    return node && node->register_num >= 0;
+}
+
+static void assign_cast_child_to_result_register(ASTNode *node) {
+    ASTNode *child;
+
+    if (!cast_can_share_detached_attribute_read(node)) return;
+    if (!node_has_concrete_register(node)) return;
+
+    child = node->child;
+    child->register_num = node->register_num;
+    child->register_type = node->register_type ? node->register_type : 'r';
+}
+
+static int assign_cast_result_to_target_register(ASTNode *cast_node, ASTNode *target_node) {
+    Symbol *symbol;
+
+    if (!cast_can_share_detached_attribute_read(cast_node)) return 0;
+    if (!use_symbol_reg(target_node)) return 0;
+    if (!target_node->symbolNode || !target_node->symbolNode->symbol) return 0;
+
+    symbol = target_node->symbolNode->symbol;
+    if (symbol->register_num < 0) return 0;
+
+    cast_node->register_num = symbol->register_num;
+    cast_node->register_type = symbol->register_type;
+    return 1;
 }
 
 /* Tests if a node uses a symbol register */
@@ -52,6 +210,73 @@ static int use_symbol_reg(ASTNode* node) {
 
 static int defer_reg_return(ASTNode* node);
 
+static int node_is_block_expr_leave(ASTNode *node) {
+    ASTNode *parent;
+
+    if (!node || node->node_type != LEAVE_WITH) return 0;
+    parent = node->parent;
+    return parent &&
+           parent->node_type == INSTRUCTIONS &&
+           parent->parent &&
+           parent->parent->node_type == BLOCK_EXPR;
+}
+
+static int scope_assigns_named_registers(Scope *scope) {
+    ASTNode *owner;
+
+    if (!scope || scope->type != SCOPE_LOCAL) return 0;
+    owner = scope->defining_node;
+    if (!owner) return 0;
+    return 1;
+}
+
+static int scope_recycles_named_registers(Scope *scope) {
+    ASTNode *owner;
+
+    if (!scope_assigns_named_registers(scope)) return 0;
+    owner = scope->defining_node;
+    if (owner->inherit_parent_reg_scope) return 0;
+    return 1;
+}
+
+static int symbol_name_starts_with(Symbol *symbol, const char *prefix) {
+    size_t len;
+
+    if (!symbol || !symbol->name || !prefix) return 0;
+    len = strlen(prefix);
+    return strncmp(symbol->name, prefix, len) == 0;
+}
+
+static int symbol_has_recyclable_local_storage_type(Symbol *symbol) {
+    if (!symbol) return 0;
+
+    switch (symbol->type) {
+        case TP_UNKNOWN:
+        case TP_BOOLEAN:
+        case TP_INTEGER:
+        case TP_FLOAT:
+        case TP_DECIMAL:
+        case TP_STRING:
+        case TP_BINARY:
+        case TP_OBJECT:
+        case TP_REFERENCE:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static int symbol_uses_scoped_register(Symbol *symbol) {
+    if (!symbol || symbol->symbol_type != VARIABLE_SYMBOL) return 0;
+    if (!scope_recycles_named_registers(symbol->scope)) return 0;
+    if (symbol->exposed || symbol->is_arg || symbol->is_ref_arg ||
+        symbol->is_this || symbol->is_factory) return 0;
+    if (symbol->has_reference_target) return 0;
+    if (symbol_name_starts_with(symbol, "__inline")) return 0;
+    if (symbol_name_starts_with(symbol, "__rxtrace")) return 0;
+    return symbol_has_recyclable_local_storage_type(symbol);
+}
+
 static void assign_symbol_registers_worker(Symbol *symbol, void *payload) {
     walker_payload *pl = (walker_payload*)payload;
     if (symbol->symbol_type == VARIABLE_SYMBOL) {
@@ -62,7 +287,11 @@ static void assign_symbol_registers_worker(Symbol *symbol, void *payload) {
             } else if (!(symbol->scope &&
                          symbol->scope->defining_node &&
                          symbol->scope->defining_node->node_type == CLASS_DEF)) {
-                symbol->register_num = get_reg_perm(symbol->scope);
+                if (symbol_uses_scoped_register(symbol)) {
+                    symbol->register_num = get_reg(symbol->scope);
+                } else {
+                    symbol->register_num = get_reg_perm(symbol->scope);
+                }
                 symbol->register_type = 'r';
             }
         }
@@ -70,15 +299,81 @@ static void assign_symbol_registers_worker(Symbol *symbol, void *payload) {
 }
 
 static void assign_registers_in_scope(Scope *scope, walker_payload *payload) {
-    size_t i;
     if (!scope) return;
     scp_4all(scope, assign_symbol_registers_worker, payload);
-    for (i = 0; i < scp_noch(scope); i++) {
-        Scope *child = scp_chd(scope, i);
-        if (child && child->type == SCOPE_LOCAL) {
-            assign_registers_in_scope(child, payload);
-        }
+}
+
+static void assign_scoped_registers_for_node(ASTNode *node, walker_payload *payload) {
+    if (!node || !scope_assigns_named_registers(node->scope)) return;
+    if (node->scope->defining_node != node) return;
+    assign_registers_in_scope(node->scope, payload);
+}
+
+static int int_compare(const void *left, const void *right) {
+    int l = *(const int *)left;
+    int r = *(const int *)right;
+
+    if (l < r) return -1;
+    if (l > r) return 1;
+    return 0;
+}
+
+static void release_scoped_registers_for_node(ASTNode *node) {
+    Scope *scope;
+    Symbol **symbols;
+    int *registers;
+    size_t count;
+    size_t i;
+
+    if (!node) return;
+    scope = node->scope;
+    if (!scope_recycles_named_registers(scope)) return;
+    if (scope->defining_node != node) return;
+
+    symbols = scp_syms(scope);
+    if (!symbols) return;
+
+    count = 0;
+    for (i = 0; symbols[i]; i++) {
+        Symbol *symbol = symbols[i];
+
+        if (!symbol_uses_scoped_register(symbol)) continue;
+        if (symbol->register_type != 'r' || symbol->register_num < 0) continue;
+        if (node->register_type == symbol->register_type &&
+            node->register_num == symbol->register_num) continue;
+        count++;
     }
+
+    if (!count) {
+        free(symbols);
+        return;
+    }
+
+    registers = malloc(sizeof(int) * count);
+    if (!registers) {
+        free(symbols);
+        return;
+    }
+
+    count = 0;
+    for (i = 0; symbols[i]; i++) {
+        Symbol *symbol = symbols[i];
+
+        if (!symbol_uses_scoped_register(symbol)) continue;
+        if (symbol->register_type != 'r' || symbol->register_num < 0) continue;
+        if (node->register_type == symbol->register_type &&
+            node->register_num == symbol->register_num) continue;
+        registers[count++] = symbol->register_num;
+    }
+
+    qsort(registers, count, sizeof(int), int_compare);
+    for (i = 0; i < count; i++) {
+        if (i && registers[i] == registers[i - 1]) continue;
+        ret_reg(scope, registers[i]);
+    }
+
+    free(registers);
+    free(symbols);
 }
 
 /* Returns a child's register to the pool, potentially deferring it if linked */
@@ -103,6 +398,15 @@ static void return_child_reg_now(ASTNode* child) {
     if (use_symbol_reg(child)) return;
     if (!defer_reg_return(child)) {
         ret_reg(child->scope, child->register_num);
+    }
+}
+
+static void return_additional_regs_later(ASTNode *node) {
+    int i;
+
+    if (!node || node->additional_registers < 0 || node->num_additional_registers <= 0) return;
+    for (i = 0; i < node->num_additional_registers; i++) {
+        ret_reg_later(node->scope, node->additional_registers + i);
     }
 }
 
@@ -198,7 +502,7 @@ walker_result register_walker(walker_direction direction,
                 c = ast_type_child(node);
                 if (c) c->register_num = DONT_ASSIGN_REGISTER;
 
-                /* Pre-assign registers for all locals in this procedure, including nested SCOPE_LOCAL blocks */
+                /* Pre-assign procedure locals; eligible SCOPE_LOCAL blocks allocate on entry. */
                 if (node->scope) assign_registers_in_scope(node->scope, payload);
 
                 if (node->node_type == FACTORY) {
@@ -225,6 +529,13 @@ walker_result register_walker(walker_direction direction,
                     }
                 }
 
+                break;
+
+            case DO:
+            case SIGNAL_BLOCK:
+            case BLOCK_EXPR:
+            case INSTRUCTIONS:
+                assign_scoped_registers_for_node(node, payload);
                 break;
 
             case ARGS:
@@ -255,6 +566,9 @@ walker_result register_walker(walker_direction direction,
                 }
                 break;
 
+            case CONSTANT_DEF:
+                break;
+
             case DEFINE:
             case ASSIGN:
                 /*
@@ -265,8 +579,10 @@ walker_result register_walker(walker_direction direction,
                  */
                 if (use_symbol_reg(child1) &&
                     child2->node_type != BLOCK_EXPR &&
-                    (!use_symbol_reg(child2) || is_constant(child2)))
-                    child2->register_num = DONT_ASSIGN_REGISTER; /* DONT_ASSIGN_REGISTER Don't assign register */
+                    (!use_symbol_reg(child2) || is_constant(child2))) {
+                    if (!assign_cast_result_to_target_register(child2, child1))
+                        child2->register_num = DONT_ASSIGN_REGISTER; /* DONT_ASSIGN_REGISTER Don't assign register */
+                }
                 break;
 
             case ARG:
@@ -366,6 +682,10 @@ walker_result register_walker(walker_direction direction,
             case OP_COMPARE_S_NEQ:
             case OP_ADD:
             case OP_MULT:
+            case OP_BIT_AND:
+            case OP_BIT_OR:
+            case OP_BIT_XOR:
+            case OP_FLAG_HAS:
                 if (is_constant(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
                 else if (is_constant(child1)) {
                     /* We need to swap the two children round because the last one needs
@@ -404,6 +724,15 @@ walker_result register_walker(walker_direction direction,
                 }
                 break;
 
+            case OP_BIT_SHL:
+            case OP_BIT_SHR:
+                if (is_constant(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
+                break;
+
+            case OP_BIT_NOT:
+                if (is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
+                break;
+
             case OP_AND:
             case OP_OR:
                 /*  These should not have constants if the optimiser has been run and
@@ -432,7 +761,11 @@ walker_result register_walker(walker_direction direction,
                                 symbol->register_num = payload->globals++;
                                 symbol->register_type = 'g';
                             } else {
-                                symbol->register_num = get_reg_perm(symbol->scope);
+                                if (symbol_uses_scoped_register(symbol)) {
+                                    symbol->register_num = get_reg(symbol->scope);
+                                } else {
+                                    symbol->register_num = get_reg_perm(symbol->scope);
+                                }
                                 symbol->register_type = 'r';
                             }
                         }
@@ -452,6 +785,14 @@ walker_result register_walker(walker_direction direction,
             case OP_TYPE_IS:
             case OP_TYPE_CAST:
                 if (child2) child2->register_num = DONT_ASSIGN_REGISTER;
+                if (node->node_type == OP_TYPE_CAST &&
+                    cast_can_share_detached_attribute_read(node)) {
+                    if (node->register_num == UNSET_REGISTER) {
+                        node->register_num = get_reg(node->scope);
+                        node->register_type = 'r';
+                    }
+                    assign_cast_child_to_result_register(node);
+                }
                 break;
 
             default:
@@ -470,6 +811,12 @@ walker_result register_walker(walker_direction direction,
             case OP_XOR:
             case OP_ADD:
             case OP_MULT:
+            case OP_BIT_AND:
+            case OP_BIT_OR:
+            case OP_BIT_XOR:
+            case OP_BIT_SHL:
+            case OP_BIT_SHR:
+            case OP_FLAG_HAS:
 
             /* The order of the operands of these instructions are significant
              * however the instructions do not support both being a constant */
@@ -535,6 +882,7 @@ walker_result register_walker(walker_direction direction,
                 break;
 
             case OP_NOT:
+            case OP_BIT_NOT:
             case OP_NEG:
             case OP_PLUS:
             case OP_REFERENCE:
@@ -611,15 +959,15 @@ walker_result register_walker(walker_direction direction,
 
                     char needs_prop_reg = 0;
                     if (node->symbolNode && symbol_is_class_attribute(node->symbolNode->symbol)) {
-                        needs_prop_reg = 1;
+                        needs_prop_reg = class_attribute_is_complex(node->symbolNode->symbol) ? 2 : 1;
                     }
 
                     if (needs_extra_reg || needs_prop_reg) {
                         /* Yes we do need an additional register */
                         node->num_additional_registers = needs_extra_reg + needs_prop_reg;
                         node->additional_registers = get_regs(node->scope, node->num_additional_registers);
-                        /* We return it straight away - we only need it for this node */
-                        ret_reg(node->scope, node->additional_registers);
+                        /* Array/property helpers may stay linked until the parent emits cleanup. */
+                        return_additional_regs_later(node);
                     }
 
                     /* Release child registers */
@@ -634,8 +982,18 @@ walker_result register_walker(walker_direction direction,
                     /* The node uses the symbol register number */
                     if (node->symbolNode && symbol_is_class_attribute(node->symbolNode->symbol)) {
                         /* Attribute - needs a temporary register */
-                        node->register_num = get_reg(node->scope);
-                        node->register_type = 'r';
+                        if (node->register_num == UNSET_REGISTER ||
+                            node->register_num == DONT_ASSIGN_REGISTER) {
+                            node->register_num = get_reg(node->scope);
+                            node->register_type = 'r';
+                        } else if (!node->register_type) {
+                            node->register_type = 'r';
+                        }
+                        if (class_attribute_needs_read_link_register(node->symbolNode->symbol)) {
+                            node->num_additional_registers = 1;
+                            node->additional_registers = get_reg(node->scope);
+                            ret_reg(node->scope, node->additional_registers);
+                        }
                     } else if (node->symbolNode && node->symbolNode->symbol) {
                         node->register_num = node->symbolNode->symbol->register_num;
                         node->register_type = node->symbolNode->symbol->register_type;
@@ -670,7 +1028,7 @@ walker_result register_walker(walker_direction direction,
                 break;
 
             case OP_TYPE_CAST:
-                if (node->register_num != DONT_ASSIGN_REGISTER)
+                if (node->register_num == UNSET_REGISTER)
                     node->register_num = get_reg(node->scope);
                 return_child_reg_after_parent(node, child1);
                 break;
@@ -765,6 +1123,9 @@ walker_result register_walker(walker_direction direction,
 
                 break;
 
+            case CONSTANT_DEF:
+                break;
+
             case DEFINE:
             case ASSIGN: {
                 int propagated = 0;
@@ -772,6 +1133,10 @@ walker_result register_walker(walker_direction direction,
                     /* Move the RHS temporary register to the target symbol register */
                     child2->register_num = child1->register_num;
                     child2->register_type = child1->register_type;
+                    propagated = 1;
+                }
+                else if (child2->register_num == child1->register_num &&
+                         child2->register_type == child1->register_type) {
                     propagated = 1;
                 }
                 else {
@@ -814,6 +1179,17 @@ walker_result register_walker(walker_direction direction,
                         return_child_reg(child1);
                     }
                 }
+                break;
+
+            case LEAVE_WITH:
+                /*
+                 * LEAVE_WITH is the statement form used by BLOCK_EXPR returns.
+                 * The value child is copied/loaded into the block result by the
+                 * emitter, so only the child temporary is safe to release here.
+                 * Do not flush deferred block-scope locals: object/reference
+                 * locals may still be needed by the copied block result.
+                 */
+                if (child1) return_child_reg(child1);
                 break;
 
             case BLOCK_EXPR:
@@ -898,9 +1274,12 @@ walker_result register_walker(walker_direction direction,
         }
 
         /* If this is a statement level node, return all deferred registers */
-        if (node->parent && node->parent->node_type == INSTRUCTIONS) {
+        if (node->parent && node->parent->node_type == INSTRUCTIONS &&
+            !node_is_block_expr_leave(node)) {
             ret_reg_all_deferred(node->scope);
         }
+
+        release_scoped_registers_for_node(node);
     }
 
     return result_normal;

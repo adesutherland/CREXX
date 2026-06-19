@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test_exposed_nested_call.crexx
- * BUILT                  : 2026-05-27 17:53:42
  */
 
 .globals=0
@@ -49,6 +48,10 @@ l8doinc:
    .srcstep 8 8 17 "inline_test_exposed_nested_call.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
+   endlife r0
+   endlife r1
+   .meta "inline_test_exposed_nested_call.main.i"
+   .meta "inline_test_exposed_nested_call.main.result"
    .srcstep 9 9 17 "inline_test_exposed_nested_call.crexx" 9 3 50 "  say \"Exposed nested call inline test finished.\""
    say "Exposed nested call inline test finished."
    .srcstep 10 10 17 "inline_test_exposed_nested_call.crexx" 10 3 11 "  return 0"

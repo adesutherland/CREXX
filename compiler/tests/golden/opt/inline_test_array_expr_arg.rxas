@@ -1,81 +1,78 @@
 /*
  * SOURCE                 : inline_test_array_expr_arg.crexx
- * BUILT                  : 2026-05-27 17:54:00
  */
 
 .globals=0
 
-main() .locals=13
+main() .locals=5
    .meta "inline_test_array_expr_arg.main"="b" ".int" main() ""
-   .srcstep 15 15 17 "inline_test_array_expr_arg.crexx" 3 1 23 "main: procedure = .int"
+   .srcstep 14 14 17 "inline_test_array_expr_arg.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
    setnumfuz 0
    setnumfrm 1
    setnumcas 1
    setnumstd 1
-   .srcstep 13 13 17 "inline_test_array_expr_arg.crexx" 4 3 25 "  say bumpFirst(makePair())"
-   .srcstep 12 12 17 "inline_test_array_expr_arg.crexx" 4 7 16 "  say bumpFirst(makePair())"
-   .meta "inline_test_array_expr_arg.main.__inline_bind_105_0"="b" ".int[2]" r7
+   .srcstep 12 12 17 "inline_test_array_expr_arg.crexx" 4 3 25 "  say bumpFirst(makePair())"
+   .srcstep 11 11 17 "inline_test_array_expr_arg.crexx" 4 7 16 "  say bumpFirst(makePair())"
+   .meta "inline_test_array_expr_arg.main.__inline_bind_105_0"="b" ".int[2]" r0
    .srcstep 1 1 33 "inline_test_array_expr_arg.crexx" 4 17 25 "  say bumpFirst(makePair())"
-   null r7
+   null r0
    .srcstep 7 7 33 "inline_test_array_expr_arg.crexx" 4 17 25 "  say bumpFirst(makePair())"
    .srcstep 6 6 17 "inline_test_array_expr_arg.crexx" 4 17 25 "  say bumpFirst(makePair())"
-   .meta "inline_test_array_expr_arg.main.pair"="b" ".int[2]" r9
+   .meta "inline_test_array_expr_arg.main.pair"="b" ".int[2]" r2
    .srcstep 2 2 17 "inline_test_array_expr_arg.crexx" 13 3 16 "  pair = .int[2]"
-   null r9
+   null r2
    .srcstep 3 3 17 "inline_test_array_expr_arg.crexx" 26 3 14 "  pair[1] = 7"
-   setattrs r9,2
-   linkattr1 r10,r9,1
-   load r11,7
-   .traceevent "L" 4 "R" "I" "r" 11 3 3 0 "" ""
-   icopy r10,r11
-   .traceevent "A" 6 "R" "I" "r" 10 3 3 0 "pair" ""
-   unlink r10
+   setattrs r2,2
+   linkattr1 r3,r2,1
+   load r4,7
+   .traceevent "L" 4 "R" "I" "r" 4 3 3 0 "" ""
+   icopy r3,r4
+   .traceevent "A" 6 "R" "I" "r" 3 3 3 0 "pair" ""
+   unlink r3
    .srcstep 4 4 17 "inline_test_array_expr_arg.crexx" 27 3 14 "  pair[2] = 9"
-   setattrs r9,2
-   linkattr1 r11,r9,2
-   load r10,9
-   .traceevent "L" 4 "R" "I" "r" 10 4 4 0 "" ""
-   icopy r11,r10
-   .traceevent "A" 6 "R" "I" "r" 11 4 4 0 "pair" ""
-   unlink r11
+   setattrs r2,2
+   linkattr1 r4,r2,2
+   load r3,9
+   .traceevent "L" 4 "R" "I" "r" 3 4 4 0 "" ""
+   icopy r4,r3
+   .traceevent "A" 6 "R" "I" "r" 4 4 4 0 "pair" ""
+   unlink r4
    .srcstep 5 5 17 "inline_test_array_expr_arg.crexx" 28 3 14 "  return pair"
-   .traceevent "V" 6 "R" "I" "r" 9 7 7 0 "pair" ""
-   copy r11,r9
-   acopy r11,r9
+   .traceevent "V" 6 "R" "I" "r" 2 7 7 0 "pair" ""
+   copy r4,r2
    br l175bexprend
 l175bexprend:
-   copy r7,r11
-   acopy r7,r11
-   .traceevent "A" 6 "R" "I" "r" 7 7 7 0 "__inline_bind_105_0" ""
+   endlife r2
+   .meta "inline_test_array_expr_arg.main.pair"
+   copy r0,r4
+   .traceevent "A" 6 "R" "I" "r" 0 7 7 0 "__inline_bind_105_0" ""
    .srcstep 8 8 6 "inline_test_array_expr_arg.crexx" 8 7 11 "  arg pair = .int[2]"
-   .traceevent "V" 6 "R" "I" "r" 7 13 13 0 "__inline_bind_105_0" ""
-   copy r8,r7
-   .srcstep 9 9 6 "inline_test_array_expr_arg.crexx" 8 7 11 "  arg pair = .int[2]"
-   .traceevent "V" 6 "R" "I" "r" 7 13 13 0 "__inline_bind_105_0" ""
-   acopy r8,r7
-   .srcstep 10 10 17 "inline_test_array_expr_arg.crexx" 9 3 24 "  pair[1] = pair[1] + 5"
-   setattrs r8,2
-   linkattr1 r11,r8,1
-   setattrs r8,2
-   linkattr1 r10,r8,1
-   .traceevent "V" 6 "R" "I" "r" 10 10 10 0 "pair" ""
-   iadd r12,r10,5
-   unlink r10
-   .traceevent "O" 4 "R" "I" "r" 12 10 10 0 "" ""
-   icopy r11,r12
-   .traceevent "A" 6 "R" "I" "r" 11 10 10 0 "pair" ""
-   unlink r11
-   .srcstep 11 11 17 "inline_test_array_expr_arg.crexx" 10 3 16 "  return pair[1]"
-   setattrs r8,2
-   linkattr1 r12,r8,1
-   .traceevent "V" 6 "R" "I" "r" 12 13 13 0 "pair" ""
-   icopy r11,r12
-   acopy r11,r12
-   unlink r12
+   .traceevent "V" 6 "R" "I" "r" 0 12 12 0 "__inline_bind_105_0" ""
+   copy r1,r0
+   .srcstep 9 9 17 "inline_test_array_expr_arg.crexx" 9 3 24 "  pair[1] = pair[1] + 5"
+   setattrs r1,2
+   linkattr1 r4,r1,1
+   setattrs r1,2
+   linkattr1 r3,r1,1
+   .traceevent "V" 6 "R" "I" "r" 3 9 9 0 "pair" ""
+   iadd r2,r3,5
+   unlink r3
+   .traceevent "O" 4 "R" "I" "r" 2 9 9 0 "" ""
+   icopy r4,r2
+   .traceevent "A" 6 "R" "I" "r" 4 9 9 0 "pair" ""
+   unlink r4
+   .srcstep 10 10 17 "inline_test_array_expr_arg.crexx" 10 3 16 "  return pair[1]"
+   setattrs r1,2
+   linkattr1 r4,r1,1
+   .traceevent "V" 6 "R" "I" "r" 4 12 12 0 "pair" ""
+   icopy r3,r4
+   unlink r4
    br l169bexprend
 l169bexprend:
-   itos r11
-   say r11
-   .srcstep 14 14 17 "inline_test_array_expr_arg.crexx" 5 3 11 "  return 0"
+   endlife r1
+   .meta "inline_test_array_expr_arg.main.__inline_bind_105_0"
+   itos r3
+   say r3
+   .srcstep 13 13 17 "inline_test_array_expr_arg.crexx" 5 3 11 "  return 0"
    ret 0

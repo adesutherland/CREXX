@@ -1,11 +1,10 @@
 /*
  * SOURCE                 : address_expose.crexx
- * BUILT                  : 2026-05-27 17:52:44
  */
 
 .globals=0
 
-main() .locals=16
+main() .locals=14
    .meta "address_expose.main"="b" ".void" main() ""
    .srcstep 14 14 17 "address_expose.crexx" 3 1 16 "main: procedure"
    setnumdgts 18
@@ -22,58 +21,61 @@ main() .locals=16
    .traceevent "L" 4 "R" "S" "r" 1 2 2 0 "" ""
    .traceevent "A" 6 "R" "S" "r" 1 2 2 0 "userid" ""
    .srcstep 12 12 33 "exit_fragment" 2 1 90 "rc=_address('system',\"echo EXPOSE_OK\",_noredir(),_noredir(),_noredir(), 'userid', userid)"
-   load r6,"system"
-   .traceevent "L" 4 "R" "S" "r" 6 12 12 0 "" ""
-   load r7,"echo EXPOSE_OK"
-   .traceevent "L" 4 "R" "S" "r" 7 12 12 0 "" ""
+   load r3,"system"
+   .traceevent "L" 4 "R" "S" "r" 3 12 12 0 "" ""
+   load r4,"echo EXPOSE_OK"
+   .traceevent "L" 4 "R" "S" "r" 4 12 12 0 "" ""
    .srcstep 5 5 33 "exit_fragment" 2 1 9 "_noredir"
-   .meta "address_expose.main.handle"="b" ".binary" r2
+   .meta "address_expose.main.handle"="b" ".binary" r10
    .srcstep 3 3 25 "_address.crexx" 1519 5 21 "    handle = .binary"
-   null r2
+   null r10
    .srcstep 4 4 25 "_address.crexx" 1520 5 18 "    return handle"
-   .traceevent "V" 6 "R" "X" "r" 2 12 12 0 "handle" ""
-   copy r13,r2
-   acopy r13,r2
+   .traceevent "V" 6 "R" "X" "r" 10 12 12 0 "handle" ""
+   bcopy r11,r10
    br l83bexprend
 l83bexprend:
+   endlife r10
+   .meta "address_expose.main.handle"
    .srcstep 8 8 33 "exit_fragment" 2 1 9 "_noredir"
-   .meta "address_expose.main.handle"="b" ".binary" r3
+   .meta "address_expose.main.handle"="b" ".binary" r10
    .srcstep 6 6 25 "_address.crexx" 1519 5 21 "    handle = .binary"
-   null r3
+   null r10
    .srcstep 7 7 25 "_address.crexx" 1520 5 18 "    return handle"
-   .traceevent "V" 6 "R" "X" "r" 3 12 12 0 "handle" ""
-   copy r14,r3
-   acopy r14,r3
+   .traceevent "V" 6 "R" "X" "r" 10 12 12 0 "handle" ""
+   bcopy r12,r10
    br l90bexprend
 l90bexprend:
+   endlife r10
+   .meta "address_expose.main.handle"
    .srcstep 11 11 33 "exit_fragment" 2 1 9 "_noredir"
-   .meta "address_expose.main.handle"="b" ".binary" r4
+   .meta "address_expose.main.handle"="b" ".binary" r10
    .srcstep 9 9 25 "_address.crexx" 1519 5 21 "    handle = .binary"
-   null r4
+   null r10
    .srcstep 10 10 25 "_address.crexx" 1520 5 18 "    return handle"
-   .traceevent "V" 6 "R" "X" "r" 4 12 12 0 "handle" ""
-   copy r15,r4
-   acopy r15,r4
+   .traceevent "V" 6 "R" "X" "r" 10 12 12 0 "handle" ""
+   bcopy r13,r10
    br l97bexprend
 l97bexprend:
-   load r11,"userid"
-   .traceevent "L" 4 "R" "S" "r" 11 12 12 0 "" ""
+   endlife r10
+   .meta "address_expose.main.handle"
+   load r8,"userid"
+   .traceevent "L" 4 "R" "S" "r" 8 12 12 0 "" ""
    .traceevent "V" 6 "R" "S" "r" 1 12 12 0 "userid" ""
-   load r5,7
-   settp r6,768
-   settp r7,768
+   load r2,7
+   settp r3,768
+   settp r4,768
+   settp r11,768
+   swap r5,r11
+   settp r12,768
+   swap r6,r12
    settp r13,768
-   swap r8,r13
-   settp r14,768
-   swap r9,r14
-   settp r15,768
-   swap r10,r15
-   swap r12,r1
-   call r0,_rxsysb._address(),r5
-   swap r13,r8
-   swap r14,r9
-   swap r15,r10
-   swap r1,r12
+   swap r7,r13
+   swap r9,r1
+   call r0,_rxsysb._address(),r2
+   swap r11,r5
+   swap r12,r6
+   swap r13,r7
+   swap r1,r9
    .traceevent "F" 4 "R" "I" "r" 0 12 12 0 "_address" ""
    .traceevent "A" 6 "R" "I" "r" 0 12 12 0 "rc" ""
    .srcstep 13 13 17 "address_expose.crexx" 6 3 9 "  return"

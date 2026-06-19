@@ -85,9 +85,11 @@ int rexbscan(Context* s) {
   fsig = digit* "." digit+ | digit+ ".";
   fexp = [eE] [+-]? digit+;
   float = (fsig fexp? | digit+ fexp);
+  hexint = "0" [xX] hex+;
   integer = digit+;
   decimal = float [d] | integer [d];
   simple = fsymchr symchr*;
+  namedop = "<" simple ">";
   qual_sep = "::" | "..";
   qualified = simple qual_sep simple;
   class = [.] (qualified|simple);
@@ -133,6 +135,12 @@ int rexbscan(Context* s) {
     "/" ob "/" { RET(s->numeric_standard ? TK_MOD : TK_UNKNOWN); } // numeric_standard: 1 = Classic Standard, 0 = Common Standard
     "*" ob "*" { RET(s->numeric_standard ? TK_POWER_L : TK_POWER_R); } // numeric_standard: 1 = Classic Standard, 0 = Common Standard
 
+    '<IDIV>' | '<MOD>' | '<REM>' { RET(TK_NAMED_MULT_OPERATOR); }
+    '<SHL>' | '<SHR>' { RET(TK_NAMED_SHIFT_OPERATOR); }
+    '<AND>' | '<HAS>' | '<CLEAR>' { RET(TK_NAMED_AND_OPERATOR); }
+    '<XOR>' { RET(TK_NAMED_XOR_OPERATOR); }
+    '<OR>' | '<SET>' { RET(TK_NAMED_OR_OPERATOR); }
+    namedop { RET(TK_NAMED_OPERATOR); }
     "=" { RET(TK_EQUAL); }
     not ob "=" | "<" ob ">" | ">" ob "<" { RET(TK_NEQ); }
     ">" { RET(TK_GT); }
@@ -172,6 +180,7 @@ int rexbscan(Context* s) {
     'AS' { RET(TK_AS); }
     'CALL' { RET(TK_CALL); }
     'CLASS' { RET(TK_CLASS); }
+    'CONSTANT' { RET(TK_CONSTANT); }
     'DO' { RET(TK_DO); }
     'LOOP' { RET(TK_LOOP); }
     'IMPLEMENTS' { RET(TK_IMPLEMENTS); }
@@ -248,6 +257,7 @@ int rexbscan(Context* s) {
     class { RET(TK_CLASS_TYPE); }
     float { RET(TK_FLOAT); }
     decimal { RET(TK_DECIMAL); }
+    hexint { RET(TK_INTEGER); }
     integer { RET(TK_INTEGER); }
     qualified { RET(TK_QUALIFIED_SYMBOL); }
     'ARG' / [.] {

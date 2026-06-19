@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : 18_array_class_main.crexx
- * BUILT                  : 2026-06-05 19:41:21
  */
 
 .globals=0
@@ -70,20 +69,20 @@ process() .locals=11
    .srcstep 13 13 17 "18_array_class_main.crexx" 18 9 22 "    arg items = .Item[]"
    .meta "18_array_class_main.process.items"="b" ".item[*]" a1
    .srcstep 14 14 17 "18_array_class_main.crexx" 19 5 44 "    say \"Inside process, Items.0 =\" items.0"
-   .traceevent "C" 4 "R" "V" "r" 6 14 14 0 "items" ""
-   getattrs r7,a1,0
-   itos r7
-   .traceevent "V" 6 "R" "S" "r" 7 14 14 0 "items" ""
-   sconcat r7,"Inside process, Items.0 =",r7
-   .traceevent "O" 4 "R" "S" "r" 7 14 14 0 "" ""
-   say r7
+   .traceevent "C" 4 "R" "V" "r" 3 14 14 0 "items" ""
+   getattrs r4,a1,0
+   itos r4
+   .traceevent "V" 6 "R" "S" "r" 4 14 14 0 "items" ""
+   sconcat r4,"Inside process, Items.0 =",r4
+   .traceevent "O" 4 "R" "S" "r" 4 14 14 0 "" ""
+   say r4
    .srcstep 16 16 17 "18_array_class_main.crexx" 20 5 19 "    if items.0 < 1 then return \"\""
-   .traceevent "C" 4 "R" "V" "r" 7 16 16 0 "items" ""
-   getattrs r6,a1,0
-   .traceevent "V" 6 "R" "I" "r" 6 16 16 0 "items" ""
-   ilt r6,r6,1
-   .traceevent "O" 4 "R" "B" "r" 6 16 16 0 "" ""
-   brf l59iffalse,r6
+   .traceevent "C" 4 "R" "V" "r" 4 16 16 0 "items" ""
+   getattrs r3,a1,0
+   .traceevent "V" 6 "R" "I" "r" 3 16 16 0 "items" ""
+   ilt r3,r3,1
+   .traceevent "O" 4 "R" "B" "r" 3 16 16 0 "" ""
+   brf l59iffalse,r3
    .srcstep 17 17 17 "18_array_class_main.crexx" 20 20 24 "    if items.0 < 1 then return \"\""
    .srcstep 15 15 17 "18_array_class_main.crexx" 20 25 34 "    if items.0 < 1 then return \"\""
    ret ""
@@ -91,53 +90,53 @@ l59iffalse:
    .srcstep 18 18 17 "18_array_class_main.crexx" 22 5 17 "    it = items.1"
    .meta "18_array_class_main.process.it"="b" ".item" r0
    minattrs a1,1
-   linkattr1 r7,a1,1
-   .traceevent "V" 6 "R" "O" "r" 7 18 18 0 "items" ""
-   copy r0,r7
+   linkattr1 r4,a1,1
+   .traceevent "V" 6 "R" "O" "r" 4 18 18 0 "items" ""
+   copy r0,r4
    .traceevent "A" 6 "R" "O" "r" 0 18 18 0 "it" ""
-   unlink r7
+   unlink r4
    .srcstep 19 19 17 "18_array_class_main.crexx" 23 5 21 "    val = it.get_val()"
    .meta "18_array_class_main.process.val"="b" ".string" r2
    .traceevent "V" 6 "R" "O" "r" 0 19 19 0 "it" ""
-   load r6,1
+   load r3,1
    settp r0,256
-   swap r7,r0
-   call r2,§array_class_lib.item.get_val(),r6
-   swap r0,r7
+   swap r4,r0
+   call r2,§array_class_lib.item.get_val(),r3
+   swap r0,r4
    .traceevent "F" 4 "R" "S" "r" 2 19 19 0 "get_val" ""
    .traceevent "A" 6 "R" "S" "r" 2 19 19 0 "val" ""
    .srcstep 26 26 17 "18_array_class_main.crexx" 25 5 7 "    do i = 1 to items.0"
    .srcstep 20 20 17 "18_array_class_main.crexx" 25 8 13 "    do i = 1 to items.0"
-   .meta "18_array_class_main.process.i"="b" ".int" r3
-   load r3,1
-   .traceevent "L" 4 "R" "I" "r" 3 20 20 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 3 20 20 0 "i" ""
+   .meta "18_array_class_main.process.i"="b" ".int" r4
+   load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 20 20 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 20 20 0 "i" ""
    .srcstep 21 21 17 "18_array_class_main.crexx" 25 14 24 "    do i = 1 to items.0"
-   .traceevent "C" 4 "R" "V" "r" 7 0 0 0 "items" ""
-   getattrs r6,a1,0
-   .traceevent "V" 6 "R" "I" "r" 6 0 0 0 "items" ""
+   .traceevent "C" 4 "R" "V" "r" 6 0 0 0 "items" ""
+   getattrs r7,a1,0
+   .traceevent "V" 6 "R" "I" "r" 7 0 0 0 "items" ""
 l70dostart:
    .srcstep 21 21 17 "18_array_class_main.crexx" 25 14 24 "    do i = 1 to items.0"
-   igt r8,r3,r6
+   igt r8,r4,r7
    brt l70doend,r8
    .srcstep 23 23 17 "18_array_class_main.crexx" 26 9 23 "        it_i = items[i]"
-   .meta "18_array_class_main.process.it_i"="b" ".item" r4
-   .traceevent "V" 6 "R" "I" "r" 3 23 23 0 "i" ""
-   .traceevent "C" 4 "R" "I" "r" 3 23 23 0 "items" ""
-   minattrs a1,r3,0
-   linkattr1 r9,a1,r3
+   .meta "18_array_class_main.process.it_i"="b" ".item" r3
+   .traceevent "V" 6 "R" "I" "r" 4 23 23 0 "i" ""
+   .traceevent "C" 4 "R" "I" "r" 4 23 23 0 "items" ""
+   minattrs a1,r4,0
+   linkattr1 r9,a1,r4
    .traceevent "V" 6 "R" "O" "r" 9 23 23 0 "items" ""
-   copy r4,r9
-   .traceevent "A" 6 "R" "O" "r" 4 23 23 0 "it_i" ""
+   copy r3,r9
+   .traceevent "A" 6 "R" "O" "r" 3 23 23 0 "it_i" ""
    unlink r9
    .srcstep 24 24 17 "18_array_class_main.crexx" 27 9 29 "        val_i = it_i.get_val()"
    .meta "18_array_class_main.process.val_i"="b" ".string" r5
-   .traceevent "V" 6 "R" "O" "r" 4 24 24 0 "it_i" ""
+   .traceevent "V" 6 "R" "O" "r" 3 24 24 0 "it_i" ""
    load r9,1
-   settp r4,256
-   swap r10,r4
+   settp r3,256
+   swap r10,r3
    call r5,§array_class_lib.item.get_val(),r9
-   swap r4,r10
+   swap r3,r10
    .traceevent "F" 4 "R" "S" "r" 5 24 24 0 "get_val" ""
    .traceevent "A" 6 "R" "S" "r" 5 24 24 0 "val_i" ""
    .srcstep 25 25 17 "18_array_class_main.crexx" 28 9 18 "        say val_i"
@@ -145,10 +144,16 @@ l70dostart:
    say r5
 l70doinc:
    .srcstep 22 22 17 "18_array_class_main.crexx" 25 8 9 "    do i = 1 to items.0"
-   inc r3
+   inc r4
    .srcstep 27 27 17 "18_array_class_main.crexx" 29 5 8 "    end"
    br l70dostart
 l70doend:
+   endlife r4
+   endlife r3
+   endlife r5
+   .meta "18_array_class_main.process.i"
+   .meta "18_array_class_main.process.it_i"
+   .meta "18_array_class_main.process.val_i"
    .srcstep 28 28 17 "18_array_class_main.crexx" 30 5 15 "    return val"
    .traceevent "V" 6 "R" "S" "r" 2 28 28 0 "val" ""
    ret r2

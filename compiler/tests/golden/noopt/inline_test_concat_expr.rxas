@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test_concat_expr.crexx
- * BUILT                  : 2026-05-27 17:53:20
  */
 
 .globals=0
@@ -48,6 +47,10 @@ l8doinc:
    .srcstep 8 8 17 "inline_test_concat_expr.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
+   endlife r0
+   endlife r1
+   .meta "inline_test_concat_expr.main.i"
+   .meta "inline_test_concat_expr.main.msg"
    .srcstep 9 9 17 "inline_test_concat_expr.crexx" 9 3 42 "  say \"Concat inline expr test finished.\""
    say "Concat inline expr test finished."
    .srcstep 10 10 17 "inline_test_concat_expr.crexx" 10 3 11 "  return 0"

@@ -517,6 +517,37 @@ void meta_clear_symbol(Symbol *symbol, void *payload) {
     }
 }
 
+static int node_owns_recyclable_scope(ASTNode *node) {
+    if (!node || !node->scope) return 0;
+    if (node->scope->defining_node != node) return 0;
+    if (node->inherit_parent_reg_scope) return 0;
+    if (node->scope->type != SCOPE_LOCAL) return 0;
+    return 1;
+}
+
+static void meta_clear_scoped_symbol(Symbol *symbol, void *payload) {
+    ASTNode* node = (ASTNode*)payload;
+    OutputFragment *output = node->output;
+    char* buffer;
+    char* symbol_fqn;
+
+    if (symbol->symbol_type == FUNCTION_SYMBOL) return;
+    if (!symbol->meta_emitted) return;
+    if (symbol->symbol_type != CONSTANT_SYMBOL && symbol->register_num < 0) return;
+
+    symbol_fqn = sym_frnm(symbol);
+    buffer = mprintf("   .meta \"%s\"\n", symbol_fqn);
+    free(symbol_fqn);
+
+    output_append_text(output, buffer);
+    free(buffer);
+}
+
+void clear_scope_variable_metadata(ASTNode *node) {
+    if (!node_owns_recyclable_scope(node)) return;
+    scp_4all(node->scope, meta_clear_scoped_symbol, node);
+}
+
 /* Clear all variable metadata */
 void clear_variable_metadata(ASTNode *node) {
 

@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test_call_like_arg_expr.crexx
- * BUILT                  : 2026-06-12 20:25:50
  */
 
 .meta "inline_test_call_like_arg_expr.box"="b" ".unknown" .class
@@ -64,6 +63,10 @@ l8doinc:
    .srcstep 8 8 17 "inline_test_call_like_arg_expr.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
+   endlife r0
+   endlife r1
+   .meta "inline_test_call_like_arg_expr.main.box"
+   .meta "inline_test_call_like_arg_expr.main.i"
    .srcstep 9 9 17 "inline_test_call_like_arg_expr.crexx" 9 3 49 "  say \"Call-like arg inline expr test finished.\""
    say "Call-like arg inline expr test finished."
    .srcstep 10 10 17 "inline_test_call_like_arg_expr.crexx" 10 3 11 "  return 0"

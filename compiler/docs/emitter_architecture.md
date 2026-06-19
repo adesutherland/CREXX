@@ -95,6 +95,7 @@ This is semantic copy elision, not a change in language semantics. Any optimisat
 | **Manual Formatting** | Hardcoded `mprintf` strings for assembly templates are brittle. | Resolved: Potential bridge collisions avoided by renaming interpreter symbols to `rxvm_mprintf`. |
 | **Label Collisions** | Relies on `node_number` and suffix conventions. | Formalize label generation into a dedicated utility. |
 | **Duplication** | Operator emission is duplicated for constant vs. register cases. | Refactor into a unified `emit_op(op, target, left, right)` helper. |
+| **Register Assignment Pressure** | Inlining and future callable-lifetime attribute locals need a clearer register lifetime model than per-node temporaries alone. | TODO: reserve long-lived locals explicitly, keep call-frame temporaries from clobbering them, and add diagnostics explaining register growth. |
 
 ## 6. AST Assumptions
 The Emitter operates on a "clean" AST. Following the validation finalization phase, the tree is guaranteed to have:

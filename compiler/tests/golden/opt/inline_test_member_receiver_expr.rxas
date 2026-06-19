@@ -1,13 +1,12 @@
 /*
  * SOURCE                 : inline_test_member_receiver_expr.crexx
- * BUILT                  : 2026-06-12 20:25:52
  */
 
 .meta "inline_test_member_receiver_expr.box"="b" ".unknown" .class
 .meta "inline_test_member_receiver_expr.box.name"="b" ".string" .attr 1
 .globals=0
 
-main() .locals=11
+main() .locals=10
    .meta "inline_test_member_receiver_expr.main"="b" ".int" main() ""
    .srcstep 24 24 17 "inline_test_member_receiver_expr.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -26,11 +25,11 @@ main() .locals=11
    .srcstep 3 3 6 "inline_test_member_receiver_expr.crexx" 18 3 13 "  *: factory"
    setobjtype r2,"inline_test_member_receiver_expr.box"
    .srcstep 4 4 17 "inline_test_member_receiver_expr.crexx" 20 5 19 "    name = initial"
-   load r7,"seed"
-   .traceevent "L" 4 "R" "S" "r" 7 4 4 0 "" ""
-   linkattr1 r6,r2,1
-   scopy r6,r7
-   unlink r6
+   load r4,"seed"
+   .traceevent "L" 4 "R" "S" "r" 4 4 4 0 "" ""
+   linkattr1 r3,r2,1
+   scopy r3,r4
+   unlink r3
    .srcstep 5 5 33 "inline_test_member_receiver_expr.crexx" 21 5 11 "    return"
    .traceevent "V" 6 "R" "O" "r" 2 5 5 0 "§factory" ""
    copy r1,r2
@@ -40,45 +39,43 @@ main() .locals=11
    copy r0,r1
    .traceevent "A" 6 "R" "O" "r" 0 7 7 0 "§this" ""
    .srcstep 9 9 17 "inline_test_member_receiver_expr.crexx" 24 5 16 "    return name"
-   linkattr1 r6,r0,1
-   .traceevent "V" 6 "R" "S" "r" 6 11 11 0 "name" ""
-   scopy r8,r6
-   acopy r8,r6
-   unlink r6
+   linkattr1 r3,r0,1
+   .traceevent "V" 6 "R" "S" "r" 3 11 11 0 "name" ""
+   scopy r5,r3
+   unlink r3
    br l63bexprend
 l63bexprend:
-   say r8
+   say r5
    .srcstep 21 21 17 "inline_test_member_receiver_expr.crexx" 6 3 31 "  say buildBox(\"temp\").getName()"
    .srcstep 20 20 17 "inline_test_member_receiver_expr.crexx" 6 7 15 "  say buildBox(\"temp\").getName()"
    .srcstep 18 18 17 "inline_test_member_receiver_expr.crexx" 6 7 31 "  say buildBox(\"temp\").getName()"
    .srcstep 16 16 17 "inline_test_member_receiver_expr.crexx" 12 3 24 "  value = .Box(initial)"
    .srcstep 12 12 6 "inline_test_member_receiver_expr.crexx" 18 3 13 "  *: factory"
-   setattrs r5,2
+   setattrs r8,2
    .srcstep 13 13 6 "inline_test_member_receiver_expr.crexx" 18 3 13 "  *: factory"
-   setobjtype r5,"inline_test_member_receiver_expr.box"
+   setobjtype r8,"inline_test_member_receiver_expr.box"
    .srcstep 14 14 17 "inline_test_member_receiver_expr.crexx" 20 5 19 "    name = initial"
-   load r9,"temp"
-   .traceevent "L" 4 "R" "S" "r" 9 14 14 0 "" ""
-   linkattr1 r8,r5,1
-   scopy r8,r9
-   unlink r8
+   load r3,"temp"
+   .traceevent "L" 4 "R" "S" "r" 3 14 14 0 "" ""
+   linkattr1 r5,r8,1
+   scopy r5,r3
+   unlink r5
    .srcstep 15 15 33 "inline_test_member_receiver_expr.crexx" 21 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 5 15 15 0 "§factory" ""
-   copy r4,r5
-   .traceevent "A" 6 "R" "O" "r" 4 15 15 0 "value" ""
+   .traceevent "V" 6 "R" "O" "r" 8 15 15 0 "§factory" ""
+   copy r7,r8
+   .traceevent "A" 6 "R" "O" "r" 7 15 15 0 "value" ""
    .srcstep 17 17 33 "inline_test_member_receiver_expr.crexx" 13 3 9 "  return value"
-   .traceevent "V" 6 "R" "O" "r" 4 17 17 0 "value" ""
-   copy r3,r4
-   .traceevent "A" 6 "R" "O" "r" 3 17 17 0 "§this" ""
+   .traceevent "V" 6 "R" "O" "r" 7 17 17 0 "value" ""
+   copy r6,r7
+   .traceevent "A" 6 "R" "O" "r" 6 17 17 0 "§this" ""
    .srcstep 19 19 17 "inline_test_member_receiver_expr.crexx" 24 5 16 "    return name"
-   linkattr1 r8,r3,1
-   .traceevent "V" 6 "R" "S" "r" 8 21 21 0 "name" ""
-   scopy r10,r8
-   acopy r10,r8
-   unlink r8
+   linkattr1 r5,r6,1
+   .traceevent "V" 6 "R" "S" "r" 5 21 21 0 "name" ""
+   scopy r9,r5
+   unlink r5
    br l71bexprend
 l71bexprend:
-   say r10
+   say r9
    .srcstep 22 22 17 "inline_test_member_receiver_expr.crexx" 7 3 46 "  say \"Member receiver inline test finished.\""
    say "Member receiver inline test finished."
    .srcstep 23 23 17 "inline_test_member_receiver_expr.crexx" 8 3 11 "  return 0"

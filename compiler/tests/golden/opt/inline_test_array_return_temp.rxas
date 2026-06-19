@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test_array_return_temp.crexx
- * BUILT                  : 2026-05-27 17:54:01
  */
 
 .globals=0
@@ -25,26 +24,24 @@ main() .locals=4
    call r3,buildPair(),r1
    .traceevent "F" 4 "R" "I" "r" 3 4 4 0 "buildpair" ""
    copy r2,r3
-   acopy r2,r3
    br l69bexprend
 l69bexprend:
    copy r0,r2
-   acopy r0,r2
    .traceevent "A" 6 "R" "I" "r" 0 4 4 0 "pair" ""
    .srcstep 5 5 17 "inline_test_array_return_temp.crexx" 6 3 13 "  say pair[1]"
    setattrs r0,2
-   linkattr1 r2,r0,1
-   itos r2
-   .traceevent "V" 6 "R" "S" "r" 2 5 5 0 "pair" ""
-   say r2
-   unlink r2
+   linkattr1 r3,r0,1
+   itos r3
+   .traceevent "V" 6 "R" "S" "r" 3 5 5 0 "pair" ""
+   say r3
+   unlink r3
    .srcstep 6 6 17 "inline_test_array_return_temp.crexx" 7 3 13 "  say pair[2]"
    setattrs r0,2
-   linkattr1 r2,r0,2
-   itos r2
-   .traceevent "V" 6 "R" "S" "r" 2 6 6 0 "pair" ""
-   say r2
-   unlink r2
+   linkattr1 r3,r0,2
+   itos r3
+   .traceevent "V" 6 "R" "S" "r" 3 6 6 0 "pair" ""
+   say r3
+   unlink r3
    .srcstep 7 7 17 "inline_test_array_return_temp.crexx" 8 3 11 "  return 0"
    ret 0
    .meta "inline_test_array_return_temp.main.pair"

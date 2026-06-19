@@ -1,13 +1,12 @@
 /*
  * SOURCE                 : inline_test_call_like_arg_expr.crexx
- * BUILT                  : 2026-06-12 20:25:50
  */
 
 .meta "inline_test_call_like_arg_expr.box"="b" ".unknown" .class
 .meta "inline_test_call_like_arg_expr.box.val"="b" ".int" .attr 1
 .globals=0
 
-main() .locals=16
+main() .locals=11
    .meta "inline_test_call_like_arg_expr.main"="b" ".int" main() ""
    .srcstep 26 26 17 "inline_test_call_like_arg_expr.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -24,82 +23,88 @@ main() .locals=16
    .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "i" ""
    .srcstep 3 3 17 "inline_test_call_like_arg_expr.crexx" 5 12 16 "  do i = 1 to 3"
-   load r10,3
-   .traceevent "L" 4 "R" "I" "r" 10 0 0 0 "" ""
+   load r2,3
+   .traceevent "L" 4 "R" "I" "r" 2 0 0 0 "" ""
 l8dostart:
    .srcstep 3 3 17 "inline_test_call_like_arg_expr.crexx" 5 12 16 "  do i = 1 to 3"
-   igt r11,r1,r10
-   brt l8doend,r11
+   igt r3,r1,r2
+   brt l8doend,r3
    .srcstep 13 13 17 "inline_test_call_like_arg_expr.crexx" 6 5 26 "    box = .Box(addOne(i))"
    .srcstep 5 5 6 "inline_test_call_like_arg_expr.crexx" 19 3 13 "  *: factory"
-   setattrs r4,2
+   setattrs r5,2
    .srcstep 6 6 6 "inline_test_call_like_arg_expr.crexx" 19 3 13 "  *: factory"
-   setobjtype r4,"inline_test_call_like_arg_expr.box"
+   setobjtype r5,"inline_test_call_like_arg_expr.box"
    .srcstep 10 10 33 "inline_test_call_like_arg_expr.crexx" 20 9 21 "    arg initialValue = .int"
    .srcstep 9 9 17 "inline_test_call_like_arg_expr.crexx" 6 16 22 "    box = .Box(addOne(i))"
    .srcstep 7 7 33 "inline_test_call_like_arg_expr.crexx" 13 7 10 "  arg val = .int"
    .traceevent "V" 6 "R" "I" "r" 1 7 7 0 "i" ""
-   icopy r5,r1
-   .traceevent "A" 6 "R" "I" "r" 5 7 7 0 "val" ""
+   icopy r6,r1
+   .traceevent "A" 6 "R" "I" "r" 6 7 7 0 "val" ""
    .srcstep 8 8 17 "inline_test_call_like_arg_expr.crexx" 14 3 17 "  return val + 1"
-   .traceevent "V" 6 "R" "I" "r" 5 10 10 0 "val" ""
-   iadd r12,r5,1
-   .traceevent "O" 4 "R" "I" "r" 12 10 10 0 "" ""
-   icopy r13,r12
+   .traceevent "V" 6 "R" "I" "r" 6 10 10 0 "val" ""
+   iadd r7,r6,1
+   .traceevent "O" 4 "R" "I" "r" 7 10 10 0 "" ""
+   icopy r8,r7
    br l94bexprend
 l94bexprend:
-   icopy r3,r13
-   .traceevent "A" 6 "R" "I" "r" 3 10 10 0 "initialvalue" ""
+   endlife r6
+   icopy r4,r8
+   .traceevent "A" 6 "R" "I" "r" 4 10 10 0 "initialvalue" ""
    .srcstep 11 11 17 "inline_test_call_like_arg_expr.crexx" 21 5 23 "    val = initialValue"
-   .traceevent "V" 6 "R" "I" "r" 3 11 11 0 "initialvalue" ""
-   linkattr1 r13,r4,1
-   icopy r13,r3
-   unlink r13
+   .traceevent "V" 6 "R" "I" "r" 4 11 11 0 "initialvalue" ""
+   linkattr1 r8,r5,1
+   icopy r8,r4
+   unlink r8
    .srcstep 12 12 33 "inline_test_call_like_arg_expr.crexx" 22 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 4 12 12 0 "§factory" ""
-   copy r0,r4
+   .traceevent "V" 6 "R" "O" "r" 5 12 12 0 "§factory" ""
+   copy r0,r5
    .traceevent "A" 6 "R" "O" "r" 0 12 12 0 "box" ""
    .srcstep 21 21 17 "inline_test_call_like_arg_expr.crexx" 7 5 28 "    say box.bump(addOne(i))"
    .meta "inline_test_call_like_arg_expr.main.box"="b" ".box" r0
    .srcstep 20 20 17 "inline_test_call_like_arg_expr.crexx" 7 9 12 "    say box.bump(addOne(i))"
    .srcstep 14 14 33 "inline_test_call_like_arg_expr.crexx" 7 9 12 "    say box.bump(addOne(i))"
    .traceevent "V" 6 "R" "O" "r" 0 14 14 0 "box" ""
-   copy r8,r0
-   .traceevent "A" 6 "R" "O" "r" 8 14 14 0 "§this" ""
+   copy r9,r0
+   .traceevent "A" 6 "R" "O" "r" 9 14 14 0 "§this" ""
    .srcstep 18 18 33 "inline_test_call_like_arg_expr.crexx" 25 9 15 "    arg amount = .int"
    .srcstep 17 17 17 "inline_test_call_like_arg_expr.crexx" 7 18 24 "    say box.bump(addOne(i))"
    .srcstep 15 15 33 "inline_test_call_like_arg_expr.crexx" 13 7 10 "  arg val = .int"
    .traceevent "V" 6 "R" "I" "r" 1 15 15 0 "i" ""
-   icopy r9,r1
-   .traceevent "A" 6 "R" "I" "r" 9 15 15 0 "val" ""
+   icopy r7,r1
+   .traceevent "A" 6 "R" "I" "r" 7 15 15 0 "val" ""
    .srcstep 16 16 17 "inline_test_call_like_arg_expr.crexx" 14 3 17 "  return val + 1"
-   .traceevent "V" 6 "R" "I" "r" 9 18 18 0 "val" ""
-   iadd r13,r9,1
-   .traceevent "O" 4 "R" "I" "r" 13 18 18 0 "" ""
-   icopy r14,r13
+   .traceevent "V" 6 "R" "I" "r" 7 18 18 0 "val" ""
+   iadd r6,r7,1
+   .traceevent "O" 4 "R" "I" "r" 6 18 18 0 "" ""
+   icopy r10,r6
    br l125bexprend
 l125bexprend:
-   icopy r7,r14
-   .traceevent "A" 6 "R" "I" "r" 7 18 18 0 "amount" ""
+   endlife r7
+   icopy r8,r10
+   .traceevent "A" 6 "R" "I" "r" 8 18 18 0 "amount" ""
    .srcstep 19 19 17 "inline_test_call_like_arg_expr.crexx" 26 5 24 "    return val + amount"
-   linkattr1 r14,r8,1
-   .traceevent "V" 6 "R" "I" "r" 14 21 21 0 "val" ""
-   .traceevent "V" 6 "R" "I" "r" 7 21 21 0 "amount" ""
-   iadd r15,r14,r7
-   unlink r14
-   .traceevent "O" 4 "R" "I" "r" 15 21 21 0 "" ""
-   icopy r14,r15
-   acopy r14,r15
+   linkattr1 r10,r9,1
+   .traceevent "V" 6 "R" "I" "r" 10 21 21 0 "val" ""
+   .traceevent "V" 6 "R" "I" "r" 8 21 21 0 "amount" ""
+   iadd r7,r10,r8
+   unlink r10
+   .traceevent "O" 4 "R" "I" "r" 7 21 21 0 "" ""
+   icopy r6,r7
    br l118bexprend
 l118bexprend:
-   itos r14
-   say r14
+   endlife r8
+   itos r6
+   say r6
 l8doinc:
    .srcstep 4 4 17 "inline_test_call_like_arg_expr.crexx" 5 6 7 "  do i = 1 to 3"
    inc r1
    .srcstep 23 23 17 "inline_test_call_like_arg_expr.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
+   endlife r0
+   endlife r1
+   .meta "inline_test_call_like_arg_expr.main.box"
+   .meta "inline_test_call_like_arg_expr.main.i"
    .srcstep 24 24 17 "inline_test_call_like_arg_expr.crexx" 9 3 49 "  say \"Call-like arg inline expr test finished.\""
    say "Call-like arg inline expr test finished."
    .srcstep 25 25 17 "inline_test_call_like_arg_expr.crexx" 10 3 11 "  return 0"

@@ -100,6 +100,20 @@ test_data_movement() .locals=20
     seq r0,r2,"moved"
     brf data_fail, r0
 
+    load r1,0x0041ff
+    loadsettp r2,999,16711680
+    bcopy r2,r1
+    blen r3,r2
+    ieq r0,r3,3
+    brf data_fail,r0
+    load r4,2
+    getbyte r3,r2,r4
+    ieq r0,r3,255
+    brf data_fail,r0
+    getandtp r3,r2,16711680
+    ieq r0,r3,16711680
+    brf data_fail,r0
+
     loadsettp r1,7,256
     erase r1
     gettp r2,r1

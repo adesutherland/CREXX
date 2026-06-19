@@ -1,0 +1,40 @@
+options levelb
+namespace reference_source_block_lifetime
+
+main: procedure = .int
+  local_ref = reference .int
+  do
+    value = .int
+    value = 12
+    local_ref = reference value
+    if \refvalid(local_ref) then return fail("block reference initially live")
+    if snapshot local_ref <> 12 then return fail("block reference value")
+  end
+  if refvalid(local_ref) then return fail("block reference invalid after do")
+
+  attr_ref = reference .int
+  do
+    box = .Box(5)
+    attr_ref = box.valueRef()
+    if \refvalid(attr_ref) then return fail("block attribute reference initially live")
+  end
+  if refvalid(attr_ref) then return fail("block attribute reference invalid after do")
+
+  say "PASS: Reference Source Block Lifetime"
+  return 0
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1
+
+Box: class
+  value = .int
+
+  *: factory
+    arg seed = .int
+    value = seed
+    return
+
+  valueRef: method = reference .int
+    return reference value

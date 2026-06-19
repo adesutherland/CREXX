@@ -1,0 +1,129 @@
+options levelb
+namespace class_attr_register_views
+
+constant FLAG_LIBRARY_ONE = 0x00010000
+constant FLAG_USER_ONE = 0x01000000
+constant FLAG_COMPILER_VAL = 0x00000100
+
+slot = .MappedSlot()
+
+call slot.setString("41")
+say "string=" || slot.asString()
+
+call slot.setInt(42)
+say "int=" || slot.asIntText()
+call slot.increment()
+say "increment=" || slot.asIntText()
+
+f = 3.5 as .float
+call slot.setFloat(f)
+say "float=" || slot.asFloatText()
+
+d = "12" as .decimal
+call slot.setDecimal(d)
+say "decimal=" || slot.asDecimalText()
+
+call slot.setBinary("4142"x as .binary)
+say "binary-length=" || slot.asBinaryLength()
+
+call slot.clearPublicFlags()
+call slot.setFlagViews()
+say "flags-public=" || slot.asPublicFlags()
+say "flags-library=" || slot.asLibraryFlags()
+say "flags-user=" || slot.asUserFlags()
+call slot.clearLibraryFlags()
+say "flags-after-clear-library=" || slot.asPublicFlags()
+say "flags-public-keeps-compiler=" || slot.publicKeepsCompiler()
+
+exit 0
+
+MappedSlot: class
+  text = .string with register.0.string
+  number = .int with register.0.int
+  approx = .float with register.0.float
+  exact = .decimal with register.0.decimal
+  bytes = .binary with register.0.binary
+  public_flags = .int with register.0.flags.public
+  library_flags = .int with register.0.flags.library
+  user_flags = .int with register.0.flags.user
+  compiler_flags = .int with register.0.flags.compiler
+
+  *: factory
+    text = ""
+    public_flags = 0
+    return
+
+  setString: method = .void
+    arg value = .string
+    text = value
+    return
+
+  setInt: method = .void
+    arg value = .int
+    number = value
+    return
+
+  increment: method = .void
+    number = number + 1
+    return
+
+  setFloat: method = .void
+    arg value = .float
+    approx = value
+    return
+
+  setDecimal: method = .void
+    arg value = .decimal
+    exact = value
+    return
+
+  setBinary: method = .void
+    arg value = .binary
+    bytes = value
+    return
+
+  asString: method = .string
+    return text
+
+  asIntText: method = .string
+    return number as .string
+
+  asFloatText: method = .string
+    return approx as .string
+
+  asDecimalText: method = .string
+    return exact as .string
+
+  asBinaryLength: method = .int
+    len = 0
+    assembler blen len,bytes
+    return len
+
+  clearPublicFlags: method = .void
+    public_flags = 0
+    return
+
+  setFlagViews: method = .void
+    library_flags = FLAG_LIBRARY_ONE
+    user_flags = FLAG_USER_ONE
+    return
+
+  clearLibraryFlags: method = .void
+    library_flags = 0
+    return
+
+  publicKeepsCompiler: method = .int
+    before = compiler_flags
+    public_flags = FLAG_LIBRARY_ONE + FLAG_COMPILER_VAL
+    after = compiler_flags
+    if before = after then return 1
+    return 0
+
+  asPublicFlags: method = .string
+    return public_flags as .string
+
+  asLibraryFlags: method = .string
+    return library_flags as .string
+
+  asUserFlags: method = .string
+    return user_flags as .string

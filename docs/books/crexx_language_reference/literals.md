@@ -10,6 +10,32 @@ A string literal is a sequence of characters enclosed in single or double quotes
 
 Numeric literals can be integers, floating-point numbers, or hexadecimal numbers. Integers are whole numbers that do not have a decimal point. Floating-point numbers are numbers that have a decimal point.
 
+Integer literals may also use a `0x` prefix for hexadecimal notation, for
+example `0x10000`. Hexadecimal integer literals are `.int` values and are
+intended for masks, flags, and low-level numeric constants.
+
+## Named Constants
+
+Level B supports named compile-time constants:
+
+```rexx
+constant FLAG_STRING = 0x00010000
+constant FLAG_TEXT = 0x00200000
+constant TEXT_FLAGS = FLAG_STRING + FLAG_TEXT
+constant SAMPLE_BYTES = "4142"x as .binary
+```
+
+The initializer must be a compile-time constant expression. A named constant is
+immutable, can be used in ordinary expressions, and can be used where inline
+assembler expects a literal operand. Runtime payload constants such as strings,
+decimals, floats, and binary byte sequences are stored through the RXBIN
+constant pool. Object, reference, and array constants are not part of this
+Level B surface.
+
+Assigning to a named constant after declaration is a compile-time error. A
+constant declaration also cannot reuse an already declared variable name in the
+same scope.
+
 ## Hex/Binary Literals
 
 A string literal that concludes with `x`, such as `"4142"x`, is decoded as

@@ -511,6 +511,17 @@ RXAS has an explicit reference surface that the source compiler should target.
 - `unref rRef`
   Clear a reference value, releasing its hold on the reference cell.
 
+- `endlife rLocal`
+  End the storage lifetime for `rLocal`. This invalidates references targeting
+  that storage and nested attribute storage, and releases any reference payload
+  held by the register, without clearing ordinary value contents. The compiler
+  emits this for storage-owning locals during lexical scope cleanup; eligible
+  block-local registers are then returned to the scoped reuse pool. Register
+  reuse is deliberately narrower than cleanup: argument and `.ref` argument
+  storage, receiver/factory pseudo-locals, exposed storage, reference-targeted
+  storage, and compiler inline scaffolding are not reuse candidates. User code
+  should normally prefer the source-level lifetime rules.
+
 ### Why `linkref`, Not Overloaded `link`
 
 Overloading the existing `link` instruction would be compact, but it makes

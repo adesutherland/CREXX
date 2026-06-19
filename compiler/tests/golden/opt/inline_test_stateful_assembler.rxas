@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test_stateful_assembler.crexx
- * BUILT                  : 2026-05-27 17:53:29
  */
 
 .globals=0
@@ -75,42 +74,42 @@ main() .locals=14
    .meta "inline_test_stateful_assembler.main.x"="b" ".string" r0
    .meta "inline_test_stateful_assembler.main.y"="b" ".string" r1
    .traceevent "V" 6 "R" "S" "r" 0 17 17 0 "x" ""
-   concat r13,r0,":"
-   .traceevent "O" 4 "R" "S" "r" 13 17 17 0 "" ""
+   concat r11,r0,":"
+   .traceevent "O" 4 "R" "S" "r" 11 17 17 0 "" ""
    .traceevent "V" 6 "R" "S" "r" 1 17 17 0 "y" ""
-   concat r13,r13,r1
-   .traceevent "O" 4 "R" "S" "r" 13 17 17 0 "" ""
-   concat r13,r13,":"
-   .traceevent "O" 4 "R" "S" "r" 13 17 17 0 "" ""
-   concat r13,r13,"abc123"
-   .traceevent "O" 4 "R" "S" "r" 13 17 17 0 "" ""
-   say r13
+   concat r11,r11,r1
+   .traceevent "O" 4 "R" "S" "r" 11 17 17 0 "" ""
+   concat r11,r11,":"
+   .traceevent "O" 4 "R" "S" "r" 11 17 17 0 "" ""
+   concat r11,r11,"abc123"
+   .traceevent "O" 4 "R" "S" "r" 11 17 17 0 "" ""
+   say r11
    .srcstep 22 22 17 "inline_test_stateful_assembler.crexx" 9 1 21 "z = left_copy(s2, 3)"
    .srcstep 18 18 33 "inline_test_stateful_assembler.crexx" 22 7 11 "  arg text = .string, len = .int"
-   load r12,"abcdef"
-   .traceevent "L" 4 "R" "S" "r" 12 18 18 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 12 18 18 0 "text" ""
+   load r13,"abcdef"
+   .traceevent "L" 4 "R" "S" "r" 13 18 18 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 13 18 18 0 "text" ""
    .srcstep 19 19 33 "inline_test_stateful_assembler.crexx" 22 23 26 "  arg text = .string, len = .int"
-   load r11,3
-   .traceevent "L" 4 "R" "I" "r" 11 19 19 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 11 19 19 0 "len" ""
+   load r12,3
+   .traceevent "L" 4 "R" "I" "r" 12 19 19 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 19 19 0 "len" ""
    .srcstep 20 20 17 "inline_test_stateful_assembler.crexx" 23 13 31 "  assembler substcut text, len"
-   .traceevent "V" 6 "R" "S" "r" 12 0 0 0 "text" ""
-   .traceevent "V" 6 "R" "I" "r" 11 0 0 0 "len" ""
-   substcut r12,r11
+   .traceevent "V" 6 "R" "S" "r" 13 0 0 0 "text" ""
+   .traceevent "V" 6 "R" "I" "r" 12 0 0 0 "len" ""
+   substcut r13,r12
    .srcstep 21 21 33 "inline_test_stateful_assembler.crexx" 24 3 9 "  return text"
-   .traceevent "V" 6 "R" "S" "r" 12 21 21 0 "text" ""
-   copy r2,r12
+   .traceevent "V" 6 "R" "S" "r" 13 21 21 0 "text" ""
+   copy r2,r13
    .traceevent "A" 6 "R" "S" "r" 2 21 21 0 "z" ""
    .srcstep 23 23 17 "inline_test_stateful_assembler.crexx" 10 1 11 "say z':'s2"
    .meta "inline_test_stateful_assembler.main.s2"="b" ".string" "abcdef"
    .meta "inline_test_stateful_assembler.main.z"="b" ".string" r2
    .traceevent "V" 6 "R" "S" "r" 2 23 23 0 "z" ""
-   concat r13,r2,":"
-   .traceevent "O" 4 "R" "S" "r" 13 23 23 0 "" ""
-   concat r13,r13,"abcdef"
-   .traceevent "O" 4 "R" "S" "r" 13 23 23 0 "" ""
-   say r13
+   concat r11,r2,":"
+   .traceevent "O" 4 "R" "S" "r" 11 23 23 0 "" ""
+   concat r11,r11,"abcdef"
+   .traceevent "O" 4 "R" "S" "r" 11 23 23 0 "" ""
+   say r11
    .srcstep 24 24 1 "inline_test_stateful_assembler.crexx" 10 11 11 "say z':'s2"
    ret
    .meta "inline_test_stateful_assembler.main.s"

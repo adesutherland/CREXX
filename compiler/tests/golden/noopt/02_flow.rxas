@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : 02_flow.crexx
- * BUILT                  : 2026-05-27 17:52:39
  */
 
 .globals=0
@@ -19,9 +18,9 @@ main() .locals=4
    .traceevent "A" 6 "R" "I" "r" 0 1 1 0 "a" ""
    .srcstep 4 4 17 "02_flow.crexx" 4 1 9 "if a > 3 then say \"Big\""
    .traceevent "V" 6 "R" "I" "r" 0 4 4 0 "a" ""
-   igt r2,r0,3
-   .traceevent "O" 4 "R" "B" "r" 2 4 4 0 "" ""
-   brf l14iffalse,r2
+   igt r1,r0,3
+   .traceevent "O" 4 "R" "B" "r" 1 4 4 0 "" ""
+   brf l14iffalse,r1
    .srcstep 5 5 17 "02_flow.crexx" 4 10 14 "if a > 3 then say \"Big\""
    .srcstep 2 2 17 "02_flow.crexx" 4 15 24 "if a > 3 then say \"Big\""
    say "Big"
@@ -54,6 +53,8 @@ l15doinc:
    .srcstep 12 12 17 "02_flow.crexx" 9 1 4 "end"
    br l15dostart
 l15doend:
+   endlife r1
+   .meta "02_flow.main.i"
    .srcstep 13 13 1 "02_flow.crexx" 7 10 10 "    say i"
    ret
    .meta "02_flow.main.a"

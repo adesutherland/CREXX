@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test_bool_expr_negative.crexx
- * BUILT                  : 2026-05-27 17:53:38
  */
 
 .globals=0
@@ -64,6 +63,8 @@ l8doinc:
    .srcstep 11 11 17 "inline_test_bool_expr_negative.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
+   endlife r0
+   .meta "inline_test_bool_expr_negative.main.i"
    .srcstep 12 12 17 "inline_test_bool_expr_negative.crexx" 9 3 44 "  say \"Bool inline negative test finished.\""
    say "Bool inline negative test finished."
    .srcstep 13 13 17 "inline_test_bool_expr_negative.crexx" 10 3 11 "  return 0"

@@ -5,10 +5,20 @@ The `crexx` toolchain implements its Standard Libraries and Built-In Functions (
 Libraries are housed in the `lib/` directory, which is divided into domains like:
 - `lib/rxfnsb/` (Classic REXX Built-In Functions for Level B)
 - `lib/rxfnsg/` (Level G class-shaped general-purpose interfaces)
-- `lib/rxfnsc/` (reserved/planned Level C standard library functions; no
-  directory exists until the Level C release surface is approved)
+- `lib/rxfnsc/` (shared Level C/RexxScript runtime foundation, currently
+  housing the Rexx value, stem, and variable-pool classes)
 - `lib/rxmath/` (Math extensions)
 - `lib/plugins/` (General-purpose extensions like `fileio`, `regex`, `strings`, `socket`, etc.)
+
+RexxScript is a first-class runtime product under `rexxscript/`, not a Level B
+BIF hidden inside `lib/rxfnsb`. It builds `bin/rexxscript.rxbin`, exposes the
+`rexxscript` namespace (`rexxscript_evaluate`,
+`rexxscript_evaluate_exposed`, `rexxscript_output`, `rexxscript_value`, and
+`.rexxscriptevaluator`), and carries the compatibility `rxfnsb.evaluate`
+facade for callers that still use the original prototype API. The `crexx`
+driver includes `rexxscript.rxbin` in its default runtime set; direct VM runs
+using the `REXXSCRIPT` compiler exit or compatibility `evaluate()` surface must
+load `rexxscript.rxbin` at runtime in addition to `library.rxbin`.
 
 `lib/rxfnsb/rexx/rxjson.crexx` contains the first JSON foundation library module
 for Level B web-service and transport work. It is implemented in Rexx, ships in

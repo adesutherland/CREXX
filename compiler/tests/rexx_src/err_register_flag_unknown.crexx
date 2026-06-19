@@ -1,0 +1,8 @@
+options levelb
+namespace err_register_flag_unknown
+
+FlagBox: class
+  bad_flags = .int with register.0.flags.unknown
+
+  *: factory
+    return

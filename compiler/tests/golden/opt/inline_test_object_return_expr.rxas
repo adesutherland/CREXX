@@ -1,13 +1,12 @@
 /*
  * SOURCE                 : inline_test_object_return_expr.crexx
- * BUILT                  : 2026-06-12 20:26:05
  */
 
 .meta "inline_test_object_return_expr.box"="b" ".unknown" .class
 .meta "inline_test_object_return_expr.box.name"="b" ".string" .attr 1
 .globals=0
 
-main() .locals=16
+main() .locals=9
    .meta "inline_test_object_return_expr.main"="b" ".int" main() ""
    .srcstep 20 20 17 "inline_test_object_return_expr.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -21,62 +20,62 @@ main() .locals=16
    .srcstep 8 8 17 "inline_test_object_return_expr.crexx" 5 19 27 "  say describeBox(buildBox(\"seed\"))"
    .srcstep 6 6 17 "inline_test_object_return_expr.crexx" 12 3 24 "  value = .Box(initial)"
    .srcstep 2 2 6 "inline_test_object_return_expr.crexx" 22 3 13 "  *: factory"
-   setattrs r1,2
+   setattrs r3,2
    .srcstep 3 3 6 "inline_test_object_return_expr.crexx" 22 3 13 "  *: factory"
-   setobjtype r1,"inline_test_object_return_expr.box"
+   setobjtype r3,"inline_test_object_return_expr.box"
    .srcstep 4 4 17 "inline_test_object_return_expr.crexx" 24 5 19 "    name = initial"
-   load r13,"seed"
-   .traceevent "L" 4 "R" "S" "r" 13 4 4 0 "" ""
-   linkattr1 r12,r1,1
-   scopy r12,r13
-   unlink r12
+   load r5,"seed"
+   .traceevent "L" 4 "R" "S" "r" 5 4 4 0 "" ""
+   linkattr1 r4,r3,1
+   scopy r4,r5
+   unlink r4
    .srcstep 5 5 33 "inline_test_object_return_expr.crexx" 25 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 1 5 5 0 "§factory" ""
-   copy r0,r1
-   .traceevent "A" 6 "R" "O" "r" 0 5 5 0 "value" ""
+   .traceevent "V" 6 "R" "O" "r" 3 5 5 0 "§factory" ""
+   copy r2,r3
+   .traceevent "A" 6 "R" "O" "r" 2 5 5 0 "value" ""
    .srcstep 7 7 17 "inline_test_object_return_expr.crexx" 13 3 15 "  return value"
-   .traceevent "V" 6 "R" "O" "r" 0 9 9 0 "value" ""
-   copy r12,r0
-   acopy r12,r0
+   .traceevent "V" 6 "R" "O" "r" 2 9 9 0 "value" ""
+   copy r4,r2
    br l73bexprend
 l73bexprend:
-   load r10,1
-   settp r12,768
-   swap r11,r12
-   call r14,describeBox(),r10
-   swap r12,r11
-   .traceevent "F" 4 "R" "S" "r" 14 9 9 0 "describebox" ""
-   say r14
+   endlife r2
+   load r0,1
+   settp r4,768
+   swap r1,r4
+   call r2,describeBox(),r0
+   swap r4,r1
+   .traceevent "F" 4 "R" "S" "r" 2 9 9 0 "describebox" ""
+   say r2
    .srcstep 17 17 17 "inline_test_object_return_expr.crexx" 6 3 36 "  say describeBox(buildBox(\"temp\"))"
    .srcstep 16 16 17 "inline_test_object_return_expr.crexx" 6 19 27 "  say describeBox(buildBox(\"temp\"))"
    .srcstep 14 14 17 "inline_test_object_return_expr.crexx" 12 3 24 "  value = .Box(initial)"
    .srcstep 10 10 6 "inline_test_object_return_expr.crexx" 22 3 13 "  *: factory"
-   setattrs r4,2
+   setattrs r8,2
    .srcstep 11 11 6 "inline_test_object_return_expr.crexx" 22 3 13 "  *: factory"
-   setobjtype r4,"inline_test_object_return_expr.box"
+   setobjtype r8,"inline_test_object_return_expr.box"
    .srcstep 12 12 17 "inline_test_object_return_expr.crexx" 24 5 19 "    name = initial"
-   load r11,"temp"
-   .traceevent "L" 4 "R" "S" "r" 11 12 12 0 "" ""
-   linkattr1 r12,r4,1
-   scopy r12,r11
-   unlink r12
+   load r1,"temp"
+   .traceevent "L" 4 "R" "S" "r" 1 12 12 0 "" ""
+   linkattr1 r2,r8,1
+   scopy r2,r1
+   unlink r2
    .srcstep 13 13 33 "inline_test_object_return_expr.crexx" 25 5 11 "    return"
-   .traceevent "V" 6 "R" "O" "r" 4 13 13 0 "§factory" ""
-   copy r3,r4
-   .traceevent "A" 6 "R" "O" "r" 3 13 13 0 "value" ""
+   .traceevent "V" 6 "R" "O" "r" 8 13 13 0 "§factory" ""
+   copy r4,r8
+   .traceevent "A" 6 "R" "O" "r" 4 13 13 0 "value" ""
    .srcstep 15 15 17 "inline_test_object_return_expr.crexx" 13 3 15 "  return value"
-   .traceevent "V" 6 "R" "O" "r" 3 17 17 0 "value" ""
-   copy r12,r3
-   acopy r12,r3
+   .traceevent "V" 6 "R" "O" "r" 4 17 17 0 "value" ""
+   copy r2,r4
    br l86bexprend
 l86bexprend:
-   load r14,1
-   settp r12,768
-   swap r15,r12
-   call r10,describeBox(),r14
-   swap r12,r15
-   .traceevent "F" 4 "R" "S" "r" 10 17 17 0 "describebox" ""
-   say r10
+   endlife r4
+   load r6,1
+   settp r2,768
+   swap r7,r2
+   call r4,describeBox(),r6
+   swap r2,r7
+   .traceevent "F" 4 "R" "S" "r" 4 17 17 0 "describebox" ""
+   say r4
    .srcstep 18 18 17 "inline_test_object_return_expr.crexx" 7 3 49 "  say \"Object return expr inline test finished.\""
    say "Object return expr inline test finished."
    .srcstep 19 19 17 "inline_test_object_return_expr.crexx" 8 3 11 "  return 0"
@@ -102,7 +101,6 @@ describeBox() .locals=4
    linkattr1 r2,r1,1
    .traceevent "V" 6 "R" "S" "r" 2 33 33 0 "name" ""
    scopy r3,r2
-   acopy r3,r2
    unlink r2
    br l115bexprend
 l115bexprend:

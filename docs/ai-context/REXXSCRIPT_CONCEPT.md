@@ -31,13 +31,19 @@ The working name in this document is **RexxScript**.
 
 ## Current Prototype Harness
 
-The current repository playground keeps Peter's evaluator mostly intact, wraps
-it behind `rxfnsb..rexxscriptevaluator`, and preserves the public
-`rxfnsb..evaluate(script, debug)` facade. `debug` defaults to `0` for library
-use. `rxfnsb..rexxscript_output()` returns the captured `SAY` output from the
-last evaluation, and `rxfnsb..rexxscript_value(name)` reads a variable from the
-last RexxScript environment. `rxfnsb..evaluate_exposed(script, names, values,
-debug)` seeds simple string variables before evaluation.
+The current repository playground keeps Peter's evaluator mostly intact, but it
+now lives in the first-class RexxScript runtime product under `rexxscript/`.
+That product builds `bin/rexxscript.rxbin` and exposes the `rexxscript`
+namespace. `debug` defaults to `0` for library use.
+`rexxscript..rexxscript_output()` returns the captured `SAY` output from the
+last evaluation, and `rexxscript..rexxscript_value(name)` reads a variable from
+the last RexxScript environment.
+`rexxscript..rexxscript_evaluate_exposed(script, names, values, debug)` seeds
+simple string variables before evaluation.
+
+The original `rxfnsb..evaluate(script, debug)` facade is retained as a
+compatibility module in `bin/rexxscript.rxbin`; it is no longer part of the
+base Level B `library.rxbin`.
 
 A non-certified compiler exit provides an experimental instruction syntax:
 
@@ -47,10 +53,11 @@ status = ""
 REXXSCRIPT "a = a + 4; status = 'done'" EXPOSE a, status OUTPUT out RESULT raw
 ```
 
-With no `EXPOSE` clause, the exit lowers to `evaluate(<script>, 0)`. With
-`EXPOSE`, it lowers to `evaluate_exposed(...)` and copies each exposed variable
-back from `rexxscript_value(name)` after evaluation. `OUTPUT` receives captured
-`SAY` lines as a `.string[]`; `RESULT` receives the raw evaluator result array.
+With no `EXPOSE` clause, the exit lowers to
+`rexxscript_evaluate(<script>, 0)`. With `EXPOSE`, it lowers to
+`rexxscript_evaluate_exposed(...)` and copies each exposed variable back from
+`rexxscript_value(name)` after evaluation. `OUTPUT` receives captured `SAY`
+lines as a `.string[]`; `RESULT` receives the raw evaluator result array.
 For now, `EXPOSE` is a simple read/write string bridge. Tagged policies such as
 `in`, `out`, or `required` remain future design space.
 

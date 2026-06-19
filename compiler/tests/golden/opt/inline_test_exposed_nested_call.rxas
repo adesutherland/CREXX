@@ -1,6 +1,5 @@
 /*
  * SOURCE                 : inline_test_exposed_nested_call.crexx
- * BUILT                  : 2026-05-27 17:53:43
  */
 
 .globals=0
@@ -22,30 +21,31 @@ main() .locals=8
    .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "i" ""
    .srcstep 3 3 17 "inline_test_exposed_nested_call.crexx" 5 12 16 "  do i = 1 to 4"
-   load r4,4
-   .traceevent "L" 4 "R" "I" "r" 4 0 0 0 "" ""
+   load r2,4
+   .traceevent "L" 4 "R" "I" "r" 2 0 0 0 "" ""
 l8dostart:
    .srcstep 3 3 17 "inline_test_exposed_nested_call.crexx" 5 12 16 "  do i = 1 to 4"
-   igt r5,r0,r4
-   brt l8doend,r5
+   igt r3,r0,r2
+   brt l8doend,r3
    .srcstep 10 10 17 "inline_test_exposed_nested_call.crexx" 6 5 24 "    result = compute(i)"
    .srcstep 5 5 33 "inline_test_exposed_nested_call.crexx" 13 7 10 "  arg val = .int"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   icopy r2,r0
-   .traceevent "A" 6 "R" "I" "r" 2 5 5 0 "val" ""
+   icopy r4,r0
+   .traceevent "A" 6 "R" "I" "r" 4 5 5 0 "val" ""
    .srcstep 9 9 33 "inline_test_exposed_nested_call.crexx" 14 3 9 "  return 10 + addOne(val)"
    .srcstep 8 8 17 "inline_test_exposed_nested_call.crexx" 14 15 21 "  return 10 + addOne(val)"
    .srcstep 6 6 33 "inline_test_exposed_nested_call.crexx" 17 7 10 "  arg val = .int"
-   .traceevent "V" 6 "R" "I" "r" 2 6 6 0 "val" ""
-   icopy r3,r2
-   .traceevent "A" 6 "R" "I" "r" 3 6 6 0 "val" ""
+   .traceevent "V" 6 "R" "I" "r" 4 6 6 0 "val" ""
+   icopy r5,r4
+   .traceevent "A" 6 "R" "I" "r" 5 6 6 0 "val" ""
    .srcstep 7 7 17 "inline_test_exposed_nested_call.crexx" 18 3 17 "  return val + 1"
-   .traceevent "V" 6 "R" "I" "r" 3 9 9 0 "val" ""
-   iadd r6,r3,1
+   .traceevent "V" 6 "R" "I" "r" 5 9 9 0 "val" ""
+   iadd r6,r5,1
    .traceevent "O" 4 "R" "I" "r" 6 9 9 0 "" ""
    icopy r7,r6
    br l75bexprend
 l75bexprend:
+   endlife r5
    iadd r1,r7,10
    .traceevent "O" 4 "R" "I" "r" 1 9 9 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 1 9 9 0 "result" ""
@@ -62,6 +62,10 @@ l8doinc:
    .srcstep 13 13 17 "inline_test_exposed_nested_call.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
+   endlife r0
+   endlife r1
+   .meta "inline_test_exposed_nested_call.main.i"
+   .meta "inline_test_exposed_nested_call.main.result"
    .srcstep 14 14 17 "inline_test_exposed_nested_call.crexx" 9 3 50 "  say \"Exposed nested call inline test finished.\""
    say "Exposed nested call inline test finished."
    .srcstep 15 15 17 "inline_test_exposed_nested_call.crexx" 10 3 11 "  return 0"
