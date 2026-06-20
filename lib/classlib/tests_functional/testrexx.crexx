@@ -1,7 +1,5 @@
-
 options levelb comments_dash
 import rexx
-import rxfnsb
 
 say 'started testrexx'
 errors = 0

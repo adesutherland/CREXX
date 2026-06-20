@@ -40,8 +40,6 @@ rxvml_address_register_callback_environment(ctx, name, id,
     command_cb, function_cb, userdata);
 ```
 
-The old command-only callback registration form is retired.
-
 ## ARG
 
 See Procedures and Arguments Section
@@ -178,6 +176,67 @@ SAY \[ expr \] ;
 Evaluates the expression expr and prints the resulting string onto the standard output stream.[^newline]
 
 [^newline]: with an added newline. For cases where no newline is wanted, the conventional way of using `call lineout` can be used, or the `sayx` assembler instruction.
+
+## MSAY
+
+MSAY mask, value-1, value-2, ...
+
+Example:
+
+```rexx <!--msayexample.crexx-->
+options levelb comments_dash numeric_classic
+import rxfnsb
+numeric digits 15
+b=.decimal;c=.decimal;p=.decimal
+n=.decimal;mn=.decimal
+b = 963807195502/100
+c = 180945931154/100
+p = 0.081090
+n = 30
+-- COMPUTE MN = (1 + P) ** N
+mn = (1+p) ** n
+-- COMPUTE B = (B + C) * MN + C * ( (MN - 1) / P - 1) .
+b = (b+c) * mn + c * (( mn - 1) / p - 1)
+msay "$$$,$$$,$$$,$$$,$$9.99.",b  
+```
+
+<!--splice--crexx msayexamplenep-->
+
+`MSAY` is a convenience syntax that formats values using `fmtmask` and immediately outputs the resulting line.
+
+The facility is intended for report-style output where fixed-width text and numeric alignment are desirable.
+
+See MSAY on page \pageref{msay} for the complete template syntax.
+
+## FSAY
+
+`FSAY` is a convenience syntax that formats the template using `fsayfmt()` and
+outputs the resulting line.
+
+Unlike `fmtmask` and `MSAY`, which use COBOL-inspired picture masks,
+`fsayfmt` uses embedded placeholders similar to modern string interpolation
+systems.
+
+
+```rexx
+FSAY template
+```
+
+The template may contain one or more placeholders enclosed in braces.
+
+Example:
+
+```rexx <!--fsayexample.crexx-->
+name  = "Fred"
+qty   = 12
+price = 64.31
+
+FSAY "Name: {name:<10} Qty: {qty:>3} Price: {price:8.2}"
+```
+
+<!--splice--crexx fsayexample-->
+
+See FSAY on page \pageref{fsay} for the complete template syntax.
 
 ## SELECT/WHEN/OTHERWISE
 
