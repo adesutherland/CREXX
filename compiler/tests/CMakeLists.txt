@@ -339,6 +339,36 @@ add_test(NAME rxc_invalid_binary_literal_as_string
          COMMAND ${CMAKE_COMMAND} -P "${RXC_INVALID_BINARY_AS_STRING_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+set(RXC_FUNCTION_LOOKUP_DIAG_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_function_lookup_diagnostic.cmake")
+set(RXC_FUNCTION_LOOKUP_DIAG_CONTENT "")
+string(APPEND RXC_FUNCTION_LOOKUP_DIAG_CONTENT
+       "file(WRITE \"${CMAKE_CURRENT_BINARY_DIR}/rxc_function_lookup_diagnostic.crexx\" [=[options levelb\n\nmain: procedure = .int\n  box = .MethodBox()\n  if length(box.current()) <> 1 then return 1\n  return 0\n\nMethodBox: class\n  *: factory\n    return\n\n  current: method = .string\n    return \"x\"\n]=])\n")
+string(APPEND RXC_FUNCTION_LOOKUP_DIAG_CONTENT
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -n -x -o \"rxc_function_lookup_diagnostic\" \"${CMAKE_CURRENT_BINARY_DIR}/rxc_function_lookup_diagnostic.crexx\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE rxc_out\n"
+       "  ERROR_VARIABLE rxc_err\n"
+       "  RESULT_VARIABLE rxc_res\n"
+       ")\n"
+       "set(full_out \"${RXAS_DIAG_DOLLAR}{rxc_out}${RXAS_DIAG_DOLLAR}{rxc_err}\")\n"
+       "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "if(rxc_res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"Expected rxc to reject the unresolved length function.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n"
+       "if(NOT full_out MATCHES [=[#FUNCTION_NOT_FOUND, \"length\"]=])\n"
+       "  message(FATAL_ERROR \"Expected unresolved function diagnostic to point at the callee token.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n"
+       "if(full_out MATCHES [=[#FUNCTION_NOT_FOUND, \"length[(]box[.]current]=])\n"
+       "  message(FATAL_ERROR \"Unresolved function diagnostic still includes a truncated nested call span.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n")
+file(GENERATE OUTPUT "${RXC_FUNCTION_LOOKUP_DIAG_SCRIPT}" CONTENT "${RXC_FUNCTION_LOOKUP_DIAG_CONTENT}")
+
+add_test(NAME rxc_function_lookup_diagnostic
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_FUNCTION_LOOKUP_DIAG_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxc_function_lookup_diagnostic PROPERTIES LABELS "compiler;diagnostics")
+
 set(RXC_INVALID_BINARY_TO_STRING_RUNTIME_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_invalid_binary_to_string_runtime.cmake")
 set(RXC_INVALID_BINARY_TO_STRING_RUNTIME_CONTENT "")
 string(APPEND RXC_INVALID_BINARY_TO_STRING_RUNTIME_CONTENT
@@ -2010,6 +2040,7 @@ add_test(NAME structured_exit_debug_run
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 add_crexx_run_test(test_obj_prop rexx_src/test_obj_prop.crexx)
 add_crexx_run_test(test_meth_vs_proc rexx_src/test_meth_vs_proc.crexx)
+add_crexx_run_test(function_arg_method_call rexx_src/function_arg_method_call.crexx)
 add_crexx_run_test(test_class_adv rexx_src/test_class_adv.crexx)
 add_crexx_run_test(test_array_edge rexx_src/test_array_edge.crexx)
 add_crexx_run_test(test_utf_math rexx_src/test_utf_math.crexx)

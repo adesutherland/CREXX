@@ -32,6 +32,44 @@
 #include "utf.h"
 #include "rxcp_val.h"
 
+static void mknd_function_name_err(ASTNode *node, char *message) {
+    int saved_line;
+    int saved_column;
+    char *saved_source_start;
+    char *saved_source_end;
+    Token *saved_token_start;
+    Token *saved_token_end;
+
+    if (!node) return;
+    if (!node->token) {
+        mknd_err(node, message);
+        return;
+    }
+
+    saved_line = node->line;
+    saved_column = node->column;
+    saved_source_start = node->source_start;
+    saved_source_end = node->source_end;
+    saved_token_start = node->token_start;
+    saved_token_end = node->token_end;
+
+    node->line = node->token->line;
+    node->column = node->token->column;
+    node->source_start = node->token->token_string;
+    node->source_end = node->token->token_string + node->token->length - 1;
+    node->token_start = node->token;
+    node->token_end = node->token;
+
+    mknd_err(node, message);
+
+    node->line = saved_line;
+    node->column = saved_column;
+    node->source_start = saved_source_start;
+    node->source_end = saved_source_end;
+    node->token_start = saved_token_start;
+    node->token_end = saved_token_end;
+}
+
 static int attr_text_equals_ci(ASTNode *node, const char *value) {
     size_t i;
     size_t length;
@@ -978,10 +1016,10 @@ walker_result resolve_functions_walker(walker_direction direction,
                         }
                     } else if (local_symbol && local_symbol->status != SYM_STATUS_UNRESOLVED) {
                         /* Found something locally but it's not a function, and no global function found */
-                        if (!ast_chld(node, ERROR, 0)) mknd_err(node, "NOT_A_FUNCTION");
+                        if (!ast_chld(node, ERROR, 0)) mknd_function_name_err(node, "NOT_A_FUNCTION");
                     } else if (context->after_rewrite) {
                         /* Not found anywhere */
-                        if (!ast_chld(node, ERROR, 0)) mknd_err(node, "FUNCTION_NOT_FOUND");
+                        if (!ast_chld(node, ERROR, 0)) mknd_function_name_err(node, "FUNCTION_NOT_FOUND");
                     }
                 }
             }
