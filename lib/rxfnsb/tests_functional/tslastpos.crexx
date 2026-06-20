@@ -85,16 +85,28 @@ if lastpos('abc','abcdefabccdabcd',4) \= 1 then do
   errors=errors+1
   say 'LASTPOS failed in test 19 '
 end
-if lastpos('→','a→b→c') \= 4 then do
+if lastpos(' ', ' ') \= 1 then do
   errors=errors+1
   say 'LASTPOS failed in test 20 '
 end
-if lastpos('→','a→b→c',3) \= 2 then do
+if lastpos('a', ' ') \= 0 then do
   errors=errors+1
   say 'LASTPOS failed in test 21 '
 end
-if lastpos('}','{say ''→'' v}') \= 11 then do
+if lastpos('a', '') \= 0 then do
   errors=errors+1
   say 'LASTPOS failed in test 22 '
+end
+if lastpos('→','a→b→c') \= 4 then do
+  errors=errors+1
+  say 'LASTPOS failed in test 23 '
+end
+if lastpos('→','a→b→c',3) \= 2 then do
+  errors=errors+1
+  say 'LASTPOS failed in test 24 '
+end
+if lastpos('}','{say ''→'' v}') \= 11 then do
+  errors=errors+1
+  say 'LASTPOS failed in test 25 '
 end
 return errors<>0

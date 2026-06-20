@@ -2,6 +2,7 @@ options levelb comments_dash
 import data_StringObjectHashMap
 import data_StringObjectTreeMap
 import data_StringIterable
+import rxfnsb
 
 failures = 0
 
@@ -61,6 +62,28 @@ if first_hash_key <> "a" & first_hash_key <> "b" then do
 end
 failures = failures + check_int("hash iterable interface count", count_string_iterable(h), 2)
 
+empty_h = .StringObjectHashMap()
+rc = empty_h.put("", .box("empty-key") as .object)
+rc = empty_h.put(" ", .box("blank-key") as .object)
+failures = failures + check_int("hash empty/blank key size", empty_h.size(), 2)
+empty_h_seen_empty = 0
+empty_h_seen_blank = 0
+empty_h_it = empty_h.iterator()
+loop while empty_h_it.hasNext()
+  empty_h_key = empty_h_it.next()
+  empty_h_item = empty_h_it.value() as .box
+  if length(empty_h_key) = 0 then do
+    failures = failures + check_string("hash empty key value", empty_h_item.name(), "empty-key")
+    empty_h_seen_empty = 1
+  end
+  else if length(empty_h_key) = 1 & empty_h_key = " " then do
+    failures = failures + check_string("hash blank key value", empty_h_item.name(), "blank-key")
+    empty_h_seen_blank = 1
+  end
+end
+failures = failures + check_int("hash empty key seen", empty_h_seen_empty, 1)
+failures = failures + check_int("hash blank key seen", empty_h_seen_blank, 1)
+
 values = .object[]
 values = h.valueArray()
 failures = failures + check_int("hash values count", values[0], 2)
@@ -104,6 +127,28 @@ failures = failures + check_box("tree nextValue advances first value", tree_next
 failures = failures + check_string("tree nextValue current key", tree_next_value.nextKey(), "b")
 failures = failures + check_box("tree nextValue current value", tree_next_value.nextValue(), "bee")
 failures = failures + check_int("tree iterable interface count", count_string_iterable(t), 3)
+
+empty_t = .StringObjectTreeMap()
+rc = empty_t.put("", .box("empty-key") as .object)
+rc = empty_t.put(" ", .box("blank-key") as .object)
+failures = failures + check_int("tree empty/blank key size", empty_t.size(), 2)
+empty_t_seen_empty = 0
+empty_t_seen_blank = 0
+empty_t_it = empty_t.iterator()
+loop while empty_t_it.hasNext()
+  empty_t_key = empty_t_it.next()
+  empty_t_item = empty_t_it.value() as .box
+  if length(empty_t_key) = 0 then do
+    failures = failures + check_string("tree empty key value", empty_t_item.name(), "empty-key")
+    empty_t_seen_empty = 1
+  end
+  else if length(empty_t_key) = 1 & empty_t_key = " " then do
+    failures = failures + check_string("tree blank key value", empty_t_item.name(), "blank-key")
+    empty_t_seen_blank = 1
+  end
+end
+failures = failures + check_int("tree empty key seen", empty_t_seen_empty, 1)
+failures = failures + check_int("tree blank key seen", empty_t_seen_blank, 1)
 
 call_t = .StringObjectTreeMap()
 call call_t.put("a", .box("aye") as .object)

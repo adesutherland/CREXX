@@ -49,8 +49,8 @@ datatype: procedure=.string
   arg val=.string, type=""
 
   val = strip(val)
-  if type='' then do
-      if val = '' then return 'CHAR'           ## 'EMPTY'
+  if length(type)=0 then do
+      if length(val)=0 then return 'CHAR'           ## 'EMPTY'
     /* Check for digits only */
       if verify(val, '0123456789') = 0 then return 'NUM'      ## plain INTEGER
     /* Check for number with one optional dot */
@@ -63,8 +63,28 @@ datatype: procedure=.string
   type=upper(substr(type,1,1))
   vlen=0
   assembler strlen vlen,val
+  allblanks=' '
   if type='A' then return (vlen>0 & verify(val,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789')=0)
-  if type='B' then return (vlen=0 | verify(val,'01 ')=0)
+  if type='B' then do
+     if vlen=0 then return 1
+     binarydigits=0
+     do j = vlen to 1 by -1
+        c=substr(val,j,1)
+        if verify(c,allblanks) = 0 then do
+           group_count=binarydigits
+           do while group_count >= 4
+              group_count=group_count-4
+           end
+           if group_count \= 0 then return 0
+           binarydigits=0
+        end
+        else do
+           if verify(c,'01') \= 0 then return 0
+           binarydigits=binarydigits+1
+        end
+     end
+     return 1
+  end
   if type='L' then return (vlen>0 & verify(val,'abcdefghijklmnopqrstuvwxyz')=0)
   if type='M' then return (vlen>0 & verify(val,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz')=0)
   if type='U' then return (vlen>0 & verify(val,'ABCDEFGHIJKLMNOPQRSTUVWXYZ')=0)
@@ -78,7 +98,26 @@ datatype: procedure=.string
      end
      return exp                /* it was exponential, return result of check  */
   end
-  if type='X' then return verify(val,'ABCDEFabcdef0123456789 ')=0 ## allow also blank
+  if type='X' then do
+     if vlen=0 then return 1
+     hexdigits=0
+     do j = vlen to 1 by -1
+        c=substr(val,j,1)
+        if verify(c,allblanks) = 0 then do
+           group_count=hexdigits
+           do while group_count >= 2
+              group_count=group_count-2
+           end
+           if group_count \= 0 then return 0
+           hexdigits=0
+        end
+        else do
+           if verify(c,'ABCDEFabcdef0123456789') \= 0 then return 0
+           hexdigits=hexdigits+1
+        end
+     end
+     return 1
+  end
   if type='S' then return (vlen>0 & verify(val,'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!?_@##$')=0)
   if type='N' then do
      if vlen=0 then return 0

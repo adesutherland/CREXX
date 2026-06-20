@@ -18,12 +18,16 @@ import rxfnsb
    failed=failed+tstdtp("","", "CHAR"                  )
    failed=failed+tstdtp("DeadBeef" , 'A', "1"       )
    failed=failed+tstdtp("Dead Beef",'A', "0"        )
-   failed=failed+tstdtp("1234ABCD",'A', '1'         )
-   failed=failed+tstdtp("",'A', "0"                 )
-   failed=failed+tstdtp("foobar",'B', "0"           )
-   failed=failed+tstdtp("01001101",'B', "1"         )
-   failed=failed+tstdtp("0110 1101",'B', "1"        )
-   failed=failed+tstdtp("",'B', "1"                 )
+	   failed=failed+tstdtp("1234ABCD",'A', '1'         )
+	   failed=failed+tstdtp("5"," ", "0"                )
+	   failed=failed+tstdtp(" "," ", "0"                )
+	   failed=failed+tstdtp(" ","", "CHAR"              )
+	   failed=failed+tstdtp("",'A', "0"                 )
+	   failed=failed+tstdtp("foobar",'B', "0"           )
+	   failed=failed+tstdtp("01001101",'B', "1"         )
+	   failed=failed+tstdtp("0110 1101",'B', "1"        )
+	   failed=failed+tstdtp("01 01",'B', "0"            )
+	   failed=failed+tstdtp("",'B', "1"                 )
    failed=failed+tstdtp("foobar",'L', "1"           )
    failed=failed+tstdtp("FooBar",'L', "0"           )
    failed=failed+tstdtp("foo bar",'L', "0"          )
@@ -80,8 +84,8 @@ import rxfnsb
    failed=failed+tstdtp('0E0','w', '1'              )
    failed=failed+tstdtp('0E1','w', '1'              )
    failed=failed+tstdtp('0E2','w', '1'              )
-   say 'tests failed 'failed
- exit 0
+	   say 'tests failed 'failed
+	 return failed<>0
 tstdtp: procedure=.int
    arg value=.string,type="",shouldbe=.string
    result=datatype(value,type)

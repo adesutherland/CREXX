@@ -37,6 +37,7 @@ token_ = .int
 closed_ = .int
 current_key_ = .string
 current_slot_ = .int
+positioned_ = .int
 
   *: factory
     arg mapToken = .int, values = .object[]
@@ -46,6 +47,7 @@ current_slot_ = .int
     closed_ = 0
     current_key_ = ""
     current_slot_ = 0
+    positioned_ = 0
     return
 
   hasNext: method = .int
@@ -62,25 +64,26 @@ current_slot_ = .int
     if closed_ then return ""
     current_key_ = stemiternext(token_)
     current_slot_ = stemget(map_token_, current_key_)
+    positioned_ = 1
     return current_key_
 
   nextKey: method = .string
     return next()
 
   value: method = .object
-    if current_key_ = "" then do
+    if positioned_ = 0 then do
       none = .object
       return none
     end
     return values_[current_slot_]
 
   nextValue: method = .object
-    if current_key_ = "" then do
-      key = next()
-      if key = "" then do
+    if positioned_ = 0 then do
+      if hasNext() = 0 then do
         none = .object
         return none
       end
+      key = next()
     end
     return value()
 

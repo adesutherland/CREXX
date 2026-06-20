@@ -61,6 +61,31 @@ errors = errors + check(count = 3, "linein preserves physical trailing blank lin
 missing = file || ".missing"
 errors = errors + check(lines(missing) = -1, "lines distinguishes missing file")
 
+call resetfile file
+call charout file, " "
+call charout file
+blankChar = charin(file)
+errors = errors + check(c2x(blankChar) = "20", "charin preserves blank at EOF")
+call charout file
+
+call resetfile file
+call charout file, " "
+call charout file
+errors = errors + check(lines(file) = 1, "lines sees blank line at EOF")
+blankLine = linein(file)
+errors = errors + check(c2x(blankLine) = "20", "linein preserves blank line at EOF")
+errors = errors + check(lines(file) = 0, "lines consumes pending blank line")
+call lineout file
+
+call resetfile file
+call charout file, " "
+call charout file
+fileLines = readlines(file)
+errors = errors + check(fileLines.0 = 1, "readlines keeps blank line at EOF")
+errors = errors + check(c2x(fileLines.1) = "20", "readlines preserves blank line at EOF")
+loadedText = loadtext(file)
+errors = errors + check(c2x(loadedText) = "200D0A", "loadtext preserves blank line at EOF")
+
 if errors = 0 then say "PASS: file character helpers"
 return errors <> 0
 

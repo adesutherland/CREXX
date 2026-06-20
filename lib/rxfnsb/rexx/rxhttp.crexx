@@ -259,7 +259,7 @@ http: class implements .httpclient
       chunk = socketrecv(sock, 8192)
       state = socketstatus(sock)
 
-      if chunk <> "" then response = response || chunk
+      if length(chunk) > 0 then response = response || chunk
 
       if _has_complete_body(response) = 1 then leave
       if state = 1 then leave
@@ -275,7 +275,7 @@ http: class implements .httpclient
         call _set_error -7, "socket receive failed: " || socketerror(sock)
         leave
       end
-      if chunk = "" then leave
+      if length(chunk) = 0 then leave
     end
 
     return response
@@ -307,7 +307,7 @@ http: class implements .httpclient
   _content_length: method = .int
     arg header = .string
     value = _header_value(header, "Content-Length")
-    if value = "" then return -1
+    if length(value) = 0 then return -1
     if datatype(value, "W") = 0 then return -1
     return value
 
@@ -461,7 +461,7 @@ http: class implements .httpclient
 
   _hex_to_int: method = .int
     arg text = .string
-    if text = "" then return -1
+    if length(text) = 0 then return -1
     value = 0
     do i = 1 to length(text)
       digit = _hex_digit_value(substr(text, i, 1))

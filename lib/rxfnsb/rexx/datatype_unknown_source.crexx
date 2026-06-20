@@ -45,14 +45,14 @@ FormLevel = 'ENGINEERING' /* we don't know this yet */
 
 /* If no second argument, DATATYPE checks whether the first is a number. */
 argc=0
-if Type = "" then argc=1
+if length(Type)=0 then argc=1
 else argc=2
 
 say 'argc =' argc
 if argc = 1 then return DtypeOne(string_in)
 
  /* Null strings are a special case. */
- if string_in = '' then do
+ if length(string_in)=0 then do
    if Type = "X" then return 1
    /* if Type = "B" & \!NotJ18 then return 1 */
    return 0
@@ -69,7 +69,7 @@ if argc = 1 then return DtypeOne(string_in)
    if pos(left(string_in,1),AllBlanks)>0 then return 0
    if pos(right(string_in,1),AllBlanks)>0 then return 0
    BinaryDigits=0
-   do j = length(string_in) by -1 to 1
+   do j = length(string_in) to 1 by -1
      c = substr(string_in,j,1)
      if pos(c,AllBlanks)>0 then do
        /* Blanks need four BinaryDigits to the right of them. */
@@ -127,7 +127,7 @@ if argc = 1 then return DtypeOne(string_in)
  if pos(left(string_in,1),AllBlanks)>0 then return 0
  if pos(right(string_in,1),AllBlanks)>0 then return 0
  HexDigits=0
- do j=length(string_in) by -1 to 1
+ do j=length(string_in) to 1 by -1
    c=substr(string_in,j,1)
    if pos(c,AllBlanks)>0 then do
      /* Blanks need a pair of HexDigits to the right of them. */
@@ -155,7 +155,7 @@ DtypeOne: procedure = .string
  /* !DatatypeResult = 'S' /\* If not syntactically a number *\/ */
  Residue = strip(string_in) /* Blanks are allowed at both ends. */
  say 'Residue is' Residue
- if Residue = '' then return "CHAR"
+ if length(Residue)=0 then return "CHAR"
  Sign = ''
  say 'first if'
  if left(Residue,1) = '+' | left(Residue,1) = '-' then do
@@ -163,20 +163,20 @@ DtypeOne: procedure = .string
    Residue = strip(substr(Residue,2),'L') /* Blanks after sign */
  end
  say 'second if'
- if Residue = '' then return "CHAR"
+ if length(Residue)=0 then return "CHAR"
  /* Now testing Number, section 6.2.2.35 */
  say 'third if'
  if left(Residue,1) = '.' then do
    Residue = substr(Residue, 2)
    Before = ''
    After = DigitRun(Residue)
-   if After = '' then return "CHAR"
+   if length(After)=0 then return "CHAR"
  end
  else do
    say 'in else'
    After='' /* BLM Nov 98. Needed as byproduct */
    Before = DigitRun(Residue)
-   if Before = '' then return "CHAR"
+   if length(Before)=0 then return "CHAR"
    say 'before left in else'
    if left(Residue,1) = '.' then do
      Residue = substr(Residue, 2)
@@ -185,28 +185,28 @@ DtypeOne: procedure = .string
    end
  end
  Exponent = 0
- if Residue \= '' then do
+ if length(Residue)>0 then do
    if left(Residue, 1) \= 'e' & left(Residue, 1) \= 'E' then
      return "CHAR"
  Residue = substr(Residue, 2)
- if Residue = '' then return "CHAR"
+ if length(Residue)=0 then return "CHAR"
  Esign = ''
  if left(Residue, 1) = '+' | left(Residue, 1) = '-' then do
    Esign = left(Residue, 1)
    Residue = substr(Residue, 2)
-   if Residue = '' then return "CHAR"
+   if length(Residue)=0 then return "CHAR"
  end
  Exponent = DigitRun(Residue)
- if Exponent = '' then return "CHAR"
+ if length(Exponent)=0 then return "CHAR"
  Exponent = Esign || Exponent
  end
- if Residue \= '' then return "CHAR"
+ if length(Residue)>0 then return "CHAR"
  ExpWas=Exponent /* BLM for Datatype 'W' */
 
  /*DATATYPE tests for exponent out of range. */
  /* !DatatypeResult = 'E' /\* If exponent out of range *\/ */
  Before = strip(Before,'L','0')
- if Before = '' then Before = '0'
+ if length(Before)=0 then Before = '0'
  Exponent = Exponent + length(Before) -1   /* For SCIENTIFIC */
 
  /* "Engineering notation causes powers of ten to expressed as a
@@ -235,7 +235,7 @@ arg Residue = .string
 say 'in DigitRun'
 say 'Residue is' Residue
 Outcome = ''
-do while Residue \= ''
+do while length(Residue)>0
   say 'in do while digitrun'
   if pos(left(Residue, 1), '0123456789') = 0 then leave
   say 'after pos in digitrun'

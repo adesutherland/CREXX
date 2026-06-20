@@ -98,7 +98,7 @@ lines: procedure = .int expose _linein_pending_names _linein_pending_values _lin
 
     assembler freadline line,fileid
     assembler feof eof,fileid
-    if eof > 0 & line = "" then return 0
+    if eof > 0 & length(line) = 0 then return 0
 
     call set_line_pending fname, line
     return 1
@@ -121,7 +121,7 @@ charin: procedure = .string
         char = ""
         assembler freadcdpt char,fileid
         assembler feof eof,fileid
-        if eof > 0 & char = "" then leave
+        if eof > 0 & length(char) = 0 then leave
         result = result || char
     end
     return result
@@ -174,7 +174,7 @@ _execio: procedure=.int
      do while eof=0 & count<maxrec
         assembler freadline line,fileid
         assembler feof eof,fileid
-        if eof > 0 & line = '' then leave
+        if eof > 0 & length(line) = 0 then leave
         count=count+1
         stem.count=line
      end
@@ -263,7 +263,7 @@ readlines: procedure = .string[]
      line = ""
      assembler freadline line, fileid
      assembler feof eof, fileid
-     if eof > 0 & line = "" then leave    /* stop on the final read-at-EOF empty result */
+     if eof > 0 & length(line) = 0 then leave    /* stop on the final read-at-EOF empty result */
 
      in_no = in_no + 1
      if in_no < from then iterate
@@ -295,7 +295,7 @@ loadtext: procedure = .string
      line = ""
      assembler freadline line, fileid
      assembler feof eof, fileid
-     if eof > 0 & line = "" then leave    /* stop on the final read-at-EOF empty result */
+     if eof > 0 & length(line) = 0 then leave    /* stop on the final read-at-EOF empty result */
      stream = stream||line||'0D0A'x
   end
   assembler fclose rc,fileid

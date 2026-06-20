@@ -1,5 +1,8 @@
 options levelb comments_dash
 import data_StringLinkedList
+import rxfnsb
+
+failures = 0
 
 l = .StringLinkedList()
 
@@ -44,3 +47,33 @@ say x.3
 say k.size()
 
 say k.toString()
+
+blank_list = .StringLinkedList()
+rc = blank_list.clear()
+rc = blank_list.append(" ")
+failures = failures + check_int("blank list is not empty", blank_list.isEmpty(), 0)
+rc = blank_list.setFirst()
+blank_current = blank_list.current()
+failures = failures + check_int("blank current length", length(blank_current), 1)
+blank_items = .string[]
+blank_items = blank_list.toArray()
+failures = failures + check_int("blank toArray count", blank_items.0, 1)
+blank_item = blank_items.1
+failures = failures + check_int("blank toArray item length", length(blank_item), 1)
+
+if failures <> 0 then do
+  say "StringLinkedList failures:" failures
+  exit 1
+end
+
+say "PASS: StringLinkedList"
+exit 0
+
+check_int: procedure=.int
+  arg label=.string, actual=.int, expected=.int
+
+  if actual <> expected then do
+    say label": expected" expected "got" actual
+    return 1
+  end
+return 0

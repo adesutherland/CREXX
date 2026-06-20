@@ -149,31 +149,51 @@ if TRANSLATE('4123','abcd','1234') \= 'dabc' then do
   say 'TRANSLATE failed in test 30'
 end
 
+if TRANSLATE('a b',' ',,'*') \= 'a b' then do
+  errors=errors+1
+  say "TRANSLATE failed in test 31: TRANSLATE('a b',' ',,'*') " "'"TRANSLATE('a b',' ',,'*')"'" "but must be 'a b'"
+end
+
+if TRANSLATE('a b','',,'*') \= '***' then do
+  errors=errors+1
+  say "TRANSLATE failed in test 32: TRANSLATE('a b','',,'*') " "'"TRANSLATE('a b','',,'*')"'" "but must be '***'"
+end
+
+if TRANSLATE('a b','X',,'*') \= 'aXb' then do
+  errors=errors+1
+  say "TRANSLATE failed in test 33: TRANSLATE('a b','X',,'*') " "'"TRANSLATE('a b','X',,'*')"'" "but must be 'aXb'"
+end
+
+if TRANSLATE('a b','X',' ') \= 'aXb' then do
+  errors=errors+1
+  say "TRANSLATE failed in test 34: TRANSLATE('a b','X',' ') " "'"TRANSLATE('a b','X',' ')"'" "but must be 'aXb'"
+end
+
 /* TODO THIS NEEDS XRANGE if TRANSLATE('APQRV',XRANGE('00'X,'Q')) \= 'APQ  ' then do */
 /*   errors=errors+1 */
-/*   say 'TRANSLATE failed in test 31' */
+/*   say 'TRANSLATE failed in test 35' */
 /* end */
 
 
 /* TODO these are ooRexx extensions - decide */
 /* TODO if translate('abc',,,,2) \= 'aBC' then do */
 /*   errors=errors+1 */
-/*   say 'TRANSLATE failed in test 32' */
+/*   say 'TRANSLATE failed in test 36' */
 /* end */
 
 /* TODO if translate('abc',,,,2,1) \= 'aBc' then do */
 /*   errors=errors+1 */
-/*   say 'TRANSLATE failed in test 33' */
+/*   say 'TRANSLATE failed in test 37' */
 /* end */
 
 /* TODO if translate('abc',,,,,1) \= 'Abc' then do */
 /*   errors=errors+1 */
-/*   say 'TRANSLATE failed in test 34' */
+/*   say 'TRANSLATE failed in test 38' */
 /* end */
   
 /* TODO if translate('abcdef','123456','aaabbbcc','.', 2, 3) \= 'a4.def' then do */
 /*   errors=errors+1 */
-/*   say 'TRANSLATE failed in test 35' */
+/*   say 'TRANSLATE failed in test 39' */
 /* end */
   
 return errors<>0

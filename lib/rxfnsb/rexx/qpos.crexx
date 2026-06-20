@@ -42,12 +42,12 @@ qpos: procedure=.int
 
   /* quick outs */
   if start < 1 then start = 1
-  if needle = "" then return 0
 
   lenNeedle = 0
   lenText   = 0
   assembler strlen lenNeedle,needle
   assembler strlen lenText,text
+  if lenNeedle = 0 then return 0
   if start > lenText then return 0
 
   ppi = start

@@ -32,7 +32,7 @@ insert: procedure = .string
   arg insstr = .string, string = .string, position = -1, len = -1, pad = " "
 /* len=-1 or pos -1 mean, the parameters are not set in the function call */
   slen=length(string)
-  if pad='' then pad=' '
+  if length(pad)=0 then pad=' '
 
   if len>0 then insstr=substr(insstr,1,len,pad) /* was there an insert string length?      */
                                                 /* format insert string to requested length*/
