@@ -376,65 +376,66 @@ This limitation applies only when values are copied back through the `EXPOSE` me
 
 ## Intrinsic Functions
 
-RexxScript provides a small set of built-in intrinsic functions.
+RexxScript provides a small set of built-in intrinsic functions. Pure
+Classic-compatible intrinsics are routed through the shared `rxfnsc`
+`RexxClassicBifs` helper layer.
 
 Function names are matched case-insensitively.
+
+The helper receives RexxScript's sandbox variable pool as its caller context.
+It does not receive unrestricted access to the host CREXX variable pool.
 
 ### String Functions
 
 ```text
+ABBREV
+COPIES
+DATATYPE
 LENGTH
-SUBSTR
-
 LEFT
-RIGHT
-
-STRIP
-POS
-
-UPPER
 LOWER
-
-WORDS
+POS
+RIGHT
+SPACE
+STRIP
+SUBSTR
+UPPER
+VERIFY
 WORD
+WORDS
 ``` 
 Arithmetic Functions
 ```text
 ABS
+MAX
+MIN
+SIGN
 ``` 
 Examples:
 ```rexx
+ABBREV(command,"PR",1)
 LEFT(name,10)
-RIGHT(code,3)
+RIGHT(code,3,"0")
+SUBSTR(text,5,3,".")
 STRIP(customer)
 POS("-", date)
+SPACE(fullname,1)
 WORD(fullname,2)
 ABS(balance)
+MAX(score, threshold, 0)
 ```
 
 Unknown function names result in a runtime error.
 
 ### Intrinsic Compatibility
 
-The current intrinsic functions are intended to provide practical utility rather than complete Rexx compatibility.
+The current intrinsic functions are intended to provide practical utility and a
+shared implementation path for RexxScript and Level C, not complete Rexx
+compatibility.
 
-Some intrinsics currently implement only their most commonly used functionality.
-
-For example:
-
-* `SUBSTR()` supports the standard two- and three-argument forms but does not currently implement padding semantics.
-* `LEFT()` and `RIGHT()` support width-based truncation and padding.
-* Additional optional arguments supported by Classic Rexx implementations may not yet be available.
-
-Examples:
-
-```rexx
-SUBSTR(text,5)
-SUBSTR(text,5,3)
-
-LEFT(name,10)
-RIGHT(code,3)
-```
+The first shared slice covers common string and arithmetic BIFs only. It does
+not add general function dispatch, stream access, external calls, `ADDRESS`, or
+ambient host authority to the RexxScript sandbox.
 
 The intrinsic function set will evolve incrementally as practical requirements emerge.
 

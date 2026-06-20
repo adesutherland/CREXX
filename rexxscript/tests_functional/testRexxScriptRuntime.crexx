@@ -2,6 +2,7 @@
 options levelb
 
 import rexxscript
+import rxfnsb
 
 errors = 0
 
@@ -60,6 +61,24 @@ end
 if out[0] <> 1 | out[1] <> "good" then do
   errors = errors + 1
   say "REXXSCRIPT evaluator skipped block failed:" out[0] out[1]
+end
+
+result = rexxscript_evaluate("x = substr('abc', 2, 4, '.') || ':' || right('7', 3, '0') || ':' || space('a  b', 0) || ':' || datatype('12.3', 'N') || ':' || max(4, 9, 2)", 0)
+
+if result[1] <> "OK" then do
+  errors = errors + 1
+  say "REXXSCRIPT shared BIF status failed:" result[1]
+end
+
+if rexxscript_value("x") <> "bc..:007:ab:1:9" then do
+  errors = errors + 1
+  say "REXXSCRIPT shared BIF value failed:" rexxscript_value("x")
+end
+
+result = rexxscript_evaluate("x = substr('abc', 0)", 0)
+if pos("RXC-LC-40.14", result[1]) = 0 then do
+  errors = errors + 1
+  say "REXXSCRIPT shared BIF error failed:" result[1]
 end
 
 if errors = 0 then say "PASS: RexxScript runtime"

@@ -4,6 +4,7 @@ set(RXFNSC_MODULES
   RexxValue
   RexxStem
   RexxVariablePool
+  RexxClassicBifs
 )
 
 set(RXFNSC_BINS)
@@ -35,6 +36,7 @@ add_custom_command(
 set(RXFNSC_SELECTORS ${RXFNSC_MODULES})
 set(RXFNSC_DEPS_RexxStem RexxValue)
 set(RXFNSC_DEPS_RexxVariablePool RexxValue RexxStem)
+set(RXFNSC_DEPS_RexxClassicBifs RexxValue RexxStem RexxVariablePool)
 
 foreach(_binfile IN LISTS RXFNSC_BINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)

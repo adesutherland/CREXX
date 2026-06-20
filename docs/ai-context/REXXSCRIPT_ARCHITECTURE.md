@@ -18,7 +18,9 @@ This document focuses on architectural decisions and implementation direction. F
 
 RexxScript is now a working structured execution environment integrated into CREXX through the `REXXSCRIPT` command and through a direct runtime namespace.
 
-The implementation supports structured control flow, local variable management, intrinsic functions, output capture, and host variable exchange through explicit exposure semantics.
+The implementation supports structured control flow, local variable management,
+shared intrinsic functions, output capture, and host variable exchange through
+explicit exposure semantics.
 
 The runtime lives under `rexxscript/` and builds `bin/rexxscript.rxbin`. Its primary namespace is `rexxscript`, exposing:
 
@@ -143,34 +145,48 @@ flat result export
 
 Step 1 supports a small but extensible set of intrinsic functions.
 
-Intrinsics are implemented directly by the execution engine and are not general Rexx function calls.
+Intrinsics are evaluator built-ins, not general Rexx function calls. Where the
+function overlaps pure Classic Rexx behavior, RexxScript now routes the call
+through the shared `rxfnsc` `RexxClassicBifs` proof layer.
 
 The intrinsic subsystem is intentionally separated from the expression parser.
 
-Function-call syntax is parsed once and dispatched through a centralized intrinsic-function handler. As a result, new intrinsic functions can normally be added without parser modifications and with minimal impact on the execution engine.
+Function-call syntax is parsed once and dispatched through a centralized
+intrinsic-function handler. As a result, new intrinsic functions can normally be
+added without parser modifications and with minimal impact on the execution
+engine.
 
 This architecture allows practical utility functions to be introduced incrementally as requirements emerge.
 
 Function names are matched case-insensitively.
 
+The shared BIF call context carries a caller variable pool. In RexxScript this
+is deliberately the script sandbox pool, not the host CREXX variable pool. Only
+variables explicitly passed through `EXPOSE` are copied into and out of that
+sandbox.
+
 Current intrinsic set:
 
 ```text
-LENGTH
-SUBSTR
-
-LEFT
-RIGHT
-STRIP
-POS
-
-UPPER
-LOWER
-
-WORDS
-WORD
-
+ABBREV
 ABS
+COPIES
+DATATYPE
+LENGTH
+LEFT
+LOWER
+MAX
+MIN
+POS
+RIGHT
+SIGN
+SPACE
+STRIP
+SUBSTR
+UPPER
+VERIFY
+WORD
+WORDS
 ```
 
 Examples:
@@ -178,28 +194,20 @@ Examples:
 ```rexx
 LEFT(name,10)
 RIGHT(code,3)
+SUBSTR(code,2,4,".")
 
 STRIP(customer)
 POS("-", date)
+SPACE(name,1)
 
 WORD(fullname,2)
+WORDS(fullname)
 
 ABS(balance)
+MAX(score, threshold, 0)
 ```
 
 Unknown function names generate a controlled runtime error.
-
-Potential future candidates include:
-
-```text
-MIN
-MAX
-SIGN
-
-SPACE
-VERIFY
-DATATYPE
-```
 
 ---
 
@@ -236,7 +244,10 @@ The underlying evaluator remains an implementation detail and may evolve without
 
 At runtime, applications using the command, direct `rexxscript_*` calls, or compatibility `evaluate()` calls must load `bin/rexxscript.rxbin` along with the base `bin/library.rxbin`. The `crexx` driver includes the RexxScript image in its default runtime set; direct VM invocations must pass it explicitly.
 
-The communication layer between CREXX and RexxScript is still considered an active design area and may evolve as additional experience is gained. The next architectural step is to move RexxScript variable/value handling toward the shared `rxfnsc` `RexxValue`, `RexxStem`, and `RexxVariablePool` classes.
+The communication layer between CREXX and RexxScript is still considered an
+active design area and may evolve as additional experience is gained. RexxScript
+now maintains a `RexxVariablePool` for the script-visible variables while
+continuing to copy values through the existing `EXPOSE` boundary.
 
 ---
 

@@ -13,9 +13,14 @@ set(REXXBINS
 
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
 set(LIBRPATH_RXBIN ${LIBRPATH}.rxbin)
+set(CLASSLIB_RXBIN ${CMAKE_BINARY_DIR}/bin/classlib.rxbin)
+set(RXFNSC_RXBIN ${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin)
 set(REXXSCRIPT_RXBIN ${CMAKE_BINARY_DIR}/bin/rexxscript.rxbin)
 set(REXXSCRIPT_RUNTIMES
+  rx_treemap
   ${LIBRPATH}
+  ${CMAKE_BINARY_DIR}/bin/classlib
+  ${CMAKE_BINARY_DIR}/bin/rxfnsc
   ${CMAKE_BINARY_DIR}/bin/rexxscript
 )
 
@@ -29,14 +34,14 @@ foreach(_binfile ${REXXBINS})
     set(_rexx_dep "${_basename}.crexx")
 
     add_custom_target(${_basename})
-    add_dependencies(testrexxscript ${_basename} rexxscript)
+    add_dependencies(testrexxscript ${_basename} rexxscript rxfnsc)
     crexx_add_rexx_opt_matrix(
             NAME ${_basename}
             SOURCE ${_rexx_file}
             TARGET_GROUP ${_basename}
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
             RXC_FLAGS -x
-            DEPENDS library rexxscript ${LIBRPATH_RXBIN} ${REXXSCRIPT_RXBIN} ${_rexx_dep} ${_prev_target}
+            DEPENDS library classlib rxfnsc rexxscript ${LIBRPATH_RXBIN} ${CLASSLIB_RXBIN} ${RXFNSC_RXBIN} ${REXXSCRIPT_RXBIN} _treemap ${_rexx_dep} ${_prev_target}
             RUNTIME_ARGS ${REXXSCRIPT_RUNTIMES}
     )
     set(_prev_target ${_basename}_noopt_artifact ${_basename}_opt_artifact)

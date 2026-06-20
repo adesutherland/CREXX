@@ -16,6 +16,7 @@ set(REXXSCRIPT_MEMBER_BUILD_DEPS
   rxc
   rxas
   library
+  rxfnsc
 )
 
 set(_rexxscript_member_clean_stamp "${CMAKE_CURRENT_BINARY_DIR}/rexxscript_member_clean.stamp")

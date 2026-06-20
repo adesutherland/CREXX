@@ -9,6 +9,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 set(REXXBINS
   testRexxValue
   testRexxRuntimePools
+  testRexxClassicBifs
 )
 
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)

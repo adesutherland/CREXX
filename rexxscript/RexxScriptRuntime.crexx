@@ -27,6 +27,8 @@ options levelb
 
 namespace rexxscript expose rexxscript_evaluate rexxscript_evaluate_exposed rexxscriptevaluator rexxscript_output rexxscript_value
 import rxfnsb
+import rexxclassicbifs
+import rexxpool
 
 rexxscriptevaluator: class
   *: factory
@@ -52,13 +54,14 @@ rexxscript_evaluate_exposed: procedure = .string[]
   evaluator = .rexxscriptevaluator()
   return evaluator.evaluate_exposed(statements, names, values, debug)
 
-_evaluate_impl: procedure = .string[] expose env_names env_keys env_values env_types env_count output_lines output_count export_variables export_contents export_count error_code error_message error_statement error_column forced_return expr_text expr_pos eval_value eval_type label_names label_targets label_count jump_target statement_texts statement_numbers statement_count block_kinds block_do_pcs block_end_pcs block_conditions block_names block_limits block_steps block_count
+_evaluate_impl: procedure = .string[] expose env_names env_keys env_values env_types env_count script_pool output_lines output_count export_variables export_contents export_count error_code error_message error_statement error_column forced_return expr_text expr_pos eval_value eval_type label_names label_targets label_count jump_target statement_texts statement_numbers statement_count block_kinds block_do_pcs block_end_pcs block_conditions block_names block_limits block_steps block_count fn_args fn_exists fn_arg_count
   arg statements = .string, debug = 0, seed_names = .string[], seed_values = .string[]
   env_names = .string[]
   env_keys = .string[]
   env_values = .string[]
   env_types = .string[]
   env_count = 0
+  script_pool = .RexxVariablePool()
   if debug then call header statements
 
   export_variables = .string[]
@@ -75,9 +78,8 @@ _evaluate_impl: procedure = .string[] expose env_names env_keys env_values env_t
   expr_pos = 1
   eval_value = ""
   eval_type = ""
-  fn_arg1 = ""
-  fn_arg2 = ""
-  fn_arg3 = ""
+  fn_args = .string[]
+  fn_exists = .int[]
   fn_arg_count = 0
 
   call _reset()
@@ -197,12 +199,13 @@ _build_result: procedure = .string[] expose export_count export_variables export
   end
   return result
 
-_reset: procedure = .void expose env_names env_keys env_values env_types env_count output_lines output_count export_variables export_contents export_count error_code error_message error_statement error_column forced_return expr_text expr_pos eval_value eval_type label_names label_targets label_count jump_target fn_arg1 fn_arg2 fn_arg3 fn_arg_count block_kinds block_do_pcs block_end_pcs block_conditions block_names block_limits block_steps block_count
+_reset: procedure = .void expose env_names env_keys env_values env_types env_count script_pool output_lines output_count export_variables export_contents export_count error_code error_message error_statement error_column forced_return expr_text expr_pos eval_value eval_type label_names label_targets label_count jump_target fn_args fn_exists fn_arg_count block_kinds block_do_pcs block_end_pcs block_conditions block_names block_limits block_steps block_count
   env_names = .string[]
   env_keys = .string[]
   env_values = .string[]
   env_types = .string[]
   env_count = 0
+  script_pool = .RexxVariablePool()
   output_lines = .string[]
   output_count = 0
   export_variables = .string[]
@@ -217,9 +220,8 @@ _reset: procedure = .void expose env_names env_keys env_values env_types env_cou
   expr_pos = 1
   eval_value = ""
   eval_type = ""
-  fn_arg1 = ""
-  fn_arg2 = ""
-  fn_arg3 = ""
+  fn_args = .string[]
+  fn_exists = .int[]
   fn_arg_count = 0
   label_names = .string[]
   label_targets = .string[]
@@ -943,7 +945,7 @@ _seed_vars: procedure = .void
   end
   return
 
-_set_var: procedure = .void expose env_names env_keys env_values env_types env_count
+_set_var: procedure = .void expose env_names env_keys env_values env_types env_count script_pool
   arg name = .string, value = .string, value_type = .string
   key = translate(name)
   index = _find_var(name)
@@ -955,6 +957,7 @@ _set_var: procedure = .void expose env_names env_keys env_values env_types env_c
   env_keys[index] = key
   env_values[index] = value || ""
   env_types[index] = value_type
+  call script_pool.setString(name, value || "")
   return
 
 _find_var: procedure = .int expose env_keys env_count
@@ -973,7 +976,7 @@ _env_type: procedure = .string expose env_types
   arg index = .int
   return env_types[index]
 
-_read_builtin: procedure = .int expose expr_text expr_pos eval_value eval_type fn_arg1 fn_arg2 fn_arg3 fn_arg_count
+_read_builtin: procedure = .int expose expr_text expr_pos eval_value eval_type fn_args fn_exists fn_arg_count
   arg name = .string, stmtno = .int
   call _skip_spaces()
   if expr_pos > length(expr_text) | substr(expr_text, expr_pos, 1) \== "(" then return _set_error("syntax_error", "expected (", stmtno, expr_pos)
@@ -994,7 +997,16 @@ _read_builtin: procedure = .int expose expr_text expr_pos eval_value eval_type f
         if level = 0 then do
           args = substr(expr_text, start, expr_pos - start)
           expr_pos = expr_pos + 1
-          return _eval_builtin(name, args, stmtno)
+          outer_text = expr_text
+          outer_pos = expr_pos
+          ok = _eval_builtin(name, args, stmtno)
+          saved_value = eval_value
+          saved_type = eval_type
+          expr_text = outer_text
+          expr_pos = outer_pos
+          eval_value = saved_value
+          eval_type = saved_type
+          return ok
         end
       end
     end
@@ -1002,12 +1014,12 @@ _read_builtin: procedure = .int expose expr_text expr_pos eval_value eval_type f
   end
   return _set_error("syntax_error", "missing )", stmtno, start)
 
-_split_args: procedure = .int expose fn_arg1 fn_arg2 fn_arg3 fn_arg_count
+_split_args: procedure = .int expose fn_args fn_exists fn_arg_count
   arg args = .string
-  fn_arg1 = ""
-  fn_arg2 = ""
-  fn_arg3 = ""
+  fn_args = .string[]
+  fn_exists = .int[]
   fn_arg_count = 0
+  if strip(args) == "" then return 0
   level = 0
   quote = ""
   current = ""
@@ -1032,18 +1044,18 @@ _split_args: procedure = .int expose fn_arg1 fn_arg2 fn_arg3 fn_arg_count
       end
       else if ch == "," & level = 0 then do
         fn_arg_count = fn_arg_count + 1
-        if fn_arg_count = 1 then fn_arg1 = strip(current)
-        else if fn_arg_count = 2 then fn_arg2 = strip(current)
-        else if fn_arg_count = 3 then fn_arg3 = strip(current)
+        fn_args[fn_arg_count] = strip(current)
+        if strip(current) == "" then fn_exists[fn_arg_count] = 0
+        else fn_exists[fn_arg_count] = 1
         current = ""
       end
       else current = current || ch
     end
   end
   fn_arg_count = fn_arg_count + 1
-  if fn_arg_count = 1 then fn_arg1 = strip(current)
-  else if fn_arg_count = 2 then fn_arg2 = strip(current)
-  else if fn_arg_count = 3 then fn_arg3 = strip(current)
+  fn_args[fn_arg_count] = strip(current)
+  if strip(current) == "" then fn_exists[fn_arg_count] = 0
+  else fn_exists[fn_arg_count] = 1
   return fn_arg_count
 
 _export_vars: procedure = .void expose env_names env_values env_count export_variables export_contents export_count
@@ -1090,59 +1102,54 @@ return 0
  * builtin handler. These are evaluator intrinsics, not general REXX
  * function calls.
  * -------------------------------------------------------------------- */
-_eval_builtin: procedure = .int expose eval_value eval_type fn_arg1 fn_arg2 fn_arg3 fn_arg_count
+_eval_builtin: procedure = .int expose eval_value eval_type fn_args fn_exists fn_arg_count script_pool
   arg name = .string, args = .string, stmtno = .int
   upper_name = translate(strip(name))
   argc = _split_args(args)
 
   select
-    when upper_name = "LENGTH" then do
-      if argc <> 1 then return _set_error("syntax_error", "length() expects one argument", stmtno, 1)
-      return _builtin_length(stmtno)
-    end
-    when upper_name = "SUBSTR" then do
-      if argc < 2 | argc > 3 then return _set_error("syntax_error", "substr() expects two or three arguments", stmtno, 1)
-      return _builtin_substr(stmtno)
-    end
-    when upper_name = "STRIP" then do
-      if argc <> 1 then return _set_error("syntax_error", "strip() expects one argument", stmtno, 1)
-      return _builtin_strip(stmtno)
-    end
-    when upper_name = "LEFT" then do
-      if argc <> 2 then return _set_error("syntax_error", "left() expects two arguments", stmtno, 1)
-      return _builtin_left(stmtno)
-    end
-    when upper_name = "RIGHT" then do
-      if argc <> 2 then return _set_error("syntax_error", "right() expects two arguments", stmtno, 1)
-      return _builtin_right(stmtno)
-    end
-    when upper_name = "POS" then do
-      if argc <> 2 then return _set_error("syntax_error", "POS() expects two arguments", stmtno, 1)
-      return _builtin_pos(stmtno)
-    end
-    when upper_name = "UPPER" then do
-      if argc <> 1 then return _set_error("syntax_error", "UPPER() expects one argument", stmtno, 1)
-      return _builtin_upper(stmtno)
-    end
-    when upper_name = "LOWER" then do
-      if argc <> 1 then return _set_error("syntax_error", "LOWER() expects one argument", stmtno, 1)
-      return _builtin_lower(stmtno)
-    end
-    when upper_name = "WORDS" then do
-      if argc <> 1 then return _set_error("syntax_error", "WORDS() expects one argument", stmtno, 1)
-      return _builtin_words(stmtno)
-    end
-    when upper_name = "WORD" then do
-      if argc <> 2 then return _set_error("syntax_error", "WORD() expects two arguments", stmtno, 1)
-      return _builtin_word(stmtno)
-    end
-    when upper_name = "ABS" then do
-      if argc <> 1 then return _set_error("syntax_error", "ABS() expects one argument", stmtno, 1)
-      return _builtin_abs(stmtno)
-    end
+    when upper_name = "ABBREV" then nop
+    when upper_name = "ABS" then nop
+    when upper_name = "COPIES" then nop
+    when upper_name = "DATATYPE" then nop
+    when upper_name = "LEFT" then nop
+    when upper_name = "LENGTH" then nop
+    when upper_name = "LOWER" then nop
+    when upper_name = "MAX" then nop
+    when upper_name = "MIN" then nop
+    when upper_name = "POS" then nop
+    when upper_name = "RIGHT" then nop
+    when upper_name = "SIGN" then nop
+    when upper_name = "SPACE" then nop
+    when upper_name = "STRIP" then nop
+    when upper_name = "SUBSTR" then nop
+    when upper_name = "UPPER" then nop
+    when upper_name = "VERIFY" then nop
+    when upper_name = "WORD" then nop
+    when upper_name = "WORDS" then nop
     otherwise return _set_error("undefined_function", "undefined function " || name, stmtno, 1)
   end
-return 0
+
+  bif_args = .string[]
+  bif_exists = .int[]
+  do i = 1 to fn_arg_count
+    bif_exists[i] = fn_exists[i]
+    if fn_exists[i] <> 0 then do
+      if _eval_expression(fn_args[i], stmtno) = 0 then return 0
+      bif_args[i] = eval_value
+    end
+    else bif_args[i] = ""
+  end
+
+  context = .RexxBifCallContext(upper_name)
+  call context.setArguments(bif_args, bif_exists)
+  call context.setCallerPool(reference script_pool)
+  result = rexxclassicbif_call(reference context)
+  if result[1] <> "OK" then return _set_error(result[3], result[4], stmtno, 1)
+  eval_value = result[2]
+  if _is_integer_text(eval_value) then eval_type = "int"
+  else eval_type = "string"
+return 1
 
 /* LENGTH(string): return character length as integer text. */
 _builtin_length: procedure = .int expose eval_value eval_type fn_arg1
@@ -1281,10 +1288,10 @@ header: procedure
      if ipi<=1 then leave
      stmt=strip(substr(statements,1,ipi-1))
      statements=substr(statements,ipi+1)
-     if stmt='' then iterate
+     if stmt == "" then iterate
      stmts[stmts[0]+1]=stmt
   end
-  if strip(statements) \='' then stmts[stmts[0]+1]=statements
+  if strip(statements) \== "" then stmts[stmts[0]+1]=statements
   say 'Parsed Statements ('stmts[0]')'
   say copies('-',72)
   inc=0

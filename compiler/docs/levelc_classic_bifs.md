@@ -108,6 +108,66 @@ The extracted helper visibly calls `40.16` for the `0_90` range failure,
 while the extracted catalog has a nearby `40.17` range-specific text. Treat this
 as a source reconciliation item before wiring `ERRORTEXT` tests.
 
+## Implemented Proof Slice
+
+The first executable proof slice lives in `lib/rxfnsc/RexxClassicBifs.crexx`.
+It is intentionally string-first and shares the `rxfnsc` runtime image with
+`RexxValue`, `RexxStem`, and `RexxVariablePool`.
+
+Implemented BIFs:
+
+```text
+ABBREV ABS COPIES DATATYPE LEFT LENGTH LOWER MAX MIN POS RIGHT SIGN SPACE
+STRIP SUBSTR UPPER VERIFY WORD WORDS
+```
+
+`UPPER` and `LOWER` are included for cREXX/RexxScript practicality even though
+the strict Classic catalog normally expresses uppercasing through `TRANSLATE`.
+
+The public proof API is:
+
+```text
+RexxBifCallContext
+rexxclassicbif_call(reference context)
+rexxclassicbif_check_args(reference context, checklist)
+```
+
+`RexxBifCallContext` carries the uppercased BIF name, argument values, argument
+presence flags, and a live caller `RexxVariablePool` reference. Level C lowering
+should pass the current visible activation pool. RexxScript passes only its
+sandbox/script pool.
+
+The current `CheckArgs` subset supports:
+
+```text
+ANY NUM WHOLE WHOLE>=0 WHOLE>0 PAD ABLMNSUWX LTB MN
+```
+
+The helper currently returns a structured status array:
+
+```text
+OK, value, "", ""
+ERROR, "", RXC-LC-code, message
+```
+
+This is a temporary proof contract. Level C must remain Classic Rexx compliant:
+Classic argument validation, message codes, and condition behavior are not to be
+weakened to match Level B convenience behavior. Separately, the planned Level B
+library review will move Level B library failures toward signal-based reporting,
+and that change is not expected to be backward compatible. Keep the bridge
+centralized in `RexxClassicBifs.crexx` through `rexxclassicbif_check_args`,
+`_set_bif_error`, and `_context_error`; do not spread one-off error formatting
+or signal decisions through individual BIF bodies.
+
+JavaDoc-style tags are present on the implemented BIF helpers for generated user
+documentation. The current tags are `@bif`, `@signature`, `@checkargs`,
+`@sandbox`, and `@return`.
+
+One important Classic comparison trap: do not use normal string equality to test
+for exact empty strings in BIF logic. Under Rexx comparison rules a blank string
+can compare equal to `""`. Use `length(value) = 0` when the distinction matters,
+as in `POS("", haystack)` versus `POS(" ", haystack)`.
+
 ### Date Helpers
 
 `DATE` and `TIME` share date/time helpers:

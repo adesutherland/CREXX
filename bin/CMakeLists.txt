@@ -26,7 +26,7 @@ add_custom_command(
         COMMAND $<TARGET_FILE:rxas> crexx
         COMMAND $<TARGET_FILE:rxlink> -s -o crexx_linked crexx ${CMAKE_BINARY_DIR}/bin/library
         COMMAND $<TARGET_FILE:rxcpack> -o crexx crexx_linked
-        DEPENDS rxas rxc rxlink crexx.crexx library ${CMAKE_BINARY_DIR}/bin/library.rxbin rexxscript ${CMAKE_BINARY_DIR}/bin/rexxscript.rxbin rxcpack rxpa _system _system_static compiler_exit_bin
+        DEPENDS rxas rxc rxlink crexx.crexx library ${CMAKE_BINARY_DIR}/bin/library.rxbin rxfnsc ${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin rexxscript ${CMAKE_BINARY_DIR}/bin/rexxscript.rxbin rxcpack rxpa _system _system_static compiler_exit_bin
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/crexx.c
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "cREXX compile, assemble, link and package crexx ..."
