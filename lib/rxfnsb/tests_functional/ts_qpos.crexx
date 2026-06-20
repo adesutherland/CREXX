@@ -66,9 +66,25 @@ tests_text.12    = "'x';"'"'y"';'z'"
 tests_needle.12 = ';'
 tests_start.12 = 1
 tests_expected.12= 4
+/* -----  Test 13 ----- */
+tests_text.13    = 'a b'
+tests_needle.13 = ' '
+tests_start.13 = 1
+tests_expected.13= 2
+/* -----  Test 14 ----- */
+tests_text.14    = '"a b" c'
+tests_needle.14 = ' '
+tests_start.14 = 1
+tests_expected.14= 6
+/* -----  Test 15 ----- */
+tests_text.15    = 'a b'
+tests_needle.15 = ''
+tests_start.15 = 1
+tests_expected.15= 0
 
 /* ===== Run tests ===== */
 passed = 0
+errors = 0
 do i = 1 to tests_text.0
    text    = tests_text.i
    needle = tests_needle.i
@@ -79,8 +95,11 @@ do i = 1 to tests_text.0
       say 'OK  ' right(i,2)':' result 'matches expected' expected
       passed = passed + 1
    end
-   else say 'FAIL' right(i,2)':' result '(expected' expected")"
+   else do
+      say 'FAIL' right(i,2)':' result '(expected' expected")"
+      errors = errors + 1
+   end
 end
 say ''
 say 'Summary:' passed 'of' tests_text.0 'tests passed.'
-exit
+return errors<>0

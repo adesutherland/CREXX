@@ -1,7 +1,7 @@
 /*
  * cREXX License (MIT)
  *
- * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Rene Jansen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,135 +24,104 @@
 
 options levelb comments_dash
 namespace data_StringTreeSet expose StringTreeSet
-import treemap -- the plugin, not the class
+import rxfnsb
 import data_StringIterable
-
-/**
- * class StringTreeSet implements a Set, backed by a treemap instance.
- * It stores the elements, which are strings, in their natural order.
- *
- * @author René Vincent Jansen
- * @author Peter Jacob
- */
 
 StringTreeSet: class implements .StringIterable
 val = .int
+items_ = .string[]
+count_ = .int
 
-/**
- * the class factory returns an instance of the StringTreeSet class
- */
   *: factory
-    val = tmcreate('set')
+    val = 1
+    count_ = 0
     return
 
-    /** method add adds the specified element to this set
-     * if it is not already present. Otherwise it will leave
-     * the set unchanged. It will be added according to its
-     * natural order..
-     * @parm .string element
-     * @return .int
-     */
+  _find: method = .int
+    arg key = .string
+    do i = 1 to count_
+      if items_[i] == key then return i
+    end
+    return 0
+
+  _sortedItems: method = .string[]
+    result = .string[]
+    do i = 1 to count_
+      result[i] = items_[i]
+    end
+    do i = 1 to count_ - 1
+      do j = 1 to count_ - i
+        if result[j] > result[j + 1] then do
+          swap = result[j]
+          result[j] = result[j + 1]
+          result[j + 1] = swap
+        end
+      end
+    end
+    return result
+
   add: method = .int
     arg key = .string
-    return tmput(val, key, key)
+    if _find(key) > 0 then return 4
+    count_ = count_ + 1
+    items_[count_] = key
+    return 0
 
-   /**
-    * method fromArray adds elements to this StringTreeSet instance
-    * from an array, and deduplicates and orders them.
-    * @parm .string items
-    * @result .int added
-    */
   fromArray: method = .int
     arg items = .string[]
     added = 0
-    loop i = 1 to items.0
-      rc = add(items.i)
+    do i = 1 to items[0]
+      rc = add(items[i])
       if rc = 0 then added = added + 1
     end
     return added
 
-    /**
-     * method contains returns 1 (true) if this set contains
-     * the specified element.
-     * @parm .string element
-     * @return .int
-     */
   contains: method = .int
     arg key = .string
-    return tmcontainsKey(val, key)
+    if _find(key) > 0 then return 1
+    return 0
 
-    /**
-     * method remove removes an element from this StringTreeSet
-     * @parm .string key
-     * @return .int 0 for success, 4 for failure
-     */
   remove: method = .int
     arg key = .string
-    return tmremove(val, key)
-
-    /**
-     * Returns the number of elements in this StringTreeSet.
-     * return .int size
-     */
-  size: method = .int
-    return tmsize(val)
-
-    /**
-     * method first returns the first (lowest) element
-     * currently in this set.
-     * @return .int
-     */
-  first: method = .string
-    return tmfirstkey(val)
-
-    /**
-     * method last returns the last (highest) element
-     * currently in this set.
-     * @return .int
-     */
-  last: method = .string
-    return tmlastkey(val)
-
-    /**
-     * method iterator returns a StringTreeSetIterator
-     * which iterates over the elements currently in this set.
-     * @return .StringTreeSetIterator
-     */
-  iterator: method = .StringTreeSetIterator
-    return .StringTreeSetIterator(val)
-
-    /**
-     * method toArray returns the items in this StringTreeSet
-     * as a rexx array
-     */
-  toArray: method = .string[]
-    list = .string[]
-    n = tmkeys(val, list)
-    return list
-
-    /**
-     * method keystem returns the elements in this StringTreeSet
-     * as a string
-     */
-  toString: method = .string
-    if size() = 0 then return '{}'
-
-    it = iterator()
-    result = '{'
-    first = 1
-
-    loop while it.hasNext()
-      key = it.next()
-      if first then first = 0
-      else result = result || ', '
-      result = result || key
+    slot = _find(key)
+    if slot = 0 then return 4
+    do i = slot to count_ - 1
+      items_[i] = items_[i + 1]
     end
+    count_ = count_ - 1
+    return 0
 
-    call it.close()
-    return result || '}'
+  size: method = .int
+    return count_
+
+  first: method = .string
+    if count_ = 0 then return ""
+    result = _sortedItems()
+    return result[1]
+
+  last: method = .string
+    if count_ = 0 then return ""
+    result = _sortedItems()
+    return result[count_]
+
+  iterator: method = .StringTreeSetIterator
+    return .StringTreeSetIterator(toArray())
+
+  toArray: method = .string[]
+    return _sortedItems()
+
+  toString: method = .string
+    if count_ = 0 then return "{}"
+    result = toArray()
+    text = "{"
+    do i = 1 to result[0]
+      if i > 1 then text = text || ", "
+      text = text || result[i]
+    end
+    return text || "}"
 
   free: method = .int
-    if val = 0 then return 0
-    rc = tmfree(val)
+    call arraydrop items_
+    count_ = 0
     val = 0
-    return rc
+    return 0

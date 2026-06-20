@@ -113,7 +113,7 @@ _json_locate: procedure = .string
   arg json = .string, path = .string
   info = _json_root_info(json)
   if word(info, 1) = "error" then return info
-  if path = "" then return info
+  if length(path) = 0 then return info
 
   p = 1
   do while p <= length(path)
@@ -140,7 +140,7 @@ _json_locate: procedure = .string
       p = p + 1
     end
     segment = substr(path, start, p - start)
-    if segment = "" then return "error 0 0"
+    if length(segment) = 0 then return "error 0 0"
     if word(info, 1) = "array" & _json_is_digits(segment) = 1 then info = _json_child_index(json, info, segment)
     else info = _json_child_key(json, info, segment)
     if word(info, 1) = "missing" | word(info, 1) = "error" then return info
@@ -295,7 +295,7 @@ _json_child_key: procedure = .string
     if p >= endpos | substr(json, p, 1) \= ":" then return "error 0 0"
     value_info = _json_value_info(json, p + 1)
     if word(value_info, 1) = "error" then return value_info
-    if candidate = wanted then return value_info
+    if length(candidate) = length(wanted) & candidate = wanted then return value_info
     p = _json_skip_ws(json, word(value_info, 3))
     if p < endpos & substr(json, p, 1) = "," then p = _json_skip_ws(json, p + 1)
     else leave
@@ -428,7 +428,7 @@ _json_skip_ws: procedure = .int
 
 _json_is_digits: procedure = .int
   arg text = .string
-  if text = "" then return 0
+  if length(text) = 0 then return 0
   do i = 1 to length(text)
     if _json_is_digit(substr(text, i, 1)) = 0 then return 0
   end

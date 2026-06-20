@@ -892,6 +892,19 @@ static int is_relevant(op_map *map, Assembler_Token *opToken) {
     return map_has_register(map, r_tp, (size_t) opToken->token_value.integer);
 }
 
+static int string_token_equals(const Assembler_Token *token, const char *value) {
+    return token &&
+           token->token_type == STRING &&
+           strcmp((const char *)token->token_value.string, value) == 0;
+}
+
+static int string_token_has_single_char(const Assembler_Token *token) {
+    return token &&
+           token->token_type == STRING &&
+           token->token_value.string[0] &&
+           token->token_value.string[1] == 0;
+}
+
 static int instruction_is_relevant(op_map *map, instruction_queue *instruction) {
     const OpInfo *op_info;
     Assembler_Token *value_source;
@@ -904,16 +917,8 @@ static int instruction_is_relevant(op_map *map, instruction_queue *instruction) 
         register_type_token = instruction->operand4Token;
         value_ref = instruction->operand5Token;
 
-        if (value_source &&
-            value_source->token_type == STRING &&
-            value_source->token_value.string &&
-            value_source->token_value.string[0] == 'R' &&
-            value_source->token_value.string[1] == 0 &&
-            register_type_token &&
-            register_type_token->token_type == STRING &&
-            register_type_token->token_value.string &&
-            register_type_token->token_value.string[0] &&
-            register_type_token->token_value.string[1] == 0 &&
+        if (string_token_equals(value_source, "R") &&
+            string_token_has_single_char(register_type_token) &&
             value_ref &&
             value_ref->token_type == INT &&
             value_ref->token_value.integer >= 0) {

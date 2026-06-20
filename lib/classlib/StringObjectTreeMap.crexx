@@ -1,7 +1,7 @@
 /*
  * cREXX License (MIT)
  *
- * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Rene Jansen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,76 +24,102 @@
 
 options levelb comments_dash
 namespace data_StringObjectTreeMap expose StringObjectTreeMap
-import treemap
+import rxfnsb
 import data_StringTreeSet
 import data_StringIterable
 
-/**
- * StringObjectTreeMap maps ordered string keys to object values.
- *
- * The native tree map stores string keys and slot ids. Object values stay in a
- * Rexx object array.
- */
 StringObjectTreeMap: class implements .StringIterable
-index_ = .int
+val = .int
+keys_ = .string[]
 values_ = .object[]
-next_slot_ = .int
+count_ = .int
 
   *: factory
-    index_ = tmcreate('stringobjecttreemap')
-    next_slot_ = 0
+    val = 1
+    count_ = 0
     return
+
+  _find: method = .int
+    arg key = .string
+    do i = 1 to count_
+      if keys_[i] == key then return i
+    end
+    return 0
+
+  _sortedKeys: method = .string[]
+    result = .string[]
+    do i = 1 to count_
+      result[i] = keys_[i]
+    end
+    do i = 1 to count_ - 1
+      do j = 1 to count_ - i
+        if result[j] > result[j + 1] then do
+          swap = result[j]
+          result[j] = result[j + 1]
+          result[j + 1] = swap
+        end
+      end
+    end
+    return result
 
   put: method = .int
     arg key = .string, value = .object
-    if tmcontainsKey(index_, key) then do
-      slot = tmget(index_, key)
+    slot = _find(key)
+    if slot > 0 then do
       values_[slot] = value
       return 0
     end
-    next_slot_ = next_slot_ + 1
-    values_[next_slot_] = value
-    return tmput(index_, key, next_slot_)
+    count_ = count_ + 1
+    keys_[count_] = key
+    values_[count_] = value
+    return 0
 
   get: method = .object
     arg key = .string
-    if \tmcontainsKey(index_, key) then do
+    slot = _find(key)
+    if slot = 0 then do
       none = .object
       return none
     end
-    slot = tmget(index_, key)
     return values_[slot]
 
   size: method = .int
-    return tmsize(index_)
+    return count_
 
   remove: method = .int
     arg key = .string
-    return tmremove(index_, key)
+    slot = _find(key)
+    if slot = 0 then return 4
+    do i = slot to count_ - 1
+      keys_[i] = keys_[i + 1]
+      values_[i] = values_[i + 1]
+    end
+    count_ = count_ - 1
+    return 0
 
   containsKey: method = .int
     arg key = .string
-    return tmcontainsKey(index_, key)
+    if _find(key) > 0 then return 1
+    return 0
 
   firstKey: method = .string
-    return tmfirstkey(index_)
+    if count_ = 0 then return ""
+    keys = _sortedKeys()
+    return keys[1]
 
   lastKey: method = .string
-    return tmlastkey(index_)
+    if count_ = 0 then return ""
+    keys = _sortedKeys()
+    return keys[count_]
 
   keyArray: method = .string[]
-    keys = .string[]
-    n = tmkeys(index_, keys)
-    return keys
+    return _sortedKeys()
 
   valueArray: method = .object[]
-    keys = .string[]
-    slots = .string[]
+    keys = _sortedKeys()
     vals = .object[]
-    n = tmdump(index_, keys, slots)
-    loop i = 1 to n
-      slot = slots[i]
-      vals[i] = values_[slot]
+    do i = 1 to keys[0]
+      vals[i] = get(keys[i])
     end
     return vals
 
@@ -103,18 +129,14 @@ next_slot_ = .int
     return ts
 
   iterator: method = .StringObjectTreeMapIterator
-    return .StringObjectTreeMapIterator(index_, values_)
+    return .StringObjectTreeMapIterator(keyArray(), valueArray())
 
   _indexToken: method = .int
-    return index_
+    return val
 
   free: method = .int
-    if index_ = 0 then return 0
-    rc = tmfree(index_)
-    index_ = 0
-    none = .object
-    do i = 1 to next_slot_
-      values_[i] = none
-    end
-    next_slot_ = 0
-    return rc
+    call arraydrop keys_
+    call objectarraydrop values_
+    count_ = 0
+    val = 0
+    return 0

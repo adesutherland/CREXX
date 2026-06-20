@@ -31,6 +31,7 @@ code before editing user-facing docs.
 | `docs/books/crexx_language_reference` | Language reference | CREXX programmers | Syntax, types, statements, classes, libraries | Formal, as-implemented |
 | `docs/books/crexx_programming_guide` | Practical guide | Users and integrators | Build, run, tools, host integration, plugins | Practical and task-oriented |
 | `docs/books/crexx_vm_spec` | VM and bytecode reference | Implementers | VM model, instruction set, platform notes | Precise and technical |
+| `rexxscript/doc` | RexxScript product docs | Users, integrators, RexxScript developers | User guide, developer guide, runtime/product source of truth | Product-owned and current |
 | `docs/ai-context` | Current implementation context | Agents and maintainers | Architecture facts, debugging, Level B authoring, library/runtime notes | Operational and explicit |
 | `compiler/docs` | Compiler implementation notebook | Compiler maintainers | Parser, validation, emitter, exits, inlining, retired working notes | Deep technical notes with status labels |
 | `docs/bifs`, `docs/functions`, `docs/instructions` | Data and generation assets | Maintainers | Reference inputs and old generation data | Source material, not prose docs |
@@ -41,6 +42,9 @@ code before editing user-facing docs.
 
 - User-facing facts belong in `docs/books` and are linked from
   `docs/index.md`.
+- Product-owned docs, such as `rexxscript/doc`, may be the master source for a
+  distinct product area. In that case, `docs/index.md` and relevant books
+  should link to the product docs instead of duplicating the full content.
 - Release milestone summaries belong in `docs/releases` and may be copied into
   GitHub Releases.
 - Fixed-date release plans that are not yet shipped facts belong in

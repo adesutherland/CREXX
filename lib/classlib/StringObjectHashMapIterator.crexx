@@ -1,7 +1,7 @@
 /*
  * cREXX License (MIT)
  *
- * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Rene Jansen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,70 +24,50 @@
 
 options levelb comments_dash
 namespace data_StringObjectHashMap expose StringObjectHashMapIterator
-import treemap
 import data_StringIterator
 
-/**
- * String iterator over the keys of a StringObjectHashMap.
- */
 StringObjectHashMapIterator: class implements .StringIterator
-map_token_ = .int
+keys_ = .string[]
 values_ = .object[]
-token_ = .int
-closed_ = .int
-current_key_ = .string
-current_slot_ = .int
+index_ = .int
+count_ = .int
 
   *: factory
-    arg mapToken = .int, values = .object[]
-    map_token_ = mapToken
+    arg keys = .string[], values = .object[]
+    keys_ = keys
     values_ = values
-    token_ = stemitercreate(map_token_)
-    closed_ = 0
-    current_key_ = ""
-    current_slot_ = 0
+    count_ = keys[0]
+    index_ = 0
     return
 
   hasNext: method = .int
-    if closed_ then return 0
-    has_next = stemiterhasnext(token_)
-    if \has_next then do
-      call stemiterfree(token_)
-      token_ = 0
-      closed_ = 1
-    end
-    return has_next
+    return index_ < count_
 
   next: method = .string
-    if closed_ then return ""
-    current_key_ = stemiternext(token_)
-    current_slot_ = stemget(map_token_, current_key_)
-    return current_key_
+    if index_ >= count_ then return ""
+    index_ = index_ + 1
+    return keys_[index_]
 
   nextKey: method = .string
     return next()
 
   value: method = .object
-    if current_key_ = "" then do
+    if index_ < 1 | index_ > count_ then do
       none = .object
       return none
     end
-    return values_[current_slot_]
+    return values_[index_]
 
   nextValue: method = .object
-    if current_key_ = "" then do
-      key = next()
-      if key = "" then do
+    if index_ < 1 then do
+      if hasNext() = 0 then do
         none = .object
         return none
       end
+      key = next()
     end
     return value()
 
   close: method = .int
-    if \closed_ then do
-      call stemiterfree(token_)
-      token_ = 0
-      closed_ = 1
-    end
+    index_ = count_
     return 0

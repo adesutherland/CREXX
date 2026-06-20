@@ -4,8 +4,9 @@ Status: Milestone 1 syntax-highlighting baseline implemented
 Last updated: 2026-05-12
 
 This document is the durable handoff for the current Level C Classic REXX
-front end. The working history and ANSI extraction live in
-`levelc_working_architecture.md`; this file records the implemented shape,
+front end. The working history and Classic extraction live in
+`levelc_working_architecture.md`, with a consolidated compliance reference in
+`levelc_compliance_reference.md`; this file records the implemented shape,
 manual test workflow, remaining parser gaps, and the planned route from
 highlighter-only parsing into canonical compiler integration.
 
@@ -33,7 +34,7 @@ until the tree-surgery/lowering stage exists and has its own verification.
 | `compiler/rxcpcgmr.y` | Level C Lemon grammar and grammar-level recovery |
 | `compiler/rxcpcdiag.c` | Level C syntax-adjacent validation and standard diagnostic helpers |
 | `compiler/rxcpcval.c` | Level C source-tree preparation for DSLSH |
-| `compiler/rxcpcsym.c` / `.h` | Level C source-symbol helpers and ANSI BIF seed list |
+| `compiler/rxcpcsym.c` / `.h` | Level C source-symbol helpers and Classic BIF seed list |
 | `compiler/rxcp_highlight_controller.c` | Parser-mode dispatch and DSLSH projection |
 | `compiler/tests/rexx_src/levelc_*.rexx` | Level C DSLSH positive and negative fixtures |
 
@@ -146,7 +147,7 @@ does not begin on shaky input:
   constant symbols still need scanner/parser support;
 - function-call syntax in expressions is not complete enough for BIF/external
   function validation;
-- continuation and nested-comment edge cases need another ANSI pass, especially
+- continuation and nested-comment edge cases need another language-specification pass, especially
   where whitespace affects concatenation or string suffix recognition;
 - `ADDRESS WITH` validation currently checks source-proven resource syntax but
   does not yet enforce every connection-order or duplicate-connection rule;

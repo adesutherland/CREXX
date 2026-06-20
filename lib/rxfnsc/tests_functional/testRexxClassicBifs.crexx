@@ -1,0 +1,110 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxpool
+
+errors = 0
+
+errors = errors + check_bif("LENGTH", "3", "abc")
+errors = errors + check_bif("SUBSTR", "bc  ", "abc", "2", "4")
+errors = errors + check_bif("SUBSTR", "...", "abc", "5", "3", ".")
+errors = errors + check_bif("LEFT", "abc..", "abc", "5", ".")
+errors = errors + check_bif("RIGHT", "007", "7", "3", "0")
+errors = errors + check_bif("STRIP", "12.7", "0012.700", "B", "0")
+errors = errors + check_bif("POS", "7", "foo", "a foo foo", "4")
+errors = errors + check_bif("WORD", "the", "Now is the time", "3")
+errors = errors + check_bif("WORDS", "4", "Now is the time")
+errors = errors + check_bif("SPACE", "Nowisthetime", "Now  is   the time", "0")
+errors = errors + check_bif("SPACE", "Now++is++the++time", "Now  is   the time", "2", "+")
+errors = errors + check_bif("ABBREV", "1", "PRINT", "PRI")
+errors = errors + check_bif("ABBREV", "0", "PRINT", "", "1")
+errors = errors + check_bif("COPIES", "abcabcabc", "abc", "3")
+errors = errors + check_bif("VERIFY", "2", "1Z3", "1234567890")
+errors = errors + check_bif("VERIFY", "3", "AB4T", "1234567890", "M")
+errors = errors + check_bif("DATATYPE", "NUM", "12.3")
+errors = errors + check_bif("DATATYPE", "1", "BCd3", "X")
+errors = errors + check_bif("DATATYPE", "0", "BCgd3", "X")
+errors = errors + check_bif("ABS", "12.5", "-12.5")
+errors = errors + check_bif("SIGN", "-1", "-0.307")
+errors = errors + check_bif("MIN", "-1", "4", "-1", "9")
+errors = errors + check_bif("MAX", "9", "4", "-1", "9")
+errors = errors + check_bif("UPPER", "MIXED", "Mixed")
+errors = errors + check_bif("LOWER", "mixed", "Mixed")
+
+errors = errors + check_error("LENGTH", "RXC-LC-40.3")
+errors = errors + check_error("LEFT", "RXC-LC-40.13", "abc", "-1")
+errors = errors + check_error("LEFT", "RXC-LC-40.23", "abc", "5", "..")
+errors = errors + check_error("DATATYPE", "RXC-LC-40.28", "abc", "Q")
+
+args = .string[]
+exists = .int[]
+args[1] = "abc"
+args[2] = ""
+args[3] = "2"
+exists[1] = 1
+exists[2] = 0
+exists[3] = 1
+ctx = .RexxBifCallContext("SUBSTR")
+call ctx.setArguments(args, exists)
+result = rexxclassicbif_call(reference ctx)
+errors = errors + check(result[1] = "ERROR" & result[3] = "RXC-LC-40.5", "omitted required argument")
+
+args = .string[]
+exists = .int[]
+args[1] = " "
+args[2] = "abc def ghi"
+args[3] = "5"
+exists[1] = 1
+exists[2] = 1
+exists[3] = 1
+ctx = .RexxBifCallContext("POS")
+call ctx.setArguments(args, exists)
+result = rexxclassicbif_call(reference ctx)
+errors = errors + check(result[1] = "OK" & result[2] = "8", "pos with blank needle and start")
+
+pool = .RexxVariablePool()
+call pool.setString("answer", "41")
+ctx = .RexxBifCallContext("LENGTH")
+call ctx.setCallerPool(reference pool)
+ctx_pool_ref = ctx.callerPool()
+ctx_pool = dereference ctx_pool_ref
+call ctx_pool.setString("answer", "42")
+errors = errors + check(pool.value("answer").asString() = "42", "context carries caller pool")
+
+if errors = 0 then say "ok"
+return errors
+
+check_bif: procedure = .int
+  arg name = .string, expected = .string, ... = .string
+  args = .string[]
+  exists = .int[]
+  do i = 1 to arg.0
+    args[i] = arg.i
+    exists[i] = 1
+  end
+  ctx = .RexxBifCallContext(name)
+  call ctx.setArguments(args, exists)
+  result = rexxclassicbif_call(reference ctx)
+  if result[1] = "OK" & result[2] = expected then return 0
+  say "FAIL" name "expected" expected "got" result[1] result[2] result[3] result[4]
+  return 1
+
+check_error: procedure = .int
+  arg name = .string, expected_code = .string, ... = .string
+  args = .string[]
+  exists = .int[]
+  do i = 1 to arg.0
+    args[i] = arg.i
+    exists[i] = 1
+  end
+  ctx = .RexxBifCallContext(name)
+  call ctx.setArguments(args, exists)
+  result = rexxclassicbif_call(reference ctx)
+  if result[1] = "ERROR" & result[3] = expected_code then return 0
+  say "FAIL" name "expected error" expected_code "got" result[1] result[2] result[3] result[4]
+  return 1
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL" label
+  return 1

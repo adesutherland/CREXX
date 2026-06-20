@@ -1,0 +1,1209 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/* rexx */
+options levelb
+
+namespace rexxscriptcore expose rexxscriptcoreevaluator
+import rxfnsb
+import rexxclassicbifs
+import rexxpool
+
+
+/**
+ * RexxScript core evaluator instance.
+ *
+ * Each instance owns its variable pool, output buffer, parser state, and
+ * BIF call context. The public rexxscript facade wraps this class so the
+ * legacy last-result API stays outside the core engine.
+ */
+rexxscriptcoreevaluator: class
+  env_names = .string[]
+  env_keys = .string[]
+  env_values = .string[]
+  env_types = .string[]
+  env_count = .int
+  script_pool = .RexxVariablePool
+  output_lines = .string[]
+  output_count = .int
+  export_variables = .string[]
+  export_contents = .string[]
+  export_count = .int
+  error_code = .string
+  error_message = .string
+  error_statement = .int
+  error_column = .int
+  forced_return = .int
+  expr_text = .string
+  expr_pos = .int
+  eval_value = .string
+  eval_type = .string
+  label_names = .string[]
+  label_targets = .string[]
+  label_count = .int
+  jump_target = .int
+  statement_texts = .string[]
+  statement_numbers = .string[]
+  statement_count = .int
+  block_kinds = .string[]
+  block_do_pcs = .string[]
+  block_end_pcs = .string[]
+  block_conditions = .string[]
+  block_names = .string[]
+  block_limits = .string[]
+  block_steps = .string[]
+  block_count = .int
+  fn_args = .string[]
+  fn_exists = .int[]
+  fn_arg_count = .int
+
+  *: factory
+    env_count = 0
+    script_pool = .RexxVariablePool()
+    output_count = 0
+    export_count = 0
+    error_code = ""
+    error_message = ""
+    error_statement = 0
+    error_column = 0
+    forced_return = 0
+    expr_text = ""
+    expr_pos = 1
+    eval_value = ""
+    eval_type = ""
+    label_count = 0
+    jump_target = 0
+    statement_count = 0
+    block_count = 0
+    fn_arg_count = 0
+    return
+
+  evaluate: method = .string[]
+    arg statements = .string, debug = 0
+    names = .string[]
+    values = .string[]
+    result = _evaluate_impl(statements, debug, names, values)
+    return result
+
+  evaluate_exposed: method = .string[]
+    arg statements = .string, names = .string[], values = .string[], debug = 0
+    result = _evaluate_impl(statements, debug, names, values)
+    return result
+
+  _evaluate_impl: method = .string[]
+    arg statements = .string, debug = 0, seed_names = .string[], seed_values = .string[]
+    call _reset()
+    if debug then call header statements
+    call _seed_vars(seed_names, seed_values)
+
+    statement_count = 0
+    start = 1
+    quote = ""
+    stmtno = 1
+    do i = 1 to length(statements)
+      ch = substr(statements, i, 1)
+      if quote \== "" then do
+        if ch == quote then quote = ""
+      end
+      else do
+        if ch == "'" | ch == '"' then quote = ch
+        else if ch == ";" then do
+          statement_count = statement_count + 1
+          statement_texts[statement_count] = substr(statements, start, i - start)
+          statement_numbers[statement_count] = stmtno || ""
+          start = i + 1
+          stmtno = stmtno + 1
+        end
+      end
+    end
+
+    if quote \== "" then do
+      call _set_error("unterminated_string", "unterminated string literal", stmtno, length(statements))
+      call _export_vars()
+      return _build_result(error_message)
+    end
+
+    statement_count = statement_count + 1
+    statement_texts[statement_count] = substr(statements, start)
+    statement_numbers[statement_count] = stmtno || ""
+
+    do i = 1 to statement_count
+      text = strip(statement_texts[i])
+      if _is_label_statement(text) = 1 then do
+        label_name = strip(substr(text, 1, length(text) - 1))
+        if _find_label(label_name) <> 0 then do
+          call _set_error("duplicate_label", "duplicate label", statement_numbers[i] + 0, 1)
+          call _export_vars()
+          return _build_result(error_message)
+        end
+        label_count = label_count + 1
+        label_names[label_count] = translate(label_name)
+        label_targets[label_count] = i + 1 || ""
+      end
+    end
+
+    pc = 1
+    do while pc <= statement_count
+      stmtno = statement_numbers[pc] + 0
+      jump_target = 0
+      if _execute_statement(statement_texts[pc], stmtno, pc) = 0 then do
+        call _export_vars()
+        return _build_result(error_message)
+      end
+      if forced_return = 1 then do
+        call _export_vars()
+        return _build_result("OK")
+      end
+      if jump_target <> 0 then pc = jump_target + 0
+      else pc = pc + 1
+    end
+    call _export_vars()
+    return _build_result("OK")
+
+  export_content: method = .string
+    arg index = .int
+    return export_contents[index]
+
+  output: method = .string[]
+    result = .string[]
+    do i = 1 to output_count
+      result[i] = output_lines[i]
+    end
+    return result
+
+  value: method = .string
+    arg name = .string
+    index = _find_var(name)
+    if index = 0 then return ""
+    return env_values[index]
+
+  _build_result: method = .string[]
+    arg status = .string
+    result = .string[]
+    result[1] = status
+    do i = 1 to export_count
+      pair = i * 2
+      result[pair] = export_variables[i]
+      result[pair + 1] = export_contents[i]
+    end
+    if output_count > 0 then do
+      base = export_count * 2 + 2
+      result[base] = output_count
+      do i = 1 to output_count
+        result[base + i] = output_lines[i]
+      end
+    end
+    return result
+
+  _reset: method = .void
+    env_count = 0
+    script_pool = .RexxVariablePool()
+    output_count = 0
+    export_count = 0
+    error_code = ""
+    error_message = ""
+    error_statement = 0
+    error_column = 0
+    forced_return = 0
+    expr_text = ""
+    expr_pos = 1
+    eval_value = ""
+    eval_type = ""
+    fn_arg_count = 0
+    label_count = 0
+    jump_target = 0
+    block_count = 0
+    return
+
+  _execute_statement: method = .int
+    arg statement = .string, stmtno = .int, pc = .int
+    rest = ""
+    then_pos = 0
+    action = ""
+    else_pos = 0
+    else_action = ""
+    body = ""
+    eq = 0
+    loop_name = ""
+    after_eq = ""
+    to_pos = 0
+    start_expr = ""
+    after_to = ""
+    by_pos = 0
+    limit_expr = ""
+    step_expr = ""
+    start_value = 0
+    limit_value = 0
+    step_value = 0
+    loop_index = 0
+    current_value = 0
+    next_value = 0
+    condition = ""
+    kind = ""
+    do_pc = 0
+    end_pc = 0
+    label = ""
+    text = strip(statement)
+    if text == "" then return 1
+
+    if _is_label_statement(text) = 1 then return 1
+
+    if _starts_keyword(text, "SIGNAL") = 1 | _starts_keyword(text, "GOTO") = 1 then do
+      if _starts_keyword(text, "SIGNAL") = 1 then do
+        label = strip(substr(text, 7))
+        if label == "" then return _set_error("missing_expression", "missing SIGNAL label", stmtno, 1)
+      end
+      else do
+        label = strip(substr(text, 5))
+        if label == "" then return _set_error("missing_expression", "missing GOTO label", stmtno, 1)
+      end
+      if _is_identifier(label) = 0 then return _set_error("invalid_label", "invalid label", stmtno, 1)
+      jump_target = _find_label(label)
+      if jump_target = 0 then return _set_error("undefined_label", "undefined label", stmtno, 1)
+      return 2
+    end
+
+    if _starts_keyword(text, "SAY") = 1 then do
+      expr = strip(substr(text, 4))
+      if expr == "" then return _set_error("missing_expression", "missing SAY expression", stmtno, 1)
+      if _eval_expression(expr, stmtno) = 0 then return 0
+      output_count = output_count + 1
+      output_lines[output_count] = eval_value
+      return 1
+    end
+
+    if _starts_keyword(text, "IF") = 1 then do
+      rest = strip(substr(text, 3))
+      then_pos = _find_then(rest)
+      if then_pos = 0 then return _set_error("syntax_error", "missing THEN in IF statement", stmtno, 1)
+
+      condition = strip(substr(rest, 1, then_pos - 1))
+      action = strip(substr(rest, then_pos + 4))
+      else_pos = _find_else(action)
+      else_action = ""
+      if else_pos > 0 then do
+        else_action = strip(substr(action, else_pos + 4))
+        action = strip(substr(action, 1, else_pos - 1))
+      end
+
+      if condition == "" then return _set_error("missing_expression", "missing IF condition", stmtno, 1)
+      if action == "" then return _set_error("missing_expression", "missing IF body", stmtno, then_pos + 4)
+      if else_pos > 0 & else_action == "" then return _set_error("missing_expression", "missing ELSE body", stmtno, else_pos + 1)
+
+      if _eval_condition(condition, stmtno) = 0 then return 0
+      if eval_value <> "0" then do
+        body = strip(action)
+        if body == "" then return _set_error("missing_expression", "missing IF body", stmtno, then_pos + 4)
+        if _starts_keyword(body, "DO") = 1 then do
+          rest = strip(substr(body, 3))
+          if _starts_keyword(rest, "WHILE") = 1 then return _set_error("syntax_error", "DO WHILE is not supported directly after THEN", stmtno, then_pos + 4)
+        end
+        if translate(body) == "DO" then do
+          if else_pos > 0 then return _set_error("syntax_error", "ELSE with DO block is not supported", stmtno, else_pos + 1)
+          end_pc = _find_matching_end(pc + 1)
+          if end_pc = 0 then return _set_error("syntax_error", "missing END for DO block", stmtno, then_pos + 4)
+          call _push_block("block", pc, end_pc, "")
+        end
+        else do
+          result = _execute_statement(body, stmtno, pc)
+          if result = 0 then return 0
+          if result = 2 then return 2
+        end
+        if forced_return = 1 then return 1
+      end
+      else do
+        if translate(action) == "DO" then do
+          end_pc = _find_matching_end(pc + 1)
+          if end_pc = 0 then return _set_error("syntax_error", "missing END for DO block", stmtno, then_pos + 4)
+          jump_target = end_pc + 1
+          return 1
+        end
+        if else_pos > 0 then do
+          if _starts_keyword(else_action, "DO") = 1 then do
+            rest = strip(substr(else_action, 3))
+            if _starts_keyword(rest, "WHILE") = 1 then return _set_error("syntax_error", "DO WHILE is not supported directly after ELSE", stmtno, else_pos + 1)
+          end
+          if translate(else_action) == "DO" then return _set_error("syntax_error", "ELSE with DO block is not supported", stmtno, else_pos + 1)
+          result = _execute_statement(else_action, stmtno, pc)
+          if result = 0 then return 0
+          if result = 2 then return 2
+          if forced_return = 1 then return 1
+        end
+      end
+      return 1
+    end
+
+    if _starts_keyword(text, "DO") = 1 then do
+      rest = strip(substr(text, 3))
+      if rest == "" then do
+        end_pc = _find_matching_end(pc + 1)
+        if end_pc = 0 then return _set_error("syntax_error", "missing END for DO block", stmtno, 1)
+        call _push_block("block", pc, end_pc, "")
+        return 1
+      end
+
+      if _starts_keyword(rest, "WHILE") = 1 then do
+        condition = strip(substr(rest, 6))
+        if condition == "" then return _set_error("missing_expression", "missing DO WHILE condition", stmtno, 1)
+
+        if block_count > 0 then do
+          if block_kinds[block_count] == "loop" & block_do_pcs[block_count] + 0 = pc then do
+            if _eval_condition(condition, stmtno) = 0 then return 0
+            if eval_value == "0" then do
+              end_pc = block_end_pcs[block_count] + 0
+              block_count = block_count - 1
+              jump_target = end_pc + 1
+            end
+            return 1
+          end
+        end
+
+        end_pc = _find_matching_end(pc + 1)
+        if end_pc = 0 then return _set_error("syntax_error", "missing END for DO WHILE block", stmtno, 1)
+        if _eval_condition(condition, stmtno) = 0 then return 0
+        if eval_value == "0" then do
+          jump_target = end_pc + 1
+          return 1
+        end
+        call _push_block("loop", pc, end_pc, condition)
+        return 1
+      end
+
+      if _starts_keyword(rest, "UNTIL") = 1 then do
+        condition = strip(substr(rest, 6))
+        if condition == "" then return _set_error("missing_expression", "missing DO UNTIL condition", stmtno, 1)
+
+        if block_count > 0 then do
+          if block_kinds[block_count] == "until" & block_do_pcs[block_count] + 0 = pc then return 1
+        end
+
+        end_pc = _find_matching_end(pc + 1)
+        if end_pc = 0 then return _set_error("syntax_error", "missing END for DO UNTIL block", stmtno, 1)
+        call _push_block("until", pc, end_pc, condition)
+        return 1
+      end
+
+      eq = _find_assignment(rest)
+      if eq > 0 then do
+        loop_name = strip(substr(rest, 1, eq - 1))
+        if _is_identifier(loop_name) = 0 then return _set_error("invalid_assignment", "invalid DO loop variable", stmtno, 1)
+
+        after_eq = strip(substr(rest, eq + 1))
+        to_pos = _find_keyword(after_eq, "TO")
+        if to_pos = 0 then return _set_error("syntax_error", "missing TO in DO loop", stmtno, 1)
+
+        start_expr = strip(substr(after_eq, 1, to_pos - 1))
+        after_to = strip(substr(after_eq, to_pos + 2))
+        if start_expr == "" | after_to == "" then return _set_error("missing_expression", "missing DO loop expression", stmtno, 1)
+
+        by_pos = _find_keyword(after_to, "BY")
+        if by_pos > 0 then do
+          limit_expr = strip(substr(after_to, 1, by_pos - 1))
+          step_expr = strip(substr(after_to, by_pos + 2))
+        end
+        else do
+          limit_expr = after_to
+          step_expr = ""
+        end
+
+        if limit_expr == "" then return _set_error("missing_expression", "missing DO loop limit", stmtno, 1)
+
+        if _eval_expression(start_expr, stmtno) = 0 then return 0
+        if _is_integer_text(eval_value) = 0 then return _set_error("type_mismatch", "DO loop requires integer start value", stmtno, 1)
+        start_value = eval_value + 0
+
+        if _eval_expression(limit_expr, stmtno) = 0 then return 0
+        if _is_integer_text(eval_value) = 0 then return _set_error("type_mismatch", "DO loop requires integer limit value", stmtno, 1)
+        limit_value = eval_value + 0
+
+        if step_expr \== "" then do
+          if _eval_expression(step_expr, stmtno) = 0 then return 0
+          if _is_integer_text(eval_value) = 0 then return _set_error("type_mismatch", "DO loop requires integer step value", stmtno, 1)
+          step_value = eval_value + 0
+        end
+        else step_value = 1
+
+        if step_value = 0 then return _set_error("divide_by_zero", "DO loop step cannot be zero", stmtno, 1)
+
+        end_pc = _find_matching_end(pc + 1)
+        if end_pc = 0 then return _set_error("syntax_error", "missing END for DO loop", stmtno, 1)
+
+        call _set_var(loop_name, start_value || "", "int")
+
+        if (step_value > 0 & start_value > limit_value) | (step_value < 0 & start_value < limit_value) then do
+          jump_target = end_pc + 1
+          return 1
+        end
+
+        call _push_block("count", pc, end_pc, "")
+        block_names[block_count] = loop_name
+        block_limits[block_count] = limit_value || ""
+        block_steps[block_count] = step_value || ""
+        return 1
+      end
+
+      return _set_error("syntax_error", "unsupported DO form", stmtno, 1)
+    end
+
+    if translate(text) == "END" then do
+      if block_count = 0 then return _set_error("syntax_error", "unexpected END", stmtno, 1)
+      kind = block_kinds[block_count]
+      do_pc = block_do_pcs[block_count] + 0
+      end_pc = block_end_pcs[block_count] + 0
+      if kind == "loop" then do
+        condition = block_conditions[block_count]
+        if _eval_condition(condition, stmtno) = 0 then return 0
+        if eval_value \== "0" then do
+          jump_target = do_pc
+          return 1
+        end
+      end
+      else if kind == "until" then do
+        condition = block_conditions[block_count]
+        if _eval_condition(condition, stmtno) = 0 then return 0
+        if eval_value == "0" then do
+          jump_target = do_pc
+          return 1
+        end
+      end
+      else if kind == "count" then do
+        loop_name = block_names[block_count]
+        limit_value = block_limits[block_count] + 0
+        step_value = block_steps[block_count] + 0
+        loop_index = _find_var(loop_name)
+        if loop_index = 0 then return _set_error("undefined_variable", "undefined variable " || loop_name, stmtno, 1)
+        if _is_integer_text(_env_value(loop_index)) = 0 then return _set_error("type_mismatch", "DO loop variable must be integer", stmtno, 1)
+        current_value = _env_value(loop_index) + 0
+        next_value = current_value + step_value
+        call _set_var(loop_name, next_value || "", "int")
+        if (step_value > 0 & next_value <= limit_value) | (step_value < 0 & next_value >= limit_value) then do
+          jump_target = do_pc + 1
+          return 1
+        end
+      end
+      block_count = block_count - 1
+      return 1
+    end
+
+    if _starts_keyword(text, "ELSE") = 1 then return _set_error("syntax_error", "ELSE must follow an IF statement", stmtno, 1)
+
+    if _starts_keyword(text, "LEAVE") = 1 then do
+      loop_index = _find_loop_block()
+      if loop_index = 0 then return _set_error("syntax_error", "LEAVE outside loop", stmtno, 1)
+      end_pc = block_end_pcs[loop_index] + 0
+      block_count = loop_index - 1
+      jump_target = end_pc + 1
+      return 1
+    end
+
+    if _starts_keyword(text, "ITERATE") = 1 then do
+      loop_index = _find_loop_block()
+      if loop_index = 0 then return _set_error("syntax_error", "ITERATE outside loop", stmtno, 1)
+      end_pc = block_end_pcs[loop_index] + 0
+      block_count = loop_index
+      jump_target = end_pc
+      return 1
+    end
+
+    if _starts_keyword(text, "RETURN") = 1 then do
+      rest = strip(substr(text, 7))
+      if rest \== "" then return _set_error("unsupported_return", "return expression is not supported", stmtno, 1)
+      forced_return = 1
+      return 1
+    end
+
+    eq = _find_assignment(text)
+    if eq = 0 then return _set_error("unknown_statement", "unknown statement", stmtno, 1)
+    name = strip(substr(text, 1, eq - 1))
+    expr = strip(substr(text, eq + 1))
+    if _is_identifier(name) = 0 then return _set_error("invalid_assignment", "invalid assignment target", stmtno, 1)
+    if expr == "" then return _set_error("missing_expression", "missing assignment expression", stmtno, eq + 1)
+    if _eval_expression(expr, stmtno) = 0 then return 0
+    call _set_var(name, eval_value || "", eval_type)
+    return 1
+
+  _is_label_statement: method = .int
+    arg text = .string
+    if length(text) < 2 then return 0
+    if substr(text, length(text), 1) \== ":" then return 0
+    name = strip(substr(text, 1, length(text) - 1))
+    if _is_identifier(name) = 0 then return 0
+    return 1
+
+  _starts_keyword: method = .int
+    arg text = .string, keyword = .string
+    klen = length(keyword)
+    if length(text) < klen then return 0
+    if translate(substr(text, 1, klen)) \== keyword then return 0
+    if length(text) = klen then return 1
+    next = substr(text, klen + 1, 1)
+    if pos(next, " " || '09'x) > 0 then return 1
+    return 0
+
+  _find_assignment: method = .int
+    arg text = .string
+    quote = ""
+    do i = 1 to length(text)
+      ch = substr(text, i, 1)
+      if quote \== "" then do
+        if ch == quote then quote = ""
+      end
+      else do
+        if ch == "'" | ch == '"' then quote = ch
+        else if ch == "=" then return i
+      end
+    end
+    return 0
+
+  _find_then: method = .int
+    arg text = .string
+    quote = ""
+    do i = 1 to length(text) - 3
+      ch = substr(text, i, 1)
+      if quote \== "" then do
+        if ch == quote then quote = ""
+      end
+      else do
+        if ch == "'" | ch == '"' then quote = ch
+        else if translate(substr(text, i, 4)) == "THEN" then do
+          prev = ""
+          next = ""
+          if i > 1 then prev = substr(text, i - 1, 1)
+          if i + 4 <= length(text) then next = substr(text, i + 4, 1)
+          if (i = 1 | _is_identifier_part(prev) = 0) & (i + 4 > length(text) | _is_identifier_part(next) = 0) then return i
+        end
+      end
+    end
+    return 0
+
+  _find_else: method = .int
+    arg text = .string
+    quote = ""
+    do i = 1 to length(text) - 3
+      ch = substr(text, i, 1)
+      if quote \== "" then do
+        if ch == quote then quote = ""
+      end
+      else do
+        if ch == "'" | ch == '"' then quote = ch
+        else if translate(substr(text, i, 4)) == "ELSE" then do
+          prev = ""
+          next = ""
+          if i > 1 then prev = substr(text, i - 1, 1)
+          if i + 4 <= length(text) then next = substr(text, i + 4, 1)
+          if (i = 1 | _is_identifier_part(prev) = 0) & (i + 4 > length(text) | _is_identifier_part(next) = 0) then return i
+        end
+      end
+    end
+    return 0
+
+  _find_keyword: method = .int
+    arg text = .string, keyword = .string
+    quote = ""
+    klen = length(keyword)
+    if klen = 0 then return 0
+    if length(text) < klen then return 0
+    do i = 1 to length(text) - klen + 1
+      ch = substr(text, i, 1)
+      if quote \== "" then do
+        if ch == quote then quote = ""
+      end
+      else do
+        if ch == "'" | ch == '"' then quote = ch
+        else if translate(substr(text, i, klen)) == keyword then do
+          prev = ""
+          next = ""
+          if i > 1 then prev = substr(text, i - 1, 1)
+          if i + klen <= length(text) then next = substr(text, i + klen, 1)
+          if (i = 1 | _is_identifier_part(prev) = 0) & (i + klen > length(text) | _is_identifier_part(next) = 0) then return i
+        end
+      end
+    end
+    return 0
+
+  _find_matching_end: method = .int
+    arg start_pc = .int
+    depth = 0
+    do i = start_pc to statement_count
+      text = strip(statement_texts[i])
+      if text == "" then iterate
+      if _statement_starts_block(text) = 1 then depth = depth + 1
+      else if _starts_keyword(text, "END") = 1 then do
+        if depth = 0 then return i
+        depth = depth - 1
+      end
+    end
+    return 0
+
+  _statement_starts_block: method = .int
+    arg text = .string
+    text = strip(text)
+    if text == "" then return 0
+    if _starts_keyword(text, "DO") = 1 then return 1
+    if _starts_keyword(text, "IF") = 1 then do
+      rest = strip(substr(text, 3))
+      then_pos = _find_then(rest)
+      if then_pos = 0 then return 0
+      body = strip(substr(rest, then_pos + 4))
+      if translate(body) == "DO" then return 1
+    end
+    return 0
+
+  _push_block: method = .void
+    arg kind = .string, do_pc = .int, end_pc = .int, condition = .string
+    block_count = block_count + 1
+    block_kinds[block_count] = kind
+    block_do_pcs[block_count] = do_pc
+    block_end_pcs[block_count] = end_pc
+    block_conditions[block_count] = condition
+    return
+
+  _find_loop_block: method = .int
+    do i = block_count to 1 by -1
+      if block_kinds[i] == "loop" | block_kinds[i] == "until" | block_kinds[i] == "count" then return i
+    end
+    return 0
+
+  _find_compare: method = .string
+    arg text = .string
+    quote = ""
+    do i = 1 to length(text)
+      ch = substr(text, i, 1)
+      if quote \== "" then do
+        if ch == quote then quote = ""
+      end
+      else do
+        if ch == "'" | ch == '"' then quote = ch
+        else do
+          if i < length(text) then do
+            pair = substr(text, i, 2)
+            if pair == "<=" | pair == ">=" | pair == "<>" | pair == "\=" then return i || "|" || pair
+          end
+          if ch == "=" | ch == "<" | ch == ">" then return i || "|" || ch
+        end
+      end
+    end
+    return 0 || "|"
+
+  _find_label: method = .int
+    arg name = .string
+    key = translate(name)
+    do i = 1 to label_count
+      if label_names[i] = key then return label_targets[i] + 0
+    end
+    return 0
+
+  _is_expression_term_start: method = .int
+    arg ch = .string
+    if ch == "'" | ch == '"' then return 1
+    if pos(ch, "0123456789") > 0 then return 1
+    if _is_identifier_start(ch) = 1 then return 1
+    return 0
+
+  _is_integer_text: method = .int
+    arg text = .string
+    text = strip(text)
+    if text == "" then return 0
+    start = 1
+    if substr(text, 1, 1) == "-" then do
+      if length(text) = 1 then return 0
+      start = 2
+    end
+    do i = start to length(text)
+      if pos(substr(text, i, 1), "0123456789") = 0 then return 0
+    end
+    return 1
+
+  _eval_condition: method = .int
+    arg condition = .string, stmtno = .int
+    cmp = _find_compare(condition)
+  /*   parse var cmp cmp_pos '|' cmp_op */
+    cmp_pos=.int
+    cmp_op =.string
+    cmi=pos('|',cmp)
+    if cmi=0 then do
+       cmp_pos=cmp
+       cmp_op =''
+    end
+    else do
+       cmp_pos=substr(cmp,1,cmi-1)
+       cmp_op =substr(cmp,cmi+1)
+    end
+
+    if cmp_pos = 0 then do
+      if _eval_expression(condition, stmtno) = 0 then return 0
+      if eval_type == "int" then do
+        if eval_value + 0 <> 0 then eval_value = "1"
+        else eval_value = "0"
+      end
+      else do
+        if eval_value \== "" then eval_value = "1"
+        else eval_value = "0"
+      end
+      eval_type = "int"
+      return 1
+    end
+
+    left = strip(substr(condition, 1, cmp_pos - 1))
+    right = strip(substr(condition, cmp_pos + length(cmp_op)))
+    if left == "" | right == "" then return _set_error("missing_expression", "missing IF comparison expression", stmtno, cmp_pos)
+
+    if _eval_expression(left, stmtno) = 0 then return 0
+    left_value = eval_value
+    left_type = eval_type
+    if _eval_expression(right, stmtno) = 0 then return 0
+    right_value = eval_value
+    right_type = eval_type
+
+    truth = 0
+    if _is_integer_text(left_value) = 1 & _is_integer_text(right_value) = 1 then do
+      left_int = left_value + 0
+      right_int = right_value + 0
+      if cmp_op == "=" then truth = left_int = right_int
+      else if cmp_op == "<>" | cmp_op == "\=" then truth = left_int <> right_int
+      else if cmp_op == "<" then truth = left_int < right_int
+      else if cmp_op == ">" then truth = left_int > right_int
+      else if cmp_op == "<=" then truth = left_int <= right_int
+      else if cmp_op == ">=" then truth = left_int >= right_int
+      else return _set_error("syntax_error", "unsupported IF comparison operator", stmtno, cmp_pos)
+    end
+    else do
+      if cmp_op == "=" then truth = left_value = right_value
+      else if cmp_op == "<>" | cmp_op == "\=" then truth = left_value <> right_value
+      else do
+        if _is_integer_text(left_value) = 0 | _is_integer_text(right_value) = 0 then return _set_error("type_mismatch", "relational IF comparison requires integers", stmtno, cmp_pos)
+        left_int = left_value + 0
+        right_int = right_value + 0
+        if cmp_op == "<" then truth = left_int < right_int
+        else if cmp_op == ">" then truth = left_int > right_int
+        else if cmp_op == "<=" then truth = left_int <= right_int
+        else if cmp_op == ">=" then truth = left_int >= right_int
+        else return _set_error("syntax_error", "unsupported IF comparison operator", stmtno, cmp_pos)
+      end
+    end
+
+    if truth = 1 then eval_value = "1"
+    else eval_value = "0"
+    eval_type = "int"
+    return 1
+
+  _eval_expression: method = .int
+
+    arg expression = .string, stmtno = .int
+
+    expr_text = expression
+    expr_pos = 1
+    if _read_term(stmtno) = 0 then return 0
+
+    do while 1 = 1
+      call _skip_spaces()
+      if expr_pos > length(expr_text) then return 1
+
+      op = substr(expr_text, expr_pos, 1)
+      if substr(expr_text, expr_pos, 2) == "||" then do
+        op = "||"
+        expr_pos = expr_pos + 2
+      end
+      else if pos(op, "+-*/") > 0 then expr_pos = expr_pos + 1
+      else if _is_expression_term_start(op) = 1 then op = "IMPLICIT"
+      else return _set_error("syntax_error", "expected operator", stmtno, expr_pos)
+
+      left_value = eval_value
+      left_type = eval_type
+      if _read_term(stmtno) = 0 then return 0
+
+      if op == "||" then do
+        eval_value = left_value || eval_value
+        eval_type = "string"
+      end
+      else if op == "IMPLICIT" then do
+        eval_value = left_value || eval_value
+        eval_type = "string"
+      end
+      else do
+        if _is_integer_text(left_value) = 0 | _is_integer_text(eval_value) = 0 then return _set_error("type_mismatch", "arithmetic requires integers", stmtno, expr_pos)
+        left_int = left_value + 0
+        right_int = eval_value + 0
+        if op == "+" then result = left_int + right_int
+        else if op == "-" then result = left_int - right_int
+        else if op == "*" then result = left_int * right_int
+        else do
+          if right_int = 0 then return _set_error("divide_by_zero", "divide by zero", stmtno, expr_pos)
+          sign = 1
+          dividend = left_int
+          divisor = right_int
+          if dividend < 0 then do
+            sign = 0 - sign
+            dividend = 0 - dividend
+          end
+          if divisor < 0 then do
+            sign = 0 - sign
+            divisor = 0 - divisor
+          end
+          result = 0
+          remainder = dividend
+          do while remainder >= divisor
+            result = result + 1
+            remainder = remainder - divisor
+          end
+          if sign < 0 then result = 0 - result
+        end
+        eval_value = result || ""
+        eval_type = "int"
+      end
+    end
+    return 1
+
+  _read_term: method = .int
+    arg stmtno = .int
+    call _skip_spaces()
+    if expr_pos > length(expr_text) then return _set_error("missing_expression", "missing expression term", stmtno, expr_pos)
+
+    ch = substr(expr_text, expr_pos, 1)
+    if ch == "-" then do
+      expr_pos = expr_pos + 1
+      if _read_term(stmtno) = 0 then return 0
+      if eval_type \== "int" then return _set_error("type_mismatch", "arithmetic requires integers", stmtno, expr_pos)
+      eval_value = 0 - (eval_value + 0)
+      eval_value = eval_value || ""
+      eval_type = "int"
+      return 1
+    end
+    if ch == "'" | ch == '"' then do
+      quote = ch
+      start = expr_pos + 1
+      expr_pos = expr_pos + 1
+      do while expr_pos <= length(expr_text)
+        if substr(expr_text, expr_pos, 1) == quote then do
+          eval_value = substr(expr_text, start, expr_pos - start)
+          eval_type = "string"
+          expr_pos = expr_pos + 1
+          return 1
+        end
+        expr_pos = expr_pos + 1
+      end
+      return _set_error("unterminated_string", "unterminated string literal", stmtno, start)
+    end
+
+    if pos(ch, "0123456789") > 0 then do
+      start = expr_pos
+      do while expr_pos <= length(expr_text) & pos(substr(expr_text, expr_pos, 1), "0123456789") > 0
+        expr_pos = expr_pos + 1
+      end
+      eval_value = substr(expr_text, start, expr_pos - start)
+      eval_type = "int"
+      return 1
+    end
+
+    if _is_identifier_start(ch) = 1 then do
+      start = expr_pos
+      do while expr_pos <= length(expr_text) & _is_identifier_part(substr(expr_text, expr_pos, 1)) = 1
+        expr_pos = expr_pos + 1
+      end
+      name = substr(expr_text, start, expr_pos - start)
+      call _skip_spaces()
+      if expr_pos <= length(expr_text) & substr(expr_text, expr_pos, 1) == "(" then do
+        if _read_builtin(name, stmtno) = 0 then return 0
+        return 1
+      end
+      index = _find_var(name)
+      if index = 0 then return _set_error("undefined_variable", "undefined variable " || name, stmtno, start)
+      eval_value = _env_value(index)
+      eval_type = _env_type(index)
+      return 1
+    end
+
+    return _set_error("syntax_error", "unexpected expression term", stmtno, expr_pos)
+
+  _skip_spaces: method = .void
+    do while expr_pos <= length(expr_text) & pos(substr(expr_text, expr_pos, 1), " " || '09'x) > 0
+      expr_pos = expr_pos + 1
+    end
+    return
+
+  _seed_vars: method = .void
+    arg names = .string[], values = .string[]
+    do i = 1 to names[0]
+      value = ""
+      if i <= values[0] then value = values[i]
+      call _set_var(names[i], value, "string")
+    end
+    return
+
+  _set_var: method = .void
+    arg name = .string, value = .string, value_type = .string
+    key = translate(name)
+    index = _find_var(name)
+    if index = 0 then do
+      env_count = env_count + 1
+      index = env_count
+    end
+    env_names[index] = name
+    env_keys[index] = key
+    env_values[index] = value || ""
+    env_types[index] = value_type
+    call script_pool.setString(name, value || "")
+    return
+
+  _find_var: method = .int
+    arg name = .string
+    key = translate(name)
+    do i = 1 to env_count
+      if env_keys[i] = key then return i
+    end
+    return 0
+
+  _env_value: method = .string
+    arg index = .int
+    return env_values[index]
+
+  _env_type: method = .string
+    arg index = .int
+    return env_types[index]
+
+  _read_builtin: method = .int
+    arg name = .string, stmtno = .int
+    call _skip_spaces()
+    if expr_pos > length(expr_text) | substr(expr_text, expr_pos, 1) \== "(" then return _set_error("syntax_error", "expected (", stmtno, expr_pos)
+    start = expr_pos + 1
+    expr_pos = expr_pos + 1
+    level = 1
+    quote = ""
+    do while expr_pos <= length(expr_text)
+      ch = substr(expr_text, expr_pos, 1)
+      if quote \== "" then do
+        if ch == quote then quote = ""
+      end
+      else do
+        if ch == "'" | ch == '"' then quote = ch
+        else if ch == "(" then level = level + 1
+        else if ch == ")" then do
+          level = level - 1
+          if level = 0 then do
+            args = substr(expr_text, start, expr_pos - start)
+            expr_pos = expr_pos + 1
+            outer_text = expr_text
+            outer_pos = expr_pos
+            ok = _eval_builtin(name, args, stmtno)
+            saved_value = eval_value
+            saved_type = eval_type
+            expr_text = outer_text
+            expr_pos = outer_pos
+            eval_value = saved_value
+            eval_type = saved_type
+            return ok
+          end
+        end
+      end
+      expr_pos = expr_pos + 1
+    end
+    return _set_error("syntax_error", "missing )", stmtno, start)
+
+  _split_args: method = .int
+    arg args = .string
+    fn_arg_count = 0
+    if strip(args) == "" then return 0
+    level = 0
+    quote = ""
+    current = ""
+    do i = 1 to length(args)
+      ch = substr(args, i, 1)
+      if quote \== "" then do
+        current = current || ch
+        if ch == quote then quote = ""
+      end
+      else do
+        if ch == "'" | ch == '"' then do
+          quote = ch
+          current = current || ch
+        end
+        else if ch == "(" then do
+          level = level + 1
+          current = current || ch
+        end
+        else if ch == ")" then do
+          level = level - 1
+          current = current || ch
+        end
+        else if ch == "," & level = 0 then do
+          fn_arg_count = fn_arg_count + 1
+          fn_args[fn_arg_count] = strip(current)
+          if strip(current) == "" then fn_exists[fn_arg_count] = 0
+          else fn_exists[fn_arg_count] = 1
+          current = ""
+        end
+        else current = current || ch
+      end
+    end
+    fn_arg_count = fn_arg_count + 1
+    fn_args[fn_arg_count] = strip(current)
+    if strip(current) == "" then fn_exists[fn_arg_count] = 0
+    else fn_exists[fn_arg_count] = 1
+    return fn_arg_count
+
+  _export_vars: method = .void
+    export_count = env_count
+    do i = 1 to env_count
+      export_variables[i] = env_names[i]
+      export_contents[i] = env_values[i]
+    end
+    return
+
+  _is_identifier: method = .int
+    arg name = .string
+    if length(name) = 0 then return 0
+    if _is_identifier_start(substr(name, 1, 1)) = 0 then return 0
+    do i = 2 to length(name)
+      if _is_identifier_part(substr(name, i, 1)) = 0 then return 0
+    end
+    return 1
+
+  _is_identifier_start: method = .int
+    arg ch = .string
+    if pos(translate(ch), "ABCDEFGHIJKLMNOPQRSTUVWXYZ_") > 0 then return 1
+    return 0
+
+  _is_identifier_part: method = .int
+    arg ch = .string
+    if _is_identifier_start(ch) = 1 then return 1
+    if pos(ch, "0123456789") > 0 then return 1
+    return 0
+
+  _set_error: method = .int
+    arg code = .string, message = .string, stmtno = .int, column = .int
+    error_code = code
+    error_message = message
+    error_statement = stmtno
+    error_column = column
+    return 0
+  /* --------------------------------------------------------------------
+   * Intrinsic Function Dispatcher
+   *
+   * Resolves evaluator intrinsic functions and dispatches to the matching
+   * builtin handler. These are evaluator intrinsics, not general REXX
+   * function calls.
+   * -------------------------------------------------------------------- */
+  _eval_builtin: method = .int
+    arg name = .string, args = .string, stmtno = .int
+    upper_name = translate(strip(name))
+    argc = _split_args(args)
+    parsed_args = .string[]
+    parsed_exists = .int[]
+    parsed_arg_count = fn_arg_count
+    do i = 1 to parsed_arg_count
+      parsed_args[i] = fn_args[i]
+      parsed_exists[i] = fn_exists[i]
+    end
+
+    select
+      when upper_name = "ABBREV" then nop
+      when upper_name = "ABS" then nop
+      when upper_name = "COPIES" then nop
+      when upper_name = "DATATYPE" then nop
+      when upper_name = "LEFT" then nop
+      when upper_name = "LENGTH" then nop
+      when upper_name = "LOWER" then nop
+      when upper_name = "MAX" then nop
+      when upper_name = "MIN" then nop
+      when upper_name = "POS" then nop
+      when upper_name = "RIGHT" then nop
+      when upper_name = "SIGN" then nop
+      when upper_name = "SPACE" then nop
+      when upper_name = "STRIP" then nop
+      when upper_name = "SUBSTR" then nop
+      when upper_name = "UPPER" then nop
+      when upper_name = "VERIFY" then nop
+      when upper_name = "WORD" then nop
+      when upper_name = "WORDS" then nop
+      otherwise return _set_error("undefined_function", "undefined function " || name, stmtno, 1)
+    end
+
+    bif_args = .string[]
+    bif_exists = .int[]
+    do i = 1 to parsed_arg_count
+      bif_exists[i] = parsed_exists[i]
+      if parsed_exists[i] <> 0 then do
+        if _eval_expression(parsed_args[i], stmtno) = 0 then return 0
+        bif_args[i] = eval_value
+      end
+      else bif_args[i] = ""
+    end
+
+    context = .RexxBifCallContext(upper_name)
+    call context.setArguments(bif_args, bif_exists)
+    call context.setCallerPool(reference script_pool)
+    result = rexxclassicbif_call(reference context)
+    if result[1] <> "OK" then return _set_error(result[3], result[4], stmtno, 1)
+    eval_value = result[2]
+    if _is_integer_text(eval_value) then eval_type = "int"
+    else eval_type = "string"
+    return 1
+
+  header: method
+    arg statements=.string
+    stmts=.string[]
+    say
+    say copies('=',72)
+    say 'Evaluate Code'
+    say copies('=',72)
+    say
+    say 'Source'
+    say copies('-',72)
+    say statements
+    say
+    do i=1
+       ipi=pos(';',statements)
+       if ipi<=1 then leave
+       stmt=strip(substr(statements,1,ipi-1))
+       statements=substr(statements,ipi+1)
+       if stmt == "" then iterate
+       stmts[stmts[0]+1]=stmt
+    end
+    if strip(statements) \== "" then stmts[stmts[0]+1]=statements
+    say 'Parsed Statements ('stmts[0]')'
+    say copies('-',72)
+    inc=0
+    do i=1 to stmts[0]
+       lstmt=lower(stmts[i])
+       if word(lstmt,1)='end' then inc=inc-3
+       say right(i,4,'0')copies(' ',inc) stmts[i]
+       if word(lstmt,1)='do' | word(lstmt,words(lstmt))='do' then inc=inc+3
+    end
+    say
+    say copies('=',72)
+    return
+
+  export_names: method = .string[]
+    result = .string[]
+    do i = 1 to export_count
+      result[i] = export_variables[i]
+    end
+    return result
+
+  export_values: method = .string[]
+    result = .string[]
+    do i = 1 to export_count
+      result[i] = export_contents[i]
+    end
+    return result

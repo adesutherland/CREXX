@@ -99,4 +99,14 @@ if insert("abc","def",2,1) \=  "deaf"     then do
   say 'INSERT failed in test 18'
 end
 
+if c2x(insert("X","ab",4,3," ")) \= "61622020582020" then do
+      errors=errors+1
+  say 'INSERT failed in test 19'
+end
+
+if c2x(insert("X","ab",4,3,"")) \= "61622020582020" then do
+      errors=errors+1
+  say 'INSERT failed in test 20'
+end
+
 return errors<>0

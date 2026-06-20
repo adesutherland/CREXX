@@ -1,106 +1,83 @@
 options levelb comments_dash
 import data_StringTreeMap
 
-errors = 0
+failures = 0
 
-a = .StringTreeMap()
-if a.val = 0 then do
-  errors = errors + 1
+m = .StringTreeMap()
+failures = failures + check_int("initial size", m.size(), 0)
+failures = failures + check_string("initial first", m.firstKey(), "")
+failures = failures + check_string("initial last", m.lastKey(), "")
+
+failures = failures + check_int("put b", m.put("b", "bee"), 0)
+failures = failures + check_int("put a", m.put("a", "aye"), 0)
+failures = failures + check_int("put c", m.put("c", "see"), 0)
+failures = failures + check_int("size after puts", m.size(), 3)
+failures = failures + check_string("first key", m.firstKey(), "a")
+failures = failures + check_string("last key", m.lastKey(), "c")
+failures = failures + check_string("get b", m.get("b"), "bee")
+
+failures = failures + check_int("same key/value rc", m.put("b", "bee"), 4)
+failures = failures + check_int("update rc", m.put("b", "BEE"), 0)
+failures = failures + check_string("updated value", m.get("b"), "BEE")
+
+keys = .string[]
+keys = m.keyArray()
+failures = failures + check_int("key count", keys[0], 3)
+failures = failures + check_string("key first", keys[1], "a")
+failures = failures + check_string("key second", keys[2], "b")
+failures = failures + check_string("key third", keys[3], "c")
+
+values = .string[]
+values = m.valueArray()
+failures = failures + check_string("value first", values[1], "aye")
+failures = failures + check_string("value second", values[2], "BEE")
+failures = failures + check_string("value third", values[3], "see")
+
+it = m.iterator()
+failures = failures + check_int("iterator snapshot add", m.put("d", "dee"), 0)
+failures = failures + check_string("iterator first", it.next(), "a")
+failures = failures + check_string("iterator second", it.next(), "b")
+failures = failures + check_string("iterator third", it.next(), "c")
+failures = failures + check_int("iterator snapshot end", it.hasNext(), 0)
+
+empty = .StringTreeMap()
+failures = failures + check_int("put empty key", empty.put("", "empty-key"), 0)
+failures = failures + check_int("put blank key", empty.put(" ", "blank-key"), 0)
+failures = failures + check_int("empty/blank size", empty.size(), 2)
+failures = failures + check_string("empty key value", empty.get(""), "empty-key")
+failures = failures + check_string("blank key value", empty.get(" "), "blank-key")
+
+failures = failures + check_int("remove a", m.remove("a"), 0)
+failures = failures + check_int("remove missing", m.remove("missing"), 4)
+failures = failures + check_int("removed contains", m.containsKey("a"), 0)
+
+failures = failures + check_int("free rc", m.free(), 0)
+failures = failures + check_int("free size", m.size(), 0)
+keys = m.keyArray()
+failures = failures + check_int("free key count", keys[0], 0)
+failures = failures + check_int("reuse put", m.put("again", "ok"), 0)
+failures = failures + check_string("reuse get", m.get("again"), "ok")
+
+if failures <> 0 then do
+  say "StringTreeMap failures:" failures
+  exit 1
 end
 
-rc = a.put('aap','noot')
-if rc <> 0 then  do
-  errors = errors + 1
-end
+say "PASS: StringTreeMap"
+exit 0
 
-say a.get('aap') 
+check_int: procedure=.int
+  arg label=.string, actual=.int, expected=.int
+  if actual <> expected then do
+    say label": expected" expected "got" actual
+    return 1
+  end
+return 0
 
-say a.size()
-
-/**
-* same key, same value, rc=4
-*/
-rc = a.put('aap','noot')
-if rc <> 4 then  do
-  errors = errors + 1
-end
-
-/**
-* this key is already in, change the value, rc=4
-*/
-rc = a.put('aap','mies')
-if rc <> 0 then  do
-  errors = errors + 1
-end
-
-say a.containsKey('aap')
-
-say a.firstKey()
-
-rc = a.put('noot','mies')
-rc = a.put('mies','wim')
-rc = a.put('wim','zus')
-rc = a.put('zus','jet')
-rc = a.put('jet',1)
-rc = a.put('teun',2)
-rc = a.put('vuur',3)
-rc = a.put('gijs',4)
-rc = a.put('lam',5)
-rc = a.put('kees',6)
-rc = a.put('bok',7)
-rc = a.put('weide',8)
-rc = a.put('does',9)
-rc = a.put('hok',10)
-rc = a.put('duif',11)
-rc = a.put('z1','aap') #duplicate values for valueStem test
-rc = a.put('z2','aap')
-rc = a.put('z3','aap')
-rc = a.put('z4','aap')
-
-say a.lastKey()
-
-#it = .StringTreeMapIterator
-it = a.iterator()
-
-loop while it.hasNext()
-  say it.next()
-end
-
-say '|'a.get('missing')'|'
-
-say a.toString()
-
-say a.remove('aap')
-
-say a.remove('zzy')
-
--- say 'keyStem() on StringTreeMap'
-
--- keystem = a.keyStem()
-
--- say 'looping over stem result'
--- loop l=1 to keystem.0
---   say keystem.l
--- end
-
--- say 'number of elements in stem:' keystem.0
-
--- say 'valueStem() on StringTreeMap'
--- valuestem = a.valueStem()
-
--- say 'looping over value stem result'
--- loop l=1 to valuestem.0
---   say valuestem.l
--- end
-
--- say 'number of elements in valuestem:' valuestem.0
--- b = .StringTreeSet()
--- rc = b.fromStem(a.valueStem())
--- say b.toString()
-
--- say 'hashmap''s valueSet as a StringTreeSet():'
--- c = a.valueSet()
--- say c.toString()
-
-b = .StringTreeMap()
-say 'the new treemap size is: ' b.size()
+check_string: procedure=.int
+  arg label=.string, actual=.string, expected=.string
+  if actual <> expected then do
+    say label": expected ["expected"] got ["actual"]"
+    return 1
+  end
+return 0

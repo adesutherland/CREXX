@@ -42,21 +42,24 @@ lowering, see `compiler/docs/levelc_syntax_highlighting.md`.
   - `compiler/rxcp_ast_rewrite.c`
 - Existing Level C grammar note:
   - `docs/books/crexx_vm_spec/Level-c-Grammar.tex`
-- ANSI draft source:
-  - `/Users/adrian/Library/CloudStorage/GoogleDrive-adrian@sutherlandonline.org/My Drive/Language Projects/REXX Collaboration/draft-ansi-rexx-standard.pdf`
-  - Extracted locally with `pypdf`; relevant sections are 5.3, 6.2, 6.3,
-    6.4, plus limited variable-pool context from 7.1 through 7.3.
-  - Standard error-message catalog extracted from section 8.2.1 into
+- Classic language-specification source:
+  - Publicly available Classic REXX language specification supplied by the
+    user.
+  - Syntax, evaluation, execution, configuration, and diagnostic guidance
+    extracted into `compiler/docs/levelc_compliance_reference.md`.
+  - Error-message catalog normalized into
     `compiler/docs/levelc_standard_error_messages.md`.
 
-This draft deliberately excludes built-in function definitions.
+This draft deliberately excludes built-in function definitions. The extracted
+implementation-facing BIF reference is now
+`compiler/docs/levelc_classic_bifs.md`.
 
 ### 1.1 External compatibility probe: Regina REXX
 
 Regina REXX is installed locally as `/opt/homebrew/bin/rexx` and is useful as a
 quick external Classic REXX syntax reference while building the Level C parser.
-It is not a substitute for the ANSI draft, but it gives a living interpreter
-baseline for representative syntax questions.
+It is not a substitute for the public language-specification source, but it
+gives a living interpreter baseline for representative syntax questions.
 
 Trial run on 2026-05-10:
 
@@ -94,7 +97,7 @@ Error 64 running "then_bad.rexx": [Syntax error while parsing]
 Error 64.1: [Syntax error at line 1]
 ```
 
-Interpretation: Regina aligns with the ANSI `THEN` concern in this document:
+Interpretation: Regina aligns with the Classic `THEN` concern in this document:
 after `IF`, `THEN` is a condition terminator, not a condition variable recovered
 through broad fallback.
 
@@ -199,20 +202,21 @@ Existing behaviour:
 
 Level C needs:
 
-- Confirm whether Level C default numeric mode should be Classic. The ANSI draft
-  arithmetic default is `NUMERIC DIGITS 9`; current cREXX context defaults to
-  common numeric mode and 18 digits for Level B behaviour.
-- Decide whether Level C accepts only ANSI block comments by default or also
+- Confirm whether Level C default numeric mode should be Classic. The public
+  language-specification source gives `NUMERIC DIGITS 9` as the arithmetic
+  default; current cREXX context defaults to common numeric mode and 18 digits
+  for Level B behaviour.
+- Decide whether Level C accepts only Classic block comments by default or also
   preserves cREXX optional line comment modes for compatibility.
 - Parser mode must keep the level selected by options/CLI instead of forcing
   Level B.
 
 ### Stage 1: scanner
 
-The Level C scanner should be closer to the ANSI lexical level than the Level B
-scanner.
+The Level C scanner should be closer to the Classic lexical level than the
+Level B scanner.
 
-Requirements from the ANSI draft:
+Requirements from the public language-specification source:
 
 - Source characters are categorized as syntactic characters, extra letters,
   other blank characters, other negators, and other characters.
@@ -242,8 +246,8 @@ Scanner design rule:
 
 ### Stage 2: parser glue
 
-Level C glue is where the ANSI "interaction between levels of syntax" belongs.
-This is more than newline-to-semicolon conversion.
+Level C glue is where the Classic interaction between lexical and top syntax
+belongs. This is more than newline-to-semicolon conversion.
 
 Required glue behaviours:
 
@@ -252,7 +256,7 @@ Required glue behaviours:
 - Collapse redundant end-of-clause tokens where safe.
 - Insert an end-of-clause token before recognized `THEN`, after recognized
   `THEN`, `ELSE`, and `OTHERWISE`, and after labels as required by the
-  standard's top-level interaction rules.
+  specification's top-level interaction rules.
 - Classify contextual keywords based on parser context, not spelling alone.
 - Pass a preceding symbol as `VAR_SYMBOL` when an `=` can be assignment in the
   current top-level context.
@@ -271,7 +275,7 @@ metadata without forcing re2c to become a parser.
 
 ### Stage 3: Lemon grammar
 
-The Level C Lemon grammar should mirror the ANSI top syntax, but be shaped for
+The Level C Lemon grammar should mirror the Classic top syntax, but be shaped for
 LALR parsing and recovery. It should own:
 
 - Program, clause, label, and null-clause structure.
@@ -359,7 +363,7 @@ Implementation conclusion:
   start.
 - A practical design is likely hybrid:
   - scanner emits symbol tokens with spelling and spacing metadata;
-  - glue promotes symbols to hard contextual keyword tokens where the ANSI
+  - glue promotes symbols to hard contextual keyword tokens where the Classic
     interaction rules require a keyword;
   - glue forces `TK_VAR_SYMBOL` where assignment, label, expression, template,
     or command context requires a variable symbol;
@@ -368,7 +372,8 @@ Implementation conclusion:
 
 Special caution for `THEN`:
 
-- The ANSI draft gives `THEN` a stronger context rule than ordinary keywords:
+- The public language-specification source gives `THEN` a stronger context rule
+  than ordinary keywords:
   after `IF` or `WHEN`, a symbol spelled `THEN` is a keyword wherever a
   `VAR_SYMBOL` would be part of the immediately following expression.
 - That rule lets `THEN` terminate the condition expression and also makes cases
@@ -382,9 +387,9 @@ Special caution for `THEN`:
   classified by the glue layer so it is never fallback-eligible while parsing
   the condition after `IF`/`WHEN`.
 - The current Level B grammar's `if ::= TK_IF expression ncl0 then` and
-  `then ::= TK_THEN ncl0 instruction` is structurally close to the standard's
+  `then ::= TK_THEN ncl0 instruction` is structurally close to the specification's
   `IF expression [ncl] THEN ncl instruction`, but Level C still needs explicit
-  handling for the standard's inserted semicolon before and after recognized
+  handling for the specification's inserted semicolon before and after recognized
   `THEN` so clause spans/tracing/highlighting remain faithful.
 
 ### Stage 4: validation and fixup walkers
@@ -412,14 +417,15 @@ Required syntax-adjacent validation:
 
 ## 6. Classic REXX Syntax Extraction
 
-This section summarizes syntax/parsing requirements from the ANSI draft PDF.
-It is an implementation extraction, not a verbatim copy of the standard.
+This section summarizes syntax/parsing requirements from the public
+language-specification source. It is an implementation extraction, not a
+verbatim copy of the source.
 
 ### 6.1 No general reserved words
 
 Classic REXX has contextual keywords, not a global reserved-word set.
 
-The draft defines a keyword as a token with special meaning only when its
+The language specification defines a keyword as a token with special meaning only when its
 spelling is recognized in a particular context. Otherwise a symbol with that
 spelling remains a variable symbol. The only "reserved symbols" described in
 the syntax chapter are constant symbols starting with period:
@@ -521,7 +527,7 @@ Extraction notes:
 - The first expression-core implementation covers symbols, integer and string
   terms, parenthesized expressions, prefix `+`/`-`/`\`, power, multiplication,
   integer division, remainder, addition/subtraction, explicit and blank
-  concatenation, all normal comparisons, all ANSI strict comparisons, `&`, `|`,
+  concatenation, all normal comparisons, all Classic strict comparisons, `&`, `|`,
   and `&&`.
 - `&&` is accepted at the Classic logical OR/exclusive-OR precedence level and
   maps to the shared `OP_XOR` logical-expression node. The node is distinct from
@@ -532,7 +538,7 @@ Extraction notes:
   slices.
 - Expression lists support omitted expressions around commas.
 - A comma or unmatched right parenthesis at expression level is a syntax error.
-- The ANSI grammar's power expression is left-recursive. Current Level B
+- The Classic grammar's power expression is left-recursive. Current Level B
   already has separate left/right power handling based on numeric standard, so
   Level C must choose the Classic rule explicitly during implementation.
 
@@ -616,12 +622,12 @@ Implementation consequences:
 - each `WHEN` has an expression and `THEN` instruction
 - `OTHERWISE` has an optional instruction list
 - `END` may carry an optional variable symbol that is invalid for `SELECT`
-  according to the ANSI diagnostic rules
+  according to the Classic diagnostic rules
 
 Implementation consequence:
 
 - Current Level B `SELECT expression` switch shape is not Classic REXX syntax.
-  Level C should parse ANSI `SELECT` separately and lower later if needed.
+  Level C should parse Classic `SELECT` separately and lower later if needed.
 
 ### 6.9 ADDRESS
 
@@ -638,10 +644,10 @@ Implementation consequences:
 
 - The current certified exit path is the likely owner for execution lowering.
 - For parsing/highlighting, Level C needs explicit syntax recognition for the
-  ANSI redirection shape, but milestone 1 does not need to implement command
+  Classic redirection shape, but milestone 1 does not need to implement command
   execution.
 - Host-variable anchors such as `:name` and `${name}` are current compiler
-  auto-expose syntax for ADDRESS handlers, not ANSI command syntax. Keep that
+  auto-expose syntax for ADDRESS handlers, not Classic command syntax. Keep that
   distinction visible in future docs.
 
 ### 6.10 PARSE and templates
@@ -730,7 +736,7 @@ Each Level C routine needs an active variable pool. Suggested compiler model:
 
 ### 7.2 Loop control map
 
-The ANSI execution model uses loop state for repetitive `DO`, including the
+The Classic execution model uses loop state for repetitive `DO`, including the
 control variable identity, iterate target, once target, leave target, repeat
 count, by/to/for values, and nesting correction for labelled `LEAVE`/`ITERATE`.
 
@@ -775,7 +781,7 @@ Additional Level C highlighting needs:
 - Correct inferred semicolon ownership for diagnostics.
 - Standard diagnostic text and error numbers from
   `levelc_standard_error_messages.md` once parser recovery and validation are
-  mapped to ANSI message identifiers.
+  mapped to Classic message identifiers.
 
 Level C diagnostics should be emitted in two layers:
 
@@ -831,7 +837,7 @@ implementation:
 1. Level C default options:
    - Should `options levelc` imply Classic numeric precedence/power mode?
    - Should Level C default `NUMERIC DIGITS` be 9 for execution lowering?
-   - Should Level C allow cREXX line-comment options, or start ANSI-only with
+   - Should Level C allow cREXX line-comment options, or start Classic-only with
      nested block comments?
 2. Parser ownership:
    - Create separate Level C scanner/glue/grammar, or attempt a shared scanner
@@ -847,7 +853,7 @@ implementation:
    - Lower variables to helper calls around a runtime pool object first, or add
      VM-native variable-pool support earlier?
 5. ADDRESS:
-   - Treat ANSI `ADDRESS WITH` syntax as Level C syntax from milestone 1, with
+   - Treat Classic `ADDRESS WITH` syntax as Level C syntax from milestone 1, with
      execution deferred, or gate it behind a later milestone?
 6. Existing `Level-c-Grammar.tex`:
    - Retire, replace, or keep as historical implementation notes after this
@@ -862,7 +868,8 @@ especially the "no reserved words" rule and Lemon's `%fallback` capability.
 ### 10.1 Problem boundary
 
 Classic REXX should not be treated as a language where the scanner emits fixed
-reserved-word tokens and the grammar consumes them. The ANSI draft describes a
+reserved-word tokens and the grammar consumes them. The public
+language-specification source describes a
 coordinated relationship between the lexical and top syntax levels:
 
 - assignment and label recognition can override keyword recognition;
@@ -882,7 +889,7 @@ the only component deciding whether a word is a keyword.
 | --- | --- | --- | --- | --- |
 | A. Scanner keywords plus broad Lemon `%fallback` | Scanner emits `TK_IF`, `TK_THEN`, `TK_SAY`, etc.; Lemon retries failed keyword tokens as `TK_VAR_SYMBOL`. | Smallest change from Level B. Uses a feature Lemon explicitly supports. | Cannot backtrack an already shifted keyword, so cases like `IF = THEN` fail once `IF` was shifted as an `IF` instruction. `%fallback` is global and can incorrectly turn `THEN` into a condition variable after `IF`/`WHEN`. | Reject as the main design. Keep only as a limited helper after PoC. |
 | B. Generic-symbol scanner and all keyword checks in grammar actions | Scanner emits every word as `TK_VAR_SYMBOL`; grammar rules compare spellings in actions. | Maximally preserves "no reserved words" at scanner level. | Lemon states become less discriminating, grammar actions become procedural, error recovery gets weaker, and DSLSH cannot color roles until late reductions. | Possible but unattractive for maintainability. |
-| C. Context-aware token adapter plus narrow `%fallback` | Scanner emits neutral symbol tokens with spelling/spacing metadata; glue promotes or demotes according to ANSI context; Lemon parses hard tokens and optionally uses narrow fallback for proven-safe candidate tokens. | Matches ANSI's split between lexical and top syntax. Keeps Lemon grammar readable. Gives DSLSH a precise token role. Allows focused fallback where it helps. | Requires a stateful adapter and a representative test matrix. | Preferred direction. |
+| C. Context-aware token adapter plus narrow `%fallback` | Scanner emits neutral symbol tokens with spelling/spacing metadata; glue promotes or demotes according to Classic context; Lemon parses hard tokens and optionally uses narrow fallback for proven-safe candidate tokens. | Matches Classic's split between lexical and top syntax. Keeps Lemon grammar readable. Gives DSLSH a precise token role. Allows focused fallback where it helps. | Requires a stateful adapter and a representative test matrix. | Preferred direction. |
 | D. Stateful scanner lexical modes | re2c switches modes for `PARSE`, `ADDRESS`, `DO`, `IF`, etc. | Useful for true lexical sublanguages such as strings/comments. | The scanner does not naturally know Lemon's top syntax state; this couples parsing decisions into lexical rules and makes recovery brittle. | Use scanner modes only for lexical facts, not keyword authority. |
 | E. PEG/PIKA-style parser for Level C now | Use a parser with richer lookahead/backtracking for Classic REXX. | Closer to the logical grammar direction in `Logical-Grammar-Specification.tex`. Could express some contextual rules more directly. | Diverges from the first-milestone architecture and DSLSH integration. Much higher integration cost before highlighter value appears. | Do not use for milestone 1. Keep as a future logical grammar track. |
 
@@ -903,7 +910,7 @@ Use three token identities for Level C words:
      itself.
 2. Adapter-promoted hard keyword:
    - The glue layer emits hard tokens such as `TK_IF`, `TK_THEN`, `TK_DO`, or
-     `TK_WITH` only when the current ANSI top-syntax context requires keyword
+     `TK_WITH` only when the current Classic top-syntax context requires keyword
      treatment.
    - Hard structural tokens should not depend on Lemon fallback to become
      variables later.
@@ -920,7 +927,7 @@ before Lemon can parse the stream.
 
 ### 10.4 Adapter state model
 
-The adapter needs enough shallow state to model ANSI's lexical/top-syntax
+The adapter needs enough shallow state to model Classic lexical/top-syntax
 interaction without becoming a second full parser.
 
 Required state:
@@ -964,7 +971,7 @@ The keyword table should be split by grammar role, not just by spelling.
 | Category | Words | Promotion rule | `%fallback` policy |
 | --- | --- | --- | --- |
 | Clause-leading instructions | `ADDRESS`, `ARG`, `CALL`, `DO`, `DROP`, `EXIT`, `IF`, `INTERPRET`, `ITERATE`, `LEAVE`, `NOP`, `NUMERIC`, `OPTIONS`, `PARSE`, `PROCEDURE`, `PULL`, `PUSH`, `QUEUE`, `RETURN`, `SAY`, `SELECT`, `SIGNAL`, `TRACE` | At clause start, after label and assignment lookahead have been handled, promote when the spelling starts a recognized instruction in the current context. | Usually no fallback needed at clause start. If a candidate-token class is introduced, prove it does not turn invalid keyword instructions into commands accidentally. |
-| Structural delimiters | `THEN`, `ELSE`, `WHEN`, `OTHERWISE`, `END` | Promote only when a control-group context recognizes the delimiter. Insert synthetic semicolons before and after `THEN`, after `ELSE`/`OTHERWISE`, and after labels according to ANSI. | No broad fallback. Demote to `TK_VAR_SYMBOL` before Lemon when they are variables; emit hard tokens only when structural. |
+| Structural delimiters | `THEN`, `ELSE`, `WHEN`, `OTHERWISE`, `END` | Promote only when a control-group context recognizes the delimiter. Insert synthetic semicolons before and after `THEN`, after `ELSE`/`OTHERWISE`, and after labels according to Classic rules. | No broad fallback. Demote to `TK_VAR_SYMBOL` before Lemon when they are variables; emit hard tokens only when structural. |
 | `IF`/`WHEN` condition terminator | `THEN` | While `if_condition` or `when_condition` is active, a symbol spelled `THEN` must be a hard `TK_THEN` wherever a variable symbol could be part of the expression. | Exclude from fallback in these contexts. The safest implementation is no global fallback for `THEN`; the adapter demotes non-keyword `THEN` before Lemon. |
 | `DO` repeat and condition words | `TO`, `BY`, `FOR`, `WHILE`, `UNTIL`, `FOREVER` | Promote only inside the correct part of `DO` specification. `WHILE`/`UNTIL` are special wherever a variable symbol would be part of an expression within `do_specification`; `TO`/`BY`/`FOR` are special inside `do_rep`. | Prefer adapter promotion/demotion. Fallback is risky because these words can be normal variables outside `DO`. |
 | `ADDRESS` tail words | `VALUE`, `WITH`, `INPUT`, `OUTPUT`, `ERROR`, `STREAM`, `STEM`, `NORMAL`, `APPEND`, `REPLACE` | Promote only inside `ADDRESS` syntax where the grammar recognizes environment, command, value expression, or connection redirection forms. | Candidate fallback may be safe for connection words outside `ADDRESS`, but only after tests. |
@@ -990,7 +997,7 @@ Lookahead rules:
 - If a digit-starting constant or disallowed period constant is followed by
   `=`, emit the standard assignment-left-side error shape rather than
   promoting any keyword.
-- If `+`, `-`, `\`, or `(` appears where ANSI allows omitted `VALUE`, and the
+- If `+`, `-`, `\`, or `(` appears where Classic syntax allows omitted `VALUE`, and the
   context is not after `PARSE`, inject a synthetic `TK_VALUE`.
 - If a left operand has been seen and the next token is an operand or left
   parenthesis that is not a keyword, infer blank or abuttal concatenation.
@@ -999,7 +1006,7 @@ Lookahead rules:
 
 ### 10.7 `THEN` and Lemon alignment
 
-The ANSI `THEN` rule is not aligned with broad Lemon `%fallback`.
+The Classic `THEN` rule is not aligned with broad Lemon `%fallback`.
 
 Lemon fallback is tried only when the current lookahead token has no parse
 action in the current state. It does not backtrack previously shifted tokens,
@@ -1016,7 +1023,7 @@ Therefore:
 - The simpler first implementation is to have no `THEN` fallback at all:
   adapter emits hard `TK_THEN` when recognized and `TK_VAR_SYMBOL` otherwise.
 - This is compatible with the current Level B grammar shape
-  `IF expression THEN instruction`, but Level C must add the ANSI synthetic
+  `IF expression THEN instruction`, but Level C must add the Classic synthetic
   semicolon before and after recognized `THEN` so source spans and DSLSH
   structure stay faithful.
 
@@ -1068,7 +1075,7 @@ PoC 1 execution result:
 - Confirmed that `%fallback` cannot backtrack a clause-leading keyword already
   shifted as a statement keyword, as shown by `IF = A ;` and `SAY = A ;`.
 - Confirmed that adding `THEN` to broad fallback cleanly accepts
-  `IF THEN THEN SAY A ;`, which is not aligned with the ANSI `THEN` rule.
+  `IF THEN THEN SAY A ;`, which is not aligned with the Classic `THEN` rule.
 
 PoC 2 execution result:
 
@@ -1332,7 +1339,7 @@ Level C DO/END control slice on 2026-05-11:
     label inside a `DO`/`SELECT` group;
   - unknown `CALL` targets are not errors, because Classic REXX procedures and
     functions can be external and resolved at runtime;
-  - ANSI BIF names are preloaded in the Level C helper so later BIF-aware
+  - Classic BIF names are preloaded in the Level C helper so later BIF-aware
     validation has one source of truth, but this slice does not make unknown
     external calls invalid;
   - `PROCEDURE` emits `17.1` unless it is the first instruction following a
@@ -1343,7 +1350,7 @@ Level C DO/END control slice on 2026-05-11:
     `DIGITS`/`FUZZ`.
 - The deep validation pass adds conservative source-proven checks that are still
   Level C-only:
-  - binary and hexadecimal string literals emit ANSI identities `15.1` through
+  - binary and hexadecimal string literals emit Level C identities `15.1` through
     `15.4` for invalid blank placement and invalid characters. The shared
     string decoder still owns the raw decoding, but Level C source-tree
     preparation rewrites its legacy `INVALID_HEX`/`INVALID_BIN` AST diagnostics
@@ -1428,7 +1435,8 @@ rexx "$probe"
 The probe returned zero under Regina, confirming the accepted `TRACE` constants,
 signed numeric `TRACE`, and valid binary/hexadecimal string forms. Regina rejects
 the new `ADDRESS WITH INPUT ...` positive fixture with `25.5`; for this slice
-the cREXX parser follows the ANSI grammar text for `ADDRESS WITH` rather than
+the cREXX parser follows the public language-specification grammar text for
+`ADDRESS WITH` rather than
 using Regina as the deciding oracle for that subgrammar.
 
 Regression tests added for the DO slice:
@@ -1508,7 +1516,7 @@ Level C expression-core slice on 2026-05-11:
     `\<`
   - strict comparisons: `==`, `\==`, `>>`, `<<`, `>>=`, `<<=`, `\>>`, `\<<`
 - Compound operators continue to accept optional blanks between their character
-  components, matching the ANSI extraction notes.
+  components, matching the public extraction notes.
 - The grammar implements the Classic precedence ladder documented in section
   6.4 and mirrors the Level B `NUMERIC_CLASSIC` expression structure where that
   is already proven: high-priority prefix minus above left-associative power,
@@ -1516,7 +1524,7 @@ Level C expression-core slice on 2026-05-11:
   logical OR/exclusive-OR.
 - `&&` now maps to shared `OP_XOR`, not to ordinary not-equals. This keeps the
   syntax tree aligned with Classic REXX logical semantics and leaves the Level C
-  validator room to enforce ANSI logical-value diagnostics before lowering.
+  validator room to enforce Classic logical-value diagnostics before lowering.
 - `DO symbol = expression` now uses a Level C-only contextual
   `CTK_DO_CONTROL_SYMBOL` parser token when the first DO-header symbol is
   followed by `=`, avoiding the Lemon ambiguity between a counted control
@@ -1564,7 +1572,7 @@ Classic prefix-minus/power, remainder, blank-concatenation, and logical
 precedence shape. The comparison fixture runs and prints only the expected true
 branches under Regina's uninitialized-variable behaviour. The bad-comma fixture
 is rejected by Regina with syntax error `64.1`; the Level C highlighter reports
-the ANSI-derived identity `RXC-LC-37.1` and resynchronizes at the following
+the language-specification-derived identity `RXC-LC-37.1` and resynchronizes at the following
 `SAY`. The bad-right-parenthesis fixture is rejected by Regina and the Level C
 highlighter reports `RXC-LC-37.2`. Regina also rejects `say 1 =` with syntax
 error `64.1`; the Level C highlighter reports `RXC-LC-35.1
@@ -1735,7 +1743,7 @@ Result after the deep-validation slice: full build passes; all
 
 The remaining first implementation sequence is:
 
-1. Review the remaining lexer/parser gaps against the ANSI syntax text:
+1. Review the remaining lexer/parser gaps against the public syntax text:
    non-integer number forms, period-start constants and reserved symbols,
    function-call syntax, nested comments, continuation edge cases, and any
    keyword fallback cases that still depend on adapter state.

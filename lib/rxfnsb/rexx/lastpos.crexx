@@ -36,7 +36,9 @@ lastpos: procedure = .int
   nlen=0
   assembler strlen nlen,needle
   if nlen=0      then return 0
-  if haystack='' then return 0
+  hlen=0
+  assembler strlen hlen,haystack
+  if hlen=0 then return 0
   nlen=nlen-1
   foundpos=1
   lastfound=0

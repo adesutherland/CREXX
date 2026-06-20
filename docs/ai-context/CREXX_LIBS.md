@@ -19,6 +19,10 @@ facade for callers that still use the original prototype API. The `crexx`
 driver includes `rexxscript.rxbin` in its default runtime set; direct VM runs
 using the `REXXSCRIPT` compiler exit or compatibility `evaluate()` surface must
 load `rexxscript.rxbin` at runtime in addition to `library.rxbin`.
+The same source directory also builds the standalone `bin/rexxscript`
+executable, which packages a file runner around an isolated
+`.rexxscriptevaluator()` instance.
+The product master documentation is in `rexxscript/doc/`.
 
 `lib/rxfnsb/rexx/rxjson.crexx` contains the first JSON foundation library module
 for Level B web-service and transport work. It is implemented in Rexx, ships in
@@ -242,7 +246,9 @@ movement, append, prepend, pop, shift, gap-growing set, and the object-array
 insert/delete/append/prepend/drop/move helpers
 use VM bulk attribute instructions so the logical array pointer list can be
 shifted without a Rexx-level per-element copy loop. Mutating array BIFs must
-declare the array with `arg expose`.
+declare the array with `arg expose`. To clear an existing array object in
+place, use `arraydrop` for `.string[]` and `objectarraydrop` for `.object[]`;
+this is the current Level B clear idiom for collection attributes.
 
 Container naming is intentionally split by shape:
 
@@ -256,10 +262,14 @@ Container naming is intentionally split by shape:
   `snapshotIterator()` returns an iterator over a factory-time snapshot.
 - Maps/stems are keyed containers. Do not overload `array*` for keyed lookup;
   use `stem*` or `map*` BIF names and class methods such as `put`, `get`,
-  `containsKey`, `remove`, `keys`, and `values`.
+  `containsKey`, `remove`, `keys`, and `values`. The current pure-Rexx
+  classlib map iterators are factory-time snapshots built from key/value
+  arrays. Do not infer `StringArrayList.iterator()` live-reference semantics
+  for maps.
 - Sets are uniqueness containers. Use `add`, `contains`, `remove`, `size`,
   `clear`, and `toArray`/`fromArray` semantics consistently across classic and
-  class-shaped APIs.
+  class-shaped APIs. The current pure-Rexx classlib set iterators are also
+  snapshot iterators.
 
 Level B classlib collection names carry their value contract because the
 language does not yet have generics. Current public classlib containers and
@@ -273,9 +283,16 @@ iterator interfaces are therefore explicitly tagged:
   `ObjectLinkedList`, and `ObjectStack`. Callers explicitly upcast concrete
   class instances with `as .object` when storing them.
 - `StringObject...` map classes use string keys and object values, for example
-  `StringObjectHashMap` and `StringObjectTreeMap`. The native stem/treemap
-  storage is used only as a string-key index; object values remain in Rexx
-  object arrays.
+  `StringObjectHashMap` and `StringObjectTreeMap`. They store keys in Rexx
+  string arrays and values in Rexx object arrays.
+
+The current public classlib collection surfaces are Rexx-only. `StringHashMap`,
+`StringTreeMap`, `StringHashSet`, `StringTreeSet`, `StringLinkedList`, and the
+string-key/object-value map variants no longer require the historical native
+`treemap` or `llist` plugins. String-key lookup uses strict equality so empty
+string keys and blank string keys remain distinct. The older native adapter
+sources for id, key database, and OS/system helpers are not linked into
+`classlib.rxbin`.
 
 Bare collection names such as `Iterator`, `Iterable`, `ArrayList`, `HashMap`,
 `TreeMap`, and `Stack` are intentionally left free for future Level G generic

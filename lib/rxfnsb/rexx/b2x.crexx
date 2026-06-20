@@ -34,7 +34,7 @@ b2x: procedure = .string
   if verify(bin, '01') \= 0 then
     return ''
 
-  if bin = '' then
+  if length(bin) = 0 then
     return ''
 
   hexlen = (length(bin) + 3) % 4
@@ -45,4 +45,3 @@ b2x: procedure = .string
 
   hex = translate(reradix(bin, 2, 16))
   return right(hex, hexlen, '0')
-

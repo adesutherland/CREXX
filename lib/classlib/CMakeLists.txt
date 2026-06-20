@@ -15,8 +15,6 @@ set(CLSS
   StringObjectHashMapIterator
   StringHashSet
   StringHashSetIterator
-  Id
-  KeyDB
   StringLinkedList
   ObjectLinkedList
   Rexx
@@ -28,7 +26,6 @@ set(CLSS
   StringObjectTreeMapIterator
   StringTreeSet
   StringTreeSetIterator
-  Os
   Qfind
   Scanlex
 )
@@ -45,11 +42,6 @@ set(CLASSLIB_MEMBER_BUILD_DEPS
   rxas
   library
   compiler_exit_bin
-  lib/plugins/_system
-  lib/plugins/_treemap
-  lib/plugins/_llist
-  lib/plugins/_keyaccess
-  lib/plugins/_id
 )
 
 set(_classlib_member_clean_stamp "${CMAKE_CURRENT_BINARY_DIR}/classlib_member_clean.stamp")
@@ -150,7 +142,7 @@ add_test(
     -DINPUT_RXBIN=${CMAKE_BINARY_DIR}/bin/classlib.rxbin
     -DOUTPUT_RXAS=${CMAKE_CURRENT_BINARY_DIR}/classlib_inline_check.rxas
     "-DEXPECT_TEXT_1=.meta \"data_stringlist.stringarraylist.init\"=\".inline\""
-    "-DEXPECT_TEXT_2=.meta \"data_stringhashmap.stringhashmap.put\"=\".inline\""
+    "-DEXPECT_TEXT_2=.meta \"data_stringhashmap.stringhashmap.size\"=\".inline\""
     -P ${CMAKE_SOURCE_DIR}/linker/tests/check_rxdas_contains.cmake
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )

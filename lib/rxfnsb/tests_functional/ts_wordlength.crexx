@@ -52,4 +52,24 @@ if wordlength('',10) \= '0' then do
   errors=errors+1
   say 'WORDLENGTH failed in test 10 '
 end
+if wordlength(' ',1) \= '0' then do
+  errors=errors+1
+  say 'WORDLENGTH failed in test 11 '
+end
+if wordlength(' a ',1) \= '1' then do
+  errors=errors+1
+  say 'WORDLENGTH failed in test 12 '
+end
+if qwordlength("'a b' c",1) \= '5' then do
+  errors=errors+1
+  say 'QWORDLENGTH failed in test 13 '
+end
+if qwordlength("'a b' c",2) \= '1' then do
+  errors=errors+1
+  say 'QWORDLENGTH failed in test 14 '
+end
+if qwordlength(' ',1) \= '0' then do
+  errors=errors+1
+  say 'QWORDLENGTH failed in test 15 '
+end
 return errors<>0

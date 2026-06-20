@@ -1,7 +1,7 @@
 /*
  * cREXX License (MIT)
  *
- * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Rene Jansen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,151 +24,135 @@
 
 options levelb comments_dash
 namespace data_StringTreeMap expose StringTreeMap
-import treemap
+import rxfnsb
 import StringTreeMapIterator
 import data_StringTreeSet
 import data_StringIterable
 
 /**
- * StringTreeMap: a Red-Black tree based map that stores key-value
- * pairs in the natural order of the keys, backed by the
- * treemap.c plugin.
- * In this version all keys and values are strings.
+ * Rexx-only ordered string map.
  *
- * @author René Vincent Jansen
- * @author Peter Jacob
+ * Storage is array-backed. Ordered views sort a snapshot of the keys.
  */
-
 StringTreeMap: class implements .StringIterable
 val = .int
+keys_ = .string[]
+values_ = .string[]
+count_ = .int
 
-/** method factory creates an instance of the StringTreeMap
- * class and returns it. Constructs a new, empty tree map,
- *  using the natural ordering of its keys.
- */
   *: factory
-    val = tmcreate('val')
+    val = 1
+    count_ = 0
     return
-   /**
-    * Associates the specified value with the specified key in this map.
-    * @parm .string key
-    * @parm .string value
-    * @return .int
-    */
+
+  _find: method = .int
+    arg key = .string
+    do i = 1 to count_
+      if keys_[i] == key then return i
+    end
+    return 0
+
+  _sortedKeys: method = .string[]
+    result = .string[]
+    do i = 1 to count_
+      result[i] = keys_[i]
+    end
+    do i = 1 to count_ - 1
+      do j = 1 to count_ - i
+        if result[j] > result[j + 1] then do
+          swap = result[j]
+          result[j] = result[j + 1]
+          result[j + 1] = swap
+        end
+      end
+    end
+    return result
+
   put: method = .int
     arg key = .string, value = .string
-    return tmput(val,key,value)
+    slot = _find(key)
+    if slot > 0 then do
+      if values_[slot] == value then return 4
+      values_[slot] = value
+      return 0
+    end
+    count_ = count_ + 1
+    keys_[count_] = key
+    values_[count_] = value
+    return 0
 
-    /**
-     * Returns the value to which the specified key is mapped,
-     * or nothing if this map contains no mapping for the key.
-     * @parm .string key
-     * @return .string the found value
-     */
   get: method = .string
     arg key = .string
-    return tmget(val,key)
+    slot = _find(key)
+    if slot = 0 then return ""
+    return values_[slot]
 
-    /**
-     * Returns the number of key-value mappings in this StringTreeMap.
-     * return .int size
-     */
   size: method = .int
-    return tmsize(val)
+    return count_
 
-    /**
-     * method remove removes a mapping from this StringTreeMap
-     * @parm .string key
-     * @return .int 0 for success, 4 for failure
-     */
   remove: method = .int
     arg key = .string
-    return tmremove(val,key)
+    slot = _find(key)
+    if slot = 0 then return 4
+    do i = slot to count_ - 1
+      keys_[i] = keys_[i + 1]
+      values_[i] = values_[i + 1]
+    end
+    count_ = count_ - 1
+    return 0
 
-    /**
-     * method containsKey returns 1 (true) if this map contains
-     * a mapping for the specified key.
-     * @parm .string key
-     * @return .int
-     */
   containsKey: method = .int
     arg key = .string
-    return tmcontainsKey(val,key)
+    if _find(key) > 0 then return 1
+    return 0
 
-    /**
-     * method firstKey returns the first (lowest) key
-     * currently in this map.
-     * @parm .string key
-     * @return .int
-     */
   firstKey: method = .string
-    return tmfirstkey(val)
+    if count_ = 0 then return ""
+    keys = _sortedKeys()
+    return keys[1]
 
-    /**
-     * method lastKey returns the last (highest) key
-     * currently in this map.
-     * @parm .string key
-     * @return .int
-     */
   lastKey: method = .string
-    return tmlastkey(val)
+    if count_ = 0 then return ""
+    keys = _sortedKeys()
+    return keys[count_]
 
-    /**
-     * method keystem returns the keys in this StringTreeMap
-     * as a rexx stem
-     */
   keyArray: method = .string[]
-    list = .string[]
-    n = tmkeys(val, list)
-    return list
+    return _sortedKeys()
 
-    /**
-    * method valuestem returns the values in this StringTreeMap
-    * as a rexx stem. This includes duplicates
-    */
   valueArray: method = .string[]
-    keys = .string[]
-    vals = .string[]
-    n = tmdump(val, keys, vals)
-    return vals
+    keys = _sortedKeys()
+    result = .string[]
+    do i = 1 to keys[0]
+      result[i] = get(keys[i])
+    end
+    return result
 
-    /* method keySet returns the keys in this StringTreeMap
-     * as a StringTreeSet.
-     * @return .StringTreeSet
-     */
   keySet: method = .StringTreeSet
     ts = .StringTreeSet()
     rc = ts.fromArray(keyArray())
     return ts
 
-    /**
-    * method valueSet returns the values in this StringTreeMap
-    * as a StringTreeSet, containing unique and ordered values
-    * @return .StringTreeSet
-    */
   valueSet: method = .StringTreeSet
     ts = .StringTreeSet()
     rc = ts.fromArray(valueArray())
     return ts
 
-    /**
-     * method iterator returns a StringTreeMapIterator
-     * which iterates over the keys currently in this map.
-     * @return .StringTreeMapIterator
-     */
   iterator: method = .StringTreeMapIterator
-    return .StringTreeMapIterator(val)
+    return .StringTreeMapIterator(keyArray())
 
-    /**
-    * method toString() returns the content of the StringTreeMap
-    * as a string.
-    * @return .string
-    */
   toString: method = .string
-    return tmtostring(val)
+    if count_ = 0 then return "{}"
+    keys = _sortedKeys()
+    text = "{"
+    do i = 1 to keys[0]
+      if i > 1 then text = text || ", "
+      text = text || keys[i] || "=" || get(keys[i])
+    end
+    return text || "}"
 
   free: method = .int
-    if val = 0 then return 0
-    rc = tmfree(val)
+    call arraydrop keys_
+    call arraydrop values_
+    count_ = 0
     val = 0
-    return rc
+    return 0

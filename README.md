@@ -84,6 +84,8 @@ is searched for same-extension imports.
   use and how much authority each area has.
 - [Level B tutorial](docs/books/crexx_programming_guide/levelb_tutorial.md)
   teaches practical Level B for Rexx programmers with tested examples.
+- [RexxScript user guide](rexxscript/doc/user-guide.md) covers the standalone
+  `rexxscript` runner, the `REXXSCRIPT` command, and the direct evaluator API.
 - [Language reference](docs/books/crexx_language_reference/about.md) covers the
   implemented language surface.
 - [Programming guide](docs/books/crexx_programming_guide/about.md) covers tools,

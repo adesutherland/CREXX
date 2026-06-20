@@ -410,6 +410,11 @@ Guidance:
   as core, integration, optional, deprecated, experimental, or remove. For each
   category, describe expected build default, package inclusion, docs status,
   and test expectation. Capture why each item exists before proposing removal.
+- Treat native-backed Rexx adapter modules as part of this policy too. The
+  `Id`, `KeyDB`, and `Os` wrappers and their tests currently live under
+  `lib/classlib` but are not linked into `classlib.rxbin`; their final home and
+  Release 1 status should be decided through this triage, not as an incidental
+  source cleanup.
 
 Acceptance:
 - An approved policy and classification categories exist, and the foundation
@@ -573,6 +578,10 @@ Guidance:
   legacy integrations, and related docs/tests. Classify each item using the
   approved categories. Capture dependencies, build option, package status, test
   status, and "why keep this?" in the table.
+- Include Rexx wrapper modules and tests that expose native plugin surfaces,
+  even when they are not currently in a release library image. In particular,
+  record the `Id`, `KeyDB`, and `Os` classlib-adjacent wrappers as package/core
+  triage entries with their native dependencies and proposed destination.
 
 Acceptance:
 - A repo note or table lists each item and its proposed category. Items marked

@@ -9,6 +9,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 set(REXXBINS
   testRexxValue
   testRexxRuntimePools
+  testRexxClassicBifs
 )
 
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
@@ -16,7 +17,6 @@ set(LIBRPATH_RXBIN ${LIBRPATH}.rxbin)
 set(CLASSLIB_RXBIN ${CMAKE_BINARY_DIR}/bin/classlib.rxbin)
 set(RXFNSC_RXBIN ${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin)
 set(RXFNSC_RUNTIMES
-  rx_treemap
   ${LIBRPATH}
   ${CMAKE_BINARY_DIR}/bin/classlib
   ${CMAKE_BINARY_DIR}/bin/rxfnsc
@@ -40,7 +40,7 @@ foreach(_binfile ${REXXBINS})
             TARGET_GROUP ${_basename}
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
             RXC_FLAGS ${_rxc_flags}
-            DEPENDS library classlib rxfnsc ${LIBRPATH_RXBIN} ${CLASSLIB_RXBIN} ${RXFNSC_RXBIN} _treemap ${_rexx_dep} ${_prev_target}
+            DEPENDS library classlib rxfnsc ${LIBRPATH_RXBIN} ${CLASSLIB_RXBIN} ${RXFNSC_RXBIN} ${_rexx_dep} ${_prev_target}
             RUNTIME_ARGS ${RXFNSC_RUNTIMES}
     )
     set(_prev_target ${_basename}_noopt_artifact ${_basename}_opt_artifact)

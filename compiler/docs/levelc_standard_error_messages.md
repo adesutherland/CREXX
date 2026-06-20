@@ -3,18 +3,16 @@
 Status: extracted reference for Level C diagnostics
 Last updated: 2026-05-10
 
-Source: draft ANSI REXX standard PDF,
-`draft-ansi-rexx-standard.pdf`, section 8.2.1, printed pages 63-70
-(PDF pages 77-84).
+Source: publicly available Classic REXX language specification.
 
 This file records the standard `#ErrorText.` catalog in a normalized
 one-message-per-line form. It is intended to become the Level C diagnostic
 message catalog used by parser recovery, validation, `ERRORTEXT`, and later
 runtime condition reporting.
 
-The PDF is the source of truth. An older `docs/bifs/#ansibifs.rexx#` copy exists
-in the repository, but it differs from the PDF in several entries and should not
-be used as the Level C baseline without reconciliation.
+The public language-specification source is the source of truth. An older
+repository copy exists under `docs/bifs/`, but it differs in several entries
+and should not be used as the Level C baseline without reconciliation.
 
 ## Parser-Recovery Priority Subset
 

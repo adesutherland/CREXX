@@ -1,43 +1,89 @@
-options levelb
+options levelb comments_dash
 import data_StringHashMap
 
-a = .StringHashMap()
+failures = 0
 
-rc = a.put('aap','noot')
-rc = a.put('noot','mies')
-rc = a.put('mies','wim')
-rc = a.put('wim','zus')
-rc = a.put('zus','jet')
-rc = a.put('jet',1)
-rc = a.put('teun',2)
-rc = a.put('vuur',3)
-rc = a.put('gijs',4)
-rc = a.put('lam',5)
-rc = a.put('kees',6)
-rc = a.put('bok',7)
-rc = a.put('weide',8)
-rc = a.put('does',9)
-rc = a.put('hok',10)
-rc = a.put('duif',11)
-rc = a.put('schapen',12)
+m = .StringHashMap()
+failures = failures + check_int("initial size", m.size(), 0)
+failures = failures + check_string("initial string", m.toString(), "{}")
 
-say a.size()
+failures = failures + check_int("put b", m.put("b", "bee"), 0)
+failures = failures + check_int("put a", m.put("a", "aye"), 0)
+failures = failures + check_int("size after puts", m.size(), 2)
+failures = failures + check_int("contains b", m.containsKey("b"), 1)
+failures = failures + check_string("get b", m.get("b"), "bee")
 
-i = a.iterator()
+failures = failures + check_int("same key/value rc", m.put("b", "bee"), 4)
+failures = failures + check_int("update rc", m.put("b", "BEE"), 0)
+failures = failures + check_int("update keeps size", m.size(), 2)
+failures = failures + check_string("updated value", m.get("b"), "BEE")
 
-loop while i.hasNext()
-  say i.next()
+keys = .string[]
+keys = m.keyArray()
+failures = failures + check_int("key count", keys[0], 2)
+failures = failures + check_string("key insertion first", keys[1], "b")
+failures = failures + check_string("key insertion second", keys[2], "a")
+
+values = .string[]
+values = m.valueArray()
+failures = failures + check_int("value count", values[0], 2)
+failures = failures + check_string("value insertion first", values[1], "BEE")
+failures = failures + check_string("value insertion second", values[2], "aye")
+
+it = m.iterator()
+failures = failures + check_int("iterator snapshot add", m.put("c", "see"), 0)
+iter_count = 0
+loop while it.hasNext()
+  key = it.next()
+  if key = "a" | key = "b" then iter_count = iter_count + 1
+  if key = "c" then do
+    say "iterator unexpectedly saw later add"
+    failures = failures + 1
+  end
+end
+failures = failures + check_int("iterator snapshot count", iter_count, 2)
+
+empty = .StringHashMap()
+failures = failures + check_int("put empty key", empty.put("", "empty-key"), 0)
+failures = failures + check_int("put blank key", empty.put(" ", "blank-key"), 0)
+failures = failures + check_int("empty/blank size", empty.size(), 2)
+failures = failures + check_int("empty contains", empty.containsKey(""), 1)
+failures = failures + check_int("blank contains", empty.containsKey(" "), 1)
+failures = failures + check_string("empty key value", empty.get(""), "empty-key")
+failures = failures + check_string("blank key value", empty.get(" "), "blank-key")
+
+failures = failures + check_int("remove a", m.remove("a"), 0)
+failures = failures + check_int("remove missing", m.remove("missing"), 4)
+failures = failures + check_int("remove size", m.size(), 2)
+failures = failures + check_int("removed contains", m.containsKey("a"), 0)
+
+failures = failures + check_int("free rc", m.free(), 0)
+failures = failures + check_int("free size", m.size(), 0)
+keys = m.keyArray()
+failures = failures + check_int("free key count", keys[0], 0)
+failures = failures + check_int("reuse put", m.put("again", "ok"), 0)
+failures = failures + check_string("reuse get", m.get("again"), "ok")
+
+if failures <> 0 then do
+  say "StringHashMap failures:" failures
+  exit 1
 end
 
-say a.toString()
+say "PASS: StringHashMap"
+exit 0
 
-say 'keyArray() on StringHashMap'
+check_int: procedure=.int
+  arg label=.string, actual=.int, expected=.int
+  if actual <> expected then do
+    say label": expected" expected "got" actual
+    return 1
+  end
+return 0
 
-keystem = a.keyArray()
-
-say 'looping over stem result'
-loop l=1 to keystem.0
-  say keystem.l
-end
-
-say 'number of elements in stem:' keystem.0
+check_string: procedure=.int
+  arg label=.string, actual=.string, expected=.string
+  if actual <> expected then do
+    say label": expected ["expected"] got ["actual"]"
+    return 1
+  end
+return 0

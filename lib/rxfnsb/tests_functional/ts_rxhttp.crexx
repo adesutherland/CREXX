@@ -40,6 +40,13 @@ failures = failures + check_int("extract content-length http status", client.htt
 failures = failures + check_str("extract content-type header", client.header("content-type"), "application/json")
 failures = failures + check_str("last body", client.lastBody(), json)
 
+blankHttp = "HTTP/1.1 200 OK" || crlf || ,
+            "Content-Length: 1" || crlf || ,
+            crlf || " "
+blankExtracted = client.extractBody(blankHttp)
+failures = failures + check_int("extract blank content-length body length", length(blankExtracted), 1)
+failures = failures + check_str("extract blank content-length body byte", c2x(blankExtracted), "20")
+
 chunkedHttp = "HTTP/1.1 200 OK" || crlf || ,
               "Transfer-Encoding: chunked" || crlf || ,
               crlf || ,
@@ -59,6 +66,15 @@ unicodeChunkedHttp = "HTTP/1.1 200 OK" || crlf || ,
 unicodeExtracted = client.extractBody(unicodeChunkedHttp)
 failures = failures + check_str("extract unicode chunked body", unicodeExtracted, unicodeJson)
 failures = failures + check_int("extract unicode chunked status", client.status(), 0)
+
+blankChunkedHttp = "HTTP/1.1 200 OK" || crlf || ,
+                   "Transfer-Encoding: chunked" || crlf || ,
+                   crlf || ,
+                   "1" || crlf || " " || crlf || ,
+                   "0" || crlf || crlf
+blankChunkedExtracted = client.extractBody(blankChunkedHttp)
+failures = failures + check_int("extract blank chunked body length", length(blankChunkedExtracted), 1)
+failures = failures + check_str("extract blank chunked body byte", c2x(blankChunkedExtracted), "20")
 
 badJson = '{"error":"busy"}'
 badHttp = "HTTP/1.1 503 Service Unavailable" || crlf || ,

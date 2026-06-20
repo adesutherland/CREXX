@@ -1,8 +1,10 @@
 # RexxScript Concept
 
-Status: draft proposal for discussion. This document is guidance for shaping
-Peter's `EVALUATE` prototype into a safe, Rexx-like scripting component. It is
-not yet an approved language design.
+Status: historical draft proposal for discussion. This document records design
+thinking from the `EVALUATE` prototype period and may intentionally disagree
+with the current implementation. The RexxScript product master documentation is
+in `rexxscript/doc/`; use that directory for current user-facing and
+developer-facing behavior.
 
 ## Starting Point
 

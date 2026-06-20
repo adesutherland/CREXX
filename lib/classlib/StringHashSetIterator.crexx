@@ -1,7 +1,7 @@
 /*
  * cREXX License (MIT)
  *
- * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Rene Jansen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,61 +24,28 @@
 
 options levelb
 namespace data_StringHashSet expose StringHashSetIterator
-import treemap
 import data_StringIterator
 
-/**
- * Class StringHashSetIterator returns an iterator
- * for a StringHashSet object.
- * It is a 'live' iterator, as opposed to a 'snapshot' one.
- * This implies that undefined behaviour is
- * possible (and expected) when the underlying 
- * StringHashSet is modified during its execution.
- */
 StringHashSetIterator: class implements .StringIterator
-token = .int
-closed = .int
+items_ = .string[]
+index_ = .int
+count_ = .int
 
-/**
- * factory method returns an instance of this class
- */
   *: factory
-    arg setToken = .int
-    token = stemitercreate(setToken)
-    closed = 0
+    arg items = .string[]
+    items_ = items
+    count_ = items[0]
+    index_ = 0
     return
 
-    /** method hasNext() returns 1 (true)
-     * as long as there are more items
-     * to be returned by this iterator
-     */
   hasNext: method = .int
-    if closed then return 0
-    has_next = stemiterhasnext(token)
-    if \has_next then do
-      call stemiterfree(token)
-      token = 0
-      closed = 1
-    end
-    return has_next
+    return index_ < count_
 
-    /**
-     * method next() returns the next item
-     * available from this iterator
-     */
   next: method = .string
-    if closed then return ''
-    return stemiternext(token)
+    if index_ >= count_ then return ""
+    index_ = index_ + 1
+    return items_[index_]
 
-    /**
-     * method close() closes this 
-     * iterator. After this, hasNext()
-     * returns 0
-     */
   close: method = .int
-    if \closed then do
-      call stemiterfree(token)
-      token = 0
-      closed = 1
-    end
+    index_ = count_
     return 0

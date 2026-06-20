@@ -31,6 +31,8 @@ designs.
 - [Namespaces](books/crexx_language_reference/namespace.md)
 - [Standard library](books/crexx_language_reference/standard_library.md)
 - [Built-in function reference](books/crexx_language_reference/bifs_function_reference.md)
+- [RexxScript user guide](../rexxscript/doc/user-guide.md)
+- [RexxScript developer guide](../rexxscript/doc/developer-guide.md)
 
 ## Tools
 
