@@ -1,5 +1,10 @@
 # RexxScript Step 1 Architecture
 
+Status: maintainer/agent architecture context. The RexxScript product master
+documentation is in `rexxscript/doc/`. Keep user-facing and developer-facing
+product docs there, and use this file for operational architecture notes that
+agents and maintainers need while working in the repo.
+
 ## Purpose
 
 This document describes the architecture, design goals, and planned evolution of RexxScript.
@@ -31,6 +36,31 @@ rexxscript_output
 rexxscript_value
 rexxscriptevaluator
 ```
+
+The runtime source is split into:
+
+```text
+RexxScriptEvaluator.crexx
+    namespace rexxscriptcore
+    owns the core evaluator class, parser state, output buffer, labels, and
+    sandbox RexxVariablePool
+
+RexxScriptRuntime.crexx
+    namespace rexxscript
+    preserves the public API and wraps the core evaluator
+
+RexxScriptEvaluateCompat.crexx
+    namespace rxfnsb
+    keeps the old evaluate()/evaluate_exposed() prototype facade
+
+RexxScriptRunner.crexx
+    packaged as the standalone bin/rexxscript executable
+```
+
+Each `.rexxscriptevaluator()` instance owns a separate core evaluator. The
+procedural `rexxscript_output()` and `rexxscript_value(name)` helpers are a
+transitional last-result facade and should not be used for code that needs
+multiple live evaluator instances.
 
 The `REXXSCRIPT` compiler exit is an adapter: it lowers the statement syntax to calls into the `rexxscript` namespace and asks the compiler to import that namespace. The old `rxfnsb.evaluate`, `rxfnsb.evaluate_exposed`, `rxfnsb.rexxscript_output`, `rxfnsb.rexxscript_value`, and `rxfnsb.rexxscriptevaluator` surface is kept as a compatibility module in `bin/rexxscript.rxbin`, not in the base Level B `library.rxbin`.
 
@@ -103,6 +133,9 @@ DO variable = start TO limit [BY step]
 
 LEAVE
 ITERATE
+
+label:
+SIGNAL label
 
 RETURN
 ```
@@ -242,7 +275,16 @@ script_status
 
 The underlying evaluator remains an implementation detail and may evolve without affecting the external RexxScript programming model.
 
-At runtime, applications using the command, direct `rexxscript_*` calls, or compatibility `evaluate()` calls must load `bin/rexxscript.rxbin` along with the base `bin/library.rxbin`. The `crexx` driver includes the RexxScript image in its default runtime set; direct VM invocations must pass it explicitly.
+At runtime, applications using the command, direct `rexxscript_*` calls, or
+compatibility `evaluate()` calls must load `bin/rexxscript.rxbin` along with
+the base `bin/library.rxbin`. The `crexx` driver includes the RexxScript image
+in its default runtime set; direct VM invocations must pass it explicitly.
+
+The standalone `bin/rexxscript` executable packages `RexxScriptRunner.crexx`
+with `library`, `classlib`, `rxfnsc`, and `rexxscript`, and statically links
+the system plugin used by the runner/library file I/O path. The included
+classlib collection code is Rexx-only and does not require the historical
+treemap plugin.
 
 The communication layer between CREXX and RexxScript is still considered an
 active design area and may evolve as additional experience is gained. RexxScript
@@ -339,6 +381,9 @@ counted DO loops
 
 LEAVE
 ITERATE
+
+label:
+SIGNAL label
 
 RETURN
 ```

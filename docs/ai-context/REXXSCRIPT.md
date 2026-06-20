@@ -1,5 +1,10 @@
 # REXXSCRIPT Command
 
+Status: maintainer/agent context. The RexxScript product master documentation
+is in `rexxscript/doc/`, especially `rexxscript/doc/user-guide.md` for
+user-facing behavior and `rexxscript/doc/developer-guide.md` for implementation
+guidance.
+
 ## Overview
 
 `REXXSCRIPT` executes a RexxScript snippet from within a CREXX program.
@@ -13,6 +18,17 @@ Programs using the `REXXSCRIPT` command should import `rexxscript`. The
 `crexx` driver loads `rexxscript.rxbin` as part of its default runtime set;
 direct `rxvm`/`rxvme` runs should pass `rexxscript.rxbin` alongside the base
 `library.rxbin`.
+
+The build also provides a standalone `bin/rexxscript` executable for running a
+RexxScript source file directly:
+
+```sh
+rexxscript rules.rxs
+rexxscript rules.rxs --debug
+```
+
+The executable evaluates the file with an isolated evaluator instance, prints
+captured `SAY` output, and exits non-zero when evaluation does not return `OK`.
 
 ---
 
@@ -181,6 +197,30 @@ OK
 ```
 
 The result array is primarily useful for diagnostics, testing, and future extensions.
+
+---
+
+## Direct Runtime API
+
+For embedded use without the `REXXSCRIPT` command, create an evaluator instance:
+
+```rexx
+import rexxscript
+
+runner = .rexxscriptevaluator()
+result = runner.evaluate("value = 'A'; say value", 0)
+out = runner.output()
+```
+
+Each evaluator instance owns its own variable pool, output buffer, labels, and
+parser state. This is the preferred API when callers need multiple independent
+RexxScript executions alive in the same process.
+
+The procedural helpers `rexxscript_evaluate`, `rexxscript_evaluate_exposed`,
+`rexxscript_output`, and `rexxscript_value` remain as a transitional facade for
+older callers. `rexxscript_output()` and `rexxscript_value(name)` report the
+last procedural evaluation, so they should not be used to model multiple live
+instances.
 
 ---
 
@@ -371,6 +411,24 @@ b = 11       /* strict numeric value */
 when RexxScript is allowed to replace the value with arbitrary text.
 
 This limitation applies only when values are copied back through the `EXPOSE` mechanism. Internally, RexxScript continues to use string-based variables and performs numeric conversions only when required by arithmetic or comparison operations.
+
+---
+
+## Labels And SIGNAL
+
+RexxScript supports simple Classic-style labels and `SIGNAL label` transfer:
+
+```rexx
+say 'before'
+signal done
+say 'skipped'
+done:
+say 'after'
+```
+
+`SIGNAL` jumps to the statement after the matching label. Labels are
+case-insensitive identifiers followed by `:`. `GOTO label` is currently accepted
+as a compatibility alias in the runtime, but new code should use `SIGNAL`.
 
 ---
 

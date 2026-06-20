@@ -1,7 +1,7 @@
 /*
  * cREXX License (MIT)
  *
- * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Rene Jansen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,124 +24,81 @@
 
 options levelb
 namespace data_StringHashSet expose StringHashSet
-import treemap
+import rxfnsb
 
-/**
- * This class implements a Set interface, backed by a stem instance.
- * It makes no guarantees as to the iteration order of the set;
- * in particular, it does not guarantee that the order will remain constant over time.
- *
- * @author René Vincent Jansen
- * @author Peter Jacob
-*/
 StringHashSet: class
 val = .int
+items_ = .string[]
+count_ = .int
 
-/** The factory method returns an instance of StringHashSet.
- * The expected cardinality can be indicated by a parameter
- * (which defaults to 1024)
- * @param .string expected
- * @return .StringHashSet
- */
   *: factory
     arg expected = 1024
-    val = stemcreate(expected, 'hashset')
+    val = 1
+    count_ = 0
     return
 
-    /** method add adds the specified element to this set
-     * if it is not already present. Otherwise it will leave
-     * the set unchanged.
-     * @parm .string element
-     */
+  _find: method = .int
+    arg key = .string
+    do i = 1 to count_
+      if items_[i] == key then return i
+    end
+    return 0
+
   add: method = .int
     arg key = .string
-    return stemput(val, key, key)
+    if _find(key) > 0 then return 4
+    count_ = count_ + 1
+    items_[count_] = key
+    return 0
 
-    /**
-     * method fromStem adds elements to this StringHashSet instance
-     * from a .string[], and adds them without order.
-     * @parm .string[] items
-     * @result .int added
-     */
   fromArray: method = .int
     arg items = .string[]
     added = 0
-    loop i = 1 to items.0
-      rc = add(items.i)
+    do i = 1 to items[0]
+      rc = add(items[i])
       if rc = 0 then added = added + 1
     end
     return added
 
-    /**
-     * method contains returns 1 (true) if this set contains
-     * the specified element.
-     * @parm .string element
-     * @return .int
-     */
   contains: method = .int
     arg key = .string
-    return stemcontainskey(val, key)
+    if _find(key) > 0 then return 1
+    return 0
 
-    /**
-     * method remove removes an element from this StringHashSet
-     * @parm .string key
-     * @return .int 0 for success, 4 for failure
-     */
   remove: method = .int
     arg key = .string
-    return stemremove(val, key)
-
-    /**
-     * Returns the number of elements in this StringHashSet.
-     * return .int size
-     */
-  size: method = .int
-    return stemsize(val)
-
-    /**
-     * method toArray returns the items in this StringHashSet
-     * as a rexx .string[]
-     */
-  toArray: method = .string[]
-    keys = .string[]
-    vals = .string[]
-    n = stemiterate(val, keys, vals)
-    return keys
-
-    /**
-     * method iterator returns a StringHashSetIterator
-     * which iterates over the keys currently in this map.
-     * @return .StringHashSetIterator
-     */
-  iterator: method = .StringHashSetIterator
-    return .StringHashSetIterator(val)
-
-    /**
-     * method toString() returns the content of the StringHashSet
-     * as a string.
-     * @return .string
-     */
-  toString: method = .string
-    keys = .string[]
-    vals = .string[]
-    n = stemiterate(val, keys, vals)
-
-    if n = 0 then return '{}'
-
-    s = '{'
-    loop i = 1 to n
-      if i > 1 then s = s || ', '
-      s = s || keys[i]
+    slot = _find(key)
+    if slot = 0 then return 4
+    do i = slot to count_ - 1
+      items_[i] = items_[i + 1]
     end
-    return s || '}'
+    count_ = count_ - 1
+    return 0
 
-    /**
-     * method free returns the memory of this StringHashSet
-     * to the heap.
-     * @return int
-     */
+  size: method = .int
+    return count_
+
+  toArray: method = .string[]
+    result = .string[]
+    do i = 1 to count_
+      result[i] = items_[i]
+    end
+    return result
+
+  iterator: method = .StringHashSetIterator
+    return .StringHashSetIterator(toArray())
+
+  toString: method = .string
+    if count_ = 0 then return "{}"
+    text = "{"
+    do i = 1 to count_
+      if i > 1 then text = text || ", "
+      text = text || items_[i]
+    end
+    return text || "}"
+
   free: method = .int
-    if val = 0 then return 0
-    rc = stemfree(val)
+    call arraydrop items_
+    count_ = 0
     val = 0
-    return rc
+    return 0

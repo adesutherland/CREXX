@@ -104,6 +104,18 @@ surface, but its public contract should stay small until class-library tests
 and examples are expanded. Prefer documenting concrete, tested classes rather
 than broad promises.
 
+## RexxScript
+
+RexxScript is delivered as a first-class runtime product with
+`bin/rexxscript.rxbin` and the standalone `bin/rexxscript` runner. It is an
+interpreted, sandboxed Rexx-family scripting surface for rules and generated
+code execution, not the Level C compiler path.
+
+The product documentation lives with the runtime source:
+
+- [RexxScript user guide](../../../rexxscript/doc/user-guide.md)
+- [RexxScript developer guide](../../../rexxscript/doc/developer-guide.md)
+
 ## Level G and LLM Work
 
 `rxfnsg` contains early Level G class-shaped library work, including the LLM

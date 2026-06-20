@@ -22,6 +22,14 @@ rc = l.insertBeforeCurrent("jet")
 -- say l.toString()
 
 rc = l.clear()
+failures = failures + check_int("cleared list size", l.size(), 0)
+failures = failures + check_int("cleared list empty", l.isEmpty(), 1)
+failures = failures + check_int("cleared setFirst", l.setFirst(), 4)
+failures = failures + check_int("append after clear", l.append("after"), 1)
+failures = failures + check_int("size after clear append", l.size(), 1)
+rc = l.setFirst()
+failures = failures + check_int("setFirst after clear append", rc, 0)
+failures = failures + check_string("current after clear append", l.current(), "after")
 
 k = .StringLinkedList()
 rc = k.append("wim")
@@ -74,6 +82,15 @@ check_int: procedure=.int
 
   if actual <> expected then do
     say label": expected" expected "got" actual
+    return 1
+  end
+return 0
+
+check_string: procedure=.int
+  arg label=.string, actual=.string, expected=.string
+
+  if actual <> expected then do
+    say label": expected ["expected"] got ["actual"]"
     return 1
   end
 return 0

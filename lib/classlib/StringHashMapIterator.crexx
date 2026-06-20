@@ -1,7 +1,7 @@
 /*
  * cREXX License (MIT)
  *
- * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Rene Jansen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,68 +24,40 @@
 
 options levelb comments_dash
 namespace data_StringHashMapIterator expose StringHashMapIterator
-import treemap -- the plugin
 import data_StringIterator
 
-/**
- * Class StringHashMapIterator returns an iterator
- * for a StringHashMap object. It is short for
- * StringHashMap.getKeySet.iterator(). It is a 'live'
- * iterator, as opposed to a 'snapshot' one.
- * This implies that undefined behaviour is
- * possible (and expected) when the underlying 
- * StringHashMap is modified during its execution.
- */
-
 StringHashMapIterator: class implements .StringIterator
-token = .int
-closed = .int
+keys_ = .string[]
+values_ = .string[]
+index_ = .int
+count_ = .int
 
   *: factory
-    arg mapToken = .int
-    token = stemitercreate(mapToken)
-    closed = 0
+    arg keys = .string[], values = .string[]
+    keys_ = keys
+    values_ = values
+    count_ = keys[0]
+    index_ = 0
     return
 
-    /** method hasNext() returns 1 (true)
-     * as long as there are more items
-     * to be returned by this iterator
-     */
   hasNext: method = .int
-    if closed then return 0
-    has_next = stemiterhasnext(token)
-    if \has_next then do
-      call stemiterfree(token)
-      token = 0
-      closed = 1
-    end
-    return has_next
-    
-    /**
-     * method next() returns the next item
-     * available from this iterator
-     */
-  next: method = .string
-    if closed then return ''
-    return stemiternext(token)
-    
-  nextKey: method = .string
-    if closed then return ''
-    return stemiternext(token)
-    
-  nextValue: method = .string
-    if closed then return ''
-    return stemitervalue(token)
+    return index_ < count_
 
-    /**
-     * method close() closes this 
-     * iterator. After this, hasNext()
-     * returns 0
-     */
-  close: method = .int
-    if \closed then do
-      call stemiterfree(token)
-      token = 0
-      closed = 1
+  next: method = .string
+    if index_ >= count_ then return ""
+    index_ = index_ + 1
+    return keys_[index_]
+
+  nextKey: method = .string
+    return next()
+
+  nextValue: method = .string
+    if index_ < 1 then do
+      if hasNext() = 0 then return ""
+      key = next()
     end
+    return values_[index_]
+
+  close: method = .int
+    index_ = count_
     return 0

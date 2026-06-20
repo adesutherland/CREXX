@@ -1,7 +1,7 @@
 /*
  * cREXX License (MIT)
  *
- * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Rene Jansen
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,52 +22,41 @@
  * SOFTWARE.
  */
 
-options levelb comments_dash
-namespace data_StringObjectHashMap expose StringObjectHashMapIterator
-import data_StringIterator
+/* rexx */
+options levelb
 
-StringObjectHashMapIterator: class implements .StringIterator
-keys_ = .string[]
-values_ = .object[]
-index_ = .int
-count_ = .int
+import rxfnsb
+import rexxscript
 
-  *: factory
-    arg keys = .string[], values = .object[]
-    keys_ = keys
-    values_ = values
-    count_ = keys[0]
-    index_ = 0
-    return
+arg argv = .string[]
 
-  hasNext: method = .int
-    return index_ < count_
+if argv[0] < 1 | argv[0] > 2 then do
+  say "usage: rexxscript file [--debug]"
+  return 64
+end
 
-  next: method = .string
-    if index_ >= count_ then return ""
-    index_ = index_ + 1
-    return keys_[index_]
+debug = 0
+if argv[0] = 2 then do
+  if argv[2] \== "--debug" then do
+    say "usage: rexxscript file [--debug]"
+    return 64
+  end
+  debug = 1
+end
 
-  nextKey: method = .string
-    return next()
+script = loadtext(argv[1])
+runner = .rexxscript..rexxscriptevaluator()
+result = runner.evaluate(script, debug)
+out = .string[]
+out = runner.output()
 
-  value: method = .object
-    if index_ < 1 | index_ > count_ then do
-      none = .object
-      return none
-    end
-    return values_[index_]
+do i = 1 to out[0]
+  say out[i]
+end
 
-  nextValue: method = .object
-    if index_ < 1 then do
-      if hasNext() = 0 then do
-        none = .object
-        return none
-      end
-      key = next()
-    end
-    return value()
+if result[1] <> "OK" then do
+  say "ERROR:" result[1]
+  return 1
+end
 
-  close: method = .int
-    index_ = count_
-    return 0
+return 0

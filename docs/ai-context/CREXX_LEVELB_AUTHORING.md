@@ -259,6 +259,19 @@ call arrayappend items, "beta"
 say items[0]
 ```
 
+To clear an existing array object, use the standard in-place helpers:
+
+```rexx
+call arraydrop items
+call objectarraydrop objects
+```
+
+This is especially important for class attributes. Reassigning an attribute-like
+name to `.string[]` or `.object[]` inside a method is not the same documented
+operation as clearing the existing array object, and can run into current Level
+B scoping edge cases. The collection classes use `arraydrop` and
+`objectarraydrop` in their `clear`/`free` methods.
+
 When a test needs delete/insert semantics, prefer library helpers such as
 `arraydelete`, `arrayinsert`, and `arrayappend` over assembler unless the test
 is specifically about RXAS.
@@ -307,6 +320,39 @@ car: class implements .vehicle
 
 Reference:
 - `docs/books/crexx_language_reference/classes_and_interfaces.md`
+
+When consuming a class from an imported binary namespace, prefer the explicit
+qualified form if the object will be used for method calls in a tool or runner:
+
+```rexx
+runner = .rexxscript..rexxscriptevaluator()
+```
+
+During the RexxScript runner work, the unqualified imported factory form was
+accepted but method typing on the result was not preserved in that context. If
+you see `#METHOD_NOT_FOUND` after an imported factory call that should be valid,
+try the qualified form and record the source-import/binary-import mismatch as a
+Level B follow-up rather than hiding it in application logic.
+
+### Call out suspected Level B gaps
+
+Level B is new enough that RexxScript and runtime-library work may uncover
+compiler or runtime gaps. Prefer documenting and surfacing these for resolution
+decisions over burying workarounds without explanation.
+
+Recent observations from the RexxScript evaluator refactor:
+
+- Assigning a new array object to a class attribute from inside a method, such
+  as `items = .string[]`, can shadow the attribute instead of resetting the
+  instance array. Reuse the instance array with an explicit count until the
+  intended attribute-reset pattern is settled.
+- A method-local first assigned only inside a nested `do` block may not be
+  visible later in the outer method. Declare locals before the block when the
+  value is read later.
+- Passing an object to a helper after a mutating method call, or passing a
+  mutated-object method call inline as an argument, may expose stale state in
+  some Level B paths. Snapshot state inside the owning method when correctness
+  depends on the just-mutated object, and raise a focused language/runtime issue.
 
 ### `address command` is the standard shell-out pattern
 

@@ -1,43 +1,73 @@
-options levelb
+options levelb comments_dash
 import data_StringTreeSet
 
-a = .StringTreeSet()
+failures = 0
 
-rc = a.add('aap')
-rc = a.add('noot')
-rc = a.add('mies')
-rc = a.add('wim')
-rc = a.add('zus')
-rc = a.add('jet')
-rc = a.add('teun')
-rc = a.add('vuur')
-rc = a.add('gijs')
-rc = a.add('lam')
-rc = a.add('kees')
-rc = a.add('bok')
-rc = a.add('weide')
-rc = a.add('does')
-rc = a.add('hok')
-rc = a.add('duif')
-rc = a.add('schapen')
+s = .StringTreeSet()
+failures = failures + check_int("initial size", s.size(), 0)
+failures = failures + check_string("initial first", s.first(), "")
+failures = failures + check_string("initial last", s.last(), "")
 
-say a.size()
+failures = failures + check_int("add b", s.add("b"), 0)
+failures = failures + check_int("add a", s.add("a"), 0)
+failures = failures + check_int("add c", s.add("c"), 0)
+failures = failures + check_int("duplicate add", s.add("a"), 4)
+failures = failures + check_int("size after adds", s.size(), 3)
+failures = failures + check_string("first", s.first(), "a")
+failures = failures + check_string("last", s.last(), "c")
 
-i = a.iterator()
+items = .string[]
+items = s.toArray()
+failures = failures + check_int("array count", items[0], 3)
+failures = failures + check_string("array first", items[1], "a")
+failures = failures + check_string("array second", items[2], "b")
+failures = failures + check_string("array third", items[3], "c")
 
-loop while i.hasNext()
-  say i.next()
+it = s.iterator()
+failures = failures + check_int("iterator snapshot add", s.add("d"), 0)
+failures = failures + check_string("iterator first", it.next(), "a")
+failures = failures + check_string("iterator second", it.next(), "b")
+failures = failures + check_string("iterator third", it.next(), "c")
+failures = failures + check_int("iterator snapshot end", it.hasNext(), 0)
+
+empty = .StringTreeSet()
+failures = failures + check_int("add empty", empty.add(""), 0)
+failures = failures + check_int("add blank", empty.add(" "), 0)
+failures = failures + check_int("empty/blank size", empty.size(), 2)
+failures = failures + check_int("empty contains", empty.contains(""), 1)
+failures = failures + check_int("blank contains", empty.contains(" "), 1)
+
+failures = failures + check_int("remove a", s.remove("a"), 0)
+failures = failures + check_int("remove missing", s.remove("missing"), 4)
+failures = failures + check_int("removed contains", s.contains("a"), 0)
+
+failures = failures + check_int("free rc", s.free(), 0)
+failures = failures + check_int("free size", s.size(), 0)
+items = s.toArray()
+failures = failures + check_int("free array count", items[0], 0)
+failures = failures + check_int("reuse add", s.add("again"), 0)
+failures = failures + check_int("reuse contains", s.contains("again"), 1)
+
+if failures <> 0 then do
+  say "StringTreeSet failures:" failures
+  exit 1
 end
 
-say a.toString()
+say "PASS: StringTreeSet"
+exit 0
 
-say 'toArray() on StringTreeSet'
+check_int: procedure=.int
+  arg label=.string, actual=.int, expected=.int
+  if actual <> expected then do
+    say label": expected" expected "got" actual
+    return 1
+  end
+return 0
 
-keystem = a.toArray()
-
-say 'looping over stem result'
-loop l=1 to keystem.0
-  say keystem.l
-end
-
-say 'number of elements in stem:' keystem.0
+check_string: procedure=.int
+  arg label=.string, actual=.string, expected=.string
+  if actual <> expected then do
+    say label": expected ["expected"] got ["actual"]"
+    return 1
+  end
+return 0

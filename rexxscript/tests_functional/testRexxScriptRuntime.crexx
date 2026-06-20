@@ -51,7 +51,7 @@ end
 
 runner = .rexxscriptevaluator()
 result = runner.evaluate("if 0 then do; say 'bad'; end; say 'good'", 0)
-out = rexxscript_output()
+out = runner.output()
 
 if result[1] <> "OK" then do
   errors = errors + 1
@@ -61,6 +61,87 @@ end
 if out[0] <> 1 | out[1] <> "good" then do
   errors = errors + 1
   say "REXXSCRIPT evaluator skipped block failed:" out[0] out[1]
+end
+
+result = rexxscript_evaluate("say 'before'; signal done; say 'bad'; done:; say 'after'", 0)
+out = rexxscript_output()
+
+if result[1] <> "OK" then do
+  errors = errors + 1
+  say "REXXSCRIPT SIGNAL status failed:" result[1]
+end
+
+if out[0] <> 2 | out[1] <> "before" | out[2] <> "after" then do
+  errors = errors + 1
+  say "REXXSCRIPT SIGNAL output failed:" out[0] out[1] out[2]
+end
+
+runner_a = .rexxscriptevaluator()
+runner_b = .rexxscriptevaluator()
+result_a = runner_a.evaluate("value = 'A'; say 'alpha'", 0)
+result_b = runner_b.evaluate("value = 'B'; say 'bravo'; say value", 0)
+out_a = runner_a.output()
+out_b = runner_b.output()
+
+if result_a[1] <> "OK" | result_b[1] <> "OK" then do
+  errors = errors + 1
+  say "REXXSCRIPT multi-instance status failed:" result_a[1] result_b[1]
+end
+
+if runner_a.value("value") <> "A" | runner_b.value("value") <> "B" then do
+  errors = errors + 1
+  say "REXXSCRIPT multi-instance value failed:" runner_a.value("value") runner_b.value("value")
+end
+
+if out_a[0] <> 1 | out_a[1] <> "alpha" | out_b[0] <> 2 | out_b[1] <> "bravo" | out_b[2] <> "B" then do
+  errors = errors + 1
+  say "REXXSCRIPT multi-instance output failed:" out_a[0] out_a[1] out_b[0] out_b[1] out_b[2]
+end
+
+last_out = rexxscript_output()
+if last_out[0] <> 2 | last_out[1] <> "bravo" | last_out[2] <> "B" | rexxscript_value("VALUE") <> "B" then do
+  errors = errors + 1
+  say "REXXSCRIPT last-result facade after instance failed:" last_out[0] last_out[1] last_out[2] rexxscript_value("VALUE")
+end
+
+result_a = runner_a.evaluate("say 'second'; value2 = 'C'", 0)
+out_a = runner_a.output()
+if result_a[1] <> "OK" | out_a[0] <> 1 | out_a[1] <> "second" | runner_a.value("value") <> "" | runner_a.value("value2") <> "C" then do
+  errors = errors + 1
+  say "REXXSCRIPT instance reset failed:" result_a[1] out_a[0] out_a[1] runner_a.value("value") runner_a.value("value2")
+end
+
+result = runner_a.evaluate("say 'before error'; x = substr('abc', 0)", 0)
+out = runner_a.output()
+if pos("RXC-LC-40.14", result[1]) = 0 | out[0] <> 1 | out[1] <> "before error" then do
+  errors = errors + 1
+  say "REXXSCRIPT error output failed:" result[1] out[0] out[1]
+end
+
+result = runner_a.evaluate("say 'after error'; y = 5", 0)
+out = runner_a.output()
+if result[1] <> "OK" | out[0] <> 1 | out[1] <> "after error" | runner_a.value("x") <> "" | runner_a.value("y") <> "5" then do
+  errors = errors + 1
+  say "REXXSCRIPT reset after error failed:" result[1] out[0] out[1] runner_a.value("x") runner_a.value("y")
+end
+
+result = rexxscript_evaluate("say 'before'; goto done; say 'bad'; done:; say 'after'", 0)
+out = rexxscript_output()
+if result[1] <> "OK" | out[0] <> 2 | out[1] <> "before" | out[2] <> "after" then do
+  errors = errors + 1
+  say "REXXSCRIPT GOTO alias failed:" result[1] out[0] out[1] out[2]
+end
+
+result = rexxscript_evaluate("signal missing", 0)
+if pos("undefined label", result[1]) = 0 then do
+  errors = errors + 1
+  say "REXXSCRIPT undefined label failed:" result[1]
+end
+
+result = rexxscript_evaluate("done:; done:; say 'bad'", 0)
+if pos("duplicate label", result[1]) = 0 then do
+  errors = errors + 1
+  say "REXXSCRIPT duplicate label failed:" result[1]
 end
 
 result = rexxscript_evaluate("x = substr('abc', 2, 4, '.') || ':' || right('7', 3, '0') || ':' || space('a  b', 0) || ':' || datatype('12.3', 'N') || ':' || max(4, 9, 2)", 0)
@@ -73,6 +154,18 @@ end
 if rexxscript_value("x") <> "bc..:007:ab:1:9" then do
   errors = errors + 1
   say "REXXSCRIPT shared BIF value failed:" rexxscript_value("x")
+end
+
+result = rexxscript_evaluate("x = abbrev('PRINT','PRI') || ':' || copies('ab',3) || ':' || verify('1Z3','1234567890') || ':' || word('Now is the time',3) || ':' || words('Now is the time') || ':' || abs('-12.5') || ':' || sign('-0.307') || ':' || min(4,-1,9) || ':' || upper('Mixed') || ':' || lower('Mixed') || ':' || length(substr('abcdef',2,3))", 0)
+
+if result[1] <> "OK" then do
+  errors = errors + 1
+  say "REXXSCRIPT expanded BIF status failed:" result[1]
+end
+
+if rexxscript_value("x") <> "1:ababab:2:the:4:12.5:-1:-1:MIXED:mixed:3" then do
+  errors = errors + 1
+  say "REXXSCRIPT expanded BIF value failed:" rexxscript_value("x")
 end
 
 result = rexxscript_evaluate("x = substr('abc', 0)", 0)

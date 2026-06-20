@@ -20,7 +20,6 @@ set(RXFNSC_MEMBER_BUILD_DEPS
   library
   classlib
   compiler_exit_bin
-  lib/plugins/_treemap
 )
 
 set(_rxfnsc_member_clean_stamp "${CMAKE_CURRENT_BINARY_DIR}/rxfnsc_member_clean.stamp")

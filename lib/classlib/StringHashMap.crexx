@@ -1,7 +1,7 @@
 /*
  * cREXX License (MIT)
  *
- * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Rene Jansen
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,146 +24,114 @@
 
 options levelb
 namespace data_StringHashMap expose StringHashMap
-import treemap
+import rxfnsb
 import data_StringTreeSet
 import data_StringIterable
 import data_StringHashMapIterator
 
 /**
- * class StringHashMap offers a Map implementation backed by a hashed stem plugin
- * with dynamic buckets. The storage and representations is unordered.
+ * Rexx-only string-to-string map.
  *
- * @author René Vincent Jansen
- * @author Peter Jacob
+ * This deliberately avoids the historical treemap/stem native plugin so
+ * classlib can remain a pure Rexx runtime image. The implementation keeps
+ * insertion order for arrays and iterators.
  */
 StringHashMap: class implements .StringIterable
 val = .int
+keys_ = .string[]
+values_ = .string[]
+count_ = .int
 
-/**
- * the class factory returns an instance of the StringHashMap class
- * the expected cardinality can be indicated by a parameter
- * (which defaults to 1024)
- * @param .string expected
- */
   *: factory
     arg expected = 1024
-    val = stemcreate(expected, 'hashmap')
+    val = 1
+    count_ = 0
     return
 
-    /**
-     * Associates the specified value with the specified key in this map.
-     * @parm .string key
-     * @parm .string value
-     * @return .int
-     */
+  _find: method = .int
+    arg key = .string
+    do i = 1 to count_
+      if keys_[i] == key then return i
+    end
+    return 0
+
   put: method = .int
     arg key = .string, value = .string
-    return stemput(val, key, value)
+    slot = _find(key)
+    if slot > 0 then do
+      if values_[slot] == value then return 4
+      values_[slot] = value
+      return 0
+    end
+    count_ = count_ + 1
+    keys_[count_] = key
+    values_[count_] = value
+    return 0
 
-    /**
-     * Returns the value to which the specified key is mapped,
-     * or nothing if this map contains no mapping for the key.
-     *  @parm .string key
-     * @return .string the found value
-     */
   get: method = .string
     arg key = .string
-    return stemget(val, key)
+    slot = _find(key)
+    if slot = 0 then return ""
+    return values_[slot]
 
-    /**
-     * method containsKey returns 1 (true) if this map contains
-     * a mapping for the specified key.
-     * @parm .string key
-     * @return .int
-     */
   containsKey: method = .int
     arg key = .string
-    return stemcontainskey(val, key)
+    if _find(key) > 0 then return 1
+    return 0
 
-    /**
-     * method remove removea a mapping from this StringHashMap
-     * @parm .string key
-     * @return .int 0 for success, 4 for failure
-     */
   remove: method = .int
     arg key = .string
-    return stemremove(val, key)
+    slot = _find(key)
+    if slot = 0 then return 4
+    do i = slot to count_ - 1
+      keys_[i] = keys_[i + 1]
+      values_[i] = values_[i + 1]
+    end
+    count_ = count_ - 1
+    return 0
 
-    /**
-     * Returns the number of key-value mappings in this StringHashMap.
-     * return .int size
-     */
   size: method = .int
-    return stemsize(val)
+    return count_
 
-    /**
-     * method keystem returns the keys in this StringHashMap
-     * as a Rexx stem
-     */
   keyArray: method = .string[]
-    list = .string[]
-    vals = .string[]
-    n = stemiterate(val, list, vals)
-    return list
+    result = .string[]
+    do i = 1 to count_
+      result[i] = keys_[i]
+    end
+    return result
 
-    /**
-     * method valueArray returns the keys in this StringHashMap
-     * as a Rexx array
-     */
   valueArray: method = .string[]
-    list = .string[]
-    vals = .string[]
-    n = stemiterate(val, list, vals)
-    return vals
+    result = .string[]
+    do i = 1 to count_
+      result[i] = values_[i]
+    end
+    return result
 
-    /* method keySet returns the keys in this StringHashMap
-     * as a StringTreeSet, which is ordered.
-     * @return .StringTreeSet
-     */
   keySet: method = .StringTreeSet
     ts = .StringTreeSet()
     rc = ts.fromArray(keyArray())
     return ts
 
-    /**
-     * method valueSet returns the values in this StringHashMap
-     * as a StringTreeSet, containing unique and ordered values
-     * @return .StringTreeSet
-     */
   valueSet: method = .StringTreeSet
     ts = .StringTreeSet()
     rc = ts.fromArray(valueArray())
     return ts
 
-    /**
-    * method iterator returns a StringHashMapIterator
-    * which iterates over the keys currently in this map.
-    * @return .StringHashMapIterator
-    */
   iterator: method = .StringHashMapIterator
-    return .StringHashMapIterator(val)
+    return .StringHashMapIterator(keyArray(), valueArray())
 
-    /**
-     * method toString() returns the content of the StringTreeMap
-     * as a string.
-     * @return .string
-     */
   toString: method = .string
-    keys = .string[]
-    vals = .string[]
-    n = stemiterate(val, keys, vals)
-
-    if n = 0 then return '{}'
-
-    s = '{'
-    loop i = 1 to n
-      if i > 1 then s = s || ', '
-      s = s || keys[i] || '=' || vals[i]
+    if count_ = 0 then return "{}"
+    text = "{"
+    do i = 1 to count_
+      if i > 1 then text = text || ", "
+      text = text || keys_[i] || "=" || values_[i]
     end
-    return s || '}'
+    return text || "}"
 
   free: method = .int
-    if val = 0 then return 0
-    rc = stemfree(val)
+    call arraydrop keys_
+    call arraydrop values_
+    count_ = 0
     val = 0
-    return rc
+    return 0

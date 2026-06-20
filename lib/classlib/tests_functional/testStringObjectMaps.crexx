@@ -32,6 +32,7 @@ failures = failures + check_int("hash object map update size", h.size(), 2)
 failures = failures + check_box("hash object map update", h.get("b"), "BEE")
 
 it = h.iterator()
+rc = h.put("c", .box("see") as .object)
 seen = 0
 loop while it.hasNext()
   key = it.next()
@@ -44,8 +45,13 @@ loop while it.hasNext()
     failures = failures + check_string("hash iterator b", item.name(), "BEE")
     seen = seen + 1
   end
+  if key = "c" then do
+    say "hash iterator unexpectedly saw later add"
+    failures = failures + 1
+  end
 end
 failures = failures + check_int("hash iterator count", seen, 2)
+failures = failures + check_int("hash object map size after iterator add", h.size(), 3)
 
 hash_next_value = h.iterator()
 first_hash_key = hash_next_value.next()
@@ -60,7 +66,7 @@ if first_hash_key <> "a" & first_hash_key <> "b" then do
   say "hash nextValue unexpected key:" first_hash_key
   failures = failures + 1
 end
-failures = failures + check_int("hash iterable interface count", count_string_iterable(h), 2)
+failures = failures + check_int("hash iterable interface count", count_string_iterable(h), 3)
 
 empty_h = .StringObjectHashMap()
 rc = empty_h.put("", .box("empty-key") as .object)
@@ -86,10 +92,14 @@ failures = failures + check_int("hash blank key seen", empty_h_seen_blank, 1)
 
 values = .object[]
 values = h.valueArray()
-failures = failures + check_int("hash values count", values[0], 2)
+failures = failures + check_int("hash values count", values[0], 3)
 rc = h.remove("a")
-failures = failures + check_int("hash remove size", h.size(), 1)
+failures = failures + check_int("hash remove size", h.size(), 2)
 failures = failures + check_int("hash remove contains", h.containsKey("a"), 0)
+failures = failures + check_int("hash free rc", h.free(), 0)
+failures = failures + check_int("hash free size", h.size(), 0)
+rc = h.put("again", .box("ok") as .object)
+failures = failures + check_box("hash reuse after free", h.get("again"), "ok")
 
 t = .StringObjectTreeMap()
 rc = t.put("b", .box("bee") as .object)
@@ -114,6 +124,7 @@ failures = failures + check_box("tree value second", vals[2], "bee")
 failures = failures + check_box("tree value third", vals[3], "see")
 
 tree_it = t.iterator()
+rc = t.put("d", .box("dee") as .object)
 failures = failures + check_string("tree iterator first key", tree_it.next(), "a")
 failures = failures + check_box("tree iterator first value", tree_it.value(), "aye")
 failures = failures + check_string("tree iterator second key", tree_it.next(), "b")
@@ -121,12 +132,13 @@ failures = failures + check_box("tree iterator second value", tree_it.value(), "
 failures = failures + check_string("tree iterator third key", tree_it.next(), "c")
 failures = failures + check_box("tree iterator third value", tree_it.value(), "see")
 failures = failures + check_int("tree iterator end", tree_it.hasNext(), 0)
+failures = failures + check_int("tree object map size after iterator add", t.size(), 4)
 
 tree_next_value = t.iterator()
 failures = failures + check_box("tree nextValue advances first value", tree_next_value.nextValue(), "aye")
 failures = failures + check_string("tree nextValue current key", tree_next_value.nextKey(), "b")
 failures = failures + check_box("tree nextValue current value", tree_next_value.nextValue(), "bee")
-failures = failures + check_int("tree iterable interface count", count_string_iterable(t), 3)
+failures = failures + check_int("tree iterable interface count", count_string_iterable(t), 4)
 
 empty_t = .StringObjectTreeMap()
 rc = empty_t.put("", .box("empty-key") as .object)
@@ -160,6 +172,10 @@ failures = failures + check_box("call tree iterator first value", call_t_it.valu
 failures = failures + check_string("call tree iterator second key", call_t_it.next(), "b")
 failures = failures + check_box("call tree iterator second value", call_t_it.value(), "bee")
 failures = failures + check_int("call tree iterator end", call_t_it.hasNext(), 0)
+failures = failures + check_int("tree free rc", t.free(), 0)
+failures = failures + check_int("tree free size", t.size(), 0)
+rc = t.put("again", .box("ok") as .object)
+failures = failures + check_box("tree reuse after free", t.get("again"), "ok")
 
 if failures <> 0 then do
   say "String object map failures:" failures
