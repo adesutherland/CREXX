@@ -2,15 +2,27 @@ options levelb comments_dash
 import id_Id
 import rxfnsb
 
-say 'testing id class'
-say date()
-
 x = .Id()
-say 'uuid:     ' x.uuid()
-say 'uuidv7:   ' x.uuidv7()
-say 'uuidt:    ' x.uuidt()
-say 'ulid:     ' x.ulid()
-say 'nanoid:   ' x.nanoid()
-say 'snowflake:' x.snowflake()
-say 'base58:   ' x.base58()
 
+failures = 0
+failures = failures + check_non_empty("uuid", x.uuid())
+failures = failures + check_non_empty("uuidV7", x.uuidV7())
+failures = failures + check_non_empty("uuidt", x.uuidt())
+failures = failures + check_non_empty("ulid", x.ulid())
+failures = failures + check_non_empty("nanoId", x.nanoId())
+failures = failures + check_non_empty("snowflake", x.snowflake())
+failures = failures + check_non_empty("base58", x.base58())
+
+if failures > 0 then do
+  say "testid failed:" failures "check(s)"
+  return 1
+end
+
+say "testid ok"
+return 0
+
+check_non_empty: procedure = .int
+  arg label = .string, value = .string
+  if length(value) > 0 then return 0
+  say label "returned an empty identifier"
+  return 1

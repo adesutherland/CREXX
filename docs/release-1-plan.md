@@ -82,10 +82,14 @@ Must-ship items are part of the Release 1 contract or release process.
    practical; tight runtime integration should move to VM/RXAS instructions;
    plugins should mainly represent external integration, OS/application
    boundaries, or experimental/edge capabilities. Include native-backed Rexx
-   adapter modules and tests in this triage, not just C plugin directories:
-   for example the current `Id`, `KeyDB`, and `Os` wrappers that are no longer
-   part of `classlib.rxbin` still need a Release 1 decision as core,
-   integration, optional, deprecated, experimental, or remove.
+   adapter modules and tests in this triage, not just C plugin directories.
+   For beta 3, `Id`, `KeyDB`, and `Os` are restored as plugin-backed classlib
+   adapters in the separate `classlib_native.rxbin` image with focused tests
+   and explicit plugin dependencies. They are not part of core
+   `classlib.rxbin`, so RexxScript and other pure-classlib consumers do not
+   inherit unrelated native plugin requirements. Any later change to make them
+   core, optional, deprecated, experimental, or removed should be explicit
+   rather than caused by refactoring fallout.
 
 7. Runtime lookup and late loading
 
@@ -226,7 +230,7 @@ common `rel1` label plus the tier and area labels shown here.
 | 9 | Complete RXAS float precision coverage issue #585 | Rene | `rel1`, `must`, `rxas`, `tests` | Regression coverage distinguishes stored binary64 precision from display formatting. |
 | 10 | Complete RXAS instruction coverage issue #586 | Rene | `rel1`, `must`, `rxas`, `tests` | Instruction inventory and regression coverage are updated. |
 | 11 | Retire/deprecate compiler-owned Unicode plugin path | Adrian | `rel1`, `must`, `unicode`, `plugins` | Obsolete path is removed, disabled, or documented as deprecated with replacement guidance. |
-| 12 | Inventory and classify all plugins and native-backed adapters as core, integration, optional, deprecated, or experimental | Peter | `rel1`, `must`, `plugins` | Classification table exists and matches build/package defaults, including Rexx wrapper modules/tests such as `Id`, `KeyDB`, and `Os` that depend on native plugins. |
+| 12 | Inventory and classify all plugins and native-backed adapters as core, integration, optional, deprecated, or experimental | Peter | `rel1`, `must`, `plugins` | Classification table exists and matches build/package defaults, including the current `classlib_native.rxbin` adapters `Id`, `KeyDB`, and `Os` and any explicit decision to keep them separate, promote them to core, or move them elsewhere. |
 | 13 | Change default plugin build/package set to match Release 1 policy | Peter | `rel1`, `must`, `plugins`, `packaging` | Default build makes the release surface clear; optional legacy paths are opt-in. |
 | 14 | Harden `METALOADMODULE` late load and class/interface rebinding | Adrian | `rel1`, `must`, `vm`, `classes` | Late-load and rebinding tests cover current expected behaviour. |
 | 15 | Replace interface method/factory linear scans with indexed lookup | Adrian | `rel1`, `must`, `vm`, `performance` | Hot lookup paths use indexed search and retain late-load correctness. |

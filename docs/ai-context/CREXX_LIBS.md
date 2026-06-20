@@ -290,9 +290,17 @@ The current public classlib collection surfaces are Rexx-only. `StringHashMap`,
 `StringTreeMap`, `StringHashSet`, `StringTreeSet`, `StringLinkedList`, and the
 string-key/object-value map variants no longer require the historical native
 `treemap` or `llist` plugins. String-key lookup uses strict equality so empty
-string keys and blank string keys remain distinct. The older native adapter
-sources for id, key database, and OS/system helpers are not linked into
-`classlib.rxbin`.
+string keys and blank string keys remain distinct.
+
+`Id`, `KeyDB`, and `Os` are intentionally kept out of the core
+`classlib.rxbin` image so products such as RexxScript can use the class
+library without pulling in unrelated native plugins. They are built and tested
+as the opt-in `classlib_native.rxbin` adapter image and depend on the `id`,
+`keyaccess`, and `system` plugins respectively. Build, test, and package
+changes that expose these classes must include their native plugin runtime
+modules. Do not rewrite these wrappers in Rexx merely to avoid native code;
+classify or remove the underlying capability explicitly if it is not part of
+the intended release surface.
 
 Bare collection names such as `Iterator`, `Iterable`, `ArrayList`, `HashMap`,
 `TreeMap`, and `Stack` are intentionally left free for future Level G generic

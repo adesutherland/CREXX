@@ -26,11 +26,20 @@ options levelb
 namespace data_StringTreeSet expose StringTreeSetIterator
 import data_StringIterator
 
+/**
+ * Iterator over an ordered StringTreeSet snapshot.
+ */
 StringTreeSetIterator: class implements .StringIterator
 items_ = .string[]
 index_ = .int
 count_ = .int
 
+  /**
+   * Create an iterator over an ordered item array.
+   *
+   * @param items Snapshot of ordered set items.
+   * @return .StringTreeSetIterator
+   */
   *: factory
     arg items = .string[]
     items_ = items
@@ -38,14 +47,29 @@ count_ = .int
     index_ = 0
     return
 
+  /**
+   * Tests whether another item is available.
+   *
+   * @return .int 1 if another item is available, 0 otherwise.
+   */
   hasNext: method = .int
     return index_ < count_
 
+  /**
+   * Returns the next item.
+   *
+   * @return .string Next item, or the empty string when exhausted.
+   */
   next: method = .string
     if index_ >= count_ then return ""
     index_ = index_ + 1
     return items_[index_]
 
+  /**
+   * Closes this iterator by advancing it to the end.
+   *
+   * @return .int 0 on success.
+   */
   close: method = .int
     index_ = count_
     return 0

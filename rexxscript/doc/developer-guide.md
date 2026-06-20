@@ -30,10 +30,11 @@ tests_functional/
 ```
 
 The runtime builds `bin/rexxscript.rxbin`. The standalone executable packages
-`RexxScriptRunner.crexx` with `library`, `classlib`, `rxfnsc`, and
+`RexxScriptRunner.crexx` with `library`, the core `classlib`, `rxfnsc`, and
 `rexxscript`, and statically links the `system` plugin for the file-I/O path.
 The current classlib collection code is Rexx-only; RexxScript no longer needs
-the historical `treemap` plugin.
+the historical `treemap` plugin, and it does not link the opt-in
+`classlib_native.rxbin` adapters for `Id`, `KeyDB`, or `Os`.
 
 ## Instance Model
 

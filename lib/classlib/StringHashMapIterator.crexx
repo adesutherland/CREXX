@@ -26,12 +26,24 @@ options levelb comments_dash
 namespace data_StringHashMapIterator expose StringHashMapIterator
 import data_StringIterator
 
+/**
+ * Iterator over a StringHashMap snapshot.
+ *
+ * The iterator walks key and value arrays captured by the map at creation.
+ */
 StringHashMapIterator: class implements .StringIterator
 keys_ = .string[]
 values_ = .string[]
 index_ = .int
 count_ = .int
 
+  /**
+   * Create an iterator over key and value arrays.
+   *
+   * @param keys Snapshot of map keys.
+   * @param values Snapshot of map values.
+   * @return .StringHashMapIterator
+   */
   *: factory
     arg keys = .string[], values = .string[]
     keys_ = keys
@@ -40,17 +52,37 @@ count_ = .int
     index_ = 0
     return
 
+  /**
+   * Tests whether another key is available.
+   *
+   * @return .int 1 if another key is available, 0 otherwise.
+   */
   hasNext: method = .int
     return index_ < count_
 
+  /**
+   * Returns the next key.
+   *
+   * @return .string Next key, or the empty string when exhausted.
+   */
   next: method = .string
     if index_ >= count_ then return ""
     index_ = index_ + 1
     return keys_[index_]
 
+  /**
+   * Returns the next key.
+   *
+   * @return .string Next key, or the empty string when exhausted.
+   */
   nextKey: method = .string
     return next()
 
+  /**
+   * Returns the value for the current key, advancing first if needed.
+   *
+   * @return .string Current value, or the empty string when exhausted.
+   */
   nextValue: method = .string
     if index_ < 1 then do
       if hasNext() = 0 then return ""
@@ -58,6 +90,11 @@ count_ = .int
     end
     return values_[index_]
 
+  /**
+   * Closes this iterator by advancing it to the end.
+   *
+   * @return .int 0 on success.
+   */
   close: method = .int
     index_ = count_
     return 0

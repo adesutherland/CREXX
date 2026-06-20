@@ -1,0 +1,125 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Rene Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/*
+ * Lightweight RexxDoc coverage ratchet.
+ *
+ * This checks simple source markers rather than rendered documentation. Its
+ * job is to catch refactors that silently drop public /** ... */ blocks and
+ * common RexxDoc tags from classlib sources.
+ */
+options levelb
+import rxfnsb
+
+arg args = .string[]
+
+if args[0] < 2 then do
+  say "Usage: check_rexxdoc_coverage <baseline-file> <source-root>"
+  return 2
+end
+
+baseline_file = args[1]
+source_root = args[2]
+
+more = lines(baseline_file)
+if more < 0 then do
+  say "RexxDoc coverage baseline could not be read:" baseline_file
+  return 2
+end
+
+failures = 0
+checked = 0
+line_number = 0
+
+do while more > 0
+  line = linein(baseline_file)
+  line_number = line_number + 1
+  more = lines(baseline_file)
+
+  line = strip(line)
+  if line = "" then iterate
+  if left(line, 1) = "#" then iterate
+
+  name = word(line, 1)
+  minimum = word(line, 2)
+  if name = "" | minimum = "" then do
+    call lineout baseline_file
+    say "Malformed RexxDoc coverage baseline line" line_number":" line
+    return 2
+  end
+
+  path = join_path(source_root, name)
+  actual = count_markers(path)
+  checked = checked + 1
+
+  if actual < 0 then do
+    failures = failures + 1
+    say name": source file could not be read"
+  end
+  else if actual < minimum then do
+    failures = failures + 1
+    say name": RexxDoc coverage regressed:" actual "< baseline" minimum
+  end
+end
+call lineout baseline_file
+
+if failures > 0 then do
+  say "RexxDoc coverage failed:" failures "file(s) regressed"
+  say "Restore/update the source comments or adjust the baseline intentionally."
+  return 1
+end
+
+say "RexxDoc coverage ok for" checked "files"
+return 0
+
+join_path: procedure = .string
+  arg root = .string, name = .string
+  if right(root, 1) = "/" then return root || name
+  return root || "/" || name
+
+count_markers: procedure = .int
+  arg path = .string
+
+  more = lines(path)
+  if more < 0 then return -1
+
+  count = 0
+  do while more > 0
+    line = linein(path)
+    if has_marker(line) then count = count + 1
+    more = lines(path)
+  end
+  call lineout path
+  return count
+
+has_marker: procedure = .int
+  arg line = .string
+
+  line = lower(line)
+  if pos("/**", line) > 0 then return 1
+  if pos("@param", line) > 0 then return 1
+  if pos("@parm", line) > 0 then return 1
+  if pos("@return", line) > 0 then return 1
+  if pos("@author", line) > 0 then return 1
+  return 0

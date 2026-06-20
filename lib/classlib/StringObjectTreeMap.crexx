@@ -28,12 +28,23 @@ import rxfnsb
 import data_StringTreeSet
 import data_StringIterable
 
+/**
+ * Rexx-only ordered map from string keys to object values.
+ *
+ * Keys and object values are stored in parallel arrays. Ordered views sort a
+ * snapshot of the keys.
+ */
 StringObjectTreeMap: class implements .StringIterable
 val = .int
 keys_ = .string[]
 values_ = .object[]
 count_ = .int
 
+  /**
+   * Create an empty StringObjectTreeMap.
+   *
+   * @return .StringObjectTreeMap
+   */
   *: factory
     val = 1
     count_ = 0
@@ -62,6 +73,13 @@ count_ = .int
     end
     return result
 
+  /**
+   * Associates the specified object value with the specified key.
+   *
+   * @param key Key to store.
+   * @param value Object value to associate with the key.
+   * @return .int 0 on success.
+   */
   put: method = .int
     arg key = .string, value = .object
     slot = _find(key)
@@ -74,6 +92,12 @@ count_ = .int
     values_[count_] = value
     return 0
 
+  /**
+   * Returns the object value to which the specified key is mapped.
+   *
+   * @param key Key to look up.
+   * @return .object Mapped object, or an empty object placeholder if absent.
+   */
   get: method = .object
     arg key = .string
     slot = _find(key)
@@ -83,9 +107,20 @@ count_ = .int
     end
     return values_[slot]
 
+  /**
+   * Returns the number of key-value mappings in this map.
+   *
+   * @return .int Number of mappings.
+   */
   size: method = .int
     return count_
 
+  /**
+   * Removes a mapping from this map.
+   *
+   * @param key Key to remove.
+   * @return .int 0 if removed, 4 if the key was not present.
+   */
   remove: method = .int
     arg key = .string
     slot = _find(key)
@@ -97,24 +132,50 @@ count_ = .int
     count_ = count_ - 1
     return 0
 
+  /**
+   * Tests whether this map contains a mapping for the specified key.
+   *
+   * @param key Key to test.
+   * @return .int 1 if present, 0 otherwise.
+   */
   containsKey: method = .int
     arg key = .string
     if _find(key) > 0 then return 1
     return 0
 
+  /**
+   * Returns the first key in natural string order.
+   *
+   * @return .string First key, or the empty string if the map is empty.
+   */
   firstKey: method = .string
     if count_ = 0 then return ""
     keys = _sortedKeys()
     return keys[1]
 
+  /**
+   * Returns the last key in natural string order.
+   *
+   * @return .string Last key, or the empty string if the map is empty.
+   */
   lastKey: method = .string
     if count_ = 0 then return ""
     keys = _sortedKeys()
     return keys[count_]
 
+  /**
+   * Returns the keys in natural string order.
+   *
+   * @return .string[] Ordered array of keys.
+   */
   keyArray: method = .string[]
     return _sortedKeys()
 
+  /**
+   * Returns the object values ordered by their corresponding keys.
+   *
+   * @return .object[] Array of object values in key order.
+   */
   valueArray: method = .object[]
     keys = _sortedKeys()
     vals = .object[]
@@ -123,17 +184,37 @@ count_ = .int
     end
     return vals
 
+  /**
+   * Returns the keys as an ordered StringTreeSet.
+   *
+   * @return .StringTreeSet Ordered set of keys.
+   */
   keySet: method = .StringTreeSet
     ts = .StringTreeSet()
     rc = ts.fromArray(keyArray())
     return ts
 
+  /**
+   * Returns an iterator over keys and object values in key order.
+   *
+   * @return .StringObjectTreeMapIterator Iterator over this map snapshot.
+   */
   iterator: method = .StringObjectTreeMapIterator
     return .StringObjectTreeMapIterator(keyArray(), valueArray())
 
+  /**
+   * Returns the implementation token for this map instance.
+   *
+   * @return .int Implementation token.
+   */
   _indexToken: method = .int
     return val
 
+  /**
+   * Clears this map and releases its backing arrays.
+   *
+   * @return .int 0 on success.
+   */
   free: method = .int
     call arraydrop keys_
     call objectarraydrop values_

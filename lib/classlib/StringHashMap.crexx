@@ -35,6 +35,9 @@ import data_StringHashMapIterator
  * This deliberately avoids the historical treemap/stem native plugin so
  * classlib can remain a pure Rexx runtime image. The implementation keeps
  * insertion order for arrays and iterators.
+ *
+ * @author Rene Vincent Jansen
+ * @author Peter Jacob
  */
 StringHashMap: class implements .StringIterable
 val = .int
@@ -42,6 +45,12 @@ keys_ = .string[]
 values_ = .string[]
 count_ = .int
 
+  /**
+   * Create an empty StringHashMap.
+   *
+   * @param expected Expected cardinality hint; accepted for API compatibility.
+   * @return .StringHashMap
+   */
   *: factory
     arg expected = 1024
     val = 1
@@ -55,6 +64,13 @@ count_ = .int
     end
     return 0
 
+  /**
+   * Associates the specified value with the specified key in this map.
+   *
+   * @param key Key to store.
+   * @param value Value to associate with the key.
+   * @return .int 0 if inserted or changed, 4 if the same value was already present.
+   */
   put: method = .int
     arg key = .string, value = .string
     slot = _find(key)
@@ -68,17 +84,35 @@ count_ = .int
     values_[count_] = value
     return 0
 
+  /**
+   * Returns the value to which the specified key is mapped.
+   *
+   * @param key Key to look up.
+   * @return .string Mapped value, or the empty string if the key is absent.
+   */
   get: method = .string
     arg key = .string
     slot = _find(key)
     if slot = 0 then return ""
     return values_[slot]
 
+  /**
+   * Tests whether this map contains a mapping for the specified key.
+   *
+   * @param key Key to test.
+   * @return .int 1 if present, 0 otherwise.
+   */
   containsKey: method = .int
     arg key = .string
     if _find(key) > 0 then return 1
     return 0
 
+  /**
+   * Removes a mapping from this map.
+   *
+   * @param key Key to remove.
+   * @return .int 0 if removed, 4 if the key was not present.
+   */
   remove: method = .int
     arg key = .string
     slot = _find(key)
@@ -90,9 +124,19 @@ count_ = .int
     count_ = count_ - 1
     return 0
 
+  /**
+   * Returns the number of key-value mappings in this map.
+   *
+   * @return .int Number of mappings.
+   */
   size: method = .int
     return count_
 
+  /**
+   * Returns the keys in insertion order.
+   *
+   * @return .string[] Array of keys.
+   */
   keyArray: method = .string[]
     result = .string[]
     do i = 1 to count_
@@ -100,6 +144,11 @@ count_ = .int
     end
     return result
 
+  /**
+   * Returns the values in insertion order.
+   *
+   * @return .string[] Array of values.
+   */
   valueArray: method = .string[]
     result = .string[]
     do i = 1 to count_
@@ -107,19 +156,39 @@ count_ = .int
     end
     return result
 
+  /**
+   * Returns the keys as an ordered StringTreeSet.
+   *
+   * @return .StringTreeSet Ordered set of keys.
+   */
   keySet: method = .StringTreeSet
     ts = .StringTreeSet()
     rc = ts.fromArray(keyArray())
     return ts
 
+  /**
+   * Returns the values as an ordered StringTreeSet.
+   *
+   * @return .StringTreeSet Ordered set of unique values.
+   */
   valueSet: method = .StringTreeSet
     ts = .StringTreeSet()
     rc = ts.fromArray(valueArray())
     return ts
 
+  /**
+   * Returns an iterator over keys in insertion order.
+   *
+   * @return .StringHashMapIterator Iterator over the map's keys and values.
+   */
   iterator: method = .StringHashMapIterator
     return .StringHashMapIterator(keyArray(), valueArray())
 
+  /**
+   * Returns the content of this map as a string.
+   *
+   * @return .string String representation of the map.
+   */
   toString: method = .string
     if count_ = 0 then return "{}"
     text = "{"
@@ -129,6 +198,11 @@ count_ = .int
     end
     return text || "}"
 
+  /**
+   * Clears this map and releases its backing arrays.
+   *
+   * @return .int 0 on success.
+   */
   free: method = .int
     call arraydrop keys_
     call arraydrop values_

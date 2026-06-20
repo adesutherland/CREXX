@@ -28,6 +28,12 @@ import rxfnsb
 
 /**
  * Rexx-only string list with a current cursor.
+ *
+ * This class preserves the public cursor-oriented surface of the older
+ * native-list-backed implementation while storing values in Rexx arrays.
+ *
+ * @author Rene Vincent Jansen
+ * @author Peter Jacob
  */
 StringLinkedList: class
 val = .int
@@ -35,12 +41,23 @@ items_ = .string[]
 size_ = .int
 current_ = .int
 
+  /**
+   * Create an empty StringLinkedList.
+   *
+   * @return .StringLinkedList
+   */
   *: factory
     val = 1
     size_ = 0
     current_ = 0
     return
 
+  /**
+   * Adds a value at the end of the list.
+   *
+   * @param value Value to append.
+   * @return .int 1 on success.
+   */
   append: method = .int
     arg value = .string
     size_ = size_ + 1
@@ -48,6 +65,12 @@ current_ = .int
     if current_ = 0 then current_ = 1
     return 1
 
+  /**
+   * Adds a value at the beginning of the list.
+   *
+   * @param value Value to prepend.
+   * @return .int 1 on success.
+   */
   prepend: method = .int
     arg value = .string
     do i = size_ to 1 by -1
@@ -59,6 +82,12 @@ current_ = .int
     else current_ = current_ + 1
     return 1
 
+  /**
+   * Inserts a value after the current position.
+   *
+   * @param value Value to insert.
+   * @return .int 1 on success.
+   */
   insertAfterCurrent: method = .int
     arg value = .string
     if size_ = 0 then return append(value)
@@ -72,6 +101,12 @@ current_ = .int
     size_ = size_ + 1
     return 1
 
+  /**
+   * Inserts a value before the current position.
+   *
+   * @param value Value to insert.
+   * @return .int 1 on success.
+   */
   insertBeforeCurrent: method = .int
     arg value = .string
     if size_ = 0 then return append(value)
@@ -86,6 +121,11 @@ current_ = .int
     current_ = index + 1
     return 1
 
+  /**
+   * Removes the current value from the list.
+   *
+   * @return .int 0 if removed, 4 if no current value exists.
+   */
   remove: method = .int
     if current_ < 1 | current_ > size_ then return 4
     do i = current_ to size_ - 1
@@ -95,10 +135,20 @@ current_ = .int
     if current_ > size_ then current_ = size_
     return 0
 
+  /**
+   * Returns the current value.
+   *
+   * @return .string Current value, or the empty string when no current value exists.
+   */
   current: method = .string
     if current_ < 1 | current_ > size_ then return ""
     return items_[current_]
 
+  /**
+   * Advances to the next value and returns it.
+   *
+   * @return .string Next value, or the empty string at end of list.
+   */
   next: method = .string
     if size_ = 0 then return ""
     if current_ < 1 then do
@@ -109,14 +159,29 @@ current_ = .int
     current_ = current_ + 1
     return items_[current_]
 
+  /**
+   * Moves to the previous value and returns it.
+   *
+   * @return .string Previous value, or the empty string at start of list.
+   */
   previous: method = .string
     if current_ <= 1 then return ""
     current_ = current_ - 1
     return items_[current_]
 
+  /**
+   * Returns the current cursor address.
+   *
+   * @return .int One-based cursor position, or 0 when the list is empty.
+   */
   currentAddress: method = .int
     return current_
 
+  /**
+   * Positions current at the first value.
+   *
+   * @return .int 0 if positioned, 4 if the list is empty.
+   */
   setFirst: method = .int
     if size_ = 0 then do
       current_ = 0
@@ -125,6 +190,11 @@ current_ = .int
     current_ = 1
     return 0
 
+  /**
+   * Positions current at the last value.
+   *
+   * @return .int 0 if positioned, 4 if the list is empty.
+   */
   setLast: method = .int
     if size_ = 0 then do
       current_ = 0
@@ -133,6 +203,14 @@ current_ = .int
     current_ = size_
     return 0
 
+  /**
+   * Positions current by symbolic or numeric position.
+   *
+   * Examples include "FIRST", "LAST", "3", "+1", and "-1".
+   *
+   * @param pos Symbolic, absolute, or relative position.
+   * @return .int 0 if positioned, 4 if the target position is invalid.
+   */
   setPosition: method = .int
     arg pos = .string
     if pos = "FIRST" then return setFirst()
@@ -147,25 +225,51 @@ current_ = .int
     end
     return setAddress(pos)
 
+  /**
+   * Positions current by one-based address.
+   *
+   * @param addr One-based list address.
+   * @return .int 0 if positioned, 4 if the address is invalid.
+   */
   setAddress: method = .int
     arg addr = .int
     if addr < 1 | addr > size_ then return 4
     current_ = addr
     return 0
 
+  /**
+   * Removes all values from the list.
+   *
+   * @return .int 0 on success.
+   */
   clear: method = .int
     call arraydrop items_
     size_ = 0
     current_ = 0
     return 0
 
+  /**
+   * Returns the number of values in the list.
+   *
+   * @return .int Number of values.
+   */
   size: method = .int
     return size_
 
+  /**
+   * Tests whether the list is empty.
+   *
+   * @return .int 1 if empty, 0 otherwise.
+   */
   isEmpty: method = .int
     if size_ = 0 then return 1
     return 0
 
+  /**
+   * Returns the list values in traversal order.
+   *
+   * @return .string[] Array of values.
+   */
   toArray: method = .string[]
     list = .string[]
     do i = 1 to size_
@@ -173,6 +277,12 @@ current_ = .int
     end
     return list
 
+  /**
+   * Rebuilds this list from a string array.
+   *
+   * @param list Source array.
+   * @return .int 0 on success.
+   */
   fromArray: method = .int
     arg list = .string[]
     rc = clear()
@@ -181,9 +291,19 @@ current_ = .int
     end
     return 0
 
+  /**
+   * Validates and reports on this list.
+   *
+   * @return .int 0 on success.
+   */
   debug: method = .int
     return 0
 
+  /**
+   * Returns the content of this list as a string.
+   *
+   * @return .string String representation of the list.
+   */
   toString: method = .string
     text = "{"
     do i = 1 to size_

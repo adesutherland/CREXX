@@ -1,17 +1,33 @@
 options levelb comments_dash
 import system_Os
+import rxfnsb
 
 x = .Os()
-say x.uptime()
-say x.user()
-lp = x.loadpath() 
-say lp
-say x.osname()
-say x.getHost()
-say 'waiting one second:'
-say x.wait(1000)
-say x.beep()
-say x.rxbinModules(lp'/library.rxbin')
-say x.rxbinModules(lp'/classlib.rxbin')
-say x.getEnv("HOME")
+failures = 0
 
+failures = failures + check_non_empty("uptime", x.uptime())
+failures = failures + check_non_empty("user", x.user())
+failures = failures + check_non_empty("loadpath", x.loadpath())
+failures = failures + check_non_empty("osname", x.osname())
+failures = failures + check_non_empty("getHost", x.getHost())
+failures = failures + check_non_empty("getEnv HOME", x.getEnv("HOME"))
+
+wait_rc = x.wait(1)
+if wait_rc < 0 then do
+  say "wait returned" wait_rc
+  failures = failures + 1
+end
+
+if failures > 0 then do
+  say "testOS failed:" failures "check(s)"
+  return 1
+end
+
+say "testOS ok"
+return 0
+
+check_non_empty: procedure = .int
+  arg label = .string, value = .string
+  if length(value) > 0 then return 0
+  say label "returned an empty string"
+  return 1

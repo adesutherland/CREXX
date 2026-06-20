@@ -28,12 +28,24 @@ import rxfnsb
 import data_StringTreeSet
 import data_StringIterable
 
+/**
+ * Rexx-only map from string keys to object values.
+ *
+ * The implementation stores string keys and Rexx object values in parallel
+ * arrays while preserving insertion order for arrays and iterators.
+ */
 StringObjectHashMap: class implements .StringIterable
 val = .int
 keys_ = .string[]
 values_ = .object[]
 count_ = .int
 
+  /**
+   * Create an empty StringObjectHashMap.
+   *
+   * @param expected Expected cardinality hint; accepted for API compatibility.
+   * @return .StringObjectHashMap
+   */
   *: factory
     arg expected = 1024
     val = 1
@@ -47,6 +59,13 @@ count_ = .int
     end
     return 0
 
+  /**
+   * Associates the specified object value with the specified key.
+   *
+   * @param key Key to store.
+   * @param value Object value to associate with the key.
+   * @return .int 0 on success.
+   */
   put: method = .int
     arg key = .string, value = .object
     slot = _find(key)
@@ -59,6 +78,12 @@ count_ = .int
     values_[count_] = value
     return 0
 
+  /**
+   * Returns the object value to which the specified key is mapped.
+   *
+   * @param key Key to look up.
+   * @return .object Mapped object, or an empty object placeholder if absent.
+   */
   get: method = .object
     arg key = .string
     slot = _find(key)
@@ -68,11 +93,23 @@ count_ = .int
     end
     return values_[slot]
 
+  /**
+   * Tests whether this map contains a mapping for the specified key.
+   *
+   * @param key Key to test.
+   * @return .int 1 if present, 0 otherwise.
+   */
   containsKey: method = .int
     arg key = .string
     if _find(key) > 0 then return 1
     return 0
 
+  /**
+   * Removes a mapping from this map.
+   *
+   * @param key Key to remove.
+   * @return .int 0 if removed, 4 if the key was not present.
+   */
   remove: method = .int
     arg key = .string
     slot = _find(key)
@@ -84,9 +121,19 @@ count_ = .int
     count_ = count_ - 1
     return 0
 
+  /**
+   * Returns the number of key-value mappings in this map.
+   *
+   * @return .int Number of mappings.
+   */
   size: method = .int
     return count_
 
+  /**
+   * Returns the keys in insertion order.
+   *
+   * @return .string[] Array of keys.
+   */
   keyArray: method = .string[]
     result = .string[]
     do i = 1 to count_
@@ -94,6 +141,11 @@ count_ = .int
     end
     return result
 
+  /**
+   * Returns the object values in insertion order.
+   *
+   * @return .object[] Array of object values.
+   */
   valueArray: method = .object[]
     result = .object[]
     do i = 1 to count_
@@ -101,17 +153,37 @@ count_ = .int
     end
     return result
 
+  /**
+   * Returns the keys as an ordered StringTreeSet.
+   *
+   * @return .StringTreeSet Ordered set of keys.
+   */
   keySet: method = .StringTreeSet
     ts = .StringTreeSet()
     rc = ts.fromArray(keyArray())
     return ts
 
+  /**
+   * Returns an iterator over keys and object values in insertion order.
+   *
+   * @return .StringObjectHashMapIterator Iterator over this map snapshot.
+   */
   iterator: method = .StringObjectHashMapIterator
     return .StringObjectHashMapIterator(keyArray(), valueArray())
 
+  /**
+   * Returns the implementation token for this map instance.
+   *
+   * @return .int Implementation token.
+   */
   _indexToken: method = .int
     return val
 
+  /**
+   * Clears this map and releases its backing arrays.
+   *
+   * @return .int 0 on success.
+   */
   free: method = .int
     call arraydrop keys_
     call objectarraydrop values_

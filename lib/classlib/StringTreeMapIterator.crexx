@@ -26,11 +26,20 @@ options levelb comments_dash
 namespace data_StringTreeMap expose StringTreeMapIterator
 import data_StringIterator
 
+/**
+ * Iterator over an ordered StringTreeMap key snapshot.
+ */
 StringTreeMapIterator: class implements .StringIterator
 keys_ = .string[]
 index_ = .int
 count_ = .int
 
+  /**
+   * Create an iterator over an ordered key array.
+   *
+   * @param keys Snapshot of ordered map keys.
+   * @return .StringTreeMapIterator
+   */
   *: factory
     arg keys = .string[]
     keys_ = keys
@@ -38,14 +47,29 @@ count_ = .int
     index_ = 0
     return
 
+  /**
+   * Tests whether another key is available.
+   *
+   * @return .int 1 if another key is available, 0 otherwise.
+   */
   hasNext: method = .int
     return index_ < count_
 
+  /**
+   * Returns the next key.
+   *
+   * @return .string Next key, or the empty string when exhausted.
+   */
   next: method = .string
     if index_ >= count_ then return ""
     index_ = index_ + 1
     return keys_[index_]
 
+  /**
+   * Closes this iterator by advancing it to the end.
+   *
+   * @return .int 0 on success.
+   */
   close: method = .int
     index_ = count_
     return 0

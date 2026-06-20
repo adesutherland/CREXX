@@ -30,6 +30,12 @@ set(CLSS
   Scanlex
 )
 
+set(CLASSLIB_NATIVE_CLSS
+  Id
+  KeyDB
+  Os
+)
+
 set(CLSBINS)
 set(CLSSOURCES)
 foreach(CLS IN LISTS CLSS)
@@ -134,6 +140,84 @@ add_custom_target(classlib ALL
 
 add_dependencies(classlib library)
 
+set(CLASSLIB_NATIVE_BINS)
+set(CLASSLIB_NATIVE_SOURCES)
+foreach(CLS IN LISTS CLASSLIB_NATIVE_CLSS)
+  list(APPEND CLASSLIB_NATIVE_BINS "${CMAKE_CURRENT_BINARY_DIR}/${CLS}.rxbin")
+  list(APPEND CLASSLIB_NATIVE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/${CLS}.crexx")
+endforeach()
+
+set(CLASSLIB_NATIVE_MEMBER_BUILD_DEPS
+  rxc
+  rxas
+  library
+  compiler_exit_bin
+  _id
+  _keyaccess
+  _system
+)
+
+set(_classlib_native_member_clean_stamp "${CMAKE_CURRENT_BINARY_DIR}/classlib_native_member_clean.stamp")
+add_custom_command(
+  OUTPUT "${_classlib_native_member_clean_stamp}"
+  COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin" ${CLASSLIB_NATIVE_BINS}
+  COMMAND ${CMAKE_COMMAND} -E touch "${_classlib_native_member_clean_stamp}"
+  DEPENDS ${CLASSLIB_NATIVE_SOURCES} ${CLASSLIB_NATIVE_MEMBER_BUILD_DEPS}
+  COMMENT "Clearing stale native-backed class library member images ..."
+  VERBATIM
+)
+
+foreach(_binfile IN LISTS CLASSLIB_NATIVE_BINS)
+  get_filename_component(_basename "${_binfile}" NAME_WE)
+  add_custom_command(
+    OUTPUT "${_binfile}"
+    COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin"
+    COMMAND $<TARGET_FILE:rxc>
+      -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}"
+      -o "${_basename}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
+    COMMAND $<TARGET_FILE:rxas> "${_basename}"
+    DEPENDS
+      "${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx"
+      "${_classlib_native_member_clean_stamp}"
+      ${CLASSLIB_NATIVE_MEMBER_BUILD_DEPS}
+    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    COMMENT "cREXX compile and assemble native-backed classlib adapter ${_basename} ..."
+    VERBATIM
+  )
+endforeach()
+
+set(_classlib_native_control_file ${CMAKE_CURRENT_BINARY_DIR}/classlib_native_link_$<CONFIG>.ctl)
+string(CONCAT _classlib_native_control_text
+  "* Auto-generated control file for native-backed cREXX class library adapters\n")
+foreach(_cls_bin IN LISTS CLASSLIB_NATIVE_BINS)
+  string(APPEND _classlib_native_control_text "INPUT ${_cls_bin}\n")
+endforeach()
+foreach(_selector IN LISTS CLASSLIB_NATIVE_CLSS)
+  string(APPEND _classlib_native_control_text "INCLUDE ${_selector}\n")
+endforeach()
+string(APPEND _classlib_native_control_text
+  "PRESERVE INLINE\n"
+  "$<$<NOT:$<CONFIG:Debug>>:STRIP SOURCE\n>"
+  "OUTPUT ${CMAKE_BINARY_DIR}/bin/classlib_native\n")
+
+file(GENERATE OUTPUT ${_classlib_native_control_file} CONTENT "${_classlib_native_control_text}")
+
+add_custom_command(
+  OUTPUT "${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin"
+  COMMAND $<TARGET_FILE:rxlink> -c ${_classlib_native_control_file}
+  DEPENDS rxlink ${CLASSLIB_NATIVE_BINS} ${_classlib_native_control_file}
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+  COMMENT "cREXX Linked native-backed Class Library Adapter Image ..."
+  VERBATIM
+)
+
+add_custom_target(classlib_native ALL
+  DEPENDS "${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin"
+)
+
+add_dependencies(classlib_native library _id _keyaccess _system)
+
 add_test(
   NAME classlib_rxdas_inline_preserve_smoke
   COMMAND ${CMAKE_COMMAND}
@@ -147,5 +231,29 @@ add_test(
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 set_tests_properties(classlib_rxdas_inline_preserve_smoke PROPERTIES LABELS "inline;library")
+
+set(_classlib_rexxdoc_check_source "${CMAKE_SOURCE_DIR}/tools/rexxDoc/check_rexxdoc_coverage.crexx")
+set(_classlib_rexxdoc_check_script "${CMAKE_CURRENT_BINARY_DIR}/run_classlib_rexxdoc_coverage.cmake")
+set(_classlib_rexxdoc_check_content "")
+string(APPEND _classlib_rexxdoc_check_content
+  "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"check_rexxdoc_coverage\" \"${_classlib_rexxdoc_check_source}\" WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND _classlib_rexxdoc_check_content
+  "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed for RexxDoc coverage checker: \${out}\${err}\")\nendif()\n")
+string(APPEND _classlib_rexxdoc_check_content
+  "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" \"check_rexxdoc_coverage\" WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND _classlib_rexxdoc_check_content
+  "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed for RexxDoc coverage checker: \${out}\${err}\")\nendif()\n")
+string(APPEND _classlib_rexxdoc_check_content
+  "execute_process(COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"${CMAKE_CURRENT_BINARY_DIR}/check_rexxdoc_coverage.rxbin\" -a \"${CMAKE_SOURCE_DIR}/tools/rexxDoc/classlib_rexxdoc_baseline.txt\" \"${CMAKE_SOURCE_DIR}/lib\" WORKING_DIRECTORY \"${CMAKE_SOURCE_DIR}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND _classlib_rexxdoc_check_content
+  "message(STATUS \"\${out}\${err}\")\nif(NOT res EQUAL 0)\n  message(FATAL_ERROR \"RexxDoc coverage check failed\")\nendif()\n")
+file(GENERATE OUTPUT "${_classlib_rexxdoc_check_script}" CONTENT "${_classlib_rexxdoc_check_content}")
+
+add_test(
+  NAME classlib_rexxdoc_coverage
+  COMMAND ${CMAKE_COMMAND} -P "${_classlib_rexxdoc_check_script}"
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)
+set_tests_properties(classlib_rexxdoc_coverage PROPERTIES LABELS "docs;classlib")
 
 add_subdirectory(tests_functional)

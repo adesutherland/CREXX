@@ -26,11 +26,25 @@ options levelb
 namespace data_StringHashSet expose StringHashSet
 import rxfnsb
 
+/**
+ * Rexx-only string set with insertion-order traversal.
+ *
+ * This class stores unique string values and makes no ordering guarantees.
+ *
+ * @author Rene Vincent Jansen
+ * @author Peter Jacob
+ */
 StringHashSet: class
 val = .int
 items_ = .string[]
 count_ = .int
 
+  /**
+   * Create an empty StringHashSet.
+   *
+   * @param expected Expected cardinality hint; accepted for API compatibility.
+   * @return .StringHashSet
+   */
   *: factory
     arg expected = 1024
     val = 1
@@ -44,6 +58,12 @@ count_ = .int
     end
     return 0
 
+  /**
+   * Adds the specified element if it is not already present.
+   *
+   * @param key Element to add.
+   * @return .int 0 if added, 4 if already present.
+   */
   add: method = .int
     arg key = .string
     if _find(key) > 0 then return 4
@@ -51,6 +71,12 @@ count_ = .int
     items_[count_] = key
     return 0
 
+  /**
+   * Adds elements from an array, preserving first-seen insertion order.
+   *
+   * @param items Source array of elements.
+   * @return .int Number of elements added.
+   */
   fromArray: method = .int
     arg items = .string[]
     added = 0
@@ -60,11 +86,23 @@ count_ = .int
     end
     return added
 
+  /**
+   * Tests whether this set contains the specified element.
+   *
+   * @param key Element to test.
+   * @return .int 1 if present, 0 otherwise.
+   */
   contains: method = .int
     arg key = .string
     if _find(key) > 0 then return 1
     return 0
 
+  /**
+   * Removes an element from this set.
+   *
+   * @param key Element to remove.
+   * @return .int 0 if removed, 4 if absent.
+   */
   remove: method = .int
     arg key = .string
     slot = _find(key)
@@ -75,9 +113,19 @@ count_ = .int
     count_ = count_ - 1
     return 0
 
+  /**
+   * Returns the number of elements in this set.
+   *
+   * @return .int Number of elements.
+   */
   size: method = .int
     return count_
 
+  /**
+   * Returns the elements in insertion order.
+   *
+   * @return .string[] Array of elements.
+   */
   toArray: method = .string[]
     result = .string[]
     do i = 1 to count_
@@ -85,9 +133,19 @@ count_ = .int
     end
     return result
 
+  /**
+   * Returns an iterator over the set elements.
+   *
+   * @return .StringHashSetIterator Iterator over elements in insertion order.
+   */
   iterator: method = .StringHashSetIterator
     return .StringHashSetIterator(toArray())
 
+  /**
+   * Returns the content of this set as a string.
+   *
+   * @return .string String representation of the set.
+   */
   toString: method = .string
     if count_ = 0 then return "{}"
     text = "{"
@@ -97,6 +155,11 @@ count_ = .int
     end
     return text || "}"
 
+  /**
+   * Clears this set and releases its backing array.
+   *
+   * @return .int 0 on success.
+   */
   free: method = .int
     call arraydrop items_
     count_ = 0
