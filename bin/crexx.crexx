@@ -276,6 +276,7 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
    
    -- standard libs plugin & classlibs included
    libs = libs';'rxpath||'bin'dirsep'classlib'
+   libs = libs';'rxpath||'bin'dirsep'classlib_native'
    libs = libs';'rxpath||'bin'dirsep'rxfnsc'
    libs = libs';'rxpath||'bin'dirsep'rexxscript'
    libs = libs';'rxpath||'bin'dirsep'rx_treemap'
