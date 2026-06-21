@@ -135,3 +135,73 @@ Remaining tracer work:
 
 - Decide whether clone/bind/return services should become named remap
   subrules or remain services used by top-level rules.
+
+## 2026-06-21: Bind Actuals Service Boundary
+
+### Goal
+
+Expose the shared actual-binding service as a named remap boundary while
+leaving the existing binding implementation intact. This makes the tracer cover
+the call-site selector, structural eligibility, and the first shared expansion
+service without converting clone/bind/return internals into a new engine.
+
+### Decision
+
+`inline.bind.actuals` is represented as a remap service boundary. The bind
+implementation remains the existing `inline_bind_call_arguments()` function.
+This keeps by-value, optional/default, by-reference, vararg, method receiver,
+and factory binding semantics unchanged.
+
+Return rewriting, body cloning, and receiver copyback remain implementation
+services for now. They should become separate remap subrules only when a later
+change needs rule-specific guards, tests, or debug reasons inside those
+services.
+
+### Replay Steps
+
+1. Add the internal rule descriptor `inline.bind.actuals`.
+2. Use the existing `INLINE_BIND_RETURN()` macro in
+   `inline_bind_call_arguments()` to emit `DEBUG_INLINE_REMAP` applied/rejected
+   results at the service boundary.
+3. Do not change any binding branches or return values.
+4. Keep existing focused inline tests green.
+
+### Issues And Resolutions
+
+No Stage 3 implementation issues recorded.
+
+### Verification
+
+Green stop for implementation stage 3:
+
+- `cmake --build cmake-build-release --target rxc --parallel 4`
+  - result: passed
+- `ctest --test-dir cmake-build-release -R '16_classes|address_inline_then|address_exit_extended' --output-on-failure`
+  - result: 3/3 passed
+- `ctest --test-dir cmake-build-release -R 'inline|Inline' --output-on-failure`
+  - result: 254/254 passed
+- `cmake-build-release/bin/rxc -i cmake-build-release/bin -d2 -o /tmp/inline_remap_debug compiler/tests/rexx_src/inline_test_expr.crexx`
+  - result: passed
+  - observed `DEBUG_INLINE_REMAP` lines for
+    `inline.eligibility.structural`, `inline.bind.actuals`, and
+    `inline.expression.block`
+- `git diff --check`
+  - result: passed
+- Direct trailing-whitespace check over touched source files
+  - result: passed
+
+### Stage 3 Result
+
+The current tracer now names:
+
+- structural inlinability: `inline.eligibility.structural`
+- call-site bucket rewrites:
+  - `inline.rhs-eager-operator.capture-left`
+  - `inline.expression.block`
+  - `inline.assignment.whole-rhs`
+  - `inline.call.statement`
+- shared actual binding: `inline.bind.actuals`
+
+That covers the current inliner rule set at the safe tracer boundary. Deeper
+clone/return/copyback subrules remain deliberately unconverted services until
+there is a concrete need to split their internal guard logic.

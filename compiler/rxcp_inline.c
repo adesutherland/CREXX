@@ -257,6 +257,14 @@ static void inline_debug_pop_remap_rule(const char *previous) {
     inline_debug_active_remap_rule_id = previous;
 }
 
+static const InlineRemapRule inline_remap_bind_actuals_rule = {
+    "inline.bind.actuals",
+    "inline.expand",
+    "callee-args+call-actuals",
+    100,
+    NULL
+};
+
 static void inline_debug_log(Context *context,
                              ASTNode *site,
                              Symbol *proc_sym,
@@ -2551,7 +2559,15 @@ static int inline_bind_call_arguments(Context *context,
     size_t captured_scoped_actual_count;
     size_t actual_index;
 
-#define INLINE_BIND_RETURN(value) do { free(captured_scoped_actuals); return (value); } while (0)
+#define INLINE_BIND_RETURN(value) do { \
+    inline_remap_debug_result(context, \
+                              &inline_remap_bind_actuals_rule, \
+                              call_node, \
+                              proc_sym, \
+                              (value) ? "applied" : "rejected"); \
+    free(captured_scoped_actuals); \
+    return (value); \
+} while (0)
 
     if (!context || !instr_list || !inline_scope || !proc_def || !call_node || !proc_sym || !clone_state) return 0;
 
