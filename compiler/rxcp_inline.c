@@ -4514,6 +4514,14 @@ static const InlineRemapRule inline_remap_rules[] = {
     }
 };
 
+static const InlineRemapRule inline_remap_structural_eligibility_rule = {
+    "inline.eligibility.structural",
+    "inline.identify",
+    "PROCEDURE|METHOD|FACTORY",
+    0,
+    NULL
+};
+
 static InlineRemapResult inline_remap_apply_rules(Context *context,
                                                   InlineWalkerPayload *payload,
                                                   ASTNode *node) {
@@ -4868,12 +4876,14 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
         if (inline_proc_has_procedure_expose(node)) {
             inline_debug_log(context, node, sym, "DEBUG_INLINE",
                              "reject: procedure-level EXPOSE is not inlineable");
+            inline_remap_debug_result(context, &inline_remap_structural_eligibility_rule, node, sym, "rejected");
             sym->is_inlinable = 0;
             return result_normal;
         }
 
         if (inline_analyse_callable_eligibility(context, node, sym, 0, 0, &eligibility) != INLINE_ELIGIBILITY_OK) {
             inline_debug_log_eligibility_reject(context, node, sym, &eligibility);
+            inline_remap_debug_result(context, &inline_remap_structural_eligibility_rule, node, sym, "rejected");
             sym->is_inlinable = 0;
             return result_normal;
         }
@@ -4884,6 +4894,7 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
                          eligibility.check.return_count,
                          eligibility.return_shape.final_is_return,
                          INLINE_MAX_NODES);
+        inline_remap_debug_result(context, &inline_remap_structural_eligibility_rule, node, sym, "accepted");
         sym->is_inlinable = 1;
         sym->ast_template = node;
     }

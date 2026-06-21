@@ -83,3 +83,55 @@ Remaining tracer work:
 - Lift structural eligibility into a rule/catalog form.
 - Decide whether clone/bind/return services should become named remap
   subrules or remain services used by top-level rules.
+
+## 2026-06-21: Structural Eligibility Rule Identity
+
+### Goal
+
+Lift the structural inlinability decision into the same remapping vocabulary as
+the call-site buckets, without changing eligibility semantics or the existing
+`DEBUG_INLINE` acceptance/rejection text.
+
+### Replay Steps
+
+1. Add the internal rule descriptor `inline.eligibility.structural`.
+2. Keep `inline_analyse_callable_eligibility()` as the semantic gate.
+3. Emit `DEBUG_INLINE_REMAP` accept/reject lines at `-d2` and higher using the
+   new structural rule descriptor.
+4. Keep normal parser goldens stable by not adding structural rule ids to the
+   existing `DEBUG_INLINE` lines.
+
+### Issues And Resolutions
+
+No Stage 2 implementation issues recorded.
+
+### Verification
+
+Green stop for implementation stage 2:
+
+- `cmake --build cmake-build-release --target rxc --parallel 4`
+  - result: passed
+- `ctest --test-dir cmake-build-release -R '16_classes|address_inline_then|address_exit_extended' --output-on-failure`
+  - result: 3/3 passed
+- `ctest --test-dir cmake-build-release -R 'inline|Inline' --output-on-failure`
+  - result: 254/254 passed
+- `cmake-build-release/bin/rxc -i cmake-build-release/bin -d2 -o /tmp/inline_remap_debug compiler/tests/rexx_src/inline_test_expr.crexx`
+  - result: passed
+  - observed `DEBUG_INLINE_REMAP` lines for
+    `inline.eligibility.structural` and `inline.expression.block`
+- `git diff --check`
+  - result: passed
+- Direct trailing-whitespace check over touched source files
+  - result: passed
+
+### Stage 2 Result
+
+Structural eligibility is now named in the remapping tracer as
+`inline.eligibility.structural`. The current eligibility code remains the
+source of truth; the remap layer records the decision instead of reimplementing
+it.
+
+Remaining tracer work:
+
+- Decide whether clone/bind/return services should become named remap
+  subrules or remain services used by top-level rules.
