@@ -132,6 +132,26 @@ typedef struct {
     int changed;
 } InlineWalkerPayload;
 
+typedef enum {
+    INLINE_REMAP_NO_MATCH = 0,
+    INLINE_REMAP_REJECTED,
+    INLINE_REMAP_APPLIED
+} InlineRemapResult;
+
+struct InlineRemapRule;
+typedef InlineRemapResult (*InlineRemapApplyFn)(const struct InlineRemapRule *rule,
+                                                Context *context,
+                                                InlineWalkerPayload *payload,
+                                                ASTNode *node);
+
+typedef struct InlineRemapRule {
+    const char *id;
+    const char *phase;
+    const char *root_shape;
+    int priority;
+    InlineRemapApplyFn apply;
+} InlineRemapRule;
+
 static size_t inline_count_siblings(ASTNode *node);
 static ASTNode *inline_clone_subtree(Context *context, ASTNode *node, InlineCloneState *state);
 static ASTNode *inline_clone_subtree_in_scope(Context *context,
@@ -208,6 +228,34 @@ static int inline_rewrite_return_nodes(Context *context,
                                        int allow_dummy_return,
                                        ValueType proc_type,
                                        InlineCloneState *clone_state);
+static InlineRemapResult inline_remap_apply_rhs_eager_operator(const InlineRemapRule *rule,
+                                                               Context *context,
+                                                               InlineWalkerPayload *payload,
+                                                               ASTNode *node);
+static InlineRemapResult inline_remap_apply_expression_block(const InlineRemapRule *rule,
+                                                             Context *context,
+                                                             InlineWalkerPayload *payload,
+                                                             ASTNode *node);
+static InlineRemapResult inline_remap_apply_assignment_whole_rhs(const InlineRemapRule *rule,
+                                                                 Context *context,
+                                                                 InlineWalkerPayload *payload,
+                                                                 ASTNode *node);
+static InlineRemapResult inline_remap_apply_call_statement(const InlineRemapRule *rule,
+                                                           Context *context,
+                                                           InlineWalkerPayload *payload,
+                                                           ASTNode *node);
+
+static const char *inline_debug_active_remap_rule_id = NULL;
+
+static const char *inline_debug_push_remap_rule(const char *rule_id) {
+    const char *previous = inline_debug_active_remap_rule_id;
+    inline_debug_active_remap_rule_id = rule_id;
+    return previous;
+}
+
+static void inline_debug_pop_remap_rule(const char *previous) {
+    inline_debug_active_remap_rule_id = previous;
+}
 
 static void inline_debug_log(Context *context,
                              ASTNode *site,
@@ -223,6 +271,7 @@ static void inline_debug_log(Context *context,
 
     fprintf(stderr, "%s", prefix);
     if (proc_sym && proc_sym->name) fprintf(stderr, " %s", proc_sym->name);
+    if (inline_debug_active_remap_rule_id) fprintf(stderr, " rule=%s", inline_debug_active_remap_rule_id);
     if (site && site->file_name) {
         fprintf(stderr, " @ %s", site->file_name);
         if (site->line > 0) fprintf(stderr, ":%d", site->line);
@@ -249,6 +298,7 @@ static void inline_debug_fail_closed(Context *context,
 
     fprintf(stderr, "DEBUG_INLINE_FAILCLOSED");
     if (proc_sym && proc_sym->name) fprintf(stderr, " %s", proc_sym->name);
+    if (inline_debug_active_remap_rule_id) fprintf(stderr, " rule=%s", inline_debug_active_remap_rule_id);
     if (site && site->file_name) {
         fprintf(stderr, " @ %s", site->file_name);
         if (site->line > 0) fprintf(stderr, ":%d", site->line);
@@ -260,6 +310,32 @@ static void inline_debug_fail_closed(Context *context,
     vfprintf(stderr, format, args);
     va_end(args);
     fputc('\n', stderr);
+}
+
+static void inline_remap_debug_result(Context *context,
+                                      const InlineRemapRule *rule,
+                                      ASTNode *site,
+                                      Symbol *proc_sym,
+                                      const char *result) {
+    Context *root;
+
+    root = context && context->master_context ? context->master_context : context;
+    if (!root || root->debug_mode < 2 || !rule || !result) return;
+
+    fprintf(stderr, "DEBUG_INLINE_REMAP");
+    if (proc_sym && proc_sym->name) fprintf(stderr, " %s", proc_sym->name);
+    if (site && site->file_name) {
+        fprintf(stderr, " @ %s", site->file_name);
+        if (site->line > 0) fprintf(stderr, ":%d", site->line);
+        if (site->column > 0) fprintf(stderr, ":%d", site->column);
+    }
+    fprintf(stderr,
+            " - %s: rule=%s phase=%s root=%s priority=%d\n",
+            result,
+            rule->id ? rule->id : "(unknown)",
+            rule->phase ? rule->phase : "(unknown)",
+            rule->root_shape ? rule->root_shape : "(unknown)",
+            rule->priority);
 }
 
 static void inline_export_debug_reject(Context *context,
@@ -4286,66 +4362,187 @@ static int ast_inline_rhs_eager_operator(Context *context,
     return 1;
 }
 
+static InlineRemapResult inline_remap_apply_rhs_eager_operator(const InlineRemapRule *rule,
+                                                               Context *context,
+                                                               InlineWalkerPayload *payload,
+                                                               ASTNode *node) {
+    ASTNode *lhs;
+    ASTNode *rhs;
+    Symbol *proc_sym;
+    const char *previous_rule;
+    int rewritten;
+
+    if (!inline_parent_is_eager_operator(node)) return INLINE_REMAP_NO_MATCH;
+
+    lhs = node->child;
+    rhs = lhs ? lhs->sibling : NULL;
+    if (!rhs || rhs->sibling) return INLINE_REMAP_NO_MATCH;
+    if (!inline_node_is_inlineable_call(rhs, &proc_sym)) return INLINE_REMAP_NO_MATCH;
+    if (!inline_rhs_eager_operator_needs_left_capture(rhs)) return INLINE_REMAP_NO_MATCH;
+
+    previous_rule = inline_debug_push_remap_rule(rule ? rule->id : NULL);
+    rewritten = ast_inline_rhs_eager_operator(context, node, rhs, proc_sym);
+    inline_debug_pop_remap_rule(previous_rule);
+
+    if (rewritten) {
+        if (payload) payload->changed = 1;
+        inline_remap_debug_result(context, rule, rhs, proc_sym, "applied");
+        return INLINE_REMAP_APPLIED;
+    }
+
+    inline_remap_debug_result(context, rule, rhs, proc_sym, "rejected");
+    return INLINE_REMAP_REJECTED;
+}
+
+static InlineRemapResult inline_remap_apply_expression_block(const InlineRemapRule *rule,
+                                                             Context *context,
+                                                             InlineWalkerPayload *payload,
+                                                             ASTNode *node) {
+    Symbol *proc_sym;
+    const char *previous_rule;
+    int rewritten;
+
+    if (node->node_type != FUNCTION &&
+        node->node_type != MEMBER_CALL &&
+        node->node_type != FACTORY_CALL) {
+        return INLINE_REMAP_NO_MATCH;
+    }
+    if (!inline_node_is_inlineable_call(node, &proc_sym)) return INLINE_REMAP_NO_MATCH;
+    if (inline_rhs_eager_operator_needs_left_capture(node)) return INLINE_REMAP_NO_MATCH;
+
+    previous_rule = inline_debug_push_remap_rule(rule ? rule->id : NULL);
+    rewritten = ast_inline_expression(context, node, proc_sym);
+    inline_debug_pop_remap_rule(previous_rule);
+
+    if (rewritten) {
+        if (payload) payload->changed = 1;
+        inline_remap_debug_result(context, rule, node, proc_sym, "applied");
+        return INLINE_REMAP_APPLIED;
+    }
+
+    inline_remap_debug_result(context, rule, node, proc_sym, "rejected");
+    return INLINE_REMAP_REJECTED;
+}
+
+static InlineRemapResult inline_remap_apply_assignment_whole_rhs(const InlineRemapRule *rule,
+                                                                 Context *context,
+                                                                 InlineWalkerPayload *payload,
+                                                                 ASTNode *node) {
+    ASTNode *lhs;
+    ASTNode *rhs;
+    Symbol *proc_sym;
+    const char *previous_rule;
+    int rewritten;
+
+    if (node->node_type != ASSIGN) return INLINE_REMAP_NO_MATCH;
+
+    lhs = node->child;
+    rhs = lhs ? lhs->sibling : NULL;
+    if (!lhs || !rhs) return INLINE_REMAP_NO_MATCH;
+    if (!inline_node_is_inlineable_call(rhs, &proc_sym)) return INLINE_REMAP_NO_MATCH;
+
+    previous_rule = inline_debug_push_remap_rule(rule ? rule->id : NULL);
+    rewritten = ast_inline_assignment(context, node, rhs, proc_sym);
+    inline_debug_pop_remap_rule(previous_rule);
+
+    if (rewritten) {
+        if (payload) payload->changed = 1;
+        inline_remap_debug_result(context, rule, rhs, proc_sym, "applied");
+        return INLINE_REMAP_APPLIED;
+    }
+
+    inline_remap_debug_result(context, rule, rhs, proc_sym, "rejected");
+    return INLINE_REMAP_REJECTED;
+}
+
+static InlineRemapResult inline_remap_apply_call_statement(const InlineRemapRule *rule,
+                                                           Context *context,
+                                                           InlineWalkerPayload *payload,
+                                                           ASTNode *node) {
+    ASTNode *call_node;
+    Symbol *proc_sym;
+    const char *previous_rule;
+    int rewritten;
+
+    if (node->node_type != CALL) return INLINE_REMAP_NO_MATCH;
+
+    call_node = node->child;
+    if (!inline_node_is_inlineable_call(call_node, &proc_sym)) return INLINE_REMAP_NO_MATCH;
+
+    previous_rule = inline_debug_push_remap_rule(rule ? rule->id : NULL);
+    rewritten = ast_inline_call(context, node, call_node, proc_sym);
+    inline_debug_pop_remap_rule(previous_rule);
+
+    if (rewritten) {
+        if (payload) payload->changed = 1;
+        inline_remap_debug_result(context, rule, call_node, proc_sym, "applied");
+        return INLINE_REMAP_APPLIED;
+    }
+
+    inline_remap_debug_result(context, rule, call_node, proc_sym, "rejected");
+    return INLINE_REMAP_REJECTED;
+}
+
+static const InlineRemapRule inline_remap_rules[] = {
+    {
+        "inline.rhs-eager-operator.capture-left",
+        "inline.callsite",
+        "eager-operator(rhs-inlineable-call)",
+        10,
+        inline_remap_apply_rhs_eager_operator
+    },
+    {
+        "inline.expression.block",
+        "inline.callsite",
+        "FUNCTION|MEMBER_CALL|FACTORY_CALL",
+        20,
+        inline_remap_apply_expression_block
+    },
+    {
+        "inline.assignment.whole-rhs",
+        "inline.callsite",
+        "ASSIGN(rhs-inlineable-call)",
+        30,
+        inline_remap_apply_assignment_whole_rhs
+    },
+    {
+        "inline.call.statement",
+        "inline.callsite",
+        "CALL(inlineable-call)",
+        40,
+        inline_remap_apply_call_statement
+    }
+};
+
+static InlineRemapResult inline_remap_apply_rules(Context *context,
+                                                  InlineWalkerPayload *payload,
+                                                  ASTNode *node) {
+    size_t i;
+
+    if (!context || !node) return INLINE_REMAP_NO_MATCH;
+
+    for (i = 0; i < sizeof(inline_remap_rules) / sizeof(inline_remap_rules[0]); i++) {
+        const InlineRemapRule *rule = &inline_remap_rules[i];
+        InlineRemapResult result;
+
+        result = rule->apply(rule, context, payload, node);
+        if (result != INLINE_REMAP_NO_MATCH) return result;
+    }
+
+    return INLINE_REMAP_NO_MATCH;
+}
+
 /* Walker to find statement-shaped call sites and inline them */
 walker_result inline_procedure_walker(walker_direction direction, ASTNode *node, void *payload) {
     InlineWalkerPayload *inline_payload;
     Context *context;
-    ASTNode *call_node;
-    ASTNode *lhs;
-    ASTNode *rhs;
-    Symbol *proc_sym;
 
     inline_payload = (InlineWalkerPayload *)payload;
     context = inline_payload ? inline_payload->context : NULL;
 
     if (direction == in) return result_normal;
 
-    if (inline_parent_is_eager_operator(node)) {
-        lhs = node->child;
-        rhs = lhs ? lhs->sibling : NULL;
-
-        if (rhs && !rhs->sibling &&
-            inline_node_is_inlineable_call(rhs, &proc_sym) &&
-            inline_rhs_eager_operator_needs_left_capture(rhs)) {
-            if (ast_inline_rhs_eager_operator(context, node, rhs, proc_sym) && inline_payload) {
-                inline_payload->changed = 1;
-            }
-        }
-        return result_normal;
-    }
-
-    if (node->node_type == FUNCTION ||
-        node->node_type == MEMBER_CALL ||
-        node->node_type == FACTORY_CALL) {
-        if (inline_node_is_inlineable_call(node, &proc_sym)) {
-            if (!inline_rhs_eager_operator_needs_left_capture(node) &&
-                ast_inline_expression(context, node, proc_sym) && inline_payload) {
-                inline_payload->changed = 1;
-            }
-        }
-        return result_normal;
-    }
-
-    if (node->node_type == ASSIGN) {
-        lhs = node->child;
-        rhs = lhs ? lhs->sibling : NULL;
-
-        if (!lhs || !rhs) return result_normal;
-
-        if (inline_node_is_inlineable_call(rhs, &proc_sym)) {
-            if (ast_inline_assignment(context, node, rhs, proc_sym) && inline_payload) inline_payload->changed = 1;
-        }
-        return result_normal;
-    }
-
-    if (node->node_type != CALL) return result_normal;
-
-    call_node = node->child;
-
-    if (inline_node_is_inlineable_call(call_node, &proc_sym)) {
-        if (ast_inline_call(context, node, call_node, proc_sym) && inline_payload) inline_payload->changed = 1;
-    }
-
+    (void)inline_remap_apply_rules(context, inline_payload, node);
     return result_normal;
 }
 

@@ -39,8 +39,47 @@ The first pass deliberately avoids:
 
 ### Issues And Resolutions
 
-No implementation issues recorded yet.
+1. `16_classes_parse` golden output changed after active remap rule ids were
+   added to fail-closed inline debug messages.
+   - Symptom: generated output included
+     `rule=inline.expression.block` on the existing `DEBUG_INLINE_FAILCLOSED`
+     line.
+   - Resolution: keep the rule id because tracer visibility is intentional,
+     and update the single affected parsing golden line.
+   - Replay note: rerun the focused parsing probe after updating
+     `compiler/tests/golden/parsing/16_classes.txt`.
 
 ### Verification
 
-Pending.
+Green stop for implementation stage 1:
+
+- `cmake --build cmake-build-release --target rxc --parallel 4`
+  - result: passed, no work needed after the final source state
+- `ctest --test-dir cmake-build-release -R '16_classes|address_inline_then|address_exit_extended' --output-on-failure`
+  - result: 3/3 passed
+- `ctest --test-dir cmake-build-release -R 'inline|Inline' --output-on-failure`
+  - result: 254/254 passed
+- `git diff --check`
+  - result: passed
+- Direct trailing-whitespace check over touched source/doc/golden files
+  - result: passed
+
+### Stage 1 Result
+
+`inline_procedure_walker()` now dispatches through internal remapping rule
+descriptors for the four current top-level inline call-site buckets. Existing
+`ast_inline_*` builders still own the semantic rewrites, so clone/bind/return
+behaviour is unchanged.
+
+Converted bucket rules:
+
+- `inline.rhs-eager-operator.capture-left`
+- `inline.expression.block`
+- `inline.assignment.whole-rhs`
+- `inline.call.statement`
+
+Remaining tracer work:
+
+- Lift structural eligibility into a rule/catalog form.
+- Decide whether clone/bind/return services should become named remap
+  subrules or remain services used by top-level rules.
