@@ -29,10 +29,13 @@ import data_StringTreeSet
 import data_StringIterable
 
 /**
- * Rexx-only ordered map from string keys to object values.
+ * Ordered map from string keys to object values.
  *
  * Keys and object values are stored in parallel arrays. Ordered views sort a
  * snapshot of the keys.
+ *
+ * @author Rene Vincent Jansen
+ * @author Peter Jacob
  */
 StringObjectTreeMap: class implements .StringIterable
 val = .int

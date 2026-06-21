@@ -28,7 +28,7 @@ import rxfnsb
 import data_StringIterable
 
 /**
- * Rexx-only ordered set of strings.
+ * Ordered set of strings.
  *
  * Values are stored in insertion order internally. Ordered views sort a
  * snapshot of the current values.

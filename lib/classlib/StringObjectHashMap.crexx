@@ -29,10 +29,13 @@ import data_StringTreeSet
 import data_StringIterable
 
 /**
- * Rexx-only map from string keys to object values.
+ * Map from string keys to object values.
  *
  * The implementation stores string keys and Rexx object values in parallel
  * arrays while preserving insertion order for arrays and iterators.
+ *
+ * @author Rene Vincent Jansen
+ * @author Peter Jacob
  */
 StringObjectHashMap: class implements .StringIterable
 val = .int

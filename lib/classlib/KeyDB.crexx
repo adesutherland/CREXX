@@ -76,6 +76,8 @@ KeyDB: class
 
   /**
    * Factory creates a closed keydb object.
+   *
+   * @return .KeyDB
    */
   *: factory
     handle = 0
@@ -83,9 +85,10 @@ KeyDB: class
 
   /**
    * Open or create a database.
-   * @parm .string filename
-   * @parm .string mode     "r", "w", or "w+"
-   * @return .int          handle or negative error code from plugin
+   *
+   * @param filename Database file path.
+   * @param mode Access mode: "r", "w", or "w+".
+   * @return .int Native handle or negative error code from the plugin.
    */
   open: method = .int
     arg filename = .string, mode = .string
@@ -104,6 +107,8 @@ KeyDB: class
 
   /**
    * Return 1 if this object currently has an open native handle, else 0.
+   *
+   * @return .int 1 if open, 0 otherwise.
    */
   isOpen: method = .int
     if handle <> 0 then return 1
@@ -132,10 +137,12 @@ KeyDB: class
 
   /**
    * Store a key/value pair.
+   *
    * Note: plugin requires an active transaction.
-   * @parm .string key
-   * @parm .string value
-   * @return .int status code
+   *
+   * @param key Key to store.
+   * @param value Value to associate with the key.
+   * @return .int Status code.
    */
   put: method = .int
     arg key = .string, value = .string
@@ -143,9 +150,11 @@ KeyDB: class
 
   /**
    * Read a value by key.
+   *
    * Plugin returns a string value, "NOT_FOUND", or "ERROR".
-   * @parm .string key
-   * @return .string
+   *
+   * @param key Key to read.
+   * @return .string Stored value, "NOT_FOUND", or "ERROR".
    */
   get: method = .string
     arg key = .string
@@ -153,9 +162,11 @@ KeyDB: class
 
   /**
    * Delete a key.
+   *
    * Note: plugin requires an active transaction.
-   * @parm .string key
-   * @return .int status code
+   *
+   * @param key Key to delete.
+   * @return .int Status code.
    */
   remove: method = .int
     arg key = .string
@@ -177,8 +188,9 @@ KeyDB: class
 
   /**
    * Back up the database.
-   * @parm .string path
-   * @return .int
+   *
+   * @param path Backup file path.
+   * @return .int Status code.
    */
   backup: method = .int
     arg path = .string
@@ -201,9 +213,11 @@ KeyDB: class
 
   /**
    * Convenience method: 1 if key exists, else 0.
+   *
    * This interprets the plugin's string return.
-   * @parm .string key
-   * @return .int
+   *
+   * @param key Key to test.
+   * @return .int 1 if present, 0 otherwise.
    */
   containsKey: method = .int
     arg key = .string
@@ -214,9 +228,10 @@ KeyDB: class
 
   /**
    * Convenience method: write a single key/value in its own transaction.
-   * @parm .string key
-   * @parm .string value
-   * @return .int
+   *
+   * @param key Key to store.
+   * @param value Value to associate with the key.
+   * @return .int Status code.
    */
   putCommit: method = .int
     arg key = .string, value = .string
@@ -231,8 +246,9 @@ KeyDB: class
 
   /**
    * Convenience method: delete a single key in its own transaction.
-   * @parm .string key
-   * @return .int
+   *
+   * @param key Key to delete.
+   * @return .int Status code.
    */
   removeCommit: method = .int
     arg key = .string
@@ -254,6 +270,8 @@ KeyDB: class
 
   /**
    * Finalizer-style cleanup helper.
+   *
+   * @return .int Status code from close().
    */
   dispose: method = .int
     return close()

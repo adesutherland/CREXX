@@ -34,6 +34,7 @@ sp    = .int
 
 /**
  * The factory method returns a StringStack object, which initially is empty
+ * @return .StringStack
  */
   *: factory
     sp = 0
@@ -42,8 +43,8 @@ sp    = .int
     /** 
      * method push
      * Pushes an item onto the top of this stack.
-     * @parm .string 
-     * @return .int (true)
+     * @param item Item to push.
+     * @return .int 1 on success.
      */ 
   push: method = .int
     arg item = .string
@@ -52,7 +53,7 @@ sp    = .int
     return 1
 
     /**
-     * method size returns the number of elemenst on the stack
+     * method size returns the number of elements on the stack
      * @return .int
      */
   size: method = .int
@@ -97,4 +98,3 @@ sp    = .int
     if sp = 0 then return 0
     item = val[sp]
     return item
-

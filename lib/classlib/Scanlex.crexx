@@ -62,7 +62,7 @@ scanlex_token: class
 /**
  * Tokenizes Rexx-like source text.
  *
- * @param  .string source
+ * @param source Source text to tokenize.
  * @return .scanlex_token[]
  */
 rxScanLex: procedure=.scanlex_token[]
@@ -102,7 +102,7 @@ return toks
 /**
  * Tokenizes JSON source text.
  *
- * @param  .string source
+ * @param source JSON source text to tokenize.
  * @return .scanlex_token[]
  */
 rxScanJSON: procedure=.scanlex_token[]

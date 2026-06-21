@@ -27,37 +27,38 @@ namespace system_os expose os
 import system
 
 /**
- * class os is comprised of methods for which interaction with
- * the operating system is necessary. It is is backed by the
- * system plugin which does so in a platform independent way. 
+ * Operating-system services backed by the system plugin.
  */
 os: class
 
 /** 
- * the factory method returns an instance of the os class
- * @ return .os
+ * Create an os object.
+ *
+ * @return .os New os instance.
  */
   *: factory
     return
 
     /** 
-     * method uptime returns the system uptime in seconds
-     * @return .string uptime
+     * Returns the system uptime in seconds.
+     *
+     * @return .string System uptime in seconds.
      */
   uptime: method = .string
     return sysuptime()
     
     /** 
-     * method user returns the logged on userid
-     * @return .string userid tsk
+     * Returns the current user id.
+     *
+     * @return .string Current user id.
      */
   user: method = .string
     return userid()  
 
     /** 
-     * method getLoadPath returns the path from which
-     * the program is run
-     * @return .string loadpath
+     * Returns the path from which the program is running.
+     *
+     * @return .string Runtime load path.
      */
   loadpath: method = .string
     return getLoadPath()
@@ -65,7 +66,7 @@ os: class
     /**
      * Returns the operating system name.
      *
-     * @return Operating system name
+     * @return .string Operating system name.
      */
   osname: method = .string
     return opsys()
@@ -75,7 +76,7 @@ os: class
      *
      * @param source Source file
      * @param target Target file
-     * @return       1 on success, 0 on failure
+     * @return .int Number of bytes appended, or negative error code.
      */
   appendBinaryFile: method = .int
     arg source = .string, target = .string
@@ -84,7 +85,7 @@ os: class
     /**
      * Returns the host or computer name.
      *
-     * @return Host name
+     * @return .string Host name.
      */
   getHost: method = .string
     return host()
@@ -92,7 +93,7 @@ os: class
     /**
      * Emits a beep.
      *
-     * @return 1 on success, 0 on failure
+     * @return .int 0 on success.
      */
   beep: method = .int
     say 'TODO: beep is not fully implemented'
@@ -101,8 +102,8 @@ os: class
     /**
      * Waits for a number of milliseconds.
      *
-     * @param time 
-     * @return     1 on success, 0 on failure
+     * @param time Time to wait, in milliseconds.
+     * @return .int 0 on success.
     */
   wait: method = .int
     arg time = .int
@@ -111,17 +112,19 @@ os: class
     /**
      * Lists modules in an rxbin source.
      *
-     * @param source rxbin file
-     * @return       Status code or count, depending on native implementation
+     * @param source rxbin file.
+     * @return .int Status code or module count, depending on native implementation.
      */
   rxbinModules: method = .int
     arg source = .string
     return lmodules(source)
 
     /**
-     * method listDir returns the files in a directory
-     * @parm .string file directory name
-     * @ return .string[]
+     * Lists the files in a directory.
+     *
+     * @param file Directory path.
+     * @param entries Output array receiving directory entries.
+     * @return .int Status code from the native implementation.
      */
   listDir: method = .int
     arg file = .string, entries = .string[]
@@ -129,11 +132,11 @@ os: class
     return _listdir(file,entries)
 
     /**
-     * method getEnv
-     * returns the contents of an environment variable
-     * @parm .string name
-     * @return .string content
-     * note: this duplicates the getenv() bif.
+     * Returns the contents of an environment variable.
+     *
+     * @param env_name Environment variable name.
+     * @return .string Environment variable value.
+     * Note: this duplicates the getenv() BIF.
      */
   getEnv: method = .string
     arg env_name = .string

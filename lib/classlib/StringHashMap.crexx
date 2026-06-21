@@ -30,11 +30,10 @@ import data_StringIterable
 import data_StringHashMapIterator
 
 /**
- * Rexx-only string-to-string map.
+ * String-to-string map with insertion-order traversal.
  *
- * This deliberately avoids the historical treemap/stem native plugin so
- * classlib can remain a pure Rexx runtime image. The implementation keeps
- * insertion order for arrays and iterators.
+ * The implementation stores string keys and values in parallel arrays.
+ * Key arrays, value arrays, and iterators preserve insertion order.
  *
  * @author Rene Vincent Jansen
  * @author Peter Jacob

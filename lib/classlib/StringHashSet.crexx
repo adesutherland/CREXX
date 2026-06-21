@@ -27,9 +27,10 @@ namespace data_StringHashSet expose StringHashSet
 import rxfnsb
 
 /**
- * Rexx-only string set with insertion-order traversal.
+ * String set with insertion-order traversal.
  *
- * This class stores unique string values and makes no ordering guarantees.
+ * This class stores unique string values. Arrays and iterators preserve the
+ * order in which values were first added.
  *
  * @author Rene Vincent Jansen
  * @author Peter Jacob

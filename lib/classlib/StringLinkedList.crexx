@@ -27,10 +27,9 @@ namespace data_StringLinkedList expose StringLinkedList
 import rxfnsb
 
 /**
- * Rexx-only string list with a current cursor.
+ * String list with a current cursor.
  *
- * This class preserves the public cursor-oriented surface of the older
- * native-list-backed implementation while storing values in Rexx arrays.
+ * The list supports cursor-oriented traversal and positional updates.
  *
  * @author Rene Vincent Jansen
  * @author Peter Jacob
