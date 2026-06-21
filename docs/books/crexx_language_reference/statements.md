@@ -390,7 +390,7 @@ self-contained source-step metadata, and text TRACE no longer guesses
 assignment results from source text. Result coverage is still deliberately
 partial: optimized-away or folded values may have no trace event, and some
 compound-variable details such as final resolved-name reporting remain a
-compiler/runtime coverage task.
+compiler/ runtime coverage task.
 
 `TRACE LLM` is a cRexx extension that emits one JSON-lines-style trace record
 per event. It is intended for debugger automation and for validating emitted

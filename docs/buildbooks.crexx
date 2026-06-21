@@ -1,5 +1,5 @@
 /* rexx */
-options levelb
+options levelb comments_dash
 import system
 
 books = 'crexx_language_reference crexx_programming_guide crexx_vm_spec crexx_library_reference'
@@ -16,7 +16,7 @@ arg title = .string
 say 'title = ' title
 newDir = '/Users/rvjansen/apps/crexx-fork/docs/'title'/tex/book'
 say 'newDir:' newDir
-call setdir(newDir)
-say '------------------->' getdir()
-'rexx ~/apps/TextTools/build.rexx -copy -crexx'
+command = '-c cd' newDir '&& rexx ~/apps/TextTools/build.rexx -copy -crexx'
+say 'command : ===>' command
+address sh command
 return
