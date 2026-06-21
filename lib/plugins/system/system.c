@@ -976,29 +976,30 @@ PROCEDURE(beep) {
     ENDPROC
 }
 PROCEDURE(getuser) {
-char username[256];
-
 #ifdef _WIN32
-DWORD username_len = sizeof(username);
-#else
-uint32_t username_len = sizeof(username);
-#endif
+    char username[256];
+    DWORD username_len = sizeof(username);
 
-#ifdef _WIN32
     if (GetUserName(username, &username_len)) {
-    RETURNSTRX(username);
+        RETURNSTRX(username);
     } else RETURNSTRX("unknown");
 #else
+    char *username = NULL;
     struct passwd pwd;
     struct passwd *result;
     char buffer[16384];  // sufficiently large buffer
-    
-    if (getpwuid_r(getuid(), &pwd, buffer, sizeof(buffer), &result) == 0 && result) {
-      snprintf(buffer, sizeof(buffer), "%s", result->pw_name);
-    } else {
-      snprintf(buffer, sizeof(buffer), "%s", "invalid");
+
+    if (getpwuid_r(getuid(), &pwd, buffer, sizeof(buffer), &result) == 0 &&
+        result && result->pw_name && result->pw_name[0] != '\0') {
+        username = result->pw_name;
     }
-    RETURNSTRX(buffer);
+
+    if (!username) username = getenv("USER");
+    if (!username || username[0] == '\0') username = getenv("LOGNAME");
+    if (!username || username[0] == '\0') username = getenv("USERNAME");
+    if (!username || username[0] == '\0') username = "unknown";
+
+    RETURNSTRX(username);
 #endif
 ENDPROC
 }
