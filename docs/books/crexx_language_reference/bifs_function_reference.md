@@ -188,8 +188,8 @@ not for binary payload construction.
 Level B arrays use `array[0]` as the high-water mark. User elements are stored
 in `array[1]` through `array[array[0]]`. The `array*` helpers below live in
 `rxfnsb`; mutating helpers take the array by `expose` and update it in place.
-They are the supported array surface for new code. The older native arrays
-plugin is deprecated.
+<!--  They are the supported array surface for new code. The older native arrays -->
+<!-- plugin is deprecated. -->
 
 | Function | Result | Notes |
 |----------|--------|-------|
