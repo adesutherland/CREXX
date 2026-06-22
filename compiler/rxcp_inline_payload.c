@@ -1913,7 +1913,7 @@ static int inline_meta_import_scope(Context *context, InlineMetaImport *meta, ch
 
     if (meta->scopes[id]) return 1;
 
-    scope = scp_f(context, parent, NULL, NULL, type);
+    scope = rxcp_remap_create_scope(context, parent, NULL, type, NULL, NULL);
     if (!scope) return 0;
 
     meta->scopes[id] = scope;
@@ -2515,16 +2515,16 @@ static ASTNode *inline_meta_create_template_proc(Context *context,
     template_proc = ast_dup(context, proc);
     if (!template_proc) return NULL;
 
-    template_scope = scp_f(context,
-                           (proc->node_type == METHOD || proc->node_type == FACTORY) ? proc->scope->parent : NULL,
-                           template_proc,
-                           NULL,
-                           SCOPE_PROCEDURE);
+    template_scope = rxcp_remap_create_scope(context,
+                                             (proc->node_type == METHOD || proc->node_type == FACTORY) ?
+                                             proc->scope->parent : NULL,
+                                             template_proc,
+                                             SCOPE_PROCEDURE,
+                                             proc->scope,
+                                             proc->scope->name);
     if (!template_scope) return NULL;
     if (!template_scope->parent && !scp_track_detached(context, template_scope)) return NULL;
     if (proc->node_type == METHOD || proc->node_type == FACTORY) template_proc->parent = proc->parent;
-    if (proc->scope->name) template_scope->name = strdup(proc->scope->name);
-    inline_copy_numeric_context(template_scope, proc->scope);
 
     template_proc->scope = template_scope;
     if (!inline_meta_clone_missing_scope_symbols(proc->scope, template_scope)) return NULL;

@@ -1,0 +1,115 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Rene Jansen
+ */
+
+#ifndef CREXX_RXCP_REMAP_BUILD_H
+#define CREXX_RXCP_REMAP_BUILD_H
+
+#include <stddef.h>
+#include "rxcp_ast.h"
+#include "rxcp_types.h"
+
+typedef enum {
+    RXCP_REMAP_GENERATED_BLOCK_NONE = 0,
+    RXCP_REMAP_GENERATED_BLOCK_PRIMARY_REPORTING = 1
+} RxcpRemapGeneratedBlockFlags;
+
+typedef ASTNode *(*RxcpRemapExprMaterializer)(Context *context,
+                                              ASTNode *source_node,
+                                              Scope *scope,
+                                              void *user_data);
+
+void rxcp_remap_anchor_synthetic(ASTNode *node, ASTNode *source_node);
+void rxcp_remap_mark_generated_block(ASTNode *node, int primary_reporting_anchor);
+void rxcp_remap_copy_numeric_context(Scope *target, const Scope *source);
+
+int rxcp_remap_copy_node_value_shape_to_symbol(Symbol *target, const ASTNode *source);
+int rxcp_remap_copy_symbol_value_shape(Symbol *target, const Symbol *source);
+
+Scope *rxcp_remap_create_scope(Context *context,
+                               Scope *parent,
+                               ASTNode *defining_node,
+                               ScopeType type,
+                               const Scope *numeric_context_source,
+                               const char *name);
+Scope *rxcp_remap_create_local_scope(Context *context,
+                                     Scope *parent,
+                                     ASTNode *defining_node,
+                                     const Scope *numeric_context_source);
+
+Symbol *rxcp_remap_create_local_symbol_from_node(Context *context,
+                                                 Scope *scope,
+                                                 const char *name,
+                                                 ASTNode *shape_node,
+                                                 int default_array_storage);
+Symbol *rxcp_remap_create_temp_symbol(Context *context,
+                                      Scope *scope,
+                                      ASTNode *source_node,
+                                      const char *prefix,
+                                      size_t suffix);
+
+ASTNode *rxcp_remap_create_symbol_node(Context *context,
+                                       Scope *scope,
+                                       ASTNode *source_node,
+                                       Symbol *symbol,
+                                       NodeType node_type,
+                                       unsigned int read_usage,
+                                       unsigned int write_usage);
+ASTNode *rxcp_remap_create_integer_constant(Context *context,
+                                            ASTNode *source_node,
+                                            int value,
+                                            ValueType type);
+ASTNode *rxcp_remap_create_assignment_node(Context *context,
+                                           Scope *scope,
+                                           ASTNode *source_node,
+                                           ASTNode *shape_node);
+ASTNode *rxcp_remap_create_assignment(Context *context,
+                                      Scope *scope,
+                                      ASTNode *source_node,
+                                      ASTNode *shape_node,
+                                      ASTNode *lhs,
+                                      ASTNode *rhs);
+ASTNode *rxcp_remap_create_assignment_to_symbol(Context *context,
+                                                Scope *scope,
+                                                ASTNode *source_node,
+                                                ASTNode *shape_node,
+                                                Symbol *target_symbol,
+                                                ASTNode *rhs);
+ASTNode *rxcp_remap_create_leave_with(Context *context,
+                                      Scope *scope,
+                                      ASTNode *source_node,
+                                      ASTNode *block_expr,
+                                      ASTNode *expr);
+ASTNode *rxcp_remap_create_sink_target(Context *context,
+                                       Scope *scope,
+                                       ASTNode *source_node,
+                                       ASTNode *shape_node,
+                                       const char *prefix);
+ASTNode *rxcp_remap_capture_once(Context *context,
+                                 ASTNode *instr_list,
+                                 Scope *scope,
+                                 ASTNode *source_node,
+                                 const char *prefix,
+                                 size_t suffix,
+                                 RxcpRemapExprMaterializer materializer,
+                                 void *user_data,
+                                 Symbol **temp_symbol_out,
+                                 ASTNode **capture_assign_out);
+
+ASTNode *rxcp_remap_create_generated_instruction_block(Context *context,
+                                                       Scope *parent_scope,
+                                                       ASTNode *token_node,
+                                                       ASTNode *anchor_node,
+                                                       ASTNode *association,
+                                                       int flags,
+                                                       Scope **scope_out);
+ASTNode *rxcp_remap_create_block_expr(Context *context,
+                                      Scope *parent_scope,
+                                      ASTNode *shape_node,
+                                      ASTNode *association,
+                                      Scope **scope_out,
+                                      ASTNode **instr_list_out);
+
+#endif

@@ -520,9 +520,16 @@ Their internals have also been split into private implementation fragments for
 binding, cloning, rewriting, analysis, and payload import/export. Those
 fragments are still included by `rxcp_inline.c` rather than compiled
 independently, because the static helper dependency graph is intentionally being
-thinned in stages. The next extraction point is a Level C-neutral
-builder/materialisation helper layer for generated scopes, temps, source
-anchors, assignment construction, and capture-once rewrites.
+thinned in stages.
+
+The first Level C-neutral builder/materialisation layer now lives in
+`compiler/rxcp_remap_build.c` and `compiler/rxcp_remap_build.h`. It provides
+shared building blocks for generated scopes, numeric-context copying, source
+anchors, generated blocks, temp symbols, symbol refs/targets, integer constants,
+assignments, sink targets, `LEAVE WITH` nodes, and capture-once rewrites. The
+inliner is the first client, but the API is intentionally under the remap layer
+so Level C lowering, other Rexx front ends, and future optimisation rewrites can
+use the same mechanics without depending on inline-specific policy.
 
 This path gives a real safety net. The inliner has existing positive and
 negative tests, source/import cases, and opt/noopt runtime comparisons. Passing

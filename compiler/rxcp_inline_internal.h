@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include "rxcp_val.h"
 #include "rxcp_remap.h"
+#include "rxcp_remap_build.h"
 
 /*
  * Production inlining size policy.  This is a profitability/metadata-size

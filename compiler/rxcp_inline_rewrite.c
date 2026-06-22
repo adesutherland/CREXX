@@ -3,58 +3,6 @@
  * Included by rxcp_inline.c; not compiled separately.
  */
 
-static void inline_copy_symbol_shape(Symbol *target, Symbol *source) {
-    if (!target || !source) return;
-
-    target->type = source->type;
-    target->value_dims = source->value_dims;
-
-    if (source->dim_base && source->value_dims) {
-        target->dim_base = malloc(sizeof(int) * source->value_dims);
-        memcpy(target->dim_base, source->dim_base, sizeof(int) * source->value_dims);
-    }
-
-    if (source->dim_elements && source->value_dims) {
-        target->dim_elements = malloc(sizeof(int) * source->value_dims);
-        memcpy(target->dim_elements, source->dim_elements, sizeof(int) * source->value_dims);
-    }
-
-    if (source->value_class) target->value_class = strdup(source->value_class);
-}
-
-static ASTNode *inline_create_sink_target(Context *context,
-                                          Scope *inline_scope,
-                                          ASTNode *source_node,
-                                          ASTNode *shape_node) {
-    char sink_name[64];
-    ASTNode *sink_target;
-    Symbol *sink_symbol;
-
-    if (!context || !inline_scope || !source_node || !shape_node) return NULL;
-
-    snprintf(sink_name, sizeof(sink_name), "__inline_unused_%d", source_node->node_number);
-
-    sink_symbol = sym_fn(inline_scope, sink_name, strlen(sink_name));
-    if (!sink_symbol) return NULL;
-
-    sink_symbol->symbol_type = VARIABLE_SYMBOL;
-    sink_symbol->status = SYM_STATUS_LOCAL_VAR;
-    sink_symbol->register_num = UNSET_REGISTER;
-    sink_symbol->register_type = 'r';
-    sink_symbol->meta_emitted = 0;
-    sink_symbol->init_emitted = 0;
-    if (!inline_copy_node_shape(sink_symbol, shape_node)) return NULL;
-
-    sink_target = ast_ftt(context, VAR_TARGET, strdup(sink_symbol->name));
-    sink_target->free_node_string = 1;
-    sink_target->scope = inline_scope;
-    ast_copy_source_anchor(sink_target, source_node, AST_SOURCE_SYNTHETIC);
-    sym_adnd(sink_symbol, sink_target, 0, 1);
-    ast_svtp(sink_target, sink_symbol);
-
-    return sink_target;
-}
-
 static InlineExprContext inline_classify_expr_context(ASTNode *node) {
     ASTNode *parent;
 
@@ -452,8 +400,8 @@ static ASTNode *inline_create_receiver_copyback_leave_wrapper(Context *context,
 
     wrapper = ast_f(context, INSTRUCTIONS, leave_node->token);
     if (!wrapper) return NULL;
-    ast_copy_source_anchor(wrapper, leave_node, AST_SOURCE_SYNTHETIC);
-    ast_mark_compiler_generated_block(wrapper);
+    rxcp_remap_anchor_synthetic(wrapper, leave_node);
+    rxcp_remap_mark_generated_block(wrapper, 0);
     wrapper->association = block_expr;
     wrapper->scope = inline_scope;
     wrapper->value_type = TP_VOID;
@@ -462,20 +410,20 @@ static ASTNode *inline_create_receiver_copyback_leave_wrapper(Context *context,
     leave_expr = leave_node->child;
     if (!leave_expr) return NULL;
 
-    temp_symbol = inline_create_temp_symbol(context,
+    temp_symbol = rxcp_remap_create_temp_symbol(context,
                                             inline_scope,
                                             leave_expr,
                                             "__inline_leave",
                                             (size_t)leave_node->node_number);
     if (!temp_symbol) return NULL;
 
-    assign_node = ast_f(context, ASSIGN, leave_expr->token ? leave_expr->token : leave_node->token);
+    assign_node = rxcp_remap_create_assignment_node(context,
+                                                    inline_scope,
+                                                    leave_expr->token ? leave_expr : leave_node,
+                                                    leave_expr);
     if (!assign_node) return NULL;
-    assign_node->scope = inline_scope;
-    assign_node->value_type = leave_expr->value_type;
-    assign_node->target_type = leave_expr->target_type;
 
-    assign_lhs = inline_create_symbol_node(context,
+    assign_lhs = rxcp_remap_create_symbol_node(context,
                                            inline_scope,
                                            leave_expr,
                                            temp_symbol,
@@ -500,7 +448,7 @@ static ASTNode *inline_create_receiver_copyback_leave_wrapper(Context *context,
         return NULL;
     }
 
-    temp_ref = inline_create_symbol_node(context,
+    temp_ref = rxcp_remap_create_symbol_node(context,
                                          inline_scope,
                                          leave_node,
                                          temp_symbol,
@@ -558,7 +506,7 @@ static int inline_rewrite_return_nodes_impl(Context *context,
     if (!node->child) {
         if (!(allow_dummy_return && proc_type == TP_VOID)) return 0;
 
-        leave_expr = inline_create_integer_constant(context, node, 0, TP_INTEGER);
+        leave_expr = rxcp_remap_create_integer_constant(context, node, 0, TP_INTEGER);
         if (!leave_expr) return 0;
         leave_expr->scope = node->scope ? node->scope : inline_scope;
         add_ast(node, leave_expr);
@@ -656,37 +604,21 @@ static ASTNode *inline_build_block_expr(Context *context,
 
     if (!inline_validate_call_site(context, proc_def, call_node, proc_sym)) return NULL;
 
-    block_expr = ast_dup(context, call_node);
+    block_expr = rxcp_remap_create_block_expr(context,
+                                              parent_scope,
+                                              call_node,
+                                              proc_def,
+                                              &inline_scope,
+                                              &instr_list);
     if (!block_expr) {
-        inline_debug_fail_closed(context, call_node, proc_sym, "failed to duplicate call node for BLOCK_EXPR");
+        inline_debug_fail_closed(context, call_node, proc_sym, "failed to create BLOCK_EXPR inline scaffold");
         return NULL;
     }
-
-    block_expr->node_type = BLOCK_EXPR;
-    ast_str(block_expr, "do");
-    block_expr->association = proc_def;
 
     if (allow_dummy_return && proc_sym->type == TP_VOID) {
         ast_set_value_type(0, block_expr, TP_INTEGER, 0, 0, 0, 0);
         ast_set_target_type(0, block_expr, TP_INTEGER, 0, 0, 0, 0);
     }
-
-    inline_scope = scp_f(context, parent_scope, block_expr, NULL, SCOPE_LOCAL);
-    if (!inline_scope) {
-        inline_debug_fail_closed(context, call_node, proc_sym, "failed to create BLOCK_EXPR inline scope");
-        return NULL;
-    }
-    block_expr->scope = inline_scope;
-
-    instr_list = ast_f(context, INSTRUCTIONS, call_node->token);
-    if (!instr_list) {
-        inline_debug_fail_closed(context, call_node, proc_sym, "failed to create inline instruction list");
-        return NULL;
-    }
-    instr_list->scope = inline_scope;
-    instr_list->value_type = TP_VOID;
-    instr_list->target_type = TP_VOID;
-    add_ast(block_expr, instr_list);
 
     memset(&clone_state, 0, sizeof(clone_state));
 
@@ -741,7 +673,7 @@ static ASTNode *inline_build_block_expr(Context *context,
         ASTNode *leave_with;
         ASTNode *leave_expr;
 
-        leave_expr = inline_create_integer_constant(context, call_node, 0, TP_INTEGER);
+        leave_expr = rxcp_remap_create_integer_constant(context, call_node, 0, TP_INTEGER);
         if (!leave_expr) {
             inline_debug_fail_closed(context, call_node, proc_sym, "failed to create dummy LEAVE_WITH expression");
             inline_free_symbol_map(&clone_state);
@@ -749,18 +681,16 @@ static ASTNode *inline_build_block_expr(Context *context,
         }
         leave_expr->scope = inline_scope;
 
-        leave_with = ast_f(context, LEAVE_WITH, call_node->token);
+        leave_with = rxcp_remap_create_leave_with(context,
+                                                  inline_scope,
+                                                  call_node,
+                                                  block_expr,
+                                                  leave_expr);
         if (!leave_with) {
             inline_debug_fail_closed(context, call_node, proc_sym, "failed to create dummy LEAVE_WITH node");
             inline_free_symbol_map(&clone_state);
             return NULL;
         }
-        leave_with->scope = inline_scope;
-        leave_with->association = block_expr;
-        leave_with->value_type = leave_expr->value_type;
-        leave_with->target_type = leave_expr->target_type;
-
-        add_ast(leave_with, leave_expr);
         add_ast(instr_list, leave_with);
     }
 
@@ -791,21 +721,15 @@ static int ast_inline_statement(Context *context,
 
     if (!inline_validate_call_site(context, proc_def, call_node, proc_sym)) return 0;
 
-    block = ast_f(context, INSTRUCTIONS, call_node->token);
+    block = rxcp_remap_create_generated_instruction_block(context,
+                                                          statement_node->scope,
+                                                          call_node,
+                                                          statement_node,
+                                                          proc_def,
+                                                          RXCP_REMAP_GENERATED_BLOCK_PRIMARY_REPORTING,
+                                                          &inline_scope);
     if (!block) {
         inline_debug_fail_closed(context, call_node, proc_sym, "failed to create compiler-generated statement block");
-        return 0;
-    }
-    ast_copy_source_anchor(block, statement_node, AST_SOURCE_SYNTHETIC);
-    ast_mark_compiler_generated_block(block);
-    ast_enable_primary_reporting_anchor(block);
-    block->association = proc_def;
-    block->value_type = TP_VOID;
-    block->target_type = TP_VOID;
-
-    inline_scope = scp_f(context, statement_node->scope, block, NULL, SCOPE_LOCAL);
-    if (!inline_scope) {
-        inline_debug_fail_closed(context, call_node, proc_sym, "failed to create compiler-generated statement scope");
         return 0;
     }
     instr_list = block;
@@ -860,7 +784,11 @@ static int ast_inline_statement(Context *context,
                                                         caller_scope);
             } else if (return_plan && return_plan->return_sink_symbol) {
                 ret_assign->scope = inline_scope;
-                ret_lhs = inline_create_sink_target(context, inline_scope, proc_instr, proc_instr->child);
+                ret_lhs = rxcp_remap_create_sink_target(context,
+                                                        inline_scope,
+                                                        proc_instr,
+                                                        proc_instr->child,
+                                                        "__inline_unused");
             } else {
                 inline_debug_fail_closed(context, call_node, proc_sym, "missing return target/sink during statement inline");
                 inline_free_symbol_map(&clone_state);
@@ -1074,37 +1002,35 @@ int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Sy
                                      "mutating method call inline requires statement-position copyback");
             return 0;
         }
-        block = ast_f(context, INSTRUCTIONS, call_node->token);
+        block = rxcp_remap_create_generated_instruction_block(context,
+                                                              call_stmt->scope,
+                                                              call_node,
+                                                              call_stmt,
+                                                              proc_def,
+                                                              RXCP_REMAP_GENERATED_BLOCK_PRIMARY_REPORTING,
+                                                              &block_scope);
         if (!block) {
             inline_debug_fail_closed(context, call_node, proc_sym, "failed to create compiler-generated sink block");
-            return 0;
-        }
-        ast_copy_source_anchor(block, call_stmt, AST_SOURCE_SYNTHETIC);
-        ast_mark_compiler_generated_block(block);
-        ast_enable_primary_reporting_anchor(block);
-        block->association = proc_def;
-        block->value_type = TP_VOID;
-        block->target_type = TP_VOID;
-
-        block_scope = scp_f(context, call_stmt->scope, block, NULL, SCOPE_LOCAL);
-        if (!block_scope) {
-            inline_debug_fail_closed(context, call_node, proc_sym, "failed to create sink block scope");
             return 0;
         }
 
         block_expr = inline_build_block_expr(context, call_node, proc_sym, block_scope, 1);
         if (!block_expr) return 0;
 
-        sink_assign = ast_f(context, ASSIGN, call_node->token);
+        sink_assign = rxcp_remap_create_assignment_node(context,
+                                                        block_scope,
+                                                        call_node,
+                                                        block_expr);
         if (!sink_assign) {
             inline_debug_fail_closed(context, call_node, proc_sym, "failed to create sink assignment");
             return 0;
         }
-        sink_assign->scope = block_scope;
-        sink_assign->value_type = block_expr->value_type;
-        sink_assign->target_type = block_expr->target_type;
 
-        sink_lhs = inline_create_sink_target(context, block_scope, call_node, block_expr);
+        sink_lhs = rxcp_remap_create_sink_target(context,
+                                                 block_scope,
+                                                 call_node,
+                                                 block_expr,
+                                                 "__inline_unused");
         if (!sink_lhs) {
             inline_debug_fail_closed(context, call_node, proc_sym, "failed to create unused return sink target");
             return 0;
@@ -1211,35 +1137,19 @@ int ast_inline_rhs_eager_operator(Context *context,
         return 0;
     }
 
-    block_expr = ast_dup(context, op_node);
+    block_expr = rxcp_remap_create_block_expr(context,
+                                              parent_scope,
+                                              op_node,
+                                              NULL,
+                                              &inline_scope,
+                                              &instr_list);
     if (!block_expr) {
         inline_debug_fail_closed(context, rhs_call, proc_sym,
                                  "failed to create RHS eager-operator BLOCK_EXPR");
         return 0;
     }
-    block_expr->node_type = BLOCK_EXPR;
-    ast_str(block_expr, "do");
 
-    inline_scope = scp_f(context, parent_scope, block_expr, NULL, SCOPE_LOCAL);
-    if (!inline_scope) {
-        inline_debug_fail_closed(context, rhs_call, proc_sym,
-                                 "failed to create RHS eager-operator inline scope");
-        return 0;
-    }
-    block_expr->scope = inline_scope;
-
-    instr_list = ast_f(context, INSTRUCTIONS, op_node->token);
-    if (!instr_list) {
-        inline_debug_fail_closed(context, rhs_call, proc_sym,
-                                 "failed to create RHS eager-operator instruction list");
-        return 0;
-    }
-    instr_list->scope = inline_scope;
-    instr_list->value_type = TP_VOID;
-    instr_list->target_type = TP_VOID;
-    add_ast(block_expr, instr_list);
-
-    left_symbol = inline_create_temp_symbol(context,
+    left_symbol = rxcp_remap_create_temp_symbol(context,
                                             inline_scope,
                                             left,
                                             "__inline_lhs",
@@ -1269,16 +1179,16 @@ int ast_inline_rhs_eager_operator(Context *context,
         return 0;
     }
 
-    assign_node = ast_f(context, ASSIGN, left->token ? left->token : op_node->token);
+    assign_node = rxcp_remap_create_assignment_node(context,
+                                                    inline_scope,
+                                                    left,
+                                                    assign_rhs);
     if (!assign_node) {
         inline_free_symbol_map(&clone_state);
         return 0;
     }
-    assign_node->scope = inline_scope;
-    assign_node->value_type = assign_rhs->value_type;
-    assign_node->target_type = assign_rhs->target_type;
 
-    assign_lhs = inline_create_symbol_node(context,
+    assign_lhs = rxcp_remap_create_symbol_node(context,
                                            inline_scope,
                                            left,
                                            left_symbol,
@@ -1301,7 +1211,7 @@ int ast_inline_rhs_eager_operator(Context *context,
     }
     op_expr->scope = inline_scope;
 
-    temp_ref = inline_create_symbol_node(context,
+    temp_ref = rxcp_remap_create_symbol_node(context,
                                          inline_scope,
                                          left,
                                          left_symbol,
@@ -1316,17 +1226,15 @@ int ast_inline_rhs_eager_operator(Context *context,
     add_ast(op_expr, temp_ref);
     add_ast(op_expr, rhs_expr);
 
-    leave_node = ast_f(context, LEAVE_WITH, op_node->token);
+    leave_node = rxcp_remap_create_leave_with(context,
+                                              inline_scope,
+                                              op_node,
+                                              block_expr,
+                                              op_expr);
     if (!leave_node) {
         inline_free_symbol_map(&clone_state);
         return 0;
     }
-    leave_node->scope = inline_scope;
-    leave_node->association = block_expr;
-    leave_node->value_type = op_expr->value_type;
-    leave_node->target_type = op_expr->target_type;
-
-    add_ast(leave_node, op_expr);
     add_ast(instr_list, leave_node);
 
     ast_rpl(op_node, block_expr);
@@ -1498,4 +1406,3 @@ static InlineEligibilityReject inline_analyse_callable_eligibility(Context *cont
 
     return eligibility->reject;
 }
-

@@ -97,11 +97,13 @@ static Scope *inline_clone_scope(Context *context,
 
     if (!context || !old_scope || !state) return NULL;
 
-    new_scope = scp_f(context, new_parent, new_defining_node, NULL, old_scope->type);
+    new_scope = rxcp_remap_create_scope(context,
+                                        new_parent,
+                                        new_defining_node,
+                                        old_scope->type,
+                                        old_scope,
+                                        old_scope->name);
     if (!new_scope) return NULL;
-
-    if (old_scope->name) new_scope->name = strdup(old_scope->name);
-    inline_copy_numeric_context(new_scope, old_scope);
 
     if (!inline_append_scope_map_entry(state, old_scope, new_scope)) return NULL;
     if (!inline_duplicate_scope_symbols(old_scope, new_scope, state)) return NULL;
@@ -139,7 +141,7 @@ static Scope *inline_prepare_cloned_node_scope(Context *context,
     }
 
     if (inline_node_requires_local_scope(old_node)) {
-        node_scope = scp_f(context, current_scope, new_node, NULL, SCOPE_LOCAL);
+        node_scope = rxcp_remap_create_local_scope(context, current_scope, new_node, NULL);
         if (!node_scope) return NULL;
     }
 
@@ -184,7 +186,7 @@ static ASTNode *inline_clone_subtree_in_scope(Context *context,
     if (state && node->node_type == OP_ARGS) {
         ASTNode *count_node;
 
-        count_node = inline_create_integer_constant(context, node, (int)state->varg_count, TP_INTEGER);
+        count_node = rxcp_remap_create_integer_constant(context, node, (int)state->varg_count, TP_INTEGER);
         if (count_node) count_node->scope = current_scope;
         return count_node;
     }
@@ -204,7 +206,7 @@ static ASTNode *inline_clone_subtree_in_scope(Context *context,
         }
         if (index < 1 || index > state->varg_count || !state->varg_symbols || !state->varg_symbols[index - 1]) return NULL;
 
-        replacement = inline_create_symbol_node(context,
+        replacement = rxcp_remap_create_symbol_node(context,
                                                 current_scope,
                                                 node,
                                                 state->varg_symbols[index - 1],
@@ -233,7 +235,7 @@ static ASTNode *inline_clone_subtree_in_scope(Context *context,
         if (!inline_varg_index_from_node(node->child, &index)) {
             return inline_build_dynamic_varg_exists(context, node, current_scope, state);
         }
-        exists_node = inline_create_integer_constant(context,
+        exists_node = rxcp_remap_create_integer_constant(context,
                                                      node,
                                                      index <= state->varg_count ? 1 : 0,
                                                      TP_BOOLEAN);
@@ -356,7 +358,7 @@ static int inline_build_symbol_map(Scope *callee_scope,
     if (!state->node_entries) state->node_count = 0;
     state->callee_scope = callee_scope;
     state->inline_scope = inline_scope;
-    inline_copy_numeric_context(inline_scope, callee_scope);
+    rxcp_remap_copy_numeric_context(inline_scope, callee_scope);
 
     if (!inline_append_scope_map_entry(state, callee_scope, inline_scope)) return 0;
     return inline_duplicate_scope_symbols(callee_scope, inline_scope, state);
@@ -394,4 +396,3 @@ static void inline_free_symbol_map(InlineCloneState *state) {
     state->varg_symbols = NULL;
     state->varg_count = 0;
 }
-

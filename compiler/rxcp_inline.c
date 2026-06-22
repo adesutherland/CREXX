@@ -23,20 +23,6 @@ static ASTNode *inline_clone_subtree_in_scope(Context *context,
                                               ASTNode *node,
                                               InlineCloneState *state,
                                               Scope *current_scope);
-static ASTNode *inline_create_symbol_node(Context *context,
-                                          Scope *scope,
-                                          ASTNode *source_node,
-                                          Symbol *symbol,
-                                          NodeType node_type,
-                                          unsigned int read_usage,
-                                          unsigned int write_usage);
-static ASTNode *inline_create_integer_constant(Context *context, ASTNode *source_node, int value, ValueType type);
-static void inline_copy_numeric_context(Scope *target, const Scope *source);
-static Symbol *inline_create_temp_symbol(Context *context,
-                                         Scope *inline_scope,
-                                         ASTNode *source_node,
-                                         const char *prefix,
-                                         size_t suffix);
 static ASTNode *inline_create_temp_value_ref(Context *context,
                                              ASTNode *instr_list,
                                              Scope *inline_scope,

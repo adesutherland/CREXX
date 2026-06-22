@@ -677,6 +677,10 @@ Green stop for implementation stage 8:
 
 - `cmake --build cmake-build-release --target rxc --parallel 4`
   - result: passed
+- `ctest --test-dir cmake-build-release -R '16_classes|address_inline_then|address_exit_extended' --output-on-failure`
+  - result: passed, 3/3 tests
+- `ctest --test-dir cmake-build-release -R 'inline|Inline' --output-on-failure`
+  - result: passed, 254/254 tests
 
 ### Stage 8 Result
 
@@ -685,3 +689,100 @@ heavy mechanics are no longer buried in one file, and the mechanics are grouped
 by bind, clone, rewrite, analysis, and payload responsibility. The next step is
 to thin dependencies inside these fragments enough to promote selected ones to
 independently compiled sources or to extract Level C-neutral builders.
+
+## 2026-06-22: Shared Remap Builder Materialisation Layer
+
+### Goal
+
+Extract the reusable generated-tree mechanics from the inliner into a neutral
+remap builder layer. This is deliberately broader than a narrow helper move:
+Level C lowering, future Rexx front ends, and optimiser rewrites all need the
+same reliable ways to create compiler-owned scopes, temps, anchors,
+assignments, block expressions, and capture-once rewrites.
+
+### Implemented Shape
+
+Added:
+
+- `compiler/rxcp_remap_build.h`
+- `compiler/rxcp_remap_build.c`
+
+The layer now owns reusable mechanics for:
+
+- synthetic source anchors and generated-block marking;
+- numeric-context copying;
+- generated scopes, including named cloned scopes and local rewrite scopes;
+- generated local/temp symbols shaped from AST nodes;
+- symbol refs/targets linked back to `Symbol` usage records;
+- integer constants;
+- ordinary assignments and assignment-to-symbol materialisation;
+- sink targets for intentionally discarded values;
+- `LEAVE WITH` construction;
+- `BLOCK_EXPR` scaffolds with child instruction lists;
+- capture-once rewrites using a caller-provided expression materializer.
+
+The inliner remains responsible for inline-specific policy: eligibility,
+call-site guards, actual/formal binding choices, subtree cloning, receiver
+copyback decisions, assembler copy instructions, and the exact rewrite rule
+catalog.
+
+### Replay Steps
+
+1. Add `rxcp_remap_build.[ch]` beside the existing remap selector/service
+   substrate and include it in `rxclib`.
+2. Route inline-generated scope creation through `rxcp_remap_create_scope()` or
+   `rxcp_remap_create_local_scope()`.
+3. Replace inline-local temp, symbol-node, integer-constant, sink-target,
+   source-anchor, and generated-block helper bodies with the shared builder
+   functions.
+4. Replace broad generated block-expression scaffolds with
+   `rxcp_remap_create_block_expr()`.
+5. Replace straightforward generated assignments and `LEAVE WITH` nodes with
+   shared assignment/leave builders.
+6. Keep inline-specific copyback, register-copy, vararg policy, and clone
+   decisions in the inline fragments.
+
+### Issues And Resolutions
+
+- The shared `capture-once` helper cannot know how to materialise a source
+  expression. It takes a materializer callback; inline passes a clone callback,
+  while Level C can later pass a lowering/materialisation callback.
+- Generated instruction blocks need to distinguish the node that supplies the
+  printed/token shape from the node that supplies the diagnostic source anchor.
+  The builder now accepts both so it can preserve existing parse output while
+  still centralising source-anchor mechanics.
+- Inline golden output is sensitive to AST allocation order because branch
+  labels include node numbers. Added `rxcp_remap_create_assignment_node()` so
+  shared assignment materialisation can allocate the assignment shell before
+  targets/RHS nodes, preserving the old tree numbering.
+- Some remaining direct inline constructors are intentionally not moved yet:
+  receiver-copyback wrappers reuse an existing inline scope, and return
+  assignments may target caller scope or inline scope depending on rewrite
+  context. The shared helpers are still used inside those flows where the
+  construction is neutral.
+
+### Verification
+
+Green stop for implementation stage 9:
+
+- `cmake --build cmake-build-release --target rxc --parallel 4`
+  - result: passed
+- `RXCP_INLINE_RULE_SUMMARY=1 cmake-build-release/bin/rxc -i cmake-build-release/bin -o /tmp/remap_build_summary_probe compiler/tests/rexx_src/inline_test_composed_expr_contexts.crexx`
+  - result: passed
+- `ctest --test-dir cmake-build-release -R '16_classes|address_inline_then|address_exit_extended' --output-on-failure`
+  - result: passed, 3/3 tests
+- `ctest --test-dir cmake-build-release -R 'inline_test_expr_negative_opt|inline_test_nested_call_expr_opt|inline_test_call_arg_expr_opt|inline_test_call_like_arg_expr_opt|inline_test_composed_expr_contexts_opt|inline_test_byvalue_arg_reuse_opt|inline_test_array_return_expr_opt|inline_test_array_multi_return_expr_opt|inline_test_array_multi_return_assign_opt|inline_test_object_writable_arg_opt|inline_test_array_expr_arg_opt|inline_test_binary_arg_return_opt' --output-on-failure`
+  - result: passed, 12/12 targeted drift-repair tests
+- `ctest --test-dir cmake-build-release -R 'inline|Inline' --output-on-failure`
+  - result: passed, 254/254 tests
+- `git diff --check`
+  - result: passed
+- `rg -n '[[:blank:]]$' <touched-files>`
+  - result: no trailing whitespace found
+
+### Stage 9 Result
+
+The remap substrate now has a first neutral builder/materialisation layer. The
+inliner is still the proving client, but generated tree surgery is no longer
+encoded only as inline-specific helper names. This is the bridge needed before
+Level C lowering can share the same compiler-owned AST construction mechanics.

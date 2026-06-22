@@ -59,16 +59,6 @@ static ASTNode *inline_formal_target(ASTNode *param_arg) {
     return param_arg ? ast_chdn(param_arg, 0) : NULL;
 }
 
-static void inline_copy_numeric_context(Scope *target, const Scope *source) {
-    if (!target || !source) return;
-
-    target->num_context.digits = source->num_context.digits;
-    target->num_context.fuzz = source->num_context.fuzz;
-    target->num_context.form = source->num_context.form;
-    target->num_context.casetype = source->num_context.casetype;
-    target->num_context.standard = source->num_context.standard;
-}
-
 static int inline_node_is_callable_def(ASTNode *node) {
     return node &&
            (node->node_type == PROCEDURE ||
@@ -159,38 +149,6 @@ static InlineRefActualEntry *inline_find_ref_varg_actual(InlineCloneState *state
     if (index < 1 || index > state->varg_count) return NULL;
 
     return &state->varg_ref_entries[index - 1];
-}
-
-static int inline_copy_node_shape(Symbol *target, ASTNode *source) {
-    if (!target || !source) return 0;
-
-    target->type = source->value_type;
-    target->value_dims = source->value_dims;
-
-    if (source->value_dims && source->value_dim_base) {
-        target->dim_base = malloc(sizeof(int) * source->value_dims);
-        if (!target->dim_base) return 0;
-        memcpy(target->dim_base, source->value_dim_base, sizeof(int) * source->value_dims);
-    } else {
-        target->dim_base = NULL;
-    }
-
-    if (source->value_dims && source->value_dim_elements) {
-        target->dim_elements = malloc(sizeof(int) * source->value_dims);
-        if (!target->dim_elements) return 0;
-        memcpy(target->dim_elements, source->value_dim_elements, sizeof(int) * source->value_dims);
-    } else {
-        target->dim_elements = NULL;
-    }
-
-    if (source->value_class) {
-        target->value_class = strdup(source->value_class);
-        if (!target->value_class) return 0;
-    } else {
-        target->value_class = NULL;
-    }
-
-    return 1;
 }
 
 static void inline_copy_replacement_semantics(ASTNode *replacement, ASTNode *replaced_node) {
@@ -599,10 +557,10 @@ static ASTNode *inline_create_register_copy_instr(Context *context,
 
     instr->free_node_string = 1;
     instr->scope = scope;
-    ast_copy_source_anchor(instr, lhs_node, AST_SOURCE_SYNTHETIC);
+    rxcp_remap_anchor_synthetic(instr, lhs_node);
 
-    lhs_copy = inline_create_symbol_node(context, scope, lhs_node, lhs_symbol, VAR_TARGET, 0, 1);
-    rhs_copy = inline_create_symbol_node(context, scope, rhs_node, rhs_symbol, VAR_SYMBOL, 1, 0);
+    lhs_copy = rxcp_remap_create_symbol_node(context, scope, lhs_node, lhs_symbol, VAR_TARGET, 0, 1);
+    rhs_copy = rxcp_remap_create_symbol_node(context, scope, rhs_node, rhs_symbol, VAR_SYMBOL, 1, 0);
     if (!lhs_copy || !rhs_copy) return NULL;
 
     add_ast(instr, lhs_copy);
@@ -610,24 +568,15 @@ static ASTNode *inline_create_register_copy_instr(Context *context,
     return instr;
 }
 
-static ASTNode *inline_create_integer_constant(Context *context, ASTNode *source_node, int value, ValueType type) {
-    ASTNode *node;
-    char buffer[32];
+static ASTNode *inline_materialize_capture_clone(Context *context,
+                                                 ASTNode *source_node,
+                                                 Scope *scope,
+                                                 void *user_data) {
+    InlineCloneState *state;
 
-    if (!context || !source_node) return NULL;
-
-    node = ast_ft(context, INTEGER);
-    if (!node) return NULL;
-
-    snprintf(buffer, sizeof(buffer), "%d", value);
-    ast_copy_str(node, buffer);
-    ast_copy_source_anchor(node, source_node, AST_SOURCE_SYNTHETIC);
-    node->int_value = value;
-    node->bool_value = value ? 1 : 0;
-    ast_set_value_type(0, node, type, 0, 0, 0, 0);
-    ast_set_target_type(0, node, type, 0, 0, 0, 0);
-
-    return node;
+    (void)scope;
+    state = (InlineCloneState *)user_data;
+    return inline_clone_subtree(context, source_node, state);
 }
 
 static ASTNode *inline_create_temp_value_ref(Context *context,
@@ -637,62 +586,18 @@ static ASTNode *inline_create_temp_value_ref(Context *context,
                                              InlineCloneState *state,
                                              const char *prefix,
                                              size_t suffix) {
-    Symbol *temp_symbol;
-    ASTNode *capture_assign;
-    ASTNode *capture_lhs;
-    ASTNode *capture_rhs;
-    ASTNode *temp_ref;
-
     if (!context || !instr_list || !inline_scope || !source_node || !state || !prefix) return NULL;
 
-    temp_symbol = inline_create_temp_symbol(context, inline_scope, source_node, prefix, suffix);
-    if (!temp_symbol) return NULL;
-
-    capture_assign = ast_f(context, ASSIGN, source_node->token);
-    if (!capture_assign) return NULL;
-    capture_assign->scope = inline_scope;
-    capture_assign->value_type = source_node->value_type;
-    capture_assign->target_type = source_node->target_type;
-
-    capture_lhs = inline_create_symbol_node(context,
-                                            inline_scope,
-                                            source_node,
-                                            temp_symbol,
-                                            VAR_TARGET,
-                                            0,
-                                            1);
-    capture_rhs = inline_clone_subtree(context, source_node, state);
-    if (!capture_lhs || !capture_rhs) return NULL;
-
-    add_ast(capture_assign, capture_lhs);
-    add_ast(capture_assign, capture_rhs);
-    add_ast(instr_list, capture_assign);
-
-    temp_ref = inline_create_symbol_node(context,
-                                         inline_scope,
-                                         source_node,
-                                         temp_symbol,
-                                         VAR_SYMBOL,
-                                         1,
-                                         0);
-    if (!temp_ref) return NULL;
-
-    ast_set_value_type(0,
-                       temp_ref,
-                       source_node->value_type,
-                       source_node->value_dims,
-                       source_node->value_dim_base,
-                       source_node->value_dim_elements,
-                       source_node->value_class);
-    ast_set_target_type(0,
-                        temp_ref,
-                        source_node->target_type,
-                        source_node->target_dims,
-                        source_node->target_dim_base,
-                        source_node->target_dim_elements,
-                        source_node->target_class);
-
-    return temp_ref;
+    return rxcp_remap_capture_once(context,
+                                   instr_list,
+                                   inline_scope,
+                                   source_node,
+                                   prefix,
+                                   suffix,
+                                   inline_materialize_capture_clone,
+                                   state,
+                                   NULL,
+                                   NULL);
 }
 
 static int inline_should_capture_scoped_actual(ASTNode *param_arg, ASTNode *actual_arg) {
@@ -830,22 +735,19 @@ static Symbol *inline_capture_method_receiver_for_scoped_args(Context *context,
     receiver = inline_call_receiver(call_node);
     if (!receiver) return NULL;
 
-    temp_symbol = inline_create_temp_symbol(context,
+    temp_symbol = rxcp_remap_create_temp_symbol(context,
                                             caller_scope,
                                             receiver,
                                             "__inline_method_receiver",
                                             0);
     if (!temp_symbol) return NULL;
 
-    capture_assign = ast_f(context, ASSIGN, receiver->token);
+    capture_assign = rxcp_remap_create_assignment_node(context, caller_scope, receiver, receiver);
     if (!capture_assign) return NULL;
     capture_assign->association = inline_scope_callable_association(caller_scope);
-    capture_assign->scope = caller_scope;
     capture_assign->inherit_parent_scope = 1;
-    capture_assign->value_type = receiver->value_type;
-    capture_assign->target_type = receiver->target_type;
 
-    capture_lhs = inline_create_symbol_node(context,
+    capture_lhs = rxcp_remap_create_symbol_node(context,
                                             caller_scope,
                                             receiver,
                                             temp_symbol,
@@ -943,7 +845,7 @@ static int inline_capture_scoped_call_actuals(Context *context,
             continue;
         }
 
-        temp_symbol = inline_create_temp_symbol(context,
+        temp_symbol = rxcp_remap_create_temp_symbol(context,
                                                 caller_scope,
                                                 actual_arg,
                                                 "__inline_scoped_arg",
@@ -953,18 +855,15 @@ static int inline_capture_scoped_call_actuals(Context *context,
             return 0;
         }
 
-        capture_assign = ast_f(context, ASSIGN, actual_arg->token);
+        capture_assign = rxcp_remap_create_assignment_node(context, caller_scope, actual_arg, actual_arg);
         if (!capture_assign) {
             free(captured_symbols);
             return 0;
         }
         capture_assign->association = inline_scope_callable_association(caller_scope);
-        capture_assign->scope = caller_scope;
         capture_assign->inherit_parent_scope = 1;
-        capture_assign->value_type = actual_arg->value_type;
-        capture_assign->target_type = actual_arg->target_type;
 
-        capture_lhs = inline_create_symbol_node(context,
+        capture_lhs = rxcp_remap_create_symbol_node(context,
                                                 caller_scope,
                                                 actual_arg,
                                                 temp_symbol,
@@ -1161,57 +1060,6 @@ static int inline_analyse_varg_usage(ASTNode *proc_def, int *unsupported_out, si
     return 1;
 }
 
-static Symbol *inline_create_temp_symbol(Context *context,
-                                         Scope *inline_scope,
-                                         ASTNode *source_node,
-                                         const char *prefix,
-                                         size_t suffix) {
-    char temp_name[80];
-    Symbol *temp_symbol;
-
-    if (!context || !inline_scope || !source_node || !prefix) return NULL;
-
-    snprintf(temp_name, sizeof(temp_name), "%s_%d_%zu", prefix, source_node->node_number, suffix);
-
-    temp_symbol = sym_fn(inline_scope, temp_name, strlen(temp_name));
-    if (!temp_symbol) return NULL;
-
-    temp_symbol->symbol_type = VARIABLE_SYMBOL;
-    temp_symbol->status = SYM_STATUS_LOCAL_VAR;
-    temp_symbol->register_num = UNSET_REGISTER;
-    temp_symbol->register_type = 'r';
-    temp_symbol->meta_emitted = 0;
-    temp_symbol->init_emitted = 0;
-
-    if (!inline_copy_node_shape(temp_symbol, source_node)) return NULL;
-    if (temp_symbol->value_dims > 0) temp_symbol->needs_default_initiation = 1;
-
-    return temp_symbol;
-}
-
-static ASTNode *inline_create_symbol_node(Context *context,
-                                          Scope *scope,
-                                          ASTNode *source_node,
-                                          Symbol *symbol,
-                                          NodeType node_type,
-                                          unsigned int read_usage,
-                                          unsigned int write_usage) {
-    ASTNode *node;
-
-    if (!context || !scope || !source_node || !symbol) return NULL;
-
-    node = ast_ftt(context, node_type, strdup(symbol->name));
-    if (!node) return NULL;
-
-    node->free_node_string = 1;
-    node->scope = scope;
-    ast_copy_source_anchor(node, source_node, AST_SOURCE_SYNTHETIC);
-    sym_adnd(symbol, node, read_usage, write_usage);
-    ast_svtp(node, symbol);
-
-    return node;
-}
-
 static ASTNode *inline_clone_ref_actual(Context *context,
                                         ASTNode *formal_node,
                                         Scope *current_scope,
@@ -1244,7 +1092,7 @@ static ASTNode *inline_clone_ref_actual(Context *context,
 
         if (child_index >= ref_entry->captured_count || !ref_entry->captured_symbols[child_index]) return NULL;
 
-        captured_ref = inline_create_symbol_node(context,
+        captured_ref = rxcp_remap_create_symbol_node(context,
                                                  current_scope,
                                                  source_child,
                                                  ref_entry->captured_symbols[child_index],
@@ -1299,7 +1147,7 @@ static ASTNode *inline_clone_ref_varg_actual(Context *context,
 
         if (child_index >= ref_entry->captured_count || !ref_entry->captured_symbols[child_index]) return NULL;
 
-        captured_ref = inline_create_symbol_node(context,
+        captured_ref = rxcp_remap_create_symbol_node(context,
                                                  current_scope,
                                                  source_child,
                                                  ref_entry->captured_symbols[child_index],
@@ -1355,16 +1203,14 @@ static int inline_capture_ref_entry(Context *context,
         ASTNode *capture_lhs;
         ASTNode *capture_rhs;
 
-        temp_symbol = inline_create_temp_symbol(context, inline_scope, child, prefix, child_index);
+        temp_symbol = rxcp_remap_create_temp_symbol(context, inline_scope, child, prefix, child_index);
         if (!temp_symbol) return 0;
 
-        capture_assign = ast_f(context, ASSIGN, child->token);
+        capture_assign = rxcp_remap_create_assignment_node(context, inline_scope, child, child);
         if (!capture_assign) return 0;
-        capture_assign->scope = inline_scope;
-        capture_assign->value_type = child->value_type;
         capture_assign->target_type = child->value_type;
 
-        capture_lhs = inline_create_symbol_node(context,
+        capture_lhs = rxcp_remap_create_symbol_node(context,
                                                 inline_scope,
                                                 child,
                                                 temp_symbol,
@@ -1457,20 +1303,19 @@ static int inline_capture_varg_actuals(Context *context,
 
         if (actual_arg->node_type == NOVAL) return 0;
 
-        temp_symbol = inline_create_temp_symbol(context,
+        temp_symbol = rxcp_remap_create_temp_symbol(context,
                                                 inline_scope,
                                                 varg_type ? varg_type : actual_arg,
                                                 "__inline_varg",
                                                 child_index);
         if (!temp_symbol) return 0;
 
-        capture_assign = ast_f(context, ASSIGN, actual_arg->token);
+        capture_assign = rxcp_remap_create_assignment_node(context, inline_scope, actual_arg, actual_arg);
         if (!capture_assign) return 0;
-        capture_assign->scope = inline_scope;
         capture_assign->value_type = temp_symbol->type;
         capture_assign->target_type = temp_symbol->type;
 
-        capture_lhs = inline_create_symbol_node(context,
+        capture_lhs = rxcp_remap_create_symbol_node(context,
                                                 inline_scope,
                                                 actual_arg,
                                                 temp_symbol,
@@ -1558,7 +1403,7 @@ static Symbol *inline_create_varg_array_symbol(Context *context,
     array_symbol->init_emitted = 0;
     array_symbol->needs_default_initiation = 1;
 
-    if (!inline_copy_node_shape(array_symbol, template_node ? template_node : source_node)) return NULL;
+    if (!rxcp_remap_copy_node_value_shape_to_symbol(array_symbol, template_node ? template_node : source_node)) return NULL;
 
     old_base = array_symbol->dim_base;
     old_elements = array_symbol->dim_elements;
@@ -1599,7 +1444,7 @@ static ASTNode *inline_create_varg_array_slot(Context *context,
 
     if (!context || !scope || !source_node || !array_symbol || !index_node) return NULL;
 
-    slot_node = inline_create_symbol_node(context, scope, source_node, array_symbol, node_type, 1, node_type == VAR_TARGET ? 1 : 0);
+    slot_node = rxcp_remap_create_symbol_node(context, scope, source_node, array_symbol, node_type, 1, node_type == VAR_TARGET ? 1 : 0);
     if (!slot_node) return NULL;
 
     add_ast(slot_node, index_node);
@@ -1639,14 +1484,13 @@ static int inline_initialise_varg_array(Context *context,
 
         if (!state->varg_symbols || !state->varg_symbols[i]) return 0;
 
-        assign_node = ast_f(context, ASSIGN, source_node->token);
+        assign_node = rxcp_remap_create_assignment_node(context, inline_scope, source_node, source_node);
         if (!assign_node) return 0;
-        assign_node->scope = inline_scope;
         assign_node->value_type = state->varg_symbols[i]->type;
         assign_node->target_type = state->varg_symbols[i]->type;
 
-        index_node = inline_create_integer_constant(context, source_node, (int)(i + 1), TP_INTEGER);
-        rhs = inline_create_symbol_node(context,
+        index_node = rxcp_remap_create_integer_constant(context, source_node, (int)(i + 1), TP_INTEGER);
+        rhs = rxcp_remap_create_symbol_node(context,
                                         inline_scope,
                                         source_node,
                                         state->varg_symbols[i],
@@ -1693,7 +1537,7 @@ static ASTNode *inline_create_assembler_instr(Context *context,
 
     instr->free_node_string = 1;
     instr->scope = scope;
-    ast_copy_source_anchor(instr, source_node, AST_SOURCE_SYNTHETIC);
+    rxcp_remap_anchor_synthetic(instr, source_node);
 
     if (arg1) add_ast(instr, arg1);
     if (arg2) add_ast(instr, arg2);
@@ -1711,7 +1555,7 @@ static ASTNode *inline_create_string_constant(Context *context, ASTNode *source_
     if (!node) return NULL;
 
     ast_copy_str(node, (char *)value);
-    ast_copy_source_anchor(node, source_node, AST_SOURCE_SYNTHETIC);
+    rxcp_remap_anchor_synthetic(node, source_node);
     ast_set_value_type(0, node, TP_STRING, 0, 0, 0, 0);
     ast_set_target_type(0, node, TP_STRING, 0, 0, 0, 0);
 
@@ -1844,13 +1688,10 @@ static int inline_bind_method_receiver(Context *context,
     this_symbol = inline_find_instance_symbol(proc_def, clone_state);
     if (!this_symbol) return 0;
 
-    assign_node = ast_f(context, ASSIGN, receiver->token);
+    assign_node = rxcp_remap_create_assignment_node(context, inline_scope, receiver, receiver);
     if (!assign_node) return 0;
-    assign_node->scope = inline_scope;
-    assign_node->value_type = receiver->value_type;
-    assign_node->target_type = receiver->target_type;
 
-    assign_lhs = inline_create_symbol_node(context,
+    assign_lhs = rxcp_remap_create_symbol_node(context,
                                            inline_scope,
                                            receiver,
                                            this_symbol,
@@ -1858,7 +1699,7 @@ static int inline_bind_method_receiver(Context *context,
                                            0,
                                            1);
     if (captured_receiver_symbol) {
-        assign_rhs = inline_create_symbol_node(context,
+        assign_rhs = rxcp_remap_create_symbol_node(context,
                                                inline_scope,
                                                receiver,
                                                captured_receiver_symbol,
@@ -1907,14 +1748,14 @@ static int inline_initialise_factory_instance(Context *context,
     factory_symbol = inline_find_instance_symbol(proc_def, clone_state);
     if (!factory_symbol) return 0;
 
-    factory_target = inline_create_symbol_node(context,
+    factory_target = rxcp_remap_create_symbol_node(context,
                                                inline_scope,
                                                proc_def,
                                                factory_symbol,
                                                VAR_TARGET,
                                                0,
                                                1);
-    attrs_count = inline_create_integer_constant(context,
+    attrs_count = rxcp_remap_create_integer_constant(context,
                                                  proc_def,
                                                  inline_count_factory_attributes(proc_def),
                                                  TP_INTEGER);
@@ -1938,7 +1779,7 @@ static int inline_initialise_factory_instance(Context *context,
     class_fq = sym_frnm(class_node->symbolNode->symbol);
     if (!class_fq) return 0;
 
-    setobjtype_target = inline_create_symbol_node(context,
+    setobjtype_target = rxcp_remap_create_symbol_node(context,
                                                   inline_scope,
                                                   proc_def,
                                                   factory_symbol,
@@ -1983,14 +1824,14 @@ static int inline_append_method_receiver_copyback_impl(Context *context,
     if (!clone_state->method_receiver_needs_copyback) return 1;
     if (!clone_state->method_receiver_source_symbol || !clone_state->method_receiver_local_symbol) return 0;
 
-    copy_lhs = inline_create_symbol_node(context,
+    copy_lhs = rxcp_remap_create_symbol_node(context,
                                          inline_scope,
                                          source_node,
                                          clone_state->method_receiver_source_symbol,
                                          VAR_TARGET,
                                          0,
                                          1);
-    copy_rhs = inline_create_symbol_node(context,
+    copy_rhs = rxcp_remap_create_symbol_node(context,
                                          inline_scope,
                                          source_node,
                                          clone_state->method_receiver_local_symbol,
@@ -2061,46 +1902,30 @@ static ASTNode *inline_build_dynamic_varg_value(Context *context,
 
     if (!context || !node || !current_scope || !state || !state->varg_array_symbol || !node->child) return NULL;
 
-    block_expr = ast_dup(context, node);
+    block_expr = rxcp_remap_create_block_expr(context,
+                                              current_scope,
+                                              node,
+                                              NULL,
+                                              &inline_scope,
+                                              &instr_list);
     if (!block_expr) return NULL;
-    block_expr->node_type = BLOCK_EXPR;
-    ast_str(block_expr, "do");
 
-    inline_scope = scp_f(context, current_scope, block_expr, NULL, SCOPE_LOCAL);
-    if (!inline_scope) return NULL;
-    block_expr->scope = inline_scope;
-
-    instr_list = ast_f(context, INSTRUCTIONS, node->token);
-    if (!instr_list) return NULL;
-    instr_list->scope = inline_scope;
-    instr_list->value_type = TP_VOID;
-    instr_list->target_type = TP_VOID;
-    add_ast(block_expr, instr_list);
-
-    index_symbol = inline_create_temp_symbol(context, inline_scope, node->child, "__inline_arg_ix", 0);
+    index_symbol = rxcp_remap_create_temp_symbol(context, inline_scope, node->child, "__inline_arg_ix", 0);
     if (!index_symbol) return NULL;
 
-    assign_node = ast_f(context, ASSIGN, node->token);
+    assign_node = rxcp_remap_create_assignment_node(context, inline_scope, node, node->child);
     if (!assign_node) return NULL;
-    assign_node->scope = inline_scope;
     assign_node->value_type = TP_INTEGER;
     assign_node->target_type = TP_INTEGER;
 
-    assign_lhs = inline_create_symbol_node(context, inline_scope, node->child, index_symbol, VAR_TARGET, 0, 1);
+    assign_lhs = rxcp_remap_create_symbol_node(context, inline_scope, node->child, index_symbol, VAR_TARGET, 0, 1);
     assign_rhs = inline_clone_subtree_in_scope(context, node->child, state, inline_scope);
     if (!assign_lhs || !assign_rhs) return NULL;
     add_ast(assign_node, assign_lhs);
     add_ast(assign_node, assign_rhs);
     add_ast(instr_list, assign_node);
 
-    leave_node = ast_f(context, LEAVE_WITH, node->token);
-    if (!leave_node) return NULL;
-    leave_node->scope = inline_scope;
-    leave_node->association = block_expr;
-    leave_node->value_type = node->value_type;
-    leave_node->target_type = node->target_type;
-
-    index_ref = inline_create_symbol_node(context, inline_scope, node, index_symbol, VAR_SYMBOL, 1, 0);
+    index_ref = rxcp_remap_create_symbol_node(context, inline_scope, node, index_symbol, VAR_SYMBOL, 1, 0);
     if (!index_ref) return NULL;
 
     slot_node = inline_create_varg_array_slot(context,
@@ -2116,7 +1941,8 @@ static ASTNode *inline_build_dynamic_varg_value(Context *context,
                                               node->value_class);
     if (!slot_node) return NULL;
 
-    add_ast(leave_node, slot_node);
+    leave_node = rxcp_remap_create_leave_with(context, inline_scope, node, block_expr, slot_node);
+    if (!leave_node) return NULL;
     add_ast(instr_list, leave_node);
     return block_expr;
 }
@@ -2142,41 +1968,32 @@ static ASTNode *inline_build_dynamic_varg_exists(Context *context,
 
     if (!context || !node || !current_scope || !state || !node->child) return NULL;
 
-    block_expr = ast_dup(context, node);
+    block_expr = rxcp_remap_create_block_expr(context,
+                                              current_scope,
+                                              node,
+                                              NULL,
+                                              &inline_scope,
+                                              &instr_list);
     if (!block_expr) return NULL;
-    block_expr->node_type = BLOCK_EXPR;
-    ast_str(block_expr, "do");
 
-    inline_scope = scp_f(context, current_scope, block_expr, NULL, SCOPE_LOCAL);
-    if (!inline_scope) return NULL;
-    block_expr->scope = inline_scope;
-
-    instr_list = ast_f(context, INSTRUCTIONS, node->token);
-    if (!instr_list) return NULL;
-    instr_list->scope = inline_scope;
-    instr_list->value_type = TP_VOID;
-    instr_list->target_type = TP_VOID;
-    add_ast(block_expr, instr_list);
-
-    index_symbol = inline_create_temp_symbol(context, inline_scope, node->child, "__inline_arg_ix", 1);
+    index_symbol = rxcp_remap_create_temp_symbol(context, inline_scope, node->child, "__inline_arg_ix", 1);
     if (!index_symbol) return NULL;
 
-    assign_node = ast_f(context, ASSIGN, node->token);
+    assign_node = rxcp_remap_create_assignment_node(context, inline_scope, node, node->child);
     if (!assign_node) return NULL;
-    assign_node->scope = inline_scope;
     assign_node->value_type = TP_INTEGER;
     assign_node->target_type = TP_INTEGER;
 
-    assign_lhs = inline_create_symbol_node(context, inline_scope, node->child, index_symbol, VAR_TARGET, 0, 1);
+    assign_lhs = rxcp_remap_create_symbol_node(context, inline_scope, node->child, index_symbol, VAR_TARGET, 0, 1);
     assign_rhs = inline_clone_subtree_in_scope(context, node->child, state, inline_scope);
     if (!assign_lhs || !assign_rhs) return NULL;
     add_ast(assign_node, assign_lhs);
     add_ast(assign_node, assign_rhs);
     add_ast(instr_list, assign_node);
 
-    index_ref = inline_create_symbol_node(context, inline_scope, node, index_symbol, VAR_SYMBOL, 1, 0);
-    const_one = inline_create_integer_constant(context, node, 1, TP_INTEGER);
-    const_max = inline_create_integer_constant(context, node, (int)state->varg_count, TP_INTEGER);
+    index_ref = rxcp_remap_create_symbol_node(context, inline_scope, node, index_symbol, VAR_SYMBOL, 1, 0);
+    const_one = rxcp_remap_create_integer_constant(context, node, 1, TP_INTEGER);
+    const_max = rxcp_remap_create_integer_constant(context, node, (int)state->varg_count, TP_INTEGER);
     if (!index_ref || !const_one || !const_max) return NULL;
     index_ref->scope = inline_scope;
     const_one->scope = inline_scope;
@@ -2185,14 +2002,11 @@ static ASTNode *inline_build_dynamic_varg_exists(Context *context,
     gte_node = ast_f(context, OP_COMPARE_GTE, node->token);
     lte_node = ast_f(context, OP_COMPARE_LTE, node->token);
     and_node = ast_f(context, OP_AND, node->token);
-    leave_node = ast_f(context, LEAVE_WITH, node->token);
-    if (!gte_node || !lte_node || !and_node || !leave_node) return NULL;
+    if (!gte_node || !lte_node || !and_node) return NULL;
 
     gte_node->scope = inline_scope;
     lte_node->scope = inline_scope;
     and_node->scope = inline_scope;
-    leave_node->scope = inline_scope;
-    leave_node->association = block_expr;
 
     ast_set_value_type(0, gte_node, TP_BOOLEAN, 0, 0, 0, 0);
     ast_set_target_type(0, gte_node, TP_BOOLEAN, 0, 0, 0, 0);
@@ -2200,20 +2014,19 @@ static ASTNode *inline_build_dynamic_varg_exists(Context *context,
     ast_set_target_type(0, lte_node, TP_BOOLEAN, 0, 0, 0, 0);
     ast_set_value_type(0, and_node, TP_BOOLEAN, 0, 0, 0, 0);
     ast_set_target_type(0, and_node, TP_BOOLEAN, 0, 0, 0, 0);
-    leave_node->value_type = TP_BOOLEAN;
-    leave_node->target_type = TP_BOOLEAN;
 
     add_ast(gte_node, index_ref);
     add_ast(gte_node, const_one);
 
-    index_ref = inline_create_symbol_node(context, inline_scope, node, index_symbol, VAR_SYMBOL, 1, 0);
+    index_ref = rxcp_remap_create_symbol_node(context, inline_scope, node, index_symbol, VAR_SYMBOL, 1, 0);
     if (!index_ref) return NULL;
     add_ast(lte_node, index_ref);
     add_ast(lte_node, const_max);
 
     add_ast(and_node, gte_node);
     add_ast(and_node, lte_node);
-    add_ast(leave_node, and_node);
+    leave_node = rxcp_remap_create_leave_with(context, inline_scope, node, block_expr, and_node);
+    if (!leave_node) return NULL;
     add_ast(instr_list, leave_node);
 
     return block_expr;
@@ -2327,10 +2140,8 @@ static int inline_bind_call_arguments_impl(Context *context,
             continue;
         }
 
-        bind_assign = ast_f(context, ASSIGN, formal_target->token);
-        bind_assign->scope = inline_scope;
-        bind_assign->value_type = formal_target->value_type;
-        bind_assign->target_type = formal_target->target_type;
+        bind_assign = rxcp_remap_create_assignment_node(context, inline_scope, formal_target, formal_target);
+        if (!bind_assign) INLINE_BIND_RETURN(0);
 
         bind_lhs = inline_clone_subtree(context, formal_target, clone_state);
         if (inline_is_missing_actual(actual_arg)) {
@@ -2342,7 +2153,7 @@ static int inline_bind_call_arguments_impl(Context *context,
         }
 
         if (captured_actual_symbol) {
-            bind_rhs = inline_create_symbol_node(context,
+            bind_rhs = rxcp_remap_create_symbol_node(context,
                                                  inline_scope,
                                                  actual_arg,
                                                  captured_actual_symbol,
@@ -2463,4 +2274,3 @@ static int inline_bind_call_arguments(Context *context,
                                     rxcp_inline_remap_trace_hooks());
     return result == RXCP_REMAP_APPLIED;
 }
-
