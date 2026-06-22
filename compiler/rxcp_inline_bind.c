@@ -766,13 +766,13 @@ static Symbol *inline_capture_method_receiver_for_scoped_args(Context *context,
                                             0,
                                             1);
     if (clone_state->method_receiver_uses_locator_copyback) {
-        capture_rhs = inline_clone_captured_locator(context,
-                                                    receiver,
-                                                    caller_scope,
-                                                    &clone_state->method_receiver_copyback_entry,
-                                                    VAR_SYMBOL,
-                                                    1,
-                                                    0);
+        capture_rhs = rxcp_remap_materialise_selected_value(context,
+                                                            caller_scope,
+                                                            &clone_state->method_receiver_copyback_locator,
+                                                            receiver,
+                                                            VAR_SYMBOL,
+                                                            1,
+                                                            0);
     } else {
         capture_rhs = inline_clone_subtree_in_scope(context, receiver, clone_state, caller_scope);
     }
@@ -1087,45 +1087,18 @@ static ASTNode *inline_clone_ref_actual(Context *context,
                                         InlineRefActualEntry *ref_entry,
                                         InlineCloneState *state) {
     ASTNode *replacement;
-    ASTNode *source_child;
     ASTNode *formal_child;
-    size_t child_index;
 
-    if (!context || !formal_node || !current_scope || !ref_entry || !ref_entry->actual_source) return NULL;
+    if (!context || !formal_node || !current_scope || !ref_entry || !ref_entry->locator.source_node) return NULL;
 
-    replacement = ast_dup(context, ref_entry->actual_source);
+    replacement = rxcp_remap_materialise_selected_value(context,
+                                                        current_scope,
+                                                        &ref_entry->locator,
+                                                        formal_node,
+                                                        formal_node->node_type,
+                                                        formal_node->symbolNode ? formal_node->symbolNode->readUsage : 0,
+                                                        formal_node->symbolNode ? formal_node->symbolNode->writeUsage : 0);
     if (!replacement) return NULL;
-
-    replacement->node_type = formal_node->node_type;
-    replacement->scope = current_scope;
-
-    if (ref_entry->actual_source->symbolNode && ref_entry->actual_source->symbolNode->symbol) {
-        sym_adnd(ref_entry->actual_source->symbolNode->symbol,
-                 replacement,
-                 formal_node->symbolNode ? formal_node->symbolNode->readUsage : 0,
-                 formal_node->symbolNode ? formal_node->symbolNode->writeUsage : 0);
-    }
-
-    source_child = ref_entry->actual_source->child;
-    child_index = 0;
-    while (source_child) {
-        ASTNode *captured_ref;
-
-        if (child_index >= ref_entry->captured_count || !ref_entry->captured_symbols[child_index]) return NULL;
-
-        captured_ref = rxcp_remap_create_symbol_node(context,
-                                                 current_scope,
-                                                 source_child,
-                                                 ref_entry->captured_symbols[child_index],
-                                                 VAR_SYMBOL,
-                                                 1,
-                                                 0);
-        if (!captured_ref) return NULL;
-
-        add_ast(replacement, captured_ref);
-        source_child = source_child->sibling;
-        child_index++;
-    }
 
     formal_child = formal_node->child;
     while (formal_child) {
@@ -1148,99 +1121,22 @@ static ASTNode *inline_clone_ref_varg_actual(Context *context,
                                              InlineRefActualEntry *ref_entry,
                                              InlineCloneState *state) {
     ASTNode *replacement;
-    ASTNode *source_child;
-    size_t child_index;
 
-    if (!context || !source_node || !current_scope || !ref_entry || !ref_entry->actual_source) return NULL;
+    if (!context || !source_node || !current_scope || !ref_entry || !ref_entry->locator.source_node) return NULL;
 
-    replacement = ast_dup(context, ref_entry->actual_source);
+    replacement = rxcp_remap_materialise_selected_value(context,
+                                                        current_scope,
+                                                        &ref_entry->locator,
+                                                        source_node,
+                                                        ref_entry->locator.source_node->node_type,
+                                                        1,
+                                                        0);
     if (!replacement) return NULL;
-    replacement->scope = current_scope;
-
-    if (ref_entry->actual_source->symbolNode && ref_entry->actual_source->symbolNode->symbol) {
-        sym_adnd(ref_entry->actual_source->symbolNode->symbol, replacement, 1, 0);
-    }
-
-    source_child = ref_entry->actual_source->child;
-    child_index = 0;
-    while (source_child) {
-        ASTNode *captured_ref;
-
-        if (child_index >= ref_entry->captured_count || !ref_entry->captured_symbols[child_index]) return NULL;
-
-        captured_ref = rxcp_remap_create_symbol_node(context,
-                                                 current_scope,
-                                                 source_child,
-                                                 ref_entry->captured_symbols[child_index],
-                                                 VAR_SYMBOL,
-                                                 1,
-                                                 0);
-        if (!captured_ref) return NULL;
-
-        add_ast(replacement, captured_ref);
-        source_child = source_child->sibling;
-        child_index++;
-    }
-
-    inline_copy_replacement_semantics(replacement, source_node);
     /* Mark forwarded `.ref` vararg actuals so later call-site checks can keep
      * them as normal calls rather than recursively inlining aliasing through a
      * synthetic locator model. */
     replacement->is_varg = 1;
     replacement->is_compiler_added = 1;
-    return replacement;
-}
-
-static ASTNode *inline_clone_captured_locator(Context *context,
-                                              ASTNode *source_node,
-                                              Scope *current_scope,
-                                              InlineRefActualEntry *entry,
-                                              NodeType node_type,
-                                              unsigned int read_usage,
-                                              unsigned int write_usage) {
-    ASTNode *replacement;
-    ASTNode *source_child;
-    ASTNode *shape_source;
-    size_t child_index;
-
-    if (!context || !current_scope || !entry || !entry->actual_source) return NULL;
-
-    shape_source = source_node ? source_node : entry->actual_source;
-    replacement = ast_dup(context, entry->actual_source);
-    if (!replacement) return NULL;
-
-    replacement->node_type = node_type;
-    replacement->scope = current_scope;
-
-    if (entry->actual_source->symbolNode && entry->actual_source->symbolNode->symbol) {
-        sym_adnd(entry->actual_source->symbolNode->symbol,
-                 replacement,
-                 read_usage,
-                 write_usage);
-    }
-
-    source_child = entry->actual_source->child;
-    child_index = 0;
-    while (source_child) {
-        ASTNode *captured_ref;
-
-        if (child_index >= entry->captured_count || !entry->captured_symbols[child_index]) return NULL;
-
-        captured_ref = rxcp_remap_create_symbol_node(context,
-                                                 current_scope,
-                                                 source_child,
-                                                 entry->captured_symbols[child_index],
-                                                 VAR_SYMBOL,
-                                                 1,
-                                                 0);
-        if (!captured_ref) return NULL;
-
-        add_ast(replacement, captured_ref);
-        source_child = source_child->sibling;
-        child_index++;
-    }
-
-    inline_copy_replacement_semantics(replacement, shape_source);
     return replacement;
 }
 
@@ -1251,8 +1147,6 @@ static int inline_capture_ref_entry(Context *context,
                                     InlineCloneState *state,
                                     InlineRefActualEntry *entry,
                                     const char *prefix) {
-    ASTNode *child;
-    size_t child_index;
     Symbol *formal_symbol;
 
     if (!context || !instr_list || !inline_scope || !actual_arg || !state || !entry || !prefix) return 0;
@@ -1261,49 +1155,15 @@ static int inline_capture_ref_entry(Context *context,
     formal_symbol = entry->formal_symbol;
     memset(entry, 0, sizeof(*entry));
     entry->formal_symbol = formal_symbol;
-    entry->actual_source = actual_arg;
-    entry->captured_count = inline_count_siblings(actual_arg->child);
 
-    if (entry->captured_count) {
-        entry->captured_symbols = calloc(entry->captured_count, sizeof(Symbol *));
-        if (!entry->captured_symbols) return 0;
-    }
-
-    child = actual_arg->child;
-    child_index = 0;
-    while (child) {
-        Symbol *temp_symbol;
-        ASTNode *capture_assign;
-        ASTNode *capture_lhs;
-        ASTNode *capture_rhs;
-
-        temp_symbol = rxcp_remap_create_temp_symbol(context, inline_scope, child, prefix, child_index);
-        if (!temp_symbol) return 0;
-
-        capture_assign = rxcp_remap_create_assignment_node(context, inline_scope, child, child);
-        if (!capture_assign) return 0;
-        capture_assign->target_type = child->value_type;
-
-        capture_lhs = rxcp_remap_create_symbol_node(context,
-                                                inline_scope,
-                                                child,
-                                                temp_symbol,
-                                                VAR_TARGET,
-                                                0,
-                                                1);
-        capture_rhs = inline_clone_subtree(context, child, state);
-        if (!capture_lhs || !capture_rhs) return 0;
-
-        add_ast(capture_assign, capture_lhs);
-        add_ast(capture_assign, capture_rhs);
-        add_ast(instr_list, capture_assign);
-
-        entry->captured_symbols[child_index] = temp_symbol;
-        child = child->sibling;
-        child_index++;
-    }
-
-    return 1;
+    return rxcp_remap_capture_locator_once(context,
+                                           instr_list,
+                                           inline_scope,
+                                           actual_arg,
+                                           prefix,
+                                           inline_materialize_capture_clone,
+                                           state,
+                                           &entry->locator);
 }
 
 static int inline_prepare_method_receiver_copyback(Context *context,
@@ -1323,13 +1183,14 @@ static int inline_prepare_method_receiver_copyback(Context *context,
     if (inline_is_direct_receiver_copyback_target(receiver)) return 1;
     if (!inline_is_locator_receiver_copyback_target(receiver)) return 0;
 
-    if (!inline_capture_ref_entry(context,
-                                  instr_list,
-                                  inline_scope,
-                                  receiver,
-                                  clone_state,
-                                  &clone_state->method_receiver_copyback_entry,
-                                  "__inline_receiver_ref")) {
+    if (!rxcp_remap_capture_locator_once(context,
+                                         instr_list,
+                                         inline_scope,
+                                         receiver,
+                                         "__inline_receiver_ref",
+                                         inline_materialize_capture_clone,
+                                         clone_state,
+                                         &clone_state->method_receiver_copyback_locator)) {
         return 0;
     }
 
@@ -1815,13 +1676,13 @@ static int inline_bind_method_receiver(Context *context,
                                                1,
                                                0);
     } else if (clone_state->method_receiver_uses_locator_copyback) {
-        assign_rhs = inline_clone_captured_locator(context,
-                                                   receiver,
-                                                   inline_scope,
-                                                   &clone_state->method_receiver_copyback_entry,
-                                                   VAR_SYMBOL,
-                                                   1,
-                                                   0);
+        assign_rhs = rxcp_remap_materialise_selected_value(context,
+                                                           inline_scope,
+                                                           &clone_state->method_receiver_copyback_locator,
+                                                           receiver,
+                                                           VAR_SYMBOL,
+                                                           1,
+                                                           0);
     } else {
         assign_rhs = inline_clone_subtree(context, receiver, clone_state);
     }
@@ -1944,27 +1805,16 @@ static int inline_append_method_receiver_copyback_impl(Context *context,
     ASTNode *copy_rhs;
     ASTNode *value_copy;
     ASTNode *copy_assign;
-    InlineRefActualEntry *receiver_entry;
+    RxcpRemapCapturedLocator *receiver_locator;
 
     if (!context || !instr_list || !inline_scope || !source_node || !clone_state) return 0;
     if (!clone_state->method_receiver_needs_copyback) return 1;
     if (!clone_state->method_receiver_source_symbol || !clone_state->method_receiver_local_symbol) return 0;
 
     if (clone_state->method_receiver_uses_locator_copyback) {
-        receiver_entry = &clone_state->method_receiver_copyback_entry;
-        if (!receiver_entry->actual_source) return 0;
+        receiver_locator = &clone_state->method_receiver_copyback_locator;
+        if (!receiver_locator->source_node) return 0;
 
-        copy_assign = rxcp_remap_create_assignment_node(context,
-                                                        inline_scope,
-                                                        receiver_entry->actual_source,
-                                                        receiver_entry->actual_source);
-        copy_lhs = inline_clone_captured_locator(context,
-                                                 receiver_entry->actual_source,
-                                                 inline_scope,
-                                                 receiver_entry,
-                                                 VAR_TARGET,
-                                                 0,
-                                                 1);
         copy_rhs = rxcp_remap_create_symbol_node(context,
                                              inline_scope,
                                              source_node,
@@ -1972,12 +1822,15 @@ static int inline_append_method_receiver_copyback_impl(Context *context,
                                              VAR_SYMBOL,
                                              1,
                                              0);
-        if (!copy_assign || !copy_lhs || !copy_rhs) return 0;
+        if (!copy_rhs) return 0;
 
-        add_ast(copy_assign, copy_lhs);
-        add_ast(copy_assign, copy_rhs);
-        add_ast(instr_list, copy_assign);
-        return 1;
+        copy_assign = rxcp_remap_writeback_through_captured_locator(context,
+                                                                    instr_list,
+                                                                    inline_scope,
+                                                                    receiver_locator,
+                                                                    receiver_locator->source_node,
+                                                                    copy_rhs);
+        return copy_assign != NULL;
     }
 
     copy_lhs = rxcp_remap_create_symbol_node(context,

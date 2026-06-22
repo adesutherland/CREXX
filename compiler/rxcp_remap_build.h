@@ -21,6 +21,12 @@ typedef ASTNode *(*RxcpRemapExprMaterializer)(Context *context,
                                               Scope *scope,
                                               void *user_data);
 
+typedef struct {
+    ASTNode *source_node;
+    Symbol **captured_symbols;
+    size_t captured_count;
+} RxcpRemapCapturedLocator;
+
 void rxcp_remap_anchor_synthetic(ASTNode *node, ASTNode *source_node);
 void rxcp_remap_mark_generated_block(ASTNode *node, int primary_reporting_anchor);
 void rxcp_remap_copy_numeric_context(Scope *target, const Scope *source);
@@ -97,6 +103,29 @@ ASTNode *rxcp_remap_capture_once(Context *context,
                                  void *user_data,
                                  Symbol **temp_symbol_out,
                                  ASTNode **capture_assign_out);
+void rxcp_remap_init_captured_locator(RxcpRemapCapturedLocator *locator);
+void rxcp_remap_free_captured_locator(RxcpRemapCapturedLocator *locator);
+int rxcp_remap_capture_locator_once(Context *context,
+                                    ASTNode *instr_list,
+                                    Scope *scope,
+                                    ASTNode *locator_node,
+                                    const char *prefix,
+                                    RxcpRemapExprMaterializer materializer,
+                                    void *user_data,
+                                    RxcpRemapCapturedLocator *locator_out);
+ASTNode *rxcp_remap_materialise_selected_value(Context *context,
+                                               Scope *scope,
+                                               const RxcpRemapCapturedLocator *locator,
+                                               ASTNode *shape_node,
+                                               NodeType node_type,
+                                               unsigned int read_usage,
+                                               unsigned int write_usage);
+ASTNode *rxcp_remap_writeback_through_captured_locator(Context *context,
+                                                       ASTNode *instr_list,
+                                                       Scope *scope,
+                                                       const RxcpRemapCapturedLocator *locator,
+                                                       ASTNode *source_node,
+                                                       ASTNode *rhs);
 
 ASTNode *rxcp_remap_create_generated_instruction_block(Context *context,
                                                        Scope *parent_scope,

@@ -823,7 +823,7 @@ part. The reusable unit is a proof/materialisation pattern:
 - boundary: leave general expression-position and receiver-producing copyback
   closed until each parent bucket has an explicit liveness/copyback proof.
 
-For Level C remapping, this suggests the shared framework should grow a small
+For Level C remapping, this proves that the shared framework needs a small
 library of named semantic obligations, not only tree selectors:
 
 - `capture-locator-once`
@@ -846,6 +846,25 @@ receiver copyback", and they describe exactly what a reader needs to audit.
   avoiding double evaluation of receiver children.
 - Kept general expression-position mutating method copyback closed; the new
   path is a statement-owned rewrite path.
+
+### Named Pattern Extraction
+
+The captured-locator proof is now a neutral remap-builder concept rather than
+an inline-private helper. `RxcpRemapCapturedLocator` records the selected
+locator node and the generated symbols that hold each captured child
+expression. The shared builder API owns three named operations:
+
+- `rxcp_remap_capture_locator_once()` evaluates each locator child into a
+  generated temp using a caller-provided materializer callback.
+- `rxcp_remap_materialise_selected_value()` rebuilds a read or write view of
+  the original locator from those captured child temps.
+- `rxcp_remap_writeback_through_captured_locator()` appends an assignment that
+  writes a supplied value back through the captured locator.
+
+The inliner now uses this pattern for computed mutating-method receiver
+copyback and for existing nontrivial by-reference actual rematerialisation.
+Inline-specific policy still decides which shapes are legal; the shared remap
+layer owns the reusable proof/materialisation mechanics.
 
 ### Replay Steps
 
@@ -888,3 +907,61 @@ Green stop for implementation stage 10:
 - `rg -n '[[:blank:]]$' <touched-files>`
   - result: reported pre-existing whitespace in `compiler/tests/CMakeLists.txt`;
     `git diff --check` confirmed no new whitespace errors
+
+## Stage 11 - Named Captured-Locator Patterns
+
+### Goal
+
+Make the captured-locator proof/materialisation pattern explicit in the shared
+remap builder layer. Selectors identify candidate tree shapes, but this layer
+names the semantic obligations that make a rewrite safe: evaluate locator
+children once, rematerialise the selected read/write value from those captures,
+and optionally write a changed value back through the same locator.
+
+### Replay Steps
+
+1. Add `RxcpRemapCapturedLocator` to `rxcp_remap_build.h`.
+2. Add `rxcp_remap_capture_locator_once()` beside the scalar
+   `rxcp_remap_capture_once()` helper.
+3. Move the inline-private captured-locator rematerialisation into
+   `rxcp_remap_materialise_selected_value()`.
+4. Add `rxcp_remap_writeback_through_captured_locator()` for assignment
+   copyback through a captured locator.
+5. Change computed method receiver copyback to use the shared captured-locator
+   API instead of an inline-private entry.
+6. Change nontrivial by-reference actual entries to embed
+   `RxcpRemapCapturedLocator`, so existing ref indexed/stem/computed/vararg
+   rematerialisation also proves the shared pattern.
+7. Update the Level C remapping and inlining docs with the named operations.
+
+### Issues And Resolutions
+
+- By-reference actual entries still need inline-specific state, notably the
+  formal symbol they replace. Kept `InlineRefActualEntry` as an inline policy
+  record, but replaced its private child-capture fields with
+  `RxcpRemapCapturedLocator`.
+- Receiver copyback needs writeback, while by-reference actuals only need
+  rematerialisation. The shared API therefore separates capture,
+  materialisation, and writeback instead of baking one receiver-specific flow.
+- The materialiser callback remains caller-owned. Inline passes subtree cloning;
+  Level C lowering can later pass a source-to-target materialiser without
+  depending on inline clone state.
+
+### Verification
+
+Green stop for implementation stage 11:
+
+- `cmake --build cmake-build-release --target rxc rxas rxvm --parallel 4`
+  - result: passed
+- `ctest --test-dir cmake-build-release -R 'inline_test_computed_receiver_copyback' --output-on-failure`
+  - result: passed, 3/3 tests
+- `ctest --test-dir cmake-build-release -R 'inline_test_class_methods|inline_local_member_scalar|inline_test_member_receiver_expr|inline_test_object_writable_arg|inline_test_object_expr_arg' --output-on-failure`
+  - result: passed, 17/17 tests
+- `ctest --test-dir cmake-build-release -R 'inline|Inline' --output-on-failure`
+  - result: passed, 257/257 tests
+- `ctest --test-dir cmake-build-release -R '16_classes|address_inline_then|address_exit_extended' --output-on-failure`
+  - result: passed, 3/3 tests
+- `RXCP_INLINE_RULE_SUMMARY=1 cmake-build-release/bin/rxc -i cmake-build-release/bin -o /tmp/captured_locator_summary_probe compiler/tests/rexx_src/inline_test_computed_receiver_copyback.crexx`
+  - result: passed; summary still prints service boundaries and selector rules
+- `git diff --check`
+  - result: passed

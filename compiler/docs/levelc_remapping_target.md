@@ -526,10 +526,17 @@ The first Level C-neutral builder/materialisation layer now lives in
 `compiler/rxcp_remap_build.c` and `compiler/rxcp_remap_build.h`. It provides
 shared building blocks for generated scopes, numeric-context copying, source
 anchors, generated blocks, temp symbols, symbol refs/targets, integer constants,
-assignments, sink targets, `LEAVE WITH` nodes, and capture-once rewrites. The
-inliner is the first client, but the API is intentionally under the remap layer
-so Level C lowering, other Rexx front ends, and future optimisation rewrites can
-use the same mechanics without depending on inline-specific policy.
+assignments, sink targets, `LEAVE WITH` nodes, capture-once rewrites, and
+captured-locator proof/materialisation patterns. The named locator patterns are
+`rxcp_remap_capture_locator_once()`,
+`rxcp_remap_materialise_selected_value()`, and
+`rxcp_remap_writeback_through_captured_locator()`. They let a rule prove that a
+variable-like locator's child expressions have been evaluated once, rebuild a
+read or write view of the selected value from those captures, and write a
+changed value back through the same locator. The inliner is the first client,
+but the API is intentionally under the remap layer so Level C lowering, other
+Rexx front ends, and future optimisation rewrites can use the same mechanics
+without depending on inline-specific policy.
 
 This path gives a real safety net. The inliner has existing positive and
 negative tests, source/import cases, and opt/noopt runtime comparisons. Passing

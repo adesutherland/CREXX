@@ -409,6 +409,206 @@ ASTNode *rxcp_remap_capture_once(Context *context,
     return temp_ref;
 }
 
+static size_t rxcp_remap_count_child_nodes(ASTNode *node) {
+    size_t count;
+
+    count = 0;
+    while (node) {
+        count++;
+        node = node->sibling;
+    }
+
+    return count;
+}
+
+static void rxcp_remap_copy_node_semantics(ASTNode *target, ASTNode *source) {
+    if (!target || !source) return;
+
+    target->is_ref_arg = source->is_ref_arg;
+    target->is_opt_arg = source->is_opt_arg;
+    target->is_const_arg = source->is_const_arg;
+    target->is_varg = source->is_varg;
+    target->inherit_parent_reg_scope = source->inherit_parent_reg_scope;
+    if (target->is_ref_arg && target->symbolNode) target->symbolNode->writeUsage = 1;
+
+    ast_set_value_type(0,
+                       target,
+                       source->value_type,
+                       source->value_dims,
+                       source->value_dim_base,
+                       source->value_dim_elements,
+                       source->value_class);
+    ast_set_target_type(0,
+                        target,
+                        source->target_type,
+                        source->target_dims,
+                        source->target_dim_base,
+                        source->target_dim_elements,
+                        source->target_class);
+}
+
+void rxcp_remap_init_captured_locator(RxcpRemapCapturedLocator *locator) {
+    if (!locator) return;
+
+    locator->source_node = NULL;
+    locator->captured_symbols = NULL;
+    locator->captured_count = 0;
+}
+
+void rxcp_remap_free_captured_locator(RxcpRemapCapturedLocator *locator) {
+    if (!locator) return;
+
+    if (locator->captured_symbols) free(locator->captured_symbols);
+    rxcp_remap_init_captured_locator(locator);
+}
+
+int rxcp_remap_capture_locator_once(Context *context,
+                                    ASTNode *instr_list,
+                                    Scope *scope,
+                                    ASTNode *locator_node,
+                                    const char *prefix,
+                                    RxcpRemapExprMaterializer materializer,
+                                    void *user_data,
+                                    RxcpRemapCapturedLocator *locator_out) {
+    ASTNode *child;
+    size_t child_index;
+
+    if (!context || !instr_list || !scope || !locator_node || !materializer || !locator_out) return 0;
+    if (!prefix) prefix = "__remap_locator";
+
+    rxcp_remap_init_captured_locator(locator_out);
+    locator_out->source_node = locator_node;
+    locator_out->captured_count = rxcp_remap_count_child_nodes(locator_node->child);
+
+    if (locator_out->captured_count) {
+        locator_out->captured_symbols = calloc(locator_out->captured_count, sizeof(Symbol *));
+        if (!locator_out->captured_symbols) return 0;
+    }
+
+    child = locator_node->child;
+    child_index = 0;
+    while (child) {
+        Symbol *temp_symbol;
+        ASTNode *capture_assign;
+        ASTNode *capture_lhs;
+        ASTNode *capture_rhs;
+
+        temp_symbol = rxcp_remap_create_temp_symbol(context, scope, child, prefix, child_index);
+        if (!temp_symbol) return 0;
+
+        capture_assign = rxcp_remap_create_assignment_node(context, scope, child, child);
+        if (!capture_assign) return 0;
+        capture_assign->target_type = child->value_type;
+
+        capture_lhs = rxcp_remap_create_symbol_node(context,
+                                                    scope,
+                                                    child,
+                                                    temp_symbol,
+                                                    VAR_TARGET,
+                                                    0,
+                                                    1);
+        capture_rhs = materializer(context, child, scope, user_data);
+        if (!capture_lhs || !capture_rhs) return 0;
+
+        add_ast(capture_assign, capture_lhs);
+        add_ast(capture_assign, capture_rhs);
+        add_ast(instr_list, capture_assign);
+
+        locator_out->captured_symbols[child_index] = temp_symbol;
+        child = child->sibling;
+        child_index++;
+    }
+
+    return 1;
+}
+
+ASTNode *rxcp_remap_materialise_selected_value(Context *context,
+                                               Scope *scope,
+                                               const RxcpRemapCapturedLocator *locator,
+                                               ASTNode *shape_node,
+                                               NodeType node_type,
+                                               unsigned int read_usage,
+                                               unsigned int write_usage) {
+    ASTNode *replacement;
+    ASTNode *source_child;
+    ASTNode *shape_source;
+    size_t child_index;
+
+    if (!context || !scope || !locator || !locator->source_node) return NULL;
+
+    shape_source = shape_node ? shape_node : locator->source_node;
+    replacement = ast_dup(context, locator->source_node);
+    if (!replacement) return NULL;
+
+    replacement->node_type = node_type;
+    replacement->scope = scope;
+
+    if (locator->source_node->symbolNode && locator->source_node->symbolNode->symbol) {
+        sym_adnd(locator->source_node->symbolNode->symbol,
+                 replacement,
+                 read_usage,
+                 write_usage);
+    }
+
+    source_child = locator->source_node->child;
+    child_index = 0;
+    while (source_child) {
+        ASTNode *captured_ref;
+
+        if (child_index >= locator->captured_count || !locator->captured_symbols[child_index]) return NULL;
+
+        captured_ref = rxcp_remap_create_symbol_node(context,
+                                                     scope,
+                                                     source_child,
+                                                     locator->captured_symbols[child_index],
+                                                     VAR_SYMBOL,
+                                                     1,
+                                                     0);
+        if (!captured_ref) return NULL;
+
+        add_ast(replacement, captured_ref);
+        source_child = source_child->sibling;
+        child_index++;
+    }
+
+    rxcp_remap_copy_node_semantics(replacement, shape_source);
+    return replacement;
+}
+
+ASTNode *rxcp_remap_writeback_through_captured_locator(Context *context,
+                                                       ASTNode *instr_list,
+                                                       Scope *scope,
+                                                       const RxcpRemapCapturedLocator *locator,
+                                                       ASTNode *source_node,
+                                                       ASTNode *rhs) {
+    ASTNode *assign_node;
+    ASTNode *assign_lhs;
+    ASTNode *anchor_node;
+
+    if (!context || !instr_list || !scope || !locator || !locator->source_node || !rhs) return NULL;
+
+    anchor_node = source_node ? source_node : locator->source_node;
+    assign_node = rxcp_remap_create_assignment_node(context,
+                                                    scope,
+                                                    anchor_node,
+                                                    locator->source_node);
+    if (!assign_node) return NULL;
+
+    assign_lhs = rxcp_remap_materialise_selected_value(context,
+                                                       scope,
+                                                       locator,
+                                                       locator->source_node,
+                                                       VAR_TARGET,
+                                                       0,
+                                                       1);
+    if (!assign_lhs) return NULL;
+
+    add_ast(assign_node, assign_lhs);
+    add_ast(assign_node, rhs);
+    add_ast(instr_list, assign_node);
+    return assign_node;
+}
+
 ASTNode *rxcp_remap_create_generated_instruction_block(Context *context,
                                                        Scope *parent_scope,
                                                        ASTNode *token_node,

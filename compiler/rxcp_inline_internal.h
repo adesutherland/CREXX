@@ -37,9 +37,7 @@ typedef struct {
 
 typedef struct {
     Symbol *formal_symbol;
-    ASTNode *actual_source;
-    Symbol **captured_symbols;
-    size_t captured_count;
+    RxcpRemapCapturedLocator locator;
 } InlineRefActualEntry;
 
 typedef struct {
@@ -59,7 +57,7 @@ typedef struct {
     Symbol *varg_array_symbol;
     Symbol *method_receiver_source_symbol;
     Symbol *method_receiver_local_symbol;
-    InlineRefActualEntry method_receiver_copyback_entry;
+    RxcpRemapCapturedLocator method_receiver_copyback_locator;
     int method_receiver_needs_copyback;
     int method_receiver_uses_locator_copyback;
 } InlineCloneState;

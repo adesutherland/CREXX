@@ -93,6 +93,13 @@ More precisely:
 - Named interface factory selector metadata must be preserved during cloning so `.iface.named(...)` still emits `srcfproc "...iface..named"` after inlining.
 - `expose`/by-reference formals are supported when the actual argument is an aliasable variable-like target, including indexed and stem-style forms.
 - For nontrivial by-reference actuals, the inline rewrite captures the locator expressions once into inline-scope temps so the callee still sees call-time binding semantics.
+- Computed receiver copyback and nontrivial by-reference rematerialisation both
+  use the shared remap-builder captured-locator pattern:
+  `rxcp_remap_capture_locator_once()`,
+  `rxcp_remap_materialise_selected_value()`, and
+  `rxcp_remap_writeback_through_captured_locator()`. The inline layer keeps the
+  guards and aliasing policy; the remap layer owns the reusable capture and
+  materialisation mechanics.
 - Optional formals now inline through the same rewrite path as other supported local plain-procedure calls, with omitted-actual/default-formal semantics preserved during binding.
 - Reference operations and reference-bearing return classes remain deliberately
   fail-closed. The `reference_source_inline_lifetime` fixture is the canary:
