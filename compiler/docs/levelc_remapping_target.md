@@ -516,9 +516,13 @@ implemented and the four current call-site inline buckets are represented as
 selector-backed rules in `compiler/rxcp_inline_rules.c`. Structural eligibility,
 actual binding, callee-body cloning, return rewriting, and receiver copyback
 are now explicit service boundaries executed through `rxcp_remap_run_service`.
-Their internals remain inline-specific; the next extraction point is a
-Level C-neutral builder/materialisation helper layer for generated scopes,
-temps, source anchors, assignment construction, and capture-once rewrites.
+Their internals have also been split into private implementation fragments for
+binding, cloning, rewriting, analysis, and payload import/export. Those
+fragments are still included by `rxcp_inline.c` rather than compiled
+independently, because the static helper dependency graph is intentionally being
+thinned in stages. The next extraction point is a Level C-neutral
+builder/materialisation helper layer for generated scopes, temps, source
+anchors, assignment construction, and capture-once rewrites.
 
 This path gives a real safety net. The inliner has existing positive and
 negative tests, source/import cases, and opt/noopt runtime comparisons. Passing

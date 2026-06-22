@@ -112,6 +112,10 @@ Green stop for implementation stage 2:
 - `cmake --build cmake-build-release --target rxc --parallel 4`
   - result: passed
 - `ctest --test-dir cmake-build-release -R '16_classes|address_inline_then|address_exit_extended' --output-on-failure`
+  - result: passed, 3/3 tests
+- `ctest --test-dir cmake-build-release -R 'inline|Inline' --output-on-failure`
+  - result: passed, 254/254 tests
+- `ctest --test-dir cmake-build-release -R '16_classes|address_inline_then|address_exit_extended' --output-on-failure`
   - result: 3/3 passed
 - `ctest --test-dir cmake-build-release -R 'inline|Inline' --output-on-failure`
   - result: 254/254 passed
@@ -608,3 +612,76 @@ The remap layer now has shared service execution, and the inliner uses it for
 the current rule rewrites plus the main expansion services. This gives Level C
 a concrete place to plug in future lowering services without depending on
 inline-only trace mechanics.
+
+## 2026-06-22: Inline Implementation Source Split
+
+### Goal
+
+Move the heavy inline internals out of the `rxcp_inline.c` monolith so the rule
+catalog and service boundaries can be reviewed without wading through all clone,
+bind, rewrite, analysis, and payload mechanics. This stage is deliberately a
+mechanical file split, not a semantic rewrite.
+
+### Implemented Shape
+
+`compiler/rxcp_inline.c` is now the inline shell for includes, forward
+declarations, debug hooks, remap hooks, and the private implementation fragment
+order.
+
+The heavy inline internals are split into private implementation fragments:
+
+- `compiler/rxcp_inline_bind.c`
+- `compiler/rxcp_inline_clone.c`
+- `compiler/rxcp_inline_rewrite.c`
+- `compiler/rxcp_inline_analysis.c`
+- `compiler/rxcp_inline_payload.c`
+
+These fragments are intentionally included by `rxcp_inline.c` and marked
+`HEADER_FILE_ONLY` in CMake. They are not independently compiled yet because
+the inline internals still share many static helpers. That keeps this stage
+low-risk and preserves the exact static dependency graph while making each
+area reviewable.
+
+### File Responsibilities
+
+- `rxcp_inline_bind.c`: actual/formal binding, ref/vararg capture, receiver
+  binding, factory setup, receiver copyback service, and related materializers.
+- `rxcp_inline_clone.c`: clone maps, symbol/scope duplication, inline body
+  clone service, clone cleanup, and clone-side helpers.
+- `rxcp_inline_rewrite.c`: statement/expression/block rewrites, return rewrite
+  service, copyback leave wrapper, recursion/call-site validation helpers, and
+  the `ast_inline_*` builders.
+- `rxcp_inline_analysis.c`: inline eligibility debug/reporting, structural
+  eligibility service, inlinable walker, and inline pass entry point.
+- `rxcp_inline_payload.c`: prune support plus inline metadata import/export.
+
+### Replay Steps
+
+1. Split `rxcp_inline.c` at stable function-boundary markers.
+2. Add private-fragment comments to each new file.
+3. Include the fragments from `rxcp_inline.c` in the original order.
+4. Add a comment in `rxcp_inline.c` explaining why the fragments remain in one
+   translation unit.
+5. List the fragments in `compiler/CMakeLists.txt` with `HEADER_FILE_ONLY`
+   so project tooling sees them but does not compile them twice.
+
+### Issues And Resolutions
+
+- A true separate-compilation split would require exposing or moving a large
+  number of static helper dependencies at once. Chose private fragments first
+  to reduce review risk and avoid churn while preserving a clear next step.
+
+### Verification
+
+Green stop for implementation stage 8:
+
+- `cmake --build cmake-build-release --target rxc --parallel 4`
+  - result: passed
+
+### Stage 8 Result
+
+The first two inline refactor gaps are addressed at the source-layout level:
+heavy mechanics are no longer buried in one file, and the mechanics are grouped
+by bind, clone, rewrite, analysis, and payload responsibility. The next step is
+to thin dependencies inside these fragments enough to promote selected ones to
+independently compiled sources or to extract Level C-neutral builders.

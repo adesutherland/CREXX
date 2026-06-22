@@ -47,6 +47,11 @@ add_custom_command(
 )
 
 # Compiler Library - can be used to link plugins to make a extended compiler
+set_source_files_properties(
+        rxcp_inline_bind.c rxcp_inline_clone.c rxcp_inline_rewrite.c rxcp_inline_analysis.c rxcp_inline_payload.c
+        PROPERTIES HEADER_FILE_ONLY TRUE
+)
+
 add_library(rxclib STATIC
         rxcpmain.c rxcp_ast_core.c rxcp_ast_print.c rxcp_ast_walk.c rxcpmain.h rxcp_util.c rxcp_diag_fallback.c
         rxcp_dsl.c rxcp_highlight_controller.c rxcp_source_tree.c rxcp_source_ext.c rxcp_source_ext.h
@@ -56,6 +61,7 @@ add_library(rxclib STATIC
         ${CMAKE_SOURCE_DIR}/assembler/rxas.h
         rxcp_val_sym.c rxcp_val_type.c rxcp_val_trans.c rxcp_ast_rewrite.c rxcp_val_check.c rxcp_val_plugin.c rxcp_val_orch.c rxcpsymb.c rxcp_fixup.c rxcp_ast_val.c
         rxcp_remap.c rxcp_remap.h rxcp_inline_internal.h rxcp_inline.c rxcp_inline_rules.c
+        rxcp_inline_bind.c rxcp_inline_clone.c rxcp_inline_rewrite.c rxcp_inline_analysis.c rxcp_inline_payload.c
         rxcpdary.h rxcpemit.c rxcp_emit_core.c rxcp_emit_reg.c rxcp_emit_expr.c rxcp_emit_flow.c rxcp_emit_proc.c rxcp_emit_meta.c rxcp_emit.h rxcp_opt.c
         ../platform/platform.h ../platform/platform.c
         ../utf8/utf.h rxcpfunc.c rxcp_exit.c
