@@ -204,15 +204,85 @@ typedef int (*InlineRemapBindFn)(Context *context, InlineRemapMatch *match);
 typedef int (*InlineRemapGuardFn)(Context *context, const InlineRemapMatch *match);
 typedef int (*InlineRemapRewriteFn)(Context *context, const InlineRemapMatch *match);
 
+typedef struct {
+    const char *id;
+    InlineRemapBindFn fn;
+} InlineRemapBindStep;
+
+typedef struct {
+    const char *id;
+    InlineRemapGuardFn fn;
+} InlineRemapGuardStep;
+
+typedef struct {
+    const char *id;
+    InlineRemapRewriteFn fn;
+} InlineRemapRewriteStep;
+
+#define INLINE_BIND_STEP(step_id, step_fn) \
+    { (step_id), (step_fn) }
+#define INLINE_BIND_END() \
+    { NULL, NULL }
+#define INLINE_GUARD_STEP(step_id, step_fn) \
+    { (step_id), (step_fn) }
+#define INLINE_GUARD_END() \
+    { NULL, NULL }
+#define INLINE_REWRITE_STEP(step_id, step_fn) \
+    { (step_id), (step_fn) }
+#define INLINE_REWRITE_END() \
+    { NULL, NULL }
+
+#define INLINE_REMAP_RULE_SELECTOR(rule_id, rule_phase, rule_root, rule_priority, rule_selector, rule_binds, rule_guards, rule_rewrites, rule_debug_capture) \
+    { \
+        (rule_id), \
+        (rule_phase), \
+        (rule_root), \
+        (rule_priority), \
+        (rule_selector), \
+        (rule_binds), \
+        (rule_guards), \
+        (rule_rewrites), \
+        (rule_debug_capture), \
+        NULL \
+    }
+
+#define INLINE_REMAP_RULE_CALLBACK(rule_id, rule_phase, rule_root, rule_priority, rule_apply) \
+    { \
+        (rule_id), \
+        (rule_phase), \
+        (rule_root), \
+        (rule_priority), \
+        NULL, \
+        NULL, \
+        NULL, \
+        NULL, \
+        NULL, \
+        (rule_apply) \
+    }
+
+#define INLINE_REMAP_RULE_SERVICE(rule_id, rule_phase, rule_root, rule_priority) \
+    { \
+        (rule_id), \
+        (rule_phase), \
+        (rule_root), \
+        (rule_priority), \
+        NULL, \
+        NULL, \
+        NULL, \
+        NULL, \
+        NULL, \
+        NULL \
+    }
+
 typedef struct InlineRemapRule {
     const char *id;
     const char *phase;
     const char *root_shape;
     int priority;
     const InlineRemapSelectorStep *selector;
-    InlineRemapBindFn bind;
-    InlineRemapGuardFn guard;
-    InlineRemapRewriteFn rewrite;
+    const InlineRemapBindStep *binds;
+    const InlineRemapGuardStep *guards;
+    const InlineRemapRewriteStep *rewrites;
     const char *debug_site_capture;
     InlineRemapApplyFn apply;
 } InlineRemapRule;
@@ -322,18 +392,12 @@ static void inline_debug_pop_remap_rule(const char *previous) {
     inline_debug_active_remap_rule_id = previous;
 }
 
-static const InlineRemapRule inline_remap_bind_actuals_rule = {
+static const InlineRemapRule inline_remap_bind_actuals_rule = INLINE_REMAP_RULE_SERVICE(
     "inline.bind.actuals",
     "inline.expand",
     "callee-args+call-actuals",
-    100,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
+    100
+);
 
 static void inline_debug_log(Context *context,
                              ASTNode *site,
@@ -4623,6 +4687,17 @@ static int inline_rewrite_rhs_eager_operator_capture(Context *context,
     return ast_inline_rhs_eager_operator(context, op, rhs, match->proc_sym);
 }
 
+static ASTNode *inline_remap_debug_site(const InlineRemapRule *rule,
+                                        const InlineRemapMatch *match) {
+    ASTNode *site;
+
+    if (!match) return NULL;
+    if (!rule || !rule->debug_site_capture) return match->root;
+
+    site = inline_remap_capture_node(match, rule->debug_site_capture);
+    return site ? site : match->root;
+}
+
 static InlineRemapResult inline_remap_apply_selector_rule(const InlineRemapRule *rule,
                                                           Context *context,
                                                           InlineWalkerPayload *payload,
@@ -4631,33 +4706,45 @@ static InlineRemapResult inline_remap_apply_selector_rule(const InlineRemapRule 
     ASTNode *debug_site;
     const char *previous_rule;
     int rewritten;
+    size_t i;
 
     if (!rule || !rule->selector || !node) return INLINE_REMAP_NO_MATCH;
     if (!inline_remap_run_selector(rule->selector, node, &match)) return INLINE_REMAP_NO_MATCH;
 
-    if (rule->bind && !rule->bind(context, &match)) {
-        debug_site = rule->debug_site_capture ?
-                     inline_remap_capture_node(&match, rule->debug_site_capture) :
-                     match.root;
-        inline_remap_debug_result(context, rule, debug_site, match.proc_sym, "rejected");
-        return INLINE_REMAP_REJECTED;
+    if (rule->binds) {
+        for (i = 0; rule->binds[i].fn; i++) {
+            if (!rule->binds[i].fn(context, &match)) {
+                debug_site = inline_remap_debug_site(rule, &match);
+                inline_remap_debug_result(context, rule, debug_site, match.proc_sym, "rejected");
+                return INLINE_REMAP_REJECTED;
+            }
+        }
     }
 
-    if (rule->guard && !rule->guard(context, &match)) {
-        debug_site = rule->debug_site_capture ?
-                     inline_remap_capture_node(&match, rule->debug_site_capture) :
-                     match.root;
-        inline_remap_debug_result(context, rule, debug_site, match.proc_sym, "rejected");
-        return INLINE_REMAP_REJECTED;
+    if (rule->guards) {
+        for (i = 0; rule->guards[i].fn; i++) {
+            if (!rule->guards[i].fn(context, &match)) {
+                debug_site = inline_remap_debug_site(rule, &match);
+                inline_remap_debug_result(context, rule, debug_site, match.proc_sym, "rejected");
+                return INLINE_REMAP_REJECTED;
+            }
+        }
     }
 
     previous_rule = inline_debug_push_remap_rule(rule->id);
-    rewritten = rule->rewrite ? rule->rewrite(context, &match) : 0;
+    rewritten = 0;
+    if (rule->rewrites) {
+        rewritten = 1;
+        for (i = 0; rule->rewrites[i].fn; i++) {
+            if (!rule->rewrites[i].fn(context, &match)) {
+                rewritten = 0;
+                break;
+            }
+        }
+    }
     inline_debug_pop_remap_rule(previous_rule);
 
-    debug_site = rule->debug_site_capture ?
-                 inline_remap_capture_node(&match, rule->debug_site_capture) :
-                 match.root;
+    debug_site = inline_remap_debug_site(rule, &match);
 
     if (rewritten) {
         if (payload) payload->changed = 1;
@@ -4669,6 +4756,12 @@ static InlineRemapResult inline_remap_apply_selector_rule(const InlineRemapRule 
     return INLINE_REMAP_REJECTED;
 }
 
+/* Rule model example:
+ * - selector: only tree shape and capture names
+ * - binds: derive semantic values from captures
+ * - guards: prove this matched site is safe to rewrite
+ * - rewrites: perform ordered tree surgery steps
+ */
 static const InlineRemapSelectorStep inline_rhs_eager_operator_selector[] = {
     INLINE_SEL_CLASS("op", INLINE_REMAP_NODECLASS_EAGER_OPERATOR),
     INLINE_SEL_DOWN_FIRST(),
@@ -4677,6 +4770,21 @@ static const InlineRemapSelectorStep inline_rhs_eager_operator_selector[] = {
     INLINE_SEL_TYPESET("rhs", INLINE_REMAP_TYPESET_CALL_EXPR),
     INLINE_SEL_ASSERT_NO_NEXT_SIBLING(),
     INLINE_SEL_END()
+};
+
+static const InlineRemapBindStep inline_rhs_eager_operator_binds[] = {
+    INLINE_BIND_STEP("bind-inlineable-rhs-proc-symbol", inline_bind_rhs_eager_operator_proc_symbol),
+    INLINE_BIND_END()
+};
+
+static const InlineRemapGuardStep inline_rhs_eager_operator_guards[] = {
+    INLINE_GUARD_STEP("rhs-left-capture-is-safe", inline_guard_rhs_eager_operator_capture_safe),
+    INLINE_GUARD_END()
+};
+
+static const InlineRemapRewriteStep inline_rhs_eager_operator_rewrites[] = {
+    INLINE_REWRITE_STEP("replace-op-with-left-capture-block", inline_rewrite_rhs_eager_operator_capture),
+    INLINE_REWRITE_END()
 };
 
 static InlineRemapResult inline_remap_apply_expression_block(const InlineRemapRule *rule,
@@ -4769,68 +4877,46 @@ static InlineRemapResult inline_remap_apply_call_statement(const InlineRemapRule
 }
 
 static const InlineRemapRule inline_remap_rules[] = {
-    {
+    INLINE_REMAP_RULE_SELECTOR(
         "inline.rhs-eager-operator.capture-left",
         "inline.callsite",
         "eager-operator(rhs-inlineable-call)",
         10,
         inline_rhs_eager_operator_selector,
-        inline_bind_rhs_eager_operator_proc_symbol,
-        inline_guard_rhs_eager_operator_capture_safe,
-        inline_rewrite_rhs_eager_operator_capture,
-        "rhs",
-        NULL
-    },
-    {
+        inline_rhs_eager_operator_binds,
+        inline_rhs_eager_operator_guards,
+        inline_rhs_eager_operator_rewrites,
+        "rhs"
+    ),
+    INLINE_REMAP_RULE_CALLBACK(
         "inline.expression.block",
         "inline.callsite",
         "FUNCTION|MEMBER_CALL|FACTORY_CALL",
         20,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
         inline_remap_apply_expression_block
-    },
-    {
+    ),
+    INLINE_REMAP_RULE_CALLBACK(
         "inline.assignment.whole-rhs",
         "inline.callsite",
         "ASSIGN(rhs-inlineable-call)",
         30,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
         inline_remap_apply_assignment_whole_rhs
-    },
-    {
+    ),
+    INLINE_REMAP_RULE_CALLBACK(
         "inline.call.statement",
         "inline.callsite",
         "CALL(inlineable-call)",
         40,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
         inline_remap_apply_call_statement
-    }
+    )
 };
 
-static const InlineRemapRule inline_remap_structural_eligibility_rule = {
+static const InlineRemapRule inline_remap_structural_eligibility_rule = INLINE_REMAP_RULE_SERVICE(
     "inline.eligibility.structural",
     "inline.identify",
     "PROCEDURE|METHOD|FACTORY",
-    0,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL
-};
+    0
+);
 
 static InlineRemapResult inline_remap_apply_rules(Context *context,
                                                   InlineWalkerPayload *payload,

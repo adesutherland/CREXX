@@ -318,3 +318,77 @@ There is now a concrete rule defined as selector plus bind/guard/rewrite
 building blocks. This is the first inspectable mapping-rule specimen and should
 be used as the pattern for deciding whether to convert the remaining inline
 rules to selector-backed form.
+
+## 2026-06-22: Readable Rule Shape
+
+### Goal
+
+Make the selector-backed rule easier to read and extend. The previous rule
+table entry worked, but it was still too positional: a maintainer had to know
+which struct field was selector, bind, guard, rewrite, or callback. This stage
+keeps the same behaviour but turns the rule into arrays of named building
+blocks plus rule declaration macros.
+
+### Implemented Shape
+
+The model rule now reads as four pieces:
+
+1. `inline_rhs_eager_operator_selector`
+2. `inline_rhs_eager_operator_binds`
+3. `inline_rhs_eager_operator_guards`
+4. `inline_rhs_eager_operator_rewrites`
+
+The table entry uses `INLINE_REMAP_RULE_SELECTOR(...)` to connect those pieces.
+Callback-backed legacy entries use `INLINE_REMAP_RULE_CALLBACK(...)`, and
+service/debug-only descriptors use `INLINE_REMAP_RULE_SERVICE(...)`.
+
+This deliberately supports multiple bind, guard, and rewrite steps per rule,
+even though the first specimen uses one of each.
+
+### Replay Steps
+
+1. Add `InlineRemapBindStep`, `InlineRemapGuardStep`, and
+   `InlineRemapRewriteStep`.
+2. Add `INLINE_BIND_STEP`, `INLINE_GUARD_STEP`, and `INLINE_REWRITE_STEP`
+   array macros plus terminators.
+3. Extend `InlineRemapRule` to point to arrays of bind, guard, and rewrite
+   steps.
+4. Add readable declaration macros:
+   - `INLINE_REMAP_RULE_SELECTOR`
+   - `INLINE_REMAP_RULE_CALLBACK`
+   - `INLINE_REMAP_RULE_SERVICE`
+5. Update `inline_remap_apply_selector_rule()` to run all bind steps, then all
+   guard steps, then all rewrite steps.
+6. Keep the same selector, same semantic helpers, and same tree surgery
+   builder for `inline.rhs-eager-operator.capture-left`.
+
+### Issues And Resolutions
+
+- The first temp-log debug wrapper used `status` as a shell variable, which is
+  read-only under zsh. Reran the same smoke with `rc`; no code change was
+  needed.
+
+### Verification
+
+Green stop for implementation stage 5:
+
+- `cmake --build cmake-build-release --target rxc --parallel 4`
+  - result: passed
+- `ctest --test-dir cmake-build-release -R '16_classes|address_inline_then|address_exit_extended' --output-on-failure`
+  - result: 3/3 passed
+- Temp-log wrapped `cmake-build-release/bin/rxc -i cmake-build-release/bin -d2 -o /tmp/inline_rule_shape_debug compiler/tests/rexx_src/inline_test_composed_expr_contexts.crexx`
+  - result: passed
+  - observed `DEBUG_INLINE_REMAP ... rule=inline.rhs-eager-operator.capture-left`
+- `ctest --test-dir cmake-build-release -R 'inline|Inline' --output-on-failure`
+  - result: 254/254 passed
+- `git diff --check`
+  - result: passed
+- Direct trailing-whitespace check over touched files
+  - result: passed
+
+### Stage 5 Result
+
+The model rule is now maintainable enough to read as a rule instead of a bundle
+of callbacks. The selector remains the structural part; binds, guards, and
+rewrites are named C building blocks that can be reused or split as later rules
+need.
