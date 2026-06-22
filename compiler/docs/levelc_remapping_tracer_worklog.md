@@ -392,3 +392,120 @@ The model rule is now maintainable enough to read as a rule instead of a bundle
 of callbacks. The selector remains the structural part; binds, guards, and
 rewrites are named C building blocks that can be reused or split as later rules
 need.
+
+## 2026-06-22: Inline Rule Catalog Split
+
+### Goal
+
+Refactor the inlining remap tracer into a source layout that can grow into the
+Level C remapping substrate without trapping generic mechanics behind
+`inline_` names. Also convert the current call-site inline buckets to
+selector-backed rule entries so the compiler can print a readable catalog of
+the active inline rules.
+
+### Implemented Shape
+
+The shared remap substrate now lives in:
+
+- `compiler/rxcp_remap.h`
+- `compiler/rxcp_remap.c`
+
+It owns generic rule descriptors, selector steps, captures, bind/guard/rewrite
+step arrays, rule declaration macros, and selector execution. It is intentionally
+not inline-specific.
+
+The inline private contract now lives in:
+
+- `compiler/rxcp_inline_internal.h`
+
+The reader-facing inline rule catalog now lives in:
+
+- `compiler/rxcp_inline_rules.c`
+
+`compiler/rxcp_inline.c` keeps the heavy existing inline mechanics: eligibility
+analysis, actual binding, clone/scope/symbol mapping, return rewriting,
+copyback, and inline payload import/export. Generic tree-build helpers were not
+split out yet; they should move only when Level C or another remap family needs
+the same helper outside inline semantics.
+
+### Rule Catalog
+
+The current call-site rules are now all selector-backed:
+
+1. `inline.rhs-eager-operator.capture-left`
+2. `inline.expression.block`
+3. `inline.assignment.whole-rhs`
+4. `inline.call.statement`
+
+The service/debug boundaries remain represented as service rules:
+
+1. `inline.eligibility.structural`
+2. `inline.bind.actuals`
+
+The reusable selector vocabulary gained exact node-type matching via
+`RXCP_REMAP_SEL_TYPE(...)`, used by the assignment and call-statement rules.
+
+### Human-Readable Summary
+
+Set `RXCP_INLINE_RULE_SUMMARY=1` when running `rxc` to print the current inline
+rule catalog. The output is deliberately simple text:
+
+- rule id, phase, root shape, priority, and kind
+- selector steps and capture names
+- bind, guard, and rewrite step ids
+
+This gives us a cheap review tool and a regression signal: if a rule is hard to
+read in this summary, the rule definition is probably not yet in the right
+shape.
+
+### Replay Steps
+
+1. Add `rxcp_remap.h/.c` with generic `RxcpRemap*` descriptors, selector
+   execution, capture lookup, and summary support helpers.
+2. Add `rxcp_inline_internal.h` for private cross-file inliner types and helper
+   declarations.
+3. Move the inline rule catalog and selector-backed model rule into
+   `rxcp_inline_rules.c`.
+4. Promote only the helpers needed by the rule catalog out of `static`:
+   inlineable-call lookup, RHS eager capture check, the existing `ast_inline_*`
+   rewrite builders, and remap debug rule-id hooks.
+5. Convert the three remaining callback-backed call-site buckets to
+   selector/bind/guard/rewrite arrays.
+6. Add the explicit `RXCP_INLINE_RULE_SUMMARY=1` summary hook.
+7. Add the new files to `compiler/CMakeLists.txt`.
+
+### Issues And Resolutions
+
+- The summary initially labelled service rules as `selector: <callback>`.
+  Changed the summary wording to print `<service>` for service descriptors.
+- `inline.expression.block` needs to reject the RHS-left-capture case at the
+  call node so the parent eager-operator rule can handle it later in the same
+  walker pass. This preserves the previous callback behaviour and is visible in
+  `-d2` traces as a rejected expression rule followed by an applied parent
+  capture rule.
+
+### Verification
+
+Green stop for implementation stage 6:
+
+- `cmake --build cmake-build-release --target rxc --parallel 4`
+  - result: passed
+- `RXCP_INLINE_RULE_SUMMARY=1 cmake-build-release/bin/rxc -i cmake-build-release/bin -o /tmp/inline_rule_summary_probe compiler/tests/rexx_src/inline_test_composed_expr_contexts.crexx`
+  - result: passed
+  - observed selector/bind/guard/rewrite summaries for all four call-site rules
+- `ctest --test-dir cmake-build-release -R '16_classes|address_inline_then|address_exit_extended' --output-on-failure`
+  - result: 3/3 passed
+- Temp-log wrapped `cmake-build-release/bin/rxc -i cmake-build-release/bin -d2 -o /tmp/inline_rule_shape_debug compiler/tests/rexx_src/inline_test_composed_expr_contexts.crexx`
+  - result: passed
+  - observed selector-backed `inline.expression.block` and
+    `inline.rhs-eager-operator.capture-left` call-site rule traces
+- `ctest --test-dir cmake-build-release -R 'inline|Inline' --output-on-failure`
+  - result: 254/254 passed
+
+### Stage 6 Result
+
+The inline remap implementation now has a reusable remap substrate and a
+separate inline rule catalog. The active call-site inlining rules can be read
+directly from `rxcp_inline_rules.c` or printed with
+`RXCP_INLINE_RULE_SUMMARY=1`, which is the first useful maintainer-facing view
+of the remapping approach.

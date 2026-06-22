@@ -55,7 +55,7 @@ add_library(rxclib STATIC
         ${CMAKE_CURRENT_BINARY_DIR}/rexcscan.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpcgmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpcgmr.h rxcpcpar.c rxcpcdiag.c rxcpcsym.c rxcpcsym.h rxcpcval.c
         ${CMAKE_SOURCE_DIR}/assembler/rxas.h
         rxcp_val_sym.c rxcp_val_type.c rxcp_val_trans.c rxcp_ast_rewrite.c rxcp_val_check.c rxcp_val_plugin.c rxcp_val_orch.c rxcpsymb.c rxcp_fixup.c rxcp_ast_val.c
-        rxcp_inline.c
+        rxcp_remap.c rxcp_remap.h rxcp_inline_internal.h rxcp_inline.c rxcp_inline_rules.c
         rxcpdary.h rxcpemit.c rxcp_emit_core.c rxcp_emit_reg.c rxcp_emit_expr.c rxcp_emit_flow.c rxcp_emit_proc.c rxcp_emit_meta.c rxcp_emit.h rxcp_opt.c
         ../platform/platform.h ../platform/platform.c
         ../utf8/utf.h rxcpfunc.c rxcp_exit.c

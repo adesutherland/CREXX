@@ -509,6 +509,16 @@ example looks scalar. Classic observability is the guard.
    `SAY`, and one binary operator.
 7. Only then open broader Level C control flow and BIF lowering.
 
+### Current Tracer Status
+
+As of the inline rule catalog split, steps 2 and 3 are implemented and the four
+current call-site inline buckets are represented as selector-backed rules in
+`compiler/rxcp_inline_rules.c`. The shared clone, actual-binding, return
+rewrite, receiver-copyback, and imported-template machinery is still represented
+as inline service boundaries rather than fully generic remap services. That is
+the next extraction point before Level C lowering should depend on these
+helpers.
+
 This path gives a real safety net. The inliner has existing positive and
 negative tests, source/import cases, and opt/noopt runtime comparisons. Passing
 those tests after each migration is stronger evidence than building a new Level

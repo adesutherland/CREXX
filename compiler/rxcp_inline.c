@@ -15,277 +15,7 @@
 #include "rxcpdary.h"
 #include "rxcp_sym.h"
 #include "rxcp_source_tree.h"
-
-/*
- * Production inlining size policy.  This is a profitability/metadata-size
- * cutoff, not a semantic safety boundary; semantic gates below still decide
- * whether a body is safe to inline.
- */
-#define INLINE_MAX_NODES 300
-#define INLINE_META_MAX_SOURCE_SPAN 512
-
-typedef struct {
-    Symbol *old_symbol;
-    Symbol *new_symbol;
-} InlineSymbolMapEntry;
-
-typedef struct {
-    Scope *old_scope;
-    Scope *new_scope;
-} InlineScopeMapEntry;
-
-typedef struct {
-    ASTNode *old_node;
-    ASTNode *new_node;
-} InlineNodeMapEntry;
-
-typedef struct {
-    Symbol *formal_symbol;
-    ASTNode *actual_source;
-    Symbol **captured_symbols;
-    size_t captured_count;
-} InlineRefActualEntry;
-
-typedef struct {
-    Scope *callee_scope;
-    Scope *inline_scope;
-    InlineSymbolMapEntry *symbol_entries;
-    size_t symbol_count;
-    InlineScopeMapEntry *scope_entries;
-    size_t scope_count;
-    InlineNodeMapEntry *node_entries;
-    size_t node_count;
-    InlineRefActualEntry *ref_entries;
-    size_t ref_count;
-    InlineRefActualEntry *varg_ref_entries;
-    Symbol **varg_symbols;
-    size_t varg_count;
-    Symbol *varg_array_symbol;
-    Symbol *method_receiver_source_symbol;
-    Symbol *method_receiver_local_symbol;
-    int method_receiver_needs_copyback;
-} InlineCloneState;
-
-typedef struct {
-    ASTNode *root_proc;
-    Context *context;
-    int node_count;
-    int return_count;
-    int has_unsupported_varg_access;
-    int has_unsupported_assembler_alias;
-    int has_unsupported_assembler_effect;
-    int has_unsupported_reference;
-    int has_class_attribute_write;
-    int has_unportable_class_attribute_shape;
-    size_t max_required_varg_index;
-    int ref_varg_mode;
-} InlinableCheck;
-
-typedef struct {
-    ASTNode *return_target;
-    Symbol *return_sink_symbol;
-} InlineReturnPlan;
-
-typedef struct {
-    int return_count;
-    int top_level_return_count;
-    int final_is_return;
-} InlineReturnShape;
-
-typedef enum {
-    INLINE_ELIGIBILITY_OK = 0,
-    INLINE_ELIGIBILITY_MISSING_ARGS_OR_INSTRS,
-    INLINE_ELIGIBILITY_MISSING_INSTRS,
-    INLINE_ELIGIBILITY_RETURN_REFERENCE_CLASS,
-    INLINE_ELIGIBILITY_VARG_FORMAL_FOLLOWED,
-    INLINE_ELIGIBILITY_RETURN_SHAPE_FAILED,
-    INLINE_ELIGIBILITY_VALUE_NOT_FINAL_RETURN,
-    INLINE_ELIGIBILITY_VALUE_NO_RETURN,
-    INLINE_ELIGIBILITY_NODE_CUTOFF,
-    INLINE_ELIGIBILITY_RETURN_COUNT_MISMATCH,
-    INLINE_ELIGIBILITY_ASSEMBLER_ALIAS,
-    INLINE_ELIGIBILITY_ASSEMBLER_EFFECT,
-    INLINE_ELIGIBILITY_UNSUPPORTED_REFERENCE,
-    INLINE_ELIGIBILITY_UNSUPPORTED_VARG_ACCESS,
-    INLINE_ELIGIBILITY_UNPORTABLE_CLASS_ATTRIBUTE_SHAPE
-} InlineEligibilityReject;
-
-typedef struct {
-    ASTNode *args;
-    ASTNode *instrs;
-    InlineReturnShape return_shape;
-    InlinableCheck check;
-    InlineEligibilityReject reject;
-} InlineEligibility;
-
-typedef enum {
-    INLINE_EXPR_CONTEXT_NONE = 0,
-    INLINE_EXPR_CONTEXT_EAGER_VALUE_CONSUMER,
-    INLINE_EXPR_CONTEXT_EAGER_OPERATOR,
-    INLINE_EXPR_CONTEXT_EAGER_CALL_ARGUMENT,
-    INLINE_EXPR_CONTEXT_SHORT_CIRCUIT_OPERATOR,
-    INLINE_EXPR_CONTEXT_CONTROL_CONSUMER
-} InlineExprContext;
-
-typedef struct {
-    Context *context;
-    int changed;
-} InlineWalkerPayload;
-
-typedef enum {
-    INLINE_REMAP_NO_MATCH = 0,
-    INLINE_REMAP_REJECTED,
-    INLINE_REMAP_APPLIED
-} InlineRemapResult;
-
-typedef enum {
-    INLINE_REMAP_SEL_END = 0,
-    INLINE_REMAP_SEL_MATCH_CLASS,
-    INLINE_REMAP_SEL_MATCH_ANY,
-    INLINE_REMAP_SEL_MATCH_TYPESET,
-    INLINE_REMAP_SEL_DOWN_FIRST,
-    INLINE_REMAP_SEL_NEXT_SIBLING,
-    INLINE_REMAP_SEL_UP_PARENT,
-    INLINE_REMAP_SEL_ASSERT_NO_NEXT_SIBLING
-} InlineRemapSelectorOp;
-
-typedef enum {
-    INLINE_REMAP_NODECLASS_EAGER_OPERATOR = 1
-} InlineRemapNodeClass;
-
-typedef enum {
-    INLINE_REMAP_TYPESET_CALL_EXPR = 1
-} InlineRemapTypeSet;
-
-typedef struct {
-    InlineRemapSelectorOp op;
-    const char *capture;
-    int value;
-} InlineRemapSelectorStep;
-
-#define INLINE_SEL_CLASS(capture_name, node_class) \
-    { INLINE_REMAP_SEL_MATCH_CLASS, (capture_name), (node_class) }
-#define INLINE_SEL_ANY(capture_name) \
-    { INLINE_REMAP_SEL_MATCH_ANY, (capture_name), 0 }
-#define INLINE_SEL_TYPESET(capture_name, type_set) \
-    { INLINE_REMAP_SEL_MATCH_TYPESET, (capture_name), (type_set) }
-#define INLINE_SEL_DOWN_FIRST() \
-    { INLINE_REMAP_SEL_DOWN_FIRST, NULL, 0 }
-#define INLINE_SEL_NEXT_SIBLING() \
-    { INLINE_REMAP_SEL_NEXT_SIBLING, NULL, 0 }
-#define INLINE_SEL_UP_PARENT() \
-    { INLINE_REMAP_SEL_UP_PARENT, NULL, 0 }
-#define INLINE_SEL_ASSERT_NO_NEXT_SIBLING() \
-    { INLINE_REMAP_SEL_ASSERT_NO_NEXT_SIBLING, NULL, 0 }
-#define INLINE_SEL_END() \
-    { INLINE_REMAP_SEL_END, NULL, 0 }
-
-#define INLINE_REMAP_MAX_CAPTURES 8
-
-typedef struct {
-    const char *name;
-    ASTNode *node;
-} InlineRemapCapture;
-
-typedef struct {
-    ASTNode *root;
-    ASTNode *current;
-    InlineRemapCapture captures[INLINE_REMAP_MAX_CAPTURES];
-    size_t capture_count;
-    Symbol *proc_sym;
-} InlineRemapMatch;
-
-struct InlineRemapRule;
-typedef InlineRemapResult (*InlineRemapApplyFn)(const struct InlineRemapRule *rule,
-                                                Context *context,
-                                                InlineWalkerPayload *payload,
-                                                ASTNode *node);
-typedef int (*InlineRemapBindFn)(Context *context, InlineRemapMatch *match);
-typedef int (*InlineRemapGuardFn)(Context *context, const InlineRemapMatch *match);
-typedef int (*InlineRemapRewriteFn)(Context *context, const InlineRemapMatch *match);
-
-typedef struct {
-    const char *id;
-    InlineRemapBindFn fn;
-} InlineRemapBindStep;
-
-typedef struct {
-    const char *id;
-    InlineRemapGuardFn fn;
-} InlineRemapGuardStep;
-
-typedef struct {
-    const char *id;
-    InlineRemapRewriteFn fn;
-} InlineRemapRewriteStep;
-
-#define INLINE_BIND_STEP(step_id, step_fn) \
-    { (step_id), (step_fn) }
-#define INLINE_BIND_END() \
-    { NULL, NULL }
-#define INLINE_GUARD_STEP(step_id, step_fn) \
-    { (step_id), (step_fn) }
-#define INLINE_GUARD_END() \
-    { NULL, NULL }
-#define INLINE_REWRITE_STEP(step_id, step_fn) \
-    { (step_id), (step_fn) }
-#define INLINE_REWRITE_END() \
-    { NULL, NULL }
-
-#define INLINE_REMAP_RULE_SELECTOR(rule_id, rule_phase, rule_root, rule_priority, rule_selector, rule_binds, rule_guards, rule_rewrites, rule_debug_capture) \
-    { \
-        (rule_id), \
-        (rule_phase), \
-        (rule_root), \
-        (rule_priority), \
-        (rule_selector), \
-        (rule_binds), \
-        (rule_guards), \
-        (rule_rewrites), \
-        (rule_debug_capture), \
-        NULL \
-    }
-
-#define INLINE_REMAP_RULE_CALLBACK(rule_id, rule_phase, rule_root, rule_priority, rule_apply) \
-    { \
-        (rule_id), \
-        (rule_phase), \
-        (rule_root), \
-        (rule_priority), \
-        NULL, \
-        NULL, \
-        NULL, \
-        NULL, \
-        NULL, \
-        (rule_apply) \
-    }
-
-#define INLINE_REMAP_RULE_SERVICE(rule_id, rule_phase, rule_root, rule_priority) \
-    { \
-        (rule_id), \
-        (rule_phase), \
-        (rule_root), \
-        (rule_priority), \
-        NULL, \
-        NULL, \
-        NULL, \
-        NULL, \
-        NULL, \
-        NULL \
-    }
-
-typedef struct InlineRemapRule {
-    const char *id;
-    const char *phase;
-    const char *root_shape;
-    int priority;
-    const InlineRemapSelectorStep *selector;
-    const InlineRemapBindStep *binds;
-    const InlineRemapGuardStep *guards;
-    const InlineRemapRewriteStep *rewrites;
-    const char *debug_site_capture;
-    InlineRemapApplyFn apply;
-} InlineRemapRule;
+#include "rxcp_inline_internal.h"
 
 static size_t inline_count_siblings(ASTNode *node);
 static ASTNode *inline_clone_subtree(Context *context, ASTNode *node, InlineCloneState *state);
@@ -340,7 +70,6 @@ static int inline_initialise_varg_array(Context *context,
                                         InlineCloneState *state);
 static ASTNode *inline_find_varg_arg(ASTNode *proc_def);
 static int inline_node_is_callable_def(ASTNode *node);
-static int inline_node_is_inlineable_call(ASTNode *node, Symbol **proc_sym_out);
 static ASTNode *inline_call_first_user_actual(ASTNode *call_node);
 static ASTNode *inline_call_receiver(ASTNode *call_node);
 static int inline_call_arity_matches(ASTNode *call_node, Symbol *proc_sym, size_t *varg_count_out);
@@ -363,41 +92,18 @@ static int inline_rewrite_return_nodes(Context *context,
                                        int allow_dummy_return,
                                        ValueType proc_type,
                                        InlineCloneState *clone_state);
-static InlineRemapResult inline_remap_apply_expression_block(const InlineRemapRule *rule,
-                                                             Context *context,
-                                                             InlineWalkerPayload *payload,
-                                                             ASTNode *node);
-static InlineRemapResult inline_remap_apply_assignment_whole_rhs(const InlineRemapRule *rule,
-                                                                 Context *context,
-                                                                 InlineWalkerPayload *payload,
-                                                                 ASTNode *node);
-static InlineRemapResult inline_remap_apply_call_statement(const InlineRemapRule *rule,
-                                                           Context *context,
-                                                           InlineWalkerPayload *payload,
-                                                           ASTNode *node);
-static InlineRemapResult inline_remap_apply_selector_rule(const InlineRemapRule *rule,
-                                                          Context *context,
-                                                          InlineWalkerPayload *payload,
-                                                          ASTNode *node);
 
 static const char *inline_debug_active_remap_rule_id = NULL;
 
-static const char *inline_debug_push_remap_rule(const char *rule_id) {
+const char *inline_debug_push_remap_rule(const char *rule_id) {
     const char *previous = inline_debug_active_remap_rule_id;
     inline_debug_active_remap_rule_id = rule_id;
     return previous;
 }
 
-static void inline_debug_pop_remap_rule(const char *previous) {
+void inline_debug_pop_remap_rule(const char *previous) {
     inline_debug_active_remap_rule_id = previous;
 }
-
-static const InlineRemapRule inline_remap_bind_actuals_rule = INLINE_REMAP_RULE_SERVICE(
-    "inline.bind.actuals",
-    "inline.expand",
-    "callee-args+call-actuals",
-    100
-);
 
 static void inline_debug_log(Context *context,
                              ASTNode *site,
@@ -454,11 +160,11 @@ static void inline_debug_fail_closed(Context *context,
     fputc('\n', stderr);
 }
 
-static void inline_remap_debug_result(Context *context,
-                                      const InlineRemapRule *rule,
-                                      ASTNode *site,
-                                      Symbol *proc_sym,
-                                      const char *result) {
+void inline_remap_debug_result(Context *context,
+                               const RxcpRemapRule *rule,
+                               ASTNode *site,
+                               Symbol *proc_sym,
+                               const char *result) {
     Context *root;
 
     root = context && context->master_context ? context->master_context : context;
@@ -593,7 +299,7 @@ static int inline_symbol_uses_imported_template(Symbol *symbol) {
     return def_node && symbol->ast_template != def_node;
 }
 
-static int inline_node_is_inlineable_call(ASTNode *node, Symbol **proc_sym_out) {
+int inline_node_is_inlineable_call(ASTNode *node, Symbol **proc_sym_out) {
     Symbol *proc_sym;
 
     if (proc_sym_out) *proc_sym_out = NULL;
@@ -1014,7 +720,7 @@ static int inline_eager_operator_context_is_safe(ASTNode *node) {
            inline_node_is_plain_stable_value(parent->child);
 }
 
-static int inline_rhs_eager_operator_needs_left_capture(ASTNode *node) {
+int inline_rhs_eager_operator_needs_left_capture(ASTNode *node) {
     ASTNode *parent;
     ASTNode *left;
 
@@ -2695,7 +2401,7 @@ static int inline_bind_call_arguments(Context *context,
 
 #define INLINE_BIND_RETURN(value) do { \
     inline_remap_debug_result(context, \
-                              &inline_remap_bind_actuals_rule, \
+                              rxcp_inline_bind_actuals_rule(), \
                               call_node, \
                               proc_sym, \
                               (value) ? "applied" : "rejected"); \
@@ -4127,7 +3833,7 @@ static int ast_inline_statement(Context *context,
     return 1;
 }
 
-static int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_node, Symbol *proc_sym) {
+int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_node, Symbol *proc_sym) {
     ASTNode *lhs;
     ASTNode *block_expr;
     ASTNode *proc_def;
@@ -4200,7 +3906,7 @@ static int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode
     return ast_inline_statement(context, assign_node, call_node, proc_sym, &return_plan);
 }
 
-static int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Symbol *proc_sym) {
+int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Symbol *proc_sym) {
     ASTNode *proc_def;
     ASTNode *block;
     Scope *block_scope;
@@ -4301,7 +4007,7 @@ static int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_n
     return ast_inline_statement(context, call_stmt, call_node, proc_sym, &return_plan);
 }
 
-static int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *proc_sym) {
+int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *proc_sym) {
     ASTNode *block_expr;
     InlineExprContext expr_context;
     InlineReturnShape return_shape;
@@ -4354,10 +4060,10 @@ static int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *p
     return 1;
 }
 
-static int ast_inline_rhs_eager_operator(Context *context,
-                                         ASTNode *op_node,
-                                         ASTNode *rhs_call,
-                                         Symbol *proc_sym) {
+int ast_inline_rhs_eager_operator(Context *context,
+                                  ASTNode *op_node,
+                                  ASTNode *rhs_call,
+                                  Symbol *proc_sym) {
     ASTNode *left;
     ASTNode *block_expr;
     ASTNode *instr_list;
@@ -4510,450 +4216,6 @@ static int ast_inline_rhs_eager_operator(Context *context,
     inline_free_symbol_map(&clone_state);
 
     return 1;
-}
-
-static int inline_remap_store_capture(InlineRemapMatch *match,
-                                      const char *name,
-                                      ASTNode *node) {
-    size_t i;
-
-    if (!match || !name) return 1;
-
-    for (i = 0; i < match->capture_count; i++) {
-        if (match->captures[i].name && strcmp(match->captures[i].name, name) == 0) {
-            match->captures[i].node = node;
-            return 1;
-        }
-    }
-
-    if (match->capture_count >= INLINE_REMAP_MAX_CAPTURES) return 0;
-
-    match->captures[match->capture_count].name = name;
-    match->captures[match->capture_count].node = node;
-    match->capture_count++;
-    return 1;
-}
-
-static ASTNode *inline_remap_capture_node(const InlineRemapMatch *match,
-                                          const char *name) {
-    size_t i;
-
-    if (!match || !name) return NULL;
-
-    for (i = 0; i < match->capture_count; i++) {
-        if (match->captures[i].name && strcmp(match->captures[i].name, name) == 0) {
-            return match->captures[i].node;
-        }
-    }
-
-    return NULL;
-}
-
-static int inline_remap_node_matches_class(ASTNode *node,
-                                           InlineRemapNodeClass node_class) {
-    if (!node) return 0;
-
-    switch (node_class) {
-        case INLINE_REMAP_NODECLASS_EAGER_OPERATOR:
-            return inline_parent_is_eager_operator(node);
-        default:
-            return 0;
-    }
-}
-
-static int inline_remap_node_matches_typeset(ASTNode *node,
-                                             InlineRemapTypeSet type_set) {
-    if (!node) return 0;
-
-    switch (type_set) {
-        case INLINE_REMAP_TYPESET_CALL_EXPR:
-            return node->node_type == FUNCTION ||
-                   node->node_type == MEMBER_CALL ||
-                   node->node_type == FACTORY_CALL;
-        default:
-            return 0;
-    }
-}
-
-static int inline_remap_run_selector(const InlineRemapSelectorStep *selector,
-                                     ASTNode *root,
-                                     InlineRemapMatch *match) {
-    size_t i;
-
-    if (!selector || !root || !match) return 0;
-
-    memset(match, 0, sizeof(*match));
-    match->root = root;
-    match->current = root;
-
-    for (i = 0; selector[i].op != INLINE_REMAP_SEL_END; i++) {
-        const InlineRemapSelectorStep *step = &selector[i];
-
-        switch (step->op) {
-            case INLINE_REMAP_SEL_MATCH_CLASS:
-                if (!inline_remap_node_matches_class(match->current,
-                                                     (InlineRemapNodeClass)step->value)) {
-                    return 0;
-                }
-                if (!inline_remap_store_capture(match, step->capture, match->current)) return 0;
-                break;
-
-            case INLINE_REMAP_SEL_MATCH_ANY:
-                if (!match->current) return 0;
-                if (!inline_remap_store_capture(match, step->capture, match->current)) return 0;
-                break;
-
-            case INLINE_REMAP_SEL_MATCH_TYPESET:
-                if (!inline_remap_node_matches_typeset(match->current,
-                                                       (InlineRemapTypeSet)step->value)) {
-                    return 0;
-                }
-                if (!inline_remap_store_capture(match, step->capture, match->current)) return 0;
-                break;
-
-            case INLINE_REMAP_SEL_DOWN_FIRST:
-                if (!match->current || !match->current->child) return 0;
-                match->current = match->current->child;
-                break;
-
-            case INLINE_REMAP_SEL_NEXT_SIBLING:
-                if (!match->current || !match->current->sibling) return 0;
-                match->current = match->current->sibling;
-                break;
-
-            case INLINE_REMAP_SEL_UP_PARENT:
-                if (!match->current || !match->current->parent) return 0;
-                match->current = match->current->parent;
-                break;
-
-            case INLINE_REMAP_SEL_ASSERT_NO_NEXT_SIBLING:
-                if (!match->current || match->current->sibling) return 0;
-                break;
-
-            case INLINE_REMAP_SEL_END:
-                return 1;
-        }
-    }
-
-    return 1;
-}
-
-static int inline_bind_rhs_eager_operator_proc_symbol(Context *context,
-                                                      InlineRemapMatch *match) {
-    ASTNode *rhs;
-    Symbol *proc_sym;
-
-    (void)context;
-    if (!match) return 0;
-
-    rhs = inline_remap_capture_node(match, "rhs");
-    if (!inline_node_is_inlineable_call(rhs, &proc_sym)) return 0;
-
-    match->proc_sym = proc_sym;
-    return 1;
-}
-
-static int inline_guard_rhs_eager_operator_capture_safe(Context *context,
-                                                       const InlineRemapMatch *match) {
-    ASTNode *op;
-    ASTNode *left;
-    ASTNode *rhs;
-    Scope *parent_scope;
-
-    (void)context;
-    if (!match) return 0;
-
-    op = inline_remap_capture_node(match, "op");
-    left = inline_remap_capture_node(match, "left");
-    rhs = inline_remap_capture_node(match, "rhs");
-    if (!op || !left || !rhs) return 0;
-    if (!inline_rhs_eager_operator_needs_left_capture(rhs)) return 0;
-
-    parent_scope = op->scope ? op->scope : (rhs->scope ? rhs->scope : left->scope);
-    return parent_scope != NULL;
-}
-
-static int inline_rewrite_rhs_eager_operator_capture(Context *context,
-                                                     const InlineRemapMatch *match) {
-    ASTNode *op;
-    ASTNode *rhs;
-
-    if (!match) return 0;
-
-    op = inline_remap_capture_node(match, "op");
-    rhs = inline_remap_capture_node(match, "rhs");
-    if (!op || !rhs || !match->proc_sym) return 0;
-
-    return ast_inline_rhs_eager_operator(context, op, rhs, match->proc_sym);
-}
-
-static ASTNode *inline_remap_debug_site(const InlineRemapRule *rule,
-                                        const InlineRemapMatch *match) {
-    ASTNode *site;
-
-    if (!match) return NULL;
-    if (!rule || !rule->debug_site_capture) return match->root;
-
-    site = inline_remap_capture_node(match, rule->debug_site_capture);
-    return site ? site : match->root;
-}
-
-static InlineRemapResult inline_remap_apply_selector_rule(const InlineRemapRule *rule,
-                                                          Context *context,
-                                                          InlineWalkerPayload *payload,
-                                                          ASTNode *node) {
-    InlineRemapMatch match;
-    ASTNode *debug_site;
-    const char *previous_rule;
-    int rewritten;
-    size_t i;
-
-    if (!rule || !rule->selector || !node) return INLINE_REMAP_NO_MATCH;
-    if (!inline_remap_run_selector(rule->selector, node, &match)) return INLINE_REMAP_NO_MATCH;
-
-    if (rule->binds) {
-        for (i = 0; rule->binds[i].fn; i++) {
-            if (!rule->binds[i].fn(context, &match)) {
-                debug_site = inline_remap_debug_site(rule, &match);
-                inline_remap_debug_result(context, rule, debug_site, match.proc_sym, "rejected");
-                return INLINE_REMAP_REJECTED;
-            }
-        }
-    }
-
-    if (rule->guards) {
-        for (i = 0; rule->guards[i].fn; i++) {
-            if (!rule->guards[i].fn(context, &match)) {
-                debug_site = inline_remap_debug_site(rule, &match);
-                inline_remap_debug_result(context, rule, debug_site, match.proc_sym, "rejected");
-                return INLINE_REMAP_REJECTED;
-            }
-        }
-    }
-
-    previous_rule = inline_debug_push_remap_rule(rule->id);
-    rewritten = 0;
-    if (rule->rewrites) {
-        rewritten = 1;
-        for (i = 0; rule->rewrites[i].fn; i++) {
-            if (!rule->rewrites[i].fn(context, &match)) {
-                rewritten = 0;
-                break;
-            }
-        }
-    }
-    inline_debug_pop_remap_rule(previous_rule);
-
-    debug_site = inline_remap_debug_site(rule, &match);
-
-    if (rewritten) {
-        if (payload) payload->changed = 1;
-        inline_remap_debug_result(context, rule, debug_site, match.proc_sym, "applied");
-        return INLINE_REMAP_APPLIED;
-    }
-
-    inline_remap_debug_result(context, rule, debug_site, match.proc_sym, "rejected");
-    return INLINE_REMAP_REJECTED;
-}
-
-/* Rule model example:
- * - selector: only tree shape and capture names
- * - binds: derive semantic values from captures
- * - guards: prove this matched site is safe to rewrite
- * - rewrites: perform ordered tree surgery steps
- */
-static const InlineRemapSelectorStep inline_rhs_eager_operator_selector[] = {
-    INLINE_SEL_CLASS("op", INLINE_REMAP_NODECLASS_EAGER_OPERATOR),
-    INLINE_SEL_DOWN_FIRST(),
-    INLINE_SEL_ANY("left"),
-    INLINE_SEL_NEXT_SIBLING(),
-    INLINE_SEL_TYPESET("rhs", INLINE_REMAP_TYPESET_CALL_EXPR),
-    INLINE_SEL_ASSERT_NO_NEXT_SIBLING(),
-    INLINE_SEL_END()
-};
-
-static const InlineRemapBindStep inline_rhs_eager_operator_binds[] = {
-    INLINE_BIND_STEP("bind-inlineable-rhs-proc-symbol", inline_bind_rhs_eager_operator_proc_symbol),
-    INLINE_BIND_END()
-};
-
-static const InlineRemapGuardStep inline_rhs_eager_operator_guards[] = {
-    INLINE_GUARD_STEP("rhs-left-capture-is-safe", inline_guard_rhs_eager_operator_capture_safe),
-    INLINE_GUARD_END()
-};
-
-static const InlineRemapRewriteStep inline_rhs_eager_operator_rewrites[] = {
-    INLINE_REWRITE_STEP("replace-op-with-left-capture-block", inline_rewrite_rhs_eager_operator_capture),
-    INLINE_REWRITE_END()
-};
-
-static InlineRemapResult inline_remap_apply_expression_block(const InlineRemapRule *rule,
-                                                             Context *context,
-                                                             InlineWalkerPayload *payload,
-                                                             ASTNode *node) {
-    Symbol *proc_sym;
-    const char *previous_rule;
-    int rewritten;
-
-    if (node->node_type != FUNCTION &&
-        node->node_type != MEMBER_CALL &&
-        node->node_type != FACTORY_CALL) {
-        return INLINE_REMAP_NO_MATCH;
-    }
-    if (!inline_node_is_inlineable_call(node, &proc_sym)) return INLINE_REMAP_NO_MATCH;
-    if (inline_rhs_eager_operator_needs_left_capture(node)) return INLINE_REMAP_NO_MATCH;
-
-    previous_rule = inline_debug_push_remap_rule(rule ? rule->id : NULL);
-    rewritten = ast_inline_expression(context, node, proc_sym);
-    inline_debug_pop_remap_rule(previous_rule);
-
-    if (rewritten) {
-        if (payload) payload->changed = 1;
-        inline_remap_debug_result(context, rule, node, proc_sym, "applied");
-        return INLINE_REMAP_APPLIED;
-    }
-
-    inline_remap_debug_result(context, rule, node, proc_sym, "rejected");
-    return INLINE_REMAP_REJECTED;
-}
-
-static InlineRemapResult inline_remap_apply_assignment_whole_rhs(const InlineRemapRule *rule,
-                                                                 Context *context,
-                                                                 InlineWalkerPayload *payload,
-                                                                 ASTNode *node) {
-    ASTNode *lhs;
-    ASTNode *rhs;
-    Symbol *proc_sym;
-    const char *previous_rule;
-    int rewritten;
-
-    if (node->node_type != ASSIGN) return INLINE_REMAP_NO_MATCH;
-
-    lhs = node->child;
-    rhs = lhs ? lhs->sibling : NULL;
-    if (!lhs || !rhs) return INLINE_REMAP_NO_MATCH;
-    if (!inline_node_is_inlineable_call(rhs, &proc_sym)) return INLINE_REMAP_NO_MATCH;
-
-    previous_rule = inline_debug_push_remap_rule(rule ? rule->id : NULL);
-    rewritten = ast_inline_assignment(context, node, rhs, proc_sym);
-    inline_debug_pop_remap_rule(previous_rule);
-
-    if (rewritten) {
-        if (payload) payload->changed = 1;
-        inline_remap_debug_result(context, rule, rhs, proc_sym, "applied");
-        return INLINE_REMAP_APPLIED;
-    }
-
-    inline_remap_debug_result(context, rule, rhs, proc_sym, "rejected");
-    return INLINE_REMAP_REJECTED;
-}
-
-static InlineRemapResult inline_remap_apply_call_statement(const InlineRemapRule *rule,
-                                                           Context *context,
-                                                           InlineWalkerPayload *payload,
-                                                           ASTNode *node) {
-    ASTNode *call_node;
-    Symbol *proc_sym;
-    const char *previous_rule;
-    int rewritten;
-
-    if (node->node_type != CALL) return INLINE_REMAP_NO_MATCH;
-
-    call_node = node->child;
-    if (!inline_node_is_inlineable_call(call_node, &proc_sym)) return INLINE_REMAP_NO_MATCH;
-
-    previous_rule = inline_debug_push_remap_rule(rule ? rule->id : NULL);
-    rewritten = ast_inline_call(context, node, call_node, proc_sym);
-    inline_debug_pop_remap_rule(previous_rule);
-
-    if (rewritten) {
-        if (payload) payload->changed = 1;
-        inline_remap_debug_result(context, rule, call_node, proc_sym, "applied");
-        return INLINE_REMAP_APPLIED;
-    }
-
-    inline_remap_debug_result(context, rule, call_node, proc_sym, "rejected");
-    return INLINE_REMAP_REJECTED;
-}
-
-static const InlineRemapRule inline_remap_rules[] = {
-    INLINE_REMAP_RULE_SELECTOR(
-        "inline.rhs-eager-operator.capture-left",
-        "inline.callsite",
-        "eager-operator(rhs-inlineable-call)",
-        10,
-        inline_rhs_eager_operator_selector,
-        inline_rhs_eager_operator_binds,
-        inline_rhs_eager_operator_guards,
-        inline_rhs_eager_operator_rewrites,
-        "rhs"
-    ),
-    INLINE_REMAP_RULE_CALLBACK(
-        "inline.expression.block",
-        "inline.callsite",
-        "FUNCTION|MEMBER_CALL|FACTORY_CALL",
-        20,
-        inline_remap_apply_expression_block
-    ),
-    INLINE_REMAP_RULE_CALLBACK(
-        "inline.assignment.whole-rhs",
-        "inline.callsite",
-        "ASSIGN(rhs-inlineable-call)",
-        30,
-        inline_remap_apply_assignment_whole_rhs
-    ),
-    INLINE_REMAP_RULE_CALLBACK(
-        "inline.call.statement",
-        "inline.callsite",
-        "CALL(inlineable-call)",
-        40,
-        inline_remap_apply_call_statement
-    )
-};
-
-static const InlineRemapRule inline_remap_structural_eligibility_rule = INLINE_REMAP_RULE_SERVICE(
-    "inline.eligibility.structural",
-    "inline.identify",
-    "PROCEDURE|METHOD|FACTORY",
-    0
-);
-
-static InlineRemapResult inline_remap_apply_rules(Context *context,
-                                                  InlineWalkerPayload *payload,
-                                                  ASTNode *node) {
-    size_t i;
-
-    if (!context || !node) return INLINE_REMAP_NO_MATCH;
-
-    for (i = 0; i < sizeof(inline_remap_rules) / sizeof(inline_remap_rules[0]); i++) {
-        const InlineRemapRule *rule = &inline_remap_rules[i];
-        InlineRemapResult result;
-
-        if (rule->selector) {
-            result = inline_remap_apply_selector_rule(rule, context, payload, node);
-        } else if (rule->apply) {
-            result = rule->apply(rule, context, payload, node);
-        } else {
-            result = INLINE_REMAP_NO_MATCH;
-        }
-        if (result != INLINE_REMAP_NO_MATCH) return result;
-    }
-
-    return INLINE_REMAP_NO_MATCH;
-}
-
-/* Walker to find statement-shaped call sites and inline them */
-walker_result inline_procedure_walker(walker_direction direction, ASTNode *node, void *payload) {
-    InlineWalkerPayload *inline_payload;
-    Context *context;
-
-    inline_payload = (InlineWalkerPayload *)payload;
-    context = inline_payload ? inline_payload->context : NULL;
-
-    if (direction == in) return result_normal;
-
-    (void)inline_remap_apply_rules(context, inline_payload, node);
-    return result_normal;
 }
 
 static walker_result inlinable_check_walker(walker_direction direction, ASTNode *node, void *payload) {
@@ -5278,14 +4540,14 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
         if (inline_proc_has_procedure_expose(node)) {
             inline_debug_log(context, node, sym, "DEBUG_INLINE",
                              "reject: procedure-level EXPOSE is not inlineable");
-            inline_remap_debug_result(context, &inline_remap_structural_eligibility_rule, node, sym, "rejected");
+            inline_remap_debug_result(context, rxcp_inline_structural_eligibility_rule(), node, sym, "rejected");
             sym->is_inlinable = 0;
             return result_normal;
         }
 
         if (inline_analyse_callable_eligibility(context, node, sym, 0, 0, &eligibility) != INLINE_ELIGIBILITY_OK) {
             inline_debug_log_eligibility_reject(context, node, sym, &eligibility);
-            inline_remap_debug_result(context, &inline_remap_structural_eligibility_rule, node, sym, "rejected");
+            inline_remap_debug_result(context, rxcp_inline_structural_eligibility_rule(), node, sym, "rejected");
             sym->is_inlinable = 0;
             return result_normal;
         }
@@ -5296,7 +4558,7 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
                          eligibility.check.return_count,
                          eligibility.return_shape.final_is_return,
                          INLINE_MAX_NODES);
-        inline_remap_debug_result(context, &inline_remap_structural_eligibility_rule, node, sym, "accepted");
+        inline_remap_debug_result(context, rxcp_inline_structural_eligibility_rule(), node, sym, "accepted");
         sym->is_inlinable = 1;
         sym->ast_template = node;
     }
@@ -5307,6 +4569,8 @@ int rxcp_inline_pass(Context *context) {
     InlineWalkerPayload payload;
 
     if (!context || !context->ast) return 0;
+
+    rxcp_inline_maybe_print_rule_summary(context);
 
     context->current_scope = 0;
     ast_wlkr(context->ast, identify_inlinable_walker, (void *)context);
