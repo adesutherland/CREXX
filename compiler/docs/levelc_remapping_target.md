@@ -511,13 +511,14 @@ example looks scalar. Classic observability is the guard.
 
 ### Current Tracer Status
 
-As of the inline rule catalog split, steps 2 and 3 are implemented and the four
-current call-site inline buckets are represented as selector-backed rules in
-`compiler/rxcp_inline_rules.c`. The shared clone, actual-binding, return
-rewrite, receiver-copyback, and imported-template machinery is still represented
-as inline service boundaries rather than fully generic remap services. That is
-the next extraction point before Level C lowering should depend on these
-helpers.
+As of the inline rule catalog and service-runner split, steps 2 and 3 are
+implemented and the four current call-site inline buckets are represented as
+selector-backed rules in `compiler/rxcp_inline_rules.c`. Structural eligibility,
+actual binding, callee-body cloning, return rewriting, and receiver copyback
+are now explicit service boundaries executed through `rxcp_remap_run_service`.
+Their internals remain inline-specific; the next extraction point is a
+Level C-neutral builder/materialisation helper layer for generated scopes,
+temps, source anchors, assignment construction, and capture-once rewrites.
 
 This path gives a real safety net. The inliner has existing positive and
 negative tests, source/import cases, and opt/noopt runtime comparisons. Passing

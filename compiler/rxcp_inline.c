@@ -186,6 +186,48 @@ void inline_remap_debug_result(Context *context,
             rule->priority);
 }
 
+static const char *inline_remap_hook_enter_rule(const char *rule_id, void *user_data) {
+    (void)user_data;
+    return inline_debug_push_remap_rule(rule_id);
+}
+
+static void inline_remap_hook_leave_rule(const char *previous_rule_id, void *user_data) {
+    (void)user_data;
+    inline_debug_pop_remap_rule(previous_rule_id);
+}
+
+static void inline_remap_hook_trace_result(Context *context,
+                                           const RxcpRemapRule *rule,
+                                           ASTNode *site,
+                                           Symbol *symbol,
+                                           const char *outcome,
+                                           void *user_data) {
+    (void)user_data;
+    inline_remap_debug_result(context, rule, site, symbol, outcome);
+}
+
+const RxcpRemapHooks *rxcp_inline_remap_hooks(void) {
+    static const RxcpRemapHooks hooks = {
+        inline_remap_hook_enter_rule,
+        inline_remap_hook_leave_rule,
+        inline_remap_hook_trace_result,
+        NULL
+    };
+
+    return &hooks;
+}
+
+const RxcpRemapHooks *rxcp_inline_remap_trace_hooks(void) {
+    static const RxcpRemapHooks hooks = {
+        NULL,
+        NULL,
+        inline_remap_hook_trace_result,
+        NULL
+    };
+
+    return &hooks;
+}
+
 static void inline_export_debug_reject(Context *context,
                                        ASTNode *site,
                                        Symbol *proc_sym,
@@ -2172,11 +2214,18 @@ static int inline_initialise_factory_instance(Context *context,
     return 1;
 }
 
-static int inline_append_method_receiver_copyback(Context *context,
-                                                  ASTNode *instr_list,
-                                                  Scope *inline_scope,
-                                                  ASTNode *source_node,
-                                                  InlineCloneState *clone_state) {
+typedef struct {
+    ASTNode *instr_list;
+    Scope *inline_scope;
+    ASTNode *source_node;
+    InlineCloneState *clone_state;
+} InlineReceiverCopybackService;
+
+static int inline_append_method_receiver_copyback_impl(Context *context,
+                                                       ASTNode *instr_list,
+                                                       Scope *inline_scope,
+                                                       ASTNode *source_node,
+                                                       InlineCloneState *clone_state) {
     ASTNode *copy_lhs;
     ASTNode *copy_rhs;
     ASTNode *value_copy;
@@ -2206,6 +2255,44 @@ static int inline_append_method_receiver_copyback(Context *context,
 
     add_ast(instr_list, value_copy);
     return 1;
+}
+
+static int inline_receiver_copyback_service(Context *context, void *payload) {
+    InlineReceiverCopybackService *service;
+
+    service = (InlineReceiverCopybackService *)payload;
+    if (!service) return 0;
+
+    return inline_append_method_receiver_copyback_impl(context,
+                                                       service->instr_list,
+                                                       service->inline_scope,
+                                                       service->source_node,
+                                                       service->clone_state);
+}
+
+static int inline_append_method_receiver_copyback(Context *context,
+                                                  ASTNode *instr_list,
+                                                  Scope *inline_scope,
+                                                  ASTNode *source_node,
+                                                  InlineCloneState *clone_state) {
+    InlineReceiverCopybackService service;
+    RxcpRemapResult result;
+    Symbol *symbol;
+
+    service.instr_list = instr_list;
+    service.inline_scope = inline_scope;
+    service.source_node = source_node;
+    service.clone_state = clone_state;
+    symbol = clone_state ? clone_state->method_receiver_source_symbol : NULL;
+
+    result = rxcp_remap_run_service(context,
+                                    rxcp_inline_receiver_copyback_rule(),
+                                    source_node,
+                                    symbol,
+                                    inline_receiver_copyback_service,
+                                    &service,
+                                    rxcp_inline_remap_trace_hooks());
+    return result == RXCP_REMAP_APPLIED;
 }
 
 static ASTNode *inline_build_dynamic_varg_value(Context *context,
@@ -2383,13 +2470,22 @@ static ASTNode *inline_build_dynamic_varg_exists(Context *context,
     return block_expr;
 }
 
-static int inline_bind_call_arguments(Context *context,
-                                      ASTNode *instr_list,
-                                      Scope *inline_scope,
-                                      ASTNode *proc_def,
-                                      ASTNode *call_node,
-                                      Symbol *proc_sym,
-                                      InlineCloneState *clone_state) {
+typedef struct {
+    ASTNode *instr_list;
+    Scope *inline_scope;
+    ASTNode *proc_def;
+    ASTNode *call_node;
+    Symbol *proc_sym;
+    InlineCloneState *clone_state;
+} InlineBindActualsService;
+
+static int inline_bind_call_arguments_impl(Context *context,
+                                           ASTNode *instr_list,
+                                           Scope *inline_scope,
+                                           ASTNode *proc_def,
+                                           ASTNode *call_node,
+                                           Symbol *proc_sym,
+                                           InlineCloneState *clone_state) {
     ASTNode *param_list;
     ASTNode *param_arg;
     ASTNode *actual_arg;
@@ -2400,11 +2496,6 @@ static int inline_bind_call_arguments(Context *context,
     size_t actual_index;
 
 #define INLINE_BIND_RETURN(value) do { \
-    inline_remap_debug_result(context, \
-                              rxcp_inline_bind_actuals_rule(), \
-                              call_node, \
-                              proc_sym, \
-                              (value) ? "applied" : "rejected"); \
     free(captured_scoped_actuals); \
     return (value); \
 } while (0)
@@ -2580,6 +2671,48 @@ static int inline_bind_call_arguments(Context *context,
 
     INLINE_BIND_RETURN(1);
 #undef INLINE_BIND_RETURN
+}
+
+static int inline_bind_call_arguments_service(Context *context, void *payload) {
+    InlineBindActualsService *service;
+
+    service = (InlineBindActualsService *)payload;
+    if (!service) return 0;
+
+    return inline_bind_call_arguments_impl(context,
+                                           service->instr_list,
+                                           service->inline_scope,
+                                           service->proc_def,
+                                           service->call_node,
+                                           service->proc_sym,
+                                           service->clone_state);
+}
+
+static int inline_bind_call_arguments(Context *context,
+                                      ASTNode *instr_list,
+                                      Scope *inline_scope,
+                                      ASTNode *proc_def,
+                                      ASTNode *call_node,
+                                      Symbol *proc_sym,
+                                      InlineCloneState *clone_state) {
+    InlineBindActualsService service;
+    RxcpRemapResult result;
+
+    service.instr_list = instr_list;
+    service.inline_scope = inline_scope;
+    service.proc_def = proc_def;
+    service.call_node = call_node;
+    service.proc_sym = proc_sym;
+    service.clone_state = clone_state;
+
+    result = rxcp_remap_run_service(context,
+                                    rxcp_inline_bind_actuals_rule(),
+                                    call_node,
+                                    proc_sym,
+                                    inline_bind_call_arguments_service,
+                                    &service,
+                                    rxcp_inline_remap_trace_hooks());
+    return result == RXCP_REMAP_APPLIED;
 }
 
 static int inline_append_scope_map_entry(InlineCloneState *state, Scope *old_scope, Scope *new_scope) {
@@ -2859,6 +2992,42 @@ static ASTNode *inline_clone_subtree_in_scope(Context *context,
 static ASTNode *inline_clone_subtree(Context *context, ASTNode *node, InlineCloneState *state) {
     if (!state) return ast_dup_subtree(context, node);
     return inline_clone_subtree_in_scope(context, node, state, state->inline_scope);
+}
+
+typedef struct {
+    ASTNode *source;
+    InlineCloneState *clone_state;
+    ASTNode *cloned;
+} InlineCloneBodyService;
+
+static int inline_clone_body_instruction_service(Context *context, void *payload) {
+    InlineCloneBodyService *service;
+
+    service = (InlineCloneBodyService *)payload;
+    if (!service || !service->source || !service->clone_state) return 0;
+
+    service->cloned = inline_clone_subtree(context, service->source, service->clone_state);
+    return service->cloned != NULL;
+}
+
+static ASTNode *inline_clone_body_instruction(Context *context,
+                                              ASTNode *source,
+                                              InlineCloneState *clone_state) {
+    InlineCloneBodyService service;
+    RxcpRemapResult result;
+
+    service.source = source;
+    service.clone_state = clone_state;
+    service.cloned = NULL;
+
+    result = rxcp_remap_run_service(context,
+                                    rxcp_inline_clone_body_rule(),
+                                    source,
+                                    NULL,
+                                    inline_clone_body_instruction_service,
+                                    &service,
+                                    rxcp_inline_remap_trace_hooks());
+    return result == RXCP_REMAP_APPLIED ? service.cloned : NULL;
 }
 
 static void inline_disconnect_subtree_symbols(ASTNode *node) {
@@ -3448,13 +3617,22 @@ static ASTNode *inline_create_receiver_copyback_leave_wrapper(Context *context,
     return wrapper;
 }
 
-static int inline_rewrite_return_nodes(Context *context,
-                                       ASTNode **node_ref,
-                                       ASTNode *block_expr,
-                                       Scope *inline_scope,
-                                       int allow_dummy_return,
-                                       ValueType proc_type,
-                                       InlineCloneState *clone_state) {
+typedef struct {
+    ASTNode **node_ref;
+    ASTNode *block_expr;
+    Scope *inline_scope;
+    int allow_dummy_return;
+    ValueType proc_type;
+    InlineCloneState *clone_state;
+} InlineReturnRewriteService;
+
+static int inline_rewrite_return_nodes_impl(Context *context,
+                                            ASTNode **node_ref,
+                                            ASTNode *block_expr,
+                                            Scope *inline_scope,
+                                            int allow_dummy_return,
+                                            ValueType proc_type,
+                                            InlineCloneState *clone_state) {
     ASTNode *node;
     ASTNode *child;
     ASTNode *next_child;
@@ -3467,13 +3645,13 @@ static int inline_rewrite_return_nodes(Context *context,
     child = node->child;
     while (child) {
         next_child = child->sibling;
-        if (!inline_rewrite_return_nodes(context,
-                                         &child,
-                                         block_expr,
-                                         inline_scope,
-                                         allow_dummy_return,
-                                         proc_type,
-                                         clone_state)) {
+        if (!inline_rewrite_return_nodes_impl(context,
+                                              &child,
+                                              block_expr,
+                                              inline_scope,
+                                              allow_dummy_return,
+                                              proc_type,
+                                              clone_state)) {
             return 0;
         }
         child = next_child;
@@ -3512,6 +3690,50 @@ static int inline_rewrite_return_nodes(Context *context,
     }
 
     return 1;
+}
+
+static int inline_rewrite_return_nodes_service(Context *context, void *payload) {
+    InlineReturnRewriteService *service;
+
+    service = (InlineReturnRewriteService *)payload;
+    if (!service) return 0;
+
+    return inline_rewrite_return_nodes_impl(context,
+                                            service->node_ref,
+                                            service->block_expr,
+                                            service->inline_scope,
+                                            service->allow_dummy_return,
+                                            service->proc_type,
+                                            service->clone_state);
+}
+
+static int inline_rewrite_return_nodes(Context *context,
+                                       ASTNode **node_ref,
+                                       ASTNode *block_expr,
+                                       Scope *inline_scope,
+                                       int allow_dummy_return,
+                                       ValueType proc_type,
+                                       InlineCloneState *clone_state) {
+    InlineReturnRewriteService service;
+    RxcpRemapResult result;
+    ASTNode *site;
+
+    service.node_ref = node_ref;
+    service.block_expr = block_expr;
+    service.inline_scope = inline_scope;
+    service.allow_dummy_return = allow_dummy_return;
+    service.proc_type = proc_type;
+    service.clone_state = clone_state;
+    site = node_ref ? *node_ref : NULL;
+
+    result = rxcp_remap_run_service(context,
+                                    rxcp_inline_return_rewrite_rule(),
+                                    site,
+                                    NULL,
+                                    inline_rewrite_return_nodes_service,
+                                    &service,
+                                    rxcp_inline_remap_trace_hooks());
+    return result == RXCP_REMAP_APPLIED;
 }
 
 static ASTNode *inline_build_block_expr(Context *context,
@@ -3595,7 +3817,7 @@ static ASTNode *inline_build_block_expr(Context *context,
     while (proc_instr) {
         ASTNode *cloned_instr;
 
-        cloned_instr = inline_clone_subtree(context, proc_instr, &clone_state);
+        cloned_instr = inline_clone_body_instruction(context, proc_instr, &clone_state);
         if (!cloned_instr) {
             inline_debug_fail_closed(context, call_node, proc_sym, "failed to clone callee instruction subtree");
             inline_free_symbol_map(&clone_state);
@@ -3804,7 +4026,7 @@ static int ast_inline_statement(Context *context,
         } else {
             ASTNode *cloned_instr;
 
-            cloned_instr = inline_clone_subtree(context, proc_instr, &clone_state);
+            cloned_instr = inline_clone_body_instruction(context, proc_instr, &clone_state);
             if (!cloned_instr) {
                 inline_debug_fail_closed(context, call_node, proc_sym, "failed to clone statement instruction subtree");
                 inline_free_symbol_map(&clone_state);
@@ -4511,6 +4733,47 @@ static void inline_export_debug_eligibility_reject(Context *context,
     inline_export_debug_reject(context, callable, symbol, "inline eligibility analysis failed");
 }
 
+typedef struct {
+    ASTNode *node;
+    Symbol *symbol;
+} InlineStructuralEligibilityService;
+
+static int inline_structural_eligibility_service(Context *context, void *payload) {
+    InlineStructuralEligibilityService *service;
+    InlineEligibility eligibility;
+    ASTNode *node;
+    Symbol *sym;
+
+    service = (InlineStructuralEligibilityService *)payload;
+    if (!service || !service->node || !service->symbol) return 0;
+
+    node = service->node;
+    sym = service->symbol;
+
+    if (inline_proc_has_procedure_expose(node)) {
+        inline_debug_log(context, node, sym, "DEBUG_INLINE",
+                         "reject: procedure-level EXPOSE is not inlineable");
+        sym->is_inlinable = 0;
+        return 0;
+    }
+
+    if (inline_analyse_callable_eligibility(context, node, sym, 0, 0, &eligibility) != INLINE_ELIGIBILITY_OK) {
+        inline_debug_log_eligibility_reject(context, node, sym, &eligibility);
+        sym->is_inlinable = 0;
+        return 0;
+    }
+
+    inline_debug_log(context, node, sym, "DEBUG_INLINE",
+                     "accept: nodes=%d returns=%d final_return=%d cutoff=%d",
+                     eligibility.check.node_count,
+                     eligibility.check.return_count,
+                     eligibility.return_shape.final_is_return,
+                     INLINE_MAX_NODES);
+    sym->is_inlinable = 1;
+    sym->ast_template = node;
+    return 1;
+}
+
 /* Walker to identify inlinable procedures */
 walker_result identify_inlinable_walker(walker_direction direction, ASTNode *node, void *payload) {
     Context *context = (Context *)payload;
@@ -4521,7 +4784,7 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
         node->node_type == METHOD ||
         node->node_type == FACTORY) {
         Symbol *sym;
-        InlineEligibility eligibility;
+        InlineStructuralEligibilityService service;
 
         sym = node->symbolNode ? node->symbolNode->symbol : NULL;
         if (sym && sym->is_inlinable && inline_symbol_has_callable_template(sym) &&
@@ -4537,30 +4800,15 @@ walker_result identify_inlinable_walker(walker_direction direction, ASTNode *nod
             return result_normal;
         }
 
-        if (inline_proc_has_procedure_expose(node)) {
-            inline_debug_log(context, node, sym, "DEBUG_INLINE",
-                             "reject: procedure-level EXPOSE is not inlineable");
-            inline_remap_debug_result(context, rxcp_inline_structural_eligibility_rule(), node, sym, "rejected");
-            sym->is_inlinable = 0;
-            return result_normal;
-        }
-
-        if (inline_analyse_callable_eligibility(context, node, sym, 0, 0, &eligibility) != INLINE_ELIGIBILITY_OK) {
-            inline_debug_log_eligibility_reject(context, node, sym, &eligibility);
-            inline_remap_debug_result(context, rxcp_inline_structural_eligibility_rule(), node, sym, "rejected");
-            sym->is_inlinable = 0;
-            return result_normal;
-        }
-
-        inline_debug_log(context, node, sym, "DEBUG_INLINE",
-                         "accept: nodes=%d returns=%d final_return=%d cutoff=%d",
-                         eligibility.check.node_count,
-                         eligibility.check.return_count,
-                         eligibility.return_shape.final_is_return,
-                         INLINE_MAX_NODES);
-        inline_remap_debug_result(context, rxcp_inline_structural_eligibility_rule(), node, sym, "accepted");
-        sym->is_inlinable = 1;
-        sym->ast_template = node;
+        service.node = node;
+        service.symbol = sym;
+        (void)rxcp_remap_run_service(context,
+                                     rxcp_inline_structural_eligibility_rule(),
+                                     node,
+                                     sym,
+                                     inline_structural_eligibility_service,
+                                     &service,
+                                     rxcp_inline_remap_trace_hooks());
     }
     return result_normal;
 }

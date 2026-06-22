@@ -15,6 +15,27 @@ static const RxcpRemapRule inline_remap_bind_actuals_rule = RXCP_REMAP_RULE_SERV
     100
 );
 
+static const RxcpRemapRule inline_remap_clone_body_rule = RXCP_REMAP_RULE_SERVICE(
+    "inline.clone.body",
+    "inline.expand",
+    "callee-instruction-subtree",
+    110
+);
+
+static const RxcpRemapRule inline_remap_return_rewrite_rule = RXCP_REMAP_RULE_SERVICE(
+    "inline.return.rewrite",
+    "inline.expand",
+    "cloned-return-nodes",
+    120
+);
+
+static const RxcpRemapRule inline_remap_receiver_copyback_rule = RXCP_REMAP_RULE_SERVICE(
+    "inline.receiver.copyback",
+    "inline.expand",
+    "mutating-method-receiver",
+    130
+);
+
 static const RxcpRemapRule inline_remap_structural_eligibility_rule = RXCP_REMAP_RULE_SERVICE(
     "inline.eligibility.structural",
     "inline.identify",
@@ -28,6 +49,18 @@ const RxcpRemapRule *rxcp_inline_bind_actuals_rule(void) {
 
 const RxcpRemapRule *rxcp_inline_structural_eligibility_rule(void) {
     return &inline_remap_structural_eligibility_rule;
+}
+
+const RxcpRemapRule *rxcp_inline_clone_body_rule(void) {
+    return &inline_remap_clone_body_rule;
+}
+
+const RxcpRemapRule *rxcp_inline_return_rewrite_rule(void) {
+    return &inline_remap_return_rewrite_rule;
+}
+
+const RxcpRemapRule *rxcp_inline_receiver_copyback_rule(void) {
+    return &inline_remap_receiver_copyback_rule;
 }
 
 static int inline_bind_rhs_eager_operator_proc_symbol(Context *context,
@@ -151,14 +184,33 @@ static int inline_rewrite_call_statement(Context *context, const RxcpRemapMatch 
     return ast_inline_call(context, stmt, call_node, match->symbol);
 }
 
+typedef struct {
+    const RxcpRemapRule *rule;
+    const RxcpRemapMatch *match;
+} InlineRewriteService;
+
+static int inline_run_rewrite_steps(Context *context, void *payload) {
+    InlineRewriteService *service;
+    size_t i;
+
+    service = (InlineRewriteService *)payload;
+    if (!service || !service->rule || !service->rule->rewrites || !service->match) return 0;
+
+    for (i = 0; service->rule->rewrites[i].fn; i++) {
+        if (!service->rule->rewrites[i].fn(context, service->match)) return 0;
+    }
+
+    return 1;
+}
+
 static RxcpRemapResult inline_remap_apply_selector_rule(const RxcpRemapRule *rule,
                                                         Context *context,
                                                         InlineWalkerPayload *payload,
                                                         ASTNode *node) {
     RxcpRemapMatch match;
     ASTNode *debug_site;
-    const char *previous_rule;
-    int rewritten;
+    InlineRewriteService rewrite_service;
+    RxcpRemapResult result;
     size_t i;
 
     if (!rule || !rule->selector || !node) return RXCP_REMAP_NO_MATCH;
@@ -184,29 +236,22 @@ static RxcpRemapResult inline_remap_apply_selector_rule(const RxcpRemapRule *rul
         }
     }
 
-    previous_rule = inline_debug_push_remap_rule(rule->id);
-    rewritten = 0;
-    if (rule->rewrites) {
-        rewritten = 1;
-        for (i = 0; rule->rewrites[i].fn; i++) {
-            if (!rule->rewrites[i].fn(context, &match)) {
-                rewritten = 0;
-                break;
-            }
-        }
-    }
-    inline_debug_pop_remap_rule(previous_rule);
-
     debug_site = rxcp_remap_debug_site(rule, &match);
+    rewrite_service.rule = rule;
+    rewrite_service.match = &match;
+    result = rxcp_remap_run_service(context,
+                                    rule,
+                                    debug_site,
+                                    match.symbol,
+                                    inline_run_rewrite_steps,
+                                    &rewrite_service,
+                                    rxcp_inline_remap_hooks());
 
-    if (rewritten) {
+    if (result == RXCP_REMAP_APPLIED) {
         if (payload) payload->changed = 1;
-        inline_remap_debug_result(context, rule, debug_site, match.symbol, "applied");
-        return RXCP_REMAP_APPLIED;
     }
 
-    inline_remap_debug_result(context, rule, debug_site, match.symbol, "rejected");
-    return RXCP_REMAP_REJECTED;
+    return result;
 }
 
 /* Rule model example:
@@ -474,6 +519,9 @@ void rxcp_inline_print_rule_summary(FILE *out) {
     fprintf(out, "  service-boundaries:\n");
     inline_summary_print_rule(out, &inline_remap_structural_eligibility_rule);
     inline_summary_print_rule(out, &inline_remap_bind_actuals_rule);
+    inline_summary_print_rule(out, &inline_remap_clone_body_rule);
+    inline_summary_print_rule(out, &inline_remap_return_rewrite_rule);
+    inline_summary_print_rule(out, &inline_remap_receiver_copyback_rule);
     fprintf(out, "  callsite-rules:\n");
     for (i = 0; i < sizeof(inline_remap_rules) / sizeof(inline_remap_rules[0]); i++) {
         inline_summary_print_rule(out, &inline_remap_rules[i]);

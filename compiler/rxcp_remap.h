@@ -87,6 +87,22 @@ typedef RxcpRemapResult (*RxcpRemapApplyFn)(const struct RxcpRemapRule *rule,
 typedef int (*RxcpRemapBindFn)(Context *context, RxcpRemapMatch *match);
 typedef int (*RxcpRemapGuardFn)(Context *context, const RxcpRemapMatch *match);
 typedef int (*RxcpRemapRewriteFn)(Context *context, const RxcpRemapMatch *match);
+typedef int (*RxcpRemapServiceFn)(Context *context, void *payload);
+typedef const char *(*RxcpRemapEnterRuleFn)(const char *rule_id, void *user_data);
+typedef void (*RxcpRemapLeaveRuleFn)(const char *previous_rule_id, void *user_data);
+typedef void (*RxcpRemapTraceFn)(Context *context,
+                                 const struct RxcpRemapRule *rule,
+                                 ASTNode *site,
+                                 Symbol *symbol,
+                                 const char *outcome,
+                                 void *user_data);
+
+typedef struct {
+    RxcpRemapEnterRuleFn enter_rule;
+    RxcpRemapLeaveRuleFn leave_rule;
+    RxcpRemapTraceFn trace_result;
+    void *user_data;
+} RxcpRemapHooks;
 
 typedef struct {
     const char *id;
@@ -176,6 +192,13 @@ int rxcp_remap_run_selector(const RxcpRemapSelectorStep *selector,
                             RxcpRemapMatch *match);
 ASTNode *rxcp_remap_capture_node(const RxcpRemapMatch *match, const char *name);
 ASTNode *rxcp_remap_debug_site(const RxcpRemapRule *rule, const RxcpRemapMatch *match);
+RxcpRemapResult rxcp_remap_run_service(Context *context,
+                                       const RxcpRemapRule *rule,
+                                       ASTNode *site,
+                                       Symbol *symbol,
+                                       RxcpRemapServiceFn service,
+                                       void *payload,
+                                       const RxcpRemapHooks *hooks);
 size_t rxcp_remap_bind_step_count(const RxcpRemapRule *rule);
 size_t rxcp_remap_guard_step_count(const RxcpRemapRule *rule);
 size_t rxcp_remap_rewrite_step_count(const RxcpRemapRule *rule);

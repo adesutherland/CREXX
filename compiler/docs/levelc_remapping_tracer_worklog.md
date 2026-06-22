@@ -509,3 +509,102 @@ separate inline rule catalog. The active call-site inlining rules can be read
 directly from `rxcp_inline_rules.c` or printed with
 `RXCP_INLINE_RULE_SUMMARY=1`, which is the first useful maintainer-facing view
 of the remapping approach.
+
+## 2026-06-22: Shared Service Runner
+
+### Goal
+
+Move inline service boundaries onto shared remap machinery. The previous rule
+catalog showed the service descriptors, but each service still owned its own
+ad-hoc trace and result handling. This stage adds one remap service runner and
+uses it for both selector rewrites and inline expansion services.
+
+### Implemented Shape
+
+`compiler/rxcp_remap.h/.c` now provides:
+
+- `RxcpRemapServiceFn`
+- `RxcpRemapHooks`
+- `rxcp_remap_run_service(...)`
+
+The runner owns the common service lifecycle:
+
+1. optionally enter an active rule id
+2. call the service body
+3. optionally leave the active rule id
+4. trace `applied` or `rejected`
+5. return `RXCP_REMAP_APPLIED` or `RXCP_REMAP_REJECTED`
+
+Inline provides two hook sets:
+
+- `rxcp_inline_remap_hooks()`: enter/leave plus trace, used where active
+  rule-id context already existed for rewrites.
+- `rxcp_inline_remap_trace_hooks()`: trace only, used for service boundaries
+  where wrapping regular `DEBUG_INLINE` text would change existing diagnostics.
+
+### Service Boundaries
+
+The printed inline summary now includes these service rules:
+
+1. `inline.eligibility.structural`
+2. `inline.bind.actuals`
+3. `inline.clone.body`
+4. `inline.return.rewrite`
+5. `inline.receiver.copyback`
+
+The first two were already descriptors; the latter three are now represented
+and exercised through the shared runner at the safe top-level service calls.
+General subtree cloning remains a utility because it is used for many purposes;
+only callee instruction subtree cloning is labelled `inline.clone.body`.
+
+### Replay Steps
+
+1. Add `RxcpRemapHooks`, `RxcpRemapServiceFn`, and
+   `rxcp_remap_run_service(...)`.
+2. Add inline hook adapters for active-rule enter/leave and remap tracing.
+3. Route selector rewrite execution through `rxcp_remap_run_service(...)`.
+4. Split `inline_bind_call_arguments()` into a service wrapper and unchanged
+   implementation body.
+5. Split structural eligibility into a service body and runner call.
+6. Add and wire service descriptors for body clone, return rewrite, and
+   receiver copyback.
+7. Add those service descriptors to `RXCP_INLINE_RULE_SUMMARY=1`.
+
+### Issues And Resolutions
+
+- Full enter/leave hooks around structural eligibility would have changed
+  existing `DEBUG_INLINE` golden output by adding active rule ids. Used
+  trace-only service hooks for expansion/eligibility services and kept full
+  hooks for selector rewrites, preserving existing diagnostics.
+- Body cloning is intentionally scoped to callee instruction subtree cloning.
+  Other `inline_clone_subtree(...)` calls remain ordinary mechanics until a
+  second remap family proves they are generic materialisation services.
+
+### Verification
+
+Green stop for implementation stage 7:
+
+- `cmake --build cmake-build-release --target rxc --parallel 4`
+  - result: passed
+- `RXCP_INLINE_RULE_SUMMARY=1 cmake-build-release/bin/rxc -i cmake-build-release/bin -o /tmp/inline_service_summary_probe compiler/tests/rexx_src/inline_test_composed_expr_contexts.crexx`
+  - result: passed
+  - observed service boundaries for eligibility, actual binding, body clone,
+    return rewrite, and receiver copyback
+- Temp-log wrapped `cmake-build-release/bin/rxc -i cmake-build-release/bin -d2 -o /tmp/inline_service_debug compiler/tests/rexx_src/inline_test_composed_expr_contexts.crexx`
+  - result: passed
+  - observed `inline.bind.actuals`, `inline.clone.body`, and
+    `inline.return.rewrite` service traces
+- Temp-log wrapped `cmake-build-release/bin/rxc -i cmake-build-release/bin -d2 -o /tmp/inline_copyback_debug compiler/tests/rexx_src/inline_test_class_methods.crexx`
+  - result: passed
+  - observed `inline.receiver.copyback` service traces
+- `ctest --test-dir cmake-build-release -R '16_classes|address_inline_then|address_exit_extended' --output-on-failure`
+  - result: 3/3 passed
+- `ctest --test-dir cmake-build-release -R 'inline|Inline' --output-on-failure`
+  - result: 254/254 passed
+
+### Stage 7 Result
+
+The remap layer now has shared service execution, and the inliner uses it for
+the current rule rewrites plus the main expansion services. This gives Level C
+a concrete place to plug in future lowering services without depending on
+inline-only trace mechanics.

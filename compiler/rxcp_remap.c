@@ -190,6 +190,40 @@ ASTNode *rxcp_remap_debug_site(const RxcpRemapRule *rule,
     return site ? site : match->root;
 }
 
+RxcpRemapResult rxcp_remap_run_service(Context *context,
+                                       const RxcpRemapRule *rule,
+                                       ASTNode *site,
+                                       Symbol *symbol,
+                                       RxcpRemapServiceFn service,
+                                       void *payload,
+                                       const RxcpRemapHooks *hooks) {
+    const char *previous_rule;
+    int applied;
+
+    if (!rule || !service) return RXCP_REMAP_REJECTED;
+
+    previous_rule = NULL;
+    if (hooks && hooks->enter_rule) {
+        previous_rule = hooks->enter_rule(rule->id, hooks->user_data);
+    }
+
+    applied = service(context, payload);
+
+    if (hooks && hooks->leave_rule) {
+        hooks->leave_rule(previous_rule, hooks->user_data);
+    }
+    if (hooks && hooks->trace_result) {
+        hooks->trace_result(context,
+                            rule,
+                            site,
+                            symbol,
+                            applied ? "applied" : "rejected",
+                            hooks->user_data);
+    }
+
+    return applied ? RXCP_REMAP_APPLIED : RXCP_REMAP_REJECTED;
+}
+
 size_t rxcp_remap_bind_step_count(const RxcpRemapRule *rule) {
     size_t count;
 

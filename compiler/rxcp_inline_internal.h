@@ -134,6 +134,8 @@ void inline_remap_debug_result(Context *context,
                                ASTNode *site,
                                Symbol *proc_sym,
                                const char *outcome);
+const RxcpRemapHooks *rxcp_inline_remap_hooks(void);
+const RxcpRemapHooks *rxcp_inline_remap_trace_hooks(void);
 
 int inline_node_is_inlineable_call(ASTNode *node, Symbol **proc_sym_out);
 int inline_rhs_eager_operator_needs_left_capture(ASTNode *node);
@@ -151,6 +153,9 @@ RxcpRemapResult rxcp_inline_apply_remap_rules(Context *context,
                                               ASTNode *node);
 const RxcpRemapRule *rxcp_inline_bind_actuals_rule(void);
 const RxcpRemapRule *rxcp_inline_structural_eligibility_rule(void);
+const RxcpRemapRule *rxcp_inline_clone_body_rule(void);
+const RxcpRemapRule *rxcp_inline_return_rewrite_rule(void);
+const RxcpRemapRule *rxcp_inline_receiver_copyback_rule(void);
 void rxcp_inline_print_rule_summary(FILE *out);
 void rxcp_inline_maybe_print_rule_summary(Context *context);
 
