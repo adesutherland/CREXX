@@ -1986,6 +1986,23 @@ add_test(NAME inline_local_member_scalar_opt
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(inline_local_member_scalar_opt PROPERTIES LABELS "linked_opt")
 
+set(INLINE_COMPUTED_RECEIVER_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_inline_test_computed_receiver_copyback_opt_rewrites.cmake")
+set(INLINE_COMPUTED_RECEIVER_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/inline_test_computed_receiver_copyback_opt_ws\")\n")
+string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
+string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy_if_different \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/inline_test_computed_receiver_copyback.crexx\" \"\${work}/inline_test_computed_receiver_copyback.crexx\" RESULT_VARIABLE res)\n")
+string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"Failed to stage computed receiver inline test\")\nendif()\n")
+string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"inline_test_computed_receiver_copyback\" \"\${work}/inline_test_computed_receiver_copyback.crexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on computed receiver inline test: \${out}\")\nendif()\n")
+string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "file(READ \"\${work}/inline_test_computed_receiver_copyback.rxas\" main_rxas)\n")
+string(APPEND INLINE_COMPUTED_RECEIVER_CONTENT "if(main_rxas MATCHES [=[call [^\\n]*inline_test_computed_receiver_copyback\\.box\\.setandreport\\(\\)]=])\n  message(FATAL_ERROR \"Optimized computed receiver test still calls setAndReport():\\n\${main_rxas}\")\nendif()\n")
+file(GENERATE OUTPUT "${INLINE_COMPUTED_RECEIVER_SCRIPT}" CONTENT "${INLINE_COMPUTED_RECEIVER_CONTENT}")
+
+add_test(NAME inline_test_computed_receiver_copyback_opt_rewrites
+         COMMAND ${CMAKE_COMMAND} -P "${INLINE_COMPUTED_RECEIVER_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(inline_test_computed_receiver_copyback_opt_rewrites PROPERTIES LABELS "linked_opt")
+
 add_crexx_run_args_test(test_parse_arg_filename rexx_src/test_parse_arg_filename.crexx demo.rexx)
 add_crexx_run_args_test(implicit_main_arg_compat rexx_src/implicit_main_arg_compat.crexx alpha beta)
 add_crexx_run_args_test(arg_compat_no_vargs rexx_src/arg_compat_no_vargs.crexx alpha beta)
@@ -2082,6 +2099,7 @@ add_crexx_run_test(inline_test_loop_bound_expr rexx_src/inline_test_loop_bound_e
 add_crexx_run_test(inline_test_member_receiver_expr rexx_src/inline_test_member_receiver_expr.crexx)
 add_crexx_run_test(inline_test_named_factory_selector rexx_src/inline_test_named_factory_selector.crexx)
 add_crexx_run_test(inline_test_factory_arg_scope rexx_src/inline_test_factory_arg_scope.crexx)
+add_crexx_run_test(inline_test_computed_receiver_copyback rexx_src/inline_test_computed_receiver_copyback.crexx)
 add_crexx_run_test(inline_test_ref_opt rexx_src/inline_test_ref_opt.crexx)
 add_crexx_run_test(inline_test_ref_indexed rexx_src/inline_test_ref_indexed.crexx)
 add_crexx_run_test(inline_test_ref_stem rexx_src/inline_test_ref_stem.crexx)

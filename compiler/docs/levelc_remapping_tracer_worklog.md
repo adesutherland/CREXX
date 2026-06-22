@@ -786,3 +786,105 @@ The remap substrate now has a first neutral builder/materialisation layer. The
 inliner is still the proving client, but generated tree surgery is no longer
 encoded only as inline-specific helper names. This is the bridge needed before
 Level C lowering can share the same compiler-owned AST construction mechanics.
+
+## Stage 10 - Captured-Locator Receiver Copyback
+
+### Intent
+
+Use the new remap/builder machinery for a class-priority extension that is
+small enough to prove: local mutating method inlining when a simple whole-RHS
+assignment calls through a computed variable-like receiver, for example:
+
+```rexx
+saved = items[pickIndex()].setAndReport("changed")
+```
+
+The required behaviour is:
+
+1. evaluate the receiver locator children exactly once;
+2. bind the selected receiver object into the callee's inline `§this`;
+3. run the cloned mutating method body;
+4. deliver the return value to the assignment target; and
+5. copy the mutated receiver object back through the same captured locator.
+
+### Framework Lessons
+
+This was a useful framework test because the selector alone was not the hard
+part. The reusable unit is a proof/materialisation pattern:
+
+- target shape: a variable-like receiver with locator children;
+- guard: local mutating method, simple statement-owned rewrite, supported
+  receiver target, and no imported non-direct method receiver;
+- capture: evaluate locator children into generated temps before argument
+  binding;
+- materialise: build `§this` from the captured locator;
+- writeback: assign the mutated receiver object back through the same captured
+  locator;
+- boundary: leave general expression-position and receiver-producing copyback
+  closed until each parent bucket has an explicit liveness/copyback proof.
+
+For Level C remapping, this suggests the shared framework should grow a small
+library of named semantic obligations, not only tree selectors:
+
+- `capture-locator-once`
+- `materialise-selected-value`
+- `writeback-through-captured-locator`
+- `statement-owned-value-delivery`
+- `expression-owned-leave-with-delivery`
+
+Those names are more reusable than inline-specific names such as "method
+receiver copyback", and they describe exactly what a reader needs to audit.
+
+### Implementation Notes
+
+- Extended `InlineCloneState` with one embedded receiver-copyback locator entry.
+- Reused the existing by-reference actual locator capture shape for receiver
+  locator children.
+- Captured receiver locator children before method argument binding so later
+  argument expressions cannot change which receiver slot gets written back.
+- Reused the captured locator when a scoped-argument receiver capture is needed,
+  avoiding double evaluation of receiver children.
+- Kept general expression-position mutating method copyback closed; the new
+  path is a statement-owned rewrite path.
+
+### Replay Steps
+
+1. Add a fixture that assigns the result of a mutating method called through a
+   computed receiver and verifies the stored receiver changed.
+2. Add an optimized-output assertion that the mutating method call is gone.
+3. Extend the inline clone state with an embedded captured-locator entry for
+   receiver copyback.
+4. Capture computed receiver locator children before argument binding.
+5. Bind `§this` from the captured locator and append copyback through the same
+   captured locator.
+6. Open the assignment/statement call-site guard from "direct receiver" to
+   "supported receiver" while keeping expression-position copyback direct-only.
+
+### Verification
+
+Green stop for implementation stage 10:
+
+- `cmake --build cmake-build-release --target rxc rxas rxvm --parallel 4`
+  - result: passed
+- direct optimized fixture probe for
+  `inline_test_computed_receiver_copyback.crexx`
+  - result: `setAndReport()` call removed from main RXAS; runtime output
+    matched `changed`, `one`, `changed`
+- direct function-index receiver probe using
+  `items[pickIndex()].setAndReport("changed")`
+  - result: `setAndReport()` call removed; runtime output matched
+- `ctest --test-dir cmake-build-release -R 'inline_test_computed_receiver_copyback' --output-on-failure`
+  - result: passed, 3/3 tests
+- `ctest --test-dir cmake-build-release -R 'inline_test_class_methods|inline_local_member_scalar|inline_test_member_receiver_expr|inline_test_object_writable_arg|inline_test_object_expr_arg' --output-on-failure`
+  - result: passed, 17/17 tests
+- `ctest --test-dir cmake-build-release -R 'inline|Inline' --output-on-failure`
+  - result: passed, 257/257 tests
+- `ctest --test-dir cmake-build-release -R '16_classes|address_inline_then|address_exit_extended' --output-on-failure`
+  - result: passed, 3/3 tests
+- `RXCP_INLINE_RULE_SUMMARY=1 cmake-build-release/bin/rxc -i cmake-build-release/bin -o /tmp/computed_receiver_summary_probe compiler/tests/rexx_src/inline_test_computed_receiver_copyback.crexx`
+  - result: passed; summary still prints service boundaries and selector rules
+- `git diff --check`
+  - result: passed
+- `rg -n '[[:blank:]]$' <touched-files>`
+  - result: reported pre-existing whitespace in `compiler/tests/CMakeLists.txt`;
+    `git diff --check` confirmed no new whitespace errors

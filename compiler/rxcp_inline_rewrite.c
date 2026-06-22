@@ -913,9 +913,9 @@ int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_
     }
     if (method_needs_receiver_copyback &&
         proc_def->node_type == METHOD &&
-        !inline_is_direct_receiver_copyback_target(inline_call_receiver(call_node))) {
+        !inline_is_supported_receiver_copyback_target(inline_call_receiver(call_node))) {
         inline_debug_fail_closed(context, call_node, proc_sym,
-                                 "mutating method assignment inline requires a direct receiver copyback target");
+                                 "mutating method assignment inline requires a supported receiver copyback target");
         return 0;
     }
     if (!return_shape.final_is_return || return_shape.return_count == 0) {
@@ -990,9 +990,9 @@ int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Sy
     }
     if (method_needs_receiver_copyback &&
         proc_def->node_type == METHOD &&
-        !inline_is_direct_receiver_copyback_target(inline_call_receiver(call_node))) {
+        !inline_is_supported_receiver_copyback_target(inline_call_receiver(call_node))) {
         inline_debug_fail_closed(context, call_node, proc_sym,
-                                 "mutating method call inline requires a direct receiver copyback target");
+                                 "mutating method call inline requires a supported receiver copyback target");
         return 0;
     }
     if ((proc_sym->type == TP_VOID && (return_shape.return_count != 1 || !return_shape.final_is_return)) ||

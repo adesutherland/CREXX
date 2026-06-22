@@ -59,7 +59,9 @@ typedef struct {
     Symbol *varg_array_symbol;
     Symbol *method_receiver_source_symbol;
     Symbol *method_receiver_local_symbol;
+    InlineRefActualEntry method_receiver_copyback_entry;
     int method_receiver_needs_copyback;
+    int method_receiver_uses_locator_copyback;
 } InlineCloneState;
 
 typedef struct {

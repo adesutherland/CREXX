@@ -383,6 +383,9 @@ static void inline_free_symbol_map(InlineCloneState *state) {
         }
         free(state->varg_ref_entries);
     }
+    if (state->method_receiver_copyback_entry.captured_symbols) {
+        free(state->method_receiver_copyback_entry.captured_symbols);
+    }
     if (state->varg_symbols) free(state->varg_symbols);
     state->symbol_entries = NULL;
     state->symbol_count = 0;
@@ -395,4 +398,9 @@ static void inline_free_symbol_map(InlineCloneState *state) {
     state->varg_ref_entries = NULL;
     state->varg_symbols = NULL;
     state->varg_count = 0;
+    memset(&state->method_receiver_copyback_entry, 0, sizeof(state->method_receiver_copyback_entry));
+    state->method_receiver_source_symbol = NULL;
+    state->method_receiver_local_symbol = NULL;
+    state->method_receiver_needs_copyback = 0;
+    state->method_receiver_uses_locator_copyback = 0;
 }

@@ -23,6 +23,13 @@ static ASTNode *inline_clone_subtree_in_scope(Context *context,
                                               ASTNode *node,
                                               InlineCloneState *state,
                                               Scope *current_scope);
+static ASTNode *inline_clone_captured_locator(Context *context,
+                                              ASTNode *source_node,
+                                              Scope *current_scope,
+                                              InlineRefActualEntry *entry,
+                                              NodeType node_type,
+                                              unsigned int read_usage,
+                                              unsigned int write_usage);
 static ASTNode *inline_create_temp_value_ref(Context *context,
                                              ASTNode *instr_list,
                                              Scope *inline_scope,

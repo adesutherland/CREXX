@@ -359,6 +359,17 @@ static int inline_is_direct_receiver_copyback_target(ASTNode *node) {
     return !inline_symbol_is_class_attribute(node->symbolNode->symbol);
 }
 
+static int inline_is_locator_receiver_copyback_target(ASTNode *node) {
+    if (!inline_is_supported_ref_actual(node)) return 0;
+    if (!node->child) return 0;
+    return !inline_symbol_is_class_attribute(node->symbolNode->symbol);
+}
+
+static int inline_is_supported_receiver_copyback_target(ASTNode *node) {
+    return inline_is_direct_receiver_copyback_target(node) ||
+           inline_is_locator_receiver_copyback_target(node);
+}
+
 static int inline_is_direct_single_value_consumer(ASTNode *node) {
     ASTNode *parent;
 
@@ -754,7 +765,17 @@ static Symbol *inline_capture_method_receiver_for_scoped_args(Context *context,
                                             VAR_TARGET,
                                             0,
                                             1);
-    capture_rhs = inline_clone_subtree_in_scope(context, receiver, clone_state, caller_scope);
+    if (clone_state->method_receiver_uses_locator_copyback) {
+        capture_rhs = inline_clone_captured_locator(context,
+                                                    receiver,
+                                                    caller_scope,
+                                                    &clone_state->method_receiver_copyback_entry,
+                                                    VAR_SYMBOL,
+                                                    1,
+                                                    0);
+    } else {
+        capture_rhs = inline_clone_subtree_in_scope(context, receiver, clone_state, caller_scope);
+    }
     if (!capture_lhs || !capture_rhs) return NULL;
 
     add_ast(capture_assign, capture_lhs);
@@ -1170,6 +1191,59 @@ static ASTNode *inline_clone_ref_varg_actual(Context *context,
     return replacement;
 }
 
+static ASTNode *inline_clone_captured_locator(Context *context,
+                                              ASTNode *source_node,
+                                              Scope *current_scope,
+                                              InlineRefActualEntry *entry,
+                                              NodeType node_type,
+                                              unsigned int read_usage,
+                                              unsigned int write_usage) {
+    ASTNode *replacement;
+    ASTNode *source_child;
+    ASTNode *shape_source;
+    size_t child_index;
+
+    if (!context || !current_scope || !entry || !entry->actual_source) return NULL;
+
+    shape_source = source_node ? source_node : entry->actual_source;
+    replacement = ast_dup(context, entry->actual_source);
+    if (!replacement) return NULL;
+
+    replacement->node_type = node_type;
+    replacement->scope = current_scope;
+
+    if (entry->actual_source->symbolNode && entry->actual_source->symbolNode->symbol) {
+        sym_adnd(entry->actual_source->symbolNode->symbol,
+                 replacement,
+                 read_usage,
+                 write_usage);
+    }
+
+    source_child = entry->actual_source->child;
+    child_index = 0;
+    while (source_child) {
+        ASTNode *captured_ref;
+
+        if (child_index >= entry->captured_count || !entry->captured_symbols[child_index]) return NULL;
+
+        captured_ref = rxcp_remap_create_symbol_node(context,
+                                                 current_scope,
+                                                 source_child,
+                                                 entry->captured_symbols[child_index],
+                                                 VAR_SYMBOL,
+                                                 1,
+                                                 0);
+        if (!captured_ref) return NULL;
+
+        add_ast(replacement, captured_ref);
+        source_child = source_child->sibling;
+        child_index++;
+    }
+
+    inline_copy_replacement_semantics(replacement, shape_source);
+    return replacement;
+}
+
 static int inline_capture_ref_entry(Context *context,
                                     ASTNode *instr_list,
                                     Scope *inline_scope,
@@ -1229,6 +1303,38 @@ static int inline_capture_ref_entry(Context *context,
         child_index++;
     }
 
+    return 1;
+}
+
+static int inline_prepare_method_receiver_copyback(Context *context,
+                                                   ASTNode *instr_list,
+                                                   Scope *inline_scope,
+                                                   ASTNode *proc_def,
+                                                   ASTNode *call_node,
+                                                   InlineCloneState *clone_state) {
+    ASTNode *receiver;
+
+    if (!context || !instr_list || !inline_scope || !proc_def || !call_node || !clone_state) return 0;
+    if (proc_def->node_type != METHOD) return 1;
+    if (!inline_method_writes_class_attribute(proc_def)) return 1;
+
+    receiver = inline_call_receiver(call_node);
+    if (!receiver) return 0;
+    if (inline_is_direct_receiver_copyback_target(receiver)) return 1;
+    if (!inline_is_locator_receiver_copyback_target(receiver)) return 0;
+
+    if (!inline_capture_ref_entry(context,
+                                  instr_list,
+                                  inline_scope,
+                                  receiver,
+                                  clone_state,
+                                  &clone_state->method_receiver_copyback_entry,
+                                  "__inline_receiver_ref")) {
+        return 0;
+    }
+
+    clone_state->method_receiver_source_symbol = receiver->symbolNode->symbol;
+    clone_state->method_receiver_uses_locator_copyback = 1;
     return 1;
 }
 
@@ -1678,6 +1784,7 @@ static int inline_bind_method_receiver(Context *context,
     ASTNode *assign_node;
     ASTNode *assign_lhs;
     ASTNode *assign_rhs;
+    int method_needs_receiver_copyback;
 
     if (!context || !instr_list || !inline_scope || !proc_def || !call_node || !clone_state) return 0;
     if (proc_def->node_type != METHOD) return 1;
@@ -1687,6 +1794,7 @@ static int inline_bind_method_receiver(Context *context,
 
     this_symbol = inline_find_instance_symbol(proc_def, clone_state);
     if (!this_symbol) return 0;
+    method_needs_receiver_copyback = inline_method_writes_class_attribute(proc_def);
 
     assign_node = rxcp_remap_create_assignment_node(context, inline_scope, receiver, receiver);
     if (!assign_node) return 0;
@@ -1706,6 +1814,14 @@ static int inline_bind_method_receiver(Context *context,
                                                VAR_SYMBOL,
                                                1,
                                                0);
+    } else if (clone_state->method_receiver_uses_locator_copyback) {
+        assign_rhs = inline_clone_captured_locator(context,
+                                                   receiver,
+                                                   inline_scope,
+                                                   &clone_state->method_receiver_copyback_entry,
+                                                   VAR_SYMBOL,
+                                                   1,
+                                                   0);
     } else {
         assign_rhs = inline_clone_subtree(context, receiver, clone_state);
     }
@@ -1715,10 +1831,18 @@ static int inline_bind_method_receiver(Context *context,
     add_ast(assign_node, assign_rhs);
     add_ast(instr_list, assign_node);
 
-    if (inline_method_writes_class_attribute(proc_def) &&
+    if (method_needs_receiver_copyback &&
         inline_is_direct_receiver_copyback_target(receiver) &&
         receiver->symbolNode &&
         receiver->symbolNode->symbol) {
+        clone_state->method_receiver_source_symbol = receiver->symbolNode->symbol;
+        clone_state->method_receiver_local_symbol = this_symbol;
+        clone_state->method_receiver_needs_copyback = 1;
+        clone_state->method_receiver_uses_locator_copyback = 0;
+    } else if (method_needs_receiver_copyback &&
+               clone_state->method_receiver_uses_locator_copyback &&
+               receiver->symbolNode &&
+               receiver->symbolNode->symbol) {
         clone_state->method_receiver_source_symbol = receiver->symbolNode->symbol;
         clone_state->method_receiver_local_symbol = this_symbol;
         clone_state->method_receiver_needs_copyback = 1;
@@ -1819,10 +1943,42 @@ static int inline_append_method_receiver_copyback_impl(Context *context,
     ASTNode *copy_lhs;
     ASTNode *copy_rhs;
     ASTNode *value_copy;
+    ASTNode *copy_assign;
+    InlineRefActualEntry *receiver_entry;
 
     if (!context || !instr_list || !inline_scope || !source_node || !clone_state) return 0;
     if (!clone_state->method_receiver_needs_copyback) return 1;
     if (!clone_state->method_receiver_source_symbol || !clone_state->method_receiver_local_symbol) return 0;
+
+    if (clone_state->method_receiver_uses_locator_copyback) {
+        receiver_entry = &clone_state->method_receiver_copyback_entry;
+        if (!receiver_entry->actual_source) return 0;
+
+        copy_assign = rxcp_remap_create_assignment_node(context,
+                                                        inline_scope,
+                                                        receiver_entry->actual_source,
+                                                        receiver_entry->actual_source);
+        copy_lhs = inline_clone_captured_locator(context,
+                                                 receiver_entry->actual_source,
+                                                 inline_scope,
+                                                 receiver_entry,
+                                                 VAR_TARGET,
+                                                 0,
+                                                 1);
+        copy_rhs = rxcp_remap_create_symbol_node(context,
+                                             inline_scope,
+                                             source_node,
+                                             clone_state->method_receiver_local_symbol,
+                                             VAR_SYMBOL,
+                                             1,
+                                             0);
+        if (!copy_assign || !copy_lhs || !copy_rhs) return 0;
+
+        add_ast(copy_assign, copy_lhs);
+        add_ast(copy_assign, copy_rhs);
+        add_ast(instr_list, copy_assign);
+        return 1;
+    }
 
     copy_lhs = rxcp_remap_create_symbol_node(context,
                                          inline_scope,
@@ -2070,6 +2226,14 @@ static int inline_bind_call_arguments_impl(Context *context,
     actual_index = 0;
 
     if (!inline_call_arity_matches(call_node, proc_sym, NULL)) INLINE_BIND_RETURN(0);
+    if (!inline_prepare_method_receiver_copyback(context,
+                                                 instr_list,
+                                                 inline_scope,
+                                                 proc_def,
+                                                 call_node,
+                                                 clone_state)) {
+        INLINE_BIND_RETURN(0);
+    }
     if (!inline_capture_scoped_call_actuals(context,
                                             instr_list,
                                             inline_scope,
