@@ -162,9 +162,9 @@ Candidate lowering rule:
 - Preserve source provenance so diagnostics and source-step metadata still point
   at authored Classic REXX clauses.
 
-The first proposed executable lowering slice is documented in
-`compiler/docs/levelc_remapping_target.md` under "Proposed First Level C
-Lowering Slice". It deliberately opens only pool setup, direct scalar
+The first executable lowering slice is documented in
+`compiler/docs/levelc_remapping_target.md` under "First Level C Lowering
+Slice". It deliberately opens only pool setup, direct scalar
 assignment/read, `RexxValue` literals, binary `+`, and `SAY expression`, while
 leaving all other Level C compile inputs on the existing unsupported diagnostic.
 
@@ -1710,9 +1710,10 @@ Level C parse/instruction completion slice on 2026-05-12:
   `RXC-LC-IMPLICIT_ADDRESS`. String-literal command clauses remain clean, which
   preserves common Classic REXX command-program style while making likely typos
   such as `SEY value` visible in DSLSH.
-- This remains parser/highlighter work only. Normal compilation of Level C still
-  stops outside parser mode with a diagnostic that Level C is currently
-  supported only for DSLSH syntax highlighting.
+- At this historical point this remained parser/highlighter work only. The
+  later first execution-lowering tracer deliberately opens only the narrow
+  slice documented in `levelc_remapping_target.md`; all other Level C compile
+  inputs still stop with the unsupported diagnostic.
 
 Regression tests added or widened for this slice:
 

@@ -1039,3 +1039,94 @@ Green stop for implementation stage 12:
     return-wrapper move case
 - `git diff --check`
   - result: passed
+
+## Stage 13 - Level B Baseline And First Level C Lowering Slice
+
+### Goal
+
+Open the first executable Level C tracer slice by following the baseline-first
+discipline: write and prove the conceptual Level B target shape, then make a
+small accepted Level C program materialise the same runtime-backed shape through
+the remap builder and normal compiler pipeline.
+
+### Implemented Shape
+
+The checked-in baseline program is
+`compiler/tests/rexx_src/levelc_slice1_target_shape.crexx`. It imports
+`rexxvalue` and `rexxpool`, creates a `RexxVariablePool`, performs scalar
+pool writes/reads, uses `RexxValue.add()`, and prints through `asString()`.
+
+The accepted Level C fixture is
+`compiler/tests/rexx_src/levelc_slice1_pool_say.rexx`:
+
+```rexx
+options levelc
+
+a = 1
+b = a + 2
+say b
+```
+
+`compiler/rxcp_levelc_lower.[ch]` now accepts only this slice family:
+
+- direct top-level scalar assignment;
+- direct scalar read;
+- string and integer literal materialisation as `RexxValue`;
+- binary `+` through `RexxValue.add()`;
+- `SAY` through `asString()`.
+
+Everything outside that shape still emits the existing unsupported Level C
+compile diagnostic. The unsupported compile fixture now uses `PARSE ARG` so it
+remains deliberately outside the slice.
+
+### Replay Steps
+
+1. Add the Level B target-shape runtime fixture and CTest helper that compiles,
+   assembles, and runs it through `rxvm`.
+2. Add neutral remap-builder constructors for literals, imports, `NOVAL`,
+   factory calls, member calls, and ignored-result call statements.
+3. Add `rxcp_levelc_lower.[ch]` with fail-closed slice acceptance, expression
+   lowering, statement lowering, hidden pool setup, and Level B-shaped options.
+4. Change the `LEVELC` branch in `rxcpmain.c` to parse with `rexcpars()`,
+   prepare the Level C source tree, reject parse diagnostics before lowering,
+   lower only accepted slice trees, and otherwise print the existing
+   unsupported diagnostic.
+5. Add the Level C positive runtime fixture and keep the unsupported fixture
+   negative.
+6. Update the Level C remapping, syntax-highlighting, and working-architecture
+   docs so they describe the narrow executable slice rather than saying all
+   normal Level C compilation is unsupported.
+
+### Issues And Resolutions
+
+- `-d2` tree probing of the accepted Level C fixture reaches existing debug
+  AST/symbol validation on imported `rxfnsc`/classlib metadata and reports
+  imported scope mismatches before the user program can complete. The program
+  compiles and runs normally, and `-d1` still prints `STAGE_RAW` and
+  `STAGE_LEVELC_LOWERED` without invoking that imported-scope checker. Use
+  `-d1` for this slice's lowered-tree inspection until the imported debug
+  validation issue is separately addressed.
+- The old `levelc_compile_unsupported` fixture was a single `SAY`, which is now
+  inside the accepted slice. Moving it to `PARSE ARG` preserves the test's
+  intent: unsupported Level C compile inputs still fail closed.
+
+### Verification
+
+Green stop for implementation stage 13:
+
+- `cmake --build cmake-build-release --target rxc rxas rxvm rxfnsc --parallel 4`
+  - result: passed
+- `ctest --test-dir cmake-build-release -R '^(levelc_slice1_target_shape|levelc_slice1_pool_say|levelc_compile_unsupported)$' --output-on-failure`
+  - result: 3/3 passed
+- `cmake-build-release/bin/rxc -i cmake-build-release/bin -d1 -o /tmp/levelc_slice1_pool_say_debug compiler/tests/rexx_src/levelc_slice1_pool_say.rexx`
+  - result: passed; `STAGE_LEVELC_LOWERED` contains `REXX_OPTIONS`,
+    `IMPORT`, `RexxVariablePool`, `RexxValue`, `setValue`, `value`, `add`, and
+    `asString`, with no residual Level C-only instruction nodes
+- `ctest --test-dir cmake-build-release -R '^(syntaxhighlight_levelc|levelc_)' --output-on-failure`
+  - result: 54/54 passed
+- `ctest --test-dir cmake-build-release -R 'inline|Inline' --output-on-failure`
+  - result: 257/257 passed
+- `RXCP_INLINE_RULE_SUMMARY=1 cmake-build-release/bin/rxc -i cmake-build-release/bin -o /tmp/levelc_remap_summary_probe compiler/tests/rexx_src/inline_test_computed_receiver_copyback.crexx`
+  - result: passed; existing inline selector/service summaries still print
+- `git diff --check`
+  - result: passed

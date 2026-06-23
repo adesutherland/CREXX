@@ -73,6 +73,28 @@ ASTNode *rxcp_remap_create_integer_constant(Context *context,
 ASTNode *rxcp_remap_create_string_constant(Context *context,
                                            ASTNode *source_node,
                                            const char *value);
+ASTNode *rxcp_remap_create_literal(Context *context,
+                                   ASTNode *source_node,
+                                   const char *value);
+ASTNode *rxcp_remap_create_import(Context *context,
+                                  ASTNode *source_node,
+                                  const char *namespace_name);
+ASTNode *rxcp_remap_create_noval(Context *context,
+                                 ASTNode *source_node);
+ASTNode *rxcp_remap_create_factory_call(Context *context,
+                                        ASTNode *source_node,
+                                        const char *class_name,
+                                        ASTNode **args,
+                                        size_t arg_count);
+ASTNode *rxcp_remap_create_member_call(Context *context,
+                                       ASTNode *source_node,
+                                       ASTNode *receiver,
+                                       const char *method_name,
+                                       ASTNode **args,
+                                       size_t arg_count);
+ASTNode *rxcp_remap_create_call_statement(Context *context,
+                                          ASTNode *source_node,
+                                          ASTNode *call_expr);
 ASTNode *rxcp_remap_create_assembler_instr(Context *context,
                                            Scope *scope,
                                            ASTNode *source_node,

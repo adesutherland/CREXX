@@ -3100,6 +3100,66 @@ add_test(NAME levelc_compile_unsupported
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(levelc_compile_unsupported PROPERTIES LABELS "compiler;levelc")
 
+function(add_levelc_runtime_slice_test NAME SOURCE_FILE EXPECTED_OUTPUT)
+    set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
+    set(SCRIPT_CONTENT "")
+
+    string(APPEND SCRIPT_CONTENT
+           "execute_process(\n"
+           "    COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"${NAME}\" \"${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}\"\n"
+           "    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+           "    OUTPUT_VARIABLE rxc_out\n"
+           "    ERROR_VARIABLE rxc_err\n"
+           "    RESULT_VARIABLE rxc_res\n"
+           ")\n"
+           "set(full_out \"${RXAS_DIAG_DOLLAR}{rxc_out}${RXAS_DIAG_DOLLAR}{rxc_err}\")\n"
+           "if(NOT rxc_res EQUAL 0)\n"
+           "  message(FATAL_ERROR \"rxc failed for ${NAME}.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+           "endif()\n")
+    string(APPEND SCRIPT_CONTENT
+           "execute_process(\n"
+           "    COMMAND \"$<TARGET_FILE:rxas>\" -o \"${NAME}.rxbin\" \"${NAME}\"\n"
+           "    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+           "    OUTPUT_VARIABLE rxas_out\n"
+           "    ERROR_VARIABLE rxas_err\n"
+           "    RESULT_VARIABLE rxas_res\n"
+           ")\n"
+           "set(full_out \"${RXAS_DIAG_DOLLAR}{full_out}${RXAS_DIAG_DOLLAR}{rxas_out}${RXAS_DIAG_DOLLAR}{rxas_err}\")\n"
+           "if(NOT rxas_res EQUAL 0)\n"
+           "  message(FATAL_ERROR \"rxas failed for ${NAME}.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+           "endif()\n")
+    string(APPEND SCRIPT_CONTENT
+           "execute_process(\n"
+           "    COMMAND \"$<TARGET_FILE:rxvm>\" \"${NAME}.rxbin\" \"${CMAKE_BINARY_DIR}/bin/library\" \"${CMAKE_BINARY_DIR}/bin/classlib\" \"${CMAKE_BINARY_DIR}/bin/rxfnsc\"\n"
+           "    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+           "    OUTPUT_VARIABLE rxvm_out\n"
+           "    ERROR_VARIABLE rxvm_err\n"
+           "    RESULT_VARIABLE rxvm_res\n"
+           ")\n"
+           "set(full_out \"${RXAS_DIAG_DOLLAR}{full_out}${RXAS_DIAG_DOLLAR}{rxvm_out}${RXAS_DIAG_DOLLAR}{rxvm_err}\")\n"
+           "string(REPLACE \"\\r\\n\" \"\\n\" rxvm_out \"${RXAS_DIAG_DOLLAR}{rxvm_out}\")\n"
+           "if(NOT rxvm_res EQUAL 0)\n"
+           "  message(FATAL_ERROR \"rxvm failed for ${NAME}.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+           "endif()\n"
+           "if(NOT rxvm_out STREQUAL \"${EXPECTED_OUTPUT}\")\n"
+           "  message(FATAL_ERROR \"Unexpected runtime output for ${NAME}.\\nExpected:\\n${EXPECTED_OUTPUT}\\nActual:\\n${RXAS_DIAG_DOLLAR}{rxvm_out}\\nFull output:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+           "endif()\n")
+
+    file(GENERATE OUTPUT "${SCRIPT_FILE}" CONTENT "${SCRIPT_CONTENT}")
+    add_test(NAME ${NAME}
+             COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
+endfunction()
+
+add_levelc_runtime_slice_test(levelc_slice1_target_shape
+        rexx_src/levelc_slice1_target_shape.crexx
+        "3\n")
+
+add_levelc_runtime_slice_test(levelc_slice1_pool_say
+        rexx_src/levelc_slice1_pool_say.rexx
+        "3\n")
+
 # Bridge Connectivity Test
 add_custom_command(
         OUTPUT stub_plugin.rxbin

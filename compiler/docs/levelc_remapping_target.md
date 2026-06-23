@@ -509,12 +509,12 @@ example looks scalar. Classic observability is the guard.
    `SAY`, and one binary operator.
 7. Only then open broader Level C control flow and BIF lowering.
 
-## Proposed First Level C Lowering Slice
+## First Level C Lowering Slice
 
-Status: proposal for the next implementation slice. This is intentionally
-small, executable, and rollback-friendly. It should prove that Level C can
-enter the normal compiler pipeline through remapping without pretending that
-Classic REXX compilation is generally supported.
+Status: first executable tracer slice implemented. This is intentionally small
+and rollback-friendly. It proves that Level C can enter the normal compiler
+pipeline through remapping without pretending that Classic REXX compilation is
+generally supported.
 
 ### User-Visible Slice
 
@@ -610,38 +610,48 @@ The first implementation can express these as C descriptors and helper
 functions, following the inline selector-table style. The selector array does
 not need to become an external DSL for this slice.
 
-### New Shared Builder Commands Needed
+### New Shared Builder Commands Added
 
 The inlining tracer has already extracted generated scopes, temps, anchors,
 assignments, assembler instructions, capture-once patterns, and safe
-replacement helpers. Slice 1 will need a few more neutral remap-builder
-commands:
+replacement helpers. Slice 1 adds these neutral remap-builder commands:
 
-- create or ensure an import/runtime dependency;
-- create a hidden local symbol with a chosen runtime class shape;
+- create an import/runtime dependency node;
 - build a factory-style object construction expression such as
   `.RexxVariablePool()` or `.RexxValue(text)`;
 - build a method-call expression with an explicit receiver and arguments;
 - build a statement call when the result is ignored, for example
   `pool.setValue(name, value)`;
+- build literal and `NOVAL` helper nodes used by those shapes.
+
+Classic variable-pool policy remains in the Level C lowerer:
+
+- create the hidden pool variable name used by the generated top-level routine;
 - normalize a Level C symbol token to the runtime pool key while preserving the
   source anchor used for diagnostics;
-- reject unsupported residual Level C nodes with a stable rule/reason pair.
+- reject unsupported residual Level C nodes with a stable reason.
 
-These should live below the Level C policy layer, probably in the remap builder
-or a small Level C lowering builder that uses it. If a helper is specific to
-Classic variable-pool semantics, keep the policy in Level C and keep only the
-AST construction primitive neutral.
+This split keeps generic AST construction under the remap builder while
+leaving Classic semantics in the Level C policy layer.
 
 ### Implementation Order
 
-1. Add a Level C lowering entry point, for example `rxcp_levelc_lower.[ch]`,
-   that runs after `rexcpars(context)` and before normal validation/emission.
+0. Keep a checked-in Level B baseline program that mimics the exact target
+   shape before enabling the Level C source that should lower to it. The
+   baseline is
+   `compiler/tests/rexx_src/levelc_slice1_target_shape.crexx`, and its CTest
+   smoke test compiles, assembles, and runs the runtime-backed target program.
+   Treat this as step zero for each later slice: write the target-shape
+   Level B-like program first, prove it runs, then make Level C materialise the
+   same conceptual shape.
+1. Add a Level C lowering entry point, `rxcp_levelc_lower.[ch]`, that runs
+   after `rexcpars(context)` and before normal validation/emission.
 2. Change the `LEVELC` branch in `rxcpmain.c` to parse with `rexcpars()`,
    then attempt the slice-1 lowering. If the accept rule rejects the tree,
    emit the existing unsupported diagnostic and fail exactly as today.
 3. Add the missing remap-builder commands for imports, runtime construction,
-   method calls, statement calls, and hidden pool symbol creation.
+   method calls, and statement calls. Keep hidden pool naming in the Level C
+   lowerer until another frontend needs the same policy.
 4. Implement the accept/reject walker first. It should return one stable
    rejection reason per unsupported node family.
 5. Implement expression lowering recursively for literals, direct variables,
@@ -658,6 +668,8 @@ AST construction primitive neutral.
 
 Minimum QA for this slice:
 
+- the Level B target-shape baseline remains green, proving the runtime helper
+  program that Level C intends to materialise is itself valid;
 - existing Level C DSLSH/syntax-highlighting tests remain green;
 - `levelc_compile_unsupported` still passes using an unsupported fixture;
 - a new `levelc_slice1_pool_say` compile/run fixture emits `3`;
@@ -677,8 +689,8 @@ normal compiler validation, normal optimiser/emitter, and executable VM output.
 
 ### Current Tracer Status
 
-As of the inline rule catalog and service-runner split, steps 2 and 3 are
-implemented and the four current call-site inline buckets are represented as
+As of the inline rule catalog and service-runner split, the four current
+call-site inline buckets are represented as
 selector-backed rules in `compiler/rxcp_inline_rules.c`. Structural eligibility,
 actual binding, callee-body cloning, return rewriting, and receiver copyback
 are now explicit service boundaries executed through `rxcp_remap_run_service`.
@@ -708,6 +720,16 @@ changed value back through the same locator. The inliner is the first client,
 but the API is intentionally under the remap layer so Level C lowering, other
 Rexx front ends, and future optimisation rewrites can use the same mechanics
 without depending on inline-specific policy.
+
+The first Level C lowering slice now lives in `compiler/rxcp_levelc_lower.c`
+and `compiler/rxcp_levelc_lower.h`. The normal compiler `LEVELC` branch parses
+with `rexcpars(context)`, prepares the Level C source tree and diagnostics,
+then attempts the slice-1 remap. Accepted programs are rewritten to a
+Level B-shaped work tree that imports `rexxvalue` and `rexxpool`, creates a
+hidden `RexxVariablePool`, lowers scalar assignments to `setValue`, lowers
+scalar reads to `value`, lowers literals to `RexxValue`, lowers binary `+` to
+`RexxValue.add`, and lowers `SAY` through `asString`. Rejected programs keep
+the existing unsupported Level C compilation diagnostic.
 
 This path gives a real safety net. The inliner has existing positive and
 negative tests, source/import cases, and opt/noopt runtime comparisons. Passing

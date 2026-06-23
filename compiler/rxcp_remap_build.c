@@ -290,6 +290,135 @@ ASTNode *rxcp_remap_create_string_constant(Context *context,
     return node;
 }
 
+ASTNode *rxcp_remap_create_literal(Context *context,
+                                   ASTNode *source_node,
+                                   const char *value) {
+    ASTNode *node;
+
+    if (!context || !source_node || !value) return NULL;
+
+    node = ast_ftt(context, LITERAL, strdup(value));
+    if (!node) return NULL;
+
+    node->free_node_string = 1;
+    rxcp_remap_anchor_synthetic(node, source_node);
+    return node;
+}
+
+ASTNode *rxcp_remap_create_import(Context *context,
+                                  ASTNode *source_node,
+                                  const char *namespace_name) {
+    ASTNode *node;
+    ASTNode *literal;
+
+    if (!context || !source_node || !namespace_name) return NULL;
+
+    node = ast_f(context, IMPORT, source_node->token);
+    if (!node) return NULL;
+    rxcp_remap_anchor_synthetic(node, source_node);
+
+    literal = rxcp_remap_create_literal(context, source_node, namespace_name);
+    if (!literal) return NULL;
+    add_ast(node, literal);
+    return node;
+}
+
+ASTNode *rxcp_remap_create_noval(Context *context,
+                                 ASTNode *source_node) {
+    ASTNode *node;
+
+    if (!context || !source_node) return NULL;
+
+    node = ast_ft(context, NOVAL);
+    if (!node) return NULL;
+
+    rxcp_remap_anchor_synthetic(node, source_node);
+    return node;
+}
+
+ASTNode *rxcp_remap_create_factory_call(Context *context,
+                                        ASTNode *source_node,
+                                        const char *class_name,
+                                        ASTNode **args,
+                                        size_t arg_count) {
+    ASTNode *node;
+    size_t i;
+
+    if (!context || !source_node || !class_name) return NULL;
+
+    node = ast_ftt(context, FACTORY_CALL, strdup(class_name));
+    if (!node) return NULL;
+
+    node->free_node_string = 1;
+    rxcp_remap_anchor_synthetic(node, source_node);
+
+    if (arg_count == 0) {
+        ASTNode *noval;
+
+        noval = rxcp_remap_create_noval(context, source_node);
+        if (!noval) return NULL;
+        add_ast(node, noval);
+    } else {
+        if (!args) return NULL;
+        for (i = 0; i < arg_count; i++) {
+            if (!args[i]) return NULL;
+            add_ast(node, args[i]);
+        }
+    }
+
+    return node;
+}
+
+ASTNode *rxcp_remap_create_member_call(Context *context,
+                                       ASTNode *source_node,
+                                       ASTNode *receiver,
+                                       const char *method_name,
+                                       ASTNode **args,
+                                       size_t arg_count) {
+    ASTNode *node;
+    size_t i;
+
+    if (!context || !source_node || !receiver || !method_name) return NULL;
+
+    node = ast_ftt(context, MEMBER_CALL, strdup(method_name));
+    if (!node) return NULL;
+
+    node->free_node_string = 1;
+    rxcp_remap_anchor_synthetic(node, source_node);
+    add_ast(node, receiver);
+
+    if (arg_count == 0) {
+        ASTNode *noval;
+
+        noval = rxcp_remap_create_noval(context, source_node);
+        if (!noval) return NULL;
+        add_ast(node, noval);
+    } else {
+        if (!args) return NULL;
+        for (i = 0; i < arg_count; i++) {
+            if (!args[i]) return NULL;
+            add_ast(node, args[i]);
+        }
+    }
+
+    return node;
+}
+
+ASTNode *rxcp_remap_create_call_statement(Context *context,
+                                          ASTNode *source_node,
+                                          ASTNode *call_expr) {
+    ASTNode *node;
+
+    if (!context || !source_node || !call_expr) return NULL;
+
+    node = ast_f(context, CALL, source_node->token);
+    if (!node) return NULL;
+
+    rxcp_remap_anchor_synthetic(node, source_node);
+    add_ast(node, call_expr);
+    return node;
+}
+
 ASTNode *rxcp_remap_create_assembler_instr(Context *context,
                                            Scope *scope,
                                            ASTNode *source_node,

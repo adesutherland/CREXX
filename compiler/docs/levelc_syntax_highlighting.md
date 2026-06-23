@@ -1,7 +1,8 @@
 # Level C Syntax Highlighting And Integration Plan
 
-Status: Milestone 1 syntax-highlighting baseline implemented
-Last updated: 2026-05-12
+Status: Milestone 1 syntax-highlighting baseline implemented; first narrow
+execution-lowering tracer implemented
+Last updated: 2026-06-23
 
 This document is the durable handoff for the current Level C Classic REXX
 front end. The working history and Classic extraction live in
@@ -12,18 +13,21 @@ highlighter-only parsing into canonical compiler integration.
 
 ## Scope
 
-The current Level C path is a parser-mode and syntax-highlighting front end:
+The main Level C path is a parser-mode and syntax-highlighting front end:
 
 - it parses Classic REXX source selected by `OPTIONS LEVELC` or parser-mode
   defaulting;
 - it builds the normal user-facing source tree used by DSLSH;
 - it emits syntax and syntax-adjacent diagnostics using stable `RXC-LC-*`
   identities;
-- it deliberately stops before canonical lowering, semantic execution support,
-  assembly, or VM execution.
+- it deliberately stops before broad canonical lowering, semantic execution
+  support, assembly, or VM execution.
 
-Normal `rxc` compilation of Level C remains unsupported. That is intentional
-until the tree-surgery/lowering stage exists and has its own verification.
+Normal `rxc` compilation of Level C remains unsupported except for the first
+explicit tracer slice documented in `levelc_remapping_target.md`: top-level
+direct scalar assignment/read, string/integer `RexxValue` literals, binary `+`,
+and `SAY`. Unsupported Level C compile inputs still fail with the existing
+unsupported diagnostic.
 
 ## Current Implementation Map
 
@@ -164,9 +168,10 @@ lower only the compiler work tree.
 Recommended sequence:
 
 1. Add a Level C-only lowering entry point, for example
-   `rxcp_levelc_lower_to_canonical(Context *)`, called only after parser-mode
-   validation is clean and only when normal compilation is intentionally
-   enabled for Level C.
+   `rxcp_levelc_lower_to_canonical(Context *)`, called only after Level C
+   source validation is clean and only when normal compilation is intentionally
+   enabled for that slice. The first implementation is
+   `rxcp_levelc_lower_slice1(Context *, const char **)`.
 2. Introduce a conservative Level C symbol/pool model before rewriting:
    routine scopes, active variable pools, stems, compound variables, parse
    targets, loop-control names, labels, and expose lists.
@@ -187,10 +192,9 @@ Recommended sequence:
    parent/child/sibling consistency after surgery, and keep source diagnostics
    reportable against authored clauses.
 5. Feed the lowered canonical work tree into the existing validation pipeline.
-   Level C should remain gated as unsupported until this pipeline is proven by
-   focused lowering tests and end-to-end compiler tests.
+   Level C remains gated as unsupported outside each proven slice.
 
-The first executable milestone should be narrow: a small Level C program with
-simple variables, `SAY`, `IF`, `DO`, `ARG`, and a string-literal ADDRESS command.
-After that, widen by statement family while keeping the syntax-highlighter
-fixtures as the static validation canary.
+The first executable milestone is deliberately narrower than the long-term
+goal: a small Level C program with simple scalar variables, `RexxValue`
+literals, binary `+`, and `SAY`. After that, widen by statement family while
+keeping the syntax-highlighter fixtures as the static validation canary.
