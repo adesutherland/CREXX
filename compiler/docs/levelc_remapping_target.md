@@ -624,6 +624,19 @@ replacement helpers. Slice 1 adds these neutral remap-builder commands:
   `pool.setValue(name, value)`;
 - build literal and `NOVAL` helper nodes used by those shapes.
 
+The procedure/expose slice adds more generated-tree building blocks in the
+same spirit. They are deliberately named as operations that could later become
+DSL commands:
+
+- build unary keyword expressions such as `reference value` and
+  `dereference value`;
+- build a generated local procedure/function call with explicit argument
+  materialisation;
+- build a canonical procedure header and `ARGS` block for a generated helper
+  routine;
+- materialise parent/child `RexxVariablePool` scopes and direct scalar
+  `exposeValue` aliases.
+
 Classic variable-pool policy remains in the Level C lowerer:
 
 - create the hidden pool variable name used by the generated top-level routine;
@@ -644,6 +657,9 @@ leaving Classic semantics in the Level C policy layer.
    Treat this as step zero for each later slice: write the target-shape
    Level B-like program first, prove it runs, then make Level C materialise the
    same conceptual shape.
+   When a future canonical target shape is not reachable through authored
+   Level B syntax, keep the target contract anyway as pseudo-code and make the
+   generated-tree debug probe the executable shape test.
 1. Add a Level C lowering entry point, `rxcp_levelc_lower.[ch]`, that runs
    after `rexcpars(context)` and before normal validation/emission.
 2. Change the `LEVELC` branch in `rxcpmain.c` to parse with `rexcpars()`,
@@ -687,7 +703,139 @@ This slice is useful even before optimisation. It proves the end-to-end path:
 Level C parser AST to remap rule selection, runtime-backed canonical AST,
 normal compiler validation, normal optimiser/emitter, and executable VM output.
 
-### Current Tracer Status
+## Second Level C Lowering Slice: PROCEDURE EXPOSE
+
+Status: implemented as the first variable-pool scope and aliasing tracer. This
+is the minimum slice that proves Classic `PROCEDURE EXPOSE` can be represented
+as generated canonical code rather than by mutating Level C nodes in place.
+
+### User-Visible Slice
+
+Accepted source shape:
+
+```rexx
+options levelc
+
+a = 1
+call change
+say a
+exit
+
+change:
+procedure expose a
+a = a + 2
+return
+```
+
+Expected output:
+
+```text
+3
+```
+
+Accepted restrictions:
+
+- local routines must be a `LABEL` immediately followed by `PROCEDURE`;
+- the top-level main segment must `EXIT` before the first local routine so
+  fall-through into generated helper procedures is impossible;
+- direct local `CALL` targets are supported only when they name one of the
+  planned local routines, and no call arguments are supported yet;
+- plain `PROCEDURE` and argument-bearing procedures remain outside this slice;
+- `PROCEDURE EXPOSE` supports only direct scalar names; stems, compound names
+  and indirect names remain outside this slice;
+- the procedure body may contain the same scalar assignment/read/add/SAY forms
+  as slice 1 and must end with a bare `RETURN`.
+
+### Conceptual Target
+
+The checked-in baseline program is
+`compiler/tests/rexx_src/levelc_slice2_procedure_expose_target_shape.crexx`.
+Its human-readable target contract is:
+
+```rexx
+options levelb comments_dash numeric_classic
+import rexxvalue
+import rexxpool
+
+__rxcp_levelc_pool = .RexxVariablePool()
+call __rxcp_levelc_pool.setValue("A", .RexxValue("1"))
+call __rxcp_levelc_proc_CHANGE(reference __rxcp_levelc_pool)
+say __rxcp_levelc_pool.value("A").asString()
+return
+
+__rxcp_levelc_proc_CHANGE: procedure
+  arg __rxcp_levelc_parent_pool_ref = reference .RexxVariablePool
+  __rxcp_levelc_parent_pool = dereference __rxcp_levelc_parent_pool_ref
+  __rxcp_levelc_pool = .RexxVariablePool()
+  call __rxcp_levelc_pool.exposeValue("A", reference __rxcp_levelc_parent_pool, "A")
+  call __rxcp_levelc_pool.setValue("A", __rxcp_levelc_pool.value("A").add(.RexxValue("2")))
+  return
+```
+
+Important target rules:
+
+- the caller passes the active variable pool by reference;
+- the generated procedure dereferences that parent pool, creates its own local
+  pool, and uses `exposeValue` to alias selected names back to the parent;
+- procedure body reads and writes continue to use the active generated
+  `__rxcp_levelc_pool`, so later body rules do not need to know whether a name
+  is local or exposed;
+- the generated helper procedure is canonical Level B shape after lowering,
+  even though the compiler currently builds that tree directly rather than
+  round-tripping through this text.
+
+### Rule Table
+
+| Rule id | Selector | Guard | Build |
+| --- | --- | --- | --- |
+| `levelc.procedure-plan.accept` | top-level `LABEL`, following `LEVELC_PROCEDURE`, and body segment | `PROCEDURE` has only supported direct scalar `EXPOSE` arguments; body ends in bare `RETURN`; duplicate labels rejected | Record a procedure slice with label, procedure node, body range, and normalized name |
+| `levelc.main.call-local` | `CALL target` in the main segment | target normalizes to a recorded procedure and has no arguments | Build ignored-result call to generated helper, passing `reference __rxcp_levelc_pool` |
+| `levelc.main.exit-before-routines` | main segment before first local routine | at least one bare `EXIT` exists when procedures are present | Lower `EXIT` to canonical `RETURN` so generated helper routines are not executed by fall-through |
+| `levelc.procedure.shell` | recorded procedure slice | generated name is unique and parent pool arg is available | Build canonical procedure header, typed `ARGS`, parent-pool dereference, and child-pool setup |
+| `levelc.procedure.expose.scalar` | each direct scalar expose target | name is not a stem/compound/indirect form | Build `__rxcp_levelc_pool.exposeValue(name, reference __rxcp_levelc_parent_pool, name)` |
+| `levelc.procedure.body` | supported body statements | same expression/statement guards as slice 1, plus final bare `RETURN` | Lower body statements against the generated child pool |
+
+### Acceptance Checks
+
+Minimum QA for this slice:
+
+- the Level B target-shape fixture
+  `levelc_slice2_procedure_expose_target_shape` emits `3`;
+- the Level C source fixture `levelc_slice2_procedure_expose` emits `3`;
+- `levelc_slice2_procedure_expose_unsupported` proves a near-miss procedure
+  layout without the main `EXIT` still fails closed;
+- `levelc_slice2_plain_procedure_unsupported` proves plain `PROCEDURE` is not
+  accidentally admitted by the expose-specific guard;
+- `levelc_slice2_procedure_expose_tree_shape` inspects the `-d1`
+  `STAGE_LEVELC_LOWERED` tree and checks for `PROCEDURE`, `ARGS`,
+  `OP_REFERENCE`, `OP_DEREFERENCE`, `RexxVariablePool`, `exposeValue`,
+  `setValue`, `value`, `add`, and `asString`, while rejecting residual
+  `LEVELC_*` nodes and the temporary builder-only `INSTRUCTIONS` wrapper.
+
+## Remapper Debugging Contract
+
+Tree-shape debugging is a first-class part of each slice, not an optional
+manual check. The preferred sequence is:
+
+1. Write the conceptual target as Level B-like code when that shape is
+   reachable and executable.
+2. If the canonical tree is not reachable through authored Level B syntax,
+   document the pseudo-target anyway and test the generated tree directly.
+3. Keep builder functions small and named by semantic action, so a later DSL
+   can map rules onto commands such as `materialise-parent-pool`,
+   `capture-locator-once`, `writeback-through-captured-locator`, or
+   `expose-scalar-alias`.
+4. Add a lowered-tree debug probe for every new accepted family. Runtime output
+   proves semantics; debug shape proves the remapper is creating the intended
+   tree.
+5. Keep unsupported near-misses as negative tests so the accepted language does
+   not widen accidentally.
+
+This means the target-shape fixture is a scaffold, not a constraint. The real
+contract is the canonical AST that the remapper builds and the downstream
+compiler accepts.
+
+## Current Tracer Status
 
 As of the inline rule catalog and service-runner split, the four current
 call-site inline buckets are represented as
@@ -721,15 +869,17 @@ but the API is intentionally under the remap layer so Level C lowering, other
 Rexx front ends, and future optimisation rewrites can use the same mechanics
 without depending on inline-specific policy.
 
-The first Level C lowering slice now lives in `compiler/rxcp_levelc_lower.c`
+The active Level C lowering tracer now lives in `compiler/rxcp_levelc_lower.c`
 and `compiler/rxcp_levelc_lower.h`. The normal compiler `LEVELC` branch parses
 with `rexcpars(context)`, prepares the Level C source tree and diagnostics,
-then attempts the slice-1 remap. Accepted programs are rewritten to a
+then attempts the fail-closed remap. Accepted programs are rewritten to a
 Level B-shaped work tree that imports `rexxvalue` and `rexxpool`, creates a
 hidden `RexxVariablePool`, lowers scalar assignments to `setValue`, lowers
 scalar reads to `value`, lowers literals to `RexxValue`, lowers binary `+` to
-`RexxValue.add`, and lowers `SAY` through `asString`. Rejected programs keep
-the existing unsupported Level C compilation diagnostic.
+`RexxValue.add`, lowers `SAY` through `asString`, and lowers the first local
+`CALL` plus `PROCEDURE EXPOSE` shape by passing a parent pool reference into a
+generated helper procedure. Rejected programs keep the existing unsupported
+Level C compilation diagnostic.
 
 This path gives a real safety net. The inliner has existing positive and
 negative tests, source/import cases, and opt/noopt runtime comparisons. Passing
@@ -762,6 +912,9 @@ For Level C lowering once enabled:
   reference where practical;
 - generated AST after lowering contains no unsupported `LEVELC_*` nodes for the
   accepted tracer subset;
+- lowered-tree debug probes assert the expected canonical shapes, especially
+  for generated procedures or other shapes that may not be easy to author
+  directly as Level B;
 - runtime tests cover `RexxValue`, `RexxStem`, `RexxVariablePool`, and
   `RexxClassicBifs` interactions used by the lowered code.
 
@@ -775,8 +928,8 @@ For Level C lowering once enabled:
   output versus a new remapping debug channel.
 - The exact hidden-symbol naming and sidecar representation for Level C
   variable pools, loop state, and procedure exposure.
-- The first approved Level C lowering subset that changes
-  `levelc_compile_unsupported`.
+- The durable name for the current `rxcp_levelc_lower_slice1()` entry point now
+  that it hosts multiple early tracer slices.
 - Which runtime helper calls should be treated as ordinary inline candidates
   and which should be protected as semantic boundaries.
 

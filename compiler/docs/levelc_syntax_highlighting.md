@@ -1,7 +1,7 @@
 # Level C Syntax Highlighting And Integration Plan
 
-Status: Milestone 1 syntax-highlighting baseline implemented; first narrow
-execution-lowering tracer implemented
+Status: Milestone 1 syntax-highlighting baseline implemented; early
+runtime-backed lowering tracer slices implemented
 Last updated: 2026-06-23
 
 This document is the durable handoff for the current Level C Classic REXX
@@ -23,10 +23,11 @@ The main Level C path is a parser-mode and syntax-highlighting front end:
 - it deliberately stops before broad canonical lowering, semantic execution
   support, assembly, or VM execution.
 
-Normal `rxc` compilation of Level C remains unsupported except for the first
-explicit tracer slice documented in `levelc_remapping_target.md`: top-level
-direct scalar assignment/read, string/integer `RexxValue` literals, binary `+`,
-and `SAY`. Unsupported Level C compile inputs still fail with the existing
+Normal `rxc` compilation of Level C remains unsupported except for the explicit
+tracer slices documented in `levelc_remapping_target.md`: top-level direct
+scalar assignment/read, string/integer `RexxValue` literals, binary `+`, `SAY`,
+and a narrow local `CALL` plus `PROCEDURE EXPOSE` shape over direct scalar
+names. Unsupported Level C compile inputs still fail with the existing
 unsupported diagnostic.
 
 ## Current Implementation Map
@@ -40,7 +41,8 @@ unsupported diagnostic.
 | `compiler/rxcpcval.c` | Level C source-tree preparation for DSLSH |
 | `compiler/rxcpcsym.c` / `.h` | Level C source-symbol helpers and Classic BIF seed list |
 | `compiler/rxcp_highlight_controller.c` | Parser-mode dispatch and DSLSH projection |
-| `compiler/tests/rexx_src/levelc_*.rexx` | Level C DSLSH positive and negative fixtures |
+| `compiler/rxcp_levelc_lower.c` / `.h` | Fail-closed Level C lowering tracer |
+| `compiler/tests/rexx_src/levelc_*.rexx` | Level C DSLSH and lowering positive/negative fixtures |
 
 The Level C files are intentionally separate from the Level B parser and
 grammar. Shared code is limited to source-tree projection, diagnostics transport,
@@ -170,8 +172,9 @@ Recommended sequence:
 1. Add a Level C-only lowering entry point, for example
    `rxcp_levelc_lower_to_canonical(Context *)`, called only after Level C
    source validation is clean and only when normal compilation is intentionally
-   enabled for that slice. The first implementation is
-   `rxcp_levelc_lower_slice1(Context *, const char **)`.
+   enabled for that slice. The current implementation keeps the historical
+   `rxcp_levelc_lower_slice1(Context *, const char **)` name while it hosts the
+   active early tracer-slice family.
 2. Introduce a conservative Level C symbol/pool model before rewriting:
    routine scopes, active variable pools, stems, compound variables, parse
    targets, loop-control names, labels, and expose lists.
@@ -195,6 +198,8 @@ Recommended sequence:
    Level C remains gated as unsupported outside each proven slice.
 
 The first executable milestone is deliberately narrower than the long-term
-goal: a small Level C program with simple scalar variables, `RexxValue`
-literals, binary `+`, and `SAY`. After that, widen by statement family while
-keeping the syntax-highlighter fixtures as the static validation canary.
+goal: small Level C programs with simple scalar variables, `RexxValue`
+literals, binary `+`, `SAY`, and the first `PROCEDURE EXPOSE` path. After that,
+widen by statement family while keeping the syntax-highlighter fixtures as the
+static validation canary and the lowered-tree debug probes as the remapper
+shape canary.

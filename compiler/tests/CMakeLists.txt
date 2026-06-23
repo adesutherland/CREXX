@@ -3078,27 +3078,41 @@ if (ENABLE_PARSER_MODE)
     )
 endif()
 
-set(LEVELC_UNSUPPORTED_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/levelc_compile_unsupported.cmake")
-file(GENERATE OUTPUT "${LEVELC_UNSUPPORTED_SCRIPT}" CONTENT
-"execute_process(
-    COMMAND \"$<TARGET_FILE:rxc>\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/levelc_unsupported.rexx\"
-    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"
-    OUTPUT_VARIABLE out
-    ERROR_VARIABLE err
-    RESULT_VARIABLE res
-)
-set(all \"\${out}\${err}\")
-if(res EQUAL 0)
-  message(FATAL_ERROR \"Level C compile unexpectedly succeeded.\\nSTDOUT:\\n\${out}\\nSTDERR:\\n\${err}\")
-endif()
-if(NOT all MATCHES \"REXX Level C \\\\(Classic REXX\\\\) is currently supported only for DSLSH syntax highlighting\\\\. Compilation is not supported yet\")
-  message(FATAL_ERROR \"Missing Level C unsupported diagnostic.\\nSTDOUT:\\n\${out}\\nSTDERR:\\n\${err}\")
-endif()
-")
-add_test(NAME levelc_compile_unsupported
-         COMMAND ${CMAKE_COMMAND} -P "${LEVELC_UNSUPPORTED_SCRIPT}"
-         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-set_tests_properties(levelc_compile_unsupported PROPERTIES LABELS "compiler;levelc")
+function(add_levelc_unsupported_compile_test NAME SOURCE_FILE)
+    set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
+    set(SCRIPT_CONTENT "")
+
+    string(APPEND SCRIPT_CONTENT
+           "execute_process(\n"
+           "    COMMAND \"$<TARGET_FILE:rxc>\" \"${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}\"\n"
+           "    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+           "    OUTPUT_VARIABLE out\n"
+           "    ERROR_VARIABLE err\n"
+           "    RESULT_VARIABLE res\n"
+           ")\n"
+           "set(all \"${RXAS_DIAG_DOLLAR}{out}${RXAS_DIAG_DOLLAR}{err}\")\n"
+           "if(res EQUAL 0)\n"
+           "  message(FATAL_ERROR \"Level C compile unexpectedly succeeded for ${NAME}.\\nSTDOUT:\\n${RXAS_DIAG_DOLLAR}{out}\\nSTDERR:\\n${RXAS_DIAG_DOLLAR}{err}\")\n"
+           "endif()\n"
+           "if(NOT all MATCHES \"REXX Level C \\\\(Classic REXX\\\\) is currently supported only for DSLSH syntax highlighting\\\\. Compilation is not supported yet\")\n"
+           "  message(FATAL_ERROR \"Missing Level C unsupported diagnostic for ${NAME}.\\nSTDOUT:\\n${RXAS_DIAG_DOLLAR}{out}\\nSTDERR:\\n${RXAS_DIAG_DOLLAR}{err}\")\n"
+           "endif()\n")
+
+    file(GENERATE OUTPUT "${SCRIPT_FILE}" CONTENT "${SCRIPT_CONTENT}")
+    add_test(NAME ${NAME}
+             COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
+endfunction()
+
+add_levelc_unsupported_compile_test(levelc_compile_unsupported
+        rexx_src/levelc_unsupported.rexx)
+
+add_levelc_unsupported_compile_test(levelc_slice2_procedure_expose_unsupported
+        rexx_src/levelc_slice2_procedure_expose_unsupported.rexx)
+
+add_levelc_unsupported_compile_test(levelc_slice2_plain_procedure_unsupported
+        rexx_src/levelc_slice2_plain_procedure_unsupported.rexx)
 
 function(add_levelc_runtime_slice_test NAME SOURCE_FILE EXPECTED_OUTPUT)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
@@ -3152,6 +3166,50 @@ function(add_levelc_runtime_slice_test NAME SOURCE_FILE EXPECTED_OUTPUT)
     set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
 endfunction()
 
+function(add_levelc_lowered_tree_shape_test NAME SOURCE_FILE)
+    set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
+    set(SCRIPT_CONTENT "")
+
+    string(APPEND SCRIPT_CONTENT
+           "execute_process(\n"
+           "    COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -d1 -o \"${NAME}\" \"${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}\"\n"
+           "    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+           "    OUTPUT_VARIABLE rxc_out\n"
+           "    ERROR_VARIABLE rxc_err\n"
+           "    RESULT_VARIABLE rxc_res\n"
+           ")\n"
+           "set(full_out \"${RXAS_DIAG_DOLLAR}{rxc_out}${RXAS_DIAG_DOLLAR}{rxc_err}\")\n"
+           "if(NOT rxc_res EQUAL 0)\n"
+           "  message(FATAL_ERROR \"rxc debug probe failed for ${NAME}.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+           "endif()\n"
+           "string(FIND \"${RXAS_DIAG_DOLLAR}{full_out}\" \"STAGE_LEVELC_LOWERED\" lowered_pos)\n"
+           "if(lowered_pos EQUAL -1)\n"
+           "  message(FATAL_ERROR \"Missing STAGE_LEVELC_LOWERED debug stage for ${NAME}.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+           "endif()\n"
+           "string(LENGTH \"STAGE_LEVELC_LOWERED\" marker_len)\n"
+           "math(EXPR lowered_start \"${RXAS_DIAG_DOLLAR}{lowered_pos} + ${RXAS_DIAG_DOLLAR}{marker_len}\")\n"
+           "string(SUBSTRING \"${RXAS_DIAG_DOLLAR}{full_out}\" ${RXAS_DIAG_DOLLAR}{lowered_start} -1 lowered)\n"
+           "if(lowered MATCHES \"LEVELC_\")\n"
+           "  message(FATAL_ERROR \"Lowered tree still contains Level C-only nodes for ${NAME}.\\nLowered debug output:\\n${RXAS_DIAG_DOLLAR}{lowered}\")\n"
+           "endif()\n"
+           "if(lowered MATCHES \"\\\\(INSTRUCTIONS\\\\)\")\n"
+           "  message(FATAL_ERROR \"Lowered tree kept the builder-only INSTRUCTIONS wrapper for ${NAME}.\\nLowered debug output:\\n${RXAS_DIAG_DOLLAR}{lowered}\")\n"
+           "endif()\n")
+
+    foreach(REQUIRED_PATTERN IN LISTS ARGN)
+        string(APPEND SCRIPT_CONTENT
+               "if(NOT lowered MATCHES \"${REQUIRED_PATTERN}\")\n"
+               "  message(FATAL_ERROR \"Lowered tree for ${NAME} is missing required pattern ${REQUIRED_PATTERN}.\\nLowered debug output:\\n${RXAS_DIAG_DOLLAR}{lowered}\")\n"
+               "endif()\n")
+    endforeach()
+
+    file(GENERATE OUTPUT "${SCRIPT_FILE}" CONTENT "${SCRIPT_CONTENT}")
+    add_test(NAME ${NAME}
+             COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
+endfunction()
+
 add_levelc_runtime_slice_test(levelc_slice1_target_shape
         rexx_src/levelc_slice1_target_shape.crexx
         "3\n")
@@ -3159,6 +3217,27 @@ add_levelc_runtime_slice_test(levelc_slice1_target_shape
 add_levelc_runtime_slice_test(levelc_slice1_pool_say
         rexx_src/levelc_slice1_pool_say.rexx
         "3\n")
+
+add_levelc_runtime_slice_test(levelc_slice2_procedure_expose_target_shape
+        rexx_src/levelc_slice2_procedure_expose_target_shape.crexx
+        "3\n")
+
+add_levelc_runtime_slice_test(levelc_slice2_procedure_expose
+        rexx_src/levelc_slice2_procedure_expose.rexx
+        "3\n")
+
+add_levelc_lowered_tree_shape_test(levelc_slice2_procedure_expose_tree_shape
+        rexx_src/levelc_slice2_procedure_expose.rexx
+        "PROCEDURE"
+        "ARGS"
+        "OP_REFERENCE"
+        "OP_DEREFERENCE"
+        "RexxVariablePool"
+        "exposeValue"
+        "setValue"
+        "value"
+        "add"
+        "asString")
 
 # Bridge Connectivity Test
 add_custom_command(

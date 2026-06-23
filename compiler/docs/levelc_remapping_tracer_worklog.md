@@ -1130,3 +1130,128 @@ Green stop for implementation stage 13:
   - result: passed; existing inline selector/service summaries still print
 - `git diff --check`
   - result: passed
+
+## Stage 14 - Level C PROCEDURE EXPOSE Lowering Slice
+
+### Goal
+
+Open the first Level C slice that exercises Classic routine scoping and exposed
+variable aliases. This is intentionally still narrow, but it proves the
+important shape: caller pool, generated procedure pool, parent-pool reference,
+and writeback through `RexxVariablePool.exposeValue()`.
+
+### Implemented Shape
+
+The checked-in target-shape baseline is
+`compiler/tests/rexx_src/levelc_slice2_procedure_expose_target_shape.crexx`.
+It builds the conceptual canonical shape directly in Level B:
+
+- top-level `RexxVariablePool` setup;
+- `setValue("A", .RexxValue("1"))`;
+- generated helper call with `reference __rxcp_levelc_pool`;
+- generated procedure with a typed reference argument;
+- parent-pool dereference, child-pool setup, direct scalar `exposeValue`, and
+  normal pool-backed assignment inside the procedure.
+
+The accepted Level C fixture is
+`compiler/tests/rexx_src/levelc_slice2_procedure_expose.rexx`:
+
+```rexx
+options levelc
+
+a = 1
+call change
+say a
+exit
+
+change:
+procedure expose a
+a = a + 2
+return
+```
+
+It emits `3`.
+
+The slice is deliberately constrained:
+
+- local routine label immediately followed by `PROCEDURE`;
+- main must `EXIT` before local routines;
+- direct local `CALL` only, with no arguments;
+- plain `PROCEDURE` remains outside this expose-specific slice;
+- direct scalar `PROCEDURE EXPOSE` names only;
+- procedure body supports the same scalar pool/read/add/SAY forms as slice 1
+  and must end with a bare `RETURN`.
+
+### Replay Steps
+
+1. Add and validate the Level B target-shape baseline before lowering the
+   Level C source.
+2. Extend `compiler/rxcp_levelc_lower.c` from a linear slice-1 walker into a
+   small lowering plan:
+   - main segment boundaries;
+   - recorded local procedure slices;
+   - duplicate-label and fail-closed layout checks;
+   - reusable builders for generated procedure names, parent-pool references,
+     `reference`/`dereference`, helper calls, procedure headers, typed `ARGS`,
+     parent setup, child pool setup, and expose calls.
+3. Lower main `CALL change` to an ignored-result generated helper call that
+   passes `reference __rxcp_levelc_pool`.
+4. Lower `EXIT` to canonical `RETURN` so generated helper routines cannot be
+   executed by top-level fall-through.
+5. Materialise each generated procedure as canonical nodes under
+   `PROGRAM_FILE`, then lower its body against the generated child pool.
+6. Add a near-miss unsupported fixture,
+   `levelc_slice2_procedure_expose_unsupported.rexx`, that omits the main
+   `EXIT` and therefore proves the procedure layout still fails closed.
+7. Add `levelc_slice2_plain_procedure_unsupported.rexx` so the expose-specific
+   guard does not accidentally admit plain `PROCEDURE`.
+8. Add `levelc_slice2_procedure_expose_tree_shape`, a `-d1` debug-tree CTest
+   that isolates `STAGE_LEVELC_LOWERED` and asserts the expected canonical
+   procedure/pool/reference shape.
+
+### Issues And Resolutions
+
+- The first generated procedure attempt left the temporary `INSTRUCTIONS`
+  builder container under `PROGRAM_FILE`. That made the generated procedure
+  appear inside an implicit main wrapper during work-tree validation, causing
+  errors such as `#UNEXPECTED_ARGUMENT`, `#CANT_DEFINE_PROC_HERE`, and
+  `#INVALID_MAIN_ARGS`. The fix was to use `INSTRUCTIONS` only as a private
+  construction container and splice its children directly after generated
+  `REXX_OPTIONS` under `PROGRAM_FILE`.
+- Runtime output alone would not catch that shape regression if a later edit
+  accidentally generated a semantically plausible but non-canonical tree. The
+  new tree-shape CTest treats remapper debugging as part of the feature.
+- The target-shape baseline remains useful when the canonical shape can be
+  written as Level B. For future shapes that cannot be authored through Level B
+  syntax, the methodology is to document the pseudo-target and make the
+  generated-tree debug probe the executable shape test.
+
+### Lessons For The Remapping Framework
+
+- Builder routines should remain small and named by semantic action so they
+  can become future DSL command names. The new local examples are
+  `reference`, `dereference`, generated helper call, procedure shell,
+  parent-pool setup, child-pool setup, and scalar expose alias materialisation.
+- Selectors alone are not enough. Each slice also needs named guard/proof
+  steps and named materialisation steps that a reader can map to the target
+  tree.
+- Every accepted family needs both runtime and shape checks. Runtime tests
+  answer "does it behave"; lowered-tree tests answer "did the remapper build
+  the intended canonical program".
+
+### Verification
+
+Green stop for implementation stage 14:
+
+- `cmake --build cmake-build-release --target rxc rxas rxvm rxfnsc --parallel 4`
+  - result: passed
+- `ctest --test-dir cmake-build-release -R '^(levelc_slice1_target_shape|levelc_slice1_pool_say|levelc_slice2_procedure_expose_target_shape|levelc_slice2_procedure_expose|levelc_slice2_procedure_expose_unsupported|levelc_slice2_plain_procedure_unsupported|levelc_slice2_procedure_expose_tree_shape|levelc_compile_unsupported)$' --output-on-failure`
+  - result: 8/8 passed
+- `ctest --test-dir cmake-build-release -R '^(syntaxhighlight_levelc|levelc_)' --output-on-failure`
+  - result: 59/59 passed
+- `ctest --test-dir cmake-build-release -R 'inline|Inline' --output-on-failure`
+  - result: 257/257 passed
+- `RXCP_INLINE_RULE_SUMMARY=1 cmake-build-release/bin/rxc -i cmake-build-release/bin -o /tmp/levelc_proc_remap_summary_probe compiler/tests/rexx_src/inline_test_computed_receiver_copyback.crexx`
+  - result: passed; existing inline selector/service summaries still print
+- `git diff --check`
+  - result: passed

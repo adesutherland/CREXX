@@ -1,7 +1,8 @@
 # Level C Classic REXX Working Architecture
 
-Status: working draft; syntax-highlighting milestone implemented, lowering not started
-Last updated: 2026-05-12
+Status: working draft; syntax-highlighting milestone implemented, early
+lowering tracer slices implemented
+Last updated: 2026-06-23
 
 This document is the working record for the Level C programme. Level C means
 Classic REXX compatibility, using the current cREXX compiler front-end style:
@@ -9,8 +10,9 @@ re2c scanner, C parser glue, Lemon grammar, and validation/fixup walkers.
 
 The first milestone is a Level C syntax highlighter through DSLSH. That
 milestone parses and validates Level C source, builds the user-facing source
-tree, emits diagnostics/highlighting, and stops before canonical lowering,
-optimization, assembly, or VM execution.
+tree, emits diagnostics/highlighting, and stops before broad canonical lowering,
+optimization, assembly, or VM execution. A deliberately narrow set of
+runtime-backed lowering tracer slices is now enabled for ordinary compilation.
 
 For the implemented highlighter contract and the forward plan into canonical
 lowering, see `compiler/docs/levelc_syntax_highlighting.md`.
@@ -167,6 +169,8 @@ The first executable lowering slice is documented in
 Slice". It deliberately opens only pool setup, direct scalar
 assignment/read, `RexxValue` literals, binary `+`, and `SAY expression`, while
 leaving all other Level C compile inputs on the existing unsupported diagnostic.
+A second tracer slice adds the first local `CALL` plus `PROCEDURE EXPOSE`
+shape, proving parent/child variable-pool aliasing for direct scalar names.
 
 ### 3.3 Milestone 3: Runtime semantics
 
