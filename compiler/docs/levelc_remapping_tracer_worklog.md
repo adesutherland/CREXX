@@ -254,8 +254,9 @@ this slice.
   conflicts because comma was also an expression-recovery token. Narrowing to
   normal multi-argument lists and moving comma recovery out of primary
   expressions restored a conflict-free parser. Source forms with omitted
-  positions such as `xxx(,a,,b)` remain deferred until Level C has a
-  list-specific expression ladder or an equivalent unambiguous parser strategy.
+  positions such as `xxx(,a,,b)` were then admitted with call-list-only
+  productions that materialise `NOVAL` placeholders for leading, repeated, and
+  trailing commas without reopening general comma recovery conflicts.
 - The BIF context can normalise/check argument text, so generated BIF frames
   must not store direct pool `RexxValue` handles. The materialiser now copies
   actuals with `.RexxValue(value.asString())` before assigning frame slots.
@@ -274,9 +275,9 @@ this slice.
   BIFs. Reusable builders should make "copy value" and "pass reference" visibly
   different commands.
 - Parser reachability is a separate proof from remapper capability. The
-  runtime frame can represent omitted slots today, but source syntax for
-  omitted positions should not be admitted until the parser can do so without
-  relying on ambiguous recovery.
+  runtime frame could represent omitted slots before source syntax could reach
+  them; the durable parser fix keeps omitted-slot recognition in the
+  call-argument list rather than in general expression recovery.
 
 ### Verification
 
@@ -288,6 +289,58 @@ Green stop for implementation stage 16:
   - result: 73/73 passed
 - `ctest --test-dir cmake-build-release -R '^(rxc_inline_byvalue_arg_reuse|inline_test_expr_run_(noopt|opt)|inline_test_ref_computed_run_(noopt|opt)|inline_test_computed_receiver_copyback_run_(noopt|opt)|inline_test_imported_bif_block_expr_lifetime_run_(noopt|opt))$' --output-on-failure`
   - result: 9/9 passed
+- `git diff --check`
+  - result: passed
+
+## Stage 17 - Level C Omitted Function Argument Slots
+
+### Intent
+
+Close the Lemon conflict left from stage 16 and prove that source-level omitted
+function argument positions can reach the dispatcher BIF frame without changing
+general expression comma recovery.
+
+### Implemented Shape
+
+`levelc_call_args` now owns omitted slots locally:
+
+- `f()` remains the existing zero-argument function shape;
+- `f(,a)` materialises `NOVAL, a`;
+- `f(a,)` materialises `a, NOVAL`;
+- `f(a,,b)` materialises `a, NOVAL, b`;
+- `f(,)` materialises two omitted positions.
+
+The `SUBSTR` slice now includes `d = substr(a, 2,, ".")`, which lowers slot 3
+as `.RexxValue("")` with provided flag `0` and slot 4 as the provided pad
+argument. Runtime output proves the Classic dispatcher sees the preserved
+argument mask. A separate unsupported fixture uses the literal
+`xxx(,a,,b)` shape to prove the parser reaches normal Level C fail-closed
+lowering rather than stopping in syntax recovery.
+
+### Replay Steps
+
+1. Keep comma recovery out of `primary_expr` and `primary_expr_c`.
+2. Add leading, trailing, and repeated-comma productions only under
+   `levelc_call_args`.
+3. Run Lemon with `-p -c` and confirm no `Parsing conflict` lines.
+4. Extend the `SUBSTR` source and target-shape fixtures with an omitted middle
+   argument slot.
+5. Add a fail-closed `xxx(,a,,b)` source fixture for leading and repeated
+   omitted positions.
+6. Rerun the focused Level C parser/runtime tests.
+
+### Verification
+
+Green stop for implementation stage 17:
+
+- `cmake-build-release/lemon/lemon -p -c -dcmake-build-release/compiler compiler/rxcpcgmr.y`
+  - result: passed, with no `Parsing conflict` lines
+- `cmake -S . -B cmake-build-release`
+  - result: passed
+- `cmake --build cmake-build-release --target rxc rxas rxvm rxfnsc --parallel 4`
+  - result: passed
+- `ctest --test-dir cmake-build-release -R '^(syntaxhighlight_levelc|levelc_|testRexxClassicBifs)' --output-on-failure`
+  - result: 74/74 passed
 - `git diff --check`
   - result: passed
 

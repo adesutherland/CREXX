@@ -2888,10 +2888,28 @@ levelc_call_args(L) ::= levelc_expression_in_list(E).
     L = E;
 }
 
+levelc_call_args(L) ::= CTK_COMMA levelc_expression_in_list(E).
+{
+    L = ast_ft(context, NOVAL);
+    add_sbtr(L, E);
+}
+
+levelc_call_args(L) ::= CTK_COMMA.
+{
+    L = ast_ft(context, NOVAL);
+    add_sbtr(L, ast_ft(context, NOVAL));
+}
+
 levelc_call_args(L) ::= levelc_call_args(L0) CTK_COMMA levelc_expression_in_list(E).
 {
     L = L0;
     add_sbtr(L, E);
+}
+
+levelc_call_args(L) ::= levelc_call_args(L0) CTK_COMMA.
+{
+    L = L0;
+    add_sbtr(L, ast_ft(context, NOVAL));
 }
 
 levelc_expression_in_list(E) ::= or_expr(P).

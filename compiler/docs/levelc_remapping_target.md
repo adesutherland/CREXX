@@ -902,9 +902,10 @@ dispatcher path used by RexxScript. Optional-arity BIFs should stay on the
 dispatcher path until a direct helper is worth specialising. The remapper now
 has the reusable argument-frame materialiser for value slots plus provided
 flags. Source forms with omitted argument positions, for example `xxx(,a,,b)`,
-remain a parser reachability task: the runtime frame can represent them, but
-the Level C grammar should not admit them until the expression-list parser can
-do so without conflicting with comma recovery.
+are admitted through a call-list-specific parser shape. The list materialises
+`NOVAL` placeholders only inside function arguments, keeping ordinary comma
+recovery outside primary expressions and preserving a conflict-free Lemon
+grammar.
 
 This path gives a real safety net. The inliner has existing positive and
 negative tests, source/import cases, and opt/noopt runtime comparisons. Passing
@@ -955,9 +956,6 @@ For Level C lowering once enabled:
   variable pools, loop state, and procedure exposure.
 - Which runtime helper calls should be treated as ordinary inline candidates
   and which should be protected as semantic boundaries.
-- The parser strategy for source-level omitted BIF positions such as
-  `xxx(,a,,b)`. The materialised target frame has slots and masks for this;
-  the grammar still needs an unambiguous list-specific expression shape.
 - The point where a dispatcher-backed BIF should gain a specialised direct
   helper.
 

@@ -137,12 +137,11 @@ rexxclassicbif_length(value)
 values, argument presence flags, and a live caller `RexxVariablePool` reference.
 The argument count is derived from the presence mask, not from the value array,
 so omitted positions such as `xxx(,a,,b)` can be represented faithfully. Level
-C lowering now materialises normal multi-argument dispatcher frames; admitting
-omitted source positions is intentionally deferred until the parser has an
-unambiguous list-specific expression shape. Level C lowering should pass the
-current visible activation pool. RexxScript passes only its
-sandbox/script pool and adapts the returned `RexxValue` back to its own public
-string result model.
+C lowering now materialises normal multi-argument dispatcher frames, including
+omitted slots parsed as `NOVAL` only inside function-call argument lists. Level
+C lowering should pass the current visible activation pool. RexxScript passes
+only its sandbox/script pool and adapts the returned `RexxValue` back to its
+own public string result model.
 
 The current `CheckArgs` subset supports:
 

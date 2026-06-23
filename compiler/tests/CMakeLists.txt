@@ -3117,6 +3117,9 @@ add_levelc_unsupported_compile_test(levelc_slice3_unsupported_bif
 add_levelc_unsupported_compile_test(levelc_slice4_procedure_arg_count_unsupported
         rexx_src/levelc_slice4_procedure_arg_count_unsupported.rexx)
 
+add_levelc_unsupported_compile_test(levelc_slice4_omitted_call_unsupported
+        rexx_src/levelc_slice4_omitted_call_unsupported.rexx)
+
 function(add_levelc_runtime_slice_test NAME SOURCE_FILE EXPECTED_OUTPUT)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
     set(SCRIPT_CONTENT "")
@@ -3239,11 +3242,11 @@ add_levelc_runtime_slice_test(levelc_slice3_bif_length
 
 add_levelc_runtime_slice_test(levelc_slice4_bif_substr_target_shape
         rexx_src/levelc_slice4_bif_substr_target_shape.crexx
-        "bcd\nef.\n")
+        "bcd\nef.\nbcdef\n")
 
 add_levelc_runtime_slice_test(levelc_slice4_bif_substr
         rexx_src/levelc_slice4_bif_substr.rexx
-        "bcd\nef.\n")
+        "bcd\nef.\nbcdef\n")
 
 add_levelc_runtime_slice_test(levelc_slice4_procedure_args_return_target_shape
         rexx_src/levelc_slice4_procedure_args_return_target_shape.crexx

@@ -34,6 +34,22 @@ call __rxcp_levelc_bif_context_2.setArguments(__rxcp_levelc_bif_args_2, __rxcp_l
 call __rxcp_levelc_bif_context_2.setCallerPool(reference __rxcp_levelc_pool)
 call __rxcp_levelc_pool.setValue("C", rexxclassicbif_call(reference __rxcp_levelc_bif_context_2))
 
+__rxcp_levelc_bif_args_3 = .RexxValue[]
+__rxcp_levelc_bif_exists_3 = .int[]
+__rxcp_levelc_bif_args_3[1] = .RexxValue(__rxcp_levelc_pool.value("A").asString())
+__rxcp_levelc_bif_exists_3[1] = 1
+__rxcp_levelc_bif_args_3[2] = .RexxValue("2")
+__rxcp_levelc_bif_exists_3[2] = 1
+__rxcp_levelc_bif_args_3[3] = .RexxValue("")
+__rxcp_levelc_bif_exists_3[3] = 0
+__rxcp_levelc_bif_args_3[4] = .RexxValue(".")
+__rxcp_levelc_bif_exists_3[4] = 1
+__rxcp_levelc_bif_context_3 = .RexxBifCallContext("SUBSTR")
+call __rxcp_levelc_bif_context_3.setArguments(__rxcp_levelc_bif_args_3, __rxcp_levelc_bif_exists_3)
+call __rxcp_levelc_bif_context_3.setCallerPool(reference __rxcp_levelc_pool)
+call __rxcp_levelc_pool.setValue("D", rexxclassicbif_call(reference __rxcp_levelc_bif_context_3))
+
 say __rxcp_levelc_pool.value("B").asString()
 say __rxcp_levelc_pool.value("C").asString()
+say __rxcp_levelc_pool.value("D").asString()
 return
