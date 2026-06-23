@@ -30,9 +30,9 @@ files being imported by accident.
 
 Source roots search `.crexx`, `.crx`, and `.rexx`. If the initial source file
 uses another extension, such as `.the`, that extension is searched for this
-compile too. Files without an explicit `options level...` default to Level G forcRexxcrx`, and arbitrary initial extensions, and Level C for `.rexx`.
+compile too. Files without an explicit `options level...` default to Level G for `.crexx` and `.crx`, and arbitrary initial extensions, and Level C for `.rexx`.
 
-The compiler only uses external procedures that are in the same namespace as the module being compiled or for namespaces listed in the "import" instruction. 
+The compiler only uses external procedures that are in the same namespace as the module being compiled or for namespaces listed in the `import` instruction. 
 
 ```rexx <!--importex.crexx-->
 import rxfnsb mynamespace anothernamespace
@@ -46,4 +46,4 @@ The cRexx level b standard library namespace is `rxfnsb`, to access these proced
 import rxfnsb
 ```
 
-Without the `import` statement for the `rxfnsb` namespace, the level B built-in functions cannot be found. One could say that the built-in functions are not as built-in as they are in Classic Rexx. This is different in level C, the compatibility level.
+Without the `import` statement for the `rxfnsb` namespace, the level B built-in functions cannot be found. One could say that the built-in functions are not as built-in as they are in Classic Rexx. This is different in cRexx level C, the compatibility level.

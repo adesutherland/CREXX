@@ -1,4 +1,4 @@
-\documentclass[10pt,twoside,openright]{book}
+\documentclass[11pt,twoside,openright,paperwidth=170mm,paperheight=240mm]{book}
 \usepackage[FINAL]{../../../boilerplate/rexx} 
 \usepackage{hyperref}
 \usepackage{graphics}
@@ -7,7 +7,7 @@
 \usepackage{etoolbox}
 \usepackage{fontspec}
 \usepackage{tocloft}
-\usepackage{titlesec}
+\usepackage[explicit]{titlesec}
 %\setmainfont[Mapping=tex-text]{TeX Gyre Pagella}
 \setmainfont[Mapping=tex-text]{Minion Pro}
 %%\setmonofont[Mapping=tex-text,Scale=0.82]{IBM Plex Mono}
@@ -230,4 +230,47 @@ the#1\endcsname\quad}}
 \lstdefinelanguage{text}{}
 \lstdefinelanguage{yacc}{}
 \newfontfamily\codefont{IBM Plex Mono}
-%%\input{../../../boilerplate/rexxformat}
+\newfontfamily\headingfont{Avenir Light}
+
+\definecolor{PartGrey}{gray}{0.92}
+\definecolor{PartRule}{gray}{0.55}
+
+%% \titleformat{\part}[display]
+%%   {\thispagestyle{empty}\normalfont}
+%%   {}
+%%   {0pt}
+%%   {%
+%%     \vspace*{0.18\textheight}%
+%%     \begin{center}
+%%     \fcolorbox{PartRule}{PartGrey}{%
+%%       \begin{minipage}{0.82\textwidth}
+%%         \centering
+%%         \vspace{2.5em}
+%%         {\fontspec{Avenir Light}\Large Part \thepart}\\[1.2em]
+%%         {\fontspec{Avenir Light}\Huge\bfseries #1}
+%%         \vspace{2.5em}
+%%       \end{minipage}%
+%%     }%
+%%     \end{center}
+%%   }
+
+%% \titlespacing*{\part}{0pt}{0pt}{0pt}
+  
+
+
+\titleformat{\part}[display]
+  {\thispagestyle{empty}\normalfont}
+  {}
+  {0pt}
+  {%
+    \vspace*{0.25\textheight}%
+    \noindent\hspace*{0.12\textwidth}%
+    {\color{gray!60}\rule{2mm}{7cm}}%
+    \hspace{1.5cm}%
+    \begin{minipage}[b]{0.65\textwidth}
+      {\fontspec{Avenir Light}\fontsize{16}{20}\selectfont\color{gray}PART \thepart}\\[1.5em]
+      {\fontspec{Avenir Light}\fontsize{34}{38}\selectfont\bfseries #1}
+    \end{minipage}%
+  }
+
+\titlespacing*{\part}{0pt}{0pt}{0pt}

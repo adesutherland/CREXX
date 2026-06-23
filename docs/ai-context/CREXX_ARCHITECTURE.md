@@ -1,6 +1,6 @@
-# cREXX Architecture
+# cRexx Architecture
 
-`crexx` is a custom REXX-to-bytecode toolchain that translates Classic REXX semantics into an optimized bytecode format executed by a specialized VM. The process happens through four main binaries:
+`crexx` is a custom Rexx-to-bytecode toolchain that translates Classic Rexx semantics into an optimized bytecode format executed by a specialized VM. The process happens through four main binaries:
 1. `rxc` - The Compiler
 2. `rxas` - The Assembler
 3. `rxlink` - The Linker
@@ -8,21 +8,21 @@
 
 ## The Compilation Pipeline
 
-The pipeline of transforming REXX source code into executable bytecode is structured as follows:
+The pipeline of transforming Rexx source code into executable bytecode is structured as follows:
 
 1. **re2c (Lexical Analyzer)**
    - Used to generate the scanner/lexer from `.re` rules (e.g., `compiler/rxcpbscn.re` and `assembler/rxasscan.re`).
-   - Converts the raw REXX source text into a stream of discrete tokens (`Token` structs).
+   - Converts the raw Rexx source text into a stream of discrete tokens (`Token` structs).
 
 2. **Lemon (Parser Generator)**
    - The token stream is parsed using a grammar defined in `Lemon` (e.g., `compiler/rxcpbgmr.y` and `compiler/rxcpopgr.y`).
-   - Lemon applies the grammar rules to recognize the syntactic structures of the REXX language and translates them into an Abstract Syntax Tree (AST).
+   - Lemon applies the grammar rules to recognize the syntactic structures of the Rexx language and translates them into an Abstract Syntax Tree (AST).
    - `DO ... END` is overloaded: statement-leading `DO` remains the normal grouped/loop form, while expression-position `DO ... END` becomes `BLOCK_EXPR`. The grammar resolves the command-start ambiguity by routing top-level command expressions through a restricted `command_expression` spine while leaving the general expression grammar free to accept block expressions.
 
 3. **AST (Abstract Syntax Tree) & Compiler Exits**
    - The primary data structure bridging the parser and the code emitter.
    - Built using a hierarchical structure of `ASTNode` C structs that capture operations, scopes, typing, and tree associations.
-   - Standard comparison operators (`=`, `<>`, `>`, `<`, `>=`, `<=`) retain loose REXX comparison semantics for string-targeted operands. The compiler emits the `r*` opcode family (`req`, `rne`, `rgt`, `rlt`, `rgte`, `rlte`), and the VM compares numerically only when both runtime string forms parse as numbers; otherwise it performs blank-padded string comparison. This prevents dynamic nonnumeric text such as `"a" > 1` from raising `CONVERSION_ERROR`.
+   - Standard comparison operators (`=`, `<>`, `>`, `<`, `>=`, `<=`) retain loose Rexx comparison semantics for string-targeted operands. The compiler emits the `r*` opcode family (`req`, `rne`, `rgt`, `rlt`, `rgte`, `rlte`), and the VM compares numerically only when both runtime string forms parse as numbers; otherwise it performs blank-padded string comparison. This prevents dynamic nonnumeric text such as `"a" > 1` from raising `CONVERSION_ERROR`.
    - String comparison operators (`==`, `>>`, `<<`, `>>=`, `<<=`) are carried as a distinct `OP_COMPARE_S_*` family. During type validation both operands are retargeted to `TP_STRING`, but the optimiser still preserves intrinsic numeric constant types long enough to stringify from value rather than source spelling. That keeps folded behaviour aligned with runtime cases like `01 == 1`.
    - Inline cloning must preserve the callee scope's numeric context when it builds replacement scopes. Without that, folded float/decimal string comparisons can silently drift from runtime behaviour under local `NUMERIC DIGITS` / `FORM` / `CASE` settings.
    - Expression-level control flow is supported through `BLOCK_EXPR` (`DO ... END` used as an expression) and `LEAVE_WITH` (`LEAVE WITH expr`). The `association` pointer links each `LEAVE_WITH` back to its owning `BLOCK_EXPR`, similar to how loop `LEAVE` / `ITERATE` link to `DO`.
@@ -157,12 +157,12 @@ are not valid text. Most character and string opcodes still take string operands
 and assume valid UTF-8 in UTF builds.
 
 Level C text and binary behavior should be treated as design space, not as
-settled current compiler behavior. Classic REXX is byte-oriented and commonly
+settled current compiler behavior. Classic Rexx is byte-oriented and commonly
 stores binary data in the same text values used for strings, while current
 Level B separates the intended surfaces as `.string` and `.binary`. Any Level C
 compatibility mode therefore has to choose where Classic byte-text semantics
 map: to UTF-8 `.string` semantics, to `.binary`, or to an explicit option such
-as `bytetext`. Classic REXX BIFs will need to be audited against that decision.
+as `bytetext`. Classic Rexx BIFs will need to be audited against that decision.
 Level G and library work have a separate Unicode extension path for grapheme,
 word, and sentence boundaries, normalization, and case operations through the
 Unicode plugin hooks; those features sit above the core codepoint-level VM
@@ -176,7 +176,7 @@ The architecture direction is:
 - `.binary` means arbitrary bytes.
 - Level B keeps those surfaces strict and typed; invalid byte streams should not
   silently become `.string` values.
-- Level C may provide Classic REXX byte-text compatibility through an explicit
+- Level C may provide Classic Rexx byte-text compatibility through an explicit
   compatibility mode such as `bytetext`, but that mode must not weaken the
   Level B/G `.string` contract.
 - Level G should build richer Unicode services through the existing Unicode
@@ -285,9 +285,9 @@ The open work has moved to its owning levels:
   candidate is `utf8proc`, subject to vendoring/build work and carrying its MIT
   expat plus Unicode data license notices. Initial coverage should target
   normalization, case folding, Unicode property checks, and grapheme/word/
-  sentence segmentation. There is also room for a Level B cREXX proof of
+  sentence segmentation. There is also room for a Level B cRexx proof of
   concept of UTF helper libraries while Level G remains design work.
-- Level C owns Classic REXX migration and byte-text compatibility. Classic
+- Level C owns Classic Rexx migration and byte-text compatibility. Classic
   byte-text behavior should be isolated behind an explicit compatibility option
   such as `bytetext`; Classic BIFs then need auditing so users can choose UTF
   text semantics, byte semantics, or explicit `.binary` operations predictably.
@@ -389,7 +389,7 @@ alphabetically by concrete class name.
 
 ## Source Tree and Parser Mode
 
-cREXX now has an explicit split between the user-facing source model and the
+cRexx now has an explicit split between the user-facing source model and the
 mutable compiler tree.
 
 - After the early source-shaping and source-location work, the compiler builds
