@@ -10,7 +10,11 @@
 \usepackage{titlesec}
 %\setmainfont[Mapping=tex-text]{TeX Gyre Pagella}
 \setmainfont[Mapping=tex-text]{Minion Pro}
-\setmonofont[Mapping=tex-text,Scale=0.82]{IBM Plex Mono}
+%%\setmonofont[Mapping=tex-text,Scale=0.82]{IBM Plex Mono}
+\setmonofont[
+  Scale=0.82,
+  Ligatures=NoCommon
+]{IBM Plex Mono}
 \usepackage{tabularx}
 \usepackage{booktabs}
 \usepackage{makeidx}
@@ -224,3 +228,6 @@ the#1\endcsname\quad}}
 ]{terminaloutput}
 
 \lstdefinelanguage{text}{}
+\lstdefinelanguage{yacc}{}
+\newfontfamily\codefont{IBM Plex Mono}
+%%\input{../../../boilerplate/rexxformat}

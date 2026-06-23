@@ -1,7 +1,7 @@
 # Running cRexx on Linux, macOS, and Windows
 
-cRexx programs are compiled before they run. The compiler emits RXAS
-assembly, the assembler emits RXBIN bytecode, and a VM executable runs the
+cRexx programs are compiled before they run. The compiler emits *rxas*
+assembly, the assembler emits *rxbin* bytecode, and a VM executable runs this
 bytecode.
 
 For most users, the `crexx` driver is the simplest entry point.
