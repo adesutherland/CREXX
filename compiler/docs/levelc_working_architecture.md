@@ -162,6 +162,12 @@ Candidate lowering rule:
 - Preserve source provenance so diagnostics and source-step metadata still point
   at authored Classic REXX clauses.
 
+The first proposed executable lowering slice is documented in
+`compiler/docs/levelc_remapping_target.md` under "Proposed First Level C
+Lowering Slice". It deliberately opens only pool setup, direct scalar
+assignment/read, `RexxValue` literals, binary `+`, and `SAY expression`, while
+leaving all other Level C compile inputs on the existing unsupported diagnostic.
+
 ### 3.3 Milestone 3: Runtime semantics
 
 Once canonical lowering exists, implement execution support through Level B

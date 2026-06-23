@@ -509,6 +509,172 @@ example looks scalar. Classic observability is the guard.
    `SAY`, and one binary operator.
 7. Only then open broader Level C control flow and BIF lowering.
 
+## Proposed First Level C Lowering Slice
+
+Status: proposal for the next implementation slice. This is intentionally
+small, executable, and rollback-friendly. It should prove that Level C can
+enter the normal compiler pipeline through remapping without pretending that
+Classic REXX compilation is generally supported.
+
+### User-Visible Slice
+
+Accept only top-level programs whose non-`OPTIONS` clauses are built from:
+
+- direct scalar assignments: `name = expression`;
+- direct scalar variable reads: `name`;
+- string and integer/numeric literal tokens, materialised as Classic
+  `RexxValue` objects from their source text;
+- parenthesised expressions already collapsed by the Level C grammar;
+- binary `+`, lowered through `RexxValue.add()`;
+- `SAY expression`, lowered through `RexxValue.asString()`.
+
+Representative first fixture:
+
+```rexx
+options levelc
+a = 1
+b = a + 2
+say b
+```
+
+Expected output:
+
+```text
+3
+```
+
+The existing `levelc_compile_unsupported` test should remain, but its fixture
+must move to a construct outside this slice, such as `PARSE ARG`, `IF`, `DO`,
+`ADDRESS`, `DROP`, a label, or an implicit command. The first implementation
+must not remove the unsupported diagnostic as the default for unsupported
+Level C programs.
+
+### Explicit Non-Goals
+
+Do not include these in slice 1:
+
+- procedures, labels, `CALL`, `RETURN`, `SIGNAL`, or `EXIT`;
+- `IF`, `SELECT`, `DO`, `LEAVE`, `ITERATE`, or any control-flow lowering;
+- `PARSE`, `ARG`, `PULL`, `PUSH`, `QUEUE`, `ADDRESS`, `INTERPRET`, `TRACE`,
+  `NUMERIC`, or `DROP`;
+- implicit command clauses;
+- BIF calls, function calls, method calls authored by the user, or host
+  variable anchors;
+- stems, compound variables, indirect variables, or exposure/aliasing;
+- optimiser proofs that replace the variable pool with Level B locals.
+
+Those exclusions are not philosophical limits. They keep the first slice small
+enough that every accepted tree shape can be audited and tested.
+
+### Conceptual Target
+
+The compiler should build canonical AST directly. The following Level B-like
+text is only the human-readable contract:
+
+```rexx
+options levelb
+import rexxvalue
+import rexxpool
+
+__lc_pool = .RexxVariablePool()
+call __lc_pool.setValue("A", .RexxValue("1"))
+call __lc_pool.setValue("B", __lc_pool.value("A").add(.RexxValue("2")))
+say __lc_pool.value("B").asString()
+```
+
+Important target rules:
+
+- Classic variable names are normalized once, using the Level C symbol rules
+  already used by the parser and diagnostics.
+- Reads always go through the visible `RexxVariablePool`.
+- Writes always call the pool setter; they do not mutate a returned value
+  object in place.
+- Literal lowering should preserve the Classic source value through
+  `RexxValue` construction rather than prematurely choosing a Level B type.
+- The generated tree must be canonical enough for normal validation,
+  optimisation, assembly, linking, and VM execution.
+
+### Rule Table
+
+| Rule id | Selector | Guard | Build |
+| --- | --- | --- | --- |
+| `levelc.slice1.program.accept` | `REXX_UNIVERSE > PROGRAM_FILE > INSTRUCTIONS` | Every child is `REXX_OPTIONS`, supported `ASSIGN`, or supported `SAY`; no `ERROR`/`WARNING` severity that should block compile | Establish a Level C lowering context and hidden pool symbol |
+| `levelc.routine.pool-setup` | accepted top-level instruction list | No existing hidden pool sidecar | Add runtime imports and a generated pool initialization before lowered user clauses |
+| `levelc.literal.value` | `STRING` or `INTEGER` in value position | Token value is valid under existing Level C lexical diagnostics | Build `.RexxValue(<classic-source-text>)` |
+| `levelc.variable.read` | `VAR_SYMBOL` in expression position | Direct scalar name only; not a target, not stem/compound/indirect | Build `__lc_pool.value(<normalized-name>)` |
+| `levelc.assignment.scalar` | `ASSIGN(VAR_TARGET, expr)` | Direct scalar target; RHS recursively supported | Build statement call `__lc_pool.setValue(<normalized-name>, lower(expr))` |
+| `levelc.operator.add` | `OP_ADD(left, right)` | Both operands recursively supported | Build `lower(left).add(lower(right))`, preserving left-to-right evaluation |
+| `levelc.say.value` | `SAY(expr)` | Expression recursively supported | Build canonical `SAY(lower(expr).asString())` |
+
+The first implementation can express these as C descriptors and helper
+functions, following the inline selector-table style. The selector array does
+not need to become an external DSL for this slice.
+
+### New Shared Builder Commands Needed
+
+The inlining tracer has already extracted generated scopes, temps, anchors,
+assignments, assembler instructions, capture-once patterns, and safe
+replacement helpers. Slice 1 will need a few more neutral remap-builder
+commands:
+
+- create or ensure an import/runtime dependency;
+- create a hidden local symbol with a chosen runtime class shape;
+- build a factory-style object construction expression such as
+  `.RexxVariablePool()` or `.RexxValue(text)`;
+- build a method-call expression with an explicit receiver and arguments;
+- build a statement call when the result is ignored, for example
+  `pool.setValue(name, value)`;
+- normalize a Level C symbol token to the runtime pool key while preserving the
+  source anchor used for diagnostics;
+- reject unsupported residual Level C nodes with a stable rule/reason pair.
+
+These should live below the Level C policy layer, probably in the remap builder
+or a small Level C lowering builder that uses it. If a helper is specific to
+Classic variable-pool semantics, keep the policy in Level C and keep only the
+AST construction primitive neutral.
+
+### Implementation Order
+
+1. Add a Level C lowering entry point, for example `rxcp_levelc_lower.[ch]`,
+   that runs after `rexcpars(context)` and before normal validation/emission.
+2. Change the `LEVELC` branch in `rxcpmain.c` to parse with `rexcpars()`,
+   then attempt the slice-1 lowering. If the accept rule rejects the tree,
+   emit the existing unsupported diagnostic and fail exactly as today.
+3. Add the missing remap-builder commands for imports, runtime construction,
+   method calls, statement calls, and hidden pool symbol creation.
+4. Implement the accept/reject walker first. It should return one stable
+   rejection reason per unsupported node family.
+5. Implement expression lowering recursively for literals, direct variables,
+   and `OP_ADD`.
+6. Implement statement lowering for scalar assignment and `SAY expression`.
+7. Mark generated nodes with deliberate source anchors: generated runtime
+   setup should be synthetic from the file/options anchor, and lowered user
+   clauses should inherit the source clause anchor.
+8. Run normal validation and optimiser passes on the lowered canonical tree.
+9. Keep all other Level C compile inputs fail-closed until their rule family is
+   added deliberately.
+
+### Acceptance Checks
+
+Minimum QA for this slice:
+
+- existing Level C DSLSH/syntax-highlighting tests remain green;
+- `levelc_compile_unsupported` still passes using an unsupported fixture;
+- a new `levelc_slice1_pool_say` compile/run fixture emits `3`;
+- a generated-tree debug probe shows no residual `LEVELC_*` nodes for the
+  accepted fixture;
+- the Level C accepted fixture can pass through `rxc`, `rxas`, `rxlink` where
+  applicable, and `rxvm`;
+- the same fixture output is compared with Regina REXX as a local development
+  sanity check where Regina is available, but CTest should not depend on
+  Regina being installed;
+- `RXCP_INLINE_RULE_SUMMARY=1` remains unaffected, proving the inlining rule
+  catalog and Level C lowering catalog do not collide.
+
+This slice is useful even before optimisation. It proves the end-to-end path:
+Level C parser AST to remap rule selection, runtime-backed canonical AST,
+normal compiler validation, normal optimiser/emitter, and executable VM output.
+
 ### Current Tracer Status
 
 As of the inline rule catalog and service-runner split, steps 2 and 3 are
