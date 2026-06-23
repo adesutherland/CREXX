@@ -442,6 +442,10 @@ Function names are matched case-insensitively.
 
 The helper receives RexxScript's sandbox variable pool as its caller context.
 It does not receive unrestricted access to the host CREXX variable pool.
+At the shared helper boundary, RexxScript converts intrinsic arguments to
+`RexxValue` objects and converts the returned `RexxValue` back to the
+evaluator's string value; the public RexxScript result array remains separate
+from the shared BIF contract.
 
 ### String Functions
 

@@ -62,6 +62,114 @@ Green stop for implementation stage 1:
 - `git diff --check`
   - result: passed
 
+## Stage 15 - Level C Direct BIF Slice And RexxValue-Native BIF Contract
+
+### Intent
+
+Open the first BIF lowering slice without teaching Level C to depend on the
+dynamic string-array BIF envelope. This slice proves a compiler-known
+fixed-arity BIF call can lower to a direct runtime helper over `RexxValue`
+objects, while the shared dispatcher remains available for dynamic callers such
+as RexxScript.
+
+### Implemented Shape
+
+The checked-in target-shape baseline is
+`compiler/tests/rexx_src/levelc_slice3_bif_length_target_shape.crexx`:
+
+- top-level `RexxVariablePool` setup;
+- `setValue("A", .RexxValue("abcdef"))`;
+- direct `rexxclassicbif_length(__rxcp_levelc_pool.value("A"))`;
+- pool writeback of the returned `RexxValue`;
+- `SAY` through `asString()`.
+
+The accepted Level C fixture is
+`compiler/tests/rexx_src/levelc_slice3_bif_length.rexx`:
+
+```rexx
+options levelc
+
+a = "abcdef"
+b = length(a)
+say b
+```
+
+It emits `6`.
+
+### Replay Steps
+
+1. Move generic tree materialisers out of the Level C lowerer and into
+   `rxcp_remap_build.[ch]`: named references, unary keyword expressions,
+   `reference`, `dereference`, normal `FUNCTION` calls, return statements, and
+   a shared call-argument appender used by factory/member/function calls.
+2. Rename the public lowering entry point from the historical
+   `rxcp_levelc_lower_slice1()` to `rxcp_levelc_lower_to_canonical()`.
+3. Change `RexxClassicBifs.crexx` so `RexxBifCallContext` stores
+   `.RexxValue[]` arguments and `rexxclassicbif_call()` returns `.RexxValue`.
+   Errors now stay on the context through `hasError()`, `errorCode()`, and
+   `errorMessage()`.
+4. Add the direct helper `rexxclassicbif_length(value = .RexxValue)` and make
+   dispatcher `LENGTH` delegate to it after `CheckArgs` validation.
+5. Keep RexxScript source compatibility by converting string evaluator values
+   to `RexxValue` at the shared BIF boundary and converting the returned
+   `RexxValue` back to text inside the evaluator.
+6. Add Level C parser support for the first simple function-call expression
+   shape and lower only `LENGTH(expr)` with exactly one real argument.
+7. Add `levelc_slice3_unsupported_bif.rexx` so parsed but unsupported function
+   calls still fail closed.
+8. Add `levelc_slice3_bif_length_tree_shape` to assert the generated
+   `rexxclassicbif_length` call appears in `STAGE_LEVELC_LOWERED`.
+
+### Issues And Resolutions
+
+- A general Level C expression-list grammar introduced 16 Lemon conflicts. The
+  slice was narrowed to one-argument and empty function calls, which is enough
+  for `LENGTH(value)` and wrong-arity rejection. The remaining identifier/call
+  conflict was resolved by mirroring Level B precedence: identifiers have lower
+  precedence than `(`.
+- `.RexxValue[]` does not make `args[0]` a reliable count source in the direct
+  assignment pattern used by the tests and RexxScript adapter. The context now
+  derives argument count from the `.int[]` provided mask, which is also the
+  right source for omitted-argument semantics.
+- Incremental RexxScript builds could see stale `RexxClassicBifs` metadata from
+  `RexxScriptRunner_linked.rxbin` in the module build directory. The
+  RexxScript clean stamp now removes stale runner images before compiling
+  runtime members, and the `rexxscript` target explicitly depends on `rxfnsc`.
+- Runtime output alone would not prove that the direct helper path was used, so
+  the lowered-tree test checks for `FUNCTION rexxclassicbif_length` in the
+  generated canonical tree.
+
+### Lessons For The Remapping Framework
+
+- Fixed-arity BIFs can use small direct helper materialisers after a guard
+  proves name and arity. Optional-argument BIFs need a reusable
+  argument-frame materialiser that records `RexxValue` slots and provided flags
+  before they bypass the dispatcher.
+- Classic copy semantics should remain the default visible contract. Direct
+  helpers may receive `RexxValue` handles for read-only materialisation, but
+  returned values should be freshly materialised unless a future
+  caller-provided result slot is deliberately introduced and documented.
+- Parser reachability is separate from lowerer acceptance. It is useful to
+  parse a narrow function-call shape while the lowerer still rejects all
+  unproven BIFs.
+
+### Verification
+
+Green stop for implementation stage 15:
+
+- `cmake --build cmake-build-release --target rxc rxas rxvm rxfnsc --parallel 4`
+  - result: passed
+- `cmake --build cmake-build-release --target rxfnsc rexxscript rexxscript_cli --parallel 4`
+  - result: passed
+- `ctest --test-dir cmake-build-release -R '^(levelc_|testRexxClassicBifs|testRexxScriptRuntime|testRexxScriptCompat)' --output-on-failure`
+  - result: 19/19 passed
+- `ctest --test-dir cmake-build-release -R '^(syntaxhighlight_levelc|levelc_)' --output-on-failure`
+  - result: 63/63 passed
+- `ctest --test-dir cmake-build-release -R '^(rxc_inline_byvalue_arg_reuse|inline_test_expr_run_(noopt|opt)|inline_test_ref_computed_run_(noopt|opt)|inline_test_computed_receiver_copyback_run_(noopt|opt)|inline_test_imported_bif_block_expr_lifetime_run_(noopt|opt))$' --output-on-failure`
+  - result: 9/9 passed
+- `git diff --check`
+  - result: passed
+
 ### Stage 1 Result
 
 `inline_procedure_walker()` now dispatches through internal remapping rule

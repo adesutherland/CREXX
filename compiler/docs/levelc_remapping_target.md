@@ -878,8 +878,18 @@ hidden `RexxVariablePool`, lowers scalar assignments to `setValue`, lowers
 scalar reads to `value`, lowers literals to `RexxValue`, lowers binary `+` to
 `RexxValue.add`, lowers `SAY` through `asString`, and lowers the first local
 `CALL` plus `PROCEDURE EXPOSE` shape by passing a parent pool reference into a
-generated helper procedure. Rejected programs keep the existing unsupported
-Level C compilation diagnostic.
+generated helper procedure. The next tracer slice also imports
+`rexxclassicbifs`, parses simple function-call expressions, and lowers proven
+`LENGTH(value)` calls to the direct `rexxclassicbif_length(RexxValue)` helper.
+Rejected programs keep the existing unsupported Level C compilation diagnostic.
+
+The BIF proof layer is now `RexxValue`-native. `RexxBifCallContext` carries
+`RexxValue` argument slots plus a separate provided-argument mask, and
+`rexxclassicbif_call()` returns a `RexxValue` while errors stay on the context.
+This keeps fixed-arity direct helpers optimisable without losing the dynamic
+dispatcher path used by RexxScript. Optional and omitted-argument BIFs should
+not be opened through direct helper calls until the remapper has a reusable
+argument-frame materialiser for value slots plus provided flags.
 
 This path gives a real safety net. The inliner has existing positive and
 negative tests, source/import cases, and opt/noopt runtime comparisons. Passing
@@ -928,10 +938,11 @@ For Level C lowering once enabled:
   output versus a new remapping debug channel.
 - The exact hidden-symbol naming and sidecar representation for Level C
   variable pools, loop state, and procedure exposure.
-- The durable name for the current `rxcp_levelc_lower_slice1()` entry point now
-  that it hosts multiple early tracer slices.
 - Which runtime helper calls should be treated as ordinary inline candidates
   and which should be protected as semantic boundaries.
+- The reusable remap block for optional BIF argument frames, including omitted
+  positions such as `xxx(,a,,b)`, and the point where a direct helper is worth
+  specialising instead of using the dispatcher.
 
 ## Working Position
 

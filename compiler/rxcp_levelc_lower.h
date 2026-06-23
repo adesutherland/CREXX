@@ -10,6 +10,6 @@
 #include "rxcp_ctx.h"
 
 const char *rxcp_levelc_compile_unsupported_message(void);
-int rxcp_levelc_lower_slice1(Context *context, const char **reason_out);
+int rxcp_levelc_lower_to_canonical(Context *context, const char **reason_out);
 
 #endif

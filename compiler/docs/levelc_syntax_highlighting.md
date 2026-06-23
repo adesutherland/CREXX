@@ -172,9 +172,9 @@ Recommended sequence:
 1. Add a Level C-only lowering entry point, for example
    `rxcp_levelc_lower_to_canonical(Context *)`, called only after Level C
    source validation is clean and only when normal compilation is intentionally
-   enabled for that slice. The current implementation keeps the historical
-   `rxcp_levelc_lower_slice1(Context *, const char **)` name while it hosts the
-   active early tracer-slice family.
+   enabled for that slice. The current implementation uses
+   `rxcp_levelc_lower_to_canonical(Context *, const char **)` for the active
+   early tracer-slice family.
 2. Introduce a conservative Level C symbol/pool model before rewriting:
    routine scopes, active variable pools, stems, compound variables, parse
    targets, loop-control names, labels, and expose lists.

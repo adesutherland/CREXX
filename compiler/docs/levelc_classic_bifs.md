@@ -130,12 +130,17 @@ The public proof API is:
 RexxBifCallContext
 rexxclassicbif_call(reference context)
 rexxclassicbif_check_args(reference context, checklist)
+rexxclassicbif_length(value)
 ```
 
-`RexxBifCallContext` carries the uppercased BIF name, argument values, argument
-presence flags, and a live caller `RexxVariablePool` reference. Level C lowering
-should pass the current visible activation pool. RexxScript passes only its
-sandbox/script pool.
+`RexxBifCallContext` carries the uppercased BIF name, `RexxValue` argument
+values, argument presence flags, and a live caller `RexxVariablePool` reference.
+The argument count is derived from the presence mask, not from the value array,
+so omitted positions such as `xxx(,a,,b)` can be represented faithfully once the
+parser/remapper opens the wider argument-list slice. Level C lowering should
+pass the current visible activation pool. RexxScript passes only its
+sandbox/script pool and adapts the returned `RexxValue` back to its own public
+string result model.
 
 The current `CheckArgs` subset supports:
 
@@ -143,21 +148,27 @@ The current `CheckArgs` subset supports:
 ANY NUM WHOLE WHOLE>=0 WHOLE>0 PAD ABLMNSUWX LTB MN
 ```
 
-The helper currently returns a structured status array:
+`rexxclassicbif_call()` returns a `RexxValue`. On validation or dispatch
+failure it returns a blank value and records the error on the context through
+`hasError()`, `errorCode()`, and `errorMessage()`. This keeps the shared BIF
+engine value-native for Level C and future optimising rewrites while preserving
+a single place for Classic message construction. Level C direct helpers such as
+`rexxclassicbif_length(value)` return freshly materialised `RexxValue` results;
+they do not return aliases to values held by a variable pool.
 
-```text
-OK, value, "", ""
-ERROR, "", RXC-LC-code, message
-```
+Level C must remain Classic Rexx compliant: Classic argument validation,
+message codes, and condition behavior are not to be weakened to match Level B
+convenience behavior. Separately, the planned Level B library review will move
+Level B library failures toward signal-based reporting, and that change is not
+expected to be backward compatible. Keep the bridge centralized in
+`RexxClassicBifs.crexx` through `rexxclassicbif_check_args`, `_set_bif_error`,
+and `_context_error`; do not spread one-off error formatting or signal
+decisions through individual BIF bodies.
 
-This is a temporary proof contract. Level C must remain Classic Rexx compliant:
-Classic argument validation, message codes, and condition behavior are not to be
-weakened to match Level B convenience behavior. Separately, the planned Level B
-library review will move Level B library failures toward signal-based reporting,
-and that change is not expected to be backward compatible. Keep the bridge
-centralized in `RexxClassicBifs.crexx` through `rexxclassicbif_check_args`,
-`_set_bif_error`, and `_context_error`; do not spread one-off error formatting
-or signal decisions through individual BIF bodies.
+For fixed-arity compiler-proven calls, the remapper may emit direct helpers.
+For optional or omitted-argument BIFs, the remapper needs a reusable
+argument-frame materialiser that records both value slots and provided flags
+before it bypasses the dispatcher.
 
 JavaDoc-style tags are present on the implemented BIF helpers for generated user
 documentation. The current tags are `@bif`, `@signature`, `@checkargs`,

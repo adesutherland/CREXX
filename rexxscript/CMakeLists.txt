@@ -23,7 +23,11 @@ set(REXXSCRIPT_MEMBER_BUILD_DEPS
 set(_rexxscript_member_clean_stamp "${CMAKE_CURRENT_BINARY_DIR}/rexxscript_member_clean.stamp")
 add_custom_command(
   OUTPUT "${_rexxscript_member_clean_stamp}"
-  COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/rexxscript.rxbin" ${REXXSCRIPT_BINS}
+  COMMAND ${CMAKE_COMMAND} -E rm -f
+    "${CMAKE_BINARY_DIR}/bin/rexxscript.rxbin"
+    ${REXXSCRIPT_BINS}
+    "${CMAKE_CURRENT_BINARY_DIR}/RexxScriptRunner.rxbin"
+    "${CMAKE_CURRENT_BINARY_DIR}/RexxScriptRunner_linked.rxbin"
   COMMAND ${CMAKE_COMMAND} -E touch "${_rexxscript_member_clean_stamp}"
   DEPENDS ${REXXSCRIPT_SOURCES} ${REXXSCRIPT_MEMBER_BUILD_DEPS}
   COMMENT "Clearing stale RexxScript runtime member images ..."
@@ -89,7 +93,7 @@ add_custom_target(rexxscript ALL
   DEPENDS "${CMAKE_BINARY_DIR}/bin/rexxscript.rxbin"
 )
 
-add_dependencies(rexxscript library)
+add_dependencies(rexxscript library rxfnsc)
 
 set(REXXSCRIPT_RUNNER_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/RexxScriptRunner.crexx")
 set(REXXSCRIPT_RUNNER_C "${CMAKE_CURRENT_BINARY_DIR}/RexxScriptRunner.c")

@@ -25,6 +25,7 @@
 #define LEVELC_PARENT_POOL_SYMBOL "__rxcp_levelc_parent_pool"
 #define LEVELC_PARENT_POOL_REF_SYMBOL "__rxcp_levelc_parent_pool_ref"
 #define LEVELC_PROC_PREFIX "__rxcp_levelc_proc_"
+#define LEVELC_BIF_LENGTH_HELPER "rexxclassicbif_length"
 
 typedef struct {
     ASTNode *label;
@@ -112,8 +113,38 @@ static int levelc_lower_plan_add_procedure(LevelCLowerPlan *plan,
     return 1;
 }
 
+static char *levelc_upper_name(ASTNode *node);
+static int levelc_expr_supported(ASTNode *expr, const char **reason_out);
+
 static int levelc_has_single_child(ASTNode *node) {
     return node && node->child && !node->child->sibling;
+}
+
+static int levelc_length_function_supported(ASTNode *expr, const char **reason_out) {
+    char *name;
+    ASTNode *arg;
+    int supported;
+
+    if (!expr || expr->node_type != FUNCTION) {
+        if (reason_out) *reason_out = "missing function expression";
+        return 0;
+    }
+
+    name = levelc_upper_name(expr);
+    supported = name && strcmp(name, "LENGTH") == 0;
+    if (name) free(name);
+    if (!supported) {
+        if (reason_out) *reason_out = "unsupported Level C function call";
+        return 0;
+    }
+
+    arg = expr->child;
+    if (!arg || arg->node_type == NOVAL || arg->sibling) {
+        if (reason_out) *reason_out = "unsupported LENGTH argument shape";
+        return 0;
+    }
+
+    return levelc_expr_supported(arg, reason_out);
 }
 
 static int levelc_expr_supported(ASTNode *expr, const char **reason_out) {
@@ -140,6 +171,9 @@ static int levelc_expr_supported(ASTNode *expr, const char **reason_out) {
             }
             return levelc_expr_supported(left, reason_out) &&
                    levelc_expr_supported(right, reason_out);
+
+        case FUNCTION:
+            return levelc_length_function_supported(expr, reason_out);
 
         default:
             if (reason_out) *reason_out = "unsupported expression node";
@@ -253,33 +287,18 @@ static char *levelc_generated_proc_name(const char *levelc_name, int with_colon)
     return result;
 }
 
-static ASTNode *levelc_named_ref(Context *context,
-                                 ASTNode *source_node,
-                                 NodeType node_type,
-                                 const char *name) {
-    ASTNode *node;
-
-    if (!context || !source_node || !name) return NULL;
-
-    node = ast_ftt(context, node_type, strdup(name));
-    if (!node) return NULL;
-    node->free_node_string = 1;
-    rxcp_remap_anchor_synthetic(node, source_node);
-    return node;
-}
-
 static ASTNode *levelc_pool_ref(Context *context, ASTNode *source_node, NodeType node_type) {
-    return levelc_named_ref(context, source_node, node_type, LEVELC_POOL_SYMBOL);
+    return rxcp_remap_create_named_ref(context, source_node, node_type, LEVELC_POOL_SYMBOL);
 }
 
 static ASTNode *levelc_parent_pool_ref(Context *context, ASTNode *source_node, NodeType node_type) {
-    return levelc_named_ref(context, source_node, node_type, LEVELC_PARENT_POOL_SYMBOL);
+    return rxcp_remap_create_named_ref(context, source_node, node_type, LEVELC_PARENT_POOL_SYMBOL);
 }
 
 static ASTNode *levelc_parent_pool_ref_symbol(Context *context,
                                               ASTNode *source_node,
                                               NodeType node_type) {
-    return levelc_named_ref(context, source_node, node_type, LEVELC_PARENT_POOL_REF_SYMBOL);
+    return rxcp_remap_create_named_ref(context, source_node, node_type, LEVELC_PARENT_POOL_REF_SYMBOL);
 }
 
 static ASTNode *levelc_name_string(Context *context, ASTNode *source_node) {
@@ -572,84 +591,31 @@ static ASTNode *levelc_lower_add(Context *context, ASTNode *expr) {
     return rxcp_remap_create_member_call(context, expr, receiver, "add", args, 1);
 }
 
-static ASTNode *levelc_unary_keyword_expr(Context *context,
-                                          ASTNode *source_node,
-                                          NodeType node_type,
-                                          const char *keyword,
-                                          ASTNode *operand) {
-    ASTNode *node;
+static ASTNode *levelc_lower_function_call(Context *context, ASTNode *expr) {
+    char *name;
+    ASTNode *args[1];
+    ASTNode *call;
 
-    if (!context || !source_node || !keyword || !operand) return NULL;
+    if (!context || !expr || expr->node_type != FUNCTION) return NULL;
 
-    node = ast_ftt(context, node_type, strdup(keyword));
-    if (!node) return NULL;
-    node->free_node_string = 1;
-    rxcp_remap_anchor_synthetic(node, source_node);
-    add_ast(node, operand);
-    return node;
-}
+    name = levelc_upper_name(expr);
+    if (!name) return NULL;
 
-static ASTNode *levelc_reference_expr(Context *context,
-                                      ASTNode *source_node,
-                                      ASTNode *operand) {
-    return levelc_unary_keyword_expr(context,
-                                     source_node,
-                                     OP_REFERENCE,
-                                     "reference",
-                                     operand);
-}
+    if (strcmp(name, "LENGTH") == 0 && expr->child && !expr->child->sibling) {
+        args[0] = levelc_lower_expr(context, expr->child);
+        free(name);
+        if (!args[0]) return NULL;
 
-static ASTNode *levelc_dereference_expr(Context *context,
-                                        ASTNode *source_node,
-                                        ASTNode *operand) {
-    return levelc_unary_keyword_expr(context,
-                                     source_node,
-                                     OP_DEREFERENCE,
-                                     "dereference",
-                                     operand);
-}
-
-static ASTNode *levelc_function_call(Context *context,
-                                     ASTNode *source_node,
-                                     const char *function_name,
-                                     ASTNode **args,
-                                     size_t arg_count) {
-    ASTNode *node;
-    size_t i;
-
-    if (!context || !source_node || !function_name) return NULL;
-
-    node = ast_ftt(context, FUNCTION, strdup(function_name));
-    if (!node) return NULL;
-    node->free_node_string = 1;
-    rxcp_remap_anchor_synthetic(node, source_node);
-
-    if (arg_count == 0) {
-        ASTNode *noval;
-
-        noval = rxcp_remap_create_noval(context, source_node);
-        if (!noval) return NULL;
-        add_ast(node, noval);
-    } else {
-        if (!args) return NULL;
-        for (i = 0; i < arg_count; i++) {
-            if (!args[i]) return NULL;
-            add_ast(node, args[i]);
-        }
+        call = rxcp_remap_create_function_call(context,
+                                               expr,
+                                               LEVELC_BIF_LENGTH_HELPER,
+                                               args,
+                                               1);
+        return call;
     }
 
-    return node;
-}
-
-static ASTNode *levelc_return_statement(Context *context, ASTNode *source_node) {
-    ASTNode *node;
-
-    if (!context || !source_node) return NULL;
-
-    node = ast_f(context, RETURN, source_node->token);
-    if (!node) return NULL;
-    rxcp_remap_anchor_synthetic(node, source_node);
-    return node;
+    free(name);
+    return NULL;
 }
 
 static ASTNode *levelc_lower_expr(Context *context, ASTNode *expr) {
@@ -663,6 +629,8 @@ static ASTNode *levelc_lower_expr(Context *context, ASTNode *expr) {
             return levelc_pool_value(context, expr);
         case OP_ADD:
             return levelc_lower_add(context, expr);
+        case FUNCTION:
+            return levelc_lower_function_call(context, expr);
         default:
             return NULL;
     }
@@ -755,9 +723,9 @@ static ASTNode *levelc_parent_pool_setup_statement(Context *context,
     rhs_operand = levelc_parent_pool_ref_symbol(context,
                                                 anchor_node ? anchor_node : assign,
                                                 VAR_SYMBOL);
-    rhs = levelc_dereference_expr(context,
-                                  anchor_node ? anchor_node : assign,
-                                  rhs_operand);
+    rhs = rxcp_remap_create_dereference_expr(context,
+                                             anchor_node ? anchor_node : assign,
+                                             rhs_operand);
     if (!lhs || !rhs_operand || !rhs) return NULL;
 
     add_ast(assign, lhs);
@@ -786,13 +754,13 @@ static ASTNode *levelc_call_local_procedure_statement(Context *context,
     if (!function_name) return NULL;
 
     pool_symbol = levelc_pool_ref(context, call_node, VAR_SYMBOL);
-    args[0] = levelc_reference_expr(context, call_node, pool_symbol);
+    args[0] = rxcp_remap_create_reference_expr(context, call_node, pool_symbol);
     if (!pool_symbol || !args[0]) {
         free(function_name);
         return NULL;
     }
 
-    call_expr = levelc_function_call(context, call_node, function_name, args, 1);
+    call_expr = rxcp_remap_create_function_call(context, call_node, function_name, args, 1);
     free(function_name);
     if (!call_expr) return NULL;
 
@@ -811,7 +779,7 @@ static ASTNode *levelc_expose_value_statement(Context *context,
     receiver = levelc_pool_ref(context, expose_target, VAR_SYMBOL);
     args[0] = levelc_name_string(context, expose_target);
     parent_symbol = levelc_parent_pool_ref(context, expose_target, VAR_SYMBOL);
-    args[1] = levelc_reference_expr(context, expose_target, parent_symbol);
+    args[1] = rxcp_remap_create_reference_expr(context, expose_target, parent_symbol);
     args[2] = levelc_name_string(context, expose_target);
     if (!receiver || !args[0] || !parent_symbol || !args[1] || !args[2]) return NULL;
 
@@ -920,6 +888,7 @@ static ASTNode *levelc_build_options(Context *context, ASTNode *anchor_node) {
     ASTNode *numeric_classic;
     ASTNode *import_value;
     ASTNode *import_pool;
+    ASTNode *import_bifs;
 
     options = ast_f(context, REXX_OPTIONS, anchor_node ? anchor_node->token : NULL);
     if (!options) return NULL;
@@ -930,13 +899,15 @@ static ASTNode *levelc_build_options(Context *context, ASTNode *anchor_node) {
     numeric_classic = rxcp_remap_create_literal(context, anchor_node ? anchor_node : options, "numeric_classic");
     import_value = rxcp_remap_create_import(context, anchor_node ? anchor_node : options, "rexxvalue");
     import_pool = rxcp_remap_create_import(context, anchor_node ? anchor_node : options, "rexxpool");
-    if (!levelb || !comments_dash || !numeric_classic || !import_value || !import_pool) return NULL;
+    import_bifs = rxcp_remap_create_import(context, anchor_node ? anchor_node : options, "rexxclassicbifs");
+    if (!levelb || !comments_dash || !numeric_classic || !import_value || !import_pool || !import_bifs) return NULL;
 
     add_ast(options, levelb);
     add_ast(options, comments_dash);
     add_ast(options, numeric_classic);
     add_ast(options, import_value);
     add_ast(options, import_pool);
+    add_ast(options, import_bifs);
     return options;
 }
 
@@ -948,7 +919,7 @@ static ASTNode *levelc_lower_main_statement(Context *context,
     if (stmt->node_type == ASSIGN) return levelc_pool_set_statement(context, stmt);
     if (stmt->node_type == SAY) return levelc_say_statement(context, stmt);
     if (stmt->node_type == CALL) return levelc_call_local_procedure_statement(context, stmt, plan);
-    if (stmt->node_type == EXIT) return levelc_return_statement(context, stmt);
+    if (stmt->node_type == EXIT) return rxcp_remap_create_return_statement(context, stmt);
     return NULL;
 }
 
@@ -957,7 +928,7 @@ static ASTNode *levelc_lower_proc_statement(Context *context, ASTNode *stmt) {
 
     if (stmt->node_type == ASSIGN) return levelc_pool_set_statement(context, stmt);
     if (stmt->node_type == SAY) return levelc_say_statement(context, stmt);
-    if (stmt->node_type == RETURN) return levelc_return_statement(context, stmt);
+    if (stmt->node_type == RETURN) return rxcp_remap_create_return_statement(context, stmt);
     return NULL;
 }
 
@@ -1068,7 +1039,7 @@ static int levelc_rewrite_program(Context *context,
     return 1;
 }
 
-int rxcp_levelc_lower_slice1(Context *context, const char **reason_out) {
+int rxcp_levelc_lower_to_canonical(Context *context, const char **reason_out) {
     ASTNode *program_file;
     ASTNode *instructions;
     LevelCLowerPlan plan;

@@ -367,6 +367,8 @@ static ASTNode *levelc_implicit_cmd_warning(Context *context, ASTNode *expressio
 %nonassoc CTK_OTHERWISE.
 %nonassoc CTK_DO.
 %nonassoc CTK_ELSE.
+%left CTK_STRING CTK_INTEGER CTK_VAR_SYMBOL.
+%left CTK_OPEN_BRACKET.
 
 %type bad_expression_start {Token*}
 %type bad_condition_start {Token*}
@@ -2867,6 +2869,18 @@ command_or_expr(E) ::= command_or_expr(L) CTK_XOR(T) missing_expression_rhs.
 command_expression(E) ::= command_or_expr(P).
 {
     E = P;
+}
+
+primary_expr(T) ::= CTK_VAR_SYMBOL(S) CTK_OPEN_BRACKET expression(E) CTK_CLOSE_BRACKET. [CTK_VAR_SYMBOL]
+{
+    T = ast_f(context, FUNCTION, S);
+    add_ast(T, E);
+}
+
+primary_expr(T) ::= CTK_VAR_SYMBOL(S) CTK_OPEN_BRACKET CTK_CLOSE_BRACKET. [CTK_VAR_SYMBOL]
+{
+    T = ast_f(context, FUNCTION, S);
+    add_ast(T, ast_ft(context, NOVAL));
 }
 
 primary_expr(T) ::= CTK_VAR_SYMBOL(S).

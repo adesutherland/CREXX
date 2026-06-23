@@ -336,13 +336,90 @@ ASTNode *rxcp_remap_create_noval(Context *context,
     return node;
 }
 
+ASTNode *rxcp_remap_create_named_ref(Context *context,
+                                     ASTNode *source_node,
+                                     NodeType node_type,
+                                     const char *name) {
+    ASTNode *node;
+
+    if (!context || !source_node || !name) return NULL;
+
+    node = ast_ftt(context, node_type, strdup(name));
+    if (!node) return NULL;
+
+    node->free_node_string = 1;
+    rxcp_remap_anchor_synthetic(node, source_node);
+    return node;
+}
+
+ASTNode *rxcp_remap_create_unary_keyword_expr(Context *context,
+                                              ASTNode *source_node,
+                                              NodeType node_type,
+                                              const char *keyword,
+                                              ASTNode *operand) {
+    ASTNode *node;
+
+    if (!context || !source_node || !keyword || !operand) return NULL;
+
+    node = rxcp_remap_create_named_ref(context, source_node, node_type, keyword);
+    if (!node) return NULL;
+
+    add_ast(node, operand);
+    return node;
+}
+
+ASTNode *rxcp_remap_create_reference_expr(Context *context,
+                                          ASTNode *source_node,
+                                          ASTNode *operand) {
+    return rxcp_remap_create_unary_keyword_expr(context,
+                                               source_node,
+                                               OP_REFERENCE,
+                                               "reference",
+                                               operand);
+}
+
+ASTNode *rxcp_remap_create_dereference_expr(Context *context,
+                                            ASTNode *source_node,
+                                            ASTNode *operand) {
+    return rxcp_remap_create_unary_keyword_expr(context,
+                                               source_node,
+                                               OP_DEREFERENCE,
+                                               "dereference",
+                                               operand);
+}
+
+static int rxcp_remap_append_call_args(Context *context,
+                                       ASTNode *node,
+                                       ASTNode *source_node,
+                                       ASTNode **args,
+                                       size_t arg_count) {
+    size_t i;
+
+    if (!context || !node || !source_node) return 0;
+
+    if (arg_count == 0) {
+        ASTNode *noval;
+
+        noval = rxcp_remap_create_noval(context, source_node);
+        if (!noval) return 0;
+        add_ast(node, noval);
+        return 1;
+    }
+
+    if (!args) return 0;
+    for (i = 0; i < arg_count; i++) {
+        if (!args[i]) return 0;
+        add_ast(node, args[i]);
+    }
+    return 1;
+}
+
 ASTNode *rxcp_remap_create_factory_call(Context *context,
                                         ASTNode *source_node,
                                         const char *class_name,
                                         ASTNode **args,
                                         size_t arg_count) {
     ASTNode *node;
-    size_t i;
 
     if (!context || !source_node || !class_name) return NULL;
 
@@ -352,19 +429,27 @@ ASTNode *rxcp_remap_create_factory_call(Context *context,
     node->free_node_string = 1;
     rxcp_remap_anchor_synthetic(node, source_node);
 
-    if (arg_count == 0) {
-        ASTNode *noval;
+    if (!rxcp_remap_append_call_args(context, node, source_node, args, arg_count)) return NULL;
 
-        noval = rxcp_remap_create_noval(context, source_node);
-        if (!noval) return NULL;
-        add_ast(node, noval);
-    } else {
-        if (!args) return NULL;
-        for (i = 0; i < arg_count; i++) {
-            if (!args[i]) return NULL;
-            add_ast(node, args[i]);
-        }
-    }
+    return node;
+}
+
+ASTNode *rxcp_remap_create_function_call(Context *context,
+                                         ASTNode *source_node,
+                                         const char *function_name,
+                                         ASTNode **args,
+                                         size_t arg_count) {
+    ASTNode *node;
+
+    if (!context || !source_node || !function_name) return NULL;
+
+    node = ast_ftt(context, FUNCTION, strdup(function_name));
+    if (!node) return NULL;
+
+    node->free_node_string = 1;
+    rxcp_remap_anchor_synthetic(node, source_node);
+
+    if (!rxcp_remap_append_call_args(context, node, source_node, args, arg_count)) return NULL;
 
     return node;
 }
@@ -376,7 +461,6 @@ ASTNode *rxcp_remap_create_member_call(Context *context,
                                        ASTNode **args,
                                        size_t arg_count) {
     ASTNode *node;
-    size_t i;
 
     if (!context || !source_node || !receiver || !method_name) return NULL;
 
@@ -387,19 +471,7 @@ ASTNode *rxcp_remap_create_member_call(Context *context,
     rxcp_remap_anchor_synthetic(node, source_node);
     add_ast(node, receiver);
 
-    if (arg_count == 0) {
-        ASTNode *noval;
-
-        noval = rxcp_remap_create_noval(context, source_node);
-        if (!noval) return NULL;
-        add_ast(node, noval);
-    } else {
-        if (!args) return NULL;
-        for (i = 0; i < arg_count; i++) {
-            if (!args[i]) return NULL;
-            add_ast(node, args[i]);
-        }
-    }
+    if (!rxcp_remap_append_call_args(context, node, source_node, args, arg_count)) return NULL;
 
     return node;
 }
@@ -416,6 +488,19 @@ ASTNode *rxcp_remap_create_call_statement(Context *context,
 
     rxcp_remap_anchor_synthetic(node, source_node);
     add_ast(node, call_expr);
+    return node;
+}
+
+ASTNode *rxcp_remap_create_return_statement(Context *context,
+                                            ASTNode *source_node) {
+    ASTNode *node;
+
+    if (!context || !source_node) return NULL;
+
+    node = ast_f(context, RETURN, source_node->token);
+    if (!node) return NULL;
+
+    rxcp_remap_anchor_synthetic(node, source_node);
     return node;
 }
 

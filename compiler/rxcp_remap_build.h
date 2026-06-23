@@ -81,11 +81,31 @@ ASTNode *rxcp_remap_create_import(Context *context,
                                   const char *namespace_name);
 ASTNode *rxcp_remap_create_noval(Context *context,
                                  ASTNode *source_node);
+ASTNode *rxcp_remap_create_named_ref(Context *context,
+                                     ASTNode *source_node,
+                                     NodeType node_type,
+                                     const char *name);
+ASTNode *rxcp_remap_create_unary_keyword_expr(Context *context,
+                                              ASTNode *source_node,
+                                              NodeType node_type,
+                                              const char *keyword,
+                                              ASTNode *operand);
+ASTNode *rxcp_remap_create_reference_expr(Context *context,
+                                          ASTNode *source_node,
+                                          ASTNode *operand);
+ASTNode *rxcp_remap_create_dereference_expr(Context *context,
+                                            ASTNode *source_node,
+                                            ASTNode *operand);
 ASTNode *rxcp_remap_create_factory_call(Context *context,
                                         ASTNode *source_node,
                                         const char *class_name,
                                         ASTNode **args,
                                         size_t arg_count);
+ASTNode *rxcp_remap_create_function_call(Context *context,
+                                         ASTNode *source_node,
+                                         const char *function_name,
+                                         ASTNode **args,
+                                         size_t arg_count);
 ASTNode *rxcp_remap_create_member_call(Context *context,
                                        ASTNode *source_node,
                                        ASTNode *receiver,
@@ -95,6 +115,8 @@ ASTNode *rxcp_remap_create_member_call(Context *context,
 ASTNode *rxcp_remap_create_call_statement(Context *context,
                                           ASTNode *source_node,
                                           ASTNode *call_expr);
+ASTNode *rxcp_remap_create_return_statement(Context *context,
+                                            ASTNode *source_node);
 ASTNode *rxcp_remap_create_assembler_instr(Context *context,
                                            Scope *scope,
                                            ASTNode *source_node,

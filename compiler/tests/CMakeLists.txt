@@ -3114,6 +3114,9 @@ add_levelc_unsupported_compile_test(levelc_slice2_procedure_expose_unsupported
 add_levelc_unsupported_compile_test(levelc_slice2_plain_procedure_unsupported
         rexx_src/levelc_slice2_plain_procedure_unsupported.rexx)
 
+add_levelc_unsupported_compile_test(levelc_slice3_unsupported_bif
+        rexx_src/levelc_slice3_unsupported_bif.rexx)
+
 function(add_levelc_runtime_slice_test NAME SOURCE_FILE EXPECTED_OUTPUT)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
     set(SCRIPT_CONTENT "")
@@ -3226,6 +3229,14 @@ add_levelc_runtime_slice_test(levelc_slice2_procedure_expose
         rexx_src/levelc_slice2_procedure_expose.rexx
         "3\n")
 
+add_levelc_runtime_slice_test(levelc_slice3_bif_length_target_shape
+        rexx_src/levelc_slice3_bif_length_target_shape.crexx
+        "6\n")
+
+add_levelc_runtime_slice_test(levelc_slice3_bif_length
+        rexx_src/levelc_slice3_bif_length.rexx
+        "6\n")
+
 add_levelc_lowered_tree_shape_test(levelc_slice2_procedure_expose_tree_shape
         rexx_src/levelc_slice2_procedure_expose.rexx
         "PROCEDURE"
@@ -3237,6 +3248,17 @@ add_levelc_lowered_tree_shape_test(levelc_slice2_procedure_expose_tree_shape
         "setValue"
         "value"
         "add"
+        "asString")
+
+add_levelc_lowered_tree_shape_test(levelc_slice3_bif_length_tree_shape
+        rexx_src/levelc_slice3_bif_length.rexx
+        "FUNCTION"
+        "rexxclassicbif_length"
+        "rexxclassicbifs"
+        "RexxVariablePool"
+        "RexxValue"
+        "setValue"
+        "value"
         "asString")
 
 # Bridge Connectivity Test

@@ -92,6 +92,11 @@ call context.setCallerPool(reference script_pool)
 result = rexxclassicbif_call(reference context)
 ```
 
+`bif_args` is a `.RexxValue[]`, and `bif_exists` is the provided-argument
+mask. `rexxclassicbif_call()` returns a `RexxValue`; check
+`context.hasError()` for validation or dispatch failure, then convert the
+result back to the evaluator's string value with `result.asString()`.
+
 The caller pool is always the RexxScript sandbox pool. Do not pass the host
 CREXX pool into the BIF context.
 
