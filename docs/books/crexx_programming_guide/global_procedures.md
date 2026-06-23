@@ -17,7 +17,7 @@ When compiling a program, the compiler looks for procedures that are called but 
    has no directory.
 2. Additional source roots specified with `rxc -s`: source files.
 3. Binary roots specified with `rxc -i`: `.rxbin` files, optional `.rxas` files
-   when `--import-rxas` is enabled, andCREXXC native function libraries
+   when `--import-rxas` is enabled, and cRexx native function libraries
    (plugins).
 4. The directory where the compiler executable (`rxc`) is located: deployed
    `.rxbin` files, optional `.rxas` files when `--import-rxas` is enabled, and

@@ -40,7 +40,9 @@ The assembler processes source files through a pipelined, pseudo-two-pass archit
 The state of the assembler is held within the `Assembler_Context` struct, specifically within the `context->binary` object, which mirrors the layout of the final `.rxbin` file.
 
 ### Instruction Stream
+
 Instructions are flattened into an array of unions called `bin_code` (defined in `binutils/include/rxdefs.h`). An instruction is represented by an opcode element, immediately followed by elements representing its operands.
+
 ```c
 // Example buffer size handling in gen_instr()
 context->binary.binary[context->binary.inst_size].instruction.opcode = opcode;
@@ -52,6 +54,7 @@ context->binary.binary[context->binary.inst_size++].iconst = token->integer;
 ```
 
 ### Constant Pool
+
 Strings, binary literals, pooled float literals, procedure mappings, debug metadata, and exported symbols are packed into `const_pool`. This is a sequential buffer of dynamically sized records. Every record starts with a `chameleon_constant` header dictating its type and byte size.
 Types include: `STRING_CONST`, `BINARY_CONST`, `FLOAT_CONST`, `PROC_CONST`, `EXPOSE_REG_CONST`, `EXPOSE_PROC_CONST`, `META_FUNC`, `META_INLINE`, `META_REG`, etc.
 
@@ -62,6 +65,7 @@ rely on that chain instead of scanning the whole constant pool.
 The interface/callable-contract work extends that same metadata path rather
 than introducing a second binary header mechanism. In addition to `META_CLASS`
 and `META_ATTR`, the assembler now serializes:
+
 - `META_INTERFACE` for one interface header
 - `META_IMPLEMENTS` for one concrete-class-to-interface link
 - `META_MEMBER` for one interface method or factory declaration
@@ -124,6 +128,7 @@ For interface methods, the member-kind string now distinguishes:
 - `method final` for a Level B final/default interface method body
 
 ### Binary Literals
+
 RXAS binary literals are written as byte-paired hex with a `0x` or `0X`
 prefix. `0x00ff` stores two bytes (`00 ff`) in a `BINARY_CONST`, and `0x`
 stores an empty binary constant. `rxdas` emits the canonical lowercase
@@ -210,6 +215,7 @@ literals. Use `load rDst,0x...`, `freadb`, `fwriteb`, `sockrecvb`, or
 `socksendb` for arbitrary bytes.
 
 ### Symbol Tracking (AVL Trees)
+
 To deduplicate constants and resolve identifiers in `O(log N)` time, the assembler leverages a custom AVL tree implementation (`avl_tree.h`). Active trees include:
 - `string_constants_tree`
 - `decimal_constants_tree`
@@ -247,9 +253,13 @@ When the `EOF` is reached, the `backptch(Assembler_Context *context)` function o
 Once parsing and backpatching conclude without errors, the assembler flushes the `Assembler_Context` state into a packed `.rxbin` file.
 
 The structural output consists of:
+
 1. **Magic Header & Version**: Validates the file format.
+
 2. **Global Counters and Section Sizes**: e.g., Number of global registers (`context->binary.globals`), expanded section sizes, stored section sizes, and section flags.
+
 3. **The Constant Pool**: The assembled `context->binary.const_pool`, optionally blob-compressed on disk if that reduces size.
+
 4. **The Bytecode Stream**: The resolved `context->binary.binary` instruction slots, optionally packed on disk as a logical opcode/operand token stream.
 
 As of format version `002` and later, float operands are no longer stored inline as raw

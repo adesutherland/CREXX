@@ -8,7 +8,7 @@ translate an `rxas` file produced by the cRexx compiler
 
 ## Program Structure
 
-![Program Structure](charts/asmstructure-crop.pdf "Title"){height=100 width=500}
+![Program Structure](charts/asmstructure-crop.pdf "Title"){height=70 width=500}
 
 The assembler processing goes through a number of steps in a single
 pass: first, the Lexer / Scanner tokenises the RXAS code. After that,

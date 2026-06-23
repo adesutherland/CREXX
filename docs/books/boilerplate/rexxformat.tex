@@ -1,3 +1,28 @@
+% rexxformat.tex -- combined listings setup for NetRexx and rxas
+%
+% This file deliberately defines languages and styles separately.  Use
+% style=netrexxcode or style=rxascode on \lstinputlisting / lstlisting.
+%
+% It also avoids calling \fontspec directly from \lstset; a named font
+% command plus \selectfont is more reliable with listings and OpenType fonts.
+
+\ifdefined\codefont
+\else
+  \newfontfamily\codefont{IBM Plex Mono}
+\fi
+
+\lstdefinelanguage{NetRexx}
+{morekeywords={abstract,adapter,binary,case,catch,class,constant,dependent,deprecated,digits,do,else,end,engineering,extends,final,finally,for,forever,if,implements,indirect,import,implements,indirect,inheritable,interface,iterate,label,leave,loop,method,native,nop,numeric,options,otherwise,over,package,parent,parse,private,properties,protect,public,return,returns,rexx,say,scientific,set,digits,form,select,shared,signal,signals,sourceline,static,super,then,this,until,used,upper,volatile,when,where,while},
+sensitive=false,
+extendedchars=true,
+morecomment=[s]={/*}{*/},
+morecomment=[l]{--},
+morecomment=[s]{/**}{*/},
+morestring=[b]",
+morestring=[d]",
+morestring=[b]',
+morestring=[d]'}
+
 \lstdefinelanguage{rxas}
 {morekeywords={
 appendchar,
@@ -273,19 +298,43 @@ morestring=[d]",
 morestring=[b]',
 morestring=[d]'}
 
-\lstset{language=rxas,
+% Common code styling.  Keep the font command in every style that listings may
+% apply while tokenising; otherwise delimiters and comments can be positioned
+% or rendered differently from the surrounding text.
+\lstdefinestyle{rexxcommon}{
   captionpos=none,
   tabsize=3,
-  keywordstyle=\color{nrorange},
-  commentstyle=\color{nrgrey},
-  stringstyle=\color{nrgreen},
-  numbers=left,
+  keywordstyle=\codefont\color{nrorange},
+  commentstyle=\codefont\color{nrgrey},
+  stringstyle=\codefont\color{nrgreen},
   numberstyle=\tiny,
   numbersep=5pt,
   breaklines=true,
   showstringspaces=false,
   index=[1][keywords],
-  columns=fixed,
-  literate={*}{{{\codefont\char"002A}}}1,               
-  basicstyle=\fontsize{8}{9}\fontspec{IBM Plex Mono},emph={label},
+  columns=fullflexible,
+  keepspaces=true,
+  upquote=true,
+  emph={label}
 }
+
+\lstdefinestyle{netrexxcode}{
+  style=rexxcommon,
+  language=NetRexx,
+  alsolanguage=rexx,
+  numbers=none,
+  basicstyle=\codefont\fontsize{10}{12}\selectfont
+}
+
+\lstdefinestyle{rxascode}{
+  style=rexxcommon,
+  language=rxas,
+  numbers=left,
+  basicstyle=\codefont\fontsize{10}{12}\selectfont
+}
+
+% Optional default.  Comment this out if each listing selects its own style.
+\lstset{
+style=netrexxcode,
+ literate={*}{{{\codefont\char"002A}}}1
+ }
