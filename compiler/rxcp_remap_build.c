@@ -589,6 +589,51 @@ ASTNode *rxcp_remap_create_simple_assignment(Context *context,
     return node;
 }
 
+ASTNode *rxcp_remap_create_do_block(Context *context,
+                                    ASTNode *source_node,
+                                    ASTNode *instructions) {
+    ASTNode *node;
+    ASTNode *repeat;
+    ASTNode *for_node;
+    ASTNode *count;
+
+    if (!context || !source_node || !instructions) return NULL;
+
+    node = ast_f(context, DO, source_node->token);
+    repeat = ast_ft(context, REPEAT);
+    for_node = ast_ft(context, FOR);
+    count = rxcp_remap_create_integer_constant(context, source_node, 1, TP_INTEGER);
+    if (!node || !repeat || !for_node || !count) return NULL;
+
+    rxcp_remap_anchor_synthetic(node, source_node);
+    rxcp_remap_anchor_synthetic(repeat, source_node);
+    rxcp_remap_anchor_synthetic(for_node, source_node);
+    add_ast(for_node, count);
+    add_ast(repeat, for_node);
+    add_ast(node, repeat);
+    add_ast(node, instructions);
+    return node;
+}
+
+ASTNode *rxcp_remap_create_if_statement(Context *context,
+                                        ASTNode *source_node,
+                                        ASTNode *condition,
+                                        ASTNode *then_statement,
+                                        ASTNode *else_statement) {
+    ASTNode *node;
+
+    if (!context || !source_node || !condition || !then_statement) return NULL;
+
+    node = ast_f(context, IF, source_node->token);
+    if (!node) return NULL;
+
+    rxcp_remap_anchor_synthetic(node, source_node);
+    add_ast(node, condition);
+    add_ast(node, then_statement);
+    if (else_statement) add_ast(node, else_statement);
+    return node;
+}
+
 ASTNode *rxcp_remap_create_assembler_instr(Context *context,
                                            Scope *scope,
                                            ASTNode *source_node,

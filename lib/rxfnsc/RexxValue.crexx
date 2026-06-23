@@ -21,6 +21,7 @@
 
 options levelb comments_dash numeric_classic
 namespace rexxvalue expose RexxValue rexxvalue_numeric_mode rexxvalue_set_numeric_mode rexxvalue_numeric_digits rexxvalue_set_numeric_digits rexxvalue_numeric_fuzz rexxvalue_set_numeric_fuzz
+import rxfnsb
 
 -- RexxValue cache flags live in the VM value status word.
 constant RV_FLAG_STRING = 0x00010000   -- 65536: string view current
@@ -435,6 +436,10 @@ RexxValue: class
     arg other = .RexxValue
     return .RexxValue(asString() || other.asString())
 
+  spaceConcat: method = .RexxValue
+    arg other = .RexxValue
+    return .RexxValue(asString() || " " || other.asString())
+
   add: method = .RexxValue
     arg other = .RexxValue
     if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
@@ -495,6 +500,153 @@ RexxValue: class
     result = asDecimal() / other.asDecimal()
     return .RexxValue.fromDecimal(result)
 
+  integerDivide: method = .RexxValue
+    arg other = .RexxValue
+    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+      float_result = 0 as .float
+      int_result = 0
+      float_result = asFloat() / other.asFloat()
+      int_result = float_result as .int
+      return .RexxValue.fromFloat(int_result as .float)
+    end
+    result = "0" as .decimal
+    numeric_digits = rexxvalue_numeric_digits()
+    numeric_fuzz = rexxvalue_numeric_fuzz()
+    assembler setnumdgts numeric_digits
+    assembler setnumfuz numeric_fuzz
+    result = asDecimal() % other.asDecimal()
+    return .RexxValue.fromDecimal(result)
+
+  remainder: method = .RexxValue
+    arg other = .RexxValue
+    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+      left_float = 0 as .float
+      right_float = 0 as .float
+      quotient = 0
+      float_result = 0 as .float
+      left_float = asFloat()
+      right_float = other.asFloat()
+      quotient = (left_float / right_float) as .int
+      float_result = left_float - (right_float * (quotient as .float))
+      return .RexxValue.fromFloat(float_result)
+    end
+    left_dec = "0" as .decimal
+    right_dec = "0" as .decimal
+    result = "0" as .decimal
+    quotient = 0
+    numeric_digits = rexxvalue_numeric_digits()
+    numeric_fuzz = rexxvalue_numeric_fuzz()
+    assembler setnumdgts numeric_digits
+    assembler setnumfuz numeric_fuzz
+    result = asDecimal() // other.asDecimal()
+    return .RexxValue.fromDecimal(result)
+
+  power: method = .RexxValue
+    arg other = .RexxValue
+    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+      float_result = 0 as .float
+      float_result = asFloat() ** other.asFloat()
+      return .RexxValue.fromFloat(float_result)
+    end
+    result = "0" as .decimal
+    numeric_digits = rexxvalue_numeric_digits()
+    numeric_fuzz = rexxvalue_numeric_fuzz()
+    assembler setnumdgts numeric_digits
+    assembler setnumfuz numeric_fuzz
+    result = asDecimal() ** other.asInt()
+    return .RexxValue.fromDecimal(result)
+
+  negate: method = .RexxValue
+    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+      float_result = 0 as .float
+      float_result = -asFloat()
+      return .RexxValue.fromFloat(float_result)
+    end
+    result = "0" as .decimal
+    numeric_digits = rexxvalue_numeric_digits()
+    numeric_fuzz = rexxvalue_numeric_fuzz()
+    assembler setnumdgts numeric_digits
+    assembler setnumfuz numeric_fuzz
+    result = -asDecimal()
+    return .RexxValue.fromDecimal(result)
+
+  positive: method = .RexxValue
+    if rexxvalue_numeric_mode() = RV_NUMERIC_FLOAT then do
+      float_result = 0 as .float
+      float_result = asFloat()
+      return .RexxValue.fromFloat(float_result)
+    end
+    result = "0" as .decimal
+    numeric_digits = rexxvalue_numeric_digits()
+    numeric_fuzz = rexxvalue_numeric_fuzz()
+    assembler setnumdgts numeric_digits
+    assembler setnumfuz numeric_fuzz
+    result = asDecimal()
+    return .RexxValue.fromDecimal(result)
+
+  logicalValue: method = .boolean
+    return _rv_logical_text(asString())
+
+  logicalResult: method = .RexxValue
+    return _rv_bool_value(_rv_logical_text(asString()))
+
+  logicalNot: method = .RexxValue
+    return _rv_bool_value(\_rv_logical_text(asString()))
+
+  logicalXor: method = .RexxValue
+    arg other = .RexxValue
+    left_bool = _rv_logical_text(asString())
+    right_bool = _rv_logical_text(other.asString())
+    return _rv_bool_value((left_bool & \right_bool) | (\left_bool & right_bool))
+
+  compareEqual: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_standard(self, other) = 0)
+
+  compareNotEqual: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_standard(self, other) <> 0)
+
+  compareGreaterThan: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_standard(self, other) > 0)
+
+  compareLessThan: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_standard(self, other) < 0)
+
+  compareGreaterOrEqual: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_standard(self, other) >= 0)
+
+  compareLessOrEqual: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_standard(self, other) <= 0)
+
+  strictCompareEqual: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_strict_text(asString(), other.asString()) = 0)
+
+  strictCompareNotEqual: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_strict_text(asString(), other.asString()) <> 0)
+
+  strictCompareGreaterThan: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_strict_text(asString(), other.asString()) > 0)
+
+  strictCompareLessThan: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_strict_text(asString(), other.asString()) < 0)
+
+  strictCompareGreaterOrEqual: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_strict_text(asString(), other.asString()) >= 0)
+
+  strictCompareLessOrEqual: method = .RexxValue
+    arg other = .RexxValue
+    return _rv_bool_value(_rv_compare_strict_text(asString(), other.asString()) <= 0)
+
   equals: method = .boolean
     arg other = .RexxValue
     if asString() = other.asString() then return 1
@@ -507,3 +659,87 @@ RexxValue: class
     if left = right then return 0
     if left < right then return -1
     return 1
+
+_rv_bool_value: procedure = .RexxValue
+  arg value = .boolean
+  if value then return .RexxValue.fromInt(1)
+  return .RexxValue.fromInt(0)
+
+_rv_logical_text: procedure = .boolean
+  arg text = .string
+  if text = "0" then return 0
+  if text = "1" then return 1
+  return text as .boolean
+
+_rv_is_number_text: procedure = .boolean
+  arg value = .string
+  text = strip(value)
+  if length(text) = 0 then return 0
+  posn = 1
+  saw_digit = 0
+  saw_dot = 0
+
+  if substr(text, posn, 1) = "+" | substr(text, posn, 1) = "-" then do
+    posn = posn + 1
+    if posn > length(text) then return 0
+  end
+
+  do while posn <= length(text)
+    ch = substr(text, posn, 1)
+    if pos(ch, "0123456789") > 0 then saw_digit = 1
+    else if ch = "." then do
+      if saw_dot then return 0
+      saw_dot = 1
+    end
+    else leave
+    posn = posn + 1
+  end
+
+  if saw_digit = 0 then return 0
+  if posn > length(text) then return 1
+  if translate(substr(text, posn, 1)) <> "E" then return 0
+
+  posn = posn + 1
+  if posn > length(text) then return 0
+  if substr(text, posn, 1) = "+" | substr(text, posn, 1) = "-" then posn = posn + 1
+  if posn > length(text) then return 0
+
+  do i = posn to length(text)
+    if pos(substr(text, i, 1), "0123456789") = 0 then return 0
+  end
+  return 1
+
+_rv_compare_standard: procedure = .int
+  arg left = .RexxValue, right = .RexxValue
+  left_text = left.asString()
+  right_text = right.asString()
+  if _rv_is_number_text(left_text) & _rv_is_number_text(right_text) then do
+    numeric_digits = rexxvalue_numeric_digits()
+    numeric_fuzz = rexxvalue_numeric_fuzz()
+    assembler setnumdgts numeric_digits
+    assembler setnumfuz numeric_fuzz
+    left_dec = left.asDecimal()
+    right_dec = right.asDecimal()
+    if left_dec = right_dec then return 0
+    if left_dec < right_dec then return -1
+    return 1
+  end
+  return _rv_compare_loose_text(left_text, right_text)
+
+_rv_compare_loose_text: procedure = .int
+  arg left = .string, right = .string
+  left_text = strip(left)
+  right_text = strip(right)
+  if length(left_text) < length(right_text) then
+    left_text = left_text || copies(" ", length(right_text) - length(left_text))
+  else if length(right_text) < length(left_text) then
+    right_text = right_text || copies(" ", length(left_text) - length(right_text))
+  if left_text = right_text then return 0
+  if left_text < right_text then return -1
+  return 1
+
+_rv_compare_strict_text: procedure = .int
+  arg left = .string, right = .string
+  if left == right then return 0
+  if left << right then return -1
+  return 1

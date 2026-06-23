@@ -166,11 +166,12 @@ Candidate lowering rule:
 
 The first executable lowering slice is documented in
 `compiler/docs/levelc_remapping_target.md` under "First Level C Lowering
-Slice". It deliberately opens only pool setup, direct scalar
-assignment/read, `RexxValue` literals, binary `+`, and `SAY expression`, while
-leaving all other Level C compile inputs on the existing unsupported diagnostic.
-A second tracer slice adds the first local `CALL` plus `PROCEDURE EXPOSE`
-shape, proving parent/child variable-pool aliasing for direct scalar names.
+Slice". The tracer now opens pool setup, scalar and simple compound
+assignment/read, `RexxValue` literals, BIF frames, direct local call/procedure
+argument/return shapes, stem exposure, and the parsed Classic expression
+operator family. Short-circuit `&` and `|` lower through generated one-shot
+branch blocks rather than eager method calls. Unsupported Level C inputs still
+fail closed on the existing unsupported diagnostic.
 
 ### 3.3 Milestone 3: Runtime semantics
 

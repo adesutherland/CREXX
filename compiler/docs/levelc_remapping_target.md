@@ -875,10 +875,14 @@ with `rexcpars(context)`, prepares the Level C source tree and diagnostics,
 then attempts the fail-closed remap. Accepted programs are rewritten to a
 Level B-shaped work tree that imports `rexxvalue` and `rexxpool`, creates a
 hidden `RexxVariablePool`, lowers scalar assignments to `setValue`, lowers
-scalar reads to `value`, lowers literals to `RexxValue`, lowers binary `+` to
-`RexxValue.add`, lowers `SAY` through `asString`, and lowers the first local
-`CALL` plus `PROCEDURE EXPOSE` shape by passing a parent pool reference into a
-generated helper procedure. The BIF slices import `rexxclassicbifs`, parse
+scalar reads to `value`, lowers literals to `RexxValue`, lowers proven Classic
+expression operators through named `RexxValue` helpers, lowers `SAY` through
+`asString`, and lowers the first local `CALL` plus `PROCEDURE EXPOSE` shape by
+passing a parent pool reference into a generated helper procedure. Arithmetic,
+concatenation, comparison, prefix, and XOR expressions are ordinary method-call
+materialisations. Short-circuit `&` and `|` use a generated outer-scope result
+anchor plus an `IF` over one-shot generated `DO 1` blocks so the right-hand
+expression remains lazy. The BIF slices import `rexxclassicbifs`, parse
 function-call expressions, lower proven `LENGTH(value)` calls to the direct
 `rexxclassicbif_length(RexxValue)` helper, and lower proven `SUBSTR` calls
 through a generated dispatcher frame with `.RexxValue[]` slots, `.int[]`
@@ -916,6 +920,12 @@ are admitted through a call-list-specific parser shape. The list materialises
 `NOVAL` placeholders only inside function arguments, keeping ordinary comma
 recovery outside primary expressions and preserving a conflict-free Lemon
 grammar.
+
+The expression slice adds shared branch builders to the neutral remap layer:
+`rxcp_remap_create_if_statement()` and `rxcp_remap_create_do_block()`. The block
+builder deliberately creates `DO -> REPEAT(FOR 1), INSTRUCTIONS`; this encodes a
+one-shot generated block and avoids relying on parser-only normalization for
+plain grouped `DO`.
 
 This path gives a real safety net. The inliner has existing positive and
 negative tests, source/import cases, and opt/noopt runtime comparisons. Passing

@@ -8,8 +8,9 @@
  * Level C Classic REXX lowering tracer.
  *
  * The active tracer slices deliberately accept only proven shapes: direct
- * scalar and compound pool reads/writes, string and integer literals, binary
- * addition, SAY, and local PROCEDURE EXPOSE over direct scalar or stem names.
+ * scalar and compound pool reads/writes, string and integer literals, proven
+ * expression operators, SAY, and local PROCEDURE EXPOSE over direct scalar or
+ * stem names.
  * Everything else remains behind the existing unsupported compile gate.
  */
 
@@ -31,6 +32,7 @@
 #define LEVELC_BIF_EXISTS_PREFIX "__rxcp_levelc_bif_exists_"
 #define LEVELC_BIF_CONTEXT_PREFIX "__rxcp_levelc_bif_context_"
 #define LEVELC_COMPOUND_TAIL_PREFIX "__rxcp_levelc_tail_"
+#define LEVELC_EXPR_RESULT_PREFIX "__rxcp_levelc_expr_"
 #define LEVELC_BIF_LENGTH_HELPER "rexxclassicbif_length"
 #define LEVELC_BIF_DISPATCH_HELPER "rexxclassicbif_call"
 #define LEVELC_BIF_CONTEXT_CLASS "RexxBifCallContext"
@@ -150,6 +152,74 @@ static int levelc_variable_value_supported(ASTNode *node,
                                            const char **reason_out);
 static int levelc_assignment_target_supported(ASTNode *node,
                                               const char **reason_out);
+
+static const char *levelc_binary_operator_method(NodeType node_type) {
+    switch (node_type) {
+        case OP_ADD:
+            return "add";
+        case OP_MINUS:
+            return "subtract";
+        case OP_MULT:
+            return "multiply";
+        case OP_DIV:
+            return "divide";
+        case OP_IDIV:
+            return "integerDivide";
+        case OP_MOD:
+            return "remainder";
+        case OP_POWER:
+            return "power";
+        case OP_CONCAT:
+            return "concat";
+        case OP_SCONCAT:
+            return "spaceConcat";
+        case OP_COMPARE_EQUAL:
+            return "compareEqual";
+        case OP_COMPARE_NEQ:
+            return "compareNotEqual";
+        case OP_COMPARE_GT:
+            return "compareGreaterThan";
+        case OP_COMPARE_LT:
+            return "compareLessThan";
+        case OP_COMPARE_GTE:
+            return "compareGreaterOrEqual";
+        case OP_COMPARE_LTE:
+            return "compareLessOrEqual";
+        case OP_COMPARE_S_EQ:
+            return "strictCompareEqual";
+        case OP_COMPARE_S_NEQ:
+            return "strictCompareNotEqual";
+        case OP_COMPARE_S_GT:
+            return "strictCompareGreaterThan";
+        case OP_COMPARE_S_LT:
+            return "strictCompareLessThan";
+        case OP_COMPARE_S_GTE:
+            return "strictCompareGreaterOrEqual";
+        case OP_COMPARE_S_LTE:
+            return "strictCompareLessOrEqual";
+        case OP_XOR:
+            return "logicalXor";
+        default:
+            return NULL;
+    }
+}
+
+static const char *levelc_unary_operator_method(NodeType node_type) {
+    switch (node_type) {
+        case OP_NEG:
+            return "negate";
+        case OP_PLUS:
+            return "positive";
+        case OP_NOT:
+            return "logicalNot";
+        default:
+            return NULL;
+    }
+}
+
+static int levelc_is_short_circuit_operator(NodeType node_type) {
+    return node_type == OP_AND || node_type == OP_OR;
+}
 
 static int levelc_has_single_child(ASTNode *node) {
     return node && node->child && !node->child->sibling;
@@ -292,6 +362,7 @@ static int levelc_expr_supported(ASTNode *expr,
                                  const char **reason_out) {
     ASTNode *left;
     ASTNode *right;
+    const char *method;
 
     if (!expr) {
         if (reason_out) *reason_out = "missing expression";
@@ -306,11 +377,12 @@ static int levelc_expr_supported(ASTNode *expr,
         case VAR_SYMBOL:
             return levelc_variable_value_supported(expr, reason_out);
 
-        case OP_ADD:
+        case OP_AND:
+        case OP_OR:
             left = expr->child;
             right = left ? left->sibling : NULL;
             if (!left || !right || right->sibling) {
-                if (reason_out) *reason_out = "unsupported add operand shape";
+                if (reason_out) *reason_out = "unsupported short-circuit operand shape";
                 return 0;
             }
             return levelc_expr_supported(left, plan, reason_out) &&
@@ -322,6 +394,28 @@ static int levelc_expr_supported(ASTNode *expr,
                    levelc_local_function_supported(expr, plan, reason_out);
 
         default:
+            method = levelc_binary_operator_method(expr->node_type);
+            if (method) {
+                left = expr->child;
+                right = left ? left->sibling : NULL;
+                if (!left || !right || right->sibling) {
+                    if (reason_out) *reason_out = "unsupported binary operand shape";
+                    return 0;
+                }
+                return levelc_expr_supported(left, plan, reason_out) &&
+                       levelc_expr_supported(right, plan, reason_out);
+            }
+
+            method = levelc_unary_operator_method(expr->node_type);
+            if (method) {
+                left = expr->child;
+                if (!left || left->sibling) {
+                    if (reason_out) *reason_out = "unsupported unary operand shape";
+                    return 0;
+                }
+                return levelc_expr_supported(left, plan, reason_out);
+            }
+
             if (reason_out) *reason_out = "unsupported expression node";
             return 0;
     }
@@ -1000,6 +1094,8 @@ static ASTNode *levelc_lower_expr(Context *context,
                                   ASTNode *expr,
                                   LevelCLowerPlan *plan,
                                   ASTNode *prelude);
+static void levelc_append_instruction_builder(ASTNode *instructions,
+                                              ASTNode *builder);
 
 static char *levelc_generated_temp_name(const char *prefix, ASTNode *source_node) {
     char buffer[128];
@@ -1164,18 +1260,198 @@ static ASTNode *levelc_copy_rexxvalue(Context *context,
                                           1);
 }
 
-static ASTNode *levelc_lower_add(Context *context,
-                                 ASTNode *expr,
-                                 LevelCLowerPlan *plan,
-                                 ASTNode *prelude) {
+static ASTNode *levelc_lower_binary_method(Context *context,
+                                           ASTNode *expr,
+                                           LevelCLowerPlan *plan,
+                                           ASTNode *prelude,
+                                           const char *method_name) {
     ASTNode *args[1];
     ASTNode *receiver;
 
+    if (!method_name) return NULL;
     receiver = levelc_lower_expr(context, expr->child, plan, prelude);
     args[0] = levelc_lower_expr(context, expr->child->sibling, plan, prelude);
     if (!receiver || !args[0]) return NULL;
 
-    return rxcp_remap_create_member_call(context, expr, receiver, "add", args, 1);
+    return rxcp_remap_create_member_call(context, expr, receiver, method_name, args, 1);
+}
+
+static ASTNode *levelc_lower_unary_method(Context *context,
+                                          ASTNode *expr,
+                                          LevelCLowerPlan *plan,
+                                          ASTNode *prelude,
+                                          const char *method_name) {
+    ASTNode *receiver;
+
+    if (!method_name) return NULL;
+    receiver = levelc_lower_expr(context, expr->child, plan, prelude);
+    if (!receiver) return NULL;
+
+    return rxcp_remap_create_member_call(context, expr, receiver, method_name, NULL, 0);
+}
+
+static ASTNode *levelc_rexxvalue_bool(Context *context,
+                                      ASTNode *source_node,
+                                      int value) {
+    ASTNode *args[1];
+
+    args[0] = rxcp_remap_create_integer_constant(context,
+                                                 source_node,
+                                                 value ? 1 : 0,
+                                                 TP_INTEGER);
+    if (!args[0]) return NULL;
+
+    return rxcp_remap_create_factory_call(context,
+                                          source_node,
+                                          LEVELC_REXX_VALUE_CLASS,
+                                          args,
+                                          1);
+}
+
+static ASTNode *levelc_logical_value(Context *context,
+                                     ASTNode *source_node,
+                                     ASTNode *value) {
+    if (!value) return NULL;
+    return rxcp_remap_create_member_call(context,
+                                         source_node,
+                                         value,
+                                         "logicalValue",
+                                         NULL,
+                                         0);
+}
+
+static ASTNode *levelc_logical_result(Context *context,
+                                      ASTNode *source_node,
+                                      ASTNode *value) {
+    if (!value) return NULL;
+    return rxcp_remap_create_member_call(context,
+                                         source_node,
+                                         value,
+                                         "logicalResult",
+                                         NULL,
+                                         0);
+}
+
+static ASTNode *levelc_instruction_block(Context *context,
+                                         ASTNode *source_node,
+                                         ASTNode *prelude,
+                                         ASTNode *statement) {
+    ASTNode *instructions;
+
+    if (!context || !source_node || !statement) return NULL;
+
+    instructions = ast_ft(context, INSTRUCTIONS);
+    if (!instructions) return NULL;
+    rxcp_remap_anchor_synthetic(instructions, source_node);
+
+    if (prelude) levelc_append_instruction_builder(instructions, prelude);
+    add_ast(instructions, statement);
+    return rxcp_remap_create_do_block(context, source_node, instructions);
+}
+
+static ASTNode *levelc_short_circuit_result_assignment(Context *context,
+                                                       ASTNode *source_node,
+                                                       const char *result_name,
+                                                       ASTNode *rhs) {
+    if (!result_name || !rhs) return NULL;
+    return rxcp_remap_create_simple_assignment(
+            context,
+            source_node,
+            rxcp_remap_create_named_ref(context, source_node, VAR_TARGET, result_name),
+            rhs);
+}
+
+static ASTNode *levelc_lower_short_circuit(Context *context,
+                                           ASTNode *expr,
+                                           LevelCLowerPlan *plan,
+                                           ASTNode *prelude) {
+    char *result_name;
+    ASTNode *left;
+    ASTNode *right_prelude;
+    ASTNode *right;
+    ASTNode *condition;
+    ASTNode *initial_assignment;
+    ASTNode *then_assignment;
+    ASTNode *else_assignment;
+    ASTNode *then_block;
+    ASTNode *else_block;
+    ASTNode *if_statement;
+    ASTNode *result_ref;
+
+    if (!context || !expr || !prelude || !levelc_is_short_circuit_operator(expr->node_type)) {
+        return NULL;
+    }
+
+    result_name = levelc_generated_temp_name(LEVELC_EXPR_RESULT_PREFIX, expr);
+    if (!result_name) return NULL;
+
+    left = levelc_lower_expr(context, expr->child, plan, prelude);
+    condition = levelc_logical_value(context, expr, left);
+    if (!left || !condition) goto fail;
+
+    initial_assignment = levelc_short_circuit_result_assignment(
+            context,
+            expr,
+            result_name,
+            levelc_rexxvalue_bool(context, expr, 0));
+    if (!initial_assignment) goto fail;
+    add_ast(prelude, initial_assignment);
+
+    right_prelude = ast_ft(context, INSTRUCTIONS);
+    if (!right_prelude) goto fail;
+    rxcp_remap_anchor_synthetic(right_prelude, expr->child->sibling);
+
+    right = levelc_lower_expr(context, expr->child->sibling, plan, right_prelude);
+    right = levelc_logical_result(context, expr->child->sibling, right);
+    if (!right) goto fail;
+
+    if (expr->node_type == OP_AND) {
+        then_assignment = levelc_short_circuit_result_assignment(context,
+                                                                 expr,
+                                                                 result_name,
+                                                                 right);
+        else_assignment = levelc_short_circuit_result_assignment(
+                context,
+                expr,
+                result_name,
+                levelc_rexxvalue_bool(context, expr, 0));
+    } else {
+        then_assignment = levelc_short_circuit_result_assignment(
+                context,
+                expr,
+                result_name,
+                levelc_rexxvalue_bool(context, expr, 1));
+        else_assignment = levelc_short_circuit_result_assignment(context,
+                                                                 expr,
+                                                                 result_name,
+                                                                 right);
+    }
+    if (!then_assignment || !else_assignment) goto fail;
+
+    if (expr->node_type == OP_AND) {
+        then_block = levelc_instruction_block(context, expr, right_prelude, then_assignment);
+        else_block = levelc_instruction_block(context, expr, NULL, else_assignment);
+    } else {
+        then_block = levelc_instruction_block(context, expr, NULL, then_assignment);
+        else_block = levelc_instruction_block(context, expr, right_prelude, else_assignment);
+    }
+    if (!then_block || !else_block) goto fail;
+
+    if_statement = rxcp_remap_create_if_statement(context,
+                                                  expr,
+                                                  condition,
+                                                  then_block,
+                                                  else_block);
+    if (!if_statement) goto fail;
+    add_ast(prelude, if_statement);
+
+    result_ref = rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, result_name);
+    free(result_name);
+    return result_ref;
+
+fail:
+    free(result_name);
+    return NULL;
 }
 
 static ASTNode *levelc_create_slot_assignment(Context *context,
@@ -1504,6 +1780,8 @@ static ASTNode *levelc_lower_expr(Context *context,
                                   ASTNode *expr,
                                   LevelCLowerPlan *plan,
                                   ASTNode *prelude) {
+    const char *method;
+
     if (!context || !expr) return NULL;
 
     switch (expr->node_type) {
@@ -1512,11 +1790,20 @@ static ASTNode *levelc_lower_expr(Context *context,
             return levelc_rexxvalue_from_literal(context, expr);
         case VAR_SYMBOL:
             return levelc_pool_value(context, expr);
-        case OP_ADD:
-            return levelc_lower_add(context, expr, plan, prelude);
         case FUNCTION:
             return levelc_lower_function_call(context, expr, plan, prelude);
         default:
+            if (levelc_is_short_circuit_operator(expr->node_type)) {
+                return levelc_lower_short_circuit(context, expr, plan, prelude);
+            }
+            method = levelc_binary_operator_method(expr->node_type);
+            if (method) {
+                return levelc_lower_binary_method(context, expr, plan, prelude, method);
+            }
+            method = levelc_unary_operator_method(expr->node_type);
+            if (method) {
+                return levelc_lower_unary_method(context, expr, plan, prelude, method);
+            }
             return NULL;
     }
 }

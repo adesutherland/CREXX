@@ -3271,6 +3271,14 @@ add_levelc_runtime_slice_test(levelc_slice5_stem_expose
         rexx_src/levelc_slice5_stem_expose.rexx
         "after\n")
 
+add_levelc_runtime_slice_test(levelc_slice6_expressions_target_shape
+        rexx_src/levelc_slice6_expressions_target_shape.crexx
+        "11\n5\n24\n4\n2\n2\n8\n-5\n6\nab c\n1\n1\n0\n1\n0\n1\n1\n0\n0\n1\n0\n1\n1\n1\n1\n3\n")
+
+add_levelc_runtime_slice_test(levelc_slice6_expressions
+        rexx_src/levelc_slice6_expressions.rexx
+        "11\n5\n24\n4\n2\n2\n8\n-5\n6\nab c\n1\n1\n0\n1\n0\n1\n1\n0\n0\n1\n0\n1\n1\n1\n1\n3\n")
+
 add_levelc_lowered_tree_shape_test(levelc_slice2_procedure_expose_tree_shape
         rexx_src/levelc_slice2_procedure_expose.rexx
         "PROCEDURE"
@@ -3324,6 +3332,24 @@ add_levelc_lowered_tree_shape_test(levelc_slice5_stem_expose_tree_shape
         "exposeStem"
         "__rxcp_levelc_tail"
         "asString")
+
+add_levelc_lowered_tree_shape_test(levelc_slice6_expressions_tree_shape
+        rexx_src/levelc_slice6_expressions.rexx
+        "subtract"
+        "multiply"
+        "divide"
+        "integerDivide"
+        "remainder"
+        "power"
+        "spaceConcat"
+        "compareEqual"
+        "strictCompareEqual"
+        "logicalNot"
+        "logicalXor"
+        "logicalValue"
+        "logicalResult"
+        "IF"
+        "RexxBifCallContext")
 
 # Bridge Connectivity Test
 add_custom_command(

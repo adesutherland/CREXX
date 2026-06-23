@@ -133,6 +133,14 @@ ASTNode *rxcp_remap_create_simple_assignment(Context *context,
                                              ASTNode *source_node,
                                              ASTNode *lhs,
                                              ASTNode *rhs);
+ASTNode *rxcp_remap_create_do_block(Context *context,
+                                    ASTNode *source_node,
+                                    ASTNode *instructions);
+ASTNode *rxcp_remap_create_if_statement(Context *context,
+                                        ASTNode *source_node,
+                                        ASTNode *condition,
+                                        ASTNode *then_statement,
+                                        ASTNode *else_statement);
 ASTNode *rxcp_remap_create_assembler_instr(Context *context,
                                            Scope *scope,
                                            ASTNode *source_node,

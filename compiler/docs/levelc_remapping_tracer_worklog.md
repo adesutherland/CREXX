@@ -62,6 +62,82 @@ Green stop for implementation stage 1:
 - `git diff --check`
   - result: passed
 
+## Stage 19 - Level C Full Expression Lowering Slice
+
+### Intent
+
+Open the expression feasibility slice after stems: prove that the parsed Classic
+operator family can be remapped through named `RexxValue` operations while
+preserving the future DSL direction. The slice keeps statement coverage inside
+the existing assignment/SAY/CALL/procedure boundary, but expression trees now
+cover arithmetic, concatenation, comparisons, prefix operators, XOR, and
+short-circuit AND/OR.
+
+### Implemented Shape
+
+The target-shape baseline is
+`compiler/tests/rexx_src/levelc_slice6_expressions_target_shape.crexx`.
+The Level C fixture is
+`compiler/tests/rexx_src/levelc_slice6_expressions.rexx`.
+
+The compiler now lowers:
+
+- `+`, `-`, `*`, `/`, `%`, `//`, and `**` through named `RexxValue` arithmetic
+  methods;
+- explicit and blank concatenation through `concat()` and `spaceConcat()`;
+- normal comparisons through numeric-aware/padded `compare*()` helpers;
+- strict comparisons through `strictCompare*()` helpers;
+- prefix `+`, prefix `-`, and prefix `\` through `positive()`, `negate()`,
+  and `logicalNot()`;
+- `&&` through `logicalXor()`;
+- `&` and `|` through a branch materialisation that evaluates the right-hand
+  expression only when required, then returns a generated `RexxValue` result.
+
+The reusable remap builder now has `rxcp_remap_create_if_statement()` and
+`rxcp_remap_create_do_block()`. The generated block shape is explicitly
+`DO 1` (`DO -> REPEAT(FOR 1), INSTRUCTIONS`) so it is a one-shot statement
+container, not an accidental loop.
+
+### Issues And Resolutions
+
+- The first short-circuit materialiser assigned the result temp only inside
+  branch scopes. Validation then treated the outer read as a non-object. The
+  fix is to anchor every branch result with an outer-scope `.RexxValue(0)`
+  assignment before the `IF`, then branch-write the same variable.
+- The first generated block used `DO -> INSTRUCTIONS`. The flow emitter expects
+  loop-shaped `DO -> REPEAT, INSTRUCTIONS`, so the compiler crashed while
+  emitting `say 0 & 1`. Adding a `REPEAT(FOR 1)` header removed the crash.
+- An empty `REPEAT` header compiled but ran forever because it had no exit
+  check. The generated block now uses an explicit count of one.
+- Strict comparison initially used Level B `=` and `<`, which are still loose
+  string comparisons. The strict helper now uses `==` and `<<`.
+- Decimal integer division first tried `left / right` and then truncation,
+  which raised a decimal invalid-operation panic for non-terminating division
+  such as `8 / 3`. The runtime methods now delegate `%` and `//` to the native
+  Level B operators.
+
+### Lessons For The Remapping Framework
+
+- Short-circuit rewrites are statement-materialisation patterns, not ordinary
+  binary method calls. The future DSL needs a named pattern like
+  `materialise-short-circuit-result` with explicit outer-temp anchoring and
+  lazy RHS lowering.
+- Generated statement blocks need a shared canonical block builder. Hand-built
+  ASTs that look source-like can still miss emitter contracts that validation
+  normally supplies.
+- Runtime helper names are becoming DSL-command candidates. The useful split is
+  now visible: lowering policy maps `NodeType` to a semantic operation name,
+  while `RexxValue` owns Classic scalar semantics.
+
+### Verification
+
+Focused green stop for this stage:
+
+- `cmake --build cmake-build-release --target rxc rxfnsc testRexxValue --parallel 6`
+  - result: passed
+- `ctest --test-dir cmake-build-release -R '^(levelc_slice6_expressions|levelc_slice6_expressions_target_shape|levelc_slice6_expressions_tree_shape|testRexxValue_noopt|testRexxValue_opt)$' --output-on-failure`
+  - result: 6/6 passed, including the linked runtime artifact dependency
+
 ## Stage 15 - Level C Direct BIF Slice And RexxValue-Native BIF Contract
 
 ### Intent
