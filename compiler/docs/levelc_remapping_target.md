@@ -885,6 +885,16 @@ through a generated dispatcher frame with `.RexxValue[]` slots, `.int[]`
 provided flags, `RexxBifCallContext`, `setArguments`, `setCallerPool`, and
 `rexxclassicbif_call(reference ctx)`.
 
+The stem slice lowers simple compound variables through the same active pool:
+`stem.1` and `stem.i` become `stemValue("STEM.", tail)` reads and
+`setStemValue("STEM.", tail, value)` writes. Dynamic assignment tails are
+materialised into generated string temporaries before the right-hand expression
+is lowered, preserving the locator-once rewrite pattern needed by later
+optimisation. `PROCEDURE EXPOSE stem.` lowers to `exposeStem`, so a generated
+procedure aliases the caller's stem object rather than copying a scalar slot.
+Bare stem default-value assignment/read and exposing a single compound variable
+remain outside this first slice.
+
 The procedure slice now admits plain internal `PROCEDURE` when the body remains
 inside the proven tree shape. It records fixed direct-scalar `ARG` arity,
 generates `.RexxValue` hidden actual parameters, binds them into the generated
@@ -954,6 +964,9 @@ For Level C lowering once enabled:
   output versus a new remapping debug channel.
 - The exact hidden-symbol naming and sidecar representation for Level C
   variable pools, loop state, and procedure exposure.
+- The runtime/helper contract for full Classic stem default values, stem
+  `DROP`, and exposing a single resolved compound variable rather than a whole
+  stem.
 - Which runtime helper calls should be treated as ordinary inline candidates
   and which should be protected as semantic boundaries.
 - The point where a dispatcher-backed BIF should gain a specialised direct

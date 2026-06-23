@@ -344,6 +344,81 @@ Green stop for implementation stage 17:
 - `git diff --check`
   - result: passed
 
+## Stage 18 - Level C Compound Variables And Stem Exposure
+
+### Intent
+
+Close the second large variable-pool gap after scalars: prove that simple
+compound-variable reads/writes and `PROCEDURE EXPOSE stem.` lower through the
+shared `RexxVariablePool`/`RexxStem` runtime rather than through generated
+Level B locals.
+
+### Implemented Shape
+
+The checked-in target-shape baseline is
+`compiler/tests/rexx_src/levelc_slice5_stem_expose_target_shape.crexx`.
+
+The accepted Level C fixture is:
+
+```rexx
+options levelc
+
+i = 1
+items.i = "before"
+call bump
+say items.i
+exit
+
+bump:
+procedure expose items.
+j = 1
+items.j = "after"
+return
+```
+
+The generated shape uses:
+
+- `setStemValue("ITEMS.", tail, value)` for compound assignments;
+- `stemValue("ITEMS.", tail)` for compound reads;
+- generated `__rxcp_levelc_tail_*` string temporaries for dynamic assignment
+  tails, evaluated before the right-hand expression;
+- `exposeStem("ITEMS.", reference parent_pool, "ITEMS.")` for whole-stem
+  procedure exposure.
+
+Compound-specific `PROCEDURE EXPOSE items.i` remains fail-closed because the
+current runtime has whole-value and whole-stem aliases, but no alias primitive
+for one resolved compound tail. Bare stem default-value reads/writes also remain
+outside this slice.
+
+### Replay Steps
+
+1. Classify Level C variable names as scalar, bare stem, or compound in the
+   lowerer.
+2. Accept scalar and simple single-component compound reads/writes in the
+   validation gate; keep bare stem values and multi-component tails closed.
+3. Lower compound reads with `stemValue` and compound writes with
+   `setStemValue`.
+4. Materialise dynamic assignment tails into generated string temporaries before
+   lowering the assignment right-hand expression.
+5. Lower `PROCEDURE EXPOSE stem.` with `exposeStem`; keep compound-specific
+   expose closed.
+6. Add source, target-shape, lowered-tree, runtime, and negative fixtures.
+
+### Verification
+
+Green stop for implementation stage 18:
+
+- `cmake -S . -B cmake-build-release`
+  - result: passed
+- `cmake --build cmake-build-release --target rxc rxas rxvm rxfnsc --parallel 4`
+  - result: passed
+- `ctest --test-dir cmake-build-release -R 'levelc_slice5|levelc_slice2_procedure_expose|levelc_slice4_call_args_expose' --output-on-failure`
+  - result: 9/9 passed
+- `ctest --test-dir cmake-build-release -R '^(syntaxhighlight_levelc|levelc_|testRexxClassicBifs)' --output-on-failure`
+  - result: 78/78 passed
+- `git diff --check`
+  - result: passed
+
 ### Stage 1 Result
 
 `inline_procedure_walker()` now dispatches through internal remapping rule

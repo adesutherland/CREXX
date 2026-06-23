@@ -3120,6 +3120,9 @@ add_levelc_unsupported_compile_test(levelc_slice4_procedure_arg_count_unsupporte
 add_levelc_unsupported_compile_test(levelc_slice4_omitted_call_unsupported
         rexx_src/levelc_slice4_omitted_call_unsupported.rexx)
 
+add_levelc_unsupported_compile_test(levelc_slice5_compound_expose_unsupported
+        rexx_src/levelc_slice5_compound_expose_unsupported.rexx)
+
 function(add_levelc_runtime_slice_test NAME SOURCE_FILE EXPECTED_OUTPUT)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
     set(SCRIPT_CONTENT "")
@@ -3260,6 +3263,14 @@ add_levelc_runtime_slice_test(levelc_slice4_call_args_expose
         rexx_src/levelc_slice4_call_args_expose.rexx
         "3\n")
 
+add_levelc_runtime_slice_test(levelc_slice5_stem_expose_target_shape
+        rexx_src/levelc_slice5_stem_expose_target_shape.crexx
+        "after\n")
+
+add_levelc_runtime_slice_test(levelc_slice5_stem_expose
+        rexx_src/levelc_slice5_stem_expose.rexx
+        "after\n")
+
 add_levelc_lowered_tree_shape_test(levelc_slice2_procedure_expose_tree_shape
         rexx_src/levelc_slice2_procedure_expose.rexx
         "PROCEDURE"
@@ -3304,6 +3315,15 @@ add_levelc_lowered_tree_shape_test(levelc_slice4_procedure_args_return_tree_shap
         "setValue"
         "RETURN"
         "add")
+
+add_levelc_lowered_tree_shape_test(levelc_slice5_stem_expose_tree_shape
+        rexx_src/levelc_slice5_stem_expose.rexx
+        "RexxVariablePool"
+        "setStemValue"
+        "stemValue"
+        "exposeStem"
+        "__rxcp_levelc_tail"
+        "asString")
 
 # Bridge Connectivity Test
 add_custom_command(

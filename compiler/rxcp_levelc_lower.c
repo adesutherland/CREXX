@@ -8,9 +8,9 @@
  * Level C Classic REXX lowering tracer.
  *
  * The active tracer slices deliberately accept only proven shapes: direct
- * scalar pool reads/writes, string and integer literals, binary addition, SAY,
- * and local PROCEDURE EXPOSE over direct scalar names. Everything else remains
- * behind the existing unsupported compile gate.
+ * scalar and compound pool reads/writes, string and integer literals, binary
+ * addition, SAY, and local PROCEDURE EXPOSE over direct scalar or stem names.
+ * Everything else remains behind the existing unsupported compile gate.
  */
 
 #include <ctype.h>
@@ -30,6 +30,7 @@
 #define LEVELC_BIF_ARGS_PREFIX "__rxcp_levelc_bif_args_"
 #define LEVELC_BIF_EXISTS_PREFIX "__rxcp_levelc_bif_exists_"
 #define LEVELC_BIF_CONTEXT_PREFIX "__rxcp_levelc_bif_context_"
+#define LEVELC_COMPOUND_TAIL_PREFIX "__rxcp_levelc_tail_"
 #define LEVELC_BIF_LENGTH_HELPER "rexxclassicbif_length"
 #define LEVELC_BIF_DISPATCH_HELPER "rexxclassicbif_call"
 #define LEVELC_BIF_CONTEXT_CLASS "RexxBifCallContext"
@@ -55,6 +56,13 @@ typedef struct {
     LevelCProcedureSlice *procedures;
     size_t procedure_count;
 } LevelCLowerPlan;
+
+typedef enum {
+    LEVELC_VAR_NAME_INVALID = 0,
+    LEVELC_VAR_NAME_SCALAR,
+    LEVELC_VAR_NAME_STEM,
+    LEVELC_VAR_NAME_COMPOUND
+} LevelCVariableNameKind;
 
 const char *rxcp_levelc_compile_unsupported_message(void) {
     return "REXX Level C (Classic REXX) is currently supported only for DSLSH syntax highlighting. Compilation is not supported yet";
@@ -138,6 +146,10 @@ static LevelCProcedureSlice *levelc_find_procedure(LevelCLowerPlan *plan,
 static int levelc_expr_supported(ASTNode *expr,
                                  LevelCLowerPlan *plan,
                                  const char **reason_out);
+static int levelc_variable_value_supported(ASTNode *node,
+                                           const char **reason_out);
+static int levelc_assignment_target_supported(ASTNode *node,
+                                              const char **reason_out);
 
 static int levelc_has_single_child(ASTNode *node) {
     return node && node->child && !node->child->sibling;
@@ -289,8 +301,10 @@ static int levelc_expr_supported(ASTNode *expr,
     switch (expr->node_type) {
         case STRING:
         case INTEGER:
-        case VAR_SYMBOL:
             return 1;
+
+        case VAR_SYMBOL:
+            return levelc_variable_value_supported(expr, reason_out);
 
         case OP_ADD:
             left = expr->child;
@@ -328,6 +342,7 @@ static int levelc_pool_statement_supported(ASTNode *stmt,
             if (reason_out) *reason_out = "unsupported assignment shape";
             return 0;
         }
+        if (!levelc_assignment_target_supported(target, reason_out)) return 0;
         return levelc_expr_supported(expr, plan, reason_out);
     }
 
@@ -392,12 +407,80 @@ static char *levelc_upper_label_name(ASTNode *node) {
     return name;
 }
 
-static int levelc_name_is_stem(const char *name) {
+static LevelCVariableNameKind levelc_variable_name_kind(const char *name) {
+    const char *dot;
     size_t length;
 
-    if (!name) return 0;
+    if (!name || !name[0]) return LEVELC_VAR_NAME_INVALID;
+
+    dot = strchr(name, '.');
+    if (!dot) return LEVELC_VAR_NAME_SCALAR;
+
     length = strlen(name);
-    return length > 0 && name[length - 1] == '.';
+    if (length > 0 && name[length - 1] == '.') return LEVELC_VAR_NAME_STEM;
+    if (dot[1] != '\0') return LEVELC_VAR_NAME_COMPOUND;
+    return LEVELC_VAR_NAME_INVALID;
+}
+
+static int levelc_name_is_stem(const char *name) {
+    return levelc_variable_name_kind(name) == LEVELC_VAR_NAME_STEM;
+}
+
+static int levelc_name_is_compound(const char *name) {
+    return levelc_variable_name_kind(name) == LEVELC_VAR_NAME_COMPOUND;
+}
+
+static char *levelc_compound_stem_name(const char *name) {
+    const char *dot;
+    size_t length;
+    char *stem;
+
+    if (!name || !levelc_name_is_compound(name)) return NULL;
+
+    dot = strchr(name, '.');
+    if (!dot) return NULL;
+
+    length = (size_t)(dot - name) + 1;
+    stem = malloc(length + 1);
+    if (!stem) return NULL;
+    memcpy(stem, name, length);
+    stem[length] = '\0';
+    return stem;
+}
+
+static char *levelc_compound_tail_name(const char *name) {
+    const char *dot;
+    char *tail;
+
+    if (!name || !levelc_name_is_compound(name)) return NULL;
+
+    dot = strchr(name, '.');
+    if (!dot || !dot[1]) return NULL;
+
+    tail = strdup(dot + 1);
+    return tail;
+}
+
+static int levelc_tail_is_numeric_literal(const char *tail) {
+    size_t i;
+
+    if (!tail || !tail[0]) return 0;
+    for (i = 0; tail[i]; i++) {
+        if (!isdigit((unsigned char)tail[i])) return 0;
+    }
+    return 1;
+}
+
+static int levelc_compound_tail_supported(const char *name) {
+    char *tail;
+    int supported;
+
+    tail = levelc_compound_tail_name(name);
+    if (!tail) return 0;
+
+    supported = tail[0] != '\0' && strchr(tail, '.') == NULL;
+    free(tail);
+    return supported;
 }
 
 static char *levelc_generated_proc_name(const char *levelc_name, int with_colon) {
@@ -444,6 +527,74 @@ static ASTNode *levelc_name_string(Context *context, ASTNode *source_node) {
     node = rxcp_remap_create_string_constant(context, source_node, name);
     free(name);
     return node;
+}
+
+static int levelc_variable_value_supported(ASTNode *node,
+                                           const char **reason_out) {
+    char *name;
+    LevelCVariableNameKind kind;
+    int supported;
+
+    name = levelc_upper_name(node);
+    if (!name) {
+        if (reason_out) *reason_out = "failed to normalize variable name";
+        return 0;
+    }
+
+    kind = levelc_variable_name_kind(name);
+    supported = 0;
+    switch (kind) {
+        case LEVELC_VAR_NAME_SCALAR:
+            supported = 1;
+            break;
+        case LEVELC_VAR_NAME_COMPOUND:
+            supported = levelc_compound_tail_supported(name);
+            if (!supported && reason_out) *reason_out = "compound tail shape is outside slice";
+            break;
+        case LEVELC_VAR_NAME_STEM:
+            if (reason_out) *reason_out = "bare stem value is outside slice";
+            break;
+        default:
+            if (reason_out) *reason_out = "unsupported variable name shape";
+            break;
+    }
+
+    free(name);
+    return supported;
+}
+
+static int levelc_assignment_target_supported(ASTNode *node,
+                                              const char **reason_out) {
+    char *name;
+    LevelCVariableNameKind kind;
+    int supported;
+
+    name = levelc_upper_name(node);
+    if (!name) {
+        if (reason_out) *reason_out = "failed to normalize assignment target";
+        return 0;
+    }
+
+    kind = levelc_variable_name_kind(name);
+    supported = 0;
+    switch (kind) {
+        case LEVELC_VAR_NAME_SCALAR:
+            supported = 1;
+            break;
+        case LEVELC_VAR_NAME_COMPOUND:
+            supported = levelc_compound_tail_supported(name);
+            if (!supported && reason_out) *reason_out = "compound assignment tail shape is outside slice";
+            break;
+        case LEVELC_VAR_NAME_STEM:
+            if (reason_out) *reason_out = "bare stem assignment is outside slice";
+            break;
+        default:
+            if (reason_out) *reason_out = "unsupported assignment target shape";
+            break;
+    }
+
+    free(name);
+    return supported;
 }
 
 static char *levelc_call_target_name(ASTNode *call_node) {
@@ -508,9 +659,13 @@ static int levelc_procedure_tail_supported(ASTNode *procedure_node,
             return 0;
         }
         name = levelc_upper_name(arg);
-        if (!name || levelc_name_is_stem(name)) {
-            if (name) free(name);
-            if (reason_out) *reason_out = "stem PROCEDURE EXPOSE is outside slice";
+        if (!name) {
+            if (reason_out) *reason_out = "failed to normalize PROCEDURE EXPOSE target";
+            return 0;
+        }
+        if (levelc_name_is_compound(name)) {
+            free(name);
+            if (reason_out) *reason_out = "compound PROCEDURE EXPOSE is outside slice";
             return 0;
         }
         free(name);
@@ -560,9 +715,13 @@ static int levelc_arg_statement_supported(ASTNode *stmt,
             return 0;
         }
         name = levelc_upper_name(target);
-        if (!name || levelc_name_is_stem(name)) {
-            if (name) free(name);
-            if (reason_out) *reason_out = "stem ARG template is outside slice";
+        if (!name) {
+            if (reason_out) *reason_out = "failed to normalize ARG template";
+            return 0;
+        }
+        if (levelc_variable_name_kind(name) != LEVELC_VAR_NAME_SCALAR) {
+            free(name);
+            if (reason_out) *reason_out = "non-scalar ARG template is outside slice";
             return 0;
         }
         free(name);
@@ -574,9 +733,14 @@ static int levelc_arg_statement_supported(ASTNode *stmt,
     return 1;
 }
 
-static int levelc_call_tail_value_supported(ASTNode *node) {
+static int levelc_call_tail_value_supported(ASTNode *node,
+                                            const char **reason_out) {
     if (!node) return 0;
-    return node->node_type == LITERAL || node->node_type == INTEGER;
+    if (node->node_type == INTEGER) return 1;
+    if (node->node_type == LITERAL) {
+        return levelc_variable_value_supported(node, reason_out);
+    }
+    return 0;
 }
 
 static int levelc_call_tail_supported(ASTNode *args,
@@ -604,7 +768,7 @@ static int levelc_call_tail_supported(ASTNode *args,
                 return 0;
             }
             expect_value = 1;
-        } else if (levelc_call_tail_value_supported(node)) {
+        } else if (levelc_call_tail_value_supported(node, reason_out)) {
             if (!expect_value) {
                 if (reason_out) *reason_out = "CALL arguments must be comma separated";
                 return 0;
@@ -888,15 +1052,94 @@ static ASTNode *levelc_blank_rexxvalue(Context *context, ASTNode *source_node) {
     return levelc_rexxvalue_from_text(context, source_node, "");
 }
 
-static ASTNode *levelc_pool_value(Context *context, ASTNode *source_node) {
+static ASTNode *levelc_scalar_pool_value_by_name(Context *context,
+                                                 ASTNode *source_node,
+                                                 const char *name) {
     ASTNode *args[1];
     ASTNode *receiver;
 
     receiver = levelc_pool_ref(context, source_node, VAR_SYMBOL);
-    args[0] = levelc_name_string(context, source_node);
+    args[0] = rxcp_remap_create_string_constant(context, source_node, name);
     if (!receiver || !args[0]) return NULL;
 
     return rxcp_remap_create_member_call(context, source_node, receiver, "value", args, 1);
+}
+
+static ASTNode *levelc_compound_tail_expr(Context *context,
+                                          ASTNode *source_node,
+                                          const char *name) {
+    char *tail;
+    ASTNode *value;
+    ASTNode *as_string;
+
+    tail = levelc_compound_tail_name(name);
+    if (!tail) return NULL;
+
+    if (levelc_tail_is_numeric_literal(tail)) {
+        ASTNode *literal_tail;
+
+        literal_tail = rxcp_remap_create_string_constant(context, source_node, tail);
+        free(tail);
+        return literal_tail;
+    }
+
+    value = levelc_scalar_pool_value_by_name(context, source_node, tail);
+    free(tail);
+    if (!value) return NULL;
+
+    as_string = rxcp_remap_create_member_call(context,
+                                             source_node,
+                                             value,
+                                             "asString",
+                                             NULL,
+                                             0);
+    return as_string;
+}
+
+static ASTNode *levelc_compound_stem_string(Context *context,
+                                            ASTNode *source_node,
+                                            const char *name) {
+    char *stem;
+    ASTNode *node;
+
+    stem = levelc_compound_stem_name(name);
+    if (!stem) return NULL;
+
+    node = rxcp_remap_create_string_constant(context, source_node, stem);
+    free(stem);
+    return node;
+}
+
+static ASTNode *levelc_compound_pool_value_by_name(Context *context,
+                                                  ASTNode *source_node,
+                                                  const char *name,
+                                                  ASTNode *tail_expr) {
+    ASTNode *args[2];
+    ASTNode *receiver;
+
+    receiver = levelc_pool_ref(context, source_node, VAR_SYMBOL);
+    args[0] = levelc_compound_stem_string(context, source_node, name);
+    args[1] = tail_expr ? tail_expr : levelc_compound_tail_expr(context, source_node, name);
+    if (!receiver || !args[0] || !args[1]) return NULL;
+
+    return rxcp_remap_create_member_call(context, source_node, receiver, "stemValue", args, 2);
+}
+
+static ASTNode *levelc_pool_value(Context *context, ASTNode *source_node) {
+    char *name;
+    ASTNode *value;
+
+    name = levelc_upper_name(source_node);
+    if (!name) return NULL;
+
+    if (levelc_variable_name_kind(name) == LEVELC_VAR_NAME_COMPOUND) {
+        value = levelc_compound_pool_value_by_name(context, source_node, name, NULL);
+    } else {
+        value = levelc_scalar_pool_value_by_name(context, source_node, name);
+    }
+
+    free(name);
+    return value;
 }
 
 static ASTNode *levelc_copy_rexxvalue(Context *context,
@@ -1210,6 +1453,53 @@ static ASTNode *levelc_lower_function_call(Context *context,
     return levelc_lower_local_function_call(context, expr, plan, prelude);
 }
 
+static ASTNode *levelc_materialise_compound_tail(Context *context,
+                                                 ASTNode *source_node,
+                                                 const char *name,
+                                                 ASTNode *prelude) {
+    char *tail;
+    char *tail_name;
+    ASTNode *tail_expr;
+    ASTNode *tail_ref;
+    ASTNode *statement;
+
+    if (!context || !source_node || !name || !prelude) return NULL;
+
+    tail = levelc_compound_tail_name(name);
+    if (!tail) return NULL;
+    if (levelc_tail_is_numeric_literal(tail)) {
+        ASTNode *literal_tail;
+
+        literal_tail = rxcp_remap_create_string_constant(context, source_node, tail);
+        free(tail);
+        return literal_tail;
+    }
+    free(tail);
+
+    tail_expr = levelc_compound_tail_expr(context, source_node, name);
+    tail_name = levelc_generated_temp_name(LEVELC_COMPOUND_TAIL_PREFIX, source_node);
+    if (!tail_expr || !tail_name) {
+        if (tail_name) free(tail_name);
+        return NULL;
+    }
+
+    statement = rxcp_remap_create_simple_assignment(
+            context,
+            source_node,
+            rxcp_remap_create_named_ref(context, source_node, VAR_TARGET, tail_name),
+            tail_expr);
+    if (!statement) {
+        free(tail_name);
+        return NULL;
+    }
+    tail_ref = rxcp_remap_create_named_ref(context, source_node, VAR_SYMBOL, tail_name);
+    free(tail_name);
+    if (!tail_ref) return NULL;
+
+    add_ast(prelude, statement);
+    return tail_ref;
+}
+
 static ASTNode *levelc_lower_expr(Context *context,
                                   ASTNode *expr,
                                   LevelCLowerPlan *plan,
@@ -1238,24 +1528,50 @@ static ASTNode *levelc_pool_set_statement(Context *context,
     ASTNode *target;
     ASTNode *expr;
     ASTNode *receiver;
-    ASTNode *args[2];
+    ASTNode *args[3];
     ASTNode *member_call;
+    char *target_name;
+    LevelCVariableNameKind target_kind;
+    const char *method_name;
+    size_t arg_count;
 
     target = assign_node->child;
     expr = target ? target->sibling : NULL;
     if (!target || !expr) return NULL;
 
+    target_name = levelc_upper_name(target);
+    if (!target_name) return NULL;
+    target_kind = levelc_variable_name_kind(target_name);
+
     receiver = levelc_pool_ref(context, assign_node, VAR_SYMBOL);
-    args[0] = levelc_name_string(context, target);
-    args[1] = levelc_lower_expr(context, expr, plan, prelude);
-    if (!receiver || !args[0] || !args[1]) return NULL;
+    if (!receiver) {
+        free(target_name);
+        return NULL;
+    }
+
+    if (target_kind == LEVELC_VAR_NAME_COMPOUND) {
+        args[0] = levelc_compound_stem_string(context, target, target_name);
+        args[1] = levelc_materialise_compound_tail(context, target, target_name, prelude);
+        args[2] = levelc_lower_expr(context, expr, plan, prelude);
+        method_name = "setStemValue";
+        arg_count = 3;
+    } else {
+        args[0] = levelc_name_string(context, target);
+        args[1] = levelc_lower_expr(context, expr, plan, prelude);
+        args[2] = NULL;
+        method_name = "setValue";
+        arg_count = 2;
+    }
+    free(target_name);
+
+    if (!args[0] || !args[1] || (arg_count == 3 && !args[2])) return NULL;
 
     member_call = rxcp_remap_create_member_call(context,
                                                 assign_node,
                                                 receiver,
-                                                "setValue",
+                                                method_name,
                                                 args,
-                                                2);
+                                                arg_count);
     if (!member_call) return NULL;
 
     return rxcp_remap_create_call_statement(context, assign_node, member_call);
@@ -1441,18 +1757,30 @@ static ASTNode *levelc_expose_value_statement(Context *context,
     ASTNode *args[3];
     ASTNode *parent_symbol;
     ASTNode *member_call;
+    char *name;
+    const char *method_name;
+
+    name = levelc_upper_name(expose_target);
+    if (!name) return NULL;
 
     receiver = levelc_pool_ref(context, expose_target, VAR_SYMBOL);
-    args[0] = levelc_name_string(context, expose_target);
+    if (levelc_name_is_stem(name)) {
+        method_name = "exposeStem";
+        args[0] = rxcp_remap_create_string_constant(context, expose_target, name);
+    } else {
+        method_name = "exposeValue";
+        args[0] = levelc_name_string(context, expose_target);
+    }
     parent_symbol = levelc_parent_pool_ref(context, expose_target, VAR_SYMBOL);
     args[1] = rxcp_remap_create_reference_expr(context, expose_target, parent_symbol);
-    args[2] = levelc_name_string(context, expose_target);
+    args[2] = rxcp_remap_create_string_constant(context, expose_target, name);
+    free(name);
     if (!receiver || !args[0] || !parent_symbol || !args[1] || !args[2]) return NULL;
 
     member_call = rxcp_remap_create_member_call(context,
                                                 procedure_node,
                                                 receiver,
-                                                "exposeValue",
+                                                method_name,
                                                 args,
                                                 3);
     if (!member_call) return NULL;
