@@ -11,7 +11,7 @@ translate an `rxas` file produced by the cRexx compiler
 ![Program Structure](charts/asmstructure-crop.pdf "Title"){height=70 width=500}
 
 The assembler processing goes through a number of steps in a single
-pass: first, the Lexer / Scanner tokenises the RXAS code. After that,
+pass: first, the Lexer / Scanner tokenises the `.rxas` code. After that,
 the Parser parses the structure into a series of instructions. The
 binary writer generates the binary code and constant pool for the
 program at hand. The backpatcher runs last and handles forward references.
@@ -76,17 +76,17 @@ Example:
 
 ```rxas
 loop:
-    fndnblnk r3,r1,r3   /* find first/next non blank offset    */
-    ilt r5,r3,0         /* if <0, nothing found, end search    */
-    brt break,r5
-    inc r6              /* else increase word count            */
-                        /* offset of word is in R3             */
-    copy r8,r3          /* save offset of word                 */
-    fndblnk r3,r1,r3    /* from offset find next blank offset  */
-    ieq r7,r6,r2        /* is this the word we are looking for?*/
-    brt wordf,r7        /* go and fetch it                     */
-    ilt r5,r3,0         /* if <0, nothing found, end search    */
-    brt break,r5        /* word not found                      */
+    fndnblnk r3,r1,r3   /* find first/next non blank offset         */
+    ilt r5,r3,0         /* if <0, nothing found, end search         */
+    brt break,r5        /* branch to break                          */
+    inc r6              /* else increase word count                 */
+                        /* offset of word is in R3                  */
+    copy r8,r3          /* save offset of word                      */
+    fndblnk r3,r1,r3    /* from offset find next blank offset       */
+    ieq r7,r6,r2        /* is this the word we are looking for?     */
+    brt wordf,r7        /* go fetch it                              */
+    ilt r5,r3,0         /* if <0, nothing found, end search         */
+    brt break,r5        /* no word found                            */
     bct loop,r4,r3      /* continue to look for next non blank char */
 ```
   
@@ -194,8 +194,8 @@ a number of different strategies can be followed.
 ### Adding say statements
 
 It is easy to add `say` statements to your program. Unlike
-Rexx, there is no trace statement for assembler programs. It
-is possible to disassemble (see page \pageref{rxdas---the-crexx-disassembler} an `.rxbin` module, and reassemble it
+Rexx, there is no trace statement for assembler programs. However, it
+is easy to disassemble (see [rxdas](rxdas---the-crexx-disassembler) on page \pageref{rxdas---the-crexx-disassembler}) an `.rxbin` module, and reassemble it
 with added statements.
 
 ### Using the debugger
@@ -204,4 +204,29 @@ The `rxdb` debugger has a mode for assembler. This can be used to
 set breakpoints and/or step through the code; here the registers can
 be traced so variables in your program can be followed and the
 comparisons and branches can be checked. For more information about the
-debugger, see page \pageref{rxdb---the-crexx-debugger}.
+debugger, see [rxdb](rxdb---the-crexx-debugger) on page \pageref{rxdb---the-crexx-debugger}).
+
+### Using the Trace statement
+
+The `trace asm` statement in cRexx is designed to trace `.rxas` code as it is executed. This works only from a Rexx program.
+
+As an example, when we want to know which VM instructions are executed:
+
+```rexx <!--hellotrace-->
+# trace the world
+trace asm
+say 'hello trace'
+say 5**2
+```
+
+<!--splice--crexx hellotrace-->
+
+and we see that the optimiser did its work by deciding the answer will never be something else than 25. If we want to see how it is calculated, we need to compile without optimisation:
+
+```bash
+crexx hellotrace --nooptimise
+```
+
+and the resulting trace will show
+
+<!--splice--crexx hellotrace --nooptimise-->
