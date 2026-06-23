@@ -320,22 +320,6 @@ static ASTNode *inline_clone_body_instruction(Context *context,
     return result == RXCP_REMAP_APPLIED ? service.cloned : NULL;
 }
 
-static void inline_disconnect_subtree_symbols(ASTNode *node) {
-    ASTNode *child;
-
-    if (!node) return;
-
-    child = node->child;
-    while (child) {
-        inline_disconnect_subtree_symbols(child);
-        child = child->sibling;
-    }
-
-    if (node->symbolNode && node->symbolNode->symbol) {
-        sym_dno(node->symbolNode->symbol, node);
-    }
-}
-
 static size_t inline_count_siblings(ASTNode *node) {
     size_t count;
 

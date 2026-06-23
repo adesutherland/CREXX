@@ -30,6 +30,9 @@ typedef struct {
 void rxcp_remap_anchor_synthetic(ASTNode *node, ASTNode *source_node);
 void rxcp_remap_mark_generated_block(ASTNode *node, int primary_reporting_anchor);
 void rxcp_remap_copy_numeric_context(Scope *target, const Scope *source);
+void rxcp_remap_copy_node_semantics(ASTNode *target, const ASTNode *source);
+void rxcp_remap_disconnect_subtree_symbols(ASTNode *node);
+int rxcp_remap_replace_node(ASTNode *old_node, ASTNode *new_node);
 
 int rxcp_remap_copy_node_value_shape_to_symbol(Symbol *target, const ASTNode *source);
 int rxcp_remap_copy_symbol_value_shape(Symbol *target, const Symbol *source);
@@ -67,6 +70,21 @@ ASTNode *rxcp_remap_create_integer_constant(Context *context,
                                             ASTNode *source_node,
                                             int value,
                                             ValueType type);
+ASTNode *rxcp_remap_create_string_constant(Context *context,
+                                           ASTNode *source_node,
+                                           const char *value);
+ASTNode *rxcp_remap_create_assembler_instr(Context *context,
+                                           Scope *scope,
+                                           ASTNode *source_node,
+                                           const char *opcode,
+                                           ASTNode *arg1,
+                                           ASTNode *arg2,
+                                           ASTNode *arg3);
+ASTNode *rxcp_remap_create_register_copy_instr(Context *context,
+                                               Scope *scope,
+                                               const char *opcode,
+                                               ASTNode *lhs_node,
+                                               ASTNode *rhs_node);
 ASTNode *rxcp_remap_create_assignment_node(Context *context,
                                            Scope *scope,
                                            ASTNode *source_node,
@@ -93,6 +111,26 @@ ASTNode *rxcp_remap_create_sink_target(Context *context,
                                        ASTNode *source_node,
                                        ASTNode *shape_node,
                                        const char *prefix);
+ASTNode *rxcp_remap_append_assignment_node(ASTNode *instr_list,
+                                           ASTNode *assign_node,
+                                           ASTNode *lhs,
+                                           ASTNode *rhs);
+ASTNode *rxcp_remap_append_leave_with(Context *context,
+                                      ASTNode *instr_list,
+                                      Scope *scope,
+                                      ASTNode *source_node,
+                                      ASTNode *block_expr,
+                                      ASTNode *expr);
+ASTNode *rxcp_remap_build_capture_assignment(Context *context,
+                                             Scope *scope,
+                                             ASTNode *source_node,
+                                             Symbol *temp_symbol,
+                                             RxcpRemapExprMaterializer materializer,
+                                             void *user_data);
+ASTNode *rxcp_remap_create_captured_value_ref(Context *context,
+                                              Scope *scope,
+                                              ASTNode *source_node,
+                                              Symbol *temp_symbol);
 ASTNode *rxcp_remap_capture_once(Context *context,
                                  ASTNode *instr_list,
                                  Scope *scope,

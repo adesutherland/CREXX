@@ -100,6 +100,10 @@ More precisely:
   `rxcp_remap_writeback_through_captured_locator()`. The inline layer keeps the
   guards and aliasing policy; the remap layer owns the reusable capture and
   materialisation mechanics.
+- Inline-generated constants, assembler/copy instructions, assignment appends,
+  `LEAVE_WITH` appends, semantic-shape copying, and ordinary replacement
+  cleanup are now also shared remap-builder operations. The inline layer still
+  decides when those operations are legal.
 - Optional formals now inline through the same rewrite path as other supported local plain-procedure calls, with omitted-actual/default-formal semantics preserved during binding.
 - Reference operations and reference-bearing return classes remain deliberately
   fail-closed. The `reference_source_inline_lifetime` fixture is the canary:

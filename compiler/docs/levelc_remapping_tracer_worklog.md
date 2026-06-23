@@ -61,8 +61,6 @@ Green stop for implementation stage 1:
   - result: 254/254 passed
 - `git diff --check`
   - result: passed
-- Direct trailing-whitespace check over touched source/doc/golden files
-  - result: passed
 
 ### Stage 1 Result
 
@@ -963,5 +961,81 @@ Green stop for implementation stage 11:
   - result: passed, 3/3 tests
 - `RXCP_INLINE_RULE_SUMMARY=1 cmake-build-release/bin/rxc -i cmake-build-release/bin -o /tmp/captured_locator_summary_probe compiler/tests/rexx_src/inline_test_computed_receiver_copyback.crexx`
   - result: passed; summary still prints service boundaries and selector rules
+- `git diff --check`
+  - result: passed
+
+## Stage 12 - Command-Shaped Remap Builder Split
+
+### Goal
+
+Make the remap builder easier to read as a future command vocabulary. The
+selector table is already DSL-like enough for now; this pass splits reusable C
+construction routines so later rule descriptions can talk in verbs such as
+`shape-from`, `append-assignment`, `append-leave-with`, `replace-node`,
+`capture-assignment`, `assembler-instr`, and `register-copy` without embedding
+inline-specific helper names.
+
+### Implemented Shape
+
+The shared remap builder now owns:
+
+- node semantic shape copying via `rxcp_remap_copy_node_semantics()`;
+- symbol-disconnect cleanup and replacement through
+  `rxcp_remap_disconnect_subtree_symbols()` and `rxcp_remap_replace_node()`;
+- string constants, generic assembler instructions, and register-copy
+  instructions;
+- assignment completion/append and `LEAVE_WITH` append operations;
+- split capture helpers:
+  `rxcp_remap_build_capture_assignment()` and
+  `rxcp_remap_create_captured_value_ref()`, used by scalar and locator
+  capture-once commands.
+
+Inline clients now use those shared helpers for semantic copying, assembler
+and copy instruction creation, assignment/leave appends, and normal AST
+replacement cleanup. Inline policy remains inline-owned: argument-binding
+classification, receiver legality, return-shape decisions, and clone-map
+policy are not moved in this pass.
+
+### Remaining Candidates
+
+- A higher-level `deliver-to-target` / `deliver-to-sink` API would make return
+  handling read even more like a rule command, but it should preserve current
+  assignment allocation order.
+- Clone-map extraction remains deliberately deferred. It is likely useful for
+  Level C and Classic Rexx, but it touches scope/symbol ownership more deeply
+  than this command-split pass.
+- Scoped method/factory argument capture still has inline policy interleaved
+  with construction. It now uses shared append helpers, but the proof logic
+  should stay with the inliner until another frontend needs the same rule.
+
+### Replay Steps
+
+1. Promote node semantic shape copying from inline-private/static helper to the
+   remap builder API.
+2. Move ordinary replacement cleanup into `rxcp_remap_replace_node()`.
+3. Move assembler, string-constant, and register-copy builders into
+   `rxcp_remap_build.[ch]`.
+4. Add append helpers for existing assignment nodes and `LEAVE_WITH` nodes.
+5. Split capture-once internals into capture-assignment and captured-value-ref
+   builders, keeping the existing scalar and locator convenience APIs.
+6. Refactor inline clients to call the shared helpers without changing rewrite
+   policy.
+
+### Verification
+
+Green stop for implementation stage 12:
+
+- `cmake --build cmake-build-release --target rxc rxas rxvm --parallel 4`
+  - result: passed
+- `ctest --test-dir cmake-build-release -R 'inline|Inline' --output-on-failure`
+  - result: 257/257 passed
+- `ctest --test-dir cmake-build-release -R '16_classes|address_inline_then|address_exit_extended' --output-on-failure`
+  - result: 3/3 passed
+- `RXCP_INLINE_RULE_SUMMARY=1 cmake-build-release/bin/rxc -i cmake-build-release/bin -o /tmp/remap_command_summary_probe compiler/tests/rexx_src/inline_test_computed_receiver_copyback.crexx`
+  - result: passed and printed selector/service rule summaries
+- Direct helper-shape searches over inline/remap source
+  - result: passed; old inline-private builder names removed, direct
+    replacement is limited to `rxcp_remap_replace_node()` and the intentional
+    return-wrapper move case
 - `git diff --check`
   - result: passed

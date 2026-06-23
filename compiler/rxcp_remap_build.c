@@ -33,6 +33,56 @@ void rxcp_remap_copy_numeric_context(Scope *target, const Scope *source) {
     target->num_context.standard = source->num_context.standard;
 }
 
+void rxcp_remap_copy_node_semantics(ASTNode *target, const ASTNode *source) {
+    if (!target || !source) return;
+
+    target->is_ref_arg = source->is_ref_arg;
+    target->is_opt_arg = source->is_opt_arg;
+    target->is_const_arg = source->is_const_arg;
+    target->is_varg = source->is_varg;
+    target->inherit_parent_reg_scope = source->inherit_parent_reg_scope;
+    if (target->is_ref_arg && target->symbolNode) target->symbolNode->writeUsage = 1;
+
+    ast_set_value_type(0,
+                       target,
+                       source->value_type,
+                       source->value_dims,
+                       source->value_dim_base,
+                       source->value_dim_elements,
+                       source->value_class);
+    ast_set_target_type(0,
+                        target,
+                        source->target_type,
+                        source->target_dims,
+                        source->target_dim_base,
+                        source->target_dim_elements,
+                        source->target_class);
+}
+
+void rxcp_remap_disconnect_subtree_symbols(ASTNode *node) {
+    ASTNode *child;
+
+    if (!node) return;
+
+    child = node->child;
+    while (child) {
+        rxcp_remap_disconnect_subtree_symbols(child);
+        child = child->sibling;
+    }
+
+    if (node->symbolNode && node->symbolNode->symbol) {
+        sym_dno(node->symbolNode->symbol, node);
+    }
+}
+
+int rxcp_remap_replace_node(ASTNode *old_node, ASTNode *new_node) {
+    if (!old_node || !new_node) return 0;
+
+    ast_rpl(old_node, new_node);
+    rxcp_remap_disconnect_subtree_symbols(old_node);
+    return 1;
+}
+
 static int rxcp_remap_copy_dims(int **target, const int *source, size_t dims) {
     if (!target) return 0;
 
@@ -222,6 +272,85 @@ ASTNode *rxcp_remap_create_integer_constant(Context *context,
     return node;
 }
 
+ASTNode *rxcp_remap_create_string_constant(Context *context,
+                                           ASTNode *source_node,
+                                           const char *value) {
+    ASTNode *node;
+
+    if (!context || !source_node || !value) return NULL;
+
+    node = ast_ft(context, STRING);
+    if (!node) return NULL;
+
+    ast_copy_str(node, (char *)value);
+    rxcp_remap_anchor_synthetic(node, source_node);
+    ast_set_value_type(0, node, TP_STRING, 0, 0, 0, 0);
+    ast_set_target_type(0, node, TP_STRING, 0, 0, 0, 0);
+
+    return node;
+}
+
+ASTNode *rxcp_remap_create_assembler_instr(Context *context,
+                                           Scope *scope,
+                                           ASTNode *source_node,
+                                           const char *opcode,
+                                           ASTNode *arg1,
+                                           ASTNode *arg2,
+                                           ASTNode *arg3) {
+    ASTNode *instr;
+
+    if (!context || !scope || !source_node || !opcode) return NULL;
+
+    instr = ast_ftt(context, ASSEMBLER, strdup(opcode));
+    if (!instr) return NULL;
+
+    instr->free_node_string = 1;
+    instr->scope = scope;
+    rxcp_remap_anchor_synthetic(instr, source_node);
+
+    if (arg1) add_ast(instr, arg1);
+    if (arg2) add_ast(instr, arg2);
+    if (arg3) add_ast(instr, arg3);
+
+    return instr;
+}
+
+ASTNode *rxcp_remap_create_register_copy_instr(Context *context,
+                                               Scope *scope,
+                                               const char *opcode,
+                                               ASTNode *lhs_node,
+                                               ASTNode *rhs_node) {
+    ASTNode *instr;
+    ASTNode *lhs_copy;
+    ASTNode *rhs_copy;
+    Symbol *lhs_symbol;
+    Symbol *rhs_symbol;
+
+    if (!context || !scope || !lhs_node || !rhs_node || !opcode) return NULL;
+    if (!lhs_node->symbolNode || !rhs_node->symbolNode) return NULL;
+
+    lhs_symbol = lhs_node->symbolNode->symbol;
+    rhs_symbol = rhs_node->symbolNode->symbol;
+    if (!lhs_symbol || !rhs_symbol) return NULL;
+
+    instr = rxcp_remap_create_assembler_instr(context,
+                                              scope,
+                                              lhs_node,
+                                              opcode,
+                                              NULL,
+                                              NULL,
+                                              NULL);
+    if (!instr) return NULL;
+
+    lhs_copy = rxcp_remap_create_symbol_node(context, scope, lhs_node, lhs_symbol, VAR_TARGET, 0, 1);
+    rhs_copy = rxcp_remap_create_symbol_node(context, scope, rhs_node, rhs_symbol, VAR_SYMBOL, 1, 0);
+    if (!lhs_copy || !rhs_copy) return NULL;
+
+    add_ast(instr, lhs_copy);
+    add_ast(instr, rhs_copy);
+    return instr;
+}
+
 ASTNode *rxcp_remap_create_assignment_node(Context *context,
                                            Scope *scope,
                                            ASTNode *source_node,
@@ -271,9 +400,16 @@ ASTNode *rxcp_remap_create_assignment_to_symbol(Context *context,
                                                 ASTNode *shape_node,
                                                 Symbol *target_symbol,
                                                 ASTNode *rhs) {
+    ASTNode *assign_node;
     ASTNode *lhs;
 
     if (!context || !scope || !source_node || !target_symbol || !rhs) return NULL;
+
+    assign_node = rxcp_remap_create_assignment_node(context,
+                                                    scope,
+                                                    source_node,
+                                                    shape_node ? shape_node : rhs);
+    if (!assign_node) return NULL;
 
     lhs = rxcp_remap_create_symbol_node(context,
                                         scope,
@@ -284,12 +420,9 @@ ASTNode *rxcp_remap_create_assignment_to_symbol(Context *context,
                                         1);
     if (!lhs) return NULL;
 
-    return rxcp_remap_create_assignment(context,
-                                        scope,
-                                        source_node,
-                                        shape_node,
-                                        lhs,
-                                        rhs);
+    add_ast(assign_node, lhs);
+    add_ast(assign_node, rhs);
+    return assign_node;
 }
 
 ASTNode *rxcp_remap_create_leave_with(Context *context,
@@ -341,28 +474,50 @@ ASTNode *rxcp_remap_create_sink_target(Context *context,
                                          1);
 }
 
-ASTNode *rxcp_remap_capture_once(Context *context,
-                                 ASTNode *instr_list,
-                                 Scope *scope,
-                                 ASTNode *source_node,
-                                 const char *prefix,
-                                 size_t suffix,
-                                 RxcpRemapExprMaterializer materializer,
-                                 void *user_data,
-                                 Symbol **temp_symbol_out,
-                                 ASTNode **capture_assign_out) {
-    Symbol *temp_symbol;
+ASTNode *rxcp_remap_append_assignment_node(ASTNode *instr_list,
+                                           ASTNode *assign_node,
+                                           ASTNode *lhs,
+                                           ASTNode *rhs) {
+    if (!instr_list || !assign_node || !lhs || !rhs) return NULL;
+
+    add_ast(assign_node, lhs);
+    add_ast(assign_node, rhs);
+    add_ast(instr_list, assign_node);
+    return assign_node;
+}
+
+ASTNode *rxcp_remap_append_leave_with(Context *context,
+                                      ASTNode *instr_list,
+                                      Scope *scope,
+                                      ASTNode *source_node,
+                                      ASTNode *block_expr,
+                                      ASTNode *expr) {
+    ASTNode *leave_node;
+
+    if (!instr_list) return NULL;
+
+    leave_node = rxcp_remap_create_leave_with(context,
+                                              scope,
+                                              source_node,
+                                              block_expr,
+                                              expr);
+    if (!leave_node) return NULL;
+
+    add_ast(instr_list, leave_node);
+    return leave_node;
+}
+
+ASTNode *rxcp_remap_build_capture_assignment(Context *context,
+                                             Scope *scope,
+                                             ASTNode *source_node,
+                                             Symbol *temp_symbol,
+                                             RxcpRemapExprMaterializer materializer,
+                                             void *user_data) {
+    ASTNode *capture_assign;
     ASTNode *capture_lhs;
     ASTNode *capture_rhs;
-    ASTNode *capture_assign;
-    ASTNode *temp_ref;
 
-    if (temp_symbol_out) *temp_symbol_out = NULL;
-    if (capture_assign_out) *capture_assign_out = NULL;
-    if (!context || !instr_list || !scope || !source_node || !prefix || !materializer) return NULL;
-
-    temp_symbol = rxcp_remap_create_temp_symbol(context, scope, source_node, prefix, suffix);
-    if (!temp_symbol) return NULL;
+    if (!context || !scope || !source_node || !temp_symbol || !materializer) return NULL;
 
     capture_assign = rxcp_remap_create_assignment_node(context, scope, source_node, source_node);
     if (!capture_assign) return NULL;
@@ -376,9 +531,19 @@ ASTNode *rxcp_remap_capture_once(Context *context,
                                                 1);
     capture_rhs = materializer(context, source_node, scope, user_data);
     if (!capture_lhs || !capture_rhs) return NULL;
+
     add_ast(capture_assign, capture_lhs);
     add_ast(capture_assign, capture_rhs);
-    add_ast(instr_list, capture_assign);
+    return capture_assign;
+}
+
+ASTNode *rxcp_remap_create_captured_value_ref(Context *context,
+                                              Scope *scope,
+                                              ASTNode *source_node,
+                                              Symbol *temp_symbol) {
+    ASTNode *temp_ref;
+
+    if (!context || !scope || !source_node || !temp_symbol) return NULL;
 
     temp_ref = rxcp_remap_create_symbol_node(context,
                                              scope,
@@ -404,6 +569,45 @@ ASTNode *rxcp_remap_capture_once(Context *context,
                         source_node->target_dim_elements,
                         source_node->target_class);
 
+    return temp_ref;
+}
+
+ASTNode *rxcp_remap_capture_once(Context *context,
+                                 ASTNode *instr_list,
+                                 Scope *scope,
+                                 ASTNode *source_node,
+                                 const char *prefix,
+                                 size_t suffix,
+                                 RxcpRemapExprMaterializer materializer,
+                                 void *user_data,
+                                 Symbol **temp_symbol_out,
+                                 ASTNode **capture_assign_out) {
+    Symbol *temp_symbol;
+    ASTNode *capture_assign;
+    ASTNode *temp_ref;
+
+    if (temp_symbol_out) *temp_symbol_out = NULL;
+    if (capture_assign_out) *capture_assign_out = NULL;
+    if (!context || !instr_list || !scope || !source_node || !prefix || !materializer) return NULL;
+
+    temp_symbol = rxcp_remap_create_temp_symbol(context, scope, source_node, prefix, suffix);
+    if (!temp_symbol) return NULL;
+
+    capture_assign = rxcp_remap_build_capture_assignment(context,
+                                                         scope,
+                                                         source_node,
+                                                         temp_symbol,
+                                                         materializer,
+                                                         user_data);
+    if (!capture_assign) return NULL;
+    add_ast(instr_list, capture_assign);
+
+    temp_ref = rxcp_remap_create_captured_value_ref(context,
+                                                    scope,
+                                                    source_node,
+                                                    temp_symbol);
+    if (!temp_ref) return NULL;
+
     if (temp_symbol_out) *temp_symbol_out = temp_symbol;
     if (capture_assign_out) *capture_assign_out = capture_assign;
     return temp_ref;
@@ -419,32 +623,6 @@ static size_t rxcp_remap_count_child_nodes(ASTNode *node) {
     }
 
     return count;
-}
-
-static void rxcp_remap_copy_node_semantics(ASTNode *target, ASTNode *source) {
-    if (!target || !source) return;
-
-    target->is_ref_arg = source->is_ref_arg;
-    target->is_opt_arg = source->is_opt_arg;
-    target->is_const_arg = source->is_const_arg;
-    target->is_varg = source->is_varg;
-    target->inherit_parent_reg_scope = source->inherit_parent_reg_scope;
-    if (target->is_ref_arg && target->symbolNode) target->symbolNode->writeUsage = 1;
-
-    ast_set_value_type(0,
-                       target,
-                       source->value_type,
-                       source->value_dims,
-                       source->value_dim_base,
-                       source->value_dim_elements,
-                       source->value_class);
-    ast_set_target_type(0,
-                        target,
-                        source->target_type,
-                        source->target_dims,
-                        source->target_dim_base,
-                        source->target_dim_elements,
-                        source->target_class);
 }
 
 void rxcp_remap_init_captured_locator(RxcpRemapCapturedLocator *locator) {
@@ -490,28 +668,18 @@ int rxcp_remap_capture_locator_once(Context *context,
     while (child) {
         Symbol *temp_symbol;
         ASTNode *capture_assign;
-        ASTNode *capture_lhs;
-        ASTNode *capture_rhs;
 
         temp_symbol = rxcp_remap_create_temp_symbol(context, scope, child, prefix, child_index);
         if (!temp_symbol) return 0;
 
-        capture_assign = rxcp_remap_create_assignment_node(context, scope, child, child);
+        capture_assign = rxcp_remap_build_capture_assignment(context,
+                                                             scope,
+                                                             child,
+                                                             temp_symbol,
+                                                             materializer,
+                                                             user_data);
         if (!capture_assign) return 0;
         capture_assign->target_type = child->value_type;
-
-        capture_lhs = rxcp_remap_create_symbol_node(context,
-                                                    scope,
-                                                    child,
-                                                    temp_symbol,
-                                                    VAR_TARGET,
-                                                    0,
-                                                    1);
-        capture_rhs = materializer(context, child, scope, user_data);
-        if (!capture_lhs || !capture_rhs) return 0;
-
-        add_ast(capture_assign, capture_lhs);
-        add_ast(capture_assign, capture_rhs);
         add_ast(instr_list, capture_assign);
 
         locator_out->captured_symbols[child_index] = temp_symbol;
@@ -603,10 +771,7 @@ ASTNode *rxcp_remap_writeback_through_captured_locator(Context *context,
                                                        1);
     if (!assign_lhs) return NULL;
 
-    add_ast(assign_node, assign_lhs);
-    add_ast(assign_node, rhs);
-    add_ast(instr_list, assign_node);
-    return assign_node;
+    return rxcp_remap_append_assignment_node(instr_list, assign_node, assign_lhs, rhs);
 }
 
 ASTNode *rxcp_remap_create_generated_instruction_block(Context *context,

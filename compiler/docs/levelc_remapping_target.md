@@ -526,8 +526,13 @@ The first Level C-neutral builder/materialisation layer now lives in
 `compiler/rxcp_remap_build.c` and `compiler/rxcp_remap_build.h`. It provides
 shared building blocks for generated scopes, numeric-context copying, source
 anchors, generated blocks, temp symbols, symbol refs/targets, integer constants,
-assignments, sink targets, `LEAVE WITH` nodes, capture-once rewrites, and
-captured-locator proof/materialisation patterns. The named locator patterns are
+string constants, assembler instructions, register-copy instructions,
+assignments, sink targets, assignment/`LEAVE WITH` append operations,
+replacement-with-symbol-disconnect, capture-once rewrites, and
+captured-locator proof/materialisation patterns. The capture primitives now
+separate reusable assignment construction and captured-value references from
+the higher-level append-and-readback convenience calls. The named locator
+patterns are
 `rxcp_remap_capture_locator_once()`,
 `rxcp_remap_materialise_selected_value()`, and
 `rxcp_remap_writeback_through_captured_locator()`. They let a rule prove that a

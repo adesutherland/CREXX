@@ -436,9 +436,7 @@ static ASTNode *inline_create_receiver_copyback_leave_wrapper(Context *context,
     leave_expr->parent = NULL;
     leave_expr->sibling = NULL;
 
-    add_ast(assign_node, assign_lhs);
-    add_ast(assign_node, leave_expr);
-    add_ast(wrapper, assign_node);
+    rxcp_remap_append_assignment_node(wrapper, assign_node, assign_lhs, leave_expr);
 
     if (!inline_append_method_receiver_copyback(context,
                                                 wrapper,
@@ -681,7 +679,8 @@ static ASTNode *inline_build_block_expr(Context *context,
         }
         leave_expr->scope = inline_scope;
 
-        leave_with = rxcp_remap_create_leave_with(context,
+        leave_with = rxcp_remap_append_leave_with(context,
+                                                  instr_list,
                                                   inline_scope,
                                                   call_node,
                                                   block_expr,
@@ -691,7 +690,6 @@ static ASTNode *inline_build_block_expr(Context *context,
             inline_free_symbol_map(&clone_state);
             return NULL;
         }
-        add_ast(instr_list, leave_with);
     }
 
     inline_free_symbol_map(&clone_state);
@@ -829,7 +827,7 @@ static int ast_inline_statement(Context *context,
                     return 0;
                 }
 
-                ret_copy = inline_create_register_copy_instr(context, inline_scope, "copy", ret_lhs, ret_rhs);
+                ret_copy = rxcp_remap_create_register_copy_instr(context, inline_scope, "copy", ret_lhs, ret_rhs);
                 if (!ret_copy) {
                     inline_debug_fail_closed(context, call_node, proc_sym, "failed to create aggregate return copy instructions");
                     inline_free_symbol_map(&clone_state);
@@ -843,9 +841,7 @@ static int ast_inline_statement(Context *context,
                     inline_free_symbol_map(&clone_state);
                     return 0;
                 }
-                add_ast(ret_assign, ret_lhs);
-                add_ast(ret_assign, ret_rhs);
-                add_ast(instr_list, ret_assign);
+                rxcp_remap_append_assignment_node(instr_list, ret_assign, ret_lhs, ret_rhs);
             }
         } else {
             ASTNode *cloned_instr;
@@ -872,8 +868,7 @@ static int ast_inline_statement(Context *context,
         return 0;
     }
 
-    ast_rpl(statement_node, block);
-    inline_disconnect_subtree_symbols(statement_node);
+    rxcp_remap_replace_node(statement_node, block);
     inline_free_symbol_map(&clone_state);
 
     return 1;
@@ -932,8 +927,7 @@ int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_
         }
         block_expr = inline_build_block_expr(context, call_node, proc_sym, assign_node->scope, 0);
         if (!block_expr) return 0;
-        ast_rpl(call_node, block_expr);
-        inline_disconnect_subtree_symbols(call_node);
+        rxcp_remap_replace_node(call_node, block_expr);
         return 1;
     }
     if (return_shape.return_count != 1) {
@@ -944,8 +938,7 @@ int ast_inline_assignment(Context *context, ASTNode *assign_node, ASTNode *call_
         }
         block_expr = inline_build_block_expr(context, call_node, proc_sym, assign_node->scope, 0);
         if (!block_expr) return 0;
-        ast_rpl(call_node, block_expr);
-        inline_disconnect_subtree_symbols(call_node);
+        rxcp_remap_replace_node(call_node, block_expr);
         return 1;
     }
 
@@ -1036,12 +1029,9 @@ int ast_inline_call(Context *context, ASTNode *call_stmt, ASTNode *call_node, Sy
             return 0;
         }
 
-        add_ast(sink_assign, sink_lhs);
-        add_ast(sink_assign, block_expr);
-        add_ast(block, sink_assign);
+        rxcp_remap_append_assignment_node(block, sink_assign, sink_lhs, block_expr);
 
-        ast_rpl(call_stmt, block);
-        inline_disconnect_subtree_symbols(call_stmt);
+        rxcp_remap_replace_node(call_stmt, block);
         return 1;
     }
 
@@ -1098,8 +1088,7 @@ int ast_inline_expression(Context *context, ASTNode *call_node, Symbol *proc_sym
     block_expr = inline_build_block_expr(context, call_node, proc_sym, call_node->scope, 0);
     if (!block_expr) return 0;
 
-    ast_rpl(call_node, block_expr);
-    inline_disconnect_subtree_symbols(call_node);
+    rxcp_remap_replace_node(call_node, block_expr);
 
     return 1;
 }
@@ -1200,9 +1189,7 @@ int ast_inline_rhs_eager_operator(Context *context,
         return 0;
     }
 
-    add_ast(assign_node, assign_lhs);
-    add_ast(assign_node, assign_rhs);
-    add_ast(instr_list, assign_node);
+    rxcp_remap_append_assignment_node(instr_list, assign_node, assign_lhs, assign_rhs);
 
     op_expr = ast_dup(context, op_node);
     if (!op_expr) {
@@ -1226,7 +1213,8 @@ int ast_inline_rhs_eager_operator(Context *context,
     add_ast(op_expr, temp_ref);
     add_ast(op_expr, rhs_expr);
 
-    leave_node = rxcp_remap_create_leave_with(context,
+    leave_node = rxcp_remap_append_leave_with(context,
+                                              instr_list,
                                               inline_scope,
                                               op_node,
                                               block_expr,
@@ -1235,10 +1223,8 @@ int ast_inline_rhs_eager_operator(Context *context,
         inline_free_symbol_map(&clone_state);
         return 0;
     }
-    add_ast(instr_list, leave_node);
 
-    ast_rpl(op_node, block_expr);
-    inline_disconnect_subtree_symbols(op_node);
+    rxcp_remap_replace_node(op_node, block_expr);
     inline_free_symbol_map(&clone_state);
 
     return 1;
