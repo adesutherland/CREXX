@@ -5,43 +5,44 @@ That is deliberate: users can inspect the generated assembly, assemble it
 directly, link modules, disassemble bytecode, or package a program for native
 deployment.
 
-\begin{wrapfigure}{l}{0.4\textwidth}
-\includegraphics[scale=0.3]{charts/buildflow.pdf}
-\end{wrapfigure}
-\fussy
-
 The common flow is:
 
-1. `rxc` compiles CREXX source to `.rxas` assembly.
+1. `rxc` compiles cRexx source to `.rxas` assembly.
 2. `rxas` assembles `.rxas` assembly to `.rxbin` bytecode.
 3. `rxvm`, `rxvme`, `rxbvm`, or `rxbvme` executes one or more `.rxbin` files.
 4. `rxlink` optionally combines modules into a linked image with a shared
    constant pool.
 5. `rxcpack` can package a linked image as C data for native executable builds.
 
-The `crexx` driver wraps the usual compile, assemble, run, link, and package
-steps for day-to-day use.
+The `crexx` driver (see [the crexx tool](the-crexx-tool) on page \pageref{the-crexx-tool} wraps the usual compile, assemble, run, link, and package steps for day-to-day use. For more elaborate application systems, with separately compiled source modules and library use, a build system like Ninja or CMake[^cmake] is recommended.
+
+[^cmake]: The native executables in the cRexx distribution are built with CMake for all Operating System / Instruction Set Architecture combinations.
+<!-- \begin{wrapfigure}{l}{0.7\textwidth} -->
+\includegraphics[scale=0.8]{charts/buildflow.pdf}
+<!-- \end{wrapfigure} -->
+<!-- \fussy -->
+
 
 ## Source, Assembly, and Bytecode
 
-Source files are UTF-8 text. New cRexx source normally uses `.crexx`, with
+Source files are UTF-8 text. cRexx source normally uses `.crexx`, with
 `.crx` as a short alias. `.rexx` remains the compatibility/classic extension.
 The compiler also accepts an arbitrary non-reserved initial source extension for
-that compile. Toolchain artifacts are less flexible: RXAS assembly uses the
-fixed `.rxas` suffix and RXBIN bytecode uses the fixed `.rxbin` suffix. The
+that compile. Toolchain artifacts are less flexible: *rxas* assembly uses the
+fixed `.rxas` suffix and *rxbin* bytecode uses the fixed `.rxbin` suffix. The
 compiler output is RXAS assembly:
 
 ```bash <!--rxc1.sh-->
 rxc hello.crexx
 ```
 
-The assembler output is RXBIN bytecode:
+The assembler output is `.rxbin` bytecode:
 
 ```bash <!--rxas1.sh-->
 rxas hello.rxas
 ```
 
-RXBIN is the module format consumed by the VM, linker, disassembler, and
+`.rxbin` is the module format consumed by the VM, linker, disassembler, and
 packager.
 
 For `rxc`, `rxas`, and `rxlink`, `-o` names an output stem/path unless it
@@ -55,6 +56,7 @@ The compiler separates source discovery from binary discovery:
 
 - source roots contain `.crexx`, `.crx`, `.rexx`, and any arbitrary extension
   used by the initial source file for this compile
+
 - binary roots contain `.rxbin`, optional `.rxas`, and `.rxplugin` files
 
 Use `rxc -s path` to add a source import root and `rxc -i path` to add a binary
@@ -76,7 +78,7 @@ shared constant pool. This reduces duplicate constants and resolves module and
 interface-provider relationships up front while preserving the module records
 needed by the VM loader.
 
-Use `rxlink` for release-style deployable images and for native packaging.
+The use of `rxlink` is a good choice for release-style deployable images and native packaging.
 
 ## Native Packaging
 
@@ -85,5 +87,8 @@ to C data and linked with the VM runtime library by the platform C toolchain.
 The generated executable contains the program image and the runtime pieces
 selected by the build.
 
-Static and dynamic plugin choices depend on how the project was built. Do not
-assume every distribution contains every optional native plugin.
+Plugin libraries (which are native libraries) in the cRexx distributions have static and
+dynamic versions. Using a static or dynamic versions of a plugin is a build choice. Although the 
+intention is to keep distributions equal over operating systems and hardware architecures, it is not realistic 
+to expect that every distribution contains every optional native plugin. What is delivered, however, is
+documented in the *Library Reference* publication.
