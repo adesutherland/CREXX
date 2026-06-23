@@ -2871,16 +2871,32 @@ command_expression(E) ::= command_or_expr(P).
     E = P;
 }
 
-primary_expr(T) ::= CTK_VAR_SYMBOL(S) CTK_OPEN_BRACKET expression(E) CTK_CLOSE_BRACKET. [CTK_VAR_SYMBOL]
+primary_expr(T) ::= CTK_VAR_SYMBOL(S) CTK_OPEN_BRACKET levelc_call_args(A) CTK_CLOSE_BRACKET. [CTK_VAR_SYMBOL]
 {
     T = ast_f(context, FUNCTION, S);
-    add_ast(T, E);
+    add_ast(T, A);
 }
 
 primary_expr(T) ::= CTK_VAR_SYMBOL(S) CTK_OPEN_BRACKET CTK_CLOSE_BRACKET. [CTK_VAR_SYMBOL]
 {
     T = ast_f(context, FUNCTION, S);
     add_ast(T, ast_ft(context, NOVAL));
+}
+
+levelc_call_args(L) ::= levelc_expression_in_list(E).
+{
+    L = E;
+}
+
+levelc_call_args(L) ::= levelc_call_args(L0) CTK_COMMA levelc_expression_in_list(E).
+{
+    L = L0;
+    add_sbtr(L, E);
+}
+
+levelc_expression_in_list(E) ::= or_expr(P).
+{
+    E = P;
 }
 
 primary_expr(T) ::= CTK_VAR_SYMBOL(S).
@@ -2911,11 +2927,6 @@ primary_expr(T) ::= CTK_OPEN_BRACKET(O) expression(E) missing_close_bracket.
 primary_expr(T) ::= CTK_OPEN_BRACKET(O) missing_close_bracket.
 {
     T = levelc_unmatched_open_bracket(context, O, 0);
-}
-
-primary_expr(T) ::= CTK_COMMA(S).
-{
-    T = rxcp_levelc_ast_error(context, "37.1", S);
 }
 
 primary_expr(T) ::= bad_expression_start(S).
@@ -3106,11 +3117,6 @@ primary_expr_c(T) ::= CTK_STRING(S).
 primary_expr_c(T) ::= CTK_OPEN_BRACKET expression(E) CTK_CLOSE_BRACKET.
 {
     T = E;
-}
-
-primary_expr_c(T) ::= CTK_COMMA(S).
-{
-    T = rxcp_levelc_ast_error(context, "37.1", S);
 }
 
 prefix_expr_c(E) ::= primary_expr_c(P).
@@ -3339,6 +3345,11 @@ expression_c(E) ::= or_expr_c(P).
     E = P;
 }
 
+expression_c(E) ::= CTK_COMMA(S).
+{
+    E = rxcp_levelc_ast_error(context, "37.1", S);
+}
+
 concat_expr(E) ::= addition(P).
 {
     E = P;
@@ -3563,6 +3574,11 @@ or_expr(E) ::= or_expr(L) CTK_XOR(T) missing_expression_rhs.
 expression(E) ::= or_expr(P).
 {
     E = P;
+}
+
+expression(E) ::= CTK_COMMA(S).
+{
+    E = rxcp_levelc_ast_error(context, "37.1", S);
 }
 
 missing_close_bracket ::= CTK_MISSING_RPAREN.

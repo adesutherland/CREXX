@@ -1,0 +1,39 @@
+options levelb comments_dash numeric_classic
+import rexxvalue
+import rexxpool
+import rexxclassicbifs
+
+__rxcp_levelc_pool = .RexxVariablePool()
+call __rxcp_levelc_pool.setValue("A", .RexxValue("abcdef"))
+
+__rxcp_levelc_bif_args_1 = .RexxValue[]
+__rxcp_levelc_bif_exists_1 = .int[]
+__rxcp_levelc_bif_args_1[1] = .RexxValue(__rxcp_levelc_pool.value("A").asString())
+__rxcp_levelc_bif_exists_1[1] = 1
+__rxcp_levelc_bif_args_1[2] = .RexxValue("2")
+__rxcp_levelc_bif_exists_1[2] = 1
+__rxcp_levelc_bif_args_1[3] = .RexxValue("3")
+__rxcp_levelc_bif_exists_1[3] = 1
+__rxcp_levelc_bif_context_1 = .RexxBifCallContext("SUBSTR")
+call __rxcp_levelc_bif_context_1.setArguments(__rxcp_levelc_bif_args_1, __rxcp_levelc_bif_exists_1)
+call __rxcp_levelc_bif_context_1.setCallerPool(reference __rxcp_levelc_pool)
+call __rxcp_levelc_pool.setValue("B", rexxclassicbif_call(reference __rxcp_levelc_bif_context_1))
+
+__rxcp_levelc_bif_args_2 = .RexxValue[]
+__rxcp_levelc_bif_exists_2 = .int[]
+__rxcp_levelc_bif_args_2[1] = .RexxValue(__rxcp_levelc_pool.value("A").asString())
+__rxcp_levelc_bif_exists_2[1] = 1
+__rxcp_levelc_bif_args_2[2] = .RexxValue("5")
+__rxcp_levelc_bif_exists_2[2] = 1
+__rxcp_levelc_bif_args_2[3] = .RexxValue("3")
+__rxcp_levelc_bif_exists_2[3] = 1
+__rxcp_levelc_bif_args_2[4] = .RexxValue(".")
+__rxcp_levelc_bif_exists_2[4] = 1
+__rxcp_levelc_bif_context_2 = .RexxBifCallContext("SUBSTR")
+call __rxcp_levelc_bif_context_2.setArguments(__rxcp_levelc_bif_args_2, __rxcp_levelc_bif_exists_2)
+call __rxcp_levelc_bif_context_2.setCallerPool(reference __rxcp_levelc_pool)
+call __rxcp_levelc_pool.setValue("C", rexxclassicbif_call(reference __rxcp_levelc_bif_context_2))
+
+say __rxcp_levelc_pool.value("B").asString()
+say __rxcp_levelc_pool.value("C").asString()
+return

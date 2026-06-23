@@ -352,6 +352,74 @@ ASTNode *rxcp_remap_create_named_ref(Context *context,
     return node;
 }
 
+ASTNode *rxcp_remap_create_indexed_ref(Context *context,
+                                       ASTNode *source_node,
+                                       NodeType node_type,
+                                       const char *name,
+                                       int index) {
+    ASTNode *node;
+    ASTNode *index_node;
+
+    node = rxcp_remap_create_named_ref(context, source_node, node_type, name);
+    index_node = rxcp_remap_create_integer_constant(context,
+                                                   source_node,
+                                                   index,
+                                                   TP_INTEGER);
+    if (!node || !index_node) return NULL;
+
+    add_ast(node, index_node);
+    return node;
+}
+
+ASTNode *rxcp_remap_create_class_type(Context *context,
+                                      ASTNode *source_node,
+                                      const char *class_name) {
+    ASTNode *class_node;
+
+    if (!context || !source_node || !class_name) return NULL;
+
+    class_node = ast_ftt(context, CLASS, strdup(class_name));
+    if (!class_node) return NULL;
+
+    class_node->free_node_string = 1;
+    rxcp_remap_anchor_synthetic(class_node, source_node);
+    return class_node;
+}
+
+ASTNode *rxcp_remap_create_array_define(Context *context,
+                                        ASTNode *source_node,
+                                        const char *name,
+                                        const char *class_name) {
+    ASTNode *define_node;
+    ASTNode *target;
+    ASTNode *class_node;
+    ASTNode *range_node;
+    ASTNode *lower_bound;
+    ASTNode *upper_bound;
+
+    if (!context || !source_node || !name || !class_name) return NULL;
+
+    define_node = ast_f(context, DEFINE, source_node->token);
+    target = rxcp_remap_create_named_ref(context, source_node, VAR_TARGET, name);
+    class_node = rxcp_remap_create_class_type(context, source_node, class_name);
+    range_node = ast_ft(context, RANGE);
+    lower_bound = rxcp_remap_create_noval(context, source_node);
+    upper_bound = rxcp_remap_create_noval(context, source_node);
+    if (!define_node || !target || !class_node || !range_node ||
+        !lower_bound || !upper_bound) {
+        return NULL;
+    }
+
+    rxcp_remap_anchor_synthetic(define_node, source_node);
+    rxcp_remap_anchor_synthetic(range_node, source_node);
+    add_ast(range_node, lower_bound);
+    add_ast(range_node, upper_bound);
+    add_ast(class_node, range_node);
+    add_ast(define_node, target);
+    add_ast(define_node, class_node);
+    return define_node;
+}
+
 ASTNode *rxcp_remap_create_unary_keyword_expr(Context *context,
                                               ASTNode *source_node,
                                               NodeType node_type,
@@ -501,6 +569,23 @@ ASTNode *rxcp_remap_create_return_statement(Context *context,
     if (!node) return NULL;
 
     rxcp_remap_anchor_synthetic(node, source_node);
+    return node;
+}
+
+ASTNode *rxcp_remap_create_simple_assignment(Context *context,
+                                             ASTNode *source_node,
+                                             ASTNode *lhs,
+                                             ASTNode *rhs) {
+    ASTNode *node;
+
+    if (!context || !source_node || !lhs || !rhs) return NULL;
+
+    node = ast_f(context, ASSIGN, source_node->token);
+    if (!node) return NULL;
+
+    rxcp_remap_anchor_synthetic(node, source_node);
+    add_ast(node, lhs);
+    add_ast(node, rhs);
     return node;
 }
 

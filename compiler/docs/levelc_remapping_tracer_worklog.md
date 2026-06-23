@@ -170,6 +170,127 @@ Green stop for implementation stage 15:
 - `git diff --check`
   - result: passed
 
+## Stage 16 - Level C BIF Frame, Procedure Arguments, And Return Values
+
+### Intent
+
+Open the next feasibility slice: prove dispatcher-backed optional-arity BIF
+lowering, local procedure arguments, value-returning internal routines, and
+statement `CALL` actuals while keeping the tree surgery vocabulary reusable.
+
+### Implemented Shape
+
+The checked-in target-shape baselines are:
+
+- `compiler/tests/rexx_src/levelc_slice4_bif_substr_target_shape.crexx`
+- `compiler/tests/rexx_src/levelc_slice4_procedure_args_return_target_shape.crexx`
+
+The accepted Level C fixtures are:
+
+```rexx
+options levelc
+
+a = "abcdef"
+b = substr(a, 2, 3)
+c = substr(a, 5, 3, ".")
+say b
+say c
+```
+
+and:
+
+```rexx
+options levelc
+
+n = 2
+m = double(n, 3)
+say m
+exit
+
+double:
+procedure
+arg x, y
+return x + y
+```
+
+`compiler/rxcp_levelc_lower.c` now materialises dispatcher BIF calls through:
+
+- generated `.RexxValue[]` argument slots;
+- generated `.int[]` provided-argument masks;
+- copied `RexxValue` actuals via `asString()` so BIF validation cannot mutate
+  caller pool values;
+- `RexxBifCallContext("SUBSTR")`;
+- `setArguments`, `setCallerPool`, and `rexxclassicbif_call(reference ctx)`.
+
+Internal routine lowering now records each procedure's fixed `ARG` arity and
+return-value shape. Plain `PROCEDURE` is admitted for this slice. Procedures
+with `RETURN expr` are generated as `procedure = .RexxValue`; void helpers stay
+void. `ARG` must be the first body statement and is limited to direct scalar
+templates. Function-position local calls pass the hidden parent-pool reference
+plus copied `RexxValue` actuals. Statement `CALL p a,b` uses the current
+Level C simple-tail AST and accepts only direct variable/integer actuals in
+this slice.
+
+### Replay Steps
+
+1. Add remap-builder commands for scope-less simple assignment, class type
+   construction, array `DEFINE`, and indexed references.
+2. Widen Level C function-call parsing to normal expression lists without
+   Lemon conflicts, using a list-specific expression entry.
+3. Add expression preludes so lowering an expression can emit setup statements
+   before the consuming assignment, `SAY`, `RETURN`, or call statement.
+4. Add the BIF frame materialiser for dispatcher calls and use it for
+   `SUBSTR` with two to four provided arguments.
+5. Collect procedure arity and return shape in the Level C lower plan before
+   validating main and procedure bodies.
+6. Lower `ARG` bindings into generated procedure pools, lower `RETURN expr`,
+   lower function-position local calls, and lower `CALL p a,b` tails.
+7. Add runtime and lowered-tree tests for `SUBSTR`, procedure args/returns,
+   statement call actuals, and wrong local-call arity.
+
+### Issues And Resolutions
+
+- A broad argument-list grammar with nullable omitted items caused 46 Lemon
+  conflicts because comma was also an expression-recovery token. Narrowing to
+  normal multi-argument lists and moving comma recovery out of primary
+  expressions restored a conflict-free parser. Source forms with omitted
+  positions such as `xxx(,a,,b)` remain deferred until Level C has a
+  list-specific expression ladder or an equivalent unambiguous parser strategy.
+- The BIF context can normalise/check argument text, so generated BIF frames
+  must not store direct pool `RexxValue` handles. The materialiser now copies
+  actuals with `.RexxValue(value.asString())` before assigning frame slots.
+  Local procedure actuals use the same copy discipline for by-value calls.
+- Plain `PROCEDURE` is now intentionally accepted when the routine body stays
+  inside the proven slice. The old plain-procedure negative test was replaced
+  by a wrong-arity procedure-call negative.
+
+### Lessons For The Remapping Framework
+
+- Expression rewrites need a first-class prelude/result shape. BIF frame
+  lowering is a small example of a future DSL command sequence:
+  `materialise-bif-argument-frame`, `copy-selected-value`, `set-provided-mask`,
+  `attach-caller-pool`, `call-dispatcher`.
+- Value-copy policy is part of materialisation, not a detail inside individual
+  BIFs. Reusable builders should make "copy value" and "pass reference" visibly
+  different commands.
+- Parser reachability is a separate proof from remapper capability. The
+  runtime frame can represent omitted slots today, but source syntax for
+  omitted positions should not be admitted until the parser can do so without
+  relying on ambiguous recovery.
+
+### Verification
+
+Green stop for implementation stage 16:
+
+- `cmake --build cmake-build-release --target rxc rxas rxvm rxfnsc --parallel 4`
+  - result: passed
+- `ctest --test-dir cmake-build-release -R '^(syntaxhighlight_levelc|levelc_|testRexxClassicBifs)' --output-on-failure`
+  - result: 73/73 passed
+- `ctest --test-dir cmake-build-release -R '^(rxc_inline_byvalue_arg_reuse|inline_test_expr_run_(noopt|opt)|inline_test_ref_computed_run_(noopt|opt)|inline_test_computed_receiver_copyback_run_(noopt|opt)|inline_test_imported_bif_block_expr_lifetime_run_(noopt|opt))$' --output-on-failure`
+  - result: 9/9 passed
+- `git diff --check`
+  - result: passed
+
 ### Stage 1 Result
 
 `inline_procedure_walker()` now dispatches through internal remapping rule

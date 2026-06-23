@@ -3111,11 +3111,11 @@ add_levelc_unsupported_compile_test(levelc_compile_unsupported
 add_levelc_unsupported_compile_test(levelc_slice2_procedure_expose_unsupported
         rexx_src/levelc_slice2_procedure_expose_unsupported.rexx)
 
-add_levelc_unsupported_compile_test(levelc_slice2_plain_procedure_unsupported
-        rexx_src/levelc_slice2_plain_procedure_unsupported.rexx)
-
 add_levelc_unsupported_compile_test(levelc_slice3_unsupported_bif
         rexx_src/levelc_slice3_unsupported_bif.rexx)
+
+add_levelc_unsupported_compile_test(levelc_slice4_procedure_arg_count_unsupported
+        rexx_src/levelc_slice4_procedure_arg_count_unsupported.rexx)
 
 function(add_levelc_runtime_slice_test NAME SOURCE_FILE EXPECTED_OUTPUT)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
@@ -3237,6 +3237,26 @@ add_levelc_runtime_slice_test(levelc_slice3_bif_length
         rexx_src/levelc_slice3_bif_length.rexx
         "6\n")
 
+add_levelc_runtime_slice_test(levelc_slice4_bif_substr_target_shape
+        rexx_src/levelc_slice4_bif_substr_target_shape.crexx
+        "bcd\nef.\n")
+
+add_levelc_runtime_slice_test(levelc_slice4_bif_substr
+        rexx_src/levelc_slice4_bif_substr.rexx
+        "bcd\nef.\n")
+
+add_levelc_runtime_slice_test(levelc_slice4_procedure_args_return_target_shape
+        rexx_src/levelc_slice4_procedure_args_return_target_shape.crexx
+        "5\n")
+
+add_levelc_runtime_slice_test(levelc_slice4_procedure_args_return
+        rexx_src/levelc_slice4_procedure_args_return.rexx
+        "5\n")
+
+add_levelc_runtime_slice_test(levelc_slice4_call_args_expose
+        rexx_src/levelc_slice4_call_args_expose.rexx
+        "3\n")
+
 add_levelc_lowered_tree_shape_test(levelc_slice2_procedure_expose_tree_shape
         rexx_src/levelc_slice2_procedure_expose.rexx
         "PROCEDURE"
@@ -3260,6 +3280,27 @@ add_levelc_lowered_tree_shape_test(levelc_slice3_bif_length_tree_shape
         "setValue"
         "value"
         "asString")
+
+add_levelc_lowered_tree_shape_test(levelc_slice4_bif_substr_tree_shape
+        rexx_src/levelc_slice4_bif_substr.rexx
+        "RexxBifCallContext"
+        "setArguments"
+        "setCallerPool"
+        "rexxclassicbif_call"
+        "__rxcp_levelc_bif_args"
+        "__rxcp_levelc_bif_exists"
+        ".RexxValue"
+        ".int")
+
+add_levelc_lowered_tree_shape_test(levelc_slice4_procedure_args_return_tree_shape
+        rexx_src/levelc_slice4_procedure_args_return.rexx
+        "__rxcp_levelc_proc_DOUBLE"
+        "__rxcp_levelc_arg_1"
+        "__rxcp_levelc_arg_2"
+        ".RexxValue"
+        "setValue"
+        "RETURN"
+        "add")
 
 # Bridge Connectivity Test
 add_custom_command(

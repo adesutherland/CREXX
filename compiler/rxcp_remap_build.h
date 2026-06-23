@@ -85,6 +85,18 @@ ASTNode *rxcp_remap_create_named_ref(Context *context,
                                      ASTNode *source_node,
                                      NodeType node_type,
                                      const char *name);
+ASTNode *rxcp_remap_create_indexed_ref(Context *context,
+                                       ASTNode *source_node,
+                                       NodeType node_type,
+                                       const char *name,
+                                       int index);
+ASTNode *rxcp_remap_create_class_type(Context *context,
+                                      ASTNode *source_node,
+                                      const char *class_name);
+ASTNode *rxcp_remap_create_array_define(Context *context,
+                                        ASTNode *source_node,
+                                        const char *name,
+                                        const char *class_name);
 ASTNode *rxcp_remap_create_unary_keyword_expr(Context *context,
                                               ASTNode *source_node,
                                               NodeType node_type,
@@ -117,6 +129,10 @@ ASTNode *rxcp_remap_create_call_statement(Context *context,
                                           ASTNode *call_expr);
 ASTNode *rxcp_remap_create_return_statement(Context *context,
                                             ASTNode *source_node);
+ASTNode *rxcp_remap_create_simple_assignment(Context *context,
+                                             ASTNode *source_node,
+                                             ASTNode *lhs,
+                                             ASTNode *rhs);
 ASTNode *rxcp_remap_create_assembler_instr(Context *context,
                                            Scope *scope,
                                            ASTNode *source_node,

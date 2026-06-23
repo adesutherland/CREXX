@@ -878,18 +878,33 @@ hidden `RexxVariablePool`, lowers scalar assignments to `setValue`, lowers
 scalar reads to `value`, lowers literals to `RexxValue`, lowers binary `+` to
 `RexxValue.add`, lowers `SAY` through `asString`, and lowers the first local
 `CALL` plus `PROCEDURE EXPOSE` shape by passing a parent pool reference into a
-generated helper procedure. The next tracer slice also imports
-`rexxclassicbifs`, parses simple function-call expressions, and lowers proven
-`LENGTH(value)` calls to the direct `rexxclassicbif_length(RexxValue)` helper.
+generated helper procedure. The BIF slices import `rexxclassicbifs`, parse
+function-call expressions, lower proven `LENGTH(value)` calls to the direct
+`rexxclassicbif_length(RexxValue)` helper, and lower proven `SUBSTR` calls
+through a generated dispatcher frame with `.RexxValue[]` slots, `.int[]`
+provided flags, `RexxBifCallContext`, `setArguments`, `setCallerPool`, and
+`rexxclassicbif_call(reference ctx)`.
+
+The procedure slice now admits plain internal `PROCEDURE` when the body remains
+inside the proven tree shape. It records fixed direct-scalar `ARG` arity,
+generates `.RexxValue` hidden actual parameters, binds them into the generated
+procedure pool, and uses `.RexxValue` return types only for routines with
+`RETURN expr`. Statement `CALL p a,b` is supported for direct variable/integer
+tails; expression-position local calls such as `x = f(a,b)` are supported when
+the callee has a value return.
 Rejected programs keep the existing unsupported Level C compilation diagnostic.
 
 The BIF proof layer is now `RexxValue`-native. `RexxBifCallContext` carries
 `RexxValue` argument slots plus a separate provided-argument mask, and
 `rexxclassicbif_call()` returns a `RexxValue` while errors stay on the context.
 This keeps fixed-arity direct helpers optimisable without losing the dynamic
-dispatcher path used by RexxScript. Optional and omitted-argument BIFs should
-not be opened through direct helper calls until the remapper has a reusable
-argument-frame materialiser for value slots plus provided flags.
+dispatcher path used by RexxScript. Optional-arity BIFs should stay on the
+dispatcher path until a direct helper is worth specialising. The remapper now
+has the reusable argument-frame materialiser for value slots plus provided
+flags. Source forms with omitted argument positions, for example `xxx(,a,,b)`,
+remain a parser reachability task: the runtime frame can represent them, but
+the Level C grammar should not admit them until the expression-list parser can
+do so without conflicting with comma recovery.
 
 This path gives a real safety net. The inliner has existing positive and
 negative tests, source/import cases, and opt/noopt runtime comparisons. Passing
@@ -940,9 +955,11 @@ For Level C lowering once enabled:
   variable pools, loop state, and procedure exposure.
 - Which runtime helper calls should be treated as ordinary inline candidates
   and which should be protected as semantic boundaries.
-- The reusable remap block for optional BIF argument frames, including omitted
-  positions such as `xxx(,a,,b)`, and the point where a direct helper is worth
-  specialising instead of using the dispatcher.
+- The parser strategy for source-level omitted BIF positions such as
+  `xxx(,a,,b)`. The materialised target frame has slots and masks for this;
+  the grammar still needs an unambiguous list-specific expression shape.
+- The point where a dispatcher-backed BIF should gain a specialised direct
+  helper.
 
 ## Working Position
 

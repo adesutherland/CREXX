@@ -136,9 +136,11 @@ rexxclassicbif_length(value)
 `RexxBifCallContext` carries the uppercased BIF name, `RexxValue` argument
 values, argument presence flags, and a live caller `RexxVariablePool` reference.
 The argument count is derived from the presence mask, not from the value array,
-so omitted positions such as `xxx(,a,,b)` can be represented faithfully once the
-parser/remapper opens the wider argument-list slice. Level C lowering should
-pass the current visible activation pool. RexxScript passes only its
+so omitted positions such as `xxx(,a,,b)` can be represented faithfully. Level
+C lowering now materialises normal multi-argument dispatcher frames; admitting
+omitted source positions is intentionally deferred until the parser has an
+unambiguous list-specific expression shape. Level C lowering should pass the
+current visible activation pool. RexxScript passes only its
 sandbox/script pool and adapts the returned `RexxValue` back to its own public
 string result model.
 
@@ -166,9 +168,10 @@ and `_context_error`; do not spread one-off error formatting or signal
 decisions through individual BIF bodies.
 
 For fixed-arity compiler-proven calls, the remapper may emit direct helpers.
-For optional or omitted-argument BIFs, the remapper needs a reusable
+For optional or omitted-argument BIFs, the remapper should use the reusable
 argument-frame materialiser that records both value slots and provided flags
-before it bypasses the dispatcher.
+before calling the dispatcher. A direct helper should be introduced only when
+the call shape is common enough to justify specialising the shared path.
 
 JavaDoc-style tags are present on the implemented BIF helpers for generated user
 documentation. The current tags are `@bif`, `@signature`, `@checkargs`,
