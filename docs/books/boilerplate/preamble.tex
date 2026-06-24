@@ -144,10 +144,15 @@
 
 \usepackage{sectsty}
 %% \partfont{\color{nrgreen}}
-\chapterfont{\fontspec{Avenir Light}}
-\sectionfont{\fontspec{Avenir Light}}
-\subsectionfont{\fontspec{Avenir Light}}
-\subsubsectionfont{\fontspec{Avenir Light}}
+%% \chapterfont{\fontspec{Avenir Light}}
+%% \sectionfont{\fontspec{Avenir Light}}
+%% \subsectionfont{\fontspec{Avenir Light}}
+%% \subsubsectionfont{\fontspec{Avenir Light}}
+
+\chapterfont{\fontspec{Avenir Next}}
+\sectionfont{\fontspec{Avenir Next}}
+\subsectionfont{\fontspec{Avenir Next}}
+\subsubsectionfont{\fontspec{Avenir Next}}
 
 \usepackage[Sonny]{fncychap}
 
@@ -194,15 +199,15 @@ the#1\endcsname\quad}}
 \titlespacing*{name=\chapter,numberless}
   {0pt}{-1cm}{1cm}  % left, before, after
 
-  \renewcommand{\contentsname}{\fontspec{Avenir Light}Contents}
-  \renewcommand{\indexname}{\fontspec{Avenir Light}Index}
-  \renewcommand{\listtablename}{\fontspec{Avenir Light}List of tables}
-  \renewcommand{\listfigurename}{\fontspec{Avenir Light}List of figures}
+  \renewcommand{\contentsname}{\fontspec{Avenir Next}Contents}
+  \renewcommand{\indexname}{\fontspec{Avenir Next}Index}
+  \renewcommand{\listtablename}{\fontspec{Avenir Next}List of tables}
+  \renewcommand{\listfigurename}{\fontspec{Avenir Next}List of figures}
   
   \sectionfont{%
     \hrule                % place a horizontal line
     \vspace{1ex}%         % add some vertical space
-    \fontspec{Avenir Light}       % set section title size & style
+    \fontspec{Avenir Next}       % set section title size & style
   }
 
 % Make labels in description bold
@@ -230,7 +235,7 @@ the#1\endcsname\quad}}
 \lstdefinelanguage{text}{}
 \lstdefinelanguage{yacc}{}
 \newfontfamily\codefont{IBM Plex Mono}
-\newfontfamily\headingfont{Avenir Light}
+\newfontfamily\headingfont{Avenir Next}
 
 \definecolor{PartGrey}{gray}{0.92}
 \definecolor{PartRule}{gray}{0.55}
@@ -268,8 +273,8 @@ the#1\endcsname\quad}}
     {\color{gray!60}\rule{2mm}{7cm}}%
     \hspace{1.5cm}%
     \begin{minipage}[b]{0.65\textwidth}
-      {\fontspec{Avenir Light}\fontsize{16}{20}\selectfont\color{gray}PART \thepart}\\[1.5em]
-      {\fontspec{Avenir Light}\fontsize{34}{38}\selectfont\bfseries #1}
+      {\fontspec{Avenir Next}\fontsize{16}{20}\selectfont\color{gray}PART \thepart}\\[1.5em]
+      {\fontspec{Avenir Next}\fontsize{34}{38}\selectfont\bfseries #1}
     \end{minipage}%
   }
 
