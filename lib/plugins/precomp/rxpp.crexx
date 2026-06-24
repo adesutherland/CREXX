@@ -769,7 +769,8 @@ macroList: procedure
   macros = .string[]
   out=.string[]
   err=.string[]
- 'LS 'dir'*.'extension output out error err
+ 'ls 'dir'*.'extension output out error err
+  if out.0 < 1 then return
   lpi=max(lastpos('/',out[1]),lastpos('\',out[1]))+1
   do i=1 to out.0
      if strip(out[i])='' then iterate
