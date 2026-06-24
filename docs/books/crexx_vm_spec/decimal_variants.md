@@ -35,11 +35,11 @@ Table: db decimal precision: OS legenda. {#tbl:id}
 | Arch/OS# | Notes                                                                 |
 |----------|-----------------------------------------------------------------------|
 | x86_64/1 | True x87 80-bit precision; ABI aligns to 16 bytes; used by GCC        |
-| x86_64/2 | `long double` uses IEEE binary128 via software (libquadmath)          |
+| x86_64/2 | long double uses IEEE binary128 via software (libquadmath)            |
 | x86_64/3 | Clang supports IEEE 128-bit emulation; not hardware backed            |
-| x86_64/4 | `long double` is just an alias for `double` in MSVC                   |
-| ARM64/5  | GCC maps `long double` to binary128 if supported                      |
-| ARM64/6  | No `__float128` support in Clang; `long double` equals `double`       |
+| x86_64/4 | long double is just an alias for double in MSVC                       |
+| ARM64/5  | GCC maps long double to binary128 if supported                        |
+| ARM64/6  | No __float128 support in Clang; long double equals double             |
 | s390x/5  | Hardware-backed IEEE 128-bit (z13 and newer)                          |
 
 Table: db decimal precision: architecture notes. {#tbl:id}

@@ -22,11 +22,11 @@ The top level of the library is:
 
 \begin{shaded}
 The current Release status of this Standard Library is that it is preliminary reference material rather than a part of the Release 1 beta baseline language contract. The user has to verify components, modules and drivers before
-depending on these API's. All documented API's have implementations - there is no planned functionality in here.
+depending on these API's. All documented API's have implementations - planned functionality in here is clearly marked.
 \end{shaded}
 
-[^java]: NetRexx types are still Java VM native types
+[^java]: NetRexx types are still Java VM types;
 
 ## Note about implementation
 
-The contents of the library are put together using different technologies, although great care has been taken, using the `namespace` and `import` mechanisms, to hide that fact from the user. A large part is implemented in the cRexx language itself, and when that was impossible because of instruction set architecture or operating system dependencies, using plugins in the c language. So a library is just a library, until, mostly in large cross-platform applications, packaging of statically linked object libraries versus shared object libraries becomes an issue. All components can be re-packaged with the `rxlink` utility, while all the modules and libraries can be completely rebuilt from a source distribution or the repository.
+The contents of the library are put together using different technologies, although great care has been taken, using the `namespace` and `import` mechanisms, to hide that fact from the user. A large part is implemented in the cRexx language itself, and when that was impossible because of instruction set architecture or operating system dependencies, using plugins in the c language. So a library is just a library, until, mostly in large cross-platform applications, packaging of statically linked object libraries versus shared object libraries becomes an issue. All components can be re-packaged with the `rxlink` utility, while all the modules and libraries can be completely rebuilt from a source distribution or a clone of the cRexx git repository.

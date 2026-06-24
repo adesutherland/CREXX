@@ -1,5 +1,4 @@
 \input{../../../boilerplate/preamble}
-
 \begin{document}
 \renewcommand{\isbn}{978-90-819090-1-3}
 \setcounter{tocdepth}{1}
@@ -8,25 +7,23 @@
     Light}\\Programming Guide}
 
 \author{The \crexx{} team}
-%\date{\null\hfill Version \splice{java org.netrexx.process.NrVersion} of \today}
 \date{\null\hfill \today}
-\maketitle
-\pagenumbering{Roman}
-\pagestyle{plain}
+
 \frontmatter
-\pagenumbering{Roman}
+\maketitle
 \pagestyle{fancy}
 \input{../../../boilerplate/bookmeta}
 \tableofcontents
 
-\newpage
-\pagenumbering{arabic}
-\frontmatter
+\cleardoublepage
 \large
-\input{../../../boilerplate/hyphenation.tex}
+\input{../../../boilerplate/hyphenation}
 \input{../../../boilerplate/series}
 \input{../../../boilerplate/conventions}
+
+\mainmatter
 \input{structure}
+
 \backmatter
 \listoftables
 %\listoffigures

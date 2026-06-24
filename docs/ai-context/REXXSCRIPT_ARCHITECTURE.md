@@ -9,7 +9,7 @@ agents and maintainers need while working in the repo.
 
 This document describes the architecture, design goals, and planned evolution of RexxScript.
 
-RexxScript is exposed to CREXX applications through the `REXXSCRIPT` command and provides a lightweight scripting environment for configurable business rules, calculations, decision logic, and generated code execution.
+RexxScript is exposed to cRexx applications through the `REXXSCRIPT` command and provides a lightweight scripting environment for configurable business rules, calculations, decision logic, and generated code execution.
 
 The current implementation is built upon an execution engine that evolved from the original `EVALUATE()` prototype. RexxScript now owns that engine as a first-class runtime product; `EVALUATE()` is a compatibility facade.
 
@@ -21,7 +21,7 @@ This document focuses on architectural decisions and implementation direction. F
 
 ## Current Status
 
-RexxScript is now a working structured execution environment integrated into CREXX through the `REXXSCRIPT` command and through a direct runtime namespace.
+RexxScript is now a working structured execution environment integrated into cRexx through the `REXXSCRIPT` command and through a direct runtime namespace.
 
 The implementation supports structured control flow, local variable management,
 shared intrinsic functions, output capture, and host variable exchange through
@@ -194,7 +194,7 @@ This architecture allows practical utility functions to be introduced incrementa
 Function names are matched case-insensitively.
 
 The shared BIF call context carries a caller variable pool. In RexxScript this
-is deliberately the script sandbox pool, not the host CREXX variable pool. Only
+is deliberately the script sandbox pool, not the host cRexx variable pool. Only
 variables explicitly passed through `EXPOSE` are copied into and out of that
 sandbox.
 
@@ -244,7 +244,7 @@ Unknown function names generate a controlled runtime error.
 
 ---
 
-## CREXX Integration
+## cRexx Integration
 
 The preferred integration mechanism is the `REXXSCRIPT` command.
 
@@ -286,7 +286,7 @@ the system plugin used by the runner/library file I/O path. The included
 classlib collection code is Rexx-only and does not require the historical
 treemap plugin.
 
-The communication layer between CREXX and RexxScript is still considered an
+The communication layer between cRexx and RexxScript is still considered an
 active design area and may evolve as additional experience is gained. RexxScript
 now maintains a `RexxVariablePool` for the script-visible variables while
 continuing to copy values through the existing `EXPOSE` boundary.
@@ -420,7 +420,7 @@ Variable pools are therefore viewed as a natural extension of the current archit
 
 The evaluator exports a flat result structure.
 
-This representation is intentionally simple and integrates naturally with CREXX arrays.
+This representation is intentionally simple and integrates naturally with cRexx arrays.
 
 The raw result structure is primarily intended as an integration and diagnostic mechanism rather than a user-facing programming interface.
 
@@ -593,7 +593,7 @@ The implementation remains free to use simpler internal representations than the
 
 ## Summary
 
-RexxScript has evolved from a simple assignment evaluator into a structured scripting environment integrated into CREXX through the `REXXSCRIPT` command.
+RexxScript has evolved from a simple assignment evaluator into a structured scripting environment integrated into cRexx through the `REXXSCRIPT` command.
 
 Implemented:
 

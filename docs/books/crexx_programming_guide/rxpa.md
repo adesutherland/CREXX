@@ -14,7 +14,7 @@ The Plugin Architecture offers a comprehensive set of resources for developers, 
 
 ## Dynamic Plugins Recommended
 
-User-provided plugins are recommended to be provided as dynamic `.rxplugin` files. Dynamic plugins offer several advantages: easy site-wide distribution by placing them in the same directory as cRexx binaries, project-specific customization by locating them in the project Rexx files directory, and flexible placement in any desired location using "rxc" and "rxvm" options.
+User-provided plugins are recommended to be provided as dynamic `.rxplugin` files. Dynamic plugins offer several advantages: easy site-wide distribution by placing them in the same directory as cRexx binaries, project-specific customization by locating them in the project Rexx files directory, and flexible placement in any desired location using `rxc` and `rxvm` options.
 
 In contrast, static plugin packaging is more complex in terms of linking and is intended for core cRexx components that are part of every cRexx release. Static plugins are shipped within the cRexx binaries, ensuring their availability and consistency across distributions.
 
