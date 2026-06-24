@@ -89,12 +89,14 @@ optAdd() .locals=3
    brtpandt l41a,a1,256
    load a1,10
    .traceevent "L" 4 "R" "I" "a" 1 0 0 0 "" ""
+   settp a1,0
 l41a:
    .srcstep 15 15 17 "inline_test_ref_opt.crexx" 19 17 22 "  arg ?a = 10, ?b = 5"
    .meta "inline_test_ref_opt.optadd.b"="b" ".int" a2
    brtpandt l45a,a2,256
    load a2,5
    .traceevent "L" 4 "R" "I" "a" 2 0 0 0 "" ""
+   settp a2,0
 l45a:
    .srcstep 16 16 17 "inline_test_ref_opt.crexx" 20 3 15 "  return a + b"
    .traceevent "V" 6 "R" "I" "a" 1 16 16 0 "a" ""

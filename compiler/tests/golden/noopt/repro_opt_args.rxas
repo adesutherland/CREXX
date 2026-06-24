@@ -60,18 +60,21 @@ test_opt() .locals=4
    brtpandt l22a,a1,256
    load a1,10
    .traceevent "L" 4 "R" "I" "a" 1 0 0 0 "" ""
+   settp a1,0
 l22a:
    .srcstep 6 6 17 "repro_opt_args.crexx" 9 13 17 "  arg a=10, b=20, c=30"
    .meta "repro_opt_args.test_opt.b"="b" ".int" a2
    brtpandt l26a,a2,256
    load a2,20
    .traceevent "L" 4 "R" "I" "a" 2 0 0 0 "" ""
+   settp a2,0
 l26a:
    .srcstep 7 7 17 "repro_opt_args.crexx" 9 19 23 "  arg a=10, b=20, c=30"
    .meta "repro_opt_args.test_opt.c"="b" ".int" a3
    brtpandt l29a,a3,256
    load a3,30
    .traceevent "L" 4 "R" "I" "a" 3 0 0 0 "" ""
+   settp a3,0
 l29a:
    .srcstep 8 8 17 "repro_opt_args.crexx" 10 3 27 "  say \"a=\" a \"b=\" b \"c=\" c"
    itos a1

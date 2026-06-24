@@ -41,6 +41,11 @@ typedef struct {
 } InlineRefActualEntry;
 
 typedef struct {
+    Symbol *formal_symbol;
+    int present;
+} InlineOptionalPresenceEntry;
+
+typedef struct {
     Scope *callee_scope;
     Scope *inline_scope;
     InlineSymbolMapEntry *symbol_entries;
@@ -51,6 +56,8 @@ typedef struct {
     size_t node_count;
     InlineRefActualEntry *ref_entries;
     size_t ref_count;
+    InlineOptionalPresenceEntry *optional_presence_entries;
+    size_t optional_presence_count;
     InlineRefActualEntry *varg_ref_entries;
     Symbol **varg_symbols;
     size_t varg_count;

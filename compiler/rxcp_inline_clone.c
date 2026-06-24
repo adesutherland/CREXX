@@ -243,6 +243,21 @@ static ASTNode *inline_clone_subtree_in_scope(Context *context,
         return exists_node;
     }
 
+    if (state && node->node_type == OP_ARG_EXISTS && node->symbolNode && node->symbolNode->symbol) {
+        InlineOptionalPresenceEntry *entry;
+        ASTNode *exists_node;
+
+        entry = inline_find_optional_presence(state, node->symbolNode->symbol);
+        if (entry) {
+            exists_node = rxcp_remap_create_integer_constant(context,
+                                                            node,
+                                                            entry->present ? 1 : 0,
+                                                            TP_BOOLEAN);
+            if (exists_node) exists_node->scope = current_scope;
+            return exists_node;
+        }
+    }
+
     new_node = ast_dup(context, node);
     if (!new_node) return NULL;
 
@@ -361,6 +376,7 @@ static void inline_free_symbol_map(InlineCloneState *state) {
         }
         free(state->ref_entries);
     }
+    if (state->optional_presence_entries) free(state->optional_presence_entries);
     if (state->varg_ref_entries) {
         for (i = 0; i < state->varg_count; i++) {
             rxcp_remap_free_captured_locator(&state->varg_ref_entries[i].locator);
@@ -377,6 +393,8 @@ static void inline_free_symbol_map(InlineCloneState *state) {
     state->node_count = 0;
     state->ref_entries = NULL;
     state->ref_count = 0;
+    state->optional_presence_entries = NULL;
+    state->optional_presence_count = 0;
     state->varg_ref_entries = NULL;
     state->varg_symbols = NULL;
     state->varg_count = 0;

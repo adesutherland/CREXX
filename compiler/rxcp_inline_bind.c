@@ -144,6 +144,48 @@ static InlineRefActualEntry *inline_find_ref_actual(InlineCloneState *state, Sym
     return NULL;
 }
 
+static InlineOptionalPresenceEntry *inline_find_optional_presence(InlineCloneState *state, Symbol *formal_symbol) {
+    size_t i;
+
+    if (!state || !formal_symbol) return NULL;
+
+    for (i = 0; i < state->optional_presence_count; i++) {
+        if (state->optional_presence_entries[i].formal_symbol == formal_symbol) {
+            return &state->optional_presence_entries[i];
+        }
+    }
+
+    return NULL;
+}
+
+static int inline_register_optional_presence(InlineCloneState *state,
+                                             ASTNode *formal_target,
+                                             int present) {
+    Symbol *formal_symbol;
+    InlineOptionalPresenceEntry *entry;
+    InlineOptionalPresenceEntry *new_entries;
+
+    if (!state || !formal_target) return 0;
+    if (!formal_target->symbolNode || !formal_target->symbolNode->symbol) return 0;
+
+    formal_symbol = formal_target->symbolNode->symbol;
+    entry = inline_find_optional_presence(state, formal_symbol);
+    if (entry) {
+        entry->present = present ? 1 : 0;
+        return 1;
+    }
+
+    new_entries = realloc(state->optional_presence_entries,
+                          sizeof(InlineOptionalPresenceEntry) * (state->optional_presence_count + 1));
+    if (!new_entries) return 0;
+
+    state->optional_presence_entries = new_entries;
+    state->optional_presence_entries[state->optional_presence_count].formal_symbol = formal_symbol;
+    state->optional_presence_entries[state->optional_presence_count].present = present ? 1 : 0;
+    state->optional_presence_count++;
+    return 1;
+}
+
 static InlineRefActualEntry *inline_find_ref_varg_actual(InlineCloneState *state, size_t index) {
     if (!state || !state->varg_ref_entries) return NULL;
     if (index < 1 || index > state->varg_count) return NULL;
@@ -2021,6 +2063,13 @@ static int inline_bind_call_arguments_impl(Context *context,
         captured_actual_symbol = actual_index < captured_scoped_actual_count ?
                                  captured_scoped_actuals[actual_index] : NULL;
         if (!formal_target || !actual_arg) INLINE_BIND_RETURN(0);
+
+        if (param_arg->is_opt_arg &&
+            !inline_register_optional_presence(clone_state,
+                                               formal_target,
+                                               !inline_is_missing_actual(actual_arg))) {
+            INLINE_BIND_RETURN(0);
+        }
 
         if (param_arg->is_ref_arg && !inline_is_missing_actual(actual_arg)) {
             if (!inline_register_ref_actual(context, instr_list, inline_scope, formal_target, actual_arg, clone_state)) {

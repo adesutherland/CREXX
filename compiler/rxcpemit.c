@@ -509,6 +509,11 @@ static walker_result emit_walker(walker_direction direction,
                             output_append_text(node->output, temp1);
                             free(temp1);
                         }
+                        temp1 = mprintf("   settp %c%d,0\n",
+                                        child1->register_type,
+                                        child1->register_num);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
 
                         /* End of logic */
                         if (node->is_ref_arg || node->is_const_arg) {
@@ -530,6 +535,7 @@ static walker_result emit_walker(walker_direction direction,
                                         "l%da:\n"
                                         "   brtpandt l%dc,%c%d,%d\n"
                                         "   %scopy %c%d,%c%d\n"
+                                        "   settp %c%d,%d\n"
                                         "   br l%dd\n"
                                         "l%dc:\n"
                                         "   swap %c%d,%c%d\n"
@@ -540,6 +546,7 @@ static walker_result emit_walker(walker_direction direction,
                                         tp_prefix,
                                         child1->register_type, child1->register_num,
                                         node->register_type, node->register_num,
+                                        child1->register_type, child1->register_num, REGTP_VAL,
                                         child1->node_number,
                                         child1->node_number,
                                         child1->register_type, child1->register_num,
@@ -551,6 +558,7 @@ static walker_result emit_walker(walker_direction direction,
                                 temp1 = mprintf("   br l%db\n"
                                                 "l%da:\n"
                                                 "   %scopy %c%d,%c%d\n"
+                                                "   settp %c%d,%d\n"
                                                 "l%db:\n",
                                                 child1->node_number, /* br l%db */
                                                 child1->node_number, /* l%da: */
@@ -559,6 +567,9 @@ static walker_result emit_walker(walker_direction direction,
                                                 tp_prefix,
                                                 child1->register_type, child1->register_num,
                                                 node->register_type, node->register_num,
+
+                                                /* settp %c%d,%d */
+                                                child1->register_type, child1->register_num, REGTP_VAL,
 
                                                 child1->node_number); /* l%db: */
                                 output_append_text(node->output, temp1);
