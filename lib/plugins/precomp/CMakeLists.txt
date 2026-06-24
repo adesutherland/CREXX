@@ -3,6 +3,9 @@ project(precomp_plugin C)
 
 set(CMAKE_C_STANDARD 99)
 
+set(RXFNSB_RXBIN ${CMAKE_BINARY_DIR}/bin/library.rxbin)
+set(CLASSLIB_RXBIN ${CMAKE_BINARY_DIR}/bin/classlib.rxbin)
+set(RXFNSC_RXBIN ${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin)
 set(REXXSCRIPT_RXBIN ${CMAKE_BINARY_DIR}/bin/rexxscript.rxbin)
 
 # Include RXPA Build System
@@ -31,6 +34,9 @@ add_custom_command(
         precomp rxas rxc rxlink rxpp.crexx
         library classlib rxfnsc rexxscript
         compiler_exit_bin
+        ${RXFNSB_RXBIN}
+        ${CLASSLIB_RXBIN}
+        ${RXFNSC_RXBIN}
         ${REXXSCRIPT_RXBIN}
         rxcpack rxpa
         OUTPUT rxpp.c
