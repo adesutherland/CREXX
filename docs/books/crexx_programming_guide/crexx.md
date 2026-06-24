@@ -111,7 +111,9 @@ Source files without an `OPTIONS` clause use the `rxc` file-type defaults:
 `.rexx` defaults to Level C Classic REXX, while `.crexx` and `.crx` default to
 Level G. Explicit `OPTIONS LEVELC` scripts use the normal source header and the
 driver's standard runtime module set, including the Classic compatibility
-runtime `rxfnsc`.
+runtime `rxfnsc`. Level C compilation is incremental: supported Classic Rexx
+shapes lower and run, while constructs outside the implemented slice are
+rejected with an unsupported-shape diagnostic.
 
 ## Examples
 

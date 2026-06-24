@@ -687,10 +687,11 @@ int rxcmain(int argc, char *argv[]) {
             }
 
             if (!rxcp_levelc_lower_to_canonical(context, &levelc_reject_reason)) {
-                if (debug_mode >= 2 && levelc_reject_reason) {
-                    fprintf(stderr, "Level C lowering tracer rejected: %s\n", levelc_reject_reason);
+                fprintf(stderr, "%s", rxcp_levelc_compile_unsupported_message());
+                if (levelc_reject_reason) {
+                    fprintf(stderr, ": %s", levelc_reject_reason);
                 }
-                fprintf(stderr, "%s\n", rxcp_levelc_compile_unsupported_message());
+                fprintf(stderr, "\n");
                 errors = 1;
                 goto finish;
             }

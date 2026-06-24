@@ -11,7 +11,8 @@
  * scalar and compound pool reads/writes, string and integer literals, proven
  * expression operators, SAY, and local PROCEDURE EXPOSE over direct scalar or
  * stem names.
- * Everything else remains behind the existing unsupported compile gate.
+ * Everything else reports an unsupported-shape diagnostic until its lowering
+ * and runtime contract are implemented.
  */
 
 #include <ctype.h>
@@ -67,7 +68,7 @@ typedef enum {
 } LevelCVariableNameKind;
 
 const char *rxcp_levelc_compile_unsupported_message(void) {
-    return "REXX Level C (Classic REXX) is currently supported only for DSLSH syntax highlighting. Compilation is not supported yet";
+    return "REXX Level C (Classic REXX) compilation does not yet support this program shape";
 }
 
 static int levelc_node_has_diagnostic(ASTNode *node) {

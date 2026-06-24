@@ -3095,7 +3095,7 @@ function(add_levelc_unsupported_compile_test NAME SOURCE_FILE)
            "if(res EQUAL 0)\n"
            "  message(FATAL_ERROR \"Level C compile unexpectedly succeeded for ${NAME}.\\nSTDOUT:\\n${RXAS_DIAG_DOLLAR}{out}\\nSTDERR:\\n${RXAS_DIAG_DOLLAR}{err}\")\n"
            "endif()\n"
-           "if(NOT all MATCHES \"REXX Level C \\\\(Classic REXX\\\\) is currently supported only for DSLSH syntax highlighting\\\\. Compilation is not supported yet\")\n"
+           "if(NOT all MATCHES \"REXX Level C \\\\(Classic REXX\\\\) compilation does not yet support this program shape:\")\n"
            "  message(FATAL_ERROR \"Missing Level C unsupported diagnostic for ${NAME}.\\nSTDOUT:\\n${RXAS_DIAG_DOLLAR}{out}\\nSTDERR:\\n${RXAS_DIAG_DOLLAR}{err}\")\n"
            "endif()\n")
 
@@ -3149,7 +3149,7 @@ function(add_levelc_invalid_compile_test NAME SOURCE_FILE)
            "if(res EQUAL 0)\n"
            "  message(FATAL_ERROR \"Invalid Level C compile unexpectedly succeeded for ${NAME}.\\nSTDOUT:\\n${RXAS_DIAG_DOLLAR}{out}\\nSTDERR:\\n${RXAS_DIAG_DOLLAR}{err}\")\n"
            "endif()\n"
-           "if(all MATCHES \"REXX Level C \\\\(Classic REXX\\\\) is currently supported only for DSLSH syntax highlighting\\\\. Compilation is not supported yet\")\n"
+           "if(all MATCHES \"REXX Level C \\\\(Classic REXX\\\\) compilation does not yet support this program shape\")\n"
            "  message(FATAL_ERROR \"Invalid Level C compile fell through to the unsupported lowering diagnostic for ${NAME}.\\nSTDOUT:\\n${RXAS_DIAG_DOLLAR}{out}\\nSTDERR:\\n${RXAS_DIAG_DOLLAR}{err}\")\n"
            "endif()\n")
 
