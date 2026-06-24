@@ -1,0 +1,8 @@
+options levelb comments_dash numeric_classic
+import rexxvalue
+import rexxpool
+
+__lc_pool = .RexxVariablePool()
+call __lc_pool.setValue("A", .RexxValue("1"))
+call __lc_pool.setValue("B", __lc_pool.value("A").add(.RexxValue("2")))
+say __lc_pool.value("B").asString()

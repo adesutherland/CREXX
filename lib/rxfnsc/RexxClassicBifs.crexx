@@ -23,7 +23,7 @@
  */
 
 options levelb comments_dash numeric_classic
-namespace rexxclassicbifs expose RexxBifCallContext rexxclassicbif_call rexxclassicbif_check_args
+namespace rexxclassicbifs expose RexxBifCallContext rexxclassicbif_call rexxclassicbif_check_args rexxclassicbif_length
 import rexxvalue
 import rexxpool
 import rxfnsb
@@ -47,7 +47,7 @@ import rxfnsb
  */
 RexxBifCallContext: class
   bif_name = .string
-  bif_args = .string[]
+  bif_args = .RexxValue[]
   bif_exists = .int[]
   bif_arg_count = .int
   owned_pool = .RexxVariablePool
@@ -74,10 +74,10 @@ RexxBifCallContext: class
     return bif_name
 
   setArguments: method = .void
-    arg args = .string[], exists = .int[]
+    arg args = .RexxValue[], exists = .int[]
     bif_args = args
     bif_exists = exists
-    bif_arg_count = args[0]
+    bif_arg_count = exists[0]
     return
 
   argumentCount: method = .int
@@ -89,15 +89,26 @@ RexxBifCallContext: class
     if index > bif_exists[0] then return 0
     return bif_exists[index] <> 0
 
-  argument: method = .string
+  argument: method = .RexxValue
     arg index = .int
-    if index < 1 | index > bif_arg_count then return ""
+    if index < 1 | index > bif_arg_count then return .RexxValue("")
     return bif_args[index]
 
   setArgument: method = .void
-    arg index = .int, value = .string
+    arg index = .int, value = .RexxValue
     if index < 1 then return
     bif_args[index] = value
+    return
+
+  argumentText: method = .string
+    arg index = .int
+    if index < 1 | index > bif_arg_count then return ""
+    return bif_args[index].asString()
+
+  setArgumentText: method = .void
+    arg index = .int, value = .string
+    if index < 1 then return
+    bif_args[index] = .RexxValue(value)
     return
 
   setCallerPool: method = .void
@@ -133,9 +144,9 @@ RexxBifCallContext: class
  *
  * @param context call context reference containing the function name,
  *                arguments, and caller variable pool
- * @return result array: status, value, code, message
+ * @return result value, or a blank value with context error set
  */
-rexxclassicbif_call: procedure = .string[]
+rexxclassicbif_call: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   call context.clearError()
@@ -217,7 +228,7 @@ rexxclassicbif_check_args: procedure = .int
 _check_arg_type: procedure = .int
   arg context_ref = reference .RexxBifCallContext, index = .int, rule = .string
   context = dereference context_ref
-  value = context.argument(index)
+  value = context.argumentText(index)
 
   if rule = "ANY" then return 1
 
@@ -226,7 +237,7 @@ _check_arg_type: procedure = .int
       call _set_bif_error(context_ref, "40.11", index, value, "")
       return 0
     end
-    call context.setArgument(index, strip(value))
+    call context.setArgumentText(index, strip(value))
     return 1
   end
 
@@ -244,7 +255,7 @@ _check_arg_type: procedure = .int
       call _set_bif_error(context_ref, "40.14", index, value, "")
       return 0
     end
-    call context.setArgument(index, whole)
+    call context.setArgumentText(index, whole)
     return 1
   end
 
@@ -266,7 +277,7 @@ _check_arg_type: procedure = .int
       call _set_bif_error(context_ref, "40.28", index, value, rule)
       return 0
     end
-    call context.setArgument(index, option)
+    call context.setArgumentText(index, option)
     return 1
   end
 
@@ -281,14 +292,14 @@ _check_arg_type: procedure = .int
  * @sandbox pure
  * @return 1 for a valid abbreviation, otherwise 0
  */
-_bif_abbrev: procedure = .string[]
+_bif_abbrev: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   if rexxclassicbif_check_args(context_ref, "rANY rANY oWHOLE>=0") = 0 then return _context_error(context_ref)
-  source = context.argument(1)
-  abbrev = context.argument(2)
+  source = context.argumentText(1)
+  abbrev = context.argumentText(2)
   minlen = 0
-  if context.argumentExists(3) then minlen = context.argument(3) + 0
+  if context.argumentExists(3) then minlen = context.argumentText(3) + 0
   result = 0
   if length(abbrev) >= minlen then do
     if substr(source, 1, length(abbrev)) = abbrev then result = 1
@@ -304,12 +315,12 @@ _bif_abbrev: procedure = .string[]
  * @sandbox pure
  * @return absolute numeric value
  */
-_bif_abs: procedure = .string[]
+_bif_abs: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   if rexxclassicbif_check_args(context_ref, "rNUM") = 0 then return _context_error(context_ref)
   value = "0" as .decimal
-  value = .RexxValue(context.argument(1)).asDecimal()
+  value = context.argument(1).asDecimal()
   if value < 0 then value = 0 - value
   return _ok(value as .string)
 
@@ -322,11 +333,11 @@ _bif_abs: procedure = .string[]
  * @sandbox pure
  * @return repeated string
  */
-_bif_copies: procedure = .string[]
+_bif_copies: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>=0") = 0 then return _context_error(context_ref)
-  return _ok(copies(context.argument(1), context.argument(2) + 0))
+  return _ok(copies(context.argumentText(1), context.argumentText(2) + 0))
 
 /**
  * Classifies a value or tests it against a Classic DATATYPE option.
@@ -337,17 +348,17 @@ _bif_copies: procedure = .string[]
  * @sandbox pure
  * @return NUM or CHAR without a type, otherwise 1 or 0
  */
-_bif_datatype: procedure = .string[]
+_bif_datatype: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   if rexxclassicbif_check_args(context_ref, "rANY oABLMNSUWX") = 0 then return _context_error(context_ref)
-  value = context.argument(1)
+  value = context.argumentText(1)
   if \context.argumentExists(2) then do
     if _is_number_text(value) then return _ok("NUM")
     return _ok("CHAR")
   end
 
-  option = context.argument(2)
+  option = context.argumentText(2)
   result = 0
   select
     when option = "A" then result = _all_chars_in(value, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789") & length(value) > 0
@@ -373,16 +384,32 @@ _bif_datatype: procedure = .string[]
  * @sandbox pure
  * @return fixed-width left slice
  */
-_bif_left: procedure = .string[]
+_bif_left: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>=0 oPAD") = 0 then return _context_error(context_ref)
-  source = context.argument(1)
-  width = context.argument(2) + 0
+  source = context.argumentText(1)
+  width = context.argumentText(2) + 0
   pad = _arg_or(context_ref, 3, " ")
   if width = 0 then return _ok("")
   if width <= length(source) then return _ok(substr(source, 1, width))
   return _ok(source || copies(pad, width - length(source)))
+
+/**
+ * Direct compiler/runtime helper for Classic LENGTH over a RexxValue.
+ *
+ * The helper returns a freshly materialized RexxValue so callers do not observe
+ * aliasing through variable-pool values.
+ *
+ * @bif LENGTH
+ * @signature LENGTH(string)
+ * @sandbox pure
+ * @param source Classic scalar value
+ * @return character count
+ */
+rexxclassicbif_length: procedure = .RexxValue
+  arg source = .RexxValue
+  return .RexxValue(length(source.asString()) || "")
 
 /**
  * Returns the character length of a string.
@@ -393,11 +420,11 @@ _bif_left: procedure = .string[]
  * @sandbox pure
  * @return character count
  */
-_bif_length: procedure = .string[]
+_bif_length: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return _context_error(context_ref)
-  return _ok(length(context.argument(1)) || "")
+  return rexxclassicbif_length(context.argument(1))
 
 /**
  * Lowercases a string.
@@ -408,11 +435,11 @@ _bif_length: procedure = .string[]
  * @sandbox pure
  * @return lowercase string
  */
-_bif_lower: procedure = .string[]
+_bif_lower: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return _context_error(context_ref)
-  return _ok(lower(context.argument(1)))
+  return _ok(lower(context.argumentText(1)))
 
 /**
  * Returns the minimum or maximum numeric argument.
@@ -425,7 +452,7 @@ _bif_lower: procedure = .string[]
  * @sandbox pure
  * @return selected numeric argument text
  */
-_bif_minmax: procedure = .string[]
+_bif_minmax: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext, mode = .string
   context = dereference context_ref
   argc = context.argumentCount()
@@ -441,12 +468,12 @@ _bif_minmax: procedure = .string[]
     if _check_arg_type(context_ref, i, "NUM") = 0 then return _context_error(context_ref)
   end
 
-  best_text = context.argument(1)
+  best_text = context.argumentText(1)
   best_value = "0" as .decimal
   candidate_value = "0" as .decimal
   best_value = .RexxValue(best_text).asDecimal()
   do i = 2 to argc
-    candidate_text = context.argument(i)
+    candidate_text = context.argumentText(i)
     candidate_value = .RexxValue(candidate_text).asDecimal()
     if mode = "MAX" then do
       if candidate_value > best_value then do
@@ -472,14 +499,14 @@ _bif_minmax: procedure = .string[]
  * @sandbox pure
  * @return 1-based position, or 0 when not found
  */
-_bif_pos: procedure = .string[]
+_bif_pos: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   if rexxclassicbif_check_args(context_ref, "rANY rANY oWHOLE>0") = 0 then return _context_error(context_ref)
-  needle = context.argument(1)
-  haystack = context.argument(2)
+  needle = context.argumentText(1)
+  haystack = context.argumentText(2)
   start = 1
-  if context.argumentExists(3) then start = context.argument(3) + 0
+  if context.argumentExists(3) then start = context.argumentText(3) + 0
   if length(needle) = 0 then return _ok("0")
   found = .rxfnsb..pos(needle, haystack, start)
   return _ok(found || "")
@@ -493,12 +520,12 @@ _bif_pos: procedure = .string[]
  * @sandbox pure
  * @return fixed-width right slice
  */
-_bif_right: procedure = .string[]
+_bif_right: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>=0 oPAD") = 0 then return _context_error(context_ref)
-  source = context.argument(1)
-  width = context.argument(2) + 0
+  source = context.argumentText(1)
+  width = context.argumentText(2) + 0
   pad = _arg_or(context_ref, 3, " ")
   if width = 0 then return _ok("")
   if width <= length(source) then return _ok(substr(source, length(source) - width + 1, width))
@@ -513,12 +540,12 @@ _bif_right: procedure = .string[]
  * @sandbox pure
  * @return -1, 0, or 1
  */
-_bif_sign: procedure = .string[]
+_bif_sign: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   if rexxclassicbif_check_args(context_ref, "rNUM") = 0 then return _context_error(context_ref)
   value = "0" as .decimal
-  value = .RexxValue(context.argument(1)).asDecimal()
+  value = context.argument(1).asDecimal()
   if value > 0 then return _ok("1")
   if value < 0 then return _ok("-1")
   return _ok("0")
@@ -532,13 +559,13 @@ _bif_sign: procedure = .string[]
  * @sandbox pure
  * @return words joined by count copies of pad
  */
-_bif_space: procedure = .string[]
+_bif_space: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   if rexxclassicbif_check_args(context_ref, "rANY oWHOLE>=0 oPAD") = 0 then return _context_error(context_ref)
-  source = context.argument(1)
+  source = context.argumentText(1)
   count = 1
-  if context.argumentExists(2) then count = context.argument(2) + 0
+  if context.argumentExists(2) then count = context.argumentText(2) + 0
   pad = _arg_or(context_ref, 3, " ")
   word_count = words(source)
   if word_count = 0 then return _ok("")
@@ -558,11 +585,11 @@ _bif_space: procedure = .string[]
  * @sandbox pure
  * @return stripped string
  */
-_bif_strip: procedure = .string[]
+_bif_strip: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   if rexxclassicbif_check_args(context_ref, "rANY oLTB oPAD") = 0 then return _context_error(context_ref)
-  source = context.argument(1)
+  source = context.argumentText(1)
   option = _arg_or(context_ref, 2, "B")
   char = _arg_or(context_ref, 3, " ")
   return _ok(strip(source, option, char))
@@ -576,16 +603,16 @@ _bif_strip: procedure = .string[]
  * @sandbox pure
  * @return substring, optionally padded to length
  */
-_bif_substr: procedure = .string[]
+_bif_substr: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0 oWHOLE>=0 oPAD") = 0 then return _context_error(context_ref)
-  source = context.argument(1)
-  start = context.argument(2) + 0
+  source = context.argumentText(1)
+  start = context.argumentText(2) + 0
   source_len = length(source)
 
   if context.argumentExists(3) then do
-    wanted = context.argument(3) + 0
+    wanted = context.argumentText(3) + 0
     pad = _arg_or(context_ref, 4, " ")
     if wanted = 0 then return _ok("")
     if start > source_len then return _ok(copies(pad, wanted))
@@ -606,11 +633,11 @@ _bif_substr: procedure = .string[]
  * @sandbox pure
  * @return uppercase string
  */
-_bif_upper: procedure = .string[]
+_bif_upper: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return _context_error(context_ref)
-  return _ok(upper(context.argument(1)))
+  return _ok(upper(context.argumentText(1)))
 
 /**
  * Finds the first matching or non-matching reference character.
@@ -621,15 +648,15 @@ _bif_upper: procedure = .string[]
  * @sandbox pure
  * @return 1-based position, or 0 when no qualifying character exists
  */
-_bif_verify: procedure = .string[]
+_bif_verify: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   if rexxclassicbif_check_args(context_ref, "rANY rANY oMN oWHOLE>0") = 0 then return _context_error(context_ref)
-  source = context.argument(1)
-  refchars = context.argument(2)
+  source = context.argumentText(1)
+  refchars = context.argumentText(2)
   mode = _arg_or(context_ref, 3, "N")
   start = 1
-  if context.argumentExists(4) then start = context.argument(4) + 0
+  if context.argumentExists(4) then start = context.argumentText(4) + 0
   if start > length(source) then return _ok("0")
   if length(refchars) = 0 then do
     if mode = "N" then return _ok(start || "")
@@ -653,11 +680,11 @@ _bif_verify: procedure = .string[]
  * @sandbox pure
  * @return word n, or the empty string when absent
  */
-_bif_word: procedure = .string[]
+_bif_word: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0") = 0 then return _context_error(context_ref)
-  return _ok(word(context.argument(1), context.argument(2) + 0))
+  return _ok(word(context.argumentText(1), context.argumentText(2) + 0))
 
 /**
  * Counts blank-delimited words.
@@ -668,36 +695,25 @@ _bif_word: procedure = .string[]
  * @sandbox pure
  * @return word count
  */
-_bif_words: procedure = .string[]
+_bif_words: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
   if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return _context_error(context_ref)
-  return _ok(words(context.argument(1)) || "")
+  return _ok(words(context.argumentText(1)) || "")
 
 _arg_or: procedure = .string
   arg context_ref = reference .RexxBifCallContext, index = .int, default_value = .string
   context = dereference context_ref
-  if context.argumentExists(index) then return context.argument(index)
+  if context.argumentExists(index) then return context.argumentText(index)
   return default_value
 
-_ok: procedure = .string[]
+_ok: procedure = .RexxValue
   arg value = .string
-  result = .string[]
-  result[1] = "OK"
-  result[2] = value
-  result[3] = ""
-  result[4] = ""
-  return result
+  return .RexxValue(value)
 
-_context_error: procedure = .string[]
+_context_error: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
-  context = dereference context_ref
-  result = .string[]
-  result[1] = "ERROR"
-  result[2] = ""
-  result[3] = context.errorCode()
-  result[4] = context.errorMessage()
-  return result
+  return .RexxValue("")
 
 _set_bif_error: procedure = .void
   arg context_ref = reference .RexxBifCallContext, code = .string, argnum = .int, value = .string, extra = .string

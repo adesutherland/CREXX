@@ -1,5 +1,8 @@
-configure_file(${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/headerless_simple.rexx
-               ${CMAKE_CURRENT_BINARY_DIR}/headerless_simple.rexx
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/headerless_simple.crx
+               ${CMAKE_CURRENT_BINARY_DIR}/headerless_simple.crx
+               COPYONLY)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/headerless_levelc.rexx
+               ${CMAKE_CURRENT_BINARY_DIR}/headerless_levelc.rexx
                COPYONLY)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/explicit_header.crexx
                ${CMAKE_CURRENT_BINARY_DIR}/explicit_header.crexx
@@ -22,13 +25,35 @@ add_test(NAME crexx_help_smoke
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 set(CREXX_HEADERLESS_SMOKE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_crexx_headerless_smoke.cmake")
-set(CREXX_HEADERLESS_SMOKE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"${CMAKE_CURRENT_BINARY_DIR}/headerless_simple.rexx\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+set(CREXX_HEADERLESS_SMOKE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"${CMAKE_CURRENT_BINARY_DIR}/headerless_simple.crx\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND CREXX_HEADERLESS_SMOKE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"crexx headerless script failed: \\n\${out}\")\nendif()\n")
 string(APPEND CREXX_HEADERLESS_SMOKE_CONTENT "if(NOT out STREQUAL \"HELLO\\n\")\n  message(FATAL_ERROR \"Unexpected headerless output. Got: \\n\${out}\")\nendif()\n")
+string(APPEND CREXX_HEADERLESS_SMOKE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"-verbose2\" \"${CMAKE_CURRENT_BINARY_DIR}/headerless_simple.crx\" OUTPUT_VARIABLE verbose_out ERROR_VARIABLE verbose_err RESULT_VARIABLE verbose_res)\n")
+string(APPEND CREXX_HEADERLESS_SMOKE_CONTENT "if(NOT verbose_res EQUAL 0)\n  message(FATAL_ERROR \"crexx verbose headerless .crx smoke failed.\\nstdout:\\n\${verbose_out}\\nstderr:\\n\${verbose_err}\")\nendif()\n")
+string(APPEND CREXX_HEADERLESS_SMOKE_CONTENT "string(FIND \"\${verbose_out}\" \"--level levelb\" levelb_pos)\n")
+string(APPEND CREXX_HEADERLESS_SMOKE_CONTENT "if(NOT levelb_pos EQUAL -1)\n  message(FATAL_ERROR \"crexx forced headerless .crx through Level B. Got: \\n\${verbose_out}\")\nendif()\n")
+string(APPEND CREXX_HEADERLESS_SMOKE_CONTENT "string(FIND \"\${verbose_out}\" \"--import rxfnsb\" import_pos)\n")
+string(APPEND CREXX_HEADERLESS_SMOKE_CONTENT "if(NOT import_pos EQUAL -1)\n  message(FATAL_ERROR \"crexx injected rxfnsb for headerless .crx. Got: \\n\${verbose_out}\")\nendif()\n")
 file(GENERATE OUTPUT "${CREXX_HEADERLESS_SMOKE_SCRIPT}" CONTENT "${CREXX_HEADERLESS_SMOKE_CONTENT}")
 
 add_test(NAME crexx_headerless_simple_smoke
          COMMAND ${CMAKE_COMMAND} -P "${CREXX_HEADERLESS_SMOKE_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+set(CREXX_HEADERLESS_REXX_LEVELC_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_crexx_headerless_rexx_levelc_smoke.cmake")
+set(CREXX_HEADERLESS_REXX_LEVELC_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"${CMAKE_CURRENT_BINARY_DIR}/headerless_levelc.rexx\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND CREXX_HEADERLESS_REXX_LEVELC_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"crexx headerless .rexx Level C smoke failed.\\nstdout:\\n\${out}\\nstderr:\\n\${err}\")\nendif()\n")
+string(APPEND CREXX_HEADERLESS_REXX_LEVELC_CONTENT "if(NOT out STREQUAL \"3\\n\")\n  message(FATAL_ERROR \"Unexpected headerless .rexx Level C output. Got: \\n\${out}\")\nendif()\n")
+string(APPEND CREXX_HEADERLESS_REXX_LEVELC_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"-verbose2\" \"${CMAKE_CURRENT_BINARY_DIR}/headerless_levelc.rexx\" OUTPUT_VARIABLE verbose_out ERROR_VARIABLE verbose_err RESULT_VARIABLE verbose_res)\n")
+string(APPEND CREXX_HEADERLESS_REXX_LEVELC_CONTENT "if(NOT verbose_res EQUAL 0)\n  message(FATAL_ERROR \"crexx verbose headerless .rexx Level C smoke failed.\\nstdout:\\n\${verbose_out}\\nstderr:\\n\${verbose_err}\")\nendif()\n")
+string(APPEND CREXX_HEADERLESS_REXX_LEVELC_CONTENT "string(FIND \"\${verbose_out}\" \"--level levelb\" levelb_pos)\n")
+string(APPEND CREXX_HEADERLESS_REXX_LEVELC_CONTENT "if(NOT levelb_pos EQUAL -1)\n  message(FATAL_ERROR \"crexx forced headerless .rexx through Level B. Got: \\n\${verbose_out}\")\nendif()\n")
+string(APPEND CREXX_HEADERLESS_REXX_LEVELC_CONTENT "string(FIND \"\${verbose_out}\" \"--import rxfnsb\" import_pos)\n")
+string(APPEND CREXX_HEADERLESS_REXX_LEVELC_CONTENT "if(NOT import_pos EQUAL -1)\n  message(FATAL_ERROR \"crexx injected rxfnsb for headerless .rexx. Got: \\n\${verbose_out}\")\nendif()\n")
+file(GENERATE OUTPUT "${CREXX_HEADERLESS_REXX_LEVELC_SCRIPT}" CONTENT "${CREXX_HEADERLESS_REXX_LEVELC_CONTENT}")
+
+add_test(NAME crexx_headerless_rexx_levelc_smoke
+         COMMAND ${CMAKE_COMMAND} -P "${CREXX_HEADERLESS_REXX_LEVELC_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 set(CREXX_EXPLICIT_SMOKE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_crexx_explicit_smoke.cmake")
@@ -53,6 +78,27 @@ file(GENERATE OUTPUT "${CREXX_REXXSCRIPT_SMOKE_SCRIPT}" CONTENT "${CREXX_REXXSCR
 
 add_test(NAME crexx_rexxscript_smoke
          COMMAND ${CMAKE_COMMAND} -P "${CREXX_REXXSCRIPT_SMOKE_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+set(CREXX_LEVELC_CLASSIC_RUNTIME_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_crexx_levelc_classic_runtime_smoke.cmake")
+set(CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/levelc_classic_runtime_ws\")\n")
+string(APPEND CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+string(APPEND CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
+string(APPEND CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy_if_different \"${CMAKE_SOURCE_DIR}/compiler/tests/rexx_src/levelc_slice4_bif_substr.rexx\" \"\${work}/classic_bif.rexx\" RESULT_VARIABLE res)\n")
+string(APPEND CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"Failed to stage Level C Classic BIF source\")\nendif()\n")
+string(APPEND CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"classic_bif.rexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"crexx Level C Classic runtime smoke failed: \\n\${out}\")\nendif()\n")
+string(APPEND CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT "if(NOT out STREQUAL \"bcd\\nef.\\nbcdef\\n\")\n  message(FATAL_ERROR \"Unexpected Level C Classic runtime output. Got: \\n\${out}\")\nendif()\n")
+string(APPEND CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"-verbose2\" \"classic_bif.rexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE verbose_out ERROR_VARIABLE verbose_out RESULT_VARIABLE verbose_res)\n")
+string(APPEND CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT "if(NOT verbose_res EQUAL 0)\n  message(FATAL_ERROR \"crexx verbose Level C Classic runtime smoke failed: \\n\${verbose_out}\")\nendif()\n")
+foreach(_needle IN ITEMS "crexx executes:" "bin/rxfnsc" "bin/classlib")
+    string(APPEND CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT "string(FIND \"\${verbose_out}\" \"${_needle}\" pos)\n")
+    string(APPEND CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT "if(pos EQUAL -1)\n  message(FATAL_ERROR \"crexx verbose Level C Classic runtime output missing ${_needle}. Got: \\n\${verbose_out}\")\nendif()\n")
+endforeach()
+file(GENERATE OUTPUT "${CREXX_LEVELC_CLASSIC_RUNTIME_SCRIPT}" CONTENT "${CREXX_LEVELC_CLASSIC_RUNTIME_CONTENT}")
+
+add_test(NAME crexx_levelc_classic_runtime_smoke
+         COMMAND ${CMAKE_COMMAND} -P "${CREXX_LEVELC_CLASSIC_RUNTIME_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
 set(CREXX_STATUS_DIAGNOSTICS_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_crexx_status_diagnostics.cmake")
@@ -81,7 +127,7 @@ set(CREXX_SPACED_SOURCE_SMOKE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_crexx_spac
 set(CREXX_SPACED_SOURCE_SMOKE_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/spaced_source_ws\")\n")
 string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
 string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
-string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy_if_different \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/headerless_simple.rexx\" \"\${work}/hel lo.crx\" RESULT_VARIABLE res)\n")
+string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy_if_different \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/headerless_simple.crx\" \"\${work}/hel lo.crx\" RESULT_VARIABLE res)\n")
 string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"Failed to stage spaced source\")\nendif()\n")
 string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"hel lo.crx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"crexx spaced source failed with rc \${res}:\\n\${out}\")\nendif()\n")
@@ -90,7 +136,7 @@ string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "if(NOT EXISTS \"\${work}/hel lo
 string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/spaced_source_nokeep_ws\")\n")
 string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
 string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
-string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy_if_different \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/headerless_simple.rexx\" \"\${work}/hel lo.crx\" RESULT_VARIABLE res)\n")
+string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy_if_different \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/headerless_simple.crx\" \"\${work}/hel lo.crx\" RESULT_VARIABLE res)\n")
 string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"Failed to stage spaced source for -nokeep\")\nendif()\n")
 string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"-nokeep\" \"hel lo.crx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"crexx spaced source -nokeep failed with rc \${res}:\\n\${out}\")\nendif()\n")
@@ -99,7 +145,7 @@ string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "if(EXISTS \"\${work}/hel lo.rxa
 string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/spaced_source_native_ws\")\n")
 string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
 string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
-string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy_if_different \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/headerless_simple.rexx\" \"\${work}/hel lo.crx\" RESULT_VARIABLE res)\n")
+string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy_if_different \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/headerless_simple.crx\" \"\${work}/hel lo.crx\" RESULT_VARIABLE res)\n")
 string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"Failed to stage spaced source for native\")\nendif()\n")
 string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"-native\" \"hel lo.crx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
 string(APPEND CREXX_SPACED_SOURCE_SMOKE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"crexx spaced source native failed with rc \${res}:\\n\${out}\")\nendif()\n")
@@ -161,8 +207,10 @@ add_test(NAME crexx_tool_output_path_policy
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(crexx_help_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_headerless_simple_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
+set_tests_properties(crexx_headerless_rexx_levelc_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_explicit_header_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_rexxscript_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
+set_tests_properties(crexx_levelc_classic_runtime_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_status_diagnostics PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_spaced_source_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_crxc_noargs_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})

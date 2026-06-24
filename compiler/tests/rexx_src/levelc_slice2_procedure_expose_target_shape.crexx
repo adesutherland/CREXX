@@ -1,0 +1,17 @@
+options levelb comments_dash numeric_classic
+import rexxvalue
+import rexxpool
+
+__rxcp_levelc_pool = .RexxVariablePool()
+call __rxcp_levelc_pool.setValue("A", .RexxValue("1"))
+call __rxcp_levelc_proc_CHANGE(reference __rxcp_levelc_pool)
+say __rxcp_levelc_pool.value("A").asString()
+return
+
+__rxcp_levelc_proc_CHANGE: procedure
+  arg __rxcp_levelc_parent_pool_ref = reference .RexxVariablePool
+  __rxcp_levelc_parent_pool = dereference __rxcp_levelc_parent_pool_ref
+  __rxcp_levelc_pool = .RexxVariablePool()
+  call __rxcp_levelc_pool.exposeValue("A", reference __rxcp_levelc_parent_pool, "A")
+  call __rxcp_levelc_pool.setValue("A", __rxcp_levelc_pool.value("A").add(.RexxValue("2")))
+  return

@@ -1,5 +1,6 @@
 options levelb comments_dash numeric_classic
 import rexxclassicbifs
+import rexxvalue
 import rexxpool
 
 errors = 0
@@ -29,37 +30,38 @@ errors = errors + check_bif("MIN", "-1", "4", "-1", "9")
 errors = errors + check_bif("MAX", "9", "4", "-1", "9")
 errors = errors + check_bif("UPPER", "MIXED", "Mixed")
 errors = errors + check_bif("LOWER", "mixed", "Mixed")
+errors = errors + check(rexxclassicbif_length(.RexxValue("abcdef")).asString() = "6", "direct length helper")
 
 errors = errors + check_error("LENGTH", "RXC-LC-40.3")
 errors = errors + check_error("LEFT", "RXC-LC-40.13", "abc", "-1")
 errors = errors + check_error("LEFT", "RXC-LC-40.23", "abc", "5", "..")
 errors = errors + check_error("DATATYPE", "RXC-LC-40.28", "abc", "Q")
 
-args = .string[]
+args = .RexxValue[]
 exists = .int[]
-args[1] = "abc"
-args[2] = ""
-args[3] = "2"
+args[1] = .RexxValue("abc")
+args[2] = .RexxValue("")
+args[3] = .RexxValue("2")
 exists[1] = 1
 exists[2] = 0
 exists[3] = 1
 ctx = .RexxBifCallContext("SUBSTR")
 call ctx.setArguments(args, exists)
 result = rexxclassicbif_call(reference ctx)
-errors = errors + check(result[1] = "ERROR" & result[3] = "RXC-LC-40.5", "omitted required argument")
+errors = errors + check(ctx.hasError() & ctx.errorCode() = "RXC-LC-40.5" & result.asString() = "", "omitted required argument")
 
-args = .string[]
+args = .RexxValue[]
 exists = .int[]
-args[1] = " "
-args[2] = "abc def ghi"
-args[3] = "5"
+args[1] = .RexxValue(" ")
+args[2] = .RexxValue("abc def ghi")
+args[3] = .RexxValue("5")
 exists[1] = 1
 exists[2] = 1
 exists[3] = 1
 ctx = .RexxBifCallContext("POS")
 call ctx.setArguments(args, exists)
 result = rexxclassicbif_call(reference ctx)
-errors = errors + check(result[1] = "OK" & result[2] = "8", "pos with blank needle and start")
+errors = errors + check(\ctx.hasError() & result.asString() = "8", "pos with blank needle and start")
 
 pool = .RexxVariablePool()
 call pool.setString("answer", "41")
@@ -75,32 +77,32 @@ return errors
 
 check_bif: procedure = .int
   arg name = .string, expected = .string, ... = .string
-  args = .string[]
+  args = .RexxValue[]
   exists = .int[]
   do i = 1 to arg.0
-    args[i] = arg.i
+    args[i] = .RexxValue(arg.i)
     exists[i] = 1
   end
   ctx = .RexxBifCallContext(name)
   call ctx.setArguments(args, exists)
   result = rexxclassicbif_call(reference ctx)
-  if result[1] = "OK" & result[2] = expected then return 0
-  say "FAIL" name "expected" expected "got" result[1] result[2] result[3] result[4]
+  if \ctx.hasError() & result.asString() = expected then return 0
+  say "FAIL" name "expected" expected "got" result.asString() ctx.errorCode() ctx.errorMessage()
   return 1
 
 check_error: procedure = .int
   arg name = .string, expected_code = .string, ... = .string
-  args = .string[]
+  args = .RexxValue[]
   exists = .int[]
   do i = 1 to arg.0
-    args[i] = arg.i
+    args[i] = .RexxValue(arg.i)
     exists[i] = 1
   end
   ctx = .RexxBifCallContext(name)
   call ctx.setArguments(args, exists)
   result = rexxclassicbif_call(reference ctx)
-  if result[1] = "ERROR" & result[3] = expected_code then return 0
-  say "FAIL" name "expected error" expected_code "got" result[1] result[2] result[3] result[4]
+  if ctx.hasError() & ctx.errorCode() = expected_code then return 0
+  say "FAIL" name "expected error" expected_code "got" result.asString() ctx.errorCode() ctx.errorMessage()
   return 1
 
 check: procedure = .int

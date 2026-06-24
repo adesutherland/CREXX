@@ -1,0 +1,10 @@
+options levelb comments_dash numeric_classic
+import rexxvalue
+import rexxpool
+import rexxclassicbifs
+
+__rxcp_levelc_pool = .RexxVariablePool()
+call __rxcp_levelc_pool.setValue("A", .RexxValue("abcdef"))
+call __rxcp_levelc_pool.setValue("B", rexxclassicbif_length(__rxcp_levelc_pool.value("A")))
+say __rxcp_levelc_pool.value("B").asString()
+return

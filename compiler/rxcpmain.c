@@ -34,6 +34,7 @@
 #include "rxcpmain.h"
 #include "rxcp_source_ext.h"
 #include "rxcp_source_tree.h"
+#include "rxcp_levelc_lower.h"
 #include "../binutils/include/rxdefs.h"
 #include "rxcpdary.h"
 #include "rxvmplugin_framework.h"
@@ -663,9 +664,43 @@ int rxcmain(int argc, char *argv[]) {
 
     /* Parse program for real */
     switch (context->level){
-        case LEVELC:
-            fprintf(stderr,"REXX Level C (Classic REXX) is currently supported only for DSLSH syntax highlighting. Compilation is not supported yet\n");
+        case LEVELC: {
+            const char *levelc_reject_reason = 0;
+
+            if (debug_mode >= 2) fprintf(stderr, "REXX Level C (Classic REXX)\n");
+            rxcp_init_exits(context);
+            rexcpars(context);
+            if (context->debug_mode) {
+                rxcp_debug_header("STAGE_RAW", -1);
+                rxcp_print_ast_recursive(context->ast, 0);
+            }
+
+            if (!context->ast) break;
+
+            rxcp_levelc_prepare_source_ast(context);
+            source_tree_sync_diagnostics(context);
+            errors = prnterrs(context);
+            if (errors) {
+                fprintf(stderr,"%d error(s) in source file\n", errors);
+                if (context->stop_after_parse) goto dp_stop;
+                goto finish;
+            }
+
+            if (!rxcp_levelc_lower_to_canonical(context, &levelc_reject_reason)) {
+                if (debug_mode >= 2 && levelc_reject_reason) {
+                    fprintf(stderr, "Level C lowering tracer rejected: %s\n", levelc_reject_reason);
+                }
+                fprintf(stderr, "%s\n", rxcp_levelc_compile_unsupported_message());
+                errors = 1;
+                goto finish;
+            }
+
+            if (context->debug_mode) {
+                rxcp_debug_header("STAGE_LEVELC_LOWERED", -1);
+                rxcp_print_ast_recursive(context->ast, 0);
+            }
             break;
+        }
 
         case LEVELA:
         case LEVELD:
