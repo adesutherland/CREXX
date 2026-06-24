@@ -1094,8 +1094,6 @@ static ASTNode *levelc_lower_expr(Context *context,
                                   ASTNode *expr,
                                   LevelCLowerPlan *plan,
                                   ASTNode *prelude);
-static void levelc_append_instruction_builder(ASTNode *instructions,
-                                              ASTNode *builder);
 
 static char *levelc_generated_temp_name(const char *prefix, ASTNode *source_node) {
     char buffer[128];
@@ -1340,11 +1338,10 @@ static ASTNode *levelc_instruction_block(Context *context,
 
     if (!context || !source_node || !statement) return NULL;
 
-    instructions = ast_ft(context, INSTRUCTIONS);
+    instructions = rxcp_remap_create_instruction_builder(context, source_node);
     if (!instructions) return NULL;
-    rxcp_remap_anchor_synthetic(instructions, source_node);
 
-    if (prelude) levelc_append_instruction_builder(instructions, prelude);
+    if (prelude) rxcp_remap_append_builder_children(instructions, prelude);
     add_ast(instructions, statement);
     return rxcp_remap_create_do_block(context, source_node, instructions);
 }
@@ -1354,11 +1351,7 @@ static ASTNode *levelc_short_circuit_result_assignment(Context *context,
                                                        const char *result_name,
                                                        ASTNode *rhs) {
     if (!result_name || !rhs) return NULL;
-    return rxcp_remap_create_simple_assignment(
-            context,
-            source_node,
-            rxcp_remap_create_named_ref(context, source_node, VAR_TARGET, result_name),
-            rhs);
+    return rxcp_remap_create_named_assignment(context, source_node, result_name, rhs);
 }
 
 static ASTNode *levelc_lower_short_circuit(Context *context,
@@ -1397,9 +1390,8 @@ static ASTNode *levelc_lower_short_circuit(Context *context,
     if (!initial_assignment) goto fail;
     add_ast(prelude, initial_assignment);
 
-    right_prelude = ast_ft(context, INSTRUCTIONS);
+    right_prelude = rxcp_remap_create_instruction_builder(context, expr->child->sibling);
     if (!right_prelude) goto fail;
-    rxcp_remap_anchor_synthetic(right_prelude, expr->child->sibling);
 
     right = levelc_lower_expr(context, expr->child->sibling, plan, right_prelude);
     right = levelc_logical_result(context, expr->child->sibling, right);
@@ -1560,10 +1552,10 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
     }
 
     call_args[0] = rxcp_remap_create_string_constant(context, expr, bif_name);
-    statement = rxcp_remap_create_simple_assignment(
+    statement = rxcp_remap_create_named_assignment(
             context,
             expr,
-            rxcp_remap_create_named_ref(context, expr, VAR_TARGET, context_name),
+            context_name,
             rxcp_remap_create_factory_call(context,
                                            expr,
                                            LEVELC_BIF_CONTEXT_CLASS,
@@ -1575,15 +1567,12 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
     receiver = rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, context_name);
     member_args[0] = rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, args_name);
     member_args[1] = rxcp_remap_create_named_ref(context, expr, VAR_SYMBOL, exists_name);
-    statement = rxcp_remap_create_call_statement(
-            context,
-            expr,
-            rxcp_remap_create_member_call(context,
-                                          expr,
-                                          receiver,
-                                          "setArguments",
-                                          member_args,
-                                          2));
+    statement = rxcp_remap_create_member_call_statement(context,
+                                                        expr,
+                                                        receiver,
+                                                        "setArguments",
+                                                        member_args,
+                                                        2);
     if (!statement) goto fail;
     add_ast(prelude, statement);
 
@@ -1592,15 +1581,12 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
             context,
             expr,
             levelc_pool_ref(context, expr, VAR_SYMBOL));
-    statement = rxcp_remap_create_call_statement(
-            context,
-            expr,
-            rxcp_remap_create_member_call(context,
-                                          expr,
-                                          receiver,
-                                          "setCallerPool",
-                                          member_args,
-                                          1));
+    statement = rxcp_remap_create_member_call_statement(context,
+                                                        expr,
+                                                        receiver,
+                                                        "setCallerPool",
+                                                        member_args,
+                                                        1);
     if (!statement) goto fail;
     add_ast(prelude, statement);
 
@@ -1759,11 +1745,10 @@ static ASTNode *levelc_materialise_compound_tail(Context *context,
         return NULL;
     }
 
-    statement = rxcp_remap_create_simple_assignment(
-            context,
-            source_node,
-            rxcp_remap_create_named_ref(context, source_node, VAR_TARGET, tail_name),
-            tail_expr);
+    statement = rxcp_remap_create_named_assignment(context,
+                                                   source_node,
+                                                   tail_name,
+                                                   tail_expr);
     if (!statement) {
         free(tail_name);
         return NULL;
@@ -1816,7 +1801,6 @@ static ASTNode *levelc_pool_set_statement(Context *context,
     ASTNode *expr;
     ASTNode *receiver;
     ASTNode *args[3];
-    ASTNode *member_call;
     char *target_name;
     LevelCVariableNameKind target_kind;
     const char *method_name;
@@ -1853,15 +1837,12 @@ static ASTNode *levelc_pool_set_statement(Context *context,
 
     if (!args[0] || !args[1] || (arg_count == 3 && !args[2])) return NULL;
 
-    member_call = rxcp_remap_create_member_call(context,
-                                                assign_node,
-                                                receiver,
-                                                method_name,
-                                                args,
-                                                arg_count);
-    if (!member_call) return NULL;
-
-    return rxcp_remap_create_call_statement(context, assign_node, member_call);
+    return rxcp_remap_create_member_call_statement(context,
+                                                   assign_node,
+                                                   receiver,
+                                                   method_name,
+                                                   args,
+                                                   arg_count);
 }
 
 static ASTNode *levelc_say_statement(Context *context,
@@ -2043,7 +2024,6 @@ static ASTNode *levelc_expose_value_statement(Context *context,
     ASTNode *receiver;
     ASTNode *args[3];
     ASTNode *parent_symbol;
-    ASTNode *member_call;
     char *name;
     const char *method_name;
 
@@ -2064,15 +2044,12 @@ static ASTNode *levelc_expose_value_statement(Context *context,
     free(name);
     if (!receiver || !args[0] || !parent_symbol || !args[1] || !args[2]) return NULL;
 
-    member_call = rxcp_remap_create_member_call(context,
-                                                procedure_node,
-                                                receiver,
-                                                method_name,
-                                                args,
-                                                3);
-    if (!member_call) return NULL;
-
-    return rxcp_remap_create_call_statement(context, procedure_node, member_call);
+    return rxcp_remap_create_member_call_statement(context,
+                                                   procedure_node,
+                                                   receiver,
+                                                   method_name,
+                                                   args,
+                                                   3);
 }
 
 static ASTNode *levelc_procedure_header(Context *context,
@@ -2221,13 +2198,6 @@ static ASTNode *levelc_build_options(Context *context, ASTNode *anchor_node) {
     return options;
 }
 
-static void levelc_append_instruction_builder(ASTNode *instructions,
-                                              ASTNode *builder) {
-    if (!instructions || !builder || !builder->child) return;
-    add_ast(instructions, builder->child);
-    builder->child = NULL;
-}
-
 static int levelc_append_arg_bindings(Context *context,
                                       ASTNode *instructions,
                                       LevelCProcedureSlice *procedure,
@@ -2237,7 +2207,6 @@ static int levelc_append_arg_bindings(Context *context,
     ASTNode *target;
     ASTNode *receiver;
     ASTNode *member_args[2];
-    ASTNode *member_call;
     ASTNode *statement;
     size_t index;
 
@@ -2263,15 +2232,12 @@ static int levelc_append_arg_bindings(Context *context,
             return 0;
         }
 
-        member_call = rxcp_remap_create_member_call(context,
-                                                    procedure->arg_statement,
-                                                    receiver,
-                                                    "setValue",
-                                                    member_args,
-                                                    2);
-        statement = member_call ? rxcp_remap_create_call_statement(context,
-                                                                   procedure->arg_statement,
-                                                                   member_call) : NULL;
+        statement = rxcp_remap_create_member_call_statement(context,
+                                                            procedure->arg_statement,
+                                                            receiver,
+                                                            "setValue",
+                                                            member_args,
+                                                            2);
         if (!statement) {
             if (reason_out) *reason_out = "failed to create ARG binding statement";
             return 0;
@@ -2319,12 +2285,11 @@ static int levelc_lower_main_statement(Context *context,
 
     if (!stmt) return 1;
 
-    prelude = ast_ft(context, INSTRUCTIONS);
+    prelude = rxcp_remap_create_instruction_builder(context, stmt);
     if (!prelude) {
         if (reason_out) *reason_out = "failed to create Level C statement prelude";
         return 0;
     }
-    rxcp_remap_anchor_synthetic(prelude, stmt);
 
     if (stmt->node_type == ASSIGN) {
         lowered = levelc_pool_set_statement(context, stmt, plan, prelude);
@@ -2343,7 +2308,7 @@ static int levelc_lower_main_statement(Context *context,
         return 0;
     }
 
-    levelc_append_instruction_builder(instructions, prelude);
+    rxcp_remap_append_builder_children(instructions, prelude);
     add_ast(instructions, lowered);
     return 1;
 }
@@ -2362,12 +2327,11 @@ static int levelc_lower_proc_statement(Context *context,
         return levelc_append_arg_bindings(context, instructions, procedure, reason_out);
     }
 
-    prelude = ast_ft(context, INSTRUCTIONS);
+    prelude = rxcp_remap_create_instruction_builder(context, stmt);
     if (!prelude) {
         if (reason_out) *reason_out = "failed to create Level C procedure statement prelude";
         return 0;
     }
-    rxcp_remap_anchor_synthetic(prelude, stmt);
 
     if (stmt->node_type == ASSIGN) {
         lowered = levelc_pool_set_statement(context, stmt, plan, prelude);
@@ -2384,7 +2348,7 @@ static int levelc_lower_proc_statement(Context *context,
         return 0;
     }
 
-    levelc_append_instruction_builder(instructions, prelude);
+    rxcp_remap_append_builder_children(instructions, prelude);
     add_ast(instructions, lowered);
     return 1;
 }
@@ -2403,12 +2367,11 @@ static int levelc_rewrite_program(Context *context,
 
     anchor = old_instructions && old_instructions->child ? old_instructions->child : program_file;
     options = levelc_build_options(context, anchor);
-    instructions = ast_ft(context, INSTRUCTIONS);
+    instructions = rxcp_remap_create_instruction_builder(context, anchor);
     if (!options || !instructions) {
         if (reason_out) *reason_out = "failed to create Level C lowered program shell";
         return 0;
     }
-    rxcp_remap_anchor_synthetic(instructions, anchor);
 
     pool_setup = levelc_pool_setup_statement(context, anchor);
     if (!pool_setup) {

@@ -559,6 +559,25 @@ ASTNode *rxcp_remap_create_call_statement(Context *context,
     return node;
 }
 
+ASTNode *rxcp_remap_create_member_call_statement(Context *context,
+                                                 ASTNode *source_node,
+                                                 ASTNode *receiver,
+                                                 const char *method_name,
+                                                 ASTNode **args,
+                                                 size_t arg_count) {
+    ASTNode *call_expr;
+
+    call_expr = rxcp_remap_create_member_call(context,
+                                             source_node,
+                                             receiver,
+                                             method_name,
+                                             args,
+                                             arg_count);
+    if (!call_expr) return NULL;
+
+    return rxcp_remap_create_call_statement(context, source_node, call_expr);
+}
+
 ASTNode *rxcp_remap_create_return_statement(Context *context,
                                             ASTNode *source_node) {
     ASTNode *node;
@@ -587,6 +606,41 @@ ASTNode *rxcp_remap_create_simple_assignment(Context *context,
     add_ast(node, lhs);
     add_ast(node, rhs);
     return node;
+}
+
+ASTNode *rxcp_remap_create_named_assignment(Context *context,
+                                            ASTNode *source_node,
+                                            const char *target_name,
+                                            ASTNode *rhs) {
+    ASTNode *lhs;
+
+    if (!context || !source_node || !target_name || !rhs) return NULL;
+
+    lhs = rxcp_remap_create_named_ref(context, source_node, VAR_TARGET, target_name);
+    if (!lhs) return NULL;
+
+    return rxcp_remap_create_simple_assignment(context, source_node, lhs, rhs);
+}
+
+ASTNode *rxcp_remap_create_instruction_builder(Context *context,
+                                               ASTNode *source_node) {
+    ASTNode *node;
+
+    if (!context || !source_node) return NULL;
+
+    node = ast_ft(context, INSTRUCTIONS);
+    if (!node) return NULL;
+
+    rxcp_remap_anchor_synthetic(node, source_node);
+    return node;
+}
+
+void rxcp_remap_append_builder_children(ASTNode *instructions,
+                                        ASTNode *builder) {
+    if (!instructions || !builder || !builder->child) return;
+
+    add_ast(instructions, builder->child);
+    builder->child = NULL;
 }
 
 ASTNode *rxcp_remap_create_do_block(Context *context,

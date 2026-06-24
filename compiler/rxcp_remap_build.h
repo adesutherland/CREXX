@@ -127,12 +127,26 @@ ASTNode *rxcp_remap_create_member_call(Context *context,
 ASTNode *rxcp_remap_create_call_statement(Context *context,
                                           ASTNode *source_node,
                                           ASTNode *call_expr);
+ASTNode *rxcp_remap_create_member_call_statement(Context *context,
+                                                 ASTNode *source_node,
+                                                 ASTNode *receiver,
+                                                 const char *method_name,
+                                                 ASTNode **args,
+                                                 size_t arg_count);
 ASTNode *rxcp_remap_create_return_statement(Context *context,
                                             ASTNode *source_node);
 ASTNode *rxcp_remap_create_simple_assignment(Context *context,
                                              ASTNode *source_node,
                                              ASTNode *lhs,
                                              ASTNode *rhs);
+ASTNode *rxcp_remap_create_named_assignment(Context *context,
+                                            ASTNode *source_node,
+                                            const char *target_name,
+                                            ASTNode *rhs);
+ASTNode *rxcp_remap_create_instruction_builder(Context *context,
+                                               ASTNode *source_node);
+void rxcp_remap_append_builder_children(ASTNode *instructions,
+                                        ASTNode *builder);
 ASTNode *rxcp_remap_create_do_block(Context *context,
                                     ASTNode *source_node,
                                     ASTNode *instructions);

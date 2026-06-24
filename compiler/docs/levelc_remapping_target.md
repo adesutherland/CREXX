@@ -622,6 +622,12 @@ replacement helpers. Slice 1 adds these neutral remap-builder commands:
 - build a method-call expression with an explicit receiver and arguments;
 - build a statement call when the result is ignored, for example
   `pool.setValue(name, value)`;
+- build a member-call statement directly when a rewrite wants the side effect
+  rather than the return value;
+- build a generated named-target assignment, for example
+  `temp = materialise(expr)`;
+- build an anchored instruction-list builder and append its children into the
+  real instruction stream;
 - build literal and `NOVAL` helper nodes used by those shapes.
 
 The procedure/expose slice adds more generated-tree building blocks in the
@@ -852,8 +858,10 @@ The first Level C-neutral builder/materialisation layer now lives in
 `compiler/rxcp_remap_build.c` and `compiler/rxcp_remap_build.h`. It provides
 shared building blocks for generated scopes, numeric-context copying, source
 anchors, generated blocks, temp symbols, symbol refs/targets, integer constants,
-string constants, assembler instructions, register-copy instructions,
-assignments, sink targets, assignment/`LEAVE WITH` append operations,
+string constants, instruction-list builders, builder-child append operations,
+factory/function/member calls, member-call statements, assembler instructions,
+register-copy instructions, assignments, generated named-target assignments,
+sink targets, assignment/`LEAVE WITH` append operations,
 replacement-with-symbol-disconnect, capture-once rewrites, and
 captured-locator proof/materialisation patterns. The capture primitives now
 separate reusable assignment construction and captured-value references from
@@ -913,19 +921,53 @@ The BIF proof layer is now `RexxValue`-native. `RexxBifCallContext` carries
 `rexxclassicbif_call()` returns a `RexxValue` while errors stay on the context.
 This keeps fixed-arity direct helpers optimisable without losing the dynamic
 dispatcher path used by RexxScript. Optional-arity BIFs should stay on the
-dispatcher path until a direct helper is worth specialising. The remapper now
-has the reusable argument-frame materialiser for value slots plus provided
-flags. Source forms with omitted argument positions, for example `xxx(,a,,b)`,
-are admitted through a call-list-specific parser shape. The list materialises
-`NOVAL` placeholders only inside function arguments, keeping ordinary comma
-recovery outside primary expressions and preserving a conflict-free Lemon
-grammar.
+dispatcher path until a direct helper is worth specialising. The Level C lowerer
+currently materialises dispatcher argument frames itself, using shared remap
+builders for the arrays, slot assignments, context object, argument binding,
+and caller-pool binding. Extracting that into a neutral
+`materialise-argument-frame` command is a good next consolidation candidate
+once a second caller exists. Source forms with omitted argument positions, for
+example `xxx(,a,,b)`, are admitted through a call-list-specific parser shape.
+The list materialises `NOVAL` placeholders only inside function arguments,
+keeping ordinary comma recovery outside primary expressions and preserving a
+conflict-free Lemon grammar.
 
 The expression slice adds shared branch builders to the neutral remap layer:
 `rxcp_remap_create_if_statement()` and `rxcp_remap_create_do_block()`. The block
 builder deliberately creates `DO -> REPEAT(FOR 1), INSTRUCTIONS`; this encodes a
 one-shot generated block and avoids relying on parser-only normalization for
 plain grouped `DO`.
+
+## Mapper Consolidation Review 2026-06-24
+
+The current selector tables are not the main source of duplication. They are
+already compact and useful for explaining what a rule selects. The repeated
+work is in materialisation: creating anchored temporary instruction lists,
+moving generated prelude statements into the real stream, assigning generated
+named values, and turning receiver/method/argument triples into side-effecting
+statements.
+
+Those mechanics are now shared as remap-builder commands:
+`rxcp_remap_create_instruction_builder()`,
+`rxcp_remap_append_builder_children()`,
+`rxcp_remap_create_named_assignment()`, and
+`rxcp_remap_create_member_call_statement()`. The Level C mapper uses them for
+short-circuit preludes, BIF dispatcher setup, compound-tail temporaries, pool
+writes, procedure exposes, ARG binding, and program/statement prelude shells.
+These names are intentionally command-like so a later table-driven or DSL-like
+mapper can call the same operations without learning the raw AST shape.
+
+Remaining consolidation candidates should stay behavior-preserving and become
+shared only when at least two rule families need them:
+
+- a neutral `materialise-argument-frame` command for value arrays plus provided
+  masks;
+- generated procedure header/argument materialisation;
+- generated import diagnostic ownership, especially suppressing or relocating
+  unused-import warnings caused by synthetic imports;
+- a generated temp-name policy shared by Level C and future front ends;
+- pool-like locator materialisation only if another Rexx dialect needs the
+  same reference/copy/writeback pattern.
 
 This path gives a real safety net. The inliner has existing positive and
 negative tests, source/import cases, and opt/noopt runtime comparisons. Passing
