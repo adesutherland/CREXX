@@ -2,7 +2,7 @@
 
 ## Overview
 
-`fmtmask` is a lightweight picture-mask formatter for CREXX.
+`fmtmask` is a lightweight picture-mask formatter for cRexx.
 
 It formats text and numeric values according to a simple mask syntax inspired by COBOL report writers and picture clauses.
 

@@ -135,6 +135,7 @@ semantically a sentinel. This is especially useful when a local is assigned in
 both sides of a branch and then read after the branch.
 
 References:
+
 - `lib/rxfnsb/rexx/abs.crexx`
 - `debugger/rxdb.crexx`
 - `compiler/exits/ExitTestSupport.crexx`
@@ -153,6 +154,7 @@ Important points:
 - the token to the left of `..` must be an imported namespace
 
 References:
+
 - `docs/ai-context/CREXX_ARCHITECTURE.md`
 - `docs/books/crexx_programming_guide/intralanguage.md`
 - `docs/books/crexx_language_reference/classes_and_interfaces.md`
@@ -277,11 +279,18 @@ When a test needs delete/insert semantics, prefer library helpers such as
 is specifically about RXAS.
 
 Use the `objectarray*` helper family for mutating `.object[]` arrays:
-`objectarrayinsert`, `objectarraydelete`, `objectarrayappend`,
-`objectarrayprepend`, `objectarraydrop`, and `objectarraymove`. Store concrete
-class instances with an explicit `as .object` upcast.
+
+- `objectarrayinsert`,
+- `objectarraydelete`,
+- `objectarrayappend`,
+- `objectarrayprepend`,
+- `objectarraydrop`, and
+- `objectarraymove`. 
+
+Store concrete class instances with an explicit `as .object` upcast.
 
 References:
+
 - `tests/demo/countlines.crexx`
 - `compiler/exits/ExitTestSupport.crexx`
 - `docs/books/crexx_language_reference/data_types.md`
@@ -377,6 +386,7 @@ address command "sh" input script output out error err
 ```
 
 References:
+
 - `compiler/exits/address/test_address.crexx`
 - `bin/crexx.crexx`
 - `tests/demo/countlines.crexx`
@@ -404,6 +414,7 @@ If `as name` is omitted, the handler has no local signal object. That is fine
 for fixed cleanup/logging handlers.
 
 References:
+
 - `docs/books/crexx_language_reference/statements.md`
 - `docs/ai-context/LEVELB_SIGNALS_TRACE_WORKING.md`
 - `compiler/exits/signal/test_signal_block.crexx`
@@ -416,6 +427,7 @@ users, but repo code should usually stay explicit with `options levelb` and
 imports unless there is a strong reason not to.
 
 Reference:
+
 - `docs/books/crexx_language_reference/tools.md`
 - `docs/books/crexx_programming_guide/crexx.md`
 
@@ -439,6 +451,7 @@ Launcher-side guidance:
   invocation syntax
 
 References:
+
 - `docs/books/crexx_language_reference/arguments.md`
 - `docs/ai-context/CREXX_ARCHITECTURE.md`
 - `debugger/rxdb.crexx`

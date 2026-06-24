@@ -139,4 +139,4 @@ of a procedure allows the compiler to:
 Using `INHERITED` prevents these compile-time optimizations because the numeric context isn't 
 known until runtime. This is a trade-off for flexibility at the cost of performance.
 
-If the option is not sepecifed than the default value is used which is not `INHERITED`; you need to explicitly enable inherited behaviour.
+If this option is not specified, then the default value is used (which is not `INHERITED`); the user needs to explicitly enable inherited behaviour.
