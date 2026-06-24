@@ -23,12 +23,14 @@ The main Level C path is a parser-mode and syntax-highlighting front end:
 - it deliberately stops before broad canonical lowering, semantic execution
   support, assembly, or VM execution.
 
-Normal `rxc` compilation of Level C remains unsupported except for the explicit
-tracer slices documented in `levelc_remapping_target.md`: top-level direct
-scalar assignment/read, string/integer `RexxValue` literals, binary `+`, `SAY`,
-and a narrow local `CALL` plus `PROCEDURE EXPOSE` shape over direct scalar
-names. Unsupported Level C compile inputs still fail with the existing
-unsupported diagnostic.
+Normal `rxc` compilation of Level C remains fail-closed outside the explicit
+tracer slices documented in `levelc_remapping_target.md`. The active lowering
+spine covers direct scalar and simple compound pool reads/writes,
+string/integer `RexxValue` literals, the current expression operator family,
+short-circuit `&` / `|`, `SAY`, selected Classic BIF call frames, local `CALL`,
+fixed `ARG`, value/void `RETURN`, and scalar/stem `PROCEDURE EXPOSE` shapes.
+Unsupported Level C compile inputs still fail with the existing unsupported
+diagnostic.
 
 ## Current Implementation Map
 
@@ -123,6 +125,14 @@ ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release \
   -L levelc --output-on-failure
 ```
 
+Focused compile/lowering/wrapper coverage:
+
+```sh
+ctest --test-dir /Users/adrian/CLionProjects/CREXX/cmake-build-release \
+  -R 'levelc_(slice|compile_)|crexx_levelc_classic_runtime|crexx_headerless_rexx_levelc' \
+  --output-on-failure
+```
+
 Manual DSLSH dump:
 
 ```sh
@@ -197,9 +207,11 @@ Recommended sequence:
 5. Feed the lowered canonical work tree into the existing validation pipeline.
    Level C remains gated as unsupported outside each proven slice.
 
-The first executable milestone is deliberately narrower than the long-term
-goal: small Level C programs with simple scalar variables, `RexxValue`
-literals, binary `+`, `SAY`, and the first `PROCEDURE EXPOSE` path. After that,
-widen by statement family while keeping the syntax-highlighter fixtures as the
-static validation canary and the lowered-tree debug probes as the remapper
-shape canary.
+The current executable feasibility spine is still deliberately narrower than
+the long-term goal, but it now reaches far enough to exercise the central
+semantic gaps: Classic variable pools, scalar and stem expose, selected Classic
+BIF dispatch, fixed procedure arguments/returns, and expression lowering. Keep
+widening by statement family while using parser-mode fixtures as the static
+validation canary, compile-mode invalid/unsupported tests as the fail-closed
+gate, `crexx` wrapper tests as the file-type/runtime-library canary, and the
+lowered-tree debug probes as the remapper shape canary.

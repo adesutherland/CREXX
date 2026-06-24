@@ -3123,6 +3123,65 @@ add_levelc_unsupported_compile_test(levelc_slice4_omitted_call_unsupported
 add_levelc_unsupported_compile_test(levelc_slice5_compound_expose_unsupported
         rexx_src/levelc_slice5_compound_expose_unsupported.rexx)
 
+add_levelc_unsupported_compile_test(levelc_slice6_bare_stem_value_unsupported
+        rexx_src/levelc_slice6_bare_stem_value_unsupported.rexx)
+
+add_levelc_unsupported_compile_test(levelc_slice6_local_function_omitted_arg_unsupported
+        rexx_src/levelc_slice6_local_function_omitted_arg_unsupported.rexx)
+
+add_levelc_unsupported_compile_test(levelc_slice6_procedure_parse_unsupported
+        rexx_src/levelc_slice6_procedure_parse_unsupported.rexx)
+
+function(add_levelc_invalid_compile_test NAME SOURCE_FILE)
+    set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
+    set(SCRIPT_CONTENT "")
+
+    string(APPEND SCRIPT_CONTENT
+           "execute_process(\n"
+           "    COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"${NAME}\" \"${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}\"\n"
+           "    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+           "    OUTPUT_VARIABLE out\n"
+           "    ERROR_VARIABLE err\n"
+           "    RESULT_VARIABLE res\n"
+           ")\n"
+           "set(all \"${RXAS_DIAG_DOLLAR}{out}${RXAS_DIAG_DOLLAR}{err}\")\n"
+           "if(res EQUAL 0)\n"
+           "  message(FATAL_ERROR \"Invalid Level C compile unexpectedly succeeded for ${NAME}.\\nSTDOUT:\\n${RXAS_DIAG_DOLLAR}{out}\\nSTDERR:\\n${RXAS_DIAG_DOLLAR}{err}\")\n"
+           "endif()\n"
+           "if(all MATCHES \"REXX Level C \\\\(Classic REXX\\\\) is currently supported only for DSLSH syntax highlighting\\\\. Compilation is not supported yet\")\n"
+           "  message(FATAL_ERROR \"Invalid Level C compile fell through to the unsupported lowering diagnostic for ${NAME}.\\nSTDOUT:\\n${RXAS_DIAG_DOLLAR}{out}\\nSTDERR:\\n${RXAS_DIAG_DOLLAR}{err}\")\n"
+           "endif()\n")
+
+    foreach(REQUIRED_PATTERN IN LISTS ARGN)
+        string(APPEND SCRIPT_CONTENT
+               "if(NOT all MATCHES \"${REQUIRED_PATTERN}\")\n"
+               "  message(FATAL_ERROR \"Invalid Level C compile for ${NAME} is missing required pattern ${REQUIRED_PATTERN}.\\nSTDOUT:\\n${RXAS_DIAG_DOLLAR}{out}\\nSTDERR:\\n${RXAS_DIAG_DOLLAR}{err}\")\n"
+               "endif()\n")
+    endforeach()
+
+    file(GENERATE OUTPUT "${SCRIPT_FILE}" CONTENT "${SCRIPT_CONTENT}")
+    add_test(NAME ${NAME}
+             COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
+endfunction()
+
+add_levelc_invalid_compile_test(levelc_compile_invalid_if_missing_then
+        rexx_src/levelc_if_missing_then.rexx
+        "RXC-LC-18\\.1")
+
+add_levelc_invalid_compile_test(levelc_compile_invalid_expression_trailing_operator
+        rexx_src/levelc_expression_bad_trailing_operator.rexx
+        "RXC-LC-35\\.1")
+
+add_levelc_invalid_compile_test(levelc_compile_invalid_do_end_symbol
+        rexx_src/levelc_do_end_bad_symbol.rexx
+        "RXC-LC-10\\.2")
+
+add_levelc_invalid_compile_test(levelc_compile_invalid_select_missing_when
+        rexx_src/levelc_select_missing_when.rexx
+        "RXC-LC-7\\.1")
+
 function(add_levelc_runtime_slice_test NAME SOURCE_FILE EXPECTED_OUTPUT)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
     set(SCRIPT_CONTENT "")

@@ -156,9 +156,12 @@ crexx in_file_specification... [--option]...
 ```
 
 The driver wraps the usual compile, assemble, execute, link, and native package
-steps. Headerless top-level scripts are compiled with `--level levelb --import
-rxfnsb`; explicit modules should still declare their own `options` and
-imports.
+steps. It delegates source-level defaults to `rxc`: source files without an
+`OPTIONS` clause default by file type, with `.rexx` as Level C Classic REXX and
+`.crexx` / `.crx` as Level G. Explicit `OPTIONS LEVELC` modules use the active
+Level C lowering subset and the standard runtime module set, including
+`rxfnsc`. Explicit modules should still declare their own `options` and imports
+when they need a specific language level or library namespace.
 
 Common driver options:
 
