@@ -281,7 +281,7 @@ return lines
 /* Load entire non Binary file into one stream and returns it
  */
 loadtext: procedure = .string
-  arg fname=.string
+  arg fname=.string, delim='0D0A'x
 
   stream=.string
   eof=.int
@@ -296,7 +296,7 @@ loadtext: procedure = .string
      assembler freadline line, fileid
      assembler feof eof, fileid
      if eof > 0 & length(line) = 0 then leave    /* stop on the final read-at-EOF empty result */
-     stream = stream||line||'0D0A'x
+     stream = stream||line||delim
   end
   assembler fclose rc,fileid
   if rc\=0 then call raise "error", "40.27", "cannot close "fname

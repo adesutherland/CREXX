@@ -13,7 +13,8 @@ main: procedure = .int
   if rc \= 0 | tmp[0] = 0 then return 1
   path = tmp[1]
 
-  write_rc = lineout(path, "payload")
+  payload = "payload"
+  write_rc = lineout(path, payload)
   address command "cat " || path output out error err
   cat_rc = rc
   call lineout(path)

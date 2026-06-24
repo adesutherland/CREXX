@@ -26,6 +26,8 @@
 /* Classic Rexx (ooRexx, REgina), NetRexx and CREXX (when    */
 /* ran as a simple script from the crexx wrapper) compatible */
 
+options levelb
+
 parse arg crexx_home execSpec
 crexx_home = strip(crexx_home)
 execSpec = strip(execSpec)

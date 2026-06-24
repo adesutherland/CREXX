@@ -381,12 +381,6 @@ do i=1 to filenames[0]
   end
   /* if all is well, we now have a .crexx ready for compilation    */
 
-  compat_flags = ''
-  if \hasSourceHeader(filename) then do
-    compat_flags = ' --level levelb --import rxfnsb'
-    if verbose>1 then say esc||ANSI_GREEN'simple script defaults:'esc||ANSI_RESET compat_flags
-  end
-
   /* if file has .crexx extension, chop it off */
   if lower(right(filename,6))='.crexx' then filename=substr(filename,1,length(filename)-6)
   /* if file has .rexx extension, chop it off */
@@ -394,13 +388,6 @@ do i=1 to filenames[0]
   /* if file has .bcrexx extension, chop it off */
   if lower(right(filename,7))='.bcrexx' then filename=substr(filename,1,length(filename)-7) 
   
-
-  # note that the next commented out sequence currently fails tests 1074 & 1076
-  -- if \hasSourceHeader(filename'.ccrexx') then do
-  --   compat_flags = ' --level levelc --import rxfnsb'
-  --   if verbose>1 then say esc||ANSI_GREEN'simple script defaults:'esc||ANSI_RESET compat_flags
-  -- end
-
   optiflag=''; if optimize=0 then optiflag= '-n'
   rxc_flags = ''
   if sourceRoots <> '' then rxc_flags = rxc_flags || ' -s ' || quoteCommandArg(sourceRoots, platformUpper)
@@ -420,7 +407,7 @@ do i=1 to filenames[0]
 
   -- rxas_filename = chop_suffix(filename) /* temp fix for two-part filename files */
 
-  rxcmd = rxpath'bin'dirsep'rxc' optiflag compat_flags rxc_flags
+  rxcmd = rxpath'bin'dirsep'rxc' optiflag rxc_flags
   rxcmd = rxcmd || ' -o ' || quoteCommandArg(binfile, platformUpper)
   rxcmd = rxcmd || ' ' || quoteCommandArg(sourceFile, platformUpper)
   if verbose>1 then
@@ -688,7 +675,8 @@ say '--linkmap path     -- write an rxlink map file when using -native'
 say '--link-keep-source -- keep source/TRACE debug metadata in the linked native image'
 say '--link-keep-inline -- keep inline-body metadata in the linked native image'
 say
-say 'Headerless top-level scripts are compiled with --level levelb --import rxfnsb.'
+say 'Source files without OPTIONS use rxc file-type defaults: .rexx is Level C'
+say 'and .crexx/.crx are Level G.'
 say 'Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l.'
 say 'Native packaging uses rxlink before rxcpack; plugin/static libraries are linked natively'
 say 'with platform-appropriate linker flags.'
@@ -715,62 +703,6 @@ say 'cREXX License (MIT)'
 say 'Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen'
 say 'See https://github.com/adesutherland/CREXX for project details'
 return
-
-/*----------------------------------------------------------------------*/
-hasSourceHeader: procedure = .int
-arg sourceFile = .string
-line = .string
-text = .string
-firstWord = .string
-inBlockComment = 0
-
-/* 
- * if we do not have a filename extension, it is allowable to
- * have a .crexx file - add it.
- */
- -- if pos('.',sourceFile) = 0 then sourceFile=sourceFile'.crexx'
-
-do while lines(sourceFile) > 0
-  line = linein(sourceFile)
-  text = strip(line)
-
-  do while 1
-    if inBlockComment then do
-      endPos = pos('*/', text)
-      if endPos > 0 then do
-        text = strip(substr(text, endPos + 2))
-        inBlockComment = 0
-        iterate
-      end
-      else do
-        text = ''
-        leave
-      end
-    end
-
-    if text = '' then leave
-    if left(text, 2) = '/*' then do
-      endPos = pos('*/', text, 3)
-      if endPos > 0 then do
-        text = strip(substr(text, endPos + 2))
-        iterate
-      end
-      inBlockComment = 1
-      text = ''
-      leave
-    end
-    leave
-  end
-
-  if text = '' then iterate
-  if left(text, 1) = '#' then iterate
-
-  firstWord = word(translate(text), 1)
-  if firstWord = 'OPTIONS' | firstWord = 'IMPORT' | firstWord = 'NAMESPACE' then return 1
-  return 0
-end
-
-return 0
 
 /*----------------------------------------------------------------------*/
 printarray: procedure = .string

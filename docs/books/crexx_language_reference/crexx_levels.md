@@ -59,11 +59,14 @@ DSLSH syntax-highlighting support is allowed to be wider than the compiler. It
 can help users edit and diagnose Rexx-family source without claiming that cRexx
 can execute that source.
 
-Level C is the first example of that split. The project now has Level C
-parser-mode and syntax-highlighting work for Classic Rexx source, while normal
-`rxc` compilation of `options levelc` remains gated as unsupported. This lets
-the project build useful editor support and standard-diagnostic experience
-before committing to a full Classic Rexx lowering/runtime path.
+Level C is the first example of that split. The project has Level C parser-mode
+and syntax-highlighting work for Classic Rexx source, and normal `rxc`
+compilation now lowers a proven subset of Classic Rexx into the canonical
+Level B runtime path. Classic constructs outside that implemented slice still
+fail closed with a Level C unsupported-shape diagnostic. This lets the project
+build useful editor support, standard-diagnostic experience, and incremental
+runtime coverage without claiming full Classic Rexx compatibility before the
+remaining lowering/runtime work is complete.
 
 Level C also owns the Classic Rexx byte-text compatibility decision. Level B and
 Level G `.string` values are valid UTF-8 text, while `.binary` carries arbitrary

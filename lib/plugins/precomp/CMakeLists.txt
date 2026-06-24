@@ -3,6 +3,11 @@ project(precomp_plugin C)
 
 set(CMAKE_C_STANDARD 99)
 
+set(RXFNSB_RXBIN ${CMAKE_BINARY_DIR}/bin/library.rxbin)
+set(CLASSLIB_RXBIN ${CMAKE_BINARY_DIR}/bin/classlib.rxbin)
+set(RXFNSC_RXBIN ${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin)
+set(REXXSCRIPT_RXBIN ${CMAKE_BINARY_DIR}/bin/rexxscript.rxbin)
+
 # Include RXPA Build System
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
 
@@ -18,13 +23,25 @@ add_custom_command(
                 ${CMAKE_CURRENT_BINARY_DIR}/rxpp_linked.rxbin
         COMMAND $<TARGET_FILE:rxc> -i "\"${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}\"" -o rxpp ${CMAKE_CURRENT_SOURCE_DIR}/rxpp
         COMMAND $<TARGET_FILE:rxas> rxpp
-        COMMAND $<TARGET_FILE:rxlink> -s -o rxpp_linked rxpp ${CMAKE_BINARY_DIR}/bin/library
+        COMMAND $<TARGET_FILE:rxlink> -s -o rxpp_linked
+        rxpp
+        ${CMAKE_BINARY_DIR}/bin/library
+        ${CMAKE_BINARY_DIR}/bin/classlib
+        ${CMAKE_BINARY_DIR}/bin/rxfnsc
+        ${CMAKE_BINARY_DIR}/bin/rexxscript
         COMMAND $<TARGET_FILE:rxcpack> -o rxpp rxpp_linked
-        DEPENDS precomp rxas rxc rxlink rxpp.crexx library compiler_exit_bin rxcpack rxpa
+        DEPENDS
+        precomp rxas rxc rxlink rxpp.crexx
+        library classlib rxfnsc rexxscript
+        compiler_exit_bin
+        ${RXFNSB_RXBIN}
+        ${CLASSLIB_RXBIN}
+        ${RXFNSC_RXBIN}
+        ${REXXSCRIPT_RXBIN}
+        rxcpack rxpa
         OUTPUT rxpp.c
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "rxpp compile, assemble, link and package rxpp ..."
-)
+        COMMENT "rxpp compile, assemble, link and package rxpp ...")
 
 add_executable(rxpp rxpp.c)
 # Ensure precomp static lib is force-loaded, then append providers (rxpashim, rxpa) after it

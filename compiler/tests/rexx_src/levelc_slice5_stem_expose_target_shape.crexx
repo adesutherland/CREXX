@@ -1,0 +1,22 @@
+options levelb comments_dash numeric_classic
+import rexxvalue
+import rexxpool
+import rexxclassicbifs
+
+__rxcp_levelc_pool = .RexxVariablePool()
+call __rxcp_levelc_pool.setValue("I", .RexxValue("1"))
+__rxcp_levelc_tail_1 = __rxcp_levelc_pool.value("I").asString()
+call __rxcp_levelc_pool.setStemValue("ITEMS.", __rxcp_levelc_tail_1, .RexxValue("before"))
+call __rxcp_levelc_proc_BUMP(reference __rxcp_levelc_pool)
+say __rxcp_levelc_pool.stemValue("ITEMS.", __rxcp_levelc_pool.value("I").asString()).asString()
+return
+
+__rxcp_levelc_proc_BUMP: procedure
+  arg __rxcp_levelc_parent_pool_ref = reference .RexxVariablePool
+  __rxcp_levelc_parent_pool = dereference __rxcp_levelc_parent_pool_ref
+  __rxcp_levelc_pool = .RexxVariablePool()
+  call __rxcp_levelc_pool.exposeStem("ITEMS.", reference __rxcp_levelc_parent_pool, "ITEMS.")
+  call __rxcp_levelc_pool.setValue("J", .RexxValue("1"))
+  __rxcp_levelc_tail_2 = __rxcp_levelc_pool.value("J").asString()
+  call __rxcp_levelc_pool.setStemValue("ITEMS.", __rxcp_levelc_tail_2, .RexxValue("after"))
+  return

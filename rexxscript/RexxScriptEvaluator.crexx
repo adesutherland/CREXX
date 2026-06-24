@@ -29,6 +29,7 @@ namespace rexxscriptcore expose rexxscriptcoreevaluator
 import rxfnsb
 import rexxclassicbifs
 import rexxpool
+import rexxvalue
 
 
 /**
@@ -291,6 +292,31 @@ rexxscriptcoreevaluator: class
       output_count = output_count + 1
       output_lines[output_count] = eval_value
       return 1
+    end
+
+    if _starts_keyword(text, ".GENI") = 1 then do
+       expr = strip(substr(text, 6))
+       if expr == "" then return _set_error("missing_expression", "missing SAY expression", stmtno, 1)
+       output_count = output_count + 1
+       output_lines[output_count] = expr
+       return 1
+    end
+
+    if _starts_keyword(text, ".GEN") = 1 then do
+       expr = strip(substr(text, 5))
+       if expr == "" then return _set_error("missing_expression", "missing .GEN expression", stmtno, 1)
+       if _eval_expression(expr, stmtno) = 0 then return 0
+       output_count = output_count + 1
+       output_lines[output_count] = eval_value
+       return 1
+    end
+    if _starts_keyword(text, ".GENE") = 1 then do
+       expr = strip(substr(text, 6))
+       if expr == "" then return _set_error("missing_expression", "missing .GENE expression", stmtno, 1)
+       if _eval_expression(expr, stmtno) = 0 then return 0
+       output_count = output_count + 1
+       output_lines[output_count] = eval_value
+       return 1
     end
 
     if _starts_keyword(text, "IF") = 1 then do
@@ -1139,23 +1165,23 @@ rexxscriptcoreevaluator: class
       otherwise return _set_error("undefined_function", "undefined function " || name, stmtno, 1)
     end
 
-    bif_args = .string[]
+    bif_args = .RexxValue[]
     bif_exists = .int[]
     do i = 1 to parsed_arg_count
       bif_exists[i] = parsed_exists[i]
       if parsed_exists[i] <> 0 then do
         if _eval_expression(parsed_args[i], stmtno) = 0 then return 0
-        bif_args[i] = eval_value
+        bif_args[i] = .RexxValue(eval_value)
       end
-      else bif_args[i] = ""
+      else bif_args[i] = .RexxValue("")
     end
 
     context = .RexxBifCallContext(upper_name)
     call context.setArguments(bif_args, bif_exists)
     call context.setCallerPool(reference script_pool)
     result = rexxclassicbif_call(reference context)
-    if result[1] <> "OK" then return _set_error(result[3], result[4], stmtno, 1)
-    eval_value = result[2]
+    if context.hasError() then return _set_error(context.errorCode(), context.errorMessage(), stmtno, 1)
+    eval_value = result.asString()
     if _is_integer_text(eval_value) then eval_type = "int"
     else eval_type = "string"
     return 1

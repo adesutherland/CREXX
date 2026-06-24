@@ -21,7 +21,8 @@ The recommended source extensions are:
 - `.crexx`: canonical cRexx source, defaulting to Level G when no
   `options level...` clause is present
 - `.crx`: short cRexx source alias, also defaulting to Level G
-- `.rexx`: compatibility/classic source, defaulting to Level C
+- `.rexx`: compatibility/classic source, defaulting to incremental Level C
+  lowering
 
 An initial source file may also use another extension, such as `.the` for an
 editor macro integration. That extension is added to source-root discovery for

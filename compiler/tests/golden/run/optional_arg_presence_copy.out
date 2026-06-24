@@ -1,0 +1,4 @@
+present=hello:local
+present=literal:local
+present=hello:local
+omitted=:local

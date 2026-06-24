@@ -1,7 +1,8 @@
 # Level C Classic REXX Working Architecture
 
-Status: working draft; syntax-highlighting milestone implemented, lowering not started
-Last updated: 2026-05-12
+Status: working draft; syntax-highlighting milestone implemented, early
+lowering tracer slices implemented
+Last updated: 2026-06-23
 
 This document is the working record for the Level C programme. Level C means
 Classic REXX compatibility, using the current cREXX compiler front-end style:
@@ -9,8 +10,9 @@ re2c scanner, C parser glue, Lemon grammar, and validation/fixup walkers.
 
 The first milestone is a Level C syntax highlighter through DSLSH. That
 milestone parses and validates Level C source, builds the user-facing source
-tree, emits diagnostics/highlighting, and stops before canonical lowering,
-optimization, assembly, or VM execution.
+tree, emits diagnostics/highlighting, and stops before broad canonical lowering,
+optimization, assembly, or VM execution. A deliberately narrow set of
+runtime-backed lowering tracer slices is now enabled for ordinary compilation.
 
 For the implemented highlighter contract and the forward plan into canonical
 lowering, see `compiler/docs/levelc_syntax_highlighting.md`.
@@ -161,6 +163,15 @@ Candidate lowering rule:
   variable-pool operations.
 - Preserve source provenance so diagnostics and source-step metadata still point
   at authored Classic REXX clauses.
+
+The first executable lowering slice is documented in
+`compiler/docs/levelc_remapping_target.md` under "First Level C Lowering
+Slice". The tracer now opens pool setup, scalar and simple compound
+assignment/read, `RexxValue` literals, BIF frames, direct local call/procedure
+argument/return shapes, stem exposure, and the parsed Classic expression
+operator family. Short-circuit `&` and `|` lower through generated one-shot
+branch blocks rather than eager method calls. Unsupported Level C inputs still
+fail closed on the existing unsupported diagnostic.
 
 ### 3.3 Milestone 3: Runtime semantics
 
@@ -1704,9 +1715,10 @@ Level C parse/instruction completion slice on 2026-05-12:
   `RXC-LC-IMPLICIT_ADDRESS`. String-literal command clauses remain clean, which
   preserves common Classic REXX command-program style while making likely typos
   such as `SEY value` visible in DSLSH.
-- This remains parser/highlighter work only. Normal compilation of Level C still
-  stops outside parser mode with a diagnostic that Level C is currently
-  supported only for DSLSH syntax highlighting.
+- At this historical point this remained parser/highlighter work only. The
+  later first execution-lowering tracer deliberately opens only the narrow
+  slice documented in `levelc_remapping_target.md`; all other Level C compile
+  inputs still stop with the unsupported diagnostic.
 
 Regression tests added or widened for this slice:
 

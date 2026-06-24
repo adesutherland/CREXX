@@ -81,10 +81,29 @@ More precisely:
 - Procedure-level `expose` clauses are not inlineable yet. This is separate from `arg expose` / by-reference formals: a procedure-level expose changes global binding semantics and must stay as a real call until the clone/bind core models that environment explicitly.
 - Callable bodies containing raw assembler aliasing statements such as `link`, `linkattr*`, `linktoattr*`, or `unlink` are not inlineable yet. Stateful string-register assembler helpers such as `setstrpos`, `substcut`, and `dropchar` are inlineable when they operate through ordinary formal/local symbol bindings: assembler operands are marked read/write, writable by-value formals are copied like a normal call prologue, and `SCOPY` resets the destination cursor.
 - Method and factory inlining evaluate and capture by-value actual arguments that read caller attributes before introducing the callee instance scope. When a method needs such captures, the receiver is captured first in the caller scope and then bound to inline `§this`; a factory initializes `§factory` with `setattrs` and `setobjtype` after the actual captures. Formal binding reads from the captured actual values. This preserves ordinary call semantics when an actual expression reads the caller's receiver attributes and the callee has same-named attributes on its receiver or new object.
-- Method inlining binds the receiver once into the callee's internal `§this` object. Statement-position and simple whole-RHS assignment rewrites copy a direct, non-attribute receiver symbol back after a mutating method body. Mutating method calls in general expression position, receiver expressions, indexed receivers, and class-attribute receivers stay as normal calls until receiver copyback is modelled for those shapes.
+- Method inlining binds the receiver once into the callee's internal `§this`
+  object. Statement-owned rewrites copy a direct, non-attribute receiver symbol
+  back after a mutating method body. Simple whole-RHS assignment rewrites can
+  also materialise a variable-like indexed/stem receiver by capturing its
+  locator children once, binding `§this` from that captured locator, and writing
+  the mutated object back through the same locator. Mutating method calls in
+  general expression position, receiver-producing expressions, and
+  class-attribute receivers stay as normal calls until receiver copyback is
+  modelled for those shapes.
 - Named interface factory selector metadata must be preserved during cloning so `.iface.named(...)` still emits `srcfproc "...iface..named"` after inlining.
 - `expose`/by-reference formals are supported when the actual argument is an aliasable variable-like target, including indexed and stem-style forms.
 - For nontrivial by-reference actuals, the inline rewrite captures the locator expressions once into inline-scope temps so the callee still sees call-time binding semantics.
+- Computed receiver copyback and nontrivial by-reference rematerialisation both
+  use the shared remap-builder captured-locator pattern:
+  `rxcp_remap_capture_locator_once()`,
+  `rxcp_remap_materialise_selected_value()`, and
+  `rxcp_remap_writeback_through_captured_locator()`. The inline layer keeps the
+  guards and aliasing policy; the remap layer owns the reusable capture and
+  materialisation mechanics.
+- Inline-generated constants, assembler/copy instructions, assignment appends,
+  `LEAVE_WITH` appends, semantic-shape copying, and ordinary replacement
+  cleanup are now also shared remap-builder operations. The inline layer still
+  decides when those operations are legal.
 - Optional formals now inline through the same rewrite path as other supported local plain-procedure calls, with omitted-actual/default-formal semantics preserved during binding.
 - Reference operations and reference-bearing return classes remain deliberately
   fail-closed. The `reference_source_inline_lifetime` fixture is the canary:
@@ -98,7 +117,8 @@ The discriminator therefore keeps these sites out of the `BLOCK_EXPR` path:
 
 - whole-RHS `ASSIGN` sites, which are rewritten as assignment statements rather than expression children
 - standalone `CALL func(...)` statements, which use the statement-position rewrite
-- receiver-position `MEMBER_CALL` expressions
+- receiver-position `MEMBER_CALL` expressions that require a general
+  `BLOCK_EXPR` value/copyback proof
 - mutating method expression sites that do not have a direct receiver copyback target
 - imported method expression sites whose receiver is not direct
 
@@ -302,12 +322,19 @@ Implemented behaviour:
 - Method bodies get an inline-scope `§this` binding and class attribute reads/writes resolve against that inlined receiver.
 - Direct-receiver mutating method calls in statement position and simple whole-RHS assignment position copy the receiver object back after the cloned method body.
 - Direct-receiver mutating method calls in supported single-consumer expression position copy the receiver object back before each generated `LEAVE_WITH`, so the returned value and receiver mutation are both preserved.
+- Simple whole-RHS assignment of a value-returning mutating method can copy
+  back through a computed variable-like receiver such as
+  `saved = items[pickIndex()].setAndReport("changed")`. The receiver locator
+  children are captured once before argument binding, then reused for both the
+  `§this` binding and final writeback.
 - Method and factory call actuals that read caller attributes are captured in the caller scope before the callee's `§this` or `§factory` scope is introduced. For methods, the receiver is captured first when this path is needed; factory bodies then get that `§factory` object initialized with the owning class's attribute count and concrete object type before the cloned factory body executes.
 - Cloned `BLOCK_EXPR` and compiler-generated block associations are preserved so nested inline scopes continue to resolve `§this`, `§factory`, and `LEAVE_WITH` targets correctly.
 
 Remaining guardrail:
 
-- Mutating methods still stay uninlined when the receiver is not a direct symbol copyback target, for example receiver-producing expressions, indexed receivers, and class-attribute receivers.
+- Mutating methods still stay uninlined when copyback would need a
+  receiver-producing expression, class attribute receiver, imported-method
+  non-direct receiver, or a general expression-position `BLOCK_EXPR` proof.
 
 ### Milestone 3: imported procedures and methods
 
@@ -729,6 +756,9 @@ The implementation now covers:
 - preserved default-init requirements for duplicated inline locals and inline-created aggregate temporaries
 - explicit cycle blocking so self recursion and mutual recursion do not expand indefinitely
 - receiver copyback for direct-receiver mutating method calls in statement, simple assignment, and supported single-consumer expression rewrites
+- captured-locator receiver copyback for local mutating method calls in simple
+  whole-RHS assignment rewrites, including computed index children that are
+  evaluated once before argument binding
 - factory object initialization for inlined class factories
 - conservative emission-time pruning of private local plain procedures once no surviving local call node still targets them
 - source, RXAS, and binary imported plain procedures when the imported module
@@ -754,10 +784,12 @@ The implementation still excludes:
 - dynamic-index vararg access (`arg.i`, `arg(i)`, `arg(i, "E")`) until the
   lowering proves both register liveness and exact OUT_OF_RANGE semantics for
   every vararg tail length
-- mutating methods whose receiver is not a direct symbol copyback target
-- receiver-position inlining, such as `buildBox("seed").getName()` or
-  `items[i].setName("x")`, pending a parent-expression liveness,
-  materialisation, and copyback proof
+- mutating methods whose receiver copyback needs an unsupported target shape,
+  such as a class-attribute receiver, imported non-direct receiver, or
+  receiver-producing expression
+- receiver-position and expression-position inlining that needs general
+  parent-expression liveness, materialisation, and copyback proof beyond the
+  statement-owned whole-RHS assignment slice
 - remaining expression parent shapes whose `BLOCK_EXPR` cannot yet be proved as
   a direct single-value consumer with call-equivalent side-effect order
 
@@ -841,15 +873,18 @@ They should be tracked separately so that future work fixes the right layer:
   same local call slice as other `BLOCK_EXPR` expression sites. They remain a
   useful regression focus because the original language semantics include both
   evaluation order and aliasing.
-- Receiver-position expressions: examples such as
-  `buildBox("seed").getName()` and `.Box("direct").prefix("q")` require the
-  receiver-producing expression to be evaluated once, materialised, and then
-  used as the method receiver without clobbering siblings or losing copyback.
+- Receiver-position expressions that need copyback through a produced receiver:
+  non-mutating receiver chains such as `buildBox("seed").getName()` and
+  `.Box("direct").prefix("q")` are covered by the current local slice, but
+  mutating variants still need the receiver-producing expression to be
+  evaluated once, materialised, and then used as the method receiver without
+  clobbering siblings or losing copyback.
 - Mutating methods in unsupported expression shapes: direct single-consumer
-  sites such as `say box.setAndReport("epsilon")` are supported, but
-  mutating methods still stay uninlined when the receiver cannot be copied
-  back to a direct local symbol or when the call appears under an unsupported
-  parent expression.
+  sites such as `say box.setAndReport("epsilon")` are supported for direct
+  receivers, and simple whole-RHS assignments can use captured locator
+  copyback. Mutating methods still stay uninlined when the receiver cannot be
+  copied back through a supported target or when the call appears under an
+  unsupported parent expression.
 - Procedure-level `expose` clauses: these are deliberately distinct from
   `arg expose` reference formals. The latter is call-argument aliasing; the
   former changes the callee's global binding environment and remains a normal
@@ -961,8 +996,8 @@ Reason classes:
 | `W7` | Writer/export codec | Decimal/numeric-control AST nodes such as `DEC_STANDARD`, `DEC_FUZZ`, `DEC_FORM`, `DEC_DIGITS`, `DEC_CASE` are not transported | codec/transport | Low current signal. | Likely low-risk codec work, but only useful for the few numeric-control helpers. | Candidate for a small later slice if numeric BIF coverage matters. Add focused transport tests first. |
 | `W8` | Writer/export codec | Unsupported scope/symbol/node families outside the current whitelist | codec/transport | Low signal beyond the named gates. | Keep whitelist-based. Expanding the codec is cheap only when the downstream imported template can still be validated and emitted. | Add one node family at a time with source/RXAS/RXDAS/binary tests. |
 | `C1` | Caller/call-site | Composed-expression `BLOCK_EXPR` inlining | mixed: complete for proven parent shapes, semantic dependency for the remaining expression parents | Raw diagnostics still show dedicated-statement contexts and a smaller set of direct-consumer gaps. | Opened for the local proven slice: arithmetic, unary operators, comparisons, concatenation, type operators, short-circuit operands, and call-like argument positions. Raw residual counts must be reviewed by parent shape because fixed-point revisits inflate them and some contexts are intentionally handled by separate rewrites. Receiver-position expressions remain separate. | Keep covered through the composed-expression runtime tests; add one no-opt/opt runtime test for each new composed bucket. |
-| `C2` | Caller/call-site | Receiver-position inlining remains closed for general cases | semantic dependency | Covered by existing negative tests; BIF impact appears through `MEMBER_CALL` export rejects | A lowering such as `__receiver = items[i]; __receiver.setName("x"); items[i] = __receiver` is possible, but it performs two general object/attribute copies and needs locator capture so computed receivers are evaluated once. Keep closed until receiver references, move semantics, or a deliberate materialise/copyback protocol is designed. | Leave closed until receiver reference/move/materialisation semantics are agreed. Do not keep revisiting as a generic inliner gap. |
-| `C3` | Caller/call-site | Mutating method inline requires a direct receiver copyback target | semantic dependency | Still visible in Level G and some Level B raw diagnostics. | Correctly conservative. Non-direct receivers need materialisation plus copyback semantics. | Leave closed until receiver materialisation/copyback is designed. |
+| `C2` | Caller/call-site | Receiver-position inlining remains closed for general copyback cases | semantic dependency | Covered by existing negative tests; BIF impact appears through `MEMBER_CALL` export rejects | Non-mutating receiver chains and simple whole-RHS assignment copyback through captured variable-like locators are covered locally. Receiver-producing mutating chains still need a parent-expression liveness and materialised receiver/copyback proof. | Leave general receiver-producing copyback closed until receiver reference/move/materialisation semantics are agreed. Do not keep revisiting as a generic inliner gap. |
+| `C3` | Caller/call-site | Mutating method inline requires a supported receiver copyback target | semantic dependency | Still visible in Level G and some Level B raw diagnostics. | Direct non-attribute receivers are supported; simple whole-RHS assignment can also capture indexed/stem-style locator children once and assign the mutated object back through that locator. Other non-direct receivers remain correctly conservative. | Open one receiver shape at a time with explicit capture/materialise/copyback tests. |
 | `C4` | Import/call-site | Source-imported getter-style member templates and scalar binary-imported method templates are supported; binary-imported factories and non-scalar member layouts remain closed | mixed: complete for scalar methods, semantic dependency for the rest | Cross-file tests now prove RXAS/RXDAS round-trip plus binary import consumption for scalar getter/setter methods. All current classlib files emit inline metadata into the final linked artifact, but non-scalar layouts and factory-call transport still block wider consumption. | This opens the class-library getter/setter path without pretending general receiver, factory, or aggregate layout semantics are solved. | Keep the remaining member/factory cases tied to their explicit W2/C2/C3 dependency notes. |
 | `C5` | Caller/call-site | Dynamic vararg indexing is closed for both by-value and `.ref` / `expose` varargs | semantic dependency | Still appears as unsupported vararg access and argument-binding diagnostics in Level B. | Semantically important. Reference varargs need locator arrays or per-index alias capture. By-value dynamic access currently lowers through generated expression blocks and captured arrays; the April 2026 regex regression showed that float comparison parents can alias a generated result register and change `max(1, len)` into an unsafe advance. | Leave closed until dynamic vararg access is lowered without BLOCK_EXPR register-alias risk, or until the expression/register allocator has a proof that parent result registers cannot clobber child values. |
 | `C6` | Safety | Recursive inline cycles are blocked | safety | Still present in raw diagnostics where library helpers call through cycles. | Must remain closed as a safety gate. | Keep. Only consider bounded/manual inline hints much later. |
@@ -1039,13 +1074,14 @@ The remaining gates can be understood as a small set of ordinary situations:
     return .arrayListIterator()
   ```
 
-- The receiver is not a direct local variable. Rewriting `items[i].set("x")`
-  as a temporary receiver plus copyback would require evaluating the receiver
-  exactly once and then writing it back safely. That is a reference/move or
-  materialisation design, not a simple inliner tweak.
+- The receiver is not a supported direct or variable-like locator target.
+  Simple whole-RHS assignment now captures locator children once and writes
+  back through that locator. Other cases, such as mutating a receiver produced
+  by a factory or helper call in a larger expression, still need a reference,
+  move, or broader materialisation design.
 
   ```rexx
-  items[i].set("x")
+  say makeBox().setAndReport("x")
   ```
 
 - The call is in an expression parent that has not been proved. Many expression
@@ -1231,7 +1267,8 @@ For validation purposes, any inline rewrite that changes whether a caller variab
 The next meaningful extensions are now milestone-driven rather than milestone-1 cleanup work:
 
 - broader cross-file coverage for remaining local-safe bodies
-- broader receiver copyback for mutating methods whose receiver is not a direct symbol
+- broader receiver copyback for mutating methods outside the direct-symbol and
+  simple captured-locator assignment slice
 - any later reconsideration of dynamic vararg indexing
 
 Recommended order from the April 2026 review:
@@ -1256,7 +1293,7 @@ Outside milestone 2 and 3, the remaining exclusions now split cleanly into:
 
 The local inlining design should be considered established when:
 
-- the compiler rewrites `inline_test1`, `inline_test_call`, `inline_test_expr`, `inline_test_concat_expr`, `inline_test_say_expr`, `inline_test_return_expr`, `inline_test_unary_expr`, `inline_test_compare_expr`, `inline_test_call_arg_expr`, `inline_test_call_like_arg_expr`, `inline_test_nested_call_expr`, `inline_test_ref_opt`, `inline_test_ref_indexed`, `inline_test_ref_stem`, and `inline_test_class_methods` using the supported strategies
+- the compiler rewrites `inline_test1`, `inline_test_call`, `inline_test_expr`, `inline_test_concat_expr`, `inline_test_say_expr`, `inline_test_return_expr`, `inline_test_unary_expr`, `inline_test_compare_expr`, `inline_test_call_arg_expr`, `inline_test_call_like_arg_expr`, `inline_test_nested_call_expr`, `inline_test_ref_opt`, `inline_test_ref_indexed`, `inline_test_ref_stem`, `inline_test_class_methods`, and `inline_test_computed_receiver_copyback` using the supported strategies
 - excluded cases such as large procedures, imported callees without compatible
   payloads, and unsupported mutating method expression calls remain uninlined
   under optimisation
@@ -1272,6 +1309,7 @@ The local inlining design should be considered established when:
 
 - arbitrary imported callees without compatible inline-body metadata
 - imported member bodies from binary-only class metadata
-- mutating methods in expression position until receiver copyback can be emitted before `LEAVE_WITH`
+- mutating methods in unsupported expression positions until receiver copyback
+  can be emitted before `LEAVE_WITH` for each parent bucket
 - aggressive pruning of fully inlined procedures
 - claiming fully generic scope/symbol cloning before it is proven

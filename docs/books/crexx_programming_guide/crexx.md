@@ -5,9 +5,9 @@ can compile, assemble, execute, link, and package programs without requiring
 the user to call each toolchain binary by hand.
 
 It is also useful in larger builds because it keeps the release defaults in one
-place: headerless scripts compile as Level B with `rxfnsb` imported, native
-packaging runs through `rxlink` before `rxcpack`, and source/binary import
-paths are passed to the compiler phase consistently.
+place: source-level defaults are delegated to `rxc` by file type, native
+packaging runs through `rxlink` before `rxcpack`, and source/binary import paths
+are passed to the compiler phase consistently.
 
 ## Use cases
 
@@ -105,9 +105,15 @@ This keeps the direct interpreter path fast while still producing compact native
 `--link-keep-inline`
 : When using `-native`, keep inline-body metadata in the linked intermediate. The native link strips this metadata by default because it is only needed by later compiler imports and debugging/tooling checks.
 
-`-s`, `-i`, and `--import-rxas` are compile-time controls only. They do not automatically add runtime modules to `rxvme` or to native links. For runtime/native library loading, continue to use `-l`.
+`-s`, `-i`, and `--import-rxas` are compile-time controls only. They do not automatically add user runtime modules to `rxvme` or to native links. For runtime/native library loading, continue to use `-l`.
 
-Headerless top-level scripts are still compiled with `--level levelb --import rxfnsb`.
+Source files without an `OPTIONS` clause use the `rxc` file-type defaults:
+`.rexx` defaults to Level C Classic REXX, while `.crexx` and `.crx` default to
+Level G. Explicit `OPTIONS LEVELC` scripts use the normal source header and the
+driver's standard runtime module set, including the Classic compatibility
+runtime `rxfnsc`. Level C compilation is incremental: supported Classic Rexx
+shapes lower and run, while constructs outside the implemented slice are
+rejected with an unsupported-shape diagnostic.
 
 ## Examples
 
@@ -116,6 +122,9 @@ Headerless top-level scripts are still compiled with `--level levelb --import rx
 The simplest way to run a cRexx program is to just specify its source file as input to the `crexx` program. It will excute the compiler, the assembler and start it with the standard threaded runtime interpreter. All included libraries and plugins are linked automatically.
 
 ```rexx <!--crexx-1.crexx-->
+options levelb
+import rxfnsb
+
 say 'hello crexx!'
 say 'today''s date is:' date()
 ```
@@ -159,7 +168,9 @@ It starts by identifying the exact release of the crexx version. After this, a n
 | s roots | additional sourcefile lookup locations |
 | i roots | additional binary (.rxbin) lookup locations |
 
-After this, the *simple script defaults* are mentioned: these are the lines that are inserted for scripts that have no explicit `main` procedure.
+Source-level defaults are owned by `rxc`, so the driver does not insert
+language or import flags for headerless files. The verbose output shows the
+exact `rxc` command and the source extension passed to the compiler.
 
 With this verbosity level, the exact invocations of the tools in the toolchain are documented, including the complete paths and arguments. Also, the invocation of the runtime engine, with all libraries explicity named - and this includes the libraries that are not used. With native compiles, the `rxlink` tool will extract the used code from these libraries into the executable. It also shows the `-a` flag as a last option, even if this is unused.
 
@@ -183,4 +194,3 @@ Also, the complete command line to the c-compiler and its linkage editor step is
 
 
 In the following chapters, these tools are documented in detail.
-
