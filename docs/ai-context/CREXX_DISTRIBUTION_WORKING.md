@@ -113,13 +113,9 @@ secrets live in `docs/packaging/macos-signing-notarization.md`.
 
 Forks and repositories without Apple signing secrets should still build and
 upload unsigned macOS ZIP assets. The workflow should log the skipped
-signing/notarization state rather than failing on missing secrets. Dev snapshot
-builds should also keep publishing the signed portable ZIP assets if Apple's
-notary service rejects the submission for account-side reasons, such as an
-expired developer agreement. Tagged release builds remain strict and should fail
-on notarization, stapling, or assessment errors. No macOS `.pkg` asset should be
-uploaded unless package signing, notarization, stapling, and installer
-assessment all succeed.
+signing/notarization state rather than failing on missing secrets. No macOS
+`.pkg` asset should be uploaded unless package signing, notarization, stapling,
+and installer assessment all succeed.
 
 The signed, notarized, stapled `.pkg` is now the best end-user install
 experience and should be the recommended macOS download. It supports the normal

@@ -577,33 +577,11 @@ jobs:
             exit 0
           fi
 
-          allow_notarization_skip=false
-          if [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/develop" ]; then
-            allow_notarization_skip=true
-          fi
-
-          notary_log="$(mktemp "${RUNNER_TEMP:-/tmp}/crexx-zip-notary.XXXXXX")"
-          if ! xcrun notarytool submit "$CREXX_RELEASE_ASSET" \
+          xcrun notarytool submit "$CREXX_RELEASE_ASSET" \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_APP_SPECIFIC_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
-            --wait 2>&1 | tee "$notary_log"; then
-            if [ "$allow_notarization_skip" = "true" ]; then
-              echo "::warning::macOS ZIP notarization failed for a dev snapshot; continuing with the signed portable ZIP asset."
-              {
-                echo "### macOS ZIP notarization failed"
-                echo
-                echo "The macOS ZIP payload is still uploaded as a signed portable developer archive."
-                echo "Notarization failed during a dev-snapshot build, so this workflow continued without treating the Apple notary-service response as a build failure."
-                echo
-                echo "\`\`\`"
-                tail -n 40 "$notary_log"
-                echo "\`\`\`"
-              } >> "$GITHUB_STEP_SUMMARY"
-              exit 0
-            fi
-            exit 1
-          fi
+            --wait
 
       - name: Notarize and staple macOS installer
         if: (github.event_name == 'create' || (github.event_name == 'push' && github.ref == 'refs/heads/develop')) && matrix.platform == 'macos' && steps.macos_signing.outputs.pkg_enabled == 'true'
@@ -642,75 +620,15 @@ jobs:
             exit 1
           fi
 
-          allow_notarization_skip=false
-          if [ "${GITHUB_EVENT_NAME}" = "push" ] && [ "${GITHUB_REF}" = "refs/heads/develop" ]; then
-            allow_notarization_skip=true
-          fi
-
-          notary_log="$(mktemp "${RUNNER_TEMP:-/tmp}/crexx-pkg-notary.XXXXXX")"
-          if ! xcrun notarytool submit "$CREXX_MACOS_PKG_ASSET" \
+          xcrun notarytool submit "$CREXX_MACOS_PKG_ASSET" \
             --apple-id "$APPLE_ID" \
             --password "$APPLE_APP_SPECIFIC_PASSWORD" \
             --team-id "$APPLE_TEAM_ID" \
-            --wait 2>&1 | tee "$notary_log"; then
-            if [ "$allow_notarization_skip" = "true" ]; then
-              echo "::warning::macOS .pkg notarization failed for a dev snapshot; continuing without uploading a .pkg asset."
-              {
-                echo "### macOS .pkg notarization failed"
-                echo
-                echo "The signed .pkg was not uploaded because notarization failed during a dev-snapshot build."
-                echo "The portable macOS ZIP asset remains available."
-                echo
-                echo "\`\`\`"
-                tail -n 40 "$notary_log"
-                echo "\`\`\`"
-              } >> "$GITHUB_STEP_SUMMARY"
-              exit 0
-            fi
-            exit 1
-          fi
+            --wait
 
-          if ! xcrun stapler staple "$CREXX_MACOS_PKG_ASSET"; then
-            if [ "$allow_notarization_skip" = "true" ]; then
-              echo "::warning::macOS .pkg stapling failed for a dev snapshot; continuing without uploading a .pkg asset."
-              {
-                echo "### macOS .pkg stapling failed"
-                echo
-                echo "The signed and notarized .pkg was not uploaded because stapling failed during a dev-snapshot build."
-                echo "The portable macOS ZIP asset remains available."
-              } >> "$GITHUB_STEP_SUMMARY"
-              exit 0
-            fi
-            exit 1
-          fi
-
-          if ! xcrun stapler validate "$CREXX_MACOS_PKG_ASSET"; then
-            if [ "$allow_notarization_skip" = "true" ]; then
-              echo "::warning::macOS .pkg stapler validation failed for a dev snapshot; continuing without uploading a .pkg asset."
-              {
-                echo "### macOS .pkg stapler validation failed"
-                echo
-                echo "The .pkg was not uploaded because stapler validation failed during a dev-snapshot build."
-                echo "The portable macOS ZIP asset remains available."
-              } >> "$GITHUB_STEP_SUMMARY"
-              exit 0
-            fi
-            exit 1
-          fi
-
-          if ! spctl --assess --type install --verbose=4 "$CREXX_MACOS_PKG_ASSET"; then
-            if [ "$allow_notarization_skip" = "true" ]; then
-              echo "::warning::macOS .pkg installer assessment failed for a dev snapshot; continuing without uploading a .pkg asset."
-              {
-                echo "### macOS .pkg installer assessment failed"
-                echo
-                echo "The .pkg was not uploaded because installer assessment failed during a dev-snapshot build."
-                echo "The portable macOS ZIP asset remains available."
-              } >> "$GITHUB_STEP_SUMMARY"
-              exit 0
-            fi
-            exit 1
-          fi
+          xcrun stapler staple "$CREXX_MACOS_PKG_ASSET"
+          xcrun stapler validate "$CREXX_MACOS_PKG_ASSET"
+          spctl --assess --type install --verbose=4 "$CREXX_MACOS_PKG_ASSET"
 
           mkdir -p "${{ runner.temp }}/release-assets"
           cp "$CREXX_MACOS_PKG_ASSET" "${{ runner.temp }}/release-assets/"
