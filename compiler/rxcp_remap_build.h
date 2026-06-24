@@ -27,6 +27,13 @@ typedef struct {
     size_t captured_count;
 } RxcpRemapCapturedLocator;
 
+typedef struct {
+    const char *values_name;
+    const char *values_class_name;
+    const char *provided_name;
+    const char *provided_class_name;
+} RxcpRemapArgumentFrameSpec;
+
 void rxcp_remap_anchor_synthetic(ASTNode *node, ASTNode *source_node);
 void rxcp_remap_mark_generated_block(ASTNode *node, int primary_reporting_anchor);
 void rxcp_remap_copy_numeric_context(Scope *target, const Scope *source);
@@ -58,6 +65,13 @@ Symbol *rxcp_remap_create_temp_symbol(Context *context,
                                       ASTNode *source_node,
                                       const char *prefix,
                                       size_t suffix);
+char *rxcp_remap_create_prefixed_name(const char *prefix,
+                                      const char *name,
+                                      const char *suffix);
+char *rxcp_remap_create_generated_node_name(const char *prefix,
+                                            ASTNode *source_node);
+char *rxcp_remap_create_generated_indexed_name(const char *prefix,
+                                               size_t index);
 
 ASTNode *rxcp_remap_create_symbol_node(Context *context,
                                        Scope *scope,
@@ -79,6 +93,9 @@ ASTNode *rxcp_remap_create_literal(Context *context,
 ASTNode *rxcp_remap_create_import(Context *context,
                                   ASTNode *source_node,
                                   const char *namespace_name);
+ASTNode *rxcp_remap_create_generated_import(Context *context,
+                                            ASTNode *source_node,
+                                            const char *namespace_name);
 ASTNode *rxcp_remap_create_noval(Context *context,
                                  ASTNode *source_node);
 ASTNode *rxcp_remap_create_named_ref(Context *context,
@@ -143,6 +160,11 @@ ASTNode *rxcp_remap_create_named_assignment(Context *context,
                                             ASTNode *source_node,
                                             const char *target_name,
                                             ASTNode *rhs);
+ASTNode *rxcp_remap_create_indexed_assignment(Context *context,
+                                              ASTNode *source_node,
+                                              const char *target_name,
+                                              int index,
+                                              ASTNode *rhs);
 ASTNode *rxcp_remap_create_instruction_builder(Context *context,
                                                ASTNode *source_node);
 void rxcp_remap_append_builder_children(ASTNode *instructions,
@@ -155,6 +177,32 @@ ASTNode *rxcp_remap_create_if_statement(Context *context,
                                         ASTNode *condition,
                                         ASTNode *then_statement,
                                         ASTNode *else_statement);
+ASTNode *rxcp_remap_create_void_type(Context *context,
+                                     ASTNode *source_node);
+ASTNode *rxcp_remap_create_reference_type(Context *context,
+                                          ASTNode *source_node,
+                                          const char *class_name);
+ASTNode *rxcp_remap_create_arg(Context *context,
+                               ASTNode *source_node,
+                               ASTNode *target,
+                               ASTNode *type_node);
+ASTNode *rxcp_remap_create_args_builder(Context *context,
+                                        ASTNode *source_node);
+ASTNode *rxcp_remap_create_procedure_header(Context *context,
+                                            ASTNode *source_node,
+                                            const char *procedure_name,
+                                            ASTNode *return_type);
+int rxcp_remap_begin_argument_frame(Context *context,
+                                    ASTNode *instructions,
+                                    ASTNode *source_node,
+                                    const RxcpRemapArgumentFrameSpec *spec);
+int rxcp_remap_append_argument_frame_slot(Context *context,
+                                          ASTNode *instructions,
+                                          ASTNode *source_node,
+                                          const RxcpRemapArgumentFrameSpec *spec,
+                                          int index,
+                                          ASTNode *value,
+                                          int provided);
 ASTNode *rxcp_remap_create_assembler_instr(Context *context,
                                            Scope *scope,
                                            ASTNode *source_node,

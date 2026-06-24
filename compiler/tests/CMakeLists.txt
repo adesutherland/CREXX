@@ -3278,6 +3278,33 @@ function(add_levelc_lowered_tree_shape_test NAME SOURCE_FILE)
     set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
 endfunction()
 
+function(add_levelc_no_unused_generated_import_warning_test NAME SOURCE_FILE)
+    set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
+    set(SCRIPT_CONTENT "")
+
+    string(APPEND SCRIPT_CONTENT
+           "execute_process(\n"
+           "    COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"${NAME}\" \"${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE_FILE}\"\n"
+           "    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+           "    OUTPUT_VARIABLE rxc_out\n"
+           "    ERROR_VARIABLE rxc_err\n"
+           "    RESULT_VARIABLE rxc_res\n"
+           ")\n"
+           "set(full_out \"${RXAS_DIAG_DOLLAR}{rxc_out}${RXAS_DIAG_DOLLAR}{rxc_err}\")\n"
+           "if(NOT rxc_res EQUAL 0)\n"
+           "  message(FATAL_ERROR \"rxc failed for ${NAME}.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+           "endif()\n"
+           "if(full_out MATCHES \"UNUSED_IMPORT\")\n"
+           "  message(FATAL_ERROR \"Generated Level C imports produced an unused-import warning for ${NAME}.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+           "endif()\n")
+
+    file(GENERATE OUTPUT "${SCRIPT_FILE}" CONTENT "${SCRIPT_CONTENT}")
+    add_test(NAME ${NAME}
+             COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(${NAME} PROPERTIES LABELS "compiler;levelc")
+endfunction()
+
 add_levelc_runtime_slice_test(levelc_slice1_target_shape
         rexx_src/levelc_slice1_target_shape.crexx
         "3\n")
@@ -3285,6 +3312,9 @@ add_levelc_runtime_slice_test(levelc_slice1_target_shape
 add_levelc_runtime_slice_test(levelc_slice1_pool_say
         rexx_src/levelc_slice1_pool_say.rexx
         "3\n")
+
+add_levelc_no_unused_generated_import_warning_test(levelc_generated_imports_no_unused_warning
+        rexx_src/levelc_slice1_pool_say.rexx)
 
 add_levelc_runtime_slice_test(levelc_slice2_procedure_expose_target_shape
         rexx_src/levelc_slice2_procedure_expose_target_shape.crexx

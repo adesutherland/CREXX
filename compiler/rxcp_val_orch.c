@@ -1383,6 +1383,7 @@ static void unused_import_add_entry(dpa *entries, ASTNode *import_node) {
     char *namespace_name;
 
     if (!entries || !import_node || import_node->node_type != IMPORT ||
+        import_node->is_compiler_added ||
         !import_node->child || !unused_import_node_has_source(import_node->child)) {
         return;
     }

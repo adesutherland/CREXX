@@ -578,24 +578,10 @@ static int levelc_compound_tail_supported(const char *name) {
 }
 
 static char *levelc_generated_proc_name(const char *levelc_name, int with_colon) {
-    size_t prefix_len;
-    size_t name_len;
-    char *result;
-
     if (!levelc_name || !levelc_name[0]) return NULL;
-    prefix_len = strlen(LEVELC_PROC_PREFIX);
-    name_len = strlen(levelc_name);
-    result = malloc(prefix_len + name_len + (with_colon ? 1 : 0) + 1);
-    if (!result) return NULL;
-    memcpy(result, LEVELC_PROC_PREFIX, prefix_len);
-    memcpy(result + prefix_len, levelc_name, name_len);
-    if (with_colon) {
-        result[prefix_len + name_len] = ':';
-        result[prefix_len + name_len + 1] = '\0';
-    } else {
-        result[prefix_len + name_len] = '\0';
-    }
-    return result;
+    return rxcp_remap_create_prefixed_name(LEVELC_PROC_PREFIX,
+                                           levelc_name,
+                                           with_colon ? ":" : NULL);
 }
 
 static ASTNode *levelc_pool_ref(Context *context, ASTNode *source_node, NodeType node_type) {
@@ -1095,21 +1081,8 @@ static ASTNode *levelc_lower_expr(Context *context,
                                   LevelCLowerPlan *plan,
                                   ASTNode *prelude);
 
-static char *levelc_generated_temp_name(const char *prefix, ASTNode *source_node) {
-    char buffer[128];
-    int node_number;
-
-    if (!prefix) return NULL;
-    node_number = source_node ? source_node->node_number : 0;
-    snprintf(buffer, sizeof(buffer), "%s%d", prefix, node_number);
-    return strdup(buffer);
-}
-
 static char *levelc_generated_arg_name(size_t index) {
-    char buffer[80];
-
-    snprintf(buffer, sizeof(buffer), "%s%zu", LEVELC_PROC_ARG_PREFIX, index);
-    return strdup(buffer);
+    return rxcp_remap_create_generated_indexed_name(LEVELC_PROC_ARG_PREFIX, index);
 }
 
 static ASTNode *levelc_rexxvalue_from_text(Context *context,
@@ -1375,7 +1348,7 @@ static ASTNode *levelc_lower_short_circuit(Context *context,
         return NULL;
     }
 
-    result_name = levelc_generated_temp_name(LEVELC_EXPR_RESULT_PREFIX, expr);
+    result_name = rxcp_remap_create_generated_node_name(LEVELC_EXPR_RESULT_PREFIX, expr);
     if (!result_name) return NULL;
 
     left = levelc_lower_expr(context, expr->child, plan, prelude);
@@ -1446,22 +1419,6 @@ fail:
     return NULL;
 }
 
-static ASTNode *levelc_create_slot_assignment(Context *context,
-                                              ASTNode *source_node,
-                                              const char *array_name,
-                                              int index,
-                                              ASTNode *rhs) {
-    ASTNode *lhs;
-
-    lhs = rxcp_remap_create_indexed_ref(context,
-                                        source_node,
-                                        VAR_TARGET,
-                                        array_name,
-                                        index);
-    if (!lhs || !rhs) return NULL;
-    return rxcp_remap_create_simple_assignment(context, source_node, lhs, rhs);
-}
-
 static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
                                                ASTNode *expr,
                                                const char *bif_name,
@@ -1481,9 +1438,9 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
 
     if (!context || !expr || !bif_name || !prelude) return NULL;
 
-    args_name = levelc_generated_temp_name(LEVELC_BIF_ARGS_PREFIX, expr);
-    exists_name = levelc_generated_temp_name(LEVELC_BIF_EXISTS_PREFIX, expr);
-    context_name = levelc_generated_temp_name(LEVELC_BIF_CONTEXT_PREFIX, expr);
+    args_name = rxcp_remap_create_generated_node_name(LEVELC_BIF_ARGS_PREFIX, expr);
+    exists_name = rxcp_remap_create_generated_node_name(LEVELC_BIF_EXISTS_PREFIX, expr);
+    context_name = rxcp_remap_create_generated_node_name(LEVELC_BIF_CONTEXT_PREFIX, expr);
     if (!args_name || !exists_name || !context_name) {
         if (args_name) free(args_name);
         if (exists_name) free(exists_name);
@@ -1491,19 +1448,15 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
         return NULL;
     }
 
-    statement = rxcp_remap_create_array_define(context,
-                                               expr,
-                                               args_name,
-                                               LEVELC_REXX_VALUE_CLASS_TYPE);
-    if (!statement) goto fail;
-    add_ast(prelude, statement);
+    {
+        RxcpRemapArgumentFrameSpec frame;
 
-    statement = rxcp_remap_create_array_define(context,
-                                               expr,
-                                               exists_name,
-                                               LEVELC_INT_CLASS_TYPE);
-    if (!statement) goto fail;
-    add_ast(prelude, statement);
+        frame.values_name = args_name;
+        frame.values_class_name = LEVELC_REXX_VALUE_CLASS_TYPE;
+        frame.provided_name = exists_name;
+        frame.provided_class_name = LEVELC_INT_CLASS_TYPE;
+        if (!rxcp_remap_begin_argument_frame(context, prelude, expr, &frame)) goto fail;
+    }
 
     arg_count = levelc_function_argument_count(expr);
     arg = expr->child;
@@ -1511,41 +1464,36 @@ static ASTNode *levelc_lower_bif_dispatch_call(Context *context,
     while (index <= arg_count) {
         ASTNode *value_rhs;
         ASTNode *value_copy;
-        ASTNode *exists_rhs;
+        int arg_provided;
 
         if (!arg) goto fail;
-        if (levelc_argument_exists(arg)) {
+        arg_provided = levelc_argument_exists(arg);
+        if (arg_provided) {
             value_rhs = levelc_lower_expr(context, arg, plan, prelude);
             value_copy = levelc_copy_rexxvalue(context, arg, value_rhs);
-            exists_rhs = rxcp_remap_create_integer_constant(context,
-                                                           arg,
-                                                           1,
-                                                           TP_INTEGER);
         } else {
             value_rhs = levelc_blank_rexxvalue(context, arg);
             value_copy = value_rhs;
-            exists_rhs = rxcp_remap_create_integer_constant(context,
-                                                           arg,
-                                                           0,
-                                                           TP_INTEGER);
         }
-        if (!value_rhs || !value_copy || !exists_rhs) goto fail;
+        if (!value_rhs || !value_copy) goto fail;
 
-        statement = levelc_create_slot_assignment(context,
-                                                  arg,
-                                                  args_name,
-                                                  (int)index,
-                                                  value_copy);
-        if (!statement) goto fail;
-        add_ast(prelude, statement);
+        {
+            RxcpRemapArgumentFrameSpec frame;
 
-        statement = levelc_create_slot_assignment(context,
-                                                  arg,
-                                                  exists_name,
-                                                  (int)index,
-                                                  exists_rhs);
-        if (!statement) goto fail;
-        add_ast(prelude, statement);
+            frame.values_name = args_name;
+            frame.values_class_name = LEVELC_REXX_VALUE_CLASS_TYPE;
+            frame.provided_name = exists_name;
+            frame.provided_class_name = LEVELC_INT_CLASS_TYPE;
+            if (!rxcp_remap_append_argument_frame_slot(context,
+                                                       prelude,
+                                                       arg,
+                                                       &frame,
+                                                       (int)index,
+                                                       value_copy,
+                                                       arg_provided)) {
+                goto fail;
+            }
+        }
 
         arg = arg->sibling;
         index++;
@@ -1739,7 +1687,7 @@ static ASTNode *levelc_materialise_compound_tail(Context *context,
     free(tail);
 
     tail_expr = levelc_compound_tail_expr(context, source_node, name);
-    tail_name = levelc_generated_temp_name(LEVELC_COMPOUND_TAIL_PREFIX, source_node);
+    tail_name = rxcp_remap_create_generated_node_name(LEVELC_COMPOUND_TAIL_PREFIX, source_node);
     if (!tail_expr || !tail_name) {
         if (tail_name) free(tail_name);
         return NULL;
@@ -2063,24 +2011,18 @@ static ASTNode *levelc_procedure_header(Context *context,
     name = levelc_generated_proc_name(procedure->name, 1);
     if (!name) return NULL;
 
-    node = ast_ftt(context, PROCEDURE, name);
-    if (!node) {
-        free(name);
-        return NULL;
-    }
-    node->free_node_string = 1;
-    rxcp_remap_anchor_synthetic(node, procedure->label);
-
     if (procedure->returns_value) {
         return_type = rxcp_remap_create_class_type(context,
                                                    procedure->procedure,
                                                    LEVELC_REXX_VALUE_CLASS_TYPE);
     } else {
-        return_type = ast_ft(context, VOID);
-        if (return_type) rxcp_remap_anchor_synthetic(return_type, procedure->procedure);
+        return_type = rxcp_remap_create_void_type(context, procedure->procedure);
     }
-    if (!return_type) return NULL;
-    add_ast(node, return_type);
+    node = return_type ? rxcp_remap_create_procedure_header(context,
+                                                           procedure->label,
+                                                           name,
+                                                           return_type) : NULL;
+    free(name);
     return node;
 }
 
@@ -2095,30 +2037,20 @@ static ASTNode *levelc_procedure_args(Context *context,
 
     if (!context || !procedure) return NULL;
 
-    args = ast_ft(context, ARGS);
-    arg = ast_ft(context, ARG);
+    args = rxcp_remap_create_args_builder(context, procedure->procedure);
     target = levelc_parent_pool_ref_symbol(context, procedure->procedure, VAR_TARGET);
-    type_ref = ast_ftt(context, TYPE_REFERENCE, strdup("reference"));
-    class_node = ast_ftt(context, CLASS, strdup(".RexxVariablePool"));
-    if (!args || !arg || !target || !type_ref || !class_node) return NULL;
+    type_ref = rxcp_remap_create_reference_type(context,
+                                                procedure->procedure,
+                                                ".RexxVariablePool");
+    arg = rxcp_remap_create_arg(context, procedure->procedure, target, type_ref);
+    if (!args || !arg) return NULL;
 
-    rxcp_remap_anchor_synthetic(args, procedure->procedure);
-    rxcp_remap_anchor_synthetic(arg, procedure->procedure);
-    rxcp_remap_anchor_synthetic(type_ref, procedure->procedure);
-    rxcp_remap_anchor_synthetic(class_node, procedure->procedure);
-    type_ref->free_node_string = 1;
-    class_node->free_node_string = 1;
-
-    add_ast(type_ref, class_node);
-    add_ast(arg, target);
-    add_ast(arg, type_ref);
     add_ast(args, arg);
 
     for (index = 1; index <= procedure->arg_count; index++) {
         char *arg_name;
 
         arg_name = levelc_generated_arg_name(index);
-        arg = ast_ft(context, ARG);
         target = arg_name ? rxcp_remap_create_named_ref(context,
                                                         procedure->procedure,
                                                         VAR_TARGET,
@@ -2127,11 +2059,9 @@ static ASTNode *levelc_procedure_args(Context *context,
                                                   procedure->procedure,
                                                   LEVELC_REXX_VALUE_CLASS_TYPE);
         if (arg_name) free(arg_name);
-        if (!arg || !target || !class_node) return NULL;
+        arg = rxcp_remap_create_arg(context, procedure->procedure, target, class_node);
+        if (!arg) return NULL;
 
-        rxcp_remap_anchor_synthetic(arg, procedure->procedure);
-        add_ast(arg, target);
-        add_ast(arg, class_node);
         add_ast(args, arg);
     }
 
@@ -2184,9 +2114,9 @@ static ASTNode *levelc_build_options(Context *context, ASTNode *anchor_node) {
     levelb = rxcp_remap_create_literal(context, anchor_node ? anchor_node : options, "levelb");
     comments_dash = rxcp_remap_create_literal(context, anchor_node ? anchor_node : options, "comments_dash");
     numeric_classic = rxcp_remap_create_literal(context, anchor_node ? anchor_node : options, "numeric_classic");
-    import_value = rxcp_remap_create_import(context, anchor_node ? anchor_node : options, "rexxvalue");
-    import_pool = rxcp_remap_create_import(context, anchor_node ? anchor_node : options, "rexxpool");
-    import_bifs = rxcp_remap_create_import(context, anchor_node ? anchor_node : options, "rexxclassicbifs");
+    import_value = rxcp_remap_create_generated_import(context, anchor_node ? anchor_node : options, "rexxvalue");
+    import_pool = rxcp_remap_create_generated_import(context, anchor_node ? anchor_node : options, "rexxpool");
+    import_bifs = rxcp_remap_create_generated_import(context, anchor_node ? anchor_node : options, "rexxclassicbifs");
     if (!levelb || !comments_dash || !numeric_classic || !import_value || !import_pool || !import_bifs) return NULL;
 
     add_ast(options, levelb);

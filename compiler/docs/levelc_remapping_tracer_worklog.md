@@ -1688,3 +1688,43 @@ Green stop for implementation stage 14:
   - result: passed; existing inline selector/service summaries still print
 - `git diff --check`
   - result: passed
+
+## Implementation Stage 15: Final Mapper Consolidation Sweep
+
+### Intent
+
+Move the remaining obvious tree-materialisation mechanics out of the Level C
+lowerer and into the neutral remap builder, while keeping Classic REXX policy
+inside the Level C mapper.
+
+### Replay Steps
+
+1. Add neutral generated-name helpers:
+   - prefix + source-node id;
+   - prefix + index;
+   - prefix + source name + optional suffix.
+2. Add generated-import construction that marks the import node as
+   compiler-generated, then teach unused-import validation to skip
+   compiler-generated imports.
+3. Add neutral indexed assignment, procedure header, `ARGS`/`ARG`,
+   void/reference type, and argument-frame begin/slot helpers.
+4. Rewire Level C BIF dispatcher frames through the neutral frame helpers,
+   preserving the old order: define frame arrays, lower each argument, append
+   value and provided-mask slots.
+5. Rewire generated procedure headers and argument lists through the neutral
+   procedure/arg helpers.
+6. Add `levelc_generated_imports_no_unused_warning` to prove synthetic runtime
+   imports do not produce user-facing `#UNUSED_IMPORT` diagnostics.
+
+### Lessons For The Remapping Framework
+
+- The reusable layer is now strongest when it is named as small commands:
+  `begin-argument-frame`, `append-argument-frame-slot`,
+  `create-procedure-header`, `create-arg`, `create-generated-import`, and
+  `create-generated-name`.
+- The Level C mapper should still own dialect decisions: pool keys, expose
+  eligibility, BIF dispatch/direct-helper choice, and which source shapes are
+  admitted.
+- Remaining refactors should be demand-led. Pool-like locator materialisation
+  should move only when another frontend or optimiser actually needs the same
+  semantics.

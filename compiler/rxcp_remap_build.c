@@ -226,6 +226,65 @@ Symbol *rxcp_remap_create_temp_symbol(Context *context,
                                                     1);
 }
 
+char *rxcp_remap_create_prefixed_name(const char *prefix,
+                                      const char *name,
+                                      const char *suffix) {
+    size_t prefix_len;
+    size_t name_len;
+    size_t suffix_len;
+    char *result;
+
+    if (!prefix || !name) return NULL;
+
+    prefix_len = strlen(prefix);
+    name_len = strlen(name);
+    suffix_len = suffix ? strlen(suffix) : 0;
+    result = malloc(prefix_len + name_len + suffix_len + 1);
+    if (!result) return NULL;
+
+    memcpy(result, prefix, prefix_len);
+    memcpy(result + prefix_len, name, name_len);
+    if (suffix_len) memcpy(result + prefix_len + name_len, suffix, suffix_len);
+    result[prefix_len + name_len + suffix_len] = '\0';
+    return result;
+}
+
+char *rxcp_remap_create_generated_node_name(const char *prefix,
+                                            ASTNode *source_node) {
+    int node_number;
+    int length;
+    char *result;
+
+    if (!prefix) return NULL;
+
+    node_number = source_node ? source_node->node_number : 0;
+    length = snprintf(NULL, 0, "%s%d", prefix, node_number);
+    if (length < 0) return NULL;
+
+    result = malloc((size_t)length + 1);
+    if (!result) return NULL;
+
+    snprintf(result, (size_t)length + 1, "%s%d", prefix, node_number);
+    return result;
+}
+
+char *rxcp_remap_create_generated_indexed_name(const char *prefix,
+                                               size_t index) {
+    int length;
+    char *result;
+
+    if (!prefix) return NULL;
+
+    length = snprintf(NULL, 0, "%s%zu", prefix, index);
+    if (length < 0) return NULL;
+
+    result = malloc((size_t)length + 1);
+    if (!result) return NULL;
+
+    snprintf(result, (size_t)length + 1, "%s%zu", prefix, index);
+    return result;
+}
+
 ASTNode *rxcp_remap_create_symbol_node(Context *context,
                                        Scope *scope,
                                        ASTNode *source_node,
@@ -320,6 +379,19 @@ ASTNode *rxcp_remap_create_import(Context *context,
     literal = rxcp_remap_create_literal(context, source_node, namespace_name);
     if (!literal) return NULL;
     add_ast(node, literal);
+    return node;
+}
+
+ASTNode *rxcp_remap_create_generated_import(Context *context,
+                                            ASTNode *source_node,
+                                            const char *namespace_name) {
+    ASTNode *node;
+
+    node = rxcp_remap_create_import(context, source_node, namespace_name);
+    if (!node) return NULL;
+
+    node->is_compiler_added = 1;
+    if (node->child) node->child->is_compiler_added = 1;
     return node;
 }
 
@@ -622,6 +694,25 @@ ASTNode *rxcp_remap_create_named_assignment(Context *context,
     return rxcp_remap_create_simple_assignment(context, source_node, lhs, rhs);
 }
 
+ASTNode *rxcp_remap_create_indexed_assignment(Context *context,
+                                              ASTNode *source_node,
+                                              const char *target_name,
+                                              int index,
+                                              ASTNode *rhs) {
+    ASTNode *lhs;
+
+    if (!context || !source_node || !target_name || !rhs) return NULL;
+
+    lhs = rxcp_remap_create_indexed_ref(context,
+                                        source_node,
+                                        VAR_TARGET,
+                                        target_name,
+                                        index);
+    if (!lhs) return NULL;
+
+    return rxcp_remap_create_simple_assignment(context, source_node, lhs, rhs);
+}
+
 ASTNode *rxcp_remap_create_instruction_builder(Context *context,
                                                ASTNode *source_node) {
     ASTNode *node;
@@ -686,6 +777,157 @@ ASTNode *rxcp_remap_create_if_statement(Context *context,
     add_ast(node, then_statement);
     if (else_statement) add_ast(node, else_statement);
     return node;
+}
+
+ASTNode *rxcp_remap_create_void_type(Context *context,
+                                     ASTNode *source_node) {
+    ASTNode *node;
+
+    if (!context || !source_node) return NULL;
+
+    node = ast_ft(context, VOID);
+    if (!node) return NULL;
+
+    rxcp_remap_anchor_synthetic(node, source_node);
+    return node;
+}
+
+ASTNode *rxcp_remap_create_reference_type(Context *context,
+                                          ASTNode *source_node,
+                                          const char *class_name) {
+    ASTNode *type_ref;
+    ASTNode *class_node;
+
+    if (!context || !source_node || !class_name) return NULL;
+
+    type_ref = ast_ftt(context, TYPE_REFERENCE, strdup("reference"));
+    class_node = rxcp_remap_create_class_type(context, source_node, class_name);
+    if (!type_ref || !class_node) return NULL;
+
+    type_ref->free_node_string = 1;
+    rxcp_remap_anchor_synthetic(type_ref, source_node);
+    add_ast(type_ref, class_node);
+    return type_ref;
+}
+
+ASTNode *rxcp_remap_create_arg(Context *context,
+                               ASTNode *source_node,
+                               ASTNode *target,
+                               ASTNode *type_node) {
+    ASTNode *node;
+
+    if (!context || !source_node || !target || !type_node) return NULL;
+
+    node = ast_ft(context, ARG);
+    if (!node) return NULL;
+
+    rxcp_remap_anchor_synthetic(node, source_node);
+    add_ast(node, target);
+    add_ast(node, type_node);
+    return node;
+}
+
+ASTNode *rxcp_remap_create_args_builder(Context *context,
+                                        ASTNode *source_node) {
+    ASTNode *node;
+
+    if (!context || !source_node) return NULL;
+
+    node = ast_ft(context, ARGS);
+    if (!node) return NULL;
+
+    rxcp_remap_anchor_synthetic(node, source_node);
+    return node;
+}
+
+ASTNode *rxcp_remap_create_procedure_header(Context *context,
+                                            ASTNode *source_node,
+                                            const char *procedure_name,
+                                            ASTNode *return_type) {
+    ASTNode *node;
+
+    if (!context || !source_node || !procedure_name || !return_type) return NULL;
+
+    node = ast_ftt(context, PROCEDURE, strdup(procedure_name));
+    if (!node) return NULL;
+
+    node->free_node_string = 1;
+    rxcp_remap_anchor_synthetic(node, source_node);
+    add_ast(node, return_type);
+    return node;
+}
+
+int rxcp_remap_begin_argument_frame(Context *context,
+                                    ASTNode *instructions,
+                                    ASTNode *source_node,
+                                    const RxcpRemapArgumentFrameSpec *spec) {
+    ASTNode *statement;
+
+    if (!context || !instructions || !source_node || !spec) return 0;
+
+    if (spec->values_name) {
+        if (!spec->values_class_name) return 0;
+        statement = rxcp_remap_create_array_define(context,
+                                                   source_node,
+                                                   spec->values_name,
+                                                   spec->values_class_name);
+        if (!statement) return 0;
+        add_ast(instructions, statement);
+    }
+
+    if (spec->provided_name) {
+        if (!spec->provided_class_name) return 0;
+        statement = rxcp_remap_create_array_define(context,
+                                                   source_node,
+                                                   spec->provided_name,
+                                                   spec->provided_class_name);
+        if (!statement) return 0;
+        add_ast(instructions, statement);
+    }
+
+    return 1;
+}
+
+int rxcp_remap_append_argument_frame_slot(Context *context,
+                                          ASTNode *instructions,
+                                          ASTNode *source_node,
+                                          const RxcpRemapArgumentFrameSpec *spec,
+                                          int index,
+                                          ASTNode *value,
+                                          int provided) {
+    ASTNode *statement;
+    ASTNode *provided_value;
+
+    if (!context || !instructions || !source_node || !spec || index < 1) return 0;
+
+    if (spec->values_name) {
+        if (!value) return 0;
+        statement = rxcp_remap_create_indexed_assignment(context,
+                                                         source_node,
+                                                         spec->values_name,
+                                                         index,
+                                                         value);
+        if (!statement) return 0;
+        add_ast(instructions, statement);
+    }
+
+    if (spec->provided_name) {
+        provided_value = rxcp_remap_create_integer_constant(context,
+                                                           source_node,
+                                                           provided ? 1 : 0,
+                                                           TP_INTEGER);
+        if (!provided_value) return 0;
+
+        statement = rxcp_remap_create_indexed_assignment(context,
+                                                         source_node,
+                                                         spec->provided_name,
+                                                         index,
+                                                         provided_value);
+        if (!statement) return 0;
+        add_ast(instructions, statement);
+    }
+
+    return 1;
 }
 
 ASTNode *rxcp_remap_create_assembler_instr(Context *context,

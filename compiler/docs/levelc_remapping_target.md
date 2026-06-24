@@ -626,8 +626,14 @@ replacement helpers. Slice 1 adds these neutral remap-builder commands:
   rather than the return value;
 - build a generated named-target assignment, for example
   `temp = materialise(expr)`;
+- build a generated indexed-target assignment, for example
+  `frame[1] = value`;
 - build an anchored instruction-list builder and append its children into the
   real instruction stream;
+- build generated name strings from a prefix plus a source-node id, index, or
+  source name;
+- build generated import/runtime dependency nodes that own their diagnostics
+  as compiler-generated code;
 - build literal and `NOVAL` helper nodes used by those shapes.
 
 The procedure/expose slice adds more generated-tree building blocks in the
@@ -638,8 +644,10 @@ DSL commands:
   `dereference value`;
 - build a generated local procedure/function call with explicit argument
   materialisation;
-- build a canonical procedure header and `ARGS` block for a generated helper
-  routine;
+- build canonical procedure headers, `ARGS` blocks, `ARG` nodes, void return
+  types, and reference types for generated helper routines;
+- begin an argument frame and append value/provided-mask slots while preserving
+  caller-controlled expression evaluation order;
 - materialise parent/child `RexxVariablePool` scopes and direct scalar
   `exposeValue` aliases.
 
@@ -859,9 +867,12 @@ The first Level C-neutral builder/materialisation layer now lives in
 shared building blocks for generated scopes, numeric-context copying, source
 anchors, generated blocks, temp symbols, symbol refs/targets, integer constants,
 string constants, instruction-list builders, builder-child append operations,
-factory/function/member calls, member-call statements, assembler instructions,
-register-copy instructions, assignments, generated named-target assignments,
-sink targets, assignment/`LEAVE WITH` append operations,
+generated name strings, generated imports, factory/function/member calls,
+member-call statements, assembler instructions, register-copy instructions,
+assignments, generated named-target and indexed-target assignments, generated
+procedure headers, generated `ARGS`/`ARG` nodes, generated void/reference type
+nodes, argument-frame begin/slot materialisation, sink targets,
+assignment/`LEAVE WITH` append operations,
 replacement-with-symbol-disconnect, capture-once rewrites, and
 captured-locator proof/materialisation patterns. The capture primitives now
 separate reusable assignment construction and captured-value references from
@@ -922,11 +933,12 @@ The BIF proof layer is now `RexxValue`-native. `RexxBifCallContext` carries
 This keeps fixed-arity direct helpers optimisable without losing the dynamic
 dispatcher path used by RexxScript. Optional-arity BIFs should stay on the
 dispatcher path until a direct helper is worth specialising. The Level C lowerer
-currently materialises dispatcher argument frames itself, using shared remap
-builders for the arrays, slot assignments, context object, argument binding,
-and caller-pool binding. Extracting that into a neutral
-`materialise-argument-frame` command is a good next consolidation candidate
-once a second caller exists. Source forms with omitted argument positions, for
+uses neutral argument-frame commands for the generated value array and
+provided-mask array: `rxcp_remap_begin_argument_frame()` creates the frame
+storage, and `rxcp_remap_append_argument_frame_slot()` appends each value slot
+and provided flag after the caller has lowered that argument expression. This
+keeps expression-evaluation policy in the caller while moving the frame tree
+shape into the remap builder. Source forms with omitted argument positions, for
 example `xxx(,a,,b)`, are admitted through a call-list-specific parser shape.
 The list materialises `NOVAL` placeholders only inside function arguments,
 keeping ordinary comma recovery outside primary expressions and preserving a
@@ -957,17 +969,34 @@ writes, procedure exposes, ARG binding, and program/statement prelude shells.
 These names are intentionally command-like so a later table-driven or DSL-like
 mapper can call the same operations without learning the raw AST shape.
 
-Remaining consolidation candidates should stay behavior-preserving and become
-shared only when at least two rule families need them:
+The final consolidation sweep moved the remaining obvious framework mechanics
+out of the Level C mapper:
 
-- a neutral `materialise-argument-frame` command for value arrays plus provided
-  masks;
-- generated procedure header/argument materialisation;
-- generated import diagnostic ownership, especially suppressing or relocating
-  unused-import warnings caused by synthetic imports;
-- a generated temp-name policy shared by Level C and future front ends;
-- pool-like locator materialisation only if another Rexx dialect needs the
-  same reference/copy/writeback pattern.
+- `rxcp_remap_begin_argument_frame()` and
+  `rxcp_remap_append_argument_frame_slot()` own value-array/provided-mask
+  frame shape;
+- `rxcp_remap_create_procedure_header()`,
+  `rxcp_remap_create_args_builder()`, `rxcp_remap_create_arg()`,
+  `rxcp_remap_create_void_type()`, and `rxcp_remap_create_reference_type()`
+  own generated procedure shell shape;
+- `rxcp_remap_create_generated_import()` marks compiler-generated runtime
+  imports so validation does not report them as user-authored unused imports;
+- `rxcp_remap_create_generated_node_name()`,
+  `rxcp_remap_create_generated_indexed_name()`, and
+  `rxcp_remap_create_prefixed_name()` centralise generated naming mechanics.
+
+The remaining non-extractions are intentional policy boundaries rather than
+obvious framework gaps. Level C still owns Classic variable-pool naming,
+uppercase symbol-key normalisation, BIF selection policy, direct helper versus
+dispatcher choice, and procedure/expose eligibility. Pool-like locator
+materialisation should only move into the neutral layer when another Rexx
+front end needs the same reference/copy/writeback policy.
+
+At this point the remapping infrastructure is complete enough for the current
+feasibility phase: selectors/rule summaries describe selection, service
+boundaries own guards/proofs, and the remap builder owns reusable tree
+materialisation commands. Further extraction should be demand-led by Classic
+REXX coverage or optimiser rules, not by speculative abstraction.
 
 This path gives a real safety net. The inliner has existing positive and
 negative tests, source/import cases, and opt/noopt runtime comparisons. Passing
