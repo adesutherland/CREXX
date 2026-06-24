@@ -294,6 +294,31 @@ rexxscriptcoreevaluator: class
       return 1
     end
 
+    if _starts_keyword(text, ".GENI") = 1 then do
+       expr = strip(substr(text, 6))
+       if expr == "" then return _set_error("missing_expression", "missing SAY expression", stmtno, 1)
+       output_count = output_count + 1
+       output_lines[output_count] = expr
+       return 1
+    end
+
+    if _starts_keyword(text, ".GEN") = 1 then do
+       expr = strip(substr(text, 5))
+       if expr == "" then return _set_error("missing_expression", "missing .GEN expression", stmtno, 1)
+       if _eval_expression(expr, stmtno) = 0 then return 0
+       output_count = output_count + 1
+       output_lines[output_count] = eval_value
+       return 1
+    end
+    if _starts_keyword(text, ".GENE") = 1 then do
+       expr = strip(substr(text, 6))
+       if expr == "" then return _set_error("missing_expression", "missing .GENE expression", stmtno, 1)
+       if _eval_expression(expr, stmtno) = 0 then return 0
+       output_count = output_count + 1
+       output_lines[output_count] = eval_value
+       return 1
+    end
+
     if _starts_keyword(text, "IF") = 1 then do
       rest = strip(substr(text, 3))
       then_pos = _find_then(rest)
