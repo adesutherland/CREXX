@@ -686,10 +686,10 @@ Silent debug
 
 | Issue                          | Cause                                        | Resolution                                                                                      |
 | ------------------------------ | -------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `command not found`            | Script path or permissions                   | Ensure `chmod +x *.sh` is run and the script is in your PATH or called directly (`./script.sh`) |
-| `No such file or directory`    | File path typo or missing input              | Check that input files like `macro1.rxpp` or `maclib.rexx` exist and match case exactly         |
+| command not found            | Script path or permissions                   | Ensure `chmod +x *.sh` is run and the script is in your PATH or called directly (`./script.sh`) |
+| No such file or directory    | File path typo or missing input              | Check that input files like `macro1.rxpp` or `maclib.rexx` exist and match case exactly         |
 | Compilation fails              | Missing macro expansion or syntax error      | Verify `rxpp` macro resolves correctly and input Rexx syntax is valid                           |
-| `member` variable is empty     | `basename` failed or wrong file name passed  | Make sure the third parameter is a valid filename (e.g. `macro1.rexx`)                          |
+| member variable is empty     | `basename` failed or wrong file name passed  | Make sure the third parameter is a valid filename (e.g. `macro1.rexx`)                          |
 | Output missing                 | Incorrect config path or script failure      | Check values in `rxconfig.sh` and run with `set -x` to debug                                    |
 | No execution / No output shown | `RUN` flag missing or script silently failed | Include `R` in flags and add `echo`/`set -x` in run script to trace it                          |
 

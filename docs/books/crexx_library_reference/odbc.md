@@ -1,7 +1,7 @@
 # ODBC Programming
 
 ## Overview
-The ODBC plugin provides a bridge between CREXX and database systems through ODBC (Open Database Connectivity). It supports both SQL databases and CSV files.
+The ODBC plugin provides a bridge between cRexx and database systems through ODBC (Open Database Connectivity). It supports both SQL databases and CSV files.
 
 ## Quick Start
 ```rexx <!--basicquery.rexx-->

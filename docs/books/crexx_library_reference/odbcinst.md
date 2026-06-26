@@ -1,6 +1,10 @@
-# ODBC Plugin Installation and use
+# ODBC Plugin Installation
+
+The OBDC plugin is dependent on a working ODBC installation on the operating platform. 
 
 ## Windows ODBC Configuration
+
+On Windows, elevated privileges might be required to achieve a working ODBC setup. When planning an application using ODBC in an environment you do not control, like a corporate environment, it is a good idea to involve administrative staff in an early stage to insure that ODBC is installed and working. For simple applications we suggest to have a look at the addressable sqlite implementation, see [SQLite address environment](sqlite-environment) on page \pageref{sqlite-environment}
 
 ### Setting Up ODBC Data Sources
 
