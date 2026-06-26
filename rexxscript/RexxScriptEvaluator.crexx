@@ -318,6 +318,7 @@ rexxscriptcoreevaluator: class
        output_lines[output_count] = eval_value
        return 1
     end
+    if _starts_keyword(text, ".MEND") = 1 then return 1
 
     if _starts_keyword(text, "IF") = 1 then do
       rest = strip(substr(text, 3))
@@ -1200,7 +1201,7 @@ rexxscriptcoreevaluator: class
     say
     do i=1
        ipi=pos(';',statements)
-       if ipi<=1 then leave
+       if ipi=0 then leave
        stmt=strip(substr(statements,1,ipi-1))
        statements=substr(statements,ipi+1)
        if stmt == "" then iterate

@@ -281,7 +281,7 @@ return lines
 /* Load entire non Binary file into one stream and returns it
  */
 loadtext: procedure = .string
-  arg fname=.string, delim='0D0A'x
+  arg fname=.string, delim='0D0A'x, xError='raise'
 
   stream=.string
   eof=.int
@@ -290,7 +290,11 @@ loadtext: procedure = .string
   rmode="r"
 
   assembler fopen fileid,fname,rmode
-  if fileid=0 then call raise "error", "40.27", "cannot open "fname
+  if fileid=0 then do
+     if upper(xError)='RAISE' then call raise "error", "40.27", "cannot open "fname
+     stream='-8 OPEN ERROR'    /* return array with error message */
+     return stream
+  end
   do while eof = 0
      line = ""
      assembler freadline line, fileid

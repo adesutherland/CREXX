@@ -137,6 +137,7 @@ rexxscriptexit: class
         if script_expr = "" then return error_result(1, "REXXSCRIPT requires a script expression")
 
         call result.set_status("REPLACE")
+        call result.add_replacement_line("__rexxscript_result = .string[]")
         if expose_names[0] > 0 then do
             call result.add_replacement_line("__rexxscript_names = .string[]")
             call result.add_replacement_line("__rexxscript_values = .string[]")
@@ -155,7 +156,7 @@ rexxscriptexit: class
         if output_name <> "" then call result.add_replacement_line(output_name || " = rexxscript_output()")
         if result_name <> "" then call result.add_replacement_line(result_name || " = __rexxscript_result")
         call result.add_replacement_line("script_status=__rexxscript_result[1]")
-        return result
+      return result
 
 isClauseKeyword: procedure = .int
     arg text = .string
