@@ -66,7 +66,7 @@ Level B runtime path. Classic constructs outside that implemented slice still
 fail closed with a Level C unsupported-shape diagnostic. This lets the project
 build useful editor support, standard-diagnostic experience, and incremental
 runtime coverage without claiming full Classic Rexx compatibility before the
-remaining lowering/runtime work is complete.
+remaining lowering / runtime work is complete.
 
 Level C also owns the Classic Rexx byte-text compatibility decision. Level B and
 Level G `.string` values are valid UTF-8 text, while `.binary` carries arbitrary
@@ -81,7 +81,7 @@ NFD, NFKC, and NFKD bits should only be assigned meaning when Level G APIs set
 and consume them. `utf8proc` is the preferred first implementation candidate for
 the Unicode plugin, subject to vendoring/build work and carrying its MIT expat
 and Unicode data license notices. Initial coverage should target normalization,
-case folding, Unicode property checks, and grapheme/word/sentence segmentation.
+case folding, Unicode property checks, and grapheme / word / sentence segmentation.
 There is also room for a Level B cRexx proof of concept of UTF helper libraries
 while the Level G design settles.
 

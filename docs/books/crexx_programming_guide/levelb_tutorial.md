@@ -1,4 +1,4 @@
-# Level B Tutorial For Rexx Programmers
+# Level B Tutorial
 
 This tutorial is for experienced Rexx programmers who want to write practical
 cRexx Level B programs in the Release 1 beta 3 documentation line. It assumes
