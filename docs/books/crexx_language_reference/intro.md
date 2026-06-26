@@ -74,5 +74,5 @@ The reference is intentionally factual rather than aspirational:
 - Experimental areas are labelled as experimental when the implementation is
   intentionally small or still being shaped.
 
-If a page conflicts with compiler tests, source, or the agent context files in
-`docs/ai-context/`, treat that as a documentation bug.
+<!-- If a page conflicts with compiler tests, source, or the agent context files in -->
+<!-- `docs/ai-context/`, treat that as a documentation bug. -->

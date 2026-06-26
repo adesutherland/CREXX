@@ -1,4 +1,4 @@
-\documentclass[11pt,twoside,openright,paperwidth=170mm,paperheight=240mm]{book}
+\documentclass[10.5pt,twoside,openright,paperwidth=193mm,paperheight=260mm]{book}
 \linespread{1.03}
 \usepackage[FINAL]{../../../boilerplate/rexx} 
 \usepackage{hyperref}
@@ -10,11 +10,9 @@
 \usepackage{tocloft}
 \usepackage{xstring}
 \usepackage[explicit]{titlesec}
-%\setmainfont[Mapping=tex-text]{TeX Gyre Pagella}
 \setmainfont[Mapping=tex-text]{Minion Pro}
-%%\setmonofont[Mapping=tex-text,Scale=0.82]{IBM Plex Mono}
 \setmonofont[
-  Scale=0.82,
+  Scale=0.75,
   Ligatures=NoCommon
 ]{IBM Plex Mono}
 \usepackage{tabularx}
@@ -37,10 +35,6 @@
 % Define the headers
 \fancyhead[RO]{\normalfont \nouppercase{\rightmark}}  % Chapter title on right pages, aligned right
 \fancyhead[LE]{\normalfont \nouppercase{\leftmark}}   % Section title on left pages, aligned right
-
-% Ensure chapter and section marks update correctly
-%% \renewcommand{\chaptermark}[1]{\markright{#1}\normalfont \thechapter.\ #1}
-%% \renewcommand{\sectionmark}[1]{\markleft{#1}\normalfont \thesection.\ #1}
 
 \fancyfoot[C]{\thepage}
 
@@ -134,10 +128,6 @@
 
 %% \newcommand{\simularelease}{12.00, date of release  9 aug 1985}
 
-
-
-
-
 %% the font used for tables
 %%\AtBeginEnvironment{longtable}{\fontspec{1403 Vintage Mono
 %%Pro}\small}
@@ -186,12 +176,12 @@
       {\bignumberfont\addfontfeatures{Kerning=On}\fontsize{84}{84}\selectfont\bfseries\color{gray!15}\chapnum}%
     }\\[-0.10em]%
     \hspace*{0.00\textwidth}%
-    \begin{minipage}{0.78\textwidth}
+    \begin{minipage}{0.90\textwidth}
       \RaggedRight
       \hyphenpenalty=10000
       \exhyphenpenalty=10000
       {\headingfont\fontsize{25}{27}\selectfont\bfseries\color{Heading}#1}\\[0.9em]%
-      %% {\color{gray!45}\rule{0.72\linewidth}{0.6pt}}%
+      {\color{gray!45}\rule{0.72\linewidth}{0.6pt}}%
     \end{minipage}%
   }
 
@@ -199,7 +189,17 @@
 
 \raggedbottom
 
-\geometry{left=1in, top=1in, bottom=1in, right=1in}
+\geometry{
+  paperwidth=193mm,
+  paperheight=260mm,
+  top=25mm,
+  bottom=25mm,
+  inner=25mm,
+  outer=28mm,
+  bindingoffset=5mm
+}
+
+%% \geometry{left=1in, top=1in, bottom=1in, right=1in}
 \setstretch{1.2}
 \titlespacing*{\section}{0pt}{*1.5}{*0.5}
 \titlespacing*{\subsection}{0pt}{*1.2}{*0.4}
@@ -212,10 +212,24 @@
 \makeatother
 
 %% heading number left overhang
-\makeatletter
-\def\@seccntformat#1{\protect\makebox[0pt][r]{\csname
-the#1\endcsname\quad}}
-\makeatother
+%% \makeatletter
+%% \def\@seccntformat#1{\protect\makebox[0pt][r]{\csname
+%% the#1\endcsname\quad}}
+%% \makeatother
+
+\titleformat{\section}
+  {\normalfont\Large\bfseries\sffamily}
+  {\makebox[18mm][l]{\thesection}}
+  {0mm}
+  {}
+
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\sffamily}
+  {\makebox[16mm][l]{\thesubsection}}
+  {0mm}
+  {}
+
+
 
 %% use the heading fonts in the TOC
 %% \renewcommand{\cftsecfont}{\sffamily\bfseries} % Matches section font
@@ -235,7 +249,7 @@ the#1\endcsname\quad}}
   {%
     \vspace*{2.2cm}%
     \noindent
-    \begin{minipage}{0.88\textwidth}
+    \begin{minipage}{0.95\textwidth}
       \RaggedRight
       {\headingfont\fontsize{25}{27}\selectfont\bfseries\color{Heading}#1}\\[0.9em]%
       {\color{gray!45}\rule{0.72\linewidth}{0.6pt}}%
@@ -244,28 +258,6 @@ the#1\endcsname\quad}}
 
 \titlespacing*{name=\chapter,numberless}{0pt}{0pt}{2.8em}
 
-%% \titleformat{name=\chapter,numberless}[display]
-%%   %{\fontspec{Avenir Light}\filcenter} % formatting applied to the
-%%   % heading text
-%%     {\filcenter} % formatting applied to the heading text
-%%   {}
-%%   {0pt}
-%%   %% {\titlerule \vspace{1ex} \fontspec{Avenir Light} } 
-%%  {\titlerule \vspace{1ex} }  % code before the heading text
-
-%% \titlespacing*{name=\chapter,numberless}
-%%   {0pt}{-1cm}{1cm}  % left, before, after
-
-%%   \renewcommand{\contentsname}{\fontspec{Avenir Next}Contents}
-%%   \renewcommand{\indexname}{\fontspec{Avenir Next}Index}
-%%   \renewcommand{\listtablename}{\fontspec{Avenir Next}List of tables}
-%%   \renewcommand{\listfigurename}{\fontspec{Avenir Next}List of figures}
-  
-%%   \sectionfont{%
-%%     \hrule                % place a horizontal line
-%%     \vspace{1ex}%         % add some vertical space
-%%     \fontspec{Avenir Next}       % set section title size & style
-%%   }
 
 % Make labels in description bold
 \setlist[description]{font=\bfseries}
@@ -297,29 +289,6 @@ the#1\endcsname\quad}}
 \definecolor{PartGrey}{gray}{0.92}
 \definecolor{PartRule}{gray}{0.55}
 
-%% \titleformat{\part}[display]
-%%   {\thispagestyle{empty}\normalfont}
-%%   {}
-%%   {0pt}
-%%   {%
-%%     \vspace*{0.18\textheight}%
-%%     \begin{center}
-%%     \fcolorbox{PartRule}{PartGrey}{%
-%%       \begin{minipage}{0.82\textwidth}
-%%         \centering
-%%         \vspace{2.5em}
-%%         {\fontspec{Avenir Light}\Large Part \thepart}\\[1.2em]
-%%         {\fontspec{Avenir Light}\Huge\bfseries #1}
-%%         \vspace{2.5em}
-%%       \end{minipage}%
-%%     }%
-%%     \end{center}
-%%   }
-
-%% \titlespacing*{\part}{0pt}{0pt}{0pt}
-  
-
-
 \titleformat{\part}[display]
   {\thispagestyle{empty}\normalfont}
   {}
@@ -329,7 +298,7 @@ the#1\endcsname\quad}}
     \noindent\hspace*{0.12\textwidth}%
     {\color{gray!60}\rule{2mm}{7cm}}%
     \hspace{1.5cm}%
-    \begin{minipage}[b]{0.65\textwidth}
+    \begin{minipage}[b]{0.88\textwidth}
       {\fontspec{Avenir Next}\fontsize{16}{20}\selectfont\color{gray}PART \thepart}\\[1.5em]
       {\fontspec{Avenir Next}\fontsize{34}{38}\selectfont\bfseries #1}
     \end{minipage}%

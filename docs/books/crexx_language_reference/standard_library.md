@@ -3,7 +3,9 @@
 The cRexx standard library is built from a mix of Level B source, rxas, and
 native support. The release model is explicit: source imports name the
 namespace to use, and runtime images or linked artifacts provide the bytecode
-and native pieces needed by the VM.
+and native pieces needed by the VM. The complete contents of the library is documented
+in the *Library Reference*; here is a short impression of how to use it and what it
+offers in addition to the classic set of built-in functions.
 
 ## Core Level B Library: `rxfnsb`
 

@@ -446,6 +446,6 @@ exits enabled, use `TRACE UNSUPPRESS NAMESPACE rxfnsb` if you need to see
 library frames, and keep linked/native images unstripped with
 `--link-keep-source` when source-level TRACE metadata is needed.
 
-Implementation status and compatibility requirements are tracked in
+Implementation status and compatibility requirements are tracked in  
 `docs/ai-context/CREXX_TRACE_REQUIREMENTS.md`.
 
