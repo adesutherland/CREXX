@@ -1,4 +1,4 @@
-\documentclass[10.5pt,twoside,openright,paperwidth=193mm,paperheight=260mm]{book}
+\documentclass[10pt,twoside,openright,paperwidth=193mm,paperheight=260mm]{book}
 \linespread{1.03}
 \usepackage[FINAL]{../../../boilerplate/rexx} 
 \usepackage{hyperref}
@@ -110,12 +110,8 @@
 \newcommand{\crexx}{\textsc{crexx}}
 \newcommand{\rexx}{R\textsc{exx}}
 \newcommand{\nr}{Net\textsc{rexx}}
-%% \newcommand{\nrpackagename}{\splice{java GetPackageName}}
-%% \newcommand{\minimalJVMversion}{8}
-%% \newcommand{\maximalJVMversion}{19ea}
 \newcommand{\keyword}[1]{\texttt{#1}}
 \newcommand{\code}[1]{\texttt{#1}}
-%% \newcommand{\thisyear}{\splice{java TexYear}}
 \newcommand{\tightlist}{}
 \newcommand{\Shaded}{\shaded}
 \newcommand{\msd}[1]{\msdhelper#1\relax}
@@ -126,11 +122,7 @@
   \newcommand{\doublehyphen}{\mbox{\msd{``-~-''}}}
   \newcommand{\doublehyphenunquoted}{\mbox{\msd{-~-}}}
 
-%% \newcommand{\simularelease}{12.00, date of release  9 aug 1985}
-
 %% the font used for tables
-%%\AtBeginEnvironment{longtable}{\fontspec{1403 Vintage Mono
-%%Pro}\small}
 \AtBeginEnvironment{longtable}{\fontspec{Avenir Next}\small}
 
 %% \setlength{\labelsep}{2em} % Distance between label and text
@@ -139,11 +131,6 @@
 \setlist[description]{font=\normalfont}
 
 \usepackage{sectsty}
-%% \partfont{\color{nrgreen}}
-%% \chapterfont{\fontspec{Avenir Light}}
-%% \sectionfont{\fontspec{Avenir Light}}
-%% \subsectionfont{\fontspec{Avenir Light}}
-%% \subsubsectionfont{\fontspec{Avenir Light}}
 
 \chapterfont{\fontspec{Avenir Next}}
 \sectionfont{\fontspec{Avenir Next}}
@@ -212,10 +199,10 @@
 \makeatother
 
 %% heading number left overhang
-%% \makeatletter
-%% \def\@seccntformat#1{\protect\makebox[0pt][r]{\csname
-%% the#1\endcsname\quad}}
-%% \makeatother
+\makeatletter
+\def\@seccntformat#1{\protect\makebox[0pt][r]{\csname
+the#1\endcsname\quad}}
+\makeatother
 
 \titleformat{\section}
   {\normalfont\Large\bfseries\sffamily}
@@ -305,3 +292,4 @@
   }
 
 \titlespacing*{\part}{0pt}{0pt}{0pt}
+
