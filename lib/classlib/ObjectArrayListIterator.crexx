@@ -23,8 +23,8 @@
  */
 
 options levelb comments_dash
-namespace data_ObjectList expose ObjectArrayListIterator
-import data_ObjectIterator
+namespace data expose ObjectArrayListIterator
+-- import data_ObjectIterator
 
 /**
  * ObjectIterator for ObjectArrayList.

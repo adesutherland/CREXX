@@ -1,4 +1,4 @@
-# Structure and General Syntax
+# General Syntax
 
 A program is built up out of a series of *clauses* that are composed of:
 zero or more blanks (which are ignored); a sequence of tokens (described

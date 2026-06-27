@@ -1,9 +1,10 @@
 options levelb comments_dash
 import rexx
-import data_ObjectList
-import data_ObjectStack
-import data_ObjectLinkedList
-import data_ObjectIterable
+import data
+-- import data_ObjectList
+-- import data_ObjectStack
+-- import data_ObjectLinkedList
+-- import data_ObjectIterable
 
 failures = 0
 

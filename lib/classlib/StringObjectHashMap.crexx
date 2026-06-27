@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-options levelb
-namespace data_StringObjectHashMap expose StringObjectHashMap
+options levelb comments_dash
+namespace data expose StringObjectHashMap
 import rxfnsb
-import data_StringTreeSet
-import data_StringIterable
+-- import data_StringTreeSet
+-- import data_StringIterable
 
 /**
  * Map from string keys to object values.

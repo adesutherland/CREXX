@@ -22,9 +22,9 @@
  * SOFTWARE.
  */
 
-options levelb
-namespace data_StringTreeSet expose StringTreeSetIterator
-import data_StringIterator
+options levelb comments_dash
+namespace data expose StringTreeSetIterator
+-- import data_StringIterator
 
 /**
  * Iterator over an ordered StringTreeSet snapshot.

@@ -27,7 +27,8 @@ namespace rexxpool expose RexxVariablePool
 import rexxvalue
 import rexxstem
 import rxfnsb
-import data_StringHashMap
+import data
+-- import data_StringHashMap
 
 constant RVP_BINDING_DROPPED = 0
 constant RVP_BINDING_VALUE = 1

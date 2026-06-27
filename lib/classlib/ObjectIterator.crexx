@@ -23,7 +23,7 @@
  */
 
 options levelb
-namespace data_ObjectIterator expose ObjectIterator
+namespace data expose ObjectIterator
 
 /**
  * ObjectIterator is the interface for iterators that return object values.

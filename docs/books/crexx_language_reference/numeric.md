@@ -1,4 +1,4 @@
-# NUMERIC Instruction: Controlling Arithmetic Behaviour
+# Controlling Arithmetic Behaviour
 
 Rexx uses *arbitrary-precision decimal arithmetic*, which requires specific rules for computation. 
 The `NUMERIC` instruction controls the *precision*, *rounding*, and *comparison* for all 

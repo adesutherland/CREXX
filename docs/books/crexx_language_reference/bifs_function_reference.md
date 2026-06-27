@@ -954,7 +954,7 @@ COPIES('', 2)    == ''
 ## DELSTR(s, start, length)
 
 returns a copy of *string* with the sub-string of
-*string* that begins at the **n*th character, and is
+*string* that begins at the `n`th character, and is
 of length *length* characters, deleted.
 If *length* is not specified, or is greater than the number of
 characters from *n* to the end of the string, the rest of the
@@ -975,7 +975,7 @@ DELSTR('abcde', 6)   == 'abcde'
 ## DELWORD(s, start, n)
 
 returns a copy of *string* with the sub-string of
-*string* that starts at the **n*th word, and is of
+*string* that starts at the `n`th word, and is of
 length *length* blank-delimited words, deleted.
 If *length* is not specified, or is greater than number of
 remaining words in the string, it defaults to be the remaining words

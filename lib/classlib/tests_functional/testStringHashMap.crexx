@@ -1,5 +1,6 @@
 options levelb comments_dash
-import data_StringHashMap
+import data
+-- import data_StringHashMap
 
 failures = 0
 

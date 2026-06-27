@@ -23,8 +23,8 @@
  */
 
 options levelb comments_dash
-namespace data_StringHashMapIterator expose StringHashMapIterator
-import data_StringIterator
+namespace data expose StringHashMapIterator
+-- import data_StringIterator
 
 /**
  * Iterator over a StringHashMap snapshot.

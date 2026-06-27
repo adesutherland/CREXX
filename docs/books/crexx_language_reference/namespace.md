@@ -4,7 +4,7 @@ In Rexx programming, the related `namespace` and `import` instructions play an i
 
 The <!--index-->namespace instruction is used after the `options` instruction in a cRexx program. By specifying a namespace, you define the logical group or category to which a particular <!--index-->module belongs. This helps in organizing related modules together and facilitates their identification and usage from other modules within the program.
 
-As an example, the built-in-functions package, has a namespace of `rxfnsb`, where he `b` suffix indicates the language level.
+As an example, the built-in-functions package, has a namespace of `rxfnsb`, where the `b` suffix indicates the language level.
 The `namespace` statement on line 3 identifies this function as part of the `rxfnsb` namespace, which, in cRexx level B, needs to be `import`ed into a program which makes use of it. 
 
 ```rexx <!--insertexample.rexx-->

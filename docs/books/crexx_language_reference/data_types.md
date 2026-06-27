@@ -26,17 +26,17 @@ The canonical integer spelling in source is `.int`.
 Type names can be used as constructors:
 
 ```rexx
-count = .int(0)
-name = .string("Ada")
-ok = .boolean(1)
-payload = .binary()
+count	= .int(0)
+name	= .string("Ada")
+ok		= .boolean(1)
+payload	= .binary()
 ```
 
 Class and interface names also use the dotted form. A factory call creates an
 object through the selected class or interface provider:
 
 ```rexx
-item = .cacheentry("abc")
+item  = .cacheentry("abc")
 asset = .asset("log.txt")
 ```
 
@@ -48,8 +48,8 @@ attribute access require an initialized instance and raise
 object is wanted:
 
 ```rexx
-pending = .cacheentry       /* typed, not initialized */
-ready = .cacheentry("abc")  /* initialized by the factory */
+pending	= .cacheentry       /* typed, not initialized */
+ready	= .cacheentry("abc")  /* initialized by the factory */
 say initialized(pending)    /* 0 */
 say initialized(ready)      /* 1 */
 ```
@@ -68,11 +68,11 @@ The left side of `namespace..symbol` must name an imported namespace.
 Arrays are declared from a base type:
 
 ```rexx
-words = .string[]
-numbers = .int[10]
-grid = .int[10, 10]
-window = .int[0 to 10]
-grow = .int[-2 to *]
+words	= .string[]
+numbers	= .int[10]
+grid	= .int[10, 10]
+window	= .int[0 to 10]
+grow	= .int[-2 to *]
 ```
 
 An array value carries its element type and dimensions. Procedure signatures can
@@ -88,7 +88,7 @@ notation:
 
 ```rexx
 items[1] = "alpha"
-items.2 = "beta"
+items.2	 = "beta"
 ```
 
 Simple growable arrays are often used with one-based element indexes, but Level
@@ -117,10 +117,10 @@ Use `reference target` to create a reference to aliasable storage,
 referenced target, and `snapshot ref` when an explicit deep copy is required:
 
 ```rexx
-count = 1
+count	  = 1
 count_ref = reference count
-linked = dereference count_ref
-copy = snapshot count_ref
+linked	  = dereference count_ref
+copy	  = snapshot count_ref
 ```
 
 `dereference` is only valid as the right side of an assignment to a local
@@ -160,10 +160,10 @@ d = .decimal("42.50")
 The checked cast form can also be used for scalar conversions:
 
 ```rexx
-f = 1 as .float
-i = "42" as .int
-d = "42.50" as .decimal
-s = 42 as .string
+f  = 1 as .float
+i  = "42" as .int
+d  = "42.50" as .decimal
+s  = 42 as .string
 ok = "1" as .boolean
 ```
 
@@ -189,8 +189,8 @@ payload = "alpha" as .binary
 Converting `.binary` to `.string` validates the byte sequence as UTF-8:
 
 ```rexx
-payload = "ceb1"x as .binary
-text = payload as .string     /* "α" */
+payload	= "ceb1"x as .binary
+text	= payload as .string     /* "α" */
 ```
 
 An invalid binary-to-string conversion raises `UNICODE_ERROR` at runtime. If the
@@ -200,10 +200,10 @@ the program with `CANNOT_CAST_BINARY`.
 Invalid UTF-8 byte sequences are only valid in an explicit binary context:
 
 ```rexx
-payload = .binary
-payload = 'ffff'x
+payload	= .binary
+payload	= 'ffff'x
 
-other = 'ffff'x as .binary
+other	= 'ffff'x as .binary
 ```
 
 A first untyped assignment such as `payload = 'ffff'x` is treated as a text
@@ -226,7 +226,7 @@ The `rxfnsb` library provides byte-oriented helpers for common binary work:
 `bininsert`, `bindelstr`, `binpos`, `bincompare`, `bin2x`, and `x2bin`.
 
 The same boundary applies outside source literals. Native RXVML string setters,
-CREXXSAA ADDRESS variable setters, RXPA native return/argument trees,
+CREXXSAA ADDRESS variable setters, RXPA native return / argument trees,
 command-line arguments passed through RXVML, ADDRESS callback text, text file
 reads, socket text reads, and explicit binary-to-string casts validate UTF-8 in
 normal Level B builds. Invalid bytes should be read or carried as `.binary`

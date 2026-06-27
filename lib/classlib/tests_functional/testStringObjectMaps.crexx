@@ -1,7 +1,8 @@
 options levelb comments_dash
-import data_StringObjectHashMap
-import data_StringObjectTreeMap
-import data_StringIterable
+import data
+-- import data_StringObjectHashMap
+-- import data_StringObjectTreeMap
+-- import data_StringIterable
 import rxfnsb
 
 failures = 0

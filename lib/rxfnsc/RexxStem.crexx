@@ -25,7 +25,7 @@
 options levelb comments_dash numeric_classic
 namespace rexxstem expose RexxStem
 import rexxvalue
-import data_StringHashMap
+import data
 
 /**
  * Classic Rexx stem proof.

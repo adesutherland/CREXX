@@ -23,7 +23,7 @@
  */
 
 options levelb comments_dash
-namespace data_StringLinkedList expose StringLinkedList
+namespace data expose StringLinkedList
 import rxfnsb
 
 /**
