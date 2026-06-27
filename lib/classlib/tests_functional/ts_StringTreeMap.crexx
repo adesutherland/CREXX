@@ -1,5 +1,6 @@
-options levelb
-import data_StringTreeMap
+options levelb comments_dash
+import data
+-- import data_StringTreeMap
 
 errors = 0
 

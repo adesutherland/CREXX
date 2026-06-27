@@ -23,7 +23,7 @@
  */
 
 options levelb
-namespace data_StringIterator expose StringIterator
+namespace data expose StringIterator
 
 /**
  * StringIterator is the interface which defines the contract

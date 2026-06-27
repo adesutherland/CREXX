@@ -23,7 +23,7 @@
  */
 
 options levelb
-namespace data_StringHashSet expose StringHashSet
+namespace data expose StringHashSet
 import rxfnsb
 
 /**

@@ -1,7 +1,7 @@
 /* Observational classlib comparison for StringArrayList iterator shapes. */
 options levelb
 import rxfnsb
-import data_StringList
+import data
 
 rounds = 4000
 expected = rounds * 6

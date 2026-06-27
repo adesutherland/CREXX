@@ -23,7 +23,7 @@
  */
 
 options levelb 
-namespace data_StringStack expose StringStack
+namespace data expose StringStack
 
 /**
  * The StringStack class represents a last-in-first-out (LIFO) stack of objects.

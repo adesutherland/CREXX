@@ -22,9 +22,9 @@
  * SOFTWARE.
  */
 
-options levelb
-namespace data_StringHashSet expose StringHashSetIterator
-import data_StringIterator
+options levelb comments_dash
+namespace data expose StringHashSetIterator
+-- import data_StringIterator
 
 /**
  * Iterator over a StringHashSet snapshot.

@@ -1,5 +1,6 @@
 options levelb comments_dash
-import data_StringTreeSet
+import data
+-- import data_StringTreeSet
 
 failures = 0
 

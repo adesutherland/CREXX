@@ -23,8 +23,8 @@
  */
 
 options levelb comments_dash
-namespace data_StringObjectTreeMap expose StringObjectTreeMapIterator
-import data_StringIterator
+namespace data expose StringObjectTreeMapIterator
+-- import data_StringIterator
 
 /**
  * Iterator over an ordered StringObjectTreeMap snapshot.
