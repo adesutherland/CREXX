@@ -24,7 +24,6 @@
 
 options levelb comments_dash
 namespace data expose ObjectIterable
--- import data_ObjectIterator
 
 /**
  * ObjectIterable is the interface for collection classes that return

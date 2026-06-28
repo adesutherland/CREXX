@@ -24,7 +24,6 @@
 
 options levelb comments_dash
 namespace data expose StringTreeMapIterator
--- import data_StringIterator
 
 /**
  * Iterator over an ordered StringTreeMap key snapshot.

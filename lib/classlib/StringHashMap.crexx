@@ -25,9 +25,6 @@
 options levelb comments_dash
 namespace data expose StringHashMap
 import rxfnsb
--- import data_StringTreeSet
--- import data_StringIterable
--- import data_StringHashMapIterator
 
 /**
  * String-to-string map with insertion-order traversal.

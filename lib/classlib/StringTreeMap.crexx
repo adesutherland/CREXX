@@ -25,17 +25,11 @@
 options levelb comments_dash
 namespace data expose StringTreeMap
 import rxfnsb
--- import StringTreeMapIterator
--- import data_StringTreeSet
--- import data_StringIterable
 
 /**
  * Ordered string-to-string map.
  *
  * Storage is array-backed. Ordered views sort a snapshot of the keys.
- *
- * @author Rene Vincent Jansen
- * @author Peter Jacob
  */
 StringTreeMap: class implements .StringIterable
 val = .int

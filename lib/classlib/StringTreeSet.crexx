@@ -25,16 +25,12 @@
 options levelb comments_dash
 namespace data expose StringTreeSet
 import rxfnsb
--- import data_StringIterable
 
 /**
  * Ordered set of strings.
  *
  * Values are stored in insertion order internally. Ordered views sort a
  * snapshot of the current values.
- *
- * @author Rene Vincent Jansen
- * @author Peter Jacob
  */
 StringTreeSet: class implements .StringIterable
 val = .int
