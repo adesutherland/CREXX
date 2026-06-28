@@ -1,0 +1,20 @@
+/*
+ * interpreter/tests/tests_selector_descriptor_bad_factory.rxas
+ */
+
+.meta "selector_bad_factory.box"="b" ".unknown" .class
+.meta "selector_bad_factory.box"="selector_bad_factory.shape" .implements
+.meta "selector_bad_factory.shape"="b" ".unknown" .interface
+.meta "selector_bad_factory.shape"="factory" "*" ".shape" "" .member
+
+.globals=0
+
+main() .locals=2
+   load r1,0
+   srcfprocsel r0,"rxsig1|selector_bad_factory.shape|.shape|",r1
+   ret 0
+
+§selector_bad_factory.box.§factory() .locals=2
+   .meta "selector_bad_factory.box.§factory"="b" ".int" §selector_bad_factory.box.§factory() ""
+   load r1,7
+   ret r1

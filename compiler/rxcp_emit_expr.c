@@ -31,6 +31,7 @@
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
 #include "rxcp_emit.h"
+#include "rxsignature.h"
 
 static Symbol *dereference_assignment_target(ASTNode *node) {
     ASTNode *assign;
@@ -79,6 +80,33 @@ static int is_interface_factory_call(ASTNode *node) {
            defnode->node_type == FACTORY &&
            defnode->parent &&
            defnode->parent->node_type == INTERFACE_DEF;
+}
+
+static char *build_dynamic_callable_descriptor_with_return(Symbol *fsym,
+                                                           const char *lookup_name,
+                                                           const char *return_type_override) {
+    SymbolNode *defsn;
+    ASTNode *defnode;
+    char *rtype;
+    char *args;
+    char *descriptor;
+
+    if (!fsym || !lookup_name || sym_nond(fsym) == 0) return 0;
+
+    defsn = sym_trnd(fsym, 0);
+    defnode = defsn ? defsn->node : 0;
+    if (!defnode) return 0;
+
+    rtype = return_type_override ? strdup(return_type_override) : callable_effective_return_type(defnode);
+    args = meta_narg(ast_chld(defnode, ARGS, 0));
+    descriptor = rx_sig_build_descriptor(lookup_name, rtype, args);
+    if (rtype) free(rtype);
+    if (args) free(args);
+    return descriptor;
+}
+
+static char *build_dynamic_callable_descriptor(Symbol *fsym, const char *lookup_name) {
+    return build_dynamic_callable_descriptor_with_return(fsym, lookup_name, 0);
 }
 
 static char *build_interface_factory_selector(ASTNode *node) {
@@ -364,13 +392,15 @@ void emit_expression(ASTNode *node, void *payload) {
             /* Actual Call */
             if (is_interface_member_call(node)) {
                 Symbol *fsym = node->symbolNode->symbol;
+                char *descriptor = build_dynamic_callable_descriptor(fsym, fsym->name);
 
-                temp1 = mprintf("   srcmethod %c%d,r%d,\"%s\"\n",
+                temp1 = mprintf("   srcmethodsel %c%d,r%d,\"%s\"\n",
                                 ret_type, ret_num,
                                 node->additional_registers + 1,
-                                fsym->name);
+                                descriptor ? descriptor : "");
                 output_append_text(node->output, temp1);
                 free(temp1);
+                if (descriptor) free(descriptor);
 
                 temp1 = mprintf("   dcall %c%d,%c%d,r%d\n",
                                 ret_type, ret_num,
@@ -379,13 +409,22 @@ void emit_expression(ASTNode *node, void *payload) {
             }
             else if (is_interface_factory_call(node)) {
                 char *selector = build_interface_factory_selector(node);
+                Symbol *fsym = node->symbolNode->symbol;
+                ValueType resolved_type = node->target_type != TP_UNKNOWN ? node->target_type : node->value_type;
+                const char *resolved_class = node->target_class ? node->target_class : node->value_class;
+                char *resolved_return = build_source_type_name(resolved_type, resolved_class);
+                char *descriptor = build_dynamic_callable_descriptor_with_return(fsym,
+                                                                                 selector ? selector : "",
+                                                                                 resolved_return);
 
-                temp1 = mprintf("   srcfproc %c%d,\"%s\",r%d\n",
+                temp1 = mprintf("   srcfprocsel %c%d,\"%s\",r%d\n",
                                 ret_type, ret_num,
-                                selector ? selector : "",
+                                descriptor ? descriptor : "",
                                 node->additional_registers);
                 output_append_text(node->output, temp1);
                 free(temp1);
+                if (descriptor) free(descriptor);
+                if (resolved_return) free(resolved_return);
                 if (selector) free(selector);
 
                 temp1 = mprintf("   dcall %c%d,%c%d,r%d\n",

@@ -1,12 +1,12 @@
 # cREXX Virtual Machine (Interpreter) Architecture
 
-The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loads, links, and executes the compiled `.rxbin` bytecode. Its design emphasizes performance through direct threaded code (computed gotos), aggressive stack frame recycling, and an optimized value struct to handle REXX dynamic typing. As of `rxbin` format `003`, serialized module data and runtime-only execution state are explicitly separated, and serialized instruction/constant sections may be compacted on disk before being expanded during load.
+The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loads, links, and executes the compiled `.rxbin` bytecode. Its design emphasizes performance through direct threaded code (computed gotos), aggressive stack frame recycling, and an optimized value struct to handle REXX dynamic typing. The current `.rxbin` format is `006`; since format `003`, serialized module data and runtime-only execution state are explicitly separated, and serialized instruction/constant sections may be compacted on disk before being expanded during load.
 
 ## 1. VM Lifecycle
 
 The execution of a program within `rxvm` is handled in discrete phases (as defined in `inc/rxvm.h`):
 1. **Creation**: `rxvm_create()` allocates the root `rxvm_context`.
-2. **Loading**: `rxvm_load()` ingests a `.rxbin` binary file, reads the section flags and stored sizes, expands any packed instruction/constant sections back into normal buffers, and then loads the result into an internal `module` struct. In the current `003` layout the reader accepts three record kinds: `MODULE_LOCAL`, `POOL_SHARED`, and `MODULE_SHARED`. Shared-backed modules borrow the current shared pool in memory rather than copying it.
+2. **Loading**: `rxvm_load()` ingests a `.rxbin` binary file, reads the section flags and stored sizes, expands any packed instruction/constant sections back into normal buffers, and then loads the result into an internal `module` struct. In the current `006` layout the reader accepts three record kinds: `MODULE_LOCAL`, `POOL_SHARED`, and `MODULE_SHARED`. Shared-backed modules borrow the current shared pool in memory rather than copying it.
 3. **Linking**: `rxvm_link()` traverses newly loaded modules to resolve exports and external imports into a unified memory map. The call is now dirty-checked, so repeated bridge/runtime entry points become fast no-ops when no module state changed.
 4. **Preparation**: `rxvm_prepare()` optionally populates per-module dispatch side tables for maximum speed without mutating serialized bytecode.
 5. **Execution**: `rxvm_run()` / `rxvm_call()` invoke a target procedure (typically `main`) and launch the main interpreter loop.
@@ -508,11 +508,16 @@ the public framework API does not upgrade an existing BSD socket in place.
 
 ### Nested rxvml Calls
 
-The public `rxvml_call_procedure()` and `rxvml_call_method()` entry points run
-Rexx procedures by installing a temporary external-call trampoline
+The public `rxvml_call_procedure_descriptor()`,
+`rxvml_call_factory_descriptor()`, and `rxvml_call_method_descriptor()` entry
+points run Rexx callables by installing a temporary external-call trampoline
 (`ext_proc`, `ext_argc`, `ext_args`, and `ext_ret`) and then entering `run()`.
-These calls are allowed from native callbacks, including ADDRESS environment
-callbacks, while another `run()` invocation is already active.
+The descriptor form is mandatory as of `RXVML_ABI_VERSION` 8. Descriptors use
+`rxsig1|name|return_type|args`; for example,
+`rxsig1|pkg.proc|.int|name=.string`. The runtime resolves the name and checks
+the return/argument signature against metadata before invoking. These calls are
+allowed from native callbacks, including ADDRESS environment callbacks, while
+another `run()` invocation is already active.
 
 Nested `rxvml` calls must save and restore both the external-call trampoline
 and the active `rxvml_context`. Without that preservation, a callback that calls
@@ -669,7 +674,7 @@ operand slot now contains an index into a `FLOAT_CONST` record in
 `const_pool`, and the interpreter resolves that record when a float operand is
 read.
 
-As of the current `003` layout, the loader is also responsible for undoing the
+As of the current `006` layout, the loader is also responsible for undoing the
 two stage-2 section codecs before execution begins:
 
 - the instruction section may arrive as a packed logical token stream with
@@ -686,35 +691,40 @@ The current Level B interface runtime slice adds three VM-facing pieces on top
 of the older object model:
 
 - `SETOBJTYPE_REG_STRING` stores a concrete class name on an object value
-- `SRCMETHOD_REG_REG_STRING` resolves the effective method procedure from
-  `object_type_name + member_name`
-- `SRCFPROC_REG_STRING_REG` resolves an interface factory provider for either
-  `interface_name` or `interface_name..factory_name`
+- `SRCMETHODSEL_REG_REG_STRING` resolves the effective method procedure from
+  `object_type_name + descriptor`
+- `SRCFPROCSEL_REG_STRING_REG` resolves an interface factory provider from a
+  descriptor whose name is either `interface_name` or
+  `interface_name..factory_name`
 - `TYPEOF_REG_REG` returns the canonical source type name of an object value
 - `ISTYPE_REG_REG_STRING` tests an object value against an interface, class,
   or `.object`
 - `ASSERTTYPE_REG_STRING` raises `CONVERSION_ERROR` on a failed object cast
 
-`srcmethod` and `srcfproc` both return a `proc_runtime *` in a normal
-register, and the existing `dcall` path performs the actual invocation.
+`srcmethodsel` and `srcfprocsel` both return a `proc_runtime *` in a normal
+register, and the existing `dcall` path performs the actual invocation. The
+selector string is a callable descriptor (`rxsig1|name|return_type|args`), so
+lookup is not name-only: the selected procedure must also match the expected
+signature.
 
-### Current `srcmethod` semantics
+### Current `srcmethodsel` semantics
 
 The current implementation is now:
 
 - it rebuilds an interface-method registry only when newly loaded modules
   invalidate that cache
-- registry rows are keyed by fully qualified concrete class name plus member
-  name
+- registry rows are keyed by fully qualified concrete class name plus method
+  descriptor
 - for each `class implements interface` link, the VM resolves the effective
-  procedure for each interface member during link
+  procedure for each interface member during link and validates its metadata
+  signature
 - if a concrete `class.member` procedure exists, that wins
 - otherwise, if the interface member kind is `method final`, the VM binds the
   interface's emitted default-body procedure instead
-- if no registry row exists, `srcmethod` still falls back to a direct
-  `class.member` lookup before raising `FUNCTION_NOT_FOUND`
+- if no registry row exists, `srcmethodsel` still falls back to a direct
+  `class.member` lookup, but only accepts it when the descriptor matches
 
-### Current `srcfproc` semantics
+### Current `srcfprocsel` semantics
 
 The current implementation is now:
 
@@ -725,9 +735,11 @@ The current implementation is now:
 - registry rows are keyed by interface FQN plus factory member name
 - for each candidate class, it resolves the concrete `§factory` or
   `§factory.member` procedure through the existing metadata/procedure tables
+  and validates the factory signature
 - each candidate row may also carry an optional resolved `§match` or
-  `§match.member` procedure
-- `srcfproc` calls the effective `match` on every candidate with the same
+  `§match.member` procedure, which must match the factory arguments and return
+  `.int`
+- `srcfprocsel` calls the effective `match` on every candidate with the same
   argument list that will later be passed to the selected factory, even when
   only one candidate exists
 - if a candidate has no explicit `match`, the VM behaves as if it had an
@@ -739,5 +751,5 @@ The current implementation is now:
 
 Runtime module loading matters here as well. `METALOADMODULE` marks the
 VM link state dirty and immediately calls `rxvm_link()` after a successful
-load, so later `srcfproc`, `srcmethod`, and direct imported calls can see
-the new provider without an automatic filesystem sweep.
+load, so later `srcfprocsel`, `srcmethodsel`, and direct imported calls can
+see the new provider without an automatic filesystem sweep.

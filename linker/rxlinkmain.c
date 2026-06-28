@@ -29,6 +29,7 @@
 
 #include "platform.h"
 #include "rxbin.h"
+#include "rxsignature.h"
 
 typedef struct string_list {
     char **items;
@@ -172,6 +173,16 @@ static int string_list_append_unique(string_list *list, const char *value) {
     return string_list_append(list, value);
 }
 
+static int rxlink_symbol_equals(const char *left, const char *right) {
+    if (!left || !right) return 0;
+    while (*left && *right) {
+        if (tolower((unsigned char)*left) != tolower((unsigned char)*right)) return 0;
+        left++;
+        right++;
+    }
+    return *left == '\0' && *right == '\0';
+}
+
 static int module_list_append(module_list *list, link_module_info *item) {
     link_module_info *new_items;
     size_t new_capacity;
@@ -211,6 +222,329 @@ static int append_method_name_from_symbol(string_list *list, const char *symbol)
     method_name = last_dot + 1;
     if (strcmp(method_name, "\xC2\xA7" "factory") == 0) return 1;
     return string_list_append_unique(list, method_name);
+}
+
+static int rxlink_module_is_active(const link_module_info *module) {
+    return module && module->selected && !module->omitted;
+}
+
+static int rxlink_kind_is_method(const char *kind) {
+    return kind && strncmp(kind, "method", 6) == 0;
+}
+
+static int rxlink_kind_is_final_method(const char *kind) {
+    return rxlink_kind_is_method(kind) && strstr(kind, "final") != 0;
+}
+
+static int rxlink_kind_is_factory(const char *kind) {
+    return kind && strcmp(kind, "factory") == 0;
+}
+
+static char *rxlink_metadata_type_to_contract_name(const char *type_name) {
+    size_t in_index;
+    size_t out_index;
+    size_t length;
+    char *normalized;
+
+    if (!type_name || !*type_name || type_name[0] != '.') return 0;
+
+    length = strlen(type_name);
+    normalized = malloc(length + 1);
+    if (!normalized) return 0;
+
+    out_index = 0;
+    for (in_index = 1; in_index < length; in_index++) {
+        if (type_name[in_index] == '.' &&
+            in_index + 1 < length &&
+            type_name[in_index + 1] == '.') {
+            normalized[out_index++] = '.';
+            in_index++;
+        } else {
+            normalized[out_index++] = type_name[in_index];
+        }
+    }
+    normalized[out_index] = 0;
+
+    return normalized;
+}
+
+static int rxlink_type_assignable(void *userdata,
+                                  const char *actual_type,
+                                  const char *expected_type) {
+    const module_list *modules = (const module_list *)userdata;
+    char *actual_contract;
+    char *expected_contract;
+    size_t i;
+    int result = 0;
+
+    if (!modules) return 0;
+
+    actual_contract = rxlink_metadata_type_to_contract_name(actual_type);
+    expected_contract = rxlink_metadata_type_to_contract_name(expected_type);
+    if (!actual_contract || !expected_contract) {
+        if (actual_contract) free(actual_contract);
+        if (expected_contract) free(expected_contract);
+        return 0;
+    }
+
+    if (strcmp(actual_contract, expected_contract) == 0) {
+        result = 1;
+    }
+
+    for (i = 0; i < modules->count && !result; i++) {
+        module_file *module;
+        int meta_ix;
+
+        if (!rxlink_module_is_active(&modules->items[i])) continue;
+        module = modules->items[i].module;
+        meta_ix = module->header.meta_head;
+        while (meta_ix != -1) {
+            meta_entry *entry = (meta_entry *)((unsigned char *)module->constant + (size_t)meta_ix);
+            if (entry->base.type == META_IMPLEMENTS) {
+                meta_implements_constant *impl = (meta_implements_constant *)entry;
+                const char *class_name = module_string_constant(module, impl->symbol);
+                const char *interface_name = module_string_constant(module, impl->interface_symbol);
+                if (class_name && interface_name &&
+                    strcmp(class_name, actual_contract) == 0 &&
+                    strcmp(interface_name, expected_contract) == 0) {
+                    result = 1;
+                    break;
+                }
+            }
+            meta_ix = entry->next;
+        }
+    }
+
+    free(actual_contract);
+    free(expected_contract);
+    return result;
+}
+
+static char *rxlink_build_member_name(const char *owner, const char *member) {
+    size_t owner_length;
+    size_t member_length;
+    char *name;
+
+    if (!owner || !member) return 0;
+    owner_length = strlen(owner);
+    member_length = strlen(member);
+    name = malloc(owner_length + 1 + member_length + 1);
+    if (!name) return 0;
+    memcpy(name, owner, owner_length);
+    name[owner_length] = '.';
+    memcpy(name + owner_length + 1, member, member_length);
+    name[owner_length + 1 + member_length] = 0;
+    return name;
+}
+
+static char *rxlink_build_factory_proc_name(const char *owner, const char *factory) {
+    const char *prefix = "\xC2\xA7" "factory";
+    char *factory_member;
+    char *name;
+
+    if (!owner || !factory) return 0;
+    if (strcmp(factory, "*") == 0) return rxlink_build_member_name(owner, prefix);
+    factory_member = malloc(strlen(prefix) + 1 + strlen(factory) + 1);
+    if (!factory_member) return 0;
+    sprintf(factory_member, "%s.%s", prefix, factory);
+    name = rxlink_build_member_name(owner, factory_member);
+    free(factory_member);
+    return name;
+}
+
+static char *rxlink_build_match_proc_name(const char *owner, const char *factory) {
+    const char *prefix = "\xC2\xA7" "match";
+    char *match_member;
+    char *name;
+
+    if (!owner || !factory) return 0;
+    if (strcmp(factory, "*") == 0) return rxlink_build_member_name(owner, prefix);
+    match_member = malloc(strlen(prefix) + 1 + strlen(factory) + 1);
+    if (!match_member) return 0;
+    sprintf(match_member, "%s.%s", prefix, factory);
+    name = rxlink_build_member_name(owner, match_member);
+    free(match_member);
+    return name;
+}
+
+static meta_func_constant *rxlink_find_meta_func(const module_list *modules,
+                                                 const char *symbol,
+                                                 module_file **module_out) {
+    size_t i;
+
+    if (module_out) *module_out = 0;
+    if (!modules || !symbol) return 0;
+
+    for (i = 0; i < modules->count; i++) {
+        module_file *module;
+        int meta_ix;
+
+        if (!rxlink_module_is_active(&modules->items[i])) continue;
+        module = modules->items[i].module;
+        meta_ix = module->header.meta_head;
+        while (meta_ix != -1) {
+            meta_entry *entry = (meta_entry *)((unsigned char *)module->constant + (size_t)meta_ix);
+            if (entry->base.type == META_FUNC) {
+                meta_func_constant *func = (meta_func_constant *)entry;
+                const char *func_symbol = module_string_constant(module, func->symbol);
+                if (func_symbol && rxlink_symbol_equals(func_symbol, symbol)) {
+                    if (module_out) *module_out = module;
+                    return func;
+                }
+            }
+            meta_ix = entry->next;
+        }
+    }
+
+    return 0;
+}
+
+static int rxlink_meta_func_matches_signature(const module_list *modules,
+                                              module_file *module,
+                                              meta_func_constant *func,
+                                              const rx_callable_signature *expected) {
+    const char *type;
+    const char *args;
+    rx_callable_signature actual;
+    rx_callable_compare_options options;
+    int matches;
+
+    if (!module || !func || !expected) return 0;
+
+    type = module_string_constant(module, func->type);
+    args = module_string_constant(module, func->args);
+    if (!type || !args) return 0;
+
+    if (!rx_sig_init_from_parts(&actual, expected->name ? expected->name : "", type, args)) {
+        return 0;
+    }
+    memset(&options, 0, sizeof(options));
+    options.allow_return_covariance = 1;
+    options.type_assignable = rxlink_type_assignable;
+    options.userdata = (void *)modules;
+
+    matches = rx_sig_matches_contract(expected, &actual, &options);
+    rx_sig_free(&actual);
+    return matches;
+}
+
+static int rxlink_validate_contracts(const module_list *modules) {
+    size_t i;
+
+    for (i = 0; i < modules->count; i++) {
+        module_file *module;
+        int meta_ix;
+
+        if (!rxlink_module_is_active(&modules->items[i])) continue;
+        module = modules->items[i].module;
+        meta_ix = module->header.meta_head;
+
+        while (meta_ix != -1) {
+            meta_entry *entry = (meta_entry *)((unsigned char *)module->constant + (size_t)meta_ix);
+
+            if (entry->base.type == META_IMPLEMENTS) {
+                meta_implements_constant *impl = (meta_implements_constant *)entry;
+                const char *class_name = module_string_constant(module, impl->symbol);
+                const char *interface_name = module_string_constant(module, impl->interface_symbol);
+                size_t j;
+
+                if (!class_name || !interface_name) return 0;
+
+                for (j = 0; j < modules->count; j++) {
+                    module_file *iface_module;
+                    int iface_meta_ix;
+
+                    if (!rxlink_module_is_active(&modules->items[j])) continue;
+                    iface_module = modules->items[j].module;
+                    iface_meta_ix = iface_module->header.meta_head;
+
+                    while (iface_meta_ix != -1) {
+                        meta_entry *iface_entry = (meta_entry *)((unsigned char *)iface_module->constant + (size_t)iface_meta_ix);
+                        if (iface_entry->base.type == META_MEMBER) {
+                            meta_member_constant *member = (meta_member_constant *)iface_entry;
+                            const char *owner = module_string_constant(iface_module, member->owner);
+                            const char *kind = module_string_constant(iface_module, member->kind);
+                            const char *member_name = module_string_constant(iface_module, member->member);
+                            const char *type = module_string_constant(iface_module, member->type);
+                            const char *args = module_string_constant(iface_module, member->args);
+
+                            if (owner && kind && member_name && type && args &&
+                                strcmp(owner, interface_name) == 0) {
+                                if (rxlink_kind_is_method(kind)) {
+                                    char *proc_name = rxlink_build_member_name(class_name, member_name);
+                                    module_file *func_module = 0;
+                                    meta_func_constant *func = proc_name ? rxlink_find_meta_func(modules, proc_name, &func_module) : 0;
+                                    rx_callable_signature expected;
+                                    int ok;
+                                    int signature_ready;
+
+                                    if (!func && rxlink_kind_is_final_method(kind)) {
+                                        if (proc_name) free(proc_name);
+                                        proc_name = rxlink_build_member_name(interface_name, member_name);
+                                        func = proc_name ? rxlink_find_meta_func(modules, proc_name, &func_module) : 0;
+                                    }
+
+                                    rx_sig_init_empty(&expected);
+                                    signature_ready = func &&
+                                                      rx_sig_init_from_parts(&expected, member_name, type, args);
+                                    ok = signature_ready &&
+                                         rxlink_meta_func_matches_signature(modules, func_module, func, &expected);
+                                    rx_sig_free(&expected);
+                                    if (proc_name) free(proc_name);
+                                    if (!ok) {
+                                        fprintf(stderr,
+                                                "ERROR: class %s does not satisfy interface member %s.%s signature\n",
+                                                class_name, interface_name, member_name);
+                                        return 0;
+                                    }
+                                } else if (rxlink_kind_is_factory(kind)) {
+                                    char *factory_proc_name = rxlink_build_factory_proc_name(class_name, member_name);
+                                    char *match_proc_name = rxlink_build_match_proc_name(class_name, member_name);
+                                    module_file *factory_module = 0;
+                                    module_file *match_module = 0;
+                                    meta_func_constant *factory_func = factory_proc_name ? rxlink_find_meta_func(modules, factory_proc_name, &factory_module) : 0;
+                                    meta_func_constant *match_func = match_proc_name ? rxlink_find_meta_func(modules, match_proc_name, &match_module) : 0;
+                                    rx_callable_signature expected_factory;
+                                    rx_callable_signature expected_match;
+                                    int ok;
+                                    int factory_signature_ready;
+                                    int match_signature_ready;
+
+                                    rx_sig_init_empty(&expected_factory);
+                                    rx_sig_init_empty(&expected_match);
+                                    factory_signature_ready = factory_func &&
+                                                              rx_sig_init_from_parts(&expected_factory, member_name, type, args);
+                                    ok = factory_signature_ready &&
+                                         rxlink_meta_func_matches_signature(modules, factory_module, factory_func, &expected_factory);
+                                    if (ok && match_func) {
+                                        match_signature_ready = rx_sig_init_from_parts(&expected_match, "", ".int", args);
+                                        ok = match_signature_ready &&
+                                             rxlink_meta_func_matches_signature(modules, match_module, match_func, &expected_match);
+                                    }
+                                    rx_sig_free(&expected_factory);
+                                    rx_sig_free(&expected_match);
+
+                                    if (factory_proc_name) free(factory_proc_name);
+                                    if (match_proc_name) free(match_proc_name);
+                                    if (!ok) {
+                                        fprintf(stderr,
+                                                "ERROR: class %s does not satisfy interface factory %s.%s signature\n",
+                                                class_name, interface_name, member_name);
+                                        return 0;
+                                    }
+                                }
+                            }
+                        }
+                        iface_meta_ix = iface_entry->next;
+                    }
+                }
+            }
+
+            meta_ix = entry->next;
+        }
+    }
+
+    return 1;
 }
 
 static void module_list_free(module_list *list) {
@@ -547,48 +881,61 @@ static int load_module_metadata(link_module_info *info) {
 
         opcode = ((bin_code *)module->instructions)[code_index].instruction.opcode;
         operand_count = rxbin_get_operand_types(rxbin_opcode_format(opcode), types);
-        if (opcode == OP_SRCFPROC_REG_STRING_REG) {
+        if (opcode == OP_SRCFPROCSEL_REG_STRING_REG) {
             for (operand_index = 0; operand_index < operand_count; operand_index++) {
                 if (types[operand_index] == OP_STRING) {
-                    size_t selector_offset;
-                    string_constant *selector;
+                    size_t descriptor_offset;
+                    string_constant *descriptor;
                     const char *separator;
                     size_t interface_length;
                     char *interface_name;
                     int ok;
+                    rx_callable_signature signature;
 
-                    selector_offset = ((bin_code *)module->instructions)[code_index + (size_t)operand_index + 1].index;
-                    if (selector_offset >= module->header.constant_size) return 0;
-                    selector = (string_constant *)((unsigned char *)module->constant + selector_offset);
-                    if (selector->base.type != STRING_CONST) return 0;
+                    descriptor_offset = ((bin_code *)module->instructions)[code_index + (size_t)operand_index + 1].index;
+                    if (descriptor_offset >= module->header.constant_size) return 0;
+                    descriptor = (string_constant *)((unsigned char *)module->constant + descriptor_offset);
+                    if (descriptor->base.type != STRING_CONST) return 0;
+                    if (!rx_sig_parse_descriptor(descriptor->string, &signature)) return 0;
 
-                    separator = strstr(selector->string, "..");
-                    interface_length = separator ? (size_t)(separator - selector->string) : strlen(selector->string);
-                    if (!interface_length) continue;
+                    separator = strstr(signature.name, "..");
+                    interface_length = separator ? (size_t)(separator - signature.name) : strlen(signature.name);
+                    if (!interface_length) {
+                        rx_sig_free(&signature);
+                        continue;
+                    }
 
                     interface_name = malloc(interface_length + 1);
                     if (!interface_name) {
                         RX_REPORT_OOM("malloc rxlink interface reference name",
                                       interface_length + 1, info->input_path);
+                        rx_sig_free(&signature);
                         return 0;
                     }
-                    memcpy(interface_name, selector->string, interface_length);
+                    memcpy(interface_name, signature.name, interface_length);
                     interface_name[interface_length] = '\0';
                     ok = string_list_append_unique(&info->referenced_interfaces, interface_name);
                     free(interface_name);
+                    rx_sig_free(&signature);
                     if (!ok) return 0;
                 }
             }
-        } else if (opcode == OP_SRCMETHOD_REG_REG_STRING) {
+        } else if (opcode == OP_SRCMETHODSEL_REG_REG_STRING) {
             for (operand_index = 0; operand_index < operand_count; operand_index++) {
                 if (types[operand_index] == OP_STRING) {
-                    size_t member_offset;
-                    const char *member_name;
+                    size_t descriptor_offset;
+                    string_constant *descriptor;
+                    rx_callable_signature signature;
+                    int ok;
 
-                    member_offset = ((bin_code *)module->instructions)[code_index + (size_t)operand_index + 1].index;
-                    member_name = module_string_constant(module, member_offset);
-                    if (member_name &&
-                        !string_list_append_unique(&info->referenced_methods, member_name)) {
+                    descriptor_offset = ((bin_code *)module->instructions)[code_index + (size_t)operand_index + 1].index;
+                    if (descriptor_offset >= module->header.constant_size) return 0;
+                    descriptor = (string_constant *)((unsigned char *)module->constant + descriptor_offset);
+                    if (descriptor->base.type != STRING_CONST) return 0;
+                    if (!rx_sig_parse_descriptor(descriptor->string, &signature)) return 0;
+                    ok = string_list_append_unique(&info->referenced_methods, signature.name);
+                    rx_sig_free(&signature);
+                    if (!ok) {
                         return 0;
                     }
                 }
@@ -1858,6 +2205,7 @@ int main(int argc, char *argv[]) {
 
     if (!load_input_modules(&modules, &config)) goto fail;
     if (!select_modules(&modules, &config)) goto fail;
+    if (!rxlink_validate_contracts(&modules)) goto fail;
     if (!build_linked_modules(&build_context, &modules, &outputs)) goto fail;
     if (!outputs.count) {
         fprintf(stderr, "ERROR: no modules selected for output\n");

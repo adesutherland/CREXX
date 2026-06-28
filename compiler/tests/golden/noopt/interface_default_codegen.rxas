@@ -25,7 +25,7 @@ main() .locals=3
    .traceevent "F" 4 "R" "O" "r" 1 1 1 0 "§factory" ""
    load r0,1
    settp r1,256
-   srcmethod r2,r1,"describe"
+   srcmethodsel r2,r1,"rxsig1|describe|.string|"
    dcall r2,r2,r0
    .traceevent "F" 4 "R" "S" "r" 2 1 1 0 "describe" ""
    say r2
@@ -47,7 +47,7 @@ main() .locals=3
    load r1,1
    settp a1,256
    swap r2,a1
-   srcmethod r3,r2,"prefix"
+   srcmethodsel r3,r2,"rxsig1|prefix|.string|"
    dcall r3,r3,r1
    swap a1,r2
    .traceevent "F" 4 "R" "S" "r" 3 4 4 0 "prefix" ""
@@ -57,7 +57,7 @@ main() .locals=3
    load r1,1
    settp a1,256
    swap r2,a1
-   srcmethod r4,r2,"summary"
+   srcmethodsel r4,r2,"rxsig1|summary|.string|"
    dcall r4,r4,r1
    swap a1,r2
    .traceevent "F" 4 "R" "S" "r" 4 4 4 0 "summary" ""

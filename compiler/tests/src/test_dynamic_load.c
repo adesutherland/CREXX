@@ -54,7 +54,12 @@ int main(void) {
                   strlen(CREXX_TEST_DYNAMIC_LOAD_PROVIDER_MODULE));
     args[0] = provider_path;
 
-    if (rxvml_call_procedure(ctx, "dynamic_load_host.dynamic_load_host", 1, args, &result) != 0 || !result) {
+    if (rxvml_call_procedure_descriptor(
+            ctx,
+            "rxsig1|dynamic_load_host.dynamic_load_host|.int|provider_path=.string",
+            1,
+            args,
+            &result) != 0 || !result) {
         print_last_error(ctx, "Failed to run dynamic load fixture");
         goto cleanup;
     }

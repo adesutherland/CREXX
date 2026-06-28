@@ -4,7 +4,7 @@ project(Linker C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(rxlink rxlinkmain.c ../binutils/include/rxbin.h)
+add_executable(rxlink rxlinkmain.c ../binutils/rxsignature.c ../binutils/include/rxbin.h ../binutils/include/rxsignature.h)
 target_link_libraries(rxlink platform)
 target_include_directories(rxlink PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -66,6 +66,7 @@ crexx_add_rxas_fixture(tests_link_srcfproc_root ${CMAKE_CURRENT_SOURCE_DIR}/test
 crexx_add_rxas_fixture(tests_link_srcfproc_contract ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_link_srcfproc_contract.rxas)
 crexx_add_rxas_fixture(tests_link_srcmethod_root ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_link_srcmethod_root.rxas)
 crexx_add_rxas_fixture(tests_link_srcmethod_provider ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_link_srcmethod_provider.rxas)
+crexx_add_rxas_fixture(tests_link_signature_bad_impl ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_link_signature_bad_impl.rxas)
 
 add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/tests_linked_success.rxbin
@@ -119,7 +120,7 @@ add_custom_command(
         COMMAND $<TARGET_FILE:rxlink> -o tests_linked_srcfproc tests_link_srcfproc_root.rxbin tests_link_srcfproc_contract.rxbin
         DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/tests_link_srcfproc_root.rxbin ${CMAKE_CURRENT_BINARY_DIR}/tests_link_srcfproc_contract.rxbin rxlink
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "cREXX RXLINK srcfproc fixture ..."
+        COMMENT "cREXX RXLINK srcfprocsel fixture ..."
 )
 add_custom_target(tests_linked_srcfproc_artifact ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/tests_linked_srcfproc.rxbin)
 
@@ -128,7 +129,7 @@ add_custom_command(
         COMMAND $<TARGET_FILE:rxlink> -o tests_linked_srcmethod tests_link_srcmethod_root.rxbin tests_link_srcmethod_provider.rxbin
         DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/tests_link_srcmethod_root.rxbin ${CMAKE_CURRENT_BINARY_DIR}/tests_link_srcmethod_provider.rxbin rxlink
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "cREXX RXLINK srcmethod fixture ..."
+        COMMENT "cREXX RXLINK srcmethodsel fixture ..."
 )
 add_custom_target(tests_linked_srcmethod_artifact ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/tests_linked_srcmethod.rxbin)
 
@@ -231,6 +232,18 @@ add_test(
         -DCONTROL_FILE=${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_link_conflict.ctl
         "-DINPUTS=tests_link_root.rxbin\;tests_link_provider_a.rxbin"
         -DEXPECT_TEXT=module tests_link_provider_a is both included and omitted
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_expected_failure.cmake
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+add_test(
+        NAME rxlink_signature_mismatch_error
+        COMMAND ${CMAKE_COMMAND}
+        -DRXLINK=$<TARGET_FILE:rxlink>
+        -DWORKING_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}
+        -DOUTPUT_BASENAME=tests_linked_signature_mismatch
+        "-DINPUTS=tests_link_signature_bad_impl.rxbin"
+        "-DEXPECT_TEXT=ERROR: class link_sig.box does not satisfy interface member link_sig.shape.describe signature"
         -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_expected_failure.cmake
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )

@@ -41,7 +41,7 @@
 #include "platform.h"
 #include "rxdefs.h"
 
-#define BIN_VERSION "005"
+#define BIN_VERSION "006"
 
 #define BIN_HEADER "cReXx" /* Do not change */
 

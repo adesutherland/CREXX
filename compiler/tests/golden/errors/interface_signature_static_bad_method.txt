@@ -1,0 +1,2 @@
+Error in interface_signature_static_bad_method.crexx @ 8:1 - #INTERFACE_MEMBER_SIGNATURE_MISMATCH, "interface_signature_static_bad_method.sample", "value", "badbox: class implements .sample"
+1 error(s) in source file

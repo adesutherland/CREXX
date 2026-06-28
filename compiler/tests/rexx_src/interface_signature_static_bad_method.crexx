@@ -1,0 +1,14 @@
+options levelb
+namespace interface_signature_static_bad_method
+
+sample: interface
+  value: method = .string
+  arg name = .string
+
+badbox: class implements .sample
+  *: factory
+    return
+
+  value: method = .int
+    arg name = .string
+    return 7

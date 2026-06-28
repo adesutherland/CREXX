@@ -238,7 +238,12 @@ int main(void) {
         goto cleanup;
     }
 
-    if (rxvml_call_procedure(ctx, "address_callback_host.address_callback_host", 0, NULL, &result) != 0 || !result) {
+    if (rxvml_call_procedure_descriptor(
+            ctx,
+            "rxsig1|address_callback_host.address_callback_host|.int|",
+            0,
+            NULL,
+            &result) != 0 || !result) {
         print_last_error(ctx, "Failed to run address callback fixture");
         goto cleanup;
     }

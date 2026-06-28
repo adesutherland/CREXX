@@ -90,7 +90,7 @@ More precisely:
   general expression position, receiver-producing expressions, and
   class-attribute receivers stay as normal calls until receiver copyback is
   modelled for those shapes.
-- Named interface factory selector metadata must be preserved during cloning so `.iface.named(...)` still emits `srcfproc "...iface..named"` after inlining.
+- Named interface factory selector metadata must be preserved during cloning so `.iface.named(...)` still emits `srcfprocsel` with the named factory descriptor after inlining.
 - `expose`/by-reference formals are supported when the actual argument is an aliasable variable-like target, including indexed and stem-style forms.
 - For nontrivial by-reference actuals, the inline rewrite captures the locator expressions once into inline-scope temps so the callee still sees call-time binding semantics.
 - Computed receiver copyback and nontrivial by-reference rematerialisation both

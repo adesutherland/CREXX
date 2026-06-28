@@ -60,6 +60,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "rxsignature.h"
 #include <ctype.h>
 #include <limits.h>
 #ifdef _WIN32
@@ -607,6 +608,17 @@ static char *build_runtime_member_name(const char *class_name, size_t class_name
     return proc_name;
 }
 
+static int runtime_name_equals_ignore_case(const char *left, size_t left_length,
+                                           const char *right, size_t right_length) {
+    size_t i;
+
+    if (!left || !right || left_length != right_length) return 0;
+    for (i = 0; i < left_length; i++) {
+        if (tolower((unsigned char)left[i]) != tolower((unsigned char)right[i])) return 0;
+    }
+    return 1;
+}
+
 static proc_runtime *resolve_runtime_procedure(rxvm_context *context, const char *proc_name, size_t proc_name_length) {
     size_t mod_index;
 
@@ -623,8 +635,8 @@ static proc_runtime *resolve_runtime_procedure(rxvm_context *context, const char
                         (string_constant *) (mod->segment.const_pool + meta_func->symbol);
 
                 if (symbol_name->base.type == STRING_CONST &&
-                    symbol_name->string_len == proc_name_length &&
-                    memcmp(symbol_name->string, proc_name, proc_name_length) == 0) {
+                    runtime_name_equals_ignore_case(symbol_name->string, symbol_name->string_len,
+                                                    proc_name, proc_name_length)) {
                     return rxvm_get_module_runtime_procedure(mod, meta_func->func);
                 }
             }
@@ -976,6 +988,7 @@ static void clear_runtime_interface_factories(rxvm_context *context) {
     for (i = 0; i < context->num_interface_factories; i++) {
         free(context->interface_factories[i].interface_name);
         free(context->interface_factories[i].factory_name);
+        free(context->interface_factories[i].descriptor);
         free(context->interface_factories[i].class_name);
     }
 
@@ -998,7 +1011,7 @@ static void clear_runtime_interface_methods(rxvm_context *context) {
 
     for (i = 0; i < context->num_interface_methods; i++) {
         free(context->interface_methods[i].class_name);
-        free(context->interface_methods[i].member_name);
+        free(context->interface_methods[i].descriptor);
     }
 
     free(context->interface_methods);
@@ -1035,6 +1048,205 @@ static string_constant *get_runtime_string_constant(module *mod, size_t offset) 
     entry = (string_constant *) (mod->segment.const_pool + offset);
     if (entry->base.type != STRING_CONST) return 0;
     return entry;
+}
+
+static char *runtime_metadata_type_to_contract_name(const char *type_name) {
+    size_t in_index;
+    size_t out_index;
+    size_t length;
+    char *normalized;
+
+    if (!type_name || !*type_name || type_name[0] != '.') return 0;
+
+    length = strlen(type_name);
+    normalized = malloc(length + 1);
+    if (!normalized) return 0;
+
+    out_index = 0;
+    for (in_index = 1; in_index < length; in_index++) {
+        if (type_name[in_index] == '.' &&
+            in_index + 1 < length &&
+            type_name[in_index + 1] == '.') {
+            normalized[out_index++] = '.';
+            in_index++;
+        } else {
+            normalized[out_index++] = type_name[in_index];
+        }
+    }
+    normalized[out_index] = 0;
+
+    return normalized;
+}
+
+static int runtime_signature_type_assignable(void *userdata,
+                                             const char *actual_type,
+                                             const char *expected_type) {
+    rxvm_context *context;
+    char *actual_contract;
+    char *expected_contract;
+    int result;
+
+    context = (rxvm_context *)userdata;
+    actual_contract = runtime_metadata_type_to_contract_name(actual_type);
+    expected_contract = runtime_metadata_type_to_contract_name(expected_type);
+    if (!context || !actual_contract || !expected_contract) {
+        if (actual_contract) free(actual_contract);
+        if (expected_contract) free(expected_contract);
+        return 0;
+    }
+
+    if (strcmp(actual_contract, expected_contract) == 0) {
+        result = 1;
+    } else {
+        result = runtime_class_implements_interface(context,
+                                                    actual_contract,
+                                                    strlen(actual_contract),
+                                                    expected_contract,
+                                                    strlen(expected_contract));
+    }
+    free(actual_contract);
+    free(expected_contract);
+    return result;
+}
+
+static int runtime_type_matches_contract_name(const char *type_name,
+                                              const char *contract_name,
+                                              size_t contract_name_length) {
+    char *normalized;
+    const char *short_name;
+    size_t normalized_length;
+    size_t short_name_length;
+    size_t i;
+    int matches;
+
+    if (!type_name || !contract_name || !contract_name_length) return 0;
+
+    normalized = runtime_metadata_type_to_contract_name(type_name);
+    if (!normalized) return 0;
+
+    normalized_length = strlen(normalized);
+    matches = normalized_length == contract_name_length &&
+              memcmp(normalized, contract_name, contract_name_length) == 0;
+    if (!matches) {
+        short_name = 0;
+        for (i = contract_name_length; i > 0; i--) {
+            if (contract_name[i - 1] == '.') {
+                short_name = contract_name + i;
+                break;
+            }
+        }
+        if (short_name && *short_name) {
+            short_name_length = (size_t) ((contract_name + contract_name_length) - short_name);
+            matches = normalized_length == short_name_length &&
+                      memcmp(normalized, short_name, short_name_length) == 0;
+        }
+    }
+
+    free(normalized);
+    return matches;
+}
+
+static int runtime_proc_matches_signature(rxvm_context *context,
+                                          proc_runtime *proc,
+                                          const rx_callable_signature *expected) {
+    size_t mod_index;
+    rx_callable_compare_options options;
+
+    if (!context || !proc || !expected) return 0;
+
+    memset(&options, 0, sizeof(options));
+    options.allow_return_covariance = 1;
+    options.type_assignable = runtime_signature_type_assignable;
+    options.userdata = context;
+
+    for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
+        module *mod;
+        int meta_ix;
+
+        mod = context->modules[mod_index];
+        meta_ix = mod->meta_head;
+        while (meta_ix != -1) {
+            meta_entry *meta;
+
+            meta = (meta_entry *) (mod->segment.const_pool + meta_ix);
+            if (meta->base.type == META_FUNC) {
+                meta_func_constant *func_meta;
+                proc_runtime *meta_proc;
+
+                func_meta = (meta_func_constant *) meta;
+                meta_proc = rxvm_get_module_runtime_procedure(mod, func_meta->func);
+                if (meta_proc == proc) {
+                    string_constant *type_symbol;
+                    string_constant *args_symbol;
+                    rx_callable_signature actual;
+                    int matches;
+
+                    type_symbol = get_runtime_string_constant(mod, func_meta->type);
+                    args_symbol = get_runtime_string_constant(mod, func_meta->args);
+                    if (!type_symbol || !args_symbol) return 0;
+
+                    if (!rx_sig_init_from_parts(&actual,
+                                                expected->name ? expected->name : "",
+                                                type_symbol->string,
+                                                args_symbol->string)) {
+                        return 0;
+                    }
+                    matches = rx_sig_matches_contract(expected, &actual, &options);
+                    rx_sig_free(&actual);
+                    return matches;
+                }
+            }
+            meta_ix = meta->next;
+        }
+    }
+
+    return 0;
+}
+
+static char *build_runtime_member_descriptor(const string_constant *member_symbol,
+                                             const string_constant *type_symbol,
+                                             const string_constant *args_symbol) {
+    if (!member_symbol || !type_symbol || !args_symbol) return 0;
+    return rx_sig_build_descriptor(member_symbol->string,
+                                   type_symbol->string,
+                                   args_symbol->string);
+}
+
+static char *build_runtime_factory_selector_name(const string_constant *interface_symbol,
+                                                 const string_constant *factory_symbol) {
+    if (!interface_symbol || !factory_symbol) return 0;
+    if (factory_symbol->string_len == 1 && factory_symbol->string[0] == '*') {
+        return dup_runtime_name(interface_symbol->string, interface_symbol->string_len);
+    }
+    {
+        char *selector;
+        selector = malloc(interface_symbol->string_len + 2 + factory_symbol->string_len + 1);
+        if (!selector) return 0;
+        memcpy(selector, interface_symbol->string, interface_symbol->string_len);
+        selector[interface_symbol->string_len] = '.';
+        selector[interface_symbol->string_len + 1] = '.';
+        memcpy(selector + interface_symbol->string_len + 2,
+               factory_symbol->string,
+               factory_symbol->string_len);
+        selector[interface_symbol->string_len + 2 + factory_symbol->string_len] = 0;
+        return selector;
+    }
+}
+
+static char *build_runtime_factory_descriptor(const string_constant *interface_symbol,
+                                              const string_constant *factory_symbol,
+                                              const string_constant *type_symbol,
+                                              const string_constant *args_symbol) {
+    char *selector;
+    char *descriptor;
+
+    if (!interface_symbol || !factory_symbol || !type_symbol || !args_symbol) return 0;
+
+    selector = build_runtime_factory_selector_name(interface_symbol, factory_symbol);
+    if (!selector) return 0;
+    descriptor = rx_sig_build_descriptor(selector, type_symbol->string, args_symbol->string);
+    free(selector);
+    return descriptor;
 }
 
 typedef struct rxvm_source_context {
@@ -1225,13 +1437,15 @@ static int add_runtime_interface_factory_entry(rxvm_context *context,
                                                size_t interface_name_length,
                                                const char *factory_name,
                                                size_t factory_name_length,
+                                               const char *descriptor,
+                                               size_t descriptor_length,
                                                const char *class_name,
                                                size_t class_name_length,
                                                proc_runtime *match_proc,
                                                proc_runtime *factory_proc) {
     rxvm_interface_factory_entry *entry;
 
-    if (!context || !interface_name || !factory_name || !class_name || !factory_proc) return 0;
+    if (!context || !interface_name || !factory_name || !descriptor || !class_name || !factory_proc) return 0;
 
     if (context->num_interface_factories >= context->interface_factory_capacity) {
         size_t new_capacity;
@@ -1251,10 +1465,12 @@ static int add_runtime_interface_factory_entry(rxvm_context *context,
 
     entry->interface_name = dup_runtime_name(interface_name, interface_name_length);
     entry->factory_name = dup_runtime_name(factory_name, factory_name_length);
+    entry->descriptor = dup_runtime_name(descriptor, descriptor_length);
     entry->class_name = dup_runtime_name(class_name, class_name_length);
-    if (!entry->interface_name || !entry->factory_name || !entry->class_name) {
+    if (!entry->interface_name || !entry->factory_name || !entry->descriptor || !entry->class_name) {
         free(entry->interface_name);
         free(entry->factory_name);
+        free(entry->descriptor);
         free(entry->class_name);
         memset(entry, 0, sizeof(*entry));
         return 0;
@@ -1262,6 +1478,7 @@ static int add_runtime_interface_factory_entry(rxvm_context *context,
 
     entry->interface_name_length = interface_name_length;
     entry->factory_name_length = factory_name_length;
+    entry->descriptor_length = descriptor_length;
     entry->class_name_length = class_name_length;
     entry->match_proc = match_proc;
     entry->factory_proc = factory_proc;
@@ -1273,22 +1490,21 @@ static int add_runtime_interface_factory_entry(rxvm_context *context,
 static int add_runtime_interface_method_entry(rxvm_context *context,
                                               const char *class_name,
                                               size_t class_name_length,
-                                              const char *member_name,
-                                              size_t member_name_length,
+                                              const char *descriptor,
+                                              size_t descriptor_length,
                                               proc_runtime *method_proc) {
     rxvm_interface_method_entry *entry;
     size_t i;
 
-    if (!context || !class_name || !member_name || !method_proc) return 0;
+    if (!context || !class_name || !descriptor || !method_proc) return 0;
 
     for (i = 0; i < context->num_interface_methods; i++) {
         entry = &context->interface_methods[i];
         if (entry->class_name_length == class_name_length &&
-            entry->member_name_length == member_name_length &&
+            entry->descriptor_length == descriptor_length &&
             memcmp(entry->class_name, class_name, class_name_length) == 0 &&
-            memcmp(entry->member_name, member_name, member_name_length) == 0) {
-            entry->method_proc = method_proc;
-            return 1;
+            memcmp(entry->descriptor, descriptor, descriptor_length) == 0) {
+            return entry->method_proc == method_proc;
         }
     }
 
@@ -1309,16 +1525,16 @@ static int add_runtime_interface_method_entry(rxvm_context *context,
     memset(entry, 0, sizeof(*entry));
 
     entry->class_name = dup_runtime_name(class_name, class_name_length);
-    entry->member_name = dup_runtime_name(member_name, member_name_length);
-    if (!entry->class_name || !entry->member_name) {
+    entry->descriptor = dup_runtime_name(descriptor, descriptor_length);
+    if (!entry->class_name || !entry->descriptor) {
         free(entry->class_name);
-        free(entry->member_name);
+        free(entry->descriptor);
         memset(entry, 0, sizeof(*entry));
         return 0;
     }
 
     entry->class_name_length = class_name_length;
-    entry->member_name_length = member_name_length;
+    entry->descriptor_length = descriptor_length;
     entry->method_proc = method_proc;
     context->num_interface_methods++;
 
@@ -1374,21 +1590,27 @@ void rxvm_rebuild_interface_method_registry(rxvm_context *context) {
                             string_constant *owner_symbol;
                             string_constant *kind_symbol;
                             string_constant *member_symbol;
+                            string_constant *type_symbol;
+                            string_constant *args_symbol;
 
                             member_meta = (meta_member_constant *) iface_meta;
                             owner_symbol = get_runtime_string_constant(iface_mod, member_meta->owner);
                             kind_symbol = get_runtime_string_constant(iface_mod, member_meta->kind);
                             member_symbol = get_runtime_string_constant(iface_mod, member_meta->member);
+                            type_symbol = get_runtime_string_constant(iface_mod, member_meta->type);
+                            args_symbol = get_runtime_string_constant(iface_mod, member_meta->args);
 
-                            if (owner_symbol && kind_symbol && member_symbol &&
+                            if (owner_symbol && kind_symbol && member_symbol && type_symbol && args_symbol &&
                                 runtime_member_kind_is_method(kind_symbol) &&
                                 owner_symbol->string_len == interface_symbol->string_len &&
                                 memcmp(owner_symbol->string, interface_symbol->string, interface_symbol->string_len) == 0) {
                                 char *class_proc_name;
                                 char *interface_proc_name;
+                                char *descriptor;
                                 proc_runtime *class_proc;
                                 proc_runtime *interface_proc;
                                 proc_runtime *effective_proc;
+                                rx_callable_signature expected_signature;
 
                                 class_proc_name = build_runtime_member_name(class_symbol->string,
                                                                             class_symbol->string_len,
@@ -1405,6 +1627,19 @@ void rxvm_rebuild_interface_method_registry(rxvm_context *context) {
                                     continue;
                                 }
 
+                                descriptor = build_runtime_member_descriptor(member_symbol, type_symbol, args_symbol);
+                                if (!descriptor ||
+                                    !rx_sig_init_from_parts(&expected_signature,
+                                                            member_symbol->string,
+                                                            type_symbol->string,
+                                                            args_symbol->string)) {
+                                    if (class_proc_name) free(class_proc_name);
+                                    if (interface_proc_name) free(interface_proc_name);
+                                    if (descriptor) free(descriptor);
+                                    iface_meta_ix = iface_meta->next;
+                                    continue;
+                                }
+
                                 class_proc = resolve_runtime_procedure(context, class_proc_name, strlen(class_proc_name));
                                 interface_proc = resolve_runtime_procedure(context, interface_proc_name, strlen(interface_proc_name));
                                 free(class_proc_name);
@@ -1415,14 +1650,17 @@ void rxvm_rebuild_interface_method_registry(rxvm_context *context) {
                                     effective_proc = interface_proc;
                                 }
 
-                                if (effective_proc) {
+                                if (effective_proc &&
+                                    runtime_proc_matches_signature(context, effective_proc, &expected_signature)) {
                                     add_runtime_interface_method_entry(context,
                                                                        class_symbol->string,
                                                                        class_symbol->string_len,
-                                                                       member_symbol->string,
-                                                                       member_symbol->string_len,
+                                                                       descriptor,
+                                                                       strlen(descriptor),
                                                                        effective_proc);
                                 }
+                                rx_sig_free(&expected_signature);
+                                free(descriptor);
                             }
                         }
 
@@ -1439,16 +1677,25 @@ void rxvm_rebuild_interface_method_registry(rxvm_context *context) {
 static proc_runtime *resolve_runtime_method(rxvm_context *context,
                                             const char *class_name,
                                             size_t class_name_length,
-                                            const char *member_name,
-                                            size_t member_name_length) {
+                                            const char *descriptor,
+                                            size_t descriptor_length) {
     size_t entry_index;
     char *proc_name;
     proc_runtime *called_function;
+    char *descriptor_text;
+    rx_callable_signature expected_signature;
 
-    if (!context || !class_name || !class_name_length || !member_name || !member_name_length) return 0;
+    if (!context || !class_name || !class_name_length || !descriptor || !descriptor_length) return 0;
 
     if (context->link_dirty || context->interface_method_registry_dirty || context->interface_factory_registry_dirty) {
         rxvm_link(context);
+    }
+
+    descriptor_text = dup_runtime_name(descriptor, descriptor_length);
+    if (!descriptor_text) return 0;
+    if (!rx_sig_parse_descriptor(descriptor_text, &expected_signature)) {
+        free(descriptor_text);
+        return 0;
     }
 
     for (entry_index = 0; entry_index < context->num_interface_methods; entry_index++) {
@@ -1456,17 +1703,32 @@ static proc_runtime *resolve_runtime_method(rxvm_context *context,
 
         entry = &context->interface_methods[entry_index];
         if (entry->class_name_length == class_name_length &&
-            entry->member_name_length == member_name_length &&
+            entry->descriptor_length == descriptor_length &&
             memcmp(entry->class_name, class_name, class_name_length) == 0 &&
-            memcmp(entry->member_name, member_name, member_name_length) == 0) {
+            memcmp(entry->descriptor, descriptor, descriptor_length) == 0) {
+            rx_sig_free(&expected_signature);
+            free(descriptor_text);
             return entry->method_proc;
         }
     }
 
-    proc_name = build_runtime_member_name(class_name, class_name_length, member_name, member_name_length);
-    if (!proc_name) return 0;
+    proc_name = build_runtime_member_name(class_name,
+                                          class_name_length,
+                                          expected_signature.name,
+                                          strlen(expected_signature.name));
+    if (!proc_name) {
+        rx_sig_free(&expected_signature);
+        free(descriptor_text);
+        return 0;
+    }
     called_function = resolve_runtime_procedure(context, proc_name, strlen(proc_name));
     free(proc_name);
+    if (called_function &&
+        !runtime_proc_matches_signature(context, called_function, &expected_signature)) {
+        called_function = 0;
+    }
+    rx_sig_free(&expected_signature);
+    free(descriptor_text);
     return called_function;
 }
 
@@ -1519,21 +1781,31 @@ void rxvm_rebuild_interface_factory_registry(rxvm_context *context) {
                             string_constant *owner_symbol;
                             string_constant *kind_symbol;
                             string_constant *member_symbol;
+                            string_constant *type_symbol;
+                            string_constant *args_symbol;
 
                             member_meta = (meta_member_constant *) iface_meta;
                             owner_symbol = get_runtime_string_constant(iface_mod, member_meta->owner);
                             kind_symbol = get_runtime_string_constant(iface_mod, member_meta->kind);
                             member_symbol = get_runtime_string_constant(iface_mod, member_meta->member);
+                            type_symbol = get_runtime_string_constant(iface_mod, member_meta->type);
+                            args_symbol = get_runtime_string_constant(iface_mod, member_meta->args);
 
-                            if (owner_symbol && kind_symbol && member_symbol &&
+                            if (owner_symbol && kind_symbol && member_symbol && type_symbol && args_symbol &&
                                 kind_symbol->string_len == 7 &&
                                 memcmp(kind_symbol->string, "factory", 7) == 0 &&
                                 owner_symbol->string_len == interface_symbol->string_len &&
                                 memcmp(owner_symbol->string, interface_symbol->string, interface_symbol->string_len) == 0) {
                                 char *factory_proc_name;
                                 char *match_proc_name;
+                                char *selector_name;
+                                char *descriptor;
                                 proc_runtime *factory_proc;
                                 proc_runtime *match_proc;
+                                rx_callable_signature expected_factory;
+                                rx_callable_signature expected_match;
+                                int factory_signature_ready;
+                                int match_signature_ready;
 
                                 factory_proc_name = build_runtime_factory_proc_name(class_symbol->string,
                                                                                     class_symbol->string_len,
@@ -1549,6 +1821,35 @@ void rxvm_rebuild_interface_factory_registry(rxvm_context *context) {
                                     continue;
                                 }
 
+                                descriptor = build_runtime_factory_descriptor(interface_symbol,
+                                                                              member_symbol,
+                                                                              type_symbol,
+                                                                              args_symbol);
+                                selector_name = build_runtime_factory_selector_name(interface_symbol,
+                                                                                   member_symbol);
+                                rx_sig_init_empty(&expected_factory);
+                                rx_sig_init_empty(&expected_match);
+                                factory_signature_ready = descriptor && selector_name &&
+                                                          rx_sig_init_from_parts(&expected_factory,
+                                                                                 selector_name,
+                                                                                 type_symbol->string,
+                                                                                 args_symbol->string);
+                                match_signature_ready = factory_signature_ready &&
+                                                        rx_sig_init_from_parts(&expected_match,
+                                                                               "",
+                                                                               ".int",
+                                                                               args_symbol->string);
+                                if (!descriptor || !factory_signature_ready || !match_signature_ready) {
+                                    rx_sig_free(&expected_factory);
+                                    rx_sig_free(&expected_match);
+                                    if (descriptor) free(descriptor);
+                                    if (selector_name) free(selector_name);
+                                    free(factory_proc_name);
+                                    if (match_proc_name) free(match_proc_name);
+                                    iface_meta_ix = iface_meta->next;
+                                    continue;
+                                }
+
                                 factory_proc = resolve_runtime_procedure(context, factory_proc_name, strlen(factory_proc_name));
                                 match_proc = match_proc_name ?
                                              resolve_runtime_procedure(context, match_proc_name, strlen(match_proc_name)) :
@@ -1556,17 +1857,25 @@ void rxvm_rebuild_interface_factory_registry(rxvm_context *context) {
                                 free(factory_proc_name);
                                 if (match_proc_name) free(match_proc_name);
 
-                                if (factory_proc) {
+                                if (factory_proc &&
+                                    runtime_proc_matches_signature(context, factory_proc, &expected_factory) &&
+                                    (!match_proc || runtime_proc_matches_signature(context, match_proc, &expected_match))) {
                                     add_runtime_interface_factory_entry(context,
                                                                         interface_symbol->string,
                                                                         interface_symbol->string_len,
                                                                         member_symbol->string,
                                                                         member_symbol->string_len,
+                                                                        descriptor,
+                                                                        strlen(descriptor),
                                                                         class_symbol->string,
                                                                         class_symbol->string_len,
                                                                         match_proc,
                                                                         factory_proc);
                                 }
+                                rx_sig_free(&expected_factory);
+                                rx_sig_free(&expected_match);
+                                free(selector_name);
+                                free(descriptor);
                             }
                         }
 
@@ -1616,13 +1925,58 @@ static void parse_runtime_factory_selector(const char *selector,
     if (factory_name_length) *factory_name_length = selector_length - ((size_t) (sep - selector_start) + 2);
 }
 
+static int runtime_factory_descriptor_matches(rxvm_context *context,
+                                              const rx_callable_signature *expected_signature,
+                                              const char *registered_descriptor,
+                                              const char *interface_name,
+                                              size_t interface_name_length) {
+    rx_callable_signature registered_signature;
+    rx_callable_compare_options options;
+    int matches;
+
+    if (!context || !expected_signature || !registered_descriptor ||
+        !interface_name || !interface_name_length) {
+        return 0;
+    }
+
+    if (!rx_sig_parse_descriptor(registered_descriptor, &registered_signature)) {
+        return 0;
+    }
+
+    memset(&options, 0, sizeof(options));
+    options.allow_return_covariance = 1;
+    options.type_assignable = runtime_signature_type_assignable;
+    options.userdata = context;
+
+    matches = rx_sig_matches_contract(expected_signature, &registered_signature, &options);
+    if (!matches &&
+        expected_signature->name && registered_signature.name &&
+        strcmp(expected_signature->name, registered_signature.name) == 0 &&
+        rx_sig_args_match(expected_signature, &registered_signature) &&
+        runtime_type_matches_contract_name(expected_signature->return_type,
+                                           interface_name,
+                                           interface_name_length) &&
+        runtime_type_matches_contract_name(registered_signature.return_type,
+                                           interface_name,
+                                           interface_name_length)) {
+        matches = 1;
+    }
+
+    rx_sig_free(&registered_signature);
+    return matches;
+}
+
 static int resolve_runtime_factory(rxvm_context *context,
-                                   const char *selector,
-                                   size_t selector_length,
+                                   const char *descriptor,
+                                   size_t descriptor_length,
                                    rxinteger argc,
                                    value **args,
                                    proc_runtime **factory_out,
                                    char **error_out) {
+    char *descriptor_text;
+    rx_callable_signature expected_signature;
+    const char *selector;
+    size_t selector_length;
     const char *interface_name;
     size_t interface_name_length;
     const char *factory_name;
@@ -1637,17 +1991,29 @@ static int resolve_runtime_factory(rxvm_context *context,
 
     if (factory_out) *factory_out = 0;
     if (error_out) *error_out = 0;
-    if (!context || !selector || !selector_length || !factory_out) return 0;
+    if (!context || !descriptor || !descriptor_length || !factory_out) return 0;
 
     if (context->link_dirty || context->interface_factory_registry_dirty) {
         rxvm_link(context);
     }
 
+    descriptor_text = dup_runtime_name(descriptor, descriptor_length);
+    if (!descriptor_text) return 0;
+    if (!rx_sig_parse_descriptor(descriptor_text, &expected_signature)) {
+        if (error_out) *error_out = build_interface_factory_error("Invalid interface factory descriptor ", descriptor, descriptor_length);
+        free(descriptor_text);
+        return 0;
+    }
+
+    selector = expected_signature.name;
+    selector_length = strlen(selector);
     parse_runtime_factory_selector(selector, selector_length,
                                    &interface_name, &interface_name_length,
                                    &factory_name, &factory_name_length);
     if (!interface_name_length || !factory_name_length) {
         if (error_out) *error_out = build_interface_factory_error("No interface factory providers for ", selector, selector_length);
+        rx_sig_free(&expected_signature);
+        free(descriptor_text);
         return 0;
     }
 
@@ -1671,11 +2037,21 @@ static int resolve_runtime_factory(rxvm_context *context,
         }
 
         saw_candidate = 1;
+        if (!runtime_factory_descriptor_matches(context,
+                                                &expected_signature,
+                                                entry->descriptor,
+                                                interface_name,
+                                                interface_name_length)) {
+            continue;
+        }
+
         score = 1;
         if (entry->match_proc &&
             !invoke_runtime_factory_match(context, entry->match_proc, argc, args, &score)) {
             if (error_out) *error_out = build_interface_factory_error("Failed to evaluate interface factory match for ", selector, selector_length);
             if (best_class_name) free(best_class_name);
+            rx_sig_free(&expected_signature);
+            free(descriptor_text);
             return 0;
         }
         if (score > 0) {
@@ -1691,6 +2067,8 @@ static int resolve_runtime_factory(rxvm_context *context,
                 if (!new_best_name) {
                     if (error_out) *error_out = build_interface_factory_error("Failed to resolve factory provider for ", selector, selector_length);
                     if (best_class_name) free(best_class_name);
+                    rx_sig_free(&expected_signature);
+                    free(descriptor_text);
                     return 0;
                 }
 
@@ -1707,15 +2085,21 @@ static int resolve_runtime_factory(rxvm_context *context,
 
     if (!saw_candidate) {
         if (error_out) *error_out = build_interface_factory_error("No interface factory providers for ", selector, selector_length);
+        rx_sig_free(&expected_signature);
+        free(descriptor_text);
         return 0;
     }
 
     if (!saw_positive_score || !best_factory) {
         if (error_out) *error_out = build_interface_factory_error("No matching interface factory provider for ", selector, selector_length);
+        rx_sig_free(&expected_signature);
+        free(descriptor_text);
         return 0;
     }
 
     *factory_out = best_factory;
+    rx_sig_free(&expected_signature);
+    free(descriptor_text);
     return 1;
 }
 
@@ -8847,13 +9231,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             set_int(op1R, value_is_uninitialized_object(op2R) ? 0 : 1);
             DISPATCH
 
-        START_INSTRUCTION(SRCMETHOD_REG_REG_STRING) CALC_DISPATCH(3)
+        START_INSTRUCTION(SRCMETHODSEL_REG_REG_STRING) CALC_DISPATCH(3)
             {
                 proc_runtime *called_function;
                 const char *class_name;
                 size_t class_name_length;
 
-                DEBUG("TRACE - SRCMETHOD R%lu,R%lu,\"%.*s\"\n", REG_IDX(1), REG_IDX(2),
+                DEBUG("TRACE - SRCMETHODSEL R%lu,R%lu,\"%.*s\"\n", REG_IDX(1), REG_IDX(2),
                       (int) op3S->string_len, op3S->string);
 
                 if (value_is_uninitialized_object(op2R)) {
@@ -8872,11 +9256,11 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 called_function = 0;
 
                 if (!class_name || !class_name_length) {
-                    char *proc_name;
-                    proc_name = build_runtime_member_name("<untyped>", 9, op3S->string, op3S->string_len);
-                    if (proc_name) {
-                        SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, proc_name);
-                        free(proc_name);
+                    char *descriptor_copy;
+                    descriptor_copy = dup_runtime_name(op3S->string, op3S->string_len);
+                    if (descriptor_copy) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, descriptor_copy);
+                        free(descriptor_copy);
                     }
                     else {
                         SET_SIGNAL(RXSIGNAL_FAILURE);
@@ -8890,14 +9274,14 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                                                          op3S->string,
                                                          op3S->string_len);
                 if (!called_function) {
-                    char *proc_name;
-                    proc_name = build_runtime_member_name(class_name, class_name_length, op3S->string, op3S->string_len);
-                    if (!proc_name) {
+                    char *descriptor_copy;
+                    descriptor_copy = dup_runtime_name(op3S->string, op3S->string_len);
+                    if (!descriptor_copy) {
                         SET_SIGNAL(RXSIGNAL_FAILURE);
                         DISPATCH
                     }
-                    SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, proc_name);
-                    free(proc_name);
+                    SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, descriptor_copy);
+                    free(descriptor_copy);
                     DISPATCH
                 }
 
@@ -8906,12 +9290,12 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             }
             DISPATCH
 
-        START_INSTRUCTION(SRCFPROC_REG_STRING_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SRCFPROCSEL_REG_STRING_REG) CALC_DISPATCH(3)
             {
                 proc_runtime *called_function;
                 char *error_message;
 
-                DEBUG("TRACE - SRCFPROC R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
+                DEBUG("TRACE - SRCFPROCSEL R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
                       (int) op2S->string_len, op2S->string, REG_IDX(3));
 
                 called_function = 0;

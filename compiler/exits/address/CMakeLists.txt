@@ -15,6 +15,7 @@ add_custom_target(exit_address_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Address.r
 crexx_add_compiler_exit_runtime_test(
         test_address
         test_address.crexx
+        EXTRA_DEPENDS library
         RUN_SUFFIX ${LIBRPATH}
 )
 

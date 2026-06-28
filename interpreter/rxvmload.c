@@ -208,6 +208,7 @@ static void free_interface_factory_registry(rxvm_context *context) {
     for (i = 0; i < context->num_interface_factories; i++) {
         free(context->interface_factories[i].interface_name);
         free(context->interface_factories[i].factory_name);
+        free(context->interface_factories[i].descriptor);
         free(context->interface_factories[i].class_name);
     }
 
@@ -230,7 +231,7 @@ static void free_interface_method_registry(rxvm_context *context) {
 
     for (i = 0; i < context->num_interface_methods; i++) {
         free(context->interface_methods[i].class_name);
-        free(context->interface_methods[i].member_name);
+        free(context->interface_methods[i].descriptor);
     }
 
     free(context->interface_methods);

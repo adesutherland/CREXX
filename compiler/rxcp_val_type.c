@@ -476,6 +476,22 @@ static int same_contract_return_signature(Context *context, ASTNode *iface_membe
     return same;
 }
 
+static int contract_arg_is_vararg(ASTNode *arg) {
+    if (!arg) return 0;
+    if (arg->is_varg) return 1;
+    return arg->child &&
+           (arg->child->node_type == VARG ||
+            arg->child->node_type == VARG_REFERENCE);
+}
+
+static int same_contract_arg_mode(ASTNode *left_arg, ASTNode *right_arg) {
+    if (!left_arg || !right_arg) return 0;
+    if (left_arg->is_opt_arg != right_arg->is_opt_arg) return 0;
+    if (left_arg->is_ref_arg != right_arg->is_ref_arg) return 0;
+    if (contract_arg_is_vararg(left_arg) != contract_arg_is_vararg(right_arg)) return 0;
+    return 1;
+}
+
 static int type_node_is_runtime_type_target(ASTNode *type_node) {
     if (!type_node) return 0;
     if (type_node->target_dims != 0) return 0;
@@ -610,6 +626,7 @@ static int same_contract_signature(Context *context, ASTNode *iface_member, ASTN
         ASTNode *class_target = class_arg->child ? class_arg->child->sibling : 0;
 
         if (!iface_target || !class_target) return 0;
+        if (!same_contract_arg_mode(iface_arg, class_arg)) return 0;
         if (!same_contract_type_node(context, iface_target, class_target)) return 0;
 
         iface_arg = iface_arg->sibling;
@@ -635,6 +652,7 @@ static int same_contract_argument_signature(Context *context, ASTNode *left_memb
         ASTNode *right_target = right_arg->child ? right_arg->child->sibling : 0;
 
         if (!left_target || !right_target) return 0;
+        if (!same_contract_arg_mode(left_arg, right_arg)) return 0;
         if (!same_contract_type_node(context, left_target, right_target)) return 0;
 
         left_arg = left_arg->sibling;

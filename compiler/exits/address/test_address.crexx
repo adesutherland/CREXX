@@ -1,4 +1,5 @@
 options levelb
+import rxfnsb
 
 main: procedure
   failures = .int
@@ -6,24 +7,45 @@ main: procedure
   err = .string[]
   cmd_out = .string[]
   path_out = .string[]
+  rexx_version = .string
+  platform = .string
 
   failures = 0
+  assembler rxvers rexx_version
+  platform = translate(word(rexx_version, 1))
 
-  address command "echo '#42'" output out error err
-  if out.1 <> "#42" then failures = failures + 1
+  if platform = "WINDOWS" then address command "echo #42" output out error err
+  else address command "echo '#42'" output out error err
+  if out.1 <> "#42" then do
+    say "ADDRESS_TEST_COMMAND_QUOTE" out.1
+    failures = failures + 1
+  end
 
   address cmd "echo CMD_OK" output cmd_out
-  if cmd_out.1 <> "CMD_OK" then failures = failures + 1
+  if cmd_out.1 <> "CMD_OK" then do
+    say "ADDRESS_TEST_CMD" cmd_out.1
+    failures = failures + 1
+  end
 
-  address path "echo PATH_OK" output path_out
-  if path_out.1 <> "PATH_OK" then failures = failures + 1
+  if platform = "WINDOWS" then address path "cmd.exe /D /S /C echo PATH_OK" output path_out
+  else address path "echo PATH_OK" output path_out
+  if path_out.1 <> "PATH_OK" then do
+    say "ADDRESS_TEST_PATH" path_out.1
+    failures = failures + 1
+  end
 
   address shell "echo Hello Shell"
-  if rc <> 0 then failures = failures + 1
+  if rc <> 0 then do
+    say "ADDRESS_TEST_SHELL_RC" rc
+    failures = failures + 1
+  end
 
   address command
   "echo COMMAND_OK"
-  if rc <> 0 then failures = failures + 1
+  if rc <> 0 then do
+    say "ADDRESS_TEST_COMMAND_RC" rc
+    failures = failures + 1
+  end
 
   if failures = 0 then say "SUCCESS"
   else say "FAILURES" failures
