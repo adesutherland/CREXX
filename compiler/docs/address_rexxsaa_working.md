@@ -108,30 +108,34 @@ Important current facts:
 
 - `_address` builds an `addressrequest` and dispatches it through the current
   `.addressenvironment` provider.
-- `SYSTEM`, `COMMAND`, `CMD`, and `SHELL` use the spawn-backed system provider.
-- `PATH` uses its own provider object over the same spawn transport.
+- `SYSTEM`, `COMMAND`, `CMD`, and `SHELL` use the spawn-backed shell provider.
+- `PATH` uses its own provider object over the direct executable spawn
+  transport.
 - native `rxvml` hosts can register callback-backed providers through the same
   factory/registration path.
 - `EXPOSE` on `ADDRESS` currently passes explicit string variable bindings to
   the environment and applies explicit response updates back to those exposed
   variables. This is not yet arbitrary variable-pool access.
 - On POSIX, the spawn path still uppercases exposed variable names before
-  `setenv()` when delegating through the system provider.
+  `setenv()` when delegating through the built-in spawn providers.
 
-### 3.4 Shell behaviour is platform-dependent
+### 3.4 Shell behaviour is environment-dependent
 
-The current implementation does not uniformly "call the shell".
+The current implementation has an explicit shell/direct split.
 
-- On Windows, `shellspawn()` prepends `cmd /c`.
-- On POSIX, `shellspawn()` tokenises the command string itself, resolves the
-  executable via `PATH`, and calls `execv()` directly.
+- `SYSTEM`, `COMMAND`, `CMD`, and `SHELL` call the platform command processor.
+  On POSIX this is standard `sh -c`, found from the standard utility path
+  before `/bin/sh` or ordinary `PATH`. On Windows this is `%COMSPEC% /D /S /C`,
+  falling back to `cmd.exe`.
+- `PATH` tokenises the command string itself, resolves the executable via
+  process `PATH`, and calls it directly.
 
 Important consequence:
 
-- shell syntax is not consistently available across platforms
-- pipes, redirects, shell expansion, and other shell semantics are not a safe
-  cross-platform assumption today
-- the current "environment" value is mostly nominal rather than real
+- shell syntax is available through the system-like environments
+- pipes, redirects, shell expansion, and built-ins such as `cd` are
+  platform-command-processor behavior, not direct `PATH` behavior
+- the current environment value now selects the shell/direct/provider route
 
 ### 3.5 Redirect implementation today
 

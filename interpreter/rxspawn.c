@@ -113,6 +113,7 @@ typedef void *(*start_routine)(void *);
 // Private functions
 static void Error(char *context, char **errorText);
 static void CleanUp(SHELLDATA* data);
+static char *copy_string(const char *text);
 static int ParseCommand(const char *command_string, char **command, char **file, char ***argv);
 static int launchChild(SHELLDATA* data);
 static void WaitForProcess(SHELLDATA* data);
@@ -127,6 +128,74 @@ static THREAD_RETURN InputFromStringThread(void* lpvThreadParam);
 static THREAD_RETURN InputFromArrayThread(void* lpvThreadParam);
 #ifndef _WIN32
 static int ExeFound(char* exe);
+static char *find_executable_in_path_list(const char *path_list, const char *exe);
+static char *find_standard_shell(void);
+#endif
+
+static char *copy_string(const char *text) {
+    size_t length = strlen(text);
+    char *copy = malloc(length + 1);
+    if (copy) {
+        memcpy(copy, text, length + 1);
+    }
+    return copy;
+}
+
+#ifndef _WIN32
+static char *find_executable_in_path_list(const char *path_list, const char *exe) {
+    const char *cursor = path_list;
+
+    if (!cursor || !*cursor || !exe || !*exe) return NULL;
+
+    while (cursor) {
+        const char *next_colon = strchr(cursor, ':');
+        size_t dir_length = next_colon ? (size_t)(next_colon - cursor) : strlen(cursor);
+        size_t candidate_length = (dir_length ? dir_length : 1) + strlen(exe) + 2;
+        char *candidate = malloc(candidate_length);
+        if (!candidate) return NULL;
+
+        if (dir_length) {
+            memcpy(candidate, cursor, dir_length);
+            candidate[dir_length] = '\0';
+        } else {
+            strcpy(candidate, ".");
+        }
+
+        strcat(candidate, "/");
+        strcat(candidate, exe);
+
+        if (ExeFound(candidate)) return candidate;
+        free(candidate);
+
+        cursor = next_colon ? next_colon + 1 : NULL;
+    }
+
+    return NULL;
+}
+
+static char *find_standard_shell(void) {
+    char *shell = NULL;
+
+#ifdef _CS_PATH
+    size_t standard_path_length = confstr(_CS_PATH, NULL, 0);
+    if (standard_path_length > 0) {
+        char *standard_path = malloc(standard_path_length);
+        if (standard_path) {
+            confstr(_CS_PATH, standard_path, standard_path_length);
+            shell = find_executable_in_path_list(standard_path, "sh");
+            free(standard_path);
+            if (shell) return shell;
+        }
+    }
+#endif
+
+    if (ExeFound("/bin/sh")) return copy_string("/bin/sh");
+
+    shell = find_executable_in_path_list(getenv("PATH"), "sh");
+    if (shell) return shell;
+
+    return NULL;
+}
 #endif
 
 /* Get Environment Value
@@ -203,6 +272,7 @@ int shellspawn (const char *command,
                 REDIRECT* pOut,
                 REDIRECT* pErr,
                 value* variables,
+                int mode,
                 int *rc,
                 char **errorText) {
 
@@ -226,63 +296,68 @@ int shellspawn (const char *command,
 
 #ifdef _WIN32
 /* Windows does the actual parsing and validating as part of CreateProcess() */
-    /* Prepend "cmd /c " to support built-in commands like echo, dir, etc. */
-    data.file_path = malloc(strlen(command) + 8);
-    strcpy(data.file_path, "cmd /c ");
-    strcat(data.file_path, command);
-#else
-    // Parse the command
-    char *base_name;
-    if (ParseCommand(command, &data.buffer, &base_name, &data.argv)) {
-        Error("Failure spawn U18", errorText);
-        CleanUp(&data);
-        return SHELLSPAWN_NOFOUND;
-    }
+    if (mode == SHELLSPAWN_MODE_SHELL) {
+        const char *shell = getenv("COMSPEC");
+        if (!shell || !*shell) shell = "cmd.exe";
 
-    int commandFound = 0;
-    if (ExeFound(base_name)) {
-        data.file_path = malloc(sizeof(char) * strlen(base_name) + 1);
-        strcpy(data.file_path, base_name);
-        commandFound = 1;
-    } else if (base_name[0] != '/') {
-        // Get PATH environment variable so we can find the exe
-        const char *env = getenv("PATH");
-        if (env) {
-            data.file_path = malloc(sizeof(char) * (strlen(env) + strlen(base_name) + 2)); // Make a buffer big enough
-            while (env) {
-                char* next_colon = strchr(env, ':');
-                size_t length;
-
-                if (next_colon) {
-                    length = next_colon - env;
-                } else {
-                    length = strlen(env);
-                }
-
-                strncpy(data.file_path, env, length);
-                data.file_path[length] = '\0';
-
-                strcat(data.file_path, "/");
-                strcat(data.file_path, base_name);
-
-                if (ExeFound(data.file_path)) {
-                    commandFound = 1;
-                    break;
-                }
-
-                if (next_colon) {
-                    env = next_colon + 1;
-                } else {
-                    env = NULL;
-                }
-            }
+        data.file_path = malloc(strlen(shell) + strlen(command) + 16);
+        if (!data.file_path) {
+            Error("Failure spawn W01", errorText);
+            CleanUp(&data);
+            return SHELLSPAWN_FAILURE;
+        }
+        sprintf(data.file_path, "\"%s\" /D /S /C %s", shell, command);
+    } else {
+        data.file_path = copy_string(command);
+        if (!data.file_path) {
+            Error("Failure spawn W02", errorText);
+            CleanUp(&data);
+            return SHELLSPAWN_FAILURE;
         }
     }
+#else
+    if (mode == SHELLSPAWN_MODE_SHELL) {
+        data.file_path = find_standard_shell();
+        data.buffer = copy_string(command);
+        data.argv = malloc(sizeof(char*) * 4);
+        if (!data.file_path) {
+            Error("Command shell not found", errorText);
+            CleanUp(&data);
+            return SHELLSPAWN_NOFOUND;
+        }
+        if (!data.buffer || !data.argv) {
+            Error("Failure spawn U19", errorText);
+            CleanUp(&data);
+            return SHELLSPAWN_FAILURE;
+        }
+        data.argv[0] = "sh";
+        data.argv[1] = "-c";
+        data.argv[2] = data.buffer;
+        data.argv[3] = NULL;
+    } else {
+        // Parse the command
+        char *base_name;
+        if (ParseCommand(command, &data.buffer, &base_name, &data.argv)) {
+            Error("Failure spawn U18", errorText);
+            CleanUp(&data);
+            return SHELLSPAWN_NOFOUND;
+        }
 
-    if (!commandFound) {
-        Error("Command not found", errorText);
-        CleanUp(&data);
-        return SHELLSPAWN_NOFOUND;
+        int commandFound = 0;
+        if (ExeFound(base_name)) {
+            data.file_path = malloc(sizeof(char) * strlen(base_name) + 1);
+            strcpy(data.file_path, base_name);
+            commandFound = 1;
+        } else if (base_name[0] != '/') {
+            data.file_path = find_executable_in_path_list(getenv("PATH"), base_name);
+            if (data.file_path) commandFound = 1;
+        }
+
+        if (!commandFound) {
+            Error("Command not found", errorText);
+            CleanUp(&data);
+            return SHELLSPAWN_NOFOUND;
+        }
     }
 #endif
 
@@ -1357,16 +1432,18 @@ int launchChild(SHELLDATA* data) {
 
     // Calculate total length of the new environment block.
     size_t newEnvironmentSize = parentEnvironmentSize + 1; // +1 For the final extra '\0'
-    for (i = 0; i + 1 < data->variables->num_attributes; i += 2) {
-        newEnvironmentSize += MultiByteToWideChar(CP_UTF8, 0,
-                                                  data->variables->attributes[i]->string_value,
-                                                  (int) data->variables->attributes[i]->string_length, NULL,
-                                                  0);
-        newEnvironmentSize += MultiByteToWideChar(CP_UTF8, 0,
-                                                  data->variables->attributes[i + 1]->string_value,
-                                                  (int) data->variables->attributes[i + 1]->string_length, NULL,
-                                                  0);
-        newEnvironmentSize += 2;  // For the '=' and '\0'.
+    if (data->variables) {
+        for (i = 0; i + 1 < data->variables->num_attributes; i += 2) {
+            newEnvironmentSize += MultiByteToWideChar(CP_UTF8, 0,
+                                                      data->variables->attributes[i]->string_value,
+                                                      (int) data->variables->attributes[i]->string_length, NULL,
+                                                      0);
+            newEnvironmentSize += MultiByteToWideChar(CP_UTF8, 0,
+                                                      data->variables->attributes[i + 1]->string_value,
+                                                      (int) data->variables->attributes[i + 1]->string_length, NULL,
+                                                      0);
+            newEnvironmentSize += 2;  // For the '=' and '\0'.
+        }
     }
     newEnvironmentSize++;  // For the final extra '\0'.
 
@@ -1388,7 +1465,7 @@ int launchChild(SHELLDATA* data) {
     // Add the custom variables at the end of the new environment block.
     LPWSTR pszCurrentVariable = pszNewEnvironment + parentEnvironmentSize;
 
-    for (i = 0; i + 1 < data->variables->num_attributes; i += 2) {
+    for (i = 0; data->variables && i + 1 < data->variables->num_attributes; i += 2) {
 
         // Assuming string_value is UTF-8 encoded
         int numChars = MultiByteToWideChar(CP_UTF8, 0,
@@ -1471,7 +1548,7 @@ int launchChild(SHELLDATA* data) {
     int i;
     char *name;
     char *value;
-    for (i = 0; i + 1 < data->variables->num_attributes; i += 2) {
+    for (i = 0; data->variables && i + 1 < data->variables->num_attributes; i += 2) {
         /* Variable Name */
         name = malloc(data->variables->attributes[i]->string_length + 1);
         memcpy(name, data->variables->attributes[i]->string_value, data->variables->attributes[i]->string_length);

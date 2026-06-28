@@ -583,12 +583,20 @@ host variable return a normal `var` updated binding, so the existing ADDRESS
 write-back path handles both explicit `EXPOSE` variables and auto-exposed
 anchors.
 
-The built-in system-like environments (`COMMAND`, `CMD`, `SYSTEM`, `SHELL`,
-and `PATH`) route through the VM spawn helper, which parses the command into an
-argv vector before executing the program. This is not a full shell-quoting
-contract. For nested shell quoting, here-doc-like content, or multiple shell
-statements, invoke an explicit shell such as `address command "sh" input lines`
-and pass the script through the ADDRESS input redirect.
+The built-in system-like environments split into two spawn modes. `SYSTEM`,
+`COMMAND`, `CMD`, and `SHELL` route the command string through the platform
+command processor so shell built-ins and command syntax work consistently.
+On POSIX, the VM invokes standard `sh -c`; it finds `sh` from `_CS_PATH`
+(the C interface for the standard utility path that `getconf PATH` exposes),
+then falls back to `/bin/sh` and finally ordinary `PATH`. Do not use the user's
+`SHELL` environment variable here; that names an interactive login preference,
+not the standard command processor. On Windows, the VM invokes
+`%COMSPEC% /D /S /C`, falling back to `cmd.exe` if `COMSPEC` is unset.
+
+`PATH` remains the direct executable environment. It parses the command into an
+argv vector, resolves the executable through the process `PATH`, and calls it
+directly. This route intentionally does not provide shell built-ins, pipes,
+redirects, or shell expansion.
 
 `demos/native/sqlite/` shows the database-oriented form of the native provider
 model. The provider routes by the ADDRESS environment name carried in the

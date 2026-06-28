@@ -632,7 +632,7 @@ systemaddressenvironment: class implements .addressenvironment .addressinstance 
 
   execute: method = .addressresponse
     arg request = .addressrequest
-    return spawn_request(request)
+    return spawn_request(request, 1)
 
   invoke: method = .addressfunctionresponse
     arg request = .addressfunctionrequest
@@ -668,7 +668,7 @@ pathaddressenvironment: class implements .addressenvironment .addressinstance .a
 
   execute: method = .addressresponse
     arg request = .addressrequest
-    return spawn_request(request)
+    return spawn_request(request, 0)
 
   invoke: method = .addressfunctionresponse
     arg request = .addressfunctionrequest
@@ -1268,9 +1268,9 @@ ensure_address_runtime: procedure expose _address_runtime_ready _address_current
   _address_runtime_ready = 1
 
   call _ensure_address_environment("SYSTEM")
-  call alias_address_environment("COMMAND", "SYSTEM")
-  call alias_address_environment("CMD", "SYSTEM")
-  call alias_address_environment("SHELL", "SYSTEM")
+  call _ensure_address_environment("COMMAND")
+  call _ensure_address_environment("CMD")
+  call _ensure_address_environment("SHELL")
   call _ensure_address_environment("PATH")
 
   return
@@ -1411,11 +1411,12 @@ _address_first_chars: procedure = .string
   return first_chars(text, count)
 
 spawn_request: procedure = .addressresponse
-  arg request = .addressrequest
+  arg request = .addressrequest, spawn_mode = 0
 
   response = .addressresponse(0)
-  redirect = .binary[4]
+  redirect = .binary[5]
   envs = .string[]
+  spawn_mode_value = .int
   slot = .int
   command = .string
   stdin_endpoint = .binary
@@ -1431,6 +1432,8 @@ spawn_request: procedure = .addressresponse
   redirect[3] = stderr_endpoint
 
   assembler linkattr1 envs,redirect,4
+  assembler linkattr1 spawn_mode_value,redirect,5
+  spawn_mode_value = spawn_mode
 
   slot = 0
   do i = 1 to request.get_binding_count()
@@ -1452,6 +1455,7 @@ spawn_request: procedure = .addressresponse
   end
 
   assembler unlink envs
+  assembler unlink spawn_mode_value
 
   command = request.get_command()
   rc = 0

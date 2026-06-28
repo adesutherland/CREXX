@@ -9,7 +9,7 @@ main: procedure
 
   failures = 0
 
-  address command "echo #42" output out error err
+  address command "echo '#42'" output out error err
   if out.1 <> "#42" then failures = failures + 1
 
   address cmd "echo CMD_OK" output cmd_out

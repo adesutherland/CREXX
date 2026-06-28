@@ -191,6 +191,10 @@ in `array[1]` through `array[array[0]]`. The `array*` helpers below live in
 <!--  They are the supported array surface for new code. The older native arrays -->
 <!-- plugin is deprecated. -->
 
+These helpers operate on `.string[]` arrays. They are not generic array helpers
+and are not the supported surface for typed numeric arrays such as `.int[]`;
+use direct indexing for those arrays until typed helpers are added.
+
 | Function | Result | Notes |
 |----------|--------|-------|
 | `ARRAYHI(array, mode, newhi)` | `.int` | Get the high-water mark, or shrink it with mode `SET`. |
