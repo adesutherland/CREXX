@@ -239,6 +239,10 @@ over the legacy `lib/plugins/arrays` RXPA plugin. Current array BIFs include
 `arraydrop`, `arrayhi`, `arraymove`, `arraydump`, `arrayformat`,
 `arrayappend`, `arrayprepend`, `arraypop`, `arrayshift`, `arrayget`,
 `arrayset`, `arraycontains`, `arrayindexof`, `arrayreverse`, and `arrayjoin`.
+These `array*` helpers are currently the `.string[]` helper family, not generic
+or numeric typed-array helpers. For `.object[]`, use the separate
+`objectarray*` family below. Numeric typed arrays should use direct indexing
+or explicit loops until a typed/generic helper surface is deliberately added.
 Object-shaped mutating helpers are exposed separately as `objectarrayinsert`,
 `objectarraydelete`, `objectarrayappend`, `objectarrayprepend`, and
 `objectarraydrop`, plus `objectarraymove` for block moves. Insertion, deletion,

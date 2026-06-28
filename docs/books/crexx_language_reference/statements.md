@@ -14,20 +14,27 @@ address system "echo hello"
 Command output and error streams can be captured:
 
 ```rexx
-address command "echo #42" output out error err
+address command "echo '#42'" output out error err
 say out
 ```
 
-The built-in `COMMAND`/`CMD`/`SYSTEM`/`SHELL` and `PATH` environments execute a
-program with parsed arguments; they are not an interactive shell parser. Simple
-quoted arguments are supported, but complex nested shell quoting should be
-passed to an explicit shell through stdin:
+The built-in `COMMAND`, `CMD`, `SYSTEM`, and `SHELL` environments execute the
+command through the platform command processor. On POSIX platforms this is the
+standard `sh -c` processor found from the system standard utility path, falling
+back to `/bin/sh` and then `PATH`; it does not use the user's `SHELL`
+environment variable. On Windows this is `%COMSPEC% /D /S /C`, falling back to
+`cmd.exe` when `COMSPEC` is unset.
 
 ```rexx
-command_lines = .string[]
-command_lines[1] = "printf '%s\n' alpha beta"
-address command "sh" input command_lines output out error err
+address shell "echo one && echo two" output out error err
+address cmd "cd ."
 ```
+
+Use `ADDRESS PATH` when code needs the direct executable route instead of shell
+syntax. `PATH` parses the command into an argv vector, resolves the executable
+through the process `PATH`, and calls it directly. Simple quoted arguments are
+supported there, but pipes, redirects, built-ins such as `cd`, and shell
+expansion belong to the shell-backed environments above.
 
 ADDRESS host-variable anchors such as `:name` and `${name}` are compiler
 auto-expose syntax. Their command meaning belongs to the selected environment
@@ -448,4 +455,3 @@ library frames, and keep linked/native images unstripped with
 
 Implementation status and compatibility requirements are tracked in  
 `docs/ai-context/CREXX_TRACE_REQUIREMENTS.md`.
-

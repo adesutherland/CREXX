@@ -278,6 +278,10 @@ When a test needs delete/insert semantics, prefer library helpers such as
 `arraydelete`, `arrayinsert`, and `arrayappend` over assembler unless the test
 is specifically about RXAS.
 
+The `array*` helper family is currently for `.string[]` arrays. Do not use it
+for `.int[]`, `.decimal[]`, or other typed numeric arrays; use direct indexing
+and explicit loops until the project adds a typed/generic helper surface.
+
 Use the `objectarray*` helper family for mutating `.object[]` arrays:
 
 - `objectarrayinsert`,
@@ -371,18 +375,23 @@ API shape:
 ```rexx
 out = .string[]
 err = .string[]
-address command "echo #42" output out error err
+address command "echo '#42'" output out error err
 if rc <> 0 then say "command failed"
 ```
 
-`address command` is argv-parsed by the built-in provider; it is not a full
-shell-quoting contract. For multi-line shell scripts or nested quoting, send
-the script to an explicit shell through an input array:
+`address command`, `address system`, `address cmd`, and `address shell` route
+through the platform command processor. On POSIX this is standard `sh -c`
+resolved from the system standard utility path, not the user's `SHELL`
+environment variable; on Windows it is `%COMSPEC% /D /S /C` with a `cmd.exe`
+fallback. Shell built-ins such as `cd`, pipes, redirects, and command chaining
+belong on this route.
+
+Use `address path` only when the caller needs direct executable dispatch. That
+provider argv-parses the command, resolves the executable through process
+`PATH`, and calls it without shell semantics:
 
 ```rexx
-script = .string[]
-script[1] = "printf '%s\n' alpha beta"
-address command "sh" input script output out error err
+address path "echo #42" output out error err
 ```
 
 References:

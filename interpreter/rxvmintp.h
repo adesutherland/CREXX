@@ -379,6 +379,7 @@ int shellspawn(const char *command,
                REDIRECT* pOut,
                REDIRECT* pErr,
                value* variables,
+               int mode,
                int *rc,
                char **errorText);
 
@@ -386,6 +387,10 @@ int shellspawn(const char *command,
 #define SHELLSPAWN_OK         0
 #define SHELLSPAWN_NOFOUND    4
 #define SHELLSPAWN_FAILURE    5
+
+// SPAWN execution modes
+#define SHELLSPAWN_MODE_PATH  0
+#define SHELLSPAWN_MODE_SHELL 1
 
 /* Create a redirect pipe to string */
 /* the redirect_reg MUST then be used in shellspawn() to cleanup/free memory */
