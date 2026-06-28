@@ -29,6 +29,7 @@
 #include "rxcpbgmr.h"
 #include "rxvml.h"
 #include "rxbin.h"
+#include "rxsignature.h"
 #include "rxvmvars.h"
 #include "platform.h"
 #include "rxcp_exit.h"
@@ -74,6 +75,76 @@ static int is_builtin_keyword(const char* keyword) {
         i++;
     }
     return 0;
+}
+
+static char *rxcp_source_type_for_class(const char *class_name) {
+    size_t i;
+    size_t dots;
+    size_t length;
+    size_t out_index;
+    char *type_name;
+
+    if (!class_name) return NULL;
+    length = strlen(class_name);
+    dots = 0;
+    for (i = 0; i < length; i++) {
+        if (class_name[i] == '.') dots++;
+    }
+
+    type_name = malloc(length + dots + 2);
+    if (!type_name) return NULL;
+    out_index = 0;
+    type_name[out_index++] = '.';
+    for (i = 0; i < length; i++) {
+        if (class_name[i] == '.') {
+            type_name[out_index++] = '.';
+            type_name[out_index++] = '.';
+        } else {
+            type_name[out_index++] = class_name[i];
+        }
+    }
+    type_name[out_index] = 0;
+    return type_name;
+}
+
+static int rxcp_call_factory_contract(rxvml_context *vctx,
+                                      const char *class_name,
+                                      const char *args_descriptor,
+                                      size_t argc,
+                                      rxvml_value **args,
+                                      rxvml_value **response_out) {
+    char *return_type;
+    char *descriptor;
+    int rc;
+
+    return_type = rxcp_source_type_for_class(class_name);
+    if (!return_type) return -1;
+    descriptor = rx_sig_build_descriptor("\xc2\xa7" "factory", return_type, args_descriptor ? args_descriptor : "");
+    free(return_type);
+    if (!descriptor) return -1;
+
+    rc = rxvml_call_factory_descriptor(vctx, class_name, descriptor, argc, args, response_out);
+    free(descriptor);
+    return rc;
+}
+
+static int rxcp_call_method_contract(rxvml_context *vctx,
+                                     rxvml_value *obj,
+                                     const char *class_name,
+                                     const char *method_name,
+                                     const char *return_type,
+                                     const char *args_descriptor,
+                                     size_t argc,
+                                     rxvml_value **args,
+                                     rxvml_value **response_out) {
+    char *descriptor;
+    int rc;
+
+    descriptor = rx_sig_build_descriptor(method_name, return_type, args_descriptor ? args_descriptor : "");
+    if (!descriptor) return -1;
+    rc = rxvml_call_method_descriptor(vctx, obj, class_name, descriptor, argc, args, response_out);
+    free(descriptor);
+    return rc;
 }
 
 static const CertifiedExitSpec *rxcp_find_certified_exit_by_keyword(const char *keyword) {
@@ -249,7 +320,7 @@ static int rxcp_get_method_string_dup(rxvml_context *vctx,
     if (value_out) *value_out = NULL;
     if (value_len_out) *value_len_out = 0;
 
-    if (rxvml_call_method(vctx, obj, class_name, method_name, 0, NULL, &value) != 0 || !value) {
+    if (rxcp_call_method_contract(vctx, obj, class_name, method_name, ".string", "", 0, NULL, &value) != 0 || !value) {
         return -1;
     }
 
@@ -274,7 +345,7 @@ static int rxcp_get_method_int(rxvml_context *vctx,
     value = NULL;
     if (value_out) *value_out = 0;
 
-    if (rxvml_call_method(vctx, obj, class_name, method_name, 0, NULL, &value) != 0 || !value) {
+    if (rxcp_call_method_contract(vctx, obj, class_name, method_name, ".int", "", 0, NULL, &value) != 0 || !value) {
         return -1;
     }
 
@@ -291,6 +362,7 @@ static int rxcp_call_indexed_method(rxvml_context *vctx,
                                     rxvml_value *obj,
                                     const char *class_name,
                                     const char *method_name,
+                                    const char *return_type,
                                     rxinteger index,
                                     rxvml_value **value_out) {
     rxvml_value *arg;
@@ -301,7 +373,15 @@ static int rxcp_call_indexed_method(rxvml_context *vctx,
     arg = rxvml_value_new(vctx);
     if (!arg) return -1;
     rxvml_set_int(arg, index);
-    rc = rxvml_call_method(vctx, obj, class_name, method_name, 1, &arg, value_out);
+    rc = rxcp_call_method_contract(vctx,
+                                   obj,
+                                   class_name,
+                                   method_name,
+                                   return_type,
+                                   "index=.int",
+                                   1,
+                                   &arg,
+                                   value_out);
     rxvml_value_free(arg);
     return rc;
 }
@@ -356,7 +436,7 @@ static unsigned int rxcp_parse_descriptor_flags(rxvml_context *vctx,
         flag_text = NULL;
         flag_len = 0;
 
-        if (rxcp_call_indexed_method(vctx, descriptor, "rxcp.exitdescriptor", "get_flag", i, &flag_value) != 0 || !flag_value) {
+        if (rxcp_call_indexed_method(vctx, descriptor, "rxcp.exitdescriptor", "get_flag", ".string", i, &flag_value) != 0 || !flag_value) {
             continue;
         }
 
@@ -411,7 +491,7 @@ static void rxcp_register_descriptor_imports(rxvml_context *vctx,
         provenance = NULL;
         flags = NULL;
 
-        if (rxcp_call_indexed_method(vctx, descriptor, "rxcp.exitdescriptor", "get_default_import", i, &import_value) != 0 || !import_value) {
+        if (rxcp_call_indexed_method(vctx, descriptor, "rxcp.exitdescriptor", "get_default_import", ".rxcp..importplan", i, &import_value) != 0 || !import_value) {
             continue;
         }
 
@@ -461,12 +541,20 @@ void rxcp_init_exits(Context *ctx) {
             nid_val = rxvml_value_new(vctx);
             rxvml_set_int(nid_val, 0);
 
-            if (rxvml_call_factory(vctx, classes[i].class_name, 1, &nid_val, &obj) != 0 || !obj) {
+            if (rxcp_call_factory_contract(vctx, classes[i].class_name, "nid=.int", 1, &nid_val, &obj) != 0 || !obj) {
                 rxvml_value_free(nid_val);
                 continue;
             }
 
-            if (rxvml_call_method(vctx, obj, classes[i].class_name, "describe", 0, NULL, &descriptor) != 0 || !descriptor) {
+            if (rxcp_call_method_contract(vctx,
+                                          obj,
+                                          classes[i].class_name,
+                                          "describe",
+                                          ".rxcp..exitdescriptor",
+                                          "",
+                                          0,
+                                          NULL,
+                                          &descriptor) != 0 || !descriptor) {
                 fprintf(stderr,
                         "INTERNAL EXIT ERROR: Exit '%s' does not implement describe()\n",
                         classes[i].class_name);
@@ -531,7 +619,7 @@ void rxcp_init_exits(Context *ctx) {
                         keyword_text = NULL;
                         keyword_len = 0;
 
-                        if (rxcp_call_indexed_method(vctx, descriptor, "rxcp.exitdescriptor", "get_additional_keyword", j, &keyword_value) != 0 || !keyword_value) {
+                        if (rxcp_call_indexed_method(vctx, descriptor, "rxcp.exitdescriptor", "get_additional_keyword", ".string", j, &keyword_value) != 0 || !keyword_value) {
                             continue;
                         }
 
@@ -944,7 +1032,12 @@ static void marshal_single_token(rxvml_context *ctx,
     rxvml_set_str(args[11], join_text, strlen(join_text));
 
     rxvml_value *tok_obj = NULL;
-    if (rxvml_call_factory(ctx, "rxcp.token", 12, args, &tok_obj) == 0 && tok_obj) {
+    if (rxcp_call_factory_contract(ctx,
+                                   "rxcp.token",
+                                   "t=.int,st=.int,txt=.string,l=.int,c=.int,len=.int,f=.string,nt=.int,vt=.string,ts=.string,vd=.int,jb=.string",
+                                   12,
+                                   args,
+                                   &tok_obj) == 0 && tok_obj) {
         rxvml_array_set(ctx, token_array, *count + 1, tok_obj);
         if (node_map) node_map[*count] = node;
         (*count)++;
@@ -1273,7 +1366,7 @@ static int rxcp_apply_diagnostics(Context *ctx,
         int rc;
 
         diagnostic = NULL;
-        if (rxcp_call_indexed_method(vctx, owner, class_name, "get_diagnostic", i, &diagnostic) != 0 || !diagnostic) {
+        if (rxcp_call_indexed_method(vctx, owner, class_name, "get_diagnostic", ".rxcp..exitdiagnostic", i, &diagnostic) != 0 || !diagnostic) {
             continue;
         }
 
@@ -1463,7 +1556,7 @@ static int rxcp_exit_mapper_rewrite(Context *ctx,
     nid_val = rxvml_value_new(vctx);
     if (!nid_val) goto cleanup;
     rxvml_set_int(nid_val, 0);
-    if (rxvml_call_factory(vctx, entry->class_name, 1, &nid_val, &obj) != 0 || !obj) goto cleanup;
+    if (rxcp_call_factory_contract(vctx, entry->class_name, "nid=.int", 1, &nid_val, &obj) != 0 || !obj) goto cleanup;
 
     for (i = 0; i < 4; i++) {
         args[i] = rxvml_value_new(vctx);
@@ -1474,7 +1567,15 @@ static int rxcp_exit_mapper_rewrite(Context *ctx,
     rxvml_set_str(args[2], source ? source : "", strlen(source ? source : ""));
     rxvml_set_str(args[3], origin ? origin : "", strlen(origin ? origin : ""));
 
-    rc = rxvml_call_method(vctx, obj, entry->class_name, "map_diagnostic", 4, args, &mapped);
+    rc = rxcp_call_method_contract(vctx,
+                                   obj,
+                                   entry->class_name,
+                                   "map_diagnostic",
+                                   ".rxcp..exitdiagnostic",
+                                   "code=.string,message=.string,source=.string,origin=.string",
+                                   4,
+                                   args,
+                                   &mapped);
     if (rc != 0 || !mapped) goto cleanup;
 
     rxcp_get_method_string_dup(vctx, mapped, "rxcp.exitdiagnostic", "get_severity", &mapped_severity, NULL);
@@ -1601,7 +1702,7 @@ static void rxcp_log_notes(Context *ctx,
         note_value = NULL;
         note_text = NULL;
         note_len = 0;
-        if (rxcp_call_indexed_method(vctx, owner, class_name, "get_note", i, &note_value) != 0 || !note_value) {
+        if (rxcp_call_indexed_method(vctx, owner, class_name, "get_note", ".string", i, &note_value) != 0 || !note_value) {
             continue;
         }
 
@@ -1730,7 +1831,7 @@ static int rxcp_apply_plan_bindings(Context *ctx,
         type_name = NULL;
         dims = 0;
 
-        if (rxcp_call_indexed_method(vctx, plan, "rxcp.exitplan", "get_binding", i, &binding) != 0 || !binding) {
+        if (rxcp_call_indexed_method(vctx, plan, "rxcp.exitplan", "get_binding", ".rxcp..bindingplan", i, &binding) != 0 || !binding) {
             continue;
         }
 
@@ -1777,7 +1878,7 @@ static int rxcp_apply_plan_keywords(ASTNode **node_map,
         keyword = NULL;
         token_index = 0;
 
-        if (rxcp_call_indexed_method(vctx, plan, "rxcp.exitplan", "get_keyword", i, &keyword) != 0 || !keyword) {
+        if (rxcp_call_indexed_method(vctx, plan, "rxcp.exitplan", "get_keyword", ".rxcp..keywordclaim", i, &keyword) != 0 || !keyword) {
             continue;
         }
 
@@ -1810,7 +1911,7 @@ static int rxcp_apply_plan_imports(Context *ctx,
         rxvml_value *import_plan;
 
         import_plan = NULL;
-        if (rxcp_call_indexed_method(vctx, plan, "rxcp.exitplan", "get_import", i, &import_plan) != 0 || !import_plan) {
+        if (rxcp_call_indexed_method(vctx, plan, "rxcp.exitplan", "get_import", ".rxcp..importplan", i, &import_plan) != 0 || !import_plan) {
             continue;
         }
 
@@ -1896,7 +1997,7 @@ static char *rxcp_join_helper_source(rxvml_context *vctx, rxvml_value *helper_pl
         line_text = NULL;
         line_len = 0;
 
-        if (rxcp_call_indexed_method(vctx, helper_plan, "rxcp.helperplan", "get_line", i, &line_value) == 0 && line_value &&
+        if (rxcp_call_indexed_method(vctx, helper_plan, "rxcp.helperplan", "get_line", ".string", i, &line_value) == 0 && line_value &&
             rxvml_to_str(vctx, line_value, &line_text, &line_len) == 0 && line_text) {
             lines[i - 1] = rx_strndup(line_text, line_len);
             total_len += line_len + 1;
@@ -2135,7 +2236,7 @@ static int rxcp_apply_plan_helpers(Context *ctx,
         scope = NULL;
         source_text = NULL;
 
-        if (rxcp_call_indexed_method(vctx, plan, "rxcp.exitplan", "get_helper", i, &helper_plan) != 0 || !helper_plan) {
+        if (rxcp_call_indexed_method(vctx, plan, "rxcp.exitplan", "get_helper", ".rxcp..helperplan", i, &helper_plan) != 0 || !helper_plan) {
             continue;
         }
 
@@ -2355,7 +2456,7 @@ static char *rxcp_join_result_lines(rxvml_context *vctx, rxvml_value *result) {
         line_value = NULL;
         line_text = NULL;
         line_len = 0;
-        if (rxcp_call_indexed_method(vctx, result, "rxcp.exitresult", "get_replacement_line", i, &line_value) == 0 && line_value &&
+        if (rxcp_call_indexed_method(vctx, result, "rxcp.exitresult", "get_replacement_line", ".string", i, &line_value) == 0 && line_value &&
             rxvml_to_str(vctx, line_value, &line_text, &line_len) == 0 && line_text) {
             lines[i - 1] = rx_strndup(line_text, line_len);
             total_len += line_len;
@@ -2489,8 +2590,16 @@ static int rxcp_exit_invoke_entry(Context *ctx,
     handled = 0;
 
     rxvml_set_int(nid_val, node->node_number);
-    if (rxvml_call_factory(vctx, entry->class_name, 1, &nid_val, &obj) == 0 && obj) {
-        if (rxvml_call_method(vctx, obj, entry->class_name, "process", 1, &tok_array, &response) == 0 && response) {
+    if (rxcp_call_factory_contract(vctx, entry->class_name, "nid=.int", 1, &nid_val, &obj) == 0 && obj) {
+        if (rxcp_call_method_contract(vctx,
+                                      obj,
+                                      entry->class_name,
+                                      "process",
+                                      ".rxcp..exitresult",
+                                      "tokens=.token[*]",
+                                      1,
+                                      &tok_array,
+                                      &response) == 0 && response) {
             handled = rxcp_exit_handle_response(ctx, node, vctx, entry, response, node_map, num_tokens);
             if (retain_exit_object && handled > 0) {
                 node->exit_obj_reg = rxvml_reg_alloc(vctx, obj, entry->class_name);
@@ -2557,7 +2666,15 @@ int rxcp_exit_bridge_invoke(Context *ctx, ASTNode *node) {
 
         obj = rxvml_reg_get(vctx, node->exit_obj_reg, class_name);
         if (obj) {
-            if (rxvml_call_method(vctx, obj, class_name, "process", 1, &tok_array, &response) == 0 && response) {
+            if (rxcp_call_method_contract(vctx,
+                                          obj,
+                                          class_name,
+                                          "process",
+                                          ".rxcp..exitresult",
+                                          "tokens=.token[*]",
+                                          1,
+                                          &tok_array,
+                                          &response) == 0 && response) {
                 handled = rxcp_exit_handle_response(ctx, node, vctx, NULL, response, node_map, num_tokens);
                 if (response) rxvml_value_free(response);
                 response = NULL;
@@ -2651,7 +2768,7 @@ int rxcp_exit_bridge_plan_invoke(Context *ctx, ASTNode *node) {
             nid_val = rxvml_value_new(vctx);
             rxvml_set_int(nid_val, node->node_number);
 
-            if (rxvml_call_factory(vctx, entry->class_name, 1, &nid_val, &obj) == 0 && obj) {
+            if (rxcp_call_factory_contract(vctx, entry->class_name, "nid=.int", 1, &nid_val, &obj) == 0 && obj) {
                 int reg_idx;
 
                 reg_idx = rxvml_reg_alloc(vctx, obj, entry->class_name);
@@ -2673,7 +2790,15 @@ int rxcp_exit_bridge_plan_invoke(Context *ctx, ASTNode *node) {
                 class_name[sizeof(class_name) - 1] = 0;
             }
 
-            if (rxvml_call_method(vctx, obj, class_name, "pre_process", 1, &tok_array, &response) == 0 && response) {
+            if (rxcp_call_method_contract(vctx,
+                                          obj,
+                                          class_name,
+                                          "pre_process",
+                                          ".rxcp..exitplan",
+                                          "tokens=.token[*]",
+                                          1,
+                                          &tok_array,
+                                          &response) == 0 && response) {
                 if (rxcp_apply_exit_plan(ctx, node, entry, vctx, response, node_map, num_tokens) < 0) {
                     rxvml_value_free(response);
                     rxvml_value_free(tok_array);

@@ -28,7 +28,7 @@
 #include <stddef.h>
 #include "rxvalue.h"
 
-#define RXVML_ABI_VERSION 7
+#define RXVML_ABI_VERSION 8
 #define RXVML_ADDRESS_ENVIRONMENT_INTERFACE "_rxsysb.addressenvironment"
 #define RXVML_ADDRESS_ENVIRONMENT_FACTORY_PROC "_rxsysb._new_address_environment"
 
@@ -124,9 +124,9 @@ int      rxvml_to_str      (rxvml_context* ctx, const rxvml_value* v, const char
 size_t   rxvml_num_attributes(const rxvml_value* v);
 
 /* Invocation */
-int rxvml_call_procedure(
+int rxvml_call_procedure_descriptor(
     rxvml_context* ctx,
-    const char* proc_name,
+    const char* proc_descriptor,
     size_t argc,
     rxvml_value** args,
     rxvml_value** response_out);
@@ -137,9 +137,10 @@ int rxvml_run(
     const char** argv,
     int* program_rc);
 
-int rxvml_call_factory(
+int rxvml_call_factory_descriptor(
     rxvml_context* ctx,
     const char* class_name,
+    const char* factory_descriptor,
     size_t argc,
     rxvml_value** args,
     rxvml_value** response_out);
@@ -240,11 +241,11 @@ typedef struct rxvml_class_info {
 
 int rxvml_discover_classes(rxvml_context* ctx, const char* ns, rxvml_class_info** out_classes, size_t* out_count);
 
-int rxvml_call_method(
+int rxvml_call_method_descriptor(
     rxvml_context* ctx,
     rxvml_value* obj,
     const char* class_name,
-    const char* method_name,
+    const char* method_descriptor,
     size_t argc,
     rxvml_value** args,
     rxvml_value** response_out);

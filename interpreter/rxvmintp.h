@@ -125,6 +125,8 @@ typedef struct rxvm_interface_factory_entry {
     size_t interface_name_length;
     char *factory_name;
     size_t factory_name_length;
+    char *descriptor;
+    size_t descriptor_length;
     char *class_name;
     size_t class_name_length;
     proc_runtime *match_proc;
@@ -134,8 +136,8 @@ typedef struct rxvm_interface_factory_entry {
 typedef struct rxvm_interface_method_entry {
     char *class_name;
     size_t class_name_length;
-    char *member_name;
-    size_t member_name_length;
+    char *descriptor;
+    size_t descriptor_length;
     proc_runtime *method_proc;
 } rxvm_interface_method_entry;
 

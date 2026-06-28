@@ -19,7 +19,7 @@ first and then pass that linked image to `rxcpack`.
 
 ## Output Format
 
-The linker writes a `003`-format record stream:
+The linker writes a `006`-format record stream:
 
 1. one `RXBIN_RECORD_POOL_SHARED` record containing the shared constant pool
 2. one `RXBIN_RECORD_MODULE_SHARED` record per selected module
@@ -35,7 +35,7 @@ Inputs are read as a record stream, so one input file may contain multiple modul
 3. apply explicit `ROOT`
 4. if no roots were chosen, select modules containing `main`
 5. if there is still no root, select modules from the first input file
-6. walk imports, `srcfproc` interface references, and interface relationships to pull in required providers
+6. walk imports, `srcfprocsel` interface references, and interface relationships to pull in required providers
 7. reject duplicate selected exports
 
 Selectors match by:
@@ -52,11 +52,14 @@ Selectors match by:
 - `proc_head` is used to find procedures and detect `main`
 - `expose_head` is used to discover imports and exports
 - `meta_head` is scanned for `META_INTERFACE` and `META_IMPLEMENTS` so interface definitions and implementations pull each other in
-- the instruction stream is scanned for `srcfproc` selector strings so modules
-  referenced only through runtime interface-factory lookup are still retained
-- the instruction stream is scanned for `srcmethod` member names. Because the
+- the instruction stream is scanned for `srcfprocsel` descriptor strings so
+  modules referenced only through runtime interface-factory lookup are still retained
+- the instruction stream is scanned for `srcmethodsel` member names. Because the
   receiver's concrete class can be known only at runtime, modules that expose
   or declare a matching member name are selected conservatively.
+- selected class/interface contracts are then checked against callable
+  descriptors so a provider with the right name but wrong return or argument
+  signature is rejected before output is written.
 
 The linker preserves the metadata chain in output because the VM and tooling still consume it at runtime.
 

@@ -63,6 +63,22 @@ The cache namespace argument, `"THE"` in this example, is part of the cache
 identity. Different hosts can compile the same source path without sharing a
 cache bucket accidentally.
 
+## Low-level rxvml calls
+
+Hosts that bypass the `crexxsaa` facade and call `rxvml` directly must use the
+descriptor invocation APIs:
+
+- `rxvml_call_procedure_descriptor()`
+- `rxvml_call_factory_descriptor()`
+- `rxvml_call_method_descriptor()`
+
+Descriptors have the form `rxsig1|name|return_type|args`, for example
+`rxsig1|pkg.main|.int|path=.string`. The runtime checks the descriptor against
+the callable metadata before invoking, so a name match with the wrong return
+or argument signature is rejected. This descriptor requirement is part of the
+`RXVML_ABI_VERSION` 8 break. `CREXXSAA_ABI_VERSION` is 3 so source-cache
+entries produced by older host/runtime pairs are not reused.
+
 ## ADDRESS callbacks
 
 A host registers an environment with

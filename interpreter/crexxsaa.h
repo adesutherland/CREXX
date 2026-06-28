@@ -27,7 +27,7 @@
 
 #include <stddef.h>
 
-#define CREXXSAA_ABI_VERSION 2
+#define CREXXSAA_ABI_VERSION 3
 
 #define CREXXSAA_CACHE_DISABLE 0x01u
 #define CREXXSAA_CACHE_REFRESH 0x02u

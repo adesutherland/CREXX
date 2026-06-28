@@ -30,6 +30,8 @@ set(RXVM_CORE_OBJECT_SOURCES
         rxsignal.h
         ../utf8/utf.h
         ../binutils/include/rxbin.h
+        ../binutils/rxsignature.c
+        ../binutils/include/rxsignature.h
         rxspawn.c
         exitfunc.c
         rxpafuncs.c
@@ -727,6 +729,10 @@ add_custom_command(
 add_custom_target(run_tests_interfaces ALL DEPENDS tests_interfaces.rxbin)
 
 crexx_add_vm_dual_test(NAME rxasinterfacetests RXVM_ARGS tests_interfaces PASS_REGULAR_EXPRESSION "PASS: Interface Dispatch Suite")
+crexx_add_rxas_vm_binary(tests_selector_descriptors "descriptor selector contracts")
+crexx_add_vm_dual_test(NAME rxasselectordescriptortests RXVM_ARGS tests_selector_descriptors PASS_REGULAR_EXPRESSION "PASS: Descriptor Selector Contracts")
+crexx_add_rxas_vm_failure_regex(rxasselectordescriptorbadmethod tests_selector_descriptor_bad_method "rxsig1\\|describe\\|\\.string\\|")
+crexx_add_rxas_vm_failure_regex(rxasselectordescriptorbadfactory tests_selector_descriptor_bad_factory "selector_bad_factory\\.shape")
 
 # Stress and Edge Case Instruction Tests
 add_custom_command(

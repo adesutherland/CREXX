@@ -89,7 +89,8 @@ clear list                   -- list.clear()
 ```
 
 The compiler already supports `MEMBER_CALL` AST nodes, class/interface method
-lookup, method argument inference, and interface dispatch through `srcmethod`.
+lookup, method argument inference, and interface dispatch through
+`srcmethodsel`.
 That means object lowering can be considered after raw arrays, provided the
 target type is known well enough for validation to bind the method contract.
 
@@ -119,4 +120,3 @@ Implementation should add focused no-opt and opt coverage for:
 - range removal and count removal edge cases
 - compile-time diagnostics for non-array targets, non-integer index/count
   expressions, and incompatible value types
-

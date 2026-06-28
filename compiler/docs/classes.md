@@ -70,8 +70,8 @@ during typing.
 
 The relevant emitted VM lookups are:
 
-- `srcmethod` for interface method dispatch
-- `srcfproc` for interface default and named factory dispatch
+- `srcmethodsel` for interface method dispatch
+- `srcfprocsel` for interface default and named factory dispatch
 
 The dynamic call itself still goes through the existing `dcall` path once the
 lookup step resolves the concrete procedure.
@@ -110,8 +110,10 @@ For each effective member:
 1. prefer the concrete class method, if present
 2. otherwise bind the interface default method when the member is `method final`
 
-At execution time `srcmethod` resolves through that registry, then `dcall`
-invokes the bound procedure.
+At execution time `srcmethodsel` resolves through that registry, then `dcall`
+invokes the bound procedure. The selector is a callable descriptor
+(`rxsig1|name|return_type|args`), so the VM validates the metadata signature
+before binding.
 
 ### Factory dispatch
 
@@ -126,7 +128,7 @@ Each candidate row stores:
 - the resolved concrete factory procedure
 - the optional resolved concrete `match` procedure
 
-At execution time `srcfproc`:
+At execution time `srcfprocsel`:
 
 1. finds all candidates for the requested interface/member pair
 2. evaluates the effective `match` for every candidate, even if there is only

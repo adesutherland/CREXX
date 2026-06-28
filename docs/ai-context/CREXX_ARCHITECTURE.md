@@ -375,17 +375,19 @@ new local contracts, and richer imported stubs replace poorer duplicates.
 Created objects carry their concrete class identity. The VM then resolves
 contract calls through load/link-time registries:
 
-- a method registry keyed by concrete class plus member name
+- a method registry keyed by concrete class plus method descriptor
 - a factory-provider registry keyed by interface plus factory member name
 
-`srcmethod` resolves the effective method for an interface/class receiver. The
-registry prefers a concrete class method and otherwise falls back to a final
-interface default method.
+`srcmethodsel` resolves the effective method for an interface/class receiver.
+The registry prefers a concrete class method and otherwise falls back to a
+final interface default method. The selector is a callable descriptor
+(`rxsig1|name|return_type|args`), and the resolved procedure metadata must
+match it.
 
-`srcfproc` resolves interface factories. Every candidate provider is evaluated
-through its effective `match`; omitted `match` behaves as score `1`, scores
-`<= 0` reject, highest positive score wins, and tied scores are broken
-alphabetically by concrete class name.
+`srcfprocsel` resolves interface factories from the same descriptor form. Every
+candidate provider is evaluated through its effective `match`; omitted `match`
+behaves as score `1`, scores `<= 0` reject, highest positive score wins, and
+tied scores are broken alphabetically by concrete class name.
 
 ## Source Tree and Parser Mode
 

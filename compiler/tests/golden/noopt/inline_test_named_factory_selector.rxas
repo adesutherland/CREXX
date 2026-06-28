@@ -25,7 +25,7 @@ main() .locals=5
    .traceevent "F" 4 "R" "O" "r" 1 1 1 0 "directnamed" ""
    load r0,1
    settp r1,256
-   srcmethod r2,r1,"describe"
+   srcmethodsel r2,r1,"rxsig1|describe|.string|"
    dcall r2,r2,r0
    .traceevent "F" 4 "R" "S" "r" 2 1 1 0 "describe" ""
    say r2
@@ -38,7 +38,7 @@ main() .locals=5
    .traceevent "F" 4 "R" "O" "r" 2 2 2 0 "assignednamed" ""
    load r1,1
    settp r2,256
-   srcmethod r4,r2,"describe"
+   srcmethodsel r4,r2,"rxsig1|describe|.string|"
    dcall r4,r4,r1
    .traceevent "F" 4 "R" "S" "r" 4 2 2 0 "describe" ""
    say r4
@@ -66,7 +66,7 @@ directNamed() .locals=3
    .traceevent "L" 4 "R" "S" "r" 1 6 6 0 "" ""
    load r0,1
    settp r1,768
-   srcfproc r2,"inline_test_named_factory_selector.vehicle..from_name",r0
+   srcfprocsel r2,"rxsig1|inline_test_named_factory_selector.vehicle..from_name|.vehicle|name=.string",r0
    dcall r2,r2,r0
    .traceevent "F" 4 "R" "O" "r" 2 6 6 0 "§factory.from_name" ""
    ret r2
@@ -87,7 +87,7 @@ assignedNamed() .locals=4
    load r2,1
    settp a1,256
    swap r3,a1
-   srcfproc r0,"inline_test_named_factory_selector.vehicle..from_name",r2
+   srcfprocsel r0,"rxsig1|inline_test_named_factory_selector.vehicle..from_name|.vehicle|name=.string",r2
    dcall r0,r0,r2
    swap a1,r3
    .traceevent "F" 4 "R" "O" "r" 0 9 9 0 "§factory.from_name" ""
@@ -128,7 +128,7 @@ describedNamed() .locals=5
    load r2,1
    settp a1,256
    swap r3,a1
-   srcfproc r0,"inline_test_named_factory_selector.vehicle..from_name",r2
+   srcfprocsel r0,"rxsig1|inline_test_named_factory_selector.vehicle..from_name|.vehicle|name=.string",r2
    dcall r0,r0,r2
    swap a1,r3
    .traceevent "F" 4 "R" "O" "r" 0 16 16 0 "§factory.from_name" ""
@@ -138,7 +138,7 @@ describedNamed() .locals=5
    load r2,1
    settp r0,256
    swap r3,r0
-   srcmethod r4,r3,"describe"
+   srcmethodsel r4,r3,"rxsig1|describe|.string|"
    dcall r4,r4,r2
    swap r0,r3
    .traceevent "F" 4 "R" "S" "r" 4 17 17 0 "describe" ""

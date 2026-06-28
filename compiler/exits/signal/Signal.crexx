@@ -32,8 +32,8 @@ signalexit: class
     _id = .int
 
     *: factory
-        arg id = 0
-        _id = id
+        arg nid = .int
+        _id = nid
         return
 
     describe: method = .exitdescriptor

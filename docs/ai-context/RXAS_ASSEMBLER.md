@@ -271,7 +271,7 @@ significant digits to distinguish binary64 values that would otherwise share a
 six-decimal rendering, while keeping integer-looking values parseable as RXAS
 float tokens (for example, `-0.0` rather than `-0`).
 
-As of the current `003` layout, `rxas` still builds the normal in-memory
+As of the current `006` layout, `rxas` still builds the normal in-memory
 `bin_code[]` and raw constant pool first. The section compaction step happens
 when `write_module()` serializes the module:
 
@@ -295,12 +295,12 @@ and the metadata records above:
   uninitialized object value
 - `isinitialized rOut,rX` stores `0` for a typed uninitialized object and `1`
   otherwise
-- `srcmethod rProc,rObj,"member"` resolves a concrete procedure from an object
-  value plus a member name
-- `srcfproc rProc,"fully.qualified.interface",rArgs` resolves the default `*`
-  factory provider for an interface
-- `srcfproc rProc,"fully.qualified.interface..factory_name",rArgs` resolves a
-  named factory provider for an interface
+- `srcmethodsel rProc,rObj,"rxsig1|member|return_type|args"` resolves a
+  concrete procedure from an object value plus a method descriptor
+- `srcfprocsel rProc,"rxsig1|fully.qualified.interface|return_type|args",rArgs`
+  resolves the default `*` factory provider for an interface
+- `srcfprocsel rProc,"rxsig1|fully.qualified.interface..factory_name|return_type|args",rArgs`
+  resolves a named factory provider for an interface
 - `typeof rOut,rObj` returns the canonical source type name of an object value
 - `istype rOut,rObj,"type"` checks an object value against an interface,
   class, or `.object`
@@ -311,11 +311,14 @@ and the metadata records above:
 Initialization is a separate lifecycle check. `assertinitialized` is the
 raising check; `isinitialized` is the non-raising probe.
 
-`srcfproc` now supports both the default `*` surface and named factory
+`srcfprocsel` supports both the default `*` surface and named factory
 selectors. Provider selection is a VM concern: the assembler simply emits the
-opcode and the interface/class metadata needed for runtime lookup.
+opcode and the interface/class metadata needed for runtime lookup. The selector
+string is a callable descriptor (`rxsig1|name|return_type|args`), which lets the
+VM and linker reject providers whose metadata has the right name but the wrong
+signature.
 
-For `call ... , rArgs`, `dcall`, and `srcfproc ... , rArgs`, the trailing
+For `call ... , rArgs`, `dcall`, and `srcfprocsel ... , rArgs`, the trailing
 register operand names the argument-count register. The actual argument values
 are taken from the contiguous registers immediately after that count register.
 That hidden contiguous argument block is semantically part of the instruction
@@ -372,14 +375,14 @@ generated code uses them for object casts/tests/introspection; scalar
 Interface default methods use that same path. The assembler does not introduce
 new opcodes for them; it simply carries `META_MEMBER` kind `method final` and
 emits the interface method body as an ordinary procedure. The VM method
-registry then decides whether `srcmethod` should bind `class.member` directly
+registry then decides whether `srcmethodsel` should bind `class.member` directly
 or fall back to the interface's emitted default-body procedure.
 
 At the current Level B stage, the runtime selection rule is:
 
 - each provider row may carry an optional resolved class-side `§match` or
   `§match.member` procedure
-- `srcfproc` causes the VM to call that effective `match` on every candidate
+- `srcfprocsel` causes the VM to call that effective `match` on every candidate
   with the same argument list that will later be passed to the selected
   factory
 - if no explicit `match` exists, the candidate behaves as if it had an
