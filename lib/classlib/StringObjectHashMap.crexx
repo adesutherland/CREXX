@@ -25,8 +25,6 @@
 options levelb comments_dash
 namespace data expose StringObjectHashMap
 import rxfnsb
--- import data_StringTreeSet
--- import data_StringIterable
 
 /**
  * Map from string keys to object values.
@@ -34,8 +32,6 @@ import rxfnsb
  * The implementation stores string keys and Rexx object values in parallel
  * arrays while preserving insertion order for arrays and iterators.
  *
- * @author Rene Vincent Jansen
- * @author Peter Jacob
  */
 StringObjectHashMap: class implements .StringIterable
 val = .int

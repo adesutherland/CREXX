@@ -30,9 +30,6 @@ import rxfnsb
  * String list with a current cursor.
  *
  * The list supports cursor-oriented traversal and positional updates.
- *
- * @author Rene Vincent Jansen
- * @author Peter Jacob
  */
 StringLinkedList: class
 val = .int

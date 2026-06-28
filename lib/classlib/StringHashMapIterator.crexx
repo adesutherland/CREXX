@@ -24,7 +24,6 @@
 
 options levelb comments_dash
 namespace data expose StringHashMapIterator
--- import data_StringIterator
 
 /**
  * Iterator over a StringHashMap snapshot.

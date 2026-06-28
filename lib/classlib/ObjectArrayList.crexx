@@ -25,7 +25,6 @@
 options levelb comments_dash
 namespace data expose ObjectArrayList
 import rxfnsb
--- import data_ObjectIterable
 
 /**
  * A dynamic, ordered collection backed by an object array.
