@@ -34,6 +34,8 @@
 #include "rxvmplugin.h"
 #include "rxsignature.h"
 
+#define RXVML_SECTION_MARK "\xc2\xa7"
+
 typedef struct rxvml_registry_entry {
     value* obj;
     char class_name[256];
@@ -147,6 +149,16 @@ static char* rxvml_ascii_lower_copy(const char* value) {
     return copy;
 }
 
+static int rxvml_ascii_case_equal(const char* left, const char* right) {
+    size_t i;
+
+    if (!left || !right) return 0;
+    for (i = 0; left[i] && right[i]; i++) {
+        if (tolower((unsigned char)left[i]) != tolower((unsigned char)right[i])) return 0;
+    }
+    return left[i] == right[i];
+}
+
 /* Internal helper to find a procedure by name */
 static proc_runtime* find_procedure(rxvm_context* ctx, const char* name) {
     proc_runtime* p = NULL;
@@ -163,6 +175,70 @@ static proc_runtime* find_procedure(rxvm_context* ctx, const char* name) {
             free(lowered);
         }
     }
+    return NULL;
+}
+
+static int rxvml_member_name_has_section_prefix(const char* member_name) {
+    return member_name &&
+           (unsigned char)member_name[0] == 0xc2 &&
+           (unsigned char)member_name[1] == 0xa7;
+}
+
+static int rxvml_member_candidate_matches(const char* symbol_name,
+                                          const char* format,
+                                          const char* class_name,
+                                          const char* member_name) {
+    char candidate[1024];
+    int written;
+
+    if (!symbol_name || !format || !class_name || !member_name) return 0;
+    written = snprintf(candidate, sizeof(candidate), format, class_name, member_name);
+    if (written < 0 || (size_t)written >= sizeof(candidate)) return 0;
+    return strcmp(symbol_name, candidate) == 0 || rxvml_ascii_case_equal(symbol_name, candidate);
+}
+
+static int rxvml_member_symbol_matches(const char* symbol_name,
+                                       const char* class_name,
+                                       const char* member_name) {
+    if (rxvml_member_candidate_matches(symbol_name, "%s.%s", class_name, member_name)) return 1;
+    if (rxvml_member_candidate_matches(symbol_name, RXVML_SECTION_MARK "%s.%s", class_name, member_name)) return 1;
+
+    if (!rxvml_member_name_has_section_prefix(member_name)) {
+        if (rxvml_member_candidate_matches(symbol_name, "%s." RXVML_SECTION_MARK "%s", class_name, member_name)) return 1;
+        if (rxvml_member_candidate_matches(symbol_name, RXVML_SECTION_MARK "%s." RXVML_SECTION_MARK "%s", class_name, member_name)) return 1;
+    }
+
+    return 0;
+}
+
+static proc_runtime* rxvml_find_member_procedure_by_metadata(rxvml_context* ctx,
+                                                            const char* class_name,
+                                                            const char* member_name) {
+    size_t mod_index;
+
+    if (!ctx || !class_name || !member_name) return NULL;
+
+    for (mod_index = 0; mod_index < ctx->vm.num_modules; mod_index++) {
+        module* mod = ctx->vm.modules[mod_index];
+        int meta_ix = mod ? mod->meta_head : -1;
+
+        while (meta_ix != -1) {
+            meta_entry* meta = (meta_entry*)(mod->segment.const_pool + meta_ix);
+
+            if (meta->base.type == META_FUNC) {
+                meta_func_constant* func_meta = (meta_func_constant*)meta;
+                string_constant* symbol_name = rxvml_get_string_constant(mod, func_meta->symbol);
+
+                if (symbol_name &&
+                    rxvml_member_symbol_matches(symbol_name->string, class_name, member_name)) {
+                    return rxvm_get_module_runtime_procedure(mod, func_meta->func);
+                }
+            }
+
+            meta_ix = meta->next;
+        }
+    }
+
     return NULL;
 }
 
@@ -311,7 +387,7 @@ static proc_runtime* rxvml_find_member_procedure(rxvml_context* ctx,
 
     if (!ctx || !class_name || !member_name) return NULL;
 
-    snprintf(full_method_name, sizeof(full_method_name), "§%s.%s", class_name, member_name);
+    snprintf(full_method_name, sizeof(full_method_name), RXVML_SECTION_MARK "%s.%s", class_name, member_name);
     p = find_procedure(&ctx->vm, full_method_name);
     if (p) return p;
 
@@ -319,12 +395,15 @@ static proc_runtime* rxvml_find_member_procedure(rxvml_context* ctx,
     p = find_procedure(&ctx->vm, full_method_name);
     if (p) return p;
 
-    snprintf(full_method_name, sizeof(full_method_name), "%s.§%s", class_name, member_name);
+    snprintf(full_method_name, sizeof(full_method_name), "%s." RXVML_SECTION_MARK "%s", class_name, member_name);
     p = find_procedure(&ctx->vm, full_method_name);
     if (p) return p;
 
-    snprintf(full_method_name, sizeof(full_method_name), "§%s.§%s", class_name, member_name);
-    return find_procedure(&ctx->vm, full_method_name);
+    snprintf(full_method_name, sizeof(full_method_name), RXVML_SECTION_MARK "%s." RXVML_SECTION_MARK "%s", class_name, member_name);
+    p = find_procedure(&ctx->vm, full_method_name);
+    if (p) return p;
+
+    return rxvml_find_member_procedure_by_metadata(ctx, class_name, member_name);
 }
 
 static proc_runtime* rxvml_resolve_descriptor_proc(rxvml_context* ctx,
@@ -1614,7 +1693,7 @@ int rxvml_discover_classes(rxvml_context* ctx, const char* ns, rxvml_class_info*
                         classes[count].class_name[255] = 0;
                         
                         /* Factory name pattern: namespace.classname.§factory */
-                        snprintf(classes[count].factory_proc, 511, "%s.§factory", sc->string);
+                        snprintf(classes[count].factory_proc, 511, "%s." RXVML_SECTION_MARK "factory", sc->string);
                         classes[count].factory_proc[511] = 0;
                         
                         count++;

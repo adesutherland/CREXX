@@ -3458,6 +3458,8 @@ add_custom_target(stub_plugin_bin DEPENDS stub_plugin.rxbin)
 add_executable(test_bridge src/test_bridge.c)
 target_link_libraries(test_bridge PRIVATE rxvml rxpashim)
 target_include_directories(test_bridge PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
+target_compile_definitions(test_bridge PRIVATE
+        CREXX_TEST_RXCEXITS_MODULE="${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin")
 add_dependencies(test_bridge stub_plugin_bin)
 
 add_executable(test_address_bridge src/test_address_bridge.c)

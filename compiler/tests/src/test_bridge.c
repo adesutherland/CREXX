@@ -4,10 +4,16 @@
 #include <assert.h>
 #include "rxvml.h"
 
+#ifndef CREXX_TEST_RXCEXITS_MODULE
+#define CREXX_TEST_RXCEXITS_MODULE "rxcexits"
+#endif
+
 int main(int argc, char** argv) {
     rxvml_context* ctx;
     rxvml_value* tok_array;
     rxvml_value* tok_obj = NULL;
+    rxvml_value* exit_arg = NULL;
+    rxvml_value* exit_obj = NULL;
     rxvml_value* response = NULL;
     rxvml_value* bad_response = NULL;
     rxvml_value* args[9];
@@ -131,6 +137,29 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    if (rxvml_load_module_file(ctx, CREXX_TEST_RXCEXITS_MODULE) <= 0) {
+        rxvml_last_error(ctx, &err);
+        fprintf(stderr, "Failed to load rxcexits: %s\n", err ? err : "unknown error");
+        return 1;
+    }
+
+    exit_arg = rxvml_value_new(ctx);
+    rxvml_set_int(exit_arg, 0);
+    if (rxvml_call_factory_descriptor(
+            ctx,
+            "rxcpexits.addressexit",
+            "rxsig1|\xc2\xa7""factory|.rxcpexits..addressexit|nid=.int",
+            1,
+            &exit_arg,
+            &exit_obj) != 0 || !exit_obj) {
+        rxvml_last_error(ctx, &err);
+        fprintf(stderr, "Failed to call factory for rxcpexits.addressexit: %s\n", err ? err : "unknown error");
+        return 1;
+    }
+    printf("SUCCESS: Compiler exit factory descriptor works!\n");
+
+    if (exit_obj) rxvml_value_free(exit_obj);
+    if (exit_arg) rxvml_value_free(exit_arg);
     if (response) rxvml_value_free(response);
     rxvml_value_free(tok_array);
     rxvml_destroy(ctx);
