@@ -20,13 +20,13 @@ classlib/StringHashSet.crexx 28
 classlib/StringHashSetIterator.crexx 10
 classlib/StringIterable.crexx 1
 classlib/StringIterator.crexx 1
-classlib/StringLinkedList.crexx 52
+classlib/StringLinkedList.crexx 50
 classlib/StringObjectHashMap.crexx 31
 classlib/StringObjectHashMapIterator.crexx 17
 classlib/StringObjectTreeMap.crexx 34
 classlib/StringObjectTreeMapIterator.crexx 17
 classlib/StringStack.crexx 15
-classlib/StringTreeMap.crexx 38
+classlib/StringTreeMap.crexx 36
 classlib/StringTreeMapIterator.crexx 10
-classlib/StringTreeSet.crexx 31
+classlib/StringTreeSet.crexx 29
 classlib/StringTreeSetIterator.crexx 10
