@@ -105,40 +105,28 @@ add_subdirectory(rexxscript)
 add_subdirectory(dummy)
 
 # Build the bundle by concatenating all exit components
-set(CREXX_EXIT_BUNDLE_OUTPUT ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin)
-set(CREXX_EXIT_BUNDLE_TEMP ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin.tmp)
-set(CREXX_EXIT_BUNDLE_INPUTS
-        ${CMAKE_CURRENT_BINARY_DIR}/token.rxbin
-        ${CMAKE_CURRENT_BINARY_DIR}/dump/Dump.rxbin
-        ${CMAKE_CURRENT_BINARY_DIR}/query/Query.rxbin
-        ${CMAKE_CURRENT_BINARY_DIR}/sort/Sort.rxbin
-        ${CMAKE_CURRENT_BINARY_DIR}/sortx/Sortx.rxbin
-        ${CMAKE_CURRENT_BINARY_DIR}/pprint/Pprint.rxbin
-        ${CMAKE_CURRENT_BINARY_DIR}/address/Address.rxbin
-        ${CMAKE_CURRENT_BINARY_DIR}/parse/Parse.rxbin
-        ${CMAKE_CURRENT_BINARY_DIR}/signal/Signal.rxbin
-        ${CMAKE_CURRENT_BINARY_DIR}/trace/Trace.rxbin
-        ${CMAKE_CURRENT_BINARY_DIR}/rexxscript/RexxScript.rxbin
-        ${CMAKE_CURRENT_BINARY_DIR}/execio/Execio.rxbin
-        ${CMAKE_CURRENT_BINARY_DIR}/add/Add.rxbin
-        ${CMAKE_CURRENT_BINARY_DIR}/fsay/Fsay.rxbin
-        ${CMAKE_CURRENT_BINARY_DIR}/msay/Msay.rxbin
-        ${CMAKE_CURRENT_BINARY_DIR}/dummy/Dummy.rxbin
-)
 add_custom_command(
-    OUTPUT ${CREXX_EXIT_BUNDLE_OUTPUT}
-    COMMAND ${CMAKE_COMMAND}
-            "-DCMAKE_COMMAND_PATH=${CMAKE_COMMAND}"
-            "-DOUTPUT=${CREXX_EXIT_BUNDLE_OUTPUT}"
-            "-DTEMP_OUTPUT=${CREXX_EXIT_BUNDLE_TEMP}"
-            "-DINPUTS=${CREXX_EXIT_BUNDLE_INPUTS}"
-            -P ${CMAKE_CURRENT_SOURCE_DIR}/bundle_exit_modules.cmake
+    OUTPUT ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin
+    COMMAND ${CMAKE_COMMAND} -E cat token.rxbin dump/Dump.rxbin query/Query.rxbin sort/Sort.rxbin sortx/Sortx.rxbin pprint/Pprint.rxbin address/Address.rxbin parse/Parse.rxbin signal/Signal.rxbin trace/Trace.rxbin rexxscript/RexxScript.rxbin execio/Execio.rxbin add/Add.rxbin fsay/Fsay.rxbin msay/Msay.rxbin dummy/Dummy.rxbin > ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin
     DEPENDS rxc rxas
-            ${CMAKE_CURRENT_SOURCE_DIR}/bundle_exit_modules.cmake
-            ${CREXX_EXIT_BUNDLE_INPUTS}
+            ${CMAKE_CURRENT_BINARY_DIR}/token.rxbin 
+            ${CMAKE_CURRENT_BINARY_DIR}/dump/Dump.rxbin
+            ${CMAKE_CURRENT_BINARY_DIR}/query/Query.rxbin
+            ${CMAKE_CURRENT_BINARY_DIR}/sort/Sort.rxbin
+            ${CMAKE_CURRENT_BINARY_DIR}/sortx/Sortx.rxbin
+            ${CMAKE_CURRENT_BINARY_DIR}/address/Address.rxbin
+            ${CMAKE_CURRENT_BINARY_DIR}/execio/Execio.rxbin
+            ${CMAKE_CURRENT_BINARY_DIR}/add/Add.rxbin
+            ${CMAKE_CURRENT_BINARY_DIR}/fsay/Fsay.rxbin
+            ${CMAKE_CURRENT_BINARY_DIR}/msay/Msay.rxbin
+            ${CMAKE_CURRENT_BINARY_DIR}/pprint/Pprint.rxbin
+            ${CMAKE_CURRENT_BINARY_DIR}/parse/Parse.rxbin
+            ${CMAKE_CURRENT_BINARY_DIR}/signal/Signal.rxbin
+            ${CMAKE_CURRENT_BINARY_DIR}/trace/Trace.rxbin
+            ${CMAKE_CURRENT_BINARY_DIR}/rexxscript/RexxScript.rxbin
+            ${CMAKE_CURRENT_BINARY_DIR}/dummy/Dummy.rxbin
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     COMMENT "Building rxcexits.rxbin (bundled via concatenation)"
-    VERBATIM
 )
-add_custom_target(compiler_exit_bin ALL DEPENDS ${CREXX_EXIT_BUNDLE_OUTPUT})
+add_custom_target(compiler_exit_bin ALL DEPENDS ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin)
 add_dependencies(compiler_exit_bin token_bin exit_dump_bin exit_query_bin exit_sort_bin exit_sortx_bin exit_pprint_bin exit_address_bin exit_parse_bin exit_signal_bin exit_trace_bin exit_rexxscript_bin exit_execio_bin exit_add_bin exit_fsay_bin  exit_msay_bin exit_dummy_bin)
