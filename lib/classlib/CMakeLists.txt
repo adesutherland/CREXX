@@ -225,8 +225,10 @@ add_test(
     -DWORKING_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}
     -DINPUT_RXBIN=${CMAKE_BINARY_DIR}/bin/classlib.rxbin
     -DOUTPUT_RXAS=${CMAKE_CURRENT_BINARY_DIR}/classlib_inline_check.rxas
-    "-DEXPECT_TEXT_1=.meta \"data_stringlist.stringarraylist.init\"=\".inline\""
-    "-DEXPECT_TEXT_2=.meta \"data_stringhashmap.stringhashmap.size\"=\".inline\""
+    "-DEXPECT_TEXT_1=.meta \"data.stringarraylist.init\"=\".inline\""
+    "-DEXPECT_TEXT_2=.meta \"data.stringhashmap.size\"=\".inline\""
+    "-DEXPECT_ABSENT_1=.meta \"data_stringlist.stringarraylist.init\"=\".inline\""
+    "-DEXPECT_ABSENT_2=.meta \"data_stringhashmap.stringhashmap.size\"=\".inline\""
     -P ${CMAKE_SOURCE_DIR}/linker/tests/check_rxdas_contains.cmake
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
