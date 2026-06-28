@@ -184,6 +184,10 @@ static int rxvml_member_name_has_section_prefix(const char* member_name) {
            (unsigned char)member_name[1] == 0xa7;
 }
 
+static int rxvml_proc_matches_signature(rxvml_context* ctx,
+                                        proc_runtime* proc,
+                                        const rx_callable_signature* expected);
+
 static int rxvml_member_candidate_matches(const char* symbol_name,
                                           const char* format,
                                           const char* class_name,
@@ -232,6 +236,40 @@ static proc_runtime* rxvml_find_member_procedure_by_metadata(rxvml_context* ctx,
                 if (symbol_name &&
                     rxvml_member_symbol_matches(symbol_name->string, class_name, member_name)) {
                     return rxvm_get_module_runtime_procedure(mod, func_meta->func);
+                }
+            }
+
+            meta_ix = meta->next;
+        }
+    }
+
+    return NULL;
+}
+
+static proc_runtime* rxvml_find_procedure_by_metadata(rxvml_context* ctx,
+                                                      const rx_callable_signature* expected,
+                                                      int* saw_name) {
+    size_t mod_index;
+
+    if (saw_name) *saw_name = 0;
+    if (!ctx || !expected || !expected->name) return NULL;
+
+    for (mod_index = 0; mod_index < ctx->vm.num_modules; mod_index++) {
+        module* mod = ctx->vm.modules[mod_index];
+        int meta_ix = mod ? mod->meta_head : -1;
+
+        while (meta_ix != -1) {
+            meta_entry* meta = (meta_entry*)(mod->segment.const_pool + meta_ix);
+
+            if (meta->base.type == META_FUNC) {
+                meta_func_constant* func_meta = (meta_func_constant*)meta;
+                string_constant* symbol_name = rxvml_get_string_constant(mod, func_meta->symbol);
+
+                if (symbol_name &&
+                    rxvml_ascii_case_equal(symbol_name->string, expected->name)) {
+                    proc_runtime* p = rxvm_get_module_runtime_procedure(mod, func_meta->func);
+                    if (saw_name) *saw_name = 1;
+                    if (rxvml_proc_matches_signature(ctx, p, expected)) return p;
                 }
             }
 
@@ -410,6 +448,7 @@ static proc_runtime* rxvml_resolve_descriptor_proc(rxvml_context* ctx,
                                                    const char* descriptor,
                                                    rx_callable_signature* expected_out) {
     proc_runtime* p;
+    int saw_name;
 
     rx_sig_init_empty(expected_out);
     if (!ctx || !descriptor || !expected_out) return NULL;
@@ -420,17 +459,20 @@ static proc_runtime* rxvml_resolve_descriptor_proc(rxvml_context* ctx,
     }
 
     p = find_procedure(&ctx->vm, expected_out->name);
-    if (!p) {
-        ctx->last_error = "Procedure not found";
-        return NULL;
+    if (p && rxvml_proc_matches_signature(ctx, p, expected_out)) {
+        return p;
     }
 
-    if (!rxvml_proc_matches_signature(ctx, p, expected_out)) {
+    saw_name = p != NULL;
+    p = rxvml_find_procedure_by_metadata(ctx, expected_out, &saw_name);
+    if (p) return p;
+
+    if (saw_name) {
         ctx->last_error = "Procedure signature mismatch";
-        return NULL;
+    } else {
+        ctx->last_error = "Procedure not found";
     }
-
-    return p;
+    return NULL;
 }
 
 static void rxvml_save_external_call_state(
