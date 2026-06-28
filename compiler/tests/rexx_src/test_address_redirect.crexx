@@ -1,15 +1,37 @@
 options levelb
+import rxfnsb
 
 main: procedure
   input_lines = .string[]
   output_lines = .string[]
   error_lines = .string[]
+  rexx_version = .string
+  platform = .string
 
-  input_lines[1] = "b"
-  input_lines[2] = "a"
+  assembler rxvers rexx_version
+  platform = translate(word(rexx_version, 1))
 
-  address path "sort" input input_lines output output_lines error error_lines
+  if platform = "WINDOWS" then do
+    input_lines[1] = "a"
+    input_lines[2] = "b"
+    address path "cmd.exe /D /S /C findstr ." input input_lines output output_lines error error_lines
+  end
+  else do
+    input_lines[1] = "b"
+    input_lines[2] = "a"
+    address path "sort" input input_lines output output_lines error error_lines
+  end
 
-  say output_lines[1]
-  say output_lines[2]
+  if rc <> 0 then say "ADDRESS_REDIRECT_RC" rc
+  if output_lines.0 <> 2 then do
+    say "ADDRESS_REDIRECT_OUTPUT_COUNT" output_lines.0
+    say "ADDRESS_REDIRECT_ERROR_COUNT" error_lines.0
+  end
+  if output_lines.1 <> "a" then say "ADDRESS_REDIRECT_LINE1" output_lines.1
+  if output_lines.2 <> "b" then say "ADDRESS_REDIRECT_LINE2" output_lines.2
+
+  if rc = 0 & output_lines.0 = 2 & output_lines.1 = "a" & output_lines.2 = "b" then do
+    say output_lines[1]
+    say output_lines[2]
+  end
   return

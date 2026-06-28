@@ -237,75 +237,7 @@ static void rxcp_register_additional_keyword(Context *ctx,
     }
 }
 
-static const char *rxcp_exit_vm_error(rxvml_context *vctx) {
-    const char *vm_error = NULL;
-    if (vctx) rxvml_last_error(vctx, &vm_error);
-    return (vm_error && vm_error[0]) ? vm_error : "<none>";
-}
-
-static void rxcp_log_exit_call_failure(rxvml_context *vctx,
-                                       const char *class_name,
-                                       const char *stage,
-                                       const char *expected_contract,
-                                       int rc) {
-    fprintf(stderr,
-            "INTERNAL EXIT DEBUG: Exit class '%s' failed during %s"
-            " (rc=%d, expected=%s, rxvml_last_error=%s)\n",
-            class_name ? class_name : "<unknown>",
-            stage ? stage : "<unknown>",
-            rc,
-            expected_contract ? expected_contract : "<unknown>",
-            rxcp_exit_vm_error(vctx));
-}
-
-static void rxcp_dump_exit_registration_state(Context *ctx,
-                                              rxvml_context *vctx,
-                                              rxvml_class_info *classes,
-                                              size_t class_count) {
-    Context *root = ctx->master_context ? ctx->master_context : ctx;
-    ExitEntry *entry = (ExitEntry *)root->exit_registry;
-    const char *exit_module = getenv("RXCP_EXIT_MODULE");
-    const char *disable_exit = getenv("RXCP_DISABLE_EXIT");
-    size_t i;
-
-    fprintf(stderr,
-            "INTERNAL EXIT DEBUG: RXCP_EXIT_MODULE=%s RXCP_DISABLE_EXIT=%s rxvml_last_error=%s\n",
-            exit_module ? exit_module : "<unset>",
-            disable_exit ? disable_exit : "<unset>",
-            rxcp_exit_vm_error(vctx));
-
-    fprintf(stderr, "INTERNAL EXIT DEBUG: Registered compiler exits:\n");
-    if (!entry) {
-        fprintf(stderr, "INTERNAL EXIT DEBUG:   <none>\n");
-    }
-    while (entry) {
-        fprintf(stderr,
-                "INTERNAL EXIT DEBUG:   primary='%s' class='%s' flags=0x%x\n",
-                entry->primary_keyword ? entry->primary_keyword : "<null>",
-                entry->class_name ? entry->class_name : "<null>",
-                entry->flags);
-        entry = entry->next;
-    }
-
-    fprintf(stderr,
-            "INTERNAL EXIT DEBUG: Discovered rxcpexits classes: %zu\n",
-            class_count);
-    if (!classes || class_count == 0) {
-        fprintf(stderr, "INTERNAL EXIT DEBUG:   <none>\n");
-        return;
-    }
-    for (i = 0; i < class_count; i++) {
-        fprintf(stderr,
-                "INTERNAL EXIT DEBUG:   class='%s' factory='%s'\n",
-                classes[i].class_name,
-                classes[i].factory_proc);
-    }
-}
-
-static void rxcp_assert_certified_exits_registered(Context *ctx,
-                                                   rxvml_context *vctx,
-                                                   rxvml_class_info *classes,
-                                                   size_t class_count) {
+static void rxcp_assert_certified_exits_registered(Context *ctx) {
     int i;
 
     for (i = 0; certified_exit_specs[i].primary_keyword; i++) {
@@ -314,7 +246,6 @@ static void rxcp_assert_certified_exits_registered(Context *ctx,
             fprintf(stderr,
                     "INTERNAL EXIT ERROR: Certified exit '%s' was not registered\n",
                     spec->primary_keyword);
-            rxcp_dump_exit_registration_state(ctx, vctx, classes, class_count);
             exit(-1);
         }
     }
@@ -610,40 +541,24 @@ void rxcp_init_exits(Context *ctx) {
             nid_val = rxvml_value_new(vctx);
             rxvml_set_int(nid_val, 0);
 
-            {
-                int factory_rc = rxcp_call_factory_contract(vctx, classes[i].class_name, "nid=.int", 1, &nid_val, &obj);
-                if (factory_rc != 0 || !obj) {
-                    rxcp_log_exit_call_failure(vctx,
-                                               classes[i].class_name,
-                                               "factory lookup",
-                                               "factory return=<exit-class> args=nid=.int",
-                                               factory_rc);
-                    rxvml_value_free(nid_val);
-                    continue;
-                }
+            if (rxcp_call_factory_contract(vctx, classes[i].class_name, "nid=.int", 1, &nid_val, &obj) != 0 || !obj) {
+                rxvml_value_free(nid_val);
+                continue;
             }
 
-            {
-                int describe_rc = rxcp_call_method_contract(vctx,
-                                                            obj,
-                                                            classes[i].class_name,
-                                                            "describe",
-                                                            ".rxcp..exitdescriptor",
-                                                            "",
-                                                            0,
-                                                            NULL,
-                                                            &descriptor);
-                if (describe_rc != 0 || !descriptor) {
-                    rxcp_log_exit_call_failure(vctx,
-                                               classes[i].class_name,
-                                               "describe lookup",
-                                               "describe return=.rxcp..exitdescriptor args=<none>",
-                                               describe_rc);
-                    fprintf(stderr,
-                            "INTERNAL EXIT ERROR: Exit '%s' does not implement describe()\n",
-                            classes[i].class_name);
-                    exit(-1);
-                }
+            if (rxcp_call_method_contract(vctx,
+                                          obj,
+                                          classes[i].class_name,
+                                          "describe",
+                                          ".rxcp..exitdescriptor",
+                                          "",
+                                          0,
+                                          NULL,
+                                          &descriptor) != 0 || !descriptor) {
+                fprintf(stderr,
+                        "INTERNAL EXIT ERROR: Exit '%s' does not implement describe()\n",
+                        classes[i].class_name);
+                exit(-1);
             }
 
             if (rxcp_get_method_int(vctx, descriptor, "rxcp.exitdescriptor", "get_protocol_version", &protocol_version) != 0 ||
@@ -723,8 +638,9 @@ void rxcp_init_exits(Context *ctx) {
         }
     }
 
-    rxcp_assert_certified_exits_registered(ctx, vctx, classes, class_count);
     if (classes) free(classes);
+
+    rxcp_assert_certified_exits_registered(ctx);
 }
 
 int rxcp_is_exit_primary(Context *ctx, const char *keyword, size_t len) {

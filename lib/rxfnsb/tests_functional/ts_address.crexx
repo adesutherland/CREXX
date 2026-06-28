@@ -23,38 +23,70 @@ if cmd_env.environment_name() <> "CMD" then errors=errors+1
 shell_env = addressenv("shell")
 if shell_env.environment_name() <> "SHELL" then errors=errors+1
 
-address command "echo '#42'"  output out error err
-if out.1 <> '#42' then errors=errors+1
+if platform = "WINDOWS" then address command 'echo #42' output out error err
+else address command "echo '#42'" output out error err
+if out.1 <> '#42' then do
+  say 'ADDRESS_BIF_COMMAND_QUOTE' out.1
+  errors=errors+1
+end
 
 address cmd 'echo CMD_OK' output cmd_out
-if cmd_out.1 <> 'CMD_OK' then errors=errors+1
+if cmd_out.1 <> 'CMD_OK' then do
+  say 'ADDRESS_BIF_CMD' cmd_out.1
+  errors=errors+1
+end
 
 if platform = "WINDOWS" then address path 'cmd.exe /D /S /C echo PATH_OK' output path_out
 else address path 'echo PATH_OK' output path_out
-if path_out.1 <> 'PATH_OK' then errors=errors+1
+if path_out.1 <> 'PATH_OK' then do
+  say 'ADDRESS_BIF_PATH' path_out.1
+  errors=errors+1
+end
 
 /* This should print OK - to the console - we are just testing the address bit returns ok */
 rc = 1
 'echo OK'
-if rc <> 0 then errors=errors+1
+if rc <> 0 then do
+  say 'ADDRESS_BIF_IMPLICIT_RC' rc
+  errors=errors+1
+end
 
 /* Test explicit address shell */
 rc = 1
 address shell 'echo SHELL_ONE && echo SHELL_TWO' output shell_out
-if rc <> 0 then errors=errors+1
-if shell_out.1 <> 'SHELL_ONE' then errors=errors+1
-if shell_out.2 <> 'SHELL_TWO' then errors=errors+1
+if rc <> 0 then do
+  say 'ADDRESS_BIF_SHELL_RC' rc
+  errors=errors+1
+end
+if shell_out.1 <> 'SHELL_ONE' then do
+  say 'ADDRESS_BIF_SHELL_ONE' shell_out.1
+  errors=errors+1
+end
+if shell_out.2 <> 'SHELL_TWO' then do
+  say 'ADDRESS_BIF_SHELL_TWO' shell_out.2
+  errors=errors+1
+end
 
 /* Test shell builtins through the CMD compatibility environment. */
 rc = 1
 address cmd 'cd .'
-if rc <> 0 then errors=errors+1
+if rc <> 0 then do
+  say 'ADDRESS_BIF_CD_RC' rc
+  errors=errors+1
+end
 
 address command
 'echo COMMAND_AFTER_COMMAND'
-if rc <> 0 then errors=errors+1
+if rc <> 0 then do
+  say 'ADDRESS_BIF_COMMAND_AFTER_RC' rc
+  errors=errors+1
+end
 
-address command "exit 3"
-if rc <> 3 then errors=errors+1
+if platform = "WINDOWS" then address command "exit /B 3"
+else address command "exit 3"
+if rc <> 3 then do
+  say 'ADDRESS_BIF_EXIT_RC' rc
+  errors=errors+1
+end
 
 return errors<>0
