@@ -993,6 +993,11 @@ THREAD_RETURN Output2StringThread(void* lpvThreadParam)
     DWORD dwBytesRead;
     while (reading) {
         if (!ReadFile(context->hRead, lpBuffer, 256, &dwBytesRead, NULL)) {
+            DWORD read_error = GetLastError();
+            if (read_error == ERROR_BROKEN_PIPE || read_error == ERROR_HANDLE_EOF) {
+                reading = 0;
+                continue;
+            }
             context->errorCode = 1;
             return 0;
         }
@@ -1037,6 +1042,11 @@ THREAD_RETURN Output2ArrayThread(void* lpvThreadParam) {
     HANDLE hRead = context->hRead;
     while (reading) {
         if (!ReadFile(hRead, lpBuffer, 256, &dwBytesRead, NULL)) {
+            DWORD read_error = GetLastError();
+            if (read_error == ERROR_BROKEN_PIPE || read_error == ERROR_HANDLE_EOF) {
+                reading = 0;
+                continue;
+            }
             context->errorCode = 1;
             return 0;
         }

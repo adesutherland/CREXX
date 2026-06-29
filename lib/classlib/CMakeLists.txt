@@ -51,9 +51,21 @@ set(CLASSLIB_MEMBER_BUILD_DEPS
 )
 
 set(_classlib_member_clean_stamp "${CMAKE_CURRENT_BINARY_DIR}/classlib_member_clean.stamp")
+set(_classlib_member_clean_paths "${CMAKE_BINARY_DIR}/bin/classlib.rxbin" ${CLSBINS})
+if(WIN32)
+  set(_classlib_member_clean_command
+    COMMAND ${CMAKE_COMMAND}
+      "-DREMOVE_PATHS=${_classlib_member_clean_paths}"
+      -DREMOVE_RETRIES=120
+      -DREMOVE_DELAY=0.25
+      -P "${CMAKE_SOURCE_DIR}/cmake/CrexxRemoveWithRetry.cmake")
+else()
+  set(_classlib_member_clean_command
+    COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/classlib.rxbin" ${CLSBINS})
+endif()
 add_custom_command(
   OUTPUT "${_classlib_member_clean_stamp}"
-  COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/classlib.rxbin" ${CLSBINS}
+  ${_classlib_member_clean_command}
   COMMAND ${CMAKE_COMMAND} -E touch "${_classlib_member_clean_stamp}"
   DEPENDS ${CLSSOURCES} ${CLASSLIB_MEMBER_BUILD_DEPS}
   COMMENT "Clearing stale class library member images ..."
@@ -80,7 +92,17 @@ set(CLASS_DEPS_StringObjectTreeMapIterator StringIterator)
 set(CLASS_DEPS_StringTreeSet StringIterable StringIterator StringTreeSetIterator)
 set(CLASS_DEPS_StringTreeSetIterator StringIterator)
 
-
+if(WIN32)
+  set(_classlib_remove_consolidated_command
+    COMMAND ${CMAKE_COMMAND}
+      "-DREMOVE_PATHS=${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+      -DREMOVE_RETRIES=120
+      -DREMOVE_DELAY=0.25
+      -P "${CMAKE_SOURCE_DIR}/cmake/CrexxRemoveWithRetry.cmake")
+else()
+  set(_classlib_remove_consolidated_command
+    COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/classlib.rxbin")
+endif()
 
 foreach(_binfile IN LISTS CLSBINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
@@ -92,7 +114,7 @@ foreach(_binfile IN LISTS CLSBINS)
     OUTPUT "${_binfile}"
     # Do not let classlib members import the previous consolidated classlib image
     # while regenerating the member artifacts that will replace it.
-    COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/classlib.rxbin"
+    ${_classlib_remove_consolidated_command}
     COMMAND $<TARGET_FILE:rxc>
     -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}"
     -o "${_basename}"
@@ -158,20 +180,44 @@ set(CLASSLIB_NATIVE_MEMBER_BUILD_DEPS
 )
 
 set(_classlib_native_member_clean_stamp "${CMAKE_CURRENT_BINARY_DIR}/classlib_native_member_clean.stamp")
+set(_classlib_native_member_clean_paths "${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin" ${CLASSLIB_NATIVE_BINS})
+if(WIN32)
+  set(_classlib_native_member_clean_command
+    COMMAND ${CMAKE_COMMAND}
+      "-DREMOVE_PATHS=${_classlib_native_member_clean_paths}"
+      -DREMOVE_RETRIES=120
+      -DREMOVE_DELAY=0.25
+      -P "${CMAKE_SOURCE_DIR}/cmake/CrexxRemoveWithRetry.cmake")
+else()
+  set(_classlib_native_member_clean_command
+    COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin" ${CLASSLIB_NATIVE_BINS})
+endif()
 add_custom_command(
   OUTPUT "${_classlib_native_member_clean_stamp}"
-  COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin" ${CLASSLIB_NATIVE_BINS}
+  ${_classlib_native_member_clean_command}
   COMMAND ${CMAKE_COMMAND} -E touch "${_classlib_native_member_clean_stamp}"
   DEPENDS ${CLASSLIB_NATIVE_SOURCES} ${CLASSLIB_NATIVE_MEMBER_BUILD_DEPS}
   COMMENT "Clearing stale native-backed class library member images ..."
   VERBATIM
 )
 
+if(WIN32)
+  set(_classlib_native_remove_consolidated_command
+    COMMAND ${CMAKE_COMMAND}
+      "-DREMOVE_PATHS=${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin"
+      -DREMOVE_RETRIES=120
+      -DREMOVE_DELAY=0.25
+      -P "${CMAKE_SOURCE_DIR}/cmake/CrexxRemoveWithRetry.cmake")
+else()
+  set(_classlib_native_remove_consolidated_command
+    COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin")
+endif()
+
 foreach(_binfile IN LISTS CLASSLIB_NATIVE_BINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
   add_custom_command(
     OUTPUT "${_binfile}"
-    COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/classlib_native.rxbin"
+    ${_classlib_native_remove_consolidated_command}
     COMMAND $<TARGET_FILE:rxc>
       -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}"
       -o "${_basename}"

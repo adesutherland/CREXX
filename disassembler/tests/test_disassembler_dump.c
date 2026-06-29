@@ -288,6 +288,7 @@ int main(void) {
     size_t meta_main_const;
     size_t meta_helper_func;
     size_t meta_clear;
+    const char *dump_path;
     int rc;
 
     pool = calloc(1u, 8192u);
@@ -396,9 +397,11 @@ int main(void) {
     code[1].instruction.opcode = 48;
     code[1].instruction.no_ops = 0;
 
-    stream = tmpfile();
+    dump_path = "test_disassembler_dump.tmp";
+    remove(dump_path);
+    stream = fopen(dump_path, "w+b");
     if (!stream) {
-        fprintf(stderr, "tmpfile failed\n");
+        fprintf(stderr, "temporary dump file failed\n");
         free(pool);
         free(code);
         return 1;
@@ -408,6 +411,7 @@ int main(void) {
 
     output = read_stream(stream);
     fclose(stream);
+    remove(dump_path);
     if (!output) {
         fprintf(stderr, "failed to read disassembly\n");
         free(pool);

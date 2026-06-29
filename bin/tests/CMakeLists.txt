@@ -178,7 +178,7 @@ set(CREXX_LICENSE_SMOKE_CONTENT "set(expected_license \"cREXX License (MIT)\")\n
 string(APPEND CREXX_LICENSE_SMOKE_CONTENT "set(expected_copyright \"Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen\")\n")
 string(APPEND CREXX_LICENSE_SMOKE_CONTENT "set(expected_project \"See https://github.com/adesutherland/CREXX for project details\")\n")
 string(APPEND CREXX_LICENSE_SMOKE_CONTENT "function(check_license label)\n")
-string(APPEND CREXX_LICENSE_SMOKE_CONTENT "  execute_process(COMMAND \${ARGN} OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND CREXX_LICENSE_SMOKE_CONTENT "  execute_process(COMMAND \${ARGN} OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res ENCODING UTF-8)\n")
 string(APPEND CREXX_LICENSE_SMOKE_CONTENT "  if(NOT res EQUAL 0)\n    message(FATAL_ERROR \"\${label} failed with rc \${res}:\\n\${out}\")\n  endif()\n")
 string(APPEND CREXX_LICENSE_SMOKE_CONTENT "  foreach(expected IN ITEMS \"\${expected_license}\" \"\${expected_copyright}\" \"\${expected_project}\")\n")
 string(APPEND CREXX_LICENSE_SMOKE_CONTENT "    string(FIND \"\${out}\" \"\${expected}\" pos)\n")

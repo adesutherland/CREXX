@@ -23,9 +23,21 @@ set(RXFNSC_MEMBER_BUILD_DEPS
 )
 
 set(_rxfnsc_member_clean_stamp "${CMAKE_CURRENT_BINARY_DIR}/rxfnsc_member_clean.stamp")
+set(_rxfnsc_member_clean_paths "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin" ${RXFNSC_BINS})
+if(WIN32)
+  set(_rxfnsc_member_clean_command
+    COMMAND ${CMAKE_COMMAND}
+      "-DREMOVE_PATHS=${_rxfnsc_member_clean_paths}"
+      -DREMOVE_RETRIES=120
+      -DREMOVE_DELAY=0.25
+      -P "${CMAKE_SOURCE_DIR}/cmake/CrexxRemoveWithRetry.cmake")
+else()
+  set(_rxfnsc_member_clean_command
+    COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin" ${RXFNSC_BINS})
+endif()
 add_custom_command(
   OUTPUT "${_rxfnsc_member_clean_stamp}"
-  COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin" ${RXFNSC_BINS}
+  ${_rxfnsc_member_clean_command}
   COMMAND ${CMAKE_COMMAND} -E touch "${_rxfnsc_member_clean_stamp}"
   DEPENDS ${RXFNSC_SOURCES} ${RXFNSC_MEMBER_BUILD_DEPS}
   COMMENT "Clearing stale rxfnsc runtime member images ..."
@@ -37,6 +49,18 @@ set(RXFNSC_DEPS_RexxStem RexxValue)
 set(RXFNSC_DEPS_RexxVariablePool RexxValue RexxStem)
 set(RXFNSC_DEPS_RexxClassicBifs RexxValue RexxStem RexxVariablePool)
 
+if(WIN32)
+  set(_rxfnsc_remove_consolidated_command
+    COMMAND ${CMAKE_COMMAND}
+      "-DREMOVE_PATHS=${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin"
+      -DREMOVE_RETRIES=120
+      -DREMOVE_DELAY=0.25
+      -P "${CMAKE_SOURCE_DIR}/cmake/CrexxRemoveWithRetry.cmake")
+else()
+  set(_rxfnsc_remove_consolidated_command
+    COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin")
+endif()
+
 foreach(_binfile IN LISTS RXFNSC_BINS)
   get_filename_component(_basename "${_binfile}" NAME_WE)
   set(_rxfnsc_deps)
@@ -45,7 +69,7 @@ foreach(_binfile IN LISTS RXFNSC_BINS)
   endforeach()
   add_custom_command(
     OUTPUT "${_binfile}"
-    COMMAND ${CMAKE_COMMAND} -E rm -f "${CMAKE_BINARY_DIR}/bin/rxfnsc.rxbin"
+    ${_rxfnsc_remove_consolidated_command}
     COMMAND $<TARGET_FILE:rxc>
     -i "${CMAKE_BINARY_DIR}/bin;${CMAKE_CURRENT_BINARY_DIR}"
     -o "${_basename}"

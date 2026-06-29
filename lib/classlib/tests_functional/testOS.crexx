@@ -10,7 +10,9 @@ failures = failures + check_non_empty("user", x.user())
 failures = failures + check_non_empty("loadpath", x.loadpath())
 failures = failures + check_non_empty("osname", x.osname())
 failures = failures + check_non_empty("getHost", x.getHost())
-failures = failures + check_non_empty("getEnv HOME", x.getEnv("HOME"))
+home = x.getEnv("HOME")
+if length(home) = 0 then home = x.getEnv("USERPROFILE")
+failures = failures + check_non_empty("getEnv HOME/USERPROFILE", home)
 
 wait_rc = x.wait(1)
 if wait_rc < 0 then do
