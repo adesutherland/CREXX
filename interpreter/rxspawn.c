@@ -82,6 +82,7 @@ typedef struct shelldata {
     int ChildProcessRC;
     char* buffer;
     char* file_path;
+    char* application_path;
     char** argv;
     value* variables;
 } SHELLDATA;
@@ -100,6 +101,9 @@ struct redirect {
     char has_thread;
     value* reg;
     int errorCode;
+    int lastError;
+    int errorSource;
+    struct redirect *thread_redirect;
 };
 
 // Defined in a header file: typedef struct redirect REDIRECT;
@@ -128,6 +132,8 @@ static THREAD_RETURN Output2StringThread(void* lpvThreadParam);
 static THREAD_RETURN Output2ArrayThread(void* lpvThreadParam);
 static THREAD_RETURN InputFromStringThread(void* lpvThreadParam);
 static THREAD_RETURN InputFromArrayThread(void* lpvThreadParam);
+static int prepare_redirect_thread_context(REDIRECT *redirect);
+static void collect_redirect_thread_context(REDIRECT *redirect);
 #ifndef _WIN32
 static int ExeFound(char* exe);
 static char *find_executable_in_path_list(const char *path_list, const char *exe);
@@ -157,6 +163,131 @@ static char *copy_string(const char *text) {
     }
     return copy;
 }
+
+#ifdef _WIN32
+static char *copy_string_length(const char *text, size_t length) {
+    char *copy = malloc(length + 1);
+    if (copy) {
+        memcpy(copy, text, length);
+        copy[length] = '\0';
+    }
+    return copy;
+}
+
+static wchar_t *wide_from_utf8(const char *text) {
+    int length;
+    wchar_t *wide;
+
+    if (!text) return NULL;
+    length = MultiByteToWideChar(CP_UTF8, 0, text, -1, NULL, 0);
+    if (length <= 0) return NULL;
+    wide = malloc((size_t)length * sizeof(wchar_t));
+    if (!wide) return NULL;
+    if (!MultiByteToWideChar(CP_UTF8, 0, text, -1, wide, length)) {
+        free(wide);
+        return NULL;
+    }
+    return wide;
+}
+
+static char *utf8_from_wide(const wchar_t *wide) {
+    int length;
+    char *text;
+
+    if (!wide) return NULL;
+    length = WideCharToMultiByte(CP_UTF8, 0, wide, -1, NULL, 0, NULL, NULL);
+    if (length <= 0) return NULL;
+    text = malloc((size_t)length);
+    if (!text) return NULL;
+    if (!WideCharToMultiByte(CP_UTF8, 0, wide, -1, text, length, NULL, NULL)) {
+        free(text);
+        return NULL;
+    }
+    return text;
+}
+
+static char *windows_command_token(const char *command) {
+    const char *start;
+    const char *end;
+    char quote;
+    char *token;
+
+    if (!command) return NULL;
+    start = command;
+    while (*start && isspace((unsigned char)*start)) start++;
+    if (!*start) return NULL;
+
+    quote = 0;
+    if (*start == '"' || *start == '\'') quote = *start++;
+    end = start;
+    if (quote) {
+        while (*end && *end != quote) end++;
+    } else {
+        while (*end && !isspace((unsigned char)*end)) end++;
+    }
+    if (end == start) return NULL;
+
+    token = copy_string_length(start, (size_t)(end - start));
+    if (!token) return NULL;
+    for (char *cursor = token; *cursor; cursor++) {
+        if (*cursor == '/') *cursor = '\\';
+    }
+    return token;
+}
+
+static char *windows_search_executable(const char *name) {
+    static const wchar_t *extensions[] = {NULL, L".exe", L".cmd", L".bat", NULL};
+    wchar_t *wide_name;
+    char *result;
+    int i;
+
+    if (!name || !*name) return NULL;
+    wide_name = wide_from_utf8(name);
+    if (!wide_name) return NULL;
+
+    result = NULL;
+    for (i = 0; extensions[i] || i == 0; i++) {
+        DWORD needed;
+        wchar_t *wide_path;
+        DWORD copied;
+
+        needed = SearchPathW(NULL, wide_name, extensions[i], 0, NULL, NULL);
+        if (needed == 0) {
+            if (!extensions[i]) continue;
+            continue;
+        }
+
+        wide_path = malloc(((size_t)needed + 1) * sizeof(wchar_t));
+        if (!wide_path) break;
+        copied = SearchPathW(NULL, wide_name, extensions[i], needed + 1, wide_path, NULL);
+        if (copied > 0 && copied <= needed) {
+            DWORD attributes = GetFileAttributesW(wide_path);
+            if (attributes != INVALID_FILE_ATTRIBUTES && !(attributes & FILE_ATTRIBUTE_DIRECTORY)) {
+                result = utf8_from_wide(wide_path);
+                free(wide_path);
+                break;
+            }
+        }
+        free(wide_path);
+
+        if (!extensions[i]) continue;
+    }
+
+    free(wide_name);
+    return result;
+}
+
+static char *windows_resolve_application_path(const char *command) {
+    char *token;
+    char *path;
+
+    token = windows_command_token(command);
+    if (!token) return NULL;
+    path = windows_search_executable(token);
+    free(token);
+    return path;
+}
+#endif
 
 #ifndef _WIN32
 static char *find_executable_in_path_list(const char *path_list, const char *exe) {
@@ -314,6 +445,37 @@ static char *copy_value_string(value *string_value) {
     return copy;
 }
 
+static int prepare_redirect_thread_context(REDIRECT *redirect) {
+    REDIRECT *thread_redirect;
+
+    if (!redirect) return -1;
+    /* REDIRECT values live inside Rexx .binary objects that can be copied while
+     * ADDRESS requests are assembled. Worker threads need a stable context. */
+    thread_redirect = malloc(sizeof(REDIRECT));
+    if (!thread_redirect) {
+        redirect->errorCode = 1;
+        return -1;
+    }
+    *thread_redirect = *redirect;
+    thread_redirect->thread_redirect = NULL;
+    redirect->thread_redirect = thread_redirect;
+    return 0;
+}
+
+static void collect_redirect_thread_context(REDIRECT *redirect) {
+    REDIRECT *thread_redirect;
+
+    if (!redirect || !redirect->thread_redirect) return;
+    thread_redirect = redirect->thread_redirect;
+    if (thread_redirect->errorCode != 0) {
+        redirect->errorCode = thread_redirect->errorCode;
+        redirect->lastError = thread_redirect->lastError;
+        redirect->errorSource = thread_redirect->errorSource;
+    }
+    free(thread_redirect);
+    redirect->thread_redirect = NULL;
+}
+
 static int crexxcmd_write_redirect(REDIRECT *redirect, FILE *fallback, const char *text, size_t length) {
     if (!text) length = 0;
     if (!redirect) {
@@ -329,6 +491,8 @@ static int crexxcmd_write_redirect(REDIRECT *redirect, FILE *fallback, const cha
             if (!WriteFile(redirect->hWrite, text + total, (DWORD)(length - total), &written, NULL)) {
                 if (GetLastError() == ERROR_NO_DATA) return 0;
                 redirect->errorCode = 1;
+                redirect->lastError = (int)GetLastError();
+                redirect->errorSource = 1;
                 return -1;
             }
             total += written;
@@ -394,6 +558,8 @@ static int crexxcmd_read_redirect(REDIRECT *redirect, char **out_text, size_t *o
                 DWORD read_error = GetLastError();
                 if (read_error == ERROR_BROKEN_PIPE || read_error == ERROR_HANDLE_EOF) break;
                 redirect->errorCode = 1;
+                redirect->lastError = (int)read_error;
+                redirect->errorSource = 2;
                 return -1;
             }
             if (bytes_read == 0) break;
@@ -408,6 +574,8 @@ static int crexxcmd_read_redirect(REDIRECT *redirect, char **out_text, size_t *o
             CloseHandle(redirect->thread);
             redirect->thread = NULL;
             redirect->has_thread = 0;
+            collect_redirect_thread_context(redirect);
+            redirect->hWrite = INVALID_HANDLE_VALUE;
         }
         if (redirect->hWrite != INVALID_HANDLE_VALUE) {
             CloseHandle(redirect->hWrite);
@@ -436,6 +604,8 @@ static int crexxcmd_read_redirect(REDIRECT *redirect, char **out_text, size_t *o
                 return -1;
             }
             redirect->has_thread = 0;
+            collect_redirect_thread_context(redirect);
+            redirect->hWrite = -1;
         }
         if (redirect->hWrite != -1) {
             close(redirect->hWrite);
@@ -465,6 +635,8 @@ static int crexxcmd_close_output_redirect(REDIRECT *redirect) {
         CloseHandle(redirect->thread);
         redirect->thread = NULL;
         redirect->has_thread = 0;
+        collect_redirect_thread_context(redirect);
+        redirect->hWrite = INVALID_HANDLE_VALUE;
     }
     if (redirect->hRead != INVALID_HANDLE_VALUE) {
         CloseHandle(redirect->hRead);
@@ -481,6 +653,8 @@ static int crexxcmd_close_output_redirect(REDIRECT *redirect) {
             return -1;
         }
         redirect->has_thread = 0;
+        collect_redirect_thread_context(redirect);
+        redirect->hWrite = -1;
     }
     if (redirect->hRead != -1) {
         close(redirect->hRead);
@@ -504,6 +678,8 @@ static int crexxcmd_close_input_redirect(REDIRECT *redirect) {
         CloseHandle(redirect->thread);
         redirect->thread = NULL;
         redirect->has_thread = 0;
+        collect_redirect_thread_context(redirect);
+        redirect->hWrite = INVALID_HANDLE_VALUE;
     }
     if (redirect->hWrite != INVALID_HANDLE_VALUE) {
         CloseHandle(redirect->hWrite);
@@ -520,6 +696,8 @@ static int crexxcmd_close_input_redirect(REDIRECT *redirect) {
             return -1;
         }
         redirect->has_thread = 0;
+        collect_redirect_thread_context(redirect);
+        redirect->hWrite = -1;
     }
     if (redirect->hWrite != -1) {
         close(redirect->hWrite);
@@ -532,12 +710,26 @@ static int crexxcmd_close_input_redirect(REDIRECT *redirect) {
 
 static int crexxcmd_finalize_redirects(SHELLDATA *data, char **errorText) {
     int rc = 0;
+    char details[192];
 
     if (!data) return 0;
     if (crexxcmd_close_input_redirect(data->pInput) != 0) rc = -1;
     if (crexxcmd_close_output_redirect(data->pOutput) != 0) rc = -1;
     if (crexxcmd_close_output_redirect(data->pError) != 0) rc = -1;
-    if (rc != 0) appendTextOutput(errorText, "CREXX command redirect failure");
+    if (rc != 0) {
+        snprintf(details, sizeof(details),
+                 "CREXX command redirect failure input=%d/%d/%d output=%d/%d/%d error=%d/%d/%d",
+                 data->pInput ? data->pInput->errorCode : 0,
+                 data->pInput ? data->pInput->lastError : 0,
+                 data->pInput ? data->pInput->errorSource : 0,
+                 data->pOutput ? data->pOutput->errorCode : 0,
+                 data->pOutput ? data->pOutput->lastError : 0,
+                 data->pOutput ? data->pOutput->errorSource : 0,
+                 data->pError ? data->pError->errorCode : 0,
+                 data->pError ? data->pError->lastError : 0,
+                 data->pError ? data->pError->errorSource : 0);
+        appendTextOutput(errorText, details);
+    }
     return rc;
 }
 
@@ -689,6 +881,7 @@ int shellspawn (const char *command,
     data.pError = pErr;
     data.buffer = 0;
     data.file_path = 0;
+    data.application_path = 0;
     data.argv = 0;
     data.waitThreadRC = 0;
     data.variables = variables;
@@ -734,6 +927,12 @@ int shellspawn (const char *command,
             Error("Failure spawn W02", errorText);
             CleanUp(&data);
             return SHELLSPAWN_FAILURE;
+        }
+        data.application_path = windows_resolve_application_path(command);
+        if (!data.application_path) {
+            Error("Command not found", errorText);
+            CleanUp(&data);
+            return SHELLSPAWN_NOFOUND;
         }
     }
 #else
@@ -834,8 +1033,11 @@ void nullredr(value* redirect_reg) {
     redirect = (REDIRECT *) redirect_reg->binary_value;
 
     redirect->errorCode = 0;
+    redirect->lastError = 0;
+    redirect->errorSource = 0;
     redirect->reg = 0;
     redirect->has_thread = 0;
+    redirect->thread_redirect = NULL;
 
 #ifdef _WIN32
 
@@ -895,8 +1097,11 @@ void redirectOutput(value* redirect_reg, value* string_reg, start_routine start)
     redirect = (REDIRECT*)redirect_reg->binary_value;
 
     redirect->errorCode = 0;
+    redirect->lastError = 0;
+    redirect->errorSource = 0;
     redirect->reg = string_reg;
     redirect->has_thread = 0;
+    redirect->thread_redirect = NULL;
 
 #ifdef _WIN32
 
@@ -911,6 +1116,7 @@ void redirectOutput(value* redirect_reg, value* string_reg, start_routine start)
     {
         // Error - try and clean-up
         redirect->errorCode = 1;
+        redirect->lastError = (int)GetLastError();
         return;
     }
 
@@ -925,6 +1131,7 @@ void redirectOutput(value* redirect_reg, value* string_reg, start_routine start)
         CloseHandle(hReadTmp);
         CloseHandle(redirect->hWrite);
         redirect->errorCode = 2;
+        redirect->lastError = (int)GetLastError();
         return;
     }
 
@@ -935,6 +1142,7 @@ void redirectOutput(value* redirect_reg, value* string_reg, start_routine start)
         CloseHandle(redirect->hRead);
         CloseHandle(redirect->hWrite);
         redirect->errorCode = 3;
+        redirect->lastError = (int)GetLastError();
         return;
     }
     hReadTmp = NULL;
@@ -956,21 +1164,28 @@ void redirectOutput(value* redirect_reg, value* string_reg, start_routine start)
     // Launch the thread that reads the output
 #ifdef _WIN32
 
-    redirect->thread = CreateThread(NULL, 0, start, (LPVOID)redirect, 0, NULL);
+    if (prepare_redirect_thread_context(redirect) != 0) return;
+    redirect->thread = CreateThread(NULL, 0, start, (LPVOID)redirect->thread_redirect, 0, NULL);
     if (redirect->thread == NULL)
     {
         // Error - try and clean-up
         CloseHandle(redirect->hRead);
         CloseHandle(redirect->hWrite);
         redirect->errorCode = 5;
+        redirect->lastError = (int)GetLastError();
+        free(redirect->thread_redirect);
+        redirect->thread_redirect = NULL;
         return;
     }
 
 #else
 
-    if (pthread_create(&(redirect->thread), NULL, start, (void *)redirect)) {
+    if (prepare_redirect_thread_context(redirect) != 0) return;
+    if (pthread_create(&(redirect->thread), NULL, start, (void *)redirect->thread_redirect)) {
         // Error
         redirect->errorCode = 1;
+        free(redirect->thread_redirect);
+        redirect->thread_redirect = NULL;
     }
 
 #endif
@@ -999,6 +1214,8 @@ THREAD_RETURN Output2StringThread(void* lpvThreadParam)
                 continue;
             }
             context->errorCode = 1;
+            context->lastError = (int)read_error;
+            context->errorSource = 3;
             return 0;
         }
         else if (dwBytesRead == 0) {
@@ -1048,6 +1265,8 @@ THREAD_RETURN Output2ArrayThread(void* lpvThreadParam) {
                 continue;
             }
             context->errorCode = 1;
+            context->lastError = (int)read_error;
+            context->errorSource = 4;
             return 0;
         }
         else if (dwBytesRead == 0) {
@@ -1152,8 +1371,11 @@ void redirectInput(value* redirect_reg, value* string_reg, start_routine start) 
     redirect_reg->binary_buffer_length = redirect_reg->binary_length;
     redirect = (REDIRECT*)redirect_reg->binary_value;
     redirect->errorCode = 0;
+    redirect->lastError = 0;
+    redirect->errorSource = 0;
     redirect->has_thread = 0;
     redirect->reg = string_reg;
+    redirect->thread_redirect = NULL;
 
 #ifdef _WIN32
 
@@ -1171,6 +1393,7 @@ void redirectInput(value* redirect_reg, value* string_reg, start_routine start) 
     {
         // Error - try and clean-up
         redirect->errorCode = 1;
+        redirect->lastError = (int)GetLastError();
         return;
     }
 
@@ -1183,6 +1406,7 @@ void redirectInput(value* redirect_reg, value* string_reg, start_routine start) 
     {
         // Error - try and clean-up
         redirect->errorCode = 2;
+        redirect->lastError = (int)GetLastError();
         return;
     }
 
@@ -1191,16 +1415,21 @@ void redirectInput(value* redirect_reg, value* string_reg, start_routine start) 
     {
         // Error - try and clean-up
         redirect->errorCode = 3;
+        redirect->lastError = (int)GetLastError();
         return;
     }
 
     DWORD threadID;
     // Launch the thread that writes to the pipe
-    redirect->thread = CreateThread(NULL, 0, start, redirect, 0, &threadID);
+    if (prepare_redirect_thread_context(redirect) != 0) return;
+    redirect->thread = CreateThread(NULL, 0, start, redirect->thread_redirect, 0, &threadID);
     if (redirect->thread == NULL)
     {
         // Error
         redirect->errorCode = 4;
+        redirect->lastError = (int)GetLastError();
+        free(redirect->thread_redirect);
+        redirect->thread_redirect = NULL;
         return;
     }
 
@@ -1220,9 +1449,12 @@ void redirectInput(value* redirect_reg, value* string_reg, start_routine start) 
     redirect->hWrite = temppipe[1];
 
     // Launch the thread that writes to the pipe
-    if (pthread_create(&(redirect->thread), NULL, start, (void *)redirect)) {
+    if (prepare_redirect_thread_context(redirect) != 0) return;
+    if (pthread_create(&(redirect->thread), NULL, start, (void *)redirect->thread_redirect)) {
         // Error
         redirect->errorCode = 2;
+        free(redirect->thread_redirect);
+        redirect->thread_redirect = NULL;
         return;
     }
 #endif
@@ -1322,6 +1554,8 @@ void WriteToStdin(REDIRECT* data, char *line, size_t nBytes)
             }
             else {
                 data->errorCode = 1;
+                data->lastError = (int)GetLastError();
+                data->errorSource = 5;
                 return;
             }
         }
@@ -1371,6 +1605,7 @@ int redrwriteclose(value* redirect_reg, const char* data, size_t nBytes)
         CloseHandle(redirect->thread);
         redirect->thread = NULL;
         redirect->has_thread = 0;
+        collect_redirect_thread_context(redirect);
     }
     if (redirect->hRead != INVALID_HANDLE_VALUE) {
         CloseHandle(redirect->hRead);
@@ -1387,6 +1622,7 @@ int redrwriteclose(value* redirect_reg, const char* data, size_t nBytes)
             return -1;
         }
         redirect->has_thread = 0;
+        collect_redirect_thread_context(redirect);
     }
     if (redirect->hRead != -1) {
         close(redirect->hRead);
@@ -1410,6 +1646,10 @@ void CleanUp(SHELLDATA* data)
     if (data->file_path) {
         free(data->file_path);
         data->file_path = 0;
+    }
+    if (data->application_path) {
+        free(data->application_path);
+        data->application_path = 0;
     }
 
 #ifdef _WIN32
@@ -1553,6 +1793,9 @@ void WaitForProcess(SHELLDATA* data)
 
     CloseHandle(data->ChildProcessInfo.hProcess);
     data->ChildProcessInfo.hProcess = NULL;
+    if (data->ChildProcessInfo.hThread) {
+        CloseHandle(data->ChildProcessInfo.hThread);
+    }
     data->ChildProcessInfo.hThread = NULL;
 
     // Wait for the Input, Output and Error threads to die
@@ -1562,6 +1805,8 @@ void WaitForProcess(SHELLDATA* data)
         CloseHandle(data->pInput->thread);
         data->pInput->thread = NULL;
         data->pInput->has_thread = 0;
+        collect_redirect_thread_context(data->pInput);
+        data->pInput->hWrite = INVALID_HANDLE_VALUE;
     }
     if (data->pOutput && data->pOutput->has_thread)
     {
@@ -1569,6 +1814,7 @@ void WaitForProcess(SHELLDATA* data)
         CloseHandle(data->pOutput->thread);
         data->pOutput->thread = NULL;
         data->pOutput->has_thread = 0;
+        collect_redirect_thread_context(data->pOutput);
     }
     if (data->pError && data->pError->has_thread)
     {
@@ -1576,6 +1822,7 @@ void WaitForProcess(SHELLDATA* data)
         CloseHandle(data->pError->thread);
         data->pError->thread = NULL;
         data->pError->has_thread = 0;
+        collect_redirect_thread_context(data->pError);
     }
 
     // Close 'my' end of any pipes
@@ -1637,6 +1884,8 @@ void WaitForProcess(SHELLDATA* data)
             Error("Failure spawn U44", &data->waitThreadErrorText);
         }
         data->pInput->has_thread = 0;
+        collect_redirect_thread_context(data->pInput);
+        data->pInput->hWrite = -1;
     }
 
     if (data->pOutput && data->pOutput->has_thread)
@@ -1646,6 +1895,7 @@ void WaitForProcess(SHELLDATA* data)
             Error("Failure spawn U45", &data->waitThreadErrorText);
         }
         data->pOutput->has_thread = 0;
+        collect_redirect_thread_context(data->pOutput);
     }
 
     if (data->pError && data->pError->has_thread)
@@ -1655,6 +1905,7 @@ void WaitForProcess(SHELLDATA* data)
             Error("Failure spawn U46", &data->waitThreadErrorText);
         }
         data->pError->has_thread = 0;
+        collect_redirect_thread_context(data->pError);
     }
 
     // Close 'my' end of any pipes
@@ -1847,24 +2098,70 @@ int launchChild(SHELLDATA* data) {
 #ifdef _WIN32
 
     // Launch the redirected command
-    STARTUPINFOW si;
+    STARTUPINFOEXW si;
+    SIZE_T attributeListSize;
+    HANDLE inheritedHandles[3];
+    int inheritedHandleCount;
+    int useHandleList;
     int i;
 
     // Set up the start up info struct.
-    ZeroMemory(&si, sizeof(STARTUPINFOW));
-    si.cb = sizeof(STARTUPINFOW);
-    si.dwFlags = STARTF_USESTDHANDLES;
+    ZeroMemory(&si, sizeof(STARTUPINFOEXW));
+    si.StartupInfo.cb = sizeof(STARTUPINFOEXW);
+    si.StartupInfo.dwFlags = STARTF_USESTDHANDLES;
 
-    si.hStdOutput = (data->pOutput && data->pOutput->hWrite != INVALID_HANDLE_VALUE) ? data->pOutput->hWrite : GetStdHandle(STD_OUTPUT_HANDLE);
-    si.hStdError = (data->pError && data->pError->hWrite != INVALID_HANDLE_VALUE) ? data->pError->hWrite : GetStdHandle(STD_ERROR_HANDLE);
-    si.hStdInput = (data->pInput && data->pInput->hRead != INVALID_HANDLE_VALUE) ? data->pInput->hRead : GetStdHandle(STD_INPUT_HANDLE);
+    si.StartupInfo.hStdOutput = (data->pOutput && data->pOutput->hWrite != INVALID_HANDLE_VALUE) ? data->pOutput->hWrite : GetStdHandle(STD_OUTPUT_HANDLE);
+    si.StartupInfo.hStdError = (data->pError && data->pError->hWrite != INVALID_HANDLE_VALUE) ? data->pError->hWrite : GetStdHandle(STD_ERROR_HANDLE);
+    si.StartupInfo.hStdInput = (data->pInput && data->pInput->hRead != INVALID_HANDLE_VALUE) ? data->pInput->hRead : GetStdHandle(STD_INPUT_HANDLE);
 
     int flags = CREATE_UNICODE_ENVIRONMENT; // UTF16 Environment Variables
+    attributeListSize = 0;
+    inheritedHandleCount = 0;
+    useHandleList = data->pInput && data->pOutput && data->pError
+        && data->pInput->hRead != INVALID_HANDLE_VALUE
+        && data->pOutput->hWrite != INVALID_HANDLE_VALUE
+        && data->pError->hWrite != INVALID_HANDLE_VALUE;
+    if (useHandleList) {
+        /* Restrict Windows child inheritance to the stdio handles for this
+         * spawn, otherwise nested ADDRESS runs can inherit unrelated pipes. */
+        inheritedHandles[inheritedHandleCount++] = si.StartupInfo.hStdInput;
+        inheritedHandles[inheritedHandleCount++] = si.StartupInfo.hStdOutput;
+        if (si.StartupInfo.hStdError != si.StartupInfo.hStdOutput) {
+            inheritedHandles[inheritedHandleCount++] = si.StartupInfo.hStdError;
+        }
+
+        InitializeProcThreadAttributeList(NULL, 1, 0, &attributeListSize);
+        si.lpAttributeList = malloc(attributeListSize);
+        if (!si.lpAttributeList) {
+            CleanUp(data);
+            return SHELLSPAWN_FAILURE;
+        }
+        if (!InitializeProcThreadAttributeList(si.lpAttributeList, 1, 0, &attributeListSize)) {
+            free(si.lpAttributeList);
+            si.lpAttributeList = NULL;
+            CleanUp(data);
+            return SHELLSPAWN_FAILURE;
+        }
+        if (!UpdateProcThreadAttribute(si.lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
+                                       inheritedHandles, (SIZE_T)inheritedHandleCount * sizeof(HANDLE),
+                                       NULL, NULL)) {
+            DeleteProcThreadAttributeList(si.lpAttributeList);
+            free(si.lpAttributeList);
+            si.lpAttributeList = NULL;
+            CleanUp(data);
+            return SHELLSPAWN_FAILURE;
+        }
+        flags |= EXTENDED_STARTUPINFO_PRESENT;
+    }
 
     /* Environment variables */
     LPWSTR pszCurrentEnvironment = GetEnvironmentStringsW();  // Get parent process's environment block.
     if (pszCurrentEnvironment == NULL) {
         // Handle error.
+        if (si.lpAttributeList) {
+            DeleteProcThreadAttributeList(si.lpAttributeList);
+            free(si.lpAttributeList);
+        }
         CleanUp(data);
         return SHELLSPAWN_FAILURE;
     }
@@ -1897,6 +2194,10 @@ int launchChild(SHELLDATA* data) {
     LPWSTR pszNewEnvironment = (LPWSTR) calloc(newEnvironmentSize, sizeof(wchar_t));
     if (pszNewEnvironment == NULL) {
         // Handle memory allocation failure.
+        if (si.lpAttributeList) {
+            DeleteProcThreadAttributeList(si.lpAttributeList);
+            free(si.lpAttributeList);
+        }
         FreeEnvironmentStringsW(pszCurrentEnvironment);
         CleanUp(data);
         return SHELLSPAWN_FAILURE;
@@ -1937,6 +2238,10 @@ int launchChild(SHELLDATA* data) {
     int filePathLength = MultiByteToWideChar(CP_UTF8, 0, data->file_path, -1, NULL, 0);
     if (filePathLength == 0) {
         // Handle the error here. Call GetLastError() to get the error code.
+        if (si.lpAttributeList) {
+            DeleteProcThreadAttributeList(si.lpAttributeList);
+            free(si.lpAttributeList);
+        }
         free(pszNewEnvironment);
         CleanUp(data);
         return SHELLSPAWN_FAILURE;
@@ -1945,6 +2250,10 @@ int launchChild(SHELLDATA* data) {
     // Allocate memory for the wide character string.
     wchar_t* wideFilePath = malloc(filePathLength * sizeof(wchar_t));
     if (wideFilePath == NULL) {
+        if (si.lpAttributeList) {
+            DeleteProcThreadAttributeList(si.lpAttributeList);
+            free(si.lpAttributeList);
+        }
         free(pszNewEnvironment);
         CleanUp(data);
         return SHELLSPAWN_FAILURE;
@@ -1953,12 +2262,45 @@ int launchChild(SHELLDATA* data) {
     // Do the conversion.
     MultiByteToWideChar(CP_UTF8, 0, data->file_path, -1, wideFilePath, filePathLength);
 
+    wchar_t* wideApplicationPath = NULL;
+    if (data->application_path) {
+        int applicationPathLength = MultiByteToWideChar(CP_UTF8, 0, data->application_path, -1, NULL, 0);
+        if (applicationPathLength == 0) {
+            if (si.lpAttributeList) {
+                DeleteProcThreadAttributeList(si.lpAttributeList);
+                free(si.lpAttributeList);
+            }
+            free(wideFilePath);
+            free(pszNewEnvironment);
+            CleanUp(data);
+            return SHELLSPAWN_FAILURE;
+        }
+
+        wideApplicationPath = malloc(applicationPathLength * sizeof(wchar_t));
+        if (wideApplicationPath == NULL) {
+            if (si.lpAttributeList) {
+                DeleteProcThreadAttributeList(si.lpAttributeList);
+                free(si.lpAttributeList);
+            }
+            free(wideFilePath);
+            free(pszNewEnvironment);
+            CleanUp(data);
+            return SHELLSPAWN_FAILURE;
+        }
+        MultiByteToWideChar(CP_UTF8, 0, data->application_path, -1, wideApplicationPath, applicationPathLength);
+    }
+
     /* Start the child process */
-    if (!CreateProcessW(NULL,wideFilePath,NULL,NULL,TRUE,
-                       flags,pszNewEnvironment,NULL,&si,&data->ChildProcessInfo))
+    if (!CreateProcessW(wideApplicationPath,wideFilePath,NULL,NULL,TRUE,
+                       flags,pszNewEnvironment,NULL,&si.StartupInfo,&data->ChildProcessInfo))
     {
         if (GetLastError() == 2) // File not found
         {
+            if (si.lpAttributeList) {
+                DeleteProcThreadAttributeList(si.lpAttributeList);
+                free(si.lpAttributeList);
+            }
+            free(wideApplicationPath);
             free(wideFilePath);
             free(pszNewEnvironment);
             CleanUp(data);
@@ -1966,6 +2308,11 @@ int launchChild(SHELLDATA* data) {
         }
         else
         {
+            if (si.lpAttributeList) {
+                DeleteProcThreadAttributeList(si.lpAttributeList);
+                free(si.lpAttributeList);
+            }
+            free(wideApplicationPath);
             free(wideFilePath);
             free(pszNewEnvironment);
             CleanUp(data);
@@ -1974,6 +2321,11 @@ int launchChild(SHELLDATA* data) {
     }
 
     /* Cleanup */
+    if (si.lpAttributeList) {
+        DeleteProcThreadAttributeList(si.lpAttributeList);
+        free(si.lpAttributeList);
+    }
+    free(wideApplicationPath);
     free(wideFilePath);
     free(pszNewEnvironment);
 
