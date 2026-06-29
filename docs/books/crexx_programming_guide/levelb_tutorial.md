@@ -27,7 +27,7 @@ For more implemented examples in a source download, start with these paths:
 - `compiler/tests/rexx_src/interface_showcase_same_module.crexx`, and
 - `compiler/tests/rexx_src/reference_source_iterator.crexx`.
 
-## 1. Why Level B Still Feels Like Rexx
+## Why Level B Still Feels Like Rexx
 
 The first pleasant surprise is that much of the surface still reads like Rexx:
 
@@ -46,7 +46,7 @@ That trade is worth leaning into. Do not write vague Classic Rexx and hope the
 compiler guesses your intent. Write a small amount of explicit Level B so the
 compiler and VM can help you.
 
-## 2. First Program and Workflow
+## First Program and Workflow
 
 The usual source extension for new cRexx code is `.crexx`. For reusable code,
 start with `options levelb` and import the Level B standard library when you
@@ -86,7 +86,7 @@ where provider modules must be present at runtime, compile the modules and run
 or link the resulting `.rxbin` files explicitly. The mini-project below shows
 that shape.
 
-## 3. Source File Conventions
+## Source File Conventions
 
 Use this header shape for committed Level B code. This is a header fragment,
 not a complete program:
@@ -146,7 +146,7 @@ Expected output:
 <!-- 2:beta -->
 <!-- ``` -->
 
-## 4. Types You Will Use Immediately
+## Types You Will Use Immediately
 
 Level B values have types. The most common built-in source spellings are:
 
@@ -232,7 +232,7 @@ Practical notes:
   and bracket keys such as `people["grace.hopper"]`.
 - `.string` is valid UTF-8 text in normal builds. Use `.binary` for bytes.
 
-## 5. Procedures, Arguments, Returns, and Varargs
+## Procedures, Arguments, Returns, and Varargs
 
 A Level B procedure can declare its return type after `=`, and it binds call
 arguments with `arg`.
@@ -285,7 +285,7 @@ The important habits are:
 storage into a procedure. Prefer explicit arguments and return values until you
 really need shared module state.
 
-## 6. Expressions, Assignment, Casts, and Comparisons
+## Expressions, Assignment, Casts, and Comparisons
 
 Level B keeps Rexx operators, but type checking happens before bytecode is
 emitted.
@@ -316,7 +316,7 @@ restored = generic as .asset
 If a cast cannot succeed, Level B raises a conversion signal instead of silently
 changing the meaning of the value.
 
-## 7. Control Flow
+## Control Flow
 
 The usual Rexx control-flow tools are present. `select` has both Classic Rexx
 condition style and a switch-like expression style. `leave` and `iterate` work
@@ -364,7 +364,7 @@ Expected output:
 <!-- summary=many -->
 <!-- ``` -->
 
-## 8. Rexx-Flavoured Features
+## Rexx-Flavoured Features
 
 Level B keeps several Rexx features that make the language feel direct:
 
@@ -424,7 +424,7 @@ Do not add `TRACE`, `PARSE`, or `ADDRESS` directly to `lib/rxfnsb/rexx/`
 library sources while debugging the library build. Those files are built with
 compiler exits disabled. Write a small caller program instead.
 
-## 9. Modules and Libraries
+## Modules and Libraries
 
 Each source file is a module. Public module identity comes from `namespace`,
 not from the filename alone. A module exposes selected symbols; another module
@@ -479,7 +479,7 @@ Use `namespace..symbol` for qualified calls. The older
 `namespace::symbol` spelling is accepted for compatibility, but new examples
 should prefer the double-dot form.
 
-## 10. Classes
+## Classes
 
 Classes hold attributes and methods. A class factory is written as `*: factory`
 or `name: factory`; do not write a return type on a factory. In a class
@@ -506,7 +506,7 @@ Ordinary application classes should let the compiler allocate attribute
 storage. The `with register.N` form exists for low-level VM/native interop, not
 for day-to-day business objects.
 
-## 11. Interfaces
+## Interfaces
 
 Interfaces define contracts. Classes implement them. Interface methods can be
 abstract, or they can provide a default/final body. In current Level B, an
@@ -592,7 +592,7 @@ providers. The `*: match` method is a class-side selector. Positive scores
 accept the provider, zero or negative scores reject it, and the highest score
 wins.
 
-## 12. Object Use
+## Object Use
 
 Use object values through factories, methods, interfaces, type tests, and
 checked casts:
@@ -611,7 +611,7 @@ call it explicitly.
 Level B also does not currently implement interface inheritance, interface
 attributes, overloads, singleton declarations, or destructor/finalizer syntax.
 
-## 13. Collections and Iteration
+## Collections and Iteration
 
 Current Level B collection patterns are explicit:
 
@@ -644,7 +644,7 @@ For iterator-like classes, current Level B uses explicit references when the
 iterator should see live container state. Use snapshots when the iterator should
 see a stable copy.
 
-## 14. References
+## References
 
 References are explicit weak aliases to storage. They do not keep a target
 alive. If the target storage goes away, `refvalid(ref)` returns false and
@@ -741,7 +741,7 @@ Keep reference boundaries visible. Level B does not let you write convenience
 forms such as `list_ref.add(...)` or `items_ref[i]` directly through the
 reference.
 
-## 15. Mini-Project: A Typed Ledger Module
+## Mini-Project: A Typed Ledger Module
 
 This mini-project uses two source files: a reusable module with an interface
 and class, and a small application that imports it.
@@ -832,7 +832,7 @@ The explicit `rxvm` command matters here because interface factory providers
 are discovered from the modules present in the runtime image. For deployable
 programs, `rxlink` is the usual way to combine those modules into one image.
 
-## 16. Migration Guide For Classic Rexx Habits
+## Migration Guide For Classic Rexx Habits
 
 Classic Rexx habit:
 : Rely on untyped variables.
@@ -877,7 +877,7 @@ Level B habit:
 : Define an interface, implement it with classes, and use checked casts and
   type tests at boundaries.
 
-## 17. Known Beta 3 Boundaries
+## Known Beta 3 Boundaries
 
 Level B is the main implemented Release 1 beta language, but this is still a
 beta line. Current boundaries that matter to tutorial code:
