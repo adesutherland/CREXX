@@ -11,6 +11,7 @@ set(REXXBINS
         ts_abbrev.rxbin
 	ts_abs.rxbin
 	ts_address.rxbin
+        ts_address_crexx.rxbin
         ts_binary.rxbin
         ts_c2x.rxbin
         ts_center.rxbin
@@ -105,7 +106,7 @@ foreach(_binfile ${REXXBINS})
     add_custom_target(${_basename})
     add_dependencies(testbifs ${_basename})
     set(_rxc_flags -x)
-    if("${_basename}" STREQUAL "ts_address")
+    if("${_basename}" STREQUAL "ts_address" OR "${_basename}" STREQUAL "ts_address_crexx")
         set(_rxc_flags)
     endif()
     set(_pass_test_name_argument)

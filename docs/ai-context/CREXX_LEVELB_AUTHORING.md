@@ -52,7 +52,7 @@ arg searches = .string[]
 
 if searches.0 < 1 then searches.1 = ".crexx"
 ordered_searches = .string[]
-address cmd "sort" input searches output ordered_searches
+address crexx "echo .crexx" output ordered_searches
 ```
 
 References:
@@ -367,31 +367,43 @@ Recent observations from the RexxScript evaluator refactor:
   some Level B paths. Snapshot state inside the owning method when correctness
   depends on the just-mutated object, and raise a focused language/runtime issue.
 
-### `address command` is the standard shell-out pattern
+### `address crexx` is the standard command-environment pattern
 
-When Level B code shells out, copy the repo pattern instead of inventing a new
-API shape:
+When Level B code needs command-environment behavior, copy the repo pattern
+instead of inventing a new API shape:
 
 ```rexx
 out = .string[]
 err = .string[]
-address command "echo '#42'" output out error err
+address crexx "echo #42" output out error err
 if rc <> 0 then say "command failed"
 ```
 
-`address command`, `address system`, `address cmd`, and `address shell` route
-through the platform command processor. On POSIX this is standard `sh -c`
-resolved from the system standard utility path, not the user's `SHELL`
+`address crexx` uses the CREXX command environment. It is the default ADDRESS
+environment, owns cREXX-specific, OS-independent commands such as `echo`, `pwd`,
+`cd`, `pushd`, `popd`, `ls`, `mkdir`, `copy`, `cat`, `platform`, `pid`,
+`resolve`, `tcp`, and `batch`, and reports normal command failure through `rc`.
+It is not a shell: `;`, `&&`, `||`, pipes, shell redirects, and shell expansion
+are usage errors. Use repeated ADDRESS statements or `address crexx "batch"`
+with input lines for multiple commands.
+
+Use `address system`, `address command`, or `address cmd` only when the caller
+intentionally needs the platform command processor. On POSIX this is standard
+`sh -c` resolved from the system standard utility path, not the user's `SHELL`
 environment variable; on Windows it is `%COMSPEC% /D /S /C` with a `cmd.exe`
-fallback. Shell built-ins such as `cd`, pipes, redirects, and command chaining
-belong on this route.
+fallback. Shell built-ins, pipes, redirects, and command chaining belong on
+this route.
+
+Use `address shell` only when the shell executable is deliberately configured
+through `CREXX_ADDRESS_SHELL` and optional `CREXX_ADDRESS_SHELL_ARGS`.
 
 Use `address path` only when the caller needs direct executable dispatch. That
-provider argv-parses the command, resolves the executable through process
-`PATH`, and calls it without shell semantics:
+provider uses the platform process API without shell semantics. On POSIX it
+argv-parses the command and resolves the executable through process `PATH`; on
+Windows it uses direct `CreateProcessW` command-line dispatch:
 
 ```rexx
-address path "echo #42" output out error err
+address path "rxas -h" output out error err
 ```
 
 References:

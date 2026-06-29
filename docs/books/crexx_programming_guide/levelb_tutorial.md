@@ -386,7 +386,7 @@ main: procedure
 
   out = .string[]
   err = .string[]
-  address command "echo 42" output out error err
+  address crexx "echo 42" output out error err
   say "address=" || out[1]
 
   handled = ""

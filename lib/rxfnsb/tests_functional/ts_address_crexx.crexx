@@ -1,0 +1,252 @@
+/* CREXX command environment tests */
+options levelb
+import rxfnsb
+
+errors=0
+
+out = .string[]
+err = .string[]
+path_out = .string[]
+exists_out = .string[]
+stat_out = .string[]
+cat_out = .string[]
+head_out = .string[]
+tail_out = .string[]
+lines_out = .string[]
+dir_out = .string[]
+pushd_out = .string[]
+popd_out = .string[]
+pwd_out = .string[]
+platform_out = .string[]
+now_out = .string[]
+env_out = .string[]
+pid_out = .string[]
+ps_out = .string[]
+resolve_out = .string[]
+batch_in = .string[]
+batch_out = .string[]
+bad_batch_in = .string[]
+bad_batch_out = .string[]
+operator_err = .string[]
+operator_out = .string[]
+run_out = .string[]
+workdir = .string
+subdir = .string
+source_file = .string
+copy_file = .string
+moved_file = .string
+touched_file = .string
+
+address crexx "pid" output pid_out error err
+if rc <> 0 | pid_out.1 = "" then do
+  say "CREXX_PID" rc pid_out.1
+  return 1
+end
+
+workdir = "crexx_address_tmp_" || pid_out.1
+subdir = workdir || "/sub"
+source_file = workdir || "/source.txt"
+copy_file = workdir || "/copy.txt"
+moved_file = workdir || "/moved.txt"
+touched_file = workdir || "/touched.txt"
+
+address crexx "rm -r " || workdir output out error err
+address crexx "mkdir -p " || subdir output out error err
+if rc <> 0 then do
+  say "CREXX_MKDIR" rc
+  errors=errors+1
+end
+
+address crexx "write " || source_file || " alpha" output out error err
+if rc <> 0 then do
+  say "CREXX_WRITE" rc
+  errors=errors+1
+end
+
+address crexx "append " || source_file || " beta" output out error err
+if rc <> 0 then do
+  say "CREXX_APPEND" rc
+  errors=errors+1
+end
+
+address crexx "exists " || source_file output exists_out error err
+if rc <> 0 | exists_out.1 <> "1 " || source_file then do
+  say "CREXX_EXISTS" rc exists_out.1
+  errors=errors+1
+end
+
+address crexx "copy " || source_file || " " || copy_file output out error err
+if rc <> 0 then do
+  say "CREXX_COPY" rc
+  errors=errors+1
+end
+
+address crexx "move " || copy_file || " " || moved_file output out error err
+if rc <> 0 then do
+  say "CREXX_MOVE" rc
+  errors=errors+1
+end
+
+address crexx "cat " || moved_file output cat_out error err
+if rc <> 0 | cat_out.1 <> "alphabeta" then do
+  say "CREXX_CAT" rc cat_out.1
+  errors=errors+1
+end
+
+address crexx "head -n 1 " || moved_file output head_out error err
+if rc <> 0 | head_out.1 <> "alphabeta" then do
+  say "CREXX_HEAD" rc head_out.1
+  errors=errors+1
+end
+
+address crexx "tail -n 1 " || moved_file output tail_out error err
+if rc <> 0 | tail_out.1 <> "alphabeta" then do
+  say "CREXX_TAIL" rc tail_out.1
+  errors=errors+1
+end
+
+address crexx "lines " || moved_file output lines_out error err
+if rc <> 0 | lines_out.1 <> "1" then do
+  say "CREXX_LINES" rc lines_out.1
+  errors=errors+1
+end
+
+address crexx "stat " || moved_file output stat_out error err
+if rc <> 0 | pos("type=file", stat_out.1) = 0 then do
+  say "CREXX_STAT" rc stat_out.1
+  errors=errors+1
+end
+
+address crexx "touch " || touched_file output out error err
+if rc <> 0 then do
+  say "CREXX_TOUCH" rc
+  errors=errors+1
+end
+
+address crexx "ls " || workdir output dir_out error err
+if rc <> 0 | dir_out.0 < 3 then do
+  say "CREXX_LS" rc dir_out.0
+  errors=errors+1
+end
+
+address crexx "pushd " || workdir output pushd_out error err
+if rc <> 0 | pushd_out.1 = "" then do
+  say "CREXX_PUSHD" rc pushd_out.1
+  errors=errors+1
+end
+
+address crexx "pwd" output pwd_out error err
+if rc <> 0 | pwd_out.1 = "" then do
+  say "CREXX_PWD" rc pwd_out.1
+  errors=errors+1
+end
+
+address crexx "popd" output popd_out error err
+if rc <> 0 | popd_out.1 = "" then do
+  say "CREXX_POPD" rc popd_out.1
+  errors=errors+1
+end
+
+address crexx "which ../../../bin/rxas" output path_out error err
+if rc <> 0 | path_out.1 = "" then do
+  say "CREXX_WHICH" rc path_out.1
+  errors=errors+1
+end
+
+address crexx "run ../../../bin/rxas -h" output run_out error err
+if rc <> 0 | run_out.1 <> "cREXX Assembler" then do
+  say "CREXX_RUN" rc run_out.1
+  errors=errors+1
+end
+
+address crexx "platform" output platform_out error err
+if rc <> 0 | left(platform_out.1, 3) <> "os=" then do
+  say "CREXX_PLATFORM" rc platform_out.1
+  errors=errors+1
+end
+
+address crexx "now utc" output now_out error err
+if rc <> 0 | length(now_out.1) < 10 then do
+  say "CREXX_NOW" rc now_out.1
+  errors=errors+1
+end
+
+address crexx "setenv CREXX_ADDRESS_TEST_VALUE ready" output out error err
+if rc <> 0 then do
+  say "CREXX_SETENV" rc
+  errors=errors+1
+end
+
+address crexx "env CREXX_ADDRESS_TEST_VALUE" output env_out error err
+if rc <> 0 | env_out.1 <> "ready" then do
+  say "CREXX_ENV" rc env_out.1
+  errors=errors+1
+end
+
+address crexx "unsetenv CREXX_ADDRESS_TEST_VALUE" output out error err
+if rc <> 0 then do
+  say "CREXX_UNSETENV" rc
+  errors=errors+1
+end
+
+address crexx "ps" output ps_out error err
+if rc <> 0 | left(ps_out.1, 4) <> "pid=" then do
+  say "CREXX_PS" rc ps_out.1
+  errors=errors+1
+end
+
+address crexx "resolve localhost" output resolve_out error err
+if rc <> 0 | resolve_out.1 = "" then do
+  say "CREXX_RESOLVE" rc resolve_out.1
+  errors=errors+1
+end
+
+batch_in[1] = "echo BATCH_ONE"
+batch_in[2] = "-- comment"
+batch_in[3] = "echo BATCH_TWO"
+address crexx "batch" input batch_in output batch_out error err
+if rc <> 0 | batch_out.1 <> "BATCH_ONE" | batch_out.2 <> "BATCH_TWO" then do
+  say "CREXX_BATCH" rc batch_out.1 batch_out.2
+  errors=errors+1
+end
+
+bad_batch_in[1] = "echo BEFORE_BAD"
+bad_batch_in[2] = "unknown_crexx_command"
+bad_batch_in[3] = "echo AFTER_BAD"
+address crexx "batch" input bad_batch_in output bad_batch_out error err
+if rc <> 127 | bad_batch_out.1 <> "BEFORE_BAD" | bad_batch_out.0 <> 1 then do
+  say "CREXX_BATCH_STOP" rc bad_batch_out.1 bad_batch_out.0
+  errors=errors+1
+end
+
+address crexx "echo ONE && echo TWO" output operator_out error operator_err
+if rc <> 2 then do
+  say "CREXX_OPERATOR_REJECT" rc
+  errors=errors+1
+end
+
+address crexx "exists __crexx_missing_address_file__" output out error err
+if rc <> 4 then do
+  say "CREXX_EXISTS_MISSING" rc
+  errors=errors+1
+end
+
+address crexx "rm " || touched_file output out error err
+if rc <> 0 then do
+  say "CREXX_RM_FILE" rc
+  errors=errors+1
+end
+
+address crexx "rmdir " || subdir output out error err
+if rc <> 0 then do
+  say "CREXX_RMDIR" rc
+  errors=errors+1
+end
+
+address crexx "rm -r " || workdir output out error err
+if rc <> 0 then do
+  say "CREXX_RM_TREE" rc
+  errors=errors+1
+end
+
+return errors<>0

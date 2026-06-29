@@ -5,19 +5,32 @@ main: procedure
   failures = .int
   out = .string[]
   err = .string[]
+  batch_in = .string[]
+  batch_out = .string[]
   cmd_out = .string[]
   path_out = .string[]
-  rexx_version = .string
-  platform = .string
+  shell_out = .string[]
+  platform_out = .string[]
 
   failures = 0
-  assembler rxvers rexx_version
-  platform = translate(word(rexx_version, 1))
 
-  if platform = "WINDOWS" then address command "echo #42" output out error err
-  else address command "echo '#42'" output out error err
+  address crexx "echo #42" output out error err
   if out.1 <> "#42" then do
-    say "ADDRESS_TEST_COMMAND_QUOTE" out.1
+    say "ADDRESS_TEST_CREXX_ECHO" out.1
+    failures = failures + 1
+  end
+
+  address crexx "platform" output platform_out error err
+  if left(platform_out.1, 3) <> "os=" then do
+    say "ADDRESS_TEST_CREXX_PLATFORM" platform_out.1
+    failures = failures + 1
+  end
+
+  batch_in[1] = "echo BATCH_ONE"
+  batch_in[2] = "echo BATCH_TWO"
+  address crexx "batch" input batch_in output batch_out error err
+  if batch_out.1 <> "BATCH_ONE" | batch_out.2 <> "BATCH_TWO" then do
+    say "ADDRESS_TEST_CREXX_BATCH" batch_out.1 batch_out.2
     failures = failures + 1
   end
 
@@ -27,16 +40,19 @@ main: procedure
     failures = failures + 1
   end
 
-  if platform = "WINDOWS" then address path "cmd.exe /D /S /C echo PATH_OK" output path_out
-  else address path "echo PATH_OK" output path_out
-  if path_out.1 <> "PATH_OK" then do
-    say "ADDRESS_TEST_PATH" path_out.1
+  address path "../../../bin/rxas -h" output path_out error err
+  if rc <> 0 | path_out.1 <> "cREXX Assembler" then do
+    say "ADDRESS_TEST_PATH" rc path_out.1
     failures = failures + 1
   end
 
-  address shell "echo Hello Shell"
+  address shell "echo SHELL_ONE && echo SHELL_TWO" output shell_out
   if rc <> 0 then do
     say "ADDRESS_TEST_SHELL_RC" rc
+    failures = failures + 1
+  end
+  if shell_out.1 <> "SHELL_ONE" | shell_out.2 <> "SHELL_TWO" then do
+    say "ADDRESS_TEST_SHELL_OUTPUT" shell_out.1 shell_out.2
     failures = failures + 1
   end
 

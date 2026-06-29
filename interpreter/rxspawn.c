@@ -60,9 +60,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include "rxvmintp.h"
 #include "rxvmvars.h"
+#include "rxcrexxcmd.h"
 
 // Private structure to allow all the threads to share data etc. and
 // make the shellspawn() call re-enterent
@@ -130,7 +132,22 @@ static THREAD_RETURN InputFromArrayThread(void* lpvThreadParam);
 static int ExeFound(char* exe);
 static char *find_executable_in_path_list(const char *path_list, const char *exe);
 static char *find_standard_shell(void);
+static int split_shell_args(char *text, char **argv);
+static char **build_shell_argv(const char *shell_path, const char *args_text, char *buffer, char *command_text);
 #endif
+static int crexxcmd_write_output(void *userdata, const char *text, size_t length);
+static int crexxcmd_write_error(void *userdata, const char *text, size_t length);
+static int crexxcmd_read_input(void *userdata, char **out_text, size_t *out_length);
+static int crexxcmd_run_path(void *userdata,
+                             const char *command,
+                             char **out_text,
+                             char **err_text,
+                             int *command_rc,
+                             char **error_text);
+static int crexxcmd_finalize_redirects(SHELLDATA *data, char **errorText);
+static int crexxcmd_write_redirect(REDIRECT *redirect, FILE *fallback, const char *text, size_t length);
+static int crexxcmd_read_redirect(REDIRECT *redirect, char **out_text, size_t *out_length);
+static char *copy_value_string(value *string_value);
 
 static char *copy_string(const char *text) {
     size_t length = strlen(text);
@@ -196,7 +213,389 @@ static char *find_standard_shell(void) {
 
     return NULL;
 }
+
+static int split_shell_args(char *text, char **argv) {
+    int count = 0;
+    char *cursor = text;
+
+    if (!text) return 0;
+    if (!argv) {
+        const char *reader = text;
+        while (*reader) {
+            char quote = 0;
+            while (*reader && isspace((unsigned char)*reader)) reader++;
+            if (!*reader) break;
+            count++;
+            while (*reader) {
+                if (quote) {
+                    if (*reader == quote) quote = 0;
+                    reader++;
+                    continue;
+                }
+                if (*reader == '"' || *reader == '\'') {
+                    quote = *reader++;
+                    continue;
+                }
+                if (isspace((unsigned char)*reader)) break;
+                reader++;
+            }
+        }
+        return count;
+    }
+
+    while (*cursor) {
+        char quote = 0;
+        while (*cursor && isspace((unsigned char)*cursor)) cursor++;
+        if (!*cursor) break;
+
+        if (argv) argv[count] = cursor;
+        count++;
+
+        while (*cursor) {
+            if (quote) {
+                if (*cursor == quote) {
+                    memmove(cursor, cursor + 1, strlen(cursor));
+                    quote = 0;
+                    continue;
+                }
+                cursor++;
+                continue;
+            }
+            if (*cursor == '"' || *cursor == '\'') {
+                quote = *cursor;
+                memmove(cursor, cursor + 1, strlen(cursor));
+                continue;
+            }
+            if (isspace((unsigned char)*cursor)) {
+                *cursor++ = '\0';
+                break;
+            }
+            cursor++;
+        }
+    }
+
+    return count;
+}
+
+static char *shell_argv_name(const char *shell_path) {
+    char *slash;
+
+    slash = strrchr(shell_path, '/');
+    return slash ? slash + 1 : (char *)shell_path;
+}
+
+static char **build_shell_argv(const char *shell_path, const char *args_text, char *buffer, char *command_text) {
+    int arg_count;
+    char **argv;
+
+    arg_count = split_shell_args(buffer, NULL);
+    argv = malloc(sizeof(char *) * (size_t)(arg_count + 3));
+    if (!argv) return NULL;
+
+    argv[0] = shell_argv_name(shell_path);
+    if (arg_count) split_shell_args(buffer, argv + 1);
+    argv[arg_count + 1] = command_text;
+    argv[arg_count + 2] = NULL;
+    (void)args_text;
+    return argv;
+}
 #endif
+
+static char *copy_value_string(value *string_value) {
+    char *copy;
+
+    if (!string_value || !string_value->string_value) return copy_string("");
+    copy = malloc(string_value->string_length + 1);
+    if (!copy) return NULL;
+    if (string_value->string_length) {
+        memcpy(copy, string_value->string_value, string_value->string_length);
+    }
+    copy[string_value->string_length] = '\0';
+    return copy;
+}
+
+static int crexxcmd_write_redirect(REDIRECT *redirect, FILE *fallback, const char *text, size_t length) {
+    if (!text) length = 0;
+    if (!redirect) {
+        return fwrite(text ? text : "", 1, length, fallback) == length ? 0 : -1;
+    }
+
+#ifdef _WIN32
+    {
+        DWORD written;
+        DWORD total = 0;
+        if (redirect->hWrite == INVALID_HANDLE_VALUE) return 0;
+        while (total < length) {
+            if (!WriteFile(redirect->hWrite, text + total, (DWORD)(length - total), &written, NULL)) {
+                if (GetLastError() == ERROR_NO_DATA) return 0;
+                redirect->errorCode = 1;
+                return -1;
+            }
+            total += written;
+        }
+    }
+#else
+    {
+        size_t total = 0;
+        ssize_t written;
+        if (redirect->hWrite == -1) return 0;
+        while (total < length) {
+            written = write(redirect->hWrite, text + total, length - total);
+            if (written == -1) {
+                if (errno == EPIPE) return 0;
+                redirect->errorCode = 1;
+                return -1;
+            }
+            total += (size_t)written;
+        }
+    }
+#endif
+
+    return 0;
+}
+
+static int crexxcmd_write_output(void *userdata, const char *text, size_t length) {
+    SHELLDATA *data = (SHELLDATA *)userdata;
+    return crexxcmd_write_redirect(data ? data->pOutput : NULL, stdout, text, length);
+}
+
+static int crexxcmd_write_error(void *userdata, const char *text, size_t length) {
+    SHELLDATA *data = (SHELLDATA *)userdata;
+    return crexxcmd_write_redirect(data ? data->pError : NULL, stderr, text, length);
+}
+
+static int append_read_buffer(char **out_text, size_t *out_length, const char *buffer, size_t length) {
+    char *new_text;
+
+    if (length > ((size_t)-1) - *out_length - 1) return -1;
+    new_text = realloc(*out_text, *out_length + length + 1);
+    if (!new_text) return -1;
+    if (length) memcpy(new_text + *out_length, buffer, length);
+    *out_length += length;
+    new_text[*out_length] = '\0';
+    *out_text = new_text;
+    return 0;
+}
+
+static int crexxcmd_read_redirect(REDIRECT *redirect, char **out_text, size_t *out_length) {
+    char buffer[4096];
+
+    *out_text = malloc(1);
+    if (!*out_text) return -1;
+    (*out_text)[0] = '\0';
+    *out_length = 0;
+    if (!redirect) return 0;
+
+#ifdef _WIN32
+    {
+        DWORD bytes_read;
+        while (redirect->hRead != INVALID_HANDLE_VALUE) {
+            if (!ReadFile(redirect->hRead, buffer, sizeof(buffer), &bytes_read, NULL)) {
+                DWORD read_error = GetLastError();
+                if (read_error == ERROR_BROKEN_PIPE || read_error == ERROR_HANDLE_EOF) break;
+                redirect->errorCode = 1;
+                return -1;
+            }
+            if (bytes_read == 0) break;
+            if (append_read_buffer(out_text, out_length, buffer, bytes_read) != 0) return -1;
+        }
+        if (redirect->hRead != INVALID_HANDLE_VALUE) {
+            CloseHandle(redirect->hRead);
+            redirect->hRead = INVALID_HANDLE_VALUE;
+        }
+        if (redirect->has_thread) {
+            WaitForSingleObject(redirect->thread, INFINITE);
+            CloseHandle(redirect->thread);
+            redirect->thread = NULL;
+            redirect->has_thread = 0;
+        }
+        if (redirect->hWrite != INVALID_HANDLE_VALUE) {
+            CloseHandle(redirect->hWrite);
+            redirect->hWrite = INVALID_HANDLE_VALUE;
+        }
+    }
+#else
+    {
+        ssize_t bytes_read;
+        while (redirect->hRead != -1) {
+            bytes_read = read(redirect->hRead, buffer, sizeof(buffer));
+            if (bytes_read == 0) break;
+            if (bytes_read == -1) {
+                redirect->errorCode = 1;
+                return -1;
+            }
+            if (append_read_buffer(out_text, out_length, buffer, (size_t)bytes_read) != 0) return -1;
+        }
+        if (redirect->hRead != -1) {
+            close(redirect->hRead);
+            redirect->hRead = -1;
+        }
+        if (redirect->has_thread) {
+            if (pthread_join(redirect->thread, NULL)) {
+                redirect->errorCode = 1;
+                return -1;
+            }
+            redirect->has_thread = 0;
+        }
+        if (redirect->hWrite != -1) {
+            close(redirect->hWrite);
+            redirect->hWrite = -1;
+        }
+    }
+#endif
+
+    return redirect->errorCode == 0 ? 0 : -1;
+}
+
+static int crexxcmd_read_input(void *userdata, char **out_text, size_t *out_length) {
+    SHELLDATA *data = (SHELLDATA *)userdata;
+    return crexxcmd_read_redirect(data ? data->pInput : NULL, out_text, out_length);
+}
+
+static int crexxcmd_close_output_redirect(REDIRECT *redirect) {
+    if (!redirect) return 0;
+
+#ifdef _WIN32
+    if (redirect->hWrite != INVALID_HANDLE_VALUE) {
+        CloseHandle(redirect->hWrite);
+        redirect->hWrite = INVALID_HANDLE_VALUE;
+    }
+    if (redirect->has_thread) {
+        WaitForSingleObject(redirect->thread, INFINITE);
+        CloseHandle(redirect->thread);
+        redirect->thread = NULL;
+        redirect->has_thread = 0;
+    }
+    if (redirect->hRead != INVALID_HANDLE_VALUE) {
+        CloseHandle(redirect->hRead);
+        redirect->hRead = INVALID_HANDLE_VALUE;
+    }
+#else
+    if (redirect->hWrite != -1) {
+        close(redirect->hWrite);
+        redirect->hWrite = -1;
+    }
+    if (redirect->has_thread) {
+        if (pthread_join(redirect->thread, NULL)) {
+            redirect->errorCode = 1;
+            return -1;
+        }
+        redirect->has_thread = 0;
+    }
+    if (redirect->hRead != -1) {
+        close(redirect->hRead);
+        redirect->hRead = -1;
+    }
+#endif
+
+    return redirect->errorCode == 0 ? 0 : -1;
+}
+
+static int crexxcmd_close_input_redirect(REDIRECT *redirect) {
+    if (!redirect) return 0;
+
+#ifdef _WIN32
+    if (redirect->hRead != INVALID_HANDLE_VALUE) {
+        CloseHandle(redirect->hRead);
+        redirect->hRead = INVALID_HANDLE_VALUE;
+    }
+    if (redirect->has_thread) {
+        WaitForSingleObject(redirect->thread, INFINITE);
+        CloseHandle(redirect->thread);
+        redirect->thread = NULL;
+        redirect->has_thread = 0;
+    }
+    if (redirect->hWrite != INVALID_HANDLE_VALUE) {
+        CloseHandle(redirect->hWrite);
+        redirect->hWrite = INVALID_HANDLE_VALUE;
+    }
+#else
+    if (redirect->hRead != -1) {
+        close(redirect->hRead);
+        redirect->hRead = -1;
+    }
+    if (redirect->has_thread) {
+        if (pthread_join(redirect->thread, NULL)) {
+            redirect->errorCode = 1;
+            return -1;
+        }
+        redirect->has_thread = 0;
+    }
+    if (redirect->hWrite != -1) {
+        close(redirect->hWrite);
+        redirect->hWrite = -1;
+    }
+#endif
+
+    return redirect->errorCode == 0 ? 0 : -1;
+}
+
+static int crexxcmd_finalize_redirects(SHELLDATA *data, char **errorText) {
+    int rc = 0;
+
+    if (!data) return 0;
+    if (crexxcmd_close_input_redirect(data->pInput) != 0) rc = -1;
+    if (crexxcmd_close_output_redirect(data->pOutput) != 0) rc = -1;
+    if (crexxcmd_close_output_redirect(data->pError) != 0) rc = -1;
+    if (rc != 0) appendTextOutput(errorText, "CREXX command redirect failure");
+    return rc;
+}
+
+static int crexxcmd_run_path(void *userdata,
+                             const char *command,
+                             char **out_text,
+                             char **err_text,
+                             int *command_rc,
+                             char **error_text) {
+    value input_redirect;
+    value output_redirect;
+    value error_redirect;
+    value output_value;
+    value error_value;
+    REDIRECT *pIn;
+    REDIRECT *pOut;
+    REDIRECT *pErr;
+    int spawn_rc;
+    char *spawn_error;
+
+    (void)userdata;
+    if (out_text) *out_text = NULL;
+    if (err_text) *err_text = NULL;
+    if (error_text) *error_text = NULL;
+    if (command_rc) *command_rc = 0;
+
+    value_init(&input_redirect);
+    value_init(&output_redirect);
+    value_init(&error_redirect);
+    value_init(&output_value);
+    value_init(&error_value);
+
+    nullredr(&input_redirect);
+    redr2str(&output_redirect, &output_value);
+    redr2str(&error_redirect, &error_value);
+    pIn = (REDIRECT *)input_redirect.binary_value;
+    pOut = (REDIRECT *)output_redirect.binary_value;
+    pErr = (REDIRECT *)error_redirect.binary_value;
+    spawn_error = NULL;
+    spawn_rc = shellspawn(command, pIn, pOut, pErr, NULL, SHELLSPAWN_MODE_PATH, command_rc, &spawn_error);
+
+    if (out_text) *out_text = copy_value_string(&output_value);
+    if (err_text) *err_text = copy_value_string(&error_value);
+    if (error_text && spawn_error) *error_text = copy_string(spawn_error);
+
+    clear_value(&input_redirect);
+    clear_value(&output_redirect);
+    clear_value(&error_redirect);
+    clear_value(&output_value);
+    clear_value(&error_value);
+
+    if (spawn_error) free(spawn_error);
+    if (spawn_rc == SHELLSPAWN_NOFOUND) {
+        if (command_rc) *command_rc = 127;
+        return 0;
+    }
+    return spawn_rc == SHELLSPAWN_OK ? 0 : -1;
+}
 
 /* Get Environment Value
  * Sets value (null terminated) (and a handle) from env variable name length name_length (not null terminated)
@@ -294,19 +693,41 @@ int shellspawn (const char *command,
     data.waitThreadRC = 0;
     data.variables = variables;
 
+    if (mode == SHELLSPAWN_MODE_CREXX) {
+        rxcrexxcmd_io io;
+        int execute_rc;
+
+        io.write_output = crexxcmd_write_output;
+        io.write_error = crexxcmd_write_error;
+        io.read_input = crexxcmd_read_input;
+        io.run_path = crexxcmd_run_path;
+        io.userdata = &data;
+
+        execute_rc = rxcrexxcmd_execute(command, &io, rc, errorText);
+        if (crexxcmd_finalize_redirects(&data, errorText) != 0) {
+            CleanUp(&data);
+            return SHELLSPAWN_FAILURE;
+        }
+        CleanUp(&data);
+        return execute_rc == 0 ? SHELLSPAWN_OK : SHELLSPAWN_FAILURE;
+    }
+
 #ifdef _WIN32
 /* Windows does the actual parsing and validating as part of CreateProcess() */
-    if (mode == SHELLSPAWN_MODE_SHELL) {
-        const char *shell = getenv("COMSPEC");
+    if (mode == SHELLSPAWN_MODE_SHELL || mode == SHELLSPAWN_MODE_CONFIGURED_SHELL) {
+        const char *shell = mode == SHELLSPAWN_MODE_CONFIGURED_SHELL ? getenv("CREXX_ADDRESS_SHELL") : NULL;
+        const char *shell_args = mode == SHELLSPAWN_MODE_CONFIGURED_SHELL ? getenv("CREXX_ADDRESS_SHELL_ARGS") : NULL;
+        if (!shell || !*shell) shell = getenv("COMSPEC");
         if (!shell || !*shell) shell = "cmd.exe";
+        if (!shell_args || !*shell_args) shell_args = "/D /S /C";
 
-        data.file_path = malloc(strlen(shell) + strlen(command) + 16);
+        data.file_path = malloc(strlen(shell) + strlen(shell_args) + strlen(command) + 8);
         if (!data.file_path) {
             Error("Failure spawn W01", errorText);
             CleanUp(&data);
             return SHELLSPAWN_FAILURE;
         }
-        sprintf(data.file_path, "\"%s\" /D /S /C %s", shell, command);
+        sprintf(data.file_path, "\"%s\" %s %s", shell, shell_args, command);
     } else {
         data.file_path = copy_string(command);
         if (!data.file_path) {
@@ -316,24 +737,39 @@ int shellspawn (const char *command,
         }
     }
 #else
-    if (mode == SHELLSPAWN_MODE_SHELL) {
-        data.file_path = find_standard_shell();
-        data.buffer = copy_string(command);
-        data.argv = malloc(sizeof(char*) * 4);
+    if (mode == SHELLSPAWN_MODE_SHELL || mode == SHELLSPAWN_MODE_CONFIGURED_SHELL) {
+        const char *configured_shell = mode == SHELLSPAWN_MODE_CONFIGURED_SHELL ? getenv("CREXX_ADDRESS_SHELL") : NULL;
+        const char *shell_args = mode == SHELLSPAWN_MODE_CONFIGURED_SHELL ? getenv("CREXX_ADDRESS_SHELL_ARGS") : NULL;
+        size_t args_length;
+        size_t command_length;
+        char *command_buffer;
+
+        if (configured_shell && *configured_shell) data.file_path = copy_string(configured_shell);
+        else data.file_path = find_standard_shell();
         if (!data.file_path) {
             Error("Command shell not found", errorText);
             CleanUp(&data);
             return SHELLSPAWN_NOFOUND;
         }
-        if (!data.buffer || !data.argv) {
+        if (!shell_args || !*shell_args) shell_args = "-c";
+
+        args_length = strlen(shell_args);
+        command_length = strlen(command);
+        data.buffer = malloc(args_length + 1 + command_length + 1);
+        if (!data.buffer) {
             Error("Failure spawn U19", errorText);
             CleanUp(&data);
             return SHELLSPAWN_FAILURE;
         }
-        data.argv[0] = "sh";
-        data.argv[1] = "-c";
-        data.argv[2] = data.buffer;
-        data.argv[3] = NULL;
+        memcpy(data.buffer, shell_args, args_length + 1);
+        command_buffer = data.buffer + args_length + 1;
+        memcpy(command_buffer, command, command_length + 1);
+        data.argv = build_shell_argv(data.file_path, shell_args, data.buffer, command_buffer);
+        if (!data.argv) {
+            Error("Failure spawn U20", errorText);
+            CleanUp(&data);
+            return SHELLSPAWN_FAILURE;
+        }
     } else {
         // Parse the command
         char *base_name;
