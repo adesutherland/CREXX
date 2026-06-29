@@ -34,6 +34,7 @@
 #include <direct.h>
 #include <io.h>
 #include <process.h>
+#include <sys/stat.h>
 #include <sys/utime.h>
 #define RX_GETCWD _getcwd
 #define RX_CHDIR _chdir
