@@ -588,20 +588,37 @@ host variable return a normal `var` updated binding, so the existing ADDRESS
 write-back path handles both explicit `EXPOSE` variables and auto-exposed
 anchors.
 
-The built-in system-like environments split into two spawn modes. `SYSTEM`,
-`COMMAND`, `CMD`, and `SHELL` route the command string through the platform
-command processor so shell built-ins and command syntax work consistently.
-On POSIX, the VM invokes standard `sh -c`; it finds `sh` from `_CS_PATH`
-(the C interface for the standard utility path that `getconf PATH` exposes),
-then falls back to `/bin/sh` and finally ordinary `PATH`. Do not use the user's
-`SHELL` environment variable here; that names an interactive login preference,
-not the standard command processor. On Windows, the VM invokes
-`%COMSPEC% /D /S /C`, falling back to `cmd.exe` if `COMSPEC` is unset.
+The built-in command environments split into four spawn modes:
 
-`PATH` remains the direct executable environment. It parses the command into an
-argv vector, resolves the executable through the process `PATH`, and calls it
-directly. This route intentionally does not provide shell built-ins, pipes,
-redirects, or shell expansion.
+- `CREXX` is the default command environment. `_address.crexx` routes it to
+  `SHELLSPAWN_MODE_CREXX`, implemented by `interpreter/rxcrexxcmd.c`. This is a
+  cREXX-defined command set with stable behavior across supported operating
+  systems, not a shell. It owns persistent `cd`/`pushd`/`popd`,
+  file/text/process/time/network commands, `batch`, and `run` for direct
+  executable dispatch.
+- `SYSTEM`, `COMMAND`, and `CMD` route the command string through the platform
+  command processor so shell built-ins and command syntax work consistently.
+  On POSIX, the VM invokes standard `sh -c`; it finds `sh` from `_CS_PATH`
+  (the C interface for the standard utility path that `getconf PATH` exposes),
+  then falls back to `/bin/sh` and finally ordinary `PATH`. Do not use the
+  user's `SHELL` environment variable here; that names an interactive login
+  preference, not the standard command processor. On Windows, the VM invokes
+  `%COMSPEC% /D /S /C`, falling back to `cmd.exe` if `COMSPEC` is unset.
+- `PATH` is the direct executable environment. On POSIX it parses the command
+  into an argv vector, resolves the executable through the process `PATH`, and
+  calls it directly; on Windows it uses direct `CreateProcessW` command-line
+  dispatch. This route intentionally does not provide shell built-ins, pipes,
+  redirects, or shell expansion.
+- `SHELL` is configured shell dispatch. The VM reads `CREXX_ADDRESS_SHELL` for
+  the shell executable and `CREXX_ADDRESS_SHELL_ARGS` for the arguments placed
+  before the command text. If unset, it falls back to the same command-processor
+  defaults as `SYSTEM`.
+
+`CREXX` multiple-command handling is intentionally explicit: command text is a
+single CREXX command and shell operators such as `;`, `&&`, `||`, and pipes are
+usage errors. Use repeated `ADDRESS` statements or `ADDRESS CREXX "batch"` with
+input lines. `batch` skips blank lines and `--` comments and stops at the first
+non-zero return code.
 
 `demos/native/sqlite/` shows the database-oriented form of the native provider
 model. The provider routes by the ADDRESS environment name carried in the

@@ -24,7 +24,7 @@
 
 /* REXX LEVEL B ADDRESS FUNCTIONS */
 options levelb
-namespace _rxsysb expose _address _address_with_sandbox _address_new_request _address_dispatch_request _address_link_request_sandbox _address_apply_response_var _address_apply_response_sandbox _address_apply_response_stem _address_apply_response_request_stem _address_environment _address_function _address_call _address_call_response addressenv addresscall _new_address_environment _ensure_address_environment _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _enable_native_address_environment _address_execute_system_command _address_unknown_command_response _address_normalize_environment_name _address_normalize_command _address_first_chars _noredir _redir2array _redir2string _array2redir _string2redir addressdriverregistry addressbinding addressstem standardaddressstem addresssandbox standardaddresssandbox addressrequest addressresponse addressinstance addressfunctionrequest addressfunctionresponse addressfunctionenvironment addressenvironment systemaddressenvironment pathaddressenvironment nativeaddressenvironment unknownaddressenvironment
+namespace _rxsysb expose _address _address_with_sandbox _address_new_request _address_dispatch_request _address_link_request_sandbox _address_apply_response_var _address_apply_response_sandbox _address_apply_response_stem _address_apply_response_request_stem _address_environment _address_function _address_call _address_call_response addressenv addresscall _new_address_environment _ensure_address_environment _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _enable_native_address_environment _address_execute_system_command _address_unknown_command_response _address_normalize_environment_name _address_normalize_command _address_first_chars _noredir _redir2array _redir2string _array2redir _string2redir addressdriverregistry addressbinding addressstem standardaddressstem addresssandbox standardaddresssandbox addressrequest addressresponse addressinstance addressfunctionrequest addressfunctionresponse addressfunctionenvironment addressenvironment crexxaddressenvironment systemaddressenvironment shelladdressenvironment pathaddressenvironment nativeaddressenvironment unknownaddressenvironment
 import rxfnsb
 
 addressdriverregistry: class
@@ -600,6 +600,42 @@ addressenvironment: interface
   execute: method = .addressresponse
     arg request = .addressrequest
 
+crexxaddressenvironment: class implements .addressenvironment .addressinstance .addressfunctionenvironment
+  _environment_id = .string
+  _environment_name = .string
+
+  *: match
+    arg env_name = .string
+    if normalize_environment_name(env_name) = "CREXX" then return 100
+    return 0
+
+  *: factory
+    arg env_name = .string
+    _environment_name = normalize_environment_name(env_name)
+    _environment_id = _environment_name
+    return
+
+  bind_environment: method = .void
+    arg env_name = .string, instance_id = .string
+    _environment_name = normalize_environment_name(env_name)
+    _environment_id = instance_id
+    if _environment_id = "" then _environment_id = _environment_name
+    return
+
+  environment_name: method = .string
+    return _environment_name
+
+  environment_id: method = .string
+    return _environment_id
+
+  execute: method = .addressresponse
+    arg request = .addressrequest
+    return spawn_request(request, 2)
+
+  invoke: method = .addressfunctionresponse
+    arg request = .addressfunctionrequest
+    return unsupported_function_response(_environment_name, request.get_function_name())
+
 systemaddressenvironment: class implements .addressenvironment .addressinstance .addressfunctionenvironment
   _environment_id = .string
   _environment_name = .string
@@ -608,7 +644,7 @@ systemaddressenvironment: class implements .addressenvironment .addressinstance 
     arg env_name = .string
     name = .string
     name = normalize_environment_name(env_name)
-    if name = "SYSTEM" | name = "COMMAND" | name = "CMD" | name = "SHELL" then return 100
+    if name = "SYSTEM" | name = "COMMAND" | name = "CMD" then return 100
     return 0
 
   *: factory
@@ -633,6 +669,42 @@ systemaddressenvironment: class implements .addressenvironment .addressinstance 
   execute: method = .addressresponse
     arg request = .addressrequest
     return spawn_request(request, 1)
+
+  invoke: method = .addressfunctionresponse
+    arg request = .addressfunctionrequest
+    return unsupported_function_response(_environment_name, request.get_function_name())
+
+shelladdressenvironment: class implements .addressenvironment .addressinstance .addressfunctionenvironment
+  _environment_id = .string
+  _environment_name = .string
+
+  *: match
+    arg env_name = .string
+    if normalize_environment_name(env_name) = "SHELL" then return 100
+    return 0
+
+  *: factory
+    arg env_name = .string
+    _environment_name = normalize_environment_name(env_name)
+    _environment_id = _environment_name
+    return
+
+  bind_environment: method = .void
+    arg env_name = .string, instance_id = .string
+    _environment_name = normalize_environment_name(env_name)
+    _environment_id = instance_id
+    if _environment_id = "" then _environment_id = _environment_name
+    return
+
+  environment_name: method = .string
+    return _environment_name
+
+  environment_id: method = .string
+    return _environment_id
+
+  execute: method = .addressresponse
+    arg request = .addressrequest
+    return spawn_request(request, 3)
 
   invoke: method = .addressfunctionresponse
     arg request = .addressfunctionrequest
@@ -1230,7 +1302,7 @@ _set_address_environment: procedure = .int expose _address_runtime_ready _addres
 
 _current_address_environment: procedure = .string expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
   call ensure_address_runtime
-  if _address_current_name = "" then _address_current_name = "SYSTEM"
+  if _address_current_name = "" then _address_current_name = "CREXX"
   return _address_current_name
 
 _reset_address_environments: procedure = .int expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
@@ -1264,9 +1336,10 @@ ensure_address_runtime: procedure expose _address_runtime_ready _address_current
 
   _address_environment_names = .string[]
   _address_environment_objects = .addressenvironment[]
-  _address_current_name = "SYSTEM"
+  _address_current_name = "CREXX"
   _address_runtime_ready = 1
 
+  call _ensure_address_environment("CREXX")
   call _ensure_address_environment("SYSTEM")
   call _ensure_address_environment("COMMAND")
   call _ensure_address_environment("CMD")

@@ -9,16 +9,17 @@ main: procedure = .int
   out = .string[]
   err = .string[]
 
-  address command "mktemp crexx-lineout-flush-visible.XXXXXX" output tmp error tmperr
+  address crexx "pid" output tmp error tmperr
   if rc \= 0 | tmp[0] = 0 then return 1
-  path = tmp[1]
+  path = "crexx-lineout-flush-visible-" || tmp[1] || ".tmp"
 
+  address crexx "rm " || path output trash error trasherr
   payload = "payload"
   write_rc = lineout(path, payload)
-  address command "cat " || path output out error err
+  address crexx "cat " || path output out error err
   cat_rc = rc
   call lineout(path)
-  address command "rm -f " || path output trash error trasherr
+  address crexx "rm " || path output trash error trasherr
 
   say "write-rc=" || write_rc
   say "cat-rc=" || cat_rc

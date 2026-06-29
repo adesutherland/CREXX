@@ -4,48 +4,101 @@
 
 `ADDRESS` sends commands or function requests to a named external environment.
 It is implemented through the current compiler-exit and VM environment protocol.
+If no environment is selected, the default command environment is `CREXX`.
 
 Basic command form:
 
 ```rexx
-address system "echo hello"
+address crexx "echo hello"
 ```
 
 Command output and error streams can be captured:
 
 ```rexx
-address command "echo '#42'" output out error err
+address crexx "echo #42" output out error err
 say out
 ```
 
-The built-in `COMMAND`, `CMD`, `SYSTEM`, and `SHELL` environments execute the
-command through the platform command processor. On POSIX platforms this is the
-standard `sh -c` processor found from the system standard utility path, falling
-back to `/bin/sh` and then `PATH`; it does not use the user's `SHELL`
-environment variable. On Windows this is `%COMSPEC% /D /S /C`, falling back to
-`cmd.exe` when `COMSPEC` is unset.
+### Built-In Command Environments
+
+The built-in environments are deliberately separate:
+
+| Environment | Purpose |
+| --- | --- |
+| `CREXX` | The default cREXX command environment. It is cREXX-specific and OS-independent, implemented by cREXX rather than by a shell. |
+| `SYSTEM` | The platform command processor. On POSIX this is standard `sh -c`; on Windows this is `%COMSPEC% /D /S /C` with a `cmd.exe` fallback. |
+| `COMMAND`, `CMD` | Compatibility aliases for `SYSTEM`. |
+| `PATH` | Direct executable dispatch through the platform process API. It resolves executables through process `PATH` where needed and calls them without shell syntax. |
+| `SHELL` | Explicit configured shell dispatch. Set `CREXX_ADDRESS_SHELL` to the shell executable and optionally `CREXX_ADDRESS_SHELL_ARGS` to the argument list used before the command text. If unset, it falls back to the platform command processor defaults. |
 
 ```rexx
-address shell "echo one && echo two" output out error err
+address system "echo one && echo two" output out error err
 address cmd "cd ."
+address path "rxas -h" output out error err
 ```
 
-Use `ADDRESS PATH` when code needs the direct executable route instead of shell
-syntax. `PATH` parses the command into an argv vector, resolves the executable
-through the process `PATH`, and calls it directly. Simple quoted arguments are
-supported there, but pipes, redirects, built-ins such as `cd`, and shell
-expansion belong to the shell-backed environments above.
+### CREXX Command Environment
 
-ADDRESS host-variable anchors such as `:name` and `${name}` are compiler
-auto-expose syntax. Their command meaning belongs to the selected environment
-handler; the VM carries binding values and write-back updates.
+`CREXX` is not a shell. It is a cREXX-specific command environment with stable
+command names and cREXX-defined return-code behavior across supported operating
+systems. It does not interpret shell punctuation such as `;`, `&&`, `||`, or
+pipes. Use multiple `ADDRESS` statements, or send newline-separated commands to
+`ADDRESS CREXX "batch"`. Blank batch lines and lines whose first non-blank
+characters are `--` are skipped; batch stops at the first non-zero return code.
 
-The current native registration API is environment based:
+`cd`, `pushd`, and `popd` change the cREXX process working directory and
+therefore persist for later `ADDRESS CREXX`, `ADDRESS PATH`, `ADDRESS SYSTEM`,
+file IO, and relative-path operations in the same process. In contrast,
+`ADDRESS SYSTEM "cd path"` runs inside the child command processor and does not
+change cREXX's working directory after that child exits.
 
-```c
-rxvml_address_register_callback_environment(ctx, name, id,
-    command_cb, function_cb, userdata);
-```
+The command set is intentionally useful but bounded:
+
+| Command | Behavior |
+| --- | --- |
+| `help` | Print the command list. |
+| `echo [text...]` | Write text followed by a newline. |
+| `pwd` | Print the current cREXX process working directory. |
+| `cd [path]` | Change the cREXX process working directory; no path means the user's home directory where known. |
+| `pushd path` | Push the current directory and change to `path`. |
+| `popd` | Return to the most recent pushed directory. |
+| `ls [path]`, `dir [path]` | List directory entries, excluding `.` and `..`. |
+| `exists path...` | Print `1 path` or `0 path` for each path; returns non-zero if any are missing. |
+| `stat path...` | Print type, size, and modification time for each path. |
+| `mkdir [-p] path...` | Create directories; `-p` creates missing parents. |
+| `rmdir path...` | Remove empty directories. |
+| `rm [-r] path...`, `del [-r] path...` | Remove files, or recursively remove paths with `-r`. |
+| `copy source target`, `cp source target` | Copy a file. |
+| `move source target`, `mv source target`, `rename source target` | Rename or move a path. |
+| `touch path...` | Create files if missing and update modification times. |
+| `cat path...`, `type path...` | Write file contents to the command output stream. |
+| `head [-n count] path` | Write the first lines of a file; default count is 10. |
+| `tail [-n count] path` | Write the last lines of a file; default count is 10. |
+| `lines [path]` | Count lines in a file, or in redirected command input when no path is supplied. |
+| `write path text...` | Replace a file with the supplied text. |
+| `append path text...` | Append the supplied text to a file. |
+| `which command` | Resolve an executable through process `PATH`. |
+| `now [local\|utc]`, `date [local\|utc]` | Print an ISO-like timestamp. |
+| `sleep seconds` | Sleep for the requested duration. |
+| `platform`, `os` | Print operating-system and architecture details. |
+| `env [name]` | Print all environment variables, or one variable's value. |
+| `setenv name value` | Set a process environment variable. |
+| `unsetenv name` | Clear a process environment variable. |
+| `pid` | Print the current cREXX process id. |
+| `ps [pid]` | Print current process details, or check whether a process id is alive. |
+| `kill pid [signal]` | Terminate or signal a process. |
+| `resolve host` | Resolve host names to numeric addresses. |
+| `tcp host port` | Check that a TCP connection can be opened. |
+| `batch` | Read commands from input and execute them in order. |
+| `run command...` | Execute a direct `PATH` command and forward its output and error streams. |
+
+ADDRESS command text can refer to Rexx variables through host-variable anchors.
+When command text contains `:name` or `${name}`, the compiler exposes the
+visible scalar variable `name` to the selected ADDRESS environment. ADDRESS does
+not replace the anchor text in the command string. Instead, the environment
+receives the command text and the exposed variable values, and that environment
+defines what the anchors mean. Environments that support write-back can update
+the exposed Rexx variables before returning.
 
 ## ARG
 

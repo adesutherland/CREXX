@@ -33,6 +33,8 @@ set(RXVM_CORE_OBJECT_SOURCES
         ../binutils/rxsignature.c
         ../binutils/include/rxsignature.h
         rxspawn.c
+        rxcrexxcmd.c
+        rxcrexxcmd.h
         exitfunc.c
         rxpafuncs.c
         rxvml/rxvm_run.c)
