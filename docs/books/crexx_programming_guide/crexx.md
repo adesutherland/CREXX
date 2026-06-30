@@ -44,6 +44,12 @@ The following options are available (single and double dashes work for all optio
 `-exec`
 : Execute the compiled `.rxbin` under `rxvme` (default).
 
+`-args`
+: Stop `crexx` option parsing; all remaining command-line arguments are passed
+to the executed program as separate argv entries. Use this as the final driver
+option when program arguments contain spaces or characters that a shell would
+normally interpret.
+
 `-noexec`
 : Compile only; do not execute the resulting `.rxbin`.
 
@@ -60,7 +66,7 @@ The following options are available (single and double dashes work for all optio
 : Disable native packaging.
 
 `-verbose[0-4]`
-: Report on progress; default verbose0, which only issues error messages when the compile fails. Verbose 2 shows the command lines to the toolchain utilities rxc, rxas and rxvme. Verbose 3 includes options and source listings, while verbose 4 includes the contents of the generated assembly code.
+: Report on progress; default verbose0, which only issues error messages when the compile fails. Verbose 2 shows the rendered argv used for the toolchain utilities rxc, rxas and rxvme. Verbose 3 includes options and source listings, while verbose 4 includes the contents of the generated assembly code.
 
 `-[no]colo[u]r`
 : Enable or disable colourized progress output.
@@ -114,6 +120,11 @@ driver's standard runtime module set, including the Classic compatibility
 runtime `rxfnsc`. Level C compilation is incremental: supported Classic Rexx
 shapes lower and run, while constructs outside the implemented slice are
 rejected with an unsupported-shape diagnostic.
+
+The driver invokes its toolchain phases through the CREXX ADDRESS command
+environment using direct argv dispatch. That avoids platform shell parsing for
+normal compile, assemble, link, pack, native-compile, and execute steps while
+keeping verbose output readable.
 
 ## Examples
 

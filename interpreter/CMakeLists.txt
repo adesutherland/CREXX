@@ -151,6 +151,8 @@ endif()
 string(JOIN " " CREXX_NATIVE_RUNTIME_LINK_FLAGS_TEXT ${CREXX_NATIVE_RUNTIME_LINK_FLAGS})
 set(CREXX_NATIVE_RUNTIME_LINK_FLAGS_TEXT "${CREXX_NATIVE_RUNTIME_LINK_FLAGS_TEXT}"
         CACHE INTERNAL "Native executable link flags required by the configured VM runtime" FORCE)
+set(CREXX_NATIVE_RUNTIME_LINK_FLAGS_ARGS "${CREXX_NATIVE_RUNTIME_LINK_FLAGS}"
+        CACHE INTERNAL "Native executable link flags as an argv-safe CMake list" FORCE)
 message(STATUS "cREXX VM core socket TLS backend: ${CREXX_ENABLE_TLS_NORMALIZED}")
 
 crexx_add_rxvm_platform_objects(rxvm_platform_objects)

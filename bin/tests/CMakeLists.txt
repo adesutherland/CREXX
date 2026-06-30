@@ -66,6 +66,21 @@ add_test(NAME crexx_explicit_header_smoke
          COMMAND ${CMAKE_COMMAND} -P "${CREXX_EXPLICIT_SMOKE_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+set(CREXX_ARGS_SMOKE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_crexx_args_smoke.cmake")
+set(CREXX_ARGS_SMOKE_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/args_smoke_ws\")\n")
+string(APPEND CREXX_ARGS_SMOKE_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+string(APPEND CREXX_ARGS_SMOKE_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
+string(APPEND CREXX_ARGS_SMOKE_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E copy_if_different \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/args_echo.crexx\" \"\${work}/args_echo.crexx\" RESULT_VARIABLE res)\n")
+string(APPEND CREXX_ARGS_SMOKE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"Failed to stage args smoke source\")\nendif()\n")
+string(APPEND CREXX_ARGS_SMOKE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"args_echo.crexx\" \"--args\" \"alpha beta\" \"and&&pipes|stay\" \"two  spaces\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND CREXX_ARGS_SMOKE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"crexx args smoke failed.\\nstdout:\\n\${out}\\nstderr:\\n\${err}\")\nendif()\n")
+string(APPEND CREXX_ARGS_SMOKE_CONTENT "if(NOT out STREQUAL [=[3\n[alpha beta]\n[and&&pipes|stay]\n[two  spaces]\n]=])\n  message(FATAL_ERROR \"Unexpected crexx args output. Got:\\n\${out}\")\nendif()\n")
+file(GENERATE OUTPUT "${CREXX_ARGS_SMOKE_SCRIPT}" CONTENT "${CREXX_ARGS_SMOKE_CONTENT}")
+
+add_test(NAME crexx_args_smoke
+         COMMAND ${CMAKE_COMMAND} -P "${CREXX_ARGS_SMOKE_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 set(CREXX_REXXSCRIPT_SMOKE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_crexx_rexxscript_smoke.cmake")
 set(CREXX_REXXSCRIPT_SMOKE_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/rexxscript_smoke_ws\")\n")
 string(APPEND CREXX_REXXSCRIPT_SMOKE_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
@@ -213,6 +228,7 @@ set_tests_properties(crexx_help_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_
 set_tests_properties(crexx_headerless_simple_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_headerless_rexx_levelc_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_explicit_header_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
+set_tests_properties(crexx_args_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_rexxscript_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_levelc_classic_runtime_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_status_diagnostics PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
@@ -390,6 +406,11 @@ add_crexx_native_test(
         crexx_native_explicit_header_smoke
         rexx_src/explicit_header.crexx
         EXPECT_OUTPUT "EXPLICIT\n"
+)
+add_crexx_native_test(
+        crexx_native_address_crexx_smoke
+        rexx_src/native_address_crexx.crexx
+        EXPECT_OUTPUT "native address ok\n"
 )
 add_crexx_native_test(
         crexx_native_default_link_strip
