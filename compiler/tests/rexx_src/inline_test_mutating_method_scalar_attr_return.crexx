@@ -1,0 +1,40 @@
+options levelb
+namespace inline_test_mutating_method_scalar_attr_return
+
+main: procedure = .int
+  probe = .Probe()
+  say probe.directAttr()
+  say probe.localThenAttr()
+  say probe.callOnly()
+  return 0
+
+Probe: class
+  root = .int
+
+  *: factory
+    root = 10
+    return
+
+  reset: method = .int
+    root = 10
+    return 0
+
+  changeAndReturnDifferent: method = .int
+    root = root + 5
+    return root + 100
+
+  directAttr: method = .int
+    call reset()
+    root = changeAndReturnDifferent()
+    return root
+
+  localThenAttr: method = .int
+    call reset()
+    next = changeAndReturnDifferent()
+    root = next
+    return root
+
+  callOnly: method = .int
+    call reset()
+    call changeAndReturnDifferent()
+    return root

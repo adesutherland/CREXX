@@ -708,6 +708,7 @@ static int ast_inline_statement(Context *context,
     ASTNode *proc_instr;
     Scope *inline_scope;
     InlineCloneState clone_state;
+    int receiver_copyback_appended;
 
     if (!context || !statement_node || !call_node || !proc_sym || !proc_sym->ast_template) return 0;
 
@@ -733,6 +734,7 @@ static int ast_inline_statement(Context *context,
     instr_list = block;
 
     memset(&clone_state, 0, sizeof(clone_state));
+    receiver_copyback_appended = 0;
 
     if (!inline_build_symbol_map(proc_def->scope, inline_scope, &clone_state)) {
         inline_debug_fail_closed(context, call_node, proc_sym, "failed to build inline symbol/scope map");
@@ -799,11 +801,33 @@ static int ast_inline_statement(Context *context,
                 return 0;
             }
 
-            if (inline_node_has_array_shape(ret_expr) ||
+            if (clone_state.method_receiver_needs_copyback) {
+                ret_rhs = inline_create_temp_value_ref(context,
+                                                       instr_list,
+                                                       inline_scope,
+                                                       ret_expr,
+                                                       &clone_state,
+                                                       "__inline_ret",
+                                                       (size_t)proc_instr->node_number);
+                if (!ret_rhs) {
+                    inline_debug_fail_closed(context, call_node, proc_sym, "failed to capture return value before receiver copyback");
+                    inline_free_symbol_map(&clone_state);
+                    return 0;
+                }
+
+                if (!inline_append_method_receiver_copyback(context,
+                                                            instr_list,
+                                                            inline_scope,
+                                                            call_node,
+                                                            &clone_state)) {
+                    inline_debug_fail_closed(context, call_node, proc_sym, "failed to append method receiver copyback before return assignment");
+                    inline_free_symbol_map(&clone_state);
+                    return 0;
+                }
+                receiver_copyback_appended = 1;
+            } else if (inline_node_has_array_shape(ret_expr) ||
                 (inline_node_needs_attr_copy(ret_expr) &&
                  (ret_expr->value_type == TP_BINARY || ret_expr->target_type == TP_BINARY))) {
-                ASTNode *ret_copy;
-
                 ret_rhs = inline_clone_subtree(context, ret_expr, &clone_state);
                 if (!ret_rhs) {
                     inline_debug_fail_closed(context, call_node, proc_sym, "failed to clone aggregate return expression");
@@ -826,14 +850,6 @@ static int ast_inline_statement(Context *context,
                     inline_free_symbol_map(&clone_state);
                     return 0;
                 }
-
-                ret_copy = rxcp_remap_create_register_copy_instr(context, inline_scope, "copy", ret_lhs, ret_rhs);
-                if (!ret_copy) {
-                    inline_debug_fail_closed(context, call_node, proc_sym, "failed to create aggregate return copy instructions");
-                    inline_free_symbol_map(&clone_state);
-                    return 0;
-                }
-                add_ast(instr_list, ret_copy);
             } else {
                 ret_rhs = inline_clone_subtree(context, ret_expr, &clone_state);
                 if (!ret_rhs) {
@@ -841,6 +857,21 @@ static int ast_inline_statement(Context *context,
                     inline_free_symbol_map(&clone_state);
                     return 0;
                 }
+            }
+
+            if (inline_node_has_array_shape(ret_rhs) ||
+                (inline_node_needs_attr_copy(ret_rhs) &&
+                 (ret_rhs->value_type == TP_BINARY || ret_rhs->target_type == TP_BINARY))) {
+                ASTNode *ret_copy;
+
+                ret_copy = rxcp_remap_create_register_copy_instr(context, inline_scope, "copy", ret_lhs, ret_rhs);
+                if (!ret_copy) {
+                    inline_debug_fail_closed(context, call_node, proc_sym, "failed to create return copy instructions");
+                    inline_free_symbol_map(&clone_state);
+                    return 0;
+                }
+                add_ast(instr_list, ret_copy);
+            } else {
                 rxcp_remap_append_assignment_node(instr_list, ret_assign, ret_lhs, ret_rhs);
             }
         } else {
@@ -858,14 +889,16 @@ static int ast_inline_statement(Context *context,
         proc_instr = proc_instr->sibling;
     }
 
-    if (!inline_append_method_receiver_copyback(context,
-                                                instr_list,
-                                                inline_scope,
-                                                call_node,
-                                                &clone_state)) {
-        inline_debug_fail_closed(context, call_node, proc_sym, "failed to append method receiver copyback");
-        inline_free_symbol_map(&clone_state);
-        return 0;
+    if (!receiver_copyback_appended) {
+        if (!inline_append_method_receiver_copyback(context,
+                                                    instr_list,
+                                                    inline_scope,
+                                                    call_node,
+                                                    &clone_state)) {
+            inline_debug_fail_closed(context, call_node, proc_sym, "failed to append method receiver copyback");
+            inline_free_symbol_map(&clone_state);
+            return 0;
+        }
     }
 
     rxcp_remap_replace_node(statement_node, block);
