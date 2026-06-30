@@ -287,6 +287,26 @@ static int ctx_write(rxcrexxcmd_context *ctx, int is_error, const char *text, si
     return fwrite(text, 1, length, fallback) == length ? 0 : -1;
 }
 
+static int ctx_write_process_text(rxcrexxcmd_context *ctx, int is_error, const char *text, size_t length) {
+#ifdef _WIN32
+    size_t start;
+    size_t i;
+
+    if (!text || length == 0) return 0;
+    start = 0;
+    for (i = 0; i < length; i++) {
+        if (text[i] == '\r' && i + 1 < length && text[i + 1] == '\n') {
+            if (i > start && ctx_write(ctx, is_error, text + start, i - start) != 0) return -1;
+            start = i + 1;
+        }
+    }
+    if (start < length) return ctx_write(ctx, is_error, text + start, length - start);
+    return 0;
+#else
+    return ctx_write(ctx, is_error, text, length);
+#endif
+}
+
 static int ctx_puts(rxcrexxcmd_context *ctx, const char *text) {
     return ctx_write(ctx, 0, text, text ? strlen(text) : 0);
 }
@@ -1990,8 +2010,8 @@ static int cmd_run(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args
         return command_rc ? command_rc : RXCREXXCMD_RC_ERROR;
     }
 
-    if (out_text) ctx_write(ctx, 0, out_text, strlen(out_text));
-    if (err_text) ctx_write(ctx, 1, err_text, strlen(err_text));
+    if (out_text) ctx_write_process_text(ctx, 0, out_text, strlen(out_text));
+    if (err_text) ctx_write_process_text(ctx, 1, err_text, strlen(err_text));
     free(out_text);
     free(err_text);
     free(run_error);

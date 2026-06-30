@@ -74,7 +74,8 @@ string(APPEND CREXX_ARGS_SMOKE_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAN
 string(APPEND CREXX_ARGS_SMOKE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"Failed to stage args smoke source\")\nendif()\n")
 string(APPEND CREXX_ARGS_SMOKE_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:crexx>\" \"args_echo.crexx\" \"--args\" \"alpha beta\" \"and&&pipes|stay\" \"two  spaces\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
 string(APPEND CREXX_ARGS_SMOKE_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"crexx args smoke failed.\\nstdout:\\n\${out}\\nstderr:\\n\${err}\")\nendif()\n")
-string(APPEND CREXX_ARGS_SMOKE_CONTENT "if(NOT out STREQUAL [=[3\n[alpha beta]\n[and&&pipes|stay]\n[two  spaces]\n]=])\n  message(FATAL_ERROR \"Unexpected crexx args output. Got:\\n\${out}\")\nendif()\n")
+string(APPEND CREXX_ARGS_SMOKE_CONTENT "string(REPLACE \"\\r\" \"\" out_normalized \"\${out}\")\n")
+string(APPEND CREXX_ARGS_SMOKE_CONTENT "if(NOT out_normalized STREQUAL [=[3\n[alpha beta]\n[and&&pipes|stay]\n[two  spaces]\n]=])\n  message(FATAL_ERROR \"Unexpected crexx args output. Got:\\n\${out}\")\nendif()\n")
 file(GENERATE OUTPUT "${CREXX_ARGS_SMOKE_SCRIPT}" CONTENT "${CREXX_ARGS_SMOKE_CONTENT}")
 
 add_test(NAME crexx_args_smoke
