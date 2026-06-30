@@ -580,13 +580,15 @@ stdout/stderr path.
 ADDRESS command text may contain host-variable anchors whose meaning belongs to
 the selected environment handler. The compiler auto-exposes visible Rexx scalar
 variables named by `:name` inside string-literal command text, and by `${name}`
-inside command text that reaches the ADDRESS exit. The command string itself is
-not interpolated by the VM. Rexx providers read the exposed values from
-`addressrequest.get_binding_value(name)`; native providers can use
-`rxvml_address_binding_get(request, name, out, out_len)`. Handlers that write a
-host variable return a normal `var` updated binding, so the existing ADDRESS
-write-back path handles both explicit `EXPOSE` variables and auto-exposed
-anchors.
+inside command text that reaches the ADDRESS exit. The scanner also exposes
+stems for `:name[]`, `:name.`, `${name[]}`, and `${name.}`. The command string
+itself is not interpolated by the VM. Rexx providers read exposed scalar values
+from `addressrequest.get_binding_value(name)` and stem values from
+`get_binding_stem_value`; native providers can use
+`rxvml_address_binding_get(request, name, out, out_len)` for scalar bindings.
+Handlers that write a host variable return a normal updated binding, so the
+existing ADDRESS write-back path handles both explicit `EXPOSE` variables and
+auto-exposed anchors.
 
 The built-in command environments split into four spawn modes:
 
@@ -595,7 +597,10 @@ The built-in command environments split into four spawn modes:
   cREXX-defined command set with stable behavior across supported operating
   systems, not a shell. It owns persistent `cd`/`pushd`/`popd`,
   file/text/process/time/network commands, `batch`, and `run` for direct
-  executable dispatch.
+  executable dispatch. CREXX expands host-variable scalar anchors to one
+  command argument and stem anchors to zero or more command arguments after its
+  own command parsing; `run :argv[]` therefore launches the child through an
+  argv vector rather than by flattening the array to a command string.
 - `SYSTEM`, `COMMAND`, and `CMD` route the command string through the platform
   command processor so shell built-ins and command syntax work consistently.
   On POSIX, the VM invokes standard `sh -c`; it finds `sh` from `_CS_PATH`

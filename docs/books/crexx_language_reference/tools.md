@@ -182,7 +182,7 @@ Common driver options:
 - `-link-keep-inline` / `-link-strip-inline`: preserve or strip inline-body
   metadata from linked images
 - `-args`: stop driver option parsing; remaining arguments are passed to the
-  executed program
+  executed program as separate argv entries
 
 If the input filename ends in `.rxpp`, the driver runs RXPP first and then
 compiles the generated `.crexx` source. `CREXX_HOME`, when set, is used as the
@@ -192,6 +192,9 @@ otherwise the driver derives that root from its load path.
 The driver does not have its own `-o` option. It derives the compile and
 assemble output stem from each input path, preserving the input directory and
 turning dots in the basename into underscores after removing the source suffix.
+Its toolchain phases use direct argv dispatch through the CREXX ADDRESS command
+environment, so paths and program arguments with spaces do not need shell
+quoting.
 
 Native packaging links the program with the standard library image, runs
 `rxcpack`, and invokes a platform C compiler. The lower-level `crxc.rexx`

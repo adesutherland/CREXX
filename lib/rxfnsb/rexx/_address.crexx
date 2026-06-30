@@ -1487,10 +1487,12 @@ spawn_request: procedure = .addressresponse
   arg request = .addressrequest, spawn_mode = 0
 
   response = .addressresponse(0)
-  redirect = .binary[5]
+  redirect = .binary[6]
   envs = .string[]
+  crexx_bindings = .string[]
   spawn_mode_value = .int
   slot = .int
+  binding_slot = .int
   command = .string
   stdin_endpoint = .binary
   stdout_endpoint = .binary
@@ -1506,29 +1508,57 @@ spawn_request: procedure = .addressresponse
 
   assembler linkattr1 envs,redirect,4
   assembler linkattr1 spawn_mode_value,redirect,5
+  assembler linkattr1 crexx_bindings,redirect,6
   spawn_mode_value = spawn_mode
 
   slot = 0
+  binding_slot = 0
   do i = 1 to request.get_binding_count()
     binding = .addressbinding
     alias = .string
     kind = .string
+    stem_count = .string
+    stem_i = .int
 
     binding = request.get_binding(i)
     kind = normalize_environment_name(binding.get_kind())
-    if kind \= "VAR" then iterate
 
     alias = binding.get_external_alias()
     if alias = "" then alias = binding.get_internal_name()
 
-    slot = slot + 1
-    envs.slot = alias
-    slot = slot + 1
-    envs.slot = binding.get_value()
+    if kind = "VAR" then do
+      slot = slot + 1
+      envs.slot = alias
+      slot = slot + 1
+      envs.slot = binding.get_value()
+
+      binding_slot = binding_slot + 1
+      crexx_bindings.binding_slot = "VAR"
+      binding_slot = binding_slot + 1
+      crexx_bindings.binding_slot = alias
+      binding_slot = binding_slot + 1
+      crexx_bindings.binding_slot = binding.get_value()
+    end
+    else if kind = "STEM" then do
+      stem_count = binding.get_stem_value("0")
+
+      binding_slot = binding_slot + 1
+      crexx_bindings.binding_slot = "STEM"
+      binding_slot = binding_slot + 1
+      crexx_bindings.binding_slot = alias
+      binding_slot = binding_slot + 1
+      crexx_bindings.binding_slot = stem_count
+
+      do stem_i = 1 to stem_count + 0
+        binding_slot = binding_slot + 1
+        crexx_bindings.binding_slot = binding.get_stem_value(stem_i || "")
+      end
+    end
   end
 
   assembler unlink envs
   assembler unlink spawn_mode_value
+  assembler unlink crexx_bindings
 
   command = request.get_command()
   rc = 0

@@ -55,9 +55,9 @@
  /* defaults for options for this program */
 native=0;version=0;help=0;compile=0;filename='';verbose=0
 execute=1;linking=0;compile=1;optimize=1;nocolor=0;keep=1;decimal=1
-lastfile=0;sourceRoots='';binaryRoots='';importRxas=0
+lastfile=0;sourceRoots='';binaryRoots='';importRxas=0;argsStart=0
 linkStripSource=1;linkPreserveInline=0;linkMap='';linkOptionsUsed=0
-filenames=.string[];binfiles=.string[];cleanupFiles=.string[]
+filenames=.string[];binfiles=.string[];cleanupFiles=.string[];cliArgs=.string[]
  
  esc             = '1b'X
  ANSI_RESET      = '[0m'
@@ -133,7 +133,10 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
        do
 	 /* allow for single- and double dash options */
 	 if left(fn.i,2) = '--'  then fn.i=substr(fn.i,2)
-	 if fn.i = '-args'       then leave
+	 if fn.i = '-args'       then do
+           argsStart = i + 1
+           leave
+	 end
 	 if fn.i = '-help'       then ret = help(nocolor)
 	 if fn.i = '-exec'       then execute=1
 	 if fn.i = '-noexec'     then execute=0
@@ -266,13 +269,12 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
 	   end
 	 end
 	 
--- parse --args out of the full command line
- commandline = ''
- loop fn_i=1 to fn.0
-    commandline = commandline fn.fn_i
-  end
-  parse commandline '-args' cli_args
-  cli_args = '-a' cli_args
+-- keep --args as argv entries so spaces and shell-looking text survive
+ if argsStart > 0 then do
+   do fn_i=argsStart to fn.0
+     call appendArrayValue cliArgs, fn.fn_i
+   end
+ end
    
    -- standard libs plugin & classlibs included
    libs = libs';'rxpath||'bin'dirsep'classlib'
@@ -365,12 +367,17 @@ do i=1 to filenames[0]
     if verbose>3 then do
       call printFileToSTDout filename'.rxpp', nocolor
     end
-    rxppcmd = rxpath'/'lpath'/rxpp'
-    rxppcmd = rxppcmd || ' -i ' || quoteCommandArg(filename'.rxpp', platformUpper)
-    rxppcmd = rxppcmd || ' -o ' || quoteCommandArg(filename'.crexx', platformUpper)
-    rxppcmd = rxppcmd || ' -m ' || quoteCommandArg(rxpath'bin/maclib.rexx', platformUpper)
-    rxppcmd = rxppcmd || ' -verbose ' || verbose
-    address cmd rxppcmd
+    rxppArgs = .string[]
+    call appendArrayValue rxppArgs, rxpath||'bin'||dirsep||'rxpp'
+    call appendArrayValue rxppArgs, '-i'
+    call appendArrayValue rxppArgs, filename'.rxpp'
+    call appendArrayValue rxppArgs, '-o'
+    call appendArrayValue rxppArgs, filename'.crexx'
+    call appendArrayValue rxppArgs, '-m'
+    call appendArrayValue rxppArgs, rxpath||'bin'||dirsep||'maclib.rexx'
+    call appendArrayValue rxppArgs, '-verbose'
+    call appendArrayValue rxppArgs, verbose
+    address crexx "run :rxppArgs[]"
     if verbose then do
       if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
       else res = esc||ANSI_RED||RC||esc||ANSI_RESET
@@ -389,12 +396,8 @@ do i=1 to filenames[0]
   if lower(right(filename,7))='.bcrexx' then filename=substr(filename,1,length(filename)-7) 
   
   optiflag=''; if optimize=0 then optiflag= '-n'
-  rxc_flags = ''
-  if sourceRoots <> '' then rxc_flags = rxc_flags || ' -s ' || quoteCommandArg(sourceRoots, platformUpper)
   binaryPath = rxpath||lpath
   if binaryRoots <> '' then binaryPath = binaryPath';'binaryRoots
-  if binaryPath <> '' then rxc_flags = rxc_flags || ' -i ' || quoteCommandArg(binaryPath, platformUpper)
-  if importRxas then rxc_flags = rxc_flags' --import-rxas'
 
   binfile = chop_suffix(filename)
   call appendArrayUnique binfiles, binfile
@@ -407,9 +410,22 @@ do i=1 to filenames[0]
 
   -- rxas_filename = chop_suffix(filename) /* temp fix for two-part filename files */
 
-  rxcmd = rxpath'bin'dirsep'rxc' optiflag rxc_flags
-  rxcmd = rxcmd || ' -o ' || quoteCommandArg(binfile, platformUpper)
-  rxcmd = rxcmd || ' ' || quoteCommandArg(sourceFile, platformUpper)
+  rxcArgs = .string[]
+  call appendArrayValue rxcArgs, rxpath||'bin'||dirsep||'rxc'
+  if optiflag <> '' then call appendArrayValue rxcArgs, optiflag
+  if sourceRoots <> '' then do
+    call appendArrayValue rxcArgs, '-s'
+    call appendArrayValue rxcArgs, sourceRoots
+  end
+  if binaryPath <> '' then do
+    call appendArrayValue rxcArgs, '-i'
+    call appendArrayValue rxcArgs, binaryPath
+  end
+  if importRxas then call appendArrayValue rxcArgs, '--import-rxas'
+  call appendArrayValue rxcArgs, '-o'
+  call appendArrayValue rxcArgs, binfile
+  call appendArrayValue rxcArgs, sourceFile
+  rxcmd = renderCommand(rxcArgs, platformUpper)
   if verbose>1 then
     do
       if compile then say esc||ANSI_GREEN'rxc command     :' rxcmd
@@ -417,10 +433,10 @@ do i=1 to filenames[0]
 	  do
 	  say 'rxc does not compile due to --nocompile option'
 	end
-    end
+  end
   rxcOut = .string[]
   rxcErr = .string[]
-  if compile then address cmd rxcmd output rxcOut error rxcErr 
+  if compile then address crexx "run :rxcArgs[]" output rxcOut error rxcErr
   else RC = 0
   do j = 1 to rxcOut.0
     say '> rxc output:' rxcOut.j
@@ -443,10 +459,14 @@ do i=1 to filenames[0]
 
     call appendArrayUnique cleanupFiles, binfile'.rxas'
     call appendArrayUnique cleanupFiles, binfile'.rxbin'
-    asmcmd = rxpath'bin'dirsep'rxas' optiflag
-    asmcmd = asmcmd || ' -o ' || quoteCommandArg(binfile, platformUpper)
-    asmcmd = asmcmd || ' ' || quoteCommandArg(binfile, platformUpper)
-    address cmd asmcmd output out error err
+    asmArgs = .string[]
+    call appendArrayValue asmArgs, rxpath||'bin'||dirsep||'rxas'
+    if optiflag <> '' then call appendArrayValue asmArgs, optiflag
+    call appendArrayValue asmArgs, '-o'
+    call appendArrayValue asmArgs, binfile
+    call appendArrayValue asmArgs, binfile
+    asmcmd = renderCommand(asmArgs, platformUpper)
+    address crexx "run :asmArgs[]" output out error err
     if RC<>0 then say '[rxas     - Assembly Failed    ' esc||ANSI_BLUE||binfile'.rxas'||esc||ANSI_RESET
     if verbose then do
       if verbose>1 then say esc||ANSI_GREEN||'rxas command    :'   asmcmd
@@ -470,7 +490,7 @@ do i=1 to filenames[0]
   if native then do
     linkedOutput = binfile'_linked'
     outputStem = binfile
-    staticFlags = ''
+    staticLinkArgs = .string[]
     linkInputs = .string[]
     libsRest = .string
     modulePath = .string
@@ -493,24 +513,33 @@ do i=1 to filenames[0]
       staticModule = findStaticModule(modulePath)
       if staticModule <> '' then do
         if isMacPlatform(platformUpper) then
-          staticFlags = staticFlags || ' ' || quoteCommandArg('-Wl,-force_load,' || staticModule, platformUpper)
-        else
-          staticFlags = staticFlags || ' -Wl,--whole-archive ' || quoteCommandArg(staticModule, platformUpper) || ' -Wl,--no-whole-archive'
+          call appendArrayValue staticLinkArgs, '-Wl,-force_load,' || staticModule
+        else do
+          call appendArrayValue staticLinkArgs, '-Wl,--whole-archive'
+          call appendArrayValue staticLinkArgs, staticModule
+          call appendArrayValue staticLinkArgs, '-Wl,--no-whole-archive'
+        end
       end
       else
         call appendArrayUnique linkInputs, modulePath
     end
 
-    link_cmd = rxpath || 'bin' || dirsep || 'rxlink'
-    if linkStripSource then link_cmd = link_cmd || ' -s'
-    if linkPreserveInline then link_cmd = link_cmd || ' -i'
-    if linkMap <> '' then link_cmd = link_cmd || ' -m ' || quoteCommandArg(linkMap, platformUpper)
-    link_cmd = link_cmd || ' -o ' || quoteCommandArg(linkedOutput, platformUpper)
-    loop f=1 to linkInputs[0]
-      link_cmd = appendCommandArg(link_cmd, linkInputs[f], platformUpper)
+    linkArgs = .string[]
+    call appendArrayValue linkArgs, rxpath || 'bin' || dirsep || 'rxlink'
+    if linkStripSource then call appendArrayValue linkArgs, '-s'
+    if linkPreserveInline then call appendArrayValue linkArgs, '-i'
+    if linkMap <> '' then do
+      call appendArrayValue linkArgs, '-m'
+      call appendArrayValue linkArgs, linkMap
     end
+    call appendArrayValue linkArgs, '-o'
+    call appendArrayValue linkArgs, linkedOutput
+    loop f=1 to linkInputs[0]
+      call appendArrayValue linkArgs, linkInputs[f]
+    end
+    link_cmd = renderCommand(linkArgs, platformUpper)
     if verbose>1 then say esc||ANSI_GREEN'rxlink command  :'esc||ANSI_RESET link_cmd
-    address cmd link_cmd output out error err
+    address crexx "run :linkArgs[]" output out error err
     if verbose then do
       if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
       else res = esc||ANSI_RED||RC||esc||ANSI_RESET
@@ -518,14 +547,17 @@ do i=1 to filenames[0]
     end
     if RC\=0 then return RC
 
-    pack_cmd = rxpath || 'bin' || dirsep || 'rxcpack'
-    pack_cmd = pack_cmd || ' -o ' || quoteCommandArg(outputStem, platformUpper)
-    pack_cmd = appendCommandArg(pack_cmd, linkedOutput, platformUpper)
+    packArgs = .string[]
+    call appendArrayValue packArgs, rxpath || 'bin' || dirsep || 'rxcpack'
+    call appendArrayValue packArgs, '-o'
+    call appendArrayValue packArgs, outputStem
+    call appendArrayValue packArgs, linkedOutput
+    pack_cmd = renderCommand(packArgs, platformUpper)
     if verbose>1 then
     do
       say esc||ANSI_GREEN'rxcpack command :'esc||ANSI_RESET pack_cmd
       end
-    address cmd pack_cmd output out error err
+    address crexx "run :packArgs[]" output out error err
     if verbose then do
       if RC = 0 then res=esc||ANSI_GREEN||'OK'esc||ANSI_RESET
       else res = esc||ANSI_RED||RC||esc||ANSI_RESET
@@ -533,41 +565,60 @@ do i=1 to filenames[0]
     end
     if RC\=0 then return RC
 
-    cc_command = 'gcc -O3 -DNDEBUG'
-    nativeCFlags = readNativeCompileFlags(rxpath, dirsep)
-    if nativeCFlags <> '' then cc_command = cc_command || ' ' || nativeCFlags
-    socketLibs = ''
-    if isWindowsPlatform(platformUpper) then socketLibs = ' -lws2_32'
-    nativeRuntimeLibs = readNativeRuntimeLinkLibs(rxpath, dirsep)
-    if nativeRuntimeLibs <> '' then socketLibs = socketLibs || ' ' || nativeRuntimeLibs
-    nativeLinkFlags = readNativeLinkFlags(rxpath, dirsep)
-    if nativeLinkFlags <> '' then socketLibs = socketLibs || ' ' || nativeLinkFlags
-    if isMacPlatform(platformUpper) then
-      cc_command = cc_command ' -Wl,-search_paths_first -Wl,-headerpad_max_install_names'
-    cc_command = cc_command || ' -o ' || quoteCommandArg(outputStem, platformUpper)
-    cc_command = cc_command || ' ' || quoteCommandArg(outputStem'.c', platformUpper)
-    cc_command = cc_command || ' ' || quoteCommandArg('-L' || rxpath || 'bin', platformUpper)
+    ccArgs = .string[]
+    call appendArrayValue ccArgs, 'gcc'
+    call appendArrayValue ccArgs, '-O3'
+    call appendArrayValue ccArgs, '-DNDEBUG'
+    call appendNativeConfigArgs ccArgs, rxpath, dirsep, 'crexx_native_cflags_argv', 'crexx_native_cflags'
     if isMacPlatform(platformUpper) then do
-      cc_command = cc_command ' -lrxvml -lrxpashim -lrxvmplugin -lrxvmref -lplatform'
-      cc_command = appendCommandArg(cc_command, decstat, platformUpper)
-      cc_command = cc_command ' -ldecnumber -lavl_tree -lrxpa -lm' || socketLibs
-      if staticFlags <> '' then cc_command = cc_command staticFlags
+      call appendArrayValue ccArgs, '-Wl,-search_paths_first'
+      call appendArrayValue ccArgs, '-Wl,-headerpad_max_install_names'
+    end
+    call appendArrayValue ccArgs, '-o'
+    call appendArrayValue ccArgs, outputStem
+    call appendArrayValue ccArgs, outputStem'.c'
+    call appendArrayValue ccArgs, '-L' || rxpath || 'bin'
+    if isMacPlatform(platformUpper) then do
+      call appendArrayValue ccArgs, '-lrxvml'
+      call appendArrayValue ccArgs, '-lrxpashim'
+      call appendArrayValue ccArgs, '-lrxvmplugin'
+      call appendArrayValue ccArgs, '-lrxvmref'
+      call appendArrayValue ccArgs, '-lplatform'
+      call appendArrayValue ccArgs, decstat
+      call appendArrayValue ccArgs, '-ldecnumber'
+      call appendArrayValue ccArgs, '-lavl_tree'
+      call appendArrayValue ccArgs, '-lrxpa'
+      call appendArrayValue ccArgs, '-lm'
+      call appendNativeConfigArgs ccArgs, rxpath, dirsep, 'crexx_native_libs_argv', 'crexx_native_libs'
+      call appendNativeConfigArgs ccArgs, rxpath, dirsep, 'crexx_native_ldflags_argv', 'crexx_native_ldflags'
+      call appendArrayValues ccArgs, staticLinkArgs
     end
     else do
-      cc_command = cc_command ' -Wl,--start-group'
-      if staticFlags <> '' then cc_command = cc_command staticFlags
-      cc_command = cc_command ' -lrxvml -lrxpashim -lrxvmplugin -lrxvmref -lplatform'
-      cc_command = appendCommandArg(cc_command, decstat, platformUpper)
-      cc_command = cc_command ' -ldecnumber -lavl_tree -lrxpa -lm' || socketLibs
-      cc_command = cc_command ' -Wl,--end-group'
+      call appendArrayValue ccArgs, '-Wl,--start-group'
+      call appendArrayValues ccArgs, staticLinkArgs
+      call appendArrayValue ccArgs, '-lrxvml'
+      call appendArrayValue ccArgs, '-lrxpashim'
+      call appendArrayValue ccArgs, '-lrxvmplugin'
+      call appendArrayValue ccArgs, '-lrxvmref'
+      call appendArrayValue ccArgs, '-lplatform'
+      call appendArrayValue ccArgs, decstat
+      call appendArrayValue ccArgs, '-ldecnumber'
+      call appendArrayValue ccArgs, '-lavl_tree'
+      call appendArrayValue ccArgs, '-lrxpa'
+      call appendArrayValue ccArgs, '-lm'
+      if isWindowsPlatform(platformUpper) then call appendArrayValue ccArgs, '-lws2_32'
+      call appendNativeConfigArgs ccArgs, rxpath, dirsep, 'crexx_native_libs_argv', 'crexx_native_libs'
+      call appendNativeConfigArgs ccArgs, rxpath, dirsep, 'crexx_native_ldflags_argv', 'crexx_native_ldflags'
+      call appendArrayValue ccArgs, '-Wl,--end-group'
     end
+    cc_command = renderCommand(ccArgs, platformUpper)
 
     if verbose>1 then
       do
 	say 'cc compile command:'
 	say cc_command
 	end
-    address system cc_command
+    address crexx "run :ccArgs[]"
     
     if verbose then
       do
@@ -588,20 +639,26 @@ do i=1 to filenames[0]
     end
     end
   else do
-    ex_command = rxpath'bin'dirsep'rxvme'
-    if declib <> '' then ex_command = ex_command || ' ' || declib
-    do bf=1 to binfiles[0]
-      ex_command = appendCommandArg(ex_command, binfiles[bf], platformUpper)
+    exArgs = .string[]
+    call appendArrayValue exArgs, rxpath||'bin'||dirsep||'rxvme'
+    if declib <> '' then do
+      call appendArrayValue exArgs, '-p'
+      call appendArrayValue exArgs, 'rxvm_db_decimal'
     end
-    ex_command = appendSemicolonArgs(ex_command, libs, platformUpper)
-    if cli_args <> '' then ex_command = ex_command || ' ' || cli_args
+    do bf=1 to binfiles[0]
+      call appendArrayValue exArgs, binfiles[bf]
+    end
+    call appendSemicolonValuesToArray exArgs, libs
+    call appendArrayValue exArgs, '-a'
+    call appendArrayValues exArgs, cliArgs
+    ex_command = renderCommand(exArgs, platformUpper)
 
     if verbose>1 then do
       if execute then say 'crexx executes:' ex_command
       if execute=0 then say 'crexx does not execute because of --noexec'
     end
     if lastfile=1 then if execute then do
-      address system ex_command
+      address crexx "run :exArgs[]"
       if RC\=0 then return RC
     end
   end
@@ -653,7 +710,7 @@ say
 say 'The following options are available:'
 say
 say '-help              -- display (this) help info'
-say '-args              -- execute with command line args (as final option only)'
+say '-args              -- pass remaining argv entries to the program (final option)'
 say '-version           -- display the version number'
 say '-exec              -- execute the compiled rxbin (default)'
 say '-noexec            -- compile only; do not execute with rxvme'
@@ -807,11 +864,49 @@ end
 call appendArrayValue current, item
 return
 
+appendArrayValues: procedure
+arg expose current = .string[], values = .string[]
+i = .int
+do i = 1 to values[0]
+  call appendArrayValue current, values[i]
+end
+return
+
+appendSemicolonValuesToArray: procedure
+arg expose current = .string[], values = .string
+rest = .string
+item = .string
+sep = .int
+rest = values
+do while rest <> ''
+  sep = pos(';', rest)
+  if sep = 0 then do
+    item = rest
+    rest = ''
+  end
+  else do
+    item = left(rest, sep - 1)
+    rest = substr(rest, sep + 1)
+  end
+  if item <> '' then call appendArrayValue current, item
+end
+return
+
 appendCommandArg: procedure = .string
 arg command = .string, item = .string, platformName = .string
 if item = '' then return command
 if command = '' then return quoteCommandArg(item, platformName)
 return command || ' ' || quoteCommandArg(item, platformName)
+
+renderCommand: procedure = .string
+arg argv = .string[], platformName = .string
+command = .string
+i = .int
+command = ''
+do i = 1 to argv[0]
+  command = appendCommandArg(command, argv[i], platformName)
+end
+return command
 
 appendSemicolonArgs: procedure = .string
 arg command = .string, values = .string, platformName = .string
@@ -871,6 +966,30 @@ return readNativeConfigLine(rxpath, dirsep, 'crexx_native_cflags')
 readNativeLinkFlags: procedure = .string
 arg rxpath = .string, dirsep = .string
 return readNativeConfigLine(rxpath, dirsep, 'crexx_native_ldflags')
+
+appendNativeConfigArgs: procedure
+arg expose current = .string[], rxpath = .string, dirsep = .string, argvFileName = .string, fallbackFileName = .string
+configFile = .string
+configArg = .string
+configFile = rxpath || 'bin' || dirsep || argvFileName
+if fileExists(configFile) then do
+  do while lines(configFile)
+    configArg = linein(configFile)
+    if configArg <> '' then call appendArrayValue current, configArg
+  end
+  call lineout configFile
+  return
+end
+call appendWordsToArray current, readNativeConfigLine(rxpath, dirsep, fallbackFileName)
+return
+
+appendWordsToArray: procedure
+arg expose current = .string[], text = .string
+i = .int
+do i = 1 to words(text)
+  call appendArrayValue current, word(text, i)
+end
+return
 
 readNativeConfigLine: procedure = .string
 arg rxpath = .string, dirsep = .string, fileName = .string

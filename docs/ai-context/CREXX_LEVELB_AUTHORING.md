@@ -387,6 +387,14 @@ It is not a shell: `;`, `&&`, `||`, pipes, shell redirects, and shell expansion
 are usage errors. Use repeated ADDRESS statements or `address crexx "batch"`
 with input lines for multiple commands.
 
+For CREXX commands, host-variable anchors can pass data without shell parsing:
+`:name` exposes a scalar as one command argument, while `:name[]` and `:name.`
+expose a stem/array as zero or more command arguments. Prefer `[]` in new code
+because it is visually unambiguous. For direct executable dispatch, build a
+`.string[]` argument vector and use `address crexx "run :argv[]"`; the `run`
+command launches from that argv vector rather than flattening and reparsing a
+command string.
+
 Use `address system`, `address command`, or `address cmd` only when the caller
 intentionally needs the platform command processor. On POSIX this is standard
 `sh -c` resolved from the system standard utility path, not the user's `SHELL`

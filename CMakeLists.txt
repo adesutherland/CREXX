@@ -244,6 +244,39 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+option(CREXX_WINDOWS_LINK_REMOVE_RETRY
+        "On Windows, remove existing link outputs with retry before relinking to tolerate transient test/AV locks"
+        ON)
+set(CREXX_WINDOWS_LINK_REMOVE_RETRIES "120" CACHE STRING
+        "Retry count for removing locked Windows link outputs before relinking")
+set(CREXX_WINDOWS_LINK_REMOVE_DELAY "0.5" CACHE STRING
+        "Delay in seconds between Windows link-output remove retries")
+
+if(WIN32 AND CREXX_WINDOWS_LINK_REMOVE_RETRY)
+    set(CREXX_WINDOWS_LINK_REMOVE_COMMAND
+            "\"${CMAKE_COMMAND}\""
+            "-DREMOVE_PATHS=<TARGET>"
+            "-DREMOVE_RETRIES=${CREXX_WINDOWS_LINK_REMOVE_RETRIES}"
+            "-DREMOVE_DELAY=${CREXX_WINDOWS_LINK_REMOVE_DELAY}"
+            "-DREMOVE_CONTEXT=Windows_relink_output"
+            "-P" "\"${CMAKE_CURRENT_SOURCE_DIR}/cmake/CrexxRemoveWithRetry.cmake\"")
+    string(REPLACE ";" " " CREXX_WINDOWS_LINK_REMOVE_PREFIX "${CREXX_WINDOWS_LINK_REMOVE_COMMAND}")
+
+    set(CMAKE_C_LINK_EXECUTABLE
+            "${CREXX_WINDOWS_LINK_REMOVE_PREFIX} && ${CMAKE_C_LINK_EXECUTABLE}")
+    set(CMAKE_C_CREATE_SHARED_LIBRARY
+            "${CREXX_WINDOWS_LINK_REMOVE_PREFIX} && ${CMAKE_C_CREATE_SHARED_LIBRARY}")
+    set(CMAKE_C_CREATE_SHARED_MODULE
+            "${CREXX_WINDOWS_LINK_REMOVE_PREFIX} && ${CMAKE_C_CREATE_SHARED_MODULE}")
+
+    set(CMAKE_CXX_LINK_EXECUTABLE
+            "${CREXX_WINDOWS_LINK_REMOVE_PREFIX} && ${CMAKE_CXX_LINK_EXECUTABLE}")
+    set(CMAKE_CXX_CREATE_SHARED_LIBRARY
+            "${CREXX_WINDOWS_LINK_REMOVE_PREFIX} && ${CMAKE_CXX_CREATE_SHARED_LIBRARY}")
+    set(CMAKE_CXX_CREATE_SHARED_MODULE
+            "${CREXX_WINDOWS_LINK_REMOVE_PREFIX} && ${CMAKE_CXX_CREATE_SHARED_MODULE}")
+endif()
+
 configure_file(
         ${CMAKE_CURRENT_SOURCE_DIR}/cmake/crexx_version.h.in
         ${CMAKE_BINARY_DIR}/generated/crexx_version.h

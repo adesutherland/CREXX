@@ -52,53 +52,57 @@ file IO, and relative-path operations in the same process. In contrast,
 `ADDRESS SYSTEM "cd path"` runs inside the child command processor and does not
 change cREXX's working directory after that child exits.
 
-The command set is intentionally useful but bounded:
+The command set is intentionally useful but bounded. CREXX command names are
+literal. Host-variable anchors are supported only in command operands. In the
+table below, `anchorable` means an operand may be a scalar anchor such as
+`:name` or `${name}`. An operand ending in `...` may also be supplied by a stem
+anchor such as `:name[]`, `:name.`, `${name[]}`, or `${name.}`, which expands
+to zero or more operands. For fixed-arity commands, a stem anchor is valid only
+when it expands to exactly the number of operands required at that point.
 
-| Command | Behavior |
-| --- | --- |
-| `help` | Print the command list. |
-| `echo [text...]` | Write text followed by a newline. |
-| `pwd` | Print the current cREXX process working directory. |
-| `cd [path]` | Change the cREXX process working directory; no path means the user's home directory where known. |
-| `pushd path` | Push the current directory and change to `path`. |
-| `popd` | Return to the most recent pushed directory. |
-| `ls [path]`, `dir [path]` | List directory entries, excluding `.` and `..`. |
-| `exists path...` | Print `1 path` or `0 path` for each path; returns non-zero if any are missing. |
-| `stat path...` | Print type, size, and modification time for each path. |
-| `mkdir [-p] path...` | Create directories; `-p` creates missing parents. |
-| `rmdir path...` | Remove empty directories. |
-| `rm [-r] path...`, `del [-r] path...` | Remove files, or recursively remove paths with `-r`. |
-| `copy source target`, `cp source target` | Copy a file. |
-| `move source target`, `mv source target`, `rename source target` | Rename or move a path. |
-| `touch path...` | Create files if missing and update modification times. |
-| `cat path...`, `type path...` | Write file contents to the command output stream. |
-| `head [-n count] path` | Write the first lines of a file; default count is 10. |
-| `tail [-n count] path` | Write the last lines of a file; default count is 10. |
-| `lines [path]` | Count lines in a file, or in redirected command input when no path is supplied. |
-| `write path text...` | Replace a file with the supplied text. |
-| `append path text...` | Append the supplied text to a file. |
-| `which command` | Resolve an executable through process `PATH`. |
-| `now [local\|utc]`, `date [local\|utc]` | Print an ISO-like timestamp. |
-| `sleep seconds` | Sleep for the requested duration. |
-| `platform`, `os` | Print operating-system and architecture details. |
-| `env [name]` | Print all environment variables, or one variable's value. |
-| `setenv name value` | Set a process environment variable. |
-| `unsetenv name` | Clear a process environment variable. |
-| `pid` | Print the current cREXX process id. |
-| `ps [pid]` | Print current process details, or check whether a process id is alive. |
-| `kill pid [signal]` | Terminate or signal a process. |
-| `resolve host` | Resolve host names to numeric addresses. |
-| `tcp host port` | Check that a TCP connection can be opened. |
-| `batch` | Read commands from input and execute them in order. |
-| `run command...` | Execute a direct `PATH` command and forward its output and error streams. |
+| Command | Anchorable operands | Behavior |
+| --- | --- | --- |
+| `help` | None. | Print the command list. |
+| `echo [text...]` | `text...` may use scalar or stem anchors. | Write text followed by a newline. |
+| `pwd` | None. | Print the current cREXX process working directory. |
+| `cd [path]` | `path` may use a scalar anchor, or a one-item stem anchor. | Change the cREXX process working directory; no path means the user's home directory where known. |
+| `pushd path` | `path` may use a scalar anchor, or a one-item stem anchor. | Push the current directory and change to `path`. |
+| `popd` | None. | Return to the most recent pushed directory. |
+| `ls [path...]`, `dir [path...]` | `path...` may use scalar or stem anchors. | List directory entries, excluding `.` and `..`. |
+| `exists path...` | `path...` may use scalar or stem anchors. | Print `1 path` or `0 path` for each path; returns non-zero if any are missing. |
+| `stat path...` | `path...` may use scalar or stem anchors. | Print type, size, and modification time for each path. |
+| `mkdir [-p] path...` | `-p` may be literal or scalar-anchored; `path...` may use scalar or stem anchors. | Create directories; `-p` creates missing parents. |
+| `rmdir path...` | `path...` may use scalar or stem anchors. | Remove empty directories. |
+| `rm [-r] path...`, `del [-r] path...` | `-r` may be literal or scalar-anchored; `path...` may use scalar or stem anchors. | Remove files, or recursively remove paths with `-r`. |
+| `copy source target`, `cp source target` | `source` and `target` may use scalar anchors, or one stem anchor that expands to both operands. | Copy a file. |
+| `move source target`, `mv source target`, `rename source target` | `source` and `target` may use scalar anchors, or one stem anchor that expands to both operands. | Rename or move a path. |
+| `touch path...` | `path...` may use scalar or stem anchors. | Create files if missing and update modification times. |
+| `cat path...`, `type path...` | `path...` may use scalar or stem anchors. | Write file contents to the command output stream. |
+| `head [-n count] path` | `count` and `path` may use scalar anchors; a stem anchor must expand to the exact option/value/path shape. | Write the first lines of a file; default count is 10. |
+| `tail [-n count] path` | `count` and `path` may use scalar anchors; a stem anchor must expand to the exact option/value/path shape. | Write the last lines of a file; default count is 10. |
+| `lines [path]` | `path` may use a scalar anchor, or a one-item stem anchor. | Count lines in a file, or in redirected command input when no path is supplied. |
+| `write path text...` | `path` may use a scalar anchor; `text...` may use scalar or stem anchors. | Replace a file with the supplied text. |
+| `append path text...` | `path` may use a scalar anchor; `text...` may use scalar or stem anchors. | Append the supplied text to a file. |
+| `which command` | `command` may use a scalar anchor, or a one-item stem anchor. | Resolve an executable through process `PATH`. |
+| `now [local\|utc]`, `date [local\|utc]` | `local`/`utc` may be literal or scalar-anchored. | Print an ISO-like timestamp. |
+| `sleep seconds` | `seconds` may use a scalar anchor. | Sleep for the requested duration. |
+| `platform`, `os` | None. | Print operating-system and architecture details. |
+| `env [name...]` | `name...` may use scalar or stem anchors. | Print all environment variables, one variable's value, or `name=value` lines for multiple names. |
+| `setenv name value...` | `name` may use a scalar anchor, or a stem anchor whose first item is the name. `value...` may use scalar or stem anchors and is joined with spaces. | Set a process environment variable. |
+| `unsetenv name...` | `name...` may use scalar or stem anchors. | Clear one or more process environment variables. |
+| `pid` | None. | Print the current cREXX process id. |
+| `ps [pid]` | `pid` may use a scalar anchor. | Print current process details, or check whether a process id is alive. |
+| `kill pid [signal]` | `pid` and `signal` may use scalar anchors. | Terminate or signal a process. |
+| `resolve host` | `host` may use a scalar anchor. | Resolve host names to numeric addresses. |
+| `tcp host port` | `host` and `port` may use scalar anchors, or one stem anchor that expands to both operands. | Check that a TCP connection can be opened. |
+| `batch` | None in the `batch` command itself; input lines are runtime text and are not compiler auto-exposed. | Read commands from input and execute them in order. |
+| `run executable [arg...]` | `executable` may be literal or scalar-anchored. `arg...` may use scalar or stem anchors. `run :argv[]` is also accepted: the first stem item is the executable and the remaining items are arguments. The word `run` itself must be literal. | Execute a direct `PATH` command and forward its output and error streams. |
 
-ADDRESS command text can refer to Rexx variables through host-variable anchors.
-When command text contains `:name` or `${name}`, the compiler exposes the
-visible scalar variable `name` to the selected ADDRESS environment. ADDRESS does
-not replace the anchor text in the command string. Instead, the environment
-receives the command text and the exposed variable values, and that environment
-defines what the anchors mean. Environments that support write-back can update
-the exposed Rexx variables before returning.
+Anchors must occupy a whole parsed operand. For example, `cat :file` expands
+`:file`, but `--file=:file` is a literal operand. Build combined operands in
+Rexx first, then pass the result with a scalar anchor. Stem anchors preserve
+each item as one operand, even when an item contains spaces or shell punctuation
+such as `&&`.
 
 ## ARG
 

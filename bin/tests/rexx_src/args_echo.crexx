@@ -1,0 +1,9 @@
+options levelb
+import rxfnsb
+
+arg args = .string[]
+
+say args[0]
+do i = 1 to args[0]
+  say "[" || args[i] || "]"
+end

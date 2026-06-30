@@ -18,6 +18,25 @@ string(STRIP "${CREXX_NATIVE_EXE_LINKER_FLAGS_TEXT}" CREXX_NATIVE_EXE_LINKER_FLA
 file(WRITE ${CMAKE_BINARY_DIR}/bin/crexx_native_cflags "${CREXX_NATIVE_C_FLAGS_TEXT}\n")
 file(WRITE ${CMAKE_BINARY_DIR}/bin/crexx_native_ldflags "${CREXX_NATIVE_EXE_LINKER_FLAGS_TEXT}\n")
 
+function(crexx_write_native_arg_file output_path)
+    file(WRITE "${output_path}" "")
+    foreach(_arg IN LISTS ARGN)
+        file(APPEND "${output_path}" "${_arg}\n")
+    endforeach()
+endfunction()
+
+separate_arguments(CREXX_NATIVE_C_FLAGS_ARGS NATIVE_COMMAND "${CREXX_NATIVE_C_FLAGS_TEXT}")
+separate_arguments(CREXX_NATIVE_EXE_LINKER_FLAGS_ARGS NATIVE_COMMAND "${CREXX_NATIVE_EXE_LINKER_FLAGS_TEXT}")
+crexx_write_native_arg_file(
+        ${CMAKE_BINARY_DIR}/bin/crexx_native_libs_argv
+        ${CREXX_NATIVE_RUNTIME_LINK_FLAGS_ARGS})
+crexx_write_native_arg_file(
+        ${CMAKE_BINARY_DIR}/bin/crexx_native_cflags_argv
+        ${CREXX_NATIVE_C_FLAGS_ARGS})
+crexx_write_native_arg_file(
+        ${CMAKE_BINARY_DIR}/bin/crexx_native_ldflags_argv
+        ${CREXX_NATIVE_EXE_LINKER_FLAGS_ARGS})
+
 add_custom_command(
         BYPRODUCTS
                 ${CMAKE_CURRENT_BINARY_DIR}/crexx.rxbin

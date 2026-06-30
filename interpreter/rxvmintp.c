@@ -8694,7 +8694,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
      * reg 2 is the command (the path environment variable is used for search resolution)
      * reg 3 is an array of opaque REDIRECT binary structures plus optional metadata
      *       reg3[1] = input, reg3[2] = output, reg3[3] = error
-     *       reg3[4] = environment variables, reg3[5] = spawn mode
+     *       reg3[4] = environment variables, reg3[5] = spawn mode,
+     *       reg3[6] = CREXX address binding metadata
      * spawn generates a failure signal if the command is not found */
     START_INSTRUCTION(SPAWN_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - SPAWN R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
@@ -8706,6 +8707,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 REDIRECT *pOut = 0;
                 REDIRECT *pErr = 0;
                 value *variables = NULL;
+                value *crexx_bindings = NULL;
                 char *command;
                 command = malloc(op2R->string_length + 1);
                 memcpy(command,op2R->string_value, op2R->string_length);
@@ -8717,8 +8719,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 if (op3R->num_attributes > 2) pErr = (REDIRECT*)(op3R->attributes[2])->binary_value;
                 if (op3R->num_attributes > 3) variables = op3R->attributes[3];
                 if (op3R->num_attributes > 4) spawn_mode = (int) op3R->attributes[4]->int_value;
+                if (op3R->num_attributes > 5) crexx_bindings = op3R->attributes[5];
 
-                spawn_rc = shellspawn(command, pIn, pOut, pErr, variables, spawn_mode, &command_rc, &errorText);
+                spawn_rc = shellspawn(command, pIn, pOut, pErr, variables, crexx_bindings, spawn_mode, &command_rc, &errorText);
                 if (spawn_rc == SHELLSPAWN_NOFOUND) {
                     SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Command Not Found");
                     free(command);

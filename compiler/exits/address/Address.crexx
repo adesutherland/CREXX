@@ -435,11 +435,26 @@ emitGeneratedRequestResult: procedure = .exitresult
     end
 
     do auto_index = 1 to auto_expose.0
-        name = auto_expose[auto_index]
+        name = hostAnchorName(auto_expose[auto_index])
         binding_index = binding_index + 1
         binding_var = "__rxaddr_binding_" || binding_index
-        call result.add_replacement_line(binding_var || "=.addressbinding('var','" || name || "','" || name || "'," || name || ",'')")
-        call result.add_replacement_line("call " || request_var || ".add_binding_plan(" || binding_var || ")")
+        if hostAnchorKind(auto_expose[auto_index]) = "STEM" then do
+            stem_index = stem_index + 1
+            stem_var = "__rxaddr_stem_" || stem_index
+            loop_var = "__rxaddr_i_" || stem_index
+            call result.add_replacement_line(stem_var || "=.standardaddressstem()")
+            call result.add_replacement_line("call " || stem_var || ".set('0'," || name || ".0 || '')")
+            call result.add_replacement_line("do " || loop_var || " = 1 to " || name || ".0")
+            call result.add_replacement_line("call " || stem_var || ".set(" || loop_var || " || ''," || name || "[" || loop_var || "])")
+            call result.add_replacement_line("end")
+            call result.add_replacement_line(binding_var || "=.addressbinding('stem','" || name || "','" || name || "','','')")
+            call result.add_replacement_line("assembler linktoattr1 6, " || binding_var || ", " || stem_var)
+            call result.add_replacement_line("call " || request_var || ".add_binding_plan(" || binding_var || ")")
+        end
+        else do
+            call result.add_replacement_line(binding_var || "=.addressbinding('var','" || name || "','" || name || "'," || name || ",'')")
+            call result.add_replacement_line("call " || request_var || ".add_binding_plan(" || binding_var || ")")
+        end
     end
 
     call result.add_replacement_line(response_var || "=_address_dispatch_request(" || request_var || ")")
@@ -481,8 +496,22 @@ emitGeneratedRequestResult: procedure = .exitresult
     end
 
     do auto_index = 1 to auto_expose.0
-        name = auto_expose[auto_index]
-        call result.add_replacement_line("call _address_apply_response_var(" || response_var || ",'" || name || "'," || name || ")")
+        name = hostAnchorName(auto_expose[auto_index])
+        auto_binding_index = binding_index + auto_index
+        if hostAnchorKind(auto_expose[auto_index]) = "STEM" then do
+            stem_index = stem_index + 1
+            loop_var = "__rxaddr_i_" || stem_index
+            count_var = "__rxaddr_count_" || stem_index
+            call result.add_replacement_line("call _address_apply_response_request_stem(" || response_var || "," || request_var || "," || auto_binding_index || ",'" || name || "')")
+            call result.add_replacement_line(count_var || "=" || request_var || ".get_binding_stem_value(" || auto_binding_index || ",'0') + 0")
+            call result.add_replacement_line("assembler SETATTRS " || name || "," || count_var)
+            call result.add_replacement_line("do " || loop_var || " = 1 to " || count_var)
+            call result.add_replacement_line(name || "[" || loop_var || "]=" || request_var || ".get_binding_stem_value(" || auto_binding_index || "," || loop_var || " || '')")
+            call result.add_replacement_line("end")
+        end
+        else do
+            call result.add_replacement_line("call _address_apply_response_var(" || response_var || ",'" || name || "'," || name || ")")
+        end
     end
 
     call result.add_replacement_line("rc=" || response_var || ".get_rc()")
@@ -509,7 +538,8 @@ buildAutoExposeArgs: procedure = .string
     expose_args = ""
 
     do i = 1 to auto_expose.0
-        name = auto_expose[i]
+        if hostAnchorKind(auto_expose[i]) \= "VAR" then iterate
+        name = hostAnchorName(auto_expose[i])
         expose_args = expose_args || ", '" || name || "', " || name
     end
     return expose_args
@@ -547,7 +577,7 @@ scanHostAnchorsInText: procedure = .void
             close_pos = pos("}", text, i + 2)
             if close_pos > i + 2 then do
                 name = substr(text, i + 2, close_pos - i - 2)
-                if isHostAnchorName(name) = 1 then call addHostAnchor anchors, name, tokens, expose_start, expose_end
+                if isHostAnchorSpec(name) = 1 then call addHostAnchor anchors, hostAnchorSpecName(name), hostAnchorSpecKind(name), tokens, expose_start, expose_end
                 i = close_pos + 1
                 iterate
             end
@@ -566,7 +596,17 @@ scanHostAnchorsInText: procedure = .void
                     j = j + 1
                 end
                 name = substr(text, i + 1, j - i - 1)
-                call addHostAnchor anchors, name, tokens, expose_start, expose_end
+                if j + 1 <= text_len & substr(text, j, 2) = "[]" then do
+                    call addHostAnchor anchors, name, "STEM", tokens, expose_start, expose_end
+                    i = j + 2
+                    iterate
+                end
+                if j <= text_len & substr(text, j, 1) = "." & isSafeStemAnchorDot(text, j) = 1 then do
+                    call addHostAnchor anchors, name, "STEM", tokens, expose_start, expose_end
+                    i = j + 1
+                    iterate
+                end
+                call addHostAnchor anchors, name, "VAR", tokens, expose_start, expose_end
                 i = j
                 iterate
             end
@@ -577,19 +617,76 @@ scanHostAnchorsInText: procedure = .void
     return
 
 addHostAnchor: procedure = .void
-    arg expose anchors = .string[], name = .string, tokens = .token[], expose_start = .int, expose_end = .int
+    arg expose anchors = .string[], name = .string, kind = .string, tokens = .token[], expose_start = .int, expose_end = .int
     normalized = .string
+    record = .string
 
     if isHostAnchorName(name) \= 1 then return
     if explicitExposeContains(tokens, expose_start, expose_end, name) = 1 then return
 
-    normalized = upper(name)
+    kind = upper(kind)
+    if kind \= "STEM" then kind = "VAR"
+    record = kind || ":" || name
+    normalized = upper(record)
     do i = 1 to anchors.0
         if upper(anchors[i]) = normalized then return
     end
 
-    anchors[anchors.0 + 1] = name
+    anchors[anchors.0 + 1] = record
     return
+
+hostAnchorKind: procedure = .string
+    arg record = .string
+    split = .int
+
+    split = pos(":", record)
+    if split < 1 then return "VAR"
+    return upper(left(record, split - 1))
+
+hostAnchorName: procedure = .string
+    arg record = .string
+    split = .int
+
+    split = pos(":", record)
+    if split < 1 then return record
+    return substr(record, split + 1)
+
+hostAnchorSpecKind: procedure = .string
+    arg spec = .string
+    spec_len = .int
+
+    spec_len = length(spec)
+    if spec_len > 2 & right(spec, 2) = "[]" then return "STEM"
+    if spec_len > 1 & right(spec, 1) = "." then return "STEM"
+    return "VAR"
+
+hostAnchorSpecName: procedure = .string
+    arg spec = .string
+    spec_len = .int
+
+    spec_len = length(spec)
+    if spec_len > 2 & right(spec, 2) = "[]" then return left(spec, spec_len - 2)
+    if spec_len > 1 & right(spec, 1) = "." then return left(spec, spec_len - 1)
+    return spec
+
+isHostAnchorSpec: procedure = .int
+    arg spec = .string
+    name = .string
+
+    name = hostAnchorSpecName(spec)
+    if isHostAnchorName(name) \= 1 then return 0
+    if hostAnchorSpecKind(spec) = "STEM" then return 1
+    return length(spec) = length(name)
+
+isSafeStemAnchorDot: procedure = .int
+    arg text = .string, dot_index = .int
+    next_ch = .string
+
+    if dot_index >= length(text) then return 1
+    next_ch = substr(text, dot_index + 1, 1)
+    if next_ch = " " | next_ch = "09"x | next_ch = "0a"x | next_ch = "0d"x then return 1
+    if next_ch = "'" | next_ch = '"' then return 1
+    return 0
 
 explicitExposeContains: procedure = .int
     arg tokens = .token[], start_index = .int, end_index = .int, name = .string

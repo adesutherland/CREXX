@@ -36,12 +36,37 @@ typedef int (*rxcrexxcmd_run_path_fn)(
     char **err_text,
     int *command_rc,
     char **error_text);
+typedef int (*rxcrexxcmd_run_argv_fn)(
+    void *userdata,
+    int argc,
+    const char *const *argv,
+    char **out_text,
+    char **err_text,
+    int *command_rc,
+    char **error_text);
+typedef int (*rxcrexxcmd_get_binding_fn)(
+    void *userdata,
+    const char *name,
+    char **out_value);
+typedef int (*rxcrexxcmd_get_stem_count_fn)(
+    void *userdata,
+    const char *name,
+    size_t *out_count);
+typedef int (*rxcrexxcmd_get_stem_value_fn)(
+    void *userdata,
+    const char *name,
+    size_t index,
+    char **out_value);
 
 typedef struct rxcrexxcmd_io {
     rxcrexxcmd_write_fn write_output;
     rxcrexxcmd_write_fn write_error;
     rxcrexxcmd_read_all_fn read_input;
     rxcrexxcmd_run_path_fn run_path;
+    rxcrexxcmd_run_argv_fn run_argv;
+    rxcrexxcmd_get_binding_fn get_binding;
+    rxcrexxcmd_get_stem_count_fn get_stem_count;
+    rxcrexxcmd_get_stem_value_fn get_stem_value;
     void *userdata;
 } rxcrexxcmd_io;
 
