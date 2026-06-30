@@ -865,7 +865,7 @@ jobs:
             echo "- Workflow run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
             echo
             echo "macOS .pkg assets, when present, are signed, notarized, stapled installers. macOS ZIP assets remain portable archives."
-            echo "Windows signing is completed separately. Prefer the \`CREXX-dev-snapshot-windows-x64-signed.zip\` asset when it is present and matches commit \`${short_sha}\` in this note."
+            echo "Windows signing and installer packaging are completed separately. Prefer \`CREXX-dev-snapshot-windows-x64-setup.exe\` for normal installation when it is present and matches commit \`${short_sha}\`; use \`CREXX-dev-snapshot-windows-x64-signed.zip\` as the portable archive."
           } > "$notes_file"
 
           echo "DEV_SNAPSHOT_NOTES_PATH=$notes_file" >> "$GITHUB_ENV"

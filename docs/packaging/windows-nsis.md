@@ -75,6 +75,20 @@ Use `--upload` to upload the generated installer to the selected GitHub release
 with `gh release upload --clobber`. The upload target is the same release/tag
 from which the ZIP was downloaded.
 
+## SmartScreen Reputation
+
+The signed NSIS installer can still trigger the Microsoft Defender SmartScreen
+"Windows protected your PC" prompt on early downloads. Authenticode signing and
+timestamping prove the publisher identity and protect the installer from
+tampering, but SmartScreen also uses reputation signals for the specific
+download, signing certificate, and observed install/download volume.
+
+For a new CREXX installer or a low-volume beta asset, testers may need to choose
+**More info** and then **Run anyway**. This is expected while reputation builds.
+It should improve as signed installer downloads and successful installs
+accumulate. Keep the signed ZIP available as the portable fallback while this
+installer reputation is still maturing.
+
 ## Installer Behavior
 
 - Requests administrator elevation.
