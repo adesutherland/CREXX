@@ -96,6 +96,12 @@ typedef struct rxcrexxcmd_args {
     char **argv;
 } rxcrexxcmd_args;
 
+enum {
+    RXCREXXCMD_ANCHOR_NONE = 0,
+    RXCREXXCMD_ANCHOR_VAR = 1,
+    RXCREXXCMD_ANCHOR_STEM = 2
+};
+
 typedef int (*rxcrexxcmd_handler)(rxcrexxcmd_context *ctx,
                                   const char *command,
                                   rxcrexxcmd_args *args);
@@ -480,6 +486,182 @@ static int parse_args(const char *command, rxcrexxcmd_args *args, char **diagnos
     return 0;
 }
 
+static int is_anchor_start(int ch) {
+    return ch == '_' || isalpha((unsigned char)ch);
+}
+
+static int is_anchor_part(int ch) {
+    return is_anchor_start(ch) || isdigit((unsigned char)ch);
+}
+
+static int parse_anchor_spec(const char *text, size_t length, char **name, int *kind) {
+    size_t name_length;
+
+    if (name) *name = NULL;
+    if (kind) *kind = RXCREXXCMD_ANCHOR_NONE;
+    if (!text || length == 0 || !is_anchor_start((unsigned char)text[0])) return 0;
+
+    name_length = 1;
+    while (name_length < length && is_anchor_part((unsigned char)text[name_length])) name_length++;
+    if (name_length == length) {
+        if (name) *name = rx_strndup(text, name_length);
+        if (kind) *kind = RXCREXXCMD_ANCHOR_VAR;
+        return name && !*name ? -1 : 1;
+    }
+
+    if (name_length + 2 == length && text[name_length] == '[' && text[name_length + 1] == ']') {
+        if (name) *name = rx_strndup(text, name_length);
+        if (kind) *kind = RXCREXXCMD_ANCHOR_STEM;
+        return name && !*name ? -1 : 1;
+    }
+
+    if (name_length + 1 == length && text[name_length] == '.') {
+        if (name) *name = rx_strndup(text, name_length);
+        if (kind) *kind = RXCREXXCMD_ANCHOR_STEM;
+        return name && !*name ? -1 : 1;
+    }
+
+    return 0;
+}
+
+static int parse_anchor_token(const char *text, char **name, int *kind) {
+    size_t length;
+
+    if (name) *name = NULL;
+    if (kind) *kind = RXCREXXCMD_ANCHOR_NONE;
+    if (!text || !*text) return 0;
+
+    if (text[0] == ':') return parse_anchor_spec(text + 1, strlen(text + 1), name, kind);
+
+    length = strlen(text);
+    if (length > 3 && text[0] == '$' && text[1] == '{' && text[length - 1] == '}') {
+        return parse_anchor_spec(text + 2, length - 3, name, kind);
+    }
+
+    return 0;
+}
+
+static int expand_args(rxcrexxcmd_context *ctx, rxcrexxcmd_args *args, rxcrexxcmd_args *expanded) {
+    int i;
+
+    expanded->argc = 0;
+    expanded->argv = NULL;
+
+    for (i = 0; i < args->argc; i++) {
+        if (i == 0) {
+            if (push_arg(expanded, args->argv[i], strlen(args->argv[i])) != 0) {
+                free_args(expanded);
+                return RXCREXXCMD_RC_ERROR;
+            }
+            continue;
+        }
+
+        char *name = NULL;
+        int kind = RXCREXXCMD_ANCHOR_NONE;
+        int parse_rc = parse_anchor_token(args->argv[i], &name, &kind);
+
+        if (parse_rc < 0) {
+            free_args(expanded);
+            return RXCREXXCMD_RC_ERROR;
+        }
+
+        if (parse_rc == 0) {
+            if (push_arg(expanded, args->argv[i], strlen(args->argv[i])) != 0) {
+                free_args(expanded);
+                return RXCREXXCMD_RC_ERROR;
+            }
+            continue;
+        }
+
+        if (kind == RXCREXXCMD_ANCHOR_VAR) {
+            char *value = NULL;
+            int found = 0;
+
+            if (ctx && ctx->io && ctx->io->get_binding) {
+                found = ctx->io->get_binding(ctx->io->userdata, name, &value);
+                if (found < 0) {
+                    free(name);
+                    free(value);
+                    free_args(expanded);
+                    return RXCREXXCMD_RC_ERROR;
+                }
+            }
+
+            if (found) {
+                if (push_arg(expanded, value ? value : "", value ? strlen(value) : 0) != 0) {
+                    free(name);
+                    free(value);
+                    free_args(expanded);
+                    return RXCREXXCMD_RC_ERROR;
+                }
+            } else if (push_arg(expanded, args->argv[i], strlen(args->argv[i])) != 0) {
+                free(name);
+                free(value);
+                free_args(expanded);
+                return RXCREXXCMD_RC_ERROR;
+            }
+
+            free(name);
+            free(value);
+            continue;
+        }
+
+        if (kind == RXCREXXCMD_ANCHOR_STEM) {
+            size_t count = 0;
+            size_t index;
+            int found = 0;
+
+            if (ctx && ctx->io && ctx->io->get_stem_count) {
+                found = ctx->io->get_stem_count(ctx->io->userdata, name, &count);
+                if (found < 0) {
+                    free(name);
+                    free_args(expanded);
+                    return RXCREXXCMD_RC_ERROR;
+                }
+            }
+
+            if (!found) {
+                ctx_errorf(ctx, "CREXX: missing stem binding: %s", name);
+                free(name);
+                free_args(expanded);
+                return RXCREXXCMD_RC_USAGE;
+            }
+
+            for (index = 1; index <= count; index++) {
+                char *value = NULL;
+                int value_found = 0;
+
+                if (ctx && ctx->io && ctx->io->get_stem_value) {
+                    value_found = ctx->io->get_stem_value(ctx->io->userdata, name, index, &value);
+                    if (value_found < 0) {
+                        free(name);
+                        free(value);
+                        free_args(expanded);
+                        return RXCREXXCMD_RC_ERROR;
+                    }
+                }
+                if (!value_found) value = rx_strdup("");
+                if (!value) {
+                    free(name);
+                    free_args(expanded);
+                    return RXCREXXCMD_RC_ERROR;
+                }
+                if (push_arg(expanded, value, strlen(value)) != 0) {
+                    free(name);
+                    free(value);
+                    free_args(expanded);
+                    return RXCREXXCMD_RC_ERROR;
+                }
+                free(value);
+            }
+
+            free(name);
+        }
+    }
+
+    return 0;
+}
+
 static char *join_args(rxcrexxcmd_args *args, int start) {
     size_t length;
     int i;
@@ -503,33 +685,6 @@ static char *join_args(rxcrexxcmd_args *args, int start) {
     }
 
     return text;
-}
-
-static const char *command_tail_after_first_word(const char *command) {
-    const char *cursor;
-    char quote;
-
-    if (!command) return "";
-    cursor = command;
-    while (*cursor && isspace((unsigned char)*cursor)) cursor++;
-
-    quote = 0;
-    while (*cursor) {
-        if (quote) {
-            if (*cursor == quote) quote = 0;
-            cursor++;
-            continue;
-        }
-        if (*cursor == '"' || *cursor == '\'') {
-            quote = *cursor++;
-            continue;
-        }
-        if (isspace((unsigned char)*cursor)) break;
-        cursor++;
-    }
-
-    while (*cursor && isspace((unsigned char)*cursor)) cursor++;
-    return cursor;
 }
 
 static int is_shell_operator_token(const char *text) {
@@ -913,13 +1068,13 @@ static int cmd_help(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_arg
     ctx_putln(ctx, "  help");
     ctx_putln(ctx, "  echo [text...]");
     ctx_putln(ctx, "  pwd | cd [path] | pushd path | popd");
-    ctx_putln(ctx, "  ls [path] | dir [path] | exists path... | stat path...");
+    ctx_putln(ctx, "  ls [path...] | dir [path...] | exists path... | stat path...");
     ctx_putln(ctx, "  mkdir [-p] path... | rmdir path... | rm [-r] path... | del [-r] path...");
     ctx_putln(ctx, "  copy source target | move source target | touch path...");
     ctx_putln(ctx, "  cat path... | head [-n count] path | tail [-n count] path | lines [path]");
     ctx_putln(ctx, "  write path text... | append path text...");
     ctx_putln(ctx, "  which command | now [local|utc] | date [local|utc] | sleep seconds");
-    ctx_putln(ctx, "  platform | os | env [name] | setenv name value | unsetenv name");
+    ctx_putln(ctx, "  platform | os | env [name...] | setenv name value... | unsetenv name...");
     ctx_putln(ctx, "  pid | ps [pid] | kill pid [signal]");
     ctx_putln(ctx, "  resolve host | tcp host port | batch | run command...");
     return 0;
@@ -1022,16 +1177,26 @@ static int cmd_popd(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_arg
 }
 
 static int cmd_ls(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args *args) {
-    const char *path;
+    int i;
+    int rc;
 
     (void)command;
-    if (args->argc > 2) return command_usage(ctx, "ls [path]");
-    path = args->argc == 1 ? "." : args->argv[1];
-    if (list_directory(ctx, path) != 0) {
-        ctx_errorf(ctx, "ls: %s: %s", path, strerror(errno));
-        return RXCREXXCMD_RC_NOT_FOUND;
+    if (args->argc == 1) {
+        if (list_directory(ctx, ".") != 0) {
+            ctx_errorf(ctx, "ls: .: %s", strerror(errno));
+            return RXCREXXCMD_RC_NOT_FOUND;
+        }
+        return 0;
     }
-    return 0;
+
+    rc = 0;
+    for (i = 1; i < args->argc; i++) {
+        if (list_directory(ctx, args->argv[i]) != 0) {
+            ctx_errorf(ctx, "ls: %s: %s", args->argv[i], strerror(errno));
+            rc = RXCREXXCMD_RC_NOT_FOUND;
+        }
+    }
+    return rc;
 }
 
 static int cmd_exists(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args *args) {
@@ -1475,12 +1640,25 @@ static int cmd_platform(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd
 
 static int cmd_env(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args *args) {
     (void)command;
-    if (args->argc > 2) return command_usage(ctx, "env [name]");
 
     if (args->argc == 2) {
         const char *value = getenv(args->argv[1]);
         if (!value) return RXCREXXCMD_RC_NOT_FOUND;
         return ctx_putln(ctx, value) == 0 ? 0 : RXCREXXCMD_RC_ERROR;
+    }
+
+    if (args->argc > 2) {
+        int i;
+        int rc = 0;
+        for (i = 1; i < args->argc; i++) {
+            const char *value = getenv(args->argv[i]);
+            if (!value) {
+                rc = RXCREXXCMD_RC_NOT_FOUND;
+                continue;
+            }
+            if (ctx_printf(ctx, "%s=%s\n", args->argv[i], value) != 0) return RXCREXXCMD_RC_ERROR;
+        }
+        return rc;
     }
 
 #ifdef _WIN32
@@ -1511,7 +1689,7 @@ static int cmd_setenv(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_a
     int rc;
 
     (void)command;
-    if (args->argc < 3) return command_usage(ctx, "setenv name value");
+    if (args->argc < 3) return command_usage(ctx, "setenv name value...");
     value = join_args(args, 2);
     if (!value) return RXCREXXCMD_RC_ERROR;
 #ifdef _WIN32
@@ -1525,17 +1703,25 @@ static int cmd_setenv(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_a
 }
 
 static int cmd_unsetenv(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args *args) {
+    int i;
     int rc;
+    int result;
 
     (void)command;
-    if (args->argc != 2) return command_usage(ctx, "unsetenv name");
+    if (args->argc < 2) return command_usage(ctx, "unsetenv name...");
+    result = 0;
+    for (i = 1; i < args->argc; i++) {
 #ifdef _WIN32
-    rc = _putenv_s(args->argv[1], "");
+        rc = _putenv_s(args->argv[i], "");
 #else
-    rc = unsetenv(args->argv[1]);
+        rc = unsetenv(args->argv[i]);
 #endif
-    if (rc != 0) ctx_errorf(ctx, "unsetenv: %s: %s", args->argv[1], strerror(errno));
-    return rc == 0 ? 0 : RXCREXXCMD_RC_ERROR;
+        if (rc != 0) {
+            ctx_errorf(ctx, "unsetenv: %s: %s", args->argv[i], strerror(errno));
+            result = RXCREXXCMD_RC_ERROR;
+        }
+    }
+    return result;
 }
 
 static int cmd_pid(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args *args) {
@@ -1761,7 +1947,7 @@ static int cmd_batch(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_ar
 }
 
 static int cmd_run(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args *args) {
-    const char *tail;
+    char *tail;
     char *out_text;
     char *err_text;
     char *run_error;
@@ -1769,23 +1955,38 @@ static int cmd_run(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args
     int run_rc;
 
     if (args->argc < 2) return command_usage(ctx, "run command...");
-    if (!ctx || !ctx->io || !ctx->io->run_path) {
+    if (!ctx || !ctx->io || (!ctx->io->run_argv && !ctx->io->run_path)) {
         ctx_errln(ctx, "run: PATH execution callback is unavailable");
         return RXCREXXCMD_RC_ERROR;
     }
 
-    tail = command_tail_after_first_word(command);
+    (void)command;
+    tail = NULL;
     out_text = NULL;
     err_text = NULL;
     run_error = NULL;
     command_rc = 0;
-    run_rc = ctx->io->run_path(ctx->io->userdata, tail, &out_text, &err_text, &command_rc, &run_error);
+    if (ctx->io->run_argv) {
+        run_rc = ctx->io->run_argv(ctx->io->userdata,
+                                   args->argc - 1,
+                                   (const char *const *)&args->argv[1],
+                                   &out_text,
+                                   &err_text,
+                                   &command_rc,
+                                   &run_error);
+    } else {
+        tail = join_args(args, 1);
+        if (!tail) return RXCREXXCMD_RC_ERROR;
+        run_rc = ctx->io->run_path(ctx->io->userdata, tail, &out_text, &err_text, &command_rc, &run_error);
+    }
     if (run_rc != 0) {
         if (run_error) ctx_errorf(ctx, "run: %s", run_error);
-        else ctx_errorf(ctx, "run: %s", tail);
+        else if (tail) ctx_errorf(ctx, "run: %s", tail);
+        else ctx_errorf(ctx, "run: %s", args->argv[1]);
         free(out_text);
         free(err_text);
         free(run_error);
+        free(tail);
         return command_rc ? command_rc : RXCREXXCMD_RC_ERROR;
     }
 
@@ -1794,10 +1995,12 @@ static int cmd_run(rxcrexxcmd_context *ctx, const char *command, rxcrexxcmd_args
     free(out_text);
     free(err_text);
     free(run_error);
+    free(tail);
     return command_rc;
 }
 
 static int execute_line(rxcrexxcmd_context *ctx, const char *line) {
+    rxcrexxcmd_args raw_args;
     rxcrexxcmd_args args;
     char *diagnostic;
     int parse_rc;
@@ -1805,7 +2008,7 @@ static int execute_line(rxcrexxcmd_context *ctx, const char *line) {
     int rc;
 
     diagnostic = NULL;
-    parse_rc = parse_args(line, &args, &diagnostic);
+    parse_rc = parse_args(line, &raw_args, &diagnostic);
     if (parse_rc == -1) return RXCREXXCMD_RC_ERROR;
     if (parse_rc != 0) {
         if (diagnostic) ctx_errorf(ctx, "CREXX: %s", diagnostic);
@@ -1813,17 +2016,26 @@ static int execute_line(rxcrexxcmd_context *ctx, const char *line) {
         return parse_rc;
     }
 
-    if (args.argc == 0) {
-        free_args(&args);
+    if (raw_args.argc == 0) {
+        free_args(&raw_args);
         return 0;
     }
 
-    for (i = 0; i < args.argc; i++) {
-        if (is_shell_operator_token(args.argv[i])) {
-            ctx_errorf(ctx, "CREXX: shell operator '%s' is not supported; use multiple ADDRESS statements or batch input", args.argv[i]);
-            free_args(&args);
+    for (i = 0; i < raw_args.argc; i++) {
+        if (is_shell_operator_token(raw_args.argv[i])) {
+            ctx_errorf(ctx, "CREXX: shell operator '%s' is not supported; use multiple ADDRESS statements or batch input", raw_args.argv[i]);
+            free_args(&raw_args);
             return RXCREXXCMD_RC_USAGE;
         }
+    }
+
+    rc = expand_args(ctx, &raw_args, &args);
+    free_args(&raw_args);
+    if (rc != 0) return rc;
+
+    if (args.argc == 0) {
+        free_args(&args);
+        return 0;
     }
 
     for (i = 0; command_table[i].name; i++) {

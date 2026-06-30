@@ -85,6 +85,7 @@ typedef struct shelldata {
     char* application_path;
     char** argv;
     value* variables;
+    value* crexx_bindings;
 } SHELLDATA;
 
 // Private structure for output to string thread
@@ -121,6 +122,14 @@ static void Error(char *context, char **errorText);
 static void CleanUp(SHELLDATA* data);
 static char *copy_string(const char *text);
 static int ParseCommand(const char *command_string, char **command, char **file, char ***argv);
+static int spawn_argv_capture(const char *const *argv,
+                              int argc,
+                              REDIRECT* pIn,
+                              REDIRECT* pOut,
+                              REDIRECT* pErr,
+                              value* variables,
+                              int *rc,
+                              char **errorText);
 static int launchChild(SHELLDATA* data);
 static void WaitForProcess(SHELLDATA* data);
 static void appendTextOutput(char **outputText, char *inputText);
@@ -150,6 +159,16 @@ static int crexxcmd_run_path(void *userdata,
                              char **err_text,
                              int *command_rc,
                              char **error_text);
+static int crexxcmd_run_argv(void *userdata,
+                             int argc,
+                             const char *const *argv,
+                             char **out_text,
+                             char **err_text,
+                             int *command_rc,
+                             char **error_text);
+static int crexxcmd_get_binding(void *userdata, const char *name, char **out_value);
+static int crexxcmd_get_stem_count(void *userdata, const char *name, size_t *out_count);
+static int crexxcmd_get_stem_value(void *userdata, const char *name, size_t index, char **out_value);
 static int crexxcmd_finalize_redirects(SHELLDATA *data, char **errorText);
 static int crexxcmd_write_redirect(REDIRECT *redirect, FILE *fallback, const char *text, size_t length);
 static int crexxcmd_read_redirect(REDIRECT *redirect, char **out_text, size_t *out_length);
@@ -286,6 +305,107 @@ static char *windows_resolve_application_path(const char *command) {
     path = windows_search_executable(token);
     free(token);
     return path;
+}
+
+static int append_to_buffer(char **buffer, size_t *length, size_t *capacity, const char *text, size_t text_length) {
+    char *new_buffer;
+    size_t needed;
+    size_t new_capacity;
+
+    needed = *length + text_length + 1;
+    if (needed > *capacity) {
+        new_capacity = *capacity ? *capacity : 64;
+        while (new_capacity < needed) new_capacity *= 2;
+        new_buffer = realloc(*buffer, new_capacity);
+        if (!new_buffer) return -1;
+        *buffer = new_buffer;
+        *capacity = new_capacity;
+    }
+
+    if (text_length) memcpy(*buffer + *length, text, text_length);
+    *length += text_length;
+    (*buffer)[*length] = '\0';
+    return 0;
+}
+
+static int append_char_to_buffer(char **buffer, size_t *length, size_t *capacity, char ch) {
+    return append_to_buffer(buffer, length, capacity, &ch, 1);
+}
+
+static int windows_append_quoted_arg(char **buffer, size_t *length, size_t *capacity, const char *arg) {
+    const char *cursor;
+    int needs_quotes;
+    size_t backslashes;
+
+    if (!arg) arg = "";
+    needs_quotes = *arg == '\0';
+    for (cursor = arg; *cursor && !needs_quotes; cursor++) {
+        if (isspace((unsigned char)*cursor) || *cursor == '"') needs_quotes = 1;
+    }
+    if (!needs_quotes) return append_to_buffer(buffer, length, capacity, arg, strlen(arg));
+
+    if (append_char_to_buffer(buffer, length, capacity, '"') != 0) return -1;
+    cursor = arg;
+    backslashes = 0;
+    while (*cursor) {
+        if (*cursor == '\\') {
+            backslashes++;
+            cursor++;
+            continue;
+        }
+        if (*cursor == '"') {
+            while (backslashes > 0) {
+                if (append_to_buffer(buffer, length, capacity, "\\\\", 2) != 0) return -1;
+                backslashes--;
+            }
+            if (append_to_buffer(buffer, length, capacity, "\\\"", 2) != 0) return -1;
+            cursor++;
+            continue;
+        }
+        while (backslashes > 0) {
+            if (append_char_to_buffer(buffer, length, capacity, '\\') != 0) return -1;
+            backslashes--;
+        }
+        if (append_char_to_buffer(buffer, length, capacity, *cursor++) != 0) return -1;
+    }
+    while (backslashes > 0) {
+        if (append_to_buffer(buffer, length, capacity, "\\\\", 2) != 0) return -1;
+        backslashes--;
+    }
+    return append_char_to_buffer(buffer, length, capacity, '"');
+}
+
+static char *windows_build_command_line(const char *const *argv, int argc) {
+    char *buffer = NULL;
+    size_t length = 0;
+    size_t capacity = 0;
+    int i;
+
+    for (i = 0; i < argc; i++) {
+        if (i > 0 && append_char_to_buffer(&buffer, &length, &capacity, ' ') != 0) {
+            free(buffer);
+            return NULL;
+        }
+        if (windows_append_quoted_arg(&buffer, &length, &capacity, argv[i]) != 0) {
+            free(buffer);
+            return NULL;
+        }
+    }
+
+    if (!buffer) buffer = copy_string("");
+    return buffer;
+}
+
+static char *windows_normalize_executable_arg(const char *arg) {
+    char *copy;
+    char *cursor;
+
+    copy = copy_string(arg ? arg : "");
+    if (!copy) return NULL;
+    for (cursor = copy; *cursor; cursor++) {
+        if (*cursor == '/') *cursor = '\\';
+    }
+    return copy;
 }
 #endif
 
@@ -443,6 +563,136 @@ static char *copy_value_string(value *string_value) {
     }
     copy[string_value->string_length] = '\0';
     return copy;
+}
+
+static int value_string_iequals(value *string_value, const char *text) {
+    size_t i;
+    size_t text_length;
+
+    if (!string_value || !text) return 0;
+    text_length = strlen(text);
+    if (string_value->string_length != text_length) return 0;
+    for (i = 0; i < text_length; i++) {
+        if (tolower((unsigned char)string_value->string_value[i]) !=
+            tolower((unsigned char)text[i])) return 0;
+    }
+    return 1;
+}
+
+static int value_string_to_size(value *string_value, size_t *out) {
+    char *text;
+    char *end;
+    unsigned long parsed;
+
+    if (out) *out = 0;
+    text = copy_value_string(string_value);
+    if (!text) return -1;
+    errno = 0;
+    parsed = strtoul(text, &end, 10);
+    if (errno || !end || *end) {
+        free(text);
+        return -1;
+    }
+    if (out) *out = (size_t)parsed;
+    free(text);
+    return 0;
+}
+
+static int crexxcmd_get_binding(void *userdata, const char *name, char **out_value) {
+    SHELLDATA *data = (SHELLDATA *)userdata;
+    value *bindings;
+    size_t i;
+
+    if (out_value) *out_value = NULL;
+    if (!data || !data->crexx_bindings || !name) return 0;
+
+    bindings = data->crexx_bindings;
+    i = 0;
+    while (i < bindings->num_attributes) {
+        if (i + 2 >= bindings->num_attributes) return 0;
+        if (value_string_iequals(bindings->attributes[i], "VAR")) {
+            if (value_string_iequals(bindings->attributes[i + 1], name)) {
+                if (out_value) {
+                    *out_value = copy_value_string(bindings->attributes[i + 2]);
+                    if (!*out_value) return -1;
+                }
+                return 1;
+            }
+            i += 3;
+        } else if (value_string_iequals(bindings->attributes[i], "STEM")) {
+            size_t count = 0;
+            if (value_string_to_size(bindings->attributes[i + 2], &count) != 0) return 0;
+            i += 3 + count;
+        } else {
+            return 0;
+        }
+    }
+
+    return 0;
+}
+
+static int crexxcmd_get_stem_count(void *userdata, const char *name, size_t *out_count) {
+    SHELLDATA *data = (SHELLDATA *)userdata;
+    value *bindings;
+    size_t i;
+
+    if (out_count) *out_count = 0;
+    if (!data || !data->crexx_bindings || !name) return 0;
+
+    bindings = data->crexx_bindings;
+    i = 0;
+    while (i < bindings->num_attributes) {
+        if (i + 2 >= bindings->num_attributes) return 0;
+        if (value_string_iequals(bindings->attributes[i], "VAR")) {
+            i += 3;
+        } else if (value_string_iequals(bindings->attributes[i], "STEM")) {
+            size_t count = 0;
+            if (value_string_to_size(bindings->attributes[i + 2], &count) != 0) return 0;
+            if (value_string_iequals(bindings->attributes[i + 1], name)) {
+                if (out_count) *out_count = count;
+                return 1;
+            }
+            i += 3 + count;
+        } else {
+            return 0;
+        }
+    }
+
+    return 0;
+}
+
+static int crexxcmd_get_stem_value(void *userdata, const char *name, size_t index, char **out_value) {
+    SHELLDATA *data = (SHELLDATA *)userdata;
+    value *bindings;
+    size_t i;
+
+    if (out_value) *out_value = NULL;
+    if (!data || !data->crexx_bindings || !name || index == 0) return 0;
+
+    bindings = data->crexx_bindings;
+    i = 0;
+    while (i < bindings->num_attributes) {
+        if (i + 2 >= bindings->num_attributes) return 0;
+        if (value_string_iequals(bindings->attributes[i], "VAR")) {
+            i += 3;
+        } else if (value_string_iequals(bindings->attributes[i], "STEM")) {
+            size_t count = 0;
+            if (value_string_to_size(bindings->attributes[i + 2], &count) != 0) return 0;
+            if (value_string_iequals(bindings->attributes[i + 1], name)) {
+                if (index > count || i + 2 + index >= bindings->num_attributes) return 0;
+                if (out_value) {
+                    *out_value = copy_value_string(bindings->attributes[i + 2 + index]);
+                    if (!*out_value) return -1;
+                }
+                return 1;
+            }
+            i += 3 + count;
+        } else {
+            return 0;
+        }
+    }
+
+    return 0;
 }
 
 static int prepare_redirect_thread_context(REDIRECT *redirect) {
@@ -739,6 +989,7 @@ static int crexxcmd_run_path(void *userdata,
                              char **err_text,
                              int *command_rc,
                              char **error_text) {
+    SHELLDATA *parent_data = (SHELLDATA *)userdata;
     value input_redirect;
     value output_redirect;
     value error_redirect;
@@ -750,7 +1001,6 @@ static int crexxcmd_run_path(void *userdata,
     int spawn_rc;
     char *spawn_error;
 
-    (void)userdata;
     if (out_text) *out_text = NULL;
     if (err_text) *err_text = NULL;
     if (error_text) *error_text = NULL;
@@ -769,7 +1019,76 @@ static int crexxcmd_run_path(void *userdata,
     pOut = (REDIRECT *)output_redirect.binary_value;
     pErr = (REDIRECT *)error_redirect.binary_value;
     spawn_error = NULL;
-    spawn_rc = shellspawn(command, pIn, pOut, pErr, NULL, SHELLSPAWN_MODE_PATH, command_rc, &spawn_error);
+    spawn_rc = shellspawn(command, pIn, pOut, pErr,
+                          parent_data ? parent_data->variables : NULL,
+                          NULL,
+                          SHELLSPAWN_MODE_PATH,
+                          command_rc,
+                          &spawn_error);
+
+    if (out_text) *out_text = copy_value_string(&output_value);
+    if (err_text) *err_text = copy_value_string(&error_value);
+    if (error_text && spawn_error) *error_text = copy_string(spawn_error);
+
+    clear_value(&input_redirect);
+    clear_value(&output_redirect);
+    clear_value(&error_redirect);
+    clear_value(&output_value);
+    clear_value(&error_value);
+
+    if (spawn_error) free(spawn_error);
+    if (spawn_rc == SHELLSPAWN_NOFOUND) {
+        if (command_rc) *command_rc = 127;
+        return 0;
+    }
+    return spawn_rc == SHELLSPAWN_OK ? 0 : -1;
+}
+
+static int crexxcmd_run_argv(void *userdata,
+                             int argc,
+                             const char *const *argv,
+                             char **out_text,
+                             char **err_text,
+                             int *command_rc,
+                             char **error_text) {
+    SHELLDATA *parent_data = (SHELLDATA *)userdata;
+    value input_redirect;
+    value output_redirect;
+    value error_redirect;
+    value output_value;
+    value error_value;
+    REDIRECT *pIn;
+    REDIRECT *pOut;
+    REDIRECT *pErr;
+    int spawn_rc;
+    char *spawn_error;
+
+    if (out_text) *out_text = NULL;
+    if (err_text) *err_text = NULL;
+    if (error_text) *error_text = NULL;
+    if (command_rc) *command_rc = 0;
+
+    value_init(&input_redirect);
+    value_init(&output_redirect);
+    value_init(&error_redirect);
+    value_init(&output_value);
+    value_init(&error_value);
+
+    nullredr(&input_redirect);
+    redr2str(&output_redirect, &output_value);
+    redr2str(&error_redirect, &error_value);
+    pIn = (REDIRECT *)input_redirect.binary_value;
+    pOut = (REDIRECT *)output_redirect.binary_value;
+    pErr = (REDIRECT *)error_redirect.binary_value;
+    spawn_error = NULL;
+    spawn_rc = spawn_argv_capture(argv,
+                                  argc,
+                                  pIn,
+                                  pOut,
+                                  pErr,
+                                  parent_data ? parent_data->variables : NULL,
+                                  command_rc,
+                                  &spawn_error);
 
     if (out_text) *out_text = copy_value_string(&output_value);
     if (err_text) *err_text = copy_value_string(&error_value);
@@ -863,6 +1182,7 @@ int shellspawn (const char *command,
                 REDIRECT* pOut,
                 REDIRECT* pErr,
                 value* variables,
+                value* crexx_bindings,
                 int mode,
                 int *rc,
                 char **errorText) {
@@ -885,6 +1205,7 @@ int shellspawn (const char *command,
     data.argv = 0;
     data.waitThreadRC = 0;
     data.variables = variables;
+    data.crexx_bindings = crexx_bindings;
 
     if (mode == SHELLSPAWN_MODE_CREXX) {
         rxcrexxcmd_io io;
@@ -894,6 +1215,10 @@ int shellspawn (const char *command,
         io.write_error = crexxcmd_write_error;
         io.read_input = crexxcmd_read_input;
         io.run_path = crexxcmd_run_path;
+        io.run_argv = crexxcmd_run_argv;
+        io.get_binding = crexxcmd_get_binding;
+        io.get_stem_count = crexxcmd_get_stem_count;
+        io.get_stem_value = crexxcmd_get_stem_value;
         io.userdata = &data;
 
         execute_rc = rxcrexxcmd_execute(command, &io, rc, errorText);
@@ -1018,6 +1343,112 @@ int shellspawn (const char *command,
 
     CleanUp(&data);
 
+    return SHELLSPAWN_OK;
+}
+
+static int spawn_argv_capture(const char *const *argv,
+                              int argc,
+                              REDIRECT* pIn,
+                              REDIRECT* pOut,
+                              REDIRECT* pErr,
+                              value* variables,
+                              int *rc,
+                              char **errorText) {
+    SHELLDATA data;
+    int lrc;
+
+    if (rc) *rc = 0;
+    if (!argv || argc < 1 || !argv[0] || !*argv[0]) {
+        Error("Command not found", errorText);
+        return SHELLSPAWN_NOFOUND;
+    }
+
+    data.waitThreadErrorText = 0;
+#ifdef _WIN32
+    ZeroMemory(&data.ChildProcessInfo, sizeof(PROCESS_INFORMATION));
+#else
+    data.ChildProcessPID = 0;
+#endif
+    data.ChildProcessRC = 0;
+    data.pInput = pIn;
+    data.pOutput = pOut;
+    data.pError = pErr;
+    data.buffer = 0;
+    data.file_path = 0;
+    data.application_path = 0;
+    data.argv = 0;
+    data.waitThreadRC = 0;
+    data.variables = variables;
+    data.crexx_bindings = NULL;
+
+#ifdef _WIN32
+    {
+        char *normalized_exe;
+
+        data.file_path = windows_build_command_line(argv, argc);
+        if (!data.file_path) {
+            Error("Failure spawn W03", errorText);
+            CleanUp(&data);
+            return SHELLSPAWN_FAILURE;
+        }
+
+        normalized_exe = windows_normalize_executable_arg(argv[0]);
+        if (!normalized_exe) {
+            Error("Failure spawn W04", errorText);
+            CleanUp(&data);
+            return SHELLSPAWN_FAILURE;
+        }
+        data.application_path = windows_search_executable(normalized_exe);
+        free(normalized_exe);
+        if (!data.application_path) {
+            Error("Command not found", errorText);
+            CleanUp(&data);
+            return SHELLSPAWN_NOFOUND;
+        }
+    }
+#else
+    {
+        int i;
+
+        data.argv = malloc(sizeof(char *) * (size_t)(argc + 1));
+        if (!data.argv) {
+            Error("Failure spawn U21", errorText);
+            CleanUp(&data);
+            return SHELLSPAWN_FAILURE;
+        }
+        for (i = 0; i < argc; i++) data.argv[i] = (char *)argv[i];
+        data.argv[argc] = NULL;
+
+        if (strchr(argv[0], '/')) {
+            if (ExeFound((char *)argv[0])) data.file_path = copy_string(argv[0]);
+        } else {
+            data.file_path = find_executable_in_path_list(getenv("PATH"), argv[0]);
+        }
+
+        if (!data.file_path) {
+            Error("Command not found", errorText);
+            CleanUp(&data);
+            return SHELLSPAWN_NOFOUND;
+        }
+    }
+#endif
+
+    lrc = launchChild(&data);
+    if (lrc) {
+        CleanUp(&data);
+        return lrc;
+    }
+
+    WaitForProcess(&data);
+
+    if (data.waitThreadRC) {
+        appendTextOutput(errorText, data.waitThreadErrorText);
+        CleanUp(&data);
+        return SHELLSPAWN_FAILURE;
+    }
+
+    if (rc) *rc = (int)data.ChildProcessRC;
+    CleanUp(&data);
     return SHELLSPAWN_OK;
 }
 

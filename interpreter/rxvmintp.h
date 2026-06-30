@@ -381,6 +381,7 @@ int shellspawn(const char *command,
                REDIRECT* pOut,
                REDIRECT* pErr,
                value* variables,
+               value* crexx_bindings,
                int mode,
                int *rc,
                char **errorText);
