@@ -129,7 +129,10 @@ a signed ZIP after the CI asset exists. Beta 3 targets the first Windows
 click-through installer while keeping the signed ZIP as the portable asset.
 
 Preferred simple beta 3 flow: add a signed NSIS `setup.exe` after the ZIP
-signing flow.
+signing flow. This remains a local post-build helper: it downloads the existing
+Windows ZIP asset, unpacks that packaged payload as the baseline, builds the
+NSIS installer from those files, signs the embedded uninstaller and final
+installer, then uploads the setup executable.
 
 1. GitHub builds and publishes the unsigned Windows ZIP.
 2. The local signing script downloads the ZIP.
@@ -141,12 +144,10 @@ signing flow.
 
 The installer should:
 
-- install CREXX into a normal Windows location, preferably per-user first to
-  avoid unnecessary elevation;
+- install CREXX into `%ProgramFiles%\CREXX` with administrator elevation;
 - add the installed `bin` directory to PATH;
 - register a normal Windows uninstaller;
-- optionally create Start Menu shortcuts for a CREXX command prompt,
-  documentation, and uninstall;
+- set machine-level `CREXX_HOME` and `REXX_HOME` to the install directory;
 - keep the signed ZIP as the portable/CI asset.
 
 WiX/MSI and `winget` remain good later targets, especially for enterprise-style
