@@ -572,16 +572,20 @@ As of `RXVML_ABI_VERSION` 7, native `rxvml_address_request` also carries
 `stdin_endpoint`, `stdout_endpoint`, and `stderr_endpoint` VM values. Native
 providers should use `rxvml_address_emit_output(ctx, request, text)` and
 `rxvml_address_emit_error(ctx, request, text)` rather than reaching into those
-opaque redirect values. These helpers write to `ADDRESS ... output/error`
-redirects and finalize them so Rexx array/string captures are readable when
-the callback returns; without a redirect they write to the normal VM
-stdout/stderr path.
+redirect values. These helpers write to `ADDRESS ... output/error` redirects and
+finalize them so Rexx array/string captures are readable when the callback
+returns; without a redirect they write to the normal VM stdout/stderr path.
 
-ADDRESS redirect endpoint `.binary` values contain native redirect handles.
-Level B runtime code that forwards endpoints must keep them as storage aliases
-with `linkattr1`/`linktoattr1` rather than copying the `.binary` value bytes;
-byte copies duplicate raw handle numbers without duplicating ownership, which
-can leave another redirect copy with invalid Windows handles.
+ADDRESS redirect endpoint values are native payloads with the internal type name
+`rxsysb.redirect_endpoint`. The payload stores a refcounted native endpoint cell,
+so ordinary VM value copies retain the cell instead of byte-copying raw OS handle
+values. The last finalizer closes native handles and joins any owned redirect
+worker thread. `SPAWN` resolves these native endpoint payloads before dispatching
+to `rxspawn.c`; it does not accept plain raw `REDIRECT` binary buffers. Existing
+bytecode remains compatible because redirect values are created by runtime
+instructions, not stored as durable `REDIRECT` struct bytes in `.rxbin` files.
+New runtime code should not inspect `binary_value` directly for redirect
+endpoints; use the redirect helper path or the public RXVML emit helpers.
 
 ADDRESS command text may contain host-variable anchors whose meaning belongs to
 the selected environment handler. The compiler auto-exposes visible Rexx scalar

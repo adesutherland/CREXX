@@ -117,6 +117,7 @@ until they are narrowed.
 | Regex support | #399 and closed issue #414 | RxLite now provides a pure-Rexx regex surface in `rxfnsb`. External/native regex dependencies remain a future packaging decision, not an open Release 1 blocker. |
 | System plugin portability | #398 | Keep platform coverage under normal plugin test hardening. Open a fresh issue only for a failing platform-specific test. |
 | REXX/SAA compatibility | #424 | Continue through the `crexxsaa` and RXPA host-integration path. Variable-pool emulation needs explicit design before new commitments. |
+| IO endpoints, process pipes, and native handles | [`ai-context/CREXX_IO_PIPE_WORKING.md`](ai-context/CREXX_IO_PIPE_WORKING.md), #491 | Existing ADDRESS redirect endpoints now use native-payload ownership internally. Public `rxio.*` stream classes, reusable process/pipe APIs, pipeline helpers, and any broader threading surface remain future work and should stay tied to the working note until narrowed into issues. |
 | Mixed Rexx/native libraries | #432 | Combining Rexx scripts and native plugin functions into one library remains an architecture direction for plugin packaging. |
 | Threads and subtasks | #491 | Treat as a design/safety project. The existing process plugin is the safer current execution model; true shared-memory subtasks need a concurrency and ownership design first. |
 

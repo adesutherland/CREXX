@@ -1621,33 +1621,33 @@ first_chars: procedure = .string
   if count <= 0 then return ""
   return substr(text, 1, count)
 
-/* Return a no redirect dummy Native Object */
+/* Return a no-redirect native endpoint payload */
 _noredir: procedure = .binary
     handle = .binary
     return handle
 
-/* Return a redirect to Array Native Object */
+/* Return a native endpoint payload that redirects output to an array */
 _redir2array: procedure = .binary
     arg expose arr = .string[]
     handle = .binary
     assembler redir2arr handle, arr
     return handle
 
-/* Return a redirect to String Native Object */
+/* Return a native endpoint payload that redirects output to a string */
 _redir2string: procedure = .binary
     arg expose str = .string
     handle = .binary
     assembler redir2str handle, str
     return handle
 
-/* Return a redirect from an Array Native Object */
+/* Return a native endpoint payload that redirects input from an array */
 _array2redir: procedure = .binary
     arg expose arr = .string[]
     handle = .binary
     assembler arr2redir handle, arr
     return handle
 
-/* Return a redirect from a String Native Object */
+/* Return a native endpoint payload that redirects input from a string */
 _string2redir: procedure = .binary
     arg expose str = .string
     handle = .binary

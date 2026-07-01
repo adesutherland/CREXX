@@ -354,6 +354,9 @@ void rxvm_callfunc(void* function, int args, value** argv, value* ret, value* si
 /* Private structure for output to string thread */
 typedef struct redirect REDIRECT;
 
+/* Resolve an internal native-payload redirect endpoint value. */
+REDIRECT *rxspawn_redirect_from_value(value *redirect_reg);
+
 /* Get Environment Value
  * Sets value (null terminated) (and a handle) from env variable name length name_length (not null terminated)
  * Value can be set to point to a zero length string (if the variable is not set)

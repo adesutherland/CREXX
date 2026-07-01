@@ -2,6 +2,19 @@
 
 Status: working design note.
 
+Implementation status in the current tree:
+
+- Implemented: existing ADDRESS redirect endpoint values are now
+  native-payload-backed `rxsysb.redirect_endpoint` values with a refcounted
+  native cell. Normal VM value copies retain the cell instead of byte-copying
+  raw OS handle values, and finalization closes/join-cleans the endpoint once
+  the last value reference is gone.
+- Implemented redirect boundary: the `SPAWN` instruction resolves internal
+  native redirect endpoint payloads before dispatching to `rxspawn.c`.
+- Not yet implemented: public `rxio.*` interfaces/classes, reusable process and
+  pipe APIs, pipeline helpers, and any general Rexx threading model. Those
+  remain proposed roadmap work.
+
 This note records the review prompted by the Windows ADDRESS redirect flake and
 sets out a more robust direction for IO, process pipes, and a first step toward
 threading. It is intentionally a working document, not a committed language
@@ -9,12 +22,13 @@ contract.
 
 ## Problem Statement
 
-The current ADDRESS redirect implementation passes opaque native redirect state
-through Rexx `.binary` values. On Windows that payload contains raw `HANDLE`
-values. Normal Level B assignment, argument passing, object construction, and
-attribute storage can byte-copy those `.binary` values. The byte copy duplicates
-the handle number, not ownership. The copied value can later be finalized or
-closed by a different lifetime path, leaving another copy with an invalid handle.
+The failing ADDRESS redirect implementation passed opaque native redirect state
+through ordinary Rexx `.binary` values. On Windows that payload contained raw
+`HANDLE` values. Normal Level B assignment, argument passing, object
+construction, and attribute storage could byte-copy those `.binary` values. The
+byte copy duplicated the handle number, not ownership. The copied value could
+later be finalized or closed by a different lifetime path, leaving another copy
+with an invalid handle.
 
 The immediate symptom was a flaky Windows failure in:
 
@@ -30,9 +44,11 @@ PANIC: CREXX command redirect failure input=0/0/0 output=1/6/1 error=0/0/0
 On Windows, `lastError=6` is `ERROR_INVALID_HANDLE`; `errorSource=1` is the
 write side of ADDRESS CREXX redirect replay.
 
-Short-term aliasing patches reduce the number of byte-copy sites, but they are
-not a robust architecture. The underlying issue is that a native resource with
-ownership semantics is being represented as an ordinary byte buffer.
+Short-term aliasing patches reduced the number of byte-copy sites, but they were
+not a robust architecture. The underlying issue was that a native resource with
+ownership semantics was represented as an ordinary byte buffer. The current
+first-stage implementation keeps the `.binary`-typed compatibility surface but
+uses a native payload and refcounted endpoint cell for the physical value.
 
 ## Facilities Reviewed
 
@@ -87,8 +103,8 @@ endpoint values, and helper functions such as `rxvml_address_emit_output()` and
 `rxvml_address_emit_error()` hide redirect writing from native providers.
 
 This is a useful precedent: native providers should not manipulate raw endpoint
-bytes. The missing piece is that the endpoint value itself is still an opaque
-`.binary`.
+bytes. The first implemented piece now gives redirect endpoint values native
+payload ownership; a public Rexx-visible endpoint class remains proposed.
 
 ### Spawn and Redirects
 
@@ -100,15 +116,17 @@ bytes. The missing piece is that the endpoint value itself is still an opaque
 - child process stdio handles
 - worker threads for pipe drain/fill
 
-The current implementation mixes three concerns in one raw struct:
+The original implementation mixed three concerns in one raw struct:
 
 - public endpoint identity
 - OS handle ownership
 - per-spawn worker-thread state
 
-Those concerns need to be split. A Rexx-visible endpoint should be a stable
-object. A spawn operation should derive per-spawn handles and worker state from
-that object.
+The current implementation has split value ownership from raw bytes by wrapping
+the existing redirect state in a refcounted native endpoint payload. The
+remaining architectural split is still proposed: a Rexx-visible endpoint should
+become a stable class-shaped object, and a spawn operation should derive
+per-spawn handles and worker state from that object.
 
 ### Socket Registry Precedent
 
@@ -340,23 +358,26 @@ adapt at safe synchronization points:
 
 True callback-from-worker-thread support should wait for a VM threading model.
 
-## Threading Implications
+## Concurrency Horizons
 
 This IO work can be the first controlled step toward threading without exposing
 general Rexx threads.
 
-Phase 1:
+Horizon 1:
 
 - native worker threads only for process pipe pump/drain
 - no Rexx code on worker threads
 - deterministic join on process wait/close/finalize
 
-Phase 2:
+This is the only concurrency behavior implemented by the redirect work. It is
+internal runtime behavior, not a public threading API.
+
+Horizon 2:
 
 - native `rxio.task` or `rxio.future` for background native operations only
 - completion is polled or waited from the owning VM thread
 
-Phase 3:
+Horizon 3:
 
 - separate `rxvm_context` per Rexx thread or explicit shared-state rules
 - message-passing streams/channels as the safe sharing primitive
@@ -367,9 +388,9 @@ Do not share a single VM frame stack across OS threads.
 
 ### Stage 0: Stabilize Existing ADDRESS Tests
 
-If the Windows flake must be fixed before the larger refactor, finish the narrow
-aliasing fix in current `_address.crexx` request construction. This is a stopgap
-only.
+If the Windows flake must be fixed on an older branch before the larger
+refactor, finish the narrow aliasing fix in `_address.crexx` request
+construction there. This is a stopgap only.
 
 Validation:
 
@@ -378,18 +399,26 @@ Validation:
 
 ### Stage 1: Native Payload Endpoint Core
 
-Implement a small internal `rxio_native_cell` and payload ops in the interpreter.
+Implemented for existing ADDRESS redirect endpoints as an internal
+`rxsysb.redirect_endpoint` native payload and refcounted cell in the interpreter.
+The public name `rxio_native_cell` remains a proposed library/API direction, not
+the current internal symbol.
 
 Deliverables:
 
-- retain/release/finalize tests
-- copy tests proving value copies do not duplicate ownership incorrectly
-- POSIX backend first for development speed on macOS
-- Windows backend second with explicit `DuplicateHandle` semantics
+- native payload copy/finalizer path covered by RXPA tests
+- ADDRESS CREXX focused tests cover the redirect endpoint path
+- endpoint copies retain a shared native cell instead of duplicating raw handles
+- finalization closes handles and joins owned worker threads once the last value
+  reference is gone
+- `SPAWN` accepts internal native endpoint payloads rather than raw `REDIRECT`
+  byte buffers
 
 No public language surface needs to change yet.
 
 ### Stage 2: Rexx-Visible IO Interfaces and Wrapper Classes
+
+Status: proposed.
 
 Add Level B interfaces/classes in a new library module, likely under `rxfnsb` or
 an internal `_rxio` namespace.
@@ -412,14 +441,18 @@ The Rexx factory is lower risk for the first pass.
 
 ### Stage 3: ADDRESS Redirect Migration
 
-Replace `_noredir`, `_redir2array`, `_redir2string`, `_array2redir`, and
-`_string2redir` internals so they return IO endpoint objects rather than raw
-`REDIRECT` binaries.
+Status: partly implemented for native payload ownership; public IO endpoint
+objects remain proposed.
 
-Keep compatibility at the `SPAWN` instruction boundary temporarily:
+`_noredir`, `_redir2array`, `_redir2string`, `_array2redir`, and `_string2redir`
+now receive native-payload-backed endpoint values from the redirect instructions
+rather than raw handle byte buffers. They do not yet return public `rxio.*`
+objects.
 
-- accept old raw `REDIRECT` binaries for existing generated bytecode
-- prefer new native payload endpoints when present
+The `SPAWN` instruction boundary now requires the internal native endpoint
+payload form. Existing bytecode remains compatible because bytecode calls the
+redirect creation instructions at runtime; it does not store durable `REDIRECT`
+struct bytes in `.rxbin` files.
 
 Validation:
 
@@ -429,6 +462,8 @@ Validation:
 - Windows repeat-until-fail stress
 
 ### Stage 4: Process API
+
+Status: proposed.
 
 Build a reusable process abstraction on top of the IO endpoints.
 
@@ -444,6 +479,8 @@ Deliverables:
 After this, `ADDRESS CREXX run` can delegate to the process API.
 
 ### Stage 5: Pipeline Syntax and Helpers
+
+Status: proposed.
 
 Once the object model is stable, add convenience helpers for pipelines:
 
@@ -508,7 +545,6 @@ Stress:
    `rxio.stream` objects.
 5. Whether `ADDRESS ... output` should expose line-oriented array behavior only,
    while `rxio.output` remains byte/text oriented.
-6. How much old raw `REDIRECT` bytecode compatibility is required after beta.
 
 ## Recommendation
 

@@ -8692,10 +8692,12 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     /* Spawn - Spawn a process with io redirects - Spawn Process op1 = exec op2 redirect op3
      * reg 1 will be the return code of the process
      * reg 2 is the command (the path environment variable is used for search resolution)
-     * reg 3 is an array of opaque REDIRECT binary structures plus optional metadata
+     * reg 3 is an array of redirect endpoint values plus optional metadata
      *       reg3[1] = input, reg3[2] = output, reg3[3] = error
      *       reg3[4] = environment variables, reg3[5] = spawn mode,
      *       reg3[6] = CREXX address binding metadata
+     * Redirect endpoints are internal native payloads resolved through
+     * rxspawn_redirect_from_value().
      * spawn generates a failure signal if the command is not found */
     START_INSTRUCTION(SPAWN_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - SPAWN R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
@@ -8714,9 +8716,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 command[op2R->string_length] = 0;
                 char* errorText = 0;
 
-                if (op3R->num_attributes > 0) pIn = (REDIRECT*)(op3R->attributes[0])->binary_value;
-                if (op3R->num_attributes > 1) pOut = (REDIRECT*)(op3R->attributes[1])->binary_value;
-                if (op3R->num_attributes > 2) pErr = (REDIRECT*)(op3R->attributes[2])->binary_value;
+                if (op3R->num_attributes > 0) pIn = rxspawn_redirect_from_value(op3R->attributes[0]);
+                if (op3R->num_attributes > 1) pOut = rxspawn_redirect_from_value(op3R->attributes[1]);
+                if (op3R->num_attributes > 2) pErr = rxspawn_redirect_from_value(op3R->attributes[2]);
                 if (op3R->num_attributes > 3) variables = op3R->attributes[3];
                 if (op3R->num_attributes > 4) spawn_mode = (int) op3R->attributes[4]->int_value;
                 if (op3R->num_attributes > 5) crexx_bindings = op3R->attributes[5];
