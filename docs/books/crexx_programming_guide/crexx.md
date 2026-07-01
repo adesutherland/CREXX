@@ -130,7 +130,7 @@ keeping verbose output readable.
 
 ### Just run it
 
-The simplest way to run a cRexx program is to just specify its source file as input to the `crexx` program. It will excute the compiler, the assembler and start it with the standard threaded runtime interpreter. All included libraries and plugins are linked automatically.
+The simplest way to run a cRexx program is to just specify its source file as input to the `crexx` program. It will execute the compiler, the assembler and start it with the standard threaded runtime interpreter. All included libraries and plugins are linked automatically.
 
 ```rexx <!--crexx-1.crexx-->
 options levelb
@@ -141,6 +141,22 @@ say 'today''s date is:' date()
 ```
 
 <!--splice--crexx crexx-1.crexx-->
+
+### Make an executable module
+
+cRexx can make a native executable from a Rexx program. For this, the `rxlink` utility will be called, to arrange the modules into an `.rxbin` library, while insuring that there is no duplication of resources. This `.rxbin` will be processed by the `rxcpack` program, after which the `gcc` or `clang` compilers and the os linkage editor will do their work.
+
+The interesting part here is that all this is accomplished by the `--native` option on the cRexx utility. When we take the previous program and compile it with:
+
+```bash
+crexx hello --native
+```
+
+then we will have a `hello` program (`hello.exe` on windows) which can be executed by specifying its name in the shell, or even by double clicking it in the File Explorer, Finder or equivalent OS GUI interface. This program can be executed on machines without a cRexx installation.
+
+### Compile and run a program with commandline arguments
+
+When using the cRexx compiler driver, commandline arguments as input to the program can be specified with the `--args` option; *this option needs to be the last option on the cRexx command*, because everything that follows will be sent to the program as a string array (`.string[]`).
 
 ## Verbosity
 

@@ -103,7 +103,7 @@ ARG a1 = 0, a2 = .int, ... = .string
 
 Pseudo Array arg allows access to the '...' arguments. Also see the Arrays section.
 
-* arg\[1\] or arg.1 gives the first '...' argument. These can signal OUTOFRANGE  
+* arg\[1\] or arg.1 gives the first '...' argument. These can signal `OUTOFRANGE`
 * arg\[0\], arg\[\], arg.0 or arg. return the number of '...' arguments
 * In a procedure without a `...` tail, the count forms return `0`
 
@@ -114,7 +114,7 @@ The type of this Pseudo is the type of the '...' argument
 The compatibility arg() operator is designed to provide some compatibility with Classic Rexx; by example:
 
 * arg() is equivalent to arg.0 etc. Type Integer.  
-* arg(1) is equivalent to arg.1 etc. The type of this operator is the same as the '...' argument and like arg.1 can signal OUTOFRANGE  
+* arg(1) is equivalent to arg.1 etc. The type of this operator is the same as the '...' argument and like arg.1 can signal `OUTOFRANGE`  
 * arg(4,E), arg(4,"E"), arg(4,Exxx), arg(4,"Exxx") etc. all return 1 (true) if there were 4 or more '...' arguments given or 0 (false) otherwise. E is Exists.  
 * Likewise arg(4,'O') etc. (O is Omitted) is equivalent to \~arg(4,'E').
 * In a procedure without a `...` tail, `arg()` returns `0` and the `E`/`O` probe forms operate on that empty tail

@@ -39,20 +39,20 @@ address path "rxas -h" output out error err
 
 ### CREXX Command Environment
 
-`CREXX` is not a shell. It is a cREXX-specific command environment with stable
+`CREXX` is not a shell. It is a cRexx -specific command environment with stable
 command names and cREXX-defined return-code behavior across supported operating
 systems. It does not interpret shell punctuation such as `;`, `&&`, `||`, or
 pipes. Use multiple `ADDRESS` statements, or send newline-separated commands to
 `ADDRESS CREXX "batch"`. Blank batch lines and lines whose first non-blank
 characters are `--` are skipped; batch stops at the first non-zero return code.
 
-`cd`, `pushd`, and `popd` change the cREXX process working directory and
+`cd`, `pushd`, and `popd` change the cRexx process working directory and
 therefore persist for later `ADDRESS CREXX`, `ADDRESS PATH`, `ADDRESS SYSTEM`,
 file IO, and relative-path operations in the same process. In contrast,
 `ADDRESS SYSTEM "cd path"` runs inside the child command processor and does not
 change cREXX's working directory after that child exits.
 
-The command set is intentionally useful but bounded. CREXX command names are
+The command set is intentionally useful but bounded. cRexx command names are
 literal. Host-variable anchors are supported only in command operands. In the
 table below, `anchorable` means an operand may be a scalar anchor such as
 `:name` or `${name}`. An operand ending in `...` may also be supplied by a stem
@@ -64,7 +64,7 @@ when it expands to exactly the number of operands required at that point.
 | --- | --- | --- |
 | `help` | None. | Print the command list. |
 | `echo [text...]` | `text...` may use scalar or stem anchors. | Write text followed by a newline. |
-| `pwd` | None. | Print the current cREXX process working directory. |
+| `pwd` | None. | Print the current cRexx process working directory. |
 | `cd [path]` | `path` may use a scalar anchor, or a one-item stem anchor. | Change the cREXX process working directory; no path means the user's home directory where known. |
 | `pushd path` | `path` may use a scalar anchor, or a one-item stem anchor. | Push the current directory and change to `path`. |
 | `popd` | None. | Return to the most recent pushed directory. |
@@ -183,7 +183,20 @@ This statement terminates the innermost, active loop. If symbol is specified, it
 
 NOP ;
 
-The NOP instruction is the "null operation" directive; it executes without performing any operation.
+The NOP instruction is the *No Operation* directive; it executes without performing any operation. It is syntactically valid but intentionally does nothing. It exists primarily as a placeholder, in the following cases:
+
+- as a placeholder while developing or debugging;
+- in generated code where an empty statement is needed;
+- to make an intentionally empty branch explicit rather than accidental
+
+This example shows how a branch can be temporarily disabled while developing by inserting a `nop` statement:
+
+```rexx <!--nopexample.crexx-->
+if retries > 0 then
+    nop               /* retry logic temporarily disabled */
+else
+    call abortTransfer
+```
 
 ## OPTIONS
 
