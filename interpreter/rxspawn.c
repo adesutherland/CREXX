@@ -105,9 +105,25 @@ struct redirect {
     int lastError;
     int errorSource;
     struct redirect *thread_redirect;
+    char endpoint_kind;
 };
 
 // Defined in a header file: typedef struct redirect REDIRECT;
+
+enum {
+    REDIRECT_ENDPOINT_NULL = 0,
+    REDIRECT_ENDPOINT_INPUT = 1,
+    REDIRECT_ENDPOINT_OUTPUT = 2
+};
+
+typedef struct redirect_endpoint_cell {
+    int refcount;
+    REDIRECT redirect;
+} REDIRECT_ENDPOINT_CELL;
+
+typedef struct redirect_endpoint_payload {
+    REDIRECT_ENDPOINT_CELL *cell;
+} REDIRECT_ENDPOINT_PAYLOAD;
 
 #ifdef _WIN32
 #define start_routine LPTHREAD_START_ROUTINE
@@ -136,6 +152,10 @@ static void appendTextOutput(char **outputText, char *inputText);
 static void WriteToStdin(REDIRECT* data, char *line, size_t nBytes);
 static void redirectInput(value* redirect_reg, value* string_reg, start_routine start);
 static void redirectOutput(value* redirect_reg, value* string_reg, start_routine start);
+static REDIRECT *redirect_endpoint_create(value *redirect_reg, char endpoint_kind);
+static void redirect_endpoint_init(REDIRECT *redirect, char endpoint_kind);
+static void redirect_endpoint_payload_copy(void *dest_value, void *source_value);
+static void redirect_endpoint_payload_finalize(void *payload_value);
 static value* add_new_element(value* array); /* Appends record to an array and returns the new record */
 static THREAD_RETURN Output2StringThread(void* lpvThreadParam);
 static THREAD_RETURN Output2ArrayThread(void* lpvThreadParam);
@@ -172,7 +192,15 @@ static int crexxcmd_get_stem_value(void *userdata, const char *name, size_t inde
 static int crexxcmd_finalize_redirects(SHELLDATA *data, char **errorText);
 static int crexxcmd_write_redirect(REDIRECT *redirect, FILE *fallback, const char *text, size_t length);
 static int crexxcmd_read_redirect(REDIRECT *redirect, char **out_text, size_t *out_length);
+static int crexxcmd_close_output_redirect(REDIRECT *redirect);
+static int crexxcmd_close_input_redirect(REDIRECT *redirect);
 static char *copy_value_string(value *string_value);
+
+static const rxvm_native_payload_ops redirect_endpoint_payload_ops = {
+    "rxsysb.redirect_endpoint",
+    redirect_endpoint_payload_copy,
+    redirect_endpoint_payload_finalize
+};
 
 static char *copy_string(const char *text) {
     size_t length = strlen(text);
@@ -736,7 +764,9 @@ static int crexxcmd_write_redirect(REDIRECT *redirect, FILE *fallback, const cha
     {
         DWORD written;
         DWORD total = 0;
-        if (redirect->hWrite == INVALID_HANDLE_VALUE) return 0;
+        if (redirect->hWrite == INVALID_HANDLE_VALUE) {
+            return fwrite(text ? text : "", 1, length, fallback) == length ? 0 : -1;
+        }
         while (total < length) {
             if (!WriteFile(redirect->hWrite, text + total, (DWORD)(length - total), &written, NULL)) {
                 if (GetLastError() == ERROR_NO_DATA) return 0;
@@ -752,7 +782,9 @@ static int crexxcmd_write_redirect(REDIRECT *redirect, FILE *fallback, const cha
     {
         size_t total = 0;
         ssize_t written;
-        if (redirect->hWrite == -1) return 0;
+        if (redirect->hWrite == -1) {
+            return fwrite(text ? text : "", 1, length, fallback) == length ? 0 : -1;
+        }
         while (total < length) {
             written = write(redirect->hWrite, text + total, length - total);
             if (written == -1) {
@@ -820,8 +852,10 @@ static int crexxcmd_read_redirect(REDIRECT *redirect, char **out_text, size_t *o
             redirect->hRead = INVALID_HANDLE_VALUE;
         }
         if (redirect->has_thread) {
-            WaitForSingleObject(redirect->thread, INFINITE);
-            CloseHandle(redirect->thread);
+            if (redirect->thread) {
+                WaitForSingleObject(redirect->thread, INFINITE);
+                CloseHandle(redirect->thread);
+            }
             redirect->thread = NULL;
             redirect->has_thread = 0;
             collect_redirect_thread_context(redirect);
@@ -881,8 +915,10 @@ static int crexxcmd_close_output_redirect(REDIRECT *redirect) {
         redirect->hWrite = INVALID_HANDLE_VALUE;
     }
     if (redirect->has_thread) {
-        WaitForSingleObject(redirect->thread, INFINITE);
-        CloseHandle(redirect->thread);
+        if (redirect->thread) {
+            WaitForSingleObject(redirect->thread, INFINITE);
+            CloseHandle(redirect->thread);
+        }
         redirect->thread = NULL;
         redirect->has_thread = 0;
         collect_redirect_thread_context(redirect);
@@ -924,8 +960,10 @@ static int crexxcmd_close_input_redirect(REDIRECT *redirect) {
         redirect->hRead = INVALID_HANDLE_VALUE;
     }
     if (redirect->has_thread) {
-        WaitForSingleObject(redirect->thread, INFINITE);
-        CloseHandle(redirect->thread);
+        if (redirect->thread) {
+            WaitForSingleObject(redirect->thread, INFINITE);
+            CloseHandle(redirect->thread);
+        }
         redirect->thread = NULL;
         redirect->has_thread = 0;
         collect_redirect_thread_context(redirect);
@@ -956,6 +994,99 @@ static int crexxcmd_close_input_redirect(REDIRECT *redirect) {
 #endif
 
     return redirect->errorCode == 0 ? 0 : -1;
+}
+
+static void redirect_endpoint_init(REDIRECT *redirect, char endpoint_kind) {
+    memset(redirect, 0, sizeof(*redirect));
+#ifdef _WIN32
+    redirect->hRead = INVALID_HANDLE_VALUE;
+    redirect->hWrite = INVALID_HANDLE_VALUE;
+    redirect->thread = NULL;
+#else
+    redirect->hRead = -1;
+    redirect->hWrite = -1;
+#endif
+    redirect->thread_redirect = NULL;
+    redirect->endpoint_kind = endpoint_kind;
+}
+
+static void redirect_endpoint_cell_release(REDIRECT_ENDPOINT_CELL *cell) {
+    REDIRECT *redirect;
+
+    if (!cell) return;
+    cell->refcount--;
+    if (cell->refcount > 0) return;
+
+    redirect = &cell->redirect;
+    if (redirect->endpoint_kind == REDIRECT_ENDPOINT_INPUT) {
+        crexxcmd_close_input_redirect(redirect);
+    } else {
+        crexxcmd_close_output_redirect(redirect);
+    }
+    free(cell);
+}
+
+static REDIRECT_ENDPOINT_PAYLOAD *redirect_endpoint_payload_from_value(value *payload_value) {
+    size_t payload_length = 0;
+    const rxvm_native_payload_ops *ops = NULL;
+    REDIRECT_ENDPOINT_PAYLOAD *payload;
+
+    payload = (REDIRECT_ENDPOINT_PAYLOAD *)get_native_payload(payload_value, &payload_length, &ops, NULL);
+    if (ops != &redirect_endpoint_payload_ops ||
+        payload_length != sizeof(REDIRECT_ENDPOINT_PAYLOAD)) return NULL;
+    return payload;
+}
+
+REDIRECT *rxspawn_redirect_from_value(value *redirect_reg) {
+    REDIRECT_ENDPOINT_PAYLOAD *payload;
+
+    if (!redirect_reg || redirect_reg->native_payload_ops != &redirect_endpoint_payload_ops) return NULL;
+    payload = redirect_endpoint_payload_from_value(redirect_reg);
+    return payload && payload->cell ? &payload->cell->redirect : NULL;
+}
+
+static REDIRECT *redirect_endpoint_create(value *redirect_reg, char endpoint_kind) {
+    REDIRECT_ENDPOINT_CELL *cell;
+    REDIRECT_ENDPOINT_PAYLOAD payload;
+
+    if (!redirect_reg) return NULL;
+
+    value_zero(redirect_reg);
+    cell = malloc(sizeof(*cell));
+    if (!cell) return NULL;
+    cell->refcount = 1;
+    redirect_endpoint_init(&cell->redirect, endpoint_kind);
+
+    payload.cell = cell;
+    if (set_native_payload(redirect_reg, &payload, sizeof(payload),
+                           &redirect_endpoint_payload_ops, 0) != 0) {
+        free(cell);
+        return NULL;
+    }
+    return &cell->redirect;
+}
+
+static void redirect_endpoint_payload_copy(void *dest_value, void *source_value) {
+    REDIRECT_ENDPOINT_PAYLOAD *source_payload;
+    REDIRECT_ENDPOINT_PAYLOAD dest_payload;
+
+    source_payload = redirect_endpoint_payload_from_value((value *)source_value);
+    dest_payload.cell = source_payload ? source_payload->cell : NULL;
+    if (dest_payload.cell) dest_payload.cell->refcount++;
+    if (set_native_payload((value *)dest_value, &dest_payload, sizeof(dest_payload),
+                           &redirect_endpoint_payload_ops, 0) != 0) {
+        if (dest_payload.cell) dest_payload.cell->refcount--;
+        abort();
+    }
+}
+
+static void redirect_endpoint_payload_finalize(void *payload_value) {
+    REDIRECT_ENDPOINT_PAYLOAD *payload;
+
+    payload = redirect_endpoint_payload_from_value((value *)payload_value);
+    if (!payload) return;
+    redirect_endpoint_cell_release(payload->cell);
+    payload->cell = NULL;
 }
 
 static int crexxcmd_finalize_redirects(SHELLDATA *data, char **errorText) {
@@ -1015,9 +1146,9 @@ static int crexxcmd_run_path(void *userdata,
     nullredr(&input_redirect);
     redr2str(&output_redirect, &output_value);
     redr2str(&error_redirect, &error_value);
-    pIn = (REDIRECT *)input_redirect.binary_value;
-    pOut = (REDIRECT *)output_redirect.binary_value;
-    pErr = (REDIRECT *)error_redirect.binary_value;
+    pIn = rxspawn_redirect_from_value(&input_redirect);
+    pOut = rxspawn_redirect_from_value(&output_redirect);
+    pErr = rxspawn_redirect_from_value(&error_redirect);
     spawn_error = NULL;
     spawn_rc = shellspawn(command, pIn, pOut, pErr,
                           parent_data ? parent_data->variables : NULL,
@@ -1077,9 +1208,9 @@ static int crexxcmd_run_argv(void *userdata,
     nullredr(&input_redirect);
     redr2str(&output_redirect, &output_value);
     redr2str(&error_redirect, &error_value);
-    pIn = (REDIRECT *)input_redirect.binary_value;
-    pOut = (REDIRECT *)output_redirect.binary_value;
-    pErr = (REDIRECT *)error_redirect.binary_value;
+    pIn = rxspawn_redirect_from_value(&input_redirect);
+    pOut = rxspawn_redirect_from_value(&output_redirect);
+    pErr = rxspawn_redirect_from_value(&error_redirect);
     spawn_error = NULL;
     spawn_rc = spawn_argv_capture(argv,
                                   argc,
@@ -1456,19 +1587,9 @@ static int spawn_argv_capture(const char *const *argv,
 /* In general,the redirect_reg MUST then be used in shellspawn() to clean up/free memory */
 void nullredr(value* redirect_reg) {
     REDIRECT *redirect;
-    /* The register has the opaque REDIRECT Structure */
-    value_zero(redirect_reg);
-    redirect_reg->binary_length = sizeof(REDIRECT);
-    redirect_reg->binary_value = malloc(redirect_reg->binary_length);
-    redirect_reg->binary_buffer_length = redirect_reg->binary_length;
-    redirect = (REDIRECT *) redirect_reg->binary_value;
 
-    redirect->errorCode = 0;
-    redirect->lastError = 0;
-    redirect->errorSource = 0;
-    redirect->reg = 0;
-    redirect->has_thread = 0;
-    redirect->thread_redirect = NULL;
+    redirect = redirect_endpoint_create(redirect_reg, REDIRECT_ENDPOINT_NULL);
+    if (!redirect) return;
 
 #ifdef _WIN32
 
@@ -1520,19 +1641,9 @@ void redirectOutput(value* redirect_reg, value* string_reg, start_routine start)
 
     REDIRECT *redirect;
 
-    /* The register has the opaque REDIRECT Structure */
-    value_zero(redirect_reg);
-    redirect_reg->binary_length = sizeof(REDIRECT);
-    redirect_reg->binary_value = malloc(redirect_reg->binary_length);
-    redirect_reg->binary_buffer_length = redirect_reg->binary_length;
-    redirect = (REDIRECT*)redirect_reg->binary_value;
-
-    redirect->errorCode = 0;
-    redirect->lastError = 0;
-    redirect->errorSource = 0;
+    redirect = redirect_endpoint_create(redirect_reg, REDIRECT_ENDPOINT_OUTPUT);
+    if (!redirect) return;
     redirect->reg = string_reg;
-    redirect->has_thread = 0;
-    redirect->thread_redirect = NULL;
 
 #ifdef _WIN32
 
@@ -1558,22 +1669,27 @@ void redirectOutput(value* redirect_reg, value* string_reg, start_routine start)
                          0, FALSE, // Make it uninheritable.
                          DUPLICATE_SAME_ACCESS))
     {
+        DWORD last_error = GetLastError();
         // Error - try and clean-up
         CloseHandle(hReadTmp);
         CloseHandle(redirect->hWrite);
+        redirect->hWrite = INVALID_HANDLE_VALUE;
         redirect->errorCode = 2;
-        redirect->lastError = (int)GetLastError();
+        redirect->lastError = (int)last_error;
         return;
     }
 
     /* We don't want this inheritable handle */
     if (!CloseHandle(hReadTmp))
     {
+        DWORD last_error = GetLastError();
         // Error - try and clean-up
         CloseHandle(redirect->hRead);
         CloseHandle(redirect->hWrite);
+        redirect->hRead = INVALID_HANDLE_VALUE;
+        redirect->hWrite = INVALID_HANDLE_VALUE;
         redirect->errorCode = 3;
-        redirect->lastError = (int)GetLastError();
+        redirect->lastError = (int)last_error;
         return;
     }
     hReadTmp = NULL;
@@ -1586,6 +1702,7 @@ void redirectOutput(value* redirect_reg, value* string_reg, start_routine start)
 
     if (pipe(temppipe)) {
         redirect->errorCode = 1;
+        return;
     }
     redirect->hRead = temppipe[0];
     redirect->hWrite = temppipe[1];
@@ -1599,11 +1716,14 @@ void redirectOutput(value* redirect_reg, value* string_reg, start_routine start)
     redirect->thread = CreateThread(NULL, 0, start, (LPVOID)redirect->thread_redirect, 0, NULL);
     if (redirect->thread == NULL)
     {
+        DWORD last_error = GetLastError();
         // Error - try and clean-up
         CloseHandle(redirect->hRead);
         CloseHandle(redirect->hWrite);
+        redirect->hRead = INVALID_HANDLE_VALUE;
+        redirect->hWrite = INVALID_HANDLE_VALUE;
         redirect->errorCode = 5;
-        redirect->lastError = (int)GetLastError();
+        redirect->lastError = (int)last_error;
         free(redirect->thread_redirect);
         redirect->thread_redirect = NULL;
         return;
@@ -1795,18 +1915,9 @@ void arr2redr(value* redirect_reg, value* string_reg) {
 void redirectInput(value* redirect_reg, value* string_reg, start_routine start) {
     REDIRECT *redirect;
 
-    /* The register has the opaque REDIRECT Structure */
-    value_zero(redirect_reg);
-    redirect_reg->binary_length = sizeof(REDIRECT);
-    redirect_reg->binary_value = malloc(redirect_reg->binary_length);
-    redirect_reg->binary_buffer_length = redirect_reg->binary_length;
-    redirect = (REDIRECT*)redirect_reg->binary_value;
-    redirect->errorCode = 0;
-    redirect->lastError = 0;
-    redirect->errorSource = 0;
-    redirect->has_thread = 0;
+    redirect = redirect_endpoint_create(redirect_reg, REDIRECT_ENDPOINT_INPUT);
+    if (!redirect) return;
     redirect->reg = string_reg;
-    redirect->thread_redirect = NULL;
 
 #ifdef _WIN32
 
@@ -1835,18 +1946,27 @@ void redirectInput(value* redirect_reg, value* string_reg, start_routine start) 
                          0, FALSE, // Make it uninheritable.
                          DUPLICATE_SAME_ACCESS))
     {
+        DWORD last_error = GetLastError();
         // Error - try and clean-up
+        CloseHandle(hWriteTmp);
+        CloseHandle(redirect->hRead);
+        redirect->hRead = INVALID_HANDLE_VALUE;
         redirect->errorCode = 2;
-        redirect->lastError = (int)GetLastError();
+        redirect->lastError = (int)last_error;
         return;
     }
 
     /* We don't want this closeable handle */
     if (!CloseHandle(hWriteTmp))
     {
+        DWORD last_error = GetLastError();
         // Error - try and clean-up
+        CloseHandle(redirect->hRead);
+        CloseHandle(redirect->hWrite);
+        redirect->hRead = INVALID_HANDLE_VALUE;
+        redirect->hWrite = INVALID_HANDLE_VALUE;
         redirect->errorCode = 3;
-        redirect->lastError = (int)GetLastError();
+        redirect->lastError = (int)last_error;
         return;
     }
 
@@ -1856,9 +1976,14 @@ void redirectInput(value* redirect_reg, value* string_reg, start_routine start) 
     redirect->thread = CreateThread(NULL, 0, start, redirect->thread_redirect, 0, &threadID);
     if (redirect->thread == NULL)
     {
+        DWORD last_error = GetLastError();
         // Error
+        CloseHandle(redirect->hRead);
+        CloseHandle(redirect->hWrite);
+        redirect->hRead = INVALID_HANDLE_VALUE;
+        redirect->hWrite = INVALID_HANDLE_VALUE;
         redirect->errorCode = 4;
-        redirect->lastError = (int)GetLastError();
+        redirect->lastError = (int)last_error;
         free(redirect->thread_redirect);
         redirect->thread_redirect = NULL;
         return;
@@ -2017,10 +2142,8 @@ int redrwriteclose(value* redirect_reg, const char* data, size_t nBytes)
 {
     REDIRECT* redirect;
 
-    if (!redirect_reg || !redirect_reg->binary_value ||
-        redirect_reg->binary_length < sizeof(REDIRECT)) return 1;
-
-    redirect = (REDIRECT*)redirect_reg->binary_value;
+    redirect = rxspawn_redirect_from_value(redirect_reg);
+    if (!redirect) return 1;
     if (!data) data = "";
 
     WriteToStdin(redirect, (char*)data, nBytes);
@@ -2032,8 +2155,10 @@ int redrwriteclose(value* redirect_reg, const char* data, size_t nBytes)
         redirect->hWrite = INVALID_HANDLE_VALUE;
     }
     if (redirect->has_thread) {
-        WaitForSingleObject(redirect->thread, INFINITE);
-        CloseHandle(redirect->thread);
+        if (redirect->thread) {
+            WaitForSingleObject(redirect->thread, INFINITE);
+            CloseHandle(redirect->thread);
+        }
         redirect->thread = NULL;
         redirect->has_thread = 0;
         collect_redirect_thread_context(redirect);
@@ -2124,16 +2249,25 @@ void CleanUp(SHELLDATA* data)
 
     // Close the thread handles in the redirect structures
     if (data->pInput && data->pInput->thread != NULL) {
+        WaitForSingleObject(data->pInput->thread, INFINITE);
         CloseHandle(data->pInput->thread);
         data->pInput->thread = NULL;
+        data->pInput->has_thread = 0;
+        collect_redirect_thread_context(data->pInput);
     }
     if (data->pOutput && data->pOutput->thread != NULL) {
+        WaitForSingleObject(data->pOutput->thread, INFINITE);
         CloseHandle(data->pOutput->thread);
         data->pOutput->thread = NULL;
+        data->pOutput->has_thread = 0;
+        collect_redirect_thread_context(data->pOutput);
     }
     if (data->pError && data->pError->thread != NULL) {
+        WaitForSingleObject(data->pError->thread, INFINITE);
         CloseHandle(data->pError->thread);
         data->pError->thread = NULL;
+        data->pError->has_thread = 0;
+        collect_redirect_thread_context(data->pError);
     }
 
 #else

@@ -67,7 +67,19 @@ int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
     // SetDllDirectory("."); // Commented out because it should not be necessary, but it can be harmful because it
                              // means the current directory is searched for DLLs BEFORE the system directories, which
                              // can lead to DLL hijacking attacks.
-    HMODULE hDll = LoadLibrary(TEXT(full_file_name));
+    HMODULE hDll;
+    char *load_file_name = full_file_name;
+    char *absolute_file_name = NULL;
+    DWORD absolute_file_name_size = GetFullPathNameA(full_file_name, 0, NULL, NULL);
+    if (absolute_file_name_size > 0) {
+        absolute_file_name = malloc((size_t)absolute_file_name_size + 1);
+        if (absolute_file_name &&
+            GetFullPathNameA(full_file_name, absolute_file_name_size + 1, absolute_file_name, NULL) > 0) {
+            load_file_name = absolute_file_name;
+        }
+    }
+
+    hDll = LoadLibraryA(load_file_name);
     if (!hDll) {
         DWORD errorCode = GetLastError();
         LPVOID errorMsg;
@@ -81,9 +93,11 @@ int load_plugin(rxpa_initctxptr ctx, char* dir, char* file_name)
                 NULL
         );
         LocalFree(errorMsg);
+        if (absolute_file_name) free(absolute_file_name);
         if (free_full_file_name) free(full_file_name);
         return -1;
     }
+    if (absolute_file_name) free(absolute_file_name);
 
     // Get the plugin initializer address and call it
     initfuncs_type init = (initfuncs_type)GetProcAddress(hDll, "_initfuncs");
