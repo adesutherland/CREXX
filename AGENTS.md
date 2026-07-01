@@ -84,6 +84,15 @@ For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the curre
 - Do not replace the object-library sharing with repeated per-target
   `rxvmintp.c` or `rxvmsock.c` source lists unless you have measured the
   Release build impact and validated Debug/Release CTest.
+- On Windows, avoid overlapping build and test invocations in the same build
+  tree. CTest fixtures and generated-runtime targets can rebuild and remove
+  `.rxbin`/`.exe` artifacts while other `ctest`, `ninja`, `cmake`, `rxc`,
+  `rxas`, `rxlink`, or VM processes still have them open, producing transient
+  "file can't be removed and still exist" failures. If a build/test run is
+  interrupted or times out, check for and stop leftover build/test processes
+  before retrying. For generated-runtime cleanup lock failures, retry the
+  relevant target after the processes are gone; use `--parallel 1` for the
+  retry when the lock appears tied to parallel cleanup.
 
 ## Debugging Output Discipline
 

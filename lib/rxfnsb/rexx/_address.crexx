@@ -1488,6 +1488,7 @@ spawn_request: procedure = .addressresponse
 
   response = .addressresponse(0)
   redirect = .binary[6]
+  assembler setattrs redirect,6
   envs = .string[]
   crexx_bindings = .string[]
   spawn_mode_value = .int
@@ -1498,13 +1499,12 @@ spawn_request: procedure = .addressresponse
   stdout_endpoint = .binary
   stderr_endpoint = .binary
 
-  stdin_endpoint = request.get_stdin_endpoint()
-  stdout_endpoint = request.get_stdout_endpoint()
-  stderr_endpoint = request.get_stderr_endpoint()
-
-  redirect[1] = stdin_endpoint
-  redirect[2] = stdout_endpoint
-  redirect[3] = stderr_endpoint
+  assembler linkattr1 stdin_endpoint,request,8
+  assembler linkattr1 stdout_endpoint,request,9
+  assembler linkattr1 stderr_endpoint,request,7
+  assembler linktoattr1 1,redirect,stdin_endpoint
+  assembler linktoattr1 2,redirect,stdout_endpoint
+  assembler linktoattr1 3,redirect,stderr_endpoint
 
   assembler linkattr1 envs,redirect,4
   assembler linkattr1 spawn_mode_value,redirect,5

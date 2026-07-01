@@ -736,7 +736,9 @@ static int crexxcmd_write_redirect(REDIRECT *redirect, FILE *fallback, const cha
     {
         DWORD written;
         DWORD total = 0;
-        if (redirect->hWrite == INVALID_HANDLE_VALUE) return 0;
+        if (redirect->hWrite == INVALID_HANDLE_VALUE) {
+            return fwrite(text ? text : "", 1, length, fallback) == length ? 0 : -1;
+        }
         while (total < length) {
             if (!WriteFile(redirect->hWrite, text + total, (DWORD)(length - total), &written, NULL)) {
                 if (GetLastError() == ERROR_NO_DATA) return 0;
@@ -752,7 +754,9 @@ static int crexxcmd_write_redirect(REDIRECT *redirect, FILE *fallback, const cha
     {
         size_t total = 0;
         ssize_t written;
-        if (redirect->hWrite == -1) return 0;
+        if (redirect->hWrite == -1) {
+            return fwrite(text ? text : "", 1, length, fallback) == length ? 0 : -1;
+        }
         while (total < length) {
             written = write(redirect->hWrite, text + total, length - total);
             if (written == -1) {

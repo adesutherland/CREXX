@@ -577,6 +577,12 @@ redirects and finalize them so Rexx array/string captures are readable when
 the callback returns; without a redirect they write to the normal VM
 stdout/stderr path.
 
+ADDRESS redirect endpoint `.binary` values contain native redirect handles.
+Level B runtime code that forwards endpoints must keep them as storage aliases
+with `linkattr1`/`linktoattr1` rather than copying the `.binary` value bytes;
+byte copies duplicate raw handle numbers without duplicating ownership, which
+can leave another redirect copy with invalid Windows handles.
+
 ADDRESS command text may contain host-variable anchors whose meaning belongs to
 the selected environment handler. The compiler auto-exposes visible Rexx scalar
 variables named by `:name` inside string-literal command text, and by `${name}`

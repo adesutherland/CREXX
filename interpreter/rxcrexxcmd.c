@@ -289,19 +289,34 @@ static int ctx_write(rxcrexxcmd_context *ctx, int is_error, const char *text, si
 
 static int ctx_write_process_text(rxcrexxcmd_context *ctx, int is_error, const char *text, size_t length) {
 #ifdef _WIN32
-    size_t start;
+    char *normalized;
     size_t i;
+    size_t out;
+    int saw_crlf;
+    int result;
 
     if (!text || length == 0) return 0;
-    start = 0;
-    for (i = 0; i < length; i++) {
-        if (text[i] == '\r' && i + 1 < length && text[i + 1] == '\n') {
-            if (i > start && ctx_write(ctx, is_error, text + start, i - start) != 0) return -1;
-            start = i + 1;
+    saw_crlf = 0;
+    for (i = 0; i < length - 1; i++) {
+        if (text[i] == '\r' && text[i + 1] == '\n') {
+            saw_crlf = 1;
+            break;
         }
     }
-    if (start < length) return ctx_write(ctx, is_error, text + start, length - start);
-    return 0;
+    if (!saw_crlf) return ctx_write(ctx, is_error, text, length);
+
+    normalized = (char *)malloc(length);
+    if (!normalized) return -1;
+
+    out = 0;
+    for (i = 0; i < length; i++) {
+        if (text[i] == '\r' && i + 1 < length && text[i + 1] == '\n') continue;
+        normalized[out++] = text[i];
+    }
+
+    result = ctx_write(ctx, is_error, normalized, out);
+    free(normalized);
+    return result;
 #else
     return ctx_write(ctx, is_error, text, length);
 #endif
