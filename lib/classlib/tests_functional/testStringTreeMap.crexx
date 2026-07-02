@@ -1,6 +1,6 @@
 options levelb comments_dash
+import rxfnsb
 import data
--- import data_StringTreeMap
 
 failures = 0
 
@@ -8,54 +8,138 @@ m = .StringTreeMap()
 failures = failures + check_int("initial size", m.size(), 0)
 failures = failures + check_string("initial first", m.firstKey(), "")
 failures = failures + check_string("initial last", m.lastKey(), "")
+failures = failures + check_string("initial tostring", m.toString(), "{}")
 
 failures = failures + check_int("put b", m.put("b", "bee"), 0)
 failures = failures + check_int("put a", m.put("a", "aye"), 0)
 failures = failures + check_int("put c", m.put("c", "see"), 0)
-failures = failures + check_int("size after puts", m.size(), 3)
+failures = failures + check_int("put d", m.put("d", "dee"), 0)
+failures = failures + check_int("put aa", m.put("aa", "double-aye"), 0)
+failures = failures + check_int("size after puts", m.size(), 5)
 failures = failures + check_string("first key", m.firstKey(), "a")
-failures = failures + check_string("last key", m.lastKey(), "c")
+failures = failures + check_string("last key", m.lastKey(), "d")
 failures = failures + check_string("get b", m.get("b"), "bee")
+failures = failures + check_int("contains b", m.containsKey("b"), 1)
+failures = failures + check_int("contains missing", m.containsKey("missing"), 0)
 
 failures = failures + check_int("same key/value rc", m.put("b", "bee"), 4)
 failures = failures + check_int("update rc", m.put("b", "BEE"), 0)
 failures = failures + check_string("updated value", m.get("b"), "BEE")
+failures = failures + check_int("update size unchanged", m.size(), 5)
 
-keys = .string[]
-keys = m.keyArray()
-failures = failures + check_int("key count", keys[0], 3)
-failures = failures + check_string("key first", keys[1], "a")
-failures = failures + check_string("key second", keys[2], "b")
-failures = failures + check_string("key third", keys[3], "c")
+expected_keys = .string[]
+expected_keys[1] = "a"
+expected_keys[2] = "aa"
+expected_keys[3] = "b"
+expected_keys[4] = "c"
+expected_keys[5] = "d"
+failures = failures + check_array("key order", m.keyArray(), expected_keys)
 
-values = .string[]
-values = m.valueArray()
-failures = failures + check_string("value first", values[1], "aye")
-failures = failures + check_string("value second", values[2], "BEE")
-failures = failures + check_string("value third", values[3], "see")
+expected_values = .string[]
+expected_values[1] = "aye"
+expected_values[2] = "double-aye"
+expected_values[3] = "BEE"
+expected_values[4] = "see"
+expected_values[5] = "dee"
+failures = failures + check_array("value order", m.valueArray(), expected_values)
+failures = failures + check_string("to string", m.toString(), "{a=aye, aa=double-aye, b=BEE, c=see, d=dee}")
+
+key_set = m.keySet()
+failures = failures + check_int("key set size", key_set.size(), 5)
+failures = failures + check_int("key set contains aa", key_set.contains("aa"), 1)
+failures = failures + check_string("key set first", key_set.first(), "a")
+failures = failures + check_string("key set last", key_set.last(), "d")
+
+value_set = m.valueSet()
+failures = failures + check_int("value set size", value_set.size(), 5)
+failures = failures + check_int("value set contains BEE", value_set.contains("BEE"), 1)
 
 it = m.iterator()
-failures = failures + check_int("iterator snapshot add", m.put("d", "dee"), 0)
+failures = failures + check_int("iterator snapshot add", m.put("e", "eee"), 0)
 failures = failures + check_string("iterator first", it.next(), "a")
-failures = failures + check_string("iterator second", it.next(), "b")
-failures = failures + check_string("iterator third", it.next(), "c")
+failures = failures + check_string("iterator second", it.next(), "aa")
+failures = failures + check_string("iterator third", it.next(), "b")
+failures = failures + check_string("iterator fourth", it.next(), "c")
+failures = failures + check_string("iterator fifth", it.next(), "d")
 failures = failures + check_int("iterator snapshot end", it.hasNext(), 0)
+failures = failures + check_int("size after snapshot add", m.size(), 6)
+
+failures = failures + check_int("remove aa", m.remove("aa"), 0)
+failures = failures + check_int("remove missing", m.remove("missing"), 4)
+failures = failures + check_int("removed contains", m.containsKey("aa"), 0)
+failures = failures + check_string("removed get", m.get("aa"), "")
+failures = failures + check_int("removed size", m.size(), 5)
+failures = failures + check_string("first after remove", m.firstKey(), "a")
+failures = failures + check_int("reinsert reused slot", m.put("aa", "again"), 0)
+failures = failures + check_string("reinserted get", m.get("aa"), "again")
+failures = failures + check_int("reinserted size", m.size(), 6)
 
 empty = .StringTreeMap()
 failures = failures + check_int("put empty key", empty.put("", "empty-key"), 0)
 failures = failures + check_int("put blank key", empty.put(" ", "blank-key"), 0)
 failures = failures + check_int("empty/blank size", empty.size(), 2)
+failures = failures + check_string("empty first key", empty.firstKey(), "")
+failures = failures + check_string("empty last key", empty.lastKey(), " ")
 failures = failures + check_string("empty key value", empty.get(""), "empty-key")
 failures = failures + check_string("blank key value", empty.get(" "), "blank-key")
+failures = failures + check_int("remove empty key", empty.remove(""), 0)
+failures = failures + check_string("blank remains first", empty.firstKey(), " ")
+failures = failures + check_int("remove blank key", empty.remove(" "), 0)
+failures = failures + check_int("empty after removals", empty.size(), 0)
 
-failures = failures + check_int("remove a", m.remove("a"), 0)
-failures = failures + check_int("remove missing", m.remove("missing"), 4)
-failures = failures + check_int("removed contains", m.containsKey("a"), 0)
+failures = failures + check_rotation_order("ascending rotation order", "a b c d e f g")
+failures = failures + check_rotation_order("descending rotation order", "g f e d c b a")
+failures = failures + check_rotation_order("left-right rotation order", "c a b")
+failures = failures + check_rotation_order("right-left rotation order", "a c b")
+
+delete_map = .StringTreeMap()
+rc = delete_map.put("d", "4")
+rc = delete_map.put("b", "2")
+rc = delete_map.put("f", "6")
+rc = delete_map.put("a", "1")
+rc = delete_map.put("c", "3")
+rc = delete_map.put("e", "5")
+rc = delete_map.put("g", "7")
+failures = failures + check_int("delete size start", delete_map.size(), 7)
+failures = failures + check_int("delete two-child", delete_map.remove("d"), 0)
+failures = failures + check_int("delete leaf", delete_map.remove("a"), 0)
+failures = failures + check_int("delete one-child", delete_map.remove("b"), 0)
+failures = failures + check_int("delete size after", delete_map.size(), 4)
+expected_delete = .string[]
+expected_delete[1] = "c"
+expected_delete[2] = "e"
+expected_delete[3] = "f"
+expected_delete[4] = "g"
+failures = failures + check_array("delete key order", delete_map.keyArray(), expected_delete)
+failures = failures + check_string("delete removed d", delete_map.get("d"), "")
+failures = failures + check_string("delete first", delete_map.firstKey(), "c")
+failures = failures + check_string("delete last", delete_map.lastKey(), "g")
+failures = failures + check_int("delete reinsert d", delete_map.put("d", "44"), 0)
+failures = failures + check_string("delete reinsert get", delete_map.get("d"), "44")
+
+churn = .StringTreeMap()
+do i = 1 to 40
+  rc = churn.put(right("000" || i, 3), "v" || i)
+end
+do i = 1 to 40 by 2
+  rc = churn.remove(right("000" || i, 3))
+end
+do i = 41 to 60
+  rc = churn.put(right("000" || i, 3), "v" || i)
+end
+failures = failures + check_int("churn size", churn.size(), 40)
+failures = failures + check_string("churn first", churn.firstKey(), "002")
+failures = failures + check_string("churn last", churn.lastKey(), "060")
+failures = failures + check_string("churn missing", churn.get("001"), "")
+failures = failures + check_string("churn present", churn.get("059"), "v59")
 
 failures = failures + check_int("free rc", m.free(), 0)
 failures = failures + check_int("free size", m.size(), 0)
+keys = .string[]
 keys = m.keyArray()
 failures = failures + check_int("free key count", keys[0], 0)
+failures = failures + check_string("free first", m.firstKey(), "")
+failures = failures + check_string("free last", m.lastKey(), "")
 failures = failures + check_int("reuse put", m.put("again", "ok"), 0)
 failures = failures + check_string("reuse get", m.get("again"), "ok")
 
@@ -67,18 +151,63 @@ end
 say "PASS: StringTreeMap"
 exit 0
 
-check_int: procedure=.int
-  arg label=.string, actual=.int, expected=.int
+check_int: procedure = .int
+  arg label = .string, actual = .int, expected = .int
   if actual <> expected then do
     say label": expected" expected "got" actual
     return 1
   end
 return 0
 
-check_string: procedure=.int
-  arg label=.string, actual=.string, expected=.string
+check_string: procedure = .int
+  arg label = .string, actual = .string, expected = .string
   if actual <> expected then do
     say label": expected ["expected"] got ["actual"]"
     return 1
   end
 return 0
+
+check_array: procedure = .int
+  arg label = .string, actual = .string[], expected = .string[]
+  errors = 0
+  if actual[0] <> expected[0] then do
+    say label": expected count" expected[0] "got" actual[0]
+    errors = errors + 1
+  end
+  limit = expected[0]
+  if actual[0] < limit then limit = actual[0]
+  do i = 1 to limit
+    if actual[i] <> expected[i] then do
+      say label": index" i "expected ["expected[i]"] got ["actual[i]"]"
+      errors = errors + 1
+    end
+  end
+return errors
+
+check_rotation_order: procedure = .int
+  arg label = .string, insertion_order = .string
+  errors = 0
+  probe = .StringTreeMap()
+  words_count = words(insertion_order)
+  do i = 1 to words_count
+    key = word(insertion_order, i)
+    rc = probe.put(key, key || "-value")
+  end
+
+  expected = .string[]
+  expected[1] = "a"
+  expected[2] = "b"
+  expected[3] = "c"
+  if words_count > 3 then do
+    expected[4] = "d"
+    expected[5] = "e"
+    expected[6] = "f"
+    expected[7] = "g"
+  end
+
+  errors = errors + check_int(label " size", probe.size(), words_count)
+  errors = errors + check_array(label " keys", probe.keyArray(), expected)
+  errors = errors + check_string(label " first", probe.firstKey(), "a")
+  if words_count > 3 then errors = errors + check_string(label " last", probe.lastKey(), "g")
+  else errors = errors + check_string(label " last", probe.lastKey(), "c")
+return errors

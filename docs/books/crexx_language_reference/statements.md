@@ -112,6 +112,29 @@ See the [Procedures and Arguments](procedures-and-arguments) section on page \pa
 
 CALL routine \[ parameter \] \[, \[ parameter \] ... \] 
 
+`CALL` invokes a procedure, function, or method for its side effects and
+discards any returned value. In a class method, an unqualified method name is a
+call on the current receiver, in the same way that `rc = append(value)` calls
+the current receiver and keeps the result:
+
+```rexx
+fromArray: method = .int
+  arg list = .object[]
+  call clear()
+  loop i = 1 to list[0]
+    rc = append(list[i])
+  end
+  return 0
+```
+
+A qualified receiver can also be used:
+
+```rexx
+call list.add("red")
+```
+
+Use an expression call when the returned value is required.
+
 ## CONSTANT
 
 Level B supports named compile-time constants:

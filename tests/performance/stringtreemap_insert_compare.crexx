@@ -1,0 +1,69 @@
+/* Observational classlib comparison for old array TreeMap and current TreeMap. */
+options levelb comments_dash
+import rxfnsb
+import data
+
+arg argv = .string[]
+
+iterations = 2500
+if argv[0] >= 1 then iterations = argv[1]
+
+start = time("us")
+array_map = .StringOldTreeMap()
+do i = 1 to iterations
+  rc = array_map.put("aap" || i, "noot")
+end
+array_elapsed = time("us") - start
+
+start = time("us")
+tree_map = .StringTreeMap()
+do i = 1 to iterations
+  rc = tree_map.put("aap" || i, "noot")
+end
+tree_elapsed = time("us") - start
+
+if array_map.size() <> iterations then return fail("array map size")
+if tree_map.size() <> iterations then return fail("tree map size")
+if tree_map.get("aap1") <> "noot" then return fail("tree first get")
+if tree_map.get("aap" || iterations) <> "noot" then return fail("tree last get")
+
+start = time("us")
+do i = 1 to iterations
+  if array_map.get("aap" || i) <> "noot" then return fail("array get " || i)
+end
+array_get_elapsed = time("us") - start
+
+start = time("us")
+do i = 1 to iterations
+  if tree_map.get("aap" || i) <> "noot" then return fail("tree get " || i)
+end
+tree_get_elapsed = time("us") - start
+
+start = time("us")
+array_keys = .string[]
+array_keys = array_map.keyArray()
+array_keyarray_elapsed = time("us") - start
+
+start = time("us")
+tree_keys = .string[]
+tree_keys = tree_map.keyArray()
+tree_keyarray_elapsed = time("us") - start
+
+if array_keys[0] <> iterations then return fail("array key array size")
+if tree_keys[0] <> iterations then return fail("tree key array size")
+
+say "benchmark=stringtreemap_insert_compare"
+say "iterations="iterations
+say "stringoldtreemap_insert_us="array_elapsed
+say "stringtreemap_insert_us="tree_elapsed
+say "stringoldtreemap_get_us="array_get_elapsed
+say "stringtreemap_get_us="tree_get_elapsed
+say "stringoldtreemap_keyarray_us="array_keyarray_elapsed
+say "stringtreemap_keyarray_us="tree_keyarray_elapsed
+say "PASS: StringTreeMap Insert Comparison"
+return 0
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1

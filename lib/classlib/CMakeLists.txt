@@ -20,6 +20,7 @@ set(CLSS
   Rexx
   StringStack
   ObjectStack
+  StringOldTreeMap
   StringTreeMap
   StringTreeMapIterator
   StringObjectTreeMap
@@ -85,6 +86,7 @@ set(CLASS_DEPS_StringObjectHashMap StringTreeSet StringObjectHashMapIterator Str
 set(CLASS_DEPS_StringObjectHashMapIterator StringIterator)
 set(CLASS_DEPS_StringHashSet StringHashSetIterator)
 set(CLASS_DEPS_StringHashSetIterator StringIterator)
+set(CLASS_DEPS_StringOldTreeMap StringIterable StringTreeMapIterator StringTreeSet)
 set(CLASS_DEPS_StringTreeMap StringIterable StringTreeMapIterator StringTreeSet)
 set(CLASS_DEPS_StringTreeMapIterator StringIterator)
 set(CLASS_DEPS_StringObjectTreeMap StringTreeSet StringObjectTreeMapIterator StringIterator StringIterable)

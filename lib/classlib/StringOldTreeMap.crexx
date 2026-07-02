@@ -1,0 +1,237 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, Rene Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash
+namespace data expose StringOldTreeMap
+import rxfnsb
+
+/**
+ * Previous array-backed string-to-string ordered map.
+ *
+ * This class is retained for performance comparisons with StringTreeMap. It
+ * stores keys and values in parallel arrays, scans linearly for lookup, and
+ * sorts a snapshot for ordered views.
+ */
+StringOldTreeMap: class implements .StringIterable
+val = .int
+keys_ = .string[]
+values_ = .string[]
+count_ = .int
+
+  /**
+   * Create an empty StringOldTreeMap.
+   *
+   * @return .StringOldTreeMap
+   */
+  *: factory
+    val = 1
+    count_ = 0
+    return
+
+  _find: method = .int
+    arg key = .string
+    do i = 1 to count_
+      if keys_[i] == key then return i
+    end
+    return 0
+
+  _sortedKeys: method = .string[]
+    result = .string[]
+    do i = 1 to count_
+      result[i] = keys_[i]
+    end
+    do i = 1 to count_ - 1
+      do j = 1 to count_ - i
+        if result[j] > result[j + 1] then do
+          swap = result[j]
+          result[j] = result[j + 1]
+          result[j + 1] = swap
+        end
+      end
+    end
+    return result
+
+  /**
+   * Associates the specified value with the specified key in this map.
+   *
+   * @param key Key to store.
+   * @param value Value to associate with the key.
+   * @return .int 0 if inserted or changed, 4 if the same value was already present.
+   */
+  put: method = .int
+    arg key = .string, value = .string
+    slot = _find(key)
+    if slot > 0 then do
+      if values_[slot] == value then return 4
+      values_[slot] = value
+      return 0
+    end
+    count_ = count_ + 1
+    keys_[count_] = key
+    values_[count_] = value
+    return 0
+
+  /**
+   * Returns the value to which the specified key is mapped.
+   *
+   * @param key Key to look up.
+   * @return .string Mapped value, or the empty string if the key is absent.
+   */
+  get: method = .string
+    arg key = .string
+    slot = _find(key)
+    if slot = 0 then return ""
+    return values_[slot]
+
+  /**
+   * Returns the number of key-value mappings in this map.
+   *
+   * @return .int Number of mappings.
+   */
+  size: method = .int
+    return count_
+
+  /**
+   * Removes a mapping from this map.
+   *
+   * @param key Key to remove.
+   * @return .int 0 if removed, 4 if the key was not present.
+   */
+  remove: method = .int
+    arg key = .string
+    slot = _find(key)
+    if slot = 0 then return 4
+    do i = slot to count_ - 1
+      keys_[i] = keys_[i + 1]
+      values_[i] = values_[i + 1]
+    end
+    count_ = count_ - 1
+    return 0
+
+  /**
+   * Tests whether this map contains a mapping for the specified key.
+   *
+   * @param key Key to test.
+   * @return .int 1 if present, 0 otherwise.
+   */
+  containsKey: method = .int
+    arg key = .string
+    if _find(key) > 0 then return 1
+    return 0
+
+  /**
+   * Returns the first key in natural string order.
+   *
+   * @return .string First key, or the empty string if the map is empty.
+   */
+  firstKey: method = .string
+    if count_ = 0 then return ""
+    keys = _sortedKeys()
+    return keys[1]
+
+  /**
+   * Returns the last key in natural string order.
+   *
+   * @return .string Last key, or the empty string if the map is empty.
+   */
+  lastKey: method = .string
+    if count_ = 0 then return ""
+    keys = _sortedKeys()
+    return keys[count_]
+
+  /**
+   * Returns the keys in natural string order.
+   *
+   * @return .string[] Ordered array of keys.
+   */
+  keyArray: method = .string[]
+    return _sortedKeys()
+
+  /**
+   * Returns the values ordered by their corresponding keys.
+   *
+   * @return .string[] Array of values in key order.
+   */
+  valueArray: method = .string[]
+    keys = _sortedKeys()
+    result = .string[]
+    do i = 1 to keys[0]
+      result[i] = get(keys[i])
+    end
+    return result
+
+  /**
+   * Returns the keys as an ordered StringTreeSet.
+   *
+   * @return .StringTreeSet Ordered set of keys.
+   */
+  keySet: method = .StringTreeSet
+    ts = .StringTreeSet()
+    rc = ts.fromArray(keyArray())
+    return ts
+
+  /**
+   * Returns the values as an ordered StringTreeSet.
+   *
+   * @return .StringTreeSet Ordered set of unique values.
+   */
+  valueSet: method = .StringTreeSet
+    ts = .StringTreeSet()
+    rc = ts.fromArray(valueArray())
+    return ts
+
+  /**
+   * Returns an iterator over keys in natural string order.
+   *
+   * @return .StringTreeMapIterator Iterator over ordered keys.
+   */
+  iterator: method = .StringTreeMapIterator
+    return .StringTreeMapIterator(keyArray())
+
+  /**
+   * Returns the content of this map as a string in key order.
+   *
+   * @return .string String representation of the map.
+   */
+  toString: method = .string
+    if count_ = 0 then return "{}"
+    keys = _sortedKeys()
+    text = "{"
+    do i = 1 to keys[0]
+      if i > 1 then text = text || ", "
+      text = text || keys[i] || "=" || get(keys[i])
+    end
+    return text || "}"
+
+  /**
+   * Clears this map and releases its backing arrays.
+   *
+   * @return .int 0 on success.
+   */
+  free: method = .int
+    call arraydrop keys_
+    call arraydrop values_
+    count_ = 0
+    val = 0
+    return 0

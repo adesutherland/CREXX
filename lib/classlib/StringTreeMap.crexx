@@ -24,18 +24,27 @@
 
 options levelb comments_dash
 namespace data expose StringTreeMap
-import rxfnsb
 
 /**
- * Ordered string-to-string map.
+ * Ordered string-to-string map backed by an AVL tree.
  *
- * Storage is array-backed. Ordered views sort a snapshot of the keys.
+ * Nodes are stored in parallel arrays and linked by integer child indexes. The
+ * deleted-node free list reuses node slots without compacting the arrays, so
+ * lookup, insertion, removal, and ordered traversal avoid the old array-backed
+ * map's linear scan and snapshot sort hot paths.
  */
 StringTreeMap: class implements .StringIterable
 val = .int
+root_ = .int
+count_ = .int
+node_count_ = .int
+free_count_ = .int
 keys_ = .string[]
 values_ = .string[]
-count_ = .int
+left_ = .int[]
+right_ = .int[]
+height_ = .int[]
+free_ = .int[]
 
   /**
    * Create an empty StringTreeMap.
@@ -44,31 +53,11 @@ count_ = .int
    */
   *: factory
     val = 1
+    root_ = 0
     count_ = 0
+    node_count_ = 0
+    free_count_ = 0
     return
-
-  _find: method = .int
-    arg key = .string
-    do i = 1 to count_
-      if keys_[i] == key then return i
-    end
-    return 0
-
-  _sortedKeys: method = .string[]
-    result = .string[]
-    do i = 1 to count_
-      result[i] = keys_[i]
-    end
-    do i = 1 to count_ - 1
-      do j = 1 to count_ - i
-        if result[j] > result[j + 1] then do
-          swap = result[j]
-          result[j] = result[j + 1]
-          result[j + 1] = swap
-        end
-      end
-    end
-    return result
 
   /**
    * Associates the specified value with the specified key in this map.
@@ -79,15 +68,225 @@ count_ = .int
    */
   put: method = .int
     arg key = .string, value = .string
-    slot = _find(key)
-    if slot > 0 then do
-      if values_[slot] == value then return 4
-      values_[slot] = value
+    new_node = .int
+
+    if root_ = 0 then do
+      if free_count_ > 0 then do
+        new_node = free_[free_count_]
+        free_[free_count_] = 0
+        free_count_ = free_count_ - 1
+      end
+      else do
+        node_count_ = node_count_ + 1
+        new_node = node_count_
+      end
+      keys_[new_node] = key
+      values_[new_node] = value
+      left_[new_node] = 0
+      right_[new_node] = 0
+      height_[new_node] = 1
+      root_ = new_node
+      count_ = 1
       return 0
     end
+
+    path = .int[]
+    direction = .int[]
+    depth = 0
+    node = root_
+    parent = 0
+    last_direction = 0
+
+    do while node <> 0
+      if key == keys_[node] then do
+        if values_[node] == value then return 4
+        values_[node] = value
+        return 0
+      end
+
+      depth = depth + 1
+      path[depth] = node
+      parent = node
+
+      if key < keys_[node] then do
+        direction[depth] = -1
+        last_direction = -1
+        node = left_[node]
+      end
+      else do
+        direction[depth] = 1
+        last_direction = 1
+        node = right_[node]
+      end
+    end
+
+    if free_count_ > 0 then do
+      new_node = free_[free_count_]
+      free_[free_count_] = 0
+      free_count_ = free_count_ - 1
+    end
+    else do
+      node_count_ = node_count_ + 1
+      new_node = node_count_
+    end
+    keys_[new_node] = key
+    values_[new_node] = value
+    left_[new_node] = 0
+    right_[new_node] = 0
+    height_[new_node] = 1
     count_ = count_ + 1
-    keys_[count_] = key
-    values_[count_] = value
+    if last_direction < 0 then left_[parent] = new_node
+    else right_[parent] = new_node
+
+    do level = depth to 1 by -1
+      subtree = path[level]
+      left_height = 0
+      right_height = 0
+      left_child = left_[subtree]
+      right_child = right_[subtree]
+      if left_child <> 0 then left_height = height_[left_child]
+      if right_child <> 0 then right_height = height_[right_child]
+
+      if left_height > right_height then height_[subtree] = left_height + 1
+      else height_[subtree] = right_height + 1
+
+      balance = left_height - right_height
+
+      if balance > 1 then do
+        child = left_[subtree]
+        child_left_height = 0
+        child_right_height = 0
+        grandchild = left_[child]
+        if grandchild <> 0 then child_left_height = height_[grandchild]
+        grandchild = right_[child]
+        if grandchild <> 0 then child_right_height = height_[grandchild]
+
+        if child_left_height < child_right_height then do
+          rotate_x = child
+          rotate_y = right_[rotate_x]
+          transfer = left_[rotate_y]
+          left_[rotate_y] = rotate_x
+          right_[rotate_x] = transfer
+
+          left_height = 0
+          right_height = 0
+          left_child = left_[rotate_x]
+          right_child = right_[rotate_x]
+          if left_child <> 0 then left_height = height_[left_child]
+          if right_child <> 0 then right_height = height_[right_child]
+          if left_height > right_height then height_[rotate_x] = left_height + 1
+          else height_[rotate_x] = right_height + 1
+
+          left_height = 0
+          right_height = 0
+          left_child = left_[rotate_y]
+          right_child = right_[rotate_y]
+          if left_child <> 0 then left_height = height_[left_child]
+          if right_child <> 0 then right_height = height_[right_child]
+          if left_height > right_height then height_[rotate_y] = left_height + 1
+          else height_[rotate_y] = right_height + 1
+
+          left_[subtree] = rotate_y
+        end
+
+        rotate_y = subtree
+        rotate_x = left_[rotate_y]
+        transfer = right_[rotate_x]
+        right_[rotate_x] = rotate_y
+        left_[rotate_y] = transfer
+
+        left_height = 0
+        right_height = 0
+        left_child = left_[rotate_y]
+        right_child = right_[rotate_y]
+        if left_child <> 0 then left_height = height_[left_child]
+        if right_child <> 0 then right_height = height_[right_child]
+        if left_height > right_height then height_[rotate_y] = left_height + 1
+        else height_[rotate_y] = right_height + 1
+
+        left_height = 0
+        right_height = 0
+        left_child = left_[rotate_x]
+        right_child = right_[rotate_x]
+        if left_child <> 0 then left_height = height_[left_child]
+        if right_child <> 0 then right_height = height_[right_child]
+        if left_height > right_height then height_[rotate_x] = left_height + 1
+        else height_[rotate_x] = right_height + 1
+
+        subtree = rotate_x
+      end
+      else if balance < -1 then do
+        child = right_[subtree]
+        child_left_height = 0
+        child_right_height = 0
+        grandchild = left_[child]
+        if grandchild <> 0 then child_left_height = height_[grandchild]
+        grandchild = right_[child]
+        if grandchild <> 0 then child_right_height = height_[grandchild]
+
+        if child_right_height < child_left_height then do
+          rotate_y = child
+          rotate_x = left_[rotate_y]
+          transfer = right_[rotate_x]
+          right_[rotate_x] = rotate_y
+          left_[rotate_y] = transfer
+
+          left_height = 0
+          right_height = 0
+          left_child = left_[rotate_y]
+          right_child = right_[rotate_y]
+          if left_child <> 0 then left_height = height_[left_child]
+          if right_child <> 0 then right_height = height_[right_child]
+          if left_height > right_height then height_[rotate_y] = left_height + 1
+          else height_[rotate_y] = right_height + 1
+
+          left_height = 0
+          right_height = 0
+          left_child = left_[rotate_x]
+          right_child = right_[rotate_x]
+          if left_child <> 0 then left_height = height_[left_child]
+          if right_child <> 0 then right_height = height_[right_child]
+          if left_height > right_height then height_[rotate_x] = left_height + 1
+          else height_[rotate_x] = right_height + 1
+
+          right_[subtree] = rotate_x
+        end
+
+        rotate_x = subtree
+        rotate_y = right_[rotate_x]
+        transfer = left_[rotate_y]
+        left_[rotate_y] = rotate_x
+        right_[rotate_x] = transfer
+
+        left_height = 0
+        right_height = 0
+        left_child = left_[rotate_x]
+        right_child = right_[rotate_x]
+        if left_child <> 0 then left_height = height_[left_child]
+        if right_child <> 0 then right_height = height_[right_child]
+        if left_height > right_height then height_[rotate_x] = left_height + 1
+        else height_[rotate_x] = right_height + 1
+
+        left_height = 0
+        right_height = 0
+        left_child = left_[rotate_y]
+        right_child = right_[rotate_y]
+        if left_child <> 0 then left_height = height_[left_child]
+        if right_child <> 0 then right_height = height_[right_child]
+        if left_height > right_height then height_[rotate_y] = left_height + 1
+        else height_[rotate_y] = right_height + 1
+
+        subtree = rotate_y
+      end
+
+      if level = 1 then root_ = subtree
+      else do
+        parent = path[level - 1]
+        if direction[level - 1] < 0 then left_[parent] = subtree
+        else right_[parent] = subtree
+      end
+    end
+
     return 0
 
   /**
@@ -98,9 +297,13 @@ count_ = .int
    */
   get: method = .string
     arg key = .string
-    slot = _find(key)
-    if slot = 0 then return ""
-    return values_[slot]
+    node = root_
+    do while node <> 0
+      if key == keys_[node] then return values_[node]
+      if key < keys_[node] then node = left_[node]
+      else node = right_[node]
+    end
+    return ""
 
   /**
    * Returns the number of key-value mappings in this map.
@@ -118,13 +321,219 @@ count_ = .int
    */
   remove: method = .int
     arg key = .string
-    slot = _find(key)
-    if slot = 0 then return 4
-    do i = slot to count_ - 1
-      keys_[i] = keys_[i + 1]
-      values_[i] = values_[i + 1]
+    path = .int[]
+    direction = .int[]
+    depth = 0
+    node = root_
+
+    do while node <> 0
+      if key == keys_[node] then leave
+
+      depth = depth + 1
+      path[depth] = node
+      if key < keys_[node] then do
+        direction[depth] = -1
+        node = left_[node]
+      end
+      else do
+        direction[depth] = 1
+        node = right_[node]
+      end
     end
+
+    if node = 0 then return 4
+
+    removed = node
+    if left_[node] <> 0 & right_[node] <> 0 then do
+      depth = depth + 1
+      path[depth] = node
+      direction[depth] = 1
+      successor_parent = node
+      successor = right_[node]
+      do while left_[successor] <> 0
+        successor_parent = successor
+        depth = depth + 1
+        path[depth] = successor
+        direction[depth] = -1
+        successor = left_[successor]
+      end
+
+      keys_[node] = keys_[successor]
+      values_[node] = values_[successor]
+      replacement = right_[successor]
+      if successor_parent = node then right_[node] = replacement
+      else left_[successor_parent] = replacement
+      removed = successor
+    end
+    else do
+      replacement = left_[node]
+      if replacement = 0 then replacement = right_[node]
+      if depth = 0 then root_ = replacement
+      else do
+        parent = path[depth]
+        if direction[depth] < 0 then left_[parent] = replacement
+        else right_[parent] = replacement
+      end
+    end
+
+    keys_[removed] = ""
+    values_[removed] = ""
+    left_[removed] = 0
+    right_[removed] = 0
+    height_[removed] = 0
+    free_count_ = free_count_ + 1
+    free_[free_count_] = removed
     count_ = count_ - 1
+
+    do level = depth to 1 by -1
+      subtree = path[level]
+      left_height = 0
+      right_height = 0
+      left_child = left_[subtree]
+      right_child = right_[subtree]
+      if left_child <> 0 then left_height = height_[left_child]
+      if right_child <> 0 then right_height = height_[right_child]
+
+      if left_height > right_height then height_[subtree] = left_height + 1
+      else height_[subtree] = right_height + 1
+
+      balance = left_height - right_height
+
+      if balance > 1 then do
+        child = left_[subtree]
+        child_left_height = 0
+        child_right_height = 0
+        grandchild = left_[child]
+        if grandchild <> 0 then child_left_height = height_[grandchild]
+        grandchild = right_[child]
+        if grandchild <> 0 then child_right_height = height_[grandchild]
+
+        if child_left_height < child_right_height then do
+          rotate_x = child
+          rotate_y = right_[rotate_x]
+          transfer = left_[rotate_y]
+          left_[rotate_y] = rotate_x
+          right_[rotate_x] = transfer
+
+          left_height = 0
+          right_height = 0
+          left_child = left_[rotate_x]
+          right_child = right_[rotate_x]
+          if left_child <> 0 then left_height = height_[left_child]
+          if right_child <> 0 then right_height = height_[right_child]
+          if left_height > right_height then height_[rotate_x] = left_height + 1
+          else height_[rotate_x] = right_height + 1
+
+          left_height = 0
+          right_height = 0
+          left_child = left_[rotate_y]
+          right_child = right_[rotate_y]
+          if left_child <> 0 then left_height = height_[left_child]
+          if right_child <> 0 then right_height = height_[right_child]
+          if left_height > right_height then height_[rotate_y] = left_height + 1
+          else height_[rotate_y] = right_height + 1
+
+          left_[subtree] = rotate_y
+        end
+
+        rotate_y = subtree
+        rotate_x = left_[rotate_y]
+        transfer = right_[rotate_x]
+        right_[rotate_x] = rotate_y
+        left_[rotate_y] = transfer
+
+        left_height = 0
+        right_height = 0
+        left_child = left_[rotate_y]
+        right_child = right_[rotate_y]
+        if left_child <> 0 then left_height = height_[left_child]
+        if right_child <> 0 then right_height = height_[right_child]
+        if left_height > right_height then height_[rotate_y] = left_height + 1
+        else height_[rotate_y] = right_height + 1
+
+        left_height = 0
+        right_height = 0
+        left_child = left_[rotate_x]
+        right_child = right_[rotate_x]
+        if left_child <> 0 then left_height = height_[left_child]
+        if right_child <> 0 then right_height = height_[right_child]
+        if left_height > right_height then height_[rotate_x] = left_height + 1
+        else height_[rotate_x] = right_height + 1
+
+        subtree = rotate_x
+      end
+      else if balance < -1 then do
+        child = right_[subtree]
+        child_left_height = 0
+        child_right_height = 0
+        grandchild = left_[child]
+        if grandchild <> 0 then child_left_height = height_[grandchild]
+        grandchild = right_[child]
+        if grandchild <> 0 then child_right_height = height_[grandchild]
+
+        if child_right_height < child_left_height then do
+          rotate_y = child
+          rotate_x = left_[rotate_y]
+          transfer = right_[rotate_x]
+          right_[rotate_x] = rotate_y
+          left_[rotate_y] = transfer
+
+          left_height = 0
+          right_height = 0
+          left_child = left_[rotate_y]
+          right_child = right_[rotate_y]
+          if left_child <> 0 then left_height = height_[left_child]
+          if right_child <> 0 then right_height = height_[right_child]
+          if left_height > right_height then height_[rotate_y] = left_height + 1
+          else height_[rotate_y] = right_height + 1
+
+          left_height = 0
+          right_height = 0
+          left_child = left_[rotate_x]
+          right_child = right_[rotate_x]
+          if left_child <> 0 then left_height = height_[left_child]
+          if right_child <> 0 then right_height = height_[right_child]
+          if left_height > right_height then height_[rotate_x] = left_height + 1
+          else height_[rotate_x] = right_height + 1
+
+          right_[subtree] = rotate_x
+        end
+
+        rotate_x = subtree
+        rotate_y = right_[rotate_x]
+        transfer = left_[rotate_y]
+        left_[rotate_y] = rotate_x
+        right_[rotate_x] = transfer
+
+        left_height = 0
+        right_height = 0
+        left_child = left_[rotate_x]
+        right_child = right_[rotate_x]
+        if left_child <> 0 then left_height = height_[left_child]
+        if right_child <> 0 then right_height = height_[right_child]
+        if left_height > right_height then height_[rotate_x] = left_height + 1
+        else height_[rotate_x] = right_height + 1
+
+        left_height = 0
+        right_height = 0
+        left_child = left_[rotate_y]
+        right_child = right_[rotate_y]
+        if left_child <> 0 then left_height = height_[left_child]
+        if right_child <> 0 then right_height = height_[right_child]
+        if left_height > right_height then height_[rotate_y] = left_height + 1
+        else height_[rotate_y] = right_height + 1
+
+        subtree = rotate_y
+      end
+
+      if level = 1 then root_ = subtree
+      else do
+        parent = path[level - 1]
+        if direction[level - 1] < 0 then left_[parent] = subtree
+        else right_[parent] = subtree
+      end
+    end
+
     return 0
 
   /**
@@ -135,7 +544,12 @@ count_ = .int
    */
   containsKey: method = .int
     arg key = .string
-    if _find(key) > 0 then return 1
+    node = root_
+    do while node <> 0
+      if key == keys_[node] then return 1
+      if key < keys_[node] then node = left_[node]
+      else node = right_[node]
+    end
     return 0
 
   /**
@@ -144,9 +558,20 @@ count_ = .int
    * @return .string First key, or the empty string if the map is empty.
    */
   firstKey: method = .string
-    if count_ = 0 then return ""
-    keys = _sortedKeys()
-    return keys[1]
+    stack = .int[]
+    top = 0
+    node = root_
+    do while node <> 0 | top > 0
+      do while node <> 0
+        top = top + 1
+        stack[top] = node
+        node = left_[node]
+      end
+      node = stack[top]
+      top = top - 1
+      return keys_[node]
+    end
+    return ""
 
   /**
    * Returns the last key in natural string order.
@@ -154,9 +579,20 @@ count_ = .int
    * @return .string Last key, or the empty string if the map is empty.
    */
   lastKey: method = .string
-    if count_ = 0 then return ""
-    keys = _sortedKeys()
-    return keys[count_]
+    stack = .int[]
+    top = 0
+    node = root_
+    do while node <> 0 | top > 0
+      do while node <> 0
+        top = top + 1
+        stack[top] = node
+        node = right_[node]
+      end
+      node = stack[top]
+      top = top - 1
+      return keys_[node]
+    end
+    return ""
 
   /**
    * Returns the keys in natural string order.
@@ -164,7 +600,24 @@ count_ = .int
    * @return .string[] Ordered array of keys.
    */
   keyArray: method = .string[]
-    return _sortedKeys()
+    result = .string[]
+    out = 0
+    stack = .int[]
+    top = 0
+    node = root_
+    do while node <> 0 | top > 0
+      do while node <> 0
+        top = top + 1
+        stack[top] = node
+        node = left_[node]
+      end
+      node = stack[top]
+      top = top - 1
+      out = out + 1
+      result[out] = keys_[node]
+      node = right_[node]
+    end
+    return result
 
   /**
    * Returns the values ordered by their corresponding keys.
@@ -172,10 +625,22 @@ count_ = .int
    * @return .string[] Array of values in key order.
    */
   valueArray: method = .string[]
-    keys = _sortedKeys()
     result = .string[]
-    do i = 1 to keys[0]
-      result[i] = get(keys[i])
+    out = 0
+    stack = .int[]
+    top = 0
+    node = root_
+    do while node <> 0 | top > 0
+      do while node <> 0
+        top = top + 1
+        stack[top] = node
+        node = left_[node]
+      end
+      node = stack[top]
+      top = top - 1
+      out = out + 1
+      result[out] = values_[node]
+      node = right_[node]
     end
     return result
 
@@ -214,11 +679,23 @@ count_ = .int
    */
   toString: method = .string
     if count_ = 0 then return "{}"
-    keys = _sortedKeys()
     text = "{"
-    do i = 1 to keys[0]
-      if i > 1 then text = text || ", "
-      text = text || keys[i] || "=" || get(keys[i])
+    emitted = 0
+    stack = .int[]
+    top = 0
+    node = root_
+    do while node <> 0 | top > 0
+      do while node <> 0
+        top = top + 1
+        stack[top] = node
+        node = left_[node]
+      end
+      node = stack[top]
+      top = top - 1
+      emitted = emitted + 1
+      if emitted > 1 then text = text || ", "
+      text = text || keys_[node] || "=" || values_[node]
+      node = right_[node]
     end
     return text || "}"
 
@@ -228,8 +705,15 @@ count_ = .int
    * @return .int 0 on success.
    */
   free: method = .int
-    call arraydrop keys_
-    call arraydrop values_
+    assembler SETATTRS keys_,0
+    assembler SETATTRS values_,0
+    assembler SETATTRS left_,0
+    assembler SETATTRS right_,0
+    assembler SETATTRS height_,0
+    assembler SETATTRS free_,0
+    root_ = 0
     count_ = 0
+    node_count_ = 0
+    free_count_ = 0
     val = 0
     return 0

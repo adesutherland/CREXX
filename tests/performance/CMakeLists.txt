@@ -57,6 +57,23 @@ foreach(_crexx_runner IN ITEMS rxvm rxbvm)
     endforeach()
 endforeach()
 
+add_custom_target(performance_classlib_treemap ALL)
+crexx_add_rexx_opt_matrix(
+        NAME stringtreemap_insert_compare
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/stringtreemap_insert_compare.crexx
+        TARGET_GROUP performance_classlib_treemap
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library classlib compiler_exit_bin
+        RUNTIME_ARGS ${LIBRPATH} ${CLASSLIBRPATH}
+        TEST_LABELS "performance;classlib;treemap"
+)
+foreach(_crexx_mode IN ITEMS noopt opt)
+    set_tests_properties(stringtreemap_insert_compare_${_crexx_mode} PROPERTIES
+            PASS_REGULAR_EXPRESSION "PASS: StringTreeMap Insert Comparison"
+            FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+    )
+endforeach()
+
 crexx_add_rexx_opt_matrix(
         NAME inlining_complex
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/inlining_complex.crexx

@@ -293,7 +293,9 @@ iterator interfaces are therefore explicitly tagged:
 The current public classlib collection surfaces are Rexx-only. `StringHashMap`,
 `StringTreeMap`, `StringHashSet`, `StringTreeSet`, `StringLinkedList`, and the
 string-key/object-value map variants no longer require the historical native
-`treemap` or `llist` plugins. String-key lookup uses strict equality so empty
+`treemap` or `llist` plugins. `StringTreeMap` is backed by an AVL node pool in
+parallel arrays; `StringOldTreeMap` retains the previous array-backed map only
+for comparative benchmarks. String-key lookup uses strict equality so empty
 string keys and blank string keys remain distinct.
 
 `Id`, `KeyDB`, and `Os` are intentionally kept out of the core
@@ -320,6 +322,14 @@ records and `META_TRACE_EVENT` semantic TRACE value records. Debug linked
 libraries keep both inline bodies and source/TRACE metadata. Class-library hot
 paths that rely on this should inspect generated `.rxas` when changing import
 paths or link-strip policy.
+
+RXAS review matters for performance-sensitive Level B classlib code. The
+`StringTreeMap` AVL rewrite showed that an inlined private lookup helper still
+left block-expression scaffolding in generated RXAS; writing `get()` and
+`containsKey()` as direct loops cut Release lookup time for 2,500 entries from
+about 200 ms to about 2.3 ms on the local arm64 development machine. Keep hot
+lookup/update loops direct unless RXAS inspection proves the helper shape is
+equivalent.
 
 `lib/plugins/arrays` is deprecated and retained only as a legacy plugin smoke
 test. New Level B code should import `rxfnsb` and use the standard BIFs.

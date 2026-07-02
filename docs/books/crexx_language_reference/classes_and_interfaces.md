@@ -193,8 +193,13 @@ flag partition.
 
 ## Receiver Storage
 
-Inside a method, `self` names the receiver storage. It is mainly useful when a
-method needs to pass or return a live reference to its receiver:
+Inside a method, unqualified attribute and method names are resolved against
+the current receiver where the member exists. For example, `call clear()` calls
+the receiver's `clear` method, and `rc = append(value)` calls the receiver's
+`append` method and stores its result.
+
+`self` names the receiver storage explicitly. It is mainly useful when a method
+needs to pass or return a live reference to its receiver:
 
 ```rexx
 iterator: method = .StringIterator
@@ -202,8 +207,8 @@ iterator: method = .StringIterator
 ```
 
 Bare `self` is not an implicit reference. Use `reference self` when a formal
-requires `reference .Class`, and use an ordinary method call for normal receiver
-access.
+requires `reference .Class`, and use ordinary unqualified attribute access or
+method calls for normal receiver access.
 
 The standard class-library collection direction uses that explicit receiver
 reference for live iterators: `iterator()` returns an unsynchronized live

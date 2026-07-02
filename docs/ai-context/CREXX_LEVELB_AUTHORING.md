@@ -366,6 +366,47 @@ Recent observations from the RexxScript evaluator refactor:
   mutated-object method call inline as an argument, may expose stale state in
   some Level B paths. Snapshot state inside the owning method when correctness
   depends on the just-mutated object, and raise a focused language/runtime issue.
+- A mutating same-receiver helper can be called as a statement, such as
+  `call clear()`, when the return value is not needed. It can also return a
+  scalar for assignment into a receiver attribute, such as
+  `root = rebalance(root)`. The optimizer must preserve normal call ordering:
+  evaluate the callee return expression, copy the mutated receiver back, then
+  assign the returned value into the caller target. The regression test
+  `inline_test_mutating_method_scalar_attr_return` covers this order. If an
+  older beta 3 WIP build shows stale receiver copyback behavior, split through a
+  local as a temporary diagnostic workaround:
+
+  ```rexx
+  next_root = rebalance(root)
+  root = next_root
+  ```
+
+  When a helper naturally needs to update a caller-owned slot, prefer an
+  explicit reference output location such as `reference root` or
+  `reference left[parent]`, then dereference it inside the helper and assign the
+  linked local.
+
+### Keep hot Level B loops honest with RXAS
+
+Inlining correctness and inlining performance are separate questions. For
+performance-sensitive classlib code, inspect the generated optimized `.rxas`
+and, when relevant, `rxdas` output from the assembled `.rxbin` before assuming a
+private helper is free.
+
+The `StringTreeMap` AVL rewrite found that a private `_findNode()` helper was
+correctly inlined into `get()` and `containsKey()`, but still left
+block-expression scaffolding around the hot lookup loop. Rewriting those two
+methods as direct loops made Release lookup time for 2,500 entries drop from
+about 200 ms to about 2.3 ms in the local benchmark. Use helpers for clarity
+unless the code is a measured hot path; for hot paths, prefer direct loops when
+the RXAS shows avoidable call or block-expression structure.
+
+For array-backed data structures, expect ordinary indexed attribute access to
+lower through `linkattr1`, `minattrs`, typed copy, and `unlink` instructions.
+That is the current cost model. It is fine to use small inline assembler assists
+such as `SETATTRS array,0` for array clearing until the language has a typed
+array-clear surface, but record broader array-access needs as language/runtime
+backlog items instead of baking large hand-written RXAS into classlib code.
 
 ### `address crexx` is the standard command-environment pattern
 

@@ -25,6 +25,7 @@ classlib/StringObjectHashMap.crexx 31
 classlib/StringObjectHashMapIterator.crexx 17
 classlib/StringObjectTreeMap.crexx 34
 classlib/StringObjectTreeMapIterator.crexx 17
+classlib/StringOldTreeMap.crexx 36
 classlib/StringStack.crexx 15
 classlib/StringTreeMap.crexx 36
 classlib/StringTreeMapIterator.crexx 10
