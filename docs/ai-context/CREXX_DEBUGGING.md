@@ -39,11 +39,12 @@ For `.rxpp` problems, split the pipeline before changing compiler C code:
 Focused coverage:
 
 ```sh
-ctest --test-dir cmake-build-release -R 'rxc_srcmap|rxpp_(smoke|srcmap)' --output-on-failure
+ctest --test-dir cmake-build-release -R 'rxc_srcmap|rxpp_(smoke|srcmap|diagnostics|diagnostic_catalogs)' --output-on-failure
 ```
 
 See `docs/ai-context/RXPP_PREPROCESSOR.md` for the marker syntax and component
-layout.
+layout. For RXPP warning/error text, set `CREXX_DIAGNOSTICS=raw` to inspect the
+stable `RXPP_*` code and parameters before checking localized wording.
 
 ### 6. Isolating Assembler Keyhole Optimiser Bugs
 If generated `.rxas` looks correct but the `.rxbin` or disassembly looks wrong,

@@ -454,9 +454,12 @@ Implementation status:
 5. Done: add focused RXPP/rxc source-map tests for positive mapping,
    malformed/unbalanced markers, nested-span precedence, rxpp srcmap output, and
    rxpp no-srcmap output.
-6. Remaining: choose the DSLSH integration direction, then build the selected prototype
+6. Done: route RXPP warning/error diagnostics through the shared diagnostic
+   catalogs with raw/localized modes, German/Dutch catalog entries, and
+   `rxpp_diagnostic_catalogs` coverage.
+7. Remaining: choose the DSLSH integration direction, then build the selected prototype
    and document its limits.
-7. Remaining: review RexxScript compiler-exit mappings against the same diagnostic
+8. Remaining: review RexxScript compiler-exit mappings against the same diagnostic
    expectations.
 
 ## Open Questions And Risks

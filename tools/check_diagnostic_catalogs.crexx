@@ -34,6 +34,10 @@
  * docs/planning/beta-3/notes/diagnostic-catalogue-scope.md before extending
  * the scope to RXPP, the debugger, VM/runtime diagnostics, or library-origin
  * unhandled signals.
+ *
+ * RXPP now reuses this checker with a preprocessor-specific source list. Keep
+ * producer selection in CMake; this script only enforces catalog parity and
+ * scans the structured diagnostic call shapes it knows about.
  */
 options levelb
 import rxfnsb
@@ -318,6 +322,8 @@ starts_generic_diagnostic_context: procedure = .int
   if pos("ast_err", text) > 0 then return 1
   if pos("append_diagnostic", text) > 0 then return 1
   if pos("rxcp_diag_create", text) > 0 then return 1
+  if pos("call rxpp_diag ", text) > 0 then return 1
+  if pos("rxpp_diag_text('", text) > 0 then return 1
   if pos("exitdiagnostic", text) > 0 then return 1
   if pos("error_result", text) > 0 then return 1
   return 0
@@ -336,21 +342,33 @@ starts_levelc_diagnostic_context: procedure = .int
 collect_line_codes: procedure = .void
   arg expose emitted_codes = .string[], line = .string, source_file = .string, line_number = .int, levelc_context = .int
 
+  call collect_line_codes_for_quote emitted_codes, line, source_file, line_number, levelc_context, '"'
+  call collect_line_codes_for_quote emitted_codes, line, source_file, line_number, levelc_context, "'"
+  return
+
+collect_line_codes_for_quote: procedure = .void
+  arg expose emitted_codes = .string[], line = .string, source_file = .string, line_number = .int, levelc_context = .int, quote_char = .string
+
   start = 1
   do forever
-    quote = pos('"', line, start)
+    quote = pos(quote_char, line, start)
     if quote = 0 then leave
 
     close = quote + 1
     value = ""
     do while close <= length(line)
       ch = substr(line, close, 1)
-      if ch = "\" then do
+      if quote_char = '"' & ch = "\" then do
         if close < length(line) then value = value || substr(line, close + 1, 1)
         close = close + 2
         iterate
       end
-      if ch = '"' then leave
+      if quote_char = "'" & ch = "'" & close < length(line) & substr(line, close + 1, 1) = "'" then do
+        value = value || "'"
+        close = close + 2
+        iterate
+      end
+      if ch = quote_char then leave
       value = value || ch
       close = close + 1
     end

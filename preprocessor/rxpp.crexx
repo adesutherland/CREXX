@@ -77,7 +77,7 @@ internal_testing=0    ## activate only for rxpp internal tests
 
 
  if strip(infile)='' then do
-     say 'CRX0100E+['time('l')'] no source file specified'
+     call rxpp_diag 'error','RXPP_NO_SOURCE_FILE'
      exit 8
   end
   if verbose then do
@@ -144,7 +144,7 @@ RXPPPassOne: procedure = .int
 /* ---- 1a. Load Macros from MACLIB  */
   macnum=readSource(maclib,0)    /* error doesn't terminate program */
   if macnum<0 then do
-     if verbose then say 'CRX0900W+['time('l')'] Maclib not found, or not accessible: 'maclib
+     if verbose then call rxpp_diag 'warning','RXPP_MACLIB_MISSING','file',maclib
   end
   else do
      call GetPreComp macnum                 ## analyse maclib, source lines not needed just register macros
@@ -164,7 +164,7 @@ RXPPPassOne: procedure = .int
 /* ---- 1b. Load System Macros from MACSYS  */
   macnum=readSource(macsys,0)    /* error doesn't terminate program */
   if macnum<0 then do
-     if verbose then say 'CRX0900W+['time('l')'] System Maclib not found, or not accessible: 'macsys
+     if verbose then call rxpp_diag 'warning','RXPP_SYSTEM_MACLIB_MISSING','file',macsys
   end
   else do
      call GetPreComp macnum                 ## analyse maclib, source lines not needed just register macros
@@ -182,13 +182,13 @@ RXPPPassOne: procedure = .int
 /* ---- 1c. Load file to compile */
   rexxLines=readSource(infile,1)
   if rexxLines<0 then do
-     say 'CRX0910E+['time('l')'] source file missing: 'infile
+     call rxpp_diag 'error','RXPP_SOURCE_MISSING','file',infile
      exit 8
   end
   call rxpp_set_source_origin_range 1,rexxLines,infile,1
   if rxpp_input_has_srcmap_options() then do
-     say 'CRX0960E+['time('l')'] input already contains options srcmap: 'infile
-     say 'CRX0961E+['time('l')'] run rxc on generated srcmap output; do not run rxpp twice'
+     call rxpp_diag 'error','RXPP_ALREADY_SOURCE_MAPPED','file',infile
+     call rxpp_diag 'error','RXPP_ALREADY_SOURCE_MAPPED_HINT'
      exit 8
   end
 
@@ -440,7 +440,7 @@ findMatchingEndif: procedure=.int
     end
     i = fsearch(source, i + 1, '##IF ', '##IFN ','##END', which)
   end
-  if verbose then say 'CRX0920E+['time('l')'] No matching ##ENDIF found after line 'startline
+  if verbose then call rxpp_diag 'error','RXPP_MISSING_ENDIF','line',startline
 return 0
 /* ------------------------------------------------------------------
  * Read Rexx Source file into the global source[] buffer.
@@ -451,8 +451,8 @@ ReadSource: procedure=.int
 ##  i=readall(source,file,-1)
   source=ReadLines(file,,,"noRaise")
   if mandatory=1 & source[0]=1 & word(source[1],1)='-8' then do
-     say 'CRX0950E+['time('l')'] missing source file: 'file
-     say 'CRX0951E+['time('l')'] RXPP of: 'file' terminated'
+     call rxpp_diag 'error','RXPP_SOURCE_MISSING','file',file
+     call rxpp_diag 'error','RXPP_FILE_TERMINATED','file',file
      exit 8
   end
   if word(source[1],1)='-8' then return -8
@@ -531,7 +531,7 @@ CMD_define: procedure=.int
       name    = strip(substr(def, 1, ppi - 1))
       ppi2    = pos(')', def,ppi+1)
       if ppi2 = 0 then do
-         say 'CRX0930E+['time('l')'] missing closing parenthesis in macro definition: ' def
+         call rxpp_diag 'error','RXPP_MACRO_MISSING_RPAREN','definition',def
          exit 8
       end
       if ppi2 - ppi - 1<=0 then arglist=''
@@ -556,7 +556,7 @@ CMD_define: procedure=.int
       if substr(body,nlen,1) \= '\' then leave
       nlino=nlino+1
       if nlino>source.0 then do
-         say 'CRX0950E+['time('l')'] macro definition is not closed: 'name
+         call rxpp_diag 'error','RXPP_MACRO_UNCLOSED','name',name
          exit 8
       end
       nlen=nlen-1
@@ -574,7 +574,7 @@ CMD_define: procedure=.int
    if substr(body,1,1)=';' then body=substr(body,2)
    body=strip(body)
    if body = '' | lopr=0 then do
-      say 'CRX0940E+['time('l')'] empty macro body or missing {} in macro: ' name
+      call rxpp_diag 'error','RXPP_MACRO_EMPTY_BODY','name',name
       exit 8
    end
 
@@ -750,6 +750,203 @@ rxpp_srcmap_span: procedure=.string
   if source_len<1 then source_len=length(text)
 return marker||source_col||'+'||source_len||'{'||text||marker||'}'
 /* ------------------------------------------------------------------
+ * Diagnostic helpers.
+ *
+ * Pattern for new RXPP warnings/errors:
+ *   1. Add one stable RXPP_* key to messages/diagnostics.*.msg.
+ *   2. Emit it with rxpp_diag and named parameters.
+ *   3. Do not format English text at the call site.
+ *
+ * Keeping the rendering here lets RXPP share rxc's message catalog files and
+ * environment contract while remaining a Level B tool.  The call sites stay
+ * small and repeatable for future preprocessor diagnostics.
+ * ------------------------------------------------------------------
+ */
+rxpp_diag: procedure
+  arg severity=.string,code=.string,name1='',value1='',name2='',value2='',name3='',value3=''
+  say rxpp_diag_text(code,name1,value1,name2,value2,name3,value3)
+return
+
+rxpp_diag_text: procedure=.string
+  arg code=.string,name1='',value1='',name2='',value2='',name3='',value3=''
+  names=.string[]
+  values=.string[]
+  if name1\='' then do
+     names[names[0]+1]=name1
+     values[values[0]+1]=value1''
+  end
+  if name2\='' then do
+     names[names[0]+1]=name2
+     values[values[0]+1]=value2''
+  end
+  if name3\='' then do
+     names[names[0]+1]=name3
+     values[values[0]+1]=value3''
+  end
+return rxpp_diag_render(code,names,values)
+
+rxpp_diag_render: procedure=.string
+  arg code=.string,names=.string[],values=.string[]
+  if rxpp_diag_mode()='raw' then return rxpp_diag_render_raw(code,names,values)
+
+  locale=rxpp_diag_effective_locale()
+  template=rxpp_diag_cat_lookup(locale,code)
+  if template='' & locale\='en_GB' then template=rxpp_diag_cat_lookup('en_GB',code)
+  if template='' then return rxpp_diag_render_raw(code,names,values)
+return rxpp_diag_render_template(code,template,names,values)
+
+rxpp_diag_mode: procedure=.string
+  mode=lower(strip(getenv('CREXX_DIAGNOSTICS')))
+  if mode='raw' | mode='machine' | mode='code' then return 'raw'
+  if mode='localized' | mode='localised' | mode='text' then return 'localized'
+return 'localized'
+
+rxpp_diag_effective_locale: procedure=.string
+  locale=strip(getenv('CREXX_DIAGNOSTIC_LOCALE'))
+  if locale='' then locale=strip(getenv('LC_ALL'))
+  if locale='' then locale=strip(getenv('LC_MESSAGES'))
+  if locale='' then locale=strip(getenv('LANG'))
+return rxpp_diag_normalize_locale(locale)
+
+rxpp_diag_normalize_locale: procedure=.string
+  arg locale=.string
+  locale=strip(locale)
+  if locale='' then return 'en_GB'
+  if upper(locale)='C' | upper(locale)='POSIX' then return 'en_GB'
+
+  dot=pos('.',locale)
+  if dot>0 then locale=left(locale,dot-1)
+  at=pos('@',locale)
+  if at>0 then locale=left(locale,at-1)
+  locale=changestr('-',locale,'_')
+
+  if length(locale)=2 then return lower(locale)
+  if length(locale)>=5 & substr(locale,3,1)='_' then do
+     return lower(substr(locale,1,2))'_'upper(substr(locale,4,2))||substr(locale,6)
+  end
+  if locale='' then return 'en_GB'
+return locale
+
+rxpp_diag_render_template: procedure=.string
+  arg code=.string,template=.string,names=.string[],values=.string[]
+  rendered=code': '
+  cursor=1
+  do forever
+     open=pos('{',template,cursor)
+     if open=0 then do
+        rendered=rendered||substr(template,cursor)
+        leave
+     end
+     rendered=rendered||substr(template,cursor,open-cursor)
+     close=pos('}',template,open+1)
+     if close=0 then do
+        rendered=rendered||substr(template,open)
+        leave
+     end
+     pname=substr(template,open+1,close-open-1)
+     found=0
+     pvalue=''
+     do i=1 to names[0]
+        if names[i]=pname then do
+           found=1
+           pvalue=values[i]
+           leave
+        end
+     end
+     if found then rendered=rendered||rxpp_diag_escape(pvalue)
+     else rendered=rendered||substr(template,open,close-open+1)
+     cursor=close+1
+  end
+return rendered
+
+rxpp_diag_render_raw: procedure=.string
+  arg code=.string,names=.string[],values=.string[]
+  rendered=code
+  do i=1 to names[0]
+     rendered=rendered' 'names[i]'="'rxpp_diag_escape(values[i])'"'
+  end
+return rendered
+
+rxpp_diag_escape: procedure=.string
+  arg text=.string
+  text=changestr('\',text,'\\')
+  text=changestr('"',text,'\"')
+  text=changestr('09'x,text,'\t')
+  text=changestr('0d'x,text,'\r')
+  text=changestr('0a'x,text,'\n')
+return text
+
+rxpp_diag_cat_lookup: procedure=.string
+  arg locale=.string,code=.string
+  template=rxpp_diag_env_lookup(locale,code)
+  if template\='' then return template
+
+  template=rxpp_diag_dir_lookup('messages',locale,code)
+  if template\='' then return template
+  template=rxpp_diag_dir_lookup('../messages',locale,code)
+  if template\='' then return template
+  template=rxpp_diag_dir_lookup('../../messages',locale,code)
+  if template\='' then return template
+
+  if syspath\='' then do
+     template=rxpp_diag_dir_lookup(syspath'/messages',locale,code)
+     if template\='' then return template
+     template=rxpp_diag_dir_lookup(syspath'/../messages',locale,code)
+     if template\='' then return template
+     template=rxpp_diag_dir_lookup(syspath'/../share/crexx/messages',locale,code)
+     if template\='' then return template
+  end
+return ''
+
+rxpp_diag_env_lookup: procedure=.string
+  arg locale=.string,code=.string
+  pathlist=strip(getenv('CREXX_MESSAGE_PATH'))
+  if pathlist='' then return ''
+
+  first=pathlist
+  semi=pos(';',first)
+  if semi>0 then first=left(first,semi-1)
+  template=rxpp_diag_dir_lookup(strip(first),locale,code)
+  if template\='' then return template
+
+  rest=pathlist
+  do while rest\=''
+     semi=pos(';',rest)
+     if semi=0 then do
+        part=strip(rest)
+        rest=''
+     end
+     else do
+        part=strip(left(rest,semi-1))
+        rest=substr(rest,semi+1)
+     end
+     template=rxpp_diag_dir_lookup(part,locale,code)
+     if template\='' then return template
+  end
+return ''
+
+rxpp_diag_dir_lookup: procedure=.string
+  arg directory=.string,locale=.string,code=.string
+  if directory='' then return ''
+  if right(directory,1)='/' | right(directory,1)='\' then path=directory'diagnostics.'locale'.msg'
+  else path=directory'/diagnostics.'locale'.msg'
+return rxpp_diag_file_lookup(path,code)
+
+rxpp_diag_file_lookup: procedure=.string
+  arg path=.string,code=.string
+  catalog=readLines(path,,,'noRaise')
+  if catalog[0]=1 & word(catalog[1],1)='-8' then return ''
+  do i=1 to catalog[0]
+     line=strip(catalog[i])
+     if line='' then iterate
+     if left(line,1)='#' then iterate
+     equals=pos('=',line)
+     if equals=0 then iterate
+     key=strip(left(line,equals-1))
+     if key=code then return strip(substr(line,equals+1))
+  end
+return ''
+/* ------------------------------------------------------------------
  * Implements ##SET: assigns a pre-compiler variable and updates internal flags if needed.
  * ------------------------------------------------------------------
  */
@@ -802,8 +999,8 @@ CMD_include: procedure
   include=readLines(file,,,'noRaise')
   new=include[0]
   if new=1 & word(include[1],1)='-8' then do
-     say 'CRX0950E+['time('l')'] missing include file: 'file
-     say 'CRX0951E+['time('l')'] RXPP terminated'
+     call rxpp_diag 'error','RXPP_INCLUDE_MISSING','file',file
+     call rxpp_diag 'error','RXPP_TERMINATED'
      exit 8
   end
   if push_unique(included_files,file)=0 then return      /* already part of the included list */
@@ -1168,8 +1365,9 @@ newMacros:  procedure=.string
      scriptMacro.macname=stream
      if pos('-8 OPEN ERROR',stream)>0 then do
         scriptMacro.macname.error='error'
-        say 'CRX0900W ['time('l')'] File not found: 'syspath||macname'.rxpm'
-        return line' ## File not found: 'syspath||macname'.rxpm'
+        missing_file=syspath||macname'.rxpm'
+        call rxpp_diag 'warning','RXPP_SCRIPT_MACRO_MISSING','file',missing_file
+        return line' ## 'rxpp_diag_text('RXPP_SCRIPT_MACRO_MISSING','file',missing_file)
      end
      ipj=pos(';',scriptMacro.macname)
      if ipj>1 then do
@@ -1181,7 +1379,7 @@ newMacros:  procedure=.string
   end
   scriptMacroCounter=scriptMacroCounter+1
   if scriptMacroCounter>500 then do
-     say 'CRX9000W ['time('l')'] Maximum macro expansion limit exceeded after 'scriptMacroCounter
+     call rxpp_diag 'warning','RXPP_EXPANSION_LIMIT','count',scriptMacroCounter
      return line
   end
 
@@ -1337,8 +1535,8 @@ replaceFixArg: Procedure=.string
         iterate
      end
      if keypositional>0 then do
-        say 'CRX0960E+['time('l')'] positional parameters must not defined after keyword parameters: 'macname||iargs')'
-        return '+++ SyntaxError: positional argument follows keyword argument 'macname||iargs')'
+        call rxpp_diag 'error','RXPP_POSITIONAL_AFTER_KEYWORD','macro',macname,'arguments',iargs
+        return '+++ 'rxpp_diag_text('RXPP_POSITIONAL_AFTER_KEYWORD','macro',macname,'arguments',iargs)
      end
      bodyExp = replaceArg(bodyExp, aname, callargs.k)   ## replace macro variable by value in callargs.k
    end

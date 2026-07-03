@@ -87,12 +87,45 @@ provenance from the script engine.
 RXPP refuses input that already contains `options ... srcmap`. That is treated
 as generated output that should go directly to `rxc`, not through RXPP again.
 
+## Diagnostics
+
+RXPP warnings and errors use the same shared message catalogs as `rxc`:
+
+- `messages/diagnostics.en_GB.msg`
+- `messages/diagnostics.en_US.msg`
+- `messages/diagnostics.de_DE.msg`
+- `messages/diagnostics.nl_NL.msg`
+
+New RXPP diagnostics should use a stable `RXPP_*` key and call `rxpp_diag`
+with named parameters instead of formatting English text at the call site. The
+helper in `preprocessor/rxpp.crexx` owns:
+
+- `CREXX_DIAGNOSTICS=raw|localized`
+- `CREXX_DIAGNOSTIC_LOCALE`
+- `CREXX_MESSAGE_PATH`
+- fallback to `en_GB` when an override locale does not define the key
+
+Raw mode follows the compiler shape:
+
+```text
+RXPP_SOURCE_MISSING file="demo.rxpp"
+```
+
+Localized mode follows the compiler shape:
+
+```text
+RXPP_SOURCE_MISSING: Source file is missing: demo.rxpp.
+```
+
+Do not reuse a diagnostic key for different messages. The catalog key is the
+stable identity; translations depend on one key mapping to one template.
+
 ## Focused Tests
 
 Use these focused tests before broader CTest runs:
 
 ```sh
-ctest --test-dir cmake-build-release -R 'rxc_srcmap|rxpp_(smoke|srcmap)' --output-on-failure
+ctest --test-dir cmake-build-release -R 'rxc_srcmap|rxpp_(smoke|srcmap|diagnostics|diagnostic_catalogs)' --output-on-failure
 ```
 
 `rxc_srcmap` covers direct compiler source-map preprocessing, positive mapping,
@@ -100,3 +133,6 @@ literal `@` escaping, malformed directives, unbalanced spans, and nested-span
 precedence. `rxpp_smoke` covers no-srcmap compatibility. `rxpp_srcmap` covers
 `##CFLAG srcmap` output, compile-through stripping/remapping, include-file
 origin, script-macro output spans, and the double-processing guard.
+`rxpp_diagnostics` checks raw/localized RXPP diagnostic rendering.
+`rxpp_diagnostic_catalogs` checks RXPP-emitted `RXPP_*` keys against the shared
+catalogs and complete German/Dutch translations.
