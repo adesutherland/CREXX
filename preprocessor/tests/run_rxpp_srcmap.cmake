@@ -25,6 +25,40 @@ if(NOT rxpp_res EQUAL 0)
 endif()
 
 file(READ "${OUTPUT_FILE}" out_content)
+string(REGEX REPLACE "PRE Compiled on [^\n]* at [^\n]*" "PRE Compiled on <date> at <time>" normalized_out "${out_content}")
+set(expected_out [=[/* RXPP */
+/* ----------------------------------------------------------------------
+ * PRE Compiled on <date> at <time>
+ * ----------------------------------------------------------------------
+ */
+options levelb srcmap
+import rxfnsb
+@"__INPUT_FILE__"
+@6l"say ""Hello@@example.com"""
+say "Hello@@example.com"
+@"__INPUT_FILE__"
+@7l"say SQUARE(3)"
+/* rxpp: say SQUARE(3) */
+@"__INPUT_FILE__"
+@7l"say SQUARE(3)"
+say @5+9{@12+1{3@}*@12+1{3@}@}
+@"__INPUT_FILE__"
+@8l"TRACEVALUE(""value"", 16)"
+/* rxpp: TRACEVALUE("value", 16) */
+@"__INPUT_FILE__"
+@8l"TRACEVALUE(""value"", 16)"
+@1+23{say @12+7{"value"@} @21+2{16@}@}
+@"__INPUT_FILE__"
+@9l"##EMITSCRIPT"
+/* ##EMITSCRIPT */
+@"__INPUT_FILE__"
+@9l"##EMITSCRIPT"
+   @1+12{say "scripted"@}
+]=])
+string(REPLACE "__INPUT_FILE__" "${INPUT_FILE}" expected_out "${expected_out}")
+if(NOT normalized_out STREQUAL expected_out)
+    message(FATAL_ERROR "rxpp source-map output did not match the reviewed baseline:\nExpected:\n${expected_out}\nActual:\n${normalized_out}")
+endif()
 string(FIND "${out_content}" "options levelb srcmap" options_pos)
 if(options_pos EQUAL -1)
     message(FATAL_ERROR "rxpp did not emit options levelb srcmap:\n${out_content}")
@@ -37,13 +71,13 @@ string(FIND "${out_content}" "say \"Hello@@example.com\"" escaped_at_pos)
 if(escaped_at_pos EQUAL -1)
     message(FATAL_ERROR "rxpp did not escape literal @ in srcmap mode:\n${out_content}")
 endif()
-string(FIND "${out_content}" "say @5+9{3*3@}" square_span_pos)
+string(FIND "${out_content}" "say @5+9{@12+1{3@}*@12+1{3@}@}" square_span_pos)
 if(square_span_pos EQUAL -1)
-    message(FATAL_ERROR "rxpp did not emit source-map span for SQUARE macro:\n${out_content}")
+    message(FATAL_ERROR "rxpp did not emit nested source-map spans for SQUARE macro:\n${out_content}")
 endif()
-string(FIND "${out_content}" "@1+23{say \"value\" 16@}" trace_span_pos)
+string(FIND "${out_content}" "@1+23{say @12+7{\"value\"@} @21+2{16@}@}" trace_span_pos)
 if(trace_span_pos EQUAL -1)
-    message(FATAL_ERROR "rxpp did not emit source-map span for TRACEVALUE macro:\n${out_content}")
+    message(FATAL_ERROR "rxpp did not emit nested source-map spans for TRACEVALUE macro:\n${out_content}")
 endif()
 string(FIND "${out_content}" "@1+12{say \"scripted\"@}" script_span_pos)
 if(script_span_pos EQUAL -1)
@@ -76,7 +110,7 @@ set(include_input "${OUTPUT_FILE}.include_input.rxpp")
 set(include_output "${OUTPUT_FILE}.include_output.crexx")
 file(WRITE "${include_file}" [=[answer = SQUARE(totl + 1)
 ]=])
-file(WRITE "${include_input}" "##CFLAG srcmap\n##include ${include_file}\n")
+file(WRITE "${include_input}" "##include ${include_file}\n")
 
 execute_process(
     COMMAND "${RXPP_BIN}" rxprecomp -I "${include_input}" -o "${include_output}" -m "${MACLIB_FILE}"
@@ -103,11 +137,16 @@ execute_process(
 if(include_rxc_res EQUAL 0)
     message(FATAL_ERROR "rxc unexpectedly compiled include source-map diagnostic case:\n${include_content}")
 endif()
-if(NOT include_rxc_err MATCHES "included\\.rxpp @ 1:")
-    message(FATAL_ERROR "included-file diagnostic was not remapped to included source:\n${include_rxc_err}\nGenerated:\n${include_content}")
+if(NOT include_rxc_err MATCHES "included\\.rxpp @ 1:17")
+    message(FATAL_ERROR "included-file diagnostic was not remapped to the included argument span:\n${include_rxc_err}\nGenerated:\n${include_content}")
 endif()
-if(NOT include_rxc_err MATCHES "totl")
-    message(FATAL_ERROR "included-file diagnostic did not include included source text:\n${include_rxc_err}")
+if(NOT include_rxc_err MATCHES "BAD_CONVERSION, \"totl \\+ 1\"")
+    message(FATAL_ERROR "included-file diagnostic did not include the mapped argument source text:\n${include_rxc_err}")
+endif()
+string(REGEX MATCHALL "Error in " include_error_lines "${include_rxc_err}")
+list(LENGTH include_error_lines include_error_count)
+if(NOT include_error_count EQUAL 1)
+    message(FATAL_ERROR "included-file diagnostic was duplicated after source-map remapping:\n${include_rxc_err}")
 endif()
 
 set(double_input "${OUTPUT_FILE}.already_srcmap.rxpp")

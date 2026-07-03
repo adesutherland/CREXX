@@ -27,11 +27,11 @@ To test end-to-end execution:
 For `.rxpp` problems, split the pipeline before changing compiler C code:
 
 1. Run `rxpp` directly and inspect the generated `.crexx`.
-2. If the generated file has `options ... srcmap`, compile it with
+2. RXPP emits `options ... srcmap` by default. Compile the generated file with
    `rxc --diagnostics raw` and check for `SRCMAP_MALFORMED` or
    `SRCMAP_UNBALANCED` before debugging normal parser/validator behavior.
-3. Confirm literal `@` is escaped as `@@` only in srcmap mode. No-srcmap output
-   should preserve literal `@` unchanged.
+3. Confirm literal `@` is escaped as `@@` in default srcmap mode. Only explicit
+   `##CFLAG nosrcmap` output should preserve literal `@` unchanged.
 4. For macro diagnostics, check whether the innermost generated token is inside
    a nested `@...{ ... @}` span. `rxc` intentionally chooses the narrowest
    enclosing source-map span.

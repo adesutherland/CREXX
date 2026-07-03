@@ -555,6 +555,7 @@ static int source_tree_diagnostic_matches(SourceDiagnostic *existing,
                                           SourceDiagnosticSeverity severity,
                                           int line,
                                           int column,
+                                          const char *file_name,
                                           const char *message) {
     if (!existing || !diag) return 0;
     if (existing->severity != severity ||
@@ -562,6 +563,11 @@ static int source_tree_diagnostic_matches(SourceDiagnostic *existing,
         existing->line != line ||
         existing->column != column) {
         return 0;
+    }
+
+    if (existing->file_name || file_name) {
+        if (!existing->file_name || !file_name) return 0;
+        if (strcmp(existing->file_name, file_name) != 0) return 0;
     }
 
     if (existing->diagnostic || diag->diagnostic) {
@@ -622,14 +628,14 @@ static void source_tree_append_diagnostic(Context *context, ASTNode *diag) {
     }
     severity = diag->node_type == WARNING ? SOURCE_DIAG_WARNING : SOURCE_DIAG_ERROR;
 
-    existing = owner->diagnostics;
+    existing = context->source_diagnostics_list;
     while (existing) {
-        if (source_tree_diagnostic_matches(existing, diag, severity, line, column, message)) {
+        if (source_tree_diagnostic_matches(existing, diag, severity, line, column, file_name, message)) {
             diag->is_source_diagnostic_recorded = 1;
             free(message);
             return;
         }
-        existing = existing->next_on_source;
+        existing = existing->next_in_context;
     }
 
     source_diag = calloc(1, sizeof(SourceDiagnostic));

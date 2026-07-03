@@ -26,16 +26,17 @@
  * RXPP preprocessor.
  *
  * RXPP expands .rxpp macro/directive source into ordinary Level B CREXX.
- * When ##CFLAG srcmap is present, RXPP emits the raw source-map channel that
- * rxc consumes before parsing so diagnostics can point back to original .rxpp
- * files instead of only the generated .crexx file.
+ * By default RXPP emits the raw source-map channel that rxc consumes before
+ * parsing so diagnostics can point back to original .rxpp files instead of only
+ * the generated .crexx file.  Use ##CFLAG nosrcmap only for legacy plain-output
+ * inspection.
  */
 options levelb
 
 import rexxscript
 import precomp
 import rxfnsb
-namespace rxpp expose globaldef rxmodule source stype source_origin_file source_origin_line source_origin_text callargs macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs select_count beginblock beginName scriptMacro scriptMacros scriptMacroCounter srcmap_source_file srcmap_line_offset
+namespace rxpp expose globaldef rxmodule source stype source_origin_file source_origin_line source_origin_text callargs callargs_source_col callargs_source_len macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs select_count beginblock beginName scriptMacro scriptMacros scriptMacroCounter srcmap_source_file srcmap_line_offset
 
 
 
@@ -698,9 +699,17 @@ rxpp_input_has_srcmap_options: procedure=.int
   end
 return 0
 
-rxpp_srcmap_enabled: procedure=.int
-  if pos(' srcmap',cflags)>0 then return 1
+rxpp_cflag_present: procedure=.int
+  arg flag=.string
+  flag=lower(strip(flag))
+  do flag_no=1 to words(cflags)
+     if word(cflags,flag_no)=flag then return 1
+  end
 return 0
+
+rxpp_srcmap_enabled: procedure=.int
+  if rxpp_cflag_present('nosrcmap') | rxpp_cflag_present('no-srcmap') then return 0
+return 1
 
 rxpp_srcmap_marker: procedure=.string
 return '!RXPP_SRCMAP_AT!'
@@ -749,6 +758,13 @@ rxpp_srcmap_span: procedure=.string
   if source_col<1 then source_col=1
   if source_len<1 then source_len=length(text)
 return marker||source_col||'+'||source_len||'{'||text||marker||'}'
+
+rxpp_srcmap_argument_value: procedure=.string
+  arg value=.string,relative_col=.int,source_base=.int
+  if \rxpp_srcmap_enabled() then return value
+  if relative_col<=0 then return value
+  if length(value)<1 then return value
+return rxpp_srcmap_span(source_base+relative_col,length(value),value)
 /* ------------------------------------------------------------------
  * Diagnostic helpers.
  *
@@ -1296,11 +1312,23 @@ writeline: procedure
       source_file=rxpp_srcmap_source_file(curlino)
       source_text=rxpp_srcmap_source_text(curlino)
       if source_line_no>0 & oline\='' then do
+        /*
+         * Peter note: these two emitter calls establish the current original
+         * source file and source line before the generated line is written.
+         * rxc uses them as the default location for any generated text that is
+         * not inside a narrower rxpp_srcmap_span() below.
+         */
          lino = lino + 1
          outbuf.lino=rxpp_srcmap_file_hint(source_file)
          lino = lino + 1
          outbuf.lino=rxpp_srcmap_line_hint(source_line_no,source_text)
       end
+      /*
+       * Peter note: escape every literal @ in generated CREXX after all RXPP
+       * source-map helper calls have inserted their private marker token.  The
+       * marker is converted back to raw @ here; user/program @ characters become
+       * @@ so rxc will treat them as ordinary text.
+       */
       oline=rxpp_srcmap_escape(oline)
    end
    lino = lino + 1
@@ -1424,7 +1452,15 @@ newMacros:  procedure=.string
       * repeatable rule is to map each emitted line to the whole script-macro
       * invocation.  Future per-token script metadata can narrow this later.
       */
-     if rxpp_srcmap_enabled() then out[kk]=rxpp_srcmap_span(1,source_len,out[kk])
+     if rxpp_srcmap_enabled() then do
+        /*
+         * Peter note: RexxScript macros currently provide line-level output
+         * only, so each emitted line is mapped to the whole script-macro
+         * invocation.  When RexxScript reports token provenance, this is the
+         * place to replace the coarse span with narrower spans.
+         */
+        out[kk]=rxpp_srcmap_span(1,source_len,out[kk])
+     end
      inew=inject2Source(inew+1,3,out[kk])
   end
 return source[linnum]
@@ -1479,10 +1515,18 @@ resolveMacro: procedure=.string
        bodyExp = body
        if isVariadic then return variadic(bodyExp, callargcount, argtext)
     /* Here is the non variadic processing */
-       bodyExp = replaceFixArg(bodyExp, name,args,callargcount)
+       bodyExp = replaceFixArg(bodyExp, name,args,callargcount,callpos+length(name)-1)
        if substr(bodyexp,1,3)='+++' then return bodyexp  ## +++ error occurred in call
        callLen = length(name) + 1 + length(argtext)  /* inkl. len(name()+1 for ) */
-       if rxpp_srcmap_enabled() then bodyExp=rxpp_srcmap_span(callpos,callLen,bodyExp)
+       if rxpp_srcmap_enabled() then do
+          /*
+           * Peter note: this outer span maps generated replacement text back to
+           * the macro call itself.  replaceFixArg() may already have inserted
+           * narrower spans for substituted arguments; rxc chooses the narrowest
+           * enclosing span when a diagnostic lands inside the expansion.
+           */
+          bodyExp=rxpp_srcmap_span(callpos,callLen,bodyExp)
+       end
        line=splice(bodyexp,line,callpos,callLen)  ## line=insertatc(bodyexp,line,callpos,callLen)
        if mspace= 1 then leave        /* nesting for command macros are not permitted */
        uline    = upper(line)         /* update uline for repetition */
@@ -1513,7 +1557,7 @@ return line2change
  * ------------------------------------------------------------------
  */
 replaceFixArg: Procedure=.string
-  arg bodyexp=.string,macname=.string, xargs=.string,callargcount=.int
+  arg bodyexp=.string,macname=.string, xargs=.string,callargcount=.int,source_base=.int
   iargs=xargs
 
   xargs   = translate(xargs, , ',')
@@ -1538,7 +1582,14 @@ replaceFixArg: Procedure=.string
         call rxpp_diag 'error','RXPP_POSITIONAL_AFTER_KEYWORD','macro',macname,'arguments',iargs
         return '+++ 'rxpp_diag_text('RXPP_POSITIONAL_AFTER_KEYWORD','macro',macname,'arguments',iargs)
      end
-     bodyExp = replaceArg(bodyExp, aname, callargs.k)   ## replace macro variable by value in callargs.k
+     aval=callargs.k
+     /*
+      * Peter note: wrap each positional argument value before substitution.
+      * If the expanded body later fails in rxc, the inner span points at the
+      * original argument expression rather than only the full macro call.
+      */
+     aval=rxpp_srcmap_argument_value(aval,callargs_source_col.k,source_base)
+     bodyExp = replaceArg(bodyExp, aname, aval)   ## replace macro variable by value in callargs.k
    end
   if keypositional=0 then return bodyExp
 ## now that we know we have keyword paramters, we need to translate tso-style call back to key= syntax
@@ -1556,11 +1607,19 @@ replaceFixArg: Procedure=.string
         if fpos(aname'=',callargs.j,1)>0 then leave    ### +++++++++++ modify  ## use fpos function to search case-insensitive
      end
      aval=callargs.j                       ## identifies the call of the macro
+     value_source_col=0
      if pos('=',aval)=0 then aval=adefault ## if keyword is not defined use the default in the macro def part
      else do                               ## if so check if the keyword call is also in the value clause
+        value_source_col=callargs_source_col.j+pos('=',aval)
         aval=translate(aval,,'=')
         aval=subword(aval,2)
      end
+     /*
+      * Peter note: keyword defaults are generated text and therefore stay on
+      * the outer macro-call span.  Supplied keyword values get a narrower span
+      * starting after the '=' or TSO-style '(' in the original call argument.
+      */
+     aval=rxpp_srcmap_argument_value(aval,value_source_col,source_base)
      bodyExp = replaceArg(bodyExp, aname, aval)
   end
 return bodyExp
@@ -1779,9 +1838,26 @@ return lhs || needle || rhs
 parseArgList: procedure=.int
   arg argstr=.string
   callargs=.string[]
+  callargs_source_col=.int[]
+  callargs_source_len=.int[]
   anum=splitargs(argstr,callargs)
+  search_start=1
   do j=1 to anum                 ## could also be callargs.0, but might be not set correctly due to higher previous macro call
      callargs.j=strip(callargs.j)
+     callargs_source_len.j=length(callargs.j)
+     if callargs.j='' then callargs_source_col.j=0
+     else do
+        /*
+         * Peter note: splitargs is still the authority for argument values.
+         * This ordered scan records where each trimmed value came from inside
+         * the original argument text so replaceFixArg() can emit nested source
+         * spans around substituted arguments.
+         */
+        found=pos(callargs.j,argstr,search_start)
+        if found=0 then found=search_start
+        callargs_source_col.j=found
+        search_start=found+length(callargs.j)
+     end
   end
 return anum
 /* ------------------- the following sequence is part of the C function splitargs
@@ -2347,6 +2423,9 @@ rxppinit: procedure=.string
   beginName=.string[]
   macros_mname=.string[]
   macros_mspace=.int[]
+  callargs=.string[]
+  callargs_source_col=.int[]
+  callargs_source_len=.int[]
   macros_varname=.string[]
   macros_varvalue=.string[]
   included_files=.string[]

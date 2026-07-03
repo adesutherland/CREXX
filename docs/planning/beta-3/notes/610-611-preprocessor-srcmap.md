@@ -12,9 +12,11 @@ Implementation slice started 2026-07-03:
   common compiler diagnostic/source-tree paths.
 - Source-map prepass errors are `rxc` diagnostics with catalogue entries
   (`SRCMAP_MALFORMED`, `SRCMAP_UNBALANCED`).
-- Current RXPP support is intentionally opt-in with `##CFLAG srcmap`; it emits
-  `options levelb srcmap`, common file/line/span helpers, escaped literal `@`,
-  and spans around ordinary macro replacement text.
+- Current RXPP support emits source maps by default; `##CFLAG nosrcmap` is the
+  explicit plain-output escape hatch. It emits `options levelb srcmap`, common
+  file/line/span helpers, escaped literal `@`, outer macro-call spans, and
+  narrower spans around substituted fixed macro arguments where RXPP can track
+  their source columns.
 - Follow-up slice moved RXPP from `lib/plugins/precomp/` to the root
   `preprocessor/` component, stages RXPP support files to `bin/`, and added
   focused direct-rxc, rxpp-srcmap, and rxpp-no-srcmap coverage.
@@ -447,10 +449,11 @@ Implementation status:
 2. Done: add `options srcmap` and the raw `@` source-map prepass to `rxc`.
 3. Done for the first slice: wire mapped locations into diagnostics, source
    tree state, and `.srcstep` emission.
-4. Done: update RXPP to emit `options srcmap`, escape literal `@`, emit spans
-   for ordinary macro replacement text, preserve the no-srcmap compatibility
-   path, switch file origin for included lines, reject already source-mapped
-   generated input, and map script-macro output to the invocation span.
+4. Done: update RXPP to emit `options srcmap` by default, escape literal `@`,
+   emit spans for ordinary macro replacement text and substituted fixed
+   arguments, preserve the explicit no-srcmap compatibility path, switch file
+   origin for included lines, reject already source-mapped generated input, and
+   map script-macro output to the invocation span.
 5. Done: add focused RXPP/rxc source-map tests for positive mapping,
    malformed/unbalanced markers, nested-span precedence, rxpp srcmap output, and
    rxpp no-srcmap output.

@@ -42,17 +42,15 @@ beside the installed `rxpp` executable.
 
 ## Source Maps
 
-RXPP source-map emission is opt-in with:
+RXPP emits source maps by default for generated CREXX. The generated file's
+leading options include `srcmap`, followed by raw source-map directives in the
+`@` channel. `rxc` recognizes `options ... srcmap`, strips the raw directives
+before normal tokenization, unescapes `@@` to a literal `@`, and remaps
+diagnostics and source-step metadata through the source-map table.
 
-```rexx
-##CFLAG srcmap
-```
-
-In that mode RXPP emits generated CREXX whose leading options include
-`srcmap`, then writes raw source-map directives in the `@` channel. `rxc`
-recognizes `options ... srcmap`, strips the raw directives before normal
-tokenization, unescapes `@@` to a literal `@`, and remaps diagnostics and
-source-step metadata through the source-map table.
+Use `##CFLAG nosrcmap` only when deliberately inspecting or preserving legacy
+plain generated CREXX. `##CFLAG srcmap` is accepted as a redundant historical
+flag but is no longer required for diagnostics to work through `.rxpp -> rxc`.
 
 Important source-map rules:
 
@@ -63,12 +61,14 @@ Important source-map rules:
 - `@Nl"text"` sets the original line and optional line text.
 - `@Nc` sets the original source-column base.
 - `@N+M{ ... @}` maps generated text to a source span.
-- Nested mappings are legal; `rxc` chooses the narrowest enclosing span.
+- Nested mappings are legal; `rxc` chooses the narrowest enclosing span. RXPP
+  emits an outer span for a macro call and narrower spans for substituted fixed
+  arguments where it can track their source columns.
 - Malformed directives and unbalanced spans are compiler diagnostics with
   `SRCMAP_MALFORMED` or `SRCMAP_UNBALANCED`.
 
-No-srcmap RXPP output remains ordinary CREXX. It must not escape literal `@` or
-emit raw source-map markers.
+Explicit no-srcmap RXPP output remains ordinary CREXX. It must not escape
+literal `@` or emit raw source-map markers.
 
 RXPP keeps source provenance in arrays beside `source[]`:
 
@@ -130,9 +130,11 @@ ctest --test-dir cmake-build-release -R 'rxc_srcmap|rxpp_(smoke|srcmap|diagnosti
 
 `rxc_srcmap` covers direct compiler source-map preprocessing, positive mapping,
 literal `@` escaping, malformed directives, unbalanced spans, and nested-span
-precedence. `rxpp_smoke` covers no-srcmap compatibility. `rxpp_srcmap` covers
-`##CFLAG srcmap` output, compile-through stripping/remapping, include-file
-origin, script-macro output spans, and the double-processing guard.
+precedence. `rxpp_smoke` covers automatic srcmap output plus explicit
+`##CFLAG nosrcmap` compatibility. `rxpp_srcmap` covers reviewed RXPP srcmap
+output, compile-through stripping/remapping, include-file origin, nested
+argument spans, script-macro output spans, diagnostic deduplication after
+remapping, and the double-processing guard.
 `rxpp_diagnostics` checks raw/localized RXPP diagnostic rendering.
 `rxpp_diagnostic_catalogs` checks RXPP-emitted `RXPP_*` keys against the shared
 catalogs and complete German/Dutch translations.

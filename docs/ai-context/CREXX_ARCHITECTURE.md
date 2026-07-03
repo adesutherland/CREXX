@@ -18,9 +18,10 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
    - Lives in the root `preprocessor/` component and builds the `rxpp` tool plus
      its native `precomp` helper.
    - Expands `.rxpp` macro/directive source into generated CREXX source.
-   - When `##CFLAG srcmap` is present, emits `options ... srcmap` and raw `@`
-     source-map markers so `rxc` diagnostics and source-step metadata can point
-     back to the original `.rxpp` file.
+   - Emits `options ... srcmap` and raw `@` source-map markers by default so
+     `rxc` diagnostics and source-step metadata can point back to the original
+     `.rxpp` file. `##CFLAG nosrcmap` is the explicit legacy escape hatch for
+     plain generated CREXX.
 
 1. **re2c (Lexical Analyzer)**
    - Used to generate the scanner/lexer from `.re` rules (e.g., `compiler/rxcpbscn.re` and `assembler/rxasscan.re`).
