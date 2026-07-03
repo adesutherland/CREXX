@@ -214,12 +214,32 @@ the#1\endcsname\quad}}
   {}
 
 %% use the heading fonts in the TOC
-\renewcommand{\cftpartfont}{\sffamily}
-\renewcommand{\cftchapfont}{\sffamily} % Matches section font
-\renewcommand{\cftchappagefont}{\sffamily} % Matches section font
-\renewcommand{\cftsubsecfont}{\sffamily} % Example for subsections
-\renewcommand{\cftsubsubsecfont}{\sffamily} % Example for subsections
-\renewcommand{\cftsecfont}{\sffamily} % Matches section font
+%% \renewcommand{\cftpartfont}{\sffamily}
+%% \renewcommand{\cftchapfont}{\sffamily} % Matches section font
+%% \renewcommand{\cftchappagefont}{\sffamily} % Matches section font
+%% \renewcommand{\cftsubsecfont}{\sffamily} % Example for subsections
+%% \renewcommand{\cftsubsubsecfont}{\sffamily} % Example for subsections
+%% \renewcommand{\cftsecfont}{\sffamily} % Matches section font
+
+\renewcommand{\cftpartfont}{\headingfont}
+\renewcommand{\cftchapfont}{\headingfont} % Matches section font
+\renewcommand{\cftchappagefont}{\headingfont} % Matches section font
+\renewcommand{\cftsubsecfont}{\headingfont} % Example for subsections
+\renewcommand{\cftsubsubsecfont}{\headingfont} % Example for subsections
+\renewcommand{\cftsecfont}{\headingfont} % Matches section font
+
+\renewcommand{\cfttoctitlefont}{%
+  \headingfont
+  \fontsize{28}{32}\selectfont
+  \bfseries
+  \color{Heading}%
+}
+
+\renewcommand{\cftaftertoctitle}{%
+  \\[0.9em]%
+  {\color{gray!45}\rule{0.56\textwidth}{0.6pt}}%
+  \vspace{1.8em}%
+}
 
 \titleformat{name=\chapter,numberless}[display]
   {\thispagestyle{plain}\normalfont}
