@@ -49,8 +49,7 @@ before normal tokenization, unescapes `@@` to a literal `@`, and remaps
 diagnostics and source-step metadata through the source-map table.
 
 Use `##CFLAG nosrcmap` only when deliberately inspecting or preserving legacy
-plain generated CREXX. `##CFLAG srcmap` is accepted as a redundant historical
-flag but is no longer required for diagnostics to work through `.rxpp -> rxc`.
+plain generated CREXX.
 
 Important source-map rules:
 
