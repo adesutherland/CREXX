@@ -3797,6 +3797,13 @@ set_tests_properties(crexxsaa_status PROPERTIES
 add_test(NAME source_provenance COMMAND test_source_provenance)
 set_tests_properties(source_provenance PROPERTIES LABELS "compiler;stage2")
 
+add_test(NAME rxc_srcmap
+        COMMAND ${CMAKE_COMMAND}
+        -DRXC=$<TARGET_FILE:rxc>
+        -DWORK=${CMAKE_CURRENT_BINARY_DIR}/rxc_srcmap
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxc_srcmap.cmake)
+set_tests_properties(rxc_srcmap PROPERTIES LABELS "compiler;diagnostics;srcmap")
+
 add_test(NAME trace_event_metadata
         COMMAND ${CMAKE_COMMAND}
         -DRXC=$<TARGET_FILE:rxc>

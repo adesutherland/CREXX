@@ -5,6 +5,18 @@ Status: working note for beta 3 issues
 [#611](https://github.com/adesutherland/CREXX/issues/611). This is not an
 implementation contract until reviewed and approved.
 
+Implementation slice started 2026-07-03:
+
+- `rxc` recognizes `options ... srcmap`, strips raw `@` source-map directives
+  before normal parsing, and remaps diagnostics/source-step metadata through the
+  common compiler diagnostic/source-tree paths.
+- Source-map prepass errors are `rxc` diagnostics with catalogue entries
+  (`SRCMAP_MALFORMED`, `SRCMAP_UNBALANCED`).
+- Current RXPP support is intentionally opt-in with `##CFLAG srcmap`; it emits
+  `options levelb srcmap`, common file/line/span helpers, escaped literal `@`,
+  and spans around ordinary macro replacement text. Moving RXPP to a root-level
+  first-class tool remains future work.
+
 ## Purpose
 
 RXPP should be treated as a first-class CREXX toolchain stage, not as invisible

@@ -31,6 +31,7 @@
 
 #include "rxcpmain.h"
 #include "rxcp_source_tree.h"
+#include "rxcp_srcmap.h"
 
 static void source_tree_clear_context_links(Context *context, ASTNode *node) {
     while (node) {
@@ -410,8 +411,70 @@ static void source_tree_sync_semantics_from_ast(SourceSemanticSyncState *state, 
     }
 }
 
+static int source_tree_context_ptr(Context *context, const char *ptr) {
+    return context &&
+           ptr &&
+           context->buff_start &&
+           context->buff_end &&
+           ptr >= context->buff_start &&
+           ptr <= context->buff_end;
+}
+
+static void source_tree_span_from_mapped_line(const RxcpSrcMapLocation *location,
+                                              const char **source_start,
+                                              const char **source_end) {
+    size_t start_offset;
+    size_t end_offset;
+
+    if (source_start) *source_start = 0;
+    if (source_end) *source_end = 0;
+    if (!location || !location->line_text || location->line_text_length == 0) return;
+
+    start_offset = location->column < 0 ? 0 : (size_t)location->column;
+    if (start_offset >= location->line_text_length) return;
+
+    end_offset = start_offset + (location->length > 0 ? (size_t)location->length : 1);
+    if (end_offset > location->line_text_length) end_offset = location->line_text_length;
+    if (end_offset <= start_offset) end_offset = start_offset + 1;
+
+    if (source_start) *source_start = location->line_text + start_offset;
+    if (source_end) *source_end = location->line_text + end_offset - 1;
+}
+
+static void source_node_apply_srcmap(SourceNode *source_node,
+                                     const RxcpSrcMapLocation *location) {
+    const char *source_start;
+    const char *source_end;
+    size_t start_offset;
+    size_t end_offset;
+
+    if (!source_node || !location) return;
+    source_node->file_name = (char *)location->file_name;
+    source_node->line = location->line;
+    source_node->column = location->column;
+    source_node->source_start = 0;
+    source_node->source_end = 0;
+
+    if (!location->line_text || location->line_text_length == 0) return;
+
+    source_node->owned_source_text = rx_strndup(location->line_text, location->line_text_length);
+    if (!source_node->owned_source_text) return;
+
+    start_offset = location->column < 0 ? 0 : (size_t)location->column;
+    if (start_offset >= location->line_text_length) return;
+    end_offset = start_offset + (location->length > 0 ? (size_t)location->length : 1);
+    if (end_offset > location->line_text_length) end_offset = location->line_text_length;
+    if (end_offset <= start_offset) end_offset = start_offset + 1;
+
+    source_start = source_node->owned_source_text + start_offset;
+    source_end = source_node->owned_source_text + end_offset - 1;
+    source_node->source_start = (char *)source_start;
+    source_node->source_end = (char *)source_end;
+}
+
 static SourceNode *source_node_f(Context *context, ASTNode *node) {
     SourceNode *source_node;
+    RxcpSrcMapLocation mapped;
 
     source_node = calloc(1, sizeof(SourceNode));
     source_node->context = context;
@@ -426,6 +489,13 @@ static SourceNode *source_node_f(Context *context, ASTNode *node) {
     source_node->source_end = node->source_end;
     source_node->line = node->line;
     source_node->column = node->column;
+    if (rxcp_srcmap_lookup(context,
+                           node->source_start,
+                           node->line,
+                           node->column,
+                           &mapped)) {
+        source_node_apply_srcmap(source_node, &mapped);
+    }
     source_node->free_list = context->source_free_list;
     if (source_node->free_list) source_node->node_number = source_node->free_list->node_number + 1;
     else source_node->node_number = 1;
@@ -510,8 +580,15 @@ static void source_tree_append_diagnostic(Context *context, ASTNode *diag) {
     char *message;
     int line;
     int column;
+    char *file_name;
+    char *source_start;
+    char *source_end;
+    const char *mapped_start;
+    const char *mapped_end;
     SourceDiagnosticSeverity severity;
     SourceDiagnostic *existing;
+    RxcpSrcMapLocation mapped;
+    const char *lookup_ptr;
 
     if (!context || !diag) return;
     if (diag->node_type != ERROR && diag->node_type != WARNING) return;
@@ -526,6 +603,23 @@ static void source_tree_append_diagnostic(Context *context, ASTNode *diag) {
     if (!message) return;
     line = diag->line >= 0 ? diag->line : owner->line;
     column = diag->column >= 0 ? diag->column : owner->column;
+    file_name = diag->file_name ? diag->file_name : owner->file_name;
+    source_start = diag->source_start ? diag->source_start : owner->source_start;
+    source_end = diag->source_end ? diag->source_end : owner->source_end;
+    lookup_ptr = diag->source_start;
+    if (!source_tree_context_ptr(context, lookup_ptr) && diag->token) lookup_ptr = diag->token->token_string;
+    if (!source_tree_context_ptr(context, lookup_ptr) &&
+        source_tree_context_ptr(context, owner->source_start)) {
+        lookup_ptr = owner->source_start;
+    }
+    if (rxcp_srcmap_lookup(context, lookup_ptr, line, column, &mapped)) {
+        file_name = (char *)mapped.file_name;
+        line = mapped.line;
+        column = mapped.column;
+        source_tree_span_from_mapped_line(&mapped, &mapped_start, &mapped_end);
+        source_start = (char *)mapped_start;
+        source_end = (char *)mapped_end;
+    }
     severity = diag->node_type == WARNING ? SOURCE_DIAG_WARNING : SOURCE_DIAG_ERROR;
 
     existing = owner->diagnostics;
@@ -548,9 +642,9 @@ static void source_tree_append_diagnostic(Context *context, ASTNode *diag) {
     source_diag->message = message;
     source_diag->message_length = strlen(message);
     source_diag->diagnostic = rxcp_diag_clone(diag->diagnostic);
-    source_diag->file_name = diag->file_name ? diag->file_name : owner->file_name;
-    source_diag->source_start = diag->source_start ? diag->source_start : owner->source_start;
-    source_diag->source_end = diag->source_end ? diag->source_end : owner->source_end;
+    source_diag->file_name = file_name;
+    source_diag->source_start = source_start;
+    source_diag->source_end = source_end;
     source_diag->line = line;
     source_diag->column = column;
     source_diag->severity = severity;

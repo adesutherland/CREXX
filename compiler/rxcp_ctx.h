@@ -99,6 +99,7 @@ struct Context {
     char is_final_pass;
     char processedOptions;
     char source_has_options;
+    char source_has_srcmap;
     RexxLevel level;
     RexxLevel cli_level_override;
     RexxLevel cli_default_level;
@@ -143,6 +144,9 @@ struct Context {
 
     /* Diagnostics list (collected from AST for safe emission) */
     void *diagnostics_list;
+
+    /* Generated source to original source map for preprocessed input. */
+    RxcpSrcMap *srcmap;
 };
 
 #include "rxcp_emit.h"

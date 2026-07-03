@@ -10,7 +10,7 @@ options levelb
 import rexxscript
 import precomp
 import rxfnsb
-namespace rxpp expose globaldef rxmodule source stype callargs macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs select_count beginblock beginName scriptMacro scriptMacros scriptMacroCounter
+namespace rxpp expose globaldef rxmodule source stype callargs macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs select_count beginblock beginName scriptMacro scriptMacros scriptMacroCounter srcmap_source_file srcmap_line_offset
 
 
 
@@ -171,6 +171,7 @@ RXPPPassOne: procedure = .int
   call arrayInsert stype,1,10
   source.1='/* RXPP */'
   source.2='options levelb'
+  if rxpp_srcmap_enabled() then source.2='options levelb srcmap'
   source.3='import rxfnsb'
   source.4='/* reserved for namespace definition */'
   rexxlines=rexxlines+3
@@ -609,6 +610,51 @@ printGen: procedure=.string
   else return '/* rxpp: 'line' */'        ## Macro call
 return '/* rxpp: 'line' U*/'
 /* ------------------------------------------------------------------
+ * Source-map helpers: keep RXPP marker emission and escaping in one place.
+ * The compiler consumes the raw @ channel after seeing "options ... srcmap".
+ * ------------------------------------------------------------------
+ */
+rxpp_srcmap_enabled: procedure=.int
+  if pos(' srcmap',cflags)>0 then return 1
+return 0
+
+rxpp_srcmap_marker: procedure=.string
+return '!RXPP_SRCMAP_AT!'
+
+rxpp_srcmap_quote: procedure=.string
+  arg text=.string
+  text=changestr('@',text,'@@')
+  text=changestr('"',text,'""')
+return '"'text'"'
+
+rxpp_srcmap_escape: procedure=.string
+  arg text=.string
+  marker=rxpp_srcmap_marker()
+  text=changestr('@',text,'@@')
+  text=changestr(marker,text,'@')
+return text
+
+rxpp_srcmap_file_hint: procedure=.string
+  arg file=.string
+return '@'rxpp_srcmap_quote(file)
+
+rxpp_srcmap_line_hint: procedure=.string
+  arg line_no=.int,line_text=.string
+  if line_no<=0 then return ''
+return '@'line_no'l'rxpp_srcmap_quote(line_text)
+
+rxpp_srcmap_source_line: procedure=.int
+  arg line_no=.int
+  if line_no<=srcmap_line_offset then return 0
+return line_no-srcmap_line_offset
+
+rxpp_srcmap_span: procedure=.string
+  arg source_col=.int,source_len=.int,text=.string
+  marker=rxpp_srcmap_marker()
+  if source_col<1 then source_col=1
+  if source_len<1 then source_len=length(text)
+return marker||source_col||'+'||source_len||'{'||text||marker||'}'
+/* ------------------------------------------------------------------
  * Implements ##SET: assigns a pre-compiler variable and updates internal flags if needed.
  * ------------------------------------------------------------------
  */
@@ -926,6 +972,7 @@ return
  */
 writeline: procedure
   arg oline=.string
+  source_line_no=.int
   oline=injectVariable(oline)
 ## just insert line to buffer
    if lino=1 then do
@@ -939,6 +986,16 @@ writeline: procedure
       outbuf.lino=' */'
    end
    if oline='' & outbuf.lino='' then return  ## not more than one blank line
+   if rxpp_srcmap_enabled() then do
+      source_line_no=rxpp_srcmap_source_line(curlino)
+      if source_line_no>0 & oline\='' then do
+         lino = lino + 1
+         outbuf.lino=rxpp_srcmap_file_hint(srcmap_source_file)
+         lino = lino + 1
+         outbuf.lino=rxpp_srcmap_line_hint(source_line_no,source.curlino)
+      end
+      oline=rxpp_srcmap_escape(oline)
+   end
    lino = lino + 1
    outbuf.lino = oline
   return
@@ -961,7 +1018,7 @@ expandRecursive:  procedure=.string
   expandlevel=0
   do until old = line | line=''   /* No change → stop */
      old = line
-     line = expandLine(line)  /* Expand one level */
+     line = expandLine(line,linnum)  /* Expand one level */
   end
 return line
 /* ------------------------------------------------------------------
@@ -969,7 +1026,7 @@ return line
  * ------------------------------------------------------------------
  */
 expandLine:  procedure=.string
-  arg line=.string
+  arg line=.string,linnum=.int
   ucmd=upper(word(line,1))
   if ucmd = '##SET' | ucmd = '##UNSET' then do
      call cmd_set 9999,line
@@ -981,7 +1038,7 @@ expandLine:  procedure=.string
   ## if pos('(',line,1)=0 then return line   ## if there is no "(" there can't be a macro call
   i=hasMacro(line,macros_mname,1)      ## checks also for ## /*
   do while i>0
-     line=resolveMacro(i,line,expandLevel)
+     line=resolveMacro(i,line,expandLevel,linnum)
      expandlevel=expandlevel+1
      i=hasMacro(line,macros_mname,i+1)
   end
@@ -1059,7 +1116,7 @@ return source[linnum]
  * ------------------------------------------------------------------
  */
 resolveMacro: procedure=.string
-   arg i=.int, line=.string,level=.int
+   arg i=.int, line=.string,level=.int,linnum=.int
    ppl=lastpos('##',line)       ## ending comment, if any
    if ppl>1 then line=substr(line,1,ppl-1)
    uline   = upper(line)
@@ -1106,6 +1163,7 @@ resolveMacro: procedure=.string
        bodyExp = replaceFixArg(bodyExp, name,args,callargcount)
        if substr(bodyexp,1,3)='+++' then return bodyexp  ## +++ error occurred in call
        callLen = length(name) + 1 + length(argtext)  /* inkl. len(name()+1 for ) */
+       if rxpp_srcmap_enabled() then bodyExp=rxpp_srcmap_span(callpos,callLen,bodyExp)
        line=splice(bodyexp,line,callpos,callLen)  ## line=insertatc(bodyexp,line,callpos,callLen)
        if mspace= 1 then leave        /* nesting for command macros are not permitted */
        uline    = upper(line)         /* update uline for repetition */
@@ -1974,6 +2032,8 @@ rxppinit: procedure=.string
   scriptMacro=.stem()
   globaldef=''
   lino=0
+  srcmap_source_file=rexxname
+  srcmap_line_offset=10
   select_count=0
   outbuf=.string[]
   mexpanded=0
