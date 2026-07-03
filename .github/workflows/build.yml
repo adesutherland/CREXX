@@ -197,8 +197,8 @@ jobs:
           stage="${{ runner.temp }}/release-payload/${{ matrix.artifact_name }}"
           mkdir -p "$stage/bin" "$stage/examples"
 
-          cp "${{ runner.temp }}/build/bin/"* "$stage/bin/"
-          cp examples/* "$stage/examples/"
+          cp -R "${{ runner.temp }}/build/bin/." "$stage/bin/"
+          cp -R examples/. "$stage/examples/"
           cp LICENSE README.md SECURITY.md INSTALL-RUN.md "$stage/"
           cp "${{ runner.temp }}/build/generated/VERSION" "$stage/VERSION"
           cp "${{ runner.temp }}/build/generated/BUILDINFO" "$stage/BUILDINFO"
