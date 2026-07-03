@@ -1,7 +1,7 @@
 # Level B Array Mutation Statements
 
 Status: raw dynamic-array implementation complete in `rxc`; object/interface
-lowering pending.
+collection lowering deferred to a post-Release 1 Level G enhancement.
 
 This note records the intended Level B source surface for direct collection
 mutation. The goal is to make common sequence operations readable in Rexx
@@ -83,6 +83,13 @@ string array but intentionally refuses `n < 1`, so it is not the helper-level
 clear-to-empty surface. Classic/Level C `DROP` is a variable-pool operation and
 should not be reused for typed-array element removal.
 
+Do not retire `arraydrop` or `objectarraydrop` during Release 1. They remain
+the compatibility surface and are still needed by collection class internals
+where the first raw-array statement implementation does not apply, such as
+class attributes and object-array helper use. `clear array` is the preferred
+source statement for supported raw dynamic arrays because it lowers directly to
+`SETATTRS array,0`.
+
 ## Object Extension Direction
 
 The syntax is intentionally compatible with future collection objects:
@@ -106,6 +113,28 @@ target. A bare `.object` does not by itself prove the presence or signature of
 specific interface or concrete class contract whose methods are visible to the
 compiler.
 
+## Post-Release 1 Level G Collection Extension
+
+Object/interface lowering is a post-Release 1 Level G enhancement, not Release 1
+scope. The extension should be interface-led rather than name-only duck typing:
+
+- Define explicit mutable sequence contracts before lowering object targets.
+  Existing classlib method names are not enough because lists, linked lists,
+  maps, and sets use overlapping names with different semantics and return
+  shapes.
+- Prefer statically proven interface or concrete-class targets first. The
+  compiler can then validate that the required method contract exists before
+  rewriting the statement to method dispatch.
+- Runtime dynamic scenarios should also be contract-based. Values should be
+  interface-typed, explicitly cast, or guarded before dispatch; arbitrary
+  `.object` targets should not be accepted merely because a method might exist.
+- Count/range removal needs a deliberate contract. Emitting repeated
+  `remove(index)` calls would be slow and would not match all existing method
+  meanings. A contract method such as `removeRange(index, count)` or equivalent
+  should be specified before collection lowering is implemented.
+- The compiler can then lower through existing member/interface dispatch,
+  including `srcmethodsel`, using the required method descriptors.
+
 ## Non-Goals
 
 - No generic `.T[]` helper functions are introduced by this syntax.
@@ -127,5 +156,5 @@ The raw-array implementation has focused no-opt and opt coverage for:
 
 Still pending:
 
-- append/insert/remove/clear on object/interface contracts once that lowering is
-  deliberately designed
+- post-Release 1 Level G append/insert/remove/clear lowering for explicit
+  object/interface collection contracts
