@@ -1212,6 +1212,16 @@ const char *ast_ndtp(NodeType type) {
             return "ARGS";
         case ASSIGN:
             return "ASSIGN";
+        case ARRAY_APPEND:
+            return "ARRAY_APPEND";
+        case ARRAY_CLEAR:
+            return "ARRAY_CLEAR";
+        case ARRAY_INSERT:
+            return "ARRAY_INSERT";
+        case ARRAY_REMOVE:
+            return "ARRAY_REMOVE";
+        case ARRAY_REMOVE_RANGE:
+            return "ARRAY_REMOVE_RANGE";
         case ASSEMBLER:
             return "ASSEMBLER";
         case BY:

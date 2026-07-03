@@ -1,0 +1,2 @@
+Error in array_mutation_scalar_target.crexx @ 4:7 - #NOT_AN_ARRAY, "scalar"
+1 error(s) in source file

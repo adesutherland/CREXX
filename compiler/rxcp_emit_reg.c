@@ -1151,6 +1151,37 @@ walker_result register_walker(walker_direction direction,
                 break;
             }
 
+            case ARRAY_APPEND:
+                node->num_additional_registers = 2;
+                node->additional_registers = get_regs(node->scope, node->num_additional_registers);
+                return_additional_regs_later(node);
+                return_child_reg(child2);
+                break;
+
+            case ARRAY_INSERT:
+                node->num_additional_registers = 1;
+                node->additional_registers = get_regs(node->scope, node->num_additional_registers);
+                return_additional_regs_later(node);
+                return_child_reg(child2);
+                return_child_reg(child3);
+                break;
+
+            case ARRAY_REMOVE:
+                return_child_reg(child2);
+                return_child_reg(child3);
+                break;
+
+            case ARRAY_REMOVE_RANGE:
+                node->num_additional_registers = 2;
+                node->additional_registers = get_regs(node->scope, node->num_additional_registers);
+                return_additional_regs_later(node);
+                return_child_reg(child2);
+                return_child_reg(child3);
+                break;
+
+            case ARRAY_CLEAR:
+                break;
+
             case ARG:
                 if (child2->register_num == DONT_ASSIGN_REGISTER) {
                     /* Marked earlier so set the register to the target register */

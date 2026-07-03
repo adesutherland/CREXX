@@ -1088,6 +1088,11 @@ const char* node_type_to_string(NodeType type) {
         case ARGS: return "ARGS";
         case ASSEMBLER: return "ASSEMBLER";
         case ASSIGN: return "ASSIGN";
+        case ARRAY_APPEND: return "ARRAY_APPEND";
+        case ARRAY_CLEAR: return "ARRAY_CLEAR";
+        case ARRAY_INSERT: return "ARRAY_INSERT";
+        case ARRAY_REMOVE: return "ARRAY_REMOVE";
+        case ARRAY_REMOVE_RANGE: return "ARRAY_REMOVE_RANGE";
         case BY: return "BY";
         case CALL: return "CALL";
         case CLASS: return "CLASS";

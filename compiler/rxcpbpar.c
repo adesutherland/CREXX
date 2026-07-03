@@ -42,6 +42,47 @@ static int rxcp_is_instruction_lead_token(int last_token_type) {
            last_token_type == TK_OTHERWISE;
 }
 
+static int rxcp_token_text_equals(Token *token, const char *text) {
+    int i;
+    int length;
+
+    if (!token || !token->token_string || !text) return 0;
+    length = (int)strlen(text);
+    if (token->length != length) return 0;
+    for (i = 0; i < length; i++) {
+        if (tolower((unsigned char)token->token_string[i]) != text[i]) return 0;
+    }
+    return 1;
+}
+
+static int rxcp_array_statement_head_type(Token *token) {
+    if (rxcp_token_text_equals(token, "append")) return TK_ARRAY_APPEND;
+    if (rxcp_token_text_equals(token, "clear")) return TK_ARRAY_CLEAR;
+    if (rxcp_token_text_equals(token, "insert")) return TK_ARRAY_INSERT;
+    if (rxcp_token_text_equals(token, "remove")) return TK_ARRAY_REMOVE;
+    return 0;
+}
+
+static int rxcp_can_start_array_statement_target(Token *token) {
+    return token && token->token_type == TK_VAR_SYMBOL;
+}
+
+static void rxcp_update_array_statement_depth(int token_type, int *depth) {
+    if (!depth) return;
+    switch (token_type) {
+        case TK_OPEN_BRACKET:
+        case TK_OPEN_SBRACKET:
+            (*depth)++;
+            break;
+        case TK_CLOSE_BRACKET:
+        case TK_CLOSE_SBRACKET:
+            if (*depth > 0) (*depth)--;
+            break;
+        default:
+            break;
+    }
+}
+
 static const char *rxcp_cli_level_name(Context *context) {
     switch (context->cli_default_level) {
         case LEVELA: return "levela";
@@ -100,6 +141,8 @@ int rexbpars(Context *context) {
     Token *token, *t, *peek_token;
     void *parser;
     int cli_option_stage;
+    int array_statement_active;
+    int array_statement_depth;
 
     /* Create parser and set up tracing */
     parser = RexxBAlloc(malloc);
@@ -116,8 +159,11 @@ int rexbpars(Context *context) {
     peek_token = rxcp_next_parser_token(context, &cli_option_stage);
     last_token_type = TK_EOC;
     int in_exit_instruction = 0;
+    array_statement_active = 0;
+    array_statement_depth = 0;
     while (1) {
         const char *disabled_certified_primary;
+        int promoted_array_head;
 
         token = peek_token;
         if (token->token_type == TK_EOL) token->token_type = TK_EOC;
@@ -125,14 +171,39 @@ int rexbpars(Context *context) {
 
         if (token_type == TK_EOC) {
             in_exit_instruction = 0;
+            array_statement_active = 0;
+            array_statement_depth = 0;
+        }
+
+        if (token_type != TK_EOS && token_type != TK_BADCOMMENT) {
+            peek_token = rxcp_next_parser_token(context, &cli_option_stage);
         }
 
         // Promotion
+        promoted_array_head = 0;
         disabled_certified_primary = NULL;
         if (context->disable_exits && token->token_string) {
             disabled_certified_primary = rxcp_match_certified_exit_primary(token->token_string, token->length);
         }
         if (rxcp_is_instruction_lead_token(last_token_type) &&
+            token_type == TK_VAR_SYMBOL &&
+            rxcp_can_start_array_statement_target(peek_token) &&
+            rxcp_array_statement_head_type(token)) {
+            token_type = rxcp_array_statement_head_type(token);
+            token->token_type = token_type;
+            array_statement_active = 1;
+            array_statement_depth = 0;
+            promoted_array_head = 1;
+        } else if (array_statement_active &&
+                   array_statement_depth == 0 &&
+                   token_type == TK_VAR_SYMBOL &&
+                   rxcp_token_text_equals(token, "at")) {
+            token_type = TK_ARRAY_AT;
+            token->token_type = TK_ARRAY_AT;
+        }
+
+        if (!promoted_array_head &&
+            rxcp_is_instruction_lead_token(last_token_type) &&
             token_type != TK_EOC &&
             token_type != TK_EOS &&
             token->token_string &&
@@ -146,6 +217,10 @@ int rexbpars(Context *context) {
                 token_type = TK_EXIT_TOKEN;
                 token->token_type = TK_EXIT_TOKEN;
             }
+        }
+
+        if (array_statement_active) {
+            rxcp_update_array_statement_depth(token_type, &array_statement_depth);
         }
 
         // EOS Special Processing
@@ -170,8 +245,6 @@ int rexbpars(Context *context) {
             RexxB(parser, 0, NULL, context);
             break;
         }
-
-        peek_token = rxcp_next_parser_token(context, &cli_option_stage);
 
         // Line Continuation
         if (token_type == TK_COMMA && peek_token->token_type == TK_EOL) {

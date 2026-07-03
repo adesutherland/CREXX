@@ -135,6 +135,39 @@ call list.add("red")
 
 Use an expression call when the returned value is required.
 
+## Array Mutation
+
+Level B supports core statement forms for mutating one-dimensional dynamic raw
+typed arrays:
+
+```rexx
+append items with value
+insert items with value at index
+remove items at index
+remove items at index for count
+remove items at first to last
+clear items
+```
+
+The target must currently be a raw dynamic array such as `.string[]` or
+`.int[]`. Appended or inserted values must be assignable to the array element
+type, and index/count/range expressions must be integers. Fixed-size arrays,
+multi-dimensional arrays, and object/interface collection targets are not part
+of this first implementation phase.
+
+```rexx
+items = .string[]
+append items with "red"
+append items with "blue"
+insert items with "green" at 2
+remove items at 1
+clear items
+```
+
+`append`, `insert`, `remove`, `clear`, and `at` are contextual in this statement
+surface; method calls such as `list.append(value)` and variables named `at`
+remain ordinary symbols outside these statement forms.
+
 ## CONSTANT
 
 Level B supports named compile-time constants:

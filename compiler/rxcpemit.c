@@ -124,6 +124,40 @@ static int output_has_text(OutputFragment *fragment) {
     return 0;
 }
 
+static void emit_statement_source_metadata(ASTNode *node,
+                                           unsigned int *trace_step_id,
+                                           unsigned int *trace_clause_id) {
+    char *comment_meta;
+
+    comment_meta = get_metaline(node);
+    if (trace_step_id) *trace_step_id = trace_source_step_id_from_metaline(comment_meta);
+    if (trace_clause_id) *trace_clause_id = trace_clause_id_from_metaline(comment_meta);
+    if (node->output) output_prepend_text(comment_meta, node->output);
+    else node->output = output_fs(comment_meta);
+    free(comment_meta);
+}
+
+static char *register_operand(ASTNode *node, ValueType fallback_type) {
+    ValueType type;
+
+    if (!node) return strdup("0");
+    if (node->register_num == DONT_ASSIGN_REGISTER) {
+        type = node->target_type != TP_UNKNOWN ? node->target_type : node->value_type;
+        if (type == TP_UNKNOWN) type = fallback_type;
+        return format_constant(type, node);
+    }
+    return mprintf("%c%d", node->register_type ? node->register_type : 'r', node->register_num);
+}
+
+static char *array_value_copy_prefix(ASTNode *value_node, ASTNode *target_node) {
+    ValueType value_type;
+
+    value_type = value_node && value_node->target_type != TP_UNKNOWN ?
+                 value_node->target_type :
+                 (target_node ? target_node->value_type : TP_UNKNOWN);
+    return type_to_prefix(value_type);
+}
+
 static void node_cleanup_replace_text(ASTNode *node, char *text) {
     if (!node || !text) return;
     if (node->cleanup) {
@@ -1536,8 +1570,146 @@ static walker_result emit_walker(walker_direction direction,
                     child1->cleanup = 0;
                 }
                 else output_concat(node->output, child1->cleanup);
-	                break;
-	            }
+                break;
+            }
+
+                case ARRAY_APPEND: {
+                    int index_reg;
+                    int link_reg;
+                    char *value_prefix;
+
+                    emit_statement_source_metadata(node, &trace_step_id, &trace_clause_id);
+                    output_concat(node->output, child1->output);
+                    output_concat(node->output, child2->output);
+                    output_apply_trace_source_ids(node->output, trace_step_id, trace_clause_id);
+
+                    index_reg = node->additional_registers;
+                    link_reg = node->additional_registers + 1;
+                    value_prefix = array_value_copy_prefix(child2, child1);
+                    temp1 = mprintf("   getattrs r%d,%c%d,0\n"
+                                    "   iadd r%d,r%d,1\n"
+                                    "   insattrs1 %c%d,r%d,1\n"
+                                    "   linkattr1 r%d,%c%d,r%d\n"
+                                    "   %scopy r%d,%c%d\n"
+                                    "   unlink r%d\n",
+                                    index_reg,
+                                    child1->register_type, child1->register_num,
+                                    index_reg, index_reg,
+                                    child1->register_type, child1->register_num, index_reg,
+                                    link_reg, child1->register_type, child1->register_num, index_reg,
+                                    value_prefix, link_reg, child2->register_type, child2->register_num,
+                                    link_reg);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                    output_concat(node->output, child2->cleanup);
+                    output_concat(node->output, child1->cleanup);
+                    break;
+                }
+
+                case ARRAY_INSERT: {
+                    int link_reg;
+                    char *value_prefix;
+                    char *index;
+
+                    emit_statement_source_metadata(node, &trace_step_id, &trace_clause_id);
+                    output_concat(node->output, child1->output);
+                    output_concat(node->output, child2->output);
+                    output_concat(node->output, child3->output);
+                    output_apply_trace_source_ids(node->output, trace_step_id, trace_clause_id);
+
+                    link_reg = node->additional_registers;
+                    value_prefix = array_value_copy_prefix(child2, child1);
+                    index = register_operand(child3, TP_INTEGER);
+                    temp1 = mprintf("   insattrs1 %c%d,%s,1\n"
+                                    "   linkattr1 r%d,%c%d,%s\n"
+                                    "   %scopy r%d,%c%d\n"
+                                    "   unlink r%d\n",
+                                    child1->register_type, child1->register_num, index,
+                                    link_reg, child1->register_type, child1->register_num, index,
+                                    value_prefix, link_reg, child2->register_type, child2->register_num,
+                                    link_reg);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                    free(index);
+                    output_concat(node->output, child3->cleanup);
+                    output_concat(node->output, child2->cleanup);
+                    output_concat(node->output, child1->cleanup);
+                    break;
+                }
+
+                case ARRAY_REMOVE: {
+                    char *index;
+                    char *count;
+
+                    emit_statement_source_metadata(node, &trace_step_id, &trace_clause_id);
+                    output_concat(node->output, child1->output);
+                    output_concat(node->output, child2->output);
+                    if (child3) output_concat(node->output, child3->output);
+                    output_apply_trace_source_ids(node->output, trace_step_id, trace_clause_id);
+
+                    index = register_operand(child2, TP_INTEGER);
+                    count = child3 ? register_operand(child3, TP_INTEGER) : strdup("1");
+                    temp1 = mprintf("   delattrs1 %c%d,%s,%s\n",
+                                    child1->register_type, child1->register_num,
+                                    index, count);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                    free(index);
+                    free(count);
+                    if (child3) output_concat(node->output, child3->cleanup);
+                    output_concat(node->output, child2->cleanup);
+                    output_concat(node->output, child1->cleanup);
+                    break;
+                }
+
+                case ARRAY_REMOVE_RANGE: {
+                    int count_reg;
+                    int bool_reg;
+                    char *first;
+                    char *last;
+
+                    emit_statement_source_metadata(node, &trace_step_id, &trace_clause_id);
+                    output_concat(node->output, child1->output);
+                    output_concat(node->output, child2->output);
+                    output_concat(node->output, child3->output);
+                    output_apply_trace_source_ids(node->output, trace_step_id, trace_clause_id);
+
+                    count_reg = node->additional_registers;
+                    bool_reg = node->additional_registers + 1;
+                    first = register_operand(child2, TP_INTEGER);
+                    last = register_operand(child3, TP_INTEGER);
+                    temp1 = mprintf("   isub r%d,%s,%s\n"
+                                    "   iadd r%d,r%d,1\n"
+                                    "   ilte r%d,r%d,0\n"
+                                    "   brt l%darrayremoveend,r%d\n"
+                                    "   delattrs1 %c%d,%s,r%d\n"
+                                    "l%darrayremoveend:\n",
+                                    count_reg, last, first,
+                                    count_reg, count_reg,
+                                    bool_reg, count_reg,
+                                    node->node_number, bool_reg,
+                                    child1->register_type, child1->register_num, first, count_reg,
+                                    node->node_number);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                    free(first);
+                    free(last);
+                    output_concat(node->output, child3->cleanup);
+                    output_concat(node->output, child2->cleanup);
+                    output_concat(node->output, child1->cleanup);
+                    break;
+                }
+
+                case ARRAY_CLEAR:
+                    emit_statement_source_metadata(node, &trace_step_id, &trace_clause_id);
+                    output_concat(node->output, child1->output);
+                    output_apply_trace_source_ids(node->output, trace_step_id, trace_clause_id);
+                    temp1 = mprintf("   setattrs %c%d,0\n",
+                                    child1->register_type, child1->register_num);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                    output_concat(node->output, child1->cleanup);
+                    break;
 
             case NOP:
                 emit_flow(node, pl);

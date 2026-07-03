@@ -241,8 +241,12 @@ over the legacy `lib/plugins/arrays` RXPA plugin. Current array BIFs include
 `arrayset`, `arraycontains`, `arrayindexof`, `arrayreverse`, and `arrayjoin`.
 These `array*` helpers are currently the `.string[]` helper family, not generic
 or numeric typed-array helpers. For `.object[]`, use the separate
-`objectarray*` family below. Numeric typed arrays should use direct indexing
-or explicit loops until a typed/generic helper surface is deliberately added.
+`objectarray*` family below. For raw one-dimensional dynamic typed arrays,
+including numeric arrays, Level B now has core `rxc` statement forms:
+`append array with value`, `insert array with value at index`,
+`remove array at index [for count]`, `remove array at first to last`, and
+`clear array`. These are compiler syntax, not exits or public helper BIFs, and
+lower directly to VM array attribute opcodes.
 Object-shaped mutating helpers are exposed separately as `objectarrayinsert`,
 `objectarraydelete`, `objectarrayappend`, `objectarrayprepend`, and
 `objectarraydrop`, plus `objectarraymove` for block moves. Insertion, deletion,
@@ -250,9 +254,10 @@ movement, append, prepend, pop, shift, gap-growing set, and the object-array
 insert/delete/append/prepend/drop/move helpers
 use VM bulk attribute instructions so the logical array pointer list can be
 shifted without a Rexx-level per-element copy loop. Mutating array BIFs must
-declare the array with `arg expose`. To clear an existing array object in
-place, use `arraydrop` for `.string[]` and `objectarraydrop` for `.object[]`;
-this is the current Level B clear idiom for collection attributes.
+declare the array with `arg expose`. To clear an existing array object through
+the helper surface, use `arraydrop` for `.string[]` and `objectarraydrop` for
+`.object[]`; `clear array` is the source-level raw dynamic-array clear
+statement.
 
 Container naming is intentionally split by shape:
 

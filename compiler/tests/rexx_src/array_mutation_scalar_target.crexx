@@ -1,0 +1,5 @@
+options levelb
+
+scalar = 1
+clear scalar
+return

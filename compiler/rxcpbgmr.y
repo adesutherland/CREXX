@@ -452,11 +452,30 @@ instruction(E)         ::= error.
                            { E = ast_errh(context, "SYNTAX_ERROR"); }
 
 single_instruction(I)  ::= assignment(B). { I = B; }
+single_instruction(I)  ::= array_mutation(B). { I = B; }
 single_instruction(I)  ::= define(B). { I = B; }
 single_instruction(I)  ::= constant_def(B). { I = B; }
 single_instruction(I)  ::= exit_extended(B). { I = B; }
 single_instruction(I)  ::= command(B). { I = B; }
 single_instruction(I)  ::= keyword_instruction(B). { I = B; }
+
+array_mutation(I) ::= TK_ARRAY_APPEND(T) var_symbol(A) TK_WITH expression(V).
+    { I = ast_f(context, ARRAY_APPEND, T); add_ast(I,A); add_ast(I,V); }
+
+array_mutation(I) ::= TK_ARRAY_INSERT(T) var_symbol(A) TK_WITH expression(V) TK_ARRAY_AT expression(X).
+    { I = ast_f(context, ARRAY_INSERT, T); add_ast(I,A); add_ast(I,V); add_ast(I,X); }
+
+array_mutation(I) ::= TK_ARRAY_REMOVE(T) var_symbol(A) TK_ARRAY_AT expression(X).
+    { I = ast_f(context, ARRAY_REMOVE, T); add_ast(I,A); add_ast(I,X); }
+
+array_mutation(I) ::= TK_ARRAY_REMOVE(T) var_symbol(A) TK_ARRAY_AT expression(X) TK_FOR expression(C).
+    { I = ast_f(context, ARRAY_REMOVE, T); add_ast(I,A); add_ast(I,X); add_ast(I,C); }
+
+array_mutation(I) ::= TK_ARRAY_REMOVE(T) var_symbol(A) TK_ARRAY_AT expression(F) TK_TO expression(L).
+    { I = ast_f(context, ARRAY_REMOVE_RANGE, T); add_ast(I,A); add_ast(I,F); add_ast(I,L); }
+
+array_mutation(I) ::= TK_ARRAY_CLEAR(T) var_symbol(A).
+    { I = ast_f(context, ARRAY_CLEAR, T); add_ast(I,A); }
 
 exit_extended(I) ::= TK_EXIT_PRIMARY(P) exit_tokens(L). [EXIT_REDUCE]
 {

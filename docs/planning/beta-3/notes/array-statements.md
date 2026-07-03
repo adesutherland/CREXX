@@ -1,6 +1,7 @@
 # Level B Array Mutation Statements
 
-Status: design accepted, implementation pending.
+Status: raw dynamic-array implementation complete in `rxc`; object/interface
+lowering pending.
 
 This note records the intended Level B source surface for direct collection
 mutation. The goal is to make common sequence operations readable in Rexx
@@ -22,17 +23,16 @@ clear items
 
 The statement heads are `APPEND`, `INSERT`, `REMOVE`, and `CLEAR`. Clause
 words should reuse existing Rexx-like words where practical: `WITH`, `FOR`,
-and `TO` are already established in the language. `AT` is a new contextual
-clause word for these statements unless a better existing spelling is chosen
-during implementation.
+and `TO` are already established in the language. `AT` is implemented as a new
+contextual clause word for these statements.
 
 ## Raw Array Semantics
 
-The first implementation target is raw Level B typed arrays.
+The first implementation target is raw Level B typed arrays. That phase is now
+implemented for one-dimensional dynamic `.T[]` arrays.
 
 - `append array with value` appends one element at the current high-water mark.
-  It is equivalent to assigning at `array[array[0] + 1]`, using the compiler's
-  existing dynamic-array growth path.
+  It is semantically equivalent to assigning at `array[array[0] + 1]`.
 - `insert array with value at index` inserts one slot before/at the 1-based
   index, shifts later elements right, and stores `value` in the new slot.
 - `remove array at index` removes one element and shifts later elements left.
@@ -42,17 +42,22 @@ The first implementation target is raw Level B typed arrays.
 - `clear array` removes all elements and leaves the array object valid with a
   high-water mark of zero.
 
-For `.T[]` arrays, the compiler should check that the target is an array and
-that inserted/appended values are assignable to `.T`. Index, count, first, and
-last expressions are integer expressions. Negative or out-of-range runtime
-behavior should match the existing `array*` helper semantics where practical
-and be documented by the implementation.
+For `.T[]` arrays, the compiler checks that the target is a one-dimensional
+dynamic raw array and that inserted/appended values are assignable to `.T`.
+Fixed-size arrays, multi-dimensional arrays, class attributes, and future
+object/interface targets are rejected by this first phase. Index, count, first,
+and last expressions are integer expressions. The implemented raw-array
+lowering uses the VM array opcodes directly, so insert/remove index validity
+follows `INSATTRS1`/`DELATTRS1` rather than the older string helper BIF
+clamping behavior. Inclusive range removal skips the opcode when
+`last - first + 1 <= 0`.
 
 ## Lowering Target
 
-The intended raw-array lowering is:
+The implemented raw-array lowering is:
 
-- append: use normal indexed assignment to `array[array[0] + 1]`
+- append: emit `GETATTRS array,0`, increment the high-water mark, emit
+  `INSATTRS1 array,index,1`, then store the value in the new slot
 - insert: emit `INSATTRS1 array,index,1`, then assign `array[index] = value`
 - remove single/count: emit `DELATTRS1 array,index,count`
 - remove range: evaluate `first` and `last`, compute `last - first + 1`, then
@@ -72,10 +77,11 @@ call arraydrop items
 call objectarraydrop objects
 ```
 
-Those helpers lower to `SETATTRS array,0`. `arrayhi(array, "SET", n)` can
-shrink a string array but intentionally refuses `n < 1`, so it is not the
-current clear-to-empty surface. Classic/Level C `DROP` is a variable-pool
-operation and should not be reused for typed-array element removal.
+Those helpers lower to `SETATTRS array,0`. `clear items` is now the source-level
+raw dynamic-array clear statement. `arrayhi(array, "SET", n)` can shrink a
+string array but intentionally refuses `n < 1`, so it is not the helper-level
+clear-to-empty surface. Classic/Level C `DROP` is a variable-pool operation and
+should not be reused for typed-array element removal.
 
 ## Object Extension Direction
 
@@ -110,13 +116,16 @@ compiler.
 
 ## Test Expectations
 
-Implementation should add focused no-opt and opt coverage for:
+The raw-array implementation has focused no-opt and opt coverage for:
 
 - append/insert/remove/clear on `.string[]`
 - append/insert/remove/clear on at least one numeric typed array, such as
   `.int[]`
-- append/insert/remove/clear on `.object[]` once boxing/object values are
-  usable enough for the test shape
 - range removal and count removal edge cases
 - compile-time diagnostics for non-array targets, non-integer index/count
   expressions, and incompatible value types
+
+Still pending:
+
+- append/insert/remove/clear on object/interface contracts once that lowering is
+  deliberately designed

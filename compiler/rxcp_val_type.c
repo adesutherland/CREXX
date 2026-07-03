@@ -206,6 +206,119 @@ static void set_node_target_type(Context* context, ASTNode* node, ValueType targ
     validate_node_promotion(context, node);
 }
 
+static int symbol_is_class_attribute_typecheck(Symbol *symbol);
+
+static int raw_dynamic_array_statement_target(Context *context, ASTNode *statement, ASTNode *target, int validate) {
+    Symbol *symbol;
+
+    if (!target) return 0;
+
+    if (!target->symbolNode || !target->symbolNode->symbol) {
+        if (validate) mknd_err(statement, "UNKNOWN_TYPE");
+        return 0;
+    }
+
+    symbol = target->symbolNode->symbol;
+    ast_svtp(target, symbol);
+
+    if (ast_nchd(target)) {
+        if (validate) mknd_err(ast_chdn(target, 0), "INVALID_LHS_ARRAY");
+        return 0;
+    }
+
+    if (symbol->type == TP_UNKNOWN || target->value_type == TP_UNKNOWN) {
+        if (validate) mknd_err(statement, "UNKNOWN_TYPE");
+        return 0;
+    }
+
+    if (!symbol->value_dims) {
+        if (validate) mknd_err(target, "NOT_AN_ARRAY");
+        return 0;
+    }
+
+    if (symbol->value_dims != 1 ||
+        !symbol->dim_base ||
+        !symbol->dim_elements ||
+        symbol->dim_base[0] != 1 ||
+        symbol->dim_elements[0] != 0 ||
+        symbol_is_class_attribute_typecheck(symbol)) {
+        if (validate) mknd_err(statement, "ARRAY_DIMS_MISMATCH");
+        return 0;
+    }
+
+    set_node_type(statement, TP_VOID);
+    return 1;
+}
+
+static void prepare_array_statement_types(Context *context, ASTNode *node, int validate) {
+    ASTNode *target;
+    ASTNode *value;
+    ASTNode *index;
+    ASTNode *count_or_last;
+    int target_ok;
+
+    set_node_type(node, TP_VOID);
+
+    target = ast_chdn(node, 0);
+    value = ast_chdn(node, 1);
+    index = ast_chdn(node, 2);
+    target_ok = raw_dynamic_array_statement_target(context, node, target, validate);
+
+    switch (node->node_type) {
+        case ARRAY_APPEND:
+            if (value && value->value_type == TP_VOID) {
+                if (validate) mknd_err(value, "RETURNS_VOID");
+            } else if (target_ok && value) {
+                ast_set_target_type(0, value, target->value_type, 0, 0, 0, target->value_class);
+                if (validate) validate_node_promotion(context, value);
+            }
+            break;
+
+        case ARRAY_INSERT:
+            if (value && value->value_type == TP_VOID) {
+                if (validate) mknd_err(value, "RETURNS_VOID");
+            } else if (target_ok && value) {
+                ast_set_target_type(0, value, target->value_type, 0, 0, 0, target->value_class);
+                if (validate) validate_node_promotion(context, value);
+            }
+            if (index) {
+                ast_set_target_type(0, index, TP_INTEGER, 0, 0, 0, 0);
+                if (validate) validate_node_promotion(context, index);
+            }
+            break;
+
+        case ARRAY_REMOVE:
+            if (value) {
+                ast_set_target_type(0, value, TP_INTEGER, 0, 0, 0, 0);
+                if (validate) validate_node_promotion(context, value);
+            }
+            count_or_last = index;
+            if (count_or_last) {
+                ast_set_target_type(0, count_or_last, TP_INTEGER, 0, 0, 0, 0);
+                if (validate) validate_node_promotion(context, count_or_last);
+            }
+            break;
+
+        case ARRAY_REMOVE_RANGE:
+            if (value) {
+                ast_set_target_type(0, value, TP_INTEGER, 0, 0, 0, 0);
+                if (validate) validate_node_promotion(context, value);
+            }
+            count_or_last = index;
+            if (count_or_last) {
+                ast_set_target_type(0, count_or_last, TP_INTEGER, 0, 0, 0, 0);
+                if (validate) validate_node_promotion(context, count_or_last);
+            }
+            break;
+
+        case ARRAY_CLEAR:
+            break;
+
+        default:
+            break;
+    }
+}
+
 static ASTNode *find_enclosing_block_expr(ASTNode *node) {
     if (node) node = node->parent;
     while (node) {
@@ -1500,6 +1613,14 @@ walker_result set_node_types_walker(walker_direction direction,
                 }
                 break;
 
+            case ARRAY_APPEND:
+            case ARRAY_INSERT:
+            case ARRAY_REMOVE:
+            case ARRAY_REMOVE_RANGE:
+            case ARRAY_CLEAR:
+                prepare_array_statement_types(context, node, 0);
+                break;
+
             case CONST_SYMBOL:
                 if (node->value_type == TP_UNKNOWN) {
                     /* context->changed_flags |= FLAG_VAL_TYPE; */ set_node_type(node, TP_STRING);
@@ -2261,6 +2382,14 @@ walker_result type_safety_walker(walker_direction direction,
                     validate_node_promotion(context, child2);
                     ast_svtn(node, child1);
                 }
+                break;
+
+            case ARRAY_APPEND:
+            case ARRAY_INSERT:
+            case ARRAY_REMOVE:
+            case ARRAY_REMOVE_RANGE:
+            case ARRAY_CLEAR:
+                prepare_array_statement_types(context, node, 1);
                 break;
 
             case ARGS:
