@@ -34,17 +34,17 @@ namespace data expose StringTreeMap
  * map's linear scan and snapshot sort hot paths.
  */
 StringTreeMap: class implements .StringIterable
-val = .int
-root_ = .int
-count_ = .int
+val	    = .int
+root_	    = .int
+count_	    = .int
 node_count_ = .int
 free_count_ = .int
-keys_ = .string[]
-values_ = .string[]
-left_ = .int[]
-right_ = .int[]
-height_ = .int[]
-free_ = .int[]
+keys_	    = .string[]
+values_	    = .string[]
+left_	    = .int[]
+right_	    = .int[]
+height_	    = .int[]
+free_	    = .int[]
 
   /**
    * Create an empty StringTreeMap.
