@@ -289,11 +289,11 @@ endfunction()
 crexx_add_trace_compile_fail_test(
         test_trace_unknown_option_diagnostic
         test_trace_unknown_option.crexx
-        "#TRACE_UNKNOWN_OPTION, \"potato\""
+        "TRACE option is not known\\., \"potato\""
 )
 
 crexx_add_trace_compile_fail_test(
         test_trace_bad_abbreviation_diagnostic
         test_trace_bad_abbreviation.crexx
-        "#TRACE_UNKNOWN_OPTION, \"ras\""
+        "TRACE option is not known\\., \"ras\""
 )

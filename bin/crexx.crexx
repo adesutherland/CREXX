@@ -57,6 +57,7 @@ native=0;version=0;help=0;compile=0;filename='';verbose=0
 execute=1;linking=0;compile=1;optimize=1;nocolor=0;keep=1;decimal=1
 lastfile=0;sourceRoots='';binaryRoots='';importRxas=0;argsStart=0
 linkStripSource=1;linkPreserveInline=0;linkMap='';linkOptionsUsed=0
+diagnosticsMode='';diagnosticLocale=''
 filenames=.string[];binfiles=.string[];cleanupFiles=.string[];cliArgs=.string[]
  
  esc             = '1b'X
@@ -164,6 +165,38 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
 	 if fn.i = '-nodecimal'  then decimal=0
 	 if fn.i = '-decimal'    then decimal=1
 	 if fn.i = '-import-rxas' then importRxas=1
+	 if fn.i = '-diagnostics' then do
+           i = i + 1
+           if i > fn.0 then do
+             say 'missing mode after' fn.i
+             return 2
+           end
+           diagnosticsMode = lower(fn.i)
+	 end
+	 else if left(fn.i,12) = '-diagnostics' & fn.i <> '-diagnostics' then do
+           diagnosticsMode = lower(substr(fn.i,13))
+           if diagnosticsMode = '' then do
+             say 'missing mode after' fn.i
+             return 2
+           end
+	 end
+	 if fn.i = '-diagnostic-locale' then do
+           i = i + 1
+           if i > fn.0 then do
+             say 'missing locale after' fn.i
+             return 2
+           end
+           diagnosticLocale = fn.i
+	 end
+	 else if left(fn.i,18) = '-diagnostic-locale' & fn.i <> '-diagnostic-locale' then do
+           diagnosticLocale = substr(fn.i,19)
+           if diagnosticLocale = '' then do
+             say 'missing locale after' fn.i
+             return 2
+           end
+	 end
+	 if fn.i = '-no-localisation' | fn.i = '-no-localization' then diagnosticsMode = 'raw'
+	 if fn.i = '-localisation' | fn.i = '-localization' then diagnosticsMode = 'localized'
 	 if fn.i = '-link-keep-source' then do
            linkStripSource = 0
            linkOptionsUsed = 1
@@ -313,6 +346,8 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
      else say '  OPTIMIZE'
      if importRxas then say '  IMPORT-RXAS'
      else say 'NOIMPORT-RXAS'
+     if diagnosticsMode <> '' then say 'DIAGNOSTICS' diagnosticsMode
+     if diagnosticLocale <> '' then say 'DIAGNOSTIC-LOCALE' diagnosticLocale
 
      say 'VERBOSE' verbose
      say 'SOURCE ROOTS' sourceRoots
@@ -422,6 +457,14 @@ do i=1 to filenames[0]
     call appendArrayValue rxcArgs, binaryPath
   end
   if importRxas then call appendArrayValue rxcArgs, '--import-rxas'
+  if diagnosticsMode <> '' then do
+    call appendArrayValue rxcArgs, '--diagnostics'
+    call appendArrayValue rxcArgs, diagnosticsMode
+  end
+  if diagnosticLocale <> '' then do
+    call appendArrayValue rxcArgs, '--diagnostic-locale'
+    call appendArrayValue rxcArgs, diagnosticLocale
+  end
   call appendArrayValue rxcArgs, '-o'
   call appendArrayValue rxcArgs, binfile
   call appendArrayValue rxcArgs, sourceFile
@@ -728,6 +771,9 @@ say '-l[library path]   -- packaged binary/runtime library relative to CREXX_HOM
 say '-s[path]           -- additional source import root for the rxc phase'
 say '-i[path]           -- additional raw binary import root for the rxc phase'
 say '--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots'
+say '--diagnostics mode -- rxc diagnostics: localized or raw'
+say '--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US'
+say '--no-localisation  -- use raw diagnostic code/parameter rendering'
 say '--linkmap path     -- write an rxlink map file when using -native'
 say '--link-keep-source -- keep source/TRACE debug metadata in the linked native image'
 say '--link-keep-inline -- keep inline-body metadata in the linked native image'

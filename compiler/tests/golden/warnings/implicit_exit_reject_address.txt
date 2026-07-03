@@ -1,2 +1,2 @@
-Warning in implicit_exit_reject_address_warning.crexx @ 3:1 - #IMPLICIT_ADDRESS, "add"
+Warning in implicit_exit_reject_address_warning.crexx @ 3:1 - #IMPLICIT_ADDRESS severity="warning", "add"
 1 warning(s) in source file

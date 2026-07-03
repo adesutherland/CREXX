@@ -35,8 +35,17 @@
 #undef mknd_err_unique
 #undef mknd_war
 #define mknd_err(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err)((n), __VA_ARGS__) : (n))
+#define mknd_err1(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err1)((n), __VA_ARGS__) : (n))
+#define mknd_err2(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err2)((n), __VA_ARGS__) : (n))
+#define mknd_err3(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err3)((n), __VA_ARGS__) : (n))
+#define mknd_err5(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err5)((n), __VA_ARGS__) : (n))
 #define mknd_err_unique(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err_unique)((n), __VA_ARGS__) : (n))
+#define mknd_err_unique1(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err_unique1)((n), __VA_ARGS__) : (n))
+#define mknd_err_unique2(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err_unique2)((n), __VA_ARGS__) : (n))
 #define mknd_war(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_war)((n), __VA_ARGS__) : (n))
+#define mknd_war1(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_war1)((n), __VA_ARGS__) : (n))
+#define mknd_war2(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_war2)((n), __VA_ARGS__) : (n))
+#define mknd_war3(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_war3)((n), __VA_ARGS__) : (n))
 #include "rxcp_util.h"
 #include "rxbin.h" /* Needed for rxvmvars.h */
 #include "rxvmvars.h"
@@ -886,7 +895,9 @@ static void validate_class_interface_contracts(Context *context, ASTNode *class_
 
                 iface_name = sym_frnm(iface_symbol);
                 if (!class_member_symbol || class_member_symbol->symbol_type != FUNCTION_SYMBOL) {
-                    mknd_err(class_node, "INTERFACE_MEMBER_NOT_IMPLEMENTED, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name ? member_name : "");
+                    mknd_err2(class_node, "INTERFACE_MEMBER_NOT_IMPLEMENTED",
+                              "interface", iface_name ? iface_name : "",
+                              "member", member_name ? member_name : "");
                     if (factory_lookup_name) free(factory_lookup_name);
                     if (match_lookup_name) free(match_lookup_name);
                     if (member_name) free(member_name);
@@ -896,7 +907,9 @@ static void validate_class_interface_contracts(Context *context, ASTNode *class_
 
                 class_member_node = sym_trnd(class_member_symbol, 0)->node;
                 if (!same_contract_signature(context, iface_member, class_member_node)) {
-                    mknd_err(class_node, "INTERFACE_MEMBER_SIGNATURE_MISMATCH, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name ? member_name : "");
+                    mknd_err2(class_node, "INTERFACE_MEMBER_SIGNATURE_MISMATCH",
+                              "interface", iface_name ? iface_name : "",
+                              "member", member_name ? member_name : "");
                 }
 
                 if (class_match_symbol && class_match_symbol->symbol_type == FUNCTION_SYMBOL) {
@@ -912,7 +925,9 @@ static void validate_class_interface_contracts(Context *context, ASTNode *class_
                         !same_contract_argument_signature(context, iface_member, class_match_node) ||
                         match_ret_type != TP_INTEGER ||
                         match_dims != 0 || match_class != 0) {
-                        mknd_err(class_node, "INTERFACE_MATCH_SIGNATURE_MISMATCH, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name ? member_name : "");
+                        mknd_err2(class_node, "INTERFACE_MATCH_SIGNATURE_MISMATCH",
+                                  "interface", iface_name ? iface_name : "",
+                                  "member", member_name ? member_name : "");
                     }
 
                     if (match_base) free(match_base);
@@ -937,7 +952,9 @@ static void validate_class_interface_contracts(Context *context, ASTNode *class_
             iface_name = sym_frnm(iface_symbol);
             if (!class_member_symbol || class_member_symbol->symbol_type != FUNCTION_SYMBOL) {
                 if (!interface_member_has_default_body(iface_member)) {
-                    mknd_err(class_node, "INTERFACE_MEMBER_NOT_IMPLEMENTED, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name ? member_name : "");
+                    mknd_err2(class_node, "INTERFACE_MEMBER_NOT_IMPLEMENTED",
+                              "interface", iface_name ? iface_name : "",
+                              "member", member_name ? member_name : "");
                 }
                 if (member_name) free(member_name);
                 if (iface_name) free(iface_name);
@@ -946,10 +963,14 @@ static void validate_class_interface_contracts(Context *context, ASTNode *class_
 
             class_member_node = sym_trnd(class_member_symbol, 0)->node;
             if (interface_member_has_default_body(iface_member)) {
-                mknd_err(class_node, "INTERFACE_DEFAULT_METHOD_REDEFINED, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name ? member_name : "");
+                mknd_err2(class_node, "INTERFACE_DEFAULT_METHOD_REDEFINED",
+                          "interface", iface_name ? iface_name : "",
+                          "member", member_name ? member_name : "");
             }
             else if (!same_contract_signature(context, iface_member, class_member_node)) {
-                mknd_err(class_node, "INTERFACE_MEMBER_SIGNATURE_MISMATCH, \"%s\", \"%s\"", iface_name ? iface_name : "", member_name ? member_name : "");
+                mknd_err2(class_node, "INTERFACE_MEMBER_SIGNATURE_MISMATCH",
+                          "interface", iface_name ? iface_name : "",
+                          "member", member_name ? member_name : "");
             }
 
             if (member_name) free(member_name);
@@ -1984,9 +2005,9 @@ walker_result type_safety_walker(walker_direction direction,
 
             case OP_INITIALIZED:
                 if (!child1 || child1->node_type == NOVAL) {
-                    mknd_err(node, "ARGUMENT_REQUIRED, 1, \"value\"");
+                    mknd_err2(node, "ARGUMENT_REQUIRED", "position", "1", "name", "value");
                 } else if (child1->sibling) {
-                    mknd_err(child1->sibling, "UNEXPECTED_ARGUMENT, 2");
+                    mknd_err1(child1->sibling, "UNEXPECTED_ARGUMENT", "position", "2");
                 }
                 break;
 
@@ -2665,7 +2686,11 @@ walker_result func_type_safety_walker(walker_direction direction,
                             break;
                         }
                         /* Its not an error for the first NOVAL argument */
-                        if (arg_num > 1 || n1->node_type != NOVAL) mknd_err(n1, "UNEXPECTED_ARGUMENT, %d", arg_num);
+                        if (arg_num > 1 || n1->node_type != NOVAL) {
+                            char *arg_text = rxcp_diag_int_string(arg_num);
+                            mknd_err1(n1, "UNEXPECTED_ARGUMENT", "position", arg_text);
+                            free(arg_text);
+                        }
                         else if (n1->node_type == NOVAL) {
                             /* Prune the unwanted NOVAL - the parser grammar just added it */
                             ASTNode *to_del = n1;
@@ -2684,7 +2709,9 @@ walker_result func_type_safety_walker(walker_direction direction,
                         if (n1->node_type == NOVAL) {
                             if (n1->sibling) {
                                 /* If n1 is not the last argument then it can't be NOVAL */
-                                mknd_err(n1, "ARGUMENT_REQUIRED, %d, \"...\"", arg_num);
+                                char *arg_text = rxcp_diag_int_string(arg_num);
+                                mknd_err2(n1, "ARGUMENT_REQUIRED", "position", arg_text, "name", "...");
+                                free(arg_text);
                             }
                             else {
                                 /* Prune the unwanted NOVAL - the parser grammar just added it */
@@ -2715,8 +2742,10 @@ walker_result func_type_safety_walker(walker_direction direction,
                         if (n1->node_type == NOVAL) {
                             ast_svtn(n1, n2);
                             if (!n1->is_opt_arg) {
-                                mknd_err(n1, "ARGUMENT_REQUIRED, %d, \"%s\"", arg_num,
-                                         required_argument_name(n2));
+                                char *arg_text = rxcp_diag_int_string(arg_num);
+                                mknd_err2(n1, "ARGUMENT_REQUIRED", "position", arg_text,
+                                          "name", required_argument_name(n2));
+                                free(arg_text);
                             }
                         } else {
                             ast_sttn(n1, n2);
@@ -2754,7 +2783,10 @@ walker_result func_type_safety_walker(walker_direction direction,
                         n1->is_ref_arg = n2->is_ref_arg;
                         n1->is_const_arg = n2->is_const_arg;
                         if (!n1->is_opt_arg) {
-                            mknd_err(n1, "ARGUMENT_REQUIRED, %d, \"%s\"", arg_num, required_argument_name(n2));
+                            char *arg_text = rxcp_diag_int_string(arg_num);
+                            mknd_err2(n1, "ARGUMENT_REQUIRED", "position", arg_text,
+                                      "name", required_argument_name(n2));
+                            free(arg_text);
                         }
                         n2 = n2->sibling;
                     }

@@ -156,6 +156,9 @@ static void help() {
             "  --level level   Default source level when OPTIONS omits one\n"
             "  --import ns     Inject a file-level IMPORT namespace (repeatable)\n"
             "  --import-rxas   Enable auto-import scanning of .rxas in binary roots\n"
+            "  --diagnostics mode  Diagnostic rendering: localized or raw\n"
+            "  --diagnostic-locale locale  Diagnostic locale such as en_GB or en_US\n"
+            "  --no-localisation  Use raw diagnostic code/parameter rendering\n"
             "  -o output_stem  RXAS output stem or .rxas file\n"
             "  -n              No Optimising\n"
             "  -x              Disable compiler exits\n"
@@ -399,6 +402,36 @@ int rxcmain(int argc, char *argv[]) {
 
         if (strcmp(argv[i], "--import-rxas") == 0) {
             auto_import_rxas = 1;
+            continue;
+        }
+
+        if (strcmp(argv[i], "--diagnostics") == 0) {
+            i++;
+            if (i >= argc) {
+                error_and_exit(2, "Missing mode after --diagnostics");
+            }
+            if (rxcp_diag_set_mode(argv[i]) != 0) {
+                error_and_exit(2, "Invalid diagnostic mode after --diagnostics");
+            }
+            continue;
+        }
+
+        if (strcmp(argv[i], "--diagnostic-locale") == 0) {
+            i++;
+            if (i >= argc) {
+                error_and_exit(2, "Missing locale after --diagnostic-locale");
+            }
+            if (rxcp_diag_set_locale(argv[i]) != 0) {
+                error_and_exit(2, "Invalid diagnostic locale after --diagnostic-locale");
+            }
+            continue;
+        }
+
+        if (strcmp(argv[i], "--no-localisation") == 0 ||
+            strcmp(argv[i], "--no-localization") == 0) {
+            if (rxcp_diag_set_mode("raw") != 0) {
+                error_and_exit(2, "Unable to set raw diagnostics mode");
+            }
             continue;
         }
 

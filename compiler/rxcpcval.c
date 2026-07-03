@@ -85,9 +85,20 @@ static int levelc_first_invalid_string_char(Token *token, char suffix, char *inv
     return 0;
 }
 
-static void levelc_replace_error_text(ASTNode *node, char *message) {
-    if (!node || !message) return;
-    ast_sstr(node, message, strlen(message));
+static void levelc_replace_error_diagnostic(ASTNode *node,
+                                            const char *standard_code,
+                                            const char *insert_name,
+                                            const char *insert_value) {
+    RxcpDiagnostic *diagnostic;
+    char *code;
+
+    if (!node) return;
+    code = rxcp_diag_levelc_code(standard_code);
+    diagnostic = rxcp_diag_create(code ? code : "RXC-LC-0");
+    if (code) free(code);
+    if (!diagnostic) return;
+    if (insert_name && *insert_name) rxcp_diag_add_param(diagnostic, insert_name, insert_value);
+    ast_set_diagnostic(node, diagnostic);
 }
 
 static void levelc_rewrite_legacy_string_errors(ASTNode *node) {
@@ -95,7 +106,6 @@ static void levelc_rewrite_legacy_string_errors(ASTNode *node) {
     char suffix;
     char invalid;
     char text[2];
-    char *message;
 
     while (node) {
         if (node->node_type == STRING &&
@@ -112,9 +122,8 @@ static void levelc_rewrite_legacy_string_errors(ASTNode *node) {
                       strcmp(child->node_string, "INVALID_BIN") == 0))) {
                     text[0] = invalid;
                     text[1] = '\0';
-                    message = rxcp_levelc_diag_format(suffix == 'X' ? "15.3" : "15.4",
-                                                       "char", text);
-                    levelc_replace_error_text(child, message);
+                    levelc_replace_error_diagnostic(child, suffix == 'X' ? "15.3" : "15.4",
+                                                    "char", text);
                 }
                 child = child->sibling;
             }

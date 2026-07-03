@@ -244,6 +244,20 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+file(GLOB CREXX_MESSAGE_CATALOGS CONFIGURE_DEPENDS
+        "${CMAKE_CURRENT_SOURCE_DIR}/messages/*.msg")
+file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/bin/messages")
+foreach(_crexx_message_catalog IN LISTS CREXX_MESSAGE_CATALOGS)
+    get_filename_component(_crexx_message_catalog_name "${_crexx_message_catalog}" NAME)
+    configure_file(
+            "${_crexx_message_catalog}"
+            "${CMAKE_BINARY_DIR}/bin/messages/${_crexx_message_catalog_name}"
+            COPYONLY)
+endforeach()
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/messages/"
+        DESTINATION share/crexx/messages
+        FILES_MATCHING PATTERN "*.msg")
+
 option(CREXX_WINDOWS_LINK_REMOVE_RETRY
         "On Windows, remove existing link outputs with retry before relinking to tolerate transient test/AV locks"
         ON)

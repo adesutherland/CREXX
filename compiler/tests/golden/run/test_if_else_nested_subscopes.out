@@ -1,11 +1,11 @@
-Warning in test_if_else_nested_subscopes.crexx @ 10:5 - #SHADOWING, original definition "test_if_nested.x" @ 2:33, "x"
-Warning in test_if_else_nested_subscopes.crexx @ 11:5 - #SHADOWING, original definition "test_if_nested.x" @ 2:33, "x"
-Warning in test_if_else_nested_subscopes.crexx @ 13:31 - #SHADOWING, original definition "test_if_nested.x" @ 2:33, "x"
-Warning in test_if_else_nested_subscopes.crexx @ 16:7 - #SHADOWING, original definition "test_if_nested.y" @ 2:35, "y"
-Warning in test_if_else_nested_subscopes.crexx @ 17:7 - #SHADOWING, original definition "test_if_nested.y" @ 2:35, "y"
-Warning in test_if_else_nested_subscopes.crexx @ 19:45 - #SHADOWING, original definition "test_if_nested.x" @ 2:33, "x"
-Warning in test_if_else_nested_subscopes.crexx @ 19:53 - #SHADOWING, original definition "test_if_nested.y" @ 2:35, "y"
-Warning in test_if_else_nested_subscopes.crexx @ 22:29 - #SHADOWING, original definition "test_if_nested.x" @ 2:33, "x"
+Warning in test_if_else_nested_subscopes.crexx @ 10:5 - #SHADOWING original="test_if_nested.x" line="2" column="33", "x"
+Warning in test_if_else_nested_subscopes.crexx @ 11:5 - #SHADOWING original="test_if_nested.x" line="2" column="33", "x"
+Warning in test_if_else_nested_subscopes.crexx @ 13:31 - #SHADOWING original="test_if_nested.x" line="2" column="33", "x"
+Warning in test_if_else_nested_subscopes.crexx @ 16:7 - #SHADOWING original="test_if_nested.y" line="2" column="35", "y"
+Warning in test_if_else_nested_subscopes.crexx @ 17:7 - #SHADOWING original="test_if_nested.y" line="2" column="35", "y"
+Warning in test_if_else_nested_subscopes.crexx @ 19:45 - #SHADOWING original="test_if_nested.x" line="2" column="33", "x"
+Warning in test_if_else_nested_subscopes.crexx @ 19:53 - #SHADOWING original="test_if_nested.y" line="2" column="35", "y"
+Warning in test_if_else_nested_subscopes.crexx @ 22:29 - #SHADOWING original="test_if_nested.x" line="2" column="33", "x"
 8 warning(s) in source file
 Initial: x=1 y=2 z=3
   Inside IF DO: x=10 y=20 z=3

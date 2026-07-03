@@ -1,12 +1,12 @@
-Warning in test_global_nested_complex.crexx @ 12:5 - #SHADOWING, original definition "test_complex.x" @ 2:31, "x"
-Warning in test_global_nested_complex.crexx @ 13:5 - #SHADOWING, original definition "test_complex.x" @ 2:31, "x"
-Warning in test_global_nested_complex.crexx @ 15:24 - #SHADOWING, original definition "test_complex.x" @ 2:31, "x"
-Warning in test_global_nested_complex.crexx @ 19:7 - #SHADOWING, original definition "test_complex.y" @ 2:33, "y"
-Warning in test_global_nested_complex.crexx @ 20:7 - #SHADOWING, original definition "test_complex.y" @ 2:33, "y"
-Warning in test_global_nested_complex.crexx @ 21:7 - #SHADOWING, original definition "test_complex.x" @ 2:31, "x"
-Warning in test_global_nested_complex.crexx @ 23:28 - #SHADOWING, original definition "test_complex.x" @ 2:31, "x"
-Warning in test_global_nested_complex.crexx @ 23:36 - #SHADOWING, original definition "test_complex.y" @ 2:33, "y"
-Warning in test_global_nested_complex.crexx @ 26:29 - #SHADOWING, original definition "test_complex.x" @ 2:31, "x"
+Warning in test_global_nested_complex.crexx @ 12:5 - #SHADOWING original="test_complex.x" line="2" column="31", "x"
+Warning in test_global_nested_complex.crexx @ 13:5 - #SHADOWING original="test_complex.x" line="2" column="31", "x"
+Warning in test_global_nested_complex.crexx @ 15:24 - #SHADOWING original="test_complex.x" line="2" column="31", "x"
+Warning in test_global_nested_complex.crexx @ 19:7 - #SHADOWING original="test_complex.y" line="2" column="33", "y"
+Warning in test_global_nested_complex.crexx @ 20:7 - #SHADOWING original="test_complex.y" line="2" column="33", "y"
+Warning in test_global_nested_complex.crexx @ 21:7 - #SHADOWING original="test_complex.x" line="2" column="31", "x"
+Warning in test_global_nested_complex.crexx @ 23:28 - #SHADOWING original="test_complex.x" line="2" column="31", "x"
+Warning in test_global_nested_complex.crexx @ 23:36 - #SHADOWING original="test_complex.y" line="2" column="33", "y"
+Warning in test_global_nested_complex.crexx @ 26:29 - #SHADOWING original="test_complex.x" line="2" column="31", "x"
 9 warning(s) in source file
 Initial: x=1 y=2 z=3
   Sub 1: x=10 y=20 z=3

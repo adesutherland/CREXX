@@ -44,6 +44,14 @@ static int open_redirect_file(const char *path) {
     return CREXX_OPEN(path, CREXX_OPEN_FLAGS, CREXX_OPEN_MODE);
 }
 
+static void force_raw_diagnostics(void) {
+#ifdef _WIN32
+    _putenv_s("CREXX_DIAGNOSTICS", "raw");
+#else
+    setenv("CREXX_DIAGNOSTICS", "raw", 1);
+#endif
+}
+
 /* Function to copy a file - C90 compliant */
 static int copy_file(const char *src_path, const char *dst_path) {
     FILE *src, *dst;
@@ -530,6 +538,7 @@ int main(int argc, char *argv[]) {
         remove(temp_rxas);
     }
 
+    force_raw_diagnostics();
     ret = run_compiler_process(compiler_args, stdout_redirect, stderr_redirect, merge_stderr);
     free(compiler_args);
     compiler_args = 0;

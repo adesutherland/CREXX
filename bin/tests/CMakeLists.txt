@@ -225,6 +225,22 @@ add_test(NAME crexx_tool_output_path_policy
                  -DWORK_ROOT=${CMAKE_CURRENT_BINARY_DIR}
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/tool_output_path_policy.cmake
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set(CREXX_DIAGNOSTIC_PLUMBING_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_crexx_diagnostic_plumbing.cmake")
+set(CREXX_DIAGNOSTIC_PLUMBING_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/diagnostic_plumbing_ws\")\n")
+string(APPEND CREXX_DIAGNOSTIC_PLUMBING_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+string(APPEND CREXX_DIAGNOSTIC_PLUMBING_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
+string(APPEND CREXX_DIAGNOSTIC_PLUMBING_CONTENT "file(WRITE \"\${work}/warn.crexx\" \"options levelb\\nimport unused_driver_dep\\nmain: procedure\\n  return\\n\")\n")
+string(APPEND CREXX_DIAGNOSTIC_PLUMBING_CONTENT "execute_process(COMMAND \"${CMAKE_COMMAND}\" -E env \"CREXX_DIAGNOSTICS=raw\" \"$<TARGET_FILE:crexx>\" \"--diagnostics\" \"localized\" \"--diagnostic-locale\" \"en_US\" \"-noexec\" \"warn.crexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)\n")
+string(APPEND CREXX_DIAGNOSTIC_PLUMBING_CONTENT "set(full_out \"\${out}\${err}\")\n")
+string(APPEND CREXX_DIAGNOSTIC_PLUMBING_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"crexx diagnostics plumbing failed with \${res}:\\n\${full_out}\")\nendif()\n")
+string(APPEND CREXX_DIAGNOSTIC_PLUMBING_CONTENT "string(FIND \"\${full_out}\" \"recognized\" recognized_pos)\n")
+string(APPEND CREXX_DIAGNOSTIC_PLUMBING_CONTENT "if(recognized_pos EQUAL -1)\n  message(FATAL_ERROR \"crexx did not forward en_US localized diagnostics to rxc:\\n\${full_out}\")\nendif()\n")
+string(APPEND CREXX_DIAGNOSTIC_PLUMBING_CONTENT "string(FIND \"\${full_out}\" \"recognised\" recognised_pos)\n")
+string(APPEND CREXX_DIAGNOSTIC_PLUMBING_CONTENT "if(NOT recognised_pos EQUAL -1)\n  message(FATAL_ERROR \"crexx used en_GB text despite en_US locale:\\n\${full_out}\")\nendif()\n")
+file(GENERATE OUTPUT "${CREXX_DIAGNOSTIC_PLUMBING_SCRIPT}" CONTENT "${CREXX_DIAGNOSTIC_PLUMBING_CONTENT}")
+add_test(NAME crexx_diagnostic_plumbing
+         COMMAND ${CMAKE_COMMAND} -P "${CREXX_DIAGNOSTIC_PLUMBING_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(crexx_help_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_headerless_simple_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_headerless_rexx_levelc_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
@@ -237,6 +253,7 @@ set_tests_properties(crexx_spaced_source_smoke PROPERTIES RESOURCE_LOCK ${CREXX_
 set_tests_properties(crexx_crxc_noargs_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_license_summary_smoke PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 set_tests_properties(crexx_tool_output_path_policy PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
+set_tests_properties(crexx_diagnostic_plumbing PROPERTIES RESOURCE_LOCK ${CREXX_BIN_TEST_RESOURCE_LOCK})
 
 function(add_crexx_compile_only_import_test NAME MAIN_FILE DEP_FILE MODE)
     get_filename_component(MAIN_BASENAME "${MAIN_FILE}" NAME)
@@ -440,3 +457,17 @@ add_crexx_native_test(
         EXPECT_NO_LINKED_INTERMEDIATE
         EXPECT_ABSENT "explicit_header.rxas" "explicit_header.rxbin" "explicit_header_linked.rxbin" "explicit_header.c"
 )
+
+function(crexx_force_raw_diagnostics_for_bin_tests)
+    get_property(_crexx_tests DIRECTORY PROPERTY TESTS)
+    foreach(_crexx_test IN LISTS _crexx_tests)
+        get_test_property(${_crexx_test} ENVIRONMENT _crexx_env)
+        if(NOT _crexx_env OR _crexx_env MATCHES "NOTFOUND$")
+            set(_crexx_env)
+        endif()
+        list(APPEND _crexx_env "CREXX_DIAGNOSTICS=raw")
+        set_tests_properties(${_crexx_test} PROPERTIES ENVIRONMENT "${_crexx_env}")
+    endforeach()
+endfunction()
+
+crexx_force_raw_diagnostics_for_bin_tests()

@@ -399,6 +399,15 @@ mutable compiler tree.
 - `context->source_tree` is the canonical user-facing tree for authored
   structure, diagnostics, semantic sidecars, metadata anchors, and editor
   projection.
+- Compiler diagnostics carry a stable `RxcpDiagnostic` payload: a message code
+  plus named parameters. `node_string` and `SourceDiagnostic.message` are
+  rendered fallbacks, not the diagnostic identity.
+- Diagnostic rendering defaults to localized text. `CREXX_DIAGNOSTICS=raw`
+  selects the machine-readable `CODE name="value"` form used by golden tests.
+  `CREXX_DIAGNOSTIC_LOCALE` overrides locale selection; otherwise the renderer
+  uses the platform locale environment and falls back to `en_GB`. Message
+  catalogs are UTF-8 files in `messages/`, currently including `en_GB`,
+  `en_US`, `de_DE`, and `nl_NL`, and are loaded lazily per process.
 - `context->ast` / `work_ast` remains the mutable compiler tree for import
   loading, exit dispatch, fixed-point rewrites, optimization, and emission.
 - `ASTNode` instances keep explicit links back to the source tree so later

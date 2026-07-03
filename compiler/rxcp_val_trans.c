@@ -140,7 +140,7 @@ walker_result needs_rxsysb_walker(walker_direction direction,
                 certified_keyword = rxcp_disabled_certified_exit_keyword(node);
             }
             if (certified_keyword) {
-                mknd_err_unique(node, "CERTIFIED_EXIT_DISABLED, \"%s\"", certified_keyword);
+                mknd_err_unique1(node, "CERTIFIED_EXIT_DISABLED", "keyword", certified_keyword);
                 return result_normal;
             }
 
@@ -155,7 +155,7 @@ walker_result needs_rxsysb_walker(walker_direction direction,
                 certified_keyword = rxcp_match_certified_exit_primary(node->token->token_string, node->token->length);
             }
             if (certified_keyword) {
-                mknd_err_unique(node, "CERTIFIED_EXIT_DISABLED, \"%s\"", certified_keyword);
+                mknd_err_unique1(node, "CERTIFIED_EXIT_DISABLED", "keyword", certified_keyword);
                 return result_normal;
             }
 

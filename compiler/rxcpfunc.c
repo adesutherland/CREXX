@@ -3209,17 +3209,20 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
         /* Compare found variable with the type defined in the master file being compiled */
         tp = type_from_string(found_func->type);
         if (found_func->is_variable) {
-            mknd_err(node,
-                     "PROC_VAR_MISMATCH, \"%s\", \"%s\", \"%s\"",
-                     name,found_func->file_name, defining_file);
+            mknd_err3(node,
+                      "PROC_VAR_MISMATCH",
+                      "name", name,
+                      "import_file", found_func->file_name,
+                      "defining_file", defining_file);
             error = 1;
         }
 
         /* Has the func got an error_state? */
         if (found_func->error_state) {
-            mknd_err(node,
-                     "%s, \"%s\", \"%s\"",
-                     found_func->error_state, name, found_func->file_name);
+            mknd_err2(node,
+                      found_func->error_state,
+                      "name", name,
+                      "import_file", found_func->file_name);
             error = 1;
         }
 
@@ -3227,25 +3230,33 @@ Symbol *sym_imfn(Context *context, ASTNode *node) {
         inconsistent_func = found_func->duplicate;
         while (inconsistent_func) {
             if (inconsistent_func->is_variable) {
-                mknd_err(node,
-                         "PROC_VAR_MISMATCH, \"%s\", \"%s\", \"%s\"",
-                         name,inconsistent_func->file_name, defining_file);
+                mknd_err3(node,
+                          "PROC_VAR_MISMATCH",
+                          "name", name,
+                          "import_file", inconsistent_func->file_name,
+                          "defining_file", defining_file);
                 error = 1;
             }
 
             if (safe_strcmp(found_func->type, inconsistent_func->type)) {
-                mknd_err(node,
-                         "TYPE_MISMATCH, \"%s\", \"%s\", \"%s\", \"%s\", \"%s\"",
-                         name,found_func->type, found_func->file_name, inconsistent_func->type,
-                         inconsistent_func->file_name);
+                mknd_err5(node,
+                          "TYPE_MISMATCH",
+                          "name", name,
+                          "expected_type", found_func->type,
+                          "defining_file", found_func->file_name,
+                          "actual_type", inconsistent_func->type,
+                          "import_file", inconsistent_func->file_name);
                 error = 1;
             }
 
             if (safe_strcmp(found_func->args, inconsistent_func->args)) {
-                mknd_err(node,
-                         "ARGS_MISMATCH, \"%s\", \"%s\", \"%s\", \"%s\", \"%s\"",
-                         name,found_func->args, found_func->file_name, inconsistent_func->args,
-                         inconsistent_func->file_name);
+                mknd_err5(node,
+                          "ARGS_MISMATCH",
+                          "name", name,
+                          "expected_args", found_func->args,
+                          "defining_file", found_func->file_name,
+                          "actual_args", inconsistent_func->args,
+                          "import_file", inconsistent_func->file_name);
                 error = 1;
             }
 
@@ -3313,14 +3324,20 @@ void sym_imva(Context *context, Symbol *symbol) {
         /* Compare found variable with the type defined in the master file being compiled */
         tp = type_from_string(found_var->type);
         if (!found_var->is_variable) {
-            mknd_err(sym_trnd(symbol, 0)->node, "PROC_VAR_MISMATCH, \"%s\", \"%s\", \"%s\"",
-                     symbol->name, defining_file, found_var->file_name);
+            mknd_err3(sym_trnd(symbol, 0)->node, "PROC_VAR_MISMATCH",
+                      "name", symbol->name,
+                      "defining_file", defining_file,
+                      "import_file", found_var->file_name);
             error = 1;
         }
         else if (symbol->type != TP_UNKNOWN) {
             if ((tp != TP_UNKNOWN) && (tp != symbol->type)) {
-                mknd_err(sym_trnd(symbol, 0)->node, "TYPE_MISMATCH, \"%s\", \"%s\", \"%s\", \"%s\", \"%s\"",
-                         symbol->name,type_nm(symbol->type), defining_file, found_var->type, found_var->file_name);
+                mknd_err5(sym_trnd(symbol, 0)->node, "TYPE_MISMATCH",
+                          "name", symbol->name,
+                          "expected_type", type_nm(symbol->type),
+                          "defining_file", defining_file,
+                          "actual_type", found_var->type,
+                          "import_file", found_var->file_name);
                 error = 1;
             }
         }
@@ -3329,15 +3346,21 @@ void sym_imva(Context *context, Symbol *symbol) {
         inconsistent_var = found_var->duplicate;
         while (inconsistent_var) {
             if (!inconsistent_var->is_variable) {
-                mknd_err(sym_trnd(symbol, 0)->node, "PROC_VAR_MISMATCH, \"%s\", \"%s\", \"%s\"",
-                         inconsistent_var->name, defining_file, inconsistent_var->file_name);
+                mknd_err3(sym_trnd(symbol, 0)->node, "PROC_VAR_MISMATCH",
+                          "name", inconsistent_var->name,
+                          "defining_file", defining_file,
+                          "import_file", inconsistent_var->file_name);
                 error = 1;
             }
 
             if (safe_strcmp(found_var->type, inconsistent_var->type)) {
-                mknd_err(sym_trnd(symbol, 0)->node,
-                         "TYPE_MISMATCH, \"%s\", \"%s\", \"%s\", \"%s\", \"%s\"",
-                         found_var->name, found_var->type, found_var->file_name, inconsistent_var->type, inconsistent_var->file_name);
+                mknd_err5(sym_trnd(symbol, 0)->node,
+                          "TYPE_MISMATCH",
+                          "name", found_var->name,
+                          "expected_type", found_var->type,
+                          "defining_file", found_var->file_name,
+                          "actual_type", inconsistent_var->type,
+                          "import_file", inconsistent_var->file_name);
                 error = 1;
             }
             inconsistent_var = inconsistent_var->duplicate;

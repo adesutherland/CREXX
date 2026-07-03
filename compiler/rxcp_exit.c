@@ -1272,24 +1272,40 @@ static ASTNode *rxcp_node_from_token_index(ASTNode *fallback,
     return fallback;
 }
 
-static char *rxcp_format_diagnostic_text(const char *severity,
+static int rxcp_exit_severity_is_warning(const char *severity) {
+    return severity &&
+           (strcasecmp(severity, "warning") == 0 ||
+            strcasecmp(severity, "note") == 0);
+}
+
+static const char *rxcp_exit_diagnostic_code(const char *severity, const char *code) {
+    if (code && code[0]) return code;
+    return rxcp_exit_severity_is_warning(severity) ? "EXIT_BRIDGE_DIAGNOSTIC" : "EXIT_BRIDGE_ERROR";
+}
+
+static ASTNode *rxcp_add_exit_diagnostic(ASTNode *node,
+                                         const char *severity,
                                          const char *code,
                                          const char *message) {
-    int is_note;
+    const char *diag_code;
+    int has_message;
+    int has_severity;
 
-    is_note = severity && strcasecmp(severity, "note") == 0;
+    diag_code = rxcp_exit_diagnostic_code(severity, code);
+    has_message = message && message[0];
+    has_severity = severity && severity[0] && strcasecmp(severity, "error") != 0;
 
-    if (is_note) {
-        if (code && code[0] && message && message[0]) return mprintf("NOTE %s, \"%s\"", code, message);
-        if (code && code[0]) return mprintf("NOTE %s", code);
-        if (message && message[0]) return mprintf("NOTE, \"%s\"", message);
-        return strdup("NOTE");
+    if (rxcp_exit_severity_is_warning(severity)) {
+        if (has_message && has_severity) return mknd_war2(node, diag_code, "severity", severity, "message", message);
+        if (has_message) return mknd_war1(node, diag_code, "message", message);
+        if (has_severity) return mknd_war1(node, diag_code, "severity", severity);
+        return mknd_war(node, diag_code);
     }
 
-    if (code && code[0] && message && message[0]) return mprintf("%s, \"%s\"", code, message);
-    if (code && code[0]) return strdup(code);
-    if (message && message[0]) return strdup(message);
-    return strdup("EXIT_BRIDGE_ERROR");
+    if (has_message && has_severity) return mknd_err_unique2(node, diag_code, "severity", severity, "message", message);
+    if (has_message) return mknd_err_unique1(node, diag_code, "message", message);
+    if (has_severity) return mknd_err_unique1(node, diag_code, "severity", severity);
+    return mknd_err_unique(node, diag_code);
 }
 
 static int rxcp_apply_diagnostic_object(Context *ctx,
@@ -1303,7 +1319,6 @@ static int rxcp_apply_diagnostic_object(Context *ctx,
     char *message;
     rxinteger token_index;
     ASTNode *diag_node;
-    char *formatted;
     int saved_in_exit_bridge;
 
     severity = NULL;
@@ -1317,7 +1332,6 @@ static int rxcp_apply_diagnostic_object(Context *ctx,
     rxcp_get_method_int(vctx, diagnostic, "rxcp.exitdiagnostic", "get_token_index", &token_index);
 
     diag_node = rxcp_node_from_token_index(node, node_map, num_tokens, token_index);
-    formatted = rxcp_format_diagnostic_text(severity ? severity : "error", code ? code : "", message ? message : "");
     saved_in_exit_bridge = ctx ? ctx->in_exit_bridge : 0;
 
     /* Exit-authored diagnostics describe user source unless they are explicit
@@ -1325,12 +1339,9 @@ static int rxcp_apply_diagnostic_object(Context *ctx,
      * internals just because they were transported through the bridge. */
     if (ctx) ctx->in_exit_bridge = 0;
 
-    if (severity && (strcasecmp(severity, "warning") == 0 || strcasecmp(severity, "note") == 0)) {
-        mknd_war(diag_node, "%s", formatted);
-    } else {
-        mknd_err_unique(diag_node, "%s", formatted);
+    rxcp_add_exit_diagnostic(diag_node, severity ? severity : "error", code ? code : "", message ? message : "");
+    if (!rxcp_exit_severity_is_warning(severity)) {
         if (ctx) ctx->in_exit_bridge = saved_in_exit_bridge;
-        free(formatted);
         if (message) free(message);
         if (code) free(code);
         if (severity) free(severity);
@@ -1338,7 +1349,6 @@ static int rxcp_apply_diagnostic_object(Context *ctx,
     }
 
     if (ctx) ctx->in_exit_bridge = saved_in_exit_bridge;
-    free(formatted);
     if (message) free(message);
     if (code) free(code);
     if (severity) free(severity);
@@ -1379,10 +1389,28 @@ static int rxcp_apply_diagnostics(Context *ctx,
     return saw_error ? -1 : 0;
 }
 
-static char *rxcp_diagnostic_code_dup(const char *text) {
+static const char *rxcp_diagnostic_param(ASTNode *diagnostic, const char *name) {
+    size_t i;
+
+    if (!diagnostic || !diagnostic->diagnostic || !name) return NULL;
+    for (i = 0; i < diagnostic->diagnostic->param_count; i++) {
+        if (diagnostic->diagnostic->params[i].name &&
+            strcmp(diagnostic->diagnostic->params[i].name, name) == 0) {
+            return diagnostic->diagnostic->params[i].value;
+        }
+    }
+    return NULL;
+}
+
+static char *rxcp_diagnostic_code_dup(ASTNode *diagnostic) {
     const char *start;
     const char *end;
+    const char *text;
 
+    if (diagnostic && diagnostic->diagnostic && diagnostic->diagnostic->code) {
+        return strdup(diagnostic->diagnostic->code);
+    }
+    text = diagnostic ? diagnostic->node_string : NULL;
     if (!text) return strdup("");
 
     start = text;
@@ -1396,10 +1424,15 @@ static char *rxcp_diagnostic_code_dup(const char *text) {
     return rx_strndup(start, (size_t)(end - start));
 }
 
-static char *rxcp_diagnostic_message_dup(const char *text) {
+static char *rxcp_diagnostic_message_dup(ASTNode *diagnostic) {
     const char *start;
     const char *end;
+    const char *param;
+    const char *text;
 
+    param = rxcp_diagnostic_param(diagnostic, "message");
+    if (param) return strdup(param);
+    text = diagnostic ? diagnostic->node_string : NULL;
     if (!text) return strdup("");
 
     start = strchr(text, ',');
@@ -1495,17 +1528,20 @@ static void rxcp_replace_diagnostic(ASTNode *diagnostic,
                                     const char *code,
                                     const char *message,
                                     ASTNode *anchor) {
-    char *formatted;
+    RxcpDiagnostic *replacement;
+    const char *diag_code;
 
     if (!diagnostic || !code || !code[0]) return;
 
-    formatted = rxcp_format_diagnostic_text(severity ? severity : "error", code, message ? message : "");
-    if (!formatted) return;
-
-    if (diagnostic->free_node_string && diagnostic->node_string) free(diagnostic->node_string);
-    diagnostic->node_string = formatted;
-    diagnostic->node_string_length = strlen(formatted);
-    diagnostic->free_node_string = 1;
+    diag_code = rxcp_exit_diagnostic_code(severity, code);
+    replacement = rxcp_diag_create(diag_code);
+    if (!replacement) return;
+    if (severity && severity[0] && strcasecmp(severity, "error") != 0) {
+        rxcp_diag_add_param(replacement, "severity", severity);
+    }
+    if (message && message[0]) rxcp_diag_add_param(replacement, "message", message);
+    diagnostic->node_type = rxcp_exit_severity_is_warning(severity) ? WARNING : ERROR;
+    ast_set_diagnostic(diagnostic, replacement);
     diagnostic->is_internal_diagnostic = 0;
 
     if (anchor) ast_copy_source_anchor(diagnostic, anchor, AST_SOURCE_INHERITED);
@@ -1548,8 +1584,8 @@ static int rxcp_exit_mapper_rewrite(Context *ctx,
     rewritten = 0;
     for (i = 0; i < 4; i++) args[i] = NULL;
 
-    code = rxcp_diagnostic_code_dup(diagnostic->node_string);
-    message = rxcp_diagnostic_message_dup(diagnostic->node_string);
+    code = rxcp_diagnostic_code_dup(diagnostic);
+    message = rxcp_diagnostic_message_dup(diagnostic);
     anchor = rxcp_find_diagnostic_anchor(offending);
     source = rxcp_node_text_dup(anchor ? anchor : offending);
     origin = rxcp_helper_origin_dup(helper_proc);
@@ -2103,7 +2139,7 @@ static int rxcp_append_helper(Context *ctx,
                                                     &source_map,
                                                     &prefixed_len);
     if (!prefixed_source) {
-        mknd_err_unique(node, "EXIT_BRIDGE_HELPER_INTERPOLATION_FAILED, \"%s\"", helper_id);
+        mknd_err_unique1(node, "EXIT_BRIDGE_HELPER_INTERPOLATION_FAILED", "helper_id", helper_id);
         return -1;
     }
 
@@ -2114,7 +2150,7 @@ static int rxcp_append_helper(Context *ctx,
         return 0;
     }
     if (registration_rc < 0) {
-        mknd_err_unique(node, "EXIT_BRIDGE_HELPER_CONFLICT, \"%s\"", helper_id);
+        mknd_err_unique1(node, "EXIT_BRIDGE_HELPER_CONFLICT", "helper_id", helper_id);
         ast_free_exit_source_map(source_map);
         free(prefixed_source);
         return -1;
@@ -2122,7 +2158,7 @@ static int rxcp_append_helper(Context *ctx,
 
     frag = cntx_f();
     if (!frag) {
-        mknd_err_unique(node, "EXIT_BRIDGE_HELPER_CONTEXT_FAILED, \"%s\"", helper_id);
+        mknd_err_unique1(node, "EXIT_BRIDGE_HELPER_CONTEXT_FAILED", "helper_id", helper_id);
         ast_free_exit_source_map(source_map);
         free(prefixed_source);
         return -1;
@@ -2144,7 +2180,7 @@ static int rxcp_append_helper(Context *ctx,
 
     cntx_buf(frag, prefixed_source, prefixed_len);
     if (rexbpars(frag)) {
-        mknd_err_unique(node, "EXIT_BRIDGE_HELPER_PARSE_FAILED, \"%s\"", helper_id);
+        mknd_err_unique1(node, "EXIT_BRIDGE_HELPER_PARSE_FAILED", "helper_id", helper_id);
         ast_free_exit_source_map(source_map);
         fre_cntx(frag);
         return -1;
@@ -2170,7 +2206,7 @@ static int rxcp_append_helper(Context *ctx,
         while (child) {
             if (child->node_type == PROCEDURE) {
                 if (helper_proc) {
-                    mknd_err_unique(node, "EXIT_BRIDGE_HELPER_MULTI_DEF, \"%s\"", helper_id);
+                    mknd_err_unique1(node, "EXIT_BRIDGE_HELPER_MULTI_DEF", "helper_id", helper_id);
                     ast_free_exit_source_map(source_map);
                     fre_cntx(frag);
                     return -1;
@@ -2178,7 +2214,7 @@ static int rxcp_append_helper(Context *ctx,
                 helper_proc = child;
             } else if (child->node_type == CLASS_DEF || child->node_type == METHOD ||
                        child->node_type == FACTORY || child->node_type == MATCH) {
-                mknd_err_unique(node, "EXIT_BRIDGE_HELPER_BAD_SHAPE, \"%s\"", helper_id);
+                mknd_err_unique1(node, "EXIT_BRIDGE_HELPER_BAD_SHAPE", "helper_id", helper_id);
                 ast_free_exit_source_map(source_map);
                 fre_cntx(frag);
                 return -1;
@@ -2188,7 +2224,7 @@ static int rxcp_append_helper(Context *ctx,
     }
 
     if (!helper_proc) {
-        mknd_err_unique(node, "EXIT_BRIDGE_HELPER_MISSING_DEF, \"%s\"", helper_id);
+        mknd_err_unique1(node, "EXIT_BRIDGE_HELPER_MISSING_DEF", "helper_id", helper_id);
         ast_free_exit_source_map(source_map);
         fre_cntx(frag);
         return -1;
@@ -2199,7 +2235,7 @@ static int rxcp_append_helper(Context *ctx,
     helper_proc = add_dast(file_node, helper_proc);
     rxcp_mark_helper_subtree(helper_proc, node);
     if (rxcp_store_helper_source(ctx, file_node, helper_id, prefixed_source) < 0) {
-        mknd_err_unique(node, "EXIT_BRIDGE_HELPER_REGISTRY_FAILED, \"%s\"", helper_id);
+        mknd_err_unique1(node, "EXIT_BRIDGE_HELPER_REGISTRY_FAILED", "helper_id", helper_id);
         ast_free_exit_source_map(source_map);
         fre_cntx(frag);
         return -1;
@@ -2246,7 +2282,7 @@ static int rxcp_apply_plan_helpers(Context *ctx,
         source_text = rxcp_join_helper_source(vctx, helper_plan);
 
         if (!scope || strcasecmp(scope, "file_tail") != 0) {
-            mknd_err_unique(node, "EXIT_BRIDGE_UNSUPPORTED_HELPER_SCOPE, \"%s\"", scope ? scope : "");
+            mknd_err_unique1(node, "EXIT_BRIDGE_UNSUPPORTED_HELPER_SCOPE", "scope", scope ? scope : "");
             if (source_text) free(source_text);
             if (scope) free(scope);
             if (helper_id) free(helper_id);
@@ -2342,18 +2378,20 @@ static int rxcp_report_bridge_method_failure(ASTNode *node,
     rxvml_last_error(vctx, &vm_error);
 
     if (vm_error && vm_error[0]) {
-        mknd_err_unique(node,
-                        "%s, \"%s.%s: %s\"",
-                        code,
-                        class_name ? class_name : "<unknown>",
-                        method_name ? method_name : "<unknown>",
-                        vm_error);
+        char *method = mprintf("%s.%s",
+                               class_name ? class_name : "<unknown>",
+                               method_name ? method_name : "<unknown>");
+        mknd_err_unique2(node,
+                         code,
+                         "method", method ? method : "",
+                         "message", vm_error);
+        if (method) free(method);
     } else {
-        mknd_err_unique(node,
-                        "%s, \"%s.%s\"",
-                        code,
-                        class_name ? class_name : "<unknown>",
-                        method_name ? method_name : "<unknown>");
+        char *method = mprintf("%s.%s",
+                               class_name ? class_name : "<unknown>",
+                               method_name ? method_name : "<unknown>");
+        mknd_err_unique1(node, code, "method", method ? method : "");
+        if (method) free(method);
     }
 
     return -1;

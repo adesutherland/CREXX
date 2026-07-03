@@ -112,7 +112,9 @@ state:
 
 *   `source_tree_sync_diagnostics()` rebuilds canonical source diagnostics from
     the current AST and detached diagnostics list, clearing stale mirrored
-    state first.
+    state first. Each mirrored diagnostic clones the structured
+    `RxcpDiagnostic` payload (`code` plus named parameters); rendered text is
+    localized or raw presentation, not the diagnostic identity.
 *   `source_tree_sync_semantics()` mirrors final symbol and type conclusions
     onto immutable `SourceNode` sidecars after validation.
 
@@ -221,7 +223,11 @@ they reduce instead of consuming the terminator as recovery.
 
 ### 5.3 Semantic Errors (Walker)
 The walker (`initial_checks_walker`) validates logic that cannot be expressed purely in grammar (or is deferred for checking).
-*   **Mechanism**: The walker traverses the AST and calls `mknd_err` to attach errors to specific nodes.
+*   **Mechanism**: The walker traverses the AST and calls `mknd_err`,
+    `mknd_err1`, `mknd_err2`, etc. to attach structured diagnostics to
+    specific nodes. The first argument after the node is the stable diagnostic
+    code; any details must be passed as named parameters rather than by
+    pre-formatting English text.
 *   **Error Codes** (Selected):
     *   **Structure**: `CANT_DEFINE_PROC_HERE` (Nested procedures).
     *   **Arguments**: `REPEATED_ARG`, `ARG_NOT_FIRST_INST`, `INVALID_ARG_SYNTAX`.
@@ -232,7 +238,7 @@ The walker (`initial_checks_walker`) validates logic that cannot be expressed pu
 ### 5.4 Diagnostic Pruning
 To protect the structural integrity of the AST for code generation, all `WARNING` and `ERROR` nodes are "pruned" from the tree during the finalization pass (`rxcp_collect_and_prune_diagnostics`). They are moved to a detached list in the `Context`, ensuring that the Emitter only sees a pure instruction tree while still allowing the compiler to report all findings.
 
-This approach allows the compiler to continue processing (in some cases) or provide precise feedback by localizing the error to the specific AST node.
+This approach allows the compiler to continue processing (in some cases) or provide precise feedback by localizing the error to the specific AST node. The detached nodes retain their `RxcpDiagnostic` payloads so CLI printing, DSLSH, source-tree diagnostics, and localized rendering use the same identity and parameters.
 
 ## 6. Status - Lemon Grammar Conflict Analysis
 The Lemon grammar (`rxcpbgmr.y`) was analyzed for parsing conflicts.

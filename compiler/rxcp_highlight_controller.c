@@ -1236,37 +1236,47 @@ static void emit_source_projection(CB_ParseTree *tb,
 
 static char *format_source_diagnostic_message(SourceDiagnostic *diag) {
     char *message;
+    char *rendered;
 
     if (!diag) return strdup("Syntax Error");
+    rendered = rxcp_diag_render(diag->diagnostic, diag->message ? diag->message : "Syntax Error");
+    if (!rendered) rendered = strdup(diag->message ? diag->message : "Syntax Error");
+    if (!rendered) return strdup("Syntax Error");
     if (!diag->is_internal) {
-        return strdup(diag->message ? diag->message : "Syntax Error");
+        return rendered;
     }
 
     if (diag->severity == SOURCE_DIAG_WARNING) {
         message = mprintf("Internal generated-code warning: %s",
-                          diag->message ? diag->message : "Warning");
+                          rendered ? rendered : "Warning");
     } else {
         message = mprintf("Internal generated-code error: %s",
-                          diag->message ? diag->message : "Syntax Error");
+                          rendered ? rendered : "Syntax Error");
     }
+    if (rendered) free(rendered);
     return message;
 }
 
 static char *format_ast_diagnostic_message(ASTNode *diag) {
     char *message;
+    char *rendered;
 
     if (!diag) return strdup("Syntax Error");
+    rendered = rxcp_diag_render(diag->diagnostic, diag->node_string ? diag->node_string : "Syntax Error");
+    if (!rendered) rendered = strdup(diag->node_string ? diag->node_string : "Syntax Error");
+    if (!rendered) return strdup("Syntax Error");
     if (!diag->is_internal_diagnostic) {
-        return strdup(diag->node_string ? diag->node_string : "Syntax Error");
+        return rendered;
     }
 
     if (diag->node_type == RXCP_WARNING) {
         message = mprintf("Internal generated-code warning: %s",
-                          diag->node_string ? diag->node_string : "Warning");
+                          rendered ? rendered : "Warning");
     } else {
         message = mprintf("Internal generated-code error: %s",
-                          diag->node_string ? diag->node_string : "Syntax Error");
+                          rendered ? rendered : "Syntax Error");
     }
+    if (rendered) free(rendered);
     return message;
 }
 

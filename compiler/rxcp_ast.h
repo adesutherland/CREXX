@@ -31,6 +31,7 @@
 
 #include "rxcp_types.h"
 #include "rxcp_token.h"
+#include "rxcp_diag.h"
 
 typedef enum ASTSourceProvenance {
     AST_SOURCE_NONE = 0,
@@ -104,6 +105,7 @@ struct ASTNode {
     char *node_string;
     size_t node_string_length;
     char free_node_string;
+    RxcpDiagnostic *diagnostic;
     rxinteger int_value;
     int bool_value;
     double float_value;
@@ -177,9 +179,9 @@ void ast_free_exit_source_map(SourceMap *map);
  */
 ASTNode *ast_dup(Context* new_context, ASTNode *node);
 /* Add error node to parent node */
-ASTNode *ast_err(Context* context, char *error_string, Token *token);
+ASTNode *ast_err(Context* context, const char *code, Token *token);
 /* Add warning node to parent node */
-ASTNode *ast_war(Context* context, char *warning_string, Token *token);
+ASTNode *ast_war(Context* context, const char *code, Token *token);
 /* ASTNode Factory - Error at last Node */
 ASTNode *ast_errh(Context* context, char *error_string);
 /* Add a duplicate of the tree headed by the source node as a child to dest
@@ -198,11 +200,28 @@ void print_error(ASTNode* node, FILE* stream, char* prefix);
 ASTNode* add_ast(ASTNode* parent, ASTNode* child); /* Add Child - Returns child for chaining */
 ASTNode *add_sbtr(ASTNode *older, ASTNode *younger); /* Add sibling - Returns younger for chaining */
 /* Add an error child node  - returns node for chaining */
-ASTNode *mknd_err(ASTNode* node, char *error_string, ...);
+ASTNode *mknd_err(ASTNode* node, const char *code);
+ASTNode *mknd_err1(ASTNode* node, const char *code, const char *name1, const char *value1);
+ASTNode *mknd_err2(ASTNode* node, const char *code, const char *name1, const char *value1,
+                   const char *name2, const char *value2);
+ASTNode *mknd_err3(ASTNode* node, const char *code, const char *name1, const char *value1,
+                   const char *name2, const char *value2, const char *name3, const char *value3);
+ASTNode *mknd_err5(ASTNode* node, const char *code, const char *name1, const char *value1,
+                   const char *name2, const char *value2, const char *name3, const char *value3,
+                   const char *name4, const char *value4, const char *name5, const char *value5);
 /* Add an error child node only if an error with same string doesn't already exist on the node */
-ASTNode *mknd_err_unique(ASTNode* node, char *error_string, ...);
+ASTNode *mknd_err_unique(ASTNode* node, const char *code);
+ASTNode *mknd_err_unique1(ASTNode* node, const char *code, const char *name1, const char *value1);
+ASTNode *mknd_err_unique2(ASTNode* node, const char *code, const char *name1, const char *value1,
+                          const char *name2, const char *value2);
 /* Add a warning child node  - returns node for chaining */
-ASTNode *mknd_war(ASTNode* node, char *error_string, ...);
+ASTNode *mknd_war(ASTNode* node, const char *code);
+ASTNode *mknd_war1(ASTNode* node, const char *code, const char *name1, const char *value1);
+ASTNode *mknd_war2(ASTNode* node, const char *code, const char *name1, const char *value1,
+                   const char *name2, const char *value2);
+ASTNode *mknd_war3(ASTNode* node, const char *code, const char *name1, const char *value1,
+                   const char *name2, const char *value2, const char *name3, const char *value3);
+void ast_set_diagnostic(ASTNode *node, RxcpDiagnostic *diagnostic);
 void free_ast(Context* context);
 void pdot_tree(ASTNode *tree, char* output_file, char* prefix);
 /* Set the string value of an ASTNode. string must be malloced. memory is

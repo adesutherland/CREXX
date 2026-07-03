@@ -33,6 +33,7 @@
 #include "rxcp_source_tree.h"
 
 void print_error(ASTNode* node, FILE* stream, char* prefix) {
+    char *message;
 
     if (node->is_duplicate_warning) return;
 
@@ -82,16 +83,21 @@ void print_error(ASTNode* node, FILE* stream, char* prefix) {
             break;
         }
     }
+    message = rxcp_diag_render(node->diagnostic, node->node_string ? node->node_string : "Syntax Error");
+    if (!message) message = strdup(node->node_string ? node->node_string : "Syntax Error");
+    if (!message) return;
+
     if (len) {
         fprintf(stream, "%s %s @ %d:%d - #%s, \"", prefix, node->file_name, node->line + 1,
-                node->column + 1, node->node_string);
+                node->column + 1, message);
         prt_unex(stream, node->source_start, len);
         fprintf(stream, "\"\n");
     }
     else {
         fprintf(stream, "%s %s @ %d:%d - #%s\n", prefix, node->file_name, node->line + 1,
-                node->column + 1, node->node_string);
+                node->column + 1, message);
     }
+    free(message);
 }
 
 walker_result prnt_walker_handler(walker_direction direction,
@@ -153,6 +159,7 @@ static walker_result print_warning_walker(walker_direction direction,
 static void print_source_diagnostic(SourceDiagnostic *diag, FILE *stream, const char *prefix) {
     int len;
     int i;
+    char *message;
 
     if (!diag || !stream || !prefix) return;
 
@@ -167,13 +174,17 @@ static void print_source_diagnostic(SourceDiagnostic *diag, FILE *stream, const 
         }
     }
 
+    message = rxcp_diag_render(diag->diagnostic, diag->message ? diag->message : "Syntax Error");
+    if (!message) message = strdup(diag->message ? diag->message : "Syntax Error");
+    if (!message) return;
+
     if (len > 0) {
         fprintf(stream, "%s %s @ %d:%d - #%s, \"",
                 prefix,
                 diag->file_name ? diag->file_name : "<unknown>",
                 diag->line + 1,
                 diag->column + 1,
-                diag->message ? diag->message : "Syntax Error");
+                message);
         prt_unex(stream, diag->source_start, len);
         fprintf(stream, "\"\n");
     } else {
@@ -182,8 +193,9 @@ static void print_source_diagnostic(SourceDiagnostic *diag, FILE *stream, const 
                 diag->file_name ? diag->file_name : "<unknown>",
                 diag->line + 1,
                 diag->column + 1,
-                diag->message ? diag->message : "Syntax Error");
+                message);
     }
+    free(message);
 }
 
 /* Prints errors and returns the number of errors in the AST Tree */

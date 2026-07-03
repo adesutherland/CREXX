@@ -480,11 +480,34 @@ static SourceNode *source_tree_resolve_owner(Context *context, ASTNode *diag) {
     return context ? context->source_tree : 0;
 }
 
+static int source_tree_diagnostic_matches(SourceDiagnostic *existing,
+                                          ASTNode *diag,
+                                          SourceDiagnosticSeverity severity,
+                                          int line,
+                                          int column,
+                                          const char *message) {
+    if (!existing || !diag) return 0;
+    if (existing->severity != severity ||
+        existing->is_internal != diag->is_internal_diagnostic ||
+        existing->line != line ||
+        existing->column != column) {
+        return 0;
+    }
+
+    if (existing->diagnostic || diag->diagnostic) {
+        return rxcp_diag_equal(existing->diagnostic, diag->diagnostic);
+    }
+
+    return existing->message &&
+           message &&
+           strcmp(existing->message, message) == 0;
+}
+
 static void source_tree_append_diagnostic(Context *context, ASTNode *diag) {
     SourceDiagnostic *source_diag;
     SourceDiagnostic *tail;
     SourceNode *owner;
-    const char *message;
+    char *message;
     int line;
     int column;
     SourceDiagnosticSeverity severity;
@@ -498,31 +521,33 @@ static void source_tree_append_diagnostic(Context *context, ASTNode *diag) {
     owner = source_tree_resolve_owner(context, diag);
     if (!owner) return;
 
-    message = diag->node_string ? diag->node_string : "Syntax Error";
+    message = rxcp_diag_render(diag->diagnostic, diag->node_string ? diag->node_string : "Syntax Error");
+    if (!message) message = strdup(diag->node_string ? diag->node_string : "Syntax Error");
+    if (!message) return;
     line = diag->line >= 0 ? diag->line : owner->line;
     column = diag->column >= 0 ? diag->column : owner->column;
     severity = diag->node_type == WARNING ? SOURCE_DIAG_WARNING : SOURCE_DIAG_ERROR;
 
     existing = owner->diagnostics;
     while (existing) {
-        if (existing->severity == severity &&
-            existing->is_internal == diag->is_internal_diagnostic &&
-            existing->line == line &&
-            existing->column == column &&
-            existing->message &&
-            strcmp(existing->message, message) == 0) {
+        if (source_tree_diagnostic_matches(existing, diag, severity, line, column, message)) {
             diag->is_source_diagnostic_recorded = 1;
+            free(message);
             return;
         }
         existing = existing->next_on_source;
     }
 
     source_diag = calloc(1, sizeof(SourceDiagnostic));
-    if (!source_diag) return;
+    if (!source_diag) {
+        free(message);
+        return;
+    }
 
     source_diag->owner = owner;
-    source_diag->message = strdup(message);
+    source_diag->message = message;
     source_diag->message_length = strlen(message);
+    source_diag->diagnostic = rxcp_diag_clone(diag->diagnostic);
     source_diag->file_name = diag->file_name ? diag->file_name : owner->file_name;
     source_diag->source_start = diag->source_start ? diag->source_start : owner->source_start;
     source_diag->source_end = diag->source_end ? diag->source_end : owner->source_end;
@@ -624,6 +649,7 @@ void source_tree_clear_diagnostics(Context *context) {
     while (diag) {
         next = diag->next_in_context;
         if (diag->message) free(diag->message);
+        if (diag->diagnostic) rxcp_diag_free(diag->diagnostic);
         free(diag);
         diag = next;
     }

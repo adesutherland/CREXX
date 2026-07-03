@@ -2165,7 +2165,7 @@ add_crexx_run_test(test_disjoint_detailed rexx_src/test_disjoint_detailed.crexx)
 # New test for detailed warning
 set(WARN_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_warn_test.cmake")
 set(WARN_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o test_disjoint_detailed_warn \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/test_disjoint_detailed.crexx\" ERROR_VARIABLE err_out OUTPUT_VARIABLE std_out RESULT_VARIABLE res)\n")
-string(APPEND WARN_CONTENT "if(NOT err_out MATCHES \"original definition @ 4:5\")\n  message(FATAL_ERROR \"Expected warning not found in output\")\nendif()\n")
+string(APPEND WARN_CONTENT "if(NOT err_out MATCHES \"NOT_IN_SAME_SCOPE line=\\\"4\\\" column=\\\"5\\\"\")\n  message(FATAL_ERROR \"Expected warning not found in output\")\nendif()\n")
 file(GENERATE OUTPUT "${WARN_SCRIPT}" CONTENT "${WARN_CONTENT}")
 
 add_test(NAME test_disjoint_detailed_warn
@@ -3844,3 +3844,177 @@ if (ENABLE_PARSER_MODE)
     add_test(NAME highlight_editor_diagnostics COMMAND test_highlight_editor_diagnostics)
     set_tests_properties(highlight_editor_diagnostics PROPERTIES LABELS "compiler;syntax_highlighting;stage5")
 endif()
+
+file(GLOB_RECURSE RXC_DIAGNOSTIC_CATALOG_SCAN_SOURCES CONFIGURE_DEPENDS
+        "${CMAKE_SOURCE_DIR}/compiler/*.c"
+        "${CMAKE_SOURCE_DIR}/compiler/*.h"
+        "${CMAKE_SOURCE_DIR}/compiler/*.l"
+        "${CMAKE_SOURCE_DIR}/compiler/*.y"
+        "${CMAKE_SOURCE_DIR}/compiler/exits/*.crexx")
+list(SORT RXC_DIAGNOSTIC_CATALOG_SCAN_SOURCES)
+set(RXC_DIAGNOSTIC_CATALOG_SOURCE_LIST "${CMAKE_CURRENT_BINARY_DIR}/rxc_diagnostic_catalog_sources.txt")
+file(WRITE "${RXC_DIAGNOSTIC_CATALOG_SOURCE_LIST}" "")
+foreach(_rxc_diagnostic_catalog_source IN LISTS RXC_DIAGNOSTIC_CATALOG_SCAN_SOURCES)
+    file(APPEND "${RXC_DIAGNOSTIC_CATALOG_SOURCE_LIST}" "${_rxc_diagnostic_catalog_source}\n")
+endforeach()
+
+set(RXC_DIAGNOSTIC_CATALOG_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_diagnostic_catalogs.cmake")
+set(RXC_DIAGNOSTIC_CATALOG_CONTENT "")
+string(APPEND RXC_DIAGNOSTIC_CATALOG_CONTENT
+       "set(tool_base \"${CMAKE_CURRENT_BINARY_DIR}/check_diagnostic_catalogs\")\n"
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"\${tool_base}\" \"${CMAKE_SOURCE_DIR}/tools/check_diagnostic_catalogs.crexx\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE out\n"
+       "  ERROR_VARIABLE err\n"
+       "  RESULT_VARIABLE res\n"
+       ")\n"
+       "if(NOT res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"diagnostic catalogue checker compile failed with \${res}:\\n\${out}\${err}\")\n"
+       "endif()\n"
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxas>\" -o \"\${tool_base}.rxbin\" \"\${tool_base}\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE out\n"
+       "  ERROR_VARIABLE err\n"
+       "  RESULT_VARIABLE res\n"
+       ")\n"
+       "if(NOT res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"diagnostic catalogue checker assembly failed with \${res}:\\n\${out}\${err}\")\n"
+       "endif()\n"
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxvm>\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" \"\${tool_base}.rxbin\" -a \"${CMAKE_SOURCE_DIR}/messages/diagnostics.en_GB.msg\" \"${RXC_DIAGNOSTIC_CATALOG_SOURCE_LIST}\" \"2\" \"${CMAKE_SOURCE_DIR}/messages/diagnostics.de_DE.msg\" \"${CMAKE_SOURCE_DIR}/messages/diagnostics.nl_NL.msg\" \"1\" \"${CMAKE_SOURCE_DIR}/messages/diagnostics.en_US.msg\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE out\n"
+       "  ERROR_VARIABLE err\n"
+       "  RESULT_VARIABLE res\n"
+       ")\n"
+       "if(NOT res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"diagnostic catalogue checker failed with \${res}:\\n\${out}\${err}\")\n"
+       "endif()\n"
+       "message(STATUS \"\${out}\")\n")
+file(GENERATE OUTPUT "${RXC_DIAGNOSTIC_CATALOG_SCRIPT}" CONTENT "${RXC_DIAGNOSTIC_CATALOG_CONTENT}")
+add_test(NAME rxc_diagnostic_catalogs
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_DIAGNOSTIC_CATALOG_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxc_diagnostic_catalogs PROPERTIES LABELS "compiler;diagnostics")
+
+set(RXC_DIAGNOSTIC_LOCALIZATION_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_diagnostic_localization.cmake")
+set(RXC_DIAGNOSTIC_LOCALIZATION_CONTENT "")
+string(APPEND RXC_DIAGNOSTIC_LOCALIZATION_CONTENT
+       "set(unused_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/unused_import_warning.crexx\")\n"
+       "set(address_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/test_implicit_address.crexx\")\n"
+       "set(missing_end_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/err_02_syntax.crexx\")\n"
+       "function(run_diag label locale source suffix expected unexpected)\n"
+       "  execute_process(\n"
+       "    COMMAND \"${CMAKE_COMMAND}\" -E env \"CREXX_DIAGNOSTICS=localized\" \"CREXX_DIAGNOSTIC_LOCALE=\${locale}\" \"$<TARGET_FILE:rxc>\" -n -o \"\${label}_\${suffix}_diag\" \"\${source}\"\n"
+       "    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "    OUTPUT_VARIABLE out\n"
+       "    ERROR_VARIABLE err\n"
+       "    RESULT_VARIABLE res\n"
+       "  )\n"
+       "  set(full_out \"\${out}\${err}\")\n"
+       "  if(NOT res EQUAL 0)\n"
+       "    message(FATAL_ERROR \"\${label} localized diagnostic run failed with \${res}:\\n\${full_out}\")\n"
+       "  endif()\n"
+       "  string(FIND \"\${full_out}\" \"\${expected}\" expected_pos)\n"
+       "  if(expected_pos EQUAL -1)\n"
+       "    message(FATAL_ERROR \"\${label} localized diagnostic missing '\${expected}':\\n\${full_out}\")\n"
+       "  endif()\n"
+       "  if(NOT \"\${unexpected}\" STREQUAL \"\")\n"
+       "    string(FIND \"\${full_out}\" \"\${unexpected}\" unexpected_pos)\n"
+       "    if(NOT unexpected_pos EQUAL -1)\n"
+       "      message(FATAL_ERROR \"\${label} localized diagnostic contained unexpected '\${unexpected}':\\n\${full_out}\")\n"
+       "    endif()\n"
+       "  endif()\n"
+       "  string(REPLACE \"\\n\" \" | \" sample \"\${full_out}\")\n"
+       "  message(STATUS \"\${label}/\${suffix}: \${sample}\")\n"
+       "endfunction()\n"
+       "function(run_diag_fail label locale source suffix expected unexpected)\n"
+       "  execute_process(\n"
+       "    COMMAND \"${CMAKE_COMMAND}\" -E env \"CREXX_DIAGNOSTICS=localized\" \"CREXX_DIAGNOSTIC_LOCALE=\${locale}\" \"$<TARGET_FILE:rxc>\" -n -o \"\${label}_\${suffix}_diag\" \"\${source}\"\n"
+       "    WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "    OUTPUT_VARIABLE out\n"
+       "    ERROR_VARIABLE err\n"
+       "    RESULT_VARIABLE res\n"
+       "  )\n"
+       "  set(full_out \"\${out}\${err}\")\n"
+       "  if(res EQUAL 0)\n"
+       "    message(FATAL_ERROR \"\${label} localized diagnostic unexpectedly succeeded:\\n\${full_out}\")\n"
+       "  endif()\n"
+       "  string(FIND \"\${full_out}\" \"\${expected}\" expected_pos)\n"
+       "  if(expected_pos EQUAL -1)\n"
+       "    message(FATAL_ERROR \"\${label} localized diagnostic missing '\${expected}':\\n\${full_out}\")\n"
+       "  endif()\n"
+       "  if(NOT \"\${unexpected}\" STREQUAL \"\")\n"
+       "    string(FIND \"\${full_out}\" \"\${unexpected}\" unexpected_pos)\n"
+       "    if(NOT unexpected_pos EQUAL -1)\n"
+       "      message(FATAL_ERROR \"\${label} localized diagnostic contained unexpected '\${unexpected}':\\n\${full_out}\")\n"
+       "    endif()\n"
+       "  endif()\n"
+       "  string(REPLACE \"\\n\" \" | \" sample \"\${full_out}\")\n"
+       "  message(STATUS \"\${label}/\${suffix}: \${sample}\")\n"
+       "endfunction()\n"
+       "run_diag(\"en_GB\" \"en_GB\" \"\${unused_src}\" \"unused\" \"UNUSED_IMPORT: Import is recognised but not used.\" \"recognized\")\n"
+       "run_diag(\"en_US\" \"en_US\" \"\${unused_src}\" \"unused\" \"UNUSED_IMPORT: Import is recognized but not used.\" \"recognised\")\n"
+       "run_diag(\"de_DE\" \"de_DE\" \"\${unused_src}\" \"unused\" \"UNUSED_IMPORT: Import wird erkannt, aber nicht verwendet.\" \"recognised\")\n"
+       "run_diag(\"nl_NL\" \"nl_NL\" \"\${unused_src}\" \"unused\" \"UNUSED_IMPORT: Import wordt herkend, maar niet gebruikt.\" \"recognised\")\n"
+       "run_diag(\"en_GB\" \"en_GB\" \"\${address_src}\" \"address\" \"IMPLICIT_ADDRESS: Implicit ADDRESS command\" \"\")\n"
+       "run_diag(\"en_US\" \"en_US\" \"\${address_src}\" \"address\" \"IMPLICIT_ADDRESS: Implicit ADDRESS command\" \"\")\n"
+       "run_diag(\"de_DE\" \"de_DE\" \"\${address_src}\" \"address\" \"IMPLICIT_ADDRESS: Impliziter ADDRESS-Befehl\" \"\")\n"
+       "run_diag(\"nl_NL\" \"nl_NL\" \"\${address_src}\" \"address\" \"IMPLICIT_ADDRESS: Impliciete ADDRESS-opdracht\" \"\")\n"
+       "run_diag_fail(\"en_GB\" \"en_GB\" \"\${missing_end_src}\" \"missing_end\" \"MISSING_END: Missing END\" \"#MISSING_END, \\\"do\\\"\")\n"
+       "run_diag_fail(\"en_US\" \"en_US\" \"\${missing_end_src}\" \"missing_end\" \"MISSING_END: Missing END\" \"#MISSING_END, \\\"do\\\"\")\n"
+       "run_diag_fail(\"de_DE\" \"de_DE\" \"\${missing_end_src}\" \"missing_end\" \"MISSING_END: Fehlendes END\" \"#MISSING_END, \\\"do\\\"\")\n"
+       "run_diag_fail(\"nl_NL\" \"nl_NL\" \"\${missing_end_src}\" \"missing_end\" \"MISSING_END: Ontbrekende END\" \"#MISSING_END, \\\"do\\\"\")\n"
+       "run_diag(\"fallback\" \"fr_FR\" \"\${unused_src}\" \"unused\" \"UNUSED_IMPORT: Import is recognised but not used.\" \"recognized\")\n")
+file(GENERATE OUTPUT "${RXC_DIAGNOSTIC_LOCALIZATION_SCRIPT}" CONTENT "${RXC_DIAGNOSTIC_LOCALIZATION_CONTENT}")
+add_test(NAME rxc_diagnostic_localization
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_DIAGNOSTIC_LOCALIZATION_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxc_diagnostic_localization PROPERTIES LABELS "compiler;diagnostics")
+
+set(RXC_DIAGNOSTIC_RAW_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_diagnostic_raw.cmake")
+set(RXC_DIAGNOSTIC_RAW_CONTENT "")
+string(APPEND RXC_DIAGNOSTIC_RAW_CONTENT
+       "execute_process(\n"
+       "  COMMAND \"${CMAKE_COMMAND}\" -E env \"CREXX_DIAGNOSTICS=raw\" \"$<TARGET_FILE:rxc>\" -o raw_diag \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/unused_import_warning.crexx\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE out\n"
+       "  ERROR_VARIABLE err\n"
+       "  RESULT_VARIABLE res\n"
+       ")\n"
+       "set(full_out \"\${out}\${err}\")\n"
+       "if(NOT res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"raw diagnostic run failed with \${res}:\\n\${full_out}\")\n"
+       "endif()\n"
+       "string(FIND \"\${full_out}\" \"UNUSED_IMPORT\" code_pos)\n"
+       "if(code_pos EQUAL -1)\n"
+       "  message(FATAL_ERROR \"raw diagnostic missing code:\\n\${full_out}\")\n"
+       "endif()\n"
+       "string(FIND \"\${full_out}\" \"recognised\" text_pos)\n"
+       "if(NOT text_pos EQUAL -1)\n"
+       "  message(FATAL_ERROR \"raw diagnostic unexpectedly used localized text:\\n\${full_out}\")\n"
+       "endif()\n")
+file(GENERATE OUTPUT "${RXC_DIAGNOSTIC_RAW_SCRIPT}" CONTENT "${RXC_DIAGNOSTIC_RAW_CONTENT}")
+add_test(NAME rxc_diagnostic_raw
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_DIAGNOSTIC_RAW_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(rxc_diagnostic_raw PROPERTIES LABELS "compiler;diagnostics")
+
+function(crexx_force_raw_diagnostics_for_directory_tests)
+    get_property(_crexx_tests DIRECTORY PROPERTY TESTS)
+    foreach(_crexx_test IN LISTS _crexx_tests)
+        if(_crexx_test MATCHES "^rxc_diagnostic_(catalogs|localization|raw)$")
+            continue()
+        endif()
+        get_test_property(${_crexx_test} ENVIRONMENT _crexx_env)
+        if(NOT _crexx_env OR _crexx_env MATCHES "NOTFOUND$")
+            set(_crexx_env)
+        endif()
+        list(APPEND _crexx_env "CREXX_DIAGNOSTICS=raw")
+        set_tests_properties(${_crexx_test} PROPERTIES ENVIRONMENT "${_crexx_env}")
+    endforeach()
+endfunction()
+
+crexx_force_raw_diagnostics_for_directory_tests()

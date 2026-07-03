@@ -980,7 +980,9 @@ walker_result resolve_functions_walker(walker_direction direction,
                             utf8lwr(local_name);
                             #endif
 
-                            mknd_war(node, "EXTERNAL_SHADOW_BYPASS, external procedure \"%s\" shadowing local procedure \"%s\"", fqn, local_name);
+                            mknd_war2(node, "EXTERNAL_SHADOW_BYPASS",
+                                      "external", fqn,
+                                      "local", local_name);
                             free(fqn);
                             free(local_name);
                         }

@@ -31,6 +31,7 @@
 
 #include "rxcp_types.h"
 #include "rxcp_token.h"
+#include "rxcp_diag.h"
 
 typedef enum SourceDiagnosticSeverity {
     SOURCE_DIAG_ERROR = 0,
@@ -52,6 +53,7 @@ struct SourceDiagnostic {
     SourceNode *owner;
     char *message;
     size_t message_length;
+    RxcpDiagnostic *diagnostic;
     char *file_name;
     char *source_start;
     char *source_end;

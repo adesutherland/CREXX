@@ -1,5 +1,5 @@
-Warning in test_meth_vs_proc.crexx @ 56:9 - #SHADOWING, original definition "test_meth_vs_proc.myobj.val" @ 29:3, "val"
-Warning in test_meth_vs_proc.crexx @ 58:12 - #SHADOWING, original definition "test_meth_vs_proc.myobj.val" @ 29:3, "val"
+Warning in test_meth_vs_proc.crexx @ 56:9 - #SHADOWING original="test_meth_vs_proc.myobj.val" line="29" column="3", "val"
+Warning in test_meth_vs_proc.crexx @ 58:12 - #SHADOWING original="test_meth_vs_proc.myobj.val" line="29" column="3", "val"
 2 warning(s) in source file
 Testing Methods vs Procedures...
 Initial: initial

@@ -33,11 +33,20 @@ input resynchronize at clause, group, expression, and template boundaries:
 - `38.*`: parse-template recovery.
 - `46.*`, `50.*`, `51.*`: variable/reserved/function-name syntax.
 
-## Interim Diagnostic Record Format
+## Diagnostic Record and Rendering
 
-Until the shared formatter exists, Level C parser and validation code should
-emit the standard identity plus named inserts in the existing diagnostic string
-field:
+Level C parser and validation code emit the standard identity plus named
+inserts through `RxcpDiagnostic`. The localized renderer maps that identity
+through the shared message catalogs under `messages/`:
+
+- `messages/diagnostics.en_GB.msg` is the default English catalog.
+- `messages/diagnostics.en_US.msg` contains spelling overrides and falls back
+  to `en_GB` for all other messages.
+- `messages/diagnostics.de_DE.msg` and `messages/diagnostics.nl_NL.msg`
+  contain German and Dutch translations. Missing locale files still fall back
+  to `en_GB`.
+- `CREXX_DIAGNOSTICS=raw` or `rxc --diagnostics raw` renders the stable
+  machine-readable form used by compiler golden tests.
 
 ```text
 RXC-LC-<standard-code> [insert-name="escaped value" ...]
@@ -51,10 +60,9 @@ RXC-LC-35.1 token="then"
 RXC-LC-40.4 name="FOO"
 ```
 
-The initial implementation uses this form for DSLSH and parser-mode tests.
-Message rendering from this catalog is a later common stage, so new tests should
-assert the `RXC-LC-...` identity first and only assert insert payloads where
-the insert value is part of the expected parser contract.
+Tests that compare diagnostic goldens force raw diagnostics. User-facing CLI
+and DSLSH output defaults to localized text, using `CREXX_DIAGNOSTIC_LOCALE`,
+the platform locale environment, and finally `en_GB`.
 
 ## Output Prefixes
 

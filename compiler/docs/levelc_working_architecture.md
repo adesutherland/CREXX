@@ -791,19 +791,19 @@ Additional Level C highlighting needs:
 - Correct comment recovery for nested block comments.
 - Correct inferred semicolon ownership for diagnostics.
 - Standard diagnostic text and error numbers from
-  `levelc_standard_error_messages.md` once parser recovery and validation are
-  mapped to Classic message identifiers.
+  `levelc_standard_error_messages.md` through the shared message catalogs in
+  `messages/`.
 
 Level C diagnostics should be emitted in two layers:
 
 1. The parser and validators emit a stable diagnostic identity plus any
-   structured inserts. The first implementation encodes that identity in the
-   existing diagnostic string field so it can flow through DSLSH and parser
-   mode without changing shared diagnostic APIs.
-2. A later common formatting stage maps the identity and inserts to human
-   message text from `levelc_standard_error_messages.md`.
+   structured inserts through the common `RxcpDiagnostic` payload. The legacy
+   `node_string`/source diagnostic message is only the final fallback.
+2. The common renderer maps the identity and inserts to localized message text.
+   Normal CLI/DSLSH output defaults to localized rendering; golden tests force
+   `CREXX_DIAGNOSTICS=raw`.
 
-The interim machine-readable string format is:
+The raw rendered form is:
 
 ```text
 RXC-LC-<standard-code> [insert-name="escaped value" ...]
@@ -826,9 +826,9 @@ RXC-LC-40.4 name="FOO"
 
 Insert names should follow the standard placeholder where there is an obvious
 one, such as `token`, `linenumber`, `keywords`, `value`, `name`, `operator`,
-`char`, `argnumber`, `bif`, `description`, and `position`. The string is not
-intended to be final user-facing prose. Tests should primarily assert the
-`RXC-LC-...` identity, and only assert insert payloads where the insert is part
+`char`, `argnumber`, `bif`, `description`, and `position`. Tests that need
+stable diagnostic text should run in raw mode and primarily assert the
+`RXC-LC-...` identity, only asserting insert payloads where the insert is part
 of the parser contract under test.
 
 Recovery should be attached to the offending source token where possible. For
@@ -1161,7 +1161,7 @@ Regression tests added:
 Diagnostic slice 1 was added on 2026-05-10:
 
 - `compiler/rxcpcdiag.c` provides Level C-only diagnostic helpers for the
-  interim `RXC-LC-<standard-code> insert="value"` record format.
+  `RXC-LC-<standard-code>` identity and named inserts.
 - The Level C grammar now emits standard identities for the first
   IF/THEN/ELSE recovery cases:
   - `18.1`: IF expression reaches end-of-clause without a matching THEN.

@@ -29,7 +29,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
 #include <ctype.h>
 #include "rxcpmain.h"
 #include "rxcpbgmr.h"
@@ -290,6 +289,7 @@ ASTNode *ast_ft(Context* context, NodeType type) {
     node->node_string = "";
     node->node_string_length = 0;
     node->free_node_string = 0;
+    node->diagnostic = 0;
     node->int_value = 0;
     node->bool_value = 0;
     node->float_value = 0;
@@ -446,6 +446,7 @@ ASTNode *ast_dup(Context* new_context, ASTNode *node) {
     ast_copy_reporting_anchors(new_node, node);
 
     new_node->token = node->token;
+    new_node->diagnostic = rxcp_diag_clone(node->diagnostic);
     if (node->free_node_string) {
         new_node->node_string = malloc(node->node_string_length + 1);
         memcpy(new_node->node_string, node->node_string, node->node_string_length);
@@ -901,155 +902,187 @@ ASTNode *ast_fstk(Context* context, ASTNode *source_node) {
     return node;
 }
 
+static ASTNode *ast_make_diagnostic_node(ASTNode *node, NodeType type, RxcpDiagnostic *diagnostic) {
+    ASTNode *diag_node;
+
+    if (!node || !diagnostic) {
+        rxcp_diag_free(diagnostic);
+        return node;
+    }
+
+    diag_node = ast_ft(node->context, type);
+    ast_set_diagnostic(diag_node, diagnostic);
+
+    diag_node->line = node->line;
+    diag_node->column = node->column;
+    diag_node->file_name = node->file_name;
+    diag_node->source_start = node->source_start;
+    diag_node->source_end = node->source_end;
+    diag_node->is_internal_diagnostic = ast_origin_is_internal_diagnostic(node);
+    if (node->source_node) ast_set_primary_source_node(diag_node, node->source_node, AST_SOURCE_INHERITED);
+
+    add_ast(node, diag_node);
+    if (node->context && node->context->source_tree) source_tree_record_diagnostic(node->context, diag_node);
+
+    return node;
+}
+
+static RxcpDiagnostic *rxcp_diag_from_params(const char *code,
+                                             const char *name1, const char *value1,
+                                             const char *name2, const char *value2,
+                                             const char *name3, const char *value3,
+                                             const char *name4, const char *value4,
+                                             const char *name5, const char *value5) {
+    RxcpDiagnostic *diag;
+
+    diag = rxcp_diag_create(code);
+    if (!diag) return 0;
+    if (name1 && name1[0]) rxcp_diag_add_param(diag, name1, value1);
+    if (name2 && name2[0]) rxcp_diag_add_param(diag, name2, value2);
+    if (name3 && name3[0]) rxcp_diag_add_param(diag, name3, value3);
+    if (name4 && name4[0]) rxcp_diag_add_param(diag, name4, value4);
+    if (name5 && name5[0]) rxcp_diag_add_param(diag, name5, value5);
+    return diag;
+}
+
+static int ast_has_diagnostic_child(ASTNode *node, RxcpDiagnostic *diagnostic) {
+    ASTNode *child;
+
+    if (!node || !diagnostic) return 0;
+    child = node->child;
+    while (child) {
+        if (child->node_type == ERROR && rxcp_diag_equal(child->diagnostic, diagnostic)) return 1;
+        child = child->sibling;
+    }
+    return 0;
+}
+
 /* Add error node to parent node */
-ASTNode *ast_err(Context* context, char *error_string, Token *token) {
+ASTNode *ast_err(Context* context, const char *code, Token *token) {
     ASTNode *newNode = ast_f(context, TOKEN, token);
-    mknd_err(newNode, error_string);
+    mknd_err(newNode, code);
     return newNode;
 }
 
 /* Add warning node to parent node */
-ASTNode *ast_war(Context* context, char *warning_string, Token *token) {
+ASTNode *ast_war(Context* context, const char *code, Token *token) {
     ASTNode *newNode = ast_f(context, TOKEN, token);
-    mknd_war(newNode, warning_string);
+    mknd_war(newNode, code);
     return newNode;
 }
 
 /* Add an ERROR node to a node - returns node for chaining */
-ASTNode* mknd_err(ASTNode* node, char *error_string, ...) {
-    va_list argptr;
-    size_t buffer_size = 200;
-    size_t needed;
-    ASTNode *errNode;
-    ASTNode *target;
-
-    char *buffer = malloc(buffer_size);
-
-    /* Write to buffer as sized */
-    va_start(argptr, error_string);
-    needed = vsnprintf(buffer, buffer_size, error_string, argptr);
-    va_end(argptr);
-
-    /* Check if buffer was large enough, if not realloc and try again */
-    if (needed >= buffer_size) {
-        buffer_size = needed + 1;
-        buffer = realloc(buffer, buffer_size);
-        va_start(argptr, error_string);
-        vsnprintf(buffer, buffer_size, error_string, argptr);
-        va_end(argptr);
-    }
-
-    errNode = ast_ft(node->context, ERROR);
-    errNode->node_string = buffer;
-    errNode->node_string_length = strlen(buffer);
-    errNode->free_node_string = 1;
-
-    errNode->line = node->line;
-    errNode->column = node->column;
-    errNode->file_name = node->file_name;
-    errNode->source_start = node->source_start;
-    errNode->source_end = node->source_end;
-    errNode->is_internal_diagnostic = ast_origin_is_internal_diagnostic(node);
-    if (node->source_node) ast_set_primary_source_node(errNode, node->source_node, AST_SOURCE_INHERITED);
-
-    add_ast(node, errNode);
-    if (node->context && node->context->source_tree) source_tree_record_diagnostic(node->context, errNode);
-
-    return node;
+ASTNode* mknd_err(ASTNode* node, const char *code) {
+    return ast_make_diagnostic_node(node, ERROR, rxcp_diag_create(code));
 }
 
-/* Add an ERROR node only if it doesn't already exist as a child with the same message */
-ASTNode* mknd_err_unique(ASTNode* node, char *error_string, ...) {
-    va_list argptr;
-    size_t buffer_size = 200;
-    size_t needed;
-    ASTNode *errNode;
+ASTNode *mknd_err1(ASTNode* node, const char *code, const char *name1, const char *value1) {
+    return ast_make_diagnostic_node(node, ERROR,
+                                    rxcp_diag_from_params(code, name1, value1, 0, 0, 0, 0, 0, 0, 0, 0));
+}
 
-    char *buffer = malloc(buffer_size);
+ASTNode *mknd_err2(ASTNode* node, const char *code, const char *name1, const char *value1,
+                   const char *name2, const char *value2) {
+    return ast_make_diagnostic_node(node, ERROR,
+                                    rxcp_diag_from_params(code, name1, value1, name2, value2, 0, 0, 0, 0, 0, 0));
+}
 
-    /* Write to buffer as sized */
-    va_start(argptr, error_string);
-    needed = vsnprintf(buffer, buffer_size, error_string, argptr);
-    va_end(argptr);
+ASTNode *mknd_err3(ASTNode* node, const char *code, const char *name1, const char *value1,
+                   const char *name2, const char *value2, const char *name3, const char *value3) {
+    return ast_make_diagnostic_node(node, ERROR,
+                                    rxcp_diag_from_params(code, name1, value1, name2, value2, name3, value3, 0, 0, 0, 0));
+}
 
-    /* Check if buffer was large enough, if not realloc and try again */
-    if (needed >= buffer_size) {
-        buffer_size = needed + 1;
-        buffer = realloc(buffer, buffer_size);
-        va_start(argptr, error_string);
-        vsnprintf(buffer, buffer_size, error_string, argptr);
-        va_end(argptr);
+ASTNode *mknd_err5(ASTNode* node, const char *code, const char *name1, const char *value1,
+                   const char *name2, const char *value2, const char *name3, const char *value3,
+                   const char *name4, const char *value4, const char *name5, const char *value5) {
+    return ast_make_diagnostic_node(node, ERROR,
+                                    rxcp_diag_from_params(code, name1, value1, name2, value2, name3, value3,
+                                                          name4, value4, name5, value5));
+}
+
+/* Add an ERROR node only if it doesn't already exist as a child with the same diagnostic */
+ASTNode* mknd_err_unique(ASTNode* node, const char *code) {
+    RxcpDiagnostic *diag;
+
+    diag = rxcp_diag_create(code);
+    if (ast_has_diagnostic_child(node, diag)) {
+        rxcp_diag_free(diag);
+        return node;
     }
+    return ast_make_diagnostic_node(node, ERROR, diag);
+}
 
-    /* Check for duplicate */
-    ASTNode *child = node->child;
-    while (child) {
-        if (child->node_type == ERROR && child->node_string_length == strlen(buffer) && 
-            strncmp(child->node_string, buffer, child->node_string_length) == 0) {
-            free(buffer);
-            return node; /* Duplicate found */
-        }
-        child = child->sibling;
+ASTNode* mknd_err_unique1(ASTNode* node, const char *code, const char *name1, const char *value1) {
+    RxcpDiagnostic *diag;
+
+    diag = rxcp_diag_from_params(code, name1, value1, 0, 0, 0, 0, 0, 0, 0, 0);
+    if (ast_has_diagnostic_child(node, diag)) {
+        rxcp_diag_free(diag);
+        return node;
     }
+    return ast_make_diagnostic_node(node, ERROR, diag);
+}
 
-    errNode = ast_ft(node->context, ERROR);
-    errNode->node_string = buffer;
-    errNode->node_string_length = strlen(buffer);
-    errNode->free_node_string = 1;
+ASTNode* mknd_err_unique2(ASTNode* node, const char *code, const char *name1, const char *value1,
+                          const char *name2, const char *value2) {
+    RxcpDiagnostic *diag;
 
-    errNode->line = node->line;
-    errNode->column = node->column;
-    errNode->file_name = node->file_name;
-    errNode->source_start = node->source_start;
-    errNode->source_end = node->source_end;
-    errNode->is_internal_diagnostic = ast_origin_is_internal_diagnostic(node);
-    if (node->source_node) ast_set_primary_source_node(errNode, node->source_node, AST_SOURCE_INHERITED);
-
-    add_ast(node, errNode);
-    if (node->context && node->context->source_tree) source_tree_record_diagnostic(node->context, errNode);
-
-    return node;
+    diag = rxcp_diag_from_params(code, name1, value1, name2, value2, 0, 0, 0, 0, 0, 0);
+    if (ast_has_diagnostic_child(node, diag)) {
+        rxcp_diag_free(diag);
+        return node;
+    }
+    return ast_make_diagnostic_node(node, ERROR, diag);
 }
 
 /* Add a WARNING node to a node - returns node for chaining */
-ASTNode* mknd_war(ASTNode* node, char *error_string, ...) {
-    va_list argptr;
-    size_t buffer_size = 200;
-    size_t needed;
-    ASTNode *warNode;
-    char *buffer = malloc(buffer_size);
+ASTNode* mknd_war(ASTNode* node, const char *code) {
+    return ast_make_diagnostic_node(node, WARNING, rxcp_diag_create(code));
+}
 
-    /* Write to buffer as sized */
-    va_start(argptr, error_string);
-    needed = vsnprintf(buffer, buffer_size, error_string, argptr);
-    va_end(argptr);
+ASTNode *mknd_war1(ASTNode* node, const char *code, const char *name1, const char *value1) {
+    return ast_make_diagnostic_node(node, WARNING,
+                                    rxcp_diag_from_params(code, name1, value1, 0, 0, 0, 0, 0, 0, 0, 0));
+}
 
-    /* Check if buffer was large enough, if not realloc and try again */
-    if (needed >= buffer_size) {
-        buffer_size = needed + 1;
-        buffer = realloc(buffer, buffer_size);
-        va_start(argptr, error_string);
-        vsnprintf(buffer, buffer_size, error_string, argptr);
-        va_end(argptr);
+ASTNode *mknd_war2(ASTNode* node, const char *code, const char *name1, const char *value1,
+                   const char *name2, const char *value2) {
+    return ast_make_diagnostic_node(node, WARNING,
+                                    rxcp_diag_from_params(code, name1, value1, name2, value2, 0, 0, 0, 0, 0, 0));
+}
+
+ASTNode *mknd_war3(ASTNode* node, const char *code, const char *name1, const char *value1,
+                   const char *name2, const char *value2, const char *name3, const char *value3) {
+    return ast_make_diagnostic_node(node, WARNING,
+                                    rxcp_diag_from_params(code, name1, value1, name2, value2, name3, value3, 0, 0, 0, 0));
+}
+
+void ast_set_diagnostic(ASTNode *node, RxcpDiagnostic *diagnostic) {
+    char *rendered;
+
+    if (!node) {
+        rxcp_diag_free(diagnostic);
+        return;
     }
 
-    warNode = ast_ft(node->context, WARNING);
-    warNode->node_string = buffer;
-    warNode->node_string_length = strlen(buffer);
-    warNode->free_node_string = 1;
+    if (node->diagnostic) rxcp_diag_free(node->diagnostic);
+    node->diagnostic = diagnostic;
 
-    warNode->line = node->line;
-    warNode->column = node->column;
-    warNode->file_name = node->file_name;
-    warNode->source_start = node->source_start;
-    warNode->source_end = node->source_end;
-    warNode->is_internal_diagnostic = ast_origin_is_internal_diagnostic(node);
-    if (node->source_node) ast_set_primary_source_node(warNode, node->source_node, AST_SOURCE_INHERITED);
+    if (node->free_node_string) free(node->node_string);
 
-    add_ast(node, warNode);
-    if (node->context && node->context->source_tree) source_tree_record_diagnostic(node->context, warNode);
+    if (!diagnostic) {
+        node->node_string = "";
+        node->node_string_length = 0;
+        node->free_node_string = 0;
+        return;
+    }
 
-    return node;
+    rendered = rxcp_diag_render(diagnostic, diagnostic->code);
+    if (!rendered) rendered = strdup(diagnostic->code ? diagnostic->code : "UNKNOWN_DIAGNOSTIC");
+    node->node_string = rendered;
+    node->node_string_length = rendered ? strlen(rendered) : 0;
+    node->free_node_string = 1;
 }
 
 void ast_str(ASTNode* node, char *string) {
@@ -1117,7 +1150,8 @@ static Token *ast_errh_anchor(Context *context) {
 /* ASTNode Factory - Error at last Node */
 ASTNode *ast_errh(Context* context, char *error_string) {
     Token *anchor;
-    ASTNode *errorAST = ast_ftt(context, ERROR, error_string);
+    ASTNode *errorAST = ast_ft(context, ERROR);
+    ast_set_diagnostic(errorAST, rxcp_diag_create(error_string));
     anchor = ast_errh_anchor(context);
     if (anchor) add_ast(errorAST, ast_f(context, TOKEN, anchor));
 
@@ -1716,6 +1750,7 @@ void free_ast(Context *context) {
         if (t->target_reference_dim_elements) free(t->target_reference_dim_elements);
         if (t->target_reference_class) free(t->target_reference_class);
         if (t->reporting_source_nodes) free(t->reporting_source_nodes);
+        if (t->diagnostic) rxcp_diag_free(t->diagnostic);
         if (t->output) f_output(t->output);
         if (t->cleanup) f_output(t->cleanup);
         if (t->loopstartchecks) f_output(t->loopstartchecks);

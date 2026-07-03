@@ -38,8 +38,17 @@
 #undef mknd_err_unique
 #undef mknd_war
 #define mknd_err(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err)((n), __VA_ARGS__) : (n))
+#define mknd_err1(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err1)((n), __VA_ARGS__) : (n))
+#define mknd_err2(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err2)((n), __VA_ARGS__) : (n))
+#define mknd_err3(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err3)((n), __VA_ARGS__) : (n))
+#define mknd_err5(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err5)((n), __VA_ARGS__) : (n))
 #define mknd_err_unique(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err_unique)((n), __VA_ARGS__) : (n))
+#define mknd_err_unique1(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err_unique1)((n), __VA_ARGS__) : (n))
+#define mknd_err_unique2(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_err_unique2)((n), __VA_ARGS__) : (n))
 #define mknd_war(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_war)((n), __VA_ARGS__) : (n))
+#define mknd_war1(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_war1)((n), __VA_ARGS__) : (n))
+#define mknd_war2(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_war2)((n), __VA_ARGS__) : (n))
+#define mknd_war3(n, ...) ((!(context) || (context)->is_final_pass) ? (mknd_war3)((n), __VA_ARGS__) : (n))
 
 /* Common Helpers */
 
@@ -927,12 +936,26 @@ void validate_node_promotion(Context *context, ASTNode* node) {
     else if (node->value_dims) {
         /* Check Dimension base/values */
         for (i = 0; i<node->value_dims; i++) {
-            if (node->value_dim_base[i] != node->target_dim_base[i])
-                mknd_err(node, "INCOMPATIBLE_DIM_BASE dim=%d from=%d to=%d",
-                         (int)i + 1, node->value_dim_base[i], node->target_dim_base[i]);
-            else if (node->value_dim_elements[i] != node->target_dim_elements[i] && node->target_dim_elements[i])
-                mknd_err(node, "INCOMPATIBLE_DIM_SIZE dim=%d from=%d to=%d",
-                         (int)i + 1, node->value_dim_elements[i], node->target_dim_elements[i]);
+            if (node->value_dim_base[i] != node->target_dim_base[i]) {
+                char *dim_text = rxcp_diag_int_string((int)i + 1);
+                char *from_text = rxcp_diag_int_string(node->value_dim_base[i]);
+                char *to_text = rxcp_diag_int_string(node->target_dim_base[i]);
+                mknd_err3(node, "INCOMPATIBLE_DIM_BASE",
+                          "dim", dim_text, "from", from_text, "to", to_text);
+                free(dim_text);
+                free(from_text);
+                free(to_text);
+            }
+            else if (node->value_dim_elements[i] != node->target_dim_elements[i] && node->target_dim_elements[i]) {
+                char *dim_text = rxcp_diag_int_string((int)i + 1);
+                char *from_text = rxcp_diag_int_string(node->value_dim_elements[i]);
+                char *to_text = rxcp_diag_int_string(node->target_dim_elements[i]);
+                mknd_err3(node, "INCOMPATIBLE_DIM_SIZE",
+                          "dim", dim_text, "from", from_text, "to", to_text);
+                free(dim_text);
+                free(from_text);
+                free(to_text);
+            }
         }
     }
 
@@ -1047,12 +1070,19 @@ static walker_result shadowing_warning_walker(walker_direction direction,
                     if (sym_nond(shadowed) > 0) {
                         ASTNode *def = sym_trnd(shadowed, 0)->node;
                         if (def && def->line != -1) {
-                            mknd_war(node, "SHADOWING, original definition \"%s\" @ %d:%d", fqn, def->line + 1, def->column + 1);
+                            char *line_text = rxcp_diag_int_string(def->line + 1);
+                            char *column_text = rxcp_diag_int_string(def->column + 1);
+                            mknd_war3(node, "SHADOWING",
+                                      "original", fqn,
+                                      "line", line_text,
+                                      "column", column_text);
+                            free(line_text);
+                            free(column_text);
                         } else {
-                            mknd_war(node, "SHADOWING, original definition \"%s\" is global", fqn);
+                            mknd_war2(node, "SHADOWING", "original", fqn, "global", "1");
                         }
                     } else {
-                        mknd_war(node, "SHADOWING, shadows \"%s\"", fqn);
+                        mknd_war1(node, "SHADOWING", "shadows", fqn);
                     }
                     free(fqn);
                 } else {
@@ -1103,9 +1133,15 @@ static walker_result disjoint_scope_warning_walker(walker_direction direction,
                                     disjoint->creation_ordinal < node->high_ordinal) {
                                     ASTNode *dnode = disjoint->creation_node;
                                     if (dnode) {
-                                        mknd_war(node, "#NOT_IN_SAME_SCOPE, original definition @ %d:%d", dnode->line + 1, dnode->column + 1);
+                                        char *line_text = rxcp_diag_int_string(dnode->line + 1);
+                                        char *column_text = rxcp_diag_int_string(dnode->column + 1);
+                                        mknd_war2(node, "NOT_IN_SAME_SCOPE",
+                                                  "line", line_text,
+                                                  "column", column_text);
+                                        free(line_text);
+                                        free(column_text);
                                     } else {
-                                        mknd_war(node, "#NOT_IN_SAME_SCOPE");
+                                        mknd_war(node, "NOT_IN_SAME_SCOPE");
                                     }
                                     break;
                                 }
