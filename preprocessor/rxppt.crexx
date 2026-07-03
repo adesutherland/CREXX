@@ -26,9 +26,9 @@ arg command=.string[]
      else if upper(command.i)='-M' then maclib=command.j
   end
 /*
-infile  = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Macro1.rxpp'
-outfile = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/Macro1.rexx'
-maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX/250607/lib/plugins/precomp/Maclib.rexx'
+infile  = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/preprocessor/Macro1.rxpp'
+outfile = 'C:/Users/PeterJ/CLionProjects/CREXX/250606/preprocessor/Macro1.rexx'
+maclib  = 'C:/Users/PeterJ/CLionProjects/CREXX/250607/preprocessor/Maclib.rexx'
  */
   if fstrip(infile)='' then do
        say 'CRX0100E+['time('l')'] no source file specified'

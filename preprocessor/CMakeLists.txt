@@ -1,7 +1,27 @@
 cmake_minimum_required(VERSION 3.24)
-project(precomp_plugin C)
+project(preprocessor C)
 
 set(CMAKE_C_STANDARD 99)
+
+set(RXPP_SUPPORT_FILES
+        ${CMAKE_CURRENT_SOURCE_DIR}/maclib.rexx
+        ${CMAKE_CURRENT_SOURCE_DIR}/macsys.rexx
+        ${CMAKE_CURRENT_SOURCE_DIR}/mathlib.rexx
+        ${CMAKE_CURRENT_SOURCE_DIR}/syslib.rexx)
+set(RXPP_STAGED_SUPPORT_FILES
+        ${CMAKE_BINARY_DIR}/bin/maclib.rexx
+        ${CMAKE_BINARY_DIR}/bin/macsys.rexx
+        ${CMAKE_BINARY_DIR}/bin/mathlib.rexx
+        ${CMAKE_BINARY_DIR}/bin/syslib.rexx)
+
+add_custom_command(
+        OUTPUT ${RXPP_STAGED_SUPPORT_FILES}
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/bin
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${RXPP_SUPPORT_FILES} ${CMAKE_BINARY_DIR}/bin
+        DEPENDS ${RXPP_SUPPORT_FILES}
+        COMMENT "Stage rxpp macro support files ...")
+add_custom_target(rxpp_support_files ALL DEPENDS ${RXPP_STAGED_SUPPORT_FILES})
+install(FILES ${RXPP_SUPPORT_FILES} DESTINATION bin)
 
 set(RXFNSB_RXBIN ${CMAKE_BINARY_DIR}/bin/library.rxbin)
 set(CLASSLIB_RXBIN ${CMAKE_BINARY_DIR}/bin/classlib.rxbin)
@@ -51,6 +71,7 @@ configure_linker_for_static_lib(rxpp precomp)
 # Now link other required libraries. Place rxpashim (which provides rxpa_* symbols) AFTER the precomp objects.
 target_link_libraries(rxpp precomp_static rxvml rxpashim)
 add_dependencies(rxpp rxvml rxpa avl_tree platform)
+add_dependencies(rxpp rxpp_support_files)
 
-# Tests for precomp plugin
+# Tests for the rxpp preprocessor tool
 add_subdirectory(tests)

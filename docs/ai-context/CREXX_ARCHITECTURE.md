@@ -1,14 +1,26 @@
 # cRexx Architecture
 
-`crexx` is a custom Rexx-to-bytecode toolchain that translates Classic Rexx semantics into an optimized bytecode format executed by a specialized VM. The process happens through four main binaries:
+`crexx` is a custom Rexx-to-bytecode toolchain that translates Classic Rexx semantics into an optimized bytecode format executed by a specialized VM. The core bytecode path happens through four main binaries:
 1. `rxc` - The Compiler
 2. `rxas` - The Assembler
 3. `rxlink` - The Linker
 4. `rxvm` - The Virtual Machine (Interpreter)
 
+`rxpp` is a first-class preprocessor component for `.rxpp` sources. It runs
+before `rxc` when the wrapper or a build step asks for preprocessing, but `rxc`
+does not run RXPP internally.
+
 ## The Compilation Pipeline
 
 The pipeline of transforming Rexx source code into executable bytecode is structured as follows:
+
+0. **RXPP Preprocessor (optional)**
+   - Lives in the root `preprocessor/` component and builds the `rxpp` tool plus
+     its native `precomp` helper.
+   - Expands `.rxpp` macro/directive source into generated CREXX source.
+   - When `##CFLAG srcmap` is present, emits `options ... srcmap` and raw `@`
+     source-map markers so `rxc` diagnostics and source-step metadata can point
+     back to the original `.rxpp` file.
 
 1. **re2c (Lexical Analyzer)**
    - Used to generate the scanner/lexer from `.re` rules (e.g., `compiler/rxcpbscn.re` and `assembler/rxasscan.re`).
@@ -424,6 +436,9 @@ For the compiler-side build order and tree-split details, see
 
 For the DSLSH/editor mapping and parser-mode contract, see
 [cREXX DSLSH Integration](../../compiler/docs/dslsh_integration.md).
+
+For RXPP build shape, wrapper role, and source-map marker rules, see
+[RXPP Preprocessor](RXPP_PREPROCESSOR.md).
 
 ## Core Data Structures
 

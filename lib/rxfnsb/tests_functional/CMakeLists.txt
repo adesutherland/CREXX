@@ -97,8 +97,8 @@ foreach(_binfile ${REXXBINS})
     #     set(_rexx_dep "${_rexx_file}")
     #     add_custom_command(
     #             OUTPUT ${_rexx_file}
-    #             COMMAND rxpp -I ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxpp -O ${_rexx_file} -M ${CMAKE_SOURCE_DIR}/lib/plugins/precomp/maclib.rexx -VERBOSE0
-    #             DEPENDS rxpp ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxpp ${CMAKE_SOURCE_DIR}/lib/plugins/precomp/maclib.rexx
+    #             COMMAND rxpp -I ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxpp -O ${_rexx_file} -M ${CMAKE_SOURCE_DIR}/preprocessor/maclib.rexx -VERBOSE0
+    #             DEPENDS rxpp ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.rxpp ${CMAKE_SOURCE_DIR}/preprocessor/maclib.rexx
     #             COMMENT "Pre-compiling ${_basename}.rxpp"
     #     )
     # endif()

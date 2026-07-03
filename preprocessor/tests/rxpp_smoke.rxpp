@@ -2,5 +2,6 @@
 ##define TRACEVALUE(name, value) {say name value}
 
 say "Hello"
+say "Hello@example.com"
 say SQUARE(3)
 TRACEVALUE("value", 16)

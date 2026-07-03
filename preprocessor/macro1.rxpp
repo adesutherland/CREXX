@@ -7,7 +7,7 @@ import rxfnsb
 ##set printgen none
 
 ##cflags def nset niflink n1buf n2buf n3buf nvars nmaclist includes  /* set early stage compiler flags */
-##include C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/include.rexx
+##include C:/Users/PeterJ/CLionProjects/CREXX/250606/preprocessor/include.rexx
 ##SYSIN
   123 SQUARE(DOUBLE(4))
   my flags {printgen}
@@ -30,7 +30,7 @@ import rxfnsb
 
 
 
-##use C:/Users/PeterJ/CLionProjects/CREXX/250606/lib/plugins/precomp/parse.rxpp
+##use C:/Users/PeterJ/CLionProjects/CREXX/250606/preprocessor/parse.rxpp
 
 say 'Compile date {rxpp_date}'
 
@@ -77,5 +77,4 @@ do i=1 to tokens.0
 end
 say 'This is the current last line'
 exit
-
 

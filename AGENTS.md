@@ -36,6 +36,7 @@ Before changing compiler logic or making claims about syntax, AST shape, validat
 - `docs/ai-context/RXAS_ASSEMBLER.md`
 - `docs/ai-context/RXLINK_LINKER.md`
 - `docs/ai-context/RXVM_INTERPRETER.md`
+- `docs/ai-context/RXPP_PREPROCESSOR.md`
 - `docs/ai-context/CREXX_LIBS.md`
 - `docs/ai-context/CREXX_ASAN_TESTING.md`
 

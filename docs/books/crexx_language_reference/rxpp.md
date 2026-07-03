@@ -649,8 +649,8 @@ Silent debug
 
 <!-- **Directories (from config):** -->
 
-<!-- * Input: `$sourcelib` (from home/lib/plugins/precomp) -->
-<!-- * Output: `$build/lib/plugins/precomp` (pluglib) -->
+<!-- * Input: `$sourcelib` (from home/preprocessor) -->
+<!-- * Output: `$build/bin` (tool and plugin artifacts) -->
 <!-- * Dependencies: `$build/lib/rxfnsb/library` (library functions) -->
 
 <!-- --- -->
@@ -748,8 +748,8 @@ Silent debug
 
 <!-- **Directories (from config):** -->
 
-<!-- * Input: `$sourcelib` (from home/lib/plugins/precomp) -->
-<!-- * Output: `$build/lib/plugins/precomp` (pluglib) -->
+<!-- * Input: `$sourcelib` (from home/preprocessor) -->
+<!-- * Output: `$build/bin` (tool and plugin artifacts) -->
 <!-- * Dependencies: `$build/lib/rxfnsb/library` (library functions) -->
 
 
