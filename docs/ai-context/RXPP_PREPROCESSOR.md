@@ -70,6 +70,23 @@ Important source-map rules:
 No-srcmap RXPP output remains ordinary CREXX. It must not escape literal `@` or
 emit raw source-map markers.
 
+RXPP keeps source provenance in arrays beside `source[]`:
+
+- `source_origin_file[]`
+- `source_origin_line[]`
+- `source_origin_text[]`
+
+Any RXPP helper that inserts into `source[]` must keep these arrays aligned with
+the inserted lines. `insert_source` copies provenance from the directive line
+that caused the generated helper line. `##INCLUDE` and `##USE` override that
+default with the included file path and included source line number. Script
+macros generated through RexxScript map each emitted line to the whole
+script-macro invocation because RXPP does not yet receive token-level
+provenance from the script engine.
+
+RXPP refuses input that already contains `options ... srcmap`. That is treated
+as generated output that should go directly to `rxc`, not through RXPP again.
+
 ## Focused Tests
 
 Use these focused tests before broader CTest runs:
@@ -81,4 +98,5 @@ ctest --test-dir cmake-build-release -R 'rxc_srcmap|rxpp_(smoke|srcmap)' --outpu
 `rxc_srcmap` covers direct compiler source-map preprocessing, positive mapping,
 literal `@` escaping, malformed directives, unbalanced spans, and nested-span
 precedence. `rxpp_smoke` covers no-srcmap compatibility. `rxpp_srcmap` covers
-`##CFLAG srcmap` output and compile-through stripping/remapping.
+`##CFLAG srcmap` output, compile-through stripping/remapping, include-file
+origin, script-macro output spans, and the double-processing guard.

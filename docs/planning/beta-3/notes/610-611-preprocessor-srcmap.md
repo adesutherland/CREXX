@@ -18,6 +18,9 @@ Implementation slice started 2026-07-03:
 - Follow-up slice moved RXPP from `lib/plugins/precomp/` to the root
   `preprocessor/` component, stages RXPP support files to `bin/`, and added
   focused direct-rxc, rxpp-srcmap, and rxpp-no-srcmap coverage.
+- Second follow-up added RXPP per-line source provenance, include-file
+  source-map origin switching, an `options srcmap` double-processing guard, and
+  whole-invocation spans for RexxScript-backed script macro output.
 
 ## Purpose
 
@@ -444,9 +447,10 @@ Implementation status:
 2. Done: add `options srcmap` and the raw `@` source-map prepass to `rxc`.
 3. Done for the first slice: wire mapped locations into diagnostics, source
    tree state, and `.srcstep` emission.
-4. Done for the first slice: update RXPP to emit `options srcmap`, escape
-   literal `@`, emit spans for ordinary macro replacement text, and preserve the
-   no-srcmap compatibility path.
+4. Done: update RXPP to emit `options srcmap`, escape literal `@`, emit spans
+   for ordinary macro replacement text, preserve the no-srcmap compatibility
+   path, switch file origin for included lines, reject already source-mapped
+   generated input, and map script-macro output to the invocation span.
 5. Done: add focused RXPP/rxc source-map tests for positive mapping,
    malformed/unbalanced markers, nested-span precedence, rxpp srcmap output, and
    rxpp no-srcmap output.

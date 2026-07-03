@@ -1,16 +1,41 @@
 /*
- * crexx RXPP
- * CREXX Pre Compiler
- * Author Peter Jacob
- * Created May 2025
- * Version 31. May 2025
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/**
+ * RXPP preprocessor.
+ *
+ * RXPP expands .rxpp macro/directive source into ordinary Level B CREXX.
+ * When ##CFLAG srcmap is present, RXPP emits the raw source-map channel that
+ * rxc consumes before parsing so diagnostics can point back to original .rxpp
+ * files instead of only the generated .crexx file.
  */
 options levelb
 
 import rexxscript
 import precomp
 import rxfnsb
-namespace rxpp expose globaldef rxmodule source stype callargs macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs select_count beginblock beginName scriptMacro scriptMacros scriptMacroCounter srcmap_source_file srcmap_line_offset
+namespace rxpp expose globaldef rxmodule source stype source_origin_file source_origin_line source_origin_text callargs macros_mname macros_margs macros_mbody macros_mspace macros_varname macros_varvalue cflags printgen_flags outbuf lino curlino rexxlines included_files syspath alphaN mExpanded expandLevel aifblock elapsedTime verbose imported_funcs select_count beginblock beginName scriptMacro scriptMacros scriptMacroCounter srcmap_source_file srcmap_line_offset
 
 
 
@@ -132,6 +157,9 @@ RXPPPassOne: procedure = .int
 ##  call drop_Array stype
   assembler SETATTRS source,0
   assembler SETATTRS stype,0
+  assembler SETATTRS source_origin_file,0
+  assembler SETATTRS source_origin_line,0
+  assembler SETATTRS source_origin_text,0
 
 /* ---- 1b. Load System Macros from MACSYS  */
   macnum=readSource(macsys,0)    /* error doesn't terminate program */
@@ -148,10 +176,19 @@ RXPPPassOne: procedure = .int
 ##  call drop_Array stype
   assembler SETATTRS source,0
   assembler SETATTRS stype,0
+  assembler SETATTRS source_origin_file,0
+  assembler SETATTRS source_origin_line,0
+  assembler SETATTRS source_origin_text,0
 /* ---- 1c. Load file to compile */
   rexxLines=readSource(infile,1)
   if rexxLines<0 then do
      say 'CRX0910E+['time('l')'] source file missing: 'infile
+     exit 8
+  end
+  call rxpp_set_source_origin_range 1,rexxLines,infile,1
+  if rxpp_input_has_srcmap_options() then do
+     say 'CRX0960E+['time('l')'] input already contains options srcmap: 'infile
+     say 'CRX0961E+['time('l')'] run rxc on generated srcmap output; do not run rxpp twice'
      exit 8
   end
 
@@ -167,8 +204,7 @@ RXPPPassOne: procedure = .int
   if linx>0 then stype.linx='X'            /* Skip line */
   linx=arrayfind('/* REXX */',source,1,0)      /* search for string in array (Case insensitive) */
   if linx>0 then stype.linx='X'            /* Skip line */
-  call arrayInsert source,1,10            /* insert header, and reserve some lines */
-  call arrayInsert stype,1,10
+  call insert_source 1,10                 /* generated RXPP header has no original source line */
   source.1='/* RXPP */'
   source.2='options levelb'
   if rxpp_srcmap_enabled() then source.2='options levelb srcmap'
@@ -612,8 +648,56 @@ return '/* rxpp: 'line' U*/'
 /* ------------------------------------------------------------------
  * Source-map helpers: keep RXPP marker emission and escaping in one place.
  * The compiler consumes the raw @ channel after seeing "options ... srcmap".
+ *
+ * RXPP edits source[] in place: it inserts generated header lines, includes
+ * files, and injects expansion output.  Keep source_origin_*[] in lockstep with
+ * source[] so Peter can trace each emitted line back to the source file/line
+ * that caused it.  For generated helper lines, the origin is normally copied
+ * from the directive or macro call that caused the insertion.
  * ------------------------------------------------------------------
  */
+rxpp_set_source_origin: procedure
+  arg line_no=.int,file=.string,source_line=.int,line_text=.string
+  source_origin_file[line_no]=file
+  source_origin_line[line_no]=source_line''
+  source_origin_text[line_no]=line_text
+return
+
+rxpp_clear_source_origin: procedure
+  arg line_no=.int
+  source_origin_file[line_no]=''
+  source_origin_line[line_no]='0'
+  source_origin_text[line_no]=''
+return
+
+rxpp_copy_source_origin: procedure
+  arg line_no=.int,from_line=.int
+  if from_line>0 & source_origin_line[from_line]>0 then do
+     source_origin_file[line_no]=source_origin_file[from_line]
+     source_origin_line[line_no]=source_origin_line[from_line]
+     source_origin_text[line_no]=source_origin_text[from_line]
+  end
+  else call rxpp_clear_source_origin line_no
+return
+
+rxpp_set_source_origin_range: procedure
+  arg first_line=.int,line_count=.int,file=.string,first_source_line=.int
+  do offset=0 to line_count-1
+     line_no=first_line+offset
+     call rxpp_set_source_origin line_no,file,first_source_line+offset,source[line_no]
+  end
+return
+
+rxpp_input_has_srcmap_options: procedure=.int
+  do line_no=1 to source.0
+     line=lower(strip(source[line_no]))
+     if word(line,1)\='options' then iterate
+     do option_no=2 to words(line)
+        if word(line,option_no)='srcmap' then return 1
+     end
+  end
+return 0
+
 rxpp_srcmap_enabled: procedure=.int
   if pos(' srcmap',cflags)>0 then return 1
 return 0
@@ -645,8 +729,19 @@ return '@'line_no'l'rxpp_srcmap_quote(line_text)
 
 rxpp_srcmap_source_line: procedure=.int
   arg line_no=.int
+  if line_no>0 & source_origin_line[line_no]>0 then return source_origin_line[line_no]
   if line_no<=srcmap_line_offset then return 0
 return line_no-srcmap_line_offset
+
+rxpp_srcmap_source_file: procedure=.string
+  arg line_no=.int
+  if line_no>0 & source_origin_file[line_no]\='' then return source_origin_file[line_no]
+return srcmap_source_file
+
+rxpp_srcmap_source_text: procedure=.string
+  arg line_no=.int
+  if line_no>0 & source_origin_text[line_no]\='' then return source_origin_text[line_no]
+return source[line_no]
 
 rxpp_srcmap_span: procedure=.string
   arg source_col=.int,source_len=.int,text=.string
@@ -724,6 +819,7 @@ CMD_include: procedure
   do j=1 to new
      insertat=insertat+1
      source.insertat=include.j
+     call rxpp_set_source_origin insertat,file,j,include.j
   end
 return
 /* ------------------------------------------------------------------
@@ -876,10 +972,20 @@ insert_source: Procedure=.int
   stemlog=0
   rc=arrayInsert(source,at,new)    ## insert new lines, shift buffer
   rc=arrayInsert(stype, at,new)
+  rc=arrayInsert(source_origin_file, at,new)
+  rc=arrayInsert(source_origin_line, at,new)
+  rc=arrayInsert(source_origin_text, at,new)
   i = .int
   do i=0 to new-1                   ## in some cases you want special
      source[at+i]='/* reserved 'at+i i' */'
      stype[at+i]=expand             ## treatment of the new entry for
+     /*
+      * Default generated-line provenance: an inserted helper line usually
+      * comes from the directive immediately above the insertion point.  Include
+      * handling overrides this below with the real included file/line.
+      */
+     if at>1 then call rxpp_copy_source_origin at+i,at-1
+     else call rxpp_clear_source_origin at+i
   end                               ## example: no further inspection
   if stemlog=0 then return 0
   say 'Insert 'new' lines at 'at
@@ -973,6 +1079,8 @@ return
 writeline: procedure
   arg oline=.string
   source_line_no=.int
+  source_file=.string
+  source_text=.string
   oline=injectVariable(oline)
 ## just insert line to buffer
    if lino=1 then do
@@ -988,11 +1096,13 @@ writeline: procedure
    if oline='' & outbuf.lino='' then return  ## not more than one blank line
    if rxpp_srcmap_enabled() then do
       source_line_no=rxpp_srcmap_source_line(curlino)
+      source_file=rxpp_srcmap_source_file(curlino)
+      source_text=rxpp_srcmap_source_text(curlino)
       if source_line_no>0 & oline\='' then do
          lino = lino + 1
-         outbuf.lino=rxpp_srcmap_file_hint(srcmap_source_file)
+         outbuf.lino=rxpp_srcmap_file_hint(source_file)
          lino = lino + 1
-         outbuf.lino=rxpp_srcmap_line_hint(source_line_no,source.curlino)
+         outbuf.lino=rxpp_srcmap_line_hint(source_line_no,source_text)
       end
       oline=rxpp_srcmap_escape(oline)
    end
@@ -1049,6 +1159,8 @@ return line
  */
 newMacros:  procedure=.string
   arg macname=.string,line=.string,linnum=.int,ipi=.int
+  original_call=.string
+  source_len=.int
   if scriptMacro.macname.error='error' then return line' ## File not available: 'syspath||macname'.rxpm'
   if scriptMacro.macname='' then do
      if substr(macname,1,2)='##' then macname=substr(macname,3)
@@ -1077,6 +1189,7 @@ newMacros:  procedure=.string
   subparm=subword(subparm,2)
   subparm=translate(subparm,,',')
   inparms=''
+  original_call=source[linnum]
   stype[linnum]='D'
   source[linnum]='/* 'source[linnum]' */'
   do kk=1 to words(scriptMacro.macname.parms)
@@ -1105,7 +1218,15 @@ newMacros:  procedure=.string
  */
   rc= insert_source(linnum+1,out[0]+1)
   inew=linnum+1
+  source_len=length(original_call)
   do kk=1 to out[0]
+     /*
+      * RexxScript-backed script macros can produce arbitrary output text.  RXPP
+      * does not know token-level provenance inside that script output, so the
+      * repeatable rule is to map each emitted line to the whole script-macro
+      * invocation.  Future per-token script metadata can narrow this later.
+      */
+     if rxpp_srcmap_enabled() then out[kk]=rxpp_srcmap_span(1,source_len,out[kk])
      inew=inject2Source(inew+1,3,out[kk])
   end
 return source[linnum]
@@ -2020,6 +2141,9 @@ rxppinit: procedure=.string
   arg rexxname=.string,maclib=.string
   alphaN='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_'
   source=.string[]
+  source_origin_file=.string[]
+  source_origin_line=.string[]
+  source_origin_text=.string[]
   stype.1='R'
   beginBlock=.string[]
   beginName=.string[]

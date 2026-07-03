@@ -45,6 +45,10 @@ string(FIND "${out_content}" "@1+23{say \"value\" 16@}" trace_span_pos)
 if(trace_span_pos EQUAL -1)
     message(FATAL_ERROR "rxpp did not emit source-map span for TRACEVALUE macro:\n${out_content}")
 endif()
+string(FIND "${out_content}" "@1+12{say \"scripted\"@}" script_span_pos)
+if(script_span_pos EQUAL -1)
+    message(FATAL_ERROR "rxpp did not map script-macro output back to the invocation:\n${out_content}")
+endif()
 
 set(output_base "${OUTPUT_FILE}.compiled")
 execute_process(
@@ -65,4 +69,63 @@ endif()
 string(FIND "${rxas_content}" "${INPUT_FILE}" srcstep_file_pos)
 if(srcstep_file_pos EQUAL -1)
     message(FATAL_ERROR "rxc did not preserve rxpp source file in srcmap source-step metadata:\n${rxas_content}")
+endif()
+
+set(include_file "${OUTPUT_FILE}.included.rxpp")
+set(include_input "${OUTPUT_FILE}.include_input.rxpp")
+set(include_output "${OUTPUT_FILE}.include_output.crexx")
+file(WRITE "${include_file}" [=[answer = SQUARE(totl + 1)
+]=])
+file(WRITE "${include_input}" "##CFLAG srcmap\n##include ${include_file}\n")
+
+execute_process(
+    COMMAND "${RXPP_BIN}" rxprecomp -I "${include_input}" -o "${include_output}" -m "${MACLIB_FILE}"
+    RESULT_VARIABLE include_rxpp_res
+    OUTPUT_VARIABLE include_rxpp_out
+    ERROR_VARIABLE include_rxpp_err
+)
+if(NOT include_rxpp_res EQUAL 0)
+    message(FATAL_ERROR "rxpp failed for include source-map case with ${include_rxpp_res}:\n${include_rxpp_out}${include_rxpp_err}")
+endif()
+
+file(READ "${include_output}" include_content)
+string(FIND "${include_content}" "${include_file}" include_marker_pos)
+if(include_marker_pos EQUAL -1)
+    message(FATAL_ERROR "rxpp did not switch source-map file origin for included lines:\n${include_content}")
+endif()
+
+execute_process(
+    COMMAND "${RXC_BIN}" --diagnostics raw "${include_output}"
+    RESULT_VARIABLE include_rxc_res
+    OUTPUT_VARIABLE include_rxc_out
+    ERROR_VARIABLE include_rxc_err
+)
+if(include_rxc_res EQUAL 0)
+    message(FATAL_ERROR "rxc unexpectedly compiled include source-map diagnostic case:\n${include_content}")
+endif()
+if(NOT include_rxc_err MATCHES "included\\.rxpp @ 1:")
+    message(FATAL_ERROR "included-file diagnostic was not remapped to included source:\n${include_rxc_err}\nGenerated:\n${include_content}")
+endif()
+if(NOT include_rxc_err MATCHES "totl")
+    message(FATAL_ERROR "included-file diagnostic did not include included source text:\n${include_rxc_err}")
+endif()
+
+set(double_input "${OUTPUT_FILE}.already_srcmap.rxpp")
+set(double_output "${OUTPUT_FILE}.already_srcmap.out.crexx")
+file(WRITE "${double_input}" [=[/* RXPP */
+options levelb srcmap
+say "already generated"
+]=])
+
+execute_process(
+    COMMAND "${RXPP_BIN}" rxprecomp -I "${double_input}" -o "${double_output}" -m "${MACLIB_FILE}"
+    RESULT_VARIABLE double_res
+    OUTPUT_VARIABLE double_out
+    ERROR_VARIABLE double_err
+)
+if(double_res EQUAL 0)
+    message(FATAL_ERROR "rxpp unexpectedly accepted already source-mapped generated input")
+endif()
+if(NOT "${double_out}${double_err}" MATCHES "already contains options srcmap")
+    message(FATAL_ERROR "rxpp double-processing guard did not explain the source-map input:\n${double_out}${double_err}")
 endif()
