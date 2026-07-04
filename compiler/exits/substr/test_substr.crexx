@@ -1,0 +1,37 @@
+options levelb
+import rxfnsb
+
+## main: procedure
+call pipe 11,222,33333,4444,5555
+    exit
+customer = copies(' ',50)
+record.1 =''
+q=1
+
+myvar='it is Fred 4711'
+
+ substr(record.q,5)  = 'Fred'
+say 1357 myvar
+ say 123 "'"record.1"'"
+  j=20
+  substr(customer,1,20)  = 'Fred'
+  say 978 substr_internal
+  substr(customer,1+j,j-5+5) = 'Bloggs'
+  substr(customer,41,5)  = '42'
+say customer
+
+line = 'John      Smith     042'
+say line
+substr(line,1,3) = ''
+say line
+ say 'SUCCESS'
+
+ pipe: procedure = .int
+    arg command = .string, ... = .string
+
+    do i=1 to arg[0]
+       say 123 i arg(2,'E')
+       say i arg(i)
+    end
+    say arg.0
+ return 0

@@ -78,6 +78,7 @@ rexxscriptcoreevaluator: class
   fn_args = .string[]
   fn_exists = .int[]
   fn_arg_count = .int
+  dbgtrace = .int
 
   *: factory
     env_count = 0
@@ -98,12 +99,14 @@ rexxscriptcoreevaluator: class
     statement_count = 0
     block_count = 0
     fn_arg_count = 0
+    dbgtrace=0
     return
 
   evaluate: method = .string[]
     arg statements = .string, debug = 0
     names = .string[]
     values = .string[]
+    dbgtrace=debug
     result = _evaluate_impl(statements, debug, names, values)
     return result
 
@@ -115,6 +118,7 @@ rexxscriptcoreevaluator: class
   _evaluate_impl: method = .string[]
     arg statements = .string, debug = 0, seed_names = .string[], seed_values = .string[]
     call _reset()
+    dbgtrace=debug
     if debug then call header statements
     call _seed_vars(seed_names, seed_values)
 
@@ -293,32 +297,16 @@ rexxscriptcoreevaluator: class
       output_lines[output_count] = eval_value
       return 1
     end
-
-    if _starts_keyword(text, ".GENI") = 1 then do
-       expr = strip(substr(text, 6))
-       if expr == "" then return _set_error("missing_expression", "missing SAY expression", stmtno, 1)
-       output_count = output_count + 1
-       output_lines[output_count] = expr
-       return 1
-    end
-
     if _starts_keyword(text, ".GEN") = 1 then do
        expr = strip(substr(text, 5))
        if expr == "" then return _set_error("missing_expression", "missing .GEN expression", stmtno, 1)
+       expr=_modify_var_symbol(expr)
        if _eval_expression(expr, stmtno) = 0 then return 0
        output_count = output_count + 1
        output_lines[output_count] = eval_value
        return 1
     end
-    if _starts_keyword(text, ".GENE") = 1 then do
-       expr = strip(substr(text, 6))
-       if expr == "" then return _set_error("missing_expression", "missing .GENE expression", stmtno, 1)
-       if _eval_expression(expr, stmtno) = 0 then return 0
-       output_count = output_count + 1
-       output_lines[output_count] = eval_value
-       return 1
-    end
-    if _starts_keyword(text, ".MEND") = 1 then return 1
+    if _starts_keyword(text, "##MEND") = 1 then return 1
 
     if _starts_keyword(text, "IF") = 1 then do
       rest = strip(substr(text, 3))
@@ -1123,6 +1111,12 @@ rexxscriptcoreevaluator: class
     error_message = message
     error_statement = stmtno
     error_column = column
+    ## if dbgtrace=1 then do
+       say "Script Error: "code
+       say "     MESSAGE: "message
+       say "   STATEMENT: "statement_texts[stmtno]
+       say "      STMTNO: "stmtno
+    ## end
     return 0
   /* --------------------------------------------------------------------
    * Intrinsic Function Dispatcher
@@ -1234,3 +1228,30 @@ rexxscriptcoreevaluator: class
       result[i] = export_contents[i]
     end
     return result
+
+_modify_var_symbol: procedure = .string
+  arg value = .string
+
+  newstr="'"
+  vmode=0
+  do i = 1 to length(value)
+     chr=substr(value,i,1)
+     if vmode=0 & chr='&' then do
+        newstr=newstr||"'"   /* close open string, variable comes now */
+        vmode=1
+        iterate
+     end
+     if vmode = 1 & \_is_identifier_part(chr) then do
+        newstr=newstr||"'"
+        vmode=0
+     end
+     newstr=newstr||chr
+  end
+  if vmode=0 then newstr=newstr||"'"
+  if substr(newstr,1,2)="''" then newstr=substr(newstr,3)
+return newstr
+
+_is_identifier_part: procedure = .boolean
+  arg ch = .string
+  IDCHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_"
+return pos(ch, IDCHARS) > 0
