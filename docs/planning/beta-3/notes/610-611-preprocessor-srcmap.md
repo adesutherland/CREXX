@@ -23,6 +23,18 @@ Implementation slice started 2026-07-03:
 - Second follow-up added RXPP per-line source provenance, include-file
   source-map origin switching, an `options srcmap` double-processing guard, and
   whole-invocation spans for RexxScript-backed script macro output.
+- Editor-integration follow-up added the native `rxpp-sh` DSLSH wrapper, build
+  tree/default RXPP and `maclib.rexx` lookup, protocol-safe RXPP output
+  redirection, and focused tests for both environment override and default
+  lookup paths.
+- DSLSH emergency parsing now has generic same-line `prefix_tokens` and
+  `span_tokens` rules. `rxpp-sh` uses these for `##` directive lines and
+  `{name}` macro variables while the full RXPP/rxc parse runs.
+- `rxpp-sh` now emits a shallow authoritative token pass for the original RXPP
+  buffer, including directives, local macro definitions/calls, macro variables,
+  macro constants, comments, strings, ordinary identifiers, keywords, numbers,
+  and operators. Mapped compiler diagnostics are overlaid onto those authored
+  RXPP tokens.
 
 ## Purpose
 
@@ -42,6 +54,39 @@ The beta 3 goal is deliberately narrow:
   for macro-generated text;
 - specify a DSLSH wrapper that orchestrates RXPP plus `rxc` for `.rxpp`
   syntax-highlighting use.
+
+## Editor Baseline Ownership
+
+The baseline is hybrid:
+
+- CREXX owns RXPP syntax/expansion, raw source-map decoding, compiler
+  diagnostics, semantic meaning, and the native `rxpp-sh` parser wrapper.
+- DSLSH owns generic editor primitives such as emergency parser rules, future
+  mapped-buffer overlays, related locations, cancellation/debounce, and
+  dependency invalidation hooks.
+- THE should consume stable DSLSH parser/token/diagnostic concepts rather than
+  adding CREXX-specific projection logic.
+
+The `rxpp-sh` wrapper stays in C because it must own DSLSH `CodeBuffer`
+projection and call compiler parser APIs. RXPP itself remains Level B.
+
+## Column Contract
+
+This work is not Unicode-complete yet. The baseline contract to implement before
+widening beyond ASCII is:
+
+- DSLSH positions and lengths are editor character positions;
+- source-map columns and diagnostic spans crossing into DSLSH must be Unicode
+  scalar offsets in the authored source line;
+- compiler byte offsets remain internal implementation details;
+- display-cell width and grapheme presentation belong to THE/UI rendering, not
+  to compiler diagnostics;
+- `.srcstep`, RXAS source-step/style output, source maps, and THE ranges must
+  all use the same explicit boundary conversions.
+
+Current ASCII source-map tests prove the handoff shape only. Byte-pointer column
+derivation in compiler/RXAS paths must be audited before non-ASCII diagnostics
+can be considered reliable.
 
 ## Directory Shape
 
@@ -370,6 +415,19 @@ The open question is which layer should own original-buffer coordinates. Full
 semantic highlighting of the original `.rxpp` source may require an RXPP-aware
 source model because RXPP does not produce a formal source AST today.
 
+Prototype result, 2026-07-03: a first `rxpp-sh` DSLSH wrapper now follows the
+`.rxpp` wrapper route. It owns the editor `.rxpp` `CodeBuffer`, writes that
+buffer to a temp file, runs RXPP, parses the generated CREXX through the
+compiler parser, and projects mapped compiler diagnostics back onto the original
+RXPP buffer. The first slice proved the diagnostic coordinate handoff.
+
+Follow-up result: `rxpp-sh` now rebuilds the final DSLSH tree from the authored
+RXPP buffer, emits shallow RXPP-aware source tokens, preserves explicit mapped
+compiler diagnostic nodes, and mirrors those diagnostics onto overlapping RXPP
+token leaves. This is enough for visible macro/directive highlighting and error
+overlays in the authored buffer. It is not yet full generated-CREXX semantic
+projection.
+
 Acceptance proof, once the direction is selected:
 
 - a prototype can process a `.rxpp` macro case, run RXPP and `rxc` parser mode
@@ -395,9 +453,8 @@ Focused beta 3 tests should include:
   where practical.
 - RXPP no-macro input produces equivalent CREXX and is marked as processed.
 - RXPP refuses or safely skips already processed `options srcmap` input.
-- a DSLSH integration prototype maps at least one generated diagnostic to the
-  original `.rxpp` buffer, or documents that the first slice is generated-view
-  macro coloring only.
+- `rxpp_sh_srcmap` maps the generated compiler diagnostic for
+  `say SQUARE(totl + 1)` to the original RXPP macro argument span.
 - the Rexx source-map algorithm demo in
   [`610-611-srcmap-demo.rexx`](610-611-srcmap-demo.rexx) is kept aligned with
   the syntax while the contract is being finalized.
@@ -460,19 +517,20 @@ Implementation status:
 6. Done: route RXPP warning/error diagnostics through the shared diagnostic
    catalogs with raw/localized modes, German/Dutch catalog entries, and
    `rxpp_diagnostic_catalogs` coverage.
-7. Remaining: choose the DSLSH integration direction, then build the selected prototype
-   and document its limits.
-8. Remaining: review RexxScript compiler-exit mappings against the same diagnostic
+7. Done: add the first `rxpp-sh` DSLSH wrapper prototype and focused
+   `rxpp_sh_srcmap` coverage for mapped diagnostics on the original RXPP buffer.
+8. Done: add shallow authoritative RXPP token emission in `rxpp-sh`, overlay
+   mapped generated compiler diagnostics onto those authored RXPP tokens, and
+   cover both with `rxpp_sh_tokens` / extended `rxpp_sh_srcmap` tests.
+9. Remaining: review RexxScript compiler-exit mappings against the same diagnostic
    expectations.
 
 ## Open Questions And Risks
 
-- Column units need an explicit implementation decision. The source-map syntax
-  uses one-based columns. Current compiler internals often derive columns from
-  byte pointers, while DSLSH uses UTF-8 character offsets for editor positions.
-  Beta 3 may initially limit exact column guarantees to ASCII-compatible source
-  and document non-ASCII column behavior until the broader UTF/text ownership
-  work settles the shared rule.
+- Column units now have a boundary rule: compiler/parser internals may remain
+  byte-oriented, while DSLSH-facing nodes and protocol ranges are codepoint
+  offsets. Exact non-ASCII guarantees still require auditing compiler/RXAS
+  byte-pointer column derivation outside the DSLSH adapter boundary.
 - Multi-line original source spans are not in the v1 syntax. A span may enclose
   multi-line generated text, but its original anchor is one source line. That is
   probably enough for RXPP's current line-oriented model; multi-line source
@@ -485,3 +543,13 @@ Implementation status:
 - File paths in `@"path"` should be normalized enough for reproducible
   diagnostics without hiding useful user paths. Exact path policy still needs to
   align with package/build expectations.
+- `rxpp-sh` currently uses temp files and environment overrides for the RXPP
+  binary/macro library. The final wrapper should locate installed/build-tree
+  support files cleanly and handle include/macro-library invalidation.
+- `rxpp-sh` maps diagnostics back to the active RXPP buffer only. Included RXPP
+  files and secondary macro-definition notes still need an editor-facing design.
+- `rxpp-sh` recognizes local macro definitions/calls from the active buffer,
+  but it does not yet import macro definitions from included files or macro
+  libraries for source-token classification.
+- `rxpp-sh` does not yet project generated CREXX semantic token kinds, symbol
+  ids, or type/function/constant conclusions back onto the RXPP source spans.

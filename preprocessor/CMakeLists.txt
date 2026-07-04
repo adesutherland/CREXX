@@ -73,5 +73,24 @@ target_link_libraries(rxpp precomp_static rxvml rxpashim)
 add_dependencies(rxpp rxvml rxpa avl_tree platform)
 add_dependencies(rxpp rxpp_support_files)
 
+if (ENABLE_PARSER_MODE)
+        configure_file(
+                ${CMAKE_CURRENT_SOURCE_DIR}/rxpp_sh_config.h.in
+                ${CMAKE_CURRENT_BINARY_DIR}/rxpp_sh_config.h
+                @ONLY)
+        add_executable(rxpp_sh rxpp_sh.c)
+        set_target_properties(rxpp_sh PROPERTIES OUTPUT_NAME "rxpp-sh")
+        target_compile_definitions(rxpp_sh PRIVATE ENABLE_PARSER_MODE)
+        target_include_directories(rxpp_sh PRIVATE
+                ${CMAKE_SOURCE_DIR}/compiler
+                ${CMAKE_BINARY_DIR}/compiler
+                ${CMAKE_CURRENT_BINARY_DIR}
+                ${CMAKE_SOURCE_DIR}/platform
+                ${CMAKE_SOURCE_DIR}/utf8)
+        target_link_libraries(rxpp_sh PRIVATE rxclib)
+        add_dependencies(rxpp_sh rxpp)
+        install(TARGETS rxpp_sh DESTINATION bin)
+endif()
+
 # Tests for the rxpp preprocessor tool
 add_subdirectory(tests)

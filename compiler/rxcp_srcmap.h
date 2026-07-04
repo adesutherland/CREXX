@@ -41,12 +41,24 @@ typedef struct RxcpSrcMapLocation {
     size_t line_text_length;
 } RxcpSrcMapLocation;
 
+typedef struct RxcpSrcMapRawMapping {
+    size_t *cleaned_to_raw_start;
+    size_t *cleaned_to_raw_end;
+    size_t cleaned_len;
+    size_t raw_len;
+} RxcpSrcMapRawMapping;
+
 int rxcp_srcmap_preprocess(Context *context, char **cleaned_out, size_t *cleaned_len_out);
+int rxcp_srcmap_preprocess_with_raw_map(Context *context,
+                                        char **cleaned_out,
+                                        size_t *cleaned_len_out,
+                                        RxcpSrcMapRawMapping *mapping_out);
 int rxcp_srcmap_lookup(Context *context,
                        const char *generated_ptr,
                        int generated_line,
                        int generated_column,
                        RxcpSrcMapLocation *location_out);
 void rxcp_srcmap_free(RxcpSrcMap *map);
+void rxcp_srcmap_raw_mapping_free(RxcpSrcMapRawMapping *mapping);
 
 #endif

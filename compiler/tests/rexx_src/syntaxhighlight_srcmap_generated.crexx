@@ -1,0 +1,5 @@
+options levelb srcmap
+@"demo.rxpp"
+@3l"say SQUARE(totl + 1)"
+@1c
+say @+4+16{(@+7+4{totl@} + 1) * (@+7+4{totl@} + 1)@}

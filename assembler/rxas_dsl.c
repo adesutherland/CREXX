@@ -131,6 +131,7 @@ void rxas_dsl_parser_func(CodeBuffer *cb) {
         return;
     }
     size_t source_len = strlen(source_code);
+    size_t source_chars = get_code_buffer_length(cb);
     cb_log("rxas_dsl_parser_func: Source extracted, length=%zu\n", source_len);
 
     cb_log("rxas_dsl_parser_func: Setting up context...\n");
@@ -164,7 +165,7 @@ void rxas_dsl_parser_func(CodeBuffer *cb) {
     if (!scanner.parser) {
         cb_log("rxas_dsl_parser_func: Failed to allocate parser in rxasinbf\n");
         CB_ParseTree *tb = cb_create_token_buffer();
-        CB_Node root_node = cb_create_node(PARSE_TREE_FILE, 0, source_len);
+        CB_Node root_node = cb_create_node(PARSE_TREE_FILE, 0, source_chars);
         cb_add_child_node(tb, root_node);
         cb_set_current_parent_to_root_node(tb);
         cb->parse_tree = tb;
@@ -178,7 +179,7 @@ void rxas_dsl_parser_func(CodeBuffer *cb) {
     CB_ParseTree *tb = cb_create_token_buffer();
     
     // Create root node
-    CB_Node root_node = cb_create_node(PARSE_TREE_FILE, 0, source_len);
+    CB_Node root_node = cb_create_node(PARSE_TREE_FILE, 0, source_chars);
     cb_add_child_node(tb, root_node);
     cb_set_current_parent_to_root_node(tb);
 
@@ -190,22 +191,22 @@ void rxas_dsl_parser_func(CodeBuffer *cb) {
     Assembler_Token *t = scanner.token_head;
     while (t) {
         if (t->token_source && t->length > 0 && t->token_source >= scanner.buff) {
-            size_t pos = (size_t)(t->token_source - scanner.buff);
-            size_t len = t->length;
+            size_t byte_pos = (size_t)(t->token_source - scanner.buff);
+            size_t byte_len = t->length;
             
-            if (pos >= source_len) {
-                cb_log("rxas_dsl_parser_func: WARNING: Ignoring out of bounds token! pos=%zu, len=%zu, source_len=%zu\n", pos, len, source_len);
+            if (byte_pos >= source_len) {
+                cb_log("rxas_dsl_parser_func: WARNING: Ignoring out of bounds token! pos=%zu, len=%zu, source_len=%zu\n", byte_pos, byte_len, source_len);
                 t = t->token_next;
                 continue;
             }
             
-            if (pos + len > source_len) {
-                cb_log("rxas_dsl_parser_func: WARNING: Truncating out of bounds token! pos=%zu, len=%zu, source_len=%zu\n", pos, len, source_len);
-                len = source_len - pos;
+            if (byte_pos + byte_len > source_len) {
+                cb_log("rxas_dsl_parser_func: WARNING: Truncating out of bounds token! pos=%zu, len=%zu, source_len=%zu\n", byte_pos, byte_len, source_len);
+                byte_len = source_len - byte_pos;
             }
 
             CB_NodeType type = map_c_token_to_cb_type(t);
-            CB_Node token_node = cb_create_node(type, pos, len);
+            CB_Node token_node = cb_create_node_from_utf8_byte_span(type, source_code, source_len, byte_pos, byte_len);
             cb_add_child_node(tb, token_node);
         }
         t = t->token_next;
@@ -242,29 +243,36 @@ void rxas_dsl_parser_func(CodeBuffer *cb) {
             }
         }
         
+        size_t byte_pos = 0;
+        size_t byte_len = 0;
         size_t pos = 0;
-        size_t len = 1; // Default
+        size_t len = 1;
         if (current_line == e->line) {
-            pos = (size_t)(line_ptr - scanner.buff) + (e->column > 0 ? e->column - 1 : 0);
+            byte_pos = (size_t)(line_ptr - scanner.buff) + (e->column > 0 ? e->column - 1 : 0);
             
             /* Robustness: ensure pos is within bounds */
-            if (pos >= source_len) pos = (source_len > 0) ? source_len - 1 : 0;
+            if (byte_pos >= source_len) byte_pos = (source_len > 0) ? source_len - 1 : 0;
 
             /* Try to find a token that covers this position to get a better length */
             Assembler_Token *tok = scanner.token_head;
             while (tok) {
                 if (tok->token_source && tok->length > 0) {
                     size_t t_pos = (size_t)(tok->token_source - scanner.buff);
-                    if (pos >= t_pos && pos < t_pos + tok->length) {
+                    if (byte_pos >= t_pos && byte_pos < t_pos + tok->length) {
                         /* Error is within this token, use its full range */
-                        pos = t_pos;
-                        len = tok->length;
+                        byte_pos = t_pos;
+                        byte_len = tok->length;
                         break;
                     }
                 }
                 tok = tok->token_next;
             }
         }
+        if (!cb_utf8_byte_span_to_codepoint_span(source_code, source_len, byte_pos, byte_len, &pos, &len)) {
+            pos = 0;
+            len = 1;
+        }
+        if (len == 0) len = 1;
 
         CB_Node diag_node = cb_create_node(SYNTAX_ERROR, pos, len);
         /* Map rxas severity (usually 1 for error) to middleware severity */

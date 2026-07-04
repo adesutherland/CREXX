@@ -2215,6 +2215,19 @@ if (ENABLE_PARSER_MODE)
     )
 
     add_crexx_syntax_highlight_test(
+            syntaxhighlight_srcmap_generated
+            ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/syntaxhighlight_srcmap_generated.crexx
+            MUST_MATCH
+            "Node: type=37 \\(LEXER_PREPROCESSOR\\), pos=[0-9]+, len=3, sev=48, text=\"@1c\""
+            "Node: type=37 \\(LEXER_PREPROCESSOR\\), pos=[0-9]+, len=7, sev=48, text=\"@\\+4\\+16\\{\""
+            "Node: type=41 \\(LEXER_KEYWORD\\), pos=[0-9]+, len=3, sev=48, text=\"say\""
+            "Node: type=57 \\(LEXER_CONSTANT_IDENTIFIER\\), pos=[0-9]+, len=4, sev=48, text=\"totl\""
+            MUST_NOT_MATCH
+            "text=\"emo\""
+            "text=\"xpp"
+    )
+
+    add_crexx_syntax_highlight_test(
             syntaxhighlight_compound_names
             ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/repro_dotted_index.crexx
             MUST_MATCH
