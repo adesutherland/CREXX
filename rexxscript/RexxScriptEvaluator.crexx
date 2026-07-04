@@ -163,7 +163,7 @@ rexxscriptcoreevaluator: class
           return _build_result(error_message)
         end
         label_count = label_count + 1
-        label_names[label_count] = translate(label_name)
+        label_names[label_count] = upper(label_name)
         label_targets[label_count] = i + 1 || ""
       end
     end
@@ -725,7 +725,7 @@ rexxscriptcoreevaluator: class
     arg name = .string
     key = translate(name)
     do i = 1 to label_count
-      if label_names[i] = key then return label_targets[i] + 0
+       if label_names[i] = key then return label_targets[i] + 0
     end
     return 0
 
@@ -1111,12 +1111,13 @@ rexxscriptcoreevaluator: class
     error_message = message
     error_statement = stmtno
     error_column = column
-    ## if dbgtrace=1 then do
+    if dbgtrace=1 then do
        say "Script Error: "code
        say "     MESSAGE: "message
-       say "   STATEMENT: "statement_texts[stmtno]
        say "      STMTNO: "stmtno
-    ## end
+       if stmtno<1 then return 0
+       say "   STATEMENT: "statement_texts[stmtno]
+     end
     return 0
   /* --------------------------------------------------------------------
    * Intrinsic Function Dispatcher

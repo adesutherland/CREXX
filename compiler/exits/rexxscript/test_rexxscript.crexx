@@ -30,13 +30,6 @@ main: procedure
     say "bad first output" out[0] out[1] out[2]
   end
 
-  do i=1 to out[0]
-     say 'OUT : 'i out[i]
-  end
-
-  do i=1 to raw[0]
-       say 'RAW : 'i raw[i]
-    end
   say
   say "Sample 2"
   say "--------"
@@ -53,11 +46,3 @@ main: procedure
 
   if failures = 0 then say "SUCCESS"
   else say "FAILURES" failures
-
- status='undefined'
- say
- say "Sample 3"
- say "--------"
- REXXSCRIPT "status='is OK'; if 0 then do; say 'is bad'; status='is BAD'; end; say status" expose status output out debug
-  say "Status of executed script "script_status
-   return

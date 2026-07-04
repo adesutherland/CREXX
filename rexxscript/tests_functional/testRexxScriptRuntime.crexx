@@ -6,6 +6,14 @@ import rxfnsb
 
 errors = 0
 
+result = rexxscript_evaluate("a = 1; .gen starting; say a; a = a + 2", 0)
+out = rexxscript_output()
+
+if result[1] <> "OK" then do
+  errors = errors + 1
+  say "REXXSCRIPT_EVALUATE status failed:" result[1]
+end
+
 result = rexxscript_evaluate("a = 1; say 'starting'; say a; a = a + 2", 0)
 out = rexxscript_output()
 
