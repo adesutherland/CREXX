@@ -13,7 +13,8 @@ within literal strings) are reduced to single blanks. Blanks adjacent to
 operator characters and special characters are also removed.
 
 ## Blanks and White Space
-
+<!--index:Blanks-->
+<!--index:White Space-->
 *Blanks* (spaces) may be freely used in a program to improve appearance
 and layout, and most are ignored. Blanks, however, are usually
 significant

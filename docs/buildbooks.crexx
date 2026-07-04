@@ -1,22 +1,17 @@
 /* rexx */
-options levelb comments_dash
-import system
-
 books = 'crexx_language_reference crexx_programming_guide crexx_vm_spec crexx_library_reference'
 loop while books <> ''
   parse var books title books
-  say 'call build_pdf' title
-  'mkdir -p 'title'/tex/book'
-  call build_pdf(title)
+  'cd /Users/rvjansen/apps/crexx-fork/docs/books/'title
+  call build_pdf title
 end
+
 exit
 
 build_pdf: procedure
 arg title = .string
-say 'title = ' title
-newDir = '/Users/rvjansen/apps/crexx-fork/docs/'title'/tex/book'
-say 'newDir:' newDir
-command = '-c cd' newDir '&& rexx ~/apps/TextTools/build.rexx -copy -crexx'
-say 'command : ===>' command
-address sh command
+'mkdir -p tex/book'
+'cd tex/book'
+'pwd'
+address cmd '/Users/rvjansen/apps/oorexx_release/bin/rexx /Users/rvjansen/apps/TextTools/build.rexx -copy'
 return

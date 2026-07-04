@@ -21,7 +21,7 @@ say out
 
 ### Built-In Command Environments
 
-The built-in environments are deliberately separate:
+The built-in environments enable a specific use of the underlying operating system functionality.
 
 | Environment | Purpose |
 | --- | --- |
@@ -39,8 +39,8 @@ address path "rxas -h" output out error err
 
 ### CREXX Command Environment
 
-`CREXX` is not a shell. It is a cRexx -specific command environment with stable
-command names and cREXX-defined return-code behavior across supported operating
+`CREXX` is not a shell. It is a cRexx-specific command environment with stable
+command names and cRexx-defined return-code behavior across supported operating
 systems. It does not interpret shell punctuation such as `;`, `&&`, `||`, or
 pipes. Use multiple `ADDRESS` statements, or send newline-separated commands to
 `ADDRESS CREXX "batch"`. Blank batch lines and lines whose first non-blank
@@ -52,7 +52,7 @@ file IO, and relative-path operations in the same process. In contrast,
 `ADDRESS SYSTEM "cd path"` runs inside the child command processor and does not
 change cREXX's working directory after that child exits.
 
-The command set is intentionally useful but bounded. cRexx command names are
+The command set is useful but bounded. cRexx command names are
 literal. Host-variable anchors are supported only in command operands. In the
 table below, `anchorable` means an operand may be a scalar anchor such as
 `:name` or `${name}`. An operand ending in `...` may also be supplied by a stem
@@ -106,7 +106,9 @@ such as `&&`.
 
 ## ARG
 
-See the [Procedures and Arguments](procedures-and-arguments) section on page \pageref{procedures-and-arguments}.
+The ARG statement receives the arguments to programs or procedures and specifies the number of (required and optional) arguments and the expected types. In cRexx level B, it is *not* a short form of PARSE UPPER ARG but a seperate statement. 
+
+See the [Procedures and Arguments](procedures-and-arguments) section on page \pageref{procedures-and-arguments} for more information.
 
 ## CALL
 
