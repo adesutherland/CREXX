@@ -22,7 +22,31 @@ To test end-to-end execution:
 2. Assemble: `./rxas test.rxas` (produces `test.rxbin`)
 3. Execute: `./rxvm test.rxbin`
 
-### 5. Isolating Assembler Keyhole Optimiser Bugs
+### 5. RXPP And Source-Map Diagnostics
+
+For `.rxpp` problems, split the pipeline before changing compiler C code:
+
+1. Run `rxpp` directly and inspect the generated `.crexx`.
+2. RXPP emits `options ... srcmap` by default. Compile the generated file with
+   `rxc --diagnostics raw` and check for `SRCMAP_MALFORMED` or
+   `SRCMAP_UNBALANCED` before debugging normal parser/validator behavior.
+3. Confirm literal `@` is escaped as `@@` in default srcmap mode. Only explicit
+   `##CFLAG nosrcmap` output should preserve literal `@` unchanged.
+4. For macro diagnostics, check whether the innermost generated token is inside
+   a nested `@...{ ... @}` span. `rxc` intentionally chooses the narrowest
+   enclosing source-map span.
+
+Focused coverage:
+
+```sh
+ctest --test-dir cmake-build-release -R 'rxc_srcmap|rxpp_(smoke|srcmap|diagnostics|diagnostic_catalogs)' --output-on-failure
+```
+
+See `docs/ai-context/RXPP_PREPROCESSOR.md` for the marker syntax and component
+layout. For RXPP warning/error text, set `CREXX_DIAGNOSTICS=raw` to inspect the
+stable `RXPP_*` code and parameters before checking localized wording.
+
+### 6. Isolating Assembler Keyhole Optimiser Bugs
 If generated `.rxas` looks correct but the `.rxbin` or disassembly looks wrong,
 compare assembler output with and without the keyhole optimiser:
 
@@ -40,7 +64,7 @@ assembly input is already known and the question is whether peephole rules,
 instruction-flow metadata, or hidden register-use handling changed the bytecode
 incorrectly.
 
-### 6. RXDB Trace Debugger
+### 7. RXDB Trace Debugger
 
 `debugger/rxdb.crexx` is the early Level B debugger prototype. It now delegates
 source lookup, ASM instruction decoding, module/procedure lookup, breakpoint
@@ -85,7 +109,7 @@ target selection; generated/debugger handlers should limit themselves to the
 unavoidable frame-local register link and then hand the value back to the
 shared trace runtime.
 
-### 7. High-Risk Compiler Change Checklist
+### 8. High-Risk Compiler Change Checklist
 
 For broad compiler work such as new source syntax, type-system changes,
 metadata changes, reference/value ownership, or inliner behaviour, treat the
@@ -182,7 +206,7 @@ cmake --build cmake-build-asan --target rxc rxas rxvm rxbvm library crexx_test_d
 ctest --test-dir cmake-build-asan -R 'reference_source_|reference_(iterator|generated)' --output-on-failure
 ```
 
-### 8. Known Build and Platform Issues
+### 9. Known Build and Platform Issues
 When encountering unusual build or execution errors on new platforms (e.g., macOS ARM, Windows), keep these documented issues in mind:
 *   **OpenSSL Resolution:** If CMake cannot find OpenSSL on macOS or Linux, ensure `CREXX_FORCE_SYSTEM_OPENSSL` is correctly handled. In `lib/plugins/socket/CMakeLists.txt`, hardcoded MSYS2 paths (`C:/msys64/...`) must be protected by an `if(WIN32)` check to prevent them from breaking path resolution on other OSs.
 *   **Massive Memory Leaks / Explosions (50+GB):** If the compiler (`rxc`) or assembler unexpectedly consumes gigabytes of memory and hangs, suspect a failure in `file2buf` (`platform/platform.c` or `S370/cmsutil.c`). Endpoint security tools (like ThreatLocker) or stream abstractions can cause `ftell()` or `fseek()` to fail, returning `-1`. If this `-1` is cast directly to a `size_t` without error checking, it overflows to `SIZE_MAX`. A subsequent `malloc(*bytes + 2)` wraps around to `1`, and `fread()` then performs a massive heap buffer overflow trying to read `SIZE_MAX` bytes, corrupting allocator headers and causing the OS to infinitely allocate memory. Always ensure `ftell()` is stored in a signed integer (e.g., `long`) and checked for errors (`< 0`) before casting to `size_t`.

@@ -31,9 +31,52 @@
 #include <string.h>
 #include "rxcpmain.h"
 #include "rxcp_source_tree.h"
+#include "rxcp_srcmap.h"
+
+static int print_error_context_ptr(Context *context, const char *ptr) {
+    return context &&
+           ptr &&
+           context->buff_start &&
+           context->buff_end &&
+           ptr >= context->buff_start &&
+           ptr <= context->buff_end;
+}
+
+static void print_error_apply_srcmap(ASTNode *node) {
+    RxcpSrcMapLocation mapped;
+    const char *lookup_ptr;
+    size_t start_offset;
+    size_t end_offset;
+
+    if (!node || !node->context || !node->context->srcmap) return;
+
+    lookup_ptr = node->source_start;
+    if (!print_error_context_ptr(node->context, lookup_ptr) && node->token) {
+        lookup_ptr = node->token->token_string;
+    }
+    if (!print_error_context_ptr(node->context, lookup_ptr)) return;
+    if (!rxcp_srcmap_lookup(node->context, lookup_ptr, node->line, node->column, &mapped)) return;
+
+    node->file_name = (char *)mapped.file_name;
+    node->line = mapped.line;
+    node->column = mapped.column;
+    node->source_start = 0;
+    node->source_end = 0;
+
+    if (!mapped.line_text || mapped.line_text_length == 0) return;
+    start_offset = mapped.column < 0 ? 0 : (size_t)mapped.column;
+    if (start_offset >= mapped.line_text_length) return;
+    end_offset = start_offset + (mapped.length > 0 ? (size_t)mapped.length : 1);
+    if (end_offset > mapped.line_text_length) end_offset = mapped.line_text_length;
+    if (end_offset <= start_offset) end_offset = start_offset + 1;
+    node->source_start = (char *)(mapped.line_text + start_offset);
+    node->source_end = (char *)(mapped.line_text + end_offset - 1);
+}
 
 void print_error(ASTNode* node, FILE* stream, char* prefix) {
     char *message;
+    int len;
+    int i;
 
     if (node->is_duplicate_warning) return;
 
@@ -74,13 +117,17 @@ void print_error(ASTNode* node, FILE* stream, char* prefix) {
         if (!node->source_end) node->source_end = node->child->token->token_string + node->child->token->length - 1;
     }
 
+    print_error_apply_srcmap(node);
+
     /* Print error - truncate source to one line */
-    int len = (int) (node->source_end - node->source_start + 1);
-    int i;
-    for (i=0; i<len; i++) {
-        if (!node->source_start || node->source_start[i] == '\n') {
-            len = i;
-            break;
+    len = 0;
+    if (node->source_start && node->source_end && node->source_end >= node->source_start) {
+        len = (int) (node->source_end - node->source_start + 1);
+        for (i=0; i<len; i++) {
+            if (node->source_start[i] == '\n') {
+                len = i;
+                break;
+            }
         }
     }
     message = rxcp_diag_render(node->diagnostic, node->node_string ? node->node_string : "Syntax Error");

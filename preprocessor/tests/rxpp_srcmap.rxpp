@@ -1,6 +1,9 @@
-## Simple RXPP smoke test using maclib
 ##define TRACEVALUE(name, value) {say name value}
+##MACRO EMITSCRIPT
+say 'say "scripted"'
+##MEND
 
-say "Hello"
+say "Hello@example.com"
 say SQUARE(3)
 TRACEVALUE("value", 16)
+##EMITSCRIPT

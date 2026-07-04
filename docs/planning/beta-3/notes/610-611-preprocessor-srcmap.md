@@ -5,6 +5,25 @@ Status: working note for beta 3 issues
 [#611](https://github.com/adesutherland/CREXX/issues/611). This is not an
 implementation contract until reviewed and approved.
 
+Implementation slice started 2026-07-03:
+
+- `rxc` recognizes `options ... srcmap`, strips raw `@` source-map directives
+  before normal parsing, and remaps diagnostics/source-step metadata through the
+  common compiler diagnostic/source-tree paths.
+- Source-map prepass errors are `rxc` diagnostics with catalogue entries
+  (`SRCMAP_MALFORMED`, `SRCMAP_UNBALANCED`).
+- Current RXPP support emits source maps by default; `##CFLAG nosrcmap` is the
+  explicit plain-output escape hatch. It emits `options levelb srcmap`, common
+  file/line/span helpers, escaped literal `@`, outer macro-call spans, and
+  narrower spans around substituted fixed macro arguments where RXPP can track
+  their source columns.
+- Follow-up slice moved RXPP from `lib/plugins/precomp/` to the root
+  `preprocessor/` component, stages RXPP support files to `bin/`, and added
+  focused direct-rxc, rxpp-srcmap, and rxpp-no-srcmap coverage.
+- Second follow-up added RXPP per-line source provenance, include-file
+  source-map origin switching, an `options srcmap` double-processing guard, and
+  whole-invocation spans for RexxScript-backed script macro output.
+
 ## Purpose
 
 RXPP should be treated as a first-class CREXX toolchain stage, not as invisible
@@ -26,46 +45,41 @@ The beta 3 goal is deliberately narrow:
 
 ## Directory Shape
 
-RXPP should move out of `lib/plugins/precomp/` into a root-level directory so it
-is visible as a toolchain component beside the compiler, assembler, linker, and
-VM.
+RXPP has moved out of `lib/plugins/precomp/` into the root `preprocessor/`
+directory so it is visible as a toolchain component beside the compiler,
+assembler, linker, and VM.
 
-Proposed layout:
+Implemented layout:
 
 ```text
-rxpp/
+preprocessor/
   CMakeLists.txt
-  src/
-    rxpp.crexx
-    native/
-      precomp.c
-  lib/
-    maclib.rexx
-    macsys.rexx
-    syslib.rexx
-  docs/
-    README.md
-    user-guide.md
-    internals.md
-    srcmap.md
+  rxpp.crexx
+  precomp.c
+  maclib.rexx
+  macsys.rexx
+  mathlib.rexx
+  syslib.rexx
+  rxpp-Users-Guide.md
+  rxpp-module.md
   tests/
     CMakeLists.txt
-    smoke/
-    srcmap/
-    dslsh-wrapper/
-  examples/
+    rxpp_smoke.rxpp
+    rxpp_srcmap.rxpp
 ```
 
-The old `lib/plugins/precomp/` path should either be removed in the same
-migration or kept only as a temporary compatibility stub that points to `rxpp/`.
-The install/package shape should expose `rxpp` as a normal tool in `bin/`.
+The old `lib/plugins/precomp/` path was removed in this migration. The
+install/package shape exposes `rxpp`, `rxprecomp.rxplugin`,
+`rxprecomp_static.a`, and RXPP support `.rexx` files under `bin/`.
 
 Top-level documentation changes should include:
 
 - `docs/ai-context/CREXX_ARCHITECTURE.md`: RXPP as a first-class source stage.
-- `docs/books/crexx_language_reference/tools.md`: wrapper behavior for `.rxpp`
-  input and direct `rxpp` invocation.
-- RXPP user/internal docs under `rxpp/docs/`.
+- `docs/ai-context/RXPP_PREPROCESSOR.md`: root component, build footprint, and
+  source-map marker rules.
+- `docs/books/crexx_language_reference/rxpp.md`: wrapper behavior for `.rxpp`
+  input and direct `rxpp` invocation as the user-facing reference matures.
+- RXPP user/internal docs under `preprocessor/`.
 - `compiler/docs/dslsh_integration.md`: `.rxpp` parser-mode wrapper
   responsibilities and limits.
 - release notes / known limitations when beta 3 scope is finalized.
@@ -281,7 +295,8 @@ addition to macro call sites, can be deferred.
 
 RXPP should:
 
-1. Move to the root `rxpp/` directory and build/install as a first-class tool.
+1. Move to the root `preprocessor/` directory and build/install as a
+   first-class tool.
 2. Emit `options srcmap` in generated output when source-map markers are
    present.
 3. Treat input whose leading options already include `srcmap` as already
@@ -427,20 +442,27 @@ answer = SQUARE(totl + 1)
 
 ## Implementation Slices
 
-After design approval, the likely follow-on issues are:
+Implementation status:
 
-1. Move RXPP to root `rxpp/`, preserve build/package behavior, and update
-   documentation paths.
-2. Add `options srcmap` and the raw `@` source-map prepass to `rxc`.
-3. Wire mapped locations into diagnostics, source tree state, and `.srcstep`
-   emission.
-4. Update RXPP to emit `options srcmap`, escape literal `@`, emit spans for the
-   first macro cases, pass no-macro inputs cleanly, and guard against double
-   processing.
-5. Add focused RXPP/rxc source-map tests.
-6. Choose the DSLSH integration direction, then build the selected prototype
+1. Done: move RXPP to root `preprocessor/`, preserve build/package behavior,
+   stage support files, and update documentation paths.
+2. Done: add `options srcmap` and the raw `@` source-map prepass to `rxc`.
+3. Done for the first slice: wire mapped locations into diagnostics, source
+   tree state, and `.srcstep` emission.
+4. Done: update RXPP to emit `options srcmap` by default, escape literal `@`,
+   emit spans for ordinary macro replacement text and substituted fixed
+   arguments, preserve the explicit no-srcmap compatibility path, switch file
+   origin for included lines, reject already source-mapped generated input, and
+   map script-macro output to the invocation span.
+5. Done: add focused RXPP/rxc source-map tests for positive mapping,
+   malformed/unbalanced markers, nested-span precedence, rxpp srcmap output, and
+   rxpp no-srcmap output.
+6. Done: route RXPP warning/error diagnostics through the shared diagnostic
+   catalogs with raw/localized modes, German/Dutch catalog entries, and
+   `rxpp_diagnostic_catalogs` coverage.
+7. Remaining: choose the DSLSH integration direction, then build the selected prototype
    and document its limits.
-7. Review RexxScript compiler-exit mappings against the same diagnostic
+8. Remaining: review RexxScript compiler-exit mappings against the same diagnostic
    expectations.
 
 ## Open Questions And Risks

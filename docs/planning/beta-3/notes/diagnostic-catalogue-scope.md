@@ -11,14 +11,15 @@ The current `rxc_diagnostic_catalogs` CTest is a compiler-scope guard. It:
 - verifies key and placeholder parity for complete catalogues;
 - treats `en_US` as an override catalogue whose entries must exist in `en_GB`.
 
-This is intentionally not yet a complete toolchain diagnostic audit.
+`rxpp_diagnostic_catalogs` now applies the same catalogue parity rules to the
+first-class preprocessor source. This is still not a complete toolchain
+diagnostic audit.
 
 ## Known Out Of Scope Producers
 
-Future localisation work must extend catalogue coverage beyond `rxc`:
+Future localisation work must still extend catalogue coverage beyond `rxc` and
+RXPP:
 
-- RXPP/preprocessor diagnostics once RXPP is promoted to a first-class
-  toolchain stage.
 - Debugger diagnostics and command errors.
 - VM/runtime diagnostics that are surfaced to users.
 - Signals and condition names that originate in the Rexx runtime library and
@@ -35,8 +36,8 @@ Keep the catalogue parity rules common, but split producer-specific discovery
 when source formats differ:
 
 - `rxc_diagnostic_catalogs`: compiler C, parser grammar, and compiler exits.
-- `rxpp_diagnostic_catalogs`: preprocessor Rexx/native sources after RXPP is
-  moved into its first-class tree.
+- `rxpp_diagnostic_catalogs`: preprocessor Rexx sources that emit structured
+  `RXPP_*` diagnostics through `rxpp_diag`.
 - `rxdb_diagnostic_catalogs`: debugger command and runtime diagnostics.
 - `rxvm_signal_catalogs`: VM-visible unhandled signals and runtime condition
   names.

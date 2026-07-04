@@ -34,6 +34,7 @@
 #include "rxcpmain.h"
 #include "rxcp_source_ext.h"
 #include "rxcp_source_tree.h"
+#include "rxcp_srcmap.h"
 #include "rxcp_levelc_lower.h"
 #include "../binutils/include/rxdefs.h"
 #include "rxcpdary.h"
@@ -273,6 +274,9 @@ void fre_cntx(Context *context)  {
     /* Deallocate Tokens */
     free_tok(context);
 
+    rxcp_srcmap_free(context->srcmap);
+    context->srcmap = 0;
+
     /* Deallocate VM Bridge */
     if (context->rxvml_bridge) {
         rxvml_destroy((rxvml_context*)context->rxvml_bridge);
@@ -330,6 +334,8 @@ int rxcmain(int argc, char *argv[]) {
     int auto_import_rxas = 0;
     char *file_directory = 0;
     char *input_source_extension = 0;
+    char *srcmap_cleaned = 0;
+    size_t srcmap_cleaned_len = 0;
     const char* filename_extension;
     RexxLevel cli_default_level = UNKNOWN;
     char **cli_import_names = 0;
@@ -693,6 +699,18 @@ int rxcmain(int argc, char *argv[]) {
     /* Deallocate memory and reset context */
     free_ast(context);
     free_tok(context);
+
+    if (context->source_has_srcmap) {
+        if (rxcp_srcmap_preprocess(context, &srcmap_cleaned, &srcmap_cleaned_len) != 0) {
+            errors = prnterrs(context);
+            if (errors) fprintf(stderr,"%d error(s) in source file\n", errors);
+            goto finish;
+        }
+        free(buff_start);
+        buff_start = srcmap_cleaned;
+        bytes = srcmap_cleaned_len;
+    }
+
     cntx_buf(context, buff_start, bytes);
 
     /* Parse program for real */

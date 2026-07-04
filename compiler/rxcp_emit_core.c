@@ -681,6 +681,7 @@ static char *get_source_node_metaline(SourceNode *node) {
     int column;
     char *source_start;
     char *source_end;
+    int allow_token_fallback;
 
     line = -1;
     column = -1;
@@ -695,8 +696,9 @@ static char *get_source_node_metaline(SourceNode *node) {
     column = node->column;
     source_start = node->source_start;
     source_end = node->source_end;
+    allow_token_fallback = source_start || !node->context || !node->context->srcmap || line < 0;
 
-    if (node->token) {
+    if (node->token && allow_token_fallback) {
         if (line == -1) line = node->token->line;
         if (column == -1) column = node->token->column;
         if (!source_start) source_start = node->token->token_string;
@@ -758,6 +760,9 @@ char* get_reporting_metalines(ASTNode *node) {
 char* get_metaline(ASTNode *node) {
     int line, column;
     char *source_start, *source_end;
+    char *file_name;
+    int allow_token_fallback;
+    int use_source_node_location;
 
     if (node->is_compiler_added &&
         node->source_provenance == AST_SOURCE_SYNTHETIC &&
@@ -769,9 +774,20 @@ char* get_metaline(ASTNode *node) {
     column = node->column;
     source_start = node->source_start;
     source_end = node->source_end;
+    file_name = node->file_name;
+
+    use_source_node_location = node->context && node->context->srcmap && node->source_node;
+    if (use_source_node_location) {
+        line = node->source_node->line;
+        column = node->source_node->column;
+        source_start = node->source_node->source_start;
+        source_end = node->source_node->source_end;
+        file_name = node->source_node->file_name;
+    }
+    allow_token_fallback = source_start || !node->context || !node->context->srcmap || line < 0;
 
     /* Try and set error position if not already set */
-    if (node->token) {
+    if (node->token && allow_token_fallback) {
         if (line == -1) line = node->token->line;
         if (column == -1) column = node->token->column;
         if (!source_start) source_start = node->token->token_string;
@@ -780,7 +796,7 @@ char* get_metaline(ASTNode *node) {
 
     return source_step_metaline(node->context,
                                 node->source_node,
-                                node->file_name,
+                                file_name,
                                 line,
                                 column,
                                 source_start,

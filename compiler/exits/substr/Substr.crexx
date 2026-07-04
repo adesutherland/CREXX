@@ -1,0 +1,312 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/* ---------------------------------------------------------------------------------------------------------------
+ * SUBSTR instruction left hand assignment of a value
+ *
+ * Supported syntax:
+ *
+ *     substr(variable, offset)         = value
+ *     substr(variable, offset, length) = value
+ *
+ * Examples:
+ *
+ *     substr(line,1,4)     = 'Fred'
+ *     substr(record,i+5,3) = age
+ *     substr(name,pos)     = value
+ *
+ * Internally transformed into:
+ *
+ *     variable =
+ *         substr(variable,1,offset-1) ||
+ *         left(value,length)          ||
+ *         substr(variable,offset+length)
+ *
+ * ---------------------------------------------------------------------------------------------------------------
+ */
+options levelb
+namespace rxcpexits expose substrexit
+
+import rxcp
+import rxfnsb
+
+substrexit: class
+    _node_id = .int
+
+    *: factory
+        arg nid = .int
+        _node_id = nid
+
+    describe: method = .exitdescriptor
+        desc = .exitdescriptor
+        desc = .exitdescriptor("substr")
+        call desc.add_import("rxfnsb", "descriptor", "")
+        return desc
+/* ---------------------------------------------------------------------------------------------------------------
+ * Phase 1 EXPOSE all variables which are defined from within the exit.
+ *   Such variables must be registered here before they can be referenced in generated replacement code.
+ *
+ *   None are required for this exit; this section is a placeholder.
+ *
+ *   Variables and stems already defined in the source program are automatically visible to the compiler exit and
+ *   require no special treatment.
+ *
+ *   Do not register an existing source variable here, otherwise a new exit-scoped variable will be created,
+ *   hiding the source program variable from the compiler exit.
+ * ---------------------------------------------------------------------------------------------------------------
+ */
+    pre_process: method = .exitplan
+      arg tokens = .token[]
+      plan = .exitplan("READY")
+     /* define and expose new variable, must be set explicitly in the exit coding */   
+     ##   call new_variable plan,'variable_name_1','.int'       /* just to illustrate how to setup
+     ##   call new_variable plan,'other_variable' ,'.string'    /* just to illustrate how to setup
+    return plan
+/* ---------------------------------------------------------------------------------------------------------------
+ * Phase 2 basic syntax tests
+ * ---------------------------------------------------------------------------------------------------------------
+ */
+    process: method = .exitresult
+      arg tokens = .token[]
+
+      result = .exitresult("EMPTY")
+      if tokens.0 < 8 | upper(tokens[1].get_text()) <> 'SUBSTR' then do
+      /* minimal substr command:  substr(field,offset) = value -> 8 parms */
+         call result.set_status("REJECT")
+         call trigger_error(result,1, 'Incomplete SUBSTR command 'tokens.0)
+         return result
+      end
+/* ---------------------------------------------------------------------------------------------------------------
+ * Phase 3 resolve identifiers (where possible), stems can't be resolved right now
+ * ---------------------------------------------------------------------------------------------------------------
+ */
+      do i = 2 to tokens.0
+         ttype=strip(tokens[i].get_type())
+         if ttype = "identifier" & substr(tokens[i].get_text(),1,1)='.' then iterate
+         if ttype = "identifier" & tokens[i].get_value_type() = ".unknown" then do
+            if substr(tokens[i+1].get_text(),1,1)='.' then nop  /* it's possibly a stem as of the period char, don't check */
+            else do                                    /* it's a simple variable, wait until type is not .unknown any more */
+               call result.set_status("PENDING")
+               return result
+            end
+         end
+      end
+/* ---------------------------------------------------------------------------------------------------------------
+ * Phase 4 fetch all tokens and build variables
+ *
+ * All variables have an identified type (except stems we ignore them anyway)
+ * Check now all tokens and identify relevant fields
+ * if stems are involved as in mystem.country.city  the full stem name might consist of several tokens
+ *        example        token:   3  4   5   6 7    here 5 tokens they must be concatenated.
+ *
+ * Supported syntax:
+ *     substr(variable, offset)         = value
+ *     substr(variable, offset, length) = value
+ * ---------------------------------------------------------------------------------------------------------------
+ */
+      call result.set_status("REPLACE")
+      varname=''
+      offset=''
+      rlen=''
+      rvalue=''
+      item=0
+      delimiter_pos=.int     /* token: 1---2--3--4--5---6--7---8-9--10  first relevant token is 3 */
+      /*                               v   v  v  v v    v v    v v  v    */
+      check_syntax_from=3         /* substr(field,offset,length) = value  */
+      do token_pos = check_syntax_from while token_pos <= tokens.0 /* a direct syntax check could be done, but iterative processing reads better */
+         item = item + 1
+      /* At this point token_pos references the start of a valid operand. This may be a variable, stem, function call, or a more complex
+       * expression, but never a delimiter or separator. next_token() searches for the delimiter that terminates the current operand.
+       * If no matching delimiter is found, it returns the original position unchanged. */
+
+         if item = 1 then do                                       /* fetch variable name, may be a stem */
+            delimiter_pos = next_token(tokens, token_pos+1, ',')   /* points to next delimiter which is , */
+            if delimiter_pos=token_pos then return trigger_error(result,delimiter_pos, 'Unable to extract variable name')
+            varname = collect_tokens(tokens, token_pos, delimiter_pos-1)  /* set and join variable name (maybe stem) */
+         end
+         else if item = 2 then do                                  /* fetch offset */
+            delimiter_pos = next_token(tokens, token_pos, ',')     /* points to next delimiter which is ',' */
+            if delimiter_pos = token_pos then do                   /* if not, maybe length is optional */
+               delimiter_pos = next_token(tokens, token_pos, ')')  /* check for ')' to ensure length is optional */
+               item = item + 1                                     /* No explicit length argument was found; skip the optional length item. */
+            end
+            if delimiter_pos=token_pos then return trigger_error(result,delimiter_pos, 'Unable to extract offset')
+            offset = collect_tokens(tokens, token_pos, delimiter_pos-1) /* set and join offset (maybe variable/stem) */
+         end
+         else if item = 3 then do                                  /* fetch length parameter */
+             delimiter_pos = next_token(tokens, token_pos, ')')    /* points to next delimiter which is ')' */
+             if delimiter_pos > token_pos then rlen = collect_tokens(tokens, token_pos, delimiter_pos-1)  /* set and join length (maybe variable/stem) */
+             else return trigger_error(result,delimiter_pos, 'Unable to extract length')
+         end
+         else if item = 4 then do                                  /* skip to assignment operator */
+             if strip(tokens[token_pos].get_text()) = '=' then nop
+             else return trigger_error(result,token_pos, 'Unable to locate "=" ')
+             delimiter_pos=token_pos
+         end
+         else if item = 5 then do                                  /* Fetch replacement value; it is the remaining part of the statement. */
+              rvalue = collect_tokens(tokens, token_pos, tokens[0]) /* set and join value (maybe stem) */
+              if strip(rvalue)='' then return trigger_error(result,token_pos, 'Unable to locate set value')
+              delimiter_pos=tokens[0]
+         end
+         token_pos = delimiter_pos                                 /* continue from delimiter */
+      end
+/* ---------------------------------------------------------------------------------------------------------------
+ * Phase 5 Build replacement statement
+ *
+ * Transform:
+ *     substr(variable, offset [, length]) = value
+ *
+ * Into: variable =
+ *          substr(variable,1,offset-1) ||
+ *          left(value,length)          ||
+ *          substr(variable,offset+length)
+ *
+ * If LENGTH is omitted, LENGTH(value) is assumed.
+ * ---------------------------------------------------------------------------------------------------------------
+ */
+         if rlen='' then rlen='length('rvalue')'
+      /*  Peter's internal trace stuff for testing
+         call xlog    /* Erase Log file */
+         call xlog('varname="'varname'"' )
+         call xlog('offset ="'offset'"' )
+         call xlog('length ="'rlen'"' )
+         call xlog('string ="'rvalue'"' )
+         call xlog('Replace="'_replacement'"')
+     */
+         _replacement = varname '= substr('varname',1,'offset'-1)||left('rvalue','rlen')||substr('varname','offset'+'rlen')'
+         call result.add_replacement_line(_replacement)
+      return result
+/* ---------------------------------------------------------------------------------------------------------------
+ * Next_token()
+ *
+ * Locate the next occurrence of a delimiter token while respecting
+ * nested function calls and parenthesized expressions.
+ *
+ * Parameters:
+ *   tokens      Token array
+ *   current     Starting token position
+ *   tokenchar   Delimiter to search for (",", ")", "=" ...)
+ *
+ * Returns:
+ *   Token position of the matching delimiter.
+ *   If no delimiter is found, returns the original position.
+ *
+ * Notes:
+ *   Commas inside nested calls are ignored:
+ *
+ *     substr(var,max(i,5),length(name))
+ *
+ *   The comma inside max(i,5) will not terminate the search.
+ * ---------------------------------------------------------------------------------------------------------------
+ */
+next_token: procedure=.int
+  arg tokens = .token[], current=.int, tokenchar=.string
+  depth = 0
+  do j = current to tokens.0
+     txt = strip(tokens[j].get_text())
+     if txt = tokenchar & depth = 0 then return j
+     if txt = '(' then depth = depth + 1
+     else if txt = ')' then depth = depth - 1
+  end
+return current
+/* ---------------------------------------------------------------------------------------------------------------
+ * collect_tokens()
+ *
+ * Concatenate a range of tokens into a single expression string.
+ *
+ * Parameters:
+ *   tokens   Token array
+ *   from     First token position
+ *   tto      Last token position
+ *
+ * Returns:
+ *   A string containing all token text concatenated without spaces.
+ *
+ * Examples:
+ *
+ *   myvar              collects 1 token
+ *   stem.country.city           5 tokens ('.' are counted tokens)
+ *   i+5                         3 tokens (+ operator is one token)
+ *   length(name)                4 tokens (function call() )
+ *
+ * Notes:
+ *   Used to reconstruct source expressions after tokenization.
+ * ---------------------------------------------------------------------------------------------------------------
+ */
+collect_tokens: procedure=.string
+  arg tokens = .token[], from=.int, tto=.int
+  collect=''
+  do i=from to tto
+     collect=collect||strip(tokens[i].get_text())
+  end
+return collect
+/* ---------------------------------------------------------------------------------------------------------------
+ * New_variable()
+ *
+ * Register a new variable binding generated by a compiler exit.
+ *
+ * Parameters:
+ *   plan      Exit plan object
+ *   newvar    Variable name
+ *   type      CREXX type descriptor
+ *
+ * Notes:
+ *   Variables registered here become visible to the compiler and may subsequently be referenced
+ *   by generated replacement code.
+ *
+ *   The variable remains available to the source code following the compiler exit transformation.
+ * ---------------------------------------------------------------------------------------------------------------
+ */
+new_variable: procedure
+  arg plan=.exitplan, newvar=.string, type=.string
+  /*  emitting a new variable into the code
+   *                      -> variable-name -> type -> exit-name_variable <- just for documentation purposes */
+   call plan.add_binding("var", newvar, "", type, 0, "rexxscript_"newvar, "")
+return
+/* ---------------------------------------------------------------------------------------------------------------
+ * Trigger_error()
+ *
+ * Register a compiler exit error and terminate processing.
+ * The function is actually used to steamline the return so you don't need to use a do/end block
+ *
+ * Parameters:
+ *   plan      Exit result object
+ *   item      Token position associated with the error
+ *   message   Diagnostic text
+ *
+ * Returns:
+ *   Updated exit result object.
+ * ---------------------------------------------------------------------------------------------------------------
+ */
+trigger_error: procedure=.exitresult
+  arg plan=.exitresult, item=.int,message=.string
+  call plan.set_error(item, message)
+return plan
+
+xlog: procedure
+  arg msgline=''
+  fname="C:\TEMP\CREXX\LOG.txt"
+  if msgline='' then call erasefile fname
+  else call LineOut(fname,time('l')' 'msgline)
+return   

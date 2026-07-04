@@ -54,7 +54,7 @@ set_source_files_properties(
 
 add_library(rxclib STATIC
         rxcpmain.c rxcp_ast_core.c rxcp_ast_print.c rxcp_ast_walk.c rxcpmain.h rxcp_util.c rxcp_diag.c rxcp_diag.h rxcp_diag_fallback.c
-        rxcp_dsl.c rxcp_highlight_controller.c rxcp_source_tree.c rxcp_source_ext.c rxcp_source_ext.h
+        rxcp_dsl.c rxcp_highlight_controller.c rxcp_source_tree.c rxcp_source_ext.c rxcp_source_ext.h rxcp_srcmap.c rxcp_srcmap.h
         ${CMAKE_CURRENT_BINARY_DIR}/rxcposcn.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpopgr.h rxcpopar.c
         ${CMAKE_CURRENT_BINARY_DIR}/rexbscan.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpbgmr.h rxcpbpar.c
         ${CMAKE_CURRENT_BINARY_DIR}/rexcscan.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpcgmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxcpcgmr.h rxcpcpar.c rxcpcdiag.c rxcpcsym.c rxcpcsym.h rxcpcval.c

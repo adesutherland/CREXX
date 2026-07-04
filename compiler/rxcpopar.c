@@ -37,9 +37,28 @@ static RexxLevel header_cli_or_default_level(Context *context) {
     return LEVELC;
 }
 
+static int token_text_equals_ci(const Token *token, const char *text) {
+    size_t i;
+    size_t len;
+
+    if (!token || !token->token_string || !text) return 0;
+    len = strlen(text);
+    if ((size_t) token->length != len) return 0;
+
+    for (i = 0; i < len; i++) {
+        if (tolower((unsigned char) token->token_string[i]) !=
+            tolower((unsigned char) text[i])) {
+            return 0;
+        }
+    }
+
+    return 1;
+}
+
 int opt_pars(Context *context) {
 
     int token_type, last_token_type;
+    int scanning_options_clause;
     Token *token;
     void *parser;
 
@@ -50,13 +69,21 @@ int opt_pars(Context *context) {
     else Opts_Trace(context->traceFile, "Options parser >> ");
 #endif
     last_token_type = TK_EOC;
+    scanning_options_clause = 0;
     while((token_type = opt_scan(context))) {
         // Setup and parse token
         token = token_f(context, token_type);
 
         // Skip multiple end of clause/line
         if (last_token_type == TK_EOC && token_type == TK_EOC) continue;
+        if (last_token_type == TK_EOC) scanning_options_clause = (token_type == TK_OPTIONS);
         last_token_type = token_type;
+        if (scanning_options_clause &&
+            token_type == TK_SYMBOL &&
+            token_text_equals_ci(token, "srcmap")) {
+            context->source_has_srcmap = 1;
+        }
+        if (token_type == TK_EOC) scanning_options_clause = 0;
 
         // EOS Special Processing
         if(token_type == TK_EOS) {
@@ -84,24 +111,6 @@ int opt_pars(Context *context) {
     /* Deallocate memory */
     Opts_Free(parser, free);
     return(0);
-}
-
-static int token_text_equals_ci(const Token *token, const char *text) {
-    size_t i;
-    size_t len;
-
-    if (!token || !token->token_string || !text) return 0;
-    len = strlen(text);
-    if ((size_t) token->length != len) return 0;
-
-    for (i = 0; i < len; i++) {
-        if (tolower((unsigned char) token->token_string[i]) !=
-            tolower((unsigned char) text[i])) {
-            return 0;
-        }
-    }
-
-    return 1;
 }
 
 int rxcp_scan_source_header(const char *location, const char *file_name, RexxLevel cli_default_level,
