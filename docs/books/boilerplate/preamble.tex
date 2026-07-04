@@ -36,7 +36,12 @@
 \fancyhead[RO]{\normalfont \nouppercase{\rightmark}}  % Chapter title on right pages, aligned right
 \fancyhead[LE]{\normalfont \nouppercase{\leftmark}}   % Section title on left pages, aligned right
 
-\fancyfoot[C]{\thepage}
+%% \fancyfoot[C]{\thepage}
+
+% Page numbers on the outside
+\fancyfoot[LE]{\thepage}   % Left on Even pages
+\fancyfoot[RO]{\thepage}   % Right on Odd pages
+
 
 % avoid headers on empty pages
 \usepackage{emptypage}

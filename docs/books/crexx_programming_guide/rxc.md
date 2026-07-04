@@ -7,7 +7,7 @@
 \small
 \obeylines \splice{rxc -h | sed 's/\&/\\\&/g'}
 \end{terminaloutput}
-\fontspec{TeX Gyre Pagella}
+\fontspec{Minion Pro}
 
 ## Import Search Roots
 
