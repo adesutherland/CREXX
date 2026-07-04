@@ -2,36 +2,39 @@ options levelb
 import rxfnsb
 
 ## main: procedure
-call pipe 11,222,33333,4444,5555
-    exit
-customer = copies(' ',50)
-record.1 =''
-q=1
 
-myvar='it is Fred 4711'
+/* SUBSTR() on the left-hand side */
 
- substr(record.q,5)  = 'Fred'
-say 1357 myvar
- say 123 "'"record.1"'"
-  j=20
-  substr(customer,1,20)  = 'Fred'
-  say 978 substr_internal
-  substr(customer,1+j,j-5+5) = 'Bloggs'
-  substr(customer,41,5)  = '42'
-say customer
+ok = 0
 
-line = 'John      Smith     042'
-say line
-substr(line,1,3) = ''
-say line
- say 'SUCCESS'
+/* Replace same length */
+text = "The quick fox"
+substr(text, 11, 3) = "cat"
+if text = "The quick cat" then ok = ok+1
 
- pipe: procedure = .int
-    arg command = .string, ... = .string
+/* Assigned string longer than target (truncated) */
+text = "The quick fox"
+substr(text, 11, 3) = "brown"
+if text = "The quick bro" then ok = ok+1
+else say 'Test 2 failed "'text'"'
 
-    do i=1 to arg[0]
-       say 123 i arg(2,'E')
-       say i arg(i)
-    end
-    say arg.0
- return 0
+/* Assigned string shorter than target (remaining characters unchanged) */
+text = "The quick fox"
+substr(text, 11, 3) = "X"
+if text = "The quick X  " then ok = ok+1
+else say 'Test 3 failed "'text'"'
+
+/* Replace at the beginning */
+text = "abcdef"
+substr(text, 1, 3) = "XYZ"
+if text = "XYZdef" then ok = ok+1
+else say 'Test 4 failed "'text'"'
+
+/* Replace at the end */
+text = "abcdef"
+substr(text, 5, 2) = "XY"
+if text = "abcdXY" then ok = ok+1
+else say 'Test 5 failed "'text'"'
+
+if ok=5 then say "SUCCESS"
+else say "FAILED"
