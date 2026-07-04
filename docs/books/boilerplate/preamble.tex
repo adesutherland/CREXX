@@ -83,7 +83,7 @@
 \setlength{\parindent}{0pt}
 \usepackage{enumitem}
 \usepackage{underscore}
-\usepackage{babel}
+\usepackage[english]{babel}
 \usepackage{graphicx}
 \usepackage{array}
 % \usepackage{tabularx}
@@ -100,9 +100,26 @@
 \usepackage{wrapfig}
 \usepackage{multicol}
 \usepackage[CJK]{ucharclasses}
-\usepackage[comma]{natbib}           % CSLI Pubs favored bibliography package.
-%% \bibliographystyle{cslipubs-natbib}  % CSLI Pubs bibliography format.
-\bibliographystyle{plainnat}  % CSLI Pubs bibliography format.
+
+\usepackage[
+  backend=biber,
+  style=authoryear,
+  maxbibnames=99,
+  giveninits=true,
+  doi=false,
+  isbn=true,
+  url=false,
+  eprint=false
+]{biblatex}
+
+\addbibresource{../../../boilerplate/bibliography.bib}
+
+\renewcommand*{\mkbibnamefamily}[1]{\textsc{#1}}
+
+%% \usepackage[comma]{natbib}
+%% \bibliographystyle{abbrvnat}
+
+
 % defines for consistent use
 \newcommand{\crexx}{\textsc{crexx}}
 \newcommand{\rexx}{R\textsc{exx}}
@@ -116,8 +133,8 @@
   {\ifx\relax#1\else
     \ifx-#1--{}\else#1\fi
     \expandafter\msdhelper\fi}
-  \newcommand{\doublehyphen}{\mbox{\msd{``-~-''}}}
-  \newcommand{\doublehyphenunquoted}{\mbox{\msd{-~-}}}
+\newcommand{\doublehyphen}{\mbox{\msd{``-~-''}}}
+\newcommand{\doublehyphenunquoted}{\mbox{\msd{-~-}}}
 
 %% the font used for tables
 \AtBeginEnvironment{longtable}{\fontspec{Avenir Next}\small}

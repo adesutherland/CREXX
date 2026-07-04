@@ -94,14 +94,20 @@ for factory selection, `match`, casts, type tests, and default methods.
 An imported callable may be implemented in cRexx, in RXAS, or in native code
 through the plugin architecture. The source-level call form is the same:
 
-```rexx
-import rxfnsb
-import rxsocket
+<!-- ```rexx -->
+<!-- import rxfnsb -->
+<!-- import rxsocket -->
 
-sock = socketcreate()
-```
+<!-- sock = socketcreate() -->
+<!-- ``` -->
 
 Runtime loading depends on how the program is run or linked. During
 compilation, `rxc -s` controls source import roots and `rxc -i` controls binary
 import roots. At runtime, provide the needed RXBIN modules, linked image, or
 plugins through the VM or `crexx` driver library path.
+
+## Finding external modules
+
+As described in[^blasco] there are different ways in which Rexx interpreters find the called modules. 
+
+[^blasco]: <!--cite-->[blasco2023searchorder]
