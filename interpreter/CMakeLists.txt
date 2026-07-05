@@ -371,6 +371,7 @@ function(crexx_add_rxas_vm_binary SOURCE_NAME DESCRIPTION)
     )
 
     add_custom_target(run_${SOURCE_NAME} ALL DEPENDS ${SOURCE_NAME}.rxbin)
+    add_dependencies(run_${SOURCE_NAME} rxvm rxbvm)
 endfunction()
 
 function(crexx_add_rxas_vm_failure_regex NAME SOURCE_NAME EXPECTED_REGEX)
@@ -648,6 +649,8 @@ crexx_add_vm_dual_test(NAME rxassystemiotests RXVM_ARGS tests_system_io)
 # Binary Buffer and I/O Instruction Tests
 crexx_add_rxas_vm_binary(tests_binary "binary buffer and I/O")
 crexx_add_vm_dual_test(NAME rxasbinarytests RXVM_ARGS tests_binary PASS_REGULAR_EXPRESSION "PASS: Binary Buffer IO")
+crexx_add_rxas_vm_binary(tests_binary_memory "typed binary memory operations")
+crexx_add_vm_dual_test(NAME rxasbinarymemorytests RXVM_ARGS tests_binary_memory PASS_REGULAR_EXPRESSION "PASS: Binary Memory Typed Ops")
 
 # Socket Instruction Tests
 add_custom_command(

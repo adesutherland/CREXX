@@ -9,6 +9,8 @@ The root `preprocessor/CMakeLists.txt` builds:
 
 - `rxpp`: the executable preprocessor tool, staged in the build `bin/`
   directory.
+- `rxpp-sh`: the DSLSH parser wrapper for `.rxpp` editor buffers when parser
+  mode is enabled.
 - `precomp_static`: the native helper linked into `rxpp`.
 - `precomp`: the dynamic RXPA helper module, emitted as `rxprecomp.rxplugin`.
 - `rxpp_support_files`: `maclib.rexx`, `macsys.rexx`, `mathlib.rexx`, and
@@ -39,6 +41,21 @@ inputs do not pass through RXPP.
 Source-tree builds should pass `-m ${CMAKE_SOURCE_DIR}/preprocessor/maclib.rexx`
 when calling `rxpp` directly. Installed/wrapper paths use `bin/maclib.rexx`
 beside the installed `rxpp` executable.
+
+`rxpp-sh` is intentionally a native C wrapper rather than a Level B driver. It
+owns the editor `CodeBuffer`, writes the active `.rxpp` buffer to a temp file,
+runs RXPP, parses the generated CREXX through the compiler parser, and maps
+diagnostics back to the authored buffer. The wrapper honors `RXPP_SH_RXPP` and
+`RXPP_SH_MACLIB`; without them it uses build-tree paths when present and then
+falls back to `rxpp`/`maclib.rexx` lookup.
+
+The wrapper emits authoritative shallow RXPP tokens on the original editor
+buffer, then overlays generated compiler diagnostics mapped through RXPP source
+maps. It recognizes RXPP directives, local macro definitions and calls,
+compile-time constants in directives, `{name}` macro variables, comments,
+strings, ordinary identifiers, keywords, numbers, and operators. It does not yet
+project generated CREXX semantic tokens or included-file macro definitions back
+onto the authored RXPP buffer.
 
 ## Source Maps
 
@@ -124,7 +141,7 @@ stable identity; translations depend on one key mapping to one template.
 Use these focused tests before broader CTest runs:
 
 ```sh
-ctest --test-dir cmake-build-release -R 'rxc_srcmap|rxpp_(smoke|srcmap|diagnostics|diagnostic_catalogs)' --output-on-failure
+ctest --test-dir cmake-build-release -R 'rxc_srcmap|rxpp_(smoke|srcmap|sh_srcmap|sh_default_lookup|diagnostics|diagnostic_catalogs)' --output-on-failure
 ```
 
 `rxc_srcmap` covers direct compiler source-map preprocessing, positive mapping,
@@ -134,6 +151,13 @@ precedence. `rxpp_smoke` covers automatic srcmap output plus explicit
 output, compile-through stripping/remapping, include-file origin, nested
 argument spans, script-macro output spans, diagnostic deduplication after
 remapping, and the double-processing guard.
+`rxpp_sh_srcmap` checks the prototype DSLSH wrapper path that preprocesses an
+editor `.rxpp` buffer and maps a generated compiler diagnostic back to the
+original macro argument span, including overlay onto the authored RXPP token.
+`rxpp_sh_default_lookup` checks the same wrapper path without environment
+overrides, covering the build-tree RXPP/maclib discovery.
+`rxpp_sh_tokens` checks RXPP directive, macro identifier, macro variable, and
+macro constant token emission on the authored buffer.
 `rxpp_diagnostics` checks raw/localized RXPP diagnostic rendering.
 `rxpp_diagnostic_catalogs` checks RXPP-emitted `RXPP_*` keys against the shared
 catalogs and complete German/Dutch translations.

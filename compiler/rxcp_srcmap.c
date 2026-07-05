@@ -64,6 +64,16 @@ typedef struct RxcpSrcMapSpan {
     const char *marker_line_start;
 } RxcpSrcMapSpan;
 
+typedef struct RxcpSrcMapLineSpan {
+    int active;
+    size_t generated_start;
+    const char *file_name;
+    int line;
+    int column;
+    const char *line_text;
+    size_t line_text_length;
+} RxcpSrcMapLineSpan;
+
 struct RxcpSrcMap {
     char **file_names;
     size_t file_name_count;
@@ -89,6 +99,13 @@ static char *srcmap_strndup(const char *text, size_t length) {
 static char *srcmap_strdup(const char *text) {
     if (!text) text = "";
     return srcmap_strndup(text, strlen(text));
+}
+
+void rxcp_srcmap_raw_mapping_free(RxcpSrcMapRawMapping *mapping) {
+    if (!mapping) return;
+    free(mapping->cleaned_to_raw_start);
+    free(mapping->cleaned_to_raw_end);
+    memset(mapping, 0, sizeof(*mapping));
 }
 
 static int srcmap_reserve_files(RxcpSrcMap *map) {
@@ -199,6 +216,64 @@ static void srcmap_add_entry(RxcpSrcMap *map, RxcpSrcMapSpan *span, size_t gener
     entry->length = span->length;
     entry->line_text = span->line_text;
     entry->line_text_length = span->line_text_length;
+}
+
+static void srcmap_add_line_entry(RxcpSrcMap *map,
+                                  size_t generated_start,
+                                  size_t generated_end,
+                                  const char *file_name,
+                                  int line,
+                                  int column,
+                                  const char *line_text,
+                                  size_t line_text_length) {
+    RxcpSrcMapSpan span;
+
+    if (!map || !file_name || line < 0 || column < 0) return;
+    if (generated_end <= generated_start) return;
+
+    memset(&span, 0, sizeof(span));
+    span.generated_start = generated_start;
+    span.file_name = file_name;
+    span.line = line;
+    span.column = column;
+    span.length = (int)(generated_end - generated_start);
+    span.line_text = line_text;
+    span.line_text_length = line_text_length;
+    srcmap_add_entry(map, &span, generated_end);
+}
+
+static void srcmap_open_line_span(RxcpSrcMapLineSpan *span,
+                                  size_t generated_start,
+                                  const char *file_name,
+                                  int line,
+                                  int column,
+                                  const char *line_text,
+                                  size_t line_text_length) {
+    if (!span || span->active) return;
+    if (!file_name || line < 0 || column < 0) return;
+    if (!line_text) return;
+    span->active = 1;
+    span->generated_start = generated_start;
+    span->file_name = file_name;
+    span->line = line;
+    span->column = column;
+    span->line_text = line_text;
+    span->line_text_length = line_text_length;
+}
+
+static void srcmap_close_line_span(RxcpSrcMap *map,
+                                   RxcpSrcMapLineSpan *span,
+                                   size_t generated_end) {
+    if (!span || !span->active) return;
+    srcmap_add_line_entry(map,
+                          span->generated_start,
+                          generated_end,
+                          span->file_name,
+                          span->line,
+                          span->column,
+                          span->line_text,
+                          span->line_text_length);
+    memset(span, 0, sizeof(*span));
 }
 
 static int srcmap_reserve_spans(RxcpSrcMapSpan **spans, size_t *capacity, size_t count) {
@@ -410,6 +485,8 @@ static int srcmap_decode_line(Context *context,
                               int is_relative,
                               const char *current_file,
                               int *current_line,
+                              int *current_column,
+                              int *line_column,
                               const char **current_line_text,
                               size_t *current_line_text_length,
                               size_t *directive_end,
@@ -440,6 +517,8 @@ static int srcmap_decode_line(Context *context,
     *current_line = new_line;
     *current_line_text = 0;
     *current_line_text_length = 0;
+    *current_column = 0;
+    if (line_column) *line_column = 0;
     end = number_end + 1;
 
     if (end < length && buffer[end] == '"') {
@@ -480,6 +559,7 @@ static int srcmap_decode_column(Context *context,
                                 int number_value,
                                 int is_relative,
                                 int *current_column,
+                                int *line_column,
                                 size_t *directive_end,
                                 int marker_line,
                                 int marker_column,
@@ -501,6 +581,7 @@ static int srcmap_decode_column(Context *context,
     }
 
     *current_column = new_column;
+    if (line_column) *line_column = new_column;
     if (directive_end) *directive_end = number_end + 1;
     return 1;
 }
@@ -606,6 +687,7 @@ static int srcmap_decode_directive(Context *context,
                                    const char **current_file,
                                    int *current_line,
                                    int *current_column,
+                                   int *line_column,
                                    const char **current_line_text,
                                    size_t *current_line_text_length,
                                    RxcpSrcMapSpan **spans,
@@ -713,6 +795,8 @@ static int srcmap_decode_directive(Context *context,
                                   is_relative,
                                   *current_file,
                                   current_line,
+                                  current_column,
+                                  line_column,
                                   current_line_text,
                                   current_line_text_length,
                                   directive_end,
@@ -729,6 +813,7 @@ static int srcmap_decode_directive(Context *context,
                                     number_value,
                                     is_relative,
                                     current_column,
+                                    line_column,
                                     directive_end,
                                     marker_line,
                                     marker_column,
@@ -768,8 +853,16 @@ static int srcmap_decode_directive(Context *context,
 }
 
 int rxcp_srcmap_preprocess(Context *context, char **cleaned_out, size_t *cleaned_len_out) {
+    return rxcp_srcmap_preprocess_with_raw_map(context, cleaned_out, cleaned_len_out, 0);
+}
+
+int rxcp_srcmap_preprocess_with_raw_map(Context *context,
+                                        char **cleaned_out,
+                                        size_t *cleaned_len_out,
+                                        RxcpSrcMapRawMapping *mapping_out) {
     RxcpSrcMap *map;
     RxcpSrcMapSpan *spans;
+    RxcpSrcMapLineSpan line_span;
     const char *current_file;
     const char *current_line_text;
     const char *marker_line_start;
@@ -781,9 +874,13 @@ int rxcp_srcmap_preprocess(Context *context, char **cleaned_out, size_t *cleaned
     size_t span_count;
     size_t span_capacity;
     size_t directive_end;
+    size_t marker_pos;
     size_t current_line_text_length;
+    size_t *cleaned_to_raw_start;
+    size_t *cleaned_to_raw_end;
     int current_line;
     int current_column;
+    int line_column;
     int raw_line;
     int raw_column;
     int marker_line;
@@ -792,6 +889,7 @@ int rxcp_srcmap_preprocess(Context *context, char **cleaned_out, size_t *cleaned
 
     if (cleaned_out) *cleaned_out = 0;
     if (cleaned_len_out) *cleaned_len_out = 0;
+    if (mapping_out) memset(mapping_out, 0, sizeof(*mapping_out));
     if (!context || !context->buff_start || !context->buff_end) return -1;
 
     buffer = context->buff_start;
@@ -801,6 +899,7 @@ int rxcp_srcmap_preprocess(Context *context, char **cleaned_out, size_t *cleaned
     current_file = srcmap_add_file(map, context->file_name ? context->file_name : "<unknown>");
     current_line = 0;
     current_column = 0;
+    line_column = 0;
     current_line_text = 0;
     current_line_text_length = 0;
     spans = 0;
@@ -809,29 +908,62 @@ int rxcp_srcmap_preprocess(Context *context, char **cleaned_out, size_t *cleaned
 
     cleaned = malloc(length + 1);
     if (!cleaned) RX_PANIC_OOM("malloc rxc source map cleaned buffer", length + 1, context->file_name);
+    cleaned_to_raw_start = 0;
+    cleaned_to_raw_end = 0;
+    if (mapping_out) {
+        cleaned_to_raw_start = malloc(sizeof(size_t) * (length + 1));
+        cleaned_to_raw_end = malloc(sizeof(size_t) * (length + 1));
+        if (!cleaned_to_raw_start || !cleaned_to_raw_end) {
+            free(cleaned_to_raw_start);
+            free(cleaned_to_raw_end);
+            free(cleaned);
+            rxcp_srcmap_free(map);
+            RX_PANIC_OOM("malloc rxc source map raw mapping", sizeof(size_t) * (length + 1), context->file_name);
+        }
+    }
 
     read_pos = 0;
     write_pos = 0;
+    memset(&line_span, 0, sizeof(line_span));
     raw_line = 0;
     raw_column = 0;
     marker_line_start = buffer;
 
     while (read_pos < length) {
         if (buffer[read_pos] != '@') {
+            if (buffer[read_pos] == '\n' || buffer[read_pos] == '\r') {
+                srcmap_close_line_span(map, &line_span, write_pos);
+            } else if (span_count == 0) {
+                srcmap_open_line_span(&line_span,
+                                      write_pos,
+                                      current_file,
+                                      current_line,
+                                      line_column,
+                                      current_line_text,
+                                      current_line_text_length);
+            }
+            if (mapping_out) {
+                cleaned_to_raw_start[write_pos] = read_pos;
+                cleaned_to_raw_end[write_pos] = read_pos + 1;
+            }
             cleaned[write_pos++] = buffer[read_pos];
             if (buffer[read_pos] == '\n') {
                 raw_line++;
                 raw_column = 0;
+                line_column = 0;
                 marker_line_start = buffer + read_pos + 1;
             } else {
                 raw_column++;
+                if (buffer[read_pos] != '\r') line_column++;
             }
             read_pos++;
             continue;
         }
 
+        srcmap_close_line_span(map, &line_span, write_pos);
         marker_line = raw_line;
         marker_column = raw_column;
+        marker_pos = read_pos;
         directive_end = read_pos;
         escaped_char = 0;
         if (!srcmap_decode_directive(context,
@@ -843,6 +975,7 @@ int rxcp_srcmap_preprocess(Context *context, char **cleaned_out, size_t *cleaned
                                      &current_file,
                                      &current_line,
                                      &current_column,
+                                     &line_column,
                                      &current_line_text,
                                      &current_line_text_length,
                                      &spans,
@@ -854,6 +987,8 @@ int rxcp_srcmap_preprocess(Context *context, char **cleaned_out, size_t *cleaned
                                      marker_column,
                                      marker_line_start)) {
             free(spans);
+            free(cleaned_to_raw_start);
+            free(cleaned_to_raw_end);
             free(cleaned);
             rxcp_srcmap_free(map);
             return -1;
@@ -868,8 +1003,25 @@ int rxcp_srcmap_preprocess(Context *context, char **cleaned_out, size_t *cleaned
                            &marker_line_start);
         read_pos = directive_end;
 
-        if (escaped_char) cleaned[write_pos++] = escaped_char;
+        if (escaped_char) {
+            if (span_count == 0) {
+                srcmap_open_line_span(&line_span,
+                                      write_pos,
+                                      current_file,
+                                      current_line,
+                                      line_column,
+                                      current_line_text,
+                                      current_line_text_length);
+            }
+            if (mapping_out) {
+                cleaned_to_raw_start[write_pos] = marker_pos;
+                cleaned_to_raw_end[write_pos] = directive_end;
+            }
+            cleaned[write_pos++] = escaped_char;
+            line_column++;
+        }
     }
+    srcmap_close_line_span(map, &line_span, write_pos);
 
     if (span_count > 0) {
         RxcpSrcMapSpan *span;
@@ -883,17 +1035,29 @@ int rxcp_srcmap_preprocess(Context *context, char **cleaned_out, size_t *cleaned
                                  span->marker_line_start,
                                  buffer + length);
         free(spans);
+        free(cleaned_to_raw_start);
+        free(cleaned_to_raw_end);
         free(cleaned);
         rxcp_srcmap_free(map);
         return -1;
     }
 
     cleaned[write_pos] = 0;
+    if (mapping_out) {
+        cleaned_to_raw_start[write_pos] = length;
+        cleaned_to_raw_end[write_pos] = length;
+    }
     free(spans);
     if (context->srcmap) rxcp_srcmap_free(context->srcmap);
     context->srcmap = map;
     if (cleaned_out) *cleaned_out = cleaned;
     if (cleaned_len_out) *cleaned_len_out = write_pos;
+    if (mapping_out) {
+        mapping_out->cleaned_to_raw_start = cleaned_to_raw_start;
+        mapping_out->cleaned_to_raw_end = cleaned_to_raw_end;
+        mapping_out->cleaned_len = write_pos;
+        mapping_out->raw_len = length;
+    }
     return 0;
 }
 
@@ -967,7 +1131,7 @@ int rxcp_srcmap_lookup(Context *context,
         entry = &map->entries[i];
         if (offset < entry->generated_start || offset >= entry->generated_end) continue;
         width = entry->generated_end - entry->generated_start;
-        if (!best || width < best_width) {
+        if (!best || width <= best_width) {
             best = entry;
             best_width = width;
         }

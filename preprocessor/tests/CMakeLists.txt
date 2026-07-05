@@ -27,6 +27,45 @@ add_test(NAME rxpp_srcmap
              -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_srcmap.cmake
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+if (ENABLE_PARSER_MODE)
+    add_test(NAME rxpp_sh_srcmap
+             COMMAND ${CMAKE_COMMAND}
+                 -DRXPP_BIN=$<TARGET_FILE:rxpp>
+                 -DRXPP_SH_BIN=$<TARGET_FILE:rxpp_sh>
+                 -DPARSER_TESTER_BIN=$<TARGET_FILE:parser_tester>
+                 -DMACLIB_FILE=${CMAKE_SOURCE_DIR}/preprocessor/maclib.rexx
+                 -DDUMP_AST_FILE=${CMAKE_SOURCE_DIR}/compiler/tests/highlighting/dump_ast.txt
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/rxpp_sh_srcmap
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_sh_srcmap.cmake
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(rxpp_sh_srcmap PROPERTIES LABELS "preprocessor;syntax_highlighting;srcmap")
+
+    add_test(NAME rxpp_sh_default_lookup
+             COMMAND ${CMAKE_COMMAND}
+                 -DRXPP_BIN=$<TARGET_FILE:rxpp>
+                 -DRXPP_SH_BIN=$<TARGET_FILE:rxpp_sh>
+                 -DPARSER_TESTER_BIN=$<TARGET_FILE:parser_tester>
+                 -DMACLIB_FILE=${CMAKE_SOURCE_DIR}/preprocessor/maclib.rexx
+                 -DDUMP_AST_FILE=${CMAKE_SOURCE_DIR}/compiler/tests/highlighting/dump_ast.txt
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/rxpp_sh_default_lookup
+                 -DRXPP_SH_USE_ENV=OFF
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_sh_srcmap.cmake
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(rxpp_sh_default_lookup PROPERTIES LABELS "preprocessor;syntax_highlighting;srcmap")
+
+    add_test(NAME rxpp_sh_tokens
+             COMMAND ${CMAKE_COMMAND}
+                 -DRXPP_BIN=$<TARGET_FILE:rxpp>
+                 -DRXPP_SH_BIN=$<TARGET_FILE:rxpp_sh>
+                 -DPARSER_TESTER_BIN=$<TARGET_FILE:parser_tester>
+                 -DMACLIB_FILE=${CMAKE_SOURCE_DIR}/preprocessor/maclib.rexx
+                 -DDUMP_AST_FILE=${CMAKE_SOURCE_DIR}/compiler/tests/highlighting/dump_ast.txt
+                 -DWORK=${CMAKE_CURRENT_BINARY_DIR}/rxpp_sh_tokens
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_sh_tokens.cmake
+             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(rxpp_sh_tokens PROPERTIES LABELS "preprocessor;syntax_highlighting")
+endif()
+
 add_test(NAME rxpp_diagnostics
          COMMAND ${CMAKE_COMMAND}
              -DRXPP_BIN=$<TARGET_FILE:rxpp>
