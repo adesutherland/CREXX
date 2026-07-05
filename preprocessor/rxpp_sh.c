@@ -347,6 +347,28 @@ static char *rxpp_sh_shell_quote(const char *value) {
     const char *cursor;
 
     if (!value) value = "";
+#ifdef _WIN32
+    len = 2;
+    cursor = value;
+    while (*cursor) {
+        len += (*cursor == '"') ? 2 : 1;
+        cursor++;
+    }
+
+    quoted = malloc(len + 1);
+    if (!quoted) return 0;
+
+    out = quoted;
+    *out++ = '"';
+    cursor = value;
+    while (*cursor) {
+        if (*cursor == '"') *out++ = '\\';
+        *out++ = *cursor++;
+    }
+    *out++ = '"';
+    *out = 0;
+    return quoted;
+#else
     len = 2;
     cursor = value;
     while (*cursor) {
@@ -374,20 +396,47 @@ static char *rxpp_sh_shell_quote(const char *value) {
     *out++ = '\'';
     *out = 0;
     return quoted;
+#endif
 }
 
 static int rxpp_sh_make_temp_path(const char *prefix, char *path, size_t path_size) {
+    const char *candidates[5];
+    size_t candidate_count;
+    size_t i;
     const char *tmpdir;
+    size_t tmpdir_len;
+    const char *separator;
     int fd;
 
-    tmpdir = getenv("TMPDIR");
-    if (!tmpdir || tmpdir[0] == 0) tmpdir = "/tmp";
-    if (snprintf(path, path_size, "%s/%s.XXXXXX", tmpdir, prefix) >= (int)path_size) return -1;
+    candidate_count = 0;
+#ifdef _WIN32
+    candidates[candidate_count++] = getenv("TEMP");
+    candidates[candidate_count++] = getenv("TMP");
+    candidates[candidate_count++] = getenv("TMPDIR");
+    candidates[candidate_count++] = ".";
+#else
+    candidates[candidate_count++] = getenv("TMPDIR");
+    candidates[candidate_count++] = "/tmp";
+    candidates[candidate_count++] = ".";
+#endif
 
-    fd = mkstemp(path);
-    if (fd < 0) return -1;
-    close(fd);
-    return 0;
+    for (i = 0; i < candidate_count; i++) {
+        tmpdir = candidates[i];
+        if (!tmpdir || tmpdir[0] == 0) continue;
+        tmpdir_len = strlen(tmpdir);
+        separator = (tmpdir_len > 0 &&
+                     (tmpdir[tmpdir_len - 1] == '/' || tmpdir[tmpdir_len - 1] == '\\')) ? "" : "/";
+        if (snprintf(path, path_size, "%s%s%s.XXXXXX", tmpdir, separator, prefix) >= (int)path_size) continue;
+
+        fd = mkstemp(path);
+        if (fd >= 0) {
+            close(fd);
+            return 0;
+        }
+    }
+
+    if (path_size > 0) path[0] = 0;
+    return -1;
 }
 
 static int rxpp_sh_write_file(const char *path, const char *text) {
@@ -921,7 +970,12 @@ static int rxpp_sh_run_rxpp(const char *input_path, const char *output_path) {
     }
     snprintf(command,
              command_len,
-             "%s rxprecomp -I %s -o %s -m %s >/dev/null 2>&1",
+             "%s rxprecomp -I %s -o %s -m %s"
+#ifdef _WIN32
+             " >NUL 2>NUL",
+#else
+             " >/dev/null 2>&1",
+#endif
              rxpp_q,
              input_q,
              output_q,
