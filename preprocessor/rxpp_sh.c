@@ -28,6 +28,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <errno.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#endif
 
 #include "dslsyntax_common.h"
 #include "dslsyntax_log.h"
@@ -340,21 +348,28 @@ static CB_NodeType rxpp_sh_operator_type(const char *source, size_t pos) {
     }
 }
 
-static char *rxpp_sh_shell_quote(const char *value) {
+static char *rxpp_sh_quote_windows_arg(const char *value) {
+#ifdef _WIN32
     char *quoted;
     char *out;
     size_t len;
     const char *cursor;
+    int needs_quotes;
 
     if (!value) value = "";
-#ifdef _WIN32
-    len = 2;
+
+    needs_quotes = value[0] == 0;
     cursor = value;
     while (*cursor) {
-        len += (*cursor == '"') ? 2 : 1;
+        if (*cursor == ' ' || *cursor == '\t' || *cursor == '"') {
+            needs_quotes = 1;
+            break;
+        }
         cursor++;
     }
+    if (!needs_quotes) return strdup(value);
 
+    len = strlen(value) * 2 + 3;
     quoted = malloc(len + 1);
     if (!quoted) return 0;
 
@@ -362,40 +377,168 @@ static char *rxpp_sh_shell_quote(const char *value) {
     *out++ = '"';
     cursor = value;
     while (*cursor) {
-        if (*cursor == '"') *out++ = '\\';
+        size_t backslashes = 0;
+        size_t i;
+
+        while (cursor[backslashes] == '\\') backslashes++;
+        if (cursor[backslashes] == '"') {
+            for (i = 0; i < backslashes; i++) {
+                *out++ = '\\';
+                *out++ = '\\';
+            }
+            *out++ = '\\';
+            *out++ = '"';
+            cursor += backslashes + 1;
+            continue;
+        }
+        if (cursor[backslashes] == 0) {
+            for (i = 0; i < backslashes; i++) {
+                *out++ = '\\';
+                *out++ = '\\';
+            }
+            cursor += backslashes;
+            break;
+        }
+        for (i = 0; i < backslashes; i++) *out++ = '\\';
+        cursor += backslashes;
         *out++ = *cursor++;
     }
     *out++ = '"';
     *out = 0;
     return quoted;
 #else
-    len = 2;
-    cursor = value;
-    while (*cursor) {
-        len += (*cursor == '\'') ? 4 : 1;
-        cursor++;
-    }
+    return strdup(value ? value : "");
+#endif
+}
 
-    quoted = malloc(len + 1);
+static char *rxpp_sh_build_windows_command_line(char *const *argv) {
+#ifdef _WIN32
+    char **quoted;
+    char *command;
+    size_t argc;
+    size_t total;
+    size_t i;
+
+    if (!argv || !argv[0]) return 0;
+
+    argc = 0;
+    while (argv[argc]) argc++;
+
+    quoted = calloc(argc, sizeof(char *));
     if (!quoted) return 0;
 
-    out = quoted;
-    *out++ = '\'';
-    cursor = value;
-    while (*cursor) {
-        if (*cursor == '\'') {
-            *out++ = '\'';
-            *out++ = '\\';
-            *out++ = '\'';
-            *out++ = '\'';
-        } else {
-            *out++ = *cursor;
+    total = 1;
+    for (i = 0; i < argc; i++) {
+        quoted[i] = rxpp_sh_quote_windows_arg(argv[i]);
+        if (!quoted[i]) {
+            while (i > 0) free(quoted[--i]);
+            free(quoted);
+            return 0;
         }
-        cursor++;
+        total += strlen(quoted[i]) + 1;
     }
-    *out++ = '\'';
-    *out = 0;
-    return quoted;
+
+    command = malloc(total);
+    if (!command) {
+        for (i = 0; i < argc; i++) free(quoted[i]);
+        free(quoted);
+        return 0;
+    }
+
+    command[0] = 0;
+    for (i = 0; i < argc; i++) {
+        if (i > 0) strcat(command, " ");
+        strcat(command, quoted[i]);
+        free(quoted[i]);
+    }
+    free(quoted);
+    return command;
+#else
+    (void)argv;
+    return 0;
+#endif
+}
+
+static int rxpp_sh_run_process_silent(char *const *argv) {
+#ifdef _WIN32
+    STARTUPINFOA startup_info;
+    PROCESS_INFORMATION process_info;
+    HANDLE null_handle;
+    DWORD exit_code;
+    char *command_line;
+    int result;
+
+    if (!argv || !argv[0]) return -1;
+
+    command_line = rxpp_sh_build_windows_command_line(argv);
+    if (!command_line) return -1;
+
+    null_handle = CreateFileA("NUL",
+                              GENERIC_READ | GENERIC_WRITE,
+                              FILE_SHARE_READ | FILE_SHARE_WRITE,
+                              NULL,
+                              OPEN_EXISTING,
+                              FILE_ATTRIBUTE_NORMAL,
+                              NULL);
+    if (null_handle == INVALID_HANDLE_VALUE) {
+        free(command_line);
+        return -1;
+    }
+    SetHandleInformation(null_handle, HANDLE_FLAG_INHERIT, HANDLE_FLAG_INHERIT);
+
+    ZeroMemory(&startup_info, sizeof(startup_info));
+    ZeroMemory(&process_info, sizeof(process_info));
+    startup_info.cb = sizeof(startup_info);
+    startup_info.dwFlags = STARTF_USESTDHANDLES;
+    startup_info.hStdInput = null_handle;
+    startup_info.hStdOutput = null_handle;
+    startup_info.hStdError = null_handle;
+
+    result = CreateProcessA(NULL,
+                            command_line,
+                            NULL,
+                            NULL,
+                            TRUE,
+                            CREATE_NO_WINDOW,
+                            NULL,
+                            NULL,
+                            &startup_info,
+                            &process_info);
+    free(command_line);
+    CloseHandle(null_handle);
+    if (!result) return -1;
+
+    WaitForSingleObject(process_info.hProcess, INFINITE);
+    exit_code = 1;
+    GetExitCodeProcess(process_info.hProcess, &exit_code);
+    CloseHandle(process_info.hThread);
+    CloseHandle(process_info.hProcess);
+    return exit_code == 0 ? 0 : -1;
+#else
+    pid_t pid;
+    int status;
+
+    if (!argv || !argv[0]) return -1;
+
+    pid = fork();
+    if (pid == 0) {
+        int null_fd = open("/dev/null", O_WRONLY);
+        if (null_fd >= 0) {
+            dup2(null_fd, STDOUT_FILENO);
+            dup2(null_fd, STDERR_FILENO);
+            if (null_fd > STDERR_FILENO) close(null_fd);
+        }
+        execvp(argv[0], argv);
+        _exit(127);
+    }
+    if (pid < 0) return -1;
+
+    while (waitpid(pid, &status, 0) < 0) {
+        if (errno != EINTR) return -1;
+    }
+
+    if (!WIFEXITED(status)) return -1;
+    return WEXITSTATUS(status) == 0 ? 0 : -1;
 #endif
 }
 
@@ -936,60 +1079,26 @@ static const char *rxpp_sh_select_maclib(void) {
 static int rxpp_sh_run_rxpp(const char *input_path, const char *output_path) {
     const char *rxpp_bin;
     const char *maclib_path;
-    char *rxpp_q;
-    char *input_q;
-    char *output_q;
-    char *maclib_q;
-    char *command;
-    size_t command_len;
-    int result;
+    char *argv[] = {
+            0,
+            (char *)"rxprecomp",
+            (char *)"-I",
+            0,
+            (char *)"-o",
+            0,
+            (char *)"-m",
+            0,
+            0
+    };
 
     rxpp_bin = rxpp_sh_select_rxpp();
     maclib_path = rxpp_sh_select_maclib();
 
-    rxpp_q = rxpp_sh_shell_quote(rxpp_bin);
-    input_q = rxpp_sh_shell_quote(input_path);
-    output_q = rxpp_sh_shell_quote(output_path);
-    maclib_q = rxpp_sh_shell_quote(maclib_path);
-    if (!rxpp_q || !input_q || !output_q || !maclib_q) {
-        free(rxpp_q);
-        free(input_q);
-        free(output_q);
-        free(maclib_q);
-        return -1;
-    }
-
-    command_len = strlen(rxpp_q) + strlen(input_q) + strlen(output_q) + strlen(maclib_q) + 96;
-    command = malloc(command_len);
-    if (!command) {
-        free(rxpp_q);
-        free(input_q);
-        free(output_q);
-        free(maclib_q);
-        return -1;
-    }
-    snprintf(command,
-             command_len,
-             "%s rxprecomp -I %s -o %s -m %s"
-#ifdef _WIN32
-             " >NUL 2>NUL",
-#else
-             " >/dev/null 2>&1",
-#endif
-             rxpp_q,
-             input_q,
-             output_q,
-             maclib_q);
-
-    result = system(command);
-
-    free(command);
-    free(rxpp_q);
-    free(input_q);
-    free(output_q);
-    free(maclib_q);
-
-    return result == 0 ? 0 : -1;
+    argv[0] = (char *)rxpp_bin;
+    argv[3] = (char *)input_path;
+    argv[5] = (char *)output_path;
+    argv[7] = (char *)maclib_path;
+    return rxpp_sh_run_process_silent(argv);
 }
 
 static void rxpp_sh_set_error_tree(CodeBuffer *cb, const char *message) {
