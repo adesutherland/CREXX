@@ -13,7 +13,7 @@ targeted compiler toolchains for Linux, macOS and Windows.
 \small
 \obeylines \splice{rxcpack -h | sed 's/\&/\\\&/g'}
 \end{terminaloutput}
-\fontspec{TeX Gyre Pagella}
+\fontspec{Minion Pro}
 
 ## Source Code
 

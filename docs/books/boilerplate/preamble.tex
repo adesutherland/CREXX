@@ -36,7 +36,12 @@
 \fancyhead[RO]{\normalfont \nouppercase{\rightmark}}  % Chapter title on right pages, aligned right
 \fancyhead[LE]{\normalfont \nouppercase{\leftmark}}   % Section title on left pages, aligned right
 
-\fancyfoot[C]{\thepage}
+%% \fancyfoot[C]{\thepage}
+
+% Page numbers on the outside
+\fancyfoot[LE]{\thepage}   % Left on Even pages
+\fancyfoot[RO]{\thepage}   % Right on Odd pages
+
 
 % avoid headers on empty pages
 \usepackage{emptypage}
@@ -83,7 +88,7 @@
 \setlength{\parindent}{0pt}
 \usepackage{enumitem}
 \usepackage{underscore}
-\usepackage{babel}
+\usepackage[english]{babel}
 \usepackage{graphicx}
 \usepackage{array}
 % \usepackage{tabularx}
@@ -100,9 +105,26 @@
 \usepackage{wrapfig}
 \usepackage{multicol}
 \usepackage[CJK]{ucharclasses}
-\usepackage[comma]{natbib}           % CSLI Pubs favored bibliography package.
-%% \bibliographystyle{cslipubs-natbib}  % CSLI Pubs bibliography format.
-\bibliographystyle{plainnat}  % CSLI Pubs bibliography format.
+
+\usepackage[
+  backend=biber,
+  style=authoryear,
+  maxbibnames=99,
+  giveninits=true,
+  doi=false,
+  isbn=true,
+  url=false,
+  eprint=false
+]{biblatex}
+
+\addbibresource{../../../boilerplate/bibliography.bib}
+
+\renewcommand*{\mkbibnamefamily}[1]{\textsc{#1}}
+
+%% \usepackage[comma]{natbib}
+%% \bibliographystyle{abbrvnat}
+
+
 % defines for consistent use
 \newcommand{\crexx}{\textsc{crexx}}
 \newcommand{\rexx}{R\textsc{exx}}
@@ -116,8 +138,8 @@
   {\ifx\relax#1\else
     \ifx-#1--{}\else#1\fi
     \expandafter\msdhelper\fi}
-  \newcommand{\doublehyphen}{\mbox{\msd{``-~-''}}}
-  \newcommand{\doublehyphenunquoted}{\mbox{\msd{-~-}}}
+\newcommand{\doublehyphen}{\mbox{\msd{``-~-''}}}
+\newcommand{\doublehyphenunquoted}{\mbox{\msd{-~-}}}
 
 %% the font used for tables
 \AtBeginEnvironment{longtable}{\fontspec{Avenir Next}\small}
@@ -214,12 +236,32 @@ the#1\endcsname\quad}}
   {}
 
 %% use the heading fonts in the TOC
-\renewcommand{\cftpartfont}{\sffamily}
-\renewcommand{\cftchapfont}{\sffamily} % Matches section font
-\renewcommand{\cftchappagefont}{\sffamily} % Matches section font
-\renewcommand{\cftsubsecfont}{\sffamily} % Example for subsections
-\renewcommand{\cftsubsubsecfont}{\sffamily} % Example for subsections
-\renewcommand{\cftsecfont}{\sffamily} % Matches section font
+%% \renewcommand{\cftpartfont}{\sffamily}
+%% \renewcommand{\cftchapfont}{\sffamily} % Matches section font
+%% \renewcommand{\cftchappagefont}{\sffamily} % Matches section font
+%% \renewcommand{\cftsubsecfont}{\sffamily} % Example for subsections
+%% \renewcommand{\cftsubsubsecfont}{\sffamily} % Example for subsections
+%% \renewcommand{\cftsecfont}{\sffamily} % Matches section font
+
+\renewcommand{\cftpartfont}{\headingfont}
+\renewcommand{\cftchapfont}{\headingfont} % Matches section font
+\renewcommand{\cftchappagefont}{\headingfont} % Matches section font
+\renewcommand{\cftsubsecfont}{\headingfont} % Example for subsections
+\renewcommand{\cftsubsubsecfont}{\headingfont} % Example for subsections
+\renewcommand{\cftsecfont}{\headingfont} % Matches section font
+
+\renewcommand{\cfttoctitlefont}{%
+  \headingfont
+  \fontsize{28}{32}\selectfont
+  \bfseries
+  \color{Heading}%
+}
+
+\renewcommand{\cftaftertoctitle}{%
+  \\[0.9em]%
+  {\color{gray!45}\rule{0.56\textwidth}{0.6pt}}%
+  \vspace{1.8em}%
+}
 
 \titleformat{name=\chapter,numberless}[display]
   {\thispagestyle{plain}\normalfont}

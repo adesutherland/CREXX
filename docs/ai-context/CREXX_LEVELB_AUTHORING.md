@@ -376,10 +376,10 @@ Recent observations from the RexxScript evaluator refactor:
   older beta 3 WIP build shows stale receiver copyback behavior, split through a
   local as a temporary diagnostic workaround:
 
-  ```rexx
+```rexx
   next_root = rebalance(root)
   root = next_root
-  ```
+```
 
   When a helper naturally needs to update a caller-owned slot, prefer an
   explicit reference output location such as `reference root` or

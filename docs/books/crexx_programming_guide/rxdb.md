@@ -17,7 +17,7 @@ high-level as well as low-level problems.
 \small
 \obeylines \splice{rxdb -h | sed 's/\&/\\\&/g'}
 \end{terminaloutput}
-\fontspec{TeX Gyre Pagella}
+\fontspec{Minion Pro}
 
 ## Runtime Options
 

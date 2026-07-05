@@ -10,7 +10,7 @@
 \small
 \obeylines \splice{rxlink -h | sed 's/\&/\\\&/g'}
 \end{terminaloutput}
-\fontspec{TeX Gyre Pagella}
+\fontspec{Minion Pro}
 
 ## What It Produces
 

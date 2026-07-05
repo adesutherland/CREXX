@@ -22,10 +22,23 @@ The top level of the library is:
 
 \begin{shaded}
 The current Release status of this Standard Library is that it is preliminary reference material rather than a part of the Release 1 beta baseline language contract. The user has to verify components, modules and drivers before
-depending on these API's. All documented API's have implementations - planned functionality in here is clearly marked.
+depending on these API's. All documented API's have implementations - planned functionality in here is clearly marked. Although great care will be taken to keep the API contracts stable, there is, however, no guarantee for that at this tiime.
 \end{shaded}
 
 [^java]: NetRexx types are still Java VM types;
+
+## Goals
+
+This library has a number of explicit goals:
+
+- Familiarity: it is reasonable to expect that the programmer has experience with several class libraries, and as such there can be expectations of what is included in a standard class library; this is also the reason that sometimes several variants of the same collection classes are offered here. The core Rexx API's are available in both procedural and object-oriented notation;
+
+- Ease of reference: a class should be findable where the programmer first looks for it; the information on the class API should be to the point and complete;
+
+- Fit for complex purposes: Design of class structures for the application domain is best left to the application designer; this library aims to offer working and quickly applicable solutions for the building blocks of application systems, like parsing, data access like json, database or network access. A simple parser is easily written in the core cRexx language; the special format parsers like the beforementioned offer correctness and performance for some of these deceptively complex protocols, a generic ODBC driver for a large range of relational databases is an asset for every data oriented application;
+
+- Performance: the aim has been to provide implementations of classes which have the highest level of performance possible; this to complement the work done on compiler optimisation, inlining of code, profiling and benchmarking. The emphasis is on native cRexx implementations which are optimally suited to profit of this work. This is the reason that there is less emphasis on using available libraries for other programming environments. Where needed, however, native variants of implementations are offered.
+
 
 ## Note about implementation
 

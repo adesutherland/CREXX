@@ -34,7 +34,7 @@ When the command line argument -h is specified the options are shown:\\
 \small
 \obeylines \splice{rxdas -h | sed 's/\&/\\\&/g'}
 \end{terminaloutput}
-\fontspec{TeX Gyre Pagella}
+\fontspec{Minion Pro}
 
 ## Example
 

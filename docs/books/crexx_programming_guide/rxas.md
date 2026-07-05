@@ -43,7 +43,7 @@ When the command line argument -h is specified the options are shown:
 \small
 \obeylines \splice{rxas -h | sed 's/\&/\\\&/g'}
 \end{terminaloutput}
-\fontspec{TeX Gyre Pagella}
+\fontspec{Minion Pro}
 
 ## Optimizer
 
