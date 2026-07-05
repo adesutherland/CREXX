@@ -3,11 +3,16 @@
 The `crexx` toolchain implements its Standard Libraries and Built-In Functions (BIFs) using a hybrid approach. Some core functions are implemented natively in C via the **cREXX Plugin Architecture (RXPA)**, while many standard library functions (like those in Classic REXX) are actually implemented in cREXX itself.
 
 Libraries are housed in the `lib/` directory, which is divided into domains like:
+
 - `lib/rxfnsb/` (Classic REXX Built-In Functions for Level B)
+
 - `lib/rxfnsg/` (Level G class-shaped general-purpose interfaces)
+
 - `lib/rxfnsc/` (shared Level C/RexxScript runtime foundation, currently
   housing the Rexx value, stem, and variable-pool classes)
+
 - `lib/rxmath/` (Math extensions)
+
 - `lib/plugins/` (General-purpose extensions like `fileio`, `regex`, `strings`, `socket`, etc.)
 
 RexxScript is a first-class runtime product under `rexxscript/`, not a Level B
@@ -19,6 +24,7 @@ facade for callers that still use the original prototype API. The `crexx`
 driver includes `rexxscript.rxbin` in its default runtime set; direct VM runs
 using the `REXXSCRIPT` compiler exit or compatibility `evaluate()` surface must
 load `rexxscript.rxbin` at runtime in addition to `library.rxbin`.
+
 The same source directory also builds the standalone `bin/rexxscript`
 executable, which packages a file runner around an isolated
 `.rexxscriptevaluator()` instance.
@@ -355,13 +361,18 @@ abs: procedure = .string
 ```
 
 **Key Features:**
+
 1. **Namespaces:** Functions must declare `namespace rxfnsb expose <function_name>` so they correctly bind into the Standard Library space that user scripts import.
+
 2. **Inline Assembly (`assembler`)**: When low-level access is required (such as fetching the current system time in `date.crexx`), cREXX BIFs can drop down into inline bytecode using the `assembler` keyword.
+
 3. **Compilation:** These `.crexx` files are compiled into `.rxbin` bytecodes during the build process and are packaged or shipped exactly like user-compiled binaries.
+
 4. **Explicit Late Load:** `loadmodule(path) -> .int` wraps the VM's
    `METALOADMODULE` instruction. Use it when Rexx code deliberately loads a
    `.rxbin` or `.rxplugin` provider before calling imports supplied by that
    file. The VM relinks immediately after a successful load.
+
 5. **ADDRESS Public Helpers:** `addressenv(name) -> .addressenvironment`
    returns the cached environment object, including `environment_name()` and
    `environment_id()` for the traditional `SYSTEM`/`PATH` environments and for
@@ -375,7 +386,9 @@ abs: procedure = .string
 For functions requiring native performance or access to C-level system libraries (like cryptography or sockets), `crexx` provides the RXPA framework. This macro-driven C API (defined in `rxpa/crexxpa.h` and `rxpa/rxpa.h`) allows developers to write REXX-callable functions without interacting directly with the VM's internal `stack_frame` or `value` structures.
 
 Plugins can be compiled in two ways:
+
 1. **Dynamic Plugins (`.rxplugin`)**: Recommended for user extensions. They are discovered and loaded at runtime using the same search paths as regular `.crexx` modules.
+
 2. **Static Plugins**: Built directly into the `crexx` binaries. These are typically reserved for core Standard Libraries to guarantee they are always available.
 
 ## 3. Writing a Native Function
@@ -383,18 +396,26 @@ Plugins can be compiled in two ways:
 A native C function meant to be exposed to REXX is defined using the `PROCEDURE` macro. 
 
 ### Argument Access and Returns
+
 The VM passes arguments as opaque handles mapped to internal VM registers. The RXPA headers provide macros to extract native C types from these registers and to write results back:
+
 - `NUM_ARGS`: The count of arguments passed from REXX.
+
 - `ARG(n)`: Retrieves the opaque handle for the *n*th argument.
+
 - `GETINT()`, `GETFLOAT()`, `GETSTRING()`: Extracts the native C value from a register handle.
+
 - `SETINT()`, `SETFLOAT()`, `SETSTRING()`: Writes a native C value into a target register.
+
 - `SETNATIVEPAYLOAD()` / `GETNATIVEPAYLOAD()`: Attach or read a hidden
   native binary payload for object-shaped native values. Use this only with a
   clear copy/finalizer contract; ordinary Rexx code still sees an object value,
   not a C pointer.
+
 - `RETURN`: The specific target register designated for the function's return value.
 
 ### Error Handling
+
 Errors are thrown using the `RETURNSIGNAL` macro, which halts execution and raises a specific `RXSIGNAL_*` exception within the VM. Successful execution must conclude with `RESETSIGNAL`.
 
 ### Example Native Function
@@ -439,10 +460,15 @@ ENDLOADFUNCS
 ```
 
 ### Registration Breakdown:
+
 1. **C Function**: The literal name of the C function defined by `PROCEDURE(...)`.
+
 2. **REXX Namespace & Name**: How the function will be called from REXX code (e.g., `import rxmath; x = add_integers(1, 2)`).
+
 3. **Option**: The target cREXX language level (`"b"` for Level B, `"c"` for Level C).
+
 4. **Return Type**: A string literal dictating the exact cREXX type returned (`".int"`, `".string"`, `".void"`).
+
 5. **Arguments**: The exact type signature expected by the compiler. It supports standard types, array syntax (`.int[]`), and reference passing (`expose`). 
 
 During compilation, `rxc` parses this block to strictly enforce type safety when the REXX code invokes the native plugin. During execution, `rxvm` uses this block to dynamically link the `.rxplugin` shared library symbol into the execution space.
@@ -474,12 +500,19 @@ directly; use the owner contract type for that metadata until RXPA grows an
 owner-derived factory helper.
 
 Available declaration macros:
+
 - `ADDCLASS(name)` and `ADDCLASSX(name, option, type)`
+
 - `ADDINTERFACE(name)` and `ADDINTERFACEX(name, option, type)`
+
 - `ADDIMPLEMENTS(class_name, interface_name)`
+
 - `ADDFACTORY(owner, member, return_type, args)`
+
 - `ADDMETHOD(owner, member, return_type, args)`
+
 - `ADDDEFAULTMETHOD(owner, member, return_type, args)`
+
 - `ADDMEMBER(owner, kind, member, return_type, args)` for the generic form
 
 These declarations are consumed from both dynamic `.rxplugin` modules and
