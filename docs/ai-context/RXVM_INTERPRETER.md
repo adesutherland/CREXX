@@ -416,6 +416,18 @@ writes past the destination length. `BCONCAT`, `BAPPEND`, and `BSLICE` build
 ordinary byte buffers without UTF-8 validation and clear VM-private UTF cache
 flags on the destination.
 
+Typed binary memory opcodes are strict fixed-width views over the same binary
+slot. `BGETU8`, `BGETI8`, `BGETU16`, `BGETI16`, `BGETU32`, `BGETI32`, and
+`BGETF64` read from zero-based byte offsets. `BSETU8`, `BSETI8`, `BSETU16`,
+`BSETI16`, `BSETU32`, `BSETI32`, and `BSETF64` write to zero-based byte
+offsets. These opcodes use canonical little-endian storage order and do not
+use host-native struct layout, alignment, or padding. Invalid ranges, negative
+offsets, and integer values outside the target storage type raise
+`OUT_OF_RANGE`. `BRESIZE` preserves existing bytes, zero-fills growth, and
+raises `OUT_OF_RANGE` for negative lengths. `BCLEAR` sets the logical binary
+length and cursor to zero. `BFILL` fills the current logical byte range and
+requires a byte value in `0..255`.
+
 `FREADB` reads bytes with `fread(ptr, 1, n, file)`, so `binary_length` is the
 actual byte count read, not a C item count.
 
