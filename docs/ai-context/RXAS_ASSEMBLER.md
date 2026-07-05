@@ -138,8 +138,25 @@ stores an empty binary constant. `rxdas` emits the canonical lowercase
 slot, not its string slot. Binary-buffer VM instructions exposed at RXAS are:
 
 - `blen rOut,rBin`
+- `bresize rBin,rLength`
+- `bclear rBin`
+- `bfill rBin,rByte`
 - `getbyte rOut,rBin,rIndex`
 - `setbyte rBin,rIndex,rByte`
+- `bgetu8 rOut,rBin,rOffset`
+- `bgeti8 rOut,rBin,rOffset`
+- `bgetu16 rOut,rBin,rOffset`
+- `bgeti16 rOut,rBin,rOffset`
+- `bgetu32 rOut,rBin,rOffset`
+- `bgeti32 rOut,rBin,rOffset`
+- `bgetf64 rOut,rBin,rOffset`
+- `bsetu8 rBin,rOffset,rValue`
+- `bseti8 rBin,rOffset,rValue`
+- `bsetu16 rBin,rOffset,rValue`
+- `bseti16 rBin,rOffset,rValue`
+- `bsetu32 rBin,rOffset,rValue`
+- `bseti32 rBin,rOffset,rValue`
+- `bsetf64 rBin,rOffset,rFloat`
 - `bconcat rDst,rLeft,rRight`
 - `bappend rDst,rRight`
 - `setbinpos rBin,rOffset`
@@ -149,13 +166,27 @@ slot, not its string slot. Binary-buffer VM instructions exposed at RXAS are:
 - `stobin rReg`
 - `bintos rReg`
 
-Indexes and lengths are bytes and zero-based. `bslice` reads from the source
-binary cursor and truncates at end-of-buffer. `setbyte` and `bupdate` are
-strict and raise `OUT_OF_RANGE` for invalid indexes, bytes outside `0..255`, or
-overlay writes past the destination length. `stobin` copies the register's
-current string bytes into its binary slot. `bintos` validates the register's
-current binary bytes as UTF-8 and copies them into its string slot; invalid
-bytes raise `UNICODE_ERROR` in UTF builds.
+Indexes, offsets, and lengths are bytes and zero-based. The typed `bget*` and
+`bset*` instructions use canonical little-endian storage order; they do not use
+host-native struct layout, alignment, or padding. `bgetu8` is the strict
+counterpart to current `getbyte`: `getbyte` still returns `-1` for
+out-of-range reads, while typed reads raise `OUT_OF_RANGE`. Typed writes raise
+`OUT_OF_RANGE` when the field does not fit or when an integer value is outside
+the target storage type's range. `bsetf64` and `bgetf64` store and read IEEE
+binary64 values in little-endian byte order.
+
+`bresize` sets the logical byte length and zero-fills newly exposed bytes;
+negative lengths raise `OUT_OF_RANGE`, and allocation failure raises `FAILURE`.
+`bclear` sets the logical byte length and cursor to zero. `bfill` fills the
+current logical byte range and raises `OUT_OF_RANGE` for bytes outside
+`0..255`.
+
+`bslice` reads from the source binary cursor and truncates at end-of-buffer.
+`setbyte` and `bupdate` are strict and raise `OUT_OF_RANGE` for invalid indexes,
+bytes outside `0..255`, or overlay writes past the destination length. `stobin`
+copies the register's current string bytes into its binary slot. `bintos`
+validates the register's current binary bytes as UTF-8 and copies them into its
+string slot; invalid bytes raise `UNICODE_ERROR` in UTF builds.
 
 Level B exposes these byte-buffer instructions through the `rxfnsb` binary
 helpers (`binlength`, `binbyte`, `binsetbyte`, `binsubstr`, `binconcat`,

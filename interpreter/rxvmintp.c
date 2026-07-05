@@ -188,6 +188,79 @@ static int rxvm_checked_size_mul(size_t left, size_t right, size_t *result) {
     return 1;
 }
 
+static int rxvm_binary_range(value *buffer, rxinteger offset_value, size_t width, size_t *offset) {
+    size_t local_offset;
+
+    if (offset_value < 0) return 0;
+    if ((uintmax_t)offset_value > (uintmax_t)SIZE_MAX) return 0;
+
+    local_offset = (size_t)offset_value;
+    if (local_offset > buffer->binary_length) return 0;
+    if (width > buffer->binary_length - local_offset) return 0;
+
+    if (offset) *offset = local_offset;
+    return 1;
+}
+
+static uint64_t rxvm_binary_read_le(const value *buffer, size_t offset, size_t width) {
+    const unsigned char *bytes = (const unsigned char *)buffer->binary_value + offset;
+    uint64_t result = 0;
+    size_t i;
+
+    for (i = 0; i < width; i++) {
+        result |= ((uint64_t)bytes[i]) << (i * 8);
+    }
+    return result;
+}
+
+static void rxvm_binary_write_le(value *buffer, size_t offset, size_t width, uint64_t data) {
+    unsigned char *bytes = (unsigned char *)buffer->binary_value + offset;
+    size_t i;
+
+    for (i = 0; i < width; i++) {
+        bytes[i] = (unsigned char)((data >> (i * 8)) & 0xffu);
+    }
+    clear_vm_private_flags(buffer);
+}
+
+static rxinteger rxvm_sign_extend_le_value(uint64_t value, unsigned int bits) {
+    uint64_t sign_bit = UINT64_C(1) << (bits - 1);
+    uint64_t mask = (UINT64_C(1) << bits) - 1;
+
+    value &= mask;
+    if ((value & sign_bit) == 0) return (rxinteger)value;
+    return -(rxinteger)((~value & mask) + 1);
+}
+
+static uintmax_t rxvm_rxinteger_positive_max(void) {
+    size_t bits = sizeof(rxinteger) * CHAR_BIT;
+    size_t uintmax_bits = sizeof(uintmax_t) * CHAR_BIT;
+
+    if (bits >= uintmax_bits) return UINTMAX_MAX >> 1;
+    return (((uintmax_t)1) << (bits - 1)) - 1;
+}
+
+static int rxvm_uint32_fits_rxinteger(uint32_t value) {
+    return (uintmax_t)value <= rxvm_rxinteger_positive_max();
+}
+
+static double rxvm_binary_read_f64_le(const value *buffer, size_t offset) {
+    uint64_t bits = rxvm_binary_read_le(buffer, offset, 8);
+    double result;
+
+    memcpy(&result, &bits, sizeof(result));
+    return result;
+}
+
+static int rxvm_binary_write_f64_le(value *buffer, size_t offset, double value) {
+    uint64_t bits;
+
+    if (sizeof(value) != sizeof(bits)) return -1;
+    memcpy(&bits, &value, sizeof(bits));
+    rxvm_binary_write_le(buffer, offset, 8, bits);
+    return 0;
+}
+
 #if defined(__has_builtin)
 #if __has_builtin(__builtin_mul_overflow)
 #define RXVM_HAS_BUILTIN_MUL_OVERFLOW 1
@@ -8047,6 +8120,274 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     START_INSTRUCTION(BLEN_REG_REG) CALC_DISPATCH(2)
     DEBUG("TRACE - BLEN R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
     REG_RETURN_INT((rxinteger)op2R->binary_length)
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  BRESIZE_REG_REG  resize op1 to op2 bytes, zero-filling growth
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BRESIZE_REG_REG) CALC_DISPATCH(2)
+    DEBUG("TRACE - BRESIZE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+    if (op2R->int_value < 0 || (uintmax_t)op2R->int_value > (uintmax_t)SIZE_MAX) {
+        SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+    }
+    else {
+        size_t old_length = op1R->native_payload_ops ? 0 : op1R->binary_length;
+        size_t new_length = (size_t)op2R->int_value;
+        if (reserve_binary_buffer(op1R, new_length) != 0) {
+            SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+        }
+        else {
+            if (new_length > old_length) {
+                memset(op1R->binary_value + old_length, 0, new_length - old_length);
+            }
+            op1R->binary_length = new_length;
+            if (op1R->binary_pos > new_length) op1R->binary_pos = new_length;
+            clear_vm_private_flags(op1R);
+        }
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  BCLEAR_REG  clear binary payload length, preserving ordinary capacity
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BCLEAR_REG) CALC_DISPATCH(1)
+    DEBUG("TRACE - BCLEAR R%d\n", (int)REG_IDX(1));
+    if (op1R->native_payload_ops) {
+        clear_binary_payload(op1R);
+    }
+    else {
+        op1R->binary_length = 0;
+        op1R->binary_pos = 0;
+        clear_vm_private_flags(op1R);
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  BFILL_REG_REG  fill all current binary bytes in op1 with byte op2
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BFILL_REG_REG) CALC_DISPATCH(2)
+    DEBUG("TRACE - BFILL R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
+    if (op2R->int_value < 0 || op2R->int_value > 255) {
+        SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+    }
+    else {
+        if (op1R->binary_length) {
+            memset(op1R->binary_value, (unsigned char)op2R->int_value, op1R->binary_length);
+        }
+        clear_vm_private_flags(op1R);
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  Strict typed little-endian binary reads
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BGETU8_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BGETU8 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        if (!rxvm_binary_range(op2R, op3R->int_value, 1, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            REG_RETURN_INT((rxinteger)rxvm_binary_read_le(op2R, offset, 1))
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BGETI8_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BGETI8 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        if (!rxvm_binary_range(op2R, op3R->int_value, 1, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            REG_RETURN_INT(rxvm_sign_extend_le_value(rxvm_binary_read_le(op2R, offset, 1), 8))
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BGETU16_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BGETU16 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        if (!rxvm_binary_range(op2R, op3R->int_value, 2, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            REG_RETURN_INT((rxinteger)rxvm_binary_read_le(op2R, offset, 2))
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BGETI16_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BGETI16 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        if (!rxvm_binary_range(op2R, op3R->int_value, 2, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            REG_RETURN_INT(rxvm_sign_extend_le_value(rxvm_binary_read_le(op2R, offset, 2), 16))
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BGETU32_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BGETU32 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        uint32_t result;
+        if (!rxvm_binary_range(op2R, op3R->int_value, 4, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            result = (uint32_t)rxvm_binary_read_le(op2R, offset, 4);
+            if (!rxvm_uint32_fits_rxinteger(result)) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            else {
+                REG_RETURN_INT((rxinteger)result)
+            }
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BGETI32_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BGETI32 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        if (!rxvm_binary_range(op2R, op3R->int_value, 4, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            REG_RETURN_INT(rxvm_sign_extend_le_value(rxvm_binary_read_le(op2R, offset, 4), 32))
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BGETF64_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BGETF64 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        if (sizeof(double) != sizeof(uint64_t)) {
+            SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "f64 requires 64-bit double");
+        }
+        else if (!rxvm_binary_range(op2R, op3R->int_value, 8, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            REG_RETURN_FLOAT(rxvm_binary_read_f64_le(op2R, offset))
+        }
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  Strict typed little-endian binary writes
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BSETU8_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BSETU8 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        if (!rxvm_binary_range(op1R, op2R->int_value, 1, &offset) ||
+            op3R->int_value < 0 || op3R->int_value > UINT8_MAX) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            rxvm_binary_write_le(op1R, offset, 1, (uint64_t)op3R->int_value);
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BSETI8_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BSETI8 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        if (!rxvm_binary_range(op1R, op2R->int_value, 1, &offset) ||
+            op3R->int_value < INT8_MIN || op3R->int_value > INT8_MAX) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            rxvm_binary_write_le(op1R, offset, 1, (uint64_t)((uint8_t)op3R->int_value));
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BSETU16_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BSETU16 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        if (!rxvm_binary_range(op1R, op2R->int_value, 2, &offset) ||
+            op3R->int_value < 0 || op3R->int_value > UINT16_MAX) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            rxvm_binary_write_le(op1R, offset, 2, (uint64_t)op3R->int_value);
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BSETI16_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BSETI16 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        if (!rxvm_binary_range(op1R, op2R->int_value, 2, &offset) ||
+            op3R->int_value < INT16_MIN || op3R->int_value > INT16_MAX) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            rxvm_binary_write_le(op1R, offset, 2, (uint64_t)((uint16_t)op3R->int_value));
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BSETU32_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BSETU32 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        if (!rxvm_binary_range(op1R, op2R->int_value, 4, &offset) ||
+            op3R->int_value < 0 || (uintmax_t)op3R->int_value > UINT32_MAX) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            rxvm_binary_write_le(op1R, offset, 4, (uint64_t)op3R->int_value);
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BSETI32_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BSETI32 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        if (!rxvm_binary_range(op1R, op2R->int_value, 4, &offset) ||
+            op3R->int_value < INT32_MIN || op3R->int_value > INT32_MAX) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            rxvm_binary_write_le(op1R, offset, 4, (uint64_t)((uint32_t)op3R->int_value));
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BSETF64_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BSETF64 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        if (sizeof(double) != sizeof(uint64_t)) {
+            SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "f64 requires 64-bit double");
+        }
+        else if (!rxvm_binary_range(op1R, op2R->int_value, 8, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else if (rxvm_binary_write_f64_le(op1R, offset, op3R->float_value) != 0) {
+            SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "f64 requires 64-bit double");
+        }
+    }
     DISPATCH
 
 /* ------------------------------------------------------------------------------------
