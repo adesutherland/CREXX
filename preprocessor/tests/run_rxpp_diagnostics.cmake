@@ -26,7 +26,8 @@ function(run_rxpp_fail label locale diagnostics input output expected)
         WORKING_DIRECTORY "${WORK}"
         RESULT_VARIABLE res
         OUTPUT_VARIABLE out
-        ERROR_VARIABLE err)
+        ERROR_VARIABLE err
+        ENCODING UTF-8)
     set(full "${out}${err}")
     if(NOT res EQUAL 8)
         message(FATAL_ERROR "${label} returned ${res}, expected 8:\n${full}")
@@ -45,7 +46,8 @@ function(run_rxpp_success label locale diagnostics input output expected)
         WORKING_DIRECTORY "${WORK}"
         RESULT_VARIABLE res
         OUTPUT_VARIABLE out
-        ERROR_VARIABLE err)
+        ERROR_VARIABLE err
+        ENCODING UTF-8)
     set(full "${out}${err}")
     if(NOT res EQUAL 0)
         message(FATAL_ERROR "${label} returned ${res}, expected 0:\n${full}")
@@ -62,7 +64,8 @@ execute_process(
     WORKING_DIRECTORY "${WORK}"
     RESULT_VARIABLE raw_res
     OUTPUT_VARIABLE raw_out
-    ERROR_VARIABLE raw_err)
+    ERROR_VARIABLE raw_err
+    ENCODING UTF-8)
 set(raw_full "${raw_out}${raw_err}")
 if(NOT raw_res EQUAL 8)
     message(FATAL_ERROR "raw no-source diagnostic returned ${raw_res}, expected 8:\n${raw_full}")
@@ -83,7 +86,8 @@ execute_process(
     WORKING_DIRECTORY "${WORK}"
     RESULT_VARIABLE de_res
     OUTPUT_VARIABLE de_out
-    ERROR_VARIABLE de_err)
+    ERROR_VARIABLE de_err
+    ENCODING UTF-8)
 set(de_full "${de_out}${de_err}")
 if(NOT de_res EQUAL 8)
     message(FATAL_ERROR "German already-srcmap diagnostic returned ${de_res}, expected 8:\n${de_full}")
@@ -100,7 +104,8 @@ execute_process(
     WORKING_DIRECTORY "${WORK}"
     RESULT_VARIABLE nl_res
     OUTPUT_VARIABLE nl_out
-    ERROR_VARIABLE nl_err)
+    ERROR_VARIABLE nl_err
+    ENCODING UTF-8)
 set(nl_full "${nl_out}${nl_err}")
 if(NOT nl_res EQUAL 8)
     message(FATAL_ERROR "Dutch already-srcmap diagnostic returned ${nl_res}, expected 8:\n${nl_full}")
@@ -116,7 +121,8 @@ execute_process(
     WORKING_DIRECTORY "${WORK}"
     RESULT_VARIABLE raw_double_res
     OUTPUT_VARIABLE raw_double_out
-    ERROR_VARIABLE raw_double_err)
+    ERROR_VARIABLE raw_double_err
+    ENCODING UTF-8)
 set(raw_double_full "${raw_double_out}${raw_double_err}")
 if(NOT raw_double_res EQUAL 8)
     message(FATAL_ERROR "raw already-srcmap diagnostic returned ${raw_double_res}, expected 8:\n${raw_double_full}")
@@ -137,7 +143,8 @@ execute_process(
     WORKING_DIRECTORY "${WORK}"
     RESULT_VARIABLE warn_res
     OUTPUT_VARIABLE warn_out
-    ERROR_VARIABLE warn_err)
+    ERROR_VARIABLE warn_err
+    ENCODING UTF-8)
 set(warn_full "${warn_out}${warn_err}")
 if(NOT warn_res EQUAL 0)
     message(FATAL_ERROR "localized warning diagnostic run failed with ${warn_res}:\n${warn_full}")
@@ -154,7 +161,8 @@ execute_process(
     WORKING_DIRECTORY "${WORK}"
     RESULT_VARIABLE fallback_res
     OUTPUT_VARIABLE fallback_out
-    ERROR_VARIABLE fallback_err)
+    ERROR_VARIABLE fallback_err
+    ENCODING UTF-8)
 set(fallback_full "${fallback_out}${fallback_err}")
 if(NOT fallback_res EQUAL 8)
     message(FATAL_ERROR "fallback locale diagnostic returned ${fallback_res}, expected 8:\n${fallback_full}")
