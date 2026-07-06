@@ -1,2 +1,2 @@
-Error in binary_memory_missing_length_argument.crexx @ 5:7 - #BINARY_MEMORY_LENGTH_REQUIRED, "<at..string(0,)> data"
+Error in binary_memory_missing_length_argument.crexx @ 5:7 - #BINARY_MEMORY_LENGTH_REQUIRED, "<at..string>(0,) data"
 1 error(s) in source file

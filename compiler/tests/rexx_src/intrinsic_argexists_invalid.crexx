@@ -1,6 +1,5 @@
 options levelb
 
 main: procedure = .int
-  text = "abcd"
-  n = <at..u8>(0) text
+  if <argexists>() then return 1
   return 0

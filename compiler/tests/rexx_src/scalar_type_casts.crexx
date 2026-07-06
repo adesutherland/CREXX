@@ -12,6 +12,7 @@ main: procedure = .int
   if typeof(d) <> ".decimal" then return 12
   if typeof(s) <> ".string" then return 13
   if typeof(truth) <> ".boolean" then return 14
+  if <typeof>(i) <> ".int" then return 18
   if i <> 42 then return 15
   if s <> "42" then return 16
   if truth <> 1 then return 17

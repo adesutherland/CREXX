@@ -2,5 +2,5 @@ options levelb
 
 main: procedure = .int
   data = '00'x as .binary
-  n = <at..u8(0, 1, 2)> data
+  n = <at..u8>(0, 1, 2) data
   return n

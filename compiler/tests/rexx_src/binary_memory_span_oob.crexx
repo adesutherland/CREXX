@@ -6,20 +6,20 @@ main: procedure = .int
   caught = 0
 
   do
-    span = <at..binary(3, 2)> data
+    span = <at..binary>(3, 2) data
   on signal out_of_range
     caught = caught + 1
   end
 
   do
-    span = <at..binary(-1, 0)> data
+    span = <at..binary>(-1, 0) data
   on signal out_of_range
     caught = caught + 1
   end
 
   if caught <> 2 then return 1
 
-  span = <at..binary(4, 0)> data
+  span = <at..binary>(4, 0) data
 
   say "ok"
   return 0

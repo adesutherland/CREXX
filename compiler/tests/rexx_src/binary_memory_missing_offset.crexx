@@ -3,5 +3,5 @@ options levelb
 main: procedure = .int
   data = .binary
   data = '0000000000000000'x as .binary
-  n = <at..u32()> data
+  n = <at..u32>() data
   return 0

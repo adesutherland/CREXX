@@ -3,5 +3,5 @@ options levelb
 main: procedure = .int
   data = .binary
   data = '01020304'x as .binary
-  s = <at..string(0)> data
+  s = <at..string>(0) data
   return 0

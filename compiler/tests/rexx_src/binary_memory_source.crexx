@@ -12,38 +12,40 @@ main: procedure = .int
   s = ""
 
   data = HEADER
-  n = <at..u32(0)> HEADER
+  n = <at..u32>(0) HEADER
   if n <> 305419896 then return 10
 
-  sz = <sizeof> .u32
+  sz = <sizeof..u32>
   if sz <> 4 then return 11
+  sz = <sizeof..i8>
+  if sz <> 1 then return 21
 
-  b = <at..u8(1 + 1)> data
+  b = <at..u8>(1 + 1) data
   if b <> 52 then return 12
 
-  b = <at..u8(0)> data + 1
+  b = <at..u8>(0) data + 1
   if b <> 121 then return 13
 
-  <at..u16(4)> data = 513
-  u = <at..u16(4)> data
+  <at..u16>(4) data = 513
+  u = <at..u16>(4) data
   if u <> 513 then return 14
 
-  f = <at..float(8)> data
+  f = <at..float>(8) data
   if f <> 1.0 then return 15
 
-  s = <at..string(16, 2)> data
+  s = <at..string>(16, 2) data
   if s <> "OK" then return 16
 
-  b = <AT..U8(0)> data
+  b = <AT..U8>(0) data
   if b <> 120 then return 17
 
   if 1 < 2 then nop
   else return 18
 
-  if <at..u8(0)> data <has> 8 then nop
+  if <at..u8>(0) data <has> 8 then nop
   else return 19
 
-  b = <at..u8(0)> (data)
+  b = <at..u8>(0) (data)
   if b <> 120 then return 20
 
   say "ok"

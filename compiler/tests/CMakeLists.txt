@@ -498,7 +498,7 @@ string(APPEND RXC_BINARY_MEMORY_SOURCE_CONTENT
        "  endif()\n"
        "endforeach()\n"
        "if(NOT rxas_out MATCHES [=[load r[0-9]+,4]=])\n"
-       "  message(FATAL_ERROR \"Binary memory <sizeof> did not lower to a literal width load.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "  message(FATAL_ERROR \"Binary memory <sizeof..type> did not lower to a literal width load.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
        "endif()\n")
 file(GENERATE OUTPUT "${RXC_BINARY_MEMORY_SOURCE_SCRIPT}" CONTENT "${RXC_BINARY_MEMORY_SOURCE_CONTENT}")
 
@@ -876,6 +876,8 @@ add_crexx_compiler_fail_test(binary_memory_target_not_binary rexx_src/binary_mem
 add_crexx_compiler_fail_test(binary_memory_length_required rexx_src/binary_memory_length_required.crexx binary_memory_length_required.txt)
 add_crexx_compiler_fail_test(binary_memory_extra_argument rexx_src/binary_memory_extra_argument.crexx binary_memory_extra_argument.txt)
 add_crexx_compiler_fail_test(binary_memory_missing_length_argument rexx_src/binary_memory_missing_length_argument.crexx binary_memory_missing_length_argument.txt)
+add_crexx_compiler_fail_test(binary_memory_generic_types_unsupported rexx_src/binary_memory_generic_types_unsupported.crexx binary_memory_generic_types_unsupported.txt)
+add_crexx_compiler_fail_test(intrinsic_argexists_invalid rexx_src/intrinsic_argexists_invalid.crexx intrinsic_argexists_invalid.txt)
 add_test(NAME err_address_exit_disabled_fail
          COMMAND crexx_test_driver --expect-fail
          ${CMAKE_CURRENT_SOURCE_DIR}/golden/errors/err_address_exit_disabled.txt
@@ -4047,9 +4049,9 @@ string(APPEND RXC_DIAGNOSTIC_LOCALIZATION_CONTENT
        "run_diag_fail(\"en_US\" \"en_US\" \"\${missing_end_src}\" \"missing_end\" \"MISSING_END: Missing END\" \"#MISSING_END, \\\"do\\\"\")\n"
        "run_diag_fail(\"de_DE\" \"de_DE\" \"\${missing_end_src}\" \"missing_end\" \"MISSING_END: Fehlendes END\" \"#MISSING_END, \\\"do\\\"\")\n"
        "run_diag_fail(\"nl_NL\" \"nl_NL\" \"\${missing_end_src}\" \"missing_end\" \"MISSING_END: Ontbrekende END\" \"#MISSING_END, \\\"do\\\"\")\n"
-       "run_diag_fail(\"en_GB\" \"en_GB\" \"\${binary_memory_src}\" \"binary_memory\" \"BINARY_MEMORY_INVALID_STORAGE_TYPE: Binary memory access has an unsupported storage type.\" \"#BINARY_MEMORY_INVALID_STORAGE_TYPE, \\\"<at..u64(0)> data\\\"\")\n"
-       "run_diag_fail(\"de_DE\" \"de_DE\" \"\${binary_memory_src}\" \"binary_memory\" \"BINARY_MEMORY_INVALID_STORAGE_TYPE: Binärer Speicherzugriff verwendet einen nicht unterstützten Speichertyp.\" \"#BINARY_MEMORY_INVALID_STORAGE_TYPE, \\\"<at..u64(0)> data\\\"\")\n"
-       "run_diag_fail(\"nl_NL\" \"nl_NL\" \"\${binary_memory_src}\" \"binary_memory\" \"BINARY_MEMORY_INVALID_STORAGE_TYPE: Binaire-geheugentoegang gebruikt een niet-ondersteund opslagtype.\" \"#BINARY_MEMORY_INVALID_STORAGE_TYPE, \\\"<at..u64(0)> data\\\"\")\n"
+       "run_diag_fail(\"en_GB\" \"en_GB\" \"\${binary_memory_src}\" \"binary_memory\" \"BINARY_MEMORY_INVALID_STORAGE_TYPE: Binary memory access has an unsupported storage type.\" \"#BINARY_MEMORY_INVALID_STORAGE_TYPE, \\\"<at..u64>(0) data\\\"\")\n"
+       "run_diag_fail(\"de_DE\" \"de_DE\" \"\${binary_memory_src}\" \"binary_memory\" \"BINARY_MEMORY_INVALID_STORAGE_TYPE: Binärer Speicherzugriff verwendet einen nicht unterstützten Speichertyp.\" \"#BINARY_MEMORY_INVALID_STORAGE_TYPE, \\\"<at..u64>(0) data\\\"\")\n"
+       "run_diag_fail(\"nl_NL\" \"nl_NL\" \"\${binary_memory_src}\" \"binary_memory\" \"BINARY_MEMORY_INVALID_STORAGE_TYPE: Binaire-geheugentoegang gebruikt een niet-ondersteund opslagtype.\" \"#BINARY_MEMORY_INVALID_STORAGE_TYPE, \\\"<at..u64>(0) data\\\"\")\n"
        "run_diag(\"fallback\" \"fr_FR\" \"\${unused_src}\" \"unused\" \"UNUSED_IMPORT: Import is recognised but not used.\" \"recognized\")\n")
 file(GENERATE OUTPUT "${RXC_DIAGNOSTIC_LOCALIZATION_SCRIPT}" CONTENT "${RXC_DIAGNOSTIC_LOCALIZATION_CONTENT}")
 add_test(NAME rxc_diagnostic_localization

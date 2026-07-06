@@ -80,6 +80,262 @@ static int named_operator_equals(Token *token, const char *text) {
     return 1;
 }
 
+static ASTNode *binary_at_operator(Context *context, Token *token, ASTNode *type_node, ASTNode *base, ASTNode *offset);
+static ASTNode *binary_for_operator(Context *context, Token *token, ASTNode *left, ASTNode *right);
+
+static ASTNode *intrinsic_path_new(Context *context, Token *token) {
+    ASTNode *path;
+    path = ast_ft(context, INTRINSIC_PATH);
+    add_ast(path, ast_f(context, VAR_SYMBOL, token));
+    return path;
+}
+
+static ASTNode *intrinsic_path_add(Context *context, ASTNode *path, Token *token) {
+    if (!path) path = ast_ft(context, INTRINSIC_PATH);
+    add_ast(path, ast_f(context, VAR_SYMBOL, token));
+    return path;
+}
+
+static ASTNode *intrinsic_types_new(Context *context, ASTNode *type_node) {
+    ASTNode *types;
+    types = ast_ft(context, INTRINSIC_TYPES);
+    if (type_node) add_ast(types, type_node);
+    return types;
+}
+
+static ASTNode *intrinsic_args_new(Context *context, ASTNode *args) {
+    ASTNode *node;
+    node = ast_ft(context, INTRINSIC_ARGS);
+    if (args) add_ast(node, args);
+    return node;
+}
+
+static ASTNode *intrinsic_new(Context *context, Token *token, ASTNode *path, ASTNode *types) {
+    ASTNode *node;
+    node = ast_f(context, INTRINSIC, token);
+    if (path) add_ast(node, path);
+    else add_ast(node, ast_ft(context, INTRINSIC_PATH));
+    if (types) add_ast(node, types);
+    return node;
+}
+
+static ASTNode *intrinsic_with_args(Context *context, ASTNode *intrinsic, ASTNode *args) {
+    if (intrinsic) add_ast(intrinsic, intrinsic_args_new(context, args));
+    return intrinsic;
+}
+
+static ASTNode *intrinsic_path_node(ASTNode *intrinsic) {
+    return ast_chdn(intrinsic, 0);
+}
+
+static ASTNode *intrinsic_types_node(ASTNode *intrinsic) {
+    ASTNode *child;
+    child = ast_chdn(intrinsic, 1);
+    return child && child->node_type == INTRINSIC_TYPES ? child : 0;
+}
+
+static ASTNode *intrinsic_args_node(ASTNode *intrinsic) {
+    ASTNode *child;
+    int ix;
+
+    for (ix = 1; (child = ast_chdn(intrinsic, ix)) != 0; ix++) {
+        if (child->node_type == INTRINSIC_ARGS) return child;
+    }
+    return 0;
+}
+
+static int intrinsic_part_equals_ci(ASTNode *part, const char *text) {
+    const char *start;
+    size_t length;
+    size_t text_length;
+    size_t i;
+
+    if (!part || !part->node_string || !text) return 0;
+    start = part->node_string;
+    length = part->node_string_length;
+    while (length > 0 && *start == '.') {
+        start++;
+        length--;
+    }
+    if (length > 0 && *start == ':') {
+        while (length > 0 && *start == ':') {
+            start++;
+            length--;
+        }
+    }
+    text_length = strlen(text);
+    if (text_length > 0 && text[0] == '.') {
+        text++;
+        text_length--;
+    }
+    if (length != text_length) return 0;
+    for (i = 0; i < length; i++) {
+        if (tolower((unsigned char) start[i]) !=
+            tolower((unsigned char) text[i])) return 0;
+    }
+    return 1;
+}
+
+static int intrinsic_simple_name_equals(ASTNode *intrinsic, const char *text) {
+    ASTNode *path;
+    path = intrinsic_path_node(intrinsic);
+    return path && ast_nchd(path) == 1 && intrinsic_part_equals_ci(ast_chdn(path, 0), text);
+}
+
+static int intrinsic_has_generic_types(ASTNode *intrinsic) {
+    ASTNode *types;
+    types = intrinsic_types_node(intrinsic);
+    return types && ast_nchd(types) > 0;
+}
+
+static int intrinsic_path_is_name_with_compact_type(ASTNode *intrinsic, const char *name) {
+    ASTNode *path;
+    ASTNode *first;
+    ASTNode *second;
+
+    path = intrinsic_path_node(intrinsic);
+    if (!path || ast_nchd(path) != 2) return 0;
+    first = ast_chdn(path, 0);
+    second = ast_chdn(path, 1);
+    return intrinsic_part_equals_ci(first, name) &&
+           second && second->node_string_length > 2 &&
+           second->node_string[0] == '.' && second->node_string[1] == '.';
+}
+
+static ASTNode *intrinsic_compact_type_node(Context *context, ASTNode *intrinsic) {
+    ASTNode *path;
+    ASTNode *part;
+    ASTNode *type_node;
+
+    path = intrinsic_path_node(intrinsic);
+    if (!path || ast_nchd(path) < 2) return 0;
+    part = ast_chdn(path, ast_nchd(path) - 1);
+    if (!part || part->node_string_length <= 2 ||
+        part->node_string[0] != '.' || part->node_string[1] != '.') {
+        return 0;
+    }
+    type_node = ast_f(context, CLASS, part->token);
+    type_node->node_string = part->node_string + 2;
+    type_node->node_string_length = part->node_string_length - 2;
+    return type_node;
+}
+
+static int intrinsic_arg_count(ASTNode *intrinsic) {
+    ASTNode *args;
+    ASTNode *child;
+
+    args = intrinsic_args_node(intrinsic);
+    if (!args) return -1;
+    child = ast_chdn(args, 0);
+    if (!child || child->node_type == NOVAL) return 0;
+    return ast_nchd(args);
+}
+
+static ASTNode *intrinsic_arg(ASTNode *intrinsic, int ix) {
+    ASTNode *args;
+    args = intrinsic_args_node(intrinsic);
+    if (!args) return 0;
+    return ast_chdn(args, ix);
+}
+
+static ASTNode *intrinsic_lower_one_arg(Context *context, ASTNode *intrinsic, NodeType type, const char *invalid_code) {
+    ASTNode *node;
+    ASTNode *arg;
+
+    if (intrinsic_arg_count(intrinsic) != 1) {
+        return ast_err(context, invalid_code, intrinsic->token);
+    }
+    arg = intrinsic_arg(intrinsic, 0);
+    node = ast_f(context, type, intrinsic->token);
+    add_ast(node, arg);
+    return node;
+}
+
+static ASTNode *intrinsic_lower_primary(Context *context, ASTNode *intrinsic) {
+    ASTNode *node;
+    ASTNode *type_node;
+
+    if (intrinsic_has_generic_types(intrinsic)) {
+        return ast_err(context, "INTRINSIC_GENERIC_TYPES_UNSUPPORTED", intrinsic->token);
+    }
+
+    if (intrinsic_path_is_name_with_compact_type(intrinsic, "sizeof")) {
+        if (intrinsic_arg_count(intrinsic) != -1) {
+            return ast_err(context, "INVALID_SIZEOF_SYNTAX", intrinsic->token);
+        }
+        type_node = intrinsic_compact_type_node(context, intrinsic);
+        node = ast_f(context, OP_SIZEOF, intrinsic->token);
+        add_ast(node, type_node);
+        return node;
+    }
+
+    if (intrinsic_simple_name_equals(intrinsic, "typeof")) {
+        return intrinsic_lower_one_arg(context, intrinsic, OP_TYPEOF, "INVALID_TYPEOF_SYNTAX");
+    }
+    if (intrinsic_simple_name_equals(intrinsic, "refvalid")) {
+        return intrinsic_lower_one_arg(context, intrinsic, OP_REFVALID, "INVALID_REFVALID_SYNTAX");
+    }
+    if (intrinsic_simple_name_equals(intrinsic, "initialized")) {
+        return intrinsic_lower_one_arg(context, intrinsic, OP_INITIALIZED, "INVALID_INITIALIZED_SYNTAX");
+    }
+    if (intrinsic_simple_name_equals(intrinsic, "argexists")) {
+        return intrinsic_lower_one_arg(context, intrinsic, OP_ARG_IX_EXISTS, "INVALID_ARGEXISTS_SYNTAX");
+    }
+    return ast_err(context, "UNKNOWN_NAMED_OPERATOR", intrinsic->token);
+}
+
+static ASTNode *intrinsic_lower_prefix(Context *context, ASTNode *intrinsic, ASTNode *child) {
+    ASTNode *node;
+    ASTNode *type_node;
+    ASTNode *args;
+    ASTNode *offset;
+    ASTNode *length;
+    ASTNode *extra;
+    ASTNode *at_node;
+
+    if (intrinsic_has_generic_types(intrinsic)) {
+        node = ast_err(context, "INTRINSIC_GENERIC_TYPES_UNSUPPORTED", intrinsic->token);
+        add_ast(node, child);
+        return node;
+    }
+
+    if (intrinsic_path_is_name_with_compact_type(intrinsic, "at")) {
+        type_node = intrinsic_compact_type_node(context, intrinsic);
+        args = intrinsic_args_node(intrinsic);
+        offset = 0;
+        length = 0;
+        extra = 0;
+        if (args && ast_chdn(args, 0)) {
+            offset = ast_chdn(args, 0);
+            if (offset->node_type != NOVAL) {
+                length = offset->sibling;
+                offset->sibling = 0;
+            } else {
+                length = offset->sibling;
+                offset->sibling = 0;
+                offset = 0;
+            }
+        }
+        if (length) {
+            extra = length->sibling;
+            length->sibling = 0;
+        }
+        if (extra) mknd_err1(extra, "UNEXPECTED_ARGUMENT", "position", "3");
+
+        at_node = binary_at_operator(context, intrinsic->token, type_node, child, offset);
+        if (length && length->node_type != NOVAL) {
+            node = binary_for_operator(context, intrinsic->token, at_node, length);
+        } else {
+            node = at_node;
+            if (length) mknd_err2(length, "ARGUMENT_REQUIRED", "position", "2", "name", "length");
+        }
+        if (extra) add_ast(node, extra);
+        return node;
+    }
+
+    return ast_err(context, "UNKNOWN_NAMED_OPERATOR", intrinsic->token);
+}
+
 static ASTNode *named_prefix_operator(Context *context, Token *token, ASTNode *child) {
     ASTNode *node;
 
@@ -89,12 +345,6 @@ static ASTNode *named_prefix_operator(Context *context, Token *token, ASTNode *c
         node = ast_err(context, "UNKNOWN_NAMED_OPERATOR", token);
     }
     add_ast(node, child);
-    return node;
-}
-
-static ASTNode *sizeof_operator(Context *context, Token *token, ASTNode *type_node) {
-    ASTNode *node = ast_f(context, OP_SIZEOF, token);
-    add_ast(node, type_node);
     return node;
 }
 
@@ -122,84 +372,6 @@ static ASTNode *binary_for_operator(Context *context, Token *token, ASTNode *lef
     node = ast_f(context, OP_BINARY_FOR, token);
     add_ast(node, left);
     add_ast(node, right);
-    return node;
-}
-
-static int binary_intrinsic_type_suffix(Token *token, const char **suffix, size_t *suffix_length) {
-    size_t i;
-    size_t prefix_length = 0;
-
-    size_t start = token && token->length > 0 && token->token_string[0] == '<' ? 1 : 0;
-
-    if (!token || !token->token_string || !suffix || !suffix_length) return 0;
-    for (i = start; i + 1 < token->length; i++) {
-        if (token->token_string[i] == '.' && token->token_string[i + 1] == '.') {
-            prefix_length = i;
-            break;
-        }
-    }
-    if (prefix_length != start + 2) return 0;
-    if (tolower((unsigned char) token->token_string[start]) != 'a' ||
-        tolower((unsigned char) token->token_string[start + 1]) != 't') {
-        return 0;
-    }
-    if (prefix_length + 2 >= token->length) return 0;
-
-    *suffix = token->token_string + prefix_length + 2;
-    *suffix_length = token->length - prefix_length - 2;
-    return 1;
-}
-
-static ASTNode *binary_intrinsic_type_node(Context *context, Token *token) {
-    const char *suffix = 0;
-    size_t suffix_length = 0;
-    ASTNode *node;
-
-    if (!binary_intrinsic_type_suffix(token, &suffix, &suffix_length)) return 0;
-    node = ast_f(context, CLASS, token);
-    node->node_string = (char *) suffix;
-    node->node_string_length = suffix_length;
-    return node;
-}
-
-static ASTNode *binary_memory_intrinsic_access(Context *context, Token *token, ASTNode *args, ASTNode *base) {
-    ASTNode *type_node;
-    ASTNode *offset = 0;
-    ASTNode *length = 0;
-    ASTNode *extra = 0;
-    ASTNode *at_node;
-    ASTNode *node;
-
-    type_node = binary_intrinsic_type_node(context, token);
-    if (!type_node) {
-        node = ast_err(context, "UNKNOWN_NAMED_OPERATOR", token);
-        if (args) add_ast(node, args);
-        if (base) add_ast(node, base);
-        return node;
-    }
-
-    if (args && args->node_type != NOVAL) {
-        offset = args;
-        length = offset->sibling;
-        offset->sibling = 0;
-    } else if (args) {
-        length = args->sibling;
-        args->sibling = 0;
-    }
-    if (length) {
-        extra = length->sibling;
-        length->sibling = 0;
-    }
-    if (extra) mknd_err1(extra, "UNEXPECTED_ARGUMENT", "position", "3");
-
-    at_node = binary_at_operator(context, token, type_node, base, offset);
-    if (length && length->node_type != NOVAL) {
-        node = binary_for_operator(context, token, at_node, length);
-    } else {
-        node = at_node;
-        if (length) mknd_err2(length, "ARGUMENT_REQUIRED", "position", "2", "name", "length");
-    }
-    if (extra) add_ast(node, extra);
     return node;
 }
 
@@ -239,7 +411,7 @@ static ASTNode *named_binary_operator(Context *context, Token *token, ASTNode *l
 }
 }
 
-%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT TK_EXIT_PRIMARY TK_EXIT_TOKEN TK_QUALIFIED_SYMBOL TK_PARAMETERIZED_OPERATOR TK_SIZEOF TK_NAMED_OPERATOR TK_NAMED_MULT_OPERATOR TK_NAMED_SHIFT_OPERATOR TK_NAMED_AND_OPERATOR TK_NAMED_XOR_OPERATOR TK_NAMED_OR_OPERATOR.
+%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT TK_EXIT_PRIMARY TK_EXIT_TOKEN TK_QUALIFIED_SYMBOL TK_INTRINSIC_LT TK_INTRINSIC_PREFIX_LT TK_INTRINSIC_NAME TK_INTRINSIC_GENERIC_OPEN TK_NAMED_OPERATOR TK_NAMED_MULT_OPERATOR TK_NAMED_SHIFT_OPERATOR TK_NAMED_AND_OPERATOR TK_NAMED_XOR_OPERATOR TK_NAMED_OR_OPERATOR.
 %wildcard ANYTHING.
 
 /* Low precedence */
@@ -365,6 +537,24 @@ type_def(A)              ::= class(S) array_def_parameters(P).
                              { A = S; if (P) add_ast(A,P); }
 type_def(A)              ::= TK_CLASS_STEM(S) stem_def_parts(P).
                              { A = ast_f(context, CLASS, S); if (P) add_ast(A,P); }
+
+intrinsic_path(P)        ::= TK_INTRINSIC_NAME(S).
+                             { P = intrinsic_path_new(context, S); }
+intrinsic_path(P)        ::= intrinsic_path(P0) TK_INTRINSIC_NAME(S).
+                             { P = intrinsic_path_add(context, P0, S); }
+intrinsic_type_list(T)   ::= class(C).
+                             { T = intrinsic_types_new(context, C); }
+intrinsic_type_list(T)   ::= intrinsic_type_list(T0) TK_COMMA class(C).
+                             { T = T0; add_ast(T, C); }
+intrinsic_generics_opt(G) ::= .
+                             { G = 0; }
+intrinsic_generics_opt(G) ::= TK_INTRINSIC_GENERIC_OPEN intrinsic_type_list(T) TK_CLOSE_SBRACKET.
+                             { G = T; }
+intrinsic_head(I)        ::= TK_INTRINSIC_LT(L) intrinsic_path(P) intrinsic_generics_opt(G) TK_GT.
+                             { I = intrinsic_new(context, L, P, G); }
+intrinsic_prefix_head(I) ::= TK_INTRINSIC_PREFIX_LT(L) intrinsic_path(P) intrinsic_generics_opt(G) TK_GT.
+                             { I = intrinsic_new(context, L, P, G); }
+
 array_def_parameters(P)  ::= TK_OPEN_SBRACKET def_expression_list(E) TK_CLOSE_SBRACKET. [TK_VAR_SYMBOL]
                              { P = E; }
 stem_def_parts(L)        ::= stem_def_part(S).
@@ -1501,8 +1691,9 @@ term(F)                ::= TK_VAR_SYMBOL(S) function_parameters(P).
                            }
 term(F)                ::= TK_VAR_SYMBOL(S) TK_OPEN_BRACKET TK_CLASS_TYPE(C) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
                            {
+                               ASTNode *type_node = ast_f(context, CLASS, C);
                                F = ast_f(context, token_text_equals_ci(S, "initialized") ? OP_INITIALIZED : FUNCTION, S);
-                               add_ast(F, ast_f(context, CLASS, C));
+                               add_ast(F, type_node);
                            }
 term(F)                ::= TK_QUALIFIED_SYMBOL(S) function_parameters(P).
                            { F = ast_f(context, FUNCTION, S); if (P) add_ast(F,P); }
@@ -1565,6 +1756,10 @@ term(A)                ::= TK_INTEGER(S).
                          { A = ast_f(context, INTEGER,S); }
 term(A)                ::= TK_STRING(S).
                          { A = ast_fstr(context,S); }
+term(F)                ::= intrinsic_head(I). [TK_VAR_SYMBOL]
+                         { F = intrinsic_lower_primary(context, I); }
+term(F)                ::= intrinsic_head(I) function_parameters(P). [TK_VAR_SYMBOL]
+                         { F = intrinsic_lower_primary(context, intrinsic_with_args(context, I, P)); }
 
 /* Special Operator - ARG */
 term(F)                ::= TK_ARG(A) TK_OPEN_BRACKET TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
@@ -1633,8 +1828,8 @@ binary_memory_operand(A) ::= term(T).
                          { A = T; }
 binary_memory_operand(A) ::= TK_OPEN_BRACKET expression(B) TK_CLOSE_BRACKET.
                          { A = B; }
-binary_memory_access(A) ::= TK_PARAMETERIZED_OPERATOR(O) function_parameters(P) TK_GT binary_memory_operand(B). [TK_NAMED_OPERATOR]
-                         { A = binary_memory_intrinsic_access(context, O, P, B); }
+binary_memory_access(A) ::= intrinsic_prefix_head(I) function_parameters(P) binary_memory_operand(B). [TK_NAMED_OPERATOR]
+                         { A = intrinsic_lower_prefix(context, intrinsic_with_args(context, I, P), B); }
 
 bracket(A)           ::= term(T).
                          { A = T; }
@@ -1722,8 +1917,6 @@ command_prefix_expression(A) ::= TK_NOT(O) prefix_expression(C).
                          { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
 command_prefix_expression(A) ::= TK_NAMED_OPERATOR(O) prefix_expression(C).
                          { A = named_prefix_operator(context, O, C); }
-command_prefix_expression(A) ::= TK_SIZEOF(O) class(C).
-                         { A = sizeof_operator(context, O, C); }
 command_prefix_expression(A) ::= TK_PLUS(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_PLUS, O); add_ast(A,C); }
 command_prefix_expression(A) ::= TK_HIGH_PRIORITY_MINUS(O) prefix_expression(C). [TK_NOT]
@@ -1851,8 +2044,6 @@ prefix_expression(A) ::= TK_NOT(O) prefix_expression(C).
                          { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
 prefix_expression(A) ::= TK_NAMED_OPERATOR(O) prefix_expression(C).
                          { A = named_prefix_operator(context, O, C); }
-prefix_expression(A) ::= TK_SIZEOF(O) class(C).
-                         { A = sizeof_operator(context, O, C); }
 prefix_expression(A) ::= TK_PLUS(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_PLUS, O); add_ast(A,C); }
 prefix_expression(A) ::= TK_HIGH_PRIORITY_MINUS(O) prefix_expression(C). [TK_NOT]
@@ -1946,8 +2137,6 @@ prefix_expression_c(A) ::= TK_NOT(O) prefix_expression_c(C).
                          { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
 prefix_expression_c(A) ::= TK_NAMED_OPERATOR(O) prefix_expression_c(C).
                          { A = named_prefix_operator(context, O, C); }
-prefix_expression_c(A) ::= TK_SIZEOF(O) class(C).
-                         { A = sizeof_operator(context, O, C); }
 prefix_expression_c(A) ::= TK_REFERENCE(O) prefix_expression_c(C). [TK_NOT]
                          { A = ast_f(context, OP_REFERENCE, O); add_ast(A,C); }
 prefix_expression_c(A) ::= TK_DEREFERENCE(O) prefix_expression_c(C). [TK_NOT]

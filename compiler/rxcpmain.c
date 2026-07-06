@@ -189,6 +189,7 @@ Context *cntx_f() {
     context->cli_level_override = UNKNOWN;
     context->cli_default_level = UNKNOWN;
     context->lexer_stem_mode = 0;
+    context->lexer_intrinsic_mode = 0;
     context->comments_hash = 1; /* This is the recommended & default line comment style */
     context->floats_decimal = 0; /* Force floats to be decimal */
     context->floats_binary = 0;  /* Force floats to be binary */

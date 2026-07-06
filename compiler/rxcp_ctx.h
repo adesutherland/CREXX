@@ -65,6 +65,7 @@ struct Context {
     char *buff_end;
     char *top, *cursor, *marker, *ctxmarker, *linestart, *prev_linestart;
     char lexer_stem_mode; /* 1 if lexing a stem */
+    char lexer_intrinsic_mode; /* 1 if lexing the head of an angle intrinsic */
     int line;
     int token_counter;
     Token* token_head;

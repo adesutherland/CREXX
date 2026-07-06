@@ -1390,6 +1390,14 @@ const char *ast_ndtp(NodeType type) {
             return "OP_COMPARE_S_GTE";
         case OP_COMPARE_S_LTE:
             return "OP_COMPARE_S_LTE";
+        case INTRINSIC:
+            return "INTRINSIC";
+        case INTRINSIC_PATH:
+            return "INTRINSIC_PATH";
+        case INTRINSIC_TYPES:
+            return "INTRINSIC_TYPES";
+        case INTRINSIC_ARGS:
+            return "INTRINSIC_ARGS";
         case OP_BIT_AND:
             return "OP_BIT_AND";
         case OP_BIT_OR:

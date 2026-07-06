@@ -736,7 +736,10 @@ const char* token_to_string(int token_id) {
         case TK_EOC: return "TK_EOC";
         case TK_VAR_SYMBOL: return "TK_VAR_SYMBOL";
         case TK_QUALIFIED_SYMBOL: return "TK_QUALIFIED_SYMBOL";
-        case TK_PARAMETERIZED_OPERATOR: return "TK_PARAMETERIZED_OPERATOR";
+        case TK_INTRINSIC_LT: return "TK_INTRINSIC_LT";
+        case TK_INTRINSIC_PREFIX_LT: return "TK_INTRINSIC_PREFIX_LT";
+        case TK_INTRINSIC_NAME: return "TK_INTRINSIC_NAME";
+        case TK_INTRINSIC_GENERIC_OPEN: return "TK_INTRINSIC_GENERIC_OPEN";
         case TK_INTEGER: return "TK_INTEGER";
         case TK_FLOAT: return "TK_FLOAT";
         case TK_DECIMAL: return "TK_DECIMAL";
@@ -755,7 +758,6 @@ const char* token_to_string(int token_id) {
         case TK_NAMED_AND_OPERATOR: return "TK_NAMED_AND_OPERATOR";
         case TK_NAMED_XOR_OPERATOR: return "TK_NAMED_XOR_OPERATOR";
         case TK_NAMED_OR_OPERATOR: return "TK_NAMED_OR_OPERATOR";
-        case TK_SIZEOF: return "TK_SIZEOF";
         case TK_NAMED_OPERATOR: return "TK_NAMED_OPERATOR";
         case TK_AND: return "TK_AND";
         case TK_OR: return "TK_OR";
@@ -1357,6 +1359,10 @@ const char* node_type_to_string(NodeType type) {
         case SIGNAL_BLOCK: return "SIGNAL_BLOCK";
         case SIGNAL_HANDLER: return "SIGNAL_HANDLER";
         case SIGNAL_NAMES: return "SIGNAL_NAMES";
+        case INTRINSIC: return "INTRINSIC";
+        case INTRINSIC_PATH: return "INTRINSIC_PATH";
+        case INTRINSIC_TYPES: return "INTRINSIC_TYPES";
+        case INTRINSIC_ARGS: return "INTRINSIC_ARGS";
         case OP_BIT_AND: return "OP_BIT_AND";
         case OP_BIT_OR: return "OP_BIT_OR";
         case OP_BIT_XOR: return "OP_BIT_XOR";

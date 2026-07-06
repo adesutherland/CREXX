@@ -1,0 +1,2 @@
+Error in intrinsic_argexists_invalid.crexx @ 4:6 - #INVALID_ARGEXISTS_SYNTAX, "<"
+1 error(s) in source file

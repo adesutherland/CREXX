@@ -7,5 +7,7 @@ say "count-dot=" || arg.
 say "first-call=" || arg(1)
 say "first-bracket=" || arg[1]
 say "first-dot=" || arg.1
+say "exists-intrinsic=" || <argexists>(1)
+say "missing-intrinsic=" || <argexists>(3)
 
 return 0

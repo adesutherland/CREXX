@@ -76,12 +76,12 @@ Release 1 binary-memory semantics should be shared.
    Future storage widths such as `.u64`, `.i64`, and `.f32` need measured
    Release 1 demand.
 5. `.binary` constants and `.binary` variables use the same read syntax.
-6. Byte positions are explicit: `<at..type(x)> buffer` means byte offset `x`
+6. Byte positions are explicit: `<at..type>(x) buffer` means byte offset `x`
    in `buffer`. The unit of the offset expression is always bytes.
-7. Typed access uses `<at..type(offset)> buffer`, with
-   `<at..type(offset, length)> buffer` when a variable-size span needs an
+7. Typed access uses `<at..type>(offset) buffer`, with
+   `<at..type>(offset, length) buffer` when a variable-size span needs an
    explicit byte length.
-8. `<sizeof>` is the Release 1 unary size operator for fixed storage types.
+8. `<sizeof..type>` is the Release 1 size operator for fixed storage types.
 9. Constants are read-only. Write, resize, reserve, and source-level cursor
    syntax must reject constants.
 10. Passing a constant to an ordinary procedure, method, or helper in Release 1
@@ -112,14 +112,14 @@ the same as reading a `.binary` variable:
 constant MAGIC = "4352584944583031"x as .binary
 constant MAGIC_PREFIX = "43525849"x as .binary
 
-if <at..u32(0)> MAGIC = <at..u32(0)> MAGIC_PREFIX then say "magic"
+if <at..u32>(0) MAGIC = <at..u32>(0) MAGIC_PREFIX then say "magic"
 ```
 
 That same syntax should work for variables:
 
 ```rexx
 page = .binary
-if <at..u32(0)> page = <at..u32(0)> MAGIC then say "magic"
+if <at..u32>(0) page = <at..u32>(0) MAGIC then say "magic"
 ```
 
 The implementation may differ. In Release 1, ordinary calls materialize
@@ -165,8 +165,8 @@ otherwise it should remain an explicit follow-up.
 The same read syntax does not mean the same mutability:
 
 ```rexx
-version = <at..u32(8)> HEADER          /* OK for constant or variable */
-<at..u32(8)> HEADER = 2                /* error: constant is read-only */
+version = <at..u32>(8) HEADER          /* OK for constant or variable */
+<at..u32>(8) HEADER = 2                /* error: constant is read-only */
 ```
 
 For mutable storage:
@@ -174,7 +174,7 @@ For mutable storage:
 ```rexx
 page = .binary
 page = bmemnew(4096)
-<at..u32(8)> page = 2
+<at..u32>(8) page = 2
 ```
 
 Release 1 should make read-only failures clear at compile time when the target
@@ -237,8 +237,8 @@ Release 1 uses explicit byte offsets plus a compiler-recognized parameterized
 intrinsic operator:
 
 ```rexx
-<at..type(offset)> memory
-<at..type(offset, length)> memory
+<at..type>(offset) memory
+<at..type>(offset, length) memory
 ```
 
 The `at` head names the intrinsic family. `..type` is the Release 1 compact
@@ -246,10 +246,20 @@ single-specialization form, chosen to keep the syntax compatible with possible
 future generic callable syntax such as `search.[.int, .string](tree, key)`.
 The storage type is the same concept as `.u32` or `.string`; in this compact
 operator form the leading dot is represented by the `..` specialization
-separator, so `<at..u32(...)>` means the `.u32` storage view.
+separator, so `<at..u32>(...)` means the `.u32` storage view.
 The runtime arguments inside `(...)` are ordinary expressions parsed by the
-normal expression grammar. `<sizeof>` remains a unary size operator for fixed
-storage types.
+normal expression grammar.
+
+The `<...>` intrinsic head is intentionally not an expression language. In
+Release 1 it is compact outside type-parameter lists: no whitespace is allowed
+between `<`, the intrinsic name/path, and `>`. Whitespace is accepted only
+inside the future generic type-list form, for example
+`<at.[ .u32, .string ]>`. That form is parsed so the lexer/parser shape is
+validated, but it reports a Release 1 unsupported diagnostic rather than
+lowering.
+
+`<sizeof..u32>` is the compact intrinsic-head spelling for the `.u32` byte
+width.
 
 ### Byte Access
 
@@ -257,8 +267,8 @@ Byte access is ordinary typed access with `u8` or `i8` and an explicit byte
 offset:
 
 ```rexx
-byte = <at..u8(6)> buffer
-<at..u8(6)> buffer = 255
+byte = <at..u8>(6) buffer
+<at..u8>(6) buffer = 255
 ```
 
 The byte result is an `.int` in the range `0..255`. Writes signal
@@ -272,18 +282,18 @@ binary buffer.
 
 ### Precedence
 
-The parser treats `<at..type(args)> memory` as one primary expression. Offset
+The parser treats `<at..type>(args) memory` as one primary expression. Offset
 and length arithmetic lives inside the normal argument list:
 
 ```rexx
-b = <at..u8(1 + 1)> data
+b = <at..u8>(1 + 1) data
 ```
 
 This reads byte offset `2`. Arithmetic after the memory operand applies to the
 loaded value:
 
 ```rexx
-b = <at..u8(1)> data + 1
+b = <at..u8>(1) data + 1
 ```
 
 This keeps layout expressions such as `node + NODE_BALANCE` natural inside the
@@ -295,10 +305,10 @@ Fixed-width fields are read by specializing `at` with the storage type and
 passing a byte offset:
 
 ```rexx
-i = <at..i8(6)> buffer
-n = <at..u32(pos)> buffer
-f = (<at..i8(6)> buffer) as .float
-balance = <at..i8(node + NODE_BALANCE)> page
+i = <at..i8>(6) buffer
+n = <at..u32>(pos) buffer
+f = (<at..i8>(6) buffer) as .float
+balance = <at..i8>(node + NODE_BALANCE) page
 ```
 
 The `as .float` in the example is ordinary cREXX cast syntax applied after the
@@ -308,8 +318,8 @@ a zero-based byte offset; `as` remains a cast.
 Writes use the same left-hand shape:
 
 ```rexx
-<at..u32(pos)> buffer = next_offset
-<at..i8(node + NODE_BALANCE)> page = balance
+<at..u32>(pos) buffer = next_offset
+<at..i8>(node + NODE_BALANCE) page = balance
 ```
 
 Fixed-width types know their byte width. No length is written for `.u8`, `.i8`,
@@ -322,9 +332,9 @@ Release 1 need.
 Variable-size memory views pass a second byte-count argument:
 
 ```rexx
-b = <at..binary(6, 10)> buffer
-s = <at..string(6, 10)> buffer
-d = <at..decimal(pos, decimal_len)> buffer
+b = <at..binary>(6, 10) buffer
+s = <at..string>(6, 10) buffer
+d = <at..decimal>(pos, decimal_len) buffer
 ```
 
 When the expression is materialized as a normal Rexx value, `.string` validates
@@ -334,9 +344,9 @@ Variable-size writes use the same conceptual shape, but are not part of Slice 2
 source lowering. The compiler currently rejects them with a specific diagnostic:
 
 ```rexx
-<at..binary(pos, key_len)> buffer = key_bytes
-<at..string(pos, key_len)> buffer = key_text
-<at..decimal(pos, amount_len)> buffer = amount
+<at..binary>(pos, key_len) buffer = key_bytes
+<at..string>(pos, key_len) buffer = key_text
+<at..decimal>(pos, amount_len) buffer = amount
 ```
 
 Later slices can add the write lowering and decide whether any exact-length
@@ -345,17 +355,17 @@ spell the length when a span length matters.
 
 ### Size Operator
 
-`<sizeof>` is a unary compile-time operator for fixed storage types:
+`<sizeof..type>` is a compile-time operator for fixed storage types:
 
 ```rexx
 constant NODE_BALANCE = 12
-constant NODE_SIZE = 3 * <sizeof> .u32 + <sizeof> .i8
+constant NODE_SIZE = 3 * <sizeof..u32> + <sizeof..i8>
 
-balance = <at..i8(node + NODE_BALANCE)> page
-next = node + 3 * <sizeof> .u32
+balance = <at..i8>(node + NODE_BALANCE) page
+next = node + 3 * <sizeof..u32>
 ```
 
-`<sizeof>` returns bytes. It does not imply typed-element indexing; offsets are
+The operator returns bytes. It does not imply typed-element indexing; offsets are
 always byte offsets. `NODE_BALANCE` and similar layout constants should be byte
 offsets.
 
@@ -372,9 +382,9 @@ create a substring, binary slice, or string value. This is the planned Slice 3
 work; Slice 2 materializes variable-size reads after a strict `bcheckrange`.
 
 ```rexx
-if <at..binary(pos, key_len)> buffer = key_bytes then say "found"
-if <at..string(6, 5)> buffer = "index" then say "found"
-if <at..binary(pos, <sizeof> .u32)> buffer = KEY_U32_BYTES then say "found"
+if <at..binary>(pos, key_len) buffer = key_bytes then say "found"
+if <at..string>(6, 5) buffer = "index" then say "found"
+if <at..binary>(pos, <sizeof..u32>) buffer = KEY_U32_BYTES then say "found"
 ```
 
 For compare, `.string` selects compatibility with string operands, but the
@@ -388,8 +398,8 @@ when that operand is a literal, constant, or ordinary variable with a known
 runtime byte length:
 
 ```rexx
-if <at..binary(pos)> buffer = KEY_BYTES then say "found"
-if <at..string(6)> buffer = "index" then say "found"
+if <at..binary>(pos) buffer = KEY_BYTES then say "found"
+if <at..string>(6) buffer = "index" then say "found"
 ```
 
 Until that compare lowering exists, pass the length for variable-size memory
@@ -406,7 +416,7 @@ if bmem.equals(buffer, pos, key_len, key_bytes) then say "found"
 ```
 
 They are not the hot path unless the compiler recognizes them as intrinsics and
-lowers them to the same RXAS as `<at..type(args)>`.
+lowers them to the same RXAS as `<at..type>(args)`.
 
 The inliner roadmap should include special lowering for selected binary-memory
 functions. That lets users choose a BIF/function spelling where it reads better
@@ -761,9 +771,9 @@ Strict binary-memory operations should use predictable signals:
 
 Compiler lowering should prefer direct RXAS over helper calls:
 
-- `<at..type(offset)> buffer` on `.binary` variables lowers to strict typed
+- `<at..type>(offset) buffer` on `.binary` variables lowers to strict typed
   reads, writes, or compare.
-- `<at..type(offset)> constant` uses the same source syntax but may materialize
+- `<at..type>(offset) constant` uses the same source syntax but may materialize
   a register in Release 1.
 - Writes, resize, reserve, clear, fill, and any generated internal cursor
   movement mutate the binary register and are optimizer barriers for that
@@ -788,9 +798,9 @@ Compiler lowering should prefer direct RXAS over helper calls:
 
 ### Slice 2: Source Syntax And Intrinsics
 
-- Implement `<at..type(offset)> buffer`,
-  `<at..type(offset, length)> buffer`, and unary `<sizeof>` as compiler
-  recognized intrinsics/operators.
+- Implement `<at..type>(offset) buffer`,
+  `<at..type>(offset, length) buffer`, and compact `<sizeof..type>` as
+  compiler recognized intrinsics/operators.
 - Implement compiler lowering directly to RXAS for fixed-width reads,
   fixed-width writes, and variable-size reads.
 - Keep helper functions only as fallback/test API.
@@ -845,7 +855,7 @@ Candidate additions:
   ```rexx
   node.left(arena, pos)
   arena.node[pos].left
-  <at..u32(pos + NODE_LEFT)> arena
+  <at..u32>(pos + NODE_LEFT) arena
   ```
 
 - Cursor/view objects that the compiler treats as zero-cost:
@@ -859,8 +869,8 @@ Candidate additions:
 - Lexer/parser convenience syntax:
 
   ```rexx
-  when <at..string(pos, 6)> source = "select" then ...
-  when <at..binary(pos)> source = KW_SELECT then ...
+  when <at..string>(pos, 6) source = "select" then ...
+  when <at..binary>(pos) source = KW_SELECT then ...
   ```
 
 - Schema/version metadata for persistent binary structures.
@@ -907,9 +917,10 @@ has not proven itself in Release 1 code.
 
 ## Working Recommendation
 
-For Release 1, use explicit offsets with `<at..type(offset)> buffer`,
-optional length as `<at..type(offset, length)> buffer`, and unary `<sizeof>`,
-then lower that syntax directly to a compact RXAS typed-memory core. Keep
+For Release 1, use explicit offsets with `<at..type>(offset) buffer`,
+optional length as `<at..type>(offset, length) buffer`, and the size operator
+`<sizeof..type>`, then lower that syntax directly to a compact RXAS
+typed-memory core. Keep
 constants and variables identical at the source read level, accept ordinary
 register materialization for constants in calls, and use scoped constants plus
 direct syntax to keep hot lookup code fast.
