@@ -414,7 +414,9 @@ offsets and returns `-1` for out-of-range reads. `SETBYTE` and `BUPDATE` are
 strict and raise `OUT_OF_RANGE` for invalid byte indexes or fixed-size overlay
 writes past the destination length. `BCONCAT`, `BAPPEND`, and `BSLICE` build
 ordinary byte buffers without UTF-8 validation and clear VM-private UTF cache
-flags on the destination.
+flags on the destination. `BCHECKRANGE` validates a zero-based byte offset and
+length without mutating either register; negative values and ranges that do not
+fit inside the current logical binary length raise `OUT_OF_RANGE`.
 
 Typed binary memory opcodes are strict fixed-width views over the same binary
 slot. `BGETU8`, `BGETI8`, `BGETU16`, `BGETI16`, `BGETU32`, `BGETI32`, and

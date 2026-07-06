@@ -1408,6 +1408,12 @@ const char *ast_ndtp(NodeType type) {
             return "OP_TYPE_IS";
         case OP_TYPE_CAST:
             return "OP_TYPE_CAST";
+        case OP_BINARY_AT:
+            return "OP_BINARY_AT";
+        case OP_BINARY_FOR:
+            return "OP_BINARY_FOR";
+        case OP_SIZEOF:
+            return "OP_SIZEOF";
         case OP_TYPEOF:
             return "OP_TYPEOF";
         case OP_REFERENCE:

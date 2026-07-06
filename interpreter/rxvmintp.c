@@ -8390,10 +8390,19 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     }
     DISPATCH
 
-/* ------------------------------------------------------------------------------------
- *  SETBYTE_REG_REG_REG  op1[op2] = op3
- *  -----------------------------------------------------------------------------------
- */
+    START_INSTRUCTION(BCHECKRANGE_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BCHECKRANGE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    if (op3R->int_value < 0 ||
+        (uintmax_t)op3R->int_value > (uintmax_t)SIZE_MAX ||
+        !rxvm_binary_range(op1R, op2R->int_value, (size_t)op3R->int_value, 0)) {
+        SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+    }
+    DISPATCH
+
+    /* ------------------------------------------------------------------------------------
+     *  SETBYTE_REG_REG_REG  op1[op2] = op3
+     *  -----------------------------------------------------------------------------------
+     */
     START_INSTRUCTION(SETBYTE_REG_REG_REG) CALC_DISPATCH(3)
     DEBUG("TRACE - SETBYTE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     if (op2R->int_value < 0 || (size_t)op2R->int_value >= op1R->binary_length ||

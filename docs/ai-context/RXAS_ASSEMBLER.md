@@ -157,6 +157,7 @@ slot, not its string slot. Binary-buffer VM instructions exposed at RXAS are:
 - `bsetu32 rBin,rOffset,rValue`
 - `bseti32 rBin,rOffset,rValue`
 - `bsetf64 rBin,rOffset,rFloat`
+- `bcheckrange rBin,rOffset,rLen`
 - `bconcat rDst,rLeft,rRight`
 - `bappend rDst,rRight`
 - `setbinpos rBin,rOffset`
@@ -181,12 +182,16 @@ negative lengths raise `OUT_OF_RANGE`, and allocation failure raises `FAILURE`.
 current logical byte range and raises `OUT_OF_RANGE` for bytes outside
 `0..255`.
 
-`bslice` reads from the source binary cursor and truncates at end-of-buffer.
-`setbyte` and `bupdate` are strict and raise `OUT_OF_RANGE` for invalid indexes,
-bytes outside `0..255`, or overlay writes past the destination length. `stobin`
-copies the register's current string bytes into its binary slot. `bintos`
-validates the register's current binary bytes as UTF-8 and copies them into its
-string slot; invalid bytes raise `UNICODE_ERROR` in UTF builds.
+`bcheckrange` is a strict side-effect-free range check for
+`rOffset..rOffset + rLen`; negative offsets, negative lengths, and ranges past
+the logical binary length raise `OUT_OF_RANGE`. `bslice` reads from the source
+binary cursor and truncates at end-of-buffer, so generated strict span reads
+must check the range before using it. `setbyte` and `bupdate` are strict and
+raise `OUT_OF_RANGE` for invalid indexes, bytes outside `0..255`, or overlay
+writes past the destination length. `stobin` copies the register's current
+string bytes into its binary slot. `bintos` validates the register's current
+binary bytes as UTF-8 and copies them into its string slot; invalid bytes raise
+`UNICODE_ERROR` in UTF builds.
 
 Level B exposes these byte-buffer instructions through the `rxfnsb` binary
 helpers (`binlength`, `binbyte`, `binsetbyte`, `binsubstr`, `binconcat`,

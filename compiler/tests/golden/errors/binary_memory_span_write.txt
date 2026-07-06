@@ -1,0 +1,2 @@
+Error in binary_memory_span_write.crexx @ 6:3 - #BINARY_MEMORY_SPAN_WRITE_UNSUPPORTED, "<at..binary(0, 1)> data"
+1 error(s) in source file

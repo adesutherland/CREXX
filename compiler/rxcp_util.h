@@ -83,4 +83,22 @@ const char* token_to_string(int token_id);
 /* Convert NodeType to human-readable string */
 const char* node_type_to_string(NodeType type);
 
+typedef struct RxcpBinaryStorageInfo {
+    const char *name;
+    ValueType value_type;
+    int width;
+    int is_fixed;
+    const char *rxas_get;
+    const char *rxas_set;
+} RxcpBinaryStorageInfo;
+
+int rxcp_binary_storage_info(ASTNode *type_node, RxcpBinaryStorageInfo *info);
+int rxcp_binary_storage_is_valid(ASTNode *type_node);
+int rxcp_binary_storage_is_fixed(ASTNode *type_node);
+int rxcp_binary_storage_sizeof(ASTNode *type_node);
+int rxcp_binary_memory_at_parts(ASTNode *node, ASTNode **type_node, ASTNode **base, ASTNode **offset);
+int rxcp_binary_memory_is_access(ASTNode *node);
+int rxcp_binary_memory_is_lhs(ASTNode *node);
+int rxcp_binary_memory_base_is_readonly(ASTNode *node);
+
 #endif //CREXX_RXCP_UTIL_H

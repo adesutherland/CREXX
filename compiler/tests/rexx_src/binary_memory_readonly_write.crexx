@@ -1,0 +1,7 @@
+options levelb
+
+constant HEADER = '01020304'x as .binary
+
+main: procedure = .int
+  <at..u8(0)> HEADER = 1
+  return 0

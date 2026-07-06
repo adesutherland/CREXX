@@ -135,11 +135,13 @@ int rexbscan(Context* s) {
     "/" ob "/" { RET(s->numeric_standard ? TK_MOD : TK_UNKNOWN); } // numeric_standard: 1 = Classic Standard, 0 = Common Standard
     "*" ob "*" { RET(s->numeric_standard ? TK_POWER_L : TK_POWER_R); } // numeric_standard: 1 = Classic Standard, 0 = Common Standard
 
+    '<SIZE>' | '<SIZEOF>' { RET(TK_SIZEOF); }
     '<IDIV>' | '<MOD>' | '<REM>' { RET(TK_NAMED_MULT_OPERATOR); }
     '<SHL>' | '<SHR>' { RET(TK_NAMED_SHIFT_OPERATOR); }
     '<AND>' | '<HAS>' | '<CLEAR>' { RET(TK_NAMED_AND_OPERATOR); }
     '<XOR>' { RET(TK_NAMED_XOR_OPERATOR); }
     '<OR>' | '<SET>' { RET(TK_NAMED_OR_OPERATOR); }
+    '<AT..' simple / "(" { RET(TK_PARAMETERIZED_OPERATOR); }
     namedop { RET(TK_NAMED_OPERATOR); }
     "=" { RET(TK_EQUAL); }
     not ob "=" | "<" ob ">" | ">" ob "<" { RET(TK_NEQ); }

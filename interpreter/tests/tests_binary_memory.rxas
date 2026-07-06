@@ -147,6 +147,12 @@ main() .locals=40
     bgeti8 r4,r7,r2
     ieq r0,r4,-128
     brf fail_const_bgeti8_80,r0
+    load r2,2
+    load r3,4
+    bcheckrange r7,r2,r3
+    load r2,6
+    load r3,0
+    bcheckrange r7,r2,r3
 
     bclear r1
     blen r3,r1
@@ -186,6 +192,13 @@ catch_write_oob:
     br fail_bad_byte_signal
 
 catch_bad_byte:
+    sigbr catch_bad_range,"OUT_OF_RANGE"
+    load r2,5
+    load r3,2
+    bcheckrange r7,r2,r3
+    br fail_bad_range_signal
+
+catch_bad_range:
     say "PASS: Binary Memory Typed Ops"
     ret 0
 
@@ -296,4 +309,7 @@ fail_write_oob_signal:
     ret 1
 fail_bad_byte_signal:
     say "FAIL: bsetu8 bad byte did not signal"
+    ret 1
+fail_bad_range_signal:
+    say "FAIL: bcheckrange out-of-range did not signal"
     ret 1

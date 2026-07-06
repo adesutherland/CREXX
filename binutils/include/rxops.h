@@ -621,3 +621,4 @@ X(BSETI16_REG_REG_REG, 595, FMT_R_R_R, FLOW_NEXT, 0, "Signed 16-bit little-endia
 X(BSETU32_REG_REG_REG, 596, FMT_R_R_R, FLOW_NEXT, 0, "Unsigned 32-bit little-endian binary write op1[op2]=op3")
 X(BSETI32_REG_REG_REG, 597, FMT_R_R_R, FLOW_NEXT, 0, "Signed 32-bit little-endian binary write op1[op2]=op3")
 X(BSETF64_REG_REG_REG, 598, FMT_R_R_R, FLOW_NEXT, 0, "Float64 little-endian binary write op1[op2]=op3")
+X(BCHECKRANGE_REG_REG_REG, 599, FMT_R_R_R, FLOW_NEXT, FLG_OPT_BARRIER, "Check binary range op1[op2..op2+op3)")

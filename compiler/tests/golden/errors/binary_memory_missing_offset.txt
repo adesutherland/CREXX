@@ -1,0 +1,2 @@
+Error in binary_memory_missing_offset.crexx @ 6:7 - #BINARY_MEMORY_OFFSET_REQUIRED, "<at..u32()> data"
+1 error(s) in source file

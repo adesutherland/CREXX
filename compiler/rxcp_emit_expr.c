@@ -255,6 +255,53 @@ static ValueType operand_type_from_prefix(char *tp_prefix, ASTNode *node) {
     return node ? node->target_type : TP_UNKNOWN;
 }
 
+static int output_fragment_in_chain(OutputFragment *chain, OutputFragment *fragment) {
+    OutputFragment *current;
+
+    if (!chain || !fragment) return 0;
+    while (chain->before) chain = chain->before;
+    for (current = chain; current; current = current->after) {
+        if (current == fragment) return 1;
+    }
+    return 0;
+}
+
+static void concat_binary_memory_output_fragment(OutputFragment *output, OutputFragment *fragment) {
+    if (!output || !fragment) return;
+    if (output_fragment_in_chain(output, fragment)) return;
+    output_concat(output, fragment);
+}
+
+static void concat_binary_memory_operand_output(OutputFragment *output, ASTNode *node) {
+    ASTNode *base = 0;
+    ASTNode *offset = 0;
+    ASTNode *length = 0;
+
+    if (!output || !rxcp_binary_memory_at_parts(node, 0, &base, &offset)) return;
+    if (node && node->node_type == OP_BINARY_FOR) length = ast_chdn(node, 1);
+    if (base && base->output) concat_binary_memory_output_fragment(output, base->output);
+    if (offset && offset->output) concat_binary_memory_output_fragment(output, offset->output);
+    if (length && length->output) concat_binary_memory_output_fragment(output, length->output);
+}
+
+static void concat_binary_memory_operand_cleanup(OutputFragment *output, ASTNode *node) {
+    ASTNode *base = 0;
+    ASTNode *offset = 0;
+    ASTNode *length = 0;
+
+    if (!output || !rxcp_binary_memory_at_parts(node, 0, &base, &offset)) return;
+    if (node && node->node_type == OP_BINARY_FOR) length = ast_chdn(node, 1);
+    if (length && length->cleanup) concat_binary_memory_output_fragment(output, length->cleanup);
+    if (offset && offset->cleanup) concat_binary_memory_output_fragment(output, offset->cleanup);
+    if (base && base->cleanup) concat_binary_memory_output_fragment(output, base->cleanup);
+}
+
+static void set_binary_memory_operand_cleanup(ASTNode *node) {
+    if (!node) return;
+    if (!node->cleanup) node->cleanup = output_f();
+    concat_binary_memory_operand_cleanup(node->cleanup, node);
+}
+
 static char *resolve_object_contract_name(ASTNode *type_node) {
     Symbol *symbol;
 
@@ -1342,6 +1389,126 @@ void emit_expression(ASTNode *node, void *payload) {
             if (child1->cleanup) output_concat(node->output, child1->cleanup);
             type_promotion(node);
             break;
+
+        case OP_SIZEOF: {
+            RxcpBinaryStorageInfo info;
+            int width = 0;
+
+            if (rxcp_binary_storage_info(child1, &info) && info.is_fixed) {
+                width = info.width;
+            }
+            if (!node->output) node->output = output_f();
+            temp1 = mprintf("   load %c%d,%d\n",
+                            node->register_type,
+                            node->register_num,
+                            width);
+            output_append_text(node->output, temp1);
+            free(temp1);
+            type_promotion(node);
+            break;
+        }
+
+        case OP_BINARY_AT: {
+            RxcpBinaryStorageInfo info;
+            ASTNode *base = 0;
+            ASTNode *offset = 0;
+
+            if (!node->output) node->output = output_f();
+            concat_binary_memory_operand_output(node->output, node);
+
+            if (rxcp_binary_memory_is_lhs(node) ||
+                (node->parent && node->parent->node_type == OP_BINARY_FOR)) {
+                set_binary_memory_operand_cleanup(node);
+                break;
+            }
+
+            if (rxcp_binary_storage_info(child1, &info) &&
+                info.is_fixed &&
+                rxcp_binary_memory_at_parts(node, 0, &base, &offset) &&
+                base && offset) {
+                temp1 = mprintf("   %s %c%d,%c%d,%c%d\n",
+                                info.rxas_get,
+                                node->register_type,
+                                node->register_num,
+                                base->register_type,
+                                base->register_num,
+                                offset->register_type,
+                                offset->register_num);
+                output_append_text(node->output, temp1);
+                free(temp1);
+            }
+
+            concat_binary_memory_operand_cleanup(node->output, node);
+            type_promotion(node);
+            break;
+        }
+
+        case OP_BINARY_FOR: {
+            ASTNode *base = 0;
+            ASTNode *offset = 0;
+            ASTNode *length = child2;
+            int saved_cursor_reg = node->additional_registers;
+
+            if (!node->output) node->output = output_f();
+            concat_binary_memory_operand_output(node->output, node);
+
+            if (!rxcp_binary_memory_is_lhs(node) &&
+                rxcp_binary_memory_at_parts(node, 0, &base, &offset) &&
+                base && offset && length) {
+                temp1 = mprintf("   bcheckrange %c%d,%c%d,%c%d\n"
+                                "   getbinpos r%d,%c%d\n"
+                                "   setbinpos %c%d,%c%d\n"
+                                "   bslice %c%d,%c%d,%c%d\n",
+                                base->register_type,
+                                base->register_num,
+                                offset->register_type,
+                                offset->register_num,
+                                length->register_type,
+                                length->register_num,
+                                saved_cursor_reg,
+                                base->register_type,
+                                base->register_num,
+                                base->register_type,
+                                base->register_num,
+                                offset->register_type,
+                                offset->register_num,
+                                node->register_type,
+                                node->register_num,
+                                base->register_type,
+                                base->register_num,
+                                length->register_type,
+                                length->register_num);
+                output_append_text(node->output, temp1);
+                free(temp1);
+
+                temp1 = mprintf("   setbinpos %c%d,r%d\n",
+                                base->register_type,
+                                base->register_num,
+                                saved_cursor_reg);
+                output_append_text(node->output, temp1);
+                free(temp1);
+
+                if (node->value_type == TP_STRING || node->target_type == TP_STRING ||
+                    node->value_type == TP_DECIMAL || node->target_type == TP_DECIMAL) {
+                    temp1 = mprintf("   bintos %c%d\n",
+                                    node->register_type,
+                                    node->register_num);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                }
+                if (node->value_type == TP_DECIMAL || node->target_type == TP_DECIMAL) {
+                    temp1 = mprintf("   stod %c%d\n",
+                                    node->register_type,
+                                    node->register_num);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                }
+            }
+
+            concat_binary_memory_operand_cleanup(node->output, node);
+            type_promotion(node);
+            break;
+        }
 
         case OP_TYPEOF:
             if (!node->output) node->output = output_f();

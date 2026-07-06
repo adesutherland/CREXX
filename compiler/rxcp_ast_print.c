@@ -499,6 +499,9 @@ walker_result pdot_walker_handler(walker_direction direction,
             case OP_BIT_SHL:
             case OP_BIT_SHR:
             case OP_FLAG_HAS:
+            case OP_BINARY_AT:
+            case OP_BINARY_FOR:
+            case OP_SIZEOF:
             case OP_MAKE_ARRAY:
             case NOVAL:
                 attributes = "color=darkcyan";

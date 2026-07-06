@@ -1,0 +1,7 @@
+options levelb
+
+main: procedure = .int
+  data = .binary
+  data = '01020304'x as .binary
+  <at..binary(0, 1)> data = 'ff'x as .binary
+  return 0

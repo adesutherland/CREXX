@@ -92,6 +92,117 @@ static ASTNode *named_prefix_operator(Context *context, Token *token, ASTNode *c
     return node;
 }
 
+static ASTNode *sizeof_operator(Context *context, Token *token, ASTNode *type_node) {
+    ASTNode *node = ast_f(context, OP_SIZEOF, token);
+    add_ast(node, type_node);
+    return node;
+}
+
+static ASTNode *binary_at_operator(Context *context, Token *token, ASTNode *type_node, ASTNode *base, ASTNode *offset) {
+    ASTNode *node = ast_f(context, OP_BINARY_AT, token);
+    add_ast(node, type_node);
+    add_ast(node, base);
+    if (offset) add_ast(node, offset);
+    return node;
+}
+
+static ASTNode *binary_for_operator(Context *context, Token *token, ASTNode *left, ASTNode *right) {
+    ASTNode *node;
+
+    if (!left || left->node_type != OP_BINARY_AT) {
+        node = ast_err(context, "BINARY_MEMORY_AT_REQUIRED", token);
+        add_ast(node, left);
+        add_ast(node, right);
+        return node;
+    }
+    if (ast_nchd(left) < 3) {
+        mknd_err(left, "BINARY_MEMORY_OFFSET_REQUIRED");
+    }
+
+    node = ast_f(context, OP_BINARY_FOR, token);
+    add_ast(node, left);
+    add_ast(node, right);
+    return node;
+}
+
+static int binary_intrinsic_type_suffix(Token *token, const char **suffix, size_t *suffix_length) {
+    size_t i;
+    size_t prefix_length = 0;
+
+    size_t start = token && token->length > 0 && token->token_string[0] == '<' ? 1 : 0;
+
+    if (!token || !token->token_string || !suffix || !suffix_length) return 0;
+    for (i = start; i + 1 < token->length; i++) {
+        if (token->token_string[i] == '.' && token->token_string[i + 1] == '.') {
+            prefix_length = i;
+            break;
+        }
+    }
+    if (prefix_length != start + 2) return 0;
+    if (tolower((unsigned char) token->token_string[start]) != 'a' ||
+        tolower((unsigned char) token->token_string[start + 1]) != 't') {
+        return 0;
+    }
+    if (prefix_length + 2 >= token->length) return 0;
+
+    *suffix = token->token_string + prefix_length + 2;
+    *suffix_length = token->length - prefix_length - 2;
+    return 1;
+}
+
+static ASTNode *binary_intrinsic_type_node(Context *context, Token *token) {
+    const char *suffix = 0;
+    size_t suffix_length = 0;
+    ASTNode *node;
+
+    if (!binary_intrinsic_type_suffix(token, &suffix, &suffix_length)) return 0;
+    node = ast_f(context, CLASS, token);
+    node->node_string = (char *) suffix;
+    node->node_string_length = suffix_length;
+    return node;
+}
+
+static ASTNode *binary_memory_intrinsic_access(Context *context, Token *token, ASTNode *args, ASTNode *base) {
+    ASTNode *type_node;
+    ASTNode *offset = 0;
+    ASTNode *length = 0;
+    ASTNode *extra = 0;
+    ASTNode *at_node;
+    ASTNode *node;
+
+    type_node = binary_intrinsic_type_node(context, token);
+    if (!type_node) {
+        node = ast_err(context, "UNKNOWN_NAMED_OPERATOR", token);
+        if (args) add_ast(node, args);
+        if (base) add_ast(node, base);
+        return node;
+    }
+
+    if (args && args->node_type != NOVAL) {
+        offset = args;
+        length = offset->sibling;
+        offset->sibling = 0;
+    } else if (args) {
+        length = args->sibling;
+        args->sibling = 0;
+    }
+    if (length) {
+        extra = length->sibling;
+        length->sibling = 0;
+    }
+    if (extra) mknd_err1(extra, "UNEXPECTED_ARGUMENT", "position", "3");
+
+    at_node = binary_at_operator(context, token, type_node, base, offset);
+    if (length && length->node_type != NOVAL) {
+        node = binary_for_operator(context, token, at_node, length);
+    } else {
+        node = at_node;
+        if (length) mknd_err2(length, "ARGUMENT_REQUIRED", "position", "2", "name", "length");
+    }
+    if (extra) add_ast(node, extra);
+    return node;
+}
+
 static ASTNode *named_binary_operator(Context *context, Token *token, ASTNode *left, ASTNode *right) {
     ASTNode *node;
     ASTNode *not_node;
@@ -128,7 +239,7 @@ static ASTNode *named_binary_operator(Context *context, Token *token, ASTNode *l
 }
 }
 
-%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT TK_EXIT_PRIMARY TK_EXIT_TOKEN TK_QUALIFIED_SYMBOL TK_NAMED_OPERATOR TK_NAMED_MULT_OPERATOR TK_NAMED_SHIFT_OPERATOR TK_NAMED_AND_OPERATOR TK_NAMED_XOR_OPERATOR TK_NAMED_OR_OPERATOR.
+%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT TK_EXIT_PRIMARY TK_EXIT_TOKEN TK_QUALIFIED_SYMBOL TK_PARAMETERIZED_OPERATOR TK_SIZEOF TK_NAMED_OPERATOR TK_NAMED_MULT_OPERATOR TK_NAMED_SHIFT_OPERATOR TK_NAMED_AND_OPERATOR TK_NAMED_XOR_OPERATOR TK_NAMED_OR_OPERATOR.
 %wildcard ANYTHING.
 
 /* Low precedence */
@@ -701,6 +812,10 @@ assignment(I) ::=  var_symbol(V) TK_EQUAL(T) expression(E). [TK_VAR_SYMBOL]
     {
         I = ast_f(context, ASSIGN, T); add_ast(I,V); add_ast(I,E);
         V->node_type = VAR_TARGET;
+    }
+assignment(I) ::=  binary_memory_access(V) TK_EQUAL(T) expression(E). [TK_VAR_SYMBOL]
+    {
+        I = ast_f(context, ASSIGN, T); add_ast(I,V); add_ast(I,E);
     }
 
 command(I)             ::= command_expression(E).
@@ -1514,9 +1629,18 @@ term(E)                 ::= TK_IMPORT(K). [ANYTHING] { E = mknd_err(ast_f(contex
 term(E)                 ::= TK_VOID(K). [ANYTHING] { E = mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"); }
 term(E)                 ::= TK_OPTIONAL(K). [ANYTHING] { E = mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"); }
 
+binary_memory_operand(A) ::= term(T).
+                         { A = T; }
+binary_memory_operand(A) ::= TK_OPEN_BRACKET expression(B) TK_CLOSE_BRACKET.
+                         { A = B; }
+binary_memory_access(A) ::= TK_PARAMETERIZED_OPERATOR(O) function_parameters(P) TK_GT binary_memory_operand(B). [TK_NAMED_OPERATOR]
+                         { A = binary_memory_intrinsic_access(context, O, P, B); }
+
 bracket(A)           ::= term(T).
                          { A = T; }
 bracket(A)           ::= TK_OPEN_BRACKET expression(B) TK_CLOSE_BRACKET.
+                         { A = B; }
+bracket(A)           ::= binary_memory_access(B). [TK_NAMED_OPERATOR]
                          { A = B; }
 block_expr(A)        ::= TK_DO(T) TK_EOC instruction_list(I) TK_END.
                          { A = ast_f(context, BLOCK_EXPR, T); add_ast(A, I); }
@@ -1555,6 +1679,8 @@ bracket(F)           ::= TK_CLASS_TYPE(S) function_parameters(P).
 command_bracket(A)   ::= term(T).
                          { A = T; }
 command_bracket(A)   ::= TK_OPEN_BRACKET expression(B) TK_CLOSE_BRACKET.
+                         { A = B; }
+command_bracket(A)   ::= binary_memory_access(B). [TK_NAMED_OPERATOR]
                          { A = B; }
 command_bracket(F)   ::= TK_CLASS_TYPE(S) TK_CLASS_TYPE(M) function_parameters(P).
                            {
@@ -1596,6 +1722,8 @@ command_prefix_expression(A) ::= TK_NOT(O) prefix_expression(C).
                          { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
 command_prefix_expression(A) ::= TK_NAMED_OPERATOR(O) prefix_expression(C).
                          { A = named_prefix_operator(context, O, C); }
+command_prefix_expression(A) ::= TK_SIZEOF(O) class(C).
+                         { A = sizeof_operator(context, O, C); }
 command_prefix_expression(A) ::= TK_PLUS(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_PLUS, O); add_ast(A,C); }
 command_prefix_expression(A) ::= TK_HIGH_PRIORITY_MINUS(O) prefix_expression(C). [TK_NOT]
@@ -1723,6 +1851,8 @@ prefix_expression(A) ::= TK_NOT(O) prefix_expression(C).
                          { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
 prefix_expression(A) ::= TK_NAMED_OPERATOR(O) prefix_expression(C).
                          { A = named_prefix_operator(context, O, C); }
+prefix_expression(A) ::= TK_SIZEOF(O) class(C).
+                         { A = sizeof_operator(context, O, C); }
 prefix_expression(A) ::= TK_PLUS(O) prefix_expression(C). [TK_NOT]
                          { A = ast_f(context, OP_PLUS, O); add_ast(A,C); }
 prefix_expression(A) ::= TK_HIGH_PRIORITY_MINUS(O) prefix_expression(C). [TK_NOT]
@@ -1816,6 +1946,8 @@ prefix_expression_c(A) ::= TK_NOT(O) prefix_expression_c(C).
                          { A = ast_f(context, OP_NOT, O); add_ast(A,C); }
 prefix_expression_c(A) ::= TK_NAMED_OPERATOR(O) prefix_expression_c(C).
                          { A = named_prefix_operator(context, O, C); }
+prefix_expression_c(A) ::= TK_SIZEOF(O) class(C).
+                         { A = sizeof_operator(context, O, C); }
 prefix_expression_c(A) ::= TK_REFERENCE(O) prefix_expression_c(C). [TK_NOT]
                          { A = ast_f(context, OP_REFERENCE, O); add_ast(A,C); }
 prefix_expression_c(A) ::= TK_DEREFERENCE(O) prefix_expression_c(C). [TK_NOT]

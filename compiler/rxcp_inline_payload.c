@@ -684,6 +684,9 @@ static int inline_meta_node_is_exportable(ASTNode *node) {
         case OP_TYPE_IS:
         case OP_TYPE_CAST:
         case OP_TYPEOF:
+        case OP_BINARY_AT:
+        case OP_BINARY_FOR:
+        case OP_SIZEOF:
         case OP_ARGS:
         case OP_ARG_VALUE:
         case OP_ARG_EXISTS:
