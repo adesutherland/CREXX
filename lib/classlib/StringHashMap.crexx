@@ -32,8 +32,6 @@ import rxfnsb
  * The implementation stores string keys and values in parallel arrays.
  * Key arrays, value arrays, and iterators preserve insertion order.
  *
- * @author Rene Vincent Jansen
- * @author Peter Jacob
  */
 StringHashMap: class implements .StringIterable
 val = .int

@@ -2,10 +2,10 @@
 
 This publication contains the documentation of the cRexx standard library. All documented functionality is delivered in every distribution of the cRexx system, while platform dependent differences or supersets are relegated to the appendices. The Rexx built-in functions, traditionally seen as part of the language, are also documented in the *Language Reference*, but in this *Library Reference* there is an emphasis on platform dependent functions and cRexx specific additions.
 
-With Classic Rexx having its origins as a language intended for command processing and procedural programming, two object oriented successors, Object Rexx and \nr{} have introduced (divergent) object concepts, types and syntax. cRexx introduced native hardware types[^java] and an object oriented notation which stays closer to Classic Rexx (with standard Classic Rexx labels and `class` and `interface` keywords in the location of the `procedure` keyword. In cRexx, the `stem` type is implemented as a class, part of this library, and useable in procedural programs as any other type. In addition to this, a large number of other data structures are documented here, and are considered part of the runtime library instead of components of the core language. This has enabled the cRexx team to deliver a set of data structures recognisable to users of both predecessors.
+With Classic Rexx having its origins as a language intended for command processing and procedural programming, two object oriented successors, Object Rexx and \nr{} have introduced (divergent) class concepts, types and syntax. cRexx introduced native hardware types[^java] and an object oriented notation which stays closer to Classic Rexx (with standard labels and `class` and `interface` keywords in the location of the `procedure` keyword. In cRexx, the `stem` type is implemented as a class, part of this library, and useable in procedural programs as any other type. In addition to this, a large number of other data structures are documented here, and are considered part of the runtime library instead of components of the core language. This has enabled the cRexx team to deliver a set of data structures recognisable to users of both predecessors.
 
 \begin{shaded}
-This level of the Library does not use inheritance and polymorphic calls (overloaded signatures). If and when this is the case, this message will be removed and method calls will be losing type info. Removal of typed method names will have a deprecation period. The current APIs cannot be regarded as stable in this regard. To avoid a large change, interfaces that accept `.string` type will leave out the type name and will be the stable name.
+This level of the Library does not use inheritance and polymorphic calls (overloaded signatures). If and when this is the case, this message will be removed and method names will be losing type info. Removal of typed method names will have a deprecation period. The current APIs cannot be regarded as stable in this regard. To avoid a large change, interfaces that accept `.string` type will leave out the type name and will be the stable name.
 \end{shaded}
 
 Also to be found here are native implementations of Graphic User interfaces and database drivers, both *universal* like ODBC or specific drivers for engines like *sqlite* - next to cRexx implementations of keystores or interface libraries. 
@@ -25,7 +25,7 @@ The current Release status of this Standard Library is that it is preliminary re
 depending on these API's. All documented API's have implementations - planned functionality in here is clearly marked. Although great care will be taken to keep the API contracts stable, there is, however, no guarantee for that at this tiime.
 \end{shaded}
 
-[^java]: NetRexx types are still Java VM types;
+[^java]: NetRexx types are still Java VM types but correspond to, and are implemented as generic hardware concepts.
 
 ## Goals
 

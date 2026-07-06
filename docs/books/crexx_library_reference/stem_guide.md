@@ -39,7 +39,7 @@ import rxfnsb
 
 root = .stem()
 tail2 = '867_5309'
-root.tail1.tail2 = 'Venetia'
+root.tail1.tail2 = 'Jenny'
 
 say root.tail1.tail2
 ```

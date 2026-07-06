@@ -1,4 +1,5 @@
-# cREXX Level B JSON Library
+<!-- # cREXX Level B JSON Library -->
+# The .rxjson library
 
 `rxjson` is the Level B JSON foundation library. It is implemented in Rexx in
 `lib/rxfnsb/rexx/rxjson.rexx`, is compiled into `library.rxbin`, and does not

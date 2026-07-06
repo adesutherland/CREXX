@@ -1,10 +1,11 @@
-# `rxsocket` Core TCP Library
-
+<!-- # `rxsocket` Core TCP Library -->
+# The .rxsocket library
 `rxsocket.rexx` is the Level B wrapper around the VM's core socket
-instructions. It is built into `library.rxbin`, so scripts can `import
-rxsocket` without loading the older dynamic socket plugin. That deprecated
-OpenSSL-backed plugin is now build-time opt-in via
-`CREXX_BUILD_LEGACY_SOCKET_PLUGIN=ON`.
+instructions. It is built into `library.rxbin`.
+<!-- so scripts can `import -->
+<!-- rxsocket` without loading the older dynamic socket plugin. That deprecated -->
+<!-- OpenSSL-backed plugin is now build-time opt-in via -->
+<!-- `CREXX_BUILD_LEGACY_SOCKET_PLUGIN=ON`. -->
 
 The implementation uses the operating system socket API directly: POSIX sockets
 on Unix-like systems and Winsock2 on Windows. Client TLS is provided by the VM
@@ -12,10 +13,11 @@ socket TLS backend when one is selected.
 
 ## Handles and Status
 
-`socketcreate()` returns a positive VM-managed socket handle. Handles are not
-OS file descriptors and should only be used with `rxsocket` functions. The VM
+`socketcreate()` returns a positive VM-managed socket handle[^handle]. The VM
 closes any live handles when the VM context is freed, but programs should still
 call `socketclose()` when finished.
+
+[^handle]: Handles are not OS file descriptors and should only be used with `rxsocket` functions.
 
 Status codes are:
 

@@ -32,8 +32,6 @@ import rxfnsb
  * This class stores unique string values. Arrays and iterators preserve the
  * order in which values were first added.
  *
- * @author Rene Vincent Jansen
- * @author Peter Jacob
  */
 StringHashSet: class
 val = .int
