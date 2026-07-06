@@ -9,8 +9,8 @@ main: procedure = .int
 
 pick: procedure = .int
   arg ix = .int, ... = .int
-  return arg(ix)
+  return arg[ix]
 
 hasArg: procedure = .int
   arg ix = .int, ... = .int
-  return arg(ix, "E")
+  return <argexists>(ix)

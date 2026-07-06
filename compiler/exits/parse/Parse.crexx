@@ -607,7 +607,7 @@ return planStr
  * -------------------------------------------------------------------------------------------------------------------
  */
 build_parse_arg_source_expr: procedure = .string
-  return "do; __rxcpx_parse_arg_count=arg(); __rxcpx_parse_arg_source=''; do __rxcpx_parse_arg_ix = 1 to __rxcpx_parse_arg_count; if __rxcpx_parse_arg_ix > 1 then __rxcpx_parse_arg_source=__rxcpx_parse_arg_source || ' '; __rxcpx_parse_arg_source=__rxcpx_parse_arg_source || arg[__rxcpx_parse_arg_ix]; end; leave with __rxcpx_parse_arg_source; end"
+  return "do; __rxcpx_parse_arg_count=arg[]; __rxcpx_parse_arg_source=''; do __rxcpx_parse_arg_ix = 1 to __rxcpx_parse_arg_count; if __rxcpx_parse_arg_ix > 1 then __rxcpx_parse_arg_source=__rxcpx_parse_arg_source || ' '; __rxcpx_parse_arg_source=__rxcpx_parse_arg_source || arg[__rxcpx_parse_arg_ix]; end; leave with __rxcpx_parse_arg_source; end"
 
 /* -------------------------------------------------------------------------------------------------------------------
  * Returns a CREXX single-quoted string literal representing the supplied text.

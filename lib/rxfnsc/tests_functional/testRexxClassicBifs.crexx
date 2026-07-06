@@ -79,8 +79,8 @@ check_bif: procedure = .int
   arg name = .string, expected = .string, ... = .string
   args = .RexxValue[]
   exists = .int[]
-  do i = 1 to arg.0
-    args[i] = .RexxValue(arg.i)
+  do i = 1 to arg[0]
+    args[i] = .RexxValue(arg[i])
     exists[i] = 1
   end
   ctx = .RexxBifCallContext(name)
@@ -94,8 +94,8 @@ check_error: procedure = .int
   arg name = .string, expected_code = .string, ... = .string
   args = .RexxValue[]
   exists = .int[]
-  do i = 1 to arg.0
-    args[i] = .RexxValue(arg.i)
+  do i = 1 to arg[0]
+    args[i] = .RexxValue(arg[i])
     exists[i] = 1
   end
   ctx = .RexxBifCallContext(name)

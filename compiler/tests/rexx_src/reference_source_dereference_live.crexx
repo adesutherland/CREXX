@@ -12,7 +12,7 @@ main: procedure = .int
   right = 2
   left_ref = reference left
   right_ref = reference right
-  if \refvalid(left_ref) | \refvalid(right_ref) then return fail("initial refvalid")
+  if <refvalid>(left_ref) = 0 | <refvalid>(right_ref) = 0 then return fail("initial refvalid")
 
   do
     linked = dereference left_ref

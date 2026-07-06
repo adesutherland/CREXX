@@ -186,7 +186,7 @@ The AST/Symbol validator (`rxcp_validate_ast_and_symbols`) asserts these rules i
 | Behavior | Logic Location | Description |
 | :--- | :--- | :--- |
 | **Array Length Intrinsics** | `set_node_types_walker` | `arr[]` or `arr[..., void]` is automatically typed as `TP_INTEGER` (returning the array length). |
-| **Implicit Main `arg` Compatibility** | `rxcp_val_check.c`, `rxcp_val_sym.c`, `rxcp_val_type.c`, `rxcpemit.c` | Compiler-generated implicit `main()` carries `is_implicit_main`; `arg()` / `arg[]` / `arg[n]` in that routine are redirected onto the hidden VM command-line argv array, while ordinary procedures keep normal vararg semantics. |
+| **Implicit Main `arg` Compatibility** | `rxcp_val_check.c`, `rxcp_val_sym.c`, `rxcp_val_type.c`, `rxcpemit.c` | Compiler-generated implicit `main()` carries `is_implicit_main`; `arg[]` / `arg[n]` in that routine are redirected onto the hidden VM command-line argv array, while ordinary procedures keep normal vararg semantics. |
 | **Implicit IMPORT Injection** | `add_rxsysb_walker` | Automatically adds `import _rxsysb` if a certified system exit, `EXIT`, or `IMPLICIT_CMD` needs it. |
 | **ADDRESS Certified Exit Lowering** | `exit_dispatch_walker` | Lowers `ADDRESS` through the certified exit bridge into the `_address(...)` call shape. |
 | **EXIT Instruction Rewrite** | `rewrite_exit_walker` | Transforms `EXIT` into a call to the internal `_exit` function. |

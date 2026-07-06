@@ -84,7 +84,7 @@ pick() .locals=2
    .srcstep 7 7 17 "inline_test_vararg_dynamic.crexx" 11 7 16 "  arg ix = .int, ... = .int"
    .meta "inline_test_vararg_dynamic.pick.ix"="b" ".int" a1
    .srcstep 8 8 17 "inline_test_vararg_dynamic.crexx" 11 18 28 "  arg ix = .int, ... = .int"
-   .srcstep 9 9 17 "inline_test_vararg_dynamic.crexx" 12 3 17 "  return arg(ix)"
+   .srcstep 9 9 17 "inline_test_vararg_dynamic.crexx" 12 3 16 "  return arg[ix]"
    icopy r1,a0
    isub r1,r1,1
    ichkrng a1,1,r1
@@ -103,7 +103,7 @@ hasArg() .locals=2
    .srcstep 11 11 17 "inline_test_vararg_dynamic.crexx" 15 7 16 "  arg ix = .int, ... = .int"
    .meta "inline_test_vararg_dynamic.hasarg.ix"="b" ".int" a1
    .srcstep 12 12 17 "inline_test_vararg_dynamic.crexx" 15 18 28 "  arg ix = .int, ... = .int"
-   .srcstep 13 13 17 "inline_test_vararg_dynamic.crexx" 16 3 16 "  return arg(ix, \"E\")"
+   .srcstep 13 13 17 "inline_test_vararg_dynamic.crexx" 16 3 25 "  return <argexists>(ix)"
    ilt r1,a1,1
    signalt "OUT_OF_RANGE",r1
    icopy r1,a0

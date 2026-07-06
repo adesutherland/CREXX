@@ -5,4 +5,4 @@ options levelb
 arg args = .string[]
 
 do i = 1 to args.0
-  say "Arg" arg.i
+  say "Arg" args[i]

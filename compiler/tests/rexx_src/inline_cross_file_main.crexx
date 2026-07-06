@@ -30,7 +30,7 @@ main: procedure
   say y
   say typeBump(y) is .int
   say y
-  say typeof(typeBump(y))
+  say <typeof>(typeBump(y))
   say y
   say safeLength("abcdef")
   say vargTotal(4, 5, 6)

@@ -159,7 +159,7 @@ hasSecond() .locals=1
    setnumcas 1
    setnumstd 1
    .srcstep 20 20 17 "inline_test_ref_vararg.crexx" 27 14 24 "  arg expose ... = .int"
-   .srcstep 21 21 17 "inline_test_ref_vararg.crexx" 28 3 15 "  return arg(2, \"E\")"
+   .srcstep 21 21 17 "inline_test_ref_vararg.crexx" 28 3 24 "  return <argexists>(2)"
    icopy r0,a0
    ilte r0,2,r0
    btoi r0
@@ -174,7 +174,7 @@ hasFifth() .locals=1
    setnumcas 1
    setnumstd 1
    .srcstep 23 23 17 "inline_test_ref_vararg.crexx" 31 14 24 "  arg expose ... = .int"
-   .srcstep 24 24 17 "inline_test_ref_vararg.crexx" 32 3 15 "  return arg(5, \"E\")"
+   .srcstep 24 24 17 "inline_test_ref_vararg.crexx" 32 3 24 "  return <argexists>(5)"
    icopy r0,a0
    ilte r0,5,r0
    btoi r0

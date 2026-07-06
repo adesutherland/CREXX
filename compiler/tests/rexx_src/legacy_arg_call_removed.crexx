@@ -1,0 +1,5 @@
+options levelb
+
+main: procedure = .int
+  if arg(1, "E") then return 1
+  return 0

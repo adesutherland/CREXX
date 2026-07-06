@@ -1763,49 +1763,39 @@ term(F)                ::= intrinsic_head(I) function_parameters(P). [TK_VAR_SYM
 
 /* Special Operator - ARG */
 term(F)                ::= TK_ARG(A) TK_OPEN_BRACKET TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
-                           { F = ast_f(context, OP_ARGS, A); }
+                           { F = ast_err(context, "LEGACY_ARG_CALL_SYNTAX", A); }
 term(F)                ::= TK_ARG(A) TK_OPEN_BRACKET expression_in_list(E) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
-                           { F = ast_f(context, OP_ARG_VALUE, A); add_ast(F, E);}
+                           { (void)E; F = ast_err(context, "LEGACY_ARG_CALL_SYNTAX", A); }
 term(F)                ::= TK_ARG(A) TK_OPEN_BRACKET expression_in_list(EX) TK_COMMA TK_STRING(OP) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
                            {
-                              if (OP->length>2 && toupper(OP->token_string[1]) == 'E') {
-                                 F = ast_f(context, OP_ARG_IX_EXISTS, A); add_ast(F, EX);
-                              }
-                              else if (OP->length>2 && toupper(OP->token_string[1]) == 'O') {
-                                 F = ast_ft(context, OP_NOT); add_ast(add_ast(F, ast_f(context, OP_ARG_IX_EXISTS, A)), EX);
-                              }
-                              else F = mknd_err(ast_fstr(context,OP), "INVALID_ARG_OPTION");
+                              (void)EX; (void)OP;
+                              F = ast_err(context, "LEGACY_ARG_CALL_SYNTAX", A);
                            }
 term(F)                ::= TK_ARG(A) TK_OPEN_BRACKET expression_in_list(EX) TK_COMMA TK_VAR_SYMBOL(OP) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
                            {
-                              if (OP->length>0 && toupper(OP->token_string[0]) == 'E') {
-                                 F = ast_f(context, OP_ARG_IX_EXISTS, A); add_ast(F, EX);
-                              }
-                              else if (OP->length>0 && toupper(OP->token_string[0]) == 'O') {
-                                 F = ast_ft(context, OP_NOT); add_ast(add_ast(F, ast_f(context, OP_ARG_IX_EXISTS, A)), EX);
-                              }
-                              else F = ast_err(context, "INVALID_ARG_OPTION", OP);
+                              (void)EX; (void)OP;
+                              F = ast_err(context, "LEGACY_ARG_CALL_SYNTAX", A);
                            }
 term(F)                ::= TK_ARG TK_OPEN_BRACKET(A) error TK_CLOSE_BRACKET.
-                           { F = ast_err(context, "INVALID_ARG_SYNTAX", A); }
+                           { F = ast_err(context, "LEGACY_ARG_CALL_SYNTAX", A); }
 term(F)                ::= TK_ARG TK_OPEN_BRACKET ANYTHING(A).
-                           { F = ast_err(context, "INVALID_ARG_SYNTAX", A); }
+                           { F = ast_err(context, "LEGACY_ARG_CALL_SYNTAX", A); }
 
 /* Type inspection intrinsic */
 term(F)                ::= TK_TYPEOF(A) TK_OPEN_BRACKET expression(E) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
-                           { F = ast_f(context, OP_TYPEOF, A); add_ast(F, E); }
+                           { (void)E; F = ast_err(context, "LEGACY_TYPEOF_SYNTAX", A); }
 term(F)                ::= TK_TYPEOF TK_OPEN_BRACKET(A) error TK_CLOSE_BRACKET.
-                           { F = ast_err(context, "INVALID_TYPEOF_SYNTAX", A); }
+                           { F = ast_err(context, "LEGACY_TYPEOF_SYNTAX", A); }
 term(F)                ::= TK_TYPEOF TK_OPEN_BRACKET ANYTHING(A).
-                           { F = ast_err(context, "INVALID_TYPEOF_SYNTAX", A); }
+                           { F = ast_err(context, "LEGACY_TYPEOF_SYNTAX", A); }
 
 /* Reference intrinsics */
 term(F)                ::= TK_REFVALID(A) TK_OPEN_BRACKET expression(E) TK_CLOSE_BRACKET. [TK_VAR_SYMBOL]
-                           { F = ast_f(context, OP_REFVALID, A); add_ast(F, E); }
+                           { (void)E; F = ast_err(context, "LEGACY_REFVALID_SYNTAX", A); }
 term(F)                ::= TK_REFVALID TK_OPEN_BRACKET(A) error TK_CLOSE_BRACKET.
-                           { F = ast_err(context, "INVALID_REFVALID_SYNTAX", A); }
+                           { F = ast_err(context, "LEGACY_REFVALID_SYNTAX", A); }
 term(F)                ::= TK_REFVALID TK_OPEN_BRACKET ANYTHING(A).
-                           { F = ast_err(context, "INVALID_REFVALID_SYNTAX", A); }
+                           { F = ast_err(context, "LEGACY_REFVALID_SYNTAX", A); }
 
 /* Special Operator - ? */
 term(F)                ::= TK_OPTIONAL TK_VAR_SYMBOL(S). [TK_VAR_SYMBOL]
@@ -1815,7 +1805,7 @@ term(F)                ::= TK_OPTIONAL TK_VAR_SYMBOL(S). [TK_VAR_SYMBOL]
 term(A)                ::= TK_ARG(S) array_parameters(P). [TK_VAR_SYMBOL]
                            { A = ast_f(context, OP_ARG_VALUE, S); if (P) add_ast(A,P); }
 term(A)                ::= TK_ARG_STEM(S) stemparts(P). [TK_VAR_SYMBOL]
-                           { A = ast_f(context, OP_ARG_VALUE, S); if (P) add_ast(A,P); }
+                           { (void)P; A = ast_err(context, "LEGACY_ARG_STEM_SYNTAX", S); }
 
 /* These Keywords can be trapped at error terms - e.g. they are not instructions */
 term(E)                 ::= TK_OPTIONS(K). [ANYTHING] { E = mknd_err(ast_f(context, VAR_SYMBOL,K), "KEYWORD"); }

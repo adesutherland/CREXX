@@ -1,0 +1,2 @@
+Error in legacy_arg_stem_removed.crexx @ 4:6 - #LEGACY_ARG_STEM_SYNTAX, "arg"
+1 error(s) in source file

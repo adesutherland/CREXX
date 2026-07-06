@@ -1,0 +1,2 @@
+Error in legacy_typeof_removed.crexx @ 5:6 - #LEGACY_TYPEOF_SYNTAX, "typeof"
+1 error(s) in source file

@@ -878,6 +878,10 @@ add_crexx_compiler_fail_test(binary_memory_extra_argument rexx_src/binary_memory
 add_crexx_compiler_fail_test(binary_memory_missing_length_argument rexx_src/binary_memory_missing_length_argument.crexx binary_memory_missing_length_argument.txt)
 add_crexx_compiler_fail_test(binary_memory_generic_types_unsupported rexx_src/binary_memory_generic_types_unsupported.crexx binary_memory_generic_types_unsupported.txt)
 add_crexx_compiler_fail_test(intrinsic_argexists_invalid rexx_src/intrinsic_argexists_invalid.crexx intrinsic_argexists_invalid.txt)
+add_crexx_compiler_fail_test(legacy_arg_call_removed rexx_src/legacy_arg_call_removed.crexx legacy_arg_call_removed.txt)
+add_crexx_compiler_fail_test(legacy_arg_stem_removed rexx_src/legacy_arg_stem_removed.crexx legacy_arg_stem_removed.txt)
+add_crexx_compiler_fail_test(legacy_typeof_removed rexx_src/legacy_typeof_removed.crexx legacy_typeof_removed.txt)
+add_crexx_compiler_fail_test(legacy_refvalid_removed rexx_src/legacy_refvalid_removed.crexx legacy_refvalid_removed.txt)
 add_test(NAME err_address_exit_disabled_fail
          COMMAND crexx_test_driver --expect-fail
          ${CMAKE_CURRENT_SOURCE_DIR}/golden/errors/err_address_exit_disabled.txt
@@ -3987,6 +3991,7 @@ string(APPEND RXC_DIAGNOSTIC_LOCALIZATION_CONTENT
        "set(address_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/test_implicit_address.crexx\")\n"
        "set(missing_end_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/err_02_syntax.crexx\")\n"
        "set(binary_memory_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/binary_memory_invalid_storage.crexx\")\n"
+       "set(legacy_arg_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/legacy_arg_call_removed.crexx\")\n"
        "function(run_diag label locale source suffix expected unexpected)\n"
        "  execute_process(\n"
        "    COMMAND \"${CMAKE_COMMAND}\" -E env \"CREXX_DIAGNOSTICS=localized\" \"CREXX_DIAGNOSTIC_LOCALE=\${locale}\" \"$<TARGET_FILE:rxc>\" -n -o \"\${label}_\${suffix}_diag\" \"\${source}\"\n"
@@ -4052,6 +4057,9 @@ string(APPEND RXC_DIAGNOSTIC_LOCALIZATION_CONTENT
        "run_diag_fail(\"en_GB\" \"en_GB\" \"\${binary_memory_src}\" \"binary_memory\" \"BINARY_MEMORY_INVALID_STORAGE_TYPE: Binary memory access has an unsupported storage type.\" \"#BINARY_MEMORY_INVALID_STORAGE_TYPE, \\\"<at..u64>(0) data\\\"\")\n"
        "run_diag_fail(\"de_DE\" \"de_DE\" \"\${binary_memory_src}\" \"binary_memory\" \"BINARY_MEMORY_INVALID_STORAGE_TYPE: Binärer Speicherzugriff verwendet einen nicht unterstützten Speichertyp.\" \"#BINARY_MEMORY_INVALID_STORAGE_TYPE, \\\"<at..u64>(0) data\\\"\")\n"
        "run_diag_fail(\"nl_NL\" \"nl_NL\" \"\${binary_memory_src}\" \"binary_memory\" \"BINARY_MEMORY_INVALID_STORAGE_TYPE: Binaire-geheugentoegang gebruikt een niet-ondersteund opslagtype.\" \"#BINARY_MEMORY_INVALID_STORAGE_TYPE, \\\"<at..u64>(0) data\\\"\")\n"
+       "run_diag_fail(\"en_GB\" \"en_GB\" \"\${legacy_arg_src}\" \"legacy_arg\" \"LEGACY_ARG_CALL_SYNTAX: ARG call syntax has been removed; use arg[], arg[n], or <argexists>(n).\" \"\")\n"
+       "run_diag_fail(\"de_DE\" \"de_DE\" \"\${legacy_arg_src}\" \"legacy_arg\" \"LEGACY_ARG_CALL_SYNTAX: ARG-Aufrufsyntax wurde entfernt; verwenden Sie arg[], arg[n] oder <argexists>(n).\" \"\")\n"
+       "run_diag_fail(\"nl_NL\" \"nl_NL\" \"\${legacy_arg_src}\" \"legacy_arg\" \"LEGACY_ARG_CALL_SYNTAX: ARG-aanroepsyntaxis is verwijderd; gebruik arg[], arg[n] of <argexists>(n).\" \"\")\n"
        "run_diag(\"fallback\" \"fr_FR\" \"\${unused_src}\" \"unused\" \"UNUSED_IMPORT: Import is recognised but not used.\" \"recognized\")\n")
 file(GENERATE OUTPUT "${RXC_DIAGNOSTIC_LOCALIZATION_SCRIPT}" CONTENT "${RXC_DIAGNOSTIC_LOCALIZATION_CONTENT}")
 add_test(NAME rxc_diagnostic_localization

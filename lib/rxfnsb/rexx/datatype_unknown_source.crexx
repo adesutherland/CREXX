@@ -145,7 +145,7 @@ if argc = 1 then return DtypeOne(string_in)
  /* /\* This check is made with the digits setting of the caller. *\/ */
  /* numeric digits !Digits.!Level */
  /* numeric form value !Form.!Level */
- /* return 0+arg(1) */
+ /* return 0+arg[1] */
 
 DtypeOne: procedure = .string
  arg string_in = .string

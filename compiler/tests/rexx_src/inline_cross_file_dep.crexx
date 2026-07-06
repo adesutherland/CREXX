@@ -88,7 +88,7 @@ vargTotal: procedure = .int
 
 vargPick: procedure = .int
   arg which = .int, ... = .int
-  return arg(which)
+  return arg[which]
 
 residualFunctionDependency: procedure = .int
   arg which = .int

@@ -22,7 +22,7 @@ secondOnly: procedure = .int
 
 hasThird: procedure = .int
   arg ... = .int
-  return arg(3, "E")
+  return <argexists>(3)
 
 logSecond: procedure = .int
   arg base = .int, ... = .int

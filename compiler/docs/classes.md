@@ -18,7 +18,7 @@ The implemented Level B surface is:
 - optional same-named class-side `match` for factory selection
 - checked casts with `expr as .type`
 - boolean type tests with `expr is .type`
-- concrete type introspection with `typeof(expr)`
+- concrete type introspection with `<typeof>(expr)`
 - namespace-qualified contract references such as `.pkg..thing()`
 
 Each class also has an intrinsic interface of its own name, so `.box()` and
@@ -146,13 +146,13 @@ Level B now supports:
 
 - `expr as .type` for checked casts
 - `expr is .type` for boolean type tests
-- `typeof(expr)` for concrete runtime type introspection
+- `<typeof>(expr)` for concrete runtime type introspection
 
 Object casts are runtime-checked. `as .interface` succeeds when the concrete
 class implements that interface, while `as .class` requires the exact concrete
 class. Failed casts raise `CONVERSION_ERROR`.
 
-`typeof(expr)` is emitted as a compile-time constant for scalar expressions and
+`<typeof>(expr)` is emitted as a compile-time constant for scalar expressions and
 as a VM lookup for object expressions, which return the concrete runtime class
 in source form such as `.pkg..thing`.
 

@@ -88,5 +88,5 @@ index_ = .int
 
   isLive: method = .int
     if snapshot_ = 1 then return 1
-    if refvalid(values_ref_) & refvalid(count_ref_) then return 1
+    if <refvalid>(values_ref_) & <refvalid>(count_ref_) then return 1
     return 0

@@ -862,14 +862,14 @@ _address: procedure = .int
 
   request = .addressrequest(env_name, command, in, out, err)
 
-  do i = 1 to arg.0 by 2
+  do i = 1 to arg[0] by 2
     alias = .string
     value = .string
 
-    alias = arg.i
+    alias = arg[i]
     value = ""
     j = i + 1
-    if j <= arg.0 then value = arg.j
+    if j <= arg[0] then value = arg[j]
 
     call request.add_binding("var", alias, alias, value)
   end
@@ -895,11 +895,11 @@ _address: procedure = .int
     if update_alias = "" then update_alias = update_internal
     update_value = update.get_value()
 
-    do i = 1 to arg.0 by 2
+    do i = 1 to arg[0] by 2
       j = i + 1
-      if j > arg.0 then iterate
+      if j > arg[0] then iterate
 
-      exposed_name = arg.i
+      exposed_name = arg[i]
       if normalize_environment_name(exposed_name) = normalize_environment_name(update_internal) | normalize_environment_name(exposed_name) = normalize_environment_name(update_alias) then do
         call _address_apply_exposed_value(arg[j], update_value)
       end
@@ -937,14 +937,14 @@ _address_with_sandbox: procedure = .int
   /* Keep C and Rexx providers on the same caller-supplied sandbox object. */
   assembler linktoattr1 6, request, sandbox
 
-  do i = 1 to arg.0 by 2
+  do i = 1 to arg[0] by 2
     alias = .string
     value = .string
 
-    alias = arg.i
+    alias = arg[i]
     value = ""
     j = i + 1
-    if j <= arg.0 then value = arg.j
+    if j <= arg[0] then value = arg[j]
 
     call request.add_binding("var", alias, alias, value)
   end
@@ -970,11 +970,11 @@ _address_with_sandbox: procedure = .int
     if update_alias = "" then update_alias = update_internal
     update_value = update.get_value()
 
-    do i = 1 to arg.0 by 2
+    do i = 1 to arg[0] by 2
       j = i + 1
-      if j > arg.0 then iterate
+      if j > arg[0] then iterate
 
-      exposed_name = arg.i
+      exposed_name = arg[i]
       if normalize_environment_name(exposed_name) = normalize_environment_name(update_internal) | normalize_environment_name(exposed_name) = normalize_environment_name(update_alias) then do
         call _address_apply_exposed_value(arg[j], update_value)
       end
@@ -1184,8 +1184,8 @@ _address_call_response: procedure = .addressfunctionresponse
   arg env_name = "", function_name = "", ... = .string
 
   arguments = .string[]
-  do i = 1 to arg.0
-    arguments[i] = arg.i
+  do i = 1 to arg[0]
+    arguments[i] = arg[i]
   end
 
   return _address_function(env_name, function_name, arguments)
@@ -1196,8 +1196,8 @@ _address_call: procedure = .string
   arguments = .string[]
   response = .addressfunctionresponse
 
-  do i = 1 to arg.0
-    arguments[i] = arg.i
+  do i = 1 to arg[0]
+    arguments[i] = arg[i]
   end
 
   response = _address_function(env_name, function_name, arguments)
@@ -1213,8 +1213,8 @@ addresscall: procedure = .string
   arguments = .string[]
   response = .addressfunctionresponse
 
-  do i = 1 to arg.0
-    arguments[i] = arg.i
+  do i = 1 to arg[0]
+    arguments[i] = arg[i]
   end
 
   response = _address_function(env_name, function_name, arguments)

@@ -344,5 +344,5 @@ stemIterator: class
   */
   isLive: method = .int
     if snapshot_ = 1 then return 0
-    if refvalid(stem_ref) then return 1
+    if <refvalid>(stem_ref) then return 1
     return 0
