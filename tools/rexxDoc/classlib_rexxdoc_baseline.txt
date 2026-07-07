@@ -14,9 +14,9 @@ classlib/Rexx.crexx 172
 classlib/Scanlex.crexx 9
 classlib/StringArrayList.crexx 24
 classlib/StringArrayListIterator.crexx 11
-classlib/StringHashMap.crexx 35
+classlib/StringHashMap.crexx 33
 classlib/StringHashMapIterator.crexx 15
-classlib/StringHashSet.crexx 28
+classlib/StringHashSet.crexx 26
 classlib/StringHashSetIterator.crexx 10
 classlib/StringIterable.crexx 1
 classlib/StringIterator.crexx 1

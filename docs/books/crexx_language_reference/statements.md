@@ -2,7 +2,17 @@
 
 ## ADDRESS
 
-`ADDRESS` sends commands or function requests to a named external environment.
+The ADDRESS instruction is used to effect a temporary or permanent change to the
+destination of commands. Commands are strings sent to an external environment,
+and may be sent by clauses consisting of just an expression as well as
+by the ADDRESS instruction.
+
+To send a single command to a specified environment, an environment name fol-
+lowed by an expression is given. The expression is evaluated, and the resulting
+command string is submitted to the given environment. After execution of the
+command the previously selected environment will be unchanged.
+
+In cRexx, `ADDRESS` sends commands or function requests to a named external environment.
 It is implemented through the current compiler-exit and VM environment protocol.
 If no environment is selected, the default command environment is `CREXX`.
 
