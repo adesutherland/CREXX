@@ -59,12 +59,12 @@ function(configure_linker_for_decl_lib target pluginId)
     if(MSVC)
         # For Visual Studio Compiler
         set_target_properties(${target} PROPERTIES LINK_FLAGS "/INCLUDE:${pluginId}_init")
-    elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-        # For GCC
-        target_link_libraries(${target} "-Wl,--whole-archive \"$<TARGET_FILE:${pluginId}_decl>\" -Wl,--no-whole-archive")
-    elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
-        # For Clang
+    elseif(APPLE)
+        # For Apple linkers
         target_link_libraries(${target} "-Wl,-force_load,\"$<TARGET_FILE:${pluginId}_decl>\"")
+    else()
+        # For GNU-like ELF linkers, including GCC and Clang on Linux
+        target_link_libraries(${target} "-Wl,--whole-archive \"$<TARGET_FILE:${pluginId}_decl>\" -Wl,--no-whole-archive")
     endif()
 endfunction()
 
@@ -73,12 +73,12 @@ function(configure_linker_for_static_lib target pluginId)
     if(MSVC)
         # For Visual Studio Compiler
         set_target_properties(${target} PROPERTIES LINK_FLAGS "/INCLUDE:${pluginId}_init")
-    elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-        # For GCC
-        target_link_libraries(${target} "-Wl,--whole-archive \"$<TARGET_FILE:${pluginId}_static>\" -Wl,--no-whole-archive")
-    elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
-        # For Clang
+    elseif(APPLE)
+        # For Apple linkers
         target_link_libraries(${target} "-Wl,-force_load,\"$<TARGET_FILE:${pluginId}_static>\"")
+    else()
+        # For GNU-like ELF linkers, including GCC and Clang on Linux
+        target_link_libraries(${target} "-Wl,--whole-archive \"$<TARGET_FILE:${pluginId}_static>\" -Wl,--no-whole-archive")
     endif()
 endfunction()
 
@@ -88,12 +88,11 @@ function(configure_linker_for_static_lib_rel target dirId pluginId)
     if(MSVC)
         # For Visual Studio Compiler
         set_target_properties(${target} PROPERTIES LINK_FLAGS "/INCLUDE:${pluginId}_init")
-    elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-        # For GCC
-        target_link_libraries(${target} "-Wl,--whole-archive \"$<TARGET_FILE:${pluginId}_static>\" -Wl,--no-whole-archive")
-    elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
-        # For Clang
+    elseif(APPLE)
+        # For Apple linkers
         target_link_libraries(${target} "-Wl,-force_load,\"$<TARGET_FILE:${pluginId}_static>\"")
+    else()
+        # For GNU-like ELF linkers, including GCC and Clang on Linux
+        target_link_libraries(${target} "-Wl,--whole-archive \"$<TARGET_FILE:${pluginId}_static>\" -Wl,--no-whole-archive")
     endif()
 endfunction()
-

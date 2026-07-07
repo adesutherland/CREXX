@@ -5,6 +5,7 @@ project(test_rxfnsc_runtime)
 enable_testing()
 
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 set(REXXBINS
   testRexxValue
@@ -45,3 +46,9 @@ foreach(_binfile ${REXXBINS})
     )
     set(_prev_target ${_basename}_noopt_artifact ${_basename}_opt_artifact)
 endforeach()
+
+crexx_label_smoke_tests(
+        testRexxValue_noopt
+        testRexxRuntimePools_noopt
+        testRexxClassicBifs_noopt
+)

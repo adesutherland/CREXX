@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.24)
 project(Linker C)
 
 set(CMAKE_C_STANDARD 99)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 add_executable(rxlink rxlinkmain.c ../binutils/rxsignature.c ../binutils/include/rxbin.h ../binutils/include/rxsignature.h)
 target_link_libraries(rxlink platform)
@@ -289,4 +290,13 @@ add_test(
         "-DEXPECT_ABSENT_3=.traceevent "
         -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_rxdas_contains.cmake
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+crexx_label_smoke_tests(
+        rxlink_success_run
+        rxlink_control_run
+        rxlink_interface_run
+        rxlink_format_check
+        rxlink_signature_mismatch_error
+        rxlink_rxdas_inline_preserve_smoke
 )

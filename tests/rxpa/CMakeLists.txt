@@ -5,6 +5,7 @@ add_subdirectory(multplugins)
 set(CMAKE_C_STANDARD 90)
 
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 # Including RXPlugin Build System
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
@@ -144,6 +145,12 @@ foreach(_mode IN ITEMS noopt opt)
     )
 endforeach()
 
+crexx_label_smoke_tests(
+        rxpa_dynlink_run_noopt
+        rxpa_staticlink_run_noopt
+        rxpa_classdecl_static_compile_opt
+)
+
 # Function Tests
 # Create dynamic plugin module
 add_dynamic_plugin_target(_testfuncs_dynamic rxpa_functests.c)
@@ -235,3 +242,8 @@ foreach(idx RANGE 0 ${num_tests})  # Iterate from 0 to len-1
     )
 
 endforeach()
+
+crexx_label_smoke_tests(
+        rxpa_signal_funcs_dynamic_noopt
+        rxpa_native_payload_funcs_dynamic_noopt
+)

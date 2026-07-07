@@ -5,6 +5,7 @@ project(test_rexxscript_runtime)
 enable_testing()
 
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 set(REXXBINS
   testRexxScriptRuntime
@@ -69,3 +70,9 @@ file(GENERATE OUTPUT "${REXXSCRIPT_CLI_SMOKE_SCRIPT}" CONTENT "${REXXSCRIPT_CLI_
 add_test(NAME rexxscript_cli_smoke
          COMMAND ${CMAKE_COMMAND} -P "${REXXSCRIPT_CLI_SMOKE_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+crexx_label_smoke_tests(
+        testRexxScriptRuntime_noopt
+        testRexxScriptCompat_noopt
+        rexxscript_cli_smoke
+)

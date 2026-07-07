@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 project(preprocessor_tests C)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 # Register rxpp smoke tests here.
 # This test runs the native rxpp precompiler on a tiny .rxpp input and validates
@@ -87,3 +88,10 @@ add_test(NAME rxpp_diagnostic_catalogs
              -P ${CMAKE_CURRENT_SOURCE_DIR}/run_rxpp_diagnostic_catalogs.cmake
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(rxpp_diagnostic_catalogs PROPERTIES LABELS "preprocessor;diagnostics")
+
+crexx_label_smoke_tests(
+        rxpp_smoke
+        rxpp_srcmap
+        rxpp_sh_tokens
+        rxpp_diagnostics
+)

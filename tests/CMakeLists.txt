@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.24)
 project(tests C)
 
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
@@ -82,6 +83,8 @@ crexx_add_rxas_optimizer_check(barrier_fltbr barrier_fltbr.rxas barrier_fltbr)
 crexx_add_rxas_optimizer_check(barrier_dgtbr barrier_dgtbr.rxas barrier_dgtbr)
 crexx_add_rxas_optimizer_check(barrier_dltbr barrier_dltbr.rxas barrier_dltbr)
 crexx_add_rxas_optimizer_check(barrier_deqbr barrier_deqbr.rxas barrier_deqbr)
+
+crexx_label_smoke_tests(rxas_optimizer_copy_acopy_opt)
 
 add_custom_target(linked_opt_sweep
         COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure -L linked_opt

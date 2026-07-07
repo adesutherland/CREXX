@@ -298,6 +298,7 @@ target_include_directories(rxpashim PUBLIC . ${CMAKE_SOURCE_DIR}/rxpa)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 # Value test executable
 add_executable(ts_regvalue_tester tests/ts_regvalue_tester.c rxvalue.h rxvmvars.h)
@@ -826,3 +827,20 @@ add_custom_command(
 )
 add_custom_target(test_db_decimal_archive_link_bin ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/test_db_decimal_archive_link)
 add_test(NAME db_decimal_archive_link COMMAND ${CMAKE_CURRENT_BINARY_DIR}/test_db_decimal_archive_link WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+crexx_label_smoke_tests(
+        crexxsaa_cache_tool_location
+        rxpa_utf_validation
+        ts_regvalue_tester
+        rxassignalstests
+        rxasregisterflagtests
+        rxasutfflagtests-rxbvm
+        rxasreferencetests
+        rxasbasictests
+        rxasstringtests-rxbvm
+        rxasdecimaltests-mc
+        rxasinterfacetests-rxbvm
+        compact_format_check
+        reentrancy_check
+        db_decimal_archive_link
+)

@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.24)
 project(sigtesttool C)
 set(CMAKE_C_STANDARD 99) # enables inline keyword
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 # Set the binary tool binary output directory to /tools
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/tools)
@@ -60,3 +61,5 @@ set_tests_properties(${_native_signal_tests} PROPERTIES
         RUN_SERIAL TRUE
         TIMEOUT 15
 )
+
+crexx_label_smoke_tests(QUIT INT_BYTECODE)
