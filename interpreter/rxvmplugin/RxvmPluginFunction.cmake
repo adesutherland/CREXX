@@ -53,11 +53,11 @@ function(configure_linker_for_static_rxvmplugin target pluginId)
         # For Visual Studio Compiler
         target_link_libraries(${target} "$<TARGET_FILE:${pluginId}>")
         set_target_properties(${target} PROPERTIES LINK_FLAGS "/INCLUDE:${pluginId}_register_rxvm_plugin")
-    elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
-        # For GCC
-        target_link_libraries(${target} "-Wl,--whole-archive \"$<TARGET_FILE:${pluginId}>\" -Wl,--no-whole-archive")
-    elseif(CMAKE_C_COMPILER_ID MATCHES "Clang")
-        # For Clang
+    elseif(APPLE)
+        # For Apple linkers
         target_link_libraries(${target} "-Wl,-force_load,\"$<TARGET_FILE:${pluginId}>\"")
+    else()
+        # For GNU-like ELF linkers, including GCC and Clang on Linux
+        target_link_libraries(${target} "-Wl,--whole-archive \"$<TARGET_FILE:${pluginId}>\" -Wl,--no-whole-archive")
     endif()
 endfunction()

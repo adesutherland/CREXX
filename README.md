@@ -30,10 +30,14 @@ prototype and is not yet part of the stable release surface.
 ```bash
 cmake -S . -B cmake-build-debug
 cmake --build cmake-build-debug
-ctest --test-dir cmake-build-debug --output-on-failure
+ctest --test-dir cmake-build-debug -L smoke --output-on-failure --parallel 10 --timeout 600
+ctest --test-dir cmake-build-debug --output-on-failure --parallel 10 --timeout 600
 ```
 
 The build creates the toolchain under `cmake-build-debug/bin`.
+The `smoke` CTest label is the fast local gate; the full suite remains the
+release/CI gate. The explicit CTest timeout keeps 10-way local runs from
+failing slow-but-progressing tests under load.
 
 Parser-mode and syntax-highlighting support use DSL Syntax Highlighter (DSLSH).
 If a sibling checkout exists at `../DSL-Syntax-Highlighter`, CMake uses it.

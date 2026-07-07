@@ -26,6 +26,8 @@ function(add_rxas_parser_test NAME SOURCE GOLDEN SCRIPT)
              COMMAND ${CMAKE_COMMAND} -P "${_script}")
 endfunction()
 
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
+
 add_rxas_parser_test(test_rxas_01_init
         "${CMAKE_CURRENT_SOURCE_DIR}/test_01_init.rxas"
         "${CMAKE_CURRENT_SOURCE_DIR}/test_01_init.golden"
@@ -51,3 +53,10 @@ add_test(NAME rxas_reject_non_source_mnemonics
                  -DRXAS=$<TARGET_FILE:rxas>
                  -DWORKING_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/reject_non_source_mnemonics.cmake)
+
+crexx_label_smoke_tests(
+        test_rxas_01_init
+        test_rxas_03_token_types
+        test_rxas_04_errors
+        rxas_reject_non_source_mnemonics
+)

@@ -14,6 +14,7 @@ set(use_precomp TRUE)            # TRUE pre compile needed, FALSE if not
 #   plugin_template(${plugin_name} ${test_rexx} PRECOMP)
 # ===========================================================================================
 include(${CMAKE_SOURCE_DIR}/rxpa/CMakePluginTemplate.txt)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 plugin_template(${plugin_name} ${test_rexx} ${PRECOMP_ARG} ${use_precomp})
 
@@ -22,6 +23,7 @@ enable_testing()
 set_tests_properties(map_test_noopt map_test_opt PROPERTIES
         PASS_REGULAR_EXPRESSION "map smoke ok"
 )
+crexx_label_smoke_tests(map_test_noopt)
 
 # Create the static link module
 # add_static_plugin_target(_map map.c)

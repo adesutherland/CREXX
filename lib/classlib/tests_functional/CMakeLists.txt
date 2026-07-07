@@ -5,6 +5,7 @@ project(test_classlib)
 enable_testing()
 
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 set(REXXBINS
   testStringArrayList
@@ -91,3 +92,11 @@ foreach(_binfile ${NATIVE_REXXBINS})
     )
     set(_prev_native_target ${_basename}_noopt_artifact ${_basename}_opt_artifact)
 endforeach()
+
+crexx_label_smoke_tests(
+        testStringArrayList_noopt
+        testStringHashMap_noopt
+        testObjectCollections_noopt
+        testJSON_noopt
+        testOS_noopt
+)

@@ -5,6 +5,7 @@ project(Disassembler C)
 set(CMAKE_C_STANDARD 90)
 
 include(CMakeParseArguments)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 add_executable(rxdas rxdamain.c rxdadism.h rxdadism.c ../binutils/include/rxbin.h)
 
@@ -112,4 +113,10 @@ add_test(
         NAME rxdas_dump_support
         COMMAND test_disassembler_dump
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+
+crexx_label_smoke_tests(
+        rxdas_roundtrip_basic
+        rxdas_roundtrip_interfaces
+        rxdas_dump_support
 )

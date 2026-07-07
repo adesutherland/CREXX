@@ -5,6 +5,7 @@ project(test_bifs)
 enable_testing()
 
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 set(REXXBINS
         tlinesz.rxbin
@@ -128,6 +129,14 @@ endforeach()
 
 set_tests_properties(ts_rxjson_noopt ts_rxjson_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxjson helpers")
+
+crexx_label_smoke_tests(
+        ts_address_noopt
+        ts_parse_noopt
+        ts_stem_noopt
+        ts_rxjson_noopt
+        ts_rxsocket_noopt
+)
 set_tests_properties(ts_rxsocket_noopt ts_rxsocket_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxsocket loopback")
 set_tests_properties(ts_socket_tls_live_noopt ts_socket_tls_live_opt

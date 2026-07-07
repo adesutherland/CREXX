@@ -4,6 +4,7 @@ project(rxpatest C)
 set(CMAKE_C_STANDARD 90)
 
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 # Including RXPlugin Build System
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
@@ -44,3 +45,4 @@ enable_testing()
 set_tests_properties(rxpa_mult_test_noopt rxpa_mult_test_opt PROPERTIES
         PASS_REGULAR_EXPRESSION "plugin1[^\\1]*plugin2"
 )
+crexx_label_smoke_tests(rxpa_mult_test_noopt)

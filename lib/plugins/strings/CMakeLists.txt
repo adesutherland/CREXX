@@ -4,6 +4,7 @@ project(strings_plugin C)
 set(CMAKE_C_STANDARD 99)
 
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 # Including RXPA Build System
 include(${CMAKE_SOURCE_DIR}/rxpa/RXPluginFunction.cmake)
@@ -22,3 +23,4 @@ crexx_add_rexx_opt_matrix(
 )
 
 enable_testing()
+crexx_label_smoke_tests(strings_test_noopt)

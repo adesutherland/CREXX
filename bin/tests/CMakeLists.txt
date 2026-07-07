@@ -1,3 +1,5 @@
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
+
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/headerless_simple.crx
                ${CMAKE_CURRENT_BINARY_DIR}/headerless_simple.crx
                COPYONLY)
@@ -456,6 +458,17 @@ add_crexx_native_test(
         EXPECT_OUTPUT "EXPLICIT\n"
         EXPECT_NO_LINKED_INTERMEDIATE
         EXPECT_ABSENT "explicit_header.rxas" "explicit_header.rxbin" "explicit_header_linked.rxbin" "explicit_header.c"
+)
+
+crexx_label_smoke_tests(
+        crexx_help_smoke
+        crexx_headerless_simple_smoke
+        crexx_args_smoke
+        crexx_rexxscript_smoke
+        crexx_status_diagnostics
+        crexx_source_root_compile_only
+        crexx_native_explicit_header_smoke
+        crexx_native_default_link_strip
 )
 
 function(crexx_force_raw_diagnostics_for_bin_tests)

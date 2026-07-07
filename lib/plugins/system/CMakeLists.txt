@@ -14,6 +14,7 @@ set(use_precomp FALSE)           # TRUE pre compile needed, FALSE if not
 #   plugin_template(${plugin_name} ${test_rexx} PRECOMP)
 # ===========================================================================================
 include(${CMAKE_SOURCE_DIR}/rxpa/CMakePluginTemplate.txt)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 plugin_template(${plugin_name} ${test_rexx} ${PRECOMP_ARG} ${use_precomp})
 
@@ -38,3 +39,4 @@ add_test(
 set_tests_properties(test_system PROPERTIES
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
+crexx_label_smoke_tests(test_system)

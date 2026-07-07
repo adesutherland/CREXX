@@ -106,6 +106,7 @@ endif()
 
 enable_testing()
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxLinkedRuntime.cmake)
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 # Compiler flags for optimization levels
 # Based on rxcpmain.c: -n is for No Optimising, and it's on by default.
@@ -1846,6 +1847,22 @@ add_test(NAME source_import_contract_stub_implements
          COMMAND ${CMAKE_COMMAND} -P "${SOURCE_IMPORT_CONTRACT_STUB_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(source_import_contract_stub_implements PROPERTIES LABELS "compiler;imports")
+
+set(SOURCE_IMPORT_OPTIONAL_FACTORY_ARG_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_source_import_optional_factory_arg.cmake")
+set(SOURCE_IMPORT_OPTIONAL_FACTORY_ARG_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/source_import_optional_factory_arg_ws\")\n")
+string(APPEND SOURCE_IMPORT_OPTIONAL_FACTORY_ARG_CONTENT "file(REMOVE_RECURSE \"\${work}\")\n")
+string(APPEND SOURCE_IMPORT_OPTIONAL_FACTORY_ARG_CONTENT "file(MAKE_DIRECTORY \"\${work}\")\n")
+string(APPEND SOURCE_IMPORT_OPTIONAL_FACTORY_ARG_CONTENT "file(WRITE \"\${work}/provider.crexx\" \"options levelb\\nnamespace optional_factory_provider expose optionalbox\\noptionalbox: class\\n  *: factory\\n    arg expected = 1024\\n    return\\n  value: method = .int\\n    return 7\\n\")\n")
+string(APPEND SOURCE_IMPORT_OPTIONAL_FACTORY_ARG_CONTENT "file(WRITE \"\${work}/main.crexx\" \"options levelb\\nnamespace optional_factory_consumer\\nimport optional_factory_provider\\nmain: procedure = .int\\n  box = .optionalbox()\\n  if box.value() <> 7 then return 1\\n  return 0\\n\")\n")
+string(APPEND SOURCE_IMPORT_OPTIONAL_FACTORY_ARG_CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -o \"main\" \"\${work}/main.crexx\" WORKING_DIRECTORY \"\${work}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+string(APPEND SOURCE_IMPORT_OPTIONAL_FACTORY_ARG_CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed on source-import optional factory arg test: \${out}\")\nendif()\n")
+string(APPEND SOURCE_IMPORT_OPTIONAL_FACTORY_ARG_CONTENT "if(NOT EXISTS \"\${work}/main.rxas\")\n  message(FATAL_ERROR \"Expected main.rxas was not produced\")\nendif()\n")
+file(GENERATE OUTPUT "${SOURCE_IMPORT_OPTIONAL_FACTORY_ARG_SCRIPT}" CONTENT "${SOURCE_IMPORT_OPTIONAL_FACTORY_ARG_CONTENT}")
+
+add_test(NAME source_import_optional_factory_arg
+         COMMAND ${CMAKE_COMMAND} -P "${SOURCE_IMPORT_OPTIONAL_FACTORY_ARG_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set_tests_properties(source_import_optional_factory_arg PROPERTIES LABELS "compiler;imports")
 
 set(SOURCE_IMPORT_CONTRACT_STUB_CYCLE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/run_source_import_contract_stub_covariant_cycle.cmake")
 set(SOURCE_IMPORT_CONTRACT_STUB_CYCLE_CONTENT "set(work \"${CMAKE_CURRENT_BINARY_DIR}/source_import_contract_stub_covariant_cycle_ws\")\n")
@@ -4021,6 +4038,44 @@ add_test(NAME rxc_diagnostic_raw
          COMMAND ${CMAKE_COMMAND} -P "${RXC_DIAGNOSTIC_RAW_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(rxc_diagnostic_raw PROPERTIES LABELS "compiler;diagnostics")
+
+crexx_label_smoke_tests(
+        rxc_help_syntaxhighlight
+        rxas_invalid_diagnostic
+        rxc_function_lookup_diagnostic
+        rxc_constants_levelb
+        01_assign_noopt
+        03_calc_opt
+        07_loops_noopt
+        08_select_opt
+        10_procs_noopt
+        15_imports_opt
+        err_01_type_fail
+        err_02_syntax_fail
+        err_06_missing_method_fail
+        unused_import_warn
+        repro_opt_args_run_noopt
+        basic_arrays_run_noopt
+        13_stems_run_noopt
+        optional_arg_presence_copy_run_noopt
+        interface_runtime_dispatch_multi_run_noopt
+        interface_source_import_run_noopt
+        source_import_optional_factory_arg
+        source_import_contract_stub_implements
+        syntaxhighlight_trace_keywords
+        levelc_slice1_pool_say
+        levelc_slice6_expressions
+        address_bridge
+        address_callback_host
+        dynamic_load
+        crexxsaa_variables
+        crexxsaa_status
+        source_provenance
+        rxc_srcmap
+        trace_stem_sugar
+        source_semantics
+        rxc_diagnostic_catalogs
+)
 
 function(crexx_force_raw_diagnostics_for_directory_tests)
     get_property(_crexx_tests DIRECTORY PROPERTY TESTS)
