@@ -6,18 +6,22 @@ methods implement the traditional *built-in functions*, and include
 character manipulation, word manipulation, conversion, and arithmetic
 functions.
 
-Use of these methods needs import of the package:
+Use of these methods needs import of the rexx package:
 
-strings must be constructed with a factory constructor.
+```rexx <!--rexxex1.crexx-->
+import rexx
+```
+
+Rexx strings must be constructed with a factory constructor.
 
 **General notes on the built-in methods:**
 
 - All methods work on string input parameters; this is referred to by the
     name *string* in the descriptions of the methods. For example, if
     the **word** method were invoked using the term:
-
+```rexx <!--rexxex2.crexx-->
         v=.rexx("Three word phrase"); v.word(2)
-
+```
     then in the description of **word** the name *string* refers to the
     string  
 	\"**Three word phrase**\", and the name *n* refers to the
@@ -30,15 +34,15 @@ strings must be constructed with a factory constructor.
 - The first parenthesis in a method call must immediately follow the
     name of the method, with no space in between.
 
-- The parentheses in a method call can be omitted if no arguments are
-    required and the method call is part of a [^1]
+<!-- - The parentheses in a method call can be omitted if no arguments are -->
+<!--     required and the method call is part of a [^1] -->
 
 - A position in a string is the number of a character in the string,
     where the first character is at position 1, *etc.*
 
--  Where arguments are optional, commas may only be included between
-    arguments that are present (that is, trailing commas in argument
-    lists are not permitted).
+<!-- -  Where arguments are optional, commas may only be included between -->
+<!--     arguments that are present (that is, trailing commas in argument -->
+<!--     lists are not permitted). -->
 
 -  A *pad* argument, if specified, must be exactly one character long.
 
@@ -57,17 +61,20 @@ returns 1 if *info* is equal to the leading characters of *string* and
 either of these conditions is not met. *length* must be a non-negative
 whole number; the default is the length of *info*. **Examples:**
 
+```rexx <!--rexxex3.crexx-->
     v=.rexx('Print'); v.abbrev('Pri')   == 1
     w=.rexx('PRINT'); w.abbrev('Pri')   == 0
     w=.rexx('PRINT'); w.abbrev('PRI',4) == 0
     w=.rexx('PRINT'); w.abbrev('PRY')   == 0
     w=.rexx('PRINT'); w.abbrev('')      == 1
     w=.rexx('PRINT'); w.abbrev('',1)    == 0
+```
 
 **Note:** A null string will always match if a length of 0 (or the
 default) is used. This allows a default keyword to be selected
 automatically if desired. **Example:**
 
+```rexx <!--rexxex4.crexx-->
     say 'Enter option:';  option=ask
     select  /* keyword1 is to be the default */
       v=.rexx('keyword1'); when v.abbrev(option) then ...
@@ -75,6 +82,7 @@ automatically if desired. **Example:**
          ...
       otherwise ...
       end
+```
 
 ## abs()
 
@@ -85,11 +93,12 @@ digits in the mantissa of the number (excluding leading insignificant
 zeros). Scientific notation is used, if necessary.
 
 **Examples:**
-
+```rexx <!--rexxex5.crexx-->
     v=.rexx('12.3'); v.abs              == 12.3
     w=.rexx(' -0.307'); w.abs           == 0.307
     x=.rexx('123.45E+16'); x.abs        == 1.2345E+18
     y=.rexx('- 1234567.7654321'); y.abs == 1234567.7654321
+```
 
 ## b2d(\[n\])
 
@@ -103,12 +112,13 @@ multiple of four. If *string* is the null string, 0 is returned. If n is
 not specified, *string* is taken to be an unsigned number.
 
 **Examples:**
-
+```rexx <!--rexxex6.crexx-->
     v=.rexx('01110'); v.b2d == 14 
     w=.rexx('10000001'); w.b2d == 129 
     x=.rexx('111110000001'); x.b2d == 3969 
     y=.rexx('1111111110000001'); y.b2d == 65409 
     z=.rexx('1100011011110000'); z.b2d == 50928 
+```
 
 If n is specified, string is taken as a signed number expressed in n
 binary characters. If the most significant (left-most) bit is zero then
@@ -121,7 +131,7 @@ not "signextended"), or truncated on the left, to length n characters;
 (that is, as though string.right(n, '0') had been executed.)
 
 **Examples:**
-
+```rexx <!--rexxex7.crexx-->
     v=.rexx('10000001'); v.b2d(8) == -127 
     v=.rexx('10000001'); v.b2d(16) == 129 
     w=.rexx('1111000010000001'); w.b2d(16) == -3967 
@@ -129,6 +139,7 @@ not "signextended"), or truncated on the left, to length n characters;
     w=.rexx('1111000010000001'); w.b2d(8) == -127 
     w=.rexx('1111000010000001'); w.b2d(4) == 1 
     x=.rexx('0000000000110001'); x.b2d(0) == 0
+```
 
 ## b2x()
 
@@ -141,12 +152,13 @@ to three **'0'** digits will be added on the left before conversion to
 make a total that is a multiple of four.
 
 **Examples:**
-
+```rexx <!--rexxex8.crexx-->
     v=.rexx('11000011'); v.b2x  == 'C3'
     w=.rexx('10111'); w.b2x     == '17'
     x=.rexx('0101'); x.b2x      == '5'
     y=.rexx('101'); y.b2x       == '5'
     z=.rexx('111110000'); z.b2x == '1F0'
+```
 
 ## center(length \[,pad\])
 
@@ -163,11 +175,12 @@ truncated or added, the right hand end loses or gains one more character
 than the left hand end.
 
 **Examples:**
-
+```rexx <!--rexxex9.crexx-->
     v=.rexx('ABC'); v.centre(7)          == '  ABC  '
     v=.rexx('ABC'); v.center(8,'-')      == '--ABC---'
     w=.rexx('The blue sky'); w.centre(8) == 'e blue s'
     w=.rexx('The blue sky'); w.center(7) == 'e blue '
+```
 
 **Note:** This method may be called either **centre** or **center**,
 which avoids difficulties due to the difference between the British and
@@ -186,12 +199,13 @@ If the *needle* is the null string, the result is a copy of *string*,
 unchanged.
 
 **Examples:**
-
+```rexx <!--rexxex10.crexx-->
     v=.rexx('elephant'); v.changestr('e','X')    == 'XlXphant'
     v=.rexx('elephant'); v.changestr('ph','X')   == 'eleXant'
     v=.rexx('elephant'); v.changestr('ph','hph') == 'elehphant'
     v=.rexx('elephant'); v.changestr('e','')     == 'lphant'
     v=.rexx('elephant'); v.changestr('','!!')    == 'elephant'
+```
 
 ## compare(target \[,pad\])
 
@@ -203,13 +217,14 @@ the same length for the comparison. The default *pad* character is a
 blank.
 
 **Examples:**
-
+```rexx <!--rexxex11.crexx-->
     v=.rexx('abc'); v.compare('abc')      == 0
     v=.rexx('abc'); v.compare('ak')       == 2
     w=.rexx('ab '); w.compare('ab')       == 0
     w=.rexx('ab '); w.compare('ab',' ')   == 0
     w=.rexx('ab '); w.compare('ab','x')   == 3
     x=.rexx('ab-- '); x.compare('ab','-') == 5
+```
 
 ## copies(n)
 
@@ -217,10 +232,11 @@ returns *n* directly concatenated copies of *string*. *n* must be
 positive or 0; if 0, the null string is returned.
 
 **Examples:**
-
+```rexx <!--rexxex12.crexx-->
     v=.rexx('abc'); v.copies(3) == 'abcabcabc'
     v=.rexx('abc'); v.copies(0) == ''
     w=.rexx(''); w.copies(2)    == ''
+```
 
 ## countstr(needle)
 
@@ -231,10 +247,11 @@ in *string*, searching from left to right and starting from the first
 If the *needle* is the null string, **0** is returned.
 
 **Examples:**
-
+```rexx <!--rexxex13.crexx-->
     v=.rexx('elephant'); v.countstr('e')  == '2'
     v=.rexx('elephant'); v.countstr('ph') == '1'
     v=.rexx('elephant'); v.countstr('')   == '0'
+```
 
 The **changestr** method can be used to change occurrences of *needle*
 to some other string.
@@ -248,12 +265,13 @@ number that represents the code point of the character and will not
 include any sign, blanks, insignificant leading zeros, or decimal part.
 
 **Examples:**
-
+```rexx <!--rexxex14.crexx-->
     v=.rexx('M'); v.c2d  == '77'  -- ASCII or Unicode
     w=.rexx('🔥'); w.c2d == '128293'
     x=.rexx('7'); x.c2d  == '247' -- EBCDIC
     y=.rexx('\textbackslash{}r'); y.c2d == '13'  -- ASCII or Unicode
     z=.rexx('\textbackslash{}0'); z.c2d == '0'
+```
 
 The **c2x** method can be used to convert the encoding of a character to
 a hexadecimal representation.
@@ -267,16 +285,16 @@ letters for the values A-F, and will not include any blanks.
 Insignificant leading zeros are removed.
 
 **Examples:**
-
+```rexx <!--rexxex15.crexx-->
     v=.rexx('M'); v.c2x  == '4D' -- ASCII or Unicode
     w=.rexx('7'); w.c2x  == 'F7' -- EBCDIC
     x=.rexx('\textbackslash{}r'); x.c2x == 'D'  -- ASCII or Unicode
     y=.rexx('\textbackslash{}0'); y.c2x == '0'
-
+```
 The **c2d** method can be used to convert the encoding of a character to
 a decimal number.
 
-## datatype(option) {#refdataty}
+## datatype(option)
 
 returns 1 if *string* matches the description requested with the
 *option*, or 0 otherwise. If *string* is the null string, 0 is always
@@ -343,7 +361,7 @@ X
     contains characters from the ranges \"a-f\", \"A-F\", and \"0-9\".
 
 **Examples:**
-
+```rexx <!--rexxex16.crexx-->
     v=.rexx('101'); v.datatype('B')    == 1
     w=.rexx('12.3'); w.datatype('D')   == 0
     w=.rexx('12.3'); w.datatype('N')   == 1
@@ -354,6 +372,7 @@ X
     v1=.rexx('3 d'); v1.datatype('s')    == 0
     v2=.rexx('BCd3'); v2.datatype('X')   == 1
     v3=.rexx('BCgd3'); v3.datatype('X')  == 0
+```
 
 **Note:** The **datatype** method tests the meaning of the characters in
 a string, independent of the encoding of those characters. Extra letters
@@ -372,10 +391,11 @@ whole number, and *n* must be a positive whole number. If *n* is greater
 than the length of *string*, the string is returned unchanged.
 
 **Examples:**
-
+```rexx
     v=.rexx('abcd'); v.delstr(3)    == 'ab'
     w=.rexx('abcde'); w.delstr(3,2) == 'abe'
     w=.rexx('abcde'); w.delstr(6)   == 'abcde'
+```
 
 ## delword(n \[,length\])
 
@@ -390,10 +410,11 @@ The string deleted includes any blanks following the final word
 involved, but none of the blanks preceding the first word involved.
 
 **Examples:**
-
+```rexx <!--rexxex17.crexx-->
     v=.rexx('Now is the  time'); v.delword(2,2) == 'Now time'
     w=.rexx('Now is the time '); w.delword(3)   == 'Now is '
     x=.rexx('Now  time'); x.delword(5)          == 'Now  time'
+```
 
 ## d2b(\[n\])
 
@@ -412,7 +433,7 @@ form). If the number is too big to fit into n characters, it will be
 truncated on the left. n must be a nonnegative whole number.
 
 **Examples:**
-
+```rexx <!--rexxex18.crexx-->
     v=.rexx('0'); v.d2b == 0 
     w=.rexx('9'); w.d2b == 1001 
     x=.rexx('19'); x.d2b == 10011 
@@ -425,6 +446,7 @@ truncated on the left. n must be a nonnegative whole number.
     v2=.rexx('-127'); v2.d2b(8) == 10000001 
     v2=.rexx('-127'); v2.d2b(16) == 1111111110000001 
     v3=.rexx('12'); v3.d2b(0) == 
+```
 
 ## d2c(\[length\])
 
@@ -440,7 +462,7 @@ If *length* is specified under Unicode semantics, it may be **0** or
 equivalent to omitting it.
 
 **Examples:**
-
+```rexx <!--rexxex19.crexx-->
     v=.rexx('77'); v.d2c  == 'M' -- ASCII or Unicode
     v=.rexx('77'); v.d2c(1) == 'M'
     w=.rexx('12'); w.d2c(0) == ''
@@ -448,6 +470,7 @@ equivalent to omitting it.
     y=.rexx('+77'); y.d2c == 'M' -- ASCII or Unicode
     z=.rexx('247'); z.d2c == '7' -- EBCDIC
     v1=.rexx('0'); v1.d2c   == '\textbackslash 0'
+```
 
 ## d2x(\[n\])
 
@@ -468,7 +491,7 @@ form). If the number is too big to fit into *n* characters, it will be
 truncated on the left. *n* must be a non-negative whole number.
 
 **Examples:**
-
+```rexx <!--rexxex20.crexx-->
     v=.rexx('9'); v.d2x       == '9'
     w=.rexx('129'); w.d2x     == '81'
     w=.rexx('129'); w.d2x(1)  == '1'
@@ -479,6 +502,7 @@ truncated on the left. *n* must be a non-negative whole number.
     z=.rexx('-127'); z.d2x(2) == '81'
     z=.rexx('-127'); z.d2x(4) == 'FF81'
     v1=.rexx('12'); v1.d2x(0)   == ''
+```
 
 ## exists(index)
 
@@ -486,17 +510,20 @@ returns 1 if *index* names a sub-value of *string* that has explicitly
 been assigned a value, or 0 otherwise.
 
 **Example:** Following the instructions:
-
+```rexx <!--rexxex21.crexx-->
     vowel=0
     vowel['a']=1
     vowel['b']=1
     vowel['b']=null -- drops previous assignment
+```
 
 then:
 
+```rexx <!--rexxex22.crexx-->
     vowel.exists('a') == '1'
     vowel.exists('b') == '0'
     vowel.exists('c') == '0'
+```
 
 ## format(\[before \[,after\]\])
 
@@ -526,7 +553,7 @@ rounded to an integer (that is, it will have no decimal part or decimal
 point).
 
 **Examples:**
-
+```rexx <!--rexxex23.crexx-->
     v=.rexx(' - 12.73'); v.format         == '-12.73'
     w=.rexx('0.000'); w.format            == '0'
     x=.rexx('3'); x.format(4)             == '   3'
@@ -535,6 +562,7 @@ point).
     z=.rexx('-.76'); z.format(4,1)        == '  -0.8'
     v1=.rexx('3.03'); v1.format(4)          == '   3.03'
     v=.rexx(' - 12.73'); v.format(null,4) == '-12.7300'
+```
 
 Further arguments may be passed to the method to control the use of
 exponential notation. The full syntax of the method is then:
@@ -571,7 +599,7 @@ up to three digits (plus sign) may be needed for the integer part of the
 result (*before*).
 
 **Examples:**
-
+```rexx <!--rexxex24.crexx-->
     v=.rexx('12345.73'); v.format(null,null,2,2) == '1.234573E+04'
     v=.rexx('12345.73'); v.format(null,3,null,0) == '1.235E+4'
     w=.rexx('1.234573'); w.format(null,3,null,0) == '1.235'
@@ -580,6 +608,7 @@ result (*before*).
     z=.rexx('1.2345'); z.format(null,3,2,0)      == '1.235    '
     v=.rexx('12345.73'); v.format(null,null,3,6) == '12345.73     '
     v1=.rexx('12345e+5'); v1.format(null,3)        == '1234500000.000'
+```
 
 **Implementation minimum:** If exponents are supported in an
 implementation, then they must be supported for exponents whose absolute
@@ -599,12 +628,13 @@ for *length* is the length of *new*. The default *pad* character is a
 blank.
 
 **Examples:**
-
+```rexx <!--rexxex25.crexx-->
     v=.rexx('abc'); v.insert('123')         == '123abc'
     w=.rexx('abcdef'); w.insert(' ',3)      == 'abc def'
     v=.rexx('abc'); v.insert('123',5,6)     == 'abc  123   '
     v=.rexx('abc'); v.insert('123',5,6,'+') == 'abc++123+++'
     v=.rexx('abc'); v.insert('123',0,5,'-') == '123--abc'
+```
 
 ## lastpos(needle \[,start\])
 
@@ -618,12 +648,13 @@ defaults to the value *string***.length** if larger than that value or
 if not specified (with a minimum default value of one).
 
 **Examples:**
-
+```rexx <!--rexxex26.crexx-->
     v=.rexx('abc def ghi'); v.lastpos(' ')   == 8
     v=.rexx('abc def ghi'); v.lastpos(' ',7) == 4
     w=.rexx('abcdefghi'); w.lastpos(' ')     == 0
     w=.rexx('abcdefghi'); w.lastpos('cd')    == 3
     x=.rexx(''); x.lastpos('?')              == 0
+```
 
 ## left(length \[,pad\])
 
@@ -634,19 +665,21 @@ blank. *length* must be a non-negative whole number. This method is
 exactly equivalent to *string***.substr(1**, *length* \[, *pad*\]**)**.
 
 **Examples:**
-
+```rexx <!--rexxex27.crexx-->
     v=.rexx('abc d'); v.left(8)     == 'abc d   '
     v=.rexx('abc d'); v.left(8,'.') == 'abc d...'
     w=.rexx('abc defg'); w.left(6)  == 'abc de'
+```
 
 ## length()
 
 returns the number of characters in *string*.
 
 **Examples:**
-
+```rexx <!--rexxex28.crexx-->
     v=.rexx('abcdefgh'); v.length == 8
     w=.rexx(''); w.length         == 0
+```
 
 ## linein(name)
 
@@ -682,12 +715,13 @@ end of the string, the rest of the string (including the *nth*
 character) is assumed.
 
 **Examples:**
-
+```rexx <!--rexxex29.crexx-->
     v=.rexx('SumA'); v.lower      == 'suma'
     v=.rexx('SumA'); v.lower(2)   == 'Suma'
     w=.rexx('SuMB'); w.lower(1,1) == 'suMB'
     x=.rexx('SUMB'); x.lower(2,2) == 'SumB'
     y=.rexx(''); y.lower          == ''
+```
 
 ## max(number)
 
@@ -706,7 +740,7 @@ digits in the mantissa of the number (excluding leading insignificant
 zeros). Scientific notation is used, if necessary.
 
 **Examples:**
-
+```rexx <!--rexxex30.crexx-->
     0.max(1)          ==1
     v=.rexx('-1'); v.max(1)       ==1
     w=.rexx('+1'); w.max(-1)      ==1
@@ -714,6 +748,7 @@ zeros). Scientific notation is used, if necessary.
     y=.rexx('1.00'); y.max(1.0)   =='1.00'
     z=.rexx('123456700000'); z.max(1234567E+5)   == '123456700000'
     v1=.rexx('1234567E+5'); v1.max('123456700000') == '1.234567E+11'
+```
 
 ## min(number)
 
@@ -732,7 +767,7 @@ digits in the mantissa of the number (excluding leading insignificant
 zeros). Scientific notation is used, if necessary.
 
 **Examples:**
-
+```rexx <!--rexxex31.crexx-->
     0.min(1)          ==0
     v=.rexx('-1'); v.min(1)       =='-1'
     w=.rexx('+1'); w.min(-1)      =='-1'
@@ -740,6 +775,7 @@ zeros). Scientific notation is used, if necessary.
     y=.rexx('1.00'); y.min(1.0)   =='1.00'
     z=.rexx('123456700000'); z.min(1234567E+5)   == '123456700000'
     v1=.rexx('1234567E+5'); v1.min('123456700000') == '1.234567E+11'
+```
 
 ## overlay(new \[,n \[,length \[,pad\]\]\])
 
@@ -754,12 +790,13 @@ default *pad* character is a blank, and the default value for *n* is 1.
 of *new*.
 
 **Examples:**
-
+```rexx <!--rexxex32.crexx-->
     v=.rexx('abcdef'); v.overlay(' ',3)      == 'ab def'
     v=.rexx('abcdef'); v.overlay('.',3,2)    == 'ab. ef'
     w=.rexx('abcd'); w.overlay('qq')         == 'qqcd'
     w=.rexx('abcd'); w.overlay('qq',4)       == 'abcqq'
     x=.rexx('abc'); x.overlay('123',5,6,'+') == 'abc+123+++'
+```
 
 ## pos(needle \[,start\])
 
@@ -771,21 +808,23 @@ value 1). This may be overridden by specifying *start* (which must be a
 positive whole number), the point at which to start the search; if
 *start* is greater than the length of *string* then 0 is returned.
 **Examples:**
-
+```rexx <!--rexxex33.crexx-->
     v=.rexx('Saturday'); v.pos('day')    == 6
     w=.rexx('abc def ghi'); w.pos('x')   == 0
     w=.rexx('abc def ghi'); w.pos(' ')   == 4
     w=.rexx('abc def ghi'); w.pos(' ',5) == 8
+```
 
 ## reverse()
 
 returns a copy of *string*, swapped end for end.
 
 **Examples:**
-
+```rexx <!--rexxex34.crexx-->
     v=.rexx('ABc.'); v.reverse        == '.cBA'
     w=.rexx('XYZ '); w.reverse        == ' ZYX'
     x=.rexx('Tranquility'); x.reverse == 'ytiliuqnarT'
+```
 
 ## right(length \[,pad\])
 
@@ -795,10 +834,11 @@ truncated) on the left as needed. The default *pad* character is a
 blank. *length* must be a non-negative whole number.
 
 **Examples:**
-
+```rexx <!--rexxex35.crexx-->
     v=.rexx('abc  d'); v.right(8)  == '  abc  d'
     w=.rexx('abc def'); w.right(5) == 'c def'
     x=.rexx('12'); x.right(5,'0')  == '00012'
+```
 
 ## sequence(final)
 
@@ -808,10 +848,11 @@ between and including the character in *string* and the character in
 greater than *final*, an error is reported.
 
 **Examples:**
-
+```rexx <!--rexxex36.crexx-->
     v=.rexx('a'); v.sequence('f')           == 'abcdef'
     w=.rexx('\\0'); w.sequence('\\x03')       == '\\x00\\x01\\x02\\x03'
     x=.rexx('\\ufffe'); x.sequence('\\uffff') == '\\ufffe\\uffff'
+```
 
 ## sign()
 
@@ -823,10 +864,11 @@ returned; if it is **'0'** then **'0'** is returned; and otherwise
 **'1'** is returned.
 
 **Examples:**
-
+```rexx <!--rexxex37.crexx-->
     v=.rexx('12.3'); v.sign    ==  1
     w=.rexx('0.0'); w.sign     ==  0
     x=.rexx(' -0.307'); x.sign == -1
+```
 
 ## space(\[n \[,pad\]\])
 
@@ -837,12 +879,13 @@ removed. Leading and trailing blanks are always removed. The default for
 *n* is 1, and the default *pad* character is a blank.
 
 **Examples:**
-
+```rexx <!--rexxex38.crexx-->
     v=.rexx('abc  def  '); v.space        == 'abc def'
     w=.rexx('  abc def '); w.space(3)     == 'abc   def'
     v=.rexx('abc  def  '); v.space(1)     == 'abc def'
     v=.rexx('abc  def  '); v.space(0)     == 'abcdef'
     v=.rexx('abc  def  '); v.space(2,'+') == 'abc++def'
+```
 
 ## strip(\[option \[,char\]\]\])
 
@@ -854,12 +897,13 @@ character to be removed, with the default being a blank. If given,
 *char* must be exactly one character long.
 
 **Examples:**
-
+```rexx <!--rexxex39.crexx-->
     v=.rexx('  ab c  '); v.strip        == 'ab c'
     v=.rexx('  ab c  '); v.strip('L')   == 'ab c  '
     v=.rexx('  ab c  '); v.strip('t')   == '  ab c'
     w=.rexx('12.70000'); w.strip('t',0) == '12.7'
     x=.rexx('0012.700'); x.strip('b',0) == '12.7'
+```
 
 ## substr(n \[,length \[,pad\]\])
 
@@ -872,12 +916,13 @@ rest of the string (or 0 if *n* is greater than the length of the
 string). The default *pad* character is a blank.
 
 **Examples:**
-
+```rexx <!--rexxex40.crexx-->
     v=.rexx('abc'); v.substr(2)       == 'bc'
     v=.rexx('abc'); v.substr(2,4)     == 'bc  '
     v=.rexx('abc'); v.substr(5,4)     == '    '
     v=.rexx('abc'); v.substr(2,6,'.') == 'bc....'
     v=.rexx('abc'); v.substr(5,6,'.') == '......'
+```
 
 **Note:** In some situations the positional (numeric) patterns of
 parsing templates are more convenient for selecting sub-strings,
@@ -894,10 +939,11 @@ The returned string will never have leading or trailing blanks, but will
 include all blanks between the selected words.
 
 **Examples:**
-
+```rexx <!--rexxex41.crexx-->
     v=.rexx('Now is the  time'); v.subword(2,2) == 'is the'
     v=.rexx('Now is the  time'); v.subword(3)   == 'the  time'
     v=.rexx('Now is the  time'); v.subword(5)   == ''
+```
 
 ## translate(tableo, tablei \[,pad\])
 
@@ -918,20 +964,22 @@ right as necessary to be the same length as *tablei*. The default *pad*
 is a blank.
 
 **Examples:**
-
+```rexx <!--rexxex42.crexx-->
     v=.rexx('abbc'); v.translate('&','b')           == 'a&&c'
     w=.rexx('abcdef'); w.translate('12','ec')       == 'ab2d1f'
     w=.rexx('abcdef'); w.translate('12','abcd','.') == '12..ef'
     x=.rexx('4123'); x.translate('abcd','1234')     == 'dabc'
     x=.rexx('4123'); x.translate('hods','1234')     == 'shod'
+```
 
 **Note:** The last two examples show how the **translate** method may be
 used to move around the characters in a string. In these examples, any
 4-character string could be specified as the first argument and its last
 character would be moved to the beginning of the string. Similarly, the
 term:
-
+```rexx <!--rexxex43.crexx-->
     v=.rexx('gh.ef.abcd'); v.translate(19970827,'abcdefgh')
+```
 
 (which returns \"**27.08.1997**\") shows how a string (in this case
 perhaps a date) might be re-formatted and merged with other characters
@@ -952,12 +1000,13 @@ integer with no decimal point is returned. The result will never be in
 exponential form.
 
 **Examples:**
-
+```rexx <!--rexxex44.crexx-->
     v=.rexx('12.3'); v.trunc         == 12
     w=.rexx('127.09782'); w.trunc(3) == 127.097
     x=.rexx('127.1'); x.trunc(3)     == 127.100
     y=.rexx('127'); y.trunc(2)       == 127.00
     z=.rexx('0'); z.trunc(2)         == 0.00
+```
 
 ## upper(\[n \[,length\]\])
 
@@ -975,7 +1024,7 @@ end of the string, the rest of the string (including the *nth*
 character) is assumed.
 
 **Examples:**
-
+```rexx <!--rexxex45.crexx-->
     v=.rexx('Fou-Baa'); v.upper        == 'FOU-BAA'
     w=.rexx('Mad Sheep'); w.upper      == 'MAD SHEEP'
     x=.rexx('Mad sheep'); x.upper(5)   == 'Mad SHEEP'
@@ -983,6 +1032,7 @@ character) is assumed.
     x=.rexx('Mad sheep'); x.upper(5,4) == 'Mad SHEEp'
     y=.rexx('tinganon'); y.upper(1,1)  == 'Tinganon'
     z=.rexx(''); z.upper               == ''
+```
 
 ## verify(reference \[,option \[,start\]\])
 
@@ -1004,13 +1054,14 @@ the value used for *start*, unless **'Match'** is specified as the
 *option*, in which case 0 is returned.
 
 **Examples:**
-
+```rexx <!--rexxex46.crexx-->
     v=.rexx('123'); v.verify('1234567890')          == 0
     w=.rexx('1Z3'); w.verify('1234567890')          == 2
     x=.rexx('AB4T'); x.verify('1234567890','M')     == 3
     y=.rexx('1P3Q4'); y.verify('1234567890','N',3)  == 4
     z=.rexx('ABCDE'); z.verify('','n',3)            == 3
     v1=.rexx('AB3CD5'); v1.verify('1234567890','m',4) == 6
+```
 
 ## word(n)
 
@@ -1020,9 +1071,10 @@ is returned. This method is exactly equivalent to
 *string***.subword(***n*,**1)**.
 
 **Examples:**
-
+```rexx <!--rexxex47.crexx-->
     v=.rexx('Now is the time'); v.word(3) == 'the'
     v=.rexx('Now is the time'); v.word(5) == ''
+```
 
 ## wordindex(n)
 
@@ -1031,9 +1083,10 @@ returns the character position of the *nth* blank-delimited word in
 string, 0 is returned.
 
 **Examples:**
-
+```rexx <!--rexxex48.crexx-->
     v=.rexx('Now is the time'); v.wordindex(3) == 8
     v=.rexx('Now is the time'); v.wordindex(6) == 0
+```
 
 ## wordlength(n)
 
@@ -1042,10 +1095,11 @@ must be positive. If there are fewer than *n* words in the string, 0 is
 returned.
 
 **Examples:**
-
+```rexx <!--rexxex49.crexx-->
     v=.rexx('Now is the time'); v.wordlength(2)    == 2
     w=.rexx('Now comes the time'); w.wordlength(2) == 5
     v=.rexx('Now is the time'); v.wordlength(6)    == 0
+```
 
 ## wordpos(phrase \[,start\])
 
@@ -1060,7 +1114,7 @@ first word in *string*. This may be overridden by specifying *start*
 (which must be positive), the word at which to start the search.
 
 **Examples:**
-
+```rexx <!--rexxex50.crexx-->
     v=.rexx('now is the time'); v.wordpos('the')       == 3
     v=.rexx('now is the time'); v.wordpos('The')       == 0
     v=.rexx('now is the time'); v.wordpos('is the')    == 2
@@ -1068,16 +1122,18 @@ first word in *string*. This may be overridden by specifying *start*
     v=.rexx('now is the time'); v.wordpos('is  time')  == 0
     w=.rexx('To be or not to be'); w.wordpos('be')     == 2
     w=.rexx('To be or not to be'); w.wordpos('be',3)   == 6
+```
 
 ## words()
 
 returns the number of blank-delimited words in *string*.
 
 **Examples:**
-
+```rexx <!--rexxex51.crexx-->
     v=.rexx('Now is the time'); v.words == 4
     w=.rexx(' '); w.words               == 0
     x=.rexx(''); x.words                == 0
+```
 
 ## x2b()
 
@@ -1091,10 +1147,11 @@ will have a length that is a multiple of four, and will not include any
 blanks.
 
 **Examples:**
-
+```rexx <!--rexxex52.crexx-->
     v=.rexx('C3'); v.x2b  == '11000011'
     w=.rexx('7'); w.x2b   == '0111'
     x=.rexx('1C1'); x.x2b == '000111000001'
+```
 
 ## x2c()
 
@@ -1112,11 +1169,12 @@ An error results if the encoding described does not produce a valid
 character for the implementation (for example, if it has more
 significant bits than the implementation's encoding for characters).
 **Examples:**
-
+```rexx <!--rexxex53.crexx-->
     v=.rexx('004D'); v.x2c == 'M' -- ASCII or Unicode
     w=.rexx('4d'); w.x2c   == 'M' -- ASCII or Unicode
     x=.rexx('A2'); x.x2c   == 's' -- EBCDIC
     y=.rexx('0'); y.x2c    == '\textbackslash 0'
+```
 
 The **d2c** method can be used to convert a number to the encoding of a
 character.
@@ -1130,12 +1188,13 @@ null string, 0 is returned.
 If *n* is not specified, *string* is taken to be an unsigned number.
 
 **Examples:**
-
+```rexx <!--rexxex54.crexx-->
     v=.rexx('0E'); v.x2d    == 14
     w=.rexx('81'); w.x2d    == 129
     x=.rexx('F81'); x.x2d   == 3969
     y=.rexx('FF81'); y.x2d  == 65409
     z=.rexx('c6f0'); z.x2d  == 50928
+```
 
 If *n* is specified, *string* is taken as a signed number expressed in
 *n* hexadecimal characters. If the most significant (left-most) bit is
@@ -1149,7 +1208,7 @@ characters; (that is, as though *string***.right(***n*, **'0')** had
 been executed.)
 
 **Examples:**
-
+```rexx <!--rexxex55.crexx-->
     v=.rexx('81'); v.x2d(2)   == -127
     v=.rexx('81'); v.x2d(4)   == 129
     w=.rexx('F081'); w.x2d(4) == -3967
@@ -1157,6 +1216,7 @@ been executed.)
     w=.rexx('F081'); w.x2d(2) == -127
     w=.rexx('F081'); w.x2d(1) == 1
     x=.rexx('0031'); x.x2d(0) == 0
+```
 
 The **c2d** method can be used to convert a character to a decimal
 representation of its encoding.

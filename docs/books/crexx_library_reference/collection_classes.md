@@ -12,6 +12,6 @@ The `List`, `Set`, `Map` and `Tree` interfaces have class implementations for `.
 
 ## Notes on performance
 
-The `StringTreeMap` class is based on an AVL[^avl] Tree for optimal performance. This is a balanced binary tree with guaranteed O$log N$ performance for all operations. This class is written in cRexx and its performance has been benchmarked against a *red-black tree* implementation in C, which is what most class libraries use. Its performance is identical to that native implementation.
+The `StringTreeMap` class is based on an AVL[^avl] Tree for optimal performance. This is a balanced binary tree with guaranteed $Olog N$ performance for all operations. This class is written in cRexx and its performance has been benchmarked against a *red-black tree* implementation in C, which is what most class libraries use. Its performance is identical to that native implementation.
 
-[^avl]: <!--cite-->[sedgewick2003]
+[^avl]: <!--cite-->[knuth1998art]
