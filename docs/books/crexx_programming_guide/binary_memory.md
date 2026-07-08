@@ -126,9 +126,9 @@ find_row: procedure = .int
 ```
 
 The hot loop reads fixed-width fields directly, checks the stored key length,
-and compares the key without making a binary slice. A good implementation test
-should inspect optimized RXAS for this shape and fail if `binsubstr`, `bslice`,
-string extraction, or helper calls appear in the inner loop.
+and compares the key without making a binary slice. The compiler test fixture
+for this shape inspects emitted RXAS and fails if `bslice`, string extraction,
+or helper calls appear in the lookup path.
 
 ## Insert And Delete Paths
 
@@ -158,7 +158,9 @@ insert_gap: procedure = .void
 
 `binfillat(table, offset, length, byte)` is the Release 1 span-fill helper. It
 currently uses a small checked helper loop; whole-buffer `binfill(table, byte)`
-is backed by the RXAS `bfill` instruction.
+is backed by the RXAS `bfill` instruction. `binmemmove` is safe for overlapping
+ranges and currently uses conservative library code; direct lowering remains a
+future optimization if profiling shows helper overhead in hot mutation paths.
 
 ## Text Fields
 

@@ -1,10 +1,8 @@
 # Binary Memory
 
 This chapter specifies the Release 1 binary-memory source surface for Level B.
-It is the implementation target for the compiler work that follows the RXAS
-binary-memory instruction baseline. Some forms in this chapter may be rejected
-until that implementation work lands; when that happens the compiler must use
-the diagnostics listed here.
+It builds on the RXAS binary-memory instruction baseline and defines the forms
+that the compiler lowers directly for packed lookup and record code.
 
 Binary memory treats a `.binary` value or `.binary` constant as an indexed byte
 space. It is intended for packed lookup structures, indexes, parsers, protocol
@@ -144,7 +142,8 @@ amount = <at..decimal>(amount_offset, amount_bytes) arena
 The `.binary` and `.decimal` length arguments are byte counts. The `.string`
 length argument is a UTF-8 codepoint count from the byte offset.
 
-Release 1 should either implement or explicitly reject variable-size writes:
+Release 1 implements zero-terminated string writes and rejects variable-size
+span writes:
 
 ```rexx
 <at..binary>(key_offset, key_len) arena = key_bytes
@@ -152,10 +151,11 @@ Release 1 should either implement or explicitly reject variable-size writes:
 <at..decimal>(amount_offset, amount_bytes) arena = amount
 ```
 
-If variable-size writes remain deferred, the compiler must reject them with
-`BINARY_MEMORY_SPAN_WRITE_UNSUPPORTED`. If accepted, the complete destination
-span must already fit inside the current binary length. Writes do not resize the
-binary buffer.
+These span-write forms raise `BINARY_MEMORY_SPAN_WRITE_UNSUPPORTED`.
+Programmers should use `binupdate`, `bincopy`, `binfillat`, `binmakegap`, and
+`bindrop` for Release 1 byte-span mutation. If span writes are added later, the
+complete destination span must already fit inside the current binary length.
+Binary-memory writes do not resize the binary buffer.
 
 ## Zero-Terminated UTF-8 Fields
 
@@ -176,7 +176,9 @@ selected bytes as UTF-8, and copies those bytes into a `.string`. The write form
 writes the string bytes followed by one zero byte. It does not resize the binary
 buffer; the complete string plus terminator must already fit.
 
-The fixed-codepoint form remains `<at..string>(offset, codepoints) memory`.
+The fixed-codepoint read form remains
+`<at..string>(offset, codepoints) memory`. Release 1 does not support the
+matching fixed-codepoint write form.
 
 The compare intrinsic `<compare..string>` uses this zero-terminated field
 contract.
@@ -296,7 +298,7 @@ The existing `BIN*` helpers are compatibility helpers that return copied values
 and use one-based positions. Packed-memory helpers use zero-based offsets,
 mutate exposed arguments, and may be direct-lowered by the compiler/inliner.
 
-The planned packed-memory helper surface is:
+The Release 1 packed-memory helper surface is:
 
 | Helper | Effect |
 | --- | --- |
@@ -337,17 +339,13 @@ Existing keys that must continue to be used:
 | `INVALID_SIZEOF_SYNTAX` | SIZEOF intrinsic has invalid syntax. | `<sizeof>` is malformed. |
 | `INTRINSIC_GENERIC_TYPES_UNSUPPORTED` | Intrinsic type parameter lists are not supported in Release 1. | A parsed generic intrinsic type-list form is valid syntax but unsupported in Release 1. |
 
-New compare/helper diagnostics should be added to all diagnostic catalogs before
-the implementation is accepted:
+Compare diagnostics are:
 
 | Key | Required message template |
 | --- | --- |
 | `BINARY_MEMORY_COMPARE_ARGUMENTS` | Binary memory compare intrinsic has an invalid argument list. |
 | `BINARY_MEMORY_COMPARE_TYPE` | Binary memory compare intrinsic has an unsupported comparison type. |
 | `BINARY_MEMORY_COMPARE_NEEDLE_TYPE` | Binary memory compare needle has an incompatible type. |
-| `BINARY_MEMORY_HELPER_ARGUMENTS` | Binary memory helper has an invalid argument list. |
-| `BINARY_MEMORY_HELPER_MUTABILITY` | Binary memory helper requires a mutable binary argument. |
-| `BINARY_MEMORY_TEXT_FIELD_SYNTAX` | Zero-terminated binary text-field intrinsic has invalid syntax. |
 
 Runtime operations signal:
 
@@ -357,12 +355,24 @@ Runtime operations signal:
 | `UNICODE_ERROR` | Bytes selected for a `.string` value or string compare are not valid UTF-8. |
 | `CONVERSION_ERROR` | Decimal or numeric conversion from selected bytes fails. |
 | `OVERFLOW_UNDERFLOW` | A Rexx numeric value cannot be represented in the selected binary field or reverse conversion overflows. |
-| `INVALID_ARGUMENTS` | Helper arguments are structurally valid but semantically invalid, such as same-value `BINCOPY` where `BINMEMMOVE` is required. |
 | `FAILURE` | Allocation or VM failure during resize, append, or other buffer-changing operations. |
+
+## Deferred Items
+
+The Release 1 surface deliberately leaves a few items for later work:
+
+- unsigned 64-bit storage syntax and ordering rules (`.u64`);
+- variable-size span writes for `.binary`, `.decimal`, and fixed-codepoint
+  `.string` fields;
+- explicit source-length zero-copy binary compare;
+- direct compiler or inliner lowering for selected packed-memory helpers when
+  profiling proves the helper call overhead matters;
+- read-only constant/view parameter passing, binary struct declarations, and
+  mmap/shared-memory views.
 
 ## Implementation Acceptance Tests
 
-The implementation should add tests for:
+The implementation test surface covers:
 
 - positive parsing and lowering for every intrinsic in this chapter;
 - `.binary` constants and variables using the same read and compare forms;
