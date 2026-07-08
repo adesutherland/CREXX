@@ -395,8 +395,8 @@ first.
 
 | Operation | Binary register source | Binary constant source | Needle operand | Release 1 position |
 | --- | --- | --- | --- | --- |
-| Compare binary bytes | Release 1: `bcmpb rCmp,rBin,rNeedle` | Release 1: `bcmpb rCmp,bConst,rNeedle` | Binary register or `BINARY_CONST`; length is needle length | Replace current selected-span semantics before release. `rCmp` is input offset then output result. |
-| Compare zero-terminated UTF-8 field to string | Release 1: `bcmps rCmp,rBin,rString` | Release 1: `bcmps rCmp,bConst,rString` | String register or `STRING_CONST`; source field length comes from NUL scan | Replace current selected-span semantics before release. Must validate UTF-8 and preserve string-read signal behavior. |
+| Compare binary bytes | Release 1: `bcmpb rCmp,rBin,rNeedle` | Release 1: `bcmpb rCmp,bConst,rNeedle` | Binary register or `BINARY_CONST`; length is needle length | Implemented with `rCmp` as input offset then output result. |
+| Compare zero-terminated UTF-8 field to string | Release 1: `bcmps rCmp,rBin,rString` | Release 1: `bcmps rCmp,bConst,rString` | String register or `STRING_CONST`; source field length comes from NUL scan | Implemented with `rCmp` as input offset then output result; validates UTF-8 and preserves string-read signal behavior. |
 | Compare byte to zero | Existing lowering: `bgetu8` plus immediate compare/branch | Candidate direct form later | Integer immediate zero | Deferred until measurement. |
 | Compare typed field to immediate | Existing lowering: `bget*` plus integer/float compare | Candidate direct form later | Integer/float immediate | Deferred until measurement. |
 | Direct compare-and-branch | Existing lowering: compare result then branch | Candidate direct form later | Binary or string needle | Deferred until profiles justify it. |
@@ -483,10 +483,12 @@ current docs are useful but incomplete:
   failures should break the book build. It is not, by itself, an expected-output
   assertion framework. Every example-worthy behavior also needs normal focused
   tests with expected output or expected signal handling.
-- The current instruction database is stale for binary memory. It contains
-  `getbyte` but not the newer `blen`, `bcopy`, typed `bget*`/`bset*`,
-  cursor/slice, span compare, or resize/fill instructions that exist in
-  `binutils/include/rxops.h`.
+- The instruction database source and checked-in `instructionbase.sqb` have
+  been refreshed from `rxas -i` for the current opcode table and now include a
+  `Binary Memory` category. Focused binary-memory `.gv` and `.gv.svg` diagrams
+  have been generated from that database. The old `instruction_doc.rexx`
+  generator still expects the historical `nrc -exec` environment, so a full
+  `instruction_chapter.tex` regeneration remains a documentation pipeline task.
 
 Documentation gate for every new or changed binary instruction:
 
@@ -581,13 +583,14 @@ metadata, tests, and generated docs as applicable.
 
 Remaining implementation points after the RXAS instruction slice:
 
-- `interpreter/tests/tests_binary.rxas` uses `setbinpos`, `getbinpos`, and
-  `bslice`; either rewrite or isolate these as legacy-only tests if the opcodes
-  are retained.
-- The docs instruction database, instruction SVGs, VM spec
-  `instruction_chapter.tex`, reference cards, and architecture notes are stale
-  for the binary-memory surface and must be regenerated or edited as part of
-  the implementation slice.
+- `interpreter/tests/tests_binary.rxas` is now isolated as
+  `rxasbinarylegacytests` and covers retained legacy cursor/slice compatibility
+  only. New typed binary-memory behavior is covered by `rxasbinarymemorytests`.
+- The full VM spec `instruction_chapter.tex` and any derived reference-card
+  artifacts still need a working `nrc -exec` documentation runner or a
+  replacement generator. Until then, `binary_memory_instructions.md` and the
+  refreshed instruction database are the authoritative Release 1 binary-memory
+  reference.
 
 ## Current Implemented Binary RXAS Inventory
 
@@ -663,8 +666,8 @@ bintos     rReg
 ## Settled Release 1 Decisions
 
 1. Use `bcopy` for target-sized copy from register or constant sources.
-2. Replace the current selected-span `bcmpb`/`bcmps` semantics with the new
-   in/out offset-result compare design before Release 1.
+2. Use the in/out offset-result compare design for `bcmpb`/`bcmps`; the
+   selected-span compare semantics are no longer part of the Release 1 surface.
 3. Use `bgets`/`bsets` for zero-terminated UTF-8 text fields in binary memory.
 4. Include adjacent string-constant extraction in Release 1.
 5. Use `bmove rDst,rSrc,rLen` for different-register binary memory move and

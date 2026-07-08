@@ -42,6 +42,7 @@ designs.
 - [rxlink linker](books/crexx_programming_guide/rxlink.md)
 - [rxdas disassembler](books/crexx_programming_guide/rxdas.md)
 - [Assembler programming guide](books/crexx_programming_guide/rxas_programming_guide.md)
+- [RXAS human reference skeleton](reference/rxas/README.md)
 - [Plugin architecture](books/crexx_programming_guide/rxpa.md)
 - [crexxsaa host integration](books/crexx_programming_guide/crexxsaa.md)
 - [Compiler exits](books/crexx_programming_guide/compiler_exits.md)

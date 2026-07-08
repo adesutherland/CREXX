@@ -611,9 +611,10 @@ bulk filling buffers. Source syntax should stay focused on typed access and
 compare; buffer lifecycle operations can remain helper/instruction backed.
 
 Existing cursor instructions such as `setbinpos`, `getbinpos`, and `bslice`
-remain part of the baseline. New source-level cursor syntax is deferred to
-Release 2. Release 1 source span reads use `bcheckrange` before cursor-based
-`bslice`, saving and restoring the binary cursor around the internal slice.
+remain as legacy RXAS compatibility instructions. New source-level cursor
+syntax is deferred to Release 2. Release 1 source span reads use target-sized
+`bcopy` or typed fixed-width reads directly from byte offsets; compiler lowering
+must not use cursor-based `bslice` for the new binary-memory surface.
 
 ### Fixed-Width Reads
 

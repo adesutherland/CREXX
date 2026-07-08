@@ -31,6 +31,7 @@ code before editing user-facing docs.
 | `docs/books/crexx_language_reference` | Language reference | CREXX programmers | Syntax, types, statements, classes, libraries | Formal, as-implemented |
 | `docs/books/crexx_programming_guide` | Practical guide | Users and integrators | Build, run, tools, host integration, plugins | Practical and task-oriented |
 | `docs/books/crexx_vm_spec` | VM and bytecode reference | Implementers | VM model, instruction set, platform notes | Precise and technical |
+| `docs/reference/rxas` | Human RXAS reference source | RXAS authors, VM/toolchain implementers | Instruction prose skeletons and inventory intended to feed generated docs later | Reader-focused and structured |
 | `rexxscript/doc` | RexxScript product docs | Users, integrators, RexxScript developers | User guide, developer guide, runtime/product source of truth | Product-owned and current |
 | `docs/ai-context` | Current implementation context | Agents and maintainers | Architecture facts, debugging, Level B authoring, library/runtime notes | Operational and explicit |
 | `compiler/docs` | Compiler implementation notebook | Compiler maintainers | Parser, validation, emitter, exits, inlining, retired working notes | Deep technical notes with status labels |

@@ -7,9 +7,11 @@ binary-memory instructions raise `OUT_OF_RANGE` for negative offsets, negative
 lengths, ranges outside the logical binary length, or integer values that cannot
 be represented in the target field width.
 
-The generated instruction table is still being refreshed from the current
-`rxops.h` source. Until that table is fully regenerated, this section is the
-authoritative binary-memory instruction reference.
+The instruction database source and focused binary-memory operand diagrams are
+refreshed from the current `rxops.h`-backed assembler instruction dump. Until
+the full VM specification instruction chapter is regenerated through the legacy
+documentation pipeline, this section is the authoritative binary-memory
+instruction reference.
 
 ## Constants and Aliases
 
