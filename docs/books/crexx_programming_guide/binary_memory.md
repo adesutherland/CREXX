@@ -58,6 +58,11 @@ Declare constants inside an explicit procedure scope. Top-level executable code
 in a library-shaped file can synthesize an implicit `main()`, which is not
 usually what a packed-layout module wants.
 
+For script-style examples that need a separate layout-constant declaration
+procedure, add an explicit `main: procedure`. Otherwise the statements after the
+declaration procedure are part of that procedure body until the next callable
+boundary.
+
 ## Header Check
 
 Binary constants and binary variables use the same direct-access syntax for

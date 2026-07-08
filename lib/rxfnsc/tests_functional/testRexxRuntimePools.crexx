@@ -3,8 +3,11 @@ import rexxvalue
 import rexxstem
 import rexxpool
 
-constant RV_FLAG_INT = 0x00020000
+test_runtime_pool_constants: procedure expose RV_FLAG_INT
+  constant RV_FLAG_INT = 0x00020000
+  return
 
+main: procedure = .int
 errors = 0
 
 stem = .RexxStem()

@@ -260,6 +260,11 @@ namespace and to importers as a compile-time value. A private declaration
 procedure may be used to give the constants an explicit home without making that
 procedure part of the public API.
 
+If the same file also has executable script code, put that code in an explicit
+`main: procedure`. A declaration procedure is a real procedure boundary; later
+statements belong to it until the next procedure/class boundary, not to a fresh
+implicit `main()`.
+
 <!-- rexx-example name="binary-memory-constants" test="pending" -->
 ```rexx
 options levelb

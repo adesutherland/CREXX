@@ -30,11 +30,13 @@ import rxfnsb
 import data
 -- import data_StringHashMap
 
-constant RVP_BINDING_DROPPED = 0
-constant RVP_BINDING_VALUE = 1
-constant RVP_BINDING_STEM = 2
-constant RVP_BINDING_ALIAS_VALUE = 3
-constant RVP_BINDING_ALIAS_STEM = 4
+rexxpool_constants: procedure expose RVP_BINDING_DROPPED RVP_BINDING_VALUE RVP_BINDING_STEM RVP_BINDING_ALIAS_VALUE RVP_BINDING_ALIAS_STEM
+  constant RVP_BINDING_DROPPED = 0
+  constant RVP_BINDING_VALUE = 1
+  constant RVP_BINDING_STEM = 2
+  constant RVP_BINDING_ALIAS_VALUE = 3
+  constant RVP_BINDING_ALIAS_STEM = 4
+  return
 
 RexxPoolAlias: class
   parent_ref = reference .RexxVariablePool

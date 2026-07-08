@@ -4000,6 +4000,7 @@ string(APPEND RXC_DIAGNOSTIC_LOCALIZATION_CONTENT
        "set(missing_end_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/err_02_syntax.crexx\")\n"
        "set(binary_memory_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/binary_memory_invalid_storage.crexx\")\n"
        "set(legacy_arg_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/legacy_arg_call_removed.crexx\")\n"
+       "set(top_level_constant_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/top_level_constant_removed.crexx\")\n"
        "function(run_diag label locale source suffix expected unexpected)\n"
        "  execute_process(\n"
        "    COMMAND \"${CMAKE_COMMAND}\" -E env \"CREXX_DIAGNOSTICS=localized\" \"CREXX_DIAGNOSTIC_LOCALE=\${locale}\" \"$<TARGET_FILE:rxc>\" -n -o \"\${label}_\${suffix}_diag\" \"\${source}\"\n"
@@ -4068,6 +4069,9 @@ string(APPEND RXC_DIAGNOSTIC_LOCALIZATION_CONTENT
        "run_diag_fail(\"en_GB\" \"en_GB\" \"\${legacy_arg_src}\" \"legacy_arg\" \"LEGACY_ARG_CALL_SYNTAX: ARG call syntax has been removed; use arg[], arg[n], or <argexists>(n).\" \"\")\n"
        "run_diag_fail(\"de_DE\" \"de_DE\" \"\${legacy_arg_src}\" \"legacy_arg\" \"LEGACY_ARG_CALL_SYNTAX: ARG-Aufrufsyntax wurde entfernt; verwenden Sie arg[], arg[n] oder <argexists>(n).\" \"\")\n"
        "run_diag_fail(\"nl_NL\" \"nl_NL\" \"\${legacy_arg_src}\" \"legacy_arg\" \"LEGACY_ARG_CALL_SYNTAX: ARG-aanroepsyntaxis is verwijderd; gebruik arg[], arg[n] of <argexists>(n).\" \"\")\n"
+       "run_diag_fail(\"en_GB\" \"en_GB\" \"\${top_level_constant_src}\" \"top_level_constant\" \"CONSTANT_OUTSIDE_ROUTINE: Constant declarations must be inside an explicit routine body.\" \"\")\n"
+       "run_diag_fail(\"de_DE\" \"de_DE\" \"\${top_level_constant_src}\" \"top_level_constant\" \"CONSTANT_OUTSIDE_ROUTINE: Konstantendeklarationen müssen sich in einem expliziten Routinenrumpf befinden.\" \"\")\n"
+       "run_diag_fail(\"nl_NL\" \"nl_NL\" \"\${top_level_constant_src}\" \"top_level_constant\" \"CONSTANT_OUTSIDE_ROUTINE: Constantdeclaraties moeten binnen een expliciete routinebody staan.\" \"\")\n"
        "run_diag(\"fallback\" \"fr_FR\" \"\${unused_src}\" \"unused\" \"UNUSED_IMPORT: Import is recognised but not used.\" \"recognized\")\n")
 file(GENERATE OUTPUT "${RXC_DIAGNOSTIC_LOCALIZATION_SCRIPT}" CONTENT "${RXC_DIAGNOSTIC_LOCALIZATION_CONTENT}")
 add_test(NAME rxc_diagnostic_localization

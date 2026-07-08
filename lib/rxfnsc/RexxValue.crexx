@@ -24,20 +24,22 @@ namespace rexxvalue expose RexxValue rexxvalue_numeric_mode rexxvalue_set_numeri
 import rxfnsb
 
 -- RexxValue cache flags live in the VM value status word.
-constant RV_FLAG_STRING = 0x00010000   -- 65536: string view current
-constant RV_FLAG_INT = 0x00020000      -- 131072: int view current
-constant RV_FLAG_FLOAT = 0x00040000    -- 262144: float view current
-constant RV_FLAG_DECIMAL = 0x00080000  -- 524288: decimal view current
-constant RV_FLAG_BINARY = 0x00100000   -- 1048576: binary view current
-constant RV_FLAG_TEXT = 0x00200000     -- 2097152: binary contents are valid text
+rexxvalue_constants: procedure expose RV_FLAG_STRING RV_FLAG_INT RV_FLAG_FLOAT RV_FLAG_DECIMAL RV_FLAG_BINARY RV_FLAG_TEXT RV_FLAGS_STRING_TEXT RV_FLAGS_STRING_BINARY_TEXT RV_NUMERIC_DECIMAL RV_NUMERIC_FLOAT RV_NUMERIC_DEFAULT_DIGITS RV_NUMERIC_DEFAULT_FUZZ
+  constant RV_FLAG_STRING = 0x00010000   -- 65536: string view current
+  constant RV_FLAG_INT = 0x00020000      -- 131072: int view current
+  constant RV_FLAG_FLOAT = 0x00040000    -- 262144: float view current
+  constant RV_FLAG_DECIMAL = 0x00080000  -- 524288: decimal view current
+  constant RV_FLAG_BINARY = 0x00100000   -- 1048576: binary view current
+  constant RV_FLAG_TEXT = 0x00200000     -- 2097152: binary contents are valid text
 
-constant RV_FLAGS_STRING_TEXT = RV_FLAG_STRING + RV_FLAG_TEXT
-constant RV_FLAGS_STRING_BINARY_TEXT = RV_FLAG_STRING + RV_FLAG_BINARY + RV_FLAG_TEXT
+  constant RV_FLAGS_STRING_TEXT = RV_FLAG_STRING + RV_FLAG_TEXT
+  constant RV_FLAGS_STRING_BINARY_TEXT = RV_FLAG_STRING + RV_FLAG_BINARY + RV_FLAG_TEXT
 
-constant RV_NUMERIC_DECIMAL = 0
-constant RV_NUMERIC_FLOAT = 1
-constant RV_NUMERIC_DEFAULT_DIGITS = 18
-constant RV_NUMERIC_DEFAULT_FUZZ = 0
+  constant RV_NUMERIC_DECIMAL = 0
+  constant RV_NUMERIC_FLOAT = 1
+  constant RV_NUMERIC_DEFAULT_DIGITS = 18
+  constant RV_NUMERIC_DEFAULT_FUZZ = 0
+  return
 
 rexxvalue_numeric_mode: procedure = .int expose _rv_numeric_mode _rv_numeric_digits _rv_numeric_fuzz _rv_numeric_ready
   call ensure_rexxvalue_numeric_context

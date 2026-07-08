@@ -1,9 +1,11 @@
 options levelb
 namespace consttest expose ConstThing
 
-constant FLAG_STRING = 0x00010000
-constant FLAG_INT = 0x00020000
-constant FLAGS = FLAG_STRING + FLAG_INT
+consttest_constants: procedure expose FLAG_STRING FLAG_INT FLAGS
+  constant FLAG_STRING = 0x00010000
+  constant FLAG_INT = 0x00020000
+  constant FLAGS = FLAG_STRING + FLAG_INT
+  return
 
 ConstThing: class
   value: method = .int

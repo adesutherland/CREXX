@@ -219,6 +219,11 @@ Do not put `constant` declarations in the file body. That top-level form is a
 Release 1 design defect being removed because it can imply an implicit `main()`
 in a module that was meant to be a library.
 
+If a script needs a separate declaration procedure for shared constants, add an
+explicit `main: procedure` before the executable body. Procedure bodies continue
+until the next top-level callable boundary, so statements after a declaration
+procedure belong to that procedure unless a new boundary is present.
+
 The initializer must fold at compile time. Integer constants used as assembler
 immediates are emitted as literals; string, decimal, float, and binary constants
 use the normal constant-pool machinery.

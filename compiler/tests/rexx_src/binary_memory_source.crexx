@@ -1,8 +1,8 @@
 options levelb
 
-constant HEADER = '78563412FE7F0000000000000000F03F4F4B'x as .binary
-
 main: procedure = .int
+  constant HEADER = '78563412FE7F0000000000000000F03F4F4B'x as .binary
+
   data = .binary
   n = 0
   u = 0

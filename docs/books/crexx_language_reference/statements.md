@@ -196,6 +196,11 @@ scope. A `constant` declaration in the file body is a design defect and is not
 part of the Release 1 surface, because it is an instruction form and can
 accidentally imply an implicit `main()` in a library-shaped module.
 
+When a script needs shared constants in a separate declaration procedure, put the
+script body in an explicit `main`. A procedure body continues until the next
+callable boundary, so executable statements after a declaration procedure belong
+to that procedure unless a new `main: procedure` boundary is present.
+
 The initializer must be a compile-time constant expression. The declared name is
 immutable after declaration and can be used in ordinary expressions in its
 visible scope or as an inline assembler literal operand. Integer constants used

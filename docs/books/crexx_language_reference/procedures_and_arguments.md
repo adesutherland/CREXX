@@ -1,5 +1,28 @@
 # Procedures and Arguments
 
+## Procedure Boundaries
+
+A Level B procedure body continues until the next top-level procedure, class,
+interface, method, factory, or match boundary. There is no separate `END`
+instruction for a procedure body.
+
+This matters when a file has declaration procedures before executable script
+code. Once the compiler sees an explicit top-level procedure, later statements
+belong to that procedure until the next callable boundary; they do not start a
+new implicit `main()`.
+
+Use an explicit `main` when a script also needs a declaration procedure:
+
+```rexx
+layout: procedure expose FLAG
+  constant FLAG = 1
+  return
+
+main: procedure = .int
+  say FLAG
+  return 0
+```
+
 ## Procedure-Level Expose
 
 `procedure expose` is the local procedure form for sharing module-global state:

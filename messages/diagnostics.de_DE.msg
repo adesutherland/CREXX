@@ -28,6 +28,7 @@ CANT_DEFINE_PROC_HERE = Prozedurdefinitionen sind hier nicht erlaubt.
 CERTIFIED_EXIT_DISABLED = Zertifizierter Compiler-Exit "{keyword}" ist deaktiviert.
 CLASS_NOT_FOUND = Klasse wurde nicht gefunden.
 CONSTANT_REQUIRES_CONSTANT_EXPRESSION = Konstantendefinitionen erfordern einen konstanten Ausdruck.
+CONSTANT_OUTSIDE_ROUTINE = Konstantendeklarationen müssen sich in einem expliziten Routinenrumpf befinden.
 DECIMAL_CASE_VALUE = NUMERIC CASE muss einer der unterstützten Case-Werte sein.
 DECIMAL_DIGITS_RANGE = NUMERIC DIGITS liegt außerhalb des unterstützten Bereichs.
 DECIMAL_FORM_VALUE = NUMERIC FORM muss SCIENTIFIC oder ENGINEERING sein.

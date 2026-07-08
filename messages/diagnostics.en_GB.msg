@@ -28,6 +28,7 @@ CANT_DEFINE_PROC_HERE = Procedure definitions are not allowed here.
 CERTIFIED_EXIT_DISABLED = Certified compiler exit "{keyword}" is disabled.
 CLASS_NOT_FOUND = Class was not found.
 CONSTANT_REQUIRES_CONSTANT_EXPRESSION = Constant definitions require a constant expression.
+CONSTANT_OUTSIDE_ROUTINE = Constant declarations must be inside an explicit routine body.
 DECIMAL_CASE_VALUE = NUMERIC CASE must be one of the supported case values.
 DECIMAL_DIGITS_RANGE = NUMERIC DIGITS is outside the supported range.
 DECIMAL_FORM_VALUE = NUMERIC FORM must be SCIENTIFIC or ENGINEERING.
