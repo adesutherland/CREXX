@@ -293,6 +293,9 @@ static ASTNode *intrinsic_lower_primary(Context *context, ASTNode *intrinsic) {
     }
     node = intrinsic_lower_compare(context, intrinsic);
     if (node) return node;
+    if (intrinsic_simple_name_equals(intrinsic, "compare")) {
+        return ast_err(context, "BINARY_MEMORY_COMPARE_TYPE", intrinsic->token);
+    }
 
     if (intrinsic_simple_name_equals(intrinsic, "typeof")) {
         return intrinsic_lower_one_arg(context, intrinsic, OP_TYPEOF, "INVALID_TYPEOF_SYNTAX");

@@ -1,0 +1,2 @@
+Error in binary_memory_compare_needle_type.crexx @ 6:34 - #BINARY_MEMORY_COMPARE_NEEDLE_TYPE, "key"
+1 error(s) in source file
