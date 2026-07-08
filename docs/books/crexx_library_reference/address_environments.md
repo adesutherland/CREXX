@@ -10,7 +10,7 @@ The *crexxsaa* facility enables the implementation of addressing environments. T
 
 Some Address Environments, like `address crexx`, `address shell`, and others, are part of the language core. Other environments can be best classified as libraries; regardless, all are packaged as libraries. In this part of the library reference these environments are discussed and documented. A good example is the `address sqlite` environment, which delivers an embedded SQL interface to SQLite and can serve as an example of delivering this for other database engines.
 
-Other documentation addressing environments are:
+Other documented addressing environments are:
 
 - SQLite: a demonstration of Embedded SQL[^embedded];
 - CMS: a demonstration of sending commands to an environment which simulates a VM/CMS host;
