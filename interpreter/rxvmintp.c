@@ -188,29 +188,44 @@ static int rxvm_checked_size_mul(size_t left, size_t right, size_t *result) {
     return 1;
 }
 
-static int rxvm_binary_range(value *buffer, rxinteger offset_value, size_t width, size_t *offset) {
+static int rxvm_memory_range(size_t length, rxinteger offset_value, size_t width, size_t *offset) {
     size_t local_offset;
 
     if (offset_value < 0) return 0;
     if ((uintmax_t)offset_value > (uintmax_t)SIZE_MAX) return 0;
 
     local_offset = (size_t)offset_value;
-    if (local_offset > buffer->binary_length) return 0;
-    if (width > buffer->binary_length - local_offset) return 0;
+    if (local_offset > length) return 0;
+    if (width > length - local_offset) return 0;
 
     if (offset) *offset = local_offset;
     return 1;
 }
 
-static uint64_t rxvm_binary_read_le(const value *buffer, size_t offset, size_t width) {
-    const unsigned char *bytes = (const unsigned char *)buffer->binary_value + offset;
+static int rxvm_binary_range(value *buffer, rxinteger offset_value, size_t width, size_t *offset) {
+    return rxvm_memory_range(buffer->binary_length, offset_value, width, offset);
+}
+
+static int rxvm_rxinteger_to_size(rxinteger value, size_t *result) {
+    if (value < 0) return 0;
+    if ((uintmax_t)value > (uintmax_t)SIZE_MAX) return 0;
+    if (result) *result = (size_t)value;
+    return 1;
+}
+
+static uint64_t rxvm_binary_read_le_bytes(const unsigned char *bytes, size_t offset, size_t width) {
+    const unsigned char *source = bytes + offset;
     uint64_t result = 0;
     size_t i;
 
     for (i = 0; i < width; i++) {
-        result |= ((uint64_t)bytes[i]) << (i * 8);
+        result |= ((uint64_t)source[i]) << (i * 8);
     }
     return result;
+}
+
+static uint64_t rxvm_binary_read_le(const value *buffer, size_t offset, size_t width) {
+    return rxvm_binary_read_le_bytes((const unsigned char *)buffer->binary_value, offset, width);
 }
 
 static void rxvm_binary_write_le(value *buffer, size_t offset, size_t width, uint64_t data) {
@@ -244,6 +259,49 @@ static int rxvm_uint32_fits_rxinteger(uint32_t value) {
     return (uintmax_t)value <= rxvm_rxinteger_positive_max();
 }
 
+static int rxvm_i64_raw_to_rxinteger(uint64_t raw, rxinteger *result) {
+    uintmax_t positive_max = rxvm_rxinteger_positive_max();
+
+    if ((raw & UINT64_C(0x8000000000000000)) == 0) {
+        if ((uintmax_t)raw > positive_max) return 0;
+        *result = (rxinteger)raw;
+        return 1;
+    }
+
+    {
+        uint64_t magnitude = (~raw) + UINT64_C(1);
+        uintmax_t negative_max = positive_max + 1;
+
+        if ((uintmax_t)magnitude > negative_max) return 0;
+        if ((uintmax_t)magnitude == negative_max) {
+            *result = -((rxinteger)(magnitude - 1)) - 1;
+        }
+        else {
+            *result = -(rxinteger)magnitude;
+        }
+        return 1;
+    }
+}
+
+static double rxvm_binary_read_f32_le_bytes(const unsigned char *bytes, size_t offset) {
+    uint32_t bits = (uint32_t)rxvm_binary_read_le_bytes(bytes, offset, 4);
+    float result;
+
+    memcpy(&result, &bits, sizeof(result));
+    return (double)result;
+}
+
+static int rxvm_binary_write_f32_le(value *buffer, size_t offset, double value) {
+    uint32_t bits;
+    float narrowed;
+
+    if (sizeof(narrowed) != sizeof(bits)) return -1;
+    narrowed = (float)value;
+    memcpy(&bits, &narrowed, sizeof(bits));
+    rxvm_binary_write_le(buffer, offset, 4, bits);
+    return 0;
+}
+
 static double rxvm_binary_read_f64_le(const value *buffer, size_t offset) {
     uint64_t bits = rxvm_binary_read_le(buffer, offset, 8);
     double result;
@@ -259,6 +317,87 @@ static int rxvm_binary_write_f64_le(value *buffer, size_t offset, double value) 
     memcpy(&bits, &value, sizeof(bits));
     rxvm_binary_write_le(buffer, offset, 8, bits);
     return 0;
+}
+
+static double rxvm_binary_read_f64_le_bytes(const unsigned char *bytes, size_t offset) {
+    uint64_t bits = rxvm_binary_read_le_bytes(bytes, offset, 8);
+    double result;
+
+    memcpy(&result, &bits, sizeof(result));
+    return result;
+}
+
+static int rxvm_find_nul_field(const unsigned char *bytes, size_t length, rxinteger offset_value,
+                               size_t *offset, size_t *field_length) {
+    size_t local_offset;
+    size_t i;
+
+    if (!rxvm_memory_range(length, offset_value, 0, &local_offset)) return 0;
+    for (i = local_offset; i < length; i++) {
+        if (bytes[i] == 0) {
+            if (offset) *offset = local_offset;
+            if (field_length) *field_length = i - local_offset;
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static int rxvm_compare_bytes(const unsigned char *left, size_t left_len,
+                              const unsigned char *right, size_t right_len) {
+    size_t common = left_len < right_len ? left_len : right_len;
+    int cmp = common ? memcmp(left, right, common) : 0;
+
+    if (cmp < 0) return -1;
+    if (cmp > 0) return 1;
+    if (left_len < right_len) return -1;
+    if (left_len > right_len) return 1;
+    return 0;
+}
+
+static int rxvm_binary_field_is_valid_utf8(const void *bytes, size_t length) {
+#ifndef NUTF8
+    return validate_utf8_bytes(bytes, length, 0) == 0;
+#else
+    (void)bytes;
+    (void)length;
+    return 1;
+#endif
+}
+
+static int rxvm_string_const_slice(string_constant *source, rxinteger offset_value, size_t requested_chars,
+                                  size_t *offset, size_t *byte_length) {
+    size_t local_offset;
+
+    if (!rxvm_memory_range(source->string_len, offset_value, 0, &local_offset)) return 0;
+
+#ifndef NUTF8
+    if (validate_utf8_bytes(source->string, source->string_len, 0) != 0) return -1;
+    if (validate_utf8_bytes(source->string, local_offset, 0) != 0) return -1;
+
+    {
+        size_t pos = local_offset;
+        size_t i;
+
+        for (i = 0; i < requested_chars; i++) {
+            size_t step;
+            if (pos >= source->string_len) return 0;
+            step = utf8codepointcalcsize(source->string + pos);
+            if (step > source->string_len - pos) return -1;
+            pos += step;
+        }
+
+        if (validate_utf8_bytes(source->string + local_offset, pos - local_offset, 0) != 0) return -1;
+        if (offset) *offset = local_offset;
+        if (byte_length) *byte_length = pos - local_offset;
+        return 1;
+    }
+#else
+    if (requested_chars > source->string_len - local_offset) return 0;
+    if (offset) *offset = local_offset;
+    if (byte_length) *byte_length = requested_chars;
+    return 1;
+#endif
 }
 
 #if defined(__has_builtin)
@@ -2948,6 +3087,9 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
 #define FMT_P_S_MAP 2, OP_FUNC, OP_STRING, OP_NONE
 #define FMT_R_MAP 1, OP_REG, OP_NONE, OP_NONE
 #define FMT_R_B_MAP 2, OP_REG, OP_BINARY, OP_NONE
+#define FMT_R_B_B_MAP 3, OP_REG, OP_BINARY, OP_BINARY
+#define FMT_R_B_R_MAP 3, OP_REG, OP_BINARY, OP_REG
+#define FMT_R_B_S_MAP 3, OP_REG, OP_BINARY, OP_STRING
 #define FMT_R_C_MAP 2, OP_REG, OP_CHAR, OP_NONE
 #define FMT_R_D_MAP 2, OP_REG, OP_DECIMAL, OP_NONE
 #define FMT_R_D_R_MAP 3, OP_REG, OP_DECIMAL, OP_REG
@@ -2960,6 +3102,7 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
 #define FMT_R_P_MAP 2, OP_REG, OP_FUNC, OP_NONE
 #define FMT_R_P_R_MAP 3, OP_REG, OP_FUNC, OP_REG
 #define FMT_R_R_MAP 2, OP_REG, OP_REG, OP_NONE
+#define FMT_R_R_B_MAP 3, OP_REG, OP_REG, OP_BINARY
 #define FMT_R_R_D_MAP 3, OP_REG, OP_REG, OP_DECIMAL
 #define FMT_R_R_F_MAP 3, OP_REG, OP_REG, OP_FLOAT
 #define FMT_R_R_I_MAP 3, OP_REG, OP_REG, OP_INT
@@ -8122,6 +8265,11 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     REG_RETURN_INT((rxinteger)op2R->binary_length)
     DISPATCH
 
+    START_INSTRUCTION(BLEN_REG_BINARY) CALC_DISPATCH(2)
+    DEBUG("TRACE - BLEN R%d,binary[%zu]\n", (int)REG_IDX(1), (size_t)(pc + 2)->index);
+    REG_RETURN_INT((rxinteger)op2S->string_len)
+    DISPATCH
+
 /* ------------------------------------------------------------------------------------
  *  BRESIZE_REG_REG  resize op1 to op2 bytes, zero-filling growth
  *  -----------------------------------------------------------------------------------
@@ -8182,6 +8330,54 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     DISPATCH
 
 /* ------------------------------------------------------------------------------------
+ *  BCOPY_REG_REG_REG / BCOPY_REG_BINARY_REG  copy op1 length bytes from source at op3
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BCOPY_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BCOPY R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t length = op1R->native_payload_ops ? 0 : op1R->binary_length;
+        size_t offset;
+
+        if (!rxvm_binary_range(op2R, op3R->int_value, length, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else if (reserve_binary_buffer(op1R, length) != 0) {
+            SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+        }
+        else {
+            op1R->binary_length = length;
+            if (length) memmove(op1R->binary_value, op2R->binary_value + offset, length);
+            if (op1R->binary_pos > op1R->binary_length) op1R->binary_pos = op1R->binary_length;
+            clear_vm_private_flags(op1R);
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BCOPY_REG_BINARY_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BCOPY R%d,binary[%zu],R%d\n",
+          (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
+    {
+        string_constant *source = op2S;
+        size_t length = op1R->native_payload_ops ? 0 : op1R->binary_length;
+        size_t offset;
+
+        if (!rxvm_memory_range(source->string_len, op3R->int_value, length, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else if (reserve_binary_buffer(op1R, length) != 0) {
+            SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
+        }
+        else {
+            op1R->binary_length = length;
+            if (length) memcpy(op1R->binary_value, source->string + offset, length);
+            if (op1R->binary_pos > op1R->binary_length) op1R->binary_pos = op1R->binary_length;
+            clear_vm_private_flags(op1R);
+        }
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
  *  Strict typed little-endian binary reads
  *  -----------------------------------------------------------------------------------
  */
@@ -8194,6 +8390,21 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         }
         else {
             REG_RETURN_INT((rxinteger)rxvm_binary_read_le(op2R, offset, 1))
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BGETU8_REG_BINARY_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BGETU8 R%d,binary[%zu],R%d\n",
+          (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
+    {
+        string_constant *source = op2S;
+        size_t offset;
+        if (!rxvm_memory_range(source->string_len, op3R->int_value, 1, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            REG_RETURN_INT((rxinteger)rxvm_binary_read_le_bytes((const unsigned char *)source->string, offset, 1))
         }
     }
     DISPATCH
@@ -8211,6 +8422,21 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     }
     DISPATCH
 
+    START_INSTRUCTION(BGETI8_REG_BINARY_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BGETI8 R%d,binary[%zu],R%d\n",
+          (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
+    {
+        string_constant *source = op2S;
+        size_t offset;
+        if (!rxvm_memory_range(source->string_len, op3R->int_value, 1, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            REG_RETURN_INT(rxvm_sign_extend_le_value(rxvm_binary_read_le_bytes((const unsigned char *)source->string, offset, 1), 8))
+        }
+    }
+    DISPATCH
+
     START_INSTRUCTION(BGETU16_REG_REG_REG) CALC_DISPATCH(3)
     DEBUG("TRACE - BGETU16 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
@@ -8224,6 +8450,21 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     }
     DISPATCH
 
+    START_INSTRUCTION(BGETU16_REG_BINARY_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BGETU16 R%d,binary[%zu],R%d\n",
+          (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
+    {
+        string_constant *source = op2S;
+        size_t offset;
+        if (!rxvm_memory_range(source->string_len, op3R->int_value, 2, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            REG_RETURN_INT((rxinteger)rxvm_binary_read_le_bytes((const unsigned char *)source->string, offset, 2))
+        }
+    }
+    DISPATCH
+
     START_INSTRUCTION(BGETI16_REG_REG_REG) CALC_DISPATCH(3)
     DEBUG("TRACE - BGETI16 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
@@ -8233,6 +8474,21 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         }
         else {
             REG_RETURN_INT(rxvm_sign_extend_le_value(rxvm_binary_read_le(op2R, offset, 2), 16))
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BGETI16_REG_BINARY_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BGETI16 R%d,binary[%zu],R%d\n",
+          (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
+    {
+        string_constant *source = op2S;
+        size_t offset;
+        if (!rxvm_memory_range(source->string_len, op3R->int_value, 2, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            REG_RETURN_INT(rxvm_sign_extend_le_value(rxvm_binary_read_le_bytes((const unsigned char *)source->string, offset, 2), 16))
         }
     }
     DISPATCH
@@ -8257,6 +8513,28 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     }
     DISPATCH
 
+    START_INSTRUCTION(BGETU32_REG_BINARY_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BGETU32 R%d,binary[%zu],R%d\n",
+          (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
+    {
+        string_constant *source = op2S;
+        size_t offset;
+        uint32_t result;
+        if (!rxvm_memory_range(source->string_len, op3R->int_value, 4, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            result = (uint32_t)rxvm_binary_read_le_bytes((const unsigned char *)source->string, offset, 4);
+            if (!rxvm_uint32_fits_rxinteger(result)) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+            }
+            else {
+                REG_RETURN_INT((rxinteger)result)
+            }
+        }
+    }
+    DISPATCH
+
     START_INSTRUCTION(BGETI32_REG_REG_REG) CALC_DISPATCH(3)
     DEBUG("TRACE - BGETI32 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
@@ -8266,6 +8544,21 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         }
         else {
             REG_RETURN_INT(rxvm_sign_extend_le_value(rxvm_binary_read_le(op2R, offset, 4), 32))
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BGETI32_REG_BINARY_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BGETI32 R%d,binary[%zu],R%d\n",
+          (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
+    {
+        string_constant *source = op2S;
+        size_t offset;
+        if (!rxvm_memory_range(source->string_len, op3R->int_value, 4, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            REG_RETURN_INT(rxvm_sign_extend_le_value(rxvm_binary_read_le_bytes((const unsigned char *)source->string, offset, 4), 32))
         }
     }
     DISPATCH
@@ -8282,6 +8575,94 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         }
         else {
             REG_RETURN_FLOAT(rxvm_binary_read_f64_le(op2R, offset))
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BGETF64_REG_BINARY_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BGETF64 R%d,binary[%zu],R%d\n",
+          (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
+    {
+        string_constant *source = op2S;
+        size_t offset;
+        if (sizeof(double) != sizeof(uint64_t)) {
+            SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "f64 requires 64-bit double");
+        }
+        else if (!rxvm_memory_range(source->string_len, op3R->int_value, 8, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            REG_RETURN_FLOAT(rxvm_binary_read_f64_le_bytes((const unsigned char *)source->string, offset))
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BGETI64_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BGETI64 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        rxinteger result;
+        if (!rxvm_binary_range(op2R, op3R->int_value, 8, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else if (!rxvm_i64_raw_to_rxinteger(rxvm_binary_read_le(op2R, offset, 8), &result)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            REG_RETURN_INT(result)
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BGETI64_REG_BINARY_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BGETI64 R%d,binary[%zu],R%d\n",
+          (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
+    {
+        string_constant *source = op2S;
+        size_t offset;
+        rxinteger result;
+        if (!rxvm_memory_range(source->string_len, op3R->int_value, 8, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else if (!rxvm_i64_raw_to_rxinteger(rxvm_binary_read_le_bytes((const unsigned char *)source->string, offset, 8), &result)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            REG_RETURN_INT(result)
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BGETF32_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BGETF32 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        if (sizeof(float) != sizeof(uint32_t)) {
+            SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "f32 requires 32-bit float");
+        }
+        else if (!rxvm_binary_range(op2R, op3R->int_value, 4, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            REG_RETURN_FLOAT(rxvm_binary_read_f32_le_bytes((const unsigned char *)op2R->binary_value, offset))
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BGETF32_REG_BINARY_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BGETF32 R%d,binary[%zu],R%d\n",
+          (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
+    {
+        string_constant *source = op2S;
+        size_t offset;
+        if (sizeof(float) != sizeof(uint32_t)) {
+            SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "f32 requires 32-bit float");
+        }
+        else if (!rxvm_memory_range(source->string_len, op3R->int_value, 4, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            REG_RETURN_FLOAT(rxvm_binary_read_f32_le_bytes((const unsigned char *)source->string, offset))
         }
     }
     DISPATCH
@@ -8390,12 +8771,334 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     }
     DISPATCH
 
+    START_INSTRUCTION(BSETI64_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BSETI64 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        if (!rxvm_binary_range(op1R, op2R->int_value, 8, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            rxvm_binary_write_le(op1R, offset, 8, (uint64_t)op3R->int_value);
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BSETF32_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BSETF32 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        if (sizeof(float) != sizeof(uint32_t)) {
+            SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "f32 requires 32-bit float");
+        }
+        else if (!rxvm_binary_range(op1R, op2R->int_value, 4, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else if (rxvm_binary_write_f32_le(op1R, offset, op3R->float_value) != 0) {
+            SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "f32 requires 32-bit float");
+        }
+    }
+    DISPATCH
+
     START_INSTRUCTION(BCHECKRANGE_REG_REG_REG) CALC_DISPATCH(3)
     DEBUG("TRACE - BCHECKRANGE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     if (op3R->int_value < 0 ||
         (uintmax_t)op3R->int_value > (uintmax_t)SIZE_MAX ||
         !rxvm_binary_range(op1R, op2R->int_value, (size_t)op3R->int_value, 0)) {
         SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+    }
+    DISPATCH
+
+/* ------------------------------------------------------------------------------------
+ *  Binary memory strings, moves, and zero-copy compares
+ *  -----------------------------------------------------------------------------------
+ */
+    START_INSTRUCTION(BGETS_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BGETS R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        size_t length;
+        if (!rxvm_find_nul_field((const unsigned char *)op2R->binary_value,
+                                 op2R->binary_length, op3R->int_value, &offset, &length)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else if (set_string_validated(op1R, op2R->binary_value + offset, length) != 0) {
+            SET_SIGNAL(RXSIGNAL_UNICODE_ERROR);
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BGETS_REG_BINARY_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BGETS R%d,binary[%zu],R%d\n",
+          (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
+    {
+        string_constant *source = op2S;
+        size_t offset;
+        size_t length;
+        if (!rxvm_find_nul_field((const unsigned char *)source->string,
+                                 source->string_len, op3R->int_value, &offset, &length)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else if (set_string_validated(op1R, source->string + offset, length) != 0) {
+            SET_SIGNAL(RXSIGNAL_UNICODE_ERROR);
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BSETS_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BSETS R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        size_t width;
+        if (op3R->string_length == SIZE_MAX || !rxvm_checked_size_add(op3R->string_length, 1, &width) ||
+            !rxvm_binary_range(op1R, op2R->int_value, width, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            if (op3R->string_length) memcpy(op1R->binary_value + offset, op3R->string_value, op3R->string_length);
+            op1R->binary_value[offset + op3R->string_length] = 0;
+            clear_vm_private_flags(op1R);
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BSETS_REG_REG_STRING) CALC_DISPATCH(3)
+    DEBUG("TRACE - BSETS R%d,R%d,string[%zu]\n",
+          (int)REG_IDX(1), (int)REG_IDX(2), (size_t)(pc + 3)->index);
+    {
+        size_t offset;
+        size_t width;
+        if (op3S->string_len == SIZE_MAX || !rxvm_checked_size_add(op3S->string_len, 1, &width) ||
+            !rxvm_binary_range(op1R, op2R->int_value, width, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            if (op3S->string_len) memcpy(op1R->binary_value + offset, op3S->string, op3S->string_len);
+            op1R->binary_value[offset + op3S->string_len] = 0;
+            clear_vm_private_flags(op1R);
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(SGET_REG_STRING_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - SGET R%d,string[%zu],R%d\n",
+          (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
+    {
+        size_t requested;
+        size_t offset;
+        size_t byte_length;
+        int slice_rc;
+#ifndef NUTF8
+        if (!has_utf8_valid_count_or_empty(op1R)) refresh_utf8_flags(op1R);
+        if (!has_utf8_valid_count_or_empty(op1R)) {
+            SET_SIGNAL(RXSIGNAL_UNICODE_ERROR);
+            DISPATCH;
+        }
+        requested = op1R->string_chars;
+#else
+        requested = op1R->string_length;
+#endif
+        slice_rc = rxvm_string_const_slice(op2S, op3R->int_value, requested, &offset, &byte_length);
+        if (slice_rc == 0) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else if (slice_rc < 0) {
+            SET_SIGNAL(RXSIGNAL_UNICODE_ERROR);
+        }
+        else if (set_string_validated(op1R, op2S->string + offset, byte_length) != 0) {
+            SET_SIGNAL(RXSIGNAL_UNICODE_ERROR);
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BMOVE_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BMOVE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t source_offset;
+        size_t target_offset;
+        size_t length;
+        if (op1R == op2R) {
+            SET_SIGNAL(RXSIGNAL_INVALID_ARGUMENTS);
+        }
+        else if (!rxvm_rxinteger_to_size(op3R->int_value, &length) ||
+                 !rxvm_binary_range(op2R, op2R->int_value, length, &source_offset) ||
+                 !rxvm_binary_range(op1R, op1R->int_value, length, &target_offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            if (length) memmove(op1R->binary_value + target_offset, op2R->binary_value + source_offset, length);
+            clear_vm_private_flags(op1R);
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BMEMMOVE_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BMEMMOVE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t source_offset;
+        size_t target_offset;
+        size_t length;
+        if (!rxvm_rxinteger_to_size(op3R->int_value, &length) ||
+            !rxvm_binary_range(op1R, op1R->int_value, length, &source_offset) ||
+            !rxvm_binary_range(op1R, op2R->int_value, length, &target_offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            if (length) memmove(op1R->binary_value + target_offset, op1R->binary_value + source_offset, length);
+            clear_vm_private_flags(op1R);
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BCMPB_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BCMPB R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        if (!rxvm_binary_range(op2R, op1R->int_value, op3R->binary_length, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            int result = rxvm_compare_bytes((const unsigned char *)op2R->binary_value + offset, op3R->binary_length,
+                                            (const unsigned char *)op3R->binary_value, op3R->binary_length);
+            REG_RETURN_INT(result)
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BCMPB_REG_BINARY_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BCMPB R%d,binary[%zu],R%d\n",
+          (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
+    {
+        string_constant *source = op2S;
+        size_t offset;
+        if (!rxvm_memory_range(source->string_len, op1R->int_value, op3R->binary_length, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            int result = rxvm_compare_bytes((const unsigned char *)source->string + offset, op3R->binary_length,
+                                            (const unsigned char *)op3R->binary_value, op3R->binary_length);
+            REG_RETURN_INT(result)
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BCMPB_REG_REG_BINARY) CALC_DISPATCH(3)
+    DEBUG("TRACE - BCMPB R%d,R%d,binary[%zu]\n",
+          (int)REG_IDX(1), (int)REG_IDX(2), (size_t)(pc + 3)->index);
+    {
+        string_constant *needle = op3S;
+        size_t offset;
+        if (!rxvm_binary_range(op2R, op1R->int_value, needle->string_len, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            int result = rxvm_compare_bytes((const unsigned char *)op2R->binary_value + offset, needle->string_len,
+                                            (const unsigned char *)needle->string, needle->string_len);
+            REG_RETURN_INT(result)
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BCMPB_REG_BINARY_BINARY) CALC_DISPATCH(3)
+    DEBUG("TRACE - BCMPB R%d,binary[%zu],binary[%zu]\n",
+          (int)REG_IDX(1), (size_t)(pc + 2)->index, (size_t)(pc + 3)->index);
+    {
+        string_constant *source = op2S;
+        string_constant *needle = op3S;
+        size_t offset;
+        if (!rxvm_memory_range(source->string_len, op1R->int_value, needle->string_len, &offset)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else {
+            int result = rxvm_compare_bytes((const unsigned char *)source->string + offset, needle->string_len,
+                                            (const unsigned char *)needle->string, needle->string_len);
+            REG_RETURN_INT(result)
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BCMPS_REG_REG_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BCMPS R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+    {
+        size_t offset;
+        size_t length;
+        if (!rxvm_find_nul_field((const unsigned char *)op2R->binary_value,
+                                 op2R->binary_length, op1R->int_value, &offset, &length)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else if (!rxvm_binary_field_is_valid_utf8(op2R->binary_value + offset, length)) {
+            SET_SIGNAL(RXSIGNAL_UNICODE_ERROR);
+        }
+        else {
+            int result = rxvm_compare_bytes((const unsigned char *)op2R->binary_value + offset, length,
+                                            (const unsigned char *)op3R->string_value, op3R->string_length);
+            REG_RETURN_INT(result)
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BCMPS_REG_REG_STRING) CALC_DISPATCH(3)
+    DEBUG("TRACE - BCMPS R%d,R%d,string[%zu]\n",
+          (int)REG_IDX(1), (int)REG_IDX(2), (size_t)(pc + 3)->index);
+    {
+        size_t offset;
+        size_t length;
+        if (!rxvm_find_nul_field((const unsigned char *)op2R->binary_value,
+                                 op2R->binary_length, op1R->int_value, &offset, &length)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else if (!rxvm_binary_field_is_valid_utf8(op2R->binary_value + offset, length)) {
+            SET_SIGNAL(RXSIGNAL_UNICODE_ERROR);
+        }
+        else {
+            int result = rxvm_compare_bytes((const unsigned char *)op2R->binary_value + offset, length,
+                                            (const unsigned char *)op3S->string, op3S->string_len);
+            REG_RETURN_INT(result)
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BCMPS_REG_BINARY_REG) CALC_DISPATCH(3)
+    DEBUG("TRACE - BCMPS R%d,binary[%zu],R%d\n",
+          (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
+    {
+        string_constant *source = op2S;
+        size_t offset;
+        size_t length;
+        if (!rxvm_find_nul_field((const unsigned char *)source->string,
+                                 source->string_len, op1R->int_value, &offset, &length)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else if (!rxvm_binary_field_is_valid_utf8(source->string + offset, length)) {
+            SET_SIGNAL(RXSIGNAL_UNICODE_ERROR);
+        }
+        else {
+            int result = rxvm_compare_bytes((const unsigned char *)source->string + offset, length,
+                                            (const unsigned char *)op3R->string_value, op3R->string_length);
+            REG_RETURN_INT(result)
+        }
+    }
+    DISPATCH
+
+    START_INSTRUCTION(BCMPS_REG_BINARY_STRING) CALC_DISPATCH(3)
+    DEBUG("TRACE - BCMPS R%d,binary[%zu],string[%zu]\n",
+          (int)REG_IDX(1), (size_t)(pc + 2)->index, (size_t)(pc + 3)->index);
+    {
+        string_constant *source = op2S;
+        size_t offset;
+        size_t length;
+        if (!rxvm_find_nul_field((const unsigned char *)source->string,
+                                 source->string_len, op1R->int_value, &offset, &length)) {
+            SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+        }
+        else if (!rxvm_binary_field_is_valid_utf8(source->string + offset, length)) {
+            SET_SIGNAL(RXSIGNAL_UNICODE_ERROR);
+        }
+        else {
+            int result = rxvm_compare_bytes((const unsigned char *)source->string + offset, length,
+                                            (const unsigned char *)op3S->string, op3S->string_len);
+            REG_RETURN_INT(result)
+        }
     }
     DISPATCH
 

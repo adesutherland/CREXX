@@ -477,6 +477,9 @@ static int rxbin_get_operand_types(OpFormat format, OperandType *types) {
         case FMT_P_S: types[0] = OP_FUNC; types[1] = OP_STRING; return 2;
         case FMT_R: types[0] = OP_REG; return 1;
         case FMT_R_B: types[0] = OP_REG; types[1] = OP_BINARY; return 2;
+        case FMT_R_B_B: types[0] = OP_REG; types[1] = OP_BINARY; types[2] = OP_BINARY; return 3;
+        case FMT_R_B_R: types[0] = OP_REG; types[1] = OP_BINARY; types[2] = OP_REG; return 3;
+        case FMT_R_B_S: types[0] = OP_REG; types[1] = OP_BINARY; types[2] = OP_STRING; return 3;
         case FMT_R_C: types[0] = OP_REG; types[1] = OP_CHAR; return 2;
         case FMT_R_D: types[0] = OP_REG; types[1] = OP_DECIMAL; return 2;
         case FMT_R_D_R: types[0] = OP_REG; types[1] = OP_DECIMAL; types[2] = OP_REG; return 3;
@@ -489,6 +492,7 @@ static int rxbin_get_operand_types(OpFormat format, OperandType *types) {
         case FMT_R_P: types[0] = OP_REG; types[1] = OP_FUNC; return 2;
         case FMT_R_P_R: types[0] = OP_REG; types[1] = OP_FUNC; types[2] = OP_REG; return 3;
         case FMT_R_R: types[0] = OP_REG; types[1] = OP_REG; return 2;
+        case FMT_R_R_B: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_BINARY; return 3;
         case FMT_R_R_D: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_DECIMAL; return 3;
         case FMT_R_R_F: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_FLOAT; return 3;
         case FMT_R_R_I: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_INT; return 3;

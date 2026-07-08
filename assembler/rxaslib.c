@@ -147,6 +147,7 @@ int rxasinbf(Assembler_Context *scanner) {
     scanner->decimal_constants_tree = 0;
     scanner->float_constants_tree = 0;
     scanner->binary_constants_tree = 0;
+    scanner->constant_aliases_tree = 0;
     scanner->proc_constants_tree = 0;
     scanner->label_constants_tree = 0;
     scanner->extern_constants_tree = 0;

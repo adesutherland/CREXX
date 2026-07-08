@@ -1077,9 +1077,6 @@ walker_result register_walker(walker_direction direction,
                     node->register_num = get_reg(node->scope);
                 }
                 if (!rxcp_binary_memory_is_lhs(node)) {
-                    node->num_additional_registers = 1;
-                    node->additional_registers = get_regs(node->scope, node->num_additional_registers);
-                    return_additional_regs_later(node);
                     return_binary_memory_operand_regs(node);
                 }
                 break;

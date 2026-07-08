@@ -1,4 +1,5 @@
 /* Binary target-sized copy example */
+.const table binary 0xaabbccdd
 main() .locals=8
     load r1,0x0011223344556677
     load r2,3
@@ -15,7 +16,7 @@ main() .locals=8
     say r6
 
     load r4,1
-    bcopy r3,0xaabbccdd,r4
+    bcopy r3,table,r4
     load r4,0
     bgetu8 r5,r3,r4
     itos r5

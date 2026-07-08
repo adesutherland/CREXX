@@ -547,7 +547,7 @@ metadata, tests, and generated docs as applicable.
 | Instruction or form | Current state | Release 1 action |
 | --- | --- | --- |
 | `load rDst,0x...` | Existing whole binary constant load, direct `BINARY_CONST` support | Keep and document as the whole-constant materialisation form, not as the large-constant lookup path. |
-| `.const name binary ...` / `.const name string ...` | Not currently documented/implemented for this surface | Add as RXAS source aliases for constants; no runtime copy. |
+| `.const name binary ...` / `.const name string ...` | Implemented in RXAS for Release 1 | Source aliases for constants; no runtime copy. |
 | `blen rOut,rBin` | Existing register length | Keep and add `blen rOut,bConst`. |
 | `bresize rBin,rLen` | Existing | Keep; document strict negative-length signal and zero-fill growth. |
 | `bclear rBin` | Existing | Keep; document length/cursor/span invalidation. |
@@ -557,34 +557,30 @@ metadata, tests, and generated docs as applicable.
 | `getbyte rOut,rBin,rOffset` | Existing tolerant byte read returning `-1` out of range | Keep register-only for compatibility; do not add constant form. Document strict reads as preferred for binary constants. |
 | `setbyte rBin,rOffset,rByte` | Existing strict byte write | Keep. |
 | `bgetu8` / `bgeti8` / `bgetu16` / `bgeti16` / `bgetu32` / `bgeti32` / `bgetf64` from `rBin` | Existing strict fixed-width reads | Keep, document little-endian storage and strict range/value behavior. |
-| Same `bget*` from `bConst` | New constant-source forms | Add the full fixed-width constant read set. |
-| `bgeti64 rOut,rSrc,rOffset` | New | Add for signed 64-bit `.int` cleanup, with register and constant source forms. |
-| `bgetf32 rOut,rSrc,rOffset` | New | Add for explicit IEEE binary32 storage, with register and constant source forms. |
+| Same `bget*` from `bConst` | Implemented in RXAS for Release 1 | Full fixed-width constant read set. |
+| `bgeti64 rOut,rSrc,rOffset` | Implemented in RXAS for Release 1 | Signed 64-bit `.int` cleanup, with register and constant source forms. |
+| `bgetf32 rOut,rSrc,rOffset` | Implemented in RXAS for Release 1 | Explicit IEEE binary32 storage, with register and constant source forms. |
 | `bsetu8` / `bseti8` / `bsetu16` / `bseti16` / `bsetu32` / `bseti32` / `bsetf64` | Existing strict fixed-width writes | Keep. |
-| `bseti64 rBin,rOffset,rValue` | New | Add for signed 64-bit `.int` cleanup. |
-| `bsetf32 rBin,rOffset,rFloat` | New | Add for explicit IEEE binary32 storage. |
-| `bgets rString,rSrc,rOffset` | New | Add zero-terminated UTF-8 field read from binary register or `BINARY_CONST`. |
-| `bsets rBin,rOffset,rString` / `bsets rBin,rOffset,sConst` | New | Add zero-terminated UTF-8 field write into mutable binary memory. |
-| `sget rString,sConst,rOffset` | New adjacent string-constant operation | Add codepoint-counted extraction starting at byte offset into `STRING_CONST`. |
+| `bseti64 rBin,rOffset,rValue` | Implemented in RXAS for Release 1 | Signed 64-bit `.int` cleanup. |
+| `bsetf32 rBin,rOffset,rFloat` | Implemented in RXAS for Release 1 | Explicit IEEE binary32 storage. |
+| `bgets rString,rSrc,rOffset` | Implemented in RXAS for Release 1 | Zero-terminated UTF-8 field read from binary register or `BINARY_CONST`. |
+| `bsets rBin,rOffset,rString` / `bsets rBin,rOffset,sConst` | Implemented in RXAS for Release 1 | Zero-terminated UTF-8 field write into mutable binary memory. |
+| `sget rString,sConst,rOffset` | Implemented in RXAS for Release 1 | Codepoint-counted extraction starting at byte offset into `STRING_CONST`. |
 | `bupdate rDst,rOffset,rSrc` | Existing register-source overlay | Keep register form; add `BINARY_CONST` source only if implementation cost is small or compiler needs it. |
 | `bappend rDst,rSrc` | Existing register-source append | Keep register form; constant source remains candidate, not required for lookup use cases. |
 | `bconcat rDst,rLeft,rRight` | Existing register-source concat | Keep register form; constant operand variants are deferred until measured useful. |
 | `stobin rReg` | Existing whole-register string-to-binary conversion | Keep; document that it copies exact string bytes and does not add a NUL. |
 | `bintos rReg` | Existing whole-register binary-to-string conversion | Keep; document exact byte validation and safety NUL outside logical string length. |
-| `bmove rDst,rSrc,rLen` | New | Add different-register binary memory move; offsets come from the integer slots of `rDst` and `rSrc`. |
-| `bmemmove rBin,rDstOffset,rLen` | New | Add same-register overlapping move; source offset comes from `rBin.int_value`, destination offset is explicit. |
-| `bcmpb rCmp,rSrc,rNeedle` | Existing mnemonic with old selected-span semantics | Replace semantics before Release 1. New form uses `rCmp` as input source offset and output `-1/0/1`, with register/constant source and register/constant binary needle. |
-| `bcmps rCmp,rSrc,rString` | Existing mnemonic with old selected-span semantics | Replace semantics before Release 1. New form compares zero-terminated UTF-8 field to string register or `STRING_CONST`, preserving UTF-8 and missing-terminator signals. |
-| `setbinspan rBin,rOffset,rLen` | Existing old selected-span setup | Remove from the Release 1 public binary-memory surface, or leave only as rejected/deprecated compatibility if opcode compatibility requires it. Compiler emission and tests should stop using it. |
+| `bmove rDst,rSrc,rLen` | Implemented in RXAS for Release 1 | Different-register binary memory move; offsets come from the integer slots of `rDst` and `rSrc`. |
+| `bmemmove rBin,rDstOffset,rLen` | Implemented in RXAS for Release 1 | Same-register overlapping move; source offset comes from `rBin.int_value`, destination offset is explicit. |
+| `bcmpb rCmp,rSrc,rNeedle` | Implemented in RXAS for Release 1 | Uses `rCmp` as input source offset and output `-1/0/1`, with register/constant source and register/constant binary needle. |
+| `bcmps rCmp,rSrc,rString` | Implemented in RXAS for Release 1 | Compares zero-terminated UTF-8 field to string register or `STRING_CONST`, preserving UTF-8 and missing-terminator signals. |
+| `setbinspan rBin,rOffset,rLen` | Old selected-span setup removed from current code | Keep out of Release 1 public binary-memory surface. Compiler emission and tests should not use it. |
 | `setbinpos rBin,rOffset` / `getbinpos rOut,rBin` / `bslice rDst,rSrc,rLen` | Existing cursor/slice surface | Remove from compiler-generated binary-memory extraction and the new Release 1 surface. If retained as legacy RXAS, document as non-preferred and keep out of Level B/G lowering. |
 | `bcheckrange rBin,rOffset,rLen` | Existing strict preflight range check | Review during implementation. The new target-sized operations perform their own checks, so this should either be kept as a general explicit assertion with docs/tests or removed from the public Release 1 binary-memory surface. |
 
-Current implementation points known to need processing:
+Remaining implementation points after the RXAS instruction slice:
 
-- `binutils/include/rxops.h` has binary byte-buffer opcodes around
-  `LOAD_REG_BINARY` through `BINTOS_REG` and typed/span opcodes around
-  `BCOPY_REG_REG` through `BCMPS_REG_REG_REG`; both blocks need a coherent
-  Release 1 update.
 - `compiler/rxcp_emit_expr.c` currently emits the old
   `bcheckrange`/`getbinpos`/`setbinpos`/`bslice` sequence for binary extraction;
   that lowering must be replaced by target-sized `bcopy`, `bgets`, or `sget`
@@ -592,9 +588,6 @@ Current implementation points known to need processing:
 - `compiler/rxcp_util.c` currently maps binary storage types only through
   `u8`, `i8`, `u16`, `i16`, `u32`, `i32`, `f64`, and `float`; it needs
   `i64`/`.int` and `f32`.
-- `interpreter/tests/tests_binary_memory.rxas` uses `bcheckrange`,
-  `setbinspan`, and old `bcmpb`/`bcmps` semantics; rewrite it around the new
-  compare model and add negative signal cases.
 - `interpreter/tests/tests_binary.rxas` uses `setbinpos`, `getbinpos`, and
   `bslice`; either rewrite or isolate these as legacy-only tests if the opcodes
   are retained.
@@ -607,12 +600,17 @@ Current implementation points known to need processing:
 
 ## Current Implemented Binary RXAS Inventory
 
-Current register-based binary operations:
+Current Release 1 binary-memory operations:
 
 ```rxas
+.const name binary 0x...
+.const name string "..."
 load       rDst,0x...
 bcopy      rDst,rSrc
+bcopy      rDst,rSrc,rOffset
+bcopy      rDst,0x...,rOffset
 blen       rOut,rBin
+blen       rOut,0x...
 bresize    rBin,rLen
 bclear     rBin
 bfill      rBin,rByte
@@ -624,18 +622,43 @@ bgetu16    rOut,rBin,rOffset
 bgeti16    rOut,rBin,rOffset
 bgetu32    rOut,rBin,rOffset
 bgeti32    rOut,rBin,rOffset
+bgeti64    rOut,rBin,rOffset
+bgetf32    rOut,rBin,rOffset
 bgetf64    rOut,rBin,rOffset
+bgetu8     rOut,0x...,rOffset
+bgeti8     rOut,0x...,rOffset
+bgetu16    rOut,0x...,rOffset
+bgeti16    rOut,0x...,rOffset
+bgetu32    rOut,0x...,rOffset
+bgeti32    rOut,0x...,rOffset
+bgeti64    rOut,0x...,rOffset
+bgetf32    rOut,0x...,rOffset
+bgetf64    rOut,0x...,rOffset
 bsetu8     rBin,rOffset,rValue
 bseti8     rBin,rOffset,rValue
 bsetu16    rBin,rOffset,rValue
 bseti16    rBin,rOffset,rValue
 bsetu32    rBin,rOffset,rValue
 bseti32    rBin,rOffset,rValue
+bseti64    rBin,rOffset,rValue
+bsetf32    rBin,rOffset,rFloat
 bsetf64    rBin,rOffset,rFloat
 bcheckrange rBin,rOffset,rLen
-setbinspan rBin,rOffset,rLen
-bcmpb      rOut,rBin,rOtherBin
-bcmps      rOut,rBin,rString
+bgets      rString,rBin,rOffset
+bgets      rString,0x...,rOffset
+bsets      rBin,rOffset,rString
+bsets      rBin,rOffset,"..."
+sget       rString,"...",rOffset
+bmove      rDst,rSrc,rLen
+bmemmove   rBin,rDstOffset,rLen
+bcmpb      rCmp,rBin,rNeedleBin
+bcmpb      rCmp,0x...,rNeedleBin
+bcmpb      rCmp,rBin,0x...
+bcmpb      rCmp,0x...,0x...
+bcmps      rCmp,rBin,rString
+bcmps      rCmp,rBin,"..."
+bcmps      rCmp,0x...,rString
+bcmps      rCmp,0x...,"..."
 bconcat    rDst,rLeft,rRight
 bappend    rDst,rRight
 setbinpos  rBin,rOffset
@@ -645,16 +668,6 @@ bupdate    rDst,rOffset,rSrc
 stobin     rReg
 bintos     rReg
 ```
-
-Direct binary-constant support currently consists only of:
-
-```rxas
-load       rDst,0x...
-```
-
-Everything else involving a binary constant currently requires materializing
-the constant into a register first, which is not acceptable for large lookup
-constants.
 
 ## Settled Release 1 Decisions
 

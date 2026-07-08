@@ -1447,7 +1447,6 @@ void emit_expression(ASTNode *node, void *payload) {
             ASTNode *base = 0;
             ASTNode *offset = 0;
             ASTNode *length = child2;
-            int saved_cursor_reg = node->additional_registers;
 
             if (!node->output) node->output = output_f();
             concat_binary_memory_operand_output(node->output, node);
@@ -1455,36 +1454,18 @@ void emit_expression(ASTNode *node, void *payload) {
             if (!rxcp_binary_memory_is_lhs(node) &&
                 rxcp_binary_memory_at_parts(node, 0, &base, &offset) &&
                 base && offset && length) {
-                temp1 = mprintf("   bcheckrange %c%d,%c%d,%c%d\n"
-                                "   getbinpos r%d,%c%d\n"
-                                "   setbinpos %c%d,%c%d\n"
-                                "   bslice %c%d,%c%d,%c%d\n",
-                                base->register_type,
-                                base->register_num,
-                                offset->register_type,
-                                offset->register_num,
+                temp1 = mprintf("   bresize %c%d,%c%d\n"
+                                "   bcopy %c%d,%c%d,%c%d\n",
+                                node->register_type,
+                                node->register_num,
                                 length->register_type,
                                 length->register_num,
-                                saved_cursor_reg,
-                                base->register_type,
-                                base->register_num,
-                                base->register_type,
-                                base->register_num,
-                                offset->register_type,
-                                offset->register_num,
                                 node->register_type,
                                 node->register_num,
                                 base->register_type,
                                 base->register_num,
-                                length->register_type,
-                                length->register_num);
-                output_append_text(node->output, temp1);
-                free(temp1);
-
-                temp1 = mprintf("   setbinpos %c%d,r%d\n",
-                                base->register_type,
-                                base->register_num,
-                                saved_cursor_reg);
+                                offset->register_type,
+                                offset->register_num);
                 output_append_text(node->output, temp1);
                 free(temp1);
 

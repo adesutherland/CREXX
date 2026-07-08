@@ -92,6 +92,7 @@ typedef struct Assembler_Context {
     struct avl_tree_node *decimal_constants_tree;
     struct avl_tree_node *float_constants_tree;
     struct avl_tree_node *binary_constants_tree;
+    struct avl_tree_node *constant_aliases_tree;
     struct avl_tree_node *proc_constants_tree;
     struct avl_tree_node *label_constants_tree;
     struct avl_tree_node *extern_constants_tree;

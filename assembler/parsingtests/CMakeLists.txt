@@ -54,9 +54,16 @@ add_test(NAME rxas_reject_non_source_mnemonics
                  -DWORKING_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/reject_non_source_mnemonics.cmake)
 
+add_test(NAME rxas_constant_aliases
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DWORKING_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/constant_aliases.cmake)
+
 crexx_label_smoke_tests(
         test_rxas_01_init
         test_rxas_03_token_types
         test_rxas_04_errors
         rxas_reject_non_source_mnemonics
+        rxas_constant_aliases
 )

@@ -3,6 +3,10 @@
  */
 
 .globals=0
+.const alias_bytes binary 0x01020304
+.const alias_table binary 0xaabbccdd
+.const alias_key string "bar"
+.const alias_ok string "ok"
 
 main() .locals=40
     load r1,0x
@@ -147,6 +151,203 @@ main() .locals=40
     bgeti8 r4,r7,r2
     ieq r0,r4,-128
     brf fail_const_bgeti8_80,r0
+
+    blen r4,alias_bytes
+    ieq r0,r4,4
+    brf fail_binary_const_blen,r0
+    load r2,0
+    bgetu8 r4,0x78563412ff80,r2
+    ieq r0,r4,120
+    brf fail_direct_const_bgetu8,r0
+    load r2,0
+    bgetu16 r4,0x3412,r2
+    ieq r0,r4,4660
+    brf fail_direct_const_bgetu16,r0
+    load r2,0
+    bgeti16 r4,0x2efb,r2
+    ieq r0,r4,-1234
+    brf fail_direct_const_bgeti16,r0
+    load r2,0
+    bgetu32 r4,0x78563412,r2
+    ieq r0,r4,305419896
+    brf fail_direct_const_bgetu32,r0
+    load r2,0
+    bgeti32 r4,0xeb32a4f8,r2
+    ieq r0,r4,-123456789
+    brf fail_direct_const_bgeti32,r0
+    load r2,0
+    bgetf64 r6,0x000000000000f83f,r2
+    feq r0,r6,1.5
+    brf fail_direct_const_bgetf64,r0
+    load r2,0
+    bgeti64 r4,0xfeffffffffffffff,r2
+    ieq r0,r4,-2
+    brf fail_direct_const_bgeti64,r0
+    load r2,0
+    bgetf32 r6,0x0000c03f,r2
+    feq r0,r6,1.5
+    brf fail_direct_const_bgetf32,r0
+
+    load r8,0x
+    load r2,3
+    bresize r8,r2
+    load r2,1
+    bcopy r8,alias_table,r2
+    load r2,0
+    getbyte r4,r8,r2
+    ieq r0,r4,187
+    brf fail_bcopy_const_byte0,r0
+    load r2,2
+    getbyte r4,r8,r2
+    ieq r0,r4,221
+    brf fail_bcopy_const_byte2,r0
+
+    load r9,0x11223344
+    load r10,0x
+    load r2,2
+    bresize r10,r2
+    load r2,1
+    bcopy r10,r9,r2
+    load r2,0
+    getbyte r4,r10,r2
+    ieq r0,r4,34
+    brf fail_bcopy_reg_byte0,r0
+    load r2,1
+    getbyte r4,r10,r2
+    ieq r0,r4,51
+    brf fail_bcopy_reg_byte1,r0
+
+    load r2,24
+    load r5,1.5
+    bsetf32 r1,r2,r5
+    bgetf32 r6,r1,r2
+    feq r0,r6,1.5
+    brf fail_bgetf32,r0
+    getbyte r4,r1,r2
+    ieq r0,r4,0
+    brf fail_bsetf32_byte0,r0
+    load r2,27
+    getbyte r4,r1,r2
+    ieq r0,r4,63
+    brf fail_bsetf32_byte3,r0
+
+    load r2,0
+    load r3,-2
+    bseti64 r1,r2,r3
+    bgeti64 r4,r1,r2
+    ieq r0,r4,-2
+    brf fail_bgeti64,r0
+    load r2,7
+    getbyte r4,r1,r2
+    ieq r0,r4,255
+    brf fail_bseti64_byte7,r0
+
+    load r11,0x61626300646500
+    load r2,0
+    bgets r12,r11,r2
+    seq r0,r12,"abc"
+    brf fail_bgets_reg_abc,r0
+    load r2,4
+    bgets r12,r11,r2
+    seq r0,r12,"de"
+    brf fail_bgets_reg_de,r0
+    load r2,0
+    bgets r12,0x61626300646500,r2
+    seq r0,r12,"abc"
+    brf fail_bgets_const_abc,r0
+
+    load r1,0x
+    load r2,8
+    bresize r1,r2
+    load r2,1
+    load r12,"hi"
+    bsets r1,r2,r12
+    bgets r13,r1,r2
+    seq r0,r13,"hi"
+    brf fail_bsets_reg,r0
+    load r2,4
+    bsets r1,r2,alias_ok
+    bgets r13,r1,r2
+    seq r0,r13,"ok"
+    brf fail_bsets_const,r0
+
+    load r12,"xx"
+    load r2,2
+    sget r12,"abcdef",r2
+    seq r0,r12,"cd"
+    brf fail_sget_const,r0
+
+    load r13,0x000000000000
+    load r13,2
+    load r14,0xaabbccdd
+    load r14,1
+    load r15,2
+    bmove r13,r14,r15
+    load r2,2
+    getbyte r4,r13,r2
+    ieq r0,r4,187
+    brf fail_bmove_byte2,r0
+    load r2,3
+    getbyte r4,r13,r2
+    ieq r0,r4,204
+    brf fail_bmove_byte3,r0
+
+    load r16,0x0102030405
+    load r16,0
+    load r17,2
+    load r18,3
+    bmemmove r16,r17,r18
+    load r2,2
+    getbyte r4,r16,r2
+    ieq r0,r4,1
+    brf fail_bmemmove_byte2,r0
+    load r2,4
+    getbyte r4,r16,r2
+    ieq r0,r4,3
+    brf fail_bmemmove_byte4,r0
+
+    load r20,0x11223344
+    load r21,0x2233
+    load r0,1
+    bcmpb r0,r20,r21
+    ieq r2,r0,0
+    brf fail_bcmpb_reg_reg,r2
+    load r0,0
+    bcmpb r0,r20,r21
+    ieq r2,r0,-1
+    brf fail_bcmpb_less,r2
+    load r0,1
+    bcmpb r0,0x11223344,r21
+    ieq r2,r0,0
+    brf fail_bcmpb_const_reg,r2
+    load r0,1
+    bcmpb r0,r20,0x2233
+    ieq r2,r0,0
+    brf fail_bcmpb_reg_const,r2
+    load r0,1
+    bcmpb r0,0x11223344,0x2233
+    ieq r2,r0,0
+    brf fail_bcmpb_const_const,r2
+
+    load r22,0x666f6f0062617200
+    load r12,"foo"
+    load r0,0
+    bcmps r0,r22,r12
+    ieq r2,r0,0
+    brf fail_bcmps_reg_reg,r2
+    load r0,4
+    bcmps r0,r22,"baz"
+    ieq r2,r0,-1
+    brf fail_bcmps_reg_const,r2
+    load r0,0
+    bcmps r0,0x666f6f0062617200,r12
+    ieq r2,r0,0
+    brf fail_bcmps_const_reg,r2
+    load r0,4
+    bcmps r0,0x666f6f0062617200,alias_key
+    ieq r2,r0,0
+    brf fail_bcmps_const_const,r2
+
     load r2,2
     load r3,4
     bcheckrange r7,r2,r3
@@ -199,6 +400,71 @@ catch_bad_byte:
     br fail_bad_range_signal
 
 catch_bad_range:
+    sigbr catch_bcopy_oob,"OUT_OF_RANGE"
+    load r8,0x
+    load r2,4
+    bresize r8,r2
+    load r2,1
+    bcopy r8,0xaabb,r2
+    br fail_bcopy_oob_signal
+
+catch_bcopy_oob:
+    sigbr catch_bgets_missing_nul,"OUT_OF_RANGE"
+    load r2,0
+    bgets r12,0x616263,r2
+    br fail_bgets_missing_nul_signal
+
+catch_bgets_missing_nul:
+    sigbr catch_bgets_bad_utf8,"UNICODE_ERROR"
+    load r2,0
+    bgets r12,0xff00,r2
+    br fail_bgets_bad_utf8_signal
+
+catch_bgets_bad_utf8:
+    sigbr catch_bsets_oob,"OUT_OF_RANGE"
+    load r1,0x
+    load r2,2
+    bresize r1,r2
+    load r2,1
+    bsets r1,r2,"hi"
+    br fail_bsets_oob_signal
+
+catch_bsets_oob:
+    sigbr catch_bcmpb_oob,"OUT_OF_RANGE"
+    load r20,0x1122
+    load r21,0x2233
+    load r0,1
+    bcmpb r0,r20,r21
+    br fail_bcmpb_oob_signal
+
+catch_bcmpb_oob:
+    sigbr catch_bcmps_missing_nul,"OUT_OF_RANGE"
+    load r0,0
+    bcmps r0,0x616263,"abc"
+    br fail_bcmps_missing_nul_signal
+
+catch_bcmps_missing_nul:
+    sigbr catch_bcmps_bad_utf8,"UNICODE_ERROR"
+    load r0,0
+    bcmps r0,0xff00,"x"
+    br fail_bcmps_bad_utf8_signal
+
+catch_bcmps_bad_utf8:
+    sigbr catch_bmove_same_reg,"INVALID_ARGUMENTS"
+    load r13,0x010203
+    load r13,0
+    load r15,1
+    bmove r13,r13,r15
+    br fail_bmove_same_reg_signal
+
+catch_bmove_same_reg:
+    sigbr catch_sget_oob,"OUT_OF_RANGE"
+    load r12,"xxx"
+    load r2,2
+    sget r12,"abc",r2
+    br fail_sget_oob_signal
+
+catch_sget_oob:
     say "PASS: Binary Memory Typed Ops"
     ret 0
 
@@ -292,6 +558,117 @@ fail_const_bgeti8_ff:
 fail_const_bgeti8_80:
     say "FAIL: constant bgeti8 80 mismatch"
     ret 1
+fail_binary_const_blen:
+    say "FAIL: binary constant blen mismatch"
+    ret 1
+fail_direct_const_bgetu8:
+    say "FAIL: direct constant bgetu8 mismatch"
+    ret 1
+fail_direct_const_bgetu16:
+    say "FAIL: direct constant bgetu16 mismatch"
+    ret 1
+fail_direct_const_bgeti16:
+    say "FAIL: direct constant bgeti16 mismatch"
+    ret 1
+fail_direct_const_bgetu32:
+    say "FAIL: direct constant bgetu32 mismatch"
+    ret 1
+fail_direct_const_bgeti32:
+    say "FAIL: direct constant bgeti32 mismatch"
+    ret 1
+fail_direct_const_bgetf64:
+    say "FAIL: direct constant bgetf64 mismatch"
+    ret 1
+fail_direct_const_bgeti64:
+    say "FAIL: direct constant bgeti64 mismatch"
+    ret 1
+fail_direct_const_bgetf32:
+    say "FAIL: direct constant bgetf32 mismatch"
+    ret 1
+fail_bcopy_const_byte0:
+    say "FAIL: bcopy constant byte 0 mismatch"
+    ret 1
+fail_bcopy_const_byte2:
+    say "FAIL: bcopy constant byte 2 mismatch"
+    ret 1
+fail_bcopy_reg_byte0:
+    say "FAIL: bcopy register byte 0 mismatch"
+    ret 1
+fail_bcopy_reg_byte1:
+    say "FAIL: bcopy register byte 1 mismatch"
+    ret 1
+fail_bgetf32:
+    say "FAIL: bgetf32 mismatch"
+    ret 1
+fail_bsetf32_byte0:
+    say "FAIL: bsetf32 byte 0 mismatch"
+    ret 1
+fail_bsetf32_byte3:
+    say "FAIL: bsetf32 byte 3 mismatch"
+    ret 1
+fail_bgeti64:
+    say "FAIL: bgeti64 mismatch"
+    ret 1
+fail_bseti64_byte7:
+    say "FAIL: bseti64 byte 7 mismatch"
+    ret 1
+fail_bgets_reg_abc:
+    say "FAIL: bgets register abc mismatch"
+    ret 1
+fail_bgets_reg_de:
+    say "FAIL: bgets register de mismatch"
+    ret 1
+fail_bgets_const_abc:
+    say "FAIL: bgets constant abc mismatch"
+    ret 1
+fail_bsets_reg:
+    say "FAIL: bsets register mismatch"
+    ret 1
+fail_bsets_const:
+    say "FAIL: bsets constant mismatch"
+    ret 1
+fail_sget_const:
+    say "FAIL: sget constant mismatch"
+    ret 1
+fail_bmove_byte2:
+    say "FAIL: bmove byte 2 mismatch"
+    ret 1
+fail_bmove_byte3:
+    say "FAIL: bmove byte 3 mismatch"
+    ret 1
+fail_bmemmove_byte2:
+    say "FAIL: bmemmove byte 2 mismatch"
+    ret 1
+fail_bmemmove_byte4:
+    say "FAIL: bmemmove byte 4 mismatch"
+    ret 1
+fail_bcmpb_reg_reg:
+    say "FAIL: bcmpb register/register mismatch"
+    ret 1
+fail_bcmpb_less:
+    say "FAIL: bcmpb less-than mismatch"
+    ret 1
+fail_bcmpb_const_reg:
+    say "FAIL: bcmpb constant/register mismatch"
+    ret 1
+fail_bcmpb_reg_const:
+    say "FAIL: bcmpb register/constant mismatch"
+    ret 1
+fail_bcmpb_const_const:
+    say "FAIL: bcmpb constant/constant mismatch"
+    ret 1
+fail_bcmps_reg_reg:
+    say "FAIL: bcmps register/register mismatch"
+    ret 1
+fail_bcmps_reg_const:
+    say "FAIL: bcmps register/constant mismatch"
+    ret 1
+fail_bcmps_const_reg:
+    say "FAIL: bcmps constant/register mismatch"
+    ret 1
+fail_bcmps_const_const:
+    say "FAIL: bcmps constant/constant mismatch"
+    ret 1
 fail_bclear:
     say "FAIL: bclear length mismatch"
     ret 1
@@ -312,4 +689,31 @@ fail_bad_byte_signal:
     ret 1
 fail_bad_range_signal:
     say "FAIL: bcheckrange out-of-range did not signal"
+    ret 1
+fail_bcopy_oob_signal:
+    say "FAIL: bcopy out-of-range did not signal"
+    ret 1
+fail_bgets_missing_nul_signal:
+    say "FAIL: bgets missing NUL did not signal"
+    ret 1
+fail_bgets_bad_utf8_signal:
+    say "FAIL: bgets invalid UTF-8 did not signal"
+    ret 1
+fail_bsets_oob_signal:
+    say "FAIL: bsets out-of-range did not signal"
+    ret 1
+fail_bcmpb_oob_signal:
+    say "FAIL: bcmpb out-of-range did not signal"
+    ret 1
+fail_bcmps_missing_nul_signal:
+    say "FAIL: bcmps missing NUL did not signal"
+    ret 1
+fail_bcmps_bad_utf8_signal:
+    say "FAIL: bcmps invalid UTF-8 did not signal"
+    ret 1
+fail_bmove_same_reg_signal:
+    say "FAIL: bmove same-register did not signal"
+    ret 1
+fail_sget_oob_signal:
+    say "FAIL: sget out-of-range did not signal"
     ret 1
