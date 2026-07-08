@@ -492,7 +492,7 @@ string(APPEND RXC_BINARY_MEMORY_SOURCE_CONTENT
        "endif()\n"
        "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/binary_memory_source_rxas_check.rxas\" rxas_out)\n"
        "string(REPLACE \"\\r\\n\" \"\\n\" rxas_out \"${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
-       "foreach(_opcode bgetu32 bgetu8 bsetu16 bgetu16 bgetf64 bresize bcopy bintos)\n"
+       "foreach(_opcode bgetu32 bgetu8 bsetu16 bgetu16 bgetf64 bgeti64 bseti64 bgetf32 bsetf32 bresize bcopy bintos)\n"
        "  if(NOT rxas_out MATCHES \"${RXAS_DIAG_DOLLAR}{_opcode}\")\n"
        "    message(FATAL_ERROR \"Binary memory source did not emit ${RXAS_DIAG_DOLLAR}{_opcode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
        "  endif()\n"
@@ -504,6 +504,9 @@ string(APPEND RXC_BINARY_MEMORY_SOURCE_CONTENT
        "endforeach()\n"
        "if(NOT rxas_out MATCHES [=[load r[0-9]+,4]=])\n"
        "  message(FATAL_ERROR \"Binary memory <sizeof..type> did not lower to a literal width load.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "endif()\n"
+       "if(NOT rxas_out MATCHES [=[load r[0-9]+,8]=])\n"
+       "  message(FATAL_ERROR \"Binary memory <sizeof..int> did not lower to an 8-byte literal width load.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
        "endif()\n")
 file(GENERATE OUTPUT "${RXC_BINARY_MEMORY_SOURCE_SCRIPT}" CONTENT "${RXC_BINARY_MEMORY_SOURCE_CONTENT}")
 

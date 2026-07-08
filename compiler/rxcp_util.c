@@ -98,6 +98,9 @@ int rxcp_binary_storage_info(ASTNode *type_node, RxcpBinaryStorageInfo *info) {
     if (rxcp_binary_storage_match(type_node, "i16", info, TP_INTEGER, 2, 1, "bgeti16", "bseti16")) return 1;
     if (rxcp_binary_storage_match(type_node, "u32", info, TP_INTEGER, 4, 1, "bgetu32", "bsetu32")) return 1;
     if (rxcp_binary_storage_match(type_node, "i32", info, TP_INTEGER, 4, 1, "bgeti32", "bseti32")) return 1;
+    if (rxcp_binary_storage_match(type_node, "i64", info, TP_INTEGER, 8, 1, "bgeti64", "bseti64")) return 1;
+    if (rxcp_binary_storage_match(type_node, "int", info, TP_INTEGER, 8, 1, "bgeti64", "bseti64")) return 1;
+    if (rxcp_binary_storage_match(type_node, "f32", info, TP_FLOAT, 4, 1, "bgetf32", "bsetf32")) return 1;
     if (rxcp_binary_storage_match(type_node, "f64", info, TP_FLOAT, 8, 1, "bgetf64", "bsetf64")) return 1;
     if (rxcp_binary_storage_match(type_node, "float", info, TP_FLOAT, 8, 1, "bgetf64", "bsetf64")) return 1;
 

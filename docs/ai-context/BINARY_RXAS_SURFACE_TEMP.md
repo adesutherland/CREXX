@@ -581,18 +581,9 @@ metadata, tests, and generated docs as applicable.
 
 Remaining implementation points after the RXAS instruction slice:
 
-- `compiler/rxcp_emit_expr.c` currently emits the old
-  `bcheckrange`/`getbinpos`/`setbinpos`/`bslice` sequence for binary extraction;
-  that lowering must be replaced by target-sized `bcopy`, `bgets`, or `sget`
-  as appropriate.
-- `compiler/rxcp_util.c` currently maps binary storage types only through
-  `u8`, `i8`, `u16`, `i16`, `u32`, `i32`, `f64`, and `float`; it needs
-  `i64`/`.int` and `f32`.
 - `interpreter/tests/tests_binary.rxas` uses `setbinpos`, `getbinpos`, and
   `bslice`; either rewrite or isolate these as legacy-only tests if the opcodes
   are retained.
-- Compiler golden checks currently search for `bcheckrange`, `getbinpos`,
-  `bslice`, and `bintos`; update them when the lowering changes.
 - The docs instruction database, instruction SVGs, VM spec
   `instruction_chapter.tex`, reference cards, and architecture notes are stale
   for the binary-memory surface and must be regenerated or edited as part of

@@ -10,8 +10,10 @@ main: procedure = .int
   sz = 0
   f = 0.0
   s = ""
+  wide = .binary
 
   data = HEADER
+  wide = 'FEFFFFFFFFFFFFFF0000C03F00000000'x as .binary
   n = <at..u32>(0) HEADER
   if n <> 305419896 then return 10
 
@@ -19,6 +21,10 @@ main: procedure = .int
   if sz <> 4 then return 11
   sz = <sizeof..i8>
   if sz <> 1 then return 21
+  sz = <sizeof..int>
+  if sz <> 8 then return 22
+  sz = <sizeof..f32>
+  if sz <> 4 then return 23
 
   b = <at..u8>(1 + 1) data
   if b <> 52 then return 12
@@ -35,6 +41,20 @@ main: procedure = .int
 
   s = <at..string>(16, 2) data
   if s <> "OK" then return 16
+
+  n = <at..i64>(0) wide
+  if n <> -2 then return 24
+
+  f = <at..f32>(8) wide
+  if f <> 1.5 then return 25
+
+  <at..int>(0) wide = -3
+  n = <at..int>(0) wide
+  if n <> -3 then return 26
+
+  <at..f32>(8) wide = 2.5
+  f = <at..f32>(8) wide
+  if f <> 2.5 then return 27
 
   b = <AT..U8>(0) data
   if b <> 120 then return 17

@@ -276,6 +276,11 @@ main() .locals=40
     sget r12,"abcdef",r2
     seq r0,r12,"cd"
     brf fail_sget_const,r0
+    load r12,"xx"
+    load r2,1
+    sget r12,"A🔥éZ",r2
+    seq r0,r12,"🔥é"
+    brf fail_sget_utf8,r0
 
     load r13,0x000000000000
     load r13,2
@@ -458,6 +463,13 @@ catch_bcmps_bad_utf8:
     br fail_bmove_same_reg_signal
 
 catch_bmove_same_reg:
+    sigbr catch_sget_boundary,"UNICODE_ERROR"
+    load r12,"x"
+    load r2,2
+    sget r12,"A🔥éZ",r2
+    br fail_sget_boundary_signal
+
+catch_sget_boundary:
     sigbr catch_sget_oob,"OUT_OF_RANGE"
     load r12,"xxx"
     load r2,2
@@ -630,6 +642,9 @@ fail_bsets_const:
 fail_sget_const:
     say "FAIL: sget constant mismatch"
     ret 1
+fail_sget_utf8:
+    say "FAIL: sget UTF-8 mismatch"
+    ret 1
 fail_bmove_byte2:
     say "FAIL: bmove byte 2 mismatch"
     ret 1
@@ -713,6 +728,9 @@ fail_bcmps_bad_utf8_signal:
     ret 1
 fail_bmove_same_reg_signal:
     say "FAIL: bmove same-register did not signal"
+    ret 1
+fail_sget_boundary_signal:
+    say "FAIL: sget non-boundary offset did not signal"
     ret 1
 fail_sget_oob_signal:
     say "FAIL: sget out-of-range did not signal"

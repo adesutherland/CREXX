@@ -365,6 +365,17 @@ static int rxvm_binary_field_is_valid_utf8(const void *bytes, size_t length) {
 #endif
 }
 
+static int rxvm_utf8_is_boundary(const char *bytes, size_t length, size_t offset) {
+#ifndef NUTF8
+    if (offset > length) return 0;
+    if (offset == length) return 1;
+    return (((unsigned char)bytes[offset] & 0xc0u) != 0x80u);
+#else
+    (void)bytes;
+    return offset <= length;
+#endif
+}
+
 static int rxvm_string_const_slice(string_constant *source, rxinteger offset_value, size_t requested_chars,
                                   size_t *offset, size_t *byte_length) {
     size_t local_offset;
@@ -372,8 +383,7 @@ static int rxvm_string_const_slice(string_constant *source, rxinteger offset_val
     if (!rxvm_memory_range(source->string_len, offset_value, 0, &local_offset)) return 0;
 
 #ifndef NUTF8
-    if (validate_utf8_bytes(source->string, source->string_len, 0) != 0) return -1;
-    if (validate_utf8_bytes(source->string, local_offset, 0) != 0) return -1;
+    if (!rxvm_utf8_is_boundary(source->string, source->string_len, local_offset)) return -1;
 
     {
         size_t pos = local_offset;
@@ -387,7 +397,6 @@ static int rxvm_string_const_slice(string_constant *source, rxinteger offset_val
             pos += step;
         }
 
-        if (validate_utf8_bytes(source->string + local_offset, pos - local_offset, 0) != 0) return -1;
         if (offset) *offset = local_offset;
         if (byte_length) *byte_length = pos - local_offset;
         return 1;
