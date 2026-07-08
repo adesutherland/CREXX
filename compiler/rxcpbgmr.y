@@ -251,6 +251,29 @@ static ASTNode *intrinsic_lower_one_arg(Context *context, ASTNode *intrinsic, No
     return node;
 }
 
+static ASTNode *intrinsic_lower_compare(Context *context, ASTNode *intrinsic) {
+    ASTNode *node;
+    ASTNode *type_node;
+    ASTNode *args;
+    ASTNode *arg;
+
+    if (!intrinsic_path_is_name_with_compact_type(intrinsic, "compare")) {
+        return 0;
+    }
+    if (intrinsic_arg_count(intrinsic) == -1) {
+        return ast_err(context, "BINARY_MEMORY_COMPARE_ARGUMENTS", intrinsic->token);
+    }
+
+    type_node = intrinsic_compact_type_node(context, intrinsic);
+    node = ast_f(context, OP_BINARY_COMPARE, intrinsic->token);
+    add_ast(node, type_node);
+
+    args = intrinsic_args_node(intrinsic);
+    arg = args ? ast_chdn(args, 0) : 0;
+    if (arg) add_ast(node, arg);
+    return node;
+}
+
 static ASTNode *intrinsic_lower_primary(Context *context, ASTNode *intrinsic) {
     ASTNode *node;
     ASTNode *type_node;
@@ -268,9 +291,14 @@ static ASTNode *intrinsic_lower_primary(Context *context, ASTNode *intrinsic) {
         add_ast(node, type_node);
         return node;
     }
+    node = intrinsic_lower_compare(context, intrinsic);
+    if (node) return node;
 
     if (intrinsic_simple_name_equals(intrinsic, "typeof")) {
         return intrinsic_lower_one_arg(context, intrinsic, OP_TYPEOF, "INVALID_TYPEOF_SYNTAX");
+    }
+    if (intrinsic_simple_name_equals(intrinsic, "blen")) {
+        return intrinsic_lower_one_arg(context, intrinsic, OP_BINARY_LENGTH, "INVALID_BLEN_SYNTAX");
     }
     if (intrinsic_simple_name_equals(intrinsic, "refvalid")) {
         return intrinsic_lower_one_arg(context, intrinsic, OP_REFVALID, "INVALID_REFVALID_SYNTAX");

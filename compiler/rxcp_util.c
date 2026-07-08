@@ -1301,6 +1301,8 @@ const char* node_type_to_string(NodeType type) {
         case OP_TYPE_CAST: return "OP_TYPE_CAST";
         case OP_BINARY_AT: return "OP_BINARY_AT";
         case OP_BINARY_FOR: return "OP_BINARY_FOR";
+        case OP_BINARY_LENGTH: return "OP_BINARY_LENGTH";
+        case OP_BINARY_COMPARE: return "OP_BINARY_COMPARE";
         case OP_SIZEOF: return "OP_SIZEOF";
         case OP_TYPEOF: return "OP_TYPEOF";
         case OP_REFERENCE: return "OP_REFERENCE";

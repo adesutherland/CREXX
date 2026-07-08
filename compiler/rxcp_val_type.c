@@ -1295,6 +1295,8 @@ walker_result set_node_types_walker(walker_direction direction,
                 break;
 
             case OP_SIZEOF:
+            case OP_BINARY_LENGTH:
+            case OP_BINARY_COMPARE:
                 if (node->value_type == TP_UNKNOWN) {
                     set_node_type(node, TP_INTEGER);
                 }
@@ -2122,6 +2124,11 @@ walker_result type_safety_walker(walker_direction direction,
                 set_node_type(node, TP_INTEGER);
                 break;
             }
+
+            case OP_BINARY_LENGTH:
+            case OP_BINARY_COMPARE:
+                set_node_type(node, TP_INTEGER);
+                break;
 
             case OP_BINARY_AT:
                 validate_binary_memory_at(context, node);
