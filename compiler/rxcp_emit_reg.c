@@ -824,6 +824,7 @@ walker_result register_walker(walker_direction direction,
 
             case OP_BINARY_AT:
                 if (child1) child1->register_num = DONT_ASSIGN_REGISTER;
+                if (child2 && is_constant(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
                 break;
 
             case OP_BINARY_FOR:
