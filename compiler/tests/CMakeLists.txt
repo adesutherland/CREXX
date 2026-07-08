@@ -514,6 +514,39 @@ add_test(NAME rxc_binary_memory_source
          COMMAND ${CMAKE_COMMAND} -P "${RXC_BINARY_MEMORY_SOURCE_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+set(RXC_BINARY_MEMORY_PACKED_LOOKUP_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_binary_memory_packed_lookup.cmake")
+set(RXC_BINARY_MEMORY_PACKED_LOOKUP_CONTENT "")
+string(APPEND RXC_BINARY_MEMORY_PACKED_LOOKUP_CONTENT
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -n -o \"binary_memory_packed_lookup_rxas_check\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/binary_memory_packed_lookup.crexx\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE rxc_out\n"
+       "  ERROR_VARIABLE rxc_err\n"
+       "  RESULT_VARIABLE rxc_res\n"
+       ")\n"
+       "set(full_out \"${RXAS_DIAG_DOLLAR}{rxc_out}${RXAS_DIAG_DOLLAR}{rxc_err}\")\n"
+       "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "if(NOT rxc_res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"rxc failed for packed binary lookup check.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n"
+       "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/binary_memory_packed_lookup_rxas_check.rxas\" rxas_out)\n"
+       "string(REPLACE \"\\r\\n\" \"\\n\" rxas_out \"${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "foreach(_opcode blen bgetu32 bgetu16 bcmpb)\n"
+       "  if(NOT rxas_out MATCHES \"${RXAS_DIAG_DOLLAR}{_opcode}\")\n"
+       "    message(FATAL_ERROR \"Packed binary lookup did not emit ${RXAS_DIAG_DOLLAR}{_opcode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "  endif()\n"
+       "endforeach()\n"
+       "foreach(_opcode bslice bintos)\n"
+       "  if(rxas_out MATCHES \"${RXAS_DIAG_DOLLAR}{_opcode}\")\n"
+       "    message(FATAL_ERROR \"Packed binary lookup materialized a key slice via ${RXAS_DIAG_DOLLAR}{_opcode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "  endif()\n"
+       "endforeach()\n")
+file(GENERATE OUTPUT "${RXC_BINARY_MEMORY_PACKED_LOOKUP_SCRIPT}" CONTENT "${RXC_BINARY_MEMORY_PACKED_LOOKUP_CONTENT}")
+
+add_test(NAME rxc_binary_memory_packed_lookup
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_BINARY_MEMORY_PACKED_LOOKUP_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 set(RXC_CONSTANTS_LEVELB_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_constants_levelb.cmake")
 set(RXC_CONSTANTS_LEVELB_CONTENT "")
 foreach(_mode IN ITEMS noopt opt)
@@ -1627,6 +1660,7 @@ add_crexx_run_test(class_attr_register_views rexx_src/class_attr_register_views.
 add_crexx_run_test(constants_levelb_payloads rexx_src/constants_levelb_payloads.crexx)
 add_crexx_run_test(binary_memory_source rexx_src/binary_memory_source.crexx)
 add_crexx_run_test(binary_memory_span_oob rexx_src/binary_memory_span_oob.crexx)
+add_crexx_run_test(binary_memory_packed_lookup rexx_src/binary_memory_packed_lookup.crexx)
 add_crexx_isolated_run_test(qualified_bif_direct_namespace rexx_src/qualified_bif_direct_namespace.crexx)
 add_crexx_dual_import_run_test(qualified_namespace_import_source rexx_src/qualified_namespace_main.crexx rexx_src/qualified_namespace_dep_a.crexx rexx_src/qualified_namespace_dep_b.crexx source)
 add_crexx_dual_import_run_test(qualified_namespace_import_binary rexx_src/qualified_namespace_main.crexx rexx_src/qualified_namespace_dep_a.crexx rexx_src/qualified_namespace_dep_b.crexx binary)
