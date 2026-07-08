@@ -1,6 +1,8 @@
 # Level B/G Binary Memory Working Design
 
-Status: working design note, not an approved language specification.
+Status: Rexx surface design and gap tracker, not an approved language
+specification. The Release 1 RXAS binary-memory instruction surface is now
+baselined in `docs/reference/rxas/instructions/07-binary-memory.md`.
 
 This note captures the proposed Release 1 direction for treating `.binary`
 values and `.binary` constants as typed memory spaces for high-performance Rexx
@@ -47,9 +49,11 @@ The current tree already has useful building blocks:
   targeted as binary data.
 - VM values carry a binary payload, byte length, byte cursor, and growable
   buffer capacity.
-- RXAS byte operations include `blen`, `getbyte`, `setbyte`, `bconcat`,
-  `bappend`, `setbinpos`, `getbinpos`, `bslice`, `bupdate`, `stobin`, and
-  `bintos`.
+- RXAS has a Release 1 binary-memory instruction family covering strict
+  fixed-width reads/writes, binary constants, target-sized copies,
+  zero-terminated UTF-8 text fields, string-constant extraction, binary memory
+  moves, and zero-copy compares. The human reference is
+  `docs/reference/rxas/instructions/07-binary-memory.md`.
 - Binary constants use the normal constant-pool path.
 - `.string` remains valid UTF-8 text in normal UTF builds; `.binary` remains
   arbitrary bytes.
@@ -71,10 +75,9 @@ Release 1 binary-memory semantics should be shared.
 1. `.binary` is the memory value.
 2. Offsets are zero-based byte offsets.
 3. Lengths are byte counts unless explicitly stated otherwise.
-4. Fixed-width layout types use dotted storage names. Slice 2 implements
-   `.u8`, `.i8`, `.u16`, `.i16`, `.u32`, `.i32`, `.f64`, and `.float`.
-   Future storage widths such as `.u64`, `.i64`, and `.f32` need measured
-   Release 1 demand.
+4. Fixed-width layout types use dotted storage names. The current source and
+   RXAS surface covers `.u8`, `.i8`, `.u16`, `.i16`, `.u32`, `.i32`, `.i64`,
+   `.int`, `.f32`, `.f64`, and `.float`. `.u64` remains a later candidate.
 5. `.binary` constants and `.binary` variables use the same read syntax.
 6. Byte positions are explicit: `<at..type>(x) buffer` means byte offset `x`
    in `buffer`. The unit of the offset expression is always bytes.
@@ -136,7 +139,7 @@ constant parameter/view type, which belongs in Release 2 if it is needed at all.
 To mitigate the cost, Release 1 should encourage scoped constants:
 
 ```rexx
-namespace packedindex expose NODE_LEFT NODE_RIGHT NODE_SIZE EMPTY_NODE
+namespace packedindex expose find_node insert_node NODE_LEFT NODE_RIGHT NODE_SIZE EMPTY_NODE
 
 constant NODE_LEFT = 0
 constant NODE_RIGHT = 4
@@ -149,7 +152,7 @@ find_node: procedure = .int
 
 insert_node: procedure = .int
   arg expose arena = .binary, key = .string
-  /* Same constants are available here too. */
+  /* Same constants are available here too; arena is by reference because it is mutated. */
 ```
 
 Release 1 requirement: binary layout constants should be available across
@@ -159,6 +162,13 @@ the expose list are visible to importers and to procedures in that namespace in
 the same way as other exposed symbols. Cross-module constant export/import can
 follow the existing constant metadata path if that path is settled enough;
 otherwise it should remain an explicit follow-up.
+
+Library-style modules should keep executable setup inside explicit procedures.
+Top-level executable statements before a `procedure` synthesize an implicit
+`main()` for compatibility, which is useful for scripts but is the wrong signal
+for packed binary libraries. Module-level constants are still the preferred form
+for shared layout values; procedure-level `expose` is for shared mutable storage
+or by-reference arguments, not for making compile-time constants visible.
 
 ### Constants And Mutability
 
@@ -211,25 +221,30 @@ The preferred spelling is dotted, matching the rest of the Level B type surface:
 - `.u8` and `.i8` for bytes, flags, tiny signed state, and node color/balance.
 - `.u16` and `.i16` for compact lengths, table states, and small indexes.
 - `.u32` and `.i32` for offsets, lengths, indexes, hashes, and record links.
+- `.i64` for signed 64-bit stored integers, with `.int` accepted as the
+  standard cREXX convenience spelling for the same Release 1 storage width.
+- `.f32` for dense binary32 float storage.
 - `.f64` for fixed binary64 storage, with `.float` accepted as the standard
   cREXX convenience spelling.
-- `.u64`, `.i64`, and `.f32` remain future candidates for large offsets,
-  64-bit hashes, external ids, dense data, or binary interchange.
+- `.u64` remains a future candidate for large offsets, 64-bit hashes, external
+  ids, dense data, or binary interchange.
 
 Standard cREXX types should be accepted as conveniences only where the
 operation has a clear storage contract:
 
 - `.float` as the normal cREXX float view, expected to map to binary64 storage
   unless a future numeric option says otherwise.
-- `.int` is not a Slice 2 persistent storage spelling; use `.i32` or `.u32`
-  when the byte width matters.
+- `.int` as the normal cREXX integer view, mapped to signed 64-bit storage for
+  Release 1 binary memory. Use `.i32` or `.u32` when a 4-byte persisted field is
+  intended.
 - `.string` for UTF-8 text spans.
 - `.decimal` for decimal text spans.
 - `.binary` for byte spans.
 
 The working bias is that fixed persisted layouts should use explicit storage
-names such as `.u32`, `.i32`, and `.f64`; ergonomic standard aliases can be
-added only where persistence and cross-platform byte width remain unambiguous.
+names such as `.u32`, `.i32`, `.i64`, `.f32`, and `.f64`; ergonomic standard
+aliases are allowed only where persistence and cross-platform byte width are
+unambiguous.
 
 ## Release 1 Defined Source Syntax
 
@@ -323,9 +338,8 @@ Writes use the same left-hand shape:
 ```
 
 Fixed-width types know their byte width. No length is written for `.u8`, `.i8`,
-`.u16`, `.i16`, `.u32`, `.i32`, `.f64`, or the `.float` convenience alias.
-`u64`, `i64`, and `f32` remain future candidates until there is a measured
-Release 1 need.
+`.u16`, `.i16`, `.u32`, `.i32`, `.i64`, `.int`, `.f32`, `.f64`, or the
+`.float` convenience alias. `.u64` remains a future candidate.
 
 ### Variable-Size Spans
 
@@ -340,8 +354,8 @@ d = <at..decimal>(pos, decimal_len) buffer
 When the expression is materialized as a normal Rexx value, `.string` validates
 UTF-8 and `.decimal` parses decimal text. `.binary` copies the selected bytes.
 
-Variable-size writes use the same conceptual shape, but are not part of Slice 2
-source lowering. The compiler currently rejects them with a specific diagnostic:
+Variable-size writes use the same conceptual shape, but are not currently
+lowered. The compiler rejects them with a specific diagnostic:
 
 ```rexx
 <at..binary>(pos, key_len) buffer = key_bytes
@@ -369,59 +383,59 @@ The operator returns bytes. It does not imply typed-element indexing; offsets ar
 always byte offsets. `NODE_BALANCE` and similar layout constants should be byte
 offsets.
 
-### Zero-Copy Compare
+### Zero-Copy Compare Intrinsics
 
-Typed memory expressions should produce an internal span/view:
+Comparisons that must avoid copies should be explicit intrinsic function calls.
+Do not overload ordinary `=` on `<at>` spans for this. If a program writes
+`<at..binary>(pos, len) buffer = key`, the left side is an ordinary materialized
+Rexx value before `=` compares it.
 
-```text
-binary source + byte offset + byte length + interpretation tag
-```
-
-The compiler must use that span/view directly for comparison. It must not first
-create a substring, binary slice, or string value. This is the planned Slice 3
-work; Slice 2 materializes variable-size reads after a strict `bcheckrange`.
+The no-copy compare contract is:
 
 ```rexx
-if <at..binary>(pos, key_len) buffer = key_bytes then say "found"
-if <at..string>(6, 5) buffer = "index" then say "found"
-if <at..binary>(pos, <sizeof..u32>) buffer = KEY_U32_BYTES then say "found"
+if <compare..binary>(buffer, pos, key_bytes) = 0 then say "found"
+if <compare..binary>(buffer, pos, key_len, key_bytes) = 0 then say "found"
+if <compare..binary>(HEADER_CONST, 4, key_bytes) = 0 then say "found"
+if <compare..string>(buffer, 6, "index") = 0 then say "found"
+if <compare..u32>(buffer, NODE_HASH, wanted_hash) = 0 then say "found"
 ```
 
-For compare, `.string` selects compatibility with string operands, but the
-comparison itself is byte-wise over the selected span and the other operand's
-bytes. UTF-8 validation is required when the span is materialized or explicitly
-cast to `.string`; a pure equality compare should not allocate a string just to
-validate it.
+`<compare..binary>` compares bytes from binary memory with a binary needle. The
+source memory and needle may each be a register-backed variable or a binary
+constant. The compare length may come from the needle or from an explicit length
+argument when the program is comparing a fixed prefix/range. `<compare..string>`
+compares a NUL-terminated UTF-8 field in binary memory with a string variable or
+string constant. Fixed-width forms such as `<compare..u32>` use the storage type
+to determine the number of bytes and convert the ordinary Rexx value to the
+field representation for comparison.
 
-Exact-length compare may later infer the span length from the other operand
-when that operand is a literal, constant, or ordinary variable with a known
-runtime byte length:
+The source intrinsic is not constrained by RXAS's three-operand instruction
+shape. The compiler can lower a clear four-argument source form by preparing the
+compare register, selecting `bcmpb`/`bcmps`, and emitting any required setup
+instructions. The parenthesized arguments are ordinary expressions outside the
+intrinsic head, so the lexer/parser only has to recognize `<compare..type>` as a
+head and then parse a normal argument list. Shorter aliases such as `<bcmp>`,
+`<scmp>`, or flatter spellings such as `<compare_binary>` remain naming options,
+but the coherent family is `<compare..type>(...)`.
+
+Use ordinary `=` when the code really wants normal Rexx value comparison. Use a
+compare intrinsic when the binary memory location itself is part of the
+operation.
+
+### Ordinary Functions
+
+Ordinary functions remain useful for buffer management and mutation:
 
 ```rexx
-if <at..binary>(pos) buffer = KEY_BYTES then say "found"
-if <at..string>(6) buffer = "index" then say "found"
+call binresize(page, size)
+call binmemmove(page, dst_pos, src_pos, len)
+call bincopy(dst, dst_pos, src, src_pos, len)
 ```
 
-Until that compare lowering exists, pass the length for variable-size memory
-expressions. Continue to pass the length when it is stored separately, when
-comparing a prefix/range, or when the code should document the field width.
-
-### Function Fallbacks
-
-Function helpers remain useful for fallback and tests:
-
-```rexx
-version = bmem.u32(buffer, 8)
-if bmem.equals(buffer, pos, key_len, key_bytes) then say "found"
-```
-
-They are not the hot path unless the compiler recognizes them as intrinsics and
-lowers them to the same RXAS as `<at..type>(args)`.
-
-The inliner roadmap should include special lowering for selected binary-memory
-functions. That lets users choose a BIF/function spelling where it reads better
-while still allowing hot paths to lower to direct RXAS when the call target and
-argument shape are known.
+These functions may still be direct-lowered by the compiler/inliner when the
+call target and argument shape are known. They should not be used for direct
+reads from binary constants or for zero-copy compares; use the intrinsic forms
+for those.
 
 ### Deferred Source Syntax
 
@@ -560,200 +574,181 @@ entry.key_bytes -> UTF-8 bytes or arbitrary binary key
 The hot path reads offsets and hashes, then compares candidate key bytes with a
 normal `.string` or `.binary` key.
 
-## Release 1 RXAS Surface
+## RXAS Baseline Status
 
-Instruction names below are working names.
+The RXAS binary-memory surface is no longer tracked in this working note. The
+locked Release 1 reference is
+`docs/reference/rxas/instructions/07-binary-memory.md`, with implementation
+context in `docs/ai-context/RXAS_ASSEMBLER.md`.
 
-Release 1 should prefer a small RXAS core that fits the existing assembler
-shape. The current RXAS parser accepts up to three operands, so Release 1 should
-avoid depending on four-operand instructions.
+Completed RXAS baseline:
 
-### RXAS Principles
+- `.const name binary 0x...` and `.const name string "..."` aliases.
+- Whole binary constant materialisation with `load rDst,0x...`.
+- Register and constant binary lengths with `blen`.
+- Mutable buffer operations: `bresize`, `bclear`, `bfill`, `setbyte`,
+  `bupdate`, `bconcat`, and `bappend`.
+- Target-sized slice copy with `bcopy rDst,rSrc,rOffset`, where the destination
+  length defines the copy length.
+- Strict fixed-width reads and writes for `.u8`, `.i8`, `.u16`, `.i16`, `.u32`,
+  `.i32`, `.i64`/`.int`, `.f32`, `.f64`, and `.float`, using canonical
+  little-endian storage.
+- Binary constant source forms for strict reads, target-sized copy, length, and
+  zero-copy compares.
+- Zero-terminated UTF-8 text-field operations: `bgets`, `bsets`, and `bcmps`.
+- String-constant extraction with `sget`.
+- Different-register and same-register memory moves with `bmove` and
+  `bmemmove`.
+- Zero-copy compare instructions `bcmpb` and `bcmps`, using an in/out compare
+  register for source offset and result.
+- Legacy cursor instructions `setbinpos`, `getbinpos`, and `bslice` retained as
+  compatibility RXAS only, not as the preferred Rexx lowering target.
 
-1. Binary memory operands are registers in Release 1.
-2. A `.binary` constant used by source syntax may be materialized with `load`
-   before the typed memory instruction.
-3. No Release 1 instruction requires a special constant-pass operand model.
-4. Writes, resize, reserve, clear, and fill require mutable binary registers.
-5. Strict typed memory operations raise `OUT_OF_RANGE` for invalid ranges.
-6. Existing tolerant `getbyte` behavior can remain for compatibility.
-7. New instructions should be easy for the compiler to emit from syntax without
-   helper calls.
+Roadmapped or deliberately deferred RXAS work:
 
-Optional direct literal forms may be useful later, but they are not required for
-Release 1 semantics.
+- Capacity-only reserve such as `breserve`.
+- Direct span fill / `memset(ptr,len)` support, if whole-buffer `bfill` plus
+  helper code is not enough for packed update paths.
+- Unsigned 64-bit storage forms.
+- Explicit big-endian forms for protocol-oriented code.
+- Search/hash instructions, after hash persistence and ordering semantics are
+  chosen.
+- Direct compare-and-branch or boolean compare instructions, only if profiles
+  justify them.
+- General span-to-span compare forms; Release 1 compares a source span with a
+  whole binary or string needle.
+- Extra constant-source append/update/concat forms, only if generated Rexx code
+  demonstrates a real need.
+- mmap/shared-memory/atomic binary operations.
 
-### Size And Capacity
+## Rexx Surface Gap List
 
-Existing:
+Implemented Rexx source surface:
 
-```rxas
-blen rOut,rMem
-```
+- The lexer/parser accepts compiler-recognized intrinsic heads, including
+  `<at..type>(...) memory` and `<sizeof..type>`, with case-insensitive `at` and
+  storage type names.
+- Fixed-width `<at..type>(offset) binary` reads and writes lower directly to
+  RXAS for the implemented storage types.
+- Variable-size `<at..binary|string|decimal>(offset, length) binary` reads
+  materialize ordinary Rexx values through target-sized copy/conversion.
+- `.binary` constants and variables share the same read syntax for supported
+  forms.
+- Unsupported storage types, missing offsets, illegal fixed-width lengths,
+  missing variable lengths, non-binary targets, read-only writes, and
+  unsupported span writes have localized diagnostics.
 
-Proposed:
+Remaining Release 1 Rexx gaps:
 
-```rxas
-bresize  rMem,rLength     ; set byte length, zero-fill growth
-breserve rMem,rCapacity   ; ensure capacity, length unchanged
-bclear   rMem             ; length becomes 0, capacity may remain
-bfill    rMem,rByte       ; fill the whole current binary with one byte
-```
+1. Intrinsic compare functions.
+   Zero-copy compare should be explicit. Do not hide it behind ordinary `=`.
+   Source `=` remains a normal Rexx comparison of already-materialized values.
+   Working intrinsic shapes:
 
-`bresize` raises `OUT_OF_RANGE` for negative lengths and `FAILURE` for
-allocation failure. Growth should zero-fill.
+   ```rexx
+   if <compare..binary>(page, pos, key_bytes) = 0 then say "found"
+   if <compare..binary>(page, pos, key_len, key_bytes) = 0 then say "found"
+   if <compare..string>(page, pos, "index") = 0 then say "found"
+   if <compare..u32>(page, node + NODE_HASH, wanted_hash) = 0 then say "found"
+   ```
 
-Slice 1 implements `bresize`, `bclear`, and `bfill`. `breserve` remains a later
-capacity-only candidate.
+   `<compare..binary>` maps to `bcmpb`: the source memory may be a binary
+   variable or binary constant, the needle may be a binary variable or binary
+   constant, and the compare length may come from either the needle or an
+   explicit source length. `<compare..string>` maps to `bcmps`: the source memory
+   may be a binary variable or binary constant, the string may be a string
+   variable or string constant, and the source field is NUL-terminated UTF-8.
+   Fixed-width typed compare forms can lower through typed read/setup or a
+   future direct compare if profiling justifies one. These forms avoid copies
+   whenever RXAS has a direct operand form. The source-level intrinsic may have
+   more arguments than the final RXAS instruction; the compiler owns that
+   lowering.
+2. Intrinsic binary transfer coverage.
+   Any direct detail read from a binary constant should use an intrinsic, and
+   the same intrinsic should work on binary variables for consistency. Release 1
+   should cover:
 
-RXAS is the right layer for clearing, initialising, reserving, resizing, and
-bulk filling buffers. Source syntax should stay focused on typed access and
-compare; buffer lifecycle operations can remain helper/instruction backed.
+   ```rexx
+   bytes = <blen>(memory)
+   n = <at..u32>(pos) memory
+   key = <at..binary>(pos, len) memory
+   text = <at..string>(pos, codepoints) memory
+   <at..u32>(pos) memory = n
+   ```
 
-Existing cursor instructions such as `setbinpos`, `getbinpos`, and `bslice`
-remain as legacy RXAS compatibility instructions. New source-level cursor
-syntax is deferred to Release 2. Release 1 source span reads use target-sized
-`bcopy` or typed fixed-width reads directly from byte offsets; compiler lowering
-must not use cursor-based `bslice` for the new binary-memory surface.
+   `memory` may be a binary variable or binary constant for reads. Writes require
+   a mutable binary variable.
+3. Variable-size writes.
+   `<at..binary>(pos, len) page = bytes`, `<at..string>(pos, len) page = text`,
+   and `<at..decimal>(pos, len) page = amount` are currently rejected. Release 1
+   needs lowering or a final decision to keep variable-size writes helper-only.
+4. Zero-terminated text-field source surface.
+   RXAS has `bgets`/`bsets` for NUL-terminated UTF-8 fields, but the Rexx
+   spelling is not settled. If this must work uniformly for binary constants and
+   variables, it should be an intrinsic function rather than an ordinary helper.
+5. Binary memory moves.
+   RXAS has `bmove` and `bmemmove`, including the same-buffer `memmove` case,
+   but Rexx has no implemented source spelling. These should be ordinary helper
+   functions with direct compiler/inliner lowering where needed, not core
+   intrinsic syntax unless profiling proves they are lookup hot-path operations.
+6. Buffer lifecycle helpers.
+   Resize, clear, fill, reserve, and byte length need a coherent Rexx helper
+   surface over `bresize`, `bclear`, `bfill`, and `blen`, including how those
+   helpers interact with existing `rxfnsb` `bin*` functions.
+7. Function fallback and inliner policy.
+   Decide which binary-memory helper calls are public fallbacks and which are
+   compiler-recognized intrinsics with direct RXAS lowering.
+8. Constant scope and import/export proof.
+   Scoped constants should make large binary constants usable across
+   procedures. Cross-module constant export/import still needs validation or a
+   documented Release 2 deferral.
+9. Decimal span policy.
+   `.decimal` spans currently materialize through text conversion. Canonical
+   decimal storage and bytewise ordering rules still need a sharper contract
+   before decimal compare/search helpers are promised.
+10. Data-structure proof fixtures.
+    Build packed sorted-table/tree fixtures and inspect optimized RXAS to prove
+    the hot path has no helper-call overhead and no substring/binary-slice
+    copies.
 
-### Fixed-Width Reads
+### Intrinsic Versus Function Rule
 
-```rxas
-bgetu8   rOut,rMem,rOffset
-bgeti8   rOut,rMem,rOffset
-bgetu16  rOut,rMem,rOffset
-bgeti16  rOut,rMem,rOffset
-bgetu32  rOut,rMem,rOffset
-bgeti32  rOut,rMem,rOffset
-bgetu64  rOut,rMem,rOffset
-bgeti64  rOut,rMem,rOffset
-bgetf32  rOut,rMem,rOffset
-bgetf64  rOut,rMem,rOffset
-```
+Use an intrinsic only when the compiler must understand the operation as binary
+memory:
 
-`bgetu8` is the strict counterpart to current `getbyte`. Current `getbyte`
-returns `-1` when out of range and should remain available for compatibility.
-Slice 1 implements `bgetu8`, `bgeti8`, `bgetu16`, `bgeti16`, `bgetu32`,
-`bgeti32`, and `bgetf64`; `u64`, `i64`, and `f32` remain future candidates.
+- direct field/span transfer from or to binary variables;
+- direct field/span transfer from binary constants;
+- binary/string compares that must avoid copies;
+- fixed storage metadata such as `<sizeof..type>` and binary length when the
+  operand may be a constant.
 
-Unsigned reads return `.int` values when representable. If a value cannot fit
-in the configured `rxinteger`, the instruction raises `OUT_OF_RANGE` rather
-than silently wrapping.
+Everything else should start as an ordinary Rexx function. The compiler may
+still lower selected functions directly to RXAS, but the source surface should
+not grow angle-bracket forms just because an RXAS instruction exists.
 
-### Fixed-Width Writes
+Release 1 intrinsic set should stay small:
 
-```rxas
-bsetu8   rMem,rOffset,rValue
-bseti8   rMem,rOffset,rValue
-bsetu16  rMem,rOffset,rValue
-bseti16  rMem,rOffset,rValue
-bsetu32  rMem,rOffset,rValue
-bseti32  rMem,rOffset,rValue
-bsetu64  rMem,rOffset,rValue
-bseti64  rMem,rOffset,rValue
-bsetf32  rMem,rOffset,rValue
-bsetf64  rMem,rOffset,rValue
-```
+- `<sizeof..type>`
+- `<blen>(memory)`
+- `<at..type>(offset) memory`
+- `<at..binary|string|decimal>(offset, length) memory`
+- `<compare..binary>(memory, offset [, length], needle)`
+- `<compare..string>(memory, offset, string)`
+- `<compare..type>(memory, offset, value)` for fixed-width field comparisons, if
+  this proves cleaner than spelling a read followed by normal `=`.
 
-Slice 1 implements `bsetu8`, `bseti8`, `bsetu16`, `bseti16`, `bsetu32`,
-`bseti32`, and `bsetf64`; `u64`, `i64`, and `f32` remain future candidates.
+Release 1 ordinary helper functions should cover buffer management and mutation:
 
-Writes are strict:
+- resize, clear, whole-buffer fill, and possibly reserve;
+- byte copy/move between buffers and same-buffer `memmove`;
+- append, overlay/update, insert gap, delete range;
+- search/hash only as library functions unless profiles justify RXAS support.
 
-- offset must be non-negative;
-- `offset + field_width <= blen(rMem)`;
-- integer values must fit the selected signed or unsigned field width;
-- float values must be representable in the selected storage format;
-- invalid writes raise `OUT_OF_RANGE`, `CONVERSION_ERROR`, or
-  `OVERFLOW_UNDERFLOW` as appropriate.
-
-### Span Copy And Fill
-
-Existing `bupdate` overlays a whole binary source at an explicit offset. Release
-1 may add:
-
-```rxas
-bcopy    rDst,rDstOffset,rSrc    ; copy all bytes from rSrc to dst offset
-bsets    rMem,rOffset,rString
-bsetd    rMem,rOffset,rDecimal
-```
-
-`bsets` copies UTF-8 bytes from a `.string` into a mutable binary value without
-normalization. `bsetd` copies a canonical decimal text representation.
-Span fill needs offset, length, and byte value, so it is a Release 2 candidate
-unless generated code can express it cleanly through a small Release 1 sequence.
-
-### Span Loads
-
-Constructing ordinary Rexx values from memory spans copies out of the binary
-memory space:
-
-```rxas
-bgets   rOut,rMem,rLen    ; string from current/internal position and length, UTF-8 checked
-bgetd   rOut,rMem,rLen    ; decimal from current/internal position and length
-bgetb   rOut,rMem,rLen    ; binary slice from current/internal position and length
-```
-
-`bgets` raises `UNICODE_ERROR` for invalid UTF-8. `bgetd` raises
-`CONVERSION_ERROR` for invalid decimal text.
-
-### Zero-Copy Compare
-
-Lookup algorithms need compare operations that do not allocate temporary string
-or binary values:
-
-```rxas
-bcmpb   rOut,rMem,rNeedle
-bcmps   rOut,rMem,rString
-bcmpd   rOut,rMem,rDecimal
-```
-
-The first implementation may use the existing binary cursor internally to name
-the memory start. The source model is still offset/span based; cursor movement
-is not exposed to Release 1 Rexx code. The result should be `-1`, `0`, or `1`
-for unsigned-byte lexicographic ordering. This is more useful for binary search
-and tree ordering than a first-mismatch-offset result.
-
-Boolean forms may be added if measured code benefits:
-
-```rxas
-bseqb   rOut,rMem,rNeedle
-bsneb   rOut,rMem,rNeedle
-bseqs   rOut,rMem,rString
-bsnes   rOut,rMem,rString
-```
-
-Release 1 can implement source compare syntax by setting an internal cursor and
-using a three-operand compare, avoiding a four-operand RXAS form. If that proves
-too costly or too stateful in generated code, direct offset/length RXAS forms
-can be considered for Release 2.
-
-The source-level compare operator is required to lower to this family, or to an
-equivalent direct span compare. Lowering it by first extracting a string or
-binary slice is not an acceptable Release 1 implementation.
-
-### Search And Hash Helpers
-
-Search/hash instructions are useful but can be staged after fixed access and
-compare:
-
-```rxas
-bfindb  rOut,rMem,rNeedle ; search from current/internal position, return offset or -1
-bfinds  rOut,rMem,rString
-bhash   rOut,rMem,rLen    ; hash bytes from current/internal position for rLen bytes
-```
-
-Do not expose `bhash` for persistent indexes until the hash algorithm is chosen
-and documented.
-
-### Byte Order
-
-Release 1 uses a portable fixed-width byte order:
-
-- canonical little-endian storage for fixed-width reads and writes;
-- explicit big-endian variants only if needed for protocol work, such as
-  `bgetu32be` and `bsetu32be`;
-- no host-native struct layout, alignment, or padding in the language contract.
+Current hot-path assessment: typed field reads/writes and binary/string compares
+are hot for lookup algorithms and deserve intrinsics. `memmove` is important for
+insert/delete/update paths, but not usually for the lookup loop; direct-lowered
+ordinary function spelling should be enough for Release 1. No other mutation
+helper currently deserves a dedicated `<...>` form.
 
 ## Release 1 Bounds, Signals, And Validation
 
@@ -773,55 +768,100 @@ Strict binary-memory operations should use predictable signals:
 Compiler lowering should prefer direct RXAS over helper calls:
 
 - `<at..type>(offset) buffer` on `.binary` variables lowers to strict typed
-  reads, writes, or compare.
+  reads and writes.
 - `<at..type>(offset) constant` uses the same source syntax but may materialize
   a register in Release 1.
+- Compare intrinsics such as `<compare..binary>` and `<compare..string>` lower
+  to zero-copy compare RXAS when a direct form exists.
 - Writes, resize, reserve, clear, fill, and any generated internal cursor
   movement mutate the binary register and are optimizer barriers for that
   register.
 - Read-only constants are immutable compile-time values and can be shared
   through the constant pool.
-- Hot-path compare syntax must not materialize `binsubstr`, binary slices, or
-  temporary strings. A compare operator that copies is a bug in the selected
-  design, not merely a missed optimization.
+- Hot-path compare intrinsics must not materialize `binsubstr`, binary slices,
+  or temporary strings. Ordinary `=` compares ordinary materialized Rexx values.
 - Performance fixtures should inspect optimized `.rxas` so helper calls and
   unnecessary copies do not creep back in.
 
-## Release 1 Implementation Slices
+## Release 1 Work Plan From Here
 
-### Slice 1: RXAS Core
+Completed baseline:
 
-- Add strict fixed-width reads and writes for the most useful field types:
-  `.u8`, `.i8`, `.u16`, `.i16`, `.u32`, `.i32`, and `.f64`.
-- Add `bresize`, `bclear`, and whole-buffer `bfill`.
-- Add focused RXAS tests for bounds, endian behavior, constants materialized
-  through `load`, and writes.
+- RXAS binary-memory instructions, constants, tests, and human reference docs.
+- Generic intrinsic lexer/parser shape for `<...>` and `<at..type>`.
+- `<sizeof..type>`.
+- Fixed-width source reads and writes.
+- Variable-size source reads.
+- Negative and localized diagnostics for the currently rejected source forms.
 
-### Slice 2: Source Syntax And Intrinsics
+Documentation is the next gate. The RXAS surface is now coherent, but the Rexx
+surface is still being shaped in this working note. Before more compiler work,
+write the user-facing Rexx contract in the normal docs and let that become the
+implementation checklist.
 
-- Implement `<at..type>(offset) buffer`,
-  `<at..type>(offset, length) buffer`, and compact `<sizeof..type>` as
-  compiler recognized intrinsics/operators.
-- Implement compiler lowering directly to RXAS for fixed-width reads,
-  fixed-width writes, and variable-size reads.
-- Keep helper functions only as fallback/test API.
-- Add tests proving constants and variables use the same read syntax.
-- Add negative tests proving constants cannot be write/resize targets and
-  variable-size writes are rejected until their lowering is implemented.
+Doc-first closure steps:
 
-### Slice 3: Zero-Copy Compare
+1. Create a Rexx language-reference chapter for binary memory, most likely
+   `docs/books/crexx_language_reference/binary_memory.md`, and wire it into the
+   book structure. This chapter must be normative for:
+   - byte offsets and byte lengths;
+   - fixed-width storage types and canonical little-endian encoding;
+   - `.binary` variables versus `.binary` constants, including read-only writes;
+   - `<sizeof..type>`;
+   - `<blen>(memory)`;
+   - `<at..type>(offset) memory` fixed-width reads and writes;
+   - `<at..binary|string|decimal>(offset, length) memory` materializing reads and
+     the final Release 1 decision for variable-size writes;
+   - `<compare..binary>(memory, offset [, length], needle)`;
+   - `<compare..string>(memory, offset, string)`;
+   - whether fixed-width compare forms such as `<compare..u32>` are Release 1 or
+     deferred;
+   - zero-terminated UTF-8 field read/write intrinsics, if accepted.
+2. Add a programming-guide chapter or section with real packed-structure
+   examples: a header check, a sorted-table lookup, and an insert/delete path
+   that uses ordinary helper functions for copy/memmove. The guide should show
+   when to use intrinsics and when to use helpers.
+3. Update the BIF/function reference for ordinary binary helpers. Keep these
+   separate from compiler intrinsics. Specify names, argument order, mutability,
+   zero-based offsets for packed-memory helpers, compatibility with existing
+   1-based `BIN*` helpers, and which helpers are eligible for direct lowering.
+4. Add a diagnostic contract table covering parser, validation, and runtime
+   errors. This must include exact diagnostic keys/messages for:
+   - malformed intrinsic heads and argument counts;
+   - unsupported storage types;
+   - missing offsets or illegal lengths;
+   - attempts to write constants;
+   - non-binary memory operands;
+   - out-of-range reads/writes/compares;
+   - integer overflow/underflow and conversion errors;
+   - invalid UTF-8 for string reads and string compares.
+5. Add doc examples in a testable format before implementation. Each accepted
+   intrinsic/helper form should have at least one positive example, and each
+   diagnostic family should have a negative compiler or runtime test expectation.
 
-- Add RXAS compare operations.
-- Lower source compare syntax without substring, binary-slice, or temporary
-  string creation.
-- Add parser/lexer and binary-search fixtures.
+Implementation steps after the docs are approved:
 
-### Slice 4: Rexx Data Structure Proofs
-
-- Build a packed sorted table fixture.
-- Build a packed tree fixture.
-- Compare correctness and rough performance against array/object versions.
-- Record the generated RXAS patterns that must remain stable.
+1. Parser and AST: ensure generic intrinsic heads can represent
+   `<blen>`, `<at..type>`, `<compare..type>`, and any text-field intrinsics with
+   ordinary parenthesized expression arguments.
+2. Validation and diagnostics: enforce the documented signatures, type rules,
+   mutability rules, and localized diagnostics.
+3. Code generation: lower binary variables and constants for `<blen>`,
+   `<at..type>`, variable-size reads, accepted variable-size writes, and compare
+   intrinsics to the existing RXAS instructions.
+4. Helper functions: implement or rename the ordinary binary helper surface for
+   resize, clear, fill, copy, memmove, append, overlay, insert gap, and delete
+   range. Add direct lowering only for helpers that profiles or packed examples
+   prove hot.
+5. Tests: add focused parser, validation, localization, runtime, constant-source,
+   and optimized-RXAS tests. The compare tests must assert no substring, binary
+   slice, or helper call appears in the optimized hot path.
+6. Examples and performance fixtures: add packed table/tree fixtures and inspect
+   generated RXAS to prove the lookup path is direct and zero-copy.
+7. Close the working note: once the reference docs, guide, helpers, compiler
+   lowering, diagnostics, and fixtures are complete, either remove this file or
+   reduce it to a short historical pointer so the reference docs remain the
+   source of truth.
 
 ## Release 2 Level B Possibilities
 
@@ -870,8 +910,8 @@ Candidate additions:
 - Lexer/parser convenience syntax:
 
   ```rexx
-  when <at..string>(pos, 6) source = "select" then ...
-  when <at..binary>(pos) source = KW_SELECT then ...
+  when <compare..string>(source, pos, "select") = 0 then ...
+  when <compare..binary>(source, pos, KW_SELECT) = 0 then ...
   ```
 
 - Schema/version metadata for persistent binary structures.
@@ -884,10 +924,12 @@ Candidate additions:
 Release 2 RXAS changes should be driven by measured Release 1 generated code.
 Possibilities:
 
-- Direct constant-pool memory operands for read-only operations.
 - A read-only constant/view operand kind that avoids register materialization.
-- Four-operand compare/search forms such as `memory,offset,length,needle` if
-  cursor setup is too costly or noisy.
+- Extra constant-pool operand forms for operations not covered in Release 1,
+  such as append, update, concat, search, or hash, if generated code needs them.
+- Four-operand RXAS compare/search forms such as `memory,offset,length,needle`
+  if lowering the richer source intrinsic through the Release 1 compare-register
+  convention is too costly or noisy.
 - Strict cursor and read/write-advance instructions if source-level cursor
   syntax is accepted.
 - Span reference instructions if source-level sub-span references are accepted.
@@ -901,15 +943,19 @@ has not proven itself in Release 1 code.
 
 ## Open Decisions
 
-1. Whether exact-length compare may omit the length argument whenever the other
-   operand's byte length is known, or only for constants/literals.
-2. Whether any shorter single-byte write spelling belongs after Release 1.
-3. Whether standard cREXX types beyond `.float` should be source conveniences
-   only, or whether any of them can name persistent storage widths.
-4. Whether compare returns only `-1/0/1` or also needs first-mismatch offset
+1. Final names for compare intrinsics: the current preferred family is
+   `<compare..type>(...)`, while shorter aliases such as `<bcmp>`/`<scmp>` or
+   flatter names such as `<compare_binary>` remain spelling options.
+2. Whether zero-terminated UTF-8 field read/write needs intrinsic function names,
+   and what those names should be.
+3. Whether variable-size writes should be Release 1 intrinsic syntax or
+   helper-only until there is more usage evidence.
+4. Final names for direct-lowered mutation helpers such as copy, memmove,
+   append, overlay, insert gap, and delete range.
+5. Whether any shorter single-byte write spelling belongs after Release 1.
+6. Whether compare returns only `-1/0/1` or also needs first-mismatch offset
    variants.
-5. Whether explicit big-endian typed operations are needed in Release 2.
-7. Exact signal for unsigned reads that do not fit `.int`.
+7. Whether explicit big-endian typed operations are needed in Release 2.
 8. Whether decimal memory fields require canonical decimal text before bytewise
    ordering is allowed.
 9. Whether current `bin*` helpers remain as compatibility wrappers, are renamed,
@@ -918,13 +964,18 @@ has not proven itself in Release 1 code.
 
 ## Working Recommendation
 
-For Release 1, use explicit offsets with `<at..type>(offset) buffer`,
-optional length as `<at..type>(offset, length) buffer`, and the size operator
-`<sizeof..type>`, then lower that syntax directly to a compact RXAS
-typed-memory core. Keep
-constants and variables identical at the source read level, accept ordinary
-register materialization for constants in calls, and use scoped constants plus
-direct syntax to keep hot lookup code fast.
+Before more compiler work, write and approve the Rexx language reference,
+programming-guide examples, diagnostics table, and binary helper/BIF reference.
+Those docs should be treated as the implementation checklist.
+
+For Release 1, use explicit byte offsets with `<at..type>(offset) memory`,
+optional byte length as `<at..type>(offset, length) memory`, the size operator
+`<sizeof..type>`, and explicit compare intrinsics such as
+`<compare..binary>(memory, offset, needle)` and
+`<compare..string>(memory, offset, string)`. Keep constants and variables
+identical at the source read level, accept ordinary register materialization for
+constants in calls, and use scoped constants plus direct intrinsics to keep hot
+lookup code fast.
 
 The first successful milestone is not a full binary-struct language. It is a
 packed Rexx lookup structure whose optimized RXAS has no helper-call overhead

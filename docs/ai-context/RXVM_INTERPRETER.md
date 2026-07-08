@@ -419,16 +419,24 @@ length without mutating either register; negative values and ranges that do not
 fit inside the current logical binary length raise `OUT_OF_RANGE`.
 
 Typed binary memory opcodes are strict fixed-width views over the same binary
-slot. `BGETU8`, `BGETI8`, `BGETU16`, `BGETI16`, `BGETU32`, `BGETI32`, and
-`BGETF64` read from zero-based byte offsets. `BSETU8`, `BSETI8`, `BSETU16`,
-`BSETI16`, `BSETU32`, `BSETI32`, and `BSETF64` write to zero-based byte
-offsets. These opcodes use canonical little-endian storage order and do not
-use host-native struct layout, alignment, or padding. Invalid ranges, negative
-offsets, and integer values outside the target storage type raise
-`OUT_OF_RANGE`. `BRESIZE` preserves existing bytes, zero-fills growth, and
-raises `OUT_OF_RANGE` for negative lengths. `BCLEAR` sets the logical binary
-length and cursor to zero. `BFILL` fills the current logical byte range and
-requires a byte value in `0..255`.
+slot. `BGETU8`, `BGETI8`, `BGETU16`, `BGETI16`, `BGETU32`, `BGETI32`,
+`BGETI64`, `BGETF32`, and `BGETF64` read from zero-based byte offsets, with
+register and binary-constant source forms where the source is read-only.
+`BSETU8`, `BSETI8`, `BSETU16`, `BSETI16`, `BSETU32`, `BSETI32`, `BSETI64`,
+`BSETF32`, and `BSETF64` write to zero-based byte offsets. These opcodes use
+canonical little-endian storage order and do not use host-native struct layout,
+alignment, or padding. Invalid ranges, negative offsets, and integer values
+outside the target storage type raise `OUT_OF_RANGE`. `BRESIZE` preserves
+existing bytes, zero-fills growth, and raises `OUT_OF_RANGE` for negative
+lengths. `BCLEAR` sets the logical binary length and cursor to zero. `BFILL`
+fills the current logical byte range and requires a byte value in `0..255`.
+
+The Release 1 binary-memory VM surface also includes target-sized copy from a
+byte offset (`BCOPY`), zero-terminated UTF-8 text fields (`BGETS`/`BSETS`),
+string-constant extraction (`SGET`), different-register and same-register
+memory moves (`BMOVE`/`BMEMMOVE`), and zero-copy compares
+(`BCMPB`/`BCMPS`). `BCMPB` and `BCMPS` use the compare register as an input
+source offset and overwrite it with `-1`, `0`, or `1`.
 
 `FREADB` reads bytes with `fread(ptr, 1, n, file)`, so `binary_length` is the
 actual byte count read, not a C item count.
