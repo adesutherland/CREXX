@@ -700,17 +700,18 @@ Remaining Release 1 Rexx gaps:
    proposes `<at..string>(offset) memory` for NUL-terminated read/write, while
    `<at..string>(offset, codepoints) memory` remains the fixed-codepoint form.
 5. Binary memory moves.
-   RXAS has `bmove` and `bmemmove`, including the same-buffer `memmove` case,
-   but Rexx has no implemented source spelling. These should be ordinary helper
-   functions with direct compiler/inliner lowering where needed, not core
-   intrinsic syntax unless profiling proves they are lookup hot-path operations.
+   Release 1 exposes ordinary `rxfnsb` helpers for memory movement:
+   `bincopy`, `binmemmove`, `binmakegap`, and `bindrop`. They are source-level
+   helper functions, not angle-bracket intrinsics. Direct compiler/inliner
+   lowering can be added where profiling proves it is worthwhile.
 6. Buffer lifecycle helpers.
-   Resize, clear, fill, reserve, and byte length need a coherent Rexx helper
-   surface over `bresize`, `bclear`, `bfill`, and `blen`, including how those
-   helpers interact with existing `rxfnsb` `bin*` functions.
+   Release 1 exposes `binresize`, `binclear`, `binfill`, `binfillat`,
+   `binappend`, and `binupdate` as zero-based mutating packed-memory helpers.
+   They coexist with the older 1-based, copy-returning `binbyte`,
+   `binsubstr`, `binoverlay`, `bininsert`, and `bindelstr` helpers.
 7. Function fallback and inliner policy.
-   Decide which binary-memory helper calls are public fallbacks and which are
-   compiler-recognized intrinsics with direct RXAS lowering.
+   Keep helpers as public fallbacks. Recognize only proven hot helper calls for
+   direct RXAS lowering later.
 8. Constant scope and import/export proof.
    Scoped constants should make large binary constants usable across
    procedures. Cross-module constant export/import still needs validation or a
@@ -751,11 +752,11 @@ Release 1 intrinsic set should stay small:
 - `<compare..type>(memory, offset, value)` for fixed-width field comparisons, if
   this proves cleaner than spelling a read followed by normal `=`.
 
-Release 1 ordinary helper functions should cover buffer management and mutation:
+Release 1 ordinary helper functions cover buffer management and mutation:
 
-- resize, clear, whole-buffer fill, and possibly reserve;
-- byte copy/move between buffers and same-buffer `memmove`;
-- append, overlay/update, insert gap, delete range;
+- `binresize`, `binclear`, `binfill`, and `binfillat`;
+- `bincopy` and same-buffer `binmemmove`;
+- `binappend`, `binupdate`, `binmakegap`, and `bindrop`;
 - search/hash only as library functions unless profiles justify RXAS support.
 
 Current hot-path assessment: typed field reads/writes and binary/string compares

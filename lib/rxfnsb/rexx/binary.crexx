@@ -24,7 +24,7 @@
 
 options levelb numeric_classic
 
-namespace rxfnsb expose binlength binbyte binsetbyte binsubstr binconcat binoverlay bininsert bindelstr binpos bincompare bin2x x2bin
+namespace rxfnsb expose binlength binbyte binsetbyte binsubstr binconcat binoverlay bininsert bindelstr binpos bincompare bin2x x2bin binresize binclear binfill binfillat bincopy binmemmove binappend binupdate binmakegap bindrop
 
 binlength: procedure = .int
   arg data = .binary
@@ -126,6 +126,99 @@ bincompare: procedure = .int
   end
   if left_len <> right_len then return scan_len + 1
   return 0
+
+binresize: procedure = .int
+  arg expose data = .binary, length = .int
+  result = 0
+  assembler bresize data,length
+  assembler blen result,data
+  return result
+
+binclear: procedure = .int
+  arg expose data = .binary
+  assembler bclear data
+  return 0
+
+binfill: procedure = .int
+  arg expose data = .binary, byte = .int
+  result = 0
+  assembler bfill data,byte
+  assembler blen result,data
+  return result
+
+binfillat: procedure = .int
+  arg expose data = .binary, offset = .int, length = .int, byte = .int
+  total = binlength(data)
+  end_offset = offset + length
+  if offset < 0 | length < 0 | end_offset > total then assembler signal "OUT_OF_RANGE", "invalid binary fill span"
+  if length = 0 then return total
+  do i = 0 to length - 1
+    position = offset + i
+    assembler setbyte data,position,byte
+  end
+  return total
+
+bincopy: procedure = .int
+  arg expose dst = .binary, dst_offset = .int, src = .binary, src_offset = .int, length = .int
+  if length < 0 then assembler signal "OUT_OF_RANGE", "invalid binary copy length"
+  if length = 0 then return binlength(dst)
+  chunk = .binary
+  result = 0
+  assembler bresize chunk,length
+  assembler bcopy chunk,src,src_offset
+  assembler bupdate dst,dst_offset,chunk
+  assembler blen result,dst
+  return result
+
+binmemmove: procedure = .int
+  arg expose data = .binary, dst_offset = .int, src_offset = .int, length = .int
+  if length < 0 then assembler signal "OUT_OF_RANGE", "invalid binary move length"
+  if length = 0 then return binlength(data)
+  chunk = .binary
+  result = 0
+  assembler bresize chunk,length
+  assembler bcopy chunk,data,src_offset
+  assembler bupdate data,dst_offset,chunk
+  assembler blen result,data
+  return result
+
+binappend: procedure = .int
+  arg expose dst = .binary, src = .binary
+  result = 0
+  assembler bappend dst,src
+  assembler blen result,dst
+  return result
+
+binupdate: procedure = .int
+  arg expose dst = .binary, offset = .int, src = .binary
+  result = 0
+  assembler bupdate dst,offset,src
+  assembler blen result,dst
+  return result
+
+binmakegap: procedure = .int
+  arg expose data = .binary, offset = .int, length = .int
+  old_len = binlength(data)
+  if offset < 0 | offset > old_len | length < 0 then assembler signal "OUT_OF_RANGE", "invalid binary gap span"
+  if length = 0 then return old_len
+  new_len = old_len + length
+  move_len = old_len - offset
+  call binresize data,new_len
+  if move_len > 0 then call binmemmove data,offset + length,offset,move_len
+  call binfillat data,offset,length,0
+  return new_len
+
+bindrop: procedure = .int
+  arg expose data = .binary, offset = .int, length = .int
+  old_len = binlength(data)
+  end_offset = offset + length
+  if offset < 0 | length < 0 | end_offset > old_len then assembler signal "OUT_OF_RANGE", "invalid binary drop span"
+  if length = 0 then return old_len
+  new_len = old_len - length
+  move_len = old_len - end_offset
+  if move_len > 0 then call binmemmove data,offset,end_offset,move_len
+  call binresize data,new_len
+  return new_len
 
 bin2x: procedure = .string
   arg data = .binary

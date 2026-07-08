@@ -156,9 +156,9 @@ insert_gap: procedure = .void
   call binfillat table, row, ROW_SIZE, 0
 ```
 
-The planned `binfillat(table, offset, length, byte)` span-fill helper depends on
-whether Release 1 adds direct span fill or implements it as a small helper loop.
-Whole-buffer `binfill(table, byte)` is backed by the RXAS `bfill` instruction.
+`binfillat(table, offset, length, byte)` is the Release 1 span-fill helper. It
+currently uses a small checked helper loop; whole-buffer `binfill(table, byte)`
+is backed by the RXAS `bfill` instruction.
 
 ## Text Fields
 

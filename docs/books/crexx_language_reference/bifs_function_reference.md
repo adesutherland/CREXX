@@ -205,16 +205,16 @@ are distinct from the older `BIN*` byte helpers above:
 - use binary-memory intrinsics, not helpers, for direct reads from binary
   constants and for zero-copy compare.
 
-Implementation note: this section is the documentation target for the next
-Release 1 implementation slice. Some helpers may be unavailable until that work
-lands.
+Implementation note: Release 1 provides these helpers in `rxfnsb`. Some helpers
+currently use conservative library code and may be direct-lowered by the
+compiler or inliner later.
 
 | Function | Result | Notes |
 |----------|--------|-------|
 | `BINRESIZE(data, length)` | `.int` | Resize `data` to `length` bytes. Existing bytes are preserved and growth is zero-filled. |
 | `BINCLEAR(data)` | `.int` | Clear `data` to length `0`; returns `0`. |
 | `BINFILL(data, byte)` | `.int` | Fill the whole current logical byte range with `byte`; returns the byte length. |
-| `BINFILLAT(data, offset, length, byte)` | `.int` | Fill a zero-based byte span with `byte`; returns the byte length. This may lower to a future span-fill RXAS instruction or a helper loop. |
+| `BINFILLAT(data, offset, length, byte)` | `.int` | Fill a zero-based byte span with `byte`; returns the byte length. |
 | `BINCOPY(dst, dst_offset, src, src_offset, length)` | `.int` | Copy `length` bytes from `src` to `dst`. Use `BINMEMMOVE` for overlapping ranges in the same binary value. |
 | `BINMEMMOVE(data, dst_offset, src_offset, length)` | `.int` | Move `length` bytes within one binary value. Overlapping ranges are safe. |
 | `BINAPPEND(dst, src)` | `.int` | Append all bytes from `src` to `dst`; returns the new byte length. |
