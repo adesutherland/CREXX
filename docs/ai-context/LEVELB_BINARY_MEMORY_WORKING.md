@@ -112,17 +112,23 @@ From the Rexx programmer's perspective, reading a `.binary` constant should feel
 the same as reading a `.binary` variable:
 
 ```rexx
-constant MAGIC = "4352584944583031"x as .binary
-constant MAGIC_PREFIX = "43525849"x as .binary
+check_magic: procedure = .int
+  constant MAGIC = "4352584944583031"x as .binary
+  constant MAGIC_PREFIX = "43525849"x as .binary
 
-if <at..u32>(0) MAGIC = <at..u32>(0) MAGIC_PREFIX then say "magic"
+  if <at..u32>(0) MAGIC = <at..u32>(0) MAGIC_PREFIX then return 1
+  return 0
 ```
 
 That same syntax should work for variables:
 
 ```rexx
-page = .binary
-if <at..u32>(0) page = <at..u32>(0) MAGIC then say "magic"
+check_page: procedure = .int
+  arg page = .binary
+  constant MAGIC = "4352584944583031"x as .binary
+
+  if <at..u32>(0) page = <at..u32>(0) MAGIC then return 1
+  return 0
 ```
 
 The implementation may differ. In Release 1, ordinary calls materialize
@@ -141,10 +147,12 @@ To mitigate the cost, Release 1 should encourage scoped constants:
 ```rexx
 namespace packedindex expose find_node insert_node NODE_LEFT NODE_RIGHT NODE_SIZE EMPTY_NODE
 
-constant NODE_LEFT = 0
-constant NODE_RIGHT = 4
-constant NODE_SIZE = 32
-constant EMPTY_NODE = "00000000000000000000000000000000"x as .binary
+packedindex_layout: procedure expose NODE_LEFT NODE_RIGHT NODE_SIZE EMPTY_NODE
+  constant NODE_LEFT = 0
+  constant NODE_RIGHT = 4
+  constant NODE_SIZE = 32
+  constant EMPTY_NODE = "00000000000000000000000000000000"x as .binary
+  return
 
 find_node: procedure = .int
   arg arena = .binary, key = .string
@@ -155,20 +163,22 @@ insert_node: procedure = .int
   /* Same constants are available here too; arena is by reference because it is mutated. */
 ```
 
-Release 1 requirement: binary layout constants should be available across
-procedures in the source scope where they are declared. The existing
-`namespace ... expose ...` shape should be repeated for constants: constants in
-the expose list are visible to importers and to procedures in that namespace in
-the same way as other exposed symbols. Cross-module constant export/import can
-follow the existing constant metadata path if that path is settled enough;
-otherwise it should remain an explicit follow-up.
+Release 1 requirement: binary layout constants should be declared in an explicit
+procedure scope and be available across procedures when their names are part of
+the namespace surface. The existing `namespace ... expose ...` shape should be
+repeated for constants: constants in the expose list are visible to importers
+and to procedures in that namespace in the same way as other exposed symbols.
+Cross-module constant export/import can follow the existing constant metadata
+path if that path is settled enough; otherwise it should remain an explicit
+follow-up.
 
 Library-style modules should keep executable setup inside explicit procedures.
 Top-level executable statements before a `procedure` synthesize an implicit
 `main()` for compatibility, which is useful for scripts but is the wrong signal
-for packed binary libraries. Module-level constants are still the preferred form
-for shared layout values; procedure-level `expose` is for shared mutable storage
-or by-reference arguments, not for making compile-time constants visible.
+for packed binary libraries. Do not present top-level `constant` declarations as
+the packed-layout library idiom. File-body `constant` declarations are a
+Release 1 design defect to remove; use an explicit procedure scope and the
+namespace expose list for shared layout constants.
 
 ### Constants And Mutability
 
@@ -343,7 +353,9 @@ Fixed-width types know their byte width. No length is written for `.u8`, `.i8`,
 
 ### Variable-Size Spans
 
-Variable-size memory views pass a second byte-count argument:
+Variable-size memory views pass a second length argument. `.binary` and
+`.decimal` use byte counts. `.string` uses a UTF-8 codepoint count from a
+zero-based byte offset:
 
 ```rexx
 b = <at..binary>(6, 10) buffer
@@ -372,11 +384,10 @@ spell the length when a span length matters.
 `<sizeof..type>` is a compile-time operator for fixed storage types:
 
 ```rexx
-constant NODE_BALANCE = 12
-constant NODE_SIZE = 3 * <sizeof..u32> + <sizeof..i8>
-
-balance = <at..i8>(node + NODE_BALANCE) page
-next = node + 3 * <sizeof..u32>
+layout_size: procedure = .int
+  constant NODE_BALANCE = 12
+  constant NODE_SIZE = 3 * <sizeof..u32> + <sizeof..i8>
+  return NODE_SIZE
 ```
 
 The operator returns bytes. It does not imply typed-element indexing; offsets are
@@ -630,8 +641,9 @@ Implemented Rexx source surface:
   storage type names.
 - Fixed-width `<at..type>(offset) binary` reads and writes lower directly to
   RXAS for the implemented storage types.
-- Variable-size `<at..binary|string|decimal>(offset, length) binary` reads
-  materialize ordinary Rexx values through target-sized copy/conversion.
+- Variable-size `<at..binary|decimal>(offset, length) binary` reads and
+  `<at..string>(offset, codepoints) binary` reads materialize ordinary Rexx
+  values through target-sized copy/conversion.
 - `.binary` constants and variables share the same read syntax for supported
   forms.
 - Unsupported storage types, missing offsets, illegal fixed-width lengths,
@@ -683,9 +695,9 @@ Remaining Release 1 Rexx gaps:
    and `<at..decimal>(pos, len) page = amount` are currently rejected. Release 1
    needs lowering or a final decision to keep variable-size writes helper-only.
 4. Zero-terminated text-field source surface.
-   RXAS has `bgets`/`bsets` for NUL-terminated UTF-8 fields, but the Rexx
-   spelling is not settled. If this must work uniformly for binary constants and
-   variables, it should be an intrinsic function rather than an ordinary helper.
+   RXAS has `bgets`/`bsets` for NUL-terminated UTF-8 fields. The docs baseline
+   proposes `<at..string>(offset) memory` for NUL-terminated read/write, while
+   `<at..string>(offset, codepoints) memory` remains the fixed-codepoint form.
 5. Binary memory moves.
    RXAS has `bmove` and `bmemmove`, including the same-buffer `memmove` case,
    but Rexx has no implemented source spelling. These should be ordinary helper
@@ -731,7 +743,8 @@ Release 1 intrinsic set should stay small:
 - `<sizeof..type>`
 - `<blen>(memory)`
 - `<at..type>(offset) memory`
-- `<at..binary|string|decimal>(offset, length) memory`
+- `<at..binary|decimal>(offset, length) memory`
+- `<at..string>(offset [, codepoints]) memory`
 - `<compare..binary>(memory, offset [, length], needle)`
 - `<compare..string>(memory, offset, string)`
 - `<compare..type>(memory, offset, value)` for fixed-width field comparisons, if
@@ -793,39 +806,43 @@ Completed baseline:
 - Fixed-width source reads and writes.
 - Variable-size source reads.
 - Negative and localized diagnostics for the currently rejected source forms.
+- Initial Rexx binary-memory reference and programming-guide docs:
+  `docs/books/crexx_language_reference/binary_memory.md` and
+  `docs/books/crexx_programming_guide/binary_memory.md`.
 
-Documentation is the next gate. The RXAS surface is now coherent, but the Rexx
-surface is still being shaped in this working note. Before more compiler work,
-write the user-facing Rexx contract in the normal docs and let that become the
-implementation checklist.
+Documentation is now the next gate. The RXAS surface is coherent and the first
+Rexx-facing docs exist, but those docs must be reviewed and approved before more
+compiler work. Once approved, the docs become the implementation checklist.
 
-Doc-first closure steps:
+Doc-first closure checklist:
 
-1. Create a Rexx language-reference chapter for binary memory, most likely
-   `docs/books/crexx_language_reference/binary_memory.md`, and wire it into the
-   book structure. This chapter must be normative for:
+1. Review the Rexx language-reference chapter
+   `docs/books/crexx_language_reference/binary_memory.md`. This chapter must be
+   normative for:
    - byte offsets and byte lengths;
    - fixed-width storage types and canonical little-endian encoding;
    - `.binary` variables versus `.binary` constants, including read-only writes;
    - `<sizeof..type>`;
    - `<blen>(memory)`;
    - `<at..type>(offset) memory` fixed-width reads and writes;
-   - `<at..binary|string|decimal>(offset, length) memory` materializing reads and
-     the final Release 1 decision for variable-size writes;
+   - `<at..binary|decimal>(offset, length) memory` materializing reads and the
+     final Release 1 decision for variable-size writes;
+   - `<at..string>(offset [, codepoints]) memory`, where omitted length means a
+     NUL-terminated UTF-8 field and present length means codepoints;
    - `<compare..binary>(memory, offset [, length], needle)`;
    - `<compare..string>(memory, offset, string)`;
    - whether fixed-width compare forms such as `<compare..u32>` are Release 1 or
      deferred;
-   - zero-terminated UTF-8 field read/write intrinsics, if accepted.
-2. Add a programming-guide chapter or section with real packed-structure
-   examples: a header check, a sorted-table lookup, and an insert/delete path
-   that uses ordinary helper functions for copy/memmove. The guide should show
-   when to use intrinsics and when to use helpers.
-3. Update the BIF/function reference for ordinary binary helpers. Keep these
+   - zero-terminated UTF-8 field read/write using `<at..string>(offset)`.
+2. Review the programming-guide chapter
+   `docs/books/crexx_programming_guide/binary_memory.md`, including the header
+   check, sorted-table lookup, and insert/delete path examples. The guide should
+   show when to use intrinsics and when to use helpers.
+3. Review the BIF/function reference for ordinary binary helpers. Keep these
    separate from compiler intrinsics. Specify names, argument order, mutability,
    zero-based offsets for packed-memory helpers, compatibility with existing
    1-based `BIN*` helpers, and which helpers are eligible for direct lowering.
-4. Add a diagnostic contract table covering parser, validation, and runtime
+4. Review the diagnostic contract table covering parser, validation, and runtime
    errors. This must include exact diagnostic keys/messages for:
    - malformed intrinsic heads and argument counts;
    - unsupported storage types;
@@ -835,30 +852,34 @@ Doc-first closure steps:
    - out-of-range reads/writes/compares;
    - integer overflow/underflow and conversion errors;
    - invalid UTF-8 for string reads and string compares.
-5. Add doc examples in a testable format before implementation. Each accepted
+5. Keep doc examples in a testable format before implementation. Each accepted
    intrinsic/helper form should have at least one positive example, and each
    diagnostic family should have a negative compiler or runtime test expectation.
 
 Implementation steps after the docs are approved:
 
-1. Parser and AST: ensure generic intrinsic heads can represent
+1. Constant scoping cleanup: reject file-body `constant` declarations with a
+   localized diagnostic, migrate existing tests/examples to explicit procedure,
+   method, or factory scopes, and add negative coverage proving top-level
+   constants no longer create an accidental implicit `main()` path.
+2. Parser and AST: ensure generic intrinsic heads can represent
    `<blen>`, `<at..type>`, `<compare..type>`, and any text-field intrinsics with
    ordinary parenthesized expression arguments.
-2. Validation and diagnostics: enforce the documented signatures, type rules,
+3. Validation and diagnostics: enforce the documented signatures, type rules,
    mutability rules, and localized diagnostics.
-3. Code generation: lower binary variables and constants for `<blen>`,
+4. Code generation: lower binary variables and constants for `<blen>`,
    `<at..type>`, variable-size reads, accepted variable-size writes, and compare
    intrinsics to the existing RXAS instructions.
-4. Helper functions: implement or rename the ordinary binary helper surface for
+5. Helper functions: implement or rename the ordinary binary helper surface for
    resize, clear, fill, copy, memmove, append, overlay, insert gap, and delete
    range. Add direct lowering only for helpers that profiles or packed examples
    prove hot.
-5. Tests: add focused parser, validation, localization, runtime, constant-source,
+6. Tests: add focused parser, validation, localization, runtime, constant-source,
    and optimized-RXAS tests. The compare tests must assert no substring, binary
    slice, or helper call appears in the optimized hot path.
-6. Examples and performance fixtures: add packed table/tree fixtures and inspect
+7. Examples and performance fixtures: add packed table/tree fixtures and inspect
    generated RXAS to prove the lookup path is direct and zero-copy.
-7. Close the working note: once the reference docs, guide, helpers, compiler
+8. Close the working note: once the reference docs, guide, helpers, compiler
    lowering, diagnostics, and fixtures are complete, either remove this file or
    reduce it to a short historical pointer so the reference docs remain the
    source of truth.
@@ -946,27 +967,25 @@ has not proven itself in Release 1 code.
 1. Final names for compare intrinsics: the current preferred family is
    `<compare..type>(...)`, while shorter aliases such as `<bcmp>`/`<scmp>` or
    flatter names such as `<compare_binary>` remain spelling options.
-2. Whether zero-terminated UTF-8 field read/write needs intrinsic function names,
-   and what those names should be.
-3. Whether variable-size writes should be Release 1 intrinsic syntax or
+2. Whether variable-size writes should be Release 1 intrinsic syntax or
    helper-only until there is more usage evidence.
-4. Final names for direct-lowered mutation helpers such as copy, memmove,
+3. Final names for direct-lowered mutation helpers such as copy, memmove,
    append, overlay, insert gap, and delete range.
-5. Whether any shorter single-byte write spelling belongs after Release 1.
-6. Whether compare returns only `-1/0/1` or also needs first-mismatch offset
+4. Whether any shorter single-byte write spelling belongs after Release 1.
+5. Whether compare returns only `-1/0/1` or also needs first-mismatch offset
    variants.
-7. Whether explicit big-endian typed operations are needed in Release 2.
-8. Whether decimal memory fields require canonical decimal text before bytewise
+6. Whether explicit big-endian typed operations are needed in Release 2.
+7. Whether decimal memory fields require canonical decimal text before bytewise
    ordering is allowed.
-9. Whether current `bin*` helpers remain as compatibility wrappers, are renamed,
+8. Whether current `bin*` helpers remain as compatibility wrappers, are renamed,
    or are superseded before Release 1.
-10. Whether cross-module binary constants are required in Release 1 or can wait.
+9. Whether cross-module binary constants are required in Release 1 or can wait.
 
 ## Working Recommendation
 
-Before more compiler work, write and approve the Rexx language reference,
+Before more compiler work, review and approve the Rexx language reference,
 programming-guide examples, diagnostics table, and binary helper/BIF reference.
-Those docs should be treated as the implementation checklist.
+Those docs should then be treated as the implementation checklist.
 
 For Release 1, use explicit byte offsets with `<at..type>(offset) memory`,
 optional byte length as `<at..type>(offset, length) memory`, the size operator

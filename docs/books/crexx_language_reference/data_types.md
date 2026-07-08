@@ -224,6 +224,9 @@ packet = prefix || "OK"      /* bytes ff 4f 4b */
 The `rxfnsb` library provides byte-oriented helpers for common binary work:
 `binlength`, `binbyte`, `binsetbyte`, `binsubstr`, `binconcat`, `binoverlay`,
 `bininsert`, `bindelstr`, `binpos`, `bincompare`, `bin2x`, and `x2bin`.
+For packed binary layouts, use the binary-memory intrinsics and helpers in
+[Binary Memory](binary_memory.md); those use zero-based byte offsets and can
+operate directly on binary constants.
 
 The same boundary applies outside source literals. Native RXVML string setters,
 CREXXSAA ADDRESS variable setters, RXPA native return / argument trees,

@@ -114,6 +114,16 @@ Table: Non-SAA Functions. {#tbl:id}
 | BINPOS          | BINPOS(needle, haystack, start)              |
 | BINSETBYTE      | BINSETBYTE(binary, position, byte)           |
 | BINSUBSTR       | BINSUBSTR(binary, start, length)             |
+| BINAPPEND       | BINAPPEND(dst, src)                          |
+| BINCLEAR        | BINCLEAR(binary)                             |
+| BINCOPY         | BINCOPY(dst, dst_offset, src, src_offset, length) |
+| BINDROP         | BINDROP(binary, offset, length)              |
+| BINFILL         | BINFILL(binary, byte)                        |
+| BINFILLAT       | BINFILLAT(binary, offset, length, byte)      |
+| BINMAKEGAP      | BINMAKEGAP(binary, offset, length)           |
+| BINMEMMOVE      | BINMEMMOVE(binary, dst_offset, src_offset, length) |
+| BINRESIZE       | BINRESIZE(binary, length)                    |
+| BINUPDATE       | BINUPDATE(binary, offset, src)               |
 | QEXTRACTALL | QEXTRACTALL(open, close, text [, start])      |
 | QEXTRACTPAIR | QEXTRACTPAIR(open, close, text, start, mode=')   |
 | QPOS | QPOS(needle, text [, start]) |
@@ -182,6 +192,49 @@ The `||` operator also performs byte concatenation when either operand is
 `.binary`. In that case the result is `.binary`; a `.string` operand is copied
 as its exact UTF-8 bytes. Blank concatenation remains a text operation and is
 not for binary payload construction.
+
+## Packed binary memory helpers
+
+The helpers in this section are the Release 1 packed-memory helper surface. They
+are distinct from the older `BIN*` byte helpers above:
+
+- packed-memory helpers use zero-based byte offsets;
+- mutating helpers update the first binary argument through `arg expose`;
+- mutating helpers return the new logical byte length unless stated otherwise;
+- the compiler or inliner may lower selected helpers directly to RXAS;
+- use binary-memory intrinsics, not helpers, for direct reads from binary
+  constants and for zero-copy compare.
+
+Implementation note: this section is the documentation target for the next
+Release 1 implementation slice. Some helpers may be unavailable until that work
+lands.
+
+| Function | Result | Notes |
+|----------|--------|-------|
+| `BINRESIZE(data, length)` | `.int` | Resize `data` to `length` bytes. Existing bytes are preserved and growth is zero-filled. |
+| `BINCLEAR(data)` | `.int` | Clear `data` to length `0`; returns `0`. |
+| `BINFILL(data, byte)` | `.int` | Fill the whole current logical byte range with `byte`; returns the byte length. |
+| `BINFILLAT(data, offset, length, byte)` | `.int` | Fill a zero-based byte span with `byte`; returns the byte length. This may lower to a future span-fill RXAS instruction or a helper loop. |
+| `BINCOPY(dst, dst_offset, src, src_offset, length)` | `.int` | Copy `length` bytes from `src` to `dst`. Use `BINMEMMOVE` for overlapping ranges in the same binary value. |
+| `BINMEMMOVE(data, dst_offset, src_offset, length)` | `.int` | Move `length` bytes within one binary value. Overlapping ranges are safe. |
+| `BINAPPEND(dst, src)` | `.int` | Append all bytes from `src` to `dst`; returns the new byte length. |
+| `BINUPDATE(dst, offset, src)` | `.int` | Overlay all bytes from `src` into `dst` at zero-based `offset`; the write must fit. |
+| `BINMAKEGAP(data, offset, length)` | `.int` | Open a zero-filled gap of `length` bytes at `offset`; returns the new byte length. |
+| `BINDROP(data, offset, length)` | `.int` | Delete `length` bytes at `offset`; returns the new byte length. |
+
+Examples:
+
+```rexx
+call binresize page, 4096
+call binfill page, 0
+call binmemmove page, dst_offset, src_offset, span_len
+call bincopy target, 0, source, source_offset, span_len
+```
+
+Packed-memory helper offsets are intentionally zero-based so they match
+`<at..type>` and the RXAS binary-memory instructions. The older
+`BINBYTE`/`BINSUBSTR`/`BINOVERLAY` compatibility helpers remain 1-based and
+copy-returning.
 
 ## Array helpers
 
