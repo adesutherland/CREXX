@@ -18,7 +18,7 @@ Use binary-memory intrinsics for hot direct access:
 
 ```rexx
 hash = <at..u32>(node + NODE_HASH) arena
-if <compare..binary>(arena, key_offset, key_len, wanted_key) = 0 then say "hit"
+if <compare..binary>(arena, key_offset, wanted_key) = 0 then say "hit"
 ```
 
 Use ordinary helper functions for buffer management and mutation:
@@ -116,18 +116,19 @@ find_row: procedure = .int
     hash = <at..u32>(row + ROW_HASH) table
     if hash = wanted_hash then do
       key_len = <at..u16>(row + ROW_KEY_LEN) table
-      if <compare..binary>(table, row + ROW_KEY, key_len, wanted_key) = 0 then
-        return row
+      if key_len = <blen>(wanted_key) then
+        if <compare..binary>(table, row + ROW_KEY, wanted_key) = 0 then
+          return row
     end
   end
 
   return -1
 ```
 
-The hot loop reads fixed-width fields directly and compares the key without
-making a binary slice. A good implementation test should inspect optimized RXAS
-for this shape and fail if `binsubstr`, `bslice`, string extraction, or helper
-calls appear in the inner loop.
+The hot loop reads fixed-width fields directly, checks the stored key length,
+and compares the key without making a binary slice. A good implementation test
+should inspect optimized RXAS for this shape and fail if `binsubstr`, `bslice`,
+string extraction, or helper calls appear in the inner loop.
 
 ## Insert And Delete Paths
 

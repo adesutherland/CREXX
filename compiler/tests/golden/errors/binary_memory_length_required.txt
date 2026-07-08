@@ -1,2 +1,2 @@
-Error in binary_memory_length_required.crexx @ 6:7 - #BINARY_MEMORY_LENGTH_REQUIRED, "<at..string>(0) data"
+Error in binary_memory_length_required.crexx @ 6:7 - #BINARY_MEMORY_LENGTH_REQUIRED, "<at..binary>(0) data"
 1 error(s) in source file

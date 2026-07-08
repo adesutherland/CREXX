@@ -801,6 +801,27 @@ walker_result register_walker(walker_direction direction,
                 if (child1) child1->register_num = DONT_ASSIGN_REGISTER;
                 break;
 
+            case OP_BINARY_LENGTH:
+                if (child1 && is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
+                break;
+
+            case OP_BINARY_COMPARE: {
+                ASTNode *type_node = child1;
+                ASTNode *memory = child2;
+                ASTNode *offset = child3;
+                ASTNode *third = ast_chdn(node, 3);
+                ASTNode *fourth = ast_chdn(node, 4);
+                RxcpBinaryStorageInfo info;
+                int is_fixed = type_node && rxcp_binary_storage_info(type_node, &info) && info.is_fixed;
+
+                if (type_node) type_node->register_num = DONT_ASSIGN_REGISTER;
+                if (memory && is_constant(memory)) memory->register_num = DONT_ASSIGN_REGISTER;
+                if (!is_fixed && offset && is_constant(offset)) offset->register_num = DONT_ASSIGN_REGISTER;
+                if (third && !fourth && is_constant(third)) third->register_num = DONT_ASSIGN_REGISTER;
+                if (fourth && is_constant(fourth)) fourth->register_num = DONT_ASSIGN_REGISTER;
+                break;
+            }
+
             case OP_BINARY_AT:
                 if (child1) child1->register_num = DONT_ASSIGN_REGISTER;
                 break;
@@ -1058,6 +1079,36 @@ walker_result register_walker(walker_direction direction,
                 if (node->register_num != DONT_ASSIGN_REGISTER)
                     node->register_num = get_reg(node->scope);
                 break;
+
+            case OP_BINARY_LENGTH:
+                if (node->register_num != DONT_ASSIGN_REGISTER)
+                    node->register_num = get_reg(node->scope);
+                return_child_reg(child1);
+                break;
+
+            case OP_BINARY_COMPARE: {
+                ASTNode *type_node = child1;
+                ASTNode *memory = child2;
+                ASTNode *offset = child3;
+                ASTNode *third = ast_chdn(node, 3);
+                ASTNode *fourth = ast_chdn(node, 4);
+                RxcpBinaryStorageInfo info;
+
+                if (node->register_num != DONT_ASSIGN_REGISTER)
+                    node->register_num = get_reg(node->scope);
+                if (type_node &&
+                    rxcp_binary_storage_info(type_node, &info) &&
+                    info.is_fixed) {
+                    node->num_additional_registers = 1;
+                    node->additional_registers = get_reg(node->scope);
+                    return_additional_regs_later(node);
+                }
+                return_child_reg(memory);
+                return_child_reg(offset);
+                return_child_reg(third);
+                return_child_reg(fourth);
+                break;
+            }
 
             case OP_BINARY_AT:
                 if (!rxcp_binary_memory_is_lhs(node) &&

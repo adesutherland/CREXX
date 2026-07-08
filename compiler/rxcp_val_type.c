@@ -299,6 +299,7 @@ static void validate_binary_memory_at(Context *context, ASTNode *node) {
     }
 
     if (!info.is_fixed &&
+        info.value_type != TP_STRING &&
         (!node->parent || node->parent->node_type != OP_BINARY_FOR)) {
         mknd_err(node, "BINARY_MEMORY_LENGTH_REQUIRED");
     }
@@ -344,7 +345,6 @@ static void validate_binary_memory_compare(Context *context, ASTNode *node) {
     ASTNode *type_node = ast_chdn(node, 0);
     ASTNode *memory = ast_chdn(node, 1);
     ASTNode *offset = ast_chdn(node, 2);
-    ASTNode *length = 0;
     ASTNode *needle = 0;
     int argc = binary_memory_compare_arg_count(node);
 
@@ -362,18 +362,10 @@ static void validate_binary_memory_compare(Context *context, ASTNode *node) {
     if (info.value_type == TP_BINARY && !info.is_fixed) {
         if (argc == 3) {
             needle = ast_chdn(node, 3);
-        } else if (argc == 4) {
-            length = ast_chdn(node, 3);
-            needle = ast_chdn(node, 4);
-            if (length && length->node_type != NOVAL) {
-                set_node_target_type(context, length, TP_INTEGER);
-            } else {
-                mknd_err(node, "BINARY_MEMORY_COMPARE_ARGUMENTS");
-            }
         } else {
             mknd_err(node, "BINARY_MEMORY_COMPARE_ARGUMENTS");
         }
-        if (argc == 3 || argc == 4) {
+        if (argc == 3) {
             validate_binary_memory_exact_value(context, needle, TP_BINARY, "BINARY_MEMORY_COMPARE_NEEDLE_TYPE", node);
         }
     } else if (info.value_type == TP_STRING && !info.is_fixed) {
@@ -2532,10 +2524,14 @@ walker_result type_safety_walker(walker_direction direction,
                         if (rxcp_binary_memory_base_is_readonly(child1)) {
                             mknd_err(child1, "BINARY_MEMORY_READ_ONLY");
                         }
-                        if (child1->node_type == OP_BINARY_FOR && !info.is_fixed) {
+                        if (info.value_type == TP_STRING && child1->node_type == OP_BINARY_AT) {
+                            ast_sttn(child2, child1);
+                            validate_node_promotion(context, child2);
+                        }
+                        else if (child1->node_type == OP_BINARY_FOR && !info.is_fixed) {
                             mknd_err(child1, "BINARY_MEMORY_SPAN_WRITE_UNSUPPORTED");
                         }
-                        if (info.is_fixed) {
+                        else if (info.is_fixed) {
                             ast_sttn(child2, child1);
                             validate_node_promotion(context, child2);
                         }

@@ -492,7 +492,7 @@ string(APPEND RXC_BINARY_MEMORY_SOURCE_CONTENT
        "endif()\n"
        "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/binary_memory_source_rxas_check.rxas\" rxas_out)\n"
        "string(REPLACE \"\\r\\n\" \"\\n\" rxas_out \"${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
-       "foreach(_opcode bgetu32 bgetu8 bsetu16 bgetu16 bgetf64 bgeti64 bseti64 bgetf32 bsetf32 bresize bcopy bintos)\n"
+       "foreach(_opcode blen bgetu32 bgetu8 bsetu16 bgetu16 bgetf64 bgeti64 bseti64 bgetf32 bsetf32 bresize bcopy bintos bgets bsets bcmpb bcmps)\n"
        "  if(NOT rxas_out MATCHES \"${RXAS_DIAG_DOLLAR}{_opcode}\")\n"
        "    message(FATAL_ERROR \"Binary memory source did not emit ${RXAS_DIAG_DOLLAR}{_opcode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
        "  endif()\n"
@@ -888,6 +888,7 @@ add_crexx_compiler_fail_test(binary_memory_generic_types_unsupported rexx_src/bi
 add_crexx_compiler_fail_test(binary_memory_blen_syntax rexx_src/binary_memory_blen_syntax.crexx binary_memory_blen_syntax.txt)
 add_crexx_compiler_fail_test(binary_memory_blen_target_not_binary rexx_src/binary_memory_blen_target_not_binary.crexx binary_memory_blen_target_not_binary.txt)
 add_crexx_compiler_fail_test(binary_memory_compare_arguments rexx_src/binary_memory_compare_arguments.crexx binary_memory_compare_arguments.txt)
+add_crexx_compiler_fail_test(binary_memory_compare_explicit_length rexx_src/binary_memory_compare_explicit_length.crexx binary_memory_compare_explicit_length.txt)
 add_crexx_compiler_fail_test(binary_memory_compare_needle_type rexx_src/binary_memory_compare_needle_type.crexx binary_memory_compare_needle_type.txt)
 add_crexx_compiler_fail_test(binary_memory_compare_target_not_binary rexx_src/binary_memory_compare_target_not_binary.crexx binary_memory_compare_target_not_binary.txt)
 add_crexx_compiler_fail_test(binary_memory_compare_type rexx_src/binary_memory_compare_type.crexx binary_memory_compare_type.txt)

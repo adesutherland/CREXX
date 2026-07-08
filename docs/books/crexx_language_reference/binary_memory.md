@@ -190,7 +190,6 @@ The preferred compare family is:
 
 ```rexx
 result = <compare..binary>(memory, offset, needle)
-result = <compare..binary>(memory, offset, length, needle)
 result = <compare..string>(memory, offset, string)
 result = <compare..u32>(memory, offset, value)
 ```
@@ -207,20 +206,19 @@ The result is an integer:
 with the whole binary needle. The source length is the byte length of `needle`.
 `memory` and `needle` may each be a variable or a constant.
 
-`<compare..binary>(memory, offset, length, needle)` compares an explicit source
-span against the whole binary needle. Equality requires both byte sequences to
-have the same length and the same bytes.
+There is no Release 1 explicit source-length binary compare form. For
+variable-length fields, compare the stored length with `<blen>(needle)` first,
+then use `<compare..binary>(memory, offset, needle)`. An explicit-length
+zero-copy compare can be added later when RXAS has a matching instruction.
 
 `<compare..string>(memory, offset, string)` compares a zero-terminated UTF-8
 field in binary memory with a string variable or string constant. It validates
 the source field as UTF-8 but must not materialize a temporary string when a
 direct compare is available.
 
-Fixed-width typed compare forms such as `<compare..u32>` are a Release 1
-candidate. They are useful when the source should read as "compare the stored
-field with this value" rather than "read the field, then compare normally".
-They may lower through a typed read plus ordinary comparison until profiles
-justify direct RXAS compare instructions.
+Fixed-width typed compare forms such as `<compare..u32>` compare the stored
+field with an ordinary Rexx value. They lower through a typed read plus a
+tri-state comparison, avoiding any binary slice copy.
 
 <!-- rexx-example name="binary-memory-compare" test="pending" -->
 ```rexx
@@ -231,7 +229,8 @@ main: procedure = .int
   constant MAGIC = "4352584944583031"x as .binary
 
   if <compare..binary>(MAGIC, 0, "43525849"x as .binary) = 0 then say "CRXI"
-  if <compare..binary>(arena, key_offset, key_len, wanted_key) = 0 then say "hit"
+  if key_len = <blen>(wanted_key) then
+    if <compare..binary>(arena, key_offset, wanted_key) = 0 then say "hit"
   if <compare..string>(arena, text_offset, "select") = 0 then say "keyword"
   return 0
 ```

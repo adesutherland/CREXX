@@ -2,6 +2,9 @@ options levelb
 
 main: procedure = .int
   constant HEADER = '78563412FE7F0000000000000000F03F4F4B'x as .binary
+  constant NEEDLE = '7856'x as .binary
+  constant NEEDLE_BEFORE = '7855'x as .binary
+  constant NEEDLE_AFTER = '7857'x as .binary
 
   data = .binary
   n = 0
@@ -11,9 +14,16 @@ main: procedure = .int
   f = 0.0
   s = ""
   wide = .binary
+  textbuf = .binary
+  cmp = 0
 
   data = HEADER
   wide = 'FEFFFFFFFFFFFFFF0000C03F00000000'x as .binary
+  textbuf = '666F6F0062617200'x as .binary
+
+  if <blen>(data) <> 18 then return 28
+  if <blen>(HEADER) <> 18 then return 29
+
   n = <at..u32>(0) HEADER
   if n <> 305419896 then return 10
 
@@ -41,6 +51,41 @@ main: procedure = .int
 
   s = <at..string>(16, 2) data
   if s <> "OK" then return 16
+
+  s = <at..string>(0) textbuf
+  if s <> "foo" then return 30
+
+  <at..string>(4) textbuf = "baz"
+  s = <at..string>(4) textbuf
+  if s <> "baz" then return 31
+
+  cmp = <compare..binary>(data, 0, NEEDLE)
+  if cmp <> 0 then return 32
+  cmp = <compare..binary>(data, 0, NEEDLE_AFTER)
+  if cmp >= 0 then return 35
+  cmp = <compare..binary>(data, 0, NEEDLE_BEFORE)
+  if cmp <= 0 then return 36
+
+  cmp = <compare..string>(textbuf, 4, "baz")
+  if cmp <> 0 then return 33
+  cmp = <compare..string>(textbuf, 4, "bay")
+  if cmp <= 0 then return 37
+  cmp = <compare..string>(textbuf, 4, "bbb")
+  if cmp >= 0 then return 38
+
+  cmp = <compare..u32>(data, 0, 305419896)
+  if cmp <> 0 then return 34
+  cmp = <compare..u32>(data, 0, 305419897)
+  if cmp >= 0 then return 39
+  cmp = <compare..u32>(data, 0, 305419895)
+  if cmp <= 0 then return 40
+
+  cmp = <compare..float>(data, 8, 1.0)
+  if cmp <> 0 then return 41
+  cmp = <compare..float>(data, 8, 2.0)
+  if cmp >= 0 then return 42
+  cmp = <compare..float>(data, 8, 0.5)
+  if cmp <= 0 then return 43
 
   n = <at..i64>(0) wide
   if n <> -2 then return 24

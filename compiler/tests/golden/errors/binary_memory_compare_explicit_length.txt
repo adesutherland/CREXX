@@ -1,0 +1,2 @@
+Error in binary_memory_compare_explicit_length.crexx @ 6:7 - #BINARY_MEMORY_COMPARE_ARGUMENTS, "<compare..binary>(page, 0, 4, key"
+1 error(s) in source file

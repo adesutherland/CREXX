@@ -405,7 +405,6 @@ The no-copy compare contract is:
 
 ```rexx
 if <compare..binary>(buffer, pos, key_bytes) = 0 then say "found"
-if <compare..binary>(buffer, pos, key_len, key_bytes) = 0 then say "found"
 if <compare..binary>(HEADER_CONST, 4, key_bytes) = 0 then say "found"
 if <compare..string>(buffer, 6, "index") = 0 then say "found"
 if <compare..u32>(buffer, NODE_HASH, wanted_hash) = 0 then say "found"
@@ -413,8 +412,10 @@ if <compare..u32>(buffer, NODE_HASH, wanted_hash) = 0 then say "found"
 
 `<compare..binary>` compares bytes from binary memory with a binary needle. The
 source memory and needle may each be a register-backed variable or a binary
-constant. The compare length may come from the needle or from an explicit length
-argument when the program is comparing a fixed prefix/range. `<compare..string>`
+constant. In Release 1 the compare length comes from the needle length; programs
+that store variable-length fields should check the stored length first. An
+explicit source-length form is deferred until RXAS has a matching instruction.
+`<compare..string>`
 compares a NUL-terminated UTF-8 field in binary memory with a string variable or
 string constant. Fixed-width forms such as `<compare..u32>` use the storage type
 to determine the number of bytes and convert the ordinary Rexx value to the
@@ -659,15 +660,15 @@ Remaining Release 1 Rexx gaps:
 
    ```rexx
    if <compare..binary>(page, pos, key_bytes) = 0 then say "found"
-   if <compare..binary>(page, pos, key_len, key_bytes) = 0 then say "found"
    if <compare..string>(page, pos, "index") = 0 then say "found"
    if <compare..u32>(page, node + NODE_HASH, wanted_hash) = 0 then say "found"
    ```
 
    `<compare..binary>` maps to `bcmpb`: the source memory may be a binary
    variable or binary constant, the needle may be a binary variable or binary
-   constant, and the compare length may come from either the needle or an
-   explicit source length. `<compare..string>` maps to `bcmps`: the source memory
+   constant, and the compare length comes from the needle length. An explicit
+   source-length compare is deferred until RXAS has a matching instruction.
+   `<compare..string>` maps to `bcmps`: the source memory
    may be a binary variable or binary constant, the string may be a string
    variable or string constant, and the source field is NUL-terminated UTF-8.
    Fixed-width typed compare forms can lower through typed read/setup or a
@@ -745,7 +746,7 @@ Release 1 intrinsic set should stay small:
 - `<at..type>(offset) memory`
 - `<at..binary|decimal>(offset, length) memory`
 - `<at..string>(offset [, codepoints]) memory`
-- `<compare..binary>(memory, offset [, length], needle)`
+- `<compare..binary>(memory, offset, needle)`
 - `<compare..string>(memory, offset, string)`
 - `<compare..type>(memory, offset, value)` for fixed-width field comparisons, if
   this proves cleaner than spelling a read followed by normal `=`.
@@ -829,7 +830,7 @@ Doc-first closure checklist:
      final Release 1 decision for variable-size writes;
    - `<at..string>(offset [, codepoints]) memory`, where omitted length means a
      NUL-terminated UTF-8 field and present length means codepoints;
-   - `<compare..binary>(memory, offset [, length], needle)`;
+   - `<compare..binary>(memory, offset, needle)`;
    - `<compare..string>(memory, offset, string)`;
    - whether fixed-width compare forms such as `<compare..u32>` are Release 1 or
      deferred;
