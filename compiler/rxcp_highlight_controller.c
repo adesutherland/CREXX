@@ -725,6 +725,10 @@ static CB_NodeType map_c_token_to_cb_type(int token_type) {
         case TK_NAMED_AND_OPERATOR:
         case TK_NAMED_XOR_OPERATOR:
         case TK_NAMED_OR_OPERATOR:
+        case TK_INTRINSIC_LT:
+        case TK_INTRINSIC_PREFIX_LT:
+        case TK_INTRINSIC_NAME:
+        case TK_INTRINSIC_GENERIC_OPEN:
         case TK_NAMED_OPERATOR: return LEXER_OPERATOR;
         case TK_EQUAL: return LEXER_OPERATOR_ASSIGN;
         case TK_NEQ:

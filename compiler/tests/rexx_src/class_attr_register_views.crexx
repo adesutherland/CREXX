@@ -1,10 +1,13 @@
 options levelb
 namespace class_attr_register_views
 
-constant FLAG_LIBRARY_ONE = 0x00010000
-constant FLAG_USER_ONE = 0x01000000
-constant FLAG_COMPILER_VAL = 0x00000100
+class_attr_register_view_constants: procedure expose FLAG_LIBRARY_ONE FLAG_USER_ONE FLAG_COMPILER_VAL
+  constant FLAG_LIBRARY_ONE = 0x00010000
+  constant FLAG_USER_ONE = 0x01000000
+  constant FLAG_COMPILER_VAL = 0x00000100
+  return
 
+main: procedure = .int
 slot = .MappedSlot()
 
 call slot.setString("41")
@@ -35,7 +38,7 @@ call slot.clearLibraryFlags()
 say "flags-after-clear-library=" || slot.asPublicFlags()
 say "flags-public-keeps-compiler=" || slot.publicKeepsCompiler()
 
-exit 0
+return 0
 
 MappedSlot: class
   text = .string with register.0.string

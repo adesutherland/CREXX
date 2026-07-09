@@ -57,20 +57,20 @@ localmax() .locals=7
    .meta "inline_test_vararg_dynamic_loop.localmax.m"="b" ".float" r0
    fcopy r0,a1
    .srcstep 7 7 17 "inline_test_vararg_dynamic_loop.crexx" 10 19 31 "  arg m = .float, ... = .float"
-   .srcstep 14 14 17 "inline_test_vararg_dynamic_loop.crexx" 11 3 5 "  do i = 1 to arg.0"
-   .srcstep 8 8 17 "inline_test_vararg_dynamic_loop.crexx" 11 6 11 "  do i = 1 to arg.0"
+   .srcstep 14 14 17 "inline_test_vararg_dynamic_loop.crexx" 11 3 5 "  do i = 1 to arg[0]"
+   .srcstep 8 8 17 "inline_test_vararg_dynamic_loop.crexx" 11 6 11 "  do i = 1 to arg[0]"
    .meta "inline_test_vararg_dynamic_loop.localmax.i"="b" ".int" r1
    load r1,1
    .traceevent "L" 4 "R" "I" "r" 1 8 8 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 1 8 8 0 "i" ""
-   .srcstep 9 9 17 "inline_test_vararg_dynamic_loop.crexx" 11 12 18 "  do i = 1 to arg.0"
+   .srcstep 9 9 17 "inline_test_vararg_dynamic_loop.crexx" 11 12 18 "  do i = 1 to arg[0]"
    icopy r2,a0
    isub r2,r2,1
 l29dostart:
-   .srcstep 9 9 17 "inline_test_vararg_dynamic_loop.crexx" 11 12 18 "  do i = 1 to arg.0"
+   .srcstep 9 9 17 "inline_test_vararg_dynamic_loop.crexx" 11 12 18 "  do i = 1 to arg[0]"
    igt r3,r1,r2
    brt l29doend,r3
-   .srcstep 12 12 17 "inline_test_vararg_dynamic_loop.crexx" 12 5 17 "    if arg.i > m then m = arg.i"
+   .srcstep 12 12 17 "inline_test_vararg_dynamic_loop.crexx" 12 5 18 "    if arg[i] > m then m = arg[i]"
    icopy r4,a0
    isub r4,r4,1
    ichkrng r1,1,r4
@@ -80,8 +80,8 @@ l29dostart:
    unlink r4
    .traceevent "O" 4 "R" "B" "r" 5 12 12 0 "" ""
    brf l45iffalse,r5
-   .srcstep 13 13 17 "inline_test_vararg_dynamic_loop.crexx" 12 18 22 "    if arg.i > m then m = arg.i"
-   .srcstep 11 11 17 "inline_test_vararg_dynamic_loop.crexx" 12 23 32 "    if arg.i > m then m = arg.i"
+   .srcstep 13 13 17 "inline_test_vararg_dynamic_loop.crexx" 12 19 23 "    if arg[i] > m then m = arg[i]"
+   .srcstep 11 11 17 "inline_test_vararg_dynamic_loop.crexx" 12 24 33 "    if arg[i] > m then m = arg[i]"
    icopy r6,a0
    isub r6,r6,1
    ichkrng r1,1,r6
@@ -91,9 +91,9 @@ l29dostart:
    unlink r6
 l45iffalse:
 l29doinc:
-   .srcstep 10 10 17 "inline_test_vararg_dynamic_loop.crexx" 11 6 7 "  do i = 1 to arg.0"
+   .srcstep 10 10 17 "inline_test_vararg_dynamic_loop.crexx" 11 6 7 "  do i = 1 to arg[0]"
    inc r1
-   .srcstep 15 15 17 "inline_test_vararg_dynamic_loop.crexx" 13 3 6 "  end"
+   .srcstep 15 15 17 "inline_test_vararg_dynamic_loop.crexx" 12 33 34 "    if arg[i] > m then m = arg[i]"
    br l29dostart
 l29doend:
    endlife r1

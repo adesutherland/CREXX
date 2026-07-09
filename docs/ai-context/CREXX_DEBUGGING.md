@@ -131,7 +131,7 @@ Process lessons:
   diagnostics.
 * Composite type metadata usually needs both value and target sidecars. A plain
   `TP_REFERENCE` or `TP_OBJECT` enum is not enough when diagnostics, metadata,
-  assignment checks, and `typeof()` must preserve the referent class, array
+  assignment checks, and `<typeof>()` must preserve the referent class, array
   dimensions, or nested type information.
 * Add source-level positive tests and negative tests together. Boundary errors
   are part of the contract, not cleanup work.
@@ -168,7 +168,7 @@ Reference source-syntax lessons:
   a scoped live link; it should emit `linkref` plus compiler-managed `unlink`
   at scope exit. Do not confuse source `snapshot` with the RXAS `deref`
   mnemonic, which remains the VM deep-copy instruction.
-* `refvalid(ref)` is only a validity preflight. Invalid use must still raise the
+* `<refvalid>(ref)` is only a validity preflight. Invalid use must still raise the
   VM's catchable `REFERENCE_INVALID` signal through operations such as `deref`,
   `linkref`, and `setref`.
 * When emitting `mkref` from a linked child expression, append the child cleanup
@@ -188,7 +188,7 @@ Reference source-syntax lessons:
 * Inlining can accidentally extend stack/local lifetime. A callable that returns
   an object containing reference attributes can hide a weak reference to one of
   its own locals; inlining that callable into the caller can make the local
-  survive long enough that `refvalid()` disagrees between opt and noopt. Reject
+  survive long enough that `<refvalid>()` disagrees between opt and noopt. Reject
   reference-bearing return classes for now and keep opt/noopt iterator lifetime
   tests paired.
 * Top-level executable assignments synthesize implicit `main`. In a file with

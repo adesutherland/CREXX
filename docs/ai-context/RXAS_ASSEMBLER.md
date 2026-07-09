@@ -135,28 +135,61 @@ stores an empty binary constant. `rxdas` emits the canonical lowercase
 `0x...` spelling.
 
 `load rDst,0x...` uses `LOAD_REG_BINARY` and loads the VM register's binary
-slot, not its string slot. Binary-buffer VM instructions exposed at RXAS are:
+slot, not its string slot. Binary-memory VM instructions exposed at RXAS are:
 
 - `blen rOut,rBin`
+- `blen rOut,0x...`
 - `bresize rBin,rLength`
 - `bclear rBin`
 - `bfill rBin,rByte`
 - `getbyte rOut,rBin,rIndex`
 - `setbyte rBin,rIndex,rByte`
+- `bcopy rDst,rSrc`
+- `bcopy rDst,rSrc,rOffset`
+- `bcopy rDst,0x...,rOffset`
 - `bgetu8 rOut,rBin,rOffset`
 - `bgeti8 rOut,rBin,rOffset`
 - `bgetu16 rOut,rBin,rOffset`
 - `bgeti16 rOut,rBin,rOffset`
 - `bgetu32 rOut,rBin,rOffset`
 - `bgeti32 rOut,rBin,rOffset`
+- `bgeti64 rOut,rBin,rOffset`
+- `bgetf32 rOut,rBin,rOffset`
 - `bgetf64 rOut,rBin,rOffset`
+- `bgetu8 rOut,0x...,rOffset`
+- `bgeti8 rOut,0x...,rOffset`
+- `bgetu16 rOut,0x...,rOffset`
+- `bgeti16 rOut,0x...,rOffset`
+- `bgetu32 rOut,0x...,rOffset`
+- `bgeti32 rOut,0x...,rOffset`
+- `bgeti64 rOut,0x...,rOffset`
+- `bgetf32 rOut,0x...,rOffset`
+- `bgetf64 rOut,0x...,rOffset`
 - `bsetu8 rBin,rOffset,rValue`
 - `bseti8 rBin,rOffset,rValue`
 - `bsetu16 rBin,rOffset,rValue`
 - `bseti16 rBin,rOffset,rValue`
 - `bsetu32 rBin,rOffset,rValue`
 - `bseti32 rBin,rOffset,rValue`
+- `bseti64 rBin,rOffset,rValue`
+- `bsetf32 rBin,rOffset,rFloat`
 - `bsetf64 rBin,rOffset,rFloat`
+- `bcheckrange rBin,rOffset,rLen`
+- `bgets rString,rBin,rOffset`
+- `bgets rString,0x...,rOffset`
+- `bsets rBin,rOffset,rString`
+- `bsets rBin,rOffset,"literal"`
+- `sget rString,"literal",rOffset`
+- `bmove rDst,rSrc,rLen`
+- `bmemmove rBin,rDstOffset,rLen`
+- `bcmpb rCmp,rBin,rNeedle`
+- `bcmpb rCmp,0x...,rNeedle`
+- `bcmpb rCmp,rBin,0x...`
+- `bcmpb rCmp,0x...,0x...`
+- `bcmps rCmp,rBin,rString`
+- `bcmps rCmp,rBin,"literal"`
+- `bcmps rCmp,0x...,rString`
+- `bcmps rCmp,0x...,"literal"`
 - `bconcat rDst,rLeft,rRight`
 - `bappend rDst,rRight`
 - `setbinpos rBin,rOffset`
@@ -172,8 +205,9 @@ host-native struct layout, alignment, or padding. `bgetu8` is the strict
 counterpart to current `getbyte`: `getbyte` still returns `-1` for
 out-of-range reads, while typed reads raise `OUT_OF_RANGE`. Typed writes raise
 `OUT_OF_RANGE` when the field does not fit or when an integer value is outside
-the target storage type's range. `bsetf64` and `bgetf64` store and read IEEE
-binary64 values in little-endian byte order.
+the target storage type's range. `bgeti64`/`bseti64` are the Release 1 `.int`
+storage form. `bgetf32`/`bsetf32` store IEEE binary32 values and widen/narrow
+through the VM float register; `bgetf64`/`bsetf64` store IEEE binary64 values.
 
 `bresize` sets the logical byte length and zero-fills newly exposed bytes;
 negative lengths raise `OUT_OF_RANGE`, and allocation failure raises `FAILURE`.
@@ -181,12 +215,27 @@ negative lengths raise `OUT_OF_RANGE`, and allocation failure raises `FAILURE`.
 current logical byte range and raises `OUT_OF_RANGE` for bytes outside
 `0..255`.
 
-`bslice` reads from the source binary cursor and truncates at end-of-buffer.
-`setbyte` and `bupdate` are strict and raise `OUT_OF_RANGE` for invalid indexes,
-bytes outside `0..255`, or overlay writes past the destination length. `stobin`
-copies the register's current string bytes into its binary slot. `bintos`
-validates the register's current binary bytes as UTF-8 and copies them into its
-string slot; invalid bytes raise `UNICODE_ERROR` in UTF builds.
+`bcopy rDst,rSrc,rOffset` copies exactly the current logical length of `rDst`
+from a binary register or constant source at a byte offset. `bcheckrange` is a
+strict side-effect-free range check for `rOffset..rOffset + rLen`; negative
+offsets, negative lengths, and ranges past the logical binary length raise
+`OUT_OF_RANGE`. `bgets`/`bsets` read and write zero-terminated UTF-8 fields in
+binary memory, including the stored NUL on writes but excluding it from the
+Rexx string value on reads. `sget` extracts a codepoint-counted slice from a
+`STRING_CONST`, starting at a byte offset that must be a UTF-8 boundary.
+`bcmpb` and `bcmps` compare without materializing a temporary copy; the compare
+register supplies the input source offset and is overwritten with `-1`, `0`, or
+`1`.
+
+`setbinpos`, `getbinpos`, and `bslice` are legacy cursor instructions retained
+for compatibility and covered by `rxasbinarylegacytests`. New Release 1 source
+lowering uses target-sized `bcopy`, typed reads/writes, and zero-copy compares
+instead of cursor-based extraction. `setbyte` and `bupdate` are strict and
+raise `OUT_OF_RANGE` for invalid indexes, bytes outside `0..255`, or overlay
+writes past the destination length. `stobin` copies the register's current
+string bytes into its binary slot. `bintos` validates the register's current
+binary bytes as UTF-8 and copies them into its string slot; invalid bytes raise
+`UNICODE_ERROR` in UTF builds.
 
 Level B exposes these byte-buffer instructions through the `rxfnsb` binary
 helpers (`binlength`, `binbyte`, `binsetbyte`, `binsubstr`, `binconcat`,

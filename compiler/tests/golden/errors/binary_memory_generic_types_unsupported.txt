@@ -1,0 +1,2 @@
+Error in binary_memory_generic_types_unsupported.crexx @ 6:7 - #INTRINSIC_GENERIC_TYPES_UNSUPPORTED, "<at.["
+1 error(s) in source file

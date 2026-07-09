@@ -1,0 +1,11 @@
+options levelb
+
+find_key: procedure = .int
+  arg page = .binary, key = .binary, offset = .int, hash = .int
+
+  bytes = <blen>(page)
+  whole_key = <compare..binary>(page, offset, key)
+  text_key = <compare..string>(page, offset, "select")
+  hash_key = <compare..u32>(page, offset, hash)
+
+  return bytes + whole_key + text_key + hash_key

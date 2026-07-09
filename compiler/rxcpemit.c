@@ -940,6 +940,11 @@ static walker_result emit_walker(walker_direction direction,
             case OP_INITIALIZED:
             case OP_TYPE_CAST:
             case OP_TYPE_IS:
+            case OP_SIZEOF:
+            case OP_BINARY_LENGTH:
+            case OP_BINARY_AT:
+            case OP_BINARY_FOR:
+            case OP_BINARY_COMPARE:
             case OP_TYPEOF:
                 emit_expression(node, payload);
                 break;
@@ -1449,7 +1454,50 @@ static walker_result emit_walker(walker_direction direction,
 		                output_concat(node->output, child2->output);
 		                output_apply_trace_source_ids(node->output, trace_step_id, trace_clause_id);
 
-	                if (child1->symbolNode && child1->symbolNode->symbol && child1->symbolNode->symbol->scope &&
+	                if (rxcp_binary_memory_is_access(child1)) {
+                    RxcpBinaryStorageInfo info;
+                    ASTNode *type_node = 0;
+                    ASTNode *base = 0;
+                    ASTNode *offset = 0;
+
+                    if (rxcp_binary_memory_at_parts(child1, &type_node, &base, &offset) &&
+                        rxcp_binary_storage_info(type_node, &info) &&
+                        base &&
+                        offset) {
+                        if (info.is_fixed) {
+                            temp1 = mprintf("   %s %c%d,%c%d,%c%d\n",
+                                            info.rxas_set,
+                                            base->register_type,
+                                            base->register_num,
+                                            offset->register_type,
+                                            offset->register_num,
+                                            child2->register_type,
+                                            child2->register_num);
+                            output_append_text(node->output, temp1);
+                            free(temp1);
+                        } else if ((info.value_type == TP_STRING || info.value_type == TP_DECIMAL) &&
+                                   child1->node_type == OP_BINARY_AT) {
+                            char *value_operand = register_operand(child2, TP_STRING);
+                            if (info.value_type == TP_DECIMAL) {
+                                temp1 = mprintf("   dtos %c%d\n",
+                                                child2->register_type,
+                                                child2->register_num);
+                                output_append_text(node->output, temp1);
+                                free(temp1);
+                            }
+                            temp1 = mprintf("   bsets %c%d,%c%d,%s\n",
+                                            base->register_type,
+                                            base->register_num,
+                                            offset->register_type,
+                                            offset->register_num,
+                                            value_operand);
+                            output_append_text(node->output, temp1);
+                            free(temp1);
+                            free(value_operand);
+                        }
+                    }
+                    trace_assignment_event = 0;
+	                } else if (child1->symbolNode && child1->symbolNode->symbol && child1->symbolNode->symbol->scope &&
                     !child1->child &&
                     child1->symbolNode->symbol->scope->defining_node &&
                     child1->symbolNode->symbol->scope->defining_node->node_type == CLASS_DEF) {

@@ -1,0 +1,2 @@
+Error in binary_memory_fixed_for.crexx @ 6:7 - #BINARY_MEMORY_FIXED_FOR_NOT_ALLOWED, "<at..u32>(0, 4) data"
+1 error(s) in source file

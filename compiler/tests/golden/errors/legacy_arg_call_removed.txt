@@ -1,0 +1,2 @@
+Error in legacy_arg_call_removed.crexx @ 4:6 - #LEGACY_ARG_CALL_SYNTAX, "arg"
+1 error(s) in source file

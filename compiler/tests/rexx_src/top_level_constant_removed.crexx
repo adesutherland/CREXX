@@ -1,0 +1,6 @@
+options levelb
+
+constant FILE_BODY_CONSTANT = 1
+
+main: procedure = .int
+  return FILE_BODY_CONSTANT

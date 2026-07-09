@@ -142,7 +142,7 @@ hasThird() .locals=1
    setnumcas 1
    setnumstd 1
    .srcstep 20 20 17 "inline_test_vararg.crexx" 24 7 17 "  arg ... = .int"
-   .srcstep 21 21 17 "inline_test_vararg.crexx" 25 3 15 "  return arg(3, \"E\")"
+   .srcstep 21 21 17 "inline_test_vararg.crexx" 25 3 24 "  return <argexists>(3)"
    icopy r0,a0
    ilte r0,3,r0
    btoi r0

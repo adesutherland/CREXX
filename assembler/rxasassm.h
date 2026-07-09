@@ -89,6 +89,8 @@ void rxassetg(Assembler_Context *context, Assembler_Token *globalsToken);
 void rxasexre(Assembler_Context *context, Assembler_Token *registerToken, Assembler_Token *exposeToken);
 void rxasexpc(Assembler_Context *context, Assembler_Token *funcToken, Assembler_Token *localsToken, Assembler_Token *exposeToken);
 void rxasdecl(Assembler_Context *context, Assembler_Token *funcToken, Assembler_Token *exposeToken);
+void rxasconst(Assembler_Context *context, Assembler_Token *nameToken, Assembler_Token *kindToken,
+               Assembler_Token *valueToken);
 /* Source Step */
 void rxasmestp(Assembler_Context *context, Assembler_Token *step, Assembler_Token *clause, Assembler_Token *flags,
                Assembler_Token *file, Assembler_Token *line, Assembler_Token *start, Assembler_Token *end,

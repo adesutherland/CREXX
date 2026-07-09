@@ -215,6 +215,189 @@ static void set_node_target_type(Context* context, ASTNode* node, ValueType targ
     validate_node_promotion(context, node);
 }
 
+static int binary_memory_base_is_binary_scalar(ASTNode *base) {
+    if (!base) return 0;
+    if (base->value_type == TP_BINARY && base->value_dims == 0) return 1;
+    if (base->symbolNode && base->symbolNode->symbol) {
+        return base->symbolNode->symbol->type == TP_BINARY &&
+               base->symbolNode->symbol->value_dims == 0;
+    }
+    return 0;
+}
+
+static int binary_memory_node_is_scalar_type(ASTNode *node, ValueType type) {
+    if (!node) return 0;
+    if (node->value_type == type && node->value_dims == 0) return 1;
+    if (node->symbolNode && node->symbolNode->symbol) {
+        return node->symbolNode->symbol->type == type &&
+               node->symbolNode->symbol->value_dims == 0;
+    }
+    return 0;
+}
+
+static void validate_binary_memory_operand(Context *context, ASTNode *node, ASTNode *owner) {
+    if (!node || node->node_type == NOVAL) {
+        mknd_err(owner ? owner : node, "BINARY_MEMORY_TARGET_NOT_BINARY");
+        return;
+    }
+
+    ast_set_target_type(0, node, TP_BINARY, 0, 0, 0, 0);
+    if (node->value_type != TP_UNKNOWN) {
+        validate_node_promotion(context, node);
+        if (!binary_memory_base_is_binary_scalar(node)) {
+            mknd_err(node, "BINARY_MEMORY_TARGET_NOT_BINARY");
+        }
+    }
+}
+
+static void validate_binary_memory_exact_value(Context *context,
+                                               ASTNode *node,
+                                               ValueType type,
+                                               const char *diagnostic,
+                                               ASTNode *owner) {
+    if (!node || node->node_type == NOVAL) {
+        mknd_err(owner ? owner : node, diagnostic);
+        return;
+    }
+    if (node->value_type == TP_UNKNOWN) {
+        set_node_target_type(context, node, type);
+    } else if (!binary_memory_node_is_scalar_type(node, type)) {
+        mknd_err(node, diagnostic);
+    }
+}
+
+static int binary_memory_storage_info(Context *context, ASTNode *node, RxcpBinaryStorageInfo *info) {
+    ASTNode *type_node = 0;
+
+    if (!rxcp_binary_memory_at_parts(node, &type_node, 0, 0) ||
+        !rxcp_binary_storage_info(type_node, info)) {
+        mknd_err(node, "BINARY_MEMORY_INVALID_STORAGE_TYPE");
+        return 0;
+    }
+    return 1;
+}
+
+static void validate_binary_memory_at(Context *context, ASTNode *node) {
+    RxcpBinaryStorageInfo info;
+    ASTNode *type_node = 0;
+    ASTNode *base = 0;
+    ASTNode *offset = 0;
+
+    if (!rxcp_binary_memory_at_parts(node, &type_node, &base, &offset)) return;
+    if (!binary_memory_storage_info(context, node, &info)) return;
+
+    if (!base) {
+        mknd_err(node, "BINARY_MEMORY_TARGET_NOT_BINARY");
+    } else {
+        validate_binary_memory_operand(context, base, node);
+    }
+
+    if (!offset) {
+        mknd_err(node, "BINARY_MEMORY_OFFSET_REQUIRED");
+    } else {
+        set_node_target_type(context, offset, TP_INTEGER);
+    }
+
+    if (!info.is_fixed &&
+        info.value_type != TP_STRING &&
+        info.value_type != TP_DECIMAL &&
+        (!node->parent || node->parent->node_type != OP_BINARY_FOR)) {
+        mknd_err(node, "BINARY_MEMORY_LENGTH_REQUIRED");
+    }
+}
+
+static void validate_binary_memory_for(Context *context, ASTNode *node) {
+    RxcpBinaryStorageInfo info;
+    ASTNode *type_node = 0;
+    ASTNode *base = 0;
+    ASTNode *offset = 0;
+    ASTNode *length = ast_chdn(node, 1);
+
+    if (!rxcp_binary_memory_at_parts(node, &type_node, &base, &offset)) {
+        mknd_err(node, "BINARY_MEMORY_AT_REQUIRED");
+        return;
+    }
+    validate_binary_memory_at(context, ast_chdn(node, 0));
+    if (!binary_memory_storage_info(context, node, &info)) return;
+    if (info.is_fixed) mknd_err(node, "BINARY_MEMORY_FIXED_FOR_NOT_ALLOWED");
+    else if (info.value_type == TP_DECIMAL) mknd_err(node, "BINARY_MEMORY_LENGTH_NOT_ALLOWED");
+    if (length) set_node_target_type(context, length, TP_INTEGER);
+    else mknd_err(node, "BINARY_MEMORY_LENGTH_REQUIRED");
+}
+
+static void validate_binary_memory_length(Context *context, ASTNode *node) {
+    ASTNode *memory = ast_chdn(node, 0);
+
+    validate_binary_memory_operand(context, memory, node);
+    set_node_type(node, TP_INTEGER);
+}
+
+static int binary_memory_compare_arg_count(ASTNode *node) {
+    ASTNode *first;
+    int count;
+
+    count = ast_nchd(node) - 1;
+    first = ast_chdn(node, 1);
+    if (count == 1 && first && first->node_type == NOVAL) return 0;
+    return count;
+}
+
+static void validate_binary_memory_compare(Context *context, ASTNode *node) {
+    RxcpBinaryStorageInfo info;
+    ASTNode *type_node = ast_chdn(node, 0);
+    ASTNode *memory = ast_chdn(node, 1);
+    ASTNode *offset = ast_chdn(node, 2);
+    ASTNode *needle = 0;
+    int argc = binary_memory_compare_arg_count(node);
+
+    if (!rxcp_binary_storage_info(type_node, &info)) {
+        mknd_err(type_node ? type_node : node, "BINARY_MEMORY_COMPARE_TYPE");
+        set_node_type(node, TP_INTEGER);
+        return;
+    }
+
+    validate_binary_memory_operand(context, memory, node);
+    if (offset && offset->node_type != NOVAL) {
+        set_node_target_type(context, offset, TP_INTEGER);
+    }
+
+    if (info.value_type == TP_BINARY && !info.is_fixed) {
+        if (argc == 3) {
+            needle = ast_chdn(node, 3);
+        } else {
+            mknd_err(node, "BINARY_MEMORY_COMPARE_ARGUMENTS");
+        }
+        if (argc == 3) {
+            validate_binary_memory_exact_value(context, needle, TP_BINARY, "BINARY_MEMORY_COMPARE_NEEDLE_TYPE", node);
+        }
+    } else if (info.value_type == TP_STRING && !info.is_fixed) {
+        if (argc != 3) {
+            mknd_err(node, "BINARY_MEMORY_COMPARE_ARGUMENTS");
+        } else {
+            needle = ast_chdn(node, 3);
+            validate_binary_memory_exact_value(context, needle, TP_STRING, "BINARY_MEMORY_COMPARE_NEEDLE_TYPE", node);
+        }
+    } else if (info.is_fixed) {
+        if (argc != 3) {
+            mknd_err(node, "BINARY_MEMORY_COMPARE_ARGUMENTS");
+        } else {
+            needle = ast_chdn(node, 3);
+            if (needle && needle->node_type != NOVAL) {
+                set_node_target_type(context, needle, info.value_type);
+            } else {
+                mknd_err(node, "BINARY_MEMORY_COMPARE_ARGUMENTS");
+            }
+        }
+    } else {
+        mknd_err(type_node ? type_node : node, "BINARY_MEMORY_COMPARE_TYPE");
+    }
+
+    if (!offset || offset->node_type == NOVAL) {
+        mknd_err(node, "BINARY_MEMORY_COMPARE_ARGUMENTS");
+    }
+    set_node_type(node, TP_INTEGER);
+}
+
 static int symbol_is_class_attribute_typecheck(Symbol *symbol);
 
 static int raw_dynamic_array_statement_target(Context *context, ASTNode *statement, ASTNode *target, int validate) {
@@ -1222,6 +1405,24 @@ walker_result set_node_types_walker(walker_direction direction,
                 }
                 break;
 
+            case OP_SIZEOF:
+            case OP_BINARY_LENGTH:
+            case OP_BINARY_COMPARE:
+                if (node->value_type == TP_UNKNOWN) {
+                    set_node_type(node, TP_INTEGER);
+                }
+                break;
+
+            case OP_BINARY_AT:
+            case OP_BINARY_FOR:
+                if (node->value_type == TP_UNKNOWN) {
+                    RxcpBinaryStorageInfo info;
+                    if (binary_memory_storage_info(context, node, &info)) {
+                        set_node_type(node, info.value_type);
+                    }
+                }
+                break;
+
             case OP_PLUS:
             case OP_NEG:
                 if (node->value_type == TP_UNKNOWN) {
@@ -1592,6 +1793,15 @@ walker_result set_node_types_walker(walker_direction direction,
                 if (node->value_type == TP_UNKNOWN) {
                     set_node_type(node, TP_VOID);
 
+                }
+                if (rxcp_binary_memory_is_access(child1)) {
+                    if (child1->value_type == TP_UNKNOWN) {
+                        RxcpBinaryStorageInfo info;
+                        if (binary_memory_storage_info(context, child1, &info)) {
+                            set_node_type(child1, info.value_type);
+                        }
+                    }
+                    break;
                 }
                 if (child2->node_type == BINARY &&
                     target_is_first_untyped_symbol_assignment(child1)) {
@@ -2017,6 +2227,31 @@ walker_result type_safety_walker(walker_direction direction,
                 }
                 break;
 
+            case OP_SIZEOF: {
+                RxcpBinaryStorageInfo info;
+                if (!rxcp_binary_storage_info(child1, &info) || !info.is_fixed) {
+                    mknd_err(child1 ? child1 : node, "BINARY_MEMORY_INVALID_STORAGE_TYPE");
+                }
+                set_node_type(node, TP_INTEGER);
+                break;
+            }
+
+            case OP_BINARY_LENGTH:
+                validate_binary_memory_length(context, node);
+                break;
+
+            case OP_BINARY_COMPARE:
+                validate_binary_memory_compare(context, node);
+                break;
+
+            case OP_BINARY_AT:
+                validate_binary_memory_at(context, node);
+                break;
+
+            case OP_BINARY_FOR:
+                validate_binary_memory_for(context, node);
+                break;
+
             case OP_TYPE_CAST:
                 if (!type_node_is_runtime_type_target(child2) || child1->value_dims != 0) {
                     mknd_err(node, "TYPE_MISMATCH");
@@ -2284,6 +2519,27 @@ walker_result type_safety_walker(walker_direction direction,
             case ASSIGN:
                 if (child2->value_type == TP_VOID) {
                     mknd_err(child2, "RETURNS_VOID");
+                }
+                else if (rxcp_binary_memory_is_access(child1)) {
+                    RxcpBinaryStorageInfo info;
+                    if (binary_memory_storage_info(context, child1, &info)) {
+                        if (rxcp_binary_memory_base_is_readonly(child1)) {
+                            mknd_err(child1, "BINARY_MEMORY_READ_ONLY");
+                        }
+                        if ((info.value_type == TP_STRING || info.value_type == TP_DECIMAL) &&
+                            child1->node_type == OP_BINARY_AT) {
+                            ast_sttn(child2, child1);
+                            validate_node_promotion(context, child2);
+                        }
+                        else if (child1->node_type == OP_BINARY_FOR && !info.is_fixed) {
+                            mknd_err(child1, "BINARY_MEMORY_SPAN_WRITE_UNSUPPORTED");
+                        }
+                        else if (info.is_fixed) {
+                            ast_sttn(child2, child1);
+                            validate_node_promotion(context, child2);
+                        }
+                    }
+                    ast_svtn(node, child1);
                 }
                 else {
                     if (child2->node_type == BINARY &&

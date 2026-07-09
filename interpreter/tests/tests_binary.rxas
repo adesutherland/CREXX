@@ -156,7 +156,7 @@ main() .locals=20
    ieq r0,r10,0
    brf fail_empty_binary_pos,r0
 
-   say "PASS: Binary Buffer IO and Ops"
+   say "PASS: Binary Buffer IO and Legacy Cursor Ops"
    ret 0
 
 fail_open_write:

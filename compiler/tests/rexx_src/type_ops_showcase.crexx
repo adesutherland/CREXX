@@ -11,8 +11,8 @@ main: procedure
   narrowed = generic as .vehicle
   concrete = narrowed as .car
 
-  say typeof(1)
-  say typeof(generic)
+  say <typeof>(1)
+  say <typeof>(generic)
   say generic is .object
   say generic is .vehicle
   say generic is .car

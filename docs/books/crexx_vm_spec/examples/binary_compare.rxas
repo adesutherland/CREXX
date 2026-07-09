@@ -1,0 +1,25 @@
+/* Binary zero-copy compare example */
+main() .locals=4
+    load r1,0x6162630061626400
+    load r2,0x616263
+
+    load r3,0
+    bcmpb r3,r1,r2
+    itos r3
+    say r3
+
+    load r3,4
+    bcmpb r3,r1,0x616263
+    itos r3
+    say r3
+
+    load r3,0
+    bcmps r3,r1,"abc"
+    itos r3
+    say r3
+
+    load r3,4
+    bcmps r3,r1,"abe"
+    itos r3
+    say r3
+    ret

@@ -83,6 +83,9 @@ static void prt_ops_new() {
             case FMT_P_S: types[0] = OP_FUNC; types[1] = OP_STRING; num_ops = 2; break;
             case FMT_R: types[0] = OP_REG; num_ops = 1; break;
             case FMT_R_B: types[0] = OP_REG; types[1] = OP_BINARY; num_ops = 2; break;
+            case FMT_R_B_B: types[0] = OP_REG; types[1] = OP_BINARY; types[2] = OP_BINARY; num_ops = 3; break;
+            case FMT_R_B_R: types[0] = OP_REG; types[1] = OP_BINARY; types[2] = OP_REG; num_ops = 3; break;
+            case FMT_R_B_S: types[0] = OP_REG; types[1] = OP_BINARY; types[2] = OP_STRING; num_ops = 3; break;
             case FMT_R_C: types[0] = OP_REG; types[1] = OP_CHAR; num_ops = 2; break;
             case FMT_R_D: types[0] = OP_REG; types[1] = OP_DECIMAL; num_ops = 2; break;
             case FMT_R_D_R: types[0] = OP_REG; types[1] = OP_DECIMAL; types[2] = OP_REG; num_ops = 3; break;
@@ -95,6 +98,7 @@ static void prt_ops_new() {
             case FMT_R_P: types[0] = OP_REG; types[1] = OP_FUNC; num_ops = 2; break;
             case FMT_R_P_R: types[0] = OP_REG; types[1] = OP_FUNC; types[2] = OP_REG; num_ops = 3; break;
             case FMT_R_R: types[0] = OP_REG; types[1] = OP_REG; num_ops = 2; break;
+            case FMT_R_R_B: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_BINARY; num_ops = 3; break;
             case FMT_R_R_D: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_DECIMAL; num_ops = 3; break;
             case FMT_R_R_F: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_FLOAT; num_ops = 3; break;
             case FMT_R_R_I: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_INT; num_ops = 3; break;

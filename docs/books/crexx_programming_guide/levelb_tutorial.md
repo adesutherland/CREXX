@@ -15,6 +15,7 @@ For exact syntax details, keep these reference pages close:
 
 - [Data types](../crexx_language_reference/data_types.md)
 - [Statements](../crexx_language_reference/statements.md)
+- [Binary memory](../crexx_language_reference/binary_memory.md)
 - [Classes and interfaces](../crexx_language_reference/classes_and_interfaces.md)
 - [Namespaces](../crexx_language_reference/namespace.md)
 - [Toolchain overview](toolchain.md)

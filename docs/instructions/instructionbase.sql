@@ -14,6 +14,7 @@ insert into category VALUES(7,'Meta Instructions','Instructions that work on pro
 insert into category VALUES(8,'Breakpoint Instructions','Instructions that aid in debugging programs');
 insert into category VALUES(9,'String Instructions','Instructions that work on Strings and Characters');
 insert into category VALUES(10,'Decimal Arithmetic','Instructions that work on Decimal Numbers');
+insert into category VALUES(11,'Binary Memory','Instructions that work on binary byte memory and constants');
 drop table if exists instruction;
 CREATE TABLE instruction
 ( opcode             char(6) primary key,
@@ -33,4 +34,3 @@ CREATE TABLE inst_cat
   category	     char(2),
   foreign key (category) references category(category)
 );
-

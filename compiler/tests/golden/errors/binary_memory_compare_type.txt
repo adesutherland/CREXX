@@ -1,0 +1,2 @@
+Error in binary_memory_compare_type.crexx @ 5:15 - #BINARY_MEMORY_COMPARE_TYPE, "..u64"
+1 error(s) in source file

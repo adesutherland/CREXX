@@ -39,6 +39,142 @@
 #include "rxcp_ctx.h"
 #include "rxcp_val.h"
 
+static int rxcp_ascii_streq_ci_len(const char *left, size_t left_len, const char *right) {
+    size_t i;
+    size_t right_len;
+
+    if (!left || !right) return 0;
+    if (left_len > 0 && left[0] == '.') {
+        left++;
+        left_len--;
+    }
+    right_len = strlen(right);
+    if (right_len > 0 && right[0] == '.') right++;
+    right_len = strlen(right);
+    if (left_len != right_len) return 0;
+    for (i = 0; i < left_len; i++) {
+        if (tolower((unsigned char) left[i]) !=
+            tolower((unsigned char) right[i])) return 0;
+    }
+    return 1;
+}
+
+static int rxcp_binary_storage_match(ASTNode *type_node,
+                                     const char *name,
+                                     RxcpBinaryStorageInfo *info,
+                                     ValueType value_type,
+                                     int width,
+                                     int is_fixed,
+                                     const char *rxas_get,
+                                     const char *rxas_set) {
+    if (!type_node || !type_node->node_string) return 0;
+    if (!rxcp_ascii_streq_ci_len(type_node->node_string,
+                                 type_node->node_string_length,
+                                 name)) return 0;
+    if (info) {
+        info->name = name;
+        info->value_type = value_type;
+        info->width = width;
+        info->is_fixed = is_fixed;
+        info->rxas_get = rxas_get;
+        info->rxas_set = rxas_set;
+    }
+    return 1;
+}
+
+int rxcp_binary_storage_info(ASTNode *type_node, RxcpBinaryStorageInfo *info) {
+    if (info) {
+        info->name = 0;
+        info->value_type = TP_UNKNOWN;
+        info->width = 0;
+        info->is_fixed = 0;
+        info->rxas_get = 0;
+        info->rxas_set = 0;
+    }
+
+    if (rxcp_binary_storage_match(type_node, "u8", info, TP_INTEGER, 1, 1, "bgetu8", "bsetu8")) return 1;
+    if (rxcp_binary_storage_match(type_node, "i8", info, TP_INTEGER, 1, 1, "bgeti8", "bseti8")) return 1;
+    if (rxcp_binary_storage_match(type_node, "u16", info, TP_INTEGER, 2, 1, "bgetu16", "bsetu16")) return 1;
+    if (rxcp_binary_storage_match(type_node, "i16", info, TP_INTEGER, 2, 1, "bgeti16", "bseti16")) return 1;
+    if (rxcp_binary_storage_match(type_node, "u32", info, TP_INTEGER, 4, 1, "bgetu32", "bsetu32")) return 1;
+    if (rxcp_binary_storage_match(type_node, "i32", info, TP_INTEGER, 4, 1, "bgeti32", "bseti32")) return 1;
+    if (rxcp_binary_storage_match(type_node, "i64", info, TP_INTEGER, 8, 1, "bgeti64", "bseti64")) return 1;
+    if (rxcp_binary_storage_match(type_node, "int", info, TP_INTEGER, 8, 1, "bgeti64", "bseti64")) return 1;
+    if (rxcp_binary_storage_match(type_node, "f32", info, TP_FLOAT, 4, 1, "bgetf32", "bsetf32")) return 1;
+    if (rxcp_binary_storage_match(type_node, "f64", info, TP_FLOAT, 8, 1, "bgetf64", "bsetf64")) return 1;
+    if (rxcp_binary_storage_match(type_node, "float", info, TP_FLOAT, 8, 1, "bgetf64", "bsetf64")) return 1;
+
+    if (rxcp_binary_storage_match(type_node, "binary", info, TP_BINARY, -1, 0, 0, 0)) return 1;
+    if (rxcp_binary_storage_match(type_node, "string", info, TP_STRING, -1, 0, 0, 0)) return 1;
+    if (rxcp_binary_storage_match(type_node, "decimal", info, TP_DECIMAL, -1, 0, 0, 0)) return 1;
+
+    return 0;
+}
+
+int rxcp_binary_storage_is_valid(ASTNode *type_node) {
+    return rxcp_binary_storage_info(type_node, 0);
+}
+
+int rxcp_binary_storage_is_fixed(ASTNode *type_node) {
+    RxcpBinaryStorageInfo info;
+    if (!rxcp_binary_storage_info(type_node, &info)) return 0;
+    return info.is_fixed;
+}
+
+int rxcp_binary_storage_sizeof(ASTNode *type_node) {
+    RxcpBinaryStorageInfo info;
+    if (!rxcp_binary_storage_info(type_node, &info) || !info.is_fixed) return -1;
+    return info.width;
+}
+
+int rxcp_binary_memory_at_parts(ASTNode *node, ASTNode **type_node, ASTNode **base, ASTNode **offset) {
+    ASTNode *at_node;
+
+    if (type_node) *type_node = 0;
+    if (base) *base = 0;
+    if (offset) *offset = 0;
+
+    if (!node) return 0;
+    at_node = node;
+    if (node->node_type == OP_BINARY_FOR) {
+        at_node = ast_chdn(node, 0);
+    }
+    if (!at_node || at_node->node_type != OP_BINARY_AT) return 0;
+
+    if (type_node) *type_node = ast_chdn(at_node, 0);
+    if (base) *base = ast_chdn(at_node, 1);
+    if (offset) *offset = ast_chdn(at_node, 2);
+    return 1;
+}
+
+int rxcp_binary_memory_is_access(ASTNode *node) {
+    return node &&
+           (node->node_type == OP_BINARY_AT ||
+            node->node_type == OP_BINARY_FOR);
+}
+
+int rxcp_binary_memory_is_lhs(ASTNode *node) {
+    ASTNode *parent;
+
+    if (!node) return 0;
+    parent = node->parent;
+    if (!parent) return 0;
+    if (parent->node_type == ASSIGN && ast_chdn(parent, 0) == node) return 1;
+    if (parent->node_type == OP_BINARY_FOR) return rxcp_binary_memory_is_lhs(parent);
+    return 0;
+}
+
+int rxcp_binary_memory_base_is_readonly(ASTNode *node) {
+    ASTNode *base = 0;
+
+    if (!rxcp_binary_memory_at_parts(node, 0, &base, 0) || !base) return 0;
+    if (base->node_type == CONSTANT || base->node_type == BINARY) return 1;
+
+    return base->symbolNode &&
+           base->symbolNode->symbol &&
+           base->symbolNode->symbol->symbol_type == CONSTANT_SYMBOL;
+}
+
 void error_and_exit(int rc, char* message) {
     fprintf(stderr, "ERROR: %s - try \"rxc -h\"\n", message);
     exit(rc);
@@ -603,6 +739,10 @@ const char* token_to_string(int token_id) {
         case TK_EOC: return "TK_EOC";
         case TK_VAR_SYMBOL: return "TK_VAR_SYMBOL";
         case TK_QUALIFIED_SYMBOL: return "TK_QUALIFIED_SYMBOL";
+        case TK_INTRINSIC_LT: return "TK_INTRINSIC_LT";
+        case TK_INTRINSIC_PREFIX_LT: return "TK_INTRINSIC_PREFIX_LT";
+        case TK_INTRINSIC_NAME: return "TK_INTRINSIC_NAME";
+        case TK_INTRINSIC_GENERIC_OPEN: return "TK_INTRINSIC_GENERIC_OPEN";
         case TK_INTEGER: return "TK_INTEGER";
         case TK_FLOAT: return "TK_FLOAT";
         case TK_DECIMAL: return "TK_DECIMAL";
@@ -1159,6 +1299,11 @@ const char* node_type_to_string(NodeType type) {
         case OP_COMPARE_S_LTE: return "OP_COMPARE_S_LTE";
         case OP_TYPE_IS: return "OP_TYPE_IS";
         case OP_TYPE_CAST: return "OP_TYPE_CAST";
+        case OP_BINARY_AT: return "OP_BINARY_AT";
+        case OP_BINARY_FOR: return "OP_BINARY_FOR";
+        case OP_BINARY_LENGTH: return "OP_BINARY_LENGTH";
+        case OP_BINARY_COMPARE: return "OP_BINARY_COMPARE";
+        case OP_SIZEOF: return "OP_SIZEOF";
         case OP_TYPEOF: return "OP_TYPEOF";
         case OP_REFERENCE: return "OP_REFERENCE";
         case OP_DEREFERENCE: return "OP_DEREFERENCE";
@@ -1219,6 +1364,10 @@ const char* node_type_to_string(NodeType type) {
         case SIGNAL_BLOCK: return "SIGNAL_BLOCK";
         case SIGNAL_HANDLER: return "SIGNAL_HANDLER";
         case SIGNAL_NAMES: return "SIGNAL_NAMES";
+        case INTRINSIC: return "INTRINSIC";
+        case INTRINSIC_PATH: return "INTRINSIC_PATH";
+        case INTRINSIC_TYPES: return "INTRINSIC_TYPES";
+        case INTRINSIC_ARGS: return "INTRINSIC_ARGS";
         case OP_BIT_AND: return "OP_BIT_AND";
         case OP_BIT_OR: return "OP_BIT_OR";
         case OP_BIT_XOR: return "OP_BIT_XOR";

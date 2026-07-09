@@ -29,8 +29,8 @@ options levelb
 gcd: procedure = .string
 arg x = .string
 x=abs(x)
-do j=2 to arg()
-  y=abs(arg(j))
+do j=2 to arg[]
+  y=abs(arg[j])
   if y<>0 then do
     do until z==0
       z=x//y

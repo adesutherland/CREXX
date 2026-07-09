@@ -37,7 +37,7 @@ Rexx source surface:
   direction. Native handle/reference migration is therefore not a blocker for
   this reference feature.
 - Rexx source syntax direction is now agreed for the Level B essential source
-  surface: word-form `reference`, `dereference`, and `snapshot` expressions, `refvalid(ref)`,
+  surface: word-form `reference`, `dereference`, and `snapshot` expressions, `<refvalid>(ref)`,
   and `reference .T` as the reference type modifier. Convenience live-access
   syntax such as `itemsRef[i]`, `itemsRef[i] = value`, and `listRef.add(value)`
   is not required for Level B and is deferred as a Level G feature candidate.
@@ -89,7 +89,7 @@ Rexx source surface:
 - The first explicit Rexx source slice is implemented in the working tree:
   `reference .T` declares reference values, `reference target` creates a weak
   reference to aliasable storage, `snapshot ref` makes an explicit snapshot
-  copy, `refvalid(ref)` checks validity, and method `self` can be referenced
+  copy, `<refvalid>(ref)` checks validity, and method `self` can be referenced
   explicitly. The source fixture runs noopt/opt through both `rxvm` and `rxbvm`
   and negative fixtures cover value/reference boundary errors, non-storage
   targets, reference-to-reference targets, nested reference types, and non-ref
@@ -729,10 +729,10 @@ scope. Attribute, array-element, argument, global, and expression destinations
 are rejected. The compiler emits `unlink` when that local scope exits; frame
 exit also resets linked locals.
 
-Use `refvalid(ref)` to test whether a weak reference can currently be used:
+Use `<refvalid>(ref)` to test whether a weak reference can currently be used:
 
 ```rexx
-if \refvalid(listRef) then return 0
+if <refvalid>(listRef) = 0 then return 0
 ```
 
 Level G convenience syntax may allow reference values to be used as the base of

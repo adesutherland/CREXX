@@ -204,13 +204,25 @@ References:
 
 ### Named constants are compile-time values
 
-Use `constant NAME = expression` for Level B masks, flags, and shared literal
-payloads that must not allocate runtime storage:
+Use `constant NAME = expression` inside an explicit procedure, method, or
+factory scope for Level B masks, flags, and shared literal payloads that must
+not allocate runtime storage:
 
 ```rexx
-constant RV_FLAG_STRING = 0x00010000
-constant SAMPLE_BYTES = "41424344"x as .binary
+flags: procedure = .int
+  constant RV_FLAG_STRING = 0x00010000
+  constant SAMPLE_BYTES = "41424344"x as .binary
+  return RV_FLAG_STRING
 ```
+
+Do not put `constant` declarations in the file body. That top-level form is a
+Release 1 design defect being removed because it can imply an implicit `main()`
+in a module that was meant to be a library.
+
+If a script needs a separate declaration procedure for shared constants, add an
+explicit `main: procedure` before the executable body. Procedure bodies continue
+until the next top-level callable boundary, so statements after a declaration
+procedure belong to that procedure unless a new boundary is present.
 
 The initializer must fold at compile time. Integer constants used as assembler
 immediates are emitted as literals; string, decimal, float, and binary constants

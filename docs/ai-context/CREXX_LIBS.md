@@ -15,6 +15,17 @@ Libraries are housed in the `lib/` directory, which is divided into domains like
 
 - `lib/plugins/` (General-purpose extensions like `fileio`, `regex`, `strings`, `socket`, etc.)
 
+`lib/rxfnsb/rexx/binary.crexx` provides the Level B binary helper surface. It
+contains the older Classic-style, 1-based, copy-returning helpers such as
+`binlength`, `binbyte`, `binsubstr`, `binoverlay`, `bininsert`, `bindelstr`,
+`binpos`, `bincompare`, `bin2x`, and `x2bin`. It also contains the Release 1
+packed-memory helper surface, which is zero-based and mutates the first binary
+argument through `arg expose`: `binresize`, `binclear`, `binfill`,
+`binfillat`, `bincopy`, `binmemmove`, `binappend`, `binupdate`, `binmakegap`,
+and `bindrop`. These helpers are public fallbacks; compiler or inliner
+recognition for direct RXAS lowering should be added only for measured hot
+paths.
+
 RexxScript is a first-class runtime product under `rexxscript/`, not a Level B
 BIF hidden inside `lib/rxfnsb`. It builds `bin/rexxscript.rxbin`, exposes the
 `rexxscript` namespace (`rexxscript_evaluate`,

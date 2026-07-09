@@ -1,0 +1,2 @@
+Error in binary_memory_compare_target_not_binary.crexx @ 6:25 - #BINARY_MEMORY_TARGET_NOT_BINARY, "page"
+1 error(s) in source file

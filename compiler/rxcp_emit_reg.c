@@ -392,6 +392,18 @@ static void return_child_reg_after_parent(ASTNode* parent, ASTNode* child) {
     return_child_reg(child);
 }
 
+static void return_binary_memory_operand_regs(ASTNode *node) {
+    ASTNode *base = 0;
+    ASTNode *offset = 0;
+    ASTNode *length = 0;
+
+    if (!rxcp_binary_memory_at_parts(node, 0, &base, &offset)) return;
+    if (node && node->node_type == OP_BINARY_FOR) length = ast_chdn(node, 1);
+    return_child_reg(base);
+    return_child_reg(offset);
+    return_child_reg(length);
+}
+
 /* Returns a child's register ONLY if it is not deferred */
 static void return_child_reg_now(ASTNode* child) {
     if (!child || child->register_num == DONT_ASSIGN_REGISTER || child->register_num == UNSET_REGISTER) return;
@@ -571,6 +583,9 @@ walker_result register_walker(walker_direction direction,
 
             case DEFINE:
             case ASSIGN:
+                if (node->node_type == ASSIGN && rxcp_binary_memory_is_access(child1)) {
+                    break;
+                }
                 /*
                  * If an assignment from an expression (rather than a symbol) then
                  * mark the register as don't assign (DONT_ASSIGN_REGISTER) so we can assign
@@ -780,6 +795,40 @@ walker_result register_walker(walker_direction direction,
             case OP_ARG_VALUE:
             case OP_ARG_IX_EXISTS:
                 if (is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER; /* Don't assign register */
+                break;
+
+            case OP_SIZEOF:
+                if (child1) child1->register_num = DONT_ASSIGN_REGISTER;
+                break;
+
+            case OP_BINARY_LENGTH:
+                if (child1 && is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
+                break;
+
+            case OP_BINARY_COMPARE: {
+                ASTNode *type_node = child1;
+                ASTNode *memory = child2;
+                ASTNode *offset = child3;
+                ASTNode *third = ast_chdn(node, 3);
+                ASTNode *fourth = ast_chdn(node, 4);
+                RxcpBinaryStorageInfo info;
+                int is_fixed = type_node && rxcp_binary_storage_info(type_node, &info) && info.is_fixed;
+
+                if (type_node) type_node->register_num = DONT_ASSIGN_REGISTER;
+                if (memory && is_constant(memory)) memory->register_num = DONT_ASSIGN_REGISTER;
+                if (!is_fixed && offset && is_constant(offset)) offset->register_num = DONT_ASSIGN_REGISTER;
+                if (third && !fourth && is_constant(third)) third->register_num = DONT_ASSIGN_REGISTER;
+                if (fourth && is_constant(fourth)) fourth->register_num = DONT_ASSIGN_REGISTER;
+                break;
+            }
+
+            case OP_BINARY_AT:
+                if (child1) child1->register_num = DONT_ASSIGN_REGISTER;
+                if (child2 && is_constant(child2)) child2->register_num = DONT_ASSIGN_REGISTER;
+                break;
+
+            case OP_BINARY_FOR:
+                if (child1) child1->register_num = DONT_ASSIGN_REGISTER;
                 break;
 
             case OP_TYPE_IS:
@@ -1027,6 +1076,63 @@ walker_result register_walker(walker_direction direction,
                 return_child_reg_after_parent(node, child1);
                 break;
 
+            case OP_SIZEOF:
+                if (node->register_num != DONT_ASSIGN_REGISTER)
+                    node->register_num = get_reg(node->scope);
+                break;
+
+            case OP_BINARY_LENGTH:
+                if (node->register_num != DONT_ASSIGN_REGISTER)
+                    node->register_num = get_reg(node->scope);
+                return_child_reg(child1);
+                break;
+
+            case OP_BINARY_COMPARE: {
+                ASTNode *type_node = child1;
+                ASTNode *memory = child2;
+                ASTNode *offset = child3;
+                ASTNode *third = ast_chdn(node, 3);
+                ASTNode *fourth = ast_chdn(node, 4);
+                RxcpBinaryStorageInfo info;
+
+                if (node->register_num != DONT_ASSIGN_REGISTER)
+                    node->register_num = get_reg(node->scope);
+                if (type_node &&
+                    rxcp_binary_storage_info(type_node, &info) &&
+                    info.is_fixed) {
+                    node->num_additional_registers = 1;
+                    node->additional_registers = get_reg(node->scope);
+                    return_additional_regs_later(node);
+                }
+                return_child_reg(memory);
+                return_child_reg(offset);
+                return_child_reg(third);
+                return_child_reg(fourth);
+                break;
+            }
+
+            case OP_BINARY_AT:
+                if (!rxcp_binary_memory_is_lhs(node) &&
+                    (!node->parent || node->parent->node_type != OP_BINARY_FOR) &&
+                    node->register_num != DONT_ASSIGN_REGISTER) {
+                    node->register_num = get_reg(node->scope);
+                }
+                if (!rxcp_binary_memory_is_lhs(node) &&
+                    (!node->parent || node->parent->node_type != OP_BINARY_FOR)) {
+                    return_binary_memory_operand_regs(node);
+                }
+                break;
+
+            case OP_BINARY_FOR:
+                if (!rxcp_binary_memory_is_lhs(node) &&
+                    node->register_num != DONT_ASSIGN_REGISTER) {
+                    node->register_num = get_reg(node->scope);
+                }
+                if (!rxcp_binary_memory_is_lhs(node)) {
+                    return_binary_memory_operand_regs(node);
+                }
+                break;
+
             case OP_TYPE_CAST:
                 if (node->register_num == UNSET_REGISTER)
                     node->register_num = get_reg(node->scope);
@@ -1129,6 +1235,11 @@ walker_result register_walker(walker_direction direction,
             case DEFINE:
             case ASSIGN: {
                 int propagated = 0;
+                if (node->node_type == ASSIGN && rxcp_binary_memory_is_access(child1)) {
+                    return_child_reg(child2);
+                    return_binary_memory_operand_regs(child1);
+                    break;
+                }
                 if (child2->register_num == DONT_ASSIGN_REGISTER) {
                     /* Move the RHS temporary register to the target symbol register */
                     child2->register_num = child1->register_num;

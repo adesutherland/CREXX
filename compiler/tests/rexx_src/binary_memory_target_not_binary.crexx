@@ -1,0 +1,6 @@
+options levelb
+
+main: procedure = .int
+  text = "abcd"
+  n = <at..u8>(0) text
+  return 0

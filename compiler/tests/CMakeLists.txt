@@ -475,6 +475,81 @@ add_test(NAME rxc_binary_literal_load
          COMMAND ${CMAKE_COMMAND} -P "${RXC_BINARY_LITERAL_LOAD_SCRIPT}"
          WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
+set(RXC_BINARY_MEMORY_SOURCE_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_binary_memory_source.cmake")
+set(RXC_BINARY_MEMORY_SOURCE_CONTENT "")
+string(APPEND RXC_BINARY_MEMORY_SOURCE_CONTENT
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -n -o \"binary_memory_source_rxas_check\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/binary_memory_source.crexx\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE rxc_out\n"
+       "  ERROR_VARIABLE rxc_err\n"
+       "  RESULT_VARIABLE rxc_res\n"
+       ")\n"
+       "set(full_out \"${RXAS_DIAG_DOLLAR}{rxc_out}${RXAS_DIAG_DOLLAR}{rxc_err}\")\n"
+       "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "if(NOT rxc_res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"rxc failed for binary memory source check.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n"
+       "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/binary_memory_source_rxas_check.rxas\" rxas_out)\n"
+       "string(REPLACE \"\\r\\n\" \"\\n\" rxas_out \"${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "foreach(_opcode blen bgetu32 bgetu8 bsetu16 bgetu16 bgetf64 bgeti64 bseti64 bgetf32 bsetf32 bresize bcopy bintos bgets bsets bcmpb bcmps stod dtos)\n"
+       "  if(NOT rxas_out MATCHES \"${RXAS_DIAG_DOLLAR}{_opcode}\")\n"
+       "    message(FATAL_ERROR \"Binary memory source did not emit ${RXAS_DIAG_DOLLAR}{_opcode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "  endif()\n"
+       "endforeach()\n"
+       "if(NOT rxas_out MATCHES [=[bgetu32 [^\\n]*,0x78563412fe7f0000000000000000f03f4f4b]=])\n"
+       "  message(FATAL_ERROR \"Binary memory source did not read a fixed-width field directly from a binary constant.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "endif()\n"
+       "foreach(_opcode bcheckrange getbinpos setbinpos bslice)\n"
+       "  if(rxas_out MATCHES \"${RXAS_DIAG_DOLLAR}{_opcode}\")\n"
+       "    message(FATAL_ERROR \"Binary memory source emitted legacy cursor/slice opcode ${RXAS_DIAG_DOLLAR}{_opcode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "  endif()\n"
+       "endforeach()\n"
+       "if(NOT rxas_out MATCHES [=[load r[0-9]+,4]=])\n"
+       "  message(FATAL_ERROR \"Binary memory <sizeof..type> did not lower to a literal width load.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "endif()\n"
+       "if(NOT rxas_out MATCHES [=[load r[0-9]+,8]=])\n"
+       "  message(FATAL_ERROR \"Binary memory <sizeof..int> did not lower to an 8-byte literal width load.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "endif()\n")
+file(GENERATE OUTPUT "${RXC_BINARY_MEMORY_SOURCE_SCRIPT}" CONTENT "${RXC_BINARY_MEMORY_SOURCE_CONTENT}")
+
+add_test(NAME rxc_binary_memory_source
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_BINARY_MEMORY_SOURCE_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
+set(RXC_BINARY_MEMORY_PACKED_LOOKUP_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_binary_memory_packed_lookup.cmake")
+set(RXC_BINARY_MEMORY_PACKED_LOOKUP_CONTENT "")
+string(APPEND RXC_BINARY_MEMORY_PACKED_LOOKUP_CONTENT
+       "execute_process(\n"
+       "  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" -n -o \"binary_memory_packed_lookup_rxas_check\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/binary_memory_packed_lookup.crexx\"\n"
+       "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+       "  OUTPUT_VARIABLE rxc_out\n"
+       "  ERROR_VARIABLE rxc_err\n"
+       "  RESULT_VARIABLE rxc_res\n"
+       ")\n"
+       "set(full_out \"${RXAS_DIAG_DOLLAR}{rxc_out}${RXAS_DIAG_DOLLAR}{rxc_err}\")\n"
+       "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "if(NOT rxc_res EQUAL 0)\n"
+       "  message(FATAL_ERROR \"rxc failed for packed binary lookup check.\\nOutput:\\n${RXAS_DIAG_DOLLAR}{full_out}\")\n"
+       "endif()\n"
+       "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/binary_memory_packed_lookup_rxas_check.rxas\" rxas_out)\n"
+       "string(REPLACE \"\\r\\n\" \"\\n\" rxas_out \"${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "foreach(_opcode blen bgetu32 bgetu16 bcmpb)\n"
+       "  if(NOT rxas_out MATCHES \"${RXAS_DIAG_DOLLAR}{_opcode}\")\n"
+       "    message(FATAL_ERROR \"Packed binary lookup did not emit ${RXAS_DIAG_DOLLAR}{_opcode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "  endif()\n"
+       "endforeach()\n"
+       "foreach(_opcode bslice bintos)\n"
+       "  if(rxas_out MATCHES \"${RXAS_DIAG_DOLLAR}{_opcode}\")\n"
+       "    message(FATAL_ERROR \"Packed binary lookup materialized a key slice via ${RXAS_DIAG_DOLLAR}{_opcode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
+       "  endif()\n"
+       "endforeach()\n")
+file(GENERATE OUTPUT "${RXC_BINARY_MEMORY_PACKED_LOOKUP_SCRIPT}" CONTENT "${RXC_BINARY_MEMORY_PACKED_LOOKUP_CONTENT}")
+
+add_test(NAME rxc_binary_memory_packed_lookup
+         COMMAND ${CMAKE_COMMAND} -P "${RXC_BINARY_MEMORY_PACKED_LOOKUP_SCRIPT}"
+         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+
 set(RXC_CONSTANTS_LEVELB_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/rxc_constants_levelb.cmake")
 set(RXC_CONSTANTS_LEVELB_CONTENT "")
 foreach(_mode IN ITEMS noopt opt)
@@ -836,6 +911,29 @@ add_crexx_compiler_fail_test(reference_source_deref_attr rexx_src/reference_sour
 add_crexx_compiler_fail_test(reference_source_deref_index rexx_src/reference_source_deref_index_fail.crexx reference_source_deref_index_fail.txt)
 add_crexx_compiler_fail_test(reference_source_deref_global rexx_src/reference_source_deref_global_fail.crexx reference_source_deref_global_fail.txt)
 add_crexx_compiler_fail_test(reference_source_refvalid_nonref rexx_src/reference_source_refvalid_nonref_fail.crexx reference_source_refvalid_nonref_fail.txt)
+add_crexx_compiler_fail_test(binary_memory_invalid_storage rexx_src/binary_memory_invalid_storage.crexx binary_memory_invalid_storage.txt)
+add_crexx_compiler_fail_test(binary_memory_fixed_for rexx_src/binary_memory_fixed_for.crexx binary_memory_fixed_for.txt)
+add_crexx_compiler_fail_test(binary_memory_missing_offset rexx_src/binary_memory_missing_offset.crexx binary_memory_missing_offset.txt)
+add_crexx_compiler_fail_test(binary_memory_readonly_write rexx_src/binary_memory_readonly_write.crexx binary_memory_readonly_write.txt)
+add_crexx_compiler_fail_test(binary_memory_span_write rexx_src/binary_memory_span_write.crexx binary_memory_span_write.txt)
+add_crexx_compiler_fail_test(binary_memory_target_not_binary rexx_src/binary_memory_target_not_binary.crexx binary_memory_target_not_binary.txt)
+add_crexx_compiler_fail_test(binary_memory_length_required rexx_src/binary_memory_length_required.crexx binary_memory_length_required.txt)
+add_crexx_compiler_fail_test(binary_memory_decimal_length rexx_src/binary_memory_decimal_length.crexx binary_memory_decimal_length.txt)
+add_crexx_compiler_fail_test(binary_memory_extra_argument rexx_src/binary_memory_extra_argument.crexx binary_memory_extra_argument.txt)
+add_crexx_compiler_fail_test(binary_memory_missing_length_argument rexx_src/binary_memory_missing_length_argument.crexx binary_memory_missing_length_argument.txt)
+add_crexx_compiler_fail_test(binary_memory_generic_types_unsupported rexx_src/binary_memory_generic_types_unsupported.crexx binary_memory_generic_types_unsupported.txt)
+add_crexx_compiler_fail_test(binary_memory_blen_syntax rexx_src/binary_memory_blen_syntax.crexx binary_memory_blen_syntax.txt)
+add_crexx_compiler_fail_test(binary_memory_blen_target_not_binary rexx_src/binary_memory_blen_target_not_binary.crexx binary_memory_blen_target_not_binary.txt)
+add_crexx_compiler_fail_test(binary_memory_compare_arguments rexx_src/binary_memory_compare_arguments.crexx binary_memory_compare_arguments.txt)
+add_crexx_compiler_fail_test(binary_memory_compare_explicit_length rexx_src/binary_memory_compare_explicit_length.crexx binary_memory_compare_explicit_length.txt)
+add_crexx_compiler_fail_test(binary_memory_compare_needle_type rexx_src/binary_memory_compare_needle_type.crexx binary_memory_compare_needle_type.txt)
+add_crexx_compiler_fail_test(binary_memory_compare_target_not_binary rexx_src/binary_memory_compare_target_not_binary.crexx binary_memory_compare_target_not_binary.txt)
+add_crexx_compiler_fail_test(binary_memory_compare_type rexx_src/binary_memory_compare_type.crexx binary_memory_compare_type.txt)
+add_crexx_compiler_fail_test(intrinsic_argexists_invalid rexx_src/intrinsic_argexists_invalid.crexx intrinsic_argexists_invalid.txt)
+add_crexx_compiler_fail_test(legacy_arg_call_removed rexx_src/legacy_arg_call_removed.crexx legacy_arg_call_removed.txt)
+add_crexx_compiler_fail_test(legacy_arg_stem_removed rexx_src/legacy_arg_stem_removed.crexx legacy_arg_stem_removed.txt)
+add_crexx_compiler_fail_test(legacy_typeof_removed rexx_src/legacy_typeof_removed.crexx legacy_typeof_removed.txt)
+add_crexx_compiler_fail_test(legacy_refvalid_removed rexx_src/legacy_refvalid_removed.crexx legacy_refvalid_removed.txt)
 add_test(NAME err_address_exit_disabled_fail
          COMMAND crexx_test_driver --expect-fail
          ${CMAKE_CURRENT_SOURCE_DIR}/golden/errors/err_address_exit_disabled.txt
@@ -1564,6 +1662,9 @@ add_crexx_isolated_run_test(qualified_namespace_same_module rexx_src/qualified_n
 add_crexx_isolated_run_test(class_attr_string_promotion rexx_src/class_attr_string_promotion.crexx)
 add_crexx_run_test(class_attr_register_views rexx_src/class_attr_register_views.crexx)
 add_crexx_run_test(constants_levelb_payloads rexx_src/constants_levelb_payloads.crexx)
+add_crexx_run_test(binary_memory_source rexx_src/binary_memory_source.crexx)
+add_crexx_run_test(binary_memory_span_oob rexx_src/binary_memory_span_oob.crexx)
+add_crexx_run_test(binary_memory_packed_lookup rexx_src/binary_memory_packed_lookup.crexx)
 add_crexx_isolated_run_test(qualified_bif_direct_namespace rexx_src/qualified_bif_direct_namespace.crexx)
 add_crexx_dual_import_run_test(qualified_namespace_import_source rexx_src/qualified_namespace_main.crexx rexx_src/qualified_namespace_dep_a.crexx rexx_src/qualified_namespace_dep_b.crexx source)
 add_crexx_dual_import_run_test(qualified_namespace_import_binary rexx_src/qualified_namespace_main.crexx rexx_src/qualified_namespace_dep_a.crexx rexx_src/qualified_namespace_dep_b.crexx binary)
@@ -2198,6 +2299,7 @@ add_crexx_parsing_test(expr_abut_04 parsing_src/expr_abut_04.crexx)
 add_crexx_parsing_test(expr_ambig_01 parsing_src/expr_ambig_01.crexx)
 add_crexx_parsing_test(expr_ambig_02 parsing_src/expr_ambig_02.crexx)
 add_crexx_parsing_test(expr_ambig_03 parsing_src/expr_ambig_03.crexx)
+add_crexx_parsing_test(binary_intrinsics_parse parsing_src/binary_intrinsics_parse.crexx)
 add_crexx_parsing_test(err_struct_01 parsing_src/err_struct_01.crexx)
 add_crexx_parsing_test(err_struct_02 parsing_src/err_struct_02.crexx)
 add_crexx_parsing_test(err_struct_03 parsing_src/err_struct_03.crexx)
@@ -3942,6 +4044,9 @@ string(APPEND RXC_DIAGNOSTIC_LOCALIZATION_CONTENT
        "set(unused_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/unused_import_warning.crexx\")\n"
        "set(address_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/test_implicit_address.crexx\")\n"
        "set(missing_end_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/err_02_syntax.crexx\")\n"
+       "set(binary_memory_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/binary_memory_invalid_storage.crexx\")\n"
+       "set(legacy_arg_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/legacy_arg_call_removed.crexx\")\n"
+       "set(top_level_constant_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/top_level_constant_removed.crexx\")\n"
        "function(run_diag label locale source suffix expected unexpected)\n"
        "  execute_process(\n"
        "    COMMAND \"${CMAKE_COMMAND}\" -E env \"CREXX_DIAGNOSTICS=localized\" \"CREXX_DIAGNOSTIC_LOCALE=\${locale}\" \"$<TARGET_FILE:rxc>\" -n -o \"\${label}_\${suffix}_diag\" \"\${source}\"\n"
@@ -4004,6 +4109,15 @@ string(APPEND RXC_DIAGNOSTIC_LOCALIZATION_CONTENT
        "run_diag_fail(\"en_US\" \"en_US\" \"\${missing_end_src}\" \"missing_end\" \"MISSING_END: Missing END\" \"#MISSING_END, \\\"do\\\"\")\n"
        "run_diag_fail(\"de_DE\" \"de_DE\" \"\${missing_end_src}\" \"missing_end\" \"MISSING_END: Fehlendes END\" \"#MISSING_END, \\\"do\\\"\")\n"
        "run_diag_fail(\"nl_NL\" \"nl_NL\" \"\${missing_end_src}\" \"missing_end\" \"MISSING_END: Ontbrekende END\" \"#MISSING_END, \\\"do\\\"\")\n"
+       "run_diag_fail(\"en_GB\" \"en_GB\" \"\${binary_memory_src}\" \"binary_memory\" \"BINARY_MEMORY_INVALID_STORAGE_TYPE: Binary memory access has an unsupported storage type.\" \"#BINARY_MEMORY_INVALID_STORAGE_TYPE, \\\"<at..u64>(0) data\\\"\")\n"
+       "run_diag_fail(\"de_DE\" \"de_DE\" \"\${binary_memory_src}\" \"binary_memory\" \"BINARY_MEMORY_INVALID_STORAGE_TYPE: Binärer Speicherzugriff verwendet einen nicht unterstützten Speichertyp.\" \"#BINARY_MEMORY_INVALID_STORAGE_TYPE, \\\"<at..u64>(0) data\\\"\")\n"
+       "run_diag_fail(\"nl_NL\" \"nl_NL\" \"\${binary_memory_src}\" \"binary_memory\" \"BINARY_MEMORY_INVALID_STORAGE_TYPE: Binaire-geheugentoegang gebruikt een niet-ondersteund opslagtype.\" \"#BINARY_MEMORY_INVALID_STORAGE_TYPE, \\\"<at..u64>(0) data\\\"\")\n"
+       "run_diag_fail(\"en_GB\" \"en_GB\" \"\${legacy_arg_src}\" \"legacy_arg\" \"LEGACY_ARG_CALL_SYNTAX: ARG call syntax has been removed; use arg[], arg[n], or <argexists>(n).\" \"\")\n"
+       "run_diag_fail(\"de_DE\" \"de_DE\" \"\${legacy_arg_src}\" \"legacy_arg\" \"LEGACY_ARG_CALL_SYNTAX: ARG-Aufrufsyntax wurde entfernt; verwenden Sie arg[], arg[n] oder <argexists>(n).\" \"\")\n"
+       "run_diag_fail(\"nl_NL\" \"nl_NL\" \"\${legacy_arg_src}\" \"legacy_arg\" \"LEGACY_ARG_CALL_SYNTAX: ARG-aanroepsyntaxis is verwijderd; gebruik arg[], arg[n] of <argexists>(n).\" \"\")\n"
+       "run_diag_fail(\"en_GB\" \"en_GB\" \"\${top_level_constant_src}\" \"top_level_constant\" \"CONSTANT_OUTSIDE_ROUTINE: Constant declarations must be inside an explicit routine body.\" \"\")\n"
+       "run_diag_fail(\"de_DE\" \"de_DE\" \"\${top_level_constant_src}\" \"top_level_constant\" \"CONSTANT_OUTSIDE_ROUTINE: Konstantendeklarationen müssen sich in einem expliziten Routinenrumpf befinden.\" \"\")\n"
+       "run_diag_fail(\"nl_NL\" \"nl_NL\" \"\${top_level_constant_src}\" \"top_level_constant\" \"CONSTANT_OUTSIDE_ROUTINE: Constantdeclaraties moeten binnen een expliciete routinebody staan.\" \"\")\n"
        "run_diag(\"fallback\" \"fr_FR\" \"\${unused_src}\" \"unused\" \"UNUSED_IMPORT: Import is recognised but not used.\" \"recognized\")\n")
 file(GENERATE OUTPUT "${RXC_DIAGNOSTIC_LOCALIZATION_SCRIPT}" CONTENT "${RXC_DIAGNOSTIC_LOCALIZATION_CONTENT}")
 add_test(NAME rxc_diagnostic_localization

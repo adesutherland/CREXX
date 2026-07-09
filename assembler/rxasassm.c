@@ -56,6 +56,9 @@ static int get_operand_types(OpFormat format, OperandType *types) {
         case FMT_P_S: types[0] = OP_FUNC; types[1] = OP_STRING; return 2;
         case FMT_R: types[0] = OP_REG; return 1;
         case FMT_R_B: types[0] = OP_REG; types[1] = OP_BINARY; return 2;
+        case FMT_R_B_B: types[0] = OP_REG; types[1] = OP_BINARY; types[2] = OP_BINARY; return 3;
+        case FMT_R_B_R: types[0] = OP_REG; types[1] = OP_BINARY; types[2] = OP_REG; return 3;
+        case FMT_R_B_S: types[0] = OP_REG; types[1] = OP_BINARY; types[2] = OP_STRING; return 3;
         case FMT_R_C: types[0] = OP_REG; types[1] = OP_CHAR; return 2;
         case FMT_R_D: types[0] = OP_REG; types[1] = OP_DECIMAL; return 2;
         case FMT_R_D_R: types[0] = OP_REG; types[1] = OP_DECIMAL; types[2] = OP_REG; return 3;
@@ -68,6 +71,7 @@ static int get_operand_types(OpFormat format, OperandType *types) {
         case FMT_R_P: types[0] = OP_REG; types[1] = OP_FUNC; return 2;
         case FMT_R_P_R: types[0] = OP_REG; types[1] = OP_FUNC; types[2] = OP_REG; return 3;
         case FMT_R_R: types[0] = OP_REG; types[1] = OP_REG; return 2;
+        case FMT_R_R_B: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_BINARY; return 3;
         case FMT_R_R_D: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_DECIMAL; return 3;
         case FMT_R_R_F: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_FLOAT; return 3;
         case FMT_R_R_I: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_INT; return 3;
@@ -239,12 +243,28 @@ struct backpatching_references {
     struct backpatching_references *link;
 };
 
+typedef struct rxas_constant_alias {
+    OperandType operand_type;
+    size_t pool_index;
+} rxas_constant_alias;
+
+static void free_constant_alias_tree(struct avl_tree_node **root) {
+    struct string_wrapper *i;
+
+    avl_tree_for_each_in_postorder(i, *root, struct string_wrapper, index_node) {
+        free((void *)i->value);
+        free(i);
+    }
+    *root = 0;
+}
+
 /* Frees Assembler Work Data */
 void freeasbl(Assembler_Context *context) {
     if (context->string_constants_tree) free_tree(&context->string_constants_tree);
     if (context->decimal_constants_tree) free_tree(&context->decimal_constants_tree);
     if (context->float_constants_tree) free_float_tree(&context->float_constants_tree);
     if (context->binary_constants_tree) free_tree(&context->binary_constants_tree);
+    if (context->constant_aliases_tree) free_constant_alias_tree(&context->constant_aliases_tree);
     if (context->proc_constants_tree) free_tree(&context->proc_constants_tree);
     if (context->label_constants_tree) free_tree(&context->label_constants_tree);
     if (context->extern_constants_tree) free_tree(&context->extern_constants_tree);
@@ -789,6 +809,61 @@ static size_t add_binary_to_pool(Assembler_Context *context, char* hex) {
     return entry_index;
 }
 
+static rxas_constant_alias *find_constant_alias(Assembler_Context *context, Assembler_Token *token) {
+    size_t value;
+
+    if (!context || !token || token->token_type != ID) return 0;
+    if (!src_node(context->constant_aliases_tree, (char *)token->token_value.string, &value)) return 0;
+    return (rxas_constant_alias *)value;
+}
+
+void rxasconst(Assembler_Context *context, Assembler_Token *nameToken, Assembler_Token *kindToken,
+               Assembler_Token *valueToken) {
+    rxas_constant_alias *alias;
+    size_t existing_alias;
+    size_t pool_index;
+    OperandType operand_type;
+    const char *kind = (const char *)kindToken->token_value.string;
+
+    if (src_node(context->constant_aliases_tree, (char *)nameToken->token_value.string, &existing_alias)) {
+        rxaserat(context, nameToken, "duplicate constant alias");
+        return;
+    }
+
+    if (strcmp(kind, "binary") == 0) {
+        if (valueToken->token_type != HEX) {
+            rxaserat(context, valueToken, "binary constant alias requires a hex literal");
+            return;
+        }
+        pool_index = add_binary_to_pool(context, (char *)valueToken->token_value.string);
+        operand_type = OP_BINARY;
+    }
+    else if (strcmp(kind, "string") == 0) {
+        if (valueToken->token_type != STRING) {
+            rxaserat(context, valueToken, "string constant alias requires a string literal");
+            return;
+        }
+        pool_index = add_string_to_pool(context, valueToken, (char *)valueToken->token_value.string);
+        if (pool_index == SIZE_MAX) return;
+        operand_type = OP_STRING;
+    }
+    else {
+        rxaserat(context, kindToken, "constant alias kind must be binary or string");
+        return;
+    }
+
+    alias = malloc(sizeof(*alias));
+    if (!alias) {
+        RXAS_PANIC_OOM(context, "malloc rxas constant alias", sizeof(*alias), 0);
+    }
+    alias->operand_type = operand_type;
+    alias->pool_index = pool_index;
+    if (add_node(&context->constant_aliases_tree, (char *)nameToken->token_value.string, (size_t)alias)) {
+        free(alias);
+        rxaserat(context, nameToken, "duplicate constant alias");
+    }
+}
+
 static size_t add_func_to_pool(Assembler_Context *context, Assembler_Token* token) {
     size_t entry_index;
     size_t entry_size;
@@ -893,6 +968,13 @@ static void gen_operand(Assembler_Context *context, Assembler_Token *operandToke
 
     switch(operandToken->token_type) {
         case ID:
+            {
+                rxas_constant_alias *alias = find_constant_alias(context, operandToken);
+                if (alias) {
+                    context->binary.binary[context->binary.inst_size++].index = alias->pool_index;
+                    return;
+                }
+            }
             /* Have we come across this symbol yet? */
             if (src_node(context->label_constants_tree,
                          (char*)operandToken->token_value.string,
@@ -973,8 +1055,14 @@ static void gen_operand(Assembler_Context *context, Assembler_Token *operandToke
 
 }
 
-static OperandType token_to_operand_type(int token_type) {
-    switch(token_type) {
+static OperandType token_to_operand_type(Assembler_Context *context, Assembler_Token *token) {
+    if (!token) return OP_NONE;
+    if (token->token_type == ID) {
+        rxas_constant_alias *alias = find_constant_alias(context, token);
+        if (alias) return alias->operand_type;
+    }
+
+    switch(token->token_type) {
         case ID: return OP_ID;
         case RREG:
         case GREG:
@@ -1004,9 +1092,9 @@ void promote_floats_to_decimals(Assembler_Token *instrToken,
     OperandType t1, t2, t3;
     char* inst = (char*)instrToken->token_value.string;
 
-    t1 = operand1Token?token_to_operand_type(operand1Token->token_type):OP_NONE;
-    t2 = operand2Token?token_to_operand_type(operand2Token->token_type):OP_NONE;
-    t3 = operand3Token?token_to_operand_type(operand3Token->token_type):OP_NONE;
+    t1 = operand1Token?token_to_operand_type(0, operand1Token):OP_NONE;
+    t2 = operand2Token?token_to_operand_type(0, operand2Token):OP_NONE;
+    t3 = operand3Token?token_to_operand_type(0, operand3Token):OP_NONE;
 
     /* If none of the operands are FLOATs, then we can't promote them */
     if (t1 != OP_FLOAT && t2 != OP_FLOAT && t3 != OP_FLOAT) return;
@@ -1143,9 +1231,9 @@ void rxasgen3(Assembler_Context *context, Assembler_Token *instrToken, Assembler
 void rxasgen(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
              Assembler_Token *operand2Token, Assembler_Token *operand3Token) {
 
-    OperandType type1 = operand1Token?token_to_operand_type(operand1Token->token_type):OP_NONE;
-    OperandType type2 = operand2Token?token_to_operand_type(operand2Token->token_type):OP_NONE;
-    OperandType type3 = operand3Token?token_to_operand_type(operand3Token->token_type):OP_NONE;
+    OperandType type1 = operand1Token?token_to_operand_type(context, operand1Token):OP_NONE;
+    OperandType type2 = operand2Token?token_to_operand_type(context, operand2Token):OP_NONE;
+    OperandType type3 = operand3Token?token_to_operand_type(context, operand3Token):OP_NONE;
 
     const OpInfo *inst = validate_instruction(context, instrToken, type1, type2, type3);
 
@@ -1195,12 +1283,16 @@ void rxasgen(Assembler_Context *context, Assembler_Token *instrToken, Assembler_
             case FMT_L_R_I:
             case FMT_L_R_R:
             case FMT_L_R_S:
+            case FMT_R_B_B:
+            case FMT_R_B_R:
+            case FMT_R_B_S:
             case FMT_R_D_R:
             case FMT_R_F_I:
             case FMT_R_F_R:
             case FMT_R_I_I:
             case FMT_R_I_R:
             case FMT_R_P_R:
+            case FMT_R_R_B:
             case FMT_R_R_D:
             case FMT_R_R_F:
             case FMT_R_R_I:

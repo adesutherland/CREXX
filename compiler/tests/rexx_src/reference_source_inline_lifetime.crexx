@@ -37,7 +37,7 @@ RefHolder: class
     return
 
   isLive: method = .int
-    if refvalid(value_ref) then return 1
+    if <refvalid>(value_ref) then return 1
     return 0
 
   invalidReadCaught: method = .int

@@ -118,7 +118,7 @@ test_parse_arg_plan: procedure = .int
   if check_equal("parse arg process", "REPLACE", result.get_status()) = 0 then failures = failures + 1
 
   replacement = join_result_lines(result)
-  if check_contains("parse arg source count", replacement, "__rxcpx_parse_arg_count=arg()") = 0 then failures = failures + 1
+  if check_contains("parse arg source count", replacement, "__rxcpx_parse_arg_count=arg[]") = 0 then failures = failures + 1
   if check_contains("parse arg source loop", replacement, "__rxcpx_parse_arg_source=__rxcpx_parse_arg_source || arg[__rxcpx_parse_arg_ix]") = 0 then failures = failures + 1
   if check_contains("parse arg block return", replacement, "leave with __rxcpx_parse_arg_source") = 0 then failures = failures + 1
   if check_contains("parse arg runtime call", replacement, "_parseResult=parseExec(_source,") = 0 then failures = failures + 1

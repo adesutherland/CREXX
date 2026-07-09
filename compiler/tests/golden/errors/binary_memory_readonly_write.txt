@@ -1,0 +1,2 @@
+Error in binary_memory_readonly_write.crexx @ 6:3 - #BINARY_MEMORY_READ_ONLY, "<at..u8>(0) HEADER"
+1 error(s) in source file

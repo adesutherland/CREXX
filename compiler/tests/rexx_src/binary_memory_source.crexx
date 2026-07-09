@@ -1,0 +1,127 @@
+options levelb
+
+main: procedure = .int
+  constant HEADER = '78563412FE7F0000000000000000F03F4F4B'x as .binary
+  constant NEEDLE = '7856'x as .binary
+  constant NEEDLE_BEFORE = '7855'x as .binary
+  constant NEEDLE_AFTER = '7857'x as .binary
+
+  data = .binary
+  n = 0
+  u = 0
+  b = 0
+  sz = 0
+  f = 0.0
+  s = ""
+  wide = .binary
+  textbuf = .binary
+  decbuf = .binary
+  amount = 0d
+  cmp = 0
+
+  data = HEADER
+  wide = 'FEFFFFFFFFFFFFFF0000C03F00000000'x as .binary
+  textbuf = '666F6F0062617200'x as .binary
+  decbuf = '31322E3500000000000000'x as .binary
+
+  if <blen>(data) <> 18 then return 28
+  if <blen>(HEADER) <> 18 then return 29
+
+  n = <at..u32>(0) HEADER
+  if n <> 305419896 then return 10
+
+  sz = <sizeof..u32>
+  if sz <> 4 then return 11
+  sz = <sizeof..i8>
+  if sz <> 1 then return 21
+  sz = <sizeof..int>
+  if sz <> 8 then return 22
+  sz = <sizeof..f32>
+  if sz <> 4 then return 23
+
+  b = <at..u8>(1 + 1) data
+  if b <> 52 then return 12
+
+  b = <at..u8>(0) data + 1
+  if b <> 121 then return 13
+
+  <at..u16>(4) data = 513
+  u = <at..u16>(4) data
+  if u <> 513 then return 14
+
+  f = <at..float>(8) data
+  if f <> 1.0 then return 15
+
+  s = <at..string>(16, 2) data
+  if s <> "OK" then return 16
+
+  s = <at..string>(0) textbuf
+  if s <> "foo" then return 30
+
+  <at..string>(4) textbuf = "baz"
+  s = <at..string>(4) textbuf
+  if s <> "baz" then return 31
+
+  amount = <at..decimal>(0) decbuf
+  if amount <> 12.5d then return 44
+
+  <at..decimal>(5) decbuf = 7.25d
+  amount = <at..decimal>(5) decbuf
+  if amount <> 7.25d then return 45
+
+  cmp = <compare..binary>(data, 0, NEEDLE)
+  if cmp <> 0 then return 32
+  cmp = <compare..binary>(data, 0, NEEDLE_AFTER)
+  if cmp >= 0 then return 35
+  cmp = <compare..binary>(data, 0, NEEDLE_BEFORE)
+  if cmp <= 0 then return 36
+
+  cmp = <compare..string>(textbuf, 4, "baz")
+  if cmp <> 0 then return 33
+  cmp = <compare..string>(textbuf, 4, "bay")
+  if cmp <= 0 then return 37
+  cmp = <compare..string>(textbuf, 4, "bbb")
+  if cmp >= 0 then return 38
+
+  cmp = <compare..u32>(data, 0, 305419896)
+  if cmp <> 0 then return 34
+  cmp = <compare..u32>(data, 0, 305419897)
+  if cmp >= 0 then return 39
+  cmp = <compare..u32>(data, 0, 305419895)
+  if cmp <= 0 then return 40
+
+  cmp = <compare..float>(data, 8, 1.0)
+  if cmp <> 0 then return 41
+  cmp = <compare..float>(data, 8, 2.0)
+  if cmp >= 0 then return 42
+  cmp = <compare..float>(data, 8, 0.5)
+  if cmp <= 0 then return 43
+
+  n = <at..i64>(0) wide
+  if n <> -2 then return 24
+
+  f = <at..f32>(8) wide
+  if f <> 1.5 then return 25
+
+  <at..int>(0) wide = -3
+  n = <at..int>(0) wide
+  if n <> -3 then return 26
+
+  <at..f32>(8) wide = 2.5
+  f = <at..f32>(8) wide
+  if f <> 2.5 then return 27
+
+  b = <AT..U8>(0) data
+  if b <> 120 then return 17
+
+  if 1 < 2 then nop
+  else return 18
+
+  if <at..u8>(0) data <has> 8 then nop
+  else return 19
+
+  b = <at..u8>(0) (data)
+  if b <> 120 then return 20
+
+  say "ok"
+  return 0

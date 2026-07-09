@@ -328,11 +328,6 @@ walker_result ast_structure_fixup_walker(walker_direction direction,
 
             last = node->child;
             child = node->child->sibling;
-            while (child && child->node_type == CONSTANT_DEF) {
-                last = child;
-                child = child->sibling;
-            }
-
             if (child && child->node_type != PROCEDURE &&
                 child->node_type != CLASS_DEF &&
                 child->node_type != INTERFACE_DEF) {
@@ -866,8 +861,7 @@ static int is_program_header_node(ASTNode *node) {
     return node &&
            (node->node_type == REXX_OPTIONS ||
             node->node_type == NAMESPACE ||
-            node->node_type == IMPORT ||
-            node->node_type == CONSTANT_DEF);
+            node->node_type == IMPORT);
 }
 
 static int is_top_level_callable_boundary(ASTNode *node) {
@@ -915,6 +909,34 @@ static void wrap_program_file_main(Context *context, ASTNode *node) {
         next->parent = 0;
         add_ast(body, next);
     }
+}
+
+static int constant_def_has_explicit_routine_scope(ASTNode *node) {
+    ASTNode *parent;
+
+    if (!node) return 0;
+
+    parent = node->parent;
+    while (parent) {
+        switch (parent->node_type) {
+            case PROCEDURE:
+            case METHOD:
+            case FACTORY:
+            case MATCH:
+                return !parent->is_implicit_main;
+
+            case PROGRAM_FILE:
+            case CLASS_DEF:
+            case INTERFACE_DEF:
+                return 0;
+
+            default:
+                parent = parent->parent;
+                break;
+        }
+    }
+
+    return 0;
 }
 
 walker_result ast_source_structure_walker(walker_direction direction,
@@ -1284,6 +1306,11 @@ walker_result syntax_validation_walker(walker_direction direction,
             }
             else if (node->parent && node->parent->node_type == INTERFACE_DEF) {
                 mknd_err(node, "CANT_ASSIGN_IN_INTERFACE_DEF");
+            }
+        }
+        else if (node->node_type == CONSTANT_DEF) {
+            if (!constant_def_has_explicit_routine_scope(node)) {
+                mknd_err(node, "CONSTANT_OUTSIDE_ROUTINE");
             }
         }
         else if (node->node_type == REPEAT) {

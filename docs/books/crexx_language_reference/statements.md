@@ -185,15 +185,27 @@ remain ordinary symbols outside these statement forms.
 Level B supports named compile-time constants:
 
 ```rexx
-constant FLAG_STRING = 0x00010000
-constant PAYLOAD = "41424344"x as .binary
+flags: procedure = .int
+  constant FLAG_STRING = 0x00010000
+  constant PAYLOAD = "41424344"x as .binary
+  return FLAG_STRING
 ```
 
-The initializer must be a compile-time constant expression. The declared name
-is immutable after declaration and can be used in ordinary expressions or as an
-inline assembler literal operand. Integer constants used as assembler immediates
-are substituted directly; string, decimal, float, and binary payload constants
-are stored through the normal RXBIN constant-pool path.
+Constants must be declared inside an explicit procedure, method, or factory
+scope. A `constant` declaration in the file body is a design defect and is not
+part of the Release 1 surface, because it is an instruction form and can
+accidentally imply an implicit `main()` in a library-shaped module.
+
+When a script needs shared constants in a separate declaration procedure, put the
+script body in an explicit `main`. A procedure body continues until the next
+callable boundary, so executable statements after a declaration procedure belong
+to that procedure unless a new `main: procedure` boundary is present.
+
+The initializer must be a compile-time constant expression. The declared name is
+immutable after declaration and can be used in ordinary expressions in its
+visible scope or as an inline assembler literal operand. Integer constants used
+as assembler immediates are substituted directly; string, decimal, float, and
+binary payload constants are stored through the normal RXBIN constant-pool path.
 
 ## DO/END
 

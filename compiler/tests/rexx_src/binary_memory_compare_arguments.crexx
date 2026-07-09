@@ -1,0 +1,6 @@
+options levelb
+
+main: procedure = .int
+  page = '00000000'x as .binary
+  n = <compare..binary>(page, 0)
+  return n

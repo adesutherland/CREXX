@@ -70,6 +70,7 @@ headers ::= headers header.
 header ::= globals.
 header ::= global_reg.
 header ::= global_meta.
+header ::= const_alias.
 header ::= NEWLINE.
 
 // Header error messages
@@ -98,6 +99,11 @@ global_meta ::= KW_META STRING(O) EQUAL STRING(K) STRING(M) STRING(T) STRING(A) 
 global_meta ::= KW_META STRING(E) NEWLINE. {rxaserat(context, E, "Cannot clear metadata here");}
 global_meta ::= KW_META STRING(E) EQUAL STRING STRING STRING NEWLINE. {rxaserat(context, E, "Cannot set constant metadata here");}
 global_meta ::= KW_META(T) error NEWLINE. {rxaseaft(context, T, "Expecting {string} = {meta definition}");}
+
+// Constant aliases
+const_alias ::= KW_CONST ID(N) ID(K) HEX(V) NEWLINE. {rxasconst(context,N,K,V);}
+const_alias ::= KW_CONST ID(N) ID(K) STRING(V) NEWLINE. {rxasconst(context,N,K,V);}
+const_alias ::= KW_CONST(T) error NEWLINE. {rxaseaft(context, T, "Expecting {id} binary {hex} or {id} string {string}");}
 
 // Function list and Declarations and Definitions
 functions ::= function.

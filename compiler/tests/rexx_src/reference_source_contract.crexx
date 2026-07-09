@@ -33,8 +33,8 @@ main: procedure = .int
   words[2] = "BETA"
   if readString(second_ref) <> "BETA" then return fail("element reference live write")
   call arraydelete words, 1, 1
-  if refvalid(first_ref) then return fail("deleted element reference invalidation")
-  if \refvalid(second_ref) then return fail("shifted element reference validity")
+  if <refvalid>(first_ref) then return fail("deleted element reference invalidation")
+  if <refvalid>(second_ref) = 0 then return fail("shifted element reference validity")
   if readString(second_ref) <> "BETA" then return fail("shifted element reference value")
   if words[1] <> "BETA" then return fail("shifted array value")
 
@@ -53,15 +53,15 @@ main: procedure = .int
 
   dead_scalar_ref = reference .int
   dead_scalar_ref = makeDeadScalarRef()
-  if refvalid(dead_scalar_ref) then return fail("dead scalar reference invalid")
+  if <refvalid>(dead_scalar_ref) then return fail("dead scalar reference invalid")
 
   dead_box_ref = reference .Box
   dead_box_ref = makeDeadBoxRef()
-  if refvalid(dead_box_ref) then return fail("dead object reference invalid")
+  if <refvalid>(dead_box_ref) then return fail("dead object reference invalid")
 
   dead_element_ref = reference .string
   dead_element_ref = makeDeadElementRef()
-  if refvalid(dead_element_ref) then return fail("dead element reference invalid")
+  if <refvalid>(dead_element_ref) then return fail("dead element reference invalid")
 
   say "PASS: Reference Source Contract"
   return 0

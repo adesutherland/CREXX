@@ -172,7 +172,7 @@ hasTail() .locals=2
    .srcstep 21 21 17 "inline_test_ref_vararg_runtime.crexx" 27 7 19 "  arg which = .int, expose ... = .int"
    .meta "inline_test_ref_vararg_runtime.hastail.which"="b" ".int" a1
    .srcstep 22 22 17 "inline_test_ref_vararg_runtime.crexx" 27 28 38 "  arg which = .int, expose ... = .int"
-   .srcstep 23 23 17 "inline_test_ref_vararg_runtime.crexx" 28 3 19 "  return arg(which, \"E\")"
+   .srcstep 23 23 17 "inline_test_ref_vararg_runtime.crexx" 28 3 28 "  return <argexists>(which)"
    ilt r1,a1,1
    signalt "OUT_OF_RANGE",r1
    icopy r1,a0

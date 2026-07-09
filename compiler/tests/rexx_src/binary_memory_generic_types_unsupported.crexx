@@ -1,0 +1,9 @@
+options levelb
+
+main: procedure = .int
+  data = .binary
+  data = '00000000'x as .binary
+  n = <at.[
+        .u32
+      ]>(0) data
+  return n

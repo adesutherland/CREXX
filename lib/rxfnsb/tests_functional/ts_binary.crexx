@@ -52,5 +52,51 @@ errors = errors + check(bin2x(x2bin("ff 00 aa")) = "FF00AA", "x2bin spaces lower
 errors = errors + check(bin2x(x2bin("f")) = "0F", "x2bin odd nibble")
 errors = errors + check(binlength(x2bin("zz")) = 0, "x2bin invalid")
 
+packed = "00112233"x as .binary
+errors = errors + check(binresize(packed,6) = 6, "binresize result")
+errors = errors + check(bin2x(packed) = "001122330000", "binresize zero fill")
+errors = errors + check(binfill(packed,255) = 6, "binfill result")
+errors = errors + check(bin2x(packed) = "FFFFFFFFFFFF", "binfill bytes")
+errors = errors + check(binclear(packed) = 0, "binclear result")
+errors = errors + check(binlength(packed) = 0, "binclear length")
+
+packed = "001122334455"x as .binary
+errors = errors + check(binfillat(packed,2,3,170) = 6, "binfillat result")
+errors = errors + check(bin2x(packed) = "0011AAAAAA55", "binfillat bytes")
+
+source = "AABBCCDDEE"x as .binary
+target = "0000000000"x as .binary
+errors = errors + check(bincopy(target,1,source,2,2) = 5, "bincopy result")
+errors = errors + check(bin2x(target) = "00CCDD0000", "bincopy bytes")
+
+packed = "0102030405"x as .binary
+errors = errors + check(binmemmove(packed,2,0,3) = 5, "binmemmove result")
+errors = errors + check(bin2x(packed) = "0102010203", "binmemmove bytes")
+
+packed = "0102"x as .binary
+errors = errors + check(binappend(packed,"AABB"x as .binary) = 4, "binappend result")
+errors = errors + check(bin2x(packed) = "0102AABB", "binappend bytes")
+errors = errors + check(binupdate(packed,1,"CCDD"x as .binary) = 4, "binupdate result")
+errors = errors + check(bin2x(packed) = "01CCDDBB", "binupdate bytes")
+
+packed = "00112233"x as .binary
+errors = errors + check(binmakegap(packed,2,2) = 6, "binmakegap result")
+errors = errors + check(bin2x(packed) = "001100002233", "binmakegap bytes")
+errors = errors + check(bindrop(packed,2,2) = 4, "bindrop result")
+errors = errors + check(bin2x(packed) = "00112233", "bindrop bytes")
+
+caught = 0
+do
+  call binfillat packed,5,1,0
+on signal out_of_range
+  caught = caught + 1
+end
+do
+  call bindrop packed,0,99
+on signal out_of_range
+  caught = caught + 1
+end
+errors = errors + check(caught = 2, "packed helper out-of-range signals")
+
 if errors = 0 then say "PASS: binary helpers"
 return errors <> 0

@@ -7,7 +7,7 @@ main: procedure = .int
 
   scalar = 7
   scalar_ref = reference scalar
-  if \refvalid(scalar_ref) then return fail("scalar ref invalid")
+  if <refvalid>(scalar_ref) = 0 then return fail("scalar ref invalid")
   if snapshot scalar_ref <> 7 then return fail("scalar deref initial")
 
   scalar = 11
@@ -31,7 +31,7 @@ main: procedure = .int
   items[1] = 10
   items[2] = 20
   items_ref = reference items
-  if \refvalid(items_ref) then return fail("array ref invalid")
+  if <refvalid>(items_ref) = 0 then return fail("array ref invalid")
 
   items_snapshot = snapshot items_ref
   items[1] = 30
@@ -40,7 +40,7 @@ main: procedure = .int
 
   box = .Box(4)
   box_ref = box.selfRef()
-  if \refvalid(box_ref) then return fail("self ref invalid")
+  if <refvalid>(box_ref) = 0 then return fail("self ref invalid")
   box_snapshot = snapshot box_ref
   call box.setValue(9)
   if box_snapshot.getValue() <> 4 then return fail("self snapshot")

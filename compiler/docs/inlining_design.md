@@ -308,9 +308,9 @@ Decision taken at milestone-1 closure:
 
 - keep the implementation on top of existing RXAS primitives rather than adding new VM or assembler instructions just for inlining
 - use compiler-side capture and rewrite helpers to preserve evaluation-once and alias semantics
-- support `.ref` / `expose` varargs for the common inlineable cases: `arg[]`, constant `arg[n]`, and constant `arg(n, "E")`
+- support `.ref` / `expose` varargs for the common inlineable cases: `arg[]`, constant `arg[n]`, and constant `<argexists>(n)`
 - keep forwarded constant `.ref` vararg elements semantically correct by allowing them to flow into inner `expose` calls while leaving those inner calls as normal calls instead of inventing a locator-table model mid-milestone
-- defer dynamic vararg indexing (`arg[ix]`, `arg(ix, "E")`) to a later design iteration; this is now treated as a post-milestone enhancement, not a milestone-1 blocker
+- defer dynamic vararg indexing (`arg[ix]`, `<argexists>(ix)`) to a later design iteration; this is now treated as a post-milestone enhancement, not a milestone-1 blocker
 
 ### Milestone 2: local class method and factory inlining
 
@@ -567,10 +567,10 @@ The first reader/writer subset is intentionally narrow:
   plain procedures
 - optional/default formal argument trees are transported so omitted-actual
   binding works for binary imports as well as source imports
-- by-value trailing varargs are transported for `arg[]`, constant `arg(n)`,
+- by-value trailing varargs are transported for `arg[]`, constant `arg[n]`,
   and constant existence/value nodes that are already proven safe by the local
   inliner. Dynamic vararg indexing is transported by the codec but rejected by
-  the writer/reader eligibility gates: `arg(ix)` must preserve call-time
+  the writer/reader eligibility gates: `arg[ix]` must preserve call-time
   OUT_OF_RANGE behaviour for zero or short vararg tails, and the current
   materialised-tail array proof is not complete for that shape.
 - non-aliasing raw `ASSEMBLER` nodes are transported as ordinary AST nodes.
@@ -750,7 +750,7 @@ The implementation now covers:
 - array-typed formals and array-valued returns, including assignment, expression, and temp-materialised return sites
 - non-symbol aggregate actuals and non-symbol aggregate return expressions via inline temp materialisation
 - broader aliasable by-reference actuals, including computed indexed/stem locator children
-- `.ref` / `expose` varargs for `arg[]`, constant `arg[n]`, and constant `arg(n, "E")`, using existing RXAS argument/link primitives plus compiler-side capture helpers
+- `.ref` / `expose` varargs for `arg[]`, constant `arg[n]`, and constant `<argexists>(n)`, using existing RXAS argument/link primitives plus compiler-side capture helpers
 - assignment-site inlining when the LHS itself has child selectors, by falling back to the RHS `BLOCK_EXPR` path
 - binary-typed local plain procedures across the current statement and expression rewrite machinery
 - preserved default-init requirements for duplicated inline locals and inline-created aggregate temporaries
@@ -781,7 +781,7 @@ The implementation still excludes:
   factory-selection, and object-lifetime metadata is rich enough to prove them
 - procedures with procedure-level `expose` clauses
 - callables containing raw assembler aliasing statements
-- dynamic-index vararg access (`arg.i`, `arg(i)`, `arg(i, "E")`) until the
+- dynamic-index vararg access (`arg[i]`, `<argexists>(i)`) until the
   lowering proves both register liveness and exact OUT_OF_RANGE semantics for
   every vararg tail length
 - mutating methods whose receiver copyback needs an unsupported target shape,
@@ -1100,7 +1100,7 @@ The remaining gates can be understood as a small set of ordinary situations:
   ```rexx
   pick: procedure = .string
     arg which = .int, ... = .string
-    return arg(which)
+    return arg[which]
   ```
 
 - The body carries loop/control-flow or numeric-control nodes that the inline
