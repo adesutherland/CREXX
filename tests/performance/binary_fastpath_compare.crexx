@@ -1,0 +1,116 @@
+/* Observational benchmark for scalar binary-memory instruction hot paths. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+
+cells = 200000
+if argv[0] >= 1 then cells = argv[1]
+
+bytes8 = cells
+bytes32 = cells * 4
+bytes64 = cells * 8
+
+array = .int[]
+buf8 = .binary
+buf32 = .binary
+buf64 = .binary
+
+call binresize buf8, bytes8
+call binresize buf32, bytes32
+call binresize buf64, bytes64
+
+start = time("us")
+do i = 1 to cells
+  array[i] = i
+end
+array_write_elapsed = time("us") - start
+
+checksum = 0
+start = time("us")
+do i = 1 to cells
+  checksum = checksum + array[i]
+end
+array_read_elapsed = time("us") - start
+
+value = 0
+offset = 0
+start = time("us")
+do i = 1 to cells
+  <at..u8>(offset) buf8 = value
+  value = value + 1
+  if value > 255 then value = 0
+  offset = offset + 1
+end
+u8_write_elapsed = time("us") - start
+
+u8_sum = 0
+offset = 0
+start = time("us")
+do i = 1 to cells
+  u8_sum = u8_sum + <at..u8>(offset) buf8
+  offset = offset + 1
+end
+u8_read_elapsed = time("us") - start
+
+offset = 0
+start = time("us")
+do i = 1 to cells
+  <at..u32>(offset) buf32 = i
+  offset = offset + 4
+end
+u32_write_elapsed = time("us") - start
+
+u32_sum = 0
+offset = 0
+start = time("us")
+do i = 1 to cells
+  u32_sum = u32_sum + <at..u32>(offset) buf32
+  offset = offset + 4
+end
+u32_read_elapsed = time("us") - start
+
+offset = 0
+start = time("us")
+do i = 1 to cells
+  <at..int>(offset) buf64 = i
+  offset = offset + 8
+end
+i64_write_elapsed = time("us") - start
+
+i64_sum = 0
+offset = 0
+start = time("us")
+do i = 1 to cells
+  i64_sum = i64_sum + <at..int>(offset) buf64
+  offset = offset + 8
+end
+i64_read_elapsed = time("us") - start
+
+if array[1] <> 1 then return fail("array first")
+if <at..u8>(0) buf8 <> 0 then return fail("u8 first")
+if <at..u32>(0) buf32 <> 1 then return fail("u32 first")
+if <at..int>(0) buf64 <> 1 then return fail("i64 first")
+if checksum <> u32_sum then return fail("u32 checksum")
+if checksum <> i64_sum then return fail("i64 checksum")
+if u8_sum <= 0 then return fail("u8 checksum")
+
+say "benchmark=binary_fastpath_compare"
+say "cells="cells
+say "array_write_us="array_write_elapsed
+say "array_read_us="array_read_elapsed
+say "u8_write_us="u8_write_elapsed
+say "u8_read_us="u8_read_elapsed
+say "u32_write_us="u32_write_elapsed
+say "u32_read_us="u32_read_elapsed
+say "i64_write_us="i64_write_elapsed
+say "i64_read_us="i64_read_elapsed
+say "checksum="checksum
+say "u8_checksum="u8_sum
+say "PASS: Binary Fastpath Compare"
+return 0
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1

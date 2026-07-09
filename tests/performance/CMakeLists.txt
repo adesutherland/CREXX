@@ -74,6 +74,23 @@ foreach(_crexx_mode IN ITEMS noopt opt)
     )
 endforeach()
 
+add_custom_target(performance_binary_fastpath ALL)
+crexx_add_rexx_opt_matrix(
+        NAME binary_fastpath_compare
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/binary_fastpath_compare.crexx
+        TARGET_GROUP performance_binary_fastpath
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library compiler_exit_bin
+        RUNTIME_ARGS ${LIBRPATH}
+        TEST_LABELS "performance;binary"
+)
+foreach(_crexx_mode IN ITEMS noopt opt)
+    set_tests_properties(binary_fastpath_compare_${_crexx_mode} PROPERTIES
+            PASS_REGULAR_EXPRESSION "PASS: Binary Fastpath Compare"
+            FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+    )
+endforeach()
+
 crexx_add_rexx_opt_matrix(
         NAME inlining_complex
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/inlining_complex.crexx

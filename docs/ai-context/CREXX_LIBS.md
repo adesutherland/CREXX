@@ -331,8 +331,11 @@ The current public classlib collection surfaces are Rexx-only. `StringHashMap`,
 string-key/object-value map variants no longer require the historical native
 `treemap` or `llist` plugins. `StringTreeMap` is backed by an AVL node pool in
 parallel arrays; `StringOldTreeMap` retains the previous array-backed map only
-for comparative benchmarks. String-key lookup uses strict equality so empty
-string keys and blank string keys remain distinct.
+for comparative benchmarks. Temporary `StringTreeMapV2`/`V2A`/`V3`/`V4`
+experiments were used to measure binary-memory and source-shape alternatives,
+then removed because none improved on the production `StringTreeMap` overall.
+String-key lookup uses strict equality so empty string keys and blank string
+keys remain distinct.
 
 `Id`, `KeyDB`, and `Os` are intentionally kept out of the core
 `classlib.rxbin` image so products such as RexxScript can use the class
@@ -366,6 +369,27 @@ left block-expression scaffolding in generated RXAS; writing `get()` and
 about 200 ms to about 2.3 ms on the local arm64 development machine. Keep hot
 lookup/update loops direct unless RXAS inspection proves the helper shape is
 equivalent.
+
+The binary-backed treemap trials showed that packed metadata can be expressed
+cleanly with `.binary` and direct binary-memory lowering. Source-shape caching
+helps both the array/register and binary versions; a packed `.u32`/`.u8` binary
+layout improves the binary variant versus the first 64-bit-field cut. The
+current optimized `.int[]` AVL metadata remains the best overall shape for this
+workload. The measurements are retained in
+`docs/planning/beta-3/notes/string-avl-treemap-trial.md` as evidence for
+binary-surface ergonomics and missing intrinsics, not as live classlib APIs.
+
+The focused `binary_fastpath_compare` benchmark isolates scalar binary-memory
+instructions from collection algorithms. In Release builds, direct `.u8`,
+`.u32`, and `.int` binary reads/writes are substantially faster than indexed
+`.int[]` attribute-array access. A VM fast-path change keeps strict bounds
+checks and canonical little-endian semantics, but replaces byte-by-byte
+fixed-width load/store loops with `memcpy`-based 1/2/4/8-byte helpers plus
+byte-swap only on known big-endian hosts. A temporary unsafe no-upper-bound
+experiment showed only modest gains, so Release 1 should keep strict checked
+binary access. See
+`docs/planning/beta-3/notes/binary-fastpath-research.md` for timings and user
+guidance.
 
 `lib/plugins/arrays` is deprecated and retained only as a legacy plugin smoke
 test. New Level B code should import `rxfnsb` and use the standard BIFs.

@@ -16,6 +16,9 @@ dominate runtime cost.
 - `.binary` variables and `.binary` constants use the same read syntax.
 - Writes require a mutable `.binary` variable; constants are read-only.
 - Fixed-width numeric fields use canonical little-endian storage.
+- Fixed-width numeric fields do not use host byte order. If a file, protocol,
+  or network payload uses a different byte order, the program must use the
+  correct layout convention or conversion helper for that format.
 - `.string` fields are UTF-8. Invalid UTF-8 raises `UNICODE_ERROR` when a string
   value is materialized or compared as a string field.
 - Ordinary `=` compares ordinary materialized Rexx values. Zero-copy binary

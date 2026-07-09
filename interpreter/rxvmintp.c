@@ -213,10 +213,75 @@ static int rxvm_rxinteger_to_size(rxinteger value, size_t *result) {
     return 1;
 }
 
+static uint16_t rxvm_bswap16(uint16_t value) {
+    return (uint16_t)((value >> 8) | (value << 8));
+}
+
+static uint32_t rxvm_bswap32(uint32_t value) {
+    return ((value & UINT32_C(0x000000ff)) << 24) |
+           ((value & UINT32_C(0x0000ff00)) << 8) |
+           ((value & UINT32_C(0x00ff0000)) >> 8) |
+           ((value & UINT32_C(0xff000000)) >> 24);
+}
+
+static uint64_t rxvm_bswap64(uint64_t value) {
+    return ((value & UINT64_C(0x00000000000000ff)) << 56) |
+           ((value & UINT64_C(0x000000000000ff00)) << 40) |
+           ((value & UINT64_C(0x0000000000ff0000)) << 24) |
+           ((value & UINT64_C(0x00000000ff000000)) << 8) |
+           ((value & UINT64_C(0x000000ff00000000)) >> 8) |
+           ((value & UINT64_C(0x0000ff0000000000)) >> 24) |
+           ((value & UINT64_C(0x00ff000000000000)) >> 40) |
+           ((value & UINT64_C(0xff00000000000000)) >> 56);
+}
+
+#if defined(_WIN32) || defined(__LITTLE_ENDIAN__) || \
+    (defined(__BYTE_ORDER__) && defined(__ORDER_LITTLE_ENDIAN__) && __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
+#define RXVM_HOST_LITTLE_ENDIAN 1
+#elif defined(__BIG_ENDIAN__) || \
+      (defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+#define RXVM_HOST_BIG_ENDIAN 1
+#endif
+
 static uint64_t rxvm_binary_read_le_bytes(const unsigned char *bytes, size_t offset, size_t width) {
     const unsigned char *source = bytes + offset;
     uint64_t result = 0;
     size_t i;
+
+    if (width == 1) return source[0];
+#if defined(RXVM_HOST_LITTLE_ENDIAN)
+    if (width == 2) {
+        uint16_t value;
+        memcpy(&value, source, sizeof(value));
+        return value;
+    }
+    if (width == 4) {
+        uint32_t value;
+        memcpy(&value, source, sizeof(value));
+        return value;
+    }
+    if (width == 8) {
+        uint64_t value;
+        memcpy(&value, source, sizeof(value));
+        return value;
+    }
+#elif defined(RXVM_HOST_BIG_ENDIAN)
+    if (width == 2) {
+        uint16_t value;
+        memcpy(&value, source, sizeof(value));
+        return rxvm_bswap16(value);
+    }
+    if (width == 4) {
+        uint32_t value;
+        memcpy(&value, source, sizeof(value));
+        return rxvm_bswap32(value);
+    }
+    if (width == 8) {
+        uint64_t value;
+        memcpy(&value, source, sizeof(value));
+        return rxvm_bswap64(value);
+    }
+#endif
 
     for (i = 0; i < width; i++) {
         result |= ((uint64_t)source[i]) << (i * 8);
@@ -231,6 +296,51 @@ static uint64_t rxvm_binary_read_le(const value *buffer, size_t offset, size_t w
 static void rxvm_binary_write_le(value *buffer, size_t offset, size_t width, uint64_t data) {
     unsigned char *bytes = (unsigned char *)buffer->binary_value + offset;
     size_t i;
+
+    if (width == 1) {
+        bytes[0] = (unsigned char)(data & 0xffu);
+        clear_vm_private_flags(buffer);
+        return;
+    }
+#if defined(RXVM_HOST_LITTLE_ENDIAN)
+    if (width == 2) {
+        uint16_t value = (uint16_t)data;
+        memcpy(bytes, &value, sizeof(value));
+        clear_vm_private_flags(buffer);
+        return;
+    }
+    if (width == 4) {
+        uint32_t value = (uint32_t)data;
+        memcpy(bytes, &value, sizeof(value));
+        clear_vm_private_flags(buffer);
+        return;
+    }
+    if (width == 8) {
+        uint64_t value = data;
+        memcpy(bytes, &value, sizeof(value));
+        clear_vm_private_flags(buffer);
+        return;
+    }
+#elif defined(RXVM_HOST_BIG_ENDIAN)
+    if (width == 2) {
+        uint16_t value = rxvm_bswap16((uint16_t)data);
+        memcpy(bytes, &value, sizeof(value));
+        clear_vm_private_flags(buffer);
+        return;
+    }
+    if (width == 4) {
+        uint32_t value = rxvm_bswap32((uint32_t)data);
+        memcpy(bytes, &value, sizeof(value));
+        clear_vm_private_flags(buffer);
+        return;
+    }
+    if (width == 8) {
+        uint64_t value = rxvm_bswap64(data);
+        memcpy(bytes, &value, sizeof(value));
+        clear_vm_private_flags(buffer);
+        return;
+    }
+#endif
 
     for (i = 0; i < width; i++) {
         bytes[i] = (unsigned char)((data >> (i * 8)) & 0xffu);
