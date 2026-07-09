@@ -15,6 +15,7 @@ BINARY_MEMORY_COMPARE_NEEDLE_TYPE = Binärspeicher-Vergleichswert hat einen inko
 BINARY_MEMORY_COMPARE_TYPE = Binärspeicher-Vergleichsintrinsic verwendet einen nicht unterstützten Vergleichstyp.
 BINARY_MEMORY_FIXED_FOR_NOT_ALLOWED = Binärer Speicherzugriff mit fester Breite darf kein Längenargument angeben.
 BINARY_MEMORY_INVALID_STORAGE_TYPE = Binärer Speicherzugriff verwendet einen nicht unterstützten Speichertyp.
+BINARY_MEMORY_LENGTH_NOT_ALLOWED = Diese Form des binären Speicherzugriffs akzeptiert kein Längenargument.
 BINARY_MEMORY_LENGTH_REQUIRED = Binärer Speicherzugriff mit variabler Länge erfordert ein Längenargument.
 BINARY_MEMORY_OFFSET_REQUIRED = Binärer Speicherzugriff erfordert ein Bytepositionsargument.
 BINARY_MEMORY_READ_ONLY = Ziel des binären Speicherzugriffs ist schreibgeschützt.

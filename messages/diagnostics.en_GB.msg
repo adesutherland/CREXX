@@ -15,6 +15,7 @@ BINARY_MEMORY_COMPARE_NEEDLE_TYPE = Binary memory compare needle has an incompat
 BINARY_MEMORY_COMPARE_TYPE = Binary memory compare intrinsic has an unsupported comparison type.
 BINARY_MEMORY_FIXED_FOR_NOT_ALLOWED = Fixed-width binary memory access must not specify a length argument.
 BINARY_MEMORY_INVALID_STORAGE_TYPE = Binary memory access has an unsupported storage type.
+BINARY_MEMORY_LENGTH_NOT_ALLOWED = This binary memory access form does not accept a length argument.
 BINARY_MEMORY_LENGTH_REQUIRED = Variable-length binary memory access requires a length argument.
 BINARY_MEMORY_OFFSET_REQUIRED = Binary memory access requires a byte-position argument.
 BINARY_MEMORY_READ_ONLY = Binary memory access target is read-only.

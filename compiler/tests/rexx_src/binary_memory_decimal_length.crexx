@@ -1,0 +1,6 @@
+options levelb
+
+main: procedure = .int
+  data = '31322E3500'x as .binary
+  amount = <at..decimal>(0, 4) data
+  return 0

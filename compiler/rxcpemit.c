@@ -1475,8 +1475,16 @@ static walker_result emit_walker(walker_direction direction,
                                             child2->register_num);
                             output_append_text(node->output, temp1);
                             free(temp1);
-                        } else if (info.value_type == TP_STRING && child1->node_type == OP_BINARY_AT) {
+                        } else if ((info.value_type == TP_STRING || info.value_type == TP_DECIMAL) &&
+                                   child1->node_type == OP_BINARY_AT) {
                             char *value_operand = register_operand(child2, TP_STRING);
+                            if (info.value_type == TP_DECIMAL) {
+                                temp1 = mprintf("   dtos %c%d\n",
+                                                child2->register_type,
+                                                child2->register_num);
+                                output_append_text(node->output, temp1);
+                                free(temp1);
+                            }
                             temp1 = mprintf("   bsets %c%d,%c%d,%s\n",
                                             base->register_type,
                                             base->register_num,

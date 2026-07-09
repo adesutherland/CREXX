@@ -1,0 +1,2 @@
+Error in binary_memory_decimal_length.crexx @ 5:12 - #BINARY_MEMORY_LENGTH_NOT_ALLOWED, "<at..decimal>(0, 4) data"
+1 error(s) in source file

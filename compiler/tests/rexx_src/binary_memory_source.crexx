@@ -15,11 +15,14 @@ main: procedure = .int
   s = ""
   wide = .binary
   textbuf = .binary
+  decbuf = .binary
+  amount = 0d
   cmp = 0
 
   data = HEADER
   wide = 'FEFFFFFFFFFFFFFF0000C03F00000000'x as .binary
   textbuf = '666F6F0062617200'x as .binary
+  decbuf = '31322E3500000000000000'x as .binary
 
   if <blen>(data) <> 18 then return 28
   if <blen>(HEADER) <> 18 then return 29
@@ -58,6 +61,13 @@ main: procedure = .int
   <at..string>(4) textbuf = "baz"
   s = <at..string>(4) textbuf
   if s <> "baz" then return 31
+
+  amount = <at..decimal>(0) decbuf
+  if amount <> 12.5d then return 44
+
+  <at..decimal>(5) decbuf = 7.25d
+  amount = <at..decimal>(5) decbuf
+  if amount <> 7.25d then return 45
 
   cmp = <compare..binary>(data, 0, NEEDLE)
   if cmp <> 0 then return 32

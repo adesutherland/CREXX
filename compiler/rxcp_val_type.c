@@ -300,6 +300,7 @@ static void validate_binary_memory_at(Context *context, ASTNode *node) {
 
     if (!info.is_fixed &&
         info.value_type != TP_STRING &&
+        info.value_type != TP_DECIMAL &&
         (!node->parent || node->parent->node_type != OP_BINARY_FOR)) {
         mknd_err(node, "BINARY_MEMORY_LENGTH_REQUIRED");
     }
@@ -319,6 +320,7 @@ static void validate_binary_memory_for(Context *context, ASTNode *node) {
     validate_binary_memory_at(context, ast_chdn(node, 0));
     if (!binary_memory_storage_info(context, node, &info)) return;
     if (info.is_fixed) mknd_err(node, "BINARY_MEMORY_FIXED_FOR_NOT_ALLOWED");
+    else if (info.value_type == TP_DECIMAL) mknd_err(node, "BINARY_MEMORY_LENGTH_NOT_ALLOWED");
     if (length) set_node_target_type(context, length, TP_INTEGER);
     else mknd_err(node, "BINARY_MEMORY_LENGTH_REQUIRED");
 }
@@ -2524,7 +2526,8 @@ walker_result type_safety_walker(walker_direction direction,
                         if (rxcp_binary_memory_base_is_readonly(child1)) {
                             mknd_err(child1, "BINARY_MEMORY_READ_ONLY");
                         }
-                        if (info.value_type == TP_STRING && child1->node_type == OP_BINARY_AT) {
+                        if ((info.value_type == TP_STRING || info.value_type == TP_DECIMAL) &&
+                            child1->node_type == OP_BINARY_AT) {
                             ast_sttn(child2, child1);
                             validate_node_promotion(context, child2);
                         }

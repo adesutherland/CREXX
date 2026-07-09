@@ -492,7 +492,7 @@ string(APPEND RXC_BINARY_MEMORY_SOURCE_CONTENT
        "endif()\n"
        "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/binary_memory_source_rxas_check.rxas\" rxas_out)\n"
        "string(REPLACE \"\\r\\n\" \"\\n\" rxas_out \"${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
-       "foreach(_opcode blen bgetu32 bgetu8 bsetu16 bgetu16 bgetf64 bgeti64 bseti64 bgetf32 bsetf32 bresize bcopy bintos bgets bsets bcmpb bcmps)\n"
+       "foreach(_opcode blen bgetu32 bgetu8 bsetu16 bgetu16 bgetf64 bgeti64 bseti64 bgetf32 bsetf32 bresize bcopy bintos bgets bsets bcmpb bcmps stod dtos)\n"
        "  if(NOT rxas_out MATCHES \"${RXAS_DIAG_DOLLAR}{_opcode}\")\n"
        "    message(FATAL_ERROR \"Binary memory source did not emit ${RXAS_DIAG_DOLLAR}{_opcode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_out}\")\n"
        "  endif()\n"
@@ -918,6 +918,7 @@ add_crexx_compiler_fail_test(binary_memory_readonly_write rexx_src/binary_memory
 add_crexx_compiler_fail_test(binary_memory_span_write rexx_src/binary_memory_span_write.crexx binary_memory_span_write.txt)
 add_crexx_compiler_fail_test(binary_memory_target_not_binary rexx_src/binary_memory_target_not_binary.crexx binary_memory_target_not_binary.txt)
 add_crexx_compiler_fail_test(binary_memory_length_required rexx_src/binary_memory_length_required.crexx binary_memory_length_required.txt)
+add_crexx_compiler_fail_test(binary_memory_decimal_length rexx_src/binary_memory_decimal_length.crexx binary_memory_decimal_length.txt)
 add_crexx_compiler_fail_test(binary_memory_extra_argument rexx_src/binary_memory_extra_argument.crexx binary_memory_extra_argument.txt)
 add_crexx_compiler_fail_test(binary_memory_missing_length_argument rexx_src/binary_memory_missing_length_argument.crexx binary_memory_missing_length_argument.txt)
 add_crexx_compiler_fail_test(binary_memory_generic_types_unsupported rexx_src/binary_memory_generic_types_unsupported.crexx binary_memory_generic_types_unsupported.txt)

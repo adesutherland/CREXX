@@ -55,13 +55,18 @@ Variable-size storage views are:
 | --- | --- | --- |
 | `.binary` | Bytes | A copied `.binary` value. |
 | `.string` | UTF-8 codepoints, or omitted for NUL-terminated | A copied `.string` value after validation. |
-| `.decimal` | Bytes | A `.decimal` value parsed from decimal text. |
+| `.decimal` | Omitted for NUL-terminated | A `.decimal` value parsed from decimal text. |
 
 For `.string`, the starting position is still a byte offset. The length is a
 count of UTF-8 codepoints to extract. The VM scans from the byte offset to find
 the corresponding byte length, validates the selected UTF-8, copies those exact
 bytes into the destination string, and writes the string safety NUL outside the
 logical string length.
+
+For `.decimal`, the starting position is a byte offset to zero-terminated
+decimal text. The terminator is not part of the decimal value. Decimal reads
+scan to the first zero byte, validate the selected bytes as UTF-8 text, and
+parse that text through the active decimal plugin.
 
 ## Size And Length Intrinsics
 
@@ -136,19 +141,19 @@ Variable-size reads materialize ordinary Rexx values:
 ```rexx
 key_bytes = <at..binary>(key_offset, key_len) arena
 name = <at..string>(name_offset, name_codepoints) arena
-amount = <at..decimal>(amount_offset, amount_bytes) arena
+amount = <at..decimal>(amount_offset) arena
 ```
 
-The `.binary` and `.decimal` length arguments are byte counts. The `.string`
-length argument is a UTF-8 codepoint count from the byte offset.
+The `.binary` length argument is a byte count. The `.string` length argument is
+a UTF-8 codepoint count from the byte offset. The `.decimal` form does not
+accept a length argument; decimal fields are zero-terminated decimal text.
 
-Release 1 implements zero-terminated string writes and rejects variable-size
-span writes:
+Release 1 implements zero-terminated string and decimal writes and rejects
+variable-size span writes:
 
 ```rexx
 <at..binary>(key_offset, key_len) arena = key_bytes
 <at..string>(name_offset, name_codepoints) arena = name
-<at..decimal>(amount_offset, amount_bytes) arena = amount
 ```
 
 These span-write forms raise `BINARY_MEMORY_SPAN_WRITE_UNSUPPORTED`.
@@ -169,12 +174,19 @@ argument:
 ```rexx
 text = <at..string>(offset) memory
 <at..string>(offset) memory = text
+amount = <at..decimal>(offset) memory
+<at..decimal>(offset) memory = amount
 ```
 
 The read form scans from the byte offset to the first zero byte, validates the
 selected bytes as UTF-8, and copies those bytes into a `.string`. The write form
 writes the string bytes followed by one zero byte. It does not resize the binary
 buffer; the complete string plus terminator must already fit.
+
+The decimal forms use the same zero-terminated field convention. Reads parse
+the selected text as `.decimal`. Writes convert the decimal value to decimal
+text through the active decimal plugin, then write those bytes followed by one
+zero byte. They do not resize the binary buffer.
 
 The fixed-codepoint read form remains
 `<at..string>(offset, codepoints) memory`. Release 1 does not support the
@@ -330,7 +342,8 @@ Existing keys that must continue to be used:
 | `BINARY_MEMORY_AT_REQUIRED` | Binary memory access requires an at intrinsic. | Binary memory access was parsed without an `at` head where one is required. |
 | `BINARY_MEMORY_FIXED_FOR_NOT_ALLOWED` | Fixed-width binary memory access must not specify a length argument. | Fixed-width access has an illegal length argument. |
 | `BINARY_MEMORY_INVALID_STORAGE_TYPE` | Binary memory access has an unsupported storage type. | The dotted storage type is not supported. |
-| `BINARY_MEMORY_LENGTH_REQUIRED` | Variable-length binary memory access requires a length argument. | A `.binary` or `.decimal` variable-size form is missing its length argument. |
+| `BINARY_MEMORY_LENGTH_NOT_ALLOWED` | This binary memory access form does not accept a length argument. | A zero-terminated form such as `.decimal` was given a length argument. |
+| `BINARY_MEMORY_LENGTH_REQUIRED` | Variable-length binary memory access requires a length argument. | A `.binary` variable-size form is missing its length argument. |
 | `BINARY_MEMORY_OFFSET_REQUIRED` | Binary memory access requires a byte-position argument. | A binary-memory form is missing its byte offset. |
 | `BINARY_MEMORY_READ_ONLY` | Binary memory access target is read-only. | A write targets a binary constant or other read-only storage. |
 | `BINARY_MEMORY_SPAN_WRITE_UNSUPPORTED` | Variable-length binary memory writes are not supported yet. | A variable-size write is not implemented in this compiler slice. |
@@ -362,8 +375,7 @@ Runtime operations signal:
 The Release 1 surface deliberately leaves a few items for later work:
 
 - unsigned 64-bit storage syntax and ordering rules (`.u64`);
-- variable-size span writes for `.binary`, `.decimal`, and fixed-codepoint
-  `.string` fields;
+- variable-size span writes for `.binary` and fixed-codepoint `.string` fields;
 - explicit source-length zero-copy binary compare;
 - direct compiler or inliner lowering for selected packed-memory helpers when
   profiling proves the helper call overhead matters;

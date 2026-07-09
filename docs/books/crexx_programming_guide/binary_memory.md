@@ -162,7 +162,7 @@ is backed by the RXAS `bfill` instruction. `binmemmove` is safe for overlapping
 ranges and currently uses conservative library code; direct lowering remains a
 future optimization if profiling shows helper overhead in hot mutation paths.
 
-## Text Fields
+## Text And Decimal Fields
 
 There are two text layouts:
 
@@ -187,6 +187,20 @@ if <compare..string>(record, keyword_offset, "select") = 0 then say "keyword"
 ```
 
 Invalid UTF-8 signals `UNICODE_ERROR`.
+
+Decimal fields use zero-terminated decimal text. This keeps the packed format
+simple for variable-width decimal values; the program only needs the starting
+byte offset:
+
+```rexx
+amount = <at..decimal>(amount_offset) record
+<at..decimal>(amount_offset) record = amount + 1d
+```
+
+The read form scans to the zero byte, validates the selected text, and parses it
+through the active decimal plugin. The write form converts the decimal value to
+decimal text, writes the bytes, and writes one zero byte. The binary buffer must
+already have room for the complete text plus terminator.
 
 ## When Not To Pack
 

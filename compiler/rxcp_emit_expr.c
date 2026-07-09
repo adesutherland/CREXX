@@ -1583,7 +1583,7 @@ void emit_expression(ASTNode *node, void *payload) {
                     output_append_text(node->output, temp1);
                     free(temp1);
                     free(base_operand);
-                } else if (info.value_type == TP_STRING) {
+                } else if (info.value_type == TP_STRING || info.value_type == TP_DECIMAL) {
                     char *base_operand = binary_memory_operand_text(base, TP_BINARY);
                     temp1 = mprintf("   bgets %c%d,%s,%c%d\n",
                                     node->register_type,
@@ -1594,6 +1594,13 @@ void emit_expression(ASTNode *node, void *payload) {
                     output_append_text(node->output, temp1);
                     free(temp1);
                     free(base_operand);
+                    if (info.value_type == TP_DECIMAL) {
+                        temp1 = mprintf("   stod %c%d\n",
+                                        node->register_type,
+                                        node->register_num);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    }
                 }
             }
 

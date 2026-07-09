@@ -15,6 +15,7 @@ BINARY_MEMORY_COMPARE_NEEDLE_TYPE = Binaire-geheugenvergelijkingswaarde heeft ee
 BINARY_MEMORY_COMPARE_TYPE = Binaire-geheugenvergelijkingsintrinsic heeft een niet-ondersteund vergelijkingstype.
 BINARY_MEMORY_FIXED_FOR_NOT_ALLOWED = Binaire-geheugentoegang met vaste breedte mag geen lengteargument opgeven.
 BINARY_MEMORY_INVALID_STORAGE_TYPE = Binaire-geheugentoegang gebruikt een niet-ondersteund opslagtype.
+BINARY_MEMORY_LENGTH_NOT_ALLOWED = Deze vorm van binaire-geheugentoegang accepteert geen lengteargument.
 BINARY_MEMORY_LENGTH_REQUIRED = Binaire-geheugentoegang met variabele lengte vereist een lengteargument.
 BINARY_MEMORY_OFFSET_REQUIRED = Binaire-geheugentoegang vereist een bytepositieargument.
 BINARY_MEMORY_READ_ONLY = Doel van binaire-geheugentoegang is alleen-lezen.
