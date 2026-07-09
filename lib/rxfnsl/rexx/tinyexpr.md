@@ -8,6 +8,7 @@ surface is usable for generated language tooling.
 The demo exposes:
 
 - a packed ASCII character-class table stored as a `.binary` constant;
+- a readable generated-table style using continued hex-literal chunks;
 - a table-driven lexer for a tiny arithmetic-expression language;
 - a packed binary token stream with fixed 16-byte token records;
 - a single exposed constant declaration procedure for token ids, token layout,
@@ -48,9 +49,11 @@ The lessons to watch are:
 - whether the declaration-procedure pattern is sufficient for generated
   source-module-local constants, and whether Release 2 should add cross-module
   constants plus wildcard expose forms such as `TINY_TOK_*`;
-- whether multiline or chunked binary constants should be accepted directly by
-  the lexer/parser so generated tables remain readable without manual joining;
+- whether continued hex-literal chunks keep generated binary tables readable
+  enough without external table joining;
 - whether fixed token records are clear enough in Rexx source;
+- whether `select` dispatch is a better emitted shape than nested `if` chains,
+  especially if Release 1 adds optimized lowering for static `select` cases;
 - whether variable-length lexeme handling should stay binary-first, with string
   materialization reserved for diagnostics and NUL-terminated packed fields;
 - whether Release 2 memory structs can remove repeated field-offset arithmetic
