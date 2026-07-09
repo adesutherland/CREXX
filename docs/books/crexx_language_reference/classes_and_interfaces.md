@@ -15,7 +15,13 @@ Level B implements the core class/interface model:
 
 Level B does **not** currently implement interface inheritance, interface
 attributes/state, interface factory bodies, overloads, singleton declarations,
-or destructor/finalizer syntax.
+class/interface constants, or destructor/finalizer syntax.
+
+Class and interface constants are a Release 2 roadmap item. The expected
+starting point is private constants owned by the class or interface body,
+consistent with the current member privacy model. Whether such constants also
+need a controlled public view should be investigated as part of that Release 2
+design.
 
 ## Core Model
 

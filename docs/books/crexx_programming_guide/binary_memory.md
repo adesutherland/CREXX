@@ -41,7 +41,7 @@ the source independent of the storage type used for each field.
 <!-- rexx-example name="packed-binary-layout" test="pending" -->
 ```rexx
 options levelb
-namespace packedindex expose find_node NODE_LEFT NODE_RIGHT NODE_HASH NODE_KEY NODE_SIZE
+namespace packedindex expose find_node
 
 packedindex_layout: procedure expose NODE_LEFT NODE_RIGHT NODE_HASH NODE_KEY NODE_SIZE
   constant NODE_LEFT = 0
@@ -53,10 +53,10 @@ packedindex_layout: procedure expose NODE_LEFT NODE_RIGHT NODE_HASH NODE_KEY NOD
   return
 ```
 
-For reusable modules, expose public procedures and any constants callers need.
-Declare constants inside an explicit procedure scope. Top-level executable code
-in a library-shaped file can synthesize an implicit `main()`, which is not
-usually what a packed-layout module wants.
+For reusable modules, expose public procedures. Keep Release 1 layout constants
+inside the source module and declare them in an explicit procedure scope.
+Top-level executable code in a library-shaped file can synthesize an implicit
+`main()`, which is not usually what a packed-layout module wants.
 
 For script-style examples that need a separate layout-constant declaration
 procedure, add an explicit `main: procedure`. Otherwise the statements after the
@@ -164,18 +164,13 @@ future optimization if profiling shows helper overhead in hot mutation paths.
 
 ## Text And Decimal Fields
 
-There are two text layouts:
+There are two text layouts, but new packed structures should prefer
+zero-terminated UTF-8 fields:
 
-- fixed-codepoint UTF-8 fields, read with `<at..string>(offset, codepoints)`;
 - zero-terminated UTF-8 fields, read with `<at..string>(offset)` and compared
-  with `<compare..string>`.
-
-For fixed-codepoint fields, the starting position is a byte offset and the
-length is a count of UTF-8 codepoints:
-
-```rexx
-name = <at..string>(name_offset, name_codepoints) record
-```
+- fixed-codepoint UTF-8 source spans, read with
+  `<at..string>(offset, codepoints)` only when the program already knows the
+  source span in codepoints.
 
 For zero-terminated fields, the program must know that the binary format stores
 a zero byte after the text. Omit the length to read the field, or use

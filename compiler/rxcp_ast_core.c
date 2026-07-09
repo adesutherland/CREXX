@@ -765,7 +765,7 @@ ASTNode *ast_fstr(Context* context, Token *token) {
         /* Validate hex string and work out length */
         for (hex_bin_length = 0, i = 0; i < raw_length; i++) {
             c = raw_string[i];
-            if (c == ' ') continue;
+            if (isspace((unsigned char)c)) continue;
             if ( !( (c >= '0' && c <= '9') ||
                     (c >= 'a' && c <= 'f') ||
                     (c >= 'A' && c <= 'F') ) ) {
@@ -787,7 +787,7 @@ ASTNode *ast_fstr(Context* context, Token *token) {
         else hex_buffer_len = 0;
 
         for (i = 0; i < raw_length; i++) {
-            if (raw_string[i] != ' ') {
+            if (!isspace((unsigned char)raw_string[i])) {
                 hex_bin_buffer[hex_buffer_len] = (char)tolower(raw_string[i]);
                 hex_buffer_len++;
                 if (hex_buffer_len == 2) {
@@ -817,7 +817,7 @@ ASTNode *ast_fstr(Context* context, Token *token) {
         /* Validate binary string and work out length */
         for (hex_bin_length = 0, i = 0; i < raw_length; i++) {
             c = raw_string[i];
-            if (c == ' ') continue;
+            if (isspace((unsigned char)c)) continue;
             if (c != '0' && c != '1') {
                 mknd_err(node, "INVALID_BIN");
                 return node;
@@ -835,7 +835,7 @@ ASTNode *ast_fstr(Context* context, Token *token) {
         for (i=0;i<hex_buffer_len;i++) hex_bin_buffer[i]='0';
 
         for (i = 0; i < raw_length; i++) {
-            if (raw_string[i] != ' ') {
+            if (!isspace((unsigned char)raw_string[i])) {
                 hex_bin_buffer[hex_buffer_len] = (char)tolower(raw_string[i]);
                 hex_buffer_len++;
                 if (hex_buffer_len == 8) {

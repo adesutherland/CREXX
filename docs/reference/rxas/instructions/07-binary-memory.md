@@ -592,6 +592,9 @@ Resize a binary register.
 ### Semantics
 
 Existing bytes are preserved up to the new length. Growth is zero-filled.
+`bresize` sets the logical length observed by `blen`; the VM may keep a larger
+private physical allocation and grow that allocation in blocks so repeated
+append/resize patterns do not reallocate on every logical growth.
 
 ### Signals
 

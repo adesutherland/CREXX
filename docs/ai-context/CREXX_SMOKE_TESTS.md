@@ -6,7 +6,7 @@ The local smoke suite is selected with:
 ctest --test-dir cmake-build-debug -L smoke --output-on-failure --parallel 10 --timeout 600
 ```
 
-As of the 2026-07-07 review, the smoke label selects 106 tests. The set is
+As of the 2026-07-09 review, the smoke label selects 108 tests. The set is
 intentionally broad but not exhaustive: it should catch broken developer builds
 quickly without replacing the full CTest suite.
 
@@ -15,6 +15,7 @@ quickly without replacing the full CTest suite.
 - Cover every shipped toolchain product: `rxc`, `rxas`, `rxlink`, `rxdas`,
   `rxvm`/`rxbvm`, `rxpp`, `rexxscript`, and `crexx`.
 - Cover the main runtime surfaces: base BIFs, classlib, `rxfnsc`, `rxfnsg`,
+  `rxfnsl`,
   native-backed adapters, RXPA plugins, SAA entry points, ADDRESS, source maps,
   diagnostics, signals, and native packaging.
 - Prefer one representative per matrix axis. Do not label both `noopt` and
@@ -35,7 +36,7 @@ quickly without replacing the full CTest suite.
 | `rxlink` linker | success, control-file linking, interface linking, format checks, signature mismatch diagnostics |
 | `rxdas` disassembler | basic/interface roundtrip and dump support |
 | `rxvm` / `rxbvm` | basic RXAS execution, string/reference/decimal/interface instructions, compact format, signal and UTF checks |
-| Libraries | rxfnsb ADDRESS/parse/stem/JSON/socket, rxfnsc runtime pools/classic BIFs/value, rxfnsg provider helpers |
+| Libraries | rxfnsb ADDRESS/parse/stem/JSON/socket, rxfnsc runtime pools/classic BIFs/value, rxfnsg provider helpers, rxfnsl generated-output tinyexpr demo |
 | Classlib | list/hash map/object collections, JSON, native OS adapter |
 | Plugins and RXPA | math/stack/string/keyaccess/map/system plugins, dynamic/static RXPA link, class declarations, callbacks, native payload, multi-plugin loading |
 | Host integration | SAA cache, `crexxsaa` variables/status, ADDRESS bridge/callback, dynamic loading |

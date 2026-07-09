@@ -54,14 +54,14 @@ Variable-size storage views are:
 | View | Length argument | Result |
 | --- | --- | --- |
 | `.binary` | Bytes | A copied `.binary` value. |
-| `.string` | UTF-8 codepoints, or omitted for NUL-terminated | A copied `.string` value after validation. |
+| `.string` | Omitted for NUL-terminated fields | A copied `.string` value after validation. |
 | `.decimal` | Omitted for NUL-terminated | A `.decimal` value parsed from decimal text. |
 
-For `.string`, the starting position is still a byte offset. The length is a
-count of UTF-8 codepoints to extract. The VM scans from the byte offset to find
-the corresponding byte length, validates the selected UTF-8, copies those exact
-bytes into the destination string, and writes the string safety NUL outside the
-logical string length.
+For ordinary packed `.string` fields, the starting position is a byte offset to
+zero-terminated UTF-8 text. The terminator is not part of the string value.
+Generated lexer/parser code should normally keep source lexemes as binary
+offset/length pairs and use zero-copy binary compare; materialize strings only
+for diagnostics or for formats that explicitly store NUL-terminated text.
 
 For `.decimal`, the starting position is a byte offset to zero-terminated
 decimal text. The terminator is not part of the decimal value. Decimal reads
@@ -140,20 +140,20 @@ Variable-size reads materialize ordinary Rexx values:
 
 ```rexx
 key_bytes = <at..binary>(key_offset, key_len) arena
-name = <at..string>(name_offset, name_codepoints) arena
+name = <at..string>(name_offset) arena
 amount = <at..decimal>(amount_offset) arena
 ```
 
-The `.binary` length argument is a byte count. The `.string` length argument is
-a UTF-8 codepoint count from the byte offset. The `.decimal` form does not
-accept a length argument; decimal fields are zero-terminated decimal text.
+The `.binary` length argument is a byte count. The `.string` and `.decimal`
+forms do not accept a length argument for ordinary packed fields; both are
+zero-terminated text.
 
 Release 1 implements zero-terminated string and decimal writes and rejects
 variable-size span writes:
 
 ```rexx
 <at..binary>(key_offset, key_len) arena = key_bytes
-<at..string>(name_offset, name_codepoints) arena = name
+<at..string>(name_offset) arena = name
 ```
 
 These span-write forms raise `BINARY_MEMORY_SPAN_WRITE_UNSUPPORTED`.
@@ -188,9 +188,11 @@ the selected text as `.decimal`. Writes convert the decimal value to decimal
 text through the active decimal plugin, then write those bytes followed by one
 zero byte. They do not resize the binary buffer.
 
-The fixed-codepoint read form remains
-`<at..string>(offset, codepoints) memory`. Release 1 does not support the
-matching fixed-codepoint write form.
+The fixed-codepoint read form, `<at..string>(offset, codepoints) memory`,
+remains available as a specialized extraction form when the program already
+knows a source span in codepoints. It is not the preferred representation for
+packed record fields, and Release 1 does not support the matching
+fixed-codepoint write form.
 
 The compare intrinsic `<compare..string>` uses this zero-terminated field
 contract.
@@ -260,18 +262,22 @@ Use that form only when materialization is acceptable or wanted.
 
 ## Constants And Scope
 
-Layout constants should be compile-time constants declared in an explicit
+Layout constants should be compile-time constants declared once in an explicit
 procedure scope. Free-floating top-level `constant` declarations are not part of
 the Release 1 surface; because `constant` is an instruction form, that shape can
 create an implicit `main()` rather than a pure module surface.
 
-When callers need the constants, publish the constant names through the
-namespace expose list. The implementation requirement for Release 1 is that a
-constant declared in an explicit procedure scope and listed in
-`namespace ... expose ...` is available to other procedures in the same
-namespace and to importers as a compile-time value. A private declaration
-procedure may be used to give the constants an explicit home without making that
-procedure part of the public API.
+Use a declaration procedure with `procedure expose` to give related constants a
+single home. A private declaration procedure may be used to give the constants
+an explicit home without making that procedure part of the public API. Release 1
+generated-code examples should use this pattern so layout values are not
+redeclared in every helper procedure.
+
+Release 1 constants are source-module local. A declaration procedure's
+`procedure expose` list makes the constants available to other procedures in
+the same source module, but constants are not imported across source, RXAS, or
+RXBIN module boundaries. Cross-module constants and wildcard expose forms such
+as `TINY_TOK_*` are Release 2 ergonomics/design items, not Release 1 syntax.
 
 If the same file also has executable script code, put that code in an explicit
 `main: procedure`. A declaration procedure is a real procedure boundary; later
@@ -281,7 +287,7 @@ implicit `main()`.
 <!-- rexx-example name="binary-memory-constants" test="pending" -->
 ```rexx
 options levelb
-namespace packedindex expose find_node NODE_LEFT NODE_RIGHT NODE_SIZE EMPTY_NODE
+namespace packedindex expose find_node
 
 packedindex_layout: procedure expose NODE_LEFT NODE_RIGHT NODE_SIZE EMPTY_NODE
   constant NODE_LEFT = 0
@@ -299,8 +305,8 @@ find_node: procedure = .int
 Do not put executable setup or `constant` declarations at top level in a
 library-style module. Top-level executable statements before a procedure
 synthesize an implicit `main()` for script compatibility. Shared binary layout
-values should be constants in an explicit procedure scope, exported through
-`namespace ... expose ...` when they are part of the module contract.
+values should be constants in an explicit procedure scope, exposed to the
+procedures in that same source module that need them.
 
 ## Ordinary Helper Functions
 
@@ -314,7 +320,7 @@ The Release 1 packed-memory helper surface is:
 
 | Helper | Effect |
 | --- | --- |
-| `BINRESIZE(data, length)` | Resize `data` to `length` bytes; growth zero-fills. |
+| `BINRESIZE(data, length)` | Set `data`'s logical length to `length` bytes; growth zero-fills. |
 | `BINCLEAR(data)` | Set `data` to the empty binary value. |
 | `BINFILL(data, byte)` | Fill the whole current logical byte range. |
 | `BINFILLAT(data, offset, length, byte)` | Fill a zero-based byte span. |
@@ -327,7 +333,9 @@ The Release 1 packed-memory helper surface is:
 
 Mutating helpers update the first binary argument through `arg expose` and
 return the new logical byte length unless the specific helper documentation says
-otherwise.
+otherwise. The VM may keep a larger private physical capacity for a binary
+register, growing in blocks and reusing that capacity across shrink/grow cycles;
+programs can observe only the logical length through `<blen>`/`BINLENGTH`.
 
 ## Diagnostics And Signals
 
@@ -377,6 +385,9 @@ The Release 1 surface deliberately leaves a few items for later work:
 - unsigned 64-bit storage syntax and ordering rules (`.u64`);
 - variable-size span writes for `.binary` and fixed-codepoint `.string` fields;
 - explicit source-length zero-copy binary compare;
+- wildcard exposes for constant families and generated-layout conveniences;
+- lexer/parser support for readable multiline or chunked suffixed binary
+  literals;
 - direct compiler or inliner lowering for selected packed-memory helpers when
   profiling proves the helper call overhead matters;
 - read-only constant/view parameter passing, binary struct declarations, and

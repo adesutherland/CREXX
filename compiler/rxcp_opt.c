@@ -1854,6 +1854,12 @@ static int can_capture_constant_value(ASTNode *node) {
     }
 }
 
+static int constant_symbol_use_keeps_identifier(ASTNode *node) {
+    return node &&
+           (node->node_type == INSTRUCTIONS ||
+            (node->parent && node->parent->node_type == EXPOSED));
+}
+
 static void copy_string_payload_to_node(ASTNode *node, const char *string, size_t length) {
     char *buffer;
 
@@ -1887,6 +1893,8 @@ static void copy_constant_value_to_symbol_nodes(Symbol *symbol, Payload *payload
 
     for (i = 0; i < sym_nond(symbol); i++) {
         ASTNode *n = sym_trnd(symbol, i)->node;
+
+        if (constant_symbol_use_keeps_identifier(n)) continue;
 
         n->node_type = CONSTANT;
         n->value_type = value_type;
@@ -2099,6 +2107,7 @@ static void constant_symbols_in_scope(Symbol *symbol, void *pload) {
     payload->changed = 1;
     for (i=0; i<sym_nond(symbol); i++) {
         n = sym_trnd(symbol, i)->node;
+        if (constant_symbol_use_keeps_identifier(n)) continue;
         n->node_type = CONSTANT;
         n->value_type = value_type;
         n->int_value = int_value;

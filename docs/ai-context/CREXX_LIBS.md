@@ -8,6 +8,9 @@ Libraries are housed in the `lib/` directory, which is divided into domains like
 
 - `lib/rxfnsg/` (Level G class-shaped general-purpose interfaces)
 
+- `lib/rxfnsl/` (Level L language-engineering examples and generated-output
+  proving slices)
+
 - `lib/rxfnsc/` (shared Level C/RexxScript runtime foundation, currently
   housing the Rexx value, stem, and variable-pool classes)
 
@@ -196,6 +199,17 @@ as `ADDRESS LLM_GPT_4_1`, `ADDRESS CLAUDE_SONNET_4_5`, and
 `ADDRESS GEMMA4_LATEST`; the provider caches by environment instance and routes
 through a small driver registry of exact aliases and prefixes. See
 `lib/rxfnsg/rexx/llm.md` and `demos/llm/`.
+
+`lib/rxfnsl/rexx/tinyexpr.crexx` contains the first Level L
+language-engineering proving slice. It is deliberately not a lexer generator or
+parser generator yet. Instead, it is hand-written in the shape that a future
+generator might emit: a packed binary character-class table, fixed-width binary
+token records, an exposed declaration procedure for generated token/layout
+constants, direct binary-memory reads/writes, a zero-copy lexeme compare helper,
+and a tiny precedence parser over the packed token stream. The purpose is to
+learn whether the Rexx/RXAS binary-memory surface is usable for generated
+language tooling before porting a tool such as re2c or changing a generator
+backend to emit this style directly. See `lib/rxfnsl/rexx/tinyexpr.md`.
 
 ## 1. BIFs Implemented in cREXX (`lib/rxfnsb/rexx/`)
 

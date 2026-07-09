@@ -48,6 +48,19 @@ hexadecimal bytes. A string literal that concludes with `b`, such as
 `"0100000101000010"b`, is decoded as binary bits. Hex literals use two hex
 digits per byte. Binary literals use eight bits per byte.
 
+Whitespace inside a same-line hex or binary literal is ignored, so generated
+byte tables may group digits for readability:
+
+```rexx
+payload = "00 ff 41"x as .binary
+bits = "0100 0001 0100 0010"b
+```
+
+Multiline suffixed literals are not part of the Release 1 lexer surface yet.
+Generated code that needs large tables should currently emit one same-line
+literal or concatenate/generate chunks; accepting newline whitespace inside
+`...x` and `...b` literals is tracked as a lexer/parser follow-up.
+
 If the decoded bytes are valid UTF-8, the literal is text by default:
 
 ```rexx
