@@ -28,40 +28,71 @@ import rxfnsb
 
 jsonvalid: procedure = .int
   arg json = .string
-  if word(_json_root_info(json), 1) = "error" then return 0
+  data = json as .binary
+  len = binlength(data)
+  p = 0
+  found = 1
+  found_kind = 0
+  found_start = 0
+  found_after = 0
+  segment_kind = .int[]
+  segment_text = .string[]
+  segment_index = .int[]
+  segment_bin = .binary[]
+
+  if _json_parse_value(data, len, p, -1, 0, segment_kind, segment_text, segment_index, segment_bin, found, found_kind, found_start, found_after) = 0 then return 0
+  call _json_skip_ws data, len, p
+  if p \= len then return 0
   return 1
 
 jsontype: procedure = .string
   arg json = .string, path = .string
-  return word(_json_locate(json, path), 1)
+  data = .binary
+  len = 0
+  found_kind = 0
+  found_start = 0
+  found_after = 0
+  status = _json_find(json, path, data, len, found_kind, found_start, found_after)
+  if status < 0 then return "error"
+  if status = 0 then return "missing"
+  return _json_kind_name(found_kind)
 
 jsonget: procedure = .string
   arg json = .string, path = .string
-  info = _json_locate(json, path)
-  kind = word(info, 1)
-  start = word(info, 2)
-  after = word(info, 3)
-
-  if kind = "missing" | kind = "error" then return ""
-  if kind = "string" then return _json_unquote_span(json, start, after)
-  return substr(json, start, after - start)
+  data = .binary
+  len = 0
+  found_kind = 0
+  found_start = 0
+  found_after = 0
+  status = _json_find(json, path, data, len, found_kind, found_start, found_after)
+  if status <= 0 then return ""
+  if found_kind = 1 then return _json_unquote_binary(data, found_start, found_after)
+  return (<at..binary>(found_start, found_after - found_start) data) as .string
 
 jsoncount: procedure = .int
   arg json = .string, path = .string
-  info = _json_locate(json, path)
-  kind = word(info, 1)
-  if kind = "missing" | kind = "error" then return -1
-  if kind = "array" then return _json_array_count(json, word(info, 2), word(info, 3))
-  if kind = "object" then return _json_object_count(json, word(info, 2), word(info, 3))
+  data = .binary
+  len = 0
+  found_kind = 0
+  found_start = 0
+  found_after = 0
+  status = _json_find(json, path, data, len, found_kind, found_start, found_after)
+  if status <= 0 then return -1
+  if found_kind = 5 then return _json_array_count(data, len, found_start, found_after)
+  if found_kind = 4 then return _json_object_count(data, len, found_start, found_after)
   return 0
 
 jsonmembers: procedure = .int
   arg json = .string, path = .string, expose names = .string[]
-  info = _json_locate(json, path)
-  kind = word(info, 1)
-  if kind = "missing" | kind = "error" then return -1
-  if kind = "array" then return _json_array_members(json, word(info, 2), word(info, 3), names)
-  if kind = "object" then return _json_object_members(json, word(info, 2), word(info, 3), names)
+  data = .binary
+  len = 0
+  found_kind = 0
+  found_start = 0
+  found_after = 0
+  status = _json_find(json, path, data, len, found_kind, found_start, found_after)
+  if status <= 0 then return -1
+  if found_kind = 5 then return _json_array_members(data, len, found_start, found_after, names)
+  if found_kind = 4 then return _json_object_members(data, len, found_start, found_after, names)
   return 0
 
 jsonquote: procedure = .string
@@ -84,9 +115,14 @@ jsonquote: procedure = .string
 
 jsonunquote: procedure = .string
   arg json = .string
-  info = _json_root_info(json)
-  if word(info, 1) \= "string" then return ""
-  return _json_unquote_span(json, word(info, 2), word(info, 3))
+  data = json as .binary
+  len = binlength(data)
+  p = 0
+  escaped = 0
+  if _json_scan_string(data, len, p, escaped) = 0 then return ""
+  call _json_skip_ws data, len, p
+  if p \= len then return ""
+  return _json_unquote_binary(data, 0, p)
 
 jsonarray: procedure = .string
   arg values = .string[]
@@ -109,14 +145,35 @@ jsonobject: procedure = .string
   end
   return out || "}"
 
-_json_locate: procedure = .string
-  arg json = .string, path = .string
-  info = _json_root_info(json)
-  if word(info, 1) = "error" then return info
-  if length(path) = 0 then return info
+_json_find: procedure = .int
+  arg json = .string, path = .string, expose data = .binary, expose len = .int, expose found_kind = .int, expose found_start = .int, expose found_after = .int
+  data = json as .binary
+  len = binlength(data)
+  segment_kind = .int[]
+  segment_text = .string[]
+  segment_index = .int[]
+  segment_bin = .binary[]
+  segment_count = _json_parse_path(path, segment_kind, segment_text, segment_index, segment_bin)
+  if segment_count < 0 then return -1
 
+  p = 0
+  found = 0
+  found_kind = 0
+  found_start = 0
+  found_after = 0
+  if _json_parse_value(data, len, p, 0, segment_count, segment_kind, segment_text, segment_index, segment_bin, found, found_kind, found_start, found_after) = 0 then return -1
+  call _json_skip_ws data, len, p
+  if p \= len then return -1
+  if found = 0 then return 0
+  return 1
+
+_json_parse_path: procedure = .int
+  arg path = .string, expose segment_kind = .int[], expose segment_text = .string[], expose segment_index = .int[], expose segment_bin = .binary[]
+  if length(path) = 0 then return 0
+  count = 0
   p = 1
-  do while p <= length(path)
+  plen = length(path)
+  do while p <= plen
     if substr(path, p, 1) = "." then do
       p = p + 1
       iterate
@@ -124,307 +181,486 @@ _json_locate: procedure = .string
 
     if substr(path, p, 1) = "[" then do
       close = pos("]", path, p + 1)
-      if close = 0 then return "error 0 0"
+      if close = 0 then return -1
       index_text = substr(path, p + 1, close - p - 1)
-      if _json_is_digits(index_text) = 0 then return "error 0 0"
-      info = _json_child_index(json, info, index_text)
-      if word(info, 1) = "missing" | word(info, 1) = "error" then return info
+      if _json_is_digits(index_text) = 0 then return -1
+      count = count + 1
+      segment_kind[count] = 1
+      segment_text[count] = index_text
+      segment_index[count] = index_text + 0
+      segment_bin[count] = index_text as .binary
       p = close + 1
       iterate
     end
 
     start = p
-    do while p <= length(path)
+    do while p <= plen
       c = substr(path, p, 1)
       if c = "." | c = "[" then leave
       p = p + 1
     end
-    segment = substr(path, start, p - start)
-    if length(segment) = 0 then return "error 0 0"
-    if word(info, 1) = "array" & _json_is_digits(segment) = 1 then info = _json_child_index(json, info, segment)
-    else info = _json_child_key(json, info, segment)
-    if word(info, 1) = "missing" | word(info, 1) = "error" then return info
+    text = substr(path, start, p - start)
+    if length(text) = 0 then return -1
+    count = count + 1
+    segment_kind[count] = 0
+    segment_text[count] = text
+    if _json_is_digits(text) = 1 then segment_index[count] = text + 0
+    else segment_index[count] = -1
+    segment_bin[count] = text as .binary
+  end
+  return count
+
+_json_parse_value: procedure = .int
+  arg data = .binary, len = .int, expose p = .int, active = .int, segment_count = .int, segment_kind = .int[], segment_text = .string[], segment_index = .int[], segment_bin = .binary[], expose found = .int, expose found_kind = .int, expose found_start = .int, expose found_after = .int
+  call _json_skip_ws data, len, p
+  if p >= len then return 0
+  start = p
+  b = <at..u8>(p) data
+
+  if b = 34 then do
+    escaped = 0
+    if _json_scan_string(data, len, p, escaped) = 0 then return 0
+    if active = segment_count & found = 0 then do
+      found = 1
+      found_kind = 1
+      found_start = start
+      found_after = p
+    end
+    return 1
   end
 
-  return info
+  if b = 123 then return _json_parse_object(data, len, p, start, active, segment_count, segment_kind, segment_text, segment_index, segment_bin, found, found_kind, found_start, found_after)
+  if b = 91 then return _json_parse_array(data, len, p, start, active, segment_count, segment_kind, segment_text, segment_index, segment_bin, found, found_kind, found_start, found_after)
 
-_json_root_info: procedure = .string
-  arg json = .string
-  info = _json_value_info(json, 1)
-  if word(info, 1) = "error" then return info
-  after = _json_skip_ws(json, word(info, 3))
-  if after \= length(json) + 1 then return "error 0 0"
-  return info
+  if b = 116 then do
+    if _json_match_literal(data, len, p, "true" as .binary) = 0 then return 0
+    p = p + 4
+    if active = segment_count & found = 0 then do
+      found = 1
+      found_kind = 3
+      found_start = start
+      found_after = p
+    end
+    return 1
+  end
 
-_json_value_info: procedure = .string
-  arg json = .string, posn = .int
-  posn = _json_skip_ws(json, posn)
-  if posn > length(json) then return "error 0 0"
-  c = substr(json, posn, 1)
-  if c = '"' then return _json_string_info(json, posn)
-  if c = "{" then return _json_object_info(json, posn)
-  if c = "[" then return _json_array_info(json, posn)
-  if c = "t" then do
-    if substr(json, posn, 4) = "true" then return "boolean " || posn || " " || (posn + 4)
-    return "error 0 0"
+  if b = 102 then do
+    if _json_match_literal(data, len, p, "false" as .binary) = 0 then return 0
+    p = p + 5
+    if active = segment_count & found = 0 then do
+      found = 1
+      found_kind = 3
+      found_start = start
+      found_after = p
+    end
+    return 1
   end
-  if c = "f" then do
-    if substr(json, posn, 5) = "false" then return "boolean " || posn || " " || (posn + 5)
-    return "error 0 0"
-  end
-  if c = "n" then do
-    if substr(json, posn, 4) = "null" then return "null " || posn || " " || (posn + 4)
-    return "error 0 0"
-  end
-  if c = "-" | _json_is_digit(c) = 1 then return _json_number_info(json, posn)
-  return "error 0 0"
 
-_json_string_info: procedure = .string
-  arg json = .string, posn = .int
-  if substr(json, posn, 1) \= '"' then return "error 0 0"
-  p = posn + 1
-  do while p <= length(json)
-    c = substr(json, p, 1)
-    if c = '"' then return "string " || posn || " " || (p + 1)
-    if c2d(c) < 32 then return "error 0 0"
-    if c = '\' then do
+  if b = 110 then do
+    if _json_match_literal(data, len, p, "null" as .binary) = 0 then return 0
+    p = p + 4
+    if active = segment_count & found = 0 then do
+      found = 1
+      found_kind = 6
+      found_start = start
+      found_after = p
+    end
+    return 1
+  end
+
+  if b = 45 | (b >= 48 & b <= 57) then do
+    if _json_scan_number(data, len, p) = 0 then return 0
+    if active = segment_count & found = 0 then do
+      found = 1
+      found_kind = 2
+      found_start = start
+      found_after = p
+    end
+    return 1
+  end
+
+  return 0
+
+_json_parse_object: procedure = .int
+  arg data = .binary, len = .int, expose p = .int, start = .int, active = .int, segment_count = .int, segment_kind = .int[], segment_text = .string[], segment_index = .int[], segment_bin = .binary[], expose found = .int, expose found_kind = .int, expose found_start = .int, expose found_after = .int
+  p = p + 1
+  call _json_skip_ws data, len, p
+  if p < len & <at..u8>(p) data = 125 then do
+    p = p + 1
+    if active = segment_count & found = 0 then do
+      found = 1
+      found_kind = 4
+      found_start = start
+      found_after = p
+    end
+    return 1
+  end
+
+  do while p < len
+    key_start = p
+    escaped = 0
+    if _json_scan_string(data, len, p, escaped) = 0 then return 0
+    key_after = p
+    call _json_skip_ws data, len, p
+    if p >= len | <at..u8>(p) data \= 58 then return 0
+    p = p + 1
+
+    child_active = -1
+    if active >= 0 & active < segment_count then do
+      next = active + 1
+      if segment_kind[next] = 0 then do
+        if _json_key_matches(data, key_start, key_after, escaped, segment_text[next], segment_bin[next]) = 1 then child_active = next
+      end
+    end
+
+    if active = segment_count then child_active = -1
+    if _json_parse_value(data, len, p, child_active, segment_count, segment_kind, segment_text, segment_index, segment_bin, found, found_kind, found_start, found_after) = 0 then return 0
+    call _json_skip_ws data, len, p
+    if p < len & <at..u8>(p) data = 44 then do
       p = p + 1
-      if p > length(json) then return "error 0 0"
-      esc = substr(json, p, 1)
-      if pos(esc, '"\/bfnrt') > 0 then do
+      call _json_skip_ws data, len, p
+      iterate
+    end
+    if p < len & <at..u8>(p) data = 125 then do
+      p = p + 1
+      if active = segment_count & found = 0 then do
+        found = 1
+        found_kind = 4
+        found_start = start
+        found_after = p
+      end
+      return 1
+    end
+    return 0
+  end
+  return 0
+
+_json_parse_array: procedure = .int
+  arg data = .binary, len = .int, expose p = .int, start = .int, active = .int, segment_count = .int, segment_kind = .int[], segment_text = .string[], segment_index = .int[], segment_bin = .binary[], expose found = .int, expose found_kind = .int, expose found_start = .int, expose found_after = .int
+  p = p + 1
+  call _json_skip_ws data, len, p
+  if p < len & <at..u8>(p) data = 93 then do
+    p = p + 1
+    if active = segment_count & found = 0 then do
+      found = 1
+      found_kind = 5
+      found_start = start
+      found_after = p
+    end
+    return 1
+  end
+
+  current = 1
+  do while p < len
+    child_active = -1
+    if active >= 0 & active < segment_count then do
+      next = active + 1
+      if segment_kind[next] = 1 | segment_index[next] >= 0 then do
+        if current = segment_index[next] then child_active = next
+      end
+    end
+    if active = segment_count then child_active = -1
+    if _json_parse_value(data, len, p, child_active, segment_count, segment_kind, segment_text, segment_index, segment_bin, found, found_kind, found_start, found_after) = 0 then return 0
+    current = current + 1
+    call _json_skip_ws data, len, p
+    if p < len & <at..u8>(p) data = 44 then do
+      p = p + 1
+      call _json_skip_ws data, len, p
+      iterate
+    end
+    if p < len & <at..u8>(p) data = 93 then do
+      p = p + 1
+      if active = segment_count & found = 0 then do
+        found = 1
+        found_kind = 5
+        found_start = start
+        found_after = p
+      end
+      return 1
+    end
+    return 0
+  end
+  return 0
+
+_json_scan_string: procedure = .int
+  arg data = .binary, len = .int, expose p = .int, expose escaped = .int
+  if p >= len | <at..u8>(p) data \= 34 then return 0
+  p = p + 1
+  escaped = 0
+  do while p < len
+    b = <at..u8>(p) data
+    if b = 34 then do
+      p = p + 1
+      return 1
+    end
+    if b < 32 then return 0
+    if b = 92 then do
+      escaped = 1
+      p = p + 1
+      if p >= len then return 0
+      esc = <at..u8>(p) data
+      if esc = 34 | esc = 92 | esc = 47 | esc = 98 | esc = 102 | esc = 110 | esc = 114 | esc = 116 then do
         p = p + 1
         iterate
       end
-      if esc = "u" then do
-        if p + 4 > length(json) then return "error 0 0"
-        hex = substr(json, p + 1, 4)
-        if _json_is_hex4(hex) = 0 then return "error 0 0"
+      if esc = 117 then do
+        if p + 4 >= len then return 0
+        if _json_hex4_at(data, p + 1) < 0 then return 0
         p = p + 5
         iterate
       end
-      return "error 0 0"
+      return 0
     end
     p = p + 1
   end
-  return "error 0 0"
+  return 0
 
-_json_number_info: procedure = .string
-  arg json = .string, posn = .int
-  p = posn
-  if substr(json, p, 1) = "-" then p = p + 1
-  if p > length(json) then return "error 0 0"
-  c = substr(json, p, 1)
-  if c = "0" then p = p + 1
-  else if _json_is_digit19(c) = 1 then do
-    do while p <= length(json) & _json_is_digit(substr(json, p, 1)) = 1
-      p = p + 1
-    end
-  end
-  else return "error 0 0"
-
-  if p <= length(json) & substr(json, p, 1) = "." then do
+_json_scan_number: procedure = .int
+  arg data = .binary, len = .int, expose p = .int
+  if p < len & <at..u8>(p) data = 45 then p = p + 1
+  if p >= len then return 0
+  b = <at..u8>(p) data
+  if b = 48 then p = p + 1
+  else if b >= 49 & b <= 57 then do
     p = p + 1
-    if p > length(json) | _json_is_digit(substr(json, p, 1)) = 0 then return "error 0 0"
-    do while p <= length(json) & _json_is_digit(substr(json, p, 1)) = 1
+    do while p < len
+      b = <at..u8>(p) data
+      if b < 48 | b > 57 then leave
       p = p + 1
     end
   end
+  else return 0
 
-  if p <= length(json) & pos(substr(json, p, 1), "eE") > 0 then do
+  if p < len & <at..u8>(p) data = 46 then do
     p = p + 1
-    if p <= length(json) & pos(substr(json, p, 1), "+-") > 0 then p = p + 1
-    if p > length(json) | _json_is_digit(substr(json, p, 1)) = 0 then return "error 0 0"
-    do while p <= length(json) & _json_is_digit(substr(json, p, 1)) = 1
+    if p >= len then return 0
+    b = <at..u8>(p) data
+    if b < 48 | b > 57 then return 0
+    do while p < len
+      b = <at..u8>(p) data
+      if b < 48 | b > 57 then leave
       p = p + 1
     end
   end
 
-  return "number " || posn || " " || p
-
-_json_object_info: procedure = .string
-  arg json = .string, posn = .int
-  p = posn + 1
-  p = _json_skip_ws(json, p)
-  if p <= length(json) & substr(json, p, 1) = "}" then return "object " || posn || " " || (p + 1)
-  do while p <= length(json)
-    key_info = _json_string_info(json, p)
-    if word(key_info, 1) = "error" then return key_info
-    p = _json_skip_ws(json, word(key_info, 3))
-    if p > length(json) | substr(json, p, 1) \= ":" then return "error 0 0"
-    value_info = _json_value_info(json, p + 1)
-    if word(value_info, 1) = "error" then return value_info
-    p = _json_skip_ws(json, word(value_info, 3))
-    if p <= length(json) & substr(json, p, 1) = "," then do
-      p = _json_skip_ws(json, p + 1)
-      iterate
+  if p < len then do
+    b = <at..u8>(p) data
+    if b = 69 | b = 101 then do
+      p = p + 1
+      if p < len then do
+        b = <at..u8>(p) data
+        if b = 43 | b = 45 then p = p + 1
+      end
+      if p >= len then return 0
+      b = <at..u8>(p) data
+      if b < 48 | b > 57 then return 0
+      do while p < len
+        b = <at..u8>(p) data
+        if b < 48 | b > 57 then leave
+        p = p + 1
+      end
     end
-    if p <= length(json) & substr(json, p, 1) = "}" then return "object " || posn || " " || (p + 1)
-    return "error 0 0"
   end
-  return "error 0 0"
-
-_json_array_info: procedure = .string
-  arg json = .string, posn = .int
-  p = posn + 1
-  p = _json_skip_ws(json, p)
-  if p <= length(json) & substr(json, p, 1) = "]" then return "array " || posn || " " || (p + 1)
-  do while p <= length(json)
-    value_info = _json_value_info(json, p)
-    if word(value_info, 1) = "error" then return value_info
-    p = _json_skip_ws(json, word(value_info, 3))
-    if p <= length(json) & substr(json, p, 1) = "," then do
-      p = _json_skip_ws(json, p + 1)
-      iterate
-    end
-    if p <= length(json) & substr(json, p, 1) = "]" then return "array " || posn || " " || (p + 1)
-    return "error 0 0"
-  end
-  return "error 0 0"
-
-_json_child_key: procedure = .string
-  arg json = .string, info = .string, wanted = .string
-  if word(info, 1) \= "object" then return "missing 0 0"
-  p = _json_skip_ws(json, word(info, 2) + 1)
-  endpos = word(info, 3) + 0
-  if p < endpos & substr(json, p, 1) = "}" then return "missing 0 0"
-  do while p < endpos
-    key_info = _json_string_info(json, p)
-    if word(key_info, 1) = "error" then return key_info
-    candidate = _json_unquote_span(json, word(key_info, 2), word(key_info, 3))
-    p = _json_skip_ws(json, word(key_info, 3))
-    if p >= endpos | substr(json, p, 1) \= ":" then return "error 0 0"
-    value_info = _json_value_info(json, p + 1)
-    if word(value_info, 1) = "error" then return value_info
-    if length(candidate) = length(wanted) & candidate = wanted then return value_info
-    p = _json_skip_ws(json, word(value_info, 3))
-    if p < endpos & substr(json, p, 1) = "," then p = _json_skip_ws(json, p + 1)
-    else leave
-  end
-  return "missing 0 0"
-
-_json_child_index: procedure = .string
-  arg json = .string, info = .string, index = .int
-  if word(info, 1) \= "array" then return "missing 0 0"
-  if index < 1 then return "missing 0 0"
-  p = _json_skip_ws(json, word(info, 2) + 1)
-  endpos = word(info, 3) + 0
-  current = 1
-  if p < endpos & substr(json, p, 1) = "]" then return "missing 0 0"
-  do while p < endpos
-    value_info = _json_value_info(json, p)
-    if word(value_info, 1) = "error" then return value_info
-    if current = index then return value_info
-    current = current + 1
-    p = _json_skip_ws(json, word(value_info, 3))
-    if p < endpos & substr(json, p, 1) = "," then p = _json_skip_ws(json, p + 1)
-    else leave
-  end
-  return "missing 0 0"
+  return 1
 
 _json_object_count: procedure = .int
-  arg json = .string, start = .int, after = .int
-  p = _json_skip_ws(json, start + 1)
+  arg data = .binary, len = .int, start = .int, after = .int
+  p = start + 1
+  call _json_skip_ws data, len, p
   count = 0
-  if p < after & substr(json, p, 1) = "}" then return 0
+  if p < after & <at..u8>(p) data = 125 then return 0
+  segment_kind = .int[]
+  segment_text = .string[]
+  segment_index = .int[]
+  segment_bin = .binary[]
+  found = 1
+  found_kind = 0
+  found_start = 0
+  found_after = 0
   do while p < after
-    key_info = _json_string_info(json, p)
-    if word(key_info, 1) = "error" then return -1
-    p = _json_skip_ws(json, word(key_info, 3))
-    if p >= after | substr(json, p, 1) \= ":" then return -1
-    value_info = _json_value_info(json, p + 1)
-    if word(value_info, 1) = "error" then return -1
+    escaped = 0
+    if _json_scan_string(data, len, p, escaped) = 0 then return -1
+    call _json_skip_ws data, len, p
+    if p >= after | <at..u8>(p) data \= 58 then return -1
+    p = p + 1
+    if _json_parse_value(data, len, p, -1, 0, segment_kind, segment_text, segment_index, segment_bin, found, found_kind, found_start, found_after) = 0 then return -1
     count = count + 1
-    p = _json_skip_ws(json, word(value_info, 3))
-    if p < after & substr(json, p, 1) = "," then p = _json_skip_ws(json, p + 1)
+    call _json_skip_ws data, len, p
+    if p < after & <at..u8>(p) data = 44 then do
+      p = p + 1
+      call _json_skip_ws data, len, p
+    end
     else leave
   end
   return count
 
 _json_array_count: procedure = .int
-  arg json = .string, start = .int, after = .int
-  p = _json_skip_ws(json, start + 1)
+  arg data = .binary, len = .int, start = .int, after = .int
+  p = start + 1
+  call _json_skip_ws data, len, p
   count = 0
-  if p < after & substr(json, p, 1) = "]" then return 0
+  if p < after & <at..u8>(p) data = 93 then return 0
+  segment_kind = .int[]
+  segment_text = .string[]
+  segment_index = .int[]
+  segment_bin = .binary[]
+  found = 1
+  found_kind = 0
+  found_start = 0
+  found_after = 0
   do while p < after
-    value_info = _json_value_info(json, p)
-    if word(value_info, 1) = "error" then return -1
+    if _json_parse_value(data, len, p, -1, 0, segment_kind, segment_text, segment_index, segment_bin, found, found_kind, found_start, found_after) = 0 then return -1
     count = count + 1
-    p = _json_skip_ws(json, word(value_info, 3))
-    if p < after & substr(json, p, 1) = "," then p = _json_skip_ws(json, p + 1)
+    call _json_skip_ws data, len, p
+    if p < after & <at..u8>(p) data = 44 then do
+      p = p + 1
+      call _json_skip_ws data, len, p
+    end
     else leave
   end
   return count
 
 _json_object_members: procedure = .int
-  arg json = .string, start = .int, after = .int, expose names = .string[]
-  p = _json_skip_ws(json, start + 1)
+  arg data = .binary, len = .int, start = .int, after = .int, expose names = .string[]
+  p = start + 1
+  call _json_skip_ws data, len, p
   count = 0
-  if p < after & substr(json, p, 1) = "}" then return 0
+  if p < after & <at..u8>(p) data = 125 then return 0
+  segment_kind = .int[]
+  segment_text = .string[]
+  segment_index = .int[]
+  segment_bin = .binary[]
+  found = 1
+  found_kind = 0
+  found_start = 0
+  found_after = 0
   do while p < after
-    key_info = _json_string_info(json, p)
-    if word(key_info, 1) = "error" then return -1
-    p = _json_skip_ws(json, word(key_info, 3))
-    if p >= after | substr(json, p, 1) \= ":" then return -1
-    value_info = _json_value_info(json, p + 1)
-    if word(value_info, 1) = "error" then return -1
+    key_start = p
+    escaped = 0
+    if _json_scan_string(data, len, p, escaped) = 0 then return -1
+    key_after = p
+    call _json_skip_ws data, len, p
+    if p >= after | <at..u8>(p) data \= 58 then return -1
+    p = p + 1
+    if _json_parse_value(data, len, p, -1, 0, segment_kind, segment_text, segment_index, segment_bin, found, found_kind, found_start, found_after) = 0 then return -1
     count = count + 1
-    names[count] = _json_unquote_span(json, word(key_info, 2), word(key_info, 3))
-    p = _json_skip_ws(json, word(value_info, 3))
-    if p < after & substr(json, p, 1) = "," then p = _json_skip_ws(json, p + 1)
+    names[count] = _json_unquote_binary(data, key_start, key_after)
+    call _json_skip_ws data, len, p
+    if p < after & <at..u8>(p) data = 44 then do
+      p = p + 1
+      call _json_skip_ws data, len, p
+    end
     else leave
   end
   return count
 
 _json_array_members: procedure = .int
-  arg json = .string, start = .int, after = .int, expose names = .string[]
-  count = _json_array_count(json, start, after)
+  arg data = .binary, len = .int, start = .int, after = .int, expose names = .string[]
+  count = _json_array_count(data, len, start, after)
   if count < 0 then return -1
   do i = 1 to count
     names[i] = i
   end
   return count
 
-_json_unquote_span: procedure = .string
-  arg json = .string, start = .int, after = .int
+_json_unquote_binary: procedure = .string
+  arg data = .binary, start = .int, after = .int
   out = ""
   p = start + 1
-  do while p < after - 1
-    c = substr(json, p, 1)
-    if c = '\' then do
+  segment_start = p
+  limit = after - 1
+  do while p < limit
+    b = <at..u8>(p) data
+    if b = 92 then do
+      if p > segment_start then out = out || ((<at..binary>(segment_start, p - segment_start) data) as .string)
       p = p + 1
-      if p >= after then return ""
-      esc = substr(json, p, 1)
-      if esc = '"' then out = out || '"'
-      else if esc = '\' then out = out || '\'
-      else if esc = "/" then out = out || "/"
-      else if esc = "b" then out = out || '08'x
-      else if esc = "f" then out = out || '0c'x
-      else if esc = "n" then out = out || '0a'x
-      else if esc = "r" then out = out || '0d'x
-      else if esc = "t" then out = out || '09'x
-      else if esc = "u" then do
-        hex = substr(json, p + 1, 4)
-        if _json_is_hex4(hex) = 0 then return ""
-        code = x2d(hex)
-        if code < 128 then out = out || x2c(right(hex, 2, "0"))
-        else out = out || "?"
-        p = p + 4
+      if p >= limit then return ""
+      esc = <at..u8>(p) data
+      if esc = 34 then out = out || '"'
+      else if esc = 92 then out = out || '\'
+      else if esc = 47 then out = out || "/"
+      else if esc = 98 then out = out || '08'x
+      else if esc = 102 then out = out || '0c'x
+      else if esc = 110 then out = out || '0a'x
+      else if esc = 114 then out = out || '0d'x
+      else if esc = 116 then out = out || '09'x
+      else if esc = 117 then do
+        if p + 4 >= limit then return ""
+        code = _json_hex4_at(data, p + 1)
+        if code < 0 then return ""
+        if code >= 55296 & code <= 56319 then do
+          next = p + 5
+          if next + 5 >= limit then return ""
+          if <at..u8>(next) data \= 92 | <at..u8>(next + 1) data \= 117 then return ""
+          low = _json_hex4_at(data, next + 2)
+          if low < 56320 | low > 57343 then return ""
+          code = 65536 + (code - 55296) * 1024 + (low - 56320)
+          p = next + 5
+        end
+        else if code >= 56320 & code <= 57343 then return ""
+        else p = p + 4
+        out = out || d2c(code)
       end
       else return ""
+      segment_start = p + 1
     end
-    else out = out || c
     p = p + 1
   end
+  if limit > segment_start then out = out || ((<at..binary>(segment_start, limit - segment_start) data) as .string)
   return out
 
-_json_skip_ws: procedure = .int
-  arg json = .string, posn = .int
-  do while posn <= length(json)
-    c = substr(json, posn, 1)
-    if c = " " | c = '09'x | c = '0a'x | c = '0d'x then posn = posn + 1
+_json_key_matches: procedure = .int
+  arg data = .binary, start = .int, after = .int, escaped = .int, wanted = .string, wanted_bin = .binary
+  if escaped = 0 then do
+    if after - start - 2 \= binlength(wanted_bin) then return 0
+    if <compare..binary>(data, start + 1, wanted_bin) = 0 then return 1
+    return 0
+  end
+  candidate = _json_unquote_binary(data, start, after)
+  if length(candidate) = length(wanted) & candidate = wanted then return 1
+  return 0
+
+_json_skip_ws: procedure
+  arg data = .binary, len = .int, expose p = .int
+  do while p < len
+    b = <at..u8>(p) data
+    if b = 32 | b = 9 | b = 10 | b = 13 then p = p + 1
     else leave
   end
-  return posn
+  return
+
+_json_match_literal: procedure = .int
+  arg data = .binary, len = .int, p = .int, literal = .binary
+  literal_len = binlength(literal)
+  if p + literal_len > len then return 0
+  if <compare..binary>(data, p, literal) = 0 then return 1
+  return 0
+
+_json_kind_name: procedure = .string
+  arg kind = .int
+  if kind = 1 then return "string"
+  if kind = 2 then return "number"
+  if kind = 3 then return "boolean"
+  if kind = 4 then return "object"
+  if kind = 5 then return "array"
+  if kind = 6 then return "null"
+  return "error"
+
+_json_hex4_at: procedure = .int
+  arg data = .binary, p = .int
+  n1 = _json_hex_nibble(<at..u8>(p) data)
+  n2 = _json_hex_nibble(<at..u8>(p + 1) data)
+  n3 = _json_hex_nibble(<at..u8>(p + 2) data)
+  n4 = _json_hex_nibble(<at..u8>(p + 3) data)
+  if n1 < 0 | n2 < 0 | n3 < 0 | n4 < 0 then return -1
+  return n1 * 4096 + n2 * 256 + n3 * 16 + n4
+
+_json_hex_nibble: procedure = .int
+  arg b = .int
+  if b >= 48 & b <= 57 then return b - 48
+  if b >= 65 & b <= 70 then return b - 55
+  if b >= 97 & b <= 102 then return b - 87
+  return -1
 
 _json_is_digits: procedure = .int
   arg text = .string
@@ -438,17 +674,3 @@ _json_is_digit: procedure = .int
   arg c = .string
   if c >= "0" & c <= "9" then return 1
   return 0
-
-_json_is_digit19: procedure = .int
-  arg c = .string
-  if c >= "1" & c <= "9" then return 1
-  return 0
-
-_json_is_hex4: procedure = .int
-  arg text = .string
-  if length(text) \= 4 then return 0
-  do i = 1 to 4
-    c = substr(text, i, 1)
-    if _json_is_digit(c) = 0 & (c < "a" | c > "f") & (c < "A" | c > "F") then return 0
-  end
-  return 1

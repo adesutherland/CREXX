@@ -61,6 +61,12 @@ for Level B web-service and transport work. It is implemented in Rexx, ships in
 Paths are Rexx-friendly and one-based for arrays, for example
 `choices.1.message.content`. This is enough to build LLM-style request JSON and
 extract common response fields without introducing a full object mapper yet.
+The parser internals use the binary-memory surface for the JSON source scan:
+the input is converted to `.binary` once per public helper call, structural
+bytes are read with direct `<at..u8>` lowering, and unescaped object keys are
+matched with binary compare before any string materialization. Repeated
+extraction from the same large document still reparses per helper call; a parsed
+or indexed JSON handle remains the next product-level performance question.
 
 For the full API contract, path syntax, examples, limits, and test location, see
 `lib/rxfnsb/rexx/rxjson.md`.
