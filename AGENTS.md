@@ -70,6 +70,17 @@ For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the curre
 
 ## Build Performance Notes
 
+- Full Debug CTest performs much better with deliberate test-level
+  parallelism. On Adrian's macOS ARM64 development machine, `uname -srm`
+  currently reports `Darwin arm64` and `sysctl -n hw.logicalcpu` reports 10
+  CPUs, but broad validation works best with `ctest --test-dir
+  cmake-build-debug --parallel 30 --output-on-failure` or
+  `CTEST_PARALLEL_LEVEL=30`. The compiler syntax-highlighting tests are
+  serialized with a CTest `RESOURCE_LOCK` because they drive parser-thread
+  tooling; do not remove that lock without proving `ctest --parallel 30` remains
+  stable. On slower or unknown Unix-like hosts, prefer at least `--parallel 10`
+  for full or large CTest sweeps unless memory pressure or platform locking
+  suggests less. Keep focused CTest runs narrow by `-R` as usual.
 - On the 2026-06-17 Linux ARM64 VM, a clean `develop` Release build with
   `--parallel $(nproc)` used 6 jobs and hit swap while compiling multiple
   optimized `rxvmintp.c` variants. If Release builds look unexpectedly slow,

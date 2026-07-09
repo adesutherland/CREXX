@@ -442,7 +442,7 @@ static ASTNode *named_binary_operator(Context *context, Token *token, ASTNode *l
 }
 }
 
-%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT TK_EXIT_PRIMARY TK_EXIT_TOKEN TK_QUALIFIED_SYMBOL TK_INTRINSIC_LT TK_INTRINSIC_PREFIX_LT TK_INTRINSIC_NAME TK_INTRINSIC_GENERIC_OPEN TK_NAMED_OPERATOR TK_NAMED_MULT_OPERATOR TK_NAMED_SHIFT_OPERATOR TK_NAMED_AND_OPERATOR TK_NAMED_XOR_OPERATOR TK_NAMED_OR_OPERATOR.
+%token TK_UNKNOWN TK_BADCOMMENT TK_EOL TK_MINUSMINUS TK_DOT TK_EXIT_PRIMARY TK_EXIT_TOKEN TK_QUALIFIED_SYMBOL TK_STRING_CONTINUATION TK_INTRINSIC_LT TK_INTRINSIC_PREFIX_LT TK_INTRINSIC_NAME TK_INTRINSIC_GENERIC_OPEN TK_NAMED_OPERATOR TK_NAMED_MULT_OPERATOR TK_NAMED_SHIFT_OPERATOR TK_NAMED_AND_OPERATOR TK_NAMED_XOR_OPERATOR TK_NAMED_OR_OPERATOR.
 %wildcard ANYTHING.
 
 /* Low precedence */
@@ -1455,6 +1455,8 @@ assembler_arg(A)         ::= TK_HIGH_PRIORITY_MINUS(O) TK_INTEGER(S).
                          { A = ast_f(context, OP_NEG, O); add_ast(A, ast_f(context, INTEGER,S)); }
 assembler_arg(A)         ::= TK_STRING(S).
                          { A = ast_fstr(context,S); }
+assembler_arg(A)         ::= continued_string(S).
+                         { A = ast_fstr_chain(context,S); }
 
 /* Iterate */
 iterate(I) ::= TK_ITERATE(T) var_symbol(S).
@@ -1633,9 +1635,15 @@ nop(I) ::= TK_NOP(T).
 
 // EXPRESSIONS
 // precedence to disambiguate assignment vs equality
-%left TK_STRING TK_FLOAT TK_DECIMAL TK_INTEGER TK_VAR_SYMBOL TK_QUALIFIED_SYMBOL.
+%left TK_STRING TK_STRING_CONTINUATION TK_FLOAT TK_DECIMAL TK_INTEGER TK_VAR_SYMBOL TK_QUALIFIED_SYMBOL.
 %left TK_OPEN_BRACKET.
 %nonassoc TK_EQUAL.
+
+%type continued_string {Token*}
+continued_string(C)   ::= TK_STRING(S) TK_STRING_CONTINUATION(N).
+                          { S->token_subtype = N->token_number; C = S; }
+continued_string(C)   ::= continued_string(S) TK_STRING_CONTINUATION(N).
+                          { S->token_subtype = N->token_number; C = S; }
 
 function_name(N)       ::= TK_VAR_SYMBOL(S).
                            { N = ast_f(context, FUNCTION, S); }
@@ -1787,6 +1795,8 @@ term(A)                ::= TK_INTEGER(S).
                          { A = ast_f(context, INTEGER,S); }
 term(A)                ::= TK_STRING(S).
                          { A = ast_fstr(context,S); }
+term(A)                ::= continued_string(S).
+                         { A = ast_fstr_chain(context,S); }
 term(F)                ::= intrinsic_head(I). [TK_VAR_SYMBOL]
                          { F = intrinsic_lower_primary(context, I); }
 term(F)                ::= intrinsic_head(I) function_parameters(P). [TK_VAR_SYMBOL]

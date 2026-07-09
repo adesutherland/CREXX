@@ -79,6 +79,7 @@ INVALID_BIN = Binary string is invalid.
 INVALID_CONTROL_VARIABLE = Control variable is invalid for this loop.
 INVALID_DO = DO instruction has an invalid combination of options.
 INVALID_HEX = Hexadecimal string is invalid.
+LITERAL_CONTINUATION_SUFFIX = Only the final chunk of a continued string literal may use an x or b suffix.
 INVALID_LHS_ARRAY = Assignment target is not a valid array target.
 INVALID_MAIN_ARGS = main must accept no arguments or a string array.
 INVALID_PUBLIC_ATTRIBUTE = Public attribute access is invalid.

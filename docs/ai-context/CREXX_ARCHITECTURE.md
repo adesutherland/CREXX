@@ -114,6 +114,10 @@ potential performance improvement rather than current behaviour.
 
 Hex and binary suffixed source strings now split by decoded byte content.
 `ast_fstr()` validates the hex or binary digit syntax and decodes the bytes.
+`ast_fstr_chain()` handles adjacent string literal tokens separated by a
+physical line break, joining the raw chunk bodies before normal decoding; only
+the final chunk may carry an `x` or `b` suffix, and the line break contributes no
+byte or character.
 When the decoded span is valid UTF-8, the literal remains a `STRING` AST node
 and follows the normal escaped RXAS string path. When the decoded span is not
 valid UTF-8, the literal becomes a `BINARY` AST node with canonical `0x...`

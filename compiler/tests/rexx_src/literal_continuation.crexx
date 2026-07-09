@@ -1,0 +1,46 @@
+options levelb
+
+main: procedure = .int
+  payload = .binary
+  nibbles = .binary
+  bits = .binary
+
+  text = "large "
+         "text"
+  if text <> "large text" then return 1
+
+  tight = "ab"
+          "cd"
+  if tight <> "abcd" then return 2
+
+  quoted = 'don''t '
+           "stop"
+  if quoted <> "don't stop" then return 3
+
+  payload = "00"
+            "ff"
+            "41"x as .binary
+  if <blen>(payload) <> 3 then return 10
+  if <at..u8>(0) payload <> 0 then return 11
+  if <at..u8>(1) payload <> 255 then return 12
+  if <at..u8>(2) payload <> 65 then return 13
+
+  nibbles = "f"
+            "f"x as .binary
+  if <blen>(nibbles) <> 1 then return 20
+  if <at..u8>(0) nibbles <> 255 then return 21
+
+  bits = "0100"
+         "0001"
+         "0100"
+         "0010"b as .binary
+  if <blen>(bits) <> 2 then return 30
+  if <at..u8>(0) bits <> 65 then return 31
+  if <at..u8>(1) bits <> 66 then return 32
+
+  decoded = "41"
+            "42"x
+  if decoded <> "AB" then return 40
+
+  say "ok"
+  return 0

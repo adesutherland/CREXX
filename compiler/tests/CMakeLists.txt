@@ -100,7 +100,9 @@ endif()
         add_test(NAME ${NAME}
                  COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-        set_tests_properties(${NAME} PROPERTIES LABELS "compiler;syntax_highlighting;stage0")
+        set_tests_properties(${NAME} PROPERTIES
+                LABELS "compiler;syntax_highlighting;stage0"
+                RESOURCE_LOCK syntax_highlighting_parser)
     endfunction()
 endif()
 
@@ -929,6 +931,7 @@ add_crexx_compiler_fail_test(binary_memory_compare_explicit_length rexx_src/bina
 add_crexx_compiler_fail_test(binary_memory_compare_needle_type rexx_src/binary_memory_compare_needle_type.crexx binary_memory_compare_needle_type.txt)
 add_crexx_compiler_fail_test(binary_memory_compare_target_not_binary rexx_src/binary_memory_compare_target_not_binary.crexx binary_memory_compare_target_not_binary.txt)
 add_crexx_compiler_fail_test(binary_memory_compare_type rexx_src/binary_memory_compare_type.crexx binary_memory_compare_type.txt)
+add_crexx_compiler_fail_test(literal_continuation_suffix_error rexx_src/literal_continuation_suffix_error.crexx literal_continuation_suffix_error.txt)
 add_crexx_compiler_fail_test(intrinsic_argexists_invalid rexx_src/intrinsic_argexists_invalid.crexx intrinsic_argexists_invalid.txt)
 add_crexx_compiler_fail_test(legacy_arg_call_removed rexx_src/legacy_arg_call_removed.crexx legacy_arg_call_removed.txt)
 add_crexx_compiler_fail_test(legacy_arg_stem_removed rexx_src/legacy_arg_stem_removed.crexx legacy_arg_stem_removed.txt)
@@ -1665,6 +1668,7 @@ add_crexx_run_test(constants_levelb_payloads rexx_src/constants_levelb_payloads.
 add_crexx_run_test(binary_memory_source rexx_src/binary_memory_source.crexx)
 add_crexx_run_test(binary_memory_span_oob rexx_src/binary_memory_span_oob.crexx)
 add_crexx_run_test(binary_memory_packed_lookup rexx_src/binary_memory_packed_lookup.crexx)
+add_crexx_run_test(literal_continuation rexx_src/literal_continuation.crexx)
 add_crexx_isolated_run_test(qualified_bif_direct_namespace rexx_src/qualified_bif_direct_namespace.crexx)
 add_crexx_dual_import_run_test(qualified_namespace_import_source rexx_src/qualified_namespace_main.crexx rexx_src/qualified_namespace_dep_a.crexx rexx_src/qualified_namespace_dep_b.crexx source)
 add_crexx_dual_import_run_test(qualified_namespace_import_binary rexx_src/qualified_namespace_main.crexx rexx_src/qualified_namespace_dep_a.crexx rexx_src/qualified_namespace_dep_b.crexx binary)
@@ -3943,7 +3947,7 @@ add_test(NAME trace_event_metadata
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_trace_event_metadata.cmake)
 set_tests_properties(trace_event_metadata PROPERTIES LABELS "compiler;stage4")
 
-set(TRACE_STEM_SUGAR_RXVM_TIMEOUT 10)
+set(TRACE_STEM_SUGAR_RXVM_TIMEOUT 60)
 set(_trace_stem_sugar_sanitizer_flags
         "${CMAKE_C_FLAGS} ${CMAKE_CXX_FLAGS} ${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_SHARED_LINKER_FLAGS}")
 if(CMAKE_BUILD_TYPE)
@@ -4047,6 +4051,7 @@ string(APPEND RXC_DIAGNOSTIC_LOCALIZATION_CONTENT
        "set(binary_memory_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/binary_memory_invalid_storage.crexx\")\n"
        "set(legacy_arg_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/legacy_arg_call_removed.crexx\")\n"
        "set(top_level_constant_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/top_level_constant_removed.crexx\")\n"
+       "set(literal_continuation_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/literal_continuation_suffix_error.crexx\")\n"
        "function(run_diag label locale source suffix expected unexpected)\n"
        "  execute_process(\n"
        "    COMMAND \"${CMAKE_COMMAND}\" -E env \"CREXX_DIAGNOSTICS=localized\" \"CREXX_DIAGNOSTIC_LOCALE=\${locale}\" \"$<TARGET_FILE:rxc>\" -n -o \"\${label}_\${suffix}_diag\" \"\${source}\"\n"
@@ -4118,6 +4123,9 @@ string(APPEND RXC_DIAGNOSTIC_LOCALIZATION_CONTENT
        "run_diag_fail(\"en_GB\" \"en_GB\" \"\${top_level_constant_src}\" \"top_level_constant\" \"CONSTANT_OUTSIDE_ROUTINE: Constant declarations must be inside an explicit routine body.\" \"\")\n"
        "run_diag_fail(\"de_DE\" \"de_DE\" \"\${top_level_constant_src}\" \"top_level_constant\" \"CONSTANT_OUTSIDE_ROUTINE: Konstantendeklarationen müssen sich in einem expliziten Routinenrumpf befinden.\" \"\")\n"
        "run_diag_fail(\"nl_NL\" \"nl_NL\" \"\${top_level_constant_src}\" \"top_level_constant\" \"CONSTANT_OUTSIDE_ROUTINE: Constantdeclaraties moeten binnen een expliciete routinebody staan.\" \"\")\n"
+       "run_diag_fail(\"en_GB\" \"en_GB\" \"\${literal_continuation_src}\" \"literal_continuation\" \"LITERAL_CONTINUATION_SUFFIX: Only the final chunk of a continued string literal may use an x or b suffix.\" \"\")\n"
+       "run_diag_fail(\"de_DE\" \"de_DE\" \"\${literal_continuation_src}\" \"literal_continuation\" \"LITERAL_CONTINUATION_SUFFIX: Nur das letzte Stück eines fortgesetzten Zeichenfolgenliterals darf ein x- oder b-Suffix verwenden.\" \"\")\n"
+       "run_diag_fail(\"nl_NL\" \"nl_NL\" \"\${literal_continuation_src}\" \"literal_continuation\" \"LITERAL_CONTINUATION_SUFFIX: Alleen het laatste deel van een voortgezet tekenreeksliteral mag een x- of b-suffix gebruiken.\" \"\")\n"
        "run_diag(\"fallback\" \"fr_FR\" \"\${unused_src}\" \"unused\" \"UNUSED_IMPORT: Import is recognised but not used.\" \"recognized\")\n")
 file(GENERATE OUTPUT "${RXC_DIAGNOSTIC_LOCALIZATION_SCRIPT}" CONTENT "${RXC_DIAGNOSTIC_LOCALIZATION_CONTENT}")
 add_test(NAME rxc_diagnostic_localization

@@ -79,6 +79,7 @@ INVALID_BIN = Binaire tekenreeks is ongeldig.
 INVALID_CONTROL_VARIABLE = Controlevariabele is ongeldig voor deze lus.
 INVALID_DO = DO-opdracht heeft een ongeldige combinatie van opties.
 INVALID_HEX = Hexadecimale tekenreeks is ongeldig.
+LITERAL_CONTINUATION_SUFFIX = Alleen het laatste deel van een voortgezet tekenreeksliteral mag een x- of b-suffix gebruiken.
 INVALID_LHS_ARRAY = Toewijzingsdoel is geen geldig arraydoel.
 INVALID_MAIN_ARGS = main mag geen argumenten of een string-array accepteren.
 INVALID_PUBLIC_ATTRIBUTE = Publieke attribuuttoegang is ongeldig.

@@ -79,6 +79,7 @@ INVALID_BIN = Binärzeichenfolge ist ungültig.
 INVALID_CONTROL_VARIABLE = Steuervariable ist für diese Schleife ungültig.
 INVALID_DO = DO-Anweisung hat eine ungültige Kombination von Optionen.
 INVALID_HEX = Hexadezimale Zeichenfolge ist ungültig.
+LITERAL_CONTINUATION_SUFFIX = Nur das letzte Stück eines fortgesetzten Zeichenfolgenliterals darf ein x- oder b-Suffix verwenden.
 INVALID_LHS_ARRAY = Zuweisungsziel ist kein gültiges Array-Ziel.
 INVALID_MAIN_ARGS = main darf keine Argumente oder ein String-Array annehmen.
 INVALID_PUBLIC_ATTRIBUTE = Öffentlicher Attributzugriff ist ungültig.

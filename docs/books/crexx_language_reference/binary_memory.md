@@ -386,8 +386,6 @@ The Release 1 surface deliberately leaves a few items for later work:
 - variable-size span writes for `.binary` and fixed-codepoint `.string` fields;
 - explicit source-length zero-copy binary compare;
 - wildcard exposes for constant families and generated-layout conveniences;
-- lexer/parser support for readable multiline or chunked suffixed binary
-  literals;
 - direct compiler or inliner lowering for selected packed-memory helpers when
   profiling proves the helper call overhead matters;
 - read-only constant/view parameter passing, binary struct declarations, and
