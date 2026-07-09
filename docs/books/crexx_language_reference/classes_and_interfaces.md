@@ -150,7 +150,7 @@ slot. Valid views are `.int`, `.float`, `.decimal`, `.binary`, `.string`, and
   _payload = .object with register.5.object
 ```
 
-System classes can also expose masked status-flag views using
+System classes can also expose masked status-flag views using  
 `register.N.flags.<partition>`. These views are `.int` attributes over the VM
 status word rather than value-payload views:
 
@@ -159,8 +159,16 @@ status word rather than value-payload views:
   _vm_flags = .int with register.0.flags.vm
 ```
 
-The supported partitions are `.vm`, `.compiler`, `.library`, `.user`,
-`.public`, and `.readable`. `.vm`, `.compiler`, and `.readable` are read-only.
+The supported partitions are 
+
+- `.vm`, 
+- `.compiler`,
+- `.library`, 
+- `.user`,
+- `.public`, and 
+- `.readable`. 
+
+`.vm`, `.compiler`, and `.readable` are read-only.
 `.library` and `.user` are writable. `.public` is writable but covers only the
 library and user bands, not compiler call-ABI flags. Assigning a writable flag
 view replaces only that masked band; other status-word bits are preserved.
@@ -320,7 +328,7 @@ say selected.describe()   /* file:log.txt:8 */
 say fallback.describe()   /* cache:memo:1 */
 ```
 
-This complete example is mirrored by the test
+This complete example is mirrored by the test  
 `compiler/tests/rexx_src/interface_showcase_same_module.crexx`.
 
 ## Multiple Interfaces
