@@ -1139,6 +1139,7 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
     set(NAME "${FIXTURE}_${RUNNER}_${MODE}")
     set(BASE "${NAME}")
     set(SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
+    set(WORK_DIR "${CMAKE_CURRENT_BINARY_DIR}/${NAME}_ws")
     set(RXC_FLAGS "")
     set(RXAS_FLAGS "")
     set(LABELS "reference;compiler;source")
@@ -1155,7 +1156,7 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
         crexx_write_linked_runtime_script(
                 OUTPUT "${LINK_SCRIPT}"
                 NAME "${NAME}"
-                WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+                WORKING_DIRECTORY "${WORK_DIR}"
                 RUNNER "$<TARGET_FILE:${RUNNER}>"
                 RXLINK "$<TARGET_FILE:rxlink>"
                 PROGRAM "${BASE}.rxbin"
@@ -1164,10 +1165,11 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
     endif()
 
     set(CONTENT "set(full_out \"\")\n")
-    string(APPEND CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${RXC_FLAGS} -o \"${BASE}\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/${FIXTURE}.crexx\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    string(APPEND CONTENT "file(MAKE_DIRECTORY \"${WORK_DIR}\")\n")
+    string(APPEND CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${RXC_FLAGS} -o \"${BASE}\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/${FIXTURE}.crexx\" WORKING_DIRECTORY \"${WORK_DIR}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
     string(APPEND CONTENT "string(APPEND full_out \"\${out}\")\n")
     string(APPEND CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed: \${out}\")\nendif()\n")
-    string(APPEND CONTENT "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/${BASE}.rxas\" rxas)\n")
+    string(APPEND CONTENT "file(READ \"${WORK_DIR}/${BASE}.rxas\" rxas)\n")
     if(FIXTURE STREQUAL "reference_source_dereference_live" OR
        FIXTURE STREQUAL "reference_source_iterator" OR
        FIXTURE STREQUAL "reference_source_inline_lifetime")
@@ -1180,7 +1182,7 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
     string(APPEND CONTENT "    message(FATAL_ERROR \"Expected \${op} in generated reference source RXAS\")\n")
     string(APPEND CONTENT "  endif()\n")
     string(APPEND CONTENT "endforeach()\n")
-    string(APPEND CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" ${RXAS_FLAGS} -o \"${BASE}.rxbin\" \"${BASE}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    string(APPEND CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" ${RXAS_FLAGS} -o \"${BASE}.rxbin\" \"${BASE}\" WORKING_DIRECTORY \"${WORK_DIR}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
     string(APPEND CONTENT "string(APPEND full_out \"\${out}\")\n")
     string(APPEND CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed: \${out}\")\nendif()\n")
     if(MODE STREQUAL "opt")
@@ -1188,7 +1190,7 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
         string(APPEND CONTENT "string(APPEND full_out \"\${out}\")\n")
         string(APPEND CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"linked ${RUNNER} failed: \${out}\")\nendif()\n")
     else()
-        string(APPEND CONTENT "execute_process(COMMAND \"$<TARGET_FILE:${RUNNER}>\" \"${BASE}.rxbin\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+        string(APPEND CONTENT "execute_process(COMMAND \"$<TARGET_FILE:${RUNNER}>\" \"${BASE}.rxbin\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" WORKING_DIRECTORY \"${WORK_DIR}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
         string(APPEND CONTENT "string(APPEND full_out \"\${out}\")\n")
         string(APPEND CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"${RUNNER} failed: \${out}\")\nendif()\n")
     endif()
@@ -1201,7 +1203,9 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
     add_test(NAME ${NAME}
              COMMAND ${CMAKE_COMMAND} -P "${SCRIPT}"
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    set_tests_properties(${NAME} PROPERTIES LABELS "${LABELS}")
+    set_tests_properties(${NAME} PROPERTIES
+            LABELS "${LABELS}"
+            FIXTURES_REQUIRED linked_opt_runtime_artifacts)
 endfunction()
 
 foreach(_crexx_reference_fixture IN ITEMS reference_source_explicit reference_source_contract reference_source_iterator reference_source_dereference_live reference_source_inline_lifetime reference_source_block_lifetime)
