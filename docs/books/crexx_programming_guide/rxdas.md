@@ -25,6 +25,13 @@ including pooled float literals, packed code and constant sections,
 and the interface/class metadata directives
 `.class`, `.attr`, `.interface`,`.implements`, and `.member`. 
 
+Assembler-built jump tables are reconstructed as procedure-local synthetic
+`.jtable` and `.jcase` declarations. The disassembly records the packed
+algorithm actually selected (`linear`, `openhash`, or `acph`) and rewrites
+`jumps`, `jumpr`, `jumpn`, `jumpb`, `jumpbs`, and `jumpi` operands to the
+synthetic table name. Numeric tables omit the internal NaN compatibility entry,
+which is recreated by `rxas` when the disassembly is assembled again.
+
 ## Command Line Arguments
 
 When the command line argument -h is specified the options are shown:\\
