@@ -581,6 +581,10 @@ walker_result register_walker(walker_direction direction,
             case CONSTANT_DEF:
                 break;
 
+            case OPT_DISPATCH_CASE:
+                if (child1 && is_constant(child1)) child1->register_num = DONT_ASSIGN_REGISTER;
+                break;
+
             case DEFINE:
             case ASSIGN:
                 if (node->node_type == ASSIGN && rxcp_binary_memory_is_access(child1)) {
@@ -1344,6 +1348,11 @@ walker_result register_walker(walker_direction direction,
                 node->register_type = child1->register_type;
                 /* If it is a temporary mark the register for reuse */
                 return_child_reg(child1);
+                break;
+
+            case OPT_DISPATCH:
+            case OPT_DISPATCH_CASE:
+            case OPT_DISPATCH_DEFAULT:
                 break;
 
             case TO:

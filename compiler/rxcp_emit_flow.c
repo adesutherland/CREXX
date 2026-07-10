@@ -78,6 +78,87 @@ static int flow_scope_owns_recyclable_registers(ASTNode *node) {
     return 1;
 }
 
+static void emit_integer_dispatch(ASTNode *node) {
+    ASTNode *selector = ast_chdn(node, 0);
+    ASTNode *entry;
+    ASTNode *default_entry = 0;
+    char *text;
+    char *comment_meta;
+    size_t case_index = 0;
+
+    if (!selector) return;
+    if (!node->output) node->output = output_f();
+
+    comment_meta = get_metaline(node);
+    output_prepend_text(comment_meta, node->output);
+    free(comment_meta);
+
+    if (selector->output) output_concat(node->output, selector->output);
+    text = mprintf("   .jtable jtable%d auto\n"
+                   "   jumpi %c%d,jtable%d\n",
+                   node->node_number,
+                   selector->register_type,
+                   selector->register_num,
+                   node->node_number);
+    output_append_text(node->output, text);
+    free(text);
+
+    for (entry = selector->sibling; entry; entry = entry->sibling) {
+        if (entry->node_type == OPT_DISPATCH_DEFAULT) {
+            default_entry = entry;
+            break;
+        }
+    }
+
+    text = mprintf("   br l%ddispatch%s\n",
+                   node->node_number,
+                   default_entry ? "default" : "end");
+    output_append_text(node->output, text);
+    free(text);
+
+    for (entry = selector->sibling; entry; entry = entry->sibling) {
+        ASTNode *key;
+        ASTNode *body;
+        char *key_text;
+
+        if (entry->node_type != OPT_DISPATCH_CASE) continue;
+        key = ast_chdn(entry, 0);
+        body = ast_chdn(entry, 1);
+        if (!key || !body) continue;
+
+        key_text = format_constant(TP_INTEGER, key);
+        text = mprintf("l%ddispatchcase%zu: .jcase jtable%d %s\n",
+                       node->node_number,
+                       case_index,
+                       node->node_number,
+                       key_text);
+        output_append_text(node->output, text);
+        free(text);
+        free(key_text);
+
+        if (body->output) output_concat(node->output, body->output);
+        if (body->cleanup) output_concat(node->output, body->cleanup);
+        text = mprintf("   br l%ddispatchend\n", node->node_number);
+        output_append_text(node->output, text);
+        free(text);
+        case_index++;
+    }
+
+    if (default_entry) {
+        ASTNode *body = ast_chdn(default_entry, 0);
+        text = mprintf("l%ddispatchdefault:\n", node->node_number);
+        output_append_text(node->output, text);
+        free(text);
+        if (body && body->output) output_concat(node->output, body->output);
+        if (body && body->cleanup) output_concat(node->output, body->cleanup);
+    }
+
+    text = mprintf("l%ddispatchend:\n", node->node_number);
+    output_append_text(node->output, text);
+    free(text);
+    if (selector->cleanup) output_concat(node->output, selector->cleanup);
+}
+
 static void flow_emit_scope_dereference_unlinks(OutputFragment *output, Scope *scope) {
     size_t i;
 
@@ -452,6 +533,10 @@ void emit_flow(ASTNode *node, void *pl) {
                 if (child1->cleanup) output_concat(node->output, child1->cleanup);
                 if (child2->cleanup) output_concat(node->output, child2->cleanup);
             }
+            break;
+
+        case OPT_DISPATCH:
+            emit_integer_dispatch(node);
             break;
 
         case DO: /* DO LOOP */

@@ -1,6 +1,7 @@
 # RXAS Jump Table Working Design
 
-Status: Release 1 RXAS surface and all three packed lookup algorithms implemented.
+Status: Release 1 RXAS surface and all three packed lookup algorithms implemented;
+`rxc` lowering is in progress.
 
 This note defines the RXAS surface for a fast static multi-branch instruction.
 The intended use is compiler-emitted dispatch for `select`, parser/token
@@ -345,6 +346,7 @@ the table constant.
    implement `auto`. Status: implemented and profiled with the common Release 1
    header.
 6. Teach `rxc` to lower suitable `select`/multi-`if` shapes to `jump*`.
+   Status: implementation is proceeding through the compiler stages below.
 7. Benchmark real parser and JSON workloads against nested branches, binary
    search, open hash, trie/switch code, and ACPH jump tables. Status: the
    generated key-size/table-size jump-table matrix is complete; compiler
@@ -365,3 +367,119 @@ the table constant.
   name exactly; it may synthesize a stable table name. It should always emit a
   `.jtable` line showing the algorithm used.
 - The canonical RXAS spelling is `openhash`.
+
+## `rxc` Integration Design
+
+Jump-table selection is primarily an `rxc` optimization. At this stage the
+compiler still knows the source construct, resolved symbols, types, folded
+constants, and evaluation rules. RXAS-level recognition of arbitrary branch
+ladders is deferred until RXAS has a control-flow graph plus reaching-definition
+and liveness analysis; the current keyhole window is not a safe substitute for
+those proofs.
+
+Both source SELECT forms retain their language semantics:
+
+- classic `select` evaluates independent Boolean `when` expressions;
+- C-style `select expression` evaluates the selector once and compares it to
+  each `when` expression using `=` semantics.
+
+The existing early control-flow rewrite remains in place. It creates a private
+typed selector temporary for C-style SELECT, then a canonical nested equality
+ladder. The generated block is marked with explicit SELECT provenance. After
+validation, common lowering recognizes that compiler-owned shape without making
+all validation and symbol passes understand a new source control-flow node.
+Optimized builds may first expose additional constants through inlining and
+folding, but explicit eligible C-style SELECT is lowered in no-opt builds too.
+
+Eligible ladders are rewritten to a dedicated internal dispatch AST. The
+optimizer describes dispatch; it does not emit RXAS text. The normal emitter
+owns `.jtable`, `jump*`, `.jcase`, fallback, and join-label generation. This
+same internal representation is the future target for safe classic-SELECT and
+general IF-ladder recognition.
+
+### Compiler Stages
+
+1. **Integer C-style SELECT.** In both optimized and no-opt builds, lower an
+   explicit C-style SELECT when its selector is scalar `.int`, every case is a
+   compile-time `.int` value, and the ladder has enough cases to justify a
+   table. Emit `jumpi` and `.jtable ... auto`. Keep the original IF ladder for
+   every rejected candidate. No-opt lowering recognizes typed source literals
+   and explicit language constants without enabling general constant-folding
+   optimization. The initial profitability threshold is conservative and
+   remains subject to branch-ladder benchmarking.
+2. **Mixed C-style SELECT.** Partition the ordered ladder into maximal
+   consecutive eligible runs. Emit a jump table for profitable constant runs
+   and retain ordinary IF comparisons for dynamic or unsupported cases. Never
+   combine cases across an intervening expression whose evaluation order could
+   be observed.
+3. **General integer IF recognition.** Reuse the dispatch builder for canonical
+   nested IF ladders, including classic SELECT after its normal rewrite. The
+   initial proof requires equality tests over the same resolved scalar variable,
+   constant right operands, and no mutation, alias, call, getter, or other
+   side-effect risk.
+4. **Exact strings and binary.** Strict string comparisons can use `jumps`
+   because `==` is exact after compiler string conversion and normalization.
+   Exact binary dispatch can use `jumpb` once the Rexx binary equality path is
+   validated end to end.
+5. **Loose nonnumeric strings.** Add a distinct Rexx/padded-string jump form.
+   The VM reduces the source's effective length over trailing ASCII spaces
+   without copying, while assembler case keys are stored with the same trailing
+   spaces removed. Leading spaces remain significant. Compiler-provided Unicode
+   normalization means equal text has the same normalized UTF-8 representation
+   before this operation. This optimization is valid when every case key is
+   provably nonnumeric: loose comparison must then use padded text comparison
+   regardless of the selector's runtime contents.
+6. **Loose numeric strings.** After the numeric comparison contract is
+   centralized, parse the selector once and dispatch using the same canonical
+   numeric representation used for case constants. Equivalent spellings map to
+   one key and retain the first source case. Numeric context, signed zero,
+   non-finite values, and parser consistency must be settled before this form is
+   enabled.
+7. **RXAS flow optimization.** Once CFG/dataflow support exists, consider the
+   same transformation for hand-written RXAS and compiler shapes exposed only
+   after emission. Correctness must not depend on source metadata.
+
+### Ordering, Duplicates, And Fallback
+
+SELECT remains first-match-wins. A complete table preserves source case order
+only through its target mapping; duplicate canonical keys must map to the first
+case. During initial compiler bring-up, duplicate or otherwise ambiguous input
+may conservatively retain the IF ladder rather than reaching the assembler,
+which correctly rejects duplicate `.jcase` keys in hand-written RXAS.
+
+Mixed lowering preserves observable order by grouping only consecutive eligible
+runs. A jump miss falls through to the next residual comparison or to the
+SELECT `otherwise` path. A match executes its original body and then branches
+to the common SELECT join.
+
+### Validation And Performance
+
+Compiler coverage must include jump-table RXAS in optimized and no-opt builds,
+runtime first, middle, and last hits, misses, `otherwise`, missing `otherwise`,
+nested SELECTs, duplicate
+fallback, mixed unsupported cases, and source/trace metadata. Negative safety
+tests must prove that side-effecting or type-incompatible ladders are not
+rewritten.
+
+The assembler's `auto` profile chooses the packed table algorithm; it does not
+choose between a table and an IF ladder. `rxc` therefore needs a separate
+benchmark matrix comparing fused branches with `jumpi`/string dispatch over
+case counts, hit positions, misses, and representative key distributions.
+
+### Compiler Defects Found During Integration
+
+Compiler defects exposed by this work are recorded here and receive immediate
+regression coverage; they must not be hidden by weakening a jump-table test.
+
+- **Repeated call-argument register corruption (found 2026-07-10).** A no-opt
+  call such as `nested(i, i)` emitted two destructive `swap` operations from
+  the same source register. The first swap changed the source before the second
+  argument was staged, so the callee received different values and restoring
+  the swaps corrupted the caller's loop variable. The required invariant is
+  that every logical argument value is captured before argument placement can
+  mutate any source register. Status: resolved in this integration slice. The
+  emitter now copies each non-primary repeated occurrence into its final call
+  slot before swaps begin, then applies per-argument flags to the staged slot.
+  `repro_duplicate_call_argument` permanently covers repeated integer and
+  string arguments plus preservation of the caller's source value in optimized
+  and no-opt builds.

@@ -1779,6 +1779,10 @@ static walker_result emit_walker(walker_direction direction,
                 emit_flow(node, pl);
                 break;
 
+            case OPT_DISPATCH:
+                emit_flow(node, pl);
+                break;
+
             case DO: /* DO LOOP */
             case SIGNAL_BLOCK:
                 emit_flow(node, pl);
