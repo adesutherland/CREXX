@@ -1,0 +1,12 @@
+.globals=0
+main() .locals=2
+    .jtable numbers auto
+    br cases_end
+one: .jcase numbers "1"
+    ret 1
+same_one: .jcase numbers "01.0"
+    ret 1
+cases_end:
+    load r0,"1"
+    jumpn r0,numbers
+    ret 0

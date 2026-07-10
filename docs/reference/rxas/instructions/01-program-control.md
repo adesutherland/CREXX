@@ -497,7 +497,83 @@ after_cases:
     ret
 ```
 
-- Related instructions: `jumpb`, `jumpbs`, `jumpi`, `.jtable`, `.jcase`.
+- Related instructions: `jumpb`, `jumpbs`, `jumpi`, `jumpr`, `jumpn`, `.jtable`, `.jcase`.
+
+## `jumpr`
+
+Status: documented.
+
+| Opcode | Operands | Assembler description |
+| --- | --- | --- |
+| `0x027b` | `{REG,BINARY}` | Jump through table op2 using blank-padded Rexx string register op1 |
+
+Human reference content:
+
+- Purpose: dispatches using Rexx blank-padded nonnumeric string equality
+  without copying or modifying the source string.
+- Operand notes: `op1` is a string register and `op2` is a procedure-local
+  `.jtable` containing string cases. The assembler removes trailing ASCII
+  spaces from every case key; the VM computes the source's effective length by
+  ignoring trailing ASCII spaces. Leading spaces remain significant.
+- Result and side effects: on match, the VM branches to the case target; on
+  miss, execution continues at the next instruction.
+- Signals/errors: malformed packed data raises `RXBIN_CORRUPTION`. A table may
+  not be shared between exact, padded, and numeric string jump forms. Case keys
+  that become duplicates after trimming are assembler errors.
+- Example:
+
+```rxas
+main() .locals=2
+    .jtable words auto
+    br after_cases
+word_if: .jcase words "if   "
+    ret 1
+after_cases:
+    load r0,"if"
+    jumpr r0,words
+    ret 0
+```
+
+- Related instructions: `jumps`, `jumpn`, `.jtable`, `.jcase`, `req`.
+
+## `jumpn`
+
+Status: documented.
+
+| Opcode | Operands | Assembler description |
+| --- | --- | --- |
+| `0x027c` | `{REG,BINARY}` | Jump through table op2 using numeric string register op1 |
+
+Human reference content:
+
+- Purpose: parses a string source once and dispatches equivalent numeric
+  spellings through a packed table.
+- Operand notes: `op1` is a string register and `op2` is a procedure-local
+  `.jtable` containing numeric string cases. The assembler and VM use the same
+  string-to-double parser. Keys are stored as canonical little-endian IEEE-754
+  bytes; `-0` and `0` share one key.
+- Result and side effects: on a numeric match, the VM branches to the case
+  target. A nonnumeric source falls through. A NaN source preserves current
+  loose-comparison first-match behavior through an assembler-generated internal
+  alias to the first source case.
+- Signals/errors: malformed packed data raises `RXBIN_CORRUPTION`. Nonnumeric
+  and NaN case keys, canonical duplicates such as `"1"` and `"01.0"`, and
+  mixed exact/padded/numeric use of one table are assembler errors.
+- Example:
+
+```rxas
+main() .locals=2
+    .jtable numbers auto
+    br after_cases
+case_one: .jcase numbers "1"
+    ret 1
+after_cases:
+    load r0,"01.000"
+    jumpn r0,numbers
+    ret 0
+```
+
+- Related instructions: `jumpr`, `jumps`, `.jtable`, `.jcase`, `req`.
 
 ## `ret`
 

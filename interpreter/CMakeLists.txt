@@ -726,6 +726,8 @@ crexx_add_rxas_vm_binary(tests_jump_table_hash_edges "open-hash and ACPH jump ta
 crexx_add_vm_dual_test(NAME rxasjumptablehashedges RXVM_ARGS tests_jump_table_hash_edges PASS_REGULAR_EXPRESSION "PASS: Jump Table Hash Edge Cases")
 crexx_add_rxas_vm_binary(tests_jump_table_auto_edges "auto jump table policy paths")
 crexx_add_vm_dual_test(NAME rxasjumptableautoedges RXVM_ARGS tests_jump_table_auto_edges PASS_REGULAR_EXPRESSION "PASS: Jump Table Auto Policy Paths")
+crexx_add_rxas_vm_binary(tests_jump_table_rexx_strings "Rexx padded and numeric string jump tables")
+crexx_add_vm_dual_test(NAME rxasjumptablerexxstrings RXVM_ARGS tests_jump_table_rexx_strings PASS_REGULAR_EXPRESSION "PASS: Jump Table Rexx String Ops")
 crexx_add_rxas_assembly_failure_regex(rxasjumptablebadnolabel tests_jump_table_bad_no_label "\\.jcase must decorate a same-line label")
 crexx_add_rxas_assembly_failure_regex(rxasjumptablebadunknown tests_jump_table_bad_unknown "unknown jump table")
 crexx_add_rxas_assembly_failure_regex(rxasjumptablebadjumpbsvariable tests_jump_table_bad_jumpbs_variable "jumpbs requires fixed-length")
@@ -736,6 +738,10 @@ crexx_add_rxas_assembly_failure_regex(rxasjumptablebadduplicatebinary tests_jump
 crexx_add_rxas_assembly_failure_regex(rxasjumptablebadduplicatetable tests_jump_table_bad_duplicate_table "duplicate jump table declaration")
 crexx_add_rxas_assembly_failure_regex(rxasjumptablebadalgorithmname tests_jump_table_bad_algorithm_name "jump table algorithm must be auto, linear, openhash, or acph")
 crexx_add_rxas_assembly_failure_regex(rxasjumptablebadoperand tests_jump_table_bad_operand "jump table instruction requires a \\.jtable name operand")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadnumerickey tests_jump_table_bad_numeric_key "jumpn case key must be a non-NaN numeric string")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadnumericduplicate tests_jump_table_bad_numeric_duplicate "duplicate jump table case key after canonicalization")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadpaddedduplicate tests_jump_table_bad_padded_duplicate "duplicate jump table case key after canonicalization")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadmatchmode tests_jump_table_bad_match_mode "cannot mix exact, padded, and numeric")
 
 # Socket Instruction Tests
 add_custom_command(

@@ -365,7 +365,11 @@ the table constant.
 - `rxdas` should reconstruct readable `.jtable` and `.jcase` lines by parsing
   the jump-table payload. It does not need to preserve the original source table
   name exactly; it may synthesize a stable table name. It should always emit a
-  `.jtable` line showing the algorithm used.
+  `.jtable` line showing the algorithm used. Status: outstanding Release 1
+  tooling gap. Current `rxdas` recognizes the `jump*` opcodes but renders the
+  packed `BINARY_CONST` inline, which is not accepted as a jump-table operand
+  when the output is reassembled. This is separate from the unscheduled RXAS
+  flow optimization below.
 - The canonical RXAS spelling is `openhash`.
 
 ## `rxc` Integration Design
@@ -421,15 +425,21 @@ general IF-ladder recognition.
    side-effect risk. Status: implemented for optimized builds. Loose and strict
    integer equality are accepted for direct scalar variable reads. Exposed,
    global, reference-target, reference-argument, class-attribute, indexed,
-   dereferenced, property, call, non-integer, and undersized shapes remain
-   ordinary comparisons. Safe constant runs may be lowered on either side of
-   an unsupported condition because each run reads the selector at its original
+   dereferenced, property, call, non-integer-at-this-stage, and undersized
+   shapes remain ordinary comparisons. Stages 4-6 below extend the same stable
+   scalar proof to selected string and binary forms. Safe constant runs may be
+   lowered on either side of an unsupported condition because each run reads
+   the selector at its original
    entry point. No-opt builds preserve general IF and classic SELECT source
    flow; their dispatch lowering remains limited to explicit C-style SELECT.
 4. **Exact strings and binary.** Strict string comparisons can use `jumps`
    because `==` is exact after compiler string conversion and normalization.
    Exact binary dispatch can use `jumpb` once the Rexx binary equality path is
-   validated end to end.
+   validated end to end. Status: implemented conservatively. Optimized strict
+   string IF ladders use `jumps`; explicit C-style binary SELECT uses `jumpb`
+   in optimized and no-opt builds. Whole binary equality now uses `bineq` and
+   `binne`, repairing the invalid `beq` fallback previously emitted for binary
+   expressions. Other binary compare/slice shapes are not inferred.
 5. **Loose nonnumeric strings.** Add a distinct Rexx/padded-string jump form.
    The VM reduces the source's effective length over trailing ASCII spaces
    without copying, while assembler case keys are stored with the same trailing
@@ -437,16 +447,29 @@ general IF-ladder recognition.
    normalization means equal text has the same normalized UTF-8 representation
    before this operation. This optimization is valid when every case key is
    provably nonnumeric: loose comparison must then use padded text comparison
-   regardless of the selector's runtime contents.
+   regardless of the selector's runtime contents. Status: implemented as
+   `jumpr`. The assembler removes trailing ASCII spaces from case keys and
+   rejects duplicates introduced by canonicalization; the VM trims only the
+   source's effective trailing ASCII spaces and does not copy it.
 6. **Loose numeric strings.** After the numeric comparison contract is
    centralized, parse the selector once and dispatch using the same canonical
    numeric representation used for case constants. Equivalent spellings map to
    one key and retain the first source case. Numeric context, signed zero,
    non-finite values, and parser consistency must be settled before this form is
-   enabled.
-7. **RXAS flow optimization.** Once CFG/dataflow support exists, consider the
-   same transformation for hand-written RXAS and compiler shapes exposed only
-   after emission. Correctness must not depend on source metadata.
+   enabled. Status: implemented conservatively as `jumpn` using the same shared
+   string-to-double parser as ordinary loose comparison. The assembler stores
+   canonical host-independent IEEE-754 keys, folds signed zero, rejects NaN
+   case keys and canonical duplicates, and adds an internal NaN alias to retain
+   the current first-match comparison behavior. Mixed numeric and nonnumeric
+   ladders are split into separate consecutive runs.
+
+### Unscheduled RXAS Optimization Roadmap
+
+- **RXAS flow optimization.** Once CFG/dataflow support exists, consider the
+  same transformation for hand-written RXAS and compiler shapes exposed only
+  after emission. Correctness must not depend on source metadata. This is an
+  unscheduled RXAS optimizer item; users can write an explicit C-style SELECT
+  or direct jump table for known hotspots in the meantime.
 
 ### Ordering, Duplicates, And Fallback
 
@@ -479,6 +502,15 @@ case counts, hit positions, misses, and representative key distributions.
 
 Compiler defects exposed by this work are recorded here and receive immediate
 regression coverage; they must not be hidden by weakening a jump-table test.
+
+- **No-opt binary equality emitted branch `beq` as an expression (found
+  2026-07-10).** A C-style SELECT over `.binary` values reached the generic
+  expression emitter in no-opt builds. The binary type prefix selected the
+  unrelated branch mnemonic `beq`, producing invalid RXAS operands instead of
+  a Boolean whole-value comparison. Status: resolved. Whole binary equality and
+  inequality now emit `bineq`/`binne`; `select_dispatch_strings` covers both a
+  fully lowered binary SELECT and an undersized ladder that must use the valid
+  ordinary comparison path.
 
 - **Repeated call-argument register corruption (found 2026-07-10).** A no-opt
   call such as `nested(i, i)` emitted two destructive `swap` operations from

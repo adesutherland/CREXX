@@ -1,0 +1,920 @@
+/*
+ * SOURCE                 : select_dispatch_strings.crexx
+ */
+
+.globals=0
+
+main() .locals=4
+   .meta "select_dispatch_strings.main"="b" ".int" main() ""
+   .srcstep 19 19 17 "select_dispatch_strings.crexx" 4 1 23 "main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 1 1 17 "select_dispatch_strings.crexx" 5 3 26 "  say c_padded(\"beta   \")"
+   load r1,"beta   "
+   .traceevent "L" 4 "R" "S" "r" 1 1 1 0 "" ""
+   load r0,1
+   settp r1,768
+   call r2,c_padded(),r0
+   itos r2
+   .traceevent "F" 4 "R" "S" "r" 2 1 1 0 "c_padded" ""
+   say r2
+   .srcstep 2 2 17 "select_dispatch_strings.crexx" 6 3 25 "  say c_numeric(\"02.00\")"
+   load r2,"02.00"
+   .traceevent "L" 4 "R" "S" "r" 2 2 2 0 "" ""
+   load r1,1
+   settp r2,768
+   call r0,c_numeric(),r1
+   itos r0
+   .traceevent "F" 4 "R" "S" "r" 0 2 2 0 "c_numeric" ""
+   say r0
+   .srcstep 3 3 17 "select_dispatch_strings.crexx" 7 3 22 "  say c_mixed(\"03.0\")"
+   load r2,"03.0"
+   .traceevent "L" 4 "R" "S" "r" 2 3 3 0 "" ""
+   load r1,1
+   settp r2,768
+   call r0,c_mixed(),r1
+   itos r0
+   .traceevent "F" 4 "R" "S" "r" 0 3 3 0 "c_mixed" ""
+   say r0
+   .srcstep 4 4 17 "select_dispatch_strings.crexx" 8 3 24 "  say c_mixed(\"green \")"
+   load r2,"green "
+   .traceevent "L" 4 "R" "S" "r" 2 4 4 0 "" ""
+   load r1,1
+   settp r2,768
+   call r0,c_mixed(),r1
+   itos r0
+   .traceevent "F" 4 "R" "S" "r" 0 4 4 0 "c_mixed" ""
+   say r0
+   .srcstep 5 5 17 "select_dispatch_strings.crexx" 9 3 28 "  say strict_string(\"beta\")"
+   load r2,"beta"
+   .traceevent "L" 4 "R" "S" "r" 2 5 5 0 "" ""
+   load r1,1
+   settp r2,768
+   call r0,strict_string(),r1
+   itos r0
+   .traceevent "F" 4 "R" "S" "r" 0 5 5 0 "strict_string" ""
+   say r0
+   .srcstep 6 6 17 "select_dispatch_strings.crexx" 10 3 29 "  say strict_string(\"beta \")"
+   load r2,"beta "
+   .traceevent "L" 4 "R" "S" "r" 2 6 6 0 "" ""
+   load r1,1
+   settp r2,768
+   call r0,strict_string(),r1
+   itos r0
+   .traceevent "F" 4 "R" "S" "r" 0 6 6 0 "strict_string" ""
+   say r0
+   .srcstep 7 7 17 "select_dispatch_strings.crexx" 11 3 32 "  say padded_string(\"gamma   \")"
+   load r2,"gamma   "
+   .traceevent "L" 4 "R" "S" "r" 2 7 7 0 "" ""
+   load r1,1
+   settp r2,768
+   call r0,padded_string(),r1
+   itos r0
+   .traceevent "F" 4 "R" "S" "r" 0 7 7 0 "padded_string" ""
+   say r0
+   .srcstep 8 8 17 "select_dispatch_strings.crexx" 12 3 32 "  say numeric_string(\"003.000\")"
+   load r2,"003.000"
+   .traceevent "L" 4 "R" "S" "r" 2 8 8 0 "" ""
+   load r1,1
+   settp r2,768
+   call r0,numeric_string(),r1
+   itos r0
+   .traceevent "F" 4 "R" "S" "r" 0 8 8 0 "numeric_string" ""
+   say r0
+   .srcstep 9 9 17 "select_dispatch_strings.crexx" 13 3 28 "  say numeric_string(\"nan\")"
+   load r2,"nan"
+   .traceevent "L" 4 "R" "S" "r" 2 9 9 0 "" ""
+   load r1,1
+   settp r2,768
+   call r0,numeric_string(),r1
+   itos r0
+   .traceevent "F" 4 "R" "S" "r" 0 9 9 0 "numeric_string" ""
+   say r0
+   .srcstep 10 10 17 "select_dispatch_strings.crexx" 14 3 27 "  say mixed_string(\"02.0\")"
+   load r2,"02.0"
+   .traceevent "L" 4 "R" "S" "r" 2 10 10 0 "" ""
+   load r1,1
+   settp r2,768
+   call r0,mixed_string(),r1
+   itos r0
+   .traceevent "F" 4 "R" "S" "r" 0 10 10 0 "mixed_string" ""
+   say r0
+   .srcstep 11 11 17 "select_dispatch_strings.crexx" 15 3 30 "  say mixed_string(\"blue   \")"
+   load r2,"blue   "
+   .traceevent "L" 4 "R" "S" "r" 2 11 11 0 "" ""
+   load r1,1
+   settp r2,768
+   call r0,mixed_string(),r1
+   itos r0
+   .traceevent "F" 4 "R" "S" "r" 0 11 11 0 "mixed_string" ""
+   say r0
+   .srcstep 12 12 17 "select_dispatch_strings.crexx" 16 3 32 "  say duplicate_padded(\"same \")"
+   load r2,"same "
+   .traceevent "L" 4 "R" "S" "r" 2 12 12 0 "" ""
+   load r1,1
+   settp r2,768
+   call r0,duplicate_padded(),r1
+   itos r0
+   .traceevent "F" 4 "R" "S" "r" 0 12 12 0 "duplicate_padded" ""
+   say r0
+   .srcstep 13 13 17 "select_dispatch_strings.crexx" 17 3 32 "  say duplicate_numeric(\"01.0\")"
+   load r2,"01.0"
+   .traceevent "L" 4 "R" "S" "r" 2 13 13 0 "" ""
+   load r1,1
+   settp r2,768
+   call r0,duplicate_numeric(),r1
+   itos r0
+   .traceevent "F" 4 "R" "S" "r" 0 13 13 0 "duplicate_numeric" ""
+   say r0
+   .srcstep 14 14 17 "select_dispatch_strings.crexx" 18 3 38 "  say binary_select(\"fe\"x as .binary)"
+   load r0,0xfe
+   .traceevent "L" 4 "R" "X" "r" 0 14 14 0 "" ""
+   bcopy r2,r0
+   load r1,1
+   settp r2,768
+   call r3,binary_select(),r1
+   itos r3
+   .traceevent "F" 4 "R" "S" "r" 3 14 14 0 "binary_select" ""
+   say r3
+   .srcstep 15 15 17 "select_dispatch_strings.crexx" 19 3 37 "  say binary_short(\"fe\"x as .binary)"
+   load r1,0xfe
+   .traceevent "L" 4 "R" "X" "r" 1 15 15 0 "" ""
+   bcopy r3,r1
+   load r2,1
+   settp r3,768
+   call r0,binary_short(),r2
+   itos r0
+   .traceevent "F" 4 "R" "S" "r" 0 15 15 0 "binary_short" ""
+   say r0
+   .srcstep 16 16 17 "select_dispatch_strings.crexx" 20 3 37 "  say binary_short(\"fd\"x as .binary)"
+   load r1,0xfd
+   .traceevent "L" 4 "R" "X" "r" 1 16 16 0 "" ""
+   bcopy r3,r1
+   load r2,1
+   settp r3,768
+   call r0,binary_short(),r2
+   itos r0
+   .traceevent "F" 4 "R" "S" "r" 0 16 16 0 "binary_short" ""
+   say r0
+   .srcstep 17 17 17 "select_dispatch_strings.crexx" 21 3 19 "  say nan_key(\"2\")"
+   load r3,"2"
+   .traceevent "L" 4 "R" "S" "r" 3 17 17 0 "" ""
+   load r2,1
+   settp r3,768
+   call r1,nan_key(),r2
+   itos r1
+   .traceevent "F" 4 "R" "S" "r" 1 17 17 0 "nan_key" ""
+   say r1
+   .srcstep 18 18 17 "select_dispatch_strings.crexx" 22 3 11 "  return 0"
+   ret 0
+
+c_padded() .locals=4
+   .meta "select_dispatch_strings.c_padded"="b" ".int" c_padded() "value=.string"
+   .srcstep 29 29 17 "select_dispatch_strings.crexx" 24 1 27 "c_padded: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 20 20 17 "select_dispatch_strings.crexx" 25 7 22 "  arg value = .string"
+   .meta "select_dispatch_strings.c_padded.value"="b" ".string" a1
+   .meta "select_dispatch_strings.c_padded.select_tmp"="b" ".string" r1
+   .srcstep 21 21 6 "select_dispatch_strings.crexx" 27 3 15 "  select value"
+   null r1
+   .srcstep 22 22 6 "select_dispatch_strings.crexx" 27 3 15 "  select value"
+   .traceevent "V" 6 "R" "S" "a" 1 22 22 0 "value" ""
+   scopy r1,a1
+   .traceevent "A" 6 "R" "S" "r" 1 22 22 0 "select_tmp" ""
+   .srcstep 27 27 6 "select_dispatch_strings.crexx" 27 3 15 "  select value"
+   .jtable jtable560 auto
+   jumpr r1,jtable560
+   br l560dispatchdefault
+l560dispatchcase0: .jcase jtable560 "alpha"
+   .srcstep 23 23 17 "select_dispatch_strings.crexx" 28 23 33 "    when \"alpha\" then return 101"
+   ret 101
+   br l560dispatchend
+l560dispatchcase1: .jcase jtable560 "beta"
+   .srcstep 24 24 17 "select_dispatch_strings.crexx" 29 22 32 "    when \"beta\" then return 102"
+   ret 102
+   br l560dispatchend
+l560dispatchcase2: .jcase jtable560 "gamma"
+   .srcstep 25 25 17 "select_dispatch_strings.crexx" 30 23 33 "    when \"gamma\" then return 103"
+   ret 103
+   br l560dispatchend
+l560dispatchdefault:
+   .srcstep 26 26 17 "select_dispatch_strings.crexx" 31 15 26 "    otherwise return -100"
+   load r2,100
+   .traceevent "L" 4 "R" "I" "r" 2 26 26 0 "" ""
+   isub r3,0,r2
+   .traceevent "P" 4 "R" "I" "r" 3 26 26 0 "" ""
+   ret r3
+l560dispatchend:
+   .srcstep 28 28 17 "select_dispatch_strings.crexx" 33 3 14 "  return -101"
+   load r3,101
+   .traceevent "L" 4 "R" "I" "r" 3 28 28 0 "" ""
+   isub r2,0,r3
+   .traceevent "P" 4 "R" "I" "r" 2 28 28 0 "" ""
+   ret r2
+   .meta "select_dispatch_strings.c_padded.value"
+
+c_numeric() .locals=4
+   .meta "select_dispatch_strings.c_numeric"="b" ".int" c_numeric() "value=.string"
+   .srcstep 39 39 17 "select_dispatch_strings.crexx" 35 1 28 "c_numeric: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 30 30 17 "select_dispatch_strings.crexx" 36 7 22 "  arg value = .string"
+   .meta "select_dispatch_strings.c_numeric.value"="b" ".string" a1
+   .meta "select_dispatch_strings.c_numeric.select_tmp"="b" ".string" r1
+   .srcstep 31 31 6 "select_dispatch_strings.crexx" 38 3 15 "  select value"
+   null r1
+   .srcstep 32 32 6 "select_dispatch_strings.crexx" 38 3 15 "  select value"
+   .traceevent "V" 6 "R" "S" "a" 1 32 32 0 "value" ""
+   scopy r1,a1
+   .traceevent "A" 6 "R" "S" "r" 1 32 32 0 "select_tmp" ""
+   .srcstep 37 37 6 "select_dispatch_strings.crexx" 38 3 15 "  select value"
+   .jtable jtable568 auto
+   jumpn r1,jtable568
+   br l568dispatchdefault
+l568dispatchcase0: .jcase jtable568 "1"
+   .srcstep 33 33 17 "select_dispatch_strings.crexx" 39 19 29 "    when \"1\" then return 201"
+   ret 201
+   br l568dispatchend
+l568dispatchcase1: .jcase jtable568 "2"
+   .srcstep 34 34 17 "select_dispatch_strings.crexx" 40 19 29 "    when \"2\" then return 202"
+   ret 202
+   br l568dispatchend
+l568dispatchcase2: .jcase jtable568 "3"
+   .srcstep 35 35 17 "select_dispatch_strings.crexx" 41 19 29 "    when \"3\" then return 203"
+   ret 203
+   br l568dispatchend
+l568dispatchdefault:
+   .srcstep 36 36 17 "select_dispatch_strings.crexx" 42 15 26 "    otherwise return -200"
+   load r2,200
+   .traceevent "L" 4 "R" "I" "r" 2 36 36 0 "" ""
+   isub r3,0,r2
+   .traceevent "P" 4 "R" "I" "r" 3 36 36 0 "" ""
+   ret r3
+l568dispatchend:
+   .srcstep 38 38 17 "select_dispatch_strings.crexx" 44 3 14 "  return -201"
+   load r3,201
+   .traceevent "L" 4 "R" "I" "r" 3 38 38 0 "" ""
+   isub r2,0,r3
+   .traceevent "P" 4 "R" "I" "r" 2 38 38 0 "" ""
+   ret r2
+   .meta "select_dispatch_strings.c_numeric.value"
+
+c_mixed() .locals=4 .expose=select_dispatch_strings.c_mixed
+   .meta "select_dispatch_strings.c_mixed"="b" ".int" c_mixed() "value=.string"
+   .srcstep 53 53 17 "select_dispatch_strings.crexx" 46 1 26 "c_mixed: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 40 40 17 "select_dispatch_strings.crexx" 47 7 22 "  arg value = .string"
+   .meta "select_dispatch_strings.c_mixed.value"="b" ".string" a1
+   .meta "select_dispatch_strings.c_mixed.select_tmp"="b" ".string" r1
+   .srcstep 41 41 6 "select_dispatch_strings.crexx" 49 3 15 "  select value"
+   null r1
+   .srcstep 42 42 6 "select_dispatch_strings.crexx" 49 3 15 "  select value"
+   .traceevent "V" 6 "R" "S" "a" 1 42 42 0 "value" ""
+   scopy r1,a1
+   .traceevent "A" 6 "R" "S" "r" 1 42 42 0 "select_tmp" ""
+   .srcstep 51 51 6 "select_dispatch_strings.crexx" 49 3 15 "  select value"
+   .jtable jtable584 auto
+   jumpn r1,jtable584
+   br l584dispatchdefault
+l584dispatchcase0: .jcase jtable584 "1"
+   .srcstep 43 43 17 "select_dispatch_strings.crexx" 50 19 29 "    when \"1\" then return 211"
+   ret 211
+   br l584dispatchend
+l584dispatchcase1: .jcase jtable584 "2"
+   .srcstep 44 44 17 "select_dispatch_strings.crexx" 51 19 29 "    when \"2\" then return 212"
+   ret 212
+   br l584dispatchend
+l584dispatchcase2: .jcase jtable584 "3"
+   .srcstep 45 45 17 "select_dispatch_strings.crexx" 52 19 29 "    when \"3\" then return 213"
+   ret 213
+   br l584dispatchend
+l584dispatchdefault:
+   .srcstep 50 50 6 "select_dispatch_strings.crexx" 49 3 15 "  select value"
+   .jtable jtable576 auto
+   jumpr r1,jtable576
+   br l576dispatchdefault
+l576dispatchcase0: .jcase jtable576 "red"
+   .srcstep 46 46 17 "select_dispatch_strings.crexx" 53 21 31 "    when \"red\" then return 221"
+   ret 221
+   br l576dispatchend
+l576dispatchcase1: .jcase jtable576 "green"
+   .srcstep 47 47 17 "select_dispatch_strings.crexx" 54 23 33 "    when \"green\" then return 222"
+   ret 222
+   br l576dispatchend
+l576dispatchcase2: .jcase jtable576 "blue"
+   .srcstep 48 48 17 "select_dispatch_strings.crexx" 55 22 32 "    when \"blue\" then return 223"
+   ret 223
+   br l576dispatchend
+l576dispatchdefault:
+   .srcstep 49 49 17 "select_dispatch_strings.crexx" 56 15 26 "    otherwise return -210"
+   load r2,210
+   .traceevent "L" 4 "R" "I" "r" 2 49 49 0 "" ""
+   isub r3,0,r2
+   .traceevent "P" 4 "R" "I" "r" 3 49 49 0 "" ""
+   ret r3
+l576dispatchend:
+l584dispatchend:
+   .srcstep 52 52 17 "select_dispatch_strings.crexx" 58 3 14 "  return -211"
+   load r3,211
+   .traceevent "L" 4 "R" "I" "r" 3 52 52 0 "" ""
+   isub r2,0,r3
+   .traceevent "P" 4 "R" "I" "r" 2 52 52 0 "" ""
+   ret r2
+   .meta "select_dispatch_strings.c_mixed.value"
+
+strict_string() .locals=6 .expose=select_dispatch_strings.strict_string
+   .meta "select_dispatch_strings.strict_string"="b" ".int" strict_string() "value=.string"
+   .meta "select_dispatch_strings.strict_string"=".inline" "I5;f,0,73656C6563745F64697370617463685F737472696E67732E6372657878;u,0,0,60,7,22,1,20206172672076616C7565203D202E737472696E67;u,1,0,60,7,12,1,20206172672076616C7565203D202E737472696E67;u,2,0,60,15,22,1,20206172672076616C7565203D202E737472696E67;u,3,0,62,3,38,1,202069662076616C7565203D3D2022616C70686122207468656E2072657475726E20333031;u,4,0,62,6,22,1,202069662076616C7565203D3D2022616C70686122207468656E2072657475726E20333031;u,5,0,62,6,11,1,202069662076616C7565203D3D2022616C70686122207468656E2072657475726E20333031;u,6,0,62,15,22,1,202069662076616C7565203D3D2022616C70686122207468656E2072657475726E20333031;u,7,0,62,28,38,1,202069662076616C7565203D3D2022616C70686122207468656E2072657475726E20333031;u,8,0,62,35,38,1,202069662076616C7565203D3D2022616C70686122207468656E2072657475726E20333031;u,9,0,63,8,42,1,2020656C73652069662076616C7565203D3D20226265746122207468656E2072657475726E20333032;u,10,0,63,11,26,1,2020656C73652069662076616C7565203D3D20226265746122207468656E2072657475726E20333032;u,11,0,63,11,16,1,2020656C73652069662076616C7565203D3D20226265746122207468656E2072657475726E20333032;u,12,0,63,20,26,1,2020656C73652069662076616C7565203D3D20226265746122207468656E2072657475726E20333032;u,13,0,63,32,42,1,2020656C73652069662076616C7565203D3D20226265746122207468656E2072657475726E20333032;u,14,0,63,39,42,1,2020656C73652069662076616C7565203D3D20226265746122207468656E2072657475726E20333032;u,15,0,64,8,43,1,2020656C73652069662076616C7565203D3D202267616D6D6122207468656E2072657475726E20333033;u,16,0,64,11,27,1,2020656C73652069662076616C7565203D3D202267616D6D6122207468656E2072657475726E20333033;u,17,0,64,11,16,1,2020656C73652069662076616C7565203D3D202267616D6D6122207468656E2072657475726E20333033;u,18,0,64,20,27,1,2020656C73652069662076616C7565203D3D202267616D6D6122207468656E2072657475726E20333033;u,19,0,64,33,43,1,2020656C73652069662076616C7565203D3D202267616D6D6122207468656E2072657475726E20333033;u,20,0,64,40,43,1,2020656C73652069662076616C7565203D3D202267616D6D6122207468656E2072657475726E20333033;u,21,0,65,8,19,1,2020656C73652072657475726E202D333030;u,22,0,65,15,19,1,2020656C73652072657475726E202D333030;u,23,0,65,16,19,1,2020656C73652072657475726E202D333030;u,24,0,66,3,14,1,202072657475726E202D333031;u,25,0,66,10,14,1,202072657475726E202D333031;u,26,0,66,11,14,1,202072657475726E202D333031;q,0,-1,3;s,0,0,76616C7565,2,6,0,-,-,-,1,a,1;a;>,0,0,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,3,6,6,0,0,-,-,-,-,-,-,4,-1,-1,0,0,0,0,0,-,-;>,0,1,112,6,6,0,0,-,-,-,-,-,-,0,0,-1,0,0,0,0,0,76616C7565,-;<;>,0,2,14,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E737472696E67,-;<;<;<;b;>,0,3,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,3,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,4,69,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D3D,-;>,0,5,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,6,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,616C706861,-;<;<;>,0,7,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,8,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,333031,-;<;<;>,0,9,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,10,69,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D3D,-;>,0,11,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,12,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,62657461,-;<;<;>,0,13,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,14,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,333032,-;<;<;>,0,15,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,16,69,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D3D,-;>,0,17,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,18,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,67616D6D61,-;<;<;>,0,19,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,20,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,333033,-;<;<;>,0,21,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,22,61,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2D,-;>,0,23,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,333030,-;<;<;<;<;<;<;>,0,24,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,25,61,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2D,-;>,0,26,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,333031,-;<;<;<;<"
+   .srcstep 69 69 17 "select_dispatch_strings.crexx" 60 1 32 "strict_string: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 54 54 17 "select_dispatch_strings.crexx" 61 7 22 "  arg value = .string"
+   .meta "select_dispatch_strings.strict_string.value"="b" ".string" a1
+   .srcstep 65 65 17 "select_dispatch_strings.crexx" 63 3 22 "  if value == \"alpha\" then return 301"
+   .traceevent "V" 6 "R" "S" "a" 1 65 65 0 "value" ""
+   seq r1,a1,"alpha"
+   .traceevent "O" 4 "R" "B" "r" 1 65 65 0 "" ""
+   brf l202iffalse,r1
+   .srcstep 66 66 17 "select_dispatch_strings.crexx" 63 23 27 "  if value == \"alpha\" then return 301"
+   .srcstep 55 55 17 "select_dispatch_strings.crexx" 63 28 38 "  if value == \"alpha\" then return 301"
+   ret 301
+   br l202ifend
+   .srcstep 67 67 17 "select_dispatch_strings.crexx" 64 3 7 "  else if value == \"beta\" then return 302"
+l202iffalse:
+   .srcstep 62 62 17 "select_dispatch_strings.crexx" 64 8 26 "  else if value == \"beta\" then return 302"
+   .traceevent "V" 6 "R" "S" "a" 1 62 62 0 "value" ""
+   seq r2,a1,"beta"
+   .traceevent "O" 4 "R" "B" "r" 2 62 62 0 "" ""
+   brf l201iffalse,r2
+   .srcstep 63 63 17 "select_dispatch_strings.crexx" 64 27 31 "  else if value == \"beta\" then return 302"
+   .srcstep 56 56 17 "select_dispatch_strings.crexx" 64 32 42 "  else if value == \"beta\" then return 302"
+   ret 302
+   br l201ifend
+   .srcstep 64 64 17 "select_dispatch_strings.crexx" 65 3 7 "  else if value == \"gamma\" then return 303"
+l201iffalse:
+   .srcstep 59 59 17 "select_dispatch_strings.crexx" 65 8 27 "  else if value == \"gamma\" then return 303"
+   .traceevent "V" 6 "R" "S" "a" 1 59 59 0 "value" ""
+   seq r3,a1,"gamma"
+   .traceevent "O" 4 "R" "B" "r" 3 59 59 0 "" ""
+   brf l200iffalse,r3
+   .srcstep 60 60 17 "select_dispatch_strings.crexx" 65 28 32 "  else if value == \"gamma\" then return 303"
+   .srcstep 57 57 17 "select_dispatch_strings.crexx" 65 33 43 "  else if value == \"gamma\" then return 303"
+   ret 303
+   br l200ifend
+   .srcstep 61 61 17 "select_dispatch_strings.crexx" 66 3 7 "  else return -300"
+l200iffalse:
+   .srcstep 58 58 17 "select_dispatch_strings.crexx" 66 8 19 "  else return -300"
+   load r4,300
+   .traceevent "L" 4 "R" "I" "r" 4 58 58 0 "" ""
+   isub r5,0,r4
+   .traceevent "P" 4 "R" "I" "r" 5 58 58 0 "" ""
+   ret r5
+l200ifend:
+l201ifend:
+l202ifend:
+   .srcstep 68 68 17 "select_dispatch_strings.crexx" 67 3 14 "  return -301"
+   load r5,301
+   .traceevent "L" 4 "R" "I" "r" 5 68 68 0 "" ""
+   isub r4,0,r5
+   .traceevent "P" 4 "R" "I" "r" 4 68 68 0 "" ""
+   ret r4
+   .meta "select_dispatch_strings.strict_string.value"
+
+padded_string() .locals=6 .expose=select_dispatch_strings.padded_string
+   .meta "select_dispatch_strings.padded_string"="b" ".int" padded_string() "value=.string"
+   .meta "select_dispatch_strings.padded_string"=".inline" "I5;f,0,73656C6563745F64697370617463685F737472696E67732E6372657878;u,0,0,69,7,22,1,20206172672076616C7565203D202E737472696E67;u,1,0,69,7,12,1,20206172672076616C7565203D202E737472696E67;u,2,0,69,15,22,1,20206172672076616C7565203D202E737472696E67;u,3,0,71,3,37,1,202069662076616C7565203D2022616C70686122207468656E2072657475726E20343031;u,4,0,71,6,21,1,202069662076616C7565203D2022616C70686122207468656E2072657475726E20343031;u,5,0,71,6,11,1,202069662076616C7565203D2022616C70686122207468656E2072657475726E20343031;u,6,0,71,14,21,1,202069662076616C7565203D2022616C70686122207468656E2072657475726E20343031;u,7,0,71,27,37,1,202069662076616C7565203D2022616C70686122207468656E2072657475726E20343031;u,8,0,71,34,37,1,202069662076616C7565203D2022616C70686122207468656E2072657475726E20343031;u,9,0,72,8,41,1,2020656C73652069662076616C7565203D20226265746122207468656E2072657475726E20343032;u,10,0,72,11,25,1,2020656C73652069662076616C7565203D20226265746122207468656E2072657475726E20343032;u,11,0,72,11,16,1,2020656C73652069662076616C7565203D20226265746122207468656E2072657475726E20343032;u,12,0,72,19,25,1,2020656C73652069662076616C7565203D20226265746122207468656E2072657475726E20343032;u,13,0,72,31,41,1,2020656C73652069662076616C7565203D20226265746122207468656E2072657475726E20343032;u,14,0,72,38,41,1,2020656C73652069662076616C7565203D20226265746122207468656E2072657475726E20343032;u,15,0,73,8,42,1,2020656C73652069662076616C7565203D202267616D6D6122207468656E2072657475726E20343033;u,16,0,73,11,26,1,2020656C73652069662076616C7565203D202267616D6D6122207468656E2072657475726E20343033;u,17,0,73,11,16,1,2020656C73652069662076616C7565203D202267616D6D6122207468656E2072657475726E20343033;u,18,0,73,19,26,1,2020656C73652069662076616C7565203D202267616D6D6122207468656E2072657475726E20343033;u,19,0,73,32,42,1,2020656C73652069662076616C7565203D202267616D6D6122207468656E2072657475726E20343033;u,20,0,73,39,42,1,2020656C73652069662076616C7565203D202267616D6D6122207468656E2072657475726E20343033;u,21,0,74,8,19,1,2020656C73652072657475726E202D343030;u,22,0,74,15,19,1,2020656C73652072657475726E202D343030;u,23,0,74,16,19,1,2020656C73652072657475726E202D343030;u,24,0,75,3,14,1,202072657475726E202D343031;u,25,0,75,10,14,1,202072657475726E202D343031;u,26,0,75,11,14,1,202072657475726E202D343031;q,0,-1,3;s,0,0,76616C7565,2,6,0,-,-,-,1,a,1;a;>,0,0,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,3,6,6,0,0,-,-,-,-,-,-,4,-1,-1,0,0,0,0,0,-,-;>,0,1,112,6,6,0,0,-,-,-,-,-,-,0,0,-1,0,0,0,0,0,76616C7565,-;<;>,0,2,14,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E737472696E67,-;<;<;<;b;>,0,3,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,3,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,4,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,5,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,6,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,616C706861,-;<;<;>,0,7,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,8,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,343031,-;<;<;>,0,9,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,10,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,11,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,12,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,62657461,-;<;<;>,0,13,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,14,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,343032,-;<;<;>,0,15,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,16,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,17,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,18,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,67616D6D61,-;<;<;>,0,19,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,20,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,343033,-;<;<;>,0,21,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,22,61,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2D,-;>,0,23,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,343030,-;<;<;<;<;<;<;>,0,24,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,25,61,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2D,-;>,0,26,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,343031,-;<;<;<;<"
+   .srcstep 85 85 17 "select_dispatch_strings.crexx" 69 1 32 "padded_string: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 70 70 17 "select_dispatch_strings.crexx" 70 7 22 "  arg value = .string"
+   .meta "select_dispatch_strings.padded_string.value"="b" ".string" a1
+   .srcstep 81 81 17 "select_dispatch_strings.crexx" 72 3 21 "  if value = \"alpha\" then return 401"
+   .traceevent "V" 6 "R" "S" "a" 1 81 81 0 "value" ""
+   req r1,a1,"alpha"
+   .traceevent "O" 4 "R" "B" "r" 1 81 81 0 "" ""
+   brf l232iffalse,r1
+   .srcstep 82 82 17 "select_dispatch_strings.crexx" 72 22 26 "  if value = \"alpha\" then return 401"
+   .srcstep 71 71 17 "select_dispatch_strings.crexx" 72 27 37 "  if value = \"alpha\" then return 401"
+   ret 401
+   br l232ifend
+   .srcstep 83 83 17 "select_dispatch_strings.crexx" 73 3 7 "  else if value = \"beta\" then return 402"
+l232iffalse:
+   .srcstep 78 78 17 "select_dispatch_strings.crexx" 73 8 25 "  else if value = \"beta\" then return 402"
+   .traceevent "V" 6 "R" "S" "a" 1 78 78 0 "value" ""
+   req r2,a1,"beta"
+   .traceevent "O" 4 "R" "B" "r" 2 78 78 0 "" ""
+   brf l231iffalse,r2
+   .srcstep 79 79 17 "select_dispatch_strings.crexx" 73 26 30 "  else if value = \"beta\" then return 402"
+   .srcstep 72 72 17 "select_dispatch_strings.crexx" 73 31 41 "  else if value = \"beta\" then return 402"
+   ret 402
+   br l231ifend
+   .srcstep 80 80 17 "select_dispatch_strings.crexx" 74 3 7 "  else if value = \"gamma\" then return 403"
+l231iffalse:
+   .srcstep 75 75 17 "select_dispatch_strings.crexx" 74 8 26 "  else if value = \"gamma\" then return 403"
+   .traceevent "V" 6 "R" "S" "a" 1 75 75 0 "value" ""
+   req r3,a1,"gamma"
+   .traceevent "O" 4 "R" "B" "r" 3 75 75 0 "" ""
+   brf l230iffalse,r3
+   .srcstep 76 76 17 "select_dispatch_strings.crexx" 74 27 31 "  else if value = \"gamma\" then return 403"
+   .srcstep 73 73 17 "select_dispatch_strings.crexx" 74 32 42 "  else if value = \"gamma\" then return 403"
+   ret 403
+   br l230ifend
+   .srcstep 77 77 17 "select_dispatch_strings.crexx" 75 3 7 "  else return -400"
+l230iffalse:
+   .srcstep 74 74 17 "select_dispatch_strings.crexx" 75 8 19 "  else return -400"
+   load r4,400
+   .traceevent "L" 4 "R" "I" "r" 4 74 74 0 "" ""
+   isub r5,0,r4
+   .traceevent "P" 4 "R" "I" "r" 5 74 74 0 "" ""
+   ret r5
+l230ifend:
+l231ifend:
+l232ifend:
+   .srcstep 84 84 17 "select_dispatch_strings.crexx" 76 3 14 "  return -401"
+   load r5,401
+   .traceevent "L" 4 "R" "I" "r" 5 84 84 0 "" ""
+   isub r4,0,r5
+   .traceevent "P" 4 "R" "I" "r" 4 84 84 0 "" ""
+   ret r4
+   .meta "select_dispatch_strings.padded_string.value"
+
+numeric_string() .locals=6 .expose=select_dispatch_strings.numeric_string
+   .meta "select_dispatch_strings.numeric_string"="b" ".int" numeric_string() "value=.string"
+   .meta "select_dispatch_strings.numeric_string"=".inline" "I5;f,0,73656C6563745F64697370617463685F737472696E67732E6372657878;u,0,0,78,7,22,1,20206172672076616C7565203D202E737472696E67;u,1,0,78,7,12,1,20206172672076616C7565203D202E737472696E67;u,2,0,78,15,22,1,20206172672076616C7565203D202E737472696E67;u,3,0,80,3,33,1,202069662076616C7565203D20223122207468656E2072657475726E20353031;u,4,0,80,6,17,1,202069662076616C7565203D20223122207468656E2072657475726E20353031;u,5,0,80,6,11,1,202069662076616C7565203D20223122207468656E2072657475726E20353031;u,6,0,80,14,17,1,202069662076616C7565203D20223122207468656E2072657475726E20353031;u,7,0,80,23,33,1,202069662076616C7565203D20223122207468656E2072657475726E20353031;u,8,0,80,30,33,1,202069662076616C7565203D20223122207468656E2072657475726E20353031;u,9,0,81,8,40,1,2020656C73652069662076616C7565203D2022322E3022207468656E2072657475726E20353032;u,10,0,81,11,24,1,2020656C73652069662076616C7565203D2022322E3022207468656E2072657475726E20353032;u,11,0,81,11,16,1,2020656C73652069662076616C7565203D2022322E3022207468656E2072657475726E20353032;u,12,0,81,19,24,1,2020656C73652069662076616C7565203D2022322E3022207468656E2072657475726E20353032;u,13,0,81,30,40,1,2020656C73652069662076616C7565203D2022322E3022207468656E2072657475726E20353032;u,14,0,81,37,40,1,2020656C73652069662076616C7565203D2022322E3022207468656E2072657475726E20353032;u,15,0,82,8,40,1,2020656C73652069662076616C7565203D202233653022207468656E2072657475726E20353033;u,16,0,82,11,24,1,2020656C73652069662076616C7565203D202233653022207468656E2072657475726E20353033;u,17,0,82,11,16,1,2020656C73652069662076616C7565203D202233653022207468656E2072657475726E20353033;u,18,0,82,19,24,1,2020656C73652069662076616C7565203D202233653022207468656E2072657475726E20353033;u,19,0,82,30,40,1,2020656C73652069662076616C7565203D202233653022207468656E2072657475726E20353033;u,20,0,82,37,40,1,2020656C73652069662076616C7565203D202233653022207468656E2072657475726E20353033;u,21,0,83,8,19,1,2020656C73652072657475726E202D353030;u,22,0,83,15,19,1,2020656C73652072657475726E202D353030;u,23,0,83,16,19,1,2020656C73652072657475726E202D353030;u,24,0,84,3,14,1,202072657475726E202D353031;u,25,0,84,10,14,1,202072657475726E202D353031;u,26,0,84,11,14,1,202072657475726E202D353031;q,0,-1,3;s,0,0,76616C7565,2,6,0,-,-,-,1,a,1;a;>,0,0,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,3,6,6,0,0,-,-,-,-,-,-,4,-1,-1,0,0,0,0,0,-,-;>,0,1,112,6,6,0,0,-,-,-,-,-,-,0,0,-1,0,0,0,0,0,76616C7565,-;<;>,0,2,14,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E737472696E67,-;<;<;<;b;>,0,3,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,3,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,4,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,5,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,6,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,31,-;<;<;>,0,7,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,8,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,353031,-;<;<;>,0,9,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,10,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,11,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,12,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,322E30,-;<;<;>,0,13,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,14,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,353032,-;<;<;>,0,15,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,16,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,17,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,18,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,336530,-;<;<;>,0,19,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,20,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,353033,-;<;<;>,0,21,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,22,61,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2D,-;>,0,23,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,353030,-;<;<;<;<;<;<;>,0,24,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,25,61,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2D,-;>,0,26,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,353031,-;<;<;<;<"
+   .srcstep 101 101 17 "select_dispatch_strings.crexx" 78 1 33 "numeric_string: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 86 86 17 "select_dispatch_strings.crexx" 79 7 22 "  arg value = .string"
+   .meta "select_dispatch_strings.numeric_string.value"="b" ".string" a1
+   .srcstep 97 97 17 "select_dispatch_strings.crexx" 81 3 17 "  if value = \"1\" then return 501"
+   .traceevent "V" 6 "R" "S" "a" 1 97 97 0 "value" ""
+   req r1,a1,"1"
+   .traceevent "O" 4 "R" "B" "r" 1 97 97 0 "" ""
+   brf l262iffalse,r1
+   .srcstep 98 98 17 "select_dispatch_strings.crexx" 81 18 22 "  if value = \"1\" then return 501"
+   .srcstep 87 87 17 "select_dispatch_strings.crexx" 81 23 33 "  if value = \"1\" then return 501"
+   ret 501
+   br l262ifend
+   .srcstep 99 99 17 "select_dispatch_strings.crexx" 82 3 7 "  else if value = \"2.0\" then return 502"
+l262iffalse:
+   .srcstep 94 94 17 "select_dispatch_strings.crexx" 82 8 24 "  else if value = \"2.0\" then return 502"
+   .traceevent "V" 6 "R" "S" "a" 1 94 94 0 "value" ""
+   req r2,a1,"2.0"
+   .traceevent "O" 4 "R" "B" "r" 2 94 94 0 "" ""
+   brf l261iffalse,r2
+   .srcstep 95 95 17 "select_dispatch_strings.crexx" 82 25 29 "  else if value = \"2.0\" then return 502"
+   .srcstep 88 88 17 "select_dispatch_strings.crexx" 82 30 40 "  else if value = \"2.0\" then return 502"
+   ret 502
+   br l261ifend
+   .srcstep 96 96 17 "select_dispatch_strings.crexx" 83 3 7 "  else if value = \"3e0\" then return 503"
+l261iffalse:
+   .srcstep 91 91 17 "select_dispatch_strings.crexx" 83 8 24 "  else if value = \"3e0\" then return 503"
+   .traceevent "V" 6 "R" "S" "a" 1 91 91 0 "value" ""
+   req r3,a1,"3e0"
+   .traceevent "O" 4 "R" "B" "r" 3 91 91 0 "" ""
+   brf l260iffalse,r3
+   .srcstep 92 92 17 "select_dispatch_strings.crexx" 83 25 29 "  else if value = \"3e0\" then return 503"
+   .srcstep 89 89 17 "select_dispatch_strings.crexx" 83 30 40 "  else if value = \"3e0\" then return 503"
+   ret 503
+   br l260ifend
+   .srcstep 93 93 17 "select_dispatch_strings.crexx" 84 3 7 "  else return -500"
+l260iffalse:
+   .srcstep 90 90 17 "select_dispatch_strings.crexx" 84 8 19 "  else return -500"
+   load r4,500
+   .traceevent "L" 4 "R" "I" "r" 4 90 90 0 "" ""
+   isub r5,0,r4
+   .traceevent "P" 4 "R" "I" "r" 5 90 90 0 "" ""
+   ret r5
+l260ifend:
+l261ifend:
+l262ifend:
+   .srcstep 100 100 17 "select_dispatch_strings.crexx" 85 3 14 "  return -501"
+   load r5,501
+   .traceevent "L" 4 "R" "I" "r" 5 100 100 0 "" ""
+   isub r4,0,r5
+   .traceevent "P" 4 "R" "I" "r" 4 100 100 0 "" ""
+   ret r4
+   .meta "select_dispatch_strings.numeric_string.value"
+
+mixed_string() .locals=9 .expose=select_dispatch_strings.mixed_string
+   .meta "select_dispatch_strings.mixed_string"="b" ".int" mixed_string() "value=.string"
+   .meta "select_dispatch_strings.mixed_string"=".inline" "I5;f,0,73656C6563745F64697370617463685F737472696E67732E6372657878;u,0,0,87,7,22,1,20206172672076616C7565203D202E737472696E67;u,1,0,87,7,12,1,20206172672076616C7565203D202E737472696E67;u,2,0,87,15,22,1,20206172672076616C7565203D202E737472696E67;u,3,0,89,3,33,1,202069662076616C7565203D20223122207468656E2072657475726E20363031;u,4,0,89,6,17,1,202069662076616C7565203D20223122207468656E2072657475726E20363031;u,5,0,89,6,11,1,202069662076616C7565203D20223122207468656E2072657475726E20363031;u,6,0,89,14,17,1,202069662076616C7565203D20223122207468656E2072657475726E20363031;u,7,0,89,23,33,1,202069662076616C7565203D20223122207468656E2072657475726E20363031;u,8,0,89,30,33,1,202069662076616C7565203D20223122207468656E2072657475726E20363031;u,9,0,90,8,38,1,2020656C73652069662076616C7565203D20223222207468656E2072657475726E20363032;u,10,0,90,11,22,1,2020656C73652069662076616C7565203D20223222207468656E2072657475726E20363032;u,11,0,90,11,16,1,2020656C73652069662076616C7565203D20223222207468656E2072657475726E20363032;u,12,0,90,19,22,1,2020656C73652069662076616C7565203D20223222207468656E2072657475726E20363032;u,13,0,90,28,38,1,2020656C73652069662076616C7565203D20223222207468656E2072657475726E20363032;u,14,0,90,35,38,1,2020656C73652069662076616C7565203D20223222207468656E2072657475726E20363032;u,15,0,91,8,38,1,2020656C73652069662076616C7565203D20223322207468656E2072657475726E20363033;u,16,0,91,11,22,1,2020656C73652069662076616C7565203D20223322207468656E2072657475726E20363033;u,17,0,91,11,16,1,2020656C73652069662076616C7565203D20223322207468656E2072657475726E20363033;u,18,0,91,19,22,1,2020656C73652069662076616C7565203D20223322207468656E2072657475726E20363033;u,19,0,91,28,38,1,2020656C73652069662076616C7565203D20223322207468656E2072657475726E20363033;u,20,0,91,35,38,1,2020656C73652069662076616C7565203D20223322207468656E2072657475726E20363033;u,21,0,92,8,40,1,2020656C73652069662076616C7565203D202272656422207468656E2072657475726E20363131;u,22,0,92,11,24,1,2020656C73652069662076616C7565203D202272656422207468656E2072657475726E20363131;u,23,0,92,11,16,1,2020656C73652069662076616C7565203D202272656422207468656E2072657475726E20363131;u,24,0,92,19,24,1,2020656C73652069662076616C7565203D202272656422207468656E2072657475726E20363131;u,25,0,92,30,40,1,2020656C73652069662076616C7565203D202272656422207468656E2072657475726E20363131;u,26,0,92,37,40,1,2020656C73652069662076616C7565203D202272656422207468656E2072657475726E20363131;u,27,0,93,8,42,1,2020656C73652069662076616C7565203D2022677265656E22207468656E2072657475726E20363132;u,28,0,93,11,26,1,2020656C73652069662076616C7565203D2022677265656E22207468656E2072657475726E20363132;u,29,0,93,11,16,1,2020656C73652069662076616C7565203D2022677265656E22207468656E2072657475726E20363132;u,30,0,93,19,26,1,2020656C73652069662076616C7565203D2022677265656E22207468656E2072657475726E20363132;u,31,0,93,32,42,1,2020656C73652069662076616C7565203D2022677265656E22207468656E2072657475726E20363132;u,32,0,93,39,42,1,2020656C73652069662076616C7565203D2022677265656E22207468656E2072657475726E20363132;u,33,0,94,8,41,1,2020656C73652069662076616C7565203D2022626C756522207468656E2072657475726E20363133;u,34,0,94,11,25,1,2020656C73652069662076616C7565203D2022626C756522207468656E2072657475726E20363133;u,35,0,94,11,16,1,2020656C73652069662076616C7565203D2022626C756522207468656E2072657475726E20363133;u,36,0,94,19,25,1,2020656C73652069662076616C7565203D2022626C756522207468656E2072657475726E20363133;u,37,0,94,31,41,1,2020656C73652069662076616C7565203D2022626C756522207468656E2072657475726E20363133;u,38,0,94,38,41,1,2020656C73652069662076616C7565203D2022626C756522207468656E2072657475726E20363133;u,39,0,95,8,19,1,2020656C73652072657475726E202D363030;u,40,0,95,15,19,1,2020656C73652072657475726E202D363030;u,41,0,95,16,19,1,2020656C73652072657475726E202D363030;u,42,0,96,3,14,1,202072657475726E202D363031;u,43,0,96,10,14,1,202072657475726E202D363031;u,44,0,96,11,14,1,202072657475726E202D363031;q,0,-1,3;s,0,0,76616C7565,2,6,0,-,-,-,1,a,1;a;>,0,0,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,3,6,6,0,0,-,-,-,-,-,-,4,-1,-1,0,0,0,0,0,-,-;>,0,1,112,6,6,0,0,-,-,-,-,-,-,0,0,-1,0,0,0,0,0,76616C7565,-;<;>,0,2,14,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E737472696E67,-;<;<;<;b;>,0,3,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,3,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,4,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,5,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,6,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,31,-;<;<;>,0,7,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,8,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,363031,-;<;<;>,0,9,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,10,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,11,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,12,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,32,-;<;<;>,0,13,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,14,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,363032,-;<;<;>,0,15,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,16,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,17,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,18,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,33,-;<;<;>,0,19,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,20,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,363033,-;<;<;>,0,21,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,22,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,23,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,24,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,726564,-;<;<;>,0,25,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,26,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,363131,-;<;<;>,0,27,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,28,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,29,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,30,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,677265656E,-;<;<;>,0,31,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,32,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,363132,-;<;<;>,0,33,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,34,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,35,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,36,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,626C7565,-;<;<;>,0,37,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,38,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,363133,-;<;<;>,0,39,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,40,61,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2D,-;>,0,41,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,363030,-;<;<;<;<;<;<;<;<;<;>,0,42,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,43,61,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2D,-;>,0,44,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,363031,-;<;<;<;<"
+   .srcstep 129 129 17 "select_dispatch_strings.crexx" 87 1 31 "mixed_string: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 102 102 17 "select_dispatch_strings.crexx" 88 7 22 "  arg value = .string"
+   .meta "select_dispatch_strings.mixed_string.value"="b" ".string" a1
+   .srcstep 125 125 17 "select_dispatch_strings.crexx" 90 3 17 "  if value = \"1\" then return 601"
+   .traceevent "V" 6 "R" "S" "a" 1 125 125 0 "value" ""
+   req r1,a1,"1"
+   .traceevent "O" 4 "R" "B" "r" 1 125 125 0 "" ""
+   brf l310iffalse,r1
+   .srcstep 126 126 17 "select_dispatch_strings.crexx" 90 18 22 "  if value = \"1\" then return 601"
+   .srcstep 103 103 17 "select_dispatch_strings.crexx" 90 23 33 "  if value = \"1\" then return 601"
+   ret 601
+   br l310ifend
+   .srcstep 127 127 17 "select_dispatch_strings.crexx" 91 3 7 "  else if value = \"2\" then return 602"
+l310iffalse:
+   .srcstep 122 122 17 "select_dispatch_strings.crexx" 91 8 22 "  else if value = \"2\" then return 602"
+   .traceevent "V" 6 "R" "S" "a" 1 122 122 0 "value" ""
+   req r2,a1,"2"
+   .traceevent "O" 4 "R" "B" "r" 2 122 122 0 "" ""
+   brf l309iffalse,r2
+   .srcstep 123 123 17 "select_dispatch_strings.crexx" 91 23 27 "  else if value = \"2\" then return 602"
+   .srcstep 104 104 17 "select_dispatch_strings.crexx" 91 28 38 "  else if value = \"2\" then return 602"
+   ret 602
+   br l309ifend
+   .srcstep 124 124 17 "select_dispatch_strings.crexx" 92 3 7 "  else if value = \"3\" then return 603"
+l309iffalse:
+   .srcstep 119 119 17 "select_dispatch_strings.crexx" 92 8 22 "  else if value = \"3\" then return 603"
+   .traceevent "V" 6 "R" "S" "a" 1 119 119 0 "value" ""
+   req r3,a1,"3"
+   .traceevent "O" 4 "R" "B" "r" 3 119 119 0 "" ""
+   brf l308iffalse,r3
+   .srcstep 120 120 17 "select_dispatch_strings.crexx" 92 23 27 "  else if value = \"3\" then return 603"
+   .srcstep 105 105 17 "select_dispatch_strings.crexx" 92 28 38 "  else if value = \"3\" then return 603"
+   ret 603
+   br l308ifend
+   .srcstep 121 121 17 "select_dispatch_strings.crexx" 93 3 7 "  else if value = \"red\" then return 611"
+l308iffalse:
+   .srcstep 116 116 17 "select_dispatch_strings.crexx" 93 8 24 "  else if value = \"red\" then return 611"
+   .traceevent "V" 6 "R" "S" "a" 1 116 116 0 "value" ""
+   req r4,a1,"red"
+   .traceevent "O" 4 "R" "B" "r" 4 116 116 0 "" ""
+   brf l307iffalse,r4
+   .srcstep 117 117 17 "select_dispatch_strings.crexx" 93 25 29 "  else if value = \"red\" then return 611"
+   .srcstep 106 106 17 "select_dispatch_strings.crexx" 93 30 40 "  else if value = \"red\" then return 611"
+   ret 611
+   br l307ifend
+   .srcstep 118 118 17 "select_dispatch_strings.crexx" 94 3 7 "  else if value = \"green\" then return 612"
+l307iffalse:
+   .srcstep 113 113 17 "select_dispatch_strings.crexx" 94 8 26 "  else if value = \"green\" then return 612"
+   .traceevent "V" 6 "R" "S" "a" 1 113 113 0 "value" ""
+   req r5,a1,"green"
+   .traceevent "O" 4 "R" "B" "r" 5 113 113 0 "" ""
+   brf l306iffalse,r5
+   .srcstep 114 114 17 "select_dispatch_strings.crexx" 94 27 31 "  else if value = \"green\" then return 612"
+   .srcstep 107 107 17 "select_dispatch_strings.crexx" 94 32 42 "  else if value = \"green\" then return 612"
+   ret 612
+   br l306ifend
+   .srcstep 115 115 17 "select_dispatch_strings.crexx" 95 3 7 "  else if value = \"blue\" then return 613"
+l306iffalse:
+   .srcstep 110 110 17 "select_dispatch_strings.crexx" 95 8 25 "  else if value = \"blue\" then return 613"
+   .traceevent "V" 6 "R" "S" "a" 1 110 110 0 "value" ""
+   req r6,a1,"blue"
+   .traceevent "O" 4 "R" "B" "r" 6 110 110 0 "" ""
+   brf l305iffalse,r6
+   .srcstep 111 111 17 "select_dispatch_strings.crexx" 95 26 30 "  else if value = \"blue\" then return 613"
+   .srcstep 108 108 17 "select_dispatch_strings.crexx" 95 31 41 "  else if value = \"blue\" then return 613"
+   ret 613
+   br l305ifend
+   .srcstep 112 112 17 "select_dispatch_strings.crexx" 96 3 7 "  else return -600"
+l305iffalse:
+   .srcstep 109 109 17 "select_dispatch_strings.crexx" 96 8 19 "  else return -600"
+   load r7,600
+   .traceevent "L" 4 "R" "I" "r" 7 109 109 0 "" ""
+   isub r8,0,r7
+   .traceevent "P" 4 "R" "I" "r" 8 109 109 0 "" ""
+   ret r8
+l305ifend:
+l306ifend:
+l307ifend:
+l308ifend:
+l309ifend:
+l310ifend:
+   .srcstep 128 128 17 "select_dispatch_strings.crexx" 97 3 14 "  return -601"
+   load r8,601
+   .traceevent "L" 4 "R" "I" "r" 8 128 128 0 "" ""
+   isub r7,0,r8
+   .traceevent "P" 4 "R" "I" "r" 7 128 128 0 "" ""
+   ret r7
+   .meta "select_dispatch_strings.mixed_string.value"
+
+duplicate_padded() .locals=6 .expose=select_dispatch_strings.duplicate_padded
+   .meta "select_dispatch_strings.duplicate_padded"="b" ".int" duplicate_padded() "value=.string"
+   .meta "select_dispatch_strings.duplicate_padded"=".inline" "I5;f,0,73656C6563745F64697370617463685F737472696E67732E6372657878;u,0,0,99,7,22,1,20206172672076616C7565203D202E737472696E67;u,1,0,99,7,12,1,20206172672076616C7565203D202E737472696E67;u,2,0,99,15,22,1,20206172672076616C7565203D202E737472696E67;u,3,0,101,3,36,1,202069662076616C7565203D202273616D6522207468656E2072657475726E20373031;u,4,0,101,6,20,1,202069662076616C7565203D202273616D6522207468656E2072657475726E20373031;u,5,0,101,6,11,1,202069662076616C7565203D202273616D6522207468656E2072657475726E20373031;u,6,0,101,14,20,1,202069662076616C7565203D202273616D6522207468656E2072657475726E20373031;u,7,0,101,26,36,1,202069662076616C7565203D202273616D6522207468656E2072657475726E20373031;u,8,0,101,33,36,1,202069662076616C7565203D202273616D6522207468656E2072657475726E20373031;u,9,0,102,8,42,1,2020656C73652069662076616C7565203D202273616D652022207468656E2072657475726E20373032;u,10,0,102,11,26,1,2020656C73652069662076616C7565203D202273616D652022207468656E2072657475726E20373032;u,11,0,102,11,16,1,2020656C73652069662076616C7565203D202273616D652022207468656E2072657475726E20373032;u,12,0,102,19,26,1,2020656C73652069662076616C7565203D202273616D652022207468656E2072657475726E20373032;u,13,0,102,32,42,1,2020656C73652069662076616C7565203D202273616D652022207468656E2072657475726E20373032;u,14,0,102,39,42,1,2020656C73652069662076616C7565203D202273616D652022207468656E2072657475726E20373032;u,15,0,103,8,42,1,2020656C73652069662076616C7565203D20226F7468657222207468656E2072657475726E20373033;u,16,0,103,11,26,1,2020656C73652069662076616C7565203D20226F7468657222207468656E2072657475726E20373033;u,17,0,103,11,16,1,2020656C73652069662076616C7565203D20226F7468657222207468656E2072657475726E20373033;u,18,0,103,19,26,1,2020656C73652069662076616C7565203D20226F7468657222207468656E2072657475726E20373033;u,19,0,103,32,42,1,2020656C73652069662076616C7565203D20226F7468657222207468656E2072657475726E20373033;u,20,0,103,39,42,1,2020656C73652069662076616C7565203D20226F7468657222207468656E2072657475726E20373033;u,21,0,104,8,19,1,2020656C73652072657475726E202D373030;u,22,0,104,15,19,1,2020656C73652072657475726E202D373030;u,23,0,104,16,19,1,2020656C73652072657475726E202D373030;u,24,0,105,3,14,1,202072657475726E202D373031;u,25,0,105,10,14,1,202072657475726E202D373031;u,26,0,105,11,14,1,202072657475726E202D373031;q,0,-1,3;s,0,0,76616C7565,2,6,0,-,-,-,1,a,1;a;>,0,0,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,3,6,6,0,0,-,-,-,-,-,-,4,-1,-1,0,0,0,0,0,-,-;>,0,1,112,6,6,0,0,-,-,-,-,-,-,0,0,-1,0,0,0,0,0,76616C7565,-;<;>,0,2,14,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E737472696E67,-;<;<;<;b;>,0,3,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,3,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,4,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,5,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,6,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,73616D65,-;<;<;>,0,7,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,8,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,373031,-;<;<;>,0,9,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,10,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,11,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,12,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,73616D6520,-;<;<;>,0,13,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,14,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,373032,-;<;<;>,0,15,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,16,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,17,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,18,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6F74686572,-;<;<;>,0,19,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,20,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,373033,-;<;<;>,0,21,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,22,61,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2D,-;>,0,23,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,373030,-;<;<;<;<;<;<;>,0,24,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,25,61,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2D,-;>,0,26,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,373031,-;<;<;<;<"
+   .srcstep 145 145 17 "select_dispatch_strings.crexx" 99 1 35 "duplicate_padded: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 130 130 17 "select_dispatch_strings.crexx" 100 7 22 "  arg value = .string"
+   .meta "select_dispatch_strings.duplicate_padded.value"="b" ".string" a1
+   .srcstep 141 141 17 "select_dispatch_strings.crexx" 102 3 20 "  if value = \"same\" then return 701"
+   .traceevent "V" 6 "R" "S" "a" 1 141 141 0 "value" ""
+   req r1,a1,"same"
+   .traceevent "O" 4 "R" "B" "r" 1 141 141 0 "" ""
+   brf l340iffalse,r1
+   .srcstep 142 142 17 "select_dispatch_strings.crexx" 102 21 25 "  if value = \"same\" then return 701"
+   .srcstep 131 131 17 "select_dispatch_strings.crexx" 102 26 36 "  if value = \"same\" then return 701"
+   ret 701
+   br l340ifend
+   .srcstep 143 143 17 "select_dispatch_strings.crexx" 103 3 7 "  else if value = \"same \" then return 702"
+l340iffalse:
+   .srcstep 138 138 17 "select_dispatch_strings.crexx" 103 8 26 "  else if value = \"same \" then return 702"
+   .traceevent "V" 6 "R" "S" "a" 1 138 138 0 "value" ""
+   req r2,a1,"same "
+   .traceevent "O" 4 "R" "B" "r" 2 138 138 0 "" ""
+   brf l339iffalse,r2
+   .srcstep 139 139 17 "select_dispatch_strings.crexx" 103 27 31 "  else if value = \"same \" then return 702"
+   .srcstep 132 132 17 "select_dispatch_strings.crexx" 103 32 42 "  else if value = \"same \" then return 702"
+   ret 702
+   br l339ifend
+   .srcstep 140 140 17 "select_dispatch_strings.crexx" 104 3 7 "  else if value = \"other\" then return 703"
+l339iffalse:
+   .srcstep 135 135 17 "select_dispatch_strings.crexx" 104 8 26 "  else if value = \"other\" then return 703"
+   .traceevent "V" 6 "R" "S" "a" 1 135 135 0 "value" ""
+   req r3,a1,"other"
+   .traceevent "O" 4 "R" "B" "r" 3 135 135 0 "" ""
+   brf l338iffalse,r3
+   .srcstep 136 136 17 "select_dispatch_strings.crexx" 104 27 31 "  else if value = \"other\" then return 703"
+   .srcstep 133 133 17 "select_dispatch_strings.crexx" 104 32 42 "  else if value = \"other\" then return 703"
+   ret 703
+   br l338ifend
+   .srcstep 137 137 17 "select_dispatch_strings.crexx" 105 3 7 "  else return -700"
+l338iffalse:
+   .srcstep 134 134 17 "select_dispatch_strings.crexx" 105 8 19 "  else return -700"
+   load r4,700
+   .traceevent "L" 4 "R" "I" "r" 4 134 134 0 "" ""
+   isub r5,0,r4
+   .traceevent "P" 4 "R" "I" "r" 5 134 134 0 "" ""
+   ret r5
+l338ifend:
+l339ifend:
+l340ifend:
+   .srcstep 144 144 17 "select_dispatch_strings.crexx" 106 3 14 "  return -701"
+   load r5,701
+   .traceevent "L" 4 "R" "I" "r" 5 144 144 0 "" ""
+   isub r4,0,r5
+   .traceevent "P" 4 "R" "I" "r" 4 144 144 0 "" ""
+   ret r4
+   .meta "select_dispatch_strings.duplicate_padded.value"
+
+duplicate_numeric() .locals=6 .expose=select_dispatch_strings.duplicate_numeric
+   .meta "select_dispatch_strings.duplicate_numeric"="b" ".int" duplicate_numeric() "value=.string"
+   .meta "select_dispatch_strings.duplicate_numeric"=".inline" "I5;f,0,73656C6563745F64697370617463685F737472696E67732E6372657878;u,0,0,108,7,22,1,20206172672076616C7565203D202E737472696E67;u,1,0,108,7,12,1,20206172672076616C7565203D202E737472696E67;u,2,0,108,15,22,1,20206172672076616C7565203D202E737472696E67;u,3,0,110,3,33,1,202069662076616C7565203D20223122207468656E2072657475726E20383031;u,4,0,110,6,17,1,202069662076616C7565203D20223122207468656E2072657475726E20383031;u,5,0,110,6,11,1,202069662076616C7565203D20223122207468656E2072657475726E20383031;u,6,0,110,14,17,1,202069662076616C7565203D20223122207468656E2072657475726E20383031;u,7,0,110,23,33,1,202069662076616C7565203D20223122207468656E2072657475726E20383031;u,8,0,110,30,33,1,202069662076616C7565203D20223122207468656E2072657475726E20383031;u,9,0,111,8,39,1,2020656C73652069662076616C7565203D2022303122207468656E2072657475726E20383032;u,10,0,111,11,23,1,2020656C73652069662076616C7565203D2022303122207468656E2072657475726E20383032;u,11,0,111,11,16,1,2020656C73652069662076616C7565203D2022303122207468656E2072657475726E20383032;u,12,0,111,19,23,1,2020656C73652069662076616C7565203D2022303122207468656E2072657475726E20383032;u,13,0,111,29,39,1,2020656C73652069662076616C7565203D2022303122207468656E2072657475726E20383032;u,14,0,111,36,39,1,2020656C73652069662076616C7565203D2022303122207468656E2072657475726E20383032;u,15,0,112,8,38,1,2020656C73652069662076616C7565203D20223222207468656E2072657475726E20383033;u,16,0,112,11,22,1,2020656C73652069662076616C7565203D20223222207468656E2072657475726E20383033;u,17,0,112,11,16,1,2020656C73652069662076616C7565203D20223222207468656E2072657475726E20383033;u,18,0,112,19,22,1,2020656C73652069662076616C7565203D20223222207468656E2072657475726E20383033;u,19,0,112,28,38,1,2020656C73652069662076616C7565203D20223222207468656E2072657475726E20383033;u,20,0,112,35,38,1,2020656C73652069662076616C7565203D20223222207468656E2072657475726E20383033;u,21,0,113,8,19,1,2020656C73652072657475726E202D383030;u,22,0,113,15,19,1,2020656C73652072657475726E202D383030;u,23,0,113,16,19,1,2020656C73652072657475726E202D383030;u,24,0,114,3,14,1,202072657475726E202D383031;u,25,0,114,10,14,1,202072657475726E202D383031;u,26,0,114,11,14,1,202072657475726E202D383031;q,0,-1,3;s,0,0,76616C7565,2,6,0,-,-,-,1,a,1;a;>,0,0,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,3,6,6,0,0,-,-,-,-,-,-,4,-1,-1,0,0,0,0,0,-,-;>,0,1,112,6,6,0,0,-,-,-,-,-,-,0,0,-1,0,0,0,0,0,76616C7565,-;<;>,0,2,14,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E737472696E67,-;<;<;<;b;>,0,3,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,3,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,4,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,5,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,6,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,31,-;<;<;>,0,7,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,8,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,383031,-;<;<;>,0,9,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,10,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,11,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,12,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3031,-;<;<;>,0,13,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,14,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,383032,-;<;<;>,0,15,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,16,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,17,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,18,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,32,-;<;<;>,0,19,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,20,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,383033,-;<;<;>,0,21,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,22,61,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2D,-;>,0,23,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,383030,-;<;<;<;<;<;<;>,0,24,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,25,61,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2D,-;>,0,26,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,383031,-;<;<;<;<"
+   .srcstep 161 161 17 "select_dispatch_strings.crexx" 108 1 36 "duplicate_numeric: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 146 146 17 "select_dispatch_strings.crexx" 109 7 22 "  arg value = .string"
+   .meta "select_dispatch_strings.duplicate_numeric.value"="b" ".string" a1
+   .srcstep 157 157 17 "select_dispatch_strings.crexx" 111 3 17 "  if value = \"1\" then return 801"
+   .traceevent "V" 6 "R" "S" "a" 1 157 157 0 "value" ""
+   req r1,a1,"1"
+   .traceevent "O" 4 "R" "B" "r" 1 157 157 0 "" ""
+   brf l370iffalse,r1
+   .srcstep 158 158 17 "select_dispatch_strings.crexx" 111 18 22 "  if value = \"1\" then return 801"
+   .srcstep 147 147 17 "select_dispatch_strings.crexx" 111 23 33 "  if value = \"1\" then return 801"
+   ret 801
+   br l370ifend
+   .srcstep 159 159 17 "select_dispatch_strings.crexx" 112 3 7 "  else if value = \"01\" then return 802"
+l370iffalse:
+   .srcstep 154 154 17 "select_dispatch_strings.crexx" 112 8 23 "  else if value = \"01\" then return 802"
+   .traceevent "V" 6 "R" "S" "a" 1 154 154 0 "value" ""
+   req r2,a1,"01"
+   .traceevent "O" 4 "R" "B" "r" 2 154 154 0 "" ""
+   brf l369iffalse,r2
+   .srcstep 155 155 17 "select_dispatch_strings.crexx" 112 24 28 "  else if value = \"01\" then return 802"
+   .srcstep 148 148 17 "select_dispatch_strings.crexx" 112 29 39 "  else if value = \"01\" then return 802"
+   ret 802
+   br l369ifend
+   .srcstep 156 156 17 "select_dispatch_strings.crexx" 113 3 7 "  else if value = \"2\" then return 803"
+l369iffalse:
+   .srcstep 151 151 17 "select_dispatch_strings.crexx" 113 8 22 "  else if value = \"2\" then return 803"
+   .traceevent "V" 6 "R" "S" "a" 1 151 151 0 "value" ""
+   req r3,a1,"2"
+   .traceevent "O" 4 "R" "B" "r" 3 151 151 0 "" ""
+   brf l368iffalse,r3
+   .srcstep 152 152 17 "select_dispatch_strings.crexx" 113 23 27 "  else if value = \"2\" then return 803"
+   .srcstep 149 149 17 "select_dispatch_strings.crexx" 113 28 38 "  else if value = \"2\" then return 803"
+   ret 803
+   br l368ifend
+   .srcstep 153 153 17 "select_dispatch_strings.crexx" 114 3 7 "  else return -800"
+l368iffalse:
+   .srcstep 150 150 17 "select_dispatch_strings.crexx" 114 8 19 "  else return -800"
+   load r4,800
+   .traceevent "L" 4 "R" "I" "r" 4 150 150 0 "" ""
+   isub r5,0,r4
+   .traceevent "P" 4 "R" "I" "r" 5 150 150 0 "" ""
+   ret r5
+l368ifend:
+l369ifend:
+l370ifend:
+   .srcstep 160 160 17 "select_dispatch_strings.crexx" 115 3 14 "  return -801"
+   load r5,801
+   .traceevent "L" 4 "R" "I" "r" 5 160 160 0 "" ""
+   isub r4,0,r5
+   .traceevent "P" 4 "R" "I" "r" 4 160 160 0 "" ""
+   ret r4
+   .meta "select_dispatch_strings.duplicate_numeric.value"
+
+binary_select() .locals=4
+   .meta "select_dispatch_strings.binary_select"="b" ".int" binary_select() "value=.binary"
+   .srcstep 171 171 17 "select_dispatch_strings.crexx" 117 1 32 "binary_select: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 162 162 17 "select_dispatch_strings.crexx" 118 7 22 "  arg value = .binary"
+   .meta "select_dispatch_strings.binary_select.value"="b" ".binary" a1
+   .meta "select_dispatch_strings.binary_select.select_tmp"="b" ".binary" r1
+   .srcstep 163 163 6 "select_dispatch_strings.crexx" 120 3 15 "  select value"
+   null r1
+   .srcstep 164 164 6 "select_dispatch_strings.crexx" 120 3 15 "  select value"
+   .traceevent "V" 6 "R" "X" "a" 1 164 164 0 "value" ""
+   bcopy r1,a1
+   .traceevent "A" 6 "R" "X" "r" 1 164 164 0 "select_tmp" ""
+   .srcstep 169 169 6 "select_dispatch_strings.crexx" 120 3 15 "  select value"
+   .jtable jtable592 auto
+   jumpb r1,jtable592
+   br l592dispatchdefault
+l592dispatchcase0: .jcase jtable592 0xff
+   .srcstep 165 165 17 "select_dispatch_strings.crexx" 121 32 42 "    when \"ff\"x as .binary then return 901"
+   ret 901
+   br l592dispatchend
+l592dispatchcase1: .jcase jtable592 0xfe
+   .srcstep 166 166 17 "select_dispatch_strings.crexx" 122 32 42 "    when \"fe\"x as .binary then return 902"
+   ret 902
+   br l592dispatchend
+l592dispatchcase2: .jcase jtable592 0xfd
+   .srcstep 167 167 17 "select_dispatch_strings.crexx" 123 32 42 "    when \"fd\"x as .binary then return 903"
+   ret 903
+   br l592dispatchend
+l592dispatchdefault:
+   .srcstep 168 168 17 "select_dispatch_strings.crexx" 124 15 26 "    otherwise return -900"
+   load r2,900
+   .traceevent "L" 4 "R" "I" "r" 2 168 168 0 "" ""
+   isub r3,0,r2
+   .traceevent "P" 4 "R" "I" "r" 3 168 168 0 "" ""
+   ret r3
+l592dispatchend:
+   .srcstep 170 170 17 "select_dispatch_strings.crexx" 126 3 14 "  return -901"
+   load r3,901
+   .traceevent "L" 4 "R" "I" "r" 3 170 170 0 "" ""
+   isub r2,0,r3
+   .traceevent "P" 4 "R" "I" "r" 2 170 170 0 "" ""
+   ret r2
+   .meta "select_dispatch_strings.binary_select.value"
+
+binary_short() .locals=9 .expose=select_dispatch_strings.binary_short
+   .meta "select_dispatch_strings.binary_short"="b" ".int" binary_short() "value=.binary"
+   .meta "select_dispatch_strings.binary_short"=".inline" "I5;f,0,73656C6563745F64697370617463685F737472696E67732E6372657878;u,0,0,128,7,22,1,20206172672076616C7565203D202E62696E617279;u,1,0,128,7,12,1,20206172672076616C7565203D202E62696E617279;u,2,0,128,15,22,1,20206172672076616C7565203D202E62696E617279;u,3,0,130,3,47,1,202069662076616C7565203D202266662278206173202E62696E617279207468656E2072657475726E2031303031;u,4,0,130,6,30,1,202069662076616C7565203D202266662278206173202E62696E617279207468656E2072657475726E2031303031;u,5,0,130,6,11,1,202069662076616C7565203D202266662278206173202E62696E617279207468656E2072657475726E2031303031;u,6,0,130,14,30,1,202069662076616C7565203D202266662278206173202E62696E617279207468656E2072657475726E2031303031;u,7,0,130,14,19,1,202069662076616C7565203D202266662278206173202E62696E617279207468656E2072657475726E2031303031;u,8,0,130,23,30,1,202069662076616C7565203D202266662278206173202E62696E617279207468656E2072657475726E2031303031;u,9,0,130,36,47,1,202069662076616C7565203D202266662278206173202E62696E617279207468656E2072657475726E2031303031;u,10,0,130,43,47,1,202069662076616C7565203D202266662278206173202E62696E617279207468656E2072657475726E2031303031;u,11,0,131,8,52,1,2020656C73652069662076616C7565203D202266652278206173202E62696E617279207468656E2072657475726E2031303032;u,12,0,131,11,35,1,2020656C73652069662076616C7565203D202266652278206173202E62696E617279207468656E2072657475726E2031303032;u,13,0,131,11,16,1,2020656C73652069662076616C7565203D202266652278206173202E62696E617279207468656E2072657475726E2031303032;u,14,0,131,19,35,1,2020656C73652069662076616C7565203D202266652278206173202E62696E617279207468656E2072657475726E2031303032;u,15,0,131,19,24,1,2020656C73652069662076616C7565203D202266652278206173202E62696E617279207468656E2072657475726E2031303032;u,16,0,131,28,35,1,2020656C73652069662076616C7565203D202266652278206173202E62696E617279207468656E2072657475726E2031303032;u,17,0,131,41,52,1,2020656C73652069662076616C7565203D202266652278206173202E62696E617279207468656E2072657475726E2031303032;u,18,0,131,48,52,1,2020656C73652069662076616C7565203D202266652278206173202E62696E617279207468656E2072657475726E2031303032;u,19,0,132,8,53,1,2020656C73652069662076616C7565203C3E202230302278206173202E62696E617279207468656E2072657475726E2031303033;u,20,0,132,11,36,1,2020656C73652069662076616C7565203C3E202230302278206173202E62696E617279207468656E2072657475726E2031303033;u,21,0,132,11,16,1,2020656C73652069662076616C7565203C3E202230302278206173202E62696E617279207468656E2072657475726E2031303033;u,22,0,132,20,36,1,2020656C73652069662076616C7565203C3E202230302278206173202E62696E617279207468656E2072657475726E2031303033;u,23,0,132,20,25,1,2020656C73652069662076616C7565203C3E202230302278206173202E62696E617279207468656E2072657475726E2031303033;u,24,0,132,29,36,1,2020656C73652069662076616C7565203C3E202230302278206173202E62696E617279207468656E2072657475726E2031303033;u,25,0,132,42,53,1,2020656C73652069662076616C7565203C3E202230302278206173202E62696E617279207468656E2072657475726E2031303033;u,26,0,132,49,53,1,2020656C73652069662076616C7565203C3E202230302278206173202E62696E617279207468656E2072657475726E2031303033;u,27,0,133,8,20,1,2020656C73652072657475726E202D31303030;u,28,0,133,15,20,1,2020656C73652072657475726E202D31303030;u,29,0,133,16,20,1,2020656C73652072657475726E202D31303030;u,30,0,134,3,15,1,202072657475726E202D31303031;u,31,0,134,10,15,1,202072657475726E202D31303031;u,32,0,134,11,15,1,202072657475726E202D31303031;q,0,-1,3;s,0,0,76616C7565,2,7,0,-,-,-,1,a,1;a;>,0,0,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,3,7,7,0,0,-,-,-,-,-,-,4,-1,-1,0,0,0,0,0,-,-;>,0,1,112,7,7,0,0,-,-,-,-,-,-,0,0,-1,0,0,0,0,0,76616C7565,-;<;>,0,2,14,7,7,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E62696E617279,-;<;<;<;b;>,0,3,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,3,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,4,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,5,111,7,7,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,6,76,7,7,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6173,-;>,0,7,104,7,7,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,30786666,-;<;>,0,8,14,7,7,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E62696E617279,-;<;<;<;>,0,9,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,10,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,31303031,-;<;<;>,0,11,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,12,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,13,111,7,7,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,14,76,7,7,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6173,-;>,0,15,104,7,7,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,30786665,-;<;>,0,16,14,7,7,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E62696E617279,-;<;<;<;>,0,17,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,18,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,31303032,-;<;<;>,0,19,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,20,64,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3C3E,-;>,0,21,111,7,7,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,22,76,7,7,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6173,-;>,0,23,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,5C30,-;<;>,0,24,14,7,7,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E62696E617279,-;<;<;<;>,0,25,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,26,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,31303033,-;<;<;>,0,27,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,28,61,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2D,-;>,0,29,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,31303030,-;<;<;<;<;<;<;>,0,30,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,31,61,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2D,-;>,0,32,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,31303031,-;<;<;<;<"
+   .srcstep 187 187 17 "select_dispatch_strings.crexx" 128 1 31 "binary_short: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 172 172 17 "select_dispatch_strings.crexx" 129 7 22 "  arg value = .binary"
+   .meta "select_dispatch_strings.binary_short.value"="b" ".binary" a1
+   .srcstep 183 183 17 "select_dispatch_strings.crexx" 131 3 30 "  if value = \"ff\"x as .binary then return 1001"
+   .traceevent "V" 6 "R" "X" "a" 1 183 183 0 "value" ""
+   load r1,0xff
+   .traceevent "L" 4 "R" "X" "r" 1 183 183 0 "" ""
+   bcopy r2,r1
+   bineq r2,a1,r2
+   .traceevent "O" 4 "R" "B" "r" 2 183 183 0 "" ""
+   brf l441iffalse,r2
+   .srcstep 184 184 17 "select_dispatch_strings.crexx" 131 31 35 "  if value = \"ff\"x as .binary then return 1001"
+   .srcstep 173 173 17 "select_dispatch_strings.crexx" 131 36 47 "  if value = \"ff\"x as .binary then return 1001"
+   ret 1001
+   br l441ifend
+   .srcstep 185 185 17 "select_dispatch_strings.crexx" 132 3 7 "  else if value = \"fe\"x as .binary then return 1002"
+l441iffalse:
+   .srcstep 180 180 17 "select_dispatch_strings.crexx" 132 8 35 "  else if value = \"fe\"x as .binary then return 1002"
+   .traceevent "V" 6 "R" "X" "a" 1 180 180 0 "value" ""
+   load r3,0xfe
+   .traceevent "L" 4 "R" "X" "r" 3 180 180 0 "" ""
+   bcopy r4,r3
+   bineq r4,a1,r4
+   .traceevent "O" 4 "R" "B" "r" 4 180 180 0 "" ""
+   brf l440iffalse,r4
+   .srcstep 181 181 17 "select_dispatch_strings.crexx" 132 36 40 "  else if value = \"fe\"x as .binary then return 1002"
+   .srcstep 174 174 17 "select_dispatch_strings.crexx" 132 41 52 "  else if value = \"fe\"x as .binary then return 1002"
+   ret 1002
+   br l440ifend
+   .srcstep 182 182 17 "select_dispatch_strings.crexx" 133 3 7 "  else if value <> \"00\"x as .binary then return 1003"
+l440iffalse:
+   .srcstep 177 177 17 "select_dispatch_strings.crexx" 133 8 36 "  else if value <> \"00\"x as .binary then return 1003"
+   .traceevent "V" 6 "R" "X" "a" 1 177 177 0 "value" ""
+   load r5,"\0"
+   .traceevent "L" 4 "R" "S" "r" 5 177 177 0 "" ""
+   scopy r6,r5
+   stobin r6
+   binne r6,a1,r6
+   .traceevent "O" 4 "R" "B" "r" 6 177 177 0 "" ""
+   brf l439iffalse,r6
+   .srcstep 178 178 17 "select_dispatch_strings.crexx" 133 37 41 "  else if value <> \"00\"x as .binary then return 1003"
+   .srcstep 175 175 17 "select_dispatch_strings.crexx" 133 42 53 "  else if value <> \"00\"x as .binary then return 1003"
+   ret 1003
+   br l439ifend
+   .srcstep 179 179 17 "select_dispatch_strings.crexx" 134 3 7 "  else return -1000"
+l439iffalse:
+   .srcstep 176 176 17 "select_dispatch_strings.crexx" 134 8 20 "  else return -1000"
+   load r7,1000
+   .traceevent "L" 4 "R" "I" "r" 7 176 176 0 "" ""
+   isub r8,0,r7
+   .traceevent "P" 4 "R" "I" "r" 8 176 176 0 "" ""
+   ret r8
+l439ifend:
+l440ifend:
+l441ifend:
+   .srcstep 186 186 17 "select_dispatch_strings.crexx" 135 3 15 "  return -1001"
+   load r8,1001
+   .traceevent "L" 4 "R" "I" "r" 8 186 186 0 "" ""
+   isub r7,0,r8
+   .traceevent "P" 4 "R" "I" "r" 7 186 186 0 "" ""
+   ret r7
+   .meta "select_dispatch_strings.binary_short.value"
+
+nan_key() .locals=6 .expose=select_dispatch_strings.nan_key
+   .meta "select_dispatch_strings.nan_key"="b" ".int" nan_key() "value=.string"
+   .meta "select_dispatch_strings.nan_key"=".inline" "I5;f,0,73656C6563745F64697370617463685F737472696E67732E6372657878;u,0,0,137,7,22,1,20206172672076616C7565203D202E737472696E67;u,1,0,137,7,12,1,20206172672076616C7565203D202E737472696E67;u,2,0,137,15,22,1,20206172672076616C7565203D202E737472696E67;u,3,0,139,3,36,1,202069662076616C7565203D20226E616E22207468656E2072657475726E2031313031;u,4,0,139,6,19,1,202069662076616C7565203D20226E616E22207468656E2072657475726E2031313031;u,5,0,139,6,11,1,202069662076616C7565203D20226E616E22207468656E2072657475726E2031313031;u,6,0,139,14,19,1,202069662076616C7565203D20226E616E22207468656E2072657475726E2031313031;u,7,0,139,25,36,1,202069662076616C7565203D20226E616E22207468656E2072657475726E2031313031;u,8,0,139,32,36,1,202069662076616C7565203D20226E616E22207468656E2072657475726E2031313031;u,9,0,140,8,39,1,2020656C73652069662076616C7565203D20223122207468656E2072657475726E2031313032;u,10,0,140,11,22,1,2020656C73652069662076616C7565203D20223122207468656E2072657475726E2031313032;u,11,0,140,11,16,1,2020656C73652069662076616C7565203D20223122207468656E2072657475726E2031313032;u,12,0,140,19,22,1,2020656C73652069662076616C7565203D20223122207468656E2072657475726E2031313032;u,13,0,140,28,39,1,2020656C73652069662076616C7565203D20223122207468656E2072657475726E2031313032;u,14,0,140,35,39,1,2020656C73652069662076616C7565203D20223122207468656E2072657475726E2031313032;u,15,0,141,8,39,1,2020656C73652069662076616C7565203D20223222207468656E2072657475726E2031313033;u,16,0,141,11,22,1,2020656C73652069662076616C7565203D20223222207468656E2072657475726E2031313033;u,17,0,141,11,16,1,2020656C73652069662076616C7565203D20223222207468656E2072657475726E2031313033;u,18,0,141,19,22,1,2020656C73652069662076616C7565203D20223222207468656E2072657475726E2031313033;u,19,0,141,28,39,1,2020656C73652069662076616C7565203D20223222207468656E2072657475726E2031313033;u,20,0,141,35,39,1,2020656C73652069662076616C7565203D20223222207468656E2072657475726E2031313033;u,21,0,142,8,20,1,2020656C73652072657475726E202D31313030;u,22,0,142,15,20,1,2020656C73652072657475726E202D31313030;u,23,0,142,16,20,1,2020656C73652072657475726E202D31313030;u,24,0,143,3,15,1,202072657475726E202D31313031;u,25,0,143,10,15,1,202072657475726E202D31313031;u,26,0,143,11,15,1,202072657475726E202D31313031;q,0,-1,3;s,0,0,76616C7565,2,6,0,-,-,-,1,a,1;a;>,0,0,4,0,0,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,0,3,6,6,0,0,-,-,-,-,-,-,4,-1,-1,0,0,0,0,0,-,-;>,0,1,112,6,6,0,0,-,-,-,-,-,-,0,0,-1,0,0,0,0,0,76616C7565,-;<;>,0,2,14,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2E737472696E67,-;<;<;<;b;>,0,3,35,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,-,-;>,0,3,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,4,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,5,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,6,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6E616E,-;<;<;>,0,7,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,8,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,31313031,-;<;<;>,0,9,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,10,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,11,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,12,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,31,-;<;<;>,0,13,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,14,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,31313032,-;<;<;>,0,15,32,1,1,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,6966,-;>,0,16,63,2,2,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,3D,-;>,0,17,111,6,6,0,0,-,-,-,-,-,-,0,0,-1,1,0,0,0,0,76616C7565,-;<;>,0,18,103,6,6,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,32,-;<;<;>,0,19,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,20,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,31313033,-;<;<;>,0,21,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,22,61,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2D,-;>,0,23,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,31313030,-;<;<;<;<;<;<;>,0,24,98,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,72657475726E,-;>,0,25,61,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,2D,-;>,0,26,40,3,3,0,0,-,-,-,-,-,-,0,-1,-1,0,0,0,0,0,31313031,-;<;<;<;<"
+   .srcstep 203 203 17 "select_dispatch_strings.crexx" 137 1 26 "nan_key: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 188 188 17 "select_dispatch_strings.crexx" 138 7 22 "  arg value = .string"
+   .meta "select_dispatch_strings.nan_key.value"="b" ".string" a1
+   .srcstep 199 199 17 "select_dispatch_strings.crexx" 140 3 19 "  if value = \"nan\" then return 1101"
+   .traceevent "V" 6 "R" "S" "a" 1 199 199 0 "value" ""
+   req r1,a1,"nan"
+   .traceevent "O" 4 "R" "B" "r" 1 199 199 0 "" ""
+   brf l471iffalse,r1
+   .srcstep 200 200 17 "select_dispatch_strings.crexx" 140 20 24 "  if value = \"nan\" then return 1101"
+   .srcstep 189 189 17 "select_dispatch_strings.crexx" 140 25 36 "  if value = \"nan\" then return 1101"
+   ret 1101
+   br l471ifend
+   .srcstep 201 201 17 "select_dispatch_strings.crexx" 141 3 7 "  else if value = \"1\" then return 1102"
+l471iffalse:
+   .srcstep 196 196 17 "select_dispatch_strings.crexx" 141 8 22 "  else if value = \"1\" then return 1102"
+   .traceevent "V" 6 "R" "S" "a" 1 196 196 0 "value" ""
+   req r2,a1,"1"
+   .traceevent "O" 4 "R" "B" "r" 2 196 196 0 "" ""
+   brf l470iffalse,r2
+   .srcstep 197 197 17 "select_dispatch_strings.crexx" 141 23 27 "  else if value = \"1\" then return 1102"
+   .srcstep 190 190 17 "select_dispatch_strings.crexx" 141 28 39 "  else if value = \"1\" then return 1102"
+   ret 1102
+   br l470ifend
+   .srcstep 198 198 17 "select_dispatch_strings.crexx" 142 3 7 "  else if value = \"2\" then return 1103"
+l470iffalse:
+   .srcstep 193 193 17 "select_dispatch_strings.crexx" 142 8 22 "  else if value = \"2\" then return 1103"
+   .traceevent "V" 6 "R" "S" "a" 1 193 193 0 "value" ""
+   req r3,a1,"2"
+   .traceevent "O" 4 "R" "B" "r" 3 193 193 0 "" ""
+   brf l469iffalse,r3
+   .srcstep 194 194 17 "select_dispatch_strings.crexx" 142 23 27 "  else if value = \"2\" then return 1103"
+   .srcstep 191 191 17 "select_dispatch_strings.crexx" 142 28 39 "  else if value = \"2\" then return 1103"
+   ret 1103
+   br l469ifend
+   .srcstep 195 195 17 "select_dispatch_strings.crexx" 143 3 7 "  else return -1100"
+l469iffalse:
+   .srcstep 192 192 17 "select_dispatch_strings.crexx" 143 8 20 "  else return -1100"
+   load r4,1100
+   .traceevent "L" 4 "R" "I" "r" 4 192 192 0 "" ""
+   isub r5,0,r4
+   .traceevent "P" 4 "R" "I" "r" 5 192 192 0 "" ""
+   ret r5
+l469ifend:
+l470ifend:
+l471ifend:
+   .srcstep 202 202 17 "select_dispatch_strings.crexx" 144 3 15 "  return -1101"
+   load r5,1101
+   .traceevent "L" 4 "R" "I" "r" 5 202 202 0 "" ""
+   isub r4,0,r5
+   .traceevent "P" 4 "R" "I" "r" 4 202 202 0 "" ""
+   ret r4
+   .meta "select_dispatch_strings.nan_key.value"

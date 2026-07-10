@@ -131,8 +131,11 @@ For interface methods, the member-kind string now distinguishes:
 
 Procedure-local `.jtable` declarations and same-line `.jcase` label decorations
 are resolved after label optimization. The assembler emits the resulting table
-as a host-layout-independent `BINARY_CONST`; `jumps`, `jumpb`, `jumpbs`, and
-`jumpi` operands are patched to that pool entry. Release 1 packed algorithms are
+as a host-layout-independent `BINARY_CONST`; `jumps`, `jumpr`, `jumpn`,
+`jumpb`, `jumpbs`, and `jumpi` operands are patched to that pool entry.
+`jumps` uses exact bytes, `jumpr` canonicalizes trailing-space-padded Rexx text,
+and `jumpn` canonicalizes numeric strings through the shared parser in
+`binutils/include/rxnumparse.h`. Release 1 packed algorithms are
 `linear`, `openhash`, and `acph`. `auto` uses linear for one case. Larger tables
 use open hashing for average key lengths up to two bytes; tables of at least 256
 cases also use it for averages up to four bytes. Remaining tables use ACPH.

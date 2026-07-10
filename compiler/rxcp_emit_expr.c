@@ -923,6 +923,11 @@ void emit_expression(ASTNode *node, void *payload) {
             if (!op) op="lte";
 
             tp_prefix = type_to_prefix(child1->target_type);
+            if (child1->target_type == TP_BINARY &&
+                (node->node_type == OP_COMPARE_EQUAL || node->node_type == OP_COMPARE_NEQ)) {
+                tp_prefix = "";
+                op = node->node_type == OP_COMPARE_EQUAL ? "bineq" : "binne";
+            }
             if (loose_string_compare && child1->target_type == TP_STRING) tp_prefix = "r";
 
         /* These operators use the type prefix already set (i.e. of their type) */

@@ -199,9 +199,15 @@ constant-pool values, not as integer or string values.
 ## Jump Tables
 
 `.jtable` declares a procedure-local static dispatch table. `.jcase` decorates
-target labels with literal keys, and `jumps`, `jumpb`, `jumpbs`, or `jumpi`
+target labels with literal keys, and `jumps`, `jumpr`, `jumpn`, `jumpb`,
+`jumpbs`, or `jumpi`
 branch through the assembled table. A miss falls through to the next
 instruction, so write an explicit default branch after the jump instruction.
+
+String table modes are deliberately distinct. `jumps` compares exact UTF-8
+bytes, `jumpr` applies blank-padded nonnumeric Rexx equality by ignoring
+trailing ASCII spaces, and `jumpn` canonicalizes numeric strings. One table may
+not mix these modes.
 
 ```rxas
 main() .locals=4

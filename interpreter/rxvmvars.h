@@ -33,6 +33,7 @@
 #include "utf.h"
 #endif
 #include "../binutils/include/rxflags.h"
+#include "../binutils/include/rxnumparse.h"
 #include "rxvmref.h"
 
 #include <assert.h>
@@ -1909,39 +1910,7 @@ RX_INLINE int string2integer(rxinteger *out, char *string, size_t length) {
 
 /* Convert a string to a float - returns 1 on error */
 RX_INLINE int string2float(double *out, char *string, size_t length) {
-    char *buffer = malloc(length + 1);
-    char *end = buffer;
-    int rc = 0;
-    errno = 0;
-
-    /* Null terminated buffer */
-    buffer[length] = 0;
-    memcpy(buffer, string, length);
-
-    /* Convert */
-    double l = strtod(buffer, &end);
-
-    /* Convert error */
-    if (errno == ERANGE || end == buffer) {
-        rc = 1;
-        goto end_string2float;
-    }
-
-    /* Check only trailing spaces */
-    while (*end != 0) {
-        if (!isspace(*end)) {
-            rc = 1;
-            goto end_string2float;
-        }
-        end++;
-    }
-
-    /* All good */
-    *out = l;
-
-    end_string2float:
-    free(buffer);
-    return rc;
+    return rx_string_to_double(out, string, length);
 }
 
 /* Convert a string to a decimal - returns 1 on error

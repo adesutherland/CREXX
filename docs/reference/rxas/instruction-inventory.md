@@ -2,20 +2,20 @@
 
 This inventory is for coverage validation. Every mnemonic from `rxas -i` should appear exactly once with its current primary skeleton section.
 
-- Unique mnemonics: 338
-- Opcode/form rows: 533
+- Unique mnemonics: 342
+- Opcode/form rows: 539
 
 ## Section Counts
 
 | Section | Mnemonics |
 | --- | ---: |
-| [Program Control And Calls](instructions/01-program-control.md) | 24 |
+| [Program Control And Calls](instructions/01-program-control.md) | 26 |
 | [Data Movement And Conversion](instructions/02-data-movement-and-conversion.md) | 7 |
 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md) | 44 |
 | [Floating Point](instructions/04-floating-point.md) | 24 |
 | [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md) | 46 |
 | [Strings And Characters](instructions/06-strings-and-characters.md) | 34 |
-| [Binary Memory](instructions/07-binary-memory.md) | 41 |
+| [Binary Memory](instructions/07-binary-memory.md) | 43 |
 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md) | 32 |
 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md) | 44 |
 | [Signals, Breakpoints, And Runtime](instructions/10-signals-breakpoints-and-runtime.md) | 19 |
@@ -58,6 +58,8 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `bgetu32` | 2 | [Binary Memory](instructions/07-binary-memory.md#bgetu32) |
 | `bgetu8` | 2 | [Binary Memory](instructions/07-binary-memory.md#bgetu8) |
 | `bgt` | 2 | [Program Control And Calls](instructions/01-program-control.md#bgt) |
+| `bineq` | 2 | [Binary Memory](instructions/07-binary-memory.md#bineq-and-binne) |
+| `binne` | 2 | [Binary Memory](instructions/07-binary-memory.md#bineq-and-binne) |
 | `bintos` | 1 | [Binary Memory](instructions/07-binary-memory.md#bintos) |
 | `ble` | 2 | [Program Control And Calls](instructions/01-program-control.md#ble) |
 | `blen` | 2 | [Binary Memory](instructions/07-binary-memory.md#blen) |
@@ -223,6 +225,8 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `jumpb` | 1 | [Program Control And Calls](instructions/01-program-control.md#jumpb) |
 | `jumpbs` | 1 | [Program Control And Calls](instructions/01-program-control.md#jumpbs) |
 | `jumpi` | 1 | [Program Control And Calls](instructions/01-program-control.md#jumpi) |
+| `jumpn` | 1 | [Program Control And Calls](instructions/01-program-control.md#jumpn) |
+| `jumpr` | 1 | [Program Control And Calls](instructions/01-program-control.md#jumpr) |
 | `jumps` | 1 | [Program Control And Calls](instructions/01-program-control.md#jumps) |
 | `link` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#link) |
 | `linkarg` | 2 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#linkarg) |

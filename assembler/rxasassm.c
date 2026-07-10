@@ -30,6 +30,7 @@
 #include "rxasassm.h"
 #include "../binutils/include/rxdefs.h"
 #include "../binutils/include/rxjtable.h"
+#include "../binutils/include/rxnumparse.h"
 #include "../binutils/include/opdata.c"
 #include <ctype.h>
 
@@ -259,6 +260,10 @@ typedef struct rxas_constant_alias {
 #define RXAS_JTABLE_KEY_BINARY 2
 #define RXAS_JTABLE_KEY_INT 3
 
+#define RXAS_JTABLE_MATCH_EXACT 0
+#define RXAS_JTABLE_MATCH_PADDED 1
+#define RXAS_JTABLE_MATCH_NUMERIC 2
+
 struct rxas_jtable_case {
     Assembler_Token *label_token;
     Assembler_Token *value_token;
@@ -299,9 +304,12 @@ struct rxas_jump_table {
     int declared;
     int algorithm;
     int key_kind;
+    int match_mode;
+    int match_mode_set;
     int used_by_jumpbs;
     Assembler_Token *decl_token;
     struct rxas_jtable_case *cases;
+    struct rxas_jtable_case *cases_tail;
     struct rxas_jtable_ref *refs;
     struct rxas_jump_table *next;
 };
@@ -1125,28 +1133,11 @@ static unsigned char *jump_table_key_from_token(Assembler_Context *context, Asse
 
 static void append_jump_table_case(Assembler_Context *context, struct rxas_jump_table *table,
                                    struct rxas_jtable_case *entry) {
-    struct rxas_jtable_case *existing;
-
-    existing = table->cases;
-    while (existing) {
-        if (existing->key_length == entry->key_length &&
-            memcmp(existing->key, entry->key, entry->key_length) == 0) {
-            rxaserat(context, entry->value_token, "duplicate jump table case key");
-            free(entry->key);
-            free(entry);
-            return;
-        }
-        existing = existing->next;
-    }
-
+    (void)context;
     if (!table->cases) {
         table->cases = entry;
-    }
-    else {
-        existing = table->cases;
-        while (existing->next) existing = existing->next;
-        existing->next = entry;
-    }
+    } else table->cases_tail->next = entry;
+    table->cases_tail = entry;
 }
 
 static void add_jump_table_ref(Assembler_Context *context, struct rxas_jump_table *table,
@@ -1165,12 +1156,13 @@ static void add_jump_table_ref(Assembler_Context *context, struct rxas_jump_tabl
 
 static int jump_instruction_table_operand(Assembler_Token *instrToken, Assembler_Token *operand2Token,
                                           Assembler_Token *operand3Token, Assembler_Token **tableToken,
-                                          int *key_kind, int *is_jumpbs) {
+                                          int *key_kind, int *match_mode, int *is_jumpbs) {
     char *mnemonic;
 
     if (!instrToken || instrToken->token_type != ID) return 0;
     mnemonic = (char *)instrToken->token_value.string;
     *is_jumpbs = 0;
+    *match_mode = RXAS_JTABLE_MATCH_EXACT;
     if (mnemonic_matches(mnemonic, "JUMPS")) {
         *tableToken = operand2Token;
         *key_kind = RXAS_JTABLE_KEY_STRING;
@@ -1192,6 +1184,18 @@ static int jump_instruction_table_operand(Assembler_Token *instrToken, Assembler
         *key_kind = RXAS_JTABLE_KEY_INT;
         return 1;
     }
+    if (mnemonic_matches(mnemonic, "JUMPR")) {
+        *tableToken = operand2Token;
+        *key_kind = RXAS_JTABLE_KEY_STRING;
+        *match_mode = RXAS_JTABLE_MATCH_PADDED;
+        return 1;
+    }
+    if (mnemonic_matches(mnemonic, "JUMPN")) {
+        *tableToken = operand2Token;
+        *key_kind = RXAS_JTABLE_KEY_STRING;
+        *match_mode = RXAS_JTABLE_MATCH_NUMERIC;
+        return 1;
+    }
     return 0;
 }
 
@@ -1200,10 +1204,11 @@ static void prepare_jump_table_instruction(Assembler_Context *context, Assembler
     Assembler_Token *tableToken;
     struct rxas_jump_table *table;
     int key_kind;
+    int match_mode;
     int is_jumpbs;
 
     if (!jump_instruction_table_operand(instrToken, operand2Token, operand3Token,
-                                        &tableToken, &key_kind, &is_jumpbs)) return;
+                                        &tableToken, &key_kind, &match_mode, &is_jumpbs)) return;
     if (!tableToken || tableToken->token_type != ID) {
         rxaserat(context, instrToken, "jump table instruction requires a .jtable name operand");
         return;
@@ -1211,6 +1216,12 @@ static void prepare_jump_table_instruction(Assembler_Context *context, Assembler
     table = get_or_create_jump_table(context, tableToken);
     if (!table) return;
     mark_jump_table_key_kind(context, table, key_kind, tableToken);
+    if (table->match_mode_set && table->match_mode != match_mode) {
+        rxaserat(context, tableToken, "jump table cannot mix exact, padded, and numeric lookup instructions");
+    } else {
+        table->match_mode = match_mode;
+        table->match_mode_set = 1;
+    }
     if (is_jumpbs) table->used_by_jumpbs = 1;
 }
 
@@ -1281,6 +1292,108 @@ struct rxas_jtable_info {
     size_t fixed_key_length;
 };
 
+struct rxas_jtable_key_view {
+    struct rxas_jtable_case *entry;
+};
+
+static int rxas_jtable_key_view_compare(const void *left, const void *right) {
+    const struct rxas_jtable_key_view *left_view = left;
+    const struct rxas_jtable_key_view *right_view = right;
+    size_t left_length = left_view->entry->key_length;
+    size_t right_length = right_view->entry->key_length;
+    size_t common = left_length < right_length ? left_length : right_length;
+    int comparison = memcmp(left_view->entry->key, right_view->entry->key, common);
+
+    if (comparison) return comparison;
+    if (left_length < right_length) return -1;
+    if (left_length > right_length) return 1;
+    return 0;
+}
+
+static int normalize_jump_table_keys(Assembler_Context *context, struct rxas_jump_table *table) {
+    struct rxas_jtable_case *entry;
+    struct rxas_jtable_key_view *views;
+    size_t count = 0;
+    size_t index;
+
+    if (table->key_kind == RXAS_JTABLE_KEY_STRING &&
+        table->match_mode != RXAS_JTABLE_MATCH_EXACT) {
+        for (entry = table->cases; entry; entry = entry->next) {
+            count++;
+            if (table->match_mode == RXAS_JTABLE_MATCH_PADDED) {
+                while (entry->key_length > 0 && entry->key[entry->key_length - 1] == ' ') {
+                    entry->key_length--;
+                }
+            } else {
+                unsigned char numeric_key[RX_NUMERIC_KEY_SIZE];
+                unsigned char *replacement;
+                int is_nan = 0;
+
+                if (!rx_numeric_key_from_text(numeric_key,
+                                              (const char *)entry->key,
+                                              entry->key_length,
+                                              &is_nan) || is_nan) {
+                    rxaserat(context, entry->value_token,
+                             "jumpn case key must be a non-NaN numeric string");
+                    return 0;
+                }
+                replacement = malloc(sizeof(numeric_key));
+                if (!replacement) {
+                    RXAS_PANIC_OOM(context, "malloc numeric jump table key", sizeof(numeric_key), 0);
+                }
+                memcpy(replacement, numeric_key, sizeof(numeric_key));
+                free(entry->key);
+                entry->key = replacement;
+                entry->key_length = sizeof(numeric_key);
+            }
+        }
+    } else {
+        for (entry = table->cases; entry; entry = entry->next) count++;
+    }
+
+    if (count > SIZE_MAX / sizeof(*views)) return 0;
+    views = malloc((count ? count : 1) * sizeof(*views));
+    if (!views) {
+        RXAS_PANIC_OOM(context, "malloc jump table duplicate views",
+                       (count ? count : 1) * sizeof(*views), 0);
+    }
+    index = 0;
+    for (entry = table->cases; entry; entry = entry->next) views[index++].entry = entry;
+    qsort(views, count, sizeof(*views), rxas_jtable_key_view_compare);
+    for (index = 1; index < count; index++) {
+        if (rxas_jtable_key_view_compare(&views[index - 1], &views[index]) == 0) {
+            char *message = table->match_mode == RXAS_JTABLE_MATCH_EXACT ?
+                            "duplicate jump table case key" :
+                            "duplicate jump table case key after canonicalization";
+            rxaserat(context, views[index].entry->value_token, message);
+            free(views);
+            return 0;
+        }
+    }
+    free(views);
+
+    if (table->match_mode == RXAS_JTABLE_MATCH_NUMERIC && table->cases) {
+        struct rxas_jtable_case *alias = calloc(1, sizeof(*alias));
+        unsigned char *key = malloc(RX_NUMERIC_KEY_SIZE);
+        double nan_value = NAN;
+
+        if (!alias || !key) {
+            free(alias);
+            free(key);
+            RXAS_PANIC_OOM(context, "allocate numeric jump table NaN alias",
+                           sizeof(*alias) + RX_NUMERIC_KEY_SIZE, 0);
+        }
+        rx_double_to_numeric_key(nan_value, key);
+        alias->label_token = table->cases->label_token;
+        alias->value_token = table->cases->value_token;
+        alias->key = key;
+        alias->key_length = RX_NUMERIC_KEY_SIZE;
+        table->cases_tail->next = alias;
+        table->cases_tail = alias;
+    }
+    return 1;
+}
+
 static int prepare_jump_table(Assembler_Context *context, struct rxas_jump_table *table,
                               struct rxas_jtable_info *info) {
     struct rxas_jtable_case *entry;
@@ -1288,6 +1401,7 @@ static int prepare_jump_table(Assembler_Context *context, struct rxas_jump_table
     int variable_length;
 
     memset(info, 0, sizeof(*info));
+    if (!normalize_jump_table_keys(context, table)) return 0;
     variable_length = 0;
     entry = table->cases;
     while (entry) {

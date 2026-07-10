@@ -6719,6 +6719,91 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
             }
             DISPATCH
 
+        START_INSTRUCTION(JUMPR_REG_BINARY) CALC_DISPATCH(2)
+            DEBUG("TRACE - JUMPR R%d,binary[%zu]\n", (int)REG_IDX(1), (size_t)(pc + 2)->index);
+            {
+                size_t key_length = op1R->string_length;
+                size_t target;
+                int found;
+
+                while (key_length > 0 && op1R->string_value[key_length - 1] == ' ') key_length--;
+                found = rxvm_jtable_lookup(op2S,
+                                           (const unsigned char *)op1R->string_value,
+                                           key_length,
+                                           &target);
+                if (found < 0) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Malformed jump table");
+                }
+                else if (found && target >= current_frame->procedure->binarySpace->inst_size) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Jump table target out of range");
+                }
+                else if (found) {
+                    next_pc = current_frame->procedure->binarySpace->binary + target;
+                    CALC_DISPATCH_MANUAL
+                }
+            }
+            DISPATCH
+
+        START_INSTRUCTION(JUMPN_REG_BINARY) CALC_DISPATCH(2)
+            DEBUG("TRACE - JUMPN R%d,binary[%zu]\n", (int)REG_IDX(1), (size_t)(pc + 2)->index);
+            {
+                unsigned char key[RX_NUMERIC_KEY_SIZE];
+                size_t target;
+                int found = 0;
+
+                if (rx_numeric_key_from_text(key,
+                                             op1R->string_value,
+                                             op1R->string_length,
+                                             NULL)) {
+                    found = rxvm_jtable_lookup(op2S, key, sizeof(key), &target);
+                }
+                if (found < 0) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Malformed jump table");
+                }
+                else if (found && target >= current_frame->procedure->binarySpace->inst_size) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Jump table target out of range");
+                }
+                else if (found) {
+                    next_pc = current_frame->procedure->binarySpace->binary + target;
+                    CALC_DISPATCH_MANUAL
+                }
+            }
+            DISPATCH
+
+        START_INSTRUCTION(BINEQ_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - BINEQ R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REG_RETURN_INT(op2R->binary_length == op3R->binary_length &&
+                           (!op2R->binary_length ||
+                            memcmp(op2R->binary_value, op3R->binary_value,
+                                   op2R->binary_length) == 0))
+            DISPATCH
+
+        START_INSTRUCTION(BINEQ_REG_REG_BINARY) CALC_DISPATCH(3)
+            DEBUG("TRACE - BINEQ R%d,R%d,binary[%zu]\n",
+                  (int)REG_IDX(1), (int)REG_IDX(2), (size_t)(pc + 3)->index);
+            REG_RETURN_INT(op2R->binary_length == op3S->string_len &&
+                           (!op2R->binary_length ||
+                            memcmp(op2R->binary_value, op3S->string,
+                                   op2R->binary_length) == 0))
+            DISPATCH
+
+        START_INSTRUCTION(BINNE_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - BINNE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REG_RETURN_INT(op2R->binary_length != op3R->binary_length ||
+                           (op2R->binary_length &&
+                            memcmp(op2R->binary_value, op3R->binary_value,
+                                   op2R->binary_length) != 0))
+            DISPATCH
+
+        START_INSTRUCTION(BINNE_REG_REG_BINARY) CALC_DISPATCH(3)
+            DEBUG("TRACE - BINNE R%d,R%d,binary[%zu]\n",
+                  (int)REG_IDX(1), (int)REG_IDX(2), (size_t)(pc + 3)->index);
+            REG_RETURN_INT(op2R->binary_length != op3S->string_len ||
+                           (op2R->binary_length &&
+                            memcmp(op2R->binary_value, op3S->string,
+                                   op2R->binary_length) != 0))
+            DISPATCH
+
         START_INSTRUCTION(TIME_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - TIME R%d\n", (int)REG_IDX(1));
             {
