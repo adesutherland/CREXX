@@ -224,9 +224,12 @@ not_found:
     ret
 ```
 
-Release 1 supports the `auto` and `linear` algorithm spellings for executable
-tables. `openhash` and `acph` are reserved spellings that parse but are rejected
-until their table builders and VM lookup paths are implemented.
+Release 1 supports `auto`, `linear`, `openhash`, and `acph`. Explicit algorithm
+names are useful for measurement and repeatable tuning. `auto` selects `linear`
+for a one-case table. Larger tables use `openhash` for average key lengths up to
+two bytes; tables of at least 256 cases also use it for average lengths up to
+four bytes. The remaining longer-key tables use `acph`. This policy is based on
+Release VM profiling and may be retuned without changing the RXAS surface.
 
 ## Metadata
 

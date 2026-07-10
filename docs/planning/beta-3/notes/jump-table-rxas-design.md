@@ -1,16 +1,16 @@
 # RXAS Jump Table Working Design
 
-Status: Slice 1 linear implementation in progress.
+Status: Release 1 RXAS surface and all three packed lookup algorithms implemented.
 
-This note proposes the RXAS surface for a fast static multi-branch instruction.
+This note defines the RXAS surface for a fast static multi-branch instruction.
 The intended use is compiler-emitted dispatch for `select`, parser/token
 classification, and other cases where a fixed set of literal values maps to
 labels in one procedure.
 
-The initial algorithm candidate is ACPH, reviewed from
-<https://github.com/adesutherland/acph> at commit `c8b99aa`. If ACPH is used,
-copy the relevant source into this repository and adapt it to cREXX coding and
-serialization rules rather than linking the external project.
+The ACPH algorithm was reviewed from <https://github.com/adesutherland/acph> at
+commit `c8b99aa`. The cREXX implementation is an internal packed-table builder
+and VM reader adapted to RXBIN serialization rules; it does not link the
+external project or serialize its C structures.
 
 ## ACPH Review Summary
 
@@ -31,9 +31,9 @@ The useful properties for RXAS jump tables are:
 
 The caution from the ACPH review is equally important: ACPH is not automatically
 better than generated `switch`, trie, DFA, gperf-style minimal perfect hash, or
-open addressing for every table. The assembler should be able to choose a
-strategy with `auto`, and the RXAS writer should be able to override that choice
-with `.jtable`.
+open addressing for every table. The assembler therefore chooses a measured
+strategy with `auto`, and the RXAS writer can override that choice with
+`.jtable`.
 
 ## Goals
 
@@ -124,11 +124,10 @@ valid only for fixed-length binary-key tables where `key_length` is non-zero.
 Variable-length binary dispatch should use `jumpb` over a binary register whose
 logical length is already the lookup key length.
 
-If the algorithm is omitted, the assembler uses `auto`. In the first executable
-slice, `auto` lowers to `linear`. `openhash` and `acph` are accepted as syntax
-but rejected during table building until their packed bodies and VM lookup paths
-are implemented. Later `jump*` uses of the same table must be consistent with
-the canonicalized case literal bytes.
+If the algorithm is omitted, the assembler uses `auto`. Explicit `linear`,
+`openhash`, and `acph` tables are available for repeatable measurement and
+tuning. Later `jump*` uses of the same table must be consistent with the
+canonicalized case literal bytes.
 
 The label decoration form is:
 
@@ -222,7 +221,7 @@ integers. The payload should contain only fields needed by the VM lookup. A
 magic marker is intentionally omitted because this is a hot instruction path and
 the operand is already an assembler-created constant.
 
-A proposed common Release 1 header:
+The common Release 1 header is:
 
 ```text
 u8     algorithm       1=linear, 2=openhash, 3=acph
@@ -252,16 +251,52 @@ The Release 1 linear body is:
 - entry: key byte offset, key length, target instruction address;
 - key blob: exact key bytes for final compare.
 
-An ACPH-derived layout can then be added behind the same header:
+The open-hash body adds a `u32` power-of-two slot count after the common header.
+Each immutable 16-byte slot stores the FNV-1a hash, key offset, key length, and
+target. `UINT32_MAX` in the key-offset field marks an empty slot. Tables are
+built at no more than 50% load, and lookup uses linear probing followed by an
+exact key comparison.
 
-- node header: selected column, prime/multiplier, slot count, first slot offset;
-- slot: selected byte/end-symbol, state, child offset or leaf offset;
-- leaf: key length, key byte offset, target instruction address;
+The ACPH-derived body uses:
+
+- table header extension: root-node offset;
+- node header: selected column, prime/multiplier, and slot count;
+- slot: selected byte/end-symbol, state, and child or leaf offset;
+- leaf: key byte offset, key length, and target instruction address;
 - key blob: exact key bytes for final compare.
 
-The end-of-key symbol used by ACPH is an internal table-building concept. The
-serialized table should store it explicitly as a value outside the byte range,
-for example `u16 256`, rather than overloading a byte.
+The end-of-key symbol is stored explicitly as `u16 256`, outside the byte
+range. All offsets are absolute payload offsets, and the final leaf always does
+an exact length and byte comparison.
+
+## Auto Selection Profile
+
+The policy was profiled on 2026-07-10 using the Release `rxas` and `rxvm` on
+Darwin ARM64. Generated real RXAS tables measured the resulting `jumpb`
+instruction for hits, misses, and balanced hit/miss loops. The matrix covered
+randomish and common-prefix keys, one to 2048 cases, and key lengths from one to
+32 bytes. Reported comparisons used the median of three to five runs around the
+decision boundaries.
+
+The resulting Release 1 rule is:
+
+| Table/key shape | `auto` choice |
+| --- | --- |
+| One case | `linear` |
+| Two or more cases, average key length 0-2 bytes | `openhash` |
+| 2-255 cases, average key length above 2 bytes | `acph` |
+| 256 or more cases, average key length 3-4 bytes | `openhash` |
+| 256 or more cases, average key length above 4 bytes | `acph` |
+
+Linear won consistently for a one-case hit and lost decisively as the table
+grew. Open hashing was the safer choice for one- and two-byte keys, especially
+for successful lookups. ACPH usually won from three-byte keys upward because it
+can reject on one selected symbol and avoids hashing every byte before the full
+leaf comparison. At 256 cases and above, three- and four-byte keys were close,
+but open hashing was the more stable hit-oriented choice. Assembler construction
+times were similar after process-startup noise and did not justify another
+policy input. The policy deliberately uses only data available to the assembler
+and can be retuned without changing RXAS source.
 
 ## VM Lookup Rules
 
@@ -299,19 +334,21 @@ the table constant.
    decorations.
 2. Add assembler table collection, label-resolution checks, duplicate-key
    checks, and deterministic packed `BINARY_CONST` emission. Status:
-   implemented for linear tables.
+   implemented for linear, open-hash, and ACPH-derived tables.
 3. Add the `RXBIN_CORRUPTION` signal for malformed generated jump-table
    payloads. Status: implemented in the signal tables and VM.
 4. Add `jumps`, `jumpb`, `jumpbs`, and `jumpi` opcodes and VM handlers using a
    simple linear packed-table strategy first. Keep all forms within the existing
    three-operand RXAS/RXBIN policy. Status: implemented for the interpreter and
    bytecode interpreter.
-5. Replace or augment the packed-table builder with ACPH-derived construction
-   and lookup. Keep the same RXAS syntax and binary header version if possible;
-   otherwise bump the payload version.
+5. Add open-hash and ACPH-derived construction and lookup, then profile and
+   implement `auto`. Status: implemented and profiled with the common Release 1
+   header.
 6. Teach `rxc` to lower suitable `select`/multi-`if` shapes to `jump*`.
 7. Benchmark real parser and JSON workloads against nested branches, binary
-   search, open hash, trie/switch code, and ACPH jump tables.
+   search, open hash, trie/switch code, and ACPH jump tables. Status: the
+   generated key-size/table-size jump-table matrix is complete; compiler
+   lowering and real workload comparisons follow slice 6.
 
 ## Decisions And Remaining Questions
 
@@ -319,14 +356,12 @@ the table constant.
   value even if the Rexx source surface does not expose that immediately.
 - Release 1 should include zero-copy binary-slice dispatch as three-operand
   `jumpbs rSource,rOffset,table`; the table must provide a fixed key length.
-- The assembler should support `auto` strategy selection and allow `.jtable` to
-  override it with `linear`, `openhash`, or `acph`.
+- The assembler supports measured `auto` strategy selection and allows
+  `.jtable` to override it with `linear`, `openhash`, or `acph`.
 - Malformed jump-table payloads should raise a new RXBIN corruption signal, not
   `INVALID_ARGUMENTS`.
 - `rxdas` should reconstruct readable `.jtable` and `.jcase` lines by parsing
   the jump-table payload. It does not need to preserve the original source table
   name exactly; it may synthesize a stable table name. It should always emit a
   `.jtable` line showing the algorithm used.
-- Remaining question: should the source spelling for the open-addressed strategy
-  be `openhash` for RXAS parser simplicity, or should RXAS accept the human
-  spelling `open-hash` here as a directive option?
+- The canonical RXAS spelling is `openhash`.

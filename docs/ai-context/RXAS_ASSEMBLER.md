@@ -127,6 +127,19 @@ For interface methods, the member-kind string now distinguishes:
 - `method` for an abstract interface method
 - `method final` for a Level B final/default interface method body
 
+### Jump Tables
+
+Procedure-local `.jtable` declarations and same-line `.jcase` label decorations
+are resolved after label optimization. The assembler emits the resulting table
+as a host-layout-independent `BINARY_CONST`; `jumps`, `jumpb`, `jumpbs`, and
+`jumpi` operands are patched to that pool entry. Release 1 packed algorithms are
+`linear`, `openhash`, and `acph`. `auto` uses linear for one case. Larger tables
+use open hashing for average key lengths up to two bytes; tables of at least 256
+cases also use it for averages up to four bytes. Remaining tables use ACPH.
+Shared format constants and hash functions live in
+`binutils/include/rxjtable.h` and must remain common to the assembler and VM
+readers.
+
 ### Binary Literals
 
 RXAS binary literals are written as byte-paired hex with a `0x` or `0X`

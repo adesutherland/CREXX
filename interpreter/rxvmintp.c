@@ -81,6 +81,7 @@
 #include "rxas.h"
 #include "../binutils/include/rxdefs.h"
 #include "../binutils/include/rxflags.h"
+#include "../binutils/include/rxjtable.h"
 #include "rxastree.h"
 #include "rxvmintp.h"
 /* #include <complex.h> */
@@ -465,50 +466,37 @@ static int rxvm_compare_bytes(const unsigned char *left, size_t left_len,
     return 0;
 }
 
-#define RXVM_JTABLE_ALG_LINEAR 1
-#define RXVM_JTABLE_HEADER_SIZE 12
-#define RXVM_JTABLE_LINEAR_ENTRY_SIZE 12
-
-static int rxvm_jtable_read_header(string_constant *table, uint32_t *key_length,
-                                   uint32_t *case_count, uint16_t *header_size) {
+static int rxvm_jtable_read_header(string_constant *table, unsigned char *algorithm,
+                                   uint32_t *key_length, uint32_t *case_count,
+                                   uint16_t *header_size) {
     const unsigned char *bytes;
-    size_t entries_length;
 
-    if (!table || table->string_len < RXVM_JTABLE_HEADER_SIZE) return 0;
+    if (!table || table->string_len < RX_JTABLE_HEADER_SIZE) return 0;
     bytes = (const unsigned char *)table->string;
-    if (bytes[0] != RXVM_JTABLE_ALG_LINEAR) return 0;
+    *algorithm = bytes[0];
+    if (*algorithm < RX_JTABLE_ALG_LINEAR || *algorithm > RX_JTABLE_ALG_ACPH) return 0;
     *header_size = (uint16_t)rxvm_binary_read_le_bytes(bytes, 2, 2);
-    if (*header_size < RXVM_JTABLE_HEADER_SIZE || *header_size > table->string_len) return 0;
+    if (*header_size < RX_JTABLE_HEADER_SIZE || *header_size > table->string_len) return 0;
     *key_length = (uint32_t)rxvm_binary_read_le_bytes(bytes, 4, 4);
     *case_count = (uint32_t)rxvm_binary_read_le_bytes(bytes, 8, 4);
-    if ((size_t)*case_count > SIZE_MAX / RXVM_JTABLE_LINEAR_ENTRY_SIZE) return 0;
-    entries_length = (size_t)(*case_count) * RXVM_JTABLE_LINEAR_ENTRY_SIZE;
-    if ((size_t)*header_size > SIZE_MAX - entries_length ||
-        (size_t)*header_size + entries_length > table->string_len) return 0;
-    return 1;
-}
-
-static int rxvm_jtable_fixed_key_length(string_constant *table, size_t *key_length_out) {
-    uint32_t key_length;
-    uint32_t case_count;
-    uint16_t header_size;
-
-    if (!rxvm_jtable_read_header(table, &key_length, &case_count, &header_size)) return -1;
-    if (key_length == 0) return 0;
-    *key_length_out = (size_t)key_length;
+    if (*case_count == 0) return 0;
     return 1;
 }
 
 static int rxvm_jtable_lookup_linear(string_constant *table, const unsigned char *key,
-                                     size_t key_length, size_t *target_out) {
+                                     size_t key_length, uint32_t fixed_key_length,
+                                     uint32_t case_count, uint16_t header_size,
+                                     size_t *target_out) {
     const unsigned char *bytes;
-    uint32_t fixed_key_length;
-    uint32_t case_count;
-    uint16_t header_size;
+    size_t entries_length;
     size_t entry_offset;
     uint32_t i;
 
-    if (!rxvm_jtable_read_header(table, &fixed_key_length, &case_count, &header_size)) return -1;
+    if (header_size != RX_JTABLE_HEADER_SIZE) return -1;
+    if ((size_t)case_count > SIZE_MAX / RX_JTABLE_LINEAR_ENTRY_SIZE) return -1;
+    entries_length = (size_t)case_count * RX_JTABLE_LINEAR_ENTRY_SIZE;
+    if ((size_t)header_size > SIZE_MAX - entries_length ||
+        (size_t)header_size + entries_length > table->string_len) return -1;
     if (fixed_key_length != 0 && key_length != fixed_key_length) return 0;
 
     bytes = (const unsigned char *)table->string;
@@ -530,9 +518,149 @@ static int rxvm_jtable_lookup_linear(string_constant *table, const unsigned char
             *target_out = (size_t)target;
             return 1;
         }
-        entry_offset += RXVM_JTABLE_LINEAR_ENTRY_SIZE;
+        entry_offset += RX_JTABLE_LINEAR_ENTRY_SIZE;
     }
     return 0;
+}
+
+static int rxvm_jtable_lookup_openhash(string_constant *table, const unsigned char *key,
+                                       size_t key_length, uint32_t fixed_key_length,
+                                       uint32_t case_count, uint16_t header_size,
+                                       size_t *target_out) {
+    const unsigned char *bytes = (const unsigned char *)table->string;
+    uint32_t slot_count;
+    uint32_t hash;
+    size_t slots_length;
+    size_t slot;
+    size_t probes;
+
+    if (header_size != RX_JTABLE_OPEN_HEADER_SIZE) return -1;
+    slot_count = (uint32_t)rxvm_binary_read_le_bytes(bytes, 12, 4);
+    if (slot_count < 2u || (slot_count & (slot_count - 1u)) != 0 ||
+        case_count > slot_count / 2u) return -1;
+    if ((size_t)slot_count > SIZE_MAX / RX_JTABLE_OPEN_SLOT_SIZE) return -1;
+    slots_length = (size_t)slot_count * RX_JTABLE_OPEN_SLOT_SIZE;
+    if ((size_t)header_size > SIZE_MAX - slots_length ||
+        (size_t)header_size + slots_length > table->string_len) return -1;
+    if (fixed_key_length != 0 && key_length != fixed_key_length) return 0;
+
+    hash = rx_jtable_hash_bytes(key, key_length);
+    slot = hash & (slot_count - 1u);
+    for (probes = 0; probes < slot_count; probes++) {
+        size_t slot_offset = header_size + slot * RX_JTABLE_OPEN_SLOT_SIZE;
+        uint32_t stored_hash = (uint32_t)rxvm_binary_read_le_bytes(bytes, slot_offset, 4);
+        uint32_t key_offset = (uint32_t)rxvm_binary_read_le_bytes(bytes, slot_offset + 4, 4);
+        uint32_t stored_key_length;
+
+        if (key_offset == RX_JTABLE_OPEN_EMPTY) return 0;
+        stored_key_length = (uint32_t)rxvm_binary_read_le_bytes(bytes, slot_offset + 8, 4);
+        if ((size_t)key_offset > table->string_len ||
+            (size_t)stored_key_length > table->string_len - (size_t)key_offset) return -1;
+        if (stored_hash == hash && (size_t)stored_key_length == key_length &&
+            (key_length == 0 || memcmp(bytes + key_offset, key, key_length) == 0)) {
+            *target_out = (size_t)rxvm_binary_read_le_bytes(bytes, slot_offset + 12, 4);
+            return 1;
+        }
+        slot = (slot + 1u) & (slot_count - 1u);
+    }
+    return -1;
+}
+
+static int rxvm_jtable_lookup_acph(string_constant *table, const unsigned char *key,
+                                   size_t key_length, uint32_t fixed_key_length,
+                                   uint32_t case_count, uint16_t header_size,
+                                   size_t *target_out) {
+    const unsigned char *bytes = (const unsigned char *)table->string;
+    uint32_t node_offset;
+    uint32_t depth;
+
+    if (header_size != RX_JTABLE_ACPH_HEADER_SIZE) return -1;
+    if (fixed_key_length != 0 && key_length != fixed_key_length) return 0;
+    node_offset = (uint32_t)rxvm_binary_read_le_bytes(bytes, 12, 4);
+
+    for (depth = 0; depth < case_count; depth++) {
+        uint32_t column;
+        uint16_t slot_count;
+        unsigned char prime;
+        uint16_t symbol;
+        size_t node_length;
+        size_t slot_index;
+        size_t slot_offset;
+        uint16_t stored_symbol;
+        unsigned char kind;
+        uint32_t value_offset;
+
+        if ((size_t)node_offset > table->string_len ||
+            RX_JTABLE_ACPH_NODE_SIZE > table->string_len - (size_t)node_offset) return -1;
+        column = (uint32_t)rxvm_binary_read_le_bytes(bytes, node_offset, 4);
+        slot_count = (uint16_t)rxvm_binary_read_le_bytes(bytes, node_offset + 4, 2);
+        prime = bytes[node_offset + 6];
+        if (slot_count == 0 || slot_count > RX_JTABLE_ACPH_SYMBOL_COUNT ||
+            (slot_count != RX_JTABLE_ACPH_SYMBOL_COUNT && prime == 0)) return -1;
+        node_length = RX_JTABLE_ACPH_NODE_SIZE + (size_t)slot_count * RX_JTABLE_ACPH_SLOT_SIZE;
+        if (node_length > table->string_len - (size_t)node_offset) return -1;
+
+        symbol = (size_t)column < key_length ? key[column] : RX_JTABLE_ACPH_END_SYMBOL;
+        slot_index = rx_jtable_acph_hash(symbol, prime, slot_count);
+        slot_offset = (size_t)node_offset + RX_JTABLE_ACPH_NODE_SIZE +
+                      slot_index * RX_JTABLE_ACPH_SLOT_SIZE;
+        stored_symbol = (uint16_t)rxvm_binary_read_le_bytes(bytes, slot_offset, 2);
+        kind = bytes[slot_offset + 2];
+        value_offset = (uint32_t)rxvm_binary_read_le_bytes(bytes, slot_offset + 4, 4);
+        if (kind == RX_JTABLE_ACPH_SLOT_EMPTY) return 0;
+        if (stored_symbol > RX_JTABLE_ACPH_END_SYMBOL) return -1;
+        if (stored_symbol != symbol) return 0;
+
+        if (kind == RX_JTABLE_ACPH_SLOT_LEAF) {
+            uint32_t key_offset;
+            uint32_t stored_key_length;
+
+            if ((size_t)value_offset > table->string_len ||
+                RX_JTABLE_ACPH_LEAF_SIZE > table->string_len - (size_t)value_offset) return -1;
+            key_offset = (uint32_t)rxvm_binary_read_le_bytes(bytes, value_offset, 4);
+            stored_key_length = (uint32_t)rxvm_binary_read_le_bytes(bytes, value_offset + 4, 4);
+            if ((size_t)key_offset > table->string_len ||
+                (size_t)stored_key_length > table->string_len - (size_t)key_offset) return -1;
+            if ((size_t)stored_key_length != key_length ||
+                (key_length != 0 && memcmp(bytes + key_offset, key, key_length) != 0)) return 0;
+            *target_out = (size_t)rxvm_binary_read_le_bytes(bytes, value_offset + 8, 4);
+            return 1;
+        }
+        if (kind != RX_JTABLE_ACPH_SLOT_CHILD) return -1;
+        node_offset = value_offset;
+    }
+    return -1;
+}
+
+static int rxvm_jtable_lookup_parsed(string_constant *table, const unsigned char *key,
+                                     size_t key_length, size_t *target_out,
+                                     unsigned char algorithm, uint32_t fixed_key_length,
+                                     uint32_t case_count, uint16_t header_size) {
+    switch (algorithm) {
+        case RX_JTABLE_ALG_LINEAR:
+            return rxvm_jtable_lookup_linear(table, key, key_length, fixed_key_length,
+                                             case_count, header_size, target_out);
+        case RX_JTABLE_ALG_OPENHASH:
+            return rxvm_jtable_lookup_openhash(table, key, key_length, fixed_key_length,
+                                               case_count, header_size, target_out);
+        case RX_JTABLE_ALG_ACPH:
+            return rxvm_jtable_lookup_acph(table, key, key_length, fixed_key_length,
+                                           case_count, header_size, target_out);
+        default:
+            return -1;
+    }
+}
+
+static int rxvm_jtable_lookup(string_constant *table, const unsigned char *key,
+                              size_t key_length, size_t *target_out) {
+    unsigned char algorithm;
+    uint32_t fixed_key_length;
+    uint32_t case_count;
+    uint16_t header_size;
+
+    if (!rxvm_jtable_read_header(table, &algorithm, &fixed_key_length, &case_count, &header_size)) return -1;
+    return rxvm_jtable_lookup_parsed(table, key, key_length, target_out, algorithm,
+                                     fixed_key_length, case_count, header_size);
 }
 
 static int rxvm_binary_field_is_valid_utf8(const void *bytes, size_t length) {
@@ -6492,8 +6620,8 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
             DEBUG("TRACE - JUMPS R%d,binary[%zu]\n", (int)REG_IDX(1), (size_t)(pc + 2)->index);
             {
                 size_t target;
-                int found = rxvm_jtable_lookup_linear(op2S, (const unsigned char *)op1R->string_value,
-                                                      op1R->string_length, &target);
+                int found = rxvm_jtable_lookup(op2S, (const unsigned char *)op1R->string_value,
+                                               op1R->string_length, &target);
                 if (found < 0) {
                     SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Malformed jump table");
                 }
@@ -6511,8 +6639,8 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
             DEBUG("TRACE - JUMPB R%d,binary[%zu]\n", (int)REG_IDX(1), (size_t)(pc + 2)->index);
             {
                 size_t target;
-                int found = rxvm_jtable_lookup_linear(op2S, (const unsigned char *)op1R->binary_value,
-                                                      op1R->binary_length, &target);
+                int found = rxvm_jtable_lookup(op2S, (const unsigned char *)op1R->binary_value,
+                                               op1R->binary_length, &target);
                 if (found < 0) {
                     SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Malformed jump table");
                 }
@@ -6529,19 +6657,29 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         START_INSTRUCTION(JUMPBS_REG_REG_BINARY) CALC_DISPATCH(3)
             DEBUG("TRACE - JUMPBS R%d,R%d,binary[%zu]\n", (int)REG_IDX(1), (int)REG_IDX(2), (size_t)(pc + 3)->index);
             {
+                unsigned char algorithm;
+                uint32_t fixed_key_length;
+                uint32_t case_count;
+                uint16_t header_size;
                 size_t key_length;
                 size_t offset;
                 size_t target;
-                int key_status = rxvm_jtable_fixed_key_length(op3S, &key_length);
-                if (key_status < 0) {
+                if (!rxvm_jtable_read_header(op3S, &algorithm, &fixed_key_length,
+                                             &case_count, &header_size)) {
                     SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Malformed jump table");
                 }
-                else if (key_status == 0 || !rxvm_binary_range(op1R, op2R->int_value, key_length, &offset)) {
+                else if (fixed_key_length == 0 ||
+                         !rxvm_binary_range(op1R, op2R->int_value,
+                                            (size_t)fixed_key_length, &offset)) {
                     SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
                 }
                 else {
-                    int found = rxvm_jtable_lookup_linear(op3S, (const unsigned char *)op1R->binary_value + offset,
-                                                          key_length, &target);
+                    int found;
+                    key_length = (size_t)fixed_key_length;
+                    found = rxvm_jtable_lookup_parsed(
+                        op3S, (const unsigned char *)op1R->binary_value + offset,
+                        key_length, &target, algorithm, fixed_key_length,
+                        case_count, header_size);
                     if (found < 0) {
                         SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Malformed jump table");
                     }
@@ -6567,7 +6705,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 for (i = 0; i < 8; i++) {
                     key[i] = (unsigned char)((value >> (i * 8)) & 0xffu);
                 }
-                found = rxvm_jtable_lookup_linear(op2S, key, sizeof(key), &target);
+                found = rxvm_jtable_lookup(op2S, key, sizeof(key), &target);
                 if (found < 0) {
                     SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Malformed jump table");
                 }

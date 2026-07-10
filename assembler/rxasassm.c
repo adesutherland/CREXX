@@ -29,6 +29,7 @@
 #include "platform.h"
 #include "rxasassm.h"
 #include "../binutils/include/rxdefs.h"
+#include "../binutils/include/rxjtable.h"
 #include "../binutils/include/opdata.c"
 #include <ctype.h>
 
@@ -258,16 +259,32 @@ typedef struct rxas_constant_alias {
 #define RXAS_JTABLE_KEY_BINARY 2
 #define RXAS_JTABLE_KEY_INT 3
 
-#define RXAS_JTABLE_PACKED_ALG_LINEAR 1
-#define RXAS_JTABLE_HEADER_SIZE 12
-#define RXAS_JTABLE_LINEAR_ENTRY_SIZE 12
-
 struct rxas_jtable_case {
     Assembler_Token *label_token;
     Assembler_Token *value_token;
     unsigned char *key;
     size_t key_length;
+    uint32_t target;
     struct rxas_jtable_case *next;
+};
+
+struct rxas_acph_node;
+
+struct rxas_acph_slot {
+    uint16_t symbol;
+    unsigned char kind;
+    struct rxas_jtable_case *leaf;
+    struct rxas_acph_node *child;
+    uint32_t packed_value_offset;
+};
+
+struct rxas_acph_node {
+    uint32_t column;
+    uint16_t slot_count;
+    unsigned char prime;
+    uint32_t packed_offset;
+    struct rxas_acph_slot *slots;
+    struct rxas_acph_node *next_all;
 };
 
 struct rxas_jtable_ref {
@@ -966,10 +983,12 @@ static int parse_jump_table_algorithm(Assembler_Context *context, Assembler_Toke
 
     if (!algorithmToken) return RXAS_JTABLE_ALG_AUTO;
     name = (char *)algorithmToken->token_value.string;
-    if (strcmp(name, "auto") == 0) return RXAS_JTABLE_ALG_AUTO;
-    if (strcmp(name, "linear") == 0) return RXAS_JTABLE_ALG_LINEAR;
-    if (strcmp(name, "openhash") == 0 || strcmp(name, "open-hash") == 0) return RXAS_JTABLE_ALG_OPENHASH;
-    if (strcmp(name, "acph") == 0) return RXAS_JTABLE_ALG_ACPH;
+    if (mnemonic_matches(name, "AUTO")) return RXAS_JTABLE_ALG_AUTO;
+    if (mnemonic_matches(name, "LINEAR")) return RXAS_JTABLE_ALG_LINEAR;
+    if (mnemonic_matches(name, "OPENHASH") || mnemonic_matches(name, "OPEN-HASH")) {
+        return RXAS_JTABLE_ALG_OPENHASH;
+    }
+    if (mnemonic_matches(name, "ACPH")) return RXAS_JTABLE_ALG_ACPH;
     rxaserat(context, algorithmToken, "jump table algorithm must be auto, linear, openhash, or acph");
     return -1;
 }
@@ -1256,130 +1275,537 @@ void rxasjcase_after_label(Assembler_Context *context, Assembler_Token *jcaseTok
     add_jump_table_case_for_label(context, context->last_label_token, tableToken, valueToken);
 }
 
-static int build_one_jump_table(Assembler_Context *context, struct rxas_jump_table *table) {
-    struct rxas_jtable_case *entry;
-    struct rxas_jtable_ref *ref;
-    unsigned char *payload;
+struct rxas_jtable_info {
     size_t case_count;
     size_t key_blob_length;
     size_t fixed_key_length;
-    size_t entries_length;
-    size_t total_length;
-    size_t entry_offset;
-    size_t key_offset;
-    size_t pool_index;
-    int algorithm;
+};
+
+static int prepare_jump_table(Assembler_Context *context, struct rxas_jump_table *table,
+                              struct rxas_jtable_info *info) {
+    struct rxas_jtable_case *entry;
+    struct rxas_jtable_ref *ref;
     int variable_length;
 
-    if (!table->declared) {
-        if (table->refs) rxaserat(context, table->refs->token, "unknown jump table");
-        else if (table->cases) rxaserat(context, table->cases->value_token, "unknown jump table");
-        return 0;
-    }
-
-    algorithm = table->algorithm == RXAS_JTABLE_ALG_AUTO ? RXAS_JTABLE_ALG_LINEAR : table->algorithm;
-    if (algorithm != RXAS_JTABLE_ALG_LINEAR) {
-        rxaserat(context, table->decl_token, "jump table algorithm is not implemented yet");
-        return 0;
-    }
-
-    case_count = 0;
-    key_blob_length = 0;
-    fixed_key_length = 0;
+    memset(info, 0, sizeof(*info));
     variable_length = 0;
     entry = table->cases;
     while (entry) {
-        if (case_count == 0) fixed_key_length = entry->key_length;
-        else if (entry->key_length != fixed_key_length) variable_length = 1;
-        if (SIZE_MAX - key_blob_length < entry->key_length) {
+        size_t tree_index;
+        struct backpatching *label_patch;
+
+        if (entry->key_length > UINT32_MAX) {
+            rxaserat(context, entry->value_token, "jump table key length is too large");
+            return 0;
+        }
+        if (info->case_count == 0) info->fixed_key_length = entry->key_length;
+        else if (entry->key_length != info->fixed_key_length) variable_length = 1;
+        if (SIZE_MAX - info->key_blob_length < entry->key_length) {
             rxaserat(context, entry->value_token, "jump table key data is too large");
             return 0;
         }
-        key_blob_length += entry->key_length;
-        case_count++;
+        info->key_blob_length += entry->key_length;
+        info->case_count++;
+
+        if (!src_node(context->label_constants_tree, (char *)entry->label_token->token_value.string, &tree_index)) {
+            rxaserat(context, entry->label_token, "unknown jump table case label");
+            return 0;
+        }
+        label_patch = (struct backpatching *)tree_index;
+        if (!label_patch->defined) {
+            rxaserat(context, entry->label_token, "unknown jump table case label");
+            return 0;
+        }
+        if (label_patch->index > UINT32_MAX) {
+            rxaserat(context, entry->label_token, "jump table target address is too large");
+            return 0;
+        }
+        entry->target = (uint32_t)label_patch->index;
         entry = entry->next;
     }
 
-    if (case_count == 0) {
+    if (info->case_count == 0) {
         rxaserat(context, table->decl_token, "jump table has no cases");
         return 0;
     }
-    if (case_count > UINT32_MAX) {
+    if (info->case_count > UINT32_MAX) {
         rxaserat(context, table->decl_token, "jump table has too many cases");
         return 0;
     }
-    if (variable_length) fixed_key_length = 0;
-    if (fixed_key_length > UINT32_MAX) {
+    if (info->key_blob_length > UINT32_MAX - RX_JTABLE_HEADER_SIZE) {
+        rxaserat(context, table->decl_token, "jump table key data is too large");
+        return 0;
+    }
+    if (variable_length) info->fixed_key_length = 0;
+    if (info->fixed_key_length > UINT32_MAX) {
         rxaserat(context, table->decl_token, "jump table key length is too large");
         return 0;
     }
-    if (table->used_by_jumpbs && fixed_key_length == 0) {
+    if (table->used_by_jumpbs && info->fixed_key_length == 0) {
         ref = table->refs;
         while (ref && !ref->token) ref = ref->next;
         rxaserat(context, ref ? ref->token : table->decl_token,
                  "jumpbs requires fixed-length non-empty binary keys");
         return 0;
     }
-    if (case_count > SIZE_MAX / RXAS_JTABLE_LINEAR_ENTRY_SIZE) {
+    return 1;
+}
+
+static unsigned char *build_linear_jump_table(Assembler_Context *context, struct rxas_jump_table *table,
+                                              const struct rxas_jtable_info *info, size_t *length_out) {
+    struct rxas_jtable_case *entry;
+    unsigned char *payload;
+    size_t entries_length;
+    size_t total_length;
+    size_t entry_offset;
+    size_t key_offset;
+
+    if (info->case_count > SIZE_MAX / RX_JTABLE_LINEAR_ENTRY_SIZE) {
         rxaserat(context, table->decl_token, "jump table entries are too large");
-        return 0;
+        return NULL;
     }
-    entries_length = case_count * RXAS_JTABLE_LINEAR_ENTRY_SIZE;
-    if (SIZE_MAX - RXAS_JTABLE_HEADER_SIZE < entries_length ||
-        SIZE_MAX - RXAS_JTABLE_HEADER_SIZE - entries_length < key_blob_length) {
+    entries_length = info->case_count * RX_JTABLE_LINEAR_ENTRY_SIZE;
+    if (SIZE_MAX - RX_JTABLE_HEADER_SIZE < entries_length ||
+        SIZE_MAX - RX_JTABLE_HEADER_SIZE - entries_length < info->key_blob_length) {
         rxaserat(context, table->decl_token, "jump table payload is too large");
-        return 0;
+        return NULL;
     }
-    total_length = RXAS_JTABLE_HEADER_SIZE + entries_length + key_blob_length;
+    total_length = RX_JTABLE_HEADER_SIZE + entries_length + info->key_blob_length;
+    if (total_length > UINT32_MAX) {
+        rxaserat(context, table->decl_token, "jump table payload is too large");
+        return NULL;
+    }
     payload = calloc(total_length ? total_length : 1, 1);
     if (!payload) {
         RXAS_PANIC_OOM(context, "calloc rxas jump table payload", total_length ? total_length : 1, 0);
     }
 
-    payload[0] = RXAS_JTABLE_PACKED_ALG_LINEAR;
+    payload[0] = RX_JTABLE_ALG_LINEAR;
     payload[1] = 0;
-    rxas_write_u16le(payload + 2, RXAS_JTABLE_HEADER_SIZE);
-    rxas_write_u32le(payload + 4, (uint32_t)fixed_key_length);
-    rxas_write_u32le(payload + 8, (uint32_t)case_count);
+    rxas_write_u16le(payload + 2, RX_JTABLE_HEADER_SIZE);
+    rxas_write_u32le(payload + 4, (uint32_t)info->fixed_key_length);
+    rxas_write_u32le(payload + 8, (uint32_t)info->case_count);
 
-    entry_offset = RXAS_JTABLE_HEADER_SIZE;
-    key_offset = RXAS_JTABLE_HEADER_SIZE + entries_length;
+    entry_offset = RX_JTABLE_HEADER_SIZE;
+    key_offset = RX_JTABLE_HEADER_SIZE + entries_length;
     entry = table->cases;
     while (entry) {
-        size_t tree_index;
-        struct backpatching *label_patch;
-        uint32_t target_index;
-
-        if (key_offset > UINT32_MAX || entry->key_length > UINT32_MAX) {
-            rxaserat(context, entry->value_token, "jump table key offset is too large");
-            free(payload);
-            return 0;
-        }
-        if (!src_node(context->label_constants_tree, (char *)entry->label_token->token_value.string, &tree_index)) {
-            rxaserat(context, entry->label_token, "unknown jump table case label");
-            free(payload);
-            return 0;
-        }
-        label_patch = (struct backpatching *)tree_index;
-        if (!label_patch->defined) {
-            rxaserat(context, entry->label_token, "unknown jump table case label");
-            free(payload);
-            return 0;
-        }
-        if (label_patch->index > UINT32_MAX) {
-            rxaserat(context, entry->label_token, "jump table target address is too large");
-            free(payload);
-            return 0;
-        }
-        target_index = (uint32_t)label_patch->index;
         rxas_write_u32le(payload + entry_offset, (uint32_t)key_offset);
         rxas_write_u32le(payload + entry_offset + 4, (uint32_t)entry->key_length);
-        rxas_write_u32le(payload + entry_offset + 8, target_index);
+        rxas_write_u32le(payload + entry_offset + 8, entry->target);
         if (entry->key_length) memcpy(payload + key_offset, entry->key, entry->key_length);
         key_offset += entry->key_length;
-        entry_offset += RXAS_JTABLE_LINEAR_ENTRY_SIZE;
+        entry_offset += RX_JTABLE_LINEAR_ENTRY_SIZE;
         entry = entry->next;
     }
+
+    *length_out = total_length;
+    return payload;
+}
+
+static unsigned char *build_openhash_jump_table(Assembler_Context *context, struct rxas_jump_table *table,
+                                                const struct rxas_jtable_info *info, size_t *length_out) {
+    struct rxas_jtable_case *entry;
+    unsigned char *payload;
+    size_t desired_slots;
+    size_t slot_count;
+    size_t slots_length;
+    size_t total_length;
+    size_t key_offset;
+    size_t i;
+
+    if (info->case_count > SIZE_MAX / 2u) {
+        rxaserat(context, table->decl_token, "jump table has too many cases");
+        return NULL;
+    }
+    desired_slots = info->case_count * 2u;
+    slot_count = 1u;
+    while (slot_count < desired_slots) {
+        if (slot_count > UINT32_MAX / 2u) {
+            rxaserat(context, table->decl_token, "jump table has too many cases");
+            return NULL;
+        }
+        slot_count *= 2u;
+    }
+    if (slot_count > SIZE_MAX / RX_JTABLE_OPEN_SLOT_SIZE) {
+        rxaserat(context, table->decl_token, "jump table entries are too large");
+        return NULL;
+    }
+    slots_length = slot_count * RX_JTABLE_OPEN_SLOT_SIZE;
+    if (SIZE_MAX - RX_JTABLE_OPEN_HEADER_SIZE < slots_length ||
+        SIZE_MAX - RX_JTABLE_OPEN_HEADER_SIZE - slots_length < info->key_blob_length) {
+        rxaserat(context, table->decl_token, "jump table payload is too large");
+        return NULL;
+    }
+    total_length = RX_JTABLE_OPEN_HEADER_SIZE + slots_length + info->key_blob_length;
+    if (total_length >= UINT32_MAX) {
+        rxaserat(context, table->decl_token, "jump table payload is too large");
+        return NULL;
+    }
+    payload = calloc(total_length, 1);
+    if (!payload) RXAS_PANIC_OOM(context, "calloc open-hash jump table", total_length, 0);
+
+    payload[0] = RX_JTABLE_ALG_OPENHASH;
+    rxas_write_u16le(payload + 2, RX_JTABLE_OPEN_HEADER_SIZE);
+    rxas_write_u32le(payload + 4, (uint32_t)info->fixed_key_length);
+    rxas_write_u32le(payload + 8, (uint32_t)info->case_count);
+    rxas_write_u32le(payload + 12, (uint32_t)slot_count);
+    for (i = 0; i < slot_count; i++) {
+        rxas_write_u32le(payload + RX_JTABLE_OPEN_HEADER_SIZE + i * RX_JTABLE_OPEN_SLOT_SIZE + 4,
+                         RX_JTABLE_OPEN_EMPTY);
+    }
+
+    key_offset = RX_JTABLE_OPEN_HEADER_SIZE + slots_length;
+    entry = table->cases;
+    while (entry) {
+        uint32_t hash = rx_jtable_hash_bytes(entry->key, entry->key_length);
+        size_t slot = hash & (slot_count - 1u);
+        size_t slot_offset;
+
+        while ((uint32_t)payload[RX_JTABLE_OPEN_HEADER_SIZE + slot * RX_JTABLE_OPEN_SLOT_SIZE + 4] != 0xffu ||
+               (uint32_t)payload[RX_JTABLE_OPEN_HEADER_SIZE + slot * RX_JTABLE_OPEN_SLOT_SIZE + 5] != 0xffu ||
+               (uint32_t)payload[RX_JTABLE_OPEN_HEADER_SIZE + slot * RX_JTABLE_OPEN_SLOT_SIZE + 6] != 0xffu ||
+               (uint32_t)payload[RX_JTABLE_OPEN_HEADER_SIZE + slot * RX_JTABLE_OPEN_SLOT_SIZE + 7] != 0xffu) {
+            slot = (slot + 1u) & (slot_count - 1u);
+        }
+        slot_offset = RX_JTABLE_OPEN_HEADER_SIZE + slot * RX_JTABLE_OPEN_SLOT_SIZE;
+        rxas_write_u32le(payload + slot_offset, hash);
+        rxas_write_u32le(payload + slot_offset + 4, (uint32_t)key_offset);
+        rxas_write_u32le(payload + slot_offset + 8, (uint32_t)entry->key_length);
+        rxas_write_u32le(payload + slot_offset + 12, entry->target);
+        if (entry->key_length) memcpy(payload + key_offset, entry->key, entry->key_length);
+        key_offset += entry->key_length;
+        entry = entry->next;
+    }
+
+    *length_out = total_length;
+    return payload;
+}
+
+struct rxas_acph_job {
+    struct rxas_acph_node **destination;
+    struct rxas_jtable_case **cases;
+    size_t case_count;
+    struct rxas_acph_job *next;
+};
+
+static uint16_t acph_symbol_at(const struct rxas_jtable_case *entry, size_t column) {
+    return column < entry->key_length ? entry->key[column] : RX_JTABLE_ACPH_END_SYMBOL;
+}
+
+static int acph_select_hash(struct rxas_jtable_case **cases, size_t case_count,
+                            uint32_t *column_out, uint16_t *slot_count_out,
+                            unsigned char *prime_out) {
+    static const unsigned char primes[] = {
+        2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53,
+        59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 113, 127,
+        131, 137, 149, 151, 157, 163, 167, 173, 211, 223, 227, 229,
+        233, 239, 241, 251
+    };
+    size_t best_column = 0;
+    size_t best_max_group = case_count + 1u;
+    size_t best_unique = 0;
+    unsigned char best_present[RX_JTABLE_ACPH_SYMBOL_COUNT] = {0};
+    size_t max_length = 0;
+    size_t column;
+    size_t i;
+
+    for (i = 0; i < case_count; i++) {
+        if (cases[i]->key_length > max_length) max_length = cases[i]->key_length;
+    }
+    if (max_length > UINT32_MAX) return 0;
+
+    for (column = 0; column <= max_length; column++) {
+        size_t counts[RX_JTABLE_ACPH_SYMBOL_COUNT] = {0};
+        size_t max_group = 0;
+        size_t unique = 0;
+
+        for (i = 0; i < case_count; i++) {
+            uint16_t symbol = acph_symbol_at(cases[i], column);
+            counts[symbol]++;
+            if (counts[symbol] == 1u) unique++;
+            if (counts[symbol] > max_group) max_group = counts[symbol];
+        }
+        if (max_group < best_max_group) {
+            size_t symbol;
+            best_column = column;
+            best_max_group = max_group;
+            best_unique = unique;
+            for (symbol = 0; symbol < RX_JTABLE_ACPH_SYMBOL_COUNT; symbol++) {
+                best_present[symbol] = counts[symbol] != 0;
+            }
+        }
+    }
+    if (case_count > 1u && best_unique < 2u) return 0;
+
+    for (i = best_unique ? best_unique : 1u; i <= RX_JTABLE_ACPH_SYMBOL_COUNT; i++) {
+        size_t prime_index;
+
+        if (i == RX_JTABLE_ACPH_SYMBOL_COUNT) {
+            *column_out = (uint32_t)best_column;
+            *slot_count_out = (uint16_t)i;
+            *prime_out = 1u;
+            return 1;
+        }
+        for (prime_index = 0; prime_index < sizeof(primes); prime_index++) {
+            uint16_t used[RX_JTABLE_ACPH_SYMBOL_COUNT];
+            size_t symbol;
+            int collision = 0;
+
+            for (symbol = 0; symbol < i; symbol++) used[symbol] = UINT16_MAX;
+            for (symbol = 0; symbol < RX_JTABLE_ACPH_SYMBOL_COUNT; symbol++) {
+                size_t slot;
+
+                if (!best_present[symbol]) continue;
+                slot = rx_jtable_acph_hash((uint16_t)symbol, primes[prime_index], (uint16_t)i);
+                if (used[slot] != UINT16_MAX && used[slot] != symbol) {
+                    collision = 1;
+                    break;
+                }
+                used[slot] = (uint16_t)symbol;
+            }
+            if (!collision) {
+                *column_out = (uint32_t)best_column;
+                *slot_count_out = (uint16_t)i;
+                *prime_out = primes[prime_index];
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+static void free_acph_nodes(struct rxas_acph_node *nodes) {
+    while (nodes) {
+        struct rxas_acph_node *next = nodes->next_all;
+        free(nodes->slots);
+        free(nodes);
+        nodes = next;
+    }
+}
+
+static void free_acph_jobs(struct rxas_acph_job *jobs) {
+    while (jobs) {
+        struct rxas_acph_job *next = jobs->next;
+        free(jobs->cases);
+        free(jobs);
+        jobs = next;
+    }
+}
+
+static int build_acph_nodes(Assembler_Context *context, struct rxas_jump_table *table,
+                            const struct rxas_jtable_info *info, struct rxas_acph_node **root_out,
+                            struct rxas_acph_node **nodes_out) {
+    struct rxas_acph_job *jobs;
+    struct rxas_acph_node *all_nodes = NULL;
+    struct rxas_acph_node *all_tail = NULL;
+    struct rxas_jtable_case *entry;
+    size_t i;
+
+    jobs = calloc(1, sizeof(*jobs));
+    if (!jobs) RXAS_PANIC_OOM(context, "calloc ACPH build job", sizeof(*jobs), 0);
+    jobs->cases = malloc(info->case_count * sizeof(*jobs->cases));
+    if (!jobs->cases) RXAS_PANIC_OOM(context, "malloc ACPH root cases", info->case_count * sizeof(*jobs->cases), 0);
+    jobs->case_count = info->case_count;
+    jobs->destination = root_out;
+    entry = table->cases;
+    for (i = 0; i < info->case_count; i++) {
+        jobs->cases[i] = entry;
+        entry = entry->next;
+    }
+
+    while (jobs) {
+        struct rxas_acph_job *job = jobs;
+        struct rxas_acph_node *node;
+        struct rxas_jtable_case **grouped;
+        size_t counts[RX_JTABLE_ACPH_SYMBOL_COUNT] = {0};
+        size_t offsets[RX_JTABLE_ACPH_SYMBOL_COUNT];
+        size_t placed[RX_JTABLE_ACPH_SYMBOL_COUNT] = {0};
+        size_t next_offset = 0;
+
+        jobs = job->next;
+        node = calloc(1, sizeof(*node));
+        if (!node) RXAS_PANIC_OOM(context, "calloc ACPH node", sizeof(*node), 0);
+        if (!acph_select_hash(job->cases, job->case_count, &node->column,
+                              &node->slot_count, &node->prime)) {
+            rxaserat(context, table->decl_token, "could not construct ACPH jump table");
+            free(node);
+            free(job->cases);
+            free(job);
+            free_acph_jobs(jobs);
+            free_acph_nodes(all_nodes);
+            return 0;
+        }
+        node->slots = calloc(node->slot_count, sizeof(*node->slots));
+        if (!node->slots) RXAS_PANIC_OOM(context, "calloc ACPH slots", node->slot_count * sizeof(*node->slots), 0);
+        *job->destination = node;
+        if (all_tail) all_tail->next_all = node;
+        else all_nodes = node;
+        all_tail = node;
+
+        for (i = 0; i < job->case_count; i++) {
+            uint16_t symbol = acph_symbol_at(job->cases[i], node->column);
+            size_t slot = rx_jtable_acph_hash(symbol, node->prime, node->slot_count);
+            counts[slot]++;
+            node->slots[slot].symbol = symbol;
+        }
+        for (i = 0; i < node->slot_count; i++) {
+            offsets[i] = next_offset;
+            next_offset += counts[i];
+        }
+        grouped = malloc(job->case_count * sizeof(*grouped));
+        if (!grouped) RXAS_PANIC_OOM(context, "malloc ACPH grouped cases", job->case_count * sizeof(*grouped), 0);
+        for (i = 0; i < job->case_count; i++) {
+            uint16_t symbol = acph_symbol_at(job->cases[i], node->column);
+            size_t slot = rx_jtable_acph_hash(symbol, node->prime, node->slot_count);
+            grouped[offsets[slot] + placed[slot]++] = job->cases[i];
+        }
+        for (i = node->slot_count; i-- > 0;) {
+            if (counts[i] == 1u) {
+                node->slots[i].kind = RX_JTABLE_ACPH_SLOT_LEAF;
+                node->slots[i].leaf = grouped[offsets[i]];
+            }
+            else if (counts[i] > 1u) {
+                struct rxas_acph_job *child_job = calloc(1, sizeof(*child_job));
+                if (!child_job) RXAS_PANIC_OOM(context, "calloc ACPH child job", sizeof(*child_job), 0);
+                child_job->cases = malloc(counts[i] * sizeof(*child_job->cases));
+                if (!child_job->cases) RXAS_PANIC_OOM(context, "malloc ACPH child cases", counts[i] * sizeof(*child_job->cases), 0);
+                memcpy(child_job->cases, grouped + offsets[i], counts[i] * sizeof(*child_job->cases));
+                child_job->case_count = counts[i];
+                child_job->destination = &node->slots[i].child;
+                child_job->next = jobs;
+                jobs = child_job;
+                node->slots[i].kind = RX_JTABLE_ACPH_SLOT_CHILD;
+            }
+        }
+        free(grouped);
+        free(job->cases);
+        free(job);
+    }
+
+    *nodes_out = all_nodes;
+    return 1;
+}
+
+static unsigned char *build_acph_jump_table(Assembler_Context *context, struct rxas_jump_table *table,
+                                            const struct rxas_jtable_info *info, size_t *length_out) {
+    struct rxas_acph_node *root = NULL;
+    struct rxas_acph_node *nodes = NULL;
+    struct rxas_acph_node *node;
+    unsigned char *payload;
+    size_t offset;
+    size_t leaf_offset;
+    size_t key_offset;
+    size_t total_length;
+    size_t i;
+
+    if (!build_acph_nodes(context, table, info, &root, &nodes)) return NULL;
+    offset = RX_JTABLE_ACPH_HEADER_SIZE;
+    for (node = nodes; node; node = node->next_all) {
+        size_t node_length = RX_JTABLE_ACPH_NODE_SIZE + (size_t)node->slot_count * RX_JTABLE_ACPH_SLOT_SIZE;
+        if (SIZE_MAX - offset < node_length || offset + node_length > UINT32_MAX) {
+            rxaserat(context, table->decl_token, "ACPH jump table nodes are too large");
+            free_acph_nodes(nodes);
+            return NULL;
+        }
+        node->packed_offset = (uint32_t)offset;
+        offset += node_length;
+    }
+    if (info->case_count > (SIZE_MAX - offset) / RX_JTABLE_ACPH_LEAF_SIZE) {
+        rxaserat(context, table->decl_token, "ACPH jump table leaves are too large");
+        free_acph_nodes(nodes);
+        return NULL;
+    }
+    leaf_offset = offset;
+    offset += info->case_count * RX_JTABLE_ACPH_LEAF_SIZE;
+    key_offset = offset;
+    if (SIZE_MAX - key_offset < info->key_blob_length || key_offset + info->key_blob_length > UINT32_MAX) {
+        rxaserat(context, table->decl_token, "ACPH jump table payload is too large");
+        free_acph_nodes(nodes);
+        return NULL;
+    }
+    total_length = key_offset + info->key_blob_length;
+
+    for (node = nodes; node; node = node->next_all) {
+        for (i = 0; i < node->slot_count; i++) {
+            if (node->slots[i].kind == RX_JTABLE_ACPH_SLOT_LEAF) {
+                node->slots[i].packed_value_offset = (uint32_t)leaf_offset;
+                leaf_offset += RX_JTABLE_ACPH_LEAF_SIZE;
+            }
+        }
+    }
+
+    payload = calloc(total_length, 1);
+    if (!payload) RXAS_PANIC_OOM(context, "calloc ACPH jump table", total_length, 0);
+    payload[0] = RX_JTABLE_ALG_ACPH;
+    rxas_write_u16le(payload + 2, RX_JTABLE_ACPH_HEADER_SIZE);
+    rxas_write_u32le(payload + 4, (uint32_t)info->fixed_key_length);
+    rxas_write_u32le(payload + 8, (uint32_t)info->case_count);
+    rxas_write_u32le(payload + 12, root->packed_offset);
+
+    for (node = nodes; node; node = node->next_all) {
+        size_t node_offset = node->packed_offset;
+        rxas_write_u32le(payload + node_offset, node->column);
+        rxas_write_u16le(payload + node_offset + 4, node->slot_count);
+        payload[node_offset + 6] = node->prime;
+        for (i = 0; i < node->slot_count; i++) {
+            struct rxas_acph_slot *slot = &node->slots[i];
+            size_t slot_offset = node_offset + RX_JTABLE_ACPH_NODE_SIZE + i * RX_JTABLE_ACPH_SLOT_SIZE;
+            rxas_write_u16le(payload + slot_offset, slot->symbol);
+            payload[slot_offset + 2] = slot->kind;
+            if (slot->kind == RX_JTABLE_ACPH_SLOT_LEAF) {
+                struct rxas_jtable_case *leaf = slot->leaf;
+                rxas_write_u32le(payload + slot_offset + 4, slot->packed_value_offset);
+                rxas_write_u32le(payload + slot->packed_value_offset, (uint32_t)key_offset);
+                rxas_write_u32le(payload + slot->packed_value_offset + 4, (uint32_t)leaf->key_length);
+                rxas_write_u32le(payload + slot->packed_value_offset + 8, leaf->target);
+                if (leaf->key_length) memcpy(payload + key_offset, leaf->key, leaf->key_length);
+                key_offset += leaf->key_length;
+            }
+            else if (slot->kind == RX_JTABLE_ACPH_SLOT_CHILD) {
+                rxas_write_u32le(payload + slot_offset + 4, slot->child->packed_offset);
+            }
+        }
+    }
+    free_acph_nodes(nodes);
+    *length_out = total_length;
+    return payload;
+}
+
+static int build_one_jump_table(Assembler_Context *context, struct rxas_jump_table *table) {
+    struct rxas_jtable_ref *ref;
+    struct rxas_jtable_info info;
+    unsigned char *payload;
+    size_t total_length;
+    size_t pool_index;
+    int algorithm;
+
+    if (!table->declared) {
+        if (table->refs) rxaserat(context, table->refs->token, "unknown jump table");
+        else if (table->cases) rxaserat(context, table->cases->value_token, "unknown jump table");
+        return 0;
+    }
+    if (!prepare_jump_table(context, table, &info)) return 0;
+
+    algorithm = table->algorithm == RXAS_JTABLE_ALG_AUTO
+                ? rx_jtable_select_auto(info.case_count, info.key_blob_length)
+                : table->algorithm;
+    switch (algorithm) {
+        case RXAS_JTABLE_ALG_LINEAR:
+            payload = build_linear_jump_table(context, table, &info, &total_length);
+            break;
+        case RXAS_JTABLE_ALG_OPENHASH:
+            payload = build_openhash_jump_table(context, table, &info, &total_length);
+            break;
+        case RXAS_JTABLE_ALG_ACPH:
+            payload = build_acph_jump_table(context, table, &info, &total_length);
+            break;
+        default:
+            payload = NULL;
+            rxaserat(context, table->decl_token, "unknown jump table algorithm");
+            break;
+    }
+    if (!payload) return 0;
 
     pool_index = add_raw_binary_to_pool(context, payload, total_length);
     free(payload);

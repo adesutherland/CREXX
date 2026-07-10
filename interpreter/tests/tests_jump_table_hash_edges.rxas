@@ -1,0 +1,131 @@
+/* Empty, prefix-sharing, late-hit, and miss cases for packed hash tables. */
+
+.globals=0
+
+main() .locals=8
+    .jtable open_words OpenHash
+    br open_after_cases
+open_empty: .jcase open_words ""
+    load r2,10
+    br open_check_empty
+open_a: .jcase open_words "a"
+    load r2,11
+    br open_check_late
+open_ab: .jcase open_words "ab"
+    load r2,12
+    br open_check_late
+open_abc: .jcase open_words "abc"
+    load r2,13
+    br open_check_late
+open_000: .jcase open_words "prefix-common-000"
+    load r2,20
+    br open_check_late
+open_001: .jcase open_words "prefix-common-001"
+    load r2,21
+    br open_check_late
+open_002: .jcase open_words "prefix-common-002"
+    load r2,22
+    br open_check_late
+open_003: .jcase open_words "prefix-common-003"
+    load r2,23
+    br open_check_late
+open_004: .jcase open_words "prefix-common-004"
+    load r2,24
+    br open_check_late
+open_005: .jcase open_words "prefix-common-005"
+    load r2,25
+    br open_check_late
+open_006: .jcase open_words "prefix-common-006"
+    load r2,26
+    br open_check_late
+open_007: .jcase open_words "prefix-common-007"
+    load r2,27
+    br open_check_late
+open_after_cases:
+    load r0,""
+    jumps r0,open_words
+    br fail_open_empty
+open_check_empty:
+    ieq r3,r2,10
+    brf fail_open_empty,r3
+    load r0,"prefix-common-007"
+    jumps r0,open_words
+    br fail_open_late
+open_check_late:
+    ieq r3,r2,27
+    brf fail_open_late,r3
+    load r0,"prefix-common-999"
+    jumps r0,open_words
+    br open_miss_ok
+open_miss_ok:
+
+    .jtable acph_words ACPH
+    br acph_after_cases
+acph_empty: .jcase acph_words ""
+    load r2,30
+    br acph_check_empty
+acph_a: .jcase acph_words "a"
+    load r2,31
+    br acph_check_late
+acph_ab: .jcase acph_words "ab"
+    load r2,32
+    br acph_check_late
+acph_abc: .jcase acph_words "abc"
+    load r2,33
+    br acph_check_late
+acph_000: .jcase acph_words "prefix-common-000"
+    load r2,40
+    br acph_check_late
+acph_001: .jcase acph_words "prefix-common-001"
+    load r2,41
+    br acph_check_late
+acph_002: .jcase acph_words "prefix-common-002"
+    load r2,42
+    br acph_check_late
+acph_003: .jcase acph_words "prefix-common-003"
+    load r2,43
+    br acph_check_late
+acph_004: .jcase acph_words "prefix-common-004"
+    load r2,44
+    br acph_check_late
+acph_005: .jcase acph_words "prefix-common-005"
+    load r2,45
+    br acph_check_late
+acph_006: .jcase acph_words "prefix-common-006"
+    load r2,46
+    br acph_check_late
+acph_007: .jcase acph_words "prefix-common-007"
+    load r2,47
+    br acph_check_late
+acph_after_cases:
+    load r0,""
+    jumps r0,acph_words
+    br fail_acph_empty
+acph_check_empty:
+    ieq r3,r2,30
+    brf fail_acph_empty,r3
+    load r0,"prefix-common-007"
+    jumps r0,acph_words
+    br fail_acph_late
+acph_check_late:
+    ieq r3,r2,47
+    brf fail_acph_late,r3
+    load r0,"prefix-common-999"
+    jumps r0,acph_words
+    br acph_miss_ok
+acph_miss_ok:
+    say "PASS: Jump Table Hash Edge Cases"
+    ret 0
+
+fail_open_empty:
+    say "FAIL: open-hash empty key"
+    ret 1
+fail_open_late:
+    say "FAIL: open-hash late hit or miss"
+    ret 1
+fail_acph_empty:
+    say "FAIL: ACPH empty key"
+    ret 1
+fail_acph_late:
+    say "FAIL: ACPH late hit or miss"
+    ret 1
