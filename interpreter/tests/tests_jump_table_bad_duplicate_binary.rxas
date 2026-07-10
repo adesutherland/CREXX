@@ -1,0 +1,17 @@
+/*
+ * Duplicate detection is after binary key canonicalization, not source spelling.
+ */
+
+.globals=0
+
+main() .locals=2
+    .jtable bytes linear
+    br done
+first_key: .jcase bytes 0x0A
+    ret 0
+second_key: .jcase bytes 0x0a
+    ret 0
+done:
+    load r0,0x0a
+    jumpb r0,bytes
+    ret 0

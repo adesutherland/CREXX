@@ -685,6 +685,8 @@ crexx_add_rxas_vm_binary(tests_binary_memory "typed binary memory operations")
 crexx_add_vm_dual_test(NAME rxasbinarymemorytests RXVM_ARGS tests_binary_memory PASS_REGULAR_EXPRESSION "PASS: Binary Memory Typed Ops")
 crexx_add_rxas_vm_binary(tests_jump_table "linear jump table dispatch")
 crexx_add_vm_dual_test(NAME rxasjumptabletests RXVM_ARGS tests_jump_table PASS_REGULAR_EXPRESSION "PASS: Jump Table Linear Ops")
+crexx_add_rxas_vm_binary(tests_jump_table_linear_sources "linear jump table source matrix")
+crexx_add_vm_dual_test(NAME rxasjumptablelinearsources RXVM_ARGS tests_jump_table_linear_sources PASS_REGULAR_EXPRESSION "PASS: Jump Table Linear Source Matrix")
 crexx_add_rxas_assembly_failure_regex(rxasjumptablebadnolabel tests_jump_table_bad_no_label "\\.jcase must decorate a same-line label")
 crexx_add_rxas_assembly_failure_regex(rxasjumptablebadunknown tests_jump_table_bad_unknown "unknown jump table")
 crexx_add_rxas_assembly_failure_regex(rxasjumptablebadjumpbsvariable tests_jump_table_bad_jumpbs_variable "jumpbs requires fixed-length")
@@ -692,6 +694,10 @@ crexx_add_rxas_assembly_failure_regex(rxasjumptablebadduplicate tests_jump_table
 crexx_add_rxas_assembly_failure_regex(rxasjumptablebadtypemismatch tests_jump_table_bad_type_mismatch "jump table key type mismatch")
 crexx_add_rxas_assembly_failure_regex(rxasjumptablebadempty tests_jump_table_bad_empty "jump table has no cases")
 crexx_add_rxas_assembly_failure_regex(rxasjumptablebadalgorithm tests_jump_table_bad_algorithm "jump table algorithm is not implemented yet")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadduplicatebinary tests_jump_table_bad_duplicate_binary "duplicate jump table case key")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadduplicatetable tests_jump_table_bad_duplicate_table "duplicate jump table declaration")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadalgorithmname tests_jump_table_bad_algorithm_name "jump table algorithm must be auto, linear, openhash, or acph")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadoperand tests_jump_table_bad_operand "jump table instruction requires a \\.jtable name operand")
 
 # Socket Instruction Tests
 add_custom_command(
