@@ -2,14 +2,14 @@
 
 This inventory is for coverage validation. Every mnemonic from `rxas -i` should appear exactly once with its current primary skeleton section.
 
-- Unique mnemonics: 334
-- Opcode/form rows: 529
+- Unique mnemonics: 338
+- Opcode/form rows: 533
 
 ## Section Counts
 
 | Section | Mnemonics |
 | --- | ---: |
-| [Program Control And Calls](instructions/01-program-control.md) | 20 |
+| [Program Control And Calls](instructions/01-program-control.md) | 24 |
 | [Data Movement And Conversion](instructions/02-data-movement-and-conversion.md) | 7 |
 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md) | 44 |
 | [Floating Point](instructions/04-floating-point.md) | 24 |
@@ -220,6 +220,10 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `itof` | 1 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#itof) |
 | `itos` | 1 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#itos) |
 | `ixor` | 2 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#ixor) |
+| `jumpb` | 1 | [Program Control And Calls](instructions/01-program-control.md#jumpb) |
+| `jumpbs` | 1 | [Program Control And Calls](instructions/01-program-control.md#jumpbs) |
+| `jumpi` | 1 | [Program Control And Calls](instructions/01-program-control.md#jumpi) |
+| `jumps` | 1 | [Program Control And Calls](instructions/01-program-control.md#jumps) |
 | `link` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#link) |
 | `linkarg` | 2 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#linkarg) |
 | `linkattr` | 2 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#linkattr) |

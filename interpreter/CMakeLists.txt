@@ -413,6 +413,37 @@ function(crexx_add_rxas_vm_failure_regex NAME SOURCE_NAME EXPECTED_REGEX)
     set_tests_properties(${NAME} PROPERTIES LABELS "interpreter;rxas;utf")
 endfunction()
 
+function(crexx_add_rxas_assembly_failure_regex NAME SOURCE_NAME EXPECTED_REGEX)
+    set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
+    set(SCRIPT_CONTENT "")
+    set(DOLLAR "$")
+
+    string(APPEND SCRIPT_CONTENT
+            "execute_process(\n"
+            "  COMMAND \"$<TARGET_FILE:rxas>\" -o \"${SOURCE_NAME}\" \"${CMAKE_CURRENT_SOURCE_DIR}/tests/${SOURCE_NAME}.rxas\"\n"
+            "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+            "  OUTPUT_VARIABLE rxas_out\n"
+            "  ERROR_VARIABLE rxas_err\n"
+            "  RESULT_VARIABLE rxas_res\n"
+            ")\n"
+            "set(full_out \"${DOLLAR}{rxas_out}${DOLLAR}{rxas_err}\")\n"
+            "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"${DOLLAR}{full_out}\")\n"
+            "if(rxas_res EQUAL 0)\n"
+            "  message(FATAL_ERROR \"Expected rxas to reject ${SOURCE_NAME}.\\nSTDOUT/STDERR:\\n${DOLLAR}{full_out}\")\n"
+            "endif()\n"
+            "if(NOT full_out MATCHES \"${EXPECTED_REGEX}\")\n"
+            "  message(FATAL_ERROR \"Expected ${SOURCE_NAME} to report ${EXPECTED_REGEX}.\\nSTDOUT/STDERR:\\n${DOLLAR}{full_out}\\nExit: ${DOLLAR}{rxas_res}\")\n"
+            "endif()\n")
+
+    file(GENERATE OUTPUT "${SCRIPT_FILE}" CONTENT "${SCRIPT_CONTENT}")
+
+    add_test(
+            NAME ${NAME}
+            COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(${NAME} PROPERTIES LABELS "interpreter;rxas;jtable")
+endfunction()
+
 # Value Tests
 add_test(
 		NAME ts_regvalue_tester
@@ -652,6 +683,15 @@ crexx_add_rxas_vm_binary(tests_binary "binary buffer and I/O")
 crexx_add_vm_dual_test(NAME rxasbinarylegacytests RXVM_ARGS tests_binary PASS_REGULAR_EXPRESSION "PASS: Binary Buffer IO and Legacy Cursor Ops")
 crexx_add_rxas_vm_binary(tests_binary_memory "typed binary memory operations")
 crexx_add_vm_dual_test(NAME rxasbinarymemorytests RXVM_ARGS tests_binary_memory PASS_REGULAR_EXPRESSION "PASS: Binary Memory Typed Ops")
+crexx_add_rxas_vm_binary(tests_jump_table "linear jump table dispatch")
+crexx_add_vm_dual_test(NAME rxasjumptabletests RXVM_ARGS tests_jump_table PASS_REGULAR_EXPRESSION "PASS: Jump Table Linear Ops")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadnolabel tests_jump_table_bad_no_label "\\.jcase must decorate a same-line label")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadunknown tests_jump_table_bad_unknown "unknown jump table")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadjumpbsvariable tests_jump_table_bad_jumpbs_variable "jumpbs requires fixed-length")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadduplicate tests_jump_table_bad_duplicate "duplicate jump table case key")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadtypemismatch tests_jump_table_bad_type_mismatch "jump table key type mismatch")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadempty tests_jump_table_bad_empty "jump table has no cases")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadalgorithm tests_jump_table_bad_algorithm "jump table algorithm is not implemented yet")
 
 # Socket Instruction Tests
 add_custom_command(

@@ -1,0 +1,14 @@
+.globals=0
+
+main() .locals=4
+    .jtable bytes linear
+    br after_cases
+short_key: .jcase bytes 0x01
+    ret 1
+long_key: .jcase bytes 0x0203
+    ret 1
+after_cases:
+    load r1,0x010203
+    load r2,0
+    jumpbs r1,r2,bytes
+    ret 0

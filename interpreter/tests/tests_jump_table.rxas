@@ -1,0 +1,117 @@
+/*
+ * CREXX Interpreter tests for linear RXAS jump tables.
+ */
+
+.globals=0
+
+main() .locals=20
+    .jtable words linear
+    br after_word_cases
+word_if: .jcase words "if"
+    load r10,11
+    br after_word_jump
+word_else: .jcase words "else"
+    load r10,22
+    br after_word_jump
+after_word_cases:
+    load r1,"else"
+    jumps r1,words
+    br fail_jumps
+after_word_jump:
+    ieq r0,r10,22
+    brf fail_jumps_target,r0
+
+    load r1,"missing"
+    jumps r1,words
+    br word_miss_ok
+    br fail_jumps_miss
+word_miss_ok:
+
+    .jtable ints auto
+    br after_int_cases
+int_minus: .jcase ints -7
+    load r11,7
+    br after_int_jump
+int_answer: .jcase ints 42
+    load r11,42
+    br after_int_jump
+after_int_cases:
+    load r2,42
+    jumpi r2,ints
+    br fail_jumpi
+after_int_jump:
+    ieq r0,r11,42
+    brf fail_jumpi_target,r0
+
+    .jtable bytes linear
+    br after_byte_cases
+bytes_ab: .jcase bytes 0x6162
+    load r12,12
+    br after_byte_jump
+bytes_cd: .jcase bytes 0x6364
+    load r12,34
+    br after_byte_jump
+after_byte_cases:
+    load r3,0x6364
+    jumpb r3,bytes
+    br fail_jumpb
+after_byte_jump:
+    ieq r0,r12,34
+    brf fail_jumpb_target,r0
+
+    .jtable slices linear
+    br after_slice_cases
+slice_bc: .jcase slices 0x6263
+    load r13,23
+    br after_slice_jump
+slice_de: .jcase slices 0x6465
+    load r13,45
+    br after_slice_jump
+after_slice_cases:
+    load r4,0x6162636465
+    load r5,1
+    jumpbs r4,r5,slices
+    br fail_jumpbs
+after_slice_jump:
+    ieq r0,r13,23
+    brf fail_jumpbs_target,r0
+
+    sigbr catch_jumpbs_oob,"OUT_OF_RANGE"
+    load r5,99
+    jumpbs r4,r5,slices
+    br fail_jumpbs_oob
+
+catch_jumpbs_oob:
+    say "PASS: Jump Table Linear Ops"
+    ret 0
+
+fail_jumps:
+    say "FAIL: jumps did not branch"
+    ret 1
+fail_jumps_target:
+    say "FAIL: jumps wrong target"
+    ret 1
+fail_jumps_miss:
+    say "FAIL: jumps miss did not fall through"
+    ret 1
+fail_jumpi:
+    say "FAIL: jumpi did not branch"
+    ret 1
+fail_jumpi_target:
+    say "FAIL: jumpi wrong target"
+    ret 1
+fail_jumpb:
+    say "FAIL: jumpb did not branch"
+    ret 1
+fail_jumpb_target:
+    say "FAIL: jumpb wrong target"
+    ret 1
+fail_jumpbs:
+    say "FAIL: jumpbs did not branch"
+    ret 1
+fail_jumpbs_target:
+    say "FAIL: jumpbs wrong target"
+    ret 1
+fail_jumpbs_oob:
+    say "FAIL: jumpbs out-of-bounds did not signal"
+    ret 1

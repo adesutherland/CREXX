@@ -653,3 +653,7 @@ X(BCMPS_REG_REG_REG, 627, FMT_R_R_R, FLOW_NEXT, 0, "Compare zero-terminated UTF-
 X(BCMPS_REG_REG_STRING, 628, FMT_R_R_S, FLOW_NEXT, 0, "Compare zero-terminated UTF-8 string from binary register op2 at offset op1 with string constant op3")
 X(BCMPS_REG_BINARY_REG, 629, FMT_R_B_R, FLOW_NEXT, 0, "Compare zero-terminated UTF-8 string from binary constant op2 at offset op1 with string register op3")
 X(BCMPS_REG_BINARY_STRING, 630, FMT_R_B_S, FLOW_NEXT, 0, "Compare zero-terminated UTF-8 string from binary constant op2 at offset op1 with string constant op3")
+X(JUMPS_REG_BINARY, 631, FMT_R_B, FLOW_COND, 0, "Jump through table op2 using string register op1")
+X(JUMPB_REG_BINARY, 632, FMT_R_B, FLOW_COND, 0, "Jump through table op2 using binary register op1")
+X(JUMPBS_REG_REG_BINARY, 633, FMT_R_R_B, FLOW_COND, 0, "Jump through fixed-width table op3 using binary register op1 at byte offset op2")
+X(JUMPI_REG_BINARY, 634, FMT_R_B, FLOW_COND, 0, "Jump through table op2 using integer register op1")

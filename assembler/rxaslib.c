@@ -151,7 +151,10 @@ int rxasinbf(Assembler_Context *scanner) {
     scanner->proc_constants_tree = 0;
     scanner->label_constants_tree = 0;
     scanner->extern_constants_tree = 0;
+    scanner->jump_tables = 0;
     scanner->extern_regs = 0;
+    scanner->current_proc_name = 0;
+    scanner->last_label_token = 0;
     scanner->proc_head = -1;
     scanner->proc_tail = -1;
     scanner->expose_head = -1;

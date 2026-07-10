@@ -465,6 +465,76 @@ static int rxvm_compare_bytes(const unsigned char *left, size_t left_len,
     return 0;
 }
 
+#define RXVM_JTABLE_ALG_LINEAR 1
+#define RXVM_JTABLE_HEADER_SIZE 12
+#define RXVM_JTABLE_LINEAR_ENTRY_SIZE 12
+
+static int rxvm_jtable_read_header(string_constant *table, uint32_t *key_length,
+                                   uint32_t *case_count, uint16_t *header_size) {
+    const unsigned char *bytes;
+    size_t entries_length;
+
+    if (!table || table->string_len < RXVM_JTABLE_HEADER_SIZE) return 0;
+    bytes = (const unsigned char *)table->string;
+    if (bytes[0] != RXVM_JTABLE_ALG_LINEAR) return 0;
+    *header_size = (uint16_t)rxvm_binary_read_le_bytes(bytes, 2, 2);
+    if (*header_size < RXVM_JTABLE_HEADER_SIZE || *header_size > table->string_len) return 0;
+    *key_length = (uint32_t)rxvm_binary_read_le_bytes(bytes, 4, 4);
+    *case_count = (uint32_t)rxvm_binary_read_le_bytes(bytes, 8, 4);
+    if ((size_t)*case_count > SIZE_MAX / RXVM_JTABLE_LINEAR_ENTRY_SIZE) return 0;
+    entries_length = (size_t)(*case_count) * RXVM_JTABLE_LINEAR_ENTRY_SIZE;
+    if ((size_t)*header_size > SIZE_MAX - entries_length ||
+        (size_t)*header_size + entries_length > table->string_len) return 0;
+    return 1;
+}
+
+static int rxvm_jtable_fixed_key_length(string_constant *table, size_t *key_length_out) {
+    uint32_t key_length;
+    uint32_t case_count;
+    uint16_t header_size;
+
+    if (!rxvm_jtable_read_header(table, &key_length, &case_count, &header_size)) return -1;
+    if (key_length == 0) return 0;
+    *key_length_out = (size_t)key_length;
+    return 1;
+}
+
+static int rxvm_jtable_lookup_linear(string_constant *table, const unsigned char *key,
+                                     size_t key_length, size_t *target_out) {
+    const unsigned char *bytes;
+    uint32_t fixed_key_length;
+    uint32_t case_count;
+    uint16_t header_size;
+    size_t entry_offset;
+    uint32_t i;
+
+    if (!rxvm_jtable_read_header(table, &fixed_key_length, &case_count, &header_size)) return -1;
+    if (fixed_key_length != 0 && key_length != fixed_key_length) return 0;
+
+    bytes = (const unsigned char *)table->string;
+    entry_offset = header_size;
+    for (i = 0; i < case_count; i++) {
+        uint32_t key_offset;
+        uint32_t entry_key_length;
+        uint32_t target;
+
+        key_offset = (uint32_t)rxvm_binary_read_le_bytes(bytes, entry_offset, 4);
+        entry_key_length = (uint32_t)rxvm_binary_read_le_bytes(bytes, entry_offset + 4, 4);
+        target = (uint32_t)rxvm_binary_read_le_bytes(bytes, entry_offset + 8, 4);
+        if ((size_t)key_offset > table->string_len ||
+            (size_t)entry_key_length > table->string_len - (size_t)key_offset) {
+            return -1;
+        }
+        if ((size_t)entry_key_length == key_length &&
+            (key_length == 0 || memcmp(bytes + key_offset, key, key_length) == 0)) {
+            *target_out = (size_t)target;
+            return 1;
+        }
+        entry_offset += RXVM_JTABLE_LINEAR_ENTRY_SIZE;
+    }
+    return 0;
+}
+
 static int rxvm_binary_field_is_valid_utf8(const void *bytes, size_t length) {
 #ifndef NUTF8
     return validate_utf8_bytes(bytes, length, 0) == 0;
@@ -2526,6 +2596,8 @@ const char *interrupt_to_string(unsigned char interrupt) {
             return "REFERENCE_INVALID";
         case RXSIGNAL_OBJECT_NOT_INITIALIZED:
             return "OBJECT_NOT_INITIALIZED";
+        case RXSIGNAL_RXBIN_CORRUPTION:
+            return "RXBIN_CORRUPTION";
         case RXSIGNAL_OUT_OF_RANGE:
             return "OUT_OF_RANGE";
         case RXSIGNAL_FAILURE:
@@ -2573,6 +2645,7 @@ unsigned char string_to_interrupt(const char *interrupt) {
     if (strcmp(interrupt, "INVALID_SIGNAL_CODE") == 0) return RXSIGNAL_INVALID_SIGNAL_CODE;
     if (strcmp(interrupt, "REFERENCE_INVALID") == 0) return RXSIGNAL_REFERENCE_INVALID;
     if (strcmp(interrupt, "OBJECT_NOT_INITIALIZED") == 0) return RXSIGNAL_OBJECT_NOT_INITIALIZED;
+    if (strcmp(interrupt, "RXBIN_CORRUPTION") == 0) return RXSIGNAL_RXBIN_CORRUPTION;
     if (strcmp(interrupt, "OUT_OF_RANGE") == 0) return RXSIGNAL_OUT_OF_RANGE;
     if (strcmp(interrupt, "FAILURE") == 0) return RXSIGNAL_FAILURE;
     if (strcmp(interrupt, "QUIT") == 0) return RXSIGNAL_QUIT;
@@ -2820,6 +2893,7 @@ RX_INLINE stack_frame *frame_f(
         this->interrupt_table[RXSIGNAL_FUNCTION_NOT_FOUND-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_REFERENCE_INVALID-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_OBJECT_NOT_INITIALIZED-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_RXBIN_CORRUPTION-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_OUT_OF_RANGE-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_FAILURE-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_QUIT-1].response = RXSIGNAL_RESPONSE_HALT;
@@ -6412,6 +6486,99 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
             if (op3RI) next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             else next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(2);
             CALC_DISPATCH_MANUAL
+            DISPATCH
+
+        START_INSTRUCTION(JUMPS_REG_BINARY) CALC_DISPATCH(2)
+            DEBUG("TRACE - JUMPS R%d,binary[%zu]\n", (int)REG_IDX(1), (size_t)(pc + 2)->index);
+            {
+                size_t target;
+                int found = rxvm_jtable_lookup_linear(op2S, (const unsigned char *)op1R->string_value,
+                                                      op1R->string_length, &target);
+                if (found < 0) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Malformed jump table");
+                }
+                else if (found && target >= current_frame->procedure->binarySpace->inst_size) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Jump table target out of range");
+                }
+                else if (found) {
+                    next_pc = current_frame->procedure->binarySpace->binary + target;
+                    CALC_DISPATCH_MANUAL
+                }
+            }
+            DISPATCH
+
+        START_INSTRUCTION(JUMPB_REG_BINARY) CALC_DISPATCH(2)
+            DEBUG("TRACE - JUMPB R%d,binary[%zu]\n", (int)REG_IDX(1), (size_t)(pc + 2)->index);
+            {
+                size_t target;
+                int found = rxvm_jtable_lookup_linear(op2S, (const unsigned char *)op1R->binary_value,
+                                                      op1R->binary_length, &target);
+                if (found < 0) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Malformed jump table");
+                }
+                else if (found && target >= current_frame->procedure->binarySpace->inst_size) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Jump table target out of range");
+                }
+                else if (found) {
+                    next_pc = current_frame->procedure->binarySpace->binary + target;
+                    CALC_DISPATCH_MANUAL
+                }
+            }
+            DISPATCH
+
+        START_INSTRUCTION(JUMPBS_REG_REG_BINARY) CALC_DISPATCH(3)
+            DEBUG("TRACE - JUMPBS R%d,R%d,binary[%zu]\n", (int)REG_IDX(1), (int)REG_IDX(2), (size_t)(pc + 3)->index);
+            {
+                size_t key_length;
+                size_t offset;
+                size_t target;
+                int key_status = rxvm_jtable_fixed_key_length(op3S, &key_length);
+                if (key_status < 0) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Malformed jump table");
+                }
+                else if (key_status == 0 || !rxvm_binary_range(op1R, op2R->int_value, key_length, &offset)) {
+                    SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                }
+                else {
+                    int found = rxvm_jtable_lookup_linear(op3S, (const unsigned char *)op1R->binary_value + offset,
+                                                          key_length, &target);
+                    if (found < 0) {
+                        SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Malformed jump table");
+                    }
+                    else if (found && target >= current_frame->procedure->binarySpace->inst_size) {
+                        SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Jump table target out of range");
+                    }
+                    else if (found) {
+                        next_pc = current_frame->procedure->binarySpace->binary + target;
+                        CALC_DISPATCH_MANUAL
+                    }
+                }
+            }
+            DISPATCH
+
+        START_INSTRUCTION(JUMPI_REG_BINARY) CALC_DISPATCH(2)
+            DEBUG("TRACE - JUMPI R%d,binary[%zu]\n", (int)REG_IDX(1), (size_t)(pc + 2)->index);
+            {
+                unsigned char key[8];
+                uint64_t value = (uint64_t)(int64_t)op1R->int_value;
+                size_t target;
+                int i;
+                int found;
+                for (i = 0; i < 8; i++) {
+                    key[i] = (unsigned char)((value >> (i * 8)) & 0xffu);
+                }
+                found = rxvm_jtable_lookup_linear(op2S, key, sizeof(key), &target);
+                if (found < 0) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Malformed jump table");
+                }
+                else if (found && target >= current_frame->procedure->binarySpace->inst_size) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Jump table target out of range");
+                }
+                else if (found) {
+                    next_pc = current_frame->procedure->binarySpace->binary + target;
+                    CALC_DISPATCH_MANUAL
+                }
+            }
             DISPATCH
 
         START_INSTRUCTION(TIME_REG) CALC_DISPATCH(1)

@@ -1,0 +1,11 @@
+/*
+ * Declared jump tables need at least one decorated case.
+ */
+
+.globals=0
+
+main() .locals=2
+    .jtable empty linear
+    load r0,"none"
+    jumps r0,empty
+    ret 0
