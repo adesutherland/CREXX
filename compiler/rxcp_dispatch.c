@@ -126,12 +126,29 @@ static int dispatch_integer_key(ASTNode *node, rxinteger *value) {
 static int dispatch_integer_selector(ASTNode *node) {
     Symbol *symbol;
 
-    if (!node || node->node_type != VAR_REFERENCE || node->value_dims || node->target_dims) return 0;
+    if (!node ||
+        (node->node_type != VAR_REFERENCE && node->node_type != VAR_SYMBOL) ||
+        node->value_dims || node->target_dims) return 0;
     if (!node->symbolNode || !node->symbolNode->symbol) return 0;
     symbol = node->symbolNode->symbol;
     return node->value_type == TP_INTEGER ||
            node->target_type == TP_INTEGER ||
            symbol->type == TP_INTEGER;
+}
+
+static int dispatch_stable_general_selector(ASTNode *node) {
+    Symbol *symbol;
+
+    if (!dispatch_integer_selector(node)) return 0;
+    symbol = node->symbolNode->symbol;
+    if (symbol->symbol_type != VARIABLE_SYMBOL || symbol->value_dims) return 0;
+    if (symbol->exposed || symbol->is_global_var || symbol->is_ref_arg ||
+        symbol->has_reference_target || symbol->is_this || symbol->is_factory) return 0;
+    if (symbol->scope &&
+        (symbol->scope->type == SCOPE_CLASS ||
+         (symbol->scope->defining_node &&
+          symbol->scope->defining_node->node_type == CLASS_DEF))) return 0;
+    return 1;
 }
 
 static int dispatch_integer_key_compare(const void *left, const void *right) {
@@ -167,9 +184,12 @@ static int dispatch_run_has_duplicate_key(RxcpDispatchCandidate *candidate,
     return has_duplicate;
 }
 
-static int collect_dispatch_ladder(ASTNode *root, RxcpDispatchCandidate *candidate) {
+static int collect_dispatch_ladder(ASTNode *root,
+                                   RxcpDispatchCandidate *candidate,
+                                   int lock_source_anchor,
+                                   int require_stable_selector) {
     ASTNode *current = root;
-    SourceNode *select_source = root ? root->source_node : 0;
+    SourceNode *select_source = lock_source_anchor && root ? root->source_node : 0;
 
     while (current && current->node_type == IF) {
         ASTNode *condition = ast_chdn(current, 0);
@@ -185,12 +205,14 @@ static int collect_dispatch_ladder(ASTNode *root, RxcpDispatchCandidate *candida
         if (select_source && current->source_node != select_source) break;
         if (!condition || !body) return 0;
 
-        if (condition->node_type == OP_COMPARE_EQUAL) {
+        if (condition->node_type == OP_COMPARE_EQUAL ||
+            condition->node_type == OP_COMPARE_S_EQ) {
             Symbol *selector_symbol;
 
             selector = ast_chdn(condition, 0);
             key = ast_chdn(condition, 1);
-            if (dispatch_integer_selector(selector) && key) {
+            if (dispatch_integer_selector(selector) && key &&
+                (!require_stable_selector || dispatch_stable_general_selector(selector))) {
                 selector_symbol = selector->symbolNode->symbol;
                 if (!candidate->selector_symbol) candidate->selector_symbol = selector_symbol;
                 if (candidate->selector_symbol == selector_symbol) {
@@ -340,7 +362,40 @@ static walker_result select_dispatch_walker(walker_direction direction,
     while (root && root->node_type != IF) root = root->sibling;
     if (!root) return result_normal;
 
-    if (collect_dispatch_ladder(root, &candidate)) {
+    if (collect_dispatch_ladder(root, &candidate, 1, 0)) {
+        lower_integer_dispatch_runs(context, &candidate);
+    }
+    dispatch_candidate_free(&candidate);
+    return result_normal;
+}
+
+static int dispatch_is_else_if_child(ASTNode *node) {
+    return node && node->parent && node->parent->node_type == IF &&
+           ast_chdn(node->parent, 2) == node;
+}
+
+static int dispatch_has_explicit_select_owner(ASTNode *node) {
+    ASTNode *current = node;
+
+    while (current) {
+        if (current->node_type == INSTRUCTIONS && current->is_select_dispatch) return 1;
+        current = current->parent;
+    }
+    return 0;
+}
+
+static walker_result general_dispatch_walker(walker_direction direction,
+                                             ASTNode *node,
+                                             void *payload) {
+    Context *context = payload;
+    RxcpDispatchCandidate candidate = {0};
+
+    if (direction != out || node->node_type != IF) return result_normal;
+    if (dispatch_is_else_if_child(node) || dispatch_has_explicit_select_owner(node)) {
+        return result_normal;
+    }
+
+    if (collect_dispatch_ladder(node, &candidate, 0, 1)) {
         lower_integer_dispatch_runs(context, &candidate);
     }
     dispatch_candidate_free(&candidate);
@@ -350,4 +405,5 @@ static walker_result select_dispatch_walker(walker_direction direction,
 void rxcp_lower_select_dispatch(Context *context) {
     if (!context || !context->ast) return;
     ast_wlkr(context->ast, select_dispatch_walker, context);
+    if (context->optimise) ast_wlkr(context->ast, general_dispatch_walker, context);
 }

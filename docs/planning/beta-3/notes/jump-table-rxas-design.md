@@ -418,7 +418,14 @@ general IF-ladder recognition.
    nested IF ladders, including classic SELECT after its normal rewrite. The
    initial proof requires equality tests over the same resolved scalar variable,
    constant right operands, and no mutation, alias, call, getter, or other
-   side-effect risk.
+   side-effect risk. Status: implemented for optimized builds. Loose and strict
+   integer equality are accepted for direct scalar variable reads. Exposed,
+   global, reference-target, reference-argument, class-attribute, indexed,
+   dereferenced, property, call, non-integer, and undersized shapes remain
+   ordinary comparisons. Safe constant runs may be lowered on either side of
+   an unsupported condition because each run reads the selector at its original
+   entry point. No-opt builds preserve general IF and classic SELECT source
+   flow; their dispatch lowering remains limited to explicit C-style SELECT.
 4. **Exact strings and binary.** Strict string comparisons can use `jumps`
    because `==` is exact after compiler string conversion and normalization.
    Exact binary dispatch can use `jumpb` once the Rexx binary equality path is
