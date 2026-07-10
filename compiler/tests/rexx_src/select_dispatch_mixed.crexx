@@ -1,0 +1,66 @@
+options levelb
+
+main: procedure = .int
+  counter = .int
+  index = .int
+  values = .int[8]
+
+  values[1] = 2
+  values[2] = 5
+  values[3] = 11
+  values[4] = 25
+  values[5] = 21
+  values[6] = 30
+  values[7] = 99
+  values[8] = 15
+
+  do index = 1 to 8
+    counter = 0
+    say mixed_classify(values[index], counter)
+    say counter
+  end
+  say otherwise_if(2, 40)
+  say otherwise_if(99, 40)
+  say otherwise_if(99, 0)
+  return 0
+
+mixed_classify: procedure = .int
+  arg value = .int, expose counter = .int
+
+  select value
+    when 1 then return 101
+    when 2 then return 102
+    when 3 then return 103
+    when dynamic_key(counter, 5) then return 150
+    when 10 then return 210
+    when 11 then return 211
+    when 12 then return 212
+    when "15" then return 215
+    when dynamic_key(counter, 25) then return 250
+    when 20 then return 320
+    when 21 then return 321
+    when 22 then return 322
+    when dynamic_key(counter, 40) then return 440
+    when 30 then return 430
+    when 31 then return 431
+    otherwise return -1
+  end
+  return -2
+
+otherwise_if: procedure = .int
+  arg value = .int, probe = .int
+
+  select value
+    when 1 then return 501
+    when 2 then return 502
+    when 3 then return 503
+    otherwise
+      if probe = 40 then return 540
+      else return -500
+  end
+  return -501
+
+dynamic_key: procedure = .int
+  arg expose counter = .int, key = .int
+  counter = counter + 1
+  return key

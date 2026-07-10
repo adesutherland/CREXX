@@ -411,7 +411,9 @@ general IF-ladder recognition.
    consecutive eligible runs. Emit a jump table for profitable constant runs
    and retain ordinary IF comparisons for dynamic or unsupported cases. Never
    combine cases across an intervening expression whose evaluation order could
-   be observed.
+   be observed. Status: implemented for integer selectors in optimized and
+   no-opt builds. Runs are lowered from the tail so every table miss retains
+   the original dynamic comparison, side effects, and subsequent fallback.
 3. **General integer IF recognition.** Reuse the dispatch builder for canonical
    nested IF ladders, including classic SELECT after its normal rewrite. The
    initial proof requires equality tests over the same resolved scalar variable,
@@ -483,3 +485,19 @@ regression coverage; they must not be hidden by weakening a jump-table test.
   `repro_duplicate_call_argument` permanently covers repeated integer and
   string arguments plus preservation of the caller's source value in optimized
   and no-opt builds.
+- **Mixed-dispatch fallback detachment (found 2026-07-10).** The initial mixed
+  rewrite detached case bodies before looking up the final case's positional
+  fallback child. Detachment changed the child index and could discard every
+  residual comparison after a table miss. Status: resolved before the mixed
+  slice baseline. The fallback is captured before any AST mutation, and
+  `select_dispatch_mixed` covers dynamic miss paths in optimized and no-opt
+  builds.
+- **Unknown eager-operator capture type after inlining (found 2026-07-10).** An
+  optimized eager comparison whose right operand was inlined could capture a
+  symbol-backed left operand into an `__inline_lhs` temporary using the AST
+  node's stale `.unknown` type instead of the resolved symbol type. `rxc` then
+  emitted the nonexistent generic `eq` mnemonic and `rxas` rejected the output.
+  Status: resolved in the remap temporary-symbol builder, which now uses the
+  resolved symbol shape when the node shape is unknown. The optimized
+  `select_dispatch_mixed` compiler and runtime tests permanently cover this
+  path.
