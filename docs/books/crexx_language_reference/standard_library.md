@@ -124,6 +124,20 @@ The product documentation lives with the runtime source:
 client modules used by demos. This is useful and real, but Level G itself is
 not the baseline user language for the Release 1 beta line.
 
+## Level L Generated-Output Work
+
+`rxfnsl` contains early Level L language-engineering examples. The first module
+is `tinyexpr`, a tiny arithmetic lexer/parser written in the shape that a future
+generator might emit. It uses packed binary constants, fixed-size binary token
+records, an exposed declaration procedure for token/layout constants, direct
+`<at..type>` reads/writes, and zero-copy source-slice compare to test whether
+the binary-memory surface is pleasant enough for generated language tooling.
+
+This is intentionally not a public parser-generator API yet. Its job is to
+teach the project what emitted Rexx/RXAS should look like before deciding
+whether to port re2c, alter a generator backend, or design a narrower Level L
+generator.
+
 ## Native Plugins
 
 Native functions use the RXPA plugin architecture. Dynamic plugins can be

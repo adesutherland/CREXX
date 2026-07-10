@@ -50,7 +50,7 @@ different:
 | Level D | A cRexx-compatible extension direction above Classic Rexx. | Direction only. Not a release language yet. |
 | Level E | Object Rexx / ooRexx relationship point. | Planned only as a DSLSH syntax-highlighting target. cRexx does not plan to compile or run ooRexx as Level E. |
 | Level G | General-purpose modern cRexx direction built on Level B. | Directional, with some real library work such as `rxfnsg`; not the baseline user language for this release. |
-| Level L | Language-engineering cRexx direction for parser, grammar, AST, and symbol-table work. | Direction only. Not a release language yet.|
+| Level L | Language-engineering cRexx direction for parser, grammar, AST, and symbol-table work. | Directional, with an initial `rxfnsl` generated-output proving demo; not a release language yet.|
 | Level N | NetRexx relationship point: Rexx-family syntax with Java/JVM integration. | Planned only as a DSLSH syntax-highlighting target. cRexx does not plan to compile or run NetRexx as Level N.|
 
 ## DSLSH And Compatibility
@@ -84,6 +84,14 @@ and Unicode data license notices. Initial coverage should target normalization,
 case folding, Unicode property checks, and grapheme / word / sentence segmentation.
 There is also room for a Level B cRexx proof of concept of UTF helper libraries
 while the Level G design settles.
+
+Level L currently uses the Level B-derived compiler pipeline plus
+`options levell` for library-shaped experiments. Its first concrete library,
+`rxfnsl`, is a generated-output proof rather than a generator: it shows what a
+future lexer/parser generator might emit using binary constants, packed token
+records, and direct RXAS binary-memory operations. That target shape should be
+proved by examples before deciding whether to port a generator such as re2c or
+adapt a generator backend to emit cRexx/RXAS directly.
 
 Levels E and N should be understood in that same tooling sense. They reserve
 clear names for Object Rexx and NetRexx editor support, but they are not cRexx

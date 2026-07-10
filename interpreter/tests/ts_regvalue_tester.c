@@ -324,6 +324,7 @@ void test_binary_buffers() {
     unsigned char combined[] = { 0xaa, 0x10, 0x20, 0x30, 0x40, 0x50, 0x10, 0x20, 0x30, 0x40, 0x50 };
     unsigned char sliced[] = { 0x10, 0x20, 0x30 };
     size_t capacity;
+    size_t grown_capacity;
 
     printf("\n--- Running Binary Buffer Tests ---\n");
 
@@ -343,6 +344,15 @@ void test_binary_buffers() {
     CHECK_BINARY(&v, smaller, sizeof(smaller));
     CHECK_SIZE_EQUAL(v.binary_pos, 0, "binary_pos after replacing binary");
     CHECK_SIZE_EQUAL(v.binary_buffer_length, capacity, "binary_buffer_length after smaller binary write");
+
+    CHECK_RC_ZERO(prep_binary_buffer(&v, capacity - 1));
+    CHECK_SIZE_EQUAL(v.binary_length, capacity - 1, "binary_length after logical resize inside capacity");
+    CHECK_SIZE_EQUAL(v.binary_buffer_length, capacity, "binary_buffer_length after logical resize inside capacity");
+    CHECK_RC_ZERO(prep_binary_buffer(&v, capacity + 1));
+    grown_capacity = buffer_size(capacity + 1);
+    CHECK_SIZE_EQUAL(v.binary_length, capacity + 1, "binary_length after logical resize beyond capacity");
+    CHECK_SIZE_EQUAL(v.binary_buffer_length, grown_capacity, "binary_buffer_length after logical resize beyond capacity");
+    CHECK_RC_ZERO(set_binary(&v, smaller, sizeof(smaller)));
 
     v.binary_pos = 1;
     CHECK_RC_ZERO(append_binary(&v, extra, sizeof(extra)));

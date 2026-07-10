@@ -148,8 +148,13 @@ Should-ship items are important but have explicit fallback paths.
 
 4. Level L lexer/parser demo
 
-   Use large constants and optimized lookup if available. Fallback: a smaller
-   demo using current arrays/tables, with performance work documented.
+   Use large constants and optimized lookup if available. The first
+   `rxfnsl.tinyexpr` slice is a generated-output proof: it is hand-written in
+   the shape a future lexer/parser generator might emit, using packed binary
+   tables, exposed token/layout constants, and token records. The real
+   generator remains later work; this slice should guide whether to port re2c
+   or change a generator backend to emit cRexx/RXAS directly. Fallback: keep
+   the generated-shape demo and document performance work.
 
 5. Plugin/demo cleanup
 
@@ -249,7 +254,7 @@ common `rel1` label plus the tier and area labels shown here.
 | 23 | Decide and implement Level G Unicode baseline | Adrian | `rel1`, `should`, `level-g`, `unicode` | Ship LLM-focused Level G and document Unicode as planned if `utf8proc` or API design is not settled. |
 | 24 | Add build-time perfect hash optimization for static `select` | Adrian | `rel1`, `should`, `compiler`, `performance` | Keep current nested `IF` lowering. |
 | 25 | Add RXAS/VM lookup primitives needed by perfect-hash select | Adrian | `rel1`, `should`, `rxas`, `vm` | Generate optimized branch sequence or move primitive post-release. |
-| 26 | Add Level L lexer/parser library demo | Peter | `rel1`, `should`, `level-l`, `demos` | Ship a smaller demo using current arrays/tables. |
+| 26 | Add Level L lexer/parser library demo | Peter | `rel1`, `should`, `level-l`, `demos` | Ship the generated-output proof using packed binary tables and document generator work as later. |
 | 27 | Define Level G first library baseline | Rene | `rel1`, `should`, `level-g`, `library` | Document the existing LLM surface as the first baseline and move extra APIs post-release. |
 | 28 | Add Level G tutorial and demos | Rene | `rel1`, `should`, `level-g`, `docs` | Ship one tutorial plus known limitations if the broader demo set is not ready. |
 | 29 | Define initial Level C Release 1 milestone | Adrian | `rel1`, `should`, `level-c`, `planning` | Ship parser/highlighter milestone plus canonical-AST lowering plan. |
@@ -269,6 +274,7 @@ common `rel1` label plus the tier and area labels shown here.
 | 38 | Add Level L syntax-sugar demo if syntax is approved | Adrian | `rel1`, `experimental`, `level-l` | Keep Level L demo library-only for Release 1. |
 | 39 | Add GPU VM plugin proof of concept behind experimental status | Adrian | `rel1`, `experimental`, `vm`, `plugins` | Publish design notes or keep the work out of the release branch. |
 | 40 | Define VM multithreading/subtask design and Release 1 scope | Adrian | `rel1`, `experimental`, `vm` | Ship design-only; keep shared-memory subtasks post-Release 1. |
+| 41 | Design class and interface constants for Release 2 | Adrian | `r2`, `level-b`, `classes`, `compiler` | Keep Release 1 constants procedure-scoped; investigate whether constants should have a public view as part of the R2 class/interface constant design. |
 
 ## Dependency Map
 
@@ -294,8 +300,16 @@ Technical dependencies:
   rxdas round-trip, compiler emission, and tests.
 - Perfect-hash `select` depends on static-case detection, constant table
   emission, VM/RXAS lookup support or branch-sequence generation, and fallback.
-- Level L demos depend on large constant structures and lexer/parser library
-  APIs.
+- Level L demos depend on large constant structures, packed binary lookup
+  ergonomics, readable generated binary literal conventions, and a proved
+  generated-output shape before real lexer/parser generator APIs are designed.
+  Source-module-local exposed constants are Release 1; cross-module constants,
+  wildcard expose forms such as `TINY_TOK_*`, and binary memory structs are
+  Release 2 candidates.
+- Class and interface constants are a Release 2 design item. The starting point
+  should be private constants owned by the class/interface body, matching the
+  current member privacy standard; a controlled public constant view should be
+  investigated as part of that work.
 - Level C execution depends on canonical AST lowering, variable-pool model,
   PARSE helpers, command/ADDRESS lowering, source provenance, and runtime tests.
 - RexxScript integration depends on its interpreter/evaluator boundary, shared

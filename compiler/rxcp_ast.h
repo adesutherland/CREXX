@@ -135,6 +135,7 @@ int tokenis(Token *token, const char* value);
 ASTNode* ast_f(Context* context, NodeType type, Token *token); /* ASTNode Factory */
 /* ASTNode Factory - adds a STRING token removing the leading & trailing speech marks */
 ASTNode *ast_fstr(Context* context, Token *token);
+ASTNode *ast_fstr_chain(Context* context, Token *first_token);
 /* ASTNode Factory - adds a DECIMAL token removing the trailing d if it exists */
 ASTNode *ast_fdec(Context* context, Token *token);
 /* ASTNode Factory - With node type*/

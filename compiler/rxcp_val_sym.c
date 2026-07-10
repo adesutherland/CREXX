@@ -1081,7 +1081,10 @@ walker_result exposed_symbols_walker(walker_direction direction,
 
                                 /* We might be exposing one of the procedure's variables */
                                 symbol = sym_drsv(proc_node->scope, n); /* find it deep */
-                                if (symbol && symbol->symbol_type == VARIABLE_SYMBOL && !symbol->is_arg) {
+                                if (symbol &&
+                                    (symbol->symbol_type == VARIABLE_SYMBOL ||
+                                     symbol->symbol_type == CONSTANT_SYMBOL) &&
+                                    !symbol->is_arg) {
                                     /* We found a variable to expose - so expose it by moving its scope */
                                     merged_symbol = sym_hoist_to_namespace(symbol, symbol->scope ? symbol->scope->parent : 0);
 
@@ -1094,7 +1097,9 @@ walker_result exposed_symbols_walker(walker_direction direction,
 
                                     if (merged_symbol->exposed == 0) {
                                         merged_symbol->exposed = 1;
-                                        merged_symbol->is_global_var = 1;
+                                        if (merged_symbol->symbol_type == VARIABLE_SYMBOL) {
+                                            merged_symbol->is_global_var = 1;
+                                        }
                                         context->changed_flags |= FLAG_VAL_SYM;
                                     }
                                     found = 1;
@@ -1169,6 +1174,13 @@ walker_result exposed_symbols_walker(walker_direction direction,
                         }
                         sym_adnd(symbol, n, 1, 1);
                     }
+                    else if (symbol->symbol_type == CONSTANT_SYMBOL) {
+                        if (symbol->exposed == 0) {
+                            symbol->exposed = 1;
+                            context->changed_flags |= FLAG_VAL_SYM;
+                        }
+                        sym_adnd(symbol, n, 1, 0);
+                    }
                     else {
                         /* Add an error - if it has not already errored */
                         if (ast_chld(n, ERROR, 0) == 0)
@@ -1192,7 +1204,10 @@ walker_result exposed_symbols_walker(walker_direction direction,
                     if (!symbol) {
                         /* It is not global yet, so we should be exposing one of the procedure's variables */
                         symbol = sym_drsv(node->parent->scope, n); /* find it deep */
-                        if (symbol && symbol->symbol_type == VARIABLE_SYMBOL && !symbol->is_arg) {
+                        if (symbol &&
+                            (symbol->symbol_type == VARIABLE_SYMBOL ||
+                             symbol->symbol_type == CONSTANT_SYMBOL) &&
+                            !symbol->is_arg) {
                             if (symbol->exposed == 0) { /* Avoid double processing */
                                 /* We found a variable to expose - so expose it by moving its scope */
                                 merged_symbol = sym_hoist_to_namespace(symbol, symbol->scope ? symbol->scope->parent : 0);
@@ -1204,7 +1219,9 @@ walker_result exposed_symbols_walker(walker_direction direction,
 
                                 if (merged_symbol->exposed == 0) {
                                     merged_symbol->exposed = 1;
-                                    merged_symbol->is_global_var = 1;
+                                    if (merged_symbol->symbol_type == VARIABLE_SYMBOL) {
+                                        merged_symbol->is_global_var = 1;
+                                    }
                                     context->changed_flags |= FLAG_VAL_SYM;
                                 }
                             }
@@ -1294,6 +1311,13 @@ walker_result exposed_symbols_walker(walker_direction direction,
                                 }
                             }
                         }
+                    }
+                    else if (symbol->symbol_type == CONSTANT_SYMBOL) {
+                        if (symbol->exposed == 0) {
+                            symbol->exposed = 1;
+                            context->changed_flags |= FLAG_VAL_SYM;
+                        }
+                        sym_adnd(symbol, n, 1, 0);
                     }
 
                     else {

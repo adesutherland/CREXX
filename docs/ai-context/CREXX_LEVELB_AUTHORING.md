@@ -228,6 +228,12 @@ The initializer must fold at compile time. Integer constants used as assembler
 immediates are emitted as literals; string, decimal, float, and binary constants
 use the normal constant-pool machinery.
 
+Generated code that shares a family of constants inside one source module must
+list each name explicitly in the declaration procedure's `procedure expose`
+list. Release 1 does not import constants across source, RXAS, or RXBIN module
+boundaries. Cross-module constants and wildcard expose forms such as `TOKEN_*`
+are Release 2 ergonomics/design candidates, not Release 1 syntax commitments.
+
 ### Explicit register views are system-programmer syntax
 
 Normal classes should use ordinary attributes. Runtime and VM-integration

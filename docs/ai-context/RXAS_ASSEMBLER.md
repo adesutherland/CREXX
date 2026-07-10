@@ -209,8 +209,10 @@ the target storage type's range. `bgeti64`/`bseti64` are the Release 1 `.int`
 storage form. `bgetf32`/`bsetf32` store IEEE binary32 values and widen/narrow
 through the VM float register; `bgetf64`/`bsetf64` store IEEE binary64 values.
 
-`bresize` sets the logical byte length and zero-fills newly exposed bytes;
-negative lengths raise `OUT_OF_RANGE`, and allocation failure raises `FAILURE`.
+`bresize` sets the logical byte length and zero-fills newly exposed bytes. The
+VM may keep a larger private physical capacity, grown in blocks and reused
+across later logical resizes; `blen` reports only the logical length. Negative
+lengths raise `OUT_OF_RANGE`, and allocation failure raises `FAILURE`.
 `bclear` sets the logical byte length and cursor to zero. `bfill` fills the
 current logical byte range and raises `OUT_OF_RANGE` for bytes outside
 `0..255`.

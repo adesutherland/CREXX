@@ -58,6 +58,13 @@ failures = failures + check_str("llm body message", jsonget(body, "messages.1.co
 blankKeyJson = '{"":"empty"," ":"blank"}'
 failures = failures + check_str("blank key type", jsontype(blankKeyJson, " "), "string")
 failures = failures + check_str("blank key get", jsonget(blankKeyJson, " "), "blank")
+failures = failures + check_int("trailing input invalid", jsonvalid('{"ok":true}x'), 0)
+failures = failures + check_str("bad bracket path", jsontype(response, "choices[bad]"), "error")
+failures = failures + check_str("unicode key get", jsonget('{"α":"beta"}', "α"), "beta")
+failures = failures + check_str("unicode value get", jsonget('{"value":"αβ","after":true}', "value"), "αβ")
+failures = failures + check_str("escaped key get", jsonget('{"a\u0062":7}', "ab"), "7")
+failures = failures + check_str("unicode escape unquote", jsonunquote('"\u03b1"'), "α")
+failures = failures + check_str("unicode escape get", jsonget('{"letter":"\u03b1"}', "letter"), "α")
 
 if failures <> 0 then do
   say "rxjson failures:" failures

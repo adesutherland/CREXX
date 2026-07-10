@@ -692,6 +692,145 @@ static char *ast_binary_literal_from_bytes(const unsigned char *bytes,
     return processed_string;
 }
 
+static char ast_string_token_suffix(Token *token) {
+    unsigned char separator;
+    char last;
+
+    if (!token || !token->token_string || token->length < 2) return 'n';
+    separator = (unsigned char) token->token_string[0];
+    last = token->token_string[token->length - 1];
+    if ((unsigned char) last == separator) return 'n';
+    if (last == 'x' || last == 'X') return 'x';
+    return 'b';
+}
+
+static size_t ast_string_token_body_length(Token *token) {
+    char suffix;
+
+    if (!token || token->length < 2) return 0;
+    suffix = ast_string_token_suffix(token);
+    if (suffix == 'n') return (size_t) token->length - 2;
+    if (token->length < 3) return 0;
+    return (size_t) token->length - 3;
+}
+
+static size_t ast_string_token_escaped_body_length(Token *token, unsigned char target_separator) {
+    unsigned char source_separator;
+    char *raw;
+    size_t raw_length;
+    size_t i;
+    size_t length;
+
+    if (!token || !token->token_string) return 0;
+    source_separator = (unsigned char) token->token_string[0];
+    raw = token->token_string + 1;
+    raw_length = ast_string_token_body_length(token);
+    length = 0;
+
+    for (i = 0; i < raw_length; i++) {
+        unsigned char ch;
+
+        ch = (unsigned char) raw[i];
+        if (ch == source_separator && i + 1 < raw_length &&
+            (unsigned char) raw[i + 1] == source_separator) {
+            i++;
+        }
+        length += (ch == target_separator) ? 2 : 1;
+    }
+
+    return length;
+}
+
+static void ast_string_token_copy_escaped_body(Token *token, unsigned char target_separator, char **target) {
+    unsigned char source_separator;
+    char *raw;
+    size_t raw_length;
+    size_t i;
+
+    if (!token || !token->token_string || !target || !*target) return;
+    source_separator = (unsigned char) token->token_string[0];
+    raw = token->token_string + 1;
+    raw_length = ast_string_token_body_length(token);
+
+    for (i = 0; i < raw_length; i++) {
+        unsigned char ch;
+
+        ch = (unsigned char) raw[i];
+        if (ch == source_separator && i + 1 < raw_length &&
+            (unsigned char) raw[i + 1] == source_separator) {
+            i++;
+        }
+        *(*target)++ = (char) ch;
+        if (ch == target_separator) *(*target)++ = (char) ch;
+    }
+}
+
+ASTNode *ast_fstr_chain(Context* context, Token *first_token) {
+    ASTNode *node;
+    Token *token;
+    Token *last_token;
+    Token synthetic;
+    char suffix;
+    unsigned char separator;
+    char *combined;
+    char *target;
+    size_t combined_body_length;
+    size_t combined_length;
+    int last_token_number;
+
+    if (!first_token) return ast_ft(context, STRING);
+    if (!first_token->token_subtype) return ast_fstr(context, first_token);
+
+    last_token_number = first_token->token_subtype;
+    last_token = first_token;
+    for (token = first_token; token && token->token_number <= last_token_number; token = token->token_next) {
+        if (token->token_type != TK_STRING && token->token_type != TK_STRING_CONTINUATION) continue;
+        if (token->token_number < last_token_number && ast_string_token_suffix(token) != 'n') {
+            return mknd_err(ast_f(context, STRING, token), "LITERAL_CONTINUATION_SUFFIX");
+        }
+        last_token = token;
+    }
+
+    suffix = ast_string_token_suffix(last_token);
+    separator = first_token && first_token->token_string ? (unsigned char) first_token->token_string[0] : '"';
+    combined_body_length = 0;
+    for (token = first_token; token && token->token_number <= last_token_number; token = token->token_next) {
+        if (token->token_type != TK_STRING && token->token_type != TK_STRING_CONTINUATION) continue;
+        combined_body_length += ast_string_token_escaped_body_length(token, separator);
+    }
+
+    combined_length = 2 + combined_body_length + (suffix == 'n' ? 0 : 1);
+    combined = malloc(combined_length + 1);
+    if (!combined) return mknd_err(ast_f(context, STRING, first_token), "OUT_OF_MEMORY");
+
+    target = combined;
+    *target++ = (char) separator;
+    for (token = first_token; token && token->token_number <= last_token_number; token = token->token_next) {
+        if (token->token_type != TK_STRING && token->token_type != TK_STRING_CONTINUATION) continue;
+        ast_string_token_copy_escaped_body(token, separator, &target);
+    }
+    *target++ = (char) separator;
+    if (suffix != 'n') *target++ = suffix;
+    *target = 0;
+
+    synthetic = *first_token;
+    synthetic.token_string = combined;
+    synthetic.length = (int) combined_length;
+    synthetic.token_type = TK_STRING;
+
+    node = ast_fstr(context, &synthetic);
+    node->token = first_token;
+    node->token_start = first_token;
+    node->token_end = last_token;
+    node->line = first_token ? first_token->line : -1;
+    node->column = first_token ? first_token->column : -1;
+    if (first_token) node->source_start = first_token->token_string;
+    if (last_token) node->source_end = last_token->token_string + last_token->length;
+
+    free(combined);
+    return node;
+}
+
 /* ASTNode Factory - adds a STRING token removing the leading & trailing speech marks
  * and decoding / encoding the string nicely - or converting to an error string */
 #define ADD_CHAR_TO_BUFFER(ch) { processed_length++; *(buffer++) = (ch); }
@@ -765,7 +904,7 @@ ASTNode *ast_fstr(Context* context, Token *token) {
         /* Validate hex string and work out length */
         for (hex_bin_length = 0, i = 0; i < raw_length; i++) {
             c = raw_string[i];
-            if (c == ' ') continue;
+            if (isspace((unsigned char)c)) continue;
             if ( !( (c >= '0' && c <= '9') ||
                     (c >= 'a' && c <= 'f') ||
                     (c >= 'A' && c <= 'F') ) ) {
@@ -787,7 +926,7 @@ ASTNode *ast_fstr(Context* context, Token *token) {
         else hex_buffer_len = 0;
 
         for (i = 0; i < raw_length; i++) {
-            if (raw_string[i] != ' ') {
+            if (!isspace((unsigned char)raw_string[i])) {
                 hex_bin_buffer[hex_buffer_len] = (char)tolower(raw_string[i]);
                 hex_buffer_len++;
                 if (hex_buffer_len == 2) {
@@ -817,7 +956,7 @@ ASTNode *ast_fstr(Context* context, Token *token) {
         /* Validate binary string and work out length */
         for (hex_bin_length = 0, i = 0; i < raw_length; i++) {
             c = raw_string[i];
-            if (c == ' ') continue;
+            if (isspace((unsigned char)c)) continue;
             if (c != '0' && c != '1') {
                 mknd_err(node, "INVALID_BIN");
                 return node;
@@ -835,7 +974,7 @@ ASTNode *ast_fstr(Context* context, Token *token) {
         for (i=0;i<hex_buffer_len;i++) hex_bin_buffer[i]='0';
 
         for (i = 0; i < raw_length; i++) {
-            if (raw_string[i] != ' ') {
+            if (!isspace((unsigned char)raw_string[i])) {
                 hex_bin_buffer[hex_buffer_len] = (char)tolower(raw_string[i]);
                 hex_buffer_len++;
                 if (hex_buffer_len == 8) {

@@ -1,0 +1,136 @@
+* Integer compare plus conditional branch should fuse only when the compare
+* result register is dead on both branch paths.
+
+case_ieq_brt_rr() .locals=5
+    ieq r0,r1,r2
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "" ""
+    brt hit_ieq_brt_rr,r0
+    ret
+hit_ieq_brt_rr:
+    ret
+
+case_ieq_brf_rr() .locals=5
+    ieq r0,r1,r2
+    brf hit_ieq_brf_rr,r0
+    ret
+hit_ieq_brf_rr:
+    ret
+
+case_ine_brt_rr() .locals=5
+    ine r0,r1,r2
+    brt hit_ine_brt_rr,r0
+    ret
+hit_ine_brt_rr:
+    ret
+
+case_ine_brf_ri() .locals=5
+    ine r0,r1,5
+    brf hit_ine_brf_ri,r0
+    ret
+hit_ine_brf_ri:
+    ret
+
+case_ilt_brt_rr() .locals=5
+    ilt r0,r1,r2
+    brt hit_ilt_brt_rr,r0
+    ret
+hit_ilt_brt_rr:
+    ret
+
+case_ilt_brf_ri() .locals=5
+    ilt r0,r1,3
+    brf hit_ilt_brf_ri,r0
+    ret
+hit_ilt_brf_ri:
+    ret
+
+case_ilte_brt_rr() .locals=5
+    ilte r0,r1,r2
+    brt hit_ilte_brt_rr,r0
+    ret
+hit_ilte_brt_rr:
+    ret
+
+case_ilte_brf_ri() .locals=5
+    ilte r0,r1,4
+    brf hit_ilte_brf_ri,r0
+    ret
+hit_ilte_brf_ri:
+    ret
+
+case_igt_brt_rr() .locals=5
+    igt r0,r1,r2
+    brt hit_igt_brt_rr,r0
+    ret
+hit_igt_brt_rr:
+    ret
+
+case_igt_brf_ri() .locals=5
+    igt r0,r1,6
+    brf hit_igt_brf_ri,r0
+    ret
+hit_igt_brf_ri:
+    ret
+
+case_igte_brt_rr() .locals=5
+    igte r0,r1,r2
+    brt hit_igte_brt_rr,r0
+    ret
+hit_igte_brt_rr:
+    ret
+
+case_igte_brf_ri() .locals=5
+    igte r0,r1,7
+    brf hit_igte_brf_ri,r0
+    ret
+hit_igte_brf_ri:
+    ret
+
+case_igt_brt_ir() .locals=5
+    igt r0,8,r1
+    brt hit_igt_brt_ir,r0
+    ret
+hit_igt_brt_ir:
+    ret
+
+case_igte_brf_ir() .locals=5
+    igte r0,9,r1
+    brf hit_igte_brf_ir,r0
+    ret
+hit_igte_brf_ir:
+    ret
+
+case_ilt_brt_ir() .locals=5
+    ilt r0,10,r1
+    brt hit_ilt_brt_ir,r0
+    ret
+hit_ilt_brt_ir:
+    ret
+
+case_ilte_brf_ir() .locals=5
+    ilte r0,11,r1
+    brf hit_ilte_brf_ir,r0
+    ret
+hit_ilte_brf_ir:
+    ret
+
+case_live_bool_target() .locals=5
+    ieq r0,r1,32
+    .traceevent "O" 4 "R" "B" "r" 0 0 0 0 "" ""
+    brt preserve_bool,r0
+    load r0,0
+preserve_bool:
+    load r3,0
+    brt done,r0
+done:
+    ret
+
+case_live_bool_target_igt() .locals=5
+    igt r0,r1,r2
+    brt preserve_gt_bool,r0
+    load r0,0
+preserve_gt_bool:
+    load r3,0
+    brt done_gt,r0
+done_gt:
+    ret

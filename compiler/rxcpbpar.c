@@ -133,12 +133,24 @@ static Token *rxcp_next_parser_token(Context *context, int *cli_option_stage) {
     return token_f(context, rexbscan(context));
 }
 
+static Token *rxcp_take_parser_token(Context *context, int *cli_option_stage, Token **deferred_token) {
+    Token *token;
+
+    if (deferred_token && *deferred_token) {
+        token = *deferred_token;
+        *deferred_token = 0;
+        return token;
+    }
+
+    return rxcp_next_parser_token(context, cli_option_stage);
+}
+
 int rexbpars(Context *context) {
 
     char *buff, *buff_end;
     size_t bytes;
     int token_type, last_token_type;
-    Token *token, *t, *peek_token;
+    Token *token, *t, *peek_token, *deferred_token;
     void *parser;
     int cli_option_stage;
     int array_statement_active;
@@ -156,7 +168,8 @@ int rexbpars(Context *context) {
         cli_option_stage = 1;
     }
 
-    peek_token = rxcp_next_parser_token(context, &cli_option_stage);
+    deferred_token = 0;
+    peek_token = rxcp_take_parser_token(context, &cli_option_stage, &deferred_token);
     last_token_type = TK_EOC;
     int in_exit_instruction = 0;
     array_statement_active = 0;
@@ -176,7 +189,23 @@ int rexbpars(Context *context) {
         }
 
         if (token_type != TK_EOS && token_type != TK_BADCOMMENT) {
-            peek_token = rxcp_next_parser_token(context, &cli_option_stage);
+            peek_token = rxcp_take_parser_token(context, &cli_option_stage, &deferred_token);
+        }
+
+        if ((token_type == TK_STRING || token_type == TK_STRING_CONTINUATION) &&
+            peek_token->token_type == TK_EOL) {
+            Token *newline_token;
+            Token *after_newline_token;
+
+            newline_token = peek_token;
+            after_newline_token = rxcp_take_parser_token(context, &cli_option_stage, &deferred_token);
+            if (after_newline_token->token_type == TK_STRING) {
+                after_newline_token->token_type = TK_STRING_CONTINUATION;
+                peek_token = after_newline_token;
+            } else {
+                deferred_token = after_newline_token;
+                peek_token = newline_token;
+            }
         }
 
         // Promotion
@@ -250,7 +279,7 @@ int rexbpars(Context *context) {
         if (token_type == TK_COMMA && peek_token->token_type == TK_EOL) {
             token_r(context);  /* Discard tokens , and EOC tokens */
             token_r(context);
-            peek_token = rxcp_next_parser_token(context, &cli_option_stage);
+            peek_token = rxcp_take_parser_token(context, &cli_option_stage, &deferred_token);
             continue;
         }
 

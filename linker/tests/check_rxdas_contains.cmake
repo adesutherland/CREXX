@@ -22,15 +22,18 @@ if(NOT _rc EQUAL 0)
 endif()
 
 file(READ "${OUTPUT_RXAS}" _text)
-string(FIND "${_text}" "${EXPECT_TEXT_1}" _index_1)
-string(FIND "${_text}" "${EXPECT_TEXT_2}" _index_2)
 
-if(_index_1 EQUAL -1 OR _index_2 EQUAL -1)
-    message(FATAL_ERROR
-            "Expected text missing from ${OUTPUT_RXAS}\n"
-            "Expected 1: ${EXPECT_TEXT_1}\n"
-            "Expected 2: ${EXPECT_TEXT_2}")
-endif()
+foreach(_text_index RANGE 1 8)
+    set(_text_var "EXPECT_TEXT_${_text_index}")
+    if(DEFINED ${_text_var} AND NOT "${${_text_var}}" STREQUAL "")
+        string(FIND "${_text}" "${${_text_var}}" _found_index)
+        if(_found_index EQUAL -1)
+            message(FATAL_ERROR
+                    "Expected text missing from ${OUTPUT_RXAS}\n"
+                    "Expected ${_text_index}: ${${_text_var}}")
+        endif()
+    endif()
+endforeach()
 
 foreach(_absent_index RANGE 1 8)
     set(_absent_var "EXPECT_ABSENT_${_absent_index}")

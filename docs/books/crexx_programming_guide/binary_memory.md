@@ -33,6 +33,49 @@ The compiler may direct-lower selected helpers, but the source still reads as an
 ordinary action. That is deliberate: moving, resizing, and opening gaps are
 operations, not field references.
 
+## Performance Shape
+
+Direct binary-memory field access is designed for hot packed-data loops. The
+Release 1 VM keeps the strict bounds checks but uses direct fixed-width
+load/store helpers for common scalar widths. In microbenchmarks, repeated
+`<at..u8>`, `<at..u32>`, and `<at..int>` access is faster than indexed
+attribute-array access when the loop is mostly scalar field reads or writes.
+
+That does not mean every data structure should be packed. A binary layout wins
+when it removes copying, stores dense records, or lets the program scan bytes
+without materializing substrings. A normal Rexx array or set of registers can
+still win when the algorithm naturally works with scalar values and the packed
+layout forces repeated manual offset arithmetic.
+
+Good binary-memory candidates:
+
+- byte scanners and generated lexers;
+- fixed-width token or index tables;
+- lookup records where key bytes can be compared without slicing;
+- large binary constants used directly with `<at>` and `<compare>`;
+- compact external record formats whose layout is already byte-based.
+
+Weaker candidates:
+
+- small scalar metadata that is read one field at a time;
+- code that needs many separate offset calculations for every logical action;
+- ordinary string processing where Unicode-aware `.string` operations dominate;
+- structures where a register or `.int[]` representation already avoids copies.
+
+Keep offsets in local variables inside hot loops. For repeated access to fields
+in one record, compute the row or node base once, then add field offsets:
+
+```rexx
+row = HEADER_ROWS + i * ROW_SIZE
+hash = <at..u32>(row + ROW_HASH) table
+kind = <at..u8>(row + ROW_KIND) table
+```
+
+Use smaller fixed-width storage only when it matches the format. `.u8` and
+`.u32` reduce the binary footprint and can help dense structures, but they also
+add range semantics. Use `.int` when the field is genuinely a Rexx integer and
+the extra bytes do not matter.
+
 ## Layout Constants
 
 Write layout constants in bytes. This makes offset arithmetic visible and keeps
@@ -41,7 +84,7 @@ the source independent of the storage type used for each field.
 <!-- rexx-example name="packed-binary-layout" test="pending" -->
 ```rexx
 options levelb
-namespace packedindex expose find_node NODE_LEFT NODE_RIGHT NODE_HASH NODE_KEY NODE_SIZE
+namespace packedindex expose find_node
 
 packedindex_layout: procedure expose NODE_LEFT NODE_RIGHT NODE_HASH NODE_KEY NODE_SIZE
   constant NODE_LEFT = 0
@@ -53,10 +96,10 @@ packedindex_layout: procedure expose NODE_LEFT NODE_RIGHT NODE_HASH NODE_KEY NOD
   return
 ```
 
-For reusable modules, expose public procedures and any constants callers need.
-Declare constants inside an explicit procedure scope. Top-level executable code
-in a library-shaped file can synthesize an implicit `main()`, which is not
-usually what a packed-layout module wants.
+For reusable modules, expose public procedures. Keep Release 1 layout constants
+inside the source module and declare them in an explicit procedure scope.
+Top-level executable code in a library-shaped file can synthesize an implicit
+`main()`, which is not usually what a packed-layout module wants.
 
 For script-style examples that need a separate layout-constant declaration
 procedure, add an explicit `main: procedure`. Otherwise the statements after the
@@ -164,18 +207,13 @@ future optimization if profiling shows helper overhead in hot mutation paths.
 
 ## Text And Decimal Fields
 
-There are two text layouts:
+There are two text layouts, but new packed structures should prefer
+zero-terminated UTF-8 fields:
 
-- fixed-codepoint UTF-8 fields, read with `<at..string>(offset, codepoints)`;
 - zero-terminated UTF-8 fields, read with `<at..string>(offset)` and compared
-  with `<compare..string>`.
-
-For fixed-codepoint fields, the starting position is a byte offset and the
-length is a count of UTF-8 codepoints:
-
-```rexx
-name = <at..string>(name_offset, name_codepoints) record
-```
+- fixed-codepoint UTF-8 source spans, read with
+  `<at..string>(offset, codepoints)` only when the program already knows the
+  source span in codepoints.
 
 For zero-terminated fields, the program must know that the binary format stores
 a zero byte after the text. Omit the length to read the field, or use

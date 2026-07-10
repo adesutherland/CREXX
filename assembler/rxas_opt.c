@@ -319,6 +319,24 @@ typedef struct op_map {
  * disassembly lp1 may be removed if it is not used by anu other code)
  *
  */
+#define INT_CMP_BRANCH_RULE(CMP, BR, OUT, OP2TYPE, OP2NUM, OP3TYPE, OP3NUM, OUT2TYPE, OUT2NUM, OUT3TYPE, OUT3NUM) \
+            {ANY_GAP, OP_CODE, CMP, 'r', 4, OP2TYPE, OP2NUM, OP3TYPE, OP3NUM}, \
+            {NO_GAP, OP_CODE, BR, 'b', 3, 'r', 4, 0, 0, \
+                        OP_CODE, OUT, 'b', 3, OUT2TYPE, OUT2NUM, OUT3TYPE, OUT3NUM}, \
+            {END_OF_RULE},
+
+#define INT_CMP_TRACE_BRANCH_RULE(CMP, BR, OUT, OP2TYPE, OP2NUM, OP3TYPE, OP3NUM, OUT2TYPE, OUT2NUM, OUT3TYPE, OUT3NUM) \
+            {ANY_GAP, OP_CODE, CMP, 'r', 4, OP2TYPE, OP2NUM, OP3TYPE, OP3NUM}, \
+            {NO_GAP, TRACE_EVENT, 0, 'r', 4, 0, 0, 0, 0, \
+                         0}, \
+            {NO_GAP, OP_CODE, BR, 'b', 3, 'r', 4, 0, 0, \
+                        OP_CODE, OUT, 'b', 3, OUT2TYPE, OUT2NUM, OUT3TYPE, OUT3NUM}, \
+            {END_OF_RULE},
+
+#define INT_CMP_BRANCH_RULES(CMP, BR, OUT, OP2TYPE, OP2NUM, OP3TYPE, OP3NUM, OUT2TYPE, OUT2NUM, OUT3TYPE, OUT3NUM) \
+            INT_CMP_TRACE_BRANCH_RULE(CMP, BR, OUT, OP2TYPE, OP2NUM, OP3TYPE, OP3NUM, OUT2TYPE, OUT2NUM, OUT3TYPE, OUT3NUM) \
+            INT_CMP_BRANCH_RULE(CMP, BR, OUT, OP2TYPE, OP2NUM, OP3TYPE, OP3NUM, OUT2TYPE, OUT2NUM, OUT3TYPE, OUT3NUM)
+
 rule rules[] =
 
         {
@@ -546,6 +564,42 @@ rule rules[] =
             {NO_HAZARD, OP_CODE,"concat", 'r', 0, 'r', 0, 'r', 1,
                         OP_CODE,"append", 'r', 0, 'r', 1, 0, 0},
             {END_OF_RULE},
+
+            /* Integer compare followed by branch: materialise no boolean temp. */
+            INT_CMP_BRANCH_RULES("ieq", "brt", "beq", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
+            INT_CMP_BRANCH_RULES("ieq", "brf", "bne", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
+            INT_CMP_BRANCH_RULES("ine", "brt", "bne", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
+            INT_CMP_BRANCH_RULES("ine", "brf", "beq", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
+            INT_CMP_BRANCH_RULES("ilt", "brt", "blt", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
+            INT_CMP_BRANCH_RULES("ilt", "brf", "bge", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
+            INT_CMP_BRANCH_RULES("ilte", "brt", "ble", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
+            INT_CMP_BRANCH_RULES("ilte", "brf", "bgt", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
+            INT_CMP_BRANCH_RULES("igt", "brt", "bgt", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
+            INT_CMP_BRANCH_RULES("igt", "brf", "ble", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
+            INT_CMP_BRANCH_RULES("igte", "brt", "bge", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
+            INT_CMP_BRANCH_RULES("igte", "brf", "blt", 'r', 1, 'r', 2, 'r', 1, 'r', 2)
+
+            INT_CMP_BRANCH_RULES("ieq", "brt", "beq", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
+            INT_CMP_BRANCH_RULES("ieq", "brf", "bne", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
+            INT_CMP_BRANCH_RULES("ine", "brt", "bne", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
+            INT_CMP_BRANCH_RULES("ine", "brf", "beq", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
+            INT_CMP_BRANCH_RULES("ilt", "brt", "blt", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
+            INT_CMP_BRANCH_RULES("ilt", "brf", "bge", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
+            INT_CMP_BRANCH_RULES("ilte", "brt", "ble", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
+            INT_CMP_BRANCH_RULES("ilte", "brf", "bgt", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
+            INT_CMP_BRANCH_RULES("igt", "brt", "bgt", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
+            INT_CMP_BRANCH_RULES("igt", "brf", "ble", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
+            INT_CMP_BRANCH_RULES("igte", "brt", "bge", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
+            INT_CMP_BRANCH_RULES("igte", "brf", "blt", 'r', 1, 'i', 2, 'r', 1, 'i', 2)
+
+            INT_CMP_BRANCH_RULES("ilt", "brt", "bgt", 'i', 1, 'r', 2, 'r', 2, 'i', 1)
+            INT_CMP_BRANCH_RULES("ilt", "brf", "ble", 'i', 1, 'r', 2, 'r', 2, 'i', 1)
+            INT_CMP_BRANCH_RULES("ilte", "brt", "bge", 'i', 1, 'r', 2, 'r', 2, 'i', 1)
+            INT_CMP_BRANCH_RULES("ilte", "brf", "blt", 'i', 1, 'r', 2, 'r', 2, 'i', 1)
+            INT_CMP_BRANCH_RULES("igt", "brt", "blt", 'i', 1, 'r', 2, 'r', 2, 'i', 1)
+            INT_CMP_BRANCH_RULES("igt", "brf", "bge", 'i', 1, 'r', 2, 'r', 2, 'i', 1)
+            INT_CMP_BRANCH_RULES("igte", "brt", "ble", 'i', 1, 'r', 2, 'r', 2, 'i', 1)
+            INT_CMP_BRANCH_RULES("igte", "brf", "bgt", 'i', 1, 'r', 2, 'r', 2, 'i', 1)
 
             /* Unconditional branch to branch true mapped to brtf*/
             {ANY_GAP,   OP_CODE,"br",  'b', 0,  0,  0,  0,  0,
@@ -948,6 +1002,399 @@ static int instruction_is_relevant(op_map *map, instruction_queue *instruction) 
                                       instruction->operand3Token);
 }
 
+static int int_compare_branch_mnemonic(const char *mnemonic) {
+    return mnemonic &&
+           (!strcmp(mnemonic, "beq") ||
+            !strcmp(mnemonic, "bne") ||
+            !strcmp(mnemonic, "blt") ||
+            !strcmp(mnemonic, "ble") ||
+            !strcmp(mnemonic, "bgt") ||
+            !strcmp(mnemonic, "bge") ||
+            !strcmp(mnemonic, "igtbr") ||
+            !strcmp(mnemonic, "fgtbr"));
+}
+
+static int token_matches_register(Assembler_Token *token, char register_type, size_t register_number) {
+    char token_register_type;
+
+    if (!token) return 0;
+    token_register_type = reg_type(token);
+    return token_register_type == register_type &&
+           (size_t)token->token_value.integer == register_number;
+}
+
+static int int_token_matches_register_number(Assembler_Token *token, size_t register_number) {
+    return token &&
+           token->token_type == INT &&
+           token->token_value.integer >= 0 &&
+           (size_t)token->token_value.integer == register_number;
+}
+
+static int opcode_writes_op1_without_read(int opcode) {
+    switch (opcode) {
+        case OP_LOAD_REG_INT:
+        case OP_LOAD_REG_FLOAT:
+        case OP_LOAD_REG_STRING:
+        case OP_LOAD_REG_REG:
+        case OP_LOAD_REG_DECIMAL:
+        case OP_COPY_REG_REG:
+        case OP_ICOPY_REG_REG:
+        case OP_FCOPY_REG_REG:
+        case OP_SCOPY_REG_REG:
+        case OP_DCOPY_REG_REG:
+        case OP_ACOPY_REG_REG:
+        case OP_IADD_REG_REG_REG:
+        case OP_IADD_REG_REG_INT:
+        case OP_ISUB_REG_REG_REG:
+        case OP_ISUB_REG_REG_INT:
+        case OP_ISUB_REG_INT_REG:
+        case OP_IMULT_REG_REG_REG:
+        case OP_IMULT_REG_REG_INT:
+        case OP_IDIV_REG_REG_REG:
+        case OP_IDIV_REG_REG_INT:
+        case OP_IDIV_REG_INT_REG:
+        case OP_IMOD_REG_REG_REG:
+        case OP_IMOD_REG_REG_INT:
+        case OP_IMOD_REG_INT_REG:
+        case OP_IEQ_REG_REG_REG:
+        case OP_IEQ_REG_REG_INT:
+        case OP_INE_REG_REG_REG:
+        case OP_INE_REG_REG_INT:
+        case OP_IGT_REG_REG_REG:
+        case OP_IGT_REG_REG_INT:
+        case OP_IGT_REG_INT_REG:
+        case OP_IGTE_REG_REG_REG:
+        case OP_IGTE_REG_REG_INT:
+        case OP_IGTE_REG_INT_REG:
+        case OP_ILT_REG_REG_REG:
+        case OP_ILT_REG_REG_INT:
+        case OP_ILT_REG_INT_REG:
+        case OP_ILTE_REG_REG_REG:
+        case OP_ILTE_REG_REG_INT:
+        case OP_ILTE_REG_INT_REG:
+        case OP_SEQ_REG_REG_REG:
+        case OP_SEQ_REG_REG_STRING:
+        case OP_RSEQ_REG_REG_REG:
+        case OP_RSEQ_REG_REG_STRING:
+        case OP_SNE_REG_REG_REG:
+        case OP_SNE_REG_REG_STRING:
+        case OP_SGT_REG_REG_REG:
+        case OP_SGT_REG_REG_STRING:
+        case OP_SGT_REG_STRING_REG:
+        case OP_SGTE_REG_REG_REG:
+        case OP_SGTE_REG_REG_STRING:
+        case OP_SGTE_REG_STRING_REG:
+        case OP_SLT_REG_REG_REG:
+        case OP_SLT_REG_REG_STRING:
+        case OP_SLT_REG_STRING_REG:
+        case OP_SLTE_REG_REG_REG:
+        case OP_SLTE_REG_REG_STRING:
+        case OP_SLTE_REG_STRING_REG:
+        case OP_CONCAT_REG_REG_REG:
+        case OP_CONCAT_REG_REG_STRING:
+        case OP_CONCAT_REG_STRING_REG:
+        case OP_SCONCAT_REG_REG_REG:
+        case OP_SCONCAT_REG_REG_STRING:
+        case OP_SCONCAT_REG_STRING_REG:
+        case OP_CONCCHAR_REG_REG_REG:
+        case OP_TRIML_REG_REG:
+        case OP_TRIMR_REG_REG:
+        case OP_TRIML_REG_REG_REG:
+        case OP_TRIMR_REG_REG_REG:
+        case OP_TRUNC_REG_REG_REG:
+        case OP_STRLEN_REG_REG:
+        case OP_STRCHAR_REG_REG_REG:
+        case OP_STRCHAR_REG_REG:
+        case OP_HEXCHAR_REG_REG_REG:
+        case OP_POSCHAR_REG_REG_REG:
+        case OP_GETSTRPOS_REG_REG:
+        case OP_SUBSTR_REG_REG_REG:
+        case OP_STRLOWER_REG_REG:
+        case OP_STRUPPER_REG_REG:
+        case OP_TRANSCHAR_REG_REG_REG:
+        case OP_DROPCHAR_REG_REG_REG:
+        case OP_SUBSTRING_REG_REG_REG:
+        case OP_PADSTR_REG_REG_REG:
+        case OP_STRPOS_REG_REG_REG:
+        case OP_FNDBLNK_REG_REG_REG:
+        case OP_FNDNBLNK_REG_REG_REG:
+        case OP_GETBYTE_REG_REG_REG:
+        case OP_IAND_REG_REG_REG:
+        case OP_IAND_REG_REG_INT:
+        case OP_IOR_REG_REG_REG:
+        case OP_IOR_REG_REG_INT:
+        case OP_IXOR_REG_REG_REG:
+        case OP_IXOR_REG_REG_INT:
+        case OP_ISHL_REG_REG_REG:
+        case OP_ISHL_REG_REG_INT:
+        case OP_ISHR_REG_REG_REG:
+        case OP_ISHR_REG_REG_INT:
+        case OP_INOT_REG_REG:
+        case OP_INOT_REG_INT:
+        case OP_AND_REG_REG_REG:
+        case OP_OR_REG_REG_REG:
+        case OP_NOT_REG_REG:
+        case OP_LOAD_REG_BINARY:
+        case OP_BLEN_REG_REG:
+        case OP_BSLICE_REG_REG_REG:
+        case OP_GETATTRS_REG_REG:
+        case OP_GETATTRS_REG_REG_INT:
+        case OP_GETABUFS_REG_REG:
+        case OP_BGETU8_REG_REG_REG:
+        case OP_BGETI8_REG_REG_REG:
+        case OP_BGETU16_REG_REG_REG:
+        case OP_BGETI16_REG_REG_REG:
+        case OP_BGETU32_REG_REG_REG:
+        case OP_BGETI32_REG_REG_REG:
+        case OP_BGETF64_REG_REG_REG:
+        case OP_BGETI64_REG_REG_REG:
+        case OP_BGETF32_REG_REG_REG:
+        case OP_BGETS_REG_REG_REG:
+            return 1;
+        default:
+            return 0;
+    }
+}
+
+static int instruction_reads_register_before_kill(instruction_queue *instruction,
+                                                  const OpInfo *op_info,
+                                                  char register_type,
+                                                  size_t register_number) {
+    if (instruction->instrType != OP_CODE) return 0;
+
+    if (token_matches_register(instruction->operand2Token, register_type, register_number) ||
+        token_matches_register(instruction->operand3Token, register_type, register_number)) {
+        return 1;
+    }
+
+    if (op_info && (op_info->flags & FLG_IMPLICIT_REG_USE)) {
+        switch (op_info->opcode) {
+            case OP_LOAD_INT_REG:
+                if (token_matches_register(instruction->operand2Token, register_type, register_number)) return 1;
+                break;
+            case OP_LOAD_INT_INT:
+                if (register_type == 'r' &&
+                    int_token_matches_register_number(instruction->operand2Token, register_number)) return 1;
+                break;
+            case OP_INC0:
+            case OP_DEC0:
+                if (register_type == 'r' && register_number == 0) return 1;
+                break;
+            case OP_INC1:
+            case OP_DEC1:
+                if (register_type == 'r' && register_number == 1) return 1;
+                break;
+            case OP_INC2:
+            case OP_DEC2:
+                if (register_type == 'r' && register_number == 2) return 1;
+                break;
+            case OP_LINKARG_REG_INT:
+                if (register_type == 'a' &&
+                    int_token_matches_register_number(instruction->operand2Token, register_number)) return 1;
+                break;
+            default:
+                return 1;
+        }
+    }
+
+    if (!token_matches_register(instruction->operand1Token, register_type, register_number)) return 0;
+    return !op_info || !opcode_writes_op1_without_read(op_info->opcode);
+}
+
+static int instruction_kills_register(instruction_queue *instruction,
+                                      const OpInfo *op_info,
+                                      char register_type,
+                                      size_t register_number) {
+    if (instruction->instrType != OP_CODE || !op_info) return 0;
+
+    if (token_matches_register(instruction->operand1Token, register_type, register_number) &&
+        opcode_writes_op1_without_read(op_info->opcode)) {
+        return 1;
+    }
+
+    if (op_info->opcode == OP_LOAD_INT_INT &&
+        register_type == 'r' &&
+        int_token_matches_register_number(instruction->operand1Token, register_number)) {
+        return 1;
+    }
+
+    if (op_info->opcode == OP_LOAD_INT_REG &&
+        register_type == 'r' &&
+        int_token_matches_register_number(instruction->operand1Token, register_number)) {
+        return 1;
+    }
+
+    return 0;
+}
+
+static int find_label_index(Assembler_Context *context, Assembler_Token *branch_token) {
+    size_t i;
+
+    if (!branch_token || branch_token->token_type != ID) return -1;
+
+    for (i = 0; i < context->optimiser_queue_items; i++) {
+        if (context->optimiser_queue[i].instrType == ASM_LABEL &&
+            context->optimiser_queue[i].instrToken &&
+            context->optimiser_queue[i].instrToken->token_type == LABEL &&
+            strcmp((char *)context->optimiser_queue[i].instrToken->token_value.string,
+                   (char *)branch_token->token_value.string) == 0) {
+            return (int)i;
+        }
+    }
+
+    return -1;
+}
+
+static int path_uses_register_before_kill(Assembler_Context *context,
+                                          int start_index,
+                                          char register_type,
+                                          size_t register_number,
+                                          unsigned char *visited,
+                                          int depth) {
+    int index;
+    int branch_index;
+    int alternate_index;
+    const OpInfo *op_info;
+    instruction_queue *instruction;
+
+    if (depth > OPTIMISER_TARGET_MAX_QUEUE_SIZE + OPTIMISER_QUEUE_EXTRA_BUFFER_SIZE) return 1;
+
+    for (index = start_index; index < (int)context->optimiser_queue_items; index++) {
+        if (index < 0) return 1;
+        if (visited[index]) return 1;
+        visited[index] = 1;
+
+        instruction = &context->optimiser_queue[index];
+        if (instruction->instrType != OP_CODE) continue;
+
+        op_info = find_optimiser_opcode(instruction->instrToken,
+                                        instruction->operand1Token,
+                                        instruction->operand2Token,
+                                        instruction->operand3Token);
+
+        if (instruction_reads_register_before_kill(instruction, op_info, register_type, register_number)) {
+            return 1;
+        }
+
+        if (instruction_kills_register(instruction, op_info, register_type, register_number)) {
+            return 0;
+        }
+
+        if (!op_info) return 1;
+
+        if (op_info->flow == FLOW_TERM) return 0;
+
+        if (op_info->flow == FLOW_JUMP) {
+            branch_index = find_label_index(context, instruction->operand1Token);
+            if (branch_index < 0) return 1;
+            return path_uses_register_before_kill(context,
+                                                  branch_index + 1,
+                                                  register_type,
+                                                  register_number,
+                                                  visited,
+                                                  depth + 1);
+        }
+
+        if (op_info->flow == FLOW_COND) {
+            branch_index = find_label_index(context, instruction->operand1Token);
+            if (branch_index < 0) return 1;
+            if (path_uses_register_before_kill(context,
+                                               branch_index + 1,
+                                               register_type,
+                                               register_number,
+                                               visited,
+                                               depth + 1)) {
+                return 1;
+            }
+
+            if (op_info->format == FMT_L_L_R) {
+                alternate_index = find_label_index(context, instruction->operand2Token);
+                if (alternate_index < 0) return 1;
+                return path_uses_register_before_kill(context,
+                                                      alternate_index + 1,
+                                                      register_type,
+                                                      register_number,
+                                                      visited,
+                                                      depth + 1);
+            }
+        }
+    }
+
+    return 1;
+}
+
+static int compare_branch_result_is_dead(Assembler_Context *context, op_map *map) {
+    int branch_index;
+    int target_index;
+    size_t i;
+    unsigned char visited[OPTIMISER_TARGET_MAX_QUEUE_SIZE + OPTIMISER_QUEUE_EXTRA_BUFFER_SIZE];
+
+    branch_index = -1;
+    for (i = 0; i < context->optimiser_queue_items; i++) {
+        if (map->inst_mapped[i] &&
+            map->inst_mapped[i]->out.inst_type == OP_CODE &&
+            int_compare_branch_mnemonic(map->inst_mapped[i]->out.instruction)) {
+            branch_index = (int)i;
+            break;
+        }
+    }
+
+    if (branch_index < 0) return 1;
+    if (!map->reg_token[4] || !map->branch_token[3]) return 0;
+
+    memset(visited, 0, sizeof(visited));
+    if (path_uses_register_before_kill(context,
+                                       branch_index + 1,
+                                       map->regtp[4],
+                                       map->reg[4],
+                                       visited,
+                                       0)) {
+        return 0;
+    }
+
+    target_index = find_label_index(context, map->branch_token[3]);
+    if (target_index < 0) return 0;
+
+    memset(visited, 0, sizeof(visited));
+    return !path_uses_register_before_kill(context,
+                                           target_index + 1,
+                                           map->regtp[4],
+                                           map->reg[4],
+                                           visited,
+                                           0);
+}
+
+static int trace_event_matches_mapped_register(op_map *map,
+                                               instruction_queue *instruction,
+                                               char op_type,
+                                               size_t op_num) {
+    Assembler_Token *value_source;
+    Assembler_Token *register_type_token;
+    Assembler_Token *value_ref;
+    char register_type;
+
+    if (instruction->instrType != TRACE_EVENT) return 0;
+    if (op_type == 0) return 1;
+    if (op_type != 'r') return 0;
+    if (!map->reg_token[op_num]) return 0;
+
+    value_source = instruction->operand2Token;
+    register_type_token = instruction->operand4Token;
+    value_ref = instruction->operand5Token;
+
+    if (!string_token_equals(value_source, "R") ||
+        !string_token_has_single_char(register_type_token) ||
+        !value_ref ||
+        value_ref->token_type != INT ||
+        value_ref->token_value.integer < 0) {
+        return 0;
+    }
+
+    register_type = (char)tolower((unsigned char)register_type_token->token_value.string[0]);
+    return map->regtp[op_num] == register_type &&
+           map->reg[op_num] == (size_t)value_ref->token_value.integer;
+}
+
 /* Checks if a instrToken can map against an op_type
  * This checks the operand type and number is consistent with existing mapped operands
  * returns 1 if it can map, otherwise 0
@@ -1262,6 +1709,9 @@ static int can_map_instruction(op_map *map, instruction_queue *instruction, rule
                 return 0;
             return 1;
 
+        case TRACE_EVENT:
+            return trace_event_matches_mapped_register(map, instruction, rule->in.optype1, rule->in.opnum1);
+
         default:
             return 0;
     }
@@ -1298,6 +1748,9 @@ static int map_instruction(op_map *map, instruction_queue *instruction, rule *ru
                                  'l', rule->in.opnum1))
                 return 0;
             return 1;
+
+        case TRACE_EVENT:
+            return trace_event_matches_mapped_register(map, instruction, rule->in.optype1, rule->in.opnum1);
 
         default:
             return 0;
@@ -1444,6 +1897,8 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
     }
 
     if (r->flag == END_OF_RULE) {
+        if (!compare_branch_result_is_dead(context, map)) return 0;
+
         /* A match! We need to apply the output rule */
         /* Make sure inst_no is in range */
         if (inst_no >= context->optimiser_queue_items)

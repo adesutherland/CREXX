@@ -52,9 +52,10 @@ function(_crexx_register_runtime_test)
     if(_crexx_labels)
         set_tests_properties(${CREXX_NAME} PROPERTIES LABELS "${_crexx_labels}")
     endif()
-    if(CREXX_NAME MATCHES "_opt$")
-        set_tests_properties(${CREXX_NAME} PROPERTIES FIXTURES_REQUIRED linked_opt_runtime_artifacts)
-    endif()
+    # The linked-opt fixture builds generated runtime artifacts inside the
+    # active build tree. Keep all helper-generated runtime tests behind that
+    # setup step so no test executes while CTest is still driving a build.
+    set_tests_properties(${CREXX_NAME} PROPERTIES FIXTURES_REQUIRED linked_opt_runtime_artifacts)
 endfunction()
 
 function(crexx_add_rexx_opt_matrix)

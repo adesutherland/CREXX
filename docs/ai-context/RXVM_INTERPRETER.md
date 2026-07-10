@@ -427,8 +427,10 @@ register and binary-constant source forms where the source is read-only.
 canonical little-endian storage order and do not use host-native struct layout,
 alignment, or padding. Invalid ranges, negative offsets, and integer values
 outside the target storage type raise `OUT_OF_RANGE`. `BRESIZE` preserves
-existing bytes, zero-fills growth, and raises `OUT_OF_RANGE` for negative
-lengths. `BCLEAR` sets the logical binary length and cursor to zero. `BFILL`
+existing bytes, zero-fills growth, sets only the logical byte length, and may
+reuse/grow the private physical binary capacity in blocks. It raises
+`OUT_OF_RANGE` for negative lengths. `BCLEAR` sets the logical binary length
+and cursor to zero. `BFILL`
 fills the current logical byte range and requires a byte value in `0..255`.
 
 The Release 1 binary-memory VM surface also includes target-sized copy from a

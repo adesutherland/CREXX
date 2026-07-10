@@ -1,0 +1,82 @@
+/* Observational benchmark for the product rxjson parser hot paths. */
+options levelb comments_dash
+import rxfnsb
+import rxjson
+
+arg argv = .string[]
+
+rows = 60
+iterations = 30
+if argv[0] >= 1 then rows = argv[1]
+if argv[0] >= 2 then iterations = argv[2]
+
+payload = build_payload(rows)
+target_path = "items." || rows || ".sku"
+target_sku = "SKU-" || rows
+
+names = .string[]
+
+start = time("us")
+do i = 1 to iterations
+  if jsonvalid(payload) \= 1 then return fail("jsonvalid")
+end
+valid_elapsed = time("us") - start
+
+start = time("us")
+do i = 1 to iterations
+  if jsonget(payload, "choices.1.message.content") \= "Hello from JSON performance" then return fail("llm path")
+end
+deep_get_elapsed = time("us") - start
+
+start = time("us")
+do i = 1 to iterations
+  if jsonget(payload, target_path) \= target_sku then return fail("tail array path")
+end
+tail_get_elapsed = time("us") - start
+
+start = time("us")
+do i = 1 to iterations
+  if jsoncount(payload, "items") \= rows then return fail("items count")
+end
+count_elapsed = time("us") - start
+
+start = time("us")
+do i = 1 to iterations
+  member_count = jsonmembers(payload, "usage", names)
+  if member_count \= 2 then return fail("usage members count")
+  if names[1] \= "total_tokens" then return fail("usage member one")
+end
+members_elapsed = time("us") - start
+
+say "benchmark=rxjson_parser_compare"
+say "rows="rows
+say "iterations="iterations
+payload_bytes = binlength(payload as .binary)
+say "payload_bytes="payload_bytes
+say "valid_us="valid_elapsed
+say "deep_get_us="deep_get_elapsed
+say "tail_get_us="tail_get_elapsed
+say "count_us="count_elapsed
+say "members_us="members_elapsed
+say "PASS: rxjson parser compare"
+return 0
+
+build_payload: procedure = .string
+  arg rows = .int
+  items = "["
+  do i = 1 to rows
+    if i > 1 then items = items || ","
+    items = items || '{"sku":"SKU-' || i || '","qty":' || i || ',"enabled":true,"tags":["alpha","beta","γ"]}'
+  end
+  items = items || "]"
+
+  out = '{"meta":{"version":1,"name":"rxjson-bench","unicode":"αβγ"},'
+  out = out || '"choices":[{"message":{"content":"Hello from JSON performance"},"finish_reason":"stop"}],'
+  out = out || '"items":' || items || ','
+  out = out || '"usage":{"total_tokens":42,"completion_tokens":9}}'
+  return out
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1

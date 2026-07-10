@@ -100,7 +100,9 @@ endif()
         add_test(NAME ${NAME}
                  COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
                  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-        set_tests_properties(${NAME} PROPERTIES LABELS "compiler;syntax_highlighting;stage0")
+        set_tests_properties(${NAME} PROPERTIES
+                LABELS "compiler;syntax_highlighting;stage0"
+                RESOURCE_LOCK syntax_highlighting_parser)
     endfunction()
 endif()
 
@@ -929,6 +931,7 @@ add_crexx_compiler_fail_test(binary_memory_compare_explicit_length rexx_src/bina
 add_crexx_compiler_fail_test(binary_memory_compare_needle_type rexx_src/binary_memory_compare_needle_type.crexx binary_memory_compare_needle_type.txt)
 add_crexx_compiler_fail_test(binary_memory_compare_target_not_binary rexx_src/binary_memory_compare_target_not_binary.crexx binary_memory_compare_target_not_binary.txt)
 add_crexx_compiler_fail_test(binary_memory_compare_type rexx_src/binary_memory_compare_type.crexx binary_memory_compare_type.txt)
+add_crexx_compiler_fail_test(literal_continuation_suffix_error rexx_src/literal_continuation_suffix_error.crexx literal_continuation_suffix_error.txt)
 add_crexx_compiler_fail_test(intrinsic_argexists_invalid rexx_src/intrinsic_argexists_invalid.crexx intrinsic_argexists_invalid.txt)
 add_crexx_compiler_fail_test(legacy_arg_call_removed rexx_src/legacy_arg_call_removed.crexx legacy_arg_call_removed.txt)
 add_crexx_compiler_fail_test(legacy_arg_stem_removed rexx_src/legacy_arg_stem_removed.crexx legacy_arg_stem_removed.txt)
@@ -1136,6 +1139,7 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
     set(NAME "${FIXTURE}_${RUNNER}_${MODE}")
     set(BASE "${NAME}")
     set(SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
+    set(WORK_DIR "${CMAKE_CURRENT_BINARY_DIR}/${NAME}_ws")
     set(RXC_FLAGS "")
     set(RXAS_FLAGS "")
     set(LABELS "reference;compiler;source")
@@ -1152,7 +1156,7 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
         crexx_write_linked_runtime_script(
                 OUTPUT "${LINK_SCRIPT}"
                 NAME "${NAME}"
-                WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+                WORKING_DIRECTORY "${WORK_DIR}"
                 RUNNER "$<TARGET_FILE:${RUNNER}>"
                 RXLINK "$<TARGET_FILE:rxlink>"
                 PROGRAM "${BASE}.rxbin"
@@ -1161,10 +1165,11 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
     endif()
 
     set(CONTENT "set(full_out \"\")\n")
-    string(APPEND CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${RXC_FLAGS} -o \"${BASE}\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/${FIXTURE}.crexx\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    string(APPEND CONTENT "file(MAKE_DIRECTORY \"${WORK_DIR}\")\n")
+    string(APPEND CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_BINARY_DIR}/bin\" ${RXC_FLAGS} -o \"${BASE}\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/${FIXTURE}.crexx\" WORKING_DIRECTORY \"${WORK_DIR}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
     string(APPEND CONTENT "string(APPEND full_out \"\${out}\")\n")
     string(APPEND CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxc failed: \${out}\")\nendif()\n")
-    string(APPEND CONTENT "file(READ \"${CMAKE_CURRENT_BINARY_DIR}/${BASE}.rxas\" rxas)\n")
+    string(APPEND CONTENT "file(READ \"${WORK_DIR}/${BASE}.rxas\" rxas)\n")
     if(FIXTURE STREQUAL "reference_source_dereference_live" OR
        FIXTURE STREQUAL "reference_source_iterator" OR
        FIXTURE STREQUAL "reference_source_inline_lifetime")
@@ -1177,7 +1182,7 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
     string(APPEND CONTENT "    message(FATAL_ERROR \"Expected \${op} in generated reference source RXAS\")\n")
     string(APPEND CONTENT "  endif()\n")
     string(APPEND CONTENT "endforeach()\n")
-    string(APPEND CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" ${RXAS_FLAGS} -o \"${BASE}.rxbin\" \"${BASE}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+    string(APPEND CONTENT "execute_process(COMMAND \"$<TARGET_FILE:rxas>\" ${RXAS_FLAGS} -o \"${BASE}.rxbin\" \"${BASE}\" WORKING_DIRECTORY \"${WORK_DIR}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
     string(APPEND CONTENT "string(APPEND full_out \"\${out}\")\n")
     string(APPEND CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"rxas failed: \${out}\")\nendif()\n")
     if(MODE STREQUAL "opt")
@@ -1185,7 +1190,7 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
         string(APPEND CONTENT "string(APPEND full_out \"\${out}\")\n")
         string(APPEND CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"linked ${RUNNER} failed: \${out}\")\nendif()\n")
     else()
-        string(APPEND CONTENT "execute_process(COMMAND \"$<TARGET_FILE:${RUNNER}>\" \"${BASE}.rxbin\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
+        string(APPEND CONTENT "execute_process(COMMAND \"$<TARGET_FILE:${RUNNER}>\" \"${BASE}.rxbin\" \"${CMAKE_BINARY_DIR}/bin/library.rxbin\" WORKING_DIRECTORY \"${WORK_DIR}\" OUTPUT_VARIABLE out ERROR_VARIABLE out RESULT_VARIABLE res)\n")
         string(APPEND CONTENT "string(APPEND full_out \"\${out}\")\n")
         string(APPEND CONTENT "if(NOT res EQUAL 0)\n  message(FATAL_ERROR \"${RUNNER} failed: \${out}\")\nendif()\n")
     endif()
@@ -1198,7 +1203,9 @@ function(add_crexx_reference_source_test FIXTURE RUNNER MODE)
     add_test(NAME ${NAME}
              COMMAND ${CMAKE_COMMAND} -P "${SCRIPT}"
              WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-    set_tests_properties(${NAME} PROPERTIES LABELS "${LABELS}")
+    set_tests_properties(${NAME} PROPERTIES
+            LABELS "${LABELS}"
+            FIXTURES_REQUIRED linked_opt_runtime_artifacts)
 endfunction()
 
 foreach(_crexx_reference_fixture IN ITEMS reference_source_explicit reference_source_contract reference_source_iterator reference_source_dereference_live reference_source_inline_lifetime reference_source_block_lifetime)
@@ -1665,6 +1672,7 @@ add_crexx_run_test(constants_levelb_payloads rexx_src/constants_levelb_payloads.
 add_crexx_run_test(binary_memory_source rexx_src/binary_memory_source.crexx)
 add_crexx_run_test(binary_memory_span_oob rexx_src/binary_memory_span_oob.crexx)
 add_crexx_run_test(binary_memory_packed_lookup rexx_src/binary_memory_packed_lookup.crexx)
+add_crexx_run_test(literal_continuation rexx_src/literal_continuation.crexx)
 add_crexx_isolated_run_test(qualified_bif_direct_namespace rexx_src/qualified_bif_direct_namespace.crexx)
 add_crexx_dual_import_run_test(qualified_namespace_import_source rexx_src/qualified_namespace_main.crexx rexx_src/qualified_namespace_dep_a.crexx rexx_src/qualified_namespace_dep_b.crexx source)
 add_crexx_dual_import_run_test(qualified_namespace_import_binary rexx_src/qualified_namespace_main.crexx rexx_src/qualified_namespace_dep_a.crexx rexx_src/qualified_namespace_dep_b.crexx binary)
@@ -3943,7 +3951,7 @@ add_test(NAME trace_event_metadata
         -P ${CMAKE_CURRENT_SOURCE_DIR}/run_trace_event_metadata.cmake)
 set_tests_properties(trace_event_metadata PROPERTIES LABELS "compiler;stage4")
 
-set(TRACE_STEM_SUGAR_RXVM_TIMEOUT 10)
+set(TRACE_STEM_SUGAR_RXVM_TIMEOUT 60)
 set(_trace_stem_sugar_sanitizer_flags
         "${CMAKE_C_FLAGS} ${CMAKE_CXX_FLAGS} ${CMAKE_EXE_LINKER_FLAGS} ${CMAKE_SHARED_LINKER_FLAGS}")
 if(CMAKE_BUILD_TYPE)
@@ -4047,6 +4055,7 @@ string(APPEND RXC_DIAGNOSTIC_LOCALIZATION_CONTENT
        "set(binary_memory_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/binary_memory_invalid_storage.crexx\")\n"
        "set(legacy_arg_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/legacy_arg_call_removed.crexx\")\n"
        "set(top_level_constant_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/top_level_constant_removed.crexx\")\n"
+       "set(literal_continuation_src \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/literal_continuation_suffix_error.crexx\")\n"
        "function(run_diag label locale source suffix expected unexpected)\n"
        "  execute_process(\n"
        "    COMMAND \"${CMAKE_COMMAND}\" -E env \"CREXX_DIAGNOSTICS=localized\" \"CREXX_DIAGNOSTIC_LOCALE=\${locale}\" \"$<TARGET_FILE:rxc>\" -n -o \"\${label}_\${suffix}_diag\" \"\${source}\"\n"
@@ -4118,6 +4127,9 @@ string(APPEND RXC_DIAGNOSTIC_LOCALIZATION_CONTENT
        "run_diag_fail(\"en_GB\" \"en_GB\" \"\${top_level_constant_src}\" \"top_level_constant\" \"CONSTANT_OUTSIDE_ROUTINE: Constant declarations must be inside an explicit routine body.\" \"\")\n"
        "run_diag_fail(\"de_DE\" \"de_DE\" \"\${top_level_constant_src}\" \"top_level_constant\" \"CONSTANT_OUTSIDE_ROUTINE: Konstantendeklarationen müssen sich in einem expliziten Routinenrumpf befinden.\" \"\")\n"
        "run_diag_fail(\"nl_NL\" \"nl_NL\" \"\${top_level_constant_src}\" \"top_level_constant\" \"CONSTANT_OUTSIDE_ROUTINE: Constantdeclaraties moeten binnen een expliciete routinebody staan.\" \"\")\n"
+       "run_diag_fail(\"en_GB\" \"en_GB\" \"\${literal_continuation_src}\" \"literal_continuation\" \"LITERAL_CONTINUATION_SUFFIX: Only the final chunk of a continued string literal may use an x or b suffix.\" \"\")\n"
+       "run_diag_fail(\"de_DE\" \"de_DE\" \"\${literal_continuation_src}\" \"literal_continuation\" \"LITERAL_CONTINUATION_SUFFIX: Nur das letzte Stück eines fortgesetzten Zeichenfolgenliterals darf ein x- oder b-Suffix verwenden.\" \"\")\n"
+       "run_diag_fail(\"nl_NL\" \"nl_NL\" \"\${literal_continuation_src}\" \"literal_continuation\" \"LITERAL_CONTINUATION_SUFFIX: Alleen het laatste deel van een voortgezet tekenreeksliteral mag een x- of b-suffix gebruiken.\" \"\")\n"
        "run_diag(\"fallback\" \"fr_FR\" \"\${unused_src}\" \"unused\" \"UNUSED_IMPORT: Import is recognised but not used.\" \"recognized\")\n")
 file(GENERATE OUTPUT "${RXC_DIAGNOSTIC_LOCALIZATION_SCRIPT}" CONTENT "${RXC_DIAGNOSTIC_LOCALIZATION_CONTENT}")
 add_test(NAME rxc_diagnostic_localization

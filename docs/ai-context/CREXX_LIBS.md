@@ -8,6 +8,9 @@ Libraries are housed in the `lib/` directory, which is divided into domains like
 
 - `lib/rxfnsg/` (Level G class-shaped general-purpose interfaces)
 
+- `lib/rxfnsl/` (Level L language-engineering examples and generated-output
+  proving slices)
+
 - `lib/rxfnsc/` (shared Level C/RexxScript runtime foundation, currently
   housing the Rexx value, stem, and variable-pool classes)
 
@@ -58,6 +61,12 @@ for Level B web-service and transport work. It is implemented in Rexx, ships in
 Paths are Rexx-friendly and one-based for arrays, for example
 `choices.1.message.content`. This is enough to build LLM-style request JSON and
 extract common response fields without introducing a full object mapper yet.
+The parser internals use the binary-memory surface for the JSON source scan:
+the input is converted to `.binary` once per public helper call, structural
+bytes are read with direct `<at..u8>` lowering, and unescaped object keys are
+matched with binary compare before any string materialization. Repeated
+extraction from the same large document still reparses per helper call; a parsed
+or indexed JSON handle remains the next product-level performance question.
 
 For the full API contract, path syntax, examples, limits, and test location, see
 `lib/rxfnsb/rexx/rxjson.md`.
@@ -197,6 +206,17 @@ as `ADDRESS LLM_GPT_4_1`, `ADDRESS CLAUDE_SONNET_4_5`, and
 through a small driver registry of exact aliases and prefixes. See
 `lib/rxfnsg/rexx/llm.md` and `demos/llm/`.
 
+`lib/rxfnsl/rexx/tinyexpr.crexx` contains the first Level L
+language-engineering proving slice. It is deliberately not a lexer generator or
+parser generator yet. Instead, it is hand-written in the shape that a future
+generator might emit: a packed binary character-class table, fixed-width binary
+token records, an exposed declaration procedure for generated token/layout
+constants, direct binary-memory reads/writes, a zero-copy lexeme compare helper,
+and a tiny precedence parser over the packed token stream. The purpose is to
+learn whether the Rexx/RXAS binary-memory surface is usable for generated
+language tooling before porting a tool such as re2c or changing a generator
+backend to emit this style directly. See `lib/rxfnsl/rexx/tinyexpr.md`.
+
 ## 1. BIFs Implemented in cREXX (`lib/rxfnsb/rexx/`)
 
 A significant portion of the Classic REXX Built-In Functions (such as `abs()`, `date()`, `length()`, `substr()`) are written entirely in cREXX. These are located in `lib/rxfnsb/rexx/`. 
@@ -317,8 +337,11 @@ The current public classlib collection surfaces are Rexx-only. `StringHashMap`,
 string-key/object-value map variants no longer require the historical native
 `treemap` or `llist` plugins. `StringTreeMap` is backed by an AVL node pool in
 parallel arrays; `StringOldTreeMap` retains the previous array-backed map only
-for comparative benchmarks. String-key lookup uses strict equality so empty
-string keys and blank string keys remain distinct.
+for comparative benchmarks. Temporary `StringTreeMapV2`/`V2A`/`V3`/`V4`
+experiments were used to measure binary-memory and source-shape alternatives,
+then removed because none improved on the production `StringTreeMap` overall.
+String-key lookup uses strict equality so empty string keys and blank string
+keys remain distinct.
 
 `Id`, `KeyDB`, and `Os` are intentionally kept out of the core
 `classlib.rxbin` image so products such as RexxScript can use the class
@@ -352,6 +375,27 @@ left block-expression scaffolding in generated RXAS; writing `get()` and
 about 200 ms to about 2.3 ms on the local arm64 development machine. Keep hot
 lookup/update loops direct unless RXAS inspection proves the helper shape is
 equivalent.
+
+The binary-backed treemap trials showed that packed metadata can be expressed
+cleanly with `.binary` and direct binary-memory lowering. Source-shape caching
+helps both the array/register and binary versions; a packed `.u32`/`.u8` binary
+layout improves the binary variant versus the first 64-bit-field cut. The
+current optimized `.int[]` AVL metadata remains the best overall shape for this
+workload. The measurements are retained in
+`docs/planning/beta-3/notes/string-avl-treemap-trial.md` as evidence for
+binary-surface ergonomics and missing intrinsics, not as live classlib APIs.
+
+The focused `binary_fastpath_compare` benchmark isolates scalar binary-memory
+instructions from collection algorithms. In Release builds, direct `.u8`,
+`.u32`, and `.int` binary reads/writes are substantially faster than indexed
+`.int[]` attribute-array access. A VM fast-path change keeps strict bounds
+checks and canonical little-endian semantics, but replaces byte-by-byte
+fixed-width load/store loops with `memcpy`-based 1/2/4/8-byte helpers plus
+byte-swap only on known big-endian hosts. A temporary unsafe no-upper-bound
+experiment showed only modest gains, so Release 1 should keep strict checked
+binary access. See
+`docs/planning/beta-3/notes/binary-fastpath-research.md` for timings and user
+guidance.
 
 `lib/plugins/arrays` is deprecated and retained only as a legacy plugin smoke
 test. New Level B code should import `rxfnsb` and use the standard BIFs.

@@ -1,0 +1,65 @@
+options levell
+
+import rxfnsl
+
+failures = 0
+
+source = "sum + 12*(3-1)"
+tokens = tinyexpr_lex(source)
+failures = failures + check_int("lex status", tinyexpr_status(), 0)
+failures = failures + check_int("token count", tinyexpr_token_count(tokens), 10)
+failures = failures + check_str("ident kind", tinyexpr_token_name(tinyexpr_token_kind(tokens, 0)), "ident")
+failures = failures + check_int("ident zero-copy compare", tinyexpr_token_is(source, tokens, 0, "73756D"x as .binary), 1)
+failures = failures + check_str("plus kind", tinyexpr_token_name(tinyexpr_token_kind(tokens, 1)), "plus")
+failures = failures + check_str("number kind", tinyexpr_token_name(tinyexpr_token_kind(tokens, 2)), "number")
+failures = failures + check_int("number start", tinyexpr_token_start(tokens, 2), 6)
+failures = failures + check_int("number length", tinyexpr_token_length(tokens, 2), 2)
+failures = failures + check_int("number value", tinyexpr_token_value(tokens, 2), 12)
+failures = failures + check_str("eof kind", tinyexpr_token_name(tinyexpr_token_kind(tokens, 9)), "eof")
+failures = failures + check_str("token name", tinyexpr_token_name(tinyexpr_token_kind(tokens, 5)), "number")
+
+failures = failures + check_int("eval precedence", tinyexpr_eval("12 + 3*(4+5) - 6/2"), 36)
+failures = failures + check_int("eval precedence status", tinyexpr_status(), 0)
+failures = failures + check_int("eval parentheses", tinyexpr_eval("(8+4)/(2+1)"), 4)
+failures = failures + check_int("eval unary", tinyexpr_eval("-2*(3+4)"), -14)
+
+call tinyexpr_eval "2 + @"
+failures = failures + check_int("invalid byte status", tinyexpr_status(), 1)
+failures = failures + check_int("invalid byte offset", tinyexpr_error_offset(), 4)
+failures = failures + check_str("invalid byte message", tinyexpr_error_message(), "invalid input byte")
+
+call tinyexpr_eval "(1+2"
+failures = failures + check_int("missing paren status", tinyexpr_status(), 3)
+failures = failures + check_int("missing paren offset", tinyexpr_error_offset(), 4)
+
+call tinyexpr_eval "1 2"
+failures = failures + check_int("trailing token status", tinyexpr_status(), 5)
+failures = failures + check_int("trailing token offset", tinyexpr_error_offset(), 2)
+
+call tinyexpr_eval "8/(3-3)"
+failures = failures + check_int("divide by zero status", tinyexpr_status(), 4)
+failures = failures + check_int("divide by zero offset", tinyexpr_error_offset(), 1)
+
+if failures <> 0 then do
+  say "rxfnsl tinyexpr failures:" failures
+  exit 1
+end
+
+say "PASS: rxfnsl tinyexpr generated-shape demo"
+exit 0
+
+check_int: procedure = .int
+  arg label = .string, actual = .int, expected = .int
+  if actual <> expected then do
+    say label": expected" expected "got" actual
+    return 1
+  end
+  return 0
+
+check_str: procedure = .int
+  arg label = .string, actual = .string, expected = .string
+  if actual <> expected then do
+    say label": expected ["expected"] got ["actual"]"
+    return 1
+  end
+  return 0
