@@ -74,6 +74,8 @@ header ::= const_alias.
 header ::= NEWLINE.
 
 // Header error messages
+header ::= KW_JTABLE(T) error NEWLINE. {rxaserat(context, T, "Jump tables can only be declared inside a procedure");}
+header ::= KW_JCASE(T) error NEWLINE. {rxaserat(context, T, "Jump table cases can only be declared inside a procedure");}
 header ::= ANYTHING(T) error NEWLINE. {rxaserat(context, T, "Invalid header directive");}
 
 // Global directive

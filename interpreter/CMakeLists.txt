@@ -774,6 +774,8 @@ crexx_add_rxas_vm_binary(tests_jump_table_auto_edges "auto jump table policy pat
 crexx_add_vm_dual_test(NAME rxasjumptableautoedges RXVM_ARGS tests_jump_table_auto_edges PASS_REGULAR_EXPRESSION "PASS: Jump Table Auto Policy Paths")
 crexx_add_rxas_vm_binary(tests_jump_table_rexx_strings "Rexx padded and numeric string jump tables")
 crexx_add_vm_dual_test(NAME rxasjumptablerexxstrings RXVM_ARGS tests_jump_table_rexx_strings PASS_REGULAR_EXPRESSION "PASS: Jump Table Rexx String Ops")
+crexx_add_rxas_vm_binary(tests_jump_table_boundaries "jump table syntax and value boundaries")
+crexx_add_vm_dual_test(NAME rxasjumptableboundaries RXVM_ARGS tests_jump_table_boundaries PASS_REGULAR_EXPRESSION "PASS: Jump Table Boundaries")
 crexx_add_jtable_corruption_fixture(rxasjtablecorruptalgorithm linear algorithm)
 crexx_add_jtable_corruption_fixture(rxasjtablecorruptheader linear header)
 crexx_add_jtable_corruption_fixture(rxasjtablecorruptlinearkey linear linear-key-offset)
@@ -795,6 +797,12 @@ crexx_add_rxas_assembly_failure_regex(rxasjumptablebadnumerickey tests_jump_tabl
 crexx_add_rxas_assembly_failure_regex(rxasjumptablebadnumericduplicate tests_jump_table_bad_numeric_duplicate "duplicate jump table case key after canonicalization")
 crexx_add_rxas_assembly_failure_regex(rxasjumptablebadpaddedduplicate tests_jump_table_bad_padded_duplicate "duplicate jump table case key after canonicalization")
 crexx_add_rxas_assembly_failure_regex(rxasjumptablebadmatchmode tests_jump_table_bad_match_mode "cannot mix exact, padded, and numeric")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadoutsideprocedure tests_jump_table_bad_outside_procedure "Jump tables can only be declared inside a procedure")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadcaseonly tests_jump_table_bad_case_only "unknown jump table")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadprocedurescope tests_jump_table_bad_procedure_scope "unknown jump table")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadjumpbsempty tests_jump_table_bad_jumpbs_empty "jumpbs requires fixed-length non-empty binary keys")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadutf8 tests_jump_table_bad_utf8 "jump table string key is not valid UTF-8")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadnumericzeroduplicate tests_jump_table_bad_numeric_zero_duplicate "duplicate jump table case key after canonicalization")
 
 # Socket Instruction Tests
 add_custom_command(
