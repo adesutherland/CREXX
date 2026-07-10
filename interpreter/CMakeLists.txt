@@ -308,6 +308,11 @@ target_link_libraries(ts_regvalue_tester rxvmref m)
 add_executable(test_jtable_policy tests/test_jtable_policy.c)
 target_include_directories(test_jtable_policy PRIVATE ../binutils/include)
 
+add_executable(mutate_jtable_rxbin tests/mutate_jtable_rxbin.c)
+target_include_directories(mutate_jtable_rxbin PRIVATE
+        ../binutils/include
+        ../platform)
+
 add_executable(test_rxpa_utf_validation tests/test_rxpa_utf_validation.c rxpafuncs.c rxvalue.h rxvmvars.h)
 target_include_directories(test_rxpa_utf_validation PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -399,6 +404,47 @@ function(crexx_add_generated_jtable_matrix ALGORITHM DISPLAY_NAME)
             NAME rxasjumptable${ALGORITHM}sources
             RXVM_ARGS ${SOURCE_NAME}
             PASS_REGULAR_EXPRESSION "PASS: Jump Table ${DISPLAY_NAME} Source Matrix")
+endfunction()
+
+function(crexx_add_jtable_corruption_fixture NAME ALGORITHM MUTATION)
+    set(BASE_NAME tests_jump_table_corruption_${ALGORITHM})
+    set(BASE_SOURCE "${CMAKE_CURRENT_BINARY_DIR}/${BASE_NAME}.rxas")
+    set(BASE_RXBIN "${CMAKE_CURRENT_BINARY_DIR}/${BASE_NAME}.rxbin")
+    set(CORRUPT_RXBIN "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.rxbin")
+
+    set(ALGORITHM "${ALGORITHM}")
+    configure_file(
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_jump_table_corruption.rxas.in
+            ${BASE_SOURCE}
+            @ONLY)
+
+    add_custom_command(
+            OUTPUT ${BASE_RXBIN}
+            COMMAND $<TARGET_FILE:rxas> -o ${BASE_NAME} ${BASE_SOURCE}
+            DEPENDS ${BASE_SOURCE} rxas
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "cREXX RXAS jump-table corruption base (${ALGORITHM}) ...")
+
+    add_custom_command(
+            OUTPUT ${CORRUPT_RXBIN}
+            COMMAND $<TARGET_FILE:mutate_jtable_rxbin>
+                    ${BASE_RXBIN} ${CORRUPT_RXBIN} ${MUTATION}
+            DEPENDS ${BASE_RXBIN} mutate_jtable_rxbin
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Mutating jump table ${NAME} (${MUTATION}) ...")
+
+    add_custom_target(run_${NAME} ALL DEPENDS ${CORRUPT_RXBIN})
+    foreach(RUNNER IN ITEMS rxvm rxbvm)
+        add_test(
+                NAME ${NAME}_${RUNNER}
+                COMMAND ${CMAKE_COMMAND}
+                        -DRUNNER=$<TARGET_FILE:${RUNNER}>
+                        -DRXBIN=${CORRUPT_RXBIN}
+                        -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_jtable_corruption.cmake
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+        set_tests_properties(${NAME}_${RUNNER} PROPERTIES
+                LABELS "interpreter;rxas;jtable;corruption")
+    endforeach()
 endfunction()
 
 function(crexx_add_rxas_vm_failure_regex NAME SOURCE_NAME EXPECTED_REGEX)
@@ -728,6 +774,13 @@ crexx_add_rxas_vm_binary(tests_jump_table_auto_edges "auto jump table policy pat
 crexx_add_vm_dual_test(NAME rxasjumptableautoedges RXVM_ARGS tests_jump_table_auto_edges PASS_REGULAR_EXPRESSION "PASS: Jump Table Auto Policy Paths")
 crexx_add_rxas_vm_binary(tests_jump_table_rexx_strings "Rexx padded and numeric string jump tables")
 crexx_add_vm_dual_test(NAME rxasjumptablerexxstrings RXVM_ARGS tests_jump_table_rexx_strings PASS_REGULAR_EXPRESSION "PASS: Jump Table Rexx String Ops")
+crexx_add_jtable_corruption_fixture(rxasjtablecorruptalgorithm linear algorithm)
+crexx_add_jtable_corruption_fixture(rxasjtablecorruptheader linear header)
+crexx_add_jtable_corruption_fixture(rxasjtablecorruptlinearkey linear linear-key-offset)
+crexx_add_jtable_corruption_fixture(rxasjtablecorruptlineartarget linear linear-target)
+crexx_add_jtable_corruption_fixture(rxasjtablecorruptopenslot openhash open-slot-offset)
+crexx_add_jtable_corruption_fixture(rxasjtablecorruptacphslot acph acph-slot-kind)
+crexx_add_jtable_corruption_fixture(rxasjtablecorruptacphtarget acph acph-target)
 crexx_add_rxas_assembly_failure_regex(rxasjumptablebadnolabel tests_jump_table_bad_no_label "\\.jcase must decorate a same-line label")
 crexx_add_rxas_assembly_failure_regex(rxasjumptablebadunknown tests_jump_table_bad_unknown "unknown jump table")
 crexx_add_rxas_assembly_failure_regex(rxasjumptablebadjumpbsvariable tests_jump_table_bad_jumpbs_variable "jumpbs requires fixed-length")
