@@ -108,6 +108,41 @@ foreach(_crexx_mode IN ITEMS noopt opt)
     )
 endforeach()
 
+add_custom_target(performance_tinyexpr_dispatch ALL)
+crexx_add_rexx_opt_matrix(
+        NAME tinyexpr_dispatch_compare
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/tinyexpr_dispatch_compare.crexx
+        TARGET_GROUP performance_tinyexpr_dispatch
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        RXC_FLAGS -x
+        DEPENDS library rxfnsl compiler_exit_bin
+        RUNTIME_ARGS ${LIBRPATH} ${CMAKE_BINARY_DIR}/bin/rxfnsl
+        TEST_LABELS "performance;dispatch;level-l"
+)
+foreach(_crexx_mode IN ITEMS noopt opt)
+    set_tests_properties(tinyexpr_dispatch_compare_${_crexx_mode} PROPERTIES
+            PASS_REGULAR_EXPRESSION "PASS: tinyexpr dispatch compare"
+            FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+    )
+endforeach()
+
+add_custom_target(performance_jump_dispatch ALL)
+crexx_add_rexx_opt_matrix(
+        NAME jump_dispatch_compare
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/jump_dispatch_compare.crexx
+        TARGET_GROUP performance_jump_dispatch
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library compiler_exit_bin
+        RUNTIME_ARGS ${LIBRPATH}
+        TEST_LABELS "performance;dispatch"
+)
+foreach(_crexx_mode IN ITEMS noopt opt)
+    set_tests_properties(jump_dispatch_compare_${_crexx_mode} PROPERTIES
+            PASS_REGULAR_EXPRESSION "PASS: jump dispatch compare"
+            FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+    )
+endforeach()
+
 crexx_add_rexx_opt_matrix(
         NAME inlining_complex
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/inlining_complex.crexx
