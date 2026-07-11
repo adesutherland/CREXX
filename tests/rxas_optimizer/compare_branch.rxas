@@ -134,3 +134,23 @@ preserve_gt_bool:
     brt done_gt,r0
 done_gt:
     ret
+
+case_live_bool_deprecated_trim() .locals=6
+    ieq r5,r1,33
+    brt preserve_trim_bool,r5
+    load r5,0
+preserve_trim_bool:
+    triml r5,r2
+    ret
+
+case_live_bool_call_argument() .locals=7
+    ieq r5,r1,34
+    brt preserve_call_bool,r5
+    load r5,0
+preserve_call_bool:
+    load r3,2
+    call r6,consume_bool(),r3
+    ret
+
+consume_bool() .locals=0
+    ret

@@ -437,6 +437,23 @@ effects are not represented as normal operands. For example, `inc0`, `dec0`,
 as using the corresponding fixed local register when checking whether an
 intervening instruction is relevant to a rule.
 
+The bounded register-effect model is split deliberately. `rxops.h` remains
+authoritative for control flow, barriers, and whether an instruction has
+implicit register use. `binutils/include/rxopeffects.h` supplies the optimizer's
+proven overwrite-without-read and implicit-register shape for those opcodes.
+Missing effect metadata is conservative: operand 1 is assumed readable and is
+not treated as a kill. The implicit shapes cover fixed registers, integer-coded
+local/argument register indexes, and the runtime-sized contiguous argument
+range after the third operand of `call`, `dcall`, and `srcfprocsel`.
+
+The current compare/branch liveness check is intentionally bounded to the
+assembler queue and known labels. It follows declared jump edges, stops at
+terminators, and treats every optimizer barrier or unknown opcode as a possible
+observation of the live register. It is not a general control-flow graph or
+alias analysis. `test_rxop_metadata` is generated from `op_table` and checks
+that flow, implicit-use flags, effect shapes, and key barrier assumptions remain
+consistent as instructions are added.
+
 Attribute/register-view cleanup is also a keyhole concern. A full `copy`
 already copies the VM value status word, so `copy rA,rB` followed immediately
 by `acopy rA,rB` is reduced to the full copy for hand-written or legacy RXAS.

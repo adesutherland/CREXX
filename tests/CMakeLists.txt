@@ -23,6 +23,14 @@ set(RXAS_OPTIMIZER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/rxas_optimizer)
 add_custom_target(rxas_optimizer_test_prereqs ALL
         DEPENDS rxas rxdas)
 
+add_executable(test_rxop_metadata
+        test_rxop_metadata.c
+        ../binutils/include/opdata.c
+        ../binutils/rxopmeta.c)
+target_include_directories(test_rxop_metadata PRIVATE ../binutils/include)
+add_test(NAME rxas_optimizer_metadata COMMAND test_rxop_metadata)
+set_tests_properties(rxas_optimizer_metadata PROPERTIES LABELS "rxas;optimizer;metadata")
+
 function(crexx_add_rxas_optimizer_check NAME SOURCE CASE)
     set(options)
     set(oneValueArgs)
@@ -85,6 +93,7 @@ crexx_add_rxas_optimizer_check(barrier_fltbr barrier_fltbr.rxas barrier_fltbr)
 crexx_add_rxas_optimizer_check(barrier_dgtbr barrier_dgtbr.rxas barrier_dgtbr)
 crexx_add_rxas_optimizer_check(barrier_dltbr barrier_dltbr.rxas barrier_dltbr)
 crexx_add_rxas_optimizer_check(barrier_deqbr barrier_deqbr.rxas barrier_deqbr)
+crexx_add_rxas_optimizer_check(barrier_metaloadmodule barrier_metaloadmodule.rxas barrier_metaloadmodule)
 
 crexx_label_smoke_tests(rxas_optimizer_copy_acopy_opt)
 
