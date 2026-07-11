@@ -812,398 +812,815 @@ main() .locals=3
 
 ## `ine`
 
-Status: placeholder.
+Compare signed integers for inequality.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0066` | `{REG,REG,REG}` | Int Not equals op1=(op2!=op3) |
-| `0x0067` | `{REG,REG,INT}` | Int Not equals op1=(op2!=op3) |
+| `0x0066` | `ine rResult,rLeft,rRight` | Compare register integers. |
+| `0x0067` | `ine rResult,rLeft,integer` | Compare with a literal. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination integer becomes canonical Boolean `1` when unequal and `0`
+when equal. Only that payload changes; sources and cursors are unchanged.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-ine" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,4
+    ine r0,r1,5
+    ret
+```
+
+### Related
+
+`ieq`, `rne`.
 
 ## `inot`
 
-Status: placeholder.
+Invert every bit of an integer.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00b2` | `{REG,REG}` | inverts all bits of an integer (op1=~op2) |
-| `0x00b3` | `{REG,INT}` | inverts all bits of an integer (op1=~op2) |
+| `0x00b2` | `inot rResult,rValue` | Complement a register integer. |
+| `0x00b3` | `inot rResult,integer` | Complement a literal integer. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination integer receives the fixed-width two's-complement bitwise
+complement. Only its integer payload changes; a register source is unchanged.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-inot" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    inot r0,0
+    ret
+```
+
+### Related
+
+`iand`, `ior`, `ixor`, `not`.
 
 ## `ior`
 
-Status: placeholder.
+Compute bitwise OR of two integers.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00aa` | `{REG,REG,REG}` | bit wise or of 2 integers (op1=op2|op3) |
-| `0x00ab` | `{REG,REG,INT}` | bit wise or of 2 integers (op1=op2|op3) |
+| `0x00aa` | `ior rResult,rLeft,rRight` | OR register integers. |
+| `0x00ab` | `ior rResult,rLeft,integer` | OR with a literal. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Every `rxinteger` bit participates. Only the destination integer payload
+changes; sources and cursors remain unchanged.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-ior" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,8
+    ior r0,r1,3
+    ret
+```
+
+### Related
+
+`iand`, `ixor`, `inot`, `or`.
 
 ## `ipow`
 
-Status: placeholder.
+Raise a signed integer base to an integer exponent with checked multiplication.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0153` | `{REG,REG,REG}` | op1=op2**op3 |
-| `0x0154` | `{REG,REG,INT}` | op1=op2**op3 |
-| `0x0155` | `{REG,INT,REG}` | op1=op2**op3 |
+| `0x0153` | `ipow rResult,rBase,rExponent` | Register base and exponent. |
+| `0x0154` | `ipow rResult,rBase,exponent` | Literal exponent. |
+| `0x0155` | `ipow rResult,base,rExponent` | Literal base. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Nonnegative powers use exponentiation by squaring; exponent zero returns one.
+Negative exponents return `1` for base `1`, parity-selected `1`/`-1` for base
+`-1`, and otherwise fail after setting the destination integer to zero.
+Sources are unchanged.
+
+### Signals
+
+Raises `OVERFLOW_UNDERFLOW` for an unrepresentable intermediate/product or an
+unsupported negative exponent.
+
+### Example
+
+<!-- rxas-example name="integer-ipow" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,3
+    ipow r0,r1,4
+    ret
+```
+
+### Related
+
+`imult`, `fpow`.
 
 ## `irand`
 
-Status: placeholder.
+Generate a process-library pseudorandom integer, optionally reseeding first.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x01d0` | `{REG,REG}` | random number random, op1=irand(op2) |
-| `0x01d1` | `{REG,INT}` | random number random, op1=irand(op2) |
+| `0x01d0` | `irand rResult,rSeed` | Use a seed from a register. |
+| `0x01d1` | `irand rResult,seed` | Use a literal seed. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+A nonnegative seed reseeds the C library generator on every call. A negative
+seed leaves an established sequence alone; on the first such call it seeds from
+seconds since midnight. The destination is set to the next nonnegative `rand()`
+result; the seed register is unchanged.
+
+### Signals
+
+This instruction does not signal. The generator is global C-library state and
+is not specified as cryptographically secure or cross-platform reproducible.
+
+### Example
+
+<!-- rxas-example name="integer-irand" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    irand r0,1
+    ret
+```
+
+### Related
+
+`rxhash`.
 
 ## `isex`
 
-Status: placeholder.
+Negate a signed integer in place.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0156` | `{REG}` | dec op1 = -op1 (sign change) |
+| `0x0156` | `isex rValue` | Replace `rValue.int` with its additive inverse. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only the integer payload changes; all other payloads, cursor, attributes, type
+metadata, and flags remain intact.
+
+### Signals
+
+Raises `OVERFLOW_UNDERFLOW` for minimum `rxinteger`, whose positive counterpart
+is not representable. The value is not wrapped.
+
+### Example
+
+<!-- rxas-example name="integer-isex" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,5
+    isex r0
+    ret
+```
+
+### Related
+
+`isub`, `fsex`, `dsex`.
 
 ## `ishl`
 
-Status: placeholder.
+Shift a signed integer bit pattern left.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00ae` | `{REG,REG,REG}` | bit wise shift logical left of integer (op1=op2<<op3) |
-| `0x00af` | `{REG,REG,INT}` | bit wise shift logical left of integer (op1=op2<<op3) |
+| `0x00ae` | `ishl rResult,rValue,rCount` | Register shift count. |
+| `0x00af` | `ishl rResult,rValue,count` | Literal shift count. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The VM applies the host C signed-left-shift operator and writes only the
+destination integer payload. Sources are unchanged. Callers must provide a
+nonnegative count smaller than the `rxinteger` bit width and a value whose
+shifted result is representable.
+
+### Signals
+
+There is no bounds or overflow check and no VM signal for invalid shift input;
+out-of-domain counts or signed overflow have host-C undefined behavior.
+
+### Example
+
+<!-- rxas-example name="integer-ishl" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,3
+    ishl r0,r1,2
+    ret
+```
+
+### Related
+
+`ishr`, `imult`.
 
 ## `ishr`
 
-Status: placeholder.
+Shift a signed integer bit pattern right.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00b0` | `{REG,REG,REG}` | bit wise shift logical right of integer (op1=op2>>op3) |
-| `0x00b1` | `{REG,REG,INT}` | bit wise shift logical right of integer (op1=op2>>op3) |
+| `0x00b0` | `ishr rResult,rValue,rCount` | Register shift count. |
+| `0x00b1` | `ishr rResult,rValue,count` | Literal shift count. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The VM applies host C signed right shift and writes only the destination
+integer. Nonnegative values shift logically; negative-value fill behavior is
+the host compiler's signed-shift behavior. Sources remain unchanged.
+
+### Signals
+
+No count validation or signal is provided. Counts must be nonnegative and less
+than the `rxinteger` bit width; other counts have undefined host-C behavior.
+
+### Example
+
+<!-- rxas-example name="integer-ishr" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,12
+    ishr r0,r1,2
+    ret
+```
+
+### Related
+
+`ishl`, `idiv`.
 
 ## `isub`
 
-Status: placeholder.
+Subtract signed integers with overflow checking.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0011` | `{REG,REG,REG}` | Integer Subtract (op1=op2-op3) |
-| `0x0012` | `{REG,REG,INT}` | Integer Subtract (op1=op2-op3) |
-| `0x0013` | `{REG,INT,REG}` | Integer Subtract (op1=op2-op3) |
+| `0x0011` | `isub rResult,rLeft,rRight` | Register minus register. |
+| `0x0012` | `isub rResult,rLeft,integer` | Register minus literal. |
+| `0x0013` | `isub rResult,integer,rRight` | Literal minus register. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination receives the mathematical difference when representable. Only
+its integer payload changes; source registers remain unchanged.
+
+### Signals
+
+Raises `OVERFLOW_UNDERFLOW` instead of writing a wrapped result.
+
+### Example
+
+<!-- rxas-example name="integer-isub" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,2
+    isub r0,10,r1
+    ret
+```
+
+### Related
+
+`iadd`, `isex`.
 
 ## `itob`
 
-Status: placeholder.
+Canonicalize an integer payload as Boolean in place.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00ea` | `{REG}` | Set register boolean (int 1 or 0) value from its integer value |
+| `0x00ea` | `itob rValue` | Replace zero with `0`, nonzero with `1`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only the integer payload is normalized. Other payloads, cursor, attributes,
+type metadata, and flags remain unchanged.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-itob" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,-3
+    itob r0
+    ret
+```
+
+### Related
+
+`btoi`, `ftob`, `stob`.
 
 ## `itof`
 
-Status: placeholder.
+Convert an integer payload to floating point in the same register.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00e7` | `{REG}` | Set register float value from its int value |
+| `0x00e7` | `itof rValue` | Assign `(double)rValue.int` to its float payload. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only the float payload changes. Large integers can round to the nearest
+representable host `double`; the original integer remains available unchanged.
+
+### Signals
+
+This instruction does not report precision loss or signal.
+
+### Example
+
+<!-- rxas-example name="integer-itof" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,42
+    itof r0
+    ret
+```
+
+### Related
+
+`ftoi`, `btof`, `itos`.
 
 ## `itos`
 
-Status: placeholder.
+Format an integer payload as a decimal string in the same register.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00e5` | `{REG}` | Set register string value from its int value |
+| `0x00e5` | `itos rValue` | Replace the string payload with the integer spelling. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Formatting uses the current frame numeric context. The string payload is
+replaced and its cursor reset; the integer payload and other value state remain
+unchanged.
+
+### Signals
+
+There is no translated VM signal; allocation failure is fatal.
+
+### Example
+
+<!-- rxas-example name="integer-itos" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,-42
+    itos r0
+    ret
+```
+
+### Related
+
+`stoi`, `itof`, `btos`.
 
 ## `ixor`
 
-Status: placeholder.
+Compute bitwise exclusive OR of two integers.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00ac` | `{REG,REG,REG}` | bit wise exclusive OR of 2 integers (op1=op2^op3) |
-| `0x00ad` | `{REG,REG,INT}` | bit wise exclusive OR of 2 integers (op1=op2^op3) |
+| `0x00ac` | `ixor rResult,rLeft,rRight` | XOR register integers. |
+| `0x00ad` | `ixor rResult,rLeft,integer` | XOR with a literal. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Every fixed-width integer bit participates. Only the destination integer
+payload changes; source registers and cursors are unchanged.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-ixor" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,10
+    ixor r0,r1,6
+    ret
+```
+
+### Related
+
+`iand`, `ior`, `inot`.
 
 ## `not`
 
-Status: placeholder.
+Compute logical negation of an integer truth value.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00b6` | `{REG,REG}` | Logical (int) not op1=!op2 |
+| `0x00b6` | `not rResult,rValue` | Store `1` for zero, otherwise `0`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination integer becomes a canonical Boolean. Only that payload changes;
+the source and both cursors remain unchanged.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-not" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,0
+    not r0,r1
+    ret
+```
+
+### Related
+
+`and`, `or`, `inot`.
 
 ## `or`
 
-Status: placeholder.
+Compute logical disjunction of two integer truth values.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00b5` | `{REG,REG,REG}` | Logical (int) or op1=(op2 || op3) |
+| `0x00b5` | `or rResult,rLeft,rRight` | Store `1` iff either operand is nonzero. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination integer becomes canonical Boolean `0` or `1`. Only its integer
+payload changes; sources and cursors remain unchanged.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-or" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    load r1,0
+    load r2,2
+    or r0,r1,r2
+    ret
+```
+
+### Related
+
+`and`, `not`, `ior`.
 
 ## `req`
 
-Status: placeholder.
+Perform loose REXX equality comparison.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0233` | `{REG,REG,REG}` | Loose REXX Equals op1=(op2=op3) |
-| `0x0234` | `{REG,REG,STRING}` | Loose REXX Equals op1=(op2=op3) |
-| `0x0235` | `{REG,STRING,REG}` | Loose REXX Equals op1=(op2=op3) |
+| `0x0233` | `req rResult,rLeft,rRight` | Compare register strings. |
+| `0x0234` | `req rResult,rLeft,"right"` | Compare register with constant. |
+| `0x0235` | `req rResult,"left",rRight` | Compare constant with register. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+If both complete strings parse as floating-point numbers, numeric values are
+compared. Otherwise bytes are compared lexically after padding the shorter
+string on the right with spaces. The destination integer becomes `0` or `1`;
+sources and cursors are unchanged.
+
+### Signals
+
+This instruction does not signal for nonnumeric text or invalid UTF-8.
+
+### Example
+
+<!-- rxas-example name="integer-req" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,"01"
+    req r0,r1,"1"
+    ret
+```
+
+### Related
+
+`rne`, `rseq`, `seq`.
 
 ## `rgt`
 
-Status: placeholder.
+Perform loose REXX greater-than comparison.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0239` | `{REG,REG,REG}` | Loose REXX Greater than op1=(op2>op3) |
-| `0x023a` | `{REG,REG,STRING}` | Loose REXX Greater than op1=(op2>op3) |
-| `0x023b` | `{REG,STRING,REG}` | Loose REXX Greater than op1=(op2>op3) |
+| `0x0239` | `rgt rResult,rLeft,rRight` | Register strings. |
+| `0x023a` | `rgt rResult,rLeft,"right"` | Register and constant. |
+| `0x023b` | `rgt rResult,"left",rRight` | Constant and register. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Both numeric strings compare as floating-point numbers; otherwise comparison is
+unsigned-byte lexical with right-space padding. The destination integer becomes
+`1` only when left is greater. Sources and cursors are unchanged.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-rgt" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,"9"
+    rgt r0,r1,"2"
+    ret
+```
+
+### Related
+
+`rgte`, `rlt`, `req`.
 
 ## `rgte`
 
-Status: placeholder.
+Perform loose REXX greater-than-or-equal comparison.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x023c` | `{REG,REG,REG}` | Loose REXX Greater than equals op1=(op2>=op3) |
-| `0x023d` | `{REG,REG,STRING}` | Loose REXX Greater than equals op1=(op2>=op3) |
-| `0x023e` | `{REG,STRING,REG}` | Loose REXX Greater than equals op1=(op2>=op3) |
+| `0x023c` | `rgte rResult,rLeft,rRight` | Register strings. |
+| `0x023d` | `rgte rResult,rLeft,"right"` | Register and constant. |
+| `0x023e` | `rgte rResult,"left",rRight` | Constant and register. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Comparison is numeric when both strings parse as floating point, otherwise
+unsigned-byte lexical with right-space padding. The destination receives
+canonical Boolean greater-or-equal; sources and cursors are unchanged.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-rgte" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,"2"
+    rgte r0,r1,"2.0"
+    ret
+```
+
+### Related
+
+`rgt`, `rlte`, `req`.
 
 ## `rlt`
 
-Status: placeholder.
+Perform loose REXX less-than comparison.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x023f` | `{REG,REG,REG}` | Loose REXX Less than op1=(op2<op3) |
-| `0x0240` | `{REG,REG,STRING}` | Loose REXX Less than op1=(op2<op3) |
-| `0x0241` | `{REG,STRING,REG}` | Loose REXX Less than op1=(op2<op3) |
+| `0x023f` | `rlt rResult,rLeft,rRight` | Register strings. |
+| `0x0240` | `rlt rResult,rLeft,"right"` | Register and constant. |
+| `0x0241` | `rlt rResult,"left",rRight` | Constant and register. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Both numeric strings compare as floating-point numbers; otherwise comparison is
+unsigned-byte lexical with right-space padding. The destination integer is `1`
+only when left is less. Sources and cursors are unchanged.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-rlt" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,"2"
+    rlt r0,r1,"10"
+    ret
+```
+
+### Related
+
+`rlte`, `rgt`, `req`.
 
 ## `rlte`
 
-Status: placeholder.
+Perform loose REXX less-than-or-equal comparison.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0242` | `{REG,REG,REG}` | Loose REXX Less than equals op1=(op2<=op3) |
-| `0x0243` | `{REG,REG,STRING}` | Loose REXX Less than equals op1=(op2<=op3) |
-| `0x0244` | `{REG,STRING,REG}` | Loose REXX Less than equals op1=(op2<=op3) |
+| `0x0242` | `rlte rResult,rLeft,rRight` | Register strings. |
+| `0x0243` | `rlte rResult,rLeft,"right"` | Register and constant. |
+| `0x0244` | `rlte rResult,"left",rRight` | Constant and register. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Comparison is numeric when both strings parse as floating point, otherwise
+unsigned-byte lexical with right-space padding. The destination receives
+canonical Boolean less-or-equal; sources and cursors are unchanged.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-rlte" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,"10"
+    rlte r0,r1,"10.0"
+    ret
+```
+
+### Related
+
+`rlt`, `rgte`, `req`.
 
 ## `rne`
 
-Status: placeholder.
+Perform loose REXX inequality comparison.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0236` | `{REG,REG,REG}` | Loose REXX Not equals op1=(op2<>op3) |
-| `0x0237` | `{REG,REG,STRING}` | Loose REXX Not equals op1=(op2<>op3) |
-| `0x0238` | `{REG,STRING,REG}` | Loose REXX Not equals op1=(op2<>op3) |
+| `0x0236` | `rne rResult,rLeft,rRight` | Compare register strings. |
+| `0x0237` | `rne rResult,rLeft,"right"` | Register and constant. |
+| `0x0238` | `rne rResult,"left",rRight` | Constant and register. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Both numeric strings compare as floating-point numbers; otherwise the VM uses
+unsigned-byte lexical comparison with right-space padding. The destination is
+`1` when unequal and `0` when equal. Sources and cursors are unchanged.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-rne" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,"2"
+    rne r0,r1,"3"
+    ret
+```
+
+### Related
+
+`req`, `rseq`, `sne`.
 
 ## `rseq`
 
-Status: placeholder.
+Compare strings for equality after trimming ASCII spaces at both ends.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0076` | `{REG,REG,REG}` | non strict String Equals op1=(op2=op3) |
-| `0x0077` | `{REG,REG,STRING}` | non strict String Equals op1=(op2=op3) |
+| `0x0076` | `rseq rResult,rLeft,rRight` | Compare two register strings. |
+| `0x0077` | `rseq rResult,rLeft,"right"` | Compare register with constant. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Leading and trailing byte `0x20` spaces are ignored independently, then the
+remaining bytes must match exactly. Unlike `req`, numeric spellings are not
+converted and internal spaces are significant. The destination integer becomes
+`0` or `1`; sources and cursors are unchanged.
+
+### Signals
+
+This byte comparison does not validate UTF-8 or signal.
+
+### Example
+
+<!-- rxas-example name="integer-rseq" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,"  value "
+    rseq r0,r1,"value"
+    ret
+```
+
+### Related
+
+`req`, `seq`, `sne`.
