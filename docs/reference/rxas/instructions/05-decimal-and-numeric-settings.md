@@ -1,427 +1,860 @@
 # Decimal And Numeric Settings
 
-Decimal arithmetic plus decimal/numeric context inspection and update instructions.
-
-Generated skeleton from `cmake-build-debug/bin/rxas -i`; edit prose by hand and regenerate placeholder inventories only with care.
-
-Instruction placeholders in this section: 46.
-
-## Section Checklist
-
-- Purpose overview: TODO
-- Operand conventions: TODO
-- Signal/error behavior: TODO
-- Examples: TODO
-- Cross-links to related instructions: TODO
+These instructions use the current frame's decimal plugin and numeric context
+for decimal arithmetic, comparison, conversion, formatting, and settings. A
+decimal literal uses RXAS decimal syntax such as `1d` or `1e3`. Unless an entry
+states otherwise, plugin conditions are propagated as their corresponding VM
+signal after the operation.
 
 ## `btod`
 
-Status: placeholder.
+Convert an in-place Boolean integer to decimal.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00e2` | `{REG}` | Set register decimal value from its boolean value |
+| `0x00e2` | `btod rValue` | Set the decimal payload to zero or one. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Zero in the integer payload converts to decimal zero; any nonzero value converts
+to decimal one under the current context. Only the decimal payload changes.
+
+### Signals
+
+Propagates decimal-plugin allocation or conversion signals.
+
+### Example
+
+<!-- rxas-example name="decimal-btod" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,1
+    btod r0
+    ret
+```
+
+### Related
+
+`itod`, `ftod`, `dtob`.
 
 ## `dadd`
 
-Status: placeholder.
+Add two decimal values under the current numeric context.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0168` | `{REG,REG,REG}` | Decimal Add (op1=op2-op3) |
-| `0x0169` | `{REG,REG,DECIMAL}` | Decimal Add (op1=op2-op3) |
+| `0x0168` | `dadd rResult,rLeft,rRight` | Add register decimals. |
+| `0x0169` | `dadd rResult,rLeft,decimal` | Add a decimal literal. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination decimal payload receives the context-rounded sum. Register
+sources, scalar payloads, attributes, and cursors remain unchanged; destination
+aliasing with a source is supported by the plugin.
+
+### Signals
+
+Propagates decimal-plugin conditions, including invalid operands and context
+overflow/underflow.
+
+### Example
+
+<!-- rxas-example name="decimal-dadd" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,1.5d
+    dadd r0,r1,2.5d
+    ret
+```
+
+### Related
+
+`dsub`, `dmult`, `setnumdgts`.
 
 ## `dcall`
 
-Status: placeholder.
+Call a procedure through an opaque runtime procedure pointer.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x002f` | `{REG,REG,REG}` | Dynamic call procedure (op1=op2(op3...) ) |
+| `0x002f` | `dcall rResult,rProcedure,rCount` | Invoke pointer with a contiguous argument block. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+`rProcedure.int` must hold a `proc_runtime` pointer, commonly produced by
+`srcmethodsel` or `srcfprocsel`. `rCount.int` is the argument count and the
+arguments occupy consecutive registers immediately after `rCount`. Native calls
+copy their result into `rResult`; bytecode calls return into it after a new
+frame whose arguments link to the caller registers. The pointer/count/arguments
+are otherwise unchanged.
+
+### Signals
+
+Raises `FUNCTION_NOT_FOUND` for an unresolved procedure, `FAILURE` if a bytecode
+frame cannot be allocated, and propagates native procedure signals. The opaque
+pointer and argument-block bounds are not validated.
+
+### Example
+
+<!-- rxas-example name="decimal-dcall" test="assemble" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    load r2,0
+    dcall r0,r1,r2
+    ret
+```
+
+### Related
+
+`call`, `srcmethodsel`, `srcfprocsel`.
 
 ## `dcopy`
 
-Status: placeholder.
+Copy only a decimal payload between registers.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x000c` | `{REG,REG}` | Copy Decimal op2 to op1 |
+| `0x000c` | `dcopy rDestination,rSource` | Duplicate the source decimal storage. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination decimal buffer is allocated or enlarged as necessary and
+receives the exact encoded decimal. Other payloads, cursors, attributes, type
+metadata, and flags remain intact. Self-copy is a no-op; the source is unchanged.
+
+### Signals
+
+Raises `INVALID_ARGUMENTS` when the source has no decimal payload. Allocation
+failure is not translated into a VM signal.
+
+### Example
+
+<!-- rxas-example name="decimal-dcopy" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,1.25d
+    dcopy r0,r1
+    ret
+```
+
+### Related
+
+`copy`, `dtos`, `load`.
 
 ## `ddiv`
 
-Status: placeholder.
+Divide decimal values under the current numeric context.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x016f` | `{REG,REG,REG}` | Decimal Divide (op1=op2/op3) |
-| `0x0170` | `{REG,REG,DECIMAL}` | Decimal Divide (op1=op2/op3) |
-| `0x0171` | `{REG,DECIMAL,REG}` | Decimal Divide (op1=op2/op3) |
+| `0x016f` | `ddiv rResult,rDividend,rDivisor` | Register decimals. |
+| `0x0170` | `ddiv rResult,rDividend,divisor` | Literal divisor. |
+| `0x0171` | `ddiv rResult,dividend,rDivisor` | Literal dividend. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination decimal receives the context-rounded quotient. Register sources
+and non-decimal destination state remain unchanged.
+
+### Signals
+
+Propagates decimal-plugin conditions, notably division by zero, invalid decimal
+data, and context overflow/underflow.
+
+### Example
+
+<!-- rxas-example name="decimal-ddiv" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,9d
+    ddiv r0,r1,2d
+    ret
+```
+
+### Related
+
+`didiv`, `dmod`, `dmult`.
 
 ## `dec`
 
-Status: placeholder.
+Decrement a selected integer payload in place.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x001d` | `{REG}` | Decrement Int (op1--) |
+| `0x001d` | `dec rValue` | Subtract one from `rValue.int`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Despite its chapter placement and name, this is fixed-width integer decrement,
+not decimal arithmetic. Only the integer payload changes.
+
+### Signals
+
+Raises `OVERFLOW_UNDERFLOW` at minimum `rxinteger` without wrapping.
+
+### Example
+
+<!-- rxas-example name="decimal-dec" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,2
+    dec r0
+    ret
+```
+
+### Related
+
+`dec0`, `dec1`, `dec2`, `inc`.
 
 ## `dec0`
 
-Status: placeholder.
+Decrement `r0`'s integer payload using a compact operand-free opcode.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x001f` | `no operand` | Decrement R0-- Int |
+| `0x001f` | `dec0` | Subtract one from `r0.int`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only the integer payload of local register zero changes; the frame must provide
+that register. This is not a decimal operation.
+
+### Signals
+
+Raises `OVERFLOW_UNDERFLOW` at minimum `rxinteger`.
+
+### Example
+
+<!-- rxas-example name="decimal-dec0" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,1
+    dec0
+    ret
+```
+
+### Related
+
+`dec`, `dec1`, `dec2`.
 
 ## `dec1`
 
-Status: placeholder.
+Decrement `r1`'s integer payload using a compact operand-free opcode.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0021` | `no operand` | Decrement R1-- Int |
+| `0x0021` | `dec1` | Subtract one from `r1.int`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only the integer payload of local register one changes; the frame must provide
+that register. This is not a decimal operation.
+
+### Signals
+
+Raises `OVERFLOW_UNDERFLOW` at minimum `rxinteger`.
+
+### Example
+
+<!-- rxas-example name="decimal-dec1" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,1
+    dec1
+    ret
+```
+
+### Related
+
+`dec`, `dec0`, `dec2`.
 
 ## `dec2`
 
-Status: placeholder.
+Decrement `r2`'s integer payload using a compact operand-free opcode.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0023` | `no operand` | Decrement R2-- Int |
+| `0x0023` | `dec2` | Subtract one from `r2.int`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only the integer payload of local register two changes; the frame must provide
+that register. This is not a decimal operation.
+
+### Signals
+
+Raises `OVERFLOW_UNDERFLOW` at minimum `rxinteger`.
+
+### Example
+
+<!-- rxas-example name="decimal-dec2" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    load r2,1
+    dec2
+    ret
+```
+
+### Related
+
+`dec`, `dec0`, `dec1`.
 
 ## `decplnm`
 
-Status: placeholder.
+Read the active decimal plugin's identity strings.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0190` | `{REG,REG,REG}` | Get Decimal Plugin Name op1=name op2=description op3=version |
+| `0x0190` | `decplnm rName,rDescription,rVersion` | Store three plugin strings. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The three destination string payloads are replaced respectively with the
+plugin name, human description, and version. Their string cursors reset; other
+value state remains intact. Destinations should be distinct because writes are
+performed in operand order.
+
+### Signals
+
+There is no translated VM signal; allocation failure is fatal.
+
+### Example
+
+<!-- rxas-example name="decimal-decplnm" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    decplnm r0,r1,r2
+    ret
+```
+
+### Related
+
+`getnumdgts`, `getnumform`, `getnumstd`.
 
 ## `deq`
 
-Status: placeholder.
+Compare decimal values for numeric equality.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0178` | `{REG,REG,REG}` | Decimal Equals op1=(op2==op3) |
-| `0x0179` | `{REG,REG,DECIMAL}` | Decimal Equals op1=(op2==op3) |
+| `0x0178` | `deq rResult,rLeft,rRight` | Compare register decimals. |
+| `0x0179` | `deq rResult,rLeft,decimal` | Compare with a decimal literal. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination is set to integer Boolean `1` when decimal numeric values are
+equal, otherwise `0`. Exponent/encoding differences do not defeat numeric
+equality. Sources and cursors are unchanged.
+
+### Signals
+
+Propagates decimal-plugin invalid-operand conditions.
+
+### Example
+
+<!-- rxas-example name="decimal-deq" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,1d
+    deq r0,r1,1.0d
+    ret
+```
+
+### Related
+
+`dne`, `deqbr`, `dgt`.
 
 ## `deqbr`
 
-Status: placeholder.
+Branch when two register decimals are numerically equal.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x018a` | `{ID,REG,REG}` | Decimal Equal if (op2=op3) goto op1 |
+| `0x018a` | `deqbr label,rLeft,rRight` | Branch on decimal equality. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+True transfers to the procedure-local label; false falls through. Sources and
+all cursors remain unchanged.
+
+### Signals
+
+Propagates decimal-plugin invalid-operand conditions.
+
+### Example
+
+<!-- rxas-example name="decimal-deqbr" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r0,1d
+    load r1,1.0d
+    deqbr equal,r0,r1
+    ret
+equal:
+    ret
+```
+
+### Related
+
+`deq`, `dgtbr`, `dltbr`.
 
 ## `dextr`
 
-Status: placeholder.
+Extract a decimal into a coefficient string and integer exponent.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x018f` | `{REG,REG,REG}` | op3 decimal extracted to op1 string coefficient and op2 int decimal exponent |
+| `0x018f` | `dextr rCoefficient,rExponent,rDecimal` | Split the decimal representation. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The plugin normalizes and rounds to the current digits setting, trims trailing
+coefficient zeros, writes the coefficient string (or `nan`, `inf`, `-inf`) to
+the first destination, and writes the base-ten exponent integer to the second.
+The source decimal is unchanged. The coefficient string cursor resets.
+
+### Signals
+
+The instruction does not perform the normal post-call plugin-signal check;
+allocation failure is not translated into a VM signal.
+
+### Example
+
+<!-- rxas-example name="decimal-dextr" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    load r2,12.5d
+    dextr r0,r1,r2
+    ret
+```
+
+### Related
+
+`dtos`, `dformat`, `getnumdgts`.
 
 ## `dgt`
 
-Status: placeholder.
+Compare whether one decimal value is greater than another.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x017c` | `{REG,REG,REG}` | Decimal Greater than op1=(op2>op3) |
-| `0x017d` | `{REG,REG,DECIMAL}` | Decimal Greater than op1=(op2>op3) |
-| `0x017e` | `{REG,DECIMAL,REG}` | Decimal Greater than op1=(op2>op3) |
+| `0x017c` | `dgt rResult,rLeft,rRight` | Register decimals. |
+| `0x017d` | `dgt rResult,rLeft,decimal` | Register and literal. |
+| `0x017e` | `dgt rResult,decimal,rRight` | Literal and register. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination becomes integer Boolean `1` iff left is numerically greater,
+otherwise `0`. Sources and cursors are unchanged.
+
+### Signals
+
+Propagates decimal-plugin invalid-operand conditions.
+
+### Example
+
+<!-- rxas-example name="decimal-dgt" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,2d
+    dgt r0,3d,r1
+    ret
+```
+
+### Related
+
+`dgte`, `dlt`, `dgtbr`.
 
 ## `dgtbr`
 
-Status: placeholder.
+Branch when one register decimal is greater than another.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0188` | `{ID,REG,REG}` | Decimal Greater than if (op2>op3) goto op1 |
+| `0x0188` | `dgtbr label,rLeft,rRight` | Branch on decimal greater-than. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+True transfers to the procedure-local label; false falls through. Sources and
+cursors are unchanged.
+
+### Signals
+
+Propagates decimal-plugin invalid-operand conditions.
+
+### Example
+
+<!-- rxas-example name="decimal-dgtbr" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r0,2d
+    load r1,1d
+    dgtbr greater,r0,r1
+    ret
+greater:
+    ret
+```
+
+### Related
+
+`dgt`, `dltbr`, `deqbr`.
 
 ## `dgte`
 
-Status: placeholder.
+Compare whether one decimal value is greater than or equal to another.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x017f` | `{REG,REG,REG}` | Decimal Greater than equals op1=(op2>=op3) |
-| `0x0180` | `{REG,REG,DECIMAL}` | Decimal Greater than equals op1=(op2>=op3) |
-| `0x0181` | `{REG,DECIMAL,REG}` | Decimal Greater than equals op1=(op2>=op3) |
+| `0x017f` | `dgte rResult,rLeft,rRight` | Register decimals. |
+| `0x0180` | `dgte rResult,rLeft,decimal` | Register and literal. |
+| `0x0181` | `dgte rResult,decimal,rRight` | Literal and register. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination becomes canonical integer Boolean greater-or-equal. Numeric
+decimal comparison ignores encoding/exponent differences; sources are unchanged.
+
+### Signals
+
+Propagates decimal-plugin invalid-operand conditions.
+
+### Example
+
+<!-- rxas-example name="decimal-dgte" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,2d
+    dgte r0,r1,2.0d
+    ret
+```
+
+### Related
+
+`dgt`, `dlte`, `deq`.
 
 ## `didiv`
 
-Status: placeholder.
+Divide decimal values and truncate the quotient to an integral decimal.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0172` | `{REG,REG,REG}` | Integer Divide with Decimals (op1=op2/op3) |
-| `0x0173` | `{REG,REG,DECIMAL}` | Integer Divide with Decimals (op1=op2/op3) |
-| `0x0174` | `{REG,DECIMAL,REG}` | Integer Divide with Decimals (op1=op2/op3) |
+| `0x0172` | `didiv rResult,rDividend,rDivisor` | Register decimals. |
+| `0x0173` | `didiv rResult,rDividend,divisor` | Literal divisor. |
+| `0x0174` | `didiv rResult,dividend,rDivisor` | Literal dividend. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The plugin first performs context decimal division, then truncates the result
+toward zero to a decimal with no fractional part. Register sources are unchanged.
+
+### Signals
+
+Propagates plugin division, invalid-operand, overflow, and underflow conditions.
+
+### Example
+
+<!-- rxas-example name="decimal-didiv" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,7d
+    didiv r0,r1,2d
+    ret
+```
+
+### Related
+
+`ddiv`, `dmod`, `dtoi`.
 
 ## `dlt`
 
-Status: placeholder.
+Compare whether one decimal value is less than another.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0182` | `{REG,REG,REG}` | Decimal Less than op1=(op2<op3) |
-| `0x0183` | `{REG,REG,DECIMAL}` | Decimal Less than op1=(op2<op3) |
-| `0x0184` | `{REG,DECIMAL,REG}` | Decimal Less than op1=(op2<op3) |
+| `0x0182` | `dlt rResult,rLeft,rRight` | Register decimals. |
+| `0x0183` | `dlt rResult,rLeft,decimal` | Register and literal. |
+| `0x0184` | `dlt rResult,decimal,rRight` | Literal and register. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination becomes integer Boolean `1` iff left is numerically less,
+otherwise `0`. Sources and cursors are unchanged.
+
+### Signals
+
+Propagates decimal-plugin invalid-operand conditions.
+
+### Example
+
+<!-- rxas-example name="decimal-dlt" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,3d
+    dlt r0,2d,r1
+    ret
+```
+
+### Related
+
+`dlte`, `dgt`, `dltbr`.
 
 ## `dltbr`
 
-Status: placeholder.
+Branch when one register decimal is less than another.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0189` | `{ID,REG,REG}` | Decimal Less than if (op2<op3) goto op1 |
+| `0x0189` | `dltbr label,rLeft,rRight` | Branch on decimal less-than. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+True transfers to the procedure-local label; false falls through. Both decimal
+sources and their cursors remain unchanged.
+
+### Signals
+
+Propagates decimal-plugin invalid-operand conditions.
+
+### Example
+
+<!-- rxas-example name="decimal-dltbr" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r0,1d
+    load r1,2d
+    dltbr less,r0,r1
+    ret
+less:
+    ret
+```
+
+### Related
+
+`dlt`, `dgtbr`, `deqbr`.
 
 ## `dlte`
 
-Status: placeholder.
+Compare whether one decimal value is less than or equal to another.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0185` | `{REG,REG,REG}` | Decimal Less than equals op1=(op2<=op3) |
-| `0x0186` | `{REG,REG,DECIMAL}` | Decimal Less than equals op1=(op2<=op3) |
-| `0x0187` | `{REG,DECIMAL,REG}` | Decimal Less than equals op1=(op2<=op3) |
+| `0x0185` | `dlte rResult,rLeft,rRight` | Register decimals. |
+| `0x0186` | `dlte rResult,rLeft,decimal` | Register and literal. |
+| `0x0187` | `dlte rResult,decimal,rRight` | Literal and register. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination becomes canonical integer Boolean less-or-equal. Decimal
+sources, cursors, and other destination state remain unchanged.
+
+### Signals
+
+Propagates decimal-plugin invalid-operand conditions.
+
+### Example
+
+<!-- rxas-example name="decimal-dlte" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,2d
+    dlte r0,r1,2d
+    ret
+```
+
+### Related
+
+`dlt`, `dgte`, `deq`.
 
 ## `dmod`
 
-Status: placeholder.
+Compute the decimal remainder paired with truncating decimal division.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0175` | `{REG,REG,REG}` | Decimal Modulo (op1=op2%op3) |
-| `0x0176` | `{REG,REG,DECIMAL}` | Decimal Modulo (op1=op2%op3) |
-| `0x0177` | `{REG,DECIMAL,REG}` | Decimal Modulo (op1=op2&op3) |
+| `0x0175` | `dmod rResult,rDividend,rDivisor` | Register decimals. |
+| `0x0176` | `dmod rResult,rDividend,divisor` | Literal divisor. |
+| `0x0177` | `dmod rResult,dividend,rDivisor` | Literal dividend. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The VM computes `dividend - truncate(dividend/divisor) * divisor` using plugin
+decimal operations and the current context. Register sources remain unchanged;
+aliasing the destination with either source is supported.
+
+### Signals
+
+Propagates plugin conditions from division, truncation, multiplication, or
+subtraction, including division by zero.
+
+### Example
+
+<!-- rxas-example name="decimal-dmod" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,7d
+    dmod r0,r1,3d
+    ret
+```
+
+### Related
+
+`didiv`, `ddiv`, `dmult`.
 
 ## `dmult`
 
-Status: placeholder.
+Multiply decimal values under the current numeric context.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x016d` | `{REG,REG,REG}` | Decimal Multiply (op1=op2*op3) |
-| `0x016e` | `{REG,REG,DECIMAL}` | Decimal Multiply (op1=op2*op3) |
+| `0x016d` | `dmult rResult,rLeft,rRight` | Multiply register decimals. |
+| `0x016e` | `dmult rResult,rLeft,decimal` | Multiply by a literal. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination decimal receives the context-rounded product. Sources and
+non-decimal value state remain unchanged; destination aliasing is supported.
+
+### Signals
+
+Propagates decimal-plugin invalid, overflow, and underflow conditions.
+
+### Example
+
+<!-- rxas-example name="decimal-dmult" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,2.5d
+    dmult r0,r1,4d
+    ret
+```
+
+### Related
+
+`dadd`, `ddiv`, `dpow`.
 
 ## `dne`
 
-Status: placeholder.
+Compare decimal values for numeric inequality.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x017a` | `{REG,REG,REG}` | Decimal Not equals op1=(op2!=op3) |
-| `0x017b` | `{REG,REG,DECIMAL}` | Decimal Not equals op1=(op2!=op3) |
+| `0x017a` | `dne rResult,rLeft,rRight` | Compare register decimals. |
+| `0x017b` | `dne rResult,rLeft,decimal` | Compare with a literal. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination becomes integer Boolean `1` when numeric decimal values differ
+and `0` when equal. Sources, decimal encodings, and cursors remain unchanged.
+
+### Signals
+
+Propagates decimal-plugin invalid-operand conditions.
+
+### Example
+
+<!-- rxas-example name="decimal-dne" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,1d
+    dne r0,r1,2d
+    ret
+```
+
+### Related
+
+`deq`, `dgt`, `dlt`.
 
 ## `dpow`
 
