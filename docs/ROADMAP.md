@@ -107,6 +107,7 @@ until they are narrowed.
 | JIT / MIR / LLVM-style backend research | #331 | Research only. Keep separate from the interpreter and bytecode release contract. |
 | RXAS instruction rationalisation | #288, #338, #357 | Review after instruction coverage is better understood. Preserve assembler-user value unless there is a measured maintenance cost. |
 | Optimizer and loop super-instructions | #339 | `BCTP` / `IGTBR` optimizer work has landed. Future optimizer work should be benchmark-driven and covered by RXAS optimizer tests. |
+| RXAS control-flow and dispatch optimization | Jump-table beta 3 work | Build a reusable RXAS control-flow graph with reaching-definition and liveness analysis before recognizing emitted or hand-written branch ladders. Audit the instruction database first so every opcode accurately records register reads, writes, mutation, and flow edges. Use those proofs to consider jump-table lowering, dead-register reuse, and later register assignment improvements; do not extend the current keyhole window to guess across arbitrary control flow. |
 | String performance follow-up | #470 | Performance results are useful, but regressions or semantic fallout should be tracked through concrete bugs such as #583. |
 
 ## Library, Plugin, And Host Integration Roadmap

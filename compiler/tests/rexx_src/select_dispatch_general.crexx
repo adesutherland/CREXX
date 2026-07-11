@@ -5,7 +5,7 @@ main: procedure = .int
   index = .int
   exposed_value = .int
 
-  do index = -1 to 3
+  do index = -1 to 6
     say if_classify(index)
     say classic_classify(index)
     say strict_classify(index)
@@ -30,6 +30,10 @@ if_classify: procedure = .int
   else if value = 0 then return 10
   else if value = 1 then return 20
   else if value = 2 then return 30
+  else if value = 3 then return 40
+  else if value = 4 then return 50
+  else if value = 5 then return 60
+  else if value = 6 then return 70
   else return -1
   return -2
 
@@ -41,6 +45,10 @@ classic_classify: procedure = .int
     when value = 0 then return 110
     when value = 1 then return 120
     when value = 2 then return 130
+    when value = 3 then return 140
+    when value = 4 then return 150
+    when value = 5 then return 160
+    when value = 6 then return 170
     otherwise return -101
   end
   return -102
@@ -52,6 +60,10 @@ strict_classify: procedure = .int
   else if value == 0 then return 410
   else if value == 1 then return 420
   else if value == 2 then return 430
+  else if value == 3 then return 440
+  else if value == 4 then return 450
+  else if value == 5 then return 460
+  else if value == 6 then return 470
   else return -401
   return -402
 

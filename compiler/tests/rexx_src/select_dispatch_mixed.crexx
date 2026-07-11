@@ -6,7 +6,7 @@ main: procedure = .int
   values = .int[8]
 
   values[1] = 2
-  values[2] = 5
+  values[2] = 9
   values[3] = 11
   values[4] = 25
   values[5] = 21
@@ -31,7 +31,12 @@ mixed_classify: procedure = .int
     when 1 then return 101
     when 2 then return 102
     when 3 then return 103
-    when dynamic_key(counter, 5) then return 150
+    when 4 then return 104
+    when 5 then return 105
+    when 6 then return 106
+    when 7 then return 107
+    when 8 then return 108
+    when dynamic_key(counter, 9) then return 150
     when 10 then return 210
     when 11 then return 211
     when 12 then return 212

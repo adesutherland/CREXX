@@ -127,9 +127,12 @@ Should-ship items are important but have explicit fallback paths.
 
 1. Perfect-hash `select`
 
-   Target static string/int `select x when ...` cases. Fallback: current nested
-   `IF` lowering remains the Release 1 behaviour, with the optimization moved
-   post-release.
+   The RXAS packed-table surface, linear/open-hash/ACPH algorithms, measured
+   `auto` policy, VM execution, disassembly round trip, corruption handling,
+   and conservative `rxc` integer/string/binary lowering are implemented on
+   `develop` for beta 3 WIP. Remaining Release 1 work is cross-platform QA
+   and documentation/release review; arbitrary RXAS branch-ladder recognition
+   is explicitly post-Release 1 CFG/dataflow work.
 
 2. First Level G library version
 

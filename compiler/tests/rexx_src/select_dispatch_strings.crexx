@@ -19,6 +19,8 @@ main: procedure = .int
   say binary_short("fe"x as .binary)
   say binary_short("fd"x as .binary)
   say nan_key("2")
+  say padded_two("second ")
+  say numeric_two("02.0")
   return 0
 
 c_padded: procedure = .int
@@ -142,3 +144,23 @@ nan_key: procedure = .int
   else if value = "2" then return 1103
   else return -1100
   return -1101
+
+padded_two: procedure = .int
+  arg value = .string
+
+  select value
+    when "first" then return 1201
+    when "second" then return 1202
+    otherwise return -1200
+  end
+  return -1201
+
+numeric_two: procedure = .int
+  arg value = .string
+
+  select value
+    when "1" then return 1301
+    when "2" then return 1302
+    otherwise return -1300
+  end
+  return -1301

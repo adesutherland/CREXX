@@ -4,7 +4,7 @@ main: procedure = .int
   i = .int
   inner = .int
 
-  do i = -2 to 4
+  do i = -2 to 5
     inner = i
     say classify(i)
     say no_default(i)
@@ -23,6 +23,8 @@ classify: procedure = .int
     when 1 then return 20
     when 2 then return 30
     when CASE_THREE then return 40
+    when 4 then return 50
+    when 5 then return 60
     when 5000000000 then return 5000
     otherwise return -1
   end

@@ -143,6 +143,9 @@ Shared format constants and hash functions live in
 `binutils/include/rxjtable.h` and must remain common to the assembler and VM
 readers.
 
+The complete packed layout, canonicalization, corruption, disassembly, and
+ownership contract is in [RXBIN_JUMP_TABLES.md](RXBIN_JUMP_TABLES.md).
+
 ### Binary Literals
 
 RXAS binary literals are written as byte-paired hex with a `0x` or `0X`

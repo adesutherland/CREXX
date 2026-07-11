@@ -71,6 +71,10 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
    - Cross-file inlining uses compiler-owned `META_INLINE` payloads alongside
      normal callable metadata. Libraries preserve this metadata for downstream
      `rxc` optimisation; final linked images strip it by default.
+   - Suitable `SELECT` and equality ladders are lowered through a dedicated
+     dispatch AST to RXAS packed jump tables. Eligibility, semantic gates,
+     profitability thresholds, and regression invariants are documented in
+     [RXC_DISPATCH_OPTIMIZATION.md](RXC_DISPATCH_OPTIMIZATION.md).
 
 5. **Assembler (`rxas`)**
    - Parses the generated `rxas` Assembly instructions.

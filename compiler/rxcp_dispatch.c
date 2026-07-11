@@ -35,7 +35,11 @@
 #include "rxcp_dispatch.h"
 #include "rxcp_util.h"
 
-#define RXCP_DISPATCH_MIN_CASES 3
+#define RXCP_DISPATCH_MIN_INTEGER_CASES 8
+#define RXCP_DISPATCH_MIN_EXACT_STRING_CASES 3
+#define RXCP_DISPATCH_MIN_PADDED_STRING_CASES 2
+#define RXCP_DISPATCH_MIN_NUMERIC_STRING_CASES 2
+#define RXCP_DISPATCH_MIN_BINARY_CASES 3
 
 typedef struct RxcpDispatchCase {
     ASTNode *if_node;
@@ -487,6 +491,23 @@ static ValueType dispatch_key_type(DispatchKind kind) {
     }
 }
 
+static size_t dispatch_minimum_cases(DispatchKind kind) {
+    switch (kind) {
+        case DISPATCH_INTEGER:
+            return RXCP_DISPATCH_MIN_INTEGER_CASES;
+        case DISPATCH_STRING_EXACT:
+            return RXCP_DISPATCH_MIN_EXACT_STRING_CASES;
+        case DISPATCH_STRING_PADDED:
+            return RXCP_DISPATCH_MIN_PADDED_STRING_CASES;
+        case DISPATCH_STRING_NUMERIC:
+            return RXCP_DISPATCH_MIN_NUMERIC_STRING_CASES;
+        case DISPATCH_BINARY_EXACT:
+            return RXCP_DISPATCH_MIN_BINARY_CASES;
+        default:
+            return SIZE_MAX;
+    }
+}
+
 static void rewrite_dispatch(Context *context,
                              RxcpDispatchCandidate *candidate,
                              size_t start,
@@ -584,7 +605,7 @@ static void lower_dispatch_runs(Context *context,
             start--;
         }
 
-        if (end - start + 1 >= RXCP_DISPATCH_MIN_CASES &&
+        if (end - start + 1 >= dispatch_minimum_cases(candidate->cases[end].kind) &&
             !dispatch_run_has_duplicate_key(candidate, start, end)) {
             rewrite_dispatch(context, candidate, start, end);
         }
