@@ -1,0 +1,4 @@
+Error in int64_literal_overflow.crexx @ 6:14 - #OVERFLOW_UNDERFLOW, "9223372036854775808"
+Error in int64_literal_overflow.crexx @ 7:14 - #OVERFLOW_UNDERFLOW, "9223372036854775809"
+Error in int64_literal_overflow.crexx @ 6:3 - #OVERFLOW_UNDERFLOW, "too_high"
+3 error(s) in source file

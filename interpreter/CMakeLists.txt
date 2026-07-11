@@ -660,6 +660,20 @@ add_custom_target(run_tests_int_math ALL DEPENDS tests_int_math.rxbin)
 
 crexx_add_vm_dual_test(NAME rxasintmathtests RXVM_ARGS tests_int_math)
 
+crexx_add_rxas_vm_binary(tests_int_contract "signed 64-bit integer contract")
+crexx_add_vm_dual_test(
+        NAME rxasintcontracttests
+        RXVM_ARGS tests_int_contract
+        PASS_REGULAR_EXPRESSION "PASS: Signed 64-bit Integer Contract")
+crexx_add_rxas_assembly_failure_regex(
+        rxasintoverflowpositive tests_int_overflow_positive
+        "integer literal is outside the signed 64-bit range")
+crexx_add_rxas_assembly_failure_regex(
+        rxasintoverflownegative tests_int_overflow_negative
+        "integer literal is outside the signed 64-bit range")
+set_tests_properties(rxasintoverflowpositive rxasintoverflownegative PROPERTIES
+        LABELS "interpreter;rxas;integer;negative")
+
 # Float Math Instruction Tests
 add_custom_command(
 		OUTPUT tests_float_math.rxbin

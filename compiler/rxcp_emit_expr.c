@@ -33,6 +33,17 @@
 #include "rxcp_emit.h"
 #include "rxsignature.h"
 
+static int emit_is_rxinteger_min_magnitude_literal(ASTNode *node) {
+    static const char magnitude[] = "9223372036854775808";
+    Token *token;
+
+    if (!node) return 0;
+    token = node->token;
+    return token &&
+           token->length == sizeof(magnitude) - 1 &&
+           memcmp(token->token_string, magnitude, sizeof(magnitude) - 1) == 0;
+}
+
 static Symbol *dereference_assignment_target(ASTNode *node) {
     ASTNode *assign;
     ASTNode *target;
@@ -1349,8 +1360,14 @@ void emit_expression(ASTNode *node, void *payload) {
 
         case OP_NEG:
             if (!node->output) node->output = output_f();
-            if (child1->output) output_concat(node->output, child1->output);
-            if (node->value_type == TP_FLOAT) {
+            if (node->value_type == TP_INTEGER &&
+                emit_is_rxinteger_min_magnitude_literal(child1)) {
+                temp1 = mprintf("   load %c%d,-9223372036854775808\n",
+                                node->register_type,
+                                node->register_num);
+            }
+            else if (node->value_type == TP_FLOAT) {
+                if (child1->output) output_concat(node->output, child1->output);
                 temp1 = mprintf("   fsub %c%d,0.0,%c%d\n",
                                 node->register_type,
                                 node->register_num,
@@ -1358,6 +1375,7 @@ void emit_expression(ASTNode *node, void *payload) {
                                 child1->register_num);
             }
             else if (node->value_type == TP_DECIMAL) {
+                if (child1->output) output_concat(node->output, child1->output);
                 temp1 = mprintf("   dsub %c%d,0d,%c%d\n",
                                 node->register_type,
                                 node->register_num,
@@ -1365,6 +1383,7 @@ void emit_expression(ASTNode *node, void *payload) {
                                 child1->register_num);
             }
             else {
+                if (child1->output) output_concat(node->output, child1->output);
                 temp1 = mprintf("   isub %c%d,0,%c%d\n",
                                 node->register_type,
                                 node->register_num,

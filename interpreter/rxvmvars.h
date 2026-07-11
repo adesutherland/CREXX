@@ -1824,11 +1824,8 @@ RX_INLINE void int_to_string(numeric_context *cnt, value *temp, value *v) {
     if (cnt->digits >= DIGITS_STRIKE_POINT) {
         // Fast path for a large number of digits - just convert the integer to string and set exponent to 0
         prep_string_buffer(v, SMALLEST_STRING_BUFFER_LENGTH); // Large enough for an int
-#ifdef __32BIT__
-        v->string_length = snprintf(v->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%ld",(long)v->int_value);
-#else
-        v->string_length = snprintf(v->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%lld",(long long)v->int_value);
-#endif
+        v->string_length = snprintf(v->string_value, SMALLEST_STRING_BUFFER_LENGTH,
+                                    "%" RXINTEGER_PRI, v->int_value);
         v->string_pos = 0;
 #ifndef NUTF8
         mark_ascii_string_valid_count(v);
@@ -1872,21 +1869,14 @@ RX_INLINE int string2integer(rxinteger *out, char *string, size_t length) {
     char *buffer = malloc(length + 1);
     char *end = buffer;
     int rc = 0;
-    errno = 0;
+    rxinteger parsed;
 
     /* Null terminated buffer */
     buffer[length] = 0;
     memcpy(buffer, string, length);
 
-    /* Convert */
-#ifdef __32BIT__
-    rxinteger l = strtol(buffer, &end, 10);
-#else
-    rxinteger l = strtoll(buffer, &end, 10);
-#endif
-
     /* Convert error */
-    if (errno == ERANGE || end == buffer) {
+    if (rxinteger_parse(buffer, &end, &parsed)) {
         rc = 1;
         goto end_string2integer;
     }
@@ -1901,7 +1891,7 @@ RX_INLINE int string2integer(rxinteger *out, char *string, size_t length) {
     }
 
     /* All good */
-    *out = l;
+    *out = parsed;
 
     end_string2integer:
     free(buffer);
@@ -2405,11 +2395,9 @@ static void extract_integer_decimal(numeric_context* num_context, value *coeffic
     }
 
     prep_string_buffer(coefficient, SMALLEST_STRING_BUFFER_LENGTH); // Large enough for an int
-#ifdef __32BIT__
-    coefficient->string_length = snprintf(coefficient->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%ld",(long)value);
-#else
-    coefficient->string_length = snprintf(coefficient->string_value,SMALLEST_STRING_BUFFER_LENGTH,"%lld",(long long)value);
-#endif
+    coefficient->string_length = snprintf(coefficient->string_value,
+                                          SMALLEST_STRING_BUFFER_LENGTH,
+                                          "%" RXINTEGER_PRI, value);
     coefficient->string_pos = 0;
 
     // We are converting to coefficient, as an example, from 123456 to 1.23456 (i.e. normalised scientific notation)

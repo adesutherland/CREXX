@@ -237,7 +237,7 @@ To limit memory fragmentation, strings shorter than `SMALLEST_STRING_BUFFER_LENG
 ```c
 struct value {
     value_type status;               /* Partitioned status/cache flags */
-    rxinteger int_value;             /* 64-bit/32-bit native integer */
+    rxinteger int_value;             /* Release 1 signed 64-bit .int */
     double float_value;              /* Native floating point */
     
     void *decimal_value;             /* Pointer for arbitrary precision math */

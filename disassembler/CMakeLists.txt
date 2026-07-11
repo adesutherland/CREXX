@@ -75,6 +75,13 @@ crexx_add_rxdas_roundtrip(
 )
 
 crexx_add_rxdas_roundtrip(
+        NAME rxdas_roundtrip_int64_contract
+        SOURCE ${CMAKE_SOURCE_DIR}/interpreter/tests/tests_int_contract.rxas
+        EXPECT_DISASSEMBLY_TEXT_1 "9223372036854775807"
+        EXPECT_DISASSEMBLY_TEXT_2 "-9223372036854775808"
+)
+
+crexx_add_rxdas_roundtrip(
         NAME rxdas_roundtrip_float_pool
         SOURCE ${CMAKE_SOURCE_DIR}/interpreter/tests/tests_float_pool.rxas
         EXPECT_DISASSEMBLY_TEXT_1 "3.1415926535897931"

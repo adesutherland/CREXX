@@ -107,6 +107,11 @@ Must-ship items are part of the Release 1 contract or release process.
    broader source sugar are explicitly deferred; they can be represented in
    binary memory until a later design justifies separate forms.
 
+   The scalar `.int` contract is signed 64-bit on every supported Release 1
+   desktop build. The shared ABI typedef, parser boundaries, checked arithmetic,
+   compiler folding, RXAS literal handling, and VM limits are covered together;
+   legacy 32-bit-host validation remains separate platform work.
+
 9. Performance baseline and targeted improvements
 
    Establish performance baselines before changes. Ship only measured or

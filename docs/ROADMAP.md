@@ -82,6 +82,7 @@ release gate.
 
 | Theme | Source discussions | Direction |
 |-------|--------------------|-----------|
+| Legacy 32-bit platform validation | Release 1 `.int` contract | Keep `.int` signed 64-bit even when revisiting a 32-bit host ABI. Audit pointer-sized handles, RXBIN compatibility, compiler/toolchain availability, memory limits, and performance as separate platform work; do not restore a host-sized `.int` typedef. |
 | z/VM CMS support | #278 | Keep the CMS interest and contact history as roadmap context. Current CMS work is best expressed as deterministic demos and ADDRESS environment compatibility rather than a full platform promise. |
 | VM/370 build recovery | #294, #322 | Investigate cross-compilation and source-structure constraints after the Level B desktop release line is stable. |
 | MVS/370 porting | #379 | Treat as a future platform project. Likely needs a dedicated maintainer, toolchain notes, and a clear cross-build strategy. |

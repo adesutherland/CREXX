@@ -472,11 +472,8 @@ static size_t disassemble_operand(bin_space *pgm, char* buffer, size_t buffer_le
             out_len = get_func_string(pgm, buffer, buffer_len, ix);
             break;
         case OP_INT:
-#ifdef __32BIT__
-            out_len = snprintf(buffer, buffer_len, "%d", pgm->binary[index].iconst);
-#else
-            out_len = snprintf(buffer, buffer_len, "%lld", pgm->binary[index].iconst);
-#endif
+            out_len = snprintf(buffer, buffer_len, "%" RXINTEGER_PRI,
+                               pgm->binary[index].iconst);
             break;
         case OP_FLOAT:
             out_len = format_float_literal(buffer, buffer_len,

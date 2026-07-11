@@ -252,8 +252,11 @@ without destroying runtime/library cache flags stored on the same value.
 VM-private bits; unmasked `BRTPT` only tests public/external flag bands so VM
 cache bits do not change old branch semantics.
 
-RXAS/RXBIN integer operands remain `rxinteger`; status instructions cast masks
-to the 32-bit flag word before applying the partition.
+RXAS/RXBIN integer operands remain `rxinteger`. The canonical definition is
+`platform/rxinteger.h`, and Release 1 fixes it to signed 64-bit across the
+compiler, assembler, VM, and RXPA ABI. Host pointer width is not the language
+integer width. Status instructions cast masks to the 32-bit flag word before
+applying the partition.
 Level B flag-view assignments use `SETTPMASK`, a masked replacement operation
 restricted to the source-writable library/user bands, so `.flags.compiler`
 remains read-only to source code while generated call setup can still maintain

@@ -20,6 +20,13 @@ enable_testing()
 
 set(RXAS_OPTIMIZER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/rxas_optimizer)
 
+add_executable(test_rxinteger_contract test_rxinteger_contract.c)
+target_include_directories(test_rxinteger_contract PRIVATE
+        ../platform ../interpreter ../rxpa ../binutils/include ${CMAKE_BINARY_DIR}/generated)
+target_link_libraries(test_rxinteger_contract PRIVATE platform)
+add_test(NAME rxinteger_contract COMMAND test_rxinteger_contract)
+set_tests_properties(rxinteger_contract PROPERTIES LABELS "integer;abi;platform")
+
 add_custom_target(rxas_optimizer_test_prereqs ALL
         DEPENDS rxas rxdas)
 

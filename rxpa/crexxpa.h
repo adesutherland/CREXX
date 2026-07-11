@@ -30,27 +30,13 @@
 
 #include "crexx_version.h"
 #include <stddef.h>
+#include "../platform/rxinteger.h"
 
 // plugin debug set to 1 if needed, else 0  added by pej 28. OCT 2024
 //    debug is created in GETSTRING/GETINT/GETFLOAD calls and typically outputs the REXX input parameters
 // #define pluginDEBUG 0
 
 // Plugin Support Functions and Macros
-
-// Define rxinteger type
-#ifndef RXINTEGER_T
-#define RXINTEGER_T
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L /* C99 */
-#include <stdint.h>
-typedef intmax_t rxinteger;
-#else
-#ifdef __32BIT__
-typedef long rxinteger;
-#else
-typedef long long rxinteger;
-#endif
-#endif
-#endif //RXINTEGER_T
 
 // Typedef for attribute value which is an opaque pointer
 typedef void* rxpa_attribute_value;

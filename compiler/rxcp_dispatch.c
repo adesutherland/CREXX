@@ -135,23 +135,30 @@ static int dispatch_integer_key(ASTNode *node, rxinteger *value) {
 
     if (node->node_type == INTEGER) {
         char *end;
-        long long parsed;
+        rxinteger parsed;
 
         if (!node->node_string || !node->node_string_length) return 0;
-        errno = 0;
-        parsed = strtoll(node->node_string, &end, 10);
-        if (errno || end != node->node_string + node->node_string_length) return 0;
-        if ((long long)(rxinteger)parsed != parsed) return 0;
-        if (value) *value = (rxinteger)parsed;
+        if (rxinteger_parse(node->node_string, &end, &parsed) ||
+            end != node->node_string + node->node_string_length) return 0;
+        if (value) *value = parsed;
         return 1;
     }
 
     if ((node->node_type == OP_NEG || node->node_type == OP_PLUS) && node->child) {
         rxinteger operand;
+        static const char min_magnitude[] = "9223372036854775808";
+
+        if (node->node_type == OP_NEG &&
+            node->child->node_type == INTEGER &&
+            node->child->node_string &&
+            node->child->node_string_length == sizeof(min_magnitude) - 1 &&
+            memcmp(node->child->node_string, min_magnitude, sizeof(min_magnitude) - 1) == 0) {
+            if (value) *value = RXINTEGER_MIN;
+            return 1;
+        }
         if (!dispatch_integer_key(node->child, &operand)) return 0;
         if (node->node_type == OP_NEG) {
-            if (operand == (rxinteger)INT64_MIN) return 0;
-            operand = (rxinteger)(-operand);
+            if (!rxinteger_checked_neg(operand, &operand)) return 0;
         }
         if (value) *value = operand;
         return 1;

@@ -287,26 +287,14 @@ static void decimalToString(decplugin *plugin, const value *number, char *string
 void decimalFromInt(decplugin *plugin, value *result, const rxinteger value) {
     decContext *context = (decContext*)(plugin->base.private_context);
     EnsureCapacity(result, context->digits);
-    /* Is rxinteger 32 bit? */
-    if (IS_RXINTEGER_32BIT) {
-        decNumberFromInt32(result->decimal_value, value);
-    }
-    else {
-        decNumberFromInt64(result->decimal_value, value);
-    }
+    decNumberFromInt64(result->decimal_value, value);
     check_signal(plugin);
 }
 
 /* Convert a rxvmplugin number to an int */
 void decimalToInt(decplugin *plugin, const value *number, rxinteger *integer) {
     decContext *context = (decContext*)(plugin->base.private_context);
-    /* Is rxinteger 32 bit? */
-    if (IS_RXINTEGER_32BIT) {
-        *integer = decNumberToInt32(number->decimal_value, context);
-    }
-    else {
-        *integer = decNumberToInt64(number->decimal_value, context);
-    }
+    *integer = decNumberToInt64(number->decimal_value, context);
     check_signal(plugin);
 }
 

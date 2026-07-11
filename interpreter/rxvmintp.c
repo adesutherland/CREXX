@@ -717,62 +717,6 @@ static int rxvm_string_const_slice(string_constant *source, rxinteger offset_val
 #endif
 }
 
-#if defined(__has_builtin)
-#if __has_builtin(__builtin_mul_overflow)
-#define RXVM_HAS_BUILTIN_MUL_OVERFLOW 1
-#endif
-#elif defined(__GNUC__)
-#define RXVM_HAS_BUILTIN_MUL_OVERFLOW 1
-#endif
-#ifndef RXVM_HAS_BUILTIN_MUL_OVERFLOW
-#define RXVM_HAS_BUILTIN_MUL_OVERFLOW 0
-#endif
-
-#if !RXVM_HAS_BUILTIN_MUL_OVERFLOW
-static uintmax_t rxvm_rxinteger_positive_limit(void) {
-    uintmax_t bits = UINTMAX_MAX;
-    size_t rxinteger_bits = sizeof(rxinteger) * CHAR_BIT;
-    size_t uintmax_bits = sizeof(uintmax_t) * CHAR_BIT;
-
-    if (rxinteger_bits < uintmax_bits) bits >>= uintmax_bits - rxinteger_bits;
-    return bits >> 1;
-}
-
-static uintmax_t rxvm_rxinteger_magnitude(rxinteger value) {
-    if (value >= 0) return (uintmax_t)value;
-    return (uintmax_t)(-(value + 1)) + 1;
-}
-#endif
-
-static int rxvm_checked_rxinteger_mul(rxinteger left, rxinteger right, rxinteger *result) {
-#if RXVM_HAS_BUILTIN_MUL_OVERFLOW
-    return !__builtin_mul_overflow(left, right, result);
-#else
-    uintmax_t left_mag = rxvm_rxinteger_magnitude(left);
-    uintmax_t right_mag = rxvm_rxinteger_magnitude(right);
-    int negative = (left < 0) != (right < 0);
-    uintmax_t limit = rxvm_rxinteger_positive_limit() + (negative ? 1 : 0);
-    uintmax_t product;
-
-    if (left_mag == 0 || right_mag == 0) {
-        *result = 0;
-        return 1;
-    }
-
-    if (right_mag > limit / left_mag) return 0;
-    product = left_mag * right_mag;
-
-    if (negative) {
-        *result = -(rxinteger)(product - 1) - 1;
-    }
-    else {
-        *result = (rxinteger)product;
-    }
-
-    return 1;
-#endif
-}
-
 static int rxvm_format_parse_field_number(const char **cursor, const char *end, int *present, int *value) {
     const char *p = *cursor;
     int parsed_value = 0;
@@ -2750,43 +2694,6 @@ const char compile_date[8+1] =
 
                 '\0'
         };
-
-RX_INLINE int ipow(rxinteger base, rxinteger exp_int, rxinteger *result_out) {
-    rxinteger result = 1;
-
-    if (exp_int < 0) {
-        if (base == 1) {
-            *result_out = 1;
-            return 1;
-        }
-
-        if (base == -1) {
-            *result_out = (exp_int & 1) ? -1 : 1;
-            return 1;
-        }
-
-        *result_out = 0;
-        return 0;
-    }
-
-    while (exp_int > 0) {
-        if (exp_int & 1) {
-            if (!rxvm_checked_rxinteger_mul(result, base, &result)) {
-                *result_out = 0;
-                return 0;
-            }
-        }
-
-        exp_int >>= 1;
-        if (exp_int > 0 && !rxvm_checked_rxinteger_mul(base, base, &base)) {
-            *result_out = 0;
-            return 0;
-        }
-    }
-
-    *result_out = result;
-    return 1;
-}
 
 /* Function to convert an interrupt to a string: interrupt_entry -> Code Description Massage */
 const char *interrupt_to_string(unsigned char interrupt) {
@@ -4789,33 +4696,53 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(IMULT_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - IMULT R%lu,R%lu,R%lu\n", REG_IDX(1),
                   REG_IDX(2), REG_IDX(3));
-            REG_RETURN_INT(op2RI * op3RI)
+            {
+                rxinteger result;
+                if (rxinteger_checked_mul(op2RI, op3RI, &result)) REG_RETURN_INT(result)
+                else SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
         START_INSTRUCTION(IMULT_REG_REG_INT) {
             CALC_DISPATCH(3)
             DEBUG("TRACE - IMULT R%lu,R%lu,%lu\n", (long)REG_IDX(1),
                   (long)REG_IDX(2), (long)op3I);
-            REG_RETURN_INT(op2RI * op3I)
+            {
+                rxinteger result;
+                if (rxinteger_checked_mul(op2RI, op3I, &result)) REG_RETURN_INT(result)
+                else SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
         }
 
         START_INSTRUCTION(IADD_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - IADD R%lu,R%lu,R%lu\n", REG_IDX(1),
                   REG_IDX(2), REG_IDX(3));
-            REG_RETURN_INT(op2RI + op3RI)
+            {
+                rxinteger result;
+                if (rxinteger_checked_add(op2RI, op3RI, &result)) REG_RETURN_INT(result)
+                else SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
         START_INSTRUCTION(ISUB_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - ISUB R%lu,R%lu,R%lu\n", REG_IDX(1),
                   REG_IDX(2), REG_IDX(3));
-            REG_RETURN_INT(op2RI - op3RI)
+            {
+                rxinteger result;
+                if (rxinteger_checked_sub(op2RI, op3RI, &result)) REG_RETURN_INT(result)
+                else SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
         START_INSTRUCTION(IADD_REG_REG_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - IADD R%lu,R%lu,%d\n", REG_IDX(1),
                   REG_IDX(2), (int)op3I);
-            REG_RETURN_INT(op2RI + op3I)
+            {
+                rxinteger result;
+                if (rxinteger_checked_add(op2RI, op3I, &result)) REG_RETURN_INT(result)
+                else SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
         START_INSTRUCTION(ERASE_REG) CALC_DISPATCH(1)
@@ -6638,7 +6565,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         START_INSTRUCTION(DEC0) CALC_DISPATCH(0)
             /* TODO This is really idec0 - i.e. it does not prime the int */
             DEBUG("TRACE - DEC0\n");
-            (current_frame->locals[0]->int_value)--;
+            if (!rxinteger_checked_sub(current_frame->locals[0]->int_value, 1,
+                                       &current_frame->locals[0]->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
             /* ------------------------------------------------------------------------------------
@@ -6648,7 +6578,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         START_INSTRUCTION(DEC1) CALC_DISPATCH(0)
             /* TODO This is really idec1 - i.e. it does not prime the int */
             DEBUG("TRACE - DEC1\n");
-            (current_frame->locals[1]->int_value)--;
+            if (!rxinteger_checked_sub(current_frame->locals[1]->int_value, 1,
+                                       &current_frame->locals[1]->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
             /* ------------------------------------------------------------------------------------
@@ -6658,13 +6591,19 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         START_INSTRUCTION(DEC2) CALC_DISPATCH(0)
             /* TODO This is really idec2 - i.e. it does not prime the int */
             DEBUG("TRACE - DEC2\n");
-            (current_frame->locals[2]->int_value)--;
+            if (!rxinteger_checked_sub(current_frame->locals[2]->int_value, 1,
+                                       &current_frame->locals[2]->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
         START_INSTRUCTION(DEC_REG) CALC_DISPATCH(1)
             /* TODO This is really idec reg - i.e. it does not prime the int */
             DEBUG("TRACE - DEC R%lu\n", REG_IDX(1));
-            (current_frame->locals[REG_IDX(1)]->int_value)--;
+            if (!rxinteger_checked_sub(current_frame->locals[REG_IDX(1)]->int_value, 1,
+                                       &current_frame->locals[REG_IDX(1)]->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
         START_INSTRUCTION(BR_ID)
@@ -7005,7 +6944,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(INC0) CALC_DISPATCH(0)
             DEBUG("TRACE - INC0\n");
-            REG_VAL(0)->int_value++;
+            if (!rxinteger_checked_add(REG_VAL(0)->int_value, 1, &REG_VAL(0)->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -7014,7 +6955,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(INC1) CALC_DISPATCH(0)
             DEBUG("TRACE - INC1\n");
-            REG_VAL(1)->int_value++;
+            if (!rxinteger_checked_add(REG_VAL(1)->int_value, 1, &REG_VAL(1)->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -7023,7 +6966,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(INC2) CALC_DISPATCH(0)
             DEBUG("TRACE - INC2\n");
-            REG_VAL(2)->int_value++;
+            if (!rxinteger_checked_add(REG_VAL(2)->int_value, 1, &REG_VAL(2)->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 /* ------------------------------------------------------------------------------------
  *  ISEX   op1 = -op1  decimal                                    pej 2. September 2021
@@ -7031,7 +6976,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(ISEX_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - INC R%lu\n", REG_IDX(1));
-            (current_frame->locals[REG_IDX(1)]->int_value)=0-(current_frame->locals[REG_IDX(1)]->int_value);
+            if (!rxinteger_checked_neg(current_frame->locals[REG_IDX(1)]->int_value,
+                                       &current_frame->locals[REG_IDX(1)]->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
         DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -7049,7 +6997,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(ISUB_REG_REG_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - ISUB R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
-            REG_RETURN_INT(op2RI - op3I)
+            {
+                rxinteger result;
+                if (rxinteger_checked_sub(op2RI, op3I, &result)) REG_RETURN_INT(result)
+                else SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -7058,7 +7010,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(ISUB_REG_INT_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - ISUB R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
-            REG_RETURN_INT(op2I - op3RI)
+            {
+                rxinteger result;
+                if (rxinteger_checked_sub(op2I, op3RI, &result)) REG_RETURN_INT(result)
+                else SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -7700,7 +7656,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(INC_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - INC R%lu\n", REG_IDX(1));
-            (current_frame->locals[REG_IDX(1)]->int_value)++;
+            if (!rxinteger_checked_add(current_frame->locals[REG_IDX(1)]->int_value, 1,
+                                       &current_frame->locals[REG_IDX(1)]->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -7709,7 +7668,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(IDIV_REG_REG_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - IDIV R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
-            REG_RETURN_INT(op2RI / op3I)
+            if (op3I == 0) { SET_SIGNAL(RXSIGNAL_DIVISION_BY_ZERO) }
+            else if (op2RI == RXINTEGER_MIN && op3I == -1) { SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW) }
+            else REG_RETURN_INT(op2RI / op3I)
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -7718,7 +7679,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(IDIV_REG_INT_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - IDIV R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
-            REG_RETURN_INT(op2I / op3RI)
+            if (op3RI == 0) { SET_SIGNAL(RXSIGNAL_DIVISION_BY_ZERO) }
+            else if (op2I == RXINTEGER_MIN && op3RI == -1) { SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW) }
+            else REG_RETURN_INT(op2I / op3RI)
             DISPATCH
 
 /* -----------------------------------------------------------------------------------
@@ -7727,7 +7690,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(IDIV_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - IDIV R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            REG_RETURN_INT(op2RI / op3RI)
+            if (op3RI == 0) { SET_SIGNAL(RXSIGNAL_DIVISION_BY_ZERO) }
+            else if (op2RI == RXINTEGER_MIN && op3RI == -1) { SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW) }
+            else REG_RETURN_INT(op2RI / op3RI)
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -7736,7 +7701,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(IMOD_REG_REG_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - IMOD R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
-            REG_RETURN_INT(op2RI % op3I)
+            if (op3I == 0) { SET_SIGNAL(RXSIGNAL_DIVISION_BY_ZERO) }
+            else if (op2RI == RXINTEGER_MIN && op3I == -1) { SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW) }
+            else REG_RETURN_INT(op2RI % op3I)
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -7745,7 +7712,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(IMOD_REG_INT_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - IMOD R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
-            REG_RETURN_INT(op2I % op3RI)
+            if (op3RI == 0) { SET_SIGNAL(RXSIGNAL_DIVISION_BY_ZERO) }
+            else if (op2I == RXINTEGER_MIN && op3RI == -1) { SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW) }
+            else REG_RETURN_INT(op2I % op3RI)
             DISPATCH
 
 /* -----------------------------------------------------------------------------------
@@ -7754,7 +7723,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(IMOD_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - IMOD R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            REG_RETURN_INT(op2RI % op3RI)
+            if (op3RI == 0) { SET_SIGNAL(RXSIGNAL_DIVISION_BY_ZERO) }
+            else if (op2RI == RXINTEGER_MIN && op3RI == -1) { SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW) }
+            else REG_RETURN_INT(op2RI % op3RI)
             DISPATCH
 /* ------------------------------------------------------------------------------------
  *  FMOD_REG_REG_FLOAT Float Modulo (op1=op2 & op3)
@@ -7960,11 +7931,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  */
         START_INSTRUCTION(SAY_INT) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY %d\n", (int)op1I);
-#ifdef __32BIT__
-            rxvm_mprintf("%ld\n", op1I);
-#else
-            rxvm_mprintf("%lld\n", op1I);
-#endif
+            rxvm_mprintf("%" RXINTEGER_PRI "\n", op1I);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -8151,7 +8118,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     START_INSTRUCTION(IPOW_REG_REG_REG) CALC_DISPATCH(3)
         DEBUG("TRACE - IPOW R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
 
-        if (!ipow(op2R->int_value, op3R->int_value, &op1R->int_value)) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+        if (!rxinteger_checked_pow(op2R->int_value, op3R->int_value, &op1R->int_value)) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
         DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -8161,7 +8128,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     START_INSTRUCTION(IPOW_REG_REG_INT) CALC_DISPATCH(3)
         DEBUG("TRACE - IPOW R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
 
-        if (!ipow(op2R->int_value, op3I, &op1R->int_value)) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+        if (!rxinteger_checked_pow(op2R->int_value, op3I, &op1R->int_value)) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
         DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -8171,7 +8138,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     START_INSTRUCTION(IPOW_REG_INT_REG) CALC_DISPATCH(3)
         DEBUG("TRACE - IPOW R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
 
-        if (!ipow(op2I, op3R->int_value, &op1R->int_value)) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+        if (!rxinteger_checked_pow(op2I, op3R->int_value, &op1R->int_value)) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
         DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -8641,8 +8608,10 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  */
         START_INSTRUCTION(BCT_ID_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - BCT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
-            (current_frame->locals[REG_IDX(2)]->int_value)--;
-            if (current_frame->locals[REG_IDX(2)]->int_value > 0) {
+            if (!rxinteger_checked_sub(op2RI, 1, &op2R->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
+            else if (op2R->int_value > 0) {
                 next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL
             }
@@ -8653,11 +8622,21 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  */
         START_INSTRUCTION(BCT_ID_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - BCT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            (current_frame->locals[REG_IDX(2)]->int_value)--;
-            (current_frame->locals[REG_IDX(3)]->int_value)++;
-            if (current_frame->locals[REG_IDX(2)]->int_value>0) {
-                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-                CALC_DISPATCH_MANUAL
+            {
+                rxinteger counter;
+                rxinteger index;
+                if (!rxinteger_checked_sub(op2RI, 1, &counter) ||
+                    !rxinteger_checked_add(op3RI, 1, &index)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else {
+                    op2R->int_value = counter;
+                    op3R->int_value = index;
+                    if (counter > 0) {
+                        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
+                        CALC_DISPATCH_MANUAL
+                    }
+                }
             }
         DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -8670,7 +8649,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL
             }
-            else (current_frame->locals[REG_IDX(2)]->int_value)--;
+            else if (!rxinteger_checked_sub(op2RI, 1, &op2R->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 /* ------------------------------------------------------------------------------------
  *  BCF_ID_REG_REG  if op2=0 goto op1(if false) else dec op2 and inc op3
@@ -8683,8 +8664,16 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 CALC_DISPATCH_MANUAL
             }
             else {
-                (current_frame->locals[REG_IDX(2)]->int_value)--;
-                (current_frame->locals[REG_IDX(3)]->int_value)++;
+                rxinteger counter;
+                rxinteger index;
+                if (!rxinteger_checked_sub(op2RI, 1, &counter) ||
+                    !rxinteger_checked_add(op3RI, 1, &index)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else {
+                    op2R->int_value = counter;
+                    op3R->int_value = index;
+                }
             }
             DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -8693,8 +8682,10 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  */
         START_INSTRUCTION(BCTNM_ID_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - BCTNM R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
-            (current_frame->locals[REG_IDX(2)]->int_value)--;
-            if (current_frame->locals[REG_IDX(2)]->int_value>=0) {
+            if (!rxinteger_checked_sub(op2RI, 1, &op2R->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
+            else if (op2R->int_value >= 0) {
                 next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL
             }
@@ -8705,11 +8696,21 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  */
         START_INSTRUCTION(BCTNM_ID_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - BCTNM R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            (current_frame->locals[REG_IDX(2)]->int_value)--;
-            (current_frame->locals[REG_IDX(3)]->int_value)++;
-            if (current_frame->locals[REG_IDX(2)]->int_value>=0) {
-                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-                CALC_DISPATCH_MANUAL
+            {
+                rxinteger counter;
+                rxinteger index;
+                if (!rxinteger_checked_sub(op2RI, 1, &counter) ||
+                    !rxinteger_checked_add(op3RI, 1, &index)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else {
+                    op2R->int_value = counter;
+                    op3R->int_value = index;
+                    if (counter >= 0) {
+                        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
+                        CALC_DISPATCH_MANUAL
+                    }
+                }
             }
         DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -8718,9 +8719,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  */
         START_INSTRUCTION(BCTP_ID_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - BCTP R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
-            (current_frame->locals[REG_IDX(2)]->int_value)++;
-            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-            CALC_DISPATCH_MANUAL
+            if (!rxinteger_checked_add(op2RI, 1, &op2R->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
+            else {
+                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
+                CALC_DISPATCH_MANUAL
+            }
         DISPATCH
  /* ------------------------------------------------------------------------------------
  *  FndBlnk REG_REG_REG  return first blank after op2[op3]          pej 27 August 2021
@@ -10293,11 +10298,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         platform = "unknown";
 #endif
 
-#ifdef __32BIT__
-        bits = "32";
-#else
-        bits = "64";
-#endif
+        bits = sizeof(void *) == 4 ? "32" : "64";
 
         snprintf(vers, sizeof(vers), "%s %s %s %s", platform, bits, rxversion, compile_date);
 
@@ -10316,11 +10317,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - RXHASH R%d R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(1),(int)REG_IDX(3));
 
     {
-#ifdef __32BIT__
-        uint32_t hash=0;
-#else
         uint64_t hash=0;
-#endif
         int i1,len;
         REQUIRE_VALID_UTF8_REGISTER(op2R);
         GETSTRLEN(len, op2R);
@@ -10330,12 +10327,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             hash = (unsigned char)op2R->string_value[i1] + (hash << 6) + (hash << 16) - hash;
         }
         hash ^= (hash >> 16);
-#ifdef __32BIT__
-        hash = hash & 0x7FFFFFFF
-#else
         hash = hash & 0x7FFFFFFFFFFFFFFF;
-#endif
-        op1R->int_value = hash;
+        op1R->int_value = (rxinteger)hash;
      }
      DISPATCH
     /* Spawn - Spawn a process with io redirects - Spawn Process op1 = exec op2 redirect op3
