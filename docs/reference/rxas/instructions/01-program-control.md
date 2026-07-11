@@ -1,376 +1,762 @@
 # Program Control And Calls
 
-Branches, counted loops, calls, returns, exits, and no-op control instructions.
+This chapter covers direct and conditional branches, counted-loop primitives,
+procedure calls and returns, VM termination, no-op control points, and packed
+jump-table dispatch.
 
-Generated skeleton from `cmake-build-debug/bin/rxas -i`; edit prose by hand and regenerate placeholder inventories only with care.
-
-Instruction entries in this section: 24.
-
-## Section Checklist
-
-- Purpose overview: TODO
-- Operand conventions: TODO
-- Signal/error behavior: TODO
-- Examples: TODO
-- Cross-links to related instructions: TODO
+Branch labels and procedure names are resolved by the assembler. Ordinary
+conditional branches read integer payloads without changing them; counted forms
+state their mutations explicitly. Packed jump-table instructions fall through
+on a miss and reserve signals for malformed runtime table data or strict slice
+bounds failures.
 
 ## `bcf`
 
-Status: placeholder.
+Branch on a zero counter; otherwise advance one counted-loop step.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x015e` | `{ID,REG}` | if op2=0 goto op1(if false) else dec op2 |
-| `0x015f` | `{ID,REG,REG}` | if op2=0 goto op1(if false) else dec op2 and inc op3 |
+| `0x015e` | `bcf label,rCounter` | Branch if zero; otherwise decrement `rCounter`. |
+| `0x015f` | `bcf label,rCounter,rIndex` | On fall-through, decrement the counter and increment the index. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The zero test occurs before mutation. If `rCounter` is zero, control branches
+and neither register changes. Otherwise its integer payload is decremented;
+the three-operand form also increments `rIndex`. This is useful as a loop-entry
+or exhaustion test.
+
+### Signals
+
+No overflow/underflow or control-flow signal is raised; integer mutation uses
+the VM integer representation.
+
+### Example
+
+<!-- rxas-example name="control-bcf" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,0
+    bcf empty,r0
+    ret
+empty:
+    ret
+```
+
+### Related
+
+`bct`, `bctnm`, `brf`.
 
 ## `bct`
 
-Status: placeholder.
+Decrement a counter and branch while the new value remains positive.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0159` | `{ID,REG}` | dec op2; if op2>0; goto op1(if true) |
-| `0x015a` | `{ID,REG,REG}` | dec op2; inc op3, if op2>0; goto op1(if true) |
+| `0x0159` | `bct label,rCounter` | Decrement, then branch if greater than zero. |
+| `0x015a` | `bct label,rCounter,rIndex` | Also increment `rIndex` before testing the counter. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The counter always decrements, whether or not the branch is taken. In the
+three-register form the index always increments. The branch uses the
+post-decrement counter value.
+
+### Signals
+
+No integer overflow/underflow signal is raised.
+
+### Example
+
+<!-- rxas-example name="control-bct" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,1
+    bct again,r0
+    ret
+again:
+    ret
+```
+
+### Related
+
+`bcf`, `bctnm`, `bctp`.
 
 ## `bctnm`
 
-Status: placeholder.
+Decrement a counter and branch while the new value is nonnegative.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x015b` | `{ID,REG}` | dec op2; if op2>=0; goto op1(if true) |
-| `0x015c` | `{ID,REG,REG}` | dec op2; inc op3, if op2>=0; goto op1(if true) |
+| `0x015b` | `bctnm label,rCounter` | Decrement, then branch if at least zero. |
+| `0x015c` | `bctnm label,rCounter,rIndex` | Also increment `rIndex` before the test. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Both mutations are unconditional; the branch tests the counter afterward. This
+differs from `bct` by including the iteration whose resulting counter is zero.
+
+### Signals
+
+No integer overflow/underflow signal is raised.
+
+### Example
+
+<!-- rxas-example name="control-bctnm" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,0
+    bctnm again,r0
+    ret
+again:
+    ret
+```
+
+### Related
+
+`bct`, `bcf`, `bctp`.
 
 ## `bctp`
 
-Status: placeholder.
+Increment an integer register and branch unconditionally.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x015d` | `{ID,REG}` | inc op2; goto op1 |
+| `0x015d` | `bctp label,rIndex` | Increment `rIndex`, then jump to `label`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The integer payload is incremented exactly once before control transfers. The
+instruction is a compact loop-back or progress-step primitive and never falls
+through.
+
+### Signals
+
+No integer overflow signal is raised.
+
+### Example
+
+<!-- rxas-example name="control-bctp" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,0
+    bctp done,r0
+done:
+    ret
+```
+
+### Related
+
+`bct`, `bctnm`, `br`.
 
 ## `beq`
 
-Status: placeholder.
+Branch when two VM integer values are equal.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0028` | `{ID,REG,REG}` | if op2==op3 then goto op1 |
-| `0x0029` | `{ID,REG,INT}` | if op2==op3 then goto op1 |
+| `0x0028` | `beq label,rLeft,rRight` | Compare two integer register payloads. |
+| `0x0029` | `beq label,rLeft,value` | Compare with an integer literal. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The operands are not modified. Equality transfers to the procedure-local
+label; inequality falls through to the next instruction.
+
+### Signals
+
+The comparison and branch do not signal.
+
+### Example
+
+<!-- rxas-example name="control-beq" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,2
+    beq equal,r0,2
+    ret
+equal:
+    ret
+```
+
+### Related
+
+`bne`, `ieq`, `brt`.
 
 ## `bge`
 
-Status: placeholder.
+Branch when a VM integer value is greater than or equal to another.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0162` | `{ID,REG,REG}` | if op2>=op3 then goto op1 |
-| `0x0163` | `{ID,REG,INT}` | if op2>=op3 then goto op1 |
+| `0x0162` | `bge label,rLeft,rRight` | Compare two integer register payloads. |
+| `0x0163` | `bge label,rLeft,value` | Compare with an integer literal. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The signed integer comparison does not change either operand. A true relation
+transfers to the label; false falls through.
+
+### Signals
+
+The comparison and branch do not signal.
+
+### Example
+
+<!-- rxas-example name="control-bge" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,2
+    bge matched,r0,2
+    ret
+matched:
+    ret
+```
+
+### Related
+
+`bgt`, `ble`, `igte`.
 
 ## `bgt`
 
-Status: placeholder.
+Branch when a VM integer value is strictly greater than another.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0160` | `{ID,REG,REG}` | if op2>op3 then goto op1 |
-| `0x0161` | `{ID,REG,INT}` | if op2>op3 then goto op1 |
+| `0x0160` | `bgt label,rLeft,rRight` | Compare two integer register payloads. |
+| `0x0161` | `bgt label,rLeft,value` | Compare with an integer literal. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The signed comparison is side-effect free. A true relation branches; equality
+or a smaller left value falls through.
+
+### Signals
+
+The comparison and branch do not signal.
+
+### Example
+
+<!-- rxas-example name="control-bgt" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,3
+    bgt matched,r0,2
+    ret
+matched:
+    ret
+```
+
+### Related
+
+`bge`, `blt`, `igt`.
 
 ## `ble`
 
-Status: placeholder.
+Branch when a VM integer value is less than or equal to another.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0166` | `{ID,REG,REG}` | if op2<=op3 then goto op1 |
-| `0x0167` | `{ID,REG,INT}` | if op2<=op3 then goto op1 |
+| `0x0166` | `ble label,rLeft,rRight` | Compare two integer register payloads. |
+| `0x0167` | `ble label,rLeft,value` | Compare with an integer literal. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The signed comparison leaves both operands unchanged. A true relation branches;
+a greater left operand falls through.
+
+### Signals
+
+The comparison and branch do not signal.
+
+### Example
+
+<!-- rxas-example name="control-ble" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,2
+    ble matched,r0,2
+    ret
+matched:
+    ret
+```
+
+### Related
+
+`blt`, `bge`, `ilte`.
 
 ## `blt`
 
-Status: placeholder.
+Branch when a VM integer value is strictly less than another.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0164` | `{ID,REG,REG}` | if op2<op3 then goto op1 |
-| `0x0165` | `{ID,REG,INT}` | if op2<op3 then goto op1 |
+| `0x0164` | `blt label,rLeft,rRight` | Compare two integer register payloads. |
+| `0x0165` | `blt label,rLeft,value` | Compare with an integer literal. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The signed comparison is side-effect free. A true relation transfers control;
+equality or a greater left value falls through.
+
+### Signals
+
+The comparison and branch do not signal.
+
+### Example
+
+<!-- rxas-example name="control-blt" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,1
+    blt matched,r0,2
+    ret
+matched:
+    ret
+```
+
+### Related
+
+`ble`, `bgt`, `ilt`.
 
 ## `bne`
 
-Status: placeholder.
+Branch when two VM integer values are unequal.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x002a` | `{ID,REG,REG}` | if op2!=op3 then goto op1 |
-| `0x002b` | `{ID,REG,INT}` | if op2!=op3 then goto op1 |
+| `0x002a` | `bne label,rLeft,rRight` | Compare two integer register payloads. |
+| `0x002b` | `bne label,rLeft,value` | Compare with an integer literal. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The operands are unchanged. Inequality transfers to the target label;
+equality falls through.
+
+### Signals
+
+The comparison and branch do not signal.
+
+### Example
+
+<!-- rxas-example name="control-bne" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,1
+    bne different,r0,2
+    ret
+different:
+    ret
+```
+
+### Related
+
+`beq`, `ine`, `brf`.
 
 ## `br`
 
-Status: placeholder.
+Transfer control unconditionally to a procedure-local label.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0024` | `{ID}` | Branch to op1 |
+| `0x0024` | `br label` | Continue execution at `label`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The assembler resolves and backpatches the label. No register, payload, flag,
+or cursor is read or modified, and there is no fall-through path.
+
+### Signals
+
+A valid assembled branch does not signal. Undefined labels are assembler errors.
+
+### Example
+
+<!-- rxas-example name="control-br" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=0
+    br done
+done:
+    ret
+```
+
+### Related
+
+`brt`, `brf`, `brtf`.
 
 ## `brf`
 
-Status: placeholder.
+Branch when an integer register payload is zero.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0026` | `{ID,REG}` | Branch to op1 if op2 false |
+| `0x0026` | `brf label,rCondition` | Branch for integer false; otherwise fall through. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Zero is false and every nonzero integer is true. The register is not normalized
+or otherwise modified.
+
+### Signals
+
+The test and branch do not signal.
+
+### Example
+
+<!-- rxas-example name="control-brf" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,0
+    brf false,r0
+    ret
+false:
+    ret
+```
+
+### Related
+
+`brt`, `brtf`, `bcf`.
 
 ## `brt`
 
-Status: placeholder.
+Branch when an integer register payload is nonzero.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0025` | `{ID,REG}` | Branch to op1 if op2 true |
+| `0x0025` | `brt label,rCondition` | Branch for integer true; otherwise fall through. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Every nonzero integer is true. The source is inspected without normalization or
+mutation.
+
+### Signals
+
+The test and branch do not signal.
+
+### Example
+
+<!-- rxas-example name="control-brt" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,1
+    brt true,r0
+    ret
+true:
+    ret
+```
+
+### Related
+
+`brf`, `brtf`, `br`.
 
 ## `brtf`
 
-Status: placeholder.
+Choose between two labels from one integer Boolean condition.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0027` | `{ID,ID,REG}` | Branch to op1 if op3 true, otherwise branch to op2 |
+| `0x0027` | `brtf trueLabel,falseLabel,rCondition` | Branch true for nonzero, false for zero. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The instruction always transfers control and never falls through. It reads
+only the integer payload and does not mutate the condition register.
+
+### Signals
+
+The test and branch do not signal.
+
+### Example
+
+<!-- rxas-example name="control-brtf" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,1
+    brtf true,false,r0
+true:
+    ret
+false:
+    ret
+```
+
+### Related
+
+`brt`, `brf`, `br`.
 
 ## `brtpandt`
 
-Status: placeholder.
+Branch when any requested readable status-flag bit is set.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x020c` | `{ID,REG,INT}` | if op2 readable status flags & op3 true then goto op1 |
+| `0x020c` | `brtpandt label,rValue,mask` | Test `(readable_flags & mask) != 0`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The integer literal becomes a 32-bit mask intersected with
+`RXFLAG_READABLE_MASK`; the reserved sign bit cannot match. This is an any-bit
+test. The value and all flags remain unchanged.
+
+### Signals
+
+The flag test and branch do not signal.
+
+### Example
+
+<!-- rxas-example name="control-brtpandt" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    setortp r0,512
+    brtpandt matched,r0,512
+    ret
+matched:
+    ret
+```
+
+### Related
+
+`brtpt`, `getandtp`, `setortp`.
 
 ## `brtpt`
 
-Status: placeholder.
+Branch when a value has any public writable status-flag bit set.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x020b` | `{ID,REG}` | if op2 has externally writable status flags then goto op1 |
+| `0x020b` | `brtpt label,rValue` | Test compiler, library, and user flag bands. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The test uses `RXFLAG_PUBLIC_TEST_MASK`, excluding VM-private and reserved bits.
+It does not alter the value or flags.
+
+### Signals
+
+The flag test and branch do not signal.
+
+### Example
+
+<!-- rxas-example name="control-brtpt" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    setortp r0,512
+    brtpt matched,r0
+    ret
+matched:
+    ret
+```
+
+### Related
+
+`brtpandt`, `gettp`, `setortp`.
 
 ## `call`
 
-Status: placeholder.
+Invoke a named RXAS or native procedure, optionally collecting a return value
+and passing a contiguous argument block.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x002c` | `{FUNC}` | Call procedure (op1()) |
-| `0x002d` | `{REG,FUNC}` | Call procedure (op1=op2()) |
-| `0x002e` | `{REG,FUNC,REG}` | Call procedure (op1=op2(op3...) ) |
+| `0x002c` | `call procedure()` | Call without a return destination or arguments. |
+| `0x002d` | `call rResult,procedure()` | Clear `rResult`, call, and collect a return value. |
+| `0x002e` | `call rResult,procedure(),rArgCount` | Call with a contiguous argument block. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+For the argument form, `rArgCount` holds the integer count and the actual
+arguments occupy consecutive register numbers immediately after it. RXAS
+procedures receive live argument storage bindings; native procedures receive
+the corresponding values through the plugin ABI. The no-argument result form
+clears `rResult` before dispatch. A return resumes at the next instruction.
+
+### Signals
+
+Raises `FUNCTION_NOT_FOUND` for an unresolved runtime procedure and `FAILURE`
+when an RXAS call frame cannot be allocated. Native or callee signals propagate
+normally. The opcode does not bounds-check a hand-written argument block.
+
+### Example
+
+<!-- rxas-example name="control-call" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    call r0,worker()
+    ret
+
+worker() .locals=0
+    ret 7
+```
+
+### Related
+
+`ret`, `dcall`, `linkarg`.
 
 ## `cnop`
 
-Status: placeholder.
+Execute an explicit no-operation instruction, primarily for tests, patch
+points, or deliberately retained instruction positions.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x021c` | `no operand` | no operation |
+| `0x021c` | `cnop` | Advance to the next instruction without changing VM state. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+There are no operands. Registers, cursors, flags, frames, and control metadata
+remain unchanged except for normal program-counter advance.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="control-cnop" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=0
+    cnop
+    ret
+```
+
+### Related
+
+`br`.
 
 ## `exit`
 
-Status: placeholder.
+Terminate the entire VM invocation immediately with an integer process result.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0035` | `no operand` | Exit |
-| `0x0036` | `{REG}` | Exit op1 |
-| `0x0037` | `{INT}` | Exit op1 |
+| `0x0035` | `exit` | Terminate with result code `0`. |
+| `0x0036` | `exit rCode` | Use the register's integer payload. |
+| `0x0037` | `exit code` | Use an integer literal. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Unlike `ret`, `exit` does not return to a caller or unwind through RXAS return
+sites. The selected integer becomes the interpreter's result code; later
+instructions are not executed.
+
+### Signals
+
+Normal exit raises no VM signal.
+
+### Example
+
+<!-- rxas-example name="control-exit" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=0
+    exit
+```
+
+### Related
+
+`ret`.
 
 ## `jumpb`
 
-Status: documented.
+Dispatch through a packed table using a whole logical binary value as the key.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0278` | `{REG,BINARY}` | Jump through table op2 using binary register op1 |
+| `0x0278` | `jumpb rKey,table` | Branch to the matching binary `.jcase`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: dispatches through an assembled jump table using the whole logical
-  binary value in `op1` as the lookup key.
-- Operand notes: `op2` is a procedure-local `.jtable` name. The table cases
-  must be binary literals decorated with `.jcase`.
-- Result and side effects: on match, the VM branches to the case target; on
-  miss, execution continues at the next instruction. The source register and
-  table constant are not modified.
-- Signals/errors: malformed packed table data raises `RXBIN_CORRUPTION`.
-- Example:
+`rKey` supplies its complete binary payload and `table` is a procedure-local
+`.jtable` whose cases are binary literals. A match branches to the case label;
+a miss falls through. The source, binary cursor, and table are unchanged.
 
+### Signals
+
+Malformed packed data or an invalid target raises `RXBIN_CORRUPTION`.
+
+### Example
+
+<!-- rxas-example name="control-jumpb" test="run" -->
 ```rxas
+.globals=0
+
 main() .locals=3
     .jtable tokens linear
     br after_cases
@@ -384,33 +770,39 @@ after_cases:
     ret
 ```
 
-- Related instructions: `jumps`, `jumpbs`, `jumpi`, `.jtable`, `.jcase`.
+### Related
+
+`jumps`, `jumpbs`, `jumpi`, `.jtable`, `.jcase`.
 
 ## `jumpbs`
 
-Status: documented.
+Dispatch through a fixed-width binary table using a zero-copy source slice.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0279` | `{REG,REG,BINARY}` | Jump through fixed-width table op3 using binary register op1 at byte offset op2 |
+| `0x0279` | `jumpbs rBinary,rOffset,table` | Match the table-width slice at a byte offset. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: dispatches through an assembled jump table using a zero-copy fixed
-  width slice of a binary register.
-- Operand notes: `op1` is the binary source, `op2.int_value` is the byte
-  offset, and `op3` is a procedure-local `.jtable` name. The table must have
-  fixed-length, non-empty binary literal keys; the packed table key length is
-  the slice length.
-- Result and side effects: on match, the VM branches to the case target; on
-  miss, execution continues at the next instruction. No slice register is
-  allocated.
-- Signals/errors: negative offsets, variable-width tables, zero-width tables,
-  or slices outside the source logical binary length raise `OUT_OF_RANGE`.
-  Malformed packed table data raises `RXBIN_CORRUPTION`.
-- Example:
+`rOffset` supplies a zero-based byte offset. All table keys must be nonempty
+binary literals of one fixed width, which determines the slice length. A match
+branches and a miss falls through. Neither register nor the binary cursor is
+modified, and no temporary slice is allocated.
 
+### Signals
+
+Negative offsets, variable/zero-width tables, or a slice outside the logical
+binary length raise `OUT_OF_RANGE`. Malformed packed data or targets raise
+`RXBIN_CORRUPTION`.
+
+### Example
+
+<!-- rxas-example name="control-jumpbs" test="run" -->
 ```rxas
+.globals=0
+
 main() .locals=4
     .jtable pairs linear
     br after_cases
@@ -425,29 +817,36 @@ after_cases:
     ret
 ```
 
-- Related instructions: `jumpb`, `jumps`, `jumpi`, `bcopy`, `bslice`.
+### Related
+
+`jumpb`, `jumps`, `jumpi`, `bcopy`, `bslice`.
 
 ## `jumpi`
 
-Status: documented.
+Dispatch through a packed table using a VM integer key.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x027a` | `{REG,BINARY}` | Jump through table op2 using integer register op1 |
+| `0x027a` | `jumpi rKey,table` | Branch to the matching integer `.jcase`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: dispatches through an assembled jump table using `op1.int_value` as
-  the lookup key.
-- Operand notes: integer keys are canonicalized to eight little-endian bytes.
-  `op2` is a procedure-local `.jtable` name, and cases must be integer
-  literals decorated with `.jcase`.
-- Result and side effects: on match, the VM branches to the case target; on
-  miss, execution continues at the next instruction.
-- Signals/errors: malformed packed table data raises `RXBIN_CORRUPTION`.
-- Example:
+The integer payload is canonicalized as eight little-endian bytes, matching
+integer-literal cases in the procedure-local table. A match branches and a miss
+falls through. The key register is unchanged.
 
+### Signals
+
+Malformed packed data or an invalid target raises `RXBIN_CORRUPTION`.
+
+### Example
+
+<!-- rxas-example name="control-jumpi" test="run" -->
 ```rxas
+.globals=0
+
 main() .locals=3
     .jtable choices auto
     br after_cases
@@ -461,29 +860,37 @@ after_cases:
     ret
 ```
 
-- Related instructions: `jumps`, `jumpb`, `jumpbs`.
+### Related
+
+`jumps`, `jumpb`, `jumpbs`.
 
 ## `jumps`
 
-Status: documented.
+Dispatch through a packed table using a string's exact UTF-8 bytes.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0277` | `{REG,BINARY}` | Jump through table op2 using string register op1 |
+| `0x0277` | `jumps rKey,table` | Branch to an exact string `.jcase`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: dispatches through an assembled jump table using the UTF-8 bytes of
-  a string register as the lookup key.
-- Operand notes: `op2` is a procedure-local `.jtable` name. Table cases must be
-  string literals decorated with `.jcase`; no NUL terminator is included in the
-  key.
-- Result and side effects: on match, the VM branches to the case target; on
-  miss, execution continues at the next instruction.
-- Signals/errors: malformed packed table data raises `RXBIN_CORRUPTION`.
-- Example:
+The logical string bytes, excluding any NUL terminator, are matched against
+string-literal cases. A match branches and a miss falls through. The string and
+its cursor are unchanged; this form performs exact byte matching without
+numeric or trailing-blank canonicalization.
 
+### Signals
+
+Malformed packed data or an invalid target raises `RXBIN_CORRUPTION`.
+
+### Example
+
+<!-- rxas-example name="control-jumps" test="run" -->
 ```rxas
+.globals=0
+
 main() .locals=3
     .jtable keywords linear
     br after_cases
@@ -497,101 +904,138 @@ after_cases:
     ret
 ```
 
-- Related instructions: `jumpb`, `jumpbs`, `jumpi`, `jumpr`, `jumpn`, `.jtable`, `.jcase`.
+### Related
+
+`jumpb`, `jumpbs`, `jumpi`, `jumpr`, `jumpn`, `.jtable`, `.jcase`.
 
 ## `jumpr`
 
-Status: documented.
+Dispatch using Rexx blank-padded nonnumeric string equality.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x027b` | `{REG,BINARY}` | Jump through table op2 using blank-padded Rexx string register op1 |
+| `0x027b` | `jumpr rKey,table` | Match after ignoring trailing ASCII spaces. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: dispatches using Rexx blank-padded nonnumeric string equality
-  without copying or modifying the source string.
-- Operand notes: `op1` is a string register and `op2` is a procedure-local
-  `.jtable` containing string cases. The assembler removes trailing ASCII
-  spaces from every case key; the VM computes the source's effective length by
-  ignoring trailing ASCII spaces. Leading spaces remain significant.
-- Result and side effects: on match, the VM branches to the case target; on
-  miss, execution continues at the next instruction.
-- Signals/errors: malformed packed data raises `RXBIN_CORRUPTION`. A table may
-  not be shared between exact, padded, and numeric string jump forms. Case keys
-  that become duplicates after trimming are assembler errors.
-- Example:
+The assembler trims trailing ASCII spaces from case keys and the VM ignores
+them in the runtime string. Leading spaces remain significant. A match branches
+and a miss falls through without copying or changing the source or cursor. A
+table cannot mix exact, padded, and numeric string modes.
 
+### Signals
+
+Malformed packed data or a bad target raises `RXBIN_CORRUPTION`; canonical
+duplicate cases are assembler errors.
+
+### Example
+
+<!-- rxas-example name="control-jumpr" test="run" -->
 ```rxas
+.globals=0
+
 main() .locals=2
     .jtable words auto
     br after_cases
 word_if: .jcase words "if   "
-    ret 1
+    ret
 after_cases:
     load r0,"if"
     jumpr r0,words
-    ret 0
+    ret
 ```
 
-- Related instructions: `jumps`, `jumpn`, `.jtable`, `.jcase`, `req`.
+### Related
+
+`jumps`, `jumpn`, `.jtable`, `.jcase`, `req`.
 
 ## `jumpn`
 
-Status: documented.
+Parse a string once and dispatch equivalent numeric spellings through a packed
+table.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x027c` | `{REG,BINARY}` | Jump through table op2 using numeric string register op1 |
+| `0x027c` | `jumpn rKey,table` | Match a canonical numeric string key. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: parses a string source once and dispatches equivalent numeric
-  spellings through a packed table.
-- Operand notes: `op1` is a string register and `op2` is a procedure-local
-  `.jtable` containing numeric string cases. The assembler and VM use the same
-  string-to-double parser. Keys are stored as canonical little-endian IEEE-754
-  bytes; `-0` and `0` share one key.
-- Result and side effects: on a numeric match, the VM branches to the case
-  target. A nonnumeric source falls through. A NaN source preserves current
-  loose-comparison first-match behavior through an assembler-generated internal
-  alias to the first source case.
-- Signals/errors: malformed packed data raises `RXBIN_CORRUPTION`. Nonnumeric
-  and NaN case keys, canonical duplicates such as `"1"` and `"01.0"`, and
-  mixed exact/padded/numeric use of one table are assembler errors.
-- Example:
+Assembler and VM use the shared string-to-double parser and canonical
+little-endian IEEE-754 key bytes; `-0` and `0` are one key. A numeric match
+branches, while nonnumeric input falls through. The source and cursor are
+unchanged. NaN input retains loose-comparison first-case alias behavior.
 
+### Signals
+
+Malformed packed data or targets raise `RXBIN_CORRUPTION`. Nonnumeric/NaN case
+keys, canonical duplicates, and mixed table modes are assembler errors.
+
+### Example
+
+<!-- rxas-example name="control-jumpn" test="run" -->
 ```rxas
+.globals=0
+
 main() .locals=2
     .jtable numbers auto
     br after_cases
 case_one: .jcase numbers "1"
-    ret 1
+    ret
 after_cases:
     load r0,"01.000"
     jumpn r0,numbers
-    ret 0
+    ret
 ```
 
-- Related instructions: `jumpr`, `jumps`, `.jtable`, `.jcase`, `req`.
+### Related
+
+`jumpr`, `jumps`, `.jtable`, `.jcase`, `req`.
 
 ## `ret`
 
-Status: placeholder.
+Return from the current procedure, optionally supplying a typed result.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0030` | `no operand` | Return VOID |
-| `0x0031` | `{REG}` | Return op1 |
-| `0x0032` | `{INT}` | Return op1 |
-| `0x0033` | `{FLOAT}` | Return op1 |
-| `0x0034` | `{STRING}` | Return op1 |
+| `0x0030` | `ret` | Return without a value. |
+| `0x0031` | `ret rValue` | Return a complete register value. |
+| `0x0032` | `ret integer` | Return an integer literal payload. |
+| `0x0033` | `ret float` | Return a float literal payload. |
+| `0x0034` | `ret "text"` | Return a string constant payload. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The register form full-copies nonlocal/linked storage but may move an ordinary
+callee-local value into the caller's return register before destroying the
+frame. Literal forms write only their respective payload. A void return leaves
+the caller's result as prepared by `call`. Returning from `main()` terminates
+the interpreter; an integer result supplies its process result code.
+
+### Signals
+
+Return itself does not signal. It also participates in signal-handler action
+returns when the current frame is an interrupt frame.
+
+### Example
+
+<!-- rxas-example name="control-ret" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    call r0,worker()
+    ret
+
+worker() .locals=0
+    ret "done"
+```
+
+### Related
+
+`call`, `exit`.
