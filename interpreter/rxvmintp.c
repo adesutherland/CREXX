@@ -1518,6 +1518,7 @@ static void clear_runtime_interface_factories(rxvm_context *context) {
         free(context->interface_factories[i].interface_name);
         free(context->interface_factories[i].factory_name);
         free(context->interface_factories[i].descriptor);
+        rx_sig_free(&context->interface_factories[i].signature);
         free(context->interface_factories[i].class_name);
     }
 
@@ -1547,6 +1548,66 @@ static void clear_runtime_interface_methods(rxvm_context *context) {
     context->interface_methods = 0;
     context->num_interface_methods = 0;
     context->interface_method_capacity = 0;
+}
+
+static int compare_runtime_interface_method_entries(const void *left_value,
+                                                    const void *right_value) {
+    const rxvm_interface_method_entry *left = left_value;
+    const rxvm_interface_method_entry *right = right_value;
+    int result;
+
+    result = compare_runtime_name(left->class_name, left->class_name_length,
+                                  right->class_name, right->class_name_length);
+    if (result) return result;
+    return compare_runtime_name(left->descriptor, left->descriptor_length,
+                                right->descriptor, right->descriptor_length);
+}
+
+static int compare_runtime_interface_method_key(const char *class_name,
+                                                size_t class_name_length,
+                                                const char *descriptor,
+                                                size_t descriptor_length,
+                                                const rxvm_interface_method_entry *entry) {
+    int result;
+
+    result = compare_runtime_name(class_name, class_name_length,
+                                  entry->class_name, entry->class_name_length);
+    if (result) return result;
+    return compare_runtime_name(descriptor, descriptor_length,
+                                entry->descriptor, entry->descriptor_length);
+}
+
+static int compare_runtime_interface_factory_entries(const void *left_value,
+                                                     const void *right_value) {
+    const rxvm_interface_factory_entry *left = left_value;
+    const rxvm_interface_factory_entry *right = right_value;
+    int result;
+
+    result = compare_runtime_name(left->interface_name, left->interface_name_length,
+                                  right->interface_name, right->interface_name_length);
+    if (result) return result;
+    result = compare_runtime_name(left->factory_name, left->factory_name_length,
+                                  right->factory_name, right->factory_name_length);
+    if (result) return result;
+    result = compare_runtime_name(left->class_name, left->class_name_length,
+                                  right->class_name, right->class_name_length);
+    if (result) return result;
+    return compare_runtime_name(left->descriptor, left->descriptor_length,
+                                right->descriptor, right->descriptor_length);
+}
+
+static int compare_runtime_interface_factory_key(const char *interface_name,
+                                                 size_t interface_name_length,
+                                                 const char *factory_name,
+                                                 size_t factory_name_length,
+                                                 const rxvm_interface_factory_entry *entry) {
+    int result;
+
+    result = compare_runtime_name(interface_name, interface_name_length,
+                                  entry->interface_name, entry->interface_name_length);
+    if (result) return result;
+    return compare_runtime_name(factory_name, factory_name_length,
+                                entry->factory_name, entry->factory_name_length);
 }
 
 static int runtime_member_kind_is_method(const string_constant *kind_symbol) {
@@ -1996,10 +2057,12 @@ static int add_runtime_interface_factory_entry(rxvm_context *context,
     entry->factory_name = dup_runtime_name(factory_name, factory_name_length);
     entry->descriptor = dup_runtime_name(descriptor, descriptor_length);
     entry->class_name = dup_runtime_name(class_name, class_name_length);
-    if (!entry->interface_name || !entry->factory_name || !entry->descriptor || !entry->class_name) {
+    if (!entry->interface_name || !entry->factory_name || !entry->descriptor || !entry->class_name ||
+        !rx_sig_parse_descriptor(entry->descriptor, &entry->signature)) {
         free(entry->interface_name);
         free(entry->factory_name);
         free(entry->descriptor);
+        rx_sig_free(&entry->signature);
         free(entry->class_name);
         memset(entry, 0, sizeof(*entry));
         return 0;
@@ -2201,6 +2264,13 @@ void rxvm_rebuild_interface_method_registry(rxvm_context *context) {
             meta_ix = meta->next;
         }
     }
+
+    if (context->num_interface_methods > 1) {
+        qsort(context->interface_methods,
+              context->num_interface_methods,
+              sizeof(*context->interface_methods),
+              compare_runtime_interface_method_entries);
+    }
 }
 
 static proc_runtime *resolve_runtime_method(rxvm_context *context,
@@ -2208,7 +2278,8 @@ static proc_runtime *resolve_runtime_method(rxvm_context *context,
                                             size_t class_name_length,
                                             const char *descriptor,
                                             size_t descriptor_length) {
-    size_t entry_index;
+    size_t lower;
+    size_t upper;
     char *proc_name;
     proc_runtime *called_function;
     char *descriptor_text;
@@ -2220,25 +2291,26 @@ static proc_runtime *resolve_runtime_method(rxvm_context *context,
         rxvm_link(context);
     }
 
+    lower = 0;
+    upper = context->num_interface_methods;
+    while (lower < upper) {
+        size_t middle = lower + (upper - lower) / 2;
+        rxvm_interface_method_entry *entry = &context->interface_methods[middle];
+        int comparison = compare_runtime_interface_method_key(
+                class_name, class_name_length, descriptor, descriptor_length, entry);
+
+        if (comparison < 0) upper = middle;
+        else if (comparison > 0) lower = middle + 1;
+        else {
+            return entry->method_proc;
+        }
+    }
+
     descriptor_text = dup_runtime_name(descriptor, descriptor_length);
     if (!descriptor_text) return 0;
     if (!rx_sig_parse_descriptor(descriptor_text, &expected_signature)) {
         free(descriptor_text);
         return 0;
-    }
-
-    for (entry_index = 0; entry_index < context->num_interface_methods; entry_index++) {
-        rxvm_interface_method_entry *entry;
-
-        entry = &context->interface_methods[entry_index];
-        if (entry->class_name_length == class_name_length &&
-            entry->descriptor_length == descriptor_length &&
-            memcmp(entry->class_name, class_name, class_name_length) == 0 &&
-            memcmp(entry->descriptor, descriptor, descriptor_length) == 0) {
-            rx_sig_free(&expected_signature);
-            free(descriptor_text);
-            return entry->method_proc;
-        }
     }
 
     proc_name = build_runtime_member_name(class_name,
@@ -2416,6 +2488,13 @@ void rxvm_rebuild_interface_factory_registry(rxvm_context *context) {
             meta_ix = meta->next;
         }
     }
+
+    if (context->num_interface_factories > 1) {
+        qsort(context->interface_factories,
+              context->num_interface_factories,
+              sizeof(*context->interface_factories),
+              compare_runtime_interface_factory_entries);
+    }
 }
 
 static void parse_runtime_factory_selector(const char *selector,
@@ -2456,19 +2535,14 @@ static void parse_runtime_factory_selector(const char *selector,
 
 static int runtime_factory_descriptor_matches(rxvm_context *context,
                                               const rx_callable_signature *expected_signature,
-                                              const char *registered_descriptor,
+                                              const rx_callable_signature *registered_signature,
                                               const char *interface_name,
                                               size_t interface_name_length) {
-    rx_callable_signature registered_signature;
     rx_callable_compare_options options;
     int matches;
 
-    if (!context || !expected_signature || !registered_descriptor ||
+    if (!context || !expected_signature || !registered_signature ||
         !interface_name || !interface_name_length) {
-        return 0;
-    }
-
-    if (!rx_sig_parse_descriptor(registered_descriptor, &registered_signature)) {
         return 0;
     }
 
@@ -2477,21 +2551,20 @@ static int runtime_factory_descriptor_matches(rxvm_context *context,
     options.type_assignable = runtime_signature_type_assignable;
     options.userdata = context;
 
-    matches = rx_sig_matches_contract(expected_signature, &registered_signature, &options);
+    matches = rx_sig_matches_contract(expected_signature, registered_signature, &options);
     if (!matches &&
-        expected_signature->name && registered_signature.name &&
-        strcmp(expected_signature->name, registered_signature.name) == 0 &&
-        rx_sig_args_match(expected_signature, &registered_signature) &&
+        expected_signature->name && registered_signature->name &&
+        strcmp(expected_signature->name, registered_signature->name) == 0 &&
+        rx_sig_args_match(expected_signature, registered_signature) &&
         runtime_type_matches_contract_name(expected_signature->return_type,
                                            interface_name,
                                            interface_name_length) &&
-        runtime_type_matches_contract_name(registered_signature.return_type,
+        runtime_type_matches_contract_name(registered_signature->return_type,
                                            interface_name,
                                            interface_name_length)) {
         matches = 1;
     }
 
-    rx_sig_free(&registered_signature);
     return matches;
 }
 
@@ -2517,6 +2590,8 @@ static int resolve_runtime_factory(rxvm_context *context,
     size_t best_class_name_length;
     int saw_candidate;
     int saw_positive_score;
+    size_t bucket_start;
+    size_t bucket_end;
 
     if (factory_out) *factory_out = 0;
     if (error_out) *error_out = 0;
@@ -2546,6 +2621,19 @@ static int resolve_runtime_factory(rxvm_context *context,
         return 0;
     }
 
+    bucket_start = 0;
+    bucket_end = context->num_interface_factories;
+    while (bucket_start < bucket_end) {
+        size_t middle = bucket_start + (bucket_end - bucket_start) / 2;
+        int comparison = compare_runtime_interface_factory_key(
+                interface_name, interface_name_length,
+                factory_name, factory_name_length,
+                &context->interface_factories[middle]);
+
+        if (comparison > 0) bucket_start = middle + 1;
+        else bucket_end = middle;
+    }
+
     best_factory = 0;
     best_score = 0;
     best_class_name = 0;
@@ -2553,22 +2641,21 @@ static int resolve_runtime_factory(rxvm_context *context,
     saw_candidate = 0;
     saw_positive_score = 0;
 
-    for (entry_index = 0; entry_index < context->num_interface_factories; entry_index++) {
+    for (entry_index = bucket_start;
+         entry_index < context->num_interface_factories;
+         entry_index++) {
         rxvm_interface_factory_entry *entry;
         rxinteger score;
 
         entry = &context->interface_factories[entry_index];
-        if (entry->interface_name_length != interface_name_length ||
-            memcmp(entry->interface_name, interface_name, interface_name_length) != 0 ||
-            entry->factory_name_length != factory_name_length ||
-            memcmp(entry->factory_name, factory_name, factory_name_length) != 0) {
-            continue;
-        }
+        if (compare_runtime_interface_factory_key(
+                interface_name, interface_name_length,
+                factory_name, factory_name_length, entry) != 0) break;
 
         saw_candidate = 1;
         if (!runtime_factory_descriptor_matches(context,
                                                 &expected_signature,
-                                                entry->descriptor,
+                                                &entry->signature,
                                                 interface_name,
                                                 interface_name_length)) {
             continue;

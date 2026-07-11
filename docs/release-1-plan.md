@@ -1,8 +1,8 @@
 # CREXX Release 1 Plan
 
-Status: draft plan for maintainer review and GitHub discussion, updated after
-the beta 2 tag and beta 3 branch baseline.
-Date: 2026-06-20.
+Status: draft plan for maintainer review and GitHub discussion, updated for the
+beta 3 foundation work completed through 2026-07-11.
+Date: 2026-07-11.
 Target release: end of August 2026.
 
 This plan describes the intended path from the tagged `v1.0.0-beta.2` release
@@ -93,16 +93,19 @@ Must-ship items are part of the Release 1 contract or release process.
 
 7. Runtime lookup and late loading
 
-   Harden late load/relink tests and replace interface method/factory hot-path
-   linear scans with indexed lookup. Treat this as the enabling VM work for
-   classes, large tables, and later Level G/L performance.
+   The beta 3 WIP baseline now has explicit-file late-load/relink coverage and
+   sorted interface method/factory registries. Exact method dispatch uses a
+   binary search; factory selection binary-searches the interface/member bucket
+   and scans only matching providers. Runtime loading rebuilds both indexes.
+   Cross-platform validation remains part of Release 1 QA.
 
 8. Large constant foundation
 
-   Implement or explicitly document the Release 1 minimum for immutable constant
-   bytes, integer arrays, string arrays, and table records. If full source sugar
-   is not ready by 2026-07-31, expose only the RXAS/VM and compiler-internal
-   pieces needed for demos and keep broader syntax post-release.
+   Immutable binary constants, typed binary-memory access, and packed jump
+   tables provide the Release 1 minimum needed by current demos and compiler
+   lowering. Dedicated immutable integer/string arrays, typed records, and
+   broader source sugar are explicitly deferred; they can be represented in
+   binary memory until a later design justifies separate forms.
 
 9. Performance baseline and targeted improvements
 
@@ -240,10 +243,10 @@ common `rel1` label plus the tier and area labels shown here.
 | 11 | Retire/deprecate compiler-owned Unicode plugin path | Adrian | `rel1`, `must`, `unicode`, `plugins` | Obsolete path is removed, disabled, or documented as deprecated with replacement guidance. |
 | 12 | Inventory and classify all plugins and native-backed adapters as core, integration, optional, deprecated, or experimental | Peter | `rel1`, `must`, `plugins` | Classification table exists and matches build/package defaults, including the current `classlib_native.rxbin` adapters `Id`, `KeyDB`, and `Os` and any explicit decision to keep them separate, promote them to core, or move them elsewhere. |
 | 13 | Change default plugin build/package set to match Release 1 policy | Peter | `rel1`, `must`, `plugins`, `packaging` | Default build makes the release surface clear; optional legacy paths are opt-in. |
-| 14 | Harden `METALOADMODULE` late load and class/interface rebinding | Adrian | `rel1`, `must`, `vm`, `classes` | Late-load and rebinding tests cover current expected behaviour. |
-| 15 | Replace interface method/factory linear scans with indexed lookup | Adrian | `rel1`, `must`, `vm`, `performance` | Hot lookup paths use indexed search and retain late-load correctness. |
-| 16 | Design fast register/class attribute metadata lookup | Adrian | `rel1`, `must`, `vm`, `compiler` | Metadata representation and lookup policy are documented and tested where implemented. |
-| 17 | Add large immutable constant structures to RXAS/RXBIN/VM | Adrian | `rel1`, `must`, `vm`, `rxas` | Bytes, integer arrays, string arrays, and table records have a tested minimum representation or explicit deferral. |
+| 14 | Harden `METALOADMODULE` late load and class/interface rebinding | Adrian | `rel1`, `must`, `vm`, `classes` | Implemented for beta 3 WIP with explicit-file late-load tests through `rxvm`, `rxbvm`, and the `crexx` driver; cross-platform QA remains. |
+| 15 | Replace interface method/factory linear scans with indexed lookup | Adrian | `rel1`, `must`, `vm`, `performance` | Implemented for beta 3 WIP with sorted indexes, late-load rebuilding, focused semantics tests, and a measured benchmark. |
+| 16 | Provide fast structured-data lookup without register-attribute metadata indexes | Adrian | `rel1`, `must`, `vm`, `compiler` | Superseded by byte-addressed binary memory, zero-copy comparison, packed jump tables, and compiler lowering; typed memory structs remain post-Release 1. |
+| 17 | Add large immutable constant structures to RXAS/RXBIN/VM | Adrian | `rel1`, `must`, `vm`, `rxas` | Release 1 minimum is implemented through binary constants and packed tables; dedicated typed arrays/records are deferred. |
 | 18 | Expose large constant structures through rxc for lexer/parser use | Adrian | `rel1`, `must`, `compiler`, `level-l` | Compiler can emit the minimum constant tables needed by approved demos, or surface syntax is deferred with VM/RXAS support documented. |
 | 19 | Add performance benchmark baseline for Release 1 | Rene | `rel1`, `must`, `performance`, `tests` | Baseline command set and recorded results exist before optimizer changes are claimed. |
 | 20 | Run final demo/tutorial usability pass | Rene | `rel1`, `must`, `docs`, `qa` | Curated examples have commands, expected output, and manual pass/fail notes. |
@@ -255,8 +258,8 @@ common `rel1` label plus the tier and area labels shown here.
 | # | Candidate issue | Owner | Labels | Fallback |
 | --- | --- | --- | --- | --- |
 | 23 | Decide and implement Level G Unicode baseline | Adrian | `rel1`, `should`, `level-g`, `unicode` | Ship LLM-focused Level G and document Unicode as planned if `utf8proc` or API design is not settled. |
-| 24 | Add build-time perfect hash optimization for static `select` | Adrian | `rel1`, `should`, `compiler`, `performance` | Keep current nested `IF` lowering. |
-| 25 | Add RXAS/VM lookup primitives needed by perfect-hash select | Adrian | `rel1`, `should`, `rxas`, `vm` | Generate optimized branch sequence or move primitive post-release. |
+| 24 | Add build-time perfect hash optimization for static `select` | Adrian | `rel1`, `should`, `compiler`, `performance` | Implemented for the conservative eligible integer/string/binary cases; arbitrary ladder recognition remains post-Release 1. |
+| 25 | Add RXAS/VM lookup primitives needed by perfect-hash select | Adrian | `rel1`, `should`, `rxas`, `vm` | Implemented through packed jump tables with linear, open-hash, ACPH, and measured `auto` selection. |
 | 26 | Add Level L lexer/parser library demo | Peter | `rel1`, `should`, `level-l`, `demos` | Ship the generated-output proof using packed binary tables and document generator work as later. |
 | 27 | Define Level G first library baseline | Rene | `rel1`, `should`, `level-g`, `library` | Document the existing LLM surface as the first baseline and move extra APIs post-release. |
 | 28 | Add Level G tutorial and demos | Rene | `rel1`, `should`, `level-g`, `docs` | Ship one tutorial plus known limitations if the broader demo set is not ready. |

@@ -143,6 +143,23 @@ foreach(_crexx_mode IN ITEMS noopt opt)
     )
 endforeach()
 
+add_custom_target(performance_runtime_lookup ALL)
+crexx_add_rexx_opt_matrix(
+        NAME runtime_interface_lookup_compare
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/runtime_interface_lookup_compare.crexx
+        TARGET_GROUP performance_runtime_lookup
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library compiler_exit_bin
+        RUNTIME_ARGS ${LIBRPATH}
+        TEST_LABELS "performance;vm;interfaces"
+)
+foreach(_crexx_mode IN ITEMS noopt opt)
+    set_tests_properties(runtime_interface_lookup_compare_${_crexx_mode} PROPERTIES
+            PASS_REGULAR_EXPRESSION "PASS: runtime interface lookup compare"
+            FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:"
+    )
+endforeach()
+
 crexx_add_rexx_opt_matrix(
         NAME inlining_complex
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/inlining_complex.crexx

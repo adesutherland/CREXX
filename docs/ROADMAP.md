@@ -65,9 +65,15 @@ the Release 1 or Level B quality bar.
 | Area | Issue | Source discussions | Notes |
 |------|-------|--------------------|-------|
 | Unicode and text semantics | [#583](https://github.com/adesutherland/CREXX/issues/583) | #155, #162, #194, #231, #470 | Define and verify Level B behaviour for case conversion, `TRANSLATE`, comparison, and byte/codepoint conversion decisions. |
-| Tool output paths | [#584](https://github.com/adesutherland/CREXX/issues/584) | #207 | Normalize `-o` / output path behaviour across `rxc`, `rxas`, and driver workflows. |
-| RXAS float literal precision | [#585](https://github.com/adesutherland/CREXX/issues/585) | #371 | Add regression coverage that separates stored double precision from display formatting. |
-| RXAS instruction coverage | [#586](https://github.com/adesutherland/CREXX/issues/586) | #427 | Inventory and extend instruction regression coverage. |
+
+Closed Release 1 quality issues remain useful as evidence rather than active
+roadmap work:
+
+| Area | Issue | Outcome |
+|------|-------|---------|
+| Tool output paths | [#584](https://github.com/adesutherland/CREXX/issues/584) | Closed with normalized `-o` behavior and regression coverage. |
+| RXAS float literal precision | [#585](https://github.com/adesutherland/CREXX/issues/585) | Closed with stored binary64 precision coverage separated from display formatting. |
+| RXAS instruction coverage | [#586](https://github.com/adesutherland/CREXX/issues/586) | Closed after the instruction inventory and regression surface were extended. |
 
 ## Platform Roadmap
 

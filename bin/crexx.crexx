@@ -258,7 +258,7 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
              return 2
            end
            optarg = fn.i
-           fullLibrary = rxpath||'bin'dirsep||optarg
+           fullLibrary = resolveLibraryPath(rxpath, dirsep, optarg)
            lastSlash = lastpos('/',fullLibrary)
            if lastSlash = 0 then lastSlash = lastpos('\',fullLibrary)
            libs = libs';'fullLibrary
@@ -272,7 +272,7 @@ if  platformUpper = 'WINDOWS' then dirsep = '\'
                say 'missing library path after' fn.i
                return 2
              end
-             fullLibrary = rxpath||'bin'dirsep||optarg
+             fullLibrary = resolveLibraryPath(rxpath, dirsep, optarg)
              lastSlash = lastpos('/',fullLibrary)
              if lastSlash = 0 then lastSlash = lastpos('\',fullLibrary)
              libs = libs';'fullLibrary
@@ -767,7 +767,7 @@ say '-[no]optimi[s|z]e  -- enable or disable optimization'
 say '-keep              -- keep compile/link intermediates (default)'
 say '-nokeep            -- delete compile/link intermediates after the run'
 say '-decimal           -- use decimal arithmetic'
-say '-l[library path]   -- packaged binary/runtime library relative to CREXX_HOME/bin'
+say '-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin'
 say '-s[path]           -- additional source import root for the rxc phase'
 say '-i[path]           -- additional raw binary import root for the rxc phase'
 say '--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots'
@@ -885,6 +885,11 @@ arg current = .string, value = .string
 if value = '' then return current
 if current = '' then return value
 return current';'value
+
+resolveLibraryPath: procedure = .string
+arg rxpath = .string, dirsep = .string, candidate = .string
+if pos('/', candidate) > 0 | pos('\', candidate) > 0 then return candidate
+return rxpath || 'bin' || dirsep || candidate
 
 appendWordUnique: procedure = .string
 arg current = .string, value = .string

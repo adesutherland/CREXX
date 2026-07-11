@@ -209,6 +209,7 @@ static void free_interface_factory_registry(rxvm_context *context) {
         free(context->interface_factories[i].interface_name);
         free(context->interface_factories[i].factory_name);
         free(context->interface_factories[i].descriptor);
+        rx_sig_free(&context->interface_factories[i].signature);
         free(context->interface_factories[i].class_name);
     }
 

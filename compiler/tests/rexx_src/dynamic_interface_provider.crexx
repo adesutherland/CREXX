@@ -1,0 +1,19 @@
+options levelb
+namespace dynamic_interface_provider expose late_service_impl
+import dynamic_interface_contract
+
+late_service_impl: class implements .late_service
+  _name = .string
+
+  *: factory
+    arg name = .string
+    _name = "plain:" || name
+    return
+
+  from_name: factory
+    arg name = .string
+    _name = "named:" || name
+    return
+
+  describe: method = .string
+    return _name

@@ -1,0 +1,26 @@
+options levelb
+namespace dynamic_interface_host
+import rxfnsb
+import dynamic_interface_contract
+
+arg argv = .string[]
+
+if argv[0] \= 1 then return fail("provider file argument")
+provider_file = argv[1]
+module_number = loadmodule(provider_file)
+if module_number <= 0 then return fail("loadmodule")
+
+plain = .late_service("alpha")
+if plain.describe() \= "plain:alpha" then return fail("default factory")
+if plain.decorated() \= "default:plain:alpha" then return fail("default method")
+
+named = .late_service.from_name("beta")
+if named.describe() \= "named:beta" then return fail("named factory")
+
+say "PASS: explicit late-loaded interface factory"
+return 0
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1

@@ -769,8 +769,9 @@ The current implementation is now:
 
 - it rebuilds an interface-method registry only when newly loaded modules
   invalidate that cache
-- registry rows are keyed by fully qualified concrete class name plus method
-  descriptor
+- registry rows are sorted by fully qualified concrete class name plus method
+  descriptor, and exact dispatch uses binary search without parsing the
+  descriptor on a registry hit
 - for each `class implements interface` link, the VM resolves the effective
   procedure for each interface member during link and validates its metadata
   signature
@@ -788,7 +789,12 @@ The current implementation is now:
   selectors
 - it rebuilds a factory-provider registry only when newly loaded modules
   invalidate that cache
-- registry rows are keyed by interface FQN plus factory member name
+- registry rows are sorted by interface FQN plus factory member name, so
+  dispatch binary-searches the matching provider bucket instead of scanning
+  unrelated interfaces
+- each provider row owns a parsed callable signature built during registry
+  rebuild; dispatch parses the requested descriptor once and does not reparse
+  every candidate descriptor
 - for each candidate class, it resolves the concrete `§factory` or
   `§factory.member` procedure through the existing metadata/procedure tables
   and validates the factory signature
@@ -809,3 +815,9 @@ Runtime module loading matters here as well. `METALOADMODULE` marks the
 VM link state dirty and immediately calls `rxvm_link()` after a successful
 load, so later `srcfprocsel`, `srcmethodsel`, and direct imported calls can
 see the new provider without an automatic filesystem sweep.
+
+The `crexx` driver keeps bare `-l` names as packaged libraries below
+`CREXX_HOME/bin`, but any `-l` value containing `/` or `\\` is an exact path.
+Late-loading applications should pass the intended `.rxbin` filename to
+`loadmodule()` explicitly; neither the driver regression nor the VM late-load
+path searches user-controlled directories for a provider.

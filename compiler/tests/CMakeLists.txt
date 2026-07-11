@@ -3797,6 +3797,62 @@ target_compile_definitions(test_dynamic_load PRIVATE
         CREXX_TEST_DYNAMIC_LOAD_PROVIDER_MODULE="${CMAKE_CURRENT_BINARY_DIR}/dynamic_load_provider.rxbin")
 add_dependencies(test_dynamic_load dynamic_load_fixture_bin library)
 
+add_custom_command(
+        OUTPUT dynamic_interface_contract.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o dynamic_interface_contract ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_contract.crexx
+        COMMAND $<TARGET_FILE:rxas> dynamic_interface_contract
+        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_contract.crexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling dynamic interface contract ..."
+)
+
+add_custom_command(
+        OUTPUT dynamic_interface_provider.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_CURRENT_BINARY_DIR} -i ${CMAKE_BINARY_DIR}/bin -o dynamic_interface_provider ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_provider.crexx
+        COMMAND $<TARGET_FILE:rxas> dynamic_interface_provider
+        DEPENDS rxc rxas library compiler_exit_bin dynamic_interface_contract.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_provider.crexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling dynamic interface provider ..."
+)
+
+add_custom_command(
+        OUTPUT dynamic_interface_host.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_CURRENT_BINARY_DIR} -i ${CMAKE_BINARY_DIR}/bin -o dynamic_interface_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_host.crexx
+        COMMAND $<TARGET_FILE:rxas> dynamic_interface_host
+        DEPENDS rxc rxas library compiler_exit_bin dynamic_interface_contract.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_host.crexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling dynamic interface host ..."
+)
+
+# These files are direct CTest inputs, so the normal build must create them.
+add_custom_target(dynamic_interface_fixture_bin ALL DEPENDS
+        dynamic_interface_contract.rxbin
+        dynamic_interface_provider.rxbin
+        dynamic_interface_host.rxbin)
+add_dependencies(dynamic_interface_fixture_bin crexx)
+
+set(DYNAMIC_INTERFACE_DRIVER_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_driver.cmake")
+file(GENERATE OUTPUT "${DYNAMIC_INTERFACE_DRIVER_SCRIPT}" CONTENT
+"file(REMOVE_RECURSE \"${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_driver\")
+file(MAKE_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_driver\")
+file(COPY \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_host.crexx\" DESTINATION \"${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_driver\")
+execute_process(
+  COMMAND \"$<TARGET_FILE:crexx>\"
+          \"${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_driver/dynamic_interface_host.crexx\"
+          \"-i${CMAKE_CURRENT_BINARY_DIR}\"
+          \"-l${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_contract.rxbin\"
+          -args \"${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_provider.rxbin\"
+  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_driver\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+set(all_output \"\${out}\${err}\")
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Late-loaded factory driver failed (\${res}):\\n\${all_output}\")
+endif()
+if(NOT all_output MATCHES \"PASS: explicit late-loaded interface factory\")
+  message(FATAL_ERROR \"Late-loaded factory driver omitted PASS marker:\\n\${all_output}\")
+endif()
+")
+
 add_executable(test_rxvml_utf_boundaries src/test_rxvml_utf_boundaries.c)
 target_link_libraries(test_rxvml_utf_boundaries PRIVATE rxvml rxpashim)
 target_include_directories(test_rxvml_utf_boundaries PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
@@ -3938,6 +3994,22 @@ add_test(NAME address_callback_host COMMAND test_address_callback_host)
 set_tests_properties(address_callback_host PROPERTIES LABELS "compiler;stage3")
 add_test(NAME dynamic_load COMMAND test_dynamic_load)
 set_tests_properties(dynamic_load PROPERTIES LABELS "compiler;stage3")
+foreach(_dynamic_interface_runner IN ITEMS rxvm rxbvm)
+    add_test(NAME dynamic_interface_load_${_dynamic_interface_runner}
+            COMMAND $<TARGET_FILE:${_dynamic_interface_runner}>
+                    ${CMAKE_BINARY_DIR}/bin/library.rxbin
+                    ${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_contract.rxbin
+                    ${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_host.rxbin
+                    -a ${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_provider.rxbin)
+    set_tests_properties(dynamic_interface_load_${_dynamic_interface_runner} PROPERTIES
+            LABELS "compiler;stage3;vm;interfaces;late-load"
+            PASS_REGULAR_EXPRESSION "PASS: explicit late-loaded interface factory"
+            FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:")
+endforeach()
+add_test(NAME dynamic_interface_load_driver
+        COMMAND ${CMAKE_COMMAND} -P ${DYNAMIC_INTERFACE_DRIVER_SCRIPT})
+set_tests_properties(dynamic_interface_load_driver PROPERTIES
+        LABELS "compiler;stage3;driver;interfaces;late-load")
 add_test(NAME crexxsaa_variables COMMAND test_crexxsaa_variables)
 set_tests_properties(crexxsaa_variables PROPERTIES
         LABELS "compiler;stage3"
