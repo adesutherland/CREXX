@@ -858,400 +858,821 @@ main() .locals=2
 
 ## `dpow`
 
-Status: placeholder.
+Raise a decimal base to a decimal exponent under the current context.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x018b` | `{REG,REG,REG}` | op1=op2**op3 |
-| `0x018c` | `{REG,REG,DECIMAL}` | op1=op2**op3 |
-| `0x018d` | `{REG,DECIMAL,REG}` | op1=op2**op3 |
+| `0x018b` | `dpow rResult,rBase,rExponent` | Register operands. |
+| `0x018c` | `dpow rResult,rBase,exponent` | Literal exponent. |
+| `0x018d` | `dpow rResult,base,rExponent` | Literal base. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The decimal plugin computes and context-rounds the power into the destination
+decimal payload. Register sources and unrelated value state are unchanged.
+
+### Signals
+
+Propagates plugin invalid-operation, overflow, underflow, and allocation
+conditions, including unsupported base/exponent combinations.
+
+### Example
+
+<!-- rxas-example name="decimal-dpow" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,2d
+    dpow r0,r1,3d
+    ret
+```
+
+### Related
+
+`dmult`, `ipow`, `fpow`.
 
 ## `dropchar`
 
-Status: placeholder.
+Append source characters that do not occur in a removal-list string.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00a0` | `{REG,REG,REG}` | set op1 from op2 after dropping all chars from op3 |
+| `0x00a0` | `dropchar rDestination,rSource,rRemovalList` | Filter by Unicode code point. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Each source character is compared with every removal-list character and is
+appended to the destination only when absent. The destination is not cleared,
+so pre-existing text is retained; its cursor follows string append behavior.
+During scanning the VM overwrites `rSource.int` and `rRemovalList.int` with the
+last examined code points, while leaving their strings and cursors unchanged.
+
+### Signals
+
+Raises `UNICODE_ERROR` if either source string is invalid UTF-8. String-growth
+allocation failure is fatal.
+
+### Example
+
+<!-- rxas-example name="decimal-dropchar" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    load r0,""
+    load r1,"banana"
+    load r2,"an"
+    dropchar r0,r1,r2
+    ret
+```
+
+### Related
+
+`transchar`, `strlower`, `strupper`.
 
 ## `dsex`
 
-Status: placeholder.
+Negate a decimal payload in place.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x018e` | `{REG}` | Decimal op1 = -op1 (sign change) |
+| `0x018e` | `dsex rValue` | Replace decimal value with its sign inverse. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only the decimal payload changes; other payloads, cursor, attributes, type
+metadata, and flags remain intact.
+
+### Signals
+
+Raises `INVALID_ARGUMENTS` when the register has no decimal payload. The
+instruction does not perform the usual post-plugin signal check after negation.
+
+### Example
+
+<!-- rxas-example name="decimal-dsex" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,1.5d
+    dsex r0
+    ret
+```
+
+### Related
+
+`dsub`, `isex`, `fsex`.
 
 ## `dsub`
 
-Status: placeholder.
+Subtract decimal values under the current numeric context.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x016a` | `{REG,REG,REG}` | Decimal Subtract (op1=op2-op3) |
-| `0x016b` | `{REG,REG,DECIMAL}` | Decimal Subtract (op1=op2-op3) |
-| `0x016c` | `{REG,DECIMAL,REG}` | Decimal Subtract (op1=op2-op3) |
+| `0x016a` | `dsub rResult,rLeft,rRight` | Register decimals. |
+| `0x016b` | `dsub rResult,rLeft,decimal` | Literal subtrahend. |
+| `0x016c` | `dsub rResult,decimal,rRight` | Literal minuend. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination decimal receives the context-rounded difference. Register
+sources and unrelated destination state remain unchanged; aliasing is supported.
+
+### Signals
+
+Propagates decimal-plugin invalid, overflow, underflow, and allocation
+conditions.
+
+### Example
+
+<!-- rxas-example name="decimal-dsub" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,2d
+    dsub r0,5d,r1
+    ret
+```
+
+### Related
+
+`dadd`, `dsex`, `dmult`.
 
 ## `dtob`
 
-Status: placeholder.
+Convert a decimal payload to Boolean integer in place.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00f1` | `{REG}` | Convert Decimal Number to Boolean op1=dec2s(op2) |
+| `0x00f1` | `dtob rValue` | Set integer to `0` for decimal zero, else `1`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only the integer payload changes; the decimal value remains available. The
+plugin's decimal zero test determines the canonical Boolean.
+
+### Signals
+
+Propagates decimal-plugin invalid-operand conditions.
+
+### Example
+
+<!-- rxas-example name="decimal-dtob" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,0.1d
+    dtob r0
+    ret
+```
+
+### Related
+
+`btod`, `dtoi`, `dtof`.
 
 ## `dtof`
 
-Status: placeholder.
+Convert a decimal payload to host floating point in place.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00f4` | `{REG}` | Convert Decimal Number to Float op1=f2dec(op2) |
+| `0x00f4` | `dtof rValue` | Write the nearest supported `double` payload. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only the float payload changes; the decimal payload and other value state are
+preserved. Conversion can round when the decimal is not exactly representable.
+
+### Signals
+
+Propagates plugin invalid, overflow, and underflow conversion conditions.
+
+### Example
+
+<!-- rxas-example name="decimal-dtof" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,1.25d
+    dtof r0
+    ret
+```
+
+### Related
+
+`ftod`, `dtoi`, `dtos`.
 
 ## `dtoi`
 
-Status: placeholder.
+Convert a decimal payload to fixed-width integer in place.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00f0` | `{REG}` | Convert Decimal Number to Integer op1=dec2s(op2) |
+| `0x00f0` | `dtoi rValue` | Write the converted integer payload. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The plugin converts under its integer-conversion rules and writes only the
+integer payload; the original decimal remains intact.
+
+### Signals
+
+Propagates invalid, nonintegral, and out-of-range plugin conversion conditions.
+
+### Example
+
+<!-- rxas-example name="decimal-dtoi" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,42d
+    dtoi r0
+    ret
+```
+
+### Related
+
+`itod`, `dtob`, `didiv`.
 
 ## `dtos`
 
-Status: placeholder.
+Format a decimal payload as a string in place.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00ef` | `{REG}` | Convert Decimal Number to Decimal String op1=dec2s(op2) |
+| `0x00ef` | `dtos rValue` | Replace the string payload with plugin formatting. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The current digits, form, case, fuzz, and standard settings govern formatting.
+The string buffer is replaced with the NUL-terminated result; the decimal
+payload remains unchanged. The implementation does not explicitly reset the
+existing string cursor after changing the length.
+
+### Signals
+
+Propagates decimal-plugin formatting conditions; buffer allocation failure is
+not separately translated.
+
+### Example
+
+<!-- rxas-example name="decimal-dtos" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,12.5d
+    dtos r0
+    ret
+```
+
+### Related
+
+`stod`, `dextr`, `dtof`.
 
 ## `ftod`
 
-Status: placeholder.
+Convert a host floating-point payload to decimal in place.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00f3` | `{REG}` | Convert Float to Decimal Number op1=f2dec(op2) |
+| `0x00f3` | `ftod rValue` | Replace the decimal payload from `rValue.float`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The current decimal context governs conversion and rounding. Only the decimal
+payload changes; the source float remains stored in the same register.
+
+### Signals
+
+Propagates plugin invalid, overflow, underflow, and allocation conditions.
+
+### Example
+
+<!-- rxas-example name="decimal-ftod" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,1.25
+    ftod r0
+    ret
+```
+
+### Related
+
+`dtof`, `itod`, `stod`.
 
 ## `getnumcas`
 
-Status: placeholder.
+Read the numeric exponent-letter case setting.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0100` | `{REG}` | Get Numeric Case=op1 (1=lower,2=upper) |
+| `0x0100` | `getnumcas rCase` | Store `1` for lower or `2` for upper. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only the destination integer payload changes; the numeric context is unchanged.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="decimal-getnumcas" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    getnumcas r0
+    ret
+```
+
+### Related
+
+`setnumcas`, `numeng`, `numsci`.
 
 ## `getnumdgts`
 
-Status: placeholder.
+Read the current decimal precision in digits.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00f7` | `{REG}` | Get Numeric Digits op1=digits |
+| `0x00f7` | `getnumdgts rDigits` | Store the context digits value. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only the destination integer payload changes; no context or cursor is mutated.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="decimal-getnumdgts" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    getnumdgts r0
+    ret
+```
+
+### Related
+
+`setnumdgts`, `getnumfuz`.
 
 ## `getnumfrm`
 
-Status: placeholder.
+Read the numeric notation form.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00fd` | `{REG}` | Get Numeric Form=op1 (1=sci,2=eng) |
+| `0x00fd` | `getnumfrm rForm` | Store `1` scientific or `2` engineering. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only the destination integer payload changes.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="decimal-getnumfrm" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    getnumfrm r0
+    ret
+```
+
+### Related
+
+`setnumfrm`, `numeng`, `numsci`.
 
 ## `getnumfuz`
 
-Status: placeholder.
+Read the current numeric fuzz value.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00fa` | `{REG}` | Get Numeric Fuzz op1=digits |
+| `0x00fa` | `getnumfuz rFuzz` | Store the context fuzz digits. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only the destination integer payload changes.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="decimal-getnumfuz" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    getnumfuz r0
+    ret
+```
+
+### Related
+
+`setnumfuz`, `getnumdgts`.
 
 ## `getnumstd`
 
-Status: placeholder.
+Read the numeric standard selector.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0103` | `{REG}` | Get Numeric Standard=op1 (1=common,2=classic) |
+| `0x0103` | `getnumstd rStandard` | Store `1` common or `2` classic. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only the destination integer payload changes.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="decimal-getnumstd" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    getnumstd r0
+    ret
+```
+
+### Related
+
+`setnumstd`, `numeng`, `numsci`.
 
 ## `itod`
 
-Status: placeholder.
+Convert an integer payload to decimal in place.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00f2` | `{REG}` | Convert Integer to Decimal Number op1=s2dec(op2) |
+| `0x00f2` | `itod rValue` | Replace the decimal payload from `rValue.int`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The current decimal context governs conversion. Only the decimal payload
+changes; the original integer and other value state remain intact.
+
+### Signals
+
+Propagates decimal-plugin conversion and allocation conditions.
+
+### Example
+
+<!-- rxas-example name="decimal-itod" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,42
+    itod r0
+    ret
+```
+
+### Related
+
+`dtoi`, `btod`, `ftod`.
 
 ## `numeng`
 
-Status: placeholder.
+Install a complete engineering-notation numeric context.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0105` | `{INT,INT,INT}` | Setup Engineering Numeric digits=op1, case=op2, std=op3, fuzz=0, form=eng |
+| `0x0105` | `numeng digits,case,standard` | Set engineering form and reset fuzz. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+`digits` must be at least 5; `case` is `1` lower or `2` upper; `standard` is
+`1` common or `2` classic. On success the frame receives those settings,
+engineering form `2`, and fuzz zero, then synchronizes the decimal plugin.
+
+### Signals
+
+Raises `INVALID_ARGUMENTS` before mutation when any literal is outside its
+accepted range.
+
+### Example
+
+<!-- rxas-example name="decimal-numeng" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=0
+    numeng 9,1,1
+    ret
+```
+
+### Related
+
+`numsci`, `setnumfrm`, `setnumdgts`.
 
 ## `numsci`
 
-Status: placeholder.
+Install a complete scientific-notation numeric context.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0104` | `{INT,INT,INT}` | Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci |
+| `0x0104` | `numsci digits,case,standard` | Set scientific form and reset fuzz. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+`digits` must be at least 5; `case` is `1` lower or `2` upper; `standard` is
+`1` common or `2` classic. Success installs those settings, scientific form
+`1`, and fuzz zero, then synchronizes the decimal plugin.
+
+### Signals
+
+Raises `INVALID_ARGUMENTS` before context mutation for an invalid literal.
+
+### Example
+
+<!-- rxas-example name="decimal-numsci" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=0
+    numsci 9,2,1
+    ret
+```
+
+### Related
+
+`numeng`, `setnumfrm`, `setnumdgts`.
 
 ## `setnumcas`
 
-Status: placeholder.
+Set the numeric exponent-letter case and synchronize the decimal plugin.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00fe` | `{REG}` | Set Numeric Case=op1 (1=lower,2=upper) |
-| `0x00ff` | `{INT}` | Set Numeric Case=op1 (1=lower,2=upper) |
+| `0x00fe` | `setnumcas rCase` | Read case from an integer payload. |
+| `0x00ff` | `setnumcas case` | Use a literal case selector. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Accepted values are `1` for lowercase and `2` for uppercase exponent letters.
+Success changes the current frame context and immediately synchronizes the
+decimal plugin. A register operand remains unchanged.
+
+### Signals
+
+Raises `INVALID_ARGUMENTS` before mutation for values outside `1..2`.
+
+### Example
+
+<!-- rxas-example name="decimal-setnumcas" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=0
+    setnumcas 2
+    ret
+```
+
+### Related
+
+`getnumcas`, `numeng`, `numsci`.
 
 ## `setnumdgts`
 
-Status: placeholder.
+Set the decimal precision and synchronize the decimal plugin.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00f5` | `{REG}` | Set Numeric Digits digits=op1 (>4) |
-| `0x00f6` | `{INT}` | Set Numeric Digits digits=op1 (>4) |
+| `0x00f5` | `setnumdgts rDigits` | Read precision from an integer payload. |
+| `0x00f6` | `setnumdgts digits` | Use a literal precision. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The implementation accepts every positive value (`>=1`), despite the older
+assembler description saying greater than four. Success updates the frame's
+digits setting and synchronizes the decimal plugin; a source register is
+unchanged.
+
+### Signals
+
+Raises `INVALID_ARGUMENTS` before mutation for zero or negative precision.
+
+### Example
+
+<!-- rxas-example name="decimal-setnumdgts" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=0
+    setnumdgts 9
+    ret
+```
+
+### Related
+
+`getnumdgts`, `numeng`, `numsci`.
 
 ## `setnumfrm`
 
-Status: placeholder.
+Set scientific or engineering numeric form.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00fb` | `{REG}` | Set Numeric Form=op1 (1=sci,2=eng) |
-| `0x00fc` | `{INT}` | Set Numeric Form=op1 (1=sci,2=eng) |
+| `0x00fb` | `setnumfrm rForm` | Read form from an integer payload. |
+| `0x00fc` | `setnumfrm form` | Use a literal form selector. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+`1` selects scientific notation and `2` engineering notation. Success updates
+the current frame and synchronizes the decimal plugin; register operands remain
+unchanged.
+
+### Signals
+
+Raises `INVALID_ARGUMENTS` before mutation outside `1..2`.
+
+### Example
+
+<!-- rxas-example name="decimal-setnumfrm" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=0
+    setnumfrm 2
+    ret
+```
+
+### Related
+
+`getnumfrm`, `numeng`, `numsci`.
 
 ## `setnumfuz`
 
-Status: placeholder.
+Set numeric fuzz and synchronize the decimal plugin.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00f8` | `{REG}` | Set Numeric Fuzz digits=op1 (>=0) |
-| `0x00f9` | `{INT}` | Set Numeric Fuzz digits=op1 (>=0) |
+| `0x00f8` | `setnumfuz rFuzz` | Read fuzz from an integer payload. |
+| `0x00f9` | `setnumfuz fuzz` | Use a literal fuzz value. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Nonnegative values are the supported domain. Success updates the current frame
+and synchronizes the plugin; a register operand is unchanged. The literal form
+currently assigns and synchronizes even after detecting a negative value,
+before the queued signal is dispatched; the register form does not mutate on
+that error.
+
+### Signals
+
+Raises `INVALID_ARGUMENTS` for a negative value, with the mutation distinction
+above.
+
+### Example
+
+<!-- rxas-example name="decimal-setnumfuz" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=0
+    setnumfuz 0
+    ret
+```
+
+### Related
+
+`getnumfuz`, `setnumdgts`, `numeng`.
 
 ## `setnumstd`
 
-Status: placeholder.
+Set the decimal numeric standard selector.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0101` | `{REG}` | Set Numeric Standard=op1 (1=common,2=classic) |
-| `0x0102` | `{INT}` | Set Numeric Standard=op1 (1=common,2=classic) |
+| `0x0101` | `setnumstd rStandard` | Read selector from an integer payload. |
+| `0x0102` | `setnumstd standard` | Use a literal selector. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+`1` selects common and `2` classic behavior. Success updates the frame context
+and synchronizes the plugin; a register operand is unchanged.
+
+### Signals
+
+Raises `INVALID_ARGUMENTS` before mutation outside `1..2`.
+
+### Example
+
+<!-- rxas-example name="decimal-setnumstd" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=0
+    setnumstd 1
+    ret
+```
+
+### Related
+
+`getnumstd`, `numeng`, `numsci`.
 
 ## `stod`
 
-Status: placeholder.
+Parse an in-place string payload as a decimal value.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00ee` | `{REG}` | Convert Decimal String to Decimal Number op1=s2dec(op2) |
+| `0x00ee` | `stod rValue` | Replace the decimal payload from the string. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The string is NUL-terminated in its existing buffer if necessary, then parsed
+under the current decimal context. Only the decimal payload changes; string
+content and cursor otherwise remain unchanged.
+
+### Signals
+
+Propagates decimal-plugin syntax, range, and allocation conditions.
+
+### Example
+
+<!-- rxas-example name="decimal-stod" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,"12.5"
+    stod r0
+    ret
+```
+
+### Related
+
+`dtos`, `itod`, `ftod`.
