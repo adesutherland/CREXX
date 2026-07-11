@@ -1,0 +1,16 @@
+options levelb
+namespace data expose RexxComparator
+import rexx
+
+RexxComparator: class implements .ObjectComparator
+
+  *: factory
+    return
+
+  compare: method = .int
+    arg left = .object, right = .object
+    left_key = left as .rexx
+    right_key = right as .rexx
+    if left_key.stringvalue() < right_key.stringvalue() then return -1
+    if left_key.stringvalue() > right_key.stringvalue() then return 1
+    return 0
