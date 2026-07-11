@@ -127,6 +127,25 @@ For interface methods, the member-kind string now distinguishes:
 - `method` for an abstract interface method
 - `method final` for a Level B final/default interface method body
 
+### Jump Tables
+
+Procedure-local `.jtable` declarations and same-line `.jcase` label decorations
+are resolved after label optimization. The assembler emits the resulting table
+as a host-layout-independent `BINARY_CONST`; `jumps`, `jumpr`, `jumpn`,
+`jumpb`, `jumpbs`, and `jumpi` operands are patched to that pool entry.
+`jumps` uses exact bytes, `jumpr` canonicalizes trailing-space-padded Rexx text,
+and `jumpn` canonicalizes numeric strings through the shared parser in
+`binutils/include/rxnumparse.h`. Release 1 packed algorithms are
+`linear`, `openhash`, and `acph`. `auto` uses linear for one case. Larger tables
+use open hashing for average key lengths up to two bytes; tables of at least 256
+cases also use it for averages up to four bytes. Remaining tables use ACPH.
+Shared format constants and hash functions live in
+`binutils/include/rxjtable.h` and must remain common to the assembler and VM
+readers.
+
+The complete packed layout, canonicalization, corruption, disassembly, and
+ownership contract is in [RXBIN_JUMP_TABLES.md](RXBIN_JUMP_TABLES.md).
+
 ### Binary Literals
 
 RXAS binary literals are written as byte-paired hex with a `0x` or `0X`
@@ -417,6 +436,23 @@ effects are not represented as normal operands. For example, `inc0`, `dec0`,
 `inc1`, and friends are still linear execution, but the optimiser treats them
 as using the corresponding fixed local register when checking whether an
 intervening instruction is relevant to a rule.
+
+The bounded register-effect model is split deliberately. `rxops.h` remains
+authoritative for control flow, barriers, and whether an instruction has
+implicit register use. `binutils/include/rxopeffects.h` supplies the optimizer's
+proven overwrite-without-read and implicit-register shape for those opcodes.
+Missing effect metadata is conservative: operand 1 is assumed readable and is
+not treated as a kill. The implicit shapes cover fixed registers, integer-coded
+local/argument register indexes, and the runtime-sized contiguous argument
+range after the third operand of `call`, `dcall`, and `srcfprocsel`.
+
+The current compare/branch liveness check is intentionally bounded to the
+assembler queue and known labels. It follows declared jump edges, stops at
+terminators, and treats every optimizer barrier or unknown opcode as a possible
+observation of the live register. It is not a general control-flow graph or
+alias analysis. `test_rxop_metadata` is generated from `op_table` and checks
+that flow, implicit-use flags, effect shapes, and key barrier assumptions remain
+consistent as instructions are added.
 
 Attribute/register-view cleanup is also a keyhole concern. A full `copy`
 already copies the VM value status word, so `copy rA,rB` followed immediately

@@ -841,6 +841,9 @@ add_crexx_compiler_test(04_literals rexx_src/04_literals.crexx)
 add_crexx_compiler_test(05_ops_common rexx_src/05_ops_common.crexx)
 add_crexx_compiler_test(05_ops_classic rexx_src/05_ops_classic.crexx)
 add_crexx_compiler_fail_test(err_xor_common rexx_src/err_xor_common.crexx err_xor_common.txt)
+add_crexx_compiler_fail_test(int64_literal_overflow rexx_src/int64_literal_overflow.crexx int64_literal_overflow.txt)
+add_crexx_compiler_fail_test(int64_fold_overflow rexx_src/int64_fold_overflow.crexx int64_fold_overflow.txt)
+add_crexx_compiler_fail_test(int64_fold_division_zero rexx_src/int64_fold_division_zero.crexx int64_fold_division_zero.txt)
 add_crexx_compiler_test(strict_compare_codegen rexx_src/strict_compare_codegen.crexx)
 add_crexx_compiler_test(address_expose rexx_src/address_expose.crexx)
 add_crexx_compiler_test(div_ops_common rexx_src/div_ops_common.crexx)
@@ -851,6 +854,12 @@ add_crexx_compiler_test(07_loops rexx_src/07_loops.crexx)
 add_crexx_compiler_test(08_select rexx_src/08_select.crexx)
 add_crexx_compiler_test(test_select_classic rexx_src/test_select_classic.crexx)
 add_crexx_compiler_test(test_select_c rexx_src/test_select_c.crexx)
+add_crexx_compiler_test(select_dispatch_integer rexx_src/select_dispatch_integer.crexx)
+add_crexx_compiler_test(select_dispatch_fallback rexx_src/select_dispatch_fallback.crexx)
+add_crexx_compiler_test(select_dispatch_mixed rexx_src/select_dispatch_mixed.crexx)
+add_crexx_compiler_test(select_dispatch_general rexx_src/select_dispatch_general.crexx)
+add_crexx_compiler_test(select_dispatch_strings rexx_src/select_dispatch_strings.crexx)
+add_crexx_compiler_test(repro_duplicate_call_argument rexx_src/repro_duplicate_call_argument.crexx)
 add_crexx_compiler_test(09_nested rexx_src/09_nested.crexx)
 add_crexx_compiler_test(10_procs rexx_src/10_procs.crexx)
 add_crexx_compiler_test(11_scope rexx_src/11_scope.crexx)
@@ -1631,6 +1640,7 @@ macro(add_crexx_run_args_test NAME SOURCE_FILE)
 endmacro()
 
 add_crexx_run_test(repro_dotted_index rexx_src/repro_dotted_index.crexx)
+add_crexx_run_test(int64_contract rexx_src/int64_contract.crexx)
 add_crexx_run_test(repro_expand_until rexx_src/repro_expand_until.crexx)
 add_crexx_run_test(repro_array_arg rexx_src/repro_array_arg.crexx)
 add_crexx_run_test(repro_array_trailing_concat rexx_src/repro_array_trailing_concat.crexx)
@@ -1652,6 +1662,12 @@ add_crexx_run_test(repro_args_alias rexx_src/repro_args_alias.crexx)
 add_crexx_run_test(repro_sconcat rexx_src/repro_sconcat.crexx)
 add_crexx_run_test(repro_strict_compare rexx_src/repro_strict_compare.crexx)
 add_crexx_run_test(08_select rexx_src/08_select.crexx)
+add_crexx_run_test(select_dispatch_integer rexx_src/select_dispatch_integer.crexx)
+add_crexx_run_test(select_dispatch_fallback rexx_src/select_dispatch_fallback.crexx)
+add_crexx_run_test(select_dispatch_mixed rexx_src/select_dispatch_mixed.crexx)
+add_crexx_run_test(select_dispatch_general rexx_src/select_dispatch_general.crexx)
+add_crexx_run_test(select_dispatch_strings rexx_src/select_dispatch_strings.crexx)
+add_crexx_run_test(repro_duplicate_call_argument rexx_src/repro_duplicate_call_argument.crexx)
 add_crexx_run_test(13_stems rexx_src/13_stems.crexx)
 add_crexx_run_test(repro_multi_tail_stems rexx_src/repro_multi_tail_stems.crexx)
 add_crexx_run_test(repro_rexx_compare_method rexx_src/repro_rexx_compare_method.crexx "${CMAKE_BINARY_DIR}/bin/classlib.rxbin")
@@ -3785,6 +3801,62 @@ target_compile_definitions(test_dynamic_load PRIVATE
         CREXX_TEST_DYNAMIC_LOAD_PROVIDER_MODULE="${CMAKE_CURRENT_BINARY_DIR}/dynamic_load_provider.rxbin")
 add_dependencies(test_dynamic_load dynamic_load_fixture_bin library)
 
+add_custom_command(
+        OUTPUT dynamic_interface_contract.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_BINARY_DIR}/bin -o dynamic_interface_contract ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_contract.crexx
+        COMMAND $<TARGET_FILE:rxas> dynamic_interface_contract
+        DEPENDS rxc rxas library compiler_exit_bin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_contract.crexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling dynamic interface contract ..."
+)
+
+add_custom_command(
+        OUTPUT dynamic_interface_provider.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_CURRENT_BINARY_DIR} -i ${CMAKE_BINARY_DIR}/bin -o dynamic_interface_provider ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_provider.crexx
+        COMMAND $<TARGET_FILE:rxas> dynamic_interface_provider
+        DEPENDS rxc rxas library compiler_exit_bin dynamic_interface_contract.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_provider.crexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling dynamic interface provider ..."
+)
+
+add_custom_command(
+        OUTPUT dynamic_interface_host.rxbin
+        COMMAND $<TARGET_FILE:rxc> -i ${CMAKE_CURRENT_BINARY_DIR} -i ${CMAKE_BINARY_DIR}/bin -o dynamic_interface_host ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_host.crexx
+        COMMAND $<TARGET_FILE:rxas> dynamic_interface_host
+        DEPENDS rxc rxas library compiler_exit_bin dynamic_interface_contract.rxbin ${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_host.crexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Compiling dynamic interface host ..."
+)
+
+# These files are direct CTest inputs, so the normal build must create them.
+add_custom_target(dynamic_interface_fixture_bin ALL DEPENDS
+        dynamic_interface_contract.rxbin
+        dynamic_interface_provider.rxbin
+        dynamic_interface_host.rxbin)
+add_dependencies(dynamic_interface_fixture_bin crexx)
+
+set(DYNAMIC_INTERFACE_DRIVER_SCRIPT "${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_driver.cmake")
+file(GENERATE OUTPUT "${DYNAMIC_INTERFACE_DRIVER_SCRIPT}" CONTENT
+"file(REMOVE_RECURSE \"${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_driver\")
+file(MAKE_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_driver\")
+file(COPY \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/dynamic_interface_host.crexx\" DESTINATION \"${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_driver\")
+execute_process(
+  COMMAND \"$<TARGET_FILE:crexx>\"
+          \"${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_driver/dynamic_interface_host.crexx\"
+          \"-i${CMAKE_CURRENT_BINARY_DIR}\"
+          \"-l${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_contract.rxbin\"
+          -args \"${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_provider.rxbin\"
+  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_driver\"
+  OUTPUT_VARIABLE out ERROR_VARIABLE err RESULT_VARIABLE res)
+set(all_output \"\${out}\${err}\")
+if(NOT res EQUAL 0)
+  message(FATAL_ERROR \"Late-loaded factory driver failed (\${res}):\\n\${all_output}\")
+endif()
+if(NOT all_output MATCHES \"PASS: explicit late-loaded interface factory\")
+  message(FATAL_ERROR \"Late-loaded factory driver omitted PASS marker:\\n\${all_output}\")
+endif()
+")
+
 add_executable(test_rxvml_utf_boundaries src/test_rxvml_utf_boundaries.c)
 target_link_libraries(test_rxvml_utf_boundaries PRIVATE rxvml rxpashim)
 target_include_directories(test_rxvml_utf_boundaries PRIVATE ${CMAKE_SOURCE_DIR}/interpreter ${CMAKE_SOURCE_DIR}/avl_tree ${CMAKE_SOURCE_DIR}/platform ${CMAKE_SOURCE_DIR}/utf8 ${CMAKE_SOURCE_DIR}/rxpa ${CMAKE_SOURCE_DIR}/binutils/include)
@@ -3926,6 +3998,22 @@ add_test(NAME address_callback_host COMMAND test_address_callback_host)
 set_tests_properties(address_callback_host PROPERTIES LABELS "compiler;stage3")
 add_test(NAME dynamic_load COMMAND test_dynamic_load)
 set_tests_properties(dynamic_load PROPERTIES LABELS "compiler;stage3")
+foreach(_dynamic_interface_runner IN ITEMS rxvm rxbvm)
+    add_test(NAME dynamic_interface_load_${_dynamic_interface_runner}
+            COMMAND $<TARGET_FILE:${_dynamic_interface_runner}>
+                    ${CMAKE_BINARY_DIR}/bin/library.rxbin
+                    ${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_contract.rxbin
+                    ${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_host.rxbin
+                    -a ${CMAKE_CURRENT_BINARY_DIR}/dynamic_interface_provider.rxbin)
+    set_tests_properties(dynamic_interface_load_${_dynamic_interface_runner} PROPERTIES
+            LABELS "compiler;stage3;vm;interfaces;late-load"
+            PASS_REGULAR_EXPRESSION "PASS: explicit late-loaded interface factory"
+            FAIL_REGULAR_EXPRESSION "FAIL:|PANIC:")
+endforeach()
+add_test(NAME dynamic_interface_load_driver
+        COMMAND ${CMAKE_COMMAND} -P ${DYNAMIC_INTERFACE_DRIVER_SCRIPT})
+set_tests_properties(dynamic_interface_load_driver PROPERTIES
+        LABELS "compiler;stage3;driver;interfaces;late-load")
 add_test(NAME crexxsaa_variables COMMAND test_crexxsaa_variables)
 set_tests_properties(crexxsaa_variables PROPERTIES
         LABELS "compiler;stage3"

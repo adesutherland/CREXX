@@ -32,25 +32,9 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include "../platform/rxinteger.h"
 
 #define SMALLEST_STRING_BUFFER_LENGTH 32
-
-// Define rxinteger type
-#ifndef RXINTEGER_T
-#define RXINTEGER_T
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L /* C99 */
-#include <stdint.h>
-typedef intmax_t rxinteger;
-#else
-#ifdef __32BIT__
-typedef long rxinteger;    // Legacy C90
-#else
-#include <stdint.h>
-typedef int64_t rxinteger; // C99+
-#endif
-#endif
-#define IS_RXINTEGER_32BIT (sizeof(rxinteger) == 4)
-#endif //RXINTEGER_T
 
 /* The default number of digits. This constant is also the point at which integers and floating numbers are
  * truncated. If it is lower than 18, then integers are floats are rounded, if 18 or higher they are not rounded (for performance).

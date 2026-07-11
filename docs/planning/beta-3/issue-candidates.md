@@ -176,6 +176,16 @@ design notes as the beta 3 issues are created.
 | B3-F-15 | Curate beta 3 demos and tutorials | Rene | `beta3`, `foundation`, `docs`, `demos` | Examples and tutorials match beta 3 capabilities and expected output. | Ship fewer demos with clear boundaries. |
 | B3-F-16 | Prototype Level C canonical AST lowering proof | Adrian | `beta3`, `foundation`, `level-c`, `compiler`, `high-risk` | A small Classic Rexx source slice transforms from Level C AST into canonical compiler AST and reaches the agreed downstream phase. | Keep Level C as parser/highlighter plus published lowering plan. |
 
+### Foundation Progress Through 2026-07-11
+
+| Candidate | Status | Evidence and remaining work |
+| --- | --- | --- |
+| B3-F-09 | Implemented on `develop` | Late-loaded interface providers are exercised through both VM variants and through the `crexx` driver. The driver test names exact contract/provider files; cross-platform QA remains. |
+| B3-F-10 | Implemented on `develop` | Method and factory registries are sorted after link/relink. Method dispatch uses binary search; factory dispatch binary-searches a provider bucket and caches provider signatures. See `reports/runtime-interface-lookup.md`. |
+| B3-F-11 | Release 1 minimum implemented | Binary constants, typed binary-memory access, zero-copy comparison, and packed jump tables cover the approved internal/demo needs. Dedicated typed arrays and records are deferred. |
+| B3-F-12 | Implemented on `develop` | RXAS/VM packed jump tables and conservative compiler lowering are complete; arbitrary RXAS ladder recognition is an unscheduled CFG/dataflow roadmap item. |
+| B3-F-13 | Open | The runtime lookup and jump-dispatch measurements are component evidence, not the central beta 3 benchmark baseline tracked by #623. |
+
 ## Suggested GitHub Issue Body Shape
 
 Use this shape when converting candidates into GitHub issues:

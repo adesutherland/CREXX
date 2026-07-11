@@ -1,0 +1,12 @@
+.globals=0
+
+main() .locals=3
+    .jtable empty_key linear
+    br cases_done
+empty: .jcase empty_key 0x
+    ret 1
+cases_done:
+    load r0,0x
+    load r1,0
+    jumpbs r0,r1,empty_key
+    ret 0

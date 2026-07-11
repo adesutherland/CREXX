@@ -112,6 +112,7 @@ NUMERIC_FUZZ_NOT_FIRST_INST = NUMERIC FUZZ moet vóór uitvoerbare opdrachten st
 NUMERIC_STANDARD_NOT_FIRST_INST = NUMERIC STANDARD moet vóór uitvoerbare opdrachten staan.
 OUT_OF_MEMORY = Onvoldoende geheugen.
 OUT_OF_RANGE = Waarde ligt buiten het toegestane bereik.
+DIVISION_BY_ZERO = Gehele deling of modulo door nul tijdens optimalisatie.
 OVERFLOW_UNDERFLOW = Rekenkundige overloop of onderloop tijdens optimalisatie.
 PARSE_FAILURE = Source kon niet worden ontleed.
 PROC_VAR_MISMATCH = Geïmporteerd symbool "{name}" is een procedure/variabele-mismatch tussen {defining_file} en {import_file}.

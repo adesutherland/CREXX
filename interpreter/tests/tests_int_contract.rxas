@@ -1,0 +1,97 @@
+/* Release 1 signed 64-bit integer boundaries and runtime overflow signals. */
+
+.globals=0
+
+main() .locals=8
+    load r1,9223372036854775807
+    ieq r0,r1,9223372036854775807
+    brf failed,r0
+    load r2,-9223372036854775808
+    ieq r0,r2,-9223372036854775808
+    brf failed,r0
+
+    load r1,9223372036854775806
+    iadd r1,r1,1
+    ieq r0,r1,9223372036854775807
+    brf failed,r0
+    load r2,-9223372036854775807
+    isub r2,r2,1
+    ieq r0,r2,-9223372036854775808
+    brf failed,r0
+
+    sigbr add_overflow,"OVERFLOW_UNDERFLOW"
+    load r1,9223372036854775807
+    iadd r1,r1,1
+    br failed
+add_overflow:
+    sighalt "OVERFLOW_UNDERFLOW"
+
+    sigbr sub_overflow,"OVERFLOW_UNDERFLOW"
+    load r1,-9223372036854775808
+    isub r1,r1,1
+    br failed
+sub_overflow:
+    sighalt "OVERFLOW_UNDERFLOW"
+
+    sigbr mul_overflow,"OVERFLOW_UNDERFLOW"
+    load r1,9223372036854775807
+    imult r1,r1,2
+    br failed
+mul_overflow:
+    sighalt "OVERFLOW_UNDERFLOW"
+
+    sigbr inc_overflow,"OVERFLOW_UNDERFLOW"
+    load r1,9223372036854775807
+    inc r1
+    br failed
+inc_overflow:
+    sighalt "OVERFLOW_UNDERFLOW"
+
+    sigbr dec_overflow,"OVERFLOW_UNDERFLOW"
+    load r1,-9223372036854775808
+    dec r1
+    br failed
+dec_overflow:
+    sighalt "OVERFLOW_UNDERFLOW"
+
+    sigbr neg_overflow,"OVERFLOW_UNDERFLOW"
+    load r1,-9223372036854775808
+    isex r1
+    br failed
+neg_overflow:
+    sighalt "OVERFLOW_UNDERFLOW"
+
+    sigbr div_overflow,"OVERFLOW_UNDERFLOW"
+    load r1,-9223372036854775808
+    idiv r1,r1,-1
+    br failed
+div_overflow:
+    sighalt "OVERFLOW_UNDERFLOW"
+
+    sigbr mod_overflow,"OVERFLOW_UNDERFLOW"
+    load r1,-9223372036854775808
+    imod r1,r1,-1
+    br failed
+mod_overflow:
+    sighalt "OVERFLOW_UNDERFLOW"
+
+    sigbr divide_zero,"DIVISION_BY_ZERO"
+    load r1,1
+    idiv r1,r1,0
+    br failed
+divide_zero:
+    sighalt "DIVISION_BY_ZERO"
+
+    sigbr modulo_zero,"DIVISION_BY_ZERO"
+    load r1,1
+    imod r1,r1,0
+    br failed
+modulo_zero:
+    sighalt "DIVISION_BY_ZERO"
+
+    say "PASS: Signed 64-bit Integer Contract"
+    ret 0
+
+failed:
+    say "FAIL: Signed 64-bit Integer Contract"
+    ret 1

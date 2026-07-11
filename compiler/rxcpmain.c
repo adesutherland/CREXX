@@ -36,6 +36,7 @@
 #include "rxcp_source_tree.h"
 #include "rxcp_srcmap.h"
 #include "rxcp_levelc_lower.h"
+#include "rxcp_dispatch.h"
 #include "../binutils/include/rxdefs.h"
 #include "rxcpdary.h"
 #include "rxvmplugin_framework.h"
@@ -849,6 +850,10 @@ int rxcmain(int argc, char *argv[]) {
         }
 #endif
     }
+
+    /* Explicit C-style SELECT is a dispatch construct in both no-opt and
+     * optimized builds. General IF-ladder discovery remains an optimization. */
+    rxcp_lower_select_dispatch(context);
 
     errors = prnterrs(context);
     if (errors) {

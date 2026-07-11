@@ -1,0 +1,52 @@
+/* Procedure locality, omitted auto policy, integer limits, and numeric infinity. */
+
+.globals=0
+
+main() .locals=4
+    .jtable same_name
+    br main_cases_done
+main_low: .jcase same_name -9223372036854775808
+    load r1,1
+    br check_main
+main_high: .jcase same_name 9223372036854775807
+    load r1,2
+    br check_main
+main_cases_done:
+    load r0,9223372036854775807
+    jumpi r0,same_name
+    br fail
+check_main:
+    ieq r2,r1,2
+    brf fail,r2
+
+    .jtable numeric_limits
+    br numeric_cases_done
+positive_inf: .jcase numeric_limits "inf"
+    load r1,3
+    br check_numeric
+negative_inf: .jcase numeric_limits "-infinity"
+    load r1,4
+    br check_numeric
+numeric_cases_done:
+    load r0,"+infinity"
+    jumpn r0,numeric_limits
+    br fail
+check_numeric:
+    ieq r2,r1,3
+    brf fail,r2
+    say "PASS: Jump Table Boundaries"
+    ret 0
+
+fail:
+    say "FAIL: Jump Table Boundaries"
+    ret 1
+
+helper() .locals=2
+    .jtable same_name linear
+    br helper_cases_done
+helper_word: .jcase same_name "helper"
+    ret 1
+helper_cases_done:
+    load r0,"miss"
+    jumps r0,same_name
+    ret 0

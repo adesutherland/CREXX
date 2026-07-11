@@ -903,30 +903,59 @@ static int implicit_int_register_relevant(op_map *map, Assembler_Token *token, c
     return map_has_register(map, reg_type, (size_t) token->token_value.integer);
 }
 
+static int implicit_register_range_relevant(op_map *map, Assembler_Token *base_token) {
+    char base_type;
+    size_t base_number;
+    int i;
+
+    if (!base_token) return 0;
+    base_type = reg_type(base_token);
+    if (!base_type) return 0;
+    base_number = (size_t)base_token->token_value.integer;
+
+    for (i = 0; i < MAX_OP_MAP; i++) {
+        if (map->reg_token[i] &&
+            map->regtp[i] == base_type &&
+            map->reg[i] > base_number) {
+            return 1;
+        }
+        if (map->literal_reg_token[i] &&
+            map->literal_regtp[i] == base_type &&
+            map->literal_reg[i] > base_number) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
 static int implicit_register_relevant(op_map *map,
                                       const OpInfo *op_info,
                                       Assembler_Token *operand1Token,
                                       Assembler_Token *operand2Token,
                                       Assembler_Token *operand3Token) {
-    if (!op_info || !(op_info->flags & FLG_IMPLICIT_REG_USE)) return 0;
+    RxOpEffects effects;
 
-    switch (op_info->opcode) {
-        case OP_LOAD_INT_INT:
+    if (!op_info || !(op_info->flags & FLG_IMPLICIT_REG_USE)) return 0;
+    effects = rxop_effects(op_info->opcode);
+
+    switch (effects.implicit) {
+        case RXOP_IMPLICIT_LOCAL_COPY:
             return implicit_int_register_relevant(map, operand1Token, 'r') ||
                    implicit_int_register_relevant(map, operand2Token, 'r');
-        case OP_LOAD_INT_REG:
+        case RXOP_IMPLICIT_LOCAL_TARGET:
             return implicit_int_register_relevant(map, operand1Token, 'r');
-        case OP_INC0:
-        case OP_DEC0:
+        case RXOP_IMPLICIT_LOCAL_R0_READ_WRITE:
             return map_has_register(map, 'r', 0);
-        case OP_INC1:
-        case OP_DEC1:
+        case RXOP_IMPLICIT_LOCAL_R1_READ_WRITE:
             return map_has_register(map, 'r', 1);
-        case OP_INC2:
-        case OP_DEC2:
+        case RXOP_IMPLICIT_LOCAL_R2_READ_WRITE:
             return map_has_register(map, 'r', 2);
-        case OP_LINKARG_REG_INT:
+        case RXOP_IMPLICIT_ARGUMENT_INDEX:
             return implicit_int_register_relevant(map, operand2Token, 'a');
+        case RXOP_IMPLICIT_LOCAL_RANGE_AFTER_OP3:
+            return implicit_register_range_relevant(map, operand3Token);
+        case RXOP_IMPLICIT_NONE:
         default:
             return 1;
     }
@@ -1031,135 +1060,17 @@ static int int_token_matches_register_number(Assembler_Token *token, size_t regi
 }
 
 static int opcode_writes_op1_without_read(int opcode) {
-    switch (opcode) {
-        case OP_LOAD_REG_INT:
-        case OP_LOAD_REG_FLOAT:
-        case OP_LOAD_REG_STRING:
-        case OP_LOAD_REG_REG:
-        case OP_LOAD_REG_DECIMAL:
-        case OP_COPY_REG_REG:
-        case OP_ICOPY_REG_REG:
-        case OP_FCOPY_REG_REG:
-        case OP_SCOPY_REG_REG:
-        case OP_DCOPY_REG_REG:
-        case OP_ACOPY_REG_REG:
-        case OP_IADD_REG_REG_REG:
-        case OP_IADD_REG_REG_INT:
-        case OP_ISUB_REG_REG_REG:
-        case OP_ISUB_REG_REG_INT:
-        case OP_ISUB_REG_INT_REG:
-        case OP_IMULT_REG_REG_REG:
-        case OP_IMULT_REG_REG_INT:
-        case OP_IDIV_REG_REG_REG:
-        case OP_IDIV_REG_REG_INT:
-        case OP_IDIV_REG_INT_REG:
-        case OP_IMOD_REG_REG_REG:
-        case OP_IMOD_REG_REG_INT:
-        case OP_IMOD_REG_INT_REG:
-        case OP_IEQ_REG_REG_REG:
-        case OP_IEQ_REG_REG_INT:
-        case OP_INE_REG_REG_REG:
-        case OP_INE_REG_REG_INT:
-        case OP_IGT_REG_REG_REG:
-        case OP_IGT_REG_REG_INT:
-        case OP_IGT_REG_INT_REG:
-        case OP_IGTE_REG_REG_REG:
-        case OP_IGTE_REG_REG_INT:
-        case OP_IGTE_REG_INT_REG:
-        case OP_ILT_REG_REG_REG:
-        case OP_ILT_REG_REG_INT:
-        case OP_ILT_REG_INT_REG:
-        case OP_ILTE_REG_REG_REG:
-        case OP_ILTE_REG_REG_INT:
-        case OP_ILTE_REG_INT_REG:
-        case OP_SEQ_REG_REG_REG:
-        case OP_SEQ_REG_REG_STRING:
-        case OP_RSEQ_REG_REG_REG:
-        case OP_RSEQ_REG_REG_STRING:
-        case OP_SNE_REG_REG_REG:
-        case OP_SNE_REG_REG_STRING:
-        case OP_SGT_REG_REG_REG:
-        case OP_SGT_REG_REG_STRING:
-        case OP_SGT_REG_STRING_REG:
-        case OP_SGTE_REG_REG_REG:
-        case OP_SGTE_REG_REG_STRING:
-        case OP_SGTE_REG_STRING_REG:
-        case OP_SLT_REG_REG_REG:
-        case OP_SLT_REG_REG_STRING:
-        case OP_SLT_REG_STRING_REG:
-        case OP_SLTE_REG_REG_REG:
-        case OP_SLTE_REG_REG_STRING:
-        case OP_SLTE_REG_STRING_REG:
-        case OP_CONCAT_REG_REG_REG:
-        case OP_CONCAT_REG_REG_STRING:
-        case OP_CONCAT_REG_STRING_REG:
-        case OP_SCONCAT_REG_REG_REG:
-        case OP_SCONCAT_REG_REG_STRING:
-        case OP_SCONCAT_REG_STRING_REG:
-        case OP_CONCCHAR_REG_REG_REG:
-        case OP_TRIML_REG_REG:
-        case OP_TRIMR_REG_REG:
-        case OP_TRIML_REG_REG_REG:
-        case OP_TRIMR_REG_REG_REG:
-        case OP_TRUNC_REG_REG_REG:
-        case OP_STRLEN_REG_REG:
-        case OP_STRCHAR_REG_REG_REG:
-        case OP_STRCHAR_REG_REG:
-        case OP_HEXCHAR_REG_REG_REG:
-        case OP_POSCHAR_REG_REG_REG:
-        case OP_GETSTRPOS_REG_REG:
-        case OP_SUBSTR_REG_REG_REG:
-        case OP_STRLOWER_REG_REG:
-        case OP_STRUPPER_REG_REG:
-        case OP_TRANSCHAR_REG_REG_REG:
-        case OP_DROPCHAR_REG_REG_REG:
-        case OP_SUBSTRING_REG_REG_REG:
-        case OP_PADSTR_REG_REG_REG:
-        case OP_STRPOS_REG_REG_REG:
-        case OP_FNDBLNK_REG_REG_REG:
-        case OP_FNDNBLNK_REG_REG_REG:
-        case OP_GETBYTE_REG_REG_REG:
-        case OP_IAND_REG_REG_REG:
-        case OP_IAND_REG_REG_INT:
-        case OP_IOR_REG_REG_REG:
-        case OP_IOR_REG_REG_INT:
-        case OP_IXOR_REG_REG_REG:
-        case OP_IXOR_REG_REG_INT:
-        case OP_ISHL_REG_REG_REG:
-        case OP_ISHL_REG_REG_INT:
-        case OP_ISHR_REG_REG_REG:
-        case OP_ISHR_REG_REG_INT:
-        case OP_INOT_REG_REG:
-        case OP_INOT_REG_INT:
-        case OP_AND_REG_REG_REG:
-        case OP_OR_REG_REG_REG:
-        case OP_NOT_REG_REG:
-        case OP_LOAD_REG_BINARY:
-        case OP_BLEN_REG_REG:
-        case OP_BSLICE_REG_REG_REG:
-        case OP_GETATTRS_REG_REG:
-        case OP_GETATTRS_REG_REG_INT:
-        case OP_GETABUFS_REG_REG:
-        case OP_BGETU8_REG_REG_REG:
-        case OP_BGETI8_REG_REG_REG:
-        case OP_BGETU16_REG_REG_REG:
-        case OP_BGETI16_REG_REG_REG:
-        case OP_BGETU32_REG_REG_REG:
-        case OP_BGETI32_REG_REG_REG:
-        case OP_BGETF64_REG_REG_REG:
-        case OP_BGETI64_REG_REG_REG:
-        case OP_BGETF32_REG_REG_REG:
-        case OP_BGETS_REG_REG_REG:
-            return 1;
-        default:
-            return 0;
-    }
+    return (rxop_effects(opcode).flags & RXOP_EFFECT_OP1_KILL) != 0;
 }
 
 static int instruction_reads_register_before_kill(instruction_queue *instruction,
                                                   const OpInfo *op_info,
                                                   char register_type,
                                                   size_t register_number) {
+    RxOpEffects effects;
+    char range_type;
+    size_t range_base;
+
     if (instruction->instrType != OP_CODE) return 0;
 
     if (token_matches_register(instruction->operand2Token, register_type, register_number) ||
@@ -1168,30 +1079,38 @@ static int instruction_reads_register_before_kill(instruction_queue *instruction
     }
 
     if (op_info && (op_info->flags & FLG_IMPLICIT_REG_USE)) {
-        switch (op_info->opcode) {
-            case OP_LOAD_INT_REG:
+        effects = rxop_effects(op_info->opcode);
+        switch (effects.implicit) {
+            case RXOP_IMPLICIT_LOCAL_TARGET:
                 if (token_matches_register(instruction->operand2Token, register_type, register_number)) return 1;
                 break;
-            case OP_LOAD_INT_INT:
+            case RXOP_IMPLICIT_LOCAL_COPY:
                 if (register_type == 'r' &&
                     int_token_matches_register_number(instruction->operand2Token, register_number)) return 1;
                 break;
-            case OP_INC0:
-            case OP_DEC0:
+            case RXOP_IMPLICIT_LOCAL_R0_READ_WRITE:
                 if (register_type == 'r' && register_number == 0) return 1;
                 break;
-            case OP_INC1:
-            case OP_DEC1:
+            case RXOP_IMPLICIT_LOCAL_R1_READ_WRITE:
                 if (register_type == 'r' && register_number == 1) return 1;
                 break;
-            case OP_INC2:
-            case OP_DEC2:
+            case RXOP_IMPLICIT_LOCAL_R2_READ_WRITE:
                 if (register_type == 'r' && register_number == 2) return 1;
                 break;
-            case OP_LINKARG_REG_INT:
+            case RXOP_IMPLICIT_ARGUMENT_INDEX:
                 if (register_type == 'a' &&
                     int_token_matches_register_number(instruction->operand2Token, register_number)) return 1;
                 break;
+            case RXOP_IMPLICIT_LOCAL_RANGE_AFTER_OP3:
+                range_type = reg_type(instruction->operand3Token);
+                if (range_type &&
+                    range_type == register_type &&
+                    instruction->operand3Token->token_value.integer >= 0) {
+                    range_base = (size_t)instruction->operand3Token->token_value.integer;
+                    if (register_number > range_base) return 1;
+                }
+                break;
+            case RXOP_IMPLICIT_NONE:
             default:
                 return 1;
         }
@@ -1205,20 +1124,18 @@ static int instruction_kills_register(instruction_queue *instruction,
                                       const OpInfo *op_info,
                                       char register_type,
                                       size_t register_number) {
+    RxOpEffects effects;
+
     if (instruction->instrType != OP_CODE || !op_info) return 0;
+    effects = rxop_effects(op_info->opcode);
 
     if (token_matches_register(instruction->operand1Token, register_type, register_number) &&
-        opcode_writes_op1_without_read(op_info->opcode)) {
+        (effects.flags & RXOP_EFFECT_OP1_KILL)) {
         return 1;
     }
 
-    if (op_info->opcode == OP_LOAD_INT_INT &&
-        register_type == 'r' &&
-        int_token_matches_register_number(instruction->operand1Token, register_number)) {
-        return 1;
-    }
-
-    if (op_info->opcode == OP_LOAD_INT_REG &&
+    if ((effects.implicit == RXOP_IMPLICIT_LOCAL_COPY ||
+         effects.implicit == RXOP_IMPLICIT_LOCAL_TARGET) &&
         register_type == 'r' &&
         int_token_matches_register_number(instruction->operand1Token, register_number)) {
         return 1;
@@ -1276,11 +1193,11 @@ static int path_uses_register_before_kill(Assembler_Context *context,
             return 1;
         }
 
+        if (!op_info || (op_info->flags & FLG_OPT_BARRIER)) return 1;
+
         if (instruction_kills_register(instruction, op_info, register_type, register_number)) {
             return 0;
         }
-
-        if (!op_info) return 1;
 
         if (op_info->flow == FLOW_TERM) return 0;
 

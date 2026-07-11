@@ -79,6 +79,8 @@ struct ASTNode {
     char is_const_arg;
     char is_varg;
     char is_compiler_added;
+    char is_select_dispatch;
+    char dispatch_kind;
     char is_implicit_main;
     char is_interface_default_method;
     char is_internal_diagnostic;

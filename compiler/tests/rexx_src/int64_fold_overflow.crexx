@@ -1,0 +1,6 @@
+options levelb
+
+main: procedure = .int
+  value = .int
+  value = 9223372036854775807 + 1
+  return value

@@ -112,6 +112,7 @@ NUMERIC_FUZZ_NOT_FIRST_INST = NUMERIC FUZZ muss vor ausführbaren Anweisungen st
 NUMERIC_STANDARD_NOT_FIRST_INST = NUMERIC STANDARD muss vor ausführbaren Anweisungen stehen.
 OUT_OF_MEMORY = Nicht genügend Speicher.
 OUT_OF_RANGE = Wert liegt außerhalb des erlaubten Bereichs.
+DIVISION_BY_ZERO = Ganzzahlige Division oder Modulooperation durch Null während der Optimierung.
 OVERFLOW_UNDERFLOW = Arithmetischer Überlauf oder Unterlauf während der Optimierung.
 PARSE_FAILURE = Source konnte nicht geparst werden.
 PROC_VAR_MISMATCH = Importiertes Symbol "{name}" ist zwischen {defining_file} und {import_file} eine Prozedur/Variable-Abweichung.

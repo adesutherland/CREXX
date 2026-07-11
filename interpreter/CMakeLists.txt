@@ -305,6 +305,14 @@ add_executable(ts_regvalue_tester tests/ts_regvalue_tester.c rxvalue.h rxvmvars.
 target_include_directories(ts_regvalue_tester PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} . ../utf8 ../platform ../binutils/include)
 target_link_libraries(ts_regvalue_tester rxvmref m)
 
+add_executable(test_jtable_policy tests/test_jtable_policy.c)
+target_include_directories(test_jtable_policy PRIVATE ../binutils/include)
+
+add_executable(mutate_jtable_rxbin tests/mutate_jtable_rxbin.c)
+target_include_directories(mutate_jtable_rxbin PRIVATE
+        ../binutils/include
+        ../platform)
+
 add_executable(test_rxpa_utf_validation tests/test_rxpa_utf_validation.c rxpafuncs.c rxvalue.h rxvmvars.h)
 target_include_directories(test_rxpa_utf_validation PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
@@ -375,6 +383,70 @@ function(crexx_add_rxas_vm_binary SOURCE_NAME DESCRIPTION)
     add_dependencies(run_${SOURCE_NAME} rxvm rxbvm)
 endfunction()
 
+function(crexx_add_generated_jtable_matrix ALGORITHM DISPLAY_NAME)
+    set(SOURCE_NAME tests_jump_table_${ALGORITHM}_sources)
+    set(GENERATED_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/${SOURCE_NAME}.rxas)
+    file(READ ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_jump_table_linear_sources.rxas MATRIX_SOURCE)
+    string(REPLACE " linear" " ${ALGORITHM}" MATRIX_SOURCE "${MATRIX_SOURCE}")
+    string(REPLACE "Linear" "${DISPLAY_NAME}" MATRIX_SOURCE "${MATRIX_SOURCE}")
+    file(GENERATE OUTPUT ${GENERATED_SOURCE} CONTENT "${MATRIX_SOURCE}")
+
+    add_custom_command(
+            OUTPUT ${SOURCE_NAME}.rxbin
+            COMMAND $<TARGET_FILE:rxas> -o ${SOURCE_NAME} ${GENERATED_SOURCE}
+            DEPENDS tests/tests_jump_table_linear_sources.rxas rxas rxvm mc_decimal_dynamic
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "cREXX RXAS Instruction Tests (${ALGORITHM} jump table source matrix) ..."
+    )
+    add_custom_target(run_${SOURCE_NAME} ALL DEPENDS ${SOURCE_NAME}.rxbin)
+    add_dependencies(run_${SOURCE_NAME} rxvm rxbvm)
+    crexx_add_vm_dual_test(
+            NAME rxasjumptable${ALGORITHM}sources
+            RXVM_ARGS ${SOURCE_NAME}
+            PASS_REGULAR_EXPRESSION "PASS: Jump Table ${DISPLAY_NAME} Source Matrix")
+endfunction()
+
+function(crexx_add_jtable_corruption_fixture NAME ALGORITHM MUTATION)
+    set(BASE_NAME tests_jump_table_corruption_${ALGORITHM})
+    set(BASE_SOURCE "${CMAKE_CURRENT_BINARY_DIR}/${BASE_NAME}.rxas")
+    set(BASE_RXBIN "${CMAKE_CURRENT_BINARY_DIR}/${BASE_NAME}.rxbin")
+    set(CORRUPT_RXBIN "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.rxbin")
+
+    set(ALGORITHM "${ALGORITHM}")
+    configure_file(
+            ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_jump_table_corruption.rxas.in
+            ${BASE_SOURCE}
+            @ONLY)
+
+    add_custom_command(
+            OUTPUT ${BASE_RXBIN}
+            COMMAND $<TARGET_FILE:rxas> -o ${BASE_NAME} ${BASE_SOURCE}
+            DEPENDS ${BASE_SOURCE} rxas
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "cREXX RXAS jump-table corruption base (${ALGORITHM}) ...")
+
+    add_custom_command(
+            OUTPUT ${CORRUPT_RXBIN}
+            COMMAND $<TARGET_FILE:mutate_jtable_rxbin>
+                    ${BASE_RXBIN} ${CORRUPT_RXBIN} ${MUTATION}
+            DEPENDS ${BASE_RXBIN} mutate_jtable_rxbin
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "Mutating jump table ${NAME} (${MUTATION}) ...")
+
+    add_custom_target(run_${NAME} ALL DEPENDS ${CORRUPT_RXBIN})
+    foreach(RUNNER IN ITEMS rxvm rxbvm)
+        add_test(
+                NAME ${NAME}_${RUNNER}
+                COMMAND ${CMAKE_COMMAND}
+                        -DRUNNER=$<TARGET_FILE:${RUNNER}>
+                        -DRXBIN=${CORRUPT_RXBIN}
+                        -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_jtable_corruption.cmake
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+        set_tests_properties(${NAME}_${RUNNER} PROPERTIES
+                LABELS "interpreter;rxas;jtable;corruption")
+    endforeach()
+endfunction()
+
 function(crexx_add_rxas_vm_failure_regex NAME SOURCE_NAME EXPECTED_REGEX)
     set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
     set(SCRIPT_CONTENT "")
@@ -413,12 +485,49 @@ function(crexx_add_rxas_vm_failure_regex NAME SOURCE_NAME EXPECTED_REGEX)
     set_tests_properties(${NAME} PROPERTIES LABELS "interpreter;rxas;utf")
 endfunction()
 
+function(crexx_add_rxas_assembly_failure_regex NAME SOURCE_NAME EXPECTED_REGEX)
+    set(SCRIPT_FILE "${CMAKE_CURRENT_BINARY_DIR}/${NAME}.cmake")
+    set(SCRIPT_CONTENT "")
+    set(DOLLAR "$")
+
+    string(APPEND SCRIPT_CONTENT
+            "execute_process(\n"
+            "  COMMAND \"$<TARGET_FILE:rxas>\" -o \"${SOURCE_NAME}\" \"${CMAKE_CURRENT_SOURCE_DIR}/tests/${SOURCE_NAME}.rxas\"\n"
+            "  WORKING_DIRECTORY \"${CMAKE_CURRENT_BINARY_DIR}\"\n"
+            "  OUTPUT_VARIABLE rxas_out\n"
+            "  ERROR_VARIABLE rxas_err\n"
+            "  RESULT_VARIABLE rxas_res\n"
+            ")\n"
+            "set(full_out \"${DOLLAR}{rxas_out}${DOLLAR}{rxas_err}\")\n"
+            "string(REPLACE \"\\r\\n\" \"\\n\" full_out \"${DOLLAR}{full_out}\")\n"
+            "if(rxas_res EQUAL 0)\n"
+            "  message(FATAL_ERROR \"Expected rxas to reject ${SOURCE_NAME}.\\nSTDOUT/STDERR:\\n${DOLLAR}{full_out}\")\n"
+            "endif()\n"
+            "if(NOT full_out MATCHES \"${EXPECTED_REGEX}\")\n"
+            "  message(FATAL_ERROR \"Expected ${SOURCE_NAME} to report ${EXPECTED_REGEX}.\\nSTDOUT/STDERR:\\n${DOLLAR}{full_out}\\nExit: ${DOLLAR}{rxas_res}\")\n"
+            "endif()\n")
+
+    file(GENERATE OUTPUT "${SCRIPT_FILE}" CONTENT "${SCRIPT_CONTENT}")
+
+    add_test(
+            NAME ${NAME}
+            COMMAND ${CMAKE_COMMAND} -P "${SCRIPT_FILE}"
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(${NAME} PROPERTIES LABELS "interpreter;rxas;jtable")
+endfunction()
+
 # Value Tests
 add_test(
 		NAME ts_regvalue_tester
 		COMMAND ts_regvalue_tester
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
+add_test(
+        NAME test_jtable_policy
+        COMMAND test_jtable_policy
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+set_tests_properties(test_jtable_policy PROPERTIES LABELS "interpreter;rxas;jtable")
 
 # Instruction Sanity Tests - Raise uncaptured signal
 add_custom_command(
@@ -551,6 +660,20 @@ add_custom_target(run_tests_int_math ALL DEPENDS tests_int_math.rxbin)
 
 crexx_add_vm_dual_test(NAME rxasintmathtests RXVM_ARGS tests_int_math)
 
+crexx_add_rxas_vm_binary(tests_int_contract "signed 64-bit integer contract")
+crexx_add_vm_dual_test(
+        NAME rxasintcontracttests
+        RXVM_ARGS tests_int_contract
+        PASS_REGULAR_EXPRESSION "PASS: Signed 64-bit Integer Contract")
+crexx_add_rxas_assembly_failure_regex(
+        rxasintoverflowpositive tests_int_overflow_positive
+        "integer literal is outside the signed 64-bit range")
+crexx_add_rxas_assembly_failure_regex(
+        rxasintoverflownegative tests_int_overflow_negative
+        "integer literal is outside the signed 64-bit range")
+set_tests_properties(rxasintoverflowpositive rxasintoverflownegative PROPERTIES
+        LABELS "interpreter;rxas;integer;negative")
+
 # Float Math Instruction Tests
 add_custom_command(
 		OUTPUT tests_float_math.rxbin
@@ -652,6 +775,48 @@ crexx_add_rxas_vm_binary(tests_binary "binary buffer and I/O")
 crexx_add_vm_dual_test(NAME rxasbinarylegacytests RXVM_ARGS tests_binary PASS_REGULAR_EXPRESSION "PASS: Binary Buffer IO and Legacy Cursor Ops")
 crexx_add_rxas_vm_binary(tests_binary_memory "typed binary memory operations")
 crexx_add_vm_dual_test(NAME rxasbinarymemorytests RXVM_ARGS tests_binary_memory PASS_REGULAR_EXPRESSION "PASS: Binary Memory Typed Ops")
+crexx_add_rxas_vm_binary(tests_jump_table "linear jump table dispatch")
+crexx_add_vm_dual_test(NAME rxasjumptabletests RXVM_ARGS tests_jump_table PASS_REGULAR_EXPRESSION "PASS: Jump Table Linear Ops")
+crexx_add_rxas_vm_binary(tests_jump_table_linear_sources "linear jump table source matrix")
+crexx_add_vm_dual_test(NAME rxasjumptablelinearsources RXVM_ARGS tests_jump_table_linear_sources PASS_REGULAR_EXPRESSION "PASS: Jump Table Linear Source Matrix")
+crexx_add_generated_jtable_matrix(openhash OpenHash)
+crexx_add_generated_jtable_matrix(acph ACPH)
+crexx_add_generated_jtable_matrix(auto Auto)
+crexx_add_rxas_vm_binary(tests_jump_table_hash_edges "open-hash and ACPH jump table edge cases")
+crexx_add_vm_dual_test(NAME rxasjumptablehashedges RXVM_ARGS tests_jump_table_hash_edges PASS_REGULAR_EXPRESSION "PASS: Jump Table Hash Edge Cases")
+crexx_add_rxas_vm_binary(tests_jump_table_auto_edges "auto jump table policy paths")
+crexx_add_vm_dual_test(NAME rxasjumptableautoedges RXVM_ARGS tests_jump_table_auto_edges PASS_REGULAR_EXPRESSION "PASS: Jump Table Auto Policy Paths")
+crexx_add_rxas_vm_binary(tests_jump_table_rexx_strings "Rexx padded and numeric string jump tables")
+crexx_add_vm_dual_test(NAME rxasjumptablerexxstrings RXVM_ARGS tests_jump_table_rexx_strings PASS_REGULAR_EXPRESSION "PASS: Jump Table Rexx String Ops")
+crexx_add_rxas_vm_binary(tests_jump_table_boundaries "jump table syntax and value boundaries")
+crexx_add_vm_dual_test(NAME rxasjumptableboundaries RXVM_ARGS tests_jump_table_boundaries PASS_REGULAR_EXPRESSION "PASS: Jump Table Boundaries")
+crexx_add_jtable_corruption_fixture(rxasjtablecorruptalgorithm linear algorithm)
+crexx_add_jtable_corruption_fixture(rxasjtablecorruptheader linear header)
+crexx_add_jtable_corruption_fixture(rxasjtablecorruptlinearkey linear linear-key-offset)
+crexx_add_jtable_corruption_fixture(rxasjtablecorruptlineartarget linear linear-target)
+crexx_add_jtable_corruption_fixture(rxasjtablecorruptopenslot openhash open-slot-offset)
+crexx_add_jtable_corruption_fixture(rxasjtablecorruptacphslot acph acph-slot-kind)
+crexx_add_jtable_corruption_fixture(rxasjtablecorruptacphtarget acph acph-target)
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadnolabel tests_jump_table_bad_no_label "\\.jcase must decorate a same-line label")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadunknown tests_jump_table_bad_unknown "unknown jump table")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadjumpbsvariable tests_jump_table_bad_jumpbs_variable "jumpbs requires fixed-length")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadduplicate tests_jump_table_bad_duplicate "duplicate jump table case key")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadtypemismatch tests_jump_table_bad_type_mismatch "jump table key type mismatch")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadempty tests_jump_table_bad_empty "jump table has no cases")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadduplicatebinary tests_jump_table_bad_duplicate_binary "duplicate jump table case key")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadduplicatetable tests_jump_table_bad_duplicate_table "duplicate jump table declaration")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadalgorithmname tests_jump_table_bad_algorithm_name "jump table algorithm must be auto, linear, openhash, or acph")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadoperand tests_jump_table_bad_operand "jump table instruction requires a \\.jtable name operand")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadnumerickey tests_jump_table_bad_numeric_key "jumpn case key must be a non-NaN numeric string")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadnumericduplicate tests_jump_table_bad_numeric_duplicate "duplicate jump table case key after canonicalization")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadpaddedduplicate tests_jump_table_bad_padded_duplicate "duplicate jump table case key after canonicalization")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadmatchmode tests_jump_table_bad_match_mode "cannot mix exact, padded, and numeric")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadoutsideprocedure tests_jump_table_bad_outside_procedure "Jump tables can only be declared inside a procedure")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadcaseonly tests_jump_table_bad_case_only "unknown jump table")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadprocedurescope tests_jump_table_bad_procedure_scope "unknown jump table")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadjumpbsempty tests_jump_table_bad_jumpbs_empty "jumpbs requires fixed-length non-empty binary keys")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadutf8 tests_jump_table_bad_utf8 "jump table string key is not valid UTF-8")
+crexx_add_rxas_assembly_failure_regex(rxasjumptablebadnumericzeroduplicate tests_jump_table_bad_numeric_zero_duplicate "duplicate jump table case key after canonicalization")
 
 # Socket Instruction Tests
 add_custom_command(

@@ -1,0 +1,17 @@
+/*
+ * Duplicate jump-table keys are rejected after key canonicalization.
+ */
+
+.globals=0
+
+main() .locals=2
+    .jtable words linear
+    br done
+first_word: .jcase words "if"
+    ret 0
+second_word: .jcase words "if"
+    ret 0
+done:
+    load r0,"if"
+    jumps r0,words
+    ret 0

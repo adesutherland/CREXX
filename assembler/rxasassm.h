@@ -91,6 +91,11 @@ void rxasexpc(Assembler_Context *context, Assembler_Token *funcToken, Assembler_
 void rxasdecl(Assembler_Context *context, Assembler_Token *funcToken, Assembler_Token *exposeToken);
 void rxasconst(Assembler_Context *context, Assembler_Token *nameToken, Assembler_Token *kindToken,
                Assembler_Token *valueToken);
+void rxasjtab(Assembler_Context *context, Assembler_Token *nameToken, Assembler_Token *algorithmToken);
+void rxasjcase(Assembler_Context *context, Assembler_Token *labelToken, Assembler_Token *tableToken,
+               Assembler_Token *valueToken);
+void rxasjcase_after_label(Assembler_Context *context, Assembler_Token *jcaseToken,
+                           Assembler_Token *tableToken, Assembler_Token *valueToken);
 /* Source Step */
 void rxasmestp(Assembler_Context *context, Assembler_Token *step, Assembler_Token *clause, Assembler_Token *flags,
                Assembler_Token *file, Assembler_Token *line, Assembler_Token *start, Assembler_Token *end,

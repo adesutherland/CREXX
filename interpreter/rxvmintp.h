@@ -30,6 +30,7 @@
 #include "rxpa.h"
 #include "rxvalue.h"
 #include "rxsignal.h"
+#include "rxsignature.h"
 #include "crexx_version.h"
 
 typedef enum { RXVM_MOD_LOADED, RXVM_MOD_LINKED, RXVM_MOD_THREADED } rxvm_mod_state;
@@ -127,6 +128,7 @@ typedef struct rxvm_interface_factory_entry {
     size_t factory_name_length;
     char *descriptor;
     size_t descriptor_length;
+    rx_callable_signature signature;
     char *class_name;
     size_t class_name_length;
     proc_runtime *match_proc;

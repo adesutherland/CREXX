@@ -126,6 +126,27 @@ typedef enum {
     FLG_IMPLICIT_REG_USE = 4
 } OpFlags;
 
+typedef enum {
+    RXOP_EFFECT_NONE = 0,
+    RXOP_EFFECT_OP1_KILL = 1
+} RxOpEffectFlags;
+
+typedef enum {
+    RXOP_IMPLICIT_NONE = 0,
+    RXOP_IMPLICIT_LOCAL_COPY,
+    RXOP_IMPLICIT_LOCAL_TARGET,
+    RXOP_IMPLICIT_LOCAL_R0_READ_WRITE,
+    RXOP_IMPLICIT_LOCAL_R1_READ_WRITE,
+    RXOP_IMPLICIT_LOCAL_R2_READ_WRITE,
+    RXOP_IMPLICIT_ARGUMENT_INDEX,
+    RXOP_IMPLICIT_LOCAL_RANGE_AFTER_OP3
+} RxOpImplicitEffect;
+
+typedef struct {
+    unsigned int flags;
+    RxOpImplicitEffect implicit;
+} RxOpEffects;
+
 typedef struct {
     const char* mnemonic;
     int         opcode; /* Using int to avoid dependency loop or forward decl issues, or strictly Opcode */
@@ -153,6 +174,8 @@ typedef enum {
     OP_MAX_INSTRUCTIONS
 } Opcode;
 #undef X
+
+RxOpEffects rxop_effects(int opcode);
 
 void *src_inst(const char* name, OperandType op1, OperandType op2, OperandType op3);
 

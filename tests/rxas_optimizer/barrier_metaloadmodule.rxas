@@ -1,0 +1,7 @@
+* Loading a module mutates runtime/link state and is an optimiser barrier.
+
+main() .locals=4
+    swap r1,r2
+    metaloadmodule r0,r3
+    swap r1,r2
+    ret

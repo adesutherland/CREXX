@@ -19,7 +19,10 @@ The built-in Level B value types are:
 | `.binary` | Binary byte sequence. |
 | `.object` | Object value. Interfaces and classes are object-shaped contracts. |
 
-The canonical integer spelling in source is `.int`.
+The canonical integer spelling in source is `.int`. In Release 1 it is a signed
+64-bit value on every supported desktop architecture, with the inclusive range
+`-9223372036854775808` through `9223372036854775807`. It is not sized from the
+host C `long`, pointer, or native word width.
 
 ## Constructors and Type Literals
 
@@ -146,6 +149,12 @@ Level B supports integer, float, and decimal arithmetic. The file-level
 `options` instruction selects the parser's arithmetic standard, and a
 procedure-level `numeric` instruction can set numeric context such as digits,
 form, fuzz, case, and standard.
+
+Integer literals and conversions outside the signed 64-bit range are rejected.
+Runtime integer add, subtract, multiply, power, increment, decrement, negation,
+and the `INT64_MIN / -1` and `INT64_MIN % -1` edges raise
+`OVERFLOW_UNDERFLOW`; integer division or modulo by zero raises
+`DIVISION_BY_ZERO`.
 
 The compiler performs type validation before bytecode emission. Numeric
 conversions are explicit where precision or representation could otherwise be

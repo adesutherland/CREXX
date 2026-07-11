@@ -1375,6 +1375,9 @@ const char* node_type_to_string(NodeType type) {
         case OP_BIT_SHL: return "OP_BIT_SHL";
         case OP_BIT_SHR: return "OP_BIT_SHR";
         case OP_FLAG_HAS: return "OP_FLAG_HAS";
+        case OPT_DISPATCH: return "OPT_DISPATCH";
+        case OPT_DISPATCH_CASE: return "OPT_DISPATCH_CASE";
+        case OPT_DISPATCH_DEFAULT: return "OPT_DISPATCH_DEFAULT";
         case SIGNAL_NAME: return "SIGNAL_NAME";
         case AST_SEMANTIC_CONTEXT: return "AST_SEMANTIC_CONTEXT";
         case TYPE_REFERENCE: return "TYPE_REFERENCE";

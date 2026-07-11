@@ -1,0 +1,6 @@
+options levelb
+
+main: procedure = .int
+  value = .int
+  value = 1 / 0
+  return value

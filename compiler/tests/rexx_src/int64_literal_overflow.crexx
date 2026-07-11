@@ -1,0 +1,8 @@
+options levelb
+
+main: procedure = .int
+  too_high = .int
+  too_low = .int
+  too_high = 9223372036854775808
+  too_low = -9223372036854775809
+  return 0

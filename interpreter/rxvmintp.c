@@ -81,6 +81,7 @@
 #include "rxas.h"
 #include "../binutils/include/rxdefs.h"
 #include "../binutils/include/rxflags.h"
+#include "../binutils/include/rxjtable.h"
 #include "rxastree.h"
 #include "rxvmintp.h"
 /* #include <complex.h> */
@@ -465,6 +466,203 @@ static int rxvm_compare_bytes(const unsigned char *left, size_t left_len,
     return 0;
 }
 
+static int rxvm_jtable_read_header(string_constant *table, unsigned char *algorithm,
+                                   uint32_t *key_length, uint32_t *case_count,
+                                   uint16_t *header_size) {
+    const unsigned char *bytes;
+
+    if (!table || table->string_len < RX_JTABLE_HEADER_SIZE) return 0;
+    bytes = (const unsigned char *)table->string;
+    *algorithm = bytes[0];
+    if (*algorithm < RX_JTABLE_ALG_LINEAR || *algorithm > RX_JTABLE_ALG_ACPH) return 0;
+    *header_size = (uint16_t)rxvm_binary_read_le_bytes(bytes, 2, 2);
+    if (*header_size < RX_JTABLE_HEADER_SIZE || *header_size > table->string_len) return 0;
+    *key_length = (uint32_t)rxvm_binary_read_le_bytes(bytes, 4, 4);
+    *case_count = (uint32_t)rxvm_binary_read_le_bytes(bytes, 8, 4);
+    if (*case_count == 0) return 0;
+    return 1;
+}
+
+static int rxvm_jtable_lookup_linear(string_constant *table, const unsigned char *key,
+                                     size_t key_length, uint32_t fixed_key_length,
+                                     uint32_t case_count, uint16_t header_size,
+                                     size_t *target_out) {
+    const unsigned char *bytes;
+    size_t entries_length;
+    size_t entry_offset;
+    uint32_t i;
+
+    if (header_size != RX_JTABLE_HEADER_SIZE) return -1;
+    if ((size_t)case_count > SIZE_MAX / RX_JTABLE_LINEAR_ENTRY_SIZE) return -1;
+    entries_length = (size_t)case_count * RX_JTABLE_LINEAR_ENTRY_SIZE;
+    if ((size_t)header_size > SIZE_MAX - entries_length ||
+        (size_t)header_size + entries_length > table->string_len) return -1;
+    if (fixed_key_length != 0 && key_length != fixed_key_length) return 0;
+
+    bytes = (const unsigned char *)table->string;
+    entry_offset = header_size;
+    for (i = 0; i < case_count; i++) {
+        uint32_t key_offset;
+        uint32_t entry_key_length;
+        uint32_t target;
+
+        key_offset = (uint32_t)rxvm_binary_read_le_bytes(bytes, entry_offset, 4);
+        entry_key_length = (uint32_t)rxvm_binary_read_le_bytes(bytes, entry_offset + 4, 4);
+        target = (uint32_t)rxvm_binary_read_le_bytes(bytes, entry_offset + 8, 4);
+        if ((size_t)key_offset > table->string_len ||
+            (size_t)entry_key_length > table->string_len - (size_t)key_offset) {
+            return -1;
+        }
+        if ((size_t)entry_key_length == key_length &&
+            (key_length == 0 || memcmp(bytes + key_offset, key, key_length) == 0)) {
+            *target_out = (size_t)target;
+            return 1;
+        }
+        entry_offset += RX_JTABLE_LINEAR_ENTRY_SIZE;
+    }
+    return 0;
+}
+
+static int rxvm_jtable_lookup_openhash(string_constant *table, const unsigned char *key,
+                                       size_t key_length, uint32_t fixed_key_length,
+                                       uint32_t case_count, uint16_t header_size,
+                                       size_t *target_out) {
+    const unsigned char *bytes = (const unsigned char *)table->string;
+    uint32_t slot_count;
+    uint32_t hash;
+    size_t slots_length;
+    size_t slot;
+    size_t probes;
+
+    if (header_size != RX_JTABLE_OPEN_HEADER_SIZE) return -1;
+    slot_count = (uint32_t)rxvm_binary_read_le_bytes(bytes, 12, 4);
+    if (slot_count < 2u || (slot_count & (slot_count - 1u)) != 0 ||
+        case_count > slot_count / 2u) return -1;
+    if ((size_t)slot_count > SIZE_MAX / RX_JTABLE_OPEN_SLOT_SIZE) return -1;
+    slots_length = (size_t)slot_count * RX_JTABLE_OPEN_SLOT_SIZE;
+    if ((size_t)header_size > SIZE_MAX - slots_length ||
+        (size_t)header_size + slots_length > table->string_len) return -1;
+    if (fixed_key_length != 0 && key_length != fixed_key_length) return 0;
+
+    hash = rx_jtable_hash_bytes(key, key_length);
+    slot = hash & (slot_count - 1u);
+    for (probes = 0; probes < slot_count; probes++) {
+        size_t slot_offset = header_size + slot * RX_JTABLE_OPEN_SLOT_SIZE;
+        uint32_t stored_hash = (uint32_t)rxvm_binary_read_le_bytes(bytes, slot_offset, 4);
+        uint32_t key_offset = (uint32_t)rxvm_binary_read_le_bytes(bytes, slot_offset + 4, 4);
+        uint32_t stored_key_length;
+
+        if (key_offset == RX_JTABLE_OPEN_EMPTY) return 0;
+        stored_key_length = (uint32_t)rxvm_binary_read_le_bytes(bytes, slot_offset + 8, 4);
+        if ((size_t)key_offset > table->string_len ||
+            (size_t)stored_key_length > table->string_len - (size_t)key_offset) return -1;
+        if (stored_hash == hash && (size_t)stored_key_length == key_length &&
+            (key_length == 0 || memcmp(bytes + key_offset, key, key_length) == 0)) {
+            *target_out = (size_t)rxvm_binary_read_le_bytes(bytes, slot_offset + 12, 4);
+            return 1;
+        }
+        slot = (slot + 1u) & (slot_count - 1u);
+    }
+    return -1;
+}
+
+static int rxvm_jtable_lookup_acph(string_constant *table, const unsigned char *key,
+                                   size_t key_length, uint32_t fixed_key_length,
+                                   uint32_t case_count, uint16_t header_size,
+                                   size_t *target_out) {
+    const unsigned char *bytes = (const unsigned char *)table->string;
+    uint32_t node_offset;
+    uint32_t depth;
+
+    if (header_size != RX_JTABLE_ACPH_HEADER_SIZE) return -1;
+    if (fixed_key_length != 0 && key_length != fixed_key_length) return 0;
+    node_offset = (uint32_t)rxvm_binary_read_le_bytes(bytes, 12, 4);
+
+    for (depth = 0; depth < case_count; depth++) {
+        uint32_t column;
+        uint16_t slot_count;
+        unsigned char prime;
+        uint16_t symbol;
+        size_t node_length;
+        size_t slot_index;
+        size_t slot_offset;
+        uint16_t stored_symbol;
+        unsigned char kind;
+        uint32_t value_offset;
+
+        if ((size_t)node_offset > table->string_len ||
+            RX_JTABLE_ACPH_NODE_SIZE > table->string_len - (size_t)node_offset) return -1;
+        column = (uint32_t)rxvm_binary_read_le_bytes(bytes, node_offset, 4);
+        slot_count = (uint16_t)rxvm_binary_read_le_bytes(bytes, node_offset + 4, 2);
+        prime = bytes[node_offset + 6];
+        if (slot_count == 0 || slot_count > RX_JTABLE_ACPH_SYMBOL_COUNT ||
+            (slot_count != RX_JTABLE_ACPH_SYMBOL_COUNT && prime == 0)) return -1;
+        node_length = RX_JTABLE_ACPH_NODE_SIZE + (size_t)slot_count * RX_JTABLE_ACPH_SLOT_SIZE;
+        if (node_length > table->string_len - (size_t)node_offset) return -1;
+
+        symbol = (size_t)column < key_length ? key[column] : RX_JTABLE_ACPH_END_SYMBOL;
+        slot_index = rx_jtable_acph_hash(symbol, prime, slot_count);
+        slot_offset = (size_t)node_offset + RX_JTABLE_ACPH_NODE_SIZE +
+                      slot_index * RX_JTABLE_ACPH_SLOT_SIZE;
+        stored_symbol = (uint16_t)rxvm_binary_read_le_bytes(bytes, slot_offset, 2);
+        kind = bytes[slot_offset + 2];
+        value_offset = (uint32_t)rxvm_binary_read_le_bytes(bytes, slot_offset + 4, 4);
+        if (kind == RX_JTABLE_ACPH_SLOT_EMPTY) return 0;
+        if (stored_symbol > RX_JTABLE_ACPH_END_SYMBOL) return -1;
+        if (stored_symbol != symbol) return 0;
+
+        if (kind == RX_JTABLE_ACPH_SLOT_LEAF) {
+            uint32_t key_offset;
+            uint32_t stored_key_length;
+
+            if ((size_t)value_offset > table->string_len ||
+                RX_JTABLE_ACPH_LEAF_SIZE > table->string_len - (size_t)value_offset) return -1;
+            key_offset = (uint32_t)rxvm_binary_read_le_bytes(bytes, value_offset, 4);
+            stored_key_length = (uint32_t)rxvm_binary_read_le_bytes(bytes, value_offset + 4, 4);
+            if ((size_t)key_offset > table->string_len ||
+                (size_t)stored_key_length > table->string_len - (size_t)key_offset) return -1;
+            if ((size_t)stored_key_length != key_length ||
+                (key_length != 0 && memcmp(bytes + key_offset, key, key_length) != 0)) return 0;
+            *target_out = (size_t)rxvm_binary_read_le_bytes(bytes, value_offset + 8, 4);
+            return 1;
+        }
+        if (kind != RX_JTABLE_ACPH_SLOT_CHILD) return -1;
+        node_offset = value_offset;
+    }
+    return -1;
+}
+
+static int rxvm_jtable_lookup_parsed(string_constant *table, const unsigned char *key,
+                                     size_t key_length, size_t *target_out,
+                                     unsigned char algorithm, uint32_t fixed_key_length,
+                                     uint32_t case_count, uint16_t header_size) {
+    switch (algorithm) {
+        case RX_JTABLE_ALG_LINEAR:
+            return rxvm_jtable_lookup_linear(table, key, key_length, fixed_key_length,
+                                             case_count, header_size, target_out);
+        case RX_JTABLE_ALG_OPENHASH:
+            return rxvm_jtable_lookup_openhash(table, key, key_length, fixed_key_length,
+                                               case_count, header_size, target_out);
+        case RX_JTABLE_ALG_ACPH:
+            return rxvm_jtable_lookup_acph(table, key, key_length, fixed_key_length,
+                                           case_count, header_size, target_out);
+        default:
+            return -1;
+    }
+}
+
+static int rxvm_jtable_lookup(string_constant *table, const unsigned char *key,
+                              size_t key_length, size_t *target_out) {
+    unsigned char algorithm;
+    uint32_t fixed_key_length;
+    uint32_t case_count;
+    uint16_t header_size;
+
+    if (!rxvm_jtable_read_header(table, &algorithm, &fixed_key_length, &case_count, &header_size)) return -1;
+    return rxvm_jtable_lookup_parsed(table, key, key_length, target_out, algorithm,
+                                     fixed_key_length, case_count, header_size);
+}
+
 static int rxvm_binary_field_is_valid_utf8(const void *bytes, size_t length) {
 #ifndef NUTF8
     return validate_utf8_bytes(bytes, length, 0) == 0;
@@ -515,62 +713,6 @@ static int rxvm_string_const_slice(string_constant *source, rxinteger offset_val
     if (requested_chars > source->string_len - local_offset) return 0;
     if (offset) *offset = local_offset;
     if (byte_length) *byte_length = requested_chars;
-    return 1;
-#endif
-}
-
-#if defined(__has_builtin)
-#if __has_builtin(__builtin_mul_overflow)
-#define RXVM_HAS_BUILTIN_MUL_OVERFLOW 1
-#endif
-#elif defined(__GNUC__)
-#define RXVM_HAS_BUILTIN_MUL_OVERFLOW 1
-#endif
-#ifndef RXVM_HAS_BUILTIN_MUL_OVERFLOW
-#define RXVM_HAS_BUILTIN_MUL_OVERFLOW 0
-#endif
-
-#if !RXVM_HAS_BUILTIN_MUL_OVERFLOW
-static uintmax_t rxvm_rxinteger_positive_limit(void) {
-    uintmax_t bits = UINTMAX_MAX;
-    size_t rxinteger_bits = sizeof(rxinteger) * CHAR_BIT;
-    size_t uintmax_bits = sizeof(uintmax_t) * CHAR_BIT;
-
-    if (rxinteger_bits < uintmax_bits) bits >>= uintmax_bits - rxinteger_bits;
-    return bits >> 1;
-}
-
-static uintmax_t rxvm_rxinteger_magnitude(rxinteger value) {
-    if (value >= 0) return (uintmax_t)value;
-    return (uintmax_t)(-(value + 1)) + 1;
-}
-#endif
-
-static int rxvm_checked_rxinteger_mul(rxinteger left, rxinteger right, rxinteger *result) {
-#if RXVM_HAS_BUILTIN_MUL_OVERFLOW
-    return !__builtin_mul_overflow(left, right, result);
-#else
-    uintmax_t left_mag = rxvm_rxinteger_magnitude(left);
-    uintmax_t right_mag = rxvm_rxinteger_magnitude(right);
-    int negative = (left < 0) != (right < 0);
-    uintmax_t limit = rxvm_rxinteger_positive_limit() + (negative ? 1 : 0);
-    uintmax_t product;
-
-    if (left_mag == 0 || right_mag == 0) {
-        *result = 0;
-        return 1;
-    }
-
-    if (right_mag > limit / left_mag) return 0;
-    product = left_mag * right_mag;
-
-    if (negative) {
-        *result = -(rxinteger)(product - 1) - 1;
-    }
-    else {
-        *result = (rxinteger)product;
-    }
-
     return 1;
 #endif
 }
@@ -1320,6 +1462,7 @@ static void clear_runtime_interface_factories(rxvm_context *context) {
         free(context->interface_factories[i].interface_name);
         free(context->interface_factories[i].factory_name);
         free(context->interface_factories[i].descriptor);
+        rx_sig_free(&context->interface_factories[i].signature);
         free(context->interface_factories[i].class_name);
     }
 
@@ -1349,6 +1492,66 @@ static void clear_runtime_interface_methods(rxvm_context *context) {
     context->interface_methods = 0;
     context->num_interface_methods = 0;
     context->interface_method_capacity = 0;
+}
+
+static int compare_runtime_interface_method_entries(const void *left_value,
+                                                    const void *right_value) {
+    const rxvm_interface_method_entry *left = left_value;
+    const rxvm_interface_method_entry *right = right_value;
+    int result;
+
+    result = compare_runtime_name(left->class_name, left->class_name_length,
+                                  right->class_name, right->class_name_length);
+    if (result) return result;
+    return compare_runtime_name(left->descriptor, left->descriptor_length,
+                                right->descriptor, right->descriptor_length);
+}
+
+static int compare_runtime_interface_method_key(const char *class_name,
+                                                size_t class_name_length,
+                                                const char *descriptor,
+                                                size_t descriptor_length,
+                                                const rxvm_interface_method_entry *entry) {
+    int result;
+
+    result = compare_runtime_name(class_name, class_name_length,
+                                  entry->class_name, entry->class_name_length);
+    if (result) return result;
+    return compare_runtime_name(descriptor, descriptor_length,
+                                entry->descriptor, entry->descriptor_length);
+}
+
+static int compare_runtime_interface_factory_entries(const void *left_value,
+                                                     const void *right_value) {
+    const rxvm_interface_factory_entry *left = left_value;
+    const rxvm_interface_factory_entry *right = right_value;
+    int result;
+
+    result = compare_runtime_name(left->interface_name, left->interface_name_length,
+                                  right->interface_name, right->interface_name_length);
+    if (result) return result;
+    result = compare_runtime_name(left->factory_name, left->factory_name_length,
+                                  right->factory_name, right->factory_name_length);
+    if (result) return result;
+    result = compare_runtime_name(left->class_name, left->class_name_length,
+                                  right->class_name, right->class_name_length);
+    if (result) return result;
+    return compare_runtime_name(left->descriptor, left->descriptor_length,
+                                right->descriptor, right->descriptor_length);
+}
+
+static int compare_runtime_interface_factory_key(const char *interface_name,
+                                                 size_t interface_name_length,
+                                                 const char *factory_name,
+                                                 size_t factory_name_length,
+                                                 const rxvm_interface_factory_entry *entry) {
+    int result;
+
+    result = compare_runtime_name(interface_name, interface_name_length,
+                                  entry->interface_name, entry->interface_name_length);
+    if (result) return result;
+    return compare_runtime_name(factory_name, factory_name_length,
+                                entry->factory_name, entry->factory_name_length);
 }
 
 static int runtime_member_kind_is_method(const string_constant *kind_symbol) {
@@ -1798,10 +2001,12 @@ static int add_runtime_interface_factory_entry(rxvm_context *context,
     entry->factory_name = dup_runtime_name(factory_name, factory_name_length);
     entry->descriptor = dup_runtime_name(descriptor, descriptor_length);
     entry->class_name = dup_runtime_name(class_name, class_name_length);
-    if (!entry->interface_name || !entry->factory_name || !entry->descriptor || !entry->class_name) {
+    if (!entry->interface_name || !entry->factory_name || !entry->descriptor || !entry->class_name ||
+        !rx_sig_parse_descriptor(entry->descriptor, &entry->signature)) {
         free(entry->interface_name);
         free(entry->factory_name);
         free(entry->descriptor);
+        rx_sig_free(&entry->signature);
         free(entry->class_name);
         memset(entry, 0, sizeof(*entry));
         return 0;
@@ -2003,6 +2208,13 @@ void rxvm_rebuild_interface_method_registry(rxvm_context *context) {
             meta_ix = meta->next;
         }
     }
+
+    if (context->num_interface_methods > 1) {
+        qsort(context->interface_methods,
+              context->num_interface_methods,
+              sizeof(*context->interface_methods),
+              compare_runtime_interface_method_entries);
+    }
 }
 
 static proc_runtime *resolve_runtime_method(rxvm_context *context,
@@ -2010,7 +2222,8 @@ static proc_runtime *resolve_runtime_method(rxvm_context *context,
                                             size_t class_name_length,
                                             const char *descriptor,
                                             size_t descriptor_length) {
-    size_t entry_index;
+    size_t lower;
+    size_t upper;
     char *proc_name;
     proc_runtime *called_function;
     char *descriptor_text;
@@ -2022,25 +2235,26 @@ static proc_runtime *resolve_runtime_method(rxvm_context *context,
         rxvm_link(context);
     }
 
+    lower = 0;
+    upper = context->num_interface_methods;
+    while (lower < upper) {
+        size_t middle = lower + (upper - lower) / 2;
+        rxvm_interface_method_entry *entry = &context->interface_methods[middle];
+        int comparison = compare_runtime_interface_method_key(
+                class_name, class_name_length, descriptor, descriptor_length, entry);
+
+        if (comparison < 0) upper = middle;
+        else if (comparison > 0) lower = middle + 1;
+        else {
+            return entry->method_proc;
+        }
+    }
+
     descriptor_text = dup_runtime_name(descriptor, descriptor_length);
     if (!descriptor_text) return 0;
     if (!rx_sig_parse_descriptor(descriptor_text, &expected_signature)) {
         free(descriptor_text);
         return 0;
-    }
-
-    for (entry_index = 0; entry_index < context->num_interface_methods; entry_index++) {
-        rxvm_interface_method_entry *entry;
-
-        entry = &context->interface_methods[entry_index];
-        if (entry->class_name_length == class_name_length &&
-            entry->descriptor_length == descriptor_length &&
-            memcmp(entry->class_name, class_name, class_name_length) == 0 &&
-            memcmp(entry->descriptor, descriptor, descriptor_length) == 0) {
-            rx_sig_free(&expected_signature);
-            free(descriptor_text);
-            return entry->method_proc;
-        }
     }
 
     proc_name = build_runtime_member_name(class_name,
@@ -2218,6 +2432,13 @@ void rxvm_rebuild_interface_factory_registry(rxvm_context *context) {
             meta_ix = meta->next;
         }
     }
+
+    if (context->num_interface_factories > 1) {
+        qsort(context->interface_factories,
+              context->num_interface_factories,
+              sizeof(*context->interface_factories),
+              compare_runtime_interface_factory_entries);
+    }
 }
 
 static void parse_runtime_factory_selector(const char *selector,
@@ -2258,19 +2479,14 @@ static void parse_runtime_factory_selector(const char *selector,
 
 static int runtime_factory_descriptor_matches(rxvm_context *context,
                                               const rx_callable_signature *expected_signature,
-                                              const char *registered_descriptor,
+                                              const rx_callable_signature *registered_signature,
                                               const char *interface_name,
                                               size_t interface_name_length) {
-    rx_callable_signature registered_signature;
     rx_callable_compare_options options;
     int matches;
 
-    if (!context || !expected_signature || !registered_descriptor ||
+    if (!context || !expected_signature || !registered_signature ||
         !interface_name || !interface_name_length) {
-        return 0;
-    }
-
-    if (!rx_sig_parse_descriptor(registered_descriptor, &registered_signature)) {
         return 0;
     }
 
@@ -2279,21 +2495,20 @@ static int runtime_factory_descriptor_matches(rxvm_context *context,
     options.type_assignable = runtime_signature_type_assignable;
     options.userdata = context;
 
-    matches = rx_sig_matches_contract(expected_signature, &registered_signature, &options);
+    matches = rx_sig_matches_contract(expected_signature, registered_signature, &options);
     if (!matches &&
-        expected_signature->name && registered_signature.name &&
-        strcmp(expected_signature->name, registered_signature.name) == 0 &&
-        rx_sig_args_match(expected_signature, &registered_signature) &&
+        expected_signature->name && registered_signature->name &&
+        strcmp(expected_signature->name, registered_signature->name) == 0 &&
+        rx_sig_args_match(expected_signature, registered_signature) &&
         runtime_type_matches_contract_name(expected_signature->return_type,
                                            interface_name,
                                            interface_name_length) &&
-        runtime_type_matches_contract_name(registered_signature.return_type,
+        runtime_type_matches_contract_name(registered_signature->return_type,
                                            interface_name,
                                            interface_name_length)) {
         matches = 1;
     }
 
-    rx_sig_free(&registered_signature);
     return matches;
 }
 
@@ -2319,6 +2534,8 @@ static int resolve_runtime_factory(rxvm_context *context,
     size_t best_class_name_length;
     int saw_candidate;
     int saw_positive_score;
+    size_t bucket_start;
+    size_t bucket_end;
 
     if (factory_out) *factory_out = 0;
     if (error_out) *error_out = 0;
@@ -2348,6 +2565,19 @@ static int resolve_runtime_factory(rxvm_context *context,
         return 0;
     }
 
+    bucket_start = 0;
+    bucket_end = context->num_interface_factories;
+    while (bucket_start < bucket_end) {
+        size_t middle = bucket_start + (bucket_end - bucket_start) / 2;
+        int comparison = compare_runtime_interface_factory_key(
+                interface_name, interface_name_length,
+                factory_name, factory_name_length,
+                &context->interface_factories[middle]);
+
+        if (comparison > 0) bucket_start = middle + 1;
+        else bucket_end = middle;
+    }
+
     best_factory = 0;
     best_score = 0;
     best_class_name = 0;
@@ -2355,22 +2585,21 @@ static int resolve_runtime_factory(rxvm_context *context,
     saw_candidate = 0;
     saw_positive_score = 0;
 
-    for (entry_index = 0; entry_index < context->num_interface_factories; entry_index++) {
+    for (entry_index = bucket_start;
+         entry_index < context->num_interface_factories;
+         entry_index++) {
         rxvm_interface_factory_entry *entry;
         rxinteger score;
 
         entry = &context->interface_factories[entry_index];
-        if (entry->interface_name_length != interface_name_length ||
-            memcmp(entry->interface_name, interface_name, interface_name_length) != 0 ||
-            entry->factory_name_length != factory_name_length ||
-            memcmp(entry->factory_name, factory_name, factory_name_length) != 0) {
-            continue;
-        }
+        if (compare_runtime_interface_factory_key(
+                interface_name, interface_name_length,
+                factory_name, factory_name_length, entry) != 0) break;
 
         saw_candidate = 1;
         if (!runtime_factory_descriptor_matches(context,
                                                 &expected_signature,
-                                                entry->descriptor,
+                                                &entry->signature,
                                                 interface_name,
                                                 interface_name_length)) {
             continue;
@@ -2466,43 +2695,6 @@ const char compile_date[8+1] =
                 '\0'
         };
 
-RX_INLINE int ipow(rxinteger base, rxinteger exp_int, rxinteger *result_out) {
-    rxinteger result = 1;
-
-    if (exp_int < 0) {
-        if (base == 1) {
-            *result_out = 1;
-            return 1;
-        }
-
-        if (base == -1) {
-            *result_out = (exp_int & 1) ? -1 : 1;
-            return 1;
-        }
-
-        *result_out = 0;
-        return 0;
-    }
-
-    while (exp_int > 0) {
-        if (exp_int & 1) {
-            if (!rxvm_checked_rxinteger_mul(result, base, &result)) {
-                *result_out = 0;
-                return 0;
-            }
-        }
-
-        exp_int >>= 1;
-        if (exp_int > 0 && !rxvm_checked_rxinteger_mul(base, base, &base)) {
-            *result_out = 0;
-            return 0;
-        }
-    }
-
-    *result_out = result;
-    return 1;
-}
-
 /* Function to convert an interrupt to a string: interrupt_entry -> Code Description Massage */
 const char *interrupt_to_string(unsigned char interrupt) {
     switch (interrupt) {
@@ -2526,6 +2718,8 @@ const char *interrupt_to_string(unsigned char interrupt) {
             return "REFERENCE_INVALID";
         case RXSIGNAL_OBJECT_NOT_INITIALIZED:
             return "OBJECT_NOT_INITIALIZED";
+        case RXSIGNAL_RXBIN_CORRUPTION:
+            return "RXBIN_CORRUPTION";
         case RXSIGNAL_OUT_OF_RANGE:
             return "OUT_OF_RANGE";
         case RXSIGNAL_FAILURE:
@@ -2573,6 +2767,7 @@ unsigned char string_to_interrupt(const char *interrupt) {
     if (strcmp(interrupt, "INVALID_SIGNAL_CODE") == 0) return RXSIGNAL_INVALID_SIGNAL_CODE;
     if (strcmp(interrupt, "REFERENCE_INVALID") == 0) return RXSIGNAL_REFERENCE_INVALID;
     if (strcmp(interrupt, "OBJECT_NOT_INITIALIZED") == 0) return RXSIGNAL_OBJECT_NOT_INITIALIZED;
+    if (strcmp(interrupt, "RXBIN_CORRUPTION") == 0) return RXSIGNAL_RXBIN_CORRUPTION;
     if (strcmp(interrupt, "OUT_OF_RANGE") == 0) return RXSIGNAL_OUT_OF_RANGE;
     if (strcmp(interrupt, "FAILURE") == 0) return RXSIGNAL_FAILURE;
     if (strcmp(interrupt, "QUIT") == 0) return RXSIGNAL_QUIT;
@@ -2820,6 +3015,7 @@ RX_INLINE stack_frame *frame_f(
         this->interrupt_table[RXSIGNAL_FUNCTION_NOT_FOUND-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_REFERENCE_INVALID-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_OBJECT_NOT_INITIALIZED-1].response = RXSIGNAL_RESPONSE_HALT;
+        this->interrupt_table[RXSIGNAL_RXBIN_CORRUPTION-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_OUT_OF_RANGE-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_FAILURE-1].response = RXSIGNAL_RESPONSE_HALT;
         this->interrupt_table[RXSIGNAL_QUIT-1].response = RXSIGNAL_RESPONSE_HALT;
@@ -4500,33 +4696,53 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(IMULT_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - IMULT R%lu,R%lu,R%lu\n", REG_IDX(1),
                   REG_IDX(2), REG_IDX(3));
-            REG_RETURN_INT(op2RI * op3RI)
+            {
+                rxinteger result;
+                if (rxinteger_checked_mul(op2RI, op3RI, &result)) REG_RETURN_INT(result)
+                else SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
         START_INSTRUCTION(IMULT_REG_REG_INT) {
             CALC_DISPATCH(3)
             DEBUG("TRACE - IMULT R%lu,R%lu,%lu\n", (long)REG_IDX(1),
                   (long)REG_IDX(2), (long)op3I);
-            REG_RETURN_INT(op2RI * op3I)
+            {
+                rxinteger result;
+                if (rxinteger_checked_mul(op2RI, op3I, &result)) REG_RETURN_INT(result)
+                else SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
         }
 
         START_INSTRUCTION(IADD_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - IADD R%lu,R%lu,R%lu\n", REG_IDX(1),
                   REG_IDX(2), REG_IDX(3));
-            REG_RETURN_INT(op2RI + op3RI)
+            {
+                rxinteger result;
+                if (rxinteger_checked_add(op2RI, op3RI, &result)) REG_RETURN_INT(result)
+                else SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
         START_INSTRUCTION(ISUB_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - ISUB R%lu,R%lu,R%lu\n", REG_IDX(1),
                   REG_IDX(2), REG_IDX(3));
-            REG_RETURN_INT(op2RI - op3RI)
+            {
+                rxinteger result;
+                if (rxinteger_checked_sub(op2RI, op3RI, &result)) REG_RETURN_INT(result)
+                else SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
         START_INSTRUCTION(IADD_REG_REG_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - IADD R%lu,R%lu,%d\n", REG_IDX(1),
                   REG_IDX(2), (int)op3I);
-            REG_RETURN_INT(op2RI + op3I)
+            {
+                rxinteger result;
+                if (rxinteger_checked_add(op2RI, op3I, &result)) REG_RETURN_INT(result)
+                else SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
         START_INSTRUCTION(ERASE_REG) CALC_DISPATCH(1)
@@ -6349,7 +6565,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         START_INSTRUCTION(DEC0) CALC_DISPATCH(0)
             /* TODO This is really idec0 - i.e. it does not prime the int */
             DEBUG("TRACE - DEC0\n");
-            (current_frame->locals[0]->int_value)--;
+            if (!rxinteger_checked_sub(current_frame->locals[0]->int_value, 1,
+                                       &current_frame->locals[0]->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
             /* ------------------------------------------------------------------------------------
@@ -6359,7 +6578,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         START_INSTRUCTION(DEC1) CALC_DISPATCH(0)
             /* TODO This is really idec1 - i.e. it does not prime the int */
             DEBUG("TRACE - DEC1\n");
-            (current_frame->locals[1]->int_value)--;
+            if (!rxinteger_checked_sub(current_frame->locals[1]->int_value, 1,
+                                       &current_frame->locals[1]->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
             /* ------------------------------------------------------------------------------------
@@ -6369,13 +6591,19 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         START_INSTRUCTION(DEC2) CALC_DISPATCH(0)
             /* TODO This is really idec2 - i.e. it does not prime the int */
             DEBUG("TRACE - DEC2\n");
-            (current_frame->locals[2]->int_value)--;
+            if (!rxinteger_checked_sub(current_frame->locals[2]->int_value, 1,
+                                       &current_frame->locals[2]->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
         START_INSTRUCTION(DEC_REG) CALC_DISPATCH(1)
             /* TODO This is really idec reg - i.e. it does not prime the int */
             DEBUG("TRACE - DEC R%lu\n", REG_IDX(1));
-            (current_frame->locals[REG_IDX(1)]->int_value)--;
+            if (!rxinteger_checked_sub(current_frame->locals[REG_IDX(1)]->int_value, 1,
+                                       &current_frame->locals[REG_IDX(1)]->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
         START_INSTRUCTION(BR_ID)
@@ -6412,6 +6640,194 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
             if (op3RI) next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
             else next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(2);
             CALC_DISPATCH_MANUAL
+            DISPATCH
+
+        START_INSTRUCTION(JUMPS_REG_BINARY) CALC_DISPATCH(2)
+            DEBUG("TRACE - JUMPS R%d,binary[%zu]\n", (int)REG_IDX(1), (size_t)(pc + 2)->index);
+            {
+                size_t target;
+                int found = rxvm_jtable_lookup(op2S, (const unsigned char *)op1R->string_value,
+                                               op1R->string_length, &target);
+                if (found < 0) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Malformed jump table");
+                }
+                else if (found && target >= current_frame->procedure->binarySpace->inst_size) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Jump table target out of range");
+                }
+                else if (found) {
+                    next_pc = current_frame->procedure->binarySpace->binary + target;
+                    CALC_DISPATCH_MANUAL
+                }
+            }
+            DISPATCH
+
+        START_INSTRUCTION(JUMPB_REG_BINARY) CALC_DISPATCH(2)
+            DEBUG("TRACE - JUMPB R%d,binary[%zu]\n", (int)REG_IDX(1), (size_t)(pc + 2)->index);
+            {
+                size_t target;
+                int found = rxvm_jtable_lookup(op2S, (const unsigned char *)op1R->binary_value,
+                                               op1R->binary_length, &target);
+                if (found < 0) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Malformed jump table");
+                }
+                else if (found && target >= current_frame->procedure->binarySpace->inst_size) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Jump table target out of range");
+                }
+                else if (found) {
+                    next_pc = current_frame->procedure->binarySpace->binary + target;
+                    CALC_DISPATCH_MANUAL
+                }
+            }
+            DISPATCH
+
+        START_INSTRUCTION(JUMPBS_REG_REG_BINARY) CALC_DISPATCH(3)
+            DEBUG("TRACE - JUMPBS R%d,R%d,binary[%zu]\n", (int)REG_IDX(1), (int)REG_IDX(2), (size_t)(pc + 3)->index);
+            {
+                unsigned char algorithm;
+                uint32_t fixed_key_length;
+                uint32_t case_count;
+                uint16_t header_size;
+                size_t key_length;
+                size_t offset;
+                size_t target;
+                if (!rxvm_jtable_read_header(op3S, &algorithm, &fixed_key_length,
+                                             &case_count, &header_size)) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Malformed jump table");
+                }
+                else if (fixed_key_length == 0 ||
+                         !rxvm_binary_range(op1R, op2R->int_value,
+                                            (size_t)fixed_key_length, &offset)) {
+                    SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                }
+                else {
+                    int found;
+                    key_length = (size_t)fixed_key_length;
+                    found = rxvm_jtable_lookup_parsed(
+                        op3S, (const unsigned char *)op1R->binary_value + offset,
+                        key_length, &target, algorithm, fixed_key_length,
+                        case_count, header_size);
+                    if (found < 0) {
+                        SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Malformed jump table");
+                    }
+                    else if (found && target >= current_frame->procedure->binarySpace->inst_size) {
+                        SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Jump table target out of range");
+                    }
+                    else if (found) {
+                        next_pc = current_frame->procedure->binarySpace->binary + target;
+                        CALC_DISPATCH_MANUAL
+                    }
+                }
+            }
+            DISPATCH
+
+        START_INSTRUCTION(JUMPI_REG_BINARY) CALC_DISPATCH(2)
+            DEBUG("TRACE - JUMPI R%d,binary[%zu]\n", (int)REG_IDX(1), (size_t)(pc + 2)->index);
+            {
+                unsigned char key[8];
+                uint64_t value = (uint64_t)(int64_t)op1R->int_value;
+                size_t target;
+                int i;
+                int found;
+                for (i = 0; i < 8; i++) {
+                    key[i] = (unsigned char)((value >> (i * 8)) & 0xffu);
+                }
+                found = rxvm_jtable_lookup(op2S, key, sizeof(key), &target);
+                if (found < 0) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Malformed jump table");
+                }
+                else if (found && target >= current_frame->procedure->binarySpace->inst_size) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Jump table target out of range");
+                }
+                else if (found) {
+                    next_pc = current_frame->procedure->binarySpace->binary + target;
+                    CALC_DISPATCH_MANUAL
+                }
+            }
+            DISPATCH
+
+        START_INSTRUCTION(JUMPR_REG_BINARY) CALC_DISPATCH(2)
+            DEBUG("TRACE - JUMPR R%d,binary[%zu]\n", (int)REG_IDX(1), (size_t)(pc + 2)->index);
+            {
+                size_t key_length = op1R->string_length;
+                size_t target;
+                int found;
+
+                while (key_length > 0 && op1R->string_value[key_length - 1] == ' ') key_length--;
+                found = rxvm_jtable_lookup(op2S,
+                                           (const unsigned char *)op1R->string_value,
+                                           key_length,
+                                           &target);
+                if (found < 0) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Malformed jump table");
+                }
+                else if (found && target >= current_frame->procedure->binarySpace->inst_size) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Jump table target out of range");
+                }
+                else if (found) {
+                    next_pc = current_frame->procedure->binarySpace->binary + target;
+                    CALC_DISPATCH_MANUAL
+                }
+            }
+            DISPATCH
+
+        START_INSTRUCTION(JUMPN_REG_BINARY) CALC_DISPATCH(2)
+            DEBUG("TRACE - JUMPN R%d,binary[%zu]\n", (int)REG_IDX(1), (size_t)(pc + 2)->index);
+            {
+                unsigned char key[RX_NUMERIC_KEY_SIZE];
+                size_t target;
+                int found = 0;
+
+                if (rx_numeric_key_from_text(key,
+                                             op1R->string_value,
+                                             op1R->string_length,
+                                             NULL)) {
+                    found = rxvm_jtable_lookup(op2S, key, sizeof(key), &target);
+                }
+                if (found < 0) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Malformed jump table");
+                }
+                else if (found && target >= current_frame->procedure->binarySpace->inst_size) {
+                    SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Jump table target out of range");
+                }
+                else if (found) {
+                    next_pc = current_frame->procedure->binarySpace->binary + target;
+                    CALC_DISPATCH_MANUAL
+                }
+            }
+            DISPATCH
+
+        START_INSTRUCTION(BINEQ_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - BINEQ R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REG_RETURN_INT(op2R->binary_length == op3R->binary_length &&
+                           (!op2R->binary_length ||
+                            memcmp(op2R->binary_value, op3R->binary_value,
+                                   op2R->binary_length) == 0))
+            DISPATCH
+
+        START_INSTRUCTION(BINEQ_REG_REG_BINARY) CALC_DISPATCH(3)
+            DEBUG("TRACE - BINEQ R%d,R%d,binary[%zu]\n",
+                  (int)REG_IDX(1), (int)REG_IDX(2), (size_t)(pc + 3)->index);
+            REG_RETURN_INT(op2R->binary_length == op3S->string_len &&
+                           (!op2R->binary_length ||
+                            memcmp(op2R->binary_value, op3S->string,
+                                   op2R->binary_length) == 0))
+            DISPATCH
+
+        START_INSTRUCTION(BINNE_REG_REG_REG) CALC_DISPATCH(3)
+            DEBUG("TRACE - BINNE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
+            REG_RETURN_INT(op2R->binary_length != op3R->binary_length ||
+                           (op2R->binary_length &&
+                            memcmp(op2R->binary_value, op3R->binary_value,
+                                   op2R->binary_length) != 0))
+            DISPATCH
+
+        START_INSTRUCTION(BINNE_REG_REG_BINARY) CALC_DISPATCH(3)
+            DEBUG("TRACE - BINNE R%d,R%d,binary[%zu]\n",
+                  (int)REG_IDX(1), (int)REG_IDX(2), (size_t)(pc + 3)->index);
+            REG_RETURN_INT(op2R->binary_length != op3S->string_len ||
+                           (op2R->binary_length &&
+                            memcmp(op2R->binary_value, op3S->string,
+                                   op2R->binary_length) != 0))
             DISPATCH
 
         START_INSTRUCTION(TIME_REG) CALC_DISPATCH(1)
@@ -6528,7 +6944,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(INC0) CALC_DISPATCH(0)
             DEBUG("TRACE - INC0\n");
-            REG_VAL(0)->int_value++;
+            if (!rxinteger_checked_add(REG_VAL(0)->int_value, 1, &REG_VAL(0)->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -6537,7 +6955,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(INC1) CALC_DISPATCH(0)
             DEBUG("TRACE - INC1\n");
-            REG_VAL(1)->int_value++;
+            if (!rxinteger_checked_add(REG_VAL(1)->int_value, 1, &REG_VAL(1)->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -6546,7 +6966,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(INC2) CALC_DISPATCH(0)
             DEBUG("TRACE - INC2\n");
-            REG_VAL(2)->int_value++;
+            if (!rxinteger_checked_add(REG_VAL(2)->int_value, 1, &REG_VAL(2)->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 /* ------------------------------------------------------------------------------------
  *  ISEX   op1 = -op1  decimal                                    pej 2. September 2021
@@ -6554,7 +6976,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(ISEX_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - INC R%lu\n", REG_IDX(1));
-            (current_frame->locals[REG_IDX(1)]->int_value)=0-(current_frame->locals[REG_IDX(1)]->int_value);
+            if (!rxinteger_checked_neg(current_frame->locals[REG_IDX(1)]->int_value,
+                                       &current_frame->locals[REG_IDX(1)]->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
         DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -6572,7 +6997,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(ISUB_REG_REG_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - ISUB R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
-            REG_RETURN_INT(op2RI - op3I)
+            {
+                rxinteger result;
+                if (rxinteger_checked_sub(op2RI, op3I, &result)) REG_RETURN_INT(result)
+                else SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -6581,7 +7010,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(ISUB_REG_INT_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - ISUB R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
-            REG_RETURN_INT(op2I - op3RI)
+            {
+                rxinteger result;
+                if (rxinteger_checked_sub(op2I, op3RI, &result)) REG_RETURN_INT(result)
+                else SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -7223,7 +7656,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(INC_REG) CALC_DISPATCH(1)
             DEBUG("TRACE - INC R%lu\n", REG_IDX(1));
-            (current_frame->locals[REG_IDX(1)]->int_value)++;
+            if (!rxinteger_checked_add(current_frame->locals[REG_IDX(1)]->int_value, 1,
+                                       &current_frame->locals[REG_IDX(1)]->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -7232,7 +7668,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(IDIV_REG_REG_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - IDIV R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
-            REG_RETURN_INT(op2RI / op3I)
+            if (op3I == 0) { SET_SIGNAL(RXSIGNAL_DIVISION_BY_ZERO) }
+            else if (op2RI == RXINTEGER_MIN && op3I == -1) { SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW) }
+            else REG_RETURN_INT(op2RI / op3I)
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -7241,7 +7679,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(IDIV_REG_INT_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - IDIV R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
-            REG_RETURN_INT(op2I / op3RI)
+            if (op3RI == 0) { SET_SIGNAL(RXSIGNAL_DIVISION_BY_ZERO) }
+            else if (op2I == RXINTEGER_MIN && op3RI == -1) { SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW) }
+            else REG_RETURN_INT(op2I / op3RI)
             DISPATCH
 
 /* -----------------------------------------------------------------------------------
@@ -7250,7 +7690,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(IDIV_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - IDIV R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            REG_RETURN_INT(op2RI / op3RI)
+            if (op3RI == 0) { SET_SIGNAL(RXSIGNAL_DIVISION_BY_ZERO) }
+            else if (op2RI == RXINTEGER_MIN && op3RI == -1) { SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW) }
+            else REG_RETURN_INT(op2RI / op3RI)
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -7259,7 +7701,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(IMOD_REG_REG_INT) CALC_DISPATCH(3)
             DEBUG("TRACE - IMOD R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
-            REG_RETURN_INT(op2RI % op3I)
+            if (op3I == 0) { SET_SIGNAL(RXSIGNAL_DIVISION_BY_ZERO) }
+            else if (op2RI == RXINTEGER_MIN && op3I == -1) { SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW) }
+            else REG_RETURN_INT(op2RI % op3I)
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -7268,7 +7712,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(IMOD_REG_INT_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - IMOD R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
-            REG_RETURN_INT(op2I % op3RI)
+            if (op3RI == 0) { SET_SIGNAL(RXSIGNAL_DIVISION_BY_ZERO) }
+            else if (op2I == RXINTEGER_MIN && op3RI == -1) { SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW) }
+            else REG_RETURN_INT(op2I % op3RI)
             DISPATCH
 
 /* -----------------------------------------------------------------------------------
@@ -7277,7 +7723,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  */
         START_INSTRUCTION(IMOD_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - IMOD R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            REG_RETURN_INT(op2RI % op3RI)
+            if (op3RI == 0) { SET_SIGNAL(RXSIGNAL_DIVISION_BY_ZERO) }
+            else if (op2RI == RXINTEGER_MIN && op3RI == -1) { SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW) }
+            else REG_RETURN_INT(op2RI % op3RI)
             DISPATCH
 /* ------------------------------------------------------------------------------------
  *  FMOD_REG_REG_FLOAT Float Modulo (op1=op2 & op3)
@@ -7483,11 +7931,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  */
         START_INSTRUCTION(SAY_INT) CALC_DISPATCH(1)
             DEBUG("TRACE - SAY %d\n", (int)op1I);
-#ifdef __32BIT__
-            rxvm_mprintf("%ld\n", op1I);
-#else
-            rxvm_mprintf("%lld\n", op1I);
-#endif
+            rxvm_mprintf("%" RXINTEGER_PRI "\n", op1I);
             DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -7674,7 +8118,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     START_INSTRUCTION(IPOW_REG_REG_REG) CALC_DISPATCH(3)
         DEBUG("TRACE - IPOW R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
 
-        if (!ipow(op2R->int_value, op3R->int_value, &op1R->int_value)) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+        if (!rxinteger_checked_pow(op2R->int_value, op3R->int_value, &op1R->int_value)) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
         DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -7684,7 +8128,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     START_INSTRUCTION(IPOW_REG_REG_INT) CALC_DISPATCH(3)
         DEBUG("TRACE - IPOW R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
 
-        if (!ipow(op2R->int_value, op3I, &op1R->int_value)) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+        if (!rxinteger_checked_pow(op2R->int_value, op3I, &op1R->int_value)) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
         DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -7694,7 +8138,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     START_INSTRUCTION(IPOW_REG_INT_REG) CALC_DISPATCH(3)
         DEBUG("TRACE - IPOW R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
 
-        if (!ipow(op2I, op3R->int_value, &op1R->int_value)) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+        if (!rxinteger_checked_pow(op2I, op3R->int_value, &op1R->int_value)) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
         DISPATCH
 
 /* ------------------------------------------------------------------------------------
@@ -8164,8 +8608,10 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  */
         START_INSTRUCTION(BCT_ID_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - BCT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
-            (current_frame->locals[REG_IDX(2)]->int_value)--;
-            if (current_frame->locals[REG_IDX(2)]->int_value > 0) {
+            if (!rxinteger_checked_sub(op2RI, 1, &op2R->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
+            else if (op2R->int_value > 0) {
                 next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL
             }
@@ -8176,11 +8622,21 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  */
         START_INSTRUCTION(BCT_ID_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - BCT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            (current_frame->locals[REG_IDX(2)]->int_value)--;
-            (current_frame->locals[REG_IDX(3)]->int_value)++;
-            if (current_frame->locals[REG_IDX(2)]->int_value>0) {
-                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-                CALC_DISPATCH_MANUAL
+            {
+                rxinteger counter;
+                rxinteger index;
+                if (!rxinteger_checked_sub(op2RI, 1, &counter) ||
+                    !rxinteger_checked_add(op3RI, 1, &index)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else {
+                    op2R->int_value = counter;
+                    op3R->int_value = index;
+                    if (counter > 0) {
+                        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
+                        CALC_DISPATCH_MANUAL
+                    }
+                }
             }
         DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -8193,7 +8649,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL
             }
-            else (current_frame->locals[REG_IDX(2)]->int_value)--;
+            else if (!rxinteger_checked_sub(op2RI, 1, &op2R->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
             DISPATCH
 /* ------------------------------------------------------------------------------------
  *  BCF_ID_REG_REG  if op2=0 goto op1(if false) else dec op2 and inc op3
@@ -8206,8 +8664,16 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 CALC_DISPATCH_MANUAL
             }
             else {
-                (current_frame->locals[REG_IDX(2)]->int_value)--;
-                (current_frame->locals[REG_IDX(3)]->int_value)++;
+                rxinteger counter;
+                rxinteger index;
+                if (!rxinteger_checked_sub(op2RI, 1, &counter) ||
+                    !rxinteger_checked_add(op3RI, 1, &index)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else {
+                    op2R->int_value = counter;
+                    op3R->int_value = index;
+                }
             }
             DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -8216,8 +8682,10 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  */
         START_INSTRUCTION(BCTNM_ID_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - BCTNM R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
-            (current_frame->locals[REG_IDX(2)]->int_value)--;
-            if (current_frame->locals[REG_IDX(2)]->int_value>=0) {
+            if (!rxinteger_checked_sub(op2RI, 1, &op2R->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
+            else if (op2R->int_value >= 0) {
                 next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
                 CALC_DISPATCH_MANUAL
             }
@@ -8228,11 +8696,21 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  */
         START_INSTRUCTION(BCTNM_ID_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - BCTNM R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            (current_frame->locals[REG_IDX(2)]->int_value)--;
-            (current_frame->locals[REG_IDX(3)]->int_value)++;
-            if (current_frame->locals[REG_IDX(2)]->int_value>=0) {
-                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-                CALC_DISPATCH_MANUAL
+            {
+                rxinteger counter;
+                rxinteger index;
+                if (!rxinteger_checked_sub(op2RI, 1, &counter) ||
+                    !rxinteger_checked_add(op3RI, 1, &index)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                }
+                else {
+                    op2R->int_value = counter;
+                    op3R->int_value = index;
+                    if (counter >= 0) {
+                        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
+                        CALC_DISPATCH_MANUAL
+                    }
+                }
             }
         DISPATCH
 /* ------------------------------------------------------------------------------------
@@ -8241,9 +8719,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  */
         START_INSTRUCTION(BCTP_ID_REG) CALC_DISPATCH(2)
             DEBUG("TRACE - BCTP R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
-            (current_frame->locals[REG_IDX(2)]->int_value)++;
-            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-            CALC_DISPATCH_MANUAL
+            if (!rxinteger_checked_add(op2RI, 1, &op2R->int_value)) {
+                SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+            }
+            else {
+                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
+                CALC_DISPATCH_MANUAL
+            }
         DISPATCH
  /* ------------------------------------------------------------------------------------
  *  FndBlnk REG_REG_REG  return first blank after op2[op3]          pej 27 August 2021
@@ -9816,11 +10298,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         platform = "unknown";
 #endif
 
-#ifdef __32BIT__
-        bits = "32";
-#else
-        bits = "64";
-#endif
+        bits = sizeof(void *) == 4 ? "32" : "64";
 
         snprintf(vers, sizeof(vers), "%s %s %s %s", platform, bits, rxversion, compile_date);
 
@@ -9839,11 +10317,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             DEBUG("TRACE - RXHASH R%d R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(1),(int)REG_IDX(3));
 
     {
-#ifdef __32BIT__
-        uint32_t hash=0;
-#else
         uint64_t hash=0;
-#endif
         int i1,len;
         REQUIRE_VALID_UTF8_REGISTER(op2R);
         GETSTRLEN(len, op2R);
@@ -9853,12 +10327,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             hash = (unsigned char)op2R->string_value[i1] + (hash << 6) + (hash << 16) - hash;
         }
         hash ^= (hash >> 16);
-#ifdef __32BIT__
-        hash = hash & 0x7FFFFFFF
-#else
         hash = hash & 0x7FFFFFFFFFFFFFFF;
-#endif
-        op1R->int_value = hash;
+        op1R->int_value = (rxinteger)hash;
      }
      DISPATCH
     /* Spawn - Spawn a process with io redirects - Spawn Process op1 = exec op2 redirect op3

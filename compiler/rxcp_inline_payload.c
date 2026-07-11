@@ -1478,11 +1478,7 @@ static int inline_meta_emit_node(InlineMetaText *text, InlineMetaExport *meta, A
         return 0;
     }
 
-#ifdef __32BIT__
-    snprintf(int_buffer, sizeof(int_buffer), "%ld", node->int_value);
-#else
-    snprintf(int_buffer, sizeof(int_buffer), "%lld", (long long)node->int_value);
-#endif
+    snprintf(int_buffer, sizeof(int_buffer), "%" RXINTEGER_PRI, node->int_value);
 
     if (!inline_meta_text_appendf(text,
                                   ";>,%zu,%ld,%d,%d,%d,%zu,%zu,%s,%s,%s,%s,%s,%s,%u,%ld,%ld,%u,%u,%s,%d,%.17g,%s,%s",
@@ -2336,7 +2332,11 @@ static int inline_meta_import_node(Context *context, InlineMetaImport *meta, cha
     if (target_dim_elements) free(target_dim_elements);
     if (value_class) free(value_class);
     if (target_class) free(target_class);
-    node->int_value = (rxinteger)atoll(int_field);
+    {
+        char *int_end;
+        int_end = int_field;
+        if (rxinteger_parse(int_field, &int_end, &node->int_value) || *int_end != 0) return 0;
+    }
     node->bool_value = atoi(bool_field);
     node->float_value = atof(float_field);
     node->scope = node_scope;

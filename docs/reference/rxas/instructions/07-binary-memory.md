@@ -147,6 +147,35 @@ See `binary-compare` in [Examples](#examples).
 
 `bcmps`, `bgets`, `bcopy`.
 
+## `bineq` And `binne`
+
+Compare two complete logical binary values for equality or inequality. Unlike
+`bcmpb`, these instructions compare both lengths as well as all bytes and do
+not interpret an integer offset.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x027d` | `bineq rResult,rLeft,rRight` | Set `rResult` to one when both complete binary values are equal. |
+| `0x027e` | `bineq rResult,rLeft,bConst` | Compare a binary register with a binary constant. |
+| `0x027f` | `binne rResult,rLeft,rRight` | Set `rResult` to one when lengths or bytes differ. |
+| `0x0280` | `binne rResult,rLeft,bConst` | Compare a binary register with a binary constant. |
+
+### Operands
+
+`rLeft` and `rRight` are binary registers. `bConst` is an inline binary literal
+or named binary constant. `rResult` receives an integer Boolean value.
+
+### Signals
+
+These comparisons do not resize, copy, or modify either input and do not raise
+`OUT_OF_RANGE`.
+
+### Related
+
+`bcmpb`, `jumpb`, `bcopy`.
+
 ## `bcmps`
 
 Compare a zero-terminated UTF-8 field in binary memory with a string without

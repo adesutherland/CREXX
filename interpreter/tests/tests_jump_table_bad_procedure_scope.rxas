@@ -1,0 +1,14 @@
+.globals=0
+
+first() .locals=1
+    .jtable local_words linear
+    br first_cases_done
+first_word: .jcase local_words "first"
+    ret 1
+first_cases_done:
+    ret 0
+
+main() .locals=1
+    load r0,"first"
+    jumps r0,local_words
+    ret 0

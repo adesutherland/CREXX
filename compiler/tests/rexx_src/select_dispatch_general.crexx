@@ -1,0 +1,136 @@
+options levelb
+namespace select_dispatch_general expose public_if exposed_if string_if short_if duplicate_if
+
+main: procedure = .int
+  index = .int
+  exposed_value = .int
+
+  do index = -1 to 6
+    say if_classify(index)
+    say classic_classify(index)
+    say strict_classify(index)
+    say mixed_if(index + 11, index)
+  end
+
+  say mixed_if(10, 99)
+  say referenced_if(2)
+  exposed_value = 3
+  say exposed_if(exposed_value)
+  say exposed_value
+  say string_if("b")
+  say short_if(2)
+  say public_if(2)
+  say duplicate_if(1)
+  return 0
+
+if_classify: procedure = .int
+  arg value = .int
+
+  if value = -1 then return -10
+  else if value = 0 then return 10
+  else if value = 1 then return 20
+  else if value = 2 then return 30
+  else if value = 3 then return 40
+  else if value = 4 then return 50
+  else if value = 5 then return 60
+  else if value = 6 then return 70
+  else return -1
+  return -2
+
+classic_classify: procedure = .int
+  arg value = .int
+
+  select
+    when value = -1 then return -110
+    when value = 0 then return 110
+    when value = 1 then return 120
+    when value = 2 then return 130
+    when value = 3 then return 140
+    when value = 4 then return 150
+    when value = 5 then return 160
+    when value = 6 then return 170
+    otherwise return -101
+  end
+  return -102
+
+strict_classify: procedure = .int
+  arg value = .int
+
+  if value == -1 then return -410
+  else if value == 0 then return 410
+  else if value == 1 then return 420
+  else if value == 2 then return 430
+  else if value == 3 then return 440
+  else if value == 4 then return 450
+  else if value == 5 then return 460
+  else if value == 6 then return 470
+  else return -401
+  return -402
+
+mixed_if: procedure = .int
+  arg value = .int, guard = .int
+
+  if value = 1 then return 201
+  else if guard = 99 then return 299
+  else if value = 10 then return 310
+  else if value = 11 then return 311
+  else if value = 12 then return 312
+  else return -200
+  return -201
+
+referenced_if: procedure = .int
+  arg seed = .int
+  value = seed
+  value_ref = reference .int
+  value_ref = reference value
+
+  if value = 1 then return 601
+  else if value = 2 then return 602
+  else if value = 3 then return 603
+  else return -600
+  return -601
+
+exposed_if: procedure = .int
+  arg expose value = .int
+
+  if value = 1 then return 701
+  else if value = 2 then return 702
+  else if value = 3 then return 703
+  else return -700
+  return -701
+
+string_if: procedure = .int
+  arg value = .string
+
+  if value == "a" then return 801
+  else if value == "b" then return 802
+  else if value == "c" then return 803
+  else return -800
+  return -801
+
+short_if: procedure = .int
+  arg value = .int
+
+  if value = 1 then return 901
+  else if value = 2 then return 902
+  else return -900
+  return -901
+
+public_if: procedure = .int
+  arg value = .int
+
+  if value = 1 then return 1001
+  else if value = 2 then return 1002
+  else if value = 3 then return 1003
+  else return -1000
+  return -1001
+
+duplicate_if: procedure = .int
+  arg value = .int
+
+  if value = 1 then return 1101
+  else if value = 1 then return 1102
+  else if value = 2 then return 1103
+  else if value = 3 then return 1104
+  else return -1100
+  return -1101

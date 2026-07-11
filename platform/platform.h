@@ -33,6 +33,7 @@
 #include <stdio.h>
 #include <stddef.h>
 #include "crexx_license.h"
+#include "rxinteger.h"
 
 #if defined(__clang__) || defined(__GNUC__)
 # ifdef NDEBUG  // RELEASE
@@ -64,24 +65,6 @@
 /* Load Platform Specific Headers */
 #ifdef __CMS__
 #include "cms.h"
-#endif
-
-#ifndef RXINTEGER_T
-#define RXINTEGER_T
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L /* C99 */
-#include <stdint.h>
-typedef intmax_t rxinteger;
-#else
-#ifdef __32BIT__
-typedef long rxinteger;
-#else
-typedef long long rxinteger;
-#endif
-#endif
-#endif //RXINTEGER_T
-
-#ifndef IS_RXINTEGER_32BIT
-#define IS_RXINTEGER_32BIT (sizeof(rxinteger) == 4)
 #endif
 
 #if defined(__GNUC__) || defined(__clang__) || defined(_MSC_VER)

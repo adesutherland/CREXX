@@ -112,6 +112,7 @@ NUMERIC_FUZZ_NOT_FIRST_INST = NUMERIC FUZZ must precede executable instructions.
 NUMERIC_STANDARD_NOT_FIRST_INST = NUMERIC STANDARD must precede executable instructions.
 OUT_OF_MEMORY = Out of memory.
 OUT_OF_RANGE = Value is outside the allowed range.
+DIVISION_BY_ZERO = Integer division or modulo by zero during optimisation.
 OVERFLOW_UNDERFLOW = Arithmetic overflow or underflow during optimisation.
 PARSE_FAILURE = Source could not be parsed.
 PROC_VAR_MISMATCH = Imported symbol "{name}" is a procedure/variable mismatch between {defining_file} and {import_file}.

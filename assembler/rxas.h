@@ -96,13 +96,16 @@ typedef struct Assembler_Context {
     struct avl_tree_node *proc_constants_tree;
     struct avl_tree_node *label_constants_tree;
     struct avl_tree_node *extern_constants_tree;
+    struct rxas_jump_table *jump_tables;
     char *extern_regs;
+    char *current_proc_name;
     instruction_queue *optimiser_queue;
     size_t optimiser_queue_items;
     int optimiser_counter;
     FILE *traceFile;
     int debug_mode;
     int quiet;
+    Assembler_Token *last_label_token;
 } Assembler_Context;
 
 /* Assembler_Token Functions */
