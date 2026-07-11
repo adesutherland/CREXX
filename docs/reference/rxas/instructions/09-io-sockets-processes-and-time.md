@@ -781,374 +781,745 @@ main() .locals=3
 
 ## `sockclose`
 
-Status: placeholder.
+Close a VM-managed socket handle.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x003f` | `{REG,REG}` | Close op2 socket handle, rc in op1 |
+| `0x003f` | `sockclose rStatus,rSocket` | Close handle and store status. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only `rStatus.int` changes. `rSocket.int` remains as a stale handle; the VM
+socket entry and native/TLS resources are released.
+
+### Signals
+
+Failures are returned in the status/last-error state, not VM signals.
+
+### Example
+
+<!-- rxas-example name="io-sockclose" test="run" -->
+```rxas
+.globals=0
+main() .locals=2
+    socknew r1
+    sockclose r0,r1
+    ret
+```
+
+### Related
+
+`socknew`, `sockshutdown`.
 
 ## `sockconnect`
 
-Status: placeholder.
+Connect a VM-managed TCP socket to a host and port.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0040` | `{REG,REG,REG}` | Connect op1 socket handle to host op2 and port op3 |
+| `0x0040` | `sockconnect rSocket,rHost,rPort` | Attempt a plain TCP connection. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Handle and port are integer payloads; host is the complete string. Registers
+and cursors are unchanged. The socket entry records status and error text.
+
+### Signals
+
+The socket-layer return is discarded; failures do not signal and must be read
+with `sockstatus`/`sockerror`.
+
+### Example
+
+<!-- rxas-example name="io-sockconnect" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=3
+    sockconnect r0,r1,r2
+    ret
+```
+
+### Related
+
+`sockconnecttls`, `socknew`, `sockstatus`.
 
 ## `sockconnecttls`
 
-Status: placeholder.
+Connect a VM-managed socket and establish client TLS in one operation.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0053` | `{REG,REG,REG}` | Connect op1 socket handle to host op2 and port op3 with client TLS |
+| `0x0053` | `sockconnecttls rSocket,rHost,rPort` | TCP connect plus TLS handshake. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The host string supplies both endpoint/SNI context and the port is an integer.
+Registers/cursors are unchanged while socket state gains a TLS session on
+success.
+
+### Signals
+
+The return is discarded; unsupported TLS or connection/handshake failures are
+available through socket status/error, not VM signals.
+
+### Example
+
+<!-- rxas-example name="io-sockconnecttls" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=3
+    sockconnecttls r0,r1,r2
+    ret
+```
+
+### Related
+
+`sockconnect`, `sockstarttls`, `sockerror`.
 
 ## `sockerror`
 
-Status: placeholder.
+Read the last error text stored for a VM-managed socket.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0051` | `{REG,REG}` | Read last socket error text for op2 into op1 |
+| `0x0051` | `sockerror rText,rSocket` | Format last error into destination string. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination string is replaced and its cursor reset. The handle register
+and socket status are unchanged.
+
+### Signals
+
+Invalid handles and missing errors are represented by helper output; no VM
+signal is raised. Allocation failure is fatal.
+
+### Example
+
+<!-- rxas-example name="io-sockerror" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=2
+    sockerror r0,r1
+    ret
+```
+
+### Related
+
+`sockstatus`, `sockconnect`.
 
 ## `sockkeepalive`
 
-Status: placeholder.
+Set the native `SO_KEEPALIVE` option on a socket.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x004d` | `{REG,REG,REG}` | Set op2 socket SO_KEEPALIVE flag op3, rc in op1 |
+| `0x004d` | `sockkeepalive rStatus,rSocket,rEnabled` | Store option status. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Handle and Boolean enable flag come from integer payloads. Only `rStatus.int`
+changes; sources/cursors remain unchanged.
+
+### Signals
+
+Failures are returned and recorded in socket state, not raised as VM signals.
+
+### Example
+
+<!-- rxas-example name="io-sockkeepalive" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=3
+    sockkeepalive r0,r1,r2
+    ret
+```
+
+### Related
+
+`socknodelay`, `sockblocking`.
 
 ## `socklisten`
 
-Status: placeholder.
+Put a bound socket into listening state.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0042` | `{REG,REG,REG}` | Listen on op2 socket handle with backlog op3, rc in op1 |
+| `0x0042` | `socklisten rStatus,rSocket,rBacklog` | Store listen status. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Socket handle and backlog are integer payloads. Only `rStatus.int` changes;
+sources are unchanged.
+
+### Signals
+
+Failures are returned/recorded rather than raised as VM signals.
+
+### Example
+
+<!-- rxas-example name="io-socklisten" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=3
+    socklisten r0,r1,r2
+    ret
+```
+
+### Related
+
+`sockbind`, `sockaccept`.
 
 ## `socklocal`
 
-Status: placeholder.
+Format a socket's local endpoint.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x004f` | `{REG,REG}` | Format op2 socket local endpoint into op1 |
+| `0x004f` | `socklocal rEndpoint,rSocket` | Store local host/port text. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination string is replaced and its cursor reset. The handle register
+and socket are unchanged.
+
+### Signals
+
+Helper failures are represented in output/socket state, not VM signals.
+
+### Example
+
+<!-- rxas-example name="io-socklocal" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=2
+    socklocal r0,r1
+    ret
+```
+
+### Related
+
+`sockpeer`, `sockbind`.
 
 ## `socknew`
 
-Status: placeholder.
+Create a VM-managed IPv4/IPv6-capable TCP socket entry.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x003e` | `{REG}` | Create a VM-managed TCP socket handle |
+| `0x003e` | `socknew rSocket` | Store a new handle or failure code. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The VM allocates and tracks native socket state. Only the destination integer
+payload changes; the handle must later be closed.
+
+### Signals
+
+Creation failure is represented by the returned handle/status and socket error
+state, not a VM signal.
+
+### Example
+
+<!-- rxas-example name="io-socknew" test="run" -->
+```rxas
+.globals=0
+main() .locals=1
+    socknew r0
+    ret
+```
+
+### Related
+
+`sockclose`, `sockconnect`, `sockbind`.
 
 ## `socknodelay`
 
-Status: placeholder.
+Set the native `TCP_NODELAY` option.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x004c` | `{REG,REG,REG}` | Set op2 socket TCP_NODELAY flag op3, rc in op1 |
+| `0x004c` | `socknodelay rStatus,rSocket,rEnabled` | Store option status. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Handle and Boolean flag are integer payloads. Only `rStatus.int` changes.
+
+### Signals
+
+Failures are returned/recorded, not raised as VM signals.
+
+### Example
+
+<!-- rxas-example name="io-socknodelay" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=3
+    socknodelay r0,r1,r2
+    ret
+```
+
+### Related
+
+`sockkeepalive`, `sockblocking`.
 
 ## `sockpeer`
 
-Status: placeholder.
+Format a connected socket's peer endpoint.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x004e` | `{REG,REG}` | Format op2 socket peer endpoint into op1 |
+| `0x004e` | `sockpeer rEndpoint,rSocket` | Store peer host/port text. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination string is replaced and its cursor reset. Socket/handle source
+is unchanged.
+
+### Signals
+
+Helper failures are represented by output/socket state, not VM signals.
+
+### Example
+
+<!-- rxas-example name="io-sockpeer" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=2
+    sockpeer r0,r1
+    ret
+```
+
+### Related
+
+`socklocal`, `sockconnect`.
 
 ## `sockpending`
 
-Status: placeholder.
+Query bytes immediately available to receive from a socket.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0049` | `{REG,REG}` | Query pending bytes on op2 socket handle into op1 |
+| `0x0049` | `sockpending rCount,rSocket` | Store pending-byte count/status. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only `rCount.int` changes; the handle and socket receive buffer are unchanged.
+
+### Signals
+
+Failures return an integer/status and update socket error state, not VM signals.
+
+### Example
+
+<!-- rxas-example name="io-sockpending" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=2
+    sockpending r0,r1
+    ret
+```
+
+### Related
+
+`sockrecv`, `sockblocking`, `socktimeout`.
 
 ## `sockrecv`
 
-Status: placeholder.
+Receive up to a requested byte count as UTF-8 text.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0047` | `{REG,REG,REG}` | Receive up to op3 bytes from op2 socket handle as string into op1 |
+| `0x0047` | `sockrecv rString,rSocket,rMaximum` | Receive into string payload. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Handle/count are integer payloads. The destination string is replaced, its
+cursor reset, and received bytes consumed from the socket; sources are unchanged.
+
+### Signals
+
+Invalid UTF-8 or socket failures are represented by helper result/socket state
+according to the socket layer; this instruction raises no direct VM signal.
+
+### Example
+
+<!-- rxas-example name="io-sockrecv" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=3
+    sockrecv r0,r1,r2
+    ret
+```
+
+### Related
+
+`sockrecvb`, `socksend`, `sockpending`.
 
 ## `sockrecvb`
 
-Status: placeholder.
+Receive up to a requested byte count as binary data.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0048` | `{REG,REG,REG}` | Receive up to op3 bytes from op2 socket handle as binary into op1 |
+| `0x0048` | `sockrecvb rBinary,rSocket,rMaximum` | Receive into binary payload. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination binary is replaced with received bytes and its cursor resets.
+Handle/count registers remain unchanged; bytes are consumed from the socket.
+
+### Signals
+
+Allocation/socket failures are represented by helper/socket state rather than a
+direct VM signal.
+
+### Example
+
+<!-- rxas-example name="io-sockrecvb" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=3
+    sockrecvb r0,r1,r2
+    ret
+```
+
+### Related
+
+`sockrecv`, `socksendb`, `sockpending`.
 
 ## `socksend`
 
-Status: placeholder.
+Send a complete string payload on a connected socket.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0045` | `{REG,REG,REG}` | Send string op3 on op2 socket handle, bytes in op1 |
+| `0x0045` | `socksend rCount,rSocket,rString` | Store bytes sent/status. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The full logical string byte range is offered to the socket. Only `rCount.int`
+changes; handle, string, and string cursor remain unchanged.
+
+### Signals
+
+Short sends and failures are returned/recorded in socket state, not raised as
+VM signals.
+
+### Example
+
+<!-- rxas-example name="io-socksend" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=3
+    socksend r0,r1,r2
+    ret
+```
+
+### Related
+
+`socksendb`, `sockrecv`.
 
 ## `socksendb`
 
-Status: placeholder.
+Send a complete binary payload on a connected socket.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0046` | `{REG,REG,REG}` | Send binary op3 on op2 socket handle, bytes in op1 |
+| `0x0046` | `socksendb rCount,rSocket,rBinary` | Store bytes sent/status. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The full logical binary byte range is offered. Only `rCount.int` changes;
+handle, binary payload, and binary cursor remain unchanged.
+
+### Signals
+
+Short sends/failures are returned and recorded, not raised as VM signals.
+
+### Example
+
+<!-- rxas-example name="io-socksendb" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=3
+    socksendb r0,r1,r2
+    ret
+```
+
+### Related
+
+`socksend`, `sockrecvb`.
 
 ## `sockshutdown`
 
-Status: placeholder.
+Shut down socket receive, send, or both directions.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0044` | `{REG,REG,REG}` | Shutdown op2 socket handle mode op3, rc in op1 |
+| `0x0044` | `sockshutdown rStatus,rSocket,rMode` | Store shutdown status. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Handle and platform shutdown mode are integer payloads. Only `rStatus.int`
+changes; the handle remains open until `sockclose`.
+
+### Signals
+
+Invalid modes/handles and native failures are returned/recorded, not signaled.
+
+### Example
+
+<!-- rxas-example name="io-sockshutdown" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=3
+    sockshutdown r0,r1,r2
+    ret
+```
+
+### Related
+
+`sockclose`, `socksend`, `sockrecv`.
 
 ## `sockstarttls`
 
-Status: placeholder.
+Upgrade an already connected socket to client TLS.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0052` | `{REG,REG,REG}` | Start client TLS on op2 socket handle using host op3, rc in op1 |
+| `0x0052` | `sockstarttls rStatus,rSocket,rHost` | Store TLS-handshake status. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The host string supplies TLS peer/SNI context. Only `rStatus.int` changes;
+sources/cursors are unchanged and successful socket state gains TLS.
+
+### Signals
+
+Unsupported TLS and handshake failures return status/error text, not VM signals.
+
+### Example
+
+<!-- rxas-example name="io-sockstarttls" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=3
+    sockstarttls r0,r1,r2
+    ret
+```
+
+### Related
+
+`sockconnecttls`, `sockerror`.
 
 ## `sockstatus`
 
-Status: placeholder.
+Read the last numeric status stored for a socket.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0050` | `{REG,REG}` | Read last socket status for op2 into op1 |
+| `0x0050` | `sockstatus rStatus,rSocket` | Store socket-layer status. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only `rStatus.int` changes; the socket handle and stored error state remain
+unchanged.
+
+### Signals
+
+Invalid handles are represented by the helper result, not a VM signal.
+
+### Example
+
+<!-- rxas-example name="io-sockstatus" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=2
+    sockstatus r0,r1
+    ret
+```
+
+### Related
+
+`sockerror`, `sockconnect`.
 
 ## `socktimeout`
 
-Status: placeholder.
+Set socket send/receive timeout in milliseconds.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x004a` | `{REG,REG,REG}` | Set op2 socket timeout in milliseconds op3, rc in op1 |
+| `0x004a` | `socktimeout rStatus,rSocket,rMilliseconds` | Store option status. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Handle and timeout are integer payloads. Only `rStatus.int` changes; source
+registers remain unchanged.
+
+### Signals
+
+Invalid values/handles and platform failures return status, not VM signals.
+
+### Example
+
+<!-- rxas-example name="io-socktimeout" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=3
+    socktimeout r0,r1,r2
+    ret
+```
+
+### Related
+
+`sockblocking`, `sockpending`.
 
 ## `spawn`
 
-Status: placeholder.
+Run a command through the platform spawn layer with optional redirections.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x01d2` | `{REG,REG,REG}` | Spawn Process op1 = exec op2 redirect op3 |
+| `0x01d2` | `spawn rExitCode,rCommand,rOptions` | Execute and store command status. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The command is copied and NUL-terminated. `rOptions` attributes are, in order:
+stdin redirect, stdout redirect, stderr redirect, environment variables, spawn
+mode, and cREXX ADDRESS binding metadata; missing attributes use defaults.
+Redirect values are native redirect payloads made by the redirect instructions.
+On success only `rExitCode.int` changes; command/options are unchanged. Spawn
+consumes/cleans redirect resources as defined by the redirect protocol.
+
+### Signals
+
+Raises `FAILURE` when the command is not found or the platform spawn layer
+fails, with diagnostic text when available. Command-buffer allocation failure
+is not translated.
+
+### Example
+
+<!-- rxas-example name="io-spawn" test="assemble" -->
+```rxas
+.globals=0
+main() .locals=3
+    load r1,"true"
+    spawn r0,r1,r2
+    ret
+```
+
+### Related
+
+`redir2str`, `str2redir`, `nullredir`, `getenv`.
 
 ## `time`
 
-Status: placeholder.
+Read wall-clock seconds adjusted by the platform timezone offset.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x01ca` | `{REG}` | Put time into op1 |
+| `0x01ca` | `time rSeconds` | Store `gettimeofday().tv_sec - timezone`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only the destination integer changes. The result is epoch seconds shifted by
+the C runtime's standard-timezone offset, not a monotonic clock, and can jump
+with wall-clock adjustment.
+
+### Signals
+
+System-call failures are not checked or signaled.
+
+### Example
+
+<!-- rxas-example name="io-time" test="run" -->
+```rxas
+.globals=0
+main() .locals=1
+    time r0
+    ret
+```
+
+### Related
+
+`mtime`, `xtime`.
 
 ## `xtime`
 
-Status: placeholder.
+Read one selected platform time property.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x01cc` | `{REG,STRING}` | put special time properties into op1 |
+| `0x01cc` | `xtime rValue,"selector"` | Select by the first constant byte. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Selectors are `Z` (C `timezone` offset seconds), `T` (process `clock()` ticks),
+`C` (`CLOCKS_PER_SEC`), `N` (standard and daylight timezone names joined by
+`;`), and `U` (UTC-style time-of-day microseconds computed from local fields
+plus `timezone`). Integer selectors write only `rValue.int`; `N` replaces its
+string and resets the byte cursor. Unknown/empty selectors leave it unchanged.
+
+### Signals
+
+System/library failures and unknown selectors do not signal; string allocation
+failure is fatal.
+
+### Example
+
+<!-- rxas-example name="io-xtime" test="run" -->
+```rxas
+.globals=0
+main() .locals=1
+    xtime r0,"C"
+    ret
+```
+
+### Related
+
+`time`, `mtime`.
