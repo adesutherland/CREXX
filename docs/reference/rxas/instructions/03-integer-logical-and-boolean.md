@@ -1,412 +1,814 @@
 # Integer, Logical, And Boolean
 
-Fixed-width integer arithmetic, integer comparisons, bitwise logic, boolean conversion, and integer range helpers.
-
-Generated skeleton from `cmake-build-debug/bin/rxas -i`; edit prose by hand and regenerate placeholder inventories only with care.
-
-Instruction placeholders in this section: 44.
-
-## Section Checklist
-
-- Purpose overview: TODO
-- Operand conventions: TODO
-- Signal/error behavior: TODO
-- Examples: TODO
-- Cross-links to related instructions: TODO
+These instructions provide checked fixed-width integer arithmetic, comparisons,
+logical and bitwise operations, Boolean/scalar conversion, and inclusive range
+checks. Unless stated otherwise, a destination receives only the indicated
+scalar payload; unrelated payloads, attributes, type metadata, flags, and
+source cursors remain unchanged.
 
 ## `and`
 
-Status: placeholder.
+Compute logical conjunction of two integer truth values.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00b4` | `{REG,REG,REG}` | Logical (int) and op1=(op2 && op3) |
+| `0x00b4` | `and rResult,rLeft,rRight` | Store `1` iff both operands are nonzero. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Both source integer payloads are read. The destination integer becomes the
+canonical Boolean `0` or `1`; sources and all cursors are unchanged.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-and" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    load r1,1
+    load r2,2
+    and r0,r1,r2
+    ret
+```
+
+### Related
+
+`or`, `not`, `iand`.
 
 ## `btof`
 
-Status: placeholder.
+Convert an in-place Boolean integer to floating point.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00e3` | `{REG}` | Set register float value from its boolean value |
+| `0x00e3` | `btof rValue` | Set the float payload to `0.0` or `1.0`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Zero in the register's integer payload produces `0.0`; any nonzero value
+produces `1.0`. Only the float payload changes; the integer payload, cursor,
+attributes, type metadata, and flags remain intact.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-btof" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,1
+    btof r0
+    ret
+```
+
+### Related
+
+`btoi`, `btos`, `itof`.
 
 ## `btoi`
 
-Status: placeholder.
+Canonicalize an in-place Boolean integer.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00e1` | `{REG}` | Set register integer value from its boolean value |
+| `0x00e1` | `btoi rValue` | Replace any nonzero integer with `1`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+An integer zero remains zero; every nonzero integer becomes one. No other
+payload, cursor, attribute, type field, or flag is changed.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-btoi" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,9
+    btoi r0
+    ret
+```
+
+### Related
+
+`btof`, `btos`, `itob`.
 
 ## `btos`
 
-Status: placeholder.
+Convert an in-place Boolean integer to its one-character string form.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00e4` | `{REG}` | Set register string value from its boolean value |
+| `0x00e4` | `btos rValue` | Set the string payload to `"0"` or `"1"`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Zero in the integer payload selects `"0"`; nonzero selects `"1"`. The string
+payload is replaced and its cursor reset. The integer payload and non-string
+state remain unchanged.
+
+### Signals
+
+There is no translated VM signal; string allocation failure is fatal.
+
+### Example
+
+<!-- rxas-example name="integer-btos" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,1
+    btos r0
+    ret
+```
+
+### Related
+
+`btof`, `btoi`, `itos`.
 
 ## `iadd`
 
-Status: placeholder.
+Add two signed integers with overflow checking.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x000f` | `{REG,REG,REG}` | Integer Add (op1=op2+op3) |
-| `0x0010` | `{REG,REG,INT}` | Integer Add (op1=op2+op3) |
+| `0x000f` | `iadd rResult,rLeft,rRight` | Add two register integers. |
+| `0x0010` | `iadd rResult,rLeft,integer` | Add a register integer and literal. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination integer receives the mathematical sum when representable.
+Sources are unchanged; only the destination integer payload is written.
+
+### Signals
+
+Raises `OVERFLOW_UNDERFLOW` when the signed result is outside `rxinteger`.
+On that path the destination is not replaced with a wrapped result.
+
+### Example
+
+<!-- rxas-example name="integer-iadd" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,40
+    iadd r0,r1,2
+    ret
+```
+
+### Related
+
+`isub`, `imult`, `inc`.
 
 ## `iand`
 
-Status: placeholder.
+Compute bitwise AND of two fixed-width integers.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x00a8` | `{REG,REG,REG}` | bit wise and of 2 integers (op1=op2&op3) |
-| `0x00a9` | `{REG,REG,INT}` | bit wise and of 2 integers (op1=op2&op3) |
+| `0x00a8` | `iand rResult,rLeft,rRight` | AND two register integers. |
+| `0x00a9` | `iand rResult,rLeft,integer` | AND a register integer and literal. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The operation covers every bit of the signed `rxinteger` representation and
+writes only the destination integer payload. Sources and cursors are unchanged.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-iand" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,13
+    iand r0,r1,6
+    ret
+```
+
+### Related
+
+`ior`, `ixor`, `inot`, `and`.
 
 ## `ichkrng`
 
-Status: placeholder.
+Require an integer to lie within an inclusive lower/upper bound.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x01f7` | `{REG,INT,INT}` | if op1<op2 | op1>op3 signal OUT_OF_RANGE |
-| `0x01f8` | `{REG,INT,REG}` | if op1<op2 | op1>op3 signal OUT_OF_RANGE |
-| `0x01f9` | `{REG,REG,REG}` | if op1<op2 | op1>op3 signal OUT_OF_RANGE |
-| `0x01fa` | `{INT,INT,REG}` | if op1<op2 | op1>op3 signal OUT_OF_RANGE |
-| `0x01fb` | `{INT,REG,REG}` | if op1<op2 | op1>op3 signal OUT_OF_RANGE |
+| `0x01f7` | `ichkrng rValue,minimum,maximum` | Register value, literal bounds. |
+| `0x01f8` | `ichkrng rValue,minimum,rMaximum` | Register value, mixed bounds. |
+| `0x01f9` | `ichkrng rValue,rMinimum,rMaximum` | All values in registers. |
+| `0x01fa` | `ichkrng value,minimum,rMaximum` | Literal value/minimum, register maximum. |
+| `0x01fb` | `ichkrng value,rMinimum,rMaximum` | Literal value, register bounds. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Every operand is read as a signed integer. Equality with either bound succeeds.
+The instruction is a check only: it does not modify registers or cursors, and
+does not diagnose reversed bounds separately.
+
+### Signals
+
+Raises `OUT_OF_RANGE` when `value < minimum` or `value > maximum`.
+
+### Example
+
+<!-- rxas-example name="integer-ichkrng" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,5
+    ichkrng r0,1,10
+    ret
+```
+
+### Related
+
+`igt`, `ilt`, `asserttype`.
 
 ## `icopy`
 
-Status: placeholder.
+Copy only an integer payload between registers.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0009` | `{REG,REG}` | Copy Integer op2 to op1 |
+| `0x0009` | `icopy rDestination,rSource` | Assign `rDestination.int = rSource.int`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only the destination integer payload changes. Its string, float, decimal and
+binary payloads, attributes, cursor, type metadata, and flags remain intact;
+the source is unchanged.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-icopy" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,42
+    icopy r0,r1
+    ret
+```
+
+### Related
+
+`copy`, `fcopy`, `scopy`, `bcopy`.
 
 ## `idiv`
 
-Status: placeholder.
+Divide signed integers with truncation toward zero.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0016` | `{REG,REG,REG}` | Integer Divide (op1=op2/op3) |
-| `0x0017` | `{REG,REG,INT}` | Integer Divide (op1=op2/op3) |
-| `0x0018` | `{REG,INT,REG}` | Integer Divide (op1=op2/op3) |
+| `0x0016` | `idiv rResult,rDividend,rDivisor` | Divide two register integers. |
+| `0x0017` | `idiv rResult,rDividend,divisor` | Use a literal divisor. |
+| `0x0018` | `idiv rResult,dividend,rDivisor` | Use a literal dividend. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination integer receives the C signed-integer quotient, truncated
+toward zero. Sources are unchanged and no remainder is retained.
+
+### Signals
+
+Raises `DIVISION_BY_ZERO` for a zero divisor. Raises
+`OVERFLOW_UNDERFLOW` for minimum-`rxinteger` divided by `-1`; no wrapped result
+is written on either path.
+
+### Example
+
+<!-- rxas-example name="integer-idiv" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,7
+    idiv r0,r1,2
+    ret
+```
+
+### Related
+
+`imod`, `imult`.
 
 ## `ieq`
 
-Status: placeholder.
+Compare signed integers for equality.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0064` | `{REG,REG,REG}` | Int Equals op1=(op2==op3) |
-| `0x0065` | `{REG,REG,INT}` | Int Equals op1=(op2==op3) |
+| `0x0064` | `ieq rResult,rLeft,rRight` | Compare two register integers. |
+| `0x0065` | `ieq rResult,rLeft,integer` | Compare with a literal. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination integer becomes canonical Boolean `1` for equality, otherwise
+`0`. Sources and cursors are unchanged.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-ieq" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,4
+    ieq r0,r1,4
+    ret
+```
+
+### Related
+
+`ine`, `rseq`, `req`.
 
 ## `igt`
 
-Status: placeholder.
+Compare whether one signed integer is greater than another.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0068` | `{REG,REG,REG}` | Int Greater than op1=(op2>op3) |
-| `0x0069` | `{REG,REG,INT}` | Int Greater than op1=(op2>op3) |
-| `0x006a` | `{REG,INT,REG}` | Int Greater than op1=(op2>op3) |
+| `0x0068` | `igt rResult,rLeft,rRight` | Test register > register. |
+| `0x0069` | `igt rResult,rLeft,integer` | Test register > literal. |
+| `0x006a` | `igt rResult,integer,rRight` | Test literal > register. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination integer becomes `1` when the ordered comparison is true and
+`0` otherwise. Only that payload changes; sources are unchanged.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-igt" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,3
+    igt r0,5,r1
+    ret
+```
+
+### Related
+
+`igte`, `ilt`, `igtbr`.
 
 ## `igtbr`
 
-Status: placeholder.
+Branch when one register integer is greater than another.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0157` | `{ID,REG,REG}` | Int Greater than if (op2>op3) goto op1 |
+| `0x0157` | `igtbr label,rLeft,rRight` | Branch if `rLeft.int > rRight.int`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The label is resolved within the current procedure. A true signed comparison
+transfers control; false falls through. Neither source is mutated.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-igtbr" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r0,2
+    load r1,1
+    igtbr greater,r0,r1
+    ret
+greater:
+    ret
+```
+
+### Related
+
+`iltbr`, `igt`, `brt`.
 
 ## `igte`
 
-Status: placeholder.
+Compare whether one signed integer is greater than or equal to another.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x006b` | `{REG,REG,REG}` | Int Greater than equals op1=(op2>=op3) |
-| `0x006c` | `{REG,REG,INT}` | Int Greater than equals op1=(op2>=op3) |
-| `0x006d` | `{REG,INT,REG}` | Int Greater than equals op1=(op2>=op3) |
+| `0x006b` | `igte rResult,rLeft,rRight` | Test register >= register. |
+| `0x006c` | `igte rResult,rLeft,integer` | Test register >= literal. |
+| `0x006d` | `igte rResult,integer,rRight` | Test literal >= register. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination integer becomes canonical Boolean `0` or `1`. Only that
+payload changes; both sources remain unchanged.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-igte" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,5
+    igte r0,r1,5
+    ret
+```
+
+### Related
+
+`igt`, `ilte`, `ichkrng`.
 
 ## `ilt`
 
-Status: placeholder.
+Compare whether one signed integer is less than another.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x006e` | `{REG,REG,REG}` | Int Less than op1=(op2<op3) |
-| `0x006f` | `{REG,REG,INT}` | Int Less than op1=(op2<op3) |
-| `0x0070` | `{REG,INT,REG}` | Int Less than op1=(op2<op3) |
+| `0x006e` | `ilt rResult,rLeft,rRight` | Test register < register. |
+| `0x006f` | `ilt rResult,rLeft,integer` | Test register < literal. |
+| `0x0070` | `ilt rResult,integer,rRight` | Test literal < register. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination integer becomes `1` when true and `0` otherwise. Only that
+payload changes; sources remain unchanged.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-ilt" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,5
+    ilt r0,r1,6
+    ret
+```
+
+### Related
+
+`ilte`, `igt`, `iltbr`.
 
 ## `iltbr`
 
-Status: placeholder.
+Branch when one register integer is less than another.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0158` | `{ID,REG,REG}` | Int Less than if (op2<op3) goto op1 |
+| `0x0158` | `iltbr label,rLeft,rRight` | Branch if `rLeft.int < rRight.int`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+A true signed comparison transfers to the procedure-local label; false falls
+through. Neither register nor cursor is changed.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-iltbr" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r0,1
+    load r1,2
+    iltbr less,r0,r1
+    ret
+less:
+    ret
+```
+
+### Related
+
+`igtbr`, `ilt`, `brt`.
 
 ## `ilte`
 
-Status: placeholder.
+Compare whether one signed integer is less than or equal to another.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0071` | `{REG,REG,REG}` | Int Less than equals op1=(op2<=op3) |
-| `0x0072` | `{REG,REG,INT}` | Int Less than equals op1=(op2<=op3) |
-| `0x0073` | `{REG,INT,REG}` | Int Less than equals op1=(op2<=op3) |
+| `0x0071` | `ilte rResult,rLeft,rRight` | Test register <= register. |
+| `0x0072` | `ilte rResult,rLeft,integer` | Test register <= literal. |
+| `0x0073` | `ilte rResult,integer,rRight` | Test literal <= register. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination integer becomes canonical Boolean `0` or `1`. Sources and
+cursors are unchanged.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="integer-ilte" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,5
+    ilte r0,5,r1
+    ret
+```
+
+### Related
+
+`ilt`, `igte`, `ichkrng`.
 
 ## `imod`
 
-Status: placeholder.
+Compute the signed remainder paired with truncating integer division.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0019` | `{REG,REG,REG}` | Integer Modulo (op1=op2%op3) |
-| `0x001a` | `{REG,REG,INT}` | Integer Modulo (op1=op2%op3) |
-| `0x001b` | `{REG,INT,REG}` | Integer Modulo (op1=op2&op3) |
+| `0x0019` | `imod rResult,rDividend,rDivisor` | Register remainder register. |
+| `0x001a` | `imod rResult,rDividend,divisor` | Literal divisor. |
+| `0x001b` | `imod rResult,dividend,rDivisor` | Literal dividend. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The result follows C signed `%`: it is consistent with division truncated
+toward zero and has the dividend's sign when nonzero. Only the destination
+integer changes; sources remain unchanged.
+
+### Signals
+
+Raises `DIVISION_BY_ZERO` for zero divisor and `OVERFLOW_UNDERFLOW` for
+minimum-`rxinteger` modulo `-1`; no result is written on failure.
+
+### Example
+
+<!-- rxas-example name="integer-imod" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,7
+    imod r0,r1,3
+    ret
+```
+
+### Related
+
+`idiv`, `imult`.
 
 ## `imult`
 
-Status: placeholder.
+Multiply two signed integers with overflow checking.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0014` | `{REG,REG,REG}` | Integer Multiply (op1=op2*op3) |
-| `0x0015` | `{REG,REG,INT}` | Integer Multiply (op1=op2*op3) |
+| `0x0014` | `imult rResult,rLeft,rRight` | Multiply register integers. |
+| `0x0015` | `imult rResult,rLeft,integer` | Multiply by a literal. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+The destination integer receives the product when representable. Sources and
+cursors remain unchanged.
+
+### Signals
+
+Raises `OVERFLOW_UNDERFLOW` rather than storing a wrapped product.
+
+### Example
+
+<!-- rxas-example name="integer-imult" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,6
+    imult r0,r1,7
+    ret
+```
+
+### Related
+
+`iadd`, `idiv`, `ipow`.
 
 ## `inc`
 
-Status: placeholder.
+Increment a selected register integer in place.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x001c` | `{REG}` | Increment Int (op1++) |
+| `0x001c` | `inc rValue` | Add one to `rValue.int`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only the register's integer payload changes. Its other payloads, cursor,
+attributes, type metadata, and flags remain intact.
+
+### Signals
+
+Raises `OVERFLOW_UNDERFLOW` at maximum `rxinteger` without wrapping.
+
+### Example
+
+<!-- rxas-example name="integer-inc" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,0
+    inc r0
+    ret
+```
+
+### Related
+
+`inc0`, `inc1`, `inc2`, `iadd`.
 
 ## `inc0`
 
-Status: placeholder.
+Increment local register `r0` without encoding an operand.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x001e` | `no operand` | Increment R0++ Int |
+| `0x001e` | `inc0` | Add one to `r0.int`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only `r0`'s integer payload changes. The compact form requires the current
+frame to provide register zero.
+
+### Signals
+
+Raises `OVERFLOW_UNDERFLOW` at maximum `rxinteger`.
+
+### Example
+
+<!-- rxas-example name="integer-inc0" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,0
+    inc0
+    ret
+```
+
+### Related
+
+`inc`, `inc1`, `inc2`.
 
 ## `inc1`
 
-Status: placeholder.
+Increment local register `r1` without encoding an operand.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0020` | `no operand` | Increment R1++ Int |
+| `0x0020` | `inc1` | Add one to `r1.int`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only `r1`'s integer payload changes. The frame must provide register one.
+
+### Signals
+
+Raises `OVERFLOW_UNDERFLOW` at maximum `rxinteger`.
+
+### Example
+
+<!-- rxas-example name="integer-inc1" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,0
+    inc1
+    ret
+```
+
+### Related
+
+`inc`, `inc0`, `inc2`.
 
 ## `inc2`
 
-Status: placeholder.
+Increment local register `r2` without encoding an operand.
 
-| Opcode | Operands | Assembler description |
+### Forms
+
+| Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x0022` | `no operand` | Increment R2++ Int |
+| `0x0022` | `inc2` | Add one to `r2.int`. |
 
-Human reference content:
+### Operands And Semantics
 
-- Purpose: TODO
-- Operand notes: TODO
-- Result and side effects: TODO
-- Signals/errors: TODO
-- Example: TODO
-- Related instructions: TODO
+Only `r2`'s integer payload changes. The frame must provide register two.
+
+### Signals
+
+Raises `OVERFLOW_UNDERFLOW` at maximum `rxinteger`.
+
+### Example
+
+<!-- rxas-example name="integer-inc2" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    load r2,0
+    inc2
+    ret
+```
+
+### Related
+
+`inc`, `inc0`, `inc1`.
 
 ## `ine`
 
