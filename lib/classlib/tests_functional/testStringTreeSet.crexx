@@ -1,6 +1,5 @@
 options levelb comments_dash
 import data
--- import data_StringTreeSet
 
 failures = 0
 
@@ -48,6 +47,166 @@ items = s.toArray()
 failures = failures + check_int("free array count", items[0], 0)
 failures = failures + check_int("reuse add", s.add("again"), 0)
 failures = failures + check_int("reuse contains", s.contains("again"), 1)
+
+-- LL rotation: c, b, a.
+ll = .StringTreeSet()
+ignored = ll.add("c")
+ignored = ll.add("b")
+ignored = ll.add("a")
+items = ll.toArray()
+failures = failures + check_int("LL count", items[0], 3)
+failures = failures + check_string("LL first", items[1], "a")
+failures = failures + check_string("LL second", items[2], "b")
+failures = failures + check_string("LL third", items[3], "c")
+
+-- RR rotation: a, b, c.
+rr = .StringTreeSet()
+ignored = rr.add("a")
+ignored = rr.add("b")
+ignored = rr.add("c")
+items = rr.toArray()
+failures = failures + check_int("RR count", items[0], 3)
+failures = failures + check_string("RR first", items[1], "a")
+failures = failures + check_string("RR second", items[2], "b")
+failures = failures + check_string("RR third", items[3], "c")
+
+-- LR rotation: c, a, b.
+lr = .StringTreeSet()
+ignored = lr.add("c")
+ignored = lr.add("a")
+ignored = lr.add("b")
+items = lr.toArray()
+failures = failures + check_int("LR count", items[0], 3)
+failures = failures + check_string("LR first", items[1], "a")
+failures = failures + check_string("LR second", items[2], "b")
+failures = failures + check_string("LR third", items[3], "c")
+
+-- RL rotation: a, c, b.
+rl = .StringTreeSet()
+ignored = rl.add("a")
+ignored = rl.add("c")
+ignored = rl.add("b")
+items = rl.toArray()
+failures = failures + check_int("RL count", items[0], 3)
+failures = failures + check_string("RL first", items[1], "a")
+failures = failures + check_string("RL second", items[2], "b")
+failures = failures + check_string("RL third", items[3], "c")
+
+-- fromArray must remove duplicates and sort naturally.
+source = .string[]
+source[1] = "delta"
+source[2] = "alpha"
+source[3] = "charlie"
+source[4] = "bravo"
+source[5] = "alpha"
+source[6] = "echo"
+source[7] = "charlie"
+from = .StringTreeSet()
+failures = failures + check_int("fromArray added", from.fromArray(source), 5)
+failures = failures + check_int("fromArray size", from.size(), 5)
+items = from.toArray()
+failures = failures + check_int("fromArray count", items[0], 5)
+failures = failures + check_string("fromArray first", items[1], "alpha")
+failures = failures + check_string("fromArray second", items[2], "bravo")
+failures = failures + check_string("fromArray third", items[3], "charlie")
+failures = failures + check_string("fromArray fourth", items[4], "delta")
+failures = failures + check_string("fromArray fifth", items[5], "echo")
+
+-- Build a larger balanced tree and exercise deletion cases.
+r = .StringTreeSet()
+ignored = r.add("m")
+ignored = r.add("g")
+ignored = r.add("t")
+ignored = r.add("d")
+ignored = r.add("j")
+ignored = r.add("p")
+ignored = r.add("w")
+ignored = r.add("b")
+ignored = r.add("f")
+ignored = r.add("h")
+ignored = r.add("k")
+ignored = r.add("n")
+ignored = r.add("r")
+ignored = r.add("v")
+ignored = r.add("x")
+failures = failures + check_int("large size", r.size(), 15)
+
+-- Leaf deletion.
+failures = failures + check_int("remove leaf", r.remove("b"), 0)
+failures = failures + check_int("leaf absent", r.contains("b"), 0)
+failures = failures + check_int("remove leaf again", r.remove("b"), 4)
+
+-- Removing f leaves d with no right child; then d is a one-child case.
+failures = failures + check_int("remove f", r.remove("f"), 0)
+failures = failures + check_int("remove one child", r.remove("d"), 0)
+failures = failures + check_int("one child absent", r.contains("d"), 0)
+
+-- Two-child node and original root.
+failures = failures + check_int("remove two child", r.remove("t"), 0)
+failures = failures + check_int("two child absent", r.contains("t"), 0)
+failures = failures + check_int("remove root", r.remove("m"), 0)
+failures = failures + check_int("root absent", r.contains("m"), 0)
+failures = failures + check_int("left survivor", r.contains("p"), 1)
+failures = failures + check_int("right survivor", r.contains("w"), 1)
+failures = failures + check_int("size after removals", r.size(), 10)
+
+items = r.toArray()
+failures = failures + check_int("remaining count", items[0], 10)
+failures = failures + check_string("remaining 1", items[1], "g")
+failures = failures + check_string("remaining 2", items[2], "h")
+failures = failures + check_string("remaining 3", items[3], "j")
+failures = failures + check_string("remaining 4", items[4], "k")
+failures = failures + check_string("remaining 5", items[5], "n")
+failures = failures + check_string("remaining 6", items[6], "p")
+failures = failures + check_string("remaining 7", items[7], "r")
+failures = failures + check_string("remaining 8", items[8], "v")
+failures = failures + check_string("remaining 9", items[9], "w")
+failures = failures + check_string("remaining 10", items[10], "x")
+
+-- Repeated remove/add cycles exercise reuse of deleted slots.
+reuse = .StringTreeSet()
+ignored = reuse.add("05")
+ignored = reuse.add("04")
+ignored = reuse.add("03")
+ignored = reuse.add("02")
+ignored = reuse.add("01")
+ignored = reuse.add("00")
+ignored = reuse.add("06")
+ignored = reuse.add("07")
+ignored = reuse.add("08")
+ignored = reuse.add("09")
+failures = failures + check_int("reuse initial size", reuse.size(), 10)
+failures = failures + check_int("reuse remove 00", reuse.remove("00"), 0)
+failures = failures + check_int("reuse remove 02", reuse.remove("02"), 0)
+failures = failures + check_int("reuse remove 04", reuse.remove("04"), 0)
+failures = failures + check_int("reuse remove 06", reuse.remove("06"), 0)
+failures = failures + check_int("reuse remove 08", reuse.remove("08"), 0)
+failures = failures + check_int("reuse reduced size", reuse.size(), 5)
+failures = failures + check_int("reuse add 10", reuse.add("10"), 0)
+failures = failures + check_int("reuse add 11", reuse.add("11"), 0)
+failures = failures + check_int("reuse add 12", reuse.add("12"), 0)
+failures = failures + check_int("reuse add 13", reuse.add("13"), 0)
+failures = failures + check_int("reuse add 14", reuse.add("14"), 0)
+failures = failures + check_int("reuse restored size", reuse.size(), 10)
+failures = failures + check_int("reuse old absent", reuse.contains("04"), 0)
+failures = failures + check_int("reuse new present", reuse.contains("14"), 1)
+items = reuse.toArray()
+failures = failures + check_int("reuse array count", items[0], 10)
+failures = failures + check_string("reuse first", items[1], "01")
+failures = failures + check_string("reuse fifth", items[5], "09")
+failures = failures + check_string("reuse sixth", items[6], "10")
+failures = failures + check_string("reuse last", items[10], "14")
+
+-- free must empty the object and permit reuse.
+failures = failures + check_int("free rc", reuse.free(), 0)
+failures = failures + check_int("free size", reuse.size(), 0)
+items = reuse.toArray()
+failures = failures + check_int("free array count", items[0], 0)
+failures = failures + check_int("reuse after free add", reuse.add("again"), 0)
+failures = failures + check_int("reuse after free contains", reuse.contains("again"), 1)
+failures = failures + check_string("reuse after free first", reuse.first(), "again")
+failures = failures + check_string("reuse after free last", reuse.last(), "again")
+
 
 if failures <> 0 then do
   say "StringTreeSet failures:" failures
