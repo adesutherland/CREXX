@@ -1,6 +1,5 @@
 options levelb comments_dash
 import data
--- import data_StringTreeSet
 
 failures = 0
 
