@@ -1103,25 +1103,26 @@ main() .locals=4
 
 ## `swap`
 
-Expose the deprecated historical register-swap opcode.
+Exchange two complete register bindings. The instruction is deprecated, but
+its effect is persistent.
 
 ### Forms
 
 | Opcode | Form | Effect |
 | --- | --- | --- |
-| `0x01fe` | `swap rLeft,rRight` | Attempt to swap the two operand bindings. |
+| `0x01fe` | `swap rLeft,rRight` | Exchange the two register storage bindings. |
 
 ### Operands And Semantics
 
-The current interpreter swaps only its temporary operand pointers during this
-instruction and performs no persistent register-value mutation. Do not use it
-to exchange values; use explicit `copy` operations through a temporary
-register. No cursor is changed.
+The VM swaps the two pointers in the current frame's register table. All value
+payloads, attributes, reference/native payloads, status flags, and string and
+binary cursors therefore move together with their storage. This is not a
+payload copy and does not allocate. Subsequent uses of either register number
+see the other register's former complete value.
 
 ### Signals
 
-This instruction does not raise a signal. Its current no-persistent-effect
-behavior is documented here rather than repaired in documentation work.
+This instruction does not raise a signal.
 
 ### Example
 
@@ -1133,12 +1134,20 @@ main() .locals=2
     load r0,"left"
     load r1,"right"
     swap r0,r1
+    say r0
+    say r1
     ret
+```
+
+<!-- rxas-output for="string-swap" -->
+```text
+right
+left
 ```
 
 ### Related
 
-`copy`, `move`.
+`copy`, `move`, `link`.
 
 ## `transchar`
 
