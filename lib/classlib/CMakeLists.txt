@@ -11,7 +11,8 @@ set(CLSS
   ObjectArrayListIterator
   ObjectObjectTreeMapIterator
   ObjectObjectTreeMap
-  ObjectComparator  
+  ObjectComparator
+  RexxComparator
   StringHashMap
   StringHashMapIterator
   StringObjectHashMap
@@ -78,6 +79,7 @@ add_custom_command(
 
 set(CLASSLIB_SELECTORS ${CLSS})
 set(CLASS_DEPS_StringIterable StringIterator)
+set(CLASS_DEPS_RexxComparator ObjectComparator)
 set(CLASS_DEPS_ObjectIterable ObjectIterator)
 set(CLASS_DEPS_StringArrayList StringIterable)
 set(CLASS_DEPS_StringArrayListIterator StringArrayList StringIterator)
