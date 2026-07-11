@@ -2,7 +2,9 @@
 
 This folder is the human-focused RXAS reference. It is intentionally separate from `docs/ai-context` implementation notes and from the historical generated VM-spec instruction chapter.
 
-The goal is to give maintainers and users a readable source that can later feed the generated documentation pipeline. Remaining placeholder sections are being completed in reviewable instruction-family batches.
+The reference covers every mnemonic accepted in RXAS source and gives each
+mnemonic an independently validated example. It can later feed the generated
+documentation pipeline.
 
 ## Suggested Documentation Model
 
@@ -31,11 +33,8 @@ because they lack prose or examples.
 ### Skeleton Comparison
 
 The authoritative filtered database currently has 342 unique mnemonics and 539
-form rows. The section files contain 340 exact single-mnemonic headings. The
-only heading-shape discrepancy is the existing combined ``bineq And binne``
-entry in the binary-memory chapter; it covers both database mnemonics and will
-be split into two standard headings when that chapter receives its per-mnemonic
-example pass. There are no unknown or duplicate exact mnemonic headings.
+form rows. The section files contain 342 exact single-mnemonic headings, with
+no missing, unknown, or duplicate mnemonic headings.
 
 ## Source Syntax
 
@@ -58,6 +57,7 @@ example pass. There are no unknown or duplicate exact mnemonic headings.
 
 ## Review Notes
 
-- The section grouping is editorial and should be reviewed. Move placeholders as the human reference settles.
+- The section grouping is editorial and can evolve as the human reference settles.
 - Each mnemonic should appear exactly once across the section files; use [Instruction Inventory](instruction-inventory.md) to validate coverage.
-- The binary-memory section should be filled first because it contains the newest Release 1 surface and the most nuanced constant/register behavior.
+- Binary-memory forms require particular care because constant/register forms,
+  byte cursors, bounds, and endian behavior differ by instruction.
