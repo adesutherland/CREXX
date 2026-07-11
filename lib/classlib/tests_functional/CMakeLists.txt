@@ -81,6 +81,10 @@ foreach(_binfile ${NATIVE_REXXBINS})
     add_custom_target(${_basename})
     add_dependencies(testclasses ${_basename} classlib_native)
     set(_rxc_flags -x)
+    set(_pass_test_name_argument)
+    if("${_basename}" STREQUAL "testKeyDB")
+        set(_pass_test_name_argument PASS_TEST_NAME_ARGUMENT)
+    endif()
     crexx_add_rexx_opt_matrix(
             NAME ${_basename}
             SOURCE ${_rexx_file}
@@ -90,6 +94,7 @@ foreach(_binfile ${NATIVE_REXXBINS})
             DEPENDS library classlib_native ${LIBRPATH_RXBIN} ${CLASSLIB_NATIVE_RXBIN} _id _keyaccess _system ${_rexx_dep} ${_prev_native_target}
             RUNTIME_ARGS ${CLASSLIB_NATIVE_RUNTIMES}
             TEST_LABELS "classlib;native-adapter"
+            ${_pass_test_name_argument}
     )
     set(_prev_native_target ${_basename}_noopt_artifact ${_basename}_opt_artifact)
 endforeach()

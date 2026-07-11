@@ -374,7 +374,9 @@ PROCEDURE(readkey) {
     // Update cache
     cache_put(handle, key, value);
 
-    RETURNSTRX(value);
+    SETSTRING(RETURN, value);
+    free(value);
+    PROCRETURN
     ENDPROC
 }
 

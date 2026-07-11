@@ -3,10 +3,15 @@ options levelb comments_dash
 import data_KeyDB
 import rxfnsb
 
+arg test_args = .string[]
+
+if test_args.0 > 0 then database_file = "testKeyDB." || test_args.1 || ".db"
+else database_file = "testKeyDB.db"
+
 kdb = .KeyDB()
 failures = 0
 
-handle = kdb.open("testKeyDB.db", "w+")
+handle = kdb.open(database_file, "w+")
 if handle < 0 then do
   say "Failed to open key database:" handle
   return 1
@@ -36,7 +41,7 @@ end
 rc = kdb.close()
 failures = failures + check_int("close", rc, 0)
 
-handle = kdb.open("testKeyDB.db", "r")
+handle = kdb.open(database_file, "r")
 if handle < 0 then do
   say "Failed to reopen key database:" handle
   failures = failures + 1
