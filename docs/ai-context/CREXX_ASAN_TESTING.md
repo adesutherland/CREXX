@@ -215,6 +215,22 @@ Validation on 2026-06-16:
 * Full CREXX ASan/LSan CTest passed: 1295/1295, log directory
   `cmake-build-debugasan/asan-logs/20260616-110335-full`.
 
+## 2026-07-11 Baseline Notes
+
+On the Ubuntu 26.04 Linux ARM64 VM at `654d42a83`, focused VM/RXAS coverage
+passed 213/213 and the documented focused ownership phase passed 28/28. The
+first broad run found a four-byte `keyaccess.readkey()` return-buffer leak. A
+second broad run exposed a parallel KeyDB test collision because opt/noopt used
+the same database files. The buffer ownership was fixed and the test race was
+removed with per-test database names rather than test serialization.
+
+Final validation passed 1580/1580 with build-time and test-time leak detection
+enabled, log directory
+`cmake-build-debugasan/asan-logs/20260711-164000-full`. The matching normal
+Debug suite passed 1580/1580. The complete machine, triage, and performance
+record is in
+`docs/planning/beta-3/reports/linux-vm-sanitizer-performance-review.md`.
+
 ## 2026-06-17 Baseline Notes
 
 On the Linux ARM64 VM, both Debug ASan/LSan and ReleaseASAN completed full

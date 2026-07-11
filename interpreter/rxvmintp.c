@@ -1621,9 +1621,12 @@ static int runtime_signature_type_assignable(void *userdata,
     int result;
 
     context = (rxvm_context *)userdata;
+    if (!context || !actual_type || !expected_type) return 0;
+    if (actual_type[0] == '.' && strcmp(actual_type, expected_type) == 0) return 1;
+
     actual_contract = runtime_metadata_type_to_contract_name(actual_type);
     expected_contract = runtime_metadata_type_to_contract_name(expected_type);
-    if (!context || !actual_contract || !expected_contract) {
+    if (!actual_contract || !expected_contract) {
         if (actual_contract) free(actual_contract);
         if (expected_contract) free(expected_contract);
         return 0;

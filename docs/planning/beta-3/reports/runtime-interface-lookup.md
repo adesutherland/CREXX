@@ -69,6 +69,30 @@ work; it does not claim that object construction itself is inexpensive.
 These results are component evidence only. The central beta 3 performance
 baseline remains tracked by GitHub issue #623.
 
+## Linux ARM64 Follow-Up
+
+The 2026-07-11 Linux VM review profiled the optimized factory workload with
+symbols and gprof. After the exact-spelling fast path,
+`runtime_signature_type_assignable()` still accounted for 50.0% of sampled
+rxvm self time and 66.7% under rxbvm because signature comparison handles
+qualified and short contract spellings at runtime.
+
+A semantics-preserving exact-metadata-spelling check now returns before
+normalization and allocation. Seven-run Release medians changed as follows:
+
+| Path | Before (us) | After (us) | Change |
+| --- | ---: | ---: | ---: |
+| rxvm noopt factory | 89,664 | 86,798 | 3.2% faster |
+| rxbvm noopt factory | 90,307 | 87,970 | 2.6% faster |
+| rxvm opt factory | 5,542 | 5,560 | flat |
+| rxbvm opt factory | 5,448 | 5,483 | flat |
+
+The remaining optimized cost is not a safe local string shortcut. Caching
+normalized assignability results would need explicit registry-rebuild and
+late-load invalidation, so it remains a design candidate. Full methodology is
+recorded in
+`docs/planning/beta-3/reports/linux-vm-sanitizer-performance-review.md`.
+
 ## Coverage
 
 Focused coverage includes exact dispatch, default methods, named/default
