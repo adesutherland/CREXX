@@ -303,7 +303,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 # Value test executable
 add_executable(ts_regvalue_tester tests/ts_regvalue_tester.c rxvalue.h rxvmvars.h)
 target_include_directories(ts_regvalue_tester PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} . ../utf8 ../platform ../binutils/include)
-target_link_libraries(ts_regvalue_tester rxvmref m)
+target_link_libraries(ts_regvalue_tester rxvmref platform m)
 
 add_executable(test_jtable_policy tests/test_jtable_policy.c)
 target_include_directories(test_jtable_policy PRIVATE ../binutils/include)
@@ -324,7 +324,7 @@ target_include_directories(test_rxpa_utf_validation PRIVATE
         ../avl_tree
         ../utf8
         ../inc)
-target_link_libraries(test_rxpa_utf_validation rxvmref m)
+target_link_libraries(test_rxpa_utf_validation rxvmref platform m)
 
 # Enable testing
 enable_testing()
