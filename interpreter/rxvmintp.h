@@ -31,6 +31,7 @@
 #include "rxvalue.h"
 #include "rxsignal.h"
 #include "rxsignature.h"
+#include "rxvminstrument.h"
 #include "crexx_version.h"
 
 typedef enum { RXVM_MOD_LOADED, RXVM_MOD_LINKED, RXVM_MOD_THREADED } rxvm_mod_state;
@@ -177,29 +178,92 @@ struct stack_frame {
                 instruction = src_inst(instr, op1,op2,op3);     \
                 address_map[instruction->opcode] = target;
 
+#define VM_CANONICAL_INDEX(pointer_) ((size_t)((pointer_) - current_module->segment.binary))
+#define VM_EXECUTION_POINTER(index_)                                           \
+    (current_frame->procedure->binarySpace->binary + (size_t)(index_))
+
+#define VM_ACTIVATE_FRAME(frame_, reason_)                                      \
+    do {                                                                        \
+        stack_frame *vm_frame__ = (frame_);                                     \
+        current_frame = vm_frame__;                                             \
+        current_module = vm_frame__->procedure->binarySpace->module;            \
+        RXVM_INSTRUMENTATION_FRAME_ACTIVATE(                                    \
+                current_module->module_number,                                  \
+                vm_frame__->procedure->start,                                   \
+                (reason_));                                                     \
+    } while (0)
+
 #ifdef NTHREADED
 
 #define START_OF_INSTRUCTIONS CASE_START:; switch ((instructions)(pc->instruction.opcode)) {
-#define END_OF_INSTRUCTIONS default: SET_SIGNAL(RXSIGNAL_UNKNOWN_INSTRUCTION); DISPATCH }
-#define START_INSTRUCTION(inst) case OP_ ## inst:
+#define END_OF_INSTRUCTIONS default: SET_SIGNAL(RXSIGNAL_UNKNOWN_INSTRUCTION); DISPATCH; }
+#define START_INSTRUCTION(inst) case OP_ ## inst: RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(current_module->module_number, VM_CANONICAL_INDEX(pc), OP_ ## inst);
 #define START_INTERRUPT INTERRUPT:
-#define END_INTERRUPT goto CASE_START;
-#define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; }
-#define CALC_DISPATCH_MANUAL
-#define DISPATCH                   { pc = next_pc; if (interrupts && !current_frame->is_interrupt) goto INTERRUPT; goto CASE_START; }
+#define END_INTERRUPT do { goto CASE_START; } while (0);
+#define VM_RESOLVE_SELECTED() do { } while (0)
+#define VM_DISPATCH_TARGET() goto CASE_START
 
 #else
 
 #define START_OF_INSTRUCTIONS
 #define END_OF_INSTRUCTIONS
-#define START_INSTRUCTION(inst) inst:
+#define START_INSTRUCTION(inst) inst: RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(current_module->module_number, VM_CANONICAL_INDEX(pc), OP_ ## inst);
 #define START_INTERRUPT INTERRUPT:
-#define END_INTERRUPT goto *next_inst;
-#define CALC_DISPATCH(n)           { next_pc = pc + (n) + 1; next_inst = current_module->prepared_dispatch[(size_t)(next_pc - current_module->segment.binary)]; }
-#define CALC_DISPATCH_MANUAL       { next_inst = current_module->prepared_dispatch[(size_t)(next_pc - current_module->segment.binary)]; }
-#define DISPATCH                   { pc = next_pc; if (interrupts && !current_frame->is_interrupt) goto INTERRUPT; goto *next_inst; }
+#define END_INTERRUPT do { goto *next_inst; } while (0);
+#define VM_RESOLVE_SELECTED()                                                   \
+    do {                                                                        \
+        next_inst = current_module->prepared_dispatch[VM_CANONICAL_INDEX(next_pc)]; \
+    } while (0)
+#define VM_DISPATCH_TARGET() goto *next_inst
 
 #endif
+
+#define VM_ADVANCE(operand_count_)                                              \
+    do {                                                                        \
+        size_t vm_operand_count__ = (size_t)(operand_count_);                   \
+        next_pc = pc + vm_operand_count__ + 1;                                  \
+        VM_RESOLVE_SELECTED();                                                  \
+        RXVM_INSTRUMENTATION_TRANSITION(RXVM_TRANSITION_SEQUENTIAL);            \
+    } while (0)
+
+#define VM_SELECT_INDEX(index_, reason_)                                        \
+    do {                                                                        \
+        size_t vm_index__ = (size_t)(index_);                                   \
+        next_pc = VM_EXECUTION_POINTER(vm_index__);                             \
+        VM_RESOLVE_SELECTED();                                                  \
+        RXVM_INSTRUMENTATION_TRANSITION(reason_);                               \
+    } while (0)
+
+#define VM_SELECT_POINTER(pointer_, reason_)                                    \
+    do {                                                                        \
+        bin_code *vm_pointer__ = (pointer_);                                    \
+        next_pc = vm_pointer__;                                                 \
+        VM_RESOLVE_SELECTED();                                                  \
+        RXVM_INSTRUMENTATION_TRANSITION(reason_);                               \
+    } while (0)
+
+#define DISPATCH                                                                \
+    do {                                                                        \
+        RXVM_INSTRUMENTATION_INSTRUCTION_RETIRE(                                \
+                current_module->module_number, VM_CANONICAL_INDEX(next_pc),     \
+                RXVM_INSTRUMENTATION_CURRENT_TRANSITION());                     \
+        pc = next_pc;                                                           \
+        if (interrupts && !current_frame->is_interrupt) goto INTERRUPT;          \
+        VM_DISPATCH_TARGET();                                                   \
+    } while (0)
+
+#define VM_RESUME_INTERRUPTED(signal_)                                          \
+    do {                                                                        \
+        unsigned char vm_signal__ = (unsigned char)(signal_);                   \
+        RXVM_INSTRUMENTATION_INSTRUCTION_RETIRE(                                \
+                current_module->module_number, VM_CANONICAL_INDEX(next_pc),     \
+                RXVM_TRANSITION_INTERRUPT_RESUME);                              \
+        pc = next_pc;                                                           \
+        RXVM_INSTRUMENTATION_INTERRUPT_RESUME(                                  \
+                vm_signal__, current_module->module_number,                     \
+                VM_CANONICAL_INDEX(pc));                                        \
+        VM_DISPATCH_TARGET();                                                   \
+    } while (0)
 
 #define REG_OP(n)                    current_frame->locals[(pc+(n))->index]
 #define REG_VAL(n)                   current_frame->locals[n]

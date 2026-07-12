@@ -82,6 +82,15 @@ endfunction()
 crexx_add_rxvm_core_objects(rxvm_core_objects)
 crexx_add_rxvm_core_objects(rxbvm_core_objects)
 target_compile_definitions(rxbvm_core_objects PRIVATE NTHREADED=1)
+if(BUILD_TESTING)
+    crexx_add_rxvm_core_objects(rxvm_instrumented_core_objects)
+    crexx_add_rxvm_core_objects(rxbvm_instrumented_core_objects)
+    target_compile_definitions(rxvm_instrumented_core_objects PRIVATE
+            RXVM_INSTRUMENTATION_BACKEND="rxvminstrument_test.h")
+    target_compile_definitions(rxbvm_instrumented_core_objects PRIVATE
+            NTHREADED=1
+            RXVM_INSTRUMENTATION_BACKEND="rxvminstrument_test.h")
+endif()
 crexx_add_rxvm_platform_objects(rxvm_platform_notls_objects)
 
 add_library(rxvmref STATIC rxvmref.c rxvmref.h)
@@ -183,6 +192,19 @@ target_include_directories(rxbvm PRIVATE . ./rxvmplugin
         ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
 target_compile_definitions(rxbvm PRIVATE NTHREADED=1)
 
+if(BUILD_TESTING)
+    add_executable(rxvm_instrumented rxvmmain.c $<TARGET_OBJECTS:rxvm_instrumented_core_objects>)
+    target_link_libraries(rxvm_instrumented rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
+    target_include_directories(rxvm_instrumented PRIVATE . ./rxvmplugin
+            ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+
+    add_executable(rxbvm_instrumented rxvmmain.c $<TARGET_OBJECTS:rxbvm_instrumented_core_objects>)
+    target_link_libraries(rxbvm_instrumented rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
+    target_include_directories(rxbvm_instrumented PRIVATE . ./rxvmplugin
+            ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+    target_compile_definitions(rxbvm_instrumented PRIVATE NTHREADED=1)
+endif()
+
 ##########################################
 # Interpreter linked to CREXX Stdlib
 
@@ -245,6 +267,12 @@ foreach(_rxvm_core_target rxvm rxbvm rxvme rxbvme rxvml rxbvml)
     target_link_libraries(${_rxvm_core_target} rxvmref)
     crexx_enable_vm_platform(${_rxvm_core_target})
 endforeach()
+if(BUILD_TESTING)
+    foreach(_rxvm_instrumented_target rxvm_instrumented rxbvm_instrumented)
+        target_link_libraries(${_rxvm_instrumented_target} rxvmref)
+        crexx_enable_vm_platform(${_rxvm_instrumented_target})
+    endforeach()
+endif()
 
 # libcrexxsaa is intentionally thin and shared. On ELF platforms, every static
 # archive pulled into it must be compiled as PIC.
@@ -542,6 +570,17 @@ add_custom_command(
 add_custom_target(run_tests_signals ALL DEPENDS tests_signals.rxbin)
 
 crexx_add_vm_dual_test(NAME rxassignalstests RXVM_ARGS tests_signals PASS_REGULAR_EXPRESSION "PANIC:")
+if(BUILD_TESTING)
+    add_test(NAME rxvminstrumentedsignaltests
+            COMMAND $<TARGET_FILE:rxvm_instrumented> tests_signals
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    add_test(NAME rxbvminstrumentedsignaltests
+            COMMAND $<TARGET_FILE:rxbvm_instrumented> tests_signals
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(rxvminstrumentedsignaltests rxbvminstrumentedsignaltests PROPERTIES
+            PASS_REGULAR_EXPRESSION "VM instrumentation: PASS .*branches=[1-9][0-9]* calls=[1-9][0-9]* returns=[1-9][0-9]* interrupts=[1-9][0-9]*/[1-9][0-9]*/[1-9][0-9]*/[1-9][0-9]*"
+            LABELS "interpreter;instrumentation;signal")
+endif()
 
 # Instruction Sanity Tests - fallback panic location and source reporting
 add_custom_command(
@@ -570,6 +609,17 @@ add_custom_target(run_tests_breakpoint_address ALL DEPENDS tests_breakpoint_addr
 
 crexx_add_vm_dual_test(NAME rxasbreakpointaddresstests RXVM_ARGS tests_breakpoint_address PASS_REGULAR_EXPRESSION "bp-source: say 'target'")
 crexx_add_vm_dual_test(NAME rxasbreakpointtraceeventtests RXVM_ARGS tests_breakpoint_address PASS_REGULAR_EXPRESSION "bp-symbol: target")
+if(BUILD_TESTING)
+    add_test(NAME rxvminstrumentedbreakpointtests
+            COMMAND $<TARGET_FILE:rxvm_instrumented> tests_breakpoint_address
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    add_test(NAME rxbvminstrumentedbreakpointtests
+            COMMAND $<TARGET_FILE:rxbvm_instrumented> tests_breakpoint_address
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(rxvminstrumentedbreakpointtests rxbvminstrumentedbreakpointtests PROPERTIES
+            PASS_REGULAR_EXPRESSION "VM instrumentation: PASS .*returns=[1-9][0-9]* interrupts=[1-9][0-9]*/[1-9][0-9]*/[1-9][0-9]*/0"
+            LABELS "interpreter;instrumentation;breakpoint")
+endif()
 
 # Instruction Sanity Tests - register flag partitioning
 crexx_add_rxas_vm_binary(tests_register_flags "register flag partitioning")
