@@ -59,6 +59,11 @@ static void help() {
 #ifndef NDEBUG
             "  -d              Debug/Trace Mode\n"
 #endif
+#ifdef CREXX_VM_PROFILING
+            "  --profile       Print VM instruction/transition timing profile\n"
+            "  --profile-output file\n"
+            "                  Write profile to file (.csv selects CSV format)\n"
+#endif
             "  -l location     Working Location (directory)\n"
             "  -v              Prints Version\n"
             "\n*   VM Extension Plugin are specified by the full file name without the extension\n"
@@ -126,6 +131,33 @@ int main(int argc, char *argv[]) {
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {
+#ifdef CREXX_VM_PROFILING
+        if (strcmp(argv[i], "--profile") == 0 ||
+                strcmp(argv[i], "--profile=timing") == 0) {
+            context.profile_mode = 1;
+            continue;
+        }
+        if (strcmp(argv[i], "--profile-output") == 0) {
+            i++;
+            if (i >= argc || !argv[i][0]) {
+                error_and_exit("Missing filename after --profile-output");
+            }
+            context.profile_mode = 1;
+            context.profile_output = argv[i];
+            continue;
+        }
+        if (strncmp(argv[i], "--profile-output=", 17) == 0) {
+            if (!argv[i][17]) {
+                error_and_exit("Missing filename after --profile-output=");
+            }
+            context.profile_mode = 1;
+            context.profile_output = argv[i] + 17;
+            continue;
+        }
+        if (strncmp(argv[i], "--profile=", 10) == 0) {
+            error_and_exit("Invalid profile mode (expected timing)");
+        }
+#endif
         if (strlen(argv[i]) > 2) {
             error_and_exit("Invalid argument");
         }

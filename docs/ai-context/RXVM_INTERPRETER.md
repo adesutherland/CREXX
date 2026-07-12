@@ -761,6 +761,54 @@ selection/entry/resume/terminal paths using canonical module/instruction
 coordinates. With no backend selected, every hook preprocesses to a no-op and
 does not evaluate its arguments, branch, access state, or call a function.
 
+### Timing/count profiling
+
+`CREXX_VM_PROFILING` selects the timing/count instrumentation backend for a
+dedicated VM build. The option is off by default, so ordinary builds retain the
+fully preprocessed no-op hook contract. Configure a Release profiling build
+with:
+
+```sh
+cmake -S . -B cmake-build-profile \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCREXX_VM_PROFILING=ON
+cmake --build cmake-build-profile --target rxvm rxbvm
+```
+
+Profiling remains off at runtime until `--profile` is passed. By default the
+report is written as a human-readable table to standard error. Use
+`--profile-output file` or `--profile-output=file` to write it to a file. An
+output filename ending in `.csv`, case-insensitively, selects CSV; every other
+filename selects the table format. The output option also enables profiling.
+
+```sh
+rxvm --profile program.rxbin
+rxvm --profile-output profile.txt program.rxbin
+rxbvm --profile-output profile.csv program.rxbin
+```
+
+The instruction table measures monotonic wall time from instruction entry to
+retire or terminal. The transition table measures retire to the next
+instruction entry and distinguishes same-frame sequential/branch transitions,
+call frame entry, return frame exit, interrupt entry/resume, external entry,
+and termination. Blocking native work is charged to its instruction.
+
+Every retired hot-loop instruction also increments the interrupt-poll count.
+Taken interrupt scans and the mechanics from selection to the first handler
+instruction, resume, or terminal outcome are reported as sub-phases. These
+sub-phases overlap the complete interrupt transition time and must not be added
+to it. The no-pending poll itself remains inside ordinary transition time; the
+profiler intentionally does not add another pair of timer reads around that
+check.
+
+Timing values are raw instrumented wall times. The report includes the minimum
+positive adjacent clock-read interval and zero-delta calibration count, but
+does not subtract them from short instructions. Compare instruction shares
+within equivalent profiled runs rather than treating the values as the
+uninstrumented VM's absolute cost. Counter updates use fixed per-run arrays;
+the hot path performs no allocation, locking, callbacks, sorting, or output
+formatting.
+
 ### Pooled float operands
 
 As of `rxbin` format `002` and later, float literals are loaded from the constant pool

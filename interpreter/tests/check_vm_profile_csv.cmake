@@ -1,0 +1,48 @@
+if(NOT DEFINED VM OR NOT DEFINED INPUT OR NOT DEFINED OUTPUT)
+    message(FATAL_ERROR "VM, INPUT, and OUTPUT are required")
+endif()
+
+file(REMOVE "${OUTPUT}")
+execute_process(
+        COMMAND "${VM}" --profile-output "${OUTPUT}" "${INPUT}"
+        RESULT_VARIABLE profile_result
+        OUTPUT_VARIABLE program_output
+        ERROR_VARIABLE profile_error)
+
+if(NOT profile_result EQUAL 0)
+    message(FATAL_ERROR
+            "profiled VM failed with ${profile_result}\nstdout:\n${program_output}\nstderr:\n${profile_error}")
+endif()
+if(NOT EXISTS "${OUTPUT}")
+    message(FATAL_ERROR "profile output was not created: ${OUTPUT}")
+endif()
+
+file(READ "${OUTPUT}" profile_csv)
+if(NOT profile_csv MATCHES "^section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals")
+    message(FATAL_ERROR "profile output is not CSV based on its .CSV extension")
+endif()
+if(NOT profile_csv MATCHES "instruction,SAY_STRING")
+    message(FATAL_ERROR "profile CSV does not contain instruction rows")
+endif()
+if(NOT profile_csv MATCHES "transition,sequential_same_frame")
+    message(FATAL_ERROR "profile CSV does not contain transition rows")
+endif()
+if(profile_error MATCHES "VM PROFILE")
+    message(FATAL_ERROR "profile table leaked to stderr despite file output")
+endif()
+
+set(table_output "${OUTPUT}.txt")
+file(REMOVE "${table_output}")
+execute_process(
+        COMMAND "${VM}" --profile-output "${table_output}" "${INPUT}"
+        RESULT_VARIABLE table_result
+        OUTPUT_VARIABLE table_program_output
+        ERROR_VARIABLE table_error)
+if(NOT table_result EQUAL 0)
+    message(FATAL_ERROR
+            "table-profiled VM failed with ${table_result}\nstdout:\n${table_program_output}\nstderr:\n${table_error}")
+endif()
+file(READ "${table_output}" profile_table)
+if(NOT profile_table MATCHES "VM PROFILE.*Instructions")
+    message(FATAL_ERROR "non-CSV filename did not select table output")
+endif()

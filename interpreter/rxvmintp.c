@@ -3853,6 +3853,11 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
                     rc = 0;
                     free_frame(temp_frame);
                     arguments_array = 0; /* We have freed it in the loop above */
+                    RXVM_INSTRUMENTATION_INTERRUPT_TERMINAL(
+                            last_interrupt,
+                            current_module ? current_module->module_number : 0,
+                            (current_execution_base && pc)
+                                ? VM_CANONICAL_INDEX(pc) : 0);
                     goto interprt_finished;
                 }
                 free_frame(temp_frame);

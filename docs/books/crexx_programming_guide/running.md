@@ -66,6 +66,22 @@ rxvme hello.rxbin -a first second third
 The VM also accepts multiple bytecode files when a program is split across
 modules.
 
+### Profiling VM execution
+
+A VM configured with `-DCREXX_VM_PROFILING=ON` supports instruction and
+dispatch-transition timing:
+
+```bash
+rxvme --profile hello.rxbin
+rxvme --profile-output hello-profile.txt hello.rxbin
+rxvme --profile-output hello-profile.csv hello.rxbin
+```
+
+The default report is a table on standard error. A profile output filename
+ending in `.csv` (case-insensitive) selects CSV; other filenames use the table
+format. Profiling support and its command-line options are absent from normal
+builds.
+
 ## Imports and Libraries
 
 Level B imports are explicit:

@@ -250,7 +250,7 @@ struct stack_frame {
 #define START_OF_INSTRUCTIONS CASE_START:; switch ((instructions)(pc->instruction.opcode)) {
 #define END_OF_INSTRUCTIONS default: SET_SIGNAL(RXSIGNAL_UNKNOWN_INSTRUCTION); DISPATCH; }
 #define START_INSTRUCTION(inst) case OP_ ## inst: RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(current_module->module_number, VM_CANONICAL_INDEX(pc), OP_ ## inst);
-#define START_INTERRUPT INTERRUPT:
+#define START_INTERRUPT INTERRUPT: RXVM_INSTRUMENTATION_INTERRUPT_SCAN_BEGIN(current_module->module_number, VM_CANONICAL_INDEX(pc));
 #define END_INTERRUPT do { goto CASE_START; } while (0);
 #define VM_RESOLVE_SELECTED() do { } while (0)
 #define VM_DISPATCH_TARGET() goto CASE_START
@@ -260,7 +260,7 @@ struct stack_frame {
 #define START_OF_INSTRUCTIONS
 #define END_OF_INSTRUCTIONS
 #define START_INSTRUCTION(inst) inst: RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(current_module->module_number, VM_CANONICAL_INDEX(pc), OP_ ## inst);
-#define START_INTERRUPT INTERRUPT:
+#define START_INTERRUPT INTERRUPT: RXVM_INSTRUMENTATION_INTERRUPT_SCAN_BEGIN(current_module->module_number, VM_CANONICAL_INDEX(pc));
 #define END_INTERRUPT do { goto *next_inst; } while (0);
 #define VM_RESOLVE_SELECTED()                                                   \
     do {                                                                        \
@@ -300,6 +300,7 @@ struct stack_frame {
                 current_module->module_number, VM_CANONICAL_INDEX(next_pc),     \
                 RXVM_INSTRUMENTATION_CURRENT_TRANSITION());                     \
         pc = next_pc;                                                           \
+        RXVM_INSTRUMENTATION_INTERRUPT_POLL();                                  \
         if (interrupts && !current_frame->is_interrupt) goto INTERRUPT;          \
         VM_DISPATCH_TARGET();                                                   \
     } while (0)
@@ -427,6 +428,11 @@ typedef struct rxvm_context {
     char link_dirty;
     char interface_method_registry_dirty;
     char interface_factory_registry_dirty;
+#ifdef CREXX_VM_PROFILING
+    /* Keep optional build-local fields last so existing field offsets stay stable. */
+    char profile_mode;
+    const char *profile_output;
+#endif
 } rxvm_context;
 
 /* Function to get signal text from a signal code  */

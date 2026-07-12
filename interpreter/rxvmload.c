@@ -109,6 +109,10 @@ void rxinimod(rxvm_context *context) {
     context->exposed_proc_tree = 0;
     context->exposed_reg_tree = 0;
     context->debug_mode = 0;
+#ifdef CREXX_VM_PROFILING
+    context->profile_mode = 0;
+    context->profile_output = 0;
+#endif
     context->location = 0;
     context->ext_proc = 0;
     context->ext_argc = 0;
