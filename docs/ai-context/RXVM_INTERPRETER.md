@@ -1,6 +1,6 @@
 # cREXX Virtual Machine (Interpreter) Architecture
 
-The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loads, links, and executes the compiled `.rxbin` bytecode. Its design emphasizes performance through direct threaded code (computed gotos), aggressive stack frame recycling, and an optimized value struct to handle REXX dynamic typing. The current `.rxbin` format is `006`; since format `003`, serialized module data and runtime-only execution state are explicitly separated, and serialized instruction/constant sections may be compacted on disk before being expanded during load.
+The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loads, links, and executes the compiled `.rxbin` bytecode. Its design supports direct threaded code (computed gotos), aggressive stack frame recycling, and an optimized value struct to handle REXX dynamic typing. The current `.rxbin` format is `006`; since format `003`, serialized module data and runtime-only execution state are explicitly separated, and serialized instruction/constant sections may be compacted on disk before being expanded during load.
 
 ## 1. VM Lifecycle
 
@@ -688,8 +688,14 @@ The core execution engine lives in `run()` within `interpreter/rxvmintp.c`.
 
 ### Threaded vs Bytecode Dispatch
 The VM uses conditional compilation (`#ifdef NTHREADED`) to flip between two execution models:
-1. **Direct Threading (Default/Fast Mode)**: During the "Preparation" phase, `rxvm_prepare()` fills a per-module `prepared_dispatch` array with C `void*` pointers targeting the exact `&&label` implementing each opcode. The instruction dispatch reduces to an incredibly fast computed goto: `goto *next_inst;`.
-2. **Standard Bytecode Mode (`NTHREADED`)**: Operates via a massive standard C `switch(opcode)` statement wrapped in a while loop.
+1. **Direct Threading (`rxvm`)**: During the preparation phase, `rxvm_prepare()` fills a per-module `prepared_dispatch` array with C `void*` pointers targeting the `&&label` implementing each opcode. Dispatch uses `goto *next_inst;`.
+2. **Switch Dispatch (`rxbvm`, `NTHREADED`)**: Dispatches the serialized opcode through a C `switch(opcode)` statement.
+
+Neither source form is assumed to be universally faster. Generated performance
+depends on compiler transformations, architecture, branch prediction, code
+layout, and the cost of locating the next handler. The current Release 1
+investigation is tracked in
+`docs/planning/beta-3/notes/vm-dispatch-performance-investigation.md`.
 
 ### Dispatch Macros
 Instructions are executed via macro-driven blocks. For example, moving to the next instruction looks like:

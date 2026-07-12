@@ -88,6 +88,126 @@ Representative standalone tool medians were:
 The jump opt assembler cost reflects packed jump-table construction and ACPH
 policy work; it is not included in VM execution time.
 
+### Repeatable Cross-Platform Protocol
+
+Dispatch comparisons must run the same `.rxbin` under both interpreters. Do
+not compare independently rebuilt `rxvm` and `rxbvm` benchmark modules, and do
+not include compilation, assembly, or linking inside a timed sample. Record the
+source commit, compiler version, architecture, power mode, CPU count, and
+Release flags. Run on AC power where applicable, stop unrelated builds and
+CTests, perform one unrecorded warmup, then retain seven serial samples and
+report their median. Preserve the seven raw outputs for later dispersion checks.
+
+Configure and build the common Release surface from the repository root:
+
+```sh
+build=cmake-build-release
+cmake -S . -B "$build" -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build "$build" --parallel 4 --target \
+  rxvm rxbvm rxlink library classlib rxfnsl \
+  performance_binary_fastpath performance_rxjson_parser \
+  performance_reference_iterator performance_classlib_iterator \
+  performance_classlib_treemap performance_tinyexpr_dispatch \
+  performance_jump_dispatch performance_runtime_lookup
+```
+
+Adjust build parallelism for the host's memory. Builds and benchmark runs must
+not overlap. Pre-link each optimized program exactly once. This binary example
+shows the required shape; classlib fixtures additionally link `classlib.rxbin`,
+and tinyexpr additionally links `rxfnsl.rxbin`:
+
+```sh
+perfdir="$build/tests/performance"
+linked="$perfdir/manual-linked"
+mkdir -p "$linked"
+"$build/bin/rxlink" -s -o "$linked/binary_fastpath_compare_opt" \
+  "$perfdir/binary_fastpath_compare_opt.rxbin" \
+  "$build/bin/library.rxbin"
+```
+
+Run the unlinked noopt image with its runtime modules. Run the one pre-linked
+opt image under both VMs. Sample zero is the discarded warmup:
+
+```sh
+for sample in 0 1 2 3 4 5 6 7; do
+  "$build/bin/rxvm" "$perfdir/binary_fastpath_compare_noopt.rxbin" \
+    "$build/bin/library.rxbin"
+done
+for sample in 0 1 2 3 4 5 6 7; do
+  "$build/bin/rxvm" "$linked/binary_fastpath_compare_opt.rxbin"
+done
+for sample in 0 1 2 3 4 5 6 7; do
+  "$build/bin/rxbvm" "$linked/binary_fastpath_compare_opt.rxbin"
+done
+```
+
+On Windows PowerShell the equivalent execution form is:
+
+```powershell
+$Build = "cmake-build-release"
+$Perf = Join-Path $Build "tests/performance"
+$Linked = Join-Path $Perf "manual-linked"
+New-Item -ItemType Directory -Force $Linked | Out-Null
+& "$Build/bin/rxlink.exe" -s -o "$Linked/binary_fastpath_compare_opt" `
+  "$Perf/binary_fastpath_compare_opt.rxbin" "$Build/bin/library.rxbin"
+0..7 | ForEach-Object {
+  & "$Build/bin/rxvm.exe" "$Linked/binary_fastpath_compare_opt.rxbin"
+}
+0..7 | ForEach-Object {
+  & "$Build/bin/rxbvm.exe" "$Linked/binary_fastpath_compare_opt.rxbin"
+}
+```
+
+Use this workload matrix without changing defaults for the first comparison:
+
+| Workload | Program base | Extra linked/runtime module | Arguments after `-a` |
+| --- | --- | --- | --- |
+| Binary | `binary_fastpath_compare` | `library.rxbin` | none: 200,000 cells |
+| JSON | `rxjson_parser_compare` | `library.rxbin` | none: 60 rows, 30 passes |
+| Reference | `reference_iterator_compare_rxvm` | `library.rxbin` | none: 12,000 iterations |
+| Classlib iterator | `stringarraylist_iterator_compare_rxvm` | `library.rxbin`, `classlib.rxbin` | none: 4,000 rounds |
+| Tree map | `stringtreemap_insert_compare` | `library.rxbin`, `classlib.rxbin` | none: 2,500 inserts |
+| Tinyexpr | `tinyexpr_dispatch_compare` | `library.rxbin`, `rxfnsl.rxbin` | none: 20,000 iterations |
+| Integer jump | `jump_dispatch_compare` | `library.rxbin` | `int 8 3 1000000` |
+| Padded-string jump | `jump_dispatch_compare` | `library.rxbin` | `string 8 0 1000000 key07` |
+| Numeric-string jump | `jump_dispatch_compare` | `library.rxbin` | `numeric 8 0 1000000 8` |
+| Interface lookup | `runtime_interface_lookup_compare` | `library.rxbin` | none: 50,000 methods, 5,000 factories |
+
+For native Ubuntu x86-64, repeat the full normal Debug and ASan/LSan exercise,
+not only the timing subset. Use `tools/asan-run.sh --phase full --test-jobs N`
+as documented in `docs/ai-context/CREXX_ASAN_TESTING.md`. Then configure a
+symbolized Release profiling tree without changing optimization:
+
+```sh
+cmake -S . -B cmake-build-perf -G Ninja \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_C_FLAGS="-g -fno-omit-frame-pointer"
+```
+
+Check `perf list` and `sysctl kernel.perf_event_paranoid` before profiling.
+After one unrecorded warmup, compare the same linked image with both runners:
+
+```sh
+perf stat -r 7 \
+  -e cycles,instructions,branches,branch-misses,cache-references,cache-misses \
+  -- cmake-build-perf/bin/rxvm MANUAL_LINKED_IMAGE.rxbin
+perf stat -r 7 \
+  -e cycles,instructions,branches,branch-misses,cache-references,cache-misses \
+  -- cmake-build-perf/bin/rxbvm MANUAL_LINKED_IMAGE.rxbin
+perf record -g --call-graph dwarf -- \
+  cmake-build-perf/bin/rxvm MANUAL_LINKED_IMAGE.rxbin
+perf report --stdio
+```
+
+Use `taskset` and a performance CPU governor only when the host supports them,
+and record that choice. For hardware-counter runs, multiply fixture iterations
+by ten so startup and module loading are negligible, but first verify that the
+default-size in-process ratio has the same direction. Events such as
+`L1-icache-load-misses` and `iTLB-load-misses` should be added only when listed
+on that CPU. Absolute times are not compared between machines; the primary
+cross-platform result is the paired `rxbvm / rxvm` ratio, with branch misses,
+instructions, cycles, and instruction-cache evidence used to explain it.
+
 ## Runtime Results
 
 All values below are in-process microseconds. `noopt` is unlinked compiler and
@@ -113,6 +233,116 @@ The current non-threaded `rxbvm` is consistently faster than computed-goto
 The long string jump benchmark is approximately tied. This result is strong
 enough to justify a perf-enabled cross-platform dispatch review, but not to
 change the default VM from one virtualized ARM64 host.
+
+### Native macOS ARM64 Repetition
+
+The runtime comparison was repeated at
+`e5c912b93f70ca6c3dc7e03d889379352e5b3525` on native macOS 26.5.1, Apple M5
+ARM64 with 10 logical CPUs and 24 GiB RAM, using Apple clang 21.0.0 and
+`-O3 -DNDEBUG`. The machine was on AC power. The same pre-linked optimized
+image was run under both VMs, with one warmup and seven serial samples.
+
+| Workload and hot section | rxvm noopt | rxvm opt | rxbvm opt |
+| --- | ---: | ---: | ---: |
+| Binary `.u32` write | 1,317 | 1,253 | 1,037 |
+| Binary `.u32` read | 1,581 | 1,517 | 1,299 |
+| Binary `.i64` write | 1,322 | 1,278 | 1,027 |
+| Binary `.i64` read | 1,605 | 1,562 | 1,296 |
+| JSON validate | 16,053 | 16,046 | 15,394 |
+| JSON count | 32,694 | 32,625 | 31,050 |
+| Reference dynamic backing iterator | 913 | 908 | 808 |
+| Classlib live iterator | 2,953 | 3,064 | 2,833 |
+| StringTreeMap insert | 6,059 | 6,058 | 5,488 |
+| Tinyexpr lex | 38,619 | 38,318 | 37,396 |
+| Tinyexpr evaluate | 103,429 | 101,827 | 93,703 |
+
+The native host reproduces the Linux VM's direction: `rxbvm` is 2.4% to 19.6%
+faster in this matrix. The smaller and more workload-dependent spread shows
+that UTM and/or GCC may amplify the Linux ARM64 result, but virtualization
+cannot be its sole cause. Numeric-string jump and optimized interface lookup
+were approximately tied between modes.
+
+### Computed-Goto Regression Investigation
+
+Source history identifies a credible regression boundary. Commit `720d3253c`
+on 2026-04-22 separated runtime dispatch state from serialized instructions.
+Before that commit, each threaded instruction slot held its handler pointer and
+sequential dispatch loaded `(next_pc)->impl_address`. The current path stores
+handlers in `module->prepared_dispatch` and, on every instruction, evaluates
+`next_pc - current_module->segment.binary` before indexing the second array.
+
+A disposable macOS worktree cached the current module's binary base and
+dispatch pointer in `run()` locals whenever the module changed. No serialized
+format or instruction semantics changed. Median improvements were 15.4% to
+16.0% for fixed-width binary reads/writes, 2.5% to 3.6% for JSON, 2.7% to 3.4%
+for Tinyexpr, 9.2% for integer jump dispatch, and 5.1% for padded-string jump
+dispatch. Numeric-string jump was 1.2% slower. The binary medians then nearly
+matched `rxbvm`, strongly implicating the extra hot-path module-field loads.
+
+Removing the pending-interrupt check in a separate measurement-only build
+improved selected sections by approximately 1% to 5%. That experiment changes
+semantics and is not a candidate fix. The check is present in both VM modes and
+therefore does not explain the main reversal, although its code-generation and
+layout cost should remain visible in hardware-counter analysis.
+
+The computed-goto `run()` body was 423,732 text bytes on this build versus
+408,508 for switch-dispatch `rxbvm`, 15,224 bytes or 3.6% larger. Compiler code
+layout and instruction-cache pressure therefore remain plausible secondary
+causes. Apple clang also merged the normal handlers onto one main indirect
+dispatch site, removing the classic per-handler predictor advantage.
+
+A measurement-only unique compiler barrier expanded the computed dispatches to
+729 indirect sites and grew `run()` from 422,216 bytes with cached pointers to
+487,164 bytes. It improved Tinyexpr and string/numeric jump cases but regressed
+binary, JSON, and integer jump cases relative to pointer caching alone. Global
+dispatch-site replication is therefore not a current fix candidate.
+
+The extended review found that module-pointer caching alone is too narrow a
+production design. A coherent active-frame cache, updated atomically whenever
+the frame changes, benefits both VM modes by caching the current module,
+execution base, binary space, constant pool, and local-register array. Combined
+with opcode-indexed computed dispatch it improved the current macOS `rxvm`
+baseline by about 2% to 25% in six measured hot sections and was effectively
+tied in the seventh. JSON, Tinyexpr, and integer jump improved by about 8% to
+11%. It was close to or faster than the original `rxbvm` in six of seven
+sections. The same coherent frame cache also improved `rxbvm`; applying
+individual cached fields without the common activation contract produced
+inconsistent results and is not recommended.
+
+An in-place handler-pointer experiment restored the original one-load dispatch
+shape and provided a measurement upper bound, but it overwrote canonical
+opcodes and therefore breaks reflection. The production design is instead a
+separate runtime instruction image for `rxvm`: preserve the canonical RXBIN
+image for reflection and serialization, copy each instruction and its operands
+into a process-local image, and replace only instruction cells in that copy
+with handler pointers. This uses approximately the same memory as the current
+canonical image plus full pointer side table while removing the hot index into
+the second array. Opcode-indexed dispatch is the measured lower-risk fallback
+if runtime-image validation exposes unacceptable Release 1 risk.
+
+Homebrew GCC 16 was also tested on native macOS ARM64 with TLS disabled because
+the default Apple blocks TLS backend is clang-specific. Unmodified GCC was
+slower than Apple clang, and its `run()` body was approximately 1.6 MiB, but
+GCC retained many per-handler indirect branches. With coherent frame state and
+the in-place upper-bound dispatch, it improved its own baseline by about 12% to
+40% and became competitive in branch-heavy cases. This supports testing GCC
+after the architecture fix; it does not support a blanket compiler switch.
+
+Implementation must begin with a semantics-preserving simplification of the
+dispatch macros. Replace the fragile `CALC_DISPATCH`/
+`CALC_DISPATCH_MANUAL` pairing and scattered raw target assignments with a
+small intent-based surface for frame activation, sequential advance, indexed
+branches, existing call/return/resume targets, common interrupt-aware dispatch,
+and execution pointer/index conversion. Preserve the current early next-handler
+load, require single evaluation and safe statement form, and rerun the complete
+performance matrix before introducing frame caching. The surface must include
+compile-time no-op extension hooks for instruction begin/retire, frame changes,
+interrupt paths, and VM entry/exit so instrumented builds can collect counters
+or timings without adding a runtime callback or condition to ordinary builds.
+The transfer macros must guarantee balanced terminal events on branches, calls,
+returns, signals, and VM exit. The detailed handoff and native Intel experiment
+are recorded in
+`docs/planning/beta-3/notes/vm-dispatch-performance-investigation.md`.
 
 ### Jump Dispatch
 
@@ -196,14 +426,20 @@ Generated and disassembled RXAS confirm:
   and improves the unlinked factory stress path by 2.6% to 3.2%.
 - Preserve the current fixed-width binary `memcpy` handlers and jump-table
   validation. They are already direct fast paths.
+- Resolve the computed-goto dispatch regression without weakening interrupt,
+  metadata, corruption, reflection, or late-load behavior. First simplify the
+  dispatch macro contract without changing timing, then add coherent
+  active-frame state to both VM modes. For `rxvm`, validate a separate runtime
+  instruction image; retain opcode-indexed dispatch as the fallback. Native
+  Intel counters and full cross-platform validation remain required.
 
 ### Release 1 Candidates Requiring Design Approval
 
 - Add a cache for normalized interface assignability/signature comparisons,
   with explicit invalidation on registry rebuild and late module loading.
-- Decide whether AArch64 builds should prefer `rxbvm`, or whether dispatch
-  selection should be configurable. Repeat with permitted hardware counters
-  and at least one native Linux ARM64 host before changing defaults.
+- Decide the documented/default dispatch policy only after the computed-goto
+  regression candidate is tested on native Linux x86-64 and Windows x86-64.
+  Do not infer a CPU-family policy from the two ARM64 results.
 - Add an inliner growth/copy budget for reference-heavy methods. The semantic
   and diagnostics effects need compiler-owner approval.
 
@@ -220,9 +456,18 @@ Generated and disassembled RXAS confirm:
 ## Remaining Risks
 
 - Hardware counter and sampled line-level perf evidence is missing because of
-  the VM security policy.
-- Results cover one virtualized Linux AArch64 host; x86-64 and native ARM64
-  validation remain necessary before dispatch-default decisions.
+  the Linux ARM64 VM security policy.
+- Results cover virtualized Linux AArch64 and native macOS ARM64. Native Linux
+  and Windows x86-64 validation remains necessary before dispatch-default or
+  compiler-flag decisions.
+- The macro cleanup, coherent frame cache, and runtime instruction image are
+  design candidates, not merged production code. The exact runtime-image
+  design is inferred from the measured in-place upper bound and still requires
+  the full reflection, signal, dynamic-load, sanitizer, and cross-platform
+  matrix.
+- GCC results were obtained with TLS disabled and do not establish that a full
+  macOS GCC build is supported. Native x86-64 hardware counters remain needed
+  before any compiler or dispatch-default policy change.
 - Gprof sees the interpreter loop as one function, so opcode attribution relies
   on isolated fixture sections and RXAS inspection.
 - Broad UBSan remains unvalidated until CREXX documents a supported runner
