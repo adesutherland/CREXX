@@ -3359,6 +3359,12 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     /* Array of modules that were last interrupted by interrupt number */
     rxinteger last_interrupted_module[RXSIGNAL_MAX] = {0};
     stack_frame *current_frame = 0, *temp_frame;
+    bin_space *current_binary_space = 0;
+    bin_code *current_execution_base = 0;
+    bin_code *current_canonical_base = 0;
+    void **current_dispatch_base = 0;
+    unsigned char *current_const_pool = 0;
+    value **current_locals = 0;
     /* 3 Work Registers */
     value *work1 = value_f();
     value *work2 = value_f();
@@ -3527,29 +3533,31 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
     DEBUG("Create first Stack Frame\n");
     if (context->ext_proc) {
-        current_frame = frame_f(procedure, context->ext_argc, 0, 0, context->ext_ret);
-        if (!current_frame) {
+        temp_frame = frame_f(procedure, context->ext_argc, 0, 0, context->ext_ret);
+        if (!temp_frame) {
             fprintf(stderr, "PANIC - Unable to allocate stack frame\n");
             rc = RXSIGNAL_FAILURE;
             goto interprt_finished;
         }
+        VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_EXTERNAL_ENTRY);
         /* Arguments (passed as individual objects) */
         {
             int i;
             int a1 = procedure->binarySpace->globals + procedure->locals + 1;
             for (i = 0; i < context->ext_argc; i++) {
                 current_frame->baselocals[a1 + i] = value_f();
-                current_frame->locals[a1 + i] = current_frame->baselocals[a1 + i];
+                current_locals[a1 + i] = current_frame->baselocals[a1 + i];
                 copy_value(current_frame->baselocals[a1 + i], context->ext_args[i]);
             }
         }
     } else {
-        current_frame = frame_f(procedure, 1, 0, 0, 0);
-        if (!current_frame) {
+        temp_frame = frame_f(procedure, 1, 0, 0, 0);
+        if (!temp_frame) {
             fprintf(stderr, "PANIC - Unable to allocate stack frame\n");
             rc = RXSIGNAL_FAILURE;
             goto interprt_finished;
         }
+        VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_EXTERNAL_ENTRY);
         /* Arguments (passed in an array) */
         /* a0 is already set by frame_f() */
         /* a1 is the array  */
@@ -3558,7 +3566,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             int a1 = procedure->binarySpace->globals + procedure->locals + 1;
             arguments_array = value_f();
             current_frame->baselocals[a1] = arguments_array;
-            current_frame->locals[a1] = current_frame->baselocals[a1];
+            current_locals[a1] = current_frame->baselocals[a1];
             set_num_attributes(current_frame->baselocals[a1], argc);
 
             for (i = 0; i < argc; i++) {
@@ -3582,7 +3590,6 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
     /* Start */
     DEBUG("Starting inst# %s-0x%x\n", procedure->binarySpace->module->name, (int) procedure->start);
-    VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_EXTERNAL_ENTRY);
     VM_SELECT_INDEX(procedure->start, RXVM_TRANSITION_EXTERNAL_ENTRY);
     DISPATCH;
 
@@ -3626,8 +3633,9 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
     for (signal_code = 0; signal_code < RXSIGNAL_MAX; signal_code++) {
         if (interrupts & (1 << signal_code)) {
             bin_code *signal_pc = (interrupted_pc && signal_code + 1 != RXSIGNAL_BREAKPOINT) ? interrupted_pc : pc;
-            last_interrupted_module[signal_code + 1] = (rxinteger) current_frame->procedure->binarySpace->module->module_number;
-            last_interrupted_address[signal_code + 1] = (rxinteger) (signal_pc - current_frame->procedure->binarySpace->binary);
+            last_interrupted_module[signal_code + 1] = (rxinteger) current_module->module_number;
+            last_interrupted_address[signal_code + 1] =
+                    (rxinteger) (signal_pc - current_canonical_base);
             if (current_frame->interrupt_table[signal_code].response == RXSIGNAL_RESPONSE_IGNORE) {
                 DEBUG("TRACE - INTR IGNORE %s\n", interrupt_to_string(signal_code + 1));
                 interrupts &= ~(1 << signal_code);
@@ -3691,8 +3699,8 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
         case RXSIGNAL_RESPONSE_CALL_BRANCH:
             DEBUG("TRACE - INTR HANDLER -> SET BRANCH FOR CALL RETURN ");
-            current_frame = rxsignal_unwind_to_frame(current_frame, signal_handler.frame);
-            VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_INTERRUPT_ENTRY);
+            VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame),
+                              RXVM_TRANSITION_INTERRUPT_ENTRY);
             VM_SELECT_INDEX(signal_handler.jump, RXVM_TRANSITION_INTERRUPT_ENTRY);
             pc = next_pc;
             // Fall through to CALL
@@ -3735,10 +3743,8 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
                     SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
                     DISPATCH;
                 }
-                current_frame = temp_frame;
-
                 /* Prepare dispatch to procedure as early as possible */
-                VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_INTERRUPT_ENTRY);
+                VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_INTERRUPT_ENTRY);
                 VM_SELECT_INDEX(intr_function->start, RXVM_TRANSITION_INTERRUPT_ENTRY);
 
 
@@ -3748,7 +3754,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
                 /* Argument */
                 size_t arg_index = intr_function->binarySpace->globals + intr_function->locals + 1;
-                current_frame->baselocals[arg_index] = current_frame->locals[arg_index] = interrupt_arg;
+                current_frame->baselocals[arg_index] = current_locals[arg_index] = interrupt_arg;
 
                 /* DISPATCH goes the interrupt handler */
                 DISPATCH;
@@ -3757,21 +3763,21 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
         case RXSIGNAL_RESPONSE_BRANCH:
             DEBUG("TRACE - INTR HANDLER -> BRANCH %s\n", interrupt_to_string(last_interrupt));
-            current_frame = rxsignal_unwind_to_frame(current_frame, signal_handler.frame);
-            VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_INTERRUPT_ENTRY);
+            VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame),
+                              RXVM_TRANSITION_INTERRUPT_ENTRY);
             VM_SELECT_INDEX(signal_handler.jump, RXVM_TRANSITION_INTERRUPT_ENTRY);
             DISPATCH;
 
         case RXSIGNAL_RESPONSE_BRANCH_VALUE:
             DEBUG("TRACE - INTR HANDLER -> BRANCH VALUE %s\n", interrupt_to_string(last_interrupt));
-            current_frame = rxsignal_unwind_to_frame(current_frame, signal_handler.frame);
-            VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_INTERRUPT_ENTRY);
+            VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame),
+                              RXVM_TRANSITION_INTERRUPT_ENTRY);
             rxsignal_populate_raw_interrupt(interrupt_arg,
                                             last_interrupt,
                                             last_interrupted_module[last_interrupt],
                                             last_interrupted_address[last_interrupt],
                                             interrupt_object[last_interrupt]);
-            rxsignal_populate_runtime_signal(current_frame->locals[signal_handler.value_register], interrupt_arg);
+            rxsignal_populate_runtime_signal(current_locals[signal_handler.value_register], interrupt_arg);
             VM_SELECT_INDEX(signal_handler.jump, RXVM_TRANSITION_INTERRUPT_ENTRY);
             DISPATCH;
 
@@ -3783,7 +3789,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
                 // Note that current_frame->is_interrupt cannot be set as a signal triggers us
                 /* back to the parent's stack frame */
                 temp_frame = current_frame;
-                current_frame = current_frame->parent;
+                VM_ACTIVATE_FRAME_OR_NULL(current_frame->parent, RXVM_TRANSITION_RETURN);
                 if (!current_frame) {
                     DEBUG("TRACE - INTR RETURNING FROM MAIN()\n");
                     /* Free Argument Values a1... */
@@ -3803,7 +3809,6 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
                     goto interprt_finished;
                 }
                 free_frame(temp_frame);
-                VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
                 VM_SELECT_POINTER(next_pc, RXVM_TRANSITION_RETURN);
                 DISPATCH;
             }
@@ -5615,9 +5620,8 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
                         DISPATCH;
                     }
-                    current_frame = temp_frame;
                     /* Prepare dispatch to procedure as early as possible */
-VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_CALL);
+                    VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_CALL);
                     VM_SELECT_INDEX(called_function->start, RXVM_TRANSITION_CALL);
 
                     /* No Arguments - so nothing to do */
@@ -5650,10 +5654,8 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_CALL);
                         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
                         DISPATCH;
                     }
-                    current_frame = temp_frame;
-
                     /* Prepare dispatch to procedure as early as possible */
-VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_CALL);
+                    VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_CALL);
                     VM_SELECT_INDEX(called_function->start, RXVM_TRANSITION_CALL);
 
                     /* No Arguments - so nothing to do */
@@ -5683,9 +5685,8 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_CALL);
                         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
                         DISPATCH;
                     }
-                    current_frame = temp_frame;
                     /* Prepare dispatch to procedure as early as possible */
-VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_CALL);
+                    VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_CALL);
                     VM_SELECT_INDEX(called_function->start, RXVM_TRANSITION_CALL);
 
 
@@ -5698,7 +5699,7 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_CALL);
                     for (i = 0;
                          i < (current_frame->parent->locals[(pc + 3)->index])->int_value;
                          i++, j++, k++) {
-                        current_frame->locals[j] = current_frame->parent->locals[k];
+                        current_locals[j] = current_frame->parent->locals[k];
                     }
                 }
             }
@@ -5726,10 +5727,8 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_CALL);
                         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
                         DISPATCH;
                     }
-                    current_frame = temp_frame;
-
                     /* Prepare dispatch to procedure as early as possible */
-VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_CALL);
+                    VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_CALL);
                     VM_SELECT_INDEX(called_function->start, RXVM_TRANSITION_CALL);
 
 
@@ -5742,7 +5741,7 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_CALL);
                     for (i = 0;
                          i < (current_frame->parent->locals[(pc + 3)->index])->int_value;
                          i++, j++, k++) {
-                        current_frame->locals[j] = current_frame->parent->locals[k];
+                        current_locals[j] = current_frame->parent->locals[k];
                     }
                 }
             }
@@ -5756,7 +5755,7 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_CALL);
                 unsigned char is_interrupt = current_frame->is_interrupt;
                 /* back to the parent's stack frame */
                 temp_frame = current_frame;
-                current_frame = current_frame->parent;
+                VM_ACTIVATE_FRAME_OR_NULL(current_frame->parent, RXVM_TRANSITION_RETURN);
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
                     /* Copy back arguments for external calls */
@@ -5788,7 +5787,6 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_CALL);
                 }
                 HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
-VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
                 VM_SELECT_POINTER(next_pc, RXVM_TRANSITION_RETURN);
                 if (is_interrupt == RXSIGNAL_BREAKPOINT) {
                     VM_RESUME_INTERRUPTED(is_interrupt); /* Bypass the still-pending breakpoint check. */
@@ -5806,7 +5804,7 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
                 /* Set the result register */
                 if (current_frame->return_reg) {
                     if (REG_IDX(1) >= current_frame->procedure->locals || /* Not a local */
-                        current_frame->locals[REG_IDX(1)] != current_frame->baselocals[REG_IDX(1)]) /* swapped/linked so might not be a local really */
+                        current_locals[REG_IDX(1)] != current_frame->baselocals[REG_IDX(1)]) /* swapped/linked so might not be a local really */
                         copy_value(current_frame->return_reg,
                                    op1R); /* Must do a copy if it could be an argument, object attribute or global because ... */
                     else
@@ -5815,7 +5813,7 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
                 }
                 /* back to the parents stack frame */
                 temp_frame = current_frame;
-                current_frame = current_frame->parent;
+                VM_ACTIVATE_FRAME_OR_NULL(current_frame->parent, RXVM_TRANSITION_RETURN);
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
                     /* Exiting - grab the int rc */
@@ -5858,7 +5856,6 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
                 }
                 HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
-VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
                 VM_SELECT_POINTER(next_pc, RXVM_TRANSITION_RETURN);
                 if (is_interrupt == RXSIGNAL_BREAKPOINT) {
                     VM_RESUME_INTERRUPTED(is_interrupt); /* Bypass the still-pending breakpoint check. */
@@ -5877,7 +5874,7 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
                     current_frame->return_reg->int_value = op1I;
                 /* back to the parents stack frame */
                 temp_frame = current_frame;
-                current_frame = current_frame->parent;
+                VM_ACTIVATE_FRAME_OR_NULL(current_frame->parent, RXVM_TRANSITION_RETURN);
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
                     /* Copy back arguments for external calls */
@@ -5917,7 +5914,6 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
                 }
                 HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
-VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
                 VM_SELECT_POINTER(next_pc, RXVM_TRANSITION_RETURN);
                 if (is_interrupt == RXSIGNAL_BREAKPOINT) {
                     VM_RESUME_INTERRUPTED(is_interrupt); /* Bypass the still-pending breakpoint check. */
@@ -5939,7 +5935,7 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
                     current_frame->return_reg->float_value = op1F;
                 /* back to the parents stack frame */
                 temp_frame = current_frame;
-                current_frame = current_frame->parent;
+                VM_ACTIVATE_FRAME_OR_NULL(current_frame->parent, RXVM_TRANSITION_RETURN);
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
                     /* Copy back arguments for external calls */
@@ -5977,7 +5973,6 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
                 }
                 HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
-VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
                 VM_SELECT_POINTER(next_pc, RXVM_TRANSITION_RETURN);
                 if (is_interrupt == RXSIGNAL_BREAKPOINT) {
                     VM_RESUME_INTERRUPTED(is_interrupt); /* Bypass the still-pending breakpoint check. */
@@ -6000,7 +5995,7 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
                     set_const_string(current_frame->return_reg, CONSTSTRING_OP(1));
                 /* back to the parents stack frame */
                 temp_frame = current_frame;
-                current_frame = current_frame->parent;
+                VM_ACTIVATE_FRAME_OR_NULL(current_frame->parent, RXVM_TRANSITION_RETURN);
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
                     /* Copy back arguments for external calls */
@@ -6037,7 +6032,6 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
                 }
                 HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
-VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
                 VM_SELECT_POINTER(next_pc, RXVM_TRANSITION_RETURN);
                 if (is_interrupt == RXSIGNAL_BREAKPOINT) {
                     VM_RESUME_INTERRUPTED(is_interrupt); /* Bypass the still-pending breakpoint check. */
@@ -6545,8 +6539,8 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
         START_INSTRUCTION(DEC0) VM_ADVANCE(0);
             /* TODO This is really idec0 - i.e. it does not prime the int */
             DEBUG("TRACE - DEC0\n");
-            if (!rxinteger_checked_sub(current_frame->locals[0]->int_value, 1,
-                                       &current_frame->locals[0]->int_value)) {
+            if (!rxinteger_checked_sub(current_locals[0]->int_value, 1,
+                                       &current_locals[0]->int_value)) {
                 SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
             DISPATCH;
@@ -6558,8 +6552,8 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
         START_INSTRUCTION(DEC1) VM_ADVANCE(0);
             /* TODO This is really idec1 - i.e. it does not prime the int */
             DEBUG("TRACE - DEC1\n");
-            if (!rxinteger_checked_sub(current_frame->locals[1]->int_value, 1,
-                                       &current_frame->locals[1]->int_value)) {
+            if (!rxinteger_checked_sub(current_locals[1]->int_value, 1,
+                                       &current_locals[1]->int_value)) {
                 SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
             DISPATCH;
@@ -6571,8 +6565,8 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
         START_INSTRUCTION(DEC2) VM_ADVANCE(0);
             /* TODO This is really idec2 - i.e. it does not prime the int */
             DEBUG("TRACE - DEC2\n");
-            if (!rxinteger_checked_sub(current_frame->locals[2]->int_value, 1,
-                                       &current_frame->locals[2]->int_value)) {
+            if (!rxinteger_checked_sub(current_locals[2]->int_value, 1,
+                                       &current_locals[2]->int_value)) {
                 SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
             DISPATCH;
@@ -6580,8 +6574,8 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
         START_INSTRUCTION(DEC_REG) VM_ADVANCE(1);
             /* TODO This is really idec reg - i.e. it does not prime the int */
             DEBUG("TRACE - DEC R%lu\n", REG_IDX(1));
-            if (!rxinteger_checked_sub(current_frame->locals[REG_IDX(1)]->int_value, 1,
-                                       &current_frame->locals[REG_IDX(1)]->int_value)) {
+            if (!rxinteger_checked_sub(current_locals[REG_IDX(1)]->int_value, 1,
+                                       &current_locals[REG_IDX(1)]->int_value)) {
                 SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
             DISPATCH;
@@ -6956,8 +6950,8 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
  */
         START_INSTRUCTION(ISEX_REG) VM_ADVANCE(1);
             DEBUG("TRACE - INC R%lu\n", REG_IDX(1));
-            if (!rxinteger_checked_neg(current_frame->locals[REG_IDX(1)]->int_value,
-                                       &current_frame->locals[REG_IDX(1)]->int_value)) {
+            if (!rxinteger_checked_neg(current_locals[REG_IDX(1)]->int_value,
+                                       &current_locals[REG_IDX(1)]->int_value)) {
                 SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
         DISPATCH;
@@ -6968,7 +6962,7 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
  */
         START_INSTRUCTION(FSEX_REG) VM_ADVANCE(1);
             DEBUG("TRACE - INC R%lu\n", REG_IDX(1));
-            (current_frame->locals[REG_IDX(1)]->float_value)=0-(current_frame->locals[REG_IDX(1)]->float_value);
+            (current_locals[REG_IDX(1)]->float_value)=0-(current_locals[REG_IDX(1)]->float_value);
         DISPATCH;
 
 /* ------------------------------------------------------------------------------------
@@ -7636,8 +7630,8 @@ VM_ACTIVATE_FRAME(current_frame, RXVM_TRANSITION_RETURN);
  */
         START_INSTRUCTION(INC_REG) VM_ADVANCE(1);
             DEBUG("TRACE - INC R%lu\n", REG_IDX(1));
-            if (!rxinteger_checked_add(current_frame->locals[REG_IDX(1)]->int_value, 1,
-                                       &current_frame->locals[REG_IDX(1)]->int_value)) {
+            if (!rxinteger_checked_add(current_locals[REG_IDX(1)]->int_value, 1,
+                                       &current_locals[REG_IDX(1)]->int_value)) {
                 SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
             DISPATCH;
@@ -8127,7 +8121,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
  */
         START_INSTRUCTION(LINKARG_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - LINKARG R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
-            op1R = current_frame->locals[op2RI + op3I +
+            op1R = current_locals[op2RI + op3I +
                                          current_frame->procedure->binarySpace->globals +
                                          current_frame->procedure->locals];
             DISPATCH;
@@ -8138,7 +8132,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
  */
         START_INSTRUCTION(LINKARG_REG_INT) VM_ADVANCE(2);
             DEBUG("TRACE - LINKARG R%d,%d\n", (int)REG_IDX(1), (int)op2I);
-            op1R = current_frame->locals[op2I +
+            op1R = current_locals[op2I +
                                          current_frame->procedure->binarySpace->globals +
                                          current_frame->procedure->locals];
             DISPATCH;
@@ -8453,7 +8447,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
  */
         START_INSTRUCTION(BGT_ID_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - BGT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            if (current_frame->locals[REG_IDX(2)]->int_value > current_frame->locals[REG_IDX(3)]->int_value) {
+            if (current_locals[REG_IDX(2)]->int_value > current_locals[REG_IDX(3)]->int_value) {
                 VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
 
             }
@@ -8465,7 +8459,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
  */
         START_INSTRUCTION(BGT_ID_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - BGT 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            if (current_frame->locals[REG_IDX(2)]->int_value > op3I) {
+            if (current_locals[REG_IDX(2)]->int_value > op3I) {
                VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
 
             }
@@ -8476,7 +8470,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
  */
     START_INSTRUCTION(BGE_ID_REG_REG) VM_ADVANCE(3);
        DEBUG("TRACE - BGE 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-       if (current_frame->locals[REG_IDX(2)]->int_value >= current_frame->locals[REG_IDX(3)]->int_value) {
+       if (current_locals[REG_IDX(2)]->int_value >= current_locals[REG_IDX(3)]->int_value) {
           VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
 
        }
@@ -8488,7 +8482,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
  */
     START_INSTRUCTION(BGE_ID_REG_INT) VM_ADVANCE(3);
         DEBUG("TRACE - BGE 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-        if (current_frame->locals[REG_IDX(2)]->int_value >= op3I) {
+        if (current_locals[REG_IDX(2)]->int_value >= op3I) {
             VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
 
         }
@@ -8499,7 +8493,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
  */
     START_INSTRUCTION(BLT_ID_REG_REG) VM_ADVANCE(3);
         DEBUG("TRACE - BLT 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-        if (current_frame->locals[REG_IDX(2)]->int_value < current_frame->locals[REG_IDX(3)]->int_value) {
+        if (current_locals[REG_IDX(2)]->int_value < current_locals[REG_IDX(3)]->int_value) {
             VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
 
         }
@@ -8510,7 +8504,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
  */
     START_INSTRUCTION(BLT_ID_REG_INT) VM_ADVANCE(3);
         DEBUG("TRACE - BGT 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-        if (current_frame->locals[REG_IDX(2)]->int_value < op3I) {
+        if (current_locals[REG_IDX(2)]->int_value < op3I) {
             VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
 
         }
@@ -8521,7 +8515,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
  */
     START_INSTRUCTION(BLE_ID_REG_REG) VM_ADVANCE(3);
         DEBUG("TRACE - BGE 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-        if (current_frame->locals[REG_IDX(2)]->int_value <= current_frame->locals[REG_IDX(3)]->int_value) {
+        if (current_locals[REG_IDX(2)]->int_value <= current_locals[REG_IDX(3)]->int_value) {
             VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
 
         }
@@ -8532,7 +8526,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
  */
     START_INSTRUCTION(BLE_ID_REG_INT) VM_ADVANCE(3);
         DEBUG("TRACE - BGE 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-        if (current_frame->locals[REG_IDX(2)]->int_value <= op3I) {
+        if (current_locals[REG_IDX(2)]->int_value <= op3I) {
             VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
 
         }
@@ -8543,7 +8537,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
  */
     START_INSTRUCTION(BNE_ID_REG_REG) VM_ADVANCE(3);
         DEBUG("TRACE - BGE 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-        if (current_frame->locals[REG_IDX(2)]->int_value != current_frame->locals[REG_IDX(3)]->int_value) {
+        if (current_locals[REG_IDX(2)]->int_value != current_locals[REG_IDX(3)]->int_value) {
             VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
 
         }
@@ -8555,7 +8549,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
  */
     START_INSTRUCTION(BNE_ID_REG_INT) VM_ADVANCE(3);
         DEBUG("TRACE - BGE 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-        if (current_frame->locals[REG_IDX(2)]->int_value != op3I) {
+        if (current_locals[REG_IDX(2)]->int_value != op3I) {
             VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
 
         }
@@ -8566,7 +8560,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
  */
     START_INSTRUCTION(BEQ_ID_REG_REG) VM_ADVANCE(3);
         DEBUG("TRACE - BGE 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-        if (current_frame->locals[REG_IDX(2)]->int_value == current_frame->locals[REG_IDX(3)]->int_value) {
+        if (current_locals[REG_IDX(2)]->int_value == current_locals[REG_IDX(3)]->int_value) {
             VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
 
         }
@@ -8577,7 +8571,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
  */
     START_INSTRUCTION(BEQ_ID_REG_INT) VM_ADVANCE(3);
         DEBUG("TRACE - BGE 0x%x,R%d,%d\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
-        if (current_frame->locals[REG_IDX(2)]->int_value == op3I) {
+        if (current_locals[REG_IDX(2)]->int_value == op3I) {
             VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
 
         }
@@ -8625,7 +8619,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
  */
         START_INSTRUCTION(BCF_ID_REG) VM_ADVANCE(2);
             DEBUG("TRACE - BCF R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
-            if (current_frame->locals[REG_IDX(2)]->int_value == 0) {
+            if (current_locals[REG_IDX(2)]->int_value == 0) {
                 VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
 
             }
@@ -8639,7 +8633,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
  */
         START_INSTRUCTION(BCF_ID_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - BCF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            if (current_frame->locals[REG_IDX(2)]->int_value == 0) {
+            if (current_locals[REG_IDX(2)]->int_value == 0) {
                 VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
 
             }

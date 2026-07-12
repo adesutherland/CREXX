@@ -33,6 +33,7 @@
 #include "rxsignature.h"
 #include "rxvminstrument.h"
 #include "crexx_version.h"
+#include <assert.h>
 
 typedef enum { RXVM_MOD_LOADED, RXVM_MOD_LINKED, RXVM_MOD_THREADED } rxvm_mod_state;
 
@@ -178,19 +179,72 @@ struct stack_frame {
                 instruction = src_inst(instr, op1,op2,op3);     \
                 address_map[instruction->opcode] = target;
 
-#define VM_CANONICAL_INDEX(pointer_) ((size_t)((pointer_) - current_module->segment.binary))
-#define VM_EXECUTION_POINTER(index_)                                           \
-    (current_frame->procedure->binarySpace->binary + (size_t)(index_))
+#define VM_CANONICAL_INDEX(pointer_) ((size_t)((pointer_) - current_canonical_base))
+#define VM_EXECUTION_POINTER(index_) (current_execution_base + (size_t)(index_))
+
+#ifdef NTHREADED
+#define VM_MODULE_DISPATCH_BASE(module_) ((void **)(0))
+#else
+#define VM_MODULE_DISPATCH_BASE(module_) ((module_)->prepared_dispatch)
+#endif
+
+#ifndef NDEBUG
+#define VM_ASSERT_ACTIVE_FRAME()                                                \
+    do {                                                                        \
+        assert(current_frame);                                                  \
+        assert(current_frame->procedure);                                       \
+        assert(current_frame->procedure->binarySpace == current_binary_space);  \
+        assert(current_binary_space->module == current_module);                 \
+        assert(current_binary_space->binary == current_canonical_base);         \
+        assert(current_execution_base == current_canonical_base);               \
+        assert(current_dispatch_base == VM_MODULE_DISPATCH_BASE(current_module)); \
+        assert(current_binary_space->const_pool == current_const_pool);         \
+        assert(current_frame->locals == current_locals);                        \
+    } while (0)
+#else
+#define VM_ASSERT_ACTIVE_FRAME() ((void)0)
+#endif
 
 #define VM_ACTIVATE_FRAME(frame_, reason_)                                      \
     do {                                                                        \
         stack_frame *vm_frame__ = (frame_);                                     \
         current_frame = vm_frame__;                                             \
-        current_module = vm_frame__->procedure->binarySpace->module;            \
+        current_binary_space = vm_frame__->procedure->binarySpace;              \
+        current_module = current_binary_space->module;                          \
+        current_execution_base = current_binary_space->binary;                  \
+        current_canonical_base = current_binary_space->binary;                  \
+        current_dispatch_base = VM_MODULE_DISPATCH_BASE(current_module);        \
+        current_const_pool = current_binary_space->const_pool;                  \
+        current_locals = vm_frame__->locals;                                    \
+        VM_ASSERT_ACTIVE_FRAME();                                               \
         RXVM_INSTRUMENTATION_FRAME_ACTIVATE(                                    \
                 current_module->module_number,                                  \
                 vm_frame__->procedure->start,                                   \
                 (reason_));                                                     \
+    } while (0)
+
+#define VM_DEACTIVATE_FRAME()                                                   \
+    do {                                                                        \
+        RXVM_INSTRUMENTATION_INSTRUCTION_TERMINAL(                              \
+                current_module ? current_module->module_number : 0,             \
+                (current_canonical_base && pc)                                  \
+                    ? (size_t)(pc - current_canonical_base) : 0,                \
+                RXVM_TRANSITION_TERMINAL);                                      \
+        current_frame = 0;                                                      \
+        current_binary_space = 0;                                               \
+        current_module = 0;                                                     \
+        current_execution_base = 0;                                             \
+        current_canonical_base = 0;                                             \
+        current_dispatch_base = 0;                                              \
+        current_const_pool = 0;                                                 \
+        current_locals = 0;                                                     \
+    } while (0)
+
+#define VM_ACTIVATE_FRAME_OR_NULL(frame_, reason_)                              \
+    do {                                                                        \
+        stack_frame *vm_frame_or_null__ = (frame_);                             \
+        if (vm_frame_or_null__) VM_ACTIVATE_FRAME(vm_frame_or_null__, reason_); \
+        else VM_DEACTIVATE_FRAME();                                             \
     } while (0)
 
 #ifdef NTHREADED
@@ -212,7 +266,7 @@ struct stack_frame {
 #define END_INTERRUPT do { goto *next_inst; } while (0);
 #define VM_RESOLVE_SELECTED()                                                   \
     do {                                                                        \
-        next_inst = current_module->prepared_dispatch[VM_CANONICAL_INDEX(next_pc)]; \
+        next_inst = current_dispatch_base[VM_CANONICAL_INDEX(next_pc)];          \
     } while (0)
 #define VM_DISPATCH_TARGET() goto *next_inst
 
@@ -265,14 +319,14 @@ struct stack_frame {
         VM_DISPATCH_TARGET();                                                   \
     } while (0)
 
-#define REG_OP(n)                    current_frame->locals[(pc+(n))->index]
-#define REG_VAL(n)                   current_frame->locals[n]
+#define REG_OP(n)                    current_locals[(pc+(n))->index]
+#define REG_VAL(n)                   current_locals[n]
 #define REG_IDX(n)                   (pc+(n))->index
 #define INT_OP(n)                    (pc+(n))->iconst
-#define FLOAT_OP(n)                  FLOAT_CONST_VALUE(current_frame->procedure->binarySpace->const_pool, (pc+(n))->index)
+#define FLOAT_OP(n)                  FLOAT_CONST_VALUE(current_const_pool, (pc+(n))->index)
 
-#define CONSTSTRING_OP(n)            ((string_constant *)(current_frame->procedure->binarySpace->const_pool + (pc+(n))->index))
-#define PROC_OP(n)                   rxvm_get_module_runtime_procedure(current_frame->procedure->binarySpace->module, (pc+(n))->index)
+#define CONSTSTRING_OP(n)            ((string_constant *)(current_const_pool + (pc+(n))->index))
+#define PROC_OP(n)                   rxvm_get_module_runtime_procedure(current_module, (pc+(n))->index)
 #define INT_VAL(vx)                  vx->int_value
 #define FLOAT_VAL(vx)                vx->float_value
 
