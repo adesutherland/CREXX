@@ -1,0 +1,6 @@
+`bcmpb rCmp,rSrc,rNeedle` compares bytes from binary memory without copying.
+On entry, `rCmp` contains the byte offset into `rSrc`. `rSrc` may be a binary
+register or binary constant. `rNeedle` may be a binary register or binary
+constant. The compare length is the whole length of `rNeedle`. On success,
+`rCmp` is overwritten with `-1`, `0`, or `1` for unsigned-byte lexicographic
+ordering.

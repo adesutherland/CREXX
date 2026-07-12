@@ -1,0 +1,3 @@
+`bconcat rDst,rLeft,rRight` concatenates two binary registers into `rDst`.
+
+This instruction operates on raw bytes and do not validate UTF-8.

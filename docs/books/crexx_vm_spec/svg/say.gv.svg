@@ -22,11 +22,11 @@
 <polygon fill="none" stroke="black" points="0,-67.5 0,-90 46.5,-90 46.5,-67.5 0,-67.5"/>
 <text xml:space="preserve" text-anchor="start" x="6.75" y="-74.25" font-family="Times,serif" font-size="14.00"> SAY </text>
 <polygon fill="none" stroke="black" points="46.5,-67.5 46.5,-90 108.75,-90 108.75,-67.5 46.5,-67.5"/>
-<text xml:space="preserve" text-anchor="start" x="53.25" y="-74.25" font-family="Times,serif" font-size="14.00"> FLOAT </text>
+<text xml:space="preserve" text-anchor="start" x="63" y="-74.25" font-family="Times,serif" font-size="14.00"> INT </text>
 <polygon fill="none" stroke="black" points="0,-45 0,-67.5 46.5,-67.5 46.5,-45 0,-45"/>
 <text xml:space="preserve" text-anchor="start" x="6.75" y="-51.75" font-family="Times,serif" font-size="14.00"> SAY </text>
 <polygon fill="none" stroke="black" points="46.5,-45 46.5,-67.5 108.75,-67.5 108.75,-45 46.5,-45"/>
-<text xml:space="preserve" text-anchor="start" x="55.12" y="-51.75" font-family="Times,serif" font-size="14.00"> CHAR </text>
+<text xml:space="preserve" text-anchor="start" x="53.25" y="-51.75" font-family="Times,serif" font-size="14.00"> FLOAT </text>
 <polygon fill="none" stroke="black" points="0,-22.5 0,-45 46.5,-45 46.5,-22.5 0,-22.5"/>
 <text xml:space="preserve" text-anchor="start" x="6.75" y="-29.25" font-family="Times,serif" font-size="14.00"> SAY </text>
 <polygon fill="none" stroke="black" points="46.5,-22.5 46.5,-45 108.75,-45 108.75,-22.5 46.5,-22.5"/>
@@ -34,7 +34,7 @@
 <polygon fill="none" stroke="black" points="0,0 0,-22.5 46.5,-22.5 46.5,0 0,0"/>
 <text xml:space="preserve" text-anchor="start" x="6.75" y="-6.75" font-family="Times,serif" font-size="14.00"> SAY </text>
 <polygon fill="none" stroke="black" points="46.5,0 46.5,-22.5 108.75,-22.5 108.75,0 46.5,0"/>
-<text xml:space="preserve" text-anchor="start" x="63" y="-6.75" font-family="Times,serif" font-size="14.00"> INT </text>
+<text xml:space="preserve" text-anchor="start" x="55.12" y="-6.75" font-family="Times,serif" font-size="14.00"> CHAR </text>
 </g>
 </g>
 </svg>

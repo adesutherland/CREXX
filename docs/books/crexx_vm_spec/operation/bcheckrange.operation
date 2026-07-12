@@ -1,0 +1,5 @@
+`bcheckrange rBin,rOffset,rLen` checks that the byte range
+`rOffset..rOffset+rLen` is inside the logical binary length. It does not mutate
+any operand. It is an explicit assertion; target-sized copy, typed reads, typed
+writes, text field instructions, and compare instructions still perform their
+own range checks.

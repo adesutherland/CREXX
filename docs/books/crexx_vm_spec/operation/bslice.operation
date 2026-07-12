@@ -1,0 +1,7 @@
+Deprecated: These legacy cursor instructions remain available for cursor-style byte
+processing. New Release 1 source lowering should prefer target-sized `bcopy`
+for binary field extraction.
+
+`bslice rDst,rSrc,rLen` copies up to `rLen` bytes from `rSrc` starting at its
+cursor into `rDst`. It truncates at end of buffer; generated strict reads should
+use `bcheckrange` or target-sized `bcopy` instead.
