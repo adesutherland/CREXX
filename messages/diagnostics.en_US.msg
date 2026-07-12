@@ -2,6 +2,7 @@
 # This file contains spelling overrides. Missing entries fall back to en_GB.
 
 OVERFLOW_UNDERFLOW = Arithmetic overflow or underflow during optimization.
+DIVISION_BY_ZERO = Integer division or modulo by zero during optimization.
 UNUSED_IMPORT = Import is recognized but not used.
 
 RXC-LC-2 = Failure during finalization

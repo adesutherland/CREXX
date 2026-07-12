@@ -74,6 +74,8 @@ header ::= const_alias.
 header ::= NEWLINE.
 
 // Header error messages
+header ::= KW_JTABLE(T) error NEWLINE. {rxaserat(context, T, "Jump tables can only be declared inside a procedure");}
+header ::= KW_JCASE(T) error NEWLINE. {rxaserat(context, T, "Jump table cases can only be declared inside a procedure");}
 header ::= ANYTHING(T) error NEWLINE. {rxaserat(context, T, "Invalid header directive");}
 
 // Global directive
@@ -134,7 +136,10 @@ functionDefinition ::= FUNC KW_LOCALS EQUAL INT KW_EXPOSE(T) error NEWLINE.
 instructions ::= instruction.
 instructions ::= instructions instruction.
 instruction ::= instr NEWLINE.
-instruction ::= LABEL(L). {rxasqlbl(context,L);}
+instruction ::= LABEL(L). {rxasqlbl(context,L); context->last_label_token = L;}
+instruction ::= KW_JTABLE ID(T) NEWLINE. {rxasjtab(context,T,0);}
+instruction ::= KW_JTABLE ID(T) ID(A) NEWLINE. {rxasjtab(context,T,A);}
+instruction ::= KW_JCASE(J) ID(T) jcase_literal(V) NEWLINE. {rxasjcase_after_label(context,J,T,V);}
 instruction ::= KW_SRCSTEP INT(ST) INT(CL) INT(FL) STRING(F) INT(L) INT(SC) INT(EC) STRING(S) NEWLINE.
                 {rxasqmstp(context, ST, CL, FL, F, L, SC, EC, S);}
 instruction ::= KW_TRACEEVENT STRING(K) INT(M) STRING(VS) STRING(VT) STRING(RT) INT(VR) INT(ST) INT(CL) INT(FL) STRING(SYM) STRING(RN) NEWLINE.
@@ -154,6 +159,8 @@ instruction ::= NEWLINE.
 // Instruction error messages
 instruction ::= KW_META(T) error NEWLINE. {rxaseaft(context, T, "Expecting {string} = {meta definition}");}
 instruction ::= ANYTHING(T) error NEWLINE. {rxaserat(context, T, "Invalid label, opcode or directive");}
+instruction ::= KW_JTABLE(T) error NEWLINE. {rxaseaft(context, T, "Expecting {id} [auto|linear|openhash|acph]");}
+instruction ::= KW_JCASE(T) error NEWLINE. {rxaserat(context, T, ".jcase must decorate a same-line label");}
 instruction ::= KW_SRCSTEP(T) error NEWLINE. {rxaserat(context, T, "Expecting .srcstep {step} {clause} {flags} \"{file}\" {line} {start-col} {end-col} \"{source line}\"");}
 instruction ::= KW_TRACEEVENT(T) error NEWLINE. {rxaserat(context, T, "Expecting .traceevent \"{kind}\" {mode-mask} \"{value-source}\" \"{value-type}\" \"{register-type}\" {value-ref} {source-step} {clause} {flags} \"{symbol}\" \"{resolved-name}\"");}
 
@@ -166,6 +173,8 @@ decl_instruction ::= NEWLINE.
 
 // Declaration instruction error messages
 decl_instruction ::= ANYTHING(T) error NEWLINE. {rxaserat(context, T, "Invalid label, opcode or directive");}
+decl_instruction ::= KW_JTABLE(T) error NEWLINE. {rxaserat(context, T, "Cannot define jump table here");}
+decl_instruction ::= KW_JCASE(T) error NEWLINE. {rxaserat(context, T, "Cannot define jump table case here");}
 decl_instruction ::= KW_SRCSTEP(T) error NEWLINE. {rxaserat(context, T, "Cannot define source step here");}
 decl_instruction ::= KW_TRACEEVENT(T) error NEWLINE. {rxaserat(context, T, "Cannot define trace event here");}
 decl_instruction ::= KW_META STRING EQUAL STRING STRING reg(E) NEWLINE. {rxaserat(context, E, "Cannot set register metadata here");}
@@ -206,3 +215,7 @@ operand ::= CHAR.
 operand ::= STRING.
 operand ::= HEX.
 operand ::= DECIMAL.
+
+jcase_literal ::= STRING.
+jcase_literal ::= HEX.
+jcase_literal ::= INT.

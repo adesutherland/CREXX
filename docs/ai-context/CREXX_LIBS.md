@@ -462,6 +462,10 @@ The VM passes arguments as opaque handles mapped to internal VM registers. The R
 
 - `SETINT()`, `SETFLOAT()`, `SETSTRING()`: Writes a native C value into a target register.
 
+  `SETSTRING()` copies the supplied NUL-terminated bytes into VM-owned value
+  storage. The plugin retains ownership of the source buffer and must release
+  it after `SETSTRING()` when that buffer was allocated by the plugin.
+
 - `SETNATIVEPAYLOAD()` / `GETNATIVEPAYLOAD()`: Attach or read a hidden
   native binary payload for object-shaped native values. Use this only with a
   clear copy/finalizer contract; ordinary Rexx code still sees an object value,

@@ -1,0 +1,5 @@
+.globals=0
+
+main() .locals=1
+word: .jcase missing "word"
+    ret 0

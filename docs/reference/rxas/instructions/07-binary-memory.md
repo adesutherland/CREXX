@@ -57,14 +57,28 @@ Append the binary payload of one register to the end of another register.
 | --- | --- | --- |
 | `0x00bb` | `bappend rDst,rRight` | Append all bytes from `rRight` to `rDst`. |
 
-### Operands
+### Operands And Semantics
 
 `rDst` and `rRight` are binary registers. `rDst` is resized to hold its original
-bytes followed by `rRight`.
+bytes followed by `rRight`. Its binary cursor is preserved when still within
+the resized value; `rRight` and its cursor are unchanged.
 
 ### Signals
 
 Allocation failure raises `FAILURE`.
+
+### Example
+
+<!-- rxas-example name="binary-bappend" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r0,0x01
+    load r1,0x0203
+    bappend r0,r1
+    ret
+```
 
 ### Related
 
@@ -81,7 +95,7 @@ operand.
 | --- | --- | --- |
 | `0x0257` | `bcheckrange rBin,rOffset,rLen` | Assert that `rOffset..rOffset+rLen` is inside `rBin`. |
 
-### Operands
+### Operands And Semantics
 
 `rOffset` and `rLen` are integer registers. The end offset is exclusive.
 
@@ -90,6 +104,20 @@ operand.
 Raises `OUT_OF_RANGE` for a negative offset, negative length, arithmetic
 overflow while computing the end offset, or a range past the logical binary
 length.
+
+### Example
+
+<!-- rxas-example name="binary-bcheckrange" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    load r0,0x001122
+    load r1,1
+    load r2,2
+    bcheckrange r0,r1,r2
+    ret
+```
 
 ### Related
 
@@ -105,9 +133,25 @@ Clear a binary register by setting its logical byte length to zero.
 | --- | --- | --- |
 | `0x0247` | `bclear rBin` | Set `rBin` to an empty binary value. |
 
-### Semantics
+### Operands And Semantics
 
 The register remains a binary value. The legacy cursor is reset to zero.
+
+### Signals
+
+This instruction does not signal.
+
+### Example
+
+<!-- rxas-example name="binary-bclear" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,0x0011
+    bclear r0
+    ret
+```
 
 ### Related
 
@@ -127,7 +171,7 @@ source slice into a temporary register.
 | `0x0271` | `bcmpb rCmp,rBin,bConst` | Compare a slice of `rBin` with binary constant `bConst`. |
 | `0x0272` | `bcmpb rCmp,bConst,bConst` | Compare a slice of one binary constant with another binary constant. |
 
-### Operands
+### Operands And Semantics
 
 On entry, `rCmp` contains the byte offset into the source. The compare length is
 the full logical byte length of the needle. On return, `rCmp` is overwritten
@@ -141,11 +185,95 @@ compare, copy it to a scratch register first.
 
 ### Example
 
-See `binary-compare` in [Examples](#examples).
+<!-- rxas-example name="binary-bcmpb" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r0,1
+    load r1,0x001122
+    bcmpb r0,r1,0x1122
+    ret
+```
 
 ### Related
 
 `bcmps`, `bgets`, `bcopy`.
+
+## `bineq`
+
+Compare two complete logical binary values for equality. Unlike `bcmpb`, this
+compares both lengths and all bytes and does not interpret an integer offset.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x027d` | `bineq rResult,rLeft,rRight` | Set `rResult` to one when both complete binary values are equal. |
+| `0x027e` | `bineq rResult,rLeft,bConst` | Compare a binary register with a binary constant. |
+
+### Operands And Semantics
+
+`rLeft` and `rRight` are binary registers. `bConst` is an inline binary literal
+or named binary constant. `rResult` receives integer Boolean `0` or `1`; only
+that payload changes and both inputs/cursors are unchanged.
+
+### Signals
+
+These comparisons do not resize, copy, or modify either input and do not raise
+`OUT_OF_RANGE`.
+
+### Example
+
+<!-- rxas-example name="binary-bineq" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,0x0011
+    bineq r0,r1,0x0011
+    ret
+```
+
+### Related
+
+`bcmpb`, `jumpb`, `bcopy`.
+
+## `binne`
+
+Compare two complete logical binary values for inequality.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x027f` | `binne rResult,rLeft,rRight` | Test register lengths and bytes. |
+| `0x0280` | `binne rResult,rLeft,bConst` | Compare register with binary constant. |
+
+### Operands And Semantics
+
+`rResult` receives integer Boolean `1` when lengths or any bytes differ,
+otherwise `0`. Only its integer payload changes; inputs and cursors are unchanged.
+
+### Signals
+
+This instruction does not signal or raise `OUT_OF_RANGE`.
+
+### Example
+
+<!-- rxas-example name="binary-binne" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,0x0011
+    binne r0,r1,0x0022
+    ret
+```
+
+### Related
+
+`bineq`, `bcmpb`, `jumpb`.
 
 ## `bcmps`
 
@@ -161,7 +289,7 @@ copying the source field into a temporary string register.
 | `0x0275` | `bcmps rCmp,bConst,rString` | Compare a binary-constant text field with string register `rString`. |
 | `0x0276` | `bcmps rCmp,bConst,sConst` | Compare a binary-constant text field with string constant `sConst`. |
 
-### Operands
+### Operands And Semantics
 
 On entry, `rCmp` contains the byte offset of a zero-terminated UTF-8 field in
 the binary source. On return, `rCmp` is overwritten with `-1`, `0`, or `1` using
@@ -175,7 +303,16 @@ before the terminator are not valid UTF-8.
 
 ### Example
 
-See `binary-compare` in [Examples](#examples).
+<!-- rxas-example name="binary-bcmps" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r0,0
+    load r1,0x616200
+    bcmps r0,r1,"ab"
+    ret
+```
 
 ### Related
 
@@ -191,13 +328,26 @@ Concatenate two binary registers into a destination register.
 | --- | --- | --- |
 | `0x00ba` | `bconcat rDst,rLeft,rRight` | Store `rLeft || rRight` as a binary value in `rDst`. |
 
-### Operands
+### Operands And Semantics
 
 All operands are registers. The source operands are read as binary values.
 
 ### Signals
 
 Allocation failure raises `FAILURE`.
+
+### Example
+
+<!-- rxas-example name="binary-bconcat" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    load r1,0x01
+    load r2,0x02
+    bconcat r0,r1,r2
+    ret
+```
 
 ### Related
 
@@ -216,7 +366,7 @@ a register or constant source.
 | `0x0259` | `bcopy rDst,rSrc,rOffset` | Copy `blen(rDst)` bytes from binary register `rSrc` at `rOffset` into `rDst`. |
 | `0x025a` | `bcopy rDst,bConst,rOffset` | Copy `blen(rDst)` bytes from binary constant `bConst` at `rOffset` into `rDst`. |
 
-### Operands
+### Operands And Semantics
 
 The three-operand forms use the current logical length of `rDst` as the copy
 length. The destination must therefore be sized before the instruction runs.
@@ -229,7 +379,15 @@ target-sized slice does not fit in the source. Allocation failure raises
 
 ### Example
 
-See `binary-bcopy` in [Examples](#examples).
+<!-- rxas-example name="binary-bcopy-one" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,0x001122
+    bcopy r0,r1
+    ret
+```
 
 ### Related
 
@@ -245,13 +403,26 @@ Fill every byte in a binary register with one byte value.
 | --- | --- | --- |
 | `0x0248` | `bfill rBin,rByte` | Fill the current logical byte range of `rBin` with `rByte`. |
 
-### Operands
+### Operands And Semantics
 
 `rByte` is an integer register and must contain a value in `0..255`.
 
 ### Signals
 
 Raises `OUT_OF_RANGE` when the byte value is outside `0..255`.
+
+### Example
+
+<!-- rxas-example name="binary-bfill" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r0,0x000000
+    load r1,255
+    bfill r0,r1
+    ret
+```
 
 ### Related
 
@@ -268,13 +439,27 @@ Read an IEEE binary32 field and widen it into a VM float register.
 | `0x0264` | `bgetf32 rOut,rBin,rOffset` | Read 4 little-endian bytes from binary register `rBin`. |
 | `0x0265` | `bgetf32 rOut,bConst,rOffset` | Read 4 little-endian bytes from binary constant `bConst`. |
 
+### Operands And Semantics
+
+`rOffset.int` is a zero-based byte offset. Only `rOut.float` changes; the
+source, offset, binary cursor, and other destination state are unchanged.
+
 ### Signals
 
 Raises `OUT_OF_RANGE` if the 4-byte field does not fit.
 
 ### Example
 
-See `binary-fixed-width` in [Examples](#examples).
+<!-- rxas-example name="binary-bgetf32" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,0x0000803f
+    load r0,0
+    bgetf32 r0,r1,r0
+    ret
+```
 
 ### Related
 
@@ -291,9 +476,27 @@ Read an IEEE binary64 field into a VM float register.
 | `0x024f` | `bgetf64 rOut,rBin,rOffset` | Read 8 little-endian bytes from binary register `rBin`. |
 | `0x0261` | `bgetf64 rOut,bConst,rOffset` | Read 8 little-endian bytes from binary constant `bConst`. |
 
+### Operands And Semantics
+
+`rOffset.int` is a zero-based byte offset. Only `rOut.float` changes; sources
+and cursors are unchanged.
+
 ### Signals
 
 Raises `OUT_OF_RANGE` if the 8-byte field does not fit.
+
+### Example
+
+<!-- rxas-example name="binary-bgetf64" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,0x000000000000f03f
+    load r0,0
+    bgetf64 r0,r1,r0
+    ret
+```
 
 ### Related
 
@@ -310,9 +513,27 @@ Read a signed 16-bit little-endian integer field.
 | `0x024c` | `bgeti16 rOut,rBin,rOffset` | Read signed 16-bit field from binary register `rBin`. |
 | `0x025e` | `bgeti16 rOut,bConst,rOffset` | Read signed 16-bit field from binary constant `bConst`. |
 
+### Operands And Semantics
+
+`rOffset.int` is zero-based. The field is sign-extended into `rOut.int`; sources,
+cursors, and other destination state are unchanged.
+
 ### Signals
 
 Raises `OUT_OF_RANGE` if the 2-byte field does not fit.
+
+### Example
+
+<!-- rxas-example name="binary-bgeti16" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,0xfeff
+    load r0,0
+    bgeti16 r0,r1,r0
+    ret
+```
 
 ### Related
 
@@ -329,9 +550,27 @@ Read a signed 32-bit little-endian integer field.
 | `0x024e` | `bgeti32 rOut,rBin,rOffset` | Read signed 32-bit field from binary register `rBin`. |
 | `0x0260` | `bgeti32 rOut,bConst,rOffset` | Read signed 32-bit field from binary constant `bConst`. |
 
+### Operands And Semantics
+
+`rOffset.int` is zero-based. The field is sign-extended into `rOut.int`; sources
+and cursors are unchanged.
+
 ### Signals
 
 Raises `OUT_OF_RANGE` if the 4-byte field does not fit.
+
+### Example
+
+<!-- rxas-example name="binary-bgeti32" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,0xfeffffff
+    load r0,0
+    bgeti32 r0,r1,r0
+    ret
+```
 
 ### Related
 
@@ -349,13 +588,27 @@ storage form for `.int`.
 | `0x0262` | `bgeti64 rOut,rBin,rOffset` | Read signed 64-bit field from binary register `rBin`. |
 | `0x0263` | `bgeti64 rOut,bConst,rOffset` | Read signed 64-bit field from binary constant `bConst`. |
 
+### Operands And Semantics
+
+`rOffset.int` is zero-based. Only `rOut.int` changes; sources and cursors remain
+unchanged. The active VM integer type must represent the decoded value.
+
 ### Signals
 
 Raises `OUT_OF_RANGE` if the 8-byte field does not fit.
 
 ### Example
 
-See `binary-fixed-width` in [Examples](#examples).
+<!-- rxas-example name="binary-bgeti64" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,0xfeffffffffffffff
+    load r0,0
+    bgeti64 r0,r1,r0
+    ret
+```
 
 ### Related
 
@@ -372,9 +625,27 @@ Read a signed 8-bit integer field and sign-extend it into an integer register.
 | `0x024a` | `bgeti8 rOut,rBin,rOffset` | Read signed byte from binary register `rBin`. |
 | `0x025c` | `bgeti8 rOut,bConst,rOffset` | Read signed byte from binary constant `bConst`. |
 
+### Operands And Semantics
+
+`rOffset.int` is zero-based. The byte is sign-extended into `rOut.int`; sources
+and cursors remain unchanged.
+
 ### Signals
 
 Raises `OUT_OF_RANGE` if the byte offset is outside the source.
+
+### Example
+
+<!-- rxas-example name="binary-bgeti8" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,0xfe
+    load r0,0
+    bgeti8 r0,r1,r0
+    ret
+```
 
 ### Related
 
@@ -391,7 +662,7 @@ Read a zero-terminated UTF-8 field from binary memory into a string register.
 | `0x0268` | `bgets rString,rBin,rOffset` | Read a NUL-terminated UTF-8 field from binary register `rBin`. |
 | `0x0269` | `bgets rString,bConst,rOffset` | Read a NUL-terminated UTF-8 field from binary constant `bConst`. |
 
-### Operands
+### Operands And Semantics
 
 `rOffset` is a byte offset. The source bytes before the first zero byte are
 validated as UTF-8 and copied into `rString`. The NUL terminator is not part of
@@ -405,7 +676,16 @@ before the terminator.
 
 ### Example
 
-See `binary-text-fields` in [Examples](#examples).
+<!-- rxas-example name="binary-bgets" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    load r1,0x686900
+    load r2,0
+    bgets r0,r1,r2
+    ret
+```
 
 ### Related
 
@@ -422,10 +702,28 @@ Read an unsigned 16-bit little-endian integer field.
 | `0x024b` | `bgetu16 rOut,rBin,rOffset` | Read unsigned 16-bit field from binary register `rBin`. |
 | `0x025d` | `bgetu16 rOut,bConst,rOffset` | Read unsigned 16-bit field from binary constant `bConst`. |
 
+### Operands And Semantics
+
+`rOffset.int` is zero-based. The zero-extended value replaces only `rOut.int`;
+sources and cursors remain unchanged.
+
 ### Signals
 
 Raises `OUT_OF_RANGE` if the 2-byte field does not fit or if the value cannot
 be represented in the active VM integer type.
+
+### Example
+
+<!-- rxas-example name="binary-bgetu16" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,0xffff
+    load r0,0
+    bgetu16 r0,r1,r0
+    ret
+```
 
 ### Related
 
@@ -442,6 +740,11 @@ Read an unsigned 32-bit little-endian integer field.
 | `0x024d` | `bgetu32 rOut,rBin,rOffset` | Read unsigned 32-bit field from binary register `rBin`. |
 | `0x025f` | `bgetu32 rOut,bConst,rOffset` | Read unsigned 32-bit field from binary constant `bConst`. |
 
+### Operands And Semantics
+
+`rOffset.int` is zero-based. The zero-extended value replaces only `rOut.int`;
+sources and cursors remain unchanged.
+
 ### Signals
 
 Raises `OUT_OF_RANGE` if the 4-byte field does not fit or if the value cannot
@@ -449,7 +752,16 @@ be represented in the active VM integer type.
 
 ### Example
 
-See `binary-fixed-width` in [Examples](#examples).
+<!-- rxas-example name="binary-bgetu32" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,0xffffffff
+    load r0,0
+    bgetu32 r0,r1,r0
+    ret
+```
 
 ### Related
 
@@ -466,13 +778,27 @@ Read an unsigned byte field.
 | `0x0249` | `bgetu8 rOut,rBin,rOffset` | Read one unsigned byte from binary register `rBin`. |
 | `0x025b` | `bgetu8 rOut,bConst,rOffset` | Read one unsigned byte from binary constant `bConst`. |
 
+### Operands And Semantics
+
+`rOffset.int` is zero-based. The byte replaces only `rOut.int`; sources and
+cursors remain unchanged.
+
 ### Signals
 
 Raises `OUT_OF_RANGE` if the byte offset is outside the source.
 
 ### Example
 
-See `binary-bcopy` in [Examples](#examples).
+<!-- rxas-example name="binary-bgetu8" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,0xff
+    load r0,0
+    bgetu8 r0,r1,r0
+    ret
+```
 
 ### Related
 
@@ -488,7 +814,7 @@ Convert the current binary bytes in a register to a string value.
 | --- | --- | --- |
 | `0x00c1` | `bintos rReg` | Validate `rReg` binary bytes as UTF-8 and copy them to the string slot. |
 
-### Semantics
+### Operands And Semantics
 
 `bintos` is a whole-register conversion. It does not require or consume a NUL
 terminator.
@@ -496,6 +822,18 @@ terminator.
 ### Signals
 
 Raises `UNICODE_ERROR` when the binary bytes are not valid UTF-8.
+
+### Example
+
+<!-- rxas-example name="binary-bintos" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    load r0,0x6869
+    bintos r0
+    ret
+```
 
 ### Related
 
@@ -512,9 +850,24 @@ Return the logical byte length of a binary register or binary constant.
 | `0x00b8` | `blen rOut,rBin` | Store the logical byte length of binary register `rBin` in `rOut`. |
 | `0x0258` | `blen rOut,bConst` | Store the logical byte length of binary constant `bConst` in `rOut`. |
 
+### Operands And Semantics
+
+Only `rOut.int` changes. The source binary and its cursor remain unchanged.
+
+### Signals
+
+This instruction does not signal.
+
 ### Example
 
-See `binary-bcopy` in [Examples](#examples).
+<!-- rxas-example name="binary-blen" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=1
+    blen r0,0x001122
+    ret
+```
 
 ### Related
 
@@ -531,7 +884,7 @@ ranges are safe.
 | --- | --- | --- |
 | `0x026e` | `bmemmove rBin,rDstOffset,rLen` | Copy `rLen` bytes within `rBin`. |
 
-### Operands
+### Operands And Semantics
 
 The source byte offset is read from the integer slot of `rBin`. The destination
 byte offset is read from `rDstOffset`. `rLen` is the byte count.
@@ -542,7 +895,18 @@ Raises `OUT_OF_RANGE` when either range is negative or outside `rBin`.
 
 ### Example
 
-See `binary-move` in [Examples](#examples).
+<!-- rxas-example name="binary-bmemmove" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    load r0,0x00112233
+    load r0,0
+    load r1,1
+    load r2,3
+    bmemmove r0,r1,r2
+    ret
+```
 
 ### Related
 
@@ -559,7 +923,7 @@ destination offsets.
 | --- | --- | --- |
 | `0x026d` | `bmove rDst,rSrc,rLen` | Copy `rLen` bytes from `rSrc` to `rDst`. |
 
-### Operands
+### Operands And Semantics
 
 The destination byte offset is read from the integer slot of `rDst`. The source
 byte offset is read from the integer slot of `rSrc`. `rLen` is the byte count.
@@ -573,7 +937,19 @@ register.
 
 ### Example
 
-See `binary-move` in [Examples](#examples).
+<!-- rxas-example name="binary-bmove" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    load r0,0x000000
+    load r1,0x112233
+    load r0,0
+    load r1,1
+    load r2,2
+    bmove r0,r1,r2
+    ret
+```
 
 ### Related
 
@@ -589,7 +965,7 @@ Resize a binary register.
 | --- | --- | --- |
 | `0x0246` | `bresize rBin,rLen` | Set the logical byte length of `rBin` to `rLen`. |
 
-### Semantics
+### Operands And Semantics
 
 Existing bytes are preserved up to the new length. Growth is zero-filled.
 `bresize` sets the logical length observed by `blen`; the VM may keep a larger
@@ -605,6 +981,19 @@ Raises `OUT_OF_RANGE` for a negative length. Allocation failure raises
 
 `bclear`, `bfill`, `blen`.
 
+### Example
+
+<!-- rxas-example name="binary-bresize" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r0,0x01
+    load r1,4
+    bresize r0,r1
+    ret
+```
+
 ## `bsetf32`
 
 Write an IEEE binary32 field from a VM float register.
@@ -615,13 +1004,28 @@ Write an IEEE binary32 field from a VM float register.
 | --- | --- | --- |
 | `0x0267` | `bsetf32 rBin,rOffset,rValue` | Write 4 little-endian bytes to `rBin` at `rOffset`. |
 
+### Operands And Semantics
+
+`rOffset.int` is zero-based and `rValue.float` supplies the value. Four bytes
+change; the binary cursor and source registers are unchanged.
+
 ### Signals
 
 Raises `OUT_OF_RANGE` if the 4-byte field does not fit.
 
 ### Example
 
-See `binary-fixed-width` in [Examples](#examples).
+<!-- rxas-example name="binary-bsetf32" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    load r0,0x00000000
+    load r1,0
+    load r2,1.5
+    bsetf32 r0,r1,r2
+    ret
+```
 
 ### Related
 
@@ -637,6 +1041,11 @@ Write an IEEE binary64 field from a VM float register.
 | --- | --- | --- |
 | `0x0256` | `bsetf64 rBin,rOffset,rValue` | Write 8 little-endian bytes to `rBin` at `rOffset`. |
 
+### Operands And Semantics
+
+`rOffset.int` is zero-based and `rValue.float` supplies the value. Eight bytes
+change; the binary cursor and sources are unchanged.
+
 ### Signals
 
 Raises `OUT_OF_RANGE` if the 8-byte field does not fit.
@@ -644,6 +1053,20 @@ Raises `OUT_OF_RANGE` if the 8-byte field does not fit.
 ### Related
 
 `bgetf64`, `bsetf32`.
+
+### Example
+
+<!-- rxas-example name="binary-bsetf64" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    load r0,0x0000000000000000
+    load r1,0
+    load r2,1.5
+    bsetf64 r0,r1,r2
+    ret
+```
 
 ## `bseti16`
 
@@ -655,6 +1078,11 @@ Write a signed 16-bit little-endian integer field.
 | --- | --- | --- |
 | `0x0253` | `bseti16 rBin,rOffset,rValue` | Write signed 16-bit field to `rBin`. |
 
+### Operands And Semantics
+
+The zero-based offset and signed value come from integer payloads. Two bytes
+change; cursors and source registers are unchanged.
+
 ### Signals
 
 Raises `OUT_OF_RANGE` if the field does not fit or the value is outside the
@@ -663,6 +1091,20 @@ signed 16-bit range.
 ### Related
 
 `bgeti16`, `bsetu16`.
+
+### Example
+
+<!-- rxas-example name="binary-bseti16" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    load r0,0x0000
+    load r1,0
+    load r2,-2
+    bseti16 r0,r1,r2
+    ret
+```
 
 ## `bseti32`
 
@@ -674,6 +1116,11 @@ Write a signed 32-bit little-endian integer field.
 | --- | --- | --- |
 | `0x0255` | `bseti32 rBin,rOffset,rValue` | Write signed 32-bit field to `rBin`. |
 
+### Operands And Semantics
+
+The zero-based offset and signed value come from integer payloads. Four bytes
+change; cursors and sources are unchanged.
+
 ### Signals
 
 Raises `OUT_OF_RANGE` if the field does not fit or the value is outside the
@@ -682,6 +1129,20 @@ signed 32-bit range.
 ### Related
 
 `bgeti32`, `bsetu32`.
+
+### Example
+
+<!-- rxas-example name="binary-bseti32" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    load r0,0x00000000
+    load r1,0
+    load r2,-2
+    bseti32 r0,r1,r2
+    ret
+```
 
 ## `bseti64`
 
@@ -694,13 +1155,28 @@ storage form for `.int`.
 | --- | --- | --- |
 | `0x0266` | `bseti64 rBin,rOffset,rValue` | Write signed 64-bit field to `rBin`. |
 
+### Operands And Semantics
+
+The zero-based offset and signed value come from integer payloads. Eight bytes
+change; cursors and sources are unchanged.
+
 ### Signals
 
 Raises `OUT_OF_RANGE` if the field does not fit.
 
 ### Example
 
-See `binary-fixed-width` in [Examples](#examples).
+<!-- rxas-example name="binary-bseti64" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    load r0,0x0000000000000000
+    load r1,0
+    load r2,-2
+    bseti64 r0,r1,r2
+    ret
+```
 
 ### Related
 
@@ -716,6 +1192,11 @@ Write a signed 8-bit integer field.
 | --- | --- | --- |
 | `0x0251` | `bseti8 rBin,rOffset,rValue` | Write one signed byte to `rBin`. |
 
+### Operands And Semantics
+
+The zero-based offset and signed value come from integer payloads. One byte
+changes; cursors and sources are unchanged.
+
 ### Signals
 
 Raises `OUT_OF_RANGE` if the byte offset is outside the destination or the
@@ -724,6 +1205,20 @@ value is outside the signed 8-bit range.
 ### Related
 
 `bgeti8`, `bsetu8`.
+
+### Example
+
+<!-- rxas-example name="binary-bseti8" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    load r0,0x00
+    load r1,0
+    load r2,-2
+    bseti8 r0,r1,r2
+    ret
+```
 
 ## `bsets`
 
@@ -736,7 +1231,7 @@ Write a string into binary memory as UTF-8 bytes followed by a zero terminator.
 | `0x026a` | `bsets rBin,rOffset,rString` | Write a string register plus NUL to `rBin`. |
 | `0x026b` | `bsets rBin,rOffset,sConst` | Write a string constant plus NUL to `rBin`. |
 
-### Operands
+### Operands And Semantics
 
 The write length is the string byte length plus one terminator byte. The target
 binary register is not resized by `bsets`; the complete write must fit.
@@ -748,7 +1243,16 @@ does not fit in the destination.
 
 ### Example
 
-See `binary-text-fields` in [Examples](#examples).
+<!-- rxas-example name="binary-bsets" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r0,0x000000
+    load r1,0
+    bsets r0,r1,"hi"
+    ret
+```
 
 ### Related
 
@@ -764,6 +1268,11 @@ Write an unsigned 16-bit little-endian integer field.
 | --- | --- | --- |
 | `0x0252` | `bsetu16 rBin,rOffset,rValue` | Write unsigned 16-bit field to `rBin`. |
 
+### Operands And Semantics
+
+The zero-based offset and unsigned value come from integer payloads. Two bytes
+change; cursors and sources are unchanged.
+
 ### Signals
 
 Raises `OUT_OF_RANGE` if the field does not fit or the value is outside
@@ -772,6 +1281,19 @@ Raises `OUT_OF_RANGE` if the field does not fit or the value is outside
 ### Related
 
 `bgetu16`, `bseti16`.
+
+### Example
+
+<!-- rxas-example name="binary-bsetu16" test="run" -->
+```rxas
+.globals=0
+main() .locals=3
+    load r0,0x0000
+    load r1,0
+    load r2,65535
+    bsetu16 r0,r1,r2
+    ret
+```
 
 ## `bsetu32`
 
@@ -783,6 +1305,11 @@ Write an unsigned 32-bit little-endian integer field.
 | --- | --- | --- |
 | `0x0254` | `bsetu32 rBin,rOffset,rValue` | Write unsigned 32-bit field to `rBin`. |
 
+### Operands And Semantics
+
+The zero-based offset and unsigned value come from integer payloads. Four bytes
+change; cursors and sources are unchanged.
+
 ### Signals
 
 Raises `OUT_OF_RANGE` if the field does not fit or the value is outside the
@@ -791,6 +1318,19 @@ unsigned 32-bit range.
 ### Related
 
 `bgetu32`, `bseti32`.
+
+### Example
+
+<!-- rxas-example name="binary-bsetu32" test="run" -->
+```rxas
+.globals=0
+main() .locals=3
+    load r0,0x00000000
+    load r1,0
+    load r2,4294967295
+    bsetu32 r0,r1,r2
+    ret
+```
 
 ## `bsetu8`
 
@@ -802,6 +1342,11 @@ Write an unsigned byte field.
 | --- | --- | --- |
 | `0x0250` | `bsetu8 rBin,rOffset,rValue` | Write one unsigned byte to `rBin`. |
 
+### Operands And Semantics
+
+The zero-based offset and byte value come from integer payloads. One byte
+changes; cursors and sources are unchanged.
+
 ### Signals
 
 Raises `OUT_OF_RANGE` if the byte offset is outside the destination or the
@@ -810,6 +1355,19 @@ value is outside `0..255`.
 ### Related
 
 `bgetu8`, `setbyte`, `bfill`.
+
+### Example
+
+<!-- rxas-example name="binary-bsetu8" test="run" -->
+```rxas
+.globals=0
+main() .locals=3
+    load r0,0x00
+    load r1,0
+    load r2,255
+    bsetu8 r0,r1,r2
+    ret
+```
 
 ## `bslice`
 
@@ -822,7 +1380,7 @@ another register.
 | --- | --- | --- |
 | `0x00be` | `bslice rDst,rSrc,rLen` | Copy bytes from `rSrc` cursor into `rDst`. |
 
-### Semantics
+### Operands And Semantics
 
 `bslice` is retained for cursor-style compatibility. It copies at most `rLen`
 bytes and truncates at end of source. New strict field extraction should use
@@ -831,6 +1389,24 @@ target-sized `bcopy`.
 ### Related
 
 `setbinpos`, `getbinpos`, `bcopy`.
+
+### Signals
+
+Negative lengths are treated as zero; copying truncates at end of source.
+Allocation failure is fatal rather than translated to a VM signal.
+
+### Example
+
+<!-- rxas-example name="binary-bslice" test="run" -->
+```rxas
+.globals=0
+main() .locals=3
+    load r1,0x001122
+    load r0,0x
+    load r2,2
+    bslice r0,r1,r2
+    ret
+```
 
 ## `bupdate`
 
@@ -842,6 +1418,11 @@ Overlay the whole binary payload of one register into another binary register.
 | --- | --- | --- |
 | `0x00bf` | `bupdate rDst,rOffset,rSrc` | Copy all bytes from `rSrc` into `rDst` at `rOffset`. |
 
+### Operands And Semantics
+
+`rOffset.int` is zero-based. The whole source payload overwrites the matching
+destination range; logical lengths, cursors, and source bytes are unchanged.
+
 ### Signals
 
 Raises `OUT_OF_RANGE` when the offset is negative or the overlay would extend
@@ -850,6 +1431,19 @@ past the logical length of `rDst`.
 ### Related
 
 `bcopy`, `bmove`, `bmemmove`.
+
+### Example
+
+<!-- rxas-example name="binary-bupdate" test="run" -->
+```rxas
+.globals=0
+main() .locals=3
+    load r0,0x000000
+    load r1,1
+    load r2,0x1122
+    bupdate r0,r1,r2
+    ret
+```
 
 ## `getbinpos`
 
@@ -861,9 +1455,28 @@ Read the current legacy cursor position of a binary register.
 | --- | --- | --- |
 | `0x00bd` | `getbinpos rOut,rBin` | Store the binary cursor byte offset in `rOut`. |
 
+### Operands And Semantics
+
+Only `rOut.int` changes. The source binary and cursor remain unchanged.
+
 ### Related
 
 `setbinpos`, `bslice`.
+
+### Signals
+
+This instruction does not signal or move the binary cursor.
+
+### Example
+
+<!-- rxas-example name="binary-getbinpos" test="run" -->
+```rxas
+.globals=0
+main() .locals=2
+    load r1,0x0011
+    getbinpos r0,r1
+    ret
+```
 
 ## `getbyte`
 
@@ -876,7 +1489,7 @@ semantics.
 | --- | --- | --- |
 | `0x00a7` | `getbyte rOut,rBin,rOffset` | Store byte value or `-1` if the offset is outside `rBin`. |
 
-### Semantics
+### Operands And Semantics
 
 `getbyte` has no binary-constant form. Use `bgetu8` for strict register and
 constant byte reads.
@@ -884,6 +1497,22 @@ constant byte reads.
 ### Related
 
 `setbyte`, `bgetu8`.
+
+### Signals
+
+This tolerant form does not signal for an invalid offset; it stores `-1`.
+
+### Example
+
+<!-- rxas-example name="binary-getbyte" test="run" -->
+```rxas
+.globals=0
+main() .locals=3
+    load r1,0x11
+    load r2,0
+    getbyte r0,r1,r2
+    ret
+```
 
 ## `setbinpos`
 
@@ -895,13 +1524,29 @@ Set the current legacy cursor position of a binary register.
 | --- | --- | --- |
 | `0x00bc` | `setbinpos rBin,rOffset` | Set `rBin` cursor from `rOffset`. |
 
-### Semantics
+### Operands And Semantics
 
 The cursor is clamped to the range `0..blen(rBin)`.
 
 ### Related
 
 `getbinpos`, `bslice`.
+
+### Signals
+
+This instruction does not signal; offsets are clamped to the valid cursor range.
+
+### Example
+
+<!-- rxas-example name="binary-setbinpos" test="run" -->
+```rxas
+.globals=0
+main() .locals=2
+    load r0,0x0011
+    load r1,1
+    setbinpos r0,r1
+    ret
+```
 
 ## `setbyte`
 
@@ -913,6 +1558,11 @@ Write one byte to a binary register.
 | --- | --- | --- |
 | `0x00b9` | `setbyte rBin,rOffset,rByte` | Store byte `rByte` at byte offset `rOffset`. |
 
+### Operands And Semantics
+
+Both register operands supply integer payloads. One destination byte changes;
+logical length, binary cursor, and source registers are unchanged.
+
 ### Signals
 
 Raises `OUT_OF_RANGE` if the offset is outside the destination or the byte
@@ -921,6 +1571,19 @@ value is outside `0..255`.
 ### Related
 
 `getbyte`, `bsetu8`.
+
+### Example
+
+<!-- rxas-example name="binary-setbyte" test="run" -->
+```rxas
+.globals=0
+main() .locals=3
+    load r0,0x00
+    load r1,0
+    load r2,255
+    setbyte r0,r1,r2
+    ret
+```
 
 ## `sget`
 
@@ -933,7 +1596,7 @@ byte offset.
 | --- | --- | --- |
 | `0x026c` | `sget rString,sConst,rOffset` | Copy codepoints from string constant `sConst` into `rString`. |
 
-### Operands
+### Operands And Semantics
 
 `rOffset` is a byte offset into the UTF-8 string constant and must be on a
 codepoint boundary. The existing codepoint length of `rString` is the requested
@@ -947,7 +1610,15 @@ Raises `OUT_OF_RANGE` when the requested codepoint count cannot be satisfied.
 
 ### Example
 
-See `binary-text-fields` in [Examples](#examples).
+<!-- rxas-example name="binary-sget" test="run" -->
+```rxas
+.globals=0
+main() .locals=2
+    load r0,"xx"
+    load r1,0
+    sget r0,"hi",r1
+    ret
+```
 
 ### Related
 
@@ -963,7 +1634,7 @@ Convert the current string bytes in a register to a binary value.
 | --- | --- | --- |
 | `0x00c0` | `stobin rReg` | Copy the register string bytes into its binary slot. |
 
-### Semantics
+### Operands And Semantics
 
 `stobin` is a whole-register conversion. It copies the logical string bytes
 exactly and does not append a NUL terminator.
@@ -971,6 +1642,21 @@ exactly and does not append a NUL terminator.
 ### Related
 
 `bintos`, `bsets`.
+
+### Signals
+
+Allocation failure raises `FAILURE`; the string is assumed already valid UTF-8.
+
+### Example
+
+<!-- rxas-example name="binary-stobin" test="run" -->
+```rxas
+.globals=0
+main() .locals=1
+    load r0,"hi"
+    stobin r0
+    ret
+```
 
 ## Examples
 

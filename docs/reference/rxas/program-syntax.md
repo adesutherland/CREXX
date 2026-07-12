@@ -122,6 +122,13 @@ loop:
     br loop
 ```
 
+Jump-table case labels use a label followed by `.jcase` on the same line. The
+`.jcase` directive decorates the label and does not emit an instruction:
+
+```rxas
+keyword_if: .jcase keywords "if"
+```
+
 ## Operands
 
 RXAS recognizes these operand classes:
@@ -188,6 +195,47 @@ load r2,0x000102ff
 
 Binary literals and `.const ... binary ...` aliases are stored as binary
 constant-pool values, not as integer or string values.
+
+## Jump Tables
+
+`.jtable` declares a procedure-local static dispatch table. `.jcase` decorates
+target labels with literal keys, and `jumps`, `jumpr`, `jumpn`, `jumpb`,
+`jumpbs`, or `jumpi`
+branch through the assembled table. A miss falls through to the next
+instruction, so write an explicit default branch after the jump instruction.
+
+String table modes are deliberately distinct. `jumps` compares exact UTF-8
+bytes, `jumpr` applies blank-padded nonnumeric Rexx equality by ignoring
+trailing ASCII spaces, and `jumpn` canonicalizes numeric strings. One table may
+not mix these modes.
+
+```rxas
+main() .locals=4
+    .jtable keywords linear
+    br after_cases
+keyword_if: .jcase keywords "if"
+    load r1,1
+    br done
+keyword_else: .jcase keywords "else"
+    load r1,2
+    br done
+after_cases:
+    load r0,"else"
+    jumps r0,keywords
+    br not_found
+done:
+    ret
+not_found:
+    load r1,0
+    ret
+```
+
+Release 1 supports `auto`, `linear`, `openhash`, and `acph`. Explicit algorithm
+names are useful for measurement and repeatable tuning. `auto` selects `linear`
+for a one-case table. Larger tables use `openhash` for average key lengths up to
+two bytes; tables of at least 256 cases also use it for average lengths up to
+four bytes. The remaining longer-key tables use `acph`. This policy is based on
+Release VM profiling and may be retuned without changing the RXAS surface.
 
 ## Metadata
 

@@ -84,7 +84,11 @@ normally interpret.
 : Use decimal arithmetic where the driver has to choose arithmetic mode.
 
 `-l[library path]`
-: Use a packaged binary/runtime library relative to `CREXX_HOME/bin`. Runtime/native library loading is separate from the compiler's `-s` and `-i` import-discovery paths.
+: Load a binary/runtime library. A value containing a directory component is
+used as the exact file path; a bare packaged name remains relative to
+`CREXX_HOME/bin`. This permits applications to name an approved library file
+without searching runtime paths. Runtime/native library loading is separate
+from the compiler's `-s` and `-i` import-discovery paths.
 
 For native packaging, `crexx` now separates `-l` inputs into two groups:
 

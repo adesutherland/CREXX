@@ -1,0 +1,19 @@
+options levelb
+
+main: procedure = .int
+  number = 7
+  text = "same"
+
+  say combine_numbers(number, number)
+  say number
+  say combine_text(text, text)
+  say text
+  return 0
+
+combine_numbers: procedure = .int
+  arg left = .int, right = .int
+  return left * 10 + right
+
+combine_text: procedure = .string
+  arg left = .string, right = .string
+  return left || ":" || right

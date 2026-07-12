@@ -1,0 +1,104 @@
+/*
+ * SOURCE                 : repro_duplicate_call_argument.crexx
+ */
+
+.globals=0
+
+main() .locals=6
+   .meta "repro_duplicate_call_argument.main"="b" ".int" main() ""
+   .srcstep 8 8 17 "repro_duplicate_call_argument.crexx" 3 1 23 "main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 1 1 17 "repro_duplicate_call_argument.crexx" 4 3 13 "  number = 7"
+   .meta "repro_duplicate_call_argument.main.number"="b" ".int" r0
+   load r0,7
+   .traceevent "L" 4 "R" "I" "r" 0 1 1 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 1 1 0 "number" ""
+   .srcstep 2 2 17 "repro_duplicate_call_argument.crexx" 5 3 16 "  text = \"same\""
+   .meta "repro_duplicate_call_argument.main.text"="b" ".string" r1
+   load r1,"same"
+   .traceevent "L" 4 "R" "S" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 1 2 2 0 "text" ""
+   .srcstep 3 3 17 "repro_duplicate_call_argument.crexx" 7 3 38 "  say combine_numbers(number, number)"
+   .traceevent "V" 6 "R" "I" "r" 0 3 3 0 "number" ""
+   .traceevent "V" 6 "R" "I" "r" 0 3 3 0 "number" ""
+   load r2,2
+   copy r4,r0
+   swap r3,r0
+   call r5,combine_numbers(),r2
+   swap r0,r3
+   itos r5
+   .traceevent "F" 4 "R" "S" "r" 5 3 3 0 "combine_numbers" ""
+   say r5
+   .srcstep 4 4 17 "repro_duplicate_call_argument.crexx" 8 3 13 "  say number"
+   itos r0
+   .traceevent "V" 6 "R" "S" "r" 0 4 4 0 "number" ""
+   say r0
+   .srcstep 5 5 17 "repro_duplicate_call_argument.crexx" 9 3 31 "  say combine_text(text, text)"
+   .traceevent "V" 6 "R" "S" "r" 1 5 5 0 "text" ""
+   .traceevent "V" 6 "R" "S" "r" 1 5 5 0 "text" ""
+   load r3,2
+   copy r5,r1
+   settp r1,256
+   swap r4,r1
+   settp r5,256
+   call r2,combine_text(),r3
+   swap r1,r4
+   .traceevent "F" 4 "R" "S" "r" 2 5 5 0 "combine_text" ""
+   say r2
+   .srcstep 6 6 17 "repro_duplicate_call_argument.crexx" 10 3 11 "  say text"
+   .traceevent "V" 6 "R" "S" "r" 1 6 6 0 "text" ""
+   say r1
+   .srcstep 7 7 17 "repro_duplicate_call_argument.crexx" 11 3 11 "  return 0"
+   ret 0
+   .meta "repro_duplicate_call_argument.main.number"
+   .meta "repro_duplicate_call_argument.main.text"
+
+combine_numbers() .locals=3
+   .meta "repro_duplicate_call_argument.combine_numbers"="b" ".int" combine_numbers() "left=.int,right=.int"
+   .srcstep 12 12 17 "repro_duplicate_call_argument.crexx" 13 1 34 "combine_numbers: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 9 9 17 "repro_duplicate_call_argument.crexx" 14 7 18 "  arg left = .int, right = .int"
+   .meta "repro_duplicate_call_argument.combine_numbers.left"="b" ".int" a1
+   .srcstep 10 10 17 "repro_duplicate_call_argument.crexx" 14 20 32 "  arg left = .int, right = .int"
+   .meta "repro_duplicate_call_argument.combine_numbers.right"="b" ".int" a2
+   .srcstep 11 11 17 "repro_duplicate_call_argument.crexx" 15 3 27 "  return left * 10 + right"
+   .traceevent "V" 6 "R" "I" "a" 1 11 11 0 "left" ""
+   imult r2,a1,10
+   .traceevent "O" 4 "R" "I" "r" 2 11 11 0 "" ""
+   .traceevent "V" 6 "R" "I" "a" 2 11 11 0 "right" ""
+   iadd r2,r2,a2
+   .traceevent "O" 4 "R" "I" "r" 2 11 11 0 "" ""
+   ret r2
+   .meta "repro_duplicate_call_argument.combine_numbers.left"
+   .meta "repro_duplicate_call_argument.combine_numbers.right"
+
+combine_text() .locals=3
+   .meta "repro_duplicate_call_argument.combine_text"="b" ".string" combine_text() "left=.string,right=.string"
+   .srcstep 16 16 17 "repro_duplicate_call_argument.crexx" 17 1 34 "combine_text: procedure = .string"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 13 13 17 "repro_duplicate_call_argument.crexx" 18 7 21 "  arg left = .string, right = .string"
+   .meta "repro_duplicate_call_argument.combine_text.left"="b" ".string" a1
+   .srcstep 14 14 17 "repro_duplicate_call_argument.crexx" 18 23 38 "  arg left = .string, right = .string"
+   .meta "repro_duplicate_call_argument.combine_text.right"="b" ".string" a2
+   .srcstep 15 15 17 "repro_duplicate_call_argument.crexx" 19 3 30 "  return left || \":\" || right"
+   .traceevent "V" 6 "R" "S" "a" 1 15 15 0 "left" ""
+   concat r2,a1,":"
+   .traceevent "O" 4 "R" "S" "r" 2 15 15 0 "" ""
+   .traceevent "V" 6 "R" "S" "a" 2 15 15 0 "right" ""
+   concat r2,r2,a2
+   .traceevent "O" 4 "R" "S" "r" 2 15 15 0 "" ""
+   ret r2
+   .meta "repro_duplicate_call_argument.combine_text.left"
+   .meta "repro_duplicate_call_argument.combine_text.right"

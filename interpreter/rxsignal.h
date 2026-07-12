@@ -49,6 +49,7 @@
 
 #define RXSIGNAL_NOTREADY             15 /* Input/output error, e.g., file not ready (POSIX SIGPIPE) */
 #define RXSIGNAL_OBJECT_NOT_INITIALIZED 16 /* Object value has a compatible type but no initialized instance */
+#define RXSIGNAL_RXBIN_CORRUPTION     17 /* Runtime bytecode or packed constant table is malformed */
 
 #define RXSIGNAL_QUIT                 19 /* Request to halt execution (POSIX SIGQUIT / Windows SIGBREAK) */
 #define RXSIGNAL_TERM                 20 /* Request to halt execution (POSIX SIGTERM) */

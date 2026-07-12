@@ -1,0 +1,194 @@
+/*
+ * Linear jump-table source matrix.
+ *
+ * Keep this test algorithm-shaped: it uses reasonably sized tables and late
+ * entries so the same source matrix can be repeated for future algorithms.
+ */
+
+.globals=0
+
+main() .locals=30
+    .jtable word_table linear
+    br after_word_cases
+word_00: .jcase word_table "kw00"
+word_01: .jcase word_table "kw01"
+word_02: .jcase word_table "kw02"
+word_03: .jcase word_table "kw03"
+word_04: .jcase word_table "kw04"
+word_05: .jcase word_table "kw05"
+word_06: .jcase word_table "kw06"
+word_07: .jcase word_table "kw07"
+word_08: .jcase word_table "kw08"
+word_09: .jcase word_table "kw09"
+word_10: .jcase word_table "kw10"
+word_11: .jcase word_table "kw11"
+word_12: .jcase word_table "kw12"
+word_13: .jcase word_table "kw13"
+word_14: .jcase word_table "kw14"
+word_15: .jcase word_table "kw15"
+    ieq r9,r8,1
+    brf fail_word_miss,r9
+    load r10,101
+    br after_word_hit
+after_word_cases:
+    load r8,1
+    load r0,"kw15"
+    jumps r0,word_table
+    br fail_word_hit
+after_word_hit:
+    ieq r9,r10,101
+    brf fail_word_target,r9
+    load r8,2
+    load r0,"kw99"
+    jumps r0,word_table
+    br after_word_miss
+after_word_miss:
+
+    .jtable int_table linear
+    br after_int_cases
+int_00: .jcase int_table 100
+int_01: .jcase int_table 101
+int_02: .jcase int_table 102
+int_03: .jcase int_table 103
+int_04: .jcase int_table 104
+int_05: .jcase int_table 105
+int_06: .jcase int_table 106
+int_07: .jcase int_table 107
+int_08: .jcase int_table 108
+int_09: .jcase int_table 109
+int_10: .jcase int_table 110
+int_11: .jcase int_table 111
+int_12: .jcase int_table 112
+int_13: .jcase int_table 113
+int_14: .jcase int_table 114
+int_15: .jcase int_table 115
+    ieq r9,r8,1
+    brf fail_int_miss,r9
+    load r10,202
+    br after_int_hit
+after_int_cases:
+    load r8,1
+    load r0,115
+    jumpi r0,int_table
+    br fail_int_hit
+after_int_hit:
+    ieq r9,r10,202
+    brf fail_int_target,r9
+    load r8,2
+    load r0,199
+    jumpi r0,int_table
+    br after_int_miss
+after_int_miss:
+
+    .jtable binary_table linear
+    br after_binary_cases
+binary_00: .jcase binary_table 0x00
+binary_01: .jcase binary_table 0x0102
+binary_02: .jcase binary_table 0x020304
+binary_03: .jcase binary_table 0x03040506
+binary_04: .jcase binary_table 0x04
+binary_05: .jcase binary_table 0x0506
+binary_06: .jcase binary_table 0x060708
+binary_07: .jcase binary_table 0x0708090a
+binary_08: .jcase binary_table 0x08
+binary_09: .jcase binary_table 0x090a
+binary_10: .jcase binary_table 0x0a0b0c
+binary_11: .jcase binary_table 0x0b0c0d0e
+binary_12: .jcase binary_table 0x0c
+binary_13: .jcase binary_table 0x0d0e
+binary_14: .jcase binary_table 0x0e0f10
+binary_15: .jcase binary_table 0x0f101112
+    ieq r9,r8,1
+    brf fail_binary_miss,r9
+    load r10,303
+    br after_binary_hit
+after_binary_cases:
+    load r8,1
+    load r0,0x0f101112
+    jumpb r0,binary_table
+    br fail_binary_hit
+after_binary_hit:
+    ieq r9,r10,303
+    brf fail_binary_target,r9
+    load r8,2
+    load r0,0xdeadbeef
+    jumpb r0,binary_table
+    br after_binary_miss
+after_binary_miss:
+
+    .jtable slice_table linear
+    br after_slice_cases
+slice_00: .jcase slice_table 0x010203
+slice_01: .jcase slice_table 0x020304
+slice_02: .jcase slice_table 0x030405
+slice_03: .jcase slice_table 0x040506
+slice_04: .jcase slice_table 0x050607
+slice_05: .jcase slice_table 0x060708
+slice_06: .jcase slice_table 0x070809
+slice_07: .jcase slice_table 0x08090a
+slice_08: .jcase slice_table 0x090a0b
+slice_09: .jcase slice_table 0x0a0b0c
+slice_10: .jcase slice_table 0x0b0c0d
+slice_11: .jcase slice_table 0x0c0d0e
+slice_12: .jcase slice_table 0x0d0e0f
+slice_13: .jcase slice_table 0x0e0f10
+slice_14: .jcase slice_table 0x0f1011
+slice_15: .jcase slice_table 0x101112
+    ieq r9,r8,1
+    brf fail_slice_miss,r9
+    load r10,404
+    br after_slice_hit
+after_slice_cases:
+    load r8,1
+    load r0,0xaaaa101112bbbb
+    load r1,2
+    jumpbs r0,r1,slice_table
+    br fail_slice_hit
+after_slice_hit:
+    ieq r9,r10,404
+    brf fail_slice_target,r9
+    load r8,2
+    load r0,0xaaaa999999bbbb
+    load r1,2
+    jumpbs r0,r1,slice_table
+    br after_slice_miss
+after_slice_miss:
+    say "PASS: Jump Table Linear Source Matrix"
+    ret 0
+
+fail_word_hit:
+    say "FAIL: string table late entry did not branch"
+    ret 1
+fail_word_target:
+    say "FAIL: string table wrong target"
+    ret 1
+fail_word_miss:
+    say "FAIL: string table miss branched"
+    ret 1
+fail_int_hit:
+    say "FAIL: integer table late entry did not branch"
+    ret 1
+fail_int_target:
+    say "FAIL: integer table wrong target"
+    ret 1
+fail_int_miss:
+    say "FAIL: integer table miss branched"
+    ret 1
+fail_binary_hit:
+    say "FAIL: binary table late entry did not branch"
+    ret 1
+fail_binary_target:
+    say "FAIL: binary table wrong target"
+    ret 1
+fail_binary_miss:
+    say "FAIL: binary table miss branched"
+    ret 1
+fail_slice_hit:
+    say "FAIL: binary slice table late entry did not branch"
+    ret 1
+fail_slice_target:
+    say "FAIL: binary slice table wrong target"
+    ret 1
+fail_slice_miss:
+    say "FAIL: binary slice table miss branched"
+    ret 1

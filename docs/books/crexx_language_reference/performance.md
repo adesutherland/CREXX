@@ -42,6 +42,42 @@ above, remain normal calls.
 Use `rxc -n` to disable compiler optimisation, including inlining, when
 comparing generated assembly or investigating optimiser behaviour.
 
+## SELECT and equality dispatch
+
+The compiler can replace suitable static SELECT or equality ladders with a
+packed jump table. This is an implementation optimization: SELECT remains
+first-match-wins, its selector is evaluated at the source-defined point, and a
+table miss continues through the original fallback path.
+
+Release 1 uses measured, type-specific minimum run lengths:
+
+| Dispatch kind | Minimum consecutive constant cases |
+| --- | ---: |
+| Integer | 8 |
+| Exact string | 3 |
+| Blank-padded nonnumeric string | 2 |
+| Numeric string | 2 |
+| Exact binary | 3 |
+
+Integer tables have a fixed lookup cost, so short ladders and first-case-heavy
+traffic often favor predicted branches. String tables avoid repeated text or
+numeric comparisons and become worthwhile earlier. These thresholds choose
+between a branch ladder and a table; the assembler independently chooses the
+table's `linear`, `openhash`, or `acph` representation.
+
+Explicit C-style SELECT may be lowered in optimized and non-optimized builds
+when its selector and constant cases are safe. General IF and classic SELECT
+recognition is optimized-build-only and requires repeated reads of the same
+resolved scalar variable with no alias, reference, call, getter, mutation, or
+other observable evaluation risk. Unsupported, dynamic, duplicate, or short
+runs remain ordinary comparisons. Consecutive eligible runs may be tabled
+without moving an intervening expression.
+
+For a known hotspot, inspect generated RXAS for `.jtable` and the relevant
+`jump*` instruction. Hand-written RXAS can also select an explicit table
+algorithm. Do not rewrite clear source solely to force this optimization;
+thresholds may be retuned as VM and platform measurements improve.
+
 ## Native executables
 
 Level B can produced native[^1] executables which can be distributed

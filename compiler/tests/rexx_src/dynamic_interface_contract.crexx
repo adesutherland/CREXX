@@ -1,0 +1,11 @@
+options levelb
+namespace dynamic_interface_contract expose late_service
+
+late_service: interface
+  *: factory
+  arg name = .string
+  from_name: factory
+  arg name = .string
+  describe: method = .string
+  decorated: method = .string
+    return "default:" || describe()

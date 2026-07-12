@@ -219,11 +219,7 @@ static void update_string(ASTNode* node) {
 
         case TP_BOOLEAN:
             buffer = malloc(32); /* Large enough for any int */
-#ifdef __32BIT__
-            length = snprintf(buffer,32,"%ld",node->int_value);
-#else
-            length = snprintf(buffer,32,"%lld",node->int_value);
-#endif
+            length = snprintf(buffer, 32, "%" RXINTEGER_PRI, node->int_value);
             /* Update the node's string - this also takes ownership of the memory */
             ast_sstr(node, buffer, length);
             return;
@@ -441,6 +437,17 @@ static char *bytes_to_rxas_escaped_string(const unsigned char *bytes,
     return buffer;
 }
 
+static int is_rxinteger_min_magnitude_literal(ASTNode *node) {
+    static const char magnitude[] = "9223372036854775808";
+    Token *token;
+
+    if (!node) return 0;
+    token = node->token;
+    return token &&
+           token->length == sizeof(magnitude) - 1 &&
+           memcmp(token->token_string, magnitude, sizeof(magnitude) - 1) == 0;
+}
+
 /* Convert a CONSTANT node from a STRING to new_type */
 static void string_to_type(ASTNode* node, ValueType new_type) {
         double f, floor_val;
@@ -481,6 +488,13 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
                 node->value_type = new_type;
                 node->target_type = new_type;
                 if (string2integer(&node->int_value,node->node_string,node->node_string_length)) {
+                    if (node->parent &&
+                        node->parent->node_type == OP_NEG &&
+                        node->parent->child == node &&
+                        is_rxinteger_min_magnitude_literal(node)) {
+                        node->int_value = RXINTEGER_MIN;
+                        return;
+                    }
                     /* Check if it is an int in float format */
                     if (string2float(&f,node->node_string,node->node_string_length)) {
                         mknd_err(node, "BAD_CONVERSION");
@@ -489,6 +503,11 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
                     /* Less than an "EPSILON" above the floor? */
                     if (f - floor_val < 1e-015 ) {
                         /* Yes - so and integer */
+                        if (floor_val < -9223372036854775808.0 ||
+                            floor_val >= 9223372036854775808.0) {
+                            mknd_err(node, "OVERFLOW_UNDERFLOW");
+                            return;
+                        }
                         node->int_value = (rxinteger)floor_val;
                         return;
                     }
@@ -496,6 +515,11 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
                     floor_val += 1.0;
                     if (floor_val - f < 1e-015 ) {
                         /* Yes - so and integer */
+                        if (floor_val < -9223372036854775808.0 ||
+                            floor_val >= 9223372036854775808.0) {
+                            mknd_err(node, "OVERFLOW_UNDERFLOW");
+                            return;
+                        }
                         node->int_value = (rxinteger)floor_val;
                         return;
                     }
@@ -976,11 +1000,15 @@ static int is_comparison_operator(NodeType type) {
 static int can_code_fold(ASTNode* node, int children) {
     ASTNode *child1 = 0, *child2 = 0, *child3 = 0;
 
+    if (ast_hase(node)) return 0;
     if (node->node_type == CONSTANT) return 1; /* A constant IS folded */
 
     child1 = node->child;
     if (child1) child2 = child1->sibling;
     if (child2) child3 = child2->sibling;
+    if ((child1 && ast_hase(child1)) ||
+        (child2 && ast_hase(child2)) ||
+        (child3 && ast_hase(child3))) return 0;
 
     /* Arity Check: Are any of the required children missing or NOT CONSTANT? */
     if (children >= 1) {
@@ -1369,9 +1397,11 @@ static walker_result opt1_walker(walker_direction direction,
                         }
                         else {
                             /* Must be integer */
-                            rewrite_to_integer_constant(node, payload,
-                                                        child1->int_value +
-                                                        child2->int_value);
+                            rxinteger folded;
+                            if (rxinteger_checked_add(child1->int_value, child2->int_value, &folded)) {
+                                rewrite_to_integer_constant(node, payload, folded);
+                            }
+                            else mknd_err(node, "OVERFLOW_UNDERFLOW");
                         }
                         break;
 
@@ -1405,9 +1435,11 @@ static walker_result opt1_walker(walker_direction direction,
                             free(result);
                         }
                         else {
-                            rewrite_to_integer_constant(node, payload,
-                                                        child1->int_value -
-                                                        child2->int_value);
+                            rxinteger folded;
+                            if (rxinteger_checked_sub(child1->int_value, child2->int_value, &folded)) {
+                                rewrite_to_integer_constant(node, payload, folded);
+                            }
+                            else mknd_err(node, "OVERFLOW_UNDERFLOW");
                         }
                         break;
 
@@ -1441,9 +1473,11 @@ static walker_result opt1_walker(walker_direction direction,
                             free(result);
                         }
                         else {
-                            rewrite_to_integer_constant(node, payload,
-                                                        child1->int_value *
-                                                        child2->int_value);
+                            rxinteger folded;
+                            if (rxinteger_checked_mul(child1->int_value, child2->int_value, &folded)) {
+                                rewrite_to_integer_constant(node, payload, folded);
+                            }
+                            else mknd_err(node, "OVERFLOW_UNDERFLOW");
                         }
                         break;
 
@@ -1477,11 +1511,11 @@ static walker_result opt1_walker(walker_direction direction,
                             free(result);
                         }
                         else {
-                            rewrite_to_integer_constant(node, payload,
-                                                        (rxinteger) pow(
-                                                                (double)child1->int_value,
-                                                                (double)child2->int_value));
-                            if (!node->int_value) mknd_err(node, "OVERFLOW_UNDERFLOW");
+                            rxinteger folded;
+                            if (rxinteger_checked_pow(child1->int_value, child2->int_value, &folded)) {
+                                rewrite_to_integer_constant(node, payload, folded);
+                            }
+                            else mknd_err(node, "OVERFLOW_UNDERFLOW");
                         }
                         break;
 
@@ -1516,9 +1550,12 @@ static walker_result opt1_walker(walker_direction direction,
                         }
                         else {
                             /* Never Happens */
-                            rewrite_to_integer_constant(node, payload,
-                                                        child1->int_value /
-                                                        child2->int_value);
+                            if (child2->int_value == 0) mknd_err(node, "DIVISION_BY_ZERO");
+                            else if (child1->int_value == RXINTEGER_MIN && child2->int_value == -1) {
+                                mknd_err(node, "OVERFLOW_UNDERFLOW");
+                            }
+                            else rewrite_to_integer_constant(node, payload,
+                                                             child1->int_value / child2->int_value);
                         }
                         break;
 
@@ -1555,9 +1592,12 @@ static walker_result opt1_walker(walker_direction direction,
                             free(result_string);
                         }
                         else { /* Must be integer */
-                            rewrite_to_integer_constant(node, payload,
-                                                        child1->int_value /
-                                                        child2->int_value);
+                            if (child2->int_value == 0) mknd_err(node, "DIVISION_BY_ZERO");
+                            else if (child1->int_value == RXINTEGER_MIN && child2->int_value == -1) {
+                                mknd_err(node, "OVERFLOW_UNDERFLOW");
+                            }
+                            else rewrite_to_integer_constant(node, payload,
+                                                             child1->int_value / child2->int_value);
                         }
                         break;
 
@@ -1598,9 +1638,12 @@ static walker_result opt1_walker(walker_direction direction,
                         }
                         else {
                             /* Must be integer */
-                            rewrite_to_integer_constant(node, payload,
-                                                        child1->int_value %
-                                                        child2->int_value);
+                            if (child2->int_value == 0) mknd_err(node, "DIVISION_BY_ZERO");
+                            else if (child1->int_value == RXINTEGER_MIN && child2->int_value == -1) {
+                                mknd_err(node, "OVERFLOW_UNDERFLOW");
+                            }
+                            else rewrite_to_integer_constant(node, payload,
+                                                             child1->int_value % child2->int_value);
                         }
                         break;
 
@@ -1686,8 +1729,14 @@ static walker_result opt1_walker(walker_direction direction,
                             free(val1);
                         }
                         else {
-                            rewrite_to_integer_constant(node, payload,
-                                                            -child1->int_value);
+                            rxinteger folded;
+                            if (is_rxinteger_min_magnitude_literal(child1)) {
+                                rewrite_to_integer_constant(node, payload, RXINTEGER_MIN);
+                            }
+                            else if (rxinteger_checked_neg(child1->int_value, &folded)) {
+                                rewrite_to_integer_constant(node, payload, folded);
+                            }
+                            else mknd_err(node, "OVERFLOW_UNDERFLOW");
                         }
                         break;
 

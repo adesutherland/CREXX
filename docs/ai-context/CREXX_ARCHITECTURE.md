@@ -71,6 +71,10 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
    - Cross-file inlining uses compiler-owned `META_INLINE` payloads alongside
      normal callable metadata. Libraries preserve this metadata for downstream
      `rxc` optimisation; final linked images strip it by default.
+   - Suitable `SELECT` and equality ladders are lowered through a dedicated
+     dispatch AST to RXAS packed jump tables. Eligibility, semantic gates,
+     profitability thresholds, and regression invariants are documented in
+     [RXC_DISPATCH_OPTIMIZATION.md](RXC_DISPATCH_OPTIMIZATION.md).
 
 5. **Assembler (`rxas`)**
    - Parses the generated `rxas` Assembly instructions.
@@ -248,8 +252,11 @@ without destroying runtime/library cache flags stored on the same value.
 VM-private bits; unmasked `BRTPT` only tests public/external flag bands so VM
 cache bits do not change old branch semantics.
 
-RXAS/RXBIN integer operands remain `rxinteger`; status instructions cast masks
-to the 32-bit flag word before applying the partition.
+RXAS/RXBIN integer operands remain `rxinteger`. The canonical definition is
+`platform/rxinteger.h`, and Release 1 fixes it to signed 64-bit across the
+compiler, assembler, VM, and RXPA ABI. Host pointer width is not the language
+integer width. Status instructions cast masks to the 32-bit flag word before
+applying the partition.
 Level B flag-view assignments use `SETTPMASK`, a masked replacement operation
 restricted to the source-writable library/user bands, so `.flags.compiler`
 remains read-only to source code while generated call setup can still maintain

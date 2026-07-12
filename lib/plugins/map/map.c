@@ -1055,11 +1055,13 @@ PROCEDURE(setstem) {
     last_rhmap_rc = STEM_MSG_OK;
     RETURNINTX(0);
     ENDPROC
-    if (mapflags & STEM_FLAG_DEBUG) printf(">>SETSTEM RC='%jd' \n",_rxpa_context->getint(RETURN));
+    if (mapflags & STEM_FLAG_DEBUG) printf(">>SETSTEM RC='%" RXINTEGER_PRI "' \n",
+                                           _rxpa_context->getint(RETURN));
 }
 
 PROCEDURE(reservestem) {
-    if (mapflags & STEM_FLAG_DEBUG)  printf("++RESERVESTEM '%s' = '%ld'\n",GETSTRING(ARG0),GETINT(ARG1));
+    if (mapflags & STEM_FLAG_DEBUG) printf("++RESERVESTEM '%s' = '%" RXINTEGER_PRI "'\n",
+                                          GETSTRING(ARG0), GETINT(ARG1));
     SPLITSTEM()
     int intsize   = GETINT(ARG1);
     stem_map_t *m = create_stem_map(stem_name,intsize);
@@ -1071,7 +1073,8 @@ PROCEDURE(reservestem) {
     last_rhmap_rc = STEM_MSG_OK;
     RETURNINTX(0);
     ENDPROC
-    if (mapflags & STEM_FLAG_DEBUG) printf(">>RESERVESTEM RC='%jd' \n",_rxpa_context->getint(RETURN));
+    if (mapflags & STEM_FLAG_DEBUG) printf(">>RESERVESTEM RC='%" RXINTEGER_PRI "' \n",
+                                           _rxpa_context->getint(RETURN));
 }
 
 PROCEDURE(dropstem) {

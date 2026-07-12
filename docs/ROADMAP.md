@@ -65,9 +65,15 @@ the Release 1 or Level B quality bar.
 | Area | Issue | Source discussions | Notes |
 |------|-------|--------------------|-------|
 | Unicode and text semantics | [#583](https://github.com/adesutherland/CREXX/issues/583) | #155, #162, #194, #231, #470 | Define and verify Level B behaviour for case conversion, `TRANSLATE`, comparison, and byte/codepoint conversion decisions. |
-| Tool output paths | [#584](https://github.com/adesutherland/CREXX/issues/584) | #207 | Normalize `-o` / output path behaviour across `rxc`, `rxas`, and driver workflows. |
-| RXAS float literal precision | [#585](https://github.com/adesutherland/CREXX/issues/585) | #371 | Add regression coverage that separates stored double precision from display formatting. |
-| RXAS instruction coverage | [#586](https://github.com/adesutherland/CREXX/issues/586) | #427 | Inventory and extend instruction regression coverage. |
+
+Closed Release 1 quality issues remain useful as evidence rather than active
+roadmap work:
+
+| Area | Issue | Outcome |
+|------|-------|---------|
+| Tool output paths | [#584](https://github.com/adesutherland/CREXX/issues/584) | Closed with normalized `-o` behavior and regression coverage. |
+| RXAS float literal precision | [#585](https://github.com/adesutherland/CREXX/issues/585) | Closed with stored binary64 precision coverage separated from display formatting. |
+| RXAS instruction coverage | [#586](https://github.com/adesutherland/CREXX/issues/586) | Closed after the instruction inventory and regression surface were extended. |
 
 ## Platform Roadmap
 
@@ -76,6 +82,7 @@ release gate.
 
 | Theme | Source discussions | Direction |
 |-------|--------------------|-----------|
+| Legacy 32-bit platform validation | Release 1 `.int` contract | Keep `.int` signed 64-bit even when revisiting a 32-bit host ABI. Audit pointer-sized handles, RXBIN compatibility, compiler/toolchain availability, memory limits, and performance as separate platform work; do not restore a host-sized `.int` typedef. |
 | z/VM CMS support | #278 | Keep the CMS interest and contact history as roadmap context. Current CMS work is best expressed as deterministic demos and ADDRESS environment compatibility rather than a full platform promise. |
 | VM/370 build recovery | #294, #322 | Investigate cross-compilation and source-structure constraints after the Level B desktop release line is stable. |
 | MVS/370 porting | #379 | Treat as a future platform project. Likely needs a dedicated maintainer, toolchain notes, and a clear cross-build strategy. |
@@ -107,6 +114,7 @@ until they are narrowed.
 | JIT / MIR / LLVM-style backend research | #331 | Research only. Keep separate from the interpreter and bytecode release contract. |
 | RXAS instruction rationalisation | #288, #338, #357 | Review after instruction coverage is better understood. Preserve assembler-user value unless there is a measured maintenance cost. |
 | Optimizer and loop super-instructions | #339 | `BCTP` / `IGTBR` optimizer work has landed. Future optimizer work should be benchmark-driven and covered by RXAS optimizer tests. |
+| RXAS control-flow and dispatch optimization | Jump-table beta 3 work | Build a reusable RXAS control-flow graph with reaching-definition and liveness analysis before recognizing emitted or hand-written branch ladders. Audit the instruction database first so every opcode accurately records register reads, writes, mutation, and flow edges. Use those proofs to consider jump-table lowering, dead-register reuse, and later register assignment improvements; do not extend the current keyhole window to guess across arbitrary control flow. |
 | String performance follow-up | #470 | Performance results are useful, but regressions or semantic fallout should be tracked through concrete bugs such as #583. |
 
 ## Library, Plugin, And Host Integration Roadmap

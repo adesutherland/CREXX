@@ -844,6 +844,7 @@ walker_result control_flow_rewrite_walker(walker_direction direction,
 
                     ASTNode *new_block = ast_execute_rewrite(context, node, block_tmpl);
                     ast_mark_compiler_generated_block(new_block);
+                    new_block->is_select_dispatch = 1;
                     context->changed_flags |= FLAG_VAL_TRANS;
                     return result_normal;
                 }

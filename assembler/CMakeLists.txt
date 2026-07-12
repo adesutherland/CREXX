@@ -23,7 +23,8 @@ add_library(rxaslib STATIC rxastoke.c rxaseror.c ${CMAKE_CURRENT_BINARY_DIR}/rxa
         ${CMAKE_CURRENT_BINARY_DIR}/rxasgrmr.c ${CMAKE_CURRENT_BINARY_DIR}/rxasgrmr.h rxas.h
         rxasassm.h rxasassm.c
         ../avl_tree/rxastree.h
-        ../utf8/utf.h ../binutils/include/rxbin.h rxaslib.c rxas_dsl.c)
+        ../utf8/utf.h ../binutils/include/rxbin.h ../binutils/include/rxopeffects.h
+        ../binutils/rxopmeta.c rxaslib.c rxas_dsl.c)
 add_dependencies(rxaslib re2c lemon avl_tree platform)
 target_include_directories(rxaslib PRIVATE . ${CMAKE_CURRENT_BINARY_DIR} ../platform ../avl_tree ../utf8 ../binutils/include)
 

@@ -1,0 +1,61 @@
+/* Exercise the linear, open-hash, and ACPH paths selected by auto. */
+
+.globals=0
+
+main() .locals=8
+    .jtable auto_one AUTO
+    br after_one_cases
+one_case: .jcase auto_one "only-one"
+    load r2,1
+    br check_one
+after_one_cases:
+    load r0,"only-one"
+    jumps r0,auto_one
+    br fail_one
+check_one:
+    ieq r3,r2,1
+    brf fail_one,r3
+
+    .jtable auto_bytes auto
+    br after_byte_cases
+byte_1: .jcase auto_bytes 0x01
+byte_2: .jcase auto_bytes 0x02
+byte_3: .jcase auto_bytes 0x03
+byte_4: .jcase auto_bytes 0x04
+    load r2,2
+    br check_bytes
+after_byte_cases:
+    load r0,0x04
+    jumpb r0,auto_bytes
+    br fail_bytes
+check_bytes:
+    ieq r3,r2,2
+    brf fail_bytes,r3
+
+    .jtable auto_long auto
+    br after_long_cases
+long_1: .jcase auto_long 0x01010101
+long_2: .jcase auto_long 0x02020202
+long_3: .jcase auto_long 0x03030303
+long_4: .jcase auto_long 0x04040404
+    load r2,3
+    br check_long
+after_long_cases:
+    load r0,0x04040404
+    jumpb r0,auto_long
+    br fail_long
+check_long:
+    ieq r3,r2,3
+    brf fail_long,r3
+    say "PASS: Jump Table Auto Policy Paths"
+    ret 0
+
+fail_one:
+    say "FAIL: auto linear path"
+    ret 1
+fail_bytes:
+    say "FAIL: auto open-hash path"
+    ret 1
+fail_long:
+    say "FAIL: auto ACPH path"
+    ret 1

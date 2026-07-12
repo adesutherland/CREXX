@@ -1,6 +1,6 @@
 # cREXX Virtual Machine (Interpreter) Architecture
 
-The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loads, links, and executes the compiled `.rxbin` bytecode. Its design emphasizes performance through direct threaded code (computed gotos), aggressive stack frame recycling, and an optimized value struct to handle REXX dynamic typing. The current `.rxbin` format is `006`; since format `003`, serialized module data and runtime-only execution state are explicitly separated, and serialized instruction/constant sections may be compacted on disk before being expanded during load.
+The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loads, links, and executes the compiled `.rxbin` bytecode. Its design supports direct threaded code (computed gotos), aggressive stack frame recycling, and an optimized value struct to handle REXX dynamic typing. The current `.rxbin` format is `006`; since format `003`, serialized module data and runtime-only execution state are explicitly separated, and serialized instruction/constant sections may be compacted on disk before being expanded during load.
 
 ## 1. VM Lifecycle
 
@@ -237,7 +237,7 @@ To limit memory fragmentation, strings shorter than `SMALLEST_STRING_BUFFER_LENG
 ```c
 struct value {
     value_type status;               /* Partitioned status/cache flags */
-    rxinteger int_value;             /* 64-bit/32-bit native integer */
+    rxinteger int_value;             /* Release 1 signed 64-bit .int */
     double float_value;              /* Native floating point */
     
     void *decimal_value;             /* Pointer for arbitrary precision math */
@@ -688,8 +688,14 @@ The core execution engine lives in `run()` within `interpreter/rxvmintp.c`.
 
 ### Threaded vs Bytecode Dispatch
 The VM uses conditional compilation (`#ifdef NTHREADED`) to flip between two execution models:
-1. **Direct Threading (Default/Fast Mode)**: During the "Preparation" phase, `rxvm_prepare()` fills a per-module `prepared_dispatch` array with C `void*` pointers targeting the exact `&&label` implementing each opcode. The instruction dispatch reduces to an incredibly fast computed goto: `goto *next_inst;`.
-2. **Standard Bytecode Mode (`NTHREADED`)**: Operates via a massive standard C `switch(opcode)` statement wrapped in a while loop.
+1. **Direct Threading (`rxvm`)**: During the preparation phase, `rxvm_prepare()` fills a per-module `prepared_dispatch` array with C `void*` pointers targeting the `&&label` implementing each opcode. Dispatch uses `goto *next_inst;`.
+2. **Switch Dispatch (`rxbvm`, `NTHREADED`)**: Dispatches the serialized opcode through a C `switch(opcode)` statement.
+
+Neither source form is assumed to be universally faster. Generated performance
+depends on compiler transformations, architecture, branch prediction, code
+layout, and the cost of locating the next handler. The current Release 1
+investigation is tracked in
+`docs/planning/beta-3/notes/vm-dispatch-performance-investigation.md`.
 
 ### Dispatch Macros
 Instructions are executed via macro-driven blocks. For example, moving to the next instruction looks like:
@@ -769,8 +775,9 @@ The current implementation is now:
 
 - it rebuilds an interface-method registry only when newly loaded modules
   invalidate that cache
-- registry rows are keyed by fully qualified concrete class name plus method
-  descriptor
+- registry rows are sorted by fully qualified concrete class name plus method
+  descriptor, and exact dispatch uses binary search without parsing the
+  descriptor on a registry hit
 - for each `class implements interface` link, the VM resolves the effective
   procedure for each interface member during link and validates its metadata
   signature
@@ -788,7 +795,12 @@ The current implementation is now:
   selectors
 - it rebuilds a factory-provider registry only when newly loaded modules
   invalidate that cache
-- registry rows are keyed by interface FQN plus factory member name
+- registry rows are sorted by interface FQN plus factory member name, so
+  dispatch binary-searches the matching provider bucket instead of scanning
+  unrelated interfaces
+- each provider row owns a parsed callable signature built during registry
+  rebuild; dispatch parses the requested descriptor once and does not reparse
+  every candidate descriptor
 - for each candidate class, it resolves the concrete `§factory` or
   `§factory.member` procedure through the existing metadata/procedure tables
   and validates the factory signature
@@ -809,3 +821,9 @@ Runtime module loading matters here as well. `METALOADMODULE` marks the
 VM link state dirty and immediately calls `rxvm_link()` after a successful
 load, so later `srcfprocsel`, `srcmethodsel`, and direct imported calls can
 see the new provider without an automatic filesystem sweep.
+
+The `crexx` driver keeps bare `-l` names as packaged libraries below
+`CREXX_HOME/bin`, but any `-l` value containing `/` or `\\` is an exact path.
+Late-loading applications should pass the intended `.rxbin` filename to
+`loadmodule()` explicitly; neither the driver regression nor the VM late-load
+path searches user-controlled directories for a provider.

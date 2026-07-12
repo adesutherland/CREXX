@@ -203,7 +203,15 @@ Symbol *rxcp_remap_create_local_symbol_from_node(Context *context,
     if (!symbol) return NULL;
 
     rxcp_remap_init_generated_local_symbol(symbol);
-    if (!rxcp_remap_copy_node_value_shape_to_symbol(symbol, shape_node)) return NULL;
+    if (shape_node->value_type == TP_UNKNOWN &&
+        shape_node->symbolNode &&
+        shape_node->symbolNode->symbol &&
+        shape_node->symbolNode->symbol->type != TP_UNKNOWN) {
+        if (!rxcp_remap_copy_symbol_value_shape(symbol,
+                                                shape_node->symbolNode->symbol)) return NULL;
+    } else if (!rxcp_remap_copy_node_value_shape_to_symbol(symbol, shape_node)) {
+        return NULL;
+    }
     if (default_array_storage && symbol->value_dims > 0) symbol->needs_default_initiation = 1;
 
     return symbol;

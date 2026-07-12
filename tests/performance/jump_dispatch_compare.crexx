@@ -1,0 +1,391 @@
+/* Observational table-versus-branch dispatch benchmark. */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+
+mode = "int"
+count = 3
+pattern = 3
+iterations = 500000
+value = ""
+if argv[0] >= 1 then mode = argv[1]
+if argv[0] >= 2 then count = argv[2]
+if argv[0] >= 3 then pattern = argv[3]
+if argv[0] >= 4 then iterations = argv[4]
+if argv[0] >= 5 then value = argv[5]
+
+if mode = "int" then do
+  if count = 2 then return bench_int2(iterations, pattern)
+  if count = 3 then return bench_int3(iterations, pattern)
+  if count = 4 then return bench_int4(iterations, pattern)
+  if count = 6 then return bench_int6(iterations, pattern)
+  if count = 8 then return bench_int8(iterations, pattern)
+end
+if mode = "string" then do
+  if count = 2 then return bench_string2(iterations, value)
+  if count = 3 then return bench_string3(iterations, value)
+  if count = 8 then return bench_string8(iterations, value)
+end
+if mode = "numeric" then do
+  if count = 2 then return bench_numeric2(iterations, value)
+  if count = 3 then return bench_numeric3(iterations, value)
+  if count = 8 then return bench_numeric8(iterations, value)
+end
+say "FAIL: unsupported benchmark shape"
+return 1
+
+bench_int2: procedure = .int
+  arg iterations = .int, pattern = .int
+  table_sum = 0
+  start = time("us")
+  do i = 0 to iterations - 1
+    if pattern = 0 then value = 0
+    else if pattern = 1 then value = 1
+    else if pattern = 2 then value = 2
+    else value = i % 2
+    select value
+      when 0 then table_sum = table_sum + 1
+      when 1 then table_sum = table_sum + 2
+      otherwise table_sum = table_sum - 1
+    end
+  end
+  table_elapsed = time("us") - start
+  branch_sum = 0
+  start = time("us")
+  do i = 0 to iterations - 1
+    if pattern = 0 then value = 0
+    else if pattern = 1 then value = 1
+    else if pattern = 2 then value = 2
+    else value = i % 2
+    if 0 = value then branch_sum = branch_sum + 1
+    else if 1 = value then branch_sum = branch_sum + 2
+    else branch_sum = branch_sum - 1
+  end
+  branch_elapsed = time("us") - start
+  return report_int(2, pattern, iterations, table_elapsed, branch_elapsed, table_sum, branch_sum)
+
+bench_int3: procedure = .int
+  arg iterations = .int, pattern = .int
+  table_sum = 0
+  start = time("us")
+  do i = 0 to iterations - 1
+    if pattern = 0 then value = 0
+    else if pattern = 1 then value = 2
+    else if pattern = 2 then value = 3
+    else value = i % 3
+    select value
+      when 0 then table_sum = table_sum + 1
+      when 1 then table_sum = table_sum + 2
+      when 2 then table_sum = table_sum + 3
+      otherwise table_sum = table_sum - 1
+    end
+  end
+  table_elapsed = time("us") - start
+  branch_sum = 0
+  start = time("us")
+  do i = 0 to iterations - 1
+    if pattern = 0 then value = 0
+    else if pattern = 1 then value = 2
+    else if pattern = 2 then value = 3
+    else value = i % 3
+    if 0 = value then branch_sum = branch_sum + 1
+    else if 1 = value then branch_sum = branch_sum + 2
+    else if 2 = value then branch_sum = branch_sum + 3
+    else branch_sum = branch_sum - 1
+  end
+  branch_elapsed = time("us") - start
+  return report_int(3, pattern, iterations, table_elapsed, branch_elapsed, table_sum, branch_sum)
+
+bench_int4: procedure = .int
+  arg iterations = .int, pattern = .int
+  table_sum = 0
+  start = time("us")
+  do i = 0 to iterations - 1
+    if pattern = 0 then value = 0
+    else if pattern = 1 then value = 3
+    else if pattern = 2 then value = 4
+    else value = i % 4
+    select value
+      when 0 then table_sum = table_sum + 1
+      when 1 then table_sum = table_sum + 2
+      when 2 then table_sum = table_sum + 3
+      when 3 then table_sum = table_sum + 4
+      otherwise table_sum = table_sum - 1
+    end
+  end
+  table_elapsed = time("us") - start
+  branch_sum = 0
+  start = time("us")
+  do i = 0 to iterations - 1
+    if pattern = 0 then value = 0
+    else if pattern = 1 then value = 3
+    else if pattern = 2 then value = 4
+    else value = i % 4
+    if 0 = value then branch_sum = branch_sum + 1
+    else if 1 = value then branch_sum = branch_sum + 2
+    else if 2 = value then branch_sum = branch_sum + 3
+    else if 3 = value then branch_sum = branch_sum + 4
+    else branch_sum = branch_sum - 1
+  end
+  branch_elapsed = time("us") - start
+  return report_int(4, pattern, iterations, table_elapsed, branch_elapsed, table_sum, branch_sum)
+
+bench_int6: procedure = .int
+  arg iterations = .int, pattern = .int
+  table_sum = 0
+  start = time("us")
+  do i = 0 to iterations - 1
+    if pattern = 0 then value = 0
+    else if pattern = 1 then value = 5
+    else if pattern = 2 then value = 6
+    else value = i % 6
+    select value
+      when 0 then table_sum = table_sum + 1
+      when 1 then table_sum = table_sum + 2
+      when 2 then table_sum = table_sum + 3
+      when 3 then table_sum = table_sum + 4
+      when 4 then table_sum = table_sum + 5
+      when 5 then table_sum = table_sum + 6
+      otherwise table_sum = table_sum - 1
+    end
+  end
+  table_elapsed = time("us") - start
+  branch_sum = 0
+  start = time("us")
+  do i = 0 to iterations - 1
+    if pattern = 0 then value = 0
+    else if pattern = 1 then value = 5
+    else if pattern = 2 then value = 6
+    else value = i % 6
+    if 0 = value then branch_sum = branch_sum + 1
+    else if 1 = value then branch_sum = branch_sum + 2
+    else if 2 = value then branch_sum = branch_sum + 3
+    else if 3 = value then branch_sum = branch_sum + 4
+    else if 4 = value then branch_sum = branch_sum + 5
+    else if 5 = value then branch_sum = branch_sum + 6
+    else branch_sum = branch_sum - 1
+  end
+  branch_elapsed = time("us") - start
+  return report_int(6, pattern, iterations, table_elapsed, branch_elapsed, table_sum, branch_sum)
+
+bench_int8: procedure = .int
+  arg iterations = .int, pattern = .int
+  table_sum = 0
+  start = time("us")
+  do i = 0 to iterations - 1
+    if pattern = 0 then value = 0
+    else if pattern = 1 then value = 7
+    else if pattern = 2 then value = 8
+    else value = i % 8
+    select value
+      when 0 then table_sum = table_sum + 1
+      when 1 then table_sum = table_sum + 2
+      when 2 then table_sum = table_sum + 3
+      when 3 then table_sum = table_sum + 4
+      when 4 then table_sum = table_sum + 5
+      when 5 then table_sum = table_sum + 6
+      when 6 then table_sum = table_sum + 7
+      when 7 then table_sum = table_sum + 8
+      otherwise table_sum = table_sum - 1
+    end
+  end
+  table_elapsed = time("us") - start
+  branch_sum = 0
+  start = time("us")
+  do i = 0 to iterations - 1
+    if pattern = 0 then value = 0
+    else if pattern = 1 then value = 7
+    else if pattern = 2 then value = 8
+    else value = i % 8
+    if 0 = value then branch_sum = branch_sum + 1
+    else if 1 = value then branch_sum = branch_sum + 2
+    else if 2 = value then branch_sum = branch_sum + 3
+    else if 3 = value then branch_sum = branch_sum + 4
+    else if 4 = value then branch_sum = branch_sum + 5
+    else if 5 = value then branch_sum = branch_sum + 6
+    else if 6 = value then branch_sum = branch_sum + 7
+    else if 7 = value then branch_sum = branch_sum + 8
+    else branch_sum = branch_sum - 1
+  end
+  branch_elapsed = time("us") - start
+  return report_int(8, pattern, iterations, table_elapsed, branch_elapsed, table_sum, branch_sum)
+
+bench_string2: procedure = .int
+  arg iterations = .int, value = .string
+  table_sum = 0
+  start = time("us")
+  do i = 1 to iterations
+    select value
+      when "key00" then table_sum = table_sum + 1
+      when "key01" then table_sum = table_sum + 2
+      otherwise table_sum = table_sum - 1
+    end
+  end
+  table_elapsed = time("us") - start
+  branch_sum = 0
+  start = time("us")
+  do i = 1 to iterations
+    if "key00" = value then branch_sum = branch_sum + 1
+    else if "key01" = value then branch_sum = branch_sum + 2
+    else branch_sum = branch_sum - 1
+  end
+  branch_elapsed = time("us") - start
+  return report_text("string", 2, value, iterations, table_elapsed, branch_elapsed, table_sum, branch_sum)
+
+bench_string3: procedure = .int
+  arg iterations = .int, value = .string
+  table_sum = 0
+  start = time("us")
+  do i = 1 to iterations
+    select value
+      when "key00" then table_sum = table_sum + 1
+      when "key01" then table_sum = table_sum + 2
+      when "key02" then table_sum = table_sum + 3
+      otherwise table_sum = table_sum - 1
+    end
+  end
+  table_elapsed = time("us") - start
+  branch_sum = 0
+  start = time("us")
+  do i = 1 to iterations
+    if "key00" = value then branch_sum = branch_sum + 1
+    else if "key01" = value then branch_sum = branch_sum + 2
+    else if "key02" = value then branch_sum = branch_sum + 3
+    else branch_sum = branch_sum - 1
+  end
+  branch_elapsed = time("us") - start
+  return report_text("string", 3, value, iterations, table_elapsed, branch_elapsed, table_sum, branch_sum)
+
+bench_string8: procedure = .int
+  arg iterations = .int, value = .string
+  table_sum = 0
+  start = time("us")
+  do i = 1 to iterations
+    select value
+      when "key00" then table_sum = table_sum + 1
+      when "key01" then table_sum = table_sum + 2
+      when "key02" then table_sum = table_sum + 3
+      when "key03" then table_sum = table_sum + 4
+      when "key04" then table_sum = table_sum + 5
+      when "key05" then table_sum = table_sum + 6
+      when "key06" then table_sum = table_sum + 7
+      when "key07" then table_sum = table_sum + 8
+      otherwise table_sum = table_sum - 1
+    end
+  end
+  table_elapsed = time("us") - start
+  branch_sum = 0
+  start = time("us")
+  do i = 1 to iterations
+    if "key00" = value then branch_sum = branch_sum + 1
+    else if "key01" = value then branch_sum = branch_sum + 2
+    else if "key02" = value then branch_sum = branch_sum + 3
+    else if "key03" = value then branch_sum = branch_sum + 4
+    else if "key04" = value then branch_sum = branch_sum + 5
+    else if "key05" = value then branch_sum = branch_sum + 6
+    else if "key06" = value then branch_sum = branch_sum + 7
+    else if "key07" = value then branch_sum = branch_sum + 8
+    else branch_sum = branch_sum - 1
+  end
+  branch_elapsed = time("us") - start
+  return report_text("string", 8, value, iterations, table_elapsed, branch_elapsed, table_sum, branch_sum)
+
+bench_numeric2: procedure = .int
+  arg iterations = .int, value = .string
+  table_sum = 0
+  start = time("us")
+  do i = 1 to iterations
+    select value
+      when "1" then table_sum = table_sum + 1
+      when "2.0" then table_sum = table_sum + 2
+      otherwise table_sum = table_sum - 1
+    end
+  end
+  table_elapsed = time("us") - start
+  branch_sum = 0
+  start = time("us")
+  do i = 1 to iterations
+    if "1" = value then branch_sum = branch_sum + 1
+    else if "2.0" = value then branch_sum = branch_sum + 2
+    else branch_sum = branch_sum - 1
+  end
+  branch_elapsed = time("us") - start
+  return report_text("numeric", 2, value, iterations, table_elapsed, branch_elapsed, table_sum, branch_sum)
+
+bench_numeric3: procedure = .int
+  arg iterations = .int, value = .string
+  table_sum = 0
+  start = time("us")
+  do i = 1 to iterations
+    select value
+      when "1" then table_sum = table_sum + 1
+      when "2.0" then table_sum = table_sum + 2
+      when "3e0" then table_sum = table_sum + 3
+      otherwise table_sum = table_sum - 1
+    end
+  end
+  table_elapsed = time("us") - start
+  branch_sum = 0
+  start = time("us")
+  do i = 1 to iterations
+    if "1" = value then branch_sum = branch_sum + 1
+    else if "2.0" = value then branch_sum = branch_sum + 2
+    else if "3e0" = value then branch_sum = branch_sum + 3
+    else branch_sum = branch_sum - 1
+  end
+  branch_elapsed = time("us") - start
+  return report_text("numeric", 3, value, iterations, table_elapsed, branch_elapsed, table_sum, branch_sum)
+
+bench_numeric8: procedure = .int
+  arg iterations = .int, value = .string
+  table_sum = 0
+  start = time("us")
+  do i = 1 to iterations
+    select value
+      when "1" then table_sum = table_sum + 1
+      when "2" then table_sum = table_sum + 2
+      when "3" then table_sum = table_sum + 3
+      when "4" then table_sum = table_sum + 4
+      when "5" then table_sum = table_sum + 5
+      when "6" then table_sum = table_sum + 6
+      when "7" then table_sum = table_sum + 7
+      when "8" then table_sum = table_sum + 8
+      otherwise table_sum = table_sum - 1
+    end
+  end
+  table_elapsed = time("us") - start
+  branch_sum = 0
+  start = time("us")
+  do i = 1 to iterations
+    if "1" = value then branch_sum = branch_sum + 1
+    else if "2" = value then branch_sum = branch_sum + 2
+    else if "3" = value then branch_sum = branch_sum + 3
+    else if "4" = value then branch_sum = branch_sum + 4
+    else if "5" = value then branch_sum = branch_sum + 5
+    else if "6" = value then branch_sum = branch_sum + 6
+    else if "7" = value then branch_sum = branch_sum + 7
+    else if "8" = value then branch_sum = branch_sum + 8
+    else branch_sum = branch_sum - 1
+  end
+  branch_elapsed = time("us") - start
+  return report_text("numeric", 8, value, iterations, table_elapsed, branch_elapsed, table_sum, branch_sum)
+
+report_int: procedure = .int
+  arg count = .int, pattern = .int, iterations = .int, table_elapsed = .int, branch_elapsed = .int, table_sum = .int, branch_sum = .int
+  if table_sum \= branch_sum then return fail("integer checksum")
+  say "mode=int count="count "pattern="pattern "iterations="iterations "table_us="table_elapsed "branch_us="branch_elapsed
+  say "PASS: jump dispatch compare"
+  return 0
+
+report_text: procedure = .int
+  arg mode = .string, count = .int, value = .string, iterations = .int, table_elapsed = .int, branch_elapsed = .int, table_sum = .int, branch_sum = .int
+  if table_sum \= branch_sum then return fail(mode || " checksum")
+  say "mode="mode "count="count "value="value "iterations="iterations "table_us="table_elapsed "branch_us="branch_elapsed
+  say "PASS: jump dispatch compare"
+  return 0
+
+fail: procedure = .int
+  arg label = .string
+  say "FAIL:" label
+  return 1

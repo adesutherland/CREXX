@@ -1,0 +1,15 @@
+/*
+ * Unknown algorithm names are rejected at assembly time.
+ */
+
+.globals=0
+
+main() .locals=2
+    .jtable words fancy
+    br done
+word_key: .jcase words "if"
+    ret 0
+done:
+    load r0,"if"
+    jumps r0,words
+    ret 0

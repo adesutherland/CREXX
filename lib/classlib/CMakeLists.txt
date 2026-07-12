@@ -9,6 +9,10 @@ set(CLSS
   StringArrayListIterator
   ObjectArrayList
   ObjectArrayListIterator
+  ObjectObjectTreeMapIterator
+  ObjectObjectTreeMap
+  ObjectComparator
+  RexxComparator
   StringHashMap
   StringHashMapIterator
   StringObjectHashMap
@@ -75,6 +79,7 @@ add_custom_command(
 
 set(CLASSLIB_SELECTORS ${CLSS})
 set(CLASS_DEPS_StringIterable StringIterator)
+set(CLASS_DEPS_RexxComparator ObjectComparator)
 set(CLASS_DEPS_ObjectIterable ObjectIterator)
 set(CLASS_DEPS_StringArrayList StringIterable)
 set(CLASS_DEPS_StringArrayListIterator StringArrayList StringIterator)
@@ -93,6 +98,9 @@ set(CLASS_DEPS_StringObjectTreeMap StringTreeSet StringObjectTreeMapIterator Str
 set(CLASS_DEPS_StringObjectTreeMapIterator StringIterator)
 set(CLASS_DEPS_StringTreeSet StringIterable StringIterator StringTreeSetIterator)
 set(CLASS_DEPS_StringTreeSetIterator StringIterator)
+set(CLASS_DEPS_ObjectObjectTreeMapIterator ObjectIterator)
+set(CLASS_DEPS_ObjectObjectTreeMap ObjectObjectTreeMapIterator ObjectComparator)
+
 
 if(WIN32)
   set(_classlib_remove_consolidated_command

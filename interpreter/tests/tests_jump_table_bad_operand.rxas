@@ -1,0 +1,10 @@
+/*
+ * Jump-table instructions require the table operand to be a .jtable name.
+ */
+
+.globals=0
+
+main() .locals=2
+    load r0,"if"
+    jumps r0,"words"
+    ret 0
