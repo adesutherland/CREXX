@@ -59,6 +59,7 @@ typedef struct instruction_coding {
 #pragma pack(push,4)
 typedef union bin_code {
     instruction_coding instruction;
+    void *handler; /* Process-local execution images only; never serialized. */
     double fconst;
     rxinteger iconst;
     char cconst;

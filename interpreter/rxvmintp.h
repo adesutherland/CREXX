@@ -73,7 +73,7 @@ struct module {
     size_t procedure_count;    /* Number of runtime procedures */
     proc_runtime_lookup_entry *proc_runtime_lookup; /* Sorted constant pool offsets -> runtime procedures */
     size_t proc_runtime_lookup_size;
-    void **prepared_dispatch;  /* Prepared opcode dispatch table */
+    bin_code *execution_image; /* Owned computed-goto image; canonical segment.binary stays immutable */
 };
 
 static inline proc_runtime *rxvm_get_module_runtime_procedure(module *mod, size_t proc_offset) {
@@ -179,13 +179,14 @@ struct stack_frame {
                 instruction = src_inst(instr, op1,op2,op3);     \
                 address_map[instruction->opcode] = target;
 
-#define VM_CANONICAL_INDEX(pointer_) ((size_t)((pointer_) - current_canonical_base))
+#define VM_CANONICAL_INDEX(pointer_) ((size_t)((pointer_) - current_execution_base))
+#define VM_CANONICAL_POINTER(index_) (current_canonical_base + (size_t)(index_))
 #define VM_EXECUTION_POINTER(index_) (current_execution_base + (size_t)(index_))
 
 #ifdef NTHREADED
-#define VM_MODULE_DISPATCH_BASE(module_) ((void **)(0))
+#define VM_MODULE_EXECUTION_BASE(module_) ((module_)->segment.binary)
 #else
-#define VM_MODULE_DISPATCH_BASE(module_) ((module_)->prepared_dispatch)
+#define VM_MODULE_EXECUTION_BASE(module_) ((module_)->execution_image)
 #endif
 
 #ifndef NDEBUG
@@ -196,8 +197,7 @@ struct stack_frame {
         assert(current_frame->procedure->binarySpace == current_binary_space);  \
         assert(current_binary_space->module == current_module);                 \
         assert(current_binary_space->binary == current_canonical_base);         \
-        assert(current_execution_base == current_canonical_base);               \
-        assert(current_dispatch_base == VM_MODULE_DISPATCH_BASE(current_module)); \
+        assert(current_execution_base == VM_MODULE_EXECUTION_BASE(current_module)); \
         assert(current_binary_space->const_pool == current_const_pool);         \
         assert(current_frame->locals == current_locals);                        \
     } while (0)
@@ -211,9 +211,8 @@ struct stack_frame {
         current_frame = vm_frame__;                                             \
         current_binary_space = vm_frame__->procedure->binarySpace;              \
         current_module = current_binary_space->module;                          \
-        current_execution_base = current_binary_space->binary;                  \
+        current_execution_base = VM_MODULE_EXECUTION_BASE(current_module);      \
         current_canonical_base = current_binary_space->binary;                  \
-        current_dispatch_base = VM_MODULE_DISPATCH_BASE(current_module);        \
         current_const_pool = current_binary_space->const_pool;                  \
         current_locals = vm_frame__->locals;                                    \
         VM_ASSERT_ACTIVE_FRAME();                                               \
@@ -227,15 +226,14 @@ struct stack_frame {
     do {                                                                        \
         RXVM_INSTRUMENTATION_INSTRUCTION_TERMINAL(                              \
                 current_module ? current_module->module_number : 0,             \
-                (current_canonical_base && pc)                                  \
-                    ? (size_t)(pc - current_canonical_base) : 0,                \
+                (current_execution_base && pc)                                  \
+                    ? VM_CANONICAL_INDEX(pc) : 0,                               \
                 RXVM_TRANSITION_TERMINAL);                                      \
         current_frame = 0;                                                      \
         current_binary_space = 0;                                               \
         current_module = 0;                                                     \
         current_execution_base = 0;                                             \
         current_canonical_base = 0;                                             \
-        current_dispatch_base = 0;                                              \
         current_const_pool = 0;                                                 \
         current_locals = 0;                                                     \
     } while (0)
@@ -266,7 +264,7 @@ struct stack_frame {
 #define END_INTERRUPT do { goto *next_inst; } while (0);
 #define VM_RESOLVE_SELECTED()                                                   \
     do {                                                                        \
-        next_inst = current_dispatch_base[VM_CANONICAL_INDEX(next_pc)];          \
+        next_inst = next_pc->handler;                                           \
     } while (0)
 #define VM_DISPATCH_TARGET() goto *next_inst
 

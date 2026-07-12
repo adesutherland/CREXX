@@ -92,6 +92,30 @@
 #include "rxvmplugin_framework.h"
 #include "rxvmsock.h"
 
+typedef char rxvm_execution_slot_must_hold_pointer[
+        sizeof(bin_code) >= sizeof(void *) ? 1 : -1];
+
+#if defined(__has_attribute)
+#  if __has_attribute(noinline)
+#    define RXVM_LABEL_OWNER_NOINLINE __attribute__((noinline))
+#  else
+#    define RXVM_LABEL_OWNER_NOINLINE
+#  endif
+#  if __has_attribute(noclone)
+#    define RXVM_LABEL_OWNER_NOCLONE __attribute__((noclone))
+#  else
+#    define RXVM_LABEL_OWNER_NOCLONE
+#  endif
+#elif defined(__GNUC__)
+#  define RXVM_LABEL_OWNER_NOINLINE __attribute__((noinline))
+#  define RXVM_LABEL_OWNER_NOCLONE __attribute__((noclone))
+#else
+#  define RXVM_LABEL_OWNER_NOINLINE
+#  define RXVM_LABEL_OWNER_NOCLONE
+#endif
+
+#define RXVM_LABEL_OWNER RXVM_LABEL_OWNER_NOINLINE RXVM_LABEL_OWNER_NOCLONE
+
 int rxvm_link(rxvm_context *ctx);
 
 #define RXVM_FFORMAT_MAX_FIELD 1000
@@ -3252,7 +3276,7 @@ if (is_interrupt && temp_frame->is_interrupt_action) { \
     rxsignal_handler_action action__ = rxsignal_read_handler_action(interrupt_action_value); \
     if (action__ == RXSIGNAL_HANDLER_ACTION_RETRY) { \
         if (current_frame && current_frame->procedure && current_frame->procedure->binarySpace) { \
-            next_pc = current_frame->procedure->binarySpace->binary + last_interrupted_address[is_interrupt]; \
+            next_pc = VM_EXECUTION_POINTER(last_interrupted_address[is_interrupt]); \
         } \
     } else if (action__ != RXSIGNAL_HANDLER_ACTION_SKIP) { \
         value *payload__ = rxsignal_handler_payload(temp_frame); \
@@ -3337,7 +3361,7 @@ RX_INLINE rxinteger ascii_back_blank( unsigned char *s, rxinteger start, rxinteg
 #endif
 
 /* Interpreter */
-RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
+RXVM_LABEL_OWNER RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     proc_runtime *procedure;
     proc_runtime *step_handler = 0;
     int rc = 0;
@@ -3362,7 +3386,6 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     bin_space *current_binary_space = 0;
     bin_code *current_execution_base = 0;
     bin_code *current_canonical_base = 0;
-    void **current_dispatch_base = 0;
     unsigned char *current_const_pool = 0;
     value **current_locals = 0;
     /* 3 Work Registers */
@@ -3461,6 +3484,47 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 #include "../binutils/include/rxops.h"
 #undef X
 };
+
+#define VM_PREPARE_EXECUTION_IMAGE(module_)                                     \
+    do {                                                                        \
+        module *vm_module__ = (module_);                                        \
+        size_t vm_bytes__;                                                      \
+        size_t vm_i__ = 0;                                                      \
+        int vm_new_image__ = vm_module__->execution_image == 0;                 \
+        if (!vm_module__->segment.inst_size) break;                             \
+        if (vm_new_image__) {                                                   \
+            if (!rxvm_checked_size_mul(sizeof(bin_code),                        \
+                                       vm_module__->segment.inst_size,          \
+                                       &vm_bytes__)) {                          \
+                RX_PANIC_OOM("size rxvm execution image", (size_t)-1,          \
+                             vm_module__->name);                                \
+            }                                                                   \
+            vm_module__->execution_image = malloc(vm_bytes__);                  \
+            if (!vm_module__->execution_image) {                                \
+                RX_PANIC_OOM("malloc rxvm execution image", vm_bytes__,        \
+                             vm_module__->name);                                \
+            }                                                                   \
+            memcpy(vm_module__->execution_image, vm_module__->segment.binary,   \
+                   vm_bytes__);                                                \
+        }                                                                       \
+        while (vm_i__ < vm_module__->segment.inst_size) {                      \
+            size_t vm_instruction__ = vm_i__;                                  \
+            size_t vm_operand_count__ =                                        \
+                    vm_module__->segment.binary[vm_instruction__].instruction.no_ops; \
+            unsigned int vm_opcode__ =                                         \
+                    vm_module__->segment.binary[vm_instruction__].instruction.opcode; \
+            vm_i__ += vm_operand_count__ + 1;                                  \
+            if (!vm_new_image__ && vm_operand_count__) {                       \
+                memcpy(vm_module__->execution_image + vm_instruction__ + 1,     \
+                       vm_module__->segment.binary + vm_instruction__ + 1,      \
+                       sizeof(bin_code) * vm_operand_count__);                  \
+            }                                                                   \
+            vm_module__->execution_image[vm_instruction__].handler =           \
+                    vm_opcode__ < OP_MAX_INSTRUCTIONS                           \
+                        ? (void *)address_map[vm_opcode__]                      \
+                        : (void *)&&IUNKNOWN;                                   \
+        }                                                                       \
+    } while (0)
 #endif
 
     /* Allocate Interrupt Arg */
@@ -3474,25 +3538,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
         if (context->modules[mod_index]->state >= RXVM_MOD_THREADED) continue;
 
 #ifndef NTHREADED
-        {
-            module *mod = context->modules[mod_index];
-            size_t i = 0, j;
-            if (!mod->prepared_dispatch && mod->segment.inst_size) {
-                mod->prepared_dispatch = malloc(sizeof(void *) * mod->segment.inst_size);
-                if (!mod->prepared_dispatch) {
-                    RX_PANIC_OOM("malloc rxvm prepared dispatch table",
-                                 sizeof(void *) * mod->segment.inst_size,
-                                 mod->name);
-                }
-            }
-            while (i < context->modules[mod_index]->segment.inst_size) {
-                j = i;
-                i += context->modules[mod_index]->segment.binary[i].instruction.no_ops + 1;
-                mod->prepared_dispatch[j] =
-                        (void *)address_map[context->modules[mod_index]->segment
-                                .binary[j].instruction.opcode];
-            }
-        }
+        VM_PREPARE_EXECUTION_IMAGE(context->modules[mod_index]);
 #endif
         context->modules[mod_index]->state = RXVM_MOD_THREADED;
     }
@@ -3635,7 +3681,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             bin_code *signal_pc = (interrupted_pc && signal_code + 1 != RXSIGNAL_BREAKPOINT) ? interrupted_pc : pc;
             last_interrupted_module[signal_code + 1] = (rxinteger) current_module->module_number;
             last_interrupted_address[signal_code + 1] =
-                    (rxinteger) (signal_pc - current_canonical_base);
+                    (rxinteger) VM_CANONICAL_INDEX(signal_pc);
             if (current_frame->interrupt_table[signal_code].response == RXSIGNAL_RESPONSE_IGNORE) {
                 DEBUG("TRACE - INTR IGNORE %s\n", interrupt_to_string(signal_code + 1));
                 interrupts &= ~(1 << signal_code);
@@ -4119,36 +4165,21 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(METALOADMODULE_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - METALOADMODULE R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2));
             {
-                int num_modules_before;
                 null_terminate_string_buffer(op2R);
                 /* Load the module */
-                num_modules_before = (int) context->num_modules;
                 op1R->int_value = rxldmod(context, op2R->string_value);
                 if (op1R->int_value > 0) {
-                    /* If successfully loaded, thread the binary - must be done in run() */
+                    /* Resolve canonical operands before copying the execution image. */
+                    rxvm_link(context);
+                    /* If successfully loaded, prepare execution state inside run(). */
 #ifndef NTHREADED
                     int mod;
                     DEBUG("Threading\n");
-                    for (mod = num_modules_before; mod < op1R->int_value; mod++) {
+                    for (mod = 0; mod < op1R->int_value; mod++) {
                         module *loaded_module = context->modules[mod];
-                        size_t i = 0, j;
-                        if (!loaded_module->prepared_dispatch && loaded_module->segment.inst_size) {
-                            loaded_module->prepared_dispatch = malloc(sizeof(void *) * loaded_module->segment.inst_size);
-                            if (!loaded_module->prepared_dispatch) {
-                                RX_PANIC_OOM("malloc rxvm loaded-module prepared dispatch table",
-                                             sizeof(void *) * loaded_module->segment.inst_size,
-                                             loaded_module->name);
-                            }
-                        }
-                        while (i < context->modules[mod]->segment.inst_size) {
-                            j = i;
-                            i += context->modules[mod]->segment.binary[i].instruction.no_ops + 1;
-                            loaded_module->prepared_dispatch[j] =
-                                (void *) address_map[context->modules[mod]->segment.binary[j].instruction.opcode];
-                        }
+                        VM_PREPARE_EXECUTION_IMAGE(loaded_module);
                     }
 #endif
-                    rxvm_link(context);
                 }
             }
             DISPATCH;
@@ -4557,8 +4588,10 @@ START_OF_INSTRUCTIONS
 
                 if (current_frame->parent != 0) {
                     mod_no = (rxinteger) current_frame->parent->procedure->binarySpace->module->module_number;
+                    module *caller_module =
+                            current_frame->parent->procedure->binarySpace->module;
                     addr = (rxinteger) (current_frame->return_pc -
-                                        current_frame->parent->procedure->binarySpace->binary);
+                                        VM_MODULE_EXECUTION_BASE(caller_module));
                 }
 
                 /* Populate the result object */
