@@ -8,7 +8,11 @@ The execution of a program within `rxvm` is handled in discrete phases (as defin
 1. **Creation**: `rxvm_create()` allocates the root `rxvm_context`.
 2. **Loading**: `rxvm_load()` ingests a `.rxbin` binary file, reads the section flags and stored sizes, expands any packed instruction/constant sections back into normal buffers, and then loads the result into an internal `module` struct. In the current `006` layout the reader accepts three record kinds: `MODULE_LOCAL`, `POOL_SHARED`, and `MODULE_SHARED`. Shared-backed modules borrow the current shared pool in memory rather than copying it.
 3. **Linking**: `rxvm_link()` traverses newly loaded modules to resolve exports and external imports into a unified memory map. The call is now dirty-checked, so repeated bridge/runtime entry points become fast no-ops when no module state changed.
-4. **Preparation**: `rxvm_prepare()` optionally populates per-module dispatch side tables for maximum speed without mutating serialized bytecode.
+4. **Preparation**: `rxvm_prepare()` builds an owned per-module runtime
+   instruction image for computed-goto execution. Operand cells are copied
+   unchanged and instruction cells hold process-local handler pointers; the
+   canonical and serialized bytecode remains immutable. Switch-dispatch
+   `rxbvm` continues to execute the canonical opcode image directly.
 5. **Execution**: `rxvm_run()` / `rxvm_call()` invoke a target procedure (typically `main`) and launch the main interpreter loop.
 
 Runtime code can explicitly late-load another `.rxbin` or `.rxplugin` through
@@ -688,7 +692,13 @@ The core execution engine lives in `run()` within `interpreter/rxvmintp.c`.
 
 ### Threaded vs Bytecode Dispatch
 The VM uses conditional compilation (`#ifdef NTHREADED`) to flip between two execution models:
-1. **Direct Threading (`rxvm`)**: During the preparation phase, `rxvm_prepare()` fills a per-module `prepared_dispatch` array with C `void*` pointers targeting the `&&label` implementing each opcode. Dispatch uses `goto *next_inst;`.
+1. **Direct Threading (`rxvm`)**: During the preparation phase,
+   `rxvm_prepare()` copies each module's canonical instruction slots into an
+   owned runtime image. Operand cells remain unchanged and each instruction
+   cell stores the C `void*` for its `&&label`. Target selection loads
+   `next_pc->handler`, and dispatch uses `goto *next_inst;`. The runtime image
+   is process-local, is never serialized or exposed through reflection, and is
+   refreshed safely after a late link.
 2. **Switch Dispatch (`rxbvm`, `NTHREADED`)**: Dispatches the serialized opcode through a C `switch(opcode)` statement.
 
 Neither source form is assumed to be universally faster. Generated performance
@@ -697,12 +707,23 @@ layout, and the cost of locating the next handler. The current Release 1
 investigation is tracked in
 `docs/planning/beta-3/notes/vm-dispatch-performance-investigation.md`.
 
-### Dispatch Macros
-Instructions are executed via macro-driven blocks. For example, moving to the next instruction looks like:
+### Active-frame and dispatch contracts
+
+Every frame change passes through `VM_ACTIVATE_FRAME` (or its nullable
+counterpart). That boundary refreshes the active frame, binary space, module,
+execution base, canonical base, constant pool, and locals as one coherent
+state change. Debug builds assert that all cached pointers agree with the
+active frame. Operand and branch macros consume only that coherent state.
+
+Instructions select their next target through intent macros. Sequential flow
+uses `VM_ADVANCE`, canonical indices use `VM_SELECT_INDEX`, and already
+resolved execution pointers use `VM_SELECT_POINTER`. Computed-goto and switch
+differences stay inside these macros, and handler resolution still happens
+before the current handler body completes. For example:
 
 ```c
-#define CALC_DISPATCH(n) { next_pc = pc + (n) + 1; next_inst = current_module->prepared_dispatch[next_pc - current_module->segment.binary]; }
-#define DISPATCH         { pc = next_pc; if (interrupts && !current_frame->is_interrupt) goto INTERRUPT; goto *next_inst; }
+#define VM_ADVANCE(n) do { next_pc = pc + (size_t)(n) + 1; VM_RESOLVE_SELECTED(); } while (0)
+#define DISPATCH do { pc = next_pc; if (interrupts && !current_frame->is_interrupt) goto INTERRUPT; VM_DISPATCH_TARGET(); } while (0)
 ```
 `DISPATCH` actively checks a global `interrupts` bit-flag to immediately branch into signal exception handling if an error occurred natively. Internal signal-raising macros stamp `interrupted_pc` with the faulting instruction before dispatch advances `pc`; breakpoint and asynchronous interrupts leave it unset so their handlers continue to receive the next instruction/resume address. The default fallback panic report uses the stamped address when present to print the module/address and, when `META_SOURCE_STEP` metadata is present, the closest preceding REXX source line. Linked images built with source stripping have only the module/address for this fallback context.
 
@@ -715,17 +736,24 @@ preserved.
 ### Instruction Flow Example
 Inside the `run()` loop, implementations are declared using `START_INSTRUCTION`. The assembler passes operands inline sequentially in the binary array.
 ```c
-        START_INSTRUCTION(IADD_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(IADD_REG_REG_REG) VM_ADVANCE(3)
             DEBUG("TRACE - IADD R%lu,R%lu,R%lu\n", REG_IDX(1),
                   REG_IDX(2), REG_IDX(3));
             REG_RETURN_INT(op2RI + op3RI)
             DISPATCH
 ```
 In this example:
-- `CALC_DISPATCH(3)` specifies that this instruction consumes 3 operand blocks.
+- `VM_ADVANCE(3)` specifies that this instruction consumes 3 operand blocks.
 - `op2RI` grabs the integer struct value mapped to Operand 2.
 - `REG_RETURN_INT` maps the result back into the memory of Operand 1.
 - `DISPATCH` safely jumps the Program Counter (`pc`) to the next instruction.
+
+`interpreter/rxvminstrument.h` is the compile-time instrumentation contract for
+both VM modes. A backend can observe VM begin/end, instruction begin plus
+retire or terminal, frame activation, call/return transitions, and interrupt
+selection/entry/resume/terminal paths using canonical module/instruction
+coordinates. With no backend selected, every hook preprocesses to a no-op and
+does not evaluate its arguments, branch, access state, or call a function.
 
 ### Pooled float operands
 
