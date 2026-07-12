@@ -11,6 +11,8 @@ typedef struct rxvm_test_instrumentation_state {
     size_t branches;
     size_t calls;
     size_t returns;
+    size_t interrupt_polls;
+    size_t interrupt_scans;
     size_t interrupt_selections;
     size_t interrupt_entries;
     size_t interrupt_resumes;
@@ -82,6 +84,10 @@ typedef struct rxvm_test_instrumentation_state {
     do { vm_instrumentation.transition = (reason_); } while (0)
 #define RXVM_INSTRUMENTATION_CURRENT_TRANSITION() vm_instrumentation.transition
 
+#define RXVM_INSTRUMENTATION_INTERRUPT_POLL()                             \
+    do { vm_instrumentation.interrupt_polls++; } while (0)
+#define RXVM_INSTRUMENTATION_INTERRUPT_SCAN_BEGIN(module_, index_)        \
+    do { (void)(module_); (void)(index_); vm_instrumentation.interrupt_scans++; } while (0)
 #define RXVM_INSTRUMENTATION_INTERRUPT_SELECT(signal_, module_, index_)         \
     do { (void)(signal_); (void)(module_); (void)(index_); vm_instrumentation.interrupt_selections++; } while (0)
 #define RXVM_INSTRUMENTATION_INTERRUPT_ENTRY(signal_, module_, index_)          \
@@ -110,7 +116,7 @@ typedef struct rxvm_test_instrumentation_state {
                     vm_instrumentation.frame_activations);                      \
             (result_) = RXSIGNAL_FAILURE;                                       \
         } else {                                                                \
-            fprintf(stderr, "VM instrumentation: PASS begins=%zu retires=%zu terminals=%zu frames=%zu branches=%zu calls=%zu returns=%zu interrupts=%zu/%zu/%zu/%zu\n", \
+            fprintf(stderr, "VM instrumentation: PASS begins=%zu retires=%zu terminals=%zu frames=%zu branches=%zu calls=%zu returns=%zu interrupts=%zu/%zu/%zu/%zu polls=%zu scans=%zu\n", \
                     vm_instrumentation.instruction_begins,                      \
                     vm_instrumentation.instruction_retires,                     \
                     vm_instrumentation.instruction_terminals,                   \
@@ -120,7 +126,9 @@ typedef struct rxvm_test_instrumentation_state {
                     vm_instrumentation.interrupt_selections,                    \
                     vm_instrumentation.interrupt_entries,                       \
                     vm_instrumentation.interrupt_resumes,                       \
-                    vm_instrumentation.interrupt_terminals);                    \
+                    vm_instrumentation.interrupt_terminals,                     \
+                    vm_instrumentation.interrupt_polls,                         \
+                    vm_instrumentation.interrupt_scans);                        \
         }                                                                       \
     } while (0)
 

@@ -59,6 +59,15 @@ static void help() {
 #ifndef NDEBUG
             "  -d              Debug/Trace Mode\n"
 #endif
+#ifdef CREXX_VM_PROFILING
+            "  --profile       Print VM instruction/transition timing profile\n"
+            "  --profile-output file\n"
+            "                  Write profile to file (.csv selects CSV format)\n"
+            "  --sequence-count N\n"
+            "                  Extract executed sequential windows (N is 2, 3, or 4)\n"
+            "  --sequence-output file.rxseq\n"
+            "                  Write the instruction-sequence execution profile\n"
+#endif
             "  -l location     Working Location (directory)\n"
             "  -v              Prints Version\n"
             "\n*   VM Extension Plugin are specified by the full file name without the extension\n"
@@ -126,6 +135,66 @@ int main(int argc, char *argv[]) {
 
     /* Parse arguments  */
     for (i = 1; i < argc && argv[i][0] == '-'; i++) {
+#ifdef CREXX_VM_PROFILING
+        if (strcmp(argv[i], "--sequence-count") == 0) {
+            char *end = 0;
+            unsigned long value;
+            i++;
+            if (i >= argc || !argv[i][0])
+                error_and_exit("Missing value after --sequence-count");
+            value = strtoul(argv[i], &end, 10);
+            if (*end || value < 2 || value > 4)
+                error_and_exit("Invalid sequence count (expected 2, 3, or 4)");
+            context.sequence_count = (unsigned int)value;
+            continue;
+        }
+        if (strncmp(argv[i], "--sequence-count=", 17) == 0) {
+            char *end = 0;
+            unsigned long value = strtoul(argv[i] + 17, &end, 10);
+            if (!argv[i][17] || *end || value < 2 || value > 4)
+                error_and_exit("Invalid sequence count (expected 2, 3, or 4)");
+            context.sequence_count = (unsigned int)value;
+            continue;
+        }
+        if (strcmp(argv[i], "--sequence-output") == 0) {
+            i++;
+            if (i >= argc || !argv[i][0])
+                error_and_exit("Missing filename after --sequence-output");
+            context.sequence_output = argv[i];
+            continue;
+        }
+        if (strncmp(argv[i], "--sequence-output=", 18) == 0) {
+            if (!argv[i][18])
+                error_and_exit("Missing filename after --sequence-output=");
+            context.sequence_output = argv[i] + 18;
+            continue;
+        }
+        if (strcmp(argv[i], "--profile") == 0 ||
+                strcmp(argv[i], "--profile=timing") == 0) {
+            context.profile_mode = 1;
+            continue;
+        }
+        if (strcmp(argv[i], "--profile-output") == 0) {
+            i++;
+            if (i >= argc || !argv[i][0]) {
+                error_and_exit("Missing filename after --profile-output");
+            }
+            context.profile_mode = 1;
+            context.profile_output = argv[i];
+            continue;
+        }
+        if (strncmp(argv[i], "--profile-output=", 17) == 0) {
+            if (!argv[i][17]) {
+                error_and_exit("Missing filename after --profile-output=");
+            }
+            context.profile_mode = 1;
+            context.profile_output = argv[i] + 17;
+            continue;
+        }
+        if (strncmp(argv[i], "--profile=", 10) == 0) {
+            error_and_exit("Invalid profile mode (expected timing)");
+        }
+#endif
         if (strlen(argv[i]) > 2) {
             error_and_exit("Invalid argument");
         }
@@ -179,6 +248,14 @@ int main(int argc, char *argv[]) {
                 error_and_exit("Invalid argument");
         }
     }
+#ifdef CREXX_VM_PROFILING
+    if (context.sequence_count && !context.sequence_output)
+        error_and_exit("--sequence-count requires --sequence-output");
+    if (context.sequence_output && !context.sequence_count)
+        error_and_exit("--sequence-output requires --sequence-count");
+    if (context.profile_mode && context.sequence_count)
+        error_and_exit("--profile and --sequence-count are separate run modes");
+#endif
     num_modules = argc - i;
     if (!num_modules) {
         error_and_exit("No input files");

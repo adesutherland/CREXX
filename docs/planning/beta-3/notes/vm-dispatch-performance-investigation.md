@@ -411,6 +411,16 @@ because reading a clock for every instruction can materially perturb the result
 being measured. Buffer draining and human-readable output happen outside the
 dispatch loop.
 
+The timing/count backend is now available behind the off-by-default
+`CREXX_VM_PROFILING` CMake option. It uses the same balanced hook contract
+for `rxvm` and `rxbvm`, keeps fixed per-run opcode/transition/signal
+counters, and is activated at runtime with `--profile`. Instruction spans
+cover entry to retire/terminal; transition spans cover retire to the next
+instruction entry. Taken interrupt scans and selection-to-handler/resume
+mechanics are also reported. Output defaults to a table on standard error, and
+an output filename ending in `.csv` selects CSV. The ordinary build still
+preprocesses every instrumentation hook to no code.
+
 Run focused semantics and the complete performance matrix after this cleanup.
 Add an instrumented test backend that verifies balanced events and canonical
 locations across sequential instructions, branches, calls/returns, interrupts,

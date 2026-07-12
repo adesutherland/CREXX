@@ -17,7 +17,8 @@ typedef enum rxvm_transition_reason {
     RXVM_TRANSITION_INTERRUPT_ENTRY,
     RXVM_TRANSITION_INTERRUPT_RESUME,
     RXVM_TRANSITION_EXTERNAL_ENTRY,
-    RXVM_TRANSITION_TERMINAL
+    RXVM_TRANSITION_TERMINAL,
+    RXVM_TRANSITION_COUNT
 } rxvm_transition_reason;
 
 #ifndef RXVM_INSTRUMENTATION_BACKEND
@@ -31,6 +32,8 @@ typedef enum rxvm_transition_reason {
 #define RXVM_INSTRUMENTATION_FRAME_ACTIVATE(module_, index_, reason_) ((void)0)
 #define RXVM_INSTRUMENTATION_TRANSITION(reason_) ((void)0)
 #define RXVM_INSTRUMENTATION_CURRENT_TRANSITION() RXVM_TRANSITION_SEQUENTIAL
+#define RXVM_INSTRUMENTATION_INTERRUPT_POLL() ((void)0)
+#define RXVM_INSTRUMENTATION_INTERRUPT_SCAN_BEGIN(module_, index_) ((void)0)
 #define RXVM_INSTRUMENTATION_INTERRUPT_SELECT(signal_, module_, index_) ((void)0)
 #define RXVM_INSTRUMENTATION_INTERRUPT_ENTRY(signal_, module_, index_) ((void)0)
 #define RXVM_INSTRUMENTATION_INTERRUPT_RESUME(signal_, module_, index_) ((void)0)

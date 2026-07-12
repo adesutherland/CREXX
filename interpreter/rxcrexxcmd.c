@@ -284,7 +284,8 @@ static int ctx_write(rxcrexxcmd_context *ctx, int is_error, const char *text, si
     if (writer) return writer(ctx->io->userdata, text, length);
 
     fallback = is_error ? stderr : stdout;
-    return fwrite(text, 1, length, fallback) == length ? 0 : -1;
+    if (fwrite(text, 1, length, fallback) != length) return -1;
+    return fflush(fallback) == 0 ? 0 : -1;
 }
 
 static int ctx_write_process_text(rxcrexxcmd_context *ctx, int is_error, const char *text, size_t length) {

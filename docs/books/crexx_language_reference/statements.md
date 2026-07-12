@@ -29,6 +29,10 @@ address crexx "echo #42" output out error err
 say out
 ```
 
+When `OUTPUT` or `ERROR` is omitted, that stream is written to the normal cRexx
+standard stream and flushed as the command emits it. Long-running later work
+does not delay already-emitted CREXX command output until task completion.
+
 ### Built-In Command Environments
 
 The built-in environments enable a specific use of the underlying operating system functionality.

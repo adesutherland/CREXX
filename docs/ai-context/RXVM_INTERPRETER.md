@@ -635,10 +635,13 @@ The built-in command environments split into four spawn modes:
   cREXX-defined command set with stable behavior across supported operating
   systems, not a shell. It owns persistent `cd`/`pushd`/`popd`,
   file/text/process/time/network commands, `batch`, and `run` for direct
-  executable dispatch. CREXX expands host-variable scalar anchors to one
-  command argument and stem anchors to zero or more command arguments after its
-  own command parsing; `run :argv[]` therefore launches the child through an
-  argv vector rather than by flattening the array to a command string.
+  executable dispatch. Without an output or error redirect, emitted text is
+  flushed to the normal VM stdout or stderr stream immediately rather than
+  being held until task completion. CREXX expands host-variable scalar anchors
+  to one command argument and stem anchors to zero or more command arguments
+  after its own command parsing; `run :argv[]` therefore launches the child
+  through an argv vector rather than by flattening the array to a command
+  string.
 - `SYSTEM`, `COMMAND`, and `CMD` route the command string through the platform
   command processor so shell built-ins and command syntax work consistently.
   On POSIX, the VM invokes standard `sh -c`; it finds `sh` from `_CS_PATH`
@@ -760,6 +763,129 @@ retire or terminal, frame activation, call/return transitions, and interrupt
 selection/entry/resume/terminal paths using canonical module/instruction
 coordinates. With no backend selected, every hook preprocesses to a no-op and
 does not evaluate its arguments, branch, access state, or call a function.
+
+### Timing/count profiling
+
+`CREXX_VM_PROFILING` selects the timing/count instrumentation backend for a
+dedicated VM build. The option is off by default, so ordinary builds retain the
+fully preprocessed no-op hook contract. Configure a Release profiling build
+with:
+
+```sh
+cmake -S . -B cmake-build-profile \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCREXX_VM_PROFILING=ON
+cmake --build cmake-build-profile --target rxvm rxbvm
+```
+
+Profiling remains off at runtime until `--profile` is passed. By default the
+report is written as a human-readable table to standard error. Use
+`--profile-output file` or `--profile-output=file` to write it to a file. An
+output filename ending in `.csv`, case-insensitively, selects CSV; every other
+filename selects the table format. The output option also enables profiling.
+
+```sh
+rxvm --profile program.rxbin
+rxvm --profile-output profile.txt program.rxbin
+rxbvm --profile-output profile.csv program.rxbin
+```
+
+The instruction table measures monotonic wall time from instruction entry to
+retire or terminal. The transition table measures retire to the next
+instruction entry and distinguishes same-frame sequential/branch transitions,
+call frame entry, return frame exit, interrupt entry/resume, external entry,
+and termination. Blocking native work is charged to its instruction.
+
+Every retired hot-loop instruction also increments the interrupt-poll count.
+Taken interrupt scans and the mechanics from selection to the first handler
+instruction, resume, or terminal outcome are reported as sub-phases. These
+sub-phases overlap the complete interrupt transition time and must not be added
+to it. The no-pending poll itself remains inside ordinary transition time; the
+profiler intentionally does not add another pair of timer reads around that
+check.
+
+Timing values are raw instrumented wall times. The report includes the minimum
+positive adjacent clock-read interval and zero-delta calibration count, but
+does not subtract them from short instructions. Compare instruction shares
+within equivalent profiled runs rather than treating the values as the
+uninstrumented VM's absolute cost. Counter updates use fixed per-run arrays;
+the hot path performs no allocation, locking, callbacks, sorting, or output
+formatting.
+
+### Dynamic instruction-sequence profiles
+
+The same `CREXX_VM_PROFILING` build can extract executed windows of two,
+three, or four instructions. This is a separate run mode from timing profiling
+and must be given an `.rxseq` output file:
+
+```sh
+cmake --build cmake-build-profile --target rxvm rxbvm rxseq
+
+rxvm --sequence-count=2 --sequence-output run.rxseq program.rxbin
+rxbvm --sequence-count 4 --sequence-output run.rxseq program.rxbin
+```
+
+`--profile` and `--sequence-count` are intentionally mutually exclusive.
+Ordinary builds configured without `CREXX_VM_PROFILING` contain neither
+runtime surface.
+
+The VM records dynamic execution counts against `(module, canonical starting
+instruction slot, window length)`. A window continues only across actual
+sequential fall-through transitions in the same module and frame. Taken
+branches, calls, returns, interrupt entry/resume, external frame entry, and
+termination break it. A branch may be the last instruction in a window, but a
+window never crosses the branch when it is taken. Loop iterations increase the
+recorded site count.
+
+The extractor writes a versioned binary instruction-sequence execution profile.
+It starts with the eight-byte `RXSEQBIN` magic. Its fixed 48-byte header uses
+little-endian integers and records the format version, header size, sequence
+length, VM result, flags, module count, and sparse site count. Each module
+record contains a variable-length ID, fixed little-endian 64-bit
+expanded-content hash, variable-length instruction size, and a length-prefixed
+UTF-8 name. Each site stores `(module ID, start slot, count)` as canonical
+unsigned LEB128 values, so common records take only three to five bytes. The
+format contains no process-sized integers, native structure padding, or
+host-endian fields.
+
+The VM deliberately does not decode or normalise operands in the interpreter
+hot loop. It writes only non-zero aggregated sites, so repeated loop executions
+increase a 64-bit count rather than increasing the file length.
+
+Run the offline second stage with the same RXBIN module set:
+
+```sh
+rxseq run.rxseq program.rxbin library.rxbin
+rxseq run.rxseq program.rxbin library.rxbin --output candidates.csv
+```
+
+Module argument order does not matter, but every profiled module must be
+present with the exact content used by the run, and no additional module may
+be supplied. `rxseq` fails on a missing module, content-hash mismatch, or
+instruction-size mismatch.
+
+For each site, `rxseq` decodes the emitted RXBIN instructions and
+alpha-renames operands by first occurrence across the whole window. Registers
+use `r1`, `r2`, and so on; every other encoded operand (literal, pool
+constant, label, or procedure reference) uses `c1`, `c2`, and so on.
+Reuse is retained:
+
+```text
+IADD_REG_REG_REG(R17,R5,R9) | COPY_REG_REG(R5,R22)
+    -> IADD_REG_REG_REG(r1,r2,r3) | COPY_REG_REG(r2,r4)
+```
+
+Sites with the same normalised pattern are clustered, and their dynamic counts
+are summed. The report includes execution count, static site count, module
+count, one concrete mapping/example, and a `candidate` or
+`over_3_symbols` status. Because an RX instruction can encode at most three
+operands, patterns with more than three distinct normalised register/constant
+symbols are screened out at this stage. This is only candidate extraction:
+control-flow, liveness, aliasing, exceptions, interrupt behaviour, and other
+transformation safety must be reviewed separately before defining a combined
+opcode or optimiser rule. An output name ending in `.csv`,
+case-insensitively, selects CSV; otherwise `rxseq` writes the human-readable
+report format.
 
 ### Pooled float operands
 

@@ -66,6 +66,38 @@ rxvme hello.rxbin -a first second third
 The VM also accepts multiple bytecode files when a program is split across
 modules.
 
+### Profiling VM execution
+
+A VM configured with `-DCREXX_VM_PROFILING=ON` supports instruction and
+dispatch-transition timing:
+
+```bash
+rxvme --profile hello.rxbin
+rxvme --profile-output hello-profile.txt hello.rxbin
+rxvme --profile-output hello-profile.csv hello.rxbin
+```
+
+The default report is a table on standard error. A profile output filename
+ending in `.csv` (case-insensitive) selects CSV; other filenames use the table
+format. Profiling support and its command-line options are absent from normal
+builds.
+
+The profiling build also supports a separate dynamic instruction-sequence
+extractor. It records the volume of sequential two-, three-, or
+four-instruction windows in a compact, sparse binary `.rxseq` file:
+
+```bash
+rxvm --sequence-count=3 --sequence-output hello.rxseq hello.rxbin
+rxseq hello.rxseq hello.rxbin --output hello-candidates.csv
+```
+
+Pass `rxseq` the same complete RXBIN module set used by `rxvm`; it verifies
+module names and content hashes before decoding. The candidate report groups
+patterns by register/constant reuse and sums loop execution counts. Patterns
+requiring more than three distinct encoded symbols are marked
+`over_3_symbols`. The report is input to later safety and optimizer review,
+not an automatic bytecode transformation.
+
 ## Imports and Libraries
 
 Level B imports are explicit:
