@@ -33,7 +33,7 @@ namespace data expose StringObjectTreeMap
  * lookup, insertion, removal, and ordered traversal avoid the old array-backed
  * map's linear scan and snapshot sort hot paths.
  */
-StringObjectTreeMap: class implements .StringIterable
+StringObjectTreeMap: class implements .StringIterable .ObjectPrintable
 val	    = .int
 root_	    = .int
 count_	    = .int
@@ -663,6 +663,63 @@ free_	    = .int[]
   iterator: method = .StringObjectTreeMapIterator
     return .StringObjectTreeMapIterator(keyArray(), valueArray())
 
+
+  /**
+   * Returns a string representation of this map in comparator order.
+   *
+   * Keys and values are represented by calling their toString() methods.
+   * In order for this to work, they have to implement ObjectPrintable.
+   * @return .string String representation in {key=value, ...} form.
+   */
+  toString: method = .string
+    text    = .string
+    emitted = .int
+    stack   = .int[]
+    top	    = .int
+    node    = .int
+    key	    = .string
+    value   = .ObjectPrintable
+
+    if count_ = 0 then return "{}"
+    text = "{"
+    emitted = 0
+    top = 0
+    node = root_
+
+    do while node <> 0 | top > 0
+      do while node <> 0
+        top = top + 1
+        stack[top] = node
+        node = left_[node]
+      end
+
+      node = stack[top]
+      top = top - 1
+      emitted = emitted + 1
+
+      if emitted > 1 then text = text || ", "
+
+      key = keys_[node]
+      value = values_[node]  as .ObjectPrintable
+      text = text || key || "=" || value.toString()
+
+      node = right_[node]
+    end
+
+    return text || "}"
+
+  /**
+   * Returns the string representation of this map.
+   *
+   * This explicit forwarding method is provided
+   * for type conversion purposes
+   *
+   * @return .string String representation of this map.
+   */
+  String: method = .string
+    return toString()
+
+    
   /**
    * Clears this map and releases its backing arrays.
    *

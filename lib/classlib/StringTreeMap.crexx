@@ -33,7 +33,7 @@ namespace data expose StringTreeMap
  * lookup, insertion, removal, and ordered traversal avoid the old array-backed
  * map's linear scan and snapshot sort hot paths.
  */
-StringTreeMap: class implements .StringIterable
+StringTreeMap: class implements .StringIterable .ObjectPrintable
 val	    = .int
 root_	    = .int
 count_	    = .int
@@ -698,6 +698,17 @@ free_	    = .int[]
       node = right_[node]
     end
     return text || "}"
+
+  /**
+   * Returns the string representation of this map.
+   *
+   * This explicit forwarding method is provided
+   * for type conversion purposes
+   *
+   * @return .string String representation of this map.
+   */
+  String: method = .string
+    return toString()
 
   /**
    * Clears this map and releases its backing arrays.

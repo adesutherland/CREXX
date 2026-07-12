@@ -74,7 +74,7 @@ options levelb
 Use `comments_slash` to enable `//` comments and `comments_dash` to enable
 `--` comments.
 
-Block comments use the normal REXX `/* ... */` form.
+Block comments use the traditional REXX `/* ... */` form.
 
 ## Floating-Point Type
 
