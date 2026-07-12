@@ -1,0 +1,5 @@
+options levelb
+
+address crexx "echo CREXX_ADDRESS_FLUSH_READY"
+address crexx "sleep 2"
+return 0

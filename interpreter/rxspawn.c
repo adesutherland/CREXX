@@ -757,7 +757,8 @@ static void collect_redirect_thread_context(REDIRECT *redirect) {
 static int crexxcmd_write_redirect(REDIRECT *redirect, FILE *fallback, const char *text, size_t length) {
     if (!text) length = 0;
     if (!redirect) {
-        return fwrite(text ? text : "", 1, length, fallback) == length ? 0 : -1;
+        if (fwrite(text ? text : "", 1, length, fallback) != length) return -1;
+        return fflush(fallback) == 0 ? 0 : -1;
     }
 
 #ifdef _WIN32

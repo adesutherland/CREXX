@@ -326,6 +326,16 @@ foreach(_rxvm_core_target rxvm rxbvm rxvme rxbvme rxvml rxbvml)
     endif()
 endforeach()
 if(BUILD_TESTING)
+    add_executable(test_rxcrexxcmd_flush tests/test_rxcrexxcmd_flush.c)
+    target_include_directories(test_rxcrexxcmd_flush PRIVATE
+            . ./rxvmplugin ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa
+            ../platform ../avl_tree ../utf8 ../inc)
+    target_link_libraries(test_rxcrexxcmd_flush PRIVATE rxvml)
+    add_test(NAME crexx_address_unredirected_flush COMMAND test_rxcrexxcmd_flush)
+    set_tests_properties(crexx_address_unredirected_flush PROPERTIES
+            LABELS "interpreter;address;runtime")
+endif()
+if(BUILD_TESTING)
     foreach(_rxvm_instrumented_target rxvm_instrumented rxbvm_instrumented)
         target_link_libraries(${_rxvm_instrumented_target} rxvmref)
         crexx_enable_vm_platform(${_rxvm_instrumented_target})

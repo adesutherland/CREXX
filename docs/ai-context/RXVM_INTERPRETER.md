@@ -635,10 +635,13 @@ The built-in command environments split into four spawn modes:
   cREXX-defined command set with stable behavior across supported operating
   systems, not a shell. It owns persistent `cd`/`pushd`/`popd`,
   file/text/process/time/network commands, `batch`, and `run` for direct
-  executable dispatch. CREXX expands host-variable scalar anchors to one
-  command argument and stem anchors to zero or more command arguments after its
-  own command parsing; `run :argv[]` therefore launches the child through an
-  argv vector rather than by flattening the array to a command string.
+  executable dispatch. Without an output or error redirect, emitted text is
+  flushed to the normal VM stdout or stderr stream immediately rather than
+  being held until task completion. CREXX expands host-variable scalar anchors
+  to one command argument and stem anchors to zero or more command arguments
+  after its own command parsing; `run :argv[]` therefore launches the child
+  through an argv vector rather than by flattening the array to a command
+  string.
 - `SYSTEM`, `COMMAND`, and `CMD` route the command string through the platform
   command processor so shell built-ins and command syntax work consistently.
   On POSIX, the VM invokes standard `sh -c`; it finds `sh` from `_CS_PATH`
