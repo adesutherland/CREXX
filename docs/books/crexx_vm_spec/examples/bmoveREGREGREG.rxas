@@ -1,0 +1,22 @@
+/* Binary memory move example */
+main() .locals=6
+    load r1,0x001122334455
+    load r2,0xaabbccdd
+    load r1,1
+    load r2,2
+    load r3,2
+    bmove r1,r2,r3
+    load r5,1
+    getbyte r4,r1,r5
+    itos r4
+    say r4
+
+    load r1,0
+    load r2,2
+    load r3,4
+    bmemmove r1,r2,r3
+    load r5,2
+    getbyte r4,r1,r5
+    itos r4
+    say r4
+    ret
