@@ -67,7 +67,7 @@ Procedure names are identifiers for routines in the program. Procedure `main()` 
 
 ## Optimizing actions of the `rxas` assembler
 
-`rxas` is an optimising assembler[^optim] which can rearrange instructions or eliminate them entirely. This optimisation can be switched off when in doubt. This will cause loss of performance, but will make debugging of the code more straightforward, because there is a more direct correspondence with the sourcelines and the generated assembly code.
+`rxas` is an optimising assembler[^optim] which can rearrange instructions or eliminate them entirely. This optimisation can be switched off when in doubt. This will cause loss of performance, but will make debugging of the code more straightforward, because there is a more direct correspondence between the sourcelines and the generated assembly code.
 
 
 [^label]: it will not hurt, however, if it does not start in column one. It must be the first word of the line, though.

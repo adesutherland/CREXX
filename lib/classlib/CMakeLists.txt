@@ -4,6 +4,7 @@ set(CLSS
   StringIterable
   StringIterator
   ObjectIterable
+  ObjectPrintable
   ObjectIterator
   StringArrayList
   StringArrayListIterator
@@ -81,6 +82,7 @@ set(CLASSLIB_SELECTORS ${CLSS})
 set(CLASS_DEPS_StringIterable StringIterator)
 set(CLASS_DEPS_RexxComparator ObjectComparator)
 set(CLASS_DEPS_ObjectIterable ObjectIterator)
+set(CLASS_DEPS_Rexx ObjectPrintable)
 set(CLASS_DEPS_StringArrayList StringIterable)
 set(CLASS_DEPS_StringArrayListIterator StringArrayList StringIterator)
 set(CLASS_DEPS_ObjectArrayList ObjectIterable)
@@ -95,11 +97,11 @@ set(CLASS_DEPS_StringOldTreeMap StringIterable StringTreeMapIterator StringTreeS
 set(CLASS_DEPS_StringTreeMap StringIterable StringTreeMapIterator StringTreeSet)
 set(CLASS_DEPS_StringTreeMapIterator StringIterator)
 set(CLASS_DEPS_StringObjectTreeMap StringTreeSet StringObjectTreeMapIterator StringIterator StringIterable)
-set(CLASS_DEPS_StringObjectTreeMapIterator StringIterator)
+set(CLASS_DEPS_StringObjectTreeMapIterator StringIterator ObjectPrintable)
 set(CLASS_DEPS_StringTreeSet StringIterable StringIterator StringTreeSetIterator)
 set(CLASS_DEPS_StringTreeSetIterator StringIterator)
 set(CLASS_DEPS_ObjectObjectTreeMapIterator ObjectIterator)
-set(CLASS_DEPS_ObjectObjectTreeMap ObjectObjectTreeMapIterator ObjectComparator)
+set(CLASS_DEPS_ObjectObjectTreeMap ObjectObjectTreeMapIterator ObjectComparator ObjectPrintable)
 
 
 if(WIN32)
