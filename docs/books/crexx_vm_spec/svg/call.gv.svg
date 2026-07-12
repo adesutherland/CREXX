@@ -22,21 +22,21 @@
 <polygon fill="none" stroke="black" points="0,-45 0,-67.5 48,-67.5 48,-45 0,-45"/>
 <text xml:space="preserve" text-anchor="start" x="3" y="-51.75" font-family="Times,serif" font-size="14.00"> CALL </text>
 <polygon fill="none" stroke="black" points="48,-45 48,-67.5 97.5,-67.5 97.5,-45 48,-45"/>
-<text xml:space="preserve" text-anchor="start" x="55.5" y="-51.75" font-family="Times,serif" font-size="14.00"> REG </text>
-<polygon fill="none" stroke="black" points="97.5,-45 97.5,-67.5 147,-67.5 147,-45 97.5,-45"/>
-<text xml:space="preserve" text-anchor="start" x="100.5" y="-51.75" font-family="Times,serif" font-size="14.00"> FUNC </text>
-<polygon fill="none" stroke="black" points="147,-45 147,-67.5 187.5,-67.5 187.5,-45 147,-45"/>
-<text xml:space="preserve" text-anchor="start" x="150" y="-51.75" font-family="Times,serif" font-size="14.00"> REG </text>
+<text xml:space="preserve" text-anchor="start" x="51" y="-51.75" font-family="Times,serif" font-size="14.00"> FUNC </text>
 <polygon fill="none" stroke="black" points="0,-22.5 0,-45 48,-45 48,-22.5 0,-22.5"/>
 <text xml:space="preserve" text-anchor="start" x="3" y="-29.25" font-family="Times,serif" font-size="14.00"> CALL </text>
 <polygon fill="none" stroke="black" points="48,-22.5 48,-45 97.5,-45 97.5,-22.5 48,-22.5"/>
-<text xml:space="preserve" text-anchor="start" x="51" y="-29.25" font-family="Times,serif" font-size="14.00"> FUNC </text>
+<text xml:space="preserve" text-anchor="start" x="55.5" y="-29.25" font-family="Times,serif" font-size="14.00"> REG </text>
+<polygon fill="none" stroke="black" points="97.5,-22.5 97.5,-45 147,-45 147,-22.5 97.5,-22.5"/>
+<text xml:space="preserve" text-anchor="start" x="100.5" y="-29.25" font-family="Times,serif" font-size="14.00"> FUNC </text>
 <polygon fill="none" stroke="black" points="0,0 0,-22.5 48,-22.5 48,0 0,0"/>
 <text xml:space="preserve" text-anchor="start" x="3" y="-6.75" font-family="Times,serif" font-size="14.00"> CALL </text>
 <polygon fill="none" stroke="black" points="48,0 48,-22.5 97.5,-22.5 97.5,0 48,0"/>
 <text xml:space="preserve" text-anchor="start" x="55.5" y="-6.75" font-family="Times,serif" font-size="14.00"> REG </text>
 <polygon fill="none" stroke="black" points="97.5,0 97.5,-22.5 147,-22.5 147,0 97.5,0"/>
 <text xml:space="preserve" text-anchor="start" x="100.5" y="-6.75" font-family="Times,serif" font-size="14.00"> FUNC </text>
+<polygon fill="none" stroke="black" points="147,0 147,-22.5 187.5,-22.5 187.5,0 147,0"/>
+<text xml:space="preserve" text-anchor="start" x="150" y="-6.75" font-family="Times,serif" font-size="14.00"> REG </text>
 </g>
 </g>
 </svg>

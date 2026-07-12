@@ -62,10 +62,10 @@ value must be in `0..255`.
 at `rOffset` into `rDst`. `rSrc` may be a binary register or a binary constant.
 The destination must already have the required length.
 
-\lstinputlisting[language=rxas]{examples/binary_bcopy.rxas}
+\lstinputlisting[language=rxas]{bcopy.rxas}
 
-<!--splice--rxas examples/binary_bcopy >null -->
-<!--splice--rxvme examples/binary_bcopy -->
+<!--splice--rxas bcopy -->
+<!--splice--rxvme bcopy -->
 
 ## `getbyte` and `setbyte`
 
@@ -96,10 +96,10 @@ float representation, which is binary64 for Release 1.
 They use the same little-endian storage widths as the matching read
 instructions.
 
-\lstinputlisting[language=rxas]{examples/binary_fixed_width.rxas}
+\lstinputlisting[language=rxas]{fixedwidth.rxas}
 
-<!--splice--rxas examples/binary_fixed_width >null -->
-<!--splice--rxvme examples/binary_fixed_width -->
+<!--splice--rxas fixedwidth >null -->
+<!--splice--rxvme fixedwidth -->
 
 ## `bcheckrange`
 
@@ -169,10 +169,10 @@ copy length. The VM scans that many codepoints, copies the exact bytes, sets the
 destination string byte length and codepoint count, and writes the safety NUL
 outside the logical value.
 
-\lstinputlisting[language=rxas]{examples/binary_text_fields.rxas}
+\lstinputlisting[language=rxas]{textfields.rxas}
 
-<!--splice--rxas examples/binary_text_fields >null -->
-<!--splice--rxvme examples/binary_text_fields -->
+<!--splice--rxas textfields >null -->
+<!--splice--rxvme textfields -->
 
 ## `bmove` and `bmemmove`
 
@@ -185,10 +185,13 @@ The source byte offset is read from `rBin`'s integer slot and the destination
 offset is the explicit `rDstOffset` operand. Overlapping ranges are safe and
 behave like C `memmove`.
 
-\lstinputlisting[language=rxas]{examples/binary_move.rxas}
+```rxas <!--binarymove.rxas-->
 
-<!--splice--rxas examples/binary_move >null -->
-<!--splice--rxvme examples/binary_move -->
+```
+\lstinputlisting[language=rxas]{move.rxas}
+
+<!--splice--rxas move -->
+<!--splice--rxvme move -->
 
 ## `bcmpb` and `bcmps`
 
@@ -208,7 +211,7 @@ temporary string is allocated.
 If the caller needs the offset after a compare, it must copy the offset into a
 scratch compare register first.
 
-\lstinputlisting[language=rxas]{examples/binary_compare.rxas}
+\lstinputlisting[language=rxas]{compare.rxas}
 
-<!--splice--rxas examples/binary_compare >null -->
-<!--splice--rxvme examples/binary_compare -->
+<!--splice--rxas compare -->
+<!--splice--rxvme compare -->

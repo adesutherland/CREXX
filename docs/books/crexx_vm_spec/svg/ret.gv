@@ -8,7 +8,9 @@ Foo [label=<
 <tr><td> RET </td><td> REG </td> </tr>
 <tr><td> RET </td><td> INT </td> </tr>
 <tr><td> RET </td><td> FLOAT </td> </tr>
-<tr><td> RET </td><td> CHAR </td> </tr>
 <tr><td> RET </td><td> STRING </td> </tr>
+</table>>];
+}
+d><td> STRING </td> </tr>
 </table>>];
 }

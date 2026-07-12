@@ -26,7 +26,7 @@
 <polygon fill="none" stroke="black" points="90.75,-22.5 90.75,-45 131.25,-45 131.25,-22.5 90.75,-22.5"/>
 <text xml:space="preserve" text-anchor="start" x="93.75" y="-29.25" font-family="Times,serif" font-size="14.00"> REG </text>
 <polygon fill="none" stroke="black" points="131.25,-22.5 131.25,-45 186,-45 186,-22.5 131.25,-22.5"/>
-<text xml:space="preserve" text-anchor="start" x="134.25" y="-29.25" font-family="Times,serif" font-size="14.00"> FLOAT </text>
+<text xml:space="preserve" text-anchor="start" x="141.38" y="-29.25" font-family="Times,serif" font-size="14.00"> REG </text>
 <polygon fill="none" stroke="black" points="0,0 0,-22.5 50.25,-22.5 50.25,0 0,0"/>
 <text xml:space="preserve" text-anchor="start" x="3" y="-6.75" font-family="Times,serif" font-size="14.00"> FADD </text>
 <polygon fill="none" stroke="black" points="50.25,0 50.25,-22.5 90.75,-22.5 90.75,0 50.25,0"/>
@@ -34,7 +34,7 @@
 <polygon fill="none" stroke="black" points="90.75,0 90.75,-22.5 131.25,-22.5 131.25,0 90.75,0"/>
 <text xml:space="preserve" text-anchor="start" x="93.75" y="-6.75" font-family="Times,serif" font-size="14.00"> REG </text>
 <polygon fill="none" stroke="black" points="131.25,0 131.25,-22.5 186,-22.5 186,0 131.25,0"/>
-<text xml:space="preserve" text-anchor="start" x="141.38" y="-6.75" font-family="Times,serif" font-size="14.00"> REG </text>
+<text xml:space="preserve" text-anchor="start" x="134.25" y="-6.75" font-family="Times,serif" font-size="14.00"> FLOAT </text>
 </g>
 </g>
 </svg>

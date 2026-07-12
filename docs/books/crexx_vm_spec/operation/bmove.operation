@@ -1,0 +1,3 @@
+`bmove rDst,rSrc,rLen` copies `rLen` bytes between different binary registers.
+The destination byte offset is read from `rDst`'s integer slot; the source byte
+offset is read from `rSrc`'s integer slot. The registers must be different.

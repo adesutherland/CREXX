@@ -1,0 +1,3 @@
+`blen rOut,rBin` stores the logical byte length of a binary register in `rOut`.
+`blen rOut,bConst` does the same for a binary constant without materializing the
+constant in a register.

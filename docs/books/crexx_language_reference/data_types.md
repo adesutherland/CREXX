@@ -238,8 +238,8 @@ For packed binary layouts, use the binary-memory intrinsics and helpers in
 operate directly on binary constants.
 
 The same boundary applies outside source literals. Native RXVML string setters,
-CREXXSAA ADDRESS variable setters, RXPA native return / argument trees,
-command-line arguments passed through RXVML, ADDRESS callback text, text file
+`CREXXSAA ADDRESS` variable setters, RXPA native return / argument trees,
+command-line arguments passed through RXVML, `ADDRESS` callback text, text file
 reads, socket text reads, and explicit binary-to-string casts validate UTF-8 in
 normal Level B builds. Invalid bytes should be read or carried as `.binary`
 first, then decoded to `.string` only when the program has a valid encoding.

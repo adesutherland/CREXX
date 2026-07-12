@@ -1,0 +1,3 @@
+`getbyte rOut,rBin,rOffset` is the legacy tolerant byte read. It stores the byte
+at `rOffset`, or `-1` when the offset is outside the logical binary length. It
+has no binary-constant form; use `bgetu8` for strict constant byte reads.

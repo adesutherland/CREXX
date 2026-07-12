@@ -86,7 +86,7 @@ do i=1 to outstem[0]
 
     lineout('instruction_chapter.tex','\\fontspec{IBM Plex Mono}')
     lineout('instruction_chapter.tex','\\includesvg{../../svg/'mnemonic'.gv}')
-    lineout('instruction_chapter.tex','\\fontspec{TeX Gyre Pagella}')
+    lineout('instruction_chapter.tex','\\fontspec{Minion Pro}')
     lineout('instruction_chapter.tex','\\item[\\texttt{Operation}]')
     lineout('instruction_chapter.tex','\\IfFileExists{operation/'mnemonic'.operation}{\\input{operation/'mnemonic'.operation}}{}')
     lineout('instruction_chapter.tex','\\item[\\texttt{}]')
@@ -100,10 +100,10 @@ do i=1 to outstem[0]
       oper=oper.translate('','{')
       oper=oper.strip().space(0)
       lineout('instruction_chapter.tex','\\item[\\texttt{'opcode'}]\\fontspec{IBM Plex Sans Condensed}'descriptor oper'\\\\')
-      lineout('instruction_chapter.tex','\\fontspec{TeX Gyre Pagella}')
+      lineout('instruction_chapter.tex','\\fontspec{Minion Pro}')
       lineout('instruction_chapter.tex','\\IfFileExists{../../examples/'mnemonic||oper'.def}{\\input{../../examples/'mnemonic||oper'.def}}{}')
       lineout('instruction_chapter.tex','\\IfFileExists{../../examples/'mnemonic||oper'.rexx}{\\splice{rxc ../../examples/'mnemonic||oper'}}{}')
-      -- lineout('instruction_chapter.tex','\\IfFileExists{../../examples/'mnemonic||oper'.rxas}{\\lstinputlisting[language=rxas,label='mn',caption='mn' example.]{../../examples/'mnemonic||oper'.rxas} \\splice{rxas ../../examples/'mnemonic||oper'} \\obeylines \\begin{shaded} \\fontspec{IBM Plex Mono}[Scale=0.8] \\splice{rxvme 'decopt' ../../examples/'mnemonic||oper'} \\end{shaded} \\fontspec{TeX Gyre Pagella}}{}')
+      -- lineout('instruction_chapter.tex','\\IfFileExists{../../examples/'mnemonic||oper'.rxas}{\\lstinputlisting[language=rxas,label='mn',caption='mn' example.]{../../examples/'mnemonic||oper'.rxas} \\splice{rxas ../../examples/'mnemonic||oper'} \\obeylines \\begin{shaded} \\fontspec{IBM Plex Mono}[Scale=0.8] \\splice{rxvme 'decopt' ../../examples/'mnemonic||oper'} \\end{shaded} \\fontspec{Minion Pro}}{}')
       lineout('instruction_chapter.tex','\\IfFileExists{../../examples/'mnemonic||oper'.rxas}{\\lstinputlisting[language=rxas,label='mn',caption='mn' example.]{../../examples/'mnemonic||oper'.rxas} \\splice{rxas ../../examples/'mnemonic||oper'} \\obeylines \\begin{terminaloutput} \\fontspec{IBM Plex Mono}[Scale=0.7] \\splice{rxvme 'decopt' ../../examples/'mnemonic||oper'} \\end{terminaloutput}}{}')
     end
     lineout('instruction_chapter.tex','\\end{description}')

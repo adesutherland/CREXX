@@ -1,0 +1,2 @@
+`setbyte rBin,rOffset,rByte` writes one byte into mutable binary memory. The
+offset must be in range and the byte value must be in `0..255`.

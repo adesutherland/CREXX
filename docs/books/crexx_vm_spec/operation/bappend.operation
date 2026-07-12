@@ -1,0 +1,3 @@
+`bappend rDst,rSrc` appends the binary payload of `rSrc` to `rDst`.
+
+This instruction operates on raw bytes and do not validate UTF-8.
