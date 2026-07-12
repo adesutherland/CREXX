@@ -112,6 +112,8 @@ void rxinimod(rxvm_context *context) {
 #ifdef CREXX_VM_PROFILING
     context->profile_mode = 0;
     context->profile_output = 0;
+    context->sequence_count = 0;
+    context->sequence_output = 0;
 #endif
     context->location = 0;
     context->ext_proc = 0;

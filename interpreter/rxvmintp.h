@@ -432,6 +432,8 @@ typedef struct rxvm_context {
     /* Keep optional build-local fields last so existing field offsets stay stable. */
     char profile_mode;
     const char *profile_output;
+    unsigned int sequence_count;
+    const char *sequence_output;
 #endif
 } rxvm_context;
 

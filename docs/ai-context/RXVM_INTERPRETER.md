@@ -809,6 +809,81 @@ uninstrumented VM's absolute cost. Counter updates use fixed per-run arrays;
 the hot path performs no allocation, locking, callbacks, sorting, or output
 formatting.
 
+### Dynamic instruction-sequence profiles
+
+The same `CREXX_VM_PROFILING` build can extract executed windows of two,
+three, or four instructions. This is a separate run mode from timing profiling
+and must be given an `.rxseq` output file:
+
+```sh
+cmake --build cmake-build-profile --target rxvm rxbvm rxseq
+
+rxvm --sequence-count=2 --sequence-output run.rxseq program.rxbin
+rxbvm --sequence-count 4 --sequence-output run.rxseq program.rxbin
+```
+
+`--profile` and `--sequence-count` are intentionally mutually exclusive.
+Ordinary builds configured without `CREXX_VM_PROFILING` contain neither
+runtime surface.
+
+The VM records dynamic execution counts against `(module, canonical starting
+instruction slot, window length)`. A window continues only across actual
+sequential fall-through transitions in the same module and frame. Taken
+branches, calls, returns, interrupt entry/resume, external frame entry, and
+termination break it. A branch may be the last instruction in a window, but a
+window never crosses the branch when it is taken. Loop iterations increase the
+recorded site count.
+
+The extractor writes a versioned binary instruction-sequence execution profile.
+It starts with the eight-byte `RXSEQBIN` magic. Its fixed 48-byte header uses
+little-endian integers and records the format version, header size, sequence
+length, VM result, flags, module count, and sparse site count. Each module
+record contains a variable-length ID, fixed little-endian 64-bit
+expanded-content hash, variable-length instruction size, and a length-prefixed
+UTF-8 name. Each site stores `(module ID, start slot, count)` as canonical
+unsigned LEB128 values, so common records take only three to five bytes. The
+format contains no process-sized integers, native structure padding, or
+host-endian fields.
+
+The VM deliberately does not decode or normalise operands in the interpreter
+hot loop. It writes only non-zero aggregated sites, so repeated loop executions
+increase a 64-bit count rather than increasing the file length.
+
+Run the offline second stage with the same RXBIN module set:
+
+```sh
+rxseq run.rxseq program.rxbin library.rxbin
+rxseq run.rxseq program.rxbin library.rxbin --output candidates.csv
+```
+
+Module argument order does not matter, but every profiled module must be
+present with the exact content used by the run, and no additional module may
+be supplied. `rxseq` fails on a missing module, content-hash mismatch, or
+instruction-size mismatch.
+
+For each site, `rxseq` decodes the emitted RXBIN instructions and
+alpha-renames operands by first occurrence across the whole window. Registers
+use `r1`, `r2`, and so on; every other encoded operand (literal, pool
+constant, label, or procedure reference) uses `c1`, `c2`, and so on.
+Reuse is retained:
+
+```text
+IADD_REG_REG_REG(R17,R5,R9) | COPY_REG_REG(R5,R22)
+    -> IADD_REG_REG_REG(r1,r2,r3) | COPY_REG_REG(r2,r4)
+```
+
+Sites with the same normalised pattern are clustered, and their dynamic counts
+are summed. The report includes execution count, static site count, module
+count, one concrete mapping/example, and a `candidate` or
+`over_3_symbols` status. Because an RX instruction can encode at most three
+operands, patterns with more than three distinct normalised register/constant
+symbols are screened out at this stage. This is only candidate extraction:
+control-flow, liveness, aliasing, exceptions, interrupt behaviour, and other
+transformation safety must be reviewed separately before defining a combined
+opcode or optimiser rule. An output name ending in `.csv`,
+case-insensitively, selects CSV; otherwise `rxseq` writes the human-readable
+report format.
+
 ### Pooled float operands
 
 As of `rxbin` format `002` and later, float literals are loaded from the constant pool

@@ -7,7 +7,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxLinkedRuntime.cmake)
 set(CMAKE_C_STANDARD 99) # enables inline keyword
 set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG") # Can do more I am sure but this is about as good as it get in practice
 option(CREXX_VM_PROFILING
-        "Compile timing/count profiling support into the VM (runtime default remains off)"
+        "Compile timing and dynamic sequence profiling into the VM (runtime default remains off)"
         OFF)
 
 set(_rxvmintp_sanitizer_flags
@@ -47,7 +47,11 @@ if(CREXX_VM_PROFILING)
     list(APPEND RXVM_CORE_OBJECT_SOURCES
             rxvmprofile.h
             rxvmprofile.c
-            rxvminstrument_profile.h)
+            rxvminstrument_profile.h
+            rxseqfile.h
+            rxseqfile.c
+            rxvmsequence.h
+            rxvmsequence.c)
 endif()
 
 function(crexx_add_rxvm_core_objects target_name)
@@ -214,6 +218,19 @@ target_link_libraries(rxbvm rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
 target_include_directories(rxbvm PRIVATE . ./rxvmplugin
         ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
 target_compile_definitions(rxbvm PRIVATE NTHREADED=1)
+
+# Offline second-stage analyser for dynamic instruction-sequence profiles.
+add_executable(rxseq rxseqmain.c rxseqfile.c)
+target_include_directories(rxseq PRIVATE . ../binutils/include ../platform ../inc)
+
+if(BUILD_TESTING)
+    add_executable(test_rxseqfile tests/test_rxseqfile.c rxseqfile.c)
+    target_include_directories(test_rxseqfile PRIVATE
+            . ../binutils/include ../platform ../inc)
+    add_test(NAME rxseqfileformat COMMAND test_rxseqfile)
+    set_tests_properties(rxseqfileformat PROPERTIES
+            LABELS "interpreter;profiling;sequence")
+endif()
 
 if(BUILD_TESTING)
     add_executable(rxvm_instrumented rxvmmain.c $<TARGET_OBJECTS:rxvm_instrumented_core_objects>)
@@ -844,6 +861,8 @@ add_custom_target(run_tests_basic ALL DEPENDS tests_basic.rxbin)
 crexx_add_vm_dual_test(NAME rxasbasictests RXVM_ARGS tests_basic)
 
 if(BUILD_TESTING AND CREXX_VM_PROFILING)
+    crexx_add_rxas_vm_binary(tests_sequence_profile "dynamic sequence profile")
+
     add_test(NAME rxvmprofiletable
             COMMAND $<TARGET_FILE:rxvm> --profile tests_basic)
     add_test(NAME rxbvmprofiletable
@@ -871,6 +890,38 @@ if(BUILD_TESTING AND CREXX_VM_PROFILING)
                     -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_vm_profile_csv.cmake)
     set_tests_properties(rxvmprofilecsv rxbvmprofilecsv PROPERTIES
             LABELS "interpreter;profiling")
+
+    add_test(NAME rxvmsequence2
+            COMMAND ${CMAKE_COMMAND}
+                    "-DVM=$<TARGET_FILE:rxvm>"
+                    "-DRXSEQ=$<TARGET_FILE:rxseq>"
+                    "-DINPUT=${CMAKE_CURRENT_BINARY_DIR}/tests_sequence_profile.rxbin"
+                    -DLENGTH=2
+                    -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_rxseq.cmake)
+    add_test(NAME rxbvmsequence3
+            COMMAND ${CMAKE_COMMAND}
+                    "-DVM=$<TARGET_FILE:rxbvm>"
+                    "-DRXSEQ=$<TARGET_FILE:rxseq>"
+                    "-DINPUT=${CMAKE_CURRENT_BINARY_DIR}/tests_sequence_profile.rxbin"
+                    -DLENGTH=3
+                    -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_rxseq.cmake)
+    add_test(NAME rxvmsequence4
+            COMMAND ${CMAKE_COMMAND}
+                    "-DVM=$<TARGET_FILE:rxvm>"
+                    "-DRXSEQ=$<TARGET_FILE:rxseq>"
+                    "-DINPUT=${CMAKE_CURRENT_BINARY_DIR}/tests_sequence_profile.rxbin"
+                    -DLENGTH=4
+                    -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_rxseq.cmake)
+    add_test(NAME rxseqmodulemismatch
+            COMMAND ${CMAKE_COMMAND}
+                    "-DVM=$<TARGET_FILE:rxvm>"
+                    "-DRXSEQ=$<TARGET_FILE:rxseq>"
+                    "-DINPUT=${CMAKE_CURRENT_BINARY_DIR}/tests_sequence_profile.rxbin"
+                    "-DWRONG_INPUT=${CMAKE_CURRENT_BINARY_DIR}/tests_basic.rxbin"
+                    -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_rxseq_mismatch.cmake)
+    set_tests_properties(
+            rxvmsequence2 rxbvmsequence3 rxvmsequence4 rxseqmodulemismatch
+            PROPERTIES LABELS "interpreter;profiling;sequence")
 endif()
 
 # Integer Math Instruction Tests

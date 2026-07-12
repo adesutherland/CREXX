@@ -4,6 +4,7 @@
 #define CREXX_RXVMINSTRUMENT_PROFILE_H
 
 #include "rxvmprofile.h"
+#include "rxvmsequence.h"
 
 #ifdef NTHREADED
 #define RXVM_PROFILE_VM_MODE "rxbvm"
@@ -11,11 +12,17 @@
 #define RXVM_PROFILE_VM_MODE "rxvm"
 #endif
 
-#define RXVM_INSTRUMENTATION_STATE() rxvm_profile_state vm_profile
+#define RXVM_INSTRUMENTATION_STATE() \
+    rxvm_profile_state vm_profile; rxvm_sequence_state vm_sequence
 
 #define RXVM_INSTRUMENTATION_VM_BEGIN(context_)                                \
-    rxvm_profile_begin(&vm_profile,                                            \
-                       (context_)->profile_mode && !(context_)->prepare_only)
+    do {                                                                        \
+        rxvm_profile_begin(&vm_profile,                                        \
+                           (context_)->profile_mode && !(context_)->prepare_only); \
+        rxvm_sequence_begin(&vm_sequence, (context_),                           \
+                (context_)->sequence_count,                                    \
+                (context_)->sequence_count && !(context_)->prepare_only);       \
+    } while (0)
 
 #define RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(module_, index_, opcode_)       \
     do {                                                                        \
@@ -23,6 +30,9 @@
         if (vm_profile.enabled)                                                 \
             rxvm_profile_instruction_begin_at(                                 \
                     &vm_profile, (int)(opcode_), rxvm_profile_now_ns());         \
+        if (vm_sequence.enabled)                                                \
+            rxvm_sequence_instruction_begin(                                   \
+                    &vm_sequence, (size_t)(module_), (size_t)(index_));          \
     } while (0)
 
 #define RXVM_INSTRUMENTATION_INSTRUCTION_RETIRE(target_module_, target_index_, reason_) \
@@ -31,6 +41,8 @@
         if (vm_profile.enabled)                                                 \
             rxvm_profile_instruction_retire_at(                                \
                     &vm_profile, (reason_), rxvm_profile_now_ns());              \
+        if (vm_sequence.enabled)                                                \
+            rxvm_sequence_instruction_retire(&vm_sequence, (reason_));          \
     } while (0)
 
 #define RXVM_INSTRUMENTATION_INSTRUCTION_TERMINAL(module_, index_, reason_)    \
@@ -39,6 +51,7 @@
         if (vm_profile.enabled)                                                 \
             rxvm_profile_instruction_terminal_at(                              \
                     &vm_profile, rxvm_profile_now_ns());                        \
+        if (vm_sequence.enabled) rxvm_sequence_break(&vm_sequence);             \
     } while (0)
 
 #define RXVM_INSTRUMENTATION_FRAME_ACTIVATE(module_, index_, reason_)          \
@@ -49,10 +62,13 @@
                 vm_profile_reason__ == RXVM_TRANSITION_EXTERNAL_ENTRY)          \
             rxvm_profile_frame_activate_at(                                    \
                     &vm_profile, vm_profile_reason__, rxvm_profile_now_ns());    \
+        if (vm_sequence.enabled &&                                             \
+                vm_profile_reason__ != RXVM_TRANSITION_SEQUENTIAL)              \
+            rxvm_sequence_break(&vm_sequence);                                 \
     } while (0)
 
 #define RXVM_INSTRUMENTATION_TRANSITION(reason_)                               \
-    do { if (vm_profile.enabled) vm_profile.current_transition = (reason_); } while (0)
+    do { vm_profile.current_transition = (reason_); } while (0)
 #define RXVM_INSTRUMENTATION_CURRENT_TRANSITION() vm_profile.current_transition
 
 #define RXVM_INSTRUMENTATION_INTERRUPT_POLL()                                 \
@@ -73,6 +89,7 @@
             rxvm_profile_interrupt_select_at(                                  \
                     &vm_profile, (unsigned char)(signal_),                      \
                     rxvm_profile_now_ns());                                     \
+        if (vm_sequence.enabled) rxvm_sequence_break(&vm_sequence);             \
     } while (0)
 
 #define RXVM_INSTRUMENTATION_INTERRUPT_ENTRY(signal_, module_, index_)         \
@@ -100,8 +117,12 @@
     } while (0)
 
 #define RXVM_INSTRUMENTATION_VM_END(context_, result_)                         \
-    rxvm_profile_report(&vm_profile, (context_)->profile_output,                \
-                        RXVM_PROFILE_VM_MODE, (result_), meta_map,              \
-                        interrupt_to_string)
+    do {                                                                        \
+        rxvm_profile_report(&vm_profile, (context_)->profile_output,            \
+                            RXVM_PROFILE_VM_MODE, (result_), meta_map,          \
+                            interrupt_to_string);                               \
+        rxvm_sequence_report(&vm_sequence, (context_),                          \
+                             (context_)->sequence_output, (result_));           \
+    } while (0)
 
 #endif
