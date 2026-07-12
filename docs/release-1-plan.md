@@ -1,8 +1,8 @@
 # CREXX Release 1 Plan
 
 Status: draft plan for maintainer review and GitHub discussion, updated for the
-beta 3 foundation work completed through 2026-07-11.
-Date: 2026-07-11.
+beta 3 foundation work completed through 2026-07-12.
+Date: 2026-07-12.
 Target release: end of August 2026.
 
 This plan describes the intended path from the tagged `v1.0.0-beta.2` release
@@ -253,7 +253,7 @@ common `rel1` label plus the tier and area labels shown here.
 | 16 | Provide fast structured-data lookup without register-attribute metadata indexes | Adrian | `rel1`, `must`, `vm`, `compiler` | Superseded by byte-addressed binary memory, zero-copy comparison, packed jump tables, and compiler lowering; typed memory structs remain post-Release 1. |
 | 17 | Add large immutable constant structures to RXAS/RXBIN/VM | Adrian | `rel1`, `must`, `vm`, `rxas` | Release 1 minimum is implemented through binary constants and packed tables; dedicated typed arrays/records are deferred. |
 | 18 | Expose large constant structures through rxc for lexer/parser use | Adrian | `rel1`, `must`, `compiler`, `level-l` | Compiler can emit the minimum constant tables needed by approved demos, or surface syntax is deferred with VM/RXAS support documented. |
-| 19 | Add performance benchmark baseline for Release 1 | Rene | `rel1`, `must`, `performance`, `tests` | Linux ARM64 and native macOS ARM64 baselines are recorded with repeatable serial sampling. The computed-goto dispatch regression candidate in `docs/planning/beta-3/notes/vm-dispatch-performance-investigation.md` must be resolved or explicitly dispositioned after native Linux and Windows x86-64 comparison and Linux hardware counters. |
+| 19 | Add performance benchmark baseline for Release 1 | Rene | `rel1`, `must`, `performance`, `tests` | Linux ARM64 and native macOS ARM64 baselines are recorded with repeatable serial sampling. The four-slice dispatch refactor is implemented and locally validated on macOS ARM64, including the coherent frame cache and separate computed-goto runtime instruction image. Native Linux x86-64 counters, Windows x86-64 validation, and the cross-platform pipeline remain external gates before a default-VM or compiler-policy decision. |
 | 20 | Run final demo/tutorial usability pass | Rene | `rel1`, `must`, `docs`, `qa` | Curated examples have commands, expected output, and manual pass/fail notes. |
 | 21 | Run final packaging/signing/notarization validation | Rene | `rel1`, `must`, `packaging`, `qa` | Release assets, signing status, and platform package notes are verified before publishing. |
 | 22 | Publish Release 1 known limitations | Rene | `rel1`, `must`, `docs`, `release` | Known limitations are in release notes and match the shipped feature set. |

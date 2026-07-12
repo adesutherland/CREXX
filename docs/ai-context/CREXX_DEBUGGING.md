@@ -22,6 +22,31 @@ To test end-to-end execution:
 2. Assemble: `./rxas test.rxas` (produces `test.rxbin`)
 3. Execute: `./rxvm test.rxbin`
 
+### CTest Result Contracts
+
+Do not use `PASS_REGULAR_EXPRESSION` to represent an expected process failure.
+CMake deliberately ignores an ordinary nonzero exit code when that property
+matches. Expected-negative runtime tests must use the checked runtime helpers in
+`cmake/CrexxLinkedRuntime.cmake`, specifying the exact nonzero exit code,
+required output, forbidden output, and a concise failure description. A valid
+negative test prints, for example:
+
+```text
+EXPECTED FAILURE: SIGNAL ERROR at bytecode address 15, exit code 3; test passed
+```
+
+The `crexx_expected_failure_contract` CTest proves that the assertion helper
+accepts the specified failure and rejects unexpected success. Existing positive
+tests that still use `PASS_REGULAR_EXPRESSION` are covered by the serialized
+`ctest_pass_regex_exit_contract`: their normal registration validates output,
+and the contract independently executes them and requires exit code zero. This
+audit intentionally adds time to a full CTest sweep and prevents a matched
+success marker from masking a later process failure.
+
+Verbose CTest output also lists `CREXX_DIAGNOSTICS=raw` for compiler tests. That
+is the deterministic machine-readable diagnostic mode used by golden tests, not
+an error indication.
+
 ### 5. RXPP And Source-Map Diagnostics
 
 For `.rxpp` problems, split the pipeline before changing compiler C code:

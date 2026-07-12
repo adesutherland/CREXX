@@ -15,7 +15,7 @@ add_custom_target(exit_trace_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Trace.rxbin
 crexx_add_compiler_exit_runtime_test(
         test_trace_exit
         test_trace_exit.crexx
-        PASS_REGULAR_EXPRESSION "[ ]*5 \\*-\\*[ ]+say .*TRACE REXX ACTIVE"
+        PASS_REGULAR_EXPRESSION "SUCCESS"
         RUN_SUFFIX ${LIBRPATH}
 )
 

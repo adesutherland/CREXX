@@ -135,7 +135,7 @@ end
 
 if trunc(99999999.,2) \= 99999999.00 then do
   errors=errors+1
-  say 'TRUNC failed in test 28 '
+  say 'TRUNC failed in test 28, expected 99999999.00 got' trunc(99999999.,2)
 end
 if trunc(99999999.9,2) \= 99999999.90 then do
   errors=errors+1
@@ -183,11 +183,11 @@ if trunc(1E2,1) \= 100.0 then do
 end
 if trunc(12E1,1) \= 120.0 then do
   errors=errors+1
-  say 'TRUNC failed in test 40 '
+  say 'TRUNC failed in test 40, expected 120.0 got' trunc(12E1,1)
 end
 if trunc(123.,1) \= 123.0 then do
   errors=errors+1
-  say 'TRUNC failed in test 41 '
+  say 'TRUNC failed in test 41, expected 123.0 got' trunc(123.,1)
 end
 if trunc(123.1,1) \= 123.1 then do
   errors=errors+1
@@ -215,11 +215,11 @@ if trunc(1E2,2) \= 100.00 then do
 end
 if trunc(12E1,2) \= 120.00 then do
   errors=errors+1
-  say 'TRUNC failed in test 48 '
+  say 'TRUNC failed in test 48, expected 120.00 got' trunc(12E1,2)
 end
 if trunc(123.,2) \= 123.00 then do
   errors=errors+1
-  say 'TRUNC failed in test 49 '
+  say 'TRUNC failed in test 49, expected 123.00 got' trunc(123.,2)
 end
 if trunc(123.1,2) \= 123.10 then do
   errors=errors+1
@@ -279,11 +279,11 @@ if trunc(1E2,4) \= 100.0000 then do
 end
 if trunc(12E1,4) \= 120.0000 then do
   errors=errors+1
-  say 'TRUNC failed in test 64 '
+  say 'TRUNC failed in test 64, expected 120.0000 got' trunc(12E1,4)
 end
 if trunc(123.,4) \= 123.0000 then do
   errors=errors+1
-  say 'TRUNC failed in test 65 '
+  say 'TRUNC failed in test 65, expected 123.0000 got' trunc(123.,4)
 end
 if trunc(123.1,4) \= 123.1000 then do
   errors=errors+1
@@ -311,11 +311,11 @@ if trunc(1E2,5) \= 100.00000 then do
 end
 if trunc(12E1,5) \= 120.00000 then do
   errors=errors+1
-  say 'TRUNC failed in test 72 '
+  say 'TRUNC failed in test 72, expected 120.00000 got' trunc(12E1,5)
 end
 if trunc(123.,5) \= 123.00000 then do
   errors=errors+1
-  say 'TRUNC failed in test 73 '
+  say 'TRUNC failed in test 73, expected 123.00000 got' trunc(123.,5)
 end
 if trunc(123.1,5) \= 123.10000 then do
   errors=errors+1
@@ -338,4 +338,4 @@ if trunc(123.12345,5) \= 123.12345 then do
   say 'TRUNC failed in test 78 '
 end
 
-return 0
+return errors <> 0

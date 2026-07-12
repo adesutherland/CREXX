@@ -10,8 +10,9 @@ endfunction()
 
 function(_crexx_register_runtime_test)
     set(options PASS_TEST_NAME_ARGUMENT)
-    set(oneValueArgs NAME RUNNER PROGRAM WORKING_DIRECTORY)
-    set(multiValueArgs RUNTIME_ARGS TEST_LABELS)
+    set(oneValueArgs NAME RUNNER PROGRAM WORKING_DIRECTORY
+            EXPECTED_EXIT_CODE EXPECTED_FAILURE_DESCRIPTION)
+    set(multiValueArgs RUNTIME_ARGS TEST_LABELS REQUIRED_OUTPUT_REGEX FORBIDDEN_OUTPUT_REGEX)
     cmake_parse_arguments(CREXX "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     set(_crexx_runner_cmd ${CREXX_RUNNER})
@@ -33,7 +34,11 @@ function(_crexx_register_runtime_test)
                 RUNNER "${_crexx_runner_cmd}"
                 RXLINK "$<TARGET_FILE:rxlink>"
                 PROGRAM "${CREXX_PROGRAM}"
+                EXPECTED_EXIT_CODE "${CREXX_EXPECTED_EXIT_CODE}"
+                EXPECTED_FAILURE_DESCRIPTION "${CREXX_EXPECTED_FAILURE_DESCRIPTION}"
                 EXTRA_ARGS ${_crexx_runtime_args}
+                REQUIRED_OUTPUT_REGEX ${CREXX_REQUIRED_OUTPUT_REGEX}
+                FORBIDDEN_OUTPUT_REGEX ${CREXX_FORBIDDEN_OUTPUT_REGEX}
         )
         add_test(
                 NAME ${CREXX_NAME}
@@ -41,6 +46,25 @@ function(_crexx_register_runtime_test)
                 WORKING_DIRECTORY ${CREXX_WORKING_DIRECTORY}
         )
         list(APPEND _crexx_labels linked_opt)
+    elseif(NOT "${CREXX_EXPECTED_EXIT_CODE}" STREQUAL "")
+        set(_crexx_script "${CMAKE_CURRENT_BINARY_DIR}/${CREXX_NAME}_checked_runtime.cmake")
+        crexx_write_runtime_script(
+                OUTPUT "${_crexx_script}"
+                NAME "${CREXX_NAME}"
+                WORKING_DIRECTORY "${CREXX_WORKING_DIRECTORY}"
+                RUNNER "${_crexx_runner_cmd}"
+                PROGRAM "${CREXX_PROGRAM}"
+                EXPECTED_EXIT_CODE "${CREXX_EXPECTED_EXIT_CODE}"
+                EXPECTED_FAILURE_DESCRIPTION "${CREXX_EXPECTED_FAILURE_DESCRIPTION}"
+                EXTRA_ARGS ${_crexx_runtime_args}
+                REQUIRED_OUTPUT_REGEX ${CREXX_REQUIRED_OUTPUT_REGEX}
+                FORBIDDEN_OUTPUT_REGEX ${CREXX_FORBIDDEN_OUTPUT_REGEX}
+        )
+        add_test(
+                NAME ${CREXX_NAME}
+                COMMAND ${CMAKE_COMMAND} -P "${_crexx_script}"
+                WORKING_DIRECTORY ${CREXX_WORKING_DIRECTORY}
+        )
     else()
         add_test(
                 NAME ${CREXX_NAME}
@@ -60,8 +84,10 @@ endfunction()
 
 function(crexx_add_rexx_opt_matrix)
     set(options PASS_TEST_NAME_ARGUMENT)
-    set(oneValueArgs NAME SOURCE WORKING_DIRECTORY TARGET_GROUP RUNNER COMPILER_TARGET ASSEMBLER_TARGET)
-    set(multiValueArgs DEPENDS IMPORT_PATHS RXC_FLAGS RXAS_FLAGS RUNTIME_ARGS TEST_LABELS)
+    set(oneValueArgs NAME SOURCE WORKING_DIRECTORY TARGET_GROUP RUNNER COMPILER_TARGET ASSEMBLER_TARGET
+            EXPECTED_EXIT_CODE EXPECTED_FAILURE_DESCRIPTION)
+    set(multiValueArgs DEPENDS IMPORT_PATHS RXC_FLAGS RXAS_FLAGS RUNTIME_ARGS TEST_LABELS
+            REQUIRED_OUTPUT_REGEX FORBIDDEN_OUTPUT_REGEX)
     cmake_parse_arguments(CREXX "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
     if(NOT CREXX_NAME OR NOT CREXX_SOURCE)
@@ -139,8 +165,12 @@ function(crexx_add_rexx_opt_matrix)
                 RUNNER ${CREXX_RUNNER}
                 PROGRAM ${_crexx_output_base}
                 WORKING_DIRECTORY ${CREXX_WORKING_DIRECTORY}
+                EXPECTED_EXIT_CODE "${CREXX_EXPECTED_EXIT_CODE}"
+                EXPECTED_FAILURE_DESCRIPTION "${CREXX_EXPECTED_FAILURE_DESCRIPTION}"
                 RUNTIME_ARGS ${CREXX_RUNTIME_ARGS}
                 TEST_LABELS ${CREXX_TEST_LABELS}
+                REQUIRED_OUTPUT_REGEX ${CREXX_REQUIRED_OUTPUT_REGEX}
+                FORBIDDEN_OUTPUT_REGEX ${CREXX_FORBIDDEN_OUTPUT_REGEX}
                 ${_crexx_runtime_test_args}
         )
     endforeach()

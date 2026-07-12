@@ -90,5 +90,6 @@ int main(int argc, char *argv[]) {
     free(string);
 
     plugin->base.free((rxvm_plugin*)plugin);
+    printf("DECIMAL TEST PASSED\n");
     return 0;
 } // main

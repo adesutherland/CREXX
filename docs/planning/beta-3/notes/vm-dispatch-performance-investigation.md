@@ -234,6 +234,73 @@ universal win. The GCC upper bound is 17% to 54% faster than unmodified GCC
 frame-cache variant was not measured. Native Intel and Windows measurements
 remain necessary.
 
+### Implemented Result (2026-07-12)
+
+The four production slices were implemented sequentially from
+`ddb69d58ba9`: intent-based dispatch and compile-time instrumentation,
+coherent active-frame state, the separate computed-goto runtime instruction
+image, then full QA and documentation. Canonical `segment.binary` remains the
+reflection/serialization source, while only the owned `rxvm` execution copy
+contains process-local handler pointers. `rxbvm` continues to execute canonical
+opcodes.
+
+The final Apple clang comparison used Release `-O3 -DNDEBUG`, the NETWORK TLS
+backend, identical prelinked images, alternating VM order, one unrecorded
+warmup, and seven retained serial samples. Values are medians in microseconds;
+the ratio is `rxvm / rxbvm`, so values below 1 favour `rxvm`.
+
+| Hot section | `rxvm` | `rxbvm` | Ratio |
+| --- | ---: | ---: | ---: |
+| Binary `.u32` write | 897 | 918 | 0.977 |
+| Binary `.u32` read | 1,131 | 1,178 | 0.960 |
+| JSON count | 28,892 | 29,220 | 0.989 |
+| Tinyexpr evaluate | 88,154 | 87,241 | 1.010 |
+| Integer jump table | 19,257 | 18,678 | 1.031 |
+| Padded-string jump table | 13,651 | 13,666 | 0.999 |
+| Numeric-string jump table | 20,527 | 20,511 | 1.001 |
+| Reference dynamic-backing iterator | 754 | 752 | 1.003 |
+| Classlib live iterator | 2,609 | 2,639 | 0.989 |
+| `StringTreeMap` insert | 5,118 | 5,027 | 1.018 |
+| Interface method lookup | 2,136 | 2,189 | 0.976 |
+
+Across the seven dispatch headline sections, the implemented `rxvm` improves
+its captured `ddb69d58ba9` baseline by 1.3% to 28.2%, with a 10.7% median. The
+documented runtime-image upper-bound projection was 1.9% to 26.8%, with an
+11.8% median. The production result is therefore close to the projection: its
+median is 1.1 percentage points lower and its observed range is slightly wider.
+The final `rxvm / rxbvm` ratio has a 0.999 median and ranges from 0.960 to
+1.031; `rxvm` wins four of the seven headline sections and six of the eleven
+reported hot sections, rather than winning every workload.
+
+Apple clang emits a 409,048-byte `run()` body for `rxvm` and 405,764 bytes for
+`rxbvm`, down from 423,732 and 408,508 bytes at the captured baseline. Disabled
+instrumentation is compile-time no-op; the dedicated test backend verifies
+balanced canonical-coordinate events in both VM modes.
+
+Homebrew GCC 16.1.0 was configured separately with Release `-O3 -DNDEBUG` and
+`CREXX_ENABLE_TLS=OFF`; this limitation is required because the macOS NETWORK
+TLS backend uses Apple blocks supported by clang. The same prelinked images and
+sampling protocol produced:
+
+| Hot section | GCC `rxvm` | GCC `rxbvm` | Ratio |
+| --- | ---: | ---: | ---: |
+| Binary `.u32` write | 1,254 | 2,009 | 0.624 |
+| Binary `.u32` read | 1,536 | 2,443 | 0.629 |
+| JSON count | 32,536 | 34,349 | 0.947 |
+| Tinyexpr evaluate | 111,290 | 121,530 | 0.916 |
+| Integer jump table | 21,930 | 33,686 | 0.651 |
+| Padded-string jump table | 13,557 | 22,528 | 0.602 |
+| Numeric-string jump table | 19,285 | 26,243 | 0.735 |
+
+GCC `rxvm` wins all seven headline sections, with a 0.651 median ratio and a
+range from 0.602 to 0.947. Against the historical GCC `rxvm` baseline above,
+the production result ranges from 4.4% slower to 21.0% faster, with a 16.0%
+median improvement. This is materially below the measurement-only upper-bound
+projection of 12.3% to 40.1% and a 26.2% median, although it preserves the
+predicted strong GCC computed-goto advantage over switch dispatch. GCC emits
+1,589,344 bytes for `rxvm` `run()` and 1,569,856 bytes for `rxbvm` `run()`, so
+Apple clang remains the smaller and generally faster compiler on this host.
+
 GCC also stresses build scalability: the unmodified switch `rxbvm` build took
 378.93 seconds and the experimental state/in-place `rxvm` build took 249.19
 seconds. GCC `run()` was 1,596,064 bytes for baseline `rxvm` and 1,571,616 bytes

@@ -92,6 +92,30 @@
 #include "rxvmplugin_framework.h"
 #include "rxvmsock.h"
 
+typedef char rxvm_execution_slot_must_hold_pointer[
+        sizeof(bin_code) >= sizeof(void *) ? 1 : -1];
+
+#if defined(__has_attribute)
+#  if __has_attribute(noinline)
+#    define RXVM_LABEL_OWNER_NOINLINE __attribute__((noinline))
+#  else
+#    define RXVM_LABEL_OWNER_NOINLINE
+#  endif
+#  if __has_attribute(noclone)
+#    define RXVM_LABEL_OWNER_NOCLONE __attribute__((noclone))
+#  else
+#    define RXVM_LABEL_OWNER_NOCLONE
+#  endif
+#elif defined(__GNUC__)
+#  define RXVM_LABEL_OWNER_NOINLINE __attribute__((noinline))
+#  define RXVM_LABEL_OWNER_NOCLONE __attribute__((noclone))
+#else
+#  define RXVM_LABEL_OWNER_NOINLINE
+#  define RXVM_LABEL_OWNER_NOCLONE
+#endif
+
+#define RXVM_LABEL_OWNER RXVM_LABEL_OWNER_NOINLINE RXVM_LABEL_OWNER_NOCLONE
+
 int rxvm_link(rxvm_context *ctx);
 
 #define RXVM_FFORMAT_MAX_FIELD 1000
@@ -3157,19 +3181,19 @@ static volatile sig_atomic_t interrupts = 0;
 
 // Function to set an interrupt
 void raise_signal(unsigned char signal) {
-    interrupts |= 1 << (signal - 1);
+    interrupts |= rxsignal_mask(signal);
 }
 
 // Function to clear an interrupt
 void clear_signal(unsigned char signal) {
-    interrupts &= ~(1 << (signal - 1));
+    interrupts &= ~rxsignal_mask(signal);
 }
 
 // Macro to detect and throw a signal if a RXVM plugin-raised error is present
 #define RXSIGNAL_IF_RXVM_PLUGIN_ERROR(signal) \
-if ((signal)->base.signal_number  && (signal)->base.signal_number < RXSIGNAL_MAX) { \
+if ((signal)->base.signal_number > RXSIGNAL_NONE && (signal)->base.signal_number < RXSIGNAL_MAX) { \
 if (!current_frame->is_interrupt) interrupted_pc = pc; \
-interrupts |= 1 << ((signal)->base.signal_number - 1); \
+interrupts |= rxsignal_mask((signal)->base.signal_number); \
 value_zero(interrupt_object[(signal)->base.signal_number]); \
 set_null_string(interrupt_object[(signal)->base.signal_number], (signal)->base.signal_string); \
 }
@@ -3177,20 +3201,20 @@ set_null_string(interrupt_object[(signal)->base.signal_number], (signal)->base.s
 // Macro to throw a signal
 #define SET_SIGNAL(signal) \
 {if (!current_frame->is_interrupt) interrupted_pc = pc; \
-interrupts |= 1 << ((signal) - 1); \
+interrupts |= rxsignal_mask(signal); \
 value_zero(interrupt_object[(signal)]);}
 
 // Macro to throw a signal with a message
 #define SET_SIGNAL_MSG(signal, message) \
 {if (!current_frame->is_interrupt) interrupted_pc = pc; \
-interrupts |= 1 << ((signal) - 1); \
+interrupts |= rxsignal_mask(signal); \
 value_zero(interrupt_object[(signal)]); \
 set_null_string(interrupt_object[(signal)], (message));}
 
 // Macro to throw a signal with a payload
 #define SET_SIGNAL_PAYLOAD(signal, payload) \
 {if (!current_frame->is_interrupt) interrupted_pc = pc; \
-interrupts |= 1 << ((signal) - 1); \
+interrupts |= rxsignal_mask(signal); \
 copy_value(interrupt_object[(signal)], (payload));}
 
 #define SET_SIGNAL_FROM_NAME(name) \
@@ -3244,7 +3268,7 @@ void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RXSIGNAL_
     }
 
     // Set the interrupt
-    interrupts |= 1 << (int_num - 1);
+    interrupts |= rxsignal_mask((int) int_num);
 }
 
 #define HANDLE_INTERRUPT_ACTION_RETURN() \
@@ -3252,7 +3276,7 @@ if (is_interrupt && temp_frame->is_interrupt_action) { \
     rxsignal_handler_action action__ = rxsignal_read_handler_action(interrupt_action_value); \
     if (action__ == RXSIGNAL_HANDLER_ACTION_RETRY) { \
         if (current_frame && current_frame->procedure && current_frame->procedure->binarySpace) { \
-            next_pc = current_frame->procedure->binarySpace->binary + last_interrupted_address[is_interrupt]; \
+            next_pc = VM_EXECUTION_POINTER(last_interrupted_address[is_interrupt]); \
         } \
     } else if (action__ != RXSIGNAL_HANDLER_ACTION_SKIP) { \
         value *payload__ = rxsignal_handler_payload(temp_frame); \
@@ -3337,13 +3361,13 @@ RX_INLINE rxinteger ascii_back_blank( unsigned char *s, rxinteger start, rxinteg
 #endif
 
 /* Interpreter */
-RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
+RXVM_LABEL_OWNER RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     proc_runtime *procedure;
     proc_runtime *step_handler = 0;
     int rc = 0;
     unsigned int initSeed = 0;   /* keep last seed for Random function within REXX run */
     char hasSeed = 0; /* no seed set */
-    bin_code *pc, *next_pc;
+    bin_code *pc = 0, *next_pc = 0;
     bin_code *interrupted_pc = 0;
     int mod_index;
     value *interrupt_arg;
@@ -3359,16 +3383,23 @@ RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[]) {
     /* Array of modules that were last interrupted by interrupt number */
     rxinteger last_interrupted_module[RXSIGNAL_MAX] = {0};
     stack_frame *current_frame = 0, *temp_frame;
+    bin_space *current_binary_space = 0;
+    bin_code *current_execution_base = 0;
+    bin_code *current_canonical_base = 0;
+    unsigned char *current_const_pool = 0;
+    value **current_locals = 0;
     /* 3 Work Registers */
     value *work1 = value_f();
     value *work2 = value_f();
     value *work3 = value_f();
+    module *current_module = 0;
 #ifdef NTHREADED
     void *next_inst = 0;
 #else
-    module *current_module = 0;
     void *next_inst = &&IUNKNOWN;
 #endif
+    RXVM_INSTRUMENTATION_STATE();
+    RXVM_INSTRUMENTATION_VM_BEGIN(context);
 
     /* Set up the interrupt object array */
     {
@@ -3453,6 +3484,47 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 #include "../binutils/include/rxops.h"
 #undef X
 };
+
+#define VM_PREPARE_EXECUTION_IMAGE(module_)                                     \
+    do {                                                                        \
+        module *vm_module__ = (module_);                                        \
+        size_t vm_bytes__;                                                      \
+        size_t vm_i__ = 0;                                                      \
+        int vm_new_image__ = vm_module__->execution_image == 0;                 \
+        if (!vm_module__->segment.inst_size) break;                             \
+        if (vm_new_image__) {                                                   \
+            if (!rxvm_checked_size_mul(sizeof(bin_code),                        \
+                                       vm_module__->segment.inst_size,          \
+                                       &vm_bytes__)) {                          \
+                RX_PANIC_OOM("size rxvm execution image", (size_t)-1,          \
+                             vm_module__->name);                                \
+            }                                                                   \
+            vm_module__->execution_image = malloc(vm_bytes__);                  \
+            if (!vm_module__->execution_image) {                                \
+                RX_PANIC_OOM("malloc rxvm execution image", vm_bytes__,        \
+                             vm_module__->name);                                \
+            }                                                                   \
+            memcpy(vm_module__->execution_image, vm_module__->segment.binary,   \
+                   vm_bytes__);                                                \
+        }                                                                       \
+        while (vm_i__ < vm_module__->segment.inst_size) {                      \
+            size_t vm_instruction__ = vm_i__;                                  \
+            size_t vm_operand_count__ =                                        \
+                    vm_module__->segment.binary[vm_instruction__].instruction.no_ops; \
+            unsigned int vm_opcode__ =                                         \
+                    vm_module__->segment.binary[vm_instruction__].instruction.opcode; \
+            vm_i__ += vm_operand_count__ + 1;                                  \
+            if (!vm_new_image__ && vm_operand_count__) {                       \
+                memcpy(vm_module__->execution_image + vm_instruction__ + 1,     \
+                       vm_module__->segment.binary + vm_instruction__ + 1,      \
+                       sizeof(bin_code) * vm_operand_count__);                  \
+            }                                                                   \
+            vm_module__->execution_image[vm_instruction__].handler =           \
+                    vm_opcode__ < OP_MAX_INSTRUCTIONS                           \
+                        ? (void *)address_map[vm_opcode__]                      \
+                        : (void *)&&IUNKNOWN;                                   \
+        }                                                                       \
+    } while (0)
 #endif
 
     /* Allocate Interrupt Arg */
@@ -3466,25 +3538,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
         if (context->modules[mod_index]->state >= RXVM_MOD_THREADED) continue;
 
 #ifndef NTHREADED
-        {
-            module *mod = context->modules[mod_index];
-            size_t i = 0, j;
-            if (!mod->prepared_dispatch && mod->segment.inst_size) {
-                mod->prepared_dispatch = malloc(sizeof(void *) * mod->segment.inst_size);
-                if (!mod->prepared_dispatch) {
-                    RX_PANIC_OOM("malloc rxvm prepared dispatch table",
-                                 sizeof(void *) * mod->segment.inst_size,
-                                 mod->name);
-                }
-            }
-            while (i < context->modules[mod_index]->segment.inst_size) {
-                j = i;
-                i += context->modules[mod_index]->segment.binary[i].instruction.no_ops + 1;
-                mod->prepared_dispatch[j] =
-                        (void *)address_map[context->modules[mod_index]->segment
-                                .binary[j].instruction.opcode];
-            }
-        }
+        VM_PREPARE_EXECUTION_IMAGE(context->modules[mod_index]);
 #endif
         context->modules[mod_index]->state = RXVM_MOD_THREADED;
     }
@@ -3525,29 +3579,31 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
     DEBUG("Create first Stack Frame\n");
     if (context->ext_proc) {
-        current_frame = frame_f(procedure, context->ext_argc, 0, 0, context->ext_ret);
-        if (!current_frame) {
+        temp_frame = frame_f(procedure, context->ext_argc, 0, 0, context->ext_ret);
+        if (!temp_frame) {
             fprintf(stderr, "PANIC - Unable to allocate stack frame\n");
             rc = RXSIGNAL_FAILURE;
             goto interprt_finished;
         }
+        VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_EXTERNAL_ENTRY);
         /* Arguments (passed as individual objects) */
         {
             int i;
             int a1 = procedure->binarySpace->globals + procedure->locals + 1;
             for (i = 0; i < context->ext_argc; i++) {
                 current_frame->baselocals[a1 + i] = value_f();
-                current_frame->locals[a1 + i] = current_frame->baselocals[a1 + i];
+                current_locals[a1 + i] = current_frame->baselocals[a1 + i];
                 copy_value(current_frame->baselocals[a1 + i], context->ext_args[i]);
             }
         }
     } else {
-        current_frame = frame_f(procedure, 1, 0, 0, 0);
-        if (!current_frame) {
+        temp_frame = frame_f(procedure, 1, 0, 0, 0);
+        if (!temp_frame) {
             fprintf(stderr, "PANIC - Unable to allocate stack frame\n");
             rc = RXSIGNAL_FAILURE;
             goto interprt_finished;
         }
+        VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_EXTERNAL_ENTRY);
         /* Arguments (passed in an array) */
         /* a0 is already set by frame_f() */
         /* a1 is the array  */
@@ -3556,7 +3612,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             int a1 = procedure->binarySpace->globals + procedure->locals + 1;
             arguments_array = value_f();
             current_frame->baselocals[a1] = arguments_array;
-            current_frame->locals[a1] = current_frame->baselocals[a1];
+            current_locals[a1] = current_frame->baselocals[a1];
             set_num_attributes(current_frame->baselocals[a1], argc);
 
             for (i = 0; i < argc; i++) {
@@ -3580,13 +3636,8 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
     /* Start */
     DEBUG("Starting inst# %s-0x%x\n", procedure->binarySpace->module->name, (int) procedure->start);
-#ifndef NTHREADED
-    current_module = current_frame->procedure->binarySpace->module;
-#endif
-    next_pc = &(current_frame->procedure->binarySpace->binary[procedure->start]);
-
-    CALC_DISPATCH_MANUAL
-    DISPATCH
+    VM_SELECT_INDEX(procedure->start, RXVM_TRANSITION_EXTERNAL_ENTRY);
+    DISPATCH;
 
     /* Instruction implementations */
     /* ----------------------------------------------------------------------------
@@ -3625,14 +3676,16 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
     /* Also clear any pending signals that are ignored and also find the first signal which */
     /* is masked and pending - the first one is the highest priority */
     last_interrupt = 0;
-    for (signal_code = 0; signal_code < RXSIGNAL_MAX; signal_code++) {
-        if (interrupts & (1 << signal_code)) {
+    for (signal_code = 0; signal_code < RXSIGNAL_MAX - 1; signal_code++) {
+        sig_atomic_t signal_mask = rxsignal_mask(signal_code + 1);
+        if (interrupts & signal_mask) {
             bin_code *signal_pc = (interrupted_pc && signal_code + 1 != RXSIGNAL_BREAKPOINT) ? interrupted_pc : pc;
-            last_interrupted_module[signal_code + 1] = (rxinteger) current_frame->procedure->binarySpace->module->module_number;
-            last_interrupted_address[signal_code + 1] = (rxinteger) (signal_pc - current_frame->procedure->binarySpace->binary);
+            last_interrupted_module[signal_code + 1] = (rxinteger) current_module->module_number;
+            last_interrupted_address[signal_code + 1] =
+                    (rxinteger) VM_CANONICAL_INDEX(signal_pc);
             if (current_frame->interrupt_table[signal_code].response == RXSIGNAL_RESPONSE_IGNORE) {
                 DEBUG("TRACE - INTR IGNORE %s\n", interrupt_to_string(signal_code + 1));
-                interrupts &= ~(1 << signal_code);
+                interrupts &= ~signal_mask;
             } else {
                 last_interrupt = signal_code + 1;
                 break;
@@ -3643,16 +3696,24 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
     if (!last_interrupt || last_interrupt >= RXSIGNAL_MAX) {
         /* No un-ignored interrupts pending */
+        RXVM_INSTRUMENTATION_INTERRUPT_RESUME(0, current_module->module_number,
+                                              VM_CANONICAL_INDEX(pc));
         END_INTERRUPT
     }
 
     // Clear the interrupt
     if (last_interrupt != RXSIGNAL_BREAKPOINT) {
         // Breakpoints are not cleared
-        interrupts &= ~(1 << (last_interrupt - 1));
+        interrupts &= ~rxsignal_mask(last_interrupt);
     }
 
     // Handle the interrupt
+    RXVM_INSTRUMENTATION_INTERRUPT_SELECT(last_interrupt,
+                                          current_module->module_number,
+                                          VM_CANONICAL_INDEX(pc));
+    RXVM_INSTRUMENTATION_INTERRUPT_ENTRY(last_interrupt,
+                                         current_module->module_number,
+                                         VM_CANONICAL_INDEX(pc));
     interrupt_entry signal_handler = current_frame->interrupt_table[last_interrupt - 1];
     switch (signal_handler.response) {
 
@@ -3669,21 +3730,25 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
                                              last_interrupted_address[last_interrupt]);
             }
             rc = (int)last_interrupt;
+            RXVM_INSTRUMENTATION_INTERRUPT_TERMINAL(last_interrupt,
+                                                    current_module->module_number,
+                                                    VM_CANONICAL_INDEX(pc));
             goto interprt_finished;
 
         case RXSIGNAL_RESPONSE_SILENT_HALT:
             /* Silent Halt */
             DEBUG("TRACE - INTR HANDLER -> SILENT HALT %s\n", interrupt_to_string(last_interrupt));
             rc = 0;
+            RXVM_INSTRUMENTATION_INTERRUPT_TERMINAL(last_interrupt,
+                                                    current_module->module_number,
+                                                    VM_CANONICAL_INDEX(pc));
             goto interprt_finished;
 
         case RXSIGNAL_RESPONSE_CALL_BRANCH:
             DEBUG("TRACE - INTR HANDLER -> SET BRANCH FOR CALL RETURN ");
-            current_frame = rxsignal_unwind_to_frame(current_frame, signal_handler.frame);
-#ifndef NTHREADED
-            current_module = current_frame->procedure->binarySpace->module;
-#endif
-            next_pc = current_frame->procedure->binarySpace->binary + signal_handler.jump;
+            VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame),
+                              RXVM_TRANSITION_INTERRUPT_ENTRY);
+            VM_SELECT_INDEX(signal_handler.jump, RXVM_TRANSITION_INTERRUPT_ENTRY);
             pc = next_pc;
             // Fall through to CALL
 
@@ -3696,7 +3761,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
             if (intr_function->start == SIZE_MAX) {
                 SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, "Exception handler not exposed/linked")
-                DISPATCH
+                DISPATCH;
             }
 
             /* Populate the interrupt argument object */
@@ -3709,30 +3774,26 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             if (intr_function->binarySpace == 0) {
                 /* This is a native plugin function */
                 rxvm_callfunc((void *) (intr_function->start), 1, &interrupt_arg, 0, signal_value);
-                if (signal_value->int_value && signal_value->int_value < RXSIGNAL_MAX) {
+                if (signal_value->int_value > RXSIGNAL_NONE && signal_value->int_value < RXSIGNAL_MAX) {
                     if (signal_value->string_length) {
                         SET_SIGNAL_MSG(signal_value->int_value, signal_value->string_value)
                     } else {
                         SET_SIGNAL(signal_value->int_value)
                     }
                 }
-                DISPATCH
+                DISPATCH;
             } else {
                 /* A CREXX Procedure */
                 if (action_aware) value_zero(interrupt_action_value);
                 temp_frame = frame_f(intr_function, 1, current_frame, pc, action_aware ? interrupt_action_value : 0);
                 if (!temp_frame) {
                     SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
-                    DISPATCH
+                    DISPATCH;
                 }
-                current_frame = temp_frame;
-
                 /* Prepare dispatch to procedure as early as possible */
-#ifndef NTHREADED
-                current_module = current_frame->procedure->binarySpace->module;
-#endif
-                next_pc = &(current_frame->procedure->binarySpace->binary[intr_function->start]);
-                CALC_DISPATCH_MANUAL
+                VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_INTERRUPT_ENTRY);
+                VM_SELECT_INDEX(intr_function->start, RXVM_TRANSITION_INTERRUPT_ENTRY);
+
 
                 /* Interrupt being handled */
                 current_frame->is_interrupt = last_interrupt;
@@ -3740,38 +3801,32 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
                 /* Argument */
                 size_t arg_index = intr_function->binarySpace->globals + intr_function->locals + 1;
-                current_frame->baselocals[arg_index] = current_frame->locals[arg_index] = interrupt_arg;
+                current_frame->baselocals[arg_index] = current_locals[arg_index] = interrupt_arg;
 
                 /* DISPATCH goes the interrupt handler */
-                DISPATCH
+                DISPATCH;
             }
         }
 
         case RXSIGNAL_RESPONSE_BRANCH:
             DEBUG("TRACE - INTR HANDLER -> BRANCH %s\n", interrupt_to_string(last_interrupt));
-            current_frame = rxsignal_unwind_to_frame(current_frame, signal_handler.frame);
-#ifndef NTHREADED
-            current_module = current_frame->procedure->binarySpace->module;
-#endif
-            next_pc = current_frame->procedure->binarySpace->binary + signal_handler.jump;
-            CALC_DISPATCH_MANUAL
-            DISPATCH
+            VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame),
+                              RXVM_TRANSITION_INTERRUPT_ENTRY);
+            VM_SELECT_INDEX(signal_handler.jump, RXVM_TRANSITION_INTERRUPT_ENTRY);
+            DISPATCH;
 
         case RXSIGNAL_RESPONSE_BRANCH_VALUE:
             DEBUG("TRACE - INTR HANDLER -> BRANCH VALUE %s\n", interrupt_to_string(last_interrupt));
-            current_frame = rxsignal_unwind_to_frame(current_frame, signal_handler.frame);
-#ifndef NTHREADED
-            current_module = current_frame->procedure->binarySpace->module;
-#endif
+            VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame),
+                              RXVM_TRANSITION_INTERRUPT_ENTRY);
             rxsignal_populate_raw_interrupt(interrupt_arg,
                                             last_interrupt,
                                             last_interrupted_module[last_interrupt],
                                             last_interrupted_address[last_interrupt],
                                             interrupt_object[last_interrupt]);
-            rxsignal_populate_runtime_signal(current_frame->locals[signal_handler.value_register], interrupt_arg);
-            next_pc = current_frame->procedure->binarySpace->binary + signal_handler.jump;
-            CALC_DISPATCH_MANUAL
-            DISPATCH
+            rxsignal_populate_runtime_signal(current_locals[signal_handler.value_register], interrupt_arg);
+            VM_SELECT_INDEX(signal_handler.jump, RXVM_TRANSITION_INTERRUPT_ENTRY);
+            DISPATCH;
 
         case RXSIGNAL_RESPONSE_RETURN:
             DEBUG("TRACE - INTR HANDLER -> RET %s\n", interrupt_to_string(last_interrupt));
@@ -3781,7 +3836,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
                 // Note that current_frame->is_interrupt cannot be set as a signal triggers us
                 /* back to the parent's stack frame */
                 temp_frame = current_frame;
-                current_frame = current_frame->parent;
+                VM_ACTIVATE_FRAME_OR_NULL(current_frame->parent, RXVM_TRANSITION_RETURN);
                 if (!current_frame) {
                     DEBUG("TRACE - INTR RETURNING FROM MAIN()\n");
                     /* Free Argument Values a1... */
@@ -3801,11 +3856,8 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
                     goto interprt_finished;
                 }
                 free_frame(temp_frame);
-#ifndef NTHREADED
-                current_module = current_frame->procedure->binarySpace->module;
-#endif
-                CALC_DISPATCH_MANUAL
-                DISPATCH
+                VM_SELECT_POINTER(next_pc, RXVM_TRANSITION_RETURN);
+                DISPATCH;
             }
 
         case RXSIGNAL_RESPONSE_IGNORE:
@@ -3822,30 +3874,30 @@ START_OF_INSTRUCTIONS
         /* Signal / Interrupt Instructions */
 
         /* Enable Breakpoints */
-        START_INSTRUCTION(BPON) CALC_DISPATCH(0)
+        START_INSTRUCTION(BPON) VM_ADVANCE(0);
             DEBUG("TRACE - BPON\n");
-            interrupts |= 1 << (RXSIGNAL_BREAKPOINT - 1);
-            DISPATCH
+            interrupts |= rxsignal_mask(RXSIGNAL_BREAKPOINT);
+            DISPATCH;
 
         /* Enable Breakpoints with op1 handler */
-        START_INSTRUCTION(BPON_FUNC) CALC_DISPATCH(1)
+        START_INSTRUCTION(BPON_FUNC) VM_ADVANCE(1);
             {
                 proc_runtime *signal_function = PROC_OP(1);
                 DEBUG("TRACE - BPON %s()\n", signal_function->name);
                 current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].response = RXSIGNAL_RESPONSE_CALL;
                 current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].function = signal_function;
-                interrupts |= 1 << (RXSIGNAL_BREAKPOINT - 1);
+                interrupts |= rxsignal_mask(RXSIGNAL_BREAKPOINT);
             }
-            DISPATCH
+            DISPATCH;
 
         /* Disable Breakpoints */
-        START_INSTRUCTION(BPOFF) CALC_DISPATCH(0)
+        START_INSTRUCTION(BPOFF) VM_ADVANCE(0);
             DEBUG("TRACE - BPOFF\n");
-            interrupts &= ~(1 << (RXSIGNAL_BREAKPOINT - 1));
-            DISPATCH
+            interrupts &= ~rxsignal_mask(RXSIGNAL_BREAKPOINT);
+            DISPATCH;
 
         /* Set Signal op1 Handle to Ignore */
-        START_INSTRUCTION(SIGIGNORE_STRING) CALC_DISPATCH(1)
+        START_INSTRUCTION(SIGIGNORE_STRING) VM_ADVANCE(1);
             DEBUG("TRACE - SIGIGNORE \"%.*s\"\n", (int) op1S->string_len, op1S->string);
             {
                 size_t sig = string_to_interrupt(op1S->string);
@@ -3861,10 +3913,10 @@ START_OF_INSTRUCTIONS
                     ignore_interrupt((int)sig); // Set the corresponding native interrupt to ignore
                 }
             }
-            DISPATCH
+            DISPATCH;
 
         /* Set Signal op1 Handle to Halt */
-        START_INSTRUCTION(SIGHALT_STRING) CALC_DISPATCH(1)
+        START_INSTRUCTION(SIGHALT_STRING) VM_ADVANCE(1);
             DEBUG("TRACE - SIGHALT \"%.*s\"\n", (int) op1S->string_len, op1S->string);
             {
                 size_t sig = string_to_interrupt(op1S->string);
@@ -3880,10 +3932,10 @@ START_OF_INSTRUCTIONS
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
-            DISPATCH
+            DISPATCH;
 
         /* Set Signal op1 Handle to Silent Halt */
-        START_INSTRUCTION(SIGSHALT_STRING) CALC_DISPATCH(1)
+        START_INSTRUCTION(SIGSHALT_STRING) VM_ADVANCE(1);
             DEBUG("TRACE - SIGSHALT \"%.*s\"\n", (int) op1S->string_len, op1S->string);
             {
                 size_t sig = string_to_interrupt(op1S->string);
@@ -3899,10 +3951,10 @@ START_OF_INSTRUCTIONS
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
-            DISPATCH
+            DISPATCH;
 
         /* Set Signal op2 Handle to Branch to op1 */
-        START_INSTRUCTION(SIGBR_ID_STRING) CALC_DISPATCH(2)
+        START_INSTRUCTION(SIGBR_ID_STRING) VM_ADVANCE(2);
             DEBUG("TRACE - SIGBR 0x%x,\"%.*s\"\n", (unsigned int)REG_IDX(1), (int)op2S->string_len, op2S->string);
             {
                 size_t sig = string_to_interrupt(op2S->string);
@@ -3918,10 +3970,10 @@ START_OF_INSTRUCTIONS
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
-            DISPATCH
+            DISPATCH;
 
         /* Set Signal op3 Handle to Branch to op1 and bind a .signal object to op2 */
-        START_INSTRUCTION(SIGBRV_ID_REG_STRING) CALC_DISPATCH(3)
+        START_INSTRUCTION(SIGBRV_ID_REG_STRING) VM_ADVANCE(3);
             DEBUG("TRACE - SIGBRV 0x%x,R%d,\"%.*s\"\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2), (int)op3S->string_len, op3S->string);
             {
                 size_t sig = string_to_interrupt(op3S->string);
@@ -3937,10 +3989,10 @@ START_OF_INSTRUCTIONS
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
-            DISPATCH
+            DISPATCH;
 
         /* Set Signal op2 Handle to Call op1 */
-        START_INSTRUCTION(SIGCALL_FUNC_STRING) CALC_DISPATCH(2)
+        START_INSTRUCTION(SIGCALL_FUNC_STRING) VM_ADVANCE(2);
             {
                 proc_runtime *signal_function = PROC_OP(1);
                 DEBUG("TRACE - SIGCALL %s(),\"%.*s\"\n", signal_function->name, (int)op2S->string_len, op2S->string);
@@ -3958,10 +4010,10 @@ START_OF_INSTRUCTIONS
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
-            DISPATCH
+            DISPATCH;
 
         /* Set Signal op2 Handle to action-aware Call op1 */
-        START_INSTRUCTION(SIGCALLA_FUNC_STRING) CALC_DISPATCH(2)
+        START_INSTRUCTION(SIGCALLA_FUNC_STRING) VM_ADVANCE(2);
             {
                 proc_runtime *signal_function = PROC_OP(1);
                 DEBUG("TRACE - SIGCALLA %s(),\"%.*s\"\n", signal_function->name, (int)op2S->string_len, op2S->string);
@@ -3979,10 +4031,10 @@ START_OF_INSTRUCTIONS
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
-            DISPATCH
+            DISPATCH;
 
         /* Set Signal op3 Handle to Call op2 returning to op1 */
-        START_INSTRUCTION(SIGCALLBR_ID_FUNC_STRING) CALC_DISPATCH(3)
+        START_INSTRUCTION(SIGCALLBR_ID_FUNC_STRING) VM_ADVANCE(3);
             DEBUG("TRACE - SIGCALLBR 0x%x,%s(),\"%.*s\"\n", (unsigned int)REG_IDX(1), PROC_OP(2)->name, (int)op3S->string_len, op3S->string);
             {
                 proc_runtime *signal_function = PROC_OP(2);
@@ -3999,10 +4051,10 @@ START_OF_INSTRUCTIONS
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
-            DISPATCH
+            DISPATCH;
 
         /* Set Signal op1 Handle to Return */
-        START_INSTRUCTION(SIGRET_STRING) CALC_DISPATCH(1)
+        START_INSTRUCTION(SIGRET_STRING) VM_ADVANCE(1);
             DEBUG("TRACE - SIGRET \"%.*s\"\n", (int)op1S->string_len, op1S->string);
             {
                 size_t sig = string_to_interrupt(op1S->string);
@@ -4018,10 +4070,10 @@ START_OF_INSTRUCTIONS
                     enable_interrupt((int)sig); // Enable the corresponding native interrupt
                 }
             }
-            DISPATCH
+            DISPATCH;
 
         /* Push current Signal op1 handler on the current frame handler stack */
-        START_INSTRUCTION(SIGPUSH_STRING) CALC_DISPATCH(1)
+        START_INSTRUCTION(SIGPUSH_STRING) VM_ADVANCE(1);
             DEBUG("TRACE - SIGPUSH \"%.*s\"\n", (int)op1S->string_len, op1S->string);
             {
                 size_t sig = string_to_interrupt(op1S->string);
@@ -4031,10 +4083,10 @@ START_OF_INSTRUCTIONS
                     rxsignal_push_handler(current_frame, (unsigned char)sig);
                 }
             }
-            DISPATCH
+            DISPATCH;
 
         /* Pop and restore current Signal op1 handler from the current frame handler stack */
-        START_INSTRUCTION(SIGPOP_STRING) CALC_DISPATCH(1)
+        START_INSTRUCTION(SIGPOP_STRING) VM_ADVANCE(1);
             DEBUG("TRACE - SIGPOP \"%.*s\"\n", (int)op1S->string_len, op1S->string);
             {
                 size_t sig = string_to_interrupt(op1S->string);
@@ -4042,123 +4094,108 @@ START_OF_INSTRUCTIONS
                     SET_SIGNAL(RXSIGNAL_INVALID_SIGNAL_CODE);
                 }
             }
-            DISPATCH
+            DISPATCH;
 
         /* RXSIGNAL_STRING Signal type op1 */
-        START_INSTRUCTION(SIGNAL_STRING) CALC_DISPATCH(1)
+        START_INSTRUCTION(SIGNAL_STRING) VM_ADVANCE(1);
             DEBUG("TRACE - SIGNAL \"%.*s\"\n", (int)op1S->string_len, op1S->string);
             SET_SIGNAL_FROM_NAME(op1S->string);
-            DISPATCH
+            DISPATCH;
 
         /* SIGNAL_REG Signal type op1 */
-        START_INSTRUCTION(SIGNAL_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(SIGNAL_REG) VM_ADVANCE(1);
             DEBUG("TRACE - SIGNAL R%d\n", (int)REG_IDX(1));
             null_terminate_string_buffer(op1R);
             SET_SIGNAL_FROM_NAME(op1R->string_value);
-            DISPATCH
+            DISPATCH;
 
         /* SIGNALT_STRING_REG Signal type op1 if op2 true */
-        START_INSTRUCTION(SIGNALT_STRING_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(SIGNALT_STRING_REG) VM_ADVANCE(2);
             DEBUG("TRACE - SIGNALT \"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)REG_IDX(2));
             if (op2RI) {
                 SET_SIGNAL_FROM_NAME(op1S->string);
             }
-            DISPATCH
+            DISPATCH;
 
         /* SIGNALF_STRING_REG Signal type op1 if op2 true */
-        START_INSTRUCTION(SIGNALF_STRING_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(SIGNALF_STRING_REG) VM_ADVANCE(2);
             DEBUG("TRACE - SIGNALF \"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)REG_IDX(2));
             if (!op2RI) {
                 SET_SIGNAL_FROM_NAME(op1S->string);
             }
-            DISPATCH
+            DISPATCH;
 
         /* SIGNAL_STRING_STRING Signal type op1 (message op2) */
-        START_INSTRUCTION(SIGNAL_STRING_STRING) CALC_DISPATCH(2)
+        START_INSTRUCTION(SIGNAL_STRING_STRING) VM_ADVANCE(2);
             DEBUG("TRACE - SIGNAL \"%.*s\",\"%.*s\"\n", (int)op1S->string_len, op1S->string, (int)op2S->string_len, op2S->string);
             SET_SIGNAL_MSG_FROM_NAME(op1S->string, op2S->string);
-            DISPATCH
+            DISPATCH;
 
         /* SIGNAL_STRING_REG Signal type op1 (payload op2) */
-        START_INSTRUCTION(SIGNAL_STRING_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(SIGNAL_STRING_REG) VM_ADVANCE(2);
             DEBUG("TRACE - SIGNAL \"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)REG_IDX(2));
             SET_SIGNAL_PAYLOAD_FROM_NAME(op1S->string, op2R);
-            DISPATCH
+            DISPATCH;
 
         /* SIGNAL_REG_REG Signal type op1 (payload op2) */
-        START_INSTRUCTION(SIGNAL_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(SIGNAL_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - SIGNAL R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
             null_terminate_string_buffer(op1R);
             SET_SIGNAL_PAYLOAD_FROM_NAME(op1R->string_value, op2R);
-            DISPATCH
+            DISPATCH;
 
         /* SIGNALT_STRING_STRING_REG Signal type op1 (message op2) if op3 true */
-        START_INSTRUCTION(SIGNALT_STRING_STRING_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SIGNALT_STRING_STRING_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SIGNALT \"%.*s\",\"%.*s\",R%d\n", (int)op1S->string_len, op1S->string, (int)op2S->string_len, op2S->string, (int)REG_IDX(2));
             if (op3RI) {
                 SET_SIGNAL_MSG_FROM_NAME(op1S->string, op2S->string);
             }
-            DISPATCH
+            DISPATCH;
 
         /* SIGNALF_STRING_STRING_REG Signal type op1 (message op2) if op3 true */
-        START_INSTRUCTION(SIGNALF_STRING_STRING_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SIGNALF_STRING_STRING_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SIGNALF \"%.*s\",\"%.*s\"\",R%d\n", (int)op1S->string_len, op1S->string, (int)op2S->string_len, op2S->string, (int)REG_IDX(2));
             if (!op3RI) {
                 SET_SIGNAL_MSG_FROM_NAME(op1S->string, op2S->string);
             }
-            DISPATCH
+            DISPATCH;
 
         /* Meta Instructions */
 
         /* Load Module (op1 = module num of loaded op2) */
-        START_INSTRUCTION(METALOADMODULE_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(METALOADMODULE_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - METALOADMODULE R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2));
             {
-                int num_modules_before;
                 null_terminate_string_buffer(op2R);
                 /* Load the module */
-                num_modules_before = (int) context->num_modules;
                 op1R->int_value = rxldmod(context, op2R->string_value);
                 if (op1R->int_value > 0) {
-                    /* If successfully loaded, thread the binary - must be done in run() */
+                    /* Resolve canonical operands before copying the execution image. */
+                    rxvm_link(context);
+                    /* If successfully loaded, prepare execution state inside run(). */
 #ifndef NTHREADED
                     int mod;
                     DEBUG("Threading\n");
-                    for (mod = num_modules_before; mod < op1R->int_value; mod++) {
+                    for (mod = 0; mod < op1R->int_value; mod++) {
                         module *loaded_module = context->modules[mod];
-                        size_t i = 0, j;
-                        if (!loaded_module->prepared_dispatch && loaded_module->segment.inst_size) {
-                            loaded_module->prepared_dispatch = malloc(sizeof(void *) * loaded_module->segment.inst_size);
-                            if (!loaded_module->prepared_dispatch) {
-                                RX_PANIC_OOM("malloc rxvm loaded-module prepared dispatch table",
-                                             sizeof(void *) * loaded_module->segment.inst_size,
-                                             loaded_module->name);
-                            }
-                        }
-                        while (i < context->modules[mod]->segment.inst_size) {
-                            j = i;
-                            i += context->modules[mod]->segment.binary[i].instruction.no_ops + 1;
-                            loaded_module->prepared_dispatch[j] =
-                                (void *) address_map[context->modules[mod]->segment.binary[j].instruction.opcode];
-                        }
+                        VM_PREPARE_EXECUTION_IMAGE(loaded_module);
                     }
 #endif
-                    rxvm_link(context);
                 }
             }
-            DISPATCH
+            DISPATCH;
 
             /* Load Instruction Code (op1 = (inst)op2[op3]) */
-        START_INSTRUCTION(METALOADINST_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(METALOADINST_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - METALOADINST R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
             {
                 bin_code inst = context->modules[op2R->int_value - 1]->segment.binary[op3R->int_value];
                 op1R->int_value = inst.instruction.opcode;
             }
-            DISPATCH
+            DISPATCH;
 
             /* Loaded Modules (op1=array loaded modules) */
-        START_INSTRUCTION(METALOADEDMODULES_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(METALOADEDMODULES_REG) VM_ADVANCE(1);
             DEBUG("TRACE - METALOADEDMODULES R%d\n", (int) REG_IDX(1));
             /* op1R will become an array of module names */
             value_zero(op1R);
@@ -4167,10 +4204,10 @@ START_OF_INSTRUCTIONS
             for (mod_index = 0; mod_index < context->num_modules; mod_index++) {
                 set_null_string(op1R->attributes[mod_index], context->modules[mod_index]->name);
             }
-            DISPATCH
+            DISPATCH;
 
         /* Loaded Exposed Procedures (op1 = array procedures in module op2) */
-        START_INSTRUCTION(METALOADEDEPROCS_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(METALOADEDEPROCS_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - METALOADEDEPROCS R%d\n", (int) REG_IDX(1));
             {
                 chameleon_constant *c_entry;
@@ -4227,10 +4264,10 @@ START_OF_INSTRUCTIONS
                     i = e_entry->next;
                 }
             }
-            DISPATCH
+            DISPATCH;
 
         /* Loaded Procedures (op1 = array procedures in module op2) */
-        START_INSTRUCTION(METALOADEDPROCS_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(METALOADEDPROCS_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - METALOADEDPROCS R%d\n", (int) REG_IDX(1));
             {
                 chameleon_constant *c_entry;
@@ -4278,10 +4315,10 @@ START_OF_INSTRUCTIONS
                     i = p_entry->next;
                 }
             }
-            DISPATCH
+            DISPATCH;
 
             /* Decode opcode (op1 decoded op2) */
-        START_INSTRUCTION(METADECODEINST_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(METADECODEINST_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - METADECODEINST R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2));
 
             /* The target register is turned into an object with 7 attributes */
@@ -4296,24 +4333,24 @@ START_OF_INSTRUCTIONS
             op1R->attributes[4]->int_value = meta_map[op2R->int_value].op1_type;
             op1R->attributes[5]->int_value = meta_map[op2R->int_value].op2_type;
             op1R->attributes[6]->int_value = meta_map[op2R->int_value].op3_type;
-            DISPATCH
+            DISPATCH;
 
             /* Load Integer/Index Operand (op1 = (int)op2[op3]) */
-        START_INSTRUCTION(METALOADIOPERAND_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(METALOADIOPERAND_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - METALOADIOPERAND R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
             op1R->int_value = context->modules[op2R->int_value - 1]->segment.binary[op3R->int_value].iconst;
-            DISPATCH
+            DISPATCH;
 
             /* Load Float Operand (op1 = (float)op2[op3]) */
-        START_INSTRUCTION(METALOADFOPERAND_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(METALOADFOPERAND_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - METALOADFOPERAND R%d,R%dR%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
             op1R->float_value =
                     FLOAT_CONST_VALUE(context->modules[op2R->int_value - 1]->segment.const_pool,
                                       context->modules[op2R->int_value - 1]->segment.binary[op3R->int_value].index);
-            DISPATCH
+            DISPATCH;
 
             /* Load String Operand (op1 = (string)op2[op3]) */
-        START_INSTRUCTION(METALOADSOPERAND_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(METALOADSOPERAND_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - METALOADSOPERAND R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
             set_const_string(op1R,
                              (string_constant *) (
@@ -4321,11 +4358,11 @@ START_OF_INSTRUCTIONS
                                      context->modules[op2R->int_value - 1]->segment.binary[op3R->int_value].index
                              ));
 
-            DISPATCH
+            DISPATCH;
 
             /* Load Procedure Operand (op1 = (proc)op2[op3]) */
             /* TODO needs to do more that get the function name - a function object is needed */
-        START_INSTRUCTION(METALOADPOPERAND_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(METALOADPOPERAND_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - METALOADPOPERAND R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
             {
                 proc_constant
@@ -4336,10 +4373,10 @@ START_OF_INSTRUCTIONS
                         );
                 set_null_string(op1R, proc->name);
             }
-            DISPATCH
+            DISPATCH;
 
             /* Load Metadata (op1 = (metadata)op2[op3]) */
-        START_INSTRUCTION(METALOADDATA_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(METALOADDATA_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - METALOADDATA R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
             {
                 module *metadata_module = context->modules[op2R->int_value - 1];
@@ -4362,7 +4399,7 @@ START_OF_INSTRUCTIONS
                 }
                 if (i == -1 || meta->address > op3R->int_value) {
                     /* No metadata for the address */
-                    DISPATCH
+                    DISPATCH;
                 }
                 int start = i;
 
@@ -4541,10 +4578,10 @@ START_OF_INSTRUCTIONS
                     }
                 }
             }
-            DISPATCH
+            DISPATCH;
 
             /* METALOADCALLERADDR - Load caller address object to op1 */
-        START_INSTRUCTION(METALOADCALLERADDR_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(METALOADCALLERADDR_REG) VM_ADVANCE(1);
             DEBUG("TRACE - METALOADCALLERADDR R%d\n", (int) REG_IDX(1));
             {
                 rxinteger mod_no = -1;
@@ -4552,8 +4589,10 @@ START_OF_INSTRUCTIONS
 
                 if (current_frame->parent != 0) {
                     mod_no = (rxinteger) current_frame->parent->procedure->binarySpace->module->module_number;
+                    module *caller_module =
+                            current_frame->parent->procedure->binarySpace->module;
                     addr = (rxinteger) (current_frame->return_pc -
-                                        current_frame->parent->procedure->binarySpace->binary);
+                                        VM_MODULE_EXECUTION_BASE(caller_module));
                 }
 
                 /* Populate the result object */
@@ -4562,57 +4601,57 @@ START_OF_INSTRUCTIONS
                 op1R->attributes[0]->int_value = mod_no;
                 op1R->attributes[1]->int_value = addr;
             }
-            DISPATCH
+            DISPATCH;
 
         /* Regular Instructions */
 
         /* NULL (Clear the register) */
-        START_INSTRUCTION(NULL_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(NULL_REG) VM_ADVANCE(1);
             DEBUG("TRACE - NULL R%lu\n", REG_IDX(1));
             value_zero(op1R);
-            DISPATCH
+            DISPATCH;
 
         /* LOAD */
-        START_INSTRUCTION(LOAD_REG_INT) CALC_DISPATCH(2)
+        START_INSTRUCTION(LOAD_REG_INT) VM_ADVANCE(2);
             DEBUG("TRACE - LOAD R%d,%d\n", (int) REG_IDX(1), (int) op2I);
             set_int(op1R, op2I);
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(LOAD_REG_STRING) CALC_DISPATCH(2)
+        START_INSTRUCTION(LOAD_REG_STRING) VM_ADVANCE(2);
             DEBUG("TRACE - LOAD R%lu,\"%.*s\"\n",
                   REG_IDX(1), (int) (CONSTSTRING_OP(2))->string_len,
                   (CONSTSTRING_OP(2))->string);
             set_const_string(op1R, CONSTSTRING_OP(2));
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(LOAD_REG_BINARY) CALC_DISPATCH(2)
+        START_INSTRUCTION(LOAD_REG_BINARY) VM_ADVANCE(2);
             DEBUG("TRACE - LOAD R%lu,binary[%zu]\n",
                   REG_IDX(1), (CONSTSTRING_OP(2))->string_len);
             if (set_binary(op1R, (CONSTSTRING_OP(2))->string, (CONSTSTRING_OP(2))->string_len) != 0) {
                 SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(LOAD_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(LOAD_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - LOAD R%lu,R%lu\n",
                   REG_IDX(1), REG_IDX(2));
             op1R=op2R;
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(LOAD_INT_INT) CALC_DISPATCH(2) // TODO - review instruction
+        START_INSTRUCTION(LOAD_INT_INT) VM_ADVANCE(2); // TODO - review instruction
             DEBUG("TRACE - LOAD R%lu,R%lu\n",
                   (long) op1I, (long) op2I);
             REG_OP(op1I)=REG_OP(op2I);
-        DISPATCH
+        DISPATCH;
 
-    START_INSTRUCTION(LOAD_INT_REG) CALC_DISPATCH(2) // TODO - review instruction
+    START_INSTRUCTION(LOAD_INT_REG) VM_ADVANCE(2); // TODO - review instruction
     DEBUG("TRACE - LOAD R%lu, R%d\n",
           REG_IDX(1), (int) op2I);
           REG_OP(op1I)=op2R;
-    DISPATCH
+    DISPATCH;
 
             /* Readline - Read a line from stdin to a register */
-        START_INSTRUCTION(READLINE_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(READLINE_REG) VM_ADVANCE(1);
             DEBUG("TRACE - READLINE R%lu\n", REG_IDX(1));
             {
                 size_t pos = 0;
@@ -4632,71 +4671,71 @@ START_OF_INSTRUCTIONS
                 clear_vm_private_flags(op1R);
 #endif
             }
-            DISPATCH
+            DISPATCH;
 	      
-        START_INSTRUCTION(SAY_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(SAY_REG) VM_ADVANCE(1);
             DEBUG("TRACE - SAY R%lu\n", REG_IDX(1));
             rxvm_mprintf("%.*s\n", (int) op1R->string_length, op1R->string_value);
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SAY_STRING) CALC_DISPATCH(1)
+        START_INSTRUCTION(SAY_STRING) VM_ADVANCE(1);
             DEBUG("TRACE - SAY \"%.*s\"\n",
                   (int) op1S->string_len, op1S->string);
             rxvm_mprintf("%.*s\n", (int) op1S->string_len, op1S->string);
-            DISPATCH
+            DISPATCH;
 	      
-        START_INSTRUCTION(SAYX_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(SAYX_REG) VM_ADVANCE(1);
             DEBUG("TRACE - SAYX R%lu\n", REG_IDX(1));
             rxvm_mprintf("%.*s", (int) op1R->string_length, op1R->string_value);
-            DISPATCH
+            DISPATCH;
 	      
-	START_INSTRUCTION(SAYX_STRING) CALC_DISPATCH(1)
+	START_INSTRUCTION(SAYX_STRING) VM_ADVANCE(1);
             DEBUG("TRACE - SAYX \"%.*s\"\n",
                   (int) op1S->string_len, op1S->string);
             rxvm_mprintf("%.*s", (int) op1S->string_len, op1S->string);
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SCONCAT_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SCONCAT_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SCONCAT R%lu,R%lu,R%lu\n", REG_IDX(1),
                   REG_IDX(2), REG_IDX(3));
             string_sconcat(op1R, op2R, op3R);
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(CONCAT_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(CONCAT_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - CONCAT R%lu,R%lu,R%lu\n", REG_IDX(1),
                   REG_IDX(2), REG_IDX(3));
             string_concat(op1R, op2R, op3R);
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SCONCAT_REG_REG_STRING) CALC_DISPATCH(3)
+        START_INSTRUCTION(SCONCAT_REG_REG_STRING) VM_ADVANCE(3);
             DEBUG("TRACE - SCONCAT R%lu,R%lu,\"%.*s\"\n", REG_IDX(1),
                   REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                   (CONSTSTRING_OP(3))->string);
             string_sconcat_var_const(op1R, op2R, op3S);
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(CONCAT_REG_REG_STRING) CALC_DISPATCH(3)
+        START_INSTRUCTION(CONCAT_REG_REG_STRING) VM_ADVANCE(3);
             DEBUG("TRACE - CONCAT R%lu,R%lu,\"%.*s\"\n", REG_IDX(1),
                   REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                   (CONSTSTRING_OP(3))->string);
             string_concat_var_const(op1R, op2R, op3S);
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SCONCAT_REG_STRING_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SCONCAT_REG_STRING_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SCONCAT R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
                   (int) (CONSTSTRING_OP(2))->string_len,
                   (CONSTSTRING_OP(2))->string, REG_IDX(3));
             string_sconcat_const_var(op1R, op2S, op3R);
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(CONCAT_REG_STRING_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(CONCAT_REG_STRING_REG) VM_ADVANCE(3);
             DEBUG("TRACE - CONCAT R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
                   (int) (CONSTSTRING_OP(2))->string_len,
                   (CONSTSTRING_OP(2))->string, REG_IDX(3));
             string_concat_const_var(op1R, op2S, op3R);
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(IMULT_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(IMULT_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - IMULT R%lu,R%lu,R%lu\n", REG_IDX(1),
                   REG_IDX(2), REG_IDX(3));
             {
@@ -4704,10 +4743,10 @@ START_OF_INSTRUCTIONS
                 if (rxinteger_checked_mul(op2RI, op3RI, &result)) REG_RETURN_INT(result)
                 else SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
-            DISPATCH
+            DISPATCH;
 
         START_INSTRUCTION(IMULT_REG_REG_INT) {
-            CALC_DISPATCH(3)
+            VM_ADVANCE(3);
             DEBUG("TRACE - IMULT R%lu,R%lu,%lu\n", (long)REG_IDX(1),
                   (long)REG_IDX(2), (long)op3I);
             {
@@ -4715,10 +4754,10 @@ START_OF_INSTRUCTIONS
                 if (rxinteger_checked_mul(op2RI, op3I, &result)) REG_RETURN_INT(result)
                 else SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
-            DISPATCH
+            DISPATCH;
         }
 
-        START_INSTRUCTION(IADD_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(IADD_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - IADD R%lu,R%lu,R%lu\n", REG_IDX(1),
                   REG_IDX(2), REG_IDX(3));
             {
@@ -4726,9 +4765,9 @@ START_OF_INSTRUCTIONS
                 if (rxinteger_checked_add(op2RI, op3RI, &result)) REG_RETURN_INT(result)
                 else SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(ISUB_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(ISUB_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - ISUB R%lu,R%lu,R%lu\n", REG_IDX(1),
                   REG_IDX(2), REG_IDX(3));
             {
@@ -4736,9 +4775,9 @@ START_OF_INSTRUCTIONS
                 if (rxinteger_checked_sub(op2RI, op3RI, &result)) REG_RETURN_INT(result)
                 else SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(IADD_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(IADD_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - IADD R%lu,R%lu,%d\n", REG_IDX(1),
                   REG_IDX(2), (int)op3I);
             {
@@ -4746,12 +4785,12 @@ START_OF_INSTRUCTIONS
                 if (rxinteger_checked_add(op2RI, op3I, &result)) REG_RETURN_INT(result)
                 else SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(ERASE_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(ERASE_REG) VM_ADVANCE(1);
             DEBUG("TRACE - ERASE R%lu\n", REG_IDX(1));
             value_zero(op1R);
-            DISPATCH
+            DISPATCH;
 
 /* ====================================================================================
  * Numeric Mode instructions
@@ -4760,63 +4799,63 @@ START_OF_INSTRUCTIONS
 /* ------------------------------------------------------------------------------------
  *  SETNUMDGTS_REG Set Numeric Digits digits=op1 (>4)
  *  ----------------------------------------------------------------------------------- */
-    START_INSTRUCTION(SETNUMDGTS_REG) CALC_DISPATCH(1)
+    START_INSTRUCTION(SETNUMDGTS_REG) VM_ADVANCE(1);
     DEBUG("TRACE - SETNUMDGTS R%lu\n", REG_IDX(1));
     if (op1R->int_value < 1) {
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Digits must be greater than 0");
-        DISPATCH
+        DISPATCH;
     }
     current_frame->num_context.digits = op1R->int_value;
     // Sync the numeric context of the decimal plugin
     if (current_frame->decimal) {
         current_frame->decimal->syncNumericContext(current_frame->decimal);
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SETNUMDGTS_INT Set Numeric Digits digits=op1 (>4)
  * ----------------------------------------------------------------------------------- */
-    START_INSTRUCTION(SETNUMDGTS_INT) CALC_DISPATCH(1)
+    START_INSTRUCTION(SETNUMDGTS_INT) VM_ADVANCE(1);
     DEBUG("TRACE - SETNUMDGTS %d\n", (int)op1I);
     if (op1I < 1) {
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Digits must be greater than 0");
-        DISPATCH
+        DISPATCH;
     }
     current_frame->num_context.digits = op1I;
     // Sync the numeric context of the decimal plugin
     if (current_frame->decimal) {
         current_frame->decimal->syncNumericContext(current_frame->decimal);
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  GETNUMDGTS_REG Get Numeric Digits op1=digits
  * ----------------------------------------------------------------------------------- */
-    START_INSTRUCTION(GETNUMDGTS_REG) CALC_DISPATCH(1)
+    START_INSTRUCTION(GETNUMDGTS_REG) VM_ADVANCE(1);
     DEBUG("TRACE - GETNUMDGTS R%lu\n", REG_IDX(1));
     op1R->int_value = (rxinteger)current_frame->num_context.digits;
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  * SETNUMFUZ_REG Set Numeric Fuzz digits=op1 (>=0)
  * ----------------------------------------------------------------------------------- */
-    START_INSTRUCTION(SETNUMFUZ_REG) CALC_DISPATCH(1)
+    START_INSTRUCTION(SETNUMFUZ_REG) VM_ADVANCE(1);
     DEBUG("TRACE - SETNUMFUZ R%lu\n", REG_IDX(1));
     if (op1R->int_value < 0) {
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Fuzz must be zero or greater");
-        DISPATCH
+        DISPATCH;
     }
     current_frame->num_context.fuzz = op1R->int_value;
     // Sync the numeric context of the decimal plugin
     if (current_frame->decimal) {
         current_frame->decimal->syncNumericContext(current_frame->decimal);
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  * SETNUMFUZ_INT Set Numeric Fuzz digits=op1 (>=0)
  * ----------------------------------------------------------------------------------- */
-START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
+START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
     DEBUG("TRACE - SETNUMFUZ %d\n", (int)op1I);
     if (op1I < 0) {
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Fuzz must be zero or greater");
@@ -4826,152 +4865,152 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
     if (current_frame->decimal) {
         current_frame->decimal->syncNumericContext(current_frame->decimal);
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  * GETNUMFUZ_REG Get Numeric Fuzz op1=digits
  * ----------------------------------------------------------------------------------- */
-    START_INSTRUCTION(GETNUMFUZ_REG) CALC_DISPATCH(1)
+    START_INSTRUCTION(GETNUMFUZ_REG) VM_ADVANCE(1);
     DEBUG("TRACE - GETNUMFUZ R%lu\n", REG_IDX(1));
     op1R->int_value = (rxinteger)current_frame->num_context.fuzz;
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  * SETNUMFRM_REG Set Numeric Form=op1 (1=sci,2=eng)
  * ----------------------------------------------------------------------------------- */
-    START_INSTRUCTION(SETNUMFRM_REG) CALC_DISPATCH(1)
+    START_INSTRUCTION(SETNUMFRM_REG) VM_ADVANCE(1);
     DEBUG("TRACE - SETNUMFRM R%lu\n", REG_IDX(1));
     if (op1R->int_value < 1 || op1R->int_value > 2) {
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Form must be 1 (scientific) or 2 (engineering)");
-        DISPATCH
+        DISPATCH;
     }
     current_frame->num_context.form = (int)op1R->int_value;
     // Sync the numeric context of the decimal plugin
     if (current_frame->decimal) {
         current_frame->decimal->syncNumericContext(current_frame->decimal);
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  * SETNUMFRM_INT Set Numeric Form=op1 (1=sci,2=eng)
  * ----------------------------------------------------------------------------------- */
-    START_INSTRUCTION(SETNUMFRM_INT) CALC_DISPATCH(1)
+    START_INSTRUCTION(SETNUMFRM_INT) VM_ADVANCE(1);
     DEBUG("TRACE - SETNUMFRM %d\n", (int)op1I);
     if (op1I < 1 || op1I > 2) {
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Form must be 1 (scientific) or 2 (engineering)");
-        DISPATCH
+        DISPATCH;
     }
     current_frame->num_context.form = (int)op1I;
     // Sync the numeric context of the decimal plugin
     if (current_frame->decimal) {
         current_frame->decimal->syncNumericContext(current_frame->decimal);
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  * GETNUMFRM_REG Get Numeric Form=op1 (1=sci,2=eng)
  * ----------------------------------------------------------------------------------- */
-    START_INSTRUCTION(GETNUMFRM_REG) CALC_DISPATCH(1)
+    START_INSTRUCTION(GETNUMFRM_REG) VM_ADVANCE(1);
     DEBUG("TRACE - GETNUMFRM R%lu\n", REG_IDX(1));
     op1R->int_value = (rxinteger)current_frame->num_context.form;
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  * SETNUMCAS_REG Set Numeric Case=op1 (1=lower,2=upper)
  * ----------------------------------------------------------------------------------- */
-    START_INSTRUCTION(SETNUMCAS_REG) CALC_DISPATCH(1)
+    START_INSTRUCTION(SETNUMCAS_REG) VM_ADVANCE(1);
     DEBUG("TRACE - SETNUMCAS R%lu\n", REG_IDX(1));
     if (op1R->int_value < 1 || op1R->int_value > 2) {
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Case must be 1 (lower) or 2 (upper)");
-        DISPATCH
+        DISPATCH;
     }
     current_frame->num_context.casetype = (int)op1R->int_value;
     // Sync the numeric context of the decimal plugin
     if (current_frame->decimal) {
         current_frame->decimal->syncNumericContext(current_frame->decimal);
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  * SETNUMCAS_INT Set Numeric Case=op1 (1=lower,2=upper)
  * ----------------------------------------------------------------------------------- */
-    START_INSTRUCTION(SETNUMCAS_INT) CALC_DISPATCH(1)
+    START_INSTRUCTION(SETNUMCAS_INT) VM_ADVANCE(1);
     DEBUG("TRACE - SETNUMCAS %d\n", (int)op1I);
     if (op1I < 1 || op1I > 2) {
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Case must be 1 (lower) or 2 (upper)");
-        DISPATCH
+        DISPATCH;
     }
     current_frame->num_context.casetype = (int)op1I;
     // Sync the numeric context of the decimal plugin
     if (current_frame->decimal) {
         current_frame->decimal->syncNumericContext(current_frame->decimal);
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  * GETNUMCAS_REG Get Numeric Case=op1 (1=lower,2=upper)
  * ----------------------------------------------------------------------------------- */
-    START_INSTRUCTION(GETNUMCAS_REG) CALC_DISPATCH(1)
+    START_INSTRUCTION(GETNUMCAS_REG) VM_ADVANCE(1);
     DEBUG("TRACE - GETNUMCAS R%lu\n", REG_IDX(1));
     op1R->int_value = (rxinteger)current_frame->num_context.casetype;
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  * SETNUMSTD_REG Set Numeric Standard=op1 (1=common,2=classic)
  * ----------------------------------------------------------------------------------- */
-    START_INSTRUCTION(SETNUMSTD_REG) CALC_DISPATCH(1)
+    START_INSTRUCTION(SETNUMSTD_REG) VM_ADVANCE(1);
     DEBUG("TRACE - SETNUMSTD R%lu\n", REG_IDX(1));
     if (op1R->int_value < 1 || op1R->int_value > 2) {
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Standard must be 1 (common) or 2 (classic)");
-        DISPATCH
+        DISPATCH;
     }
     current_frame->num_context.standard = (int)op1R->int_value;
     // Sync the numeric context of the decimal plugin
     if (current_frame->decimal) {
         current_frame->decimal->syncNumericContext(current_frame->decimal);
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  * SETNUMSTD_INT Set Numeric Standard=op1 (1=common,2=classic)
  * ----------------------------------------------------------------------------------- */
-    START_INSTRUCTION(SETNUMSTD_INT) CALC_DISPATCH(1)
+    START_INSTRUCTION(SETNUMSTD_INT) VM_ADVANCE(1);
     DEBUG("TRACE - SETNUMSTD %d\n", (int)op1I);
     if (op1I < 1 || op1I > 2) {
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Standard must be 1 (common) or 2 (classic)");
-        DISPATCH
+        DISPATCH;
     }
     current_frame->num_context.standard = (int)op1I;
     // Sync the numeric context of the decimal plugin
     if (current_frame->decimal) {
         current_frame->decimal->syncNumericContext(current_frame->decimal);
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  * GETNUMSTD_REG Get Numeric Standard=op1 (1=common,2=classic)
  * ----------------------------------------------------------------------------------- */
-    START_INSTRUCTION(GETNUMSTD_REG) CALC_DISPATCH(1)
+    START_INSTRUCTION(GETNUMSTD_REG) VM_ADVANCE(1);
     DEBUG("TRACE - GETNUMSTD R%lu\n", REG_IDX(1));
     op1R->int_value = (rxinteger)current_frame->num_context.standard;
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  * NUMSCI_INT_INT_INT Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
  * ----------------------------------------------------------------------------------- */
-    START_INSTRUCTION(NUMSCI_INT_INT_INT) CALC_DISPATCH(3)
+    START_INSTRUCTION(NUMSCI_INT_INT_INT) VM_ADVANCE(3);
     DEBUG("TRACE - NUMSCI %d,%d,%d\n", (int)op1I, (int)op2I, (int)op3I);
     if (op1I < 5) {
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Digits must be greater than 4");
-        DISPATCH
+        DISPATCH;
     }
     if (op2I < 1 || op2I > 2) {
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Case must be 1 (lower) or 2 (upper)");
-        DISPATCH
+        DISPATCH;
     }
     if (op3I < 1 || op3I > 2) {
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Standard must be 1 (common) or 2 (classic)");
-        DISPATCH
+        DISPATCH;
     }
     current_frame->num_context.digits = op1I;
     current_frame->num_context.fuzz = 0;
@@ -4982,24 +5021,24 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
     if (current_frame->decimal) {
         current_frame->decimal->syncNumericContext(current_frame->decimal);
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  * NUMENG_INT_INT_INT Setup Engineering Numeric digits=op1, case=op2, std=op3, fuzz=0, form=eng
  * ----------------------------------------------------------------------------------- */
-    START_INSTRUCTION(NUMENG_INT_INT_INT) CALC_DISPATCH(3)
+    START_INSTRUCTION(NUMENG_INT_INT_INT) VM_ADVANCE(3);
     DEBUG("TRACE - NUMENG %d,%d,%d\n", (int)op1I, (int)op2I, (int)op3I);
     if (op1I < 5) {
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Digits must be greater than 4");
-        DISPATCH
+        DISPATCH;
     }
     if (op2I < 1 || op2I > 2) {
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Case must be 1 (lower) or 2 (upper)");
-        DISPATCH
+        DISPATCH;
     }
     if (op3I < 1 || op3I > 2) {
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "Numeric Standard must be 1 (common) or 2 (classic)");
-        DISPATCH
+        DISPATCH;
     }
     current_frame->num_context.digits = op1I;
     current_frame->num_context.fuzz = 0;
@@ -5010,7 +5049,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
     if (current_frame->decimal) {
         current_frame->decimal->syncNumericContext(current_frame->decimal);
     }
-    DISPATCH
+    DISPATCH;
 
 /* ====================================================================================
  * Decimal Plugin instructions
@@ -5020,72 +5059,72 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  * DECPLNM_REG_REG_REG Get Decimal Plugin Name op1=name op2=description op3=version
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(DECPLNM_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(DECPLNM_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - DECPLNM R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     set_null_string(op1R, current_frame->decimal->base.name);
     set_null_string(op2R, current_frame->decimal->base.description);
     set_null_string(op3R, current_frame->decimal->base.version);
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  LOAD_REG_DECIMAL Load op1 with op2
  *  -----------------------------------------------------------------------------------
 */
-    START_INSTRUCTION(LOAD_REG_DECIMAL) CALC_DISPATCH(2)
+    START_INSTRUCTION(LOAD_REG_DECIMAL) VM_ADVANCE(2);
     DEBUG("TRACE - LOAD R%d,%s\n",(int)REG_IDX(1),op2S->string);
     current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op2S->string);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  * Convert decimal string to Decimal                              added August 2024 pej
  * ------------------------------------------------------------------------------------
  */
     START_INSTRUCTION(STOD_REG)
-    CALC_DISPATCH(1)
+    VM_ADVANCE(1);
     DEBUG("TRACE - STOD R%lu\n", REG_IDX(1));
     // Ensure the string is null terminated
     null_terminate_string_buffer(op1R);
     // Convert
     current_frame->decimal->decimalFromString(current_frame->decimal, op1R, op1R->string_value);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  * Convert Integer to Decimal                                     added August 2024 pej
  * ------------------------------------------------------------------------------------
  */
     START_INSTRUCTION(ITOD_REG)
-    CALC_DISPATCH(1)
+    VM_ADVANCE(1);
     DEBUG("TRACE - ITOD R%lu\n", REG_IDX(1));
     // Convert
     current_frame->decimal->decimalFromInt(current_frame->decimal, op1R, op1R->int_value);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  * Convert Boolean to Decimal                                     added August 2024 pej
  * ------------------------------------------------------------------------------------
  */
     START_INSTRUCTION(BTOD_REG)
-    CALC_DISPATCH(1)
+    VM_ADVANCE(1);
     DEBUG("TRACE - BTOD R%lu\n", REG_IDX(1));
     // Convert
     current_frame->decimal->decimalFromInt(current_frame->decimal, op1R, op1R->int_value ? 1 : 0);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
     /* ------------------------------------------------------------------------------------
  * Convert Float to Decimal                                       added August 2024 pej
  * ------------------------------------------------------------------------------------
  */
     START_INSTRUCTION(FTOD_REG)
-    CALC_DISPATCH(1)
+    VM_ADVANCE(1);
     DEBUG("TRACE - FTOD R%lu\n",REG_IDX(1));
     current_frame->decimal->decimalFromDouble(current_frame->decimal, op1R, op1R->float_value);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  * Convert Decimal to string                                        17. August 2024 pej
  * ------------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DTOS_REG)
-    CALC_DISPATCH(1)
+    VM_ADVANCE(1);
     DEBUG("TRACE - DTOS R%lu\n", REG_IDX(1));
     /* Determine how long the string needs to be */
     size_t string_size = current_frame->decimal->getRequiredStringSize(current_frame->decimal);
@@ -5095,53 +5134,53 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
     current_frame->decimal->decimalToString(current_frame->decimal, op1R, op1R->string_value);
     op1R->string_length = strlen(op1R->string_value);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  * Convert Decimal to integer                                       17. August 2024 pej
  * ------------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DTOI_REG)
-    CALC_DISPATCH(1)
+    VM_ADVANCE(1);
     DEBUG("TRACE - DTOI R%lu\n", REG_IDX(1));
     current_frame->decimal->decimalToInt(current_frame->decimal, op1R, &op1R->int_value);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  * Convert Decimal to Boolean
  * ------------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DTOB_REG)
-    CALC_DISPATCH(1)
+    VM_ADVANCE(1);
     DEBUG("TRACE - DTOB R%lu\n", REG_IDX(1));
     op1R->int_value = current_frame->decimal->decimalIsZero(current_frame->decimal, op1R) ? 0 : 1; // Convert to boolean
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DTOF_REG  Convert Decimal Number to Float op1=f2dec(op2)              pej 19 Aug 2024
  *  -----------------------------------------------------------------------------------
 */
     START_INSTRUCTION(DTOF_REG) // label not yet defined
-    CALC_DISPATCH(1);
+    VM_ADVANCE(1);
     DEBUG("TRACE - DTOF_REG\n");
     current_frame->decimal->decimalToDouble(current_frame->decimal, op1R, &op1R->float_value);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  * Decimal addition                                               added August 2024 pej
  * ------------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DADD_REG_REG_REG)
-    CALC_DISPATCH(3)
+    VM_ADVANCE(3);
     DEBUG("TRACE - DADD R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     current_frame->decimal->decimalAdd(current_frame->decimal, op1R, op2R, op3R);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DADD_REG_REG_DECIMAL  Decimal Add (op1=op2+op3)              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DADD_REG_REG_DECIMAL)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DADD R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     {
         value *op = decimal_literal_value(current_frame->decimal, op3S->string);
@@ -5149,23 +5188,23 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         free_decimal_literal_value(op);
     }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  * Decimal subtraction                                            added August 2024 pej
  * ------------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DSUB_REG_REG_REG)
-    CALC_DISPATCH(3)
+    VM_ADVANCE(3);
     DEBUG("TRACE - DSUB R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     current_frame->decimal->decimalSub(current_frame->decimal, op1R, op2R, op3R);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DSUB_REG_REG_DECIMAL  Decimal Subtract (op1=op2-op3)              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DSUB_REG_REG_DECIMAL)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DSUB R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     {
         value *op = decimal_literal_value(current_frame->decimal, op3S->string);
@@ -5173,13 +5212,13 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         free_decimal_literal_value(op);
     }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DSUB_REG_REG_DECIMAL  Decimal Subtract (op1=op2-op3)              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DSUB_REG_DECIMAL_REG)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DSUB R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
     {
         value *op = decimal_literal_value(current_frame->decimal, op2S->string);
@@ -5187,24 +5226,24 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         free_decimal_literal_value(op);
     }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  * Decimal Multiply                                               added August 2024 pej
  * ------------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DMULT_REG_REG_REG)
-    CALC_DISPATCH(3)
+    VM_ADVANCE(3);
     DEBUG("TRACE - DMULT R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     current_frame->decimal->decimalMul(current_frame->decimal, op1R, op2R, op3R);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DMULT_REG_REG_DECIMAL Decimal Multiply (op1=op2*op3)              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DMULT_REG_REG_DECIMAL)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DMULT R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     {
         value *op = decimal_literal_value(current_frame->decimal, op3S->string);
@@ -5212,23 +5251,23 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         free_decimal_literal_value(op);
     }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  * Decimal division                                               added August 2024 pej
  * ------------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DDIV_REG_REG_REG)
-    CALC_DISPATCH(3)
+    VM_ADVANCE(3);
     DEBUG("TRACE - DDIV R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op2R, op3R);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DDIV_REG_DECIMAL_REG  Decimal Divide  (op1=op2/op3)                   pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DDIV_REG_DECIMAL_REG)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DDIV R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
     {
         value *op = decimal_literal_value(current_frame->decimal, op2S->string);
@@ -5236,13 +5275,13 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         free_decimal_literal_value(op);
     }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DDIV_REG_REG_DECIMAL  Decimal Divide (op1=op2/op3)                   pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DDIV_REG_REG_DECIMAL)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DDIV R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     {
         value *op = decimal_literal_value(current_frame->decimal, op3S->string);
@@ -5250,25 +5289,25 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         free_decimal_literal_value(op);
     }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  * DIDIV_REG_REG_REG Decimal integer division
  * ------------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DIDIV_REG_REG_REG)
-    CALC_DISPATCH(3)
+    VM_ADVANCE(3);
     DEBUG("TRACE - DIDIV R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     current_frame->decimal->decimalDiv(current_frame->decimal, op1R, op2R, op3R);
     // Note: This is integer division, so the result is truncated
     current_frame->decimal->decimalTruncate(current_frame->decimal, op1R, op1R);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DIDIV_REG_DECIMAL_REG  Decimal Integer Divide  (op1=op2/op3)
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DIDIV_REG_DECIMAL_REG)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DIDIV R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
     {
         value *op = decimal_literal_value(current_frame->decimal, op2S->string);
@@ -5278,13 +5317,13 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         free_decimal_literal_value(op);
     }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DIDIV_REG_REG_DECIMAL  Decimal Integer Divide (op1=op2/op3)
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DIDIV_REG_REG_DECIMAL)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DIDIV R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     {
         value *op = decimal_literal_value(current_frame->decimal, op3S->string);
@@ -5294,221 +5333,221 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         free_decimal_literal_value(op);
     }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DEQ_REG_REG_REG  Decimal Equals op1=(op2==op3)              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DEQ_REG_REG_REG)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DEQ R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     set_int(op1R, current_frame->decimal->decimalCompare(current_frame->decimal, op2R, op3R) == 0);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DNE_REG_REG_REG  Decimal Not equals op1=(op2!=op3)              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DNE_REG_REG_REG)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DNE R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     set_int(op1R, current_frame->decimal->decimalCompare(current_frame->decimal, op2R, op3R) != 0);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DGT_REG_REG_REG  Decimal Greater than op1=(op2>op3)              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DGT_REG_REG_REG) // label not yet defined
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DGT R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     set_int(op1R, current_frame->decimal->decimalCompare(current_frame->decimal, op2R, op3R) > 0);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DGTE_REG_REG_REG  Decimal Greater than equals op1=(op2>=op3)              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DGTE_REG_REG_REG) // label not yet defined
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DGTE R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     set_int(op1R, current_frame->decimal->decimalCompare(current_frame->decimal, op2R, op3R) >= 0);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DLT_REG_REG_REG  Decimal Less than op1=(op2<op3)              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DLT_REG_REG_REG) // label not yet defined
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DLT R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     set_int(op1R, current_frame->decimal->decimalCompare(current_frame->decimal, op2R, op3R) < 0);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DLTE_REG_REG_REG  Decimal Less than equals op1=(op2<=op3)              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DLTE_REG_REG_REG) // label not yet defined
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DLTE R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     set_int(op1R, current_frame->decimal->decimalCompare(current_frame->decimal, op2R, op3R) <= 0);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DEQ_REG_REG_DECIMAL  Decimal Equals op1=(op2==op3)              pej 19 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DEQ_REG_REG_DECIMAL) // label not yet defined
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DEQ R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     set_int(op1R, current_frame->decimal->decimalCompareString(current_frame->decimal, op2R, op3S->string) == 0);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DLTBR_ID_REG_REG  Decimal Less than if (op2<op3) goto op1              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DLTBR_ID_REG_REG)
-    CALC_DISPATCH(3); // This branch prediction for the condition not being met
+    VM_ADVANCE(3); // This branch prediction for the condition not being met
     DEBUG("TRACE - DLTBR 0x%x,0x%x,R%d\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     if (current_frame->decimal->decimalCompare(current_frame->decimal, op2R, op3R) < 0) {
-        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-        CALC_DISPATCH_MANUAL
+        VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
     }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DGTBR_ID_REG_REG  Decimal Greater than if (op2>op3) goto op1              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DGTBR_ID_REG_REG)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DLTBR 0x%x,0x%x,R%d\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     if (current_frame->decimal->decimalCompare(current_frame->decimal, op2R, op3R) > 0) {
-        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-        CALC_DISPATCH_MANUAL
+        VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
     }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DEQBR_ID_REG_REG  Decimal Equal if (op2=op3) goto op1              pej 19 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DEQBR_ID_REG_REG)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DEQBR 0x%x,0x%x,R%d\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     if (current_frame->decimal->decimalCompare(current_frame->decimal, op2R, op3R) == 0) {
-        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-        CALC_DISPATCH_MANUAL
+        VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
     }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DNE_REG_REG_DECIMAL  Decimal Not equals op1=(op2!=op3)              pej 19 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DNE_REG_REG_DECIMAL)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DNE R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     set_int(op1R, current_frame->decimal->decimalCompareString(current_frame->decimal, op2R, op3S->string) != 0);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DGT_REG_REG_DECIMAL  Decimal Greater than op1=(op2>op3)              pej 19 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DGT_REG_REG_DECIMAL)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DGT R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     set_int(op1R, current_frame->decimal->decimalCompareString(current_frame->decimal, op2R, op3S->string) > 0);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DGT_REG_DECIMAL_REG  Decimal Greater than op1=(op2>op3)              pej 19 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DGT_REG_DECIMAL_REG)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DGT R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
     set_int(op1R, current_frame->decimal->decimalCompareString(current_frame->decimal, op3R, op2S->string) < 0);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DGTE_REG_REG_DECIMAL  Decimal Greater than equals op1=(op2>=op3)              pej 19 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DGTE_REG_REG_DECIMAL)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DGTE R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     set_int(op1R, current_frame->decimal->decimalCompareString(current_frame->decimal, op2R, op3S->string) >= 0);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DGTE_REG_DECIMAL_REG  Decimal Greater than equals op1=(op2>=op3)              pej 19 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DGTE_REG_DECIMAL_REG) // label not yet defined
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DGTE R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
     set_int(op1R, current_frame->decimal->decimalCompareString(current_frame->decimal, op3R, op2S->string) <= 0);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DLT_REG_REG_DECIMAL  Decimal Less than op1=(op2<op3)              pej 19 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DLT_REG_REG_DECIMAL)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DLT R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     set_int(op1R, current_frame->decimal->decimalCompareString(current_frame->decimal, op2R, op3S->string) < 0);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DLT_REG_DECIMAL_REG  Decimal Less than op1=(op2<op3)              pej 19 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DLT_REG_DECIMAL_REG)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DLT R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
     set_int(op1R, current_frame->decimal->decimalCompareString(current_frame->decimal, op3R, op2S->string) > 0);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DLTE_REG_REG_DECIMAL  Decimal Less than equals op1=(op2<=op3)              pej 19 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DLTE_REG_REG_DECIMAL)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DLTE R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     set_int(op1R, current_frame->decimal->decimalCompareString(current_frame->decimal, op2R, op3S->string) <= 0);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DLTE_REG_DECIMAL_REG  Decimal Less than equals op1=(op2<=op3)              pej 19 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DLTE_REG_DECIMAL_REG)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DLTE R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
     set_int(op1R, current_frame->decimal->decimalCompareString(current_frame->decimal, op3R, op2S->string) >= 0);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DCOPY_REG_REG  Copy Decimal op2 to op1              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DCOPY_REG_REG) // label not yet defined
-    CALC_DISPATCH(2);
+    VM_ADVANCE(2);
     DEBUG("TRACE - DCOPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
     if (op2R->decimal_value == NULL) {
         // Signal error
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "No Source Decimal Value")
-        DISPATCH
+        DISPATCH;
     }
     if (op1R == op2R) {
         // NOP
-        DISPATCH
+        DISPATCH;
     }
     if (op1R->decimal_value == NULL) {
         // Allocate storage for the decimal
@@ -5522,37 +5561,37 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
     }
     memcpy(op1R->decimal_value, op2R->decimal_value, op2R->decimal_value_length);
     op1R->decimal_value_length = op2R->decimal_value_length;
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DSEX_REG  Decimal op1 = -op1 (sign change)              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DSEX_REG)
-    CALC_DISPATCH(1);
+    VM_ADVANCE(1);
     DEBUG("TRACE - DSEX R%lu\n", REG_IDX(1));
     if (op1R->decimal_value == NULL) {
         // Signal error
         SET_SIGNAL_MSG(RXSIGNAL_INVALID_ARGUMENTS, "No Source Decimal Value")
-        DISPATCH
+        DISPATCH;
     }
     current_frame->decimal->decimalNeg(current_frame->decimal, op1R, op1R);
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DPOW_REG_REG_REG  op1=op2**op3              pej 17 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DPOW_REG_REG_REG)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DPOW R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
     current_frame->decimal->decimalPow(current_frame->decimal, op1R, op2R, op3R);
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DPOW_REG_REG_DECIMAL  op1=op2**op3              pej 19 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DPOW_REG_REG_DECIMAL)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DPOW R%lu,R%lu,%s\n", REG_IDX(1), REG_IDX(2), op3S->string);
     {
         value *op = decimal_literal_value(current_frame->decimal, op3S->string);
@@ -5560,13 +5599,13 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         free_decimal_literal_value(op);
     }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  DPOW_REG_DECIMAL_REG  op1=op2**op3              pej 19 Aug 2024
  *  -----------------------------------------------------------------------------------
  */
     START_INSTRUCTION(DPOW_REG_DECIMAL_REG)
-    CALC_DISPATCH(3);
+    VM_ADVANCE(3);
     DEBUG("TRACE - DPOW R%lu,%s,R%lu\n", REG_IDX(1), op2S->string, REG_IDX(3));
     {
         value *op = decimal_literal_value(current_frame->decimal, op2S->string);
@@ -5574,7 +5613,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
         free_decimal_literal_value(op);
     }
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  * DEXTR_REG_REG_REG Extract decimal to string coefficient and decimal exponent integer
  * R3 contains the decimal value
@@ -5585,24 +5624,24 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  * This instruction is designed to allow the user to format the float as they wish
  */
     START_INSTRUCTION(DEXTR_REG_REG_REG)
-    CALC_DISPATCH(3)
+    VM_ADVANCE(3);
     DEBUG("TRACE - DEXTR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     prep_string_buffer(op1R, current_frame->decimal->getRequiredStringSize(current_frame->decimal));
     current_frame->decimal->decimalExtract(current_frame->decimal, op1R->string_value, &(op2R->int_value), op3R);
     op1R->string_length = strlen(op1R->string_value);
-    DISPATCH
+    DISPATCH;
 /* ====================================================================================
  * End of Decimal Plugin instructions
  * ====================================================================================
  */
-       START_INSTRUCTION(CALL_FUNC) CALC_DISPATCH(1)
+       START_INSTRUCTION(CALL_FUNC) VM_ADVANCE(1);
             /* New stackframe - grabbing procedure object from the caller frame */
             {
                 proc_runtime *called_function = PROC_OP(1);
                 DEBUG("TRACE - CALL %s()\n", called_function->name);
                 if (called_function->start == SIZE_MAX) {
                     SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, called_function->name)
-                    DISPATCH
+                    DISPATCH;
                 }
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
@@ -5613,21 +5652,18 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     temp_frame = frame_f(called_function, 0, current_frame, next_pc, 0);
                     if (!temp_frame) {
                         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
-                        DISPATCH
+                        DISPATCH;
                     }
-                    current_frame = temp_frame;
                     /* Prepare dispatch to procedure as early as possible */
-#ifndef NTHREADED
-                    current_module = current_frame->procedure->binarySpace->module;
-#endif
-                    next_pc = &(current_frame->procedure->binarySpace->binary[called_function->start]);
-                    CALC_DISPATCH_MANUAL
+                    VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_CALL);
+                    VM_SELECT_INDEX(called_function->start, RXVM_TRANSITION_CALL);
+
                     /* No Arguments - so nothing to do */
                 }
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(CALL_REG_FUNC) CALC_DISPATCH(2)
+        START_INSTRUCTION(CALL_REG_FUNC) VM_ADVANCE(2);
             {
                 /* Clear target return value register */
                 value_zero(op1R);
@@ -5637,7 +5673,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
 
                 if (called_function->start == SIZE_MAX) {
                     SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, called_function->name);
-                    DISPATCH
+                    DISPATCH;
                 }
 
                 if (called_function->binarySpace == 0) {
@@ -5650,28 +5686,24 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     temp_frame = frame_f(called_function, 0, current_frame, next_pc, op1R);
                     if (!temp_frame) {
                         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
-                        DISPATCH
+                        DISPATCH;
                     }
-                    current_frame = temp_frame;
-
                     /* Prepare dispatch to procedure as early as possible */
-#ifndef NTHREADED
-                    current_module = current_frame->procedure->binarySpace->module;
-#endif
-                    next_pc = &(current_frame->procedure->binarySpace->binary[called_function->start]);
-                    CALC_DISPATCH_MANUAL
+                    VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_CALL);
+                    VM_SELECT_INDEX(called_function->start, RXVM_TRANSITION_CALL);
+
                     /* No Arguments - so nothing to do */
                 }
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(CALL_REG_FUNC_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(CALL_REG_FUNC_REG) VM_ADVANCE(3);
             {
                 proc_runtime *called_function = PROC_OP(2);
                 DEBUG("TRACE - CALL R%lu,%s,R%lu\n", REG_IDX(1), called_function->name, REG_IDX(3));
                 if (called_function->start == SIZE_MAX) {
                     SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, called_function->name);
-                    DISPATCH
+                    DISPATCH;
                 }
 
                 if (called_function->binarySpace == 0) {
@@ -5685,15 +5717,12 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     temp_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
                     if (!temp_frame) {
                         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
-                        DISPATCH
+                        DISPATCH;
                     }
-                    current_frame = temp_frame;
                     /* Prepare dispatch to procedure as early as possible */
-#ifndef NTHREADED
-                    current_module = current_frame->procedure->binarySpace->module;
-#endif
-                    next_pc = &(current_frame->procedure->binarySpace->binary[called_function->start]);
-                    CALC_DISPATCH_MANUAL
+                    VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_CALL);
+                    VM_SELECT_INDEX(called_function->start, RXVM_TRANSITION_CALL);
+
 
                     /* Arguments - complex lets never have to change this code! */
                     size_t j =
@@ -5704,20 +5733,20 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     for (i = 0;
                          i < (current_frame->parent->locals[(pc + 3)->index])->int_value;
                          i++, j++, k++) {
-                        current_frame->locals[j] = current_frame->parent->locals[k];
+                        current_locals[j] = current_frame->parent->locals[k];
                     }
                 }
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(DCALL_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(DCALL_REG_REG_REG) VM_ADVANCE(3);
             {
                 /* Function pointer is in register 2 */
                 proc_runtime *called_function = (proc_runtime *) op2R->int_value;
                 DEBUG("TRACE - DCALL R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
                 if (called_function->start == SIZE_MAX) {
                     SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, called_function->name);
-                    DISPATCH
+                    DISPATCH;
                 }
 
                 if (called_function->binarySpace == 0) {
@@ -5730,16 +5759,12 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     temp_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
                     if (!temp_frame) {
                         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
-                        DISPATCH
+                        DISPATCH;
                     }
-                    current_frame = temp_frame;
-
                     /* Prepare dispatch to procedure as early as possible */
-#ifndef NTHREADED
-                    current_module = current_frame->procedure->binarySpace->module;
-#endif
-                    next_pc = &(current_frame->procedure->binarySpace->binary[called_function->start]);
-                    CALC_DISPATCH_MANUAL
+                    VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_CALL);
+                    VM_SELECT_INDEX(called_function->start, RXVM_TRANSITION_CALL);
+
 
                     /* Arguments - complex lets never have to change this code! */
                     size_t j =
@@ -5750,11 +5775,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     for (i = 0;
                          i < (current_frame->parent->locals[(pc + 3)->index])->int_value;
                          i++, j++, k++) {
-                        current_frame->locals[j] = current_frame->parent->locals[k];
+                        current_locals[j] = current_frame->parent->locals[k];
                     }
                 }
             }
-            DISPATCH
+            DISPATCH;
 
         START_INSTRUCTION(RET)
             DEBUG("TRACE - RET\n");
@@ -5764,7 +5789,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 unsigned char is_interrupt = current_frame->is_interrupt;
                 /* back to the parent's stack frame */
                 temp_frame = current_frame;
-                current_frame = current_frame->parent;
+                VM_ACTIVATE_FRAME_OR_NULL(current_frame->parent, RXVM_TRANSITION_RETURN);
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
                     /* Copy back arguments for external calls */
@@ -5796,15 +5821,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 }
                 HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
-#ifndef NTHREADED
-                current_module = current_frame->procedure->binarySpace->module;
-#endif
-                CALC_DISPATCH_MANUAL
+                VM_SELECT_POINTER(next_pc, RXVM_TRANSITION_RETURN);
                 if (is_interrupt == RXSIGNAL_BREAKPOINT) {
-                    pc = next_pc;
-                    END_INTERRUPT // Breakpoints are not cleared, so we bypass the interrupt check
+                    VM_RESUME_INTERRUPTED(is_interrupt); /* Bypass the still-pending breakpoint check. */
                 }
-                DISPATCH
+                DISPATCH;
             }
 
         START_INSTRUCTION(RET_REG)
@@ -5817,7 +5838,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 /* Set the result register */
                 if (current_frame->return_reg) {
                     if (REG_IDX(1) >= current_frame->procedure->locals || /* Not a local */
-                        current_frame->locals[REG_IDX(1)] != current_frame->baselocals[REG_IDX(1)]) /* swapped/linked so might not be a local really */
+                        current_locals[REG_IDX(1)] != current_frame->baselocals[REG_IDX(1)]) /* swapped/linked so might not be a local really */
                         copy_value(current_frame->return_reg,
                                    op1R); /* Must do a copy if it could be an argument, object attribute or global because ... */
                     else
@@ -5826,7 +5847,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 }
                 /* back to the parents stack frame */
                 temp_frame = current_frame;
-                current_frame = current_frame->parent;
+                VM_ACTIVATE_FRAME_OR_NULL(current_frame->parent, RXVM_TRANSITION_RETURN);
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
                     /* Exiting - grab the int rc */
@@ -5869,15 +5890,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 }
                 HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
-#ifndef NTHREADED
-                current_module = current_frame->procedure->binarySpace->module;
-#endif
-                CALC_DISPATCH_MANUAL
+                VM_SELECT_POINTER(next_pc, RXVM_TRANSITION_RETURN);
                 if (is_interrupt == RXSIGNAL_BREAKPOINT) {
-                    pc = next_pc;
-                    END_INTERRUPT // Breakpoints are not cleared, so we bypass the interrupt check
+                    VM_RESUME_INTERRUPTED(is_interrupt); /* Bypass the still-pending breakpoint check. */
                 }
-                DISPATCH
+                DISPATCH;
             }
 
         START_INSTRUCTION(RET_INT)
@@ -5891,7 +5908,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     current_frame->return_reg->int_value = op1I;
                 /* back to the parents stack frame */
                 temp_frame = current_frame;
-                current_frame = current_frame->parent;
+                VM_ACTIVATE_FRAME_OR_NULL(current_frame->parent, RXVM_TRANSITION_RETURN);
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
                     /* Copy back arguments for external calls */
@@ -5931,15 +5948,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 }
                 HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
-#ifndef NTHREADED
-                current_module = current_frame->procedure->binarySpace->module;
-#endif
-                CALC_DISPATCH_MANUAL
+                VM_SELECT_POINTER(next_pc, RXVM_TRANSITION_RETURN);
                 if (is_interrupt == RXSIGNAL_BREAKPOINT) {
-                    pc = next_pc;
-                    END_INTERRUPT // Breakpoints are not cleared, so we bypass the interrupt check
+                    VM_RESUME_INTERRUPTED(is_interrupt); /* Bypass the still-pending breakpoint check. */
                 }
-                DISPATCH
+                DISPATCH;
             }
 /* ------------------------------------------------------------------------------------
  *  RET_FLOAT                                                        pej 12. April 2021
@@ -5956,7 +5969,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     current_frame->return_reg->float_value = op1F;
                 /* back to the parents stack frame */
                 temp_frame = current_frame;
-                current_frame = current_frame->parent;
+                VM_ACTIVATE_FRAME_OR_NULL(current_frame->parent, RXVM_TRANSITION_RETURN);
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
                     /* Copy back arguments for external calls */
@@ -5994,15 +6007,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 }
                 HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
-#ifndef NTHREADED
-                current_module = current_frame->procedure->binarySpace->module;
-#endif
-                CALC_DISPATCH_MANUAL
+                VM_SELECT_POINTER(next_pc, RXVM_TRANSITION_RETURN);
                 if (is_interrupt == RXSIGNAL_BREAKPOINT) {
-                    pc = next_pc;
-                    END_INTERRUPT // Breakpoints are not cleared, so we bypass the interrupt check
+                    VM_RESUME_INTERRUPTED(is_interrupt); /* Bypass the still-pending breakpoint check. */
                 }
-                DISPATCH
+                DISPATCH;
             }
 
             /* ------------------------------------------------------------------------------------
@@ -6020,7 +6029,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     set_const_string(current_frame->return_reg, CONSTSTRING_OP(1));
                 /* back to the parents stack frame */
                 temp_frame = current_frame;
-                current_frame = current_frame->parent;
+                VM_ACTIVATE_FRAME_OR_NULL(current_frame->parent, RXVM_TRANSITION_RETURN);
                 if (!current_frame) {
                     DEBUG("TRACE - RETURNING FROM MAIN()\n");
                     /* Copy back arguments for external calls */
@@ -6057,23 +6066,19 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 }
                 HANDLE_INTERRUPT_ACTION_RETURN()
                 free_frame(temp_frame);
-#ifndef NTHREADED
-                current_module = current_frame->procedure->binarySpace->module;
-#endif
-                CALC_DISPATCH_MANUAL
+                VM_SELECT_POINTER(next_pc, RXVM_TRANSITION_RETURN);
                 if (is_interrupt == RXSIGNAL_BREAKPOINT) {
-                    pc = next_pc;
-                    END_INTERRUPT // Breakpoints are not cleared, so we bypass the interrupt check
+                    VM_RESUME_INTERRUPTED(is_interrupt); /* Bypass the still-pending breakpoint check. */
                 }
-                DISPATCH
+                DISPATCH;
             }
 
-        START_INSTRUCTION(MOVE_REG_REG) CALC_DISPATCH(2) /* Deprecated */
+        START_INSTRUCTION(MOVE_REG_REG) VM_ADVANCE(2); /* Deprecated */
             DEBUG("TRACE - MOVE R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             move_value(op1R, op2R);
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SWAP_REG_REG) CALC_DISPATCH(2) /* Deprecated */
+        START_INSTRUCTION(SWAP_REG_REG) VM_ADVANCE(2); /* Deprecated */
             DEBUG("TRACE - SWAP R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 value *v_temp;
@@ -6081,9 +6086,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 op1R = op2R;
                 op2R = v_temp;
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(MKREF_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(MKREF_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - MKREF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 void *owner = 0;
@@ -6102,550 +6107,550 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                                                            0);
                 if (!cell) {
                     SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
-                    DISPATCH
+                    DISPATCH;
                 }
 
                 rxvm_mark_reference_lifetime_owner(current_frame, op2R);
                 clear_value_contents(op1R);
                 rxvm_reference_value_set_payload(op1R, cell);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(DEREF_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(DEREF_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - DEREF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 rxvm_reference_cell *cell = rxvm_reference_payload_cell(op2R);
                 value *target = rxvm_reference_cell_target(cell);
                 if (!target) {
                     SET_SIGNAL_MSG(RXSIGNAL_REFERENCE_INVALID, "Reference is invalid");
-                    DISPATCH
+                    DISPATCH;
                 }
                 copy_value(op1R, target);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(LINKREF_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(LINKREF_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - LINKREF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 rxvm_reference_cell *cell = rxvm_reference_payload_cell(op2R);
                 value *target = rxvm_reference_cell_target(cell);
                 if (!target) {
                     SET_SIGNAL_MSG(RXSIGNAL_REFERENCE_INVALID, "Reference is invalid");
-                    DISPATCH
+                    DISPATCH;
                 }
                 op1R = target;
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SETREF_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(SETREF_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - SETREF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 rxvm_reference_cell *cell = rxvm_reference_payload_cell(op1R);
                 value *target = rxvm_reference_cell_target(cell);
                 if (!target) {
                     SET_SIGNAL_MSG(RXSIGNAL_REFERENCE_INVALID, "Reference is invalid");
-                    DISPATCH
+                    DISPATCH;
                 }
                 copy_value(target, op2R);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(REFVALID_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(REFVALID_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - REFVALID R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 int valid = rxvm_reference_cell_is_valid(rxvm_reference_payload_cell(op2R));
                 value_zero(op1R);
                 op1R->int_value = valid ? 1 : 0;
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(UNREF_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(UNREF_REG) VM_ADVANCE(1);
             DEBUG("TRACE - UNREF R%lu\n", REG_IDX(1));
             clear_value_contents(op1R);
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(ENDLIFE_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(ENDLIFE_REG) VM_ADVANCE(1);
             DEBUG("TRACE - ENDLIFE R%lu\n", REG_IDX(1));
             release_value_reference_lifetime(op1R);
-            DISPATCH
+            DISPATCH;
 
         /* Link attribute op3 of op2 to op1 */
-        START_INSTRUCTION(LINKATTR_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(LINKATTR_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - LINKATTR R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             if (op3R->int_value < 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             if (op3R->int_value >= op2R->num_attributes) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             op1R = op2R->attributes[op3R->int_value];
-            DISPATCH
+            DISPATCH;
 
         /* Link attribute op3 of op2 to op1 */
-        START_INSTRUCTION(LINKATTR_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(LINKATTR_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - LINKATTR R%lu,R%lu,%d\n", REG_IDX(1), REG_IDX(2), (int)op3I);
             if ((int)op3I < 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             if ((int)op3I >= op2R->num_attributes) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             op1R = op2R->attributes[(int)op3I];
-            DISPATCH
+            DISPATCH;
 
         /* Link attribute op3 (1 base) of op2 to op1 */
-        START_INSTRUCTION(LINKATTR1_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(LINKATTR1_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - LINKATTR1 R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             if (op3R->int_value - 1 < 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             if (op3R->int_value - 1 >= op2R->num_attributes) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             op1R = op2R->attributes[op3R->int_value - 1];
-            DISPATCH
+            DISPATCH;
 
         /* Link attribute op3 (1 base) of op2 to op1 */
-        START_INSTRUCTION(LINKATTR1_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(LINKATTR1_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - LINKATTR1 R%lu,R%lu,%d\n", REG_IDX(1), REG_IDX(2), (int)op3I);
             if ((int)op3I - 1 < 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             if ((int)op3I - 1 >= op2R->num_attributes) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             op1R = op2R->attributes[(int)op3I - 1];
-            DISPATCH
+            DISPATCH;
 
         /* Link op3 to attribute op1 of op2 */
-        START_INSTRUCTION(LINKTOATTR_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(LINKTOATTR_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - LINKTOATTR R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             if (op1R->int_value < 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             if (op1R->int_value >= op2R->num_attributes) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             op2R->attributes[op1R->int_value] = op3R;
-            DISPATCH
+            DISPATCH;
 
         /* Link op3 to attribute op1 of op2 */
-        START_INSTRUCTION(LINKTOATTR_INT_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(LINKTOATTR_INT_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - LINKTOATTR %d,R%lu,R%lu\n", (int)op1I, REG_IDX(2), REG_IDX(3));
             if ((int)op1I < 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             if ((int)op1I >= op2R->num_attributes) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             op2R->attributes[(int)op1I] = op3R;
-            DISPATCH
+            DISPATCH;
 
         /* Link op3 to attribute op1 (1 base) of op2 */
-        START_INSTRUCTION(LINKTOATTR1_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(LINKTOATTR1_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - LINKTOATTR1 R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             if (op1R->int_value - 1 < 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             if (op1R->int_value - 1 >= op2R->num_attributes) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             op2R->attributes[op1R->int_value - 1] = op3R;
-            DISPATCH
+            DISPATCH;
 
         /* Link op3 to attribute op1 (1 base) of op2 */
-        START_INSTRUCTION(LINKTOATTR1_INT_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(LINKTOATTR1_INT_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - LINKTOATTR1 %d,R%lu,R%lu\n", (int)op1I, REG_IDX(2), REG_IDX(3));
             if ((int)op1I - 1 < 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             if ((int)op1I - 1 >= op2R->num_attributes) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             op2R->attributes[(int)op1I -1] = op3R;
-            DISPATCH
+            DISPATCH;
 
         /* Unlink attribute op1 of op2 */
-        START_INSTRUCTION(UNLINKATTR_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(UNLINKATTR_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - UNLINKATTR R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             if (op1R->int_value < 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             if (op1R->int_value >= op2R->num_attributes) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             op2R->attributes[op1R->int_value] = op2R->unlinked_attributes[op1R->int_value];
-            DISPATCH
+            DISPATCH;
 
         /* Unlink attribute op1 of op2 */
-        START_INSTRUCTION(UNLINKATTR_INT_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(UNLINKATTR_INT_REG) VM_ADVANCE(2);
             DEBUG("TRACE - UNLINKATTR %d,R%lu\n", (int)op1I, REG_IDX(2));
             if ((int)op1I < 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             if ((int)op1I >= op2R->num_attributes) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             op2R->attributes[(int)op1I] = op2R->unlinked_attributes[(int)op1I];
-            DISPATCH
+            DISPATCH;
 
         /* Unlink attribute op1 (1 base) of op2 */
-        START_INSTRUCTION(UNLINKATTR1_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(UNLINKATTR1_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - UNLINKATTR1 R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             if (op1R->int_value - 1 < 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             if (op1R->int_value - 1 >= op2R->num_attributes) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             op2R->attributes[op1R->int_value - 1] = op2R->unlinked_attributes[op1R->int_value - 1];
-            DISPATCH
+            DISPATCH;
 
         /* Unlink attribute op1 (1 base) of op2 */
-        START_INSTRUCTION(UNLINKATTR1_INT_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(UNLINKATTR1_INT_REG) VM_ADVANCE(2);
             DEBUG("TRACE - UNLINKATTR1 %d,R%lu\n", (int)op1I, REG_IDX(2));
             if ((int)op1I - 1 < 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             if ((int)op1I - 1 >= op2R->num_attributes) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
-                DISPATCH
+                DISPATCH;
             }
             op2R->attributes[(int)op1I - 1] = op2R->unlinked_attributes[(int)op1I - 1];
-            DISPATCH
+            DISPATCH;
 
             /* Link op2 to op1 */
-        START_INSTRUCTION(LINK_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(LINK_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - LINK R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             op1R = op2R;
-            DISPATCH
+            DISPATCH;
 
         /* Link parent-frame-register[op2] to op1 */
-        START_INSTRUCTION(METALINKPREG_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(METALINKPREG_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - METALINKPREG R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             op1R = current_frame->parent->locals[op2R->int_value];
-            DISPATCH
+            DISPATCH;
 
         /* Unlink op1 */
-        START_INSTRUCTION(UNLINK_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(UNLINK_REG) VM_ADVANCE(1);
             DEBUG("TRACE - UNLINK R%lu\n", REG_IDX(1));
             op1R = (current_frame->baselocals[(pc + 1)->index]);
-            DISPATCH
+            DISPATCH;
 
         /* ------------------------------------------------------------------------------------
          *  GETATTRS_REG_REG Get Number Attributes op1 = op2.num_attributes
          *  ----------------------------------------------------------------------------------- */
-        START_INSTRUCTION(GETATTRS_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(GETATTRS_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - GETATTRS R%lu,R%lu\n", REG_IDX(1),REG_IDX(2));
             REG_RETURN_INT(op2R->num_attributes)
-            DISPATCH
+            DISPATCH;
 
         /* ------------------------------------------------------------------------------------
          *  GETATTRS_REG_REG_INT Get Number Attributes op1 = op2.num_attributes + op3
          *  ----------------------------------------------------------------------------------- */
-        START_INSTRUCTION(GETATTRS_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(GETATTRS_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - GETATTRS R%lu,R%lu,%d\n", REG_IDX(1),REG_IDX(2),(int)op3I);
             REG_RETURN_INT(op2R->num_attributes + op3I)
-            DISPATCH
+            DISPATCH;
 
         /* ------------------------------------------------------------------------------------
          *  SETATTRS_REG_REG Set Number Attributes op1.num_attributes = op2
          * ----------------------------------------------------------------------------------- */
-        START_INSTRUCTION(SETATTRS_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(SETATTRS_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - SETATTRS R%lu,R%lu\n", REG_IDX(1),REG_IDX(2));
             set_num_attributes(op1R, op2RI);
-            DISPATCH
+            DISPATCH;
 
         /* ------------------------------------------------------------------------------------
          *  SETATTRS_REG_REG Set Number Attributes op1.num_attributes = op2
          * ----------------------------------------------------------------------------------- */
-        START_INSTRUCTION(SETATTRS_REG_INT) CALC_DISPATCH(2)
+        START_INSTRUCTION(SETATTRS_REG_INT) VM_ADVANCE(2);
             DEBUG("TRACE - SETATTRS R%lu,%d\n", REG_IDX(1),(int)op2I);
             set_num_attributes(op1R, op2I);
-            DISPATCH
+            DISPATCH;
 
         /* ------------------------------------------------------------------------------------
          *  SETATTRS_REG_REG_INT Set Number Attributes op1.num_attributes = op2 + op3
          * ----------------------------------------------------------------------------------- */
-        START_INSTRUCTION(SETATTRS_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(SETATTRS_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - SETATTRS R%lu,R%lu,%d\n", REG_IDX(1),REG_IDX(2), (int)op3I);
             set_num_attributes(op1R, op2RI + op3I);
-            DISPATCH
+            DISPATCH;
 
         /* ------------------------------------------------------------------------------------
          *  SETATTRS_REG_INT_INT Set Number Attributes op1.num_attributes = op2 + op3
          * ----------------------------------------------------------------------------------- */
-        START_INSTRUCTION(SETATTRS_REG_INT_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(SETATTRS_REG_INT_INT) VM_ADVANCE(3);
             DEBUG("TRACE - SETATTRS R%lu,%d,%d\n", REG_IDX(1),(int)op2I, (int)op3I);
             set_num_attributes(op1R, op2I + op3I);
-            DISPATCH
+            DISPATCH;
 
         /* ------------------------------------------------------------------------------------
          *  MINATTRS_REG_REG Ensure min number attributes op1.num_attributes >= op2
          * ----------------------------------------------------------------------------------- */
-        START_INSTRUCTION(MINATTRS_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(MINATTRS_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - MINATTRS R%lu,R%lu\n", REG_IDX(1),REG_IDX(2));
             if (op2RI > op1R->num_attributes) {
                 set_num_attributes(op1R, op2RI);
             }
-            DISPATCH
+            DISPATCH;
 
         /* ------------------------------------------------------------------------------------
          *  MINATTRS_REG_REG Ensure min number attributes op1.num_attributes >= op2
          * ----------------------------------------------------------------------------------- */
-        START_INSTRUCTION(MINATTRS_REG_INT) CALC_DISPATCH(2)
+        START_INSTRUCTION(MINATTRS_REG_INT) VM_ADVANCE(2);
             DEBUG("TRACE - MINATTRS R%lu,%d\n", REG_IDX(1),(int)op2I);
             if (op2I > op1R->num_attributes) {
                 set_num_attributes(op1R, op2I);
             }
-            DISPATCH
+            DISPATCH;
 
         /* ------------------------------------------------------------------------------------
          *  MINATTRS_REG_REG_INT Ensure min number attributes op1.num_attributes >= op2 + op3
          * ----------------------------------------------------------------------------------- */
-        START_INSTRUCTION(MINATTRS_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(MINATTRS_REG_REG_INT) VM_ADVANCE(3);
         DEBUG("TRACE - MINATTRS R%lu,R%lu,%d\n", REG_IDX(1),REG_IDX(2),(int)op3I);
         if (op2RI + op3I > op1R->num_attributes) {
             /* Set the number of attributes to the requested number */
             set_num_attributes(op1R, op2RI + op3I);
         }
-        DISPATCH
+        DISPATCH;
 
         /* ------------------------------------------------------------------------------------
          *  MINATTRS_REG_REG_INT Ensure min number attributes op1.num_attributes >= op2 + op3
          * ----------------------------------------------------------------------------------- */
-        START_INSTRUCTION(MINATTRS_REG_INT_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(MINATTRS_REG_INT_INT) VM_ADVANCE(3);
             DEBUG("TRACE - MINATTRS R%lu,%d,%d\n", REG_IDX(1),(int)op2I,(int)op3I);
             if (op2I + op3I > op1R->num_attributes) {
                 /* Set the number of attributes to the requested number */
                 set_num_attributes(op1R, op2I + op3I);
             }
-            DISPATCH
+            DISPATCH;
 
         /* ------------------------------------------------------------------------------------
          *  GETABUFS_REG_REG Get attribute buffer size op1 = op2.max_attributes
          *  ----------------------------------------------------------------------------------- */
-        START_INSTRUCTION(GETABUFS_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(GETABUFS_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - GETABUFS R%lu,R%lu\n", REG_IDX(1),REG_IDX(1));
             REG_RETURN_INT(op2R->max_num_attributes)
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(INSATTRS_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(INSATTRS_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - INSATTRS R%lu,R%lu,R%lu\n", REG_IDX(1),REG_IDX(2),REG_IDX(3));
             if (rxvm_insert_attributes_checked(op1R, op2RI, op3RI) != 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(INSATTRS_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(INSATTRS_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - INSATTRS R%lu,R%lu,%d\n", REG_IDX(1),REG_IDX(2),(int)op3I);
             if (rxvm_insert_attributes_checked(op1R, op2RI, op3I) != 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(INSATTRS_REG_INT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(INSATTRS_REG_INT_REG) VM_ADVANCE(3);
             DEBUG("TRACE - INSATTRS R%lu,%d,R%lu\n", REG_IDX(1),(int)op2I,REG_IDX(3));
             if (rxvm_insert_attributes_checked(op1R, op2I, op3RI) != 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(INSATTRS_REG_INT_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(INSATTRS_REG_INT_INT) VM_ADVANCE(3);
             DEBUG("TRACE - INSATTRS R%lu,%d,%d\n", REG_IDX(1),(int)op2I,(int)op3I);
             if (rxvm_insert_attributes_checked(op1R, op2I, op3I) != 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(INSATTRS1_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(INSATTRS1_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - INSATTRS1 R%lu,R%lu,R%lu\n", REG_IDX(1),REG_IDX(2),REG_IDX(3));
             if (rxvm_insert_attributes1_checked(op1R, op2RI, op3RI) != 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(INSATTRS1_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(INSATTRS1_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - INSATTRS1 R%lu,R%lu,%d\n", REG_IDX(1),REG_IDX(2),(int)op3I);
             if (rxvm_insert_attributes1_checked(op1R, op2RI, op3I) != 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(INSATTRS1_REG_INT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(INSATTRS1_REG_INT_REG) VM_ADVANCE(3);
             DEBUG("TRACE - INSATTRS1 R%lu,%d,R%lu\n", REG_IDX(1),(int)op2I,REG_IDX(3));
             if (rxvm_insert_attributes1_checked(op1R, op2I, op3RI) != 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(INSATTRS1_REG_INT_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(INSATTRS1_REG_INT_INT) VM_ADVANCE(3);
             DEBUG("TRACE - INSATTRS1 R%lu,%d,%d\n", REG_IDX(1),(int)op2I,(int)op3I);
             if (rxvm_insert_attributes1_checked(op1R, op2I, op3I) != 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(DELATTRS_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(DELATTRS_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - DELATTRS R%lu,R%lu,R%lu\n", REG_IDX(1),REG_IDX(2),REG_IDX(3));
             if (rxvm_delete_attributes_checked(op1R, op2RI, op3RI) != 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(DELATTRS_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(DELATTRS_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - DELATTRS R%lu,R%lu,%d\n", REG_IDX(1),REG_IDX(2),(int)op3I);
             if (rxvm_delete_attributes_checked(op1R, op2RI, op3I) != 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(DELATTRS_REG_INT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(DELATTRS_REG_INT_REG) VM_ADVANCE(3);
             DEBUG("TRACE - DELATTRS R%lu,%d,R%lu\n", REG_IDX(1),(int)op2I,REG_IDX(3));
             if (rxvm_delete_attributes_checked(op1R, op2I, op3RI) != 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(DELATTRS_REG_INT_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(DELATTRS_REG_INT_INT) VM_ADVANCE(3);
             DEBUG("TRACE - DELATTRS R%lu,%d,%d\n", REG_IDX(1),(int)op2I,(int)op3I);
             if (rxvm_delete_attributes_checked(op1R, op2I, op3I) != 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(DELATTRS1_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(DELATTRS1_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - DELATTRS1 R%lu,R%lu,R%lu\n", REG_IDX(1),REG_IDX(2),REG_IDX(3));
             if (rxvm_delete_attributes1_checked(op1R, op2RI, op3RI) != 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(DELATTRS1_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(DELATTRS1_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - DELATTRS1 R%lu,R%lu,%d\n", REG_IDX(1),REG_IDX(2),(int)op3I);
             if (rxvm_delete_attributes1_checked(op1R, op2RI, op3I) != 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(DELATTRS1_REG_INT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(DELATTRS1_REG_INT_REG) VM_ADVANCE(3);
             DEBUG("TRACE - DELATTRS1 R%lu,%d,R%lu\n", REG_IDX(1),(int)op2I,REG_IDX(3));
             if (rxvm_delete_attributes1_checked(op1R, op2I, op3RI) != 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(DELATTRS1_REG_INT_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(DELATTRS1_REG_INT_INT) VM_ADVANCE(3);
             DEBUG("TRACE - DELATTRS1 R%lu,%d,%d\n", REG_IDX(1),(int)op2I,(int)op3I);
             if (rxvm_delete_attributes1_checked(op1R, op2I, op3I) != 0) {
                 SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(DEC0) CALC_DISPATCH(0)
+        START_INSTRUCTION(DEC0) VM_ADVANCE(0);
             /* TODO This is really idec0 - i.e. it does not prime the int */
             DEBUG("TRACE - DEC0\n");
-            if (!rxinteger_checked_sub(current_frame->locals[0]->int_value, 1,
-                                       &current_frame->locals[0]->int_value)) {
+            if (!rxinteger_checked_sub(current_locals[0]->int_value, 1,
+                                       &current_locals[0]->int_value)) {
                 SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
-            DISPATCH
+            DISPATCH;
 
             /* ------------------------------------------------------------------------------------
          *  DEC1   R1--                                                       pej 7. April 2021
          *  -----------------------------------------------------------------------------------
          */
-        START_INSTRUCTION(DEC1) CALC_DISPATCH(0)
+        START_INSTRUCTION(DEC1) VM_ADVANCE(0);
             /* TODO This is really idec1 - i.e. it does not prime the int */
             DEBUG("TRACE - DEC1\n");
-            if (!rxinteger_checked_sub(current_frame->locals[1]->int_value, 1,
-                                       &current_frame->locals[1]->int_value)) {
+            if (!rxinteger_checked_sub(current_locals[1]->int_value, 1,
+                                       &current_locals[1]->int_value)) {
                 SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
-            DISPATCH
+            DISPATCH;
 
             /* ------------------------------------------------------------------------------------
             *  DEC2   op2R--                                                       pej 7. April 2021
             *  -----------------------------------------------------------------------------------
             */
-        START_INSTRUCTION(DEC2) CALC_DISPATCH(0)
+        START_INSTRUCTION(DEC2) VM_ADVANCE(0);
             /* TODO This is really idec2 - i.e. it does not prime the int */
             DEBUG("TRACE - DEC2\n");
-            if (!rxinteger_checked_sub(current_frame->locals[2]->int_value, 1,
-                                       &current_frame->locals[2]->int_value)) {
+            if (!rxinteger_checked_sub(current_locals[2]->int_value, 1,
+                                       &current_locals[2]->int_value)) {
                 SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(DEC_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(DEC_REG) VM_ADVANCE(1);
             /* TODO This is really idec reg - i.e. it does not prime the int */
             DEBUG("TRACE - DEC R%lu\n", REG_IDX(1));
-            if (!rxinteger_checked_sub(current_frame->locals[REG_IDX(1)]->int_value, 1,
-                                       &current_frame->locals[REG_IDX(1)]->int_value)) {
+            if (!rxinteger_checked_sub(current_locals[REG_IDX(1)]->int_value, 1,
+                                       &current_locals[REG_IDX(1)]->int_value)) {
                 SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
-            DISPATCH
+            DISPATCH;
 
         START_INSTRUCTION(BR_ID)
             DEBUG("TRACE - BR 0x%x\n", (unsigned int)REG_IDX(1));
-            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-            CALC_DISPATCH_MANUAL
-            DISPATCH
+            VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
+            DISPATCH;
 
             /* For these we optimise for condition to NOT be met because in a loop
              * these ae used to jump out of the loop when the end condition it met
              * (and every little bit helps to improve performance!)
              */
 
-        START_INSTRUCTION(BRT_ID_REG) CALC_DISPATCH(2) /* i.e. if the condition is not met - this helps the
+        START_INSTRUCTION(BRT_ID_REG) VM_ADVANCE(2); /* i.e. if the condition is not met - this helps the
                                 the real CPUs branch prediction (in theory) */
             DEBUG("TRACE - BRT 0x%x,R%d\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2));
             if (op2RI) {
-                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-                CALC_DISPATCH_MANUAL
-            }
-            DISPATCH
+                VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
 
-        START_INSTRUCTION(BRF_ID_REG) CALC_DISPATCH(2) /* i.e. if the condition is not met - this helps the
+            }
+            DISPATCH;
+
+        START_INSTRUCTION(BRF_ID_REG) VM_ADVANCE(2); /* i.e. if the condition is not met - this helps the
                                   the real CPUs branch prediction (in theory) */
             DEBUG("TRACE - BRF 0x%x,R%d\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2));
             if (!(op2RI)) {
-                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-                CALC_DISPATCH_MANUAL
+                VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
             }
-            DISPATCH
+            DISPATCH;
 
         START_INSTRUCTION(BRTF_ID_ID_REG)
             DEBUG("TRACE - BRTF 0x%x,0x%x,R%d\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            if (op3RI) next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-            else next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(2);
-            CALC_DISPATCH_MANUAL
-            DISPATCH
+            if (op3RI) VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+            else VM_SELECT_INDEX(REG_IDX(2), RXVM_TRANSITION_BRANCH);
 
-        START_INSTRUCTION(JUMPS_REG_BINARY) CALC_DISPATCH(2)
+            DISPATCH;
+
+        START_INSTRUCTION(JUMPS_REG_BINARY) VM_ADVANCE(2);
             DEBUG("TRACE - JUMPS R%d,binary[%zu]\n", (int)REG_IDX(1), (size_t)(pc + 2)->index);
             {
                 size_t target;
@@ -6658,13 +6663,13 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Jump table target out of range");
                 }
                 else if (found) {
-                    next_pc = current_frame->procedure->binarySpace->binary + target;
-                    CALC_DISPATCH_MANUAL
+                    VM_SELECT_INDEX(target, RXVM_TRANSITION_BRANCH);
+
                 }
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(JUMPB_REG_BINARY) CALC_DISPATCH(2)
+        START_INSTRUCTION(JUMPB_REG_BINARY) VM_ADVANCE(2);
             DEBUG("TRACE - JUMPB R%d,binary[%zu]\n", (int)REG_IDX(1), (size_t)(pc + 2)->index);
             {
                 size_t target;
@@ -6677,13 +6682,13 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Jump table target out of range");
                 }
                 else if (found) {
-                    next_pc = current_frame->procedure->binarySpace->binary + target;
-                    CALC_DISPATCH_MANUAL
+                    VM_SELECT_INDEX(target, RXVM_TRANSITION_BRANCH);
+
                 }
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(JUMPBS_REG_REG_BINARY) CALC_DISPATCH(3)
+        START_INSTRUCTION(JUMPBS_REG_REG_BINARY) VM_ADVANCE(3);
             DEBUG("TRACE - JUMPBS R%d,R%d,binary[%zu]\n", (int)REG_IDX(1), (int)REG_IDX(2), (size_t)(pc + 3)->index);
             {
                 unsigned char algorithm;
@@ -6716,14 +6721,14 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                         SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Jump table target out of range");
                     }
                     else if (found) {
-                        next_pc = current_frame->procedure->binarySpace->binary + target;
-                        CALC_DISPATCH_MANUAL
+                        VM_SELECT_INDEX(target, RXVM_TRANSITION_BRANCH);
+
                     }
                 }
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(JUMPI_REG_BINARY) CALC_DISPATCH(2)
+        START_INSTRUCTION(JUMPI_REG_BINARY) VM_ADVANCE(2);
             DEBUG("TRACE - JUMPI R%d,binary[%zu]\n", (int)REG_IDX(1), (size_t)(pc + 2)->index);
             {
                 unsigned char key[8];
@@ -6742,13 +6747,13 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Jump table target out of range");
                 }
                 else if (found) {
-                    next_pc = current_frame->procedure->binarySpace->binary + target;
-                    CALC_DISPATCH_MANUAL
+                    VM_SELECT_INDEX(target, RXVM_TRANSITION_BRANCH);
+
                 }
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(JUMPR_REG_BINARY) CALC_DISPATCH(2)
+        START_INSTRUCTION(JUMPR_REG_BINARY) VM_ADVANCE(2);
             DEBUG("TRACE - JUMPR R%d,binary[%zu]\n", (int)REG_IDX(1), (size_t)(pc + 2)->index);
             {
                 size_t key_length = op1R->string_length;
@@ -6767,13 +6772,13 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Jump table target out of range");
                 }
                 else if (found) {
-                    next_pc = current_frame->procedure->binarySpace->binary + target;
-                    CALC_DISPATCH_MANUAL
+                    VM_SELECT_INDEX(target, RXVM_TRANSITION_BRANCH);
+
                 }
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(JUMPN_REG_BINARY) CALC_DISPATCH(2)
+        START_INSTRUCTION(JUMPN_REG_BINARY) VM_ADVANCE(2);
             DEBUG("TRACE - JUMPN R%d,binary[%zu]\n", (int)REG_IDX(1), (size_t)(pc + 2)->index);
             {
                 unsigned char key[RX_NUMERIC_KEY_SIZE];
@@ -6793,47 +6798,47 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     SET_SIGNAL_MSG(RXSIGNAL_RXBIN_CORRUPTION, "Jump table target out of range");
                 }
                 else if (found) {
-                    next_pc = current_frame->procedure->binarySpace->binary + target;
-                    CALC_DISPATCH_MANUAL
+                    VM_SELECT_INDEX(target, RXVM_TRANSITION_BRANCH);
+
                 }
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(BINEQ_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(BINEQ_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - BINEQ R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2R->binary_length == op3R->binary_length &&
                            (!op2R->binary_length ||
                             memcmp(op2R->binary_value, op3R->binary_value,
                                    op2R->binary_length) == 0))
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(BINEQ_REG_REG_BINARY) CALC_DISPATCH(3)
+        START_INSTRUCTION(BINEQ_REG_REG_BINARY) VM_ADVANCE(3);
             DEBUG("TRACE - BINEQ R%d,R%d,binary[%zu]\n",
                   (int)REG_IDX(1), (int)REG_IDX(2), (size_t)(pc + 3)->index);
             REG_RETURN_INT(op2R->binary_length == op3S->string_len &&
                            (!op2R->binary_length ||
                             memcmp(op2R->binary_value, op3S->string,
                                    op2R->binary_length) == 0))
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(BINNE_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(BINNE_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - BINNE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2R->binary_length != op3R->binary_length ||
                            (op2R->binary_length &&
                             memcmp(op2R->binary_value, op3R->binary_value,
                                    op2R->binary_length) != 0))
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(BINNE_REG_REG_BINARY) CALC_DISPATCH(3)
+        START_INSTRUCTION(BINNE_REG_REG_BINARY) VM_ADVANCE(3);
             DEBUG("TRACE - BINNE R%d,R%d,binary[%zu]\n",
                   (int)REG_IDX(1), (int)REG_IDX(2), (size_t)(pc + 3)->index);
             REG_RETURN_INT(op2R->binary_length != op3S->string_len ||
                            (op2R->binary_length &&
                             memcmp(op2R->binary_value, op3S->string,
                                    op2R->binary_length) != 0))
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(TIME_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(TIME_REG) VM_ADVANCE(1);
             DEBUG("TRACE - TIME R%d\n", (int)REG_IDX(1));
             {
                 struct timeval tv;
@@ -6841,12 +6846,12 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 gettimeofday(&tv, NULL);
                 REG_RETURN_INT(tv.tv_sec - timezone)
             }
-            DISPATCH
+            DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  XTIME return time properties                                  pej 02. December 2021
  * ------------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(XTIME_REG_STRING) CALC_DISPATCH(2)
+        START_INSTRUCTION(XTIME_REG_STRING) VM_ADVANCE(2);
         DEBUG("TRACE - XTIME R%d,\"%s\"\n", (int)REG_IDX(1),(CONSTSTRING_OP(2))->string);
 
             tzset();
@@ -6877,13 +6882,13 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                      break;  // UTC Time
                 }
             }
-            DISPATCH
+            DISPATCH;
 
 /* ---------------------------------------------------------------------------------
  *  MTIME get time of the day in microseconds                      pej 31. October 2021
  * ------------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(MTIME_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(MTIME_REG) VM_ADVANCE(1);
             DEBUG("TRACE - MTIME R%d\n", (int)REG_IDX(1));
             {
                 rxinteger tm;
@@ -6900,13 +6905,13 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 gettimeofday(&tv, NULL);
                 REG_RETURN_INT(tm * 1000000 + tv.tv_usec)
             }
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  TRIMR  Trim right                                                 pej 7. April 2021
  * ------------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(TRIMR_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(TRIMR_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - TRIMR (DEPRECATED) R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
             {
                 size_t i = op1R->string_length;
@@ -6916,13 +6921,13 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                 op1R->string_length = i;
                 null_terminate_string_buffer(op1R);
             }
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  TRIML  Trim left                                                  pej 7. April 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(TRIML_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(TRIML_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - TRIML (DEPRECATED) R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
             /* TODO - UTF etc */
             {
@@ -6939,656 +6944,656 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
                     null_terminate_string_buffer(op1R);
                 }
             }
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  INC0   R0++                                                       pej 7. April 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(INC0) CALC_DISPATCH(0)
+        START_INSTRUCTION(INC0) VM_ADVANCE(0);
             DEBUG("TRACE - INC0\n");
             if (!rxinteger_checked_add(REG_VAL(0)->int_value, 1, &REG_VAL(0)->int_value)) {
                 SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  INC1   R1++                                                       pej 7. April 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(INC1) CALC_DISPATCH(0)
+        START_INSTRUCTION(INC1) VM_ADVANCE(0);
             DEBUG("TRACE - INC1\n");
             if (!rxinteger_checked_add(REG_VAL(1)->int_value, 1, &REG_VAL(1)->int_value)) {
                 SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  INC2   op2R++                                                       pej 7. April 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(INC2) CALC_DISPATCH(0)
+        START_INSTRUCTION(INC2) VM_ADVANCE(0);
             DEBUG("TRACE - INC2\n");
             if (!rxinteger_checked_add(REG_VAL(2)->int_value, 1, &REG_VAL(2)->int_value)) {
                 SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
-            DISPATCH
+            DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  ISEX   op1 = -op1  decimal                                    pej 2. September 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(ISEX_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(ISEX_REG) VM_ADVANCE(1);
             DEBUG("TRACE - INC R%lu\n", REG_IDX(1));
-            if (!rxinteger_checked_neg(current_frame->locals[REG_IDX(1)]->int_value,
-                                       &current_frame->locals[REG_IDX(1)]->int_value)) {
+            if (!rxinteger_checked_neg(current_locals[REG_IDX(1)]->int_value,
+                                       &current_locals[REG_IDX(1)]->int_value)) {
                 SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
-        DISPATCH
+        DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FSEX   op1 = -op1  decimal                                    pej 2. September 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FSEX_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(FSEX_REG) VM_ADVANCE(1);
             DEBUG("TRACE - INC R%lu\n", REG_IDX(1));
-            (current_frame->locals[REG_IDX(1)]->float_value)=0-(current_frame->locals[REG_IDX(1)]->float_value);
-        DISPATCH
+            (current_locals[REG_IDX(1)]->float_value)=0-(current_locals[REG_IDX(1)]->float_value);
+        DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  ISUB_REG_REG_INT: Integer Subtract (op1=op2-op3)               pej 8. April 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(ISUB_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(ISUB_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - ISUB R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
             {
                 rxinteger result;
                 if (rxinteger_checked_sub(op2RI, op3I, &result)) REG_RETURN_INT(result)
                 else SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  ISUB_REG_INT_REG: Integer Subtract (op1=op2-op3)               pej 8. April 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(ISUB_REG_INT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(ISUB_REG_INT_REG) VM_ADVANCE(3);
             DEBUG("TRACE - ISUB R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
             {
                 rxinteger result;
                 if (rxinteger_checked_sub(op2I, op3RI, &result)) REG_RETURN_INT(result)
                 else SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  AND_REG_REG_REG  Int Logical AND op1=(op2 && op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(AND_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(AND_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - AND R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI && op3RI)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  OR_REG_REG_REG  Int Logical OR op1=(op2 || op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(OR_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(OR_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - OR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI || op3RI)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  NOT_REG_REG  Int Logical NOT op1=!op2
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(NOT_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(NOT_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - NOT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
             if (op2RI) REG_RETURN_INT(0)
             else REG_RETURN_INT(1)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  IEQ_REG_REG_REG  Int Equals op1=(op2==op3)                           pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IEQ_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(IEQ_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - IEQ R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI == op3RI)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  IEQ_REG_REG_INT  Int Equals op1=(op2==op3)                           pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IEQ_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(IEQ_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - IEQ R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
             REG_RETURN_INT(op2RI == op3I)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  INE_REG_REG_REG  Int Equals op1=(op2!=op3)                           pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(INE_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(INE_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - INE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI != op3RI)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  INE_REG_REG_INT  Int Equals op1=(op2!=op3)                           pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(INE_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(INE_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - INE R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
             REG_RETURN_INT(op2RI != op3I)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  IGT_REG_REG_REG  Int Greater than op1=(op2>op3)                      pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IGT_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(IGT_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - IGT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI > op3RI)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  IGT_REG_REG_INT  Int Greater than op1=(op2>op3)                      pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IGT_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(IGT_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - IGT R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
             REG_RETURN_INT(op2RI > op3I)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  IGT_REG_INT_REG  Int Greater than op1=(op2>op3)                      pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IGT_REG_INT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(IGT_REG_INT_REG) VM_ADVANCE(3);
             DEBUG("TRACE - IGT R%d,%d,r%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
             REG_RETURN_INT(op2I > op3RI)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  ILT_REG_REG_REG  Int Less than op1=(op2<op3)                         pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(ILT_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(ILT_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - ILT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI < op3RI)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  ILT_REG_REG_INT  Int Less than op1=(op2<op3)                         pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(ILT_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(ILT_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - ILT R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
             REG_RETURN_INT(op2RI < op3I)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  ILT_REG_INT_REG  Int Less than op1=(op2<op3)                         pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(ILT_REG_INT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(ILT_REG_INT_REG) VM_ADVANCE(3);
             DEBUG("TRACE - ILT R%d,%d,r%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
             REG_RETURN_INT(op2I < op3RI)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  IGTE_REG_REG_REG  Int Greater Equal than op1=(op2>=op3)              pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IGTE_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(IGTE_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - IGTE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI >= op3RI)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  IGTE_REG_REG_INT  Int Greater Equal than op1=(op2>=op3)              pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IGTE_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(IGTE_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - IGTE R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
             REG_RETURN_INT(op2RI >= op3I)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  IGTE_REG_INT_REG  Int Greater Equal than op1=(op2>=op3)              pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IGTE_REG_INT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(IGTE_REG_INT_REG) VM_ADVANCE(3);
             DEBUG("TRACE - IGTE R%d,%d,r%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
             REG_RETURN_INT(op2I >= op3RI)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  ILTE_REG_REG_REG  Int Less Equal than op1=(op2<=op3)                 pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(ILTE_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(ILTE_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - ILTE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI <= op3RI)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  ILTE_REG_REG_INT  Int Less Equal than op1=(op2<=op3)                 pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(ILTE_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(ILTE_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - ILTE R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
             REG_RETURN_INT(op2RI <= op3I)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  ILTE_REG_INT_REG  Int Less Equal than op1=(op2<=op3)                 pej 9 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(ILTE_REG_INT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(ILTE_REG_INT_REG) VM_ADVANCE(3);
             DEBUG("TRACE - ILTE R%d,%d,r%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
             REG_RETURN_INT(op2I <= op3RI)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  IGTBR_ID_REG_REG  if op2>op3 ; goto op1                             pej 12 June 2023
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(IGTBR_ID_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(IGTBR_ID_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - IGTBR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2),(int)REG_IDX(3));
     if (op2RI > op3RI) {
-        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-        CALC_DISPATCH_MANUAL
+        VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
     }
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  ILTBR_ID_REG_REG  if op2<op3 ; goto op1                             pej 14 June 2023
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(ILTBR_ID_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(ILTBR_ID_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - ILTBR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2),(int)REG_IDX(3));
     if (op2RI < op3RI) {
-        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-        CALC_DISPATCH_MANUAL
+        VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FEQ_REG_REG_REG  Float Equals op1=(op2==op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FEQ_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(FEQ_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - FEQ R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RF == op3RF)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FEQ_REG_REG_FLOAT  Float Equals op1=(op2==op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FEQ_REG_REG_FLOAT) CALC_DISPATCH(3)
+        START_INSTRUCTION(FEQ_REG_REG_FLOAT) VM_ADVANCE(3);
             DEBUG("TRACE - FEQ R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_INT(op2RF == op3F)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FNE_REG_REG_REG  Float Not Equals op1=(op2!=op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FNE_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(FNE_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - FNE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RF != op3RF)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FNE_REG_REG_FLOAT  Float Not Equals op1=(op2!=op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FNE_REG_REG_FLOAT) CALC_DISPATCH(3)
+        START_INSTRUCTION(FNE_REG_REG_FLOAT) VM_ADVANCE(3);
             DEBUG("TRACE - FNE R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_INT(op2RF != op3F)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FGT_REG_REG_REG  Float Greater than op1=(op2>op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FGT_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(FGT_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - FGT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RF > op3RF)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FGT_REG_REG_FLOAT  Float Greater than op1=(op2>op3)
  *
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FGT_REG_REG_FLOAT) CALC_DISPATCH(3)
+        START_INSTRUCTION(FGT_REG_REG_FLOAT) VM_ADVANCE(3);
             DEBUG("TRACE - FGT R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_INT(op2RF > op3F)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FGT_REG_FLOAT_REG  Float Greater than op1=(op2>op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FGT_REG_FLOAT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(FGT_REG_FLOAT_REG) VM_ADVANCE(3);
             DEBUG("TRACE - FGT R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_INT(op2F > op3RF)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FLT_REG_REG_REG  Float Less than op1=(op2<op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FLT_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(FLT_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - FLT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RF < op3RF)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FLT_REG_REG_FLOAT  Float Less than op1=(op2<op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FLT_REG_REG_FLOAT) CALC_DISPATCH(3)
+        START_INSTRUCTION(FLT_REG_REG_FLOAT) VM_ADVANCE(3);
             DEBUG("TRACE - FLT R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_INT(op2RF < op3F)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FLT_REG_FLOAT_REG  Float Less than op1=(op2<op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FLT_REG_FLOAT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(FLT_REG_FLOAT_REG) VM_ADVANCE(3);
             DEBUG("TRACE - FLT R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_INT(op2F < op3RF)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FGTE_REG_REG_REG  Float Greater Equal than op1=(op2>=op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FGTE_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(FGTE_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - FGTE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RF >= op3RF)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FGTE_REG_REG_FLOAT  Float Greater Equal than op1=(op2>=op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FGTE_REG_REG_FLOAT) CALC_DISPATCH(3)
+        START_INSTRUCTION(FGTE_REG_REG_FLOAT) VM_ADVANCE(3);
             DEBUG("TRACE - FGTE R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_INT(op2RF >= op3F)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FGTE_REG_FLOAT_REG  Float Greater Equal than op1=(op2>=op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FGTE_REG_FLOAT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(FGTE_REG_FLOAT_REG) VM_ADVANCE(3);
             DEBUG("TRACE - FGTE R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_INT(op2F >= op3RF)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FLTE_REG_REG_REG  Float Less Equal than op1=(op2<=op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FLTE_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(FLTE_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - FLTE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RF <= op3RF)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FLTE_REG_REG_FLOAT  Float Less Equal than op1=(op2<=op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FLTE_REG_REG_FLOAT) CALC_DISPATCH(3)
+        START_INSTRUCTION(FLTE_REG_REG_FLOAT) VM_ADVANCE(3);
             DEBUG("TRACE - FLTE R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_INT(op2RF <= op3F)
-            DISPATCH
+            DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FLTE_REG_FLOAT_REG  Float Less Equal than op1=(op2<=op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FLTE_REG_FLOAT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(FLTE_REG_FLOAT_REG) VM_ADVANCE(3);
             DEBUG("TRACE - FLTE R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_INT(op2F <= op3RF)
-            DISPATCH
+            DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FGTBR_ID_REG_REG  if op2>op3 ; goto op1                            pej 14 June 2023
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(FGTBR_ID_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(FGTBR_ID_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - FGTBR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2),(int)REG_IDX(3));
     if (op2RF > op3RF) {
-        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-        CALC_DISPATCH_MANUAL
+        VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FLTBR_ID_REG_REG  if op2>op3 ; goto op1                            pej 14 June 2023
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(FLTBR_ID_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(FLTBR_ID_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - FLTBR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2),(int)REG_IDX(3));
     if (op2RF < op3RF) {
-        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-        CALC_DISPATCH_MANUAL
+        VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SEQ_REG_REG_REG  String Equals op1=(op2==op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(SEQ_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SEQ_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SEQ R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(!string_cmp_value(op2R, op3R))
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SEQ_REG_REG_STRING String Equals op1=(op2==op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(SEQ_REG_REG_STRING) CALC_DISPATCH(3)
+        START_INSTRUCTION(SEQ_REG_REG_STRING) VM_ADVANCE(3);
             DEBUG("TRACE - SEQ R%lu,R%lu,\"%.*s\"\n", REG_IDX(1),
                 REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                 (CONSTSTRING_OP(3))->string);
             REG_RETURN_INT(!string_cmp_const(op2R, op3S))
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  RSEQ_REG_REG_REG  String Equals op1=(op2=op3) non strict REXX comparison  pej 29. Nov 2021
  *  -----------------------------------------------------------------------------------
 */
-        START_INSTRUCTION(RSEQ_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(RSEQ_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - RSEQ R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(rxvm_trimmed_space_equal(op2R->string_value, op2R->string_length,
                                                     op3R->string_value, op3R->string_length))
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  RSEQ_REG_REG_STRING String Equals op1=(op2=op3)  non strict REXX comparison
  *  -----------------------------------------------------------------------------------
 */
-        START_INSTRUCTION(RSEQ_REG_REG_STRING) CALC_DISPATCH(3)
+        START_INSTRUCTION(RSEQ_REG_REG_STRING) VM_ADVANCE(3);
             DEBUG("TRACE - RSEQ R%lu,R%lu,\"%.*s\"\n", REG_IDX(1),
                   REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                   (CONSTSTRING_OP(3))->string);
             REG_RETURN_INT(rxvm_trimmed_space_equal(op2R->string_value, op2R->string_length,
                                                     op3S->string, op3S->string_len))
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SNE_REG_REG_REG  String Not Equals op1=(op2!=op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(SNE_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SNE_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SNE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(string_cmp_value(op2R, op3R) != 0)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SNE_REG_REG_STRING  String Not Equals op1=(op2!=op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(SNE_REG_REG_STRING) CALC_DISPATCH(3)
+        START_INSTRUCTION(SNE_REG_REG_STRING) VM_ADVANCE(3);
             DEBUG("TRACE - SNE R%lu,R%lu,\"%.*s\"\n", REG_IDX(1),
                 REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                 (CONSTSTRING_OP(3))->string);
             REG_RETURN_INT(string_cmp_const(op2R, op3S) != 0)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SGT_REG_REG_REG  String Greater than op1=(op2>op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(SGT_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SGT_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SGT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(string_cmp_value(op2R, op3R) > 0)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SGT_REG_REG_STRING  String Greater than op1=(op2>op3)
  *
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(SGT_REG_REG_STRING) CALC_DISPATCH(3)
+        START_INSTRUCTION(SGT_REG_REG_STRING) VM_ADVANCE(3);
             DEBUG("TRACE - SGT R%lu,R%lu,\"%.*s\"\n", REG_IDX(1),
                 REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                 (CONSTSTRING_OP(3))->string);
 
             REG_RETURN_INT(string_cmp_const(op2R, op3S) > 0)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SGT_REG_STRING_REG  String Greater than op1=(op2>op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(SGT_REG_STRING_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SGT_REG_STRING_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SGT R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
                 (int) (CONSTSTRING_OP(2))->string_len,
                 (CONSTSTRING_OP(2))->string, REG_IDX(3));
             REG_RETURN_INT(string_cmp_const(op3R, op2S) < 0)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SLT_REG_REG_REG  String Less than op1=(op2<op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(SLT_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SLT_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SLT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(string_cmp_value(op2R, op3R) < 0)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SLT_REG_REG_STRING  String Less than op1=(op2<op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(SLT_REG_REG_STRING) CALC_DISPATCH(3)
+        START_INSTRUCTION(SLT_REG_REG_STRING) VM_ADVANCE(3);
             DEBUG("TRACE - SLT R%lu,R%lu,\"%.*s\"\n", REG_IDX(1),
                 REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                 (CONSTSTRING_OP(3))->string);
 
             REG_RETURN_INT(string_cmp_const(op2R, op3S) < 0)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SLT_REG_STRING_REG  String Less than op1=(op2<op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(SLT_REG_STRING_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SLT_REG_STRING_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SLT R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
                 (int) (CONSTSTRING_OP(2))->string_len,
                 (CONSTSTRING_OP(2))->string, REG_IDX(3));
             REG_RETURN_INT(string_cmp_const(op3R, op2S) > 0)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SGTE_REG_REG_REG  String Greater Equal than op1=(op2>=op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(SGTE_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SGTE_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SGTE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(string_cmp_value(op2R, op3R) >= 0)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SGTE_REG_REG_STRING  String Greater Equal than op1=(op2>=op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(SGTE_REG_REG_STRING) CALC_DISPATCH(3)
+        START_INSTRUCTION(SGTE_REG_REG_STRING) VM_ADVANCE(3);
             DEBUG("TRACE - SGTE R%lu,R%lu,\"%.*s\"\n", REG_IDX(1),
                 REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                 (CONSTSTRING_OP(3))->string);
 
             REG_RETURN_INT(string_cmp_const(op2R, op3S) >= 0)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SGTE_REG_STRING_REG  String Greater Equal than op1=(op2>=op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(SGTE_REG_STRING_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SGTE_REG_STRING_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SGTE R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
                 (int) (CONSTSTRING_OP(2))->string_len,
                 (CONSTSTRING_OP(2))->string, REG_IDX(3));
             REG_RETURN_INT(string_cmp_const(op3R, op2S) <= 0)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SLTE_REG_REG_REG  String Less Equal than op1=(op2<=op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(SLTE_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SLTE_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SLTE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(string_cmp_value(op2R, op3R) <= 0)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SLTE_REG_REG_STRING  String Less Equal than op1=(op2<=op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(SLTE_REG_REG_STRING) CALC_DISPATCH(3)
+        START_INSTRUCTION(SLTE_REG_REG_STRING) VM_ADVANCE(3);
             DEBUG("TRACE - SLTE R%lu,R%lu,\"%.*s\"\n", REG_IDX(1),
                 REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len,
                 (CONSTSTRING_OP(3))->string);
             REG_RETURN_INT(string_cmp_const(op2R, op3S) <= 0)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SLTE_REG_STRING_REG  String Less Equal than op1=(op2<=op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(SLTE_REG_STRING_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SLTE_REG_STRING_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SLTE R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
                 (int) (CONSTSTRING_OP(2))->string_len,
                 (CONSTSTRING_OP(2))->string, REG_IDX(3));
             REG_RETURN_INT(string_cmp_const(op3R, op2S) >= 0)
-            DISPATCH
+            DISPATCH;
 
 #define RXVM_LOOSE_COMPARE_INSTRUCTIONS(name, cmpop) \
-        START_INSTRUCTION(name##_REG_REG_REG) CALC_DISPATCH(3) \
+        START_INSTRUCTION(name##_REG_REG_REG) VM_ADVANCE(3); \
             DEBUG("TRACE - " #name " R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3)); \
             REG_RETURN_INT(rxvm_loose_compare_values(op2R, op3R) cmpop 0) \
-            DISPATCH \
-        START_INSTRUCTION(name##_REG_REG_STRING) CALC_DISPATCH(3) \
+            DISPATCH; \
+        START_INSTRUCTION(name##_REG_REG_STRING) VM_ADVANCE(3); \
             DEBUG("TRACE - " #name " R%lu,R%lu,\"%.*s\"\n", REG_IDX(1), \
                 REG_IDX(2), (int) (CONSTSTRING_OP(3))->string_len, \
                 (CONSTSTRING_OP(3))->string); \
             REG_RETURN_INT(rxvm_loose_compare_value_const(op2R, op3S) cmpop 0) \
-            DISPATCH \
-        START_INSTRUCTION(name##_REG_STRING_REG) CALC_DISPATCH(3) \
+            DISPATCH; \
+        START_INSTRUCTION(name##_REG_STRING_REG) VM_ADVANCE(3); \
             DEBUG("TRACE - " #name " R%lu,\"%.*s\",R%lu\n", REG_IDX(1), \
                 (int) (CONSTSTRING_OP(2))->string_len, \
                 (CONSTSTRING_OP(2))->string, REG_IDX(3)); \
             REG_RETURN_INT(rxvm_loose_compare_const_value(op2S, op3R) cmpop 0) \
-            DISPATCH
+            DISPATCH;
 
         RXVM_LOOSE_COMPARE_INSTRUCTIONS(REQ, ==)
         RXVM_LOOSE_COMPARE_INSTRUCTIONS(RNE, !=)
@@ -7603,157 +7608,157 @@ START_INSTRUCTION(SETNUMFUZ_INT) CALC_DISPATCH(1)
  *  COPY_REG_REG  Copy op2 to op1
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(COPY_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(COPY_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - COPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             copy_value(op1R, op2R);
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SCOPY_REG_REG  Copy String op2 to op1
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(SCOPY_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(SCOPY_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - SCOPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             copy_string_value(op1R, op2R);
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  BCOPY_REG_REG  Copy Binary op2 to op1
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(BCOPY_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(BCOPY_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - BCOPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             copy_binary_value(op1R, op2R);
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  ICOPY_REG_REG  Copy Integer op2 to op1
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(ICOPY_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(ICOPY_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - ICOPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             op1R->int_value = op2R->int_value;
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FCOPY_REG_REG  Copy Float op2 to op1
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FCOPY_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(FCOPY_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - FCOPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             op1R->float_value = op2R->float_value;
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  ACOPY_REG_REG Copy status Attributes op2 to op1
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(ACOPY_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(ACOPY_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - ACOPY R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             op1R->status.all_type_flags = op2R->status.all_type_flags;
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  INC_REG  Increment Int (op1++)                                      pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(INC_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(INC_REG) VM_ADVANCE(1);
             DEBUG("TRACE - INC R%lu\n", REG_IDX(1));
-            if (!rxinteger_checked_add(current_frame->locals[REG_IDX(1)]->int_value, 1,
-                                       &current_frame->locals[REG_IDX(1)]->int_value)) {
+            if (!rxinteger_checked_add(current_locals[REG_IDX(1)]->int_value, 1,
+                                       &current_locals[REG_IDX(1)]->int_value)) {
                 SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  IDIV_REG_REG_INT  Integer Divide (op1=op2/op3)                      pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IDIV_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(IDIV_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - IDIV R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
             if (op3I == 0) { SET_SIGNAL(RXSIGNAL_DIVISION_BY_ZERO) }
             else if (op2RI == RXINTEGER_MIN && op3I == -1) { SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW) }
             else REG_RETURN_INT(op2RI / op3I)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  IDIV_REG_INT_REG  Integer Divide (op1=op2/op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IDIV_REG_INT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(IDIV_REG_INT_REG) VM_ADVANCE(3);
             DEBUG("TRACE - IDIV R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
             if (op3RI == 0) { SET_SIGNAL(RXSIGNAL_DIVISION_BY_ZERO) }
             else if (op2I == RXINTEGER_MIN && op3RI == -1) { SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW) }
             else REG_RETURN_INT(op2I / op3RI)
-            DISPATCH
+            DISPATCH;
 
 /* -----------------------------------------------------------------------------------
  *  IDIV_REG_REG_REG  Integer Divide (op1=op2/op3)                      pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IDIV_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(IDIV_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - IDIV R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             if (op3RI == 0) { SET_SIGNAL(RXSIGNAL_DIVISION_BY_ZERO) }
             else if (op2RI == RXINTEGER_MIN && op3RI == -1) { SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW) }
             else REG_RETURN_INT(op2RI / op3RI)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  IMOD_REG_REG_INT  Integer Modulo (op1=op2 & op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IMOD_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(IMOD_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - IMOD R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
             if (op3I == 0) { SET_SIGNAL(RXSIGNAL_DIVISION_BY_ZERO) }
             else if (op2RI == RXINTEGER_MIN && op3I == -1) { SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW) }
             else REG_RETURN_INT(op2RI % op3I)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  IMOD_REG_INT_REG  Integer Modulo (op1=op2 % op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IMOD_REG_INT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(IMOD_REG_INT_REG) VM_ADVANCE(3);
             DEBUG("TRACE - IMOD R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
             if (op3RI == 0) { SET_SIGNAL(RXSIGNAL_DIVISION_BY_ZERO) }
             else if (op2I == RXINTEGER_MIN && op3RI == -1) { SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW) }
             else REG_RETURN_INT(op2I % op3RI)
-            DISPATCH
+            DISPATCH;
 
 /* -----------------------------------------------------------------------------------
  *  IMOD_REG_REG_REG  Integer Modulo (op1=op2 % op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IMOD_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(IMOD_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - IMOD R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             if (op3RI == 0) { SET_SIGNAL(RXSIGNAL_DIVISION_BY_ZERO) }
             else if (op2RI == RXINTEGER_MIN && op3RI == -1) { SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW) }
             else REG_RETURN_INT(op2RI % op3RI)
-            DISPATCH
+            DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FMOD_REG_REG_FLOAT Float Modulo (op1=op2 & op3)
  *  -----------------------------------------------------------------------------------
 */
-    START_INSTRUCTION(FMOD_REG_REG_FLOAT) CALC_DISPATCH(3)
+    START_INSTRUCTION(FMOD_REG_REG_FLOAT) VM_ADVANCE(3);
     DEBUG("TRACE - FMOD R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
     REG_RETURN_FLOAT(fmod(op2RF, op3F))
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
 *  FMOD_REG_FLOAT_REG  Float Modulo (op1=op2 % op3)
 *  -----------------------------------------------------------------------------------
 */
-START_INSTRUCTION(FMOD_REG_FLOAT_REG) CALC_DISPATCH(3)
+START_INSTRUCTION(FMOD_REG_FLOAT_REG) VM_ADVANCE(3);
     DEBUG("TRACE - FMOD R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
     REG_RETURN_FLOAT(fmod(op2F, op3RF))
-    DISPATCH
+    DISPATCH;
 /* -----------------------------------------------------------------------------------
 *  FMOD_REG_REG_REG  Float Modulo (op1=op2 % op3)
 *  -----------------------------------------------------------------------------------
 */
-START_INSTRUCTION(FMOD_REG_REG_REG) CALC_DISPATCH(3)
+START_INSTRUCTION(FMOD_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - FMOD R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     REG_RETURN_FLOAT(fmod(op2RF, op3RF))
-    DISPATCH
+    DISPATCH;
 
 
 
@@ -7761,7 +7766,7 @@ START_INSTRUCTION(FMOD_REG_REG_REG) CALC_DISPATCH(3)
  *  DMOD_REG_REG_DECIMAL Decimal Modulo (op1=op2 & op3)
  *  -----------------------------------------------------------------------------------
 */
-    START_INSTRUCTION(DMOD_REG_REG_DECIMAL) CALC_DISPATCH(3)
+    START_INSTRUCTION(DMOD_REG_REG_DECIMAL) VM_ADVANCE(3);
     DEBUG("TRACE - DMOD R%d,R%d,%s\n", (int)REG_IDX(1), (int)REG_IDX(2), op3S->string);
     {
         value *op = decimal_literal_value(current_frame->decimal, op3S->string);
@@ -7779,12 +7784,12 @@ START_INSTRUCTION(FMOD_REG_REG_REG) CALC_DISPATCH(3)
     }
     // Check for errors
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
 *  FMOD_REG_DECIMAL_REG  Decimal Modulo (op1=op2 % op3)
 *  -----------------------------------------------------------------------------------
 */
-START_INSTRUCTION(DMOD_REG_DECIMAL_REG) CALC_DISPATCH(3)
+START_INSTRUCTION(DMOD_REG_DECIMAL_REG) VM_ADVANCE(3);
     DEBUG("TRACE - FMOD R%d,%s,R%d\n", (int)REG_IDX(1), op2S->string, (int)REG_IDX(3));
     {
         value *op = decimal_literal_value(current_frame->decimal, op2S->string);
@@ -7802,12 +7807,12 @@ START_INSTRUCTION(DMOD_REG_DECIMAL_REG) CALC_DISPATCH(3)
     }
     // Check for errors
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* -----------------------------------------------------------------------------------
 *  FMOD_REG_REG_REG Decimal Modulo (op1=op2 % op3)
 *  -----------------------------------------------------------------------------------
 */
-START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
+START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - DMOD R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         value *work = value_f();
@@ -7823,406 +7828,406 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     }
     // Check for errors
     RXSIGNAL_IF_RXVM_PLUGIN_ERROR(current_frame->decimal)
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
   *  IOR_REG_REG_REG bitwise OR (op1=op2|op3)                           pej 17 Oct 2021
   *  -----------------------------------------------------------------------------------
   */
-        START_INSTRUCTION(IOR_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(IOR_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - IOR R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI | op3RI)
-            DISPATCH
+            DISPATCH;
  /* -----------------------------------------------------------------------------------
   *  IOR_REG_REG_INT  bitwise OR (op1=op2|op3)                          pej 17 Oct 2021
   *  ----------------------------------------------------------------------------------
   */
-        START_INSTRUCTION(IOR_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(IOR_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - IOR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
             REG_RETURN_INT(op2RI | op3I)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  IAND_REG_REG_INT  bitwise AND (op1=op2&op3)                         pej 17 Oct 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IAND_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(IAND_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - IAND R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
             REG_RETURN_INT(op2RI & op3I)
-            DISPATCH
+            DISPATCH;
 /* -----------------------------------------------------------------------------------
  *  IAND_REG_REG_REG  bitwise AND (op1=op2&op3)                        pej 17 Oct 2021
  *  ----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IAND_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(IAND_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - IAND R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI & op3RI)
-            DISPATCH
+            DISPATCH;
 
 /* -----------------------------------------------------------------------------------
  *  IXOR_REG_REG_REG  bitwise XOR (op1=op2^op3)                        pej 17 Oct 2021
  *  ----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IXOR_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(IXOR_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - IXOR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI ^ op3RI)
-            DISPATCH
+            DISPATCH;
 
 /* -----------------------------------------------------------------------------------
  *  IXOR_REG_REG_INT  bitwise XOR (op1=op2^op3)                        pej 17 Oct 2021
  *  ----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IXOR_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(IXOR_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - IXOR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
             REG_RETURN_INT(op2RI ^ op3I)
-            DISPATCH
+            DISPATCH;
 
 /* -----------------------------------------------------------------------------------
  *  ISHL_REG_REG_REG  bitwise shift logical left (op1=op2<<op3)         pej 17 Oct 2021
  *  ----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(ISHL_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(ISHL_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - ISHL R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI << op3RI)
-            DISPATCH
+            DISPATCH;
 
 /* -----------------------------------------------------------------------------------
  *  ISHL_REG_REG_INT  bitwise shift logical left (op1=op2<<op3)         pej 17 Oct 2021
  *  ----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(ISHL_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(ISHL_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - ISHL R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
             REG_RETURN_INT(op2RI << op3I)
-            DISPATCH
+            DISPATCH;
 /* -----------------------------------------------------------------------------------
  *  ISHR_REG_REG_REG  bitwise shift logical right (op1=op2>>op3)       pej 17 Oct 2021
  *  ----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(ISHR_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(ISHR_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - ISHR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_INT(op2RI >> op3RI)
-            DISPATCH
+            DISPATCH;
 
 /* -----------------------------------------------------------------------------------
  *  ISHR_REG_REG_INT  bitwise shift logical right (op1=op2>>op3)       pej 17 Oct 2021
  *  ----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(ISHR_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(ISHR_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - IXSHL R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
             REG_RETURN_INT(op2RI >> op3I)
-            DISPATCH
+            DISPATCH;
 /* -----------------------------------------------------------------------------------
  *  INOT_REG_REG  inverts all bits of an integer (op1=~op2)            pej 17 Oct 2021
  *  ----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(INOT_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(INOT_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - INOT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
             REG_RETURN_INT(~op2RI)
-            DISPATCH
+            DISPATCH;
 
 /* -----------------------------------------------------------------------------------
  *  INOT_REG_INT  inverts all bits of an integer (op1=~op2)            pej 17 Oct 2021
  *  ----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(INOT_REG_INT) CALC_DISPATCH(2)
+        START_INSTRUCTION(INOT_REG_INT) VM_ADVANCE(2);
             DEBUG("TRACE - INOT R%d,R%d\n", (int)REG_IDX(1), (int)op2I);
             REG_RETURN_INT(~op2I)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SAY_INT  Say op1                                                    pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(SAY_INT) CALC_DISPATCH(1)
+        START_INSTRUCTION(SAY_INT) VM_ADVANCE(1);
             DEBUG("TRACE - SAY %d\n", (int)op1I);
             rxvm_mprintf("%" RXINTEGER_PRI "\n", op1I);
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SAY_CHAR  Say op1                                                   pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(SAY_CHAR) CALC_DISPATCH(1)
+        START_INSTRUCTION(SAY_CHAR) VM_ADVANCE(1);
             DEBUG("TRACE - SAY \'%c\'\n", (pc + (1))->cconst);
             rxvm_mprintf("%c\n", (pc + (1))->cconst);
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SAY_FLOAT  Say op1                                                  pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(SAY_FLOAT) CALC_DISPATCH(1)
+        START_INSTRUCTION(SAY_FLOAT) VM_ADVANCE(1);
             DEBUG("TRACE - SAY %.15g\n", op1F);
             rxvm_mprintf("%.15g\n", op1F);
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  LOAD_REG_FLOAT  Load op1 with op2                                   pej 10 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(LOAD_REG_FLOAT) CALC_DISPATCH(2)
+        START_INSTRUCTION(LOAD_REG_FLOAT) VM_ADVANCE(2);
             DEBUG("TRACE - LOAD R%d,%.15g\n",(int)REG_IDX(1),op2F);
             REG_RETURN_FLOAT(op2F)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FADD_REG_REG_REG  Float Add (op1=op2+op3)                           pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FADD_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(FADD_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - FADD R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_FLOAT(op2RF + op3RF)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FSUB_REG_REG_REG  Float Sub (op1=op2-op3)                           pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
 
-        START_INSTRUCTION(FSUB_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(FSUB_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - FSUB R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_FLOAT(op2RF - op3RF)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FDIV_REG_REG_REG  Float Div (op1=op2/op3)                           pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FDIV_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(FDIV_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - FDIV R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_FLOAT(op2RF / op3RF)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FIDIV_REG_REG_REG  Integer Div for Float (op1=op2/op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FIDIV_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(FIDIV_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - FIDIV R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_FLOAT(trunc(op2RF / op3RF))
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FMULT_REG_REG_REG  Float Mult (op1=op2/op3)                         pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FMULT_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(FMULT_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - FMULT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             REG_RETURN_FLOAT(op2RF * op3RF)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FADD_REG_REG_FLOAT  Float Add (op1=op2+op3)                          pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FADD_REG_REG_FLOAT) CALC_DISPATCH(3)
+        START_INSTRUCTION(FADD_REG_REG_FLOAT) VM_ADVANCE(3);
             DEBUG("TRACE - FADD R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_FLOAT(op2RF + op3F)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FSUB_REG_REG_FLOAT  Float Sub (op1=op2-op3)                         pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FSUB_REG_REG_FLOAT) CALC_DISPATCH(3)
+        START_INSTRUCTION(FSUB_REG_REG_FLOAT) VM_ADVANCE(3);
             DEBUG("TRACE - FSUB R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_FLOAT(op2RF - op3F)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FDIV_REG_REG_FLOAT  Float Div (op1=op2/op3)                         pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FDIV_REG_REG_FLOAT) CALC_DISPATCH(3)
+        START_INSTRUCTION(FDIV_REG_REG_FLOAT) VM_ADVANCE(3);
             DEBUG("TRACE - FDIV R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_FLOAT(op2RF / op3F)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FIDIV_REG_REG_FLOAT  Integer Div for Float(op1=op2/op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FIDIV_REG_REG_FLOAT) CALC_DISPATCH(3)
+        START_INSTRUCTION(FIDIV_REG_REG_FLOAT) VM_ADVANCE(3);
             DEBUG("TRACE - FIDIV R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_FLOAT(trunc(op2RF / op3F))
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FMULT_REG_REG_FLOAT  Float Mult (op1=op2/op3)                       pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FMULT_REG_REG_FLOAT) CALC_DISPATCH(3)
+        START_INSTRUCTION(FMULT_REG_REG_FLOAT) VM_ADVANCE(3);
             DEBUG("TRACE - FMULT R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
             REG_RETURN_FLOAT(op2RF * op3F)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FSUB_REG_FLOAT_REG  Float Sub (op1=op2-op3)                         pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FSUB_REG_FLOAT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(FSUB_REG_FLOAT_REG) VM_ADVANCE(3);
         DEBUG("TRACE - FSUB R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_FLOAT(op2F - op3RF)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FDIV_REG_FLOAT_REG  Float Div (op1=op2/op3)                           pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FDIV_REG_FLOAT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(FDIV_REG_FLOAT_REG) VM_ADVANCE(3);
         DEBUG("TRACE - FDIV R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
             REG_RETURN_FLOAT(op2F / op3RF)
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FIDIV_REG_FLOAT_REG  Integer Div for Float (op1=op2/op3)                           pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FIDIV_REG_FLOAT_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(FIDIV_REG_FLOAT_REG) VM_ADVANCE(3);
         DEBUG("TRACE - FIDIV R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
         REG_RETURN_FLOAT(trunc(op2F / op3RF))
-        DISPATCH
+        DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FPOW_REG_REG_FLOAT  op1=op2**op3 Float operationn                   pej 3 March 2022
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(FPOW_REG_REG_FLOAT) CALC_DISPATCH(3)
+    START_INSTRUCTION(FPOW_REG_REG_FLOAT) VM_ADVANCE(3);
     DEBUG("TRACE - DIVF R%d,R%d,%.15g\n", (int)REG_IDX(1), (int)REG_IDX(2), op3F);
     {
         REG_RETURN_FLOAT(pow(op2RF,op3F))
     }
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FPOW_REG_FLOAT_REG  op1=op2**op3 Float operation
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(FPOW_REG_FLOAT_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(FPOW_REG_FLOAT_REG) VM_ADVANCE(3);
     DEBUG("TRACE - DIVF R%d,%.15g,R%d\n", (int)REG_IDX(1), op2F, (int)REG_IDX(3));
     {
         REG_RETURN_FLOAT(pow(op2F,op3RF))
     }
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FPOW_REG_REG_REG  op1=op2**op3 Float operation                     pej 3 March 2021
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(FPOW_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(FPOW_REG_REG_REG) VM_ADVANCE(3);
     {
         DEBUG("TRACE - FPOW R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2),
               (int) REG_IDX(3));
         REG_RETURN_FLOAT(pow(op2RF,op3RF))
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  IPOW_REG_REG_REG  op1=op2**op2w Integer operation
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(IPOW_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(IPOW_REG_REG_REG) VM_ADVANCE(3);
         DEBUG("TRACE - IPOW R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
 
         if (!rxinteger_checked_pow(op2R->int_value, op3R->int_value, &op1R->int_value)) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
-        DISPATCH
+        DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  IPOW_REG_REG_INT  op1=op2**op2w Integer operationn
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(IPOW_REG_REG_INT) CALC_DISPATCH(3)
+    START_INSTRUCTION(IPOW_REG_REG_INT) VM_ADVANCE(3);
         DEBUG("TRACE - IPOW R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
 
         if (!rxinteger_checked_pow(op2R->int_value, op3I, &op1R->int_value)) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
-        DISPATCH
+        DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  IPOW_REG_INT_REG  op1=op2**op2w Integer operationn
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(IPOW_REG_INT_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(IPOW_REG_INT_REG) VM_ADVANCE(3);
         DEBUG("TRACE - IPOW R%d,%d,R%d\n", (int)REG_IDX(1), (int)op2I, (int)REG_IDX(3));
 
         if (!rxinteger_checked_pow(op2I, op3R->int_value, &op1R->int_value)) SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
-        DISPATCH
+        DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  LINKARG_REG_REG_INT  Link args[op2+op3] to op1
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(LINKARG_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(LINKARG_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - LINKARG R%d,R%d,%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
-            op1R = current_frame->locals[op2RI + op3I +
+            op1R = current_locals[op2RI + op3I +
                                          current_frame->procedure->binarySpace->globals +
                                          current_frame->procedure->locals];
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  LINKARG_REG_INT  Link args[op2] to op1
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(LINKARG_REG_INT) CALC_DISPATCH(2)
+        START_INSTRUCTION(LINKARG_REG_INT) VM_ADVANCE(2);
             DEBUG("TRACE - LINKARG R%d,%d\n", (int)REG_IDX(1), (int)op2I);
-            op1R = current_frame->locals[op2I +
+            op1R = current_locals[op2I +
                                          current_frame->procedure->binarySpace->globals +
                                          current_frame->procedure->locals];
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  ITOS_REG  Set register string value from its int value
  *  -----------------------------------------------------------------------------------*/
-        START_INSTRUCTION(ITOS_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(ITOS_REG) VM_ADVANCE(1);
             DEBUG("TRACE - ITOS R%lu\n", REG_IDX(1));
             int_to_string(&(current_frame->num_context), work1, op1R);
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FTOS_REG  Set register string value from its float value
  *  -----------------------------------------------------------------------------------*/
-        START_INSTRUCTION(FTOS_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(FTOS_REG) VM_ADVANCE(1);
             DEBUG("TRACE - FTOS R%lu\n", REG_IDX(1));
             float_to_string(&(current_frame->num_context), work1, op1R);
-            DISPATCH
+            DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  ITOF_REG  Set register float value from its int value
  *  -----------------------------------------------------------------------------------*/
-        START_INSTRUCTION(ITOF_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(ITOF_REG) VM_ADVANCE(1);
             DEBUG("TRACE - ITOF R%lu\n", REG_IDX(1));
             op1R->float_value = op1R->int_value;
-            DISPATCH
+            DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FTOI_REG  Set register int value from its float value
  *  -----------------------------------------------------------------------------------*/
-        START_INSTRUCTION(FTOI_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(FTOI_REG) VM_ADVANCE(1);
             DEBUG("TRACE - FTOI R%lu\n", REG_IDX(1));
             int_from_float(op1R);
             if (op1R->float_value != (double)op1R->int_value) {
                 SET_SIGNAL(RXSIGNAL_CONVERSION_ERROR);
             }
-            DISPATCH
+            DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FTOB_REG  Set register boolean (int set to 1 or 0) value from its float value
  *  -----------------------------------------------------------------------------------*/
-        START_INSTRUCTION(FTOB_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(FTOB_REG) VM_ADVANCE(1);
             DEBUG("TRACE - FTOB R%lu\n", REG_IDX(1));
             int_from_float(op1R);
 
             if (op1R->float_value) op1R->int_value = 1;
             else op1R->int_value = 0;
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  ITOB_REG  Set register boolean (int set to 1 or 0) value from its int value
  *  -----------------------------------------------------------------------------------*/
-        START_INSTRUCTION(ITOB_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(ITOB_REG) VM_ADVANCE(1);
             DEBUG("TRACE - ITOB R%lu\n", REG_IDX(1));
 
             if (op1R->int_value) op1R->int_value = 1;
             else op1R->int_value = 0;
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  ITOB_REG  Set register boolean (int set to 1 or 0) value from its string value
  *  -----------------------------------------------------------------------------------*/
-        START_INSTRUCTION(STOB_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(STOB_REG) VM_ADVANCE(1);
             DEBUG("TRACE - STOB R%lu\n", REG_IDX(1));
 
             if (op1R->string_length != 1) op1R->int_value = 0;
@@ -8233,61 +8238,61 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                     op1R->int_value = 0;
                 }
             }
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  BTOI_REG  Set register integer value from its boolean value
  *  -----------------------------------------------------------------------------------*/
-        START_INSTRUCTION(BTOI_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(BTOI_REG) VM_ADVANCE(1);
             DEBUG("TRACE - BTOI R%lu\n", REG_IDX(1));
             if (op1R->int_value) op1R->int_value = 1;
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  BTOF_REG  Set register float value from its boolean value
  *  -----------------------------------------------------------------------------------*/
-        START_INSTRUCTION(BTOF_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(BTOF_REG) VM_ADVANCE(1);
             DEBUG("TRACE - BTOF R%lu\n", REG_IDX(1));
             if (op1R->int_value) op1R->float_value = 1.0;
             else op1R->float_value = 0.0;
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  BTOS_REG  Set register string value from its boolean value
  *  -----------------------------------------------------------------------------------*/
-        START_INSTRUCTION(BTOS_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(BTOS_REG) VM_ADVANCE(1);
             DEBUG("TRACE - BTOS R%lu\n", REG_IDX(1));
             if (op1R->int_value) set_null_string(op1R,"1");
             else set_null_string(op1R,"0");
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  STOI_REG  Set register int value from its string value
  *  -----------------------------------------------------------------------------------*/
-        START_INSTRUCTION(STOI_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(STOI_REG) VM_ADVANCE(1);
             DEBUG("TRACE - STOI R%lu\n", REG_IDX(1));
             /* Convert a string to a integer - returns 1 on error */
             if (string2integer(&op1R->int_value, op1R->string_value, op1R->string_length)) {
                 SET_SIGNAL(RXSIGNAL_CONVERSION_ERROR);
             }
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  STOF_REG  Set register float value from its string value
  *  -----------------------------------------------------------------------------------*/
-        START_INSTRUCTION(STOF_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(STOF_REG) VM_ADVANCE(1);
             DEBUG("TRACE - STOF R%lu\n", REG_IDX(1));
             /* Convert a string to a float - returns 1 on error */
             if (string2float(&op1R->float_value, op1R->string_value, op1R->string_length)) {
                 SET_SIGNAL(RXSIGNAL_CONVERSION_ERROR);
             }
-            DISPATCH
+            DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  FFORMAT_REG_REG_REG  Set string from float use format string   pej 3. November 2021
  *  DEPRECATED - use FEXTR_REG_REG_REG
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FFORMAT_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(FFORMAT_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - FFORMAT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             prep_string_buffer(op1R,SMALLEST_STRING_BUFFER_LENGTH); // Large enough for a float
             null_terminate_string_buffer(op3R);    // terminate format string explicitly, rexx vars aren't!
@@ -8297,7 +8302,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             op1R->string_char_pos = 0;
             op1R->string_chars = op1R->string_length;
   #endif
-            DISPATCH
+            DISPATCH;
 /* ------------------------------------------------------------------------------------
  * FEXTR_REG_REG_REG Extract float to string coefficient and decimal exponent integer
  * R3 contains the float value
@@ -8307,17 +8312,17 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  * trimmed of trailing zeros
  * This instruction is designed to allow the user to format the float as they wish
  */
-        START_INSTRUCTION(FEXTR_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(FEXTR_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - FEXTR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             extract_double_decimal(&(current_frame->num_context), op1R, op2R, op3R->float_value);
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  STRLOWER_REG_REG  translate string into lower case string              pej 23.10.21
  *  -----------------------------------------------------------------------------------
  */
 // TODO: what to do if there is a length change of chars during translation
-            START_INSTRUCTION(STRLOWER_REG_REG) CALC_DISPATCH(2)
+            START_INSTRUCTION(STRLOWER_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - STRLOWER R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 set_value_string(op1R, op2R);
@@ -8330,14 +8335,14 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 utf8lwr(op1R->string_value);
 #endif
             }
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  STRUPPER_REG_REG  translate string into upper case string              pej 23.10.21
  *  -----------------------------------------------------------------------------------
  */
 // TODO: what to do if there is a length change of chars during translation
-            START_INSTRUCTION(STRUPPER_REG_REG) CALC_DISPATCH(2)
+            START_INSTRUCTION(STRUPPER_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - STRUPPER R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 set_value_string(op1R, op2R);
@@ -8350,13 +8355,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 utf8upr(op1R->string_value);
 #endif
             }
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  STRCHAR_REG_REG_REG  String to Int op1 = op2[op3]                   pej 12 Apr 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(STRCHAR_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(STRCHAR_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - STRCHAR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             {
 #ifndef NUTF8
@@ -8369,7 +8374,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 REG_RETURN_INT(op2R->string_value[op3R->int_value])
 #endif
             }
-            DISPATCH
+            DISPATCH;
 // Lazy Peter approach
 #define setCodePointETC()       \
    {string_set_byte_pos(op2R, op3R->int_value); \
@@ -8385,7 +8390,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  *  HEXCHAR_REG_REG_REG  op1 = hex(op2[op3])                       pej 04 November 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(HEXCHAR_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(HEXCHAR_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - HEXCHAR R%d,R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2), (int) REG_IDX(3));
             {
                 static const char hexconst[] = "0123456789ABCDEF";
@@ -8441,13 +8446,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 PUTSTRLEN(op1R, bytelen * 2);
             }
         hexdispatch:
-        DISPATCH
+        DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  POSCHAR_REG_REG_REG  op1 position of op3 in op2                pej 05 November 2021
  *  -----------------------------------------------------------------------------------
  */
-            START_INSTRUCTION(POSCHAR_REG_REG_REG) CALC_DISPATCH(3)
+            START_INSTRUCTION(POSCHAR_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - POSCHAR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             {
                 rxinteger result = -1, i;
@@ -8468,162 +8473,162 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 }
                 REG_RETURN_INT(result)
             }
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  BGT_ID_REG_REG  if op2>op3 goto op1                           pej 13 September 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(BGT_ID_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(BGT_ID_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - BGT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            if (current_frame->locals[REG_IDX(2)]->int_value > current_frame->locals[REG_IDX(3)]->int_value) {
-                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-                CALC_DISPATCH_MANUAL
+            if (current_locals[REG_IDX(2)]->int_value > current_locals[REG_IDX(3)]->int_value) {
+                VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
             }
-        DISPATCH
+        DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  BGT_ID_REG_INT  if op2>op3 goto op1                           pej 13 September 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(BGT_ID_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(BGT_ID_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - BGT 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            if (current_frame->locals[REG_IDX(2)]->int_value > op3I) {
-               next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-               CALC_DISPATCH_MANUAL
+            if (current_locals[REG_IDX(2)]->int_value > op3I) {
+               VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
             }
-        DISPATCH
+        DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  BGE_ID_REG_REG  if op2>=op3 goto op1                          pej 13 September 2021
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BGE_ID_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGE_ID_REG_REG) VM_ADVANCE(3);
        DEBUG("TRACE - BGE 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-       if (current_frame->locals[REG_IDX(2)]->int_value >= current_frame->locals[REG_IDX(3)]->int_value) {
-          next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-          CALC_DISPATCH_MANUAL
+       if (current_locals[REG_IDX(2)]->int_value >= current_locals[REG_IDX(3)]->int_value) {
+          VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
        }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  BGE_ID_REG_INT  if op2>=op3 goto op1                         pej 13 September 2021
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BGE_ID_REG_INT) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGE_ID_REG_INT) VM_ADVANCE(3);
         DEBUG("TRACE - BGE 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-        if (current_frame->locals[REG_IDX(2)]->int_value >= op3I) {
-            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-            CALC_DISPATCH_MANUAL
+        if (current_locals[REG_IDX(2)]->int_value >= op3I) {
+            VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
         }
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  BLT_ID_REG_REG  if op2<op3 goto op1                           pej 13 September 2021
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BLT_ID_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BLT_ID_REG_REG) VM_ADVANCE(3);
         DEBUG("TRACE - BLT 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-        if (current_frame->locals[REG_IDX(2)]->int_value < current_frame->locals[REG_IDX(3)]->int_value) {
-            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-            CALC_DISPATCH_MANUAL
+        if (current_locals[REG_IDX(2)]->int_value < current_locals[REG_IDX(3)]->int_value) {
+            VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
         }
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  BLT_ID_REG_INT  if op2<op3 goto op1                           pej 13 September 2021
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BLT_ID_REG_INT) CALC_DISPATCH(3)
+    START_INSTRUCTION(BLT_ID_REG_INT) VM_ADVANCE(3);
         DEBUG("TRACE - BGT 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-        if (current_frame->locals[REG_IDX(2)]->int_value < op3I) {
-            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-            CALC_DISPATCH_MANUAL
+        if (current_locals[REG_IDX(2)]->int_value < op3I) {
+            VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
         }
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  BLE_ID_REG_REG  if op2<=op3 goto op1                          pej 13 September 2021
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BLE_ID_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BLE_ID_REG_REG) VM_ADVANCE(3);
         DEBUG("TRACE - BGE 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-        if (current_frame->locals[REG_IDX(2)]->int_value <= current_frame->locals[REG_IDX(3)]->int_value) {
-            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-            CALC_DISPATCH_MANUAL
+        if (current_locals[REG_IDX(2)]->int_value <= current_locals[REG_IDX(3)]->int_value) {
+            VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
         }
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  BLE_ID_REG_INT  if op2<=op3 goto op1                          pej 13 September 2021
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BLE_ID_REG_INT) CALC_DISPATCH(3)
+    START_INSTRUCTION(BLE_ID_REG_INT) VM_ADVANCE(3);
         DEBUG("TRACE - BGE 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-        if (current_frame->locals[REG_IDX(2)]->int_value <= op3I) {
-            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-            CALC_DISPATCH_MANUAL
+        if (current_locals[REG_IDX(2)]->int_value <= op3I) {
+            VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
         }
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  BNE_ID_REG_INT  if op2!=op3 goto op1                          pej 14 September 2021
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BNE_ID_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BNE_ID_REG_REG) VM_ADVANCE(3);
         DEBUG("TRACE - BGE 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-        if (current_frame->locals[REG_IDX(2)]->int_value != current_frame->locals[REG_IDX(3)]->int_value) {
-            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-            CALC_DISPATCH_MANUAL
+        if (current_locals[REG_IDX(2)]->int_value != current_locals[REG_IDX(3)]->int_value) {
+            VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
         }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  BNE_ID_REG_INT  if op2!=op3 goto op1                          pej 14 September 2021
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BNE_ID_REG_INT) CALC_DISPATCH(3)
+    START_INSTRUCTION(BNE_ID_REG_INT) VM_ADVANCE(3);
         DEBUG("TRACE - BGE 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-        if (current_frame->locals[REG_IDX(2)]->int_value != op3I) {
-            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-            CALC_DISPATCH_MANUAL
+        if (current_locals[REG_IDX(2)]->int_value != op3I) {
+            VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
         }
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  BEQ_ID_REG_INT  if op2=op3 goto op1                           pej 14 September 2021
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BEQ_ID_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BEQ_ID_REG_REG) VM_ADVANCE(3);
         DEBUG("TRACE - BGE 0x%x,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-        if (current_frame->locals[REG_IDX(2)]->int_value == current_frame->locals[REG_IDX(3)]->int_value) {
-            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-            CALC_DISPATCH_MANUAL
+        if (current_locals[REG_IDX(2)]->int_value == current_locals[REG_IDX(3)]->int_value) {
+            VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
         }
-    DISPATCH
+    DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  BEQ_ID_REG_INT  if op2=op3 goto op1                           pej 14 September 2021
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BEQ_ID_REG_INT) CALC_DISPATCH(3)
+    START_INSTRUCTION(BEQ_ID_REG_INT) VM_ADVANCE(3);
         DEBUG("TRACE - BGE 0x%x,R%d,%d\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
-        if (current_frame->locals[REG_IDX(2)]->int_value == op3I) {
-            next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-            CALC_DISPATCH_MANUAL
+        if (current_locals[REG_IDX(2)]->int_value == op3I) {
+            VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
         }
-    DISPATCH
+    DISPATCH;
  /* ------------------------------------------------------------------------------------
  *  BCT_REG_ID  dec op2; if op2>0 goto op1                           pej 26 August 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(BCT_ID_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(BCT_ID_REG) VM_ADVANCE(2);
             DEBUG("TRACE - BCT R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
             if (!rxinteger_checked_sub(op2RI, 1, &op2R->int_value)) {
                 SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
             else if (op2R->int_value > 0) {
-                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-                CALC_DISPATCH_MANUAL
+                VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
             }
-        DISPATCH
+        DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  BCT_REG_REG_ID  dec op2, inc op3; if op2>0 goto op1              pej 26 August 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(BCT_ID_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(BCT_ID_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - BCT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             {
                 rxinteger counter;
@@ -8636,35 +8641,35 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                     op2R->int_value = counter;
                     op3R->int_value = index;
                     if (counter > 0) {
-                        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-                        CALC_DISPATCH_MANUAL
+                        VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
                     }
                 }
             }
-        DISPATCH
+        DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  BCF_ID_REG if op2=0 goto op1(if false) else dec op2
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(BCF_ID_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(BCF_ID_REG) VM_ADVANCE(2);
             DEBUG("TRACE - BCF R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
-            if (current_frame->locals[REG_IDX(2)]->int_value == 0) {
-                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-                CALC_DISPATCH_MANUAL
+            if (current_locals[REG_IDX(2)]->int_value == 0) {
+                VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
             }
             else if (!rxinteger_checked_sub(op2RI, 1, &op2R->int_value)) {
                 SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
-            DISPATCH
+            DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  BCF_ID_REG_REG  if op2=0 goto op1(if false) else dec op2 and inc op3
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(BCF_ID_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(BCF_ID_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - BCF R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
-            if (current_frame->locals[REG_IDX(2)]->int_value == 0) {
-                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-                CALC_DISPATCH_MANUAL
+            if (current_locals[REG_IDX(2)]->int_value == 0) {
+                VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
             }
             else {
                 rxinteger counter;
@@ -8678,26 +8683,26 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                     op3R->int_value = index;
                 }
             }
-            DISPATCH
+            DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  BCTNM_REG_ID  dec op2; if op2>=0 goto op1                           pej 26 August 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(BCTNM_ID_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(BCTNM_ID_REG) VM_ADVANCE(2);
             DEBUG("TRACE - BCTNM R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
             if (!rxinteger_checked_sub(op2RI, 1, &op2R->int_value)) {
                 SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
             else if (op2R->int_value >= 0) {
-                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-                CALC_DISPATCH_MANUAL
+                VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
             }
-        DISPATCH
+        DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  BCTNM_REG_REG_ID  dec op2, inc op3; if op2>=0 goto op1           pej 26 August 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(BCTNM_ID_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(BCTNM_ID_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - BCTNM R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             {
                 rxinteger counter;
@@ -8710,26 +8715,26 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                     op2R->int_value = counter;
                     op3R->int_value = index;
                     if (counter >= 0) {
-                        next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-                        CALC_DISPATCH_MANUAL
+                        VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
                     }
                 }
             }
-        DISPATCH
+        DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  BCTP_ID_REG  inc op2; goto op1                                     pej 11 June 2023
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(BCTP_ID_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(BCTP_ID_REG) VM_ADVANCE(2);
             DEBUG("TRACE - BCTP R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
             if (!rxinteger_checked_add(op2RI, 1, &op2R->int_value)) {
                 SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
             }
             else {
-                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-                CALC_DISPATCH_MANUAL
+                VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
             }
-        DISPATCH
+        DISPATCH;
  /* ------------------------------------------------------------------------------------
  *  FndBlnk REG_REG_REG  return first blank after op2[op3]          pej 27 August 2021
  *  Blanks are all unicode white spaces
@@ -8737,7 +8742,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  *  a negative return value means nothing found: to distinguish from offset 0
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(FNDBLNK_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(FNDBLNK_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - FNDBLNK R%lu R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 rxinteger len;
@@ -8777,7 +8782,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
              // printf("FBlank %d %d\n",fresult,result);
                 REG_RETURN_INT(result)
             }
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  FndNBlnk REG_REG_REG  return first non blank after op2[op3]          pej 27 August 2021
@@ -8786,7 +8791,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  *  a negative return value means nothing found: to distinguish from offset 0
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(FNDNBLNK_REG_REG_REG)  CALC_DISPATCH(3)
+    START_INSTRUCTION(FNDNBLNK_REG_REG_REG)  VM_ADVANCE(3);
             DEBUG("TRACE - FNDNBLNK R%lu R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 rxinteger result;
@@ -8843,13 +8848,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
          //       printf("FnBLANK %d %d\n",fresult,result);
                 REG_RETURN_INT(result)
             }
-            DISPATCH
+            DISPATCH;
 
  /* ------------------------------------------------------------------------------------
   *  GETBYTE_REG_REG_REG  Int op1 = op2[op3]                             pej 19 Oct 2021
   *  -----------------------------------------------------------------------------------
   */
-    START_INSTRUCTION(GETBYTE_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(GETBYTE_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - GETBYTE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
 
     if (op3R->int_value < 0 || (size_t)op3R->int_value >= op2R->binary_length) {
@@ -8858,27 +8863,27 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     else {
         REG_RETURN_INT((unsigned char)op2R->binary_value[op3R->int_value])
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  BLEN_REG_REG  Int op1 = byte length of op2
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BLEN_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(BLEN_REG_REG) VM_ADVANCE(2);
     DEBUG("TRACE - BLEN R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
     REG_RETURN_INT((rxinteger)op2R->binary_length)
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BLEN_REG_BINARY) CALC_DISPATCH(2)
+    START_INSTRUCTION(BLEN_REG_BINARY) VM_ADVANCE(2);
     DEBUG("TRACE - BLEN R%d,binary[%zu]\n", (int)REG_IDX(1), (size_t)(pc + 2)->index);
     REG_RETURN_INT((rxinteger)op2S->string_len)
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  BRESIZE_REG_REG  resize op1 to op2 bytes, zero-filling growth
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BRESIZE_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(BRESIZE_REG_REG) VM_ADVANCE(2);
     DEBUG("TRACE - BRESIZE R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
     if (op2R->int_value < 0 || (uintmax_t)op2R->int_value > (uintmax_t)SIZE_MAX) {
         SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
@@ -8898,13 +8903,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             clear_vm_private_flags(op1R);
         }
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  BCLEAR_REG  clear binary payload length, preserving ordinary capacity
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BCLEAR_REG) CALC_DISPATCH(1)
+    START_INSTRUCTION(BCLEAR_REG) VM_ADVANCE(1);
     DEBUG("TRACE - BCLEAR R%d\n", (int)REG_IDX(1));
     if (op1R->native_payload_ops) {
         clear_binary_payload(op1R);
@@ -8914,13 +8919,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         op1R->binary_pos = 0;
         clear_vm_private_flags(op1R);
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  BFILL_REG_REG  fill all current binary bytes in op1 with byte op2
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BFILL_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(BFILL_REG_REG) VM_ADVANCE(2);
     DEBUG("TRACE - BFILL R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
     if (op2R->int_value < 0 || op2R->int_value > 255) {
         SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
@@ -8931,13 +8936,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         }
         clear_vm_private_flags(op1R);
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  BCOPY_REG_REG_REG / BCOPY_REG_BINARY_REG  copy op1 length bytes from source at op3
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BCOPY_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BCOPY_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BCOPY R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t length = op1R->native_payload_ops ? 0 : op1R->binary_length;
@@ -8956,9 +8961,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             clear_vm_private_flags(op1R);
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BCOPY_REG_BINARY_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BCOPY_REG_BINARY_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BCOPY R%d,binary[%zu],R%d\n",
           (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
     {
@@ -8979,13 +8984,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             clear_vm_private_flags(op1R);
         }
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  Strict typed little-endian binary reads
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BGETU8_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGETU8_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BGETU8 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -8996,9 +9001,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_INT((rxinteger)rxvm_binary_read_le(op2R, offset, 1))
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BGETU8_REG_BINARY_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGETU8_REG_BINARY_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BGETU8 R%d,binary[%zu],R%d\n",
           (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
     {
@@ -9011,9 +9016,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_INT((rxinteger)rxvm_binary_read_le_bytes((const unsigned char *)source->string, offset, 1))
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BGETI8_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGETI8_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BGETI8 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -9024,9 +9029,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_INT(rxvm_sign_extend_le_value(rxvm_binary_read_le(op2R, offset, 1), 8))
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BGETI8_REG_BINARY_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGETI8_REG_BINARY_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BGETI8 R%d,binary[%zu],R%d\n",
           (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
     {
@@ -9039,9 +9044,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_INT(rxvm_sign_extend_le_value(rxvm_binary_read_le_bytes((const unsigned char *)source->string, offset, 1), 8))
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BGETU16_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGETU16_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BGETU16 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -9052,9 +9057,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_INT((rxinteger)rxvm_binary_read_le(op2R, offset, 2))
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BGETU16_REG_BINARY_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGETU16_REG_BINARY_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BGETU16 R%d,binary[%zu],R%d\n",
           (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
     {
@@ -9067,9 +9072,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_INT((rxinteger)rxvm_binary_read_le_bytes((const unsigned char *)source->string, offset, 2))
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BGETI16_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGETI16_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BGETI16 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -9080,9 +9085,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_INT(rxvm_sign_extend_le_value(rxvm_binary_read_le(op2R, offset, 2), 16))
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BGETI16_REG_BINARY_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGETI16_REG_BINARY_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BGETI16 R%d,binary[%zu],R%d\n",
           (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
     {
@@ -9095,9 +9100,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_INT(rxvm_sign_extend_le_value(rxvm_binary_read_le_bytes((const unsigned char *)source->string, offset, 2), 16))
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BGETU32_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGETU32_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BGETU32 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -9115,9 +9120,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             }
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BGETU32_REG_BINARY_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGETU32_REG_BINARY_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BGETU32 R%d,binary[%zu],R%d\n",
           (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
     {
@@ -9137,9 +9142,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             }
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BGETI32_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGETI32_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BGETI32 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -9150,9 +9155,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_INT(rxvm_sign_extend_le_value(rxvm_binary_read_le(op2R, offset, 4), 32))
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BGETI32_REG_BINARY_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGETI32_REG_BINARY_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BGETI32 R%d,binary[%zu],R%d\n",
           (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
     {
@@ -9165,9 +9170,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_INT(rxvm_sign_extend_le_value(rxvm_binary_read_le_bytes((const unsigned char *)source->string, offset, 4), 32))
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BGETF64_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGETF64_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BGETF64 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -9181,9 +9186,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_FLOAT(rxvm_binary_read_f64_le(op2R, offset))
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BGETF64_REG_BINARY_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGETF64_REG_BINARY_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BGETF64 R%d,binary[%zu],R%d\n",
           (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
     {
@@ -9199,9 +9204,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_FLOAT(rxvm_binary_read_f64_le_bytes((const unsigned char *)source->string, offset))
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BGETI64_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGETI64_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BGETI64 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -9216,9 +9221,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_INT(result)
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BGETI64_REG_BINARY_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGETI64_REG_BINARY_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BGETI64 R%d,binary[%zu],R%d\n",
           (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
     {
@@ -9235,9 +9240,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_INT(result)
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BGETF32_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGETF32_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BGETF32 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -9251,9 +9256,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_FLOAT(rxvm_binary_read_f32_le_bytes((const unsigned char *)op2R->binary_value, offset))
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BGETF32_REG_BINARY_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGETF32_REG_BINARY_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BGETF32 R%d,binary[%zu],R%d\n",
           (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
     {
@@ -9269,13 +9274,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_FLOAT(rxvm_binary_read_f32_le_bytes((const unsigned char *)source->string, offset))
         }
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  Strict typed little-endian binary writes
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BSETU8_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BSETU8_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BSETU8 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -9287,9 +9292,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             rxvm_binary_write_le(op1R, offset, 1, (uint64_t)op3R->int_value);
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BSETI8_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BSETI8_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BSETI8 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -9301,9 +9306,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             rxvm_binary_write_le(op1R, offset, 1, (uint64_t)((uint8_t)op3R->int_value));
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BSETU16_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BSETU16_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BSETU16 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -9315,9 +9320,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             rxvm_binary_write_le(op1R, offset, 2, (uint64_t)op3R->int_value);
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BSETI16_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BSETI16_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BSETI16 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -9329,9 +9334,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             rxvm_binary_write_le(op1R, offset, 2, (uint64_t)((uint16_t)op3R->int_value));
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BSETU32_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BSETU32_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BSETU32 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -9343,9 +9348,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             rxvm_binary_write_le(op1R, offset, 4, (uint64_t)op3R->int_value);
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BSETI32_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BSETI32_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BSETI32 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -9357,9 +9362,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             rxvm_binary_write_le(op1R, offset, 4, (uint64_t)((uint32_t)op3R->int_value));
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BSETF64_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BSETF64_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BSETF64 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -9373,9 +9378,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "f64 requires 64-bit double");
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BSETI64_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BSETI64_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BSETI64 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -9386,9 +9391,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             rxvm_binary_write_le(op1R, offset, 8, (uint64_t)op3R->int_value);
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BSETF32_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BSETF32_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BSETF32 R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -9402,22 +9407,22 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "f32 requires 32-bit float");
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BCHECKRANGE_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BCHECKRANGE_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BCHECKRANGE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     if (op3R->int_value < 0 ||
         (uintmax_t)op3R->int_value > (uintmax_t)SIZE_MAX ||
         !rxvm_binary_range(op1R, op2R->int_value, (size_t)op3R->int_value, 0)) {
         SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  Binary memory strings, moves, and zero-copy compares
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BGETS_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGETS_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BGETS R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -9430,9 +9435,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             SET_SIGNAL(RXSIGNAL_UNICODE_ERROR);
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BGETS_REG_BINARY_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BGETS_REG_BINARY_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BGETS R%d,binary[%zu],R%d\n",
           (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
     {
@@ -9447,9 +9452,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             SET_SIGNAL(RXSIGNAL_UNICODE_ERROR);
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BSETS_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BSETS_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BSETS R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -9464,9 +9469,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             clear_vm_private_flags(op1R);
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BSETS_REG_REG_STRING) CALC_DISPATCH(3)
+    START_INSTRUCTION(BSETS_REG_REG_STRING) VM_ADVANCE(3);
     DEBUG("TRACE - BSETS R%d,R%d,string[%zu]\n",
           (int)REG_IDX(1), (int)REG_IDX(2), (size_t)(pc + 3)->index);
     {
@@ -9482,9 +9487,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             clear_vm_private_flags(op1R);
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(SGET_REG_STRING_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(SGET_REG_STRING_REG) VM_ADVANCE(3);
     DEBUG("TRACE - SGET R%d,string[%zu],R%d\n",
           (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
     {
@@ -9513,9 +9518,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             SET_SIGNAL(RXSIGNAL_UNICODE_ERROR);
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BMOVE_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BMOVE_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BMOVE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t source_offset;
@@ -9534,9 +9539,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             clear_vm_private_flags(op1R);
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BMEMMOVE_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BMEMMOVE_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BMEMMOVE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t source_offset;
@@ -9552,9 +9557,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             clear_vm_private_flags(op1R);
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BCMPB_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BCMPB_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BCMPB R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -9567,9 +9572,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_INT(result)
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BCMPB_REG_BINARY_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BCMPB_REG_BINARY_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BCMPB R%d,binary[%zu],R%d\n",
           (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
     {
@@ -9584,9 +9589,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_INT(result)
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BCMPB_REG_REG_BINARY) CALC_DISPATCH(3)
+    START_INSTRUCTION(BCMPB_REG_REG_BINARY) VM_ADVANCE(3);
     DEBUG("TRACE - BCMPB R%d,R%d,binary[%zu]\n",
           (int)REG_IDX(1), (int)REG_IDX(2), (size_t)(pc + 3)->index);
     {
@@ -9601,9 +9606,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_INT(result)
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BCMPB_REG_BINARY_BINARY) CALC_DISPATCH(3)
+    START_INSTRUCTION(BCMPB_REG_BINARY_BINARY) VM_ADVANCE(3);
     DEBUG("TRACE - BCMPB R%d,binary[%zu],binary[%zu]\n",
           (int)REG_IDX(1), (size_t)(pc + 2)->index, (size_t)(pc + 3)->index);
     {
@@ -9619,9 +9624,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_INT(result)
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BCMPS_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BCMPS_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BCMPS R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     {
         size_t offset;
@@ -9639,9 +9644,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_INT(result)
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BCMPS_REG_REG_STRING) CALC_DISPATCH(3)
+    START_INSTRUCTION(BCMPS_REG_REG_STRING) VM_ADVANCE(3);
     DEBUG("TRACE - BCMPS R%d,R%d,string[%zu]\n",
           (int)REG_IDX(1), (int)REG_IDX(2), (size_t)(pc + 3)->index);
     {
@@ -9660,9 +9665,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_INT(result)
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BCMPS_REG_BINARY_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BCMPS_REG_BINARY_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BCMPS R%d,binary[%zu],R%d\n",
           (int)REG_IDX(1), (size_t)(pc + 2)->index, (int)REG_IDX(3));
     {
@@ -9682,9 +9687,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_INT(result)
         }
     }
-    DISPATCH
+    DISPATCH;
 
-    START_INSTRUCTION(BCMPS_REG_BINARY_STRING) CALC_DISPATCH(3)
+    START_INSTRUCTION(BCMPS_REG_BINARY_STRING) VM_ADVANCE(3);
     DEBUG("TRACE - BCMPS R%d,binary[%zu],string[%zu]\n",
           (int)REG_IDX(1), (size_t)(pc + 2)->index, (size_t)(pc + 3)->index);
     {
@@ -9704,13 +9709,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             REG_RETURN_INT(result)
         }
     }
-    DISPATCH
+    DISPATCH;
 
     /* ------------------------------------------------------------------------------------
      *  SETBYTE_REG_REG_REG  op1[op2] = op3
      *  -----------------------------------------------------------------------------------
      */
-    START_INSTRUCTION(SETBYTE_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(SETBYTE_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - SETBYTE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     if (op2R->int_value < 0 || (size_t)op2R->int_value >= op1R->binary_length ||
         op3R->int_value < 0 || op3R->int_value > 255) {
@@ -9720,35 +9725,35 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         op1R->binary_value[(size_t)op2R->int_value] = (char)(unsigned char)op3R->int_value;
         clear_vm_private_flags(op1R);
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  BCONCAT_REG_REG_REG  op1 = op2 || op3
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BCONCAT_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BCONCAT_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BCONCAT R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     if (concat_binary(op1R, op2R, op3R) != 0) {
         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  BAPPEND_REG_REG  op1 = op1 || op2
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BAPPEND_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(BAPPEND_REG_REG) VM_ADVANCE(2);
     DEBUG("TRACE - BAPPEND R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
     if (append_binary_value(op1R, op2R) != 0) {
         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SETBINPOS_REG_REG  op1 binary cursor = clamp(op2, 0..len)
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(SETBINPOS_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(SETBINPOS_REG_REG) VM_ADVANCE(2);
     DEBUG("TRACE - SETBINPOS R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
     if (op2R->int_value < 0) {
         op1R->binary_pos = 0;
@@ -9759,22 +9764,22 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     else {
         op1R->binary_pos = (size_t)op2R->int_value;
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  GETBINPOS_REG_REG  Int op1 = op2 binary cursor
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(GETBINPOS_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(GETBINPOS_REG_REG) VM_ADVANCE(2);
     DEBUG("TRACE - GETBINPOS R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
     REG_RETURN_INT((rxinteger)op2R->binary_pos)
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  BSLICE_REG_REG_REG  op1 = op2[op2.binary_pos..op2.binary_pos + op3)
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BSLICE_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BSLICE_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BSLICE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     if (op3R->int_value < 0) {
         SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
@@ -9782,13 +9787,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
     else if (slice_binary(op1R, op2R, op2R->binary_pos, (size_t)op3R->int_value) != 0) {
         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  BUPDATE_REG_REG_REG  overlay op3 into op1 at byte offset op2
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BUPDATE_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(BUPDATE_REG_REG_REG) VM_ADVANCE(3);
     DEBUG("TRACE - BUPDATE R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
     if (op2R->int_value < 0 || (size_t)op2R->int_value > op1R->binary_length) {
         SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
@@ -9805,24 +9810,24 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             clear_vm_private_flags(op1R);
         }
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  STOBIN_REG  op1.binary = op1.string bytes
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(STOBIN_REG) CALC_DISPATCH(1)
+    START_INSTRUCTION(STOBIN_REG) VM_ADVANCE(1);
     DEBUG("TRACE - STOBIN R%d\n", (int)REG_IDX(1));
     if (set_binary(op1R, op1R->string_value, op1R->string_length) != 0) {
         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Out of memory");
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  BINTOS_REG  op1.string = op1.binary bytes, validated as UTF-8
  *  -----------------------------------------------------------------------------------
  */
-    START_INSTRUCTION(BINTOS_REG) CALC_DISPATCH(1)
+    START_INSTRUCTION(BINTOS_REG) VM_ADVANCE(1);
     DEBUG("TRACE - BINTOS R%d\n", (int)REG_IDX(1));
 #ifndef NUTF8
     {
@@ -9842,13 +9847,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                op1R->binary_value ? op1R->binary_value : "",
                op1R->binary_length);
 #endif
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  CONCCHAR_REG_REG_REG  op1=op2[op3]                                pej 27 August 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(CONCCHAR_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(CONCCHAR_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - CONCCHAR R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
             {
                 rxinteger temp = op3R->int_value;   // save offset, we misuse v3 later
@@ -9864,13 +9869,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 string_concat_char(op1R, op3R);
                 op3R->int_value = temp;   // restore original v3
             }
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  TRANSCHAR_REG_REG_REG  replace op1 if it is in op3-list by char in op2-list pej 7 November 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(TRANSCHAR_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(TRANSCHAR_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - TRANSCHAR R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
             {
                 rxinteger val = op1R->int_value;
@@ -9891,13 +9896,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 }
                 REG_RETURN_INT(val)
             }
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  DROPCHAR_REG_REG_REG  removes characters contained in op3-list pej 19 November 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(DROPCHAR_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(DROPCHAR_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - DROPCHAR R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
             {
                 rxinteger i, len1, len2;
@@ -9925,7 +9930,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                     string_concat_char(op1R, op2R);
                 }
             }
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  SUBSTR_REG_REG_REG op1 = substr(op2, length)
@@ -9934,7 +9939,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  * ----------------------------------------------------------------------------------- */
 
         START_INSTRUCTION(SUBSTR_REG_REG_REG)
-        START_INSTRUCTION(SUBSTRING_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SUBSTRING_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SUBSTR R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             {
                 rxinteger length = op3R->int_value;
@@ -9945,26 +9950,26 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                     string_slice_from_cursor(op1R, op2R, (size_t) length);
                 }
             }
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
 *  SUBSTCUT_REG_REG_REG op1=substr(op1,,op2) cuts off after op2   pej 13 November 2021
 *  -----------------------------------------------------------------------------------
 */
-        START_INSTRUCTION(SUBSTCUT_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(SUBSTCUT_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - SUBSTCUT R%lu R%lu\n", REG_IDX(1), REG_IDX(2));
 
         /* input parm op2 defines how many leading codepoints remain in the string */
            REQUIRE_VALID_UTF8_REGISTER(op1R);
            string_truncate_chars(op1R, (size_t) op2R->int_value);
-           DISPATCH
+           DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  PADSTR_REG_REG_REG op1=op2(repeated op3 times)                 pej 13 November 2021
  *  requires in op2R the codepoint of the character
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(PADSTR_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(PADSTR_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - PADSTR R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
             {
                 int i;
@@ -9972,15 +9977,15 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                     string_concat_char(op1R, op2R);
                 }
              }
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  CNOP Dummy instruction for testing purposes                     pej 11 November 2021
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(CNOP) CALC_DISPATCH(0)
+        START_INSTRUCTION(CNOP) VM_ADVANCE(0);
         DEBUG("TRACE - CNOP\n");
-        DISPATCH
+        DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  find substring in string                                           pej 27 June 2025
  *  the initial offset is in R1: it is 1-based
@@ -9989,7 +9994,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  *  0 means nothing found
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(STRPOS_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(STRPOS_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - STRPOS R%lu R%lu R%lu\n", REG_IDX(1), REG_IDX(2),REG_IDX(3));
             {
                 char *charpos;
@@ -10042,39 +10047,39 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 #endif
                 }
             }
-            DISPATCH
+            DISPATCH;
 
 /*
  *   APPENDCHAR_REG_REG Append Concat Char op2 (as int) on op1
  */
-        START_INSTRUCTION(APPENDCHAR_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(APPENDCHAR_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - APPENDCHAR R%lu R%lu\n", REG_IDX(1),
                   REG_IDX(2));
             string_concat_char(op1R, op2R);
-            DISPATCH
+            DISPATCH;
 
 /*
  *   APPEND_REG_REG Append string op2 on op1
  */
-        START_INSTRUCTION(APPEND_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(APPEND_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - APPEND R%lu R%lu\n", REG_IDX(1),
                   REG_IDX(2));
             string_append(op1R, op2R);
-            DISPATCH
+            DISPATCH;
 
 /*
  *   SAPPEND_REG_REG Append with space string op2 on op1
  */
-        START_INSTRUCTION(SAPPEND_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(SAPPEND_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - SAPPEND R%lu R%lu\n", REG_IDX(1),
                   REG_IDX(2));
             string_sappend(op1R, op2R);
-            DISPATCH
+            DISPATCH;
 
 /*
  *   STRLEN_REG_REG String Length op1 = length(op2)
  */
-        START_INSTRUCTION(STRLEN_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(STRLEN_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - STRLEN R%lu R%lu\n", REG_IDX(1),
                   REG_IDX(2));
             REQUIRE_VALID_UTF8_REGISTER(op2R);
@@ -10083,12 +10088,12 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 #else
             op1R->int_value = (rxinteger)op2R->string_length;
 #endif
-            DISPATCH
+            DISPATCH;
 
 /*
  * SETSTRPOS_REG_REG - Set String (op1) charpos set to op2
  */
-        START_INSTRUCTION(SETSTRPOS_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(SETSTRPOS_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - SETSTRPOS R%lu R%lu\n", REG_IDX(1),
                   REG_IDX(2));
             REQUIRE_VALID_UTF8_REGISTER(op1R);
@@ -10097,12 +10102,12 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 #else
             op1R->string_pos = op2R->int_value;
 #endif
-            DISPATCH
+            DISPATCH;
 
 /*
  * GETSTRPOS_REG_REG - Get String (op2) charpos into op1
  */
-        START_INSTRUCTION(GETSTRPOS_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(GETSTRPOS_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - GETSTRPOS R%lu R%lu\n", REG_IDX(1),
                   REG_IDX(2));
 #ifndef NUTF8
@@ -10110,12 +10115,12 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 #else
             op1R->int_value = op2R->string_pos;
 #endif
-            DISPATCH
+            DISPATCH;
 
 /*
  * STRCHAR_REG_REG - op1 (as int) = op2[charpos]
  */
-        START_INSTRUCTION(STRCHAR_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(STRCHAR_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - STRCHAR R%lu R%lu\n", REG_IDX(1),
                   REG_IDX(2));
             {
@@ -10128,115 +10133,115 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 op1R->int_value = op2R->string_value[op2R->string_pos];
 #endif
             }
-            DISPATCH
+            DISPATCH;
 
 /*
  * SETTPMASK_REG_REG_INT masked replace of source-writable status flags
  */
-        START_INSTRUCTION(SETTPMASK_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(SETTPMASK_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - SETTPMASK R%d R%d %d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
             op1R->status.all_type_flags =
                 RXFLAGS_SOURCE_MASKED_REPLACE(op1R->status.all_type_flags,
                                               (uint32_t)op2R->int_value,
                                               (uint32_t)op3I);
-            DISPATCH
+            DISPATCH;
 
 /*
  * GETTP_REG_REG gets readable register status flags (op1 = op2.flags)
  */
-        START_INSTRUCTION(GETTP_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(GETTP_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - GETTP R%d R%d\n", (int)REG_IDX(1), (int)REG_IDX(2));
             op1R->int_value = (rxinteger)(op2R->status.all_type_flags & RXFLAG_READABLE_MASK);
-            DISPATCH
+            DISPATCH;
 
 /*
  * SETTP_REG_INT sets externally writable register status flags
  */
-        START_INSTRUCTION(SETTP_REG_INT) CALC_DISPATCH(2)
+        START_INSTRUCTION(SETTP_REG_INT) VM_ADVANCE(2);
             DEBUG("TRACE - SETTP R%d %d\n", (int)REG_IDX(1), (int)op2I);
             op1R->status.all_type_flags = RXFLAGS_PUBLIC_WRITE(op1R->status.all_type_flags, (uint32_t)op2I);
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  LOADSETTP_REG_INT load register and set externally writable status flags
  *   op1=op2 and (op1.flags = op3)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(LOADSETTP_REG_INT_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(LOADSETTP_REG_INT_INT) VM_ADVANCE(3);
         DEBUG("TRACE - LOADSETTP R%d %d %d\n", (int)REG_IDX(1),(int)op2I,(int)op3I);
 
             op1R->int_value = op2I;
             op1R->status.all_type_flags = RXFLAGS_PUBLIC_REPLACE((uint32_t)op3I);
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  LOADSETTP_REG_string load string to register and set externally writable status flags
  *   op1=op2 and (op1.flags = op3)
  *  -----------------------------------------------------------------------------------
  */
-            START_INSTRUCTION(LOADSETTP_REG_STRING_INT) CALC_DISPATCH(3)
+            START_INSTRUCTION(LOADSETTP_REG_STRING_INT) VM_ADVANCE(3);
             DEBUG("TRACE - LOADSETTP R%d %s %d\n", (int)REG_IDX(1),op2S->string,(int) op3I);
 
             set_const_string(op1R, op2S);
             op1R->status.all_type_flags = RXFLAGS_PUBLIC_WRITE(op1R->status.all_type_flags, (uint32_t)op3I);
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  LOADSETTP_REG_FLOAT float to load register and set externally writable status flags
  *   op1=op2 and (op1.flags = op3)
  *  -----------------------------------------------------------------------------------
  */
-            START_INSTRUCTION(LOADSETTP_REG_FLOAT_INT) CALC_DISPATCH(3)
+            START_INSTRUCTION(LOADSETTP_REG_FLOAT_INT) VM_ADVANCE(3);
             DEBUG("TRACE - LOADSETTP R%d %.15g %d\n", (int)REG_IDX(1), op2F,(int) op3I);
             op1R->float_value = op2F;
             op1R->status.all_type_flags = RXFLAGS_PUBLIC_REPLACE((uint32_t)op3I);
-            DISPATCH
+            DISPATCH;
 
 /*
  * SETORTP_REG_INT or externally writable register status flags
  */
-        START_INSTRUCTION(SETORTP_REG_INT) CALC_DISPATCH(2)
+        START_INSTRUCTION(SETORTP_REG_INT) VM_ADVANCE(2);
             DEBUG("TRACE - SETORTP R%d %d\n", (int)REG_IDX(1), (int)op2I);
             op1R->status.all_type_flags = RXFLAGS_PUBLIC_OR(op1R->status.all_type_flags, (uint32_t)op2I);
-            DISPATCH
+            DISPATCH;
 
 /*
  * GETANDTP_REG_REG_INT get readable register status flags with mask
  */
-        START_INSTRUCTION(GETANDTP_REG_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(GETANDTP_REG_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - GETANDTP R%d R%d %d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)op3I);
             op1R->int_value = (rxinteger)((op2R->status.all_type_flags & RXFLAG_READABLE_MASK) & (uint32_t)op3I);
-            DISPATCH
+            DISPATCH;
 
 /*
  * BRTPT_ID_REG if op2 has public status flags then goto op1
  */
-        START_INSTRUCTION(BRTPT_ID_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(BRTPT_ID_REG) VM_ADVANCE(2);
             DEBUG("TRACE - BRTPT_ID_REG 0x%x R%d\n", (unsigned int)REG_IDX(1), (int)REG_IDX(2));
             if (op2R->status.all_type_flags & RXFLAG_PUBLIC_TEST_MASK) {
-                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-                CALC_DISPATCH_MANUAL
+                VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
             }
-            DISPATCH
+            DISPATCH;
 
 /*
  * BRTPANDT_ID_REG_INT if op2 readable status flags & op3 true then goto op1
 */
-        START_INSTRUCTION(BRTPANDT_ID_REG_INT) CALC_DISPATCH(3)
+        START_INSTRUCTION(BRTPANDT_ID_REG_INT) VM_ADVANCE(3);
             DEBUG("TRACE - BRTPANDT_ID_REG_INT 0x%x R%d %d\n",
                   (unsigned int)REG_IDX(1),
                   (int)REG_IDX(2),(int)op3I);
             if ((op2R->status.all_type_flags & RXFLAG_READABLE_MASK) & (uint32_t)op3I) {
-                next_pc = current_frame->procedure->binarySpace->binary + REG_IDX(1);
-                CALC_DISPATCH_MANUAL
+                VM_SELECT_INDEX(REG_IDX(1), RXVM_TRANSITION_BRANCH);
+
             }
-            DISPATCH
+            DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IRAND_REG_REG Random Number with seed register                 pej 27 February 2022
  *   op1=irand(op2)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IRAND_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(IRAND_REG_REG) VM_ADVANCE(2);
              DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), (int)REG_IDX(2));
 
             if (op2R->int_value<0) {                 // no seed set
@@ -10251,13 +10256,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 hasSeed = 1;
             }
             set_int(op1R, rand());   // receive new random value
-        DISPATCH
+        DISPATCH;
 /* ------------------------------------------------------------------------------------
  *  IRAND_REG_REG Random Number with seed register                 pej 27 February 2022
  *   op1=irand(op2)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(IRAND_REG_INT) CALC_DISPATCH(2)
+        START_INSTRUCTION(IRAND_REG_INT) VM_ADVANCE(2);
              DEBUG("TRACE - IRAND R%d R%d \n", (int)REG_IDX(1), (int)op2I);
              if (op2I<0) {                                // no seed set
                 if (!hasSeed)  {            // seed still initial, set time based seed
@@ -10271,7 +10276,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 hasSeed = 1;
             }
             set_int(op1R, rand());   // receive new random value
-        DISPATCH
+        DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  rxvers  returns os information                                    pej 20. June 2023
@@ -10282,7 +10287,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 
 #define FDATE (char const[]){ __DATE__[7], __DATE__[8], ..., ' ', ... , '\0' }
 
-    START_INSTRUCTION(RXVERS_REG) CALC_DISPATCH(1)
+    START_INSTRUCTION(RXVERS_REG) VM_ADVANCE(1);
     DEBUG("TRACE - RXVERS R%d\n", (int) REG_IDX(1));
     {
         char vers[256];
@@ -10307,7 +10312,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 
         set_null_string(op1R, vers);
     }
-    DISPATCH
+    DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  rxhash  returns hash of a string it runs in reverse order         pej 24. June 2023
@@ -10316,7 +10321,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
  *      op3=length(string)
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(RXHASH_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(RXHASH_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - RXHASH R%d R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(1),(int)REG_IDX(3));
 
     {
@@ -10333,7 +10338,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
         hash = hash & 0x7FFFFFFFFFFFFFFF;
         op1R->int_value = (rxinteger)hash;
      }
-     DISPATCH
+     DISPATCH;
     /* Spawn - Spawn a process with io redirects - Spawn Process op1 = exec op2 redirect op3
      * reg 1 will be the return code of the process
      * reg 2 is the command (the path environment variable is used for search resolution)
@@ -10344,7 +10349,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
      * Redirect endpoints are internal native payloads resolved through
      * rxspawn_redirect_from_value().
      * spawn generates a failure signal if the command is not found */
-    START_INSTRUCTION(SPAWN_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(SPAWN_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SPAWN R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             {
                 int command_rc = 0;
@@ -10373,72 +10378,72 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                     SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Command Not Found");
                     free(command);
                     if (errorText) free(errorText);
-                    DISPATCH
+                    DISPATCH;
                 }
                 if (spawn_rc) {
                     SET_SIGNAL_MSG(RXSIGNAL_FAILURE, errorText);
                     free(command);
                     if (errorText) free(errorText);
-                    DISPATCH
+                    DISPATCH;
                 }
                 if (errorText) free(errorText);
                 free(command);
                 op1R->int_value = command_rc;
             }
-            DISPATCH
+            DISPATCH;
 
     /* redir2str - Redirect op1 = to-string op2
      * reg 1 will be the redirect object
      * reg 2 is string that will have the redirected string appended to
      *       the redirect object MUST then be used in shellspawn() to cleanup/free memory
      */
-    START_INSTRUCTION(REDIR2STR_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(REDIR2STR_REG_REG) VM_ADVANCE(2);
         DEBUG("TRACE - REDIR2STR R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
         redr2str(op1R, op2R);
-        DISPATCH
+        DISPATCH;
 
     /* redir2arr - Redirect op1 = to-array op2
      * reg 1 will be the redirect object
      * reg 2 is array that will have the redirected output appended to
      *       the redirect object MUST then be used in shellspawn() to cleanup/free memory
      */
-    START_INSTRUCTION(REDIR2ARR_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(REDIR2ARR_REG_REG) VM_ADVANCE(2);
         DEBUG("TRACE - REDIR2ARR R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
         redr2arr(op1R, op2R);
-        DISPATCH
+        DISPATCH;
 
     /* str2redir - Redirect op1 <- string op2
      * reg 1 will be the redirect object
      * reg 2 is string that will be redirected to the pipe
      *       the redirect object MUST then be used in shellspawn() to cleanup/free memory
      */
-    START_INSTRUCTION(STR2REDIR_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(STR2REDIR_REG_REG) VM_ADVANCE(2);
         DEBUG("TRACE - STR2REDIR R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
         str2redr(op1R, op2R);
-        DISPATCH
+        DISPATCH;
 
     /* arr2redir - Redirect op1 <- array op2
      * reg 1 will be the redirect object
      * reg 2 is array that will be redirected to the pipe
      *       the redirect object MUST then be used in shellspawn() to cleanup/free memory
      */
-    START_INSTRUCTION(ARR2REDIR_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(ARR2REDIR_REG_REG) VM_ADVANCE(2);
         DEBUG("TRACE - ARR2REDIR R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
         arr2redr(op1R, op2R);
-        DISPATCH
+        DISPATCH;
 
     /* nullredir - Redirect op1 = to/from null
      * reg 1 will be the redirect object
     */
-    START_INSTRUCTION(NULLREDIR_REG) CALC_DISPATCH(1)
+    START_INSTRUCTION(NULLREDIR_REG) VM_ADVANCE(1);
         DEBUG("TRACE - NULLREDIR R%lu\n", REG_IDX(1));
         nullredr(op1R);
-        DISPATCH
+        DISPATCH;
 
     /* File IO functions - mapped to C90 functions */
 
     /* fopen - op1 file*(int) = fopen filename op2(string) mode op3(string) */
-    START_INSTRUCTION(FOPEN_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(FOPEN_REG_REG_REG) VM_ADVANCE(3);
         DEBUG("TRACE - FOPEN R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
         {
             int fd;
@@ -10475,22 +10480,22 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             free(filename);
             free(mode);
         }
-        DISPATCH
+        DISPATCH;
 
     /* fclose - op1 rc(int) = fclose op2 file*(int) */
-    START_INSTRUCTION(FCLOSE_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(FCLOSE_REG_REG) VM_ADVANCE(2);
         DEBUG("TRACE - FCLOSE R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
         op1R->int_value = fclose((FILE*)op2R->int_value);
-        DISPATCH
+        DISPATCH;
 
     /* fflush - op1 rc(int) = fflush op2 file*(int) */
-    START_INSTRUCTION(FFLUSH_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(FFLUSH_REG_REG) VM_ADVANCE(2);
         DEBUG("TRACE - FFLUSH R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
         op1R->int_value = fflush((FILE*)op2R->int_value);
-        DISPATCH
+        DISPATCH;
 
     /* freadb - op1(binary) = fread op2 file*(int) op3 bytes(int) */
-    START_INSTRUCTION(FREADB_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(FREADB_REG_REG_REG) VM_ADVANCE(3);
         DEBUG("TRACE - FREADB R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
         {
             if (op3R->int_value < 0) {
@@ -10508,10 +10513,10 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 clear_vm_private_flags(op1R);
             }
         }
-        DISPATCH
+        DISPATCH;
 
     /* freadline - op1 (string) = read until newline op2 file*(int) */
-    START_INSTRUCTION(FREADLINE_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(FREADLINE_REG_REG) VM_ADVANCE(2);
         DEBUG("TRACE - FREADLINE R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
     {
         int ch;
@@ -10568,16 +10573,16 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 #else
         clear_vm_private_flags(op1R);
 #endif
-        DISPATCH
+        DISPATCH;
 
     /* freadbyte - op1 (int) = read byte op2 file*(int) */
-    START_INSTRUCTION(FREADBYTE_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(FREADBYTE_REG_REG) VM_ADVANCE(2);
         DEBUG("TRACE - FREADBYTE R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
         op1R->int_value = fgetc((FILE *)op2R->int_value);
-        DISPATCH
+        DISPATCH;
 
     /* freadcdpt - op1 (string and int) = read codepoint op2 file*(int) */
-    START_INSTRUCTION(FREADCDPT_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(FREADCDPT_REG_REG) VM_ADVANCE(2);
         DEBUG("TRACE - FREADCDPT R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
         {
 #ifndef NUTF8
@@ -10654,28 +10659,28 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             clear_vm_private_flags(op1R);
 #endif
         }
-        DISPATCH
+        DISPATCH;
 
     /* fwrite - fwrite to op1 file*(int) from op2(string) */
-    START_INSTRUCTION(FWRITE_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(FWRITE_REG_REG) VM_ADVANCE(2);
         DEBUG("TRACE - FWRITE R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
         fwrite(op2R->string_value, op2R->string_length, 1, (FILE*)op1R->int_value);
-        DISPATCH
+        DISPATCH;
 
     /* fwriteb - fwrite to op1 file*(int) from op2(binary) */
-    START_INSTRUCTION(FWRITEB_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(FWRITEB_REG_REG) VM_ADVANCE(2);
     DEBUG("TRACE - FWRITEB R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
     fwrite(op2R->binary_value, op2R->binary_length, 1, (FILE*)op1R->int_value);
-    DISPATCH
+    DISPATCH;
 
     /* fwritebyte - write byte to op1 file*(int) op2 source(int) */
-    START_INSTRUCTION(FWRITEBYTE_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(FWRITEBYTE_REG_REG) VM_ADVANCE(2);
         DEBUG("TRACE - FWRITEBYTE R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
         fputc(op2R->int_value, (FILE*)op1R->int_value);
-        DISPATCH
+        DISPATCH;
 
     /* fwritecdpt - write codepoint to op1 file*(int) op2 source(int) */
-    START_INSTRUCTION(FWRITECDPT_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(FWRITECDPT_REG_REG) VM_ADVANCE(2);
         DEBUG("TRACE - FWRITECDPT R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
         {
             char codepoint[4];
@@ -10691,58 +10696,58 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 #endif
             fwrite(codepoint, length_of_codepoint, 1, (FILE*)op1R->int_value);
         }
-        DISPATCH
+        DISPATCH;
 
     /* fclearerr - clearerr op1 file*(int) */
-    START_INSTRUCTION(FCLEARERR_REG) CALC_DISPATCH(1)
+    START_INSTRUCTION(FCLEARERR_REG) VM_ADVANCE(1);
         DEBUG("TRACE - FCLEARERR R%lu\n", REG_IDX(1));
         clearerr((FILE*)op1R->int_value);
-        DISPATCH
+        DISPATCH;
 
     /* feof - op1 rc(int) = feof op2 file*(int) */
-    START_INSTRUCTION(FEOF_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(FEOF_REG_REG) VM_ADVANCE(2);
         DEBUG("TRACE - FEOF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
         op1R->int_value = feof((FILE*)op2R->int_value);
-        DISPATCH
+        DISPATCH;
 
     /* ferror - op1 rc(int) = ferror op2 file*(int) */
-    START_INSTRUCTION(FERROR_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(FERROR_REG_REG) VM_ADVANCE(2);
         DEBUG("TRACE - FERROR R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
         op1R->int_value = ferror((FILE*)op2R->int_value);
-        DISPATCH
+        DISPATCH;
 
     /* ichkrng - if op1<op2 | op1>op3 signal OUT_OF_RANGE */
-    START_INSTRUCTION(ICHKRNG_REG_INT_INT) CALC_DISPATCH(3)
+    START_INSTRUCTION(ICHKRNG_REG_INT_INT) VM_ADVANCE(3);
         DEBUG("TRACE - ICHKRNG R%lu,%d,%d\n", REG_IDX(1), (int)op2I, (int)op3I);
         if (op1R->int_value < op2I || op1R->int_value > op3I) SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE)
-        DISPATCH
+        DISPATCH;
 
     /* ichkrng - if op1<op2 | op1>op3 signal OUT_OF_RANGE */
-    START_INSTRUCTION(ICHKRNG_REG_INT_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(ICHKRNG_REG_INT_REG) VM_ADVANCE(3);
         DEBUG("TRACE - ICHKRNG R%lu,%d,R%lu\n", REG_IDX(1), (int)op2I, REG_IDX(3));
         if (op1R->int_value < op2I || op1R->int_value > op3R->int_value) SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE)
-        DISPATCH
+        DISPATCH;
 
     /* ichkrng - if op1<op2 | op1>op3 signal OUT_OF_RANGE */
-    START_INSTRUCTION(ICHKRNG_REG_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(ICHKRNG_REG_REG_REG) VM_ADVANCE(3);
         DEBUG("TRACE - ICHKRNG R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
         if (op1R->int_value < op2R->int_value || op1R->int_value > op3R->int_value) SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE)
-        DISPATCH
+        DISPATCH;
 
     /* ichkrng - if op1<op2 | op1>op3 signal OUT_OF_RANGE */
-    START_INSTRUCTION(ICHKRNG_INT_INT_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(ICHKRNG_INT_INT_REG) VM_ADVANCE(3);
         DEBUG("TRACE - ICHKRNG %d,%d,R%lu\n", (int)op1I, (int)op2I, REG_IDX(3));
         if (op1I < op2I || op1I > op3R->int_value) SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE)
-        DISPATCH
+        DISPATCH;
 
     /* ichkrng - if op1<op2 | op1>op3 signal OUT_OF_RANGE */
-    START_INSTRUCTION(ICHKRNG_INT_REG_REG) CALC_DISPATCH(3)
+    START_INSTRUCTION(ICHKRNG_INT_REG_REG) VM_ADVANCE(3);
         DEBUG("TRACE - ICHKRNG %d,R%lu,R%lu\n", (int)op1I, REG_IDX(2), REG_IDX(3));
         if (op1I < op2R->int_value || op1I > op3R->int_value) SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE)
-        DISPATCH
+        DISPATCH;
 
     /* getenv - get environment variable, op1=env[op2] */
-    START_INSTRUCTION(GETENV_REG_REG) CALC_DISPATCH(2)
+    START_INSTRUCTION(GETENV_REG_REG) VM_ADVANCE(2);
         DEBUG("TRACE - GETENV R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
         {
             char *value;
@@ -10750,10 +10755,10 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             set_null_string(op1R, value);
             if (should_free) free(value);
         }
-        DISPATCH
+        DISPATCH;
 
     /* getenv - get environment variable, op1=env[op2] */
-    START_INSTRUCTION(GETENV_REG_STRING) CALC_DISPATCH(2)
+    START_INSTRUCTION(GETENV_REG_STRING) VM_ADVANCE(2);
         DEBUG("TRACE - GETENV R%lu,\"%.*s\"\n", REG_IDX(1),
               (int)(CONSTSTRING_OP(2))->string_len, (CONSTSTRING_OP(2))->string);
         {
@@ -10762,14 +10767,14 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             set_null_string(op1R, value);
             if (should_free) free(value);
         }
-        DISPATCH
+        DISPATCH;
 
 
     /* ------------------------------------------------------------------------------------
  *  TRIMR_REG_REG_REG  Trim right with char                          pej updated Jan 2026
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(TRIMR_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(TRIMR_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - TRIMR R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             {
                 if (op1R != op2R) set_value_string(op1R, op2R);
@@ -10783,13 +10788,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 }
                 null_terminate_string_buffer(op1R);
             }
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  TRIML_REG_REG_REG  Trim left with char                           pej updated Jan 2026
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(TRIML_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(TRIML_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - TRIML R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             {
                 size_t i = 0;
@@ -10807,13 +10812,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 }
                 null_terminate_string_buffer(op1R);
             }
-            DISPATCH
+            DISPATCH;
 
 /* ------------------------------------------------------------------------------------
  *  TRUNC_REG_REG_REG  Truncate string                              pej updated Jan 2026
  *  -----------------------------------------------------------------------------------
  */
-        START_INSTRUCTION(TRUNC_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(TRUNC_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - TRUNC R%d,R%d,R%d\n", (int)REG_IDX(1), (int)REG_IDX(2), (int)REG_IDX(3));
             {
                 rxinteger len = op3R->int_value;
@@ -10824,12 +10829,12 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                     null_terminate_string_buffer(op1R);
                 }
             }
-            DISPATCH
+            DISPATCH;
 
         START_INSTRUCTION(IUNKNOWN)
         START_INSTRUCTION(INULL)
             SET_SIGNAL(RXSIGNAL_UNKNOWN_INSTRUCTION);
-            DISPATCH
+            DISPATCH;
 
         START_INSTRUCTION(EXIT)
             DEBUG("TRACE - EXIT");
@@ -10846,22 +10851,22 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
             rc = op1RI;
             goto interprt_finished;
 
-        START_INSTRUCTION(SETOBJTYPE_REG_STRING) CALC_DISPATCH(2)
+        START_INSTRUCTION(SETOBJTYPE_REG_STRING) VM_ADVANCE(2);
             DEBUG("TRACE - SETOBJTYPE R%lu,\"%.*s\"\n", REG_IDX(1), (int) op2S->string_len, op2S->string);
             op1R->object_type_name = op2S->string;
             op1R->object_type_name_length = op2S->string_len;
             clear_value_uninitialized_object(op1R);
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SETOBJUNINIT_REG_STRING) CALC_DISPATCH(2)
+        START_INSTRUCTION(SETOBJUNINIT_REG_STRING) VM_ADVANCE(2);
             DEBUG("TRACE - SETOBJUNINIT R%lu,\"%.*s\"\n", REG_IDX(1), (int) op2S->string_len, op2S->string);
             value_zero(op1R);
             op1R->object_type_name = op2S->string;
             op1R->object_type_name_length = op2S->string_len;
             mark_value_uninitialized_object(op1R);
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(ASSERTINITIALIZED_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(ASSERTINITIALIZED_REG) VM_ADVANCE(1);
             DEBUG("TRACE - ASSERTINITIALIZED R%lu\n", REG_IDX(1));
             if (value_is_uninitialized_object(op1R)) {
                 char *error_message = build_runtime_uninitialized_object_error(op1R);
@@ -10871,17 +10876,17 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 } else {
                     SET_SIGNAL(RXSIGNAL_OBJECT_NOT_INITIALIZED);
                 }
-                DISPATCH
+                DISPATCH;
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(ISINITIALIZED_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(ISINITIALIZED_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - ISINITIALIZED R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             value_zero(op1R);
             set_int(op1R, value_is_uninitialized_object(op2R) ? 0 : 1);
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SRCMETHODSEL_REG_REG_STRING) CALC_DISPATCH(3)
+        START_INSTRUCTION(SRCMETHODSEL_REG_REG_STRING) VM_ADVANCE(3);
             {
                 proc_runtime *called_function;
                 const char *class_name;
@@ -10898,7 +10903,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                     } else {
                         SET_SIGNAL(RXSIGNAL_OBJECT_NOT_INITIALIZED);
                     }
-                    DISPATCH
+                    DISPATCH;
                 }
 
                 class_name = op2R->object_type_name;
@@ -10915,7 +10920,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                     else {
                         SET_SIGNAL(RXSIGNAL_FAILURE);
                     }
-                    DISPATCH
+                    DISPATCH;
                 }
 
                 called_function = resolve_runtime_method(context,
@@ -10928,19 +10933,19 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                     descriptor_copy = dup_runtime_name(op3S->string, op3S->string_len);
                     if (!descriptor_copy) {
                         SET_SIGNAL(RXSIGNAL_FAILURE);
-                        DISPATCH
+                        DISPATCH;
                     }
                     SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, descriptor_copy);
                     free(descriptor_copy);
-                    DISPATCH
+                    DISPATCH;
                 }
 
                 value_zero(op1R);
                 op1R->int_value = (rxinteger) called_function;
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SRCFPROCSEL_REG_STRING_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SRCFPROCSEL_REG_STRING_REG) VM_ADVANCE(3);
             {
                 proc_runtime *called_function;
                 char *error_message;
@@ -10964,15 +10969,15 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                     } else {
                         SET_SIGNAL(RXSIGNAL_FAILURE);
                     }
-                    DISPATCH
+                    DISPATCH;
                 }
 
                 value_zero(op1R);
                 op1R->int_value = (rxinteger) called_function;
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(TYPEOF_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(TYPEOF_REG_REG) VM_ADVANCE(2);
             {
                 char *type_name;
 
@@ -10987,16 +10992,16 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 
                 if (!type_name) {
                     SET_SIGNAL(RXSIGNAL_FAILURE);
-                    DISPATCH
+                    DISPATCH;
                 }
 
                 value_zero(op1R);
                 set_null_string(op1R, type_name);
                 free(type_name);
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(ISTYPE_REG_REG_STRING) CALC_DISPATCH(3)
+        START_INSTRUCTION(ISTYPE_REG_REG_STRING) VM_ADVANCE(3);
             DEBUG("TRACE - ISTYPE R%lu,R%lu,\"%.*s\"\n", REG_IDX(1), REG_IDX(2),
                   (int) op3S->string_len, op3S->string);
             value_zero(op1R);
@@ -11004,9 +11009,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                                                             op2R,
                                                             op3S->string,
                                                             op3S->string_len));
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(ASSERTTYPE_REG_STRING) CALC_DISPATCH(2)
+        START_INSTRUCTION(ASSERTTYPE_REG_STRING) VM_ADVANCE(2);
             DEBUG("TRACE - ASSERTTYPE R%lu,\"%.*s\"\n", REG_IDX(1),
                   (int) op2S->string_len, op2S->string);
             if (!runtime_value_matches_object_type(context, op1R, op2S->string, op2S->string_len)) {
@@ -11017,119 +11022,119 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
                 } else {
                     SET_SIGNAL(RXSIGNAL_CONVERSION_ERROR);
                 }
-                DISPATCH
+                DISPATCH;
             }
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKNEW_REG) CALC_DISPATCH(1)
+        START_INSTRUCTION(SOCKNEW_REG) VM_ADVANCE(1);
             DEBUG("TRACE - SOCKNEW R%lu\n", REG_IDX(1));
             set_int(op1R, rxvm_socket_new(context));
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKCLOSE_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(SOCKCLOSE_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - SOCKCLOSE R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             set_int(op1R, rxvm_socket_close(context, op2R->int_value));
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKCONNECT_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SOCKCONNECT_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SOCKCONNECT R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             rxvm_socket_connect(context, op1R->int_value, op2R, op3R->int_value);
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKBIND_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SOCKBIND_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SOCKBIND R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             rxvm_socket_bind(context, op1R->int_value, op2R, op3R->int_value);
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKLISTEN_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SOCKLISTEN_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SOCKLISTEN R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             set_int(op1R, rxvm_socket_listen(context, op2R->int_value, op3R->int_value));
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKACCEPT_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(SOCKACCEPT_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - SOCKACCEPT R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             set_int(op1R, rxvm_socket_accept(context, op2R->int_value));
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKSHUTDOWN_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SOCKSHUTDOWN_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SOCKSHUTDOWN R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             set_int(op1R, rxvm_socket_shutdown(context, op2R->int_value, op3R->int_value));
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKSEND_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SOCKSEND_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SOCKSEND R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             set_int(op1R, rxvm_socket_send_string(context, op2R->int_value, op3R));
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKSENDB_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SOCKSENDB_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SOCKSENDB R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             set_int(op1R, rxvm_socket_send_binary(context, op2R->int_value, op3R));
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKRECV_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SOCKRECV_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SOCKRECV R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             rxvm_socket_recv_string(context, op1R, op2R->int_value, op3R->int_value);
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKRECVB_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SOCKRECVB_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SOCKRECVB R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             rxvm_socket_recv_binary(context, op1R, op2R->int_value, op3R->int_value);
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKPENDING_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(SOCKPENDING_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - SOCKPENDING R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             set_int(op1R, rxvm_socket_pending(context, op2R->int_value));
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKTIMEOUT_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SOCKTIMEOUT_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SOCKTIMEOUT R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             set_int(op1R, rxvm_socket_timeout(context, op2R->int_value, op3R->int_value));
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKBLOCKING_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SOCKBLOCKING_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SOCKBLOCKING R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             set_int(op1R, rxvm_socket_blocking(context, op2R->int_value, op3R->int_value));
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKNODELAY_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SOCKNODELAY_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SOCKNODELAY R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             set_int(op1R, rxvm_socket_nodelay(context, op2R->int_value, op3R->int_value));
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKKEEPALIVE_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SOCKKEEPALIVE_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SOCKKEEPALIVE R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             set_int(op1R, rxvm_socket_keepalive(context, op2R->int_value, op3R->int_value));
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKPEER_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(SOCKPEER_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - SOCKPEER R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             rxvm_socket_peer(context, op1R, op2R->int_value);
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKLOCAL_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(SOCKLOCAL_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - SOCKLOCAL R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             rxvm_socket_local(context, op1R, op2R->int_value);
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKSTATUS_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(SOCKSTATUS_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - SOCKSTATUS R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             set_int(op1R, rxvm_socket_status(context, op2R->int_value));
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKERROR_REG_REG) CALC_DISPATCH(2)
+        START_INSTRUCTION(SOCKERROR_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - SOCKERROR R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             rxvm_socket_error(context, op1R, op2R->int_value);
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKSTARTTLS_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SOCKSTARTTLS_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SOCKSTARTTLS R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             set_int(op1R, rxvm_socket_starttls(context, op2R->int_value, op3R));
-            DISPATCH
+            DISPATCH;
 
-        START_INSTRUCTION(SOCKCONNECTTLS_REG_REG_REG) CALC_DISPATCH(3)
+        START_INSTRUCTION(SOCKCONNECTTLS_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - SOCKCONNECTTLS R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
             rxvm_socket_connect_tls(context, op1R->int_value, op2R, op3R->int_value);
-            DISPATCH
+            DISPATCH;
 
         RESERVED_IMPL(RESERVED_087)
         RESERVED_IMPL(RESERVED_088)
@@ -11235,6 +11240,12 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 
     interprt_finished:
 
+    if (current_module && pc) {
+        RXVM_INSTRUMENTATION_INSTRUCTION_TERMINAL(current_module->module_number,
+                                                  VM_CANONICAL_INDEX(pc),
+                                                  RXVM_TRANSITION_TERMINAL);
+    }
+
     /* Cleanup / Remove OS Interrupt handlers */
     cleanup_vm_signals();
 
@@ -11305,6 +11316,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) CALC_DISPATCH(3)
 #ifndef NDEBUG
     if (context->debug_mode) rxvm_mprintf("Interpreter Finished with rc=%d\n", rc);
 #endif
+
+    RXVM_INSTRUMENTATION_VM_END(context, rc);
 
     return rc;
 }

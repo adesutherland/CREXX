@@ -731,17 +731,15 @@ static void string_to_type(ASTNode* node, ValueType new_type) {
 /* Compares two typed numeric/string nodes returns -1, 0, 1 as appropriate. */
 static int compare_nodes(ASTNode* node1, ASTNode* node2, Scope* scope) {
     double fdiff;
-    rxinteger idiff;
     int cmp;
 
     if (node1->value_type == TP_INTEGER) {
-        idiff = node1->int_value - node2->int_value;
-        return idiff>0 ? 1 : (idiff<0 ? -1 : 0);
+        return (node1->int_value > node2->int_value) -
+               (node1->int_value < node2->int_value);
     }
 
     if (node1->value_type == TP_BOOLEAN) {
-        idiff = (node1->int_value != 0) - (node2->int_value != 0); /* Weird */
-        return idiff>0 ? 1 : (idiff<0 ? -1 : 0);
+        return (node1->int_value != 0) - (node2->int_value != 0);
     }
 
     if (node1->value_type == TP_FLOAT) {
@@ -772,10 +770,8 @@ static int compare_nodes(ASTNode* node1, ASTNode* node2, Scope* scope) {
                      node2->node_string_length));
     if (cmp != 0)
         return cmp > 0 ? 1 : -1;
-    else {
-        idiff = (rxinteger)node1->node_string_length - (rxinteger)node2->node_string_length;
-        return idiff>0 ? 1 : (idiff<0 ? -1 : 0);
-    }
+    return (node1->node_string_length > node2->node_string_length) -
+           (node1->node_string_length < node2->node_string_length);
 }
 
 static char *constant_node_to_effective_string(ASTNode *node, size_t *length) {

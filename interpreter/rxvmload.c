@@ -184,7 +184,7 @@ void rxfremod(rxvm_context *context) {
             free(temp_globals);
             if (temp_dont_free) free(temp_dont_free);
         }
-        if (context->modules[j]->prepared_dispatch) free(context->modules[j]->prepared_dispatch);
+        if (context->modules[j]->execution_image) free(context->modules[j]->execution_image);
         if (context->modules[j]->proc_runtime_lookup) free(context->modules[j]->proc_runtime_lookup);
         if (context->modules[j]->procedures) free(context->modules[j]->procedures);
         free(context->modules[j]);
@@ -546,7 +546,7 @@ static size_t prep_and_link_module(rxvm_context *context, module_file *file_modu
     context->modules[n]->procedure_count = 0;
     context->modules[n]->proc_runtime_lookup = 0;
     context->modules[n]->proc_runtime_lookup_size = 0;
-    context->modules[n]->prepared_dispatch = 0;
+    context->modules[n]->execution_image = 0;
     build_module_runtime_procedures(context->modules[n]);
     context->link_dirty = 1;
     context->interface_method_registry_dirty = 1;

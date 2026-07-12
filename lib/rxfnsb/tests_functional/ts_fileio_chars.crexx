@@ -59,6 +59,7 @@ count = countLines(file)
 errors = errors + check(count = 3, "linein preserves physical trailing blank line")
 
 missing = file || ".missing"
+say "EXPECTED ERROR: lines() rejects missing file" missing
 errors = errors + check(lines(missing) = -1, "lines distinguishes missing file")
 
 call resetfile file

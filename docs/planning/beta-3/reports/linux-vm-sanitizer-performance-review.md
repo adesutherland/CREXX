@@ -328,21 +328,59 @@ the in-place upper-bound dispatch, it improved its own baseline by about 12% to
 40% and became competitive in branch-heavy cases. This supports testing GCC
 after the architecture fix; it does not support a blanket compiler switch.
 
-Implementation must begin with a semantics-preserving simplification of the
-dispatch macros. Replace the fragile `CALC_DISPATCH`/
-`CALC_DISPATCH_MANUAL` pairing and scattered raw target assignments with a
-small intent-based surface for frame activation, sequential advance, indexed
-branches, existing call/return/resume targets, common interrupt-aware dispatch,
-and execution pointer/index conversion. Preserve the current early next-handler
-load, require single evaluation and safe statement form, and rerun the complete
-performance matrix before introducing frame caching. The surface must include
-compile-time no-op extension hooks for instruction begin/retire, frame changes,
-interrupt paths, and VM entry/exit so instrumented builds can collect counters
-or timings without adding a runtime callback or condition to ordinary builds.
-The transfer macros must guarantee balanced terminal events on branches, calls,
-returns, signals, and VM exit. The detailed handoff and native Intel experiment
-are recorded in
+Implementation proceeded through that semantics-preserving simplification of
+the dispatch macros. The `CALC_DISPATCH`/`CALC_DISPATCH_MANUAL` pairing and
+scattered raw target assignments are replaced by an intent-based surface for
+frame activation, sequential advance, indexed branches, existing
+call/return/resume targets, common interrupt-aware dispatch, and execution
+pointer/index conversion. Early next-handler loading remains. Compile-time
+no-op extension hooks cover instruction begin/retire, frame changes, interrupt
+paths, and VM entry/exit without a runtime callback or condition in ordinary
+builds. A coherent active-frame cache and the separate process-local runtime
+instruction image then completed the production path. The detailed handoff,
+implemented measurements, and native Intel experiment are recorded in
 `docs/planning/beta-3/notes/vm-dispatch-performance-investigation.md`.
+
+### Dispatch Refactor Validation (2026-07-12)
+
+The implementation passed the full macOS ARM64 Debug and Release builds and
+all 1,584 CTests in each tree at CTest parallel 30. Focused runtime-image ASan
+coverage passed 24/24 reflection, corruption, semantics, signal, breakpoint,
+and late-load tests. The initial full ASan+UBSan tree completed 1,581/1,584
+tests. Its three output-comparison failures exposed two pre-existing
+undefined-behaviour defects: signed overflow in `compiler/rxcp_opt.c` for the
+optimized int64 contract fixture, and signed `1 << 31` in
+`interpreter/rxvmintp.c` reached by both multi-tail-stem variants. No
+AddressSanitizer memory error was reported.
+
+The same-day follow-up replaced subtraction-based integer ordering with direct
+relational comparison and centralized validated VM signal-mask construction.
+Valid signals 1 through 31 now occupy only bits 0 through 30, and the interrupt
+scan does not inspect the `RXSIGNAL_MAX` sentinel bit. Strengthened int64,
+signal-mask, ignored-signal, breakpoint, instrumentation, and the three former
+failure cases pass 19/19 in both normal Debug and ASan+UBSan focused runs; the
+corresponding optimized Release surface passes 15/15. A subsequent full Debug
+sweep passed 1,588/1,589 in parallel, with the unrelated syntax-highlighting
+parser timeout passing immediately when rerun serially. Apple's sanitizer
+runtime still rejects `detect_leaks=1`, so LSan is unsupported on this host
+rather than reported as passing.
+
+The final Apple clang matrix uses the exact protocol above and is tabulated in
+the investigation note. The seven dispatch headline sections improve the
+captured `rxvm` baseline by 1.3% to 28.2%, with a 10.7% median, and the final
+`rxvm / rxbvm` median ratio is 0.999. The result is close to the earlier 11.8%
+median runtime-image projection while continuing to preserve canonical RXBIN
+reflection and serialization.
+
+The final Homebrew GCC 16.1.0 matrix used Release `-O3 -DNDEBUG` with TLS off
+and the identical prelinked images. GCC `rxvm` won all seven headline sections
+with a 0.651 median `rxvm / rxbvm` ratio. Its improvement against the historical
+GCC `rxvm` baseline had a 16.0% median, below the measurement-only 26.2% upper-
+bound projection. The GCC `run()` bodies remain large at 1,589,344 bytes for
+`rxvm` and 1,569,856 bytes for `rxbvm`, versus Apple clang's 409,048 and 405,764
+bytes. These results reinforce that compiler code generation changes the
+dispatch balance; they do not justify a default compiler or VM policy on one
+ARM64 host.
 
 ### Jump Dispatch
 
@@ -426,12 +464,11 @@ Generated and disassembled RXAS confirm:
   and improves the unlinked factory stress path by 2.6% to 3.2%.
 - Preserve the current fixed-width binary `memcpy` handlers and jump-table
   validation. They are already direct fast paths.
-- Resolve the computed-goto dispatch regression without weakening interrupt,
-  metadata, corruption, reflection, or late-load behavior. First simplify the
-  dispatch macro contract without changing timing, then add coherent
-  active-frame state to both VM modes. For `rxvm`, validate a separate runtime
-  instruction image; retain opcode-indexed dispatch as the fallback. Native
-  Intel counters and full cross-platform validation remain required.
+- Keep the implemented dispatch macro contract, coherent active-frame state,
+  and separate `rxvm` runtime instruction image without weakening interrupt,
+  metadata, corruption, reflection, or late-load behavior. Opcode-indexed
+  dispatch remains the fallback. Native Intel counters and full cross-platform
+  validation remain required.
 
 ### Release 1 Candidates Requiring Design Approval
 
@@ -461,10 +498,13 @@ Generated and disassembled RXAS confirm:
   and Windows x86-64 validation remains necessary before dispatch-default or
   compiler-flag decisions.
 - The macro cleanup, coherent frame cache, and runtime instruction image are
-  design candidates, not merged production code. The exact runtime-image
-  design is inferred from the measured in-place upper bound and still requires
-  the full reflection, signal, dynamic-load, sanitizer, and cross-platform
-  matrix.
+  implemented and locally validated, including reflection, signal,
+  dynamic-load, focused sanitizer, and full Debug/Release coverage. Linux
+  x86-64, Windows x86-64, and the cross-platform pipeline remain pending
+  because the local commits were intentionally not pushed.
+- The two UB findings from the initial full macOS ASan+UBSan run are fixed and
+  their focused normal/sanitizer regression surfaces pass. LSan cannot run
+  with Apple's current sanitizer runtime.
 - GCC results were obtained with TLS disabled and do not establish that a full
   macOS GCC build is supported. Native x86-64 hardware counters remain needed
   before any compiler or dispatch-default policy change.

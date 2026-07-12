@@ -969,7 +969,7 @@ end
 say copies('-',32)
 
 if ccod.11 = 0 & ccod.2 = 0 then do
-    say 'SUCCESS'
+    say 'PARSE TESTS PASSED'
 end
 return
 

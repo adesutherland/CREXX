@@ -210,6 +210,18 @@ foreach(idx RANGE 0 ${num_tests})  # Iterate from 0 to len-1
     list(GET FUNC_TESTS ${idx} _rexxtest)
     list(GET OUTPUTS ${idx} _expected_output)
     set(_rexxtest_source ${_rexxtest}.crexx)
+    set(_runtime_expectations)
+    if(_rexxtest STREQUAL "signal_funcs")
+        list(APPEND _runtime_expectations
+                EXPECTED_EXIT_CODE 3
+                EXPECTED_FAILURE_DESCRIPTION "SIGNAL ERROR at bytecode address 15"
+                REQUIRED_OUTPUT_REGEX
+                    "PANIC: \\(SIGNAL ERROR\\)"
+                    "address 15 \\(0xf\\)"
+                FORBIDDEN_OUTPUT_REGEX
+                    "Error - should not reach here"
+        )
+    endif()
     add_custom_target(rxpa_${_rexxtest}_dynamic ALL)
     crexx_add_rexx_opt_matrix(
             NAME rxpa_${_rexxtest}_dynamic
@@ -218,12 +230,15 @@ foreach(idx RANGE 0 ${num_tests})  # Iterate from 0 to len-1
             IMPORT_PATHS ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/bin
             DEPENDS library funcvm _testfuncs_dynamic
             RUNTIME_ARGS rx_testfuncs_dynamic ${CMAKE_BINARY_DIR}/bin/library
+            ${_runtime_expectations}
     )
-    set_tests_properties(
-            rxpa_${_rexxtest}_dynamic_noopt
-            rxpa_${_rexxtest}_dynamic_opt
-            PROPERTIES PASS_REGULAR_EXPRESSION ".*${_expected_output}.*"
-    )
+    if(NOT _rexxtest STREQUAL "signal_funcs")
+        set_tests_properties(
+                rxpa_${_rexxtest}_dynamic_noopt
+                rxpa_${_rexxtest}_dynamic_opt
+                PROPERTIES PASS_REGULAR_EXPRESSION ".*${_expected_output}.*"
+        )
+    endif()
 
     add_custom_target(rxpa_${_rexxtest}_static ALL)
     crexx_add_rexx_opt_matrix(
@@ -234,12 +249,15 @@ foreach(idx RANGE 0 ${num_tests})  # Iterate from 0 to len-1
             DEPENDS library funcvm _testfuncs_dynamic
             RUNNER funcvm
             RUNTIME_ARGS ${CMAKE_BINARY_DIR}/bin/library
+            ${_runtime_expectations}
     )
-    set_tests_properties(
-            rxpa_${_rexxtest}_static_noopt
-            rxpa_${_rexxtest}_static_opt
-            PROPERTIES PASS_REGULAR_EXPRESSION ".*${_expected_output}.*"
-    )
+    if(NOT _rexxtest STREQUAL "signal_funcs")
+        set_tests_properties(
+                rxpa_${_rexxtest}_static_noopt
+                rxpa_${_rexxtest}_static_opt
+                PROPERTIES PASS_REGULAR_EXPRESSION ".*${_expected_output}.*"
+        )
+    endif()
 
 endforeach()
 

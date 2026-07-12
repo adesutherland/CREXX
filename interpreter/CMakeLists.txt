@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.24)
 
 project(Interpreter C)
 
+include(${CMAKE_SOURCE_DIR}/cmake/CrexxLinkedRuntime.cmake)
+
 set(CMAKE_C_STANDARD 99) # enables inline keyword
 set(CMAKE_C_FLAGS_RELEASE "-O3 -DNDEBUG") # Can do more I am sure but this is about as good as it get in practice
 
@@ -82,6 +84,15 @@ endfunction()
 crexx_add_rxvm_core_objects(rxvm_core_objects)
 crexx_add_rxvm_core_objects(rxbvm_core_objects)
 target_compile_definitions(rxbvm_core_objects PRIVATE NTHREADED=1)
+if(BUILD_TESTING)
+    crexx_add_rxvm_core_objects(rxvm_instrumented_core_objects)
+    crexx_add_rxvm_core_objects(rxbvm_instrumented_core_objects)
+    target_compile_definitions(rxvm_instrumented_core_objects PRIVATE
+            RXVM_INSTRUMENTATION_BACKEND="rxvminstrument_test.h")
+    target_compile_definitions(rxbvm_instrumented_core_objects PRIVATE
+            NTHREADED=1
+            RXVM_INSTRUMENTATION_BACKEND="rxvminstrument_test.h")
+endif()
 crexx_add_rxvm_platform_objects(rxvm_platform_notls_objects)
 
 add_library(rxvmref STATIC rxvmref.c rxvmref.h)
@@ -183,6 +194,19 @@ target_include_directories(rxbvm PRIVATE . ./rxvmplugin
         ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
 target_compile_definitions(rxbvm PRIVATE NTHREADED=1)
 
+if(BUILD_TESTING)
+    add_executable(rxvm_instrumented rxvmmain.c $<TARGET_OBJECTS:rxvm_instrumented_core_objects>)
+    target_link_libraries(rxvm_instrumented rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
+    target_include_directories(rxvm_instrumented PRIVATE . ./rxvmplugin
+            ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+
+    add_executable(rxbvm_instrumented rxvmmain.c $<TARGET_OBJECTS:rxbvm_instrumented_core_objects>)
+    target_link_libraries(rxbvm_instrumented rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim)
+    target_include_directories(rxbvm_instrumented PRIVATE . ./rxvmplugin
+            ../assembler ../binutils/include ${CMAKE_SOURCE_DIR}/rxpa ../platform ../avl_tree ../utf8 ../inc)
+    target_compile_definitions(rxbvm_instrumented PRIVATE NTHREADED=1)
+endif()
+
 ##########################################
 # Interpreter linked to CREXX Stdlib
 
@@ -245,6 +269,12 @@ foreach(_rxvm_core_target rxvm rxbvm rxvme rxbvme rxvml rxbvml)
     target_link_libraries(${_rxvm_core_target} rxvmref)
     crexx_enable_vm_platform(${_rxvm_core_target})
 endforeach()
+if(BUILD_TESTING)
+    foreach(_rxvm_instrumented_target rxvm_instrumented rxbvm_instrumented)
+        target_link_libraries(${_rxvm_instrumented_target} rxvmref)
+        crexx_enable_vm_platform(${_rxvm_instrumented_target})
+    endforeach()
+endif()
 
 # libcrexxsaa is intentionally thin and shared. On ELF platforms, every static
 # archive pulled into it must be compiled as PIC.
@@ -308,6 +338,9 @@ target_link_libraries(ts_regvalue_tester rxvmref platform m)
 add_executable(test_jtable_policy tests/test_jtable_policy.c)
 target_include_directories(test_jtable_policy PRIVATE ../binutils/include)
 
+add_executable(test_signal_mask tests/test_signal_mask.c rxsignal.h)
+target_include_directories(test_signal_mask PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+
 add_executable(mutate_jtable_rxbin tests/mutate_jtable_rxbin.c)
 target_include_directories(mutate_jtable_rxbin PRIVATE
         ../binutils/include
@@ -347,26 +380,85 @@ add_test(
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 set_tests_properties(rxpa_utf_validation PROPERTIES LABELS "interpreter;rxpa;utf")
 
-function(crexx_add_vm_dual_test)
+function(crexx_add_vm_expected_failure_test)
     set(options)
-    set(oneValueArgs NAME PASS_REGULAR_EXPRESSION)
-    set(multiValueArgs RXVM_ARGS)
+    set(oneValueArgs NAME RUNNER EXPECTED_EXIT_CODE EXPECTED_FAILURE_DESCRIPTION)
+    set(multiValueArgs RXVM_ARGS REQUIRED_OUTPUT_REGEX FORBIDDEN_OUTPUT_REGEX TEST_LABELS)
     cmake_parse_arguments(CREXX "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
+    if(NOT CREXX_NAME OR NOT CREXX_RUNNER OR "${CREXX_EXPECTED_EXIT_CODE}" STREQUAL "")
+        message(FATAL_ERROR
+                "crexx_add_vm_expected_failure_test requires NAME, RUNNER, and EXPECTED_EXIT_CODE")
+    endif()
+
+    set(_crexx_script "${CMAKE_CURRENT_BINARY_DIR}/${CREXX_NAME}_expected_failure.cmake")
+    crexx_write_runtime_script(
+            OUTPUT "${_crexx_script}"
+            NAME "${CREXX_NAME}"
+            WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+            RUNNER "${CREXX_RUNNER}"
+            PROGRAM "${CREXX_RXVM_ARGS}"
+            EXPECTED_EXIT_CODE "${CREXX_EXPECTED_EXIT_CODE}"
+            EXPECTED_FAILURE_DESCRIPTION "${CREXX_EXPECTED_FAILURE_DESCRIPTION}"
+            REQUIRED_OUTPUT_REGEX ${CREXX_REQUIRED_OUTPUT_REGEX}
+            FORBIDDEN_OUTPUT_REGEX ${CREXX_FORBIDDEN_OUTPUT_REGEX}
+    )
     add_test(
             NAME ${CREXX_NAME}
-            COMMAND $<TARGET_FILE:rxvm> ${CREXX_RXVM_ARGS}
+            COMMAND ${CMAKE_COMMAND} -P "${_crexx_script}"
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
-    add_test(
-            NAME ${CREXX_NAME}-rxbvm
-            COMMAND $<TARGET_FILE:rxbvm> ${CREXX_RXVM_ARGS}
-            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    )
+    if(CREXX_TEST_LABELS)
+        set_tests_properties(${CREXX_NAME} PROPERTIES LABELS "${CREXX_TEST_LABELS}")
+    endif()
+endfunction()
 
-    if(CREXX_PASS_REGULAR_EXPRESSION)
-        set_tests_properties(${CREXX_NAME} ${CREXX_NAME}-rxbvm PROPERTIES
-                PASS_REGULAR_EXPRESSION "${CREXX_PASS_REGULAR_EXPRESSION}")
+function(crexx_add_vm_dual_test)
+    set(options)
+    set(oneValueArgs NAME PASS_REGULAR_EXPRESSION EXPECTED_EXIT_CODE EXPECTED_FAILURE_DESCRIPTION)
+    set(multiValueArgs RXVM_ARGS REQUIRED_OUTPUT_REGEX FORBIDDEN_OUTPUT_REGEX)
+    cmake_parse_arguments(CREXX "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+
+    if(CREXX_PASS_REGULAR_EXPRESSION AND NOT "${CREXX_EXPECTED_EXIT_CODE}" STREQUAL "")
+        message(FATAL_ERROR
+                "${CREXX_NAME}: expected-failure tests must not use PASS_REGULAR_EXPRESSION")
+    endif()
+
+    if(NOT "${CREXX_EXPECTED_EXIT_CODE}" STREQUAL "")
+        crexx_add_vm_expected_failure_test(
+                NAME ${CREXX_NAME}
+                RUNNER $<TARGET_FILE:rxvm>
+                RXVM_ARGS ${CREXX_RXVM_ARGS}
+                EXPECTED_EXIT_CODE ${CREXX_EXPECTED_EXIT_CODE}
+                EXPECTED_FAILURE_DESCRIPTION "${CREXX_EXPECTED_FAILURE_DESCRIPTION}"
+                REQUIRED_OUTPUT_REGEX ${CREXX_REQUIRED_OUTPUT_REGEX}
+                FORBIDDEN_OUTPUT_REGEX ${CREXX_FORBIDDEN_OUTPUT_REGEX}
+        )
+        crexx_add_vm_expected_failure_test(
+                NAME ${CREXX_NAME}-rxbvm
+                RUNNER $<TARGET_FILE:rxbvm>
+                RXVM_ARGS ${CREXX_RXVM_ARGS}
+                EXPECTED_EXIT_CODE ${CREXX_EXPECTED_EXIT_CODE}
+                EXPECTED_FAILURE_DESCRIPTION "${CREXX_EXPECTED_FAILURE_DESCRIPTION}"
+                REQUIRED_OUTPUT_REGEX ${CREXX_REQUIRED_OUTPUT_REGEX}
+                FORBIDDEN_OUTPUT_REGEX ${CREXX_FORBIDDEN_OUTPUT_REGEX}
+        )
+    else()
+        add_test(
+                NAME ${CREXX_NAME}
+                COMMAND $<TARGET_FILE:rxvm> ${CREXX_RXVM_ARGS}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        )
+        add_test(
+                NAME ${CREXX_NAME}-rxbvm
+                COMMAND $<TARGET_FILE:rxbvm> ${CREXX_RXVM_ARGS}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        )
+
+        if(CREXX_PASS_REGULAR_EXPRESSION)
+            set_tests_properties(${CREXX_NAME} ${CREXX_NAME}-rxbvm PROPERTIES
+                    PASS_REGULAR_EXPRESSION "${CREXX_PASS_REGULAR_EXPRESSION}")
+        endif()
     endif()
 endfunction()
 
@@ -528,6 +620,12 @@ add_test(
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 )
 set_tests_properties(test_jtable_policy PROPERTIES LABELS "interpreter;rxas;jtable")
+add_test(
+        NAME test_signal_mask
+        COMMAND test_signal_mask
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+)
+set_tests_properties(test_signal_mask PROPERTIES LABELS "interpreter;signal")
 
 # Instruction Sanity Tests - Raise uncaptured signal
 add_custom_command(
@@ -541,7 +639,36 @@ add_custom_command(
 # Create a custom target that depends on the custom command's output
 add_custom_target(run_tests_signals ALL DEPENDS tests_signals.rxbin)
 
-crexx_add_vm_dual_test(NAME rxassignalstests RXVM_ARGS tests_signals PASS_REGULAR_EXPRESSION "PANIC:")
+crexx_add_vm_dual_test(
+        NAME rxassignalstests
+        RXVM_ARGS tests_signals
+        EXPECTED_EXIT_CODE 30
+        EXPECTED_FAILURE_DESCRIPTION "uncaught SIGNAL OTHER from tests_signals"
+        REQUIRED_OUTPUT_REGEX
+            "7\\. Should signal with a PANIC"
+            "PANIC: Test 7 message \\(SIGNAL OTHER\\)"
+)
+if(BUILD_TESTING)
+    set(_instrumented_signal_required_output
+            "PANIC: Test 7 message \\(SIGNAL OTHER\\)"
+            "VM instrumentation: PASS .*branches=[1-9][0-9]* calls=[1-9][0-9]* returns=[1-9][0-9]* interrupts=[1-9][0-9]*/[1-9][0-9]*/[1-9][0-9]*/[1-9][0-9]*")
+    crexx_add_vm_expected_failure_test(
+            NAME rxvminstrumentedsignaltests
+            RUNNER $<TARGET_FILE:rxvm_instrumented>
+            RXVM_ARGS tests_signals
+            EXPECTED_EXIT_CODE 30
+            EXPECTED_FAILURE_DESCRIPTION "instrumented VM uncaught SIGNAL OTHER"
+            REQUIRED_OUTPUT_REGEX ${_instrumented_signal_required_output}
+            TEST_LABELS interpreter instrumentation signal)
+    crexx_add_vm_expected_failure_test(
+            NAME rxbvminstrumentedsignaltests
+            RUNNER $<TARGET_FILE:rxbvm_instrumented>
+            RXVM_ARGS tests_signals
+            EXPECTED_EXIT_CODE 30
+            EXPECTED_FAILURE_DESCRIPTION "instrumented threaded VM uncaught SIGNAL OTHER"
+            REQUIRED_OUTPUT_REGEX ${_instrumented_signal_required_output}
+            TEST_LABELS interpreter instrumentation signal)
+endif()
 
 # Instruction Sanity Tests - fallback panic location and source reporting
 add_custom_command(
@@ -554,8 +681,24 @@ add_custom_command(
 
 add_custom_target(run_tests_panic_source ALL DEPENDS tests_panic_source.rxbin)
 
-crexx_add_vm_dual_test(NAME rxaspanicaddresstests RXVM_ARGS tests_panic_source PASS_REGULAR_EXPRESSION "address [0-9]+ \\(0x[0-9a-fA-F]+\\)")
-crexx_add_vm_dual_test(NAME rxaspanicsourcetests RXVM_ARGS tests_panic_source PASS_REGULAR_EXPRESSION "source: panic_source\\.rexx:7:3:")
+crexx_add_vm_dual_test(
+        NAME rxaspanicaddresstests
+        RXVM_ARGS tests_panic_source
+        EXPECTED_EXIT_CODE 6
+        EXPECTED_FAILURE_DESCRIPTION "conversion panic with bytecode address"
+        REQUIRED_OUTPUT_REGEX
+            "PANIC: \\(SIGNAL CONVERSION_ERROR\\)"
+            "address [0-9]+ \\(0x[0-9a-fA-F]+\\)"
+)
+crexx_add_vm_dual_test(
+        NAME rxaspanicsourcetests
+        RXVM_ARGS tests_panic_source
+        EXPECTED_EXIT_CODE 6
+        EXPECTED_FAILURE_DESCRIPTION "conversion panic with source location"
+        REQUIRED_OUTPUT_REGEX
+            "PANIC: \\(SIGNAL CONVERSION_ERROR\\)"
+            "source: panic_source\\.rexx:7:3:"
+)
 
 # Instruction Sanity Tests - breakpoint reports the next instruction address
 add_custom_command(
@@ -568,8 +711,19 @@ add_custom_command(
 
 add_custom_target(run_tests_breakpoint_address ALL DEPENDS tests_breakpoint_address.rxbin)
 
-crexx_add_vm_dual_test(NAME rxasbreakpointaddresstests RXVM_ARGS tests_breakpoint_address PASS_REGULAR_EXPRESSION "bp-source: say 'target'")
-crexx_add_vm_dual_test(NAME rxasbreakpointtraceeventtests RXVM_ARGS tests_breakpoint_address PASS_REGULAR_EXPRESSION "bp-symbol: target")
+crexx_add_vm_dual_test(NAME rxasbreakpointaddresstests RXVM_ARGS tests_breakpoint_address PASS_REGULAR_EXPRESSION "bp-source: say 'target'.*breakpoint-tests-passed")
+crexx_add_vm_dual_test(NAME rxasbreakpointtraceeventtests RXVM_ARGS tests_breakpoint_address PASS_REGULAR_EXPRESSION "bp-symbol: target.*breakpoint-tests-passed")
+if(BUILD_TESTING)
+    add_test(NAME rxvminstrumentedbreakpointtests
+            COMMAND $<TARGET_FILE:rxvm_instrumented> tests_breakpoint_address
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    add_test(NAME rxbvminstrumentedbreakpointtests
+            COMMAND $<TARGET_FILE:rxbvm_instrumented> tests_breakpoint_address
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+    set_tests_properties(rxvminstrumentedbreakpointtests rxbvminstrumentedbreakpointtests PROPERTIES
+            PASS_REGULAR_EXPRESSION "VM instrumentation: PASS .*returns=[1-9][0-9]* interrupts=[1-9][0-9]*/[1-9][0-9]*/[1-9][0-9]*/0"
+            LABELS "interpreter;instrumentation;breakpoint")
+endif()
 
 # Instruction Sanity Tests - register flag partitioning
 crexx_add_rxas_vm_binary(tests_register_flags "register flag partitioning")
@@ -588,48 +742,52 @@ crexx_add_vm_dual_test(NAME rxasattributebulktests RXVM_ARGS tests_attributes PA
 # Instruction Sanity Tests - reference values
 crexx_add_rxas_vm_binary(tests_references "reference value instructions")
 crexx_add_vm_dual_test(NAME rxasreferencetests RXVM_ARGS tests_references PASS_REGULAR_EXPRESSION "PASS: Reference RXAS Ops")
-crexx_add_vm_dual_test(NAME rxasreferencecatchtests RXVM_ARGS tests_references PASS_REGULAR_EXPRESSION "caught-reference-invalid")
+crexx_add_vm_dual_test(NAME rxasreferencecatchtests RXVM_ARGS tests_references PASS_REGULAR_EXPRESSION "caught-reference-invalid.*PASS: Reference RXAS Ops")
 
 # Instruction Sanity Tests - object initialization lifecycle
 crexx_add_rxas_vm_binary(tests_object_initialization "object initialization lifecycle instructions")
 crexx_add_vm_dual_test(NAME rxasobjectinitializationtests RXVM_ARGS tests_object_initialization PASS_REGULAR_EXPRESSION "PASS: Object Initialization RXAS Ops")
-crexx_add_vm_dual_test(NAME rxasobjectinitializationcatchtests RXVM_ARGS tests_object_initialization PASS_REGULAR_EXPRESSION "caught-object-not-initialized")
+crexx_add_vm_dual_test(NAME rxasobjectinitializationcatchtests RXVM_ARGS tests_object_initialization PASS_REGULAR_EXPRESSION "caught-object-not-initialized.*PASS: Object Initialization RXAS Ops")
 
 # Instruction Sanity Tests - focused signal handler mode coverage
 crexx_add_rxas_vm_binary(tests_signal_call_attrs "signal call argument attributes")
-crexx_add_vm_dual_test(NAME rxassignalattrcodetests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-code: 30")
-crexx_add_vm_dual_test(NAME rxassignalattrnametests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-name: OTHER")
-crexx_add_vm_dual_test(NAME rxassignalattrpayloadtests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-payload: attr payload")
+crexx_add_vm_dual_test(NAME rxassignalattrcodetests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-code: 30.*attr-source: signal other")
+crexx_add_vm_dual_test(NAME rxassignalattrnametests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-name: OTHER.*attr-source: signal other")
+crexx_add_vm_dual_test(NAME rxassignalattrpayloadtests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-payload: attr payload.*attr-source: signal other")
 crexx_add_vm_dual_test(NAME rxassignalattrsourcetests RXVM_ARGS tests_signal_call_attrs PASS_REGULAR_EXPRESSION "attr-source: signal other")
 
 crexx_add_rxas_vm_binary(tests_signal_handler_modes "signal handler response modes")
-crexx_add_vm_dual_test(NAME rxassignalmodeignoretests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-ignore-ok")
-crexx_add_vm_dual_test(NAME rxassignalmodebranchtests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-branch-hit")
-crexx_add_vm_dual_test(NAME rxassignalmodecallbranchtests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-callbr-handler: callbr payload")
+crexx_add_vm_dual_test(NAME rxassignalmodeignoretests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-ignore-ok.*mode-ret-after")
+crexx_add_vm_dual_test(NAME rxassignalmodebranchtests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-branch-hit.*mode-ret-after")
+crexx_add_vm_dual_test(NAME rxassignalmodecallbranchtests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-callbr-handler: callbr payload.*mode-ret-after")
 crexx_add_vm_dual_test(NAME rxassignalmodereturntests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-ret-after")
 
+crexx_add_rxas_vm_binary(tests_signal_mask_bounds "signal mask boundary handling")
+crexx_add_vm_dual_test(NAME rxassignalmaskotherignoretests RXVM_ARGS tests_signal_mask_bounds PASS_REGULAR_EXPRESSION "mask-other-ignore-ok.*mask-tests-passed")
+crexx_add_vm_dual_test(NAME rxassignalmaskbreakpointignoretests RXVM_ARGS tests_signal_mask_bounds PASS_REGULAR_EXPRESSION "mask-breakpoint-ignore-ok.*mask-tests-passed")
+
 crexx_add_rxas_vm_binary(tests_signal_silent_halt "signal silent halt response")
-crexx_add_vm_dual_test(NAME rxassignalsilenthalttests RXVM_ARGS tests_signal_silent_halt PASS_REGULAR_EXPRESSION "silent-before")
+crexx_add_vm_dual_test(NAME rxassignalsilenthalttests RXVM_ARGS tests_signal_silent_halt)
 
 crexx_add_rxas_vm_binary(tests_signal_frame_scope "signal frame handler table scope")
-crexx_add_vm_dual_test(NAME rxassignalframescopechildtests RXVM_ARGS tests_signal_frame_scope PASS_REGULAR_EXPRESSION "frame-handler: from child")
-crexx_add_vm_dual_test(NAME rxassignalframescopeparenttests RXVM_ARGS tests_signal_frame_scope PASS_REGULAR_EXPRESSION "frame-handler: after child ignore")
+crexx_add_vm_dual_test(NAME rxassignalframescopechildtests RXVM_ARGS tests_signal_frame_scope PASS_REGULAR_EXPRESSION "frame-handler: from child.*frame-main-after")
+crexx_add_vm_dual_test(NAME rxassignalframescopeparenttests RXVM_ARGS tests_signal_frame_scope PASS_REGULAR_EXPRESSION "frame-handler: after child ignore.*frame-main-after")
 
 crexx_add_rxas_vm_binary(tests_signal_nested_pending "nested pending signal delivery")
 crexx_add_vm_dual_test(NAME rxassignalnestedpendingtests RXVM_ARGS tests_signal_nested_pending PASS_REGULAR_EXPRESSION "nested:outer-before>outer-after>inner>main-after")
 
 crexx_add_rxas_vm_binary(tests_signal_actions "action-aware signal handlers")
-crexx_add_vm_dual_test(NAME rxassignalactionskiptests RXVM_ARGS tests_signal_actions PASS_REGULAR_EXPRESSION "action-skip-after")
-crexx_add_vm_dual_test(NAME rxassignalactiondynamictests RXVM_ARGS tests_signal_actions PASS_REGULAR_EXPRESSION "action-handler: dynamic payload")
+crexx_add_vm_dual_test(NAME rxassignalactionskiptests RXVM_ARGS tests_signal_actions PASS_REGULAR_EXPRESSION "action-skip-after.*action-dynamic-after")
+crexx_add_vm_dual_test(NAME rxassignalactiondynamictests RXVM_ARGS tests_signal_actions PASS_REGULAR_EXPRESSION "action-handler: dynamic payload.*action-dynamic-after")
 
 crexx_add_rxas_vm_binary(tests_signal_pushpop "signal handler push/pop scope")
-crexx_add_vm_dual_test(NAME rxassignalpushpoprestoretests RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-restored-ignore")
-crexx_add_vm_dual_test(NAME rxassignalpushpopbranchtests RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-branch-hit")
+crexx_add_vm_dual_test(NAME rxassignalpushpoprestoretests RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-restored-ignore.*pushpop-after-restored-ignore")
+crexx_add_vm_dual_test(NAME rxassignalpushpopbranchtests RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-branch-hit.*pushpop-after-restored-ignore")
 crexx_add_vm_dual_test(NAME rxassignalpushpophandlerrestoretests RXVM_ARGS tests_signal_pushpop PASS_REGULAR_EXPRESSION "pushpop-after-restored-ignore")
 
 crexx_add_rxas_vm_binary(tests_signal_branch_value "signal branch with bound value")
-crexx_add_vm_dual_test(NAME rxassignalbrvrawtests RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-has-raw: 1")
-crexx_add_vm_dual_test(NAME rxassignalbrvnametests RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-name: OTHER")
+crexx_add_vm_dual_test(NAME rxassignalbrvrawtests RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-has-raw: 1.*brv-payload: value payload")
+crexx_add_vm_dual_test(NAME rxassignalbrvnametests RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-name: OTHER.*brv-payload: value payload")
 crexx_add_vm_dual_test(NAME rxassignalbrvpayloadtests RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-payload: value payload")
 
 # Basic Instruction Tests

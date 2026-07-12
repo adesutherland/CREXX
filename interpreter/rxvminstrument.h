@@ -1,0 +1,43 @@
+/*
+ * Internal VM instrumentation contract.
+ *
+ * Backends are selected at compile time.  The default backend intentionally
+ * preprocesses to no code: ordinary VM builds pay no branch, callback, state,
+ * or argument-evaluation cost for these extension points.
+ */
+
+#ifndef CREXX_RXVMINSTRUMENT_H
+#define CREXX_RXVMINSTRUMENT_H
+
+typedef enum rxvm_transition_reason {
+    RXVM_TRANSITION_SEQUENTIAL = 0,
+    RXVM_TRANSITION_BRANCH,
+    RXVM_TRANSITION_CALL,
+    RXVM_TRANSITION_RETURN,
+    RXVM_TRANSITION_INTERRUPT_ENTRY,
+    RXVM_TRANSITION_INTERRUPT_RESUME,
+    RXVM_TRANSITION_EXTERNAL_ENTRY,
+    RXVM_TRANSITION_TERMINAL
+} rxvm_transition_reason;
+
+#ifndef RXVM_INSTRUMENTATION_BACKEND
+
+#define RXVM_INSTRUMENTATION_STATE()
+#define RXVM_INSTRUMENTATION_VM_BEGIN(context_) ((void)0)
+#define RXVM_INSTRUMENTATION_VM_END(context_, result_) ((void)0)
+#define RXVM_INSTRUMENTATION_INSTRUCTION_BEGIN(module_, index_, opcode_) ((void)0)
+#define RXVM_INSTRUMENTATION_INSTRUCTION_RETIRE(target_module_, target_index_, reason_) ((void)0)
+#define RXVM_INSTRUMENTATION_INSTRUCTION_TERMINAL(module_, index_, reason_) ((void)0)
+#define RXVM_INSTRUMENTATION_FRAME_ACTIVATE(module_, index_, reason_) ((void)0)
+#define RXVM_INSTRUMENTATION_TRANSITION(reason_) ((void)0)
+#define RXVM_INSTRUMENTATION_CURRENT_TRANSITION() RXVM_TRANSITION_SEQUENTIAL
+#define RXVM_INSTRUMENTATION_INTERRUPT_SELECT(signal_, module_, index_) ((void)0)
+#define RXVM_INSTRUMENTATION_INTERRUPT_ENTRY(signal_, module_, index_) ((void)0)
+#define RXVM_INSTRUMENTATION_INTERRUPT_RESUME(signal_, module_, index_) ((void)0)
+#define RXVM_INSTRUMENTATION_INTERRUPT_TERMINAL(signal_, module_, index_) ((void)0)
+
+#else
+#include RXVM_INSTRUMENTATION_BACKEND
+#endif
+
+#endif

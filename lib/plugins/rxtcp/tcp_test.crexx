@@ -1,30 +1,78 @@
-/* TCP Test */
+/* RXTCP self-contained loopback test */
 options levelb
 import rxtcp
-import rxfnsb
-/* ----------------------------------------------------------------------------------
- * Sample CREXX TCP Client
- * ----------------------------------------------------------------------------------
- */
-say tcpflags("Debug")
 
-socket=tcpopen("127.0.0.1",3033)
-say "Socket: "socket
-say "TCPSEND    : "tcpsend(socket,"Hello Server, I am a CREXX script")
-record=TCPRECEIVE(socket,10)                   ## timeout in milliseconds
-say "TCPRECEIVE : Length: "length(record) record
+call tcpflags "NDEBUG"
 
-say "TCPSEND    : "tcpsend(socket,"How is it going")
-record=TCPRECEIVE(socket,1000)                   ## timeout in milliseconds
-say "TCPRECEIVE : Length: "length(record) record
+connections = .string[]
+port = 32310
+last_port = 32350
+server = -1
 
-say "TCPSEND    : "tcpsend(socket,"I am happy to meet you")
-record=TCPRECEIVE(socket,10)                   ## timeout in milliseconds
-say "TCPRECEIVE : Length: "length(record) record
+do while port <= last_port
+  server = tcpserver(port, connections)
+  if server >= 0 then leave
+  port = port + 1
+end
 
-say "TCPSEND    : "tcpsend(socket,"Sorry, I must leave now")
-record=TCPRECEIVE(socket,10)                   ## timeout in milliseconds
-say "TCPRECEIVE : Length: "length(record) record
+if server < 0 then do
+  say "rxtcp failed: no loopback port available"
+  exit 1
+end
 
-say "TCPCLOSE   : "TCPCLOSE(socket)
+client = tcpopen("127.0.0.1", port)
+if client < 0 then do
+  say "rxtcp failed: tcpopen returned" client
+  call tcpclose server
+  exit 1
+end
 
+accepted = tcpwait(server, 1000, connections)
+if accepted < 0 then do
+  say "rxtcp failed: tcpwait returned" accepted
+  call tcpclose client
+  call tcpclose server
+  exit 1
+end
+
+send_rc = tcpsend(client, "ping")
+if send_rc <> 0 then do
+  say "rxtcp failed: tcpsend returned" send_rc
+  call tcpclose client
+  call tcpclose accepted
+  call tcpclose server
+  exit 1
+end
+
+if tcpclose(client) <> 0 then do
+  say "rxtcp failed: client close"
+  call tcpclose accepted
+  call tcpclose server
+  exit 1
+end
+
+received = tcpreceive(accepted, 1000)
+if received <> "ping" then do
+  say "rxtcp failed: expected [ping] got ["received"]"
+  call tcpclose accepted
+  call tcpclose server
+  exit 1
+end
+
+if tcpclose(accepted) <> 0 then do
+  say "rxtcp failed: accepted socket close"
+  call tcpclose server
+  exit 1
+end
+if tcpclose(server) <> 0 then do
+  say "rxtcp failed: server close"
+  exit 1
+end
+
+if tcpopen("127.0.0.1", 0) <> -2 then do
+  say "rxtcp failed: invalid port was not rejected"
+  exit 1
+end
+
+say "PASS: rxtcp self-contained loopback"
+exit 0
