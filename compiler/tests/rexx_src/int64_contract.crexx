@@ -9,6 +9,12 @@ main: procedure = .int
   say minimum
   say classify_boundary(minimum)
   say classify_boundary(maximum)
+  say -9223372036854775808 < 1
+  say 1 > -9223372036854775808
+  say 9223372036854775807 > -1
+  say -1 < 9223372036854775807
+  say -9223372036854775808 = -9223372036854775808
+  say 9223372036854775807 \= -9223372036854775808
   return 0
 
 classify_boundary: procedure = .int

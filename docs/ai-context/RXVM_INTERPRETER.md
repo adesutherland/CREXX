@@ -727,6 +727,12 @@ before the current handler body completes. For example:
 ```
 `DISPATCH` actively checks a global `interrupts` bit-flag to immediately branch into signal exception handling if an error occurred natively. Internal signal-raising macros stamp `interrupted_pc` with the faulting instruction before dispatch advances `pc`; breakpoint and asynchronous interrupts leave it unset so their handlers continue to receive the next instruction/resume address. The default fallback panic report uses the stamped address when present to print the module/address and, when `META_SOURCE_STEP` metadata is present, the closest preceding REXX source line. Linked images built with source stripping have only the module/address for this fallback context.
 
+VM signal codes 1 through 31 map to the non-sign `sig_atomic_t` mask bits 0
+through 30. `RXSIGNAL_MAX` is a sentinel and has no mask bit. All producers and
+consumers use the validated `rxsignal_mask()` helper, and the interrupt scan
+stops before the sentinel bit; this keeps invalid codes from shifting by a
+negative count or into the signed high bit.
+
 `INTERRUPT` is the internal dispatch target used by this macro, not a source
 instruction. `INULL` and `IUNKNOWN` are runtime sentinel handlers that raise
 `UNKNOWN_INSTRUCTION`; `rxas` intentionally rejects all three names as source

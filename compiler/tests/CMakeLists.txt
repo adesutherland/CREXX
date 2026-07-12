@@ -824,9 +824,23 @@ add_crexx_robustness_test(set6_main set6_main.crexx Counter.crexx CounterIterato
 
 # Set 5 - Encapsulation (Expected to fail compilation)
 set(SCRIPT_FILE_SET5 "${CMAKE_CURRENT_BINARY_DIR}/run_robustness_set5.cmake")
-set(SCRIPT_CONTENT_SET5 "")
-string(APPEND SCRIPT_CONTENT_SET5 "execute_process(COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness\" -o \"set5_main\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness/set5_main.crexx\" RESULT_VARIABLE res)\n")
-string(APPEND SCRIPT_CONTENT_SET5 "if(res EQUAL 0)\n  message(FATAL_ERROR \"Expected compilation to fail, but it succeeded\")\nendif()\n")
+set(SCRIPT_CONTENT_SET5
+        "include([=[${CMAKE_SOURCE_DIR}/cmake/CrexxTestAssertions.cmake]=])\n")
+string(APPEND SCRIPT_CONTENT_SET5
+        "execute_process(\n"
+        "  COMMAND \"$<TARGET_FILE:rxc>\" -i \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness\" -o \"set5_main\" \"${CMAKE_CURRENT_SOURCE_DIR}/rexx_src/robustness/set5_main.crexx\"\n"
+        "  RESULT_VARIABLE res\n"
+        "  OUTPUT_VARIABLE out\n"
+        "  ERROR_VARIABLE err)\n"
+        "set(combined \"\${out}\${err}\")\n"
+        "if(NOT \"\${combined}\" STREQUAL \"\")\n  message(\"\${combined}\")\nendif()\n"
+        "crexx_assert_expected_failure(\n"
+        "  NAME robustness_set5_encapsulation\n"
+        "  RESULT \"\${res}\"\n"
+        "  EXPECTED_EXIT_CODE 2\n"
+        "  OUTPUT \"\${combined}\"\n"
+        "  DESCRIPTION \"private function access was rejected\"\n"
+        "  REQUIRED_OUTPUT_REGEX [=[#FUNCTION_NOT_FOUND, \"private_func\"]=])\n")
 file(GENERATE OUTPUT "${SCRIPT_FILE_SET5}" CONTENT "${SCRIPT_CONTENT_SET5}")
 
 add_test(NAME robustness_set5_encapsulation

@@ -346,13 +346,24 @@ implemented measurements, and native Intel experiment are recorded in
 The implementation passed the full macOS ARM64 Debug and Release builds and
 all 1,584 CTests in each tree at CTest parallel 30. Focused runtime-image ASan
 coverage passed 24/24 reflection, corruption, semantics, signal, breakpoint,
-and late-load tests. The full ASan+UBSan tree completed 1,581/1,584 tests. Its
-three output-comparison failures expose two pre-existing undefined-behaviour
-diagnostics: signed overflow in `compiler/rxcp_opt.c` for the optimized int64
-contract fixture, and signed `1 << 31` in `interpreter/rxvmintp.c` reached by
-both multi-tail-stem variants. No AddressSanitizer memory error was reported.
-Apple's sanitizer runtime rejects `detect_leaks=1`, so LSan is unsupported on
-this host rather than reported as passing.
+and late-load tests. The initial full ASan+UBSan tree completed 1,581/1,584
+tests. Its three output-comparison failures exposed two pre-existing
+undefined-behaviour defects: signed overflow in `compiler/rxcp_opt.c` for the
+optimized int64 contract fixture, and signed `1 << 31` in
+`interpreter/rxvmintp.c` reached by both multi-tail-stem variants. No
+AddressSanitizer memory error was reported.
+
+The same-day follow-up replaced subtraction-based integer ordering with direct
+relational comparison and centralized validated VM signal-mask construction.
+Valid signals 1 through 31 now occupy only bits 0 through 30, and the interrupt
+scan does not inspect the `RXSIGNAL_MAX` sentinel bit. Strengthened int64,
+signal-mask, ignored-signal, breakpoint, instrumentation, and the three former
+failure cases pass 19/19 in both normal Debug and ASan+UBSan focused runs; the
+corresponding optimized Release surface passes 15/15. A subsequent full Debug
+sweep passed 1,588/1,589 in parallel, with the unrelated syntax-highlighting
+parser timeout passing immediately when rerun serially. Apple's sanitizer
+runtime still rejects `detect_leaks=1`, so LSan is unsupported on this host
+rather than reported as passing.
 
 The final Apple clang matrix uses the exact protocol above and is tabulated in
 the investigation note. The seven dispatch headline sections improve the
@@ -491,8 +502,9 @@ Generated and disassembled RXAS confirm:
   dynamic-load, focused sanitizer, and full Debug/Release coverage. Linux
   x86-64, Windows x86-64, and the cross-platform pipeline remain pending
   because the local commits were intentionally not pushed.
-- The full macOS ASan+UBSan run still exposes the two pre-existing UB findings
-  recorded above; LSan cannot run with Apple's current sanitizer runtime.
+- The two UB findings from the initial full macOS ASan+UBSan run are fixed and
+  their focused normal/sanitizer regression surfaces pass. LSan cannot run
+  with Apple's current sanitizer runtime.
 - GCC results were obtained with TLS disabled and do not establish that a full
   macOS GCC build is supported. Native x86-64 hardware counters remain needed
   before any compiler or dispatch-default policy change.

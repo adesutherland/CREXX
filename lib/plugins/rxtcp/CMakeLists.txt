@@ -22,6 +22,8 @@ crexx_add_rexx_opt_matrix(
         DEPENDS library _rxtcp
         RUNTIME_ARGS rx_rxtcp ${CMAKE_BINARY_DIR}/bin/library
 )
+set_tests_properties(tcp_test_noopt tcp_test_opt PROPERTIES
+        RESOURCE_LOCK rxtcp_loopback)
 
 enable_testing()
 

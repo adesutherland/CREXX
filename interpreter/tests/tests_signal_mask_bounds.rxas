@@ -1,0 +1,18 @@
+/*
+ * Exercise ignored signals at the upper end of the VM mask. The interrupt
+ * scan must stop after bit 30 and must never evaluate the sentinel bit 31.
+ */
+
+.globals=0
+
+main() .locals=0
+    sigignore "OTHER"
+    signal "OTHER"
+    say "mask-other-ignore-ok"
+
+    sigignore "BREAKPOINT"
+    bpon
+    say "mask-breakpoint-ignore-ok"
+    bpoff
+    say "mask-tests-passed"
+    ret 0

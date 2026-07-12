@@ -17,6 +17,7 @@ add_custom_target(exit_parse_bin DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Parse.rxbin
 crexx_add_compiler_exit_runtime_test(
         test_parse
         test_parse.crexx
+        PASS_REGULAR_EXPRESSION "PARSE TESTS PASSED"
         RUN_SUFFIX ${LIBRPATH}
 )
 

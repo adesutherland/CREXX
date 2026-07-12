@@ -3181,19 +3181,19 @@ static volatile sig_atomic_t interrupts = 0;
 
 // Function to set an interrupt
 void raise_signal(unsigned char signal) {
-    interrupts |= 1 << (signal - 1);
+    interrupts |= rxsignal_mask(signal);
 }
 
 // Function to clear an interrupt
 void clear_signal(unsigned char signal) {
-    interrupts &= ~(1 << (signal - 1));
+    interrupts &= ~rxsignal_mask(signal);
 }
 
 // Macro to detect and throw a signal if a RXVM plugin-raised error is present
 #define RXSIGNAL_IF_RXVM_PLUGIN_ERROR(signal) \
-if ((signal)->base.signal_number  && (signal)->base.signal_number < RXSIGNAL_MAX) { \
+if ((signal)->base.signal_number > RXSIGNAL_NONE && (signal)->base.signal_number < RXSIGNAL_MAX) { \
 if (!current_frame->is_interrupt) interrupted_pc = pc; \
-interrupts |= 1 << ((signal)->base.signal_number - 1); \
+interrupts |= rxsignal_mask((signal)->base.signal_number); \
 value_zero(interrupt_object[(signal)->base.signal_number]); \
 set_null_string(interrupt_object[(signal)->base.signal_number], (signal)->base.signal_string); \
 }
@@ -3201,20 +3201,20 @@ set_null_string(interrupt_object[(signal)->base.signal_number], (signal)->base.s
 // Macro to throw a signal
 #define SET_SIGNAL(signal) \
 {if (!current_frame->is_interrupt) interrupted_pc = pc; \
-interrupts |= 1 << ((signal) - 1); \
+interrupts |= rxsignal_mask(signal); \
 value_zero(interrupt_object[(signal)]);}
 
 // Macro to throw a signal with a message
 #define SET_SIGNAL_MSG(signal, message) \
 {if (!current_frame->is_interrupt) interrupted_pc = pc; \
-interrupts |= 1 << ((signal) - 1); \
+interrupts |= rxsignal_mask(signal); \
 value_zero(interrupt_object[(signal)]); \
 set_null_string(interrupt_object[(signal)], (message));}
 
 // Macro to throw a signal with a payload
 #define SET_SIGNAL_PAYLOAD(signal, payload) \
 {if (!current_frame->is_interrupt) interrupted_pc = pc; \
-interrupts |= 1 << ((signal) - 1); \
+interrupts |= rxsignal_mask(signal); \
 copy_value(interrupt_object[(signal)], (payload));}
 
 #define SET_SIGNAL_FROM_NAME(name) \
@@ -3268,7 +3268,7 @@ void interrupt_from_rxpa_signal(value *signal, value* interrupt_object[RXSIGNAL_
     }
 
     // Set the interrupt
-    interrupts |= 1 << (int_num - 1);
+    interrupts |= rxsignal_mask((int) int_num);
 }
 
 #define HANDLE_INTERRUPT_ACTION_RETURN() \
@@ -3676,15 +3676,16 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
     /* Also clear any pending signals that are ignored and also find the first signal which */
     /* is masked and pending - the first one is the highest priority */
     last_interrupt = 0;
-    for (signal_code = 0; signal_code < RXSIGNAL_MAX; signal_code++) {
-        if (interrupts & (1 << signal_code)) {
+    for (signal_code = 0; signal_code < RXSIGNAL_MAX - 1; signal_code++) {
+        sig_atomic_t signal_mask = rxsignal_mask(signal_code + 1);
+        if (interrupts & signal_mask) {
             bin_code *signal_pc = (interrupted_pc && signal_code + 1 != RXSIGNAL_BREAKPOINT) ? interrupted_pc : pc;
             last_interrupted_module[signal_code + 1] = (rxinteger) current_module->module_number;
             last_interrupted_address[signal_code + 1] =
                     (rxinteger) VM_CANONICAL_INDEX(signal_pc);
             if (current_frame->interrupt_table[signal_code].response == RXSIGNAL_RESPONSE_IGNORE) {
                 DEBUG("TRACE - INTR IGNORE %s\n", interrupt_to_string(signal_code + 1));
-                interrupts &= ~(1 << signal_code);
+                interrupts &= ~signal_mask;
             } else {
                 last_interrupt = signal_code + 1;
                 break;
@@ -3703,7 +3704,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
     // Clear the interrupt
     if (last_interrupt != RXSIGNAL_BREAKPOINT) {
         // Breakpoints are not cleared
-        interrupts &= ~(1 << (last_interrupt - 1));
+        interrupts &= ~rxsignal_mask(last_interrupt);
     }
 
     // Handle the interrupt
@@ -3773,7 +3774,7 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             if (intr_function->binarySpace == 0) {
                 /* This is a native plugin function */
                 rxvm_callfunc((void *) (intr_function->start), 1, &interrupt_arg, 0, signal_value);
-                if (signal_value->int_value && signal_value->int_value < RXSIGNAL_MAX) {
+                if (signal_value->int_value > RXSIGNAL_NONE && signal_value->int_value < RXSIGNAL_MAX) {
                     if (signal_value->string_length) {
                         SET_SIGNAL_MSG(signal_value->int_value, signal_value->string_value)
                     } else {
@@ -3875,7 +3876,7 @@ START_OF_INSTRUCTIONS
         /* Enable Breakpoints */
         START_INSTRUCTION(BPON) VM_ADVANCE(0);
             DEBUG("TRACE - BPON\n");
-            interrupts |= 1 << (RXSIGNAL_BREAKPOINT - 1);
+            interrupts |= rxsignal_mask(RXSIGNAL_BREAKPOINT);
             DISPATCH;
 
         /* Enable Breakpoints with op1 handler */
@@ -3885,14 +3886,14 @@ START_OF_INSTRUCTIONS
                 DEBUG("TRACE - BPON %s()\n", signal_function->name);
                 current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].response = RXSIGNAL_RESPONSE_CALL;
                 current_frame->interrupt_table[RXSIGNAL_BREAKPOINT-1].function = signal_function;
-                interrupts |= 1 << (RXSIGNAL_BREAKPOINT - 1);
+                interrupts |= rxsignal_mask(RXSIGNAL_BREAKPOINT);
             }
             DISPATCH;
 
         /* Disable Breakpoints */
         START_INSTRUCTION(BPOFF) VM_ADVANCE(0);
             DEBUG("TRACE - BPOFF\n");
-            interrupts &= ~(1 << (RXSIGNAL_BREAKPOINT - 1));
+            interrupts &= ~rxsignal_mask(RXSIGNAL_BREAKPOINT);
             DISPATCH;
 
         /* Set Signal op1 Handle to Ignore */

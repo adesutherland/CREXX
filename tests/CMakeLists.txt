@@ -18,6 +18,15 @@ set(CMAKE_C_STANDARD 90)
 
 enable_testing()
 
+add_test(
+        NAME crexx_expected_failure_contract
+        COMMAND ${CMAKE_COMMAND}
+                -DASSERTIONS_MODULE=${CMAKE_SOURCE_DIR}/cmake/CrexxTestAssertions.cmake
+                -DWORKING_DIRECTORY=${CMAKE_CURRENT_BINARY_DIR}/expected_failure_contract
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/cmake/expected_failure_contract.cmake
+)
+set_tests_properties(crexx_expected_failure_contract PROPERTIES LABELS "cmake;negative")
+
 set(RXAS_OPTIMIZER_DIR ${CMAKE_CURRENT_SOURCE_DIR}/rxas_optimizer)
 
 add_executable(test_rxinteger_contract test_rxinteger_contract.c)

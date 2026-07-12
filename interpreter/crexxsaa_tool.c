@@ -338,11 +338,16 @@ int main(int argc, char** argv) {
             fprintf(stderr, "crexxsaa: unable to clear cache: %s\n", strerror(errno));
             return 1;
         }
-        printf("cleared\n");
     }
 
-    if (list_cache)
-        return crexxsaa_tool_list_cache(cache_dir);
+    if (list_cache) {
+        int list_rc = crexxsaa_tool_list_cache(cache_dir);
+        if (list_rc != 0)
+            return list_rc;
+    }
+
+    if (clear_cache)
+        printf("cleared\n");
 
     return 0;
 }
