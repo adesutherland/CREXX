@@ -1,0 +1,292 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2026 the cREXX contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+options levelb comments_dash
+import rxfnsb
+
+/* Run cREXX language benchmarks repeatedly and emit machine-readable CSV. */
+main: procedure = .int
+  arg args = .string[]
+
+  build_dir = "cmake-build-release"
+  vm_name = "rxvm"
+  mode = "opt"
+  warmups = 2
+  runs = 10
+  output_path = ""
+  selected = .string[]
+
+  i = 1
+  do while i <= args[0]
+    option = args[i]
+    if option = "-h" | option = "--help" then do
+      call usage
+      return 0
+    end
+    else if option = "--build-dir" then do
+      if i = args[0] then return argument_error("missing value after --build-dir")
+      i = i + 1
+      build_dir = args[i]
+    end
+    else if option = "--vm" then do
+      if i = args[0] then return argument_error("missing value after --vm")
+      i = i + 1
+      vm_name = lower(args[i])
+    end
+    else if option = "--mode" then do
+      if i = args[0] then return argument_error("missing value after --mode")
+      i = i + 1
+      mode = lower(args[i])
+    end
+    else if option = "--warmups" then do
+      if i = args[0] then return argument_error("missing value after --warmups")
+      i = i + 1
+      if \is_digits(args[i]) then return argument_error("--warmups must be a non-negative integer")
+      warmups = args[i]
+    end
+    else if option = "--runs" then do
+      if i = args[0] then return argument_error("missing value after --runs")
+      i = i + 1
+      if \is_digits(args[i]) then return argument_error("--runs must be a positive integer")
+      runs = args[i]
+    end
+    else if option = "--benchmark" then do
+      if i = args[0] then return argument_error("missing value after --benchmark")
+      i = i + 1
+      if benchmark_base(args[i]) = "" then return argument_error("unknown benchmark: " || args[i])
+      selected[selected[0] + 1] = args[i]
+    end
+    else if option = "--output" then do
+      if i = args[0] then return argument_error("missing value after --output")
+      i = i + 1
+      output_path = args[i]
+    end
+    else return argument_error("unknown option: " || option)
+    i = i + 1
+  end
+
+  if vm_name <> "rxvm" & vm_name <> "rxbvm" then
+    return argument_error("--vm must be rxvm or rxbvm")
+  if mode <> "opt" & mode <> "noopt" then
+    return argument_error("--mode must be opt or noopt")
+  if runs < 1 then return argument_error("--runs must be a positive integer")
+
+  if selected[0] = 0 then do
+    selected[1] = "sieve"
+    selected[2] = "permute"
+    selected[3] = "mandelbrot"
+    selected[4] = "towers"
+    selected[5] = "rexxcps"
+  end
+
+  platform_name = platform_description()
+  crexx_version = version()
+  csv_lines = .string[]
+  csv_lines[1] = "benchmark,vm,mode,runs,min_ns,median_ns,mean_ns,max_ns,platform,crexx_version"
+
+  do benchmark_index = 1 to selected[0]
+    benchmark_name = selected[benchmark_index]
+    command = benchmark_command(build_dir, vm_name, mode, benchmark_name)
+
+    do warmup = 1 to warmups
+      elapsed_ns = run_once(command)
+      if elapsed_ns < 0 then return 1
+    end
+
+    samples = .int[]
+    total_ns = 0
+    do run = 1 to runs
+      elapsed_ns = run_once(command)
+      if elapsed_ns < 0 then return 1
+      samples[run] = elapsed_ns
+      total_ns = total_ns + elapsed_ns
+    end
+
+    call sort_samples samples
+    median_ns = sample_median(samples)
+    mean_ns = total_ns <idiv> runs
+    csv_lines[csv_lines[0] + 1] = csv_row(benchmark_name, vm_name, mode, runs, ,
+        samples[1], median_ns, mean_ns, samples[runs], platform_name, crexx_version)
+  end
+
+  return emit_csv(csv_lines, output_path)
+
+usage: procedure = .void
+  say "Usage: run_benchmarks [options]"
+  say ""
+  say "Options:"
+  say "  --build-dir PATH      Build tree (default: cmake-build-release)"
+  say "  --vm rxvm|rxbvm       VM executable (default: rxvm)"
+  say "  --mode opt|noopt      Benchmark bytecode mode (default: opt)"
+  say "  --warmups N           Unrecorded runs per benchmark (default: 2)"
+  say "  --runs N              Recorded runs per benchmark (default: 10)"
+  say "  --benchmark NAME      Repeatable: sieve, permute, mandelbrot, towers, rexxcps"
+  say "  --output PATH         Write CSV to PATH instead of stdout"
+  say "  -h, --help            Show this help"
+  return
+
+argument_error: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  say "Use --help for usage."
+  return 2
+
+is_digits: procedure = .int
+  arg value = .string
+  if value = "" then return 0
+  return verify(value, "0123456789") = 0
+
+benchmark_base: procedure = .string
+  arg benchmark_name = .string
+  select
+    when benchmark_name = "sieve" then return "benchmark_awfy_sieve"
+    when benchmark_name = "permute" then return "benchmark_awfy_permute"
+    when benchmark_name = "mandelbrot" then return "benchmark_awfy_mandelbrot"
+    when benchmark_name = "towers" then return "benchmark_awfy_towers"
+    when benchmark_name = "rexxcps" then return "benchmark_rexxcps_levelb"
+    otherwise return ""
+  end
+  return ""
+
+benchmark_command: procedure = .string[]
+  arg build_dir = .string, vm_name = .string, mode = .string, benchmark_name = .string
+  command = .string[]
+  command[1] = build_dir || "/bin/" || vm_name
+  command[2] = build_dir || "/tests/benchmarks/" || benchmark_base(benchmark_name) || "_" || mode || ".rxbin"
+  command[3] = build_dir || "/bin/library.rxbin"
+  command[4] = "-a"
+  select
+    when benchmark_name = "sieve" then command[5] = "50"
+    when benchmark_name = "permute" then command[5] = "50"
+    when benchmark_name = "mandelbrot" then command[5] = "500"
+    when benchmark_name = "towers" then command[5] = "10"
+    when benchmark_name = "rexxcps" then do
+      command[5] = "100"
+      command[6] = "10"
+    end
+  end
+  return command
+
+run_once: procedure = .int
+  arg command = .string[]
+  child_output = .string[]
+  child_error = .string[]
+  started_us = .int
+  ended_us = .int
+  started_us = time("us")
+  address crexx "run :command[]" output child_output error child_error
+  child_rc = rc
+  ended_us = time("us")
+
+  if child_rc <> 0 | \has_pass_line(child_output) then do
+    say "ERROR: benchmark command failed; rc=" || child_rc
+    say "argv:"
+    do i = 1 to command[0]
+      say "  [" || i || "] " || command[i]
+    end
+    say "stdout:"
+    if child_output[0] = 0 then say "  <empty>"
+    else do i = 1 to child_output[0]
+      say "  " || child_output[i]
+    end
+    say "stderr:"
+    if child_error[0] = 0 then say "  <empty>"
+    else do i = 1 to child_error[0]
+      say "  " || child_error[i]
+    end
+    return -1
+  end
+
+  elapsed_us = ended_us - started_us
+  /* time("us") is microseconds since midnight, so allow for midnight rollover. */
+  if elapsed_us < 0 then elapsed_us = elapsed_us + 86400000000
+  return elapsed_us * 1000
+
+has_pass_line: procedure = .int
+  arg lines = .string[]
+  do i = 1 to lines[0]
+    if pos("PASS:", lines[i]) > 0 then return 1
+  end
+  return 0
+
+sort_samples: procedure = .void
+  arg expose samples = .int[]
+  do i = 2 to samples[0]
+    value = samples[i]
+    j = i - 1
+    do while j >= 1 & samples[j] > value
+      samples[j + 1] = samples[j]
+      j = j - 1
+    end
+    samples[j + 1] = value
+  end
+  return
+
+sample_median: procedure = .int
+  arg samples = .int[]
+  count = samples[0]
+  if count <mod> 2 = 1 then return samples[(count + 1) <idiv> 2]
+  lower_index = count <idiv> 2
+  return (samples[lower_index] + samples[lower_index + 1]) <idiv> 2
+
+platform_description: procedure = .string
+  platform_output = .string[]
+  platform_error = .string[]
+  address crexx "platform" output platform_output error platform_error
+  if rc = 0 & platform_output[0] > 0 then return platform_output[1]
+  return "unknown"
+
+csv_row: procedure = .string
+  arg benchmark_name = .string, vm_name = .string, mode = .string, runs = .int, ,
+      min_ns = .int, median_ns = .int, mean_ns = .int, max_ns = .int, ,
+      platform_name = .string, crexx_version = .string
+  return csv_field(benchmark_name) || "," || csv_field(vm_name) || "," || ,
+      csv_field(mode) || "," || runs || "," || min_ns || "," || median_ns || ,
+      "," || mean_ns || "," || max_ns || "," || csv_field(platform_name) || ,
+      "," || csv_field(crexx_version)
+
+csv_field: procedure = .string
+  arg value = .string
+  if pos(",", value) > 0 | pos('"', value) > 0 | pos("0a"x, value) > 0 then
+    return '"' || changestr('"', value, '""') || '"'
+  return value
+
+emit_csv: procedure = .int
+  arg csv_lines = .string[], output_path = .string
+  if output_path = "" then do
+    do i = 1 to csv_lines[0]
+      say csv_lines[i]
+    end
+    return 0
+  end
+
+  do i = 1 to csv_lines[0]
+    write_rc = lineout(output_path, csv_lines[i])
+    if write_rc <> 0 then do
+      call lineout output_path
+      say "ERROR: could not write CSV output:" output_path
+      return 1
+    end
+  end
+  call lineout output_path
+  return 0
