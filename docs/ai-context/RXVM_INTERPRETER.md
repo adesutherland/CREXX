@@ -761,8 +761,10 @@ In this example:
 both VM modes. A backend can observe VM begin/end, instruction begin plus
 retire or terminal, frame activation, call/return transitions, and interrupt
 selection/entry/resume/terminal paths using canonical module/instruction
-coordinates. With no backend selected, every hook preprocesses to a no-op and
-does not evaluate its arguments, branch, access state, or call a function.
+coordinates. The contract also exposes native-call boundaries and module-set
+changes needed by callable profiling. With no backend selected, every hook
+preprocesses to a no-op and does not evaluate its arguments, branch, access
+state, or call a function.
 
 ### Timing/count profiling
 
@@ -775,14 +777,20 @@ with:
 cmake -S . -B cmake-build-profile \
   -DCMAKE_BUILD_TYPE=Release \
   -DCREXX_VM_PROFILING=ON
-cmake --build cmake-build-profile --target rxvm rxbvm
+cmake --build cmake-build-profile --config Release \
+  --target rxvm rxbvm rxvme rxbvme rxseq
 ```
 
-Profiling remains off at runtime until `--profile` is passed. By default the
-report is written as a human-readable table to standard error. Use
-`--profile-output file` or `--profile-output=file` to write it to a file. An
-output filename ending in `.csv`, case-insensitively, selects CSV; every other
-filename selects the table format. The output option also enables profiling.
+The command-line surface is compiled into `rxvm`, `rxbvm`, and their embedded
+standard-library variants `rxvme` and `rxbvme`. Timing profiling remains off at
+runtime until `--profile`, `--profile=timing`, or `--profile-output` is passed.
+By default the report is written as a human-readable table to standard error.
+Use `--profile-output file` or `--profile-output=file` to write it to a file.
+An output filename ending in `.csv`, case-insensitively, selects CSV; every
+other filename selects the table format. The output option also enables
+profiling.
+Profiling options are parsed before the first RXBIN filename; ordinary program
+arguments continue to follow `-a`.
 
 ```sh
 rxvm --profile program.rxbin
@@ -794,7 +802,40 @@ The instruction table measures monotonic wall time from instruction entry to
 retire or terminal. The transition table measures retire to the next
 instruction entry and distinguishes same-frame sequential/branch transitions,
 call frame entry, return frame exit, interrupt entry/resume, external entry,
-and termination. Blocking native work is charged to its instruction.
+and termination.
+
+The same report contains procedure/method and call-mechanics tables. Callable
+names, return types, and argument signatures come from `META_FUNC`; a
+module/procedure fallback is used for older binaries without that record. The
+procedure table classifies runtime rows as procedure, method, factory, or
+native and reports calls, normally completed calls, calls discarded by an
+exceptional unwind, elapsed call time, inclusive body time, and self time.
+Rows are sorted by elapsed time (native total for native rows). Inclusive body
+time includes nested bytecode calls, so rows overlap; self time does not.
+Inlined calls have no runtime frame and therefore remain attributed to their
+containing procedure rather than appearing as separate rows.
+
+For bytecode calls, the normal-return boundaries are:
+
+```text
+caller call-instruction entry
+    -> callee first-instruction entry       entry overhead
+    -> callee return-instruction entry      inclusive body
+    -> caller next-instruction entry        exit overhead
+```
+
+Elapsed time covers the whole outer span. These are observed VM call-mechanics
+spans, not an estimate of the speed-up from inlining. External entry and
+terminal return are measured against their nearest available VM boundary.
+Dynamic calls are attributed to the concrete runtime procedure.
+
+Native plugin calls are listed with call count and total time around
+`rxvm_callfunc`. Body/self and entry/exit breakdowns are intentionally omitted
+because the VM cannot observe the native implementation's internal phases.
+Native time remains part of its calling instruction's instruction timing, but
+is removed from the bytecode caller's self time to avoid double attribution in
+the procedure view. The instruction, transition, and procedure sections are
+overlapping views and must not be summed together.
 
 Every retired hot-loop instruction also increments the interrupt-poll count.
 Taken interrupt scans and the mechanics from selection to the first handler
@@ -804,13 +845,34 @@ to it. The no-pending poll itself remains inside ordinary transition time; the
 profiler intentionally does not add another pair of timer reads around that
 check.
 
+CSV output retains the original columns in their original order, appends
+callable metadata/status columns, and identifies the format as schema version
+2. Its exact header is:
+
+```text
+section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args
+```
+
+Procedure rows use `value` to distinguish `elapsed`, `inclusive_body`, `self`,
+`entry_overhead`, `exit_overhead`, and `native_total` metrics. There are
+multiple metric rows per bytecode callable rather than one denormalized row.
+
 Timing values are raw instrumented wall times. The report includes the minimum
 positive adjacent clock-read interval and zero-delta calibration count, but
 does not subtract them from short instructions. Compare instruction shares
 within equivalent profiled runs rather than treating the values as the
-uninstrumented VM's absolute cost. Counter updates use fixed per-run arrays;
-the hot path performs no allocation, locking, callbacks, sorting, or output
-formatting.
+uninstrumented VM's absolute cost. Instruction and transition counters use
+fixed per-run arrays; the common hot path performs no allocation, locking,
+callbacks, sorting, or output formatting. The procedure activation array is
+allocated once per run and grows only if call depth exceeds its current
+capacity. Bytecode procedure timing reuses the existing instruction
+timestamps; only native calls add a dedicated timer pair, and exceptional
+stack unwinds add a timestamp outside the ordinary path.
+
+Do not use an inactive profiling build as the uninstrumented performance
+baseline: the enabled backend still contains inexpensive runtime guards. Only
+a build configured without `CREXX_VM_PROFILING` has the compile-time no-op
+shape.
 
 ### Dynamic instruction-sequence profiles
 
@@ -830,12 +892,15 @@ Ordinary builds configured without `CREXX_VM_PROFILING` contain neither
 runtime surface.
 
 The VM records dynamic execution counts against `(module, canonical starting
-instruction slot, window length)`. A window continues only across actual
-sequential fall-through transitions in the same module and frame. Taken
-branches, calls, returns, interrupt entry/resume, external frame entry, and
-termination break it. A branch may be the last instruction in a window, but a
-window never crosses the branch when it is taken. Loop iterations increase the
-recorded site count.
+instruction slot, window length)`. At run start it allocates one 64-bit counter
+per expanded instruction slot in every loaded module; the on-disk result is
+sparse. A window continues only across actual sequential fall-through
+transitions in the same module and frame. Taken branches, bytecode-frame calls
+and returns, interrupt entry/resume, external frame entry, and termination
+break it. A native call that returns normally remains within its CALL
+instruction and can participate in a sequential window. A branch may be the
+last instruction in a window, but a window never crosses the branch when it is
+taken. Loop iterations increase the recorded site count.
 
 The extractor writes a versioned binary instruction-sequence execution profile.
 It starts with the eight-byte `RXSEQBIN` magic. Its fixed 48-byte header uses
@@ -862,7 +927,11 @@ rxseq run.rxseq program.rxbin library.rxbin --output candidates.csv
 Module argument order does not matter, but every profiled module must be
 present with the exact content used by the run, and no additional module may
 be supplied. `rxseq` fails on a missing module, content-hash mismatch, or
-instruction-size mismatch.
+instruction-size mismatch. The profile records all loaded modules, even those
+with no non-zero site. Consequently, a capture made with `rxvme` or `rxbvme`
+also requires the exact RXBIN image corresponding to its embedded standard
+library. Prefer `rxvm`/`rxbvm` with explicit inputs or a single linked image
+when a self-contained sequence-analysis workflow is needed.
 
 For each site, `rxseq` decodes the emitted RXBIN instructions and
 alpha-renames operands by first occurrence across the whole window. Registers
@@ -878,14 +947,19 @@ IADD_REG_REG_REG(R17,R5,R9) | COPY_REG_REG(R5,R22)
 Sites with the same normalised pattern are clustered, and their dynamic counts
 are summed. The report includes execution count, static site count, module
 count, one concrete mapping/example, and a `candidate` or
-`over_3_symbols` status. Because an RX instruction can encode at most three
-operands, patterns with more than three distinct normalised register/constant
-symbols are screened out at this stage. This is only candidate extraction:
-control-flow, liveness, aliasing, exceptions, interrupt behaviour, and other
-transformation safety must be reviewed separately before defining a combined
-opcode or optimiser rule. An output name ending in `.csv`,
-case-insensitively, selects CSV; otherwise `rxseq` writes the human-readable
-report format.
+`over_3_symbols` status. The current combined-opcode candidate filter accepts
+at most three distinct normalised register/constant symbols; larger patterns
+remain visible but are screened out at this stage. This is only candidate
+extraction: control-flow, liveness, aliasing, exceptions, interrupt behaviour,
+and other transformation safety must be reviewed separately before defining a
+combined opcode or optimiser rule. The table heading also reports the window
+length, cluster/site counts, and counter-overflow status. An output name ending
+in `.csv`, case-insensitively, selects CSV; otherwise `rxseq` writes the
+human-readable report format. Candidate CSV uses:
+
+```text
+rank,count,sites,modules,symbols,status,pattern,mapping,example_module,example_start
+```
 
 ### Pooled float operands
 

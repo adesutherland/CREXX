@@ -307,6 +307,9 @@ static void init_module_runtime_procedure(module *mod, proc_runtime *runtime, si
     runtime->frame_free_list = &runtime->frame_free_list_head;
     runtime->start = definition->start;
     runtime->name = definition->name;
+#ifdef CREXX_VM_PROFILING
+    runtime->profile_id = SIZE_MAX;
+#endif
 }
 
 static void build_module_runtime_procedures(module *mod) {

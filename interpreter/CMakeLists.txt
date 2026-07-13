@@ -872,30 +872,42 @@ crexx_add_vm_dual_test(NAME rxasbasictests RXVM_ARGS tests_basic)
 
 if(BUILD_TESTING AND CREXX_VM_PROFILING)
     crexx_add_rxas_vm_binary(tests_sequence_profile "dynamic sequence profile")
+    crexx_add_rxas_vm_binary(tests_procedure_profile "procedure timing profile")
+
+    set(PROFILING_DOC_EXAMPLE
+            ${CMAKE_SOURCE_DIR}/docs/books/crexx_programming_guide/examples/profiling_demo.rxas)
+    add_custom_command(
+            OUTPUT profiling_demo.rxbin
+            COMMAND $<TARGET_FILE:rxas> -o profiling_demo ${PROFILING_DOC_EXAMPLE}
+            DEPENDS ${PROFILING_DOC_EXAMPLE} rxas rxvm mc_decimal_dynamic
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            COMMENT "cREXX VM profiling documentation example ...")
+    add_custom_target(run_profiling_demo ALL DEPENDS profiling_demo.rxbin)
+    add_dependencies(run_profiling_demo rxvm rxbvm)
 
     add_test(NAME rxvmprofiletable
-            COMMAND $<TARGET_FILE:rxvm> --profile tests_basic)
+            COMMAND $<TARGET_FILE:rxvm> --profile tests_procedure_profile)
     add_test(NAME rxbvmprofiletable
-            COMMAND $<TARGET_FILE:rxbvm> --profile tests_basic)
+            COMMAND $<TARGET_FILE:rxbvm> --profile tests_procedure_profile)
     set_tests_properties(rxvmprofiletable PROPERTIES
-            PASS_REGULAR_EXPRESSION "VM PROFILE \\(rxvm\\)"
+            PASS_REGULAR_EXPRESSION "Procedures and methods.*procedure_profile.worker.*[ ]2[ ]+2[ ]+0"
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             LABELS "interpreter;profiling")
     set_tests_properties(rxbvmprofiletable PROPERTIES
-            PASS_REGULAR_EXPRESSION "VM PROFILE \\(rxbvm\\)"
+            PASS_REGULAR_EXPRESSION "Procedures and methods.*procedure_profile.worker.*[ ]2[ ]+2[ ]+0"
             WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
             LABELS "interpreter;profiling")
 
     add_test(NAME rxvmprofilecsv
             COMMAND ${CMAKE_COMMAND}
                     "-DVM=$<TARGET_FILE:rxvm>"
-                    "-DINPUT=${CMAKE_CURRENT_BINARY_DIR}/tests_basic.rxbin"
+                    "-DINPUT=${CMAKE_CURRENT_BINARY_DIR}/tests_procedure_profile.rxbin"
                     "-DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/rxvm-profile.CSV"
                     -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_vm_profile_csv.cmake)
     add_test(NAME rxbvmprofilecsv
             COMMAND ${CMAKE_COMMAND}
                     "-DVM=$<TARGET_FILE:rxbvm>"
-                    "-DINPUT=${CMAKE_CURRENT_BINARY_DIR}/tests_basic.rxbin"
+                    "-DINPUT=${CMAKE_CURRENT_BINARY_DIR}/tests_procedure_profile.rxbin"
                     "-DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/rxbvm-profile.csv"
                     -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_vm_profile_csv.cmake)
     set_tests_properties(rxvmprofilecsv rxbvmprofilecsv PROPERTIES
@@ -929,8 +941,16 @@ if(BUILD_TESTING AND CREXX_VM_PROFILING)
                     "-DINPUT=${CMAKE_CURRENT_BINARY_DIR}/tests_sequence_profile.rxbin"
                     "-DWRONG_INPUT=${CMAKE_CURRENT_BINARY_DIR}/tests_basic.rxbin"
                     -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_rxseq_mismatch.cmake)
+    add_test(NAME vmprofilingdocumentation
+            COMMAND ${CMAKE_COMMAND}
+                    "-DVM=$<TARGET_FILE:rxvm>"
+                    "-DRXSEQ=$<TARGET_FILE:rxseq>"
+                    "-DINPUT=${CMAKE_CURRENT_BINARY_DIR}/profiling_demo.rxbin"
+                    "-DOUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}"
+                    -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_vm_profiling_docs.cmake)
     set_tests_properties(
             rxvmsequence2 rxbvmsequence3 rxvmsequence4 rxseqmodulemismatch
+            vmprofilingdocumentation
             PROPERTIES LABELS "interpreter;profiling;sequence")
 endif()
 

@@ -1,0 +1,14 @@
+/* Procedure timing profiler fixture. */
+
+.globals=0
+
+   .meta "procedure_profile.main"="b" ".int" main() ""
+   .meta "procedure_profile.worker"="b" ".void" worker() ""
+
+main() .locals=0
+    call worker()
+    call worker()
+    ret 0
+
+worker() .locals=0
+    ret

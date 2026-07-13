@@ -3132,19 +3132,39 @@ static void free_external_entry_arguments(stack_frame *frame) {
     }
 }
 
-static stack_frame *rxsignal_unwind_to_frame(stack_frame *current, stack_frame *target) {
+static stack_frame *rxsignal_unwind_to_frame(
+        stack_frame *current, stack_frame *target
+#ifdef CREXX_VM_PROFILING
+        , rxvm_profile_state *profile
+#endif
+        ) {
     stack_frame *discard;
+#ifdef CREXX_VM_PROFILING
+    uint64_t unwind_time_ns = 0;
+#endif
 
     if (!target) return current;
 
     while (current && current != target) {
         discard = current;
         current = current->parent;
+#ifdef CREXX_VM_PROFILING
+        if (profile && profile->enabled) {
+            if (!unwind_time_ns) unwind_time_ns = rxvm_profile_now_ns();
+            rxvm_profile_frame_unwind_at(profile, discard, unwind_time_ns);
+        }
+#endif
         free_frame(discard);
     }
 
     return current ? current : target;
 }
+
+#ifdef CREXX_VM_PROFILING
+#define RXVM_PROFILE_UNWIND_STATE , &vm_profile
+#else
+#define RXVM_PROFILE_UNWIND_STATE
+#endif
 
 static void rxsignal_populate_raw_interrupt(value *raw,
                                             unsigned char interrupt,
@@ -3746,7 +3766,8 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
         case RXSIGNAL_RESPONSE_CALL_BRANCH:
             DEBUG("TRACE - INTR HANDLER -> SET BRANCH FOR CALL RETURN ");
-            VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame),
+            VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame
+                                                       RXVM_PROFILE_UNWIND_STATE),
                               RXVM_TRANSITION_INTERRUPT_ENTRY);
             VM_SELECT_INDEX(signal_handler.jump, RXVM_TRANSITION_INTERRUPT_ENTRY);
             pc = next_pc;
@@ -3773,7 +3794,9 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
             if (intr_function->binarySpace == 0) {
                 /* This is a native plugin function */
+                RXVM_INSTRUMENTATION_NATIVE_BEGIN(intr_function);
                 rxvm_callfunc((void *) (intr_function->start), 1, &interrupt_arg, 0, signal_value);
+                RXVM_INSTRUMENTATION_NATIVE_END();
                 if (signal_value->int_value > RXSIGNAL_NONE && signal_value->int_value < RXSIGNAL_MAX) {
                     if (signal_value->string_length) {
                         SET_SIGNAL_MSG(signal_value->int_value, signal_value->string_value)
@@ -3810,14 +3833,16 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
         case RXSIGNAL_RESPONSE_BRANCH:
             DEBUG("TRACE - INTR HANDLER -> BRANCH %s\n", interrupt_to_string(last_interrupt));
-            VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame),
+            VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame
+                                                       RXVM_PROFILE_UNWIND_STATE),
                               RXVM_TRANSITION_INTERRUPT_ENTRY);
             VM_SELECT_INDEX(signal_handler.jump, RXVM_TRANSITION_INTERRUPT_ENTRY);
             DISPATCH;
 
         case RXSIGNAL_RESPONSE_BRANCH_VALUE:
             DEBUG("TRACE - INTR HANDLER -> BRANCH VALUE %s\n", interrupt_to_string(last_interrupt));
-            VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame),
+            VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame
+                                                       RXVM_PROFILE_UNWIND_STATE),
                               RXVM_TRANSITION_INTERRUPT_ENTRY);
             rxsignal_populate_raw_interrupt(interrupt_arg,
                                             last_interrupt,
@@ -4186,6 +4211,7 @@ START_OF_INSTRUCTIONS
                         VM_PREPARE_EXECUTION_IMAGE(loaded_module);
                     }
 #endif
+                    RXVM_INSTRUMENTATION_MODULES_CHANGED(context);
                 }
             }
             DISPATCH;
@@ -5650,7 +5676,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                 }
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
+                    RXVM_INSTRUMENTATION_NATIVE_BEGIN(called_function);
                     rxvm_callfunc((void *) (called_function->start), 0, NULL, NULL, signal_value);
+                    RXVM_INSTRUMENTATION_NATIVE_END();
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
                     /* This is a CREXX Procedure */
@@ -5683,7 +5711,9 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
 
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
+                    RXVM_INSTRUMENTATION_NATIVE_BEGIN(called_function);
                     rxvm_callfunc((void *) (called_function->start), 0, NULL, op1R, signal_value);
+                    RXVM_INSTRUMENTATION_NATIVE_END();
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
                     /* This is a CREXX Procedure */
@@ -5713,8 +5743,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
 
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
+                    RXVM_INSTRUMENTATION_NATIVE_BEGIN(called_function);
                     rxvm_callfunc((void *) (called_function->start), op3R->int_value, (&(op3R)) + 1, op1R,
                                   signal_value);
+                    RXVM_INSTRUMENTATION_NATIVE_END();
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
                     /* This is a CREXX Procedure */
@@ -5756,8 +5788,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
 
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
+                    RXVM_INSTRUMENTATION_NATIVE_BEGIN(called_function);
                     rxvm_callfunc((void *) (called_function->start), op3R->int_value, (&(op3R)) + 1, op1R,
                                   signal_value);
+                    RXVM_INSTRUMENTATION_NATIVE_END();
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
                     /* This is a CREXX Procedure */

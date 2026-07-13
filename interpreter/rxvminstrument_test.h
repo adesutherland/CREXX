@@ -71,14 +71,18 @@ typedef struct rxvm_test_instrumentation_state {
         }                                                                       \
     } while (0)
 
-#define RXVM_INSTRUMENTATION_FRAME_ACTIVATE(module_, index_, reason_)           \
+#define RXVM_INSTRUMENTATION_FRAME_ACTIVATE(frame_, module_, index_, reason_)   \
     do {                                                                        \
-        (void)(index_);                                                         \
+        (void)(frame_); (void)(index_);                                         \
         if (!(module_)) vm_instrumentation.failed = 1;                          \
         vm_instrumentation.frame_activations++;                                 \
         if ((reason_) == RXVM_TRANSITION_CALL) vm_instrumentation.calls++;      \
         else if ((reason_) == RXVM_TRANSITION_RETURN) vm_instrumentation.returns++; \
     } while (0)
+
+#define RXVM_INSTRUMENTATION_NATIVE_BEGIN(procedure_) do { (void)(procedure_); } while (0)
+#define RXVM_INSTRUMENTATION_NATIVE_END() ((void)0)
+#define RXVM_INSTRUMENTATION_MODULES_CHANGED(context_) do { (void)(context_); } while (0)
 
 #define RXVM_INSTRUMENTATION_TRANSITION(reason_)                                \
     do { vm_instrumentation.transition = (reason_); } while (0)

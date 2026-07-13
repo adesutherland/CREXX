@@ -46,6 +46,9 @@ typedef struct proc_runtime {
     stack_frame *frame_free_list_head;
     size_t start;
     char *name;
+#ifdef CREXX_VM_PROFILING
+    size_t profile_id;
+#endif
 } proc_runtime;
 
 typedef struct proc_runtime_lookup_entry {
@@ -217,6 +220,7 @@ struct stack_frame {
         current_locals = vm_frame__->locals;                                    \
         VM_ASSERT_ACTIVE_FRAME();                                               \
         RXVM_INSTRUMENTATION_FRAME_ACTIVATE(                                    \
+                vm_frame__,                                                     \
                 current_module->module_number,                                  \
                 vm_frame__->procedure->start,                                   \
                 (reason_));                                                     \

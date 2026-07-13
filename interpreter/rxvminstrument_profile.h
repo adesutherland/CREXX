@@ -18,7 +18,8 @@
 #define RXVM_INSTRUMENTATION_VM_BEGIN(context_)                                \
     do {                                                                        \
         rxvm_profile_begin(&vm_profile,                                        \
-                           (context_)->profile_mode && !(context_)->prepare_only); \
+                           (context_)->profile_mode && !(context_)->prepare_only, \
+                           (context_));                                        \
         rxvm_sequence_begin(&vm_sequence, (context_),                           \
                 (context_)->sequence_count,                                    \
                 (context_)->sequence_count && !(context_)->prepare_only);       \
@@ -54,17 +55,45 @@
         if (vm_sequence.enabled) rxvm_sequence_break(&vm_sequence);             \
     } while (0)
 
-#define RXVM_INSTRUMENTATION_FRAME_ACTIVATE(module_, index_, reason_)          \
+#define RXVM_INSTRUMENTATION_FRAME_ACTIVATE(frame_, module_, index_, reason_)  \
     do {                                                                        \
         rxvm_transition_reason vm_profile_reason__ = (reason_);                 \
         (void)(module_); (void)(index_);                                        \
-        if (vm_profile.enabled &&                                              \
-                vm_profile_reason__ == RXVM_TRANSITION_EXTERNAL_ENTRY)          \
+        if (vm_profile.enabled) {                                               \
+            uint64_t vm_profile_now__ =                                        \
+                    (vm_profile_reason__ == RXVM_TRANSITION_EXTERNAL_ENTRY ||   \
+                     vm_profile_reason__ == RXVM_TRANSITION_INTERRUPT_ENTRY ||  \
+                     (vm_profile_reason__ == RXVM_TRANSITION_RETURN &&          \
+                      !vm_profile.instruction_active))                         \
+                    ? rxvm_profile_now_ns() : vm_profile.instruction_start_ns;  \
             rxvm_profile_frame_activate_at(                                    \
-                    &vm_profile, vm_profile_reason__, rxvm_profile_now_ns());    \
+                    &vm_profile, (const void *)(frame_),                        \
+                    (frame_)->procedure->profile_id, vm_profile_reason__,       \
+                    vm_profile_now__);                                         \
+        }                                                                       \
         if (vm_sequence.enabled &&                                             \
                 vm_profile_reason__ != RXVM_TRANSITION_SEQUENTIAL)              \
             rxvm_sequence_break(&vm_sequence);                                 \
+    } while (0)
+
+#define RXVM_INSTRUMENTATION_NATIVE_BEGIN(procedure_)                          \
+    do {                                                                        \
+        if (vm_profile.enabled)                                                 \
+            rxvm_profile_native_begin_at(                                      \
+                    &vm_profile, (procedure_)->profile_id,                      \
+                    rxvm_profile_now_ns());                                     \
+    } while (0)
+
+#define RXVM_INSTRUMENTATION_NATIVE_END()                                      \
+    do {                                                                        \
+        if (vm_profile.enabled)                                                 \
+            rxvm_profile_native_end_at(&vm_profile, rxvm_profile_now_ns());     \
+    } while (0)
+
+#define RXVM_INSTRUMENTATION_MODULES_CHANGED(context_)                         \
+    do {                                                                        \
+        if (vm_profile.enabled)                                                 \
+            rxvm_profile_refresh_catalog(&vm_profile, (context_));              \
     } while (0)
 
 #define RXVM_INSTRUMENTATION_TRANSITION(reason_)                               \
@@ -123,6 +152,7 @@
                             interrupt_to_string);                               \
         rxvm_sequence_report(&vm_sequence, (context_),                          \
                              (context_)->sequence_output, (result_));           \
+        rxvm_profile_destroy(&vm_profile);                                      \
     } while (0)
 
 #endif

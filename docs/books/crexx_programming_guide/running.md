@@ -68,8 +68,8 @@ modules.
 
 ### Profiling VM execution
 
-A VM configured with `-DCREXX_VM_PROFILING=ON` supports instruction and
-dispatch-transition timing:
+A VM configured with `-DCREXX_VM_PROFILING=ON` supports instruction,
+transition, procedure/method, native-call, and interrupt timing:
 
 ```bash
 rxvme --profile hello.rxbin
@@ -77,10 +77,13 @@ rxvme --profile-output hello-profile.txt hello.rxbin
 rxvme --profile-output hello-profile.csv hello.rxbin
 ```
 
-The default report is a table on standard error. A profile output filename
-ending in `.csv` (case-insensitive) selects CSV; other filenames use the table
-format. Profiling support and its command-line options are absent from normal
-builds.
+The default report is a table on standard error. It includes instruction and
+transition timing plus per-procedure/method call counts, elapsed time,
+inclusive body time, self time, and measured VM entry/exit mechanics. Native
+plugin calls are included with call count and total time only. A profile output
+filename ending in `.csv` (case-insensitive) selects CSV; other filenames use
+the table format. Profiling support and its command-line options are absent
+from normal builds.
 
 The profiling build also supports a separate dynamic instruction-sequence
 extractor. It records the volume of sequential two-, three-, or
@@ -97,6 +100,10 @@ patterns by register/constant reuse and sums loop execution counts. Patterns
 requiring more than three distinct encoded symbols are marked
 `over_3_symbols`. The report is input to later safety and optimizer review,
 not an automatic bytecode transformation.
+
+The complete build instructions, report-field definitions, measurement
+boundaries, tested example, CSV schema, sequence semantics, and troubleshooting
+guide are in [Profiling cREXX VM Execution](profiling.md).
 
 ## Imports and Libraries
 
