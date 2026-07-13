@@ -1,0 +1,4 @@
+`bmemmove rBin,rDstOffset,rLen` copies `rLen` bytes within one binary register.
+The source byte offset is read from `rBin`'s integer slot and the destination
+offset is the explicit `rDstOffset` operand. Overlapping ranges are safe and
+behave like C `memmove`.

@@ -1,0 +1,2 @@
+`bfill rBin,rByte` fills the current logical byte range with `rByte`. The byte
+value must be in `0..255`.

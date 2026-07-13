@@ -1,0 +1,5 @@
+`bcopy rDst,rSrc` copies the whole binary payload from one register to another.
+
+`bcopy rDst,rSrc,rOffset` copies exactly `blen(rDst)` bytes from `rSrc` starting
+at `rOffset` into `rDst`. `rSrc` may be a binary register or a binary constant.
+The destination must already have the required length.

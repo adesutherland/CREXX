@@ -11,6 +11,7 @@ the intended purpose of each documentation area, see
 - `books/crexx_language_reference`: implemented Level B language reference
 - `books/crexx_programming_guide`: build, run, tools, and integration guide
 - `books/crexx_vm_spec`: VM, RXAS, RXBIN, and instruction reference
+- `reference/rxas`: human-authored RXAS reference source skeleton
 - `ai-context`: implementation facts for agents and maintainers
 
 ## Generated and Historical Material

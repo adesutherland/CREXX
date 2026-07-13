@@ -1,0 +1,3 @@
+`bresize rBin,rLen` changes the logical binary length. Existing bytes are
+preserved up to the new length and growth is zero-filled. Negative lengths raise
+`OUT_OF_RANGE`.

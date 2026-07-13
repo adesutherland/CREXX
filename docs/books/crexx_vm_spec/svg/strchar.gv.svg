@@ -23,14 +23,14 @@
 <text xml:space="preserve" text-anchor="start" x="78.75" y="-29.25" font-family="Times,serif" font-size="14.00"> REG </text>
 <polygon fill="none" stroke="black" points="116.25,-22.5 116.25,-45 156.75,-45 156.75,-22.5 116.25,-22.5"/>
 <text xml:space="preserve" text-anchor="start" x="119.25" y="-29.25" font-family="Times,serif" font-size="14.00"> REG </text>
+<polygon fill="none" stroke="black" points="156.75,-22.5 156.75,-45 197.25,-45 197.25,-22.5 156.75,-22.5"/>
+<text xml:space="preserve" text-anchor="start" x="159.75" y="-29.25" font-family="Times,serif" font-size="14.00"> REG </text>
 <polygon fill="none" stroke="black" points="0,0 0,-22.5 75.75,-22.5 75.75,0 0,0"/>
 <text xml:space="preserve" text-anchor="start" x="3" y="-6.75" font-family="Times,serif" font-size="14.00"> STRCHAR </text>
 <polygon fill="none" stroke="black" points="75.75,0 75.75,-22.5 116.25,-22.5 116.25,0 75.75,0"/>
 <text xml:space="preserve" text-anchor="start" x="78.75" y="-6.75" font-family="Times,serif" font-size="14.00"> REG </text>
 <polygon fill="none" stroke="black" points="116.25,0 116.25,-22.5 156.75,-22.5 156.75,0 116.25,0"/>
 <text xml:space="preserve" text-anchor="start" x="119.25" y="-6.75" font-family="Times,serif" font-size="14.00"> REG </text>
-<polygon fill="none" stroke="black" points="156.75,0 156.75,-22.5 197.25,-22.5 197.25,0 156.75,0"/>
-<text xml:space="preserve" text-anchor="start" x="159.75" y="-6.75" font-family="Times,serif" font-size="14.00"> REG </text>
 </g>
 </g>
 </svg>

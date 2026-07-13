@@ -1,6 +1,7 @@
 # cRexx Architecture
 
 `crexx` is a custom Rexx-to-bytecode toolchain that translates Classic Rexx semantics into an optimized bytecode format executed by a specialized VM. The core bytecode path happens through four main binaries:
+
 1. `rxc` - The Compiler
 2. `rxas` - The Assembler
 3. `rxlink` - The Linker
@@ -24,7 +25,8 @@ The pipeline of transforming Rexx source code into executable bytecode is struct
      plain generated CREXX.
 
 1. **re2c (Lexical Analyzer)**
-   - Used to generate the scanner/lexer from `.re` rules (e.g., `compiler/rxcpbscn.re` and `assembler/rxasscan.re`).
+   - Used to generate the scanner/lexer from `.re` rules (e.g.,  
+   `compiler/rxcpbscn.re` and `assembler/rxasscan.re`).
    - Converts the raw Rexx source text into a stream of discrete tokens (`Token` structs).
 
 2. **Lemon (Parser Generator)**
@@ -230,7 +232,7 @@ attributes and is enabled by default; developers can temporarily opt out with
 must stay on the binary path (`.binary`, `freadb`, `fwriteb`, `sockrecvb`, and
 `socksendb`) until it is decoded explicitly.
 
-The VM register/value status word is a `uint32_t` field partitioned in
+The VM register/value status word is a `uint32_t` field partitioned in  
 `binutils/include/rxflags.h` instead of adding a second flag field:
 
 - `0x000000FF`: VM-private, externally readable but not writable through RXAS
@@ -263,16 +265,26 @@ remains read-only to source code while generated call setup can still maintain
 the compiler ABI flags.
 
 Regression coverage for the partition and UTF cache contract lives in
-`interpreter/tests/tests_register_flags.rxas`,
-`interpreter/tests/tests_utf_flags.rxas`, and
-`interpreter/tests/ts_regvalue_tester.c`.
+
+- `interpreter/tests/tests_register_flags.rxas`,
+- `interpreter/tests/tests_utf_flags.rxas`, and
+- `interpreter/tests/ts_regvalue_tester.c`.
+
 Compiler and runtime regression coverage for `.string`/`.binary` coexistence
-lives in `compiler/tests/rexx_src/binary_literal_load.crexx`,
-`compiler/tests/rexx_src/scalar_type_casts.crexx`, and the generated negative
-tests in `compiler/tests/CMakeLists.txt`. Boundary regressions include direct
-RXAS invalid string constants, `compiler/tests/src/test_rxvml_utf_boundaries.c`,
-and `interpreter/tests/tests_utf_freadline_boundary.rxas` /
-`interpreter/tests/tests_utf_freadcdpt_boundary.rxas`.
+lives in 
+
+- `compiler/tests/rexx_src/binary_literal_load.crexx`,
+- `compiler/tests/rexx_src/scalar_type_casts.crexx`,
+
+and the generated negative
+tests in `compiler/tests/CMakeLists.txt`. 
+
+Boundary regressions include direct
+RXAS invalid string constants, 
+
+- `compiler/tests/src/test_rxvml_utf_boundaries.c`,
+- `interpreter/tests/tests_utf_freadline_boundary.rxas` /
+- `interpreter/tests/tests_utf_freadcdpt_boundary.rxas`.
 
 The completed UTF baseline is:
 

@@ -1,0 +1,4 @@
+`bupdate rDst,rOffset,rSrc` overlays the whole binary payload of `rSrc` into
+`rDst` at `rOffset`. The overlay must fit in the existing destination length.
+
+This instruction operates on raw bytes and do not validate UTF-8.

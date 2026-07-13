@@ -1,0 +1,6 @@
+`sget rString,sConst,rOffset` extracts from a `STRING_CONST`, not from binary
+memory. `rOffset` is a byte offset into the UTF-8 string constant and must be a
+codepoint boundary. The current codepoint length of `rString` is the requested
+copy length. The VM scans that many codepoints, copies the exact bytes, sets the
+destination string byte length and codepoint count, and writes the safety NUL
+outside the logical value.
