@@ -151,11 +151,17 @@ unset(_prev_target)
 foreach(_binfile ${REXXBINS})
 	get_filename_component(_basename ${_binfile} NAME_WE)
 	set(_rxc_import_args -i ${CMAKE_CURRENT_SOURCE_DIR}/../rxas)
+	# parse depends on the immediately preceding parsecompile/parsestring modules.
+	# Import their freshly built metadata rather than the previous library archive
+	# so an interface update can be rebuilt in one pass.
+	if("${_basename}" STREQUAL "parse")
+		set(_rxc_import_args -i ${CMAKE_CURRENT_BINARY_DIR})
+	endif()
 	add_custom_command(
 		  COMMAND ${CMAKE_COMMAND} -E rm -f ${_basename}.rxas
 		  COMMAND $<TARGET_FILE:rxc> -x --import-rxas -o ${_basename} ${_rxc_import_args} ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx
 		  COMMAND $<TARGET_FILE:rxas> ${_basename}
-		  DEPENDS rxas rxc library-rxas ${REXXSRC} ${REXX_IMPORT_RXAS} ${_prev_target}
+		  DEPENDS rxas rxc library-rxas ${CMAKE_CURRENT_SOURCE_DIR}/${_basename}.crexx ${REXX_IMPORT_RXAS} ${_prev_target}
 		  OUTPUT ${_binfile}
 		  WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		  COMMENT "cREXX compile and assemble ${_basename} ..."

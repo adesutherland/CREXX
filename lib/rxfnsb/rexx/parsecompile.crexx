@@ -22,217 +22,304 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Compile the legacy dynamic PARSE template representation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/parsecompile.md
+ */
 options levelb
+namespace rxfnsb expose parsecompile
 
-namespace rxfnsb expose parseCompile
+/**
+ * Compile a dynamic template into parallel token and integer-kind arrays.
+ *
+ * Kinds are 1 variable, 2 literal, 3 absolute position, 4 signed relative
+ * position, 5 implicit word separator, and 6 prior-variable delimiter search.
+ * The output arrays are not changed if template validation fails.
+ *
+ * @param template dynamic template text
+ * @param token exposed output payload array
+ * @param token_type exposed output integer-kind array
+ * @return number of compiled plan items
+ * @signal INVALID_ARGUMENTS malformed quote, position, or search token
+ */
+parsecompile: procedure = .int
+  arg template = .string, expose token = .string[], expose token_type = .int[]
+  template_length = .int
+  index = .int
+  segment_start = .int
+  next_index = .int
+  quote_code = .int
+  code = .int
+  next_code = .int
+  char_index = .int
+  segment_length = .int
+  kind = .int
+  value = .string
+  pending_blank = .string
+  pending_blank_exists = .boolean
+  previous_kind = .int
+  count = .int
 
-/* ----------------------------------------------------------------------
- * Compile the given template, split it in tokens and token.ktypes
- * parseCompile
- *  - Tokenizes a template with support for quoted strings ('' and "")
- *  - Handles quotes across spaces and doubled quotes inside strings
- *  - Splits punctuation as separate tokens (tune PUNCT set as needed)
- *  - Classifies tokens:
- *      1 = identifier/word
- *      2 = quoted string
- *      3 = unsigned integer
- *      4 = signed integer (+/- followed by digits)
- *      5 = punctuation/operator
- * ---------------------------------------------------------------------- */
-parseCompile: procedure = .int
-  arg template = .string, expose token = .string[], expose token_type = .string[]
+  /* Validation is deliberately complete before exposed output is touched. */
+  call _validate_legacy_template template
 
-  template   = preCleanTemplate(template)
-  k          = 0
-  buf        = ''                 /* pending unquoted text */
-  WHITESPACE = ' '||'09'x||'0D'x||'0A'x||'0B'x||'0C'x||'C2A0'x
+  assembler SETATTRS token,0
+  assembler SETATTRS token_type,0
 
-  /* flush pending unquoted text as a token */
-  tokenhi = 0
-  L = length(template)
-  i = 1
+  assembler strlen template_length,template
+  index = 0
+  segment_start = 0
+  pending_blank = ""
+  pending_blank_exists = 0
+  previous_kind = 0
+  count = 0
 
-  do while i <= L
-     ch = substr(template, i, 1)
-     if pos(ch, WHITESPACE) > 0 then do
-        buf = flush(buf, token, tokenhi)
-        j = i + 1
-        do while j <= L & pos(substr(template, j, 1), WHITESPACE) > 0
-           j = j + 1
+  do while index < template_length
+    assembler strchar code,template,index
+
+    if _legacy_blank(code) then do
+      if index > segment_start then do
+        segment_length = index - segment_start
+        kind = _legacy_segment_kind(template,segment_start,segment_length)
+        value = _legacy_slice(template,segment_start,segment_length)
+        if kind = 6 then value = _legacy_slice(template,segment_start + 1,segment_length - 2)
+        count = _emit_legacy_item(token,token_type,count,pending_blank,pending_blank_exists,previous_kind,value,kind)
+      end
+
+      next_index = index + 1
+      do while next_index < template_length
+        assembler strchar next_code,template,next_index
+        if \_legacy_blank(next_code) then leave
+        next_index = next_index + 1
+      end
+
+      /* The historical compiler suppresses whitespace touching a quote. */
+      if previous_kind = 2 | (next_index < template_length & (next_code = 39 | next_code = 34)) then do
+        pending_blank = ""
+        pending_blank_exists = 0
+      end
+      else do
+        pending_blank = _legacy_slice(template,index,next_index - index)
+        pending_blank_exists = 1
+      end
+      index = next_index
+      segment_start = index
+      iterate
+    end
+
+    if code = 39 | code = 34 then do
+      if index > segment_start then do
+        segment_length = index - segment_start
+        kind = _legacy_segment_kind(template,segment_start,segment_length)
+        value = _legacy_slice(template,segment_start,segment_length)
+        if kind = 6 then value = _legacy_slice(template,segment_start + 1,segment_length - 2)
+        count = _emit_legacy_item(token,token_type,count,pending_blank,pending_blank_exists,previous_kind,value,kind)
+      end
+
+      quote_code = code
+      next_index = index + 1
+      do while next_index < template_length
+        assembler strchar next_code,template,next_index
+        if next_code = quote_code then do
+          if next_index + 1 < template_length then do
+            char_index = next_index + 1
+            assembler strchar code,template,char_index
+            if code = quote_code then do
+              next_index = next_index + 2
+              iterate
+            end
+          end
+          leave
         end
-        tokenhi       = tokenhi + 1
-        token.tokenhi = substr(template, i, j - i)  /* exact run of blanks/tabs/etc */
-        i = j
-        iterate
-     end
+        next_index = next_index + 1
+      end
 
-     /* quoted literal => single token, quotes included; supports doubled quotes */
-     if ch = "'" | ch = '"' then do
-        buf = flush(buf, token, tokenhi)
-        q     = ch
-        qtok  = q
-        i     = i + 1
-        closed = 0
-        do while i <= L
-           c = substr(template, i, 1)
-           qtok = qtok || c
-           if c = q then do
-              /* doubled quote => literal quote inside string */
-              if i < L & substr(template, i+1, 1) = q then do
-                 qtok = qtok || q
-                 i = i + 2
-                 iterate
-              end
-              closed = 1
-              i = i + 1
-              leave
-           end
-           i = i + 1
-        end
-        if \closed then do
-           say 'Error: unmatched quote in template'
-           return -1
-        end
-        tokenhi       = tokenhi + 1
-        token.tokenhi = qtok
-        iterate
-     end
+      value = _legacy_slice(template,index + 1,next_index - index - 1)
+      count = _emit_legacy_item(token,token_type,count,pending_blank,pending_blank_exists,previous_kind,value,2)
+      index = next_index + 1
+      segment_start = index
+      iterate
+    end
 
-     /* otherwise accumulate into current unquoted token */
-     buf = buf || ch
-     i   = i + 1
+    index = index + 1
   end
 
-  buf = flush(buf, token, tokenhi)
-
-  /* ----------------------------------------------------------------------
-   * Classify tokens in token_types
-   * ---------------------------------------------------------------------- */
-  do i = 1 to tokenhi
-     quote = substr(token.i,1,1)
-     if quote = "'" | quote = '"' then do
-        token.i      = strip(token.i,,quote)   /* drop quotes */
-        token_type.i = 2
-     end
-     else if quote = " " then token_type.i = 5                       /* blank separator */
-     else if verify(token.i,'0123456789') = 0 then token_type.i = 3
-     else if (quote='+' | quote='-') & verify(substr(token.i,2),'0123456789+-') = 0 then token_type.i = 4
-     else if (quote='(') then token_type.i = 6
-     else token_type.i = 1
+  if index > segment_start then do
+    segment_length = index - segment_start
+    kind = _legacy_segment_kind(template,segment_start,segment_length)
+    value = _legacy_slice(template,segment_start,segment_length)
+    if kind = 6 then value = _legacy_slice(template,segment_start + 1,segment_length - 2)
+    count = _emit_legacy_item(token,token_type,count,pending_blank,pending_blank_exists,previous_kind,value,kind)
   end
+  return count
 
-  out = 0
-  do i = 1 to tokenhi
-     t = token_type.i
-     if t = 6 then
-        token.i = substr(token.i, 2, length(token.i) - 2)
-
-     if t \= 5 then do
-        out = out + 1
-        token.out      = token.i
-        token_type.out = t
-        iterate
-     end
-
-     /* t == 5 ? decide whether to keep it */
-     lt = 0; rt = 0
-     ix = i - 1
-     if i > 1 then lt = token_type.ix
-     ix = i + 1
-     if i < tokenhi then rt = token_type.ix
-
-     if (lt = 1 & rt = 1) then do  /* VAR ? VAR ? keep as word delimiter */
-        out = out + 1
-        token.out      = token.i
-        token_type.out = 5
-     end
-  end
-
-return out
-
-flush: procedure = .string
-  arg buf = .string, expose token = .string[], expose tokenhi = .int
-  if buf = '' then return ''
-  tokenhi       = tokenhi + 1
-  token.tokenhi = buf
-  buf = ''
-return buf
-
-/* -------------------------------------------------
- * preCleanTemplate
- *  - Preserve inner content of quoted literals exactly
- *  - Remove whitespace only if it directly neighbors a quote
- *  - No suppression around numbers, +/-, punctuation, etc.
- *  - Supports doubled quotes inside literals ('' and "")
- * ------------------------------------------------- */
-preCleanTemplate: procedure = .string
+/* Validate without mutating the exposed output arrays. */
+_validate_legacy_template: procedure
   arg template = .string
+  template_length = .int
+  index = .int
+  segment_start = .int
+  next_index = .int
+  code = .int
+  next_code = .int
+  quote_code = .int
+  char_index = .int
 
-  WHITESPACE = ' '||'09'x||'0D'x||'0A'x||'0B'x||'0C'x||'C2A0'x
-  out = ''
-  L   = length(template)
-  i   = 1
-  last_out_char = ''     /* track last emitted char for "prev is quote" check */
+  assembler strlen template_length,template
+  index = 0
+  segment_start = 0
+  do while index < template_length
+    assembler strchar code,template,index
+    if _legacy_blank(code) then do
+      if index > segment_start then call _validate_legacy_segment template,segment_start,index - segment_start
+      index = index + 1
+      do while index < template_length
+        assembler strchar code,template,index
+        if \_legacy_blank(code) then leave
+        index = index + 1
+      end
+      segment_start = index
+      iterate
+    end
 
-  do while i <= L
-     ch = substr(template, i, 1)
-
-     /* ---- quoted literal: copy EXACTLY as-is, including quotes ---- */
-     if ch = "'" | ch = '"' then do
-        q    = ch
-        qtok = q
-        i    = i + 1
-        closed = 0
-        do while i <= L
-           c = substr(template, i, 1)
-           qtok = qtok || c
-           if c = q then do
-              /* doubled quote -> keep both quotes and continue */
-              if i < L & substr(template, i+1, 1) = q then do
-                 qtok = qtok || q
-                 i = i + 2
-                 iterate
-              end
-              closed = 1
-              i = i + 1
-              leave
-           end
-           i = i + 1
+    if code = 39 | code = 34 then do
+      if index > segment_start then call _validate_legacy_segment template,segment_start,index - segment_start
+      quote_code = code
+      next_index = index + 1
+      do while next_index < template_length
+        assembler strchar next_code,template,next_index
+        if next_code = quote_code then do
+          if next_index + 1 < template_length then do
+            char_index = next_index + 1
+            assembler strchar code,template,char_index
+            if code = quote_code then do
+              next_index = next_index + 2
+              iterate
+            end
+          end
+          leave
         end
-        if \closed then return template  /* unmatched quote: leave template as-is */
-        out = out || qtok
-        last_out_char = q               /* closing quote is the last emitted char */
-        iterate
-     end
-
-     /* ---- whitespace run ---- */
-     if pos(ch, WHITESPACE) > 0 then do
-        j = i + 1
-        do while j <= L & pos(substr(template, j, 1), WHITESPACE) > 0
-           j = j + 1
-        end
-        /* peek next non-WS char */
-        nextch = ''
-        if j <= L then nextch = substr(template, j, 1)
-
-        /* suppress only if whitespace touches a QUOTE on either side */
-        if last_out_char = "'" | last_out_char = '"' | nextch = "'" | nextch = '"' then do
-           i = j
-           iterate
-        end
-
-        /* otherwise keep the whitespace as-is */
-        out = out || substr(template, i, j - i)
-        i = j
-        last_out_char = ' '             /* non-quote marker */
-        iterate
-     end
-
-     /* ---- ordinary char ---- */
-     out = out || ch
-     i   = i + 1
-     last_out_char = ch
+        next_index = next_index + 1
+      end
+      if next_index >= template_length then
+        assembler signal "INVALID_ARGUMENTS","PARSECOMPILE template has an unmatched quote"
+      index = next_index + 1
+      segment_start = index
+      iterate
+    end
+    index = index + 1
   end
+  if index > segment_start then call _validate_legacy_segment template,segment_start,index - segment_start
+  return
 
-return out
+_validate_legacy_segment: procedure
+  arg source = .string, start = .int, segment_length = .int
+  first_code = .int
+  last_code = .int
+  char_index = .int
+
+  if segment_length <= 0 then return
+  assembler strchar first_code,source,start
+  if first_code = 43 | first_code = 45 then do
+    if segment_length = 1 | \_legacy_digits(source,start + 1,segment_length - 1) then
+      assembler signal "INVALID_ARGUMENTS","PARSECOMPILE relative position must be a sign followed by digits"
+    if \_legacy_native_magnitude(source,start + 1,segment_length - 1,first_code = 45) then
+      assembler signal "INVALID_ARGUMENTS","PARSECOMPILE relative position is too large"
+    return
+  end
+  if first_code = 40 then do
+    if segment_length < 3 then
+      assembler signal "INVALID_ARGUMENTS","PARSECOMPILE search token must be parenthesized and nonempty"
+    char_index = start + segment_length - 1
+    assembler strchar last_code,source,char_index
+    if last_code <> 41 then
+      assembler signal "INVALID_ARGUMENTS","PARSECOMPILE search token is missing its closing parenthesis"
+    return
+  end
+  if _legacy_digits(source,start,segment_length) then do
+    if \_legacy_native_magnitude(source,start,segment_length) then
+      assembler signal "INVALID_ARGUMENTS","PARSECOMPILE absolute position is too large"
+  end
+  return
+
+_legacy_segment_kind: procedure = .int
+  arg source = .string, start = .int, segment_length = .int
+  first_code = .int
+  assembler strchar first_code,source,start
+  if first_code = 43 | first_code = 45 then return 4
+  if first_code = 40 then return 6
+  if _legacy_digits(source,start,segment_length) then return 3
+  return 1
+
+_legacy_digits: procedure = .boolean
+  arg source = .string, start = .int, segment_length = .int
+  code = .int
+  if segment_length <= 0 then return 0
+  do index = start to start + segment_length - 1
+    assembler strchar code,source,index
+    if code < 48 | code > 57 then return 0
+  end
+  return 1
+
+/* Native positions are signed 64-bit integers. */
+_legacy_native_magnitude: procedure = .boolean
+  arg source = .string, start = .int, segment_length = .int, allow_minimum = 0
+  first_nonzero = .int
+  significant = .int
+  code = .int
+  limit_code = .int
+  char_index = .int
+  limit_text = .string
+  constant LIMIT = "9223372036854775807"
+
+  limit_text = LIMIT
+  if allow_minimum then limit_text = "9223372036854775808"
+  first_nonzero = start
+  do while first_nonzero < start + segment_length
+    assembler strchar code,source,first_nonzero
+    if code <> 48 then leave
+    first_nonzero = first_nonzero + 1
+  end
+  significant = start + segment_length - first_nonzero
+  if significant < 19 then return 1
+  if significant > 19 then return 0
+  do index = 0 to 18
+    char_index = first_nonzero + index
+    assembler strchar code,source,char_index
+    assembler strchar limit_code,limit_text,index
+    if code < limit_code then return 1
+    if code > limit_code then return 0
+  end
+  return 1
+
+_legacy_blank: procedure = .boolean
+  arg code = .int
+  return code = 32 | code = 9 | code = 13 | code = 10 | code = 11 | code = 12 | code = 160
+
+_legacy_slice: procedure = .string
+  arg source = .string, start = .int, slice_length = .int
+  result = ""
+  if slice_length <= 0 then return result
+  assembler setstrpos source,start
+  assembler substring result,source,slice_length
+  return result
+
+_emit_legacy_item: procedure = .int
+  arg expose token = .string[], expose token_type = .int[], count = .int, expose pending_blank = .string, expose pending_blank_exists = .boolean, expose previous_kind = .int, value = .string, kind = .int
+
+  if pending_blank_exists then do
+    if previous_kind = 1 & kind = 1 then do
+      count = count + 1
+      token[count] = pending_blank
+      token_type[count] = 5
+    end
+    pending_blank = ""
+    pending_blank_exists = 0
+  end
+  count = count + 1
+  token[count] = value
+  token_type[count] = kind
+  previous_kind = kind
+  return count

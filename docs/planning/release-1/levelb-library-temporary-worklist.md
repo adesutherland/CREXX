@@ -55,7 +55,7 @@ scope implicitly.
 | Batch | Parked selectors | Shared dependency | State |
 |---:|---|---|---|
 | 1 | `insert`, `overlay`, `lastpos`, `strip`, `substr`, `abs`, `format`, `sign`, `trunc`, `b2d`, `x2b`, `x2d` | Class adapters, focused class tests, and one classlib/library rebuild | done |
-| 2 | `parsecompile`, `parsestring`, `parse`, `parseExec` | Frozen legacy plan/stream ABI and assertion harnesses; no producer/lowering change | review in progress |
+| 2 | `parsecompile`, `parsestring`, `parse`, `parseExec` | Frozen legacy plan/stream ABI and assertion harnesses; no producer/lowering change | done |
 | 3 | `_datei`, `_dateo`, `_jdn`, `date`, `time` | Calendar/error contract and frozen-clause-time service | queued |
 | 4 | `arrayformat`, `arraydump` | One pure formatting contract/core, followed by the output wrapper | queued |
 | 5 | `delword`, `word`, `words`, `wordindex`, `subword`, `wordlength`, `wordpos` | `Config_OtherBlankCharacters` | queued |
@@ -90,6 +90,33 @@ Batch 1 completion evidence:
   `delword`, `subword`, `wordlength`, and `wordpos` artifacts. The class pair,
   coverage guard, RexxDoc checks, and focused native/direct-Classic selector
   set pass in both modes (65/65 focused CTests); `git diff --check` passes.
+
+Batch 2 completion evidence:
+
+- the legacy ABI is frozen as `.string[]` payloads plus `.int[]` kinds 1-6;
+  `parsecompile` validates before mutating its exposed outputs and
+  `parsestring` borrows both plan arrays read-only, validates the complete plan,
+  and only then clears its aligned output arrays;
+- `parseexec` preserves the compiler exit's exact `kind,length:text;` stream
+  bytes and cursor behavior but decodes them incrementally, retaining current
+  plus two lookahead items rather than materializing the whole plan. The
+  compiler exit and lowering are unchanged;
+- malformed templates, plans, streams, typed options, and debug values now use
+  catchable `INVALID_ARGUMENTS` signals. Native relative positions cover the
+  full signed 64-bit range without overflow during cursor clamping;
+- the print/timing-only `ts_parse` was replaced with direct assertions and the
+  new `ts_parseexec` harness was registered in optimized and unoptimized modes.
+  Existing compiler PARSE tests remain registered; the focused old/new set
+  passes 14/14 CTests in both modes, including direct frozen-plan assertions;
+- optimized aggregate RXAS falls from 6,121 to 4,697 lines for `parsecompile`,
+  4,640 to 2,646 for `parsestring`, and 10,886 to 7,238 for `parseExec`.
+  `parse` grows from 277 to 368 lines to add typed option validation and direct
+  strip/case operations. None of the four optimized modules calls general
+  LENGTH/SUBSTR/POS/STRIP/VERIFY selectors;
+- separate Level B Markdown documents the legacy compiler, executor, wrapper,
+  and compiler-stream executor. None is a Level C BIF. The Level B library
+  build now gives each generated module its own source dependency, avoiding the
+  previous accidental whole-library rebuild on every Level B source edit.
 
 ## Efficient selector validation and deferred integration
 
@@ -1892,6 +1919,10 @@ Integration evidence:
   parsecompile/parsestring plan ABI, assertion harness, and caught-signal expose
   dependency. Resume as one dependency checkpoint while still recording rows
   separately. Row 84 `parsestring` is sole active.
+- Batch 2 result: done. The ABI now uses integer kinds, all validation precedes
+  exposed-array mutation, the direct scanner emits the frozen six item kinds,
+  and optimized aggregate RXAS is 4,697 lines versus 6,121. Assertion coverage,
+  Markdown, and both build modes pass.
 
 ### Selector inventory and evidence — row 84 `parsestring`
 
@@ -1916,6 +1947,10 @@ Integration evidence:
   build was attempted because a local rewrite would guess the shared ABI.
 - Completion summary: parked on the same legacy plan-contract/assertion harness
   and exposed-array signal dependencies as row 83. Row 85 `parse` is sole active.
+- Batch 2 result: done. Plan arrays are exposed read-only, malformed counts,
+  kinds, and payloads signal before output clearing, and direct cursor scans
+  replace repeated tail copies and general selector calls. Optimized aggregate
+  RXAS is 2,646 lines versus 4,640; assertions and Markdown cover all six kinds.
 
 ### Selector inventory and evidence — row 85 `parse`
 
@@ -1940,6 +1975,10 @@ Integration evidence:
 - Completion summary: parked with rows 83-84 on the legacy plan ABI, assertion
   harness, option/error contract, and exposed-array signal dependency. Row 86
   `datatype` is sole active.
+- Batch 2 result: done. Both options are explicit `.int` values with validated
+  ranges; template/plan failures propagate as signals and stripping/case folding
+  use direct VM operations. The wrapper is 368 optimized RXAS lines and its
+  result, option, empty-template, and error branches pass in both modes.
 
 ### Selector inventory and evidence — row 86 `datatype`
 
@@ -2003,6 +2042,11 @@ Integration evidence:
   first capture representative generated plan strings and malformed-plan
   expectations in a selector-local harness, then optimize the decoder/executor
   while preserving those bytes. Row 88 `getenv` is sole active.
+- Batch 2 result: done. Representative compiler-emitted bytes are asserted
+  directly, strict stream errors signal, the executor streams with two-item
+  lookahead, and optimized aggregate RXAS is 7,238 lines versus 10,886. The new
+  direct harness and the existing compiler suite pass in both modes; producer
+  and lowering source are unchanged.
 
 ### Active parked co-dependency queue
 
@@ -2055,11 +2099,6 @@ only for their separate `.Rexx` class-adapter work.
   empty/invalid placeholders, unaligned width semantics, and diagnostic signals
   before changing emitted source. Keep compiler exit/lowering changes out of
   this library programme.
-- `parseExec` stream-plan ABI: freeze representative compiler-emitted plan
-  bytes and malformed-plan behavior in a direct executor harness before
-  changing the decoder or its errors. Keep the producer and compiler lowering
-  unchanged during this library programme.
-
 - `delword` configured blank set and class artifact: native Level B and direct
   Level C default-Unicode behavior, errors, tests, docs, and linear algorithms
   are complete. Full Classic Level C compliance shares the unimplemented
@@ -2093,19 +2132,6 @@ only for their separate `.Rexx` class-adapter work.
   complete. Full Classic Level C closure waits for
   `Config_OtherBlankCharacters`; compile/test the corrected receiver/phrase
   forwarding after the single classlib rebuild.
-- `parsecompile` legacy plan ABI: freeze/document token kinds and error
-  semantics jointly with `parsestring`, replace the print-only `ts_parse` demo
-  with assertions, and repair/prove caught-signal exposed-array preservation
-  before rewriting the 6,121-line producer. No selector-local code change or
-  aggregate rebuild was made.
-- `parsestring` legacy plan ABI: freeze its cursor, delimiter, token-kind, and
-  output-array semantics with `parsecompile`; replace `ts_parse` printing with
-  assertions and settle exposed-output signal handling before removing its
-  repeated remainder copies/per-character selector calls. No code was changed.
-- `parse` legacy wrapper contract: define validated strip/case options and
-  failure propagation only after the shared parsecompile/parsestring plan and
-  output-array contracts have assertion coverage and exposed-signal preservation.
-  No selector-local code or build change was made.
 - `datatype` Classic configuration/option contract: decide whether `D` joins the
   Level C catalog, then provide extra-letter/digit, blank-grouping,
   exponent-limit, and caller-numeric services before replacing the ASCII/float
@@ -2376,11 +2402,11 @@ are active. This association is an approval point before row 1 starts.
 | 80 | `subword` | `SUBWORD` R | ☐ | ☐ | ☒ | ☒ | ☒ | ☐ | parked — configured blanks / rebuilt adapter |
 | 81 | `wordlength` | `WORDLENGTH` R | ☐ | ☐ | ☒ | ☒ | ☒ | ☐ | parked — metadata / configured blanks |
 | 82 | `wordpos` | `WORDPOS` R | ☐ | ☐ | ☒ | ☒ | ☒ | ☐ | parked — configured blanks / rebuilt adapter |
-| 83 | `parsecompile` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — legacy parse plan ABI |
-| 84 | `parsestring` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — legacy parse plan ABI |
-| 85 | `parse` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — legacy parse plan ABI |
+| 83 | `parsecompile` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 84 | `parsestring` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 85 | `parse` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 86 | `datatype` | `DATATYPE` M | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | parked — Classic config / `D` decision |
-| 87 | `parseExec` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — stream-plan ABI/harness |
+| 87 | `parseExec` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 
 ## B standard; default (35)
 

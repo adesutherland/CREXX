@@ -22,575 +22,522 @@
  * SOFTWARE.
  */
 
+/**
+ * Execute the compiler PARSE exit's frozen length-prefixed stream plan.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/parseExec.md
+ */
 options levelb
-
 namespace rxfnsb expose parseexec
 
-/* ----------------------------------------------------------------------
- * parseexec
+/**
+ * Execute `kind,length:text;` items without materializing a decoded plan.
  *
- * Sequential PARSE executor for stream plan:
+ * Kinds are 1 target, 2 literal, 3 absolute position, 4 relative forward,
+ * 5 relative backward, and 6 implicit next-word control. The decoder retains
+ * at most two lookahead items plus pre-start controls.
  *
- *   kind,len:text;
- *   kind,len:text;
- *   ...
- *
- * Kinds
- *   1 = variable / target
- *   2 = literal
- *   3 = absolute position
- *   4 = relative forward
- *   5 = relative backward
- *   6 = implicit next-word control
- * ---------------------------------------------------------------------- */
-parseExec: procedure = .string[]
-  arg src=.string, splan=.string, template=.string, debug=0
+ * @param src source text
+ * @param splan frozen compiler-emitted stream plan
+ * @param template diagnostic template text
+ * @param debug optional 0, 1, or 9 diagnostic level
+ * @return values aligned with target items, including drop-target slots
+ * @signal INVALID_ARGUMENTS malformed stream, item, numeric payload, or debug
+ */
+parseexec: procedure = .string[]
+  arg src = .string, splan = .string, template = .string, debug = 0
+  result = .string[]
+  source_length = .int
+  cursor = .int
+  pending_variable = .string
+  capture_start = .int
+  pre_count = .int
+  pre_kind = .int[]
+  pre_text = .string[]
+  shared_kind = .int
+  shared_text = .string
+  plan_position = .int
+  current_kind = .int
+  current_text = .string
+  next_kind = .int
+  next_text = .string
+  after_kind = .int
+  after_text = .string
+  current_exists = .boolean
+  next_exists = .boolean
+  after_exists = .boolean
+  item_number = .int
+  final_cursor = .int
+  position = .int
+  anchor_at_start = .boolean
+  starts_with_blank = .boolean
+  first_code = .int
+  literal_index = .int
+  literal_length = .int
 
-  rs = .string[]               /* result array returned to caller */
-  src_len = length(src)
-  cursor = 1                   /* current parse cursor in source string */
-  pendingVar = ""              /* current variable waiting for a boundary */
-  captureStart = 0             /* start position for current pending variable */
-  planKind=.int[]              /* decoded plan item kinds */
-  planText=.string[]           /* decoded plan item payloads */
-  value=.string
-  preCount = 0                 /* buffered pre-start control count */
-  preKind  = .int[]            /* buffered pre-start control kinds */
-  preText  = .string[]         /* buffered pre-start control texts */
-  sharedKind = 0               /* one control shared from previous boundary */
-  sharedText = ""
+  if debug <> 0 & debug <> 1 & debug <> 9 then
+    assembler signal "INVALID_ARGUMENTS","PARSEEXEC debug must be 0, 1, or 9"
 
-  plans = decode_stream_plan(splan,planKind,planText)
+  assembler strlen source_length,src
+  cursor = 1
+  pending_variable = ""
+  capture_start = 0
+  pre_count = 0
+  shared_kind = 0
+  shared_text = ""
+  plan_position = 0
+  item_number = 0
 
-  if debug>0 then do
-     call log "----- NEW PARSE V2 -----"
-     call log "PARSE STRING  ='"src"'"
-     call log "                1---5----0----5----0----5----0----5----0----5----0"
-     call log "PARSE-TEMPLATE='"template"'"
+  current_exists = _stream_next_item(splan,plan_position,current_kind,current_text)
+  next_exists = _stream_next_item(splan,plan_position,next_kind,next_text)
+  after_exists = _stream_next_item(splan,plan_position,after_kind,after_text)
+
+  if debug > 0 then do
+    call _parse_log "----- PARSE STREAM -----"
+    call _parse_log "PARSE STRING='" || src || "'"
+    call _parse_log "PARSE TEMPLATE='" || template || "'"
   end
-  if debug=9 then do
-     call log "PLAN V2='"splan"'"
-     call dump_stream_plan planKind,planText
-  end
+  if debug = 9 then call _parse_log "PLAN='" || splan || "'"
 
-  do i = 1 to plans
-     kind = planKind[i]
-     text = planText[i]
+  do while current_exists
+    item_number = item_number + 1
+    if debug = 9 then
+      call _parse_log "ITEM[" || item_number || "] KIND=(" || current_kind || "," || current_text || ") CURSOR=" || cursor
 
-     if debug=9 then call log "ITEM["i"] KIND=("kind","text") CURSOR="cursor" PENDING=<"pendingVar"> START="captureStart
-
-     /* --------------------------------------------------------------
-      * Variable target:
-      *   - if another variable is still pending, close it implicitly
-      *   - inject any shared boundary from the previous item
-      *   - apply buffered pre-start controls
-      *   - start a new capture
-      * -------------------------------------------------------------- */
-      if kind = 1 then do
-         if pendingVar \= "" then do
-            /* adjacent variables imply implicit-word termination */
-            final_cursor = finalize_implicit(src, src_len, captureStart, pendingVar, rs, cursor, debug)
-            cursor = final_cursor
-            pendingVar = ""
-            captureStart = 0
-         end
-
-         /* inject shared boundary/start from previous variable */
-         if sharedKind \= 0 then do
-            preCount = preCount + 1
-            preKind[preCount] = sharedKind
-            preText[preCount] = sharedText
-            if debug=9 then call log "INJECT SHARED PRESTART=("sharedKind","sharedText")"
-            sharedKind = 0
-            sharedText = ""
-         end
-
-         /* ----------------------------------------------------------
-          * Normalise overlay-style prestart:
-          *   ABS n, LIT s, ABS n, VAR
-          *
-          * The trailing ABS n must not reset the cursor again for the
-          * variable start, otherwise the located literal anchor is lost.
-          * Example:
-          *   1 ' go' 1 xx
-          * behaves as:
-          *   1 ' go' xx
-          * ---------------------------------------------------------- */
-         if preCount >= 3 then do
-            if preKind[preCount] = 3 & preKind[preCount-1] = 2 & preKind[preCount-2] = 3 then do
-               if preText[preCount] = preText[preCount-2] then do
-                  if debug=9 then call log "NORMALISE PRESTART: DROP TRAILING ABS ("preKind[preCount]","preText[preCount]")"
-                  preCount = preCount - 1
-               end
-            end
-         end
-
-         /* apply all buffered controls that define the variable start */
-         do j = 1 to preCount
-
-            /* kind 8 = shared literal start:
-             * the literal must already sit immediately before the cursor
-             */
-            if preKind[j] = 8 then do
-               p = cursor - length(preText[j])
-               if p >= 1 & substr(src, p, length(preText[j])) = preText[j] then
-                  cursor = p
-               else
-                  cursor = src_len + 1
-            end
-
-            /* literal search used as a start control */
-            else if preKind[j] = 2 then do
-               p = pos(preText[j], src, cursor)
-               if p = 0 then cursor = src_len + 1
-               else do
-                  anchorAtStart = 0
-                  startsWithBlank = 0
-
-                  if length(preText[j]) > 0 then do
-                     if substr(preText[j],1,1) = ' ' then startsWithBlank = 1
-                  end
-
-                  /* literal followed by relative motion in prestart:
-                   * anchor at literal start so relative motion can apply
-                   */
-                  if j < preCount then do
-                     if preKind[j+1] = 4 | preKind[j+1] = 5 then anchorAtStart = 1
-                  end
-
-                  /* non-blank literal followed by +n after the variable:
-                   * also anchor at start of match
-                   */
-                  if anchorAtStart = 0 & startsWithBlank = 0 then do
-                     if i < plans then do
-                        if planKind[i+1] = 4 then anchorAtStart = 1
-                     end
-                  end
-
-                  if anchorAtStart then cursor = p
-                  else cursor = p + length(preText[j])
-               end
-            end
-
-            /* numeric/implicit pre-start controls use normal cursor logic */
-            else do
-               cursor = apply_item_to_cursor(src, src_len, cursor, preKind[j], preText[j])
-            end
-
-            if debug=9 then call log "APPLY PRESTART["j"]=("preKind[j]","preText[j]") -> CURSOR="cursor
-         end
-
-         preCount = 0
-         pendingVar = text
-         captureStart = cursor
-         iterate
+    if current_kind = 1 then do
+      if pending_variable <> "" then do
+        final_cursor = _finalize_implicit(src,source_length,capture_start,result)
+        cursor = final_cursor
+        pending_variable = ""
+        capture_start = 0
       end
 
-     /* --------------------------------------------------------------
-      * No pending variable:
-      *   buffer control items until a variable arrives.
-      * Pending variable:
-      *   current item terminates that variable.
-      * -------------------------------------------------------------- */
-     if pendingVar = "" then do
-        preCount = preCount + 1
-        preKind[preCount] = kind
-        preText[preCount] = text
-        if debug=9 then call log "PRESTART["preCount"]=("kind","text")"
-        iterate
-     end
+      if shared_kind <> 0 then do
+        pre_count = pre_count + 1
+        pre_kind[pre_count] = shared_kind
+        pre_text[pre_count] = shared_text
+        shared_kind = 0
+        shared_text = ""
+      end
 
-     select
-        when kind = 2 then do
-           /* literal terminates current variable */
-           final_cursor = finalize_literal(src, src_len, captureStart, pendingVar, text, rs, cursor, debug)
+      /* Preserve the established ABS/LIT/ABS overlay normalization. */
+      if pre_count >= 3 then do
+        if pre_kind[pre_count] = 3 & pre_kind[pre_count - 1] = 2 & pre_kind[pre_count - 2] = 3 then do
+          if pre_text[pre_count] = pre_text[pre_count - 2] then pre_count = pre_count - 1
+        end
+      end
 
-           /* shared-literal case:
-            *   p ',' q +1 r
-            * q must start at the same comma that ended p
-            */
-            if i + 2 <= plans then do
-                 if planKind[i+1] = 1 & planKind[i+2] = 4 then do
-                   sharedKind = 8
-                    sharedText = text
-                    if debug=9 then call log "SHARE LITERAL TO NEXT VAR=("sharedKind","sharedText")"
-                 end
+      do pre_index = 1 to pre_count
+        if pre_kind[pre_index] = 8 then do
+          assembler strlen literal_length,pre_text[pre_index]
+          position = cursor - literal_length
+          if position >= 1 & _stream_equals_at(src,source_length,position,pre_text[pre_index]) then cursor = position
+          else cursor = source_length + 1
+        end
+        else if pre_kind[pre_index] = 2 then do
+          position = cursor
+          if pre_text[pre_index] = "" then position = cursor
+          else assembler strpos position,pre_text[pre_index],src
+          if pre_text[pre_index] <> "" & position = 0 then cursor = source_length + 1
+          else do
+            anchor_at_start = 0
+            starts_with_blank = 0
+            assembler strlen literal_length,pre_text[pre_index]
+            if literal_length > 0 then do
+              literal_index = 0
+              assembler strchar first_code,pre_text[pre_index],literal_index
+              if first_code = 32 then starts_with_blank = 1
             end
+            if pre_index < pre_count then do
+              if pre_kind[pre_index + 1] = 4 | pre_kind[pre_index + 1] = 5 then anchor_at_start = 1
+            end
+            if \anchor_at_start & \starts_with_blank & next_exists & next_kind = 4 then anchor_at_start = 1
+            if anchor_at_start then cursor = position
+            else cursor = position + literal_length
+          end
         end
+        else cursor = _apply_stream_cursor(src,source_length,cursor,pre_kind[pre_index],pre_text[pre_index])
+      end
 
-        when kind = 3 | kind = 4 | kind = 5 then do
-           /* numeric boundary terminates current variable */
-           final_cursor = finalize_numeric(src, src_len, cursor, captureStart, pendingVar, kind, text, rs, debug)
-
-           /* shared absolute boundary:
-            *   ... 3 w2 3 w3
-            * the final ABS 3 also becomes the start of w3
-            */
-           if kind = 3 then do
-              if i + 1 <= plans then do
-                 if planKind[i+1] = 1 then do
-                    sharedKind = 3
-                    sharedText = text
-                    if debug=9 then call log "SHARE ABS TO NEXT VAR=("sharedKind","sharedText")"
-                 end
-              end
-           end
+      pre_count = 0
+      pending_variable = current_text
+      capture_start = cursor
+    end
+    else if pending_variable = "" then do
+      pre_count = pre_count + 1
+      pre_kind[pre_count] = current_kind
+      pre_text[pre_count] = current_text
+    end
+    else do
+      if current_kind = 2 then do
+        final_cursor = _finalize_literal(src,source_length,capture_start,pending_variable,current_text,result,cursor)
+        if next_exists & after_exists & next_kind = 1 & after_kind = 4 then do
+          shared_kind = 8
+          shared_text = current_text
         end
-
-        when kind = 6 then do
-           /* explicit implicit-word boundary */
-           final_cursor = finalize_implicit(src, src_len, captureStart, pendingVar, rs, cursor, debug)
+      end
+      else if current_kind = 3 | current_kind = 4 | current_kind = 5 then do
+        final_cursor = _finalize_numeric(src,source_length,cursor,capture_start,current_kind,current_text,result)
+        if current_kind = 3 & next_exists & next_kind = 1 then do
+          shared_kind = 3
+          shared_text = current_text
         end
+      end
+      else do
+        final_cursor = _finalize_implicit(src,source_length,capture_start,result)
+      end
+      cursor = final_cursor
+      pending_variable = ""
+      capture_start = 0
+    end
 
-        otherwise do
-           if debug=9 then call log "parseexec2 error: invalid item kind="kind" at item "i
-           final_cursor = cursor
-        end
-     end
-
-     cursor = final_cursor
-     pendingVar = ""
-     captureStart = 0
+    current_exists = next_exists
+    current_kind = next_kind
+    current_text = next_text
+    next_exists = after_exists
+    next_kind = after_kind
+    next_text = after_text
+    if current_exists then after_exists = _stream_next_item(splan,plan_position,after_kind,after_text)
+    else after_exists = 0
   end
 
-  /* trailing variable gets the remainder of the source */
-  if pendingVar \= "" then do
-     if captureStart > src_len then value = ""
-     else value = substr(src, captureStart)
-     if debug=9 then call log ">SEQ ASSIGN REST "pendingVar"='"value"' FROM="captureStart
-     rs[rs[0]+1] = value
+  if pending_variable <> "" then do
+    if capture_start > source_length then result[result[0] + 1] = ""
+    else result[result[0] + 1] = _stream_tail(src,capture_start,source_length)
   end
-return rs
+  return result
 
-/* ----------------------------------------------------------------------
- * decode_stream_plan
- *
- * Decode compiler stream:
- *   kind,len:text;
- * into planKind[] / planText[] arrays.
- * ---------------------------------------------------------------------- */
-decode_stream_plan: procedure = .int
-  arg planStr=.string, expose planKind=.int[],expose planText=.string[]
+/* Strict streaming decoder. `position` is a zero-based character cursor. */
+_stream_next_item: procedure = .boolean
+  arg plan = .string, expose position = .int, expose kind = .int, expose text = .string
+  plan_length = .int
+  number_start = .int
+  field_length = .int
+  code = .int
+  digit = .int
+  payload_length = .int
 
-  posn = 1
-  i = 0
+  assembler strlen plan_length,plan
+  if position = plan_length then return 0
+  if position < 0 | position > plan_length then
+    assembler signal "INVALID_ARGUMENTS","PARSEEXEC stream cursor is outside the plan"
 
-  do while posn <= length(planStr)
-     if substr(planStr, posn, 1) = ";" then do
-        posn = posn + 1
-        iterate
-     end
-
-     i = i + 1
-     planKind[i] = read_number(planStr, posn)
-     call expect_char planStr, posn, ","
-     planText[i] = read_lp_field(planStr, posn)
-     call expect_char planStr, posn, ";"
+  number_start = position
+  kind = 0
+  do while position < plan_length
+    assembler strchar code,plan,position
+    if code = 44 then leave
+    if code < 48 | code > 57 then
+      assembler signal "INVALID_ARGUMENTS","PARSEEXEC item kind must be decimal digits followed by comma"
+    digit = code - 48
+    kind = kind * 10 + digit
+    position = position + 1
   end
-return i
+  if position = number_start | position >= plan_length then
+    assembler signal "INVALID_ARGUMENTS","PARSEEXEC item kind is missing"
+  position = position + 1
 
-/* ----------------------------------------------------------------------
- * apply_item_to_cursor
- *
- * Apply one control item when no variable is currently pending.
- * Used for pre-start cursor positioning.
- * ---------------------------------------------------------------------- */
-apply_item_to_cursor: procedure = .int
-  arg src=.string, src_len=.int, cursor=.int, kind=.int, text=.string
-
-  p = cursor
-
-  select
-     when kind = 2 then do
-        /* literal search positions cursor at match start */
-        p = pos(text, src, cursor)
-        if p = 0 then return src_len + 1
-        return p           /* + length(text) */
-     end
-
-     when kind = 3 then do
-        /* absolute cursor set */
-        p = text + 0
-        if p < 1 then p = 1
-        if p > src_len + 1 then p = src_len + 1
-        return p
-     end
-
-     when kind = 4 then do
-        /* relative forward */
-        p = cursor + (text + 0)
-        if p < 1 then p = 1
-        if p > src_len + 1 then p = src_len + 1
-        return p
-     end
-
-     when kind = 5 then do
-        /* relative backward */
-        p = cursor - (text + 0)
-        if p < 1 then p = 1
-        if p > src_len + 1 then p = src_len + 1
-        return p
-     end
-
-     when kind = 6 then do
-        /* skip blanks to next word start */
-        p = cursor
-        do while p <= src_len
-           if substr(src, p, 1) \= ' ' then leave
-           p = p + 1
-        end
-        return p
-     end
-
-     otherwise return cursor
+  number_start = position
+  field_length = 0
+  do while position < plan_length
+    assembler strchar code,plan,position
+    if code = 58 then leave
+    if code < 48 | code > 57 then
+      assembler signal "INVALID_ARGUMENTS","PARSEEXEC field length must be decimal digits followed by colon"
+    digit = code - 48
+    if field_length > plan_length then
+      assembler signal "INVALID_ARGUMENTS","PARSEEXEC field length exceeds the plan"
+    field_length = field_length * 10 + digit
+    position = position + 1
   end
-return cursor
+  if position = number_start | position >= plan_length then
+    assembler signal "INVALID_ARGUMENTS","PARSEEXEC field length is missing"
+  position = position + 1
 
-/* ----------------------------------------------------------------------
- * finalize_literal
- *
- * Terminate current variable at the next occurrence of a literal.
- * Cursor advances to just after the matched literal.
- * ---------------------------------------------------------------------- */
-finalize_literal: procedure=.int
-  arg src=.string, src_len=.int, captureStart=.int, pendingVar=.string, lit=.string, expose rs=.string[], cursor=.int, debug=.int
+  if field_length > plan_length - position then
+    assembler signal "INVALID_ARGUMENTS","PARSEEXEC field payload is truncated"
+  text = _stream_zero_span(plan,position,field_length)
+  position = position + field_length
+  if position >= plan_length then
+    assembler signal "INVALID_ARGUMENTS","PARSEEXEC item terminator is missing"
+  assembler strchar code,plan,position
+  if code <> 59 then
+    assembler signal "INVALID_ARGUMENTS","PARSEEXEC item must end with semicolon"
+  position = position + 1
 
-  value=.string
-  final_cursor=.int
-  p=.int
-
-  /* empty literal splits at current cursor position */
-  if length(lit) = 0 then do
-     value = ""
-     final_cursor = cursor
-     if debug=9 then call log ">SEQ ASSIGN EMPTY-LIT "pendingVar"='' FROM="captureStart" NEXTCURSOR="final_cursor
-     if pendingVar \= "." then rs[rs[0]+1] = value
-     return final_cursor
+  if kind < 1 | kind > 6 then
+    assembler signal "INVALID_ARGUMENTS","PARSEEXEC item kind must be between 1 and 6"
+  assembler strlen payload_length,text
+  if kind = 1 & payload_length = 0 then
+    assembler signal "INVALID_ARGUMENTS","PARSEEXEC target must be nonempty"
+  if kind >= 3 & kind <= 5 then do
+    if \_stream_native_digits(text,payload_length) then
+      assembler signal "INVALID_ARGUMENTS","PARSEEXEC position payload must be a native nonnegative integer"
   end
+  if kind = 6 & text <> "{implicit}" then
+    assembler signal "INVALID_ARGUMENTS","PARSEEXEC implicit item payload is invalid"
+  return 1
 
-  p = pos(lit, src, cursor)
+_stream_native_digits: procedure = .boolean
+  arg source = .string, source_length = .int
+  code = .int
+  limit_code = .int
+  first_nonzero = .int
+  significant = .int
+  limit_text = .string
+  char_index = .int
+  constant NATIVE_LIMIT = "9223372036854775807"
 
-  if p = 0 then do
-     /* delimiter not found: current variable gets remainder */
-     if captureStart > src_len then value = ""
-     else value = substr(src, captureStart)
-     final_cursor = src_len + 1
-     if debug=9 then call log ">SEQ ASSIGN LIT-REST "pendingVar"='"value"' FROM="captureStart
+  if source_length = 0 then return 0
+  first_nonzero = 0
+  do index = 0 to source_length - 1
+    assembler strchar code,source,index
+    if code < 48 | code > 57 then return 0
+    if first_nonzero = 0 & code = 48 then iterate
+    if first_nonzero = 0 then first_nonzero = index + 1
+  end
+  if first_nonzero = 0 then return 1
+  first_nonzero = first_nonzero - 1
+  significant = source_length - first_nonzero
+  if significant < 19 then return 1
+  if significant > 19 then return 0
+  limit_text = NATIVE_LIMIT
+  do index = 0 to 18
+    char_index = first_nonzero + index
+    assembler strchar code,source,char_index
+    assembler strchar limit_code,limit_text,index
+    if code < limit_code then return 1
+    if code > limit_code then return 0
+  end
+  return 1
+
+_apply_stream_cursor: procedure = .int
+  arg src = .string, source_length = .int, cursor = .int, kind = .int, text = .string
+  position = .int
+  movement = .int
+  room = .int
+  code = .int
+  char_index = .int
+
+  if kind = 2 then do
+    if text = "" then return cursor
+    position = cursor
+    assembler strpos position,text,src
+    if position = 0 then return source_length + 1
+    return position
+  end
+  movement = text
+  if kind = 3 then do
+    if movement < 1 then return 1
+    if movement > source_length + 1 then return source_length + 1
+    return movement
+  end
+  if kind = 4 then do
+    room = source_length + 1 - cursor
+    if movement > room then return source_length + 1
+    return cursor + movement
+  end
+  if kind = 5 then do
+    if movement >= cursor then return 1
+    return cursor - movement
+  end
+  if kind = 6 then do
+    position = cursor
+    do while position <= source_length
+      char_index = position - 1
+      assembler strchar code,src,char_index
+      if code <> 32 then leave
+      position = position + 1
+    end
+    return position
+  end
+  return cursor
+
+_finalize_literal: procedure = .int
+  arg src = .string, source_length = .int, capture_start = .int, pending_variable = .string, literal = .string, expose result = .string[], cursor = .int
+  value = .string
+  final_cursor = .int
+  position = .int
+  literal_length = .int
+
+  assembler strlen literal_length,literal
+  if literal_length = 0 then do
+    value = ""
+    final_cursor = cursor
+    if pending_variable <> "." then result[result[0] + 1] = value
+    return final_cursor
+  end
+  position = cursor
+  assembler strpos position,literal,src
+  if position = 0 then do
+    value = _stream_tail(src,capture_start,source_length)
+    final_cursor = source_length + 1
   end
   else do
-     if p <= captureStart then value = ""
-     else value = substr(src, captureStart, p - captureStart)
-     final_cursor = p + length(lit)
-     if debug=9 then call log ">SEQ ASSIGN LIT "pendingVar"='"value"' FROM="captureStart" TO="p-1" NEXTCURSOR="final_cursor
+    value = _stream_span(src,capture_start,position - capture_start)
+    final_cursor = position + literal_length
   end
+  result[result[0] + 1] = value
+  return final_cursor
 
-  rs[rs[0]+1] = value
-return final_cursor
+_finalize_numeric: procedure = .int
+  arg src = .string, source_length = .int, cursor = .int, capture_start = .int, kind = .int, text = .string, expose result = .string[]
+  value = .string
+  position = .int
+  movement = .int
+  room = .int
 
-/* ----------------------------------------------------------------------
- * finalize_numeric
- *
- * Terminate current variable using a numeric boundary.
- * Boundary is interpreted from the current runtime cursor, not from the
- * variable capture start.
- * ---------------------------------------------------------------------- */
-finalize_numeric: procedure=.int
-  arg src=.string, src_len=.int, cursor=.int, captureStart=.int, pendingVar=.string, kind=.int, text=.string, expose rs=.string[], debug=.int
-
-  value=.string
-  final_cursor=.int
-  p=.int
-
-  if debug=9 then call log "cursor="cursor" captureStart="captureStart" kind="kind" text=<"text"> src_len="src_len
-
-  if kind = 3 then p = text
-  else if kind = 4 then p = cursor + text
-  else if kind = 5 then p = cursor - text
-  else p = cursor
-
-  if p < 1 then p = 1
-  if p > src_len + 1 then p = src_len + 1
-
-  if p <= captureStart then do
-     /* backward/non-advancing boundary fallback */
-     if kind = 5 then do
-        /* backward fallback preserves blanks around the word */
-        value = take_raw_word(src, captureStart, src_len)
-        if debug=9 then call log ">SEQ ASSIGN RAWWORD "pendingVar"='"value"' FROM="captureStart" BOUNDARY="p
-     end
-     else do
-        /* forward/non-advancing fallback takes one plain word */
-        value = take_word(src, captureStart, src_len)
-        if debug=9 then call log ">SEQ ASSIGN WORD "pendingVar"='"value"' FROM="captureStart" BOUNDARY="p
-     end
-     final_cursor = captureStart
+  movement = text
+  if kind = 3 then do
+    position = movement
+    if position < 1 then position = 1
+    if position > source_length + 1 then position = source_length + 1
+  end
+  else if kind = 4 then do
+    room = source_length + 1 - cursor
+    if movement > room then position = source_length + 1
+    else position = cursor + movement
   end
   else do
-     value = substr(src, captureStart, p - captureStart)
-     final_cursor = p
-     if debug=9 then call log ">SEQ ASSIGN NUM "pendingVar"='"value"' FROM="captureStart" TO="p-1" NEXTCURSOR="final_cursor
+    if movement >= cursor then position = 1
+    else position = cursor - movement
   end
 
-  rs[rs[0]+1] = value
-return final_cursor
-
-/* ----------------------------------------------------------------------
- * finalize_implicit
- *
- * Terminate current variable by taking one implicit word.
- * Leading blanks are skipped; exactly one separator blank is consumed.
- * ---------------------------------------------------------------------- */
-finalize_implicit: procedure=.int
-  arg src=.string, src_len=.int, captureStart=.int, pendingVar=.string, expose rs=.string[], cursor=.int, debug=.int
-
-  value=.string
-  final_cursor=.int
-  p1 = captureStart
-
-  do while p1 <= src_len
-     if substr(src, p1, 1) \= ' ' then leave
-     p1 = p1 + 1
+  if position <= capture_start then do
+    if kind = 5 then value = _take_raw_word(src,capture_start,source_length)
+    else value = _take_word(src,capture_start,source_length)
+    position = capture_start
   end
+  else value = _stream_span(src,capture_start,position - capture_start)
+  result[result[0] + 1] = value
+  return position
 
-  if p1 > src_len then do
-     value = ""
-     final_cursor = src_len + 1
+_finalize_implicit: procedure = .int
+  arg src = .string, source_length = .int, capture_start = .int, expose result = .string[]
+  value = .string
+  first = .int
+  after = .int
+  char_index = .int
+  code = .int
+
+  first = capture_start
+  do while first <= source_length
+    char_index = first - 1
+    assembler strchar code,src,char_index
+    if code <> 32 then leave
+    first = first + 1
+  end
+  if first > source_length then do
+    value = ""
+    after = source_length + 1
   end
   else do
-     p2 = p1
-     do while p2 <= src_len
-        if substr(src, p2, 1) = ' ' then leave
-        p2 = p2 + 1
-     end
-     value = substr(src, p1, p2 - p1)
-
-     if p2 <= src_len & substr(src, p2, 1) = ' ' then final_cursor = p2 + 1
-     else final_cursor = p2
+    after = first
+    do while after <= source_length
+      char_index = after - 1
+      assembler strchar code,src,char_index
+      if code = 32 then leave
+      after = after + 1
+    end
+    value = _stream_span(src,first,after - first)
+    if after <= source_length then after = after + 1
   end
+  result[result[0] + 1] = value
+  return after
 
-  if debug=9 then call log ">SEQ ASSIGN IMPLICIT "pendingVar"='"value"' FROM="captureStart" NEXTCURSOR="final_cursor
-  rs[rs[0]+1] = value
-return final_cursor
+_take_raw_word: procedure = .string
+  arg src = .string, field_start = .int, source_length = .int
+  first = .int
+  word_start = .int
+  after = .int
+  char_index = .int
+  code = .int
 
-/* ----------------------------------------------------------------------
- * take_raw_word
- *
- * Take one word from field_start, preserving leading and trailing blanks
- * that belong to that word fragment.
- * ---------------------------------------------------------------------- */
-take_raw_word: procedure = .string
-  arg src=.string, field_start=.int, src_len=.int
-
-  p1 = field_start
-  p2 = p1
-
-  if p2 > src_len then return ""
-
-  do while p2 <= src_len
-     if substr(src, p2, 1) \= ' ' then leave
-     p2 = p2 + 1
+  first = field_start
+  if first > source_length then return ""
+  word_start = first
+  do while word_start <= source_length
+    char_index = word_start - 1
+    assembler strchar code,src,char_index
+    if code <> 32 then leave
+    word_start = word_start + 1
   end
-
-  if p2 > src_len then return substr(src, p1)
-
-  p3 = p2
-  do while p3 <= src_len
-     if substr(src, p3, 1) = ' ' then leave
-     p3 = p3 + 1
+  if word_start > source_length then return _stream_tail(src,first,source_length)
+  after = word_start
+  do while after <= source_length
+    char_index = after - 1
+    assembler strchar code,src,char_index
+    if code = 32 then leave
+    after = after + 1
   end
-
-  p4 = p3
-  do while p4 <= src_len
-     if substr(src, p4, 1) \= ' ' then leave
-     p4 = p4 + 1
+  do while after <= source_length
+    char_index = after - 1
+    assembler strchar code,src,char_index
+    if code <> 32 then leave
+    after = after + 1
   end
-return substr(src, p1, p4 - p1)
+  return _stream_span(src,first,after - first)
 
-/* ----------------------------------------------------------------------
- * take_word
- *
- * Extract exactly one word starting at (or after) field_start.
- * - skips leading blanks
- * - returns word only (no trailing blanks)
- * ---------------------------------------------------------------------- */
-take_word: procedure = .string
-  arg src=.string, field_start=.int, src_len=.int
+_take_word: procedure = .string
+  arg src = .string, field_start = .int, source_length = .int
+  first = .int
+  after = .int
+  char_index = .int
+  code = .int
 
-  p1 = field_start
-
-  /* skip leading blanks */
-  do while p1 <= src_len
-     if substr(src, p1, 1) \= ' ' then leave
-     p1 = p1 + 1
+  first = field_start
+  do while first <= source_length
+    char_index = first - 1
+    assembler strchar code,src,char_index
+    if code <> 32 then leave
+    first = first + 1
   end
-
-  /* no word found */
-  if p1 > src_len then return ""
-
-  /* scan word */
-  p2 = p1
-  do while p2 <= src_len
-     if substr(src, p2, 1) = ' ' then leave
-     p2 = p2 + 1
+  if first > source_length then return ""
+  after = first
+  do while after <= source_length
+    char_index = after - 1
+    assembler strchar code,src,char_index
+    if code = 32 then leave
+    after = after + 1
   end
-return substr(src, p1, p2 - p1)
+  return _stream_span(src,first,after - first)
 
-/* ----------------------------------------------------------------------
- * retrieve number from string
- * ---------------------------------------------------------------------- */
-read_number: procedure=.string
-  arg s=.string, expose posn=.int
-  n = ""
-  nlen = length(s)
-  do while posn <= nlen
-     ch = substr(s, posn, 1)
-     if ch < "0" | ch > "9" then leave
-     n = n || ch
-     posn = posn + 1
+_stream_equals_at: procedure = .boolean
+  arg source = .string, source_length = .int, start = .int, expected = .string
+  expected_length = .int
+  source_code = .int
+  expected_code = .int
+  source_index = .int
+  assembler strlen expected_length,expected
+  if start < 1 | start + expected_length - 1 > source_length then return 0
+  do index = 0 to expected_length - 1
+    source_index = start - 1 + index
+    assembler strchar source_code,source,source_index
+    assembler strchar expected_code,expected,index
+    if source_code <> expected_code then return 0
   end
-return n
+  return 1
 
-/* ----------------------------------------------------------------------
- * retrieve field from string
- * ---------------------------------------------------------------------- */
-read_lp_field: procedure=.string
-  arg s=.string, expose posn=.int
-  lenstr = ""
-  nlen = length(s)
-  do while posn <= nlen
-     ch = substr(s, posn, 1)
-     if ch = ":" then leave
-     lenstr = lenstr || ch
-     posn = posn + 1
-  end
-  posn = posn + 1
-  if lenstr = "" then fldlen = 0
-  else fldlen = lenstr + 0
-  if fldlen = 0 then out = ""
-  else out = substr(s, posn, fldlen)
-  posn = posn + fldlen
-return out
+_stream_zero_span: procedure = .string
+  arg source = .string, start = .int, span_length = .int
+  result = ""
+  if span_length <= 0 then return result
+  assembler setstrpos source,start
+  assembler substring result,source,span_length
+  return result
 
-expect_char: procedure
-  arg s=.string, expose posn=.int, wanted=.string
-  ch = substr(s, posn, 1)
-  if ch \= wanted then do
-     call log "decode_stream_plan error: expected '"wanted"' at position" posn "got '"ch"'"
-  end
-  posn = posn + 1
-return
+_stream_span: procedure = .string
+  arg source = .string, start = .int, span_length = .int
+  if span_length <= 0 then return ""
+  return _stream_zero_span(source,start - 1,span_length)
 
-/* ----------------------------------------------------------------------
- * Dump received PARSE plan from compiler exit
- * ---------------------------------------------------------------------- */
-dump_stream_plan: procedure
-  arg planKind=.int[],planText=.string[]
-  do i = 1 to planKind.0
-     call log "PLAN["i"] KIND=("planKind[i]","planText[i]")"
-  end
-return
+_stream_tail: procedure = .string
+  arg source = .string, start = .int, source_length = .int
+  if start > source_length then return ""
+  return _stream_span(source,start,source_length - start + 1)
 
-log: procedure
-  arg logtxt = .string
-  say ">DBG "logtxt
-return
+_parse_log: procedure
+  arg text = .string
+  say ">DBG " text
+  return

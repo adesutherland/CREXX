@@ -1,0 +1,139 @@
+/* Direct assertion coverage for the compiler PARSE stream executor. */
+options levelb
+import rxfnsb
+
+errors = 0
+errors = errors + test_frozen_plans()
+errors = errors + test_stream_boundaries()
+errors = errors + test_large_plan()
+errors = errors + test_malformed_streams()
+
+if errors = 0 then say "PASS: parseExec stream executor"
+return errors <> 0
+
+test_frozen_plans: procedure = .int
+  errors = 0
+  plan = "3,1:1;1,5:first;6,10:{implicit};1,6:second;"
+  result = parseexec("Now is the time",plan," first second")
+  errors = errors + check(result[0] = 2,"implicit frozen plan count")
+  errors = errors + check(result[1] = "Now" & result[2] = "is the time","implicit frozen plan values")
+
+  plan = "3,1:1;1,4:left;2,1:,;1,5:right;"
+  result = parseexec("alpha,beta",plan,' left "," right')
+  errors = errors + check(result[1] = "alpha" & result[2] = "beta","literal frozen plan")
+  errors = errors + check(plan = "3,1:1;1,4:left;2,1:,;1,5:right;","plan nonmutation")
+  return errors
+
+test_stream_boundaries: procedure = .int
+  errors = 0
+  result = parseexec("abcdef","3,1:1;1,1:a;3,1:4;1,1:b;"," 1 a 4 b")
+  errors = errors + check(result[1] = "abc" & result[2] = "def","shared absolute boundary")
+
+  result = parseexec("abcdef","3,1:5;1,1:a;5,1:3;1,1:b;"," 5 a -3 b")
+  errors = errors + check(result[1] = "ef" & result[2] = "ef","backward position word fallback")
+
+  result = parseexec("ab--cd--ef","3,1:1;1,1:p;2,2:--;1,1:q;4,1:2;1,1:r;"," p '--' q +2 r")
+  errors = errors + check(result[1] = "ab" & result[2] = "--" & result[3] = "cd--ef","shared literal boundary")
+
+  result = parseexec("left:;right","3,1:1;1,1:a;2,2::;;1,1:b;"," a ':;' b")
+  errors = errors + check(result[1] = "left" & result[2] = "right","length-prefixed punctuation")
+
+  result = parseexec("one two","3,1:1;1,1:.;6,10:{implicit};1,1:b;"," . b")
+  errors = errors + check(result[0] = 2 & result[1] = "one" & result[2] = "two","drop target retains result slot")
+
+  result = parseexec("unused","","empty")
+  errors = errors + check(result[0] = 0,"empty plan")
+  return errors
+
+test_large_plan: procedure = .int
+  errors = 0
+  plan = "3,1:1;"
+  source = ""
+  do index = 1 to 100
+    name = "v" || index
+    word = "w" || index
+    if index > 1 then do
+      plan = plan || "6,10:{implicit};"
+      source = source || " "
+    end
+    plan = plan || "1," || length(name) || ":" || name || ";"
+    source = source || word
+  end
+  result = parseexec(source,plan,"generated 100-word plan")
+  errors = errors + check(result[0] = 100,"large plan result count")
+  errors = errors + check(result[1] = "w1" & result[50] = "w50" & result[100] = "w100","large plan values")
+  return errors
+
+test_malformed_streams: procedure = .int
+  errors = 0
+  caught = 0
+
+  do
+    ignored = parseexec("x","1:1:a;","bad comma")
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = parseexec("x",",1:a;","missing kind")
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = parseexec("x","1,:a;","missing length")
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = parseexec("x","1,x:a;","bad length")
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = parseexec("x","1,2:a;","truncated")
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = parseexec("x","1,1:a","missing terminator")
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = parseexec("x","7,1:a;","bad kind")
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = parseexec("x","1,0:;","empty target")
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = parseexec("x","3,1:x;","bad numeric payload")
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = parseexec("x","3,19:9223372036854775808;","oversized numeric payload")
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = parseexec("x","6,3:bad;","bad implicit payload")
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+  do
+    ignored = parseexec("x","1,1:a;","bad debug",2)
+  on signal invalid_arguments
+    caught = caught + 1
+  end
+
+  errors = errors + check(caught = 12,"all stream validation signals caught")
+  return errors
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: parseExec" label
+  return 1
