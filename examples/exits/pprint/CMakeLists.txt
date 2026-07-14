@@ -38,7 +38,9 @@ add_custom_command(
                 -o pprint_example_program
                 "${CMAKE_CURRENT_SOURCE_DIR}/pprint_example.crexx"
         COMMAND $<TARGET_FILE:rxas> -o pprint_example_program pprint_example_program
-        DEPENDS rxc rxas library "${_pprint_bundle}"
+        DEPENDS rxc rxas library compiler_exit_bin
+                "${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin"
+                "${_pprint_bundle}"
                 "${CREXX_ARRAY_FORMATTING_MODULE}"
                 "${CMAKE_CURRENT_SOURCE_DIR}/pprint_example.crexx"
         BYPRODUCTS "${CMAKE_CURRENT_BINARY_DIR}/pprint_example_program.rxas"
