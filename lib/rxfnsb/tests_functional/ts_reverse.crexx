@@ -10,6 +10,8 @@ errors = errors + check(reverse(reverse(source)) = source, "involution")
 errors = errors + check(reverse("") = "", "empty string")
 errors = errors + check(reverse("x") = "x", "one character")
 errors = errors + check(reverse("aé日🙂") = "🙂日éa", "Unicode codepoints")
+embedded_nul = "a" || d2c(0) || "b"
+errors = errors + check(reverse(embedded_nul) = "b" || d2c(0) || "a", "embedded U+0000")
 errors = errors + check(source = "the quick brown fox jumps over the lazy dog", "source is not mutated")
 
 large = ""

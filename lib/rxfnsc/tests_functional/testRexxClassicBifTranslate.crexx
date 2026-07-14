@@ -1,0 +1,111 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbiftranslate
+import rexxclassicencoding
+import rexxvalue
+
+errors = 0
+errors = errors + check_byte("414243C3A9", "616263C3A9", "", 0, "", 0, "", 0)
+errors = errors + check_byte("616232643166", "616263646566", "3132", 1, "6563", 1, "", 0)
+errors = errors + check_byte("31", "61", "3132", 1, "6161", 1, "", 0)
+errors = errors + check_byte("582E2E", "616263", "58", 1, "616263", 1, "2E", 1)
+errors = errors + check_byte("41422E2E", "000102FF", "4142", 1, "", 0, "2E", 1)
+errors = errors + check_byte("612063", "616263", "", 0, "62", 1, "", 0)
+errors = errors + check_utf8("ÉA", "éa", "", 0, "", 0, "", 0, "")
+errors = errors + check_utf8("YX", "aé", "XY", 1, "éa", 1, "", 0, "")
+errors = errors + check_utf8("", "abc", "XY", 1, "", 0, "", 0, "RXC-LC-40.1")
+errors = errors + check_invalid_utf8()
+errors = errors + check_pad_error()
+errors = errors + check_count_error()
+
+if errors = 0 then say "PASS: Level C TRANSLATE BIF"
+return errors <> 0
+
+check_byte: procedure = .int
+  arg expected_hex = .string, source_hex = .string, output_hex = .string, output_exists = .int, input_hex = .string, input_exists = .int, pad_hex = .string, pad_exists = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes(source_hex))
+  exists[1] = 1
+  args[2] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes(output_hex))
+  exists[2] = output_exists
+  args[3] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes(input_hex))
+  exists[3] = input_exists
+  args[4] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes(pad_hex))
+  exists[4] = pad_exists
+  context = .RexxBifCallContext("TRANSLATE")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbiftranslate..rexxclassicbif_translate(reference context)
+  actual_hex = rexxclassic_bytes_to_hex(result.asBinary())
+  if \context.hasError() & actual_hex = expected_hex & \result.hasText() then return 0
+  say "FAIL: TRANSLATE BYTE expected" expected_hex "got" actual_hex result.hasText(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_utf8: procedure = .int
+  arg expected = .string, source = .string, output = .string, output_exists = .int, input = .string, input_exists = .int, pad = .string, pad_exists = .int, expected_error = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(source)
+  exists[1] = 1
+  args[2] = .RexxValue(output)
+  exists[2] = output_exists
+  args[3] = .RexxValue(input)
+  exists[3] = input_exists
+  args[4] = .RexxValue(pad)
+  exists[4] = pad_exists
+  context = .RexxBifCallContext("TRANSLATE")
+  call context.useUtf8Profile()
+  call context.setArguments(args, exists)
+  result = .rexxclassicbiftranslate..rexxclassicbif_translate(reference context)
+  if expected_error <> "" then do
+    if context.hasError() & context.errorCode() = expected_error then return 0
+  end
+  else if \context.hasError() & result.asString() = expected & result.hasText() then return 0
+  say "FAIL: TRANSLATE UTF8 expected" expected expected_error "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_invalid_utf8: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes("FF"))
+  exists[1] = 1
+  context = .RexxBifCallContext("TRANSLATE")
+  call context.useUtf8Profile()
+  call context.setArguments(args, exists)
+  result = .rexxclassicbiftranslate..rexxclassicbif_translate(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-23.1" then return 0
+  say "FAIL: TRANSLATE invalid UTF8" context.errorCode() result.asString()
+  return 1
+
+check_pad_error: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("abc")
+  exists[1] = 1
+  args[2] = .RexxValue("")
+  exists[2] = 0
+  args[3] = .RexxValue("")
+  exists[3] = 0
+  args[4] = .RexxValue("é")
+  exists[4] = 1
+  return run_error("RXC-LC-40.23", args, exists)
+
+check_count_error: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do index = 1 to 5
+    args[index] = .RexxValue("A")
+    exists[index] = 1
+  end
+  return run_error("RXC-LC-40.4", args, exists)
+
+run_error: procedure = .int
+  arg expected = .string, args = .RexxValue[], exists = .int[]
+  context = .RexxBifCallContext("TRANSLATE")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbiftranslate..rexxclassicbif_translate(reference context)
+  if context.hasError() & context.errorCode() = expected then return 0
+  say "FAIL: TRANSLATE expected error" expected "got" context.errorCode() result.asString()
+  return 1

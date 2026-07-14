@@ -25,6 +25,7 @@
 options levelb comments_dash numeric_classic
 namespace rexxclassicbifwords expose rexxclassicbif_words
 import rexxclassicbifs
+import rexxclassiccharacterscan
 import rexxvalue
 
 /**
@@ -42,16 +43,37 @@ rexxclassicbif_words: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return .RexxValue("")
 
+  config = context.characterConfig()
+  if config.isByteProfile() then do
+    bytes = .binary
+    other_blanks = .binary
+    bytes = context.argument(1).asBinary()
+    other_blanks = config.byteOtherBlanks()
+    byte_length = .int
+    assembler blen byte_length,bytes
+    scan = 0
+    count = 0
+    do while scan < byte_length
+      scan = rexxclassic_find_byte_nonblank(bytes, scan, other_blanks)
+      if scan < 0 then leave
+      count = count + 1
+      scan = rexxclassic_find_byte_blank(bytes, scan, other_blanks)
+      if scan < 0 then leave
+    end
+    return .RexxValue(count || "")
+  end
+
   string = context.argumentText(1)
+  text_other_blanks = config.textOtherBlanks()
   string_length = .int
   assembler strlen string_length,string
   scan = 0
   count = 0
   do while scan < string_length
-    assembler fndnblnk scan,string,scan
+    scan = rexxclassic_find_text_nonblank(string, scan, text_other_blanks)
     if scan < 0 then leave
     count = count + 1
-    assembler fndblnk scan,string,scan
+    scan = rexxclassic_find_text_blank(string, scan, text_other_blanks)
     if scan < 0 then leave
   end
   return .RexxValue(count || "")

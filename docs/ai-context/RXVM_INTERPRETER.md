@@ -105,7 +105,11 @@ struct stack_frame {
 
 Frame recycling is a performance feature, not a semantic shortcut. When a
 frame is reused, the VM relinks local register pointers back to their base
-storage, relinks globals, and resets the argument-count register. Ordinary
+storage, relinks globals, and resets the argument-count register. Incoming
+arguments do not own value storage, but their entry pointers are recorded in
+both `baselocals` and the active `locals` map. This makes `UNLINK` well-defined
+for argument registers and preserves the frame-entry mapping needed when a
+nested call uses `a1...` as its call window. Ordinary
 return places the frame on the procedure recycler; full value teardown happens
 when recycled frames are drained. Because references are rare, frames carry a
 small flag that is set on the frame that owns referenced storage. A helper may
@@ -136,7 +140,9 @@ discards the callee before those instructions run, the unwind path uses that
 one index plus `number_args` to restore the caller's active pointer permutation.
 It finds each displaced call-slot base pointer in the caller's active map and
 performs the inverse pointer swap, preserving mutations and pre-call links
-instead of resetting values to `baselocals`. Native calls have no child frame;
+instead of resetting values. The base pointer may be frame-owned local storage
+or an incoming argument's recorded entry pointer; neither case copies the
+value. Native calls have no child frame;
 their cold branch path recovers the same window from the interrupted CALL or
 DCALL instruction.
 

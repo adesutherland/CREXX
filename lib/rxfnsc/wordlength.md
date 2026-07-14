@@ -7,9 +7,11 @@ rexxclassicbif_wordlength(
   context = reference .RexxBifCallContext) = .RexxValue
 ```
 
-It implements `WORDLENGTH(string, n)`, returning the Unicode character length
-of the positive one-based word, or `0` when that word does not exist. The direct
-implementation uses the VM's Unicode whitespace classification.
+It implements `WORDLENGTH(string, n)`, returning the active-profile character
+length of the positive one-based word, or `0` when absent. BYTE counts exact
+bytes and uses space/configured byte blanks. UTF8 counts codepoints and uses
+Unicode 17.0.0 `White_Space` plus configured codepoint blanks; its default path
+uses the VM scanner.
 
 The CheckArgs contract is `rANY rWHOLE>0`. Standard context errors are:
 
@@ -21,10 +23,6 @@ The implementation scans only as far as the requested word and subtracts its
 source positions. It allocates no substring, has no controller body, and does
 not rely on compiler lowering.
 
-Supporting a configured `Config_OtherBlankCharacters` set is tracked as the
-shared dependency for the word-family Level C BIFs.
-
 `lib/rxfnsc/tests_functional/testRexxClassicBifWordlength.crexx` calls the entry
-directly in optimized and unoptimized overlays. It covers Unicode character
-length, whitespace and absent-word boundaries, source non-mutation, and all
-standard argument errors.
+directly in optimized and unoptimized overlays. It covers BYTE/UTF8 lengths,
+configured blanks, absent-word boundaries, source preservation, and errors.

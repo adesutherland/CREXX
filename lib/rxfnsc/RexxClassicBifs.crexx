@@ -26,6 +26,7 @@ options levelb comments_dash numeric_classic
 namespace rexxclassicbifs expose RexxBifCallContext rexxclassicbif_call rexxclassicbif_check_args rexxclassicbif_check_variadic rexxclassicbif_set_error rexxclassic_symbol_kind rexxclassicbif_abbrev rexxclassicbif_abs rexxclassicbif_copies rexxclassicbif_datatype rexxclassicbif_left rexxclassicbif_length rexxclassicbif_lower rexxclassicbif_max rexxclassicbif_min rexxclassicbif_pos rexxclassicbif_right rexxclassicbif_sign rexxclassicbif_space rexxclassicbif_strip rexxclassicbif_substr rexxclassicbif_upper rexxclassicbif_verify rexxclassicbif_word rexxclassicbif_words
 import rexxvalue
 import rexxpool
+import rexxclassicconfig
 import rxfnsb
 
 /**
@@ -56,6 +57,7 @@ RexxBifCallContext: class
   bif_arg_count = .int
   owned_pool = .RexxVariablePool
   caller_pool_ref = reference .RexxVariablePool
+  character_config = .RexxClassicConfig
   error_code = .string
   error_message = .string
 
@@ -65,6 +67,7 @@ RexxBifCallContext: class
     bif_arg_count = 0
     owned_pool = .RexxVariablePool()
     caller_pool_ref = reference owned_pool
+    character_config = .RexxClassicConfig()
     error_code = ""
     error_message = ""
     return
@@ -122,6 +125,32 @@ RexxBifCallContext: class
 
   callerPool: method = reference .RexxVariablePool
     return caller_pool_ref
+
+  setCharacterConfig: method = .void
+    arg config = .RexxClassicConfig
+    character_config = config
+    return
+
+  characterConfig: method = .RexxClassicConfig
+    return character_config
+
+  useByteProfile: method = .void
+    call character_config.useByteProfile()
+    return
+
+  useUtf8Profile: method = .void
+    call character_config.useUtf8Profile()
+    return
+
+  setByteOtherBlanks: method = .void
+    arg blanks = .binary
+    call character_config.setByteOtherBlanks(blanks)
+    return
+
+  setTextOtherBlanks: method = .void
+    arg blanks = .string
+    call character_config.setTextOtherBlanks(blanks)
+    return
 
   clearError: method = .void
     error_code = ""
@@ -266,9 +295,36 @@ _check_arg_type: procedure = .int
   numeric form inherited
   arg context_ref = reference .RexxBifCallContext, index = .int, rule = .string
   context = dereference context_ref
-  value = context.argumentText(index)
+  config = context.characterConfig()
+  argument_value = context.argument(index)
 
-  if rule = "ANY" then return 1
+  if rule = "ANY" then do
+    if config.isUtf8Profile() & argument_value.hasBinary() & \argument_value.hasText() then do
+      call _set_bif_error(context_ref, "23.1", index, "", "")
+      return 0
+    end
+    return 1
+  end
+
+  if rule = "PAD" & config.isByteProfile() then do
+    bytes = argument_value.asBinary()
+    byte_length = .int
+    assembler blen byte_length,bytes
+    if byte_length <> 1 then do
+      display_value = ""
+      if argument_value.hasText() then display_value = argument_value.asString()
+      call _set_bif_error(context_ref, "40.23", index, display_value, "")
+      return 0
+    end
+    return 1
+  end
+
+  if config.isUtf8Profile() & argument_value.hasBinary() & \argument_value.hasText() then do
+    call _set_bif_error(context_ref, "23.1", index, "", "")
+    return 0
+  end
+
+  value = context.argumentText(index)
 
   if rule = "SYM" then do
     if rexxclassic_symbol_kind(value) <> 1 then do

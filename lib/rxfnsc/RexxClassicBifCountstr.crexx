@@ -25,6 +25,7 @@
 options levelb comments_dash numeric_classic
 namespace rexxclassicbifcountstr expose rexxclassicbif_countstr
 import rexxclassicbifs
+import rexxclassiccharacterops
 import rexxvalue
 
 /**
@@ -42,20 +43,20 @@ rexxclassicbif_countstr: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rANY") = 0 then return .RexxValue("")
 
-  needle = context.argumentText(1)
-  haystack = context.argumentText(2)
+  needle_value = context.argument(1)
+  haystack_value = context.argument(2)
+  config = context.characterConfig()
   count = 0
   position = 1
   found = .int
   needle_length = .int
   haystack_length = .int
-  assembler strlen needle_length,needle
-  assembler strlen haystack_length,haystack
+  needle_length = rexxclassic_value_length(needle_value,config)
+  haystack_length = rexxclassic_value_length(haystack_value,config)
   if needle_length = 0 | needle_length > haystack_length then return .RexxValue("0")
 
   do forever
-    found = position
-    assembler strpos found,needle,haystack
+    found = rexxclassic_value_find(needle_value,haystack_value,position,config)
     if found = 0 then leave
     count = count + 1
     position = found + needle_length

@@ -3413,7 +3413,6 @@ if (is_interrupt && temp_frame->is_interrupt_action) { \
     (cp) == 0x0085 || /* Next Line */ \
     (cp) == 0x00A0 || /* No-Break Space */ \
     (cp) == 0x1680 || \
-    (cp) == 0x180E || \
     ((cp) >= 0x2000 && (cp) <= 0x200A) || \
     (cp) == 0x2028 || \
     (cp) == 0x2029 || \
@@ -5874,7 +5873,12 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                     for (i = 0;
                          i < (current_frame->parent->locals[(pc + 3)->index])->int_value;
                          i++, j++, k++) {
-                        current_locals[j] = current_frame->parent->locals[k];
+                        /* Arguments have no frame-owned value storage.  Keep
+                         * their entry mapping in baselocals so UNLINK and a
+                         * cold signal unwind can restore an argument-slot call
+                         * window without copying or losing exposed links. */
+                        current_frame->baselocals[j] = current_frame->parent->locals[k];
+                        current_locals[j] = current_frame->baselocals[j];
                     }
                 }
             }
@@ -5921,7 +5925,8 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                     for (i = 0;
                          i < (current_frame->parent->locals[(pc + 3)->index])->int_value;
                          i++, j++, k++) {
-                        current_locals[j] = current_frame->parent->locals[k];
+                        current_frame->baselocals[j] = current_frame->parent->locals[k];
+                        current_locals[j] = current_frame->baselocals[j];
                     }
                 }
             }
@@ -8472,13 +8477,31 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - STRLOWER R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 set_value_string(op1R, op2R);
-                null_terminate_string_buffer(op1R); /* the logic requires a null terminator */
 #ifdef NUTF8
-                char *c;
-                for (c = op1R->string_value; *c; ++c) *c = (char)tolower(*c);
+                size_t i;
+                for (i = 0; i < op1R->string_length; ++i) {
+                    op1R->string_value[i] =
+                            (char)tolower((unsigned char)op1R->string_value[i]);
+                }
 #else
+                char *current;
+                char *next;
+                char *end;
+                utf8_int32_t codepoint;
+                utf8_int32_t mapped;
                 REQUIRE_VALID_UTF8_REGISTER(op1R);
-                utf8lwr(op1R->string_value);
+                current = op1R->string_value;
+                end = current + op1R->string_length;
+                while (current < end) {
+                    next = utf8codepoint(current, &codepoint);
+                    mapped = utf8lwrcodepoint(codepoint);
+                    if (mapped != codepoint) {
+                        /* The deliberately limited simple-case table preserves
+                         * UTF-8 width, so the transform is allocation-free. */
+                        utf8catcodepoint(current, mapped, (size_t)(next - current));
+                    }
+                    current = next;
+                }
 #endif
             }
             DISPATCH;
@@ -8492,13 +8515,30 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             DEBUG("TRACE - STRUPPER R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
             {
                 set_value_string(op1R, op2R);
-                null_terminate_string_buffer(op1R); /* the logic requires a null terminator */
 #ifdef NUTF8
-                char *c;
-                for (c = op1R->string_value ; *c; ++c) *c = (char)toupper(*c);
+                size_t i;
+                for (i = 0; i < op1R->string_length; ++i) {
+                    op1R->string_value[i] =
+                            (char)toupper((unsigned char)op1R->string_value[i]);
+                }
 #else
+                char *current;
+                char *next;
+                char *end;
+                utf8_int32_t codepoint;
+                utf8_int32_t mapped;
                 REQUIRE_VALID_UTF8_REGISTER(op1R);
-                utf8upr(op1R->string_value);
+                current = op1R->string_value;
+                end = current + op1R->string_length;
+                while (current < end) {
+                    next = utf8codepoint(current, &codepoint);
+                    mapped = utf8uprcodepoint(codepoint);
+                    if (mapped != codepoint) {
+                        /* See STRLOWER: simple mappings retain encoded width. */
+                        utf8catcodepoint(current, mapped, (size_t)(next - current));
+                    }
+                    current = next;
+                }
 #endif
             }
             DISPATCH;
@@ -10145,52 +10185,72 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             {
                 char *charpos;
                 rxinteger start_pos = op1RI;
+                size_t start_offset;
+                size_t needle_length;
 
                 REQUIRE_VALID_UTF8_REGISTER(op2R);
                 REQUIRE_VALID_UTF8_REGISTER(op3R);
                 if (start_pos <= 0) {
                     REG_RETURN_INT(0);
                 } else {
-                    null_terminate_string_buffer(op2R);
-                    null_terminate_string_buffer(op3R);
 #ifndef NUTF8
                     {
-                        size_t start_offset;
                         size_t saved_string_pos = op3R->string_pos;
                         size_t saved_string_char_pos = op3R->string_char_pos;
-                        char *search_start;
 
                         start_offset = (size_t)(start_pos - 1);
                         if (start_offset >= op3R->string_chars) {
-                            REG_RETURN_INT(0);
+                            start_offset = op3R->string_length;
                         } else {
                             string_set_byte_pos(op3R, start_offset);
-                            search_start = op3R->string_value + op3R->string_pos;
-                            charpos = (char *)utf8str(search_start, op2R->string_value);
+                            start_offset = op3R->string_pos;
                             op3R->string_pos = saved_string_pos;
                             op3R->string_char_pos = saved_string_char_pos;
-
-                            if (charpos) {
-                                size_t byte_offset = (size_t)(charpos - op3R->string_value);
-                                REG_RETURN_INT((rxinteger)(utf8nlen(op3R->string_value, byte_offset) + 1));
-                            } else {
-                                REG_RETURN_INT(0);
-                            }
                         }
                     }
 #else
-                    {
-                        rxinteger offset = start_pos - 1;    // make position an offset
-                        if (offset >= op3R->string_length) {
+                    start_offset = (size_t)(start_pos - 1);
+#endif
+                    if (start_offset >= op3R->string_length) {
+                        REG_RETURN_INT(0);
+                    } else {
+                        needle_length = op2R->string_length;
+                        charpos = NULL;
+                        if (needle_length == 0) {
+                            charpos = op3R->string_value + start_offset;
+                        } else if (needle_length <= op3R->string_length - start_offset) {
+                            char *candidate = op3R->string_value + start_offset;
+                            char *last = op3R->string_value +
+                                         op3R->string_length - needle_length;
+                            while (candidate <= last) {
+                                candidate = (char *)memchr(
+                                        candidate,
+                                        (unsigned char)op2R->string_value[0],
+                                        (size_t)(last - candidate + 1));
+                                if (!candidate) break;
+                                if (memcmp(candidate, op2R->string_value,
+                                           needle_length) == 0) {
+                                    charpos = candidate;
+                                    break;
+                                }
+                                ++candidate;
+                            }
+                        }
+                        if (!charpos) {
                             REG_RETURN_INT(0);
                         } else {
-                            charpos = strstr(op3R->string_value + offset, op2R->string_value);
-                            if (charpos) offset = (rxinteger)(charpos - op3R->string_value);
-                            else offset = -1;
-                            REG_RETURN_INT(offset + 1);      // make offset a position
+#ifndef NUTF8
+                            size_t character_offset = 0;
+                            (void)utf8nvalid_count(
+                                    op3R->string_value,
+                                    (size_t)(charpos - op3R->string_value),
+                                    &character_offset);
+                            REG_RETURN_INT((rxinteger)(character_offset + 1));
+#else
+                            REG_RETURN_INT((rxinteger)(charpos - op3R->string_value) + 1);
+#endif
                         }
                     }
-#endif
                 }
             }
             DISPATCH;

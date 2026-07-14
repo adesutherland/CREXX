@@ -43,6 +43,7 @@ set(BIFS
 		numeric
 		overlay
 		pos
+		qscan
 		qpos
 		qsplit
 		qsplitsafe

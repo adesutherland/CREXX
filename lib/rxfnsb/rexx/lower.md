@@ -6,14 +6,18 @@
 lower(string = .string) = .string
 ```
 
-Every cased character is converted by the VM's configured Unicode lowercase
-mapping. Nonletters, uncased characters, and an empty string are unchanged.
+Every character covered by the VM's deliberately limited, locale-independent
+simple lowercase table is converted. Other characters and an empty string are
+unchanged; this is not full Unicode case folding.
 
 ```rexx
 lower("MiXeD 123 !?") /* "mixed 123 !?" */
 lower("ÄÖÜÉ")         /* "äöüé" */
 lower("")             /* "" */
 ```
+
+U+0000 is an ordinary codepoint for this bounded operation; it does not stop
+conversion of later text.
 
 The argument is read-only and valid `.string` input has no error branch. The
 implementation is one direct `strlower` instruction and creates only the result

@@ -1,0 +1,436 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/** Shared positional scanner for the Level B quote-aware library. */
+options levelb
+namespace rxfnsb expose qscan_outside_matches qscan_safe_matches qscan_pair_spans qscan_line_comment_spans qscan_word_spans
+
+/** Return all one-based needle starts outside quotes at or after start. */
+qscan_outside_matches: procedure = .int[]
+  arg text = .string, needle = .string, start = .int
+  if start < 1 then
+    assembler signal "INVALID_ARGUMENTS", "quote-aware start must be positive"
+
+  text_length = .int
+  needle_length = .int
+  codepoint = .int
+  next_codepoint = .int
+  assembler strlen text_length,text
+  assembler strlen needle_length,needle
+  if needle_length = 0 then
+    assembler signal "INVALID_ARGUMENTS", "quote-aware delimiter must not be empty"
+
+  matches = .int[]
+  match_count = 0
+  next_match = start
+  assembler strpos next_match,needle,text
+  quote = 0
+  index = 0
+  do while index < text_length
+    current = index + 1
+    if next_match > 0 & next_match < current then do
+      next_match = current
+      assembler strpos next_match,needle,text
+    end
+
+    assembler strchar codepoint,text,index
+    if quote <> 0 then do
+      if codepoint = quote then do
+        next_index = index + 1
+        if next_index < text_length then do
+          assembler strchar next_codepoint,text,next_index
+          if next_codepoint = quote then do
+            index = index + 2
+            iterate
+          end
+        end
+        quote = 0
+      end
+    end
+    else if codepoint = 34 | codepoint = 39 then quote = codepoint
+    else if next_match = current then do
+      match_count = match_count + 1
+      matches[match_count] = current
+    end
+
+    if next_match = current then do
+      next_match = current + needle_length
+      assembler strpos next_match,needle,text
+    end
+    index = index + 1
+  end
+  if quote <> 0 then
+    assembler signal "INVALID_ARGUMENTS", "unmatched quote in quote-aware text"
+  return matches
+
+/** Return one-based separator starts outside quotes and configured pair stacks. */
+qscan_safe_matches: procedure = .int[]
+  arg text = .string, separator = .string, start = .int, pairs = .string
+  if start < 1 then
+    assembler signal "INVALID_ARGUMENTS", "QSPLITSAFE start must be positive"
+
+  text_length = .int
+  separator_length = .int
+  pairs_length = .int
+  remainder = .int
+  codepoint = .int
+  next_codepoint = .int
+  pair_codepoint = .int
+  closer_codepoint = .int
+  assembler strlen text_length,text
+  assembler strlen separator_length,separator
+  assembler strlen pairs_length,pairs
+  if separator_length = 0 then
+    assembler signal "INVALID_ARGUMENTS", "QSPLITSAFE separator must not be empty"
+  assembler imod remainder,pairs_length,2
+  if remainder <> 0 then
+    assembler signal "INVALID_ARGUMENTS", "QSPLITSAFE pairs must contain opener/closer codepoint pairs"
+
+  matches = .int[]
+  stack = .int[]
+  match_count = 0
+  depth = 0
+  quote = 0
+  next_match = start
+  assembler strpos next_match,separator,text
+  index = 0
+  do while index < text_length
+    current = index + 1
+    if next_match > 0 & next_match < current then do
+      next_match = current
+      assembler strpos next_match,separator,text
+    end
+    assembler strchar codepoint,text,index
+
+    if quote <> 0 then do
+      if codepoint = quote then do
+        next_index = index + 1
+        if next_index < text_length then do
+          assembler strchar next_codepoint,text,next_index
+          if next_codepoint = quote then do
+            index = index + 2
+            iterate
+          end
+        end
+        quote = 0
+      end
+    end
+    else if codepoint = 34 | codepoint = 39 then quote = codepoint
+    else do
+      opener = 0
+      closer = 0
+      pair_index = 0
+      do while pair_index < pairs_length
+        assembler strchar pair_codepoint,pairs,pair_index
+        if codepoint = pair_codepoint then do
+          closer_index = pair_index + 1
+          assembler strchar closer_codepoint,pairs,closer_index
+          depth = depth + 1
+          stack[depth] = closer_codepoint
+          opener = 1
+          leave
+        end
+        closer_index = pair_index + 1
+        assembler strchar pair_codepoint,pairs,closer_index
+        if codepoint = pair_codepoint then closer = 1
+        pair_index = pair_index + 2
+      end
+
+      if \opener & closer then do
+        if depth = 0 | codepoint <> stack[depth] then
+          assembler signal "INVALID_ARGUMENTS", "mismatched closer in QSPLITSAFE text"
+        depth = depth - 1
+      end
+      else if \opener & depth = 0 & next_match = current then do
+        match_count = match_count + 1
+        matches[match_count] = current
+      end
+    end
+
+    if next_match = current then do
+      next_match = current + separator_length
+      assembler strpos next_match,separator,text
+    end
+    index = index + 1
+  end
+  if quote <> 0 then
+    assembler signal "INVALID_ARGUMENTS", "unmatched quote in QSPLITSAFE text"
+  if depth <> 0 then
+    assembler signal "INVALID_ARGUMENTS", "unclosed pair in QSPLITSAFE text"
+  return matches
+
+/**
+ * Return top-level balanced spans as groups of four zero-based positions:
+ * open start, inner start, inner end, end exclusive.
+ */
+qscan_pair_spans: procedure = .int[]
+  arg open = .string, close = .string, text = .string, start = .int
+  if start < 1 then
+    assembler signal "INVALID_ARGUMENTS", "quote-aware start must be positive"
+
+  text_length = .int
+  open_length = .int
+  close_length = .int
+  codepoint = .int
+  next_codepoint = .int
+  assembler strlen text_length,text
+  assembler strlen open_length,open
+  assembler strlen close_length,close
+  if open_length = 0 | close_length = 0 then
+    assembler signal "INVALID_ARGUMENTS", "pair delimiters must not be empty"
+  if open == close then
+    assembler signal "INVALID_ARGUMENTS", "pair delimiters must be different"
+
+  spans = .int[]
+  span_count = 0
+  depth = 0
+  quote = 0
+  top_open = 0
+  top_inner = 0
+  next_open = start
+  next_close = start
+  assembler strpos next_open,open,text
+  assembler strpos next_close,close,text
+  index = 0
+  do while index < text_length
+    current = index + 1
+    if next_open > 0 & next_open < current then do
+      next_open = current
+      assembler strpos next_open,open,text
+    end
+    if next_close > 0 & next_close < current then do
+      next_close = current
+      assembler strpos next_close,close,text
+    end
+
+    assembler strchar codepoint,text,index
+    if quote <> 0 then do
+      if codepoint = quote then do
+        next_index = index + 1
+        if next_index < text_length then do
+          assembler strchar next_codepoint,text,next_index
+          if next_codepoint = quote then do
+            index = index + 2
+            iterate
+          end
+        end
+        quote = 0
+      end
+      if next_open = current then do
+        next_open = current + 1
+        assembler strpos next_open,open,text
+      end
+      if next_close = current then do
+        next_close = current + 1
+        assembler strpos next_close,close,text
+      end
+      index = index + 1
+      iterate
+    end
+
+    if codepoint = 34 | codepoint = 39 then do
+      quote = codepoint
+      index = index + 1
+      iterate
+    end
+
+    if next_open = current then do
+      if depth = 0 then do
+        top_open = index
+        top_inner = index + open_length
+      end
+      depth = depth + 1
+      index = index + open_length
+      next_open = index + 1
+      next_close = index + 1
+      assembler strpos next_open,open,text
+      assembler strpos next_close,close,text
+      iterate
+    end
+
+    if next_close = current & depth > 0 then do
+      depth = depth - 1
+      if depth = 0 then do
+        span_count = span_count + 1
+        base = (span_count - 1) * 4
+        spans[base + 1] = top_open
+        spans[base + 2] = top_inner
+        spans[base + 3] = index
+        spans[base + 4] = index + close_length
+      end
+      index = index + close_length
+      next_open = index + 1
+      next_close = index + 1
+      assembler strpos next_open,open,text
+      assembler strpos next_close,close,text
+      iterate
+    end
+
+    if next_close = current then
+      assembler signal "INVALID_ARGUMENTS", "mismatched closer in pair text"
+    index = index + 1
+  end
+  if quote <> 0 then
+    assembler signal "INVALID_ARGUMENTS", "unmatched quote in pair text"
+  if depth <> 0 then
+    assembler signal "INVALID_ARGUMENTS", "unclosed delimiter pair"
+  return spans
+
+/** Return line-comment removal spans as zero-based start/end pairs. */
+qscan_line_comment_spans: procedure = .int[]
+  arg marker = .string, text = .string
+  text_length = .int
+  marker_length = .int
+  codepoint = .int
+  next_codepoint = .int
+  assembler strlen text_length,text
+  assembler strlen marker_length,marker
+  if marker_length = 0 then
+    assembler signal "INVALID_ARGUMENTS", "line-comment marker must not be empty"
+
+  spans = .int[]
+  span_count = 0
+  quote = 0
+  next_marker = 1
+  assembler strpos next_marker,marker,text
+  index = 0
+  do while index < text_length
+    current = index + 1
+    if next_marker > 0 & next_marker < current then do
+      next_marker = current
+      assembler strpos next_marker,marker,text
+    end
+
+    assembler strchar codepoint,text,index
+    if quote <> 0 then do
+      if codepoint = quote then do
+        next_index = index + 1
+        if next_index < text_length then do
+          assembler strchar next_codepoint,text,next_index
+          if next_codepoint = quote then do
+            index = index + 2
+            iterate
+          end
+        end
+        quote = 0
+      end
+      if next_marker = current then do
+        next_marker = current + 1
+        assembler strpos next_marker,marker,text
+      end
+      index = index + 1
+      iterate
+    end
+
+    if codepoint = 34 | codepoint = 39 then do
+      quote = codepoint
+      index = index + 1
+      iterate
+    end
+
+    if next_marker = current then do
+      comment_start = index
+      index = index + marker_length
+      do while index < text_length
+        assembler strchar codepoint,text,index
+        if codepoint = 10 | codepoint = 13 then leave
+        index = index + 1
+      end
+      span_count = span_count + 1
+      base = (span_count - 1) * 2
+      spans[base + 1] = comment_start
+      spans[base + 2] = index
+      next_marker = index + 1
+      assembler strpos next_marker,marker,text
+      iterate
+    end
+    index = index + 1
+  end
+  if quote <> 0 then
+    assembler signal "INVALID_ARGUMENTS", "unmatched quote in line-comment text"
+  return spans
+
+/** Return quote-aware word spans as zero-based start/length pairs. */
+qscan_word_spans: procedure = .int[]
+  arg text = .string
+  spans = .int[]
+  text_length = .int
+  codepoint = .int
+  next_codepoint = .int
+  assembler strlen text_length,text
+  quote = 0
+  word_start = -1
+  word_count = 0
+  index = 0
+  do while index < text_length
+    assembler strchar codepoint,text,index
+    if quote <> 0 then do
+      if codepoint = quote then do
+        next_index = index + 1
+        if next_index < text_length then do
+          assembler strchar next_codepoint,text,next_index
+          if next_codepoint = quote then do
+            index = index + 2
+            iterate
+          end
+        end
+        quote = 0
+      end
+      index = index + 1
+      iterate
+    end
+
+    if codepoint = 34 | codepoint = 39 then do
+      if word_start < 0 then word_start = index
+      quote = codepoint
+      index = index + 1
+      iterate
+    end
+
+    is_blank = (codepoint >= 9 & codepoint <= 13) | codepoint = 32 | codepoint = 133 |,
+               codepoint = 160 | codepoint = 5760 | (codepoint >= 8192 & codepoint <= 8202) |,
+               codepoint = 8232 | codepoint = 8233 | codepoint = 8239 | codepoint = 8287 |,
+               codepoint = 12288
+    if is_blank then do
+      if word_start >= 0 then do
+        word_count = word_count + 1
+        base = (word_count - 1) * 2
+        spans[base + 1] = word_start
+        spans[base + 2] = index - word_start
+        word_start = -1
+      end
+    end
+    else if word_start < 0 then word_start = index
+    index = index + 1
+  end
+
+  if quote <> 0 then
+    assembler signal "INVALID_ARGUMENTS", "unmatched quote in quote-aware words"
+  if word_start >= 0 then do
+    word_count = word_count + 1
+    base = (word_count - 1) * 2
+    spans[base + 1] = word_start
+    spans[base + 2] = text_length - word_start
+  end
+  return spans

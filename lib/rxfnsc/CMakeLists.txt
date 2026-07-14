@@ -5,12 +5,15 @@ set(RXFNSC_DIRECT_BIF_MODULES
   RexxClassicBifAbs
   RexxClassicBifAddress
   RexxClassicBifB2x
+  RexxClassicBifC2d
+  RexxClassicBifC2x
   RexxClassicBifCenter
   RexxClassicBifChangestr
   RexxClassicBifCompare
   RexxClassicBifCopies
   RexxClassicBifCountstr
   RexxClassicBifD2x
+  RexxClassicBifD2c
   RexxClassicBifDate
   RexxClassicBifDelstr
   RexxClassicBifDelword
@@ -34,6 +37,7 @@ set(RXFNSC_DIRECT_BIF_MODULES
   RexxClassicBifSymbol
   RexxClassicBifTime
   RexxClassicBifTrace
+  RexxClassicBifTranslate
   RexxClassicBifTrunc
   RexxClassicBifValue
   RexxClassicBifVerify
@@ -43,12 +47,18 @@ set(RXFNSC_DIRECT_BIF_MODULES
   RexxClassicBifWordpos
   RexxClassicBifWords
   RexxClassicBifX2b
+  RexxClassicBifX2c
   RexxClassicBifX2d
+  RexxClassicBifXrange
 )
 
 set(RXFNSC_MODULES
   RexxValue
   RexxStem
+  RexxClassicConfig
+  RexxClassicCharacterScan
+  RexxClassicCharacterOps
+  RexxClassicEncoding
   RexxClassicState
   RexxVariablePool
   RexxClassicBifs
@@ -96,9 +106,38 @@ set(RXFNSC_SELECTORS ${RXFNSC_MODULES})
 set(RXFNSC_DEPS_RexxStem RexxValue)
 set(RXFNSC_DEPS_RexxClassicState RexxValue)
 set(RXFNSC_DEPS_RexxVariablePool RexxValue RexxStem RexxClassicState)
-set(RXFNSC_DEPS_RexxClassicBifs RexxValue RexxStem RexxClassicState RexxVariablePool)
+set(RXFNSC_DEPS_RexxClassicBifs RexxValue RexxStem RexxClassicConfig RexxClassicState RexxVariablePool)
+set(RXFNSC_DEPS_RexxClassicEncoding RexxValue RexxClassicConfig)
+set(RXFNSC_DEPS_RexxClassicCharacterOps RexxValue RexxClassicConfig RexxClassicCharacterScan)
 foreach(MOD IN LISTS RXFNSC_DIRECT_BIF_MODULES)
   set(RXFNSC_DEPS_${MOD} RexxClassicBifs)
+endforeach()
+set(RXFNSC_DEPS_RexxClassicBifC2d RexxClassicBifs RexxClassicEncoding RexxClassicBifX2d)
+set(RXFNSC_DEPS_RexxClassicBifC2x RexxClassicBifs RexxClassicEncoding)
+set(RXFNSC_DEPS_RexxClassicBifD2c RexxClassicBifs RexxClassicEncoding RexxClassicBifD2x)
+set(RXFNSC_DEPS_RexxClassicBifTranslate RexxClassicBifs RexxClassicEncoding)
+set(RXFNSC_DEPS_RexxClassicBifX2c RexxClassicBifs RexxClassicEncoding)
+set(RXFNSC_DEPS_RexxClassicBifXrange RexxClassicBifs RexxClassicEncoding)
+foreach(MOD RexxClassicBifDelword RexxClassicBifSubword RexxClassicBifWord RexxClassicBifWordindex RexxClassicBifWordlength RexxClassicBifWordpos RexxClassicBifWords)
+  set(RXFNSC_DEPS_${MOD} RexxClassicBifs RexxClassicCharacterScan)
+endforeach()
+foreach(MOD RexxClassicBifLastpos RexxClassicBifLeft RexxClassicBifLength RexxClassicBifPos RexxClassicBifReverse RexxClassicBifRight RexxClassicBifSubstr)
+  set(RXFNSC_DEPS_${MOD} RexxClassicBifs RexxClassicCharacterOps)
+endforeach()
+
+foreach(MOD RexxClassicBifAbbrev RexxClassicBifCountstr)
+  set(RXFNSC_DEPS_${MOD} RexxClassicBifs RexxClassicCharacterOps)
+endforeach()
+
+set(RXFNSC_DEPS_RexxClassicBifChangestr RexxClassicBifs RexxClassicCharacterOps RexxClassicCharacterScan)
+set(RXFNSC_DEPS_RexxClassicBifCenter RexxClassicBifs RexxClassicCharacterOps RexxClassicCharacterScan)
+set(RXFNSC_DEPS_RexxClassicBifDelstr RexxClassicBifs RexxClassicCharacterScan)
+foreach(MOD RexxClassicBifInsert RexxClassicBifOverlay)
+  set(RXFNSC_DEPS_${MOD} RexxClassicBifs RexxClassicCharacterOps RexxClassicCharacterScan)
+endforeach()
+
+foreach(MOD RexxClassicBifSpace RexxClassicBifStrip)
+  set(RXFNSC_DEPS_${MOD} RexxClassicBifs RexxClassicCharacterScan)
 endforeach()
 
 if(WIN32)

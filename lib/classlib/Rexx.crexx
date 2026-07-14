@@ -457,8 +457,24 @@ val = .string
  * @return the translated value as a Rexx string object.
  */
   translate: method = .rexx
-    arg tochar = "?????", fromchar = "?????", pad=" "
-    return .rexx(.rxfnsb..translate(val,tochar,fromchar,pad))
+    arg tochar = "", fromchar = "", pad = " "
+    output_supplied = ?tochar
+    input_supplied = ?fromchar
+    pad_supplied = ?pad
+    if output_supplied then do
+      if input_supplied then do
+        if pad_supplied then return .rexx(.rxfnsb..translate(val,tochar,fromchar,pad))
+        return .rexx(.rxfnsb..translate(val,tochar,fromchar))
+      end
+      if pad_supplied then return .rexx(.rxfnsb..translate(val,tochar,,pad))
+      return .rexx(.rxfnsb..translate(val,tochar))
+    end
+    if input_supplied then do
+      if pad_supplied then return .rexx(.rxfnsb..translate(val,,fromchar,pad))
+      return .rexx(.rxfnsb..translate(val,,fromchar))
+    end
+    if pad_supplied then return .rexx(.rxfnsb..translate(val,,,pad))
+    return .rexx(.rxfnsb..translate(val))
 
 /**
  * Truncate this numeric string.

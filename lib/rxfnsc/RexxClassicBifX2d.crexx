@@ -23,7 +23,7 @@
  */
 
 options levelb comments_dash numeric_classic
-namespace rexxclassicbifx2d expose rexxclassicbif_x2d
+namespace rexxclassicbifx2d expose rexxclassicbif_x2d rexxclassic_hex_to_decimal rexxclassic_bounded_digit_length rexxclassic_hex_sign_bit
 import rexxclassicbifs
 import rexxvalue
 
@@ -61,15 +61,15 @@ rexxclassicbif_x2d: procedure = .RexxValue
   negative = 0
   if context.argumentExists(2) then do
     length_text = context.argumentText(2)
-    signed_length = _x2d_bounded_length(length_text, hexadecimal_digits + 1)
+    signed_length = rexxclassic_bounded_digit_length(length_text, hexadecimal_digits + 1)
     if signed_length = 0 then return .RexxValue("0")
     if signed_length < selected_digits then selected_digits = signed_length
     skip_digits = hexadecimal_digits - selected_digits
     if signed_length <= hexadecimal_digits then
-      negative = _x2d_sign_bit(hexadecimal, hexadecimal_length, skip_digits)
+      negative = rexxclassic_hex_sign_bit(hexadecimal, hexadecimal_length, skip_digits)
   end
 
-  result = _x2d_hex_to_decimal(hexadecimal, hexadecimal_length, skip_digits, negative)
+  result = rexxclassic_hex_to_decimal(hexadecimal, hexadecimal_length, skip_digits, negative)
   magnitude_digits = .int
   assembler strlen magnitude_digits,result
   if negative then magnitude_digits = magnitude_digits - 1
@@ -83,7 +83,7 @@ rexxclassicbif_x2d: procedure = .RexxValue
   return .RexxValue(result)
 
 /* Return the high bit of the selected rightmost hexadecimal field. */
-_x2d_sign_bit: procedure = .int
+rexxclassic_hex_sign_bit: procedure = .int
   arg hexadecimal = .string, hexadecimal_length = .int, skip_digits = .int
   codepoint = .int
   blank_character = 32
@@ -100,7 +100,7 @@ _x2d_sign_bit: procedure = .int
   return 0
 
 /* Parse a validated non-negative whole length, capped before native narrowing. */
-_x2d_bounded_length: procedure = .int
+rexxclassic_bounded_digit_length: procedure = .int
   arg length_text = .string, cap = .int
   text_length = .int
   cap_length = .int
@@ -140,7 +140,7 @@ _x2d_bounded_length: procedure = .int
   return result
 
 /* Convert the selected field through mutable little-endian base-1e9 limbs. */
-_x2d_hex_to_decimal: procedure = .string
+rexxclassic_hex_to_decimal: procedure = .string
   arg hexadecimal = .string, hexadecimal_length = .int, skip_digits = .int, negative = .int
   limbs = .int[]
   limb_count = 1

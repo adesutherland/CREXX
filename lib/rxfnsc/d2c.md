@@ -6,21 +6,19 @@ CheckArgs: rWHOLENUM>=0
            rWHOLENUM rWHOLE>=0
 ```
 
-Classic Level C D2C converts a decimal whole-number RexxValue to
-configuration-coded characters. Without `length`, `number` must be
-non-negative and the result has the minimum encoded width. With a non-negative
-`length`, negative numbers are represented in twos-complement and the result is
-padded or truncated to exactly that many coded characters. Positive values use
-the configuration's zero character for padding; negative values use its
-highest-value character.
+The standalone `rexxclassicbif_d2c` entry converts an arbitrary-precision
+Classic whole number to exact configured bytes. Without `length`, the number
+must be non-negative and the minimum byte width is returned. With `length`, the
+result is padded or truncated to exactly that many bytes and negative values
+use twos-complement/sign extension. Length zero returns empty.
 
-Standard context errors include `RXC-LC-40.3`/`40.4` for argument count,
-`RXC-LC-40.5` for an omitted required argument, `RXC-LC-40.11` for a non-whole
-number, `RXC-LC-40.12` for a non-whole length, and `RXC-LC-40.13` for a
-negative length or for a negative number without `length`.
+BYTE results are binary-authoritative. In UTF8, exact output bytes are marked as
+text only when they form canonical valid UTF-8; otherwise they remain binary.
+No decoding, fallback, or normalization occurs.
 
-This contract is intentionally distinct from the native Unicode-scalar helper
-in [`lib/rxfnsb/rexx/d2c.md`](../rxfnsb/rexx/d2c.md). A direct
-`RexxClassicBifD2c` implementation and harness are parked until the repository
-defines the `Config_B2C` bits-to-coded-character service required by D2C and
-X2C. Hard-coding Unicode `appendchar` would not satisfy the Classic contract.
+Standard errors include `RXC-LC-40.3`, `40.4`, `40.5`, `40.12`, and `40.13`.
+The direct optimized/unoptimized harness covers positive/negative widths,
+padding, truncation, empty output, UTF-8 validity flags, and argument errors.
+
+This differs from the native Unicode-scalar Level B helper in
+[`lib/rxfnsb/rexx/d2c.md`](../rxfnsb/rexx/d2c.md).

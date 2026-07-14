@@ -19,14 +19,12 @@ The CheckArgs contract is `rANY rANY oWHOLE>0`. Standard context errors are:
 - `RXC-LC-40.12` for a non-whole start; and
 - `RXC-LC-40.14` for a nonpositive start.
 
-The implementation scans word boundaries and compares source spans by Unicode
-codepoint. It allocates no substrings, has no controller body, and does not rely
-on compiler lowering.
-
-Supporting a configured `Config_OtherBlankCharacters` set is tracked as the
-shared dependency for the word-family Level C BIFs.
+The implementation scans word boundaries and compares source spans in the
+active profile: exact bytes for BYTE, codepoints for UTF8. Both include their
+configured blank sets; UTF8 retains the VM fast path with no additions. It
+allocates no substrings and does not rely on compiler lowering.
 
 `lib/rxfnsc/tests_functional/testRexxClassicBifWordpos.crexx` calls the entry
 directly in optimized and unoptimized overlays. It covers exact/prefix/case
-behavior, repeated and Unicode blanks, start and duplicate matches, empty
-inputs, non-mutation, omission, and all standard argument errors.
+behavior, BYTE/UTF8/configured blanks, start/duplicate matches, empty inputs,
+non-mutation, omission, and all standard argument errors.

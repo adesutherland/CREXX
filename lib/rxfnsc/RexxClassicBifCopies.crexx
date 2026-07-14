@@ -42,9 +42,31 @@ rexxclassicbif_copies: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>=0") = 0 then return .RexxValue("")
 
-  string = context.argumentText(1)
   count = .int
   count = context.argumentText(2) + 0
+  config = context.characterConfig()
+  if config.isByteProfile() then do
+    bytes = context.argument(1).asBinary()
+    result_bytes = .binary
+    if count = 0 then return .RexxValue.fromBinary(result_bytes)
+    if count = 1 then return .RexxValue.fromBinary(bytes)
+    byte_length = .int
+    assembler blen byte_length,bytes
+    if byte_length = 0 then return .RexxValue.fromBinary(result_bytes)
+    remaining = count
+    bit = .int
+    chunk_bytes = .binary
+    assembler bcopy chunk_bytes,bytes
+    do while remaining > 0
+      assembler imod bit,remaining,2
+      if bit <> 0 then assembler bappend result_bytes,chunk_bytes
+      assembler idiv remaining,remaining,2
+      if remaining > 0 then assembler bappend chunk_bytes,chunk_bytes
+    end
+    return .RexxValue.fromBinary(result_bytes)
+  end
+
+  string = context.argumentText(1)
   string_length = .int
   remaining = .int
   bit = .int

@@ -16,6 +16,8 @@ errors = errors + check(substr("abc", 2,, ".") = "bc", "omitted length with pad"
 errors = errors + check(substr("abcdefgh", 1, 8) = "abcdefgh", "whole string")
 errors = errors + check(substr(source, 2, 3) = "ené", "Unicode slice")
 errors = errors + check(substr("12345678", 5, 6, "é") = "5678éé", "Unicode padding")
+embedded_nul = "a" || d2c(0) || "bc"
+errors = errors + check(substr(embedded_nul, 2, 2) = d2c(0) || "b", "slice across embedded U+0000")
 errors = errors + check(source = "René日🙂", "source is not mutated")
 
 large_source = ""

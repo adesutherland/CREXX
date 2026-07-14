@@ -10,9 +10,10 @@ errors = errors + check_value("5", "Now comes the time", "2")
 errors = errors + check_value("0", "Now is the time", "6")
 errors = errors + check_value("4", "This is a test", "1")
 errors = errors + check_value("4", "This is a test  ", "4")
-errors = errors + check_value("2", "one é日 three", "2")
+errors = errors + check_value("2", "one é日 three", "2", "UTF8")
 errors = errors + check_value("0", "", "1")
-errors = errors + check_value("0", "    ", "1")
+errors = errors + check_value("0", "    ", "1", "UTF8")
+errors = errors + check_value("3", "one|two", "2", "BYTE_BAR")
 
 errors = errors + check_count_error("RXC-LC-40.3", 0)
 errors = errors + check_count_error("RXC-LC-40.3", 1)
@@ -28,7 +29,7 @@ if errors = 0 then say "PASS: Level C WORDLENGTH BIF"
 return errors <> 0
 
 check_value: procedure = .int
-  arg expected = .string, string = .string, wordnum = .string
+  arg expected = .string, string = .string, wordnum = .string, profile = "BYTE"
   args = .RexxValue[]
   exists = .int[]
   args[1] = .RexxValue(string)
@@ -36,12 +37,23 @@ check_value: procedure = .int
   exists[1] = 1
   exists[2] = 1
   context = .RexxBifCallContext("WORDLENGTH")
+  call configure_profile context, profile
   call context.setArguments(args, exists)
   result = rexxclassicbif_wordlength(reference context)
   if \context.hasError() & result.asString() = expected & args[1].asString() == string then return 0
   say "FAIL: WORDLENGTH expected" expected "got" result.asString(),
       context.errorCode() context.errorMessage()
   return 1
+
+configure_profile: procedure
+  arg context = .RexxBifCallContext, profile = .string
+  if profile = "UTF8" then call context.useUtf8Profile()
+  else if profile = "BYTE_BAR" then do
+    blanks = .binary
+    blanks = "7C"x
+    call context.setByteOtherBlanks(blanks)
+  end
+  return
 
 check_count_error: procedure = .int
   arg expected_code = .string, count = .int

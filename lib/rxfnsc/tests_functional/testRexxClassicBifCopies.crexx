@@ -1,6 +1,7 @@
 options levelb comments_dash numeric_classic
 import rexxclassicbifs
 import rexxclassicbifcopies
+import rexxclassicencoding
 import rexxvalue
 
 errors = 0
@@ -11,6 +12,7 @@ errors = errors + run_check("abc", "abc", "1")
 errors = errors + run_check("", "", "50")
 errors = errors + run_check("ababababab", "ab", "5")
 errors = errors + run_check("☺☺☺☺", "☺", "4")
+errors = errors + check_byte_profile()
 errors = errors + check_large()
 
 errors = errors + check_count_error("RXC-LC-40.3", 0)
@@ -34,10 +36,27 @@ run_check: procedure = .int
   exists[1] = 1
   exists[2] = 1
   context = .RexxBifCallContext("COPIES")
+  call context.useUtf8Profile()
   call context.setArguments(args, exists)
   result = .rexxclassicbifcopies..rexxclassicbif_copies(reference context)
   if \context.hasError() & result.asString() = expected then return 0
   say "FAIL: COPIES expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_byte_profile: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes("FF00"))
+  args[2] = .RexxValue("3")
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("COPIES")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifcopies..rexxclassicbif_copies(reference context)
+  actual = rexxclassic_bytes_to_hex(result.asBinary())
+  if \context.hasError() & actual = "FF00FF00FF00" & \result.hasText() then return 0
+  say "FAIL: COPIES BYTE expected FF00FF00FF00 got" actual result.hasText(),
       context.errorCode() context.errorMessage()
   return 1
 
@@ -49,6 +68,7 @@ check_large: procedure = .int
   exists[1] = 1
   exists[2] = 1
   context = .RexxBifCallContext("COPIES")
+  call context.useUtf8Profile()
   call context.setArguments(args, exists)
   result = .rexxclassicbifcopies..rexxclassicbif_copies(reference context)
   result_text = result.asString()

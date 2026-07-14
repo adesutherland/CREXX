@@ -17,6 +17,8 @@ errors = errors + check_char("x", "🙂🙂x🙂", 1, "B", "🙂")
 errors = errors + check_default("", "　　")
 errors = errors + check_char("", "....", 0, "", ".")
 errors = errors + check_default("", "")
+errors = errors + check_byte_profile()
+errors = errors + check_configured_byte_blank()
 
 edge = ""
 dot = "."
@@ -68,11 +70,49 @@ run_check: procedure = .int
     exists[3] = 1
   end
   context = .RexxBifCallContext("STRIP")
+  call context.useUtf8Profile()
   call context.setArguments(args, exists)
   result = .rexxclassicbifstrip..rexxclassicbif_strip(reference context)
   if \context.hasError() & result.asString() = expected & args[1].asString() = string then return 0
   say "FAIL: STRIP expected" expected "got" result.asString(),
       context.errorCode() context.errorMessage()
+  return 1
+
+check_byte_profile: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  source = "　x　"
+  args[1] = .RexxValue(source)
+  exists[1] = 1
+  context = .RexxBifCallContext("STRIP")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifstrip..rexxclassicbif_strip(reference context)
+  if \context.hasError() & result.asString() == source then return 0
+  say "FAIL: STRIP BYTE removed UTF8-only whitespace",
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_configured_byte_blank: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  source = .binary
+  source = "FF78FF"x
+  blank = .binary
+  blank = "FF"x
+  args[1] = .RexxValue.fromBinary(source)
+  exists[1] = 1
+  context = .RexxBifCallContext("STRIP")
+  call context.setByteOtherBlanks(blank)
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifstrip..rexxclassicbif_strip(reference context)
+  actual = result.asBinary()
+  actual_length = .int
+  first = .int
+  first_index = 0
+  assembler blen actual_length,actual
+  assembler getbyte first,actual,first_index
+  if \context.hasError() & actual_length = 1 & first = 120 then return 0
+  say "FAIL: STRIP configured BYTE blank"
   return 1
 
 check_count_error: procedure = .int

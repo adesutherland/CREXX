@@ -1,6 +1,7 @@
 options levelb comments_dash numeric_classic
 import rexxclassicbifs
 import rexxclassicbifinsert
+import rexxclassicencoding
 import rexxvalue
 
 errors = 0
@@ -16,6 +17,7 @@ errors = errors + check_length("def", "abc", "def", "2", "0")
 errors = errors + check_omitted_before("123--abc", "123", "abc", "5", "-")
 errors = errors + check_before("aé日b", "日", "aéb", "2")
 errors = errors + check_pad("ab··X··", "X", "ab", "4", "3", "·")
+errors = errors + check_byte_profile()
 errors = errors + check_large()
 
 errors = errors + check_count_error("RXC-LC-40.3", 0)
@@ -75,10 +77,29 @@ run_check: procedure = .int
     exists[5] = 1
   end
   context = .RexxBifCallContext("INSERT")
+  call context.useUtf8Profile()
   call context.setArguments(args, exists)
   result = rexxclassicbif_insert(reference context)
   if \context.hasError() & result.asString() = expected then return 0
   say "FAIL: INSERT expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_byte_profile: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes("FF"))
+  args[2] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes("C3A9"))
+  args[3] = .RexxValue("1")
+  exists[1] = 1
+  exists[2] = 1
+  exists[3] = 1
+  context = .RexxBifCallContext("INSERT")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_insert(reference context)
+  actual = rexxclassic_bytes_to_hex(result.asBinary())
+  if \context.hasError() & actual = "C3FFA9" & \result.hasText() then return 0
+  say "FAIL: INSERT BYTE expected C3FFA9 got" actual result.hasText(),
       context.errorCode() context.errorMessage()
   return 1
 
@@ -94,6 +115,7 @@ check_large: procedure = .int
     exists[i] = 1
   end
   context = .RexxBifCallContext("INSERT")
+  call context.useUtf8Profile()
   call context.setArguments(args, exists)
   result = rexxclassicbif_insert(reference context)
   text = result.asString()

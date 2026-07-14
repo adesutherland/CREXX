@@ -25,6 +25,8 @@
 options levelb comments_dash numeric_classic
 namespace rexxclassicbifinsert expose rexxclassicbif_insert
 import rexxclassicbifs
+import rexxclassiccharacterops
+import rexxclassiccharacterscan
 import rexxvalue
 
 /**
@@ -42,13 +44,59 @@ rexxclassicbif_insert: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rANY oWHOLE>=0 oWHOLE>=0 oPAD") = 0 then return .RexxValue("")
 
-  new_string = context.argumentText(1)
-  target = context.argumentText(2)
   before = 0
   if context.argumentExists(3) then before = context.argumentText(3) + 0
   length_supplied = context.argumentExists(4)
   insert_length = 0
   if length_supplied then insert_length = context.argumentText(4) + 0
+  config = context.characterConfig()
+
+  if config.isByteProfile() then do
+    new_bytes = context.argument(1).asBinary()
+    target_bytes = context.argument(2).asBinary()
+    pad_bytes = .binary
+    if context.argumentExists(5) then pad_bytes = context.argument(5).asBinary()
+    else pad_bytes = " " as .binary
+    new_length = .int
+    target_length = .int
+    pad_byte = .int
+    pad_index = 0
+    assembler blen new_length,new_bytes
+    assembler blen target_length,target_bytes
+    assembler getbyte pad_byte,pad_bytes,pad_index
+    if \length_supplied then insert_length = new_length
+    if insert_length = 0 & before <= target_length then return .RexxValue.fromBinary(target_bytes)
+    result_bytes = .binary
+    if before > 0 then do
+      if before >= target_length then do
+        assembler bappend result_bytes,target_bytes
+        if before > target_length then do
+          padding_needed = before - target_length
+          padding_bytes = rexxclassic_byte_slice_pad("" as .binary,0,0,padding_needed,pad_byte)
+          assembler bappend result_bytes,padding_bytes
+        end
+      end
+      else do
+        segment_bytes = rexxclassic_byte_slice(target_bytes,0,before)
+        assembler bappend result_bytes,segment_bytes
+      end
+    end
+    if insert_length > 0 then do
+      copy_length = insert_length
+      if new_length < copy_length then copy_length = new_length
+      segment_bytes = rexxclassic_byte_slice_pad(new_bytes,0,copy_length,insert_length,pad_byte)
+      assembler bappend result_bytes,segment_bytes
+    end
+    if before < target_length then do
+      tail_length = target_length - before
+      segment_bytes = rexxclassic_byte_slice(target_bytes,before,tail_length)
+      assembler bappend result_bytes,segment_bytes
+    end
+    return .RexxValue.fromBinary(result_bytes)
+  end
+
+  new_string = context.argumentText(1)
+  target = context.argumentText(2)
   pad = " "
   if context.argumentExists(5) then pad = context.argumentText(5)
 

@@ -68,14 +68,15 @@ build useful editor support, standard-diagnostic experience, and incremental
 runtime coverage without claiming full Classic Rexx compatibility before the
 remaining lowering / runtime work is complete.
 
-Level C also owns the Classic Rexx byte-text compatibility decision. Level B and
-Level G `.string` values are valid UTF-8 text, while `.binary` carries arbitrary
-bytes. A future Level C lowering path may choose a compatibility option such as
-`bytetext`, but that choice should be isolated to Level C and accompanied by an
-audit of Classic BIFs so byte-oriented legacy programs and UTF text programs do
-not silently share incompatible semantics.
+Level C owns the Classic Rexx byte-text compatibility decision. Direct Level C
+BIF calls carry a `RexxClassicConfig` through `RexxBifCallContext`: `BYTE` is
+the default compatibility profile and `UTF8` is the opt-in text profile. This
+library/runtime configuration does not require a compiler or lowering change.
+Per-value `RexxValue` flags describe text/binary validity but do not select the
+profile. See [Unicode](unicode.md) for the exact contracts.
 
-Level G owns richer Unicode services above the Level B codepoint contract. The
+Level G owns grapheme-aware and richer Unicode services above the Level B
+codepoint contract. The
 VM reserves private status bits for normalization-form cache knowledge, but NFC,
 NFD, NFKC, and NFKD bits should only be assigned meaning when Level G APIs set
 and consume them. `utf8proc` is the preferred first implementation candidate for

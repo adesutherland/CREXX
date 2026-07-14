@@ -1,7 +1,7 @@
 # Level C Classic BIF Implementation Notes
 
 Status: extracted implementation reference for Level C BIF migration
-Last updated: 2026-06-20
+Last updated: 2026-07-14
 
 Source: publicly available Classic REXX language specification.
 
@@ -61,6 +61,12 @@ can see the function name, argument values, argument presence, caller numeric
 settings, current variable pool, source lines, condition state, trace state,
 stream state, and host/configuration adapters.
 
+`RexxBifCallContext` also owns the active `RexxClassicConfig`. Its `BYTE`
+profile is the default and uses exact bytes as Classic character units. Its
+opt-in `UTF8` profile requires valid UTF-8 and uses Unicode codepoints. The
+configuration also carries profile-typed additional blank characters. Value
+flags describe a `RexxValue` representation; they never select the profile.
+
 ### Numeric Context
 
 The specification helper code uses three numeric contexts:
@@ -87,7 +93,7 @@ starts with `r` for required or `o` for optional, followed by a type rule.
 | Rule | Required behavior | Generic message codes |
 | --- | --- | --- |
 | Argument count | Too few, too many, or missing required arguments fail before function logic. | `40.3`, `40.4`, `40.5` |
-| `ANY` | Any string/RexxValue string view is accepted. | none |
+| `ANY` | BYTE accepts any exact byte value. UTF8 requires a valid text view. | `23.1` for invalid UTF8 data |
 | `NUM` | Argument must be numeric under caller settings; normalized numeric value replaces the argument copy. | `40.9`, `40.11` |
 | `WHOLE` | Whole number under BIF settings; normalized whole number replaces the argument copy. | `40.12` |
 | `WHOLE>=0` | Whole number greater than or equal to zero. | `40.12`, `40.13` |
@@ -95,7 +101,7 @@ starts with `r` for required or `o` for optional, followed by a type rule.
 | `WHOLENUM` | D2X-style whole number under caller settings. | `40.12` |
 | `WHOLENUM>=0` | D2X-style non-negative whole number under caller settings. | `40.12`, `40.13` |
 | `0_90` | `ERRORTEXT` message code in range `0` through `90.9`, without exponential notation. | `40.11`, source helper calls `40.16`; reconcile with catalog before implementation |
-| `PAD` | Exactly one character. | `40.23` |
+| `PAD` | Exactly one BYTE byte or one UTF8 codepoint, according to the active profile. | `40.23` |
 | `HEX` | Hex string according to `DATATYPE(value, "X")`. | `40.25` |
 | `BIN` | Binary string according to `DATATYPE(value, "B")`. | `40.24` |
 | `SYM` | Valid symbol according to `DATATYPE(value, "S")`. | `40.26` |
@@ -108,11 +114,13 @@ The extracted helper visibly calls `40.16` for the `0_90` range failure,
 while the extracted catalog has a nearby `40.17` range-specific text. Treat this
 as a source reconciliation item before wiring `ERRORTEXT` tests.
 
-## Implemented Proof Slice
+## Implemented Runtime Slice
 
-The first executable proof slice lives in `lib/rxfnsc/RexxClassicBifs.crexx`.
-It is intentionally string-first and shares the `rxfnsc` runtime image with
-`RexxValue`, `RexxStem`, and `RexxVariablePool`.
+The shared context and legacy proof dispatcher live in
+`lib/rxfnsc/RexxClassicBifs.crexx`. New direct BIF implementations are
+standalone `RexxClassicBif*.crexx` modules in the same runtime image with
+`RexxValue`, `RexxStem`, and `RexxVariablePool`; direct harnesses do not rely on
+compiler lowering or the common dispatcher.
 
 Implemented BIFs:
 
@@ -134,7 +142,8 @@ rexxclassicbif_length(value)
 ```
 
 `RexxBifCallContext` carries the uppercased BIF name, `RexxValue` argument
-values, argument presence flags, and a live caller `RexxVariablePool` reference.
+values, argument presence flags, a live caller `RexxVariablePool` reference,
+and the active `RexxClassicConfig` character profile.
 The argument count is derived from the presence mask, not from the value array,
 so omitted positions such as `xxx(,a,,b)` can be represented faithfully. Level
 C lowering now materialises normal multi-argument dispatcher frames, including
@@ -212,6 +221,23 @@ The current `lib/rxfnsb/rexx/raise.crexx` is only a placeholder printer. Level C
 needs a real condition/message bridge using the specification message catalog and
 the runtime condition model.
 
+### Character Configuration
+
+The character configuration is implemented entirely in the library/runtime:
+
+- `RexxClassicConfig` supplies BYTE/UTF8 selection and configured blanks;
+- `RexxClassicCharacterScan` supplies profile-aware word scans, retaining the
+  VM Unicode fast path when UTF8 has no extra blanks;
+- `RexxClassicEncoding` supplies exact byte/hex conversion and UTF-8 validity;
+- the Unicode data contract is pinned to Unicode 17.0.0;
+- BYTE `Config_Xrange`, `Config_C2B`, and `Config_B2C` are exact octet
+  operations; UTF8 outputs gain a text flag only when their exact bytes are
+  valid UTF-8.
+
+UTF8 XRANGE is unavailable because Classic XRANGE is a configured coded-byte
+range, not a Unicode scalar or grapheme range. No compiler or lowering change
+is required for these direct BIF services.
+
 ### Configuration Dependencies
 
 Several BIFs are not pure string/numeric functions. They depend on host or
@@ -284,14 +310,14 @@ source for planning. This is implementation guidance, not a code copy.
 | `STRIP` | `STRIP(string [,option [,char]])` | `rANY oLTB oPAD` | Strips leading, trailing, or both occurrences of `char`; default is both blanks. | Option first letter: `L`, `T`, `B`. |
 | `SUBSTR` | `SUBSTR(string, start [,length [,pad]])` | `rANY rWHOLE>0 oWHOLE>=0 oPAD` | Returns substring from `start`, padding if requested length extends beyond input. | Standard checks that requested start can reference the string or raise invalid data as appropriate. |
 | `SUBWORD` | `SUBWORD(string, start [,count])` | `rANY rWHOLE>0 oWHOLE>=0` | Returns a substring made of words from word `start`, for `count` words or through the end. | Share word scanner with `WORD*` functions. |
-| `TRANSLATE` | `TRANSLATE(string [,outputTable [,inputTable [,pad]]])` | `rANY oANY oANY oPAD` | Uppercases by configuration when no tables are supplied; otherwise maps characters from input table to output table, using pad for missing output entries. | Requires configuration uppercase/range services. |
+| `TRANSLATE` | `TRANSLATE(string [,outputTable [,inputTable [,pad]]])` | `rANY oANY oANY oPAD` | Uppercases by configuration when no tables are supplied; otherwise maps characters from input table to output table, using pad for missing output entries. | Direct BYTE/UTF8 implementation; output-with-omitted-input uses BYTE XRANGE and is unavailable in UTF8. |
 | `VERIFY` | `VERIFY(string, reference [,option [,start]])` | `rANY rANY oMN oWHOLE>0` | With `M`, returns first character position in `string` that is in `reference`; with `N`, first position not in `reference`; `0` if no such character. | Default option is `N`, default start is `1`. |
 | `WORD` | `WORD(string, n)` | `rANY rWHOLE>0` | Returns word `n`, or null if absent. | Can delegate to `SUBWORD(string,n,1)`. |
 | `WORDINDEX` | `WORDINDEX(string, n)` | `rANY rWHOLE>0` | Returns the character index of word `n`, or `0` if absent. | Needs shared word scanner that preserves original spacing. |
 | `WORDLENGTH` | `WORDLENGTH(string, n)` | `rANY rWHOLE>0` | Returns the length of word `n`, or `0` if absent. | Can share `WORD` extraction. |
 | `WORDPOS` | `WORDPOS(phrase, string [,start])` | `rANY rANY oWHOLE>0` | Finds a sequence of words from `phrase` in `string`; returns the word position or `0`. | Compare normalized word sequences, not raw spacing. |
 | `WORDS` | `WORDS(string)` | `rANY` | Counts blank-delimited words. | Share word scanner. |
-| `XRANGE` | `XRANGE([start [,end]])` | `oPAD oPAD` | Returns configuration-defined characters from start through end. | Requires `Config_Xrange`; not a Unicode range API. |
+| `XRANGE` | `XRANGE([start [,end]])` | `oPAD oPAD` | Returns configuration-defined characters from start through end. | Direct BYTE implementation; deliberately unavailable in UTF8. |
 
 ### Arithmetic Built-in Functions
 
@@ -326,12 +352,12 @@ source for planning. This is implementation guidance, not a code copy.
 | `BITAND` | `BITAND(left [,right [,pad]])` | `rANY oANY oPAD` | Converts encoded characters to bits, applies bitwise AND over the common length, and preserves the longer tail. | Depends on `Config_C2B` and coded-character policy. |
 | `BITOR` | `BITOR(left [,right [,pad]])` | same as `BITAND` | Same as `BITAND`, using bitwise OR. | Implement through one shared bit helper keyed by `#Bif`. |
 | `BITXOR` | `BITXOR(left [,right [,pad]])` | same as `BITAND` | Same as `BITAND`, using bitwise exclusive OR. | Implement through one shared bit helper keyed by `#Bif`. |
-| `C2D` | `C2D(string [,length])` | `rANY oWHOLE>=0` | Converts coded characters to decimal. With length, treats the rightmost `length` characters as a signed twos-complement value. | Raises `40.35` when result cannot fit current digits. |
-| `C2X` | `C2X(string)` | `rANY` | Converts coded characters to hexadecimal through configuration bit encoding. | Empty input returns null. |
-| `D2C` | `D2C(number [,length])` | `rWHOLENUM>=0`, or `rWHOLENUM rWHOLE>=0` | Converts decimal whole number to coded characters; with length, pads/truncates using zero or high-value characters depending on sign. | Depends on `Config_B2C`; negative values use twos-complement. |
+| `C2D` | `C2D(string [,length])` | `rANY oWHOLE>=0` | Converts exact coded bytes to decimal. With length, treats the rightmost `length` bytes as a signed twos-complement value. | Direct implementation; raises `40.35` when result cannot fit current digits. |
+| `C2X` | `C2X(string)` | `rANY` | Converts exact coded bytes to uppercase hexadecimal. | Direct implementation; empty input returns null. |
+| `D2C` | `D2C(number [,length])` | `rWHOLENUM>=0`, or `rWHOLENUM rWHOLE>=0` | Converts a decimal whole number to exact coded bytes; with length, pads/truncates according to sign. | Direct implementation; negative values use twos-complement. |
 | `D2X` | `D2X(number [,length])` | `rWHOLENUM>=0`, or `rWHOLENUM rWHOLE>=0` | Converts decimal whole number to hex; with length, pads/truncates with `0` or `F` depending on sign. | Negative values use twos-complement. |
 | `X2B` | `X2B(hex)` | `rHEX` | Removes blanks and converts hex digit text to binary digit text. | Empty input returns null. |
-| `X2C` | `X2C(hex)` | `rHEX` | Converts hex digit text to coded characters, left-padding to a full byte as needed. | Depends on `Config_B2C`; empty input returns null. |
+| `X2C` | `X2C(hex)` | `rHEX` | Converts hex digit text to exact coded bytes, left-padding to a full byte as needed. | Direct implementation; empty input returns null. |
 | `X2D` | `X2D(hex [,length])` | `rHEX oWHOLE>=0` | Converts hex digit text to decimal. With length, interprets sign bit for twos-complement. | Raises `40.35` when result cannot fit current digits. |
 
 ### Input/Output Built-in Functions

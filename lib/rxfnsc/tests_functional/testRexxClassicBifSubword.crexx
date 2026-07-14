@@ -13,8 +13,9 @@ errors = errors + check_count("is   the", "Now is   the  time", "2", "2")
 errors = errors + check_count("the  time", "Now is the  time   ", "3", "99")
 errors = errors + check_count("", "Now is the time", "2", "0")
 errors = errors + check_omitted("one two", "  one two  ", "1")
-errors = errors + check_count("two　three", "one two　three", "2", "2")
+errors = errors + check_count("two　three", "one two　three", "2", "2", "UTF8")
 errors = errors + check_omitted("", "", "1")
+errors = errors + check_count("two|three", "one|two|three", "2", "2", "BYTE_BAR")
 
 errors = errors + check_count_error("RXC-LC-40.3", 0)
 errors = errors + check_count_error("RXC-LC-40.3", 1)
@@ -32,15 +33,15 @@ if errors = 0 then say "PASS: Level C SUBWORD BIF"
 return errors <> 0
 
 check_omitted: procedure = .int
-  arg expected = .string, string = .string, start = .string
-  return run_check(expected, string, start, 0, "")
+  arg expected = .string, string = .string, start = .string, profile = "BYTE"
+  return run_check(expected, string, start, 0, "", profile)
 
 check_count: procedure = .int
-  arg expected = .string, string = .string, start = .string, wordcount = .string
-  return run_check(expected, string, start, 1, wordcount)
+  arg expected = .string, string = .string, start = .string, wordcount = .string, profile = "BYTE"
+  return run_check(expected, string, start, 1, wordcount, profile)
 
 run_check: procedure = .int
-  arg expected = .string, string = .string, start = .string, count_supplied = .boolean, wordcount = .string
+  arg expected = .string, string = .string, start = .string, count_supplied = .boolean, wordcount = .string, profile = .string
   args = .RexxValue[]
   exists = .int[]
   args[1] = .RexxValue(string)
@@ -52,12 +53,23 @@ run_check: procedure = .int
     exists[3] = 1
   end
   context = .RexxBifCallContext("SUBWORD")
+  call configure_profile context, profile
   call context.setArguments(args, exists)
   result = rexxclassicbif_subword(reference context)
   if \context.hasError() & result.asString() == expected & args[1].asString() == string then return 0
   say "FAIL: SUBWORD expected" expected "got" result.asString(),
       context.errorCode() context.errorMessage()
   return 1
+
+configure_profile: procedure
+  arg context = .RexxBifCallContext, profile = .string
+  if profile = "UTF8" then call context.useUtf8Profile()
+  else if profile = "BYTE_BAR" then do
+    blanks = .binary
+    blanks = "7C"x
+    call context.setByteOtherBlanks(blanks)
+  end
+  return
 
 check_count_error: procedure = .int
   arg expected_code = .string, count = .int

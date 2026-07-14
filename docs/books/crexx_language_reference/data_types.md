@@ -230,6 +230,17 @@ prefix = "ff"x as .binary
 packet = prefix || "OK"      /* bytes ff 4f 4b */
 ```
 
+Level B string length, indexing, slicing, search, and reversal use Unicode
+codepoints. They do not use UTF-8 bytes and do not imply grapheme boundaries.
+Normalization and full case folding are explicit future Level G services; no
+string conversion or ordinary Level B operation normalizes implicitly.
+
+Level C direct BIFs retain the `.string`/`.binary` distinction but apply the
+character profile held by their call context. `BYTE` treats exact bytes as
+Classic character units; `UTF8` requires valid UTF-8 for text operations and
+uses codepoint units. A value's binary/text cache flags do not select that
+profile. See [Unicode](unicode.md).
+
 The `rxfnsb` library provides byte-oriented helpers for common binary work:
 `binlength`, `binbyte`, `binsetbyte`, `binsubstr`, `binconcat`, `binoverlay`,
 `bininsert`, `bindelstr`, `binpos`, `bincompare`, `bin2x`, and `x2bin`.

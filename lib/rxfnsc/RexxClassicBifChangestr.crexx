@@ -25,6 +25,8 @@
 options levelb comments_dash numeric_classic
 namespace rexxclassicbifchangestr expose rexxclassicbif_changestr
 import rexxclassicbifs
+import rexxclassiccharacterops
+import rexxclassiccharacterscan
 import rexxvalue
 
 /**
@@ -41,6 +43,43 @@ rexxclassicbif_changestr: procedure = .RexxValue
   context = dereference context_ref
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rANY rANY") = 0 then return .RexxValue("")
+
+  config = context.characterConfig()
+  if config.isByteProfile() then do
+    needle_bytes = context.argument(1).asBinary()
+    haystack_bytes = context.argument(2).asBinary()
+    replacement_bytes = context.argument(3).asBinary()
+    needle_length = .int
+    haystack_length = .int
+    position = 1
+    found = .int
+    segment_start = .int
+    segment_length = .int
+    segment_bytes = .binary
+    result_bytes = .binary
+    assembler blen needle_length,needle_bytes
+    if needle_length = 0 then return .RexxValue.fromBinary(haystack_bytes)
+    assembler blen haystack_length,haystack_bytes
+    do forever
+      found = rexxclassic_bytes_find(needle_bytes,haystack_bytes,position)
+      if found = 0 then leave
+      segment_length = found - position
+      if segment_length > 0 then do
+        segment_start = position - 1
+        segment_bytes = rexxclassic_byte_slice(haystack_bytes,segment_start,segment_length)
+        assembler bappend result_bytes,segment_bytes
+      end
+      assembler bappend result_bytes,replacement_bytes
+      position = found + needle_length
+    end
+    if position <= haystack_length then do
+      segment_start = position - 1
+      segment_length = haystack_length - position + 1
+      segment_bytes = rexxclassic_byte_slice(haystack_bytes,segment_start,segment_length)
+      assembler bappend result_bytes,segment_bytes
+    end
+    return .RexxValue.fromBinary(result_bytes)
+  end
 
   needle = context.argumentText(1)
   haystack = context.argumentText(2)

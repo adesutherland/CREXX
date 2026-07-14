@@ -1,6 +1,7 @@
 options levelb comments_dash numeric_classic
 import rexxclassicbifs
 import rexxclassicbifsubstr
+import rexxclassicencoding
 import rexxvalue
 
 errors = 0
@@ -15,6 +16,7 @@ errors = errors + check_default("", "abc", "5")
 errors = errors + check_omitted_length_pad("bc", "abc", "2", ".")
 errors = errors + check_length("ené", "René日🙂", "2", "3")
 errors = errors + check_pad("5678éé", "12345678", "5", "6", "é")
+errors = errors + check_byte_profile()
 
 large_source = ""
 x = "x"
@@ -80,10 +82,31 @@ run_check: procedure = .int
     exists[4] = 1
   end
   context = .RexxBifCallContext("SUBSTR")
+  call context.useUtf8Profile()
   call context.setArguments(args, exists)
   result = .rexxclassicbifsubstr..rexxclassicbif_substr(reference context)
   if \context.hasError() & result.asString() = expected & args[1].asString() = string then return 0
   say "FAIL: SUBSTR expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_byte_profile: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  source = .binary
+  source = "C3A941"x
+  args[1] = .RexxValue.fromBinary(source)
+  args[2] = .RexxValue("2")
+  args[3] = .RexxValue("1")
+  exists[1] = 1
+  exists[2] = 1
+  exists[3] = 1
+  context = .RexxBifCallContext("SUBSTR")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifsubstr..rexxclassicbif_substr(reference context)
+  actual = rexxclassic_bytes_to_hex(result.asBinary())
+  if \context.hasError() & actual = "A9" & \result.hasText() then return 0
+  say "FAIL: SUBSTR BYTE expected A9 got" actual result.hasText(),
       context.errorCode() context.errorMessage()
   return 1
 

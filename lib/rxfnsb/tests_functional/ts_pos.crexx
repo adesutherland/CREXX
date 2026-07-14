@@ -19,6 +19,9 @@ errors = errors + check(pos("", "") = 0, "both empty")
 errors = errors + check(pos("b", "b") = 1, "whole-string match")
 errors = errors + check(pos("c", "a→bc") = 4, "Unicode character position")
 errors = errors + check(pos("→", "a→b→c", 3) = 4, "Unicode start position")
+embedded_nul = "a" || d2c(0) || "bc" || d2c(0) || "d"
+errors = errors + check(pos("bc", embedded_nul) = 3, "match after embedded U+0000")
+errors = errors + check(pos(d2c(0), embedded_nul, 3) = 5, "embedded U+0000 needle")
 errors = errors + check(needle = "foo" & haystack = "a foo foo b", "arguments are not mutated")
 
 large = ""

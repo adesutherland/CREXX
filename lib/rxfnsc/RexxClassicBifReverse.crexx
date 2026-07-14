@@ -25,10 +25,11 @@
 options levelb comments_dash numeric_classic
 namespace rexxclassicbifreverse expose rexxclassicbif_reverse
 import rexxclassicbifs
+import rexxclassiccharacterops
 import rexxvalue
 
 /**
- * Reverse a Classic string by Unicode codepoint.
+ * Reverse a Classic value by configured BYTE or UTF8 character units.
  *
  * @bif REVERSE
  * @signature REVERSE(string)
@@ -42,17 +43,12 @@ rexxclassicbif_reverse: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return .RexxValue("")
 
-  string = context.argumentText(1)
-  string_length = .int
-  index = .int
-  codepoint = .int
-  result = ""
-
-  assembler strlen string_length,string
-  index = string_length - 1
-  do while index >= 0
-    assembler strchar codepoint,string,index
-    assembler appendchar result,codepoint
-    index = index - 1
+  config = context.characterConfig()
+  if config.isByteProfile() then do
+    bytes = context.argument(1).asBinary()
+    result_bytes = rexxclassic_reverse_bytes(bytes)
+    return .RexxValue.fromBinary(result_bytes)
   end
-  return .RexxValue(result)
+  text = context.argumentText(1)
+  result_text = rexxclassic_reverse_text(text)
+  return .RexxValue(result_text)

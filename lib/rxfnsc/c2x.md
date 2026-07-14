@@ -5,25 +5,17 @@ C2X(string)
 CheckArgs: rANY
 ```
 
-Classic Level C C2X accepts one present RexxValue and converts its coded
-characters to uppercase hexadecimal through the configuration's character-to-
-bits encoding. It does not inherit the native Level B low-code-point-byte
-behavior.
+The standalone `rexxclassicbif_c2x` entry converts each exact configured byte
+to two uppercase hexadecimal digits. Empty and multi-byte inputs are valid and
+encoded leading zeros are retained.
 
-The empty string is valid, multi-character input is valid, and encoded leading
-zero digits are retained.
+BYTE accepts arbitrary bytes. UTF8 requires valid UTF-8 text, then converts its
+exact UTF-8 representation. Standard errors are `RXC-LC-40.3`, `40.4`, `40.5`,
+and UTF8 invalid-data `23.1`.
 
-```rexx
-C2X("M") /* configuration encoding of M, commonly 4D or D4 */
-C2X("")  /* empty */
-```
+The optimized/unoptimized direct harness covers text, multibyte UTF-8, arbitrary
+binary bytes, empty input, argument errors, and source preservation without
+compiler lowering.
 
-Standard context errors are `RXC-LC-40.3` for too few arguments,
-`RXC-LC-40.4` for too many, and `RXC-LC-40.5` for an omitted required
-argument.
-
-A direct `RexxClassicBifC2x` implementation and harness are parked until the
-repository defines the `Config_C2B` coded-character-to-bits service shared by
-C2X, C2D, BITAND, BITOR, and BITXOR. Hard-coding the Level B low-byte behavior
-would not satisfy this contract. The native Level B API is documented
-separately in [`lib/rxfnsb/rexx/c2x.md`](../rxfnsb/rexx/c2x.md).
+The native Level B low-codepoint helper remains a different API, documented in
+[`lib/rxfnsb/rexx/c2x.md`](../rxfnsb/rexx/c2x.md).

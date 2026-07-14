@@ -1,6 +1,7 @@
 options levelb comments_dash numeric_classic
 import rexxclassicbifs
 import rexxclassicbifdelstr
+import rexxclassicencoding
 import rexxvalue
 
 errors = 0
@@ -14,6 +15,7 @@ errors = errors + check_length("abc", "abcde", "4", "20")
 errors = errors + check_omitted("", "abcde", "1")
 errors = errors + check_omitted("", "", "1")
 errors = errors + check_length("az", "aé日z", "2", "2")
+errors = errors + check_byte_profile()
 
 errors = errors + check_count_error("RXC-LC-40.3", 0)
 errors = errors + check_count_error("RXC-LC-40.3", 1)
@@ -51,10 +53,29 @@ run_check: procedure = .int
     exists[3] = 1
   end
   context = .RexxBifCallContext("DELSTR")
+  call context.useUtf8Profile()
   call context.setArguments(args, exists)
   result = rexxclassicbif_delstr(reference context)
   if \context.hasError() & result.asString() = expected then return 0
   say "FAIL: DELSTR expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_byte_profile: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes("C3A978"))
+  args[2] = .RexxValue("2")
+  args[3] = .RexxValue("1")
+  exists[1] = 1
+  exists[2] = 1
+  exists[3] = 1
+  context = .RexxBifCallContext("DELSTR")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_delstr(reference context)
+  actual = rexxclassic_bytes_to_hex(result.asBinary())
+  if \context.hasError() & actual = "C378" & \result.hasText() then return 0
+  say "FAIL: DELSTR BYTE expected C378 got" actual result.hasText(),
       context.errorCode() context.errorMessage()
   return 1
 

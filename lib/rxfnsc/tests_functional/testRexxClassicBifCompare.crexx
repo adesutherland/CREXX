@@ -15,6 +15,7 @@ errors = errors + check_default("1", "x", "")
 errors = errors + check_pad("0", "foo", "f", "o")
 errors = errors + check_default("2", "aé", "aê")
 errors = errors + check_pad("0", "é", "é·", "·")
+errors = errors + check_byte_default("3", "aé", "aê")
 
 errors = errors + check_count_error("RXC-LC-40.3", 0)
 errors = errors + check_count_error("RXC-LC-40.3", 1)
@@ -48,10 +49,27 @@ run_check: procedure = .int
     exists[3] = 1
   end
   context = .RexxBifCallContext("COMPARE")
+  call context.useUtf8Profile()
   call context.setArguments(args, exists)
   result = rexxclassicbif_compare(reference context)
   if \context.hasError() & result.asString() = expected then return 0
   say "FAIL: COMPARE expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_byte_default: procedure = .int
+  arg expected = .string, left = .string, right = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(left)
+  args[2] = .RexxValue(right)
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("COMPARE")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_compare(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: COMPARE BYTE expected" expected "got" result.asString(),
       context.errorCode() context.errorMessage()
   return 1
 

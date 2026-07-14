@@ -77,6 +77,9 @@ test_text_methods: procedure = .int
   errors = errors + check(.rexx("abc").substr(2, 6, ".").toString() = "bc....", "substr padding")
 
   errors = errors + check(.rexx("abbc").translate("&", "b").toString() = "a&&c", "translate")
+  errors = errors + check(.rexx("Foo").translate().toString() = "FOO", "translate omitted tables")
+  errors = errors + check(.rexx("a b").translate(, " ", "*").toString() = "a*b", "translate omitted output")
+  errors = errors + check(.rexx("abc").translate(,, "$").toString() = "ABC", "translate pad does not replace uppercase mode")
   errors = errors + check(.rexx("Fou-Baa").upper().toString() = "FOU-BAA", "upper")
   errors = errors + check(.rexx("AB4T").verify("1234567890", "M") = 3, "verify")
   errors = errors + check(.rexx("i").sequence("l").toString() = "ijkl", "sequence")

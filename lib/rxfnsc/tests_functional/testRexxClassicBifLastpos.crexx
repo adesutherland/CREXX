@@ -20,6 +20,7 @@ errors = errors + check_default("0", "", "anything")
 errors = errors + check_default("0", "a", "")
 errors = errors + check_default("4", "→", "a→b→c")
 errors = errors + check_end("2", "→", "a→b→c", "3")
+errors = errors + check_byte_profile("4", "b", "aéb")
 errors = errors + check_large()
 
 errors = errors + check_count_error("RXC-LC-40.3", 0)
@@ -56,10 +57,27 @@ run_check: procedure = .int
     exists[3] = 1
   end
   context = .RexxBifCallContext("LASTPOS")
+  call context.useUtf8Profile()
   call context.setArguments(args, exists)
   result = rexxclassicbif_lastpos(reference context)
   if \context.hasError() & result.asString() = expected & args[1].asString() = needle & args[2].asString() = haystack then return 0
   say "FAIL: LASTPOS expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_byte_profile: procedure = .int
+  arg expected = .string, needle = .string, haystack = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(needle)
+  args[2] = .RexxValue(haystack)
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("LASTPOS")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_lastpos(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: LASTPOS BYTE expected" expected "got" result.asString(),
       context.errorCode() context.errorMessage()
   return 1
 

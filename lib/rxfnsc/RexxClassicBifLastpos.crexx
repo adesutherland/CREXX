@@ -25,6 +25,7 @@
 options levelb comments_dash numeric_classic
 namespace rexxclassicbiflastpos expose rexxclassicbif_lastpos
 import rexxclassicbifs
+import rexxclassiccharacterops
 import rexxvalue
 
 /**
@@ -42,8 +43,9 @@ rexxclassicbif_lastpos: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rANY oWHOLE>0") = 0 then return .RexxValue("")
 
-  needle = context.argumentText(1)
-  haystack = context.argumentText(2)
+  needle_value = context.argument(1)
+  haystack_value = context.argument(2)
+  config = context.characterConfig()
   end_supplied = context.argumentExists(3)
   search_end = 0
   if end_supplied then search_end = context.argumentText(3) + 0
@@ -53,9 +55,9 @@ rexxclassicbif_lastpos: procedure = .RexxValue
   match_end = .int
   last_found = 0
 
-  assembler strlen needle_length,needle
+  needle_length = rexxclassic_value_length(needle_value,config)
   if needle_length = 0 then return .RexxValue("0")
-  assembler strlen haystack_length,haystack
+  haystack_length = rexxclassic_value_length(haystack_value,config)
   if haystack_length = 0 then return .RexxValue("0")
 
   if \end_supplied | search_end > haystack_length then search_end = haystack_length
@@ -63,7 +65,7 @@ rexxclassicbif_lastpos: procedure = .RexxValue
 
   found_position = 1
   do forever
-    assembler strpos found_position,needle,haystack
+    found_position = rexxclassic_value_find(needle_value,haystack_value,found_position,config)
     if found_position = 0 then leave
     match_end = found_position + needle_length - 1
     if match_end > search_end then leave

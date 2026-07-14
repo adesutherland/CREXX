@@ -22,25 +22,24 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/** Measure a Unicode quote-aware word. */
 options levelb
-
 namespace rxfnsb expose qwordlength
 
 /**
- * Return the character length of the selected quote-aware word.
- *
- * @param string source text, not modified
+ * @param string source text
  * @param wordnum positive one-based word number
- * @return character length of QWORD's selected span, or zero when absent
- * @signal INVALID_ARGUMENTS wordnum is less than one
+ * @return codepoint length including quote delimiters, or zero when absent
+ * @signal INVALID_ARGUMENTS invalid index or unmatched quote
  */
 qwordlength: procedure = .int
   arg string = .string, wordnum = .int
   if wordnum < 1 then
     assembler signal "INVALID_ARGUMENTS", "QWORDLENGTH word number must be positive"
-
-  wordstr = qword(string,wordnum)
-  wlen = .int
-  assembler strlen wlen,wordstr
-  return wlen
+  spans = qscan_word_spans(string)
+  current_word = 0
+  do length_index = 2 to spans[0] by 2
+    current_word = current_word + 1
+    if current_word = wordnum then return spans[length_index]
+  end
+  return 0

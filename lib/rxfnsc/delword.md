@@ -7,9 +7,11 @@ rexxclassicbif_delword(
   context = reference .RexxBifCallContext) = .RexxValue
 ```
 
-It implements `DELWORD(string, start [,count])`. Words are delimited by the
-VM's Unicode whitespace classification. The blanks before the first deleted
-word are preserved; deleted words and their following blanks are removed.
+It implements `DELWORD(string, start [,count])`. BYTE words use exact byte
+positions and space plus configured blank bytes. UTF8 words use codepoint
+positions and Unicode 17.0.0 `White_Space` plus configured blank codepoints;
+with no additions the scanner retains the VM fast path. The blanks before the
+first deleted word are preserved; deleted words and their following blanks are removed.
 Omitted count deletes through the end, explicit zero changes nothing, and a
 start beyond the available words returns the original string.
 
@@ -25,12 +27,7 @@ The implementation scans the source directly and extracts at most one prefix
 and one suffix. It does not dispatch through the compatibility controller or
 call the `WORDS`, `WORDINDEX`, `WORD`, or `SUBSTR` selectors.
 
-The direct implementation currently uses the VM's standard Unicode whitespace
-set. Supporting a configured `Config_OtherBlankCharacters` set is tracked as a
-shared dependency for the word-family Level C BIFs rather than being hidden in
-this selector.
-
 `lib/rxfnsc/tests_functional/testRexxClassicBifDelword.crexx` calls the entry
 directly in optimized and unoptimized overlays. It covers omitted, zero, and
-oversized counts; leading and Unicode whitespace; word boundaries; empty input;
-and every standard argument error without using the compatibility dispatcher.
+oversized counts; BYTE/UTF8/default/configured blanks; word boundaries; empty
+input; and every standard argument error without using the dispatcher.

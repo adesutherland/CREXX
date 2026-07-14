@@ -25,6 +25,7 @@
 options levelb comments_dash numeric_classic
 namespace rexxclassicbifsubword expose rexxclassicbif_subword
 import rexxclassicbifs
+import rexxclassiccharacterscan
 import rexxvalue
 
 /**
@@ -42,13 +43,60 @@ rexxclassicbif_subword: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0 oWHOLE>=0") = 0 then return .RexxValue("")
 
-  string = context.argumentText(1)
   start = .int
   start = context.argumentText(2) + 0
   count_supplied = context.argumentExists(3)
   wordcount = 0
   if count_supplied then wordcount = context.argumentText(3) + 0
   if count_supplied & wordcount = 0 then return .RexxValue("")
+
+  config = context.characterConfig()
+  if config.isByteProfile() then do
+    bytes = .binary
+    other_blanks = .binary
+    bytes = context.argument(1).asBinary()
+    other_blanks = config.byteOtherBlanks()
+    byte_length = .int
+    assembler blen byte_length,bytes
+    if byte_length = 0 then return .RexxValue("")
+
+    scan = 0
+    current_word = 0
+    selection_start = 0
+    do while scan < byte_length
+      selection_start = rexxclassic_find_byte_nonblank(bytes, scan, other_blanks)
+      if selection_start < 0 then return .RexxValue("")
+      current_word = current_word + 1
+      if current_word = start then leave
+      scan = rexxclassic_find_byte_blank(bytes, selection_start, other_blanks)
+      if scan < 0 then return .RexxValue("")
+    end
+
+    selection_end = selection_start
+    selected = 0
+    scan = selection_start
+    word_end = 0
+    next_word = 0
+    do while \count_supplied | selected < wordcount
+      word_end = rexxclassic_find_byte_blank(bytes, scan, other_blanks)
+      if word_end < 0 then do
+        selection_end = byte_length
+        leave
+      end
+      selection_end = word_end
+      selected = selected + 1
+      if count_supplied & selected = wordcount then leave
+      next_word = rexxclassic_find_byte_nonblank(bytes, word_end, other_blanks)
+      if next_word < 0 then leave
+      scan = next_word
+    end
+
+    result_bytes = rexxclassic_byte_slice(bytes, selection_start, selection_end - selection_start)
+    return .RexxValue.fromBinary(result_bytes)
+  end
+
+  string = context.argumentText(1)
+  text_other_blanks = config.textOtherBlanks()
 
   string_length = .int
   assembler strlen string_length,string
@@ -58,11 +106,11 @@ rexxclassicbif_subword: procedure = .RexxValue
   current_word = 0
   selection_start = 0
   do while scan < string_length
-    assembler fndnblnk selection_start,string,scan
+    selection_start = rexxclassic_find_text_nonblank(string, scan, text_other_blanks)
     if selection_start < 0 then return .RexxValue("")
     current_word = current_word + 1
     if current_word = start then leave
-    assembler fndblnk scan,string,selection_start
+    scan = rexxclassic_find_text_blank(string, selection_start, text_other_blanks)
     if scan < 0 then return .RexxValue("")
   end
 
@@ -72,7 +120,7 @@ rexxclassicbif_subword: procedure = .RexxValue
   word_end = 0
   next_word = 0
   do while \count_supplied | selected < wordcount
-    assembler fndblnk word_end,string,scan
+    word_end = rexxclassic_find_text_blank(string, scan, text_other_blanks)
     if word_end < 0 then do
       selection_end = string_length
       leave
@@ -80,7 +128,7 @@ rexxclassicbif_subword: procedure = .RexxValue
     selection_end = word_end
     selected = selected + 1
     if count_supplied & selected = wordcount then leave
-    assembler fndnblnk next_word,string,word_end
+    next_word = rexxclassic_find_text_nonblank(string, word_end, text_other_blanks)
     if next_word < 0 then leave
     scan = next_word
   end

@@ -25,6 +25,8 @@
 options levelb comments_dash numeric_classic
 namespace rexxclassicbifoverlay expose rexxclassicbif_overlay
 import rexxclassicbifs
+import rexxclassiccharacterops
+import rexxclassiccharacterscan
 import rexxvalue
 
 /**
@@ -42,13 +44,61 @@ rexxclassicbif_overlay: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rANY oWHOLE>0 oWHOLE>=0 oPAD") = 0 then return .RexxValue("")
 
-  new_string = context.argumentText(1)
-  target = context.argumentText(2)
   start = 1
   if context.argumentExists(3) then start = context.argumentText(3) + 0
   length_supplied = context.argumentExists(4)
   overlay_length = 0
   if length_supplied then overlay_length = context.argumentText(4) + 0
+  config = context.characterConfig()
+
+  if config.isByteProfile() then do
+    new_bytes = context.argument(1).asBinary()
+    target_bytes = context.argument(2).asBinary()
+    pad_bytes = .binary
+    if context.argumentExists(5) then pad_bytes = context.argument(5).asBinary()
+    else pad_bytes = " " as .binary
+    new_length = .int
+    target_length = .int
+    pad_byte = .int
+    pad_index = 0
+    before = start - 1
+    assembler blen new_length,new_bytes
+    assembler blen target_length,target_bytes
+    assembler getbyte pad_byte,pad_bytes,pad_index
+    if \length_supplied then overlay_length = new_length
+    if overlay_length = 0 & before <= target_length then return .RexxValue.fromBinary(target_bytes)
+    result_bytes = .binary
+    if before > 0 then do
+      if before >= target_length then do
+        assembler bappend result_bytes,target_bytes
+        if before > target_length then do
+          padding_needed = before - target_length
+          padding_bytes = rexxclassic_byte_slice_pad("" as .binary,0,0,padding_needed,pad_byte)
+          assembler bappend result_bytes,padding_bytes
+        end
+      end
+      else do
+        segment_bytes = rexxclassic_byte_slice(target_bytes,0,before)
+        assembler bappend result_bytes,segment_bytes
+      end
+    end
+    if overlay_length > 0 then do
+      copy_length = overlay_length
+      if new_length < copy_length then copy_length = new_length
+      segment_bytes = rexxclassic_byte_slice_pad(new_bytes,0,copy_length,overlay_length,pad_byte)
+      assembler bappend result_bytes,segment_bytes
+    end
+    tail_start = before + overlay_length
+    if tail_start < target_length then do
+      tail_length = target_length - tail_start
+      segment_bytes = rexxclassic_byte_slice(target_bytes,tail_start,tail_length)
+      assembler bappend result_bytes,segment_bytes
+    end
+    return .RexxValue.fromBinary(result_bytes)
+  end
+
+  new_string = context.argumentText(1)
+  target = context.argumentText(2)
   pad = " "
   if context.argumentExists(5) then pad = context.argumentText(5)
 

@@ -1,22 +1,13 @@
 # Level B `qwordlength`
 
-`qwordlength` returns the character length of the span selected by the Level B
-quote-aware `qword` helper:
+`qwordlength(text=.string, word_number=.int) = .int` returns the codepoint length
+of a positive one-based quote-aware word, including its quote delimiters. An
+absent word returns `0`; an invalid word number or unmatched quote signals
+`INVALID_ARGUMENTS`.
 
-```rexx
-qwordlength(text=.string, word_number=.int) = .int
-```
+The implementation reads the selected span length from the shared scanner and
+does not copy the word. There is no Level C BIF or class method named
+QWORDLENGTH. See [the shared quote-aware contract](quote-aware.md).
 
-`word_number` is positive and one-based. A number beyond the available words
-returns `0`; a number below one signals `INVALID_ARGUMENTS`. The input is not
-modified. The exact treatment of quote delimiters, doubled/unmatched quotes,
-attached quoted text, and configured blanks follows `qword` and remains tracked
-as the shared quote-aware word-span dependency in the Release 1 work list.
-
-The implementation calls `qword` once and measures its returned span once. It
-does not expose or copy the source argument. There is no Level C BIF or class
-method named QWORDLENGTH.
-
-`ts_qwordlength.crexx` covers typed unquoted lengths, missing/empty input,
-non-mutation, and the invalid-index signal without freezing the parked quote
-grammar.
+`ts_qwordlength.crexx` covers quoted and unquoted lengths, Unicode whitespace,
+missing input, non-mutation, and signals in both Level B build modes.

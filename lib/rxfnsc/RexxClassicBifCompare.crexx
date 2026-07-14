@@ -42,6 +42,41 @@ rexxclassicbif_compare: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rANY oPAD") = 0 then return .RexxValue("")
 
+  config = context.characterConfig()
+  if config.isByteProfile() then do
+    left_bytes = context.argument(1).asBinary()
+    right_bytes = context.argument(2).asBinary()
+    pad_bytes = .binary
+    if context.argumentExists(3) then pad_bytes = context.argument(3).asBinary()
+    else pad_bytes = " " as .binary
+    left_length = .int
+    right_length = .int
+    common_length = .int
+    pad_byte = .int
+    left_byte = .int
+    right_byte = .int
+    pad_index = 0
+    assembler getbyte pad_byte,pad_bytes,pad_index
+    assembler blen left_length,left_bytes
+    assembler blen right_length,right_bytes
+    common_length = left_length
+    if right_length < common_length then common_length = right_length
+    do i = 0 to common_length - 1
+      assembler getbyte left_byte,left_bytes,i
+      assembler getbyte right_byte,right_bytes,i
+      if left_byte <> right_byte then return .RexxValue((i + 1) || "")
+    end
+    if left_length > right_length then do i = common_length to left_length - 1
+      assembler getbyte left_byte,left_bytes,i
+      if left_byte <> pad_byte then return .RexxValue((i + 1) || "")
+    end
+    else if right_length > left_length then do i = common_length to right_length - 1
+      assembler getbyte right_byte,right_bytes,i
+      if pad_byte <> right_byte then return .RexxValue((i + 1) || "")
+    end
+    return .RexxValue("0")
+  end
+
   left = context.argumentText(1)
   right = context.argumentText(2)
   pad = " "

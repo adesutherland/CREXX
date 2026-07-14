@@ -1,8 +1,9 @@
 # High-priority Level B library temporary work list
 
 Status: **approved; programme steps -1 and 8 complete; all 120 current selector
-rows processed; two original rows reclassified as examples; final integration
-complete; parked co-dependencies remain queued**
+rows processed; two original rows reclassified as examples; dependency batches
+1-7 complete and fully integrated; remaining design batches
+8-12 queued**
 
 This is the temporary execution ledger for the high-priority Level B library
 review. It now tracks the 87 bootstrap-core candidate selectors and the 33
@@ -61,9 +62,9 @@ scope implicitly.
 | 2 | `parsecompile`, `parsestring`, `parse`, `parseExec` | Frozen legacy plan/stream ABI and assertion harnesses; no producer/lowering change | done |
 | 3 | `_datei`, `_dateo`, `_jdn`, `date`, `time` | Calendar/error contract and frozen-clause-time service | done |
 | 4 | `arrayformat`, `arraydump` | Reclassify diagnostic functions and their `pprint` consumer as packaged examples | reclassified; optimized safety checks pass |
-| 5 | `delword`, `word`, `words`, `wordindex`, `subword`, `wordlength`, `wordpos` | `Config_OtherBlankCharacters` | queued |
-| 6 | `translate`, `xrange`, `c2x`, `c2d`, `d2c`, `x2c` | `Config_Xrange`, `Config_C2B`, and `Config_B2C` | queued |
-| 7 | `qpos`, `qsplit`, `qsplitsafe`, `qextractall`, `qextractpair`, `qstripcomment`, `qremoveall`, `qword`, `qwordlength`, `qwords`, `qwordindex`, `qwordpos`, `qsubword` | Shared quote grammar, vectors, extraction bounds, and word spans | queued |
+| 5 | `delword`, `word`, `words`, `wordindex`, `subword`, `wordlength`, `wordpos` | `Config_OtherBlankCharacters` | done |
+| 6 | `translate`, `xrange`, `c2x`, `c2d`, `d2c`, `x2c` | `Config_Xrange`, `Config_C2B`, and `Config_B2C` | done |
+| 7 | `qpos`, `qsplit`, `qsplitsafe`, `qextractall`, `qextractpair`, `qstripcomment`, `qremoveall`, `qword`, `qwordlength`, `qwords`, `qwordindex`, `qwordpos`, `qsubword` | Shared quote grammar, vectors, extraction bounds, and word spans | done |
 | 8 | `fsayfmt` | Approved placeholder contract on the frozen quote grammar | queued |
 | 9 | `random` | Typed Level B contract and scoped RNG service | queued |
 | 10 | `value` | Configuration-named external-pool service | queued |
@@ -174,6 +175,101 @@ Batch 4 reclassification evidence:
   are outside the Level B performance and conformance programme, so no shared
   formatter contract or Level B/Level G documentation is required.
 
+Batch 5 completion evidence:
+
+- `RexxClassicConfig`, owned by each direct `RexxBifCallContext`, now carries
+  the approved BYTE-default or UTF8-opt-in profile plus separate configured
+  BYTE and text blank sets. No compiler, lowering, or common controller change
+  is part of this batch;
+- the seven Level C word functions use one shared configured scanner. BYTE
+  accepts arbitrary octets and uses ASCII space plus configured blank bytes;
+  UTF8 validates text, uses codepoint positions, and uses Unicode 17.0.0
+  `White_Space` plus configured additions. The VM Unicode fast path remains in
+  use when UTF8 has no additions;
+- Level B keeps its direct typed surfaces and pinned Unicode whitespace table.
+  Direct Level C RexxValue harnesses cover default/profile differences,
+  configured blanks, arbitrary BYTE data, UTF8 failures, optional arguments,
+  positions, slicing, standard context errors, and source preservation;
+- separate Level B and Level C Markdown now states their different contracts.
+  The focused word-family matrix passes 14 direct opt/noopt tests plus its
+  shared fixture, and the later combined consequence run remains green.
+
+Batch 6 completion evidence:
+
+- direct Level C `C2X`, `C2D`, `D2C`, `X2C`, `XRANGE`, and `TRANSLATE` now use
+  the same context profile. BYTE exposes exact octets and the Classic wrapping
+  00-FF range; UTF8 validates exact UTF-8, flags valid text outputs, and rejects
+  XRANGE because a Unicode scalar wrapping range would be a different API;
+- TRANSLATE tables and PAD are bytes in BYTE and codepoints in UTF8. Omitted
+  tables select configured case conversion, while output-with-omitted-input
+  uses BYTE XRANGE and reports the documented unavailable-configuration error
+  in UTF8;
+- focused direct RexxValue harnesses cover valid/invalid flags, arbitrary
+  binary input, exact conversion boundaries, table holes, profile errors, and
+  standard CheckArgs failures. All 12 opt/noopt conversion tests pass with the
+  shared fixture, and stable Level C selector pages plus the Unicode reference
+  describe the configuration boundary.
+
+Batch 7 completion evidence:
+
+- one `qscan` module now owns quote transitions, doubled matching quotes,
+  configured pair nesting, comment spans, and quote-aware word spans. Quotes
+  may begin inside a word, delimiters remain in returned fields/words,
+  positions are Unicode codepoints, and unmatched/mismatched/unclosed grammar
+  signals `INVALID_ARGUMENTS`;
+- all thirteen selectors consume those spans rather than duplicating state
+  machines or repeatedly rescanning from the start. Splits preserve exact
+  fields and multi-character separators; extraction/removal reconstruct by
+  position; comments preserve CRLF/LF/CR; word operations share one span model
+  and `qsubword` has the approved optional count;
+- `ts_qpos`, `ts_qwordlength`, and the comprehensive `ts_qlibrary` cover every
+  public selector, Unicode positions/whitespace, doubled and embedded quotes,
+  nested pairs, exact reconstruction, line endings, non-mutation, and signal
+  paths in both modes. The focused matrix passes 6/6 tests plus its fixture;
+- the second review confirmed consumers make one shared scanner call per
+  operation and then use direct slices. Stable selector pages and one shared
+  Level B quote-aware contract replace the former contradictory prose. There
+  is no Level C BIF surface in this batch.
+
+Combined Unicode consequence audit:
+
+- bounded VM case conversion and substring search now process embedded U+0000
+  without treating it as an end marker. Existing limited-width case mappings
+  were exhaustively checked over Unicode scalar values and preserve encoded
+  width, so the in-place hot path remains allocation-free;
+- Level B upper/lower, length, position, last position, substring, reverse,
+  quote-aware search, and character file I/O gained embedded-NUL assertions.
+  The focused Level B consequence matrix passes 24 opt/noopt tests plus its
+  shared fixture;
+- previously completed direct Level C character BIFs were audited against the
+  newly explicit profile. ABBREV, CENTER/CENTRE, CHANGESTR, COMPARE, COPIES,
+  COUNTSTR, DELSTR, INSERT, LENGTH, OVERLAY, POS/LASTPOS, LEFT/RIGHT, REVERSE,
+  SPACE, STRIP, SUBSTR, and VERIFY now consistently use configured units and
+  preserve binary-authoritative BYTE results. Their 40 opt/noopt direct
+  harnesses pass 41/41 including the shared fixture;
+- separate Level B, Level C, and Unicode documentation now distinguishes the
+  limited Level B case table, BYTE compatibility operations, UTF8 codepoint
+  operations, configured blanks, Unicode 17.0.0 tables, binary I/O, and the
+  Level G grapheme/full-algorithm boundary.
+
+Batches 5-7 final integration evidence (2026-07-14):
+
+- the combined Debug rebuild completed without a matched compiler/Level B
+  warning or error, and `git diff --check` passes;
+- the first full sweep passed 1,810/1,814 tests and exposed one pre-existing VM
+  unwind invariant through the reference iterator contract in rxvm/rxbvm and
+  opt/noopt. Incoming child arguments now record their frame-entry pointers in
+  `baselocals` as well as the active map, allowing an exceptional unwind to
+  restore a nested `a1...` call window without allocation, value copying, or
+  loss of exposed/reference mutations;
+- the focused signal-unwind and reference-contract set passes 7/7 including its
+  linked-runtime fixture. A dedicated nested argument-slot case now covers the
+  failure mode on both VM implementations;
+- after the repair, the affected 276-artifact combined rebuild is clean and the
+  complete registered suite passes 1,814/1,814 tests at parallelism 30. This
+  full count includes the existing tests and all newly registered optimized and
+  unoptimized Level B/direct Level C harnesses.
+
 ## Efficient selector validation and deferred integration
 
 Each active selector is compiled with the existing tool binaries into an
@@ -183,10 +279,10 @@ run in both optimized and unoptimized modes before the V gate is checked. This
 proves the selector against its new tests without causing CMake's aggregate
 `library` dependency to rebuild every Level B module.
 
-The final integration pass will add the accumulated CMake registrations, build
-the combined libraries once, run the queued tests, and perform the full test
-sweep. A parked selector must name the co-dependency that remains and retain
-its focused validation evidence.
+The final integration pass has added the accumulated CMake registrations,
+built the combined libraries once, run the queued tests, and performed the full
+test sweep. A parked selector must name the co-dependency that remains and
+retain its focused validation evidence.
 
 ### Deferred integration wiring queue — applied 2026-07-14
 
@@ -2396,7 +2492,7 @@ are active. This association is an approval point before row 1 starts.
 | 28 | `strip` | `STRIP` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 29 | `substr` | `SUBSTR` L | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 30 | `substro` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
-| 31 | `translate` | `TRANSLATE` R | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | parked — `Config_Xrange` service |
+| 31 | `translate` | `TRANSLATE` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 32 | `upper` | — (dispatcher compatibility helper only) | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 33 | `verify` | `VERIFY` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 34 | `_ftrunc` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
@@ -2411,15 +2507,15 @@ are active. This association is an approval point before row 1 starts.
 | 43 | `b2x` | `B2X` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 44 | `b2d` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 45 | `binary` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
-| 46 | `c2x` | `C2X` R | ☒ | ☐ | ☒ | ☒ | ☒ | ☒ | parked — `Config_C2B` service |
-| 47 | `c2d` | `C2D` R | ☒ | ☐ | ☒ | ☒ | ☒ | ☒ | parked — `Config_C2B` service |
+| 46 | `c2x` | `C2X` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
+| 47 | `c2d` | `C2D` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 48 | `d2b` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
-| 49 | `d2c` | `D2C` R | ☒ | ☐ | ☒ | ☒ | ☒ | ☒ | parked — `Config_B2C` service |
+| 49 | `d2c` | `D2C` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 50 | `d2x` | `D2X` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 51 | `x2b` | `X2B` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
-| 52 | `x2c` | `X2C` R | ☒ | ☐ | ☒ | ☒ | ☒ | ☒ | parked — `Config_B2C` service |
+| 52 | `x2c` | `X2C` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 53 | `x2d` | `X2D` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
-| 54 | `xrange` | `XRANGE` R | ☐ | ☐ | ☒ | ☒ | ☒ | ☐ | parked — `Config_Xrange` and rebuilt adapter |
+| 54 | `xrange` | `XRANGE` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 55 | `arrayfind` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 56 | `splice` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 57 | `arrayinsert` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
@@ -2441,13 +2537,13 @@ are active. This association is an approval point before row 1 starts.
 | 73 | `arrayhi` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 74 | `arraymove` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 75 | `stem` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
-| 76 | `delword` | `DELWORD` R | ☐ | ☐ | ☒ | ☒ | ☒ | ☐ | parked — configured blanks / rebuilt adapter |
-| 77 | `word` | `WORD` M | ☒ | ☐ | ☒ | ☒ | ☒ | ☐ | parked — configured blanks |
-| 78 | `words` | `WORDS` M | ☒ | ☐ | ☒ | ☒ | ☒ | ☐ | parked — configured blanks |
-| 79 | `wordindex` | `WORDINDEX` R | ☒ | ☐ | ☒ | ☒ | ☒ | ☐ | parked — configured blanks |
-| 80 | `subword` | `SUBWORD` R | ☐ | ☐ | ☒ | ☒ | ☒ | ☐ | parked — configured blanks / rebuilt adapter |
-| 81 | `wordlength` | `WORDLENGTH` R | ☐ | ☐ | ☒ | ☒ | ☒ | ☐ | parked — metadata / configured blanks |
-| 82 | `wordpos` | `WORDPOS` R | ☐ | ☐ | ☒ | ☒ | ☒ | ☐ | parked — configured blanks / rebuilt adapter |
+| 76 | `delword` | `DELWORD` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
+| 77 | `word` | `WORD` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
+| 78 | `words` | `WORDS` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
+| 79 | `wordindex` | `WORDINDEX` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
+| 80 | `subword` | `SUBWORD` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
+| 81 | `wordlength` | `WORDLENGTH` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
+| 82 | `wordpos` | `WORDPOS` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 83 | `parsecompile` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 84 | `parsestring` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 85 | `parse` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
@@ -2482,19 +2578,19 @@ entries; they are not included in the 33-selector count.
 | 106 | `arraysort` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 107 | `arraydump` | example support | — | — | ☒ | — | ☒ | ☒ | reclassified — `examples/functions` |
 | 108 | `arrayformat` | example support | — | — | ☒ | — | ☒ | ☒ | reclassified — `examples/functions` |
-| 109 | `qpos` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — shared quote grammar |
-| 110 | `qsplit` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — quote/field grammar |
-| 111 | `qsplitsafe` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — quote/nesting grammar |
-| 112 | `qextractall` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — extraction ABI/grammar |
-| 113 | `qextractpair` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — extraction modes/grammar |
-| 114 | `qstripcomment` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — comment/quote grammar |
-| 115 | `qremoveall` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — extraction bounds/grammar |
-| 116 | `qword` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — shared qword grammar |
-| 117 | `qwordlength` | — | ☐ | — | ☒ | ☒ | ☒ | ☐ | parked — shared qword grammar |
-| 118 | `qwords` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — shared qword scanner |
-| 119 | `qwordindex` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — shared qword scanner |
-| 120 | `qwordpos` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — match/qword grammar |
-| 121 | `qsubword` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — shared qword scanner |
+| 109 | `qpos` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 110 | `qsplit` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 111 | `qsplitsafe` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 112 | `qextractall` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 113 | `qextractpair` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 114 | `qstripcomment` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 115 | `qremoveall` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 116 | `qword` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 117 | `qwordlength` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 118 | `qwords` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 119 | `qwordindex` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 120 | `qwordpos` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 121 | `qsubword` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 122 | `fsayfmt` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — FSAY/quote grammar |
 
 ## Active-item evidence record
@@ -4058,7 +4154,7 @@ entries; they are not included in the 33-selector count.
 - Completion summary: all applicable B/T/P/D/V gates are complete. Focused test
   registration is queued. Row 31 is now active.
 
-### 31. `translate` — parked
+### 31. `translate` — done (historical pre-configuration audit below)
 
 - Source/public surface: `lib/rxfnsb/rexx/translate.crexx`, one exported
   `translate(source, outputTable, inputTable, pad) -> .string` procedure whose
@@ -5323,7 +5419,10 @@ entries; they are not included in the 33-selector count.
   Level B or Level G compatibility promises. Row 109 `qpos` remains the next
   library batch.
 
-### 109. `qpos` — parked before implementation
+The Batch 7 completion record above supersedes the following per-selector
+pre-implementation findings. They remain here as the decision audit trail.
+
+### 109. `qpos` — done (historical pre-implementation audit below)
 
 - Public surface: `qpos(needle=.string, text=.string [,start=.int]) -> .int`
   returns the first 1-based match outside single- or double-quoted regions.
@@ -5348,7 +5447,7 @@ entries; they are not included in the 33-selector count.
   edits. No Level C BIF exists. `git diff --check` passes and compiler/
   interpreter diffs remain empty. Row 110 `qsplit` is sole active.
 
-### 110. `qsplit` — parked before implementation
+### 110. `qsplit` — done (historical pre-implementation audit below)
 
 - Public surface: `qsplit(text=.string, separator=.string) -> .string[]` splits
   on matches outside quotes. It is Level B-only and directly depends on qpos
@@ -5369,7 +5468,7 @@ entries; they are not included in the 33-selector count.
 - Completion summary: parked on the shared quote/field grammar before edits.
   Row 111 `qsplitsafe` is sole active.
 
-### 111. `qsplitsafe` — parked before implementation
+### 111. `qsplitsafe` — done (historical pre-implementation audit below)
 
 - Public surface: `qsplitsafe(text=.string, separator=.string [,start=.int
   [,pairs=.string]]) -> .string[]` splits outside quotes and nested delimiter
@@ -5390,7 +5489,7 @@ entries; they are not included in the 33-selector count.
 - Completion summary: parked on the shared quote/nesting/field grammar before
   edits. Row 112 `qextractall` is sole active.
 
-### 112. `qextractall` — parked before implementation
+### 112. `qextractall` — done (historical pre-implementation audit below)
 
 - Public surface conflict: source metadata is
   `qextractall(open=.string, close=.string, text=.string [,mode=.string]) ->
@@ -5412,7 +5511,7 @@ entries; they are not included in the 33-selector count.
   contract and the underlying quote grammar before edits. Row 113
   `qextractpair` is sole active.
 
-### 113. `qextractpair` — parked before implementation
+### 113. `qextractpair` — done (historical pre-implementation audit below)
 
 - Public surface: `qextractpair(open=.string, close=.string, text=.string
   [,start=.int [,mode=.string]]) -> .string` returns one balanced region or
@@ -5435,7 +5534,7 @@ entries; they are not included in the 33-selector count.
 - Completion summary: parked with row 112 on the extraction mode/result-boundary
   ABI and shared quote grammar. Row 114 `qstripcomment` is sole active.
 
-### 114. `qstripcomment` — parked before implementation
+### 114. `qstripcomment` — done (historical pre-implementation audit below)
 
 - Public surface: `qstripcomment(open=.string [,close=.string], text=.string)
   -> .string` removes line or block comments outside quotes. It is Level B-only
@@ -5457,7 +5556,7 @@ entries; they are not included in the 33-selector count.
 - Completion summary: parked on a comment/newline/unclosed-block policy plus the
   shared quote/extraction grammar. Row 115 `qremoveall` is sole active.
 
-### 115. `qremoveall` — parked before implementation
+### 115. `qremoveall` — done (historical pre-implementation audit below)
 
 - Public surface: `qremoveall(open=.string, close=.string, text=.string
   [,mode=.string]) -> .string` removes matched regions in inclusive or
@@ -5481,7 +5580,7 @@ entries; they are not included in the 33-selector count.
   position and never perform global value replacement. Row 116 `qword` is sole
   active.
 
-### 116. `qword` — parked before implementation
+### 116. `qword` — done (historical pre-implementation audit below)
 
 - Public surface: `qword(line=.string, wanted=.int) -> .string` returns a
   quote-aware word. It is Level B-only and is the value foundation for qwords,
@@ -5503,7 +5602,7 @@ entries; they are not included in the 33-selector count.
 - Completion summary: parked before edits on one shared quote-aware word-span
   contract. Row 117 `qwordlength` is sole active.
 
-### 117. `qwordlength` — parked after typed-wrapper completion
+### 117. `qwordlength` — done (historical partial audit below)
 
 - Public surface result: the incorrect `.string` return and exposed read-only
   input are replaced by `qwordlength(text=.string, word_number=.int) -> .int`.
@@ -5529,7 +5628,7 @@ entries; they are not included in the 33-selector count.
   --check` passes and compiler/interpreter diffs remain empty. Row 118 `qwords`
   is sole active.
 
-### 118. `qwords` — parked before implementation
+### 118. `qwords` — done (historical pre-implementation audit below)
 
 - Public surface: `qwords(text=.string) -> .int` counts quote-aware words. It is
   Level B-only and currently delegates each candidate ordinal to qword.
@@ -5549,7 +5648,7 @@ entries; they are not included in the 33-selector count.
   artificial ceiling and repeated qword calls. Row 119 `qwordindex` is sole
   active.
 
-### 119. `qwordindex` — parked before implementation
+### 119. `qwordindex` — done (historical pre-implementation audit below)
 
 - Public surface: `qwordindex(text=.string, wanted=.int) -> .int` returns the
   1-based start of a quote-aware word. It is Level B-only and is consumed by
@@ -5569,7 +5668,7 @@ entries; they are not included in the 33-selector count.
 - Completion summary: parked on the shared qword span scanner. Row 120
   `qwordpos` is sole active.
 
-### 120. `qwordpos` — parked before implementation
+### 120. `qwordpos` — done (historical pre-implementation audit below)
 
 - Public surface: `qwordpos(search=.string, text=.string [,start=.int]) -> .int`
   is named as the quote-aware analogue of WORDPOS. It is Level B-only.
@@ -5588,7 +5687,7 @@ entries; they are not included in the 33-selector count.
 - Completion summary: parked on an exact qwordpos match contract plus the shared
   word-span scanner. Row 121 `qsubword` is sole active.
 
-### 121. `qsubword` — parked before implementation
+### 121. `qsubword` — done (historical pre-implementation audit below)
 
 - Public surface: `qsubword(text=.string, word_number=.int) -> .string` returns
   the source tail starting at the selected quote-aware word. It is Level B-only

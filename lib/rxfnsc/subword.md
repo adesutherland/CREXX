@@ -10,8 +10,10 @@ rexxclassicbif_subword(
 It implements `SUBWORD(string, start [,count])`. Omitted count selects through
 the final word, explicit zero returns empty, and an oversized count clamps to
 the available words. The result excludes leading and trailing whitespace while
-preserving all whitespace between selected words. The direct implementation
-uses the VM's Unicode whitespace classification.
+preserving all whitespace between selected words. BYTE uses byte positions and
+space plus configured blank bytes. UTF8 uses codepoints and Unicode 17.0.0
+`White_Space` plus configured blank codepoints, retaining the VM fast path when
+no additions are configured.
 
 The CheckArgs contract is `rANY rWHOLE>0 oWHOLE>=0`. Standard context errors
 are:
@@ -24,10 +26,7 @@ are:
 The implementation scans once to identify one source span and extracts it once.
 It has no controller body and the direct harness does not rely on lowering.
 
-Supporting a configured `Config_OtherBlankCharacters` set is tracked as the
-shared dependency for the word-family Level C BIFs.
-
 `lib/rxfnsc/tests_functional/testRexxClassicBifSubword.crexx` calls the entry
 directly in optimized and unoptimized overlays. It covers the documented
-examples, optional and boundary counts, blank preservation/trimming, Unicode,
-source non-mutation, and every standard argument error.
+examples, optional and boundary counts, blank preservation/trimming,
+BYTE/UTF8/configured blanks, source non-mutation, and every standard error.

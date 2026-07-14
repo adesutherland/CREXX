@@ -6,14 +6,18 @@
 upper(string = .string) = .string
 ```
 
-Every cased character is converted by the VM's configured Unicode uppercase
-mapping. Nonletters, uncased characters, and an empty string are unchanged.
+Every character covered by the VM's deliberately limited, locale-independent
+simple uppercase table is converted. Other characters and an empty string are
+unchanged; this is not full Unicode case folding.
 
 ```rexx
 upper("MiXeD 123 !?") /* "MIXED 123 !?" */
 upper("äöüé")         /* "ÄÖÜÉ" */
 upper("")             /* "" */
 ```
+
+U+0000 is an ordinary codepoint for this bounded operation; it does not stop
+conversion of later text.
 
 The implementation does not modify the argument, and valid `.string` input has
 no error branch. It uses a zero-copy exposed input binding followed by one

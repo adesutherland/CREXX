@@ -7,9 +7,11 @@ rexxclassicbif_delstr(
   context = reference .RexxBifCallContext) = .RexxValue
 ```
 
-It implements `DELSTR(string, start [,length])` over 1-based Unicode character
-positions. Omitted length deletes through the end; explicit zero changes
-nothing; start beyond the string returns the original text.
+It implements `DELSTR(string, start [,length])` over 1-based configured
+character positions. BYTE is the default and positions exact octets; UTF8 is
+opt-in and positions Unicode codepoints. Omitted length deletes through the
+end; explicit zero changes nothing; start beyond the value returns the original
+payload. BYTE results remain binary-authoritative.
 
 The CheckArgs contract is `rANY rWHOLE>0 oWHOLE>=0`. Standard context errors
 are:
@@ -21,7 +23,7 @@ are:
 
 The implementation checks optional-argument presence explicitly, computes the
 source length once, and extracts at most one prefix and one suffix using direct
-VM string operations.
+VM string or binary operations.
 
 `lib/rxfnsc/tests_functional/testRexxClassicBifDelstr.crexx` calls the entry
 directly in optimized and unoptimized overlays. It covers omitted/zero/oversized

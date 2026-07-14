@@ -11,6 +11,7 @@ errors = errors + check_value("8", "abcdefgh")
 errors = errors + check_value("4", "René")
 errors = errors + check_value("3", "é日🙂")
 errors = errors + check_value("2", "é")
+errors = errors + check_byte_value("2", "é")
 errors = errors + check_count_error("RXC-LC-40.3", 0)
 errors = errors + check_count_error("RXC-LC-40.4", 2)
 errors = errors + check_omitted_error()
@@ -25,10 +26,25 @@ check_value: procedure = .int
   args[1] = .RexxValue(string)
   exists[1] = 1
   context = .RexxBifCallContext("LENGTH")
+  call context.useUtf8Profile()
   call context.setArguments(args, exists)
   result = .rexxclassicbiflength..rexxclassicbif_length(reference context)
   if \context.hasError() & result.asString() = expected & args[1].asString() = string then return 0
   say "FAIL: LENGTH expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_byte_value: procedure = .int
+  arg expected = .string, string = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(string)
+  exists[1] = 1
+  context = .RexxBifCallContext("LENGTH")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbiflength..rexxclassicbif_length(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: LENGTH BYTE expected" expected "got" result.asString(),
       context.errorCode() context.errorMessage()
   return 1
 

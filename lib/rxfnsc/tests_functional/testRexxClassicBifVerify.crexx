@@ -19,6 +19,7 @@ errors = errors + check3("3", "é🙂x", "é🙂", "N")
 nul = "00"x
 errors = errors + check2("0", nul, nul)
 errors = errors + check2("1", nul, "")
+errors = errors + check_byte_profile()
 
 large = ""
 a_code = 97
@@ -72,10 +73,32 @@ run_check: procedure = .int
     exists[4] = 1
   end
   context = .RexxBifCallContext("VERIFY")
+  call context.useUtf8Profile()
   call context.setArguments(args, exists)
   result = .rexxclassicbifverify..rexxclassicbif_verify(reference context)
   if \context.hasError() & result.asString() = expected & args[1].asString() = string & args[2].asString() = refchars then return 0
   say "FAIL: VERIFY expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_byte_profile: procedure = .int
+  source = .binary
+  reference_bytes = .binary
+  source = "C3A978"x
+  reference_bytes = "A9"x
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue.fromBinary(source)
+  args[2] = .RexxValue.fromBinary(reference_bytes)
+  args[3] = .RexxValue("M")
+  exists[1] = 1
+  exists[2] = 1
+  exists[3] = 1
+  context = .RexxBifCallContext("VERIFY")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifverify..rexxclassicbif_verify(reference context)
+  if \context.hasError() & result.asString() = "2" then return 0
+  say "FAIL: VERIFY BYTE expected 2 got" result.asString(),
       context.errorCode() context.errorMessage()
   return 1
 

@@ -23,6 +23,9 @@ errors = errors + check(lastpos("a", "") = 0, "empty haystack")
 errors = errors + check(lastpos("", "") = 0, "both empty")
 errors = errors + check(lastpos("→", "a→b→c") = 4, "Unicode character position")
 errors = errors + check(lastpos("→", "a→b→c", 3) = 2, "Unicode search end")
+embedded_nul = "a" || d2c(0) || "b" || d2c(0) || "c"
+errors = errors + check(lastpos(d2c(0), embedded_nul) = 4, "embedded U+0000 needle")
+errors = errors + check(lastpos("c", embedded_nul) = 5, "match after embedded U+0000")
 errors = errors + check(needle = "abc" & haystack = "abc abc", "arguments are not mutated")
 
 large = ""

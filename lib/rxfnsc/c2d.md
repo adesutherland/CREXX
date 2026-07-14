@@ -5,19 +5,20 @@ C2D(string [, length])
 CheckArgs: rANY oWHOLE>=0
 ```
 
-Classic Level C C2D converts configuration-coded characters to a decimal
-whole-number RexxValue. With `length`, it uses the rightmost requested number
-of coded characters and interprets the high bit as signed twos-complement. The
-conversion uses the caller's `NUMERIC DIGITS`; a result that cannot be
-expressed under that setting reports `RXC-LC-40.35`.
+The standalone `rexxclassicbif_c2d` entry converts the exact configured bytes
+of `string` to a decimal whole-number `RexxValue`. Without `length`, all bytes
+are unsigned. With `length`, the rightmost requested bytes are selected and
+interpreted as signed twos-complement; a width larger than the input is
+zero-extended and therefore non-negative. Zero returns `0`.
 
-Standard context errors also include `RXC-LC-40.3`/`40.4` for argument count,
-`RXC-LC-40.5` for an omitted required argument, `RXC-LC-40.12` for a non-whole
-length, and `RXC-LC-40.13` for a negative length.
+The result uses the caller's `NUMERIC DIGITS`; an unrepresentable result reports
+`RXC-LC-40.35`. Standard argument errors are `40.3`, `40.4`, `40.5`, `40.12`,
+and `40.13`.
 
-This contract is intentionally distinct from the native Level B single-code-
-point helper in [`lib/rxfnsb/rexx/c2d.md`](../rxfnsb/rexx/c2d.md). A direct
-`RexxClassicBifC2d` implementation is parked until the repository defines the
-`Config_C2B` coded-character-to-bits service required by C2D, C2X, BITAND,
-BITOR, and BITXOR. Reusing Unicode code-point extraction here would not satisfy
-the Classic contract.
+BYTE accepts arbitrary bytes. UTF8 requires valid UTF-8 input, but conversion
+still uses its exact encoded bytes. The direct optimized/unoptimized RexxValue
+harness covers unsigned/signed widths, arbitrary-size values, zero, invalid
+arguments, and the digits limit without compiler lowering.
+
+This is distinct from the one-codepoint native Level B helper documented in
+[`lib/rxfnsb/rexx/c2d.md`](../rxfnsb/rexx/c2d.md).

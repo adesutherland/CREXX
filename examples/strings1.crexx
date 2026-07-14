@@ -29,7 +29,7 @@ text = 'The "quick brown" fox jumps over the lazy dog'
 say 'Original   :' text
 say 'Length     :' length(text)
 say 'QWords     :' qwords(text)         /* "quick brown" counts as one word */
-say 'QWord 2    :' qword(text, 2)       /* Returns: quick brown           */
+say 'QWord 2    :' qword(text, 2)       /* Returns quote delimiters too   */
 say 'QWord 3    :' qword(text, 3)       /* Returns: fox                   */
 say 'QPos fox   :' qpos('fox', text)    /* Position of "fox"              */
 say 'QPos brown :' qpos('brown', text)  /* Position inside quoted text    */

@@ -1,0 +1,71 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifd2c expose rexxclassicbif_d2c
+import rexxclassicbifs
+import rexxclassicbifd2x
+import rexxclassicencoding
+import rexxvalue
+
+/** Convert a Classic whole number to exact configured character bytes. */
+rexxclassicbif_d2c: procedure = .RexxValue
+  numeric digits inherited
+  numeric form inherited
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+
+  if context.argumentExists(2) then checklist = "rWHOLENUM rWHOLE>=0"
+  else checklist = "rWHOLENUM>=0 oWHOLE>=0"
+  if rexxclassicbif_check_args(context_ref, checklist) = 0 then return .RexxValue("")
+
+  number = context.argumentText(1)
+  number_length = .int
+  first_codepoint = .int
+  start = 0
+  negative = 0
+  magnitude = number
+  assembler strlen number_length,number
+  assembler strchar first_codepoint,number,start
+  if first_codepoint = 45 then do
+    negative = 1
+    start = 1
+    number_length = number_length - 1
+    magnitude = ""
+    assembler setstrpos number,start
+    assembler substring magnitude,number,number_length
+  end
+
+  hexadecimal = rexxclassic_decimal_to_hex(magnitude, negative)
+  if context.argumentExists(2) then do
+    output_length = .int
+    output_length = context.argumentText(2)
+    hexadecimal = rexxclassic_fit_hex(hexadecimal, output_length * 2, negative)
+  end
+  bytes = rexxclassic_hex_to_bytes(hexadecimal)
+  config = context.characterConfig()
+  if config.isUtf8Profile() & rexxclassic_bytes_are_utf8(bytes) then
+    return .RexxValue.fromBinaryText(bytes)
+  return .RexxValue.fromBinary(bytes)

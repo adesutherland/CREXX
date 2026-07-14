@@ -22,79 +22,40 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/** Extract every top-level balanced, quote-aware delimiter pair. */
 options levelb
-
 namespace rxfnsb expose qextractall
 
-/* ------------------------------------------------------------------
- *  Function:  QEXTRACTALL
- *  Purpose:   Extracts all top-level substrings enclosed by matching
- *             delimiters (e.g. (), {}, BEGIN/END, <!--/-->), ignoring
- *             quoted text and nested inner pairs.
+/**
+ * Extract all top-level balanced spans without rescanning extracted values.
  *
- *  Usage:     parts. = QEXTRACTALL(open, close, text [, start])
- *
- *   Arguments:
- *     open   - Opening delimiter (string, one or more characters)
- *     close  - Matching closing delimiter (string, one or more chars)
- *     text   - The string to scan
- *     start  - (optional) Position to begin searching. Default = 1.
- *
- *  Returns:
- *     A stem array:
- *        parts.0 - number of segments found
- *        parts.1 - first complete segment
- *        parts.2 - second segment, etc.
- *     Returns .0=0 if no complete pair is found.
- *
- *  Description:
- *     Repeatedly calls QEXTRACTPAIR() to locate and extract each
- *     top-level delimited segment, skipping any text or partial
- *     fragments between them. Handles nested pairs and quoted text.
- *
- *  Example:
- *     s = 'BEGIN one BEGIN two END END BEGIN three END'
- *     segs. = qextractall('BEGIN', 'END', s)
- *     do i = 1 to segs.0
- *        say i':' segs.i
- *     end
- *
- *  Output:
- *     1: BEGIN one BEGIN two END END
- *     2: BEGIN three END
- *
- *  Dependencies:
- *     Requires QEXTRACTPAIR() and QPOS().
- *
- *  Notes:
- *     - Multi-character delimiters are fully supported.
- *     - Ignores delimiters appearing inside quoted strings.
- *     - Only top-level (non-nested) segments are returned.
- *  ------------------------------------------------------------------
+ * @param open non-empty opening delimiter
+ * @param close non-empty distinct closing delimiter
+ * @param text source text
+ * @param start optional positive one-based codepoint position
+ * @param mode X or E for contents, I or C to include delimiters
+ * @return extracted spans in source order
+ * @signal INVALID_ARGUMENTS invalid arguments or malformed quote/pair grammar
  */
-qextractall: procedure=.string[]
-   arg open=.string, close=.string, text=.string, mode='X'
+qextractall: procedure = .string[]
+  arg open = .string, close = .string, text = .string, start = 1, mode = 'X'
+  folded_mode = ''
+  assembler strupper folded_mode,mode
+  folded_mode = left(folded_mode,1)
+  if folded_mode = 'E' then folded_mode = 'X'
+  if folded_mode = 'C' then folded_mode = 'I'
+  if folded_mode <> 'X' & folded_mode <> 'I' then
+    assembler signal "INVALID_ARGUMENTS", "QEXTRACTALL mode must be X, E, I, or C"
 
-   parts = .string[]
-   count  = 0
-   pos    = 1
-   lenOpen = length(open)
-   lenText = length(text)
-
-   do while pos <= lenText
-      /* find next opening delimiter */
-      firstPos = qpos(open, text, pos)
-      if firstPos = 0 then leave
-
-      /* extract full segment */
-      seg = qextractpair(open, close, text, firstPos,mode)
-      if seg = '' then leave
-
-      count = count + 1
-      parts.count = seg
-
-      /* move beyond this segment */
-      pos = firstPos + length(seg)-1
-   end
-return parts
+  spans = qscan_pair_spans(open,close,text,start)
+  parts = .string[]
+  count = .int
+  assembler idiv count,spans[0],4
+  do index = 1 to count
+    base = (index - 1) * 4
+    if folded_mode = 'I' then
+      parts[index] = substr(text,spans[base + 1] + 1,spans[base + 4] - spans[base + 1])
+    else
+      parts[index] = substr(text,spans[base + 2] + 1,spans[base + 3] - spans[base + 2])
+  end
+  return parts

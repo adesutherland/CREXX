@@ -44,6 +44,11 @@ caught:
     seq r0,r4,"referent-updated"
     brf fail_reference,r0
 
+    load r12,1
+    load r13,"nested-argument"
+    call r14,nested_argument_window(),r12
+    brf fail_nested_argument,r14
+
     say "PASS: Signal Call Mapping Unwind"
     ret 0
 
@@ -57,6 +62,10 @@ fail_attribute:
 
 fail_reference:
     say "FAIL: linked reference call mapping"
+    ret 1
+
+fail_nested_argument:
+    say "FAIL: nested argument-slot call mapping"
     ret 1
 
 forward() .locals=5
@@ -73,3 +82,13 @@ forward() .locals=5
 fail() .locals=0
     signal "INVALID_ARGUMENTS","unwind call mappings"
     ret
+
+nested_argument_window() .locals=1
+    sigbr nested_argument_caught,"INVALID_ARGUMENTS"
+    load a0,1
+    call r0,fail(),a0
+    ret 0
+
+nested_argument_caught:
+    seq r0,a1,"nested-argument"
+    ret r0

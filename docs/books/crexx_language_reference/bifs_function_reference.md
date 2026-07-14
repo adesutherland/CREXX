@@ -129,14 +129,14 @@ Table: Non-SAA Functions. {#tbl:id}
 | BINMEMMOVE      | BINMEMMOVE(binary, dst_offset, src_offset, length) |
 | BINRESIZE       | BINRESIZE(binary, length)                    |
 | BINUPDATE       | BINUPDATE(binary, offset, src)               |
-| QEXTRACTALL | QEXTRACTALL(open, close, text [, start])      |
-| QEXTRACTPAIR | QEXTRACTPAIR(open, close, text, start, mode=')   |
+| QEXTRACTALL | QEXTRACTALL(open, close, text [, start [, mode]]) |
+| QEXTRACTPAIR | QEXTRACTPAIR(open, close, text [, start [, mode]]) |
 | QPOS | QPOS(needle, text [, start]) |
 | QREMOVEALL | QREMOVEALL(open, close, text [, mode])   |
 | QSPLIT | QSPLIT(text, sep) |
-| QSPLITSAFE | QSPLITSAFE(text, sep, start, pairs) |
-| QSTRIPCOMMENT | QSTRIPCOMMENT(open, close, text) |
-| QSUBWORD | QSUBWORD(string,wordnum)|
+| QSPLITSAFE | QSPLITSAFE(text, sep [, start [, pairs]]) |
+| QSTRIPCOMMENT | QSTRIPCOMMENT(open [, close], text) |
+| QSUBWORD | QSUBWORD(string, wordnum [, count]) |
 | QWORD | QWORD(line, wanted) |
 | QWORDINDEX | QWORDINDEX(string,wordnum) |
 | QWORDLENGTH | QWORDLENGTH(string,wordnum) |
@@ -293,20 +293,40 @@ Rexx strings and keep the usual copy and lifetime rules.
 
 ## Quote-aware helpers
 
-The `q*` helpers perform string operations while ignoring separators or words
-that appear inside quoted text. They are ordinary `rxfnsb` functions and follow
-the current implementation in `lib/rxfnsb/rexx`.
+The `q*` helpers share one positional Unicode scanner. They are ordinary Level B
+`rxfnsb` functions, not Classic Level C BIFs. Single and double ASCII quotes can
+occur anywhere in a word, matching doubled quotes are escapes, quote delimiters
+remain in returned values, and malformed quote or pair grammar signals
+`INVALID_ARGUMENTS`. Positions and lengths are Unicode codepoints; word
+separation uses Unicode 17.0 `White_Space`.
 
 `QPOS(needle, text [, start])` returns the 1-based position of `needle` outside
-single- or double-quoted regions, or `0` when it is not found. The current
-quote scan treats matching single and double quote characters as delimiters.
+single- or double-quoted regions, or `0` when it is not found. `start` is a
+positive codepoint position.
 
 `QSPLIT(text, sep)` splits `text` on `sep` only when the separator is outside
-quoted regions. It returns a `.string[]` array of parts.
+quoted regions. It returns exact `.string[]` fields, including empty and
+trailing fields, without stripping source whitespace.
 
 `QSPLITSAFE(text, sep, start, pairs)` is the nested-safe splitter. In addition
-to quote tracking, it tracks paired delimiters from the `pairs` string, such as
-the default `()`, and only splits at depth zero.
+to quote tracking, it tracks nested one-codepoint delimiter pairs from `pairs`,
+such as the default `()`, and only splits at depth zero.
+
+`QEXTRACTPAIR` and `QEXTRACTALL` return balanced top-level source spans. Modes
+`X`/`E` return the contents and `I`/`C` include delimiters. `QREMOVEALL` uses the
+same spans; its default inclusive mode removes the complete regions, while
+exclusive mode retains the delimiters. Equal text outside a selected region is
+never removed.
+
+`QSTRIPCOMMENT` removes line comments when `close` is omitted or empty and
+preserves CRLF, LF, and CR endings exactly. With a closer it removes nested
+balanced block comments.
+
+`QWORD`, `QWORDINDEX`, `QWORDLENGTH`, and `QWORDS` use the same word spans.
+`QWORDPOS` matches an exact word sequence. `QSUBWORD` preserves separators
+inside the selected source span; omitted `count` selects through the last word
+and explicit zero returns an empty string. The selector-local pages under
+`lib/rxfnsb/rexx` contain the complete signatures and examples.
 
 
 ## ABS(number)
@@ -749,8 +769,8 @@ multi-character input is valid, and leading zero digits are retained.
 
 The current Level B implementation preserves RXAS `hexchar` behavior for
 Unicode: a code point beyond the single-byte range contributes its low eight
-bits. Classic Level C C2X instead uses configuration-coded character encoding;
-that direct implementation is parked until the configuration service exists.
+bits. Classic Level C C2X instead converts the exact coded bytes selected by
+the call context's BYTE or UTF8 profile.
 
 **Examples:**
 ```
@@ -782,8 +802,8 @@ Level B deliberately provides a different typed helper:
 its explicit output length may only be zero or one.
 
 See the separate [Level C BIF contract](../../../lib/rxfnsc/d2c.md) and
-[native Level B API](../../../lib/rxfnsb/rexx/d2c.md). The Level C contract is
-recorded, but its direct implementation is parked until `Config_B2C` exists.
+[native Level B API](../../../lib/rxfnsb/rexx/d2c.md). The direct Level C
+implementation returns exact bytes and records valid UTF-8 text when applicable.
 
 
 
@@ -873,8 +893,8 @@ Level B deliberately provides a different typed helper that maps every parsed
 byte to Unicode U+0000 through U+00FF.
 
 See the separate [Level C BIF contract](../../../lib/rxfnsc/x2c.md) and
-[native Level B API](../../../lib/rxfnsb/rexx/x2c.md). Direct Level C X2C is
-parked until `Config_B2C` exists.
+[native Level B API](../../../lib/rxfnsb/rexx/x2c.md). Direct Level C X2C
+preserves exact configured bytes and records a text view only for valid UTF-8.
 
 
 
@@ -953,7 +973,9 @@ end loses or gains one more character than the left hand end.
 
 The Level B helper types *length* as `.int`; an invalid length or pad signals
 `INVALID_ARGUMENTS`. The standalone Level C BIF accepts Classic whole-number
-text and reports the standard `RXC-LC-40.*` context errors. See the separate
+text and reports the standard `RXC-LC-40.*` context errors. Level B measures
+Unicode codepoints. Level C measures configured units: octets in the default
+BYTE profile and Unicode codepoints in the opt-in UTF8 profile. See the separate
 [Level B CENTER](../../../lib/rxfnsb/rexx/center.md) and
 [Level C CENTER](../../../lib/rxfnsc/center.md) pages for their distinct
 contracts.
@@ -986,7 +1008,9 @@ end loses or gains one more character than the left hand end.
 
 The Level B helper types *length* as `.int`; an invalid length or pad signals
 `INVALID_ARGUMENTS`. The standalone Level C BIF accepts Classic whole-number
-text and reports the standard `RXC-LC-40.*` context errors. See the separate
+text and reports the standard `RXC-LC-40.*` context errors. Level B measures
+Unicode codepoints. Level C measures configured units: octets in the default
+BYTE profile and Unicode codepoints in the opt-in UTF8 profile. See the separate
 [Level B CENTRE](../../../lib/rxfnsb/rexx/centre.md) and
 [Level C CENTRE](../../../lib/rxfnsc/centre.md) pages for their distinct
 contracts.
@@ -1014,7 +1038,9 @@ the haystack is returned unchanged. A null replacement deletes each match.
 
 The Level B helper requires three `.string` arguments. The standalone Level C
 BIF accepts any three RexxValue texts and reports standard `RXC-LC-40.*`
-argument-presence errors. See the separate
+argument-presence errors. Level B finds codepoint-aligned text matches. Level C
+uses exact octet matches in BYTE and codepoint-aligned matches in UTF8. See the
+separate
 [Level B CHANGESTR](../../../lib/rxfnsb/rexx/changestr.md) and
 [Level C CHANGESTR](../../../lib/rxfnsc/changestr.md) pages for their distinct
 contracts and implementation notes.
@@ -1038,7 +1064,9 @@ must contain exactly one character.
 
 The Level B helper takes two `.string` arguments, returns `.int`, and signals
 `INVALID_ARGUMENTS` for an invalid pad. The standalone Level C BIF accepts
-RexxValue text and reports standard `RXC-LC-40.*` context errors. See the
+RexxValue text and reports standard `RXC-LC-40.*` context errors. Its result
+position and one-unit pad use octets in BYTE and Unicode codepoints in UTF8;
+Level B always uses codepoints. See the
 separate [Level B COMPARE](../../../lib/rxfnsb/rexx/compare.md) and
 [Level C COMPARE](../../../lib/rxfnsc/compare.md) pages.
 
@@ -1059,7 +1087,9 @@ Returns *count* directly concatenated copies of *string*.
 
 The Level B helper types *count* as `.int` and signals `INVALID_ARGUMENTS` for
 a negative value. The standalone Level C BIF accepts Classic whole-number text
-and reports standard `RXC-LC-40.*` errors. See the separate
+and reports standard `RXC-LC-40.*` errors. Level C repeats the exact RexxValue
+bytes and preserves a BYTE result as binary-authoritative; Level B repeats valid
+UTF-8 `.string` text. See the separate
 [Level B COPIES](../../../lib/rxfnsb/rexx/copies.md) and
 [Level C COPIES](../../../lib/rxfnsc/copies.md) pages for their contracts and
 performance notes.
@@ -1081,7 +1111,9 @@ needle returns `0`.
 
 The Level B helper takes two `.string` arguments and returns `.int`. The
 standalone Level C BIF accepts any two RexxValue texts and reports standard
-`RXC-LC-40.*` argument-presence errors. See the separate
+`RXC-LC-40.*` argument-presence errors. Level B matches at codepoint boundaries;
+Level C matches exact octets in BYTE and codepoint-aligned text in UTF8. See the
+separate
 [Level B COUNTSTR](../../../lib/rxfnsb/rexx/countstr.md) and
 [Level C COUNTSTR](../../../lib/rxfnsc/countstr.md) pages.
 
@@ -1106,7 +1138,9 @@ positive whole number. A start beyond the string returns it unchanged.
 
 The Level B helper types *start* and *length* as `.int` and signals
 `INVALID_ARGUMENTS` for invalid values. The standalone Level C BIF accepts
-Classic whole-number text and reports standard `RXC-LC-40.*` errors. See the
+Classic whole-number text and reports standard `RXC-LC-40.*` errors. Level B
+positions and lengths are codepoints. Level C uses octets in BYTE and codepoints
+in UTF8. See the
 separate [Level B DELSTR](../../../lib/rxfnsb/rexx/delstr.md) and
 [Level C DELSTR](../../../lib/rxfnsc/delstr.md) pages.
 
@@ -1158,7 +1192,9 @@ one character.
 
 The Level B helper uses `.string` text and `.int` position/length values and
 signals `INVALID_ARGUMENTS` for invalid values. The standalone Level C BIF
-accepts RexxValue text and reports standard `RXC-LC-40.*` context errors. See
+accepts RexxValue text and reports standard `RXC-LC-40.*` context errors. Level
+B measures codepoints. Level C measures octets in BYTE and codepoints in UTF8,
+including the one-unit pad rule. See
 the separate [Level B INSERT](../../../lib/rxfnsb/rexx/insert.md) and
 [Level C INSERT](../../../lib/rxfnsc/insert.md) pages for their distinct
 contracts and implementation notes.
@@ -1192,8 +1228,9 @@ A supplied pad must contain exactly one character.
 
 The Level B helper requires `.int` *length* and signals `INVALID_ARGUMENTS` for
 an invalid length or pad. The standalone Level C BIF accepts Classic
-whole-number text and reports standard `RXC-LC-40.*` context errors. Both count
-Unicode characters rather than encoded bytes. See the separate
+whole-number text and reports standard `RXC-LC-40.*` context errors. Level B
+counts Unicode codepoints. Level C counts exact octets in BYTE and codepoints in
+UTF8. See the separate
 [Level B LEFT](../../../lib/rxfnsb/rexx/left.md) and
 [Level C LEFT](../../../lib/rxfnsc/left.md) pages.
 
@@ -1208,9 +1245,10 @@ LEFT('abc defg', 6)  == 'abc de'
 
 ## LENGTH(string)
 
-Returns the number of Unicode characters/codepoints in *string*, not the number
-of bytes in its UTF-8 representation. A combining codepoint is counted
-separately from the base character it follows.
+Returns the character-unit length of *string*. Level B returns its Unicode
+codepoint count, not the number of bytes in its UTF-8 representation; a
+combining codepoint is counted separately from the base character it follows.
+Level C returns the exact octet count in BYTE and the codepoint count in UTF8.
 
 The Level B helper accepts `.string` and returns `.int`. The standalone Level C
 BIF accepts RexxValue text and returns the decimal count in a RexxValue, with
@@ -1231,13 +1269,14 @@ LENGTH('é日🙂')    == 3
 
 ## LOWER(string)
 
-Returns a copy of *string* with every cased character replaced by its lowercase
-equivalent. Nonletters and uncased characters are unchanged. This Level B
-surface accepts only the string argument; it has no substring position or
-length options.
+Returns a copy of *string* after applying Level B's locale-independent, limited
+simple lowercase table. Covered letters are replaced by their lowercase
+equivalents; other codepoints are unchanged. This is deliberately not full
+Unicode case folding. The surface accepts only the string argument; it has no
+substring position or length options.
 
 The helper accepts and returns `.string`, does not modify its argument, performs
-the configured Unicode case mapping, and has no error branch for valid text. See
+the runtime's limited simple mapping, and has no error branch for valid text. See
 [Level B LOWER](../../../lib/rxfnsb/rexx/lower.md) for its exact contract and
 implementation notes. LOWER is not a required Level C BIF in the repository
 catalog; the existing common-runtime helper is compatibility surface only.
@@ -1265,7 +1304,9 @@ character. The default pad is blank.
 
 The Level B helper uses `.string` text and `.int` start/length values and
 signals `INVALID_ARGUMENTS` for invalid values. The standalone Level C BIF
-accepts RexxValue text and reports standard `RXC-LC-40.*` context errors. See
+accepts RexxValue text and reports standard `RXC-LC-40.*` context errors. Level
+B measures codepoints. Level C measures octets in BYTE and codepoints in UTF8,
+including the one-unit pad rule. See
 the separate [Level B OVERLAY](../../../lib/rxfnsb/rexx/overlay.md) and
 [Level C OVERLAY](../../../lib/rxfnsc/overlay.md) pages.
 
@@ -1296,8 +1337,9 @@ is returned.
 
 The Level B helper types *start* as `.int` and signals `INVALID_ARGUMENTS` for
 a non-positive value. The standalone Level C BIF accepts Classic whole-number
-text and reports standard `RXC-LC-40.*` context errors. Both use Unicode
-character positions. See the separate
+text and reports standard `RXC-LC-40.*` context errors. Level B returns Unicode
+codepoint positions. Level C returns octet positions in BYTE and codepoint
+positions in UTF8. See the separate
 [Level B POS](../../../lib/rxfnsb/rexx/pos.md) and
 [Level C POS](../../../lib/rxfnsc/pos.md) pages for their contracts and direct
 search implementation.
@@ -1316,10 +1358,11 @@ POS(' ', 'abc def ghi', 5) == 8
 ## LASTPOS(needle, haystack [,start])
 
 Returns the position of the last occurrence of *needle* whose final character
-is at or before *start*. The search is case-sensitive and uses 1-based Unicode
-character positions. When *start* is omitted, the complete haystack is
-considered. A value beyond the haystack has the same effect as omission. A null
-or absent needle returns `0`.
+unit is at or before *start*. The search is case-sensitive. Level B positions
+are 1-based Unicode codepoints; Level C positions are octets in BYTE and
+codepoints in UTF8. When *start* is omitted, the complete haystack is considered.
+A value beyond the haystack has the same effect as omission. A null or absent
+needle returns `0`.
 
 *start* must be a positive whole number when supplied. The Level B helper types
 it as `.int` and signals `INVALID_ARGUMENTS` for an invalid value. The
@@ -1350,8 +1393,9 @@ A supplied pad must contain exactly one character.
 
 The Level B helper requires `.int` *length* and signals `INVALID_ARGUMENTS` for
 an invalid length or pad. The standalone Level C BIF accepts Classic
-whole-number text and reports standard `RXC-LC-40.*` context errors. Both count
-Unicode characters rather than encoded bytes. See the separate
+whole-number text and reports standard `RXC-LC-40.*` context errors. Level B
+counts Unicode codepoints. Level C counts exact octets in BYTE and codepoints in
+UTF8. See the separate
 [Level B RIGHT](../../../lib/rxfnsb/rexx/right.md) and
 [Level C RIGHT](../../../lib/rxfnsc/right.md) pages.
 
@@ -1366,14 +1410,15 @@ RIGHT('12', 5, '0')  == '00012'
 
 ## REVERSE(string)
 
-Returns a copy of *string* with its Unicode codepoints in reverse order. The
-operation is codepoint-based rather than byte-based; combining marks are
-independent codepoints and grapheme clusters are not preserved as units.
+Returns a copy of *string* with its character units in reverse order. Level B
+reverses Unicode codepoints, so combining marks are independent and grapheme
+clusters are not preserved as units. Level C reverses exact octets in BYTE and
+Unicode codepoints in UTF8.
 
 The Level B helper accepts and returns `.string` and has no domain error for
 valid text. The standalone Level C BIF accepts RexxValue text and reports
-standard `RXC-LC-40.*` argument errors. Both use a single reverse codepoint
-pass. See the separate
+standard `RXC-LC-40.*` argument errors. Both use a single reverse pass over
+their active unit representation. See the separate
 [Level B REVERSE](../../../lib/rxfnsb/rexx/reverse.md) and
 [Level C REVERSE](../../../lib/rxfnsc/reverse.md) pages.
 
@@ -1388,12 +1433,13 @@ REVERSE('')       == ''
 
 ## SPACE(string [,count [,pad]])
 
-Returns a copy of *string* with its Unicode-whitespace-delimited words joined
-by exactly *count* copies of *pad*. Leading and trailing whitespace is removed,
-and each internal whitespace run becomes the requested separator. *count* must
-be a non-negative whole number; zero joins the words directly. The default
-count is one and the default pad is blank. A supplied pad must contain exactly
-one Unicode codepoint.
+Returns a copy of *string* with its blank-delimited words joined by exactly
+*count* copies of *pad*. Level B uses Unicode 17.0.0 `White_Space`. Level C BYTE
+uses ASCII space plus configured blank octets; Level C UTF8 uses Unicode
+`White_Space` plus configured blank codepoints. Leading/trailing blanks are
+removed and each internal blank run becomes the requested separator. *count*
+must be non-negative; zero joins words directly. The default count is one and
+the default pad is blank. A supplied pad must contain one active character unit.
 
 The Level B helper takes `.string`, an optional `.int` count, and `.string` pad,
 and signals `INVALID_ARGUMENTS` for an invalid count or pad. The standalone
@@ -1419,10 +1465,12 @@ Returns a copy of *string* with a leading, trailing, or both leading and
 trailing runs removed. The first codepoint of *option* is `L`, `T`, or `B`
 respectively, case-insensitively; the default is `B`.
 
-When *char* is omitted, the configured Unicode whitespace set is removed. When
-it is supplied, it must contain exactly one codepoint and only that codepoint is
-removed. Thus an explicit blank differs from omission when other Unicode
-whitespace occurs at an edge.
+When *char* is omitted, Level B removes Unicode 17.0.0 `White_Space`; Level C
+BYTE removes ASCII space plus configured blank octets and Level C UTF8 removes
+Unicode `White_Space` plus configured blank codepoints. When supplied, *char*
+must contain exactly one active unit and only that unit is removed. Thus an
+explicit blank differs from omission when other configured whitespace occurs at
+an edge.
 
 The Level B helper accepts strings and signals `INVALID_ARGUMENTS` for an
 invalid option or supplied char. The standalone Level C BIF reports standard
@@ -1443,17 +1491,18 @@ STRIP('0012.700', 'b', '0') == '12.7'
 
 ## SUBSTR(string, start [,length [,pad]])
 
-Returns the Unicode-codepoint substring of *string* beginning at the positive
-1-based position *start*. When *length* is omitted, the result continues through
-the end, or is empty when *start* is beyond the source. A supplied *length* must
-be non-negative and fixes the result width; missing source codepoints are
-replaced with *pad*. The default pad is blank and a supplied pad must contain
-exactly one codepoint.
+Returns the substring of *string* beginning at the positive 1-based position
+*start*. Level B measures Unicode codepoints. Level C measures exact octets in
+BYTE and codepoints in UTF8. When *length* is omitted, the result continues
+through the end, or is empty when *start* is beyond the source. A supplied
+*length* must be non-negative and fixes the result width; missing source units
+are replaced with *pad*. The default pad is blank and a supplied pad must
+contain exactly one active unit.
 
 The Level B helper requires `.int` start/length values and signals
 `INVALID_ARGUMENTS` for invalid values. The standalone Level C BIF accepts
 Classic whole-number text and reports standard `RXC-LC-40.*` context errors.
-Both count characters rather than UTF-8 bytes and leave the source unchanged.
+Both leave the source unchanged; their active units differ as described above.
 See the separate [Level B SUBSTR](../../../lib/rxfnsb/rexx/substr.md) and
 [Level C SUBSTR](../../../lib/rxfnsc/substr.md) pages.
 
@@ -1501,7 +1550,7 @@ SUBWORD('Now is the  time', 5)   == ''
 
 
 
-## TRANSLATE(s, new, old)
+## TRANSLATE(string [,outputTable [,inputTable [,pad]]])
 
 returns a copy of *string* with each character in
 *string* either unchanged or translated to another character.
@@ -1520,6 +1569,15 @@ The output table, *tableo*, is padded with *pad* or
 truncated on the right as necessary to be the same length as
 *tablei*.
 The default *pad* is a blank.
+
+When both tables are omitted, TRANSLATE applies the active profile's uppercase
+mapping. When the output table is supplied and the input table is omitted,
+Level B uses its fixed U+0000 through U+00FF codepoint domain and Level C BYTE
+uses its exact `00` through `FF` XRANGE. Level C UTF8 rejects that form because
+Classic XRANGE is not a Unicode range. Level B tables are codepoint based;
+Level C table units follow its BYTE or UTF8 profile. See the separate
+[Level B API](../../../lib/rxfnsb/rexx/translate.md) and
+[Level C BIF contract](../../../lib/rxfnsc/translate.md).
 
 **Examples:**
 ```
@@ -1546,12 +1604,13 @@ characters using the **translate** function.
 
 ## UPPER(string)
 
-Returns a copy of *string* with every cased character replaced by its uppercase
-equivalent. Nonletters and uncased characters are unchanged. This Level B
-surface accepts only the string argument; it has no substring position or
-length options.
+Returns a copy of *string* after applying Level B's locale-independent, limited
+simple uppercase table. Covered letters are replaced by their uppercase
+equivalents; other codepoints are unchanged. This is deliberately not full
+Unicode case folding. The surface accepts only the string argument; it has no
+substring position or length options.
 
-The helper accepts and returns `.string`, performs the configured Unicode case
+The helper accepts and returns `.string`, performs the runtime's limited simple
 mapping, and has no error branch for valid text. See
 [Level B UPPER](../../../lib/rxfnsb/rexx/upper.md) for its exact contract and
 implementation notes. UPPER is not a required Level C BIF in the repository
@@ -1596,7 +1655,8 @@ which case 0 is returned.
 The Level B helper types *start* as `.int`; an empty or invalid option and a
 non-positive start signal `INVALID_ARGUMENTS`. The standalone Level C BIF
 accepts Classic whole-number text and reports standard `RXC-LC-40.*` context
-errors. Both implementations use Unicode character positions. See the separate
+errors. Level B reports codepoint positions. Level C reports octet positions in
+BYTE and codepoint positions in UTF8. See the separate
 [Level B VERIFY](../../../lib/rxfnsb/rexx/verify.md) and
 [Level C VERIFY](../../../lib/rxfnsc/verify.md) pages for their distinct
 contracts.
@@ -1819,9 +1879,10 @@ must contain exactly one character, and invalid endpoints signal
 `INVALID_ARGUMENTS`. It is retained for legacy byte-range use; `SEQUENCE` is
 the non-wrapping Unicode range API.
 
-Classic Level C `XRANGE([start [,end]])` is different: its optional defaults
-and encoded-character order come from `Config_Xrange`. That configuration
-service is not yet defined, so the direct Level C implementation is parked.
+Classic Level C `XRANGE([start [,end]])` is different. In the default BYTE
+profile it returns the inclusive wrapping exact-byte range, defaulting to
+`00` through `FF`. It is intentionally unavailable in UTF8 because it is not a
+Unicode scalar or grapheme range.
 See the separate [Level B API](../../../lib/rxfnsb/rexx/xrange.md) and
 [Level C contract](../../../lib/rxfnsc/xrange.md).
 
@@ -1938,7 +1999,9 @@ is used.
 This allows a default keyword to be selected automatically if desired.
 
 The typed Level B and direct `RexxValue` contracts are documented separately in
-`lib/rxfnsb/rexx/abbrev.md` and `lib/rxfnsc/abbrev.md`.
+`lib/rxfnsb/rexx/abbrev.md` and `lib/rxfnsc/abbrev.md`. Level B measures the
+prefix and minimum in codepoints. Level C measures octets in BYTE and codepoints
+in UTF8.
 
 
 **Example:**

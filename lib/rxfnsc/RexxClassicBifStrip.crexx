@@ -25,6 +25,7 @@
 options levelb comments_dash numeric_classic
 namespace rexxclassicbifstrip expose rexxclassicbif_strip
 import rexxclassicbifs
+import rexxclassiccharacterscan
 import rexxvalue
 
 /**
@@ -42,14 +43,65 @@ rexxclassicbif_strip: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY oLTB oPAD") = 0 then return .RexxValue("")
 
-  string = context.argumentText(1)
   option = "B"
   if context.argumentExists(2) then option = context.argumentText(2)
   char_supplied = context.argumentExists(3)
-  char = " "
-  if char_supplied then char = context.argumentText(3)
+  config = context.characterConfig()
   option_character = .int
   option_index = 0
+  normalized_option = ""
+  assembler strupper normalized_option,option
+  assembler strchar option_character,normalized_option,option_index
+
+  if config.isByteProfile() then do
+    bytes = context.argument(1).asBinary()
+    other_blanks = config.byteOtherBlanks()
+    byte_length = .int
+    trim_byte = .int
+    current_byte = .int
+    start = 0
+    end_position = .int
+    assembler blen byte_length,bytes
+    end_position = byte_length
+    if char_supplied then do
+      char_bytes = context.argument(3).asBinary()
+      assembler getbyte trim_byte,char_bytes,option_index
+    end
+    if byte_length = 0 then return .RexxValue.fromBinary("" as .binary)
+
+    if \char_supplied then do
+      if option_character = 76 | option_character = 66 then do
+        start = rexxclassic_find_byte_nonblank(bytes,0,other_blanks)
+        if start < 0 then return .RexxValue.fromBinary("" as .binary)
+      end
+      if option_character = 84 | option_character = 66 then do
+        last = rexxclassic_find_byte_nonblank_reverse(bytes,byte_length,other_blanks)
+        if last < 0 then return .RexxValue.fromBinary("" as .binary)
+        end_position = last + 1
+      end
+    end
+    else do
+      if option_character = 76 | option_character = 66 then do while start < end_position
+        assembler getbyte current_byte,bytes,start
+        if current_byte <> trim_byte then leave
+        start = start + 1
+      end
+      if option_character = 84 | option_character = 66 then do while end_position > start
+        index = end_position - 1
+        assembler getbyte current_byte,bytes,index
+        if current_byte <> trim_byte then leave
+        end_position = end_position - 1
+      end
+    end
+    slice_length = end_position - start
+    result_bytes = rexxclassic_byte_slice(bytes,start,slice_length)
+    return .RexxValue.fromBinary(result_bytes)
+  end
+
+  string = context.argumentText(1)
+  char = " "
+  if char_supplied then char = context.argumentText(3)
+  other_blanks_text = config.textOtherBlanks()
   trim_character = .int
   current_character = .int
   string_length = .int
@@ -61,7 +113,6 @@ rexxclassicbif_strip: procedure = .RexxValue
   slice_length = .int
   result = ""
 
-  assembler strchar option_character,option,option_index
   if char_supplied then assembler strchar trim_character,char,option_index
   assembler strlen string_length,string
   end_position = string_length
@@ -69,13 +120,11 @@ rexxclassicbif_strip: procedure = .RexxValue
 
   if \char_supplied then do
     if option_character = 76 | option_character = 66 then do
-      search = 0
-      assembler fndnblnk start,string,search
+      start = rexxclassic_find_text_nonblank(string,0,other_blanks_text)
       if start < 0 then return .RexxValue(result)
     end
     if option_character = 84 | option_character = 66 then do
-      search = 0 - string_length
-      assembler fndnblnk last,string,search
+      last = rexxclassic_find_text_nonblank_reverse(string,string_length,other_blanks_text)
       if last < 0 then return .RexxValue(result)
       end_position = last + 1
     end

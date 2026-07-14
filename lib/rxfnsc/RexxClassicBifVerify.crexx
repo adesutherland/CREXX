@@ -42,8 +42,6 @@ rexxclassicbif_verify: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rANY oMN oWHOLE>0") = 0 then return .RexxValue("")
 
-  string = context.argumentText(1)
-  refchars = context.argumentText(2)
   option = "N"
   if context.argumentExists(3) then option = context.argumentText(3)
   start = 1
@@ -58,6 +56,39 @@ rexxclassicbif_verify: procedure = .RexxValue
 
   assembler strchar option_code,option,option_index
   want_match = option_code = 77 | option_code = 109
+  config = context.characterConfig()
+  if config.isByteProfile() then do
+    source_bytes = context.argument(1).asBinary()
+    reference_bytes = context.argument(2).asBinary()
+    source_byte = .int
+    reference_byte = .int
+    assembler blen source_length,source_bytes
+    if source_length = 0 | start > source_length then return .RexxValue("0")
+    assembler blen reference_length,reference_bytes
+    if reference_length = 0 then do
+      if want_match then return .RexxValue("0")
+      return .RexxValue(start || "")
+    end
+    do index = start - 1 to source_length - 1
+      assembler getbyte source_byte,source_bytes,index
+      found = 0
+      do reference_index = 0 to reference_length - 1
+        assembler getbyte reference_byte,reference_bytes,reference_index
+        if reference_byte = source_byte then do
+          found = 1
+          leave
+        end
+      end
+      if found = want_match then do
+        position = index + 1
+        return .RexxValue(position || "")
+      end
+    end
+    return .RexxValue("0")
+  end
+
+  string = context.argumentText(1)
+  refchars = context.argumentText(2)
   assembler strlen source_length,string
   if source_length = 0 | start > source_length then return .RexxValue("0")
   assembler strlen reference_length,refchars

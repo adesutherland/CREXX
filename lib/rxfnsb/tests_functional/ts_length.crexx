@@ -11,6 +11,7 @@ errors = errors + check(length("abcdefgh") = 8, "documented ASCII example")
 errors = errors + check(length(source) = 4, "Unicode Latin text")
 errors = errors + check(length("é日🙂") = 3, "Unicode codepoints, not UTF-8 bytes")
 errors = errors + check(length("é") = 2, "combining codepoint is counted separately")
+errors = errors + check(length("a" || d2c(0) || "b") = 3, "embedded U+0000")
 errors = errors + check(source = "René", "source is not exposed or mutated")
 
 if errors = 0 then say "PASS: length"

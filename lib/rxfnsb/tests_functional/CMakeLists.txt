@@ -37,6 +37,7 @@ set(REXXBINS
         ts_overlay.rxbin
         ts_pos.rxbin
         ts_qpos.rxbin
+        ts_qlibrary.rxbin
         ts_reverse.rxbin
         ts_regex.rxbin
         ts_right.rxbin

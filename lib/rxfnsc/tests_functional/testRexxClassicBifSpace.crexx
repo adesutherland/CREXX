@@ -14,6 +14,8 @@ errors = errors + check_default("", "")
 errors = errors + check_default("", " 　 ")
 errors = errors + check_pad("a·b", "a　b", "1", "·")
 errors = errors + check_count("solo", "solo", "100000")
+errors = errors + check_byte_profile()
+errors = errors + check_configured_byte_blank()
 
 large_source = "   "
 large_expected = ""
@@ -74,11 +76,49 @@ run_check: procedure = .int
     exists[3] = 1
   end
   context = .RexxBifCallContext("SPACE")
+  call context.useUtf8Profile()
   call context.setArguments(args, exists)
   result = .rexxclassicbifspace..rexxclassicbif_space(reference context)
   if \context.hasError() & result.asString() = expected & args[1].asString() = string then return 0
   say "FAIL: SPACE expected" expected "got" result.asString(),
       context.errorCode() context.errorMessage()
+  return 1
+
+check_byte_profile: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  source = "a　b"
+  args[1] = .RexxValue(source)
+  exists[1] = 1
+  context = .RexxBifCallContext("SPACE")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifspace..rexxclassicbif_space(reference context)
+  if \context.hasError() & result.asString() == source then return 0
+  say "FAIL: SPACE BYTE changed UTF8-only whitespace",
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_configured_byte_blank: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  source = .binary
+  source = "61FF62"x
+  blank = .binary
+  blank = "FF"x
+  args[1] = .RexxValue.fromBinary(source)
+  exists[1] = 1
+  context = .RexxBifCallContext("SPACE")
+  call context.setByteOtherBlanks(blank)
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifspace..rexxclassicbif_space(reference context)
+  actual = result.asBinary()
+  actual_length = .int
+  middle = .int
+  middle_index = 1
+  assembler blen actual_length,actual
+  assembler getbyte middle,actual,middle_index
+  if \context.hasError() & actual_length = 3 & middle = 32 then return 0
+  say "FAIL: SPACE configured BYTE blank"
   return 1
 
 check_count_error: procedure = .int

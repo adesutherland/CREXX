@@ -25,6 +25,7 @@
 options levelb comments_dash numeric_classic
 namespace rexxclassicbifdelword expose rexxclassicbif_delword
 import rexxclassicbifs
+import rexxclassiccharacterscan
 import rexxvalue
 
 /**
@@ -42,12 +43,73 @@ rexxclassicbif_delword: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0 oWHOLE>=0") = 0 then return .RexxValue("")
 
-  string = context.argumentText(1)
   start = .int
   start = context.argumentText(2) + 0
   count_supplied = context.argumentExists(3)
   delete_count = 0
   if count_supplied then delete_count = context.argumentText(3) + 0
+
+  config = context.characterConfig()
+  if config.isByteProfile() then do
+    bytes = .binary
+    other_blanks = .binary
+    bytes = context.argument(1).asBinary()
+    other_blanks = config.byteOtherBlanks()
+    byte_length = .int
+    assembler blen byte_length,bytes
+    if byte_length = 0 then return .RexxValue.fromBinary(bytes)
+    if count_supplied & delete_count = 0 then return .RexxValue.fromBinary(bytes)
+
+    scan = 0
+    current_word = 0
+    delete_start = -1
+    do while scan < byte_length
+      scan = rexxclassic_find_byte_nonblank(bytes, scan, other_blanks)
+      if scan < 0 then return .RexxValue.fromBinary(bytes)
+      current_word = current_word + 1
+      if current_word = start then do
+        delete_start = scan
+        leave
+      end
+      scan = rexxclassic_find_byte_blank(bytes, scan, other_blanks)
+      if scan < 0 then return .RexxValue.fromBinary(bytes)
+    end
+
+    delete_end = byte_length
+    if count_supplied then do
+      deleted = 0
+      scan = delete_start
+      word_end = 0
+      next_word = 0
+      do while deleted < delete_count
+        word_end = rexxclassic_find_byte_blank(bytes, scan, other_blanks)
+        deleted = deleted + 1
+        if word_end < 0 then do
+          delete_end = byte_length
+          leave
+        end
+        next_word = rexxclassic_find_byte_nonblank(bytes, word_end, other_blanks)
+        if next_word < 0 then do
+          delete_end = byte_length
+          leave
+        end
+        delete_end = next_word
+        if deleted = delete_count then leave
+        scan = next_word
+      end
+    end
+
+    prefix = .binary
+    tail = .binary
+    result_bytes = .binary
+    prefix = rexxclassic_byte_slice(bytes, 0, delete_start)
+    tail = rexxclassic_byte_slice(bytes, delete_end, byte_length - delete_end)
+    assembler bconcat result_bytes,prefix,tail
+    return .RexxValue.fromBinary(result_bytes)
+  end
+
+  string = context.argumentText(1)
+  text_other_blanks = config.textOtherBlanks()
 
   string_length = .int
   assembler strlen string_length,string
@@ -58,14 +120,14 @@ rexxclassicbif_delword: procedure = .RexxValue
   current_word = 0
   delete_start = -1
   do while scan < string_length
-    assembler fndnblnk scan,string,scan
+    scan = rexxclassic_find_text_nonblank(string, scan, text_other_blanks)
     if scan < 0 then return .RexxValue(string)
     current_word = current_word + 1
     if current_word = start then do
       delete_start = scan
       leave
     end
-    assembler fndblnk scan,string,scan
+    scan = rexxclassic_find_text_blank(string, scan, text_other_blanks)
     if scan < 0 then return .RexxValue(string)
   end
 
@@ -76,13 +138,13 @@ rexxclassicbif_delword: procedure = .RexxValue
     word_end = 0
     next_word = 0
     do while deleted < delete_count
-      assembler fndblnk word_end,string,scan
+      word_end = rexxclassic_find_text_blank(string, scan, text_other_blanks)
       deleted = deleted + 1
       if word_end < 0 then do
         delete_end = string_length
         leave
       end
-      assembler fndnblnk next_word,string,word_end
+      next_word = rexxclassic_find_text_nonblank(string, word_end, text_other_blanks)
       if next_word < 0 then do
         delete_end = string_length
         leave

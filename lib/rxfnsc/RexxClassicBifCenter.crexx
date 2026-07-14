@@ -25,6 +25,8 @@
 options levelb comments_dash numeric_classic
 namespace rexxclassicbifcenter expose rexxclassicbif_center rexxclassicbif_centre
 import rexxclassicbifs
+import rexxclassiccharacterops
+import rexxclassiccharacterscan
 import rexxvalue
 
 /**
@@ -42,9 +44,43 @@ rexxclassicbif_center: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>=0 oPAD") = 0 then return .RexxValue("")
 
-  string = context.argumentText(1)
   width = .int
   width = context.argumentText(2) + 0
+  config = context.characterConfig()
+
+  if config.isByteProfile() then do
+    bytes = context.argument(1).asBinary()
+    pad_bytes = .binary
+    if context.argumentExists(3) then pad_bytes = context.argument(3).asBinary()
+    else pad_bytes = " " as .binary
+    byte_length = .int
+    difference = .int
+    half = .int
+    start = .int
+    pad_byte = .int
+    pad_index = 0
+    assembler blen byte_length,bytes
+    assembler getbyte pad_byte,pad_bytes,pad_index
+    if width = byte_length then return .RexxValue.fromBinary(bytes)
+    if width < byte_length then do
+      difference = byte_length - width
+      start = difference
+      assembler idiv start,start,2
+      result_bytes = rexxclassic_byte_slice(bytes,start,width)
+      return .RexxValue.fromBinary(result_bytes)
+    end
+    difference = width - byte_length
+    half = difference
+    assembler idiv half,half,2
+    result_bytes = rexxclassic_byte_slice_pad("" as .binary,0,0,half,pad_byte)
+    assembler bappend result_bytes,bytes
+    right_padding = difference - half
+    padding_bytes = rexxclassic_byte_slice_pad("" as .binary,0,0,right_padding,pad_byte)
+    assembler bappend result_bytes,padding_bytes
+    return .RexxValue.fromBinary(result_bytes)
+  end
+
+  string = context.argumentText(1)
   pad = " "
   if context.argumentExists(3) then pad = context.argumentText(3)
 

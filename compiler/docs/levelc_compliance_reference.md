@@ -2,7 +2,7 @@
 
 Status: extracted implementation reference for Level C syntax, evaluation,
 execution, configuration, and diagnostics
-Last updated: 2026-06-20
+Last updated: 2026-07-14
 
 Source: publicly available Classic REXX language specification, with BIF details
 separated into
@@ -109,9 +109,20 @@ Source scanning depends on configuration services:
 - `Config_B2C` and `Config_C2B` convert between binary digits and encoded
   characters for binary/hex strings and conversion BIFs.
 
-Level B `.string` currently assumes valid UTF-8. Do not weaken that invariant
-accidentally. Level C byte-text behavior should be a deliberate policy in
-`RexxValue`, where binary bytes and valid text flags are already distinct.
+Level B `.string` remains valid UTF-8 and its character operations use
+codepoints. Level C selects character behavior through `RexxClassicConfig`
+owned by `RexxBifCallContext`, not through an individual value flag:
+
+- `BYTE` is the default compatibility profile. Character units, PAD values,
+  configured blanks, coded-character conversion, and XRANGE are exact bytes.
+- `UTF8` is opt-in. Text operations require valid UTF-8 and use Unicode
+  codepoints; default blanks follow Unicode 17.0.0 `White_Space` plus configured
+  codepoints.
+
+`RexxValue` binary/text flags continue to describe representation validity.
+There is no implicit profile fallback and no implicit normalization. Level G,
+not Level C or B, owns grapheme, normalization, full folding, and segmentation
+algorithms.
 
 ### Commands, Routines, Queues, Streams
 

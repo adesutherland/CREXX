@@ -1,0 +1,139 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/** Shared configured-character primitives for direct Level C BIFs. */
+options levelb comments_dash numeric_classic
+namespace rexxclassiccharacterops expose rexxclassic_value_length rexxclassic_value_find rexxclassic_value_prefix_equal rexxclassic_bytes_find rexxclassic_byte_slice_pad rexxclassic_reverse_bytes rexxclassic_reverse_text
+import rexxclassiccharacterscan
+import rexxclassicconfig
+import rexxvalue
+
+/** Return the configured BYTE or UTF8 character-unit length. */
+rexxclassic_value_length: procedure = .int
+  arg value = .RexxValue, config = .RexxClassicConfig
+  result = .int
+  if config.isByteProfile() then do
+    bytes = value.asBinary()
+    assembler blen result,bytes
+  end
+  else do
+    text = value.asString()
+    assembler strlen result,text
+  end
+  return result
+
+/** Find a value at or after a positive one-based configured-unit position. */
+rexxclassic_value_find: procedure = .int
+  arg needle_value = .RexxValue, haystack_value = .RexxValue, start = .int, config = .RexxClassicConfig
+  if config.isUtf8Profile() then do
+    needle = needle_value.asString()
+    haystack = haystack_value.asString()
+    if needle == "" | haystack == "" then return 0
+    result = start
+    assembler strpos result,needle,haystack
+    return result
+  end
+
+  needle_bytes = needle_value.asBinary()
+  haystack_bytes = haystack_value.asBinary()
+  return rexxclassic_bytes_find(needle_bytes,haystack_bytes,start)
+
+/** Find exact bytes at or after a positive one-based byte position. */
+rexxclassic_bytes_find: procedure = .int
+  arg needle_bytes = .binary, haystack_bytes = .binary, start = .int
+  needle_length = .int
+  haystack_length = .int
+  assembler blen needle_length,needle_bytes
+  assembler blen haystack_length,haystack_bytes
+  if needle_length = 0 | haystack_length = 0 then return 0
+  candidate = start - 1
+  last_candidate = haystack_length - needle_length
+  do while candidate <= last_candidate
+    if rexxclassic_byte_equal(needle_bytes,0,haystack_bytes,candidate,needle_length) then
+      return candidate + 1
+    candidate = candidate + 1
+  end
+  return 0
+
+/** Compare a configured-unit prefix without scanning beyond the prefix. */
+rexxclassic_value_prefix_equal: procedure = .boolean
+  arg left_value = .RexxValue, right_value = .RexxValue, count = .int, config = .RexxClassicConfig
+  if count = 0 then return 1
+  if config.isByteProfile() then do
+    left_bytes = left_value.asBinary()
+    right_bytes = right_value.asBinary()
+    return rexxclassic_byte_equal(left_bytes,0,right_bytes,0,count)
+  end
+  left = left_value.asString()
+  right = right_value.asString()
+  left_character = .int
+  right_character = .int
+  do index = 0 to count - 1
+    assembler strchar left_character,left,index
+    assembler strchar right_character,right,index
+    if left_character <> right_character then return 0
+  end
+  return 1
+
+/** Copy a byte span and extend it with one pad byte to the requested length. */
+rexxclassic_byte_slice_pad: procedure = .binary
+  arg bytes = .binary, start = .int, copy_count = .int, result_length = .int, pad_byte = .int
+  result = rexxclassic_byte_slice(bytes,start,copy_count)
+  if result_length > copy_count then do
+    assembler bresize result,result_length
+    do index = copy_count to result_length - 1
+      assembler setbyte result,index,pad_byte
+    end
+  end
+  return result
+
+/** Reverse exact BYTE units. */
+rexxclassic_reverse_bytes: procedure = .binary
+  arg bytes = .binary
+  byte_length = .int
+  byte = .int
+  result_bytes = .binary
+  assembler blen byte_length,bytes
+  assembler bresize result_bytes,byte_length
+  do index = 0 to byte_length - 1
+    assembler getbyte byte,bytes,index
+    target = byte_length - index - 1
+    assembler setbyte result_bytes,target,byte
+  end
+  return result_bytes
+
+/** Reverse UTF8 codepoints without changing the codepoint payloads. */
+rexxclassic_reverse_text: procedure = .string
+  arg text = .string
+  text_length = .int
+  codepoint = .int
+  result_text = ""
+  assembler strlen text_length,text
+  index = text_length - 1
+  do while index >= 0
+    assembler strchar codepoint,text,index
+    assembler appendchar result_text,codepoint
+    index = index - 1
+  end
+  return result_text

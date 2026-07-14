@@ -15,6 +15,8 @@ set(REXXBINS
   testRexxClassicBifAbs
   testRexxClassicBifAddress
   testRexxClassicBifB2x
+  testRexxClassicBifC2d
+  testRexxClassicBifC2x
   testRexxClassicBifCenter
   testRexxClassicBifCentre
   testRexxClassicBifChangestr
@@ -22,6 +24,7 @@ set(REXXBINS
   testRexxClassicBifCopies
   testRexxClassicBifCountstr
   testRexxClassicBifD2x
+  testRexxClassicBifD2c
   testRexxClassicBifDate
   testRexxClassicBifDelstr
   testRexxClassicBifDelword
@@ -45,6 +48,7 @@ set(REXXBINS
   testRexxClassicBifSymbol
   testRexxClassicBifTime
   testRexxClassicBifTrace
+  testRexxClassicBifTranslate
   testRexxClassicBifTrunc
   testRexxClassicBifValue
   testRexxClassicBifVerify
@@ -54,7 +58,9 @@ set(REXXBINS
   testRexxClassicBifWordpos
   testRexxClassicBifWords
   testRexxClassicBifX2b
+  testRexxClassicBifX2c
   testRexxClassicBifX2d
+  testRexxClassicBifXrange
 )
 
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)

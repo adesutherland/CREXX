@@ -22,3 +22,6 @@ pos("", "anything")        /* 0 */
 Arguments are read-only. The implementation performs direct null checks and
 one VM `strpos` search. It makes no LENGTH or other Level B helper call and
 allocates no substring.
+
+The VM search is length bounded: U+0000 can occur in either argument and does
+not terminate matching.

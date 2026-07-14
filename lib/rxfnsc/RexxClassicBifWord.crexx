@@ -25,6 +25,7 @@
 options levelb comments_dash numeric_classic
 namespace rexxclassicbifword expose rexxclassicbif_word
 import rexxclassicbifs
+import rexxclassiccharacterscan
 import rexxvalue
 
 /**
@@ -42,9 +43,41 @@ rexxclassicbif_word: procedure = .RexxValue
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0") = 0 then return .RexxValue("")
 
-  string = context.argumentText(1)
   wordnum = .int
   wordnum = context.argumentText(2) + 0
+  config = context.characterConfig()
+
+  if config.isByteProfile() then do
+    bytes = .binary
+    other_blanks = .binary
+    bytes = context.argument(1).asBinary()
+    other_blanks = config.byteOtherBlanks()
+    byte_length = .int
+    assembler blen byte_length,bytes
+    if byte_length = 0 then return .RexxValue("")
+
+    scan = 0
+    current_word = 0
+    word_start = 0
+    word_end = 0
+    do while scan < byte_length
+      word_start = rexxclassic_find_byte_nonblank(bytes, scan, other_blanks)
+      if word_start < 0 then return .RexxValue("")
+      current_word = current_word + 1
+      word_end = rexxclassic_find_byte_blank(bytes, word_start, other_blanks)
+      if current_word = wordnum then do
+        if word_end < 0 then word_end = byte_length
+        result_bytes = rexxclassic_byte_slice(bytes, word_start, word_end - word_start)
+        return .RexxValue.fromBinary(result_bytes)
+      end
+      if word_end < 0 then return .RexxValue("")
+      scan = word_end
+    end
+    return .RexxValue("")
+  end
+
+  string = context.argumentText(1)
+  text_other_blanks = config.textOtherBlanks()
   string_length = .int
   assembler strlen string_length,string
   if string_length = 0 then return .RexxValue("")
@@ -56,10 +89,10 @@ rexxclassicbif_word: procedure = .RexxValue
   word_length = 0
   result = ""
   do while scan < string_length
-    assembler fndnblnk word_start,string,scan
+    word_start = rexxclassic_find_text_nonblank(string, scan, text_other_blanks)
     if word_start < 0 then return .RexxValue("")
     current_word = current_word + 1
-    assembler fndblnk word_end,string,word_start
+    word_end = rexxclassic_find_text_blank(string, word_start, text_other_blanks)
     if current_word = wordnum then do
       if word_end < 0 then word_end = string_length
       word_length = word_end - word_start

@@ -1,0 +1,90 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifxrange
+import rexxclassicencoding
+import rexxvalue
+
+errors = 0
+errors = errors + check_default()
+errors = errors + check_value("FEFF", "FE", 1, "", 0)
+errors = errors + check_value("FF0001", "FF", 1, "01", 1)
+errors = errors + check_value("000102", "", 0, "02", 1)
+errors = errors + check_utf8_error()
+errors = errors + check_count_error()
+errors = errors + check_pad_error("C3A9")
+
+if errors = 0 then say "PASS: Level C XRANGE BIF"
+return errors <> 0
+
+check_default: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  context = .RexxBifCallContext("XRANGE")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifxrange..rexxclassicbif_xrange(reference context)
+  bytes = result.asBinary()
+  byte_length = .int
+  first = .int
+  last = .int
+  first_index = 0
+  last_index = 255
+  assembler blen byte_length,bytes
+  assembler getbyte first,bytes,first_index
+  assembler getbyte last,bytes,last_index
+  if \context.hasError() & byte_length = 256 & first = 0 & last = 255 then return 0
+  say "FAIL: XRANGE default" byte_length first last context.errorCode()
+  return 1
+
+check_value: procedure = .int
+  arg expected_hex = .string, start_hex = .string, start_exists = .int, end_hex = .string, end_exists = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes(start_hex))
+  exists[1] = start_exists
+  args[2] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes(end_hex))
+  exists[2] = end_exists
+  context = .RexxBifCallContext("XRANGE")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifxrange..rexxclassicbif_xrange(reference context)
+  actual_hex = rexxclassic_bytes_to_hex(result.asBinary())
+  if \context.hasError() & actual_hex = expected_hex then return 0
+  say "FAIL: XRANGE" start_hex end_hex "expected" expected_hex "got" actual_hex,
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_utf8_error: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  context = .RexxBifCallContext("XRANGE")
+  call context.useUtf8Profile()
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifxrange..rexxclassicbif_xrange(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.1" then return 0
+  say "FAIL: XRANGE UTF8 expected RXC-LC-40.1 got" context.errorCode() result.asString()
+  return 1
+
+check_count_error: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do index = 1 to 3
+    args[index] = .RexxValue("A")
+    exists[index] = 1
+  end
+  return run_error("RXC-LC-40.4", args, exists)
+
+check_pad_error: procedure = .int
+  arg hexadecimal = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue.fromBinary(rexxclassic_hex_to_bytes(hexadecimal))
+  exists[1] = 1
+  return run_error("RXC-LC-40.23", args, exists)
+
+run_error: procedure = .int
+  arg expected = .string, args = .RexxValue[], exists = .int[]
+  context = .RexxBifCallContext("XRANGE")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifxrange..rexxclassicbif_xrange(reference context)
+  if context.hasError() & context.errorCode() = expected then return 0
+  say "FAIL: XRANGE expected error" expected "got" context.errorCode() result.asString()
+  return 1

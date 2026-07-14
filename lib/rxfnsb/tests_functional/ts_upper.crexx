@@ -10,6 +10,8 @@ errors = errors + check(upper("MiXeD 123 !?") = "MIXED 123 !?", "mixed text pres
 errors = errors + check(upper("äöüé") = "ÄÖÜÉ", "Unicode cased characters")
 errors = errors + check(upper("ALREADY UPPER") = "ALREADY UPPER", "already uppercase")
 errors = errors + check(upper("") = "", "empty string")
+embedded_nul = "a" || d2c(0) || "b"
+errors = errors + check(upper(embedded_nul) = "A" || d2c(0) || "B", "text after embedded U+0000")
 errors = errors + check(source = "The quick brown fox jumps over the lazy dog", "source is not exposed or mutated")
 
 if errors = 0 then say "PASS: upper"

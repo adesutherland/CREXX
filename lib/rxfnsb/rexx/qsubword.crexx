@@ -22,15 +22,38 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/** Select a range of Unicode quote-aware words. */
 options levelb
-
 namespace rxfnsb expose qsubword
 
-qsubword: procedure=.string
-   arg string=.string, wordnum=.int
-   if wordnum<1 then return ''
-   spos=qwordindex(string,wordnum)              /* start position of selected word */
-   if spos=0 then return ""
-return substr(string,spos)
+/**
+ * Return words beginning at wordnum while preserving their original separators.
+ * Omitted count selects through the last word; explicit zero returns empty.
+ *
+ * @param string source text
+ * @param wordnum positive one-based first word
+ * @param count optional non-negative number of words
+ * @return the selected source span without outer whitespace
+ * @signal INVALID_ARGUMENTS invalid index/count or unmatched quote
+ */
+qsubword: procedure = .string
+  arg string = .string, wordnum = .int, count = 0
+  count_supplied = ?count
+  if wordnum < 1 then
+    assembler signal "INVALID_ARGUMENTS", "QSUBWORD word number must be positive"
+  if count_supplied & count < 0 then
+    assembler signal "INVALID_ARGUMENTS", "QSUBWORD count must not be negative"
+  if count_supplied & count = 0 then return ''
 
+  spans = qscan_word_spans(string)
+  word_count = .int
+  assembler idiv word_count,spans[0],2
+  if wordnum > word_count then return ''
+  last_word = word_count
+  if count_supplied & wordnum + count - 1 < last_word then
+    last_word = wordnum + count - 1
+  first_base = (wordnum - 1) * 2
+  last_base = (last_word - 1) * 2
+  first_start = spans[first_base + 1]
+  last_end = spans[last_base + 1] + spans[last_base + 2]
+  return substr(string,first_start + 1,last_end - first_start)

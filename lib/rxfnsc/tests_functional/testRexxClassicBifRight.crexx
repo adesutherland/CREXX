@@ -1,6 +1,7 @@
 options levelb comments_dash numeric_classic
 import rexxclassicbifs
 import rexxclassicbifright
+import rexxclassicencoding
 import rexxvalue
 
 errors = 0
@@ -15,6 +16,7 @@ errors = errors + check_default("foobar", "foobar", "6")
 errors = errors + check_pad("**foobar", "foobar", "8", "*")
 errors = errors + check_default("é日", "aé日", "2")
 errors = errors + check_pad("··é", "é", "3", "·")
+errors = errors + check_byte_profile()
 errors = errors + check_large()
 
 errors = errors + check_count_error("RXC-LC-40.3", 0)
@@ -52,10 +54,27 @@ run_check: procedure = .int
     exists[3] = 1
   end
   context = .RexxBifCallContext("RIGHT")
+  call context.useUtf8Profile()
   call context.setArguments(args, exists)
   result = .rexxclassicbifright..rexxclassicbif_right(reference context)
   if \context.hasError() & result.asString() = expected & args[1].asString() = string then return 0
   say "FAIL: RIGHT expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_byte_profile: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("éx")
+  args[2] = .RexxValue("2")
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("RIGHT")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifright..rexxclassicbif_right(reference context)
+  actual = rexxclassic_bytes_to_hex(result.asBinary())
+  if \context.hasError() & actual = "A978" then return 0
+  say "FAIL: RIGHT BYTE expected A978 got" actual,
       context.errorCode() context.errorMessage()
   return 1
 

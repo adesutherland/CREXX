@@ -10,6 +10,8 @@ errors = errors + check(lower("MiXeD 123 !?") = "mixed 123 !?", "mixed text pres
 errors = errors + check(lower("ÄÖÜÉ") = "äöüé", "Unicode cased characters")
 errors = errors + check(lower("already lower") = "already lower", "already lowercase")
 errors = errors + check(lower("") = "", "empty string")
+embedded_nul = "A" || d2c(0) || "B"
+errors = errors + check(lower(embedded_nul) = "a" || d2c(0) || "b", "text after embedded U+0000")
 errors = errors + check(source = "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG", "source is not exposed or mutated")
 
 if errors = 0 then say "PASS: lower"
