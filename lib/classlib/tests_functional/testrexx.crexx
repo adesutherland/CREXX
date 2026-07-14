@@ -66,6 +66,18 @@ rc = t.t_d2x() ; errors=errors+rc
 say 'rc d2x=' rc
 say 'errors' errors
 
+rc = t.t_x2b() ; errors=errors+rc
+say 'rc x2b=' rc
+say 'errors' errors
+
+rc = t.t_x2d() ; errors=errors+rc
+say 'rc x2d=' rc
+say 'errors' errors
+
+rc = t.t_xrange() ; errors=errors+rc
+say 'rc xrange=' rc
+say 'errors' errors
+
 rc = t.t_format() ; errors=errors+rc
 say 'rc format=' rc
 say 'errors' errors
@@ -420,36 +432,46 @@ testrexx: class
   t_d2x: method = .int
     flag=.boolean
     flag = 1
-    v=.rexx('8947848')
+    v=.rexx('0')
     w=.rexx(9)
     x=.rexx('129')
-    y=.rexx('127')
-    z=.rexx('257')
-    a=.rexx('-127')
-    b=.rexx('12')
-    c=.rexx('-7829368')
-    
+    flag=flag & (v.d2x().toString()     = '0' )
     flag=flag & (w.d2x().toString()     = '9' )
     flag=flag & (x.d2x().toString()     = '81' )
-    -- flag=flag & (x.d2x()    = 1 )
-    -- flag=flag & (x.d2x()    = '81')
-    -- flag=flag & (y.d2x()    = '07F')
-    -- flag=flag & (x.d2x()    = '0081')
-    -- flag=flag & (z.d2x()    = '01')
-    -- flag=flag & (a.d2x()    = '81')
-    -- flag=flag & (a.d2x()    = 'FF81')
-    -- flag=flag & (b.d2x()    = '')
-    -- flag=flag & (v.d2x()    = '888888')
-    -- flag=flag & (v.d2x()    = '8888')
-    -- flag=flag & (v.d2x()    = '88888')
-    -- flag=flag & (v.d2x()    = '888888')
-    -- flag=flag & (v.d2x()    = '0888888')
-    -- flag=flag & (v.d2x()    = '00888888')
-    -- flag=flag & (c.d2x()    = '8888')
-    -- flag=flag & (c.d2x()    = '88888')
-    -- flag=flag & (c.d2x()    = '888888')
-    -- flag=flag & (c.d2x()    = 'F888888')
-    -- flag=flag & (c.d2x()    = 'FF888888')
+    return \flag
+
+ /*-- X 2 B -------------------------------------------------------*/
+  t_x2b: method = .int
+    flag=.boolean
+    flag = 1
+    v=.rexx('C3')
+    w=.rexx('7')
+    x=.rexx('1 C1')
+    y=.rexx('0001')
+    flag=flag & (v.x2b().toString() = '11000011')
+    flag=flag & (w.x2b().toString() = '0111')
+    flag=flag & (x.x2b().toString() = '000111000001')
+    flag=flag & (y.x2b().toString() = '0000000000000001')
+    return \flag
+
+ /*-- X 2 D -------------------------------------------------------*/
+  t_x2d: method = .int
+    flag=.boolean
+    flag = 1
+    unsigned=.rexx('81')
+    signed=.rexx('F081')
+    flag=flag & (unsigned.x2d() = 129)
+    flag=flag & (unsigned.x2d(2) = -127)
+    flag=flag & (unsigned.x2d(0) = 0)
+    flag=flag & (signed.x2d(3) = 129)
+    return \flag
+
+ /*-- X R A N G E ------------------------------------------------*/
+  t_xrange: method = .int
+    flag=.boolean
+    flag = 1
+    start=.rexx('a')
+    flag=flag & (start.xrange('f').toString() = 'abcdef')
     return \flag
 
 -- /*-- E X I S T S --------- not in crexx (yet?---------------------*/
@@ -551,4 +573,3 @@ testrexx: class
     -- flag=flag & ('0.99999'.format(null,4,2,2)     == '1.0000    ')
     
     return \flag
-

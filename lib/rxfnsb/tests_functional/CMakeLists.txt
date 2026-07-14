@@ -11,6 +11,7 @@ set(REXXBINS
         tlinesz.rxbin
         ts_abbrev.rxbin
 	ts_abs.rxbin
+	        ts_address_protocol.rxbin
 	ts_address.rxbin
         ts_address_crexx.rxbin
         ts_binary.rxbin
@@ -73,6 +74,49 @@ set(REXXBINS
         ts_numeric.rxbin
         ts_splice.rxbin
         ts_arraydelete.rxbin
+        ts_arraydelete_focused.rxbin
+        ts_arrayappend.rxbin
+        ts_arraycontains.rxbin
+        ts_arraycopy.rxbin
+        ts_arraydrop.rxbin
+        ts_arrayfind.rxbin
+        ts_arrayget.rxbin
+        ts_arrayhi.rxbin
+        ts_arrayindexof.rxbin
+        ts_arrayinsert.rxbin
+        ts_arrayjoin.rxbin
+        ts_arraymove.rxbin
+        ts_arraypop.rxbin
+        ts_arrayprepend.rxbin
+        ts_arrayreverse.rxbin
+        ts_arrayset.rxbin
+        ts_arrayshift.rxbin
+        ts_arraysort.rxbin
+        ts_b2d.rxbin
+        ts_b2x.rxbin
+        ts_c2d.rxbin
+        ts_centre.rxbin
+        ts_d2b.rxbin
+        ts_ftrunc.rxbin
+        ts_getenv.rxbin
+        ts_itrunc.rxbin
+        ts_loadmodule.rxbin
+        ts_max.rxbin
+        ts_min.rxbin
+        ts_objectarrayappend.rxbin
+        ts_objectarraydelete.rxbin
+        ts_objectarraydrop.rxbin
+        ts_objectarrayinsert.rxbin
+        ts_objectarraymove.rxbin
+        ts_objectarrayprepend.rxbin
+        ts_qwordlength.rxbin
+        ts_raise.rxbin
+        ts_rxsystem.rxbin
+        ts_rxsystem_exit.rxbin
+        ts_signal.rxbin
+        ts_substro.rxbin
+        ts_subword.rxbin
+        ts_xrange.rxbin
         ts_objectarray.rxbin
         ts_stem.rxbin
         ts_rxjson.rxbin
@@ -84,6 +128,21 @@ set(REXXBINS
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
 
 add_custom_target(testbifs ALL)
+
+set(_loadmodule_provider "${CMAKE_CURRENT_BINARY_DIR}/ts_loadmodule_provider.rxbin")
+add_custom_command(
+        OUTPUT ${_loadmodule_provider}
+        COMMAND $<TARGET_FILE:rxc> -x -o ts_loadmodule_provider
+                ${CMAKE_CURRENT_SOURCE_DIR}/ts_loadmodule_provider.crexx
+        COMMAND $<TARGET_FILE:rxas> -o ts_loadmodule_provider ts_loadmodule_provider
+        DEPENDS rxc rxas compiler_exit_bin
+                ${CMAKE_CURRENT_SOURCE_DIR}/ts_loadmodule_provider.crexx
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Building the LOADMODULE focused provider"
+        VERBATIM
+)
+add_custom_target(ts_loadmodule_provider_artifact DEPENDS ${_loadmodule_provider})
+add_dependencies(testbifs ts_loadmodule_provider_artifact)
 
 unset(_prev_target)
 foreach(_binfile ${REXXBINS})
@@ -111,8 +170,20 @@ foreach(_binfile ${REXXBINS})
         set(_rxc_flags)
     endif()
     set(_pass_test_name_argument)
-    if("${_basename}" STREQUAL "ts_fileio_chars")
+    if("${_basename}" STREQUAL "ts_fileio_chars" OR
+            "${_basename}" STREQUAL "ts_rxsystem" OR
+            "${_basename}" STREQUAL "ts_signal")
         set(_pass_test_name_argument PASS_TEST_NAME_ARGUMENT)
+    endif()
+    set(_expected_exit_code)
+    set(_expected_failure_description)
+    if("${_basename}" STREQUAL "ts_rxsystem_exit")
+        set(_expected_exit_code 7)
+        set(_expected_failure_description "Level B _exit must preserve the requested process status")
+    endif()
+    set(_extra_depends)
+    if("${_basename}" STREQUAL "ts_loadmodule")
+        list(APPEND _extra_depends ts_loadmodule_provider_artifact ${_loadmodule_provider})
     endif()
     crexx_add_rexx_opt_matrix(
             NAME ${_basename}
@@ -120,11 +191,62 @@ foreach(_binfile ${REXXBINS})
             TARGET_GROUP ${_basename}
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
             RXC_FLAGS ${_rxc_flags}
-            DEPENDS library ${_rexx_dep} ${_prev_target}
+            DEPENDS library ${_rexx_dep} ${_prev_target} ${_extra_depends}
             RUNTIME_ARGS ${LIBRPATH}
+            EXPECTED_EXIT_CODE "${_expected_exit_code}"
+            EXPECTED_FAILURE_DESCRIPTION "${_expected_failure_description}"
             ${_pass_test_name_argument}
     )
     set(_prev_target ${_basename}_noopt_artifact ${_basename}_opt_artifact)
+endforeach()
+
+# Caught signals from exposed arrays/objects are currently reliable only when
+# each assertion runs in a fresh VM. Build each parameterized harness once per
+# optimization mode, then register every case as a separate process.
+add_custom_target(ts_arraysort_errors)
+add_dependencies(testbifs ts_arraysort_errors)
+crexx_add_rexx_opt_matrix(
+        NAME ts_arraysort_error_offset
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/ts_arraysort_errors.crexx
+        TARGET_GROUP ts_arraysort_errors
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        RXC_FLAGS -x
+        DEPENDS library ${CMAKE_CURRENT_SOURCE_DIR}/ts_arraysort_errors.crexx
+        RUNTIME_ARGS ${LIBRPATH} -a offset
+)
+foreach(_mode IN ITEMS noopt opt)
+    foreach(_case IN ITEMS order debug)
+        _crexx_register_runtime_test(
+                NAME ts_arraysort_error_${_case}_${_mode}
+                RUNNER $<TARGET_FILE:rxvm>
+                PROGRAM ts_arraysort_error_offset_${_mode}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                RUNTIME_ARGS ${LIBRPATH} -a ${_case}
+        )
+    endforeach()
+endforeach()
+
+add_custom_target(ts_stem_errors)
+add_dependencies(testbifs ts_stem_errors)
+crexx_add_rexx_opt_matrix(
+        NAME ts_stem_error_key
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/ts_stem_errors.crexx
+        TARGET_GROUP ts_stem_errors
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        RXC_FLAGS -x
+        DEPENDS library ${CMAKE_CURRENT_SOURCE_DIR}/ts_stem_errors.crexx
+        RUNTIME_ARGS ${LIBRPATH} -a key
+)
+foreach(_mode IN ITEMS noopt opt)
+    foreach(_case IN ITEMS value valueat iterator)
+        _crexx_register_runtime_test(
+                NAME ts_stem_error_${_case}_${_mode}
+                RUNNER $<TARGET_FILE:rxvm>
+                PROGRAM ts_stem_error_key_${_mode}
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                RUNTIME_ARGS ${LIBRPATH} -a ${_case}
+        )
+    endforeach()
 endforeach()
 
 set_tests_properties(ts_rxjson_noopt ts_rxjson_opt
@@ -146,10 +268,12 @@ set_tests_properties(ts_rxhttp_noopt ts_rxhttp_opt
 set_tests_properties(ts_trace_noopt ts_trace_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: trace helpers")
 set_tests_properties(ts_version_noopt ts_version_opt
-        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: version helper")
+        PROPERTIES PASS_REGULAR_EXPRESSION "PASS: version")
 set_tests_properties(ts_binary_noopt ts_binary_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: binary helpers")
 set_tests_properties(ts_fileio_chars_noopt ts_fileio_chars_opt
         PROPERTIES RUN_SERIAL TRUE)
 set_tests_properties(ts_arraydelete_noopt ts_arraydelete_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: array helpers")
+set_tests_properties(ts_getenv_noopt ts_getenv_opt
+        PROPERTIES ENVIRONMENT "CREXX_GETENV_SELECTOR_TEST_VALUE=alpha beta")

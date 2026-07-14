@@ -1,0 +1,5 @@
+options levelb
+namespace loadmodule_test_provider expose loadmodule_test_ping
+
+loadmodule_test_ping: procedure = .int
+  return 1

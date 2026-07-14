@@ -1,0 +1,89 @@
+/* Focused Level B ARRAYINSERT tests. */
+options levelb
+import rxfnsb
+
+errors = 0
+errors = errors + test_empty()
+errors = errors + test_middle()
+errors = errors + test_prepend()
+errors = errors + test_append_clamp()
+errors = errors + test_zero_count()
+errors = errors + test_invalid_from()
+errors = errors + test_invalid_count()
+
+if errors = 0 then say "PASS: arrayinsert"
+return errors <> 0
+
+test_empty: procedure = .int
+  array = .string[]
+  rc = arrayinsert(array, 1, 2, "X")
+  return check_array("empty insertion", array, rc, 2, "X|X")
+
+test_middle: procedure = .int
+  array = .string[]
+  array[1] = "A"
+  array[2] = "D"
+  fill = "B"
+  rc = arrayinsert(array, 2, 2, fill)
+  fill = "changed"
+  return check_array("middle insertion", array, rc, 4, "A|B|B|D")
+
+test_prepend: procedure = .int
+  array = .string[]
+  array[1] = "B"
+  array[2] = "C"
+  rc = arrayinsert(array, 1, 1, "A")
+  return check_array("prepend", array, rc, 3, "A|B|C")
+
+test_append_clamp: procedure = .int
+  array = .string[]
+  array[1] = "A"
+  rc = arrayinsert(array, 999, 2)
+  return check_array("append clamp/default", array, rc, 3, "A||")
+
+test_zero_count: procedure = .int
+  array = .string[]
+  array[1] = "A"
+  before = join(array)
+  rc = arrayinsert(array, 1, 0, "X")
+  if rc = 1 & join(array) == before then return 0
+  say "FAIL: ARRAYINSERT zero count changed the array"
+  return 1
+
+test_invalid_from: procedure = .int
+  array = .string[]
+  array[1] = "A"
+  do
+    ignored = arrayinsert(array, 0, 1, "X")
+  on signal invalid_arguments
+    return 0
+  end
+  say "FAIL: ARRAYINSERT invalid position did not signal"
+  return 1
+
+test_invalid_count: procedure = .int
+  array = .string[]
+  array[1] = "A"
+  do
+    ignored = arrayinsert(array, 1, -1, "X")
+  on signal invalid_arguments
+    return 0
+  end
+  say "FAIL: ARRAYINSERT invalid count did not signal"
+  return 1
+
+check_array: procedure = .int
+  arg label = .string, array = .string[], actual_rc = .int, expected_rc = .int, expected = .string
+  actual = join(array)
+  if actual_rc = expected_rc & actual == expected then return 0
+  say "FAIL: ARRAYINSERT" label "expected" expected_rc expected "got" actual_rc actual
+  return 1
+
+join: procedure = .string
+  arg array = .string[]
+  result = ""
+  do i = 1 to array[0]
+    if i > 1 then result = result || "|"
+    result = result || array[i]
+  end
+  return result

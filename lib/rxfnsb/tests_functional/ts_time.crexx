@@ -1,37 +1,89 @@
-/* rexx test abs bif */
+/* rexx */
 options levelb
 import rxfnsb
 
-/* TODO RXVM ts_time time trunc right left _elapsed copies length substr */
-say "test Time"
-say "Option 'E' "time('E')
-/* instead of a wait we run a large loop */
-do i=1 to 1000000
-   a=i
+errors = 0
+normal = time()
+errors = errors + check_clock(normal, 8, "normal")
+errors = errors + check_clock(time("n"), 8, "case-insensitive normal")
+errors = errors + check_clock(time("L"), 15, "long")
+errors = errors + check_clock(time("UTC"), 8, "UTC")
+
+hour = time("H") + 0
+minute = time("M") + 0
+second = time("S") + 0
+microsecond = time("US") + 0
+errors = errors + check_true(hour >= 0 & hour <= 23, "hour range")
+errors = errors + check_true(minute >= 0 & minute < 1440, "minute range")
+errors = errors + check_true(second >= 0 & second < 86400, "second range")
+errors = errors + check_true(microsecond >= 0 & microsecond < 86400000000, "microsecond range")
+
+civil = time("C")
+errors = errors + check_true(character_length(civil) = 7, "civil length")
+errors = errors + check_true(character_code(civil, 2) = 58, "civil separator")
+errors = errors + check_true((character_code(civil, 5) = 97 | character_code(civil, 5) = 112) & character_code(civil, 6) = 109, "civil suffix")
+civil_hour = (character_code(civil, 0) - 48) * 10 + character_code(civil, 1) - 48
+errors = errors + check_true(civil_hour >= 1 & civil_hour <= 12, "civil hour")
+
+first_elapsed = time("E") + 0
+do index = 1 to 10000
+  scratch = index
 end
-say "Option 'E' "time('E')
-say "Option 'R' "time('R')
-say "Option 'E' "time('E')
-/* instead of a wait we run a large loop */
-do i=1 to 2500000
-   a=i
+second_elapsed = time("E") + 0
+reset_elapsed = time("R") + 0
+after_reset = time("E") + 0
+errors = errors + check_true(first_elapsed >= 0, "first elapsed")
+errors = errors + check_true(second_elapsed >= first_elapsed, "elapsed monotonic")
+errors = errors + check_true(reset_elapsed >= second_elapsed, "reset returns elapsed")
+errors = errors + check_true(after_reset >= 0, "elapsed after reset")
+
+errors = errors + check_true(time("T") + 0 >= 0, "process ticks")
+errors = errors + check_true(time("TS") + 0 > 0, "ticks per second")
+errors = errors + check_true(time("ZD") + 0 > -86400 & time("ZD") + 0 < 86400, "UTC offset")
+timezone_names = time("ZN")
+errors = errors + check_true(timezone_names \== "", "timezone names")
+
+caught = 0
+do
+  ignored = time("BAD")
+on signal invalid_arguments
+  caught = 1
 end
-say "Option 'E' "time('E')
+errors = errors + check_true(caught = 1, "invalid option signals")
 
-say "Option '' "time()
-say "Option N  "time("N")
-say "Option L  "time("l")
-say "Option C  "time("C")
-say "Option H  "time("h")
-say "Option M  "time("M")
-say "Option S  "time("s")
-say "Option US "time("us")  /* microseconds since midnight */
+if errors = 0 then say "PASS: time"
+return errors <> 0
 
+check_clock: procedure = .int
+  arg value = .string, expected_length = .int, label = .string
+  if character_length(value) <> expected_length then do
+    say "FAIL: TIME" label "length" character_length(value) "value" value
+    return 1
+  end
+  if character_code(value, 2) <> 58 | character_code(value, 5) <> 58 then do
+    say "FAIL: TIME" label "separators in" value
+    return 1
+  end
+  if expected_length = 15 & character_code(value, 8) <> 46 then do
+    say "FAIL: TIME" label "fraction separator in" value
+    return 1
+  end
+  return 0
 
-say "Option ZD  "time("zd")   /* time differnce to UTC in seconds */
-say "Option T   "time("T")    /* cpu ticks since program start    */
-say "Option TS  "time("TS")   /* cpu ticks per seconds            */
-say "Option ZN  "time("zN")   /* time zone name ; summer time zone name (if any) */
-say "Option UTC "time("uTc")  /* UTC time */
+character_length: procedure = .int
+  arg value = .string
+  result = .int
+  assembler strlen result,value
+  return result
 
-return 0
+character_code: procedure = .int
+  arg value = .string, index = .int
+  result = .int
+  assembler strchar result,value,index
+  return result
+
+check_true: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: TIME" label
+  return 1

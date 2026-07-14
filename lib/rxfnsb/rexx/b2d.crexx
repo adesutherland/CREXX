@@ -22,12 +22,66 @@
  * SOFTWARE.
  */
 
-/* rexx */
-options levelb
+/**
+ * Level B B2D implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/b2d.md
+ */
+options levelb comments_dash numeric_classic
 namespace rxfnsb expose b2d
-import _rxsysb
 
+/**
+ * Convert standard binary text to a non-negative native integer.
+ *
+ * @param binary zero or more binary digits with standard nibble-group blanks
+ * @return unsigned value within the Level B signed 64-bit integer range
+ */
 b2d: procedure = .int
-  arg bin = .string
-  return reradix(bin,2,10)
+  arg binary = .string
+  binary_length = .int
+  binary_digits = 0
+  significant_bits = 0
+  bit = 0
+  result = 0
+  codepoint = .int
+  index = 0
+  blank_character = 32
+  zero_character = 48
+  one_character = 49
 
+  assembler strlen binary_length,binary
+  if binary_length = 0 then return result
+
+  assembler strchar codepoint,binary,index
+  if codepoint = blank_character then
+    assembler signal "INVALID_ARGUMENTS","B2D binary text must not start with a blank"
+  last = binary_length - 1
+  assembler strchar codepoint,binary,last
+  if codepoint = blank_character then
+    assembler signal "INVALID_ARGUMENTS","B2D binary text must not end with a blank"
+
+  do i = binary_length - 1 to 0 by -1
+    assembler strchar codepoint,binary,i
+    if codepoint = blank_character then do
+      if binary_digits // 4 <> 0 then
+        assembler signal "INVALID_ARGUMENTS","B2D blank must precede a four-bit group"
+    end
+    else if codepoint = zero_character | codepoint = one_character then
+      binary_digits = binary_digits + 1
+    else assembler signal "INVALID_ARGUMENTS","B2D accepts only 0, 1, and blank"
+  end
+
+  significant = 0
+  do i = 0 to binary_length - 1
+    assembler strchar codepoint,binary,i
+    if codepoint = blank_character then iterate
+    if \significant & codepoint = zero_character then iterate
+    significant = 1
+    significant_bits = significant_bits + 1
+    if significant_bits > 63 then
+      assembler signal "OVERFLOW_UNDERFLOW","B2D result exceeds the Level B integer range"
+    bit = codepoint - zero_character
+    result = result * 2 + bit
+  end
+  return result

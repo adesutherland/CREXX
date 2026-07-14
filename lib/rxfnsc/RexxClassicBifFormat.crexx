@@ -1,0 +1,376 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifformat expose rexxclassicbif_format
+import rexxclassicbifs
+import rexxvalue
+
+/**
+ * Format one Classic numeric argument under the caller's numeric settings.
+ *
+ * @bif FORMAT
+ * @signature FORMAT(number [,before [,after [,expp [,expt]]]])
+ * @checkargs rNUM oWHOLE>=0 oWHOLE>=0 oWHOLE>=0 oWHOLE>=0
+ * @sandbox pure
+ * @return formatted numeric text as a RexxValue
+ */
+rexxclassicbif_format: procedure = .RexxValue
+  numeric digits inherited
+  numeric form inherited
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rNUM oWHOLE>=0 oWHOLE>=0 oWHOLE>=0 oWHOLE>=0") = 0 then return .RexxValue("")
+
+  value = "0" as .decimal
+  value = context.argumentText(1)
+  number_text = .string
+  converted = .string
+  converted = value as .string
+  number_text = converted || ""
+  if context.argumentCount() = 1 then return .RexxValue(number_text)
+
+  before = 0
+  after = 0
+  expp = 0
+  expt = 0
+  before_exists = context.argumentExists(2)
+  after_exists = context.argumentExists(3)
+  expp_exists = context.argumentExists(4)
+  expt_exists = context.argumentExists(5)
+  if before_exists then before = context.argumentText(2)
+  if after_exists then after = context.argumentText(3)
+  if expp_exists then expp = context.argumentText(4)
+  if expt_exists then expt = context.argumentText(5)
+
+  mantissa = number_text
+  exponent_text = ""
+  befo = ""
+  afte = ""
+  integer = ""
+  suffix = ""
+  result = ""
+  exponent = 0
+  point = 0
+  sign = 0
+  show_exp = 0
+  form_setting = .int
+  numeric_digits = .int
+  number_length = .int
+  mantissa_length = .int
+  befo_length = .int
+  afte_length = .int
+  integer_length = .int
+  exponent_length = .int
+  e_position = .int
+  point_position = .int
+  start = .int
+  segment_length = .int
+  codepoint = .int
+  next_codepoint = .int
+  round_codepoint = .int
+  padding_count = .int
+  zero_character = 48
+  blank_character = 32
+  minus_character = 45
+  upper_e_character = 69
+  lower_e_character = 101
+  point_character = 46
+
+  assembler strlen number_length,number_text
+  e_position = -1
+  assembler poschar e_position,number_text,upper_e_character
+  if e_position < 0 then assembler poschar e_position,number_text,lower_e_character
+  if e_position >= 0 then do
+    mantissa = ""
+    if e_position > 0 then do
+      start = 0
+      assembler setstrpos number_text,start
+      assembler substring mantissa,number_text,e_position
+    end
+    start = e_position + 1
+    segment_length = number_length - start
+    if segment_length > 0 then do
+      assembler setstrpos number_text,start
+      assembler substring exponent_text,number_text,segment_length
+    end
+    exponent = exponent_text
+  end
+
+  assembler strlen mantissa_length,mantissa
+  start = 0
+  assembler strchar codepoint,mantissa,start
+  if codepoint = minus_character then do
+    sign = 1
+    segment_length = mantissa_length - 1
+    befo = ""
+    if segment_length > 0 then do
+      start = 1
+      assembler setstrpos mantissa,start
+      assembler substring befo,mantissa,segment_length
+    end
+    mantissa = befo
+    mantissa_length = segment_length
+  end
+  point_position = -1
+  assembler poschar point_position,mantissa,point_character
+  if point_position < 0 then do
+    befo = mantissa
+    afte = ""
+    befo_length = mantissa_length
+    afte_length = 0
+  end
+  else do
+    befo = ""
+    if point_position > 0 then do
+      start = 0
+      assembler setstrpos mantissa,start
+      assembler substring befo,mantissa,point_position
+    end
+    start = point_position + 1
+    afte_length = mantissa_length - start
+    afte = ""
+    if afte_length > 0 then do
+      assembler setstrpos mantissa,start
+      assembler substring afte,mantissa,afte_length
+    end
+    befo_length = point_position
+  end
+  point = befo_length
+
+  if expp_exists | expt_exists then do
+    if \expt_exists then do
+      assembler getnumdgts numeric_digits
+      expt = numeric_digits
+    end
+    if point + exponent > expt then show_exp = 1
+
+    left_is_zero = 1
+    do i = 0 to befo_length - 1
+      assembler strchar codepoint,befo,i
+      if codepoint <> zero_character then do
+        left_is_zero = 0
+        leave
+      end
+    end
+    zeros = 0
+    do while zeros < afte_length
+      assembler strchar codepoint,afte,zeros
+      if codepoint <> zero_character then leave
+      zeros = zeros + 1
+    end
+    if left_is_zero & zeros - exponent > 5 then show_exp = 1
+    if expp_exists & expp = 0 then show_exp = 0
+
+    if show_exp then do
+      exponent = exponent + point - 1
+      point = 1
+      assembler getnumfrm form_setting
+      if form_setting = 2 then do while exponent // 3 <> 0
+        point = point + 1
+        exponent = exponent - 1
+      end
+    end
+    else point = point + exponent
+  end
+  else if exponent <> 0 then show_exp = 1
+
+  integer = befo || afte
+  integer_length = befo_length + afte_length
+  if point < 1 then do
+    padding_count = 1 - point
+    padding = ""
+    assembler padstr padding,zero_character,padding_count
+    integer = padding || integer
+    integer_length = integer_length + padding_count
+    point = 1
+  end
+  if point > integer_length then do
+    padding_count = point - integer_length
+    assembler padstr integer,zero_character,padding_count
+    integer_length = point
+  end
+
+  afters = integer_length - point
+  if \after_exists then after = afters
+  if afters < after then do
+    padding_count = after - afters
+    assembler padstr integer,zero_character,padding_count
+    integer_length = integer_length + padding_count
+  end
+  else if afters > after then do
+    start = point + after
+    assembler strchar round_codepoint,integer,start
+    segment_length = start
+    segment = ""
+    if segment_length > 0 then do
+      start = 0
+      assembler setstrpos integer,start
+      assembler substring segment,integer,segment_length
+    end
+    integer = segment
+    integer_length = segment_length
+    if round_codepoint >= 53 then do
+      integer = _format_increment(integer)
+      assembler strlen integer_length,integer
+    end
+    sign = sign & \_format_is_zero(integer)
+    if integer_length > point + after then point = point + 1
+    if show_exp then do
+      exponent = exponent + point - 1
+      point = 1
+      assembler getnumfrm form_setting
+      if form_setting = 2 then do while exponent // 3 <> 0
+        point = point + 1
+        exponent = exponent - 1
+      end
+      if point > integer_length then do
+        padding_count = point - integer_length
+        assembler padstr integer,zero_character,padding_count
+        integer_length = point
+      end
+    end
+  end
+
+  afte = ""
+  if after > 0 then do
+    assembler appendchar afte,point_character
+    segment = ""
+    start = point
+    assembler setstrpos integer,start
+    assembler substring segment,integer,after
+    assembler append afte,segment
+  end
+  segment = ""
+  if point > 0 then do
+    start = 0
+    assembler setstrpos integer,start
+    assembler substring segment,integer,point
+  end
+  integer = segment
+  integer_length = point
+  if \before_exists then before = point + sign
+  if point > before - sign then do
+    call rexxclassicbif_set_error(context_ref, "40.38", 2, context.argumentText(1), "")
+    return .RexxValue("")
+  end
+  if point < before then do
+    padding_count = before - point
+    padding = ""
+    assembler padstr padding,zero_character,padding_count
+    integer = padding || integer
+    integer_length = before
+  end
+
+  triggered = 0
+  result = ""
+  do j = 0 to integer_length - 1
+    assembler strchar codepoint,integer,j
+    if triggered then assembler appendchar result,codepoint
+    else if codepoint = zero_character & j + 1 < integer_length - 1 then do
+      start = j + 1
+      assembler strchar next_codepoint,integer,start
+      if next_codepoint = zero_character then do
+        assembler appendchar result,blank_character
+        iterate
+      end
+    end
+    if \triggered then do
+      if codepoint = zero_character & j <> integer_length - 1 then codepoint = blank_character
+      if sign then codepoint = minus_character
+      assembler appendchar result,codepoint
+      triggered = 1
+    end
+  end
+  assembler append result,afte
+
+  if show_exp then do
+    exponent_negative = exponent < 0
+    if exponent_negative then exponent = 0 - exponent
+    exponent_text = exponent || ""
+    assembler strlen exponent_length,exponent_text
+    if \expp_exists then expp = exponent_length
+    if exponent_length > expp then do
+      call rexxclassicbif_set_error(context_ref, "40.38", 4, context.argumentText(1), "")
+      return .RexxValue("")
+    end
+    if exponent_length < expp then do
+      padding_count = expp - exponent_length
+      padding = ""
+      assembler padstr padding,zero_character,padding_count
+      exponent_text = padding || exponent_text
+    end
+    if exponent = 0 then do
+      if expp_exists then do
+        padding_count = expp + 2
+        assembler padstr suffix,blank_character,padding_count
+      end
+    end
+    else if exponent_negative then suffix = "E-" || exponent_text
+    else suffix = "E+" || exponent_text
+    result = result || suffix
+  end
+  return .RexxValue(result)
+
+_format_increment: procedure = .string
+  arg digits = .string
+  result = ""
+  digit_length = .int
+  codepoint = .int
+  start = .int
+  zero_character = 48
+  assembler strlen digit_length,digits
+  position = digit_length - 1
+  do while position >= 0
+    assembler strchar codepoint,digits,position
+    if codepoint <> 57 then leave
+    position = position - 1
+  end
+  if position < 0 then do
+    result = "1"
+    assembler padstr result,zero_character,digit_length
+    return result
+  end
+  if position > 0 then do
+    start = 0
+    assembler setstrpos digits,start
+    assembler substring result,digits,position
+  end
+  codepoint = codepoint + 1
+  assembler appendchar result,codepoint
+  padding_count = digit_length - position - 1
+  if padding_count > 0 then assembler padstr result,zero_character,padding_count
+  return result
+
+_format_is_zero: procedure = .boolean
+  arg digits = .string
+  digit_length = .int
+  codepoint = .int
+  assembler strlen digit_length,digits
+  do i = 0 to digit_length - 1
+    assembler strchar codepoint,digits,i
+    if codepoint <> 48 then return 0
+  end
+  return 1

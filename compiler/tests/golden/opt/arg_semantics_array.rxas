@@ -65,19 +65,19 @@ l184bexprend:
    minattrs r5,1
    linkattr1 r4,r5,1
    .srcstep 12 12 17 "arg_semantics_array.crexx" 23 14 19 "  value[1] = upper(value[1])"
-   .srcstep 9 9 25 "upper.crexx" 33 3 12 "  newstr=\"\""
+   .srcstep 9 9 25 "upper.crexx" 42 3 14 "  result = \"\""
    load r3,""
    .traceevent "L" 4 "R" "S" "r" 3 9 9 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 3 9 9 0 "newstr" ""
-   .srcstep 10 10 25 "upper.crexx" 34 13 35 "  assembler strupper newstr,string"
-   .traceevent "V" 6 "R" "S" "r" 3 13 13 0 "newstr" ""
+   .traceevent "A" 6 "R" "S" "r" 3 9 9 0 "result" ""
+   .srcstep 10 10 25 "upper.crexx" 43 13 35 "  assembler strupper result,string"
+   .traceevent "V" 6 "R" "S" "r" 3 13 13 0 "result" ""
    minattrs r5,1
    linkattr1 r2,r5,1
    .traceevent "V" 6 "R" "S" "r" 2 13 13 0 "value" ""
    strupper r3,r2
    unlink r2
-   .srcstep 11 11 25 "upper.crexx" 35 1 14 "return newstr"
-   .traceevent "V" 6 "R" "S" "r" 3 13 13 0 "newstr" ""
+   .srcstep 11 11 25 "upper.crexx" 44 3 16 "  return result"
+   .traceevent "V" 6 "R" "S" "r" 3 13 13 0 "result" ""
    scopy r1,r3
    br l329bexprend
 l329bexprend:
@@ -171,19 +171,19 @@ l250bexprend:
    minattrs r7,1
    linkattr1 r5,r7,1
    .srcstep 30 30 17 "arg_semantics_array.crexx" 23 14 19 "  value[1] = upper(value[1])"
-   .srcstep 27 27 25 "upper.crexx" 33 3 12 "  newstr=\"\""
+   .srcstep 27 27 25 "upper.crexx" 42 3 14 "  result = \"\""
    load r4,""
    .traceevent "L" 4 "R" "S" "r" 4 27 27 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 4 27 27 0 "newstr" ""
-   .srcstep 28 28 25 "upper.crexx" 34 13 35 "  assembler strupper newstr,string"
-   .traceevent "V" 6 "R" "S" "r" 4 31 31 0 "newstr" ""
+   .traceevent "A" 6 "R" "S" "r" 4 27 27 0 "result" ""
+   .srcstep 28 28 25 "upper.crexx" 43 13 35 "  assembler strupper result,string"
+   .traceevent "V" 6 "R" "S" "r" 4 31 31 0 "result" ""
    minattrs r7,1
    linkattr1 r3,r7,1
    .traceevent "V" 6 "R" "S" "r" 3 31 31 0 "value" ""
    strupper r4,r3
    unlink r3
-   .srcstep 29 29 25 "upper.crexx" 35 1 14 "return newstr"
-   .traceevent "V" 6 "R" "S" "r" 4 31 31 0 "newstr" ""
+   .srcstep 29 29 25 "upper.crexx" 44 3 16 "  return result"
+   .traceevent "V" 6 "R" "S" "r" 4 31 31 0 "result" ""
    scopy r1,r4
    br l343bexprend
 l343bexprend:
@@ -233,19 +233,19 @@ l244bexprend:
    minattrs r0,2
    linkattr1 r10,r0,2
    .srcstep 40 40 17 "arg_semantics_array.crexx" 30 14 19 "  value[2] = upper(value[2])"
-   .srcstep 37 37 25 "upper.crexx" 33 3 12 "  newstr=\"\""
+   .srcstep 37 37 25 "upper.crexx" 42 3 14 "  result = \"\""
    load r7,""
    .traceevent "L" 4 "R" "S" "r" 7 37 37 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 7 37 37 0 "newstr" ""
-   .srcstep 38 38 25 "upper.crexx" 34 13 35 "  assembler strupper newstr,string"
-   .traceevent "V" 6 "R" "S" "r" 7 41 41 0 "newstr" ""
+   .traceevent "A" 6 "R" "S" "r" 7 37 37 0 "result" ""
+   .srcstep 38 38 25 "upper.crexx" 43 13 35 "  assembler strupper result,string"
+   .traceevent "V" 6 "R" "S" "r" 7 41 41 0 "result" ""
    minattrs r0,2
    linkattr1 r5,r0,2
    .traceevent "V" 6 "R" "S" "r" 5 41 41 0 "arr" ""
    strupper r7,r5
    unlink r5
-   .srcstep 39 39 25 "upper.crexx" 35 1 14 "return newstr"
-   .traceevent "V" 6 "R" "S" "r" 7 41 41 0 "newstr" ""
+   .srcstep 39 39 25 "upper.crexx" 44 3 16 "  return result"
+   .traceevent "V" 6 "R" "S" "r" 7 41 41 0 "result" ""
    scopy r4,r7
    br l357bexprend
 l357bexprend:
@@ -293,19 +293,19 @@ l82d:
    minattrs r0,1
    linkattr1 r1,r0,1
    .srcstep 52 52 17 "arg_semantics_array.crexx" 23 14 19 "  value[1] = upper(value[1])"
-   .srcstep 49 49 25 "upper.crexx" 33 3 12 "  newstr=\"\""
+   .srcstep 49 49 25 "upper.crexx" 42 3 14 "  result = \"\""
    load r2,""
    .traceevent "L" 4 "R" "S" "r" 2 49 49 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 2 49 49 0 "newstr" ""
-   .srcstep 50 50 25 "upper.crexx" 34 13 35 "  assembler strupper newstr,string"
-   .traceevent "V" 6 "R" "S" "r" 2 53 53 0 "newstr" ""
+   .traceevent "A" 6 "R" "S" "r" 2 49 49 0 "result" ""
+   .srcstep 50 50 25 "upper.crexx" 43 13 35 "  assembler strupper result,string"
+   .traceevent "V" 6 "R" "S" "r" 2 53 53 0 "result" ""
    minattrs r0,1
    linkattr1 r4,r0,1
    .traceevent "V" 6 "R" "S" "r" 4 53 53 0 "value" ""
    strupper r2,r4
    unlink r4
-   .srcstep 51 51 25 "upper.crexx" 35 1 14 "return newstr"
-   .traceevent "V" 6 "R" "S" "r" 2 53 53 0 "newstr" ""
+   .srcstep 51 51 25 "upper.crexx" 44 3 16 "  return result"
+   .traceevent "V" 6 "R" "S" "r" 2 53 53 0 "result" ""
    scopy r5,r2
    br l301bexprend
 l301bexprend:
@@ -359,19 +359,19 @@ mutateArrayRef() .locals=6
    minattrs a1,2
    linkattr1 r2,a1,2
    .srcstep 62 62 17 "arg_semantics_array.crexx" 30 14 19 "  value[2] = upper(value[2])"
-   .srcstep 59 59 25 "upper.crexx" 33 3 12 "  newstr=\"\""
+   .srcstep 59 59 25 "upper.crexx" 42 3 14 "  result = \"\""
    load r1,""
    .traceevent "L" 4 "R" "S" "r" 1 59 59 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 1 59 59 0 "newstr" ""
-   .srcstep 60 60 25 "upper.crexx" 34 13 35 "  assembler strupper newstr,string"
-   .traceevent "V" 6 "R" "S" "r" 1 63 63 0 "newstr" ""
+   .traceevent "A" 6 "R" "S" "r" 1 59 59 0 "result" ""
+   .srcstep 60 60 25 "upper.crexx" 43 13 35 "  assembler strupper result,string"
+   .traceevent "V" 6 "R" "S" "r" 1 63 63 0 "result" ""
    minattrs a1,2
    linkattr1 r4,a1,2
    .traceevent "V" 6 "R" "S" "r" 4 63 63 0 "value" ""
    strupper r1,r4
    unlink r4
-   .srcstep 61 61 25 "upper.crexx" 35 1 14 "return newstr"
-   .traceevent "V" 6 "R" "S" "r" 1 63 63 0 "newstr" ""
+   .srcstep 61 61 25 "upper.crexx" 44 3 16 "  return result"
+   .traceevent "V" 6 "R" "S" "r" 1 63 63 0 "result" ""
    scopy r5,r1
    br l315bexprend
 l315bexprend:

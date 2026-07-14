@@ -434,13 +434,13 @@ as a compatibility alias in the runtime, but new code should use `SIGNAL`.
 
 ## Intrinsic Functions
 
-RexxScript provides a small set of built-in intrinsic functions. Pure
-Classic-compatible intrinsics are routed through the shared `rxfnsc`
-`RexxClassicBifs` helper layer.
+RexxScript provides a small set of built-in intrinsic functions. Its evaluator
+owns the sandbox allow-list and name controller; pure Classic-compatible cases
+call the corresponding direct `rxfnsc` `RexxClassicBifs` export.
 
 Function names are matched case-insensitively.
 
-The helper receives RexxScript's sandbox variable pool as its caller context.
+The direct helper receives RexxScript's sandbox variable pool as its caller context.
 It does not receive unrestricted access to the host CREXX variable pool.
 At the shared helper boundary, RexxScript converts intrinsic arguments to
 `RexxValue` objects and converts the returned `RexxValue` back to the

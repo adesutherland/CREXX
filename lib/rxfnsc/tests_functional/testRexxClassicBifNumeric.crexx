@@ -1,0 +1,80 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifnumeric
+import rexxvalue
+
+errors = test_context_one() + test_context_two()
+errors = errors + check_extra_argument("DIGITS")
+errors = errors + check_extra_argument("FORM")
+errors = errors + check_extra_argument("FUZZ")
+
+if errors = 0 then say "PASS: Level C NUMERIC BIFs"
+return errors <> 0
+
+test_context_one: procedure = .int
+  numeric digits 6
+  numeric fuzz 2
+  numeric form engineering
+  errors = 0
+  errors = errors + check_digits(6)
+  errors = errors + check_form("ENGINEERING")
+  errors = errors + check_fuzz(2)
+  return errors
+
+test_context_two: procedure = .int
+  numeric digits 27
+  numeric fuzz 0
+  numeric form scientific
+  errors = 0
+  errors = errors + check_digits(27)
+  errors = errors + check_form("SCIENTIFIC")
+  errors = errors + check_fuzz(0)
+  return errors
+
+check_digits: procedure = .int
+  numeric digits inherited
+  arg expected = .int
+  context = .RexxBifCallContext("DIGITS")
+  result = .rexxclassicbifnumeric..rexxclassicbif_digits(reference context)
+  return check_result(expected || "", result, reference context, "DIGITS")
+
+check_form: procedure = .int
+  numeric form inherited
+  arg expected = .string
+  context = .RexxBifCallContext("FORM")
+  result = .rexxclassicbifnumeric..rexxclassicbif_form(reference context)
+  return check_result(expected, result, reference context, "FORM")
+
+check_fuzz: procedure = .int
+  numeric fuzz inherited
+  arg expected = .int
+  context = .RexxBifCallContext("FUZZ")
+  result = .rexxclassicbifnumeric..rexxclassicbif_fuzz(reference context)
+  return check_result(expected || "", result, reference context, "FUZZ")
+
+check_result: procedure = .int
+  arg expected = .string, result = .RexxValue, context_ref = reference .RexxBifCallContext, label = .string
+  context = dereference context_ref
+  actual = result.asString()
+  if \context.hasError() & actual = expected then return 0
+  say "FAIL:" label "expected" expected "got" actual,
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_extra_argument: procedure = .int
+  arg name = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("unexpected")
+  exists[1] = 1
+  context = .RexxBifCallContext(name)
+  call context.setArguments(args, exists)
+  select
+    when name = "DIGITS" then result = .rexxclassicbifnumeric..rexxclassicbif_digits(reference context)
+    when name = "FORM" then result = .rexxclassicbifnumeric..rexxclassicbif_form(reference context)
+    otherwise result = .rexxclassicbifnumeric..rexxclassicbif_fuzz(reference context)
+  end
+  if context.hasError() & context.errorCode() = "RXC-LC-40.4" then return 0
+  say "FAIL:" name "expected RXC-LC-40.4 got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

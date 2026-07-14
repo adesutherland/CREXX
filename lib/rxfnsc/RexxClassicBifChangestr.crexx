@@ -1,0 +1,84 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifchangestr expose rexxclassicbif_changestr
+import rexxclassicbifs
+import rexxvalue
+
+/**
+ * Replace all non-overlapping matches in one Classic string.
+ *
+ * @bif CHANGESTR
+ * @signature CHANGESTR(needle, haystack, replacement)
+ * @checkargs rANY rANY rANY
+ * @sandbox pure
+ * @return changed string as a RexxValue
+ */
+rexxclassicbif_changestr: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY rANY rANY") = 0 then return .RexxValue("")
+
+  needle = context.argumentText(1)
+  haystack = context.argumentText(2)
+  replacement = context.argumentText(3)
+  needle_length = .int
+  haystack_length = .int
+  position = 1
+  found = .int
+  segment_start = .int
+  segment_length = .int
+  segment = ""
+  result = ""
+
+  assembler strlen needle_length,needle
+  if needle_length = 0 then return .RexxValue(haystack)
+  assembler strlen haystack_length,haystack
+
+  do forever
+    found = position
+    assembler strpos found,needle,haystack
+    if found = 0 then leave
+
+    segment_length = found - position
+    if segment_length > 0 then do
+      segment_start = position - 1
+      assembler setstrpos haystack,segment_start
+      assembler substring segment,haystack,segment_length
+      assembler append result,segment
+    end
+    assembler append result,replacement
+    position = found + needle_length
+  end
+
+  if position <= haystack_length then do
+    segment_start = position - 1
+    segment_length = haystack_length - position + 1
+    assembler setstrpos haystack,segment_start
+    assembler substring segment,haystack,segment_length
+    assembler append result,segment
+  end
+  return .RexxValue(result)

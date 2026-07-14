@@ -1,0 +1,64 @@
+/* Focused Level B SUBSTRO tests. */
+options levelb
+import rxfnsb
+
+errors = 0
+source = "René日🙂"
+
+errors = errors + check(substro("abc", 2) = "bc", "omitted length")
+errors = errors + check(substro("abc", 2, 4) = "bc  ", "default padding")
+errors = errors + check(substro("abc", 5, 4) = "    ", "padding beyond end")
+errors = errors + check(substro("abc", 2, 6, ".") = "bc....", "custom padding")
+errors = errors + check(substro("abc", 2, 0) = "", "zero length")
+errors = errors + check(substro("abc", 5) = "", "omitted length beyond end")
+errors = errors + check(substro("abc", 2,, ".") = "bc", "omitted length with pad")
+errors = errors + check(substro(source, 2, 3) = "ené", "Unicode slice")
+errors = errors + check(substro("12345678", 5, 6, "é") = "5678éé", "Unicode padding")
+errors = errors + check(source = "René日🙂", "source is not mutated")
+
+large_source = ""
+x = "x"
+do i = 1 to 1000
+  assembler append large_source,x
+end
+large_expected = ""
+do i = 1 to 500
+  assembler append large_expected,x
+end
+dot = "."
+do i = 1 to 250
+  assembler append large_expected,dot
+end
+errors = errors + check(substro(large_source, 501, 750, ".") = large_expected, "substantial slice and pad")
+
+caught = 0
+do
+  ignored = substro("abc", 0)
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = substro("abc", 1, -1)
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = substro("", 1, 0, "")
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = substro("abc", 1, 1, "xy")
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(caught = 4, "start, length, and pad failures use signals")
+
+if errors = 0 then say "PASS: substro"
+return errors <> 0
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: SUBSTRO" label
+  return 1

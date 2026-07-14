@@ -22,17 +22,34 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Internal runtime signal helper.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/raise.md
+ */
 options levelb
 
 namespace _rxsysb expose raise
 
-/* Raise() Internal Function to Raise a runtime error */
+/**
+ * Raise a named VM signal with a two-part diagnostic message.
+ *
+ * @param type canonical VM signal name
+ * @param code primary diagnostic text
+ * @param parm1 contextual diagnostic text
+ * @return zero only when a handler consumes the signal and resumes this helper
+ */
 raise: procedure = .int
   arg type = .string, code = .string, parm1 = .string
-  /* TODO Variable number of arguments */
-  say "RUNTIME" type "ERROR:" code parm1
-  /*
-  exit /* TODO - the compiler does not supports exit yet */
-  */
+  signal_type = .string
+  message = .string
+
+  signal_type = type
+  if type = "syntax" | type = "SYNTAX" | type = "error" then signal_type = "ERROR"
+
+  if parm1 = "" then message = code
+  else message = code || " " || parm1
+
+  assembler signal signal_type,message
   return 0

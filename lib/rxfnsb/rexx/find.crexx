@@ -22,15 +22,20 @@
  * SOFTWARE.
  */
 
-/*
- * crexx find
- * VM-TSO compatible implementation of wordpos()
- */
 options levelb
 
 namespace rxfnsb expose find
 
+/**
+ * Locate an exact word phrase using the VM/TSO FIND argument order.
+ *
+ * @param needle word or phrase to locate
+ * @param haystack whitespace-delimited words to search
+ * @param start optional one-based word at which searching begins
+ * @return the matching word number, or zero
+ * @signal INVALID_ARGUMENTS start is not positive
+ */
 find: procedure = .int
   arg needle = .string, haystack = .string, start = 1
 
-return wordpos(needle,haystack,start)
+  return wordpos(needle,haystack,start)

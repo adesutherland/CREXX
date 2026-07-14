@@ -1,0 +1,56 @@
+/* rexx */
+options levelb
+import rxfnsb
+
+errors = 0
+empty = .string[]
+errors = errors + check_int(0, arrayreverse(empty), "empty return")
+errors = errors + check_int(0, empty[0], "empty high-water")
+
+one = .string[]
+one[1] = "only"
+errors = errors + check_int(1, arrayreverse(one), "single return")
+errors = errors + check_string("only", one[1], "single unchanged")
+
+odd = .string[]
+odd[1] = "A"
+odd[2] = "🙂"
+odd[3] = ""
+odd[4] = "D"
+odd[5] = "E"
+errors = errors + check_int(5, arrayreverse(odd), "odd return")
+errors = errors + check_string("E|D||🙂|A", join(odd), "odd reversal")
+
+even = .string[]
+even[1] = "1"
+even[2] = "2"
+even[3] = "3"
+even[4] = "4"
+errors = errors + check_int(4, arrayreverse(even), "even return")
+errors = errors + check_string("4|3|2|1", join(even), "even reversal")
+errors = errors + check_int(4, arrayreverse(even), "second return")
+errors = errors + check_string("1|2|3|4", join(even), "second reversal")
+
+if errors = 0 then say "PASS: arrayreverse"
+return errors <> 0
+
+join: procedure = .string
+  arg values = .string[]
+  result = ""
+  do index = 1 to values[0]
+    if index > 1 then result = result || "|"
+    result = result || values[index]
+  end
+  return result
+
+check_string: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected == actual then return 0
+  say "FAIL: ARRAYREVERSE" label "expected" expected "got" actual
+  return 1
+
+check_int: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: ARRAYREVERSE" label "expected" expected "got" actual
+  return 1

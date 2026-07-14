@@ -1,0 +1,102 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifstrip expose rexxclassicbif_strip
+import rexxclassicbifs
+import rexxvalue
+
+/**
+ * Remove leading, trailing, or both Classic character runs.
+ *
+ * @bif STRIP
+ * @signature STRIP(string [,option [,char]])
+ * @checkargs rANY oLTB oPAD
+ * @sandbox pure
+ * @return stripped string as a RexxValue
+ */
+rexxclassicbif_strip: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY oLTB oPAD") = 0 then return .RexxValue("")
+
+  string = context.argumentText(1)
+  option = "B"
+  if context.argumentExists(2) then option = context.argumentText(2)
+  char_supplied = context.argumentExists(3)
+  char = " "
+  if char_supplied then char = context.argumentText(3)
+  option_character = .int
+  option_index = 0
+  trim_character = .int
+  current_character = .int
+  string_length = .int
+  start = 0
+  end_position = .int
+  search = .int
+  last = .int
+  index = .int
+  slice_length = .int
+  result = ""
+
+  assembler strchar option_character,option,option_index
+  if char_supplied then assembler strchar trim_character,char,option_index
+  assembler strlen string_length,string
+  end_position = string_length
+  if string_length = 0 then return .RexxValue(result)
+
+  if \char_supplied then do
+    if option_character = 76 | option_character = 66 then do
+      search = 0
+      assembler fndnblnk start,string,search
+      if start < 0 then return .RexxValue(result)
+    end
+    if option_character = 84 | option_character = 66 then do
+      search = 0 - string_length
+      assembler fndnblnk last,string,search
+      if last < 0 then return .RexxValue(result)
+      end_position = last + 1
+    end
+  end
+  else do
+    if option_character = 76 | option_character = 66 then do while start < end_position
+      assembler strchar current_character,string,start
+      if current_character <> trim_character then leave
+      start = start + 1
+    end
+    if option_character = 84 | option_character = 66 then do while end_position > start
+      index = end_position - 1
+      assembler strchar current_character,string,index
+      if current_character <> trim_character then leave
+      end_position = end_position - 1
+    end
+  end
+
+  if start = 0 & end_position = string_length then return .RexxValue(string)
+  slice_length = end_position - start
+  if slice_length <= 0 then return .RexxValue(result)
+  assembler setstrpos string,start
+  assembler substring result,string,slice_length
+  return .RexxValue(result)

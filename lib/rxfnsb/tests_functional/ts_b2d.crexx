@@ -1,0 +1,61 @@
+/* Focused Level B B2D tests. */
+options levelb comments_dash numeric_classic
+import rxfnsb
+
+errors = 0
+source = "10000001"
+errors = errors + check(14, b2d("01110"), "small value")
+errors = errors + check(129, b2d(source), "eight bits")
+errors = errors + check(3969, b2d("111110000001"), "twelve bits")
+errors = errors + check(65409, b2d("1111111110000001"), "sixteen bits")
+errors = errors + check(50928, b2d("1100011011110000"), "second sixteen-bit value")
+errors = errors + check(42, b2d("10 1010"), "valid grouped blank")
+errors = errors + check(0, b2d(""), "empty input")
+errors = errors + check(0, b2d(copies("0", 128)), "arbitrary leading zeros")
+errors = errors + check(9223372036854775807, b2d(copies("1", 63)), "INT64_MAX")
+errors = errors + check_string(source, source, "argument is not mutated")
+
+errors = errors + check_invalid(" 1010", "leading blank")
+errors = errors + check_invalid("1010 ", "trailing blank")
+errors = errors + check_invalid("1010 10", "misplaced blank")
+errors = errors + check_invalid("1020", "non-binary character")
+errors = errors + check_overflow("1" || copies("0", 63))
+
+if errors = 0 then say "PASS: b2d"
+return errors <> 0
+
+check: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if actual = expected then return 0
+  say "FAIL: B2D" label "expected" expected "got" actual
+  return 1
+
+check_string: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if actual = expected then return 0
+  say "FAIL: B2D" label "expected" expected "got" actual
+  return 1
+
+check_invalid: procedure = .int
+  arg source = .string, label = .string
+  caught = 0
+  do
+    ignored = b2d(source)
+  on signal invalid_arguments
+    caught = 1
+  end
+  if caught then return 0
+  say "FAIL: B2D" label "did not signal"
+  return 1
+
+check_overflow: procedure = .int
+  arg source = .string
+  caught = 0
+  do
+    ignored = b2d(source)
+  on signal overflow_underflow
+    caught = 1
+  end
+  if caught then return 0
+  say "FAIL: B2D overflow did not signal"
+  return 1

@@ -22,16 +22,25 @@
  * SOFTWARE.
  */
 
-/* rexx wordlength finds length of certain word */
+/* rexx */
 options levelb
 
 namespace rxfnsb expose qwordlength
 
-qwordlength: procedure = .string
-  arg expose string = .string, wordnum = .int
-  wlen=0
-  wordstr=qword(string,wordnum)
-  if length(wordstr)=0 then return 0
-  assembler strlen wlen,wordstr
-return wlen
+/**
+ * Return the character length of the selected quote-aware word.
+ *
+ * @param string source text, not modified
+ * @param wordnum positive one-based word number
+ * @return character length of QWORD's selected span, or zero when absent
+ * @signal INVALID_ARGUMENTS wordnum is less than one
+ */
+qwordlength: procedure = .int
+  arg string = .string, wordnum = .int
+  if wordnum < 1 then
+    assembler signal "INVALID_ARGUMENTS", "QWORDLENGTH word number must be positive"
 
+  wordstr = qword(string,wordnum)
+  wlen = .int
+  assembler strlen wlen,wordstr
+  return wlen

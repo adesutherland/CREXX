@@ -82,20 +82,25 @@ and `GOTO label` set a jump target from the precomputed label table.
 
 ## BIF Dispatch
 
-RexxScript intrinsics are not general Rexx function calls. The evaluator keeps
-an allow-list and routes supported functions through `rxfnsc`:
+RexxScript intrinsics are not general Rexx function calls. The evaluator owns
+the allow-list in `_builtin_known()` and the name controller in
+`_dispatch_builtin()`. The controller constructs the shared context and calls
+the specific `rxfnsc` export:
 
 ```rexx
 context = .RexxBifCallContext(upper_name)
 call context.setArguments(bif_args, bif_exists)
 call context.setCallerPool(reference script_pool)
-result = rexxclassicbif_call(reference context)
+result = rexxclassicbif_substr(reference context)
 ```
 
 `bif_args` is a `.RexxValue[]`, and `bif_exists` is the provided-argument
-mask. `rexxclassicbif_call()` returns a `RexxValue`; check
-`context.hasError()` for validation or dispatch failure, then convert the
-result back to the evaluator's string value with `result.asString()`.
+mask. Each `rexxclassicbif_*` entry returns a `RexxValue`; check
+`context.hasError()` for validation failure, then convert the result back to
+the evaluator's string value with `result.asString()`. Direct Level C library
+harnesses call these exports without using the RexxScript controller. Current
+compiler output may retain the deprecated `rxfnsc` compatibility dispatcher
+until the later bulk lowering change.
 
 The caller pool is always the RexxScript sandbox pool. Do not pass the host
 CREXX pool into the BIF context.
@@ -108,7 +113,7 @@ attributes.
 
 ## Adding An Intrinsic
 
-1. Add the name to the allow-list in `_eval_builtin()`.
+1. Add the name to `_builtin_known()` and `_dispatch_builtin()`.
 2. Implement the shared behavior in `lib/rxfnsc/RexxClassicBifs.crexx` when it
    belongs to the Classic-compatible shared layer.
 3. Keep argument validation and message construction in the shared BIF helper,

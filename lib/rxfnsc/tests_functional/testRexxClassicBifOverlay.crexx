@@ -1,0 +1,185 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifoverlay
+import rexxvalue
+
+errors = 0
+
+errors = errors + check_before("ab def", " ", "abcdef", "3")
+errors = errors + check_length("ab. ef", ".", "abcdef", "3", "2")
+errors = errors + check_default("qqcd", "qq", "abcd")
+errors = errors + check_before("abcqq", "qq", "abcd", "4")
+errors = errors + check_pad("abc+123+++", "123", "abc", "5", "6", "+")
+errors = errors + check_pad("abfoo*ghi", "foo", "abcdefghi", "3", "4", "*")
+errors = errors + check_length("abfoefghi", "foo", "abcdefghi", "3", "2")
+errors = errors + check_length("abcdefghi", "foo", "abcdefghi", "3", "0")
+errors = errors + check_pad("abc+", "foo", "abc", "5", "0", "+")
+errors = errors + check_omitted_start("foo*efghi", "foo", "abcdefghi", "4", "*")
+errors = errors + check_before("a日bc", "日", "aébc", "2")
+errors = errors + check_pad("ab·X··", "X", "ab", "4", "3", "·")
+errors = errors + check_large()
+
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.3", 1)
+errors = errors + check_count_error("RXC-LC-40.4", 6)
+errors = errors + check_omitted_required(1)
+errors = errors + check_omitted_required(2)
+errors = errors + check_numeric_error(3, "not-a-number", "RXC-LC-40.12")
+errors = errors + check_numeric_error(3, "1.5", "RXC-LC-40.12")
+errors = errors + check_numeric_error(3, "0", "RXC-LC-40.14")
+errors = errors + check_numeric_error(3, "-1", "RXC-LC-40.14")
+errors = errors + check_numeric_error(4, "1.5", "RXC-LC-40.12")
+errors = errors + check_numeric_error(4, "-1", "RXC-LC-40.13")
+errors = errors + check_pad_error("")
+errors = errors + check_pad_error("xy")
+
+if errors = 0 then say "PASS: Level C OVERLAY BIF"
+return errors <> 0
+
+check_default: procedure = .int
+  arg expected = .string, new_string = .string, target = .string
+  return run_check(expected, new_string, target, 0, "", 0, "", 0, "")
+
+check_before: procedure = .int
+  arg expected = .string, new_string = .string, target = .string, start = .string
+  return run_check(expected, new_string, target, 1, start, 0, "", 0, "")
+
+check_length: procedure = .int
+  arg expected = .string, new_string = .string, target = .string, start = .string, overlay_length = .string
+  return run_check(expected, new_string, target, 1, start, 1, overlay_length, 0, "")
+
+check_pad: procedure = .int
+  arg expected = .string, new_string = .string, target = .string, start = .string, overlay_length = .string, pad = .string
+  return run_check(expected, new_string, target, 1, start, 1, overlay_length, 1, pad)
+
+check_omitted_start: procedure = .int
+  arg expected = .string, new_string = .string, target = .string, overlay_length = .string, pad = .string
+  return run_check(expected, new_string, target, 0, "", 1, overlay_length, 1, pad)
+
+run_check: procedure = .int
+  arg expected = .string, new_string = .string, target = .string, start_exists = .boolean, start = .string, length_exists = .boolean, overlay_length = .string, pad_exists = .boolean, pad = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(new_string)
+  args[2] = .RexxValue(target)
+  exists[1] = 1
+  exists[2] = 1
+  if start_exists | length_exists | pad_exists then do
+    args[3] = .RexxValue(start)
+    exists[3] = start_exists
+  end
+  if length_exists | pad_exists then do
+    args[4] = .RexxValue(overlay_length)
+    exists[4] = length_exists
+  end
+  if pad_exists then do
+    args[5] = .RexxValue(pad)
+    exists[5] = 1
+  end
+  context = .RexxBifCallContext("OVERLAY")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_overlay(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: OVERLAY expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_large: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("X")
+  args[2] = .RexxValue("A")
+  args[3] = .RexxValue("1001")
+  args[4] = .RexxValue("1000")
+  args[5] = .RexxValue(".")
+  do i = 1 to 5
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("OVERLAY")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_overlay(reference context)
+  text = result.asString()
+  text_length = .int
+  first = .int
+  overlaid = .int
+  first_index = 0
+  overlaid_index = 1000
+  assembler strlen text_length,text
+  assembler strchar first,text,first_index
+  assembler strchar overlaid,text,overlaid_index
+  if \context.hasError() & text_length = 2000 & first = 65 & overlaid = 88 then return 0
+  say "FAIL: OVERLAY substantial padding" text_length,
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("A")
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("OVERLAY")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_overlay(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: OVERLAY expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_omitted_required: procedure = .int
+  arg omitted = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to 2
+    args[i] = .RexxValue("A")
+    exists[i] = i <> omitted
+  end
+  context = .RexxBifCallContext("OVERLAY")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_overlay(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.5" then return 0
+  say "FAIL: OVERLAY omitted" omitted "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_numeric_error: procedure = .int
+  arg index = .int, value = .string, expected_code = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("X")
+  args[2] = .RexxValue("abc")
+  args[3] = .RexxValue("1")
+  args[4] = .RexxValue("1")
+  do i = 1 to 4
+    exists[i] = 1
+  end
+  args[index] = .RexxValue(value)
+  context = .RexxBifCallContext("OVERLAY")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_overlay(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: OVERLAY argument" index "expected" expected_code "got",
+      result.asString() context.errorCode() context.errorMessage()
+  return 1
+
+check_pad_error: procedure = .int
+  arg pad = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("X")
+  args[2] = .RexxValue("abc")
+  args[3] = .RexxValue("1")
+  args[4] = .RexxValue("1")
+  args[5] = .RexxValue(pad)
+  do i = 1 to 5
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("OVERLAY")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_overlay(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.23" then return 0
+  say "FAIL: OVERLAY pad expected RXC-LC-40.23 got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

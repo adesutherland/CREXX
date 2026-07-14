@@ -30,14 +30,14 @@ import rxfnsb
 
 /**
 Return .rexx:
-  abs, b2x, b2d, c2x, center, centre, changestr, copies,
+  abs, b2x, c2x, center, centre, changestr, copies,
   d2b, d2c, d2x, delstr, delword, format, insert, lower,
   overlay, left, right, reverse, sign, space, strip, substr,
   translate, trunc, upper, word, subword, x2b, x2c, reradix,
   sequence, value, toString maybe not
 
 Return .int:
-  c2d, compare, countstr, length, linesize, pos, lastpos,
+  b2d, c2d, compare, countstr, length, linesize, pos, lastpos,
   verify, words, wordindex, wordlength, wordpos, x2d
 
 Return .boolean:
@@ -102,10 +102,10 @@ val = .string
 /**
  * Convert a binary string to decimal.
  *
- * @return the decimal result as a Rexx string object.
+ * @return the non-negative native integer result.
  */
-  b2d: method = .rexx
-    return .rexx(.rxfnsb..b2d(val))
+  b2d: method = .int
+    return .rxfnsb..b2d(val)
 
 /**
  * Convert characters to hexadecimal.
@@ -188,7 +188,7 @@ val = .string
     return .rxfnsb..countstr(needle,val)
 
 /**
- * Convert a decimal string to binary.
+ * Convert non-negative receiver integer text to minimal binary digits.
  *
  * @return the binary result as a Rexx string object.
  */
@@ -196,7 +196,7 @@ val = .string
     return .rexx(.rxfnsb..d2b(val))
 
 /**
- * Convert a decimal string to characters.
+ * Convert the receiver's whole-number text to one Unicode character.
  *
  * @return the character result as a Rexx string object.
  */
@@ -204,7 +204,7 @@ val = .string
     return .rexx(.rxfnsb..d2c(val))
 
 /**
- * Convert a decimal string to hexadecimal.
+ * Convert the receiver's non-negative native-integer text to hexadecimal.
  *
  * @return the hexadecimal result as a Rexx string object.
  */
@@ -231,21 +231,66 @@ val = .string
  * @return the resulting value as a Rexx string object.
  */
   delword: method = .rexx
-    arg wnum = .int, wcount = -1
-    return .rexx(.rxfnsb..delword(val,wnum,wcount))
+    arg wnum = .int, wcount = 0
+    if ?wcount then return .rexx(.rxfnsb..delword(val,wnum,wcount))
+    return .rexx(.rxfnsb..delword(val,wnum))
 
 /**
  * Format this numeric string.
  *
- * @param before digits before the decimal point.
- * @param after digits after the decimal point.
- * @param expp exponent trigger.
- * @param expt exponent width.
+ * @param before optional width before the decimal point, including the sign.
+ * @param after optional number of fractional digits.
+ * @param expp optional exponent width.
+ * @param expt optional exponent trigger.
  * @return the formatted value as a Rexx string object.
  */
   format: method = .rexx
     arg before = 0, after = 0, expp = 0, expt=-1
-    return .rexx(.rxfnsb..format(val,before,after,expp,expt))
+    before_exists = ?before
+    after_exists = ?after
+    expp_exists = ?expp
+    expt_exists = ?expt
+
+    number_text = .string
+    leading = .string
+    number = .decimal
+    number_text = .rxfnsb..strip(val)
+    leading = .rxfnsb..left(number_text, 1)
+    if leading = "-" | leading = "+" then
+      number_text = leading || .rxfnsb..strip(.rxfnsb..substr(number_text, 2), "L")
+    number = number_text
+
+    if before_exists then do
+      if after_exists then do
+        if expp_exists then do
+          if expt_exists then return .rexx(.rxfnsb..format(number, before, after, expp, expt))
+          return .rexx(.rxfnsb..format(number, before, after, expp))
+        end
+        if expt_exists then return .rexx(.rxfnsb..format(number, before, after, , expt))
+        return .rexx(.rxfnsb..format(number, before, after))
+      end
+      if expp_exists then do
+        if expt_exists then return .rexx(.rxfnsb..format(number, before, , expp, expt))
+        return .rexx(.rxfnsb..format(number, before, , expp))
+      end
+      if expt_exists then return .rexx(.rxfnsb..format(number, before, , , expt))
+      return .rexx(.rxfnsb..format(number, before))
+    end
+
+    if after_exists then do
+      if expp_exists then do
+        if expt_exists then return .rexx(.rxfnsb..format(number, , after, expp, expt))
+        return .rexx(.rxfnsb..format(number, , after, expp))
+      end
+      if expt_exists then return .rexx(.rxfnsb..format(number, , after, , expt))
+      return .rexx(.rxfnsb..format(number, , after))
+    end
+    if expp_exists then do
+      if expt_exists then return .rexx(.rxfnsb..format(number, , , expp, expt))
+      return .rexx(.rxfnsb..format(number, , , expp))
+    end
+    if expt_exists then return .rexx(.rxfnsb..format(number, , , , expt))
+    return .rexx(.rxfnsb..format(number))
 
 /**
  * Insert another string into this string.
@@ -479,10 +524,12 @@ val = .string
  * Return a subword sequence.
  *
  * @param wordnum the 1-based first word number.
+ * @param wordcount optional maximum number of words.
  * @return the selected words as a Rexx string object.
  */
   subword: method = .rexx
-    arg wordnum=.int
+    arg wordnum = .int, wordcount = 0
+    if ?wordcount then return .rexx(.rxfnsb..subword(val,wordnum,wordcount))
     return .rexx(.rxfnsb..subword(val,wordnum))
 
 /**
@@ -504,20 +551,18 @@ val = .string
  */
   wordpos: method = .int
     arg string = .string, start = 1
-    return .rxfnsb..wordpos(val,string,start)
+    return .rxfnsb..wordpos(string,val,start)
 
 /**
  * Convert hexadecimal to binary.
  *
- * @param slen the source length.
  * @return the binary result as a Rexx string object.
  */
   x2b: method = .rexx
-    arg slen=-1
-    return .rexx(.rxfnsb..x2b(val,slen))
+    return .rexx(.rxfnsb..x2b(val))
 
 /**
- * Convert hexadecimal to characters.
+ * Convert hexadecimal bytes to Unicode U+00xx characters.
  *
  * @return the character result as a Rexx string object.
  */
@@ -527,12 +572,13 @@ val = .string
 /**
  * Convert hexadecimal to decimal.
  *
- * @param slen the source length.
+ * @param signed_length optional non-negative signed hexadecimal width.
  * @return the decimal value.
  */
   x2d: method = .int
-    arg slen=-1
-    return .rxfnsb..x2d(val,slen)
+    arg signed_length = 0
+    if ?signed_length then return .rxfnsb..x2d(val,signed_length)
+    return .rxfnsb..x2d(val)
 
 /**
  * Convert this value between arbitrary radices.
@@ -550,22 +596,22 @@ val = .string
  *
  * @param tos the end of the sequence.
  * @return the sequence as a Rexx string object.
+ * @signal INVALID_ARGUMENTS either endpoint is not one character or is descending
  */
   sequence: method = .rexx
     arg tos = .string
     return .rexx(.rxfnsb..sequence(val,tos))
 
 /**
- * Deprecated alias for sequence.
+ * Generate a wrapping byte-domain range from this value.
  *
  * @param tos the end of the sequence.
- * @return a deprecation message as a Rexx string object.
- * @deprecated use sequence instead.
+ * @return the inclusive range as a Rexx string object.
+ * @deprecated use sequence for non-wrapping Unicode ranges.
  */
   xrange: method = .rexx
     arg tos = .string
-    say 'xrange is deprecated; use sequence'
-    return .rexx('xrange is deprecated; use sequence')
+    return .rexx(.rxfnsb..xrange(val,tos))
 
 /**
  * Return the datatype classification or test a datatype.
@@ -574,8 +620,9 @@ val = .string
  * @return the datatype result returned by the Rexx DATATYPE built-in.
  */
   datatype: method = .string
-    arg type=""
-    return .rxfnsb..datatype(val,type)
+    arg type = ""
+    if ?type then return .rxfnsb..datatype(val,type)
+    return .rxfnsb..datatype(val)
 
 /**
  * Return the wrapped native string value.

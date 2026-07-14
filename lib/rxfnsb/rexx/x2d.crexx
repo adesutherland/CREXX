@@ -22,53 +22,149 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Typed Level B X2D implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/x2d.md
+ */
 options levelb
 namespace rxfnsb expose x2d
 
-/* X2d(hex-string)  returns decimal number of hex string */
-
+/**
+ * Convert grouped hexadecimal text to a native signed integer.
+ *
+ * @param hexadecimal hexadecimal digits with standard interior grouping blanks
+ * @param signed_length optional non-negative signed interpretation width
+ * @return exact native signed-64-bit result
+ * @signal INVALID_ARGUMENTS invalid text/grouping or a negative width
+ * @signal OVERFLOW_UNDERFLOW result outside the native signed-64-bit range
+ */
 x2d: procedure = .int
-  arg hex = .string, slen=-1
-  trtab="0123456789ABCDEFabcdef"
-  hlen=0
-  char=0
-  dec=0
-  sign=0
-  offset=0
-  len = 0
-  if slen=0 then return 0      /* no hex input return 0    */
-  if slen>20 then slen=20      /* may be up to 20 chars, inluding sign */
-  assembler strlen hlen,hex    /* get length of hex string */
-  if slen > -1 then do
-     hex=right(hex,slen,"0")  /* if length parm set, treat hex as signed integer */
-     len = slen
+  arg hexadecimal = .string, signed_length = 0
+  length_supplied = ?signed_length
+  if length_supplied & signed_length < 0 then
+    assembler signal "INVALID_ARGUMENTS", "X2D signed length must be non-negative"
+
+  hexadecimal_length = .int
+  hexadecimal_digits = 0
+  codepoint = .int
+  remainder = .int
+  nibble = .int
+  blank_character = 32
+  index = 0
+
+  assembler strlen hexadecimal_length,hexadecimal
+  if hexadecimal_length > 0 then do
+    assembler strchar codepoint,hexadecimal,index
+    if codepoint = blank_character then
+      assembler signal "INVALID_ARGUMENTS", "X2D hexadecimal text cannot start with a blank"
+    index = hexadecimal_length - 1
+    assembler strchar codepoint,hexadecimal,index
+    if codepoint = blank_character then
+      assembler signal "INVALID_ARGUMENTS", "X2D hexadecimal text cannot end with a blank"
   end
-  else len=hlen                          /* else it is an unsigned integer */
-  do i=0 to len-1                        /* loop through hex string */
-     assembler strchar char,hex,i         /* fetch one byte          */
-     assembler poschar offset,trtab,char  /* position in hex table   */
-     if offset<0 then do
-        say "hex string contains invalid character "hex
-        return 0
-     end
-     if offset>15 then offset=offset-6    /* translate lower case to upper case hex */
-     char=offset
-  /* if it is first byte then check if sign is set, and convert number */
-     if i=0 then do
-        if char>=8 & slen > -1 then do /* does it contain sign? */
-           sign=1                   /* keep sign             */
-           char=char-8              /* switch off sign       */
-        end
-     end
-     dec=dec*16+char        /* cumulate fetched char in result integer */
+
+  do index = hexadecimal_length - 1 to 0 by -1
+    assembler strchar codepoint,hexadecimal,index
+    if codepoint = blank_character then do
+      assembler iand remainder,hexadecimal_digits,1
+      if remainder <> 0 then
+        assembler signal "INVALID_ARGUMENTS", "X2D blank must have an even number of hexadecimal digits to its right"
+    end
+    else if (codepoint >= 48 & codepoint <= 57) |,
+            (codepoint >= 65 & codepoint <= 70) |,
+            (codepoint >= 97 & codepoint <= 102) then
+      hexadecimal_digits = hexadecimal_digits + 1
+    else
+      assembler signal "INVALID_ARGUMENTS", "X2D input contains a non-hexadecimal character"
   end
-/* hex string has been processed, check if there was a sign */
-  if sign=1 then do        /* was sign set?    */
-     char=8                /* build complement */
-     do i=1 to len-1
-        char=char*16
-     end
-     dec=dec-char          /* create integer out of complement */
+
+  if hexadecimal_digits = 0 then return 0
+  if length_supplied & signed_length = 0 then return 0
+  if \length_supplied then return _x2d_unsigned(hexadecimal, hexadecimal_length)
+  return _x2d_signed(hexadecimal, hexadecimal_length, hexadecimal_digits, signed_length)
+
+_x2d_unsigned: procedure = .int
+  arg hexadecimal = .string, hexadecimal_length = .int
+  result = 0
+  codepoint = .int
+  nibble = .int
+  blank_character = 32
+  maximum_before_nibble = 576460752303423487
+
+  do index = 0 to hexadecimal_length - 1
+    assembler strchar codepoint,hexadecimal,index
+    if codepoint = blank_character then iterate
+    if codepoint <= 57 then nibble = codepoint - 48
+    else if codepoint <= 70 then nibble = codepoint - 55
+    else nibble = codepoint - 87
+    if result > maximum_before_nibble then
+      assembler signal "OVERFLOW_UNDERFLOW", "X2D unsigned result exceeds native integer range"
+    result = result * 16 + nibble
   end
-return dec
+  return result
+
+_x2d_signed: procedure = .int
+  arg hexadecimal = .string, hexadecimal_length = .int, hexadecimal_digits = .int, signed_length = .int
+  selected_digits = hexadecimal_digits
+  if selected_digits > signed_length then selected_digits = signed_length
+  skip_digits = hexadecimal_digits - selected_digits
+  implicit_padding = signed_length - selected_digits
+  low_width = signed_length
+  if low_width > 16 then low_width = 16
+  actual_high_digits = selected_digits - low_width
+  if actual_high_digits < 0 then actual_high_digits = 0
+
+  result = 0
+  codepoint = .int
+  nibble = .int
+  blank_character = 32
+  digit_index = 0
+  selected_index = 0
+  negative = 0
+  extension_nibble = 0
+  low_digits_seen = 0
+
+  do index = 0 to hexadecimal_length - 1
+    assembler strchar codepoint,hexadecimal,index
+    if codepoint = blank_character then iterate
+    if codepoint <= 57 then nibble = codepoint - 48
+    else if codepoint <= 70 then nibble = codepoint - 55
+    else nibble = codepoint - 87
+    if digit_index < skip_digits then do
+      digit_index = digit_index + 1
+      iterate
+    end
+
+    if selected_index = 0 & implicit_padding = 0 then do
+      negative = nibble >= 8
+      if negative then extension_nibble = 15
+    end
+    if selected_index < actual_high_digits then do
+      if nibble <> extension_nibble then
+        assembler signal "OVERFLOW_UNDERFLOW", "X2D signed result exceeds native integer range"
+    end
+    else do
+      assembler ishl result,result,4
+      assembler ior result,result,nibble
+      low_digits_seen = low_digits_seen + 1
+    end
+    selected_index = selected_index + 1
+    digit_index = digit_index + 1
+  end
+
+  if signed_length < 16 & negative then do
+    sign_power = 1
+    do i = 1 to signed_length
+      sign_power = sign_power * 16
+    end
+    result = result - sign_power
+  end
+  else if signed_length >= 16 then do
+    if negative & result >= 0 then
+      assembler signal "OVERFLOW_UNDERFLOW", "X2D signed result is below native integer range"
+    if \negative & result < 0 then
+      assembler signal "OVERFLOW_UNDERFLOW", "X2D signed result exceeds native integer range"
+  end
+  return result

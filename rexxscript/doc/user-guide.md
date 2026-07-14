@@ -170,8 +170,9 @@ WORD
 WORDS
 ```
 
-Function names are matched case-insensitively. These are sandbox-safe
-intrinsics routed through the shared `rxfnsc` `RexxClassicBifs` layer.
+Function names are matched case-insensitively. RexxScript owns the sandbox-safe
+name controller, which routes each allowed intrinsic to its specific shared
+`rxfnsc` `RexxClassicBifs` implementation.
 
 Examples:
 

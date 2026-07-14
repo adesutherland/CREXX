@@ -1,0 +1,95 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifmax
+import rexxvalue
+
+errors = 0
+
+errors = errors + check1("7.5", "7.5")
+errors = errors + check3("100", "100", "99", "1")
+errors = errors + check3("-1", "-4", "-1", "-9")
+errors = errors + check2("9007199254740993", "9007199254740992", "9007199254740993")
+errors = errors + check2("1.0", "1.0", "1.00")
+errors = errors + check2("1.00", "1.00", "1.0")
+errors = errors + check2("123456700000", "123456700000", "1234567E+5")
+errors = errors + check2("1.234567E+11", "1234567E+5", "123456700000")
+errors = errors + check2("-1", " - 1", "-2")
+
+errors = errors + check_no_args()
+errors = errors + check_omitted()
+errors = errors + check_value_error("", "RXC-LC-40.11")
+errors = errors + check_value_error("not-a-number", "RXC-LC-40.11")
+errors = errors + check_value_error("1 2", "RXC-LC-40.11")
+
+if errors = 0 then say "PASS: Level C MAX BIF"
+return errors <> 0
+
+check1: procedure = .int
+  arg expected = .string, first = .string
+  values = .string[]
+  values[1] = first
+  return run_check(expected, values)
+
+check2: procedure = .int
+  arg expected = .string, first = .string, second = .string
+  values = .string[]
+  values[1] = first
+  values[2] = second
+  return run_check(expected, values)
+
+check3: procedure = .int
+  arg expected = .string, first = .string, second = .string, third = .string
+  values = .string[]
+  values[1] = first
+  values[2] = second
+  values[3] = third
+  return run_check(expected, values)
+
+run_check: procedure = .int
+  arg expected = .string, values = .string[]
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to values[0]
+    args[i] = .RexxValue(values[i])
+    exists[i] = 1
+  end
+  first_before = values[1]
+  context = .RexxBifCallContext("MAX")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifmax..rexxclassicbif_max(reference context)
+  if \context.hasError() & result.asString() = expected & args[1].asString() = first_before then return 0
+  say "FAIL: MAX expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_no_args: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  return run_error("RXC-LC-40.3", args, exists)
+
+check_omitted: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("1")
+  args[2] = .RexxValue("2")
+  exists[1] = 1
+  exists[2] = 0
+  return run_error("RXC-LC-40.5", args, exists)
+
+check_value_error: procedure = .int
+  arg input = .string, expected_code = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(input)
+  exists[1] = 1
+  return run_error(expected_code, args, exists)
+
+run_error: procedure = .int
+  arg expected_code = .string, args = .RexxValue[], exists = .int[]
+  context = .RexxBifCallContext("MAX")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifmax..rexxclassicbif_max(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: MAX expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

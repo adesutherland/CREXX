@@ -1,0 +1,73 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbiflastpos expose rexxclassicbif_lastpos
+import rexxclassicbifs
+import rexxvalue
+
+/**
+ * Locate the last eligible match in a Classic string.
+ *
+ * @bif LASTPOS
+ * @signature LASTPOS(needle, haystack [,start])
+ * @checkargs rANY rANY oWHOLE>0
+ * @sandbox pure
+ * @return last matching character position as a RexxValue, or zero
+ */
+rexxclassicbif_lastpos: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY rANY oWHOLE>0") = 0 then return .RexxValue("")
+
+  needle = context.argumentText(1)
+  haystack = context.argumentText(2)
+  end_supplied = context.argumentExists(3)
+  search_end = 0
+  if end_supplied then search_end = context.argumentText(3) + 0
+  needle_length = .int
+  haystack_length = .int
+  found_position = .int
+  match_end = .int
+  last_found = 0
+
+  assembler strlen needle_length,needle
+  if needle_length = 0 then return .RexxValue("0")
+  assembler strlen haystack_length,haystack
+  if haystack_length = 0 then return .RexxValue("0")
+
+  if \end_supplied | search_end > haystack_length then search_end = haystack_length
+  if needle_length > search_end then return .RexxValue("0")
+
+  found_position = 1
+  do forever
+    assembler strpos found_position,needle,haystack
+    if found_position = 0 then leave
+    match_end = found_position + needle_length - 1
+    if match_end > search_end then leave
+    last_found = found_position
+    found_position = found_position + 1
+  end
+  return .RexxValue(last_found || "")

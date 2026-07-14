@@ -35,18 +35,33 @@ options levelb
 
 namespace rxfnsb expose digits form fuzz numcase standard
 
+/**
+ * Return the caller's current NUMERIC DIGITS setting.
+ *
+ * @return positive significant-digit count
+ */
 digits: procedure = .int
     numeric digits inherited
     d = .int
     assembler getnumdgts d
     return d
 
+/**
+ * Return the caller's current NUMERIC FUZZ setting.
+ *
+ * @return non-negative ignored-digit count
+ */
 fuzz: procedure = .int
     numeric fuzz inherited
     f = .int
     assembler getnumfuz f
     return f
 
+/**
+ * Return the caller's current NUMERIC FORM setting.
+ *
+ * @return `scientific`, `engineering`, or `unknown`
+ */
 form: procedure = .string
     numeric form inherited
     f = .int
@@ -55,6 +70,11 @@ form: procedure = .string
     if f = 2 then return "engineering"
     return "unknown"
 
+/**
+ * Return the caller's current NUMERIC CASE setting.
+ *
+ * @return `lower`, `upper`, or `unknown`
+ */
 numcase: procedure = .string
     numeric case inherited
     c = .int
@@ -63,6 +83,11 @@ numcase: procedure = .string
     if c = 2 then return "upper"
     return "unknown"
 
+/**
+ * Return the caller's current NUMERIC STANDARD setting.
+ *
+ * @return `common`, `classic`, or `unknown`
+ */
 standard: procedure = .string
     numeric standard inherited
     s = .int

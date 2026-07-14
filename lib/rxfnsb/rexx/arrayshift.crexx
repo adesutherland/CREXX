@@ -27,7 +27,13 @@ options levelb
 
 namespace rxfnsb expose arrayshift
 
-/* Remove and return the first element of ARRAY, or DEFAULT when empty. */
+/**
+ * Remove and return the first array element.
+ *
+ * @param array exposed one-based string array to mutate
+ * @param default optional value returned when array is empty
+ * @return removed value, or default
+ */
 arrayshift: procedure=.string
   arg expose array=.string[], default=""
 
@@ -35,4 +41,4 @@ arrayshift: procedure=.string
 
   item = array[1]
   assembler DELATTRS1 array,1,1
-return item
+  return item

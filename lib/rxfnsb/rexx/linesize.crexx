@@ -22,17 +22,18 @@
  * SOFTWARE.
  */
 
-/* rexx linesize bif */
 options levelb
 
 namespace rxfnsb expose linesize
 
-/*
- * here mainly because it needs a native implementation on z/VM
- * and probably other OS; this one returns 999999999 to be consistent
- * with the Rexx compiler for zSeries 
- */  
-
+/**
+ * Return the implementation line-size limit.
+ *
+ * The portable Level B implementation uses the traditional effectively
+ * unlimited value 999999999. A platform may replace this module when it has a
+ * smaller native line limit.
+ *
+ * @return the maximum line size
+ */
 linesize: procedure = .int
-  result = 999999999
-  return result
+  return 999999999

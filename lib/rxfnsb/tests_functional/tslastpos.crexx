@@ -1,112 +1,54 @@
-/* LASTPOS */
+/* Focused Level B LASTPOS tests. */
 options levelb
 import rxfnsb
 
-errors=0
-/* These from the Rexx book. */
-if lastpos(' ','abc def ghi') \= 8 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 1 '
+errors = 0
+needle = "abc"
+haystack = "abc abc"
+
+errors = errors + check(lastpos(" ", "abc def ghi") = 8, "last blank")
+errors = errors + check(lastpos(" ", "abcdefghi") = 0, "absent blank")
+errors = errors + check(lastpos(" ", "abc def ghi", 7) = 4, "search end excludes later blank")
+errors = errors + check(lastpos("b", haystack) = 6, "last single-character match")
+errors = errors + check(lastpos("b", haystack, 5) = 2, "limit before last match")
+errors = errors + check(lastpos("b", haystack, 6) = 6, "match ending at limit")
+errors = errors + check(lastpos("b", haystack, 20) = 6, "limit beyond haystack")
+errors = errors + check(lastpos("x", haystack) = 0, "absent needle")
+errors = errors + check(lastpos(needle, haystack) = 5, "multicharacter match")
+errors = errors + check(lastpos(needle, haystack, 6) = 1, "multicharacter match must end by limit")
+errors = errors + check(lastpos("aa", "aaa") = 2, "overlapping matches")
+errors = errors + check(lastpos("aa", "aaa", 2) = 1, "overlap limited by match end")
+errors = errors + check(lastpos("", haystack) = 0, "empty needle")
+errors = errors + check(lastpos("a", "") = 0, "empty haystack")
+errors = errors + check(lastpos("", "") = 0, "both empty")
+errors = errors + check(lastpos("→", "a→b→c") = 4, "Unicode character position")
+errors = errors + check(lastpos("→", "a→b→c", 3) = 2, "Unicode search end")
+errors = errors + check(needle = "abc" & haystack = "abc abc", "arguments are not mutated")
+
+large = ""
+pad_character = 97
+large_count = 1000
+assembler padstr large,pad_character,large_count
+errors = errors + check(lastpos("aa", large) = 999, "substantial overlapping search")
+
+caught = 0
+do
+  ignored = lastpos("a", "abc", 0)
+on signal invalid_arguments
+  caught = caught + 1
 end
-if lastpos(' ','abcdefghi') \= 0 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 2 '
+do
+  ignored = lastpos("a", "abc", -1)
+on signal invalid_arguments
+  caught = caught + 1
 end
-if lastpos(' ','abc def ghi',7) \= 4 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 3 '
-  /* These from Mark Hessling. */
-end
-if lastpos('b', 'abc abc') \= 6 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 4 '
-end
-if lastpos('b', 'abc abc',5) \= 2 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 5 '
-end
-if lastpos('b', 'abc abc',6) \= 6 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 6 '
-end
-if lastpos('b', 'abc abc',7) \= 6 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 7 '
-end
-if lastpos('x', 'abc abc') \= 0 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 8 '
-end
-if lastpos('b', 'abc abc',20) \= 6 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 9 '
-end
-/* 
-   end
-   if lastpos('b', '') \= 0 then do
-   errors=errors+1
-   say 'LASTPOS failed in test 10 ' */
-/* 
-   end
-   if lastpos('', 'c') \= 0 then do
-   errors=errors+1
-   say 'LASTPOS failed in test 11 ' */
-/* 
-   end
-   if lastpos('', '') \= 0 then do
-   errors=errors+1
-   say 'LASTPOS failed in test 12 ' */
-if lastpos('b', 'abc abc',20) \= 6 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 13 '
-end
-if lastpos('bc', 'abc abc') \= 6 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 14 '
-end
-if lastpos('bc ', 'abc abc',20) \= 2 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 15 '
-end
-if lastpos('abc', 'abc abc',6) \= 1 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 16 '
-end
-if lastpos('abc', 'abc abc') \= 5 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 17 '
-end
-if lastpos('abc', 'abc abc',7) \= 5 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 18 '
-  /* These from elsewhere. */
-end
-if lastpos('abc','abcdefabccdabcd',4) \= 1 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 19 '
-end
-if lastpos(' ', ' ') \= 1 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 20 '
-end
-if lastpos('a', ' ') \= 0 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 21 '
-end
-if lastpos('a', '') \= 0 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 22 '
-end
-if lastpos('→','a→b→c') \= 4 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 23 '
-end
-if lastpos('→','a→b→c',3) \= 2 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 24 '
-end
-if lastpos('}','{say ''→'' v}') \= 11 then do
-  errors=errors+1
-  say 'LASTPOS failed in test 25 '
-end
-return errors<>0
+errors = errors + check(caught = 2, "invalid search end uses signals")
+
+if errors = 0 then say "PASS: lastpos"
+return errors <> 0
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: LASTPOS" label
+  return 1

@@ -22,42 +22,52 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * In-place object-array block move.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/objectarraymove.md
+ */
 options levelb
-
 namespace rxfnsb expose objectarraymove
 
-/* Move a block within an object array. */
-objectarraymove: procedure=.int
-  arg expose array=.object[], from=1, count=0, tto=1
+/**
+ * Move a block within one object array.
+ *
+ * @param array exposed object array using array[0] as its high-water mark
+ * @param from positive first source index
+ * @param count non-negative maximum number of values to move
+ * @param tto positive insertion position in the original array
+ * @return the unchanged array high-water mark
+ * @signal INVALID_ARGUMENTS invalid source, count, or destination
+ */
+objectarraymove: procedure = .int
+  arg expose array = .object[], from = .int, count = .int, tto = .int
 
   hi = array[0]
-  if hi < 1 then return hi
-  if count < 1 then return hi
-  if from < 1 then return hi
-  if from > hi then return hi
+  if from < 1 then
+    assembler signal "INVALID_ARGUMENTS", "OBJECTARRAYMOVE source position must be positive"
+  if count < 0 then
+    assembler signal "INVALID_ARGUMENTS", "OBJECTARRAYMOVE count must be non-negative"
+  if tto < 1 then
+    assembler signal "INVALID_ARGUMENTS", "OBJECTARRAYMOVE destination position must be positive"
+  if count = 0 | hi < 1 | from > hi then return hi
 
-  if from + count - 1 > hi then count = hi - from + 1
-  if count < 1 then return hi
+  available = hi - from + 1
+  if count > available then count = available
 
-  if tto < 1 then tto = 1
   if tto > hi + 1 then tto = hi + 1
-
   if tto >= from & tto <= from + count then return hi
 
-  tmp = .object[]
-  do i = 1 to count
-     tmp[i] = array[from + i - 1]
-  end
-
-  assembler DELATTRS1 array,from,count
-
-  if tto > from then tto = tto - count
-
   assembler INSATTRS1 array,tto,count
+  if tto < from then source_start = from + count
+  else source_start = from
 
-  do i = 0 to count - 1
-     array[tto + i] = tmp[i + 1]
+  do offset = 0 to count - 1
+    target_index = tto + offset
+    source_index = source_start + offset
+    array[target_index] = array[source_index]
   end
 
-return hi
+  assembler DELATTRS1 array,source_start,count
+  return array[0]

@@ -22,25 +22,46 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Complete-element search from a selected string-array index.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/arrayindexof.md
+ */
 options levelb
 
 namespace rxfnsb expose arrayindexof
 
-/* Return the first exact VALUE index at or after FROM, or 0 when absent. */
+/**
+ * Return the first complete-element match at or after a start index.
+ *
+ * @param array exposed read-only string array using array[0] as high-water
+ * @param value complete string value to match
+ * @param from optional first index; values below one clamp to one
+ * @param case optional 1 for case-sensitive or 0 for uppercase-folded matching
+ * @return first matching one-based index, otherwise zero
+ * @signal INVALID_ARGUMENTS case is not 0 or 1
+ */
 arrayindexof: procedure=.int
-  arg array=.string[], value=.string, from=1, case=1
+  arg expose array=.string[], value=.string, from=1, case=1
 
+  if case <> 0 & case <> 1 then
+    assembler signal "INVALID_ARGUMENTS", "ARRAYINDEXOF case flag must be zero or one"
+  high = array[0]
   if from < 1 then from = 1
-  if from > array[0] then return 0
+  if from > high then return 0
 
-  if case = 1 then do i = from to array[0]
-    if array[i] = value then return i
+  if case = 1 then do i = from to high
+    if array[i] == value then return i
   end
   else do
-    uvalue = upper(value)
-    do i = from to array[0]
-      if upper(array[i]) = uvalue then return i
+    folded_value = ""
+    folded_candidate = ""
+    assembler strupper folded_value,value
+    do i = from to high
+      candidate = array[i]
+      assembler strupper folded_candidate,candidate
+      if folded_candidate == folded_value then return i
     end
   end
 return 0

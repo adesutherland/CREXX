@@ -22,26 +22,60 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Level B CHANGESTR implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/changestr.md
+ */
 options levelb
 
 namespace rxfnsb expose changestr
 
-/* changestr(needle,haystack,new-needle) returns string with replaced string */
+/**
+ * Replace every non-overlapping occurrence of a string.
+ *
+ * @param needle case-sensitive text to find
+ * @param haystack original text to search
+ * @param replacement text inserted for each match
+ * @return changed text, or the original text when `needle` is empty or absent
+ */
 changestr: procedure = .string
-  arg expose needle = .string, expose haystack = .string, expose nneedle = .string /* Pass by reference */
-  offset=1
-  nlen=0
-  assembler strlen nlen,needle
-  nnlen=0
-  assembler strlen nnlen,nneedle
-  newstr=haystack
+  arg needle = .string, haystack = .string, replacement = .string
+  needle_length = .int
+  haystack_length = .int
+  position = 1
+  found = .int
+  segment_start = .int
+  segment_length = .int
+  segment = ""
+  result = ""
+
+  assembler strlen needle_length,needle
+  if needle_length = 0 then return haystack
+  assembler strlen haystack_length,haystack
 
   do forever
-     offset=pos(needle,newstr,offset)
-     if offset=0 then return newstr
-     if offset=1 then newstr=nneedle||substr(newstr,offset+nlen)
-     else newstr=substr(newstr,1,offset-1)||nneedle||substr(newstr,offset+nlen)
-     offset=offset+nnlen
+    found = position
+    assembler strpos found,needle,haystack
+    if found = 0 then leave
+
+    segment_length = found - position
+    if segment_length > 0 then do
+      segment_start = position - 1
+      assembler setstrpos haystack,segment_start
+      assembler substring segment,haystack,segment_length
+      assembler append result,segment
+    end
+    assembler append result,replacement
+    position = found + needle_length
   end
-return newstr
+
+  if position <= haystack_length then do
+    segment_start = position - 1
+    segment_length = haystack_length - position + 1
+    assembler setstrpos haystack,segment_start
+    assembler substring segment,haystack,segment_length
+    assembler append result,segment
+  end
+  return result

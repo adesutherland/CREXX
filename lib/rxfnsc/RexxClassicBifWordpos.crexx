@@ -1,0 +1,136 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifwordpos expose rexxclassicbif_wordpos
+import rexxclassicbifs
+import rexxvalue
+
+/**
+ * Locate an exact Classic word sequence.
+ *
+ * @bif WORDPOS
+ * @signature WORDPOS(phrase, string [,start])
+ * @checkargs rANY rANY oWHOLE>0
+ * @sandbox pure
+ * @return first matching word number, or zero, as a RexxValue
+ */
+rexxclassicbif_wordpos: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY rANY oWHOLE>0") = 0 then return .RexxValue("")
+
+  search = context.argumentText(1)
+  string = context.argumentText(2)
+  start = 1
+  if context.argumentExists(3) then start = context.argumentText(3) + 0
+
+  string_length = .int
+  search_length = .int
+  assembler strlen string_length,string
+  assembler strlen search_length,search
+  if string_length = 0 | search_length = 0 then return .RexxValue("0")
+
+  search_first = 0
+  assembler fndnblnk search_first,search,search_first
+  if search_first < 0 then return .RexxValue("0")
+
+  scan = 0
+  candidate_start = 0
+  candidate_word = 0
+  do while candidate_word < start
+    assembler fndnblnk candidate_start,string,scan
+    if candidate_start < 0 then return .RexxValue("0")
+    candidate_word = candidate_word + 1
+    if candidate_word = start then leave
+    assembler fndblnk scan,string,candidate_start
+    if scan < 0 then return .RexxValue("0")
+  end
+
+  search_word_start = 0
+  search_word_end = 0
+  search_word_length = 0
+  source_word_start = 0
+  source_word_end = 0
+  source_word_length = 0
+  next_search_word = 0
+  next_source_word = 0
+  candidate_end = 0
+  char_offset = 0
+  search_index = 0
+  source_index = 0
+  search_char = 0
+  source_char = 0
+
+  do while candidate_start >= 0
+    search_word_start = search_first
+    source_word_start = candidate_start
+    matched = 1
+
+    do while matched
+      assembler fndblnk search_word_end,search,search_word_start
+      if search_word_end < 0 then search_word_end = search_length
+      assembler fndblnk source_word_end,string,source_word_start
+      if source_word_end < 0 then source_word_end = string_length
+
+      search_word_length = search_word_end - search_word_start
+      source_word_length = source_word_end - source_word_start
+      if search_word_length <> source_word_length then do
+        matched = 0
+        leave
+      end
+
+      char_offset = 0
+      do while char_offset < search_word_length
+        search_index = search_word_start + char_offset
+        source_index = source_word_start + char_offset
+        assembler strchar search_char,search,search_index
+        assembler strchar source_char,string,source_index
+        if search_char <> source_char then do
+          matched = 0
+          leave
+        end
+        char_offset = char_offset + 1
+      end
+      if \matched then leave
+
+      assembler fndnblnk next_search_word,search,search_word_end
+      if next_search_word < 0 then return .RexxValue(candidate_word || "")
+      assembler fndnblnk next_source_word,string,source_word_end
+      if next_source_word < 0 then do
+        matched = 0
+        leave
+      end
+      search_word_start = next_search_word
+      source_word_start = next_source_word
+    end
+
+    assembler fndblnk candidate_end,string,candidate_start
+    if candidate_end < 0 then return .RexxValue("0")
+    assembler fndnblnk candidate_start,string,candidate_end
+    if candidate_start < 0 then return .RexxValue("0")
+    candidate_word = candidate_word + 1
+  end
+  return .RexxValue("0")

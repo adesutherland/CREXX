@@ -1,0 +1,174 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicstate expose RexxAddressState RexxTraceState
+import rxfnsb
+
+/**
+ * Per-activation Classic ADDRESS state used by state-query BIFs.
+ *
+ * Connection descriptions follow ANSI X3J18 section 9.5.1 and are returned as
+ * position, type, and resource separated by single blanks. The default NORMAL
+ * resource is null, so the default connection descriptions retain a trailing
+ * blank.
+ */
+RexxAddressState: class
+  environment_name = .string
+  input_position = .string
+  input_type = .string
+  input_resource = .string
+  output_position = .string
+  output_type = .string
+  output_resource = .string
+  error_position = .string
+  error_type = .string
+  error_resource = .string
+
+  *: factory
+    environment_name = "CREXX"
+    input_position = "INPUT"
+    input_type = "NORMAL"
+    input_resource = ""
+    output_position = "REPLACE"
+    output_type = "NORMAL"
+    output_resource = ""
+    error_position = "REPLACE"
+    error_type = "NORMAL"
+    error_resource = ""
+    return
+
+  setEnvironment: method = .void
+    arg name = .string
+    environment_name = name
+    return
+
+  environment: method = .string
+    return environment_name
+
+  setConnection: method = .void
+    arg option = .string, position = .string, type = .string, resource = .string
+    selector = upper(left(strip(option), 1))
+
+    select
+      when selector = "I" then do
+        input_position = position
+        input_type = type
+        input_resource = resource
+      end
+      when selector = "O" then do
+        output_position = position
+        output_type = type
+        output_resource = resource
+      end
+      when selector = "E" then do
+        error_position = position
+        error_type = type
+        error_resource = resource
+      end
+      otherwise return
+    end
+    return
+
+  connection: method = .string
+    arg option = .string
+    selector = upper(left(strip(option), 1))
+
+    select
+      when selector = "I" then return input_position || " " || input_type || " " || input_resource
+      when selector = "O" then return output_position || " " || output_type || " " || output_resource
+      when selector = "E" then return error_position || " " || error_type || " " || error_resource
+      otherwise return ""
+    end
+    return ""
+
+  position: method = .string
+    arg option = .string
+    selector = upper(left(strip(option), 1))
+    if selector = "I" then return input_position
+    if selector = "O" then return output_position
+    if selector = "E" then return error_position
+    return ""
+
+  type: method = .string
+    arg option = .string
+    selector = upper(left(strip(option), 1))
+    if selector = "I" then return input_type
+    if selector = "O" then return output_type
+    if selector = "E" then return error_type
+    return ""
+
+  resource: method = .string
+    arg option = .string
+    selector = upper(left(strip(option), 1))
+    if selector = "I" then return input_resource
+    if selector = "O" then return output_resource
+    if selector = "E" then return error_resource
+    return ""
+
+/**
+ * Per-activation Classic TRACE BIF state.
+ *
+ * The stored setting is the single Classic option letter. Interactive state
+ * is represented separately and is rendered as the leading `?` required by
+ * TRACE().
+ */
+RexxTraceState: class
+  trace_setting = .string
+  interacting = .boolean
+
+  *: factory
+    trace_setting = "N"
+    interacting = 0
+    return
+
+  current: method = .string
+    if interacting then return "?" || trace_setting
+    return trace_setting
+
+  apply: method = .void
+    arg option = .string
+    option_length = .int
+    index = .int
+    codepoint = .int
+    assembler strlen option_length,option
+
+    if option_length = 0 then interacting = 0
+    index = 0
+    do while index < option_length
+      assembler strchar codepoint,option,index
+      if codepoint <> 63 then leave
+      interacting = \interacting
+      index = index + 1
+    end
+
+    if index >= option_length then trace_setting = "N"
+    else do
+      assembler strchar codepoint,option,index
+      if codepoint >= 97 & codepoint <= 122 then codepoint = codepoint - 32
+      trace_setting = ""
+      assembler appendchar trace_setting,codepoint
+    end
+    if trace_setting = "O" then interacting = 0
+    return

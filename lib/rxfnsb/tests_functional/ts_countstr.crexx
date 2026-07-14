@@ -1,76 +1,30 @@
-/* rexx test abs bif */
+/* Focused Level B COUNTSTR tests. */
 options levelb
 import rxfnsb
 
-errors=0
+errors = 0
+needle = "bc"
+haystack = "abcabcabc"
 
-if countstr('bc','abcabcabc') \= 3 then do
-  errors=errors+1
-  say 'COUNTSTR failed in test 1 '
-end
+errors = errors + check(countstr(needle, haystack) = 3, "three matches")
+errors = errors + check(countstr("aa", "aaaa") = 2, "non-overlapping matches")
+errors = errors + check(countstr("aa", "aaaaa") = 2, "trailing partial match")
+errors = errors + check(countstr("", "a a") = 0, "empty needle")
+errors = errors + check(countstr("", "") = 0, "both empty")
+errors = errors + check(countstr("a", "") = 0, "empty haystack")
+errors = errors + check(countstr("abcdefg", "abcdef") = 0, "oversized needle")
+errors = errors + check(countstr("missing", "abcdef") = 0, "absent needle")
+errors = errors + check(countstr("abc", "abcdef") = 1, "match at start")
+errors = errors + check(countstr("abc", "defabc") = 1, "match at end")
+errors = errors + check(countstr("é", "café été") = 3, "Unicode matches")
+errors = errors + check(countstr("ab", copies("ab", 1000)) = 1000, "substantial repeated input")
+errors = errors + check(needle = "bc" & haystack = "abcabcabc", "arguments are not mutated")
 
-if countstr('aa','aaaa') \= 2 then do
-  errors=errors+1
-  say 'COUNTSTR failed in test 2 '
-end
+if errors = 0 then say "PASS: countstr"
+return errors <> 0
 
-if countstr('','a a') \= 0 then do
-  errors=errors+1
-  say 'COUNTSTR failed in test 3 '
-end
-
-/* These from the Rexx book. */
-/* These from Mark Hessling. */
-if countstr('','') \= 0 then do
-  errors=errors+1
-  say 'COUNTSTR failed in test 4 '
-end
-
-if countstr('a','abcdef') \= 1 then do
-  errors=errors+1
-  say 'COUNTSTR failed in test 5 '
-end
-
-if countstr(0,0) \= 1 then do
-  errors=errors+1
-  say 'COUNTSTR failed in test 6 '
-end
-
-if countstr('a','def') \= 0 then do
-  errors=errors+1
-  say 'COUNTSTR failed in test 7 '
-end
-
-if countstr('a','') \= 0 then do
-  errors=errors+1
-  say 'COUNTSTR failed in test 8 '
-end
-
-if countstr('','def') \= 0 then do
-  errors=errors+1
-  say 'COUNTSTR failed in test 9 '
-end
-
-if countstr('abc','abcdef') \= 1 then do
-  errors=errors+1
-  say 'COUNTSTR failed in test 10 '
-end
-
-if countstr('abcdefg','abcdef') \= 0 then do
-  errors=errors+1
-  say 'COUNTSTR failed in test 11 '
-end
-
-if countstr('abc','abcdefabccdabcd') \= 3 then do
-  errors=errors+1
-  say 'COUNTSTR failed in test 12 '
-end
-
-if countstr('o','the quick brown fox jumps over the lazy dog') \= 4 then do
-  errors=errors+1
-  say 'COUNTSTR failed in test 13 '
-end
-
-/* 12345678901234567890123456789012  */
-
-return errors<>0
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: COUNTSTR" label
+  return 1

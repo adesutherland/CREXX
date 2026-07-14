@@ -1,0 +1,48 @@
+options levelb
+namespace raise_test expose handled failures
+import _rxsysb
+import rxfnsb
+
+main: procedure = .int expose handled failures
+  handled = 0
+  failures = 0
+
+  assembler sigcalla handle_raise(),"ERROR"
+  assembler sigcalla handle_raise(),"INVALID_SIGNAL_CODE"
+  call raise "SYNTAX", "Error 40.28", "BAD"
+  call raise "syntax", "plain message", ""
+  call raise "error", "lower error", "context"
+  call raise "NOT_A_SIGNAL", "ignored", "ignored"
+
+  failures = failures + check(handled = 4, "all signals handled")
+  if failures = 0 then say "PASS: Level B raise"
+  return failures <> 0
+
+handle_raise: procedure = .string expose handled failures
+  arg condition = .runtime_signal_raw
+
+  handled = handled + 1
+  if handled = 1 then do
+    failures = failures + check(condition.name() = "ERROR", "SYNTAX canonical name")
+    failures = failures + check(condition.message() = "Error 40.28 BAD", "joined message")
+  end
+  else if handled = 2 then do
+    failures = failures + check(condition.name() = "ERROR", "blank context signal name")
+    failures = failures + check(condition.message() = "plain message", "blank context message")
+  end
+  else if handled = 3 then do
+    failures = failures + check(condition.name() = "ERROR", "lowercase ERROR name")
+    failures = failures + check(condition.message() = "lower error context", "lowercase ERROR message")
+  end
+  else if handled = 4 then do
+    failures = failures + check(condition.name() = "INVALID_SIGNAL_CODE", "unknown signal validation")
+  end
+  else failures = failures + 1
+
+  return "__rxsignal_skip"
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if condition then return 0
+  say "FAIL:" label
+  return 1

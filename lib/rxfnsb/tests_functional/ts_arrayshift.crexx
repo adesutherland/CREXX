@@ -1,0 +1,35 @@
+/* rexx */
+options levelb
+import rxfnsb
+
+errors = 0
+values = .string[]
+values[1] = "🙂"
+values[2] = ""
+values[3] = "C"
+
+errors = errors + check_string("🙂", arrayshift(values, "missing"), "first value")
+errors = errors + check_int(2, values[0], "high-water after first shift")
+errors = errors + check_string("", values[1], "empty moved to first")
+errors = errors + check_string("C", values[2], "tail moved to second")
+errors = errors + check_string("", arrayshift(values, "missing"), "empty element value")
+errors = errors + check_string("C", arrayshift(values), "final value")
+errors = errors + check_int(0, values[0], "empty high-water")
+errors = errors + check_string("missing", arrayshift(values, "missing"), "explicit default")
+errors = errors + check_string("", arrayshift(values), "omitted default")
+errors = errors + check_int(0, values[0], "empty remains empty")
+
+if errors = 0 then say "PASS: arrayshift"
+return errors <> 0
+
+check_string: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected == actual then return 0
+  say "FAIL: ARRAYSHIFT" label "values differ"
+  return 1
+
+check_int: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: ARRAYSHIFT" label "expected" expected "got" actual
+  return 1

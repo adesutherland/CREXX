@@ -182,6 +182,12 @@ if pos("RXC-LC-40.14", result[1]) = 0 then do
   say "REXXSCRIPT shared BIF error failed:" result[1]
 end
 
+result = rexxscript_evaluate("x = not_allowed(substr('abc', 0))", 0)
+if pos("undefined function not_allowed", lower(result[1])) = 0 then do
+  errors = errors + 1
+  say "REXXSCRIPT intrinsic allow-list failed:" result[1]
+end
+
 if errors = 0 then say "PASS: RexxScript runtime"
 else say "FAIL: RexxScript runtime" errors
 

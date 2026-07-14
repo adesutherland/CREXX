@@ -1,0 +1,120 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifcenter
+import rexxvalue
+
+errors = 0
+
+errors = errors + check_default("  ABC  ", "ABC", "7")
+errors = errors + check_pad("--ABC---", "ABC", "8", "-")
+errors = errors + check_default("e blue s", "The blue sky", "8")
+errors = errors + check_default("e blue ", "The blue sky", "7")
+errors = errors + check_default("", "anything", "0")
+errors = errors + check_pad("...", "", "3", ".")
+errors = errors + check_pad("·é·", "é", "3", "·")
+
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.3", 1)
+errors = errors + check_count_error("RXC-LC-40.4", 4)
+errors = errors + check_width_error("RXC-LC-40.12", "not-a-number")
+errors = errors + check_width_error("RXC-LC-40.12", "1.5")
+errors = errors + check_width_error("RXC-LC-40.13", "-1")
+errors = errors + check_pad_error("")
+errors = errors + check_pad_error("xy")
+errors = errors + check_omitted_error()
+
+if errors = 0 then say "PASS: Level C CENTER BIF"
+return errors <> 0
+
+check_default: procedure = .int
+  arg expected = .string, string = .string, width = .string
+  return run_check(expected, string, width, 0, "")
+
+check_pad: procedure = .int
+  arg expected = .string, string = .string, width = .string, pad = .string
+  return run_check(expected, string, width, 1, pad)
+
+run_check: procedure = .int
+  arg expected = .string, string = .string, width = .string, pad_supplied = .boolean, pad = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(string)
+  args[2] = .RexxValue(width)
+  exists[1] = 1
+  exists[2] = 1
+  if pad_supplied then do
+    args[3] = .RexxValue(pad)
+    exists[3] = 1
+  end
+  context = .RexxBifCallContext("CENTER")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_center(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: CENTER expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("A")
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("CENTER")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_center(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: CENTER expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_width_error: procedure = .int
+  arg expected_code = .string, width = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("ABC")
+  args[2] = .RexxValue(width)
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("CENTER")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_center(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: CENTER width expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_pad_error: procedure = .int
+  arg pad = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("ABC")
+  args[2] = .RexxValue("5")
+  args[3] = .RexxValue(pad)
+  exists[1] = 1
+  exists[2] = 1
+  exists[3] = 1
+  context = .RexxBifCallContext("CENTER")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_center(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.23" then return 0
+  say "FAIL: CENTER pad expected RXC-LC-40.23 got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_omitted_error: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("ABC")
+  args[2] = .RexxValue("")
+  exists[1] = 1
+  exists[2] = 0
+  context = .RexxBifCallContext("CENTER")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_center(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.5" then return 0
+  say "FAIL: CENTER omitted argument got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

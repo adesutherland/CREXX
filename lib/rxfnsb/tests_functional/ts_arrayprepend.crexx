@@ -1,0 +1,57 @@
+/* Focused Level B ARRAYPREPEND tests. */
+options levelb
+import rxfnsb
+
+errors = 0
+
+array = .string[]
+array[1] = "B"
+array[2] = "C"
+errors = errors + check_int(3, arrayprepend(array, "A"), "default count return")
+errors = errors + check("A|B|C", join(array), "default count data")
+
+value = "β"
+errors = errors + check_int(5, arrayprepend(array, value, 2), "repeat return")
+value = "changed"
+errors = errors + check("β|β|A|B|C", join(array), "repeat data/value copy")
+
+before = join(array)
+errors = errors + check_int(5, arrayprepend(array, "X", 0), "zero count return")
+errors = errors + check(before, join(array), "zero count no-op")
+
+errors = errors + test_invalid_count()
+
+if errors = 0 then say "PASS: arrayprepend"
+return errors <> 0
+
+test_invalid_count: procedure = .int
+  array = .string[]
+  array[1] = "A"
+  do
+    ignored = arrayprepend(array, "X", -1)
+  on signal invalid_arguments
+    return 0
+  end
+  say "FAIL: ARRAYPREPEND negative count did not signal"
+  return 1
+
+check_int: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: ARRAYPREPEND" label "expected" expected "got" actual
+  return 1
+
+check: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected == actual then return 0
+  say "FAIL: ARRAYPREPEND" label "expected" expected "got" actual
+  return 1
+
+join: procedure = .string
+  arg array = .string[]
+  result = ""
+  do i = 1 to array[0]
+    if i > 1 then result = result || "|"
+    result = result || array[i]
+  end
+  return result

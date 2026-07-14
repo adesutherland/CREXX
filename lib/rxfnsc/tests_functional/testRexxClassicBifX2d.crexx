@@ -1,0 +1,131 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifx2d
+import rexxvalue
+
+numeric digits 40
+errors = 0
+errors = errors + check_value("0", "", "", 0)
+errors = errors + check_value("14", "0E", "", 0)
+errors = errors + check_value("129", "81", "", 0)
+errors = errors + check_value("3969", "F81", "", 0)
+errors = errors + check_value("65409", "FF 81", "", 0)
+errors = errors + check_value("18446744073709551615", "FFFFFFFFFFFFFFFF", "", 0)
+errors = errors + check_value("79228162514264337593543950335", "FFFFFFFFFFFFFFFFFFFFFFFF", "", 0)
+
+errors = errors + check_value("-127", "81", "2", 1)
+errors = errors + check_value("129", "81", "4", 1)
+errors = errors + check_value("-3967", "F081", "4", 1)
+errors = errors + check_value("129", "F081", "3", 1)
+errors = errors + check_value("-127", "F081", "2", 1)
+errors = errors + check_value("1", "F081", "1", 1)
+errors = errors + check_value("-6", "A", "1", 1)
+errors = errors + check_value("-6", "a", "1", 1)
+errors = errors + check_value("0", "0031", "0", 1)
+errors = errors + check_value("2748", "ABC", "999999999999999999999999", 1)
+errors = errors + check_value("-1", "F", "0000000001", 1)
+errors = errors + check_value("-1", "FFFFFFFFFFFFFFFFFFFFFFFF", "24", 1)
+errors = errors + check_value("129", "F081", " + 3", 1)
+
+errors = errors + check_digits_error()
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.4", 3)
+errors = errors + check_omitted_required()
+errors = errors + check_omitted_length()
+errors = errors + check_argument_error("RXC-LC-40.25", " A", "", 0)
+errors = errors + check_argument_error("RXC-LC-40.25", "A ", "", 0)
+errors = errors + check_argument_error("RXC-LC-40.25", "0G", "", 0)
+errors = errors + check_argument_error("RXC-LC-40.25", "1 0", "", 0)
+errors = errors + check_argument_error("RXC-LC-40.12", "1", "1.2", 1)
+errors = errors + check_argument_error("RXC-LC-40.13", "1", "-1", 1)
+
+if errors = 0 then say "PASS: Level C X2D BIF"
+return errors <> 0
+
+check_value: procedure = .int
+  numeric digits inherited
+  numeric form inherited
+  arg expected = .string, hexadecimal = .string, signed_length = .string, length_exists = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(hexadecimal)
+  exists[1] = 1
+  args[2] = .RexxValue(signed_length)
+  exists[2] = length_exists
+  context = .RexxBifCallContext("X2D")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifx2d..rexxclassicbif_x2d(reference context)
+  if \context.hasError() & result.asString() = expected & args[1].asString() = hexadecimal then return 0
+  say "FAIL: X2D" hexadecimal signed_length "expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_digits_error: procedure = .int
+  numeric digits 9
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("3B9ACA00")
+  exists[1] = 1
+  return run_error("RXC-LC-40.35", args, exists)
+
+check_count_error: procedure = .int
+  numeric digits inherited
+  numeric form inherited
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("1")
+    exists[i] = 1
+  end
+  return run_error(expected_code, args, exists)
+
+check_omitted_required: procedure = .int
+  numeric digits inherited
+  numeric form inherited
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("1")
+  exists[1] = 0
+  return run_error("RXC-LC-40.5", args, exists)
+
+check_omitted_length: procedure = .int
+  numeric digits inherited
+  numeric form inherited
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("81")
+  exists[1] = 1
+  args[2] = .RexxValue("2")
+  exists[2] = 0
+  context = .RexxBifCallContext("X2D")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifx2d..rexxclassicbif_x2d(reference context)
+  if \context.hasError() & result.asString() = "129" then return 0
+  say "FAIL: X2D omitted optional length got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_argument_error: procedure = .int
+  numeric digits inherited
+  numeric form inherited
+  arg expected_code = .string, hexadecimal = .string, signed_length = .string, length_exists = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(hexadecimal)
+  exists[1] = 1
+  args[2] = .RexxValue(signed_length)
+  exists[2] = length_exists
+  return run_error(expected_code, args, exists)
+
+run_error: procedure = .int
+  numeric digits inherited
+  numeric form inherited
+  arg expected_code = .string, args = .RexxValue[], exists = .int[]
+  context = .RexxBifCallContext("X2D")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifx2d..rexxclassicbif_x2d(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: X2D expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

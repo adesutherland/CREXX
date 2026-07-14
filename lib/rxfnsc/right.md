@@ -1,0 +1,27 @@
+# Level C `RIGHT`
+
+The standalone direct entry point is:
+
+```rexx
+.rexxclassicbifright..rexxclassicbif_right(
+    context = reference .RexxBifCallContext) = .RexxValue
+```
+
+It implements `RIGHT(string, length [,pad])`. `length` is a required
+non-negative whole number. Longer text is truncated to its rightmost character
+width and shorter text is padded on the left. A supplied pad must contain
+exactly one codepoint; the default is blank.
+
+The CheckArgs contract is `rANY rWHOLE>=0 oPAD`. Standard context errors are
+`RXC-LC-40.3`, `40.4`, and `40.5` for argument count/presence,
+`RXC-LC-40.12` for a non-whole length, `RXC-LC-40.13` for a negative length,
+and `RXC-LC-40.23` for an invalid pad.
+
+The implementation extracts RexxValue text once, caches its character length,
+and uses direct VM substring or pad/append operations. It calls neither the name
+dispatcher nor the Level B RIGHT helper.
+
+`lib/rxfnsc/tests_functional/testRexxClassicBifRight.crexx` uses the qualified
+standalone entry in optimized and unoptimized overlays and covers documented,
+zero/equal, empty, Unicode, substantial-padding, non-mutation, and
+argument-error behavior.

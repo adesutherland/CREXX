@@ -22,39 +22,129 @@
  * SOFTWARE.
  */
 
-/* rexx */
-  options levelb
-
+/**
+ * Level B TRUNC implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/trunc.md
+ */
+options levelb comments_dash numeric_classic
 namespace rxfnsb expose trunc
 
+/**
+ * Truncate a decimal value to a fixed number of fractional digits.
+ *
+ * @param number decimal value
+ * @param fraction non-negative number of fractional digits
+ * @return fixed, non-exponent decimal text without rounding
+ */
 trunc: procedure = .string
-       arg innum = .string, fraction = 0
-   source=innum
+  arg number = .decimal, fraction = 0
+  coefficient = .string
+  formatted = .string
+  digits = ""
+  tail = ""
+  whole = ""
+  fractional = ""
+  segment = ""
+  padding = ""
+  result = ""
+  exponent = .int
+  coefficient_length = .int
+  sign_offset = .int
+  point_position = .int
+  prefix_length = .int
+  tail_length = .int
+  digit_length = .int
+  decimal_position = .int
+  padding_count = .int
+  remaining = .int
+  start = .int
+  copy_length = .int
+  zero_character = 48
+  point_character = 46
+  minus_character = 45
+  negative = .boolean
 
- /* translate exponential format to integer */
-   ppi=pos('E',source)
-   if ppi>0 then do
-      num=substr(source,1,ppi-1)
-      exp=substr(source,ppi+1)
-      assembler stof num
-      assembler stoi exp
-      xnum=num*(10**exp)
-      assembler itos xnum
-      source=xnum||''
-   end
+  if fraction < 0 then
+    assembler signal "INVALID_ARGUMENTS","TRUNC fraction must be non-negative"
 
-   whole=.string
-   fractional=.string
-   dp=pos('.',source)
-   if dp=0 then do
-      whole=source
-      fractional=""
-   end
-   else do
-      whole=substr(source,1,dp-1)
-      fractional=substr(source,dp+1)
-   end
+  assembler dextr coefficient,exponent,number
+  formatted = coefficient || ""
+  negative = number < 0
+  assembler strlen coefficient_length,formatted
+  if negative then sign_offset = 1
+  else sign_offset = 0
 
-   if whole="" then whole="0"
-   if fraction=0 then return whole
-   return whole||'.'||left(fractional,fraction,'0')
+  point_position = -1
+  assembler poschar point_position,formatted,point_character
+  if point_position < 0 then do
+    digit_length = coefficient_length - sign_offset
+    start = sign_offset
+    assembler setstrpos formatted,start
+    assembler substring digits,formatted,digit_length
+  end
+  else do
+    prefix_length = point_position - sign_offset
+    digit_length = coefficient_length - sign_offset - 1
+    if prefix_length > 0 then do
+      start = sign_offset
+      assembler setstrpos formatted,start
+      assembler substring digits,formatted,prefix_length
+    end
+    tail_length = coefficient_length - point_position - 1
+    if tail_length > 0 then do
+      start = point_position + 1
+      assembler setstrpos formatted,start
+      assembler substring tail,formatted,tail_length
+      assembler append digits,tail
+    end
+  end
+
+  decimal_position = exponent + 1
+  if negative then assembler appendchar result,minus_character
+
+  if decimal_position <= 0 then assembler appendchar result,zero_character
+  else if decimal_position < digit_length then do
+    start = 0
+    assembler setstrpos digits,start
+    assembler substring whole,digits,decimal_position
+    assembler append result,whole
+  end
+  else do
+    assembler append result,digits
+    padding_count = decimal_position - digit_length
+    if padding_count > 0 then do
+      assembler padstr padding,zero_character,padding_count
+      assembler append result,padding
+    end
+  end
+
+  if fraction = 0 then return result
+  assembler appendchar result,point_character
+  remaining = fraction
+  if decimal_position < 0 then do
+    padding_count = 0 - decimal_position
+    if padding_count > remaining then padding_count = remaining
+    if padding_count > 0 then do
+      assembler padstr fractional,zero_character,padding_count
+      remaining = remaining - padding_count
+    end
+    start = 0
+  end
+  else start = decimal_position
+
+  if remaining > 0 & start < digit_length then do
+    copy_length = digit_length - start
+    if copy_length > remaining then copy_length = remaining
+    assembler setstrpos digits,start
+    assembler substring segment,digits,copy_length
+    assembler append fractional,segment
+    remaining = remaining - copy_length
+  end
+  if remaining > 0 then do
+    assembler padstr padding,zero_character,remaining
+    assembler append fractional,padding
+  end
+  assembler append result,fractional
+  return result

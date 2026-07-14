@@ -1,0 +1,78 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifchangestr
+import rexxvalue
+
+errors = 0
+
+errors = errors + run_check("the fast brown fox", "quick", "the quick brown fox", "fast")
+errors = errors + run_check("a cat and a dog", "the", "the cat and the dog", "a")
+errors = errors + run_check("unchanged", "missing", "unchanged", "x")
+errors = errors + run_check("bnn", "a", "banana", "")
+errors = errors + run_check("baanaanaa", "a", "banana", "aa")
+errors = errors + run_check("XXa", "aa", "aaaaa", "X")
+errors = errors + run_check("unchanged", "", "unchanged", "!")
+errors = errors + run_check("", "x", "", "y")
+errors = errors + run_check("ElXphant", "e", "Elephant", "X")
+errors = errors + run_check("cafX XtX", "é", "café été", "X")
+
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.3", 1)
+errors = errors + check_count_error("RXC-LC-40.3", 2)
+errors = errors + check_count_error("RXC-LC-40.4", 4)
+errors = errors + check_omitted_error(1)
+errors = errors + check_omitted_error(2)
+errors = errors + check_omitted_error(3)
+
+if errors = 0 then say "PASS: Level C CHANGESTR BIF"
+return errors <> 0
+
+run_check: procedure = .int
+  arg expected = .string, needle = .string, haystack = .string, replacement = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(needle)
+  args[2] = .RexxValue(haystack)
+  args[3] = .RexxValue(replacement)
+  exists[1] = 1
+  exists[2] = 1
+  exists[3] = 1
+  context = .RexxBifCallContext("CHANGESTR")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_changestr(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: CHANGESTR expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("A")
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("CHANGESTR")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_changestr(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: CHANGESTR expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_omitted_error: procedure = .int
+  arg omitted = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to 3
+    args[i] = .RexxValue("A")
+    exists[i] = i <> omitted
+  end
+  context = .RexxBifCallContext("CHANGESTR")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_changestr(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.5" then return 0
+  say "FAIL: CHANGESTR omitted" omitted "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

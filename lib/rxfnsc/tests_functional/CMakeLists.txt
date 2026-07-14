@@ -11,6 +11,48 @@ set(REXXBINS
   testRexxValue
   testRexxRuntimePools
   testRexxClassicBifs
+  testRexxClassicBifAbbrev
+  testRexxClassicBifAbs
+  testRexxClassicBifAddress
+  testRexxClassicBifB2x
+  testRexxClassicBifCenter
+  testRexxClassicBifCentre
+  testRexxClassicBifChangestr
+  testRexxClassicBifCompare
+  testRexxClassicBifCopies
+  testRexxClassicBifCountstr
+  testRexxClassicBifD2x
+  testRexxClassicBifDelstr
+  testRexxClassicBifDelword
+  testRexxClassicBifFormat
+  testRexxClassicBifInsert
+  testRexxClassicBifLastpos
+  testRexxClassicBifLeft
+  testRexxClassicBifLength
+  testRexxClassicBifMax
+  testRexxClassicBifMin
+  testRexxClassicBifNumeric
+  testRexxClassicBifOverlay
+  testRexxClassicBifPos
+  testRexxClassicBifReverse
+  testRexxClassicBifRight
+  testRexxClassicBifSign
+  testRexxClassicBifSpace
+  testRexxClassicBifStrip
+  testRexxClassicBifSubstr
+  testRexxClassicBifSubword
+  testRexxClassicBifSymbol
+  testRexxClassicBifTrace
+  testRexxClassicBifTrunc
+  testRexxClassicBifValue
+  testRexxClassicBifVerify
+  testRexxClassicBifWord
+  testRexxClassicBifWordindex
+  testRexxClassicBifWordlength
+  testRexxClassicBifWordpos
+  testRexxClassicBifWords
+  testRexxClassicBifX2b
+  testRexxClassicBifX2d
 )
 
 set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)

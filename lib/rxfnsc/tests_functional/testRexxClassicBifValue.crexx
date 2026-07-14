@@ -1,0 +1,121 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifvalue
+import rexxvalue
+import rexxpool
+
+errors = 0
+pool = .RexxVariablePool()
+
+call pool.setString("mary", "10")
+call pool.setString("j", "3")
+call pool.setString("t", "x")
+call pool.setString("blank", " ")
+call pool.setString("empty", "")
+call pool.setString(".RC", "7")
+call pool.setStemString("A.", "3", "three")
+call pool.setStemString("A.", "X", "ex")
+call pool.setStemString("A.", ".3", "dot-three")
+
+errors = errors + check_value(reference pool, "10", "mary")
+errors = errors + check_value(reference pool, "10", "MARY")
+errors = errors + check_value(reference pool, "MISSING", "missing")
+errors = errors + check_value(reference pool, " ", "blank")
+errors = errors + check_value(reference pool, "", "empty")
+errors = errors + check_value(reference pool, "7", ".RC")
+errors = errors + check_value(reference pool, "three", "A.J")
+errors = errors + check_value(reference pool, "ex", "A.T")
+errors = errors + check_value(reference pool, "dot-three", "A..J")
+errors = errors + check_value(reference pool, "A.K", "A.K")
+
+errors = errors + set_value(reference pool, "10", "mary", "11")
+errors = errors + check_value(reference pool, "11", "MARY")
+errors = errors + set_value(reference pool, "NEWNAME", "newname", "created")
+errors = errors + check_value(reference pool, "created", "NEWNAME")
+errors = errors + set_value(reference pool, "A.", "A.", "fallback")
+errors = errors + check_value(reference pool, "fallback", "A.K")
+errors = errors + set_value(reference pool, "fallback", "A.K", "explicit")
+errors = errors + check_value(reference pool, "explicit", "A.K")
+errors = errors + check_value(reference pool, "fallback", "A.Z")
+errors = errors + set_value(reference pool, "11", "mary", "")
+errors = errors + check_value(reference pool, "", "mary")
+
+errors = errors + check_error(reference pool, "RXC-LC-40.26", 1, "", 1)
+errors = errors + check_error(reference pool, "RXC-LC-40.26", 1, "has blank", 1)
+errors = errors + check_error(reference pool, "RXC-LC-40.26", 1, "1E3", 1)
+errors = errors + check_error(reference pool, "RXC-LC-40.3", 0, "", 1)
+errors = errors + check_error(reference pool, "RXC-LC-40.4", 4, "A", 1)
+errors = errors + check_error(reference pool, "RXC-LC-40.5", 1, "", 0)
+errors = errors + check_external_error(reference pool, "CONFIG")
+
+if errors = 0 then say "PASS: Level C VALUE BIF"
+return errors <> 0
+
+check_value: procedure = .int
+  arg pool_ref = reference .RexxVariablePool, expected = .string, name = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(name)
+  exists[1] = 1
+  context = .RexxBifCallContext("VALUE")
+  call context.setArguments(args, exists)
+  call context.setCallerPool(pool_ref)
+  result = rexxclassicbif_value(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: VALUE" name "expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+set_value: procedure = .int
+  arg pool_ref = reference .RexxVariablePool, expected_old = .string, name = .string, replacement = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(name)
+  args[2] = .RexxValue(replacement)
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("VALUE")
+  call context.setArguments(args, exists)
+  call context.setCallerPool(pool_ref)
+  result = rexxclassicbif_value(reference context)
+  if \context.hasError() & result.asString() = expected_old then return 0
+  say "FAIL: VALUE set" name "expected old" expected_old "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_error: procedure = .int
+  arg pool_ref = reference .RexxVariablePool, expected_code = .string, count = .int, value = .string, supplied = .boolean
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue(value)
+    exists[i] = 1
+  end
+  if count = 1 & \supplied then exists[1] = 0
+  context = .RexxBifCallContext("VALUE")
+  call context.setArguments(args, exists)
+  call context.setCallerPool(pool_ref)
+  result = rexxclassicbif_value(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: VALUE expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_external_error: procedure = .int
+  arg pool_ref = reference .RexxVariablePool, pool_name = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("not required to be a symbol")
+  args[2] = .RexxValue("")
+  args[3] = .RexxValue(pool_name)
+  exists[1] = 1
+  exists[2] = 0
+  exists[3] = 1
+  context = .RexxBifCallContext("VALUE")
+  call context.setArguments(args, exists)
+  call context.setCallerPool(pool_ref)
+  result = rexxclassicbif_value(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.37" then return 0
+  say "FAIL: VALUE external pool expected RXC-LC-40.37 got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

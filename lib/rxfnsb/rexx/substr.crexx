@@ -22,69 +22,71 @@
  * SOFTWARE.
  */
 
-/* Classic REXX Runtime Library */
-/* substr is UTF8 save! */
-
-options levelb /* Written in REXX Level B */
-
+/**
+ * Level B SUBSTR implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/substr.md
+ */
+options levelb
 namespace rxfnsb expose substr
-import _rxsysb
 
+/**
+ * Return a character slice, optionally padded to an exact length.
+ *
+ * @param string source text
+ * @param start positive 1-based start position
+ * @param length optional non-negative result length
+ * @param pad exactly one padding codepoint
+ * @return selected text, padded on the right when length is supplied
+ */
 substr: procedure = .string
-  arg string1 = .string, start = .int, len =-256 , pad = ' '  /* set len default to -256, to avoid a call to the length function */
+  arg string = .string, start = .int, length = 0, pad = " "
+  length_supplied = ?length
+  string_length = .int
+  pad_length = .int
+  pad_character = .int
+  pad_index = 0
+  start_offset = .int
+  available = .int
+  copy_length = .int
+  padding_length = .int
+  result = ""
 
-  inputLength  = 0
-  assembler strlen inputLength, string1          /* this is the total string length */
-  if len=-256 then len=inputLength + 1 - start   /* len was not set, use the faster assembler instruction to retrieve and calculate the length */
+  if start < 1 then
+    assembler signal "INVALID_ARGUMENTS","SUBSTR start must be positive"
+  if length_supplied & length < 0 then
+    assembler signal "INVALID_ARGUMENTS","SUBSTR length must be non-negative"
+  assembler strlen pad_length,pad
+  if pad_length <> 1 then
+    assembler signal "INVALID_ARGUMENTS","SUBSTR pad must contain exactly one character"
 
-  if start < 1 then call raise "syntax", "40.13", start
-  ## if len   < 0 then call raise "syntax", "40.13", len
-  if len   <= 0 then return ''
- /* Convert to 0-based character offset */
-  start = start - 1
+  assembler strlen string_length,string
+  start_offset = start - 1
+  available = string_length - start_offset
+  if available < 0 then available = 0
 
-  /* fast path if start offset is 0, string can be cut off after length */
-  if start=0 then do
-     if len = inputLength then return string1  /* same length, return immediately */
-     if len<=inputLength then do
-        assembler substcut string1,len         /* no length checking necessary, handled in substcut */
-        return string1
-     end
+  if \length_supplied then do
+    if available = 0 then return result
+    if start_offset = 0 then return string
+    assembler setstrpos string,start_offset
+    assembler substring result,string,available
+    return result
   end
-  /* fast path if length doesn't exceed string length, there is no padding required, substring can return directly */
-  outputstring = .string
-  if start+len<=inputLength then do
-     assembler SETSTRPOS string1,start
-     assembler substring outputstring,string1,len
-     return outputstring
+
+  if length = 0 then return result
+  copy_length = length
+  if available < copy_length then copy_length = available
+  if copy_length > 0 then do
+    if start_offset = 0 & copy_length = string_length & length = string_length then
+      return string
+    assembler setstrpos string,start_offset
+    assembler substring result,string,copy_length
   end
 
-  /* Initialize registers */
-  padchar      = 0  /* Holds Unicode codepoint */
-  padstring    = ""
-  padLength    = 0
-
-  /* Pad character validation and preparation */
-  if pad = '' then pad = ' '
-  assembler strlen padLength, pad
-  if padLength > 1 then call raise "syntax", "40.23", pad
-  assembler strchar padchar, pad   /* padchar= utf8codepoint(pad) */
-
-  /* Calculate remaining input length */
-  inputLength = inputLength - start              /* calculate usable length after positioning substr */
-
-  /* Set byte offset for VM based on character index (UTF-8 safe) */
-  assembler SETSTRPOS string1, start
-  /* Copy or pad */
-  if inputLength <= 0 then do                      /* just padding required */
-     assembler padstr outputstring, padchar, len
+  padding_length = length - copy_length
+  if padding_length > 0 then do
+    assembler strchar pad_character,pad,pad_index
+    assembler padstr result,pad_character,padding_length
   end
-  else if len <= inputLength then do
-     assembler substring outputstring, string1, len
-  end
-  else do
-     assembler substring outputstring, string1, inputLength
-     pcount = len - inputLength
-     assembler padstr outputstring, padchar, pcount
-  end
-  return outputstring
+  return result

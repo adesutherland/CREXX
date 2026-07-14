@@ -1,0 +1,42 @@
+/* Focused Level B D2B tests. */
+options levelb
+import rxfnsb
+
+errors = 0
+source = 129
+errors = errors + check("0", d2b(0), "zero")
+errors = errors + check("1", d2b(1), "one")
+errors = errors + check("10", d2b(2), "two")
+errors = errors + check("1001", d2b(9), "documented nine")
+errors = errors + check("10011", d2b(19), "documented nineteen")
+errors = errors + check("10000001", d2b(source), "documented 129")
+errors = errors + check_int(129, source, "source is not mutated")
+
+expected_max = ""
+do 63
+  expected_max = expected_max || "1"
+end
+errors = errors + check(expected_max, d2b(9223372036854775807), "maximum native integer")
+
+caught = 0
+do
+  ignored = d2b(-1)
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check_int(1, caught, "negative integer signals")
+
+if errors = 0 then say "PASS: d2b"
+return errors <> 0
+
+check: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected = actual then return 0
+  say "FAIL: D2B" label "expected" expected "got" actual
+  return 1
+
+check_int: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: D2B" label "expected" expected "got" actual
+  return 1

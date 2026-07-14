@@ -1,0 +1,95 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifabbrev
+import rexxvalue
+
+errors = 0
+
+errors = errors + check_value("1", "PRINT", "PRI")
+errors = errors + check_value("0", "PRINT", "Pri")
+errors = errors + check_value("1", "PRINT", "PRI", "3")
+errors = errors + check_value("0", "PRINT", "PRI", "4")
+errors = errors + check_value("0", "A", "AB")
+errors = errors + check_value("1", "PRINT", "")
+errors = errors + check_value("0", "PRINT", "", "1")
+errors = errors + check_value("1", "caféine", "café")
+
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.3", 1)
+errors = errors + check_count_error("RXC-LC-40.4", 4)
+errors = errors + check_minimum_error("RXC-LC-40.12", "not-a-number")
+errors = errors + check_minimum_error("RXC-LC-40.12", "1.5")
+errors = errors + check_minimum_error("RXC-LC-40.13", "-1")
+errors = errors + check_omitted_error()
+
+if errors = 0 then say "PASS: Level C ABBREV BIF"
+return errors <> 0
+
+check_value: procedure = .int
+  arg expected = .string, string = .string, candidate = .string, minimum = ""
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(string)
+  args[2] = .RexxValue(candidate)
+  exists[1] = 1
+  exists[2] = 1
+  if minimum <> "" then do
+    args[3] = .RexxValue(minimum)
+    exists[3] = 1
+  end
+  context = .RexxBifCallContext("ABBREV")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifabbrev..rexxclassicbif_abbrev(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: ABBREV expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("A")
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("ABBREV")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifabbrev..rexxclassicbif_abbrev(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: ABBREV expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_minimum_error: procedure = .int
+  arg expected_code = .string, minimum = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("PRINT")
+  args[2] = .RexxValue("PRI")
+  args[3] = .RexxValue(minimum)
+  exists[1] = 1
+  exists[2] = 1
+  exists[3] = 1
+  context = .RexxBifCallContext("ABBREV")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifabbrev..rexxclassicbif_abbrev(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: ABBREV minimum expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_omitted_error: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("PRINT")
+  args[2] = .RexxValue("")
+  exists[1] = 1
+  exists[2] = 0
+  context = .RexxBifCallContext("ABBREV")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifabbrev..rexxclassicbif_abbrev(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.5" then return 0
+  say "FAIL: ABBREV omitted argument got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

@@ -1,0 +1,141 @@
+/* Pure Level B ADDRESS protocol tests (no external command execution). */
+options levelb
+import rxfnsb
+import _rxsysb
+
+errors = 0
+
+registry = .addressdriverregistry()
+call registry.add("openai", "openai gpt", "gpt_")
+call registry.add("anthropic", "anthropic claude", "claude_")
+errors = errors + check(registry.lookup("GPT") = "OPENAI", "driver exact alias")
+errors = errors + check(registry.lookup("gpt_4_1") = "OPENAI", "driver prefix")
+errors = errors + check(registry.lookup("claude_sonnet") = "ANTHROPIC", "second driver prefix")
+errors = errors + check(registry.lookup("missing") = "", "unknown driver")
+errors = errors + check(registry.drivers() = "OPENAI ANTHROPIC", "driver inventory")
+
+stem = .standardaddressstem()
+call stem.set("One", "first")
+call stem.set("two", "second")
+errors = errors + check(stem.get("ONE") = "first", "stem normalized get")
+errors = errors + check(stem.exists("one") = 1, "stem exists")
+errors = errors + check(stem.next(0) = "ONE", "stem first numeric cursor")
+errors = errors + check(stem.next(1) = "TWO", "stem second numeric cursor")
+call stem.drop("one")
+errors = errors + check(stem.exists("ONE") = 0, "stem drop")
+errors = errors + check(stem.next(0) = "TWO", "stem cursor skips dropped entry")
+errors = errors + check(stem.next(2) = "", "stem cursor end")
+
+sandbox = .standardaddresssandbox()
+call sandbox.set("Mode", "safe")
+call sandbox.set("count", "2")
+errors = errors + check(sandbox.get("MODE") = "safe", "sandbox normalized get")
+errors = errors + check(sandbox.exists("mode") = 1, "sandbox exists")
+errors = errors + check(sandbox.next(0) = "MODE", "sandbox first numeric cursor")
+errors = errors + check(sandbox.next(1) = "COUNT", "sandbox second numeric cursor")
+call sandbox.drop("mode")
+errors = errors + check(sandbox.get("mode") = "", "sandbox drop")
+
+binding = .addressbinding("var", "local", "external", "value", "rw")
+errors = errors + check(binding.get_kind() = "var", "binding kind")
+errors = errors + check(binding.get_internal_name() = "local", "binding internal name")
+errors = errors + check(binding.get_external_alias() = "external", "binding alias")
+errors = errors + check(binding.get_value() = "value", "binding value")
+errors = errors + check(binding.get_flags() = "rw", "binding flags")
+
+stem_binding = .addressbinding("stem", "items", "items", "", "")
+call stem_binding.set_stem_value("0", "2")
+call stem_binding.set_stem_value("1", "alpha")
+call stem_binding.set_stem_value("2", "beta")
+errors = errors + check(stem_binding.get_stem_value("2") = "beta", "binding stem value")
+
+request = .addressrequest("cms", "query", _noredir(), _noredir(), _noredir(), "flag")
+errors = errors + check(request.get_environment_name() = "cms", "request environment")
+errors = errors + check(request.get_command() = "query", "request command")
+errors = errors + check(request.get_flags() = "flag", "request flags")
+call request.set_environment_name("CMS2")
+call request.set_command("query user")
+call request.set_sandbox(sandbox)
+call request.set_sandbox_value("phase", "test")
+call request.add_binding_plan(binding)
+call request.add_binding_plan(stem_binding)
+errors = errors + check(request.get_environment_name() = "CMS2", "request environment setter")
+errors = errors + check(request.get_command() = "query user", "request command setter")
+errors = errors + check(request.get_sandbox_value("PHASE") = "test", "request sandbox")
+errors = errors + check(request.get_binding_count() = 2, "request binding count")
+errors = errors + check(request.get_binding_value("EXTERNAL") = "value", "request binding alias lookup")
+errors = errors + check(request.get_binding_stem_value(2, "1") = "alpha", "request stem lookup")
+
+response = .addressresponse(7, "ERROR")
+call response.add_diagnostic("problem")
+call response.add_updated_binding("var", "local", "external", "updated", "")
+call response.add_updated_binding("sandbox", "phase", "phase", "done", "")
+call response.add_updated_binding("stem", "items.1", "items", "changed", "")
+errors = errors + check(response.get_rc() = 7, "response rc")
+errors = errors + check(response.get_condition_name() = "ERROR", "response condition")
+errors = errors + check(response.get_diagnostic_count() = 1, "response diagnostic count")
+errors = errors + check(response.get_diagnostic(1) = "problem", "response diagnostic")
+errors = errors + check(response.get_updated_binding_count() = 3, "response update count")
+
+target = "before"
+call _address_apply_response_var(response, "local", target)
+errors = errors + check(target = "updated", "response scalar writeback")
+call _address_apply_response_sandbox(response, sandbox)
+errors = errors + check(sandbox.get("phase") = "done", "response sandbox writeback")
+call _address_apply_response_stem(response, "items", stem)
+errors = errors + check(stem.get("1") = "changed", "response stem writeback")
+call _address_apply_response_request_stem(response, request, 2, "items")
+errors = errors + check(request.get_binding_stem_value(2, "1") = "changed", "request stem writeback")
+
+arguments = .string[]
+arguments[1] = "one"
+arguments[2] = "two"
+function_request = .addressfunctionrequest("cms", "words", arguments, sandbox, "trace")
+errors = errors + check(function_request.get_environment_name() = "cms", "function request environment")
+errors = errors + check(function_request.get_function_name() = "words", "function request name")
+errors = errors + check(function_request.get_argument_count() = 2, "function request argc")
+errors = errors + check(function_request.get_argument(2) = "two", "function request argument")
+errors = errors + check(function_request.get_argument(3) = "", "function request missing argument")
+errors = errors + check(function_request.get_flags() = "trace", "function request flags")
+
+function_response = .addressfunctionresponse(3, "result", "FAILURE")
+call function_response.add_diagnostic("unsupported")
+errors = errors + check(function_response.get_rc() = 3, "function response rc")
+errors = errors + check(function_response.get_result() = "result", "function response result")
+errors = errors + check(function_response.get_condition_name() = "FAILURE", "function response condition")
+errors = errors + check(function_response.get_diagnostic(1) = "unsupported", "function response diagnostic")
+
+call _reset_address_environments()
+errors = errors + check(_current_address_environment() = "CREXX", "default current environment")
+errors = errors + check(_set_address_environment(" shell ") = 0, "set environment rc")
+errors = errors + check(_current_address_environment() = "SHELL", "normalized current environment")
+env = addressenv()
+errors = errors + check(env.environment_name() = "SHELL", "addressenv current object")
+call _reset_address_environments()
+
+unknown_request = _address_new_request("__address_protocol_unknown__", "noop", _noredir(), _noredir(), _noredir())
+unknown_response = _address_dispatch_request(unknown_request)
+errors = errors + check(unknown_response.get_rc() = -3, "unknown environment rc")
+errors = errors + check(unknown_response.get_condition_name() = "FAILURE", "unknown environment condition")
+
+caught = 0
+do
+  call registry.add("", "", "")
+on signal invalid_arguments as problem
+  if problem.name() = "INVALID_ARGUMENTS" & pos("driver name", problem.message()) > 0 then caught = caught + 1
+end
+do
+  call _set_address_environment("")
+on signal invalid_arguments as problem
+  if problem.name() = "INVALID_ARGUMENTS" & pos("non-blank environment name", problem.message()) > 0 then caught = caught + 1
+end
+errors = errors + check(caught = 2, "invalid ADDRESS arguments use signals")
+
+if errors = 0 then say "PASS: ADDRESS protocol helpers"
+return errors <> 0
+
+check: procedure = .int
+  arg condition = .int, label = .string
+  if condition then return 0
+  say "FAIL:" label
+  return 1

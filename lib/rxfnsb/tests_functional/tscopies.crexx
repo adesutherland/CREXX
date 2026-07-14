@@ -1,36 +1,34 @@
-/* rexx */
-/* These from TRL */
+/* Focused Level B COPIES tests. */
 options levelb
 import rxfnsb
 
-errors=0
-if copies('abc',3) \= 'abcabcabc' then do
-  errors=errors+1
-  say 'COPIES failed in test 1 'copies('abc',3)
+errors = 0
+source = "abc"
+
+errors = errors + check(copies(source, 3) = "abcabcabc", "documented ordinary count")
+errors = errors + check(copies(source, 0) = "", "documented zero count")
+errors = errors + check(copies("", 2) = "", "documented empty source")
+errors = errors + check(copies(source, 1) = source, "count one")
+errors = errors + check(copies("ab", 5) = "ababababab", "non-power-of-two count")
+errors = errors + check(copies("x", 10) = "xxxxxxxxxx", "multi-bit count")
+errors = errors + check(copies("☺", 4) = "☺☺☺☺", "Unicode source")
+errors = errors + check(copies("", 50) = "", "large count with empty source")
+errors = errors + check(length(copies("ab", 4096)) = 8192, "substantial power-of-two result")
+errors = errors + check(source = "abc", "source is not mutated")
+
+caught = 0
+do
+  ignored = copies("abc", -1)
+on signal invalid_arguments
+  caught = 1
 end
-if copies('abc',0) \= '' then do
-  errors=errors+1
-  say 'COPIES failed in test 2 'copies('abc',0)
-  /* These from Mark Hessling. */
-end
-if copies("foo",3) \= "foofoofoo" then do
-  errors=errors+1
-  say 'COPIES failed in test 3 '
-end
-if copies("x", 10) \= "xxxxxxxxxx" then do
-  errors=errors+1
-  say 'COPIES failed in test 4 '
-end
-if copies("", 50) \= "" then do
-  errors=errors+1
-  say 'COPIES failed in test 5 '
-end
-if copies("", 0) \= "" then do
-  errors=errors+1
-  say 'COPIES failed in test 6 '
-end
-if copies("foobar",0 ) \= "" then do
-  errors=errors+1
-  say 'COPIES failed in test 7 '
-end
-return errors<>0
+errors = errors + check(caught = 1, "negative count uses a signal")
+
+if errors = 0 then say "PASS: copies"
+return errors <> 0
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: COPIES" label
+  return 1

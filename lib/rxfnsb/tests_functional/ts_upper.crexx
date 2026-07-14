@@ -1,17 +1,22 @@
-/* rexx */
+/* Focused Level B UPPER tests. */
 options levelb
 import rxfnsb
 
-errors=0
+errors = 0
+source = "The quick brown fox jumps over the lazy dog"
 
-if upper("The quick brown fox jumps over the lazy dog") \= 'THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG' then do
-  errors=errors+1
-  say 'UPPER failed in test      1'
-end
+errors = errors + check(upper(source) = "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG", "ASCII alphabet")
+errors = errors + check(upper("MiXeD 123 !?") = "MIXED 123 !?", "mixed text preserves nonletters")
+errors = errors + check(upper("äöüé") = "ÄÖÜÉ", "Unicode cased characters")
+errors = errors + check(upper("ALREADY UPPER") = "ALREADY UPPER", "already uppercase")
+errors = errors + check(upper("") = "", "empty string")
+errors = errors + check(source = "The quick brown fox jumps over the lazy dog", "source is not exposed or mutated")
 
-if upper("é") \= 'É' then do
-  errors=errors+1
-  say 'UPPER failed in test      2'
-end
+if errors = 0 then say "PASS: upper"
+return errors <> 0
 
-return errors<>0
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: UPPER" label
+  return 1

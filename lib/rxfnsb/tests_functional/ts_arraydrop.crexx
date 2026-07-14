@@ -1,0 +1,34 @@
+/* Focused Level B ARRAYDROP tests. */
+options levelb
+import rxfnsb
+
+errors = 0
+array = .string[]
+
+errors = errors + check(0, arraydrop(array), "empty return")
+errors = errors + check(0, array[0], "empty high-water")
+
+array[1] = "A"
+array[2] = "B"
+errors = errors + check(0, arraydrop(array), "populated return")
+errors = errors + check(0, array[0], "populated high-water")
+
+array[1] = "C"
+errors = errors + check_string("C", array[1], "reuse after clear")
+errors = errors + check(0, arraydrop(array), "second clear return")
+errors = errors + check(0, array[0], "second clear high-water")
+
+if errors = 0 then say "PASS: arraydrop"
+return errors <> 0
+
+check: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: ARRAYDROP" label "expected" expected "got" actual
+  return 1
+
+check_string: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected == actual then return 0
+  say "FAIL: ARRAYDROP" label "expected" expected "got" actual
+  return 1

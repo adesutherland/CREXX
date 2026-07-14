@@ -1,74 +1,50 @@
-/* rexx */
+/* Focused Level B RIGHT tests. */
 options levelb
 import rxfnsb
 
-errors=0
+errors = 0
+source = "foobar"
 
-/* These from TRL */
+errors = errors + check(right("abc  d", 8) = "  abc  d", "documented blank padding")
+errors = errors + check(right("abc def", 5) = "c def", "documented truncation")
+errors = errors + check(right("12", 5, "0") = "00012", "documented zero padding")
+errors = errors + check(right("", 4) = "    ", "empty source padding")
+errors = errors + check(right(source, 0) = "", "zero width")
+errors = errors + check(right(source, 3) = "bar", "rightmost slice")
+errors = errors + check(right(source, 6) = source, "equal width")
+errors = errors + check(right(source, 8, "*") = "**foobar", "padded width")
+errors = errors + check(right("aé日", 2) = "é日", "Unicode truncation")
+errors = errors + check(right("é", 3, "·") = "··é", "Unicode padding")
+errors = errors + check(source = "foobar", "source is not mutated")
 
-if right('abc  d',8) \= '  abc  d'        then do
-  errors=errors+1
-  say 'RIGHT failed in test          1 '
-end
-if right('abc def',5) \= 'c def'          then do
-  errors=errors+1
-  say 'RIGHT failed in test          2 '
-end
-if right('12',5,'0') \= '00012'           then do
-  errors=errors+1
-  say 'RIGHT failed in test          3 '
-end
-/* These from Mark Hessling. */
-if right("",4) \=            "    "                    then do
-  errors=errors+1
-  say 'RIGHT failed in test          4 '
-end
-if right("foobar",0) \=      ""                        then do
-  errors=errors+1
-  say 'RIGHT failed in test          5 '
-end
-if right("foobar",3) \=      "bar"                     then do
-  errors=errors+1
-  say 'RIGHT failed in test          6 '
-end
-if right("foobar",6) \=      "foobar"                  then do
-  errors=errors+1
-  say 'RIGHT failed in test          7 '
-end
-if right("foobar",8) \=      "  foobar"                then do
-  errors=errors+1
-  say 'RIGHT failed in test          8 '
-end
-if right("foobar",8,'*') \=  "**foobar"                then do
-  errors=errors+1
-  say 'RIGHT failed in test          9 '
-end
-if right("foobar",4,'*') \=  "obar"                    then do
-  errors=errors+1
-  say 'RIGHT failed in test         10 '
-end
+wide = right("x", 1000, ".")
+wide_length = .int
+assembler strlen wide_length,wide
+errors = errors + check(wide_length = 1000, "substantial direct padding")
 
-/* these from us in crexx */
-/* say "Test of Right function, 3 args" */
+caught = 0
+do
+  ignored = right("abc", -1)
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = right("abc", 3, "")
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = right("abc", 3, "xy")
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(caught = 3, "width and pad failures use signals")
 
+if errors = 0 then say "PASS: right"
+return errors <> 0
 
-if right("abc  d",8,'.') \=  "..abc  d"                    then do
-  errors=errors+1
-  say 'RIGHT failed in test         11 '
-end
-/* say "Test of Right function, 3 args" */
-if right("12",5,'0') \=  "00012"                    then do
-  errors=errors+1
-  say 'RIGHT failed in test         12 '
-end
-/* say "Test of Right function, non-copies concatenate version" */
-if right("the quick brown fox",3) \=  "fox"                    then do
-  errors=errors+1
-  say 'RIGHT failed in test         13 '
-end
-/* say "Test of Right function, non-copies concatenate version" */
-if right("abcdefghijklmnopqrstuvwxyz",6) \=  "uvwxyz"                    then do
-  errors=errors+1
-  say 'RIGHT failed in test         14 '
-end
-return errors<>0
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: RIGHT" label
+  return 1

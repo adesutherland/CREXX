@@ -17,8 +17,11 @@ b = "41c3"x as .binary
 c = a || b
 errors = errors + check(bin2x(c) = "FF0041C3", "operator concat keeps bytes")
 errors = errors + check(binlength(c) = 4, "binlength")
+empty = .binary
+errors = errors + check(binlength(empty) = 0, "binlength empty")
 errors = errors + check(binbyte(c,1) = 255, "binbyte first")
 errors = errors + check(binbyte(c,4) = 195, "binbyte fourth")
+errors = errors + check(binbyte(c,0) = -1 & binbyte(c,5) = -1, "binbyte outside returns minus one")
 
 mixed = a || "A"
 errors = errors + check(bin2x(mixed) = "FF0041", "mixed binary/text concat returns binary")
@@ -32,25 +35,40 @@ errors = errors + check(bin2x(d) = "001122FF", "binsetbyte returns copy")
 
 errors = errors + check(bin2x(binsubstr(d,2,2)) = "1122", "binsubstr middle")
 errors = errors + check(bin2x(binsubstr(d,3)) = "22FF", "binsubstr rest")
+errors = errors + check(bin2x(binsubstr(d,2,-1)) = "1122FF", "binsubstr explicit negative rest")
+errors = errors + check(binlength(binsubstr(d,1,0)) = 0, "binsubstr zero count")
 errors = errors + check(bin2x(binsubstr(d,10)) = "", "binsubstr past end")
 
 errors = errors + check(bin2x(binoverlay("abcd"x as .binary, d, 2)) = "00ABCDFF", "binoverlay")
 errors = errors + check(bin2x(bininsert("abcd"x as .binary, d, 3)) = "0011ABCD22FF", "bininsert middle")
+errors = errors + check(bin2x(bininsert("abcd"x as .binary, d, 1)) = "ABCD001122FF", "bininsert prepend")
+errors = errors + check(bin2x(bininsert("abcd"x as .binary, d, 5)) = "001122FFABCD", "bininsert end boundary")
 errors = errors + check(bin2x(bininsert("abcd"x as .binary, d, 99)) = "001122FFABCD", "bininsert append")
 errors = errors + check(bin2x(bindelstr(d,2,2)) = "00FF", "bindelstr count")
 errors = errors + check(bin2x(bindelstr(d,3)) = "0011", "bindelstr rest")
+errors = errors + check(bin2x(bindelstr(d,3,99)) = "0011", "bindelstr oversized count")
+errors = errors + check(bin2x(bindelstr(d,9,2)) = "001122FF", "bindelstr past end")
+errors = errors + check(bin2x(d) = "001122FF", "copy helpers preserve target")
 
 errors = errors + check(binpos("1122"x as .binary, d) = 2, "binpos")
 errors = errors + check(binpos("22"x as .binary, d, 3) = 3, "binpos start")
 errors = errors + check(binpos("33"x as .binary, d) = 0, "binpos not found")
+errors = errors + check(binpos(empty, d) = 0, "binpos empty needle")
+large = .binary
+call binresize large,1024
+call binfill large,65
+call binfillat large,1023,1,66
+errors = errors + check(binpos("414142"x as .binary,large) = 1022, "binpos zero-copy long search")
 
 errors = errors + check(bincompare(d, "001122ff"x as .binary) = 0, "bincompare equal")
 errors = errors + check(bincompare(d, "001123ff"x as .binary) = 3, "bincompare mismatch")
 errors = errors + check(bincompare(d, "001122"x as .binary) = 4, "bincompare length")
+errors = errors + check(bincompare(empty,empty) = 0, "bincompare empty")
+errors = errors + check(bincompare("00"x as .binary,empty) = 1, "bincompare empty prefix")
 
 errors = errors + check(bin2x(x2bin("ff 00 aa")) = "FF00AA", "x2bin spaces lower")
 errors = errors + check(bin2x(x2bin("f")) = "0F", "x2bin odd nibble")
-errors = errors + check(binlength(x2bin("zz")) = 0, "x2bin invalid")
+errors = errors + check(binlength(x2bin("")) = 0, "x2bin empty")
 
 packed = "00112233"x as .binary
 errors = errors + check(binresize(packed,6) = 6, "binresize result")
@@ -63,15 +81,22 @@ errors = errors + check(binlength(packed) = 0, "binclear length")
 packed = "001122334455"x as .binary
 errors = errors + check(binfillat(packed,2,3,170) = 6, "binfillat result")
 errors = errors + check(bin2x(packed) = "0011AAAAAA55", "binfillat bytes")
+errors = errors + check(binfillat(packed,0,6,85) = 6, "binfillat whole fast path")
+errors = errors + check(bin2x(packed) = "555555555555", "binfillat whole bytes")
+errors = errors + check(binfillat(packed,6,0,0) = 6, "binfillat empty end span")
 
 source = "AABBCCDDEE"x as .binary
 target = "0000000000"x as .binary
 errors = errors + check(bincopy(target,1,source,2,2) = 5, "bincopy result")
 errors = errors + check(bin2x(target) = "00CCDD0000", "bincopy bytes")
+errors = errors + check(bin2x(source) = "AABBCCDDEE", "bincopy preserves source")
+errors = errors + check(bincopy(target,5,source,5,0) = 5, "bincopy empty end spans")
 
 packed = "0102030405"x as .binary
 errors = errors + check(binmemmove(packed,2,0,3) = 5, "binmemmove result")
 errors = errors + check(bin2x(packed) = "0102010203", "binmemmove bytes")
+errors = errors + check(binmemmove(packed,0,2,3) = 5, "binmemmove reverse overlap")
+errors = errors + check(bin2x(packed) = "0102030203", "binmemmove reverse bytes")
 
 packed = "0102"x as .binary
 errors = errors + check(binappend(packed,"AABB"x as .binary) = 4, "binappend result")
@@ -87,16 +112,114 @@ errors = errors + check(bin2x(packed) = "00112233", "bindrop bytes")
 
 caught = 0
 do
-  call binfillat packed,5,1,0
+  ignored = binsetbyte(d,0,0)
 on signal out_of_range
   caught = caught + 1
 end
 do
-  call bindrop packed,0,99
+  ignored = binsetbyte(d,1,256)
 on signal out_of_range
   caught = caught + 1
 end
-errors = errors + check(caught = 2, "packed helper out-of-range signals")
+do
+  ignored = binsubstr(d,0)
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = binoverlay("ffff"x as .binary,d,4)
+on signal out_of_range
+  caught = caught + 1
+end
+do
+  ignored = bindelstr(d,0,1)
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = bindelstr(d,1,-1)
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = binpos("00"x as .binary,d,0)
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = x2bin("zz")
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(caught = 8, "copy helper invalid arguments use signals")
+caught = 0
+packed_error = "00112233"x as .binary
+do
+  call binresize packed_error,-1
+on signal out_of_range
+  caught = caught + 1
+end
+packed_error = "00112233"x as .binary
+do
+  call binfill packed_error,-1
+on signal out_of_range
+  caught = caught + 1
+end
+packed_error = "00112233"x as .binary
+do
+  call binfillat packed_error,5,1,0
+on signal out_of_range
+  caught = caught + 1
+end
+packed_error = "00112233"x as .binary
+do
+  call binfillat packed_error,0,0,256
+on signal out_of_range
+  caught = caught + 1
+end
+errors = errors + check(caught = 4, "packed resize and fill errors use signals")
+caught = 0
+packed_error = "00112233"x as .binary
+do
+  call bincopy packed_error,5,source,0,1
+on signal out_of_range
+  caught = caught + 1
+end
+packed_error = "00112233"x as .binary
+do
+  call bincopy packed_error,0,source,5,1
+on signal out_of_range
+  caught = caught + 1
+end
+packed_error = "00112233"x as .binary
+do
+  call binmemmove packed_error,0,5,1
+on signal out_of_range
+  caught = caught + 1
+end
+packed_error = "00112233"x as .binary
+do
+  call binupdate packed_error,4,"FFFF"x as .binary
+on signal out_of_range
+  caught = caught + 1
+end
+errors = errors + check(caught = 4, "packed copy and move errors use signals")
+caught = 0
+packed_error = "00112233"x as .binary
+do
+  call binmakegap packed_error,5,1
+on signal out_of_range
+  caught = caught + 1
+end
+errors = errors + check(caught = 1, "binmakegap invalid span uses signal")
+caught = 0
+packed_error = "00112233"x as .binary
+do
+  call bindrop packed_error,0,99
+on signal out_of_range
+  caught = caught + 1
+end
+errors = errors + check(caught = 1, "bindrop invalid span uses signal")
 
 if errors = 0 then say "PASS: binary helpers"
 return errors <> 0

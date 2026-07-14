@@ -1,114 +1,130 @@
 /* rexx */
 options levelb
+namespace trace_test expose errors handled
 import rxfnsb
 
-errors = 0
+main: procedure = .int expose errors handled
+  errors = 0
+  handled = 0
 
-controller = .tracecontroller()
-call controller.set_mode("ASM")
-if controller.mode() \= "ASM" then do
-  errors = errors + 1
-  say "TRACE failed mode set"
-end
+  controller = .tracecontroller()
+  call controller.set_mode("ASM")
+  errors = errors + check(controller.mode() = "ASM", "mode set")
+  errors = errors + check(controller.toggle_mode() = "REXX", "mode toggle")
+  call controller.set_first_client_module(-5)
+  errors = errors + check(controller.first_client_module() = 1, "first module floor")
+  call controller.set_latest_module_only(1)
+  errors = errors + check(controller.latest_module_only() = 1, "latest module flag")
+  call controller.set_latest_module_only(0)
+  call controller.set_include_runtime(1)
+  errors = errors + check(controller.include_runtime() = 1, "runtime inclusion flag")
+  call controller.set_include_runtime(0)
 
-if controller.toggle_mode() \= "REXX" then do
-  errors = errors + 1
-  say "TRACE failed mode toggle"
-end
+  errors = errors + check_mode("r", "R")
+  errors = errors + check_mode("re", "R")
+  errors = errors + check_mode("res", "R")
+  errors = errors + check_mode("results", "R")
+  errors = errors + check_mode("a", "A")
+  errors = errors + check_mode("commands", "C")
+  errors = errors + check_mode("errors", "E")
+  errors = errors + check_mode("failures", "F")
+  errors = errors + check_mode("intermediates", "I")
+  errors = errors + check_mode("labels", "L")
+  errors = errors + check_mode("normal", "N")
+  errors = errors + check_mode("off", "OFF")
+  errors = errors + check_mode("as", "ASM")
+  errors = errors + check_mode("ll", "LLM")
+  errors = errors + check_mode("?r", "R")
+  errors = errors + check_mode("+7", "N")
+  errors = errors + check_mode("0", "OFF")
+  errors = errors + check_mode("ras", "")
+  errors = errors + check(_trace_needs_breakpoints("R") = 1, "results breakpoints")
+  errors = errors + check(_trace_needs_breakpoints("N") = 0, "normal no breakpoints")
 
-if rxfnsb.._trace_mode_from_option("r") \= "R" then do
-  errors = errors + 1
-  say "TRACE failed result letter"
-end
+  call _trace_set("results")
+  errors = errors + check(_trace_current_mode() = "R", "current mode")
+  call _trace_set_format("json")
+  errors = errors + check(_trace_current_format() = "LLM", "JSON format alias")
+  call _trace_set_format("text")
+  errors = errors + check(_trace_current_format() = "TEXT", "text format")
+  call _trace_set("off")
 
-if rxfnsb.._trace_mode_from_option("re") \= "R" then do
-  errors = errors + 1
-  say "TRACE failed result short abbreviation"
-end
+  assembler sigcalla handle_trace_error(),"INVALID_ARGUMENTS"
+  assembler sigcalla handle_trace_error(),"NOTREADY"
+  call _trace_set("not-a-mode")
+  errors = errors + check(_trace_current_mode() = "OFF", "invalid mode preserves state")
+  call _trace_set_output("__crexx_trace_missing_directory__/trace.log")
+  call _trace_write_line("must not print")
+  errors = errors + check(handled = 2, "signal error delivery")
+  call _trace_set_output("stdout")
 
-if rxfnsb.._trace_mode_from_option("res") \= "R" then do
-  errors = errors + 1
-  say "TRACE failed result abbreviation"
-end
+  call controller.reset_namespace_filters()
+  errors = errors + check(controller.namespace_is_suppressed("rxfnsb.trace") = 1, "default namespace filter")
+  errors = errors + check(controller.namespace_is_suppressed("myrxfnsbhelper") = 0, "component boundary")
+  errors = errors + check(controller.namespace_is_suppressed("/tmp/rxfnsg/helper") = 1, "path component filter")
+  call controller.unsuppress_namespace("rxfnsb")
+  errors = errors + check(controller.namespace_is_suppressed("rxfnsb.trace") = 0, "namespace inclusion")
+  call controller.suppress_namespace("myframework")
+  errors = errors + check(controller.namespace_is_suppressed("myframework.child") = 1, "custom namespace filter")
+  call controller.unsuppress_namespace("myframework.child")
+  errors = errors + check(controller.namespace_is_suppressed("myframework.child") = 0, "specific inclusion precedence")
+  errors = errors + check(controller.namespace_is_suppressed("myframework.other") = 1, "parent filter retained")
 
-if rxfnsb.._trace_mode_from_option("results") \= "R" then do
-  errors = errors + 1
-  say "TRACE failed result full word"
-end
+  errors = errors + check(_trace_escape_text('\') = '\\', "escape backslash")
+  errors = errors + check(_trace_escape_text('"') = '\"', "escape quote")
+  errors = errors + check(_trace_escape_text('09'x) = '\t', "escape tab")
+  errors = errors + check(_trace_escape_text('0a'x) = '\n', "escape newline")
+  errors = errors + check(_trace_escape_text('0c'x) = '\f', "escape form feed")
+  errors = errors + check(_trace_escape_text('0d'x) = '\r', "escape carriage return")
+  errors = errors + check(_trace_escape_text('01'x) = '\x01', "escape control byte")
+  errors = errors + check(_trace_escape_text("é") = "é", "preserve Unicode")
 
-if rxfnsb.._trace_mode_from_option("as") \= "ASM" then do
-  errors = errors + 1
-  say "TRACE failed asm abbreviation"
-end
+  module = 0
+  addr = -1
+  module_count = controller.loaded_module_count()
+  errors = errors + check(module_count > 0, "loaded module count")
+  errors = errors + check(controller.module_name(0) = "", "invalid module status")
+  errors = errors + check(controller.loaded_proc_count(0) = 0, "invalid procedure count")
+  errors = errors + check(controller.loaded_proc_name(0, 1) = "", "invalid procedure name")
+  errors = errors + check(controller.loaded_proc_id(0, 1) = 0, "invalid procedure id")
 
-if rxfnsb.._trace_mode_from_option("ll") \= "LLM" then do
-  errors = errors + 1
-  say "TRACE failed llm abbreviation"
-end
-
-if rxfnsb.._trace_mode_from_option("ras") \= "" then do
-  errors = errors + 1
-  say "TRACE failed invalid abbreviation"
-end
-
-call rxfnsb.._trace_set "results"
-if rxfnsb.._trace_current_mode() \= "R" then do
-  errors = errors + 1
-  say "TRACE failed current mode"
-end
-call rxfnsb.._trace_set "off"
-
-module = 0
-addr = -1
-module_count = controller.loaded_module_count()
-if module_count <= 0 then do
-  errors = errors + 1
-  say "TRACE failed loaded module count"
-end
-do mod_candidate = module_count to 1 by -1
-  do candidate = 0 to 10000
-    if controller.exact_source_line(mod_candidate, candidate) <> "" then do
-      module = mod_candidate
-      addr = candidate
-      leave mod_candidate
+  do mod_candidate = module_count to 1 by -1
+    do candidate = 0 to 10000
+      if controller.exact_source_line(mod_candidate, candidate) <> "" then do
+        module = mod_candidate
+        addr = candidate
+        leave mod_candidate
+      end
     end
   end
-end
 
-if module > 0 & addr >= 0 then do
-  context = controller.context(module, addr, "ASM")
-  if context.module() \= module then do
-    errors = errors + 1
-    say "TRACE failed context module"
+  if module > 0 & addr >= 0 then do
+    context = controller.context(module, addr, "ASM")
+    errors = errors + check(context.module() = module, "context module")
+    errors = errors + check(context.address() = addr, "context address")
+    errors = errors + check(context.asm_line() <> "", "ASM line")
+    errors = errors + check(controller.closest_source_line(module, addr) <> "", "closest source")
+    errors = errors + check(context.line() > 0, "source line number")
+    errors = errors + check(context.source() <> "", "source text")
+    errors = errors + check(pos("(:) ''", context.source_line()) = 0, "source formatting")
+    errors = errors + check(context.procedure() <> "", "procedure lookup")
   end
-  if context.address() \= addr then do
-    errors = errors + 1
-    say "TRACE failed context address"
-  end
-  if context.asm_line() = "" then do
-    errors = errors + 1
-    say "TRACE failed asm line"
-  end
-  if controller.closest_source_line(module, addr) = "" then do
-    errors = errors + 1
-    say "TRACE failed closest source"
-  end
-  if context.line() <= 0 then do
-    errors = errors + 1
-    say "TRACE failed source line number"
-  end
-  if context.source() = "" then do
-    errors = errors + 1
-    say "TRACE failed source text"
-  end
-  if pos("(:) ''", context.source_line()) > 0 then do
-    errors = errors + 1
-    say "TRACE failed source formatting"
-  end
-end
-else do
-  say "TRACE skipped source metadata checks"
-end
+  else say "TRACE skipped source metadata checks"
 
-if errors = 0 then say "PASS: trace helpers"
-return errors <> 0
+  if errors = 0 then say "PASS: trace helpers"
+  return errors <> 0
+
+handle_trace_error: procedure = .string expose handled
+  arg condition = .object
+  handled = handled + 1
+  return "__rxsignal_skip"
+
+check_mode: procedure = .int
+  arg option = .string, expected = .string
+  return check(_trace_mode_from_option(option) = expected, "mode " || option)
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if condition then return 0
+  say "FAIL: TRACE" label
+  return 1

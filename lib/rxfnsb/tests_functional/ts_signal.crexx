@@ -1,0 +1,115 @@
+options levelb
+namespace signal_test expose handled failures stripped
+import rxfnsb
+
+main: procedure = .int expose handled failures stripped
+  arg test_args = .string[]
+  condition = .signal
+  action = .signalaction
+  payload = .object
+
+  handled = 0
+  failures = 0
+  stripped = test_args[0] > 0 & test_args[1] = "ts_signal_opt"
+
+  condition = .signal("error", "standard message")
+  failures = failures + check(condition is .rxfnsb..standard_signal, "public factory provider")
+  failures = failures + check(condition.name() = "ERROR", "standard name")
+  failures = failures + check(condition.code() = 3, "standard code")
+  failures = failures + check(condition.message() = "standard message", "standard message")
+  failures = failures + check(condition.module() = 0, "standard module")
+  failures = failures + check(condition.address() = 0, "standard address")
+  failures = failures + check(condition.file() = "", "standard file")
+  failures = failures + check(condition.line() = 0, "standard line")
+  failures = failures + check(condition.column() = 0, "standard column")
+  failures = failures + check(condition.source() = "", "standard source")
+  payload = condition.payload()
+
+  failures = failures + check_code("KILL", 1)
+  failures = failures + check_code("FAILURE", 2)
+  failures = failures + check_code("SYNTAX", 3)
+  failures = failures + check_code("OVERFLOW_UNDERFLOW", 4)
+  failures = failures + check_code("DIVISION_BY_ZERO", 5)
+  failures = failures + check_code("CONVERSION_ERROR", 6)
+  failures = failures + check_code("INVALID_ARGUMENTS", 7)
+  failures = failures + check_code("OUT_OF_RANGE", 8)
+  failures = failures + check_code("UNICODE_ERROR", 9)
+  failures = failures + check_code("UNKNOWN_INSTRUCTION", 10)
+  failures = failures + check_code("FUNCTION_NOT_FOUND", 11)
+  failures = failures + check_code("NOT_IMPLEMENTED", 12)
+  failures = failures + check_code("INVALID_SIGNAL_CODE", 13)
+  failures = failures + check_code("REFERENCE_INVALID", 14)
+  failures = failures + check_code("NOTREADY", 15)
+  failures = failures + check_code("OBJECT_NOT_INITIALIZED", 16)
+  failures = failures + check_code("RXBIN_CORRUPTION", 17)
+  failures = failures + check_code("QUIT", 19)
+  failures = failures + check_code("TERM", 20)
+  failures = failures + check_code("POSIX_INT", 21)
+  failures = failures + check_code("POSIX_HUP", 22)
+  failures = failures + check_code("POSIX_USR1", 23)
+  failures = failures + check_code("POSIX_USR2", 24)
+  failures = failures + check_code("POSIX_CHLD", 25)
+  failures = failures + check_code("OTHER", 30)
+  failures = failures + check_code("BREAKPOINT", 31)
+  failures = failures + check_code("not-a-signal", 13)
+
+  action = .signalaction.retry()
+  failures = failures + check(action.kind() = "retry", "retry action")
+  action = .signalaction.skip()
+  failures = failures + check(action.kind() = "skip", "skip action")
+  action = .signalaction.fail()
+  failures = failures + check(action.kind() = "fail", "fail action")
+
+  assembler sigcalla handle_runtime(),"OTHER"
+  assembler signal "OTHER","runtime payload"
+  failures = failures + check(handled = 1, "runtime signal handled")
+
+  if failures = 0 then say "PASS: Level B signal objects"
+  return failures <> 0
+
+handle_runtime: procedure = .string expose handled failures stripped
+  arg raw = .runtime_signal_raw
+  condition = .runtime_signal
+  payload = .object
+
+  handled = handled + 1
+  failures = failures + check(raw.name() = "OTHER", "raw name")
+  failures = failures + check(raw.code() = 30, "raw code")
+  failures = failures + check(raw.module() > 0, "raw module")
+  failures = failures + check(raw.address() >= 0, "raw address")
+  failures = failures + check(raw.message() = "runtime payload", "raw message")
+  payload = raw.payload()
+
+  condition = .runtime_signal("")
+  call condition.set_raw(raw)
+  failures = failures + check(condition.name() = raw.name(), "runtime name")
+  failures = failures + check(condition.code() = raw.code(), "runtime code")
+  failures = failures + check(condition.module() = raw.module(), "runtime module")
+  failures = failures + check(condition.address() = raw.address(), "runtime address")
+  failures = failures + check(condition.message() = raw.message(), "runtime message")
+  if stripped then do
+    failures = failures + check(condition.file() = "", "stripped runtime file")
+    failures = failures + check(condition.line() = 0, "stripped runtime line")
+    failures = failures + check(condition.column() = 0, "stripped runtime column")
+    failures = failures + check(condition.source() = "", "stripped runtime source")
+  end
+  else do
+    failures = failures + check(condition.file() \= "", "runtime file")
+    failures = failures + check(condition.line() > 0, "runtime line")
+    failures = failures + check(condition.column() > 0, "runtime column")
+    failures = failures + check(condition.source() \= "", "runtime source")
+  end
+  payload = condition.payload()
+
+  return "__rxsignal_skip"
+
+check_code: procedure = .int
+  arg name = .string, expected = .int
+  condition = .signal(name)
+  return check(condition.code() = expected, "code " || name)
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if condition then return 0
+  say "FAIL:" label
+  return 1

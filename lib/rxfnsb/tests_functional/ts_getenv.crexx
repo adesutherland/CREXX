@@ -1,0 +1,21 @@
+/* rexx */
+options levelb
+import rxfnsb
+
+failures = 0
+name = "CREXX_GETENV_SELECTOR_TEST_VALUE"
+
+failures = failures + check(getenv(name) = "alpha beta", "injected value", getenv(name))
+failures = failures + check(name = "CREXX_GETENV_SELECTOR_TEST_VALUE", "name unchanged", name)
+failures = failures + check(getenv(name) = getenv(name), "repeatable", getenv(name))
+failures = failures + check(getenv("CREXX_GETENV_SELECTOR_TEST_MISSING_17F22") = "", "missing", "nonempty")
+failures = failures + check(getenv("") = "", "empty name", "nonempty")
+
+if failures = 0 then say "PASS: getenv"
+return failures <> 0
+
+check: procedure = .int
+  arg passed = .boolean, label = .string, actual = .string
+  if passed then return 0
+  say "FAIL: GETENV" label "got '"actual"'"
+  return 1

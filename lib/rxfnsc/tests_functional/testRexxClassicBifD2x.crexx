@@ -1,0 +1,120 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifd2x
+import rexxvalue
+
+numeric digits 40
+numeric form scientific
+errors = 0
+errors = errors + check_value("0", "0", "", 0)
+errors = errors + check_value("9", "9", "", 0)
+errors = errors + check_value("81", "129", "", 0)
+errors = errors + check_value("81", "1.29E2", "", 0)
+errors = errors + check_value("FFFFFFFFFFFFFFFF", "18446744073709551615", "", 0)
+errors = errors + check_value("1", "129", "1", 1)
+errors = errors + check_value("0081", "129", "4", 1)
+errors = errors + check_value("01", "257", "2", 1)
+errors = errors + check_value("", "12", "0", 1)
+errors = errors + check_value("81", "-127", "2", 1)
+errors = errors + check_value("FF81", " - 127", "4", 1)
+errors = errors + check_value("7F", "-129", "2", 1)
+errors = errors + check_value("FFFFFFFFFFFFFFFFFFFFFFFF", "-1", "24", 1)
+errors = errors + test_caller_digits()
+errors = errors + test_engineering_form()
+
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.4", 3)
+errors = errors + check_omitted_required()
+errors = errors + check_omitted_length_negative()
+errors = errors + check_number_error("RXC-LC-40.12", "not-a-number", "", 0)
+errors = errors + check_number_error("RXC-LC-40.12", "1.2", "", 0)
+errors = errors + check_number_error("RXC-LC-40.13", "-1", "", 0)
+errors = errors + check_number_error("RXC-LC-40.12", "1", "1.2", 1)
+errors = errors + check_number_error("RXC-LC-40.13", "1", "-1", 1)
+
+if errors = 0 then say "PASS: Level C D2X BIF"
+return errors <> 0
+
+test_caller_digits: procedure = .int
+  numeric digits 9
+  numeric form scientific
+  return check_value("2DFDC1C98", "12345678999", "", 0)
+
+test_engineering_form: procedure = .int
+  numeric digits 40
+  numeric form engineering
+  return check_value("3039", "1.2345E4", "", 0)
+
+check_value: procedure = .int
+  numeric digits inherited
+  numeric form inherited
+  arg expected = .string, number = .string, output_length = .string, length_exists = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(number)
+  exists[1] = 1
+  args[2] = .RexxValue(output_length)
+  exists[2] = length_exists
+  context = .RexxBifCallContext("D2X")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifd2x..rexxclassicbif_d2x(reference context)
+  if \context.hasError() & result.asString() = expected & args[1].asString() = number then return 0
+  say "FAIL: D2X" number output_length "expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count_error: procedure = .int
+  numeric digits inherited
+  numeric form inherited
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("1")
+    exists[i] = 1
+  end
+  return run_error(expected_code, args, exists)
+
+check_omitted_required: procedure = .int
+  numeric digits inherited
+  numeric form inherited
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("1")
+  exists[1] = 0
+  return run_error("RXC-LC-40.5", args, exists)
+
+check_omitted_length_negative: procedure = .int
+  numeric digits inherited
+  numeric form inherited
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("-1")
+  exists[1] = 1
+  args[2] = .RexxValue("2")
+  exists[2] = 0
+  return run_error("RXC-LC-40.13", args, exists)
+
+check_number_error: procedure = .int
+  numeric digits inherited
+  numeric form inherited
+  arg expected_code = .string, number = .string, output_length = .string, length_exists = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(number)
+  exists[1] = 1
+  args[2] = .RexxValue(output_length)
+  exists[2] = length_exists
+  return run_error(expected_code, args, exists)
+
+run_error: procedure = .int
+  numeric digits inherited
+  numeric form inherited
+  arg expected_code = .string, args = .RexxValue[], exists = .int[]
+  context = .RexxBifCallContext("D2X")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifd2x..rexxclassicbif_d2x(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: D2X expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

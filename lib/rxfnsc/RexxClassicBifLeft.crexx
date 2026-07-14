@@ -1,0 +1,73 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifleft expose rexxclassicbif_left
+import rexxclassicbifs
+import rexxvalue
+
+/**
+ * Return a fixed-width left-aligned Classic string.
+ *
+ * @bif LEFT
+ * @signature LEFT(string, length [,pad])
+ * @checkargs rANY rWHOLE>=0 oPAD
+ * @sandbox pure
+ * @return fixed-width left slice as a RexxValue
+ */
+rexxclassicbif_left: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>=0 oPAD") = 0 then return .RexxValue("")
+
+  string = context.argumentText(1)
+  width = .int
+  width = context.argumentText(2) + 0
+  pad = " "
+  if context.argumentExists(3) then pad = context.argumentText(3)
+  string_length = .int
+  padding_length = .int
+  pad_character = .int
+  pad_index = 0
+  cursor = 0
+  padding = ""
+  result = ""
+
+  if width = 0 then return .RexxValue(result)
+  assembler strlen string_length,string
+  if width = string_length then return .RexxValue(string)
+
+  if width < string_length then do
+    assembler setstrpos string,cursor
+    assembler substring result,string,width
+    return .RexxValue(result)
+  end
+
+  padding_length = width - string_length
+  assembler strchar pad_character,pad,pad_index
+  assembler padstr padding,pad_character,padding_length
+  assembler scopy result,string
+  assembler append result,padding
+  return .RexxValue(result)

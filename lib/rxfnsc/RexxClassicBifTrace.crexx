@@ -1,0 +1,51 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbiftrace expose rexxclassicbif_trace
+import rexxclassicbifs
+import rexxpool
+import rexxvalue
+
+/**
+ * Query or update the caller activation's Classic TRACE BIF state.
+ *
+ * @bif TRACE
+ * @signature TRACE([option])
+ * @checkargs oACEFILNOR
+ * @sandbox reads and updates only the caller activation's TRACE state
+ * @return trace setting in effect before this call
+ */
+rexxclassicbif_trace: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "oACEFILNOR") = 0 then return .RexxValue("")
+
+  pool_ref = reference .RexxVariablePool
+  pool_ref = context.callerPool()
+  pool = dereference pool_ref
+  previous = pool.traceSetting()
+  if context.argumentExists(1) then call pool.setTraceOption(context.argumentText(1))
+  return .RexxValue(previous)

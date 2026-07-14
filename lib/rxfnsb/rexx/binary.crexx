@@ -22,16 +22,36 @@
  * SOFTWARE.
  */
 
+/**
+ * Typed Level B binary value and packed-memory helpers.
+ *
+ * The copy-returning compatibility helpers use 1-based positions. The exposed
+ * packed-memory mutators use zero-based byte offsets to match RXAS.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/binary.md
+ */
 options levelb numeric_classic
 
 namespace rxfnsb expose binlength binbyte binsetbyte binsubstr binconcat binoverlay bininsert bindelstr binpos bincompare bin2x x2bin binresize binclear binfill binfillat bincopy binmemmove binappend binupdate binmakegap bindrop
 
+/**
+ * Return the logical byte length.
+ * @param data binary value
+ * @return logical byte length
+ */
 binlength: procedure = .int
   arg data = .binary
   len = 0
   assembler blen len,data
   return len
 
+/**
+ * Read one byte using a compatibility 1-based position.
+ * @param data binary value
+ * @param position 1-based byte position
+ * @return byte or -1 when outside data
+ */
 binbyte: procedure = .int
   arg data = .binary, position = .int
   offset = position - 1
@@ -39,6 +59,13 @@ binbyte: procedure = .int
   assembler getbyte byte,data,offset
   return byte
 
+/**
+ * Replace one byte in a copy.
+ * @param data binary value
+ * @param position 1-based byte position
+ * @param byte value in 0..255
+ * @return changed copy
+ */
 binsetbyte: procedure = .binary
   arg data = .binary, position = .int, byte = .int
   offset = position - 1
@@ -47,25 +74,45 @@ binsetbyte: procedure = .binary
   assembler setbyte result,offset,byte
   return result
 
+/**
+ * Copy a byte slice.
+ * @param data binary value
+ * @param start positive 1-based byte position
+ * @param count optional byte count; negative means the rest
+ * @return copied byte slice
+ */
 binsubstr: procedure = .binary
   arg data = .binary, start = .int, count = -1
   result = .binary
   total = 0
+  if start < 1 then assembler signal "INVALID_ARGUMENTS", "BINSUBSTR start must be positive"
   offset = start - 1
   assembler blen total,data
-  if start < 1 then offset = 0
   if count < 0 then count = total - offset
   if count <= 0 then return result
   assembler setbinpos data,offset
   assembler bslice result,data,count
   return result
 
+/**
+ * Concatenate two binary values.
+ * @param left first binary value
+ * @param right second binary value
+ * @return byte concatenation
+ */
 binconcat: procedure = .binary
   arg left = .binary, right = .binary
   result = .binary
   assembler bconcat result,left,right
   return result
 
+/**
+ * Overlay bytes in a copy.
+ * @param new replacement bytes
+ * @param target original binary value
+ * @param start 1-based byte position
+ * @return changed copy
+ */
 binoverlay: procedure = .binary
   arg new = .binary, target = .binary, start = .int
   result = .binary
@@ -74,59 +121,129 @@ binoverlay: procedure = .binary
   assembler bupdate result,offset,new
   return result
 
+/**
+ * Insert bytes in a copy.
+ * @param new bytes to insert
+ * @param target original binary value
+ * @param before 1-based insertion position
+ * @return changed copy
+ */
 bininsert: procedure = .binary
   arg new = .binary, target = .binary, before = .int
-  total = binlength(target)
-  if before <= 1 then return new || target
-  if before > total then return target || new
-  prefix = binsubstr(target,1,before - 1)
-  suffix = binsubstr(target,before)
-  return prefix || new || suffix
+  total = 0
+  insert_length = 0
+  result = .binary
+  assembler blen total,target
+  if before <= 1 then do
+    assembler bconcat result,new,target
+    return result
+  end
+  if before > total then do
+    assembler bconcat result,target,new
+    return result
+  end
+  assembler blen insert_length,new
+  if insert_length = 0 then return target
+  offset = before - 1
+  move_length = total - offset
+  result_length = total + insert_length
+  result = target
+  assembler bresize result,result_length
+  assembler icopy result,offset
+  destination = offset + insert_length
+  assembler bmemmove result,destination,move_length
+  assembler bupdate result,offset,new
+  return result
 
+/**
+ * Delete bytes from a copy.
+ * @param target original binary value
+ * @param start positive 1-based byte position
+ * @param count non-negative count; zero means the rest
+ * @return changed copy
+ */
 bindelstr: procedure = .binary
   arg target = .binary, start = .int, count = 0
-  total = binlength(target)
-  empty = .binary
-  if start < 1 then start = 1
+  total = 0
+  result = .binary
+  if start < 1 then assembler signal "INVALID_ARGUMENTS", "BINDELSTR start must be positive"
+  if count < 0 then assembler signal "INVALID_ARGUMENTS", "BINDELSTR length must be non-negative"
+  assembler blen total,target
   if start > total then return target
-  prefix = binsubstr(target,1,start - 1)
-  if count <= 0 then return prefix
-  suffix = binsubstr(target,start + count)
-  return prefix || suffix
+  offset = start - 1
+  if count = 0 | count > total - offset then count = total - offset
+  if count = 0 then return target
+  result = target
+  tail_offset = offset + count
+  move_length = total - tail_offset
+  if move_length > 0 then do
+    assembler icopy result,tail_offset
+    assembler bmemmove result,offset,move_length
+  end
+  result_length = total - count
+  assembler bresize result,result_length
+  return result
 
+/**
+ * Find a binary value without materializing candidate slices.
+ * @param needle bytes to find
+ * @param haystack bytes to search
+ * @param start positive 1-based start
+ * @return first position or zero
+ */
 binpos: procedure = .int
   arg needle = .binary, haystack = .binary, start = 1
-  needle_len = binlength(needle)
-  haystack_len = binlength(haystack)
+  needle_len = 0
+  haystack_len = 0
+  if start < 1 then assembler signal "INVALID_ARGUMENTS", "BINPOS start must be positive"
+  assembler blen needle_len,needle
+  assembler blen haystack_len,haystack
   if needle_len = 0 then return 0
   if haystack_len = 0 then return 0
-  if start < 1 then start = 1
   last = haystack_len - needle_len + 1
   if start > last then return 0
   do i = start to last
-    matched = 1
-    do j = 1 to needle_len
-      if binbyte(needle,j) <> binbyte(haystack,i + j - 1) then do
-        matched = 0
-        leave
-      end
-    end
-    if matched then return i
+    comparison = i - 1
+    assembler bcmpb comparison,haystack,needle
+    if comparison = 0 then return i
   end
   return 0
 
+/**
+ * Find the first differing byte position.
+ * @param left first binary value
+ * @param right second binary value
+ * @return first differing 1-based position or zero
+ */
 bincompare: procedure = .int
   arg left = .binary, right = .binary
-  left_len = binlength(left)
-  right_len = binlength(right)
+  left_len = 0
+  right_len = 0
+  assembler blen left_len,left
+  assembler blen right_len,right
+  if left_len = right_len then do
+    comparison = 0
+    assembler bcmpb comparison,left,right
+    if comparison = 0 then return 0
+  end
   scan_len = left_len
   if right_len < scan_len then scan_len = right_len
-  do i = 1 to scan_len
-    if binbyte(left,i) <> binbyte(right,i) then return i
+  do offset = 0 to scan_len - 1
+    left_byte = 0
+    right_byte = 0
+    assembler getbyte left_byte,left,offset
+    assembler getbyte right_byte,right,offset
+    if left_byte <> right_byte then return offset + 1
   end
   if left_len <> right_len then return scan_len + 1
   return 0
 
+/**
+ * Resize an exposed binary value.
+ * @param data exposed binary value
+ * @param length non-negative new length
+ * @return new length
+ */
 binresize: procedure = .int
   arg expose data = .binary, length = .int
   result = 0
@@ -134,11 +251,22 @@ binresize: procedure = .int
   assembler blen result,data
   return result
 
+/**
+ * Clear an exposed binary value.
+ * @param data exposed binary value
+ * @return zero
+ */
 binclear: procedure = .int
   arg expose data = .binary
   assembler bclear data
   return 0
 
+/**
+ * Fill an exposed binary value.
+ * @param data exposed binary value
+ * @param byte value in 0..255
+ * @return unchanged length
+ */
 binfill: procedure = .int
   arg expose data = .binary, byte = .int
   result = 0
@@ -146,42 +274,79 @@ binfill: procedure = .int
   assembler blen result,data
   return result
 
+/**
+ * Fill a checked byte span.
+ * @param data exposed binary value
+ * @param offset zero-based offset
+ * @param length byte count
+ * @param byte value in 0..255
+ * @return unchanged length
+ */
 binfillat: procedure = .int
   arg expose data = .binary, offset = .int, length = .int, byte = .int
-  total = binlength(data)
-  end_offset = offset + length
-  if offset < 0 | length < 0 | end_offset > total then assembler signal "OUT_OF_RANGE", "invalid binary fill span"
+  total = 0
+  assembler blen total,data
+  if byte < 0 | byte > 255 then assembler signal "OUT_OF_RANGE", "invalid binary fill byte"
+  if offset < 0 | length < 0 | offset > total | length > total - offset then assembler signal "OUT_OF_RANGE", "invalid binary fill span"
   if length = 0 then return total
+  if offset = 0 & length = total then do
+    assembler bfill data,byte
+    return total
+  end
   do i = 0 to length - 1
     position = offset + i
     assembler setbyte data,position,byte
   end
   return total
 
+/**
+ * Copy a checked span between binary values.
+ * @param dst exposed destination
+ * @param dst_offset zero-based destination offset
+ * @param src source bytes
+ * @param src_offset zero-based source offset
+ * @param length byte count
+ * @return destination length
+ */
 bincopy: procedure = .int
   arg expose dst = .binary, dst_offset = .int, src = .binary, src_offset = .int, length = .int
-  if length < 0 then assembler signal "OUT_OF_RANGE", "invalid binary copy length"
-  if length = 0 then return binlength(dst)
-  chunk = .binary
   result = 0
-  assembler bresize chunk,length
-  assembler bcopy chunk,src,src_offset
-  assembler bupdate dst,dst_offset,chunk
+  assembler bcheckrange dst,dst_offset,length
+  assembler bcheckrange src,src_offset,length
+  if length > 0 then do
+    assembler icopy dst,dst_offset
+    assembler icopy src,src_offset
+    assembler bmove dst,src,length
+  end
   assembler blen result,dst
   return result
 
+/**
+ * Move an overlap-safe span within one binary value.
+ * @param data exposed binary value
+ * @param dst_offset zero-based destination offset
+ * @param src_offset zero-based source offset
+ * @param length byte count
+ * @return unchanged length
+ */
 binmemmove: procedure = .int
   arg expose data = .binary, dst_offset = .int, src_offset = .int, length = .int
-  if length < 0 then assembler signal "OUT_OF_RANGE", "invalid binary move length"
-  if length = 0 then return binlength(data)
-  chunk = .binary
   result = 0
-  assembler bresize chunk,length
-  assembler bcopy chunk,data,src_offset
-  assembler bupdate data,dst_offset,chunk
+  assembler bcheckrange data,dst_offset,length
+  assembler bcheckrange data,src_offset,length
+  if length > 0 then do
+    assembler icopy data,src_offset
+    assembler bmemmove data,dst_offset,length
+  end
   assembler blen result,data
   return result
 
+/**
+ * Append bytes to an exposed destination.
+ * @param dst exposed destination
+ * @param src bytes to append
+ * @return new length
+ */
 binappend: procedure = .int
   arg expose dst = .binary, src = .binary
   result = 0
@@ -189,6 +354,13 @@ binappend: procedure = .int
   assembler blen result,dst
   return result
 
+/**
+ * Overlay bytes into an exposed destination.
+ * @param dst exposed destination
+ * @param offset zero-based offset
+ * @param src replacement bytes
+ * @return unchanged length
+ */
 binupdate: procedure = .int
   arg expose dst = .binary, offset = .int, src = .binary
   result = 0
@@ -196,37 +368,70 @@ binupdate: procedure = .int
   assembler blen result,dst
   return result
 
+/**
+ * Open a zero-filled gap in an exposed binary value.
+ * @param data exposed binary value
+ * @param offset zero-based insertion offset
+ * @param length gap size
+ * @return new length
+ */
 binmakegap: procedure = .int
   arg expose data = .binary, offset = .int, length = .int
-  old_len = binlength(data)
+  old_len = 0
+  assembler blen old_len,data
   if offset < 0 | offset > old_len | length < 0 then assembler signal "OUT_OF_RANGE", "invalid binary gap span"
   if length = 0 then return old_len
   new_len = old_len + length
   move_len = old_len - offset
-  call binresize data,new_len
-  if move_len > 0 then call binmemmove data,offset + length,offset,move_len
-  call binfillat data,offset,length,0
+  assembler bresize data,new_len
+  if move_len > 0 then do
+    assembler icopy data,offset
+    destination = offset + length
+    assembler bmemmove data,destination,move_len
+  end
+  zero = 0
+  do i = offset to offset + length - 1
+    assembler setbyte data,i,zero
+  end
   return new_len
 
+/**
+ * Delete a span from an exposed binary value.
+ * @param data exposed binary value
+ * @param offset zero-based deletion offset
+ * @param length byte count
+ * @return new length
+ */
 bindrop: procedure = .int
   arg expose data = .binary, offset = .int, length = .int
-  old_len = binlength(data)
-  end_offset = offset + length
-  if offset < 0 | length < 0 | end_offset > old_len then assembler signal "OUT_OF_RANGE", "invalid binary drop span"
+  old_len = 0
+  assembler blen old_len,data
+  if offset < 0 | length < 0 | offset > old_len | length > old_len - offset then assembler signal "OUT_OF_RANGE", "invalid binary drop span"
   if length = 0 then return old_len
+  end_offset = offset + length
   new_len = old_len - length
   move_len = old_len - end_offset
-  if move_len > 0 then call binmemmove data,offset,end_offset,move_len
-  call binresize data,new_len
+  if move_len > 0 then do
+    assembler icopy data,end_offset
+    assembler bmemmove data,offset,move_len
+  end
+  assembler bresize data,new_len
   return new_len
 
+/**
+ * Encode bytes as hexadecimal text.
+ * @param data binary value
+ * @return uppercase hexadecimal bytes
+ */
 bin2x: procedure = .string
   arg data = .binary
   table = "0123456789ABCDEF"
   out = ""
-  len = binlength(data)
-  do i = 1 to len
-    byte = binbyte(data,i)
+  len = 0
+  assembler blen len,data
+  do offset = 0 to len - 1
+    byte = 0
+    assembler getbyte byte,data,offset
     high = byte % 16
     low = byte // 16
     char = 0
@@ -237,13 +442,17 @@ bin2x: procedure = .string
   end
   return out
 
+/**
+ * Decode hexadecimal text.
+ * @param hex hexadecimal text with optional ASCII blanks
+ * @return decoded bytes
+ */
 x2bin: procedure = .binary
   arg hex = .string
   table = "0123456789ABCDEFabcdef"
   blank = " "
   clean = ""
   result = .binary
-  empty = .binary
   zero = "00"x as .binary
   assembler dropchar clean,hex,blank
   len = 0
@@ -264,7 +473,7 @@ x2bin: procedure = .binary
     assembler strchar char2,clean,j
     assembler poschar high,table,char1
     assembler poschar low,table,char2
-    if high < 0 | low < 0 then return empty
+    if high < 0 | low < 0 then assembler signal "INVALID_ARGUMENTS", "X2BIN requires hexadecimal digits and blanks"
     if high > 15 then high = high - 6
     if low > 15 then low = low - 6
     byte = high * 16 + low

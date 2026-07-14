@@ -22,24 +22,44 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * In-place string-array assignment with optional gap filling.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/arrayset.md
+ */
 options levelb
 
 namespace rxfnsb expose arrayset
 
-/* Set ARRAY[INDEX] to VALUE, filling any growth gap with FILL. */
+/**
+ * Set one array element, growing the array when required.
+ *
+ * @param array exposed string array using array[0] as its high-water mark
+ * @param index positive one-based target index
+ * @param value string assigned at index
+ * @param fill optional value assigned to intervening growth slots
+ * @return the resulting array high-water mark
+ * @signal INVALID_ARGUMENTS index is not positive
+ */
 arrayset: procedure=.int
   arg expose array=.string[], index=.int, value=.string, fill=""
 
   hi = array[0]
-  if index < 1 then return hi
+  if index < 1 then
+    assembler signal "INVALID_ARGUMENTS", "ARRAYSET index must be positive"
 
   if index > hi then do
     from = hi + 1
     count = index - hi
     assembler INSATTRS1 array,from,count
-    do i = from to index
-      array[i] = fill
+    gap_count = count - 1
+    if fill <> "" then do
+      i = from
+      do gap_count
+        array[i] = fill
+        i = i + 1
+      end
     end
   end
 

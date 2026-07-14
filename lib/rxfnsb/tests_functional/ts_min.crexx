@@ -1,0 +1,24 @@
+/* Focused Level B MIN tests. */
+options levelb numeric_classic
+import rxfnsb
+
+errors = 0
+source = "-7.25"
+
+errors = errors + check(min(100, 99, 1) = 1, "positive integers")
+errors = errors + check(min(-4, -1, -9) = -9, "negative integers")
+errors = errors + check(min(7.5) = 7.5, "single argument")
+errors = errors + check(min(-7.25, source, -8.5) = -8.5, "numeric string promotion")
+errors = errors + check(min(1.00, 1.0) = 1, "numeric tie")
+errors = errors + check((min("9007199254740993", "9007199254740992") as .string) = "9007199254740992", "precision beyond binary float")
+errors = errors + check(min(9, 1, 7, 2, 6, 3, 5, 4, 8) = 1, "variadic scan")
+errors = errors + check(source = "-7.25", "argument is not mutated")
+
+if errors = 0 then say "PASS: min"
+return errors <> 0
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: MIN" label
+  return 1

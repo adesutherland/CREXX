@@ -22,48 +22,73 @@
  * SOFTWARE.
  */
 
-/* rexx */
-options levelb numeric_classic
+/**
+ * Typed Level B Unicode-byte X2C implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/x2c.md
+ */
+options levelb
 
 namespace rxfnsb expose x2c
 
-/* X2c(hex-string)  returns character representation of hex string */
-
+/**
+ * Convert grouped hexadecimal bytes to Unicode U+00xx characters.
+ *
+ * @param hexadecimal hexadecimal digits with standard interior grouping blanks
+ * @return one Unicode code point for each parsed byte
+ */
 x2c: procedure = .string
-  arg hex = .string
-  trtab="0123456789ABCDEFabcdef"
-  slen=0
-  char1=0
-  char2=0
-  off1=0
-  off2=0
-  binary=""
-  byte=0
-  hexi=""
-  blank=" "
-  assembler dropchar hexi,hex,blank
-  assembler strlen slen,hexi    /* get length of hex string */
+  arg hexadecimal = .string
+  hexadecimal_length = .int
+  hexadecimal_digits = 0
+  codepoint = .int
+  remainder = .int
+  nibble = .int
+  high_nibble = -1
+  byte = .int
+  blank_character = 32
+  result = ""
+  index = 0
 
-  if slen//2=1 then do
-     hexi='0'hexi
-     slen=slen+1
+  assembler strlen hexadecimal_length,hexadecimal
+  if hexadecimal_length = 0 then return result
+  assembler strchar codepoint,hexadecimal,index
+  if codepoint = blank_character then
+    assembler signal "INVALID_ARGUMENTS", "X2C hexadecimal text cannot start with a blank"
+  index = hexadecimal_length - 1
+  assembler strchar codepoint,hexadecimal,index
+  if codepoint = blank_character then
+    assembler signal "INVALID_ARGUMENTS", "X2C hexadecimal text cannot end with a blank"
+
+  do index = hexadecimal_length - 1 to 0 by -1
+    assembler strchar codepoint,hexadecimal,index
+    if codepoint = blank_character then do
+      assembler iand remainder,hexadecimal_digits,1
+      if remainder <> 0 then
+        assembler signal "INVALID_ARGUMENTS", "X2C blank must have an even number of hexadecimal digits to its right"
+    end
+    else if (codepoint >= 48 & codepoint <= 57) |,
+            (codepoint >= 65 & codepoint <= 70) |,
+            (codepoint >= 97 & codepoint <= 102) then
+      hexadecimal_digits = hexadecimal_digits + 1
+    else
+      assembler signal "INVALID_ARGUMENTS", "X2C input contains a non-hexadecimal character"
   end
 
-  do i=0 to slen-1 by 2                   /* loop through hex string */
-     assembler strchar char1,hexi,i        /* fetch one byte          */
-     assembler poschar off1,trtab,char1   /* position in hex table   */
-     j=i+1
-     assembler strchar char2,hexi,j        /* fetch one byte          */
-     assembler poschar off2,trtab,char2   /* position in hex table   */
-
-     if off1<0 | off2<0 then do           /* no hex char? error!     */
-        say "hex string contains invalid character "hexi
-        return 0
-     end
-     if off1>15 then off1=off1-6    /* translate lower case to upper case hex */
-     if off2>15 then off2=off2-6    /* translate lower case to upper case hex */
-     assembler ishl byte,off1,4     /* move 1. char to left hand part of byte */
-     byte=byte+off2                 /* move 2. char to right hand part of byte*/
-     assembler appendchar binary,byte /* append to result                     */
+  assembler iand remainder,hexadecimal_digits,1
+  if remainder <> 0 then high_nibble = 0
+  do index = 0 to hexadecimal_length - 1
+    assembler strchar codepoint,hexadecimal,index
+    if codepoint = blank_character then iterate
+    if codepoint <= 57 then nibble = codepoint - 48
+    else if codepoint <= 70 then nibble = codepoint - 55
+    else nibble = codepoint - 87
+    if high_nibble < 0 then high_nibble = nibble
+    else do
+      byte = high_nibble * 16 + nibble
+      assembler appendchar result,byte
+      high_nibble = -1
+    end
   end
- return binary  /* return result */
+  return result

@@ -1,0 +1,55 @@
+/* Parameterized Level B STEM error test; run each case in a fresh VM. */
+options levelb
+import rxfnsb
+
+arg test_args = .string[]
+if test_args[0] <> 1 then do
+  say "FAIL: STEM error harness requires one case name"
+  return 1
+end
+
+test_case = test_args[1]
+item = .stem()
+call item.set("A", "1")
+
+select
+  when test_case == "key" then do
+    do
+      ignored = item.key(0)
+    on signal invalid_arguments
+      say "PASS: stem error key"
+      return 0
+    end
+  end
+  when test_case == "value" then do
+    do
+      ignored = item.value(2)
+    on signal invalid_arguments
+      say "PASS: stem error value"
+      return 0
+    end
+  end
+  when test_case == "valueat" then do
+    do
+      ignored = item.valueAt(-1)
+    on signal invalid_arguments
+      say "PASS: stem error valueAt"
+      return 0
+    end
+  end
+  when test_case == "iterator" then do
+    do
+      ignored = .stemIterator(reference item, 2)
+    on signal invalid_arguments
+      say "PASS: stem error iterator"
+      return 0
+    end
+  end
+  otherwise do
+    say "FAIL: STEM unknown error case" test_case
+    return 1
+  end
+end
+
+say "FAIL: STEM" test_case "did not signal INVALID_ARGUMENTS"
+return 1

@@ -1,0 +1,62 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbiflength
+import rexxvalue
+
+errors = 0
+
+errors = errors + check_value("0", "")
+errors = errors + check_value("1", "a")
+errors = errors + check_value("8", "abcdefgh")
+errors = errors + check_value("4", "René")
+errors = errors + check_value("3", "é日🙂")
+errors = errors + check_value("2", "é")
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.4", 2)
+errors = errors + check_omitted_error()
+
+if errors = 0 then say "PASS: Level C LENGTH BIF"
+return errors <> 0
+
+check_value: procedure = .int
+  arg expected = .string, string = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(string)
+  exists[1] = 1
+  context = .RexxBifCallContext("LENGTH")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbiflength..rexxclassicbif_length(reference context)
+  if \context.hasError() & result.asString() = expected & args[1].asString() = string then return 0
+  say "FAIL: LENGTH expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("A")
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("LENGTH")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbiflength..rexxclassicbif_length(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: LENGTH expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_omitted_error: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("")
+  exists[1] = 0
+  context = .RexxBifCallContext("LENGTH")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbiflength..rexxclassicbif_length(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.5" then return 0
+  say "FAIL: LENGTH omitted argument got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

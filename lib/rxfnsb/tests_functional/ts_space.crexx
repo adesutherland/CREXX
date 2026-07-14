@@ -1,80 +1,61 @@
-/* rexx test abs bif */
+/* Focused Level B SPACE tests. */
 options levelb
 import rxfnsb
 
-errors=0
-/* x='the quick brown fox jumps over the lazy dog' */
-/* say "test Space bif" */
-/* say space(x,5,'.!#') */
-/* say space(x) */
-/* return */
+errors = 0
+source = "  abc  def  "
 
+errors = errors + check(space("abc  def  ") = "abc def", "documented default")
+errors = errors + check(space("  abc  def", 3) = "abc   def", "documented count")
+errors = errors + check(space("abc  def  ", 0) = "abcdef", "zero count")
+errors = errors + check(space("abc  def  ", 2, "+") = "abc++def", "custom pad")
+errors = errors + check(space(" foo bar ",, "-") = "foo-bar", "omitted count with pad")
+errors = errors + check(space("") = "", "empty string")
+errors = errors + check(space(" 　 ") = "", "all Unicode whitespace")
+errors = errors + check(space("a　b", 1, "·") = "a·b", "Unicode whitespace and pad")
+errors = errors + check(space(" f-- b-- ", 2, "-") = "f----b--", "pad in word data")
+errors = errors + check(space("solo", 100000, ".") = "solo", "separator is lazy")
+errors = errors + check(source = "  abc  def  ", "source is not mutated")
 
-/* These from the Rexx book. */
-if space('abc  def  ') \= 'abc def'         then do
-  errors=errors+1
-  say 'SPACE failed in line          1 '
+large_source = "   "
+large_expected = ""
+word_text = "word"
+blank_run = "   "
+large_separator = ".."
+do i = 1 to 250
+  if i > 1 then do
+    assembler append large_source,blank_run
+    assembler append large_expected,large_separator
+  end
+  assembler append large_source,word_text
+  assembler append large_expected,word_text
 end
-if space('  abc  def',3) \= 'abc   def'     then do
-  errors=errors+1
-  say 'SPACE failed in line          2 '
-end
-if space('abc  def  ',1) \= 'abc def'       then do
-  errors=errors+1
-  say 'SPACE failed in line          3 '
-end
-if space('abc  def  ',0) \= 'abcdef'        then do
-  errors=errors+1
-  say 'SPACE failed in line          4 '
-end
-if space('abc  def  ',2,'+') \= 'abc++def'  then do
-  errors=errors+1
-  say 'SPACE failed in line          5 '
-end
-/* These from Mark Hessling. */
-if space(" foo ")                \= "foo"                then do
-  errors=errors+1
-  say 'SPACE failed in line          6 '
-end
-if space("  foo")                \= "foo"                then do
-  errors=errors+1
-  say 'SPACE failed in line          7 '
-end
-if space("foo  ")                \= "foo"                then do
-  errors=errors+1
-  say 'SPACE failed in line          8 '
-end
-if space("  foo  ")              \= "foo"                then do
-  errors=errors+1
-  say 'SPACE failed in line          9 '
-end
-if space(" foo bar ")            \= "foo bar"            then do
-  errors=errors+1
-  say 'SPACE failed in line         10 '
-end
-if space("  foo  bar  ")         \= "foo bar"            then do
-  errors=errors+1
-  say 'SPACE failed in line         11 '
-end
-if space(" foo bar " , 2)          \= "foo  bar"         then do
-  errors=errors+1
-  say 'SPACE failed in line         12 '
-end
-if space(" foo bar ",,"-")       \= "foo-bar"            then do
-  errors=errors+1
-  say 'SPACE failed in line         13 '
-end
-if space("  foo  bar  ",2,"-")   \= "foo--bar"           then do
-  errors=errors+1
-  say 'SPACE failed in line         14 '
-end
-if space(" f-- b-- ",2,"-")      \= "f----b--"           then do
-  errors=errors+1
-  say 'SPACE failed in line         15 '
-end
-if space(" f o o   b a r ",0)    \= "foobar"             then do
-  errors=errors+1
-  say 'SPACE failed in line         16 '
-end
+assembler append large_source,blank_run
+errors = errors + check(space(large_source, 2, ".") = large_expected, "substantial input")
 
-return errors<>0
+caught = 0
+do
+  ignored = space("a b", -1)
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = space("", 0, "")
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = space("a b", 1, "xy")
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(caught = 3, "count and pad failures use signals")
+
+if errors = 0 then say "PASS: space"
+return errors <> 0
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: SPACE" label
+  return 1

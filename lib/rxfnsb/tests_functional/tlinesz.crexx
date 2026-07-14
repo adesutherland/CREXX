@@ -1,12 +1,17 @@
-/* rexx test linesize bif */
+/* rexx */
 options levelb
 import rxfnsb
 
-errors=0
+errors = 0
 
 if linesize() \= 999999999 then do
-  errors=errors+1
-  say 'LINESIZE failed in test 1'
+  errors = errors + 1
+  say "FAIL: LINESIZE exact value got" linesize()
+end
+if linesize() \= linesize() then do
+  errors = errors + 1
+  say "FAIL: LINESIZE repeated call changed"
 end
 
-return errors<>0
+if errors = 0 then say "PASS: linesize"
+return errors <> 0

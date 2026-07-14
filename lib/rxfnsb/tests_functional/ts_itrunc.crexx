@@ -1,0 +1,35 @@
+/* Focused Level B _ITRUNC tests. */
+options levelb
+import _rxsysb
+
+errors = 0
+number = 12.75
+
+errors = errors + check(_itrunc(number) = "12", "positive integer prefix")
+errors = errors + check(_itrunc(-12.75) = "-12", "negative sign is retained")
+errors = errors + check(_itrunc(0.125) = "0", "positive value below one")
+errors = errors + check(_itrunc(-0.125) = "-0", "negative value below one")
+errors = errors + check(_itrunc(42.0) = "42", "whole float")
+errors = errors + check(_itrunc(-42.0) = "-42", "negative whole float")
+errors = errors + check(_itrunc(0.0) = "0", "zero")
+errors = errors + check(number = 12.75, "argument is not mutated")
+
+caught = 0
+bad = "not-a-"
+bad_suffix = "number"
+assembler append bad,bad_suffix
+do
+  ignored = _itrunc(bad)
+on signal conversion_error
+  caught = 1
+end
+errors = errors + check(caught = 1, "invalid float coercion uses a signal")
+
+if errors = 0 then say "PASS: _itrunc"
+return errors <> 0
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: _ITRUNC" label
+  return 1

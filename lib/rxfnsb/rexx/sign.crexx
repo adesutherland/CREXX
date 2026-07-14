@@ -22,15 +22,24 @@
  * SOFTWARE.
  */
 
-/* rexx */
-options levelb
-/* returns sign of number  */
+/**
+ * Level B SIGN implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/sign.md
+ */
+options levelb comments_dash numeric_classic
 
 namespace rxfnsb expose sign
 
+/**
+ * Return the sign of a decimal number.
+ *
+ * @param number decimal value
+ * @return `-1`, `0`, or `1`
+ */
 sign: procedure = .int
-  arg number = .float
-  if number>0 then return 1
-  if number<0 then return -1
-return 0
-
+  arg number = .decimal
+  if number > 0 then return 1
+  if number < 0 then return -1
+  return 0

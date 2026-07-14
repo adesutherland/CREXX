@@ -11,12 +11,23 @@ Libraries are housed in the `lib/` directory, which is divided into domains like
 - `lib/rxfnsl/` (Level L language-engineering examples and generated-output
   proving slices)
 
-- `lib/rxfnsc/` (shared Level C/RexxScript runtime foundation, currently
-  housing the Rexx value, stem, and variable-pool classes)
+- `lib/rxfnsc/` (shared Level C/RexxScript runtime foundation, housing the
+  Rexx value, stem, and variable-pool classes plus directly callable Classic
+  BIF implementations; `rexxclassicbif_call` is a deprecated compatibility
+  path for current compiler output, while name-based intrinsic dispatch belongs
+  to RexxScript)
 
 - `lib/rxmath/` (Math extensions)
 
 - `lib/plugins/` (General-purpose extensions like `fileio`, `regex`, `strings`, `socket`, etc.)
+
+Same-named Level B and Level C functions are separate APIs. For example,
+`lib/rxfnsb/rexx/value.crexx` is a read-only, immediate-caller metadata helper,
+whereas `lib/rxfnsc/RexxClassicBifValue.crexx` implements the Classic
+old-value/optional-assignment contract over `RexxValue` and
+`RexxVariablePool`. Direct Level C harnesses call selector functions without
+`rexxclassicbif_call`; compiler lowering to those entries is deferred to the
+later bulk lowering change.
 
 `lib/rxfnsb/rexx/binary.crexx` provides the Level B binary helper surface. It
 contains the older Classic-style, 1-based, copy-returning helpers such as
@@ -173,6 +184,14 @@ images that strip source/TRACE debug metadata may still provide ASM/module data
 while source-line and trace-event lookup return empty. Debugger UI text and
 menu rendering belong to `debugger/rxdb_gui.crexx`, not the library trace
 internals.
+
+Trace contexts cache their metadata. Breakpoint events resolve procedure data
+for namespace filtering first, then load source/instruction content only after
+the event is accepted. Namespace matching operates on already-normalized
+stored components, and trace escaping scans/appends code points directly.
+Invalid direct `_trace_set` modes raise `INVALID_ARGUMENTS`; failure to open a
+configured output target raises `NOTREADY`. VM metadata/module queries retain
+their zero/empty status protocols.
 
 `lib/rxfnsb/rexx/_address.crexx` owns the Rexx-side ADDRESS protocol. In
 addition to command dispatch, redirects, sandboxes, and function calls,

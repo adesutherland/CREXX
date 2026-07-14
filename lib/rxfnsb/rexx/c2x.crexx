@@ -22,20 +22,31 @@
  * SOFTWARE.
  */
 
-/* rexx center text  */
+/**
+ * Level B C2X implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/c2x.md
+ */
 options levelb
 
 namespace rxfnsb expose c2x
 
+/**
+ * Convert every source character to its established two-digit hexadecimal
+ * representation.
+ *
+ * @param from source characters
+ * @return two uppercase hexadecimal digits per character
+ */
 c2x: procedure = .string
   arg from = .string
-  stx=""
-  fz=""
-  len=0
-  assembler strlen len,from
-  if len=0 then return ""
-  do  i=0 to len-1
-      assembler hexchar fz,from,i
-      stx=stx||fz
+  result = ""
+  hexadecimal = ""
+  source_length = .int
+  assembler strlen source_length,from
+  do i = 0 to source_length - 1
+      assembler hexchar hexadecimal,from,i
+      assembler append result,hexadecimal
   end
-  return stx
+  return result

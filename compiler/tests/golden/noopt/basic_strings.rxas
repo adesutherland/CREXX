@@ -48,6 +48,7 @@ main() .locals=10
    .srcstep 7 7 17 "basic_strings.crexx" 11 1 14 "say length(c)"
    .traceevent "V" 6 "R" "S" "r" 2 7 7 0 "c" ""
    load r4,1
+   settp r2,256
    swap r5,r2
    call r6,rxfnsb.length(),r4
    swap r2,r5
@@ -93,12 +94,12 @@ main() .locals=10
 /* Imported Declaration from file: length@library.rxbin */
 
 rxfnsb.length() .expose=rxfnsb.length
-   .meta "rxfnsb.length"="b" ".int" rxfnsb.length() "expose string1=.string"
+   .meta "rxfnsb.length"="b" ".int" rxfnsb.length() "string=.string"
 
 /* Imported Declaration from file: substr@library.rxbin */
 
 rxfnsb.substr() .expose=rxfnsb.substr
-   .meta "rxfnsb.substr"="b" ".string" rxfnsb.substr() "string1=.string,start=.int,?len=.int,?pad=.string"
+   .meta "rxfnsb.substr"="b" ".string" rxfnsb.substr() "string=.string,start=.int,?length=.int,?pad=.string"
 
 /* Imported Declaration from file: pos@library.rxbin */
 

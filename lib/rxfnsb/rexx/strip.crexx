@@ -22,83 +22,90 @@
  * SOFTWARE.
  */
 
-  /* rexx */
-  options levelb
+/**
+ * Level B STRIP implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/strip.md
+ */
+options levelb
+namespace rxfnsb expose strip
 
-  namespace rxfnsb expose strip
-
+/**
+ * Remove leading, trailing, or both runs of a character class.
+ *
+ * @param string source text
+ * @param option optional L, T, or B selector; only its first codepoint matters
+ * @param char optional single codepoint; omission selects all Unicode whitespace
+ * @return requested slice of the source
+ */
 strip: procedure = .string
-       arg instr = .string, option = "B", schar= "UTF8WSP"
-hlen=1
-assembler substcut option,hlen      /* limit option length to 1 char*/
-if option='l' then option='L'
-else if option='t' then option='T'
-else if option='b' then option='B'
-else if option=' ' then option='B'
+  arg string = .string, option = "B", char = " "
+  char_supplied = ?char
+  option_length = .int
+  option_character = .int
+  normalized_option = ""
+  char_length = .int
+  trim_character = .int
+  current_character = .int
+  string_length = .int
+  start = 0
+  end_position = .int
+  search = .int
+  last = .int
+  index = .int
+  slice_length = .int
+  result = ""
 
-/* ---------------------------------------------------------------
- * This is the old strip part, for dropping any single characters
- * ---------------------------------------------------------------
- */
-if schar<>"UTF8WSP" then do
-   retstr=""
-   i=0
-   char=""
+  assembler strlen option_length,option
+  if option_length = 0 then
+    assembler signal "INVALID_ARGUMENTS","STRIP option must start with L, T, or B"
+  assembler strupper normalized_option,option
+  assembler strchar option_character,normalized_option,start
+  if option_character <> 76 & option_character <> 84 & option_character <> 66 then
+    assembler signal "INVALID_ARGUMENTS","STRIP option must start with L, T, or B"
 
-   assembler strchar schar,schar,i
-   assembler itos schar
- /* strip leading chars */
+  if char_supplied then do
+    assembler strlen char_length,char
+    if char_length <> 1 then
+      assembler signal "INVALID_ARGUMENTS","STRIP char must contain exactly one character"
+    assembler strchar trim_character,char,start
+  end
 
-   retstr=instr
-   if option='L' | option='B' then do    /* check leading blanks */
-      Assembler strlen hlen,retstr
-      do i=0 to hlen-1
-         assembler strchar char,retstr,i
-         assembler itos char
-         if char\=schar then do
-            retstr=substr(retstr,i+1)     /* place none byte char and leave loop  */
-            leave
-         end
-      end
-   end
-   if option='T' | option='B' then do   /* check trailing blanks */
-      Assembler strlen hlen,retstr
-      do i=hlen-1 to 0 by -1
-         Assembler strchar char,retstr,i
-         Assembler itos char
-         if char\=schar then return substr(retstr,1,i+1)
-      end
-   end
-   return retstr
-end
-/* ---------------------------------------------------------------
- * Here starts the new strip part which check all white spaces
- * ---------------------------------------------------------------
- */
-nbpos=0
-assembler strlen hlen,instr          /* this is the total string length */
-/*  Perform right TRIM first  */
-if option='T' | option='B' then do  /* check trailing blanks */
-   nbpos=-hlen                      /* negative value means, reverse search beginning at nbpos */
-   assembler FNDNBLNK nbpos,instr,nbpos
-   if nbpos<0 then return ""            /* <0 no non blank char found  */
-   else do
-      nbpos=nbpos+1
-      if nbpos<hlen then do             /* found non white space character prior end of string */
-         assembler substcut instr,nbpos /* strip off at this positions */
-         hlen=nbpos                     /* set new length of right trimmed string */
-      end
-   end
-end
-/* now perform Left Trim */
-if option='L' | option='B' then do   /* check leading blanks */
-   nbpos=0
-   assembler FNDNBLNK nbpos,instr,nbpos
-   if nbpos<=0 then return instr
-   hlen = hlen - nbpos               /* calculate usable length after positioning */
-   assembler SETSTRPOS instr, nbpos
-   instr2=""                         /* setup new variable, substring instruction doesn't work on same string */
-   assembler substring instr2, instr, hlen /* left trim string */
-   return instr2                     /* return trimmed string */
-end
-return instr                         /* return right trimmed string */
+  assembler strlen string_length,string
+  end_position = string_length
+  if string_length = 0 then return result
+
+  if \char_supplied then do
+    if option_character = 76 | option_character = 66 then do
+      search = 0
+      assembler fndnblnk start,string,search
+      if start < 0 then return result
+    end
+    if option_character = 84 | option_character = 66 then do
+      search = 0 - string_length
+      assembler fndnblnk last,string,search
+      if last < 0 then return result
+      end_position = last + 1
+    end
+  end
+  else do
+    if option_character = 76 | option_character = 66 then do while start < end_position
+      assembler strchar current_character,string,start
+      if current_character <> trim_character then leave
+      start = start + 1
+    end
+    if option_character = 84 | option_character = 66 then do while end_position > start
+      index = end_position - 1
+      assembler strchar current_character,string,index
+      if current_character <> trim_character then leave
+      end_position = end_position - 1
+    end
+  end
+
+  if start = 0 & end_position = string_length then return string
+  slice_length = end_position - start
+  if slice_length <= 0 then return result
+  assembler setstrpos string,start
+  assembler substring result,string,slice_length
+  return result

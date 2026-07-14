@@ -1,0 +1,106 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifcompare
+import rexxvalue
+
+errors = 0
+
+errors = errors + check_default("0", "abc", "abc")
+errors = errors + check_default("2", "abc", "ak")
+errors = errors + check_default("0", "ab ", "ab")
+errors = errors + check_pad("3", "ab ", "ab", "x")
+errors = errors + check_pad("5", "ab-- ", "ab", "-")
+errors = errors + check_default("1", "", "x")
+errors = errors + check_default("1", "x", "")
+errors = errors + check_pad("0", "foo", "f", "o")
+errors = errors + check_default("2", "aé", "aê")
+errors = errors + check_pad("0", "é", "é·", "·")
+
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.3", 1)
+errors = errors + check_count_error("RXC-LC-40.4", 4)
+errors = errors + check_omitted_error(1)
+errors = errors + check_omitted_error(2)
+errors = errors + check_pad_error("")
+errors = errors + check_pad_error("xy")
+
+if errors = 0 then say "PASS: Level C COMPARE BIF"
+return errors <> 0
+
+check_default: procedure = .int
+  arg expected = .string, left = .string, right = .string
+  return run_check(expected, left, right, 0, "")
+
+check_pad: procedure = .int
+  arg expected = .string, left = .string, right = .string, pad = .string
+  return run_check(expected, left, right, 1, pad)
+
+run_check: procedure = .int
+  arg expected = .string, left = .string, right = .string, pad_supplied = .boolean, pad = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(left)
+  args[2] = .RexxValue(right)
+  exists[1] = 1
+  exists[2] = 1
+  if pad_supplied then do
+    args[3] = .RexxValue(pad)
+    exists[3] = 1
+  end
+  context = .RexxBifCallContext("COMPARE")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_compare(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: COMPARE expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("A")
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("COMPARE")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_compare(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: COMPARE expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_omitted_error: procedure = .int
+  arg omitted = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to 2
+    args[i] = .RexxValue("A")
+    exists[i] = i <> omitted
+  end
+  context = .RexxBifCallContext("COMPARE")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_compare(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.5" then return 0
+  say "FAIL: COMPARE omitted" omitted "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_pad_error: procedure = .int
+  arg pad = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("A")
+  args[2] = .RexxValue("B")
+  args[3] = .RexxValue(pad)
+  exists[1] = 1
+  exists[2] = 1
+  exists[3] = 1
+  context = .RexxBifCallContext("COMPARE")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_compare(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.23" then return 0
+  say "FAIL: COMPARE pad expected RXC-LC-40.23 got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

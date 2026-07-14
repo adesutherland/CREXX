@@ -1,0 +1,44 @@
+/* Focused Level B ARRAYGET tests. */
+options levelb
+import rxfnsb
+
+errors = 0
+array = .string[]
+array[1] = "A"
+array[2] = "B"
+array[3] = "C"
+hi = array[0]
+one = 1
+far = 96
+low_index = .int
+high_index = .int
+omitted_index = .int
+assembler isub low_index,hi,hi
+assembler iadd high_index,hi,one
+assembler iadd omitted_index,hi,far
+
+errors = errors + check("A", arrayget(array, 1, "?"), "first element")
+errors = errors + check("C", arrayget(array, 3, "?"), "last element")
+errors = errors + check("low", arrayget(array, low_index, "low"), "low fallback")
+errors = errors + check("high", arrayget(array, high_index, "high"), "high fallback")
+errors = errors + check("", arrayget(array, omitted_index), "omitted default")
+
+empty = .string[]
+errors = errors + check("empty", arrayget(empty, 1, "empty"), "empty array")
+errors = errors + check_int(3, array[0], "input high-water preserved")
+errors = errors + check("B", array[2], "input value preserved")
+
+if errors = 0 then say "PASS: arrayget"
+return errors <> 0
+
+check: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected == actual then return 0
+  say "FAIL: ARRAYGET" label "expected" expected "got" actual
+  return 1
+
+check_int: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: ARRAYGET" label "expected" expected "got" actual
+  return 1

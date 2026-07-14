@@ -1,0 +1,83 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifb2x
+import rexxvalue
+
+errors = 0
+errors = errors + check_value("C3", "11000011")
+errors = errors + check_value("17", "10111")
+errors = errors + check_value("5", "0101")
+errors = errors + check_value("01", "00000001")
+errors = errors + check_value("1F0", "111110000")
+errors = errors + check_value("2A", "10 1010")
+errors = errors + check_value("10", "1  0000")
+errors = errors + check_value("", "")
+large_binary = ""
+large_hex = ""
+do 64
+  large_binary = large_binary || "1111"
+  large_hex = large_hex || "F"
+end
+errors = errors + check_value(large_hex, large_binary)
+
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.4", 2)
+errors = errors + check_omitted_required()
+errors = errors + check_binary_error(" 1010")
+errors = errors + check_binary_error("1010 ")
+errors = errors + check_binary_error("1010 10")
+errors = errors + check_binary_error("10 10")
+errors = errors + check_binary_error("1020")
+errors = errors + check_binary_error("10" || "09"x || "10")
+
+if errors = 0 then say "PASS: Level C B2X BIF"
+return errors <> 0
+
+check_value: procedure = .int
+  arg expected = .string, binary = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(binary)
+  exists[1] = 1
+  context = .RexxBifCallContext("B2X")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifb2x..rexxclassicbif_b2x(reference context)
+  if \context.hasError() & result.asString() = expected & args[1].asString() = binary then return 0
+  say "FAIL: B2X" binary "expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("1")
+    exists[i] = 1
+  end
+  return run_error(expected_code, args, exists)
+
+check_omitted_required: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("1")
+  exists[1] = 0
+  return run_error("RXC-LC-40.5", args, exists)
+
+check_binary_error: procedure = .int
+  arg binary = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(binary)
+  exists[1] = 1
+  return run_error("RXC-LC-40.24", args, exists)
+
+run_error: procedure = .int
+  arg expected_code = .string, args = .RexxValue[], exists = .int[]
+  context = .RexxBifCallContext("B2X")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifb2x..rexxclassicbif_b2x(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: B2X expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

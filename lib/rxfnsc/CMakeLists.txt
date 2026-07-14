@@ -1,10 +1,56 @@
 cmake_minimum_required(VERSION 3.24)
 
+set(RXFNSC_DIRECT_BIF_MODULES
+  RexxClassicBifAbbrev
+  RexxClassicBifAbs
+  RexxClassicBifAddress
+  RexxClassicBifB2x
+  RexxClassicBifCenter
+  RexxClassicBifChangestr
+  RexxClassicBifCompare
+  RexxClassicBifCopies
+  RexxClassicBifCountstr
+  RexxClassicBifD2x
+  RexxClassicBifDelstr
+  RexxClassicBifDelword
+  RexxClassicBifFormat
+  RexxClassicBifInsert
+  RexxClassicBifLastpos
+  RexxClassicBifLeft
+  RexxClassicBifLength
+  RexxClassicBifMax
+  RexxClassicBifMin
+  RexxClassicBifNumeric
+  RexxClassicBifOverlay
+  RexxClassicBifPos
+  RexxClassicBifReverse
+  RexxClassicBifRight
+  RexxClassicBifSign
+  RexxClassicBifSpace
+  RexxClassicBifStrip
+  RexxClassicBifSubstr
+  RexxClassicBifSubword
+  RexxClassicBifSymbol
+  RexxClassicBifTrace
+  RexxClassicBifTrunc
+  RexxClassicBifValue
+  RexxClassicBifVerify
+  RexxClassicBifWord
+  RexxClassicBifWordindex
+  RexxClassicBifWordlength
+  RexxClassicBifWordpos
+  RexxClassicBifWords
+  RexxClassicBifX2b
+  RexxClassicBifX2d
+)
+
 set(RXFNSC_MODULES
   RexxValue
   RexxStem
+  RexxClassicState
   RexxVariablePool
   RexxClassicBifs
+  ${RXFNSC_DIRECT_BIF_MODULES}
 )
 
 set(RXFNSC_BINS)
@@ -46,8 +92,12 @@ add_custom_command(
 
 set(RXFNSC_SELECTORS ${RXFNSC_MODULES})
 set(RXFNSC_DEPS_RexxStem RexxValue)
-set(RXFNSC_DEPS_RexxVariablePool RexxValue RexxStem)
-set(RXFNSC_DEPS_RexxClassicBifs RexxValue RexxStem RexxVariablePool)
+set(RXFNSC_DEPS_RexxClassicState RexxValue)
+set(RXFNSC_DEPS_RexxVariablePool RexxValue RexxStem RexxClassicState)
+set(RXFNSC_DEPS_RexxClassicBifs RexxValue RexxStem RexxClassicState RexxVariablePool)
+foreach(MOD IN LISTS RXFNSC_DIRECT_BIF_MODULES)
+  set(RXFNSC_DEPS_${MOD} RexxClassicBifs)
+endforeach()
 
 if(WIN32)
   set(_rxfnsc_remove_consolidated_command

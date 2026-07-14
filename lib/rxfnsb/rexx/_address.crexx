@@ -27,6 +27,18 @@ options levelb
 namespace _rxsysb expose _address _address_with_sandbox _address_new_request _address_dispatch_request _address_link_request_sandbox _address_apply_response_var _address_apply_response_sandbox _address_apply_response_stem _address_apply_response_request_stem _address_environment _address_function _address_call _address_call_response addressenv addresscall _new_address_environment _ensure_address_environment _register_address_environment _set_address_environment _current_address_environment _reset_address_environments _enable_native_address_environment _address_execute_system_command _address_unknown_command_response _address_normalize_environment_name _address_normalize_command _address_first_chars _noredir _redir2array _redir2string _array2redir _string2redir addressdriverregistry addressbinding addressstem standardaddressstem addresssandbox standardaddresssandbox addressrequest addressresponse addressinstance addressfunctionrequest addressfunctionresponse addressfunctionenvironment addressenvironment crexxaddressenvironment systemaddressenvironment shelladdressenvironment pathaddressenvironment nativeaddressenvironment unknownaddressenvironment
 import rxfnsb
 
+/**
+ * Level B ADDRESS command-environment protocol.
+ *
+ * This module owns the typed request/response, binding, sandbox, provider,
+ * registry, redirect, and command/function dispatch surfaces used by the
+ * ADDRESS compiler exit and native host bridge. It is separate from the
+ * Classic Level C ADDRESS() state-query BIF.
+ *
+ * @docType runtime-module
+ * @see docs/books/crexx_language_reference/statements.md
+ */
+
 addressdriverregistry: class
   _driver_count = .int
   _drivers = .string[]
@@ -40,9 +52,17 @@ addressdriverregistry: class
   add: method = .void
     arg driver = .string, aliases = .string, prefixes = .string
     idx = .int
+    normalized_driver = .string
+
+    normalized_driver = normalize_environment_name(driver)
+    if normalized_driver = "" then do
+      call address_invalid_arguments("ADDRESS driver name must not be blank")
+      return
+    end
+
     idx = _driver_count + 1
     _driver_count = idx
-    _drivers[idx] = normalize_environment_name(driver)
+    _drivers[idx] = normalized_driver
     _aliases[idx] = normalize_address_lookup_words(aliases)
     _prefixes[idx] = normalize_address_lookup_words(prefixes)
     return
@@ -96,7 +116,7 @@ addressstem: interface
     arg name = .string
 
   next: method = .string
-    arg cursor_text = .string
+    arg cursor = .int
 
 standardaddressstem: class implements .addressstem
   _key_count = .int
@@ -123,7 +143,7 @@ standardaddressstem: class implements .addressstem
     key = normalize_sandbox_key(name)
     if key = "" then return
 
-    idx = find_sandbox_key_index(_keys, _present, _key_count, key)
+    idx = find_normalized_sandbox_key_index(_keys, _present, _key_count, key)
     if idx = 0 then do
       _key_count = _key_count + 1
       idx = _key_count
@@ -149,11 +169,9 @@ standardaddressstem: class implements .addressstem
     return 1
 
   next: method = .string
-    arg cursor_text = .string
+    arg cursor = .int
     start = .int
-    cursor = .int
 
-    cursor = cursor_text + 0
     start = cursor + 1
     if start < 1 then start = 1
 
@@ -226,7 +244,7 @@ addresssandbox: interface
     arg name = .string
 
   next: method = .string
-    arg cursor_text = .string
+    arg cursor = .int
 
 standardaddresssandbox: class implements .addresssandbox
   _key_count = .int
@@ -253,7 +271,7 @@ standardaddresssandbox: class implements .addresssandbox
     key = normalize_sandbox_key(name)
     if key = "" then return
 
-    idx = find_sandbox_key_index(_keys, _present, _key_count, key)
+    idx = find_normalized_sandbox_key_index(_keys, _present, _key_count, key)
     if idx = 0 then do
       _key_count = _key_count + 1
       idx = _key_count
@@ -279,11 +297,9 @@ standardaddresssandbox: class implements .addresssandbox
     return 1
 
   next: method = .string
-    arg cursor_text = .string
+    arg cursor = .int
     start = .int
-    cursor = .int
 
-    cursor = cursor_text + 0
     start = cursor + 1
     if start < 1 then start = 1
 
@@ -1222,7 +1238,7 @@ addresscall: procedure = .string
 
 _new_address_environment: procedure = .addressenvironment
   arg env_name = .string
-  return .addressenvironment(normalize_environment_name(env_name))
+  return .addressenvironment(require_address_environment_name(env_name, "_new_address_environment"))
 
 bind_address_environment_object: procedure = .void
   arg env_name = .string, env_obj = .addressenvironment, instance_id = ""
@@ -1247,8 +1263,7 @@ _ensure_address_environment: procedure = .int expose _address_runtime_ready _add
 
   call ensure_address_runtime
 
-  name = normalize_environment_name(env_name)
-  if name = "" then return -3
+  name = require_address_environment_name(env_name, "_ensure_address_environment")
 
   idx = find_address_environment_index(_address_environment_names, name)
   if idx \= 0 then return 0
@@ -1268,8 +1283,7 @@ _register_address_environment: procedure = .int expose _address_runtime_ready _a
 
   call ensure_address_runtime
 
-  name = normalize_environment_name(env_name)
-  if name = "" then return -3
+  name = require_address_environment_name(env_name, "_register_address_environment")
 
   idx = find_address_environment_index(_address_environment_names, name)
   if idx = 0 then idx = _address_environment_names.0 + 1
@@ -1288,8 +1302,7 @@ _set_address_environment: procedure = .int expose _address_runtime_ready _addres
 
   call ensure_address_runtime
 
-  name = normalize_environment_name(env_name)
-  if name = "" then return -3
+  name = require_address_environment_name(env_name, "_set_address_environment")
 
   ensure_rc = _ensure_address_environment(name)
   if ensure_rc \= 0 then return ensure_rc
@@ -1357,9 +1370,8 @@ alias_address_environment: procedure = .int expose _address_runtime_ready _addre
   target_idx = .int
   ensure_rc = .int
 
-  alias = normalize_environment_name(alias_name)
-  target = normalize_environment_name(target_name)
-  if alias = "" | target = "" then return -3
+  alias = require_address_environment_name(alias_name, "alias_address_environment alias")
+  target = require_address_environment_name(target_name, "alias_address_environment target")
 
   ensure_rc = _ensure_address_environment(target)
   if ensure_rc \= 0 then return ensure_rc
@@ -1381,7 +1393,7 @@ find_address_environment_index: procedure = .int
   name = normalize_environment_name(env_name)
 
   do i = 1 to env_names.0
-    if normalize_environment_name(env_names.i) = name then return i
+    if env_names.i = name then return i
   end
 
   return 0
@@ -1400,11 +1412,32 @@ find_sandbox_key_index: procedure = .int
   key = normalize_sandbox_key(name)
   if key = "" then return 0
 
+  return find_normalized_sandbox_key_index(keys, present, key_count, key)
+
+find_normalized_sandbox_key_index: procedure = .int
+  arg expose keys = .string[], present = .int[], key_count = .int, key = .string
+
   do i = 1 to key_count
     if present[i] = 1 & keys[i] = key then return i
   end
 
   return 0
+
+require_address_environment_name: procedure = .string
+  arg env_name = .string, operation = .string
+  name = .string
+
+  name = normalize_environment_name(env_name)
+  if name = "" then do
+    call address_invalid_arguments(operation || " requires a non-blank environment name")
+    return ""
+  end
+  return name
+
+address_invalid_arguments: procedure = .void
+  arg message = .string
+  assembler signal "INVALID_ARGUMENTS",message
+  return
 
 dispatch_address_request: procedure = .addressresponse expose _address_runtime_ready _address_current_name _address_environment_names _address_environment_objects
   arg request = .addressrequest
@@ -1517,7 +1550,7 @@ spawn_request: procedure = .addressresponse
     binding = .addressbinding
     alias = .string
     kind = .string
-    stem_count = .string
+    stem_count = .int
     stem_i = .int
 
     binding = request.get_binding(i)
@@ -1540,16 +1573,20 @@ spawn_request: procedure = .addressresponse
       crexx_bindings.binding_slot = binding.get_value()
     end
     else if kind = "STEM" then do
-      stem_count = binding.get_stem_value("0")
+      stem_count = binding.get_stem_value("0") as .int
+      if stem_count < 0 then do
+        call address_invalid_arguments("ADDRESS stem binding count must not be negative")
+        stem_count = 0
+      end
 
       binding_slot = binding_slot + 1
       crexx_bindings.binding_slot = "STEM"
       binding_slot = binding_slot + 1
       crexx_bindings.binding_slot = alias
       binding_slot = binding_slot + 1
-      crexx_bindings.binding_slot = stem_count
+      crexx_bindings.binding_slot = stem_count || ""
 
-      do stem_i = 1 to stem_count + 0
+      do stem_i = 1 to stem_count
         binding_slot = binding_slot + 1
         crexx_bindings.binding_slot = binding.get_stem_value(stem_i || "")
       end

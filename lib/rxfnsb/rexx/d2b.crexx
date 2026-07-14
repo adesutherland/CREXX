@@ -22,13 +22,42 @@
  * SOFTWARE.
  */
 
+/**
+ * Typed Level B D2B implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/d2b.md
+ */
 options levelb
-/* d2b( decimal to bit string)  returns bit combination of decimal string */
 
 namespace rxfnsb expose d2b
 
+/**
+ * Convert a non-negative native integer to minimal binary digit text.
+ *
+ * @param decimal non-negative native integer
+ * @return minimal binary digits, with zero represented by "0"
+ */
 d2b: procedure = .string
-   arg dec = .int
-   hex=d2x(dec)
-   bit=x2b(hex)
-return bit
+  arg decimal = .int
+  if decimal < 0 then
+    assembler signal "INVALID_ARGUMENTS", "D2B requires a non-negative integer"
+  if decimal = 0 then return "0"
+
+  result = ""
+  working = decimal
+  bit_count = 0
+  bit = .int
+  codepoint = .int
+  do while working > 0
+    bit_count = bit_count + 1
+    assembler ishr working,working,1
+  end
+
+  do shift = bit_count - 1 to 0 by -1
+    assembler ishr bit,decimal,shift
+    assembler iand bit,bit,1
+    codepoint = 48 + bit
+    assembler appendchar result,codepoint
+  end
+  return result

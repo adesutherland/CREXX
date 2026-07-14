@@ -179,15 +179,19 @@ flat result export
 Step 1 supports a small but extensible set of intrinsic functions.
 
 Intrinsics are evaluator built-ins, not general Rexx function calls. Where the
-function overlaps pure Classic Rexx behavior, RexxScript now routes the call
-through the shared `rxfnsc` `RexxClassicBifs` proof layer.
+function overlaps pure Classic Rexx behavior, RexxScript owns the name
+controller and routes the call to the specific shared `rxfnsc`
+`RexxClassicBifs` export. Direct Level C library harnesses call the same exports.
+Current compiler output may still use the deprecated `rxfnsc` compatibility
+dispatcher until a separate bulk lowering change; it never uses the RexxScript
+controller.
 
 The intrinsic subsystem is intentionally separated from the expression parser.
 
-Function-call syntax is parsed once and dispatched through a centralized
-intrinsic-function handler. As a result, new intrinsic functions can normally be
-added without parser modifications and with minimal impact on the execution
-engine.
+Function-call syntax is parsed once and dispatched through `_builtin_known()`
+and `_dispatch_builtin()` in `RexxScriptEvaluator.crexx`. As a result, new
+intrinsic functions can normally be added without parser modifications and
+with minimal impact on the execution engine.
 
 This architecture allows practical utility functions to be introduced incrementally as requirements emerge.
 

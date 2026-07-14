@@ -22,37 +22,44 @@
  * SOFTWARE.
  */
 
-/* rexx */
 options levelb
 
 namespace rxfnsb expose sequence
 
-/* Built-in function Sequence is a modern day equivalent of XRANGE,
- * that can deal with Unicode. First turned up in NetRexx.
- * (XRANGE is limited to single byte characters 00-FF and wraps around) 
- */ 
+/**
+ * Return an inclusive ascending Unicode scalar sequence.
+ *
+ * @param from one Unicode character
+ * @param tos one Unicode character
+ * @return every Unicode scalar from from through tos
+ * @signal INVALID_ARGUMENTS an endpoint is not one character or is descending
+ */
 sequence: procedure = .string
-arg from = .string, tos = .string
+  arg from = .string, tos = .string
+  from_length = .int
+  to_length = .int
+  from_codepoint = .int
+  to_codepoint = .int
+  current = .int
+  index = 0
+  result = ""
 
-/* TODO: support hex notation */
+  assembler strlen from_length,from
+  assembler strlen to_length,tos
+  if from_length <> 1 | to_length <> 1 then
+    assembler signal "INVALID_ARGUMENTS", "SEQUENCE endpoints must each contain exactly one character"
 
-fromVal=c2d(from)
-toVal  =c2d(tos)
+  assembler strchar from_codepoint,from,index
+  assembler strchar to_codepoint,tos,index
+  if from_codepoint > to_codepoint then
+    assembler signal "INVALID_ARGUMENTS", "SEQUENCE start must not follow its end"
 
-/* as opposed to xrange, there is no wraparound */
-if fromVal > toVal then do
-  say 'starting value must be less than end value'
-  return "BAD"
-end
-
-resultString = ""
-diff=0
-
-assembler isub diff,toVal,fromVal
-
-loop i=0 to diff
-  assembler appendchar resultString,fromVal
-  assembler inc fromVal
-end
-
-return resultString
+  current = from_codepoint
+  do while current <= to_codepoint
+    assembler appendchar result,current
+    if current = to_codepoint then return result
+    /* Unicode surrogate code points are not scalar values. */
+    if current = 55295 then current = 57344
+    else assembler inc current
+  end
+  return result

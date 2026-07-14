@@ -1,0 +1,161 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifsubstr
+import rexxvalue
+
+errors = 0
+
+errors = errors + check_default("bc", "abc", "2")
+errors = errors + check_length("bc  ", "abc", "2", "4")
+errors = errors + check_length("    ", "abc", "5", "4")
+errors = errors + check_pad("bc....", "abc", "2", "6", ".")
+errors = errors + check_pad("......", "abc", "5", "6", ".")
+errors = errors + check_length("", "abc", "2", "0")
+errors = errors + check_default("", "abc", "5")
+errors = errors + check_omitted_length_pad("bc", "abc", "2", ".")
+errors = errors + check_length("ené", "René日🙂", "2", "3")
+errors = errors + check_pad("5678éé", "12345678", "5", "6", "é")
+
+large_source = ""
+x = "x"
+do i = 1 to 1000
+  assembler append large_source,x
+end
+large_expected = ""
+do i = 1 to 500
+  assembler append large_expected,x
+end
+dot = "."
+do i = 1 to 250
+  assembler append large_expected,dot
+end
+errors = errors + check_pad(large_expected, large_source, "501", "750", ".")
+
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.3", 1)
+errors = errors + check_count_error("RXC-LC-40.4", 5)
+errors = errors + check_omitted_required(1)
+errors = errors + check_omitted_required(2)
+errors = errors + check_numeric_error(2, "not-a-number", "RXC-LC-40.12")
+errors = errors + check_numeric_error(3, "1.5", "RXC-LC-40.12")
+errors = errors + check_numeric_error(2, "0", "RXC-LC-40.14")
+errors = errors + check_numeric_error(2, "-1", "RXC-LC-40.14")
+errors = errors + check_numeric_error(3, "-1", "RXC-LC-40.13")
+errors = errors + check_pad_error("")
+errors = errors + check_pad_error("xy")
+
+if errors = 0 then say "PASS: Level C SUBSTR BIF"
+return errors <> 0
+
+check_default: procedure = .int
+  arg expected = .string, string = .string, start = .string
+  return run_check(expected, string, start, 0, "", 0, "")
+
+check_length: procedure = .int
+  arg expected = .string, string = .string, start = .string, length = .string
+  return run_check(expected, string, start, 1, length, 0, "")
+
+check_pad: procedure = .int
+  arg expected = .string, string = .string, start = .string, length = .string, pad = .string
+  return run_check(expected, string, start, 1, length, 1, pad)
+
+check_omitted_length_pad: procedure = .int
+  arg expected = .string, string = .string, start = .string, pad = .string
+  return run_check(expected, string, start, 0, "", 1, pad)
+
+run_check: procedure = .int
+  arg expected = .string, string = .string, start = .string, length_exists = .boolean, length = .string, pad_exists = .boolean, pad = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(string)
+  args[2] = .RexxValue(start)
+  exists[1] = 1
+  exists[2] = 1
+  if length_exists | pad_exists then do
+    args[3] = .RexxValue(length)
+    exists[3] = length_exists
+  end
+  if pad_exists then do
+    args[4] = .RexxValue(pad)
+    exists[4] = 1
+  end
+  context = .RexxBifCallContext("SUBSTR")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifsubstr..rexxclassicbif_substr(reference context)
+  if \context.hasError() & result.asString() = expected & args[1].asString() = string then return 0
+  say "FAIL: SUBSTR expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("1")
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("SUBSTR")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifsubstr..rexxclassicbif_substr(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: SUBSTR expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_omitted_required: procedure = .int
+  arg omitted = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("abc")
+  args[2] = .RexxValue("1")
+  exists[1] = omitted <> 1
+  exists[2] = omitted <> 2
+  context = .RexxBifCallContext("SUBSTR")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifsubstr..rexxclassicbif_substr(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.5" then return 0
+  say "FAIL: SUBSTR omitted" omitted "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_numeric_error: procedure = .int
+  arg index = .int, value = .string, expected_code = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("abc")
+  args[2] = .RexxValue("1")
+  exists[1] = 1
+  exists[2] = 1
+  if index = 2 then args[2] = .RexxValue(value)
+  else do
+    args[3] = .RexxValue(value)
+    exists[3] = 1
+  end
+  context = .RexxBifCallContext("SUBSTR")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifsubstr..rexxclassicbif_substr(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: SUBSTR numeric expected" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_pad_error: procedure = .int
+  arg pad = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("")
+  args[2] = .RexxValue("1")
+  args[3] = .RexxValue("0")
+  args[4] = .RexxValue(pad)
+  exists[1] = 1
+  exists[2] = 1
+  exists[3] = 1
+  exists[4] = 1
+  context = .RexxBifCallContext("SUBSTR")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifsubstr..rexxclassicbif_substr(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.23" then return 0
+  say "FAIL: SUBSTR pad expected RXC-LC-40.23 got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

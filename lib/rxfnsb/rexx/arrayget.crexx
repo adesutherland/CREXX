@@ -22,12 +22,24 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Non-mutating string-array element lookup with a fallback value.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/arrayget.md
+ */
 options levelb
 
 namespace rxfnsb expose arrayget
 
-/* Return ARRAY[INDEX], or DEFAULT when INDEX is outside 1..ARRAY[0]. */
+/**
+ * Return one array element, or a fallback for an out-of-range index.
+ *
+ * @param array string array using array[0] as its high-water mark
+ * @param index one-based element index
+ * @param default fallback value; defaults to the empty string
+ * @return array[index] when index is in range, otherwise default
+ */
 arrayget: procedure=.string
   arg array=.string[], index=.int, default=""
 

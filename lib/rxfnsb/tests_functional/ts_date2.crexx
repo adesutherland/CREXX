@@ -44,6 +44,14 @@ if date('W','10 Mar 1962','N') \= 'Saturday' then do
     errors=errors+1
   say "DATE() failed in test 2: date('W','10 Mar 1962','N')" date('B','10 Mar 1962') "but must be 'Saturday'"
 end
+if date('B','10 March 1962','N') \= 716308 then do
+  errors=errors+1
+  say "DATE() failed for a full NORMAL month name:" date('B','10 March 1962','N') "but must be 716308"
+end
+if date('B','Saturday, Mar 10, 1962','QU') \= 716308 then do
+  errors=errors+1
+  say "DATE() failed for an abbreviated QUALIFIED month name:" date('B','Saturday, Mar 10, 1962','QU') "but must be 716308"
+end
 if date('W','716308','B') \= 'Saturday' then do
     errors=errors+1
   say "Date() failed in test 3: date('W','716308','B')" date('W','716308','B') "but must be 'Saturday'"
@@ -99,4 +107,3 @@ end
 say 'end of date2 test'
 say errors 'errors'
 return errors<>0
-

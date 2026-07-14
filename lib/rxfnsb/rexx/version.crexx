@@ -22,14 +22,22 @@
  * SOFTWARE.
  */
 
-/* REXX Levelb VERSION Implementation */
+/**
+ * Level B running-VM build description.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/version.md
+ */
 options levelb
 
 namespace rxfnsb expose version
 
+/**
+ * Return platform, pointer width, cREXX version, and VM build date.
+ *
+ * @return four space-separated fields from the running VM
+ */
 version: procedure = .string
-
-string=''
-assembler rxvers string
-
-return string
+  result = .string
+  assembler rxvers result
+  return result

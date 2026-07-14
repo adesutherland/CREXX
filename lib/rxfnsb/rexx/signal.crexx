@@ -22,11 +22,17 @@
  * SOFTWARE.
  */
 
-/* REXX Level B Signal Objects */
+/**
+ * Level B signal condition, handler-action, and VM transport objects.
+ *
+ * @docType runtime-module
+ * @see lib/rxfnsb/rexx/signal.md
+ */
 options levelb
 
 namespace rxfnsb expose signal standard_signal runtime_signal runtime_signal_raw signalaction standard_signalaction
 
+/** Public condition contract used by Level B signal handlers. */
 signal: interface
   *: factory
     arg name = .string, message = ""
@@ -42,10 +48,15 @@ signal: interface
   column: method = .int
   source: method = .string
 
+/** Message-only condition created through the public `.signal` factory. */
 standard_signal: class implements .signal
   _name = .string
   _message = .string
   _payload = .object
+
+  *: match
+    arg name = .string, message = ""
+    return 2
 
   *: factory
     arg name = .string, message = ""
@@ -83,6 +94,11 @@ standard_signal: class implements .signal
   source: method = .string
     return ""
 
+/**
+ * Internal five-slot view over the raw VM interrupt object.
+ *
+ * Attribute order and register views are part of the VM/library ABI.
+ */
 runtime_signal_raw: class
   _code = .int with register.1.int
   _module = .int with register.2.int
@@ -109,6 +125,7 @@ runtime_signal_raw: class
   payload: method = .object
     return _payload
 
+/** Public condition wrapper around a raw VM interrupt object. */
 runtime_signal: class implements .signal
   _has_raw = .int with register.1.int
   _name = .string with register.2.string
@@ -165,12 +182,14 @@ runtime_signal: class implements .signal
   source: method = .string
     return _signal_metadata_string(module(), address(), ".meta_source_step", 8)
 
+/** Explicit action returned by an action-aware signal handler. */
 signalaction: interface
   retry: factory
   skip: factory
   fail: factory
   kind: method = .string
 
+/** Standard immutable-by-convention implementation of `.signalaction`. */
 standard_signalaction: class implements .signalaction
   _kind = .string
 
@@ -197,32 +216,36 @@ _signal_code: procedure = .int
   arg name = .string
   n = .string
   n = upper(name)
-  if n = "KILL" then return 1
-  if n = "FAILURE" then return 2
-  if n = "ERROR" | n = "SYNTAX" then return 3
-  if n = "OVERFLOW_UNDERFLOW" then return 4
-  if n = "DIVISION_BY_ZERO" then return 5
-  if n = "CONVERSION_ERROR" then return 6
-  if n = "INVALID_ARGUMENTS" then return 7
-  if n = "OUT_OF_RANGE" then return 8
-  if n = "UNICODE_ERROR" then return 9
-  if n = "UNKNOWN_INSTRUCTION" then return 10
-  if n = "FUNCTION_NOT_FOUND" then return 11
-  if n = "NOT_IMPLEMENTED" then return 12
-  if n = "INVALID_SIGNAL_CODE" then return 13
-  if n = "REFERENCE_INVALID" then return 14
-  if n = "NOTREADY" then return 15
-  if n = "OBJECT_NOT_INITIALIZED" then return 16
-  if n = "RXBIN_CORRUPTION" then return 17
-  if n = "QUIT" then return 19
-  if n = "TERM" then return 20
-  if n = "POSIX_INT" then return 21
-  if n = "POSIX_HUP" then return 22
-  if n = "POSIX_USR1" then return 23
-  if n = "POSIX_USR2" then return 24
-  if n = "POSIX_CHLD" then return 25
-  if n = "OTHER" then return 30
-  if n = "BREAKPOINT" then return 31
+  select n
+    when "KILL" then return 1
+    when "FAILURE" then return 2
+    when "ERROR" then return 3
+    when "SYNTAX" then return 3
+    when "OVERFLOW_UNDERFLOW" then return 4
+    when "DIVISION_BY_ZERO" then return 5
+    when "CONVERSION_ERROR" then return 6
+    when "INVALID_ARGUMENTS" then return 7
+    when "OUT_OF_RANGE" then return 8
+    when "UNICODE_ERROR" then return 9
+    when "UNKNOWN_INSTRUCTION" then return 10
+    when "FUNCTION_NOT_FOUND" then return 11
+    when "NOT_IMPLEMENTED" then return 12
+    when "INVALID_SIGNAL_CODE" then return 13
+    when "REFERENCE_INVALID" then return 14
+    when "NOTREADY" then return 15
+    when "OBJECT_NOT_INITIALIZED" then return 16
+    when "RXBIN_CORRUPTION" then return 17
+    when "QUIT" then return 19
+    when "TERM" then return 20
+    when "POSIX_INT" then return 21
+    when "POSIX_HUP" then return 22
+    when "POSIX_USR1" then return 23
+    when "POSIX_USR2" then return 24
+    when "POSIX_CHLD" then return 25
+    when "OTHER" then return 30
+    when "BREAKPOINT" then return 31
+    otherwise return 13
+  end
   return 13
 
 _signal_metadata_string: procedure = .string

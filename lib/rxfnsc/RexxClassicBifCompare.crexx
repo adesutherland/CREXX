@@ -1,0 +1,78 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifcompare expose rexxclassicbif_compare
+import rexxclassicbifs
+import rexxvalue
+
+/**
+ * Compare two Classic strings using virtual right padding.
+ *
+ * @bif COMPARE
+ * @signature COMPARE(left, right [,pad])
+ * @checkargs rANY rANY oPAD
+ * @sandbox pure
+ * @return first differing 1-based character position, or zero
+ */
+rexxclassicbif_compare: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY rANY oPAD") = 0 then return .RexxValue("")
+
+  left = context.argumentText(1)
+  right = context.argumentText(2)
+  pad = " "
+  if context.argumentExists(3) then pad = context.argumentText(3)
+  left_length = .int
+  right_length = .int
+  common_length = .int
+  pad_character = .int
+  left_character = .int
+  right_character = .int
+  pad_index = 0
+  i = .int
+
+  assembler strchar pad_character,pad,pad_index
+  assembler strlen left_length,left
+  assembler strlen right_length,right
+  common_length = left_length
+  if right_length < common_length then common_length = right_length
+
+  do i = 0 to common_length - 1
+    assembler strchar left_character,left,i
+    assembler strchar right_character,right,i
+    if left_character <> right_character then return .RexxValue((i + 1) || "")
+  end
+
+  if left_length > right_length then do i = common_length to left_length - 1
+    assembler strchar left_character,left,i
+    if left_character <> pad_character then return .RexxValue((i + 1) || "")
+  end
+  else if right_length > left_length then do i = common_length to right_length - 1
+    assembler strchar right_character,right,i
+    if pad_character <> right_character then return .RexxValue((i + 1) || "")
+  end
+  return .RexxValue("0")

@@ -1117,8 +1117,75 @@ rexxscriptcoreevaluator: class
        say "      STMTNO: "stmtno
        if stmtno<1 then return 0
        say "   STATEMENT: "statement_texts[stmtno]
-     end
+    end
     return 0
+
+  _builtin_known: method = .boolean
+    arg name = .string
+    select
+      when name = "ABBREV" then return 1
+      when name = "ABS" then return 1
+      when name = "COPIES" then return 1
+      when name = "DATATYPE" then return 1
+      when name = "LEFT" then return 1
+      when name = "LENGTH" then return 1
+      when name = "LOWER" then return 1
+      when name = "MAX" then return 1
+      when name = "MIN" then return 1
+      when name = "POS" then return 1
+      when name = "RIGHT" then return 1
+      when name = "SIGN" then return 1
+      when name = "SPACE" then return 1
+      when name = "STRIP" then return 1
+      when name = "SUBSTR" then return 1
+      when name = "UPPER" then return 1
+      when name = "VERIFY" then return 1
+      when name = "WORD" then return 1
+      when name = "WORDS" then return 1
+      otherwise return 0
+    end
+    return 0
+
+  _dispatch_builtin: method = .int
+    arg name = .string, bif_args = .RexxValue[], bif_exists = .int[], stmtno = .int
+    context = .RexxBifCallContext(name)
+    call context.setArguments(bif_args, bif_exists)
+    call context.setCallerPool(reference script_pool)
+    bif_result = .RexxValue
+
+    select
+      when name = "ABBREV" then bif_result = rexxclassicbif_abbrev(reference context)
+      when name = "ABS" then bif_result = rexxclassicbif_abs(reference context)
+      when name = "COPIES" then bif_result = rexxclassicbif_copies(reference context)
+      when name = "DATATYPE" then bif_result = rexxclassicbif_datatype(reference context)
+      when name = "LEFT" then bif_result = rexxclassicbif_left(reference context)
+      when name = "LENGTH" then do
+        call context.clearError()
+        if rexxclassicbif_check_args(reference context, "rANY") = 0 then bif_result = .RexxValue("")
+        else bif_result = rexxclassicbif_length(context.argument(1))
+      end
+      when name = "LOWER" then bif_result = rexxclassicbif_lower(reference context)
+      when name = "MAX" then bif_result = rexxclassicbif_max(reference context)
+      when name = "MIN" then bif_result = rexxclassicbif_min(reference context)
+      when name = "POS" then bif_result = rexxclassicbif_pos(reference context)
+      when name = "RIGHT" then bif_result = rexxclassicbif_right(reference context)
+      when name = "SIGN" then bif_result = rexxclassicbif_sign(reference context)
+      when name = "SPACE" then bif_result = rexxclassicbif_space(reference context)
+      when name = "STRIP" then bif_result = rexxclassicbif_strip(reference context)
+      when name = "SUBSTR" then bif_result = rexxclassicbif_substr(reference context)
+      when name = "UPPER" then bif_result = rexxclassicbif_upper(reference context)
+      when name = "VERIFY" then bif_result = rexxclassicbif_verify(reference context)
+      when name = "WORD" then bif_result = rexxclassicbif_word(reference context)
+      when name = "WORDS" then bif_result = rexxclassicbif_words(reference context)
+      otherwise return _set_error("undefined_function", "undefined function " || name, stmtno, 1)
+    end
+
+    if context.hasError() then return _set_error(context.errorCode(), context.errorMessage(), stmtno, 1)
+    eval_value = bif_result.asString()
+    if _is_integer_text(eval_value) then eval_type = "int"
+    else eval_type = "string"
+    return 1
+
   /* --------------------------------------------------------------------
    * Intrinsic Function Dispatcher
    *
@@ -1138,28 +1205,8 @@ rexxscriptcoreevaluator: class
       parsed_exists[i] = fn_exists[i]
     end
 
-    select
-      when upper_name = "ABBREV" then nop
-      when upper_name = "ABS" then nop
-      when upper_name = "COPIES" then nop
-      when upper_name = "DATATYPE" then nop
-      when upper_name = "LEFT" then nop
-      when upper_name = "LENGTH" then nop
-      when upper_name = "LOWER" then nop
-      when upper_name = "MAX" then nop
-      when upper_name = "MIN" then nop
-      when upper_name = "POS" then nop
-      when upper_name = "RIGHT" then nop
-      when upper_name = "SIGN" then nop
-      when upper_name = "SPACE" then nop
-      when upper_name = "STRIP" then nop
-      when upper_name = "SUBSTR" then nop
-      when upper_name = "UPPER" then nop
-      when upper_name = "VERIFY" then nop
-      when upper_name = "WORD" then nop
-      when upper_name = "WORDS" then nop
-      otherwise return _set_error("undefined_function", "undefined function " || name, stmtno, 1)
-    end
+    if _builtin_known(upper_name) = 0 then
+      return _set_error("undefined_function", "undefined function " || name, stmtno, 1)
 
     bif_args = .RexxValue[]
     bif_exists = .int[]
@@ -1172,15 +1219,7 @@ rexxscriptcoreevaluator: class
       else bif_args[i] = .RexxValue("")
     end
 
-    context = .RexxBifCallContext(upper_name)
-    call context.setArguments(bif_args, bif_exists)
-    call context.setCallerPool(reference script_pool)
-    result = rexxclassicbif_call(reference context)
-    if context.hasError() then return _set_error(context.errorCode(), context.errorMessage(), stmtno, 1)
-    eval_value = result.asString()
-    if _is_integer_text(eval_value) then eval_type = "int"
-    else eval_type = "string"
-    return 1
+    return _dispatch_builtin(upper_name, bif_args, bif_exists, stmtno)
 
   header: method
     arg statements=.string

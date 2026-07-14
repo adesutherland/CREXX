@@ -23,16 +23,20 @@
  */
 
 options levelb comments_dash numeric_classic
-namespace rexxclassicbifs expose RexxBifCallContext rexxclassicbif_call rexxclassicbif_check_args rexxclassicbif_length
+namespace rexxclassicbifs expose RexxBifCallContext rexxclassicbif_call rexxclassicbif_check_args rexxclassicbif_check_variadic rexxclassicbif_set_error rexxclassic_symbol_kind rexxclassicbif_abbrev rexxclassicbif_abs rexxclassicbif_copies rexxclassicbif_datatype rexxclassicbif_left rexxclassicbif_length rexxclassicbif_lower rexxclassicbif_max rexxclassicbif_min rexxclassicbif_pos rexxclassicbif_right rexxclassicbif_sign rexxclassicbif_space rexxclassicbif_strip rexxclassicbif_substr rexxclassicbif_upper rexxclassicbif_verify rexxclassicbif_word rexxclassicbif_words
 import rexxvalue
 import rexxpool
 import rxfnsb
 
 /**
- * Shared Classic-compatible BIF proof module for Level C and RexxScript.
+ * Direct Classic-compatible BIF functions and shared call support.
+ *
+ * New library harnesses call the specific exported BIF functions directly.
+ * The name-based compatibility dispatcher remains only for current compiler
+ * output and is removed in the later bulk Level C lowering change.
  *
  * @docType bif-module
- * @sandbox RexxScript callers use an explicit allow-list and sandbox pool
+ * @sandbox RexxScript adapters use an explicit allow-list and sandbox pool
  */
 
 /**
@@ -140,8 +144,9 @@ RexxBifCallContext: class
     return error_message
 
 /**
- * Dispatch one Classic-compatible BIF call.
+ * Dispatch one Classic-compatible BIF call for existing compiler output.
  *
+ * @deprecated compatibility-only; direct BIF entry points are the library API
  * @param context call context reference containing the function name,
  *                arguments, and caller variable pool
  * @return result value, or a blank value with context error set
@@ -153,25 +158,29 @@ rexxclassicbif_call: procedure = .RexxValue
   name = context.name()
 
   select
-    when name = "ABBREV" then return _bif_abbrev(context_ref)
-    when name = "ABS" then return _bif_abs(context_ref)
-    when name = "COPIES" then return _bif_copies(context_ref)
-    when name = "DATATYPE" then return _bif_datatype(context_ref)
-    when name = "LEFT" then return _bif_left(context_ref)
-    when name = "LENGTH" then return _bif_length(context_ref)
-    when name = "LOWER" then return _bif_lower(context_ref)
-    when name = "MAX" then return _bif_minmax(context_ref, "MAX")
-    when name = "MIN" then return _bif_minmax(context_ref, "MIN")
-    when name = "POS" then return _bif_pos(context_ref)
-    when name = "RIGHT" then return _bif_right(context_ref)
-    when name = "SIGN" then return _bif_sign(context_ref)
-    when name = "SPACE" then return _bif_space(context_ref)
-    when name = "STRIP" then return _bif_strip(context_ref)
-    when name = "SUBSTR" then return _bif_substr(context_ref)
-    when name = "UPPER" then return _bif_upper(context_ref)
-    when name = "VERIFY" then return _bif_verify(context_ref)
-    when name = "WORD" then return _bif_word(context_ref)
-    when name = "WORDS" then return _bif_words(context_ref)
+    when name = "ABBREV" then return rexxclassicbif_abbrev(context_ref)
+    when name = "ABS" then return rexxclassicbif_abs(context_ref)
+    when name = "COPIES" then return rexxclassicbif_copies(context_ref)
+    when name = "DATATYPE" then return rexxclassicbif_datatype(context_ref)
+    when name = "LEFT" then return rexxclassicbif_left(context_ref)
+    when name = "LENGTH" then do
+      call context.clearError()
+      if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return _context_error(context_ref)
+      return rexxclassicbif_length(context.argument(1))
+    end
+    when name = "LOWER" then return rexxclassicbif_lower(context_ref)
+    when name = "MAX" then return rexxclassicbif_max(context_ref)
+    when name = "MIN" then return rexxclassicbif_min(context_ref)
+    when name = "POS" then return rexxclassicbif_pos(context_ref)
+    when name = "RIGHT" then return rexxclassicbif_right(context_ref)
+    when name = "SIGN" then return rexxclassicbif_sign(context_ref)
+    when name = "SPACE" then return rexxclassicbif_space(context_ref)
+    when name = "STRIP" then return rexxclassicbif_strip(context_ref)
+    when name = "SUBSTR" then return rexxclassicbif_substr(context_ref)
+    when name = "UPPER" then return rexxclassicbif_upper(context_ref)
+    when name = "VERIFY" then return rexxclassicbif_verify(context_ref)
+    when name = "WORD" then return rexxclassicbif_word(context_ref)
+    when name = "WORDS" then return rexxclassicbif_words(context_ref)
     otherwise do
       call _set_bif_error(context_ref, "43.1", 1, name, "")
       return _context_error(context_ref)
@@ -187,6 +196,8 @@ return _ok("")
  * @return 1 when valid, otherwise 0 with context error set
  */
 rexxclassicbif_check_args: procedure = .int
+  numeric digits inherited
+  numeric form inherited
   arg context_ref = reference .RexxBifCallContext, checklist = .string
   context = dereference context_ref
   argc = context.argumentCount()
@@ -225,34 +236,106 @@ rexxclassicbif_check_args: procedure = .int
 
   return 1
 
+/**
+ * Validate a variadic Classic argument list with one repeated type rule.
+ *
+ * @param context_ref direct BIF call context
+ * @param rule repeated CheckArgs type rule without required/optional prefix
+ * @param minargs minimum number of arguments
+ * @return one when valid; otherwise zero with a standard context error
+ */
+rexxclassicbif_check_variadic: procedure = .int
+  arg context_ref = reference .RexxBifCallContext, rule = .string, minargs = .int
+  context = dereference context_ref
+  argc = context.argumentCount()
+  if argc < minargs then do
+    call _set_bif_error(context_ref, "40.3", minargs, "", "")
+    return 0
+  end
+  do i = 1 to argc
+    if \context.argumentExists(i) then do
+      call _set_bif_error(context_ref, "40.5", i, "", "")
+      return 0
+    end
+    if _check_arg_type(context_ref, i, rule) = 0 then return 0
+  end
+  return 1
+
 _check_arg_type: procedure = .int
+  numeric digits inherited
+  numeric form inherited
   arg context_ref = reference .RexxBifCallContext, index = .int, rule = .string
   context = dereference context_ref
   value = context.argumentText(index)
 
   if rule = "ANY" then return 1
 
+  if rule = "SYM" then do
+    if rexxclassic_symbol_kind(value) <> 1 then do
+      call _set_bif_error(context_ref, "40.26", index, value, "")
+      return 0
+    end
+    return 1
+  end
+
   if rule = "NUM" then do
-    if _is_number_text(value) = 0 then do
+    normalized_number = _normalize_classic_number_text(value)
+    if _is_number_text(normalized_number) = 0 then do
       call _set_bif_error(context_ref, "40.11", index, value, "")
       return 0
     end
-    call context.setArgumentText(index, strip(value))
+    call context.setArgumentText(index, normalized_number)
+    return 1
+  end
+
+  if rule = "BIN" then do
+    if _is_binary_text(value) = 0 then do
+      call _set_bif_error(context_ref, "40.24", index, value, "")
+      return 0
+    end
+    return 1
+  end
+
+  if rule = "HEX" then do
+    if _is_hex_text(value) = 0 then do
+      call _set_bif_error(context_ref, "40.25", index, value, "")
+      return 0
+    end
     return 1
   end
 
   if rule = "WHOLE" | rule = "WHOLE>=0" | rule = "WHOLE>0" then do
-    if _is_whole_text(value) = 0 then do
+    whole = _normalize_classic_number_text(value)
+    if _is_whole_text(whole) = 0 then do
       call _set_bif_error(context_ref, "40.12", index, value, "")
       return 0
     end
-    whole = strip(value)
     if rule = "WHOLE>=0" & whole + 0 < 0 then do
       call _set_bif_error(context_ref, "40.13", index, value, "")
       return 0
     end
     if rule = "WHOLE>0" & whole + 0 <= 0 then do
       call _set_bif_error(context_ref, "40.14", index, value, "")
+      return 0
+    end
+    call context.setArgumentText(index, whole)
+    return 1
+  end
+
+  if rule = "WHOLENUM" | rule = "WHOLENUM>=0" then do
+    normalized_number = _normalize_classic_number_text(value)
+    if _is_number_text(normalized_number) = 0 then do
+      call _set_bif_error(context_ref, "40.12", index, value, "")
+      return 0
+    end
+    whole_valid = 0
+    whole = _normalize_wholenum_text(normalized_number, whole_valid)
+    if \whole_valid then do
+      call _set_bif_error(context_ref, "40.12", index, value, "")
+      return 0
+    end
+    if rule = "WHOLENUM>=0" & left(whole, 1) = "-" then do
+      call _set_bif_error(context_ref, "40.13", index, value, "")
       return 0
     end
     call context.setArgumentText(index, whole)
@@ -267,7 +350,21 @@ _check_arg_type: procedure = .int
     return 1
   end
 
-  if rule = "ABLMNSUWX" | rule = "LTB" | rule = "MN" then do
+  if rule = "ACEFILNOR" then do
+    remainder = value
+    do while left(remainder, 1) = "?"
+      remainder = substr(remainder, 2)
+    end
+    if remainder = "" then return 1
+    option = translate(left(remainder, 1))
+    if pos(option, rule) = 0 then do
+      call _set_bif_error(context_ref, "40.28", index, value, rule)
+      return 0
+    end
+    return 1
+  end
+
+  if rule = "ABLMNSUWX" | rule = "EINO" | rule = "LTB" | rule = "MN" then do
     if length(value) = 0 then do
       call _set_bif_error(context_ref, "40.21", index, value, "")
       return 0
@@ -284,6 +381,116 @@ _check_arg_type: procedure = .int
   return 1
 
 /**
+ * Classify Classic symbol spelling for shared CheckArgs and SYMBOL use.
+ *
+ * @return 0 for invalid, 1 for variable/reserved, or 2 for a constant
+ */
+rexxclassic_symbol_kind: procedure = .int
+  arg text = .string
+  text_length = .int
+  first = .int
+  codepoint = .int
+  i = .int
+  first_is_general = .boolean
+  first_is_constant = .boolean
+  has_exponent_sign = .boolean
+  is_number = .boolean
+
+  assembler strlen text_length,text
+  if text_length = 0 then return 0
+
+  i = 0
+  assembler strchar first,text,i
+  first_is_general = (first >= 65 & first <= 90) |,
+                     (first >= 97 & first <= 122) |,
+                     first = 95 | first = 33 | first = 63
+  first_is_constant = (first >= 48 & first <= 57) | first = 46
+  if \first_is_general & \first_is_constant then return 0
+
+  has_exponent_sign = 0
+  do i = 0 to text_length - 1
+    assembler strchar codepoint,text,i
+    if (codepoint >= 65 & codepoint <= 90) |,
+       (codepoint >= 97 & codepoint <= 122) |,
+       (codepoint >= 48 & codepoint <= 57) |,
+       codepoint = 95 | codepoint = 33 | codepoint = 63 | codepoint = 46 then iterate
+    if codepoint = 43 | codepoint = 45 then has_exponent_sign = 1
+    else return 0
+  end
+
+  if has_exponent_sign | first = 46 then do
+    is_number = _classic_symbol_number(text)
+    if is_number then return 2
+    if has_exponent_sign then return 0
+  end
+
+  if first_is_general then return 1
+  if first \= 46 then return 2
+
+  normalized = .string
+  assembler strupper normalized,text
+  if normalized = ".MN" | normalized = ".RESULT" | normalized = ".RC" |,
+     normalized = ".RS" | normalized = ".SIGL" then return 1
+  return 0
+
+_classic_symbol_number: procedure = .boolean
+  arg text = .string
+  text_length = .int
+  codepoint = .int
+  i = .int
+  digits = .int
+  leading_dot = .boolean
+  exponent_start = .int
+
+  assembler strlen text_length,text
+  if text_length = 0 then return 0
+
+  i = 0
+  digits = 0
+  leading_dot = 0
+  assembler strchar codepoint,text,i
+  if codepoint = 46 then do
+    leading_dot = 1
+    i = i + 1
+  end
+
+  do while i < text_length
+    assembler strchar codepoint,text,i
+    if codepoint < 48 | codepoint > 57 then leave
+    digits = digits + 1
+    i = i + 1
+  end
+  if digits = 0 then return 0
+
+  if \leading_dot & i < text_length then do
+    assembler strchar codepoint,text,i
+    if codepoint = 46 then do
+      i = i + 1
+      do while i < text_length
+        assembler strchar codepoint,text,i
+        if codepoint < 48 | codepoint > 57 then leave
+        i = i + 1
+      end
+    end
+  end
+  if i >= text_length then return 1
+
+  assembler strchar codepoint,text,i
+  if codepoint \= 69 & codepoint \= 101 then return 0
+  i = i + 1
+  if i < text_length then do
+    assembler strchar codepoint,text,i
+    if codepoint = 43 | codepoint = 45 then i = i + 1
+  end
+  exponent_start = i
+  do while i < text_length
+    assembler strchar codepoint,text,i
+    if codepoint < 48 | codepoint > 57 then leave
+    i = i + 1
+  end
+  return i >= text_length & i > exponent_start
+
+/**
  * Tests whether an abbreviation matches the start of a string.
  *
  * @bif ABBREV
@@ -291,10 +498,13 @@ _check_arg_type: procedure = .int
  * @checkargs rANY rANY oWHOLE>=0
  * @sandbox pure
  * @return 1 for a valid abbreviation, otherwise 0
+ * @deprecated compatibility body; public direct entry is in
+ *             RexxClassicBifAbbrev.crexx
  */
-_bif_abbrev: procedure = .RexxValue
+rexxclassicbif_abbrev: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
+  call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rANY oWHOLE>=0") = 0 then return _context_error(context_ref)
   source = context.argumentText(1)
   abbrev = context.argumentText(2)
@@ -314,10 +524,13 @@ _bif_abbrev: procedure = .RexxValue
  * @checkargs rNUM
  * @sandbox pure
  * @return absolute numeric value
+ * @deprecated Compatibility body for the common controller. Direct callers use
+ *             the standalone `rexxclassicbifabs` module.
  */
-_bif_abs: procedure = .RexxValue
+rexxclassicbif_abs: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
+  call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rNUM") = 0 then return _context_error(context_ref)
   value = "0" as .decimal
   value = context.argument(1).asDecimal()
@@ -332,10 +545,13 @@ _bif_abs: procedure = .RexxValue
  * @checkargs rANY rWHOLE>=0
  * @sandbox pure
  * @return repeated string
+ * @deprecated compatibility body; public direct entry is in
+ *             RexxClassicBifCopies.crexx
  */
-_bif_copies: procedure = .RexxValue
+rexxclassicbif_copies: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
+  call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>=0") = 0 then return _context_error(context_ref)
   return _ok(copies(context.argumentText(1), context.argumentText(2) + 0))
 
@@ -348,9 +564,10 @@ _bif_copies: procedure = .RexxValue
  * @sandbox pure
  * @return NUM or CHAR without a type, otherwise 1 or 0
  */
-_bif_datatype: procedure = .RexxValue
+rexxclassicbif_datatype: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
+  call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY oABLMNSUWX") = 0 then return _context_error(context_ref)
   value = context.argumentText(1)
   if \context.argumentExists(2) then do
@@ -383,10 +600,13 @@ _bif_datatype: procedure = .RexxValue
  * @checkargs rANY rWHOLE>=0 oPAD
  * @sandbox pure
  * @return fixed-width left slice
+ * @deprecated Compatibility body for the common controller. Direct callers use
+ *             the standalone `rexxclassicbifleft` module.
  */
-_bif_left: procedure = .RexxValue
+rexxclassicbif_left: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
+  call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>=0 oPAD") = 0 then return _context_error(context_ref)
   source = context.argumentText(1)
   width = context.argumentText(2) + 0
@@ -406,25 +626,12 @@ _bif_left: procedure = .RexxValue
  * @sandbox pure
  * @param source Classic scalar value
  * @return character count
+ * @deprecated Compatibility signature for current compiler lowering. New
+ *             direct BIF callers use `rexxclassicbiflength` with a call context.
  */
 rexxclassicbif_length: procedure = .RexxValue
   arg source = .RexxValue
   return .RexxValue(length(source.asString()) || "")
-
-/**
- * Returns the character length of a string.
- *
- * @bif LENGTH
- * @signature LENGTH(string)
- * @checkargs rANY
- * @sandbox pure
- * @return character count
- */
-_bif_length: procedure = .RexxValue
-  arg context_ref = reference .RexxBifCallContext
-  context = dereference context_ref
-  if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return _context_error(context_ref)
-  return rexxclassicbif_length(context.argument(1))
 
 /**
  * Lowercases a string.
@@ -435,23 +642,47 @@ _bif_length: procedure = .RexxValue
  * @sandbox pure
  * @return lowercase string
  */
-_bif_lower: procedure = .RexxValue
+rexxclassicbif_lower: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
+  call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return _context_error(context_ref)
   return _ok(lower(context.argumentText(1)))
 
 /**
- * Returns the minimum or maximum numeric argument.
+ * Returns the maximum numeric argument.
  *
- * @bif MIN
  * @bif MAX
- * @signature MIN(number, ...)
  * @signature MAX(number, ...)
  * @checkargs rNUM...
  * @sandbox pure
  * @return selected numeric argument text
+ * @deprecated Compatibility body for the common controller. Direct callers use
+ *             the standalone `rexxclassicbifmax` module.
  */
+rexxclassicbif_max: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  return _bif_minmax(context_ref, "MAX")
+
+/**
+ * Returns the minimum numeric argument.
+ *
+ * @bif MIN
+ * @signature MIN(number, ...)
+ * @checkargs rNUM...
+ * @sandbox pure
+ * @return selected numeric argument text
+ * @deprecated Compatibility body for the common controller. Direct callers use
+ *             the standalone `rexxclassicbifmin` module.
+ */
+rexxclassicbif_min: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  return _bif_minmax(context_ref, "MIN")
+
 _bif_minmax: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext, mode = .string
   context = dereference context_ref
@@ -498,10 +729,13 @@ _bif_minmax: procedure = .RexxValue
  * @checkargs rANY rANY oWHOLE>0
  * @sandbox pure
  * @return 1-based position, or 0 when not found
+ * @deprecated Compatibility body for the common controller. Direct callers use
+ *             the standalone `rexxclassicbifpos` module.
  */
-_bif_pos: procedure = .RexxValue
+rexxclassicbif_pos: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
+  call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rANY oWHOLE>0") = 0 then return _context_error(context_ref)
   needle = context.argumentText(1)
   haystack = context.argumentText(2)
@@ -519,10 +753,13 @@ _bif_pos: procedure = .RexxValue
  * @checkargs rANY rWHOLE>=0 oPAD
  * @sandbox pure
  * @return fixed-width right slice
+ * @deprecated Compatibility body for the common controller. Direct callers use
+ *             the standalone `rexxclassicbifright` module.
  */
-_bif_right: procedure = .RexxValue
+rexxclassicbif_right: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
+  call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>=0 oPAD") = 0 then return _context_error(context_ref)
   source = context.argumentText(1)
   width = context.argumentText(2) + 0
@@ -539,10 +776,13 @@ _bif_right: procedure = .RexxValue
  * @checkargs rNUM
  * @sandbox pure
  * @return -1, 0, or 1
+ * @deprecated Compatibility body for the common controller. Direct callers use
+ *             the standalone `rexxclassicbifsign` module.
  */
-_bif_sign: procedure = .RexxValue
+rexxclassicbif_sign: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
+  call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rNUM") = 0 then return _context_error(context_ref)
   value = "0" as .decimal
   value = context.argument(1).asDecimal()
@@ -558,10 +798,12 @@ _bif_sign: procedure = .RexxValue
  * @checkargs rANY oWHOLE>=0 oPAD
  * @sandbox pure
  * @return words joined by count copies of pad
+ * @deprecated compatibility-controller body; use RexxClassicBifSpace
  */
-_bif_space: procedure = .RexxValue
+rexxclassicbif_space: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
+  call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY oWHOLE>=0 oPAD") = 0 then return _context_error(context_ref)
   source = context.argumentText(1)
   count = 1
@@ -584,10 +826,12 @@ _bif_space: procedure = .RexxValue
  * @checkargs rANY oLTB oPAD
  * @sandbox pure
  * @return stripped string
+ * @deprecated compatibility-controller body; use RexxClassicBifStrip
  */
-_bif_strip: procedure = .RexxValue
+rexxclassicbif_strip: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
+  call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY oLTB oPAD") = 0 then return _context_error(context_ref)
   source = context.argumentText(1)
   option = _arg_or(context_ref, 2, "B")
@@ -602,10 +846,12 @@ _bif_strip: procedure = .RexxValue
  * @checkargs rANY rWHOLE>0 oWHOLE>=0 oPAD
  * @sandbox pure
  * @return substring, optionally padded to length
+ * @deprecated compatibility-controller body; use RexxClassicBifSubstr
  */
-_bif_substr: procedure = .RexxValue
+rexxclassicbif_substr: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
+  call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0 oWHOLE>=0 oPAD") = 0 then return _context_error(context_ref)
   source = context.argumentText(1)
   start = context.argumentText(2) + 0
@@ -633,9 +879,10 @@ _bif_substr: procedure = .RexxValue
  * @sandbox pure
  * @return uppercase string
  */
-_bif_upper: procedure = .RexxValue
+rexxclassicbif_upper: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
+  call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return _context_error(context_ref)
   return _ok(upper(context.argumentText(1)))
 
@@ -647,10 +894,13 @@ _bif_upper: procedure = .RexxValue
  * @checkargs rANY rANY oMN oWHOLE>0
  * @sandbox pure
  * @return 1-based position, or 0 when no qualifying character exists
+ * @deprecated Compatibility body for the common controller. Direct callers use
+ *             the standalone `rexxclassicbifverify` module.
  */
-_bif_verify: procedure = .RexxValue
+rexxclassicbif_verify: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
+  call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rANY oMN oWHOLE>0") = 0 then return _context_error(context_ref)
   source = context.argumentText(1)
   refchars = context.argumentText(2)
@@ -679,10 +929,12 @@ _bif_verify: procedure = .RexxValue
  * @checkargs rANY rWHOLE>0
  * @sandbox pure
  * @return word n, or the empty string when absent
+ * @deprecated compatibility-controller body; use RexxClassicBifWord
  */
-_bif_word: procedure = .RexxValue
+rexxclassicbif_word: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
+  call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0") = 0 then return _context_error(context_ref)
   return _ok(word(context.argumentText(1), context.argumentText(2) + 0))
 
@@ -694,10 +946,12 @@ _bif_word: procedure = .RexxValue
  * @checkargs rANY
  * @sandbox pure
  * @return word count
+ * @deprecated compatibility-controller body; use RexxClassicBifWords
  */
-_bif_words: procedure = .RexxValue
+rexxclassicbif_words: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   context = dereference context_ref
+  call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY") = 0 then return _context_error(context_ref)
   return _ok(words(context.argumentText(1)) || "")
 
@@ -714,6 +968,12 @@ _ok: procedure = .RexxValue
 _context_error: procedure = .RexxValue
   arg context_ref = reference .RexxBifCallContext
   return .RexxValue("")
+
+/** Set one standard Level C BIF error on a direct call context. */
+rexxclassicbif_set_error: procedure = .void
+  arg context_ref = reference .RexxBifCallContext, code = .string, argnum = .int, value = .string, extra = .string
+  call _set_bif_error(context_ref, code, argnum, value, extra)
+  return
 
 _set_bif_error: procedure = .void
   arg context_ref = reference .RexxBifCallContext, code = .string, argnum = .int, value = .string, extra = .string
@@ -734,7 +994,7 @@ _quote_insert: procedure = .string
 
 _is_number_text: procedure = .boolean
   arg value = .string
-  text = strip(value)
+  text = _normalize_classic_number_text(value)
   if length(text) = 0 then return 0
   posn = 1
   saw_digit = 0
@@ -770,9 +1030,18 @@ _is_number_text: procedure = .boolean
   end
   return 1
 
-_is_whole_text: procedure = .boolean
+_normalize_classic_number_text: procedure = .string
   arg value = .string
   text = strip(value)
+  if length(text) < 2 then return text
+  first = left(text, 1)
+  if first = "+" | first = "-" then
+    return first || strip(substr(text, 2), "L")
+  return text
+
+_is_whole_text: procedure = .boolean
+  arg value = .string
+  text = _normalize_classic_number_text(value)
   if length(text) = 0 then return 0
   start = 1
   if substr(text, 1, 1) = "+" | substr(text, 1, 1) = "-" then do
@@ -781,6 +1050,178 @@ _is_whole_text: procedure = .boolean
   end
   do i = start to length(text)
     if pos(substr(text, i, 1), "0123456789") = 0 then return 0
+  end
+  return 1
+
+/* Normalize a caller-context numeric value to plain signed whole digits. */
+_normalize_wholenum_text: procedure = .string
+  numeric digits inherited
+  numeric form inherited
+  arg value = .string, expose valid = .int
+  number = "0" as .decimal
+  converted = .string
+  number = value
+  converted = number as .string
+  return _expand_whole_decimal(converted, valid)
+
+/* Expand normalized scientific/engineering decimal text and reject a fraction. */
+_expand_whole_decimal: procedure = .string
+  arg value = .string, expose valid = .int
+  text = value
+  negative = 0
+  exponent = 0
+  text_length = .int
+  start = 0
+  first_codepoint = .int
+  codepoint = .int
+  exponent_position = .int
+  exponent_start = .int
+  exponent_length = .int
+  mantissa_end = .int
+  before_length = .int
+  digit_length = .int
+  decimal_position = .int
+  integer_source_length = .int
+  fractional_start = .int
+  first_nonzero = .int
+  segment_length = .int
+  padding_count = .int
+  saw_point = 0
+  digits = ""
+  whole_text = ""
+  exponent_text = ""
+  segment = ""
+  zero_character = 48
+  point_character = 46
+  upper_e_character = 69
+  lower_e_character = 101
+  plus_character = 43
+  minus_character = 45
+
+  valid = 0
+  assembler strlen text_length,text
+  if text_length = 0 then return ""
+  assembler strchar first_codepoint,text,start
+  if first_codepoint = plus_character | first_codepoint = minus_character then do
+    negative = first_codepoint = minus_character
+    start = 1
+  end
+
+  exponent_position = -1
+  assembler poschar exponent_position,text,upper_e_character
+  if exponent_position < 0 then
+    assembler poschar exponent_position,text,lower_e_character
+  mantissa_end = text_length
+  if exponent_position >= 0 then do
+    exponent_start = exponent_position + 1
+    exponent_length = text_length - exponent_start
+    assembler setstrpos text,exponent_start
+    assembler substring exponent_text,text,exponent_length
+    exponent = exponent_text
+    mantissa_end = exponent_position
+  end
+
+  do i = start to mantissa_end - 1
+    assembler strchar codepoint,text,i
+    if codepoint = point_character then saw_point = 1
+    else do
+      assembler appendchar digits,codepoint
+      if \saw_point then before_length = before_length + 1
+    end
+  end
+  assembler strlen digit_length,digits
+  decimal_position = before_length + exponent
+
+  fractional_start = decimal_position
+  if fractional_start < 0 then fractional_start = 0
+  if fractional_start < digit_length then do i = fractional_start to digit_length - 1
+    assembler strchar codepoint,digits,i
+    if codepoint <> zero_character then return ""
+  end
+
+  integer_source_length = decimal_position
+  if integer_source_length < 0 then integer_source_length = 0
+  if integer_source_length > digit_length then integer_source_length = digit_length
+  first_nonzero = -1
+  if integer_source_length > 0 then do i = 0 to integer_source_length - 1
+    assembler strchar codepoint,digits,i
+    if codepoint <> zero_character then do
+      first_nonzero = i
+      leave
+    end
+  end
+  if first_nonzero < 0 then whole_text = "0"
+  else do
+    if negative then assembler appendchar whole_text,minus_character
+    segment_length = integer_source_length - first_nonzero
+    assembler setstrpos digits,first_nonzero
+    assembler substring segment,digits,segment_length
+    assembler append whole_text,segment
+    if decimal_position > digit_length then do
+      padding_count = decimal_position - digit_length
+      assembler padstr whole_text,zero_character,padding_count
+    end
+  end
+  valid = 1
+  return whole_text
+
+_is_binary_text: procedure = .boolean
+  arg value = .string
+  value_length = .int
+  codepoint = .int
+  binary_digits = 0
+  blank_character = 32
+  zero_character = 48
+  one_character = 49
+  index = 0
+
+  assembler strlen value_length,value
+  if value_length = 0 then return 1
+  assembler strchar codepoint,value,index
+  if codepoint = blank_character then return 0
+  last = value_length - 1
+  assembler strchar codepoint,value,last
+  if codepoint = blank_character then return 0
+
+  do i = value_length - 1 to 0 by -1
+    assembler strchar codepoint,value,i
+    if codepoint = blank_character then do
+      if binary_digits // 4 <> 0 then return 0
+    end
+    else if codepoint = zero_character | codepoint = one_character then
+      binary_digits = binary_digits + 1
+    else return 0
+  end
+  return 1
+
+_is_hex_text: procedure = .boolean
+  arg value = .string
+  value_length = .int
+  codepoint = .int
+  hexadecimal_digits = 0
+  remainder = .int
+  blank_character = 32
+  index = 0
+
+  assembler strlen value_length,value
+  if value_length = 0 then return 1
+  assembler strchar codepoint,value,index
+  if codepoint = blank_character then return 0
+  index = value_length - 1
+  assembler strchar codepoint,value,index
+  if codepoint = blank_character then return 0
+
+  do index = value_length - 1 to 0 by -1
+    assembler strchar codepoint,value,index
+    if codepoint = blank_character then do
+      assembler iand remainder,hexadecimal_digits,1
+      if remainder <> 0 then return 0
+    end
+    else if (codepoint >= 48 & codepoint <= 57) |,
+            (codepoint >= 65 & codepoint <= 70) |,
+            (codepoint >= 97 & codepoint <= 102) then
+      hexadecimal_digits = hexadecimal_digits + 1
+    else return 0
   end
   return 1
 

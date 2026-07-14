@@ -22,70 +22,138 @@
  * SOFTWARE.
  */
 
- /* rexx */
-  options levelb numeric_classic
+options levelb numeric_classic
 
-  namespace rxfnsb expose time
-  import _rxsysb
+namespace rxfnsb expose time
+import _rxsysb
 
+/**
+ * Return local/UTC clock, elapsed, timezone, or process-clock information.
+ *
+ * @param option optional case-insensitive Level B time format
+ * @return the requested value as text
+ * @signal INVALID_ARGUMENTS option is unsupported
+ */
 time: procedure = .string
-   arg option = ""
+  arg option = ""
+  normalized = ""
+  today_microseconds = 0
+  day_microseconds = 86400000000
 
- if option="" then option='N'
- option=upper(option)
- todayms=0
- tstring=""
+  if option == "" then normalized = "N"
+  else assembler strupper normalized,option
 
- if option='ZD'  then do
-    assembler xtime todayms,"Z"
-    return todayms
- end
- if option='T'  then do
-    assembler xtime todayms,"T"
-    return todayms
+  if normalized = "ZD" then do
+    assembler xtime today_microseconds,"Z"
+    return today_microseconds
   end
-  if option='TS'  then do
-     assembler xtime todayms,"C"
-     return todayms
- end
- if option='ZN'  then do
-    tstring="ABC"
-    assembler xtime tstring,"N"
-    return tstring
- end
+  if normalized = "T" then do
+    assembler xtime today_microseconds,"T"
+    return today_microseconds
+  end
+  if normalized = "TS" then do
+    assembler xtime today_microseconds,"C"
+    return today_microseconds
+  end
+  if normalized = "ZN" then do
+    result = ""
+    assembler xtime result,"N"
+    return result
+  end
 
- if option="UTC" then do
-    assembler xtime todayms,"U"
-    option='N'
- end
- else assembler mtime todayms
+  valid = 0
+  if normalized = "N" | normalized = "L" | normalized = "H" then valid = 1
+  if normalized = "M" | normalized = "S" | normalized = "US" then valid = 1
+  if normalized = "E" | normalized = "R" | normalized = "C" then valid = 1
+  if normalized = "UTC" then valid = 1
+  if valid = 0 then
+    assembler signal "INVALID_ARGUMENTS", "TIME option is not supported"
 
- ms=todayms//1000000
- today=todayms%1000000
- hh=today%3600
- rm=today//3600
- mm=rm%60
- ss=rm//60
+  if normalized = "UTC" then do
+    assembler xtime today_microseconds,"U"
+    if today_microseconds < 0 then today_microseconds = today_microseconds + day_microseconds
+    if today_microseconds >= day_microseconds then today_microseconds = today_microseconds - day_microseconds
+    normalized = "N"
+  end
+  else assembler mtime today_microseconds
 
- if option='N' then return right(hh,2,'0')':'right(mm,2,'0')':'right(ss,2,'0')
- if option='L' then return right(hh,2,'0')':'right(mm,2,'0')':'right(ss,2,'0')'.'left(ms,6,'0')
- if option='H' then return hh
- if option='M' then return hh*60+mm
- if option='S' then return today
- if option='US' then return todayms
- if option='E' then do
-    elp = 0.0                /* Note: elp is a float ... */
-    elp = _elapsed(todayms)  /*       So elp stays a float ... */
-    return elp/1000
- end
- if option='R' | option='r' then return _elapsed(0)
- if option='C' | option='c' then do
-    if hh>12 then xm='pm'
-    else xm='am'
-    return right(hh,2,'0')':'right(mm,2,'0')||xm
- end
+  /* Keep the benchmark/timestamp path free of formatting work. */
+  if normalized = "US" then return today_microseconds
 
-return "time invalid option"
+  if normalized = "E" | normalized = "R" then do
+    elapsed_microseconds = _elapsed(today_microseconds)
+    if elapsed_microseconds < 0 then
+      elapsed_microseconds = elapsed_microseconds + day_microseconds
+    if normalized = "R" then ignored = _elapsed(0)
+    elapsed_seconds = 0.0
+    elapsed_seconds = elapsed_microseconds
+    return elapsed_seconds / 1000000
+  end
 
+  microseconds = today_microseconds // 1000000
+  seconds_today = today_microseconds % 1000000
+  hour = seconds_today % 3600
+  remainder = seconds_today // 3600
+  minute = remainder % 60
+  second = remainder // 60
+
+  if normalized = "H" then return hour
+  if normalized = "M" then return hour * 60 + minute
+  if normalized = "S" then return seconds_today
+
+  result = ""
+  if normalized = "C" then do
+    civil_hour = hour
+    suffix = 97
+    if civil_hour = 0 then civil_hour = 12
+    else if civil_hour >= 12 then do
+      suffix = 112
+      if civil_hour > 12 then civil_hour = civil_hour - 12
+    end
+    codepoint = 48 + civil_hour % 10
+    assembler appendchar result,codepoint
+    codepoint = 48 + civil_hour // 10
+    assembler appendchar result,codepoint
+    codepoint = 58
+    assembler appendchar result,codepoint
+    codepoint = 48 + minute % 10
+    assembler appendchar result,codepoint
+    codepoint = 48 + minute // 10
+    assembler appendchar result,codepoint
+    assembler appendchar result,suffix
+    codepoint = 109
+    assembler appendchar result,codepoint
+    return result
+  end
+
+  codepoint = 48 + hour % 10
+  assembler appendchar result,codepoint
+  codepoint = 48 + hour // 10
+  assembler appendchar result,codepoint
+  codepoint = 58
+  assembler appendchar result,codepoint
+  codepoint = 48 + minute % 10
+  assembler appendchar result,codepoint
+  codepoint = 48 + minute // 10
+  assembler appendchar result,codepoint
+  codepoint = 58
+  assembler appendchar result,codepoint
+  codepoint = 48 + second % 10
+  assembler appendchar result,codepoint
+  codepoint = 48 + second // 10
+  assembler appendchar result,codepoint
+  if normalized = "N" then return result
+
+  codepoint = 46
+  assembler appendchar result,codepoint
+  divisor = 100000
+  do 6
+    digit = microseconds % divisor
+    microseconds = microseconds // divisor
+    codepoint = 48 + digit
+    assembler appendchar result,codepoint
+    divisor = divisor % 10
+  end
+  return result
 
 

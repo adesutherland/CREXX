@@ -22,39 +22,53 @@
  * SOFTWARE.
  */
 
+/**
+ * String-array substring search.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/arrayfind.md
+ */
 options levelb
 namespace rxfnsb expose arrayfind
 
-/* --------------------------------------------------------------------------------------
- * arrayfind(find, array[, from[, case]])
+/**
+ * Return the first array index whose element contains a substring.
  *
- * Searches an array of strings for the first element containing a substring.
- *
- * Arguments:
- *   find   - substring to search for
- *   array  - array of strings (array[0] = element count)
- *   from   - starting array position (default: 1)
- *   case   - case sensitivity flag:
- *            1 = case-sensitive (default)
- *            0 = case-insensitive
- *
- * Returns:
- *   Index (1-based) of the first matching array element,
- *   or 0 if no match is found.
- * --------------------------------------------------------------------------------------
+ * @param needle substring to locate
+ * @param array one-based string array using array[0] as its high-water mark
+ * @param from optional first array index; values below one clamp to one
+ * @param case_sensitive optional 1 for case-sensitive or 0 for folded matching
+ * @return first matching array index, or zero
+ * @signal INVALID_ARGUMENTS case_sensitive is not 0 or 1
  */
-arrayfind: procedure=.int
-  arg find=.string,array=.string[],from=1,case=1
-  if from < 1 then from = 1
-  if from > array[0] then return 0
+arrayfind: procedure = .int
+  arg needle = .string, array = .string[], from = 1, case_sensitive = 1
+  high = array[0]
+  found_position = .int
+  candidate = .string
 
-  if case=1 then do i=from to array[0]     /* case sensitive search */
-     if pos(find,array[i])>0 then return i
+  if case_sensitive <> 0 & case_sensitive <> 1 then
+    assembler signal "INVALID_ARGUMENTS", "ARRAYFIND case-sensitive flag must be zero or one"
+  if needle == "" | high < 1 then return 0
+  if from < 1 then from = 1
+  if from > high then return 0
+
+  if case_sensitive then do index = from to high
+    candidate = array[index]
+    found_position = 1
+    assembler strpos found_position,needle,candidate
+    if found_position > 0 then return index
   end
-  else do       /* case insensitive search */
-      ufind=upper(find)
-      do i=from to array[0]
-         if pos(ufind,upper(array[i]))>0 then return i
-       end
+  else do
+    folded_needle = ""
+    folded_candidate = ""
+    assembler strupper folded_needle,needle
+    do index = from to high
+      candidate = array[index]
+      assembler strupper folded_candidate,candidate
+      found_position = 1
+      assembler strpos found_position,folded_needle,folded_candidate
+      if found_position > 0 then return index
+    end
   end
-return 0
+  return 0

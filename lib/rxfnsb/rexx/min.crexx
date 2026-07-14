@@ -22,14 +22,26 @@
  * SOFTWARE.
  */
 
-/* rexx */
-options levelb
+/**
+ * Level B MIN implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/min.md
+ */
+options levelb numeric_classic
 
 namespace rxfnsb expose min
 
-min: procedure = .float
-    arg m = .float, ... = .float
-    do i = 1 to arg[0]
-        if arg[i] < m then m = arg[i]
-    end
-    return m
+/**
+ * Return the least decimal argument.
+ *
+ * @param first first and initially selected decimal
+ * @param ... remaining decimal arguments
+ * @return least decimal; the first value wins a tie
+ */
+min: procedure = .decimal
+  arg first = .decimal, ... = .decimal
+  do i = 1 to arg[0]
+    if arg[i] < first then first = arg[i]
+  end
+  return first

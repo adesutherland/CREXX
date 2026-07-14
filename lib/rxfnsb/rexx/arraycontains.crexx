@@ -22,22 +22,44 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Complete-element search in a string array.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/arraycontains.md
+ */
 options levelb
 
 namespace rxfnsb expose arraycontains
 
-/* Return 1 when ARRAY contains VALUE as a complete element, else 0. */
+/**
+ * Report whether a string array contains a complete matching element.
+ *
+ * @param array exposed read-only string array using array[0] as high-water
+ * @param value complete string value to match
+ * @param case optional 1 for case-sensitive or 0 for uppercase-folded matching
+ * @return one for a match, otherwise zero
+ * @signal INVALID_ARGUMENTS case is not 0 or 1
+ */
 arraycontains: procedure=.int
-  arg array=.string[], value=.string, case=1
+  arg expose array=.string[], value=.string, case=1
 
-  if case = 1 then do i = 1 to array[0]
-    if array[i] = value then return 1
+  if case <> 0 & case <> 1 then
+    assembler signal "INVALID_ARGUMENTS", "ARRAYCONTAINS case flag must be zero or one"
+  high = array[0]
+  if high < 1 then return 0
+
+  if case = 1 then do i = 1 to high
+    if array[i] == value then return 1
   end
   else do
-    uvalue = upper(value)
-    do i = 1 to array[0]
-      if upper(array[i]) = uvalue then return 1
+    folded_value = ""
+    folded_candidate = ""
+    assembler strupper folded_value,value
+    do i = 1 to high
+      candidate = array[i]
+      assembler strupper folded_candidate,candidate
+      if folded_candidate == folded_value then return 1
     end
   end
 return 0

@@ -1,0 +1,35 @@
+/* Focused Level B _FTRUNC tests. */
+options levelb
+import _rxsysb
+
+errors = 0
+number = 12.75
+
+errors = errors + check(_ftrunc(number) = "75", "positive fraction")
+errors = errors + check(_ftrunc(-12.75) = "75", "negative fraction")
+errors = errors + check(_ftrunc(0.125) = "125", "fraction below one")
+errors = errors + check(_ftrunc(-0.125) = "125", "negative fraction below one")
+errors = errors + check(_ftrunc(12.5) = "5", "no synthetic trailing zero")
+errors = errors + check(_ftrunc(42.0) = "", "whole float")
+errors = errors + check(_ftrunc(0.0) = "", "zero")
+errors = errors + check(number = 12.75, "argument is not mutated")
+
+caught = 0
+bad = "not-a-"
+bad_suffix = "number"
+assembler append bad,bad_suffix
+do
+  ignored = _ftrunc(bad)
+on signal conversion_error
+  caught = 1
+end
+errors = errors + check(caught = 1, "invalid float coercion uses a signal")
+
+if errors = 0 then say "PASS: _ftrunc"
+return errors <> 0
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: _FTRUNC" label
+  return 1

@@ -1,28 +1,31 @@
-/* rexx test abs bif */
+/* Focused Level B CHANGESTR tests. */
 options levelb
 import rxfnsb
 
-errors=0
-/*                     12345  */
-x='the quick brown fox jumps over the lazy dog'
+errors = 0
+source = "the quick brown fox jumps over the lazy dog"
+needle = "the"
+replacement = "a"
 
-if changestr('quick',x,'fast') \= 'the fast brown fox jumps over the lazy dog' then do
-  errors=errors+1
-  say 'CHANGESTR failed in test 1'
-end
+errors = errors + check(changestr("quick", source, "fast") = "the fast brown fox jumps over the lazy dog", "ordinary replacement")
+errors = errors + check(changestr(needle, source, replacement) = "a quick brown fox jumps over a lazy dog", "all matches")
+errors = errors + check(changestr("the", "the cat and the dog", "a") = "a cat and a dog", "documented all-match example")
+errors = errors + check(changestr("quicker", source, "fast") = source, "absent needle")
+errors = errors + check(changestr("a", "banana", "") = "bnn", "deletion")
+errors = errors + check(changestr("a", "banana", "aa") = "baanaanaa", "replacement containing needle")
+errors = errors + check(changestr("aa", "aaaaa", "X") = "XXa", "non-overlapping matches")
+errors = errors + check(changestr("", source, "!") = source, "empty needle is unchanged")
+errors = errors + check(changestr("x", "", "y") = "", "empty haystack")
+errors = errors + check(changestr("e", "Elephant", "X") = "ElXphant", "case sensitivity")
+errors = errors + check(changestr("é", "café été", "X") = "cafX XtX", "Unicode positions")
+errors = errors + check(changestr("a", copies("a", 1000), "bb") = copies("bb", 1000), "repeated expansion")
+errors = errors + check(source = "the quick brown fox jumps over the lazy dog" & needle = "the" & replacement = "a", "arguments are not exposed or mutated")
 
+if errors = 0 then say "PASS: changestr"
+return errors <> 0
 
-if changestr('the',x,'a') \= 'a quick brown fox jumps over a lazy dog' then do
-  errors=errors+1
-  say 'CHANGESTR failed in test 2'
-end
-  
-
-if changestr('quicker',x,'fast') \= 'the quick brown fox jumps over the lazy dog' then do
-  errors=errors+1
-  say 'CHANGESTR failed in test 3'
-end
-
-say '<><><><' changestr('e','Elephant','X')
-
-return errors<>0
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: CHANGESTR" label
+  return 1

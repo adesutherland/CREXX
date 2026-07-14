@@ -1,88 +1,52 @@
-/* POS */
+/* Focused Level B POS tests. */
 options levelb
 import rxfnsb
 
-errors=0
-/* These from the Rexx book. */
-if pos('day','Saturday') \= 6 then do
-  errors=errors+1
-  say 'POS failed in test 1 '
+errors = 0
+needle = "foo"
+haystack = "a foo foo b"
+
+errors = errors + check(pos("day", "Saturday") = 6, "documented match")
+errors = errors + check(pos("x", "abc def ghi") = 0, "documented absence")
+errors = errors + check(pos(" ", "abc def ghi") = 4, "documented first blank")
+errors = errors + check(pos(" ", "abc def ghi", 5) = 8, "documented start")
+errors = errors + check(pos(needle, haystack) = 3, "first occurrence")
+errors = errors + check(pos(needle, haystack, 4) = 7, "later occurrence")
+errors = errors + check(pos(needle, haystack, 30) = 0, "start beyond haystack")
+errors = errors + check(pos("", haystack) = 0, "empty needle")
+errors = errors + check(pos(needle, "") = 0, "empty haystack")
+errors = errors + check(pos("", "") = 0, "both empty")
+errors = errors + check(pos("b", "b") = 1, "whole-string match")
+errors = errors + check(pos("c", "a→bc") = 4, "Unicode character position")
+errors = errors + check(pos("→", "a→b→c", 3) = 4, "Unicode start position")
+errors = errors + check(needle = "foo" & haystack = "a foo foo b", "arguments are not mutated")
+
+large = ""
+marker = "Z"
+pad_character = 97
+large_count = 1000
+assembler padstr large,pad_character,large_count
+assembler append large,marker
+errors = errors + check(pos("Z", large) = 1001, "substantial direct search")
+
+caught = 0
+do
+  ignored = pos("a", "abc", 0)
+on signal invalid_arguments
+  caught = caught + 1
 end
-if pos('x','abc def ghi') \= 0 then do
-  errors=errors+1
-  say 'POS failed in test 2 '
+do
+  ignored = pos("a", "abc", -1)
+on signal invalid_arguments
+  caught = caught + 1
 end
-if pos(' ','abc def ghi') \= 4 then do
-  errors=errors+1
-  say 'POS failed in test 3 '
-end
-if pos(' ','abc def ghi',5) \= 8 then do
-  errors=errors+1
-  say 'POS failed in test 4 '
-end
-/* These from Mark Hessling. */
-if pos('foo','a foo foo b') \= 3 then do
-  errors=errors+1
-  say 'POS failed in test 5 '
-end
-if pos('foo','a foo foo',3) \= 3 then do
-  errors=errors+1
-  say 'POS failed in test 6 '
-end
-if pos('foo','a foo foo',4) \= 7 then do
-  errors=errors+1
-  say 'POS failed in test 7 '
-end
-if pos('foo','a foo foo b',30) \= 0 then do
-  errors=errors+1
-  say 'POS failed in test 8 '
-end
-if pos('foo','a foo foo b',1) \= 3 then do
-  errors=errors+1
-  say 'POS failed in test 9 '
-end
-if pos('','a foo foo b') \= 0 then do
-  errors=errors+1
-  say 'POS failed in test 10 ' /* segfaults */
-end
-if pos('foo','') \= 0 then do
-  errors=errors+1
-  say 'POS failed in test 11 ' /* segfaults */
-end
-if pos('','') \= 0 then do
-  errors=errors+1
-  say 'POS failed in test 12 ' /* segfaults */
-end
-if pos('b' , 'a') \= 0 then do
-  errors=errors+1
-  say 'POS failed in test 13 '
-end
-if pos('b','b') \= 1 then do
-  errors=errors+1
-  say 'POS failed in test 14 '
-end
-if pos('b','abc') \= 2 then do
-  errors=errors+1
-  say 'POS failed in test 15 '
-end
-if pos('b','def') \= 0 then do
-  errors=errors+1
-  say 'POS failed in test 16 '
-end
-if pos('foo','foo foo b') \= 1 then do
-  errors=errors+1
-  say 'POS failed in test 17 '
-end
-if pos('c','a→bc') \= 4 then do
-  errors=errors+1
-  say 'POS failed in test 18 '
-end
-if pos('→','a→b→c',3) \= 4 then do
-  errors=errors+1
-  say 'POS failed in test 19 '
-end
-if pos('}','{say ''→'' v}') \= 11 then do
-  errors=errors+1
-  say 'POS failed in test 20 '
-end
-return errors<>0
+errors = errors + check(caught = 2, "invalid start uses signals")
+
+if errors = 0 then say "PASS: pos"
+return errors <> 0
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: POS" label
+  return 1

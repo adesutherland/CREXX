@@ -1,0 +1,57 @@
+/* Focused Level B ARRAYCONTAINS tests. */
+options levelb
+import rxfnsb
+
+array = .string[]
+array[1] = "Alpha"
+array[2] = ""
+array[3] = "Beta"
+array[4] = "Alpha"
+
+errors = 0
+errors = errors + check(1, arraycontains(array, "Alpha"), "first match")
+errors = errors + check(1, arraycontains(array, "Beta"), "last unique match")
+errors = errors + check(1, arraycontains(array, ""), "empty-string match")
+errors = errors + check(0, arraycontains(array, "alpha"), "sensitive miss")
+errors = errors + check(1, arraycontains(array, "alpha", 0), "insensitive match")
+errors = errors + check(0, arraycontains(array, "missing", 0), "insensitive miss")
+errors = errors + check_int(4, array[0], "input high-water preserved")
+errors = errors + check_string("Beta", array[3], "input value preserved")
+
+empty = .string[]
+errors = errors + check(0, arraycontains(empty, ""), "empty array")
+errors = errors + test_invalid_case(-1)
+errors = errors + test_invalid_case(2)
+
+if errors = 0 then say "PASS: arraycontains"
+return errors <> 0
+
+test_invalid_case: procedure = .int
+  arg invalid = .int
+  values = .string[]
+  values[1] = "A"
+  do
+    ignored = arraycontains(values, "A", invalid)
+  on signal invalid_arguments
+    return 0
+  end
+  say "FAIL: ARRAYCONTAINS invalid case did not signal" invalid
+  return 1
+
+check: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: ARRAYCONTAINS" label "expected" expected "got" actual
+  return 1
+
+check_int: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: ARRAYCONTAINS" label "expected" expected "got" actual
+  return 1
+
+check_string: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected == actual then return 0
+  say "FAIL: ARRAYCONTAINS" label "expected" expected "got" actual
+  return 1

@@ -22,14 +22,23 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Level B LOWER implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/lower.md
+ */
 options levelb
-
 namespace rxfnsb expose lower
 
-/* upper(string) translate to upper cases */
+/**
+ * Lowercase every cased character in a string.
+ *
+ * @param string source text
+ * @return lowercased text
+ */
 lower: procedure = .string
-  arg expose string = .string
-  newstr=""
-  assembler strlower newstr,string
-return newstr
+  arg string = .string
+  result = ""
+  assembler strlower result,string
+  return result

@@ -22,23 +22,38 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * In-place string-array append.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/arrayappend.md
+ */
 options levelb
-
 namespace rxfnsb expose arrayappend
 
-/* Append VALUE COUNT times to ARRAY. Returns the new array high water mark. */
-arrayappend: procedure=.int
-  arg expose array=.string[], value=.string, count=1
+/**
+ * Append one string value one or more times.
+ *
+ * @param array exposed array using array[0] as its high-water mark
+ * @param value string assigned to each appended slot
+ * @param count optional non-negative number of copies; defaults to one
+ * @return the new array high-water mark
+ * @signal INVALID_ARGUMENTS count is negative
+ */
+arrayappend: procedure = .int
+  arg expose array = .string[], value = .string, count = 1
 
   hi = array[0]
-  if count < 1 then return hi
+  if count < 0 then
+    assembler signal "INVALID_ARGUMENTS", "ARRAYAPPEND count must be non-negative"
+  if count = 0 then return hi
 
   from = hi + 1
   assembler INSATTRS1 array,from,count
 
-  last = from + count - 1
-  do i = from to last
+  i = from
+  do count
     array[i] = value
+    i = i + 1
   end
-return array[0]
+  return array[0]

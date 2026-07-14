@@ -22,25 +22,61 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Level B DELSTR implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/delstr.md
+ */
 options levelb
 namespace rxfnsb expose delstr
 
-/* delstr(string,position,length) delete string from certain position and length and returns it */
+/**
+ * Delete a character range from a string.
+ *
+ * @param string source text
+ * @param start positive 1-based start position
+ * @param delete_length optional non-negative character count
+ * @return source text with the selected range removed
+ */
 delstr: procedure = .string
-  arg string = .string, position = .int, dellen = 0
-  retstr = ""
- ## if position<1 then call raise "syntax", "40.13", position /* Invalid start */
-  if position<1 then position=1
-  len=length(string)
-  if position>len then return string
-  if position+dellen>len then dellen=0
-  if position=1 then do
-     if dellen>0 then retstr=substr(string,dellen+1)
-     else retstr=''
+  arg string = .string, start = .int, delete_length = 0
+  length_supplied = ?delete_length
+  string_length = .int
+  prefix_length = .int
+  available = .int
+  tail_start = .int
+  tail_length = .int
+  cursor = 0
+  tail = ""
+  result = ""
+
+  if start < 1 then
+    assembler signal "INVALID_ARGUMENTS","DELSTR start must be positive"
+  if length_supplied & delete_length < 0 then
+    assembler signal "INVALID_ARGUMENTS","DELSTR length must be non-negative"
+
+  assembler strlen string_length,string
+  if start > string_length then return string
+  if length_supplied & delete_length = 0 then return string
+
+  prefix_length = start - 1
+  available = string_length - prefix_length
+  if \length_supplied then delete_length = available
+  if delete_length >= available then do
+    if prefix_length = 0 then return ""
+    assembler setstrpos string,cursor
+    assembler substring result,string,prefix_length
+    return result
   end
-  else do
-    if dellen=0 then retstr=substr(string,1,position-1)
-    else retstr=substr(string,1,position-1)||substr(string,position+dellen)
+
+  if prefix_length > 0 then do
+    assembler setstrpos string,cursor
+    assembler substring result,string,prefix_length
   end
-return retstr
+  tail_start = prefix_length + delete_length
+  tail_length = string_length - tail_start
+  assembler setstrpos string,tail_start
+  assembler substring tail,string,tail_length
+  assembler append result,tail
+  return result

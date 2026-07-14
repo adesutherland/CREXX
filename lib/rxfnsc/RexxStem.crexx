@@ -37,11 +37,30 @@ RexxStem: class
   slots = .StringHashMap
   values = .RexxValue[]
   next_slot = .int
+  stem_default = .RexxValue
+  stem_default_set = .boolean
 
   *: factory
     arg expected = 1024
     slots = .StringHashMap(expected)
     next_slot = 0
+    stem_default = .RexxValue("")
+    stem_default_set = 0
+    return
+
+  /** Test whether this stem has an assigned default value. */
+  hasDefault: method = .boolean
+    return stem_default_set
+
+  /** Return this stem's assigned default value. */
+  defaultValue: method = .RexxValue
+    return stem_default
+
+  /** Assign the value returned for otherwise-unset compound tails. */
+  setDefault: method = .void
+    arg item = .RexxValue
+    stem_default = item
+    stem_default_set = 1
     return
 
   value: method = .RexxValue

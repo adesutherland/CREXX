@@ -22,7 +22,12 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Level B string stem/map and iterator classes.
+ *
+ * @docType runtime-class
+ * @see lib/rxfnsb/rexx/stem.md
+ */
 options levelb comments_dash
 
 namespace rxfnsb expose stem stemIterator
@@ -55,27 +60,24 @@ stem: class
  /**
   * Computes the hash bucket for a key.
   *
-  * Uses a simple polynomial rolling hash (multiplier 31).
+  * Uses a codepoint polynomial rolling hash (multiplier 31), reducing each
+  * step modulo the bucket count to avoid native integer overflow.
   *
   * @param key key to hash
   * @return bucket number (1..num_buckets)
   */
   hash: method = .int
     arg key = .string
-    
+
     h = 0
-    len = length(key)
-    if len = 0 then return 1
-    
-    do i = 1 to len
-      char = substr(key, i, 1)
-      val = c2d(char)
-      h = h * 31 + val
+    key_length = .int
+    codepoint = .int
+    assembler strlen key_length,key
+    do offset = 0 to key_length - 1
+      assembler strchar codepoint,key,offset
+      h = (h * 31 + codepoint) % num_buckets
     end
-    
-    rem = h % num_buckets
-    if rem < 0 then rem = -rem
-    return rem + 1
+    return h + 1
 
  /**
   * Retrieves the value associated with a key.
@@ -90,7 +92,7 @@ stem: class
     idx = buckets[b]
     
     do while idx > 0
-      if keys[idx] = key then return vals[idx]
+      if keys[idx] == key then return vals[idx]
       idx = next[idx]
     end
     
@@ -114,7 +116,7 @@ stem: class
 
     /* Update existing if found */
     do while idx > 0
-      if keys[idx] = key then do
+      if keys[idx] == key then do
         vals[idx] = value
         return
       end
@@ -155,16 +157,21 @@ stem: class
   */
   key: method = .string
     arg ix = .int
+    if ix < 1 | ix > count then
+      assembler signal "INVALID_ARGUMENTS", "STEM key index is outside the stored range"
     return keys[ix]
 
  /**
   * Returns a value using an internal array index.
   *
-  * @param kv internal value index
-  * @return value
-  */
+   * @param kv internal value index (1-based)
+   * @return value
+   * @signal INVALID_ARGUMENTS index is outside the stored range
+   */
   value: method = .string
-    arg kv = .string
+    arg kv = .int
+    if kv < 1 | kv > count then
+      assembler signal "INVALID_ARGUMENTS", "STEM value index is outside the stored range"
     return vals[kv]
 
  /**
@@ -175,6 +182,8 @@ stem: class
   */
   valueAt: method = .string
     arg ix = .int
+    if ix < 1 | ix > count then
+      assembler signal "INVALID_ARGUMENTS", "STEM valueAt index is outside the stored range"
     return vals[ix]
 
  /**
@@ -256,6 +265,8 @@ stemIterator: class
   */
   *: factory
     arg source = reference .stem, snapshot_flag = 0
+    if snapshot_flag <> 0 & snapshot_flag <> 1 then
+      assembler signal "INVALID_ARGUMENTS", "STEM iterator snapshot flag must be zero or one"
     snapshot_ = snapshot_flag
     index_ = 0
     current_tail_ = ""

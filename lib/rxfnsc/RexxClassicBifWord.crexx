@@ -1,0 +1,73 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifword expose rexxclassicbif_word
+import rexxclassicbifs
+import rexxvalue
+
+/**
+ * Return one Classic whitespace-delimited word.
+ *
+ * @bif WORD
+ * @signature WORD(string, n)
+ * @checkargs rANY rWHOLE>0
+ * @sandbox pure
+ * @return word n, or empty when absent, as a RexxValue
+ */
+rexxclassicbif_word: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0") = 0 then return .RexxValue("")
+
+  string = context.argumentText(1)
+  wordnum = .int
+  wordnum = context.argumentText(2) + 0
+  string_length = .int
+  assembler strlen string_length,string
+  if string_length = 0 then return .RexxValue("")
+
+  scan = 0
+  current_word = 0
+  word_start = 0
+  word_end = 0
+  word_length = 0
+  result = ""
+  do while scan < string_length
+    assembler fndnblnk word_start,string,scan
+    if word_start < 0 then return .RexxValue("")
+    current_word = current_word + 1
+    assembler fndblnk word_end,string,word_start
+    if current_word = wordnum then do
+      if word_end < 0 then word_end = string_length
+      word_length = word_end - word_start
+      assembler setstrpos string,word_start
+      assembler substring result,string,word_length
+      return .RexxValue(result)
+    end
+    if word_end < 0 then return .RexxValue("")
+    scan = word_end
+  end
+  return .RexxValue("")

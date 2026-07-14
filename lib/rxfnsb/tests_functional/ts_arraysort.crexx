@@ -1,0 +1,69 @@
+/* rexx */
+options levelb
+import rxfnsb
+
+errors = 0
+empty = .string[]
+errors = errors + check_int(0, arraysort(empty), "empty")
+
+single = .string[]
+single[1] = "only"
+errors = errors + check_int(1, arraysort(single, 20, "desc"), "single")
+errors = errors + check_string("only", single[1], "single unchanged")
+
+values = .string[]
+values[1] = "delta"
+values[2] = "Alpha"
+values[3] = "charlie"
+values[4] = "bravo"
+errors = errors + check_int(4, arraysort(values), "ascending return")
+errors = errors + check_string("Alpha|bravo|charlie|delta", join(values), "ascending")
+errors = errors + check_int(4, arraysort(values, 1, "desc"), "descending return")
+errors = errors + check_string("delta|charlie|bravo|Alpha", join(values), "descending")
+
+numeric_text = .string[]
+numeric_text[1] = "10"
+numeric_text[2] = "2"
+numeric_text[3] = "1"
+numeric_text[4] = "20"
+ignored = arraysort(numeric_text)
+errors = errors + check_string("1|10|2|20", join(numeric_text), "lexical numeric text")
+
+records = .string[]
+records[1] = "2-B"
+records[2] = "1-C"
+records[3] = "3-A"
+ignored = arraysort(records, 3, "ASC")
+errors = errors + check_string("3-A|2-B|1-C", join(records), "substring key")
+
+unicode = .string[]
+unicode[1] = "🙂"
+unicode[2] = "α"
+unicode[3] = "β"
+unicode[4] = "A"
+errors = errors + check_int(4, arraysort(unicode), "Unicode return")
+errors = errors + check_int(4, unicode[0], "high-water preserved")
+
+if errors = 0 then say "PASS: arraysort"
+return errors <> 0
+
+join: procedure = .string
+  arg values = .string[]
+  result = ""
+  do index = 1 to values[0]
+    if index > 1 then result = result || "|"
+    result = result || values[index]
+  end
+  return result
+
+check_string: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected == actual then return 0
+  say "FAIL: ARRAYSORT" label "expected" expected "got" actual
+  return 1
+
+check_int: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: ARRAYSORT" label "expected" expected "got" actual
+  return 1

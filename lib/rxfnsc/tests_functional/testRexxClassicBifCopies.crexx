@@ -1,0 +1,108 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifcopies
+import rexxvalue
+
+errors = 0
+
+errors = errors + run_check("abcabcabc", "abc", "3")
+errors = errors + run_check("", "abc", "0")
+errors = errors + run_check("abc", "abc", "1")
+errors = errors + run_check("", "", "50")
+errors = errors + run_check("ababababab", "ab", "5")
+errors = errors + run_check("☺☺☺☺", "☺", "4")
+errors = errors + check_large()
+
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.3", 1)
+errors = errors + check_count_error("RXC-LC-40.4", 3)
+errors = errors + check_omitted_error(1)
+errors = errors + check_omitted_error(2)
+errors = errors + check_value_error("RXC-LC-40.12", "not-a-number")
+errors = errors + check_value_error("RXC-LC-40.12", "1.5")
+errors = errors + check_value_error("RXC-LC-40.13", "-1")
+
+if errors = 0 then say "PASS: Level C COPIES BIF"
+return errors <> 0
+
+run_check: procedure = .int
+  arg expected = .string, string = .string, count = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(string)
+  args[2] = .RexxValue(count)
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("COPIES")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifcopies..rexxclassicbif_copies(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: COPIES expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_large: procedure = .int
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("ab")
+  args[2] = .RexxValue("4096")
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("COPIES")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifcopies..rexxclassicbif_copies(reference context)
+  result_text = result.asString()
+  result_length = .int
+  assembler strlen result_length,result_text
+  if \context.hasError() & result_length = 8192 then return 0
+  say "FAIL: COPIES substantial result length" result_length,
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("A")
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("COPIES")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifcopies..rexxclassicbif_copies(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: COPIES expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_omitted_error: procedure = .int
+  arg omitted = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to 2
+    args[i] = .RexxValue("A")
+    exists[i] = i <> omitted
+  end
+  context = .RexxBifCallContext("COPIES")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifcopies..rexxclassicbif_copies(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.5" then return 0
+  say "FAIL: COPIES omitted" omitted "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_value_error: procedure = .int
+  arg expected_code = .string, count = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("A")
+  args[2] = .RexxValue(count)
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("COPIES")
+  call context.setArguments(args, exists)
+  result = .rexxclassicbifcopies..rexxclassicbif_copies(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: COPIES count expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1

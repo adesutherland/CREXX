@@ -1,0 +1,109 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifdelword expose rexxclassicbif_delword
+import rexxclassicbifs
+import rexxvalue
+
+/**
+ * Delete a Classic word range.
+ *
+ * @bif DELWORD
+ * @signature DELWORD(string, start [,count])
+ * @checkargs rANY rWHOLE>0 oWHOLE>=0
+ * @sandbox pure
+ * @return changed string as a RexxValue
+ */
+rexxclassicbif_delword: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY rWHOLE>0 oWHOLE>=0") = 0 then return .RexxValue("")
+
+  string = context.argumentText(1)
+  start = .int
+  start = context.argumentText(2) + 0
+  count_supplied = context.argumentExists(3)
+  delete_count = 0
+  if count_supplied then delete_count = context.argumentText(3) + 0
+
+  string_length = .int
+  assembler strlen string_length,string
+  if string_length = 0 then return .RexxValue(string)
+  if count_supplied & delete_count = 0 then return .RexxValue(string)
+
+  scan = 0
+  current_word = 0
+  delete_start = -1
+  do while scan < string_length
+    assembler fndnblnk scan,string,scan
+    if scan < 0 then return .RexxValue(string)
+    current_word = current_word + 1
+    if current_word = start then do
+      delete_start = scan
+      leave
+    end
+    assembler fndblnk scan,string,scan
+    if scan < 0 then return .RexxValue(string)
+  end
+
+  delete_end = string_length
+  if count_supplied then do
+    deleted = 0
+    scan = delete_start
+    word_end = 0
+    next_word = 0
+    do while deleted < delete_count
+      assembler fndblnk word_end,string,scan
+      deleted = deleted + 1
+      if word_end < 0 then do
+        delete_end = string_length
+        leave
+      end
+      assembler fndnblnk next_word,string,word_end
+      if next_word < 0 then do
+        delete_end = string_length
+        leave
+      end
+      delete_end = next_word
+      if deleted = delete_count then leave
+      scan = next_word
+    end
+  end
+
+  result = ""
+  cursor = 0
+  if delete_start > 0 then do
+    assembler setstrpos string,cursor
+    assembler substring result,string,delete_start
+  end
+  if delete_end < string_length then do
+    tail = ""
+    tail_length = string_length - delete_end
+    assembler setstrpos string,delete_end
+    assembler substring tail,string,tail_length
+    assembler append result,tail
+  end
+  return .RexxValue(result)

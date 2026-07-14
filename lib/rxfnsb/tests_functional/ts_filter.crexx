@@ -2,5 +2,27 @@
 options levelb
 import rxfnsb
 
-say filter('the quick fox jumps over the lazy brown dog',' ')
-say filter('the-+quick*fox/_jumps over...the\lazy brown#dog','-+*/\. _#')
+failures = 0
+
+failures = failures + check(filter("the quick fox", " ") = "thequickfox", "blank")
+failures = failures + check(filter("banana", "an") = "b", "set removal")
+failures = failures + check(filter("banana", "nnaa") = "b", "duplicate set")
+failures = failures + check(filter("a🙂bλ🙂c", "🙂λ") = "abc", "Unicode")
+failures = failures + check(filter("unchanged", "") = "unchanged", "empty set")
+failures = failures + check(filter("abc", "abc") = "", "remove all")
+failures = failures + check(filter("", "abc") = "", "empty source")
+
+source = "a🙂b"
+removal = "🙂"
+result = filter(source, removal)
+failures = failures + check(result = "ab", "saved result")
+failures = failures + check(source = "a🙂b" & removal = "🙂", "inputs unchanged")
+
+if failures = 0 then say "PASS: filter"
+return failures <> 0
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: FILTER" label
+  return 1

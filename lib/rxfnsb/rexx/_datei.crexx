@@ -38,7 +38,7 @@ _datei: Procedure = .int
   YY = .string
   mm = .string
   dd = .string
-  mlist='JANUARY FEBRUARY MARCH APRIL MAY JUNE JULY AUGUST SEPTEMBER OCTOBER NOVEMBER DECEMBER'
+  month_number = .int
 
   if format='' then format='NORMAL'
   if fabbreV('DAYS',format,1) then do
@@ -83,8 +83,8 @@ _datei: Procedure = .int
      yy=testyear(yy)
      mm=word(idate,2)
      dd=word(idate,3)
-     mm=wordpos(mm,mlist)
-     return _jdn(dd,mm,YY)
+     month_number = date_month_number(mm)
+     return _jdn(dd,month_number,YY)
   end
   if fabbreV('NORMAL',format,1) then do  /* format 24 December 2021 */
      idate=split(idate,isep)
@@ -92,8 +92,8 @@ _datei: Procedure = .int
      yy=testyear(yy)
      mm=word(idate,2)
      dd=word(idate,1)
-     mm=wordpos(mm,mlist)
-     return _jdn(dd,mm,YY)
+     month_number = date_month_number(mm)
+     return _jdn(dd,month_number,YY)
   end
   if fabbreV('STANDARD',format,1) then do
      idate=right(idate,8,'0')
@@ -115,6 +115,24 @@ _datei: Procedure = .int
   if fabbreV('UNIX',format,2)>0 then return idate+1721426+719162 /* UNIX Days since 1.1.1970 */
   call raise "SYNTAX","Error 40.28: invalid DATE argument 3",format
 return -1
+
+/* DATE accepts month-name prefixes; WORDPOS itself remains an exact matcher. */
+date_month_number: procedure = .int
+  arg month_name = .string
+  if month_name = "" then return 0
+  if abbrev("JANUARY",month_name) > 0 then return 1
+  if abbrev("FEBRUARY",month_name) > 0 then return 2
+  if abbrev("MARCH",month_name) > 0 then return 3
+  if abbrev("APRIL",month_name) > 0 then return 4
+  if abbrev("MAY",month_name) > 0 then return 5
+  if abbrev("JUNE",month_name) > 0 then return 6
+  if abbrev("JULY",month_name) > 0 then return 7
+  if abbrev("AUGUST",month_name) > 0 then return 8
+  if abbrev("SEPTEMBER",month_name) > 0 then return 9
+  if abbrev("OCTOBER",month_name) > 0 then return 10
+  if abbrev("NOVEMBER",month_name) > 0 then return 11
+  if abbrev("DECEMBER",month_name) > 0 then return 12
+  return 0
 
 fabbreV: Procedure = .int
   arg p0 = .string, p1 = .string, flen = 1

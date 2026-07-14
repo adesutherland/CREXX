@@ -1,109 +1,55 @@
-/* rexx test abs bif */
+/* Focused Level B OVERLAY tests. */
 options levelb
 import rxfnsb
 
-errors=0
-/* say "test insert" */
-/* x='CREXX is faster  than BREXX' */
+errors = 0
+new_string = "foo"
+target = "abcdefghi"
 
-/* say "'"overlay('quicker ',x,10)"'" */
+errors = errors + check(overlay(" ", "abcdef", 3) = "ab def", "documented single-character overlay")
+errors = errors + check(overlay(".", "abcdef", 3, 2) = "ab. ef", "documented padded overlay")
+errors = errors + check(overlay("qq", "abcd") = "qqcd", "default start and length")
+errors = errors + check(overlay("qq", "abcd", 4) = "abcqq", "overlay extends target")
+errors = errors + check(overlay("123", "abc", 5, 6, "+") = "abc+123+++", "target and overlay padding")
+errors = errors + check(overlay(new_string, target, 3, 4, "*") = "abfoo*ghi", "formatted overlay")
+errors = errors + check(overlay(new_string, target, 3, 2, "*") = "abfoefghi", "truncated overlay")
+errors = errors + check(overlay(new_string, target, 3, 0) = target, "explicit zero is identity inside target")
+errors = errors + check(overlay(new_string, "abc", 5, 0, "+") = "abc+", "zero width still extends to start")
+errors = errors + check(overlay(new_string, target, , 4, "*") = "foo*efghi", "omitted start with later arguments")
+errors = errors + check(overlay("", target, 3) = target, "empty new text with omitted length")
+errors = errors + check(overlay("", "", 3, 4, "*") = "******", "empty inputs with explicit width")
+errors = errors + check(overlay("日", "aébc", 2) = "a日bc", "Unicode character position")
+errors = errors + check(overlay("X", "ab", 4, 3, "·") = "ab·X··", "Unicode padding")
+errors = errors + check(new_string = "foo" & target = "abcdefghi", "arguments are not mutated")
 
-/* say '--2----' */
-/* say "'"overlay('as',x,17,5)"'" */
+caught = 0
+do
+  ignored = overlay("x", "abc", 0)
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = overlay("x", "abc", 1, -1)
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = overlay("x", "abc", 1, 1, "")
+on signal invalid_arguments
+  caught = caught + 1
+end
+do
+  ignored = overlay("x", "abc", 1, 1, "xy")
+on signal invalid_arguments
+  caught = caught + 1
+end
+errors = errors + check(caught = 4, "start, length, and pad failures use signals")
 
-/* say '--3----' */
-/* say "'"overlay('The new system ',x,1)"'" */
+if errors = 0 then say "PASS: overlay"
+return errors <> 0
 
-/* say '--4----' */
-/* say "'"overlay(" ,isnt it?",x,27)"'" */
-
-/* return */
-
-/* These from TRL */
-
-  
-
-if overlay('.','abcdef',3,2) \= 'ab. ef'         then do
-  errors=errors+1
-  say 'OVERLAY failed in test          1 '
-end
-if overlay(' ','abcdef',3) \= 'ab def'           then do
-  errors=errors+1
-  say 'OVERLAY failed in test          2 '
-end
-if overlay('.','abcdef',3,2) \= 'ab. ef'         then do
-  errors=errors+1
-  say 'OVERLAY failed in test          3 '
-end
-  /* 
-end
-if overlay('qq','abcd') \= 'qqcd'                then do
-errors=errors+1
-say 'OVERLAY failed in test          4 ' */
-  
-
-if overlay('qq','abcd',4) \= 'abcqq'             then do
-  errors=errors+1
-  say 'OVERLAY failed in test          5 '
-end
-if overlay('123','abc',5,6,'+') \= 'abc+123+++'  then do
-  errors=errors+1
-  say 'OVERLAY failed in test          6 '
-end
-  /* These from Mark Hessling. */
-
-if overlay('foo', 'abcdefghi',3,4,'*') \=  'abfoo*ghi'  then do
-  errors=errors+1
-  say 'OVERLAY failed in test          7 '
-end
-if overlay('foo', 'abcdefghi',3,2,'*') \=  'abfoefghi'  then do
-  errors=errors+1
-  say 'OVERLAY failed in test          8 '
-end
-if overlay('foo', 'abcdefghi',3,4,) \=  'abfoo ghi'     then do
-  errors=errors+1
-  say 'OVERLAY failed in test          9 '
-end
-if overlay('foo', 'abcdefghi',3) \=  'abfoofghi'        then do
-  errors=errors+1
-  say 'OVERLAY failed in test         10 '
-end
-/* 
-   end
-   if overlay('foo', 'abcdefghi',,4,'*') \=  'foo*efghi'   then do
-   errors=errors+1
-   say 'OVERLAY failed in test         11 ' */
-
-
-if overlay('foo', 'abcdefghi',9,4,'*') \=  'abcdefghfoo*'  then do
-  errors=errors+1
-  say 'OVERLAY failed in test         12 '
-end
-if overlay('foo', 'abcdefghi',10,4,'*') \=  'abcdefghifoo*'  then do
-  errors=errors+1
-  say 'OVERLAY failed in test         13 ' overlay('foo', 'abcdefghi',10,4,'*')
-end
-
-if overlay('foo', 'abcdefghi',11,4,'*') \=  'abcdefghi*foo*'  then do
-  errors=errors+1
-  say 'OVERLAY failed in test         14 '
-end
-if overlay('', 'abcdefghi',3) \=  'abcdefghi'                 then do
-  errors=errors+1
-  say 'OVERLAY failed in test         15 '
-end
-if overlay('foo', '',3) \=  '  foo'                           then do
-  errors=errors+1
-  say 'OVERLAY failed in test         16 '
-end
-if overlay('', '',3,4,'*') \=  '******'                       then do
-  errors=errors+1
-  say 'OVERLAY failed in test         17 '
-end
-/* 
-   end
-   if overlay('', '') \=  ''                                     then do
-   errors=errors+1
-   say 'OVERLAY failed in test         18 ' */
-
-return errors<>0
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: OVERLAY" label
+  return 1

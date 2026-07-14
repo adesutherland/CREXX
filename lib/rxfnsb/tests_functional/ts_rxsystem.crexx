@@ -1,0 +1,61 @@
+/* Focused Level B cached file-handle primitive tests. */
+options levelb
+import _rxsysb
+
+errors = 0
+arg test_args = .string[]
+
+if test_args[0] > 0 then file = "ts_rxsystem." || test_args[1] || ".tmp"
+else file = "ts_rxsystem.tmp"
+call resetfile(file)
+
+writer = _open(file, "w")
+errors = errors + check(writer <> 0, "open write handle")
+same_writer = _open(file, "a")
+errors = errors + check(same_writer = writer, "canonical write/append cache reuse")
+payload = "system-cache"
+assembler fwrite writer,payload
+
+reader = _open(file, "r")
+errors = errors + check(reader <> 0, "mode change reopens handle")
+text = ""
+assembler freadline text,reader
+errors = errors + check(text = payload, "reopened read content")
+call _close(file, 0)
+
+missing = "__crexx_rxsystem_missing_directory__/missing.file"
+errors = errors + check(_open(missing, "r") = 0, "open failure returns zero")
+errors = errors + check(_open(missing, "r") = 0, "open failure is not cached")
+
+caught = 0
+do
+  ignored = _open(file, "invalid")
+on signal invalid_arguments as problem
+  if problem.name() = "INVALID_ARGUMENTS" then caught = caught + 1
+end
+do
+  call _close(file, 0)
+on signal notready as problem
+  if problem.name() = "NOTREADY" then caught = caught + 1
+end
+errors = errors + check(caught = 2, "invalid arguments and close state use signals")
+
+call _close(file, 1)
+
+if errors = 0 then say "PASS: Level B system primitives"
+return errors <> 0
+
+resetfile: procedure = .void
+  arg file = .string
+  fileid = .int
+  rc = .int
+  mode = "w"
+  assembler fopen fileid,file,mode
+  if fileid <> 0 then assembler fclose rc,fileid
+  return
+
+check: procedure = .int
+  arg condition = .boolean, label = .string
+  if condition then return 0
+  say "FAIL:" label
+  return 1

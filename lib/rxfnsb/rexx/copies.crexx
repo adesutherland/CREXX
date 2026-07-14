@@ -22,15 +22,44 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Level B COPIES implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/copies.md
+ */
 options levelb
 
 namespace rxfnsb expose copies
 
-copies: procedure=.string
-  arg cstring=.string, count=.int
-  result=''
-  do i = 1 to count
-     result = result || cstring
+/**
+ * Repeat a string a non-negative number of times.
+ *
+ * @param string source text
+ * @param count number of copies
+ * @return concatenated copies, or null for zero
+ */
+copies: procedure = .string
+  arg string = .string, count = .int
+  string_length = .int
+  remaining = .int
+  bit = .int
+  chunk = ""
+  result = ""
+
+  if count < 0 then
+    assembler signal "INVALID_ARGUMENTS","COPIES count must be non-negative"
+  if count = 0 then return result
+  if count = 1 then return string
+  assembler strlen string_length,string
+  if string_length = 0 then return result
+
+  remaining = count
+  assembler scopy chunk,string
+  do while remaining > 0
+    assembler imod bit,remaining,2
+    if bit <> 0 then assembler append result,chunk
+    assembler idiv remaining,remaining,2
+    if remaining > 0 then assembler append chunk,chunk
   end
-return result
+  return result

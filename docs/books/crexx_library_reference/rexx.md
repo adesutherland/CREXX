@@ -100,16 +100,12 @@ zeros). Scientific notation is used, if necessary.
     y=.rexx('- 1234567.7654321'); y.abs == 1234567.7654321
 ```
 
-## b2d(\[n\])
+## b2d()
 
-Binary to decimal. Converts *string*, a string of at least one binary
-(**0** and/or **1**) digits, to an equivalent string of decimal
-characters (a number), without rounding. The returned string will use
-digits, and will not include any blanks. If the number of binary digits
-in the string is not a multiple of four, then up to three **'0'** digits
-will be added on the left before conversion to make a total that is a
-multiple of four. If *string* is the null string, 0 is returned. If n is
-not specified, *string* is taken to be an unsigned number.
+Binary to decimal. Converts the receiver's binary digits to a non-negative
+Level B integer. The empty string returns 0. Standard nibble-group blanks are
+accepted; invalid text signals `INVALID_ARGUMENTS`. Results must fit the signed
+64-bit `.int` range or `OVERFLOW_UNDERFLOW` is signalled.
 
 **Examples:**
 ```rexx <!--rexxex6.crexx-->
@@ -120,26 +116,8 @@ not specified, *string* is taken to be an unsigned number.
     z=.rexx('1100011011110000'); z.b2d == 50928 
 ```
 
-If n is specified, string is taken as a signed number expressed in n
-binary characters. If the most significant (left-most) bit is zero then
-the number is positive; otherwise it is a negative number in
-twos-complement form. In both cases it is converted to a cRexx number
-which may, therefore, be negative. If n is 0, 0 is always returned.
-
-If necessary, string is padded on the left with '0' characters (note,
-not "signextended"), or truncated on the left, to length n characters;
-(that is, as though string.right(n, '0') had been executed.)
-
-**Examples:**
-```rexx <!--rexxex7.crexx-->
-    v=.rexx('10000001'); v.b2d(8) == -127 
-    v=.rexx('10000001'); v.b2d(16) == 129 
-    w=.rexx('1111000010000001'); w.b2d(16) == -3967 
-    w=.rexx('1111000010000001'); w.b2d(12) == 129 
-    w=.rexx('1111000010000001'); w.b2d(8) == -127 
-    w=.rexx('1111000010000001'); w.b2d(4) == 1 
-    x=.rexx('0000000000110001'); x.b2d(0) == 0
-```
+The callable has no signed-width argument. See the stable
+[Level B `b2d` contract](../../../lib/rxfnsb/rexx/b2d.md).
 
 ## b2x()
 
@@ -260,17 +238,15 @@ to some other string.
 
 Coded character to decimal. Converts the Unicode code point of the
 character in *string* (which must be exactly one character) to its
-decimal representation. The returned string will be a non-negative
-number that represents the code point of the character and will not
-include any sign, blanks, insignificant leading zeros, or decimal part.
+native `.int` representation. Empty or multi-character receivers raise
+`CONVERSION_ERROR`.
 
 **Examples:**
 ```rexx <!--rexxex14.crexx-->
-    v=.rexx('M'); v.c2d  == '77'  -- ASCII or Unicode
-    w=.rexx('🔥'); w.c2d == '128293'
-    x=.rexx('7'); x.c2d  == '247' -- EBCDIC
-    y=.rexx('\textbackslash{}r'); y.c2d == '13'  -- ASCII or Unicode
-    z=.rexx('\textbackslash{}0'); z.c2d == '0'
+    v=.rexx('M'); v.c2d  == 77
+    w=.rexx('α'); w.c2d  == 945
+    x=.rexx('🔥'); x.c2d == 128293
+    y=.rexx('00'x); y.c2d == 0
 ```
 
 The **c2x** method can be used to convert the encoding of a character to
@@ -278,18 +254,18 @@ a hexadecimal representation.
 
 ## c2x()
 
-Coded character to hexadecimal. Converts the encoding of the character
-in *string* (which must be exactly one character) to its hexadecimal
-representation (unpacks). The returned string will use uppercase Roman
-letters for the values A-F, and will not include any blanks.
-Insignificant leading zeros are removed.
+Coded characters to hexadecimal. Converts every character in the receiver to
+two uppercase hexadecimal digits. The empty receiver returns an empty Rexx
+string; multi-character receivers are valid and leading zero digits are
+retained. The method uses the native Level B C2X contract, including its
+established low-byte behavior for Unicode code points beyond one byte.
 
 **Examples:**
 ```rexx <!--rexxex15.crexx-->
-    v=.rexx('M'); v.c2x  == '4D' -- ASCII or Unicode
-    w=.rexx('7'); w.c2x  == 'F7' -- EBCDIC
-    x=.rexx('\textbackslash{}r'); x.c2x == 'D'  -- ASCII or Unicode
-    y=.rexx('\textbackslash{}0'); y.c2x == '0'
+    v=.rexx('M'); v.c2x     == '4D'
+    w=.rexx('72s'); w.c2x   == '373273' -- ASCII/Unicode build
+    x=.rexx('0123'x); x.c2x == '0123'
+    y=.rexx(''); y.c2x      == ''
 ```
 The **c2d** method can be used to convert the encoding of a character to
 a decimal number.
@@ -416,93 +392,70 @@ involved, but none of the blanks preceding the first word involved.
     x=.rexx('Now  time'); x.delword(5)          == 'Now  time'
 ```
 
-## d2b(\[n\])
+## d2b()
 
-Returns a string of binary characters of length as needed or of length
-n, which is the binary representation of the decimal number. The
-returned string will use 0 and 1 characters for binary values. string
-must be a whole number, and must be non-negative unless n is specified,
-or an error will result. If n is not specified, the length of the result
-returned is such that there are no leading 0 characters, unless string
-was equal to 0 (in which case '0' is returned).
-
-If n is specified it is the length of the final result in characters;
-that is, after conversion the input string will be sign-extended to the
-required length (negative numbers are converted assuming twos-complement
-form). If the number is too big to fit into n characters, it will be
-truncated on the left. n must be a nonnegative whole number.
+Returns the minimal string of `0` and `1` characters representing the
+receiver's non-negative native integer value. Zero returns `"0"`; other
+results have no leading zeroes. A negative receiver raises
+`INVALID_ARGUMENTS`. The method has no width argument and does not perform
+signed extension or truncation.
 
 **Examples:**
 ```rexx <!--rexxex18.crexx-->
-    v=.rexx('0'); v.d2b == 0 
-    w=.rexx('9'); w.d2b == 1001 
-    x=.rexx('19'); x.d2b == 10011 
-    y=.rexx('129'); y.d2b == 10000001 
-    y=.rexx('129'); y.d2b(1) == 1 
-    y=.rexx('129'); y.d2b(8) == 10000001 
-    z=.rexx('127'); z.d2b(12) == 000001111111 
-    y=.rexx('129'); y.d2b(16) == 0000000010000001 
-    v1=.rexx('257'); v1.d2b(8) == 00000001 
-    v2=.rexx('-127'); v2.d2b(8) == 10000001 
-    v2=.rexx('-127'); v2.d2b(16) == 1111111110000001 
-    v3=.rexx('12'); v3.d2b(0) == 
+    v=.rexx('0'); v.d2b     == '0'
+    w=.rexx('9'); w.d2b     == '1001'
+    x=.rexx('19'); x.d2b    == '10011'
+    y=.rexx('129'); y.d2b   == '10000001'
 ```
 
-## d2c(\[length\])
+The native function contract is documented in
+[`d2b.md`](../../../lib/rxfnsb/rexx/d2b.md).
 
-Decimal to coded character. Converts the *string* (a *number*) to a
-single character, where the number is used as the Unicode code point of
-the character.
+## d2c()
 
-*string* must be a non-negative whole number naming a valid Unicode code
-point. An error results if the code point is invalid for Unicode (for
-example, if it is outside the Unicode range or in the surrogate range).
-If *length* is specified under Unicode semantics, it may be **0** or
-**1**. A length of **0** returns the null string; a length of **1** is
-equivalent to omitting it.
+Converts the receiver's whole-number text to one Unicode character. The value
+must name a Unicode scalar from `0` through `1114111` (`U+10FFFF`), excluding
+the surrogate range. Invalid values raise `CONVERSION_ERROR`.
+
+The `.Rexx.d2c()` method has no length argument. The underlying typed Level B
+function also exposes a separate optional zero-or-one output length; callers
+that need that native surface should call `rxfnsb.d2c` directly.
 
 **Examples:**
 ```rexx <!--rexxex19.crexx-->
-    v=.rexx('77'); v.d2c  == 'M' -- ASCII or Unicode
-    v=.rexx('77'); v.d2c(1) == 'M'
-    w=.rexx('12'); w.d2c(0) == ''
-    x=.rexx('128293'); x.d2c == '🔥'
-    y=.rexx('+77'); y.d2c == 'M' -- ASCII or Unicode
-    z=.rexx('247'); z.d2c == '7' -- EBCDIC
-    v1=.rexx('0'); v1.d2c   == '\textbackslash 0'
+    v=.rexx('77'); v.d2c().toString() == 'M'
+    w=.rexx('+77'); w.d2c().toString() == 'M'
+    x=.rexx('945'); x.d2c().toString() == 'α'
+    y=.rexx('128293'); y.d2c().toString() == '🔥'
 ```
 
-## d2x(\[n\])
+The native function contract is documented in
+[`d2c.md`](../../../lib/rxfnsb/rexx/d2c.md). Classic Level C D2C is a different
+configuration-coded BIF documented in
+[`rxfnsc/d2c.md`](../../../lib/rxfnsc/d2c.md).
 
-Decimal to hexadecimal. Returns a string of hexadecimal characters of
-length as needed or of length *n*, which is the hexadecimal (unpacked)
-representation of the decimal number. The returned string will use
-uppercase Roman letters for the values A-F, and will not include any
-blanks. *string* must be a whole number, and must be non-negative unless
-*n* is specified, or an error will result. If *n* is not specified, the
-length of the result returned is such that there are no leading 0
-characters, unless *string* was equal to 0 (in which case **'0'** is
-returned).
+## d2x()
 
-If *n* is specified it is the length of the final result in characters;
-that is, after conversion the input string will be sign-extended to the
-required length (negative numbers are converted assuming twos-complement
-form). If the number is too big to fit into *n* characters, it will be
-truncated on the left. *n* must be a non-negative whole number.
+Converts the receiver's non-negative native-integer text to minimal uppercase
+hexadecimal. Zero returns `"0"`; a negative receiver raises
+`INVALID_ARGUMENTS` because the method has no width from which to derive a
+signed representation.
+
+The `.Rexx.d2x()` method accepts no arguments. The underlying typed Level B
+function also exposes an optional exact output width; callers needing padding,
+truncation, or signed twos-complement should call `rxfnsb.d2x` directly.
 
 **Examples:**
 ```rexx <!--rexxex20.crexx-->
-    v=.rexx('9'); v.d2x       == '9'
-    w=.rexx('129'); w.d2x     == '81'
-    w=.rexx('129'); w.d2x(1)  == '1'
-    w=.rexx('129'); w.d2x(2)  == '81'
-    x=.rexx('127'); x.d2x(3)  == '07F'
-    w=.rexx('129'); w.d2x(4)  == '0081'
-    y=.rexx('257'); y.d2x(2)  == '01'
-    z=.rexx('-127'); z.d2x(2) == '81'
-    z=.rexx('-127'); z.d2x(4) == 'FF81'
-    v1=.rexx('12'); v1.d2x(0)   == ''
+    v=.rexx('0'); v.d2x().toString() == '0'
+    w=.rexx('9'); w.d2x().toString() == '9'
+    x=.rexx('129'); x.d2x().toString() == '81'
 ```
+
+The native function contract is documented in
+[`d2x.md`](../../../lib/rxfnsb/rexx/d2x.md). Classic Level C D2X accepts
+arbitrary caller-context whole numbers and is documented in
+[`rxfnsc/d2x.md`](../../../lib/rxfnsc/d2x.md).
 
 ## exists(index)
 
@@ -854,6 +807,23 @@ greater than *final*, an error is reported.
     x=.rexx('\\ufffe'); x.sequence('\\uffff') == '\\ufffe\\uffff'
 ```
 
+## xrange(final)
+
+returns the inclusive legacy byte-domain range from the single character in
+*string* through the single character in *final*. Endpoints are limited to
+U+0000 through U+00FF, and a descending range wraps at U+00FF. Invalid
+endpoints signal `INVALID_ARGUMENTS`. Use `sequence` for non-wrapping Unicode
+ranges.
+
+```rexx
+    v=.rexx('a'); v.xrange('f').toString() == 'abcdef'
+```
+
+The native contract is documented in
+[`xrange.md`](../../../lib/rxfnsb/rexx/xrange.md). Classic Level C XRANGE uses
+configuration-coded characters and is documented separately in
+[`rxfnsc/xrange.md`](../../../lib/rxfnsc/xrange.md).
+
 ## sign()
 
 returns a number that indicates the sign of *string*, which must be a
@@ -1137,47 +1107,46 @@ returns the number of blank-delimited words in *string*.
 
 ## x2b()
 
-Hexadecimal to binary. Converts *string* (a string of at least one
-hexadecimal characters) to an equivalent string of binary digits.
-Hexadecimal characters may be any decimal digit character (0-9) or any
-of the first six alphabetic characters (a-f), in either lowercase or
-uppercase. *string* may be of any length; each hexadecimal character
-with be converted to a string of four binary digits. The returned string
-will have a length that is a multiple of four, and will not include any
-blanks.
+Converts each hexadecimal digit in the receiver to four binary digits. Letters
+are case-insensitive, leading zero nibbles are retained, and an empty receiver
+returns empty. Interior blanks are accepted only when an even number of
+hexadecimal digits lies to their right. Invalid text raises
+`INVALID_ARGUMENTS`.
+
+The method accepts no arguments and returns a Rexx string object.
 
 **Examples:**
 ```rexx <!--rexxex52.crexx-->
-    v=.rexx('C3'); v.x2b  == '11000011'
-    w=.rexx('7'); w.x2b   == '0111'
-    x=.rexx('1C1'); x.x2b == '000111000001'
+    v=.rexx('C3'); v.x2b().toString() == '11000011'
+    w=.rexx('7'); w.x2b().toString() == '0111'
+    x=.rexx('1 C1'); x.x2b().toString() == '000111000001'
+    y=.rexx('0001'); y.x2b().toString() == '0000000000000001'
 ```
+
+The native function contract is documented in
+[`x2b.md`](../../../lib/rxfnsb/rexx/x2b.md). Classic Level C X2B is documented
+separately in [`rxfnsc/x2b.md`](../../../lib/rxfnsc/x2b.md).
 
 ## x2c()
 
-Hexadecimal to coded character. Converts the *string* (a string of
-hexadecimal characters) to a single character (packs). Hexadecimal
-characters may be any decimal digit character (0-9) or any of the first
-six alphabetic characters (a-f), in either lowercase or uppercase.
+Parses hexadecimal bytes from the receiver and maps each byte to the Unicode
+code point U+0000 through U+00FF. An odd leading nibble is padded with zero;
+empty input returns empty and leading zero bytes are retained. Values above
+`7F` are encoded as valid UTF-8 text, not copied as raw bytes.
 
-*string* must contain at least one hexadecimal character; insignificant
-leading zeros are removed, and the string is then padded with leading
-zeros if necessary to make a sufficient number of hexadecimal digits to
-describe a character encoding for the implementation.
-
-An error results if the encoding described does not produce a valid
-character for the implementation (for example, if it has more
-significant bits than the implementation's encoding for characters).
+Interior blanks are valid only when an even number of hexadecimal digits lies
+to their right. Invalid text raises `INVALID_ARGUMENTS`.
 **Examples:**
 ```rexx <!--rexxex53.crexx-->
-    v=.rexx('004D'); v.x2c == 'M' -- ASCII or Unicode
-    w=.rexx('4d'); w.x2c   == 'M' -- ASCII or Unicode
-    x=.rexx('A2'); x.x2c   == 's' -- EBCDIC
-    y=.rexx('0'); y.x2c    == '\textbackslash 0'
+    v=.rexx('416263'); v.x2c().toString() == 'Abc'
+    w=.rexx('4d'); w.x2c().toString() == 'M'
+    x=.rexx('FF'); x.x2c().toString() == 'ÿ'
 ```
 
-The **d2c** method can be used to convert a number to the encoding of a
-character.
+The native function contract is documented in
+[`x2c.md`](../../../lib/rxfnsb/rexx/x2c.md). Classic Level C X2C uses a
+configuration-coded character service and is documented separately in
+[`rxfnsc/x2c.md`](../../../lib/rxfnsc/x2c.md).
 
 ## x2d(\[n\])
 
@@ -1220,6 +1189,15 @@ been executed.)
 
 The **c2d** method can be used to convert a character to a decimal
 representation of its encoding.
+
+This method is the native Level B signed-64-bit surface. Invalid hexadecimal
+text or a negative *n* signals `INVALID_ARGUMENTS`; a result outside the native
+range signals `OVERFLOW_UNDERFLOW`. Its optional argument is presence-aware,
+so an omitted width is unsigned while an explicit zero returns zero. See the
+[native function contract](../../../lib/rxfnsb/rexx/x2d.md). Classic Level C
+X2D is an arbitrary-width RexxValue BIF with caller `NUMERIC DIGITS` handling,
+documented separately in
+[`rxfnsc/x2d.md`](../../../lib/rxfnsc/x2d.md).
 
 [^1]: Unless an implementation-provided option to disallow parenthesis
     omission is in force.

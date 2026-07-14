@@ -1,0 +1,89 @@
+/* Focused Level B ARRAYHI tests. */
+options levelb
+import rxfnsb
+
+errors = 0
+empty = .string[]
+errors = errors + check(0, arrayhi(empty), "empty omitted GET")
+
+array = load("ABCD")
+errors = errors + check(4, arrayhi(array), "omitted GET")
+errors = errors + check(4, arrayhi(array, "get"), "lowercase GET")
+errors = errors + check(2, arrayhi(array, "set", 2), "lowercase SET shrink")
+errors = errors + check_string("A|B", join(array), "shrink data")
+errors = errors + check(2, arrayhi(array, "SET", 2), "same mark no-op")
+errors = errors + check(2, arrayhi(array, "SET", 5), "growth no-op")
+errors = errors + check(2, arrayhi(array, "SET", 0), "zero no-op")
+errors = errors + check(2, arrayhi(array, "SET", -1), "negative no-op")
+errors = errors + check_string("A|B", join(array), "no-op data preserved")
+errors = errors + test_invalid_mode()
+errors = errors + test_missing_mark()
+errors = errors + test_get_with_mark()
+
+if errors = 0 then say "PASS: arrayhi"
+return errors <> 0
+
+test_invalid_mode: procedure = .int
+  values = load("AB")
+  do
+    ignored = arrayhi(values, "UNKNOWN")
+  on signal invalid_arguments
+    return 0
+  end
+  say "FAIL: ARRAYHI invalid mode did not signal"
+  return 1
+
+test_missing_mark: procedure = .int
+  values = load("AB")
+  do
+    ignored = arrayhi(values, "SET")
+  on signal invalid_arguments
+    return 0
+  end
+  say "FAIL: ARRAYHI missing SET mark did not signal"
+  return 1
+
+test_get_with_mark: procedure = .int
+  values = load("AB")
+  do
+    ignored = arrayhi(values, "GET", 1)
+  on signal invalid_arguments
+    return 0
+  end
+  say "FAIL: ARRAYHI GET mark did not signal"
+  return 1
+
+load: procedure = .string[]
+  arg data = .string
+  result = .string[]
+  data_length = .int
+  codepoint = .int
+  assembler strlen data_length,data
+  do index = 0 to data_length - 1
+    value = ""
+    assembler strchar codepoint,data,index
+    assembler appendchar value,codepoint
+    result[index + 1] = value
+  end
+  return result
+
+join: procedure = .string
+  arg array = .string[]
+  result = ""
+  do index = 1 to array[0]
+    if index > 1 then result = result || "|"
+    result = result || array[index]
+  end
+  return result
+
+check: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: ARRAYHI" label "expected" expected "got" actual
+  return 1
+
+check_string: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected == actual then return 0
+  say "FAIL: ARRAYHI" label "expected" expected "got" actual
+  return 1

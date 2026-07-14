@@ -30,12 +30,13 @@ import rxfnsb
 | BINSUBSTR       | BINSUBSTR(binary, start, length)             |
 | C2D             | C2D(s)                                       |
 | C2X             | C2X(s)                                       |
-| D2C             | D2C(n)                                       |
-| D2X             | D2X(n)                                       |
+| D2C             | D2C(number [,length])                        |
+| D2X             | D2X(number [,length])                        |
 | X2B             | X2B(x)                                       |
 | X2BIN           | X2BIN(x)                                     |
 | X2C             | X2C(x)                                       |
-| X2D             | X2D(x)                                       |
+| X2D             | X2D(hexadecimal [,length])                   |
+| XRANGE          | XRANGE([start [,end]])                       |
 | CENTER          | CENTER(s, n, pad)                            |
 | CENTRE          | CENTRE(s, n, pad)                            |
 | CHARIN          | CHARIN(name, count)                          |
@@ -125,10 +126,16 @@ use direct indexing for those arrays until typed helpers are added.
 |----------|--------|-------|
 | `ARRAYHI(array, mode, newhi)` | `.int` | Get the high-water mark, or shrink it with mode `SET`. |
 | `ARRAYDROP(array)` | `.int` | Clear the array in place and return `0`. |
-| `ARRAYINSERT(array, from, count, default)` | `.int` | Open a gap at `from`, fill it, and return the new high-water mark. |
+| `ARRAYINSERT(array, from, count [,default])` | `.int` | Open a gap at `from`, fill it, and return the new high-water mark. |
+| `OBJECTARRAYINSERT(array, from, count, value)` | `.int` | Open an object-array gap and fill it with object-value copies. |
+| `OBJECTARRAYDELETE(array, from, count)` | `.int` | Delete an object-array range and return the new high-water mark. |
+| `OBJECTARRAYAPPEND(array, value [,count])` | `.int` | Append object-value copies and return the new high-water mark. |
+| `OBJECTARRAYPREPEND(array, value [,count])` | `.int` | Prepend object-value copies and return the new high-water mark. |
+| `OBJECTARRAYDROP(array)` | `.int` | Clear an object array in place and return zero. |
+| `OBJECTARRAYMOVE(array, from, count, to)` | `.int` | Move an object-array block and preserve its high-water mark. |
 | `ARRAYDELETE(array, from, count)` | `.int` | Delete a range and return the new high-water mark. |
-| `ARRAYAPPEND(array, value, count)` | `.int` | Append `value` `count` times. |
-| `ARRAYPREPEND(array, value, count)` | `.int` | Prepend `value` `count` times. |
+| `ARRAYAPPEND(array, value [,count])` | `.int` | Append `value` `count` times. |
+| `ARRAYPREPEND(array, value [,count])` | `.int` | Prepend `value` `count` times. |
 | `ARRAYPOP(array, default)` | `.string` | Remove and return the last element, or `default` when empty. |
 | `ARRAYSHIFT(array, default)` | `.string` | Remove and return the first element, or `default` when empty. |
 | `ARRAYSET(array, index, value, fill)` | `.int` | Set an element; growing gaps are initialised with `fill`. |
@@ -137,7 +144,7 @@ use direct indexing for those arrays until typed helpers are added.
 | `ARRAYMOVE(array, from, count, to)` | `.int` | Move a range within the same array. |
 | `ARRAYREVERSE(array)` | `.int` | Reverse the array in place. |
 | `ARRAYSORT(array, offset, order, debug)` | `.int` | Sort strings by a substring key. |
-| `ARRAYFIND(find, array, from, case)` | `.int` | Find the first element containing a substring. |
+| `ARRAYFIND(needle, array [,from [,case_sensitive]])` | `.int` | Find the first element containing a substring. |
 | `ARRAYINDEXOF(array, value, from, case)` | `.int` | Find the first element equal to `value`. |
 | `ARRAYCONTAINS(array, value, case)` | `.int` | Return `1` when an element equals `value`, else `0`. |
 | `ARRAYJOIN(array, separator)` | `.string` | Join all elements with `separator`. |

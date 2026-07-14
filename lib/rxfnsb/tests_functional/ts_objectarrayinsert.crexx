@@ -1,0 +1,102 @@
+/* Focused Level B OBJECTARRAYINSERT tests. */
+options levelb
+import rxfnsb
+
+errors = 0
+errors = errors + test_empty_references()
+errors = errors + test_middle()
+errors = errors + test_prepend()
+errors = errors + test_append_clamp()
+errors = errors + test_zero_count()
+errors = errors + test_invalid_from()
+errors = errors + test_invalid_count()
+
+if errors = 0 then say "PASS: objectarrayinsert"
+return errors <> 0
+
+test_empty_references: procedure = .int
+  array = .object[]
+  item = .box("X")
+  rc = objectarrayinsert(array, 1, 2, item as .object)
+  call item.setName("Y")
+  return check_array("empty/value copies", array, rc, 2, "X|X")
+
+test_middle: procedure = .int
+  array = .object[]
+  array[1] = .box("A") as .object
+  array[2] = .box("D") as .object
+  rc = objectarrayinsert(array, 2, 2, .box("B") as .object)
+  return check_array("middle", array, rc, 4, "A|B|B|D")
+
+test_prepend: procedure = .int
+  array = .object[]
+  array[1] = .box("B") as .object
+  rc = objectarrayinsert(array, 1, 1, .box("A") as .object)
+  return check_array("prepend", array, rc, 2, "A|B")
+
+test_append_clamp: procedure = .int
+  array = .object[]
+  array[1] = .box("A") as .object
+  rc = objectarrayinsert(array, 999, 1, .box("Z") as .object)
+  return check_array("append clamp", array, rc, 2, "A|Z")
+
+test_zero_count: procedure = .int
+  array = .object[]
+  array[1] = .box("A") as .object
+  rc = objectarrayinsert(array, 1, 0, .box("X") as .object)
+  return check_array("zero count", array, rc, 1, "A")
+
+test_invalid_from: procedure = .int
+  array = .object[]
+  array[1] = .box("A") as .object
+  do
+    ignored = objectarrayinsert(array, 0, 1, .box("X") as .object)
+  on signal invalid_arguments
+    return 0
+  end
+  say "FAIL: OBJECTARRAYINSERT invalid position did not signal"
+  return 1
+
+test_invalid_count: procedure = .int
+  array = .object[]
+  array[1] = .box("A") as .object
+  do
+    ignored = objectarrayinsert(array, 1, -1, .box("X") as .object)
+  on signal invalid_arguments
+    return 0
+  end
+  say "FAIL: OBJECTARRAYINSERT invalid count did not signal"
+  return 1
+
+check_array: procedure = .int
+  arg label = .string, array = .object[], actual_rc = .int, expected_rc = .int, expected = .string
+  actual = join(array)
+  if actual_rc = expected_rc & actual == expected then return 0
+  say "FAIL: OBJECTARRAYINSERT" label "expected" expected_rc expected "got" actual_rc actual
+  return 1
+
+join: procedure = .string
+  arg array = .object[]
+  result = ""
+  do i = 1 to array[0]
+    if i > 1 then result = result || "|"
+    item = array[i] as .box
+    result = result || item.name()
+  end
+  return result
+
+box: class
+  name_ = .string
+
+  *: factory
+    arg name = .string
+    name_ = name
+    return
+
+  name: method = .string
+    return name_
+
+  setName: method = .void
+    arg name = .string
+    name_ = name
+    return

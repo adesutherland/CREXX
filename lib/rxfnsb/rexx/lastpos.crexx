@@ -22,31 +22,50 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Level B LASTPOS implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/lastpos.md
+ */
 options levelb
-
 namespace rxfnsb expose lastpos
 
-/* pos(sub-string in string beginning at) */
+/**
+ * Locate the last match ending at or before a character position.
+ *
+ * @param needle text to find
+ * @param haystack text to search
+ * @param search_end optional positive final character considered
+ * @return last matching character position, or zero
+ */
 lastpos: procedure = .int
-  arg needle = .string, haystack=.string, upto=0
-  if upto<1 then do
-     assembler strlen upto,haystack
-  end
-  nlen=0
-  assembler strlen nlen,needle
-  if nlen=0      then return 0
-  hlen=0
-  assembler strlen hlen,haystack
-  if hlen=0 then return 0
-  nlen=nlen-1
-  foundpos=1
-  lastfound=0
+  arg needle = .string, haystack = .string, search_end = 0
+  end_supplied = ?search_end
+  needle_length = .int
+  haystack_length = .int
+  found_position = .int
+  match_end = .int
+  last_found = 0
+
+  if end_supplied & search_end < 1 then
+    assembler signal "INVALID_ARGUMENTS","LASTPOS search end must be positive"
+
+  assembler strlen needle_length,needle
+  if needle_length = 0 then return 0
+  assembler strlen haystack_length,haystack
+  if haystack_length = 0 then return 0
+
+  if \end_supplied | search_end > haystack_length then search_end = haystack_length
+  if needle_length > search_end then return 0
+
+  found_position = 1
   do forever
-     assembler strpos foundpos,needle,haystack
-     if foundpos = 0 then leave
-     if foundpos + nlen> upto then leave    ## nlen-1 calculated above
-     lastfound = foundpos
-     foundpos=foundpos + 1
+    assembler strpos found_position,needle,haystack
+    if found_position = 0 then leave
+    match_end = found_position + needle_length - 1
+    if match_end > search_end then leave
+    last_found = found_position
+    found_position = found_position + 1
   end
-return lastfound
+  return last_found

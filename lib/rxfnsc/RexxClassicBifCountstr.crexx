@@ -1,0 +1,63 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifcountstr expose rexxclassicbif_countstr
+import rexxclassicbifs
+import rexxvalue
+
+/**
+ * Count non-overlapping matches in one Classic string.
+ *
+ * @bif COUNTSTR
+ * @signature COUNTSTR(needle, haystack)
+ * @checkargs rANY rANY
+ * @sandbox pure
+ * @return match count as a RexxValue
+ */
+rexxclassicbif_countstr: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref, "rANY rANY") = 0 then return .RexxValue("")
+
+  needle = context.argumentText(1)
+  haystack = context.argumentText(2)
+  count = 0
+  position = 1
+  found = .int
+  needle_length = .int
+  haystack_length = .int
+  assembler strlen needle_length,needle
+  assembler strlen haystack_length,haystack
+  if needle_length = 0 | needle_length > haystack_length then return .RexxValue("0")
+
+  do forever
+    found = position
+    assembler strpos found,needle,haystack
+    if found = 0 then leave
+    count = count + 1
+    position = found + needle_length
+  end
+  return .RexxValue(count || "")

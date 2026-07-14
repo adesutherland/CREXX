@@ -34,18 +34,18 @@ main() .locals=7
    .traceevent "O" 4 "R" "S" "r" 2 3 3 0 "" ""
    say r2
    .srcstep 6 6 17 "repro_array_arg.crexx" 8 1 15 "c = upper(s.i)"
-   .srcstep 4 4 25 "upper.crexx" 33 3 12 "  newstr=\"\""
+   .srcstep 4 4 25 "upper.crexx" 42 3 14 "  result = \"\""
    load r4,""
    .traceevent "L" 4 "R" "S" "r" 4 4 4 0 "" ""
-   .traceevent "A" 6 "R" "S" "r" 4 4 4 0 "newstr" ""
-   .srcstep 5 5 25 "upper.crexx" 34 13 35 "  assembler strupper newstr,string"
-   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "newstr" ""
+   .traceevent "A" 6 "R" "S" "r" 4 4 4 0 "result" ""
+   .srcstep 5 5 25 "upper.crexx" 43 13 35 "  assembler strupper result,string"
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "result" ""
    minattrs r1,1
    linkattr1 r3,r1,1
    .traceevent "V" 6 "R" "S" "r" 3 0 0 0 "s" ""
    strupper r4,r3
    unlink r3
-   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "newstr" ""
+   .traceevent "V" 6 "R" "S" "r" 4 0 0 0 "result" ""
    copy r0,r4
    .traceevent "A" 6 "R" "S" "r" 0 0 0 0 "c" ""
    .srcstep 7 7 17 "repro_array_arg.crexx" 9 1 20 "say \"Upper:  [\"c\"]\""

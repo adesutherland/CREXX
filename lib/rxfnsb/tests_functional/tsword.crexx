@@ -1,60 +1,34 @@
-/* WORD */
+/* Focused Level B WORD tests. */
 options levelb
 import rxfnsb
 
-errors=0
-/* These from the Rexx book. */
-if word('Now is the time',3) \= 'the' then do
-  errors=errors+1
-  say 'WORD failed in test 1 '
-end
-if word('Now is the time',5) \= '' then do
-  errors=errors+1
-  say 'WORD failed in test 2 '
-  /* These from Mark Hessling. */
-end
-if word('This is certainly a test',1) \= 'This' then do
-  errors=errors+1
-  say 'WORD failed in test 3 '
-end
-if word(' This is certainly a test',1) \= 'This' then do
-  errors=errors+1
-  say 'WORD failed in test 4 '
-end
-if word('This is certainly a test',1) \= 'This' then do
-  errors=errors+1
-  say 'WORD failed in test 5 '
-end
-if word('This is certainly a test',2) \= 'is' then do
-  errors=errors+1
-  say 'WORD failed in test 6 '
-end
-if word('This is certainly a test',2) \= 'is' then do
-  errors=errors+1
-  say 'WORD failed in test 7 '
-end
-if word('This is certainly a test',5) \= 'test' then do
-  errors=errors+1
-  say 'WORD failed in test 8 '
-end
-if word('This is certainly a test ',5) \= 'test' then do
-  errors=errors+1
-  say 'WORD failed in test 9 '
-end
-if word('This is certainly a test',6) \= '' then do
-  errors=errors+1
-  say 'WORD failed in test 10 '
-end
-if word('',1) \= '' then do
-  errors=errors+1
-  say 'WORD failed in test 11 '
-end
-if word('',10) \= '' then do
-  errors=errors+1
-  say 'WORD failed in test 12 '
-end
-if word('test ',2) \= '' then do
-  errors=errors+1
-  say 'WORD failed in test 13 '
-end
-return errors<>0
+errors = 0
+errors = errors + check("the", word("Now is the time", 3), "middle")
+errors = errors + check("", word("Now is the time", 5), "absent")
+errors = errors + check("This", word("  This is a test", 1), "leading blanks")
+errors = errors + check("test", word("This is a test  ", 4), "trailing blanks")
+errors = errors + check("is", word("This   is a test", 2), "multiple blanks")
+errors = errors + check("two", word("one two three", 2), "Unicode blank")
+errors = errors + check("", word("", 1), "empty")
+errors = errors + check("", word("   ", 1), "blank only")
+errors = errors + invalid_wordnum(0)
+errors = errors + invalid_wordnum(-1)
+
+if errors = 0 then say "PASS: word"
+return errors <> 0
+
+invalid_wordnum: procedure = .int
+  arg wordnum = .int
+  do
+    ignored = word("one two", wordnum)
+  on signal invalid_arguments
+    return 0
+  end
+  say "FAIL: WORD invalid number did not signal" wordnum
+  return 1
+
+check: procedure = .int
+  arg expected = .string, actual = .string, label = .string
+  if expected == actual then return 0
+  say "FAIL: WORD" label "expected" expected "got" actual
+  return 1

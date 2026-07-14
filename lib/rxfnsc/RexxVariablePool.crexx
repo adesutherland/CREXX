@@ -26,6 +26,7 @@ options levelb comments_dash numeric_classic
 namespace rexxpool expose RexxVariablePool
 import rexxvalue
 import rexxstem
+import rexxclassicstate
 import rxfnsb
 import data
 -- import data_StringHashMap
@@ -97,10 +98,77 @@ RexxVariablePool: class
   stems = .RexxStem[]
   aliases = .RexxPoolAlias[]
   next_slot = .int
+  address_state = .RexxAddressState
+  trace_state = .RexxTraceState
 
   *: factory
     slots = .StringHashMap()
     next_slot = 0
+    address_state = .RexxAddressState()
+    trace_state = .RexxTraceState()
+    return
+
+  setAddressEnvironment: method = .void
+    arg name = .string
+    state = .RexxAddressState
+    assembler link state, address_state
+    call state.setEnvironment(name)
+    return
+
+  addressEnvironment: method = .string
+    return address_state.environment()
+
+  setAddressConnection: method = .void
+    arg option = .string, position = .string, type = .string, resource = .string
+    state = .RexxAddressState
+    assembler link state, address_state
+    call state.setConnection(option, position, type, resource)
+    return
+
+  addressConnection: method = .string
+    arg option = .string
+    return address_state.connection(option)
+
+  addressPosition: method = .string
+    arg option = .string
+    return address_state.position(option)
+
+  addressType: method = .string
+    arg option = .string
+    return address_state.type(option)
+
+  addressResource: method = .string
+    arg option = .string
+    return address_state.resource(option)
+
+  inheritAddressState: method = .void
+    arg parent = reference .RexxVariablePool
+    parent_pool = dereference parent
+    call setAddressEnvironment(parent_pool.addressEnvironment())
+    call setAddressConnection("I", parent_pool.addressPosition("I"), parent_pool.addressType("I"), parent_pool.addressResource("I"))
+    call setAddressConnection("O", parent_pool.addressPosition("O"), parent_pool.addressType("O"), parent_pool.addressResource("O"))
+    call setAddressConnection("E", parent_pool.addressPosition("E"), parent_pool.addressType("E"), parent_pool.addressResource("E"))
+    return
+
+  /** Return the current activation's Classic TRACE setting. */
+  traceSetting: method = .string
+    return trace_state.current()
+
+  /** Apply one validated Classic TRACE BIF option to this activation. */
+  setTraceOption: method = .void
+    arg option = .string
+    state = .RexxTraceState
+    assembler link state, trace_state
+    call state.apply(option)
+    return
+
+  /** Copy Classic TRACE state when creating a child activation pool. */
+  inheritTraceState: method = .void
+    arg parent = reference .RexxVariablePool
+    parent_pool = dereference parent
+    state = .RexxTraceState()
+    call state.apply(parent_pool.traceSetting())
+    trace_state = state
     return
 
   normalizeName: method = .string
@@ -134,6 +202,161 @@ RexxVariablePool: class
       return \alias.isDropped()
     end
     return 1
+
+  /**
+   * Expand a validated Classic variable symbol against this pool.
+   *
+   * Compound tail components that do not start with a digit are substituted
+   * from this pool. Missing components retain their uppercase spelling. The
+   * operation never creates a binding and does not raise NOVALUE.
+   *
+   * @param name validated Classic variable-symbol spelling
+   * @return normalized scalar/stem name or expanded compound name
+   */
+  resolveSymbolName: method = .string
+    arg name = .string
+    normalized = normalizeName(name)
+    normalized_length = length(normalized)
+    stem_end = pos(".", normalized)
+
+    if stem_end = 0 | stem_end = 1 | stem_end = normalized_length then
+      return normalized
+
+    stem_name = substr(normalized, 1, stem_end)
+    tail_text = substr(normalized, stem_end + 1)
+    tail_length = length(tail_text)
+    derived_tail = ""
+    component_start = 1
+
+    do i = 1 to tail_length + 1
+      if i > tail_length | substr(tail_text, i, 1) = "." then do
+        component = substr(tail_text, component_start, i - component_start)
+        if component \= "" then do
+          if pos(left(component, 1), "0123456789") = 0 then do
+            if hasBinding(component) then component = value(component).asString()
+          end
+        end
+
+        if component_start > 1 then derived_tail = derived_tail || "."
+        derived_tail = derived_tail || component
+        component_start = i + 1
+      end
+    end
+
+    derived_tail = upper(derived_tail)
+    return stem_name || derived_tail
+
+  /**
+   * Return a Classic symbol value without creating a missing binding.
+   *
+   * Uninitialized scalars return their normalized name. Uninitialized
+   * compound variables return their fully expanded name unless their stem has
+   * an assigned default value.
+   *
+   * @param name validated Classic variable-symbol spelling
+   * @return current scalar, stem-default, or compound value
+   */
+  symbolValue: method = .RexxValue
+    arg name = .string
+    item_stem = .RexxStem
+    resolved = resolveSymbolName(name)
+    resolved_length = length(resolved)
+    stem_end = pos(".", resolved)
+
+    if stem_end = 0 | stem_end = 1 then do
+      if hasBinding(resolved) then return value(resolved)
+      return .RexxValue(resolved)
+    end
+
+    if stem_end = resolved_length then do
+      if \hasBinding(resolved) then return .RexxValue(resolved)
+      slot = slotFor(resolved)
+      if kinds[slot] = RVP_BINDING_VALUE | kinds[slot] = RVP_BINDING_ALIAS_VALUE then
+        return value(resolved)
+      if kinds[slot] = RVP_BINDING_STEM then item_stem = stems[slot]
+      else if kinds[slot] = RVP_BINDING_ALIAS_STEM then do
+        alias = aliases[slot]
+        item_stem = alias.stem()
+      end
+      else return .RexxValue(resolved)
+      if item_stem.hasDefault() then return item_stem.defaultValue()
+      return .RexxValue(resolved)
+    end
+
+    if hasBinding(resolved) then do
+      slot = slotFor(resolved)
+      if kinds[slot] = RVP_BINDING_VALUE | kinds[slot] = RVP_BINDING_ALIAS_VALUE then
+        return value(resolved)
+    end
+
+    stem_name = substr(resolved, 1, stem_end)
+    derived_tail = substr(resolved, stem_end + 1)
+    if \hasBinding(stem_name) then return .RexxValue(resolved)
+
+    slot = slotFor(stem_name)
+    if kinds[slot] = RVP_BINDING_STEM then do
+      item_stem = stems[slot]
+    end
+    else if kinds[slot] = RVP_BINDING_ALIAS_STEM then do
+      alias = aliases[slot]
+      item_stem = alias.stem()
+    end
+    else return .RexxValue(resolved)
+
+    if item_stem.containsTail(derived_tail) then return item_stem.value(derived_tail)
+    if item_stem.hasDefault() then return item_stem.defaultValue()
+    return .RexxValue(resolved)
+
+  /** Assign one Classic scalar, stem default, or expanded compound name. */
+  setSymbolValue: method = .void
+    arg name = .string, item = .RexxValue
+    item_stem = .RexxStem
+    resolved = resolveSymbolName(name)
+    resolved_length = length(resolved)
+    stem_end = pos(".", resolved)
+    if stem_end = 0 | stem_end = 1 then do
+      call setValue(resolved, item)
+      return
+    end
+    if stem_end = resolved_length then do
+      item_stem = stem(resolved)
+      call item_stem.setDefault(item)
+      call setStem(resolved, item_stem)
+      return
+    end
+    stem_name = substr(resolved, 1, stem_end)
+    derived_tail = substr(resolved, stem_end + 1)
+    call setStemValue(stem_name, derived_tail, item)
+    return
+
+  /**
+   * Test whether a Classic variable symbol resolves to a non-dropped value.
+   *
+   * @param name validated Classic variable-symbol spelling
+   * @return 1 when the resolved scalar, stem, or compound tail has a value
+   */
+  symbolHasValue: method = .boolean
+    arg name = .string
+    item_stem = .RexxStem
+    resolved = resolveSymbolName(name)
+    resolved_length = length(resolved)
+    stem_end = pos(".", resolved)
+
+    if stem_end = 0 | stem_end = 1 | stem_end = resolved_length then return hasBinding(resolved)
+    if hasBinding(resolved) then return 1
+
+    stem_name = substr(resolved, 1, stem_end)
+    derived_tail = substr(resolved, stem_end + 1)
+    if \hasBinding(stem_name) then return 0
+
+    slot = slotFor(stem_name)
+    if kinds[slot] = RVP_BINDING_STEM then item_stem = stems[slot]
+    else if kinds[slot] = RVP_BINDING_ALIAS_STEM then do
+      alias = aliases[slot]
+      item_stem = alias.stem()
+    end
+    else return 0
+    return item_stem.containsTail(derived_tail) | item_stem.hasDefault()
 
   bindingKind: method = .int
     arg name = .string

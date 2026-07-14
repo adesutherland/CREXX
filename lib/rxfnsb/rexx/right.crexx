@@ -22,31 +22,54 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Level B RIGHT implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/right.md
+ */
 options levelb
-
 namespace rxfnsb expose right
-import _rxsysb
 
+/**
+ * Return or pad the rightmost characters to an exact width.
+ *
+ * @param string source text
+ * @param width non-negative result width
+ * @param pad exactly one padding codepoint
+ * @return rightmost text padded on the left to `width`
+ */
 right: procedure = .string
-  arg rstring = .string, rlen = .int, pad = ' '
+  arg string = .string, width = .int, pad = " "
+  string_length = .int
+  pad_length = .int
+  padding_length = .int
+  start = .int
+  pad_character = .int
+  pad_index = 0
+  padding = ""
+  result = ""
 
-  if rlen = 0 then return ''
+  if width < 0 then
+    assembler signal "INVALID_ARGUMENTS","RIGHT width must be non-negative"
+  assembler strlen pad_length,pad
+  if pad_length <> 1 then
+    assembler signal "INVALID_ARGUMENTS","RIGHT pad must contain exactly one character"
 
-  slen=0
-  assembler strlen slen,rstring
-  if rlen = slen then return rstring
+  if width = 0 then return result
+  assembler strlen string_length,string
+  if width = string_length then return string
 
-  padchar = ''
-  padlength=0
-
-  assembler strlen padLength, pad
-  if padLength > 1 then call raise "syntax", "40.23", pad
-  assembler strchar padchar, pad            /* Get UTF-8 codepoint */
-  diff = rlen - slen                        /* is left padding necessary? */
-  if diff > 0 then do                       /* yes */
-     padstring = ''
-     assembler padstr padstring, padchar, diff /* create left padding string */
-     return padstring||rstring
+  if width < string_length then do
+    start = string_length - width
+    assembler setstrpos string,start
+    assembler substring result,string,width
+    return result
   end
-return substr(rstring, slen + 1 - rlen, rlen)
+
+  padding_length = width - string_length
+  assembler strchar pad_character,pad,pad_index
+  assembler padstr padding,pad_character,padding_length
+  assembler scopy result,padding
+  assembler append result,string
+  return result

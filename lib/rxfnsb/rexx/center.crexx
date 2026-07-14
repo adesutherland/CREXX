@@ -22,38 +22,61 @@
  * SOFTWARE.
  */
 
-/* rexx center text  */
-/* CENTER and CENTRE are exact copies, any change must be reflected in both functions */
-/* TODO Fix this bit of uglyness when crexx allows ... */
+/**
+ * Level B CENTER implementation.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/center.md
+ */
 options levelb
 
 namespace rxfnsb expose center
 
+/**
+ * Center or centrally truncate a string to an exact character width.
+ *
+ * @param string source text
+ * @param width non-negative result width
+ * @param pad exactly one padding codepoint
+ * @return a string containing exactly `width` codepoints
+ */
 center: procedure = .string
-  arg expose string = .string, centlen = .int,  pad = " "
+  arg string = .string, width = .int, pad = " "
+  string_length = .int
+  pad_length = .int
+  difference = .int
+  half = .int
+  start = .int
+  pad_character = .int
+  pad_index = 0
+  padding = ""
+  result = ""
 
-padstr=""
-offset=0
-slen=0
-cpad=""
+  if width < 0 then
+    assembler signal "INVALID_ARGUMENTS","CENTER width must be non-negative"
+  assembler strlen pad_length,pad
+  if pad_length <> 1 then
+    assembler signal "INVALID_ARGUMENTS","CENTER pad must contain exactly one character"
 
-/* make sure just to take first char */
-assembler strchar cpad,pad,offset
-assembler load pad,""
-assembler appendchar pad,cpad
-/* calculate number of pad chars to added as prefix and suffix */
-assembler strlen slen,string
-padlen=centlen-slen
-assembler idiv padlen,padlen,2
-if padlen=0 then return string   /* if nothing to add return original string */
+  assembler strlen string_length,string
+  if width = string_length then return string
 
-if padlen<0 then newstr=Substr(string,-padlen+1,centlen," ")
-else do
-/* create padding string */
-   padstr=copies(pad,padlen)
-   newstr=padstr||string||padstr
-   assembler strlen slen,newstr
-   if slen<centlen then newstr=newstr||pad  /* in case of uneven center length */
-end
+  if width < string_length then do
+    difference = string_length - width
+    start = difference
+    assembler idiv start,start,2
+    assembler SETSTRPOS string,start
+    assembler substring result,string,width
+    return result
+  end
 
-return newstr
+  difference = width - string_length
+  half = difference
+  assembler idiv half,half,2
+  assembler strchar pad_character,pad,pad_index
+  assembler padstr padding,pad_character,half
+  assembler scopy result,padding
+  assembler append result,string
+  assembler append result,padding
+  if difference - half > half then assembler appendchar result,pad_character
+  return result

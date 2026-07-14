@@ -3,10 +3,31 @@ options levelb
 import rxfnsb
 
 v = version()
-if pos("crexx-1.0.0-beta.3", v) = 0 then do
-  say "version() did not contain crexx-1.0.0-beta.3:" v
-  return 1
-end
+errors = 0
 
-say "PASS: version helper"
-return 0
+errors = errors + check(words(v) = 4, "four fields", v)
+platform = word(v, 1)
+bits = word(v, 2)
+release = word(v, 3)
+build_date = word(v, 4)
+errors = errors + check(pos(" " || platform || " ", " linux windows macOS cms unknown ") > 0, "platform", platform)
+errors = errors + check(bits = "32" | bits = "64", "pointer width", bits)
+errors = errors + check(left(release, 6) = "crexx-", "version prefix", release)
+errors = errors + check(length(build_date) = 8 & is_digits(build_date), "yyyymmdd build date", build_date)
+errors = errors + check(version() = v, "stable repeated call", version())
+
+if errors = 0 then say "PASS: version"
+return errors <> 0
+
+is_digits: procedure = .boolean
+  arg text = .string
+  do i = 1 to length(text)
+    if pos(substr(text, i, 1), "0123456789") = 0 then return 0
+  end
+  return length(text) > 0
+
+check: procedure = .int
+  arg passed = .boolean, label = .string, actual = .string
+  if passed then return 0
+  say "FAIL: VERSION" label "got" actual
+  return 1

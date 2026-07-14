@@ -1,0 +1,32 @@
+/* Parameterized ARRAYSORT signal test; run each case in a fresh VM. */
+options levelb
+import rxfnsb
+
+arg test_args = .string[]
+if test_args[0] <> 1 then do
+  say "FAIL: ARRAYSORT error harness requires one case name"
+  return 1
+end
+
+test_case = test_args[1]
+values = .string[]
+values[1] = "B"
+values[2] = "A"
+
+do
+  select
+    when test_case == "offset" then ignored = arraysort(values, 0)
+    when test_case == "order" then ignored = arraysort(values, 1, "SIDEWAYS")
+    when test_case == "debug" then ignored = arraysort(values, 1, "ASC", 2)
+    otherwise do
+      say "FAIL: ARRAYSORT unknown error case" test_case
+      return 1
+    end
+  end
+on signal invalid_arguments
+  say "PASS: arraysort error" test_case
+  return 0
+end
+
+say "FAIL: ARRAYSORT" test_case "did not signal INVALID_ARGUMENTS"
+return 1

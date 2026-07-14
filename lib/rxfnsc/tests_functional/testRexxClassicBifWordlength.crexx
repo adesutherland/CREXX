@@ -1,0 +1,92 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifwordlength
+import rexxvalue
+
+errors = 0
+
+errors = errors + check_value("2", "Now is the time", "2")
+errors = errors + check_value("5", "Now comes the time", "2")
+errors = errors + check_value("0", "Now is the time", "6")
+errors = errors + check_value("4", "This is a test", "1")
+errors = errors + check_value("4", "This is a test  ", "4")
+errors = errors + check_value("2", "one é日 three", "2")
+errors = errors + check_value("0", "", "1")
+errors = errors + check_value("0", "    ", "1")
+
+errors = errors + check_count_error("RXC-LC-40.3", 0)
+errors = errors + check_count_error("RXC-LC-40.3", 1)
+errors = errors + check_count_error("RXC-LC-40.4", 3)
+errors = errors + check_omitted_error(1)
+errors = errors + check_omitted_error(2)
+errors = errors + check_wordnum_error("RXC-LC-40.12", "not-a-number")
+errors = errors + check_wordnum_error("RXC-LC-40.12", "1.5")
+errors = errors + check_wordnum_error("RXC-LC-40.14", "0")
+errors = errors + check_wordnum_error("RXC-LC-40.14", "-1")
+
+if errors = 0 then say "PASS: Level C WORDLENGTH BIF"
+return errors <> 0
+
+check_value: procedure = .int
+  arg expected = .string, string = .string, wordnum = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(string)
+  args[2] = .RexxValue(wordnum)
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("WORDLENGTH")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_wordlength(reference context)
+  if \context.hasError() & result.asString() = expected & args[1].asString() == string then return 0
+  say "FAIL: WORDLENGTH expected" expected "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_count_error: procedure = .int
+  arg expected_code = .string, count = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to count
+    args[i] = .RexxValue("A")
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("WORDLENGTH")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_wordlength(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: WORDLENGTH expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_omitted_error: procedure = .int
+  arg omitted = .int
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to 2
+    args[i] = .RexxValue("A")
+    exists[i] = i <> omitted
+  end
+  context = .RexxBifCallContext("WORDLENGTH")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_wordlength(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.5" then return 0
+  say "FAIL: WORDLENGTH omitted" omitted "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
+
+check_wordnum_error: procedure = .int
+  arg expected_code = .string, wordnum = .string
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("one two")
+  args[2] = .RexxValue(wordnum)
+  exists[1] = 1
+  exists[2] = 1
+  context = .RexxBifCallContext("WORDLENGTH")
+  call context.setArguments(args, exists)
+  result = rexxclassicbif_wordlength(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: WORDLENGTH number expected error" expected_code "got" result.asString(),
+      context.errorCode() context.errorMessage()
+  return 1
