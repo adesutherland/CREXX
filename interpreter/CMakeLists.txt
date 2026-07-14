@@ -828,6 +828,9 @@ crexx_add_vm_dual_test(NAME rxassignalmodebranchtests RXVM_ARGS tests_signal_han
 crexx_add_vm_dual_test(NAME rxassignalmodecallbranchtests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-callbr-handler: callbr payload.*mode-ret-after")
 crexx_add_vm_dual_test(NAME rxassignalmodereturntests RXVM_ARGS tests_signal_handler_modes PASS_REGULAR_EXPRESSION "mode-ret-after")
 
+crexx_add_rxas_vm_binary(tests_signal_call_unwind "signal call-window mapping unwind")
+crexx_add_vm_dual_test(NAME rxassignalcallunwindtests RXVM_ARGS tests_signal_call_unwind PASS_REGULAR_EXPRESSION "PASS: Signal Call Mapping Unwind")
+
 crexx_add_rxas_vm_binary(tests_signal_mask_bounds "signal mask boundary handling")
 crexx_add_vm_dual_test(NAME rxassignalmaskotherignoretests RXVM_ARGS tests_signal_mask_bounds PASS_REGULAR_EXPRESSION "mask-other-ignore-ok.*mask-tests-passed")
 crexx_add_vm_dual_test(NAME rxassignalmaskbreakpointignoretests RXVM_ARGS tests_signal_mask_bounds PASS_REGULAR_EXPRESSION "mask-breakpoint-ignore-ok.*mask-tests-passed")
@@ -1144,7 +1147,7 @@ crexx_add_vm_dual_test(NAME rxassockettests RXVM_ARGS tests_socket PASS_REGULAR_
 add_custom_command(
 		OUTPUT tests_decimal.rxbin
 		COMMAND $<TARGET_FILE:rxas> -o tests_decimal ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_decimal
-		DEPENDS tests/tests_decimal.rxas rxas rxvm mc_decimal_dynamic db_decimal_manual
+		DEPENDS tests/tests_decimal.rxas rxas rxvm mc_decimal_dynamic db_decimal_dynamic db_decimal_manual
 		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
 		COMMENT "cREXX RXAS Decimal Instruction Tests ..."
 )
@@ -1154,6 +1157,7 @@ add_custom_target(run_tests_decimal ALL DEPENDS tests_decimal.rxbin)
 
 crexx_add_vm_dual_test(NAME rxasdecimaltests RXVM_ARGS tests_decimal)
 crexx_add_vm_dual_test(NAME rxasdecimaltests-mc RXVM_ARGS -p rxvm_mc_decimal tests_decimal)
+crexx_add_vm_dual_test(NAME rxasdecimaltests-db RXVM_ARGS -p rxvm_db_decimal tests_decimal)
 
 # Conversion and Formatting Instruction Tests
 add_custom_command(

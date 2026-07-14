@@ -2,6 +2,7 @@
 options levelb comments_dash numeric_classic
 import rxfnsb
 
+arg test_args = .string[]
 errors = test_scientific() + test_engineering()
 
 caught = 0
@@ -19,6 +20,16 @@ on signal invalid_arguments
   caught = caught + 1
 end
 errors = errors + check("1", caught || "", "exponent fit uses signal")
+
+invalid = "not-a-number"
+if test_args[0] = 1 then invalid = test_args[1]
+caught = 0
+do
+  ignored = format(invalid)
+on signal conversion_error
+  caught = caught + 1
+end
+errors = errors + check("1", caught || "", "invalid dynamic decimal uses signal")
 
 if errors = 0 then say "PASS: format"
 return errors <> 0

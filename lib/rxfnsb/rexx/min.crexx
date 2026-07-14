@@ -38,6 +38,7 @@ namespace rxfnsb expose min
  * @param first first and initially selected decimal
  * @param ... remaining decimal arguments
  * @return least decimal; the first value wins a tie
+ * @signal CONVERSION_ERROR an argument cannot be converted to decimal
  */
 min: procedure = .decimal
   arg first = .decimal, ... = .decimal

@@ -52,6 +52,19 @@ test1end:
     say r3
 test2end:
 
+    /* Invalid decimal text must remain a conversion signal rather than the
+     * decimal backend's generic ERROR fallback. */
+    say ""
+    sayx "Test 2.1 (stod - conversion syntax)"
+    inc r2
+    load r3,"not-a-number"
+    sigbr test2_1caught, "CONVERSION_ERROR"
+    stod r3
+    inc r1
+    sayx " - failed "
+test2_1caught:
+    sighalt "CONVERSION_ERROR"
+
     /* Test itod */
     say ""
     sayx "Test 3 (itod)"

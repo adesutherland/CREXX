@@ -20,10 +20,7 @@ The implementation performs at most two decimal comparisons and allocates
 nothing. It does not format or modify the argument.
 
 The Level B call boundary performs ordinary `.decimal` conversion. Invalid
-dynamic conversion is intended to raise `CONVERSION_ERROR`; the current VM
-decimal argument-conversion path instead terminates before a handler can catch
-it. That shared integration dependency is parked explicitly in the library
-programme worklist.
+dynamic conversion raises the catchable `CONVERSION_ERROR` signal.
 
 This is the strongly typed foundation API. The distinct Level C `SIGN` BIF
 normalizes Classic numeric text and reports standard context errors.

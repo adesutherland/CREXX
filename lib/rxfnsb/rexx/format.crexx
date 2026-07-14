@@ -40,6 +40,8 @@ namespace rxfnsb expose format
  * @param expp optional non-negative exponent width; zero suppresses exponents
  * @param expt optional non-negative exponent trigger
  * @return formatted decimal text
+ * @signal CONVERSION_ERROR a supplied value cannot be converted to its typed parameter
+ * @signal INVALID_ARGUMENTS a control is negative or a requested field cannot fit
  */
 format: procedure = .string
   numeric digits inherited

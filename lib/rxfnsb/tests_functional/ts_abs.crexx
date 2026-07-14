@@ -2,6 +2,7 @@
 options levelb comments_dash
 import rxfnsb
 
+arg test_args = .string[]
 errors = 0
 source = "-12.345"
 
@@ -13,6 +14,16 @@ errors = errors + check(abs("-0") = 0, "negative zero")
 errors = errors + check(abs(0) = 0, "integer zero promotion")
 errors = errors + check((abs("-123.45E+16") as .string) = "1.2345E+18", "exponent normalization")
 errors = errors + check(source = "-12.345", "argument is not mutated")
+
+invalid = "not-a-number"
+if test_args[0] = 1 then invalid = test_args[1]
+caught = 0
+do
+  ignored = abs(invalid)
+on signal conversion_error
+  caught = caught + 1
+end
+errors = errors + check(caught = 1, "invalid dynamic decimal uses signal")
 
 if errors = 0 then say "PASS: abs"
 return errors <> 0

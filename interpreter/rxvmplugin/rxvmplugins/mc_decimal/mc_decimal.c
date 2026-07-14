@@ -78,20 +78,19 @@ static void check_signal(decplugin *plugin) {
     decContext *dec_context = ((decContext*)(plugin->base.private_context));
 
     if (dec_context->status & DEC_Errors) {
+        uint32_t errors = dec_context->status & DEC_Errors;
 
-        switch (dec_context->status) {
-            case DEC_Invalid_operation:
-                plugin->base.signal_number = RXSIGNAL_CONVERSION_ERROR;
-                break;
-            case DEC_Division_by_zero:
-                plugin->base.signal_number = RXSIGNAL_DIVISION_BY_ZERO;
-                break;
-            case DEC_Overflow:
-            case DEC_Underflow:
-                plugin->base.signal_number = RXSIGNAL_OVERFLOW_UNDERFLOW;
-                break;
-            default:
-                plugin->base.signal_number = RXSIGNAL_ERROR;
+        if (errors & (DEC_Conversion_syntax | DEC_Invalid_operation)) {
+            plugin->base.signal_number = RXSIGNAL_CONVERSION_ERROR;
+        }
+        else if (errors & DEC_Division_by_zero) {
+            plugin->base.signal_number = RXSIGNAL_DIVISION_BY_ZERO;
+        }
+        else if (errors & (DEC_Overflow | DEC_Underflow)) {
+            plugin->base.signal_number = RXSIGNAL_OVERFLOW_UNDERFLOW;
+        }
+        else {
+            plugin->base.signal_number = RXSIGNAL_ERROR;
         }
         strcpy(buffer, "decNumber: ");
         strcat(buffer, decContextStatusToString(dec_context));

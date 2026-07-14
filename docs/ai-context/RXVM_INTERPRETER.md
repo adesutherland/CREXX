@@ -90,6 +90,7 @@ struct stack_frame {
     size_t nominal_number_locals;    /* Procedure-declared local count */
     size_t number_args;              /* Argument count for the frame */
     unsigned char is_interrupt;      /* Signal currently being handled, or zero */
+    uint32_t caller_arg_base;         /* First caller call-window argument */
     interrupt_entry interrupt_table[RXSIGNAL_MAX]; /* Signal / Exception handlers */
     interrupt_saved_entry *interrupt_stack; /* Block-scoped signal handler saves */
     numeric_context num_context;     /* Numeric context for the procedure */
@@ -127,6 +128,17 @@ storage whose block lifetime has ended.
 cleanup, and any VM plugin instance cleanup when a frame is finally destroyed.
 The `SAFE_RECYCLED_STACKFRAMES` build-time debug guard can additionally zero
 locals on reuse.
+
+Argument-bearing bytecode calls also record the first register in the caller's
+contiguous call window. Normal return still executes the compiler-emitted
+reverse swaps and pays no restoration scan. If a branch-style signal handler
+discards the callee before those instructions run, the unwind path uses that
+one index plus `number_args` to restore the caller's active pointer permutation.
+It finds each displaced call-slot base pointer in the caller's active map and
+performs the inverse pointer swap, preserving mutations and pre-call links
+instead of resetting values to `baselocals`. Native calls have no child frame;
+their cold branch path recovers the same window from the interrupted CALL or
+DCALL instruction.
 
 ### Signal / Interrupt Handling
 The VM signal model is implemented directly in the interpreter loop. Each
@@ -371,6 +383,10 @@ double values, coefficient/exponent extraction, arithmetic operations
 (`add`, `sub`, `mul`, `div`, `pow`, `neg`), comparisons, zero testing,
 truncate, and round. Decimal instructions in `rxvm` should go through that API
 rather than depending on one decimal backend's internal representation.
+Both decimal backends map a failed text parse to `CONVERSION_ERROR`; the decNumber
+backend maps conversion-syntax and invalid-operation status bits explicitly,
+while the long-double backend maps its invalid parsed value. Decimal conversion
+instructions then raise that through the ordinary catchable VM signal path.
 
 ### Copy, Move, and Native Payloads
 

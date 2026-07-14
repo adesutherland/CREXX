@@ -36,6 +36,7 @@ namespace rxfnsb expose abs
  *
  * @param number decimal value
  * @return non-negative decimal value
+ * @signal CONVERSION_ERROR number cannot be converted to decimal
  */
 abs: procedure = .decimal
   arg number = .decimal

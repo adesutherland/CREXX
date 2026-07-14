@@ -2,6 +2,7 @@
 options levelb comments_dash numeric_classic
 import rxfnsb
 
+arg test_args = .string[]
 errors = 0
 source = "-7.25"
 
@@ -15,6 +16,16 @@ errors = errors + check(sign("-1E-999") = -1, "negative below binary-float range
 errors = errors + check(sign("1E+999") = 1, "positive above binary-float range")
 errors = errors + check(sign("-1E+999") = -1, "negative above binary-float range")
 errors = errors + check(source = "-7.25", "argument is not mutated")
+
+invalid = "not-a-number"
+if test_args[0] = 1 then invalid = test_args[1]
+caught = 0
+do
+  ignored = sign(invalid)
+on signal conversion_error
+  caught = caught + 1
+end
+errors = errors + check(caught = 1, "invalid dynamic decimal uses signal")
 
 if errors = 0 then say "PASS: sign"
 return errors <> 0

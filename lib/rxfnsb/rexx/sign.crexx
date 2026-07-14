@@ -37,6 +37,7 @@ namespace rxfnsb expose sign
  *
  * @param number decimal value
  * @return `-1`, `0`, or `1`
+ * @signal CONVERSION_ERROR number cannot be converted to decimal
  */
 sign: procedure = .int
   arg number = .decimal

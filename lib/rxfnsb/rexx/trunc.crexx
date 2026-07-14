@@ -37,6 +37,8 @@ namespace rxfnsb expose trunc
  * @param number decimal value
  * @param fraction non-negative number of fractional digits
  * @return fixed, non-exponent decimal text without rounding
+ * @signal CONVERSION_ERROR number cannot be converted to decimal
+ * @signal INVALID_ARGUMENTS fraction is negative
  */
 trunc: procedure = .string
   arg number = .decimal, fraction = 0

@@ -18,7 +18,7 @@ performs ordinary `.decimal` conversion for every argument. The implementation
 uses one linear comparison pass, retains the first value on a tie, allocates no
 string, and calls no helper.
 
-Invalid dynamic decimal conversion is subject to the VM conversion-signal
-dependency recorded for numeric Level B selectors in the programme worklist.
+Invalid dynamic decimal conversion raises the catchable `CONVERSION_ERROR`
+signal.
 The separate Level C `MIN` BIF validates Classic `rNUM...` text and preserves
 the first selected argument's normalized text representation.

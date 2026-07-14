@@ -26,9 +26,7 @@ power, multiplication, integer conversion, or helper call. One string copy is
 used to materialize the coefficient's VM text metadata before scanning it.
 
 The Level B call boundary performs ordinary `.decimal` conversion. Invalid
-dynamic conversion is intended to raise `CONVERSION_ERROR`; the current VM
-decimal argument-conversion path instead terminates before a handler can catch
-it. That shared integration dependency is parked in the programme worklist.
+dynamic conversion raises the catchable `CONVERSION_ERROR` signal.
 
 The distinct Level C `TRUNC` BIF accepts Classic numeric text through RexxValue
 and preserves mantissas longer than the active typed-decimal precision.

@@ -2,6 +2,7 @@
 options levelb numeric_classic
 import rxfnsb
 
+arg test_args = .string[]
 errors = 0
 source = "-7.25"
 
@@ -13,6 +14,16 @@ errors = errors + check(max(1.00, 1.0) = 1, "numeric tie")
 errors = errors + check((max("9007199254740992", "9007199254740993") as .string) = "9007199254740993", "precision beyond binary float")
 errors = errors + check(max(1, 9, 3, 8, 2, 7, 4, 6, 5) = 9, "variadic scan")
 errors = errors + check(source = "-7.25", "argument is not mutated")
+
+invalid = "not-a-number"
+if test_args[0] = 1 then invalid = test_args[1]
+caught = 0
+do
+  ignored = max(1, invalid, 2)
+on signal conversion_error
+  caught = caught + 1
+end
+errors = errors + check(caught = 1, "invalid dynamic decimal uses signal")
 
 if errors = 0 then say "PASS: max"
 return errors <> 0

@@ -37,6 +37,40 @@ its public surface has passed every applicable gate.
    together after selector processing (or at a deliberate integration
    checkpoint).
 
+## Dependency-batched execution queue — approved 2026-07-14
+
+The original 122-row order remains the selector-level audit trail. The 54
+parked rows are now processed through the dependency batches below so that one
+contract decision, shared helper, fixture set, and aggregate rebuild can serve
+all affected selectors. Within a batch, selectors are still reviewed, tested,
+and marked one at a time.
+
+For every batch: first review the existing situation and present its decisions
+and options for approval; then implement and validate the approved option; then
+mark every completed selector before reviewing the next batch. If an approved
+batch encounters a new language, syntax, public-contract, compiler, or VM
+decision, park it and move to the next approved batch rather than widening the
+scope implicitly.
+
+| Batch | Parked selectors | Shared dependency | State |
+|---:|---|---|---|
+| 1 | `insert`, `overlay`, `lastpos`, `strip`, `substr`, `abs`, `format`, `sign`, `trunc`, `b2d`, `x2b`, `x2d` | Class adapters, focused class tests, and one classlib/library rebuild | review in progress |
+| 2 | `parsecompile`, `parsestring`, `parse`, `parseExec` | Frozen legacy plan/stream ABI and assertion harnesses; no producer/lowering change | queued |
+| 3 | `_datei`, `_dateo`, `_jdn`, `date`, `time` | Calendar/error contract and frozen-clause-time service | queued |
+| 4 | `arrayformat`, `arraydump` | One pure formatting contract/core, followed by the output wrapper | queued |
+| 5 | `delword`, `word`, `words`, `wordindex`, `subword`, `wordlength`, `wordpos` | `Config_OtherBlankCharacters` | queued |
+| 6 | `translate`, `xrange`, `c2x`, `c2d`, `d2c`, `x2c` | `Config_Xrange`, `Config_C2B`, and `Config_B2C` | queued |
+| 7 | `qpos`, `qsplit`, `qsplitsafe`, `qextractall`, `qextractpair`, `qstripcomment`, `qremoveall`, `qword`, `qwordlength`, `qwords`, `qwordindex`, `qwordpos`, `qsubword` | Shared quote grammar, vectors, extraction bounds, and word spans | queued |
+| 8 | `fsayfmt` | Approved placeholder contract on the frozen quote grammar | queued |
+| 9 | `random` | Typed Level B contract and scoped RNG service | queued |
+| 10 | `value` | Configuration-named external-pool service | queued |
+| 11 | `datatype` | Classic configuration services, option set, and `D` decision | queued |
+| 12 | `fnv` | Public hash contract and `rxhash` VM Unicode repair | queued |
+
+Batch 1's aggregate rebuild should also prove the already corrected class
+artifacts for `xrange`, `delword`, `subword`, `wordlength`, and `wordpos` without
+claiming completion of their separate configuration-service gates.
+
 ## Efficient selector validation and deferred integration
 
 Each active selector is compiled with the existing tool binaries into an
@@ -71,6 +105,11 @@ Integration evidence:
   three transient syntax-highlighting parser-thread misses; all three passed
   immediately when rerun serially, and the unchanged clean full rerun passed;
 - `git diff --check` passes;
+- the 2026-07-14 VM dependency checkpoint restores compiler call-window
+  mappings only on exceptional branch unwind, maps decimal conversion syntax
+  to catchable `CONVERSION_ERROR`, and passes the focused 63-test VM/Level B
+  gate. This closes the shared ABI blocker for 18 selectors and the decimal
+  signal gate for six numeric selectors without changing compiler lowering;
 - step 8 reran the five coarse Release workloads with the baseline settings;
   every median improved, with changes from -27.38% to -38.41%. Detailed
   results are in
@@ -188,23 +227,23 @@ Integration evidence:
   compiler lowering changes.
 - Level B: register new `ts_ftrunc` optimized/unoptimized.
 - Level B: register new `ts_itrunc` optimized/unoptimized.
-- Level B: retain the existing `ts_abs` registration and run the enhanced valid
-  typed-core harness optimized/unoptimized; add the dynamic invalid-decimal
-  signal case when the parked VM conversion dependency is repaired.
+- Level B: retain the existing `ts_abs` registration and run the enhanced typed-
+  core harness optimized/unoptimized, including the dynamic invalid-decimal
+  signal case enabled by the shared VM conversion repair.
 - Level C: add `RexxClassicBifAbs` to the consolidated rxfnsc library, register
   `testRexxClassicBifAbs` optimized/unoptimized, switch RexxScript and the broad
   direct harness to the standalone qualified entry, then remove the legacy ABS
   export while retaining its deprecated controller body until compiler lowering
   changes. Retain the shared Classic NUM leading-sign normalization.
-- Level B: register new `ts_max` optimized/unoptimized after the parked dynamic
-  decimal-conversion signal path is repaired.
+- Level B: register new `ts_max` optimized/unoptimized, including the dynamic
+  decimal-conversion signal path enabled by the shared VM repair.
 - Level C: add `RexxClassicBifMax` to the consolidated rxfnsc library, retain
   the shared variadic CheckArgs export, register `testRexxClassicBifMax`
   optimized/unoptimized, switch RexxScript and the broad direct harness to the
   standalone qualified entry, then remove the legacy MAX export while retaining
   its deprecated controller body until compiler lowering changes.
-- Level B: register new `ts_min` optimized/unoptimized after the parked dynamic
-  decimal-conversion signal path is repaired.
+- Level B: register new `ts_min` optimized/unoptimized, including the dynamic
+  decimal-conversion signal path enabled by the shared VM repair.
 - Level C: add `RexxClassicBifMin` to the consolidated rxfnsc library, register
   `testRexxClassicBifMin` optimized/unoptimized, switch RexxScript and the broad
   direct harness to the standalone qualified entry, then remove the legacy MIN
@@ -216,24 +255,22 @@ Integration evidence:
   register `testRexxClassicBifNumeric` optimized/unoptimized. Wire the later
   direct lowering to the three qualified entries without adding them to the
   deprecated name controller.
-- Level B: retain the `ts_sign` registration and run the simplified valid
-  decimal-core harness optimized/unoptimized; add the dynamic invalid-decimal
-  signal case after the parked VM conversion dependency is repaired.
+- Level B: retain the `ts_sign` registration and run the simplified decimal-core
+  harness optimized/unoptimized, including dynamic invalid-decimal signalling.
 - Level C: add `RexxClassicBifSign` to the consolidated rxfnsc library, register
   `testRexxClassicBifSign` optimized/unoptimized, switch RexxScript and the broad
   direct harness to the qualified entry, then remove the legacy SIGN export
   while retaining its deprecated controller body until compiler lowering
   changes.
-- Level B: retain the `ts_trunc` registration and run the simplified valid
-  decimal-core/signal harness optimized/unoptimized; add dynamic invalid-decimal
-  coverage after the parked VM conversion dependency is repaired.
+- Level B: retain the `ts_trunc` registration and run the simplified decimal-
+  core/signal harness optimized/unoptimized, including dynamic invalid-decimal
+  coverage.
 - Level C: add `RexxClassicBifTrunc` to the consolidated rxfnsc library and
   register `testRexxClassicBifTrunc` optimized/unoptimized. Add RexxScript and
   broad-harness direct wiring without introducing a compatibility-controller
   body that does not currently exist.
 - Level B: retain the `ts_format` registration and run the rewritten normative
-  harness optimized/unoptimized; add dynamic invalid-decimal coverage after the
-  parked VM conversion dependency is repaired.
+  harness optimized/unoptimized, including dynamic invalid-decimal coverage.
 - Level C: add `RexxClassicBifFormat` to the consolidated rxfnsc library and
   register `testRexxClassicBifFormat` optimized/unoptimized. Add RexxScript and
   broad-harness direct wiring without adding a compatibility-controller body.
@@ -1946,7 +1983,12 @@ Integration evidence:
   expectations in a selector-local harness, then optimize the decoder/executor
   while preserving those bytes. Row 88 `getenv` is sole active.
 
-### Parked co-dependency queue
+### Active parked co-dependency queue
+
+The 2026-07-14 VM dependency checkpoint removed the shared caught-signal call-
+window blocker for 18 selectors and the decimal-conversion signal blocker for
+six numeric selectors. The four numeric rows that remain parked below are held
+only for their separate `.Rexx` class-adapter work.
 
 - Date/time conversion cluster (`_datei`, `_dateo`, `_jdn`, `date`, and Level C
   `time`): freeze the
@@ -1961,10 +2003,6 @@ Integration evidence:
   reverse-order SDBM or migrates to conventional FNV-1a, and repair `rxhash`'s
   Unicode character-count-as-byte-limit defect before freezing vectors. The VM
   change is outside this library-only programme.
-- `arraysort` exposed-signal ABI: valid ascending/descending and substring-key
-  behavior, strict argument signalling, the cached-key O(n log n) algorithm,
-  focused tests, and docs are complete. Repair the shared caught-signal `arg
-  expose` unwind behavior once, then close B/V without revisiting the sort.
 - `arraydump`/`arrayformat` shared output contract: freeze one common definition
   of range errors, accepted flags, headers, index padding, quote escaping,
   non-printable rendering, and empty ranges before replacing their duplicated
@@ -2001,40 +2039,6 @@ Integration evidence:
   changing the decoder or its errors. Keep the producer and compiler lowering
   unchanged during this library programme.
 
-- `objectarraymove` exposed-signal ABI: normal and signal-focused selector
-  tests pass independently and the one-copy algorithm is complete. As with the
-  adjacent exposed-array mutators, unwinding a caught signal from an `arg
-  expose` callee can displace the caller array. Repair and verify that shared
-  call ABI once at the final dependency checkpoint, without rebuilding the
-  compiler/interpreter for this row.
-- `arrayset` exposed-signal ABI: valid growth/overwrite behavior, invalid-index
-  signalling, focused tests, performance review, and docs are complete. Repair
-  the shared caught-signal `arg expose` unwind behavior once at the final
-  dependency checkpoint, then re-enable the row's B/V closure.
-- `arraycontains` exposed-signal ABI: normal and invalid-flag selector tests,
-  the no-array-copy/direct-fold performance repair, and docs are complete.
-  Repair the shared caught-signal `arg expose` unwind behavior once, then close
-  B/V without revisiting this algorithm.
-- `arrayindexof` exposed-signal ABI: focused start/case coverage, no-array-copy
-  direct-fold implementation, and docs are complete. Repair the shared caught-
-  signal `arg expose` unwind behavior once, then close B/V without revisiting
-  the selector.
-- `arraycopy` caught-signal argument ABI: all normal slice behavior and the
-  isolated negative-count signal pass, and the direct pre-sized copy algorithm
-  is complete. A caught signal can displace the borrowed caller array, so close
-  B/V with the same shared unwind repair as the exposed-array rows.
-- `arrayhi` exposed-signal ABI: all GET/SET behavior, explicit mode/argument
-  validation, fast omitted GET, tests, and docs are complete. Repair the shared
-  caught-signal unwind behavior once at the dependency checkpoint, then close
-  B/V without revisiting the selector.
-- `arraymove` exposed-signal ABI: normal and signal-focused coverage, the
-  insert-first one-copy algorithm, and docs are complete. Repair the shared
-  caught-signal unwind behavior once, then close B/V without revisiting it.
-- `stem` repeated caught-method signal state: normal behavior and every error
-  contract pass in isolated optimized/unoptimized processes, but two caught
-  object-method signals in one optimized VM process are not reliable. Audit
-  this with the shared argument/signal unwind dependency once; do not revisit
-  the hash/map algorithm.
 - `delword` configured blank set and class artifact: native Level B and direct
   Level C default-Unicode behavior, errors, tests, docs, and linear algorithms
   are complete. Full Classic Level C compliance shares the unimplemented
@@ -2124,56 +2128,24 @@ Integration evidence:
   helper without pretending it defines that policy. Resume row 31 only after
   the configuration-range/XRANGE contract is approved and implemented; do not
   preserve the current nonstandard literal-blank fallback.
-- `abs` VM decimal conversion and class adapter: dynamic invalid
-  `.string -> .decimal` Level B argument binding currently terminates with
-  `decNumber: Conversion syntax` instead of raising a catchable
-  `CONVERSION_ERROR`; repair that VM conversion path at an integration
-  checkpoint without adding an interpreter rebuild per selector. The
-  `.Rexx.abs` adapter also passes Classic string text, including blank-separated
-  signs, directly to the now-native `.decimal` Level B function; normalize the
-  adapter input through the Classic path and add its focused method test in the
-  final classlib checkpoint. The valid typed Level B core and complete direct
-  Level C BIF are independently tested.
-- `max` Level B invalid conversion: the native decimal implementation and all
-  valid focused tests are complete, but its dynamic invalid argument case uses
-  the same parked VM `.string -> .decimal` conversion-signal path as `abs`.
-  Re-enable that one error test when the shared VM dependency is repaired; the
-  standalone Level C MAX BIF is complete and reports `40.11` normally.
-- `min` Level B invalid conversion: identical VM dependency to `max`; the native
-  decimal implementation and valid focused tests are complete, and standalone
-  Level C MIN fully reports its errors. Re-enable the dynamic invalid Level B
-  case with the same shared VM repair.
-- `sign` VM decimal conversion and class adapter: valid native decimal SIGN and
-  the complete direct Level C BIF are independently tested. Dynamic invalid
-  `.string -> .decimal` binding shares the ABS/MAX/MIN catchable-signal blocker.
-  `.Rexx.sign` also forwards Classic receiver text directly to the native
-  helper; normalize that adapter through the Classic path and add its focused
-  method test at the final classlib/VM integration checkpoint.
-- `trunc` VM decimal conversion and class adapter: valid native decimal TRUNC,
-  its negative-fraction signal, and the complete text-preserving direct Level C
-  BIF are independently tested. Dynamic invalid decimal binding shares the
-  ABS/MAX/MIN/SIGN VM blocker. `.Rexx.trunc` passes Classic receiver text into
-  the typed helper; normalize it through the Classic path and add a focused
-  method test at the final classlib/VM checkpoint.
-- `format` VM decimal conversion and class adapter: the typed, presence-aware
-  Level B formatter and complete direct Level C BIF are independently tested.
-  Dynamic invalid `.string -> .decimal` binding shares the catchable conversion
-  blocker already recorded for ABS/MAX/MIN/SIGN/TRUNC. `.Rexx.format` forwards
-  five concrete defaults and therefore loses Classic omission; preserve option
-  presence and add its focused method test at the final classlib/VM checkpoint.
+- `abs` class adapter: `.Rexx.abs` passes Classic string text, including blank-
+  separated signs, directly to the native `.decimal` Level B function.
+  Normalize the adapter input through the Classic path and add its focused
+  method test at the final classlib checkpoint.
+- `sign` class adapter: `.Rexx.sign` forwards Classic receiver text directly to
+  the native helper. Normalize it through the Classic path and add its focused
+  method test at the final classlib checkpoint.
+- `trunc` class adapter: `.Rexx.trunc` passes Classic receiver text into the
+  typed helper. Normalize it through the Classic path and add a focused method
+  test at the final classlib checkpoint.
+- `format` class adapter: `.Rexx.format` forwards five concrete defaults and
+  therefore loses Classic omission. Preserve option presence and add its
+  focused method test at the final classlib checkpoint.
 - `b2d` class adapter metadata: the native one-argument unsigned converter and
   its boundary/error harness are complete. `lib/classlib/Rexx.crexx` now
   correctly declares `.Rexx.b2d() -> .int`, but the current aggregate classlib
   still advertises the old `.rexx` return. Prove the adapter after the single
   deferred classlib rebuild rather than rebuilding it during this row.
-- `binary` exposed-argument signal unwind: all library success/error paths and
-  documentation are complete and pass separately. The expanded harness showed
-  that a caught signal from any `arg expose` procedure can skip the caller-side
-  swap restoration used by the existing call ABI, displacing the caller's
-  binary value even when the library signals before mutation. Each signal case
-  therefore uses a fresh buffer and passes, while caller-value preservation is
-  parked as a shared compiler/runtime ABI dependency. Do not change compiler
-  lowering during this library programme.
 - `c2x` configuration encoding: native Level B C2X and its tests/docs are
   complete with the established `hexchar` low-byte behavior. Classic Level C
   instead requires configuration-coded character-to-bits conversion. The
@@ -2213,38 +2185,6 @@ Integration evidence:
   blocked on the undefined `Config_Xrange` coded-character service shared with
   TRANSLATE. `.Rexx.xrange` now forwards correctly in source; compile and run
   its focused assertion after the single deferred classlib rebuild.
-- `arrayinsert` exposed-signal unwind: all valid mutation paths, focused tests,
-  errors, docs, and performance work are complete. A caught invalid-control
-  signal from the `arg expose` procedure displaces the caller's array through
-  the same shared call-ABI issue already proved for `binary`. Repair and enable
-  caller-preservation assertions at the final compiler/runtime integration
-  checkpoint; do not rebuild that layer during selector processing.
-- `arraydelete` exposed-signal unwind: normal/no-op deletion paths, isolated
-  errors, tests, docs, and performance work are complete. Its caught invalid-
-  control signals share the same exposed-argument caller displacement proved
-  for rows 45 and 57; repair caller preservation at their common final ABI
-  checkpoint rather than in this library row.
-- `arrayappend` exposed-signal unwind: all success/no-op paths, isolated errors,
-  tests, docs, and performance work are complete. Its caught negative-count
-  signal shares the same caller-array displacement as the other `arg expose`
-  helpers; repair preservation once at the common ABI checkpoint.
-- `arrayprepend` exposed-signal unwind: all success/no-op paths, isolated
-  errors, tests, docs, and performance work are complete. Its caught negative-
-  count signal shares the common caller-array displacement and waits for the
-  same final ABI repair.
-- `objectarrayinsert` exposed-signal unwind: normal insertions, object-value
-  copy semantics, isolated errors, tests, docs, and performance work are
-  complete. Its invalid-control signals share the common `arg expose` caller-
-  array displacement and wait for the final ABI repair.
-- `objectarraydelete` exposed-signal unwind: all normal/no-op paths, isolated
-  errors, tests, docs, and performance work are complete. Invalid-control
-  signal preservation waits for the same common ABI repair.
-- `objectarrayappend` exposed-signal unwind: all normal/no-op paths, object-
-  value semantics, isolated errors, tests, docs, and performance work are
-  complete. Its negative-count signal waits for the common ABI repair.
-- `objectarrayprepend` exposed-signal unwind: all normal/no-op paths, object-
-  value semantics, isolated errors, tests, docs, and performance work are
-  complete. Its negative-count signal waits for the common ABI repair.
 
 ## Programme benchmark gates
 
@@ -2409,16 +2349,16 @@ are active. This association is an approval point before row 1 starts.
 | 33 | `verify` | `VERIFY` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 34 | `_ftrunc` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 35 | `_itrunc` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
-| 36 | `abs` | `ABS` M | ☐ | ☒ | ☐ | ☒ | ☒ | ☐ | parked — VM decimal conversion signal / `.Rexx.abs` |
-| 37 | `format` | `FORMAT` R | ☐ | ☒ | ☐ | ☒ | ☒ | ☐ | parked — VM decimal conversion signal / `.Rexx.format` |
-| 38 | `max` | `MAX` M | ☐ | ☒ | ☐ | ☒ | ☒ | ☐ | parked — VM decimal conversion signal |
-| 39 | `min` | `MIN` M | ☐ | ☒ | ☐ | ☒ | ☒ | ☐ | parked — VM decimal conversion signal |
+| 36 | `abs` | `ABS` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | parked — `.Rexx.abs` adapter |
+| 37 | `format` | `FORMAT` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | parked — `.Rexx.format` adapter test |
+| 38 | `max` | `MAX` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
+| 39 | `min` | `MIN` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 40 | `numeric` | `DIGITS` R; `FORM` R; `FUZZ` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
-| 41 | `sign` | `SIGN` M | ☐ | ☒ | ☐ | ☒ | ☒ | ☐ | parked — VM decimal conversion signal / `.Rexx.sign` |
-| 42 | `trunc` | `TRUNC` R | ☐ | ☒ | ☐ | ☒ | ☒ | ☐ | parked — VM decimal conversion signal / `.Rexx.trunc` |
+| 41 | `sign` | `SIGN` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | parked — `.Rexx.sign` adapter |
+| 42 | `trunc` | `TRUNC` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | parked — `.Rexx.trunc` adapter |
 | 43 | `b2x` | `B2X` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 44 | `b2d` | — | ☐ | — | ☒ | ☒ | ☒ | ☐ | parked — rebuilt `.Rexx.b2d` metadata/test |
-| 45 | `binary` | — | ☒ | — | ☒ | ☒ | ☒ | ☐ | parked — exposed-signal call ABI |
+| 45 | `binary` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 46 | `c2x` | `C2X` R | ☒ | ☐ | ☒ | ☒ | ☒ | ☒ | parked — `Config_C2B` service |
 | 47 | `c2d` | `C2D` R | ☒ | ☐ | ☒ | ☒ | ☒ | ☒ | parked — `Config_C2B` service |
 | 48 | `d2b` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
@@ -2430,25 +2370,25 @@ are active. This association is an approval point before row 1 starts.
 | 54 | `xrange` | `XRANGE` R | ☐ | ☐ | ☒ | ☒ | ☒ | ☐ | parked — `Config_Xrange` and rebuilt adapter |
 | 55 | `arrayfind` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 56 | `splice` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
-| 57 | `arrayinsert` | — | ☐ | — | ☒ | ☒ | ☒ | ☐ | parked — exposed-signal call ABI |
-| 58 | `arraydelete` | — | ☐ | — | ☒ | ☒ | ☒ | ☐ | parked — exposed-signal call ABI |
-| 59 | `arrayappend` | — | ☐ | — | ☒ | ☒ | ☒ | ☐ | parked — exposed-signal call ABI |
-| 60 | `arrayprepend` | — | ☐ | — | ☒ | ☒ | ☒ | ☐ | parked — exposed-signal call ABI |
-| 61 | `objectarrayinsert` | — | ☐ | — | ☒ | ☒ | ☒ | ☐ | parked — exposed-signal call ABI |
-| 62 | `objectarraydelete` | — | ☐ | — | ☒ | ☒ | ☒ | ☐ | parked — exposed-signal call ABI |
-| 63 | `objectarrayappend` | — | ☐ | — | ☒ | ☒ | ☒ | ☐ | parked — exposed-signal call ABI |
-| 64 | `objectarrayprepend` | — | ☐ | — | ☒ | ☒ | ☒ | ☐ | parked — exposed-signal call ABI |
+| 57 | `arrayinsert` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 58 | `arraydelete` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 59 | `arrayappend` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 60 | `arrayprepend` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 61 | `objectarrayinsert` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 62 | `objectarraydelete` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 63 | `objectarrayappend` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 64 | `objectarrayprepend` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 65 | `objectarraydrop` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
-| 66 | `objectarraymove` | — | ☐ | — | ☒ | ☒ | ☒ | ☐ | parked — exposed-signal call ABI |
+| 66 | `objectarraymove` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 67 | `arrayget` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
-| 68 | `arrayset` | — | ☐ | — | ☒ | ☒ | ☒ | ☐ | parked — exposed-signal call ABI |
-| 69 | `arraycontains` | — | ☐ | — | ☒ | ☒ | ☒ | ☐ | parked — exposed-signal call ABI |
-| 70 | `arrayindexof` | — | ☐ | — | ☒ | ☒ | ☒ | ☐ | parked — exposed-signal call ABI |
-| 71 | `arraycopy` | — | ☐ | — | ☒ | ☒ | ☒ | ☐ | parked — caught-signal argument ABI |
+| 68 | `arrayset` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 69 | `arraycontains` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 70 | `arrayindexof` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 71 | `arraycopy` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 72 | `arraydrop` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
-| 73 | `arrayhi` | — | ☐ | — | ☒ | ☒ | ☒ | ☐ | parked — exposed-signal call ABI |
-| 74 | `arraymove` | — | ☐ | — | ☒ | ☒ | ☒ | ☐ | parked — exposed-signal call ABI |
-| 75 | `stem` | — | ☐ | — | ☒ | ☒ | ☒ | ☐ | parked — repeated caught-method signal state |
+| 73 | `arrayhi` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 74 | `arraymove` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 75 | `stem` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 76 | `delword` | `DELWORD` R | ☐ | ☐ | ☒ | ☒ | ☒ | ☐ | parked — configured blanks / rebuilt adapter |
 | 77 | `word` | `WORD` M | ☒ | ☐ | ☒ | ☒ | ☒ | ☐ | parked — configured blanks |
 | 78 | `words` | `WORDS` M | ☒ | ☐ | ☒ | ☒ | ☒ | ☐ | parked — configured blanks |
@@ -2484,7 +2424,7 @@ are active. This association is an approval point before row 1 starts.
 | 103 | `arrayshift` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 104 | `arrayreverse` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 105 | `arrayjoin` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
-| 106 | `arraysort` | — | ☐ | — | ☒ | ☒ | ☒ | ☐ | parked — exposed-signal ABI |
+| 106 | `arraysort` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 107 | `arraydump` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — shared formatter contract |
 | 108 | `arrayformat` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — shared formatter contract |
 | 109 | `qpos` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — shared quote grammar |
@@ -4303,7 +4243,7 @@ are active. This association is an approval point before row 1 starts.
 - Completion summary: all applicable B/T/P/D/V gates are complete. New focused
   test registration is queued; Level C is not applicable. Row 36 is now active.
 
-### 36. `abs` — parked
+### 36. `abs` — VM gate complete; class adapter parked
 
 - Source/public surface: `lib/rxfnsb/rexx/abs.crexx`, one exported
   `abs(number=.string) -> .string` procedure that currently implements text
@@ -4343,12 +4283,10 @@ are active. This association is an approval point before row 1 starts.
   whitespace), so documented Level C input is accepted. Park `.Rexx.abs` until
   the final classlib checkpoint supplies Classic string normalization rather
   than weakening the native Level B signature.
-- Discovered dependency: dynamic invalid `.string -> .decimal` argument binding
-  currently terminates in the VM with `decNumber: Conversion syntax` before a
-  Level B `CONVERSION_ERROR` handler can run. Valid typed-core work continues,
-  but the B/V error gate must remain parked until that VM conversion path
-  translates the failure to a signal; no interpreter rebuild is pulled into
-  this selector row.
+- Resolved VM dependency: dynamic invalid `.string -> .decimal` argument
+  binding now maps decNumber conversion syntax to catchable
+  `CONVERSION_ERROR`. The optimized and unoptimized Level B harnesses include
+  this runtime case.
 - Focused validation commands/results: isolated valid Level B optimized/
   unoptimized overlays both report `PASS: abs`; because the new signature
   intentionally conflicts with the stale aggregate metadata, the focused
@@ -4359,19 +4297,17 @@ are active. This association is an approval point before row 1 starts.
   `PASS: Level C ABS BIF`, covering ordinary/signed/exponent/blank-separated
   forms, non-mutation, and `40.3`/`40.4`/`40.5`/`40.11` errors including
   rejection of embedded digit blanks. The dynamic invalid Level B decimal case
-  reproduces the parked VM termination rather than a signal.
+  now catches `CONVERSION_ERROR` in both modes.
 - Performance/RXAS review evidence: stale Level B aggregate is 774 lines with
   four helper calls and repeated slicing; the native Level B core is 39 noopt/
   33 opt lines with one decimal comparison and at most one subtraction, no
   helper/string call, scan, or allocation. The standalone Level C BIF is 127
   noopt/128 opt lines and adds only CheckArgs/context/RexxValue conversion plus
   the same decimal core.
-- Completion summary: C/P/D are complete and the valid Level B implementation
-  is independently proven. B/T/V remain open solely for catchable invalid
-  decimal conversion and the final `.Rexx.abs` adapter test; both exact
-  dependencies are parked. Row 37 is now active.
+- Completion summary: B/C/T/P/D/V are complete for the standalone selector.
+  Only the distinct Classic-normalizing `.Rexx.abs` adapter remains parked.
 
-### 37. `format` — parked after independent B/C completion
+### 37. `format` — VM gate complete; class adapter test parked
 
 - Source/public surface: `lib/rxfnsb/rexx/format.crexx`, one exported
   `format(number=.string, before=0, after=0, expp=0, expt=-1) -> .string`
@@ -4442,10 +4378,10 @@ are active. This association is an approval point before row 1 starts.
   final Level B implementation emits 1,800 noopt / 1,768 opt lines, has no
   `rxfnsb` helper calls on the optimized path, and keeps arithmetic in exact
   decimal/text operations. Direct Level C is 1,967 noopt / 1,935 opt lines.
-- Completion summary: C/P/D and the independently testable valid Level B core
-  are complete. B/T/V remain open only for the shared catchable dynamic-decimal
-  conversion repair and the omission-preserving `.Rexx.format` adapter test;
-  row 37 is parked and row 43 proceeds without an aggregate rebuild.
+- Completion summary: B/C/T/P/D/V are complete for the standalone selector,
+  including catchable dynamic-decimal conversion in both modes. The corrected
+  omission-preserving `.Rexx.format` source remains parked only for its focused
+  class-adapter test.
 
 ### 43. `b2x` — done
 
@@ -4566,7 +4502,7 @@ are active. This association is an approval point before row 1 starts.
   still describes `.Rexx.b2d` as returning `.rexx`; row 44 is parked for the
   single final classlib rebuild/adapter assertion, and row 45 is active.
 
-### 38. `max` — parked
+### 38. `max` — done
 
 - Source/public surface: `lib/rxfnsb/rexx/max.crexx`, one exported variadic
   `max(first=.float, ...=.float) -> .float` procedure.
@@ -4618,11 +4554,11 @@ are active. This association is an approval point before row 1 starts.
   with no helper call or allocation. The standalone Level C BIF is 204 noopt/
   211 opt lines, validates/converts each argument once, scans linearly, and
   performs no name dispatch or substring work.
-- Completion summary: C/P/D and the valid Level B core are complete. B/T/V are
-  parked only for the shared catchable invalid-decimal conversion dependency.
-  Aggregate wiring is queued. Row 39 is now active.
+- Completion summary: all B/C/T/P/D/V gates are complete. Dynamic invalid
+  decimal text raises and is caught as `CONVERSION_ERROR` in both Level B
+  modes.
 
-### 39. `min` — parked
+### 39. `min` — done
 
 - Source/public surface: `lib/rxfnsb/rexx/min.crexx`, one exported variadic
   `min(first=.float, ...=.float) -> .float` procedure.
@@ -4666,9 +4602,9 @@ are active. This association is an approval point before row 1 starts.
   pass/no-allocation core. Standalone Level C is 204 noopt/211 opt lines with
   one validation/conversion pass and one comparison pass, no dispatcher or
   substring work.
-- Completion summary: C/P/D and valid Level B are complete. B/T/V are parked
-  solely on the shared invalid-decimal VM signal dependency. Wiring is queued;
-  row 41 is active.
+- Completion summary: all B/C/T/P/D/V gates are complete. Dynamic invalid
+  decimal text raises and is caught as `CONVERSION_ERROR` in both Level B
+  modes.
 
 ### 40. `numeric` — done
 
@@ -4727,7 +4663,7 @@ are active. This association is an approval point before row 1 starts.
   the three distinct direct Level C BIFs are documented and independently
   proven in both modes. Aggregate wiring is queued; row 41 is active.
 
-### 41. `sign` — parked
+### 41. `sign` — VM gate complete; class adapter parked
 
 - Source/public surface: `lib/rxfnsb/rexx/sign.crexx` exports
   `sign(number=.float) -> .int`. It has no imports. `.Rexx.sign` forwards its
@@ -4778,11 +4714,11 @@ are active. This association is an approval point before row 1 starts.
   Level C is 146 noopt/145 opt lines: one validation/conversion followed by the
   same two comparisons and native integer RexxValue factories, with no name
   dispatch or numeric result-string construction.
-- Completion summary: C/P/D and the valid typed Level B core are complete. B/T/V
-  remain open solely for the shared VM invalid-decimal signal and final
-  `.Rexx.sign` adapter checkpoint. Aggregate wiring is queued; row 42 is active.
+- Completion summary: B/C/T/P/D/V are complete for the standalone selector,
+  including catchable dynamic invalid-decimal input. Only the distinct
+  Classic-normalizing `.Rexx.sign` adapter remains parked.
 
-### 42. `trunc` — parked
+### 42. `trunc` — VM gate complete; class adapter parked
 
 - Source/public surface: `lib/rxfnsb/rexx/trunc.crexx` exports
   `trunc(innum=.string, fraction=0) -> .string`. It has no imports but calls
@@ -4839,10 +4775,9 @@ are active. This association is an approval point before row 1 starts.
   Level C is 864 lines in both modes, scans input leading zeros once and writes
   output linearly; it contains no float instructions, decimal-cache conversion,
   typed TRUNC call, or name dispatch.
-- Completion summary: C/P/D and the valid typed Level B core are complete. B/T/V
-  are parked only for the shared VM invalid-decimal signal and `.Rexx.trunc`
-  adapter checkpoint. Aggregate wiring is queued; row 37 is resumed now that
-  its numeric inheritance and decimal-decomposition prerequisites exist.
+- Completion summary: B/C/T/P/D/V are complete for the standalone selector,
+  including catchable dynamic invalid-decimal input. Only the distinct
+  Classic-normalizing `.Rexx.trunc` adapter remains parked.
 
 ### 88. `getenv` — done
 
@@ -5273,7 +5208,7 @@ are active. This association is an approval point before row 1 starts.
 - Completion summary: all applicable B/T/P/D/V gates are complete; registration
   is queued. Row 106 `arraysort` is sole active.
 
-### 106. `arraysort` — parked after selector completion
+### 106. `arraysort` — done
 
 - Public surface: `arraysort(expose array=.string[] [,offset=.int
   [,order=.string [,debug=.int]]]) -> .int` sorts a one-based Level B string
@@ -5289,19 +5224,20 @@ are active. This association is an approval point before row 1 starts.
   key storage; the sort core has no general selector calls.
 - Test/doc result: focused valid coverage exercises empty/single arrays, both
   orders, prefix-related numeric text, substring keys, Unicode, return state,
-  and mutation. A parameterized harness verifies offset/order/debug signals in
-  separate VM processes. RexxDoc and stable Level B Markdown document the exact
-  behavior, complexity, and lack of a Level C surface.
+  and mutation. The error harness verifies offset/order/debug signals
+  sequentially in one VM and checks caller-array preservation after every
+  catch. RexxDoc and stable Level B Markdown document the exact behavior,
+  complexity, and lack of a Level C surface.
 - Focused validation and second review: optimized and unoptimized overlays both
-  report `PASS: arraysort`; all six fresh-process error invocations pass. RXAS
+  report `PASS: arraysort`; both repeated-signal error tests pass. RXAS
   changes from 377 noopt / 1,231 opt lines to 765/757: the original noopt body
   has five helper calls and optimized output contains twelve inlined substring
   sites, while the replacement has zero calls and one key-extraction substring
   site in each mode. `git diff --check` passes and compiler/interpreter diffs
   remain empty.
-- Completion summary: T/P/D are complete. B/V remain parked only on the shared
-  caught-signal exposed-array unwind dependency; the algorithm needs no revisit.
-  Registration is queued. Row 107 `arraydump` is sole active.
+- Completion summary: all applicable B/T/P/D/V gates are complete. The shared
+  caught-signal call-window repair is covered by the one-VM repeated-signal
+  harness and the focused 63-test integration gate.
 
 ### 107. `arraydump` — parked before implementation
 

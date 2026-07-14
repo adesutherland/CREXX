@@ -200,54 +200,31 @@ foreach(_binfile ${REXXBINS})
     set(_prev_target ${_basename}_noopt_artifact ${_basename}_opt_artifact)
 endforeach()
 
-# Caught signals from exposed arrays/objects are currently reliable only when
-# each assertion runs in a fresh VM. Build each parameterized harness once per
-# optimization mode, then register every case as a separate process.
+# Run each caught-signal sequence in one VM so the harnesses verify that call
+# unwind preserves exposed arrays and object receivers across repeated errors.
 add_custom_target(ts_arraysort_errors)
 add_dependencies(testbifs ts_arraysort_errors)
 crexx_add_rexx_opt_matrix(
-        NAME ts_arraysort_error_offset
+        NAME ts_arraysort_errors
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/ts_arraysort_errors.crexx
         TARGET_GROUP ts_arraysort_errors
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         RXC_FLAGS -x
         DEPENDS library ${CMAKE_CURRENT_SOURCE_DIR}/ts_arraysort_errors.crexx
-        RUNTIME_ARGS ${LIBRPATH} -a offset
+        RUNTIME_ARGS ${LIBRPATH}
 )
-foreach(_mode IN ITEMS noopt opt)
-    foreach(_case IN ITEMS order debug)
-        _crexx_register_runtime_test(
-                NAME ts_arraysort_error_${_case}_${_mode}
-                RUNNER $<TARGET_FILE:rxvm>
-                PROGRAM ts_arraysort_error_offset_${_mode}
-                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                RUNTIME_ARGS ${LIBRPATH} -a ${_case}
-        )
-    endforeach()
-endforeach()
 
 add_custom_target(ts_stem_errors)
 add_dependencies(testbifs ts_stem_errors)
 crexx_add_rexx_opt_matrix(
-        NAME ts_stem_error_key
+        NAME ts_stem_errors
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/ts_stem_errors.crexx
         TARGET_GROUP ts_stem_errors
         IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
         RXC_FLAGS -x
         DEPENDS library ${CMAKE_CURRENT_SOURCE_DIR}/ts_stem_errors.crexx
-        RUNTIME_ARGS ${LIBRPATH} -a key
+        RUNTIME_ARGS ${LIBRPATH}
 )
-foreach(_mode IN ITEMS noopt opt)
-    foreach(_case IN ITEMS value valueat iterator)
-        _crexx_register_runtime_test(
-                NAME ts_stem_error_${_case}_${_mode}
-                RUNNER $<TARGET_FILE:rxvm>
-                PROGRAM ts_stem_error_key_${_mode}
-                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                RUNTIME_ARGS ${LIBRPATH} -a ${_case}
-        )
-    endforeach()
-endforeach()
 
 set_tests_properties(ts_rxjson_noopt ts_rxjson_opt
         PROPERTIES PASS_REGULAR_EXPRESSION "PASS: rxjson helpers")

@@ -53,23 +53,27 @@ test_zero_count: procedure = .int
 test_invalid_from: procedure = .int
   array = .string[]
   array[1] = "A"
+  caught = 0
   do
     ignored = arrayinsert(array, 0, 1, "X")
   on signal invalid_arguments
-    return 0
+    caught = 1
   end
-  say "FAIL: ARRAYINSERT invalid position did not signal"
+  if caught & array[0] = 1 & array[1] == "A" then return 0
+  say "FAIL: ARRAYINSERT invalid position signal displaced the caller array"
   return 1
 
 test_invalid_count: procedure = .int
   array = .string[]
   array[1] = "A"
+  caught = 0
   do
     ignored = arrayinsert(array, 1, -1, "X")
   on signal invalid_arguments
-    return 0
+    caught = 1
   end
-  say "FAIL: ARRAYINSERT invalid count did not signal"
+  if caught & array[0] = 1 & array[1] == "A" then return 0
+  say "FAIL: ARRAYINSERT invalid count signal displaced the caller array"
   return 1
 
 check_array: procedure = .int

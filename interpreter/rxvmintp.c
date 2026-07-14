@@ -3081,6 +3081,7 @@ RX_INLINE stack_frame *frame_f(
     this->procedure = procedure;
     this->has_reference_lifetimes = 0;
     this->is_interrupt_action = 0;
+    this->caller_arg_base = UINT32_MAX;
 
     return this;
 }
@@ -3132,6 +3133,90 @@ static void free_external_entry_arguments(stack_frame *frame) {
     }
 }
 
+/* Restore the active pointer permutation created by compiler call-window
+ * swaps.  Call-window registers have unique base storage, so locating each
+ * displaced base pointer identifies the source register for the inverse swap.
+ * Values are not copied or reset: arg expose and reference mutations survive. */
+static int rxvm_restore_call_argument_mapping(
+        stack_frame *caller, size_t arg_base, size_t arg_count) {
+    size_t arg;
+    size_t source;
+
+    if (!caller || !arg_count) return 1;
+    if (arg_base > caller->number_locals ||
+        arg_count > caller->number_locals - arg_base) return 0;
+
+    for (arg = 0; arg < arg_count; arg++) {
+        size_t slot = arg_base + arg;
+        value *slot_base = caller->baselocals[slot];
+
+        if (!slot_base) return 0;
+        if (caller->locals[slot] == slot_base) continue;
+
+        for (source = 0; source < caller->number_locals; source++) {
+            if (caller->locals[source] == slot_base) break;
+        }
+        if (source == caller->number_locals) return 0;
+
+        {
+            value *mapped = caller->locals[slot];
+            caller->locals[slot] = caller->locals[source];
+            caller->locals[source] = mapped;
+        }
+    }
+
+    return 1;
+}
+
+static int rxvm_restore_caller_call_argument_mapping(stack_frame *callee) {
+    if (!callee || !callee->parent || callee->caller_arg_base == UINT32_MAX) return 1;
+    return rxvm_restore_call_argument_mapping(callee->parent,
+                                              (size_t)callee->caller_arg_base,
+                                              callee->number_args);
+}
+
+/* A native call has no child frame to carry caller_arg_base.  If a branch
+ * handler remains in the interrupted frame, recover the call window from the
+ * canonical CALL/DCALL operand only on that cold signal path. */
+static int rxsignal_restore_interrupted_call_argument_mapping(
+        stack_frame *frame, rxinteger interrupted_module, rxinteger interrupted_address) {
+    bin_space *space;
+    size_t address;
+    size_t count_reg;
+    rxinteger count;
+    int opcode;
+
+    if (!frame || !frame->procedure || !frame->procedure->binarySpace) return 1;
+    space = frame->procedure->binarySpace;
+    if (!space->module || interrupted_module != (rxinteger)space->module->module_number) return 1;
+    if (interrupted_address < 0) return 1;
+
+    address = (size_t)interrupted_address;
+    if (address >= space->inst_size) return 0;
+    opcode = space->binary[address].instruction.opcode;
+    if (opcode != OP_CALL_REG_FUNC_REG && opcode != OP_DCALL_REG_REG_REG) return 1;
+    if (space->inst_size - address < 4) return 0;
+
+    count_reg = space->binary[address + 3].index;
+    if (count_reg >= frame->number_locals || !frame->locals[count_reg]) return 0;
+    count = frame->locals[count_reg]->int_value;
+    if (count < 0 || (uintmax_t)count > (uintmax_t)SIZE_MAX) return 0;
+
+    return rxvm_restore_call_argument_mapping(frame, count_reg + 1, (size_t)count);
+}
+
+static void rxsignal_restore_branch_call_argument_mapping(
+        stack_frame *current, const interrupt_entry *handler,
+        rxinteger interrupted_module, rxinteger interrupted_address) {
+    int mapping_restored;
+
+    if (!current || !handler || current != handler->frame) return;
+    mapping_restored = rxsignal_restore_interrupted_call_argument_mapping(
+            current, interrupted_module, interrupted_address);
+    assert(mapping_restored);
+    (void)mapping_restored;
+}
+
 static stack_frame *rxsignal_unwind_to_frame(
         stack_frame *current, stack_frame *target
 #ifdef CREXX_VM_PROFILING
@@ -3146,8 +3231,12 @@ static stack_frame *rxsignal_unwind_to_frame(
     if (!target) return current;
 
     while (current && current != target) {
+        int mapping_restored;
         discard = current;
         current = current->parent;
+        mapping_restored = rxvm_restore_caller_call_argument_mapping(discard);
+        assert(mapping_restored);
+        (void)mapping_restored;
 #ifdef CREXX_VM_PROFILING
         if (profile && profile->enabled) {
             if (!unwind_time_ns) unwind_time_ns = rxvm_profile_now_ns();
@@ -3766,6 +3855,10 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
         case RXSIGNAL_RESPONSE_CALL_BRANCH:
             DEBUG("TRACE - INTR HANDLER -> SET BRANCH FOR CALL RETURN ");
+            rxsignal_restore_branch_call_argument_mapping(
+                    current_frame, &signal_handler,
+                    last_interrupted_module[last_interrupt],
+                    last_interrupted_address[last_interrupt]);
             VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame
                                                        RXVM_PROFILE_UNWIND_STATE),
                               RXVM_TRANSITION_INTERRUPT_ENTRY);
@@ -3833,6 +3926,10 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
         case RXSIGNAL_RESPONSE_BRANCH:
             DEBUG("TRACE - INTR HANDLER -> BRANCH %s\n", interrupt_to_string(last_interrupt));
+            rxsignal_restore_branch_call_argument_mapping(
+                    current_frame, &signal_handler,
+                    last_interrupted_module[last_interrupt],
+                    last_interrupted_address[last_interrupt]);
             VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame
                                                        RXVM_PROFILE_UNWIND_STATE),
                               RXVM_TRANSITION_INTERRUPT_ENTRY);
@@ -3841,6 +3938,10 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
         case RXSIGNAL_RESPONSE_BRANCH_VALUE:
             DEBUG("TRACE - INTR HANDLER -> BRANCH VALUE %s\n", interrupt_to_string(last_interrupt));
+            rxsignal_restore_branch_call_argument_mapping(
+                    current_frame, &signal_handler,
+                    last_interrupted_module[last_interrupt],
+                    last_interrupted_address[last_interrupt]);
             VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame
                                                        RXVM_PROFILE_UNWIND_STATE),
                               RXVM_TRANSITION_INTERRUPT_ENTRY);
@@ -5751,11 +5852,14 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                 } else {
                     /* This is a CREXX Procedure */
                     /* New stackframe - grabbing a procedure object from the caller frame */
+                    size_t caller_arg_base = REG_IDX(3) + 1;
                     temp_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
                     if (!temp_frame) {
                         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
                         DISPATCH;
                     }
+                    assert(caller_arg_base <= UINT32_MAX);
+                    temp_frame->caller_arg_base = (uint32_t)caller_arg_base;
                     /* Prepare dispatch to procedure as early as possible */
                     VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_CALL);
                     VM_SELECT_INDEX(called_function->start, RXVM_TRANSITION_CALL);
@@ -5795,11 +5899,14 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                     INTERRUPT_FROM_RXPA_SIGNAL(signal_value);
                 } else {
                     /* This is a CREXX Procedure */
+                    size_t caller_arg_base = REG_IDX(3) + 1;
                     temp_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
                     if (!temp_frame) {
                         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
                         DISPATCH;
                     }
+                    assert(caller_arg_base <= UINT32_MAX);
+                    temp_frame->caller_arg_base = (uint32_t)caller_arg_base;
                     /* Prepare dispatch to procedure as early as possible */
                     VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_CALL);
                     VM_SELECT_INDEX(called_function->start, RXVM_TRANSITION_CALL);

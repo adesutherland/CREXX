@@ -34,6 +34,7 @@
 #include "rxvminstrument.h"
 #include "crexx_version.h"
 #include <assert.h>
+#include <stdint.h>
 
 typedef enum { RXVM_MOD_LOADED, RXVM_MOD_LINKED, RXVM_MOD_THREADED } rxvm_mod_state;
 
@@ -160,6 +161,7 @@ struct stack_frame {
     unsigned char has_reference_lifetimes; /* Frame-owned storage has reference cells to release on exit */
     unsigned char is_interrupt;  /* Set to the interrupt number that the frame is handling (or zero) */
     unsigned char is_interrupt_action; /* Set when an interrupt handler return value is action-aware */
+    uint32_t caller_arg_base; /* First caller call-window argument, or UINT32_MAX */
     interrupt_entry interrupt_table[RXSIGNAL_MAX]; /* Interrupt Table */
     interrupt_saved_entry *interrupt_stack; /* Block-scoped saved interrupt handlers */
     numeric_context num_context; /* Numeric context for the procedure */
