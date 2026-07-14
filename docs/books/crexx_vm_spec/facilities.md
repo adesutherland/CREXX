@@ -29,8 +29,8 @@ form the basis of most compiler-generated code.
 The facility supports arithmetic operations, comparisons, sign manipulation,
 increment and decrement operations, and conversions between integer values and
 the other numeric representations supported by the virtual machine.
-Representative instructions include `add`, `sub`, `mul`, `div`, `rem`, `neg`,
-`inc`, `dec`, `cmp`, and `test`.
+Representative instructions include `iadd`, `isub`, `imul`, `idiv`, `isex`,
+`inc`, and `dec`.
 
 Arithmetic operations perform the elementary mathematical functions on integer
 operands. Comparison operations establish ordering relationships that are
@@ -74,7 +74,9 @@ rounding operations.
 
 By providing decimal arithmetic directly within the instruction set, the
 virtual machine ensures predictable and portable behavior independent of the
-decimal facilities provided by the host processor.
+decimal facilities provided by the host processor. There are two implementations
+for every decimal instruction, one following the traditional Rexx unlimited precision
+model, and the other a high-performance hardware variant.
 
 
 
@@ -147,7 +149,7 @@ is ultimately implemented by this facility.
 
 The facility includes unconditional transfers, conditional branches,
 procedure invocation, procedure return, and exception transfer.
-Representative instructions include `jmp`, the conditional branch
+Representative instructions include `branch`, the conditional branch
 instructions, `call`, and `ret`.
 
 Branch operations examine execution conditions established by previous
@@ -189,6 +191,8 @@ The facility includes operations for opening and closing files, reading and
 writing streams, positioning within files, querying stream status, and
 performing related operating-system services. Representative instructions
 include the file, stream, console, and operating-system interface operations.
+The Input/Output Facility also includes the low-level network instructions
+which form the base for TCP/IP Socket handling in the runtime library.
 
 By presenting a uniform interface to external resources, the Input/Output
 facility enables programs to execute consistently across different host
