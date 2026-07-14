@@ -292,9 +292,12 @@ ctest --test-dir cmake-build-debug \
 The standard Level B array helpers live in `lib/rxfnsb/rexx` and are preferred
 over the legacy `lib/plugins/arrays` RXPA plugin. Current array BIFs include
 `arrayfind`, `arrayinsert`, `arraydelete`, `arraysort`, `arraycopy`,
-`arraydrop`, `arrayhi`, `arraymove`, `arraydump`, `arrayformat`,
-`arrayappend`, `arrayprepend`, `arraypop`, `arrayshift`, `arrayget`,
+`arraydrop`, `arrayhi`, `arraymove`, `arrayappend`, `arrayprepend`, `arraypop`,
+`arrayshift`, `arrayget`,
 `arrayset`, `arraycontains`, `arrayindexof`, `arrayreverse`, and `arrayjoin`.
+The former diagnostic `arraydump` and `arrayformat` procedures are deployed as
+the `arrayformatdemo` module under `examples/functions/array-formatting`; they
+are demonstration support rather than Level B or Level G library contracts.
 These `array*` helpers are currently the `.string[]` helper family, not generic
 or numeric typed-array helpers. For `.object[]`, use the separate
 `objectarray*` family below. For raw one-dimensional dynamic typed arrays,

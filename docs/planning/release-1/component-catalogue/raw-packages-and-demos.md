@@ -53,7 +53,7 @@ Stage 2 discovery data. CMake references are literal source facts, not delivery 
 | `EXIT-fsay` | `fsay` | `rxcpexits.fsayexit` | `compiler/exits/fsay/Fsay.crexx` | directory is active from `compiler/exits/CMakeLists.txt` |
 | `EXIT-msay` | `msay` | `rxcpexits.msayexit` | `compiler/exits/msay/Msay.crexx` | directory is active from `compiler/exits/CMakeLists.txt` |
 | `EXIT-parse` | `parse` | `rxcpexits.parseexit` | `compiler/exits/parse/Parse.crexx` | directory is active from `compiler/exits/CMakeLists.txt` |
-| `EXIT-pprint` | `pprint` | `rxcpexits.pprintexit` | `compiler/exits/pprint/Pprint.crexx` | directory is active from `compiler/exits/CMakeLists.txt` |
+| `EXIT-pprint` | `pprint` | `rxcpexits.pprintexit` | `examples/exits/pprint/Pprint.crexx` | standalone optimized example bundle; not in `rxcexits.rxbin` |
 | `EXIT-query` | `query` | `rxcpexits.queryexit` | `compiler/exits/query/Query.crexx` | directory is active from `compiler/exits/CMakeLists.txt` |
 | `EXIT-rexxscript` | `rexxscript` | `rxcpexits.rexxscriptexit` | `compiler/exits/rexxscript/RexxScript.crexx` | directory is active from `compiler/exits/CMakeLists.txt` |
 | `EXIT-signal` | `signal` | `rxcpexits.signalexit` | `compiler/exits/signal/Signal.crexx` | directory is active from `compiler/exits/CMakeLists.txt` |
@@ -172,5 +172,8 @@ Stage 2 discovery data. CMake references are literal source facts, not delivery 
 | `EXAMPLE-examples-system-crexx` | example | `examples/system.crexx` |
 | `EXAMPLE-examples-time-sample-crexx` | example | `examples/time_sample.crexx` |
 | `EXAMPLE-examples-xref-crexx` | example | `examples/xref.crexx` |
+| `EXAMPLE-functions-arraydump` | function example | `examples/functions/array-formatting/arraydump.crexx` |
+| `EXAMPLE-functions-arrayformat` | function example | `examples/functions/array-formatting/arrayformat.crexx` |
+| `EXAMPLE-exit-pprint-program` | compiler-exit example | `examples/exits/pprint/pprint_example.crexx` |
 | `POC-levelc-lemon-fallback` | compiler PoC | `compiler/pocs/levelc_lemon_fallback` |
 | `POC-levelc-token-adapter-trace` | compiler PoC | `compiler/pocs/levelc_token_adapter_trace` |

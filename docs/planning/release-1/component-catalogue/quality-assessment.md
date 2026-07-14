@@ -82,7 +82,7 @@ Consequences:
 
 ## Level B library assessment
 
-All 131 selector families are covered by the rows below; public exports and
+All 129 selector families are covered by the rows below; public exports and
 members inherit their source selector's assessment. Most files are pure Level B
 Rexx source. The consolidated image is nevertheless a mixed implementation:
 active RXAS, VM/system namespaces, inline assembler, and VM-backed socket/TLS
@@ -94,7 +94,7 @@ operations occur on selected paths.
 | pure-Rexx `regex` | pure Rexx with namespace-exposed match state | T2 | D2 | high | A sizeable backtracking/scanning engine repeatedly tries start positions and concatenates replacement output. Global exposed match state also constrains reentrancy. Functional tests pass, but adversarial complexity and Unicode semantics need dedicated tests/benchmarks. |
 | numeric/date/time/random/format/mask functions | mostly pure Rexx; date/random/format paths use system/numeric primitives | T3 | D2 | medium | Strong functional breadth, but numeric-mode, date boundary, randomness, and formatting combinations are wider than named tests. Mask compilation/execution should be measured separately from scalar numeric BIFs. |
 | binary/conversion/hash functions | pure Rexx using binary views and VM primitives | T3 | D2 | medium | Binary operators provide an efficient intended surface and focused tests exist. Conversion allocation and large-buffer behavior still need baselines. |
-| typed array and stem helpers | pure Rexx using VM bulk array operations on key paths | T3 | D2 | medium | Preferred over the deprecated arrays plugin. Insert/delete/move have functional and compiler/VM coverage; sort/join/dump/format have different complexity and should not inherit one performance claim. |
+| typed array and stem helpers | pure Rexx using VM bulk array operations on key paths | T3 | D2 | medium | Preferred over the deprecated arrays plugin. Insert/delete/move have functional and compiler/VM coverage; sort and join have different complexity and should not inherit one performance claim. Diagnostic dump/format procedures are now example support. |
 | file/output helpers | Rexx wrappers over VM/system file operations | T2 | D2 | medium; I/O-dominated | Character and file cases run serially where needed. Platform/error/large-file coverage is less visible than the ordinary success path. |
 | `rxsocket` | pure Rexx API over VM native socket/TLS operations | T2 | D3 | medium; I/O-dominated | Loopback and selected TLS behavior are tested. Native protocol boundaries, timeouts, resource closure, and cross-platform failure paths are the main quality risks. |
 | `rxhttp` | pure Rexx over `rxsocket` | T2 | D3 | high for large payloads | Clear object interface and focused helpers. Response/chunk accumulation uses repeated string concatenation and the client is connection-close oriented; correctness and memory behavior need large/chunked response tests. |
@@ -216,13 +216,15 @@ the active Level B library image.
 
 ## Compiler-exit assessment
 
-All exits are pure Level B Rexx compiled into one mixed-purpose bytecode bundle.
+All exits are pure Level B Rexx. Fifteen compile into the default mixed-purpose
+bytecode bundle; `pprint` builds independently as an optimized example.
 
 | Exit family | Tests | Docs | Perf risk | Initial assessment |
 |---|---:|---:|---|---|
 | `address`, `parse`, `signal`, `trace` | T3 | D3 through language/runtime references | medium | Certified language exits have the deepest focused evidence, including numerous signal/trace cases and opt/noopt execution. They are quality-critical compiler infrastructure. |
 | RexxScript exit | T3 | D2 | medium-high | Multiple runtime paths are tested; it inherits the separate evaluator's parsing/performance limits. |
-| `dump`, `pprint`, `query` | T2 | D0-D1 | low-medium | Useful compiler/introspection utilities with focused execution tests; public contract documentation is thin. |
+| `dump`, `query` | T2 | D0-D1 | low-medium | Useful compiler/introspection utilities with focused execution tests; public contract documentation is thin. |
+| standalone `pprint` example | optimized golden smoke | local example README | low | Demonstrates a compiler exit plus companion runtime module; it is not in the default exit bundle or a supported language contract. |
 | `sort`, `sortx`, `substr`, `add` | T2 | D0-D1 | medium | Each has opt/noopt runtime evidence but duplicates library capabilities and has no established reason to share one release role. |
 | `execio`, `fsay`, `msay` | T2 | D1 for message exits | medium; I/O-dominated | Focused execution evidence exists; host/file semantics and portability need explicit contracts. |
 | `dummy` | T2 | D0 | low | Adequate as an exit mechanism demonstration, not as a product feature. |

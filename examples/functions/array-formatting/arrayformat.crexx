@@ -25,7 +25,9 @@
 /* rexx */
 options levelb
 
-namespace rxfnsb expose arrayformat
+namespace arrayformatdemo expose arrayformat
+
+import rxfnsb
 
 /* ----------------------------------------------------------------------
  * ARRAYFORMAT(array[, from[, to[, flags[, hdr[, prefix]]]]])

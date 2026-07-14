@@ -148,8 +148,6 @@ use direct indexing for those arrays until typed helpers are added.
 | `ARRAYINDEXOF(array, value, from, case)` | `.int` | Find the first element equal to `value`. |
 | `ARRAYCONTAINS(array, value, case)` | `.int` | Return `1` when an element equals `value`, else `0`. |
 | `ARRAYJOIN(array, separator)` | `.string` | Join all elements with `separator`. |
-| `ARRAYFORMAT(array, from, to, flags, hdr, prefix)` | `.string[]` | Return a formatted dump as an array. |
-| `ARRAYDUMP(array, from, to, flags, hdr, prefix)` | `.int` | Print a formatted dump and return the printed count. |
 
 Insert, delete, append, prepend, pop, shift, shrink, and clear operations use
 the VM array attribute instructions, so the pointer array can be adjusted

@@ -37,7 +37,7 @@ metadata was compared with the Stage 2 source inventory.
 | `rxfnsc.rxbin` | Classic-value, stem, variable-pool, and BIF-dispatch support | Every namespace-exposed source contract and catalogued public member was represented. |
 | `rxfnsl.rxbin` | Level L `tinyexpr.crexx` | All exported functions were represented. |
 | `rexxscript.rxbin` | RexxScript evaluator/runtime and compatibility exports | Every namespace-exposed source contract and catalogued public member was represented. |
-| `rxcexits.rxbin` | 16 compiler exits plus token infrastructure | The configured compiler-exit bundle existed as one linked image. Individual exits are retained as separate catalogue entries. |
+| `rxcexits.rxbin` | 15 default compiler exits plus token infrastructure | The configured compiler-exit bundle exists as one linked image. The sixteenth exit, `pprint`, is built and tested as a standalone example. |
 
 Factory metadata requires one normalisation: an exposed factory is encoded as
 `§factory` in procedure metadata and as a `factory` member marker for its
@@ -60,7 +60,7 @@ rule.
 | `rxfnsc` | `ALL` | `bin/rxfnsc.rxbin` | installed by the sweep |
 | `rxfnsl` | `ALL` | `bin/rxfnsl.rxbin` | installed by the sweep |
 | RexxScript | `ALL` | `bin/rexxscript.rxbin` and CLI | installed by the sweep |
-| compiler exits | normal build dependency | `bin/rxcexits.rxbin` | installed by the sweep |
+| compiler exits | normal build dependency | `bin/rxcexits.rxbin` | the 15-exit default bundle is installed by the sweep; standalone `pprint_example.rxbin` installs under `examples/exits/pprint` |
 | vector library | `ALL` | `lib/veclib/veclib.rxbin` | not installed by the root sweep |
 | old `lib/rxmath` tree | no CMake entry point | none | source-only |
 

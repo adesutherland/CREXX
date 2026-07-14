@@ -1,0 +1,5 @@
+> Demo (range=1-2), flags=IQ
+> Demo (range=1-2), flags=IQ
+> 000001 'alpha'
+> 000002 ''
+PASS: array formatting example

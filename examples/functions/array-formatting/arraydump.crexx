@@ -25,7 +25,9 @@
 /* rexx */
 options levelb
 
-namespace rxfnsb expose arraydump
+namespace arrayformatdemo expose arraydump
+
+import rxfnsb
 
 /* ----------------------------------------------------------------------
  * ARRAYDUMP(array[, from[, to[, flags[, hdr[, prefix]]]]])

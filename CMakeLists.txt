@@ -323,6 +323,7 @@ add_subdirectory(preprocessor)
 add_subdirectory(lib)
 add_subdirectory(rexxscript)
 add_subdirectory(demos)
+add_subdirectory(examples)
 add_subdirectory(tests)
 add_subdirectory(bin crexx_driver)
 

@@ -199,6 +199,7 @@ jobs:
 
           cp -R "${{ runner.temp }}/build/bin/." "$stage/bin/"
           cp -R examples/. "$stage/examples/"
+          cp -R "${{ runner.temp }}/build/example-artifacts/." "$stage/examples/"
           cp LICENSE README.md SECURITY.md INSTALL-RUN.md "$stage/"
           cp "${{ runner.temp }}/build/generated/VERSION" "$stage/VERSION"
           cp "${{ runner.temp }}/build/generated/BUILDINFO" "$stage/BUILDINFO"
@@ -213,6 +214,7 @@ jobs:
 
           Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/bin/*") -Destination (Join-Path $stage "bin") -Recurse
           Copy-Item -Path "examples/*" -Destination (Join-Path $stage "examples") -Recurse
+          Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/example-artifacts/*") -Destination (Join-Path $stage "examples") -Recurse
           Copy-Item -Path "LICENSE", "README.md", "SECURITY.md", "INSTALL-RUN.md" -Destination $stage
           Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/generated/VERSION") -Destination (Join-Path $stage "VERSION") -Force
           Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/generated/BUILDINFO") -Destination (Join-Path $stage "BUILDINFO") -Force

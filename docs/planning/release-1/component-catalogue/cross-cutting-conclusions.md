@@ -2,7 +2,7 @@
 
 ## Outcome
 
-The repository now has a maintained, source-grounded catalogue of 2,153
+The repository now has a maintained, source-grounded catalogue of 2,154
 language, library, BIF, class/member, native registration, plugin, exit, tool,
 debugger, preprocessor, macro, example, and residual-source identities. The
 catalogue is sufficient to begin Eel1 product-boundary decisions, but the Stage
@@ -23,8 +23,8 @@ This avoids the current failure mode in which “built into `bin`” is read as
 
 ## 1. Level B must be a measured bootstrap closure
 
-The present `library.rxbin` contains 131 selectors. Stage 6 provisionally puts
-87 in a conservative bootstrap-core candidate, 35 in the B standard/default
+The present `library.rxbin` contains 129 selectors. Stage 6 provisionally puts
+87 in a conservative bootstrap-core candidate, 33 in the B standard/default
 layer, and nine in optional images. Even 87 is likely too broad for the stated
 goal of a light, essential, very fast bootstrap language.
 
@@ -156,8 +156,9 @@ trees, file I/O, sockets, and math before performance engineering begins.
 
 Certified ADDRESS, PARSE, SIGNAL, and TRACE behavior plus token infrastructure
 is core language machinery. RexxScript, developer inspection exits, optional
-I/O exits, and mechanism demonstrations have different contracts. Linking all
-16 into `rxcexits.rxbin` currently hides that difference.
+I/O exits, and mechanism demonstrations have different contracts. The default
+`rxcexits.rxbin` now carries 15 exits; `pprint` and its runtime functions are
+packaged and tested independently below `examples/`.
 
 Eel1 should either split the bundle or use an explicit manifest that records
 which exits are required, default, optional, and developer-only. Demonstrator

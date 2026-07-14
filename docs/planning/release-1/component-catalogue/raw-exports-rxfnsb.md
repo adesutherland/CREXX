@@ -103,9 +103,7 @@ Stage 2 discovery data. These are namespace-exposed source symbols; no level, ro
 | `FN-rxfnsb-arraycopy` | `rxfnsb` | `arraycopy` | procedure | `lib/rxfnsb/rexx/arraycopy.crexx` | `levelb` | named in `lib/rxfnsb/rexx/CMakeLists.txt` |
 | `FN-rxfnsb-arraydelete` | `rxfnsb` | `arrayDelete` | procedure | `lib/rxfnsb/rexx/arraydelete.crexx` | `levelb` | named in `lib/rxfnsb/rexx/CMakeLists.txt` |
 | `FN-rxfnsb-arraydrop` | `rxfnsb` | `arraydrop` | procedure | `lib/rxfnsb/rexx/arraydrop.crexx` | `levelb` | named in `lib/rxfnsb/rexx/CMakeLists.txt` |
-| `FN-rxfnsb-arraydump` | `rxfnsb` | `arraydump` | procedure | `lib/rxfnsb/rexx/arraydump.crexx` | `levelb` | named in `lib/rxfnsb/rexx/CMakeLists.txt` |
 | `FN-rxfnsb-arrayfind` | `rxfnsb` | `arrayfind` | procedure | `lib/rxfnsb/rexx/arrayfind.crexx` | `levelb` | named in `lib/rxfnsb/rexx/CMakeLists.txt` |
-| `FN-rxfnsb-arrayformat` | `rxfnsb` | `arrayformat` | procedure | `lib/rxfnsb/rexx/arrayformat.crexx` | `levelb` | named in `lib/rxfnsb/rexx/CMakeLists.txt` |
 | `FN-rxfnsb-arrayget` | `rxfnsb` | `arrayget` | procedure | `lib/rxfnsb/rexx/arrayget.crexx` | `levelb` | named in `lib/rxfnsb/rexx/CMakeLists.txt` |
 | `FN-rxfnsb-arrayhi` | `rxfnsb` | `arrayhi` | procedure | `lib/rxfnsb/rexx/arrayhi.crexx` | `levelb` | named in `lib/rxfnsb/rexx/CMakeLists.txt` |
 | `FN-rxfnsb-arrayindexof` | `rxfnsb` | `arrayindexof` | procedure | `lib/rxfnsb/rexx/arrayindexof.crexx` | `levelb` | named in `lib/rxfnsb/rexx/CMakeLists.txt` |
@@ -300,4 +298,4 @@ Stage 2 discovery data. These are namespace-exposed source symbols; no level, ro
 | `FN-rxsocket-socketstatus` | `rxsocket` | `socketstatus` | procedure | `lib/rxfnsb/rexx/rxsocket.crexx` | `levelb` | named in `lib/rxfnsb/rexx/CMakeLists.txt` |
 | `FN-rxsocket-sockettimeout` | `rxsocket` | `sockettimeout` | procedure | `lib/rxfnsb/rexx/rxsocket.crexx` | `levelb` | named in `lib/rxfnsb/rexx/CMakeLists.txt` |
 
-Discovered rows: **295**.
+Discovered rows: **293**.

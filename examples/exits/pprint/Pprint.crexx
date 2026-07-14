@@ -39,6 +39,7 @@ pprintexit: class
         desc = .exitdescriptor
         desc = .exitdescriptor("pprint")
         call desc.add_import("rxfnsb", "descriptor", "")
+        call desc.add_import("arrayformatdemo", "pprint example support", "")
         return desc
 
     pre_process: method = .exitplan

@@ -14,10 +14,10 @@ State: complete; reviewed before Stage 3 began.
 
 ### Completeness checks
 
-- The first raw sweep contained 2,028 stable IDs. Reconciliation added eight typed intrinsic/reserved/documentation identities, 21 missing primary tool/runtime entries, and then the explicit debugger/macro audit added 96 entries. The maintained raw catalogue now has **2,153 stable, unique IDs**: 137 syntax/preprocessor capabilities, 386 namespace exports, 917 public members, 422 unique native RXPA registrations, 70 Classic BIF names, eight typed intrinsic/reserved/documentation-only BIFs, 70 RXPP macro/included-procedure leaves, and 143 package/tool/source/demo/example/PoC entries.
-- All 131 active `lib/rxfnsb/rexx/CMakeLists.txt` selectors have a source file and at least one raw catalogue row.
+- The first raw sweep contained 2,028 stable IDs. Reconciliation added eight typed intrinsic/reserved/documentation identities, 21 missing primary tool/runtime entries, and then the explicit debugger/macro audit added 96 entries. The later formatter/example relocation leaves the maintained raw catalogue with **2,154 stable, unique IDs**: 137 syntax/preprocessor capabilities, 384 library namespace exports, 917 public members, 422 unique native RXPA registrations, 70 Classic BIF names, eight typed intrinsic/reserved/documentation-only BIFs, 70 RXPP macro/included-procedure leaves, and 146 package/tool/source/demo/example/PoC entries.
+- All 129 active `lib/rxfnsb/rexx/CMakeLists.txt` selectors have a source file and at least one raw catalogue row; the two diagnostic formatters were subsequently moved to examples.
 - All 36 `classlib` and `classlib_native` CMake selectors have a source file and a raw catalogue row.
-- All 27 `lib/plugins` directories, both VM decimal-plugin directories, and all 16 compiler-exit directories are represented.
+- All 27 `lib/plugins` directories, both VM decimal-plugin directories, and all 16 compiler exits are represented across 15 default exit directories plus the standalone `examples/exits/pprint` directory.
 - All 423 in-scope `ADDPROC` registration sites are represented as 422 public leaves. The difference is the identical `console.setcolor` registration appearing in two platform branches; it is one contract and the catalogue records both sites.
 - The first validation pass found omitted nonstandard roots. The inventory was extended to cover `lib/rxfnsb/native/des`, active and residual `lib/rxfnsb/rxas` files, the unbuilt `lib/rxmath/rexx` source candidates, and compiler-exit token infrastructure.
 - Public class/interface members are included only when the owner is namespace-exposed. Ten methods on non-exported `rxfnsc` implementation classes were correctly left as implementation evidence rather than public leaves.
@@ -76,16 +76,16 @@ State: complete; reviewed before Stage 5 began.
 - Fifteen purpose domains cover toolchain/language, runtime control, text, numeric, binary, collections, local system, network, parsing/data, object model, external integration, Level C/RexxScript, Level G, Level L, and example/PoC purposes.
 - Deterministic inheritance rules assign every raw export, public member, and native registration through its source selector or containing package without duplicating the leaf catalogue.
 - All typed, Classic, and RXPP syntax rows have either an explicit purpose exception or a stated default rule. All 70 Classic BIFs and all eight typed intrinsic/reserved/doc-only BIFs are assigned.
-- All 131 active `rxfnsb` selectors, 36 classlib/classlib-native selectors, 27 RXPA directories, two VM plugins, 16 compiler exits, tools, residual sources, demonstrations, examples, and PoCs have a primary purpose.
+- All 129 active `rxfnsb` selectors, 36 classlib/classlib-native selectors, 27 RXPA directories, two VM plugins, 16 compiler exits, tools, residual sources, demonstrations, examples, and PoCs have a primary purpose.
 - The RXPP macro/included-procedure leaves inherit a defined purpose by support file and function family; RXDB public leaves inherit the debugger/tooling purpose.
 - A duplication map records the major same-purpose implementations without claiming that they have equivalent contracts.
 
 ### Validation checks
 
-- The `rxfnsb` purpose table was mechanically compared with the CMake selector list: 131 versus 131, no missing selectors, no extras, and no duplicate assignment.
+- The `rxfnsb` purpose table was mechanically compared with the CMake selector list: 129 versus 129, no missing selectors, no extras, and no duplicate assignment.
 - The native-package matrix contains the 27 distinct `lib/plugins` package IDs plus the separately assigned internal RXPP `precomp` package, matching Stage 2 and Stage 3 boundaries.
 - The exit/tool matrix contains 16 distinct exit IDs.
-- The maintained raw inventory remains 2,153 IDs and all 2,153 are unique.
+- The maintained raw inventory contains 2,154 IDs and all 2,154 are unique.
 - `git diff --check` reports no whitespace errors in the catalogue tree.
 
 ### Compliance checks
@@ -101,7 +101,7 @@ State: complete; reviewed before Stage 6 began.
 ### Completeness checks
 
 - The assessment separates test evidence, documentation, performance risk, confidence, source composition, and runtime call path; it assigns no composite score.
-- Language/compiler surfaces, all 131 Level B selectors, all 36 classlib selectors, G/C/L libraries, RexxScript, `veclib`, all 27 RXPA directories, both VM decimal plugins, native DES, all 16 exits, residual sources, demos/examples, and PoCs are covered either directly or by a documented source/package inheritance rule.
+- Language/compiler surfaces, all 129 Level B selectors, all 36 classlib selectors, G/C/L libraries, RexxScript, `veclib`, all 27 RXPA directories, both VM decimal plugins, native DES, all 16 exits, residual sources, demos/examples, and PoCs are covered either directly or by a documented source/package inheritance rule.
 - Dependency/blast-radius relationships are explicit, including the Level B-to-classlib-to-Level C-to-RexxScript chain and RXPP's four linked runtime inputs.
 - Performance findings distinguish source-review risk from measured speed. Hot-path, repeated-scan/copy, manual-memory/registry, stateful I/O, and external-service concerns are recorded without inventing benchmark numbers.
 - Use of cREXX features is reviewed separately for B, G, C-runtime implementation, L, classlib, RexxScript, and RXPA packages.
@@ -111,9 +111,9 @@ State: complete; reviewed before Stage 6 began.
 
 - A focused Debug run selected 115 representative tests across all major library levels, classlib, RexxScript, RXPP, certified exits, decimal plugins, and selected native plugins: 115 passed and zero failed. A non-overlapping 24-test tool/runtime selection also passed, and the RXDB usage smoke passed separately: 140 selected tests passed and zero failed in total.
 - The native assessment table has 27 rows and a mechanical name check found no missing plugin directory.
-- The exit assessment names all 16 exit directories.
+- The exit assessment names all 16 exits, including the standalone `pprint` example.
 - Top-level RexxDoc counts were rechecked: 24 blocks across 134 Level B library source files and 329 blocks across 37 top-level classlib `.crexx` files; the classlib coverage regression test passed.
-- The maintained raw inventory remains 2,153 unique IDs, and `git diff --check` reports no catalogue whitespace errors.
+- The maintained raw inventory contains 2,154 unique IDs, and `git diff --check` reports no catalogue whitespace errors.
 
 ### Compliance checks
 
@@ -129,18 +129,18 @@ unapproved.
 
 ### Completeness checks
 
-- Classification inheritance covers every one of the 2,153 raw IDs by syntax family, source selector, or containing package; explicit exceptions are named.
+- Classification inheritance covers every one of the 2,154 raw IDs by syntax family, source selector, or containing package; explicit exceptions are named.
 - Every syntax capability has a B/G/C/L or shared-tooling disposition. The 80 non-selector typed capabilities are B+G; the B, G, and L selectors remain level-specific; all 36 Classic rows are unique C capabilities; all 18 RXPP rows are shared tooling rather than language-level syntax.
-- All 131 Level B selectors are present exactly once in three explicit groups: 87 bootstrap-core candidates, 35 standard/default selectors, and nine optional selectors.
+- All 129 Level B selectors are present exactly once in three explicit groups: 87 bootstrap-core candidates, 33 standard/default selectors, and nine optional selectors.
 - All 33 main classlib selectors, three native-backed classlib selectors, five G exports, 70 unique C BIFs, 12 L exports, RexxScript, `veclib`, RXDB, RXPP, 64 macros, six included procedures, and residual sources have a stated disposition.
 - All 27 native plugin directories, both decimal plugins, native DES, 16 compiler exits, primary tools/runtimes/host APIs, profiling components, examples, demos, and PoCs are covered.
 - Source composition and runtime call path are separate, so pure Rexx source with inline RXAS/native/external dependencies is not mislabeled as an entirely Rexx-only implementation.
 
 ### Validation checks
 
-- The three Level B classification rows were mechanically compared with `RXXFNSB_REXX_SELECTORS`: 131 versus 131, with no missing, extra, or duplicate selector.
+- The three Level B classification rows were mechanically compared with `RXXFNSB_REXX_SELECTORS`: 129 versus 129, with no missing, extra, or duplicate selector.
 - The native-plugin disposition table was mechanically compared with the 27 `lib/plugins` directories: 27 versus 27, with no missing or extra package.
-- All 16 `EXIT-*` IDs occur in the exit classification and all 2,153 raw IDs remain unique.
+- All 16 `EXIT-*` IDs occur in the exit classification and all 2,154 raw IDs remain unique.
 - Level C uses an explicit 19-name implemented set plus its exact complement within the 70-row raw list; only `LENGTH` and `SUBSTR` are claimed as proven executable lowering paths.
 - `git diff --check` reports no catalogue whitespace error.
 
@@ -163,7 +163,7 @@ State: complete; reviewed. Decisions are ready for the later approval stage.
 
 ### Validation and compliance checks
 
-- Numerical claims reconcile: 2,153 unique raw IDs; 131 Level B selectors; 70 Level C BIF identities; 64 macros plus six included procedures; 27 plugin directories; 16 exits; and 140 selected passing tests.
+- Numerical claims reconcile after the example relocation: 2,154 unique raw IDs; 129 Level B selectors; 70 Level C BIF identities; 64 macros plus six included procedures; 27 plugin directories; 16 exits (15 default plus one standalone example); and the recorded selected test baseline.
 - Conclusions distinguish current repository fact, provisional recommendation, and future implementation work.
 - The requested later Level B re-engineering is explicitly out of scope and was not performed.
 - No source, build, install, packaging, or public contract file outside this documentation catalogue was changed by this task; unrelated profiling work remains untouched.

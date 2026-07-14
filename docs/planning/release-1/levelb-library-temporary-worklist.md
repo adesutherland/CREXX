@@ -1,12 +1,15 @@
 # High-priority Level B library temporary work list
 
-Status: **approved; programme steps -1 and 8 complete; all 122 selector rows
-processed; final integration complete; parked co-dependencies remain queued**
+Status: **approved; programme steps -1 and 8 complete; all 120 current selector
+rows processed; two original rows reclassified as examples; final integration
+complete; parked co-dependencies remain queued**
 
 This is the temporary execution ledger for the high-priority Level B library
-review. It copies the 87 bootstrap-core candidate selectors and the 35
-standard/default selectors from the Release 1 component catalogue, preserving
-their supplied order. The 122 selectors match `lib/rxfnsb/rexx/CMakeLists.txt`.
+review. It now tracks the 87 bootstrap-core candidate selectors and the 33
+standard/default selectors from the Release 1 component catalogue. The original
+122-row numbering is preserved as an audit trail, including the two formatter
+rows subsequently moved to examples. The 120 current selectors match
+`lib/rxfnsb/rexx/CMakeLists.txt`.
 
 The unit of work is a **selector/source module**, not necessarily one exported
 procedure. Every public callable, class, interface, and code-adjacent RexxDoc
@@ -40,7 +43,7 @@ its public surface has passed every applicable gate.
 ## Dependency-batched execution queue — approved 2026-07-14
 
 The original 122-row order remains the selector-level audit trail. The 54
-originally parked rows are processed through the dependency batches below so that one
+originally parked rows are processed or reclassified through the dependency batches below so that one
 contract decision, shared helper, fixture set, and aggregate rebuild can serve
 all affected selectors. Within a batch, selectors are still reviewed, tested,
 and marked one at a time.
@@ -57,7 +60,7 @@ scope implicitly.
 | 1 | `insert`, `overlay`, `lastpos`, `strip`, `substr`, `abs`, `format`, `sign`, `trunc`, `b2d`, `x2b`, `x2d` | Class adapters, focused class tests, and one classlib/library rebuild | done |
 | 2 | `parsecompile`, `parsestring`, `parse`, `parseExec` | Frozen legacy plan/stream ABI and assertion harnesses; no producer/lowering change | done |
 | 3 | `_datei`, `_dateo`, `_jdn`, `date`, `time` | Calendar/error contract and frozen-clause-time service | done |
-| 4 | `arrayformat`, `arraydump` | One pure formatting contract/core, followed by the output wrapper | queued |
+| 4 | `arrayformat`, `arraydump` | Reclassify diagnostic functions and their `pprint` consumer as packaged examples | reclassified; optimized safety checks pass |
 | 5 | `delword`, `word`, `words`, `wordindex`, `subword`, `wordlength`, `wordpos` | `Config_OtherBlankCharacters` | queued |
 | 6 | `translate`, `xrange`, `c2x`, `c2d`, `d2c`, `x2c` | `Config_Xrange`, `Config_C2B`, and `Config_B2C` | queued |
 | 7 | `qpos`, `qsplit`, `qsplitsafe`, `qextractall`, `qextractpair`, `qstripcomment`, `qremoveall`, `qword`, `qwordlength`, `qwords`, `qwordindex`, `qwordpos`, `qsubword` | Shared quote grammar, vectors, extraction bounds, and word spans | queued |
@@ -149,6 +152,27 @@ Batch 3 completion evidence:
   current build-tree metadata for the DATE cluster, so clean and incremental
   builds embed the validated helper. Separate Level B pages cover the public
   extension and three helpers; separate Level C pages cover DATE and TIME.
+
+Batch 4 reclassification evidence:
+
+- `arraydump` and `arrayformat` were diagnostic presentation helpers rather
+  than foundation services: neither is a Level C BIF, `arrayformat` had no
+  repository consumer, and `arraydump` was used only by the optional `pprint`
+  compiler-exit demonstration;
+- the old work-list description was corrected: there is no `arraydump` exit or
+  `DUMP ARRAY` lowering. The `pprint` exit recognizes `pprint array,...` and
+  emits an `arraydump(...)` call; the separate `dump` exit emits its own `say`
+  statements and array loop;
+- both procedures moved from `rxfnsb` to the example-only `arrayformatdemo`
+  namespace under `examples/functions/array-formatting`; `pprint` moved to
+  `examples/exits/pprint`. `library.rxbin` now contains 129 selectors and the
+  default `rxcexits.rxbin` contains 15 exits plus token infrastructure;
+- optimized standalone formatter and exit artifacts are built outside `bin/`.
+  Their exact-output safety checks pass, and install/release rules deploy source
+  plus built artifacts only beneath the matching `examples/` subdirectories;
+- rows 107 and 108 are retained below solely as reclassification history. They
+  are outside the Level B performance and conformance programme, so no shared
+  formatter contract or Level B/Level G documentation is required.
 
 ## Efficient selector validation and deferred integration
 
@@ -2095,11 +2119,6 @@ only for their separate `.Rexx` class-adapter work.
   reverse-order SDBM or migrates to conventional FNV-1a, and repair `rxhash`'s
   Unicode character-count-as-byte-limit defect before freezing vectors. The VM
   change is outside this library-only programme.
-- `arraydump`/`arrayformat` shared output contract: freeze one common definition
-  of range errors, accepted flags, headers, index padding, quote escaping,
-  non-printable rendering, and empty ranges before replacing their duplicated
-  formatters. Preserve `arraydump` as the compiler `DUMP ARRAY` exit target and
-  do not change that lowering in this library programme.
 - Quote-aware parser grammar (`qpos` and dependent `q*` selectors): decide
   whether doubled delimiters escape quotes, how unmatched quotes behave, and
   whether matching is by Unicode character or encoded byte. Also freeze empty
@@ -2245,7 +2264,7 @@ Before any selector implementation edit:
 
 ### Step 8 — final comparison and report
 
-After all 122 selector rows are done:
+After all 120 current Level B selector rows are done:
 
 1. Rerun the same five-program step -1 command on the same platform, build
    type, workloads, input sizes, warm-up policy, and repetition count.
@@ -2435,7 +2454,10 @@ are active. This association is an approval point before row 1 starts.
 | 86 | `datatype` | `DATATYPE` M | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | parked — Classic config / `D` decision |
 | 87 | `parseExec` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 
-## B standard; default (35)
+## B standard; default (33)
+
+Rows 107 and 108 retain their original numbers below as reclassification audit
+entries; they are not included in the 33-selector count.
 
 | # | Selector | Level C BIF contract/status | B | C | T | P | D | V | Row status |
 |---:|---|---|:---:|:---:|:---:|:---:|:---:|:---:|---|
@@ -2458,8 +2480,8 @@ are active. This association is an approval point before row 1 starts.
 | 104 | `arrayreverse` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 105 | `arrayjoin` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 106 | `arraysort` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
-| 107 | `arraydump` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — shared formatter contract |
-| 108 | `arrayformat` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — shared formatter contract |
+| 107 | `arraydump` | example support | — | — | ☒ | — | ☒ | ☒ | reclassified — `examples/functions` |
+| 108 | `arrayformat` | example support | — | — | ☒ | — | ☒ | ☒ | reclassified — `examples/functions` |
 | 109 | `qpos` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — shared quote grammar |
 | 110 | `qsplit` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — quote/field grammar |
 | 111 | `qsplitsafe` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — quote/nesting grammar |
@@ -5272,54 +5294,34 @@ are active. This association is an approval point before row 1 starts.
   caught-signal call-window repair is covered by the one-VM repeated-signal
   harness and the focused 63-test integration gate.
 
-### 107. `arraydump` — parked before implementation
+### 107. `arraydump` — reclassified as example support
 
-- Public surface: `arraydump(array=.string[] [,from=.int [,to=.int
-  [,flags=.string [,header=.string [,prefix=.string]]]]]) -> .int` prints a
-  header and selected formatted elements, returning the number of elements.
-  It is Level B-only, but the compiler pprint exit emits calls to it for the
-  source-level `DUMP ARRAY` convenience form.
-- Contract blockers: invalid starts are silently clamped, nonpositive/oversize
-  ends silently become the high-water mark, and unknown flags are ignored.
-  The comment promises doubled embedded single quotes but the helper only
-  switches quote style when the first character is a quote and does not escape
-  either delimiter. Empty-range prefixing, header inclusion, index zero-padding,
-  and `N` rendering also disagree with duplicated row 108 behavior.
-- Test/doc finding: there is no functional harness or selector-local Markdown.
-  The books provide only a signature/one-line summary and do not freeze the
-  flag, range, escaping, header, or signal contracts. No Level C BIF exists.
-- Performance baseline: isolated output is 758 noopt / 1,940 opt RXAS lines.
-  The noopt path has 21 calls and 35 concatenations; optimized output still has
-  17 calls and 46 concatenations. It repeatedly invokes general UPPER/POS/
-  RIGHT/LENGTH/STRIP/SUBSTR/C2D/D2X selectors and rebuilds growing strings.
-- Completion summary: parked before edits on one shared `arraydump`/
-  `arrayformat` output-and-error contract, because changing compiler-exit-visible
-  text selector-locally would be a public-contract decision. Resume by adding a
-  shared vector harness first, then implement the agreed formatter without any
-  compiler/lowering change. Row 108 `arrayformat` is sole active.
+- Repository result: moved unchanged in behavior from `rxfnsb` to the
+  `arrayformatdemo` namespace at
+  `examples/functions/array-formatting/arraydump.crexx`. It is not present in
+  `library.rxbin` and is not a Level B, Level G, or Level C contract.
+- Consumer result: its only repository consumer is the standalone `pprint`
+  compiler-exit example. The earlier `DUMP ARRAY` description was incorrect;
+  the distinct `dump` exit emits direct `say` statements and does not call this
+  procedure.
+- Build/test/delivery result: one optimized module is built outside `bin/`, its
+  exact-output function safety check passes, and source plus bytecode install
+  only below `examples/functions/array-formatting`.
+- Completion summary: reclassified outside the library programme. No Level B
+  performance, error-contract, Level C, or selector-documentation gate applies.
 
-### 108. `arrayformat` — parked before implementation
+### 108. `arrayformat` — reclassified as example support
 
-- Public surface: `arrayformat(array=.string[] [,from=.int [,to=.int
-  [,flags=.string [,header=.string [,prefix=.string]]]]]) -> .string[]` is a
-  Level B-only formatter with no current consumer, Level C BIF, or class method.
-- Contract blockers: it duplicates row 107's range, flag, escaping, and
-  non-printable ambiguities. In addition, a function documented as returning a
-  formatted array prints its header to stdout, does not include that header in
-  the result, treats `C` only as a choice between two side effects, and pads
-  indices with spaces where `arraydump` pads them with zeroes.
-- Test/doc finding: there is no harness or selector-local Markdown. The books
-  provide only a signature and one-line return summary, which is insufficient
-  to choose between a pure result array and mixed returned/printed output.
-- Performance baseline: isolated output is 765 noopt / 1,947 opt RXAS lines.
-  Like row 107 it has 21 noopt / 17 opt calls, 35/46 concatenations, and no
-  in-place append; it also retains header `say` instructions despite returning
-  an array.
-- Completion summary: parked with row 107 on the shared formatter contract.
-  One agreed vector table must drive both selectors, after which this function
-  can be made pure or explicitly documented as side-effecting without changing
-  compiler lowering. `git diff --check` passes and compiler/interpreter diffs
-  remain empty. Row 109 `qpos` is sole active.
+- Repository result: moved unchanged in behavior from `rxfnsb` to the same
+  example-only `arrayformatdemo` module. No production repository consumer or
+  Level C BIF exists.
+- Build/test/delivery result: the optimized safety program asserts its returned
+  lines and captures the existing header side effect. The packaged source and
+  module share row 107's example-only build/install boundary.
+- Completion summary: reclassified outside the library programme. The
+  historical formatter-contract questions are intentionally not promoted into
+  Level B or Level G compatibility promises. Row 109 `qpos` remains the next
+  library batch.
 
 ### 109. `qpos` — parked before implementation
 
@@ -5634,8 +5636,9 @@ are active. This association is an approval point before row 1 starts.
   expected report rows and `SUCCESS` in both modes.
 - Completion summary: parked on an explicit placeholder/expression/diagnostic
   contract plus shared quote grammar, with compiler changes excluded. `git diff
-  --check` passes and compiler/interpreter source diffs remain empty. All 122
-  selector rows have now been processed; the one deferred aggregate wiring/build
+  --check` passes and compiler/interpreter source diffs remain empty. All 120
+  current selector rows have now been processed, and the two original formatter
+  rows have been reclassified as examples; the deferred aggregate wiring/build
   and final validation/benchmark phase is active.
 
 For each started row, add a short subsection here before editing:

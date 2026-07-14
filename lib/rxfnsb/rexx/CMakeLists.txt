@@ -122,8 +122,6 @@ set(BIFS
 		arraydrop
 		arrayhi
 		arraymove
-		arraydump
-		arrayformat
 		fmtmask
 		compilemask
 		runmask

@@ -92,7 +92,6 @@ add_subdirectory(dump)
 add_subdirectory(query)
 add_subdirectory(sort)
 add_subdirectory(sortx)
-add_subdirectory(pprint)
 add_subdirectory(address)
 add_subdirectory(execio)
 add_subdirectory(add)
@@ -108,7 +107,7 @@ add_subdirectory(dummy)
 # Build the bundle by concatenating all exit components
 add_custom_command(
     OUTPUT ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin
-    COMMAND ${CMAKE_COMMAND} -E cat token.rxbin dump/Dump.rxbin query/Query.rxbin sort/Sort.rxbin sortx/Sortx.rxbin pprint/Pprint.rxbin address/Address.rxbin parse/Parse.rxbin signal/Signal.rxbin trace/Trace.rxbin rexxscript/RexxScript.rxbin execio/Execio.rxbin add/Add.rxbin fsay/Fsay.rxbin msay/Msay.rxbin substr/Substr.rxbin dummy/Dummy.rxbin > ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin
+    COMMAND ${CMAKE_COMMAND} -E cat token.rxbin dump/Dump.rxbin query/Query.rxbin sort/Sort.rxbin sortx/Sortx.rxbin address/Address.rxbin parse/Parse.rxbin signal/Signal.rxbin trace/Trace.rxbin rexxscript/RexxScript.rxbin execio/Execio.rxbin add/Add.rxbin fsay/Fsay.rxbin msay/Msay.rxbin substr/Substr.rxbin dummy/Dummy.rxbin > ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin
     DEPENDS rxc rxas
             ${CMAKE_CURRENT_BINARY_DIR}/token.rxbin 
             ${CMAKE_CURRENT_BINARY_DIR}/dump/Dump.rxbin
@@ -120,7 +119,6 @@ add_custom_command(
             ${CMAKE_CURRENT_BINARY_DIR}/add/Add.rxbin
             ${CMAKE_CURRENT_BINARY_DIR}/fsay/Fsay.rxbin
             ${CMAKE_CURRENT_BINARY_DIR}/msay/Msay.rxbin
-            ${CMAKE_CURRENT_BINARY_DIR}/pprint/Pprint.rxbin
             ${CMAKE_CURRENT_BINARY_DIR}/parse/Parse.rxbin
             ${CMAKE_CURRENT_BINARY_DIR}/signal/Signal.rxbin
             ${CMAKE_CURRENT_BINARY_DIR}/trace/Trace.rxbin
@@ -131,4 +129,4 @@ add_custom_command(
     COMMENT "Building rxcexits.rxbin (bundled via concatenation)"
 )
 add_custom_target(compiler_exit_bin ALL DEPENDS ${CMAKE_BINARY_DIR}/bin/rxcexits.rxbin)
-add_dependencies(compiler_exit_bin token_bin exit_dump_bin exit_query_bin exit_sort_bin exit_sortx_bin exit_pprint_bin exit_address_bin exit_parse_bin exit_signal_bin exit_trace_bin exit_rexxscript_bin exit_execio_bin exit_add_bin exit_fsay_bin  exit_msay_bin exit_substr_bin exit_dummy_bin)
+add_dependencies(compiler_exit_bin token_bin exit_dump_bin exit_query_bin exit_sort_bin exit_sortx_bin exit_address_bin exit_parse_bin exit_signal_bin exit_trace_bin exit_rexxscript_bin exit_execio_bin exit_add_bin exit_fsay_bin exit_msay_bin exit_substr_bin exit_dummy_bin)

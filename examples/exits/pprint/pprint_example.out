@@ -1,0 +1,9 @@
+Array dump (count=11, range=3-9), flags=IC
+000003 Line 3
+000004 Line 4
+000005 Line 5
+000006 Line 6
+000007 Line 7
+000008 Line 8
+000009 Line 9
+PASS: pprint exit example

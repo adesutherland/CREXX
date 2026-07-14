@@ -84,12 +84,13 @@ domain.
 | `P03` text | `abbrev`, `center`, `centre`, `changestr`, `compare`, `copies`, `countstr`, `delstr`, `filter`, `insert`, `length`, `lower`, `overlay`, `pos`, `lastpos`, `left`, `right`, `reverse`, `space`, `strip`, `substr`, `substro`, `translate`, `upper`, `verify`, `regex`, `sequence`, `find`, `index`, `wordrep` |
 | `P04` numeric/date/time | `_datei`, `_dateo`, `_ftrunc`, `_itrunc`, `_jdn`, `abs`, `date`, `format`, `max`, `min`, `numeric`, `random`, `reradix`, `sign`, `time`, `trunc`, `fmtmask`, `compilemask`, `runmask` |
 | `P05` binary/hash | `b2x`, `b2d`, `binary`, `c2x`, `c2d`, `d2b`, `d2c`, `d2x`, `fnv`, `x2b`, `x2c`, `x2d`, `xrange` |
-| `P06` arrays/stems | `arrayfind`, `splice`, `arrayinsert`, `arraydelete`, `arrayappend`, `arrayprepend`, `objectarrayinsert`, `objectarraydelete`, `objectarrayappend`, `objectarrayprepend`, `objectarraydrop`, `objectarraymove`, `arraypop`, `arrayshift`, `arrayget`, `arrayset`, `arraycontains`, `arrayindexof`, `arrayreverse`, `arrayjoin`, `arraysort`, `arraycopy`, `arraydrop`, `arrayhi`, `arraymove`, `arraydump`, `arrayformat`, `stem` |
+| `P06` arrays/stems | `arrayfind`, `splice`, `arrayinsert`, `arraydelete`, `arrayappend`, `arrayprepend`, `objectarrayinsert`, `objectarraydelete`, `objectarrayappend`, `objectarrayprepend`, `objectarraydrop`, `objectarraymove`, `arraypop`, `arrayshift`, `arrayget`, `arrayset`, `arraycontains`, `arrayindexof`, `arrayreverse`, `arrayjoin`, `arraysort`, `arraycopy`, `arraydrop`, `arrayhi`, `arraymove`, `stem` |
 | `P07` files/output | `fileio`, `fsayfmt` |
 | `P08` network | `rxsocket`, `rxhttp` |
 | `P09` parsing/data | `delword`, `qpos`, `qsplit`, `qsplitsafe`, `qextractall`, `qextractpair`, `qstripcomment`, `qremoveall`, `word`, `words`, `wordindex`, `subword`, `wordlength`, `wordpos`, `qword`, `qwordlength`, `qwords`, `qwordindex`, `qwordpos`, `qsubword`, `parsecompile`, `parsestring`, `parse`, `datatype`, `parseExec`, `rxjson` |
 
-This table contains all 131 active selectors exactly once.
+This table contains all 129 active selectors exactly once. The former
+`arraydump` and `arrayformat` selectors are catalogued as function examples.
 
 ## Class, G, C, L, vector, and RexxScript sources
 

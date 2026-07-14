@@ -25,7 +25,7 @@ mixed package.
 
 Every public leaf inherits the classification of its syntax family, source
 selector, or containing package unless an exception is stated. This supplies a
-classification for all 2,153 raw IDs without duplicating the leaf catalogue.
+classification for all 2,154 raw IDs without duplicating the leaf catalogue.
 
 ## Language syntax contracts
 
@@ -55,7 +55,7 @@ status remains as recorded in the raw file.
 
 ## Level B library closure
 
-All 131 selectors and their public leaves are B contracts. This first cut
+All 129 selectors and their public leaves are B contracts. This first cut
 separates a bootstrap-core **candidate closure** from the larger default and
 optional libraries. “Candidate” is important: the final B closure must be
 derived from the actual transitive needs of the compiler, preprocessor,
@@ -65,7 +65,7 @@ membership in `library.rxbin` is not treated as proof of necessity.
 | Proposed role/delivery | Exact selectors | Count |
 |---|---|---:|
 | bootstrap-core candidate; required | `_address`, `_rxsystem`, `loadmodule`, `raise`, `signal`, `symbol`, `trace`, `value`, `version`; `abbrev`, `center`, `centre`, `changestr`, `compare`, `copies`, `countstr`, `delstr`, `insert`, `length`, `lower`, `overlay`, `pos`, `lastpos`, `left`, `right`, `reverse`, `space`, `strip`, `substr`, `substro`, `translate`, `upper`, `verify`; `_ftrunc`, `_itrunc`, `abs`, `format`, `max`, `min`, `numeric`, `sign`, `trunc`; `b2x`, `b2d`, `binary`, `c2x`, `c2d`, `d2b`, `d2c`, `d2x`, `x2b`, `x2c`, `x2d`, `xrange`; `arrayfind`, `splice`, `arrayinsert`, `arraydelete`, `arrayappend`, `arrayprepend`, `objectarrayinsert`, `objectarraydelete`, `objectarrayappend`, `objectarrayprepend`, `objectarraydrop`, `objectarraymove`, `arrayget`, `arrayset`, `arraycontains`, `arrayindexof`, `arraycopy`, `arraydrop`, `arrayhi`, `arraymove`, `stem`; `delword`, `word`, `words`, `wordindex`, `subword`, `wordlength`, `wordpos`, `parsecompile`, `parsestring`, `parse`, `datatype`, `parseExec` | 87 |
-| B standard; default | `getenv`, `linesize`; `filter`, `sequence`, `find`, `index`; `_datei`, `_dateo`, `_jdn`, `date`, `random`, `reradix`, `time`; `fnv`; `arraypop`, `arrayshift`, `arrayreverse`, `arrayjoin`, `arraysort`, `arraydump`, `arrayformat`; `qpos`, `qsplit`, `qsplitsafe`, `qextractall`, `qextractpair`, `qstripcomment`, `qremoveall`, `qword`, `qwordlength`, `qwords`, `qwordindex`, `qwordpos`, `qsubword`; `fsayfmt` | 35 |
+| B standard; default | `getenv`, `linesize`; `filter`, `sequence`, `find`, `index`; `_datei`, `_dateo`, `_jdn`, `date`, `random`, `reradix`, `time`; `fnv`; `arraypop`, `arrayshift`, `arrayreverse`, `arrayjoin`, `arraysort`; `qpos`, `qsplit`, `qsplitsafe`, `qextractall`, `qextractpair`, `qstripcomment`, `qremoveall`, `qword`, `qwordlength`, `qwords`, `qwordindex`, `qwordpos`, `qsubword`; `fsayfmt` | 33 |
 | B optional; opt-in linked image | `regex`, `wordrep`; `fmtmask`, `compilemask`, `runmask`; `fileio`; `rxsocket`, `rxhttp`; `rxjson` | 9 |
 
 The 87-row candidate is intentionally a conservative starting closure, not a
@@ -76,7 +76,7 @@ must then meet bootstrap performance and quality requirements.
 
 Composition inheritance for Level B leaves is:
 
-- source language is pure Rexx for the 131 selectors;
+- source language is pure Rexx for the 129 selectors;
 - a selector whose source contains inline `assembler`, imports RXAS, or invokes
   VM/system operations has a hybrid call path (85 selector files currently
   match that source-review rule);
@@ -187,12 +187,13 @@ purpose. Public leaves inherit these rows.
 |---|---|---|---|---|
 | `EXIT-address`, `EXIT-parse`, `EXIT-signal`, `EXIT-trace`, `INFRA-EXIT-TOKEN` | B+G compiler language infrastructure | bootstrap/level core | required | supported |
 | `EXIT-rexxscript` | B compatibility integration | integration | default only with RexxScript | provisional-supported |
-| `EXIT-dump`, `EXIT-pprint`, `EXIT-query` | compiler developer utilities | optional | developer-only | provisional |
+| `EXIT-dump`, `EXIT-query` | compiler developer utilities | optional | developer-only | provisional |
 | `EXIT-execio`, `EXIT-fsay`, `EXIT-msay` | I/O integrations/examples | optional | opt-in | provisional |
-| `EXIT-add`, `EXIT-sort`, `EXIT-sortx`, `EXIT-substr`, `EXIT-dummy` | mechanism demonstrations | example | developer-only/source examples | demonstration |
+| `EXIT-add`, `EXIT-sort`, `EXIT-sortx`, `EXIT-substr`, `EXIT-dummy`, `EXIT-pprint` | mechanism demonstrations | example | developer-only/source examples; `pprint` is packaged below `examples/` | demonstration |
 
-The current single `rxcexits.rxbin` image should not imply one support level;
-the delivery proposal requires a later bundle partition or explicit allowlist.
+The default `rxcexits.rxbin` image still mixes several support levels, but the
+`pprint` demonstration is now separated into an explicit example bundle. The
+remaining delivery proposal requires a later bundle partition or allowlist.
 
 ## Native plugins
 
