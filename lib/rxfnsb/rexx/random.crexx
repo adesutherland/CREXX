@@ -22,29 +22,105 @@
  * SOFTWARE.
  */
 
-/* rexx random */
+/**
+ * Typed Level B RANDOM and its reusable scoped generator.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/random.md
+ */
 options levelb numeric_classic
-import _rxsysb
 
-namespace rxfnsb expose random
+namespace rxfnsb expose random RexxRandomState
 
-random: procedure = .int
-arg expose min=0, max=-1,seed = -1    /* seed = time()%(3600*24) */
-if max<0 then max=999
-if min<0 then do
-   call raise "syntax", "40.??","invalid minimum value ("min","max")"
-   return -999999
-end
-if min>max then do
-  call raise "syntax", "40.??","minimum value greater than maximum value ("min","max")"
-  return -9999999
-end
-rx1=0
-assembler irand rx1,seed  /* seed -1, will be handled by irand instruction */
-rx1=rx1//(max-min+1) + min
-return rx1
+/** Deterministic Park-Miller generator with unbiased bounded sampling. */
+RexxRandomState: class
+  state = .int
+  ready = .boolean
 
-#raise: procedure = .int
-#  arg type = .string, code = .string, parm1 = .string
+  *: factory
+    state = 1
+    ready = 0
+    return
 
-  
+  /** Reset this generator. Seed zero is the documented deterministic seed 1. */
+  seed: method = .void
+    arg seed_value = .int
+    modulus = 2147483647
+    if seed_value < 0 then
+      assembler signal "INVALID_ARGUMENTS", "RANDOM seed must be non-negative"
+    state = seed_value // modulus
+    if state = 0 then state = 1
+    ready = 1
+    return
+
+  /** Return the next raw value in the inclusive range 1..2147483646. */
+  nextRaw: method = .int
+    if \ready then call seedFromClock()
+    state = (state * 48271) // 2147483647
+    return state
+
+  /** Return an unbiased value in the half-open range 0..span-1. */
+  bounded: method = .int
+    arg span = .int
+    if span <= 0 then
+      assembler signal "INVALID_ARGUMENTS", "RANDOM span must be positive"
+    domain = 2147483646
+    limit = domain - (domain // span)
+    do forever
+      candidate = nextRaw() - 1
+      if candidate < limit then return candidate // span
+    end
+    return 0
+
+  seedFromClock: method = .void
+    microseconds = .int
+    assembler mtime microseconds
+    call seed(microseconds)
+    return
+
+/**
+ * Return a scoped pseudo-random integer.
+ *
+ * One supplied argument is the maximum. In the positioned three-argument form
+ * omitted minimum and maximum values default to 0 and 999 respectively.
+ *
+ * @param minimum optional minimum, or maximum in the one-argument form
+ * @param maximum optional maximum
+ * @param seed optional non-negative deterministic seed
+ * @return random integer in the selected inclusive range
+ * @signal INVALID_ARGUMENTS negative, reversed, or wider-than-100000 range
+ */
+random: procedure = .int expose _random_service_ready _random_service
+  arg minimum = 0, maximum = 999, seed = 0
+  minimum_exists = ?minimum
+  maximum_exists = ?maximum
+  seed_exists = ?seed
+  single_maximum = .boolean
+
+  single_maximum = minimum_exists & \maximum_exists & \seed_exists
+  if single_maximum then do
+    maximum = minimum
+    minimum = 0
+  end
+  else do
+    if \minimum_exists then minimum = 0
+    if \maximum_exists then maximum = 999
+  end
+
+  if minimum < 0 then
+    assembler signal "INVALID_ARGUMENTS", "RANDOM minimum must be non-negative"
+  if maximum < 0 then
+    assembler signal "INVALID_ARGUMENTS", "RANDOM maximum must be non-negative"
+  if seed_exists & seed < 0 then
+    assembler signal "INVALID_ARGUMENTS", "RANDOM seed must be non-negative"
+  if minimum > maximum then
+    assembler signal "INVALID_ARGUMENTS", "RANDOM minimum must not exceed maximum"
+  if maximum - minimum > 100000 then
+    assembler signal "INVALID_ARGUMENTS", "RANDOM range width must not exceed 100000"
+
+  if _random_service_ready <> 1 then do
+    _random_service = .RexxRandomState()
+    _random_service_ready = 1
+  end
+  if seed_exists then call _random_service.seed(seed)
+  return minimum + _random_service.bounded(maximum - minimum + 1)

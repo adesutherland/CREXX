@@ -83,6 +83,7 @@ Table: SAA Rexx Built-In-Functions. {#tbl:id}
 | DIGITS     | DIGITS()                            |
 | FORM       | FORM()                              |
 | FUZZ       | FUZZ()                              |
+| FNV        | FNV(string)                         |
 | QUEUED     | QUEUED()                            |
 
 Table: Non-SAA Functions. {#tbl:id}
@@ -1735,11 +1736,12 @@ WORDS('')                == 0
 
 
 
-## DATATYPE(s, type)
+## DATATYPE(s [,type])
 
-returns 1 if *string* matches the description requested with
-the *option*, or 0 otherwise.
-If *string* is the null string, 0 is always returned.
+With *type* omitted, returns `NUM` for a syntactically valid Level B number and
+`CHAR` otherwise. With *type* present, returns 1 if *string* matches the
+requested description, or 0 otherwise. The null string is valid for the `B`
+and `X` tests and false for the other explicit tests.
 
 Only the first character of *option* is significant, and it may
 be in either uppercase or lowercase.
@@ -1752,7 +1754,7 @@ characters from the ranges "a-z", "A-Z", and "0-9".
 (Binary); returns 1 if *string* only contains the
 characters "0" and/or "1".
 \item[D]
-(Digits); returns 1 if *string* only contains
+(Digits, cREXX Level B extension); returns 1 if *string* only contains
 characters from the range "0-9".
 \item[L]
 (Lowercase); returns 1 if *string* only contains
@@ -1793,24 +1795,49 @@ DATATYPE('3 d', 's')    == 0
 DATATYPE('BCd3', 'X')   == 1
 DATATYPE('BCgd3', 'X')  == 0
 ```
-**Note:** The **datatype** function tests the meaning of the characters
-in a string, independent of the encoding of those characters.  Extra
-letters and Extra digits cause **datatype** to return 0 except
-for the number tests ("**N**" and "**W**"),
-which treat extra digits whose value is in the range 0-9 as though they
-were the corresponding Arabic numeral.
+**Note:** Level B traverses codepoints safely but deliberately uses the listed
+ASCII character classes. Its `W` test is exact and has no floating-point
+tolerance. An explicit empty or unsupported option signals
+`INVALID_ARGUMENTS`. The separate Classic Level C BIF excludes `D` and obtains
+extra letter/digit mappings, B/X blanks, and exponent limits from its call
+configuration; see `lib/rxfnsc/datatype.md`.
 
 
 
 ## RANDOM(min, max, seed)
 
-Returns a pseudo-random integer in the inclusive range `min` through `max`.
-When omitted, `min` defaults to `0`, `max` defaults to `999`, and `seed`
-defaults to `-1`. The current implementation raises a syntax condition for a
-negative minimum or for `min > max`.
+Returns a pseudo-random integer in the selected inclusive range. With no
+arguments the range is `0..999`. One argument is the inclusive maximum, so
+`RANDOM(10)` selects `0..10`. In the positioned three-argument form an omitted
+minimum defaults to `0` and an omitted maximum defaults to `999`.
 
-`seed` is passed to the VM `irand` instruction. The default `-1` asks the
-instruction to choose its normal seed behavior.
+A supplied non-negative seed resets the module-scoped sequence before drawing
+the result; omitted seeding continues that sequence. Negative arguments,
+reversed bounds, and a range wider than `100000` signal `INVALID_ARGUMENTS`.
+
+Level B uses deterministic Park-Miller state and unbiased rejection sampling,
+not the VM-global `irand` instruction. It is suitable for repeatable language-
+level sequences, not cryptography. See the separate
+[Level B contract](../../../lib/rxfnsb/rexx/random.md) and
+[Level C contract](../../../lib/rxfnsc/random.md); Level C owns its state on the
+call configuration and reports the standard `40.31` through `40.33` errors.
+
+
+## FNV(string)
+
+Returns the conventional 32-bit FNV-1a hash of the string's exact UTF-8 byte
+sequence as an integer in `0..4294967295`.
+
+```rexx
+FNV("")    == 2166136261
+FNV("a")   == 3826002220
+FNV("abc") == 440920331
+```
+
+Embedded NUL bytes participate in the hash. FNV does not mutate its input and
+does not signal numeric overflow because modulo-2^32 arithmetic is part of the
+algorithm. It is a Level B library function, not a Level C Classic BIF. See the
+[Level B contract](../../../lib/rxfnsb/rexx/fnv.md).
 
 
 ## TIME(option)
@@ -1949,11 +1976,15 @@ The standalone Level C BIF implements `VALUE(name [,newvalue [,pool]])` over
 compound-variable tails, returns the old value, and optionally assigns the new
 value. Invalid internal symbols use error `40.26`.
 
-The repository does not yet have the configuration service required to resolve
-the optional external `pool` name. Until that co-dependency exists, a supplied
-third argument reports `40.37`. The exact direct-call contract and test scope
-are documented in `lib/rxfnsc/value.md`. Compiler lowering to the direct entry
-point remains part of the later bulk Level C lowering change.
+When a third argument is present, Level C resolves its trimmed,
+case-insensitive name through the external-pool registry on
+`RexxClassicConfig`. The subject name is passed to the selected adapter
+unchanged. External assignment first gets and returns the old value, then sets
+the new value; a missing subject is not implicitly created. Adapter rejection
+reports `40.36`, and a blank or unknown pool reports `40.37`. The exact direct-
+call contract and test scope are documented in
+[the Level C VALUE page](../../../lib/rxfnsc/value.md). Compiler lowering to the
+direct entry point remains part of the later bulk Level C lowering change.
 
 
 ## VERSION()

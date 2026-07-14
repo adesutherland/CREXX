@@ -26,6 +26,7 @@ set(REXXBINS
   testRexxClassicBifD2x
   testRexxClassicBifD2c
   testRexxClassicBifDate
+  testRexxClassicBifDatatype
   testRexxClassicBifDelstr
   testRexxClassicBifDelword
   testRexxClassicBifFormat
@@ -38,6 +39,7 @@ set(REXXBINS
   testRexxClassicBifNumeric
   testRexxClassicBifOverlay
   testRexxClassicBifPos
+  testRexxClassicBifRandom
   testRexxClassicBifReverse
   testRexxClassicBifRight
   testRexxClassicBifSign

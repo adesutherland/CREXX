@@ -27,6 +27,7 @@ namespace rexxclassicbifs expose RexxBifCallContext rexxclassicbif_call rexxclas
 import rexxvalue
 import rexxpool
 import rexxclassicconfig
+import rexxclassicdatatype
 import rxfnsb
 
 /**
@@ -57,7 +58,8 @@ RexxBifCallContext: class
   bif_arg_count = .int
   owned_pool = .RexxVariablePool
   caller_pool_ref = reference .RexxVariablePool
-  character_config = .RexxClassicConfig
+  owned_config = .RexxClassicConfig
+  config_ref = reference .RexxClassicConfig
   error_code = .string
   error_message = .string
 
@@ -67,7 +69,8 @@ RexxBifCallContext: class
     bif_arg_count = 0
     owned_pool = .RexxVariablePool()
     caller_pool_ref = reference owned_pool
-    character_config = .RexxClassicConfig()
+    owned_config = .RexxClassicConfig()
+    config_ref = reference owned_config
     error_code = ""
     error_message = ""
     return
@@ -128,28 +131,48 @@ RexxBifCallContext: class
 
   setCharacterConfig: method = .void
     arg config = .RexxClassicConfig
-    character_config = config
+    owned_config = config
+    config_ref = reference owned_config
+    return
+
+  setConfig: method = .void
+    arg config = reference .RexxClassicConfig
+    config_ref = config
     return
 
   characterConfig: method = .RexxClassicConfig
-    return character_config
+    config = .RexxClassicConfig
+    config = dereference config_ref
+    return config
+
+  config: method = .RexxClassicConfig
+    config = .RexxClassicConfig
+    config = dereference config_ref
+    return config
+
+  configReference: method = reference .RexxClassicConfig
+    return config_ref
 
   useByteProfile: method = .void
-    call character_config.useByteProfile()
+    config = dereference config_ref
+    call config.useByteProfile()
     return
 
   useUtf8Profile: method = .void
-    call character_config.useUtf8Profile()
+    config = dereference config_ref
+    call config.useUtf8Profile()
     return
 
   setByteOtherBlanks: method = .void
     arg blanks = .binary
-    call character_config.setByteOtherBlanks(blanks)
+    config = dereference config_ref
+    call config.setByteOtherBlanks(blanks)
     return
 
   setTextOtherBlanks: method = .void
     arg blanks = .string
-    call character_config.setTextOtherBlanks(blanks)
+    config = dereference config_ref
+    call config.setTextOtherBlanks(blanks)
     return
 
   clearError: method = .void
@@ -327,7 +350,7 @@ _check_arg_type: procedure = .int
   value = context.argumentText(index)
 
   if rule = "SYM" then do
-    if rexxclassic_symbol_kind(value) <> 1 then do
+    if rexxclassic_datatype_symbol_kind(argument_value,config) <> 1 then do
       call _set_bif_error(context_ref, "40.26", index, value, "")
       return 0
     end
@@ -335,8 +358,13 @@ _check_arg_type: procedure = .int
   end
 
   if rule = "NUM" then do
-    normalized_number = _normalize_classic_number_text(value)
-    if _is_number_text(normalized_number) = 0 then do
+    number_state = 0
+    normalized_number = rexxclassic_datatype_normalize_number(argument_value,config,number_state)
+    if number_state = 2 then do
+      call _set_bif_error(context_ref, "40.9", index, value, "")
+      return 0
+    end
+    if number_state = 0 then do
       call _set_bif_error(context_ref, "40.11", index, value, "")
       return 0
     end
@@ -345,7 +373,7 @@ _check_arg_type: procedure = .int
   end
 
   if rule = "BIN" then do
-    if _is_binary_text(value) = 0 then do
+    if rexxclassic_datatype_binary(argument_value,config) = 0 then do
       call _set_bif_error(context_ref, "40.24", index, value, "")
       return 0
     end
@@ -353,7 +381,7 @@ _check_arg_type: procedure = .int
   end
 
   if rule = "HEX" then do
-    if _is_hex_text(value) = 0 then do
+    if rexxclassic_datatype_hex(argument_value,config) = 0 then do
       call _set_bif_error(context_ref, "40.25", index, value, "")
       return 0
     end
@@ -361,8 +389,9 @@ _check_arg_type: procedure = .int
   end
 
   if rule = "WHOLE" | rule = "WHOLE>=0" | rule = "WHOLE>0" then do
-    whole = _normalize_classic_number_text(value)
-    if _is_whole_text(whole) = 0 then do
+    whole_valid = 0
+    whole = rexxclassic_datatype_normalize_whole(argument_value,config,whole_valid)
+    if whole_valid = 0 then do
       call _set_bif_error(context_ref, "40.12", index, value, "")
       return 0
     end
@@ -379,8 +408,13 @@ _check_arg_type: procedure = .int
   end
 
   if rule = "WHOLENUM" | rule = "WHOLENUM>=0" then do
-    normalized_number = _normalize_classic_number_text(value)
-    if _is_number_text(normalized_number) = 0 then do
+    number_state = 0
+    normalized_number = rexxclassic_datatype_normalize_number(argument_value,config,number_state)
+    if number_state = 2 then do
+      call _set_bif_error(context_ref, "40.9", index, value, "")
+      return 0
+    end
+    if number_state = 0 then do
       call _set_bif_error(context_ref, "40.12", index, value, "")
       return 0
     end
@@ -445,108 +479,8 @@ _check_arg_type: procedure = .int
  */
 rexxclassic_symbol_kind: procedure = .int
   arg text = .string
-  text_length = .int
-  first = .int
-  codepoint = .int
-  i = .int
-  first_is_general = .boolean
-  first_is_constant = .boolean
-  has_exponent_sign = .boolean
-  is_number = .boolean
-
-  assembler strlen text_length,text
-  if text_length = 0 then return 0
-
-  i = 0
-  assembler strchar first,text,i
-  first_is_general = (first >= 65 & first <= 90) |,
-                     (first >= 97 & first <= 122) |,
-                     first = 95 | first = 33 | first = 63
-  first_is_constant = (first >= 48 & first <= 57) | first = 46
-  if \first_is_general & \first_is_constant then return 0
-
-  has_exponent_sign = 0
-  do i = 0 to text_length - 1
-    assembler strchar codepoint,text,i
-    if (codepoint >= 65 & codepoint <= 90) |,
-       (codepoint >= 97 & codepoint <= 122) |,
-       (codepoint >= 48 & codepoint <= 57) |,
-       codepoint = 95 | codepoint = 33 | codepoint = 63 | codepoint = 46 then iterate
-    if codepoint = 43 | codepoint = 45 then has_exponent_sign = 1
-    else return 0
-  end
-
-  if has_exponent_sign | first = 46 then do
-    is_number = _classic_symbol_number(text)
-    if is_number then return 2
-    if has_exponent_sign then return 0
-  end
-
-  if first_is_general then return 1
-  if first \= 46 then return 2
-
-  normalized = .string
-  assembler strupper normalized,text
-  if normalized = ".MN" | normalized = ".RESULT" | normalized = ".RC" |,
-     normalized = ".RS" | normalized = ".SIGL" then return 1
-  return 0
-
-_classic_symbol_number: procedure = .boolean
-  arg text = .string
-  text_length = .int
-  codepoint = .int
-  i = .int
-  digits = .int
-  leading_dot = .boolean
-  exponent_start = .int
-
-  assembler strlen text_length,text
-  if text_length = 0 then return 0
-
-  i = 0
-  digits = 0
-  leading_dot = 0
-  assembler strchar codepoint,text,i
-  if codepoint = 46 then do
-    leading_dot = 1
-    i = i + 1
-  end
-
-  do while i < text_length
-    assembler strchar codepoint,text,i
-    if codepoint < 48 | codepoint > 57 then leave
-    digits = digits + 1
-    i = i + 1
-  end
-  if digits = 0 then return 0
-
-  if \leading_dot & i < text_length then do
-    assembler strchar codepoint,text,i
-    if codepoint = 46 then do
-      i = i + 1
-      do while i < text_length
-        assembler strchar codepoint,text,i
-        if codepoint < 48 | codepoint > 57 then leave
-        i = i + 1
-      end
-    end
-  end
-  if i >= text_length then return 1
-
-  assembler strchar codepoint,text,i
-  if codepoint \= 69 & codepoint \= 101 then return 0
-  i = i + 1
-  if i < text_length then do
-    assembler strchar codepoint,text,i
-    if codepoint = 43 | codepoint = 45 then i = i + 1
-  end
-  exponent_start = i
-  do while i < text_length
-    assembler strchar codepoint,text,i
-    if codepoint < 48 | codepoint > 57 then leave
-    i = i + 1
-  end
-  return i >= text_length & i > exponent_start
+  config = .RexxClassicConfig()
+  return rexxclassic_datatype_symbol_kind(.RexxValue(text),config)
 
 /**
  * Tests whether an abbreviation matches the start of a string.
@@ -627,26 +561,14 @@ rexxclassicbif_datatype: procedure = .RexxValue
   context = dereference context_ref
   call context.clearError()
   if rexxclassicbif_check_args(context_ref, "rANY oABLMNSUWX") = 0 then return _context_error(context_ref)
-  value = context.argumentText(1)
+  value = context.argument(1)
+  config = context.characterConfig()
   if \context.argumentExists(2) then do
-    if _is_number_text(value) then return _ok("NUM")
-    return _ok("CHAR")
+    return _ok(rexxclassic_datatype_classify(value,config))
   end
 
   option = context.argumentText(2)
-  result = 0
-  select
-    when option = "A" then result = _all_chars_in(value, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789") & length(value) > 0
-    when option = "B" then result = _all_chars_in(value, "01 ")
-    when option = "L" then result = _all_chars_in(value, "abcdefghijklmnopqrstuvwxyz") & length(value) > 0
-    when option = "M" then result = _all_chars_in(value, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz") & length(value) > 0
-    when option = "N" then result = _is_number_text(value)
-    when option = "S" then result = _is_symbol_text(value)
-    when option = "U" then result = _all_chars_in(value, "ABCDEFGHIJKLMNOPQRSTUVWXYZ") & length(value) > 0
-    when option = "W" then result = _is_whole_text(value)
-    when option = "X" then result = _all_chars_in(value, "ABCDEFabcdef0123456789 ")
-    otherwise result = 0
-  end
+  result = rexxclassic_datatype_test(value,option,config)
   if result then return _ok("1")
   return _ok("0")
 
@@ -1050,67 +972,6 @@ _quote_insert: procedure = .string
   escaped = changestr('"', escaped, '\"')
   return '"' || escaped || '"'
 
-_is_number_text: procedure = .boolean
-  arg value = .string
-  text = _normalize_classic_number_text(value)
-  if length(text) = 0 then return 0
-  posn = 1
-  saw_digit = 0
-  saw_dot = 0
-
-  if substr(text, posn, 1) = "+" | substr(text, posn, 1) = "-" then do
-    posn = posn + 1
-    if posn > length(text) then return 0
-  end
-
-  do while posn <= length(text)
-    ch = substr(text, posn, 1)
-    if pos(ch, "0123456789") > 0 then saw_digit = 1
-    else if ch = "." then do
-      if saw_dot then return 0
-      saw_dot = 1
-    end
-    else leave
-    posn = posn + 1
-  end
-
-  if saw_digit = 0 then return 0
-  if posn > length(text) then return 1
-  if translate(substr(text, posn, 1)) <> "E" then return 0
-
-  posn = posn + 1
-  if posn > length(text) then return 0
-  if substr(text, posn, 1) = "+" | substr(text, posn, 1) = "-" then posn = posn + 1
-  if posn > length(text) then return 0
-
-  do i = posn to length(text)
-    if pos(substr(text, i, 1), "0123456789") = 0 then return 0
-  end
-  return 1
-
-_normalize_classic_number_text: procedure = .string
-  arg value = .string
-  text = strip(value)
-  if length(text) < 2 then return text
-  first = left(text, 1)
-  if first = "+" | first = "-" then
-    return first || strip(substr(text, 2), "L")
-  return text
-
-_is_whole_text: procedure = .boolean
-  arg value = .string
-  text = _normalize_classic_number_text(value)
-  if length(text) = 0 then return 0
-  start = 1
-  if substr(text, 1, 1) = "+" | substr(text, 1, 1) = "-" then do
-    if length(text) = 1 then return 0
-    start = 2
-  end
-  do i = start to length(text)
-    if pos(substr(text, i, 1), "0123456789") = 0 then return 0
-  end
-  return 1
-
 /* Normalize a caller-context numeric value to plain signed whole digits. */
 _normalize_wholenum_text: procedure = .string
   numeric digits inherited
@@ -1222,79 +1083,3 @@ _expand_whole_decimal: procedure = .string
   end
   valid = 1
   return whole_text
-
-_is_binary_text: procedure = .boolean
-  arg value = .string
-  value_length = .int
-  codepoint = .int
-  binary_digits = 0
-  blank_character = 32
-  zero_character = 48
-  one_character = 49
-  index = 0
-
-  assembler strlen value_length,value
-  if value_length = 0 then return 1
-  assembler strchar codepoint,value,index
-  if codepoint = blank_character then return 0
-  last = value_length - 1
-  assembler strchar codepoint,value,last
-  if codepoint = blank_character then return 0
-
-  do i = value_length - 1 to 0 by -1
-    assembler strchar codepoint,value,i
-    if codepoint = blank_character then do
-      if binary_digits // 4 <> 0 then return 0
-    end
-    else if codepoint = zero_character | codepoint = one_character then
-      binary_digits = binary_digits + 1
-    else return 0
-  end
-  return 1
-
-_is_hex_text: procedure = .boolean
-  arg value = .string
-  value_length = .int
-  codepoint = .int
-  hexadecimal_digits = 0
-  remainder = .int
-  blank_character = 32
-  index = 0
-
-  assembler strlen value_length,value
-  if value_length = 0 then return 1
-  assembler strchar codepoint,value,index
-  if codepoint = blank_character then return 0
-  index = value_length - 1
-  assembler strchar codepoint,value,index
-  if codepoint = blank_character then return 0
-
-  do index = value_length - 1 to 0 by -1
-    assembler strchar codepoint,value,index
-    if codepoint = blank_character then do
-      assembler iand remainder,hexadecimal_digits,1
-      if remainder <> 0 then return 0
-    end
-    else if (codepoint >= 48 & codepoint <= 57) |,
-            (codepoint >= 65 & codepoint <= 70) |,
-            (codepoint >= 97 & codepoint <= 102) then
-      hexadecimal_digits = hexadecimal_digits + 1
-    else return 0
-  end
-  return 1
-
-_all_chars_in: procedure = .boolean
-  arg value = .string, valid = .string
-  do i = 1 to length(value)
-    if pos(substr(value, i, 1), valid) = 0 then return 0
-  end
-  return 1
-
-_is_symbol_text: procedure = .boolean
-  arg value = .string
-  text = strip(value)
-  if length(text) = 0 then return 0
-  first = substr(text, 1, 1)
-  if pos(translate(first), "ABCDEFGHIJKLMNOPQRSTUVWXYZ!?_@$#") = 0 then return 0
-  valid = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789.!?_@$#"
-  return _all_chars_in(text, valid)

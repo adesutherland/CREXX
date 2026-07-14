@@ -22,27 +22,30 @@
  * SOFTWARE.
  */
 
-/* rexx */
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifdatatype expose rexxclassicbif_datatype
+import rexxclassicbifs
+import rexxclassicdatatype
+import rexxvalue
+
 /**
- * Return the conventional 32-bit FNV-1a hash of a text value's exact UTF-8
- * bytes.
+ * Classify a value or test one strict Classic DATATYPE option.
  *
- * @param input_value text to hash
- * @return unsigned 32-bit hash as an integer in 0..4294967295
- * @docType runtime-function
- * @see lib/rxfnsb/rexx/fnv.md
+ * @bif DATATYPE
+ * @signature DATATYPE(string [,type])
+ * @checkargs rANY oABLMNSUWX
+ * @sandbox pure
+ * @return NUM or CHAR without type, otherwise 1 or 0
  */
-options levelb numeric_classic
-
-namespace rxfnsb expose fnv
-
-fnv: procedure = .int
-  arg input_value = .string
-
-  bytes = input_value as .binary
-  len = 0
-  hashr = 0
-
-  assembler blen len,bytes
-  assembler rxhash hashr,input_value,len
-  return hashr
+rexxclassicbif_datatype: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref,"rANY oABLMNSUWX") = 0 then return .RexxValue("")
+  value = context.argument(1)
+  config = context.characterConfig()
+  if \context.argumentExists(2) then
+    return .RexxValue(rexxclassic_datatype_classify(value,config))
+  option = context.argumentText(2)
+  if rexxclassic_datatype_test(value,option,config) then return .RexxValue("1")
+  return .RexxValue("0")

@@ -1,9 +1,8 @@
 # High-priority Level B library temporary work list
 
-Status: **approved; programme steps -1 and 8 complete; all 120 current selector
-rows processed; two original rows reclassified as examples; dependency batches
-1-7 complete and fully integrated; remaining design batches
-8-12 queued**
+Status: **complete; all 120 current selector rows processed; two original rows
+reclassified as examples; dependency batches 1-12 complete; programme steps -1
+and 8, combined documentation, build, and full test gates complete**
 
 This is the temporary execution ledger for the high-priority Level B library
 review. It now tracks the 87 bootstrap-core candidate selectors and the 33
@@ -65,11 +64,11 @@ scope implicitly.
 | 5 | `delword`, `word`, `words`, `wordindex`, `subword`, `wordlength`, `wordpos` | `Config_OtherBlankCharacters` | done |
 | 6 | `translate`, `xrange`, `c2x`, `c2d`, `d2c`, `x2c` | `Config_Xrange`, `Config_C2B`, and `Config_B2C` | done |
 | 7 | `qpos`, `qsplit`, `qsplitsafe`, `qextractall`, `qextractpair`, `qstripcomment`, `qremoveall`, `qword`, `qwordlength`, `qwords`, `qwordindex`, `qwordpos`, `qsubword` | Shared quote grammar, vectors, extraction bounds, and word spans | done |
-| 8 | `fsayfmt` | Approved placeholder contract on the frozen quote grammar | queued |
-| 9 | `random` | Typed Level B contract and scoped RNG service | queued |
-| 10 | `value` | Configuration-named external-pool service | queued |
-| 11 | `datatype` | Classic configuration services, option set, and `D` decision | queued |
-| 12 | `fnv` | Public hash contract and `rxhash` VM Unicode repair | queued |
+| 8 | `fsayfmt` | Approved placeholder contract on the frozen quote grammar | done; integrated |
+| 9 | `random` | Typed Level B contract and scoped RNG service | done; integrated |
+| 10 | `value` | Configuration-named external-pool service | done; integrated |
+| 11 | `datatype` | Classic configuration services, option set, and `D` decision | done; integrated |
+| 12 | `fnv` | Public hash contract and `rxhash` VM Unicode repair | done; integrated |
 
 Batch 1's aggregate rebuild should also prove the already corrected class
 artifacts for `xrange`, `delword`, `subword`, `wordlength`, and `wordpos` without
@@ -313,6 +312,15 @@ Integration evidence:
   every median improved, with changes from -27.38% to -38.41%. Detailed
   results are in
   `levelb-library-benchmark-baseline-2026-07-13.md`.
+- the final batches 8-12 integration rebuilt 530 Debug artifacts and passed
+  1,824/1,824 CTests at parallelism 30, including all existing tests and the
+  newly registered optimized/unoptimized Level B and direct Level C harnesses;
+- the post-batch Release smoke gate passed 13/13. All five final benchmark
+  medians remain 18.03% to 66.62% below the original baseline. Compared with
+  the earlier step 8 sample, three general workloads moved upward, Towers was
+  neutral, and the Level B-heavy RexxCPS adaptation improved 45.79%; the
+  detailed mixed sanity result is retained in the benchmark report rather than
+  attributed to individual selectors.
 
 - Level B: register `ts_address_protocol` optimized/unoptimized.
 - Level B: register `ts_rxsystem` optimized/unoptimized, passing the CTest test
@@ -2162,10 +2170,61 @@ Integration evidence:
   harness or separate stable Markdown exists. No implementation or aggregate
   build was attempted because the missing services and D decision determine the
   correct algorithm and tests.
-- Completion summary: parked before implementation on the DATATYPE option-set
-  decision and shared Classic character/numeric configuration services. Resume
-  it before closing dependent CheckArgs semantics. Row 87 `parseExec` is sole
-  active.
+- Approved Batch 11 result: Level B keeps `D` as an ASCII-digits cREXX
+  extension and signals on an explicit empty/unknown option. Its direct
+  codepoint scans implement the limited ASCII catalogs, standard right-counted
+  B/X grouping, full signed/decimal/exponent number syntax, and exact W
+  arithmetic without float conversion or tolerance. The old repeated selector
+  chain and binary-float exponentiation are removed.
+- Level C result: `RexxClassicDatatype.crexx` is the shared BYTE/UTF8 engine for
+  the strict `ABLMNSUWX` catalog. `RexxClassicConfig` now supplies paired extra
+  letter tables, consecutive 0-through-9 digit families, profile-specific B/X
+  blanks, and a default-nine configurable exponent limit. The standalone
+  `RexxClassicBifDatatype.crexx`, CheckArgs BIN/HEX/SYM/NUM/WHOLE paths, and
+  direct SYMBOL BIF use the same engine; exponent-limit failure maps to `40.9`
+  for NUM while DATATYPE returns false.
+- Test/doc result: the Level B print/tolerance script is replaced by assertions
+  for every option, omission, grouping, exact whole boundaries, huge exponents,
+  and option signals. The direct RexxValue harness covers BYTE arbitrary data,
+  UTF8 rejection, configured byte/codepoint letters/digits/blanks, exponent
+  limits, strict rejection of D, CheckArgs normalization/error identities, and
+  all argument-presence errors. Separate B/C module pages and the existing book
+  and Level C specification pages now describe the distinct surfaces.
+- Focused validation and second review: Level B and the direct Level C harness
+  pass against noopt and opt modules; the direct SYMBOL and deprecated common-
+  controller support harnesses also pass in both modes. Level B output falls
+  from 4,847 aggregate RXAS lines to 1,670 noopt / 2,044 opt. The standalone
+  direct BIF is 202/206 lines and delegates to the shared classifier; neither B
+  nor C optimized classifier output contains float/decimal arithmetic. Each
+  selected test performs one profile-specific scan, with configuration-table
+  searches bounded by the configured tables. Compiler, lowering, and VM source
+  are unchanged.
+- Completion summary: all applicable B/C/T/P/D/V gates are complete. Aggregate
+  wiring is present and the final combined sweep passes. Batch 12 `fnv` then
+  became active and is also complete.
+
+### Batch 12 completion evidence — `fnv` and `rxhash`
+
+- Approved contract/result: `fnv(input_value=.string) -> .int` is the
+  conventional 32-bit FNV-1a algorithm over the exact UTF-8 bytes, returning
+  the unsigned value in `0..4294967295`. It remains Level B-only; no Level C
+  BIF or class method exists.
+- VM result: `rxhash` now reads its third operand as a byte count, clamps it to
+  the available encoded payload, and hashes the selected bytes once in forward
+  order. Zero and negative lengths select the empty byte sequence. The old
+  Unicode character-count pre-scan, reverse traversal, SDBM recurrence, fold,
+  and sign mask are removed.
+- Test/doc result: the registered Level B assertion harness fixes empty, ASCII,
+  embedded-NUL, Unicode, sentence, and non-mutation vectors. The RXAS gap suite
+  fixes empty, prefix, exact, and oversized explicit-length behavior. The
+  separate Level B page and RXAS instruction reference state the algorithm,
+  byte units, range, and error behavior.
+- Focused validation and second review: `rxvm` and `rxbvm` instruction-gap tests
+  pass, as do the optimized and unoptimized Level B tests. The Level B hot path
+  is one string-to-binary view/copy, one `blen`, and one `rxhash`; the VM loop
+  is allocation-free O(n) unsigned 32-bit arithmetic. `git diff --check`
+  passes. The final combined build, 1,824-test CTest sweep, and benchmark/report
+  gates pass.
 
 ### Selector inventory and evidence — row 87 `parseExec`
 
@@ -2211,10 +2270,9 @@ only for their separate `.Rexx` class-adapter work.
   omission semantics separately from Classic RANDOM, then provide a scoped
   seed/next-value service that can implement unbiased bounded generation and
   the Level C `40.31`/`40.32`/`40.33` contract without VM-global `rand()` state.
-- `fnv` hash contract/VM opcode: decide whether the public legacy name preserves
-  reverse-order SDBM or migrates to conventional FNV-1a, and repair `rxhash`'s
-  Unicode character-count-as-byte-limit defect before freezing vectors. The VM
-  change is outside this library-only programme.
+- `fnv` hash contract/VM opcode: resolved in approved Batch 12 as conventional
+  32-bit FNV-1a over exact UTF-8 bytes. The repaired `rxhash` consumes its byte-
+  count operand and no longer confuses codepoint length with encoded length.
 - Quote-aware parser grammar (`qpos` and dependent `q*` selectors): decide
   whether doubled delimiters escape quotes, how unmatched quotes behave, and
   whether matching is by Unicode character or encoded byte. Also freeze empty
@@ -2274,16 +2332,16 @@ only for their separate `.Rexx` class-adapter work.
   complete. Full Classic Level C closure waits for
   `Config_OtherBlankCharacters`; compile/test the corrected receiver/phrase
   forwarding after the single classlib rebuild.
-- `datatype` Classic configuration/option contract: decide whether `D` joins the
-  Level C catalog, then provide extra-letter/digit, blank-grouping,
-  exponent-limit, and caller-numeric services before replacing the ASCII/float
-  implementations. This checkpoint must also reconcile dependent CheckArgs
-  BIN/HEX/SYM/WHOLE behavior. Only adapter omission source was corrected.
-- `value` Level C external-pool success paths: define and implement a
-  configuration-named pool get/set service. The internal Level C BIF and all
-  Level B work are complete; the direct harness currently proves the required
-  `40.37` error for every external pool name. This is not blocked on compiler
-  lowering.
+- `datatype` Classic configuration/option contract: completed in Batch 11.
+  Level B retains the typed `D` extension; strict Level C remains
+  `ABLMNSUWX`. The shared BYTE/UTF8 classifier now owns configured extra
+  letters/digits, B/X blank grouping, exponent limits, exact W semantics, and
+  CheckArgs BIN/HEX/SYM/NUM/WHOLE validation.
+- `value` Level C external-pool success paths: completed in Batch 10. A
+  configuration-owned, case-insensitive named adapter registry now provides
+  exact-subject get/set operations, distinguishes missing/rejected subjects
+  (`40.36`) from unknown pools (`40.37`), and never creates a missing subject
+  implicitly. Compiler lowering remains unchanged.
 - `insert`, `overlay`, `lastpos`, `strip`, and `substr` class adapters:
   completed in Batch 1. Optional presence is preserved, obsolete sentinels are
   removed, receiver/target order is correct, and focused method assertions pass
@@ -2469,7 +2527,7 @@ are active. This association is an approval point before row 1 starts.
 | 5 | `signal` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 6 | `symbol` | `SYMBOL` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 7 | `trace` | `TRACE` R* | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
-| 8 | `value` | `VALUE` R | ☒ | ☐ | ☒ | ☒ | ☒ | ☒ | parked — external pool service |
+| 8 | `value` | `VALUE` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 9 | `version` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 10 | `abbrev` | `ABBREV` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 11 | `center` | `CENTER` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
@@ -2547,7 +2605,7 @@ are active. This association is an approval point before row 1 starts.
 | 83 | `parsecompile` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 84 | `parsestring` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 85 | `parse` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
-| 86 | `datatype` | `DATATYPE` M | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | parked — Classic config / `D` decision |
+| 86 | `datatype` | `DATATYPE` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 87 | `parseExec` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 
 ## B standard; default (33)
@@ -2567,10 +2625,10 @@ entries; they are not included in the 33-selector count.
 | 95 | `_dateo` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 96 | `_jdn` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 97 | `date` | `DATE` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
-| 98 | `random` | `RANDOM` R | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | parked — RNG service/contract |
+| 98 | `random` | `RANDOM` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 99 | `reradix` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 100 | `time` | `TIME` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
-| 101 | `fnv` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — hash contract/VM Unicode |
+| 101 | `fnv` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 102 | `arraypop` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 103 | `arrayshift` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 104 | `arrayreverse` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
@@ -2591,7 +2649,7 @@ entries; they are not included in the 33-selector count.
 | 119 | `qwordindex` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 120 | `qwordpos` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 121 | `qsubword` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
-| 122 | `fsayfmt` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — FSAY/quote grammar |
+| 122 | `fsayfmt` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 
 ## Active-item evidence record
 
@@ -2990,22 +3048,22 @@ entries; they are not included in the 33-selector count.
   defaults through `RexxVariablePool`; it returns the prior value and assigns
   argument 2 when present. Shared CheckArgs now implements `SYM` with standard
   `40.26`, reusing the same Classic recognizer as `SYMBOL`. `RexxStem` now owns
-  an optional default value. The configuration-backed external pool interface
-  does not exist, so supplied argument 3 is validated as `rANY oANY oANY` and
-  reports `40.37`; successful external get/set remains parked.
+  an optional default value. Batch 10 adds configuration-backed named external
+  pools without changing this internal-variable path.
 - Tests: `ts_value` is now assertion-only with a pass marker and covers typed
   registers, constants, exact `a`/`aa` names, case, blank/empty values, empty
   and missing names, later visibility, and a procedure-boundary regression.
   The direct Level C harness covers lookup/assignment old values, creation,
   empty values, `.RC`, derived and empty compound components, stem defaults,
-  `40.3`/`40.4`/`40.5`/`40.26`, and the parked external `40.37` path. It never
-  calls `rexxclassicbif_call`. Moving the Classic recognizer into shared call
-  support was regression-tested with the direct SYMBOL harness; the runtime
-  pool harness also passes.
+  `40.3`/`40.4`/`40.5`/`40.26`, external reads and prior-value writes, exact
+  case-sensitive subjects, empty values, missing/rejected subjects (`40.36`),
+  and unknown/blank pools (`40.37`). It never calls `rexxclassicbif_call`.
+  Moving the Classic recognizer into shared call support was regression-tested
+  with the direct SYMBOL harness; the runtime pool harness also passes.
 - Documentation: Level B source RexxDoc and
   `lib/rxfnsb/rexx/value.md` document the read-only frame contract. The distinct
-  direct BIF contract and parked dependency are in `lib/rxfnsc/value.md`; the
-  public BIF reference now explains both surfaces and its examples are covered.
+  direct BIF contract and external-adapter service are in `lib/rxfnsc/value.md`;
+  the public BIF reference explains both surfaces and its examples are covered.
 - Approved implementation notes or decisions: preserve Level B's read-only
   caller-metadata contract and make matching/boundaries exact; implement and
   test the internal Level C pool form directly; inspect repository host-pool
@@ -3025,10 +3083,22 @@ entries; they are not included in the 33-selector count.
   `rexxclassicbif_value` directly; the standalone BIF is 253 noopt/262 optimized
   RXAS lines and contains no name dispatcher. No focused timing benchmark is
   justified for metadata introspection.
-- Completion summary: B/T/P/D/V and the internal Level C implementation are
-  complete. The row is parked solely on a future configuration-named external
-  pool service; that exact item is in the parked queue. Aggregate registration
-  remains in the deferred integration queue. Row 9 is now the sole active item.
+- Batch 10 result: `RexxClassicConfig` owns a case-insensitive named registry of
+  `RexxExternalValuePool` adapters. Pool names are trimmed and uppercased once;
+  subject text is passed unchanged. VALUE always reads before an optional set,
+  returns the prior value, never creates a missing subject implicitly, and uses
+  `40.36` for missing/rejected subjects versus `40.37` for unknown pools. The
+  supplied in-memory adapter makes the service directly testable while host/SAA
+  adapters can implement the same interface.
+- Batch 10 validation and second review: the focused direct RexxValue harness
+  passes against noopt and opt standalone module sets, and the unchanged Level
+  B VALUE harness passes in both modes. The standalone VALUE output is 485/496
+  RXAS lines; external lookup performs one normalized linear registry search
+  and then links directly to the owned adapter for the get/set call. Registration
+  is a cold configuration path; no compiler, lowering, or VM source changed.
+- Completion summary: all applicable B/C/T/P/D/V gates are complete. Aggregate
+  registration is integrated and the final sweep passes. Batch 11 `datatype`
+  then became active and is also complete.
 
 ### 9. `version` — done
 
@@ -5157,7 +5227,7 @@ entries; they are not included in the 33-selector count.
 - Completion summary: all applicable B/C/T/P/D/V gates are complete without
   compiler or VM source changes. Row 98 `random` remains parked for Batch 9.
 
-### 98. `random` — parked
+### 98. `random` — done 2026-07-14
 
 - Public contracts: Level B currently exposes three optional defaulted integer
   slots `random([min [,max [,seed]]]) -> .int`; Classic Level C separately
@@ -5179,11 +5249,34 @@ entries; they are not included in the 33-selector count.
   reseeding, bounds, omission, errors, state isolation, nor distribution
   reachability. The language page describes only current Level B defaults and
   no separate stable B/C pages or standalone direct harness exist.
-- Completion summary: parked before implementation/build on the Level B
-  optional-call decision and scoped unbiased RNG service. That checkpoint can
-  then produce distinct typed B and direct RexxValue C implementations with
-  standard `40.31`/`40.32`/`40.33`, without compiler changes. Row 99 `reradix`
-  is sole active.
+- Approved result: one Level B argument is the maximum; positioned holes retain
+  the Classic 0/999 defaults. Arguments are native non-negative `.int` values,
+  reversed or wider-than-100000 ranges signal `INVALID_ARGUMENTS`, and supplied
+  seed zero is the deterministic seed-one sequence. The old exposed arguments,
+  sentinel values, placeholder raise path, modulo bias, and VM-global `irand`
+  dependency are removed.
+- Scoped service result: `RexxRandomState` implements Park-Miller state and
+  rejection sampling. Level B lazily owns one module service. The reusable
+  `RexxClassicConfig` owns a separate service, and `RexxBifCallContext` can now
+  retain an injected configuration reference. RexxScript owns one configuration
+  per evaluator and injects it into every direct BIF call; compiler/lowering and
+  the VM are unchanged.
+- Level C result: standalone `RexxClassicBifRandom.crexx` uses RexxValue inputs,
+  CheckArgs `oWHOLE>=0` validation, scoped configuration state, and standard
+  `40.31`, `40.32`, and `40.33` context errors. It is called directly by
+  RexxScript and is not added to the deprecated name controller.
+- Test/doc result: the print/intentional-failure Level B test is replaced by
+  deterministic sequence, omission, bounds, repeated-range, and signal
+  assertions. A direct Level C harness proves exact vectors, reseeding,
+  continuation, two-configuration isolation, holes, bounds, and all argument
+  and range errors. Separate stable B/C pages describe their distinct contracts.
+- Focused validation: noopt and opt RANDOM modules pass the asserting Level B
+  harness; noopt and opt Level C module sets pass the direct RexxValue harness.
+  The isolated outputs are 481/875 Level B RXAS lines and 458/455 direct Level C
+  RXAS lines, with no `irand` instruction or C-library random call. CMake wiring
+  is present and the final combined rebuild/CTest sweep passes.
+- Completion summary: all applicable B/C/T/P/D/V gates are complete. Batch 10
+  `value` is now the sole active batch.
 
 ### 99. `reradix` — done
 
@@ -5252,31 +5345,27 @@ entries; they are not included in the 33-selector count.
   remain empty.
 - Completion summary: all applicable B/C/T/P/D/V gates are complete. The final
   six-test DATE/TIME set passes in both modes (13/13 with the shared fixture),
-  and no compiler lowering or VM source changed. Row 101 `fnv` remains parked
-  for Batch 12.
+  and no compiler lowering or VM source changed. Row 101 `fnv` then remained
+  parked for Batch 12 and is now complete.
 
-### 101. `fnv` — parked
+### 101. `fnv` — done 2026-07-14
 
 - Public surface: `fnv(input_value=.string) -> .int` is Level B-only and is
   consumed by treemap bucket macros. Its argument/result are typed and read-only;
   there is no Level C BIF or class method.
-- Contract blocker: despite the public name, the authoritative VM `rxhash`
-  opcode implements a nonnegative reverse-order SDBM-style recurrence, not
-  FNV-1/FNV-1a. Other repository components use conventional 32/64-bit FNV-1a,
-  so silently changing this selector would alter bucket compatibility and needs
-  an explicit public algorithm decision.
-- VM correctness blocker: `rxhash` obtains a Unicode character count and then
-  uses it as a byte-loop bound. A direct probe showed `"a🙂b"` is therefore
-  hashed from only a prefix of its UTF-8 payload. The supplied length register
-  is ignored, so Level B cannot repair this by passing a byte count; fixing the
-  opcode is an interpreter change outside this library-only programme.
-- Performance/test/doc evidence: current output is 48 lines in both modes and
-  redundantly executes `strlen` before an opcode that derives length again.
-  The test merely prints four unlabelled values and has no empty/Unicode/vector/
-  non-mutation assertions; no stable page identifies the actual algorithm.
-- Completion summary: parked before source/test/doc changes on the public hash
-  algorithm and VM Unicode-byte-length repair. Do not optimize away the visible
-  pre-scan and then freeze defective vectors. Row 102 `arraypop` is sole active.
+- Approved contract/result: the old reverse-order SDBM behavior is replaced by
+  conventional 32-bit FNV-1a over the complete UTF-8 encoding. `rxhash` now
+  consumes and clamps its explicit byte-count operand; `fnv` supplies `blen`
+  from the string's binary view instead of a Unicode character count.
+- Test/doc result: the old four-line print script is replaced and registered
+  in both optimization modes. Stable vectors cover empty, ASCII, Unicode,
+  embedded NUL, a sentence, and input non-mutation; direct RXAS tests cover
+  prefix, zero, exact, and oversized lengths. Separate Level B and RXAS pages
+  identify the algorithm and byte units.
+- Performance/result: the VM performs one forward O(n) byte loop with no
+  allocation or secondary fold. Focused tests pass on `rxvm`, `rxbvm`, and both
+  Level B overlays. All applicable B/T/P/D/V gates are complete; there is no
+  Level C gate. Final aggregate validation is deferred to the programme gate.
 
 ### 102. `arraypop` — done
 
@@ -5706,7 +5795,7 @@ pre-implementation findings. They remain here as the decision audit trail.
 - Completion summary: parked on the shared qword span scanner and explicit
   tail-versus-count contract. Row 122 `fsayfmt` is sole active.
 
-### 122. `fsayfmt` — parked before implementation
+### 122. `fsayfmt` — done 2026-07-14
 
 - Public surface: `fsayfmt(template=.string) -> .string` is a Level B compile-
   time expression generator, not a runtime value formatter. The existing FSAY
@@ -5733,12 +5822,28 @@ pre-implementation findings. They remain here as the decision audit trail.
   aggregate linking. It was not retried. Running the already-built noopt/opt
   FSAY artifacts directly with the existing runtime suffix produced all five
   expected report rows and `SUCCESS` in both modes.
-- Completion summary: parked on an explicit placeholder/expression/diagnostic
-  contract plus shared quote grammar, with compiler changes excluded. `git diff
-  --check` passes and compiler/interpreter source diffs remain empty. All 120
-  current selector rows have now been processed, and the two original formatter
-  rows have been reclassified as examples; the deferred aggregate wiring/build
-  and final validation/benchmark phase is active.
+- Approved result: FSAYFMT remains a compile-time source-expression generator.
+  It accepts identifiers and compound variables only, makes plain widths left
+  aligned and decimal FORMAT widths right aligned by default, accepts the
+  documented colon/whitespace separator, and requires non-negative digit-only
+  width/precision fields. Every malformed brace, name, or format now signals
+  `INVALID_ARGUMENTS`.
+- Algorithm/result: the compiler source literal is decoded once, quote
+  characters are then ordinary literal text, `{{`/`}}` produce literal braces,
+  and generated text uses canonical single-quoted fragments with doubled
+  apostrophes. One codepoint scan replaces two general `qpos` scans per
+  placeholder; compiler exit and lowering code are unchanged.
+- Test/doc result: `ts_fsayfmt` directly asserts returned source for literals,
+  source-token decoding, Unicode, escaped braces, compounds, all alignments,
+  decimals, and every error family. `lib/rxfnsb/rexx/fsayfmt.md` records the
+  Level B contract; existing compiler/book pages remain in their established
+  directories and are updated in the final documentation pass.
+- Focused validation: both direct optimized/unoptimized Level B tests and both
+  existing compiler-exit integration tests pass (6/6 including fixtures). The
+  optimized source contains no qscan/qpos call. CMake wiring is present; the
+  final combined sweep passes.
+- Completion summary: all applicable B/T/P/D/V gates are complete; no Level C
+  BIF exists. Batch 9 then became active and is now complete.
 
 For each started row, add a short subsection here before editing:
 

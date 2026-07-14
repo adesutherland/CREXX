@@ -31,19 +31,26 @@ The CheckArgs contract is `rSYM oANY oANY` for the internal form. Invalid
 symbols report `RXC-LC-40.26`; ordinary missing, extra, and omitted arguments
 use the shared `RXC-LC-40.*` errors.
 
-## Parked external-pool dependency
+## External pools
 
 When argument 3 is supplied, the ANSI contract changes argument 1 to `rANY`
-and routes both lookup and assignment through a configuration-named external
-pool. The repository does not yet provide that configuration service. The
-direct entry point therefore validates `rANY oANY oANY` and reports
-`RXC-LC-40.37` for every external pool name. Completing successful external
-get/set behavior is parked on a concrete configuration-pool interface; it does
-not require compiler lowering work.
+and routes both lookup and assignment through a named
+`RexxExternalValuePool` adapter registered on `RexxClassicConfig`. Pool names
+are trimmed and case-insensitive. The subject text is passed to the selected
+adapter unchanged.
+
+External assignment always performs a successful get before set and returns
+that old value. A missing subject is not implicitly created. A missing or
+rejected subject reports `RXC-LC-40.36`; an unknown or blank pool name reports
+`RXC-LC-40.37`. `RexxInMemoryExternalValuePool` is the exact-subject adapter
+used by direct harnesses and embedded users. Host/SAA adapters can implement
+the same two-method interface without changing VALUE.
 
 The direct harness
 `lib/rxfnsc/tests_functional/testRexxClassicBifValue.crexx` covers scalars,
 missing values, old-value assignment, empty values, reserved variables, stems,
-derived and empty compound components, stem defaults, argument errors, and the
-parked external-pool error path. It calls `rexxclassicbif_value` directly and
-does not use the deprecated name dispatcher.
+derived and empty compound components, stem defaults, argument errors,
+successful external get/set, pool-name normalization, unchanged subject text,
+get-before-set, no implicit creation, adapter rejection, `40.36`, and `40.37`.
+It calls `rexxclassicbif_value` directly and does not use the deprecated name
+dispatcher.

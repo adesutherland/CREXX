@@ -1,50 +1,17 @@
-#  FSAY and FSAYFMT
+# FSAY and FSAYFMT
 
 ## Overview
 
-`fsayfmt` is a template-based formatting facility for cRexx.
-
-It allows values to be embedded directly into text using named placeholders. The
-facility supports field widths, alignment, and numeric formatting while keeping
-the formatting specification close to the text being generated.
-
-The same formatting engine is also available through the compiler-exit
-statement:
+`FSAY` is a compiler-exit statement that turns a template into a cREXX string
+expression and emits it through `SAY`. Its Level B helper, `fsayfmt`, is the
+source-expression generator used by that exit; it is not a runtime
+interpolation engine.
 
 ```rexx
-FSAY template
-```
-
-`FSAY` is a convenience syntax that formats the template using `fsayfmt()` and
-outputs the resulting line.
-
-Unlike `fmtmask` and `MSAY`, which use COBOL-inspired picture masks,
-`fsayfmt` uses embedded placeholders similar to modern string interpolation
-systems.
-
-
-## Compiler Exit Statement: FSAY
-
-### Syntax
-
-```rexx
-FSAY template
-```
-
-The template may contain one or more placeholders enclosed in braces.
-
-Example:
-
-```rexx
-FSAY "Name: {name:<10} Qty: {qty:>3} Price: {price:8.2}"
-```
-
-If:
-
-```rexx
-name  = "Fred"
-qty   = 12
+name = "Fred"
+qty = 12
 price = 64.31
+FSAY "Name: {name:<10} Qty: {qty:>3} Price: {price:8.2}"
 ```
 
 Output:
@@ -53,494 +20,97 @@ Output:
 Name: Fred       Qty:  12 Price:    64.31
 ```
 
-### Equivalent Code
-
-Conceptually, the previous statement expands to:
+Conceptually, the statement becomes:
 
 ```rexx
-say 'Name: '
-    || left(name,10)
-    || ' Qty: '
-    || right(qty,3)
-    || ' Price: '
-    || format(price,8,2)
+say 'Name: ' || left(name,10) ||,
+    ' Qty: ' || right(qty,3) ||,
+    ' Price: ' || format(price,8,2)
 ```
 
-### Notes
-
-* `FSAY` is a compiler-exit convenience syntax.
-* `fsayfmt()` performs the template expansion.
-* `FSAY` automatically outputs the resulting line using `SAY`.
-* Placeholder processing rules are identical for `FSAY` and `fsayfmt()`.
-
-
-
-## Function Syntax
+## FSAY statement
 
 ```rexx
-expression = fsayfmt(template)
+FSAY template
 ```
 
-`fsayfmt()` converts a template into an equivalent cRexx string expression.
+The compiler exit passes the quoted template source token to `fsayfmt`, inserts
+the returned expression after `SAY`, and compiles the result normally. Variable
+lookup and formatting therefore occur when the generated statement runs.
 
-Example:
+## Placeholder grammar
 
-```rexx
-expr = fsayfmt("Name: {name:<10}")
-```
-
-Conceptually produces:
-
-```rexx
-'Name: ' || left(name,10)
-```
-
-
-
-## Template Structure
-
-A template consists of:
-
-* Literal text
-* Placeholders
-
-Literal text is copied unchanged.
-
-Placeholders are enclosed in braces:
-
-```text
-{name}
-```
-
-or
-
-```text
-{name:format}
-```
-
-Example:
-
-```rexx
-FSAY "Customer: {customer}"
-```
-
-Result:
-
-```text
-Customer: Smith
-```
-
-
-
-## Placeholder Format Specification
-
-General syntax:
+The general form is:
 
 ```text
 {variable[:alignment][width][.decimals]}
 ```
 
-where:
-
-| Element   | Meaning                     |
-| --------- | --------------------------- |
-| variable  | Variable name to insert     |
-| alignment | Optional alignment modifier |
-| width     | Optional field width        |
-| decimals  | Optional decimal precision  |
-
-Examples:
-
-```text
-{name}
-{name:10}
-{name:<10}
-{name:>10}
-{name:^10}
-{price:8.2}
-{price:<8.2}
-```
-
-
-
-## Variable Substitution
-
-The simplest form inserts a variable value unchanged.
-
-Template:
-
-```text
-{name}
-```
-
-Example:
-
-```rexx
-FSAY "Hello {name}"
-```
-
-If:
-
-```rexx
-name = "Fred"
-```
-
-Result:
-
-```text
-Hello Fred
-```
-
-
-
-## Width Formatting
-
-A width may be specified after the variable name.
-
-Template:
-
-```text
-{name:10}
-```
-
-Example:
-
-```rexx
-FSAY "|{name:10}|"
-```
-
-Result:
-
-```text
-|Fred      |
-```
-
-The field width specifies the minimum width of the generated text.
-
-
-
-## Alignment
-
-Three alignment modes are supported.
-
-| Specifier | Meaning      |
-| --------- | ------------ |
-| `<`       | Left align   |
-| `>`       | Right align  |
-| `^`       | Centre align |
-
-
-
-## Left Alignment
-
-Template:
-
-```text
-{name:<10}
-```
-
-Equivalent to:
-
-```rexx
-left(name,10)
-```
-
-Result:
-
-```text
-Fred
-```
-
-(with trailing spaces)
-
-
-
-## Right Alignment
-
-Template:
-
-```text
-{name:>10}
-```
-
-Equivalent to:
-
-```rexx
-right(name,10)
-```
-
-Result:
-
-```text
-      Fred
-```
-
-
-
-## Centre Alignment
-
-Template:
-
-```text
-{name:^10}
-```
-
-Equivalent to:
-
-```rexx
-center(name,10)
-```
-
-Result:
-
-```text
-   Fred
-```
-
-
-
-## Numeric Formatting
-
-Numeric formatting uses cRexx `FORMAT()` semantics.
-
-Syntax:
-
-```text
-{value:width.decimals}
-```
-
-Example:
-
-```text
-{price:8.2}
-```
-
-Equivalent to:
-
-```rexx
-format(price,8,2)
-```
-
-If:
-
-```rexx
-price = 123.45
-```
-
-Result:
-
-```text
-  123.45
-```
-
-
-
-## Numeric Formatting with Alignment
-
-Alignment may be combined with decimal formatting.
-
-## Left-Aligned Numeric
-
-```text
-{price:<8.2}
-```
-
-Equivalent to:
-
-```rexx
-left(format(price,8,2),8)
-```
-
-
-
-## Right-Aligned Numeric
-
-```text
-{price:>8.2}
-```
-
-Equivalent to:
-
-```rexx
-format(price,8,2)
-```
-
-
-
-## Centre-Aligned Numeric
-
-```text
-{price:^8.2}
-```
-
-Equivalent to:
-
-```rexx
-center(format(price,8,2),8)
-```
-
-
-
-## Placeholder Summary
-
-| Placeholder    | Description                 |
-| -------------- | --------------------------- |
-| `{name}`       | Insert value                |
-| `{name:10}`    | Width 10                    |
-| `{name:<10}`   | Left align width 10         |
-| `{name:>10}`   | Right align width 10        |
-| `{name:^10}`   | Centre width 10             |
-| `{value:8.2}`  | Numeric width 8, 2 decimals |
-| `{value:<8.2}` | Left-aligned numeric        |
-| `{value:>8.2}` | Right-aligned numeric       |
-| `{value:^8.2}` | Centre-aligned numeric      |
-
-
-
-## Colon and Space Separators
-
-The formatter accepts either a colon or whitespace as the separator between the
-variable name and the format specification.
-
-The following forms are equivalent:
+Whitespace may replace the colon:
 
 ```text
 {name:<10}
 {name <10}
 ```
 
-Likewise:
+`variable` must be an identifier or compound variable. General expressions and
+array subscripts are not accepted inside a placeholder.
 
-```text
-{price:8.2}
-{price 8.2}
-```
+| Placeholder | Generated expression |
+| --- | --- |
+| `{name}` | `name` |
+| `{name:10}` | `left(name,10)` |
+| `{name:<10}` | `left(name,10)` |
+| `{name:>10}` | `right(name,10)` |
+| `{name:^10}` | `center(name,10)` |
+| `{price:8.2}` | `format(price,8,2)` |
+| `{price:.2}` | `format(price,,2)` |
+| `{price:<8.2}` | `left(format(price,,2),8)` |
+| `{price:>8.2}` | `format(price,8,2)` |
+| `{price:^8.2}` | `center(format(price,,2),8)` |
 
-Using the colon form is recommended because it is more readable and mirrors the
-notation used by other formatting systems.
+Plain widths default to left alignment. Decimal formats default to right
+alignment. Width and decimal precision are non-negative decimal integers; an
+explicit alignment requires a width.
 
+## Literal text and braces
 
-
-## Examples
-
-### Simple Text
-
-```rexx
-FSAY "Customer: {customer}"
-```
-
-Output:
-
-```text
-Customer: Smith
-```
-
-
-
-### Report Line
+Literal template text is emitted as canonical single-quoted cREXX source.
+Apostrophes are doubled in that generated source, and Unicode text is preserved.
+Use `{{` and `}}` for literal braces:
 
 ```rexx
-FSAY "Item: {item:<15} Qty: {qty:>5}"
+FSAY "Set {{name}} to {value}"
 ```
 
-Output:
+An unmatched brace, nested opening brace, empty placeholder, invalid variable,
+empty format, invalid width, or invalid decimal precision signals
+`INVALID_ARGUMENTS` while the compiler exit is expanding the statement.
 
-```text
-Item: Tea               Qty:     7
-```
+## Direct `fsayfmt` use
 
-
-
-### Price List
+The typed Level B surface is:
 
 ```rexx
-FSAY "{item:<20} {price:8.2}"
+fsayfmt(template = .string) = .string
 ```
 
-Output:
-
-```text
-Tea                     12.45
-Coffee                   8.95
-Sugar                    3.10
-```
-
-
-
-### Mixed Formatting
+A direct call normally supplies decoded template text and receives cREXX source:
 
 ```rexx
-FSAY "Customer: {cust:<20} Balance: {bal:10.2}"
+fsayfmt("Hello {name}")  /* returns: 'Hello '||name */
+fsayfmt("{name:10}")    /* returns: left(name,10) */
 ```
 
-Output:
-
-```text
-Customer: Acme Ltd            Balance:     1234.56
-```
-
-
+For compiler-exit use, one matching outer quoted source token is decoded before
+the template is scanned. `fsayfmt` scans the decoded template once and does not
+invoke the general quote-aware library.
 
 ## Relationship to FMTMASK and MSAY
 
-`fsayfmt` and `fmtmask` both provide formatted output facilities but use
-different approaches.
+`FSAY` uses named placeholders close to the text they affect. `MSAY` and
+`fmtmask` instead use COBOL-style picture masks and positional values. Use FSAY
+for readable named interpolation and MSAY for fixed picture-driven reports.
 
-## FMTMASK / MSAY
-
-Uses COBOL-inspired picture masks.
-
-Example:
-
-```rexx
-MSAY "Name: XXXXXXXXXX  Price: $$$$9.99",
-     name,
-     price
-```
-
-Advantages:
-
-* Fixed report layouts
-* Traditional picture-mask notation
-* Familiar to COBOL and report-writer users
-
-
-
-## FSAYFMT / FSAY
-
-Uses embedded named placeholders.
-
-Example:
-
-```rexx
-FSAY "Name: {name:<10} Price: {price:8.2}"
-```
-
-Advantages:
-
-* Self-documenting templates
-* Named variables
-* Easier maintenance
-* Readable formatting specifications
-* Familiar interpolation-style syntax
-
-
-
-## Design Goals
-
-`fsayfmt` is intended to provide:
-
-* Readable template-based formatting
-* Named variable substitution
-* Alignment support
-* Numeric formatting support
-* Efficient compiler-exit expansion
-
-It is not intended to be:
-
-* A full template language
-* A report writer
-* A replacement for sophisticated formatting frameworks
-
-Instead, it provides a lightweight and practical formatting mechanism for cRexx
-source code and compiler-generated output.
+See the selector-level [Level B contract](../../../lib/rxfnsb/rexx/fsayfmt.md)
+for direct-call and test details.

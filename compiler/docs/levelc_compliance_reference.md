@@ -110,8 +110,9 @@ Source scanning depends on configuration services:
   characters for binary/hex strings and conversion BIFs.
 
 Level B `.string` remains valid UTF-8 and its character operations use
-codepoints. Level C selects character behavior through `RexxClassicConfig`
-owned by `RexxBifCallContext`, not through an individual value flag:
+codepoints. Level C selects character behavior through the active
+`RexxClassicConfig` referenced by `RexxBifCallContext`, not through an
+individual value flag:
 
 - `BYTE` is the default compatibility profile. Character units, PAD values,
   configured blanks, coded-character conversion, and XRANGE are exact bytes.
@@ -123,6 +124,13 @@ owned by `RexxBifCallContext`, not through an individual value flag:
 There is no implicit profile fallback and no implicit normalization. Level G,
 not Level C or B, owns grapheme, normalization, full folding, and segmentation
 algorithms.
+
+Classic DATATYPE configuration is carried by the same object. BYTE and UTF8
+profiles each have paired extra lowercase/uppercase tables and digit families
+listed in consecutive `0` through `9` order. The configured blank set controls
+right-grouped binary/hexadecimal validation, and the exponent-digit limit
+defaults to nine. `RexxClassicDatatype` applies these services consistently to
+DATATYPE, SYMBOL, and CheckArgs rather than duplicating ASCII-only validators.
 
 ### Commands, Routines, Queues, Streams
 

@@ -29,6 +29,8 @@ set(REXXBINS
         ts_delword.rxbin
         ts_fileio_chars.rxbin
         ts_format.rxbin
+        ts_fnv.rxbin
+        ts_fsayfmt.rxbin
         ts_insert.rxbin
         ts_left.rxbin
         ts_length.rxbin
@@ -38,6 +40,7 @@ set(REXXBINS
         ts_pos.rxbin
         ts_qpos.rxbin
         ts_qlibrary.rxbin
+        ts_random.rxbin
         ts_reverse.rxbin
         ts_regex.rxbin
         ts_right.rxbin

@@ -121,7 +121,7 @@ main() .locals=1
 
 ## `rxhash`
 
-Compute the VM's nonnegative reverse-order hash of a string payload.
+Compute the conventional 32-bit FNV-1a hash of a string payload.
 
 ### Forms
 
@@ -131,11 +131,15 @@ Compute the VM's nonnegative reverse-order hash of a string payload.
 
 ### Operands And Semantics
 
-The VM validates `rString` as UTF-8, visits the selected bytes from last to
-first with its SDBM-style recurrence, folds the high bits, and masks off the
-sign bit. It writes only the destination integer payload; sources and cursors
-are unchanged. Although the source form requires `rLength`, the current VM does
-not read it and instead derives and clamps the effective length from `rString`.
+The VM validates `rString` as UTF-8 and hashes its first `rLength` encoded bytes
+in forward order with the 32-bit FNV-1a offset basis and prime. The byte count is
+clamped to `0..rString.string_length`; zero or a negative value therefore hashes
+the empty byte sequence. The unsigned result is returned as an integer in
+`0..4294967295`. Only the destination integer payload is changed; sources and
+cursors are unchanged.
+
+The stable vectors include `2166136261` for an empty byte sequence and
+`440920331` for `"abc"`.
 
 ### Signals
 

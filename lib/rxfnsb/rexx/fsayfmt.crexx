@@ -22,78 +22,299 @@
  * SOFTWARE.
  */
 
-/* rexx */
+/**
+ * Level B FSAY source-expression formatter.
+ *
+ * @docType runtime-function
+ * @see lib/rxfnsb/rexx/fsayfmt.md
+ */
 options levelb
 
 namespace rxfnsb expose fsayfmt
 
-fsayFmt: Procedure=.string
-  arg txt=.string
-  start = 1
-  tindx = 0
-  out = ""
-  txt=strip(txt)
-  qt=substr(txt,1,1)
-  if qt="'" | qt='"' then txt=substr(txt,2,length(txt)-2)
-  else qt="'"
-  do forever
-     firstPos = qpos("{", txt, start)
-     if firstPos = 0 then leave
-     firstClose = qpos("}", txt, firstPos + 1)
+/**
+ * Convert an FSAY template to an equivalent cREXX source expression.
+ *
+ * The compiler-exit form supplies a quoted source literal. Direct callers may
+ * supply the decoded template text. Double braces produce literal braces.
+ *
+ * @param template decoded template text or one quoted source-literal token
+ * @return cREXX expression containing literal and formatting operations
+ * @signal INVALID_ARGUMENTS malformed braces, placeholder, name, or format
+ */
+fsayfmt: procedure = .string
+  arg template = .string
+  template_length = .int
+  index = .int
+  next_index = .int
+  literal_start = .int
+  placeholder_start = .int
+  codepoint = .int
+  next_codepoint = .int
+  literal = .string
+  slice = .string
+  placeholder = .string
+  part = .string
+  result = .string
 
-     if firstClose = 0 then return txt
-    /* literal text before placeholder */
-     lit = substr(txt, start, firstPos - start)
-     if lit \= "" then do
-        if out \= "" then out = out || "||"
-        out = out ||qt||lit||qt
-     end
-   /* placeholder */
-     segment = substr(txt, firstPos + 1, firstClose - firstPos - 1)
-     replace = fmtSegment(segment)
-     if out \= "" then out = out || "||"
-     out = out ||replace
-     start = firstClose + 1
-  end
-  lit = substr(txt, start)
-  if lit \= "" then do
-     if out \= "" then out = out || "||"
-    out = out ||qt||lit||qt
-  end
-return out
+  template = _fsay_decode_template(template)
+  assembler strlen template_length,template
+  index = 0
+  literal_start = 0
+  literal = ""
+  result = ""
 
-fmtSegment: procedure = .string
-   arg segment = .string
-   segment=translate(segment,,':')
-   vname = word(segment,1)
-   fmtspec = word(segment,2)
-   align = ""
-   width = ""
-   decs  = ""
-   if fmtspec \= "" then do
-      c1 = substr(fmtspec,1,1)
-      if c1='<' | c1='>' | c1='^' then do
-         align = c1
-         fmtspec = substr(fmtspec,2)
+  do while index < template_length
+    assembler strchar codepoint,template,index
+    if codepoint = 123 then do                 /* { */
+      next_index = index + 1
+      if next_index < template_length then do
+        assembler strchar next_codepoint,template,next_index
+        if next_codepoint = 123 then do
+          slice = substr(template,literal_start + 1,index - literal_start + 1)
+          assembler append literal,slice
+          index = index + 2
+          literal_start = index
+          iterate
+        end
       end
-   end
-   ppi = pos('.', fmtspec)
-   if ppi = 0 then width = fmtspec
-   else do
-      width = substr(fmtspec,1,ppi-1)
-      decs  = substr(fmtspec,ppi+1)
-   end
-   fmt = vname
-   if decs \= "" then do
-      fmt = "format("vname","width","decs")"
-      if align = '<' then fmt = "left("fmt","width")"
-      else if align = '^' then fmt = "center("fmt","width")"
-      /* '>' or none: FORMAT already gives right-justified numeric width */
-      return fmt
-   end
-   if width \= "" then do
-      if align = '<' then fmt = "left("vname","width")"
-      else if align = '>' then fmt = "right("vname","width")"
-      else if align = '^' then fmt = "center("vname","width")"
-   end
-return fmt
+
+      if index > literal_start then do
+        slice = substr(template,literal_start + 1,index - literal_start)
+        assembler append literal,slice
+      end
+      if literal <> "" then do
+        part = _fsay_literal(literal)
+        result = _fsay_join(result,part)
+        literal = ""
+      end
+
+      placeholder_start = index + 1
+      index = placeholder_start
+      do while index < template_length
+        assembler strchar codepoint,template,index
+        if codepoint = 123 then
+          assembler signal "INVALID_ARGUMENTS", "FSAYFMT placeholder contains an opening brace"
+        if codepoint = 125 then leave           /* } */
+        index = index + 1
+      end
+      if index >= template_length then
+        assembler signal "INVALID_ARGUMENTS", "FSAYFMT placeholder is missing its closing brace"
+
+      placeholder = substr(template,placeholder_start + 1,index - placeholder_start)
+      part = _fsay_placeholder(placeholder)
+      result = _fsay_join(result,part)
+      index = index + 1
+      literal_start = index
+      iterate
+    end
+
+    if codepoint = 125 then do                 /* } */
+      next_index = index + 1
+      if next_index >= template_length then
+        assembler signal "INVALID_ARGUMENTS", "FSAYFMT contains an unmatched closing brace"
+      assembler strchar next_codepoint,template,next_index
+      if next_codepoint <> 125 then
+        assembler signal "INVALID_ARGUMENTS", "FSAYFMT contains an unmatched closing brace"
+
+      slice = substr(template,literal_start + 1,index - literal_start + 1)
+      assembler append literal,slice
+      index = index + 2
+      literal_start = index
+      iterate
+    end
+
+    index = index + 1
+  end
+
+  if literal_start < template_length then do
+    slice = substr(template,literal_start + 1,template_length - literal_start)
+    assembler append literal,slice
+  end
+  if literal <> "" then do
+    part = _fsay_literal(literal)
+    result = _fsay_join(result,part)
+  end
+  if result = "" then return "''"
+  return result
+
+/* Decode the quoted token form supplied by the compiler exit exactly once. */
+_fsay_decode_template: procedure = .string
+  arg template = .string
+  template_length = .int
+  first_codepoint = .int
+  last_codepoint = .int
+  first_index = .int
+  last_index = .int
+  quote = .string
+  body = .string
+
+  assembler strlen template_length,template
+  if template_length < 2 then return template
+  first_index = 0
+  last_index = template_length - 1
+  assembler strchar first_codepoint,template,first_index
+  if first_codepoint <> 34 & first_codepoint <> 39 then return template
+  assembler strchar last_codepoint,template,last_index
+  if last_codepoint <> first_codepoint then
+    assembler signal "INVALID_ARGUMENTS", "FSAYFMT source literal has mismatched quotes"
+
+  quote = substr(template,1,1)
+  body = substr(template,2,template_length - 2)
+  return changestr(quote || quote,body,quote)
+
+/* Emit one canonical single-quoted source literal. */
+_fsay_literal: procedure = .string
+  arg literal = .string
+  literal = changestr("'",literal,"''")
+  return "'" || literal || "'"
+
+_fsay_join: procedure = .string
+  arg result = .string, part = .string
+  if result = "" then return part
+  return result || "||" || part
+
+_fsay_placeholder: procedure = .string
+  arg placeholder = .string
+  separator = .int
+  variable = .string
+  format_spec = .string
+
+  placeholder = strip(placeholder)
+  if placeholder = "" then
+    assembler signal "INVALID_ARGUMENTS", "FSAYFMT placeholder must not be empty"
+
+  separator = pos(":",placeholder)
+  if separator > 0 then do
+    if pos(":",placeholder,separator + 1) > 0 then
+      assembler signal "INVALID_ARGUMENTS", "FSAYFMT placeholder contains more than one colon"
+    variable = strip(substr(placeholder,1,separator - 1))
+    format_spec = strip(substr(placeholder,separator + 1))
+    if format_spec = "" then
+      assembler signal "INVALID_ARGUMENTS", "FSAYFMT format specification must not be empty"
+  end
+  else do
+    if words(placeholder) > 2 then
+      assembler signal "INVALID_ARGUMENTS", "FSAYFMT placeholder contains too many fields"
+    variable = word(placeholder,1)
+    if words(placeholder) = 2 then format_spec = word(placeholder,2)
+    else format_spec = ""
+  end
+
+  if \_fsay_variable_name(variable) then
+    assembler signal "INVALID_ARGUMENTS", "FSAYFMT placeholder requires an identifier or compound variable"
+  return _fsay_format(variable,format_spec)
+
+_fsay_variable_name: procedure = .boolean
+  arg variable = .string
+  variable_length = .int
+  index = .int
+  codepoint = .int
+  after_dot = .boolean
+
+  assembler strlen variable_length,variable
+  if variable_length = 0 then return 0
+  index = 0
+  assembler strchar codepoint,variable,index
+  if \_fsay_identifier_start(codepoint) then return 0
+
+  after_dot = 0
+  index = 1
+  do while index < variable_length
+    assembler strchar codepoint,variable,index
+    if codepoint = 46 then do
+      if after_dot | index = variable_length - 1 then return 0
+      after_dot = 1
+    end
+    else do
+      if \_fsay_identifier_part(codepoint) then return 0
+      after_dot = 0
+    end
+    index = index + 1
+  end
+  return 1
+
+_fsay_identifier_start: procedure = .boolean
+  arg codepoint = .int
+  if codepoint = 95 | codepoint >= 128 then return 1
+  if codepoint >= 65 & codepoint <= 90 then return 1
+  if codepoint >= 97 & codepoint <= 122 then return 1
+  return 0
+
+_fsay_identifier_part: procedure = .boolean
+  arg codepoint = .int
+  if _fsay_identifier_start(codepoint) then return 1
+  return codepoint >= 48 & codepoint <= 57
+
+_fsay_format: procedure = .string
+  arg variable = .string, format_spec = .string
+  format_length = .int
+  codepoint = .int
+  align = .string
+  width = .string
+  decimals = .string
+  decimal_point = .int
+  first_index = .int
+  remainder = .string
+  formatted = .string
+
+  if format_spec = "" then return variable
+  assembler strlen format_length,format_spec
+  first_index = 0
+  assembler strchar codepoint,format_spec,first_index
+  if codepoint = 60 | codepoint = 62 | codepoint = 94 then do
+    align = substr(format_spec,1,1)
+    remainder = substr(format_spec,2)
+  end
+  else do
+    align = ""
+    remainder = format_spec
+  end
+
+  decimal_point = pos(".",remainder)
+  if decimal_point > 0 then do
+    if pos(".",remainder,decimal_point + 1) > 0 then
+      assembler signal "INVALID_ARGUMENTS", "FSAYFMT format contains more than one decimal point"
+    width = substr(remainder,1,decimal_point - 1)
+    decimals = substr(remainder,decimal_point + 1)
+    if decimals = "" | \_fsay_decimal_digits(decimals) then
+      assembler signal "INVALID_ARGUMENTS", "FSAYFMT decimal precision must be a non-negative integer"
+    if width <> "" & \_fsay_decimal_digits(width) then
+      assembler signal "INVALID_ARGUMENTS", "FSAYFMT width must be a non-negative integer"
+    if align <> "" & width = "" then
+      assembler signal "INVALID_ARGUMENTS", "FSAYFMT alignment requires a width"
+
+    if width = "" then return "format(" || variable || ",," || decimals || ")"
+    if align = "<" then do
+      formatted = "format(" || variable || ",," || decimals || ")"
+      return "left(" || formatted || "," || width || ")"
+    end
+    if align = "^" then do
+      formatted = "format(" || variable || ",," || decimals || ")"
+      return "center(" || formatted || "," || width || ")"
+    end
+    return "format(" || variable || "," || width || "," || decimals || ")"
+  end
+
+  width = remainder
+  if width = "" | \_fsay_decimal_digits(width) then
+    assembler signal "INVALID_ARGUMENTS", "FSAYFMT width must be a non-negative integer"
+  if align = ">" then return "right(" || variable || "," || width || ")"
+  if align = "^" then return "center(" || variable || "," || width || ")"
+  return "left(" || variable || "," || width || ")"
+
+_fsay_decimal_digits: procedure = .boolean
+  arg text = .string
+  text_length = .int
+  index = .int
+  codepoint = .int
+
+  assembler strlen text_length,text
+  if text_length = 0 then return 0
+  index = 0
+  do while index < text_length
+    assembler strchar codepoint,text,index
+    if codepoint < 48 | codepoint > 57 then return 0
+    index = index + 1
+  end
+  return 1

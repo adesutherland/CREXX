@@ -97,3 +97,28 @@ The result is a healthy aggregate sanity signal, not evidence that any single
 selector caused a particular improvement. The Mandelbrot maximum again shows
 why this programme deliberately does not treat this suite as a performance
 management framework.
+
+## Post-batches 8-12 confirmation — 2026-07-14
+
+After the final five dependency batches and the complete 1,824-test Debug gate,
+the Release benchmark targets were incrementally rebuilt from commit
+`86006fac18a8` plus the uncommitted batches 8-12 worktree. The runner retained
+the original `rxvm`/optimized-bytecode settings, two warmups, ten recorded runs,
+and unchanged inputs. The 13-test Release benchmark smoke gate and every child
+correctness check passed.
+
+| Workload | Minimum (ns) | Median (ns) | Mean (ns) | Maximum (ns) | Original baseline median (ns) | Change from baseline | Earlier step 8 median (ns) | Change from earlier step 8 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Sieve | 23,251,000 | 23,687,000 | 23,825,000 | 24,514,000 | 35,035,500 | -32.39% | 22,719,500 | +4.26% |
+| Permute | 97,611,000 | 104,904,500 | 108,076,800 | 128,346,000 | 129,424,500 | -18.95% | 93,987,500 | +11.62% |
+| Mandelbrot | 182,882,000 | 186,577,000 | 186,170,600 | 187,614,000 | 227,606,500 | -18.03% | 154,303,500 | +20.92% |
+| Towers | 687,145,000 | 705,100,000 | 712,889,200 | 777,580,000 | 980,985,500 | -28.12% | 708,681,000 | -0.51% |
+| RexxCPS Level B adaptation | 800,318,000 | 810,617,500 | 816,622,800 | 861,192,000 | 2,428,091,500 | -66.62% | 1,495,438,500 | -45.79% |
+
+Every final median remains below the original programme baseline. Relative to
+the earlier step 8 sample, three general language workloads moved upward,
+Towers is effectively neutral, and the Level B-heavy RexxCPS adaptation
+improved substantially. These process-level measurements include startup and
+were collected in one ten-run sample, so the mixed movement is recorded as a
+sanity result rather than attributed to an individual selector or treated as a
+performance-management conclusion.

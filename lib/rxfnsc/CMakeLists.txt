@@ -15,6 +15,7 @@ set(RXFNSC_DIRECT_BIF_MODULES
   RexxClassicBifD2x
   RexxClassicBifD2c
   RexxClassicBifDate
+  RexxClassicBifDatatype
   RexxClassicBifDelstr
   RexxClassicBifDelword
   RexxClassicBifFormat
@@ -27,6 +28,7 @@ set(RXFNSC_DIRECT_BIF_MODULES
   RexxClassicBifNumeric
   RexxClassicBifOverlay
   RexxClassicBifPos
+  RexxClassicBifRandom
   RexxClassicBifReverse
   RexxClassicBifRight
   RexxClassicBifSign
@@ -56,6 +58,7 @@ set(RXFNSC_MODULES
   RexxValue
   RexxStem
   RexxClassicConfig
+  RexxClassicDatatype
   RexxClassicCharacterScan
   RexxClassicCharacterOps
   RexxClassicEncoding
@@ -106,7 +109,9 @@ set(RXFNSC_SELECTORS ${RXFNSC_MODULES})
 set(RXFNSC_DEPS_RexxStem RexxValue)
 set(RXFNSC_DEPS_RexxClassicState RexxValue)
 set(RXFNSC_DEPS_RexxVariablePool RexxValue RexxStem RexxClassicState)
-set(RXFNSC_DEPS_RexxClassicBifs RexxValue RexxStem RexxClassicConfig RexxClassicState RexxVariablePool)
+set(RXFNSC_DEPS_RexxClassicBifs RexxValue RexxStem RexxClassicConfig RexxClassicDatatype RexxClassicState RexxVariablePool)
+set(RXFNSC_DEPS_RexxClassicConfig RexxValue)
+set(RXFNSC_DEPS_RexxClassicDatatype RexxValue RexxClassicConfig)
 set(RXFNSC_DEPS_RexxClassicEncoding RexxValue RexxClassicConfig)
 set(RXFNSC_DEPS_RexxClassicCharacterOps RexxValue RexxClassicConfig RexxClassicCharacterScan)
 foreach(MOD IN LISTS RXFNSC_DIRECT_BIF_MODULES)
@@ -116,6 +121,8 @@ set(RXFNSC_DEPS_RexxClassicBifC2d RexxClassicBifs RexxClassicEncoding RexxClassi
 set(RXFNSC_DEPS_RexxClassicBifC2x RexxClassicBifs RexxClassicEncoding)
 set(RXFNSC_DEPS_RexxClassicBifD2c RexxClassicBifs RexxClassicEncoding RexxClassicBifD2x)
 set(RXFNSC_DEPS_RexxClassicBifTranslate RexxClassicBifs RexxClassicEncoding)
+set(RXFNSC_DEPS_RexxClassicBifDatatype RexxClassicBifs RexxClassicDatatype)
+set(RXFNSC_DEPS_RexxClassicBifSymbol RexxClassicBifs RexxClassicDatatype)
 set(RXFNSC_DEPS_RexxClassicBifX2c RexxClassicBifs RexxClassicEncoding)
 set(RXFNSC_DEPS_RexxClassicBifXrange RexxClassicBifs RexxClassicEncoding)
 foreach(MOD RexxClassicBifDelword RexxClassicBifSubword RexxClassicBifWord RexxClassicBifWordindex RexxClassicBifWordlength RexxClassicBifWordpos RexxClassicBifWords)

@@ -10521,27 +10521,36 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
     DISPATCH;
 
 /* ------------------------------------------------------------------------------------
- *  rxhash  returns hash of a string it runs in reverse order         pej 24. June 2023
- *  op1=hash(op2,op3)
- *      op2=string
- *      op3=length(string)
- *  -----------------------------------------------------------------------------------
+ * rxhash returns the conventional 32-bit FNV-1a hash of the first op3 bytes of op2.
+ * The requested byte count is clamped to the available UTF-8 payload.
+ * -----------------------------------------------------------------------------------
  */
         START_INSTRUCTION(RXHASH_REG_REG_REG) VM_ADVANCE(3);
-            DEBUG("TRACE - RXHASH R%d R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(1),(int)REG_IDX(3));
+            DEBUG("TRACE - RXHASH R%d R%d R%d \n", (int)REG_IDX(1),(int)REG_IDX(2),(int)REG_IDX(3));
 
     {
-        uint64_t hash=0;
-        int i1,len;
+        uint32_t hash = UINT32_C(2166136261);
+        size_t i;
+        size_t len;
+        rxinteger requested_len = op3R->int_value;
+
         REQUIRE_VALID_UTF8_REGISTER(op2R);
-        GETSTRLEN(len, op2R);
-        if(len<=0) len=op2R->string_length;
-        else if(op2R->string_length<len) len=op2R->string_length;
-        for (i1 = len - 1; i1 >= 0; i1--) {
-            hash = (unsigned char)op2R->string_value[i1] + (hash << 6) + (hash << 16) - hash;
+
+        if (requested_len <= 0) {
+            len = 0;
         }
-        hash ^= (hash >> 16);
-        hash = hash & 0x7FFFFFFFFFFFFFFF;
+        else if ((uint64_t)requested_len > (uint64_t)op2R->string_length) {
+            len = op2R->string_length;
+        }
+        else {
+            len = (size_t)requested_len;
+        }
+
+        for (i = 0; i < len; i++) {
+            hash ^= (uint8_t)op2R->string_value[i];
+            hash *= UINT32_C(16777619);
+        }
+
         op1R->int_value = (rxinteger)hash;
      }
      DISPATCH;

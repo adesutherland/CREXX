@@ -514,7 +514,22 @@ test_system_misc() .locals=30
     load r2,"abc"
     load r3,3
     rxhash r1,r2,r3
-    igt r0,r1,0
+    ieq r0,r1,440920331
+    brf system_fail, r0
+
+    load r3,2
+    rxhash r1,r2,r3
+    ieq r0,r1,1294271946
+    brf system_fail, r0
+
+    load r3,99
+    rxhash r1,r2,r3
+    ieq r0,r1,440920331
+    brf system_fail, r0
+
+    load r3,0
+    rxhash r1,r2,r3
+    ieq r0,r1,2166136261
     brf system_fail, r0
 
     load r1,"test_instruction_gaps_io.tmp"

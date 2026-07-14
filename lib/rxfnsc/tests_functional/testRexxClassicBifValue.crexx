@@ -1,6 +1,7 @@
 options levelb comments_dash numeric_classic
 import rexxclassicbifs
 import rexxclassicbifvalue
+import rexxclassicconfig
 import rexxvalue
 import rexxpool
 
@@ -46,7 +47,24 @@ errors = errors + check_error(reference pool, "RXC-LC-40.26", 1, "1E3", 1)
 errors = errors + check_error(reference pool, "RXC-LC-40.3", 0, "", 1)
 errors = errors + check_error(reference pool, "RXC-LC-40.4", 4, "A", 1)
 errors = errors + check_error(reference pool, "RXC-LC-40.5", 1, "", 0)
-errors = errors + check_external_error(reference pool, "CONFIG")
+external_config = .RexxClassicConfig()
+external_pool = .RexxInMemoryExternalValuePool()
+call external_pool.put("Mixed Case",.RexxValue("before"))
+call external_pool.put("empty",.RexxValue(""))
+call external_config.registerExternalPool(" Config ",external_pool)
+rejecting_pool = .RejectingExternalValuePool()
+call external_config.registerExternalPool("READONLY",rejecting_pool)
+
+errors = errors + check_external_value(external_config,"before","Mixed Case",""," cOnFiG ",0)
+errors = errors + check_external_value(external_config,"before","Mixed Case","after","CONFIG",1)
+errors = errors + check_external_value(external_config,"after","Mixed Case","","config",0)
+errors = errors + check_external_value(external_config,"","empty","","CONFIG",0)
+errors = errors + check_external_error(external_config,"RXC-LC-40.36","mixed case","","CONFIG",0)
+errors = errors + check_external_error(external_config,"RXC-LC-40.36","missing","create","CONFIG",1)
+errors = errors + check_external_error(external_config,"RXC-LC-40.36","missing","","CONFIG",0)
+errors = errors + check_external_error(external_config,"RXC-LC-40.36","fixed","new","READONLY",1)
+errors = errors + check_external_error(external_config,"RXC-LC-40.37","anything","","UNKNOWN",0)
+errors = errors + check_external_error(external_config,"RXC-LC-40.37","anything","","   ",0)
 
 if errors = 0 then say "PASS: Level C VALUE BIF"
 return errors <> 0
@@ -101,21 +119,53 @@ check_error: procedure = .int
       context.errorCode() context.errorMessage()
   return 1
 
-check_external_error: procedure = .int
-  arg pool_ref = reference .RexxVariablePool, pool_name = .string
+check_external_value: procedure = .int
+  arg config = .RexxClassicConfig, expected = .string, subject = .string, replacement = .string, pool_name = .string, replacement_exists = .boolean
   args = .RexxValue[]
   exists = .int[]
-  args[1] = .RexxValue("not required to be a symbol")
-  args[2] = .RexxValue("")
+  args[1] = .RexxValue(subject)
+  args[2] = .RexxValue(replacement)
   args[3] = .RexxValue(pool_name)
   exists[1] = 1
-  exists[2] = 0
+  exists[2] = replacement_exists
   exists[3] = 1
   context = .RexxBifCallContext("VALUE")
   call context.setArguments(args, exists)
-  call context.setCallerPool(pool_ref)
+  call context.setConfig(reference config)
   result = rexxclassicbif_value(reference context)
-  if context.hasError() & context.errorCode() = "RXC-LC-40.37" then return 0
-  say "FAIL: VALUE external pool expected RXC-LC-40.37 got" result.asString(),
+  if \context.hasError() & result.asString() == expected then return 0
+  say "FAIL: VALUE external" subject "expected" expected "got" result.asString(),
       context.errorCode() context.errorMessage()
   return 1
+
+check_external_error: procedure = .int
+  arg config = .RexxClassicConfig, expected_code = .string, subject = .string, replacement = .string, pool_name = .string, replacement_exists = .boolean
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue(subject)
+  args[2] = .RexxValue(replacement)
+  args[3] = .RexxValue(pool_name)
+  exists[1] = 1
+  exists[2] = replacement_exists
+  exists[3] = 1
+  context = .RexxBifCallContext("VALUE")
+  call context.setArguments(args,exists)
+  call context.setConfig(reference config)
+  ignored = rexxclassicbif_value(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: VALUE external expected" expected_code "got" context.errorCode(),
+      context.errorMessage()
+  return 1
+
+RejectingExternalValuePool: class implements .RexxExternalValuePool
+  *: factory
+    return
+
+  get: method = .RexxExternalValueResult
+    arg subject = .string
+    if subject == "fixed" then return .RexxExternalValueResult(1,.RexxValue("old"))
+    return .RexxExternalValueResult(0,.RexxValue(""))
+
+  set: method = .boolean
+    arg subject = .string, value = .RexxValue
+    return 0

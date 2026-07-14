@@ -61,11 +61,13 @@ can see the function name, argument values, argument presence, caller numeric
 settings, current variable pool, source lines, condition state, trace state,
 stream state, and host/configuration adapters.
 
-`RexxBifCallContext` also owns the active `RexxClassicConfig`. Its `BYTE`
-profile is the default and uses exact bytes as Classic character units. Its
-opt-in `UTF8` profile requires valid UTF-8 and uses Unicode codepoints. The
-configuration also carries profile-typed additional blank characters. Value
-flags describe a `RexxValue` representation; they never select the profile.
+`RexxBifCallContext` owns a default `RexxClassicConfig` or holds a reference to
+an evaluator/host-supplied one. Its `BYTE` profile is the default and uses exact
+bytes as Classic character units. Its opt-in `UTF8` profile requires valid
+UTF-8 and uses Unicode codepoints. The configuration also carries profile-
+typed character tables, scoped RANDOM state, and named external VALUE pools.
+Value flags describe a `RexxValue` representation; they never select the
+profile.
 
 ### Numeric Context
 
@@ -122,15 +124,18 @@ standalone `RexxClassicBif*.crexx` modules in the same runtime image with
 `RexxValue`, `RexxStem`, and `RexxVariablePool`; direct harnesses do not rely on
 compiler lowering or the common dispatcher.
 
-Implemented BIFs:
+Standalone direct BIF modules:
 
 ```text
-ABBREV ABS COPIES DATATYPE LEFT LENGTH LOWER MAX MIN POS RIGHT SIGN SPACE
-STRIP SUBSTR UPPER VERIFY WORD WORDS
+ABBREV ABS ADDRESS B2X C2D C2X CENTER CHANGESTR COMPARE COPIES COUNTSTR
+D2C D2X DATE DATATYPE DELSTR DELWORD FORMAT INSERT LASTPOS LEFT LENGTH MAX
+MIN NUMERIC OVERLAY POS RANDOM REVERSE RIGHT SIGN SPACE STRIP SUBSTR
+SUBWORD SYMBOL TIME TRACE TRANSLATE TRUNC VALUE VERIFY WORD WORDINDEX
+WORDLENGTH WORDPOS WORDS X2B X2C X2D XRANGE
 ```
 
-`UPPER` and `LOWER` are included for cREXX/RexxScript practicality even though
-the strict Classic catalog normally expresses uppercasing through `TRANSLATE`.
+The legacy proof dispatcher remains for compatibility tests. New direct
+harnesses call the named standalone module and do not use it.
 
 The public proof API is:
 
@@ -143,20 +148,29 @@ rexxclassicbif_length(value)
 
 `RexxBifCallContext` carries the uppercased BIF name, `RexxValue` argument
 values, argument presence flags, a live caller `RexxVariablePool` reference,
-and the active `RexxClassicConfig` character profile.
+and the active `RexxClassicConfig` reference.
 The argument count is derived from the presence mask, not from the value array,
 so omitted positions such as `xxx(,a,,b)` can be represented faithfully. Level
-C lowering now materialises normal multi-argument dispatcher frames, including
-omitted slots parsed as `NOVAL` only inside function-call argument lists. Level
-C lowering should pass the current visible activation pool. RexxScript passes
-only its sandbox/script pool and adapts the returned `RexxValue` back to its
-own public string result model.
+C compiler lowering is unchanged in this library programme; existing common-
+dispatcher artifacts are deprecated pending the later lowering rebuild. The
+future lowering should call standalone BIF entries directly and pass the
+current visible activation pool and configuration. RexxScript already calls
+the available standalone entries directly, passes only its sandbox/script pool,
+and adapts the returned `RexxValue` back to its public string result model.
 
 The current `CheckArgs` subset supports:
 
 ```text
 ANY NUM WHOLE WHOLE>=0 WHOLE>0 PAD ABLMNSUWX LTB MN
 ```
+
+`RexxClassicDatatype.crexx` is the shared implementation for `NUM`, `WHOLE`,
+`BIN`, `HEX`, and `SYM`. It uses the call context's BYTE/UTF8 profile, configured
+extra letter/digit maps, configured B/X blanks, and exponent-digit limit. The
+standalone public entry is `RexxClassicBifDatatype.crexx`; the same shared symbol
+classifier is used by `RexxClassicBifSymbol.crexx`. Strict Level C retains the
+standard `ABLMNSUWX` option set, while Level B separately owns the cREXX `D`
+extension.
 
 `rexxclassicbif_call()` returns a `RexxValue`. On validation or dispatch
 failure it returns a blank value and records the error on the context through
@@ -175,11 +189,10 @@ expected to be backward compatible. Keep the bridge centralized in
 and `_context_error`; do not spread one-off error formatting or signal
 decisions through individual BIF bodies.
 
-For fixed-arity compiler-proven calls, the remapper may emit direct helpers.
-For optional or omitted-argument BIFs, the remapper should use the reusable
-argument-frame materialiser that records both value slots and provided flags
-before calling the dispatcher. A direct helper should be introduced only when
-the call shape is common enough to justify specialising the shared path.
+Future compiler lowering should materialise the reusable argument frame,
+including provided flags for omitted positions, then call the standalone
+function directly. This library work deliberately does not modify that
+lowering.
 
 JavaDoc-style tags are present on the implemented BIF helpers for generated user
 documentation. The current tags are `@bif`, `@signature`, `@checkargs`,
@@ -408,32 +421,26 @@ Grouped or partial Level B coverage exists for:
 - command-environment runtime internals in `_address.crexx`.
 - trace runtime internals in `trace.crexx`.
 
-Likely Level C work items rather than complete existing surfaces:
+Remaining Level C work items rather than complete standalone surfaces:
 
 - `ARG`, `ADDRESS`, `CONDITION`, `ERRORTEXT`, `QUEUED`, and `SOURCELINE`
   as stateful BIFs.
 - `BITAND`, `BITOR`, `BITXOR`, `CHARS`, `QUALIFY`, and `STREAM`.
-- `SYMBOL` and `VALUE` over `RexxVariablePool` rather than Level B metadata.
-- `DATATYPE` using Level C symbol, numeric, binary, and hex rules exactly.
 - `CHARIN`/`CHAROUT`/`LINEIN`/`LINEOUT`/`LINES` as Classic stream functions rather
   than current Level B UTF text helpers.
 - A real `Raise`/condition bridge and `ERRORTEXT` catalog lookup.
 
-## Implementation Sequencing
+## Remaining Implementation Sequencing
 
-1. Build the shared Level B BIF context and `CheckArgs` helper over
-   `RexxValue`.
-2. Port/audit pure character and arithmetic BIFs first, using existing
-   `rxfnsb` code only where behavior matches this reference.
-3. Add `DATATYPE`, `SYMBOL`, and `VALUE` against `RexxVariablePool`; these
-   unlock much of the specification helper logic.
-4. Add `DATE`, `TIME`, `RANDOM`, `ERRORTEXT`, and numeric state functions.
-5. Add coded-character conversion and bit BIFs after the Level C byte-text
-   policy is explicit.
-6. Add stream and external data queue BIFs once the Level C configuration
+1. Complete the remaining stateful BIFs and the real condition/message bridge.
+2. Add the remaining bit BIFs on the approved BYTE/UTF8 configuration model.
+3. Add stream and external data queue BIFs once the Level C configuration
    adapter surface is settled.
-7. Route RexxScript pure intrinsics through the shared helpers where doing so
-   does not grant extra authority to the sandbox.
+4. Route the remaining RexxScript intrinsics through standalone entries where
+   doing so does not grant extra authority to the sandbox.
+5. Replace deprecated compiler dispatcher artifacts in the separate lowering
+   rebuild, then remove the common proof dispatcher after compatibility tests
+   no longer require it.
 
 Do not weaken Level B `.string` UTF-8 guarantees while implementing Classic
 byte-oriented behavior. If Level C needs byte-text compatibility, keep it behind

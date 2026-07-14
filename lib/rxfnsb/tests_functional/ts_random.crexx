@@ -1,29 +1,60 @@
-/* rexx test center bif */
-options levelb
-say 'random(1,999,8142) 'random(1,999,8142)
-say 'random(1,999,8142) 'random(1,999,8142)
-say 'random(1,999) 'random(1,999)
-say 'random(1,999) 'random(1,999)
-say 'random(1,999) 'random(1,999)
-say 'random(1,999) 'random(1,999)
-say 'random(1,999,8142) 'random(1,999,8142)
-say 'random(1,999) 'random(1,999)
-say 'random(1,999) 'random(1,999)
-say 'random(1,999) 'random(1,999)
-say 'random(1,999) 'random(1,999)
-say "Random(,,4711)     "random(,,4711)
-say "Random()           "random()
-say "Random()           "random()
-say "Random()           "random()
-say "Random()           "random()
-say "Random(,555555)    "random(,555555)
-say "Random(,,18601)    "random(,,1860)
-say "Random(,300,31415) "random(,300,31415926)
-say "Random(10,300,314) "random(10,300,314)
-say "Random(10,300,314) "random(10,300,314)
-say "Random(10,300,314) "random(10,300,314)
-say "Random(10,5,123)   "random(10,5,123)
-return 0
+options levelb numeric_classic
+import rxfnsb
 
-random: procedure = .int
-arg expose from=0, rto=-1,seed = -1
+errors = 0
+errors = errors + check(270,random(0,999,1),"seeded first value")
+errors = errors + check(793,random(0,999),"seeded continuation")
+errors = errors + check(885,random(0,999),"seeded second continuation")
+errors = errors + check(270,random(0,999,1),"reseed repeats")
+errors = errors + check(270,random(0,999,0),"seed zero normalization")
+errors = errors + check(0,random(0),"one-argument maximum")
+errors = errors + check(270,random(,,1),"positioned defaults")
+
+value = random(,10,1)
+errors = errors + check_range(value,0,10,"omitted minimum")
+value = random(10,,1)
+errors = errors + check_range(value,10,999,"omitted maximum")
+value = random()
+errors = errors + check_range(value,0,999,"default range")
+
+do 1000
+  value = random(100,200)
+  if value < 100 | value > 200 then do
+    errors = errors + 1
+    say "FAIL: RANDOM repeated range got" value
+    leave
+  end
+end
+
+errors = errors + expect_signal("negative minimum",-1,10,1,7)
+errors = errors + expect_signal("negative maximum",0,-1,1,7)
+errors = errors + expect_signal("negative seed",0,10,-1,7)
+errors = errors + expect_signal("reversed range",10,5,1,7)
+errors = errors + expect_signal("wide range",0,100001,1,7)
+
+if errors = 0 then say "PASS: random"
+return errors <> 0
+
+check: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: RANDOM" label "expected" expected "got" actual
+  return 1
+
+check_range: procedure = .int
+  arg actual = .int, minimum = .int, maximum = .int, label = .string
+  if actual >= minimum & actual <= maximum then return 0
+  say "FAIL: RANDOM" label "expected range" minimum maximum "got" actual
+  return 1
+
+expect_signal: procedure = .int
+  arg label = .string, minimum = .int, maximum = .int, seed = .int, marker = .int
+  caught = 0
+  do
+    ignored = random(minimum,maximum,seed)
+  on signal invalid_arguments
+    caught = marker
+  end
+  if caught = marker then return 0
+  say "FAIL: RANDOM" label "did not signal INVALID_ARGUMENTS"
+  return 1

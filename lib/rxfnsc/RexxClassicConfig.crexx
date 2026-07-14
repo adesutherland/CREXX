@@ -23,7 +23,80 @@
  */
 
 options levelb comments_dash numeric_classic
-namespace rexxclassicconfig expose RexxClassicConfig
+namespace rexxclassicconfig expose RexxClassicConfig RexxExternalValuePool RexxExternalValueResult RexxInMemoryExternalValuePool
+import rxfnsb
+import rexxvalue
+
+/** Result of one external VALUE pool lookup. */
+RexxExternalValueResult: class
+  result_found = .boolean
+  result_value = .RexxValue
+
+  *: factory
+    arg found = .boolean, value = .RexxValue
+    result_found = found
+    result_value = value
+    return
+
+  found: method = .boolean
+    return result_found
+
+  value: method = .RexxValue
+    return result_value
+
+/** Host/configuration adapter used by the external form of VALUE. */
+RexxExternalValuePool: interface
+  get: method = .RexxExternalValueResult
+    arg subject = .string
+
+  set: method = .boolean
+    arg subject = .string, value = .RexxValue
+
+/** Exact-subject in-memory adapter for harnesses and embedded evaluators. */
+RexxInMemoryExternalValuePool: class implements .RexxExternalValuePool
+  subjects = .string[]
+  values = .RexxValue[]
+  subject_count = .int
+
+  *: factory
+    subject_count = 0
+    return
+
+  /** Seed or replace a subject; ordinary VALUE assignment cannot create it. */
+  put: method = .void
+    arg subject = .string, value = .RexxValue
+    slot = find(subject)
+    if slot = 0 then do
+      subject_count = subject_count + 1
+      slot = subject_count
+      subjects[slot] = subject
+    end
+    values[slot] = value
+    return
+
+  get: method = .RexxExternalValueResult
+    arg subject = .string
+    slot = find(subject)
+    if slot = 0 then return .RexxExternalValueResult(0,.RexxValue(""))
+    return .RexxExternalValueResult(1,values[slot])
+
+  set: method = .boolean
+    arg subject = .string, value = .RexxValue
+    slot = find(subject)
+    if slot = 0 then return 0
+    values[slot] = value
+    return 1
+
+  contains: method = .boolean
+    arg subject = .string
+    return find(subject) > 0
+
+  find: method = .int
+    arg subject = .string
+    do i = 1 to subject_count
+      if subjects[i] == subject then return i
+    end
+    return 0
 
 /**
  * Level C coded-character configuration used by direct Classic BIFs.
@@ -39,11 +112,31 @@ RexxClassicConfig: class
   profile_name = .string
   byte_other_blanks = .binary
   text_other_blanks = .string
+  byte_extra_lowercase = .binary
+  byte_extra_uppercase = .binary
+  byte_extra_digits = .binary
+  text_extra_lowercase = .string
+  text_extra_uppercase = .string
+  text_extra_digits = .string
+  exponent_digit_limit = .int
+  random_state = .RexxRandomState
+  external_pool_names = .string[]
+  external_pools = .RexxExternalValuePool[]
+  external_pool_count = .int
 
   *: factory
     profile_name = "BYTE"
     byte_other_blanks = "" as .binary
     text_other_blanks = ""
+    byte_extra_lowercase = "" as .binary
+    byte_extra_uppercase = "" as .binary
+    byte_extra_digits = "" as .binary
+    text_extra_lowercase = ""
+    text_extra_uppercase = ""
+    text_extra_digits = ""
+    exponent_digit_limit = 9
+    random_state = .RexxRandomState()
+    external_pool_count = 0
     return
 
   useByteProfile: method = .void
@@ -91,5 +184,151 @@ RexxClassicConfig: class
   textOtherBlanks: method = .string
     return text_other_blanks
 
+  /** Set paired BYTE-profile extra lowercase and uppercase characters. */
+  setByteDatatypeLetters: method = .void
+    arg lowercase = .binary, uppercase = .binary
+    lower_length = .int
+    upper_length = .int
+    assembler blen lower_length,lowercase
+    assembler blen upper_length,uppercase
+    if lower_length <> upper_length then
+      assembler signal "INVALID_ARGUMENTS", "Level C BYTE extra letter tables must have equal lengths"
+    byte_extra_lowercase = lowercase
+    byte_extra_uppercase = uppercase
+    return
+
+  byteDatatypeLowercase: method = .binary
+    return byte_extra_lowercase
+
+  byteDatatypeUppercase: method = .binary
+    return byte_extra_uppercase
+
+  /** Set BYTE-profile extra digit families in consecutive 0-through-9 order. */
+  setByteDatatypeDigits: method = .void
+    arg digits = .binary
+    digit_length = .int
+    assembler blen digit_length,digits
+    if digit_length // 10 <> 0 then
+      assembler signal "INVALID_ARGUMENTS", "Level C BYTE extra digit table length must be a multiple of 10"
+    byte_extra_digits = digits
+    return
+
+  byteDatatypeDigits: method = .binary
+    return byte_extra_digits
+
+  /** Set paired UTF8-profile extra lowercase and uppercase codepoints. */
+  setTextDatatypeLetters: method = .void
+    arg lowercase = .string, uppercase = .string
+    lower_length = .int
+    upper_length = .int
+    assembler strlen lower_length,lowercase
+    assembler strlen upper_length,uppercase
+    if lower_length <> upper_length then
+      assembler signal "INVALID_ARGUMENTS", "Level C UTF8 extra letter tables must have equal lengths"
+    text_extra_lowercase = lowercase
+    text_extra_uppercase = uppercase
+    return
+
+  textDatatypeLowercase: method = .string
+    return text_extra_lowercase
+
+  textDatatypeUppercase: method = .string
+    return text_extra_uppercase
+
+  /** Set UTF8-profile extra digit families in consecutive 0-through-9 order. */
+  setTextDatatypeDigits: method = .void
+    arg digits = .string
+    digit_length = .int
+    assembler strlen digit_length,digits
+    if digit_length // 10 <> 0 then
+      assembler signal "INVALID_ARGUMENTS", "Level C UTF8 extra digit table length must be a multiple of 10"
+    text_extra_digits = digits
+    return
+
+  textDatatypeDigits: method = .string
+    return text_extra_digits
+
+  /** Set the maximum accepted exponent digit count for Classic numbers. */
+  setExponentDigitLimit: method = .void
+    arg limit = .int
+    if limit < 1 then
+      assembler signal "INVALID_ARGUMENTS", "Level C exponent digit limit must be positive"
+    exponent_digit_limit = limit
+    return
+
+  exponentDigitLimit: method = .int
+    return exponent_digit_limit
+
   unicodeVersion: method = .string
     return "17.0.0"
+
+  /** Reset the configuration-scoped RANDOM service. */
+  seedRandom: method = .void
+    arg seed = .int
+    call random_state.seed(seed)
+    return
+
+  /** Return an unbiased configuration-scoped value from 0 through span-1. */
+  nextRandom: method = .int
+    arg span = .int
+    return random_state.bounded(span)
+
+  /** Register or replace one case-insensitive external VALUE pool name. */
+  registerExternalPool: method = .void
+    arg name = .string, pool = .RexxExternalValuePool
+    normalized = normalizeExternalPoolName(name)
+    if normalized = "" then
+      assembler signal "INVALID_ARGUMENTS", "external VALUE pool name must not be blank"
+    slot = findExternalPool(normalized)
+    if slot = 0 then do
+      external_pool_count = external_pool_count + 1
+      slot = external_pool_count
+      external_pool_names[slot] = normalized
+    end
+    /* The registry owns the adapter copy; accessors link to it before calls. */
+    external_pools[slot] = pool
+    return
+
+  hasExternalPool: method = .boolean
+    arg name = .string
+    normalized = normalizeExternalPoolName(name)
+    if normalized = "" then return 0
+    return findExternalPool(normalized) > 0
+
+  externalPool: method = .RexxExternalValuePool
+    arg name = .string
+    normalized = normalizeExternalPoolName(name)
+    slot = findExternalPool(normalized)
+    pool = .RexxExternalValuePool
+    if slot > 0 then do
+      assembler linkattr1 pool,external_pools,slot
+      return pool
+    end
+    return pool
+
+  externalValueGet: method = .RexxExternalValueResult
+    arg pool_name = .string, subject = .string
+    slot = findExternalPool(normalizeExternalPoolName(pool_name))
+    if slot = 0 then return .RexxExternalValueResult(0,.RexxValue(""))
+    pool = .RexxExternalValuePool
+    assembler linkattr1 pool,external_pools,slot
+    return pool.get(subject)
+
+  externalValueSet: method = .boolean
+    arg pool_name = .string, subject = .string, value = .RexxValue
+    slot = findExternalPool(normalizeExternalPoolName(pool_name))
+    if slot = 0 then return 0
+    pool = .RexxExternalValuePool
+    assembler linkattr1 pool,external_pools,slot
+    return pool.set(subject,value)
+
+  normalizeExternalPoolName: method = .string
+    arg name = .string
+    return upper(strip(name))
+
+  findExternalPool: method = .int
+    arg normalized = .string
+    do i = 1 to external_pool_count
+      if external_pool_names[i] == normalized then return i
+    end
+    return 0

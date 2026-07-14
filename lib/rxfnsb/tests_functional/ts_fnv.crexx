@@ -1,8 +1,31 @@
-/* rexx */
-options levelb
+options levelb numeric_classic
 import rxfnsb
 
-say 111 fnv("The quick fox jumps over the lazy dog")
-say 222 fnv("The quick brown fox jumps over the lazy black dog")
-say 333 fnv("The quick brown fox jumps over the lazy sleeping black dog")
-say 444 fnv("The quick fox jumps over a lazy do")
+errors = 0
+
+errors = errors + check(2166136261,fnv(""),"empty input")
+errors = errors + check(3826002220,fnv("a"),"one ASCII byte")
+errors = errors + check(440920331,fnv("abc"),"published ASCII vector")
+errors = errors + check(44730528,fnv("α"),"UTF-8 byte sequence")
+errors = errors + check(88585904,fnv("The quick fox jumps over the lazy dog"),"sentence")
+
+nul_bytes = "610062"x as .binary
+nul_text = nul_bytes as .string
+errors = errors + check(284404690,fnv(nul_text),"embedded NUL")
+
+source = "a🙂b"
+before = source
+ignored = fnv(source)
+if source <> before then do
+  say "FAIL: FNV mutated its argument"
+  errors = errors + 1
+end
+
+if errors = 0 then say "PASS: fnv"
+return errors <> 0
+
+check: procedure = .int
+  arg expected = .int, actual = .int, label = .string
+  if expected = actual then return 0
+  say "FAIL: FNV" label "expected" expected "got" actual
+  return 1

@@ -28,6 +28,9 @@ options levelb
 namespace rexxscriptcore expose rexxscriptcoreevaluator
 import rxfnsb
 import rexxclassicbifs
+import rexxclassicbifdatatype
+import rexxclassicbifrandom
+import rexxclassicconfig
 import rexxpool
 import rexxvalue
 
@@ -46,6 +49,7 @@ rexxscriptcoreevaluator: class
   env_types = .string[]
   env_count = .int
   script_pool = .RexxVariablePool
+  classic_config = .RexxClassicConfig
   output_lines = .string[]
   output_count = .int
   export_variables = .string[]
@@ -83,6 +87,7 @@ rexxscriptcoreevaluator: class
   *: factory
     env_count = 0
     script_pool = .RexxVariablePool()
+    classic_config = .RexxClassicConfig()
     output_count = 0
     export_count = 0
     error_code = ""
@@ -1133,6 +1138,7 @@ rexxscriptcoreevaluator: class
       when name = "MAX" then return 1
       when name = "MIN" then return 1
       when name = "POS" then return 1
+      when name = "RANDOM" then return 1
       when name = "RIGHT" then return 1
       when name = "SIGN" then return 1
       when name = "SPACE" then return 1
@@ -1151,13 +1157,14 @@ rexxscriptcoreevaluator: class
     context = .RexxBifCallContext(name)
     call context.setArguments(bif_args, bif_exists)
     call context.setCallerPool(reference script_pool)
+    call context.setConfig(reference classic_config)
     bif_result = .RexxValue
 
     select
       when name = "ABBREV" then bif_result = rexxclassicbif_abbrev(reference context)
       when name = "ABS" then bif_result = rexxclassicbif_abs(reference context)
       when name = "COPIES" then bif_result = rexxclassicbif_copies(reference context)
-      when name = "DATATYPE" then bif_result = rexxclassicbif_datatype(reference context)
+      when name = "DATATYPE" then bif_result = .rexxclassicbifdatatype..rexxclassicbif_datatype(reference context)
       when name = "LEFT" then bif_result = rexxclassicbif_left(reference context)
       when name = "LENGTH" then do
         call context.clearError()
@@ -1168,6 +1175,7 @@ rexxscriptcoreevaluator: class
       when name = "MAX" then bif_result = rexxclassicbif_max(reference context)
       when name = "MIN" then bif_result = rexxclassicbif_min(reference context)
       when name = "POS" then bif_result = rexxclassicbif_pos(reference context)
+      when name = "RANDOM" then bif_result = rexxclassicbif_random(reference context)
       when name = "RIGHT" then bif_result = rexxclassicbif_right(reference context)
       when name = "SIGN" then bif_result = rexxclassicbif_sign(reference context)
       when name = "SPACE" then bif_result = rexxclassicbif_space(reference context)

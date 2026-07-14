@@ -281,8 +281,9 @@ a decimal number.
 ## datatype(option)
 
 returns 1 if *string* matches the description requested with the
-*option*, or 0 otherwise. If *string* is the null string, 0 is always
-returned.
+*option*, or 0 otherwise. With the option omitted it returns `NUM` or `CHAR`.
+The null string is valid for `B` and `X` and false for the other explicit
+tests.
 
 Only the first character of *option* is significant, and it may be in
 either uppercase or lowercase. The following *option* characters are
@@ -302,7 +303,8 @@ B
 D
 
 :   (Digits); returns 1 if *string* only
-    contains characters from the range \"0-9\".
+    contains characters from the range \"0-9\". This is the cREXX Level B
+    extension and is not a Classic Level C option.
 
 L
 
@@ -358,11 +360,10 @@ X
     v3=.rexx('BCgd3'); v3.datatype('X')  == 0
 ```
 
-**Note:** The **datatype** method tests the meaning of the characters in
-a string, independent of the encoding of those characters. Extra letters
-and Extra digits cause **datatype** to return 0 except for the number
-tests (\"**N**\" and \"**W**\"), which treat extra digits whose value is
-in the range 0-9 as though they were the corresponding Arabic numeral.
+**Note:** The Level B method traverses codepoints safely but deliberately uses
+the listed ASCII character classes. Whole-number testing is exact and does not
+use a floating-point tolerance. Explicit empty or unsupported options signal
+`INVALID_ARGUMENTS`.
 
 ## delstr(n \[,length\])
 
