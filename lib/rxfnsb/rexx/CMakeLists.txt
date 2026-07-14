@@ -3,11 +3,11 @@ cmake_minimum_required(VERSION 3.24)
 set(BIFS
 		_address
 		_rxsystem
+		_jdn
 		_datei
 		_dateo
 		_ftrunc
 		_itrunc
-		_jdn
 		abbrev
 		abs
 		b2x
@@ -151,10 +151,13 @@ unset(_prev_target)
 foreach(_binfile ${REXXBINS})
 	get_filename_component(_basename ${_binfile} NAME_WE)
 	set(_rxc_import_args -i ${CMAKE_CURRENT_SOURCE_DIR}/../rxas)
-	# parse depends on the immediately preceding parsecompile/parsestring modules.
-	# Import their freshly built metadata rather than the previous library archive
-	# so an interface update can be rebuilt in one pass.
-	if("${_basename}" STREQUAL "parse")
+	# These modules consume helpers built earlier in this list. Import their
+	# freshly built metadata rather than the previous library archive so an
+	# interface or inline-body update is correct in one clean/incremental pass.
+	if("${_basename}" STREQUAL "_datei" OR
+	   "${_basename}" STREQUAL "_dateo" OR
+	   "${_basename}" STREQUAL "date" OR
+	   "${_basename}" STREQUAL "parse")
 		set(_rxc_import_args -i ${CMAKE_CURRENT_BINARY_DIR})
 	endif()
 	add_custom_command(

@@ -1,0 +1,90 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbifdate
+import rexxvalue
+import rexxpool
+
+errors = 0
+pool = .RexxVariablePool()
+-- 2024-03-01; clock values are irrelevant to DATE but deterministic.
+call pool.injectClauseTime(738945,47106123456,10000000000000,3600000000)
+
+errors = errors + check_result(reference pool,"738945","B")
+errors = errors + check_result(reference pool,"61","D")
+errors = errors + check_result(reference pool,"01/03/24","E")
+errors = errors + check_result(reference pool,"March","M")
+errors = errors + check_result(reference pool,"1 Mar 2024","N")
+errors = errors + check_result(reference pool,"24/03/01","O")
+errors = errors + check_result(reference pool,"20240301","S")
+errors = errors + check_result(reference pool,"03/01/24","U")
+errors = errors + check_result(reference pool,"Friday","W")
+
+-- Exact Classic conversions and the current-year sliding window.
+errors = errors + check_result(reference pool,"716308","B","10 Mar 1962","N")
+errors = errors + check_result(reference pool,"Saturday","W","19620310","S")
+errors = errors + check_result(reference pool,"20620310","S","10/03/62","E")
+errors = errors + check_result(reference pool,"20620310","S","62/03/10","O")
+errors = errors + check_result(reference pool,"20620310","S","03/10/62","U")
+errors = errors + check_result(reference pool,"20240229","S","60","D")
+errors = errors + check_result(reference pool,"19740101","S","01/01/74","E")
+errors = errors + check_result(reference pool,"20730101","S","01/01/73","E")
+
+errors = errors + check_error(reference pool,"RXC-LC-40.19","S","31/04/24","E")
+errors = errors + check_error(reference pool,"RXC-LC-40.19","S","10 mar 1962","N")
+errors = errors + check_error(reference pool,"RXC-LC-40.19","S","1962031","S")
+errors = errors + check_error(reference pool,"RXC-LC-40.19","S","9999999999999","B")
+errors = errors + check_error(reference pool,"RXC-LC-40.28","Q")
+errors = errors + check_missing_input_error(reference pool)
+
+if errors = 0 then say "PASS: Level C DATE BIF"
+return errors <> 0
+
+check_result: procedure = .int
+  arg pool_ref = reference .RexxVariablePool, expected = .string, ... = .string
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to arg[0]
+    args[i] = .RexxValue(arg[i])
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("DATE")
+  call context.setArguments(args,exists)
+  call context.setCallerPool(pool_ref)
+  result = rexxclassicbif_date(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: Level C DATE expected" expected "got" result.asString() context.errorCode() context.errorMessage()
+  return 1
+
+check_error: procedure = .int
+  arg pool_ref = reference .RexxVariablePool, expected_code = .string, ... = .string
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to arg[0]
+    args[i] = .RexxValue(arg[i])
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("DATE")
+  call context.setArguments(args,exists)
+  call context.setCallerPool(pool_ref)
+  ignored = rexxclassicbif_date(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: Level C DATE expected error" expected_code "got" context.errorCode() context.errorMessage()
+  return 1
+
+check_missing_input_error: procedure = .int
+  arg pool_ref = reference .RexxVariablePool
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("S")
+  exists[1] = 1
+  args[2] = .RexxValue("")
+  exists[2] = 0
+  args[3] = .RexxValue("E")
+  exists[3] = 1
+  context = .RexxBifCallContext("DATE")
+  call context.setArguments(args,exists)
+  call context.setCallerPool(pool_ref)
+  ignored = rexxclassicbif_date(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.19" then return 0
+  say "FAIL: Level C DATE missing input error" context.errorCode() context.errorMessage()
+  return 1

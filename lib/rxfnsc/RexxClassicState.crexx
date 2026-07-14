@@ -23,7 +23,7 @@
  */
 
 options levelb comments_dash numeric_classic
-namespace rexxclassicstate expose RexxAddressState RexxTraceState
+namespace rexxclassicstate expose RexxAddressState RexxTraceState RexxDateTimeState
 import rxfnsb
 
 /**
@@ -172,3 +172,107 @@ RexxTraceState: class
     end
     if trace_setting = "O" then interacting = 0
     return
+
+/**
+ * Per-activation Classic DATE/TIME clause clock.
+ *
+ * `beginClause` freezes one platform sample. The compiler's future direct
+ * Level C lowering can call that method at each clause boundary; direct BIF
+ * harnesses use `ensureClause`, and deterministic tests use `injectClause`.
+ * Elapsed/reset state persists across clause samples in the same activation.
+ */
+RexxDateTimeState: class
+  clause_base_day = .int
+  clause_local_microseconds = .int
+  clause_utc_microseconds = .int
+  clause_offset_microseconds = .int
+  elapsed_started = .boolean
+  elapsed_start_microseconds = .int
+
+  *: factory
+    elapsed_started = 0
+    return
+
+  /** Capture and freeze the current local and UTC clock for a new clause. */
+  beginClause: method = .void
+    before_local = .int
+    after_local = .int
+    standard_seconds = .int
+    timezone_seconds = .int
+    utc_seconds = .int
+    standard_day = .int
+    standard_second = .int
+    local_second = .int
+    local_day = .int
+    daylight_adjustment = .int
+    fraction = .int
+
+    assembler mtime before_local
+    assembler time standard_seconds
+    assembler xtime timezone_seconds,"Z"
+    assembler mtime after_local
+    if after_local < before_local then do
+      assembler time standard_seconds
+      assembler xtime timezone_seconds,"Z"
+    end
+
+    utc_seconds = standard_seconds + timezone_seconds
+    standard_day = standard_seconds % 86400
+    standard_second = standard_seconds // 86400
+    if standard_second < 0 then do
+      standard_second = standard_second + 86400
+      standard_day = standard_day - 1
+    end
+
+    local_second = after_local % 1000000
+    fraction = after_local // 1000000
+    daylight_adjustment = local_second - standard_second
+    local_day = standard_day
+    if daylight_adjustment > 43200 then do
+      daylight_adjustment = daylight_adjustment - 86400
+      local_day = local_day - 1
+    end
+    else if daylight_adjustment < -43200 then do
+      daylight_adjustment = daylight_adjustment + 86400
+      local_day = local_day + 1
+    end
+
+    clause_base_day = local_day + 719162
+    clause_local_microseconds = after_local
+    clause_utc_microseconds = utc_seconds * 1000000 + fraction
+    clause_offset_microseconds = (0 - timezone_seconds + daylight_adjustment) * 1000000
+    return
+
+  /** Install a deterministic clause sample for a direct library harness. */
+  injectClause: method = .void
+    arg base_day = .int, local_microseconds = .int, utc_microseconds = .int, offset_microseconds = .int
+    clause_base_day = base_day
+    clause_local_microseconds = local_microseconds
+    clause_utc_microseconds = utc_microseconds
+    clause_offset_microseconds = offset_microseconds
+    return
+
+  baseDay: method = .int
+    return clause_base_day
+
+  localMicroseconds: method = .int
+    return clause_local_microseconds
+
+  utcMicroseconds: method = .int
+    return clause_utc_microseconds
+
+  offsetMicroseconds: method = .int
+    return clause_offset_microseconds
+
+  /** Return elapsed microseconds and optionally reset the elapsed origin. */
+  elapsedMicroseconds: method = .int
+    arg reset = .boolean
+    elapsed = .int
+    if \elapsed_started then do
+      elapsed_start_microseconds = clause_utc_microseconds
+      elapsed_started = 1
+      return 0
+    end
+    elapsed = clause_utc_microseconds - elapsed_start_microseconds
+    if reset then elapsed_start_microseconds = clause_utc_microseconds
+    return elapsed

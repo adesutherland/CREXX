@@ -11,6 +11,7 @@ set(RXFNSC_DIRECT_BIF_MODULES
   RexxClassicBifCopies
   RexxClassicBifCountstr
   RexxClassicBifD2x
+  RexxClassicBifDate
   RexxClassicBifDelstr
   RexxClassicBifDelword
   RexxClassicBifFormat
@@ -31,6 +32,7 @@ set(RXFNSC_DIRECT_BIF_MODULES
   RexxClassicBifSubstr
   RexxClassicBifSubword
   RexxClassicBifSymbol
+  RexxClassicBifTime
   RexxClassicBifTrace
   RexxClassicBifTrunc
   RexxClassicBifValue

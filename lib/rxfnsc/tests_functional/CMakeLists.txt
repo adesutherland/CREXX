@@ -22,6 +22,7 @@ set(REXXBINS
   testRexxClassicBifCopies
   testRexxClassicBifCountstr
   testRexxClassicBifD2x
+  testRexxClassicBifDate
   testRexxClassicBifDelstr
   testRexxClassicBifDelword
   testRexxClassicBifFormat
@@ -42,6 +43,7 @@ set(REXXBINS
   testRexxClassicBifSubstr
   testRexxClassicBifSubword
   testRexxClassicBifSymbol
+  testRexxClassicBifTime
   testRexxClassicBifTrace
   testRexxClassicBifTrunc
   testRexxClassicBifValue

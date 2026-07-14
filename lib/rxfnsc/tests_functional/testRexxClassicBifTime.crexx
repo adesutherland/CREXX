@@ -1,0 +1,122 @@
+options levelb comments_dash numeric_classic
+import rexxclassicbifs
+import rexxclassicbiftime
+import rexxvalue
+import rexxpool
+
+errors = 0
+pool = .RexxVariablePool()
+call pool.injectClauseTime(738945,47106123456,10000000000000,3600000000)
+
+errors = errors + check_result(reference pool,"1:05pm","C")
+errors = errors + check_result(reference pool,"13","H")
+errors = errors + check_result(reference pool,"13:05:06.123456","L")
+errors = errors + check_result(reference pool,"785","M")
+errors = errors + check_result(reference pool,"13:05:06","N")
+errors = errors + check_result(reference pool,"3600000000","O")
+errors = errors + check_result(reference pool,"47106","S")
+
+errors = errors + check_result(reference pool,"00:00:00","N","12:00am","C")
+errors = errors + check_result(reference pool,"13:05:00","N","1:05pm","C")
+errors = errors + check_result(reference pool,"1:00pm","C","13","H")
+errors = errors + check_result(reference pool,"13:05:06","N","13:05:06.123456","L")
+errors = errors + check_result(reference pool,"13:05:00","N","785","M")
+errors = errors + check_result(reference pool,"13:05:06.000000","L","47106","S")
+
+-- E/R use the frozen UTC sample and retain their origin across clauses.
+errors = errors + check_result(reference pool,"0","E")
+call pool.injectClauseTime(738945,47108623456,10000002500000,3600000000)
+errors = errors + check_result(reference pool,"2.5","E")
+errors = errors + check_result(reference pool,"2.5","R")
+call pool.injectClauseTime(738945,47109123456,10000003000000,3600000000)
+errors = errors + check_result(reference pool,"0.5","E")
+
+errors = errors + check_error(reference pool,"RXC-LC-40.19","N","24:00:00","N")
+errors = errors + check_error(reference pool,"RXC-LC-40.19","N","01:02:03.4","L")
+errors = errors + check_error(reference pool,"RXC-LC-40.19","N","01:02PM","C")
+errors = errors + check_error(reference pool,"RXC-LC-40.19","N","9999999999999","S")
+errors = errors + check_error(reference pool,"RXC-LC-40.29","E","12:00:00","N")
+errors = errors + check_error(reference pool,"RXC-LC-40.28","Q")
+errors = errors + check_missing_input_error(reference pool)
+
+fresh_pool = .RexxVariablePool()
+errors = errors + check(\fresh_pool.clauseTimeFrozen(),"fresh clause clock starts unfrozen")
+errors = errors + check_live_freeze(reference fresh_pool)
+errors = errors + check(fresh_pool.clauseTimeFrozen(),"direct BIF freeze persists in caller pool")
+
+if errors = 0 then say "PASS: Level C TIME BIF"
+return errors <> 0
+
+check_result: procedure = .int
+  arg pool_ref = reference .RexxVariablePool, expected = .string, ... = .string
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to arg[0]
+    args[i] = .RexxValue(arg[i])
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("TIME")
+  call context.setArguments(args,exists)
+  call context.setCallerPool(pool_ref)
+  result = rexxclassicbif_time(reference context)
+  if \context.hasError() & result.asString() = expected then return 0
+  say "FAIL: Level C TIME expected" expected "got" result.asString() context.errorCode() context.errorMessage()
+  return 1
+
+check_error: procedure = .int
+  arg pool_ref = reference .RexxVariablePool, expected_code = .string, ... = .string
+  args = .RexxValue[]
+  exists = .int[]
+  do i = 1 to arg[0]
+    args[i] = .RexxValue(arg[i])
+    exists[i] = 1
+  end
+  context = .RexxBifCallContext("TIME")
+  call context.setArguments(args,exists)
+  call context.setCallerPool(pool_ref)
+  ignored = rexxclassicbif_time(reference context)
+  if context.hasError() & context.errorCode() = expected_code then return 0
+  say "FAIL: Level C TIME expected error" expected_code "got" context.errorCode() context.errorMessage()
+  return 1
+
+check_missing_input_error: procedure = .int
+  arg pool_ref = reference .RexxVariablePool
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("N")
+  exists[1] = 1
+  args[2] = .RexxValue("")
+  exists[2] = 0
+  args[3] = .RexxValue("L")
+  exists[3] = 1
+  context = .RexxBifCallContext("TIME")
+  call context.setArguments(args,exists)
+  call context.setCallerPool(pool_ref)
+  ignored = rexxclassicbif_time(reference context)
+  if context.hasError() & context.errorCode() = "RXC-LC-40.19" then return 0
+  say "FAIL: Level C TIME missing input error" context.errorCode() context.errorMessage()
+  return 1
+
+check_live_freeze: procedure = .int
+  arg pool_ref = reference .RexxVariablePool
+  errors = 0
+  args = .RexxValue[]
+  exists = .int[]
+  args[1] = .RexxValue("S")
+  exists[1] = 1
+  context = .RexxBifCallContext("TIME")
+  call context.setArguments(args,exists)
+  call context.setCallerPool(pool_ref)
+  result = rexxclassicbif_time(reference context)
+  pool = dereference pool_ref
+  errors = errors + check(\context.hasError(),"live clock query succeeds")
+  errors = errors + check(pool.clauseTimeFrozen(),"direct BIF freezes clause clock")
+  seconds = result.asString() + 0
+  errors = errors + check(seconds >= 0 & seconds < 86400,"live clock seconds range")
+  return errors
+
+check: procedure = .int
+  arg passed = .boolean, label = .string
+  if passed then return 0
+  say "FAIL: Level C TIME" label
+  return 1

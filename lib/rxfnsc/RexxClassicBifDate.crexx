@@ -1,0 +1,307 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ */
+
+options levelb comments_dash numeric_classic
+namespace rexxclassicbifdate expose rexxclassicbif_date
+import rexxclassicbifs
+import rexxpool
+import rexxvalue
+import _rxsysb
+import rxfnsb
+
+/**
+ * Classic Rexx DATE built-in function.
+ *
+ * This is a standalone direct Level C entry point. It consumes and returns
+ * RexxValue objects, reads the caller pool's frozen clause clock, and reports
+ * Classic errors through RexxBifCallContext.
+ *
+ * @bif DATE
+ * @signature DATE([option [,date [,inoption]]])
+ * @checkargs oBDEMNOSUW oANY oBDENOSU
+ * @return Classic formatted date
+ * @error 40.19 input does not match the declared input format
+ */
+rexxclassicbif_date: procedure = .RexxValue
+  arg context_ref = reference .RexxBifCallContext
+  context = dereference context_ref
+  pool_ref = reference .RexxVariablePool
+  pool = .RexxVariablePool
+  option = .string
+  input_option = .string
+  input_value = .string
+  jdn = .int
+  current_jdn = .int
+  current_year = .int
+  current_month = .int
+  current_day = .int
+  current_days = .int
+  current_weekday = .int
+  current_base = .int
+
+  call context.clearError()
+  if rexxclassicbif_check_args(context_ref,"oBDEMNOSUW oANY oBDENOSU") = 0 then return .RexxValue("")
+  if context.argumentExists(3) & \context.argumentExists(2) then do
+    call rexxclassicbif_set_error(context_ref,"40.19",2,"",context.argumentText(3))
+    return .RexxValue("")
+  end
+
+  pool_ref = context.callerPool()
+  pool = dereference pool_ref
+  call pool.ensureClauseTime()
+  current_jdn = pool.clauseBaseDay() + 1721426
+  call _datefromjdn current_jdn,current_year,current_month,current_day,current_days,current_weekday,current_base
+
+  option = "N"
+  if context.argumentExists(1) then option = context.argumentText(1)
+  if \context.argumentExists(2) then return .RexxValue(_lc_date_format(current_jdn,option))
+
+  input_value = context.argumentText(2)
+  input_option = "N"
+  if context.argumentExists(3) then input_option = context.argumentText(3)
+  if \_lc_date_parse(input_value,input_option,current_year,jdn) then do
+    call rexxclassicbif_set_error(context_ref,"40.19",2,input_value,input_option)
+    return .RexxValue("")
+  end
+  if _lc_date_format(jdn,input_option) \== input_value then do
+    call rexxclassicbif_set_error(context_ref,"40.19",2,input_value,input_option)
+    return .RexxValue("")
+  end
+  return .RexxValue(_lc_date_format(jdn,option))
+
+_lc_date_parse: procedure = .boolean
+  arg value = .string, input_option = .string, current_year = .int, expose jdn = .int
+  value_length = .int
+  year = .int
+  month = .int
+  day = .int
+  short_year = .int
+  day_of_year = .int
+  base_day = .int
+  codepoint = .int
+  position = .int
+  token = .string
+
+  assembler strlen value_length,value
+  if input_option = "B" then do
+    if \_lc_date_integer(value,base_day) then return 0
+    if base_day < 0 | base_day > 3652058 then return 0
+    jdn = base_day + 1721426
+    return 1
+  end
+  if input_option = "D" then do
+    if \_lc_date_integer(value,day_of_year) then return 0
+    if day_of_year < 1 | day_of_year > 365 + _leapyear(current_year) then return 0
+    jdn = _jdn(1,1,current_year) + day_of_year - 1
+    return 1
+  end
+  if input_option = "N" then do
+    if words(value) <> 3 then return 0
+    token = word(value,1)
+    if \_lc_date_integer(token,day) then return 0
+    month = _lc_date_month_abbreviation_number(word(value,2))
+    token = word(value,3)
+    if \_lc_date_integer(token,year) then return 0
+    if month = 0 | \_datevalid(day,month,year) then return 0
+    jdn = _jdn(day,month,year)
+    return 1
+  end
+  if input_option = "S" then do
+    if value_length <> 8 then return 0
+    if \_lc_date_unsigned_span(value,0,4,year) then return 0
+    if \_lc_date_unsigned_span(value,4,2,month) then return 0
+    if \_lc_date_unsigned_span(value,6,2,day) then return 0
+    if \_datevalid(day,month,year) then return 0
+    jdn = _jdn(day,month,year)
+    return 1
+  end
+
+  if value_length <> 8 then return 0
+  position = 2
+  assembler strchar codepoint,value,position
+  if codepoint <> 47 then return 0
+  position = 5
+  assembler strchar codepoint,value,position
+  if codepoint <> 47 then return 0
+
+  if input_option = "E" then do
+    if \_lc_date_unsigned_span(value,0,2,day) then return 0
+    if \_lc_date_unsigned_span(value,3,2,month) then return 0
+  end
+  else if input_option = "O" then do
+    if \_lc_date_unsigned_span(value,0,2,short_year) then return 0
+    if \_lc_date_unsigned_span(value,3,2,month) then return 0
+    if \_lc_date_unsigned_span(value,6,2,day) then return 0
+  end
+  else do -- U
+    if \_lc_date_unsigned_span(value,0,2,month) then return 0
+    if \_lc_date_unsigned_span(value,3,2,day) then return 0
+  end
+  if input_option <> "O" then do
+    if \_lc_date_unsigned_span(value,6,2,short_year) then return 0
+  end
+
+  year = short_year
+  do while year < current_year - 50
+    year = year + 100
+  end
+  if \_datevalid(day,month,year) then return 0
+  jdn = _jdn(day,month,year)
+  return 1
+
+_lc_date_format: procedure = .string
+  arg jdn = .int, option = .string
+  year = .int
+  month = .int
+  day = .int
+  day_of_year = .int
+  weekday = .int
+  base_day = .int
+  year_text = .string
+  month_text = .string
+  day_text = .string
+  call _datefromjdn jdn,year,month,day,day_of_year,weekday,base_day
+
+  select
+    when option = "B" then return _lc_date_digits(base_day,0)
+    when option = "D" then return _lc_date_digits(day_of_year,0)
+    when option = "M" then return _lc_date_month_name(month)
+    when option = "N" then return _lc_date_digits(day,0) || " " || _lc_date_month_abbreviation(month) || " " || _lc_date_digits(year,4)
+    when option = "W" then return _lc_date_weekday_name(weekday)
+    otherwise nop
+  end
+
+  year_text = _lc_date_digits(year,4)
+  month_text = _lc_date_digits(month,2)
+  day_text = _lc_date_digits(day,2)
+  if option = "E" then return day_text || "/" || month_text || "/" || _lc_date_digits(year // 100,2)
+  if option = "O" then return _lc_date_digits(year // 100,2) || "/" || month_text || "/" || day_text
+  if option = "S" then return year_text || month_text || day_text
+  return month_text || "/" || day_text || "/" || _lc_date_digits(year // 100,2)
+
+_lc_date_integer: procedure = .boolean
+  arg text = .string, expose value = .int
+  text_length = .int
+  position = .int
+  codepoint = .int
+  sign = .int
+  magnitude = .int
+  assembler strlen text_length,text
+  if text_length = 0 then return 0
+  sign = 1
+  assembler strchar codepoint,text,position
+  if codepoint = 43 | codepoint = 45 then do
+    if codepoint = 45 then sign = -1
+    position = 1
+    if position = text_length then return 0
+  end
+  if text_length - position > 12 then return 0
+  do while position < text_length
+    assembler strchar codepoint,text,position
+    if codepoint < 48 | codepoint > 57 then return 0
+    magnitude = magnitude * 10 + codepoint - 48
+    position = position + 1
+  end
+  value = magnitude * sign
+  return 1
+
+_lc_date_unsigned_span: procedure = .boolean
+  arg text = .string, start = .int, count = .int, expose value = .int
+  codepoint = .int
+  value = 0
+  do index = start to start + count - 1
+    assembler strchar codepoint,text,index
+    if codepoint < 48 | codepoint > 57 then return 0
+    value = value * 10 + codepoint - 48
+  end
+  return 1
+
+_lc_date_digits: procedure = .string
+  arg value = .int, width = .int
+  divisor = .int
+  digit = .int
+  codepoint = .int
+  result = .string
+  divisor = 1
+  if width > 0 then do index = 2 to width
+    divisor = divisor * 10
+  end
+  else do while value % divisor >= 10
+    divisor = divisor * 10
+  end
+  do while divisor > 0
+    digit = value % divisor
+    codepoint = digit + 48
+    assembler appendchar result,codepoint
+    value = value // divisor
+    divisor = divisor % 10
+  end
+  return result
+
+_lc_date_month_abbreviation_number: procedure = .int
+  arg name = .string
+  if name = "Jan" then return 1
+  if name = "Feb" then return 2
+  if name = "Mar" then return 3
+  if name = "Apr" then return 4
+  if name = "May" then return 5
+  if name = "Jun" then return 6
+  if name = "Jul" then return 7
+  if name = "Aug" then return 8
+  if name = "Sep" then return 9
+  if name = "Oct" then return 10
+  if name = "Nov" then return 11
+  if name = "Dec" then return 12
+  return 0
+
+_lc_date_month_abbreviation: procedure = .string
+  arg month = .int
+  select
+    when month = 1 then return "Jan"
+    when month = 2 then return "Feb"
+    when month = 3 then return "Mar"
+    when month = 4 then return "Apr"
+    when month = 5 then return "May"
+    when month = 6 then return "Jun"
+    when month = 7 then return "Jul"
+    when month = 8 then return "Aug"
+    when month = 9 then return "Sep"
+    when month = 10 then return "Oct"
+    when month = 11 then return "Nov"
+    otherwise return "Dec"
+  end
+  return ""
+
+_lc_date_month_name: procedure = .string
+  arg month = .int
+  select
+    when month = 1 then return "January"
+    when month = 2 then return "February"
+    when month = 3 then return "March"
+    when month = 4 then return "April"
+    when month = 5 then return "May"
+    when month = 6 then return "June"
+    when month = 7 then return "July"
+    when month = 8 then return "August"
+    when month = 9 then return "September"
+    when month = 10 then return "October"
+    when month = 11 then return "November"
+    otherwise return "December"
+  end
+  return ""
+
+_lc_date_weekday_name: procedure = .string
+  arg weekday = .int
+  select
+    when weekday = 1 then return "Monday"
+    when weekday = 2 then return "Tuesday"
+    when weekday = 3 then return "Wednesday"
+    when weekday = 4 then return "Thursday"
+    when weekday = 5 then return "Friday"
+    when weekday = 6 then return "Saturday"
+    otherwise return "Sunday"
+  end
+  return ""

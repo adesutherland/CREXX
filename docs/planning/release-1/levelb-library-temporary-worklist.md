@@ -56,7 +56,7 @@ scope implicitly.
 |---:|---|---|---|
 | 1 | `insert`, `overlay`, `lastpos`, `strip`, `substr`, `abs`, `format`, `sign`, `trunc`, `b2d`, `x2b`, `x2d` | Class adapters, focused class tests, and one classlib/library rebuild | done |
 | 2 | `parsecompile`, `parsestring`, `parse`, `parseExec` | Frozen legacy plan/stream ABI and assertion harnesses; no producer/lowering change | done |
-| 3 | `_datei`, `_dateo`, `_jdn`, `date`, `time` | Calendar/error contract and frozen-clause-time service | queued |
+| 3 | `_datei`, `_dateo`, `_jdn`, `date`, `time` | Calendar/error contract and frozen-clause-time service | done |
 | 4 | `arrayformat`, `arraydump` | One pure formatting contract/core, followed by the output wrapper | queued |
 | 5 | `delword`, `word`, `words`, `wordindex`, `subword`, `wordlength`, `wordpos` | `Config_OtherBlankCharacters` | queued |
 | 6 | `translate`, `xrange`, `c2x`, `c2d`, `d2c`, `x2c` | `Config_Xrange`, `Config_C2B`, and `Config_B2C` | queued |
@@ -117,6 +117,38 @@ Batch 2 completion evidence:
   and compiler-stream executor. None is a Level C BIF. The Level B library
   build now gives each generated module its own source dependency, avoiding the
   previous accidental whole-library rebuild on every Level B source edit.
+
+Batch 3 completion evidence:
+
+- `_jdn` now owns a validated proleptic-Gregorian core for years 1-9999,
+  constant-time forward/inverse conversion, leap/month rules, derived weekday/
+  day-of-year/base fields, and output-preserving `INVALID_ARGUMENTS` failures;
+- Level B `_datei`, `_dateo`, and `date` preserve the extended five-argument
+  surface while making short years deterministic (2000-2099), X years exactly
+  four digits, separators zero/one Unicode codepoint, all numeric results
+  strings, QUALIFIED weekdays checked, and invalid input catchable. Direct
+  scans/appends remove the old general WORD/SUBSTR/RIGHT/ABBREV formatting and
+  parsing chains;
+- standalone RexxValue Classic DATE and TIME modules implement the exact
+  three-argument checklists and `40.19`/`40.29` errors without entering the
+  deprecated name controller. The caller `RexxVariablePool` owns a frozen
+  clause clock with a direct ready flag, platform sampling, deterministic
+  injection, UTC offset, and persistent elapsed/reset origin. Compiler/VM and
+  lowering sources are unchanged;
+- the print DATE scripts were replaced by format, boundary/error, and calendar-
+  core assertions. With the existing Level B TIME suite and new direct Classic
+  DATE/TIME harnesses, all six tests are registered in both modes; the focused
+  aggregate run passes 13/13 CTests including its shared runtime fixture;
+- optimized aggregate RXAS moves from 13,434 to 10,230 lines for `_datei`,
+  19,386 to 3,751 for `_dateo`, and 1,681 to 307 for `date`. `_jdn` grows from
+  97 to 3,792 because it now also contains validation, inverse/derived calendar
+  helpers, and the shared format resolver. Level B `time` remains the previously
+  reviewed 724-line/two-elapsed-call implementation;
+- the aggregate review found that `_datei` had been optimized before fresh
+  `_jdn` metadata existed. The Level B build now orders `_jdn` first and imports
+  current build-tree metadata for the DATE cluster, so clean and incremental
+  builds embed the validated helper. Separate Level B pages cover the public
+  extension and three helpers; separate Level C pages cover DATE and TIME.
 
 ## Efficient selector validation and deferred integration
 
@@ -2055,11 +2087,6 @@ window blocker for 18 selectors and the decimal-conversion signal blocker for
 six numeric selectors. The four numeric rows that remain parked below are held
 only for their separate `.Rexx` class-adapter work.
 
-- Date/time conversion cluster (`_datei`, `_dateo`, `_jdn`, `date`, and Level C
-  `time`): freeze the
-  extended Level B format/validation contract separately from Classic Level C
-  DATE, add direct calendar/JDN round-trip and invalid-date harnesses, and define
-  the frozen-clause-time service before rewriting the shared conversion core.
 - `random` service/contract: decide the typed Level B one-argument and explicit
   omission semantics separately from Classic RANDOM, then provide a scoped
   seed/next-value service that can implement unbiased bounded generation and
@@ -2418,13 +2445,13 @@ are active. This association is an approval point before row 1 starts.
 | 91 | `sequence` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 92 | `find` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 93 | `index` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
-| 94 | `_datei` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — shared DATE contract |
-| 95 | `_dateo` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — shared DATE contract |
-| 96 | `_jdn` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — DATE error translation |
-| 97 | `date` | `DATE` R | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | parked — DATE core/clause time |
+| 94 | `_datei` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 95 | `_dateo` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 96 | `_jdn` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
+| 97 | `date` | `DATE` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 98 | `random` | `RANDOM` R | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | parked — RNG service/contract |
 | 99 | `reradix` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
-| 100 | `time` | `TIME` R | ☒ | ☐ | ☐ | ☒ | ☒ | ☐ | parked — Level C clause-time service |
+| 100 | `time` | `TIME` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 101 | `fnv` | — | ☐ | — | ☐ | ☐ | ☐ | ☐ | parked — hash contract/VM Unicode |
 | 102 | `arraypop` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 103 | `arrayshift` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
@@ -4922,98 +4949,95 @@ are active. This association is an approval point before row 1 starts.
 - Completion summary: all applicable B/T/P/D/V gates are complete; test wiring
   is retained for final integration. Row 94 `_datei` is sole active.
 
-### 94. `_datei` — parked
+### 94. `_datei` — done
 
 - Public surface: `_rxsysb._datei(idate=.string, format=.string
-  [,isep=.string]) -> .int` is the private input-format half of the extended
-  Level B DATE implementation; there is no Level C BIF under this helper name.
-- Co-dependency/correctness finding: its accepted abbreviations, separators,
-  two-digit-year policy, and JDN epoch are shared directly with `_dateo`, `_jdn`,
-  and `date`. Invalid formats call `raise` with `40.28` then return `-1`, while a
-  malformed split prints to stdout and still continues. Month/day validity is
-  not checked before `_jdn` normalizes it.
-- Performance/test/doc evidence: the current aggregate is 11,931 RXAS lines,
-  repeatedly invoking ABBREV, SUBSTR, WORD, WORDPOS, RIGHT, WORDS, UPPER, and
-  concatenation across format branches. The only direct use is a print-oriented
-  DATE demo; no assertion freezes parsed fields, invalid dates, errors, or
-  round trips, and no stable helper Markdown exists.
-- Integration follow-up: the corrected exact WORDPOS implementation exposed
-  that NORMAL and QUALIFIED month abbreviations had depended on WORDPOS's old
-  accidental prefix behavior. A typed DATE-local month mapper now preserves
-  that established compatibility without weakening WORDPOS. Fixed NORMAL and
-  QUALIFIED full/abbreviated cases pass through `ts_date2` in both modes.
-- Completion summary: the broader selector remains parked on the shared
-  extended DATE format, validation/error, and round-trip harness checkpoint;
-  the narrow compatibility repair does not settle those contracts. Row 95
-  `_dateo` is sole active.
+  [,isep=""]) -> .int` remains the private input half of extended Level B DATE;
+  the separator's optional metadata is preserved. There is no Level C BIF under
+  this helper name.
+- Correctness/error result: documented actual-prefix abbreviations, exact year
+  widths, deterministic 2000-2099 short years, matching X input variants,
+  named months, QUALIFIED weekday validation, Gregorian field/range checks,
+  negative-EPOCH floor division, and zero/one-codepoint separators are explicit.
+  Every malformed input signals `INVALID_ARGUMENTS`; no path prints or returns a
+  magic value.
+- Algorithm result: fixed, separated, named, and signed-integer forms are direct
+  codepoint/digit scans. The parser no longer composes ABBREV, SUBSTR, WORD,
+  WORDPOS, RIGHT, WORDS, or UPPER selectors, and oversized integers are rejected
+  before native overflow.
+- Test/doc/validation result: `ts_date` covers every input form plus omitted and
+  Unicode separators; `ts_date2` covers boundaries and failures. Both pass in
+  optimized/unoptimized isolated and aggregate runs. Stable helper Markdown and
+  RexxDoc document the contract. Optimized aggregate RXAS is 10,230 lines versus
+  the 13,434-line pre-batch baseline; remaining calls are DATE-local scanners or
+  shared calendar primitives rather than general string BIF chains.
+- Completion summary: all applicable B/T/P/D/V gates are complete. Row 95
+  `_dateo` was processed next within the approved batch.
 
-### 95. `_dateo` — parked
+### 95. `_dateo` — done
 
-- Public surface: `_rxsysb._dateo(jdn=.int, format=.string
-  [,osep=.string]) -> .string` is the private output-format half of extended
-  Level B DATE. There is no Level C BIF with this helper name.
-- Co-dependency/correctness finding: format abbreviation and separator behavior
-  must round-trip row 94. BASE, UNIX, JDN, DAYS, CENTURY, and EPOCH currently
-  return integers through a string contract; unknown formats silently fall back
-  to `dd mm yyyy`; and USA/XUSA currently emit the same four-digit year despite
-  separate format names. None of those ambiguities can be corrected without
-  freezing the shared DATE surface.
-- Performance/test/doc evidence: the aggregate is 14,367 RXAS lines, dominated
-  by repeated abbreviation tests, RIGHT/WORD/SUBSTR formatting, and repeated
-  `_jdn(1,1,year)` calls. `ts_date` only prints direct helper results; it has no
-  expected values, invalid-format cases, type assertions, or inverse checks.
-  No separate stable helper page exists.
-- Completion summary: parked without implementation/build on the same format,
-  return-type, validation, and round-trip contract as rows 94/96/97. Row 96
-  `_jdn` is sole active.
+- Public surface: `_rxsysb._dateo(jdn=.int, format=.string [,osep=""]) ->
+  .string` remains the private output half; its optional separator metadata is
+  preserved. There is no Level C BIF under this helper name.
+- Correctness/error result: every documented output has an explicit branch;
+  USA/ORDERED/European/German/DEC use two-digit years while X variants use four,
+  all numeric origins return strings, and invalid JDN/format/separator values
+  signal instead of falling back.
+- Algorithm result: one inverse-calendar call derives all fields, then direct
+  digit/codepoint append helpers format the result. Repeated RIGHT, WORD, SUBSTR,
+  abbreviation tests, and repeated Gregorian conversions are gone.
+- Test/doc/validation result: the complete output table, separator overrides,
+  omitted separator, boundaries, and inverse paths pass through `ts_date` and
+  `ts_date2` in both modes. Stable helper Markdown and RexxDoc are present.
+  Optimized aggregate RXAS falls from 19,386 to 3,751 lines; its three calls are
+  the shared format resolver, one inverse conversion, and the CENTURY origin.
+- Completion summary: all applicable B/T/P/D/V gates are complete. Row 96
+  `_jdn` was processed next within the approved batch.
 
-### 96. `_jdn` — parked
+### 96. `_jdn` — done
 
-- Public surface: `_rxsysb._jdn(day=.int, month=.int, year=.int) -> .int` is a
-  typed internal Gregorian-to-Julian-day helper used only by the DATE cluster;
-  there is no Level C BIF under this name.
-- Correctness/error dependency: the standard integer formula is correct for
-  valid proleptic-Gregorian fields, but the helper accepts invalid months/days
-  and normalizes them arithmetically. Adding `INVALID_ARGUMENTS` here would leak
-  through the current public DATE path, while Classic DATE requires conversion
-  error `40.19`; that translation belongs in the shared cluster checkpoint.
-  Year-zero/negative-year scope is likewise not documented.
-- Performance/test/doc evidence: the current aggregate is only 97 RXAS lines,
-  containing fixed integer arithmetic with no helper call or allocation, so no
-  valid-path algorithm replacement is indicated. There is no focused leap/
-  century/boundary/invalid/round-trip harness and no stable helper page.
-- Completion summary: parked without code/build specifically on calendar-domain
-  validation and DATE error translation, not performance. Row 97 `date` is sole
-  active.
+- Public surface: the typed `_jdn(day=.int,month=.int,year=.int) -> .int` now
+  shares one module with `_datefromjdn`, `_datevalid`, `_leapyear`,
+  `_daysinmonth`, and the DATE-local format resolver. No helper is a Level C BIF.
+- Correctness/error result: the supported proleptic-Gregorian domain is years
+  1-9999/JDN 1721426-5373484. Invalid fields/JDNs signal
+  `INVALID_ARGUMENTS`; inverse conversion assigns exposed outputs only after
+  validation. Leap-century rules, day-of-year, Monday-based weekday, and base
+  day are explicit.
+- Algorithm result: forward and inverse conversions remain constant-time integer
+  formulae. The forward hot path adds bounded validation but no allocation or
+  general selector call.
+- Test/doc/validation result: `ts_date_core` covers known values, all calendar
+  rules, representative round trips, both boundaries, caught failures, and
+  exposed-output preservation in both modes. Stable Markdown and RexxDoc cover
+  the helper family. The module grows from 97 to 3,792 optimized RXAS lines
+  because it now owns all shared validated calendar/format primitives.
+- Completion summary: all applicable B/T/P/D/V gates are complete. Row 97
+  `date` was processed next within the approved batch.
 
-### 97. `date` — parked
+### 97. `date` — done
 
-- Public contracts: Level B `date([oformat=.string [,idate=.string
-  [,iformat=.string [,osep=.string [,isep=.string]]]]]) -> .string` is an
-  extended five-argument formatter. Classic Level C is separately specified as
-  `DATE([option [,date [,inoption]]])` with checklist `oBDEMNOSUW oANY
-  oBDENOSU`; these surfaces must not be merged.
-- Dependency/correctness finding: Level B delegates all conversion to rows
-  94-96, truncates separators silently, uppercases the date payload, and has no
-  complete invalid-date/format signal translation. Current-date evaluation
-  reads wall time directly. Level C instead requires frozen clause time,
-  `Time2Date`/`Leap`, and `40.19`; no clause-time service, standalone RexxValue
-  DATE, or common-controller DATE body exists.
-- Performance/test/doc evidence: the wrapper aggregate is 1,854 RXAS lines in
-  addition to the 11,931/14,367-line input/output helpers. `ts_date2` has useful
-  fixed conversion assertions but mixes them with time-dependent printing,
-  duplicate coercion comparisons, disabled cases, repeated calls in failures,
-  and no invalid conversion coverage. `ts_date` is almost entirely a print demo.
-  The language book documents only the Level B extension and there are no
-  separate stable B/C pages.
-- Integration follow-up: `ts_date2` now also asserts a full NORMAL month name
-  and an abbreviated QUALIFIED month name. The month-prefix regression and all
-  eight previously stale RXAS/AST expectations are closed; the final unchanged
-  full Debug rerun passes 1,794/1,794 tests.
-- Completion summary: the selector remains parked on the shared calendar core,
-  strict Level B error contract, frozen-clause-time service, direct Classic
-  implementation, and separate harnesses/docs. Compiler lowering remains out
-  of scope. Row 98 `random` is sole active.
+- Public contracts: Level B keeps its five optional string arguments and
+  extended format set. Classic Level C is a separate standalone RexxValue
+  `DATE([option [,date [,inoption]]])` implementation with checklist
+  `oBDEMNOSUW oANY oBDENOSU`; the surfaces are not merged.
+- Level B result: separator truncation and payload uppercasing are removed;
+  current local date is sampled directly and all conversion/errors delegate to
+  the validated cluster. The wrapper falls from 1,681 to 307 optimized RXAS
+  lines and makes only `_datei`/`_dateo` calls.
+- Level C/state result: `RexxClassicBifDate` implements every Classic format,
+  exact conversion round trips, current-year 50-year sliding input, frozen
+  caller-pool clause date, RexxValue results, and standard `40.19` errors. It is
+  not registered in the deprecated name controller and no lowering changed.
+- Test/doc/validation result: print-only DATE coverage is replaced by three
+  asserting Level B suites plus a direct Level C harness, all registered in both
+  modes. Separate stable B/C pages and source RexxDoc cover their different
+  contracts. The final DATE/TIME focused aggregate gate passes 13/13 CTests.
+- Build result: `_jdn` now precedes its consumers and DATE modules import current
+  build-tree metadata, preventing stale inline calendar bodies in clean or
+  incremental aggregates.
+- Completion summary: all applicable B/C/T/P/D/V gates are complete without
+  compiler or VM source changes. Row 98 `random` remains parked for Batch 9.
 
 ### 98. `random` — parked
 
@@ -5072,7 +5096,7 @@ are active. This association is an approval point before row 1 starts.
   class-forwarding tests are queued for final integration. Row 100 `time` is
   sole active.
 
-### 100. `time` — parked after Level B completion
+### 100. `time` — done
 
 - Public contracts: Level B `time([option=.string]) -> .string` exposes local/
   UTC clocks, elapsed/reset state, timezone data, process ticks, and `US` as an
@@ -5089,21 +5113,29 @@ are active. This association is an approval point before row 1 starts.
   after `mtime` without decomposition. Numeric decomposition is delayed until
   required and clock text is appended directly, removing RIGHT/LEFT/UPPER and
   all other general selector calls. Only E/R call the required RXAS `_elapsed`.
-- Test/doc result: the print/large-loop demo is now an asserting format/range/
-  elapsed/reset/option harness with a PASS marker. Stable Level B Markdown and
-  RexxDoc document the extension; separate Level C Markdown records its precise
-  pending direct contract. The ZN assertion avoids the known VM `xtime "N"`
-  character-count cache gap while still verifies nonempty returned text.
+- Level C/state result: standalone `RexxClassicBifTime` implements checklist
+  `oCEHLMNORS oANY oCHLMNS`, exact C/H/L/M/N/S conversion, frozen local clause
+  time, offset, elapsed/reset origin, RexxValue results, and `40.19`/`40.29`.
+  `RexxVariablePool` owns the clock state and a direct ready flag; first direct
+  use freezes, `beginClauseTime` is the later lowering hook, and deterministic
+  injection exercises clause changes without a VM/compiler modification.
+- Test/doc result: the Level B asserting format/range/elapsed/reset/option
+  harness remains green and unchanged in scope. The new direct Classic harness
+  covers every output/input, civil noon/midnight, six fraction digits, frozen
+  state, offset, elapsed/reset across injected clauses, live first-use freeze,
+  and standard errors. Separate stable B/C Markdown and source RexxDoc document
+  their different surfaces. The ZN assertion retains the known VM cache-safe
+  nonempty check.
 - Focused validation and second review: both overlays report `PASS: time`.
   RXAS moves from 506 noopt / 612 opt with 12/11 calls to 735/724 with only the
   two elapsed-state call sites; added static code is direct validation and
   formatting, while `US` and other raw clock paths are substantially shorter
   and allocation-free. `git diff --check` passes and compiler/interpreter diffs
   remain empty.
-- Completion summary: typed Level B B/P/D and focused behavior are complete.
-  C/T/V remain parked on shared DATE/TIME local adjustment, `Time2Date`, frozen
-  clause time, and elapsed state services; no compiler lowering change was made.
-  Row 101 `fnv` is sole active.
+- Completion summary: all applicable B/C/T/P/D/V gates are complete. The final
+  six-test DATE/TIME set passes in both modes (13/13 with the shared fixture),
+  and no compiler lowering or VM source changed. Row 101 `fnv` remains parked
+  for Batch 12.
 
 ### 101. `fnv` — parked
 

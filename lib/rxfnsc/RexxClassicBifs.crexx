@@ -364,7 +364,9 @@ _check_arg_type: procedure = .int
     return 1
   end
 
-  if rule = "ABLMNSUWX" | rule = "EINO" | rule = "LTB" | rule = "MN" then do
+  if rule = "ABLMNSUWX" | rule = "EINO" | rule = "LTB" | rule = "MN" |,
+     rule = "BDEMNOSUW" | rule = "BDENOSU" |,
+     rule = "CEHLMNORS" | rule = "CHLMNS" then do
     if length(value) = 0 then do
       call _set_bif_error(context_ref, "40.21", index, value, "")
       return 0

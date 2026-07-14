@@ -100,12 +100,16 @@ RexxVariablePool: class
   next_slot = .int
   address_state = .RexxAddressState
   trace_state = .RexxTraceState
+  date_time_state = .RexxDateTimeState
+  date_time_ready = .boolean
 
   *: factory
     slots = .StringHashMap()
     next_slot = 0
     address_state = .RexxAddressState()
     trace_state = .RexxTraceState()
+    date_time_state = .RexxDateTimeState()
+    date_time_ready = 0
     return
 
   setAddressEnvironment: method = .void
@@ -170,6 +174,54 @@ RexxVariablePool: class
     call state.apply(parent_pool.traceSetting())
     trace_state = state
     return
+
+  /** Freeze a fresh platform clock sample for a new Classic clause. */
+  beginClauseTime: method = .void
+    state = .RexxDateTimeState
+    assembler link state,date_time_state
+    call state.beginClause()
+    date_time_ready = 1
+    return
+
+  /** Ensure direct BIF calls share one frozen clause clock. */
+  ensureClauseTime: method = .void
+    if \date_time_ready then do
+      state = .RexxDateTimeState
+      assembler link state,date_time_state
+      call state.beginClause()
+      date_time_ready = 1
+    end
+    return
+
+  /** Install deterministic DATE/TIME state for a direct Level C harness. */
+  injectClauseTime: method = .void
+    arg base_day = .int, local_microseconds = .int, utc_microseconds = .int, offset_microseconds = .int
+    state = .RexxDateTimeState
+    assembler link state,date_time_state
+    call state.injectClause(base_day,local_microseconds,utc_microseconds,offset_microseconds)
+    date_time_ready = 1
+    return
+
+  clauseTimeFrozen: method = .boolean
+    return date_time_ready
+
+  clauseBaseDay: method = .int
+    return date_time_state.baseDay()
+
+  clauseLocalMicroseconds: method = .int
+    return date_time_state.localMicroseconds()
+
+  clauseUtcMicroseconds: method = .int
+    return date_time_state.utcMicroseconds()
+
+  clauseOffsetMicroseconds: method = .int
+    return date_time_state.offsetMicroseconds()
+
+  clauseElapsedMicroseconds: method = .int
+    arg reset = .boolean
+    state = .RexxDateTimeState
+    assembler link state,date_time_state
+    return state.elapsedMicroseconds(reset)
 
   normalizeName: method = .string
     arg name = .string

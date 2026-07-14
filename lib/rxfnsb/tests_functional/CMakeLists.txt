@@ -24,6 +24,7 @@ set(REXXBINS
         ts_d2x.rxbin
         ts_date.rxbin
         ts_date2.rxbin
+        ts_date_core.rxbin
         ts_delstr.rxbin
         ts_delword.rxbin
         ts_fileio_chars.rxbin
