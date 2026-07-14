@@ -89,7 +89,9 @@ val = .string
  * @return the absolute value as a Rexx string object.
  */
   abs: method = .rexx
-    return .rexx(.rxfnsb..abs(val))
+    number = .decimal
+    number = _classic_decimal(val)
+    return .rexx(.rxfnsb..abs(number))
 
 /**
  * Convert a binary string to hexadecimal.
@@ -221,7 +223,8 @@ val = .string
  */
   delstr: method = .rexx
     arg position = .int, dellen = 0
-    return .rexx(.rxfnsb..delstr(val,position,dellen))
+    if ?dellen then return .rexx(.rxfnsb..delstr(val,position,dellen))
+    return .rexx(.rxfnsb..delstr(val,position))
 
 /**
  * Delete words by word number and count.
@@ -251,14 +254,8 @@ val = .string
     expp_exists = ?expp
     expt_exists = ?expt
 
-    number_text = .string
-    leading = .string
     number = .decimal
-    number_text = .rxfnsb..strip(val)
-    leading = .rxfnsb..left(number_text, 1)
-    if leading = "-" | leading = "+" then
-      number_text = leading || .rxfnsb..strip(.rxfnsb..substr(number_text, 2), "L")
-    number = number_text
+    number = _classic_decimal(val)
 
     if before_exists then do
       if after_exists then do
@@ -302,8 +299,9 @@ val = .string
  * @return the resulting value as a Rexx string object.
  */
   insert: method = .rexx
-    arg string = .string, position = -1, len = -1, pad = " "
-    return .rexx(.rxfnsb..insert(val,string,position,len,pad))
+    arg string = .string, position = 0, len = 0, pad = " "
+    if ?len then return .rexx(.rxfnsb..insert(string,val,position,len,pad))
+    return .rexx(.rxfnsb..insert(string,val,position,,pad))
 
 /**
  * Return the length of this string.
@@ -339,50 +337,54 @@ val = .string
  * @return the resulting value as a Rexx string object.
  */
   overlay: method = .rexx
-    arg string = .string, position = .int, len = 0, pad = ""
-    return .rexx(.rxfnsb..overlay(val,string,position,len,pad))
+    arg string = .string, position = 1, len = 0, pad = " "
+    if ?len then return .rexx(.rxfnsb..overlay(string,val,position,len,pad))
+    return .rexx(.rxfnsb..overlay(string,val,position,,pad))
 
 /**
- * Locate this string within another string.
+ * Locate a string within this string.
  *
- * @param haystack the string to search.
+ * @param needle the string to locate.
  * @param start the 1-based start position.
- * @return the position of this string, or zero if not found.
+ * @return the position of the needle, or zero if not found.
  */
   pos: method = .int
-    arg haystack=.string, start=1
-    return .rxfnsb..pos(val,haystack,start)
+    arg needle=.string, start=1
+    return .rxfnsb..pos(needle,val,start)
 
 /**
- * Locate the last occurrence of this string within another string.
+ * Locate the last occurrence of a string within this string.
  *
- * @param haystack the string to search.
- * @param upto the highest position to search up to.
- * @return the last position of this string, or zero if not found.
+ * @param needle the string to locate.
+ * @param search_end optional highest character position considered.
+ * @return the last position of the needle, or zero if not found.
  */
   lastpos: method = .int
-    arg haystack=.string, upto=0
-    return .rxfnsb..lastpos(val,haystack,upto)
+    arg needle=.string, search_end=0
+    if ?search_end then return .rxfnsb..lastpos(needle,val,search_end)
+    return .rxfnsb..lastpos(needle,val)
 
 /**
  * Return the leftmost characters of this string.
  *
  * @param number the number of characters to return.
+ * @param pad optional single padding character.
  * @return the resulting value as a Rexx string object.
  */
   left: method = .rexx
-    arg number = .int
-    return .rexx(.rxfnsb..left(val,number))
+    arg number = .int, pad = " "
+    return .rexx(.rxfnsb..left(val,number,pad))
 
 /**
  * Return the rightmost characters of this string.
  *
  * @param number the number of characters to return.
+ * @param pad optional single padding character.
  * @return the resulting value as a Rexx string object.
  */
   right: method = .rexx
-    arg number = .int
-    return .rexx(.rxfnsb..right(val,number))
+    arg number = .int, pad = " "
+    return .rexx(.rxfnsb..right(val,number,pad))
 
 /**
  * Reverse this string.
@@ -398,7 +400,9 @@ val = .string
  * @return the sign as a Rexx string object.
  */
   sign: method = .rexx
-    return .rexx(.rxfnsb..sign(val))
+    number = .decimal
+    number = _classic_decimal(val)
+    return .rexx(.rxfnsb..sign(number))
 
 /**
  * Normalize spacing between words.
@@ -415,12 +419,13 @@ val = .string
  * Strip leading, trailing, or both kinds of characters.
  *
  * @param option the strip option.
- * @param schar the character set to strip.
+ * @param schar optional single character to strip; omission selects Unicode whitespace.
  * @return the stripped value as a Rexx string object.
  */
   strip: method = .rexx
-    arg option = "B", schar= "UTF8WSP"
-    return .rexx(.rxfnsb..strip(val,option,schar))
+    arg option = "B", schar = " "
+    if ?schar then return .rexx(.rxfnsb..strip(val,option,schar))
+    return .rexx(.rxfnsb..strip(val,option))
 
 /**
  * Return a substring.
@@ -431,8 +436,9 @@ val = .string
  * @return the substring as a Rexx string object.
  */
   substr: method = .rexx
-    arg start = .int, len =-256, pad = ' '  /* set len default to -256, to avoid a call to the length function */
-    return .rexx(.rxfnsb..substr(val,start,len,pad))
+    arg start = .int, len = 0, pad = " "
+    if ?len then return .rexx(.rxfnsb..substr(val,start,len,pad))
+    return .rexx(.rxfnsb..substr(val,start,,pad))
 
 /**
  * Classify this string as a symbol.
@@ -462,7 +468,9 @@ val = .string
  */
   trunc: method = .rexx
     arg fraction = 0
-    return .rexx(.rxfnsb..trunc(val,fraction))
+    number = .decimal
+    number = _classic_decimal(val)
+    return .rexx(.rxfnsb..trunc(number,fraction))
 
 /**
  * Convert this string to uppercase.
@@ -639,3 +647,60 @@ val = .string
  */
   toString: method = .string
     return val
+
+/**
+ * Convert Classic numeric text to a native decimal for `.Rexx` adapters.
+ *
+ * Leading and trailing Unicode whitespace is removed. Whitespace between an
+ * initial sign and the numeric text is also removed; other embedded whitespace
+ * remains invalid and is rejected by the ordinary `.string` to `.decimal`
+ * conversion boundary.
+ *
+ * @param source Classic numeric text.
+ * @return the converted decimal value.
+ * @signal CONVERSION_ERROR the normalized text is not a decimal value.
+ */
+_classic_decimal: procedure = .decimal
+  arg source = .string
+  source_length = .int
+  first = .int
+  last = .int
+  scan = 0
+  first_character = .int
+  digits_start = .int
+  slice_length = .int
+  normalized = ""
+  digits = ""
+  result = .decimal
+
+  assembler strlen source_length,source
+  assembler fndnblnk first,source,scan
+  if first < 0 then do
+    result = normalized
+    return result
+  end
+
+  scan = 0 - source_length
+  assembler fndnblnk last,source,scan
+  assembler strchar first_character,source,first
+
+  if first_character = 43 | first_character = 45 then do
+    scan = first + 1
+    assembler fndnblnk digits_start,source,scan
+    if first_character = 43 then normalized = "+"
+    else normalized = "-"
+    if digits_start >= 0 & digits_start <= last then do
+      slice_length = last - digits_start + 1
+      assembler setstrpos source,digits_start
+      assembler substring digits,source,slice_length
+      assembler append normalized,digits
+    end
+  end
+  else do
+    slice_length = last - first + 1
+    assembler setstrpos source,first
+    assembler substring normalized,source,slice_length
+  end
+
+  result = normalized
+  return result

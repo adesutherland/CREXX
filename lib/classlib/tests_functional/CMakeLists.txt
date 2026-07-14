@@ -8,6 +8,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/CrexxTestModes.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
 set(REXXBINS
+  testrexx
   testStringArrayList
   testStringHashMap
   testStringHashSet
@@ -23,6 +24,15 @@ set(REXXBINS
   testTokenise
   testJSON
 )
+
+add_test(
+  NAME classlib_rexx_method_test_coverage
+  COMMAND ${CMAKE_COMMAND}
+    -DCLASS_SOURCE=${CMAKE_SOURCE_DIR}/lib/classlib/Rexx.crexx
+    -DTEST_SOURCE=${CMAKE_CURRENT_SOURCE_DIR}/testrexx.crexx
+    -P ${CMAKE_SOURCE_DIR}/cmake/CheckRexxMethodTestCoverage.cmake
+)
+set_tests_properties(classlib_rexx_method_test_coverage PROPERTIES LABELS "classlib;coverage")
 
 set(NATIVE_REXXBINS
   testid

@@ -40,7 +40,7 @@ its public surface has passed every applicable gate.
 ## Dependency-batched execution queue — approved 2026-07-14
 
 The original 122-row order remains the selector-level audit trail. The 54
-parked rows are now processed through the dependency batches below so that one
+originally parked rows are processed through the dependency batches below so that one
 contract decision, shared helper, fixture set, and aggregate rebuild can serve
 all affected selectors. Within a batch, selectors are still reviewed, tested,
 and marked one at a time.
@@ -54,8 +54,8 @@ scope implicitly.
 
 | Batch | Parked selectors | Shared dependency | State |
 |---:|---|---|---|
-| 1 | `insert`, `overlay`, `lastpos`, `strip`, `substr`, `abs`, `format`, `sign`, `trunc`, `b2d`, `x2b`, `x2d` | Class adapters, focused class tests, and one classlib/library rebuild | review in progress |
-| 2 | `parsecompile`, `parsestring`, `parse`, `parseExec` | Frozen legacy plan/stream ABI and assertion harnesses; no producer/lowering change | queued |
+| 1 | `insert`, `overlay`, `lastpos`, `strip`, `substr`, `abs`, `format`, `sign`, `trunc`, `b2d`, `x2b`, `x2d` | Class adapters, focused class tests, and one classlib/library rebuild | done |
+| 2 | `parsecompile`, `parsestring`, `parse`, `parseExec` | Frozen legacy plan/stream ABI and assertion harnesses; no producer/lowering change | review in progress |
 | 3 | `_datei`, `_dateo`, `_jdn`, `date`, `time` | Calendar/error contract and frozen-clause-time service | queued |
 | 4 | `arrayformat`, `arraydump` | One pure formatting contract/core, followed by the output wrapper | queued |
 | 5 | `delword`, `word`, `words`, `wordindex`, `subword`, `wordlength`, `wordpos` | `Config_OtherBlankCharacters` | queued |
@@ -70,6 +70,26 @@ scope implicitly.
 Batch 1's aggregate rebuild should also prove the already corrected class
 artifacts for `xrange`, `delword`, `subword`, `wordlength`, and `wordpos` without
 claiming completion of their separate configuration-service gates.
+
+Batch 1 completion evidence:
+
+- `.Rexx` now preserves optional-argument presence for `delstr`, `insert`,
+  `overlay`, `lastpos`, `strip`, and `substr`; the receiver is consistently the
+  target for `insert`, `overlay`, `pos`, and `lastpos`; `left` and `right`
+  expose their documented optional pad;
+- `abs`, `format`, `sign`, and `trunc` use an inlined direct Classic numeric
+  normalizer before entering their typed Level B cores. Emitted RXAS contains
+  only direct scan/slice/decimal operations for normalization and no general
+  string-BIF call; presence-aware branches enter exactly one selected core;
+- the old print-oriented `testrexx.crexx` was replaced and registered in both
+  optimized and unoptimized modes. It asserts the factory and every one of the
+  53 public `.Rexx` methods, including omissions, explicit zeroes, receiver
+  direction, non-mutation, and catchable failures. A CTest coverage guard fails
+  if any public method lacks an invocation;
+- the class rebuild proves the corrected `b2d`, `x2b`, `x2d`, `xrange`,
+  `delword`, `subword`, `wordlength`, and `wordpos` artifacts. The class pair,
+  coverage guard, RexxDoc checks, and focused native/direct-Classic selector
+  set pass in both modes (65/65 focused CTests); `git diff --check` passes.
 
 ## Efficient selector validation and deferred integration
 
@@ -690,7 +710,8 @@ Integration evidence:
   non-mutation, 256 bits, every invalid blank/character family, argument count,
   omission, and `40.25`. Separate stable B/C pages and both books now document
   the same scope. `.Rexx.x2b` source and its focused class test now use the
-  correct no-argument adapter, pending the single deferred classlib rebuild.
+  correct no-argument adapter. The Batch 1 classlib rebuild and complete class
+  test prove it in optimized and unoptimized modes.
 - Focused validation and second review: native and direct Classic overlays all
   report PASS optimized/unoptimized. Native output is 344/328 lines versus the
   original 221/219, but replaces silent corruption with two bounded scans,
@@ -1617,8 +1638,8 @@ Integration evidence:
   supplied negative count, and retains supplied zero as a no-op. The standalone
   Level C entry applies `rANY rWHOLE>0 oWHOLE>=0` through CheckArgs and reports
   the standard count/presence, `40.12`, `40.13`, and `40.14` context errors.
-  The class adapter source now preserves count omission; its compiled artifact
-  waits for the single deferred classlib rebuild.
+  The class adapter preserves count omission; Batch 1 rebuilt and tested the
+  compiled artifact in both modes.
 - Focused validation: the compact Level B harness passes optimized and
   unoptimized overlays for omission, exact/oversized/zero counts, boundaries,
   leading/multiple/Unicode blanks, empty input, and both signals. The direct
@@ -1755,8 +1776,8 @@ Integration evidence:
   `SUBWORD(string, start [,count])` with `rANY rWHOLE>0 oWHOLE>=0`; no Level C
   implementation exists.
 - Dependencies and surface result: native Level B and the class adapter now
-  expose the documented optional typed count and preserve omission. The adapter
-  source waits for the single final classlib build/test.
+  expose the documented optional typed count and preserve omission. Batch 1
+  rebuilt and tested the adapter in both modes.
 - Correctness/error result: Level B now signals for non-positive start and a
   supplied negative count, supports explicit zero/omitted/oversized counts,
   excludes outer whitespace, and preserves every internal blank. Standalone
@@ -2043,8 +2064,7 @@ only for their separate `.Rexx` class-adapter work.
   Level C default-Unicode behavior, errors, tests, docs, and linear algorithms
   are complete. Full Classic Level C compliance shares the unimplemented
   `Config_OtherBlankCharacters` service with rows 77-82. The presence-aware
-  `.Rexx.delword` adapter is corrected in source; compile and test it after the
-  single deferred classlib build.
+  `.Rexx.delword` adapter was rebuilt and tested in both modes during Batch 1.
 - `word` configured blank set: native Level B and direct Level C default-
   Unicode behavior, errors, tests, docs, and scan/slice algorithms are complete.
   Full Classic Level C compliance waits only for the word-family
@@ -2096,56 +2116,22 @@ only for their separate `.Rexx` class-adapter work.
   Level B work are complete; the direct harness currently proves the required
   `40.37` error for every external pool name. This is not blocked on compiler
   lowering.
-- `insert` class adapter: `lib/classlib/Rexx.crexx` still forwards legacy `-1`
-  sentinels for omitted position and length, which the corrected Level B
-  contract properly rejects. At the final integration checkpoint, change the
-  adapter to preserve optional-argument presence and correct its receiver/new
-  argument order, add a focused class-method test, and validate it with the
-  rebuilt classlib. The standalone Level B and Level C implementations and
-  their focused tests are complete.
-- `overlay` class adapter: `lib/classlib/Rexx.crexx` always forwards its default
-  `len=0`, so it cannot distinguish an omitted overlay length from a supplied
-  zero after the standard correction. At the final integration checkpoint,
-  preserve optional length presence in the adapter and add a focused class
-  method test. The standalone B/C implementations and tests are complete.
-- `lastpos` class adapter: `lib/classlib/Rexx.crexx` always forwards its default
-  `upto=0`, while standard Level B now distinguishes omission from an invalid
-  supplied zero. Preserve optional presence and add a focused method test at
-  the final classlib integration checkpoint. Standalone B/C work is complete.
-- `strip` class adapter: `lib/classlib/Rexx.crexx` always forwards the legacy
-  `UTF8WSP` sentinel instead of preserving omission of `char`. At the final
-  classlib integration checkpoint, preserve optional char presence, remove the
-  sentinel/default from the adapter, correct its char documentation, and add a
-  focused method test. Standalone B/C work is complete.
-- `substr` class adapter: `lib/classlib/Rexx.crexx` always forwards the legacy
-  `len=-256` omission sentinel and pad. At the final classlib integration
-  checkpoint, preserve optional length/pad presence, remove the sentinel,
-  correct its pad documentation, and add a focused method test. Standalone B/C
-  work is complete.
+- `insert`, `overlay`, `lastpos`, `strip`, and `substr` class adapters:
+  completed in Batch 1. Optional presence is preserved, obsolete sentinels are
+  removed, receiver/target order is correct, and focused method assertions pass
+  against the rebuilt classlib in both modes.
 - `translate` configuration range: the standard omitted-input-table path
   requires `Config_Xrange`, but the repository has no Classic coded-character
   configuration service. Row 54 repaired the distinct native byte-domain
   helper without pretending it defines that policy. Resume row 31 only after
   the configuration-range/XRANGE contract is approved and implemented; do not
   preserve the current nonstandard literal-blank fallback.
-- `abs` class adapter: `.Rexx.abs` passes Classic string text, including blank-
-  separated signs, directly to the native `.decimal` Level B function.
-  Normalize the adapter input through the Classic path and add its focused
-  method test at the final classlib checkpoint.
-- `sign` class adapter: `.Rexx.sign` forwards Classic receiver text directly to
-  the native helper. Normalize it through the Classic path and add its focused
-  method test at the final classlib checkpoint.
-- `trunc` class adapter: `.Rexx.trunc` passes Classic receiver text into the
-  typed helper. Normalize it through the Classic path and add a focused method
-  test at the final classlib checkpoint.
-- `format` class adapter: `.Rexx.format` forwards five concrete defaults and
-  therefore loses Classic omission. Preserve option presence and add its
-  focused method test at the final classlib checkpoint.
-- `b2d` class adapter metadata: the native one-argument unsigned converter and
-  its boundary/error harness are complete. `lib/classlib/Rexx.crexx` now
-  correctly declares `.Rexx.b2d() -> .int`, but the current aggregate classlib
-  still advertises the old `.rexx` return. Prove the adapter after the single
-  deferred classlib rebuild rather than rebuilding it during this row.
+- `abs`, `format`, `sign`, and `trunc` class adapters: completed in Batch 1.
+  Classic numeric text is normalized directly before typed-core entry, every
+  FORMAT option-presence combination is asserted, and invalid text remains a
+  catchable `CONVERSION_ERROR`.
+- `b2d` class adapter metadata: completed in Batch 1. The rebuilt class exposes
+  the native `.int` result and its method assertion passes in both modes.
 - `c2x` configuration encoding: native Level B C2X and its tests/docs are
   complete with the established `hexchar` low-byte behavior. Classic Level C
   instead requires configuration-coded character-to-bits conversion. The
@@ -2164,27 +2150,21 @@ only for their separate `.Rexx` class-adapter work.
   zero/high padding characters and signed twos-complement width. Implement its
   standalone direct BIF and harness after that service exists; do not substitute
   Unicode `appendchar`.
-- `x2b` class adapter artifact: native Level B and direct Level C X2B plus all
-  standalone tests/docs are complete. `.Rexx.x2b()` no longer advertises or
-  forwards the old unused length, and its focused class assertions include
-  leading-zero preservation. Compile and run that adapter after the single
-  deferred classlib/library rebuild; do not rebuild the aggregate for this row.
+- `x2b` class adapter artifact: completed in Batch 1. The rebuilt one-argument
+  adapter preserves leading zeroes and passes in both modes.
 - `x2c` configuration encoding: native Level B Unicode U+00xx X2C and its
   direct UTF-8 tests/docs are complete. Classic Level C `X2C(hex)` shares the
   completed HEX validator but must convert through `Config_B2C`. Implement its
   standalone BIF and harness after that service exists; do not substitute the
   native Unicode-byte mapping.
-- `x2d` class adapter artifact: native Level B and direct Level C X2D plus all
-  standalone tests/docs are complete. `.Rexx.x2d([length])` now preserves
-  omission instead of forwarding the old `-1` sentinel, and its focused class
-  assertions cover omitted, signed, and explicit-zero widths. Compile the
-  adapter and run the tagged class examples after the single deferred
-  classlib/library rebuild.
+- `x2d` class adapter artifact: completed in Batch 1. The rebuilt adapter
+  preserves omission and its assertions cover omitted, signed, and explicit-
+  zero widths in both modes.
 - `xrange` configuration and class artifact: the native byte-domain helper and
   its standalone tests/docs are complete, while direct Classic XRANGE remains
   blocked on the undefined `Config_Xrange` coded-character service shared with
-  TRANSLATE. `.Rexx.xrange` now forwards correctly in source; compile and run
-  its focused assertion after the single deferred classlib rebuild.
+  TRANSLATE. The correctly forwarding `.Rexx.xrange` artifact was rebuilt and
+  tested in both modes during Batch 1.
 
 ## Programme benchmark gates
 
@@ -2331,42 +2311,42 @@ are active. This association is an approval point before row 1 starts.
 | 15 | `copies` | `COPIES` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 16 | `countstr` | `COUNTSTR` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 17 | `delstr` | `DELSTR` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
-| 18 | `insert` | `INSERT` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | parked — `.Rexx.insert` adapter |
+| 18 | `insert` | `INSERT` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 19 | `length` | `LENGTH` L | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 20 | `lower` | — (dispatcher compatibility helper only) | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
-| 21 | `overlay` | `OVERLAY` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | parked — `.Rexx.overlay` adapter |
+| 21 | `overlay` | `OVERLAY` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 22 | `pos` | `POS` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
-| 23 | `lastpos` | `LASTPOS` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | parked — `.Rexx.lastpos` adapter |
+| 23 | `lastpos` | `LASTPOS` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 24 | `left` | `LEFT` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 25 | `right` | `RIGHT` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 26 | `reverse` | `REVERSE` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 27 | `space` | `SPACE` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
-| 28 | `strip` | `STRIP` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | parked — `.Rexx.strip` adapter |
-| 29 | `substr` | `SUBSTR` L | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | parked — `.Rexx.substr` adapter |
+| 28 | `strip` | `STRIP` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
+| 29 | `substr` | `SUBSTR` L | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 30 | `substro` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 31 | `translate` | `TRANSLATE` R | ☐ | ☐ | ☐ | ☐ | ☐ | ☐ | parked — `Config_Xrange` service |
 | 32 | `upper` | — (dispatcher compatibility helper only) | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 33 | `verify` | `VERIFY` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 34 | `_ftrunc` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 35 | `_itrunc` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
-| 36 | `abs` | `ABS` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | parked — `.Rexx.abs` adapter |
-| 37 | `format` | `FORMAT` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | parked — `.Rexx.format` adapter test |
+| 36 | `abs` | `ABS` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
+| 37 | `format` | `FORMAT` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 38 | `max` | `MAX` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 39 | `min` | `MIN` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 40 | `numeric` | `DIGITS` R; `FORM` R; `FUZZ` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
-| 41 | `sign` | `SIGN` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | parked — `.Rexx.sign` adapter |
-| 42 | `trunc` | `TRUNC` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | parked — `.Rexx.trunc` adapter |
+| 41 | `sign` | `SIGN` M | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
+| 42 | `trunc` | `TRUNC` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 43 | `b2x` | `B2X` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
-| 44 | `b2d` | — | ☐ | — | ☒ | ☒ | ☒ | ☐ | parked — rebuilt `.Rexx.b2d` metadata/test |
+| 44 | `b2d` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 45 | `binary` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 46 | `c2x` | `C2X` R | ☒ | ☐ | ☒ | ☒ | ☒ | ☒ | parked — `Config_C2B` service |
 | 47 | `c2d` | `C2D` R | ☒ | ☐ | ☒ | ☒ | ☒ | ☒ | parked — `Config_C2B` service |
 | 48 | `d2b` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 49 | `d2c` | `D2C` R | ☒ | ☐ | ☒ | ☒ | ☒ | ☒ | parked — `Config_B2C` service |
 | 50 | `d2x` | `D2X` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
-| 51 | `x2b` | `X2B` R | ☐ | ☒ | ☒ | ☒ | ☒ | ☐ | parked — rebuilt `.Rexx.x2b` adapter test |
+| 51 | `x2b` | `X2B` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 52 | `x2c` | `X2C` R | ☒ | ☐ | ☒ | ☒ | ☒ | ☒ | parked — `Config_B2C` service |
-| 53 | `x2d` | `X2D` R | ☐ | ☒ | ☒ | ☒ | ☒ | ☐ | parked — rebuilt `.Rexx.x2d` adapter/examples |
+| 53 | `x2d` | `X2D` R | ☒ | ☒ | ☒ | ☒ | ☒ | ☒ | done |
 | 54 | `xrange` | `XRANGE` R | ☐ | ☐ | ☒ | ☒ | ☒ | ☐ | parked — `Config_Xrange` and rebuilt adapter |
 | 55 | `arrayfind` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
 | 56 | `splice` | — | ☒ | — | ☒ | ☒ | ☒ | ☒ | done |
@@ -3345,7 +3325,7 @@ are active. This association is an approval point before row 1 starts.
 - Completion summary: all B/C/T/P/D/V gates are complete. Aggregate wiring is
   queued for the final integration pass. Row 18 is now the sole active item.
 
-### 18. `insert` — parked
+### 18. `insert` — done
 
 - Source/public surface: `lib/rxfnsb/rexx/insert.crexx`, one exported
   `insert` procedure returning `.string`; its source uses untyped optional
@@ -3397,9 +3377,9 @@ are active. This association is an approval point before row 1 starts.
   appends, and O(1) VM `padstr` construction; it makes no Level B helper call.
   The direct BIF emits 472 noopt/475 opt lines with the same algorithm, and its
   harness calls `rexxclassicbif_insert` directly with no controller.
-- Completion summary: all selector B/C/T/P/D/V gates are complete and aggregate
-  wiring is queued. The row is parked only for the `.Rexx.insert` class adapter
-  correction and its classlib-level test at integration. Row 19 is now active.
+- Completion summary: all selector B/C/T/P/D/V gates are complete. Batch 1
+  corrected and rebuilt the `.Rexx.insert` adapter and proved it through the
+  complete class test in both modes.
 
 ### 19. `length` — done
 
@@ -3495,7 +3475,7 @@ are active. This association is an approval point before row 1 starts.
 - Completion summary: all applicable B/T/P/D/V gates are complete and Level B
   wiring is queued. C is not applicable. Row 21 is now the sole active item.
 
-### 21. `overlay` — parked
+### 21. `overlay` — done
 
 - Source/public surface: `lib/rxfnsb/rexx/overlay.crexx`, one exported
   `overlay(insstr=.string, string=.string, position=.int, len=0, pad="")`
@@ -3546,9 +3526,9 @@ are active. This association is an approval point before row 1 starts.
   `padstr`, and makes no formatting-helper call. The direct BIF emits 491
   noopt/494 opt lines with the same algorithm; its harness calls the standalone
   entry directly and contains no controller call.
-- Completion summary: all selector B/C/T/P/D/V gates are complete and wiring is
-  queued. The row is parked only for `.Rexx.overlay` optional-length adaptation
-  and its classlib test at integration. Row 22 is now active.
+- Completion summary: all selector B/C/T/P/D/V gates are complete. Batch 1
+  rebuilt and proved the omission-preserving `.Rexx.overlay` adapter in both
+  modes.
 
 ### 22. `pos` — done
 
@@ -3598,7 +3578,7 @@ are active. This association is an approval point before row 1 starts.
 - Completion summary: all B/C/T/P/D/V gates are complete. Aggregate module/test
   wiring and common-helper migration are queued. Row 23 is now active.
 
-### 23. `lastpos` — parked
+### 23. `lastpos` — done
 
 - Source/public surface: `lib/rxfnsb/rexx/lastpos.crexx`, one exported
   `lastpos(needle=.string, haystack=.string, upto=0) -> .int` procedure.
@@ -3643,9 +3623,9 @@ are active. This association is an approval point before row 1 starts.
   RexxDoc metadata; runtime retains two cached `strlen` operations and one
   advancing `strpos` per match, with no helper call or substring. The direct
   BIF emits 300 noopt/306 opt lines with the same scan and no controller call.
-- Completion summary: all selector B/C/T/P/D/V gates are complete and wiring is
-  queued. The row is parked only for `.Rexx.lastpos` optional-argument
-  adaptation at integration. Row 24 is now active.
+- Completion summary: all selector B/C/T/P/D/V gates are complete. Batch 1
+  rebuilt and proved the omission-preserving `.Rexx.lastpos` adapter in both
+  modes.
 
 ### 24. `left` — done
 
@@ -3843,7 +3823,7 @@ are active. This association is an approval point before row 1 starts.
 - Completion summary: all B/C/T/P/D/V gates are complete. Aggregate module/test
   wiring and common-helper migration are queued. Row 28 is now active.
 
-### 28. `strip` — parked
+### 28. `strip` — done
 
 - Source/public surface: `lib/rxfnsb/rexx/strip.crexx`, one exported
   `strip(instr=.string, option="B", schar="UTF8WSP") -> .string` procedure. The
@@ -3884,8 +3864,7 @@ are active. This association is an approval point before row 1 starts.
   start/end slice. Use direct Unicode blank scans for the omitted-char case and
   direct codepoint scans for a supplied char, with no Level B helper. Add the
   standalone Level C BIF/tests/docs and deprecate the retained common body.
-  Park only the `.Rexx.strip` adapter until the final classlib checkpoint can
-  preserve char omission and remove its sentinel safely.
+  Batch 1 preserves char omission in `.Rexx.strip` and removes its sentinel.
 - Focused validation commands/results: isolated Level B optimized/unoptimized
   overlays both report `PASS: strip`; isolated direct Level C overlays both
   report `PASS: Level C STRIP BIF`. Coverage includes L/T/B and first-character
@@ -3901,12 +3880,10 @@ are active. This association is an approval point before row 1 starts.
   concatenation. The direct Level C BIF emits 498 noopt/507 opt lines with the
   same core and only context/RexxValue support calls, not the name controller or
   Level B helpers.
-- Completion summary: all B/C/T/P/D/V gates are complete. Aggregate module/test
-  wiring and common-helper migration are queued. The row is parked only because
-  `.Rexx.strip` still forwards the removed `UTF8WSP` sentinel; that adapter/test
-  is queued for the single final classlib checkpoint. Row 29 is now active.
+- Completion summary: all B/C/T/P/D/V gates are complete. Batch 1 rebuilt and
+  proved the sentinel-free `.Rexx.strip` adapter in both modes.
 
-### 29. `substr` — parked
+### 29. `substr` — done
 
 - Source/public surface: `lib/rxfnsb/rexx/substr.crexx`, one exported
   `substr(string1=.string, start=.int, len=-256, pad=" ") -> .string`
@@ -3947,8 +3924,8 @@ are active. This association is an approval point before row 1 starts.
   before all result paths, and use cached lengths plus at most one direct
   substring and one direct pad append without mutating the source or calling a
   helper. Add the standalone Level C BIF/tests/docs and deprecate the retained
-  common body. Park only `.Rexx.substr` until the final classlib checkpoint can
-  preserve length/pad presence and remove its sentinel.
+  common body. Batch 1 preserves `.Rexx.substr` length/pad presence and removes
+  its sentinel.
 - Focused validation commands/results: isolated Level B optimized/unoptimized
   overlays both report `PASS: substr`; isolated direct Level C overlays both
   report `PASS: Level C SUBSTR BIF`. Coverage includes omitted/supplied/zero
@@ -3964,10 +3941,8 @@ are active. This association is an approval point before row 1 starts.
   `substcut`, or concatenation. The direct Level C BIF emits 416 noopt/419 opt
   lines with the same core and only context/RexxValue support calls, not the
   name controller or Level B helpers.
-- Completion summary: all B/C/T/P/D/V gates are complete. Aggregate module/test
-  wiring and common-helper migration are queued. The row is parked only because
-  `.Rexx.substr` still forwards the removed `-256` sentinel; that adapter/test is
-  queued for the single final classlib checkpoint. Row 30 is now active.
+- Completion summary: all B/C/T/P/D/V gates are complete. Batch 1 rebuilt and
+  proved the sentinel-free `.Rexx.substr` adapter in both modes.
 
 ### 30. `substro` — done
 
@@ -4243,7 +4218,7 @@ are active. This association is an approval point before row 1 starts.
 - Completion summary: all applicable B/T/P/D/V gates are complete. New focused
   test registration is queued; Level C is not applicable. Row 36 is now active.
 
-### 36. `abs` — VM gate complete; class adapter parked
+### 36. `abs` — done
 
 - Source/public surface: `lib/rxfnsb/rexx/abs.crexx`, one exported
   `abs(number=.string) -> .string` procedure that currently implements text
@@ -4305,9 +4280,9 @@ are active. This association is an approval point before row 1 starts.
   noopt/128 opt lines and adds only CheckArgs/context/RexxValue conversion plus
   the same decimal core.
 - Completion summary: B/C/T/P/D/V are complete for the standalone selector.
-  Only the distinct Classic-normalizing `.Rexx.abs` adapter remains parked.
+  Batch 1 completed and proved the Classic-normalizing `.Rexx.abs` adapter.
 
-### 37. `format` — VM gate complete; class adapter test parked
+### 37. `format` — done
 
 - Source/public surface: `lib/rxfnsb/rexx/format.crexx`, one exported
   `format(number=.string, before=0, after=0, expp=0, expt=-1) -> .string`
@@ -4380,8 +4355,8 @@ are active. This association is an approval point before row 1 starts.
   decimal/text operations. Direct Level C is 1,967 noopt / 1,935 opt lines.
 - Completion summary: B/C/T/P/D/V are complete for the standalone selector,
   including catchable dynamic-decimal conversion in both modes. The corrected
-  omission-preserving `.Rexx.format` source remains parked only for its focused
-  class-adapter test.
+  Batch 1 rebuilt the omission-preserving `.Rexx.format` adapter and proved all
+  16 option-presence combinations in both modes.
 
 ### 43. `b2x` — done
 
@@ -4447,7 +4422,7 @@ are active. This association is an approval point before row 1 starts.
 - Completion summary: every B/C/test/performance/doc/validation gate is complete;
   row 43 is done and row 44 is active.
 
-### 44. `b2d` — parked after native-core completion
+### 44. `b2d` — done
 
 - Source/public surface: `lib/rxfnsb/rexx/b2d.crexx` exports the non-Level-C
   helper `b2d(bin=.string) -> .int`; `.Rexx.b2d` forwards only its receiver and
@@ -4499,8 +4474,8 @@ are active. This association is an approval point before row 1 starts.
   signed-64-bit boundary.
 - Completion summary: T/P/D and the complete native core are independently
   proven. B/V remain open only because the current aggregate classlib metadata
-  still describes `.Rexx.b2d` as returning `.rexx`; row 44 is parked for the
-  single final classlib rebuild/adapter assertion, and row 45 is active.
+  now describes `.Rexx.b2d` as returning `.int`; Batch 1 rebuilt and asserted
+  that metadata and behavior in both modes.
 
 ### 38. `max` — done
 
@@ -4663,7 +4638,7 @@ are active. This association is an approval point before row 1 starts.
   the three distinct direct Level C BIFs are documented and independently
   proven in both modes. Aggregate wiring is queued; row 41 is active.
 
-### 41. `sign` — VM gate complete; class adapter parked
+### 41. `sign` — done
 
 - Source/public surface: `lib/rxfnsb/rexx/sign.crexx` exports
   `sign(number=.float) -> .int`. It has no imports. `.Rexx.sign` forwards its
@@ -4716,9 +4691,9 @@ are active. This association is an approval point before row 1 starts.
   dispatch or numeric result-string construction.
 - Completion summary: B/C/T/P/D/V are complete for the standalone selector,
   including catchable dynamic invalid-decimal input. Only the distinct
-  Classic-normalizing `.Rexx.sign` adapter remains parked.
+  Batch 1 completed and proved the Classic-normalizing `.Rexx.sign` adapter.
 
-### 42. `trunc` — VM gate complete; class adapter parked
+### 42. `trunc` — done
 
 - Source/public surface: `lib/rxfnsb/rexx/trunc.crexx` exports
   `trunc(innum=.string, fraction=0) -> .string`. It has no imports but calls
@@ -4777,7 +4752,7 @@ are active. This association is an approval point before row 1 starts.
   typed TRUNC call, or name dispatch.
 - Completion summary: B/C/T/P/D/V are complete for the standalone selector,
   including catchable dynamic invalid-decimal input. Only the distinct
-  Classic-normalizing `.Rexx.trunc` adapter remains parked.
+  Batch 1 completed and proved the Classic-normalizing `.Rexx.trunc` adapter.
 
 ### 88. `getenv` — done
 
