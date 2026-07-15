@@ -2,10 +2,18 @@
 
 ## Are We Fast Yet? / SOM-derived benchmarks
 
-The Sieve, Permute, and Towers ports are based on the SOM class-library
-benchmarks distributed by the Are We Fast Yet? project. Copyright (c)
+The Sieve, Permute, Towers, Bounce, Storage, List, and Richards ports are based
+on the SOM/Java benchmarks distributed by the Are We Fast Yet? project.
+Copyright (c)
 2001–2021, see the upstream project authors. The Mandelbrot port follows the
 Are We Fast Yet? version derived from the Computer Language Benchmarks Game.
+The expanded ports were reviewed against upstream commit
+`74306fec151070fd07157cefeacf19e7e0bcdc89`.
+
+The deterministic JSON fixture uses the RAP-style request/data shape found in
+the Are We Fast Yet? JSON workload, but it is a smaller capability probe and is
+not represented as a byte-for-byte copy of the upstream input or full upstream
+benchmark.
 
 MIT license used by the SOM-derived sources:
 

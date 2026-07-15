@@ -20,6 +20,8 @@ capture ideas that otherwise risk being lost.
 | `performance/evidence/benchmark-median-summary.md` | Master per-date/run median comparison with explicit exclusions and comparability markers |
 | `performance/evidence/` | Dated provenance, commands, raw samples and summaries |
 | `performance/tools/run_cross_runtime.crexx` | Level B serial capture tool for one workload/runtime cell |
+| `performance/tools/run_lifecycle.crexx` | Level B compile/translate and cold load-to-first-result capture across the three portfolio runtimes |
+| `performance/capability-gaps.md` | Audited missing surfaces and candidates uncovered by portfolio ports |
 | `tests/benchmarks/` | Portable, correctness-gated language workloads and runner |
 | `tests/performance/` | Focused internal microbenchmarks and implementation comparisons |
 | `docs/books/crexx_programming_guide/profiling.md` | Supported VM profiling and RXSEQ workflow |
@@ -33,6 +35,11 @@ runs, requires an observable correctness string, retains stdout/stderr for
 every sample, keeps process elapsed time separate from an optional
 benchmark-native metric, and writes the exact argv and cREXX version to
 `manifest.json`.
+
+`tools/run_lifecycle.crexx` is also Level B cREXX. It keeps lifecycle phases
+outside the steady-state aggregate and emits one CSV row per runtime, phase and
+sequence. The final phase is named `load_first_result` because the public CLIs
+do not expose a consistent loaded-but-not-executed boundary.
 
 Run it through the Release driver, placing the workload command after `--`:
 

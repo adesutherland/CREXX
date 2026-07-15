@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+json,netrexx,java-collections-dom,process,warmup,1,62679000,0,pass,,
+json,netrexx,java-collections-dom,process,recorded,1,71233000,0,pass,,
+json,netrexx,java-collections-dom,process,recorded,2,61391000,0,pass,,
+json,netrexx,java-collections-dom,process,recorded,3,90700000,0,pass,,

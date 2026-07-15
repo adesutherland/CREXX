@@ -1,6 +1,6 @@
 # Cross-runtime benchmark coverage plan
 
-Status: active comparative scope; Tier A/Tier B workload approval remains NR-11
+Status: active comparative scope; 12-item Tier A portfolio approved 2026-07-15
 
 The programme target is stronger than “rerun RexxCPS”: every approved Tier A
 workload should be ported, qualified and run on **CREXX, ooRexx and NetRexx**.
@@ -45,11 +45,10 @@ NR-02 is complete only when:
 ## Coverage completion rule
 
 Do not choose a benchmark count merely because it is round. Close named
-coverage gaps first. A useful planning range is approximately **12-16 Tier A
-workloads**, with at least one credible workload in every category below and a
-second workload for the dominant semantic/call/allocation categories where
-practical. That planning range applies to the common CREXX/ooRexx/NetRexx
-portfolio, not to Regina.
+coverage gaps first. Adrian approved a deliberately bounded **12-item Tier A
+portfolio** on 2026-07-15: the five seed workloads, six additional steady-state
+workloads, and one separately reported lifecycle lane. The portfolio applies to
+the common CREXX/ooRexx/NetRexx comparison, not to Regina.
 
 | Coverage category | Current seed | Planned completion work |
 | --- | --- | --- |
@@ -58,18 +57,19 @@ portfolio, not to Regina.
 | Calls, recursion and return handling | AWFY Permute; Towers | Add direct calls/recursion and larger application-call-graph coverage |
 | Floating point, branches and bit operations | AWFY Mandelbrot | Retain; add only if cross-runtime comparability exposes a gap |
 | Objects and allocation | AWFY Towers | Add Bounce/Storage and record Classic-runtime adaptation limits |
-| Collections and lookup | none dedicated | Add List plus map/set/collection coverage |
-| Parser and text processing | none dedicated | Add JSON and a parser/text workload |
-| Binary processing | none | Add a deterministic binary workload with equivalent byte semantics |
-| Larger application algorithms | none | Add Richards, DeltaBlue and/or Havlak after port review |
-| Startup, load and first result | process timing only | Add explicit compile/assemble/link/load/first-result lifecycle cases |
-| Integration/application behavior | none | Add at least one representative end-to-end application workload |
-| PARSE, stems, TRACE and ADDRESS | present only inside RexxCPS mix | Add focused semantic workloads alongside the mixed benchmark |
+| Collections and lookup | none dedicated | Add List; JSON adds structured collection/lookup pressure |
+| Parser and text processing | none dedicated | Add a deterministic RAP-shaped JSON parser capability workload |
+| Binary processing | none | Add an RFC 4648 Base64 in-memory round trip with checksum observation |
+| Larger application algorithms | none | Add Richards; retain DeltaBlue/Havlak as reserves |
+| Startup, load and first result | process timing only | Add explicit compile/translate, cREXX assemble and load-to-first-result lifecycle cases, reported outside the steady-state aggregate |
+| Integration/application behavior | none | Richards supplies the bounded application-style call graph |
+| PARSE, stems, TRACE and ADDRESS | present inside RexxCPS mix | Keep focused probes in Tier B unless profiling demonstrates a coverage gap |
 
-The existing expansion candidates in `tests/benchmarks/README.md`—Queens,
-Bounce, List, Storage, Richards, DeltaBlue, Havlak and JSON—are the starting
-inventory, not automatic Tier A selections. Focused binary, startup and
-application cases are still required even if all eight are accepted.
+The approved additions are Bounce, Storage, List, Richards, JSON, an RFC 4648
+Base64 round trip, and compile/load/first-result lifecycle measurement. Queens,
+DeltaBlue, Havlak, filesystem-I/O workloads and focused Classic-semantics probes
+remain Tier B/reserve work. They are not silently included in the Tier A
+aggregate.
 
 ## Initial implementation matrix
 
@@ -84,7 +84,19 @@ as part of NR-01 and NR-02.
 | AWFY Permute | qualified equivalent port | qualified equivalent procedural port | out of scope: RexxCPS only | qualified equivalent object port | inventory/provenance review required |
 | AWFY Mandelbrot | qualified equivalent port | `not comparable`: decimal numerics fail common checksums at sizes 500/750 | out of scope: RexxCPS only | disclosed arithmetic-XOR adaptation; aggregate review open | inventory/provenance review required |
 | AWFY Towers | qualified equivalent object port | correct procedural diagnostic but `not comparable` for object/allocation scoring | out of scope: RexxCPS only | qualified equivalent object port | inventory/provenance review required |
-| Portfolio additions | NR-01 selection pending | mandatory port/qualification lane | out of scope: RexxCPS only | mandatory port/qualification lane | selected port/control only |
+| AWFY Bounce | qualified equivalent reference/object port | qualified equivalent object port | out of scope: RexxCPS only | qualified equivalent object port | upstream Java reference available |
+| AWFY Storage | correct disclosed node-wrapper diagnostic; `not comparable` for allocation score | qualified equivalent object/array port | out of scope: RexxCPS only | qualified equivalent object/array port | upstream Java reference available |
+| AWFY List | qualified disclosed weak-reference arena; aggregate review open | qualified equivalent object port | out of scope: RexxCPS only | qualified equivalent object port | upstream Java reference available |
+| AWFY Richards | qualified common state-machine adaptation | qualified common state-machine adaptation | out of scope: RexxCPS only | qualified common state-machine adaptation | upstream queue/hold result retained |
+| JSON capability probe | correct path/count diagnostic; `not comparable` to DOM cells | correct supplied-DOM diagnostic | out of scope: RexxCPS only | correct Java-collections-DOM diagnostic | common correctness only; no common timing score |
+| RFC 4648 Base64 | qualified preallocated `.binary` port | qualified byte-string port | out of scope: RexxCPS only | qualified Java `byte[]` port | exact round-trip/length/checksum contract |
+| Compile/load/first-result | qualified compile/assemble/load-first-result capture | qualified translate/load-first-result capture | out of scope: RexxCPS only | qualified compile/JVM-load-first-result capture | reported separately; no load-only CLI boundary |
+
+The port exercise's confirmed capability gaps and accuracy checks are retained
+in `performance/capability-gaps.md`. In particular, references and binary-safe
+storage are present cREXX capabilities; the open questions are nested
+heterogeneous containers, a parse-once JSON representation, reusable Base64
+library coverage and a more precise loader measurement boundary.
 
 ## Comparability labels
 

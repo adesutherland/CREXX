@@ -1,0 +1,134 @@
+/*
+ * Level B port of the Are We Fast Yet? List benchmark.
+ * Derived from the SOM benchmark suite under the MIT license; see
+ * LICENSE-SOM-MIT.txt and README.md in this directory.
+ */
+options levelb comments_dash
+
+arg argv = .string[]
+
+repetitions = 1
+if argv[0] >= 1 then repetitions = argv[1]
+if repetitions < 1 then return fail("repetitions must be positive")
+
+result = 0
+do iteration = 1 to repetitions
+  benchmark = .ListBenchmark()
+  result = benchmark.run()
+  if result <> 10 then return fail("expected length 10, got " || result)
+end
+
+say "benchmark=awfy_list repetitions="repetitions "result="result
+say "PASS: AWFY List"
+return 0
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1
+
+ListElement: class
+  value = .int
+  next_reference = reference .ListElement
+
+  *: factory
+    arg initial_value = .int
+    value = initial_value
+    return
+
+  length: method = .int
+    if <refvalid>(next_reference) = 0 then return 1
+    next_element = dereference next_reference
+    return 1 + next_element.length()
+
+  next: method = reference .ListElement
+    return next_reference
+
+  setNext: method = .void
+    arg element = reference .ListElement
+    next_reference = element
+    return
+
+ListArena: class
+  elements = .ListElement[]
+  element_count = .int
+
+  *: factory
+    element_count = 0
+    return
+
+  allocate: method = reference .ListElement
+    arg value = .int
+    element_count = element_count + 1
+    elements[element_count] = .ListElement(value)
+    result = reference elements[element_count]
+    return result
+
+ListBenchmark: class
+  *: factory
+    return
+
+  run: method = .int
+    arena = .ListArena()
+    x = reference .ListElement
+    y = reference .ListElement
+    z = reference .ListElement
+    result_reference = reference .ListElement
+    x = makeList(15, reference arena)
+    y = makeList(10, reference arena)
+    z = makeList(6, reference arena)
+    result_reference = tail(x, y, z)
+    result = dereference result_reference
+    return result.length()
+
+  makeList: method = reference .ListElement
+    arg list_length = .int, arena_reference = reference .ListArena
+    next_reference = reference .ListElement
+    element_reference = reference .ListElement
+    if list_length = 0 then do
+      empty_reference = reference .ListElement
+      return empty_reference
+    end
+    next_reference = makeList(list_length - 1, arena_reference)
+    arena = dereference arena_reference
+    element_reference = arena.allocate(list_length)
+    element = dereference element_reference
+    if <refvalid>(next_reference) then call element.setNext(next_reference)
+    return element_reference
+
+  isShorterThan: method = .boolean
+    arg x = reference .ListElement, y = reference .ListElement
+    x_tail_reference = reference .ListElement
+    y_tail_reference = reference .ListElement
+    x_tail_reference = x
+    y_tail_reference = y
+    do while <refvalid>(y_tail_reference)
+      if <refvalid>(x_tail_reference) = 0 then return 1
+      x_tail = dereference x_tail_reference
+      y_tail = dereference y_tail_reference
+      x_tail_reference = x_tail.next()
+      y_tail_reference = y_tail.next()
+    end
+    return 0
+
+  tail: method = reference .ListElement
+    arg x = reference .ListElement, y = reference .ListElement, z = reference .ListElement
+    x_next = reference .ListElement
+    y_next = reference .ListElement
+    z_next = reference .ListElement
+    first_tail = reference .ListElement
+    second_tail = reference .ListElement
+    third_tail = reference .ListElement
+    if isShorterThan(y, x) then do
+      x_value = dereference x
+      y_value = dereference y
+      z_value = dereference z
+      x_next = x_value.next()
+      y_next = y_value.next()
+      z_next = z_value.next()
+      first_tail = tail(x_next, y, z)
+      second_tail = tail(y_next, z, x)
+      third_tail = tail(z_next, x, y)
+      return tail(first_tail, second_tail, third_tail)
+    end
+    return z

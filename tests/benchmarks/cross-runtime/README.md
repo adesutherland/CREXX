@@ -31,13 +31,31 @@ The RexxCPS sources retain their original provenance and redistribution terms;
 see `../LICENSE-REXXCPS-CPL-1.0.txt` and `../THIRD_PARTY_NOTICES.md`. The
 NetRexx distribution also carries its bundled `LICENSE` (ICU license).
 
-## NetRexx seed ports
+## Expanded portfolio ports
 
-`netrexx/` ports the four AWFY seed workloads. They retain the same algorithms,
-workload sizes and observable checks as the Level B sources. Primitive Java
-arrays/numbers and NetRexx classes are language-required representations. The
-generated Java/class evidence, JDK settings and pilot outputs belong in the
-dated NR-02 evidence bundle rather than beside the versioned sources.
+`netrexx/` contains the seed and expanded workload ports. NetRexx uses its
+class surface for Bounce/List/Storage, a common state-machine representation
+for Richards, a parser backed by Java collections for JSON, and a Java `byte[]`
+for Base64. Generated Java/classes, disassembly and pilot output belong in the
+dated NR-02 evidence bundle rather than beside these versioned `.nrx` sources.
+
+`oorexx/` contains object-native Bounce/List/Storage ports, the common Richards
+state-machine port, a supplied `json.cls` DOM consumer, and a byte-string
+Base64 port. The official portable environment wrapper is required so
+`::requires 'json.cls'` resolves against the ooRexx installation.
+
+The JSON sources intentionally exercise each implementation's available
+surface: cREXX's string/path API, ooRexx's supplied DOM, and a NetRexx parser
+using Java collections. Their correctness result is common, but their timed
+work is not; the three JSON cells are diagnostics and are excluded from a
+common score. Storage is also diagnostic for cREXX because a `StorageNode`
+wrapper plus `.object[]` replaces each upstream array node. List uses a cREXX
+arena to own elements because references are weak; that adaptation remains
+visible in the equivalence ledger.
+
+Base64 uses the same RFC 4648 arithmetic in all three ports. cREXX builds the
+encoded output in a pre-sized `.binary`, ooRexx uses its byte-string surface,
+and NetRexx uses Java `byte[]`; all validate length, byte equality and checksum.
 
 ## Classic seed ports
 
@@ -52,3 +70,12 @@ specific accepted answer. Towers represents allocated disk nodes with numeric
 ids and stems; it preserves recursion/link mutations but not object dispatch or
 allocator pressure, so its correct ooRexx run remains a disclosed diagnostic
 and is `not comparable` for the common object/allocation score.
+
+## Lifecycle probes
+
+`lifecycle/` contains one deliberately tiny deterministic program per runtime.
+`performance/tools/run_lifecycle.crexx` measures cREXX compile, assemble and
+cold load-to-first-result; ooRexx translate and cold load-to-first-result; and
+NetRexx compile and JVM load-to-first-result. A load-only CLI boundary is not
+available consistently, so the final phase is explicitly combined rather than
+being presented as pure loader time.

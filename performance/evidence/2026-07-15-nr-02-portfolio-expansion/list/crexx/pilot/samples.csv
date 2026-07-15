@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+list,crexx,reference-arena,process,warmup,1,271826000,0,pass,,
+list,crexx,reference-arena,process,recorded,1,245494000,0,pass,,
+list,crexx,reference-arena,process,recorded,2,239523000,0,pass,,
+list,crexx,reference-arena,process,recorded,3,242574000,0,pass,,

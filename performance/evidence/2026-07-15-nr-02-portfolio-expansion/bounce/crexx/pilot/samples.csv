@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+bounce,crexx,reference-object,process,warmup,1,380257000,0,pass,,
+bounce,crexx,reference-object,process,recorded,1,403904000,0,pass,,
+bounce,crexx,reference-object,process,recorded,2,346103000,0,pass,,
+bounce,crexx,reference-object,process,recorded,3,356059000,0,pass,,

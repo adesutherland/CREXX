@@ -1,0 +1,18 @@
+/* Tiny deterministic source for compile/load/first-result lifecycle timing. */
+options binary
+
+class lifecycle_probe
+  method main(args=String[]) static
+    left=int 0
+    right=int 1
+    loop index=1 to 20
+      next=int left+right
+      left=right
+      right=next
+    end
+    if left\=6765 then do
+      say 'FAIL: expected 6765, got' left
+      exit 1
+    end
+    say 'result='left
+    say 'PASS: Lifecycle Probe NetRexx'

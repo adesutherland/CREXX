@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+storage,crexx,disclosed-node-wrapper,process,warmup,1,2174359000,0,pass,,
+storage,crexx,disclosed-node-wrapper,process,recorded,1,2093523000,0,pass,,
+storage,crexx,disclosed-node-wrapper,process,recorded,2,2047058000,0,pass,,
+storage,crexx,disclosed-node-wrapper,process,recorded,3,2074887000,0,pass,,

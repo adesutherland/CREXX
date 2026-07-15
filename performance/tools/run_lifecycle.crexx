@@ -1,0 +1,322 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2026 the cREXX contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+options levelb comments_dash
+import rxfnsb
+
+/*
+ * Capture compile/translation and cold load-to-first-result phases for the
+ * deliberately tiny lifecycle probes. The combined load_first_result phase is
+ * used because none of the three public command-line surfaces exposes a
+ * portable "loaded but do not execute" boundary.
+ */
+main: procedure = .int
+  arg args = .string[]
+
+  runtime = "all"
+  runs = 3
+  repo_root = "."
+  build_dir = "cmake-build-release"
+  output_dir = "performance/evidence/lifecycle"
+  output_path = ""
+  oorexx_home = "/Users/adrian/.local/opt/oorexx/5.1.0-12973"
+  netrexx_home = "/Users/adrian/.local/opt/netrexx/5.10-GA"
+
+  i = 1
+  do while i <= args[0]
+    option = args[i]
+    if option = "-h" | option = "--help" then do
+      call usage
+      return 0
+    end
+    else if option = "--runtime" then do
+      if i = args[0] then return argument_error("missing value after --runtime")
+      i = i + 1
+      runtime = lower(args[i])
+    end
+    else if option = "--runs" then do
+      if i = args[0] then return argument_error("missing value after --runs")
+      i = i + 1
+      if \is_digits(args[i]) then return argument_error("--runs must be a positive integer")
+      runs = args[i]
+    end
+    else if option = "--repo-root" then do
+      if i = args[0] then return argument_error("missing value after --repo-root")
+      i = i + 1
+      repo_root = args[i]
+    end
+    else if option = "--build-dir" then do
+      if i = args[0] then return argument_error("missing value after --build-dir")
+      i = i + 1
+      build_dir = args[i]
+    end
+    else if option = "--output-dir" then do
+      if i = args[0] then return argument_error("missing value after --output-dir")
+      i = i + 1
+      output_dir = args[i]
+    end
+    else if option = "--output" then do
+      if i = args[0] then return argument_error("missing value after --output")
+      i = i + 1
+      output_path = args[i]
+    end
+    else if option = "--oorexx-home" then do
+      if i = args[0] then return argument_error("missing value after --oorexx-home")
+      i = i + 1
+      oorexx_home = args[i]
+    end
+    else if option = "--netrexx-home" then do
+      if i = args[0] then return argument_error("missing value after --netrexx-home")
+      i = i + 1
+      netrexx_home = args[i]
+    end
+    else return argument_error("unknown option: " || option)
+    i = i + 1
+  end
+
+  if runtime <> "all" & runtime <> "crexx" & runtime <> "oorexx" & runtime <> "netrexx" then
+    return argument_error("--runtime must be all, crexx, oorexx or netrexx")
+  if runs < 1 then return argument_error("--runs must be positive")
+  if \is_absolute_path(build_dir) then build_dir = current_directory() || "/" || build_dir
+  if output_path = "" then output_path = output_dir || "/samples.csv"
+
+  command_out = .string[]
+  command_err = .string[]
+  address crexx "mkdir -p :output_dir" output command_out error command_err
+  if rc <> 0 then return execution_error("could not create output directory " || output_dir)
+
+  rows = .string[]
+  rows[1] = "runtime,lifecycle,phase,sequence,elapsed_ns,correctness"
+  if runtime = "all" | runtime = "crexx" then do
+    result = capture_crexx(repo_root, build_dir, output_dir, runs, rows)
+    if result <> 0 then return result
+  end
+  if runtime = "all" | runtime = "oorexx" then do
+    result = capture_oorexx(repo_root, oorexx_home, output_dir, runs, rows)
+    if result <> 0 then return result
+  end
+  if runtime = "all" | runtime = "netrexx" then do
+    result = capture_netrexx(repo_root, netrexx_home, output_dir, runs, rows)
+    if result <> 0 then return result
+  end
+
+  if write_lines(output_path, rows) <> 0 then return 1
+  say "PASS: retained" rows[0] - 1 "lifecycle phase samples in" output_path
+  return 0
+
+capture_crexx: procedure = .int
+  arg repo_root = .string, build_dir = .string, output_dir = .string, runs = .int, expose rows = .string[]
+  runtime_dir = output_dir || "/crexx"
+  if make_directory(runtime_dir) <> 0 then return 1
+  source = repo_root || "/tests/benchmarks/cross-runtime/lifecycle/lifecycle_probe.crexx"
+  output_stem = runtime_dir || "/lifecycle_probe"
+
+  do sequence = 1 to runs
+    command = .string[]
+    command[1] = build_dir || "/bin/rxc"
+    command[2] = "-x"
+    command[3] = "-o"
+    command[4] = output_stem
+    command[5] = source
+    if capture_phase("crexx", "compile", sequence, command, "", rows) <> 0 then return 1
+
+    command = .string[]
+    command[1] = "cmake"
+    command[2] = "-E"
+    command[3] = "chdir"
+    command[4] = runtime_dir
+    command[5] = build_dir || "/bin/rxas"
+    command[6] = "-o"
+    command[7] = "lifecycle_probe"
+    command[8] = "lifecycle_probe"
+    if capture_phase("crexx", "assemble", sequence, command, "", rows) <> 0 then return 1
+
+    command = .string[]
+    command[1] = build_dir || "/bin/rxvm"
+    command[2] = output_stem || ".rxbin"
+    command[3] = "-a"
+    if capture_phase("crexx", "load_first_result", sequence, command, "PASS: Lifecycle Probe", rows) <> 0 then return 1
+  end
+  return 0
+
+capture_oorexx: procedure = .int
+  arg repo_root = .string, oorexx_home = .string, output_dir = .string, runs = .int, expose rows = .string[]
+  runtime_dir = output_dir || "/oorexx"
+  if make_directory(runtime_dir) <> 0 then return 1
+  source = repo_root || "/tests/benchmarks/cross-runtime/lifecycle/lifecycle_probe.rex"
+  image = runtime_dir || "/lifecycle_probe.orx"
+
+  do sequence = 1 to runs
+    command = .string[]
+    command[1] = oorexx_home || "/bin/rexxc"
+    command[2] = source
+    command[3] = image
+    if capture_phase("oorexx", "translate", sequence, command, "", rows) <> 0 then return 1
+
+    command = .string[]
+    command[1] = oorexx_home || "/rxenv.sh"
+    command[2] = "rexx"
+    command[3] = image
+    if capture_phase("oorexx", "load_first_result", sequence, command, "PASS: Lifecycle Probe", rows) <> 0 then return 1
+  end
+  return 0
+
+capture_netrexx: procedure = .int
+  arg repo_root = .string, netrexx_home = .string, output_dir = .string, runs = .int, expose rows = .string[]
+  runtime_dir = output_dir || "/netrexx"
+  if make_directory(runtime_dir) <> 0 then return 1
+  source = repo_root || "/tests/benchmarks/cross-runtime/lifecycle/lifecycle_probe.nrx"
+  local_source = runtime_dir || "/lifecycle_probe.nrx"
+  copy_command = .string[]
+  copy_command[1] = "cp"
+  copy_command[2] = source
+  copy_command[3] = local_source
+  if run_setup(copy_command) <> 0 then return execution_error("could not stage NetRexx lifecycle source")
+
+  do sequence = 1 to runs
+    command = .string[]
+    command[1] = netrexx_home || "/bin/NetRexxC.sh"
+    command[2] = "-keep"
+    command[3] = "-sourcedir"
+    command[4] = local_source
+    if capture_phase("netrexx", "compile", sequence, command, "", rows) <> 0 then return 1
+
+    command = .string[]
+    command[1] = "java"
+    command[2] = "-cp"
+    command[3] = runtime_dir || ":" || netrexx_home || "/runlib/NetRexxR.jar"
+    command[4] = "lifecycle_probe"
+    if capture_phase("netrexx", "load_first_result", sequence, command, "PASS: Lifecycle Probe", rows) <> 0 then return 1
+  end
+  return 0
+
+capture_phase: procedure = .int
+  arg runtime = .string, phase = .string, sequence = .int, command = .string[], expectation = .string, expose rows = .string[]
+  child_output = .string[]
+  child_error = .string[]
+  started_us = time("us")
+  address crexx "run :command[]" output child_output error child_error
+  child_rc = rc
+  ended_us = time("us")
+  elapsed_us = ended_us - started_us
+  if elapsed_us < 0 then elapsed_us = elapsed_us + 86400000000
+  elapsed_ns = elapsed_us * 1000
+  correct = child_rc = 0
+  if expectation <> "" then correct = correct & (has_text(child_output, expectation) | has_text(child_error, expectation))
+  correctness = "pass"
+  if \correct then correctness = "fail"
+  rows[rows[0] + 1] = runtime || ",compile-load-first-result," || phase || "," || sequence || "," || elapsed_ns || "," || correctness
+  if correct then return 0
+
+  say "ERROR:" runtime phase "failed; rc="child_rc
+  call show_lines "stdout", child_output
+  call show_lines "stderr", child_error
+  return 1
+
+run_setup: procedure = .int
+  arg command = .string[]
+  child_output = .string[]
+  child_error = .string[]
+  address crexx "run :command[]" output child_output error child_error
+  return rc
+
+make_directory: procedure = .int
+  arg path = .string
+  command_out = .string[]
+  command_err = .string[]
+  address crexx "mkdir -p :path" output command_out error command_err
+  if rc = 0 then return 0
+  say "ERROR: could not create directory" path
+  return 1
+
+has_text: procedure = .int
+  arg lines = .string[], needle = .string
+  do i = 1 to lines[0]
+    if pos(needle, lines[i]) > 0 then return 1
+  end
+  return 0
+
+show_lines: procedure = .void
+  arg label = .string, lines = .string[]
+  say label || ":"
+  if lines[0] = 0 then say "  <empty>"
+  else do i = 1 to lines[0]
+    if i <= 20 then say "  " || lines[i]
+  end
+  return
+
+write_lines: procedure = .int
+  arg path = .string, lines = .string[]
+  command_out = .string[]
+  command_err = .string[]
+  address crexx "rm :path" output command_out error command_err
+  do i = 1 to lines[0]
+    if lineout(path, lines[i]) <> 0 then do
+      call lineout path
+      say "ERROR: could not write output file:" path
+      return 1
+    end
+  end
+  call lineout path
+  return 0
+
+current_directory: procedure = .string
+  cwd_out = .string[]
+  cwd_err = .string[]
+  address crexx "pwd" output cwd_out error cwd_err
+  if rc = 0 & cwd_out[0] > 0 then return cwd_out[1]
+  return "unknown"
+
+is_digits: procedure = .int
+  arg value = .string
+  if value = "" then return 0
+  return verify(value, "0123456789") = 0
+
+is_absolute_path: procedure = .int
+  arg path = .string
+  if substr(path, 1, 1) = "/" then return 1
+  if length(path) >= 2 & substr(path, 2, 1) = ":" then return 1
+  return 0
+
+usage: procedure = .void
+  say "Usage: run_lifecycle [options]"
+  say "  --runtime all|crexx|oorexx|netrexx"
+  say "  --runs N"
+  say "  --repo-root PATH"
+  say "  --build-dir PATH"
+  say "  --output-dir PATH"
+  say "  --output PATH"
+  say "  --oorexx-home PATH"
+  say "  --netrexx-home PATH"
+  return
+
+argument_error: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  say "Use --help for usage."
+  return 2
+
+execution_error: procedure = .int
+  arg message = .string
+  say "ERROR:" message
+  return 1

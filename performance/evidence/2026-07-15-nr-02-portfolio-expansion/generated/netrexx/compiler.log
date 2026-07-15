@@ -1,0 +1,121 @@
+[33mNetRexx portable processor[0m [34m5.10-GA[0m build 18-20260320-1410
+Copyright (c) RexxLA, 2011,2026.   All rights reserved.
+Parts Copyright (c) IBM Corporation, 1995,2008.
+Program awfy_bounce.nrx
+  === class awfy_bounce ===
+    function main(String[])
+ 19 +++     loop iteration=1 to repetitions
+    +++          ^^^^^^^^^
+    +++ [34mWarning[0m: Variable is set but not used
+
+  === class BounceRandom ===
+    method next
+
+  === class BounceBall ===
+    constructor BounceBall(BounceRandom)
+    method bounce
+
+  === class BounceBenchmark ===
+    method run
+ 85 +++     loop step=1 to 50
+    +++          ^^^^
+    +++ [34mWarning[0m: Variable is set but not used
+Program awfy_list.nrx
+  === class awfy_list ===
+    function main(String[])
+ 19 +++     loop iteration=1 to repetitions
+    +++          ^^^^^^^^^
+    +++ [34mWarning[0m: Variable is set but not used
+
+  === class ListElement ===
+    constructor ListElement(int)
+    method length
+    method next
+    method setNext(ListElement)
+ 32 +++     value=int
+    +++     ^^^^^
+    +++ [34mWarning[0m: Private property is defined but not used
+
+  === class ListBenchmark ===
+    method run
+    method makeList(int)
+    method isShorterThan(ListElement,ListElement)
+    method tail(ListElement,ListElement,ListElement)
+Program awfy_richards.nrx
+  === class awfy_richards ===
+    function main(String[])
+  18 +++     loop iteration=1 to repetitions
+     +++          ^^^^^^^^^
+     +++ [34mWarning[0m: Variable is set but not used
+
+  === class RichardsScheduler ===
+    method run
+    method queueCount
+    method holdCount
+    method createTask(int,int,int,boolean,boolean,boolean)
+    method createPacket(int,int,int)
+    method appendPacket(int,int)
+    method setRunning(int)
+    method setPacketPending(int)
+    method isHoldingOrWaiting(int)
+    method isWaitingWithPacket(int)
+    method addInput(int,int,int)
+    method holdSelf
+    method markWaiting
+    method release(int)
+    method queuePacket(int)
+    method runTask(int)
+    method runIdler
+    function xorInt(int,int)
+ 192 +++     loop i=1 to 16
+     +++          ^
+     +++ [34mWarning[0m: Variable is set but not used
+    method runWorker(int)
+    method runHandler(int,int)
+    method runDevice(int,int)
+    method schedule
+Program awfy_storage.nrx
+  === class awfy_storage ===
+    function main(String[])
+ 19 +++     loop iteration=1 to repetitions
+    +++          ^^^^^^^^^
+    +++ [34mWarning[0m: Variable is set but not used
+
+  === class StorageRandom ===
+    method next
+
+  === class StorageBenchmark ===
+    method run
+    method buildTreeDepth(int,StorageRandom)
+Program base64_roundtrip.nrx
+  === class base64_roundtrip ===
+    function main(String[])
+ 20 +++     loop iteration=1 to repetitions
+    +++          ^^^^^^^^^
+    +++ [34mWarning[0m: Variable is set but not used
+    function encode(int[])
+    function decode(String)
+Program json_parser.nrx
+  === class json_parser ===
+    function main(String[])
+  27 +++     loop iteration=1 to repetitions
+     +++          ^^^^^^^^^
+     +++ [34mWarning[0m: Variable is set but not used
+
+  === class JsonDomParser ===
+    constructor JsonDomParser(String)
+    method parse
+    method parseValue
+    method parseObject
+    method parseArray
+    method parseString
+    method parseNumber
+    method expectLiteral(String)
+    method expectCode(int)
+    method skipWhitespace
+Compilation of '[33mawfy_bounce.nrx[0m' successful [4 classes, [33m 2 [34mwarnings[0m]
+Compilation of '[33mawfy_list.nrx[0m' successful [3 classes, [33m 2 [34mwarnings[0m]
+Compilation of '[33mawfy_richards.nrx[0m' successful [2 classes, [33m 2 [34mwarnings[0m]
+Compilation of '[33mawfy_storage.nrx[0m' successful [3 classes, [34mone warning[0m]
+Compilation of '[33mbase64_roundtrip.nrx[0m' successful [[34mone warning[0m]
+Compilation of '[33mjson_parser.nrx[0m' successful [2 classes, [34mone warning[0m]

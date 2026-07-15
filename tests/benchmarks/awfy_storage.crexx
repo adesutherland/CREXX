@@ -1,0 +1,99 @@
+/*
+ * Level B port of the Are We Fast Yet? Storage benchmark.
+ * Derived from the SOM benchmark suite under the MIT license; see
+ * LICENSE-SOM-MIT.txt and README.md in this directory.
+ */
+options levelb comments_dash
+import rxfnsb
+
+arg argv = .string[]
+
+repetitions = 1
+if argv[0] >= 1 then repetitions = argv[1]
+if repetitions < 1 then return fail("repetitions must be positive")
+
+result = 0
+do iteration = 1 to repetitions
+  benchmark = .StorageBenchmark()
+  result = benchmark.run()
+  if result <> 5461 then return fail("expected 5461 allocations, got " || result)
+end
+
+say "benchmark=awfy_storage repetitions="repetitions "result="result
+say "PASS: AWFY Storage"
+return 0
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1
+
+StorageRandom: class
+  seed_value = .int
+
+  *: factory
+    seed_value = 74755
+    return
+
+  next: method = .int
+    seed_value = ((seed_value * 1309) + 13849) <mod> 65536
+    return seed_value
+
+StorageBenchmark: class
+  allocation_count = .int
+
+  *: factory
+    allocation_count = 0
+    return
+
+  run: method = .int
+    random = .StorageRandom()
+    allocation_count = 0
+    tree = buildTreeDepth(7, random)
+    if tree.size() = 0 then return 0
+    return allocation_count
+
+  buildTreeDepth: method = .StorageNode
+    arg depth = .int, random = .StorageRandom
+    allocation_count = allocation_count + 1
+    node = .StorageNode()
+    if depth = 1 then do
+      leaf_size = (random.next() <mod> 10) + 1
+      call node.allocateLeaf(leaf_size, random as .object)
+    end
+    else do
+      do i = 1 to 4
+        child = buildTreeDepth(depth - 1, random)
+        call node.addChild(child)
+      end
+    end
+    return node
+
+/*
+ * Level B has explicit references, but arrays are not object values and nested
+ * reference containers (such as arrays of references to arrays) are not in the
+ * current surface. The upstream array-of-arrays tree therefore needs this
+ * disclosed cREXX wrapper: every logical AWFY array is represented by one
+ * StorageNode plus its object array. The reference result still counts the
+ * 5,461 logical tree nodes.
+ */
+StorageNode: class
+  children = .object[]
+  child_count = .int
+
+  *: factory
+    child_count = 0
+    return
+
+  allocateLeaf: method = .void
+    arg leaf_size = .int, marker = .object
+    child_count = objectarrayappend(children, marker, leaf_size)
+    return
+
+  addChild: method = .void
+    arg child = .StorageNode
+    child_count = objectarrayappend(children, child as .object)
+    return
+
+  size: method = .int
+    return child_count

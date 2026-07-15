@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+json,oorexx,supplied-dom,process,warmup,1,797541000,0,pass,,
+json,oorexx,supplied-dom,process,recorded,1,627826000,0,pass,,
+json,oorexx,supplied-dom,process,recorded,2,704302000,0,pass,,
+json,oorexx,supplied-dom,process,recorded,3,650235000,0,pass,,

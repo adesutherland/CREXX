@@ -1,0 +1,18 @@
+/* Generated from 'lifecycle_probe.nrx' 15 Jul 2026 20:11:27 [v5.10] *//* Options: Annotations Binary Decimal Implicituses Java Logo Sourcedir Trace2 Verbose3 */
+
+
+public class lifecycle_probe{private static final java.lang.String $0="lifecycle_probe.nrx";
+@SuppressWarnings("unchecked") public static void main(java.lang.String args[]){int left;int right;int index=0;int next=0;
+left=0;
+right=1;
+{index=1;index:for(;index<=20;index++){
+next=left+right;
+left=right;
+right=next;
+}}/*index*/
+if (left!=6765) {
+netrexx.lang.RexxIO.Say("FAIL: expected 6765, got"+" "+left);
+{System.exit(1);return;}
+}
+netrexx.lang.RexxIO.Say("result="+left);
+netrexx.lang.RexxIO.Say("PASS: Lifecycle Probe NetRexx");return;}private lifecycle_probe(){return;}}

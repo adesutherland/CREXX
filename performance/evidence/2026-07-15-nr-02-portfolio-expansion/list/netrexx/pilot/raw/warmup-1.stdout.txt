@@ -1,0 +1,2 @@
+benchmark=awfy_list repetitions=100 result=10
+PASS: AWFY List NetRexx port

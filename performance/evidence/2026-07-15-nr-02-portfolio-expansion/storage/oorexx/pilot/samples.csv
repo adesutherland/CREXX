@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+storage,oorexx,equivalent-object-array,process,warmup,1,42582000,0,pass,,
+storage,oorexx,equivalent-object-array,process,recorded,1,32901000,0,pass,,
+storage,oorexx,equivalent-object-array,process,recorded,2,31876000,0,pass,,
+storage,oorexx,equivalent-object-array,process,recorded,3,31665000,0,pass,,

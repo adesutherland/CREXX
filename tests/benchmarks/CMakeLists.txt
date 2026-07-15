@@ -24,6 +24,18 @@ crexx_add_language_benchmark(benchmark_awfy_mandelbrot awfy_mandelbrot.crexx 1
         "PASS: AWFY Mandelbrot")
 crexx_add_language_benchmark(benchmark_awfy_towers awfy_towers.crexx 1
         "PASS: AWFY Towers")
+crexx_add_language_benchmark(benchmark_awfy_bounce awfy_bounce.crexx 1
+        "PASS: AWFY Bounce")
+crexx_add_language_benchmark(benchmark_awfy_storage awfy_storage.crexx 1
+        "PASS: AWFY Storage")
+crexx_add_language_benchmark(benchmark_awfy_list awfy_list.crexx 1
+        "PASS: AWFY List")
+crexx_add_language_benchmark(benchmark_awfy_richards awfy_richards.crexx 1
+        "PASS: AWFY Richards")
+crexx_add_language_benchmark(benchmark_json_parser json_parser.crexx 1
+        "PASS: JSON Parser")
+crexx_add_language_benchmark(benchmark_base64_roundtrip base64_roundtrip.crexx 1
+        "PASS: Base64 Roundtrip")
 crexx_add_language_benchmark(benchmark_rexxcps_levelb rexxcps_levelb.crexx 10
         "PASS: RexxCPS 2.2c cREXX port")
 
@@ -62,6 +74,12 @@ crexx_label_smoke_tests(
         benchmark_awfy_permute_opt
         benchmark_awfy_mandelbrot_opt
         benchmark_awfy_towers_opt
+        benchmark_awfy_bounce_opt
+        benchmark_awfy_storage_opt
+        benchmark_awfy_list_opt
+        benchmark_awfy_richards_opt
+        benchmark_json_parser_opt
+        benchmark_base64_roundtrip_opt
         benchmark_rexxcps_levelb_opt
         benchmark_rexxcps_levelb_opaque_opt
         benchmark_runner_opt)

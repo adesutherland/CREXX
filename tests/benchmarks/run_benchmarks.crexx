@@ -104,7 +104,13 @@ main: procedure = .int
     selected[2] = "permute"
     selected[3] = "mandelbrot"
     selected[4] = "towers"
-    selected[5] = "rexxcps"
+    selected[5] = "bounce"
+    selected[6] = "storage"
+    selected[7] = "list"
+    selected[8] = "richards"
+    selected[9] = "json"
+    selected[10] = "base64"
+    selected[11] = "rexxcps"
   end
 
   platform_name = platform_description()
@@ -157,7 +163,7 @@ usage: procedure = .void
   say "  --mode opt|noopt      Benchmark bytecode mode (default: opt)"
   say "  --warmups N           Unrecorded runs per benchmark (default: 2)"
   say "  --runs N              Recorded runs per benchmark (default: 10)"
-  say "  --benchmark NAME      Repeatable: sieve, permute, mandelbrot, towers, rexxcps"
+  say "  --benchmark NAME      Repeatable benchmark name; use README.md for the current set"
   say "  --output PATH         Write CSV to PATH instead of stdout"
   say "  --samples-output PATH Write serial warmup/recorded samples as CSV"
   say "  -h, --help            Show this help"
@@ -181,6 +187,12 @@ benchmark_base: procedure = .string
     when benchmark_name = "permute" then return "benchmark_awfy_permute"
     when benchmark_name = "mandelbrot" then return "benchmark_awfy_mandelbrot"
     when benchmark_name = "towers" then return "benchmark_awfy_towers"
+    when benchmark_name = "bounce" then return "benchmark_awfy_bounce"
+    when benchmark_name = "storage" then return "benchmark_awfy_storage"
+    when benchmark_name = "list" then return "benchmark_awfy_list"
+    when benchmark_name = "richards" then return "benchmark_awfy_richards"
+    when benchmark_name = "json" then return "benchmark_json_parser"
+    when benchmark_name = "base64" then return "benchmark_base64_roundtrip"
     when benchmark_name = "rexxcps" then return "benchmark_rexxcps_levelb"
     otherwise return ""
   end
@@ -198,6 +210,12 @@ benchmark_command: procedure = .string[]
     when benchmark_name = "permute" then command[5] = "50"
     when benchmark_name = "mandelbrot" then command[5] = "500"
     when benchmark_name = "towers" then command[5] = "10"
+    when benchmark_name = "bounce" then command[5] = "100"
+    when benchmark_name = "storage" then command[5] = "10"
+    when benchmark_name = "list" then command[5] = "100"
+    when benchmark_name = "richards" then command[5] = "1"
+    when benchmark_name = "json" then command[5] = "5000"
+    when benchmark_name = "base64" then command[5] = "500"
     /* RexxCPS uses its canonical 100 x 100 defaults and self-calibration. */
     when benchmark_name = "rexxcps" then nop
   end

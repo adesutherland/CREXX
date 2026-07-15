@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+bounce,oorexx,object-port,process,warmup,1,134268000,0,pass,,
+bounce,oorexx,object-port,process,recorded,1,116805000,0,pass,,
+bounce,oorexx,object-port,process,recorded,2,114530000,0,pass,,
+bounce,oorexx,object-port,process,recorded,3,114489000,0,pass,,

@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+richards,netrexx,state-machine-port,process,warmup,1,44641000,0,pass,,
+richards,netrexx,state-machine-port,process,recorded,1,51521000,0,pass,,
+richards,netrexx,state-machine-port,process,recorded,2,40864000,0,pass,,
+richards,netrexx,state-machine-port,process,recorded,3,35614000,0,pass,,

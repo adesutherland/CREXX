@@ -1,0 +1,17 @@
+/* Tiny deterministic source for compile/load/first-result lifecycle timing. */
+options levelb comments_dash
+
+left = 0
+right = 1
+do index = 1 to 20
+  next = left + right
+  left = right
+  right = next
+end
+if left <> 6765 then do
+  say "FAIL: expected 6765, got" left
+  return 1
+end
+say "result="left
+say "PASS: Lifecycle Probe cREXX"
+return 0

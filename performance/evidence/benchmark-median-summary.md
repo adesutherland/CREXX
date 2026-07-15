@@ -46,6 +46,15 @@ bundle's scope or no valid observation exists.
 | 2026-07-15 / CREXX O3 AC isolated | Mandelbrot / size 500 | process ms | 188 (10) | — | — | — |
 | 2026-07-15 / CREXX O3 AC isolated | Towers / 10 repetitions | process ms | 766 (10) | — | — | — |
 | 2026-07-15 / CREXX O3 AC repeat | Towers / 10 repetitions | process ms | 771 (10) | — | — | — |
+| 2026-07-15 / portfolio expansion pilot | Bounce / 100 repetitions | process ms | 356 (3) | 115 (3) | — | 32.4 (3) |
+| 2026-07-15 / portfolio expansion pilot | Storage / 10 repetitions | process ms | 2,070 (3)¶ | 31.9 (3) | — | 30.6 (3) |
+| 2026-07-15 / portfolio expansion pilot | List / 100 repetitions | process ms | 243 (3)‡‡ | 245 (3) | — | 31.7 (3) |
+| 2026-07-15 / portfolio expansion pilot | Richards / 1 repetition | process ms | 648 (3) | 104 (3) | — | 40.9 (3) |
+| 2026-07-15 / portfolio expansion pilot | JSON / 5,000 repetitions | process ms | 321 (3)†† | 650 (3)†† | — | 71.2 (3)†† |
+| 2026-07-15 / portfolio expansion pilot | Base64 / 500 repetitions | process ms | 433 (3) | 278 (3) | — | 65.3 (3) |
+| 2026-07-15 / lifecycle pilot | compile / translate | process ms | 74.7 (3) | 4.72 (3) | — | 428 (3) |
+| 2026-07-15 / lifecycle pilot | assemble | process ms | 6.90 (3) | — | — | — |
+| 2026-07-15 / lifecycle pilot | load to first result | process ms | 3.22 (3) | 8.79 (3) | — | 28.0 (3) |
 
 † NetRexx Mandelbrot has a disclosed timed arithmetic-XOR/padding adaptation;
 its aggregate equivalence review remains open.
@@ -57,6 +66,17 @@ allocation and dispatch.
 § The rebuilt-O3 timing session began on battery and ended on AC. The later
 `AC isolated` rows were wholly on AC. Both modes remained interactive desktop
 diagnostics rather than a quiet-machine NR-10 baseline.
+
+¶ The cREXX Storage time is shown as a diagnostic but is `NC` for the common
+allocation score: each logical upstream array needs a `StorageNode` plus an
+`.object[]`, so the timed allocation/object work is materially different.
+
+‡‡ The cREXX List time uses explicit weak references and a typed-array arena to
+own their targets. It remains a disclosed adaptation pending aggregate review.
+
+†† JSON timings are native-surface diagnostics, not a common score. cREXX uses
+the string/path `rxjson` API, ooRexx builds its supplied DOM and NetRexx builds
+Java collections.
 
 ## Inclusion and outlier policy
 
@@ -99,6 +119,8 @@ later established, add its sample id and reason here before changing the table.
   correctness captures
 - `2026-07-15-crexx-rexxcps-o3-rerun/` for the clean-build O3 confirmation,
   all-five runner pass and AC-only repeats
+- `2026-07-15-nr-02-portfolio-expansion/` for the six added workload pilots,
+  generated runtime forms and separate lifecycle phase samples
 
 Do not combine rows from different dates/bundles into one median. Add a new row
 for each future benchmark/run so environment drift remains visible.

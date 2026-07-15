@@ -16,8 +16,8 @@ exit criterion is met.
 
 | ID | Activity | Status | Current note / next gate |
 | --- | --- | --- | --- |
-| NR-01 | Reproducible benchmark portfolio and runner | in progress | Seed manifest and serial raw-sample retention started 2026-07-15; fill the coverage and cross-runtime port matrix, then complete separate startup/steady-state reporting. |
-| NR-02 | Portfolio equivalence and optimizer-resistance ledger | in progress | Current five-workload seed is dispositioned across required runtimes: RexxCPS four-runtime slice complete; Sieve/Permute qualified on CREXX/ooRexx/NetRexx; ooRexx Mandelbrot/Towers explicitly not comparable. Continue the proposed expanded Tier A set from `NR-02-WORKLIST.md`. |
+| NR-01 | Reproducible benchmark portfolio and runner | in progress | Approved workload coverage, serial raw-sample retention and the separate lifecycle lane are implemented; remaining exit work is machine-capturable full provenance and NR-11 publication policy. |
+| NR-02 | Portfolio equivalence and optimizer-resistance ledger | complete | All approved steady-state/runtime cells and the lifecycle lane have correctness, equivalence, generated-form and retained-pilot evidence or an explicit `not comparable` disposition. |
 | NR-03 | Automated performance evidence bundle | queued | One command must coordinate unprofiled timing, instruction/procedure CSV, allocation data and RXSEQ N=2/3/4 for an exact image set. |
 | NR-04 | Opcode effects inventory | queued | Generate and validate read/write/kill/alias/reference/throw/branch/call facts before broad flow transforms. |
 | NR-04A | Kind-index runtime metadata and scan counters | queued | Remove ordinary type/ADDRESS traversal through source/TRACE records without losing diagnostics. |
@@ -53,14 +53,19 @@ exit criterion is met.
   optimizer-resistance evidence and an initial retained run. Regina is limited
   to RexxCPS. NR-10 receives each qualified workload for formal baseline and
   forensic capture.
-- Remaining exit work: approve the actual Tier A/Tier B portfolio; add
-  representative Classic Rexx, calls/recursion, parser/text,
-  allocation/object, binary, collections, startup and application workloads;
-  report startup and steady state separately; make full build/machine
-  provenance machine-capturable; define the publication scorecard under
-  NR-11.
+- Remaining exit work: make full build/machine provenance machine-capturable
+  and define the publication scorecard, common subset and regression policy
+  under NR-11. The approved coverage categories and separate lifecycle lane
+  are now implemented.
 
 ### NR-02 work notes
+
+- 2026-07-15: Adrian approved a bounded 12-item Tier A portfolio: the five seed
+  workloads; Bounce, Storage, List, Richards, a JSON parser capability workload
+  and an RFC 4648 Base64 round trip; plus compile/load/first-result as a
+  separately reported lifecycle lane. Queens, DeltaBlue, Havlak,
+  filesystem-I/O work and focused Classic semantic probes remain Tier B/reserve
+  candidates.
 
 - 2026-07-15: Started the temporary resumable matrix in
   `NR-02-WORKLIST.md`, including provenance, license, correctness,
@@ -137,6 +142,21 @@ exit criterion is met.
   the seed band. Towers ranged from 688 to 771 ms across three passing series
   on the same image, so all samples are retained and a quiet NR-10 run remains
   the regression gate. See `evidence/2026-07-15-crexx-rexxcps-o3-rerun/`.
+- 2026-07-15: Implemented and qualified the approved expansion across cREXX,
+  ooRexx and NetRexx: Bounce, Storage, List, Richards, JSON and RFC 4648
+  Base64, plus the cREXX-scripted compile/translate/assemble/load-first-result
+  lane. All six workloads pass 1/2 perturbations on all three runtimes; cREXX
+  optimized/unoptimized CTest passes. One-warmup/three-recorded pilots,
+  ooRexx translated images, NetRexx generated Java/classes/disassembly and
+  lifecycle samples are retained under
+  `evidence/2026-07-15-nr-02-portfolio-expansion/`.
+- 2026-07-15: Closed NR-02 with explicit comparability boundaries. cREXX
+  Storage is `not comparable` because a wrapper object plus `.object[]`
+  replaces each upstream array. JSON is a native-surface diagnostic because
+  cREXX uses string/path parsing while ooRexx and NetRexx build object models.
+  List/cREXX retains its weak-reference arena as a disclosed adaptation. The
+  resulting capability/accuracy register is `capability-gaps.md`; references
+  and binary-safe `.binary` storage are confirmed present, not missing.
 
 ## Cross-runtime portfolio execution order
 
@@ -151,11 +171,9 @@ coverage gaps are in
    each cell as canonical, equivalent port, disclosed adaptation, control or
    not comparable. Regina needs only the RexxCPS lane; Java/C remain selected
    controls rather than a mandatory full matrix.
-2. **NR-02 — port, qualify and pilot-run comparisons.** The current seed and
-   four-runtime RexxCPS slice are dispositioned. Continue one cell at a time
-   through the proposed expanded Tier A set, starting with Queens, Bounce,
-   Storage and List after portfolio approval. Regina's NR-02 work is complete
-   after RexxCPS.
+2. **NR-02 — port, qualify and pilot-run comparisons.** Complete for the
+   approved portfolio. Preserve the explicit `not comparable` and disclosed-
+   adaptation decisions when transferring cells to NR-10/NR-11.
 3. **NR-10 — retain formal comparative baselines.** Do not wait for the final
    workload before measuring: add same-host raw results implementation by
    implementation whenever a workload clears NR-02, while keeping incomplete

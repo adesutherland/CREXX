@@ -1,6 +1,6 @@
 # NR-02 resumable cross-runtime worklist
 
-Status: in progress
+Status: complete for the approved portfolio; formal baselines transfer to NR-10
 
 Started: 2026-07-15
 
@@ -25,7 +25,7 @@ Disposition uses the programme labels: `canonical`, `equivalent port`,
 
 | Gate | State | Retained fact / next action |
 | --- | --- | --- |
-| Branch and dirty scope captured | pass | `develop` at `44dd4dbf3da624e2d8e79eccf696f78f023d436e`; intentional performance-programme dirty tree |
+| Branch and dirty scope captured | pass | expansion built on `develop` commit `3aee597382c90152b31a4a772e70ceac174688dc`; intentional performance-programme dirty tree retained in the dated bundle |
 | Java/JDK inventory | pass | Temurin OpenJDK/JDK 26.0.1; exact output belongs in the dated evidence bundle |
 | Regina inventory | pass | Regina 3.9.7, Homebrew `regina-rexx`; both `rexx` and `regina` resolve to Regina |
 | ooRexx inventory and install | pass | Homebrew had no ooRexx formula/cask and its `rexx` is Regina; official stable 5.1.0 r12973 portable universal macOS build installed user-locally under `/Users/adrian/.local/opt/oorexx/5.1.0-12973` |
@@ -55,13 +55,34 @@ equivalence, optimizer resistance, a retained pilot, and final disposition.
 | Towers | CREXX | `tests/benchmarks/awfy_towers.crexx`; AWFY/SOM MIT | pass: 8,191 moves | same disk allocation, pile operations and 13-disk recursion | pass: runtime repetitions; 1/2 perturbations; observed moves | pass: 10 repetitions, 1 warmup + 3 recorded | equivalent port; available-runtime cell qualified |
 | Towers | ooRexx | `tests/benchmarks/cross-runtime/classic/awfy_towers.rex`; procedural AWFY/SOM adaptation; MIT | pass: 8,191 moves at 1/2 and pilot size | recursion/link mutations preserved; numeric node ids/stems do not preserve object dispatch or allocator cost | pass for the diagnostic adaptation: runtime repetitions, observed moves and executable translated image | pass: 10 repetitions, 1 warmup + 3 recorded | not comparable for the common object/allocation score; retained as a disclosed procedural diagnostic unless replaced |
 | Towers | NetRexx | `tests/benchmarks/cross-runtime/netrexx/awfy_towers.nrx`; object port of AWFY/SOM; MIT | pass: 8,191 moves | same disk objects/allocation, pile operations and 13-disk recursion; primitive arrays hold three pile roots/presence flags | pass: runtime repetitions; 1/2 perturbations; generated Java/classes/result path inspected | pass: 10 repetitions, 1 warmup + 3 recorded | equivalent port; available-runtime cell qualified |
+| Bounce | CREXX | `tests/benchmarks/awfy_bounce.crexx`; AWFY/SOM MIT | pass: 1,331 bounces at 1/2 | object/typed-array port; PRNG and ball slots use explicit references | pass: opt/no-opt, runtime repetition and observed result | pass: 100 repetitions, 1 warmup + 3 recorded | equivalent reference/object port; qualified |
+| Bounce | ooRexx | `tests/benchmarks/cross-runtime/oorexx/awfy_bounce.rex`; AWFY/SOM MIT | pass: 1,331 bounces at 1/2 | object-native port with same PRNG, 100 balls and 50 steps | pass: runtime repetition and translated image | pass: 100 repetitions, 1 warmup + 3 recorded | equivalent object port; qualified |
+| Bounce | NetRexx | `tests/benchmarks/cross-runtime/netrexx/awfy_bounce.nrx`; AWFY/SOM MIT | pass: 1,331 bounces at 1/2 | object-native port with primitive ball array | pass: runtime repetition; generated Java/classes retained | pass: 100 repetitions, 1 warmup + 3 recorded | equivalent object port; qualified |
+| Storage | CREXX | `tests/benchmarks/awfy_storage.crexx`; AWFY/SOM MIT | pass: 5,461 logical nodes at 1/2 | arrays are not object values and nested reference containers are unavailable, so each logical array is a `StorageNode` plus `.object[]` | pass: opt/no-opt, runtime repetition and observed count | pass: 10 repetitions, 1 warmup + 3 recorded | correct disclosed adaptation; `not comparable` for common allocation score |
+| Storage | ooRexx | `tests/benchmarks/cross-runtime/oorexx/awfy_storage.rex`; AWFY/SOM MIT | pass: 5,461 allocations at 1/2 | object/array tree preserves upstream allocation shape | pass: runtime repetition and translated image | pass: 10 repetitions, 1 warmup + 3 recorded | equivalent port; qualified |
+| Storage | NetRexx | `tests/benchmarks/cross-runtime/netrexx/awfy_storage.nrx`; AWFY/SOM MIT | pass: 5,461 allocations at 1/2 | Java object arrays preserve upstream allocation shape | pass: runtime repetition; generated Java/classes retained | pass: 10 repetitions, 1 warmup + 3 recorded | equivalent port; qualified |
+| List | CREXX | `tests/benchmarks/awfy_list.crexx`; AWFY/SOM MIT | pass: length 10 at 1/2 | links are explicit weak references; a typed-array arena owns targets | pass: opt/no-opt, runtime repetition and observed length | pass: 100 repetitions, 1 warmup + 3 recorded | disclosed reference/ownership adaptation; aggregate review open |
+| List | ooRexx | `tests/benchmarks/cross-runtime/oorexx/awfy_list.rex`; AWFY/SOM MIT | pass: length 10 at 1/2 | object links and recursive tail algorithm preserved | pass: runtime repetition and translated image | pass: 100 repetitions, 1 warmup + 3 recorded | equivalent object port; qualified |
+| List | NetRexx | `tests/benchmarks/cross-runtime/netrexx/awfy_list.nrx`; AWFY/SOM MIT | pass: length 10 at 1/2 | object links and recursive tail algorithm preserved | pass: runtime repetition; generated Java/classes retained | pass: 100 repetitions, 1 warmup + 3 recorded | equivalent object port; qualified |
+| Richards | CREXX | `tests/benchmarks/awfy_richards.crexx`; AWFY-derived MIT | pass: 23,246 queued / 9,297 held at 1/2 | common task-kind state machine preserves queues, packets, task state and result | pass: opt/no-opt, runtime repetition and both counters | pass: 1 repetition, 1 warmup + 3 recorded | common disclosed state-machine adaptation; qualified |
+| Richards | ooRexx | `tests/benchmarks/cross-runtime/oorexx/awfy_richards.rex`; AWFY-derived MIT | pass: 23,246 / 9,297 at 1/2 | same state-machine representation as the other ports | pass: runtime repetition and translated image | pass: 1 repetition, 1 warmup + 3 recorded | common disclosed state-machine adaptation; qualified |
+| Richards | NetRexx | `tests/benchmarks/cross-runtime/netrexx/awfy_richards.nrx`; AWFY-derived MIT | pass: 23,246 / 9,297 at 1/2 | same state-machine representation; arithmetic integer XOR helper | pass: runtime repetition; generated Java/classes retained | pass: 1 repetition, 1 warmup + 3 recorded | common disclosed state-machine adaptation; qualified |
+| JSON | CREXX | `tests/benchmarks/json_parser.crexx`; deterministic RAP-shaped fixture | pass: 8 operations at 1/2 | `rxjson` reparses a string/path count; no DOM is built | pass: opt/no-opt, runtime repetition and observed count | pass: 5,000 repetitions, 1 warmup + 3 recorded | native-surface diagnostic; `not comparable` to DOM cells |
+| JSON | ooRexx | `tests/benchmarks/cross-runtime/oorexx/json_parser.rex`; same fixture | pass: root directory and 8 operations at 1/2 | supplied `json.cls` builds the ooRexx object model | pass: runtime repetition and translated image | pass: 5,000 repetitions, 1 warmup + 3 recorded | native-surface diagnostic; no common JSON timing score |
+| JSON | NetRexx | `tests/benchmarks/cross-runtime/netrexx/json_parser.nrx`; same fixture | pass: 8 operations at 1/2 | parser builds Java `LinkedHashMap`/`ArrayList` DOM | pass: runtime repetition; generated Java/classes retained | pass: 5,000 repetitions, 1 warmup + 3 recorded | native-surface diagnostic; no common JSON timing score |
+| Base64 | CREXX | `tests/benchmarks/base64_roundtrip.crexx`; deterministic RFC 4648 | pass: 1,368 encoded bytes / 130,560 checksum at 1/2 | same arithmetic codec; pre-sized `.binary` output/input and direct byte access | pass: opt/no-opt, runtime repetition and byte equality | pass: 500 repetitions, 1 warmup + 3 recorded | equivalent binary port; qualified |
+| Base64 | ooRexx | `tests/benchmarks/cross-runtime/oorexx/base64_roundtrip.rex`; deterministic RFC 4648 | pass: length/checksum/equality at 1/2 | same arithmetic codec using byte strings | pass: runtime repetition and translated image | pass: 500 repetitions, 1 warmup + 3 recorded | equivalent byte-string port; qualified |
+| Base64 | NetRexx | `tests/benchmarks/cross-runtime/netrexx/base64_roundtrip.nrx`; deterministic RFC 4648 | pass: length/checksum/equality at 1/2 | same arithmetic codec using Java `byte[]` | pass: runtime repetition; generated Java/classes retained | pass: 500 repetitions, 1 warmup + 3 recorded | equivalent byte-array port; qualified |
+| Lifecycle | CREXX | `lifecycle/lifecycle_probe.crexx` plus `performance/tools/run_lifecycle.crexx`; MIT | pass: Fibonacci result 6,765 | compile, assemble and combined load-to-first-result are separate rows | pass: every phase/correctness check | pass: 3 per phase | separate lifecycle diagnostic; qualified |
+| Lifecycle | ooRexx | `lifecycle/lifecycle_probe.rex`; MIT | pass: result 6,765 | translate and combined load-to-first-result | pass: every phase/correctness check | pass: 3 per phase | separate lifecycle diagnostic; qualified |
+| Lifecycle | NetRexx | `lifecycle/lifecycle_probe.nrx`; MIT | pass: result 6,765 | compile and combined JVM-load-to-first-result | pass: every phase/correctness check | pass: 3 per phase | separate lifecycle diagnostic; qualified |
 | Non-RexxCPS seed workloads | Regina | programme scope decision | n/a | n/a | n/a | n/a | out of scope |
 
-## Exact expanded Tier A working proposal
+## Approved Tier A portfolio
 
-The proposed common CREXX / ooRexx / NetRexx Tier A working set is 16
-workloads. Approval remains an NR-11 decision; NR-01/NR-02 may inventory and
-prototype the uncontested candidates without treating this proposal as final.
+Adrian approved the bounded common CREXX / ooRexx / NetRexx portfolio on
+2026-07-15. It contains 11 steady-state workloads plus one separately reported
+lifecycle lane. Regina remains RexxCPS-only.
 
 | # | Workload | Primary coverage role |
 | ---: | --- | --- |
@@ -70,39 +91,34 @@ prototype the uncontested candidates without treating this proposal as final.
 | 3 | Permute | recursion, calls, returns and array mutation |
 | 4 | Mandelbrot | floating point, branches and bit operations |
 | 5 | Towers | objects, allocation and recursion |
-| 6 | Queens | backtracking, direct recursion and arrays |
-| 7 | Bounce | object dispatch and allocation |
-| 8 | Storage | sustained allocation and tree construction |
-| 9 | List | dedicated list construction and traversal |
-| 10 | Richards | larger scheduler/application call graph |
-| 11 | DeltaBlue | constraints plus collection/lookup pressure |
-| 12 | JSON | parser and text processing |
-| 13 | deterministic binary codec | binary byte semantics and checksum observation |
-| 14 | compile/load/first-result | explicit startup lifecycle separate from steady state |
-| 15 | focused Classic semantics matrix | PARSE, stems, TRACE and ADDRESS outside the RexxCPS mix |
-| 16 | deterministic file-processing application | integration, I/O, text/collection work and end-to-end result |
+| 6 | Bounce | object dispatch and short-lived allocation |
+| 7 | Storage | sustained allocation and tree construction |
+| 8 | List | linked-list construction, traversal and reference mutation |
+| 9 | Richards | larger scheduler/application call graph and state transitions |
+| 10 | JSON | parser, text, arrays, maps and lookup processing |
+| 11 | RFC 4648 Base64 round trip | binary/byte semantics, shifts, masks, buffers and checksum observation |
+| 12 | compile/load/first-result | explicit startup lifecycle, kept outside the steady-state aggregate |
 
-Havlak remains the first reserve if DeltaBlue does not provide credible
-map/set/graph coverage across all three required runtimes. The set closes the
-named coverage cells without selecting both large graph workloads before their
-port/equivalence cost is known.
+Queens, DeltaBlue, Havlak, filesystem-I/O work and focused Classic-semantics
+probes remain Tier B/reserve candidates. They are added only if the approved
+set exposes a concrete coverage gap.
 
 ## Resumption order
 
-1. Keep the completed RexxCPS four-runtime slice and current five-workload seed
-   evidence immutable; transfer only qualified cells to NR-10. Mandelbrot/
-   ooRexx and Towers/ooRexx remain explicit `not comparable` cells.
-2. Resolve the NR-11 approval/disposition of the exact 16-workload proposal.
-   Until then, prototype only uncontested additions without calling the Tier A
-   portfolio final.
-3. Continue one workload/runtime cell at a time, starting with Queens, Bounce,
-   Storage and List to close recursion, object/allocation and collection gaps.
-4. For each addition, run correctness and perturbation checks before timing,
-   retain generated/translated forms, and move it to NR-10 only after every
-   applicable CREXX/ooRexx/NetRexx column passes or records an honest
-   `not comparable` decision.
+1. Keep the completed RexxCPS, seed and expansion qualification evidence
+   immutable; transfer only qualified/comparable cells to NR-10.
+2. Preserve explicit exclusions: Mandelbrot/ooRexx, Towers/ooRexx,
+   Storage/cREXX and all JSON native-surface timings are not common scores.
+   List/cREXX remains a disclosed weak-reference ownership adaptation for NR-11
+   aggregate review.
+3. Keep the lifecycle lane separate from the steady-state portfolio aggregate;
+   it measures compile/translate, cREXX assemble and combined
+   load-to-first-result rather than kernel work.
+4. Use `performance/capability-gaps.md` for follow-on closure decisions. Do not
+   convert a benchmark workaround into a language change without a focused
+   correctness contract and measured performance case.
 
-Verified validation command for the current seed slice:
+Verified validation command for the portfolio benchmark slice:
 
 ```sh
 ctest --test-dir cmake-build-release -L benchmark --output-on-failure --parallel 10

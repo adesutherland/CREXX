@@ -1,0 +1,90 @@
+/* Generated from 'awfy_bounce.nrx' 15 Jul 2026 20:09:35 [v5.10] *//* Options: Annotations Binary Decimal Implicituses Java Logo Trace2 Verbose3 */
+
+
+
+
+
+
+public class awfy_bounce{private static final java.lang.String $0="awfy_bounce.nrx";
+
+@SuppressWarnings("unchecked") public static void main(java.lang.String args[]){int repetitions;int result;int iteration=0;
+repetitions=1;
+if (args.length>=1) repetitions=(netrexx.lang.Rexx.toRexx(args[0])).toint();
+if (repetitions<1) {
+netrexx.lang.RexxIO.Say("FAIL: repetitions must be positive");
+{System.exit(1);return;}
+}
+
+result=0;
+{int $1=repetitions;iteration=1;iteration:for(;iteration<=$1;iteration++){
+result=(new BounceBenchmark()).run();
+if (result!=1331) {
+netrexx.lang.RexxIO.Say("FAIL: expected 1331 bounces, got"+" "+result);
+{System.exit(1);return;}
+}
+}}/*iteration*/
+
+netrexx.lang.RexxIO.Say("benchmark=awfy_bounce repetitions="+repetitions+" "+"result="+result);
+netrexx.lang.RexxIO.Say("PASS: AWFY Bounce NetRexx port");return;}
+
+private awfy_bounce(){return;}}class BounceRandom{private static final java.lang.String $0="awfy_bounce.nrx";
+/* properties private */
+private int seedValue=74755;
+
+@SuppressWarnings("unchecked") public int next(){
+seedValue=((((seedValue*1309))+13849))%65536;
+return seedValue;}
+
+public BounceRandom(){return;}}class BounceBall{private static final java.lang.String $0="awfy_bounce.nrx";
+/* properties private */
+private int x;
+private int y;
+private int xVelocity;
+private int yVelocity;
+
+@SuppressWarnings("unchecked") public BounceBall(BounceRandom random){super();
+x=(random.next())%500;
+y=(random.next())%500;
+xVelocity=(((random.next())%300))-150;
+yVelocity=(((random.next())%300))-150;return;}
+
+@SuppressWarnings("unchecked") public boolean bounce(){boolean bounced;
+bounced=false;
+x=x+xVelocity;
+y=y+yVelocity;
+if (x>500) {
+x=500;
+xVelocity=(int)-(java.lang.Math.abs(xVelocity));
+bounced=true;
+}
+if (x<0) {
+x=0;
+xVelocity=java.lang.Math.abs(xVelocity);
+bounced=true;
+}
+if (y>500) {
+y=500;
+yVelocity=(int)-(java.lang.Math.abs(yVelocity));
+bounced=true;
+}
+if (y<0) {
+y=0;
+yVelocity=java.lang.Math.abs(yVelocity);
+bounced=true;
+}
+return bounced;}
+
+}class BounceBenchmark{private static final java.lang.String $0="awfy_bounce.nrx";
+@SuppressWarnings("unchecked") public int run(){BounceRandom random;BounceBall balls[];int i=0;int bounces;int step=0;
+random=new BounceRandom();
+balls=new BounceBall[100];
+{i=0;i:for(;i<=99;i++){
+balls[i]=new BounceBall(random);
+}}/*i*/
+bounces=0;
+{step=1;step:for(;step<=50;step++){
+{i=0;i:for(;i<=99;i++){
+if (balls[i].bounce()) bounces++;
+}}/*i*/
+}}/*step*/
+return bounces;}public BounceBenchmark(){return;}}

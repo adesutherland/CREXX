@@ -14,11 +14,17 @@ timed I/O in their kernels.
 | `awfy_permute.crexx` | Are We Fast Yet? / SOM | recursion, method calls, array mutation |
 | `awfy_mandelbrot.crexx` | Are We Fast Yet? / Benchmarks Game | floating-point arithmetic, branches, bit operations |
 | `awfy_towers.crexx` | Are We Fast Yet? / SOM | object allocation, object attributes, recursion |
+| `awfy_bounce.crexx` | Are We Fast Yet? / SOM | objects, typed arrays and explicit references |
+| `awfy_storage.crexx` | Are We Fast Yet? / SOM | sustained tree allocation; disclosed cREXX node wrapper |
+| `awfy_list.crexx` | Are We Fast Yet? / SOM | linked-list recursion and explicit weak references |
+| `awfy_richards.crexx` | Are We Fast Yet? / Richards | scheduler queues, state transitions and a larger call graph |
+| `json_parser.crexx` | deterministic RAP-shaped JSON fixture | parser/text processing through the current `rxjson` surface |
+| `base64_roundtrip.crexx` | deterministic RFC 4648 algorithm | `.binary`, pre-sized buffers, byte access and checksum observation |
 
-`cross-runtime/` contains the NR-02 Classic and NetRexx sources. Byte-exact
+`cross-runtime/` contains the NR-02 ooRexx and NetRexx sources. Byte-exact
 RexxCPS 2.2 and bundled NetRexx 2.1n remain unchanged; 2.2n, opaque-input,
-result-observation and trace diagnostics use distinct names. The four AWFY
-ports preserve their deterministic arguments/results and document every
+result-observation and trace diagnostics use distinct names. All portfolio
+ports preserve deterministic arguments/results and document every material
 language-required representation or operation substitution in
 `cross-runtime/README.md` and `performance/NR-02-WORKLIST.md`.
 
@@ -198,11 +204,19 @@ profile to find high-volume instruction windows, and optimized `.rxas`/`rxdas`
 output to map those costs back to source. Confirm every optimization with the
 ordinary non-profiled Release build and the correctness tests.
 
-## Expansion order
+## Approved portfolio
 
-The next useful Are We Fast Yet? ports are `Queens`, `Bounce`, `List`, and
-`Storage`, followed by the larger `Richards`, `DeltaBlue`, `Havlak`, and JSON
-workloads. The larger group is especially valuable after the basic array,
-object, recursion, and floating-point paths are stable.
+The approved bounded portfolio contains eleven steady-state workloads plus the
+separate compile/load/first-result lifecycle lane. `Bounce` and `List` exercise
+cREXX references directly. `Storage` exposes the current array/object and
+nested-reference-container boundary; JSON exposes the absence of a full cREXX
+JSON object model. Those adaptations are never silently aggregated. The
+lifecycle lane is reported separately from steady-state workload aggregates.
+Queens, DeltaBlue, Havlak, filesystem-I/O workloads and focused Classic-
+semantics probes remain Tier B or reserve candidates.
+
+The confirmed capability gaps and audit candidates uncovered while porting are
+kept in `performance/capability-gaps.md` so they can be checked and considered
+for measured closure work.
 
 See `THIRD_PARTY_NOTICES.md` for attribution and license terms.

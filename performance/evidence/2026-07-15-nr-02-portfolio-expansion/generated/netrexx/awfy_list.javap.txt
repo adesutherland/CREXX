@@ -1,0 +1,86 @@
+Compiled from "awfy_list.java"
+public class awfy_list {
+  private static final java.lang.String $0;
+
+  public static void main(java.lang.String[]);
+    Code:
+         0: iconst_0
+         1: istore_3
+         2: iconst_1
+         3: istore_1
+         4: aload_0
+         5: arraylength
+         6: iconst_1
+         7: if_icmplt     20
+        10: aload_0
+        11: iconst_0
+        12: aaload
+        13: invokestatic  #1                  // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+        16: invokevirtual #7                  // Method netrexx/lang/Rexx.toint:()I
+        19: istore_1
+        20: iload_1
+        21: iconst_1
+        22: if_icmpge     36
+        25: ldc           #11                 // String FAIL: repetitions must be positive
+        27: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+        30: pop
+        31: iconst_1
+        32: invokestatic  #19                 // Method java/lang/System.exit:(I)V
+        35: return
+        36: iconst_0
+        37: istore_2
+        38: iload_1
+        39: istore        4
+        41: iconst_1
+        42: istore_3
+        43: iload_3
+        44: iload         4
+        46: if_icmpgt     100
+        49: new           #25                 // class ListBenchmark
+        52: dup
+        53: invokespecial #27                 // Method ListBenchmark."<init>":()V
+        56: invokevirtual #31                 // Method ListBenchmark.run:()I
+        59: istore_2
+        60: iload_2
+        61: bipush        10
+        63: if_icmpeq     94
+        66: new           #34                 // class java/lang/StringBuilder
+        69: dup
+        70: invokespecial #36                 // Method java/lang/StringBuilder."<init>":()V
+        73: ldc           #37                 // String FAIL: expected length 10, got
+        75: invokevirtual #39                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        78: iload_2
+        79: invokevirtual #43                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+        82: invokevirtual #46                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        85: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+        88: pop
+        89: iconst_1
+        90: invokestatic  #19                 // Method java/lang/System.exit:(I)V
+        93: return
+        94: iinc          3, 1
+        97: goto          43
+       100: new           #34                 // class java/lang/StringBuilder
+       103: dup
+       104: invokespecial #36                 // Method java/lang/StringBuilder."<init>":()V
+       107: ldc           #50                 // String benchmark=awfy_list repetitions=
+       109: invokevirtual #39                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       112: iload_1
+       113: invokevirtual #43                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       116: ldc           #52                 // String  result=
+       118: invokevirtual #39                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       121: iload_2
+       122: invokevirtual #43                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       125: invokevirtual #46                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       128: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       131: pop
+       132: ldc           #54                 // String PASS: AWFY List NetRexx port
+       134: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       137: pop
+       138: return
+
+  private awfy_list();
+    Code:
+         0: aload_0
+         1: invokespecial #56                 // Method java/lang/Object."<init>":()V
+         4: return
+}

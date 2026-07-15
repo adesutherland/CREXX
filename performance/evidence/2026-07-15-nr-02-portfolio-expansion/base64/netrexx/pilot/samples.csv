@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+base64,netrexx,byte-array-port,process,warmup,1,110737000,0,pass,,
+base64,netrexx,byte-array-port,process,recorded,1,65253000,0,pass,,
+base64,netrexx,byte-array-port,process,recorded,2,64149000,0,pass,,
+base64,netrexx,byte-array-port,process,recorded,3,65811000,0,pass,,

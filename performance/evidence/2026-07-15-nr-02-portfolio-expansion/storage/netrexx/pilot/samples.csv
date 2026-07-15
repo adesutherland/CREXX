@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+storage,netrexx,equivalent-object-array,process,warmup,1,33237000,0,pass,,
+storage,netrexx,equivalent-object-array,process,recorded,1,31292000,0,pass,,
+storage,netrexx,equivalent-object-array,process,recorded,2,30602000,0,pass,,
+storage,netrexx,equivalent-object-array,process,recorded,3,30485000,0,pass,,

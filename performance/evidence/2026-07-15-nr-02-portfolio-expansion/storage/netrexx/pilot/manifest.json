@@ -1,0 +1,20 @@
+{
+  "schema": 2,
+  "capture_tool": "run_cross_runtime.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g3aee597382c9.dirty 20260715",
+  "workload": "storage",
+  "runtime": "netrexx",
+  "variant": "equivalent-object-array",
+  "lifecycle": "process",
+  "warmups": 1,
+  "recorded_runs": 3,
+  "sampling": "serial",
+  "correctness_expectation": "PASS: AWFY Storage",
+  "metric_prefix": null,
+  "command": ["java","-cp","performance/evidence/2026-07-15-nr-02-portfolio-expansion/generated/netrexx:/Users/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar","awfy_storage","10"],
+  "cwd": "/Users/adrian/CLionProjects/CREXX",
+  "host": "os=macos",
+  "started_utc": "2026-07-15T19:28:17+0000",
+  "completed_utc": "2026-07-15T19:28:17+0000",
+  "result": "pass"
+}
