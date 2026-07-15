@@ -437,22 +437,57 @@ effects are not represented as normal operands. For example, `inc0`, `dec0`,
 as using the corresponding fixed local register when checking whether an
 intervening instruction is relevant to a rule.
 
-The bounded register-effect model is split deliberately. `rxops.h` remains
-authoritative for control flow, barriers, and whether an instruction has
-implicit register use. `binutils/include/rxopeffects.h` supplies the optimizer's
-proven overwrite-without-read and implicit-register shape for those opcodes.
-Missing effect metadata is conservative: operand 1 is assumed readable and is
-not treated as a kill. The implicit shapes cover fixed registers, integer-coded
-local/argument register indexes, and the runtime-sized contiguous argument
-range after the third operand of `call`, `dcall`, and `srcfprocsel`.
+The opcode-effects inventory is split deliberately without duplicating facts.
+`rxops.h` remains authoritative for the dense opcode list, operand format,
+control flow, opcode flags and source-mnemonic status.
+`binutils/include/rxopeffects.h` is the one-to-one semantic sidecar: it has one
+ordered entry for every opcode slot, including reserved and internal slots.
+`binutils/rxopmeta.c` combines both sources through the stable
+`rxop_effects()` C API; `rxop_effect_count()` exposes the mechanically checked
+inventory size.
+
+`RxOpEffects` uses the following guarantees:
+
+- `state` is `CLASSIFIED`, `CONSERVATIVE`, `RESERVED`, or `INTERNAL`.
+  Conservative, reserved, internal and unknown/out-of-range queries are
+  optimizer barriers and never claim a kill.
+- `reads` and `writes` are conservative possible-access masks over explicit
+  operand positions 1-3. A consumer must account for two positions naming the
+  same physical register.
+- `kills` is a proof mask: every named operand is definitely overwritten
+  without reading its previous value. It is always a subset of `writes` and is
+  deliberately narrower than possible writes.
+- `implicit` covers fixed local-register read/modify/write, integer-coded local
+  copy/target registers, argument-register indexes and the runtime-sized local
+  range after operand 3 used by `call`, `dcall`, and `srcfprocsel`.
+- `branch_targets` identifies explicit label operands. Packed jump-table
+  instructions instead carry `RXOP_SEM_INDIRECT_BRANCH`.
+- `semantics` covers possible signal/error transfer, direct and dynamic call
+  boundaries, returns, alias creation/release, reference creation/read/write/
+  release, storage-lifetime end, indirect writes, indirect branches and opaque
+  side effects.
+- `flow` and `optimizer_barrier` are returned in the same object but are
+  derived from the canonical `rxops.h` flow/flags. A non-classified state also
+  forces the returned barrier bit.
+
+The current inventory has 641 entries: 539 source opcodes (533 classified and
+six explicitly conservative process/redirect operations), 99 reserved slots
+and three internal handlers. Coverage is not inferred from an instruction name
+or format. The audit used the VM handlers between `START_OF_INSTRUCTIONS` and
+`END_OF_INSTRUCTIONS`, the assembler/compiler behavior described here, and
+focused semantic tests. The tests mechanically validate table alignment,
+operand-mask legality, flow/branch/call/implicit consistency, source coverage,
+reserved/internal treatment and fail-closed unknown queries; they do not claim
+to parse arbitrary C handler bodies formally.
 
 The current compare/branch liveness check is intentionally bounded to the
-assembler queue and known labels. It follows declared jump edges, stops at
-terminators, and treats every optimizer barrier or unknown opcode as a possible
-observation of the live register. It is not a general control-flow graph or
-alias analysis. `test_rxop_metadata` is generated from `op_table` and checks
-that flow, implicit-use flags, effect shapes, and key barrier assumptions remain
-consistent as instructions are added.
+assembler queue and known labels. It now reads explicit read/kill and implicit
+register facts through `rxop_effects()`, follows declared jump edges, stops at
+terminators, and treats every returned optimizer barrier or non-classified
+opcode as a possible observation of the live register. It is not a general
+control-flow graph or alias analysis, and NR-04 adds no new optimization.
+`test_rxop_metadata` is generated from `op_table` and the complete effects
+sidecar so instructions cannot be added without a mechanically aligned entry.
 
 Attribute/register-view cleanup is also a keyhole concern. A full `copy`
 already copies the VM value status word, so `copy rA,rB` followed immediately

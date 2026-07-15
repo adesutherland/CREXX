@@ -779,6 +779,26 @@ In this example:
 - `REG_RETURN_INT` maps the result back into the memory of Operand 1.
 - `DISPATCH` safely jumps the Program Counter (`pc`) to the next instruction.
 
+### Opcode effects inventory
+
+The VM handlers are also the semantic evidence for the machine-readable opcode
+effects inventory consumed by RXAS and future data-flow work. The canonical
+structural inventory remains `binutils/include/rxops.h`; the complete ordered
+semantic sidecar is `binutils/include/rxopeffects.h`; and
+`rxop_effects()` in `binutils/rxopmeta.c` exposes their consolidated C API.
+Effects cover explicit and implicit register access, proven overwrites,
+branch-target operands, calls/returns, aliases, references and storage
+lifetimes, possible exceptional transfer, indirect effects and conservative
+barriers.
+
+The inventory is an audited contract, not a parser for arbitrary handler C.
+Handler-sensitive classifications are checked against the implementations in
+this instruction region and representative semantic tests. Every opcode slot
+must have an entry. Reserved/internal slots, explicitly conservative entries,
+and unknown/out-of-range API queries fail closed: they remain barriers and
+offer no kill proof. NR-04 does not change VM execution or serialized RXBIN and
+does not enable a new optimizer transformation.
+
 `interpreter/rxvminstrument.h` is the compile-time instrumentation contract for
 both VM modes. A backend can observe VM begin/end, instruction begin plus
 retire or terminal, frame activation, call/return transitions, and interrupt

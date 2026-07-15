@@ -25,6 +25,7 @@
 #ifndef RXDEFS_H
 #define RXDEFS_H
 
+#include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -126,10 +127,24 @@ typedef enum {
     FLG_IMPLICIT_REG_USE = 4
 } OpFlags;
 
+/* Explicit operand positions used by the opcode-effects inventory. */
 typedef enum {
-    RXOP_EFFECT_NONE = 0,
-    RXOP_EFFECT_OP1_KILL = 1
-} RxOpEffectFlags;
+    RXOP_OP_NONE = 0,
+    RXOP_OP_1 = 1,
+    RXOP_OP_2 = 2,
+    RXOP_OP_12 = 3,
+    RXOP_OP_3 = 4,
+    RXOP_OP_13 = 5,
+    RXOP_OP_23 = 6,
+    RXOP_OP_ALL = 7
+} RxOpOperandMask;
+
+typedef enum {
+    RXOP_EFFECT_CLASSIFIED = 0,
+    RXOP_EFFECT_CONSERVATIVE,
+    RXOP_EFFECT_RESERVED,
+    RXOP_EFFECT_INTERNAL
+} RxOpEffectState;
 
 typedef enum {
     RXOP_IMPLICIT_NONE = 0,
@@ -142,9 +157,35 @@ typedef enum {
     RXOP_IMPLICIT_LOCAL_RANGE_AFTER_OP3
 } RxOpImplicitEffect;
 
+typedef enum {
+    RXOP_SEM_NONE = 0,
+    RXOP_SEM_MAY_THROW = 1,
+    RXOP_SEM_CALL = 2,
+    RXOP_SEM_DYNAMIC_CALL = 4,
+    RXOP_SEM_RETURN = 8,
+    RXOP_SEM_ALIAS_CREATE = 16,
+    RXOP_SEM_ALIAS_RELEASE = 32,
+    RXOP_SEM_REFERENCE_CREATE = 64,
+    RXOP_SEM_REFERENCE_READ = 128,
+    RXOP_SEM_REFERENCE_WRITE = 256,
+    RXOP_SEM_REFERENCE_RELEASE = 512,
+    RXOP_SEM_LIFETIME_END = 1024,
+    RXOP_SEM_INDIRECT_WRITE = 2048,
+    RXOP_SEM_INDIRECT_BRANCH = 4096,
+    RXOP_SEM_OPAQUE = 8192
+} RxOpSemanticFlags;
+
 typedef struct {
-    unsigned int flags;
+    int opcode;
+    RxOpEffectState state;
+    unsigned int reads;
+    unsigned int writes;
+    unsigned int kills;
+    unsigned int branch_targets;
     RxOpImplicitEffect implicit;
+    unsigned int semantics;
+    FlowType flow;
+    int optimizer_barrier;
 } RxOpEffects;
 
 typedef struct {
@@ -176,6 +217,7 @@ typedef enum {
 #undef X
 
 RxOpEffects rxop_effects(int opcode);
+size_t rxop_effect_count(void);
 
 void *src_inst(const char* name, OperandType op1, OperandType op2, OperandType op3);
 

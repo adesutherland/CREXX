@@ -19,7 +19,7 @@ exit criterion is met.
 | NR-01 | Reproducible benchmark portfolio and runner | in progress | Approved workload coverage, serial raw-sample retention and the separate lifecycle lane are implemented; remaining exit work is machine-capturable full provenance and NR-11 publication policy. |
 | NR-02 | Portfolio equivalence and optimizer-resistance ledger | complete | All approved steady-state/runtime cells and the lifecycle lane have correctness, equivalence, generated-form and retained-pilot evidence or an explicit `not comparable` disposition. |
 | NR-03 | Automated performance evidence bundle | complete | One Level B command retains exact-hash Release timing, schema-3 profile/allocation evidence, RXSEQ N=2/3/4, ranked reports and paired deltas; the verified proof bundle is `evidence/2026-07-15-nr-03-automated-proof/`. |
-| NR-04 | Opcode effects inventory | queued | Generate and validate read/write/kill/alias/reference/throw/branch/call facts before broad flow transforms. |
+| NR-04 | Opcode effects inventory | complete | All 641 opcode slots have ordered machine-readable effects; 539 source opcodes are classified or explicitly conservative and RXAS consumes the fail-closed API without new transforms. |
 | NR-04A | Kind-index runtime metadata and scan counters | queued | Remove ordinary type/ADDRESS traversal through source/TRACE records without losing diagnostics. |
 | NR-05 | Call-path census | queued | Portfolio counts by call kind/arity plus swaps, copies, return placement, frame reuse, selection and signal unwind. |
 | NR-06 | Compiler call-window placement fast path | queued | Preserve the contiguous-window ABI and signal-unwind contract; schedule moves once and measure. |
@@ -182,6 +182,21 @@ exit criterion is met.
   help/symbol/compiler/preprocessor checks found no surviving instrumentation.
   The proof deliberately retains all passing samples; its timing deltas are
   observations, not a new regression policy or optimizer-causality claim.
+
+### NR-04 work notes
+
+- 2026-07-15: Completed the canonical opcode-effects sidecar and consolidated
+  `rxop_effects()`/`rxop_effect_count()` API. The mechanically closed inventory
+  covers 641 dense slots: 539 source opcodes (533 classified and six explicit
+  conservative process/redirect operations), 99 reserved slots and three
+  internal handlers. Effects cover explicit read/write/kill masks, implicit
+  fixed/indexed/range registers, branch targets and indirect branches, calls
+  and returns, alias/reference/lifetime behavior, exceptional transfer and
+  opaque barriers. Unknown, reserved, internal and conservative effects fail
+  closed. RXAS liveness now consumes the consolidated masks without enabling a
+  new transformation. Debug and Release metadata/optimizer tests passed 37/37;
+  the rebuilt broad Debug suite passed 1840/1840. NR-04A, CFG/global data flow,
+  dead NULL/ENDLIFE removal and RXBIN/public ABI changes remain out of scope.
 
 ## Cross-runtime portfolio execution order
 

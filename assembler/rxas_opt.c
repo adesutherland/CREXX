@@ -936,8 +936,10 @@ static int implicit_register_relevant(op_map *map,
                                       Assembler_Token *operand3Token) {
     RxOpEffects effects;
 
-    if (!op_info || !(op_info->flags & FLG_IMPLICIT_REG_USE)) return 0;
+    if (!op_info) return 1;
     effects = rxop_effects(op_info->opcode);
+    if (effects.state != RXOP_EFFECT_CLASSIFIED) return 1;
+    if (effects.implicit == RXOP_IMPLICIT_NONE) return 0;
 
     switch (effects.implicit) {
         case RXOP_IMPLICIT_LOCAL_COPY:
@@ -1059,10 +1061,6 @@ static int int_token_matches_register_number(Assembler_Token *token, size_t regi
            (size_t)token->token_value.integer == register_number;
 }
 
-static int opcode_writes_op1_without_read(int opcode) {
-    return (rxop_effects(opcode).flags & RXOP_EFFECT_OP1_KILL) != 0;
-}
-
 static int instruction_reads_register_before_kill(instruction_queue *instruction,
                                                   const OpInfo *op_info,
                                                   char register_type,
@@ -1072,14 +1070,20 @@ static int instruction_reads_register_before_kill(instruction_queue *instruction
     size_t range_base;
 
     if (instruction->instrType != OP_CODE) return 0;
+    if (!op_info) return 1;
+    effects = rxop_effects(op_info->opcode);
+    if (effects.state != RXOP_EFFECT_CLASSIFIED) return 1;
 
-    if (token_matches_register(instruction->operand2Token, register_type, register_number) ||
-        token_matches_register(instruction->operand3Token, register_type, register_number)) {
+    if (((effects.reads & RXOP_OP_1) &&
+         token_matches_register(instruction->operand1Token, register_type, register_number)) ||
+        ((effects.reads & RXOP_OP_2) &&
+         token_matches_register(instruction->operand2Token, register_type, register_number)) ||
+        ((effects.reads & RXOP_OP_3) &&
+         token_matches_register(instruction->operand3Token, register_type, register_number))) {
         return 1;
     }
 
-    if (op_info && (op_info->flags & FLG_IMPLICIT_REG_USE)) {
-        effects = rxop_effects(op_info->opcode);
+    if (effects.implicit != RXOP_IMPLICIT_NONE) {
         switch (effects.implicit) {
             case RXOP_IMPLICIT_LOCAL_TARGET:
                 if (token_matches_register(instruction->operand2Token, register_type, register_number)) return 1;
@@ -1116,8 +1120,7 @@ static int instruction_reads_register_before_kill(instruction_queue *instruction
         }
     }
 
-    if (!token_matches_register(instruction->operand1Token, register_type, register_number)) return 0;
-    return !op_info || !opcode_writes_op1_without_read(op_info->opcode);
+    return 0;
 }
 
 static int instruction_kills_register(instruction_queue *instruction,
@@ -1128,9 +1131,14 @@ static int instruction_kills_register(instruction_queue *instruction,
 
     if (instruction->instrType != OP_CODE || !op_info) return 0;
     effects = rxop_effects(op_info->opcode);
+    if (effects.state != RXOP_EFFECT_CLASSIFIED) return 0;
 
-    if (token_matches_register(instruction->operand1Token, register_type, register_number) &&
-        (effects.flags & RXOP_EFFECT_OP1_KILL)) {
+    if (((effects.kills & RXOP_OP_1) &&
+         token_matches_register(instruction->operand1Token, register_type, register_number)) ||
+        ((effects.kills & RXOP_OP_2) &&
+         token_matches_register(instruction->operand2Token, register_type, register_number)) ||
+        ((effects.kills & RXOP_OP_3) &&
+         token_matches_register(instruction->operand3Token, register_type, register_number))) {
         return 1;
     }
 
@@ -1193,7 +1201,7 @@ static int path_uses_register_before_kill(Assembler_Context *context,
             return 1;
         }
 
-        if (!op_info || (op_info->flags & FLG_OPT_BARRIER)) return 1;
+        if (!op_info || rxop_effects(op_info->opcode).optimizer_barrier) return 1;
 
         if (instruction_kills_register(instruction, op_info, register_type, register_number)) {
             return 0;
