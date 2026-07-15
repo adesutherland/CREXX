@@ -212,9 +212,9 @@ jobs:
           New-Item -ItemType Directory -Force -Path (Join-Path $stage "bin") | Out-Null
           New-Item -ItemType Directory -Force -Path (Join-Path $stage "examples") | Out-Null
 
-          Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/bin/*") -Destination (Join-Path $stage "bin") -Recurse
-          Copy-Item -Path "examples/*" -Destination (Join-Path $stage "examples") -Recurse
-          Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/example-artifacts/*") -Destination (Join-Path $stage "examples") -Recurse
+          Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/bin/*") -Destination (Join-Path $stage "bin") -Recurse -Force
+          Copy-Item -Path "examples/*" -Destination (Join-Path $stage "examples") -Recurse -Force
+          Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/example-artifacts/*") -Destination (Join-Path $stage "examples") -Recurse -Force
           Copy-Item -Path "LICENSE", "README.md", "SECURITY.md", "INSTALL-RUN.md" -Destination $stage
           Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/generated/VERSION") -Destination (Join-Path $stage "VERSION") -Force
           Copy-Item -Path (Join-Path "${{ runner.temp }}" "build/generated/BUILDINFO") -Destination (Join-Path $stage "BUILDINFO") -Force
