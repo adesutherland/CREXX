@@ -18,7 +18,7 @@ exit criterion is met.
 | --- | --- | --- | --- |
 | NR-01 | Reproducible benchmark portfolio and runner | in progress | Approved workload coverage, serial raw-sample retention and the separate lifecycle lane are implemented; remaining exit work is machine-capturable full provenance and NR-11 publication policy. |
 | NR-02 | Portfolio equivalence and optimizer-resistance ledger | complete | All approved steady-state/runtime cells and the lifecycle lane have correctness, equivalence, generated-form and retained-pilot evidence or an explicit `not comparable` disposition. |
-| NR-03 | Automated performance evidence bundle | queued | One command must coordinate unprofiled timing, instruction/procedure CSV, allocation data and RXSEQ N=2/3/4 for an exact image set. |
+| NR-03 | Automated performance evidence bundle | complete | One Level B command retains exact-hash Release timing, schema-3 profile/allocation evidence, RXSEQ N=2/3/4, ranked reports and paired deltas; the verified proof bundle is `evidence/2026-07-15-nr-03-automated-proof/`. |
 | NR-04 | Opcode effects inventory | queued | Generate and validate read/write/kill/alias/reference/throw/branch/call facts before broad flow transforms. |
 | NR-04A | Kind-index runtime metadata and scan counters | queued | Remove ordinary type/ADDRESS traversal through source/TRACE records without losing diagnostics. |
 | NR-05 | Call-path census | queued | Portfolio counts by call kind/arity plus swaps, copies, return placement, frame reuse, selection and signal unwind. |
@@ -157,6 +157,31 @@ exit criterion is met.
   List/cREXX retains its weak-reference arena as a disclosed adaptation. The
   resulting capability/accuracy register is `capability-gaps.md`; references
   and binary-safe `.binary` storage are confirmed present, not missing.
+
+### NR-03 work notes
+
+- 2026-07-15: Started the resumable implementation ledger in
+  `NR-03-WORKLIST.md`. The ordinary Release build is the verified
+  `-O3 -DNDEBUG`, profiling-off product baseline; no profiling build was
+  configured at handover. Existing schema-v2 instrumentation and focused tests
+  cover instruction/transition/procedure/native/call-mechanics timing,
+  overflow/degraded status, and RXSEQ N=2/3/4 exact-module analysis. Code audit
+  confirmed that allocation/value/frame counters are absent. A private
+  profiling-schema extension is sufficient and does not require a language,
+  RXBIN, public ABI, ownership, or architecture decision.
+- 2026-07-15: Completed NR-03 with the Level B
+  `tools/run_evidence_bundle.crexx` orchestration path and versioned
+  `manifests/nr03-proof-v1.txt`. Schema 3 adds documented profiling-only
+  allocation/value/frame counts, bytes, frame reuse/high water, explicit
+  native-child accounting, and row status. The retained proof bundle at
+  `evidence/2026-07-15-nr-03-automated-proof/` covers five exact
+  optimized/unoptimized pairs, 40 serial ordinary-Release samples, 10 profile
+  CSVs, 30 binary RXSEQ captures plus decoded candidate CSVs, generated paired
+  summaries, and 311 independently reverified checksums. Release benchmark
+  CTest passed 29/29 and profiling/RXSEQ CTest passed 11/11. Profiling-off
+  help/symbol/compiler/preprocessor checks found no surviving instrumentation.
+  The proof deliberately retains all passing samples; its timing deltas are
+  observations, not a new regression policy or optimizer-causality claim.
 
 ## Cross-runtime portfolio execution order
 

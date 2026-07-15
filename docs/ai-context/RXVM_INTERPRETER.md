@@ -834,6 +834,9 @@ native and reports calls, normally completed calls, calls discarded by an
 exceptional unwind, elapsed call time, inclusive body time, and self time.
 Rows are sorted by elapsed time (native total for native rows). Inclusive body
 time includes nested bytecode calls, so rows overlap; self time does not.
+Each bytecode row also reports `native_child`, the observed native-call time
+removed from self time. It is already inside inclusive body time and must not
+be added to elapsed time.
 Inlined calls have no runtime frame and therefore remain attributed to their
 containing procedure rather than appearing as separate rows.
 
@@ -868,16 +871,42 @@ profiler intentionally does not add another pair of timer reads around that
 check.
 
 CSV output retains the original columns in their original order, appends
-callable metadata/status columns, and identifies the format as schema version
-2. Its exact header is:
+callable and allocation metadata/status columns, and identifies the format as
+schema version 3. Its exact header is:
 
 ```text
-section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args
+section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args,bytes,max_bytes,high_water,status
 ```
 
 Procedure rows use `value` to distinguish `elapsed`, `inclusive_body`, `self`,
-`entry_overhead`, `exit_overhead`, and `native_total` metrics. There are
-multiple metric rows per bytecode callable rather than one denormalized row.
+`native_child`, `entry_overhead`, `exit_overhead`, and `native_total` metrics.
+There are multiple metric rows per bytecode callable rather than one
+denormalized row.
+
+Schema 3 also emits `allocation` rows. The counters are private profiling
+instrumentation, active only between profile begin/end, and count successful
+requests rather than live heap:
+
+- `frame_blocks` counts fresh combined frame/pointer/local-value blocks;
+  `frame_activations` counts fresh plus recycled activations, records maximum
+  simultaneous active frames in `high_water`, and `frame_reuses` identifies
+  recycler hits;
+- `standalone_values` counts successful `value_f()` allocations;
+  `attribute_value_blocks` and `attribute_pointer_storage` cover VM-managed
+  object-attribute capacity;
+- `string_buffers` and `binary_buffers` cover VM value-buffer allocations and
+  capacity changes, with successful reallocations charged at their requested
+  new capacity;
+- `value_slots` totals counted standalone, frame-local/a0, and attribute
+  `value` structs. Its byte fields overlap their containing allocation rows by
+  design.
+
+The allocation scope excludes loader state, profiler/RXSEQ bookkeeping,
+plugin-private/native-payload ownership, reference-lifetime payloads, OS/TLS,
+and temporary native conversion storage. Allocation rows carry `complete`,
+`overflowed`, or `degraded`; summary rows retain counter overflow plus
+procedure/allocation tracking availability. A non-zero active-frame balance
+degrades the frame-activation row.
 
 Timing values are raw instrumented wall times. The report includes the minimum
 positive adjacent clock-read interval and zero-delta calibration count, but
@@ -885,7 +914,9 @@ does not subtract them from short instructions. Compare instruction shares
 within equivalent profiled runs rather than treating the values as the
 uninstrumented VM's absolute cost. Instruction and transition counters use
 fixed per-run arrays; the common hot path performs no allocation, locking,
-callbacks, sorting, or output formatting. The procedure activation array is
+callbacks, sorting, or output formatting. Allocation accounting itself is
+fixed-state TLS-local addition at the existing allocation/frame boundaries.
+The procedure activation array is
 allocated once per run and grows only if call depth exceeds its current
 capacity. Bytecode procedure timing reuses the existing instruction
 timestamps; only native calls add a dedicated timer pair, and exceptional

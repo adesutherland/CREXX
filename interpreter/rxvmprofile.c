@@ -25,6 +25,23 @@ static const char *const rxvm_profile_transition_names[RXVM_TRANSITION_COUNT] = 
         "terminal"
 };
 
+static const char *const rxvm_profile_allocation_names[RXVM_PROFILE_ALLOC_COUNT] = {
+        "frame_blocks",
+        "standalone_values",
+        "attribute_value_blocks",
+        "attribute_pointer_storage",
+        "string_buffers",
+        "binary_buffers"
+};
+
+#if defined(_MSC_VER)
+#define RXVM_PROFILE_THREAD_LOCAL __declspec(thread)
+#else
+#define RXVM_PROFILE_THREAD_LOCAL __thread
+#endif
+
+static RXVM_PROFILE_THREAD_LOCAL rxvm_profile_state *rxvm_active_allocation_profile;
+
 uint64_t rxvm_profile_now_ns(void) {
 #ifdef __APPLE__
     return clock_gettime_nsec_np(CLOCK_UPTIME_RAW);
@@ -42,6 +59,23 @@ uint64_t rxvm_profile_now_ns(void) {
     if (clock_gettime(CLOCK_MONOTONIC, &ts) != 0) return 0;
     return (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
 #endif
+}
+
+void rxvm_profile_record_allocation(rxvm_profile_allocation_kind kind,
+                                    size_t bytes, size_t value_slots) {
+    rxvm_profile_add_allocation_at(rxvm_active_allocation_profile, kind,
+                                   (uint64_t)bytes, (uint64_t)value_slots);
+}
+
+void rxvm_profile_record_frame_activation(int reused, size_t frame_bytes,
+                                          size_t value_slots) {
+    rxvm_profile_frame_activation_at(rxvm_active_allocation_profile, reused,
+                                     (uint64_t)frame_bytes,
+                                     (uint64_t)value_slots);
+}
+
+void rxvm_profile_record_frame_release(void) {
+    rxvm_profile_frame_release_at(rxvm_active_allocation_profile);
 }
 
 static char *rxvm_profile_copy_string(const char *source, size_t length) {
@@ -273,6 +307,8 @@ void rxvm_profile_begin(rxvm_profile_state *state, int enabled,
         }
     }
     state->timer_read_min_ns = minimum == UINT64_MAX ? 0 : minimum;
+    state->previous_allocation_profile = rxvm_active_allocation_profile;
+    rxvm_active_allocation_profile = state;
 }
 
 void rxvm_profile_destroy(rxvm_profile_state *state) {
@@ -292,6 +328,9 @@ void rxvm_profile_destroy(rxvm_profile_state *state) {
     state->procedure_capacity = 0;
     state->activation_count = 0;
     state->activation_capacity = 0;
+    if (rxvm_active_allocation_profile == state)
+        rxvm_active_allocation_profile = state->previous_allocation_profile;
+    state->previous_allocation_profile = 0;
 }
 
 static uint64_t rxvm_profile_average(const rxvm_profile_counter *counter) {
@@ -453,7 +492,22 @@ static void rxvm_profile_write_procedure_csv_row(
     rxvm_profile_csv_string(out, procedure->return_type);
     fputc(',', out);
     rxvm_profile_csv_string(out, procedure->args);
-    fputc('\n', out);
+    fprintf(out, ",,,,\n");
+}
+
+static const char *rxvm_profile_counter_status(const rxvm_profile_state *state) {
+    return state->overflowed ? "overflowed" : "complete";
+}
+
+static void rxvm_profile_write_allocation_csv_row(
+        FILE *out, const char *name, uint64_t count, uint64_t bytes,
+        uint64_t max_bytes, uint64_t high_water, const char *status) {
+    int i;
+    fprintf(out, "allocation,%s,,,%" PRIu64 ",0,0,0,0,0",
+            name, count);
+    for (i = 0; i < 10; i++) fputc(',', out);
+    fprintf(out, ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%s\n",
+            bytes, max_bytes, high_water, status);
 }
 
 static void rxvm_profile_write_csv(FILE *out,
@@ -469,24 +523,25 @@ static void rxvm_profile_write_csv(FILE *out,
     int position;
     int i;
 
-    fprintf(out, "section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args\n");
-    fprintf(out, "summary,schema_version,2,,0,0,0,0,0,0,,,,,,,,,,\n");
-    fprintf(out, "summary,vm_mode,%s,,0,0,0,0,0,0,,,,,,,,,,\n", vm_mode);
-    fprintf(out, "summary,result,%d,,0,0,0,0,0,0,,,,,,,,,,\n", result);
-    fprintf(out, "summary,timer_read_min_ns,%" PRIu64 ",,1,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",0,,,,,,,,,,\n",
+    fprintf(out, "section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args,bytes,max_bytes,high_water,status\n");
+    fprintf(out, "summary,schema_version,3,,0,0,0,0,0,0,,,,,,,,,,,,,,\n");
+    fprintf(out, "summary,vm_mode,%s,,0,0,0,0,0,0,,,,,,,,,,,,,,\n", vm_mode);
+    fprintf(out, "summary,result,%d,,0,0,0,0,0,0,,,,,,,,,,,,,,\n", result);
+    fprintf(out, "summary,timer_read_min_ns,%" PRIu64 ",,1,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",0,,,,,,,,,,,,,,\n",
             state->timer_read_min_ns,
             state->timer_read_min_ns, state->timer_read_min_ns,
             state->timer_read_min_ns, state->timer_read_min_ns);
-    fprintf(out, "summary,timer_zero_deltas,%" PRIu64 ",,0,0,0,0,0,0,,,,,,,,,,\n",
+    fprintf(out, "summary,timer_zero_deltas,%" PRIu64 ",,0,0,0,0,0,0,,,,,,,,,,,,,,\n",
             state->timer_zero_deltas);
-    fprintf(out, "summary,interrupt_polls,%" PRIu64 ",,0,0,0,0,0,0,,,,,,,,,,\n",
+    fprintf(out, "summary,interrupt_polls,%" PRIu64 ",,0,0,0,0,0,0,,,,,,,,,,,,,,\n",
             state->interrupt_polls);
-    fprintf(out, "summary,invalid_events,%" PRIu64 ",,0,0,0,0,0,0,,,,,,,,,,\n",
+    fprintf(out, "summary,invalid_events,%" PRIu64 ",,0,0,0,0,0,0,,,,,,,,,,,,,,\n",
             state->invalid_events);
-    fprintf(out, "summary,counter_overflow,%d,,0,0,0,0,0,0,,,,,,,,,,\n",
+    fprintf(out, "summary,counter_overflow,%d,,0,0,0,0,0,0,,,,,,,,,,,,,,\n",
             state->overflowed);
-    fprintf(out, "summary,procedure_tracking_unavailable,%d,,0,0,0,0,0,0,,,,,,,,,,\n",
+    fprintf(out, "summary,procedure_tracking_unavailable,%d,,0,0,0,0,0,0,,,,,,,,,,,,,,\n",
             state->procedure_tracking_unavailable);
+    fprintf(out, "summary,allocation_tracking_unavailable,0,,0,0,0,0,0,0,,,,,,,,,,,,,,\n");
 
     rxvm_profile_sort_instruction_indices(state, indices, &used);
     for (position = 0; position < used; position++) {
@@ -494,7 +549,7 @@ static void rxvm_profile_write_csv(FILE *out,
         const rxvm_profile_counter *counter = &state->instructions[opcode];
         fprintf(out,
                 "instruction,%s,,%d,%" PRIu64 ",%" PRIu64 ",%" PRIu64
-                ",%" PRIu64 ",%" PRIu64 ",%.6f,,,,,,,,,,\n",
+                ",%" PRIu64 ",%" PRIu64 ",%.6f,,,,,,,,,,,,,,\n",
                 instruction_map[opcode].instruction, opcode, counter->count,
                 counter->total_ns, rxvm_profile_average(counter),
                 counter->min_ns, counter->max_ns,
@@ -506,7 +561,7 @@ static void rxvm_profile_write_csv(FILE *out,
         if (!counter->count) continue;
         fprintf(out,
                 "transition,%s,,%d,%" PRIu64 ",%" PRIu64 ",%" PRIu64
-                ",%" PRIu64 ",%" PRIu64 ",%.6f,,,,,,,,,,\n",
+                ",%" PRIu64 ",%" PRIu64 ",%.6f,,,,,,,,,,,,,,\n",
                 rxvm_profile_transition_names[i], i, counter->count,
                 counter->total_ns, rxvm_profile_average(counter),
                 counter->min_ns, counter->max_ns,
@@ -515,16 +570,16 @@ static void rxvm_profile_write_csv(FILE *out,
 
     fprintf(out,
             "interrupt,scan_all,,,%" PRIu64 ",%" PRIu64 ",%" PRIu64
-            ",%" PRIu64 ",%" PRIu64 ",0,,,,,,,,,,\n",
+            ",%" PRIu64 ",%" PRIu64 ",0,,,,,,,,,,,,,,\n",
             state->interrupt_scans.count, state->interrupt_scans.total_ns,
             rxvm_profile_average(&state->interrupt_scans),
             state->interrupt_scans.min_ns, state->interrupt_scans.max_ns);
     fprintf(out,
-            "interrupt,scan_without_selection,,,%" PRIu64 ",0,0,0,0,0,,,,,,,,,,\n",
+            "interrupt,scan_without_selection,,,%" PRIu64 ",0,0,0,0,0,,,,,,,,,,,,,,\n",
             state->interrupt_scans_without_selection);
     fprintf(out,
             "interrupt,mechanics_all,,,%" PRIu64 ",%" PRIu64 ",%" PRIu64
-            ",%" PRIu64 ",%" PRIu64 ",0,,,,,,,,,,\n",
+            ",%" PRIu64 ",%" PRIu64 ",0,,,,,,,,,,,,,,\n",
             state->interrupt_mechanics.count,
             state->interrupt_mechanics.total_ns,
             rxvm_profile_average(&state->interrupt_mechanics),
@@ -539,7 +594,7 @@ static void rxvm_profile_write_csv(FILE *out,
         fprintf(out,
                 "interrupt,%s,,%d,%" PRIu64 ",%" PRIu64 ",%" PRIu64
                 ",%" PRIu64 ",%" PRIu64 ",0,%" PRIu64 ",%" PRIu64
-                ",%" PRIu64 ",%" PRIu64 ",,,,,,\n",
+                ",%" PRIu64 ",%" PRIu64 ",,,,,,,,,,\n",
                 rxvm_profile_signal_name((unsigned char)i, signal_name,
                                          fallback, sizeof(fallback)),
                 i, counter->mechanics.count, counter->mechanics.total_ns,
@@ -570,6 +625,9 @@ static void rxvm_profile_write_csv(FILE *out,
                 rxvm_profile_write_procedure_csv_row(
                         out, procedure, "self", &procedure->self);
                 rxvm_profile_write_procedure_csv_row(
+                        out, procedure, "native_child",
+                        &procedure->native_child);
+                rxvm_profile_write_procedure_csv_row(
                         out, procedure, "entry_overhead",
                         &procedure->entry_overhead);
                 rxvm_profile_write_procedure_csv_row(
@@ -579,6 +637,25 @@ static void rxvm_profile_write_csv(FILE *out,
         }
         free(procedure_indices);
     }
+
+    for (i = 0; i < RXVM_PROFILE_ALLOC_COUNT; i++) {
+        const rxvm_profile_allocation_counter *counter = &state->allocations[i];
+        rxvm_profile_write_allocation_csv_row(
+                out, rxvm_profile_allocation_names[i], counter->count,
+                counter->bytes, counter->max_bytes, 0,
+                rxvm_profile_counter_status(state));
+    }
+    rxvm_profile_write_allocation_csv_row(
+            out, "value_slots", state->value_slots, state->value_slot_bytes,
+            state->max_value_slots_per_block * sizeof(value), 0,
+            rxvm_profile_counter_status(state));
+    rxvm_profile_write_allocation_csv_row(
+            out, "frame_activations", state->frame_activations, 0, 0,
+            state->frame_high_water,
+            state->active_frames ? "degraded" : rxvm_profile_counter_status(state));
+    rxvm_profile_write_allocation_csv_row(
+            out, "frame_reuses", state->frame_reuses, 0, 0, 0,
+            rxvm_profile_counter_status(state));
 }
 
 static void rxvm_profile_write_table(FILE *out,
@@ -601,10 +678,11 @@ static void rxvm_profile_write_table(FILE *out,
             state->timer_read_min_ns, state->timer_zero_deltas);
     fprintf(out,
             "Hot-loop interrupt polls=%" PRIu64 "; invalid events=%" PRIu64
-            "; counter overflow=%s; procedure tracking=%s\n",
+            "; counter overflow=%s; procedure tracking=%s; allocation tracking=%s\n",
             state->interrupt_polls, state->invalid_events,
             state->overflowed ? "yes" : "no",
-            state->procedure_tracking_unavailable ? "degraded" : "complete");
+            state->procedure_tracking_unavailable ? "degraded" : "complete",
+            state->active_frames ? "degraded" : "complete");
 
     fprintf(out, "\nInstructions (entry to retire/terminal)\n");
     fprintf(out, "%-30s %7s %14s %14s %12s %12s %8s\n",
@@ -645,9 +723,10 @@ static void rxvm_profile_write_table(FILE *out,
 
         fprintf(out, "\nProcedures and methods (inclusive body overlaps nested calls)\n");
         fprintf(out,
-                "%-60s %-9s %9s %9s %9s %14s %12s %14s %14s %8s\n",
+                "%-60s %-9s %9s %9s %9s %14s %12s %14s %14s %14s %8s\n",
                 "callable", "kind", "calls", "complete", "unwound",
-                "total ns", "average ns", "body ns", "self ns", "self %");
+                "total ns", "average ns", "body ns", "self ns",
+                "native child", "self %");
         for (procedure_position = 0; procedure_position < procedure_used;
              procedure_position++) {
             const rxvm_profile_procedure *procedure =
@@ -655,17 +734,17 @@ static void rxvm_profile_write_table(FILE *out,
             if (procedure->native) {
                 fprintf(out,
                         "%-60s %-9s %9" PRIu64 " %9" PRIu64 " %9" PRIu64
-                        " %14" PRIu64 " %12" PRIu64 " %14s %14s %8s\n",
+                        " %14" PRIu64 " %12" PRIu64 " %14s %14s %14s %8s\n",
                         procedure->name, "native", procedure->calls,
                         procedure->completed, procedure->unwound,
                         procedure->native_total.total_ns,
                         rxvm_profile_average(&procedure->native_total),
-                        "-", "-", "-");
+                        "-", "-", "-", "-");
             } else {
                 fprintf(out,
                         "%-60s %-9s %9" PRIu64 " %9" PRIu64 " %9" PRIu64
                         " %14" PRIu64 " %12" PRIu64 " %14" PRIu64
-                        " %14" PRIu64
+                        " %14" PRIu64 " %14" PRIu64
                         " %7.2f%%\n",
                         procedure->name,
                         rxvm_profile_callable_kind_name(procedure),
@@ -675,6 +754,7 @@ static void rxvm_profile_write_table(FILE *out,
                         rxvm_profile_average(&procedure->elapsed),
                         procedure->inclusive_body.total_ns,
                         procedure->self.total_ns,
+                        procedure->native_child.total_ns,
                         rxvm_profile_percent(procedure->self.total_ns,
                                              procedure->inclusive_body.total_ns));
             }
@@ -708,6 +788,24 @@ static void rxvm_profile_write_table(FILE *out,
         }
         free(procedure_indices);
     }
+
+    fprintf(out, "\nRuntime allocation and value/frame storage\n");
+    fprintf(out, "%-30s %12s %16s %16s %16s\n",
+            "counter", "requests", "requested bytes", "max request", "high water");
+    for (i = 0; i < RXVM_PROFILE_ALLOC_COUNT; i++) {
+        const rxvm_profile_allocation_counter *counter = &state->allocations[i];
+        fprintf(out, "%-30s %12" PRIu64 " %16" PRIu64 " %16" PRIu64 " %16s\n",
+                rxvm_profile_allocation_names[i], counter->count,
+                counter->bytes, counter->max_bytes, "-");
+    }
+    fprintf(out, "%-30s %12" PRIu64 " %16" PRIu64 " %16" PRIu64 " %16s\n",
+            "value_slots", state->value_slots, state->value_slot_bytes,
+            state->max_value_slots_per_block * sizeof(value), "-");
+    fprintf(out, "%-30s %12" PRIu64 " %16s %16s %16" PRIu64 "\n",
+            "frame_activations", state->frame_activations, "-", "-",
+            state->frame_high_water);
+    fprintf(out, "%-30s %12" PRIu64 " %16s %16s %16s\n",
+            "frame_reuses", state->frame_reuses, "-", "-", "-");
 
     fprintf(out, "\nInterrupt sub-phases\n");
     fprintf(out,

@@ -45,6 +45,7 @@ static void test_balanced_procedure_accounting(void) {
     assert(procedures[0].entry_overhead.total_ns == 10);
     assert(procedures[0].inclusive_body.total_ns == 75);
     assert(procedures[0].self.total_ns == 15);
+    assert(procedures[0].native_child.total_ns == 10);
     assert(procedures[0].exit_overhead.total_ns == 10);
     assert(procedures[0].elapsed.total_ns == 95);
 
@@ -53,6 +54,7 @@ static void test_balanced_procedure_accounting(void) {
     assert(procedures[1].entry_overhead.total_ns == 20);
     assert(procedures[1].inclusive_body.total_ns == 15);
     assert(procedures[1].self.total_ns == 15);
+    assert(procedures[1].native_child.total_ns == 0);
     assert(procedures[1].exit_overhead.total_ns == 15);
     assert(procedures[1].elapsed.total_ns == 50);
 
@@ -98,6 +100,44 @@ static void test_unwound_procedure_accounting(void) {
     assert(procedures[1].elapsed.total_ns == 30);
     assert(procedures[0].unwound == 1);
     assert(state.invalid_events == 0);
+}
+
+static void test_allocation_and_frame_accounting(void) {
+    rxvm_profile_state state;
+
+    memset(&state, 0, sizeof(state));
+    state.enabled = 1;
+
+    rxvm_profile_add_allocation_at(
+            &state, RXVM_PROFILE_ALLOC_VALUE, 2 * sizeof(value), 2);
+    rxvm_profile_add_allocation_at(
+            &state, RXVM_PROFILE_ALLOC_STRING_BUFFER, 64, 0);
+    rxvm_profile_frame_activation_at(&state, 0, 512, 3);
+    rxvm_profile_frame_activation_at(&state, 1, 0, 0);
+
+    assert(state.allocations[RXVM_PROFILE_ALLOC_VALUE].count == 1);
+    assert(state.allocations[RXVM_PROFILE_ALLOC_VALUE].bytes ==
+           2 * sizeof(value));
+    assert(state.allocations[RXVM_PROFILE_ALLOC_STRING_BUFFER].max_bytes == 64);
+    assert(state.allocations[RXVM_PROFILE_ALLOC_FRAME_BLOCK].count == 1);
+    assert(state.allocations[RXVM_PROFILE_ALLOC_FRAME_BLOCK].bytes == 512);
+    assert(state.value_slots == 5);
+    assert(state.value_slot_bytes == 5 * sizeof(value));
+    assert(state.max_value_slots_per_block == 3);
+    assert(state.frame_activations == 2);
+    assert(state.frame_reuses == 1);
+    assert(state.frame_high_water == 2);
+    assert(state.active_frames == 2);
+
+    rxvm_profile_frame_release_at(&state);
+    rxvm_profile_frame_release_at(&state);
+    assert(state.active_frames == 0);
+    assert(state.invalid_events == 0);
+
+    state.allocations[RXVM_PROFILE_ALLOC_BINARY_BUFFER].count = UINT64_MAX;
+    rxvm_profile_add_allocation_at(
+            &state, RXVM_PROFILE_ALLOC_BINARY_BUFFER, 32, 0);
+    assert(state.overflowed);
 }
 
 int main(void) {
@@ -192,6 +232,7 @@ int main(void) {
     assert(procedures[0].entry_overhead.total_ns == 5);
     assert(procedures[0].inclusive_body.total_ns == 80);
     assert(procedures[0].self.total_ns == 30);
+    assert(procedures[0].native_child.total_ns == 0);
     assert(procedures[0].exit_overhead.total_ns == 10);
     assert(procedures[0].elapsed.total_ns == 95);
     assert(procedures[1].calls == 1);
@@ -204,6 +245,7 @@ int main(void) {
 
     test_balanced_procedure_accounting();
     test_unwound_procedure_accounting();
+    test_allocation_and_frame_accounting();
 
     return 0;
 }

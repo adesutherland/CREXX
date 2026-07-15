@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include "rxdefs.h"
 #include "rxsignal.h"
+#include "rxvalue.h"
 #include "rxvminstrument.h"
 
 #if defined(_MSC_VER)
@@ -52,6 +53,7 @@ typedef struct rxvm_profile_procedure {
     rxvm_profile_counter elapsed;
     rxvm_profile_counter inclusive_body;
     rxvm_profile_counter self;
+    rxvm_profile_counter native_child;
     rxvm_profile_counter entry_overhead;
     rxvm_profile_counter exit_overhead;
     rxvm_profile_counter native_total;
@@ -63,6 +65,7 @@ typedef struct rxvm_profile_activation {
     uint64_t call_start_ns;
     uint64_t body_start_ns;
     uint64_t self_ns;
+    uint64_t native_child_ns;
     int body_started;
 } rxvm_profile_activation;
 
@@ -72,6 +75,22 @@ typedef struct rxvm_profile_pending_exit {
     uint64_t call_start_ns;
     uint64_t exit_start_ns;
 } rxvm_profile_pending_exit;
+
+typedef enum rxvm_profile_allocation_kind {
+    RXVM_PROFILE_ALLOC_FRAME_BLOCK = 0,
+    RXVM_PROFILE_ALLOC_VALUE,
+    RXVM_PROFILE_ALLOC_ATTRIBUTE_VALUES,
+    RXVM_PROFILE_ALLOC_ATTRIBUTE_POINTERS,
+    RXVM_PROFILE_ALLOC_STRING_BUFFER,
+    RXVM_PROFILE_ALLOC_BINARY_BUFFER,
+    RXVM_PROFILE_ALLOC_COUNT
+} rxvm_profile_allocation_kind;
+
+typedef struct rxvm_profile_allocation_counter {
+    uint64_t count;
+    uint64_t bytes;
+    uint64_t max_bytes;
+} rxvm_profile_allocation_counter;
 
 typedef struct rxvm_profile_state {
     int enabled;
@@ -113,6 +132,16 @@ typedef struct rxvm_profile_state {
     size_t native_procedure_id;
     uint64_t native_start_ns;
 
+    struct rxvm_profile_state *previous_allocation_profile;
+    rxvm_profile_allocation_counter allocations[RXVM_PROFILE_ALLOC_COUNT];
+    uint64_t value_slots;
+    uint64_t value_slot_bytes;
+    uint64_t max_value_slots_per_block;
+    uint64_t frame_activations;
+    uint64_t frame_reuses;
+    uint64_t active_frames;
+    uint64_t frame_high_water;
+
     rxvm_profile_counter instructions[OP_MAX_INSTRUCTIONS];
     rxvm_profile_counter transitions[RXVM_TRANSITION_COUNT];
     rxvm_profile_counter interrupt_scans;
@@ -134,6 +163,11 @@ void rxvm_profile_report(const rxvm_profile_state *state,
                          int result,
                          const Instruction *instruction_map,
                          rxvm_profile_signal_name_fn signal_name);
+void rxvm_profile_record_allocation(rxvm_profile_allocation_kind kind,
+                                    size_t bytes, size_t value_slots);
+void rxvm_profile_record_frame_activation(int reused, size_t frame_bytes,
+                                          size_t value_slots);
+void rxvm_profile_record_frame_release(void);
 
 RXVM_PROFILE_INLINE uint64_t rxvm_profile_elapsed(uint64_t start_ns,
                                                   uint64_t end_ns) {
@@ -168,6 +202,63 @@ RXVM_PROFILE_INLINE void rxvm_profile_add_counter(rxvm_profile_state *state,
     rxvm_profile_add_total(state, &counter->total_ns, elapsed_ns);
     if (first || elapsed_ns < counter->min_ns) counter->min_ns = elapsed_ns;
     if (first || elapsed_ns > counter->max_ns) counter->max_ns = elapsed_ns;
+}
+
+RXVM_PROFILE_INLINE int rxvm_profile_valid_allocation_kind(
+        rxvm_profile_allocation_kind kind) {
+    return kind >= RXVM_PROFILE_ALLOC_FRAME_BLOCK &&
+           kind < RXVM_PROFILE_ALLOC_COUNT;
+}
+
+RXVM_PROFILE_INLINE void rxvm_profile_add_allocation_at(
+        rxvm_profile_state *state, rxvm_profile_allocation_kind kind,
+        uint64_t bytes, uint64_t value_slots) {
+    rxvm_profile_allocation_counter *counter;
+    uint64_t value_bytes;
+    if (!state || !state->enabled ||
+            !rxvm_profile_valid_allocation_kind(kind)) return;
+    counter = &state->allocations[kind];
+    rxvm_profile_increment(state, &counter->count);
+    rxvm_profile_add_total(state, &counter->bytes, bytes);
+    if (bytes > counter->max_bytes) counter->max_bytes = bytes;
+    if (!value_slots) return;
+    if (value_slots > state->max_value_slots_per_block)
+        state->max_value_slots_per_block = value_slots;
+    rxvm_profile_add_total(state, &state->value_slots, value_slots);
+    if (value_slots > UINT64_MAX / sizeof(value)) {
+        value_bytes = UINT64_MAX;
+        state->overflowed = 1;
+    } else {
+        value_bytes = value_slots * sizeof(value);
+    }
+    rxvm_profile_add_total(state, &state->value_slot_bytes, value_bytes);
+}
+
+RXVM_PROFILE_INLINE void rxvm_profile_frame_activation_at(
+        rxvm_profile_state *state, int reused, uint64_t frame_bytes,
+        uint64_t value_slots) {
+    if (!state || !state->enabled) return;
+    rxvm_profile_increment(state, &state->frame_activations);
+    rxvm_profile_increment(state, &state->active_frames);
+    if (state->active_frames > state->frame_high_water)
+        state->frame_high_water = state->active_frames;
+    if (reused) {
+        rxvm_profile_increment(state, &state->frame_reuses);
+    } else {
+        rxvm_profile_add_allocation_at(
+                state, RXVM_PROFILE_ALLOC_FRAME_BLOCK, frame_bytes,
+                value_slots);
+    }
+}
+
+RXVM_PROFILE_INLINE void rxvm_profile_frame_release_at(
+        rxvm_profile_state *state) {
+    if (!state || !state->enabled) return;
+    if (!state->active_frames) {
+        rxvm_profile_increment(state, &state->invalid_events);
+        return;
+    }
+    state->active_frames--;
 }
 
 RXVM_PROFILE_INLINE int rxvm_profile_valid_transition(rxvm_transition_reason reason) {
@@ -284,6 +375,7 @@ RXVM_PROFILE_INLINE int rxvm_profile_push_activation(
     activation->call_start_ns = call_start_ns;
     activation->body_start_ns = 0;
     activation->self_ns = 0;
+    activation->native_child_ns = 0;
     activation->body_started = 0;
     rxvm_profile_increment(state, &state->procedures[procedure_id].calls);
     return 1;
@@ -310,6 +402,8 @@ RXVM_PROFILE_INLINE void rxvm_profile_close_top_at(
                 state, &procedure->inclusive_body,
                 rxvm_profile_elapsed(activation.body_start_ns, body_end_ns));
         rxvm_profile_add_counter(state, &procedure->self, activation.self_ns);
+        rxvm_profile_add_counter(state, &procedure->native_child,
+                                 activation.native_child_ns);
     }
     if (completed) rxvm_profile_increment(state, &procedure->completed);
     else rxvm_profile_increment(state, &procedure->unwound);
@@ -507,6 +601,11 @@ RXVM_PROFILE_INLINE void rxvm_profile_native_end_at(rxvm_profile_state *state,
     if (state->instruction_active)
         rxvm_profile_add_total(state, &state->native_elapsed_in_instruction,
                                elapsed_ns);
+    if (state->activation_count)
+        rxvm_profile_add_total(
+                state,
+                &state->activations[state->activation_count - 1].native_child_ns,
+                elapsed_ns);
     state->native_active = 0;
 }
 

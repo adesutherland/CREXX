@@ -44,6 +44,14 @@
 #include <float.h>
 #include <string.h>
 
+#ifdef CREXX_VM_PROFILING
+#include "rxvmprofile.h"
+#define RXVM_PROFILE_RECORD_ALLOCATION(kind_, bytes_, value_slots_) \
+    rxvm_profile_record_allocation((kind_), (bytes_), (value_slots_))
+#else
+#define RXVM_PROFILE_RECORD_ALLOCATION(kind_, bytes_, value_slots_) ((void)0)
+#endif
+
 /* Forward declarations */
 static void extract_double_decimal(numeric_context* num_context, value *coefficient, value *exponent, double value);
 static void extract_integer_decimal(numeric_context* num_context, value *coefficient, value *exponent, rxinteger value);
@@ -219,6 +227,8 @@ RX_INLINE void value_init(value *v) {
 RX_INLINE value* value_f() {
     value* this;
     this = malloc(sizeof(value));
+    if (this) RXVM_PROFILE_RECORD_ALLOCATION(
+            RXVM_PROFILE_ALLOC_VALUE, sizeof(value), 1);
     value_init(this);
     return this;
 }
@@ -283,9 +293,15 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
     /* Now we need to make the pointer arrays big enough */
     if (v->attributes) v->attributes = realloc(v->attributes, sizeof(value*) * new_max);
     else v->attributes = malloc(sizeof(value*) * new_max);
+    if (v->attributes) RXVM_PROFILE_RECORD_ALLOCATION(
+            RXVM_PROFILE_ALLOC_ATTRIBUTE_POINTERS,
+            sizeof(value*) * new_max, 0);
 
     if (v->unlinked_attributes) v->unlinked_attributes = realloc(v->unlinked_attributes, sizeof(value*) * new_max);
     else v->unlinked_attributes = malloc(sizeof(value*) * new_max);
+    if (v->unlinked_attributes) RXVM_PROFILE_RECORD_ALLOCATION(
+            RXVM_PROFILE_ALLOC_ATTRIBUTE_POINTERS,
+            sizeof(value*) * new_max, 0);
 
     /* We create a buffer for the new attributes separate to the existing buffers. */
     size_t old_capacity = power_of_two_size(v->num_attribute_buffers);
@@ -299,11 +315,19 @@ RX_INLINE void set_num_attributes(value* v, size_t num) {
         } else {
             v->attribute_buffers = malloc(sizeof(value*) * new_capacity);
         }
+        if (v->attribute_buffers) RXVM_PROFILE_RECORD_ALLOCATION(
+                RXVM_PROFILE_ALLOC_ATTRIBUTE_POINTERS,
+                sizeof(value*) * new_capacity, 0);
     }
 
     /* Create a new buffer */
     v->attribute_buffers[v->num_attribute_buffers - 1] =
             malloc(sizeof(value) * (new_max - v->max_num_attributes));
+    if (v->attribute_buffers[v->num_attribute_buffers - 1])
+        RXVM_PROFILE_RECORD_ALLOCATION(
+                RXVM_PROFILE_ALLOC_ATTRIBUTE_VALUES,
+                sizeof(value) * (new_max - v->max_num_attributes),
+                new_max - v->max_num_attributes);
 
     /* Initiate the new attributes */
     a = v->attribute_buffers[v->num_attribute_buffers - 1];
@@ -339,6 +363,9 @@ RX_INLINE int reserve_binary_buffer(value *v, size_t length) {
         else new_buffer = malloc(new_size);
 
         if (!new_buffer) return -1;
+
+        RXVM_PROFILE_RECORD_ALLOCATION(
+                RXVM_PROFILE_ALLOC_BINARY_BUFFER, new_size, 0);
 
         v->binary_value = new_buffer;
         v->binary_buffer_length = new_size;
@@ -407,6 +434,8 @@ RX_INLINE int concat_binary(value *dest, value *left, value *right) {
         size_t buffer_length = buffer_size(total_length);
         char *buffer = malloc(buffer_length);
         if (!buffer) return -1;
+        RXVM_PROFILE_RECORD_ALLOCATION(
+                RXVM_PROFILE_ALLOC_BINARY_BUFFER, buffer_length, 0);
         if (left_length) memcpy(buffer, left->binary_value, left_length);
         if (right_length) memcpy(buffer + left_length, right->binary_value, right_length);
         set_buffer_binary(dest, buffer, total_length, buffer_length);
@@ -450,6 +479,9 @@ RX_INLINE void prep_string_buffer(value *v, size_t length) {
         if (v->string_value != v->small_string_buffer) free(v->string_value);
         v->string_buffer_length = buffer_size(v->string_length);
         v->string_value = malloc(v->string_buffer_length);
+        if (v->string_value) RXVM_PROFILE_RECORD_ALLOCATION(
+                RXVM_PROFILE_ALLOC_STRING_BUFFER,
+                v->string_buffer_length, 0);
     }
 }
 
@@ -464,6 +496,9 @@ RX_INLINE void extend_string_buffer(value *v, size_t length) {
         else {
             v->string_value = realloc(v->string_value, v->string_buffer_length);
         }
+        if (v->string_value) RXVM_PROFILE_RECORD_ALLOCATION(
+                RXVM_PROFILE_ALLOC_STRING_BUFFER,
+                v->string_buffer_length, 0);
     }
 }
 
@@ -1101,6 +1136,17 @@ RX_MOSTLYINLINE void maybe_trim_attribute_storage(value *v) {
     new_unlinked_attributes = malloc(sizeof(value*) * new_max);
     new_attribute_buffers = malloc(sizeof(value*));
     new_storage = malloc(sizeof(value) * new_max);
+    if (new_attributes) RXVM_PROFILE_RECORD_ALLOCATION(
+            RXVM_PROFILE_ALLOC_ATTRIBUTE_POINTERS,
+            sizeof(value*) * new_max, 0);
+    if (new_unlinked_attributes) RXVM_PROFILE_RECORD_ALLOCATION(
+            RXVM_PROFILE_ALLOC_ATTRIBUTE_POINTERS,
+            sizeof(value*) * new_max, 0);
+    if (new_attribute_buffers) RXVM_PROFILE_RECORD_ALLOCATION(
+            RXVM_PROFILE_ALLOC_ATTRIBUTE_POINTERS, sizeof(value*), 0);
+    if (new_storage) RXVM_PROFILE_RECORD_ALLOCATION(
+            RXVM_PROFILE_ALLOC_ATTRIBUTE_VALUES,
+            sizeof(value) * new_max, new_max);
     if (!new_attributes || !new_unlinked_attributes || !new_attribute_buffers || !new_storage) {
         if (new_attributes) free(new_attributes);
         if (new_unlinked_attributes) free(new_unlinked_attributes);
@@ -1429,6 +1475,8 @@ RX_INLINE void string_concat(value *v1, value *v2, value *v3) {
     if (v1 == v2 || v1 == v3) {
         /* Need to use a buffer */
         buffer = malloc(buffer_len);
+        if (buffer) RXVM_PROFILE_RECORD_ALLOCATION(
+                RXVM_PROFILE_ALLOC_STRING_BUFFER, buffer_len, 0);
 
         memcpy(buffer, v2->string_value, v2->string_length);
         memcpy(buffer + v2->string_length, v3->string_value, v3->string_length);
@@ -1472,6 +1520,8 @@ RX_INLINE void string_sconcat(value *v1, value *v2, value *v3) {
     if (v1 == v2 || v1 == v3) {
         /* Need to use a buffer */
         buffer = malloc(buffer_len);
+        if (buffer) RXVM_PROFILE_RECORD_ALLOCATION(
+                RXVM_PROFILE_ALLOC_STRING_BUFFER, buffer_len, 0);
 
         memcpy(buffer, v2->string_value, v2->string_length);
         buffer[v2->string_length] = ' ';
@@ -1514,6 +1564,8 @@ RX_INLINE void string_concat_var_const(value *v1, value *v2, string_constant *v3
     if (v1 == v2) {
         /* Need to use a buffer */
         buffer = malloc(buffer_len);
+        if (buffer) RXVM_PROFILE_RECORD_ALLOCATION(
+                RXVM_PROFILE_ALLOC_STRING_BUFFER, buffer_len, 0);
 
         memcpy(buffer, v2->string_value, v2->string_length);
         memcpy(buffer + v2->string_length, v3->string, v3->string_len);
@@ -1556,6 +1608,8 @@ RX_INLINE void string_sconcat_var_const(value *v1, value *v2, string_constant *v
     if (v1 == v2) {
         /* Need to use a buffer */
         buffer = malloc(buffer_len);
+        if (buffer) RXVM_PROFILE_RECORD_ALLOCATION(
+                RXVM_PROFILE_ALLOC_STRING_BUFFER, buffer_len, 0);
 
         memcpy(buffer, v2->string_value, v2->string_length);
         buffer[v2->string_length] = ' ';
@@ -1600,6 +1654,8 @@ RX_INLINE void string_concat_const_var(value *v1, string_constant *v2, value *v3
     if (v1 == v3) {
         /* Need to use a buffer */
         buffer = malloc(buffer_len);
+        if (buffer) RXVM_PROFILE_RECORD_ALLOCATION(
+                RXVM_PROFILE_ALLOC_STRING_BUFFER, buffer_len, 0);
 
         memcpy(buffer, v2->string, v2->string_len);
         memcpy(buffer + v2->string_len, v3->string_value, v3->string_length);
@@ -1643,6 +1699,8 @@ RX_INLINE void string_sconcat_const_var(value *v1, string_constant *v2, value *v
     if (v1 == v3) {
         /* Need to use a buffer */
         buffer = malloc(buffer_len);
+        if (buffer) RXVM_PROFILE_RECORD_ALLOCATION(
+                RXVM_PROFILE_ALLOC_STRING_BUFFER, buffer_len, 0);
 
         memcpy(buffer, v2->string, v2->string_len);
         buffer[v2->string_len] = ' ';
@@ -2439,5 +2497,7 @@ static void extract_integer_decimal(numeric_context* num_context, value *coeffic
     mark_ascii_string_valid_count(coefficient);
 #endif
 }
+
+#undef RXVM_PROFILE_RECORD_ALLOCATION
 
 #endif //CREXX_RXVMVARS_H

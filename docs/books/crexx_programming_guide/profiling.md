@@ -1,9 +1,11 @@
 # Profiling cREXX VM Execution
 
-cREXX can profile an RXBIN program at two complementary levels:
+cREXX can profile an RXBIN program at three complementary levels:
 
 - **timing and counts** for VM instructions, dispatch transitions,
   procedures, methods, factories, native calls, and interrupt handling;
+- **runtime storage counts** for VM values, frame allocation/reuse, attribute
+  storage, and string/binary buffers;
 - **dynamic instruction sequences** for finding frequently executed runs of
   two, three, or four sequential instructions.
 
@@ -124,9 +126,10 @@ rxvme --profile-output application.csv application.rxbin -a first second
 The heading identifies the VM mode and the program result. A result of `0`
 normally means that the program completed successfully. The next lines state
 the monotonic-clock calibration, hot-loop interrupt-poll count, invalid-event
-count, counter-overflow state, and whether procedure tracking was complete.
+count, counter-overflow state, and whether procedure and allocation tracking
+were complete.
 
-The report then contains four views of the run:
+The report then contains five views of the run:
 
 | Section | What it reports |
 |---|---|
@@ -134,6 +137,7 @@ The report then contains four views of the run:
 | **Transitions** | Time from an instruction retiring to the next instruction entering. Kinds distinguish sequential flow, a taken branch, call entry, return exit, interrupt entry/resume, external entry, and termination. |
 | **Procedures and methods** | Runtime calls and inclusive elapsed/body/self time for bytecode callables; call count and total observed time for native callables. |
 | **Call mechanics** | The measured VM work entering and leaving each bytecode callable. |
+| **Runtime allocation and value/frame storage** | Successful profiling-scope allocation requests, requested bytes, maximum request size, frame reuse, and active-frame high water. |
 
 The final **Interrupt sub-phases** section separates interrupt scans from the
 mechanics of entering, resuming, or terminating an interrupt path. These
@@ -157,6 +161,7 @@ For bytecode callables the columns mean:
 | `average ns` | Elapsed time divided by the number of elapsed samples. |
 | `body ns` | Inclusive body time, including nested bytecode calls. |
 | `self ns` | Time attributed only to that callable, excluding nested bytecode calls and observed native-call time. |
+| `native child` | Observed native-call time removed from this bytecode caller's self time. It is a child component of body time, not extra elapsed time. |
 | `self %` | Self time as a percentage of inclusive body time. |
 
 The call-mechanics table exposes the entry and exit components separately:
@@ -176,7 +181,8 @@ Native plugin calls are timed around the VM's native-call boundary. A native
 row therefore has `calls`, `complete`, total time, and average time, while
 body, self, and bytecode entry/exit columns are shown as unavailable. Native
 time remains visible in the calling instruction's timing but is removed from
-the bytecode caller's self time.
+the bytecode caller's self time. The `native_child` metric preserves that
+removed amount explicitly for each bytecode caller.
 
 Dynamic calls are attributed to the concrete procedure selected at runtime.
 An inlined procedure or method creates no runtime frame and consequently does
@@ -186,10 +192,10 @@ procedure and its executed instructions.
 ### CSV Format
 
 CSV is the best input for spreadsheets, scripts, and comparisons between runs.
-The current format identifies itself as schema version 2 and starts with:
+The current format identifies itself as schema version 3 and starts with:
 
 ```text
-section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args
+section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args,bytes,max_bytes,high_water,status
 ```
 
 Columns that do not apply to a row are empty or zero. Interpret rows by their
@@ -202,12 +208,42 @@ Columns that do not apply to a row are empty or zero. Interpret rows by their
 | `transition` | One row per observed transition kind. |
 | `interrupt` | Scan totals and per-signal selection/entry/resume/terminal data. |
 | `procedure` | One or more metric rows per called procedure, method, factory, or native routine. |
+| `allocation` | One row per allocation/value/frame counter, including byte and high-water fields where they apply. |
 
 For a bytecode `procedure` row, `value` is one of `elapsed`,
-`inclusive_body`, `self`, `entry_overhead`, or `exit_overhead`. A native row
-uses `native_total`. Callable rows also carry `module`, `kind`, `completed`,
-`unwound`, `return_type`, and `args` metadata. Do not assume that one CSV row
-represents all metrics for a callable.
+`inclusive_body`, `self`, `native_child`, `entry_overhead`, or
+`exit_overhead`. A native row uses `native_total`. Callable rows also carry
+`module`, `kind`, `completed`, `unwound`, `return_type`, and `args` metadata.
+Do not assume that one CSV row represents all metrics for a callable.
+
+### Allocation and Frame Counter Definitions
+
+The allocation view counts successful allocation requests made while the
+timing-profile run is active. `bytes` is the sum of requested capacities and
+`max_bytes` is the largest single requested capacity. A successful `realloc`
+is one request for its full new capacity, not a net-growth byte count. These
+are request counters, not retained/live-heap measurements.
+
+| Counter | Exact scope |
+|---|---|
+| `frame_blocks` | Fresh combined `stack_frame` blocks allocated when the selected procedure has no reusable block large enough. `bytes` includes the frame, pointer arrays, and inline local/a0 `value` storage. |
+| `standalone_values` | Successful `value_f()` heap allocations. Each request also contributes one `value_slots` slot. |
+| `attribute_value_blocks` | Fresh or replacement blocks containing object-attribute `value` structs. Their element counts contribute to `value_slots`. |
+| `attribute_pointer_storage` | Successful allocations or capacity changes for attribute pointer arrays, unlinked-attribute pointer arrays, and attribute-buffer pointer arrays. |
+| `string_buffers` | Successful heap buffer allocations/capacity changes made by VM string growth or alias-safe string concatenation. Inline small strings do not count. |
+| `binary_buffers` | Successful heap buffer allocations/capacity changes made by VM binary growth or binary concatenation. |
+| `value_slots` | Total `value` structs supplied by counted standalone, frame-local/a0, and attribute-value allocations. `bytes` is slots times `sizeof(value)`; `max_bytes` is the largest counted value block. It deliberately overlaps the containing allocation byte totals. |
+| `frame_activations` | Every activated bytecode frame, fresh or recycled. `high_water` is the maximum simultaneously active bytecode-frame count observed in the run. |
+| `frame_reuses` | Activations satisfied from a procedure's frame recycler rather than a fresh `frame_blocks` request. |
+
+The scope excludes module loading, profiler/RXSEQ bookkeeping, plugin-private
+and native-payload ownership, OS/TLS support, reference-lifetime payloads, and
+temporary native conversion buffers. It is intentionally a focused VM
+value/frame/storage view, not a replacement for a heap profiler. Allocation
+rows report `complete`, `overflowed`, or `degraded`; the summary also carries
+`allocation_tracking_unavailable`. A non-zero active-frame balance at report
+time degrades `frame_activations` because its high water cannot then be treated
+as a balanced run.
 
 ### Interpreting Timing Responsibly
 
@@ -230,10 +266,10 @@ Instruction, transition, procedure, and interrupt sections are overlapping
 views. Procedure body times also overlap their nested callees. Do not add the
 sections or all procedure rows together as if they partition elapsed time.
 
-`invalid events`, `counter overflow`, or `procedure tracking=degraded` in the
-table heading—and their CSV summary equivalents—mean that the affected view
-is incomplete. Preserve those status fields whenever profiles are processed
-automatically.
+`invalid events`, `counter overflow`, `procedure tracking=degraded`, or
+`allocation tracking=degraded` in the table heading—and their CSV summary or
+allocation-row equivalents—mean that the affected view is incomplete.
+Preserve those status fields whenever profiles are processed automatically.
 
 ## Dynamic Instruction-Sequence Profiles
 

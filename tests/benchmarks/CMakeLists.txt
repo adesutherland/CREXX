@@ -69,6 +69,18 @@ crexx_add_rexx_opt_matrix(
         FORBIDDEN_OUTPUT_REGEX "ERROR:|FAIL:|PANIC:"
 )
 
+crexx_add_rexx_opt_matrix(
+        NAME nr03_evidence_tool_selftest
+        SOURCE ${CMAKE_SOURCE_DIR}/performance/tools/run_evidence_bundle.crexx
+        TARGET_GROUP language_benchmarks
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library compiler_exit_bin
+        RUNTIME_ARGS ${LIBRPATH} -a --self-test
+        TEST_LABELS "benchmark;runner;performance"
+        REQUIRED_OUTPUT_REGEX "PASS: NR-03 evidence tool self-test"
+        FORBIDDEN_OUTPUT_REGEX "ERROR:|FAIL:|PANIC:"
+)
+
 crexx_label_smoke_tests(
         benchmark_awfy_sieve_opt
         benchmark_awfy_permute_opt
@@ -82,4 +94,5 @@ crexx_label_smoke_tests(
         benchmark_base64_roundtrip_opt
         benchmark_rexxcps_levelb_opt
         benchmark_rexxcps_levelb_opaque_opt
-        benchmark_runner_opt)
+        benchmark_runner_opt
+        nr03_evidence_tool_selftest_opt)

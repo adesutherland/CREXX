@@ -2944,6 +2944,9 @@ RX_INLINE stack_frame *frame_f(
         this = *procedure->frame_free_list;
         *procedure->frame_free_list = this->prev_free;
         this->prev_free = 0;
+#ifdef CREXX_VM_PROFILING
+        rxvm_profile_record_frame_activation(1, 0, 0);
+#endif
 
         /* Reset Local Registers */
         for (i = 0; i < procedure->locals; i++) {
@@ -2976,6 +2979,9 @@ RX_INLINE stack_frame *frame_f(
 
         this = (stack_frame *) malloc( frame_size );
         if (!this) return 0;
+#ifdef CREXX_VM_PROFILING
+        rxvm_profile_record_frame_activation(0, frame_size, value_count);
+#endif
         this->prev_free = 0;
 
         this->baselocals = (value**)(this + 1);
@@ -3109,6 +3115,9 @@ RX_INLINE void clear_frame(stack_frame *frame) {
 
 /* Free Stack Frame */
 RX_INLINE void free_frame(stack_frame *frame) {
+#ifdef CREXX_VM_PROFILING
+    rxvm_profile_record_frame_release();
+#endif
     rxsignal_clear_handler_stack(frame);
     rxvm_release_frame_reference_lifetimes(frame);
     /* Add to free list */
@@ -3479,8 +3488,8 @@ RXVM_LABEL_OWNER RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[
     bin_code *interrupted_pc = 0;
     int mod_index;
     value *interrupt_arg;
-    value *signal_value = value_f();
-    value *interrupt_action_value = value_f();
+    value *signal_value;
+    value *interrupt_action_value;
     unsigned char signal_code = 0;
     value *arguments_array = 0;                /* note that the needs mallocing / freeing */
     unsigned char last_interrupt = 0; /* Interrupt being handled */
@@ -3497,9 +3506,9 @@ RXVM_LABEL_OWNER RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[
     unsigned char *current_const_pool = 0;
     value **current_locals = 0;
     /* 3 Work Registers */
-    value *work1 = value_f();
-    value *work2 = value_f();
-    value *work3 = value_f();
+    value *work1;
+    value *work2;
+    value *work3;
     module *current_module = 0;
 #ifdef NTHREADED
     void *next_inst = 0;
@@ -3508,6 +3517,12 @@ RXVM_LABEL_OWNER RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[
 #endif
     RXVM_INSTRUMENTATION_STATE();
     RXVM_INSTRUMENTATION_VM_BEGIN(context);
+
+    signal_value = value_f();
+    interrupt_action_value = value_f();
+    work1 = value_f();
+    work2 = value_f();
+    work3 = value_f();
 
     /* Set up the interrupt object array */
     {
