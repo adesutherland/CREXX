@@ -1,0 +1,17 @@
+Compiled from "hello.java"
+public class hello {
+  private static final java.lang.String $0;
+
+  public static void main(java.lang.String[]);
+    Code:
+         0: ldc           #1                  // String PASS: NetRexx 5.10-GA compile/run proof
+         2: invokestatic  #3                  // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+         5: pop
+         6: return
+
+  private hello();
+    Code:
+         0: aload_0
+         1: invokespecial #9                  // Method java/lang/Object."<init>":()V
+         4: return
+}

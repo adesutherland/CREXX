@@ -1,0 +1,95 @@
+Compiled from "awfy_permute.java"
+class PermuteBenchmark {
+  private static final java.lang.String $0;
+
+  private int count;
+
+  private int[] values;
+
+  public PermuteBenchmark();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: aload_0
+         5: iconst_0
+         6: putfield      #7                  // Field count:I
+         9: aload_0
+        10: bipush        6
+        12: newarray       int
+        14: putfield      #13                 // Field values:[I
+        17: return
+
+  public int run();
+    Code:
+         0: aload_0
+         1: iconst_0
+         2: putfield      #7                  // Field count:I
+         5: aload_0
+         6: bipush        6
+         8: invokevirtual #17                 // Method permute:(I)V
+        11: aload_0
+        12: getfield      #7                  // Field count:I
+        15: ireturn
+
+  public void permute(int);
+    Code:
+         0: iconst_0
+         1: istore_2
+         2: iconst_0
+         3: istore_3
+         4: aload_0
+         5: dup
+         6: getfield      #7                  // Field count:I
+         9: iconst_1
+        10: iadd
+        11: putfield      #7                  // Field count:I
+        14: iload_1
+        15: ifeq          56
+        18: iload_1
+        19: iconst_1
+        20: isub
+        21: istore_2
+        22: aload_0
+        23: iload_2
+        24: invokevirtual #17                 // Method permute:(I)V
+        27: iload_2
+        28: istore_3
+        29: iload_3
+        30: iflt          56
+        33: aload_0
+        34: iload_2
+        35: iload_3
+        36: invokevirtual #21                 // Method swap:(II)V
+        39: aload_0
+        40: iload_2
+        41: invokevirtual #17                 // Method permute:(I)V
+        44: aload_0
+        45: iload_2
+        46: iload_3
+        47: invokevirtual #21                 // Method swap:(II)V
+        50: iinc          3, -1
+        53: goto          29
+        56: return
+
+  public void swap(int, int);
+    Code:
+         0: aload_0
+         1: getfield      #13                 // Field values:[I
+         4: iload_1
+         5: iaload
+         6: istore_3
+         7: aload_0
+         8: getfield      #13                 // Field values:[I
+        11: iload_1
+        12: aload_0
+        13: getfield      #13                 // Field values:[I
+        16: iload_2
+        17: iaload
+        18: iastore
+        19: aload_0
+        20: getfield      #13                 // Field values:[I
+        23: iload_2
+        24: iload_3
+        25: iastore
+        26: return
+}

@@ -1,0 +1,78 @@
+--- tests/benchmarks/cross-runtime/rexxcps/rexxcps_2_1n.nrx	2026-07-15 16:42:18
++++ tests/benchmarks/cross-runtime/rexxcps/rexxcps_2_2n.nrx	2026-07-15 16:21:49
+@@ -4,6 +4,12 @@
+ /* 2.0   3 Jun 89 Remove attempt to simulate commands                */
+ /* 2.1   7 Oct 89 Remove use of not symbols, and correct commentary  */
+ /* 2.1n 26 Jun 96 NetRexx version of 2.1 (see comments below).       */
++/* 2.2n 15 Jul 26 Disclosed NR-02 adaptation of the bundled 2.1n     */
++/*                  source. Retains the NetRexx timed kernel and adds */
++/*                  the upstream 2.2 minimum-duration calibration.   */
++/*                                                                  */
++/* This adaptation is not the bundled canonical 2.1n source. See    */
++/* performance/NR-02-WORKLIST.md for provenance and equivalence.    */
+ options nobinary
+ numeric digits 20
+ /* This measure of REXX execution speed is based on an analysis of   */
+@@ -50,11 +56,10 @@
+ /* Repetition count */
+ averaging=100
+ /* Averaging-over count */
+-rexxcps='2.1n'      /* REXXCPS version */
++rexxcps='2.2n'      /* disclosed NetRexx adaptation version */
+ say '----- REXXCPS' rexxcps '-- Measuring NetRexx clauses/second -----'
+ say ' NetRexx version is:' myversion
+ say '          System is:' opsystem
+-say '          Averaging:' averaging 'measures of' count 'iterations'
+ 
+ /* ----- Calibrate for the empty loop ----- */
+ empty=long 0
+@@ -65,6 +70,9 @@
+   end
+   fempty=empty/averaging
+ 
++/* Measure at most twice. If the first summed timed region is shorter than
++   one second, increase count using the RexxCPS 2.2 rule and repeat. */
++loop trial=1 to 2
+   /* ----- Now the true timer loop .. average timing again ----- */
+   full=long 0
+   loop for averaging
+@@ -117,13 +125,22 @@
+     end
+     full=full+System.nanoTime()-start
+   end
+-  ffull=full/averaging
+-  /* Now display the statistics */
+-  looptime=(ffull-fempty)/(count*1000000000) -- 1000000000 for nanosecs->secs
++  total=full/1000000000
++  if total>1 | trial=2 then leave
++  if total=0 then count=count*100
++  else count=(1%total+1)*count
++end trial
++
++ffull=full/averaging
++say '          Averaging:' averaging 'measures of' count 'iterations'
++say '                       of 1000 clauses (over' total.format(null,null,1) 's)'
++
++/* Now display the statistics */
++looptime=(ffull-fempty)/(count*1000000000) -- 1000000000 for nanosecs->secs
+   /* Developer's statistics: */
+   if dstats then do
+     say
+-    say 'Total (full DO):' (ffull-fempty)/1000000000 'secs (average of' averaging -
++    say 'Total (full DOs):' total 'secs (average of' averaging -
+     'measures of' count 'iterations)'
+     say 'Time for one iteration (1000 clauses) was:' looptime 'seconds'
+   end
+@@ -136,6 +153,7 @@
+   say'                (' cps.format(null,3,null,0,'e') 'cps)'
+   say
+   p1=p1;p2=p2;p3=p3;p4=p4;p5=p5;p6=p6;p7=p7;p8=p8;v1=v1;v2=v2
++  say 'PASS: RexxCPS 2.2n NetRexx disclosed adaptation'
+   exit
+ 
+ 
+@@ -161,3 +179,4 @@
+       raw = raw.substr(2)
+     end
+     return raw
++

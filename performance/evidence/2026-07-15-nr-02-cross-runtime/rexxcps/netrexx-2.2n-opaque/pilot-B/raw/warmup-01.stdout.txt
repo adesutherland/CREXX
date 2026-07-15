@@ -1,0 +1,14 @@
+----- REXXCPS 2.2n-opaque -- Measuring NetRexx clauses/second -----
+ NetRexx version is: NetRexx 5.10 20 Mar 2026
+          System is: Java
+          Averaging: 100 measures of 300 iterations
+                       of 1000 clauses (over 0.820443502    s)
+
+Total (full DOs): 0.820443502 secs (average of 100 measures of 300 iterations)
+Time for one iteration (1000 clauses) was: 0.000027339684966666666667 seconds
+
+     Performance: 36_576_866 NetRexx clauses per second
+                ( 36.577E+6 cps)
+
+OBSERVED: B|1|69|1.22694
+PASS: RexxCPS 2.2n NetRexx opaque/result-observation diagnostic

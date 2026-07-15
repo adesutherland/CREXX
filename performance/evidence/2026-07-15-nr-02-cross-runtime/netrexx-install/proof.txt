@@ -1,0 +1,28 @@
+NetRexx installation proof
+Date: 2026-07-15
+
+Commands (from this directory):
+
+  PATH=/Users/adrian/.local/opt/netrexx/5.10-GA/bin:$PATH \
+    nrc -keep hello.nrx
+  java -cp .:/Users/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar hello
+  javap -classpath .:/Users/adrian/.local/opt/netrexx/5.10-GA/runlib/NetRexxR.jar \
+    -c -p hello
+
+Compiler output:
+
+  NetRexx portable processor 5.10-GA build 18-20260320-1410
+  Copyright (c) RexxLA, 2011,2026.   All rights reserved.
+  Parts Copyright (c) IBM Corporation, 1995,2008.
+  Program hello.nrx
+  Compilation of 'hello.nrx' successful
+
+Program output:
+
+  PASS: NetRexx 5.10-GA compile/run proof
+
+Generated artifacts:
+
+- hello.java.keep: retained generated Java source
+- hello.class: compiled Java class data, version 52.0 (Java 1.8)
+- hello.javap.txt: retained bytecode disassembly

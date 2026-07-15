@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+rexxcps,crexx-release-clang-o3,2.2c-opaque-B-opt,process,warmup,1,11955333000,0,pass,837672,cREXX clauses per second
+rexxcps,crexx-release-clang-o3,2.2c-opaque-B-opt,process,recorded,1,11878193000,0,pass,843094,cREXX clauses per second
+rexxcps,crexx-release-clang-o3,2.2c-opaque-B-opt,process,recorded,2,11968107000,0,pass,836741,cREXX clauses per second
+rexxcps,crexx-release-clang-o3,2.2c-opaque-B-opt,process,recorded,3,12056370000,0,pass,830635,cREXX clauses per second

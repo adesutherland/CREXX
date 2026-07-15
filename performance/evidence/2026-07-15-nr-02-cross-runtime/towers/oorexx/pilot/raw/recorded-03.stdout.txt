@@ -1,0 +1,2 @@
+benchmark=awfy_towers repetitions=10 result=8191
+PASS: AWFY Towers Classic procedural adaptation

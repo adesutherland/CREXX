@@ -55,6 +55,16 @@ For ADDRESS environment work, `docs/ai-context/RXVM_INTERPRETER.md` is the curre
 - Keep documentation in sync with code. If you uncover important undocumented behaviour or architecture, update the relevant docs as part of the change.
 - Treat source documentation tags as first-class code-adjacent assets during refactors. When rewriting or replacing `.crexx` classes, methods, plugins, or library surfaces, preserve existing `/** ... */` RexxDoc blocks and tags such as `@param`, `@parm`, `@return`, `@author`, examples, and notes wherever the documented API still exists. If behaviour, signatures, backing implementation, or return contracts change, update the tags in the same change instead of dropping them. Before large classlib or library refactors, compare relevant doc-tag coverage before and after; if tags are intentionally removed because an API is removed, call that out explicitly in the change summary.
 
+## Performance Programme
+
+For performance-programme work, read `performance/AGENTS.md` and
+`performance/ROADMAP.md` before changing benchmarks, profiling automation,
+compiler/assembler optimisations, VM execution paths, or recorded performance
+evidence. The dated programme charter remains
+`docs/planning/release-1/performance-programme-report-2026-07-15.md`; use the
+roadmap for live status and idea capture rather than editing historical findings
+into the charter.
+
 ## Linux Install Notes
 
 - The default CMake install prefix is the user prefix, `$HOME/.local`, so a

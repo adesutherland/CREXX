@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+towers,crexx,equivalent-port,process,warmup,1,1916165084,0,pass,,
+towers,crexx,equivalent-port,process,recorded,1,1161715250,0,pass,,
+towers,crexx,equivalent-port,process,recorded,2,1567470333,0,pass,,
+towers,crexx,equivalent-port,process,recorded,3,1454330000,0,pass,,

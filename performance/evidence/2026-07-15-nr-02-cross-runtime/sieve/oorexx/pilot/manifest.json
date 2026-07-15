@@ -1,0 +1,23 @@
+{
+  "command": [
+    "/Users/adrian/.local/opt/oorexx/5.1.0-12973/bin/rexx",
+    "/Users/adrian/CLionProjects/CREXX/tests/benchmarks/cross-runtime/classic/awfy_sieve.rex",
+    "50"
+  ],
+  "completed_utc": "2026-07-15T15:59:33.620706+00:00",
+  "correctness_expectation": "PASS: AWFY Sieve Classic port",
+  "cwd": "/Users/adrian/CLionProjects/CREXX",
+  "host": "macOS-26.5.2-arm64-arm-64bit-Mach-O",
+  "lifecycle": "process",
+  "metric_regex": null,
+  "python": "3.14.4",
+  "recorded_runs": 3,
+  "result": "pass",
+  "runtime": "oorexx",
+  "sampling": "serial",
+  "schema": 1,
+  "started_utc": "2026-07-15T15:59:33.286600+00:00",
+  "variant": "equivalent-port",
+  "warmups": 1,
+  "workload": "sieve"
+}

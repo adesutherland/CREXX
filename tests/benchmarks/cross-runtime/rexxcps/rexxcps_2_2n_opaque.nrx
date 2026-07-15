@@ -1,0 +1,214 @@
+/* Take a measure of REXX clauses-per-second (CIPS)                  */
+/* Mike Cowlishaw (MFC at VENTA)                                     */
+/* 1.0  17 Jan 89 Original version                                   */
+/* 2.0   3 Jun 89 Remove attempt to simulate commands                */
+/* 2.1   7 Oct 89 Remove use of not symbols, and correct commentary  */
+/* 2.1n 26 Jun 96 NetRexx version of 2.1 (see comments below).       */
+/* 2.2n 15 Jul 26 Disclosed NR-02 adaptation of the bundled 2.1n     */
+/*                  source. Retains the NetRexx timed kernel and adds */
+/*                  the upstream 2.2 minimum-duration calibration.   */
+/*                                                                  */
+/* This adaptation is not the bundled canonical 2.1n source. See    */
+/* performance/NR-02-WORKLIST.md for provenance and equivalence.    */
+/*                                                                  */
+/* NR-02 opaque-input/result-observation diagnostic. This separately */
+/* named source is not a quotable canonical RexxCPS implementation.  */
+options nobinary
+numeric digits 20
+/* This measure of REXX execution speed is based on an analysis of   */
+/* the dynamic mix of clauses found in a (subjectively chosen)       */
+/* collection of REXX programs (including commands, macros, and      */
+/* personal programs).  Approximately 2,500,000 lines of trace       */
+/* output were analysed, and the program below recreates the         */
+/* dynamic mix of constructs found in that analysis.                 */
+/* In view of the dramatic differences between systems in their      */
+/* efficiency of issuing commands, the timed loop does not issue     */
+/* commands (an 'RC=expression; PARSE' sequence is used instead).    */
+/* This program therefore measures the performance of a REXX         */
+/* implementation, exclusive of command execution overhead.          */
+/* Elapsed (user-perceived) time is used, rather than any form of    */
+/* virtual time.                                                     */
+/*                                                                   */
+/* For 2.1n (NetRexx version), the original instruction mix is       */
+/* preserved, for comparison with 2.1 -- there is no intent to       */
+/* imply that the mix is representative of NetRexx programs.         */
+
+/* For NetRexx, the following changes had to be made to the measured */
+/* loop:                                                             */
+/*                                                                   */
+/*   repetitive 'do' becomes 'loop'                                  */
+/*   'loop' control variable renamed 'lvar'                          */
+/*   'acompound.' becomes an indexed variable, and so has to be      */
+/*     initialized; trace instruction removed to compensate          */
+/*   address instruction changed to 'address=digits'                 */
+/*   'value' and 'var' keywords on parse removed                     */
+/*   functions (substr, etc.) become methods of Rexx class (working  */
+/*     on key1 rather than j, where appropriate, so binary/nobinary  */
+/*     comparisons can be made)                                      */
+/*   subroutine becomes a method                                     */
+/*   first parse in method is on first string only (but sets same    */
+/*     number of variables)                                          */
+
+parse source   mysource  1 opsystem .
+mysource=mysource
+
+
+parse version  myversion
+parse arg variant
+if variant='' then variant='A'
+select
+  when variant='A' then do
+    opaqueZero=0; opaqueOne=1; opaqueMarker='b'
+    opaqueKey='Key Bee'; opaqueDigits='12345678'
+    opaqueFailure='foobar'; opaqueNine=9; opaqueQuestion='?'
+    opaqueFooBar='Foo Bar'; opaqueWith='with'; opaqueArgs='args'
+  end
+  when variant='B' then do
+    opaqueZero=0; opaqueOne=1; opaqueMarker='b'
+    opaqueKey='Key Dee'; opaqueDigits='92345678'
+    opaqueFailure='foobaz'; opaqueNine=8; opaqueQuestion='!'
+    opaqueFooBar='Zoo Bar'; opaqueWith='WITH'; opaqueArgs='ARGS'
+  end
+  otherwise do
+    say 'FAIL: variant must be A or B'
+    exit 2
+  end
+end
+dstats=1
+count=100
+/* Repetition count */
+averaging=100
+/* Averaging-over count */
+rexxcps='2.2n-opaque' /* diagnostic, not a canonical score */
+say '----- REXXCPS' rexxcps '-- Measuring NetRexx clauses/second -----'
+say ' NetRexx version is:' myversion
+say '          System is:' opsystem
+
+/* ----- Calibrate for the empty loop ----- */
+empty=long 0
+loop for averaging
+  start=System.nanoTime()
+  loop for count; end
+    empty=empty+System.nanoTime()-start
+  end
+  fempty=empty/averaging
+
+/* Measure at most twice. If the first summed timed region is shorter than
+   one second, increase count using the RexxCPS 2.2 rule and repeat. */
+loop trial=1 to 2
+  /* ----- Now the true timer loop .. average timing again ----- */
+  full=long 0
+  loop for averaging
+    start=System.nanoTime()
+    loop for count
+      /* -----  This is first of the 1000 clauses ----- */
+      flag=opaqueZero; p0=opaqueMarker
+      loop lvar=1 to 14
+	/* This is the "block" comment in lvar */
+	key1=opaqueKey; acompound=''
+	acompound[key1,lvar]=opaqueDigits.substr(6,2)
+	if flag=acompound[key1,lvar] then say 'Failed1'
+	loop j=1.1 to 2.2 by 1.1   /* executed 28 times */
+          if j>acompound[key1,lvar] then say 'Failed2'
+          if 17<key1.length-1       then say 'Failed3'
+	          if j=opaqueFailure         then say 'Failed4'
+	          if key1.substr(1,1)=opaqueNine then say 'Failed5'
+	          if key1.word(1)=opaqueQuestion then say 'Failed6'
+          if j<5 then do   /* This path taken */
+	    acompound[key1,lvar]=acompound[key1,lvar]+1
+	    if j=2 then leave /* never */
+          end
+          iterate
+        end /* j */
+	avar=1.0''lvar
+	select
+          when flag='string'  then say 'FailedS1'
+          when avar[flag,2]=0 then say 'FailedS2'
+          when flag=5+99.7    then say 'FailedS3'
+          when flag           then avar[1,2]=avar[1,2]*1.1
+          when flag==0       then flag=0
+        end
+	if opaqueOne then flag=opaqueOne
+	select
+          when flag=='ring'   then say 'FailedT1'
+          when avar[flag,3]=0 then say 'FailedT2'
+          when flag           then avar[1,2]=avar[1,2]*1.1
+          when flag==0        then flag=1
+        end
+	parse opaqueFooBar v1 +5 v2 .
+	address=digits
+	address=address
+	subroutine(opaqueWith 2 opaqueArgs, '(This is the second)'opaqueOne''opaqueOne)
+	rc='This is an awfully boring program'; parse rc p1 (p0) p5
+	rc='is an awfully boring program This'; parse rc p2 (p0) p6
+	rc='an awfully boring program This is'; parse rc p3 (p0) p7
+	rc='awfully boring program This is an'; parse rc p4 (p0) p8
+      end lvar
+      /* -----  This is last of the 1000 clauses ----- */
+    end
+    full=full+System.nanoTime()-start
+  end
+  total=full/1000000000
+  if total>1 | trial=2 then leave
+  if total=0 then count=count*100
+  else count=(1%total+1)*count
+end trial
+
+ffull=full/averaging
+say '          Averaging:' averaging 'measures of' count 'iterations'
+say '                       of 1000 clauses (over' total.format(null,null,1) 's)'
+
+/* Now display the statistics */
+looptime=(ffull-fempty)/(count*1000000000) -- 1000000000 for nanosecs->secs
+  /* Developer's statistics: */
+  if dstats then do
+    say
+    say 'Total (full DOs):' total 'secs (average of' averaging -
+    'measures of' count 'iterations)'
+    say 'Time for one iteration (1000 clauses) was:' looptime 'seconds'
+  end
+  /* And finally, the Result... */
+  -- cps = (1000000000/looptime+0.5)
+  cps = (1000/looptime+0.5)
+  cps = cps.substr(1,cps.pos('.')-1)
+  say
+  say'     Performance:' formatThousands(cps) 'NetRexx clauses per second'
+  say'                (' cps.format(null,3,null,0,'e') 'cps)'
+  say
+  p1=p1;p2=p2;p3=p3;p4=p4;p5=p5;p6=p6;p7=p7;p8=p8;v1=v1;v2=v2
+  observed=variant'|'flag'|'acompound[opaqueKey,14]'|'avar[1,2]
+  say 'OBSERVED:' observed
+  if flag\=opaqueOne then do
+    say 'FAIL: final flag was not observed as one'
+    exit 1
+  end
+  if acompound[opaqueKey,14]\=69 then do
+    say 'FAIL: final compound value was not 69'
+    exit 1
+  end
+  say 'PASS: RexxCPS 2.2n NetRexx opaque/result-observation diagnostic'
+  exit
+
+
+  /* Target routine for the timed CALL - called 14 times */
+  method subroutine(arg1, arg2) constant
+    parse arg1.upper a1 a2 a3 . a4
+    parse a3 b1 b2 b3 .
+
+    loop for 1; rc=a1 a2 a3; parse rc c1 c2 c3;end
+      b1=b1;b2=b2;b3=b3
+      a1=a1;a2=a2;a3=a3;a4=a4
+      c1=c1;c2=c2;c3=c3
+
+
+      return
+
+      /* as we do not have locales yet, format with underscores */
+  method formatThousands(n) static
+    mn = n.reverse()
+    nm = "abc_def_ghi_jkl_mno_pqr_stu_vwx_yz1".translate(mn,"abcdefghijklmnopqrstuvwxyz1")
+    raw = nm.reverse().strip()
+    loop while \raw.left(1).datatype('d')
+      raw = raw.substr(2)
+    end
+    return raw

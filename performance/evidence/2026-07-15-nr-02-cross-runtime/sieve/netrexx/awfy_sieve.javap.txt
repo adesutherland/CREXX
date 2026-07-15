@@ -1,0 +1,150 @@
+Compiled from "awfy_sieve.java"
+public class awfy_sieve {
+  private static final java.lang.String $0;
+
+  public static void main(java.lang.String[]);
+    Code:
+         0: iconst_0
+         1: istore_3
+         2: iconst_1
+         3: istore_1
+         4: aload_0
+         5: arraylength
+         6: iconst_1
+         7: if_icmplt     20
+        10: aload_0
+        11: iconst_0
+        12: aaload
+        13: invokestatic  #1                  // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+        16: invokevirtual #7                  // Method netrexx/lang/Rexx.toint:()I
+        19: istore_1
+        20: iload_1
+        21: iconst_1
+        22: if_icmpge     36
+        25: ldc           #11                 // String FAIL: repetitions must be positive
+        27: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+        30: pop
+        31: iconst_1
+        32: invokestatic  #19                 // Method java/lang/System.exit:(I)V
+        35: return
+        36: iconst_0
+        37: istore_2
+        38: iload_1
+        39: istore        4
+        41: iconst_1
+        42: istore_3
+        43: iload_3
+        44: iload         4
+        46: if_icmpgt     94
+        49: invokestatic  #25                 // Method sieveOnce:()I
+        52: istore_2
+        53: iload_2
+        54: sipush        669
+        57: if_icmpeq     88
+        60: new           #30                 // class java/lang/StringBuilder
+        63: dup
+        64: invokespecial #32                 // Method java/lang/StringBuilder."<init>":()V
+        67: ldc           #36                 // String FAIL: expected 669 primes, got
+        69: invokevirtual #38                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        72: iload_2
+        73: invokevirtual #42                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+        76: invokevirtual #45                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        79: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+        82: pop
+        83: iconst_1
+        84: invokestatic  #19                 // Method java/lang/System.exit:(I)V
+        87: return
+        88: iinc          3, 1
+        91: goto          43
+        94: new           #30                 // class java/lang/StringBuilder
+        97: dup
+        98: invokespecial #32                 // Method java/lang/StringBuilder."<init>":()V
+       101: ldc           #49                 // String benchmark=awfy_sieve repetitions=
+       103: invokevirtual #38                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       106: iload_1
+       107: invokevirtual #42                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       110: ldc           #51                 // String  result=
+       112: invokevirtual #38                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       115: iload_2
+       116: invokevirtual #42                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       119: invokevirtual #45                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       122: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       125: pop
+       126: ldc           #53                 // String PASS: AWFY Sieve NetRexx port
+       128: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       131: pop
+       132: return
+
+  public static int sieveOnce();
+    Code:
+         0: iconst_0
+         1: istore_1
+         2: iconst_0
+         3: istore_3
+         4: sipush        5001
+         7: newarray       int
+         9: astore_0
+        10: iconst_1
+        11: istore_1
+        12: iload_1
+        13: sipush        5000
+        16: if_icmpgt     29
+        19: aload_0
+        20: iload_1
+        21: iconst_1
+        22: iastore
+        23: iinc          1, 1
+        26: goto          12
+        29: iconst_0
+        30: istore_2
+        31: iconst_2
+        32: istore_1
+        33: iload_1
+        34: sipush        5000
+        37: if_icmpgt     108
+        40: aload_0
+        41: iload_1
+        42: iaload
+        43: ifeq          102
+        46: iinc          2, 1
+        49: iload_1
+        50: istore        4
+        52: iload         4
+        54: iflt          61
+        57: iconst_1
+        58: goto          62
+        61: iconst_0
+        62: istore        5
+        64: iload_1
+        65: iload_1
+        66: iadd
+        67: istore_3
+        68: iload         5
+        70: ifeq          83
+        73: iload_3
+        74: sipush        5000
+        77: if_icmpgt     102
+        80: goto          90
+        83: iload_3
+        84: sipush        5000
+        87: if_icmplt     102
+        90: aload_0
+        91: iload_3
+        92: iconst_0
+        93: iastore
+        94: iload_3
+        95: iload         4
+        97: iadd
+        98: istore_3
+        99: goto          68
+       102: iinc          1, 1
+       105: goto          33
+       108: iload_2
+       109: ireturn
+
+  private awfy_sieve();
+    Code:
+         0: aload_0
+         1: invokespecial #55                 // Method java/lang/Object."<init>":()V
+         4: return
+}

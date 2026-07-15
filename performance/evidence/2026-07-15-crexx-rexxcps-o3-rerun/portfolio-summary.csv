@@ -1,0 +1,6 @@
+benchmark,vm,mode,runs,min_ns,median_ns,mean_ns,max_ns,platform,crexx_version
+sieve,rxvm,opt,10,22787000,23193500,23275700,24012000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.g44dd4dbf3da6.dirty 20260715
+permute,rxvm,opt,10,94854000,98055500,104829500,142974000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.g44dd4dbf3da6.dirty 20260715
+mandelbrot,rxvm,opt,10,183854000,185480000,185384600,186675000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.g44dd4dbf3da6.dirty 20260715
+towers,rxvm,opt,10,684764000,688274000,701667000,764305000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.g44dd4dbf3da6.dirty 20260715
+rexxcps,rxvm,opt,10,11481296000,12732693000,12519116300,13421279000,os=macos,macOS 64 crexx-1.0.0-beta.3+local.g44dd4dbf3da6.dirty 20260715

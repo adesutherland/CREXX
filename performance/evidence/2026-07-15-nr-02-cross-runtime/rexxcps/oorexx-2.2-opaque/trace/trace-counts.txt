@@ -1,0 +1,21 @@
+Command:
+  /Users/adrian/.local/opt/oorexx/5.1.0-12973/bin/rexx tests/benchmarks/cross-runtime/rexxcps/rexxcps_2_2_opaque.rex A I 1 1
+
+Count boundary:
+  strictly between TRACE_KERNEL_BEGIN and TRACE_KERNEL_END
+
+source_trace_records=990
+intermediate_trace_records=4012
+>L>=565
+>A>=240
+>F>=127
+>V>=858
+>K>=156
+>C>=194
+>O>=505
+>.>=42
+>=>=522
+>>>=803
+
+The marker names are ooRexx TRACE I record classes. These are trace-event
+counts, not interpreter opcode dispatch counts.

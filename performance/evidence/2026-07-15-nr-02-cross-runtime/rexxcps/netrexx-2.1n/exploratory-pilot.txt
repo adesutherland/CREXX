@@ -1,0 +1,15 @@
+-XX:-AOTAdapterCaching -XX:-AOTInvokeDynamicLinking -XX:-AOTRecordTraining -XX:-AOTReplayTraining -XX:-AOTStubCaching -XX:ConcGCThreads=2 -XX:G1ConcRefinementThreads=9 -XX:InitialHeapSize=6815736 -XX:MarkStackSize=4194304 -XX:MaxHeapSize=6442450944 -XX:MaxRAM=25769803776 -XX:MinHeapSize=6815736 -XX:+PrintCommandLineFlags -XX:ReservedCodeCacheSize=251658240 -XX:+SegmentedCodeCache -XX:+UseCompressedOops -XX:+UseG1GC 
+openjdk version "26.0.1" 2026-04-21
+OpenJDK Runtime Environment Temurin-26.0.1+8 (build 26.0.1+8)
+OpenJDK 64-Bit Server VM Temurin-26.0.1+8 (build 26.0.1+8, mixed mode, sharing)
+----- REXXCPS 2.1n -- Measuring NetRexx clauses/second -----
+ NetRexx version is: NetRexx 5.10 20 Mar 2026
+          System is: Java
+          Averaging: 100 measures of 100 iterations
+
+Total (full DO): 0.00414954878 secs (average of 100 measures of 100 iterations)
+Time for one iteration (1000 clauses) was: 0.0000414954878 seconds
+
+     Performance: 24_099_006 NetRexx clauses per second
+                ( 24.099E+6 cps)
+

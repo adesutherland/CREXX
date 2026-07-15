@@ -1,0 +1,13 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+sieve,crexx-release-clang-o3,50-repetitions-opt,process,warmup,1,24376000,0,pass,,
+sieve,crexx-release-clang-o3,50-repetitions-opt,process,warmup,2,23677000,0,pass,,
+sieve,crexx-release-clang-o3,50-repetitions-opt,process,recorded,1,23175000,0,pass,,
+sieve,crexx-release-clang-o3,50-repetitions-opt,process,recorded,2,23287000,0,pass,,
+sieve,crexx-release-clang-o3,50-repetitions-opt,process,recorded,3,23057000,0,pass,,
+sieve,crexx-release-clang-o3,50-repetitions-opt,process,recorded,4,23488000,0,pass,,
+sieve,crexx-release-clang-o3,50-repetitions-opt,process,recorded,5,23475000,0,pass,,
+sieve,crexx-release-clang-o3,50-repetitions-opt,process,recorded,6,23847000,0,pass,,
+sieve,crexx-release-clang-o3,50-repetitions-opt,process,recorded,7,23820000,0,pass,,
+sieve,crexx-release-clang-o3,50-repetitions-opt,process,recorded,8,23676000,0,pass,,
+sieve,crexx-release-clang-o3,50-repetitions-opt,process,recorded,9,23253000,0,pass,,
+sieve,crexx-release-clang-o3,50-repetitions-opt,process,recorded,10,23585000,0,pass,,

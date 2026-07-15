@@ -1,0 +1,50 @@
+Compiled from "awfy_towers.java"
+class TowersDisk {
+  private static final java.lang.String $0;
+
+  private int diskSize;
+
+  private TowersDisk nextDisk;
+
+  private boolean hasNextValue;
+
+  public TowersDisk(int);
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: aload_0
+         5: iconst_0
+         6: putfield      #7                  // Field hasNextValue:Z
+         9: aload_0
+        10: iload_1
+        11: putfield      #13                 // Field diskSize:I
+        14: return
+
+  public int size();
+    Code:
+         0: aload_0
+         1: getfield      #13                 // Field diskSize:I
+         4: ireturn
+
+  public TowersDisk next();
+    Code:
+         0: aload_0
+         1: getfield      #17                 // Field nextDisk:LTowersDisk;
+         4: areturn
+
+  public boolean hasNext();
+    Code:
+         0: aload_0
+         1: getfield      #7                  // Field hasNextValue:Z
+         4: ireturn
+
+  public void setNext(TowersDisk);
+    Code:
+         0: aload_0
+         1: aload_1
+         2: putfield      #17                 // Field nextDisk:LTowersDisk;
+         5: aload_0
+         6: iconst_1
+         7: putfield      #7                  // Field hasNextValue:Z
+        10: return
+}

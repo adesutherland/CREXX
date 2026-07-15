@@ -1,0 +1,184 @@
+Compiled from "awfy_towers.java"
+class TowersBenchmark {
+  private static final java.lang.String $0;
+
+  private TowersDisk[] piles;
+
+  private boolean[] present;
+
+  private int movesDone;
+
+  public TowersBenchmark();
+    Code:
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: aload_0
+         5: iconst_3
+         6: anewarray     #7                  // class TowersDisk
+         9: putfield      #9                  // Field piles:[LTowersDisk;
+        12: aload_0
+        13: iconst_3
+        14: newarray       boolean
+        16: putfield      #15                 // Field present:[Z
+        19: aload_0
+        20: iconst_0
+        21: putfield      #19                 // Field movesDone:I
+        24: return
+
+  public int run();
+    Code:
+         0: aload_0
+         1: iconst_0
+         2: bipush        13
+         4: invokevirtual #23                 // Method buildTowerAt:(II)V
+         7: aload_0
+         8: iconst_0
+         9: putfield      #19                 // Field movesDone:I
+        12: aload_0
+        13: bipush        13
+        15: iconst_0
+        16: iconst_1
+        17: invokevirtual #27                 // Method moveDisks:(III)V
+        20: aload_0
+        21: getfield      #19                 // Field movesDone:I
+        24: ireturn
+
+  public void pushDisk(TowersDisk, int);
+    Code:
+         0: aconst_null
+         1: astore_3
+         2: aload_0
+         3: getfield      #15                 // Field present:[Z
+         6: iload_2
+         7: baload
+         8: ifeq          35
+        11: aload_0
+        12: getfield      #9                  // Field piles:[LTowersDisk;
+        15: iload_2
+        16: aaload
+        17: astore_3
+        18: aload_1
+        19: invokevirtual #31                 // Method TowersDisk.size:()I
+        22: aload_3
+        23: invokevirtual #31                 // Method TowersDisk.size:()I
+        26: if_icmplt     30
+        29: return
+        30: aload_1
+        31: aload_3
+        32: invokevirtual #35                 // Method TowersDisk.setNext:(LTowersDisk;)V
+        35: aload_0
+        36: getfield      #9                  // Field piles:[LTowersDisk;
+        39: iload_2
+        40: aload_1
+        41: aastore
+        42: aload_0
+        43: getfield      #15                 // Field present:[Z
+        46: iload_2
+        47: iconst_1
+        48: bastore
+        49: return
+
+  public TowersDisk popDiskFrom(int);
+    Code:
+         0: aload_0
+         1: getfield      #9                  // Field piles:[LTowersDisk;
+         4: iload_1
+         5: aaload
+         6: astore_2
+         7: aload_2
+         8: invokevirtual #39                 // Method TowersDisk.hasNext:()Z
+        11: ifeq          27
+        14: aload_0
+        15: getfield      #9                  // Field piles:[LTowersDisk;
+        18: iload_1
+        19: aload_2
+        20: invokevirtual #43                 // Method TowersDisk.next:()LTowersDisk;
+        23: aastore
+        24: goto          34
+        27: aload_0
+        28: getfield      #15                 // Field present:[Z
+        31: iload_1
+        32: iconst_0
+        33: bastore
+        34: aload_2
+        35: areturn
+
+  public void moveTopDisk(int, int);
+    Code:
+         0: aload_0
+         1: iload_1
+         2: invokevirtual #47                 // Method popDiskFrom:(I)LTowersDisk;
+         5: astore_3
+         6: aload_0
+         7: aload_3
+         8: iload_2
+         9: invokevirtual #51                 // Method pushDisk:(LTowersDisk;I)V
+        12: aload_0
+        13: dup
+        14: getfield      #19                 // Field movesDone:I
+        17: iconst_1
+        18: iadd
+        19: putfield      #19                 // Field movesDone:I
+        22: return
+
+  public void buildTowerAt(int, int);
+    Code:
+         0: iconst_0
+         1: istore_3
+         2: aconst_null
+         3: astore        4
+         5: iload_2
+         6: istore_3
+         7: iload_3
+         8: iflt          34
+        11: new           #7                  // class TowersDisk
+        14: dup
+        15: iload_3
+        16: invokespecial #55                 // Method TowersDisk."<init>":(I)V
+        19: astore        4
+        21: aload_0
+        22: aload         4
+        24: iload_1
+        25: invokevirtual #51                 // Method pushDisk:(LTowersDisk;I)V
+        28: iinc          3, -1
+        31: goto          7
+        34: return
+
+  public void moveDisks(int, int, int);
+    Code:
+         0: iconst_0
+         1: istore        4
+         3: iload_1
+         4: iconst_1
+         5: if_icmpne     17
+         8: aload_0
+         9: iload_2
+        10: iload_3
+        11: invokevirtual #58                 // Method moveTopDisk:(II)V
+        14: goto          50
+        17: iconst_3
+        18: iload_2
+        19: isub
+        20: iload_3
+        21: isub
+        22: istore        4
+        24: aload_0
+        25: iload_1
+        26: iconst_1
+        27: isub
+        28: iload_2
+        29: iload         4
+        31: invokevirtual #27                 // Method moveDisks:(III)V
+        34: aload_0
+        35: iload_2
+        36: iload_3
+        37: invokevirtual #58                 // Method moveTopDisk:(II)V
+        40: aload_0
+        41: iload_1
+        42: iconst_1
+        43: isub
+        44: iload         4
+        46: iload_3
+        47: invokevirtual #27                 // Method moveDisks:(III)V
+        50: return
+}

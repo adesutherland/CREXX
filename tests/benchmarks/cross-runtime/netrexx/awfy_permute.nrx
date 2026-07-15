@@ -1,0 +1,59 @@
+/*
+ * NetRexx port of the Are We Fast Yet? Permute benchmark.
+ * Derived from the SOM benchmark suite under the MIT license; see
+ * ../../LICENSE-SOM-MIT.txt and ../../README.md.
+ */
+options binary
+
+class awfy_permute
+
+  method main(args=String[]) static
+    repetitions=int 1
+    if args.length>=1 then repetitions=Rexx args[0]
+    if repetitions<1 then do
+      say 'FAIL: repetitions must be positive'
+      exit 1
+    end
+
+    result=int 0
+    loop iteration=1 to repetitions
+      benchmark=PermuteBenchmark()
+      result=benchmark.run()
+      if result\=8660 then do
+        say 'FAIL: expected 8660 calls, got' result
+        exit 1
+      end
+    end
+
+    say 'benchmark=awfy_permute repetitions='repetitions 'result='result
+    say 'PASS: AWFY Permute NetRexx port'
+
+class PermuteBenchmark
+
+  properties private
+    count=int 0
+    values=int[6]
+
+  method PermuteBenchmark()
+
+  method run() binary returns int
+    count=0
+    permute(6)
+    return count
+
+  method permute(n=int) binary
+    count=count+1
+    if n\=0 then do
+      n1=n-1
+      permute(n1)
+      loop i=n1 to 0 by -1
+        swap(n1,i)
+        permute(n1)
+        swap(n1,i)
+      end
+    end
+
+  method swap(i=int,j=int) binary
+    temporary=int values[i]
+    values[i]=values[j]
+    values[j]=temporary

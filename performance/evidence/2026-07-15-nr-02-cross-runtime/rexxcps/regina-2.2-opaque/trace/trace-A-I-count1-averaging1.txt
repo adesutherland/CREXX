@@ -1,0 +1,3884 @@
+----- REXXCPS 2.2-opaque -- Measuring REXX clauses/second -----
+ REXX version is: REXX-Regina_3.9.7(MT) 5.00 18 Mar 2025
+       System is: UNIX
+TRACE_KERNEL_BEGIN
+   138 *-*   call time 'R'
+       >L>     "R"
+   139 *-*   do count
+       >V>     "1"
+   141 *-*    flag=opaquezero
+       >V>      "0"
+       *-*    p0=opaquemarker
+       >V>      "b"
+   142 *-*    do loop=1 to 14
+       >L>      "1"
+       >L>      "14"
+       >V>      "1"
+   144 *-*     key1=opaquekey
+       >V>       "Key Bee"
+   145 *-*     acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>       "12345678"
+       >L>       "6"
+       >L>       "2"
+       >F>       "67"
+       >V>       "Key Bee"
+       >V>       "1"
+       >C>       "ACOMPOUND.Key Bee.1"
+   146 *-*     if flag=acompound.key1.loop then say 'Failed1'
+       >V>       "0"
+       >V>       "Key Bee"
+       >V>       "1"
+       >C>       "ACOMPOUND.Key Bee.1"
+       >V>       "67"
+       >O>       "0"
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>       "1.1"
+       >L>       "2.2"
+       >L>       "1.1"
+       >V>       "1.1"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "1.1"
+       >V>        "Key Bee"
+       >V>        "1"
+       >C>        "ACOMPOUND.Key Bee.1"
+       >V>        "67"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "1.1"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "1.1"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "1.1"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "1"
+       >C>        "ACOMPOUND.Key Bee.1"
+       >V>        "67"
+       >L>        "1"
+       >O>        "68"
+       >V>        "Key Bee"
+       >V>        "1"
+       >C>        "ACOMPOUND.Key Bee.1"
+   155 *-*      if j=2 then leave
+       >V>        "1.1"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "1.1"
+       >V>       "2.2"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "2.2"
+       >V>        "Key Bee"
+       >V>        "1"
+       >C>        "ACOMPOUND.Key Bee.1"
+       >V>        "68"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "2.2"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "2.2"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "2.2"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "1"
+       >C>        "ACOMPOUND.Key Bee.1"
+       >V>        "68"
+       >L>        "1"
+       >O>        "69"
+       >V>        "Key Bee"
+       >V>        "1"
+       >C>        "ACOMPOUND.Key Bee.1"
+   155 *-*      if j=2 then leave
+       >V>        "2.2"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "2.2"
+       >V>       "3.3"
+   159 *-*     avar.=1.0''loop
+       >L>       "1.0"
+       >L>       ""
+       >O>       "1.0"
+       >V>       "1"
+       >O>       "1.01"
+   160 *-*     select
+   161 *-*     when flag='string' then say 'FailedS1'
+       >V>       "0"
+       >L>       "string"
+       >O>       "0"
+   162 *-*     when avar.flag.2=0 then say 'FailedS2'
+       >V>       "0"
+       >C>       "AVAR.0.2"
+       >V>       "1.01"
+       >L>       "0"
+       >O>       "0"
+   163 *-*     when flag=5+99.7   then say 'FailedS3'
+       >V>       "0"
+       >L>       "5"
+       >L>       "99.7"
+       >O>       "104.7"
+       >O>       "0"
+   164 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "0"
+   165 *-*     when flag==0       then flag=0
+       >V>       "0"
+       >L>       "0"
+       >O>       "1"
+       *-*     flag=0
+       >L>       "0"
+   167 *-*     if opaqueone then flag=opaqueone
+       >V>       "1"
+       *-*     flag=opaqueone
+       >V>       "1"
+   168 *-*     select
+   169 *-*     when flag=='ring'  then say 'FailedT1'
+       >V>       "1"
+       >L>       "ring"
+       >O>       "0"
+   170 *-*     when avar.flag.3=0 then say 'FailedT2'
+       >V>       "1"
+       >C>       "AVAR.1.3"
+       >V>       "1.01"
+       >L>       "0"
+       >O>       "0"
+   171 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.01"
+       >L>       "1.1"
+       >O>       "1.111"
+       >C>       "AVAR.1.2"
+   174 *-*     parse value opaquefoobar with v1 +5 v2 .
+       >V>       "Foo Bar"
+       >>>       "Foo B"
+       >>>       "ar"
+       >.>       ""
+   175 *-*     trace value trace()
+       >F>       "I"
+       *-*     address value address()
+       >F>       "SYSTEM"
+   176 *-*     call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>       "with"
+       >L>       "2"
+       >O>       "with 2"
+       >V>       "args"
+       >O>       "with 2 args"
+       >L>       "(This is the second)"
+       >V>       "1"
+       >O>       "(This is the second)1"
+       >L>       ""
+       >O>       "(This is the second)1"
+       >V>       "1"
+       >O>       "(This is the second)11"
+   236 *-*      subroutine:
+   237 *-*      parse upper arg a1 a2 a3 ., a4
+       >>>        "WITH"
+       >>>        "2"
+       >>>        "ARGS"
+       >.>        ""
+       >>>        "(THIS IS THE SECOND)11"
+   238 *-*      parse var a3 b1 b2 b3 .
+       >V>        "ARGS"
+       >>>        "ARGS"
+       >>>        ""
+       >>>        ""
+       >.>        ""
+   239 *-*      do 1
+       >L>        "1"
+       *-*       rc=a1 a2 a3
+       >V>         "WITH"
+       >V>         "2"
+       >O>         "WITH 2"
+       >V>         "ARGS"
+       >O>         "WITH 2 ARGS"
+       *-*       parse var rc c1 c2 c3
+       >V>         "WITH 2 ARGS"
+       >>>         "WITH"
+       >>>         "2"
+       >>>         "ARGS"
+       *-*      end
+       *-*      do 1
+   240 *-*      return
+   177 *-*     rc='This is an awfully boring program'
+       >L>       "This is an awfully boring program"
+       *-*     parse var rc p1 (p0) p5
+       >V>       "This is an awfully boring program"
+       >V>       "b"
+       >>>       "This is an awfully "
+       >>>       "oring program"
+   178 *-*     rc='is an awfully boring program This'
+       >L>       "is an awfully boring program This"
+       *-*     parse var rc p2 (p0) p6
+       >V>       "is an awfully boring program This"
+       >V>       "b"
+       >>>       "is an awfully "
+       >>>       "oring program This"
+   179 *-*     rc='an awfully boring program This is'
+       >L>       "an awfully boring program This is"
+       *-*     parse var rc p3 (p0) p7
+       >V>       "an awfully boring program This is"
+       >V>       "b"
+       >>>       "an awfully "
+       >>>       "oring program This is"
+   180 *-*     rc='awfully boring program This is an'
+       >L>       "awfully boring program This is an"
+       *-*     parse var rc p4 (p0) p8
+       >V>       "awfully boring program This is an"
+       >V>       "b"
+       >>>       "awfully "
+       >>>       "oring program This is an"
+   181 *-*    end loop
+   142 *-*    do loop=1 to 14
+       >V>      "1"
+       >V>      "2"
+   144 *-*     key1=opaquekey
+       >V>       "Key Bee"
+   145 *-*     acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>       "12345678"
+       >L>       "6"
+       >L>       "2"
+       >F>       "67"
+       >V>       "Key Bee"
+       >V>       "2"
+       >C>       "ACOMPOUND.Key Bee.2"
+   146 *-*     if flag=acompound.key1.loop then say 'Failed1'
+       >V>       "1"
+       >V>       "Key Bee"
+       >V>       "2"
+       >C>       "ACOMPOUND.Key Bee.2"
+       >V>       "67"
+       >O>       "0"
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>       "1.1"
+       >L>       "2.2"
+       >L>       "1.1"
+       >V>       "1.1"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "1.1"
+       >V>        "Key Bee"
+       >V>        "2"
+       >C>        "ACOMPOUND.Key Bee.2"
+       >V>        "67"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "1.1"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "1.1"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "1.1"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "2"
+       >C>        "ACOMPOUND.Key Bee.2"
+       >V>        "67"
+       >L>        "1"
+       >O>        "68"
+       >V>        "Key Bee"
+       >V>        "2"
+       >C>        "ACOMPOUND.Key Bee.2"
+   155 *-*      if j=2 then leave
+       >V>        "1.1"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "1.1"
+       >V>       "2.2"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "2.2"
+       >V>        "Key Bee"
+       >V>        "2"
+       >C>        "ACOMPOUND.Key Bee.2"
+       >V>        "68"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "2.2"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "2.2"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "2.2"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "2"
+       >C>        "ACOMPOUND.Key Bee.2"
+       >V>        "68"
+       >L>        "1"
+       >O>        "69"
+       >V>        "Key Bee"
+       >V>        "2"
+       >C>        "ACOMPOUND.Key Bee.2"
+   155 *-*      if j=2 then leave
+       >V>        "2.2"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "2.2"
+       >V>       "3.3"
+   159 *-*     avar.=1.0''loop
+       >L>       "1.0"
+       >L>       ""
+       >O>       "1.0"
+       >V>       "2"
+       >O>       "1.02"
+   160 *-*     select
+   161 *-*     when flag='string' then say 'FailedS1'
+       >V>       "1"
+       >L>       "string"
+       >O>       "0"
+   162 *-*     when avar.flag.2=0 then say 'FailedS2'
+       >V>       "1"
+       >C>       "AVAR.1.2"
+       >V>       "1.02"
+       >L>       "0"
+       >O>       "0"
+   163 *-*     when flag=5+99.7   then say 'FailedS3'
+       >V>       "1"
+       >L>       "5"
+       >L>       "99.7"
+       >O>       "104.7"
+       >O>       "0"
+   164 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.02"
+       >L>       "1.1"
+       >O>       "1.122"
+       >C>       "AVAR.1.2"
+   167 *-*     if opaqueone then flag=opaqueone
+       >V>       "1"
+       *-*     flag=opaqueone
+       >V>       "1"
+   168 *-*     select
+   169 *-*     when flag=='ring'  then say 'FailedT1'
+       >V>       "1"
+       >L>       "ring"
+       >O>       "0"
+   170 *-*     when avar.flag.3=0 then say 'FailedT2'
+       >V>       "1"
+       >C>       "AVAR.1.3"
+       >V>       "1.02"
+       >L>       "0"
+       >O>       "0"
+   171 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.122"
+       >L>       "1.1"
+       >O>       "1.2342"
+       >C>       "AVAR.1.2"
+   174 *-*     parse value opaquefoobar with v1 +5 v2 .
+       >V>       "Foo Bar"
+       >>>       "Foo B"
+       >>>       "ar"
+       >.>       ""
+   175 *-*     trace value trace()
+       >F>       "I"
+       *-*     address value address()
+       >F>       "SYSTEM"
+   176 *-*     call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>       "with"
+       >L>       "2"
+       >O>       "with 2"
+       >V>       "args"
+       >O>       "with 2 args"
+       >L>       "(This is the second)"
+       >V>       "1"
+       >O>       "(This is the second)1"
+       >L>       ""
+       >O>       "(This is the second)1"
+       >V>       "1"
+       >O>       "(This is the second)11"
+   236 *-*      subroutine:
+   237 *-*      parse upper arg a1 a2 a3 ., a4
+       >>>        "WITH"
+       >>>        "2"
+       >>>        "ARGS"
+       >.>        ""
+       >>>        "(THIS IS THE SECOND)11"
+   238 *-*      parse var a3 b1 b2 b3 .
+       >V>        "ARGS"
+       >>>        "ARGS"
+       >>>        ""
+       >>>        ""
+       >.>        ""
+   239 *-*      do 1
+       >L>        "1"
+       *-*       rc=a1 a2 a3
+       >V>         "WITH"
+       >V>         "2"
+       >O>         "WITH 2"
+       >V>         "ARGS"
+       >O>         "WITH 2 ARGS"
+       *-*       parse var rc c1 c2 c3
+       >V>         "WITH 2 ARGS"
+       >>>         "WITH"
+       >>>         "2"
+       >>>         "ARGS"
+       *-*      end
+       *-*      do 1
+   240 *-*      return
+   177 *-*     rc='This is an awfully boring program'
+       >L>       "This is an awfully boring program"
+       *-*     parse var rc p1 (p0) p5
+       >V>       "This is an awfully boring program"
+       >V>       "b"
+       >>>       "This is an awfully "
+       >>>       "oring program"
+   178 *-*     rc='is an awfully boring program This'
+       >L>       "is an awfully boring program This"
+       *-*     parse var rc p2 (p0) p6
+       >V>       "is an awfully boring program This"
+       >V>       "b"
+       >>>       "is an awfully "
+       >>>       "oring program This"
+   179 *-*     rc='an awfully boring program This is'
+       >L>       "an awfully boring program This is"
+       *-*     parse var rc p3 (p0) p7
+       >V>       "an awfully boring program This is"
+       >V>       "b"
+       >>>       "an awfully "
+       >>>       "oring program This is"
+   180 *-*     rc='awfully boring program This is an'
+       >L>       "awfully boring program This is an"
+       *-*     parse var rc p4 (p0) p8
+       >V>       "awfully boring program This is an"
+       >V>       "b"
+       >>>       "awfully "
+       >>>       "oring program This is an"
+   181 *-*    end loop
+   142 *-*    do loop=1 to 14
+       >V>      "2"
+       >V>      "3"
+   144 *-*     key1=opaquekey
+       >V>       "Key Bee"
+   145 *-*     acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>       "12345678"
+       >L>       "6"
+       >L>       "2"
+       >F>       "67"
+       >V>       "Key Bee"
+       >V>       "3"
+       >C>       "ACOMPOUND.Key Bee.3"
+   146 *-*     if flag=acompound.key1.loop then say 'Failed1'
+       >V>       "1"
+       >V>       "Key Bee"
+       >V>       "3"
+       >C>       "ACOMPOUND.Key Bee.3"
+       >V>       "67"
+       >O>       "0"
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>       "1.1"
+       >L>       "2.2"
+       >L>       "1.1"
+       >V>       "1.1"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "1.1"
+       >V>        "Key Bee"
+       >V>        "3"
+       >C>        "ACOMPOUND.Key Bee.3"
+       >V>        "67"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "1.1"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "1.1"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "1.1"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "3"
+       >C>        "ACOMPOUND.Key Bee.3"
+       >V>        "67"
+       >L>        "1"
+       >O>        "68"
+       >V>        "Key Bee"
+       >V>        "3"
+       >C>        "ACOMPOUND.Key Bee.3"
+   155 *-*      if j=2 then leave
+       >V>        "1.1"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "1.1"
+       >V>       "2.2"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "2.2"
+       >V>        "Key Bee"
+       >V>        "3"
+       >C>        "ACOMPOUND.Key Bee.3"
+       >V>        "68"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "2.2"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "2.2"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "2.2"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "3"
+       >C>        "ACOMPOUND.Key Bee.3"
+       >V>        "68"
+       >L>        "1"
+       >O>        "69"
+       >V>        "Key Bee"
+       >V>        "3"
+       >C>        "ACOMPOUND.Key Bee.3"
+   155 *-*      if j=2 then leave
+       >V>        "2.2"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "2.2"
+       >V>       "3.3"
+   159 *-*     avar.=1.0''loop
+       >L>       "1.0"
+       >L>       ""
+       >O>       "1.0"
+       >V>       "3"
+       >O>       "1.03"
+   160 *-*     select
+   161 *-*     when flag='string' then say 'FailedS1'
+       >V>       "1"
+       >L>       "string"
+       >O>       "0"
+   162 *-*     when avar.flag.2=0 then say 'FailedS2'
+       >V>       "1"
+       >C>       "AVAR.1.2"
+       >V>       "1.03"
+       >L>       "0"
+       >O>       "0"
+   163 *-*     when flag=5+99.7   then say 'FailedS3'
+       >V>       "1"
+       >L>       "5"
+       >L>       "99.7"
+       >O>       "104.7"
+       >O>       "0"
+   164 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.03"
+       >L>       "1.1"
+       >O>       "1.133"
+       >C>       "AVAR.1.2"
+   167 *-*     if opaqueone then flag=opaqueone
+       >V>       "1"
+       *-*     flag=opaqueone
+       >V>       "1"
+   168 *-*     select
+   169 *-*     when flag=='ring'  then say 'FailedT1'
+       >V>       "1"
+       >L>       "ring"
+       >O>       "0"
+   170 *-*     when avar.flag.3=0 then say 'FailedT2'
+       >V>       "1"
+       >C>       "AVAR.1.3"
+       >V>       "1.03"
+       >L>       "0"
+       >O>       "0"
+   171 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.133"
+       >L>       "1.1"
+       >O>       "1.2463"
+       >C>       "AVAR.1.2"
+   174 *-*     parse value opaquefoobar with v1 +5 v2 .
+       >V>       "Foo Bar"
+       >>>       "Foo B"
+       >>>       "ar"
+       >.>       ""
+   175 *-*     trace value trace()
+       >F>       "I"
+       *-*     address value address()
+       >F>       "SYSTEM"
+   176 *-*     call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>       "with"
+       >L>       "2"
+       >O>       "with 2"
+       >V>       "args"
+       >O>       "with 2 args"
+       >L>       "(This is the second)"
+       >V>       "1"
+       >O>       "(This is the second)1"
+       >L>       ""
+       >O>       "(This is the second)1"
+       >V>       "1"
+       >O>       "(This is the second)11"
+   236 *-*      subroutine:
+   237 *-*      parse upper arg a1 a2 a3 ., a4
+       >>>        "WITH"
+       >>>        "2"
+       >>>        "ARGS"
+       >.>        ""
+       >>>        "(THIS IS THE SECOND)11"
+   238 *-*      parse var a3 b1 b2 b3 .
+       >V>        "ARGS"
+       >>>        "ARGS"
+       >>>        ""
+       >>>        ""
+       >.>        ""
+   239 *-*      do 1
+       >L>        "1"
+       *-*       rc=a1 a2 a3
+       >V>         "WITH"
+       >V>         "2"
+       >O>         "WITH 2"
+       >V>         "ARGS"
+       >O>         "WITH 2 ARGS"
+       *-*       parse var rc c1 c2 c3
+       >V>         "WITH 2 ARGS"
+       >>>         "WITH"
+       >>>         "2"
+       >>>         "ARGS"
+       *-*      end
+       *-*      do 1
+   240 *-*      return
+   177 *-*     rc='This is an awfully boring program'
+       >L>       "This is an awfully boring program"
+       *-*     parse var rc p1 (p0) p5
+       >V>       "This is an awfully boring program"
+       >V>       "b"
+       >>>       "This is an awfully "
+       >>>       "oring program"
+   178 *-*     rc='is an awfully boring program This'
+       >L>       "is an awfully boring program This"
+       *-*     parse var rc p2 (p0) p6
+       >V>       "is an awfully boring program This"
+       >V>       "b"
+       >>>       "is an awfully "
+       >>>       "oring program This"
+   179 *-*     rc='an awfully boring program This is'
+       >L>       "an awfully boring program This is"
+       *-*     parse var rc p3 (p0) p7
+       >V>       "an awfully boring program This is"
+       >V>       "b"
+       >>>       "an awfully "
+       >>>       "oring program This is"
+   180 *-*     rc='awfully boring program This is an'
+       >L>       "awfully boring program This is an"
+       *-*     parse var rc p4 (p0) p8
+       >V>       "awfully boring program This is an"
+       >V>       "b"
+       >>>       "awfully "
+       >>>       "oring program This is an"
+   181 *-*    end loop
+   142 *-*    do loop=1 to 14
+       >V>      "3"
+       >V>      "4"
+   144 *-*     key1=opaquekey
+       >V>       "Key Bee"
+   145 *-*     acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>       "12345678"
+       >L>       "6"
+       >L>       "2"
+       >F>       "67"
+       >V>       "Key Bee"
+       >V>       "4"
+       >C>       "ACOMPOUND.Key Bee.4"
+   146 *-*     if flag=acompound.key1.loop then say 'Failed1'
+       >V>       "1"
+       >V>       "Key Bee"
+       >V>       "4"
+       >C>       "ACOMPOUND.Key Bee.4"
+       >V>       "67"
+       >O>       "0"
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>       "1.1"
+       >L>       "2.2"
+       >L>       "1.1"
+       >V>       "1.1"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "1.1"
+       >V>        "Key Bee"
+       >V>        "4"
+       >C>        "ACOMPOUND.Key Bee.4"
+       >V>        "67"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "1.1"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "1.1"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "1.1"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "4"
+       >C>        "ACOMPOUND.Key Bee.4"
+       >V>        "67"
+       >L>        "1"
+       >O>        "68"
+       >V>        "Key Bee"
+       >V>        "4"
+       >C>        "ACOMPOUND.Key Bee.4"
+   155 *-*      if j=2 then leave
+       >V>        "1.1"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "1.1"
+       >V>       "2.2"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "2.2"
+       >V>        "Key Bee"
+       >V>        "4"
+       >C>        "ACOMPOUND.Key Bee.4"
+       >V>        "68"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "2.2"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "2.2"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "2.2"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "4"
+       >C>        "ACOMPOUND.Key Bee.4"
+       >V>        "68"
+       >L>        "1"
+       >O>        "69"
+       >V>        "Key Bee"
+       >V>        "4"
+       >C>        "ACOMPOUND.Key Bee.4"
+   155 *-*      if j=2 then leave
+       >V>        "2.2"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "2.2"
+       >V>       "3.3"
+   159 *-*     avar.=1.0''loop
+       >L>       "1.0"
+       >L>       ""
+       >O>       "1.0"
+       >V>       "4"
+       >O>       "1.04"
+   160 *-*     select
+   161 *-*     when flag='string' then say 'FailedS1'
+       >V>       "1"
+       >L>       "string"
+       >O>       "0"
+   162 *-*     when avar.flag.2=0 then say 'FailedS2'
+       >V>       "1"
+       >C>       "AVAR.1.2"
+       >V>       "1.04"
+       >L>       "0"
+       >O>       "0"
+   163 *-*     when flag=5+99.7   then say 'FailedS3'
+       >V>       "1"
+       >L>       "5"
+       >L>       "99.7"
+       >O>       "104.7"
+       >O>       "0"
+   164 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.04"
+       >L>       "1.1"
+       >O>       "1.144"
+       >C>       "AVAR.1.2"
+   167 *-*     if opaqueone then flag=opaqueone
+       >V>       "1"
+       *-*     flag=opaqueone
+       >V>       "1"
+   168 *-*     select
+   169 *-*     when flag=='ring'  then say 'FailedT1'
+       >V>       "1"
+       >L>       "ring"
+       >O>       "0"
+   170 *-*     when avar.flag.3=0 then say 'FailedT2'
+       >V>       "1"
+       >C>       "AVAR.1.3"
+       >V>       "1.04"
+       >L>       "0"
+       >O>       "0"
+   171 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.144"
+       >L>       "1.1"
+       >O>       "1.2584"
+       >C>       "AVAR.1.2"
+   174 *-*     parse value opaquefoobar with v1 +5 v2 .
+       >V>       "Foo Bar"
+       >>>       "Foo B"
+       >>>       "ar"
+       >.>       ""
+   175 *-*     trace value trace()
+       >F>       "I"
+       *-*     address value address()
+       >F>       "SYSTEM"
+   176 *-*     call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>       "with"
+       >L>       "2"
+       >O>       "with 2"
+       >V>       "args"
+       >O>       "with 2 args"
+       >L>       "(This is the second)"
+       >V>       "1"
+       >O>       "(This is the second)1"
+       >L>       ""
+       >O>       "(This is the second)1"
+       >V>       "1"
+       >O>       "(This is the second)11"
+   236 *-*      subroutine:
+   237 *-*      parse upper arg a1 a2 a3 ., a4
+       >>>        "WITH"
+       >>>        "2"
+       >>>        "ARGS"
+       >.>        ""
+       >>>        "(THIS IS THE SECOND)11"
+   238 *-*      parse var a3 b1 b2 b3 .
+       >V>        "ARGS"
+       >>>        "ARGS"
+       >>>        ""
+       >>>        ""
+       >.>        ""
+   239 *-*      do 1
+       >L>        "1"
+       *-*       rc=a1 a2 a3
+       >V>         "WITH"
+       >V>         "2"
+       >O>         "WITH 2"
+       >V>         "ARGS"
+       >O>         "WITH 2 ARGS"
+       *-*       parse var rc c1 c2 c3
+       >V>         "WITH 2 ARGS"
+       >>>         "WITH"
+       >>>         "2"
+       >>>         "ARGS"
+       *-*      end
+       *-*      do 1
+   240 *-*      return
+   177 *-*     rc='This is an awfully boring program'
+       >L>       "This is an awfully boring program"
+       *-*     parse var rc p1 (p0) p5
+       >V>       "This is an awfully boring program"
+       >V>       "b"
+       >>>       "This is an awfully "
+       >>>       "oring program"
+   178 *-*     rc='is an awfully boring program This'
+       >L>       "is an awfully boring program This"
+       *-*     parse var rc p2 (p0) p6
+       >V>       "is an awfully boring program This"
+       >V>       "b"
+       >>>       "is an awfully "
+       >>>       "oring program This"
+   179 *-*     rc='an awfully boring program This is'
+       >L>       "an awfully boring program This is"
+       *-*     parse var rc p3 (p0) p7
+       >V>       "an awfully boring program This is"
+       >V>       "b"
+       >>>       "an awfully "
+       >>>       "oring program This is"
+   180 *-*     rc='awfully boring program This is an'
+       >L>       "awfully boring program This is an"
+       *-*     parse var rc p4 (p0) p8
+       >V>       "awfully boring program This is an"
+       >V>       "b"
+       >>>       "awfully "
+       >>>       "oring program This is an"
+   181 *-*    end loop
+   142 *-*    do loop=1 to 14
+       >V>      "4"
+       >V>      "5"
+   144 *-*     key1=opaquekey
+       >V>       "Key Bee"
+   145 *-*     acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>       "12345678"
+       >L>       "6"
+       >L>       "2"
+       >F>       "67"
+       >V>       "Key Bee"
+       >V>       "5"
+       >C>       "ACOMPOUND.Key Bee.5"
+   146 *-*     if flag=acompound.key1.loop then say 'Failed1'
+       >V>       "1"
+       >V>       "Key Bee"
+       >V>       "5"
+       >C>       "ACOMPOUND.Key Bee.5"
+       >V>       "67"
+       >O>       "0"
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>       "1.1"
+       >L>       "2.2"
+       >L>       "1.1"
+       >V>       "1.1"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "1.1"
+       >V>        "Key Bee"
+       >V>        "5"
+       >C>        "ACOMPOUND.Key Bee.5"
+       >V>        "67"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "1.1"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "1.1"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "1.1"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "5"
+       >C>        "ACOMPOUND.Key Bee.5"
+       >V>        "67"
+       >L>        "1"
+       >O>        "68"
+       >V>        "Key Bee"
+       >V>        "5"
+       >C>        "ACOMPOUND.Key Bee.5"
+   155 *-*      if j=2 then leave
+       >V>        "1.1"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "1.1"
+       >V>       "2.2"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "2.2"
+       >V>        "Key Bee"
+       >V>        "5"
+       >C>        "ACOMPOUND.Key Bee.5"
+       >V>        "68"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "2.2"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "2.2"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "2.2"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "5"
+       >C>        "ACOMPOUND.Key Bee.5"
+       >V>        "68"
+       >L>        "1"
+       >O>        "69"
+       >V>        "Key Bee"
+       >V>        "5"
+       >C>        "ACOMPOUND.Key Bee.5"
+   155 *-*      if j=2 then leave
+       >V>        "2.2"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "2.2"
+       >V>       "3.3"
+   159 *-*     avar.=1.0''loop
+       >L>       "1.0"
+       >L>       ""
+       >O>       "1.0"
+       >V>       "5"
+       >O>       "1.05"
+   160 *-*     select
+   161 *-*     when flag='string' then say 'FailedS1'
+       >V>       "1"
+       >L>       "string"
+       >O>       "0"
+   162 *-*     when avar.flag.2=0 then say 'FailedS2'
+       >V>       "1"
+       >C>       "AVAR.1.2"
+       >V>       "1.05"
+       >L>       "0"
+       >O>       "0"
+   163 *-*     when flag=5+99.7   then say 'FailedS3'
+       >V>       "1"
+       >L>       "5"
+       >L>       "99.7"
+       >O>       "104.7"
+       >O>       "0"
+   164 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.05"
+       >L>       "1.1"
+       >O>       "1.155"
+       >C>       "AVAR.1.2"
+   167 *-*     if opaqueone then flag=opaqueone
+       >V>       "1"
+       *-*     flag=opaqueone
+       >V>       "1"
+   168 *-*     select
+   169 *-*     when flag=='ring'  then say 'FailedT1'
+       >V>       "1"
+       >L>       "ring"
+       >O>       "0"
+   170 *-*     when avar.flag.3=0 then say 'FailedT2'
+       >V>       "1"
+       >C>       "AVAR.1.3"
+       >V>       "1.05"
+       >L>       "0"
+       >O>       "0"
+   171 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.155"
+       >L>       "1.1"
+       >O>       "1.2705"
+       >C>       "AVAR.1.2"
+   174 *-*     parse value opaquefoobar with v1 +5 v2 .
+       >V>       "Foo Bar"
+       >>>       "Foo B"
+       >>>       "ar"
+       >.>       ""
+   175 *-*     trace value trace()
+       >F>       "I"
+       *-*     address value address()
+       >F>       "SYSTEM"
+   176 *-*     call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>       "with"
+       >L>       "2"
+       >O>       "with 2"
+       >V>       "args"
+       >O>       "with 2 args"
+       >L>       "(This is the second)"
+       >V>       "1"
+       >O>       "(This is the second)1"
+       >L>       ""
+       >O>       "(This is the second)1"
+       >V>       "1"
+       >O>       "(This is the second)11"
+   236 *-*      subroutine:
+   237 *-*      parse upper arg a1 a2 a3 ., a4
+       >>>        "WITH"
+       >>>        "2"
+       >>>        "ARGS"
+       >.>        ""
+       >>>        "(THIS IS THE SECOND)11"
+   238 *-*      parse var a3 b1 b2 b3 .
+       >V>        "ARGS"
+       >>>        "ARGS"
+       >>>        ""
+       >>>        ""
+       >.>        ""
+   239 *-*      do 1
+       >L>        "1"
+       *-*       rc=a1 a2 a3
+       >V>         "WITH"
+       >V>         "2"
+       >O>         "WITH 2"
+       >V>         "ARGS"
+       >O>         "WITH 2 ARGS"
+       *-*       parse var rc c1 c2 c3
+       >V>         "WITH 2 ARGS"
+       >>>         "WITH"
+       >>>         "2"
+       >>>         "ARGS"
+       *-*      end
+       *-*      do 1
+   240 *-*      return
+   177 *-*     rc='This is an awfully boring program'
+       >L>       "This is an awfully boring program"
+       *-*     parse var rc p1 (p0) p5
+       >V>       "This is an awfully boring program"
+       >V>       "b"
+       >>>       "This is an awfully "
+       >>>       "oring program"
+   178 *-*     rc='is an awfully boring program This'
+       >L>       "is an awfully boring program This"
+       *-*     parse var rc p2 (p0) p6
+       >V>       "is an awfully boring program This"
+       >V>       "b"
+       >>>       "is an awfully "
+       >>>       "oring program This"
+   179 *-*     rc='an awfully boring program This is'
+       >L>       "an awfully boring program This is"
+       *-*     parse var rc p3 (p0) p7
+       >V>       "an awfully boring program This is"
+       >V>       "b"
+       >>>       "an awfully "
+       >>>       "oring program This is"
+   180 *-*     rc='awfully boring program This is an'
+       >L>       "awfully boring program This is an"
+       *-*     parse var rc p4 (p0) p8
+       >V>       "awfully boring program This is an"
+       >V>       "b"
+       >>>       "awfully "
+       >>>       "oring program This is an"
+   181 *-*    end loop
+   142 *-*    do loop=1 to 14
+       >V>      "5"
+       >V>      "6"
+   144 *-*     key1=opaquekey
+       >V>       "Key Bee"
+   145 *-*     acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>       "12345678"
+       >L>       "6"
+       >L>       "2"
+       >F>       "67"
+       >V>       "Key Bee"
+       >V>       "6"
+       >C>       "ACOMPOUND.Key Bee.6"
+   146 *-*     if flag=acompound.key1.loop then say 'Failed1'
+       >V>       "1"
+       >V>       "Key Bee"
+       >V>       "6"
+       >C>       "ACOMPOUND.Key Bee.6"
+       >V>       "67"
+       >O>       "0"
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>       "1.1"
+       >L>       "2.2"
+       >L>       "1.1"
+       >V>       "1.1"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "1.1"
+       >V>        "Key Bee"
+       >V>        "6"
+       >C>        "ACOMPOUND.Key Bee.6"
+       >V>        "67"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "1.1"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "1.1"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "1.1"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "6"
+       >C>        "ACOMPOUND.Key Bee.6"
+       >V>        "67"
+       >L>        "1"
+       >O>        "68"
+       >V>        "Key Bee"
+       >V>        "6"
+       >C>        "ACOMPOUND.Key Bee.6"
+   155 *-*      if j=2 then leave
+       >V>        "1.1"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "1.1"
+       >V>       "2.2"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "2.2"
+       >V>        "Key Bee"
+       >V>        "6"
+       >C>        "ACOMPOUND.Key Bee.6"
+       >V>        "68"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "2.2"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "2.2"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "2.2"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "6"
+       >C>        "ACOMPOUND.Key Bee.6"
+       >V>        "68"
+       >L>        "1"
+       >O>        "69"
+       >V>        "Key Bee"
+       >V>        "6"
+       >C>        "ACOMPOUND.Key Bee.6"
+   155 *-*      if j=2 then leave
+       >V>        "2.2"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "2.2"
+       >V>       "3.3"
+   159 *-*     avar.=1.0''loop
+       >L>       "1.0"
+       >L>       ""
+       >O>       "1.0"
+       >V>       "6"
+       >O>       "1.06"
+   160 *-*     select
+   161 *-*     when flag='string' then say 'FailedS1'
+       >V>       "1"
+       >L>       "string"
+       >O>       "0"
+   162 *-*     when avar.flag.2=0 then say 'FailedS2'
+       >V>       "1"
+       >C>       "AVAR.1.2"
+       >V>       "1.06"
+       >L>       "0"
+       >O>       "0"
+   163 *-*     when flag=5+99.7   then say 'FailedS3'
+       >V>       "1"
+       >L>       "5"
+       >L>       "99.7"
+       >O>       "104.7"
+       >O>       "0"
+   164 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.06"
+       >L>       "1.1"
+       >O>       "1.166"
+       >C>       "AVAR.1.2"
+   167 *-*     if opaqueone then flag=opaqueone
+       >V>       "1"
+       *-*     flag=opaqueone
+       >V>       "1"
+   168 *-*     select
+   169 *-*     when flag=='ring'  then say 'FailedT1'
+       >V>       "1"
+       >L>       "ring"
+       >O>       "0"
+   170 *-*     when avar.flag.3=0 then say 'FailedT2'
+       >V>       "1"
+       >C>       "AVAR.1.3"
+       >V>       "1.06"
+       >L>       "0"
+       >O>       "0"
+   171 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.166"
+       >L>       "1.1"
+       >O>       "1.2826"
+       >C>       "AVAR.1.2"
+   174 *-*     parse value opaquefoobar with v1 +5 v2 .
+       >V>       "Foo Bar"
+       >>>       "Foo B"
+       >>>       "ar"
+       >.>       ""
+   175 *-*     trace value trace()
+       >F>       "I"
+       *-*     address value address()
+       >F>       "SYSTEM"
+   176 *-*     call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>       "with"
+       >L>       "2"
+       >O>       "with 2"
+       >V>       "args"
+       >O>       "with 2 args"
+       >L>       "(This is the second)"
+       >V>       "1"
+       >O>       "(This is the second)1"
+       >L>       ""
+       >O>       "(This is the second)1"
+       >V>       "1"
+       >O>       "(This is the second)11"
+   236 *-*      subroutine:
+   237 *-*      parse upper arg a1 a2 a3 ., a4
+       >>>        "WITH"
+       >>>        "2"
+       >>>        "ARGS"
+       >.>        ""
+       >>>        "(THIS IS THE SECOND)11"
+   238 *-*      parse var a3 b1 b2 b3 .
+       >V>        "ARGS"
+       >>>        "ARGS"
+       >>>        ""
+       >>>        ""
+       >.>        ""
+   239 *-*      do 1
+       >L>        "1"
+       *-*       rc=a1 a2 a3
+       >V>         "WITH"
+       >V>         "2"
+       >O>         "WITH 2"
+       >V>         "ARGS"
+       >O>         "WITH 2 ARGS"
+       *-*       parse var rc c1 c2 c3
+       >V>         "WITH 2 ARGS"
+       >>>         "WITH"
+       >>>         "2"
+       >>>         "ARGS"
+       *-*      end
+       *-*      do 1
+   240 *-*      return
+   177 *-*     rc='This is an awfully boring program'
+       >L>       "This is an awfully boring program"
+       *-*     parse var rc p1 (p0) p5
+       >V>       "This is an awfully boring program"
+       >V>       "b"
+       >>>       "This is an awfully "
+       >>>       "oring program"
+   178 *-*     rc='is an awfully boring program This'
+       >L>       "is an awfully boring program This"
+       *-*     parse var rc p2 (p0) p6
+       >V>       "is an awfully boring program This"
+       >V>       "b"
+       >>>       "is an awfully "
+       >>>       "oring program This"
+   179 *-*     rc='an awfully boring program This is'
+       >L>       "an awfully boring program This is"
+       *-*     parse var rc p3 (p0) p7
+       >V>       "an awfully boring program This is"
+       >V>       "b"
+       >>>       "an awfully "
+       >>>       "oring program This is"
+   180 *-*     rc='awfully boring program This is an'
+       >L>       "awfully boring program This is an"
+       *-*     parse var rc p4 (p0) p8
+       >V>       "awfully boring program This is an"
+       >V>       "b"
+       >>>       "awfully "
+       >>>       "oring program This is an"
+   181 *-*    end loop
+   142 *-*    do loop=1 to 14
+       >V>      "6"
+       >V>      "7"
+   144 *-*     key1=opaquekey
+       >V>       "Key Bee"
+   145 *-*     acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>       "12345678"
+       >L>       "6"
+       >L>       "2"
+       >F>       "67"
+       >V>       "Key Bee"
+       >V>       "7"
+       >C>       "ACOMPOUND.Key Bee.7"
+   146 *-*     if flag=acompound.key1.loop then say 'Failed1'
+       >V>       "1"
+       >V>       "Key Bee"
+       >V>       "7"
+       >C>       "ACOMPOUND.Key Bee.7"
+       >V>       "67"
+       >O>       "0"
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>       "1.1"
+       >L>       "2.2"
+       >L>       "1.1"
+       >V>       "1.1"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "1.1"
+       >V>        "Key Bee"
+       >V>        "7"
+       >C>        "ACOMPOUND.Key Bee.7"
+       >V>        "67"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "1.1"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "1.1"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "1.1"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "7"
+       >C>        "ACOMPOUND.Key Bee.7"
+       >V>        "67"
+       >L>        "1"
+       >O>        "68"
+       >V>        "Key Bee"
+       >V>        "7"
+       >C>        "ACOMPOUND.Key Bee.7"
+   155 *-*      if j=2 then leave
+       >V>        "1.1"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "1.1"
+       >V>       "2.2"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "2.2"
+       >V>        "Key Bee"
+       >V>        "7"
+       >C>        "ACOMPOUND.Key Bee.7"
+       >V>        "68"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "2.2"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "2.2"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "2.2"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "7"
+       >C>        "ACOMPOUND.Key Bee.7"
+       >V>        "68"
+       >L>        "1"
+       >O>        "69"
+       >V>        "Key Bee"
+       >V>        "7"
+       >C>        "ACOMPOUND.Key Bee.7"
+   155 *-*      if j=2 then leave
+       >V>        "2.2"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "2.2"
+       >V>       "3.3"
+   159 *-*     avar.=1.0''loop
+       >L>       "1.0"
+       >L>       ""
+       >O>       "1.0"
+       >V>       "7"
+       >O>       "1.07"
+   160 *-*     select
+   161 *-*     when flag='string' then say 'FailedS1'
+       >V>       "1"
+       >L>       "string"
+       >O>       "0"
+   162 *-*     when avar.flag.2=0 then say 'FailedS2'
+       >V>       "1"
+       >C>       "AVAR.1.2"
+       >V>       "1.07"
+       >L>       "0"
+       >O>       "0"
+   163 *-*     when flag=5+99.7   then say 'FailedS3'
+       >V>       "1"
+       >L>       "5"
+       >L>       "99.7"
+       >O>       "104.7"
+       >O>       "0"
+   164 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.07"
+       >L>       "1.1"
+       >O>       "1.177"
+       >C>       "AVAR.1.2"
+   167 *-*     if opaqueone then flag=opaqueone
+       >V>       "1"
+       *-*     flag=opaqueone
+       >V>       "1"
+   168 *-*     select
+   169 *-*     when flag=='ring'  then say 'FailedT1'
+       >V>       "1"
+       >L>       "ring"
+       >O>       "0"
+   170 *-*     when avar.flag.3=0 then say 'FailedT2'
+       >V>       "1"
+       >C>       "AVAR.1.3"
+       >V>       "1.07"
+       >L>       "0"
+       >O>       "0"
+   171 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.177"
+       >L>       "1.1"
+       >O>       "1.2947"
+       >C>       "AVAR.1.2"
+   174 *-*     parse value opaquefoobar with v1 +5 v2 .
+       >V>       "Foo Bar"
+       >>>       "Foo B"
+       >>>       "ar"
+       >.>       ""
+   175 *-*     trace value trace()
+       >F>       "I"
+       *-*     address value address()
+       >F>       "SYSTEM"
+   176 *-*     call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>       "with"
+       >L>       "2"
+       >O>       "with 2"
+       >V>       "args"
+       >O>       "with 2 args"
+       >L>       "(This is the second)"
+       >V>       "1"
+       >O>       "(This is the second)1"
+       >L>       ""
+       >O>       "(This is the second)1"
+       >V>       "1"
+       >O>       "(This is the second)11"
+   236 *-*      subroutine:
+   237 *-*      parse upper arg a1 a2 a3 ., a4
+       >>>        "WITH"
+       >>>        "2"
+       >>>        "ARGS"
+       >.>        ""
+       >>>        "(THIS IS THE SECOND)11"
+   238 *-*      parse var a3 b1 b2 b3 .
+       >V>        "ARGS"
+       >>>        "ARGS"
+       >>>        ""
+       >>>        ""
+       >.>        ""
+   239 *-*      do 1
+       >L>        "1"
+       *-*       rc=a1 a2 a3
+       >V>         "WITH"
+       >V>         "2"
+       >O>         "WITH 2"
+       >V>         "ARGS"
+       >O>         "WITH 2 ARGS"
+       *-*       parse var rc c1 c2 c3
+       >V>         "WITH 2 ARGS"
+       >>>         "WITH"
+       >>>         "2"
+       >>>         "ARGS"
+       *-*      end
+       *-*      do 1
+   240 *-*      return
+   177 *-*     rc='This is an awfully boring program'
+       >L>       "This is an awfully boring program"
+       *-*     parse var rc p1 (p0) p5
+       >V>       "This is an awfully boring program"
+       >V>       "b"
+       >>>       "This is an awfully "
+       >>>       "oring program"
+   178 *-*     rc='is an awfully boring program This'
+       >L>       "is an awfully boring program This"
+       *-*     parse var rc p2 (p0) p6
+       >V>       "is an awfully boring program This"
+       >V>       "b"
+       >>>       "is an awfully "
+       >>>       "oring program This"
+   179 *-*     rc='an awfully boring program This is'
+       >L>       "an awfully boring program This is"
+       *-*     parse var rc p3 (p0) p7
+       >V>       "an awfully boring program This is"
+       >V>       "b"
+       >>>       "an awfully "
+       >>>       "oring program This is"
+   180 *-*     rc='awfully boring program This is an'
+       >L>       "awfully boring program This is an"
+       *-*     parse var rc p4 (p0) p8
+       >V>       "awfully boring program This is an"
+       >V>       "b"
+       >>>       "awfully "
+       >>>       "oring program This is an"
+   181 *-*    end loop
+   142 *-*    do loop=1 to 14
+       >V>      "7"
+       >V>      "8"
+   144 *-*     key1=opaquekey
+       >V>       "Key Bee"
+   145 *-*     acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>       "12345678"
+       >L>       "6"
+       >L>       "2"
+       >F>       "67"
+       >V>       "Key Bee"
+       >V>       "8"
+       >C>       "ACOMPOUND.Key Bee.8"
+   146 *-*     if flag=acompound.key1.loop then say 'Failed1'
+       >V>       "1"
+       >V>       "Key Bee"
+       >V>       "8"
+       >C>       "ACOMPOUND.Key Bee.8"
+       >V>       "67"
+       >O>       "0"
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>       "1.1"
+       >L>       "2.2"
+       >L>       "1.1"
+       >V>       "1.1"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "1.1"
+       >V>        "Key Bee"
+       >V>        "8"
+       >C>        "ACOMPOUND.Key Bee.8"
+       >V>        "67"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "1.1"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "1.1"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "1.1"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "8"
+       >C>        "ACOMPOUND.Key Bee.8"
+       >V>        "67"
+       >L>        "1"
+       >O>        "68"
+       >V>        "Key Bee"
+       >V>        "8"
+       >C>        "ACOMPOUND.Key Bee.8"
+   155 *-*      if j=2 then leave
+       >V>        "1.1"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "1.1"
+       >V>       "2.2"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "2.2"
+       >V>        "Key Bee"
+       >V>        "8"
+       >C>        "ACOMPOUND.Key Bee.8"
+       >V>        "68"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "2.2"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "2.2"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "2.2"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "8"
+       >C>        "ACOMPOUND.Key Bee.8"
+       >V>        "68"
+       >L>        "1"
+       >O>        "69"
+       >V>        "Key Bee"
+       >V>        "8"
+       >C>        "ACOMPOUND.Key Bee.8"
+   155 *-*      if j=2 then leave
+       >V>        "2.2"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "2.2"
+       >V>       "3.3"
+   159 *-*     avar.=1.0''loop
+       >L>       "1.0"
+       >L>       ""
+       >O>       "1.0"
+       >V>       "8"
+       >O>       "1.08"
+   160 *-*     select
+   161 *-*     when flag='string' then say 'FailedS1'
+       >V>       "1"
+       >L>       "string"
+       >O>       "0"
+   162 *-*     when avar.flag.2=0 then say 'FailedS2'
+       >V>       "1"
+       >C>       "AVAR.1.2"
+       >V>       "1.08"
+       >L>       "0"
+       >O>       "0"
+   163 *-*     when flag=5+99.7   then say 'FailedS3'
+       >V>       "1"
+       >L>       "5"
+       >L>       "99.7"
+       >O>       "104.7"
+       >O>       "0"
+   164 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.08"
+       >L>       "1.1"
+       >O>       "1.188"
+       >C>       "AVAR.1.2"
+   167 *-*     if opaqueone then flag=opaqueone
+       >V>       "1"
+       *-*     flag=opaqueone
+       >V>       "1"
+   168 *-*     select
+   169 *-*     when flag=='ring'  then say 'FailedT1'
+       >V>       "1"
+       >L>       "ring"
+       >O>       "0"
+   170 *-*     when avar.flag.3=0 then say 'FailedT2'
+       >V>       "1"
+       >C>       "AVAR.1.3"
+       >V>       "1.08"
+       >L>       "0"
+       >O>       "0"
+   171 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.188"
+       >L>       "1.1"
+       >O>       "1.3068"
+       >C>       "AVAR.1.2"
+   174 *-*     parse value opaquefoobar with v1 +5 v2 .
+       >V>       "Foo Bar"
+       >>>       "Foo B"
+       >>>       "ar"
+       >.>       ""
+   175 *-*     trace value trace()
+       >F>       "I"
+       *-*     address value address()
+       >F>       "SYSTEM"
+   176 *-*     call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>       "with"
+       >L>       "2"
+       >O>       "with 2"
+       >V>       "args"
+       >O>       "with 2 args"
+       >L>       "(This is the second)"
+       >V>       "1"
+       >O>       "(This is the second)1"
+       >L>       ""
+       >O>       "(This is the second)1"
+       >V>       "1"
+       >O>       "(This is the second)11"
+   236 *-*      subroutine:
+   237 *-*      parse upper arg a1 a2 a3 ., a4
+       >>>        "WITH"
+       >>>        "2"
+       >>>        "ARGS"
+       >.>        ""
+       >>>        "(THIS IS THE SECOND)11"
+   238 *-*      parse var a3 b1 b2 b3 .
+       >V>        "ARGS"
+       >>>        "ARGS"
+       >>>        ""
+       >>>        ""
+       >.>        ""
+   239 *-*      do 1
+       >L>        "1"
+       *-*       rc=a1 a2 a3
+       >V>         "WITH"
+       >V>         "2"
+       >O>         "WITH 2"
+       >V>         "ARGS"
+       >O>         "WITH 2 ARGS"
+       *-*       parse var rc c1 c2 c3
+       >V>         "WITH 2 ARGS"
+       >>>         "WITH"
+       >>>         "2"
+       >>>         "ARGS"
+       *-*      end
+       *-*      do 1
+   240 *-*      return
+   177 *-*     rc='This is an awfully boring program'
+       >L>       "This is an awfully boring program"
+       *-*     parse var rc p1 (p0) p5
+       >V>       "This is an awfully boring program"
+       >V>       "b"
+       >>>       "This is an awfully "
+       >>>       "oring program"
+   178 *-*     rc='is an awfully boring program This'
+       >L>       "is an awfully boring program This"
+       *-*     parse var rc p2 (p0) p6
+       >V>       "is an awfully boring program This"
+       >V>       "b"
+       >>>       "is an awfully "
+       >>>       "oring program This"
+   179 *-*     rc='an awfully boring program This is'
+       >L>       "an awfully boring program This is"
+       *-*     parse var rc p3 (p0) p7
+       >V>       "an awfully boring program This is"
+       >V>       "b"
+       >>>       "an awfully "
+       >>>       "oring program This is"
+   180 *-*     rc='awfully boring program This is an'
+       >L>       "awfully boring program This is an"
+       *-*     parse var rc p4 (p0) p8
+       >V>       "awfully boring program This is an"
+       >V>       "b"
+       >>>       "awfully "
+       >>>       "oring program This is an"
+   181 *-*    end loop
+   142 *-*    do loop=1 to 14
+       >V>      "8"
+       >V>      "9"
+   144 *-*     key1=opaquekey
+       >V>       "Key Bee"
+   145 *-*     acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>       "12345678"
+       >L>       "6"
+       >L>       "2"
+       >F>       "67"
+       >V>       "Key Bee"
+       >V>       "9"
+       >C>       "ACOMPOUND.Key Bee.9"
+   146 *-*     if flag=acompound.key1.loop then say 'Failed1'
+       >V>       "1"
+       >V>       "Key Bee"
+       >V>       "9"
+       >C>       "ACOMPOUND.Key Bee.9"
+       >V>       "67"
+       >O>       "0"
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>       "1.1"
+       >L>       "2.2"
+       >L>       "1.1"
+       >V>       "1.1"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "1.1"
+       >V>        "Key Bee"
+       >V>        "9"
+       >C>        "ACOMPOUND.Key Bee.9"
+       >V>        "67"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "1.1"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "1.1"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "1.1"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "9"
+       >C>        "ACOMPOUND.Key Bee.9"
+       >V>        "67"
+       >L>        "1"
+       >O>        "68"
+       >V>        "Key Bee"
+       >V>        "9"
+       >C>        "ACOMPOUND.Key Bee.9"
+   155 *-*      if j=2 then leave
+       >V>        "1.1"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "1.1"
+       >V>       "2.2"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "2.2"
+       >V>        "Key Bee"
+       >V>        "9"
+       >C>        "ACOMPOUND.Key Bee.9"
+       >V>        "68"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "2.2"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "2.2"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "2.2"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "9"
+       >C>        "ACOMPOUND.Key Bee.9"
+       >V>        "68"
+       >L>        "1"
+       >O>        "69"
+       >V>        "Key Bee"
+       >V>        "9"
+       >C>        "ACOMPOUND.Key Bee.9"
+   155 *-*      if j=2 then leave
+       >V>        "2.2"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "2.2"
+       >V>       "3.3"
+   159 *-*     avar.=1.0''loop
+       >L>       "1.0"
+       >L>       ""
+       >O>       "1.0"
+       >V>       "9"
+       >O>       "1.09"
+   160 *-*     select
+   161 *-*     when flag='string' then say 'FailedS1'
+       >V>       "1"
+       >L>       "string"
+       >O>       "0"
+   162 *-*     when avar.flag.2=0 then say 'FailedS2'
+       >V>       "1"
+       >C>       "AVAR.1.2"
+       >V>       "1.09"
+       >L>       "0"
+       >O>       "0"
+   163 *-*     when flag=5+99.7   then say 'FailedS3'
+       >V>       "1"
+       >L>       "5"
+       >L>       "99.7"
+       >O>       "104.7"
+       >O>       "0"
+   164 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.09"
+       >L>       "1.1"
+       >O>       "1.199"
+       >C>       "AVAR.1.2"
+   167 *-*     if opaqueone then flag=opaqueone
+       >V>       "1"
+       *-*     flag=opaqueone
+       >V>       "1"
+   168 *-*     select
+   169 *-*     when flag=='ring'  then say 'FailedT1'
+       >V>       "1"
+       >L>       "ring"
+       >O>       "0"
+   170 *-*     when avar.flag.3=0 then say 'FailedT2'
+       >V>       "1"
+       >C>       "AVAR.1.3"
+       >V>       "1.09"
+       >L>       "0"
+       >O>       "0"
+   171 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.199"
+       >L>       "1.1"
+       >O>       "1.3189"
+       >C>       "AVAR.1.2"
+   174 *-*     parse value opaquefoobar with v1 +5 v2 .
+       >V>       "Foo Bar"
+       >>>       "Foo B"
+       >>>       "ar"
+       >.>       ""
+   175 *-*     trace value trace()
+       >F>       "I"
+       *-*     address value address()
+       >F>       "SYSTEM"
+   176 *-*     call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>       "with"
+       >L>       "2"
+       >O>       "with 2"
+       >V>       "args"
+       >O>       "with 2 args"
+       >L>       "(This is the second)"
+       >V>       "1"
+       >O>       "(This is the second)1"
+       >L>       ""
+       >O>       "(This is the second)1"
+       >V>       "1"
+       >O>       "(This is the second)11"
+   236 *-*      subroutine:
+   237 *-*      parse upper arg a1 a2 a3 ., a4
+       >>>        "WITH"
+       >>>        "2"
+       >>>        "ARGS"
+       >.>        ""
+       >>>        "(THIS IS THE SECOND)11"
+   238 *-*      parse var a3 b1 b2 b3 .
+       >V>        "ARGS"
+       >>>        "ARGS"
+       >>>        ""
+       >>>        ""
+       >.>        ""
+   239 *-*      do 1
+       >L>        "1"
+       *-*       rc=a1 a2 a3
+       >V>         "WITH"
+       >V>         "2"
+       >O>         "WITH 2"
+       >V>         "ARGS"
+       >O>         "WITH 2 ARGS"
+       *-*       parse var rc c1 c2 c3
+       >V>         "WITH 2 ARGS"
+       >>>         "WITH"
+       >>>         "2"
+       >>>         "ARGS"
+       *-*      end
+       *-*      do 1
+   240 *-*      return
+   177 *-*     rc='This is an awfully boring program'
+       >L>       "This is an awfully boring program"
+       *-*     parse var rc p1 (p0) p5
+       >V>       "This is an awfully boring program"
+       >V>       "b"
+       >>>       "This is an awfully "
+       >>>       "oring program"
+   178 *-*     rc='is an awfully boring program This'
+       >L>       "is an awfully boring program This"
+       *-*     parse var rc p2 (p0) p6
+       >V>       "is an awfully boring program This"
+       >V>       "b"
+       >>>       "is an awfully "
+       >>>       "oring program This"
+   179 *-*     rc='an awfully boring program This is'
+       >L>       "an awfully boring program This is"
+       *-*     parse var rc p3 (p0) p7
+       >V>       "an awfully boring program This is"
+       >V>       "b"
+       >>>       "an awfully "
+       >>>       "oring program This is"
+   180 *-*     rc='awfully boring program This is an'
+       >L>       "awfully boring program This is an"
+       *-*     parse var rc p4 (p0) p8
+       >V>       "awfully boring program This is an"
+       >V>       "b"
+       >>>       "awfully "
+       >>>       "oring program This is an"
+   181 *-*    end loop
+   142 *-*    do loop=1 to 14
+       >V>      "9"
+       >V>      "10"
+   144 *-*     key1=opaquekey
+       >V>       "Key Bee"
+   145 *-*     acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>       "12345678"
+       >L>       "6"
+       >L>       "2"
+       >F>       "67"
+       >V>       "Key Bee"
+       >V>       "10"
+       >C>       "ACOMPOUND.Key Bee.10"
+   146 *-*     if flag=acompound.key1.loop then say 'Failed1'
+       >V>       "1"
+       >V>       "Key Bee"
+       >V>       "10"
+       >C>       "ACOMPOUND.Key Bee.10"
+       >V>       "67"
+       >O>       "0"
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>       "1.1"
+       >L>       "2.2"
+       >L>       "1.1"
+       >V>       "1.1"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "1.1"
+       >V>        "Key Bee"
+       >V>        "10"
+       >C>        "ACOMPOUND.Key Bee.10"
+       >V>        "67"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "1.1"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "1.1"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "1.1"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "10"
+       >C>        "ACOMPOUND.Key Bee.10"
+       >V>        "67"
+       >L>        "1"
+       >O>        "68"
+       >V>        "Key Bee"
+       >V>        "10"
+       >C>        "ACOMPOUND.Key Bee.10"
+   155 *-*      if j=2 then leave
+       >V>        "1.1"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "1.1"
+       >V>       "2.2"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "2.2"
+       >V>        "Key Bee"
+       >V>        "10"
+       >C>        "ACOMPOUND.Key Bee.10"
+       >V>        "68"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "2.2"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "2.2"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "2.2"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "10"
+       >C>        "ACOMPOUND.Key Bee.10"
+       >V>        "68"
+       >L>        "1"
+       >O>        "69"
+       >V>        "Key Bee"
+       >V>        "10"
+       >C>        "ACOMPOUND.Key Bee.10"
+   155 *-*      if j=2 then leave
+       >V>        "2.2"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "2.2"
+       >V>       "3.3"
+   159 *-*     avar.=1.0''loop
+       >L>       "1.0"
+       >L>       ""
+       >O>       "1.0"
+       >V>       "10"
+       >O>       "1.010"
+   160 *-*     select
+   161 *-*     when flag='string' then say 'FailedS1'
+       >V>       "1"
+       >L>       "string"
+       >O>       "0"
+   162 *-*     when avar.flag.2=0 then say 'FailedS2'
+       >V>       "1"
+       >C>       "AVAR.1.2"
+       >V>       "1.010"
+       >L>       "0"
+       >O>       "0"
+   163 *-*     when flag=5+99.7   then say 'FailedS3'
+       >V>       "1"
+       >L>       "5"
+       >L>       "99.7"
+       >O>       "104.7"
+       >O>       "0"
+   164 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.010"
+       >L>       "1.1"
+       >O>       "1.1110"
+       >C>       "AVAR.1.2"
+   167 *-*     if opaqueone then flag=opaqueone
+       >V>       "1"
+       *-*     flag=opaqueone
+       >V>       "1"
+   168 *-*     select
+   169 *-*     when flag=='ring'  then say 'FailedT1'
+       >V>       "1"
+       >L>       "ring"
+       >O>       "0"
+   170 *-*     when avar.flag.3=0 then say 'FailedT2'
+       >V>       "1"
+       >C>       "AVAR.1.3"
+       >V>       "1.010"
+       >L>       "0"
+       >O>       "0"
+   171 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.1110"
+       >L>       "1.1"
+       >O>       "1.22210"
+       >C>       "AVAR.1.2"
+   174 *-*     parse value opaquefoobar with v1 +5 v2 .
+       >V>       "Foo Bar"
+       >>>       "Foo B"
+       >>>       "ar"
+       >.>       ""
+   175 *-*     trace value trace()
+       >F>       "I"
+       *-*     address value address()
+       >F>       "SYSTEM"
+   176 *-*     call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>       "with"
+       >L>       "2"
+       >O>       "with 2"
+       >V>       "args"
+       >O>       "with 2 args"
+       >L>       "(This is the second)"
+       >V>       "1"
+       >O>       "(This is the second)1"
+       >L>       ""
+       >O>       "(This is the second)1"
+       >V>       "1"
+       >O>       "(This is the second)11"
+   236 *-*      subroutine:
+   237 *-*      parse upper arg a1 a2 a3 ., a4
+       >>>        "WITH"
+       >>>        "2"
+       >>>        "ARGS"
+       >.>        ""
+       >>>        "(THIS IS THE SECOND)11"
+   238 *-*      parse var a3 b1 b2 b3 .
+       >V>        "ARGS"
+       >>>        "ARGS"
+       >>>        ""
+       >>>        ""
+       >.>        ""
+   239 *-*      do 1
+       >L>        "1"
+       *-*       rc=a1 a2 a3
+       >V>         "WITH"
+       >V>         "2"
+       >O>         "WITH 2"
+       >V>         "ARGS"
+       >O>         "WITH 2 ARGS"
+       *-*       parse var rc c1 c2 c3
+       >V>         "WITH 2 ARGS"
+       >>>         "WITH"
+       >>>         "2"
+       >>>         "ARGS"
+       *-*      end
+       *-*      do 1
+   240 *-*      return
+   177 *-*     rc='This is an awfully boring program'
+       >L>       "This is an awfully boring program"
+       *-*     parse var rc p1 (p0) p5
+       >V>       "This is an awfully boring program"
+       >V>       "b"
+       >>>       "This is an awfully "
+       >>>       "oring program"
+   178 *-*     rc='is an awfully boring program This'
+       >L>       "is an awfully boring program This"
+       *-*     parse var rc p2 (p0) p6
+       >V>       "is an awfully boring program This"
+       >V>       "b"
+       >>>       "is an awfully "
+       >>>       "oring program This"
+   179 *-*     rc='an awfully boring program This is'
+       >L>       "an awfully boring program This is"
+       *-*     parse var rc p3 (p0) p7
+       >V>       "an awfully boring program This is"
+       >V>       "b"
+       >>>       "an awfully "
+       >>>       "oring program This is"
+   180 *-*     rc='awfully boring program This is an'
+       >L>       "awfully boring program This is an"
+       *-*     parse var rc p4 (p0) p8
+       >V>       "awfully boring program This is an"
+       >V>       "b"
+       >>>       "awfully "
+       >>>       "oring program This is an"
+   181 *-*    end loop
+   142 *-*    do loop=1 to 14
+       >V>      "10"
+       >V>      "11"
+   144 *-*     key1=opaquekey
+       >V>       "Key Bee"
+   145 *-*     acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>       "12345678"
+       >L>       "6"
+       >L>       "2"
+       >F>       "67"
+       >V>       "Key Bee"
+       >V>       "11"
+       >C>       "ACOMPOUND.Key Bee.11"
+   146 *-*     if flag=acompound.key1.loop then say 'Failed1'
+       >V>       "1"
+       >V>       "Key Bee"
+       >V>       "11"
+       >C>       "ACOMPOUND.Key Bee.11"
+       >V>       "67"
+       >O>       "0"
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>       "1.1"
+       >L>       "2.2"
+       >L>       "1.1"
+       >V>       "1.1"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "1.1"
+       >V>        "Key Bee"
+       >V>        "11"
+       >C>        "ACOMPOUND.Key Bee.11"
+       >V>        "67"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "1.1"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "1.1"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "1.1"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "11"
+       >C>        "ACOMPOUND.Key Bee.11"
+       >V>        "67"
+       >L>        "1"
+       >O>        "68"
+       >V>        "Key Bee"
+       >V>        "11"
+       >C>        "ACOMPOUND.Key Bee.11"
+   155 *-*      if j=2 then leave
+       >V>        "1.1"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "1.1"
+       >V>       "2.2"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "2.2"
+       >V>        "Key Bee"
+       >V>        "11"
+       >C>        "ACOMPOUND.Key Bee.11"
+       >V>        "68"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "2.2"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "2.2"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "2.2"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "11"
+       >C>        "ACOMPOUND.Key Bee.11"
+       >V>        "68"
+       >L>        "1"
+       >O>        "69"
+       >V>        "Key Bee"
+       >V>        "11"
+       >C>        "ACOMPOUND.Key Bee.11"
+   155 *-*      if j=2 then leave
+       >V>        "2.2"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "2.2"
+       >V>       "3.3"
+   159 *-*     avar.=1.0''loop
+       >L>       "1.0"
+       >L>       ""
+       >O>       "1.0"
+       >V>       "11"
+       >O>       "1.011"
+   160 *-*     select
+   161 *-*     when flag='string' then say 'FailedS1'
+       >V>       "1"
+       >L>       "string"
+       >O>       "0"
+   162 *-*     when avar.flag.2=0 then say 'FailedS2'
+       >V>       "1"
+       >C>       "AVAR.1.2"
+       >V>       "1.011"
+       >L>       "0"
+       >O>       "0"
+   163 *-*     when flag=5+99.7   then say 'FailedS3'
+       >V>       "1"
+       >L>       "5"
+       >L>       "99.7"
+       >O>       "104.7"
+       >O>       "0"
+   164 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.011"
+       >L>       "1.1"
+       >O>       "1.1121"
+       >C>       "AVAR.1.2"
+   167 *-*     if opaqueone then flag=opaqueone
+       >V>       "1"
+       *-*     flag=opaqueone
+       >V>       "1"
+   168 *-*     select
+   169 *-*     when flag=='ring'  then say 'FailedT1'
+       >V>       "1"
+       >L>       "ring"
+       >O>       "0"
+   170 *-*     when avar.flag.3=0 then say 'FailedT2'
+       >V>       "1"
+       >C>       "AVAR.1.3"
+       >V>       "1.011"
+       >L>       "0"
+       >O>       "0"
+   171 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.1121"
+       >L>       "1.1"
+       >O>       "1.22331"
+       >C>       "AVAR.1.2"
+   174 *-*     parse value opaquefoobar with v1 +5 v2 .
+       >V>       "Foo Bar"
+       >>>       "Foo B"
+       >>>       "ar"
+       >.>       ""
+   175 *-*     trace value trace()
+       >F>       "I"
+       *-*     address value address()
+       >F>       "SYSTEM"
+   176 *-*     call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>       "with"
+       >L>       "2"
+       >O>       "with 2"
+       >V>       "args"
+       >O>       "with 2 args"
+       >L>       "(This is the second)"
+       >V>       "1"
+       >O>       "(This is the second)1"
+       >L>       ""
+       >O>       "(This is the second)1"
+       >V>       "1"
+       >O>       "(This is the second)11"
+   236 *-*      subroutine:
+   237 *-*      parse upper arg a1 a2 a3 ., a4
+       >>>        "WITH"
+       >>>        "2"
+       >>>        "ARGS"
+       >.>        ""
+       >>>        "(THIS IS THE SECOND)11"
+   238 *-*      parse var a3 b1 b2 b3 .
+       >V>        "ARGS"
+       >>>        "ARGS"
+       >>>        ""
+       >>>        ""
+       >.>        ""
+   239 *-*      do 1
+       >L>        "1"
+       *-*       rc=a1 a2 a3
+       >V>         "WITH"
+       >V>         "2"
+       >O>         "WITH 2"
+       >V>         "ARGS"
+       >O>         "WITH 2 ARGS"
+       *-*       parse var rc c1 c2 c3
+       >V>         "WITH 2 ARGS"
+       >>>         "WITH"
+       >>>         "2"
+       >>>         "ARGS"
+       *-*      end
+       *-*      do 1
+   240 *-*      return
+   177 *-*     rc='This is an awfully boring program'
+       >L>       "This is an awfully boring program"
+       *-*     parse var rc p1 (p0) p5
+       >V>       "This is an awfully boring program"
+       >V>       "b"
+       >>>       "This is an awfully "
+       >>>       "oring program"
+   178 *-*     rc='is an awfully boring program This'
+       >L>       "is an awfully boring program This"
+       *-*     parse var rc p2 (p0) p6
+       >V>       "is an awfully boring program This"
+       >V>       "b"
+       >>>       "is an awfully "
+       >>>       "oring program This"
+   179 *-*     rc='an awfully boring program This is'
+       >L>       "an awfully boring program This is"
+       *-*     parse var rc p3 (p0) p7
+       >V>       "an awfully boring program This is"
+       >V>       "b"
+       >>>       "an awfully "
+       >>>       "oring program This is"
+   180 *-*     rc='awfully boring program This is an'
+       >L>       "awfully boring program This is an"
+       *-*     parse var rc p4 (p0) p8
+       >V>       "awfully boring program This is an"
+       >V>       "b"
+       >>>       "awfully "
+       >>>       "oring program This is an"
+   181 *-*    end loop
+   142 *-*    do loop=1 to 14
+       >V>      "11"
+       >V>      "12"
+   144 *-*     key1=opaquekey
+       >V>       "Key Bee"
+   145 *-*     acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>       "12345678"
+       >L>       "6"
+       >L>       "2"
+       >F>       "67"
+       >V>       "Key Bee"
+       >V>       "12"
+       >C>       "ACOMPOUND.Key Bee.12"
+   146 *-*     if flag=acompound.key1.loop then say 'Failed1'
+       >V>       "1"
+       >V>       "Key Bee"
+       >V>       "12"
+       >C>       "ACOMPOUND.Key Bee.12"
+       >V>       "67"
+       >O>       "0"
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>       "1.1"
+       >L>       "2.2"
+       >L>       "1.1"
+       >V>       "1.1"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "1.1"
+       >V>        "Key Bee"
+       >V>        "12"
+       >C>        "ACOMPOUND.Key Bee.12"
+       >V>        "67"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "1.1"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "1.1"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "1.1"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "12"
+       >C>        "ACOMPOUND.Key Bee.12"
+       >V>        "67"
+       >L>        "1"
+       >O>        "68"
+       >V>        "Key Bee"
+       >V>        "12"
+       >C>        "ACOMPOUND.Key Bee.12"
+   155 *-*      if j=2 then leave
+       >V>        "1.1"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "1.1"
+       >V>       "2.2"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "2.2"
+       >V>        "Key Bee"
+       >V>        "12"
+       >C>        "ACOMPOUND.Key Bee.12"
+       >V>        "68"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "2.2"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "2.2"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "2.2"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "12"
+       >C>        "ACOMPOUND.Key Bee.12"
+       >V>        "68"
+       >L>        "1"
+       >O>        "69"
+       >V>        "Key Bee"
+       >V>        "12"
+       >C>        "ACOMPOUND.Key Bee.12"
+   155 *-*      if j=2 then leave
+       >V>        "2.2"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "2.2"
+       >V>       "3.3"
+   159 *-*     avar.=1.0''loop
+       >L>       "1.0"
+       >L>       ""
+       >O>       "1.0"
+       >V>       "12"
+       >O>       "1.012"
+   160 *-*     select
+   161 *-*     when flag='string' then say 'FailedS1'
+       >V>       "1"
+       >L>       "string"
+       >O>       "0"
+   162 *-*     when avar.flag.2=0 then say 'FailedS2'
+       >V>       "1"
+       >C>       "AVAR.1.2"
+       >V>       "1.012"
+       >L>       "0"
+       >O>       "0"
+   163 *-*     when flag=5+99.7   then say 'FailedS3'
+       >V>       "1"
+       >L>       "5"
+       >L>       "99.7"
+       >O>       "104.7"
+       >O>       "0"
+   164 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.012"
+       >L>       "1.1"
+       >O>       "1.1132"
+       >C>       "AVAR.1.2"
+   167 *-*     if opaqueone then flag=opaqueone
+       >V>       "1"
+       *-*     flag=opaqueone
+       >V>       "1"
+   168 *-*     select
+   169 *-*     when flag=='ring'  then say 'FailedT1'
+       >V>       "1"
+       >L>       "ring"
+       >O>       "0"
+   170 *-*     when avar.flag.3=0 then say 'FailedT2'
+       >V>       "1"
+       >C>       "AVAR.1.3"
+       >V>       "1.012"
+       >L>       "0"
+       >O>       "0"
+   171 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.1132"
+       >L>       "1.1"
+       >O>       "1.22452"
+       >C>       "AVAR.1.2"
+   174 *-*     parse value opaquefoobar with v1 +5 v2 .
+       >V>       "Foo Bar"
+       >>>       "Foo B"
+       >>>       "ar"
+       >.>       ""
+   175 *-*     trace value trace()
+       >F>       "I"
+       *-*     address value address()
+       >F>       "SYSTEM"
+   176 *-*     call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>       "with"
+       >L>       "2"
+       >O>       "with 2"
+       >V>       "args"
+       >O>       "with 2 args"
+       >L>       "(This is the second)"
+       >V>       "1"
+       >O>       "(This is the second)1"
+       >L>       ""
+       >O>       "(This is the second)1"
+       >V>       "1"
+       >O>       "(This is the second)11"
+   236 *-*      subroutine:
+   237 *-*      parse upper arg a1 a2 a3 ., a4
+       >>>        "WITH"
+       >>>        "2"
+       >>>        "ARGS"
+       >.>        ""
+       >>>        "(THIS IS THE SECOND)11"
+   238 *-*      parse var a3 b1 b2 b3 .
+       >V>        "ARGS"
+       >>>        "ARGS"
+       >>>        ""
+       >>>        ""
+       >.>        ""
+   239 *-*      do 1
+       >L>        "1"
+       *-*       rc=a1 a2 a3
+       >V>         "WITH"
+       >V>         "2"
+       >O>         "WITH 2"
+       >V>         "ARGS"
+       >O>         "WITH 2 ARGS"
+       *-*       parse var rc c1 c2 c3
+       >V>         "WITH 2 ARGS"
+       >>>         "WITH"
+       >>>         "2"
+       >>>         "ARGS"
+       *-*      end
+       *-*      do 1
+   240 *-*      return
+   177 *-*     rc='This is an awfully boring program'
+       >L>       "This is an awfully boring program"
+       *-*     parse var rc p1 (p0) p5
+       >V>       "This is an awfully boring program"
+       >V>       "b"
+       >>>       "This is an awfully "
+       >>>       "oring program"
+   178 *-*     rc='is an awfully boring program This'
+       >L>       "is an awfully boring program This"
+       *-*     parse var rc p2 (p0) p6
+       >V>       "is an awfully boring program This"
+       >V>       "b"
+       >>>       "is an awfully "
+       >>>       "oring program This"
+   179 *-*     rc='an awfully boring program This is'
+       >L>       "an awfully boring program This is"
+       *-*     parse var rc p3 (p0) p7
+       >V>       "an awfully boring program This is"
+       >V>       "b"
+       >>>       "an awfully "
+       >>>       "oring program This is"
+   180 *-*     rc='awfully boring program This is an'
+       >L>       "awfully boring program This is an"
+       *-*     parse var rc p4 (p0) p8
+       >V>       "awfully boring program This is an"
+       >V>       "b"
+       >>>       "awfully "
+       >>>       "oring program This is an"
+   181 *-*    end loop
+   142 *-*    do loop=1 to 14
+       >V>      "12"
+       >V>      "13"
+   144 *-*     key1=opaquekey
+       >V>       "Key Bee"
+   145 *-*     acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>       "12345678"
+       >L>       "6"
+       >L>       "2"
+       >F>       "67"
+       >V>       "Key Bee"
+       >V>       "13"
+       >C>       "ACOMPOUND.Key Bee.13"
+   146 *-*     if flag=acompound.key1.loop then say 'Failed1'
+       >V>       "1"
+       >V>       "Key Bee"
+       >V>       "13"
+       >C>       "ACOMPOUND.Key Bee.13"
+       >V>       "67"
+       >O>       "0"
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>       "1.1"
+       >L>       "2.2"
+       >L>       "1.1"
+       >V>       "1.1"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "1.1"
+       >V>        "Key Bee"
+       >V>        "13"
+       >C>        "ACOMPOUND.Key Bee.13"
+       >V>        "67"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "1.1"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "1.1"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "1.1"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "13"
+       >C>        "ACOMPOUND.Key Bee.13"
+       >V>        "67"
+       >L>        "1"
+       >O>        "68"
+       >V>        "Key Bee"
+       >V>        "13"
+       >C>        "ACOMPOUND.Key Bee.13"
+   155 *-*      if j=2 then leave
+       >V>        "1.1"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "1.1"
+       >V>       "2.2"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "2.2"
+       >V>        "Key Bee"
+       >V>        "13"
+       >C>        "ACOMPOUND.Key Bee.13"
+       >V>        "68"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "2.2"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "2.2"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "2.2"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "13"
+       >C>        "ACOMPOUND.Key Bee.13"
+       >V>        "68"
+       >L>        "1"
+       >O>        "69"
+       >V>        "Key Bee"
+       >V>        "13"
+       >C>        "ACOMPOUND.Key Bee.13"
+   155 *-*      if j=2 then leave
+       >V>        "2.2"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "2.2"
+       >V>       "3.3"
+   159 *-*     avar.=1.0''loop
+       >L>       "1.0"
+       >L>       ""
+       >O>       "1.0"
+       >V>       "13"
+       >O>       "1.013"
+   160 *-*     select
+   161 *-*     when flag='string' then say 'FailedS1'
+       >V>       "1"
+       >L>       "string"
+       >O>       "0"
+   162 *-*     when avar.flag.2=0 then say 'FailedS2'
+       >V>       "1"
+       >C>       "AVAR.1.2"
+       >V>       "1.013"
+       >L>       "0"
+       >O>       "0"
+   163 *-*     when flag=5+99.7   then say 'FailedS3'
+       >V>       "1"
+       >L>       "5"
+       >L>       "99.7"
+       >O>       "104.7"
+       >O>       "0"
+   164 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.013"
+       >L>       "1.1"
+       >O>       "1.1143"
+       >C>       "AVAR.1.2"
+   167 *-*     if opaqueone then flag=opaqueone
+       >V>       "1"
+       *-*     flag=opaqueone
+       >V>       "1"
+   168 *-*     select
+   169 *-*     when flag=='ring'  then say 'FailedT1'
+       >V>       "1"
+       >L>       "ring"
+       >O>       "0"
+   170 *-*     when avar.flag.3=0 then say 'FailedT2'
+       >V>       "1"
+       >C>       "AVAR.1.3"
+       >V>       "1.013"
+       >L>       "0"
+       >O>       "0"
+   171 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.1143"
+       >L>       "1.1"
+       >O>       "1.22573"
+       >C>       "AVAR.1.2"
+   174 *-*     parse value opaquefoobar with v1 +5 v2 .
+       >V>       "Foo Bar"
+       >>>       "Foo B"
+       >>>       "ar"
+       >.>       ""
+   175 *-*     trace value trace()
+       >F>       "I"
+       *-*     address value address()
+       >F>       "SYSTEM"
+   176 *-*     call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>       "with"
+       >L>       "2"
+       >O>       "with 2"
+       >V>       "args"
+       >O>       "with 2 args"
+       >L>       "(This is the second)"
+       >V>       "1"
+       >O>       "(This is the second)1"
+       >L>       ""
+       >O>       "(This is the second)1"
+       >V>       "1"
+       >O>       "(This is the second)11"
+   236 *-*      subroutine:
+   237 *-*      parse upper arg a1 a2 a3 ., a4
+       >>>        "WITH"
+       >>>        "2"
+       >>>        "ARGS"
+       >.>        ""
+       >>>        "(THIS IS THE SECOND)11"
+   238 *-*      parse var a3 b1 b2 b3 .
+       >V>        "ARGS"
+       >>>        "ARGS"
+       >>>        ""
+       >>>        ""
+       >.>        ""
+   239 *-*      do 1
+       >L>        "1"
+       *-*       rc=a1 a2 a3
+       >V>         "WITH"
+       >V>         "2"
+       >O>         "WITH 2"
+       >V>         "ARGS"
+       >O>         "WITH 2 ARGS"
+       *-*       parse var rc c1 c2 c3
+       >V>         "WITH 2 ARGS"
+       >>>         "WITH"
+       >>>         "2"
+       >>>         "ARGS"
+       *-*      end
+       *-*      do 1
+   240 *-*      return
+   177 *-*     rc='This is an awfully boring program'
+       >L>       "This is an awfully boring program"
+       *-*     parse var rc p1 (p0) p5
+       >V>       "This is an awfully boring program"
+       >V>       "b"
+       >>>       "This is an awfully "
+       >>>       "oring program"
+   178 *-*     rc='is an awfully boring program This'
+       >L>       "is an awfully boring program This"
+       *-*     parse var rc p2 (p0) p6
+       >V>       "is an awfully boring program This"
+       >V>       "b"
+       >>>       "is an awfully "
+       >>>       "oring program This"
+   179 *-*     rc='an awfully boring program This is'
+       >L>       "an awfully boring program This is"
+       *-*     parse var rc p3 (p0) p7
+       >V>       "an awfully boring program This is"
+       >V>       "b"
+       >>>       "an awfully "
+       >>>       "oring program This is"
+   180 *-*     rc='awfully boring program This is an'
+       >L>       "awfully boring program This is an"
+       *-*     parse var rc p4 (p0) p8
+       >V>       "awfully boring program This is an"
+       >V>       "b"
+       >>>       "awfully "
+       >>>       "oring program This is an"
+   181 *-*    end loop
+   142 *-*    do loop=1 to 14
+       >V>      "13"
+       >V>      "14"
+   144 *-*     key1=opaquekey
+       >V>       "Key Bee"
+   145 *-*     acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>       "12345678"
+       >L>       "6"
+       >L>       "2"
+       >F>       "67"
+       >V>       "Key Bee"
+       >V>       "14"
+       >C>       "ACOMPOUND.Key Bee.14"
+   146 *-*     if flag=acompound.key1.loop then say 'Failed1'
+       >V>       "1"
+       >V>       "Key Bee"
+       >V>       "14"
+       >C>       "ACOMPOUND.Key Bee.14"
+       >V>       "67"
+       >O>       "0"
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>       "1.1"
+       >L>       "2.2"
+       >L>       "1.1"
+       >V>       "1.1"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "1.1"
+       >V>        "Key Bee"
+       >V>        "14"
+       >C>        "ACOMPOUND.Key Bee.14"
+       >V>        "67"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "1.1"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "1.1"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "1.1"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "14"
+       >C>        "ACOMPOUND.Key Bee.14"
+       >V>        "67"
+       >L>        "1"
+       >O>        "68"
+       >V>        "Key Bee"
+       >V>        "14"
+       >C>        "ACOMPOUND.Key Bee.14"
+   155 *-*      if j=2 then leave
+       >V>        "1.1"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "1.1"
+       >V>       "2.2"
+   148 *-*      if j>acompound.key1.loop then say 'Failed2'
+       >V>        "2.2"
+       >V>        "Key Bee"
+       >V>        "14"
+       >C>        "ACOMPOUND.Key Bee.14"
+       >V>        "68"
+       >O>        "0"
+   149 *-*      if 17<length(j)-1        then say 'Failed3'
+       >L>        "17"
+       >V>        "2.2"
+       >F>        "3"
+       >L>        "1"
+       >O>        "2"
+       >O>        "0"
+   150 *-*      if j=opaquefailure       then say 'Failed4'
+       >V>        "2.2"
+       >V>        "foobar"
+       >V>        "foobar"
+       >O>        "0"
+   151 *-*      if substr(opaquedigits,1,1)=opaquenine then say 'Failed5'
+       >V>        "12345678"
+       >L>        "1"
+       >L>        "1"
+       >F>        "1"
+       >V>        "9"
+       >O>        "0"
+   152 *-*      if word(key1,1)=opaquequestion then say 'Failed6'
+       >V>        "Key Bee"
+       >L>        "1"
+       >F>        "Key"
+       >V>        "?"
+       >V>        "?"
+       >O>        "0"
+   153 *-*      if j<5 then do   /* This path taken */
+       >V>        "2.2"
+       >L>        "5"
+       >O>        "1"
+       *-*      do   /* This path taken */
+   154 *-*      acompound.key1.loop=acompound.key1.loop+1
+       >V>        "Key Bee"
+       >V>        "14"
+       >C>        "ACOMPOUND.Key Bee.14"
+       >V>        "68"
+       >L>        "1"
+       >O>        "69"
+       >V>        "Key Bee"
+       >V>        "14"
+       >C>        "ACOMPOUND.Key Bee.14"
+   155 *-*      if j=2 then leave
+       >V>        "2.2"
+       >L>        "2"
+       >O>        "0"
+   157 *-*      iterate
+   147 *-*      do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+   158 *-*     end /* j */
+   147 *-*     do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>       "2.2"
+       >V>       "3.3"
+   159 *-*     avar.=1.0''loop
+       >L>       "1.0"
+       >L>       ""
+       >O>       "1.0"
+       >V>       "14"
+       >O>       "1.014"
+   160 *-*     select
+   161 *-*     when flag='string' then say 'FailedS1'
+       >V>       "1"
+       >L>       "string"
+       >O>       "0"
+   162 *-*     when avar.flag.2=0 then say 'FailedS2'
+       >V>       "1"
+       >C>       "AVAR.1.2"
+       >V>       "1.014"
+       >L>       "0"
+       >O>       "0"
+   163 *-*     when flag=5+99.7   then say 'FailedS3'
+       >V>       "1"
+       >L>       "5"
+       >L>       "99.7"
+       >O>       "104.7"
+       >O>       "0"
+   164 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.014"
+       >L>       "1.1"
+       >O>       "1.1154"
+       >C>       "AVAR.1.2"
+   167 *-*     if opaqueone then flag=opaqueone
+       >V>       "1"
+       *-*     flag=opaqueone
+       >V>       "1"
+   168 *-*     select
+   169 *-*     when flag=='ring'  then say 'FailedT1'
+       >V>       "1"
+       >L>       "ring"
+       >O>       "0"
+   170 *-*     when avar.flag.3=0 then say 'FailedT2'
+       >V>       "1"
+       >C>       "AVAR.1.3"
+       >V>       "1.014"
+       >L>       "0"
+       >O>       "0"
+   171 *-*     when flag          then avar.1.2=avar.1.2*1.1
+       >V>       "1"
+       *-*     avar.1.2=avar.1.2*1.1
+       >C>       "AVAR.1.2"
+       >V>       "1.1154"
+       >L>       "1.1"
+       >O>       "1.22694"
+       >C>       "AVAR.1.2"
+   174 *-*     parse value opaquefoobar with v1 +5 v2 .
+       >V>       "Foo Bar"
+       >>>       "Foo B"
+       >>>       "ar"
+       >.>       ""
+   175 *-*     trace value trace()
+       >F>       "I"
+       *-*     address value address()
+       >F>       "SYSTEM"
+   176 *-*     call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>       "with"
+       >L>       "2"
+       >O>       "with 2"
+       >V>       "args"
+       >O>       "with 2 args"
+       >L>       "(This is the second)"
+       >V>       "1"
+       >O>       "(This is the second)1"
+       >L>       ""
+       >O>       "(This is the second)1"
+       >V>       "1"
+       >O>       "(This is the second)11"
+   236 *-*      subroutine:
+   237 *-*      parse upper arg a1 a2 a3 ., a4
+       >>>        "WITH"
+       >>>        "2"
+       >>>        "ARGS"
+       >.>        ""
+       >>>        "(THIS IS THE SECOND)11"
+   238 *-*      parse var a3 b1 b2 b3 .
+       >V>        "ARGS"
+       >>>        "ARGS"
+       >>>        ""
+       >>>        ""
+       >.>        ""
+   239 *-*      do 1
+       >L>        "1"
+       *-*       rc=a1 a2 a3
+       >V>         "WITH"
+       >V>         "2"
+       >O>         "WITH 2"
+       >V>         "ARGS"
+       >O>         "WITH 2 ARGS"
+       *-*       parse var rc c1 c2 c3
+       >V>         "WITH 2 ARGS"
+       >>>         "WITH"
+       >>>         "2"
+       >>>         "ARGS"
+       *-*      end
+       *-*      do 1
+   240 *-*      return
+   177 *-*     rc='This is an awfully boring program'
+       >L>       "This is an awfully boring program"
+       *-*     parse var rc p1 (p0) p5
+       >V>       "This is an awfully boring program"
+       >V>       "b"
+       >>>       "This is an awfully "
+       >>>       "oring program"
+   178 *-*     rc='is an awfully boring program This'
+       >L>       "is an awfully boring program This"
+       *-*     parse var rc p2 (p0) p6
+       >V>       "is an awfully boring program This"
+       >V>       "b"
+       >>>       "is an awfully "
+       >>>       "oring program This"
+   179 *-*     rc='an awfully boring program This is'
+       >L>       "an awfully boring program This is"
+       *-*     parse var rc p3 (p0) p7
+       >V>       "an awfully boring program This is"
+       >V>       "b"
+       >>>       "an awfully "
+       >>>       "oring program This is"
+   180 *-*     rc='awfully boring program This is an'
+       >L>       "awfully boring program This is an"
+       *-*     parse var rc p4 (p0) p8
+       >V>       "awfully boring program This is an"
+       >V>       "b"
+       >>>       "awfully "
+       >>>       "oring program This is an"
+   181 *-*    end loop
+   142 *-*    do loop=1 to 14
+       >V>      "14"
+       >V>      "15"
+   183 *-*   end
+   139 *-*   do count
+   184 *-*   full=time('R')+full
+       >L>     "R"
+       >F>     "0.009208"
+       >V>     "0"
+       >O>     "0.009208"
+   185 *-*   trace off
+TRACE_KERNEL_END
+        Averaged: 1 x 1 iterations of 1000 clauses (over 0.0s)
+
+Total (full DOs): 0.009208 secs (average of 1 measures of 1 iterations)
+Time for one iteration (1000 clauses) was: 0.00885 seconds
+
+     Performance: 112994 REXX clauses per second
+
+OBSERVED: A|1|69|1.22694
+PASS: RexxCPS 2.2 Classic opaque/result-observation diagnostic

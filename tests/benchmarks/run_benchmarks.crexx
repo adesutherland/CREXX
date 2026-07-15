@@ -34,6 +34,7 @@ main: procedure = .int
   warmups = 2
   runs = 10
   output_path = ""
+  samples_output_path = ""
   selected = .string[]
 
   i = 1
@@ -81,6 +82,11 @@ main: procedure = .int
       i = i + 1
       output_path = args[i]
     end
+    else if option = "--samples-output" then do
+      if i = args[0] then return argument_error("missing value after --samples-output")
+      i = i + 1
+      samples_output_path = args[i]
+    end
     else return argument_error("unknown option: " || option)
     i = i + 1
   end
@@ -90,6 +96,8 @@ main: procedure = .int
   if mode <> "opt" & mode <> "noopt" then
     return argument_error("--mode must be opt or noopt")
   if runs < 1 then return argument_error("--runs must be a positive integer")
+  if output_path <> "" & output_path = samples_output_path then
+    return argument_error("--output and --samples-output must name different files")
 
   if selected[0] = 0 then do
     selected[1] = "sieve"
@@ -103,6 +111,8 @@ main: procedure = .int
   crexx_version = version()
   csv_lines = .string[]
   csv_lines[1] = "benchmark,vm,mode,runs,min_ns,median_ns,mean_ns,max_ns,platform,crexx_version"
+  sample_lines = .string[]
+  sample_lines[1] = "benchmark,vm,mode,lifecycle,phase,sequence,elapsed_ns,platform,crexx_version"
 
   do benchmark_index = 1 to selected[0]
     benchmark_name = selected[benchmark_index]
@@ -111,6 +121,8 @@ main: procedure = .int
     do warmup = 1 to warmups
       elapsed_ns = run_once(command)
       if elapsed_ns < 0 then return 1
+      sample_lines[sample_lines[0] + 1] = sample_csv_row(benchmark_name, vm_name, mode, ,
+          "warmup", warmup, elapsed_ns, platform_name, crexx_version)
     end
 
     samples = .int[]
@@ -120,6 +132,8 @@ main: procedure = .int
       if elapsed_ns < 0 then return 1
       samples[run] = elapsed_ns
       total_ns = total_ns + elapsed_ns
+      sample_lines[sample_lines[0] + 1] = sample_csv_row(benchmark_name, vm_name, mode, ,
+          "recorded", run, elapsed_ns, platform_name, crexx_version)
     end
 
     call sort_samples samples
@@ -129,7 +143,10 @@ main: procedure = .int
         samples[1], median_ns, mean_ns, samples[runs], platform_name, crexx_version)
   end
 
-  return emit_csv(csv_lines, output_path)
+  emit_rc = emit_csv(csv_lines, output_path)
+  if emit_rc <> 0 then return emit_rc
+  if samples_output_path <> "" then return emit_csv(sample_lines, samples_output_path)
+  return 0
 
 usage: procedure = .void
   say "Usage: run_benchmarks [options]"
@@ -142,6 +159,7 @@ usage: procedure = .void
   say "  --runs N              Recorded runs per benchmark (default: 10)"
   say "  --benchmark NAME      Repeatable: sieve, permute, mandelbrot, towers, rexxcps"
   say "  --output PATH         Write CSV to PATH instead of stdout"
+  say "  --samples-output PATH Write serial warmup/recorded samples as CSV"
   say "  -h, --help            Show this help"
   return
 
@@ -262,6 +280,15 @@ csv_row: procedure = .string
       csv_field(mode) || "," || runs || "," || min_ns || "," || median_ns || ,
       "," || mean_ns || "," || max_ns || "," || csv_field(platform_name) || ,
       "," || csv_field(crexx_version)
+
+sample_csv_row: procedure = .string
+  arg benchmark_name = .string, vm_name = .string, mode = .string, ,
+      phase = .string, sequence = .int, elapsed_ns = .int, ,
+      platform_name = .string, crexx_version = .string
+  return csv_field(benchmark_name) || "," || csv_field(vm_name) || "," || ,
+      csv_field(mode) || ",process," || csv_field(phase) || "," || sequence || ,
+      "," || elapsed_ns || "," || csv_field(platform_name) || "," || ,
+      csv_field(crexx_version)
 
 csv_field: procedure = .string
   arg value = .string

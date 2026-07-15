@@ -1,0 +1,4 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+rexxcps,netrexx,2.2n-opaque-B,process,warmup,1,1305323583,0,pass,36576866,NetRexx clauses per second
+rexxcps,netrexx,2.2n-opaque-B,process,recorded,1,1441849125,0,pass,33814955,NetRexx clauses per second
+rexxcps,netrexx,2.2n-opaque-B,process,recorded,2,1899875125,0,pass,22325786,NetRexx clauses per second

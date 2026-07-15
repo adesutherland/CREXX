@@ -28,6 +28,18 @@ crexx_add_language_benchmark(benchmark_rexxcps_levelb rexxcps_levelb.crexx 10
         "PASS: RexxCPS 2.2c cREXX port")
 
 crexx_add_rexx_opt_matrix(
+        NAME benchmark_rexxcps_levelb_opaque
+        SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/rexxcps_levelb_opaque.crexx
+        TARGET_GROUP language_benchmarks
+        IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
+        DEPENDS library compiler_exit_bin
+        RUNTIME_ARGS ${LIBRPATH} -a A Off 1 1
+        TEST_LABELS "benchmark;language;optimizer-resistance"
+        REQUIRED_OUTPUT_REGEX "PASS: RexxCPS 2.2c cREXX opaque/result-observation diagnostic"
+        FORBIDDEN_OUTPUT_REGEX "FAIL:|Failed|PANIC:"
+)
+
+crexx_add_rexx_opt_matrix(
         NAME benchmark_runner
         SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/run_benchmarks.crexx
         TARGET_GROUP language_benchmarks
@@ -51,4 +63,5 @@ crexx_label_smoke_tests(
         benchmark_awfy_mandelbrot_opt
         benchmark_awfy_towers_opt
         benchmark_rexxcps_levelb_opt
+        benchmark_rexxcps_levelb_opaque_opt
         benchmark_runner_opt)

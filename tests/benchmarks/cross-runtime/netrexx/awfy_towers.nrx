@@ -1,0 +1,102 @@
+/*
+ * NetRexx port of the Are We Fast Yet? Towers benchmark.
+ * Derived from the SOM benchmark suite under the MIT license; see
+ * ../../LICENSE-SOM-MIT.txt and ../../README.md.
+ */
+options binary
+
+class awfy_towers
+
+  method main(args=String[]) static
+    repetitions=int 1
+    if args.length>=1 then repetitions=Rexx args[0]
+    if repetitions<1 then do
+      say 'FAIL: repetitions must be positive'
+      exit 1
+    end
+
+    result=int 0
+    loop iteration=1 to repetitions
+      benchmark=TowersBenchmark()
+      result=benchmark.run()
+      if result\=8191 then do
+        say 'FAIL: expected 8191 moves, got' result
+        exit 1
+      end
+    end
+
+    say 'benchmark=awfy_towers repetitions='repetitions 'result='result
+    say 'PASS: AWFY Towers NetRexx port'
+
+class TowersDisk
+
+  properties private
+    diskSize=int
+    nextDisk=TowersDisk
+    hasNextValue=boolean 0
+
+  method TowersDisk(size=int)
+    diskSize=size
+
+  method size() binary returns int
+    return diskSize
+
+  method next() binary returns TowersDisk
+    return nextDisk
+
+  method hasNext() binary returns boolean
+    return hasNextValue
+
+  method setNext(value=TowersDisk) binary
+    nextDisk=value
+    hasNextValue=1
+
+class TowersBenchmark
+
+  properties private
+    piles=TowersDisk[3]
+    present=boolean[3]
+    movesDone=int 0
+
+  method TowersBenchmark()
+
+  method run() binary returns int
+    buildTowerAt(0,13)
+    movesDone=0
+    moveDisks(13,0,1)
+    return movesDone
+
+  method pushDisk(disk=TowersDisk,pile=int) binary
+    if present[pile] then do
+      top=TowersDisk piles[pile]
+      if disk.size()>=top.size() then return
+      disk.setNext(top)
+    end
+    piles[pile]=disk
+    present[pile]=1
+
+  method popDiskFrom(pile=int) binary returns TowersDisk
+    top=TowersDisk piles[pile]
+    if top.hasNext() then piles[pile]=top.next()
+    else present[pile]=0
+    return top
+
+  method moveTopDisk(fromPile=int,toPile=int) binary
+    disk=TowersDisk popDiskFrom(fromPile)
+    pushDisk(disk,toPile)
+    movesDone=movesDone+1
+
+  method buildTowerAt(pile=int,disks=int) binary
+    loop i=disks to 0 by -1
+      disk=TowersDisk(i)
+      pushDisk(disk,pile)
+    end
+
+  method moveDisks(disks=int,fromPile=int,toPile=int) binary
+    if disks=1 then moveTopDisk(fromPile,toPile)
+    else do
+      otherPile=int (3-fromPile)-toPile
+      moveDisks(disks-1,fromPile,otherPile)
+      moveTopDisk(fromPile,toPile)
+      moveDisks(disks-1,otherPile,toPile)
+    end

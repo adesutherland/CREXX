@@ -15,6 +15,13 @@ timed I/O in their kernels.
 | `awfy_mandelbrot.crexx` | Are We Fast Yet? / Benchmarks Game | floating-point arithmetic, branches, bit operations |
 | `awfy_towers.crexx` | Are We Fast Yet? / SOM | object allocation, object attributes, recursion |
 
+`cross-runtime/` contains the NR-02 Classic and NetRexx sources. Byte-exact
+RexxCPS 2.2 and bundled NetRexx 2.1n remain unchanged; 2.2n, opaque-input,
+result-observation and trace diagnostics use distinct names. The four AWFY
+ports preserve their deterministic arguments/results and document every
+language-required representation or operation substitution in
+`cross-runtime/README.md` and `performance/NR-02-WORKLIST.md`.
+
 The Are We Fast Yet? suite was published with the DLS 2016 paper
 “Cross-Language Compiler Benchmarking—Are We Fast Yet?” (DOI
 `10.1145/2989225.2989232`). Its porting rules prioritize deterministic,
@@ -98,6 +105,12 @@ cmake --build cmake-build-release --target language_benchmarks --parallel
 ctest --test-dir cmake-build-release -L benchmark --output-on-failure
 ```
 
+The separately named `rexxcps_levelb_opaque.crexx` target is an NR-02
+diagnostic, not a replacement canonical score. Its optimized/unoptimized smoke
+uses fixed `1 x 1` counts and validates the externally observed final state.
+Full-default diagnostic pilots must state their A/B variant and remain
+separate from `rexxcps_levelb.crexx` results.
+
 ## Repeatable timing
 
 Use a Release build, keep the machine otherwise idle, and run enough work for
@@ -114,6 +127,30 @@ cmake-build-release/bin/crexx --nokeep tests/benchmarks/run_benchmarks.crexx \
 The runner itself is Level B cREXX. It records microsecond-resolution wall
 time as nanoseconds in the CSV columns, validates every child run by exit code
 and `PASS:` output, and identifies the runner with `crexx_version`.
+
+For retained performance evidence, also request the serial sample stream:
+
+```bash
+cmake-build-release/bin/crexx --nokeep tests/benchmarks/run_benchmarks.crexx \
+  --args --build-dir cmake-build-release --vm rxvm --mode opt \
+  --warmups 2 --runs 10 --output summary.csv \
+  --samples-output samples.csv
+```
+
+The samples file contains every warmup and recorded run in execution order.
+Its lifecycle is labelled `process`: every sample starts a new VM and loads the
+workload and library modules, so these measurements include startup and are not
+steady-state kernel timings. Keep the samples and summary from the same
+invocation together with the host, commit, dirty state, toolchain, build flags,
+image set and metadata-retention mode. The operational manifest and retained
+evidence layout are in `performance/`.
+
+For a non-cREXX process, run the Level B cREXX tool
+`performance/tools/run_cross_runtime.crexx` through the Release `crexx`
+driver. It retains the exact argv, serial warmup/recorded process samples,
+every raw stdout/stderr stream, correctness result and optional
+benchmark-native metric. It does not compile ports or decide equivalence;
+those remain explicit NR-02 cell steps.
 
 Repeat with `rxbvm` and `noopt`. Compare one change at a time on the same host,
 power mode, compiler, build type, and commit. Keep raw samples; do not compare

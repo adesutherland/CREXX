@@ -1,0 +1,262 @@
+/*----------------------------------------------------------------------------*/
+
+/* NR-02 opaque-input, result-observation, perturbation and trace diagnostic. */
+/* This separately named source is not quotable RexxCPS 2.2c.                 */
+/*                                                                            */
+/* Copyright (c) 1995, 2004 IBM Corporation. All rights reserved.             */
+/* Copyright (c) 2005, 2006 Rexx Language Association. All rights reserved.   */
+/* Copyright (c) 1981, 2025 Mike Cowlishaw. All rights reserved.              */
+/*                                                                            */
+/* This program and the accompanying materials are made available under       */
+/* the terms of the Common Public License v1.0 which accompanies this         */
+/* distribution. A copy is also available at the following address:           */
+/* https://www.oorexx.org/license.html                                        */
+/*                                                                            */
+/* Redistribution and use in source and binary forms, with or                 */
+/* without modification, are permitted provided that the following            */
+/* conditions are met:                                                        */
+/*                                                                            */
+/* Redistributions of source code must retain the above copyright             */
+/* notice, this list of conditions and the following disclaimer.              */
+/* Redistributions in binary form must reproduce the above copyright          */
+/* notice, this list of conditions and the following disclaimer in            */
+/* the documentation and/or other materials provided with the distribution.   */
+/*                                                                            */
+/* Neither the name of Rexx Language Association nor the names                */
+/* of its contributors may be used to endorse or promote products             */
+/* derived from this software without specific prior written permission.      */
+/*                                                                            */
+/* THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS        */
+/* "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT          */
+/* LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS          */
+/* FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT   */
+/* OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,      */
+/* SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED   */
+/* TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,        */
+/* OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY     */
+/* OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING    */
+/* NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS         */
+/* SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.               */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/* This measure of Rexx execution speed is based on an analysis of            */
+/* the dynamic mix of clauses found in a (subjectively chosen)                */
+/* collection of Rexx programs (including commands, macros, and               */
+/* personal programs).  Approximately 2,500,000 lines of trace                */
+/* output were analysed, and the program below recreates the                  */
+/* dynamic mix of constructs found in that analysis.                          */
+/* In view of the dramatic differences between systems in their               */
+/* efficiency of issuing commands, the timed loop does not issue              */
+/* commands (an 'RC=expression; PARSE' sequence is used instead).             */
+/* This program therefore measures the performance of a Rexx                  */
+/* implementation, exclusive of command execution overhead.                   */
+/* Elapsed (user-perceived) time is used, rather than any form of             */
+/* virtual time, with an adjustment for the inner loop overhead.              */
+/*                                                                            */
+/*----------------------------------------------------------------------------*/
+/* 1.0  17 Jan 1981 Original version (Mike Cowlishaw)                         */
+/* 2.0   3 Jun 1989 Remove attempt to simulate commands                       */
+/* 2.1   7 Oct 1989 Remove use of not symbols, and correct commentary         */
+/*      12 Aug 2011 Restore lost comments + minor cleanups                    */
+/* 2.2  15 Mar 2025 Merged in changes by Rick McGuire which adjusts for       */
+/*                  modern CPU speeds. Runs shorter than one second are       */
+/*                  repeated with an automatically increased count.           */
+/* 2.2c 14 Jul 2026 Faithful cREXX Level B port of 2.2. The timed source      */
+/*                  retains the 1,000-clause dynamic mix. Port substitutions  */
+/*                  are audited in README.md and this score is quotable only  */
+/*                  as RexxCPS 2.2c, not as unchanged RexxCPS 2.2.            */
+/*----------------------------------------------------------------------------*/
+
+options levelb comments_dash numeric_classic
+import rxfnsb
+
+arg argv = .string[]
+
+rexxcps = "2.2c-opaque" /* diagnostic, not a canonical score */
+
+/* Loop counts; these are auto-adjusted so total run time is over one second. */
+count = 100       /* Repetition count */
+averaging = 100   /* Averaging-over count */
+
+variant = "A"
+if argv[0] >= 1 then variant = upper(argv[1])
+select
+  when variant = "A" then do
+    opaque_zero = 0
+    opaque_one = 1
+    opaque_marker = "b"
+    opaque_key = "Key Bee"
+    opaque_digits = "12345678"
+    opaque_failure = "foobar"
+    opaque_nine = "9"
+    opaque_question = "?"
+    opaque_foo_bar = "Foo Bar"
+    opaque_with = "with"
+    opaque_args = "args"
+  end
+  when variant = "B" then do
+    opaque_zero = 0
+    opaque_one = 1
+    opaque_marker = "b"
+    opaque_key = "Key Dee"
+    opaque_digits = "92345678"
+    opaque_failure = "foobaz"
+    opaque_nine = "8"
+    opaque_question = "!"
+    opaque_foo_bar = "Zoo Bar"
+    opaque_with = "WITH"
+    opaque_args = "ARGS"
+  end
+  otherwise return fail("variant must be A or B")
+end
+
+tracevar = "Off"
+if argv[0] >= 2 then tracevar = argv[2]
+fixed_counts = 0
+if argv[0] >= 3 then do
+  count = argv[3]
+  fixed_counts = 1
+end
+if argv[0] >= 4 then averaging = argv[4]
+if count < 1 then return fail("count must be positive")
+if averaging < 1 then return fail("averaging must be positive")
+
+version_info = version()
+system = word(version_info, 1)
+
+say "----- REXXCPS" rexxcps "-- Measuring cREXX clauses/second -----"
+say " cREXX version is:" version_info
+say "       System is:" system
+
+/* Level B makes the backing objects for Classic compound variables explicit. */
+acompound = .stem()
+avar = .stem()
+
+/* Predeclare values that must remain visible after their control blocks. */
+empty = 0.0
+full = 0.0
+total = 0.0
+innertime = 0.0
+thousand = 0.0
+flag = ""
+
+/* Calibrate for the empty do-loop. */
+do i = 1 to averaging
+  call time("R")
+  do count; end
+  empty = (time("R") as .float) + empty
+end
+empty = empty / averaging
+
+/* Measure twice; the first trial is used to increase short-run counts. */
+do trial = 1 to 2
+
+  /* Now the true timer loop; average timing again. */
+  full = 0.0
+  do i = 1 to averaging
+    if tracevar <> "Off" then say "TRACE_KERNEL_BEGIN"
+    trace value tracevar
+    call time("R")
+    do count
+      /* -----  This is first of the 1000 clauses ----- */
+      flag = opaque_zero as .string; p0 = opaque_marker
+      do lvar = 1 to 14
+        /* This is the "block" comment in lvar. */
+        key1 = opaque_key
+        acompound.key1.lvar = substr(opaque_digits, 6, 2)
+        if flag = acompound.key1.lvar then say "Failed1"
+        do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+          if j > (acompound.key1.lvar as .decimal) then say "Failed2"
+          if 17 < length(j as .string) - 1 then say "Failed3"
+          if (j as .string) = opaque_failure then say "Failed4"
+          if substr(opaque_digits, 1, 1) = opaque_nine then say "Failed5"
+          if word(key1, 1) = opaque_question then say "Failed6"
+          if j < 5 then do /* This path is taken. */
+            acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + 1) as .string
+            if j = 2 then leave
+          end
+          iterate
+        end /* j */
+        avar. = "1.0" || lvar
+        select
+          when flag = "string" then say "FailedS1"
+          when avar.flag.2 = "0" then say "FailedS2"
+          when flag = ((5 + 99.7) as .string) then say "FailedS3"
+          when flag <> "0" then avar.1.2 = ((avar.1.2 as .decimal) * 1.1) as .string
+          when flag == "0" then flag = "0"
+        end
+        if opaque_one then flag = opaque_one as .string
+        select
+          when flag == "ring" then say "FailedT1"
+          when avar.flag.3 = "0" then say "FailedT2"
+          when flag <> "0" then avar.1.2 = ((avar.1.2 as .decimal) * 1.1) as .string
+          when flag == "0" then flag = "1"
+        end
+        parse value opaque_foo_bar with v1 +5 v2 .
+        trace value _trace_current_mode()
+        address value addressenv().environment_name()
+        call cps_subroutine(upper(opaque_with), upper("2"), upper(opaque_args), ,
+            upper("(This is the second)" || opaque_one || "" || opaque_one))
+        text = "This is an awfully boring program"; parse var text p1 (p0) p5
+        text = "is an awfully boring program This"; parse var text p2 (p0) p6
+        text = "an awfully boring program This is"; parse var text p3 (p0) p7
+        text = "awfully boring program This is an"; parse var text p4 (p0) p8
+      end
+      /* -----  This is last of the 1000 clauses ----- */
+    end
+    full = (time("R") as .float) + full
+    trace off
+    if tracevar <> "Off" then say "TRACE_KERNEL_END"
+  end
+  total = full /* total time */
+
+  /* If total is over one second it is usable; trial 2 is always final. */
+  if fixed_counts | total > 1 | trial = 2 then leave
+
+  /* Bump count so the second run should take about one second. */
+  if total = 0 then count = count * 100
+  else count = (trunc(1 / total) + 1) * count
+end
+
+/* Show the counts. */
+say "        Averaged:" count "x" averaging "iterations of 1000 clauses (over" format(total, , 1) "s)"
+
+/* Now display the statistics. */
+innertime = total / averaging - empty
+thousand = innertime / count
+
+/* Developer's statistics. */
+if left(tracevar, 1) = "O" then nop
+else do
+  say
+  say "Total (full DOs):" total "secs (average of" averaging "measures of" count "iterations)"
+  say "Time for one iteration (1000 clauses) was:" thousand "seconds"
+end
+
+/* And finally, the result. */
+say
+say "     Performance:" format(1000 / thousand, , 0) "cREXX clauses per second"
+say
+observed = variant || "|" || flag || "|" || acompound.opaque_key.14 || "|" || avar.1.2
+say "OBSERVED:" observed
+if flag <> opaque_one as .string then return fail("final flag was not observed as one")
+if acompound.opaque_key.14 <> "69" then return fail("final compound value was not 69")
+say "PASS: RexxCPS 2.2c cREXX opaque/result-observation diagnostic"
+return 0
+
+
+/* Target routine for the timed CALL - called 14 times. */
+cps_subroutine: procedure = .void
+  arg a1 = .string, a2 = .string, a3 = .string, a4 = .string
+  parse var a3 b1 b2 b3 .
+  do 1
+    text = a1 || " " || a2 || " " || a3
+    parse var text c1 c2 c3
+  end
+  return
+
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1

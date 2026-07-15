@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+mandelbrot,netrexx,disclosed-xor-adaptation,process,warmup,1,70963417,0,pass,,
+mandelbrot,netrexx,disclosed-xor-adaptation,process,recorded,1,70439083,0,pass,,
+mandelbrot,netrexx,disclosed-xor-adaptation,process,recorded,2,71038625,0,pass,,
+mandelbrot,netrexx,disclosed-xor-adaptation,process,recorded,3,68608375,0,pass,,

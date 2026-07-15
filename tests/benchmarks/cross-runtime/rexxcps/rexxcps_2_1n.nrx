@@ -1,0 +1,163 @@
+/* Take a measure of REXX clauses-per-second (CIPS)                  */
+/* Mike Cowlishaw (MFC at VENTA)                                     */
+/* 1.0  17 Jan 89 Original version                                   */
+/* 2.0   3 Jun 89 Remove attempt to simulate commands                */
+/* 2.1   7 Oct 89 Remove use of not symbols, and correct commentary  */
+/* 2.1n 26 Jun 96 NetRexx version of 2.1 (see comments below).       */
+options nobinary
+numeric digits 20
+/* This measure of REXX execution speed is based on an analysis of   */
+/* the dynamic mix of clauses found in a (subjectively chosen)       */
+/* collection of REXX programs (including commands, macros, and      */
+/* personal programs).  Approximately 2,500,000 lines of trace       */
+/* output were analysed, and the program below recreates the         */
+/* dynamic mix of constructs found in that analysis.                 */
+/* In view of the dramatic differences between systems in their      */
+/* efficiency of issuing commands, the timed loop does not issue     */
+/* commands (an 'RC=expression; PARSE' sequence is used instead).    */
+/* This program therefore measures the performance of a REXX         */
+/* implementation, exclusive of command execution overhead.          */
+/* Elapsed (user-perceived) time is used, rather than any form of    */
+/* virtual time.                                                     */
+/*                                                                   */
+/* For 2.1n (NetRexx version), the original instruction mix is       */
+/* preserved, for comparison with 2.1 -- there is no intent to       */
+/* imply that the mix is representative of NetRexx programs.         */
+
+/* For NetRexx, the following changes had to be made to the measured */
+/* loop:                                                             */
+/*                                                                   */
+/*   repetitive 'do' becomes 'loop'                                  */
+/*   'loop' control variable renamed 'lvar'                          */
+/*   'acompound.' becomes an indexed variable, and so has to be      */
+/*     initialized; trace instruction removed to compensate          */
+/*   address instruction changed to 'address=digits'                 */
+/*   'value' and 'var' keywords on parse removed                     */
+/*   functions (substr, etc.) become methods of Rexx class (working  */
+/*     on key1 rather than j, where appropriate, so binary/nobinary  */
+/*     comparisons can be made)                                      */
+/*   subroutine becomes a method                                     */
+/*   first parse in method is on first string only (but sets same    */
+/*     number of variables)                                          */
+
+parse source   mysource  1 opsystem .
+mysource=mysource
+
+
+parse version  myversion
+dstats=1
+count=100
+/* Repetition count */
+averaging=100
+/* Averaging-over count */
+rexxcps='2.1n'      /* REXXCPS version */
+say '----- REXXCPS' rexxcps '-- Measuring NetRexx clauses/second -----'
+say ' NetRexx version is:' myversion
+say '          System is:' opsystem
+say '          Averaging:' averaging 'measures of' count 'iterations'
+
+/* ----- Calibrate for the empty loop ----- */
+empty=long 0
+loop for averaging
+  start=System.nanoTime()
+  loop for count; end
+    empty=empty+System.nanoTime()-start
+  end
+  fempty=empty/averaging
+
+  /* ----- Now the true timer loop .. average timing again ----- */
+  full=long 0
+  loop for averaging
+    start=System.nanoTime()
+    loop for count
+      /* -----  This is first of the 1000 clauses ----- */
+      flag=0; p0='b'
+      loop lvar=1 to 14
+	/* This is the "block" comment in lvar */
+	key1='Key Bee'; acompound=''
+	acompound[key1,lvar]=(1234"5678").substr(6,2)
+	if flag=acompound[key1,lvar] then say 'Failed1'
+	loop j=1.1 to 2.2 by 1.1   /* executed 28 times */
+          if j>acompound[key1,lvar] then say 'Failed2'
+          if 17<key1.length-1       then say 'Failed3'
+          if j='foobar'             then say 'Failed4'
+          if key1.substr(1,1)=9     then say 'Failed5'
+          if key1.word(1)='?'       then say 'Failed6'
+          if j<5 then do   /* This path taken */
+	    acompound[key1,lvar]=acompound[key1,lvar]+1
+	    if j=2 then leave /* never */
+          end
+          iterate
+        end /* j */
+	avar=1.0''lvar
+	select
+          when flag='string'  then say 'FailedS1'
+          when avar[flag,2]=0 then say 'FailedS2'
+          when flag=5+99.7    then say 'FailedS3'
+          when flag           then avar[1,2]=avar[1,2]*1.1
+          when flag==0       then flag=0
+        end
+	if 1 then flag=1
+	select
+          when flag=='ring'   then say 'FailedT1'
+          when avar[flag,3]=0 then say 'FailedT2'
+          when flag           then avar[1,2]=avar[1,2]*1.1
+          when flag==0        then flag=1
+        end
+	parse 'Foo Bar' v1 +5 v2 .
+	address=digits
+	address=address
+	subroutine('with' 2 'args', '(This is the second)'1''1)
+	rc='This is an awfully boring program'; parse rc p1 (p0) p5
+	rc='is an awfully boring program This'; parse rc p2 (p0) p6
+	rc='an awfully boring program This is'; parse rc p3 (p0) p7
+	rc='awfully boring program This is an'; parse rc p4 (p0) p8
+      end lvar
+      /* -----  This is last of the 1000 clauses ----- */
+    end
+    full=full+System.nanoTime()-start
+  end
+  ffull=full/averaging
+  /* Now display the statistics */
+  looptime=(ffull-fempty)/(count*1000000000) -- 1000000000 for nanosecs->secs
+  /* Developer's statistics: */
+  if dstats then do
+    say
+    say 'Total (full DO):' (ffull-fempty)/1000000000 'secs (average of' averaging -
+    'measures of' count 'iterations)'
+    say 'Time for one iteration (1000 clauses) was:' looptime 'seconds'
+  end
+  /* And finally, the Result... */
+  -- cps = (1000000000/looptime+0.5)
+  cps = (1000/looptime+0.5)
+  cps = cps.substr(1,cps.pos('.')-1)
+  say
+  say'     Performance:' formatThousands(cps) 'NetRexx clauses per second'
+  say'                (' cps.format(null,3,null,0,'e') 'cps)'
+  say
+  p1=p1;p2=p2;p3=p3;p4=p4;p5=p5;p6=p6;p7=p7;p8=p8;v1=v1;v2=v2
+  exit
+
+
+  /* Target routine for the timed CALL - called 14 times */
+  method subroutine(arg1, arg2) constant
+    parse arg1.upper a1 a2 a3 . a4
+    parse a3 b1 b2 b3 .
+
+    loop for 1; rc=a1 a2 a3; parse rc c1 c2 c3;end
+      b1=b1;b2=b2;b3=b3
+      a1=a1;a2=a2;a3=a3;a4=a4
+      c1=c1;c2=c2;c3=c3
+
+
+      return
+
+      /* as we do not have locales yet, format with underscores */
+  method formatThousands(n) static
+    mn = n.reverse()
+    nm = "abc_def_ghi_jkl_mno_pqr_stu_vwx_yz1".translate(mn,"abcdefghijklmnopqrstuvwxyz1")
+    raw = nm.reverse().strip()
+    loop while \raw.left(1).datatype('d')
+      raw = raw.substr(2)
+    end
+    return raw

@@ -1,0 +1,13 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+mandelbrot,crexx-release-clang-o3,size-500-opt,process,warmup,1,189916000,0,pass,,
+mandelbrot,crexx-release-clang-o3,size-500-opt,process,warmup,2,227705000,0,pass,,
+mandelbrot,crexx-release-clang-o3,size-500-opt,process,recorded,1,206082000,0,pass,,
+mandelbrot,crexx-release-clang-o3,size-500-opt,process,recorded,2,190220000,0,pass,,
+mandelbrot,crexx-release-clang-o3,size-500-opt,process,recorded,3,184613000,0,pass,,
+mandelbrot,crexx-release-clang-o3,size-500-opt,process,recorded,4,185948000,0,pass,,
+mandelbrot,crexx-release-clang-o3,size-500-opt,process,recorded,5,207197000,0,pass,,
+mandelbrot,crexx-release-clang-o3,size-500-opt,process,recorded,6,227323000,0,pass,,
+mandelbrot,crexx-release-clang-o3,size-500-opt,process,recorded,7,190242000,0,pass,,
+mandelbrot,crexx-release-clang-o3,size-500-opt,process,recorded,8,185121000,0,pass,,
+mandelbrot,crexx-release-clang-o3,size-500-opt,process,recorded,9,183865000,0,pass,,
+mandelbrot,crexx-release-clang-o3,size-500-opt,process,recorded,10,184885000,0,pass,,

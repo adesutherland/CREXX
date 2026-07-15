@@ -1,0 +1,90 @@
+Compiled from "awfy_permute.java"
+public class awfy_permute {
+  private static final java.lang.String $0;
+
+  public static void main(java.lang.String[]);
+    Code:
+         0: iconst_0
+         1: istore_3
+         2: aconst_null
+         3: astore        4
+         5: iconst_1
+         6: istore_1
+         7: aload_0
+         8: arraylength
+         9: iconst_1
+        10: if_icmplt     23
+        13: aload_0
+        14: iconst_0
+        15: aaload
+        16: invokestatic  #1                  // Method netrexx/lang/Rexx.toRexx:(Ljava/lang/String;)Lnetrexx/lang/Rexx;
+        19: invokevirtual #7                  // Method netrexx/lang/Rexx.toint:()I
+        22: istore_1
+        23: iload_1
+        24: iconst_1
+        25: if_icmpge     39
+        28: ldc           #11                 // String FAIL: repetitions must be positive
+        30: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+        33: pop
+        34: iconst_1
+        35: invokestatic  #19                 // Method java/lang/System.exit:(I)V
+        38: return
+        39: iconst_0
+        40: istore_2
+        41: iload_1
+        42: istore        5
+        44: iconst_1
+        45: istore_3
+        46: iload_3
+        47: iload         5
+        49: if_icmpgt     108
+        52: new           #25                 // class PermuteBenchmark
+        55: dup
+        56: invokespecial #27                 // Method PermuteBenchmark."<init>":()V
+        59: astore        4
+        61: aload         4
+        63: invokevirtual #31                 // Method PermuteBenchmark.run:()I
+        66: istore_2
+        67: iload_2
+        68: sipush        8660
+        71: if_icmpeq     102
+        74: new           #34                 // class java/lang/StringBuilder
+        77: dup
+        78: invokespecial #36                 // Method java/lang/StringBuilder."<init>":()V
+        81: ldc           #37                 // String FAIL: expected 8660 calls, got
+        83: invokevirtual #39                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+        86: iload_2
+        87: invokevirtual #43                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+        90: invokevirtual #46                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+        93: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+        96: pop
+        97: iconst_1
+        98: invokestatic  #19                 // Method java/lang/System.exit:(I)V
+       101: return
+       102: iinc          3, 1
+       105: goto          46
+       108: new           #34                 // class java/lang/StringBuilder
+       111: dup
+       112: invokespecial #36                 // Method java/lang/StringBuilder."<init>":()V
+       115: ldc           #50                 // String benchmark=awfy_permute repetitions=
+       117: invokevirtual #39                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       120: iload_1
+       121: invokevirtual #43                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       124: ldc           #52                 // String  result=
+       126: invokevirtual #39                 // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+       129: iload_2
+       130: invokevirtual #43                 // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+       133: invokevirtual #46                 // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+       136: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       139: pop
+       140: ldc           #54                 // String PASS: AWFY Permute NetRexx port
+       142: invokestatic  #13                 // Method netrexx/lang/RexxIO.Say:(Ljava/lang/String;)Z
+       145: pop
+       146: return
+
+  private awfy_permute();
+    Code:
+         0: aload_0
+         1: invokespecial #56                 // Method java/lang/Object."<init>":()V
+         4: return
+}

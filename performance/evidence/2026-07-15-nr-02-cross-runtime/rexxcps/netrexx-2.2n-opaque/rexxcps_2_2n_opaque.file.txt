@@ -1,0 +1,1 @@
+/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-15-nr-02-cross-runtime/rexxcps/netrexx-2.2n-opaque/rexxcps_2_2n_opaque.class: compiled Java class data, version 52.0 (Java 1.8)

@@ -1,0 +1,4 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+rexxcps,regina,2.2-opaque-A,process,warmup,1,1924871291,0,pass,20377002,REXX clauses per second
+rexxcps,regina,2.2-opaque-A,process,recorded,1,2280800834,0,pass,16111543,REXX clauses per second
+rexxcps,regina,2.2-opaque-A,process,recorded,2,1850047666,0,pass,21269159,REXX clauses per second

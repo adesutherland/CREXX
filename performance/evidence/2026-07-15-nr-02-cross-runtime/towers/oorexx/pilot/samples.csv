@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+towers,oorexx,disclosed-procedural-adaptation,process,warmup,1,219464000,0,pass,,
+towers,oorexx,disclosed-procedural-adaptation,process,recorded,1,242414292,0,pass,,
+towers,oorexx,disclosed-procedural-adaptation,process,recorded,2,243227041,0,pass,,
+towers,oorexx,disclosed-procedural-adaptation,process,recorded,3,221434917,0,pass,,

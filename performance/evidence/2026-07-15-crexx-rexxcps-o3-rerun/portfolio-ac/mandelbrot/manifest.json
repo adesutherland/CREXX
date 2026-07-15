@@ -1,0 +1,20 @@
+{
+  "schema": 2,
+  "capture_tool": "run_cross_runtime.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g44dd4dbf3da6.dirty 20260715",
+  "workload": "mandelbrot",
+  "runtime": "crexx-release-clang-o3",
+  "variant": "size-500-opt",
+  "lifecycle": "process",
+  "warmups": 2,
+  "recorded_runs": 10,
+  "sampling": "serial",
+  "correctness_expectation": "PASS: AWFY Mandelbrot",
+  "metric_prefix": null,
+  "command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm","/Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_awfy_mandelbrot_opt.rxbin","/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin","-a","500"],
+  "cwd": "/Users/adrian/CLionProjects/CREXX",
+  "host": "os=macos",
+  "started_utc": "2026-07-15T18:22:47+0000",
+  "completed_utc": "2026-07-15T18:22:50+0000",
+  "result": "pass"
+}

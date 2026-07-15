@@ -1,0 +1,102 @@
+/* Generated from 'awfy_towers.nrx' 15 Jul 2026 16:38:11 [v5.10] *//* Options: Annotations Binary Decimal Implicituses Java Logo Trace2 Verbose3 */
+
+
+
+
+
+
+public class awfy_towers{private static final java.lang.String $0="awfy_towers.nrx";
+
+@SuppressWarnings("unchecked") public static void main(java.lang.String args[]){int repetitions;int result;int iteration=0;TowersBenchmark benchmark=null;
+repetitions=1;
+if (args.length>=1) repetitions=(netrexx.lang.Rexx.toRexx(args[0])).toint();
+if (repetitions<1) {
+netrexx.lang.RexxIO.Say("FAIL: repetitions must be positive");
+{System.exit(1);return;}
+}
+
+result=0;
+{int $1=repetitions;iteration=1;iteration:for(;iteration<=$1;iteration++){
+benchmark=new TowersBenchmark();
+result=benchmark.run();
+if (result!=8191) {
+netrexx.lang.RexxIO.Say("FAIL: expected 8191 moves, got"+" "+result);
+{System.exit(1);return;}
+}
+}}/*iteration*/
+
+netrexx.lang.RexxIO.Say("benchmark=awfy_towers repetitions="+repetitions+" "+"result="+result);
+netrexx.lang.RexxIO.Say("PASS: AWFY Towers NetRexx port");return;}
+
+private awfy_towers(){return;}}class TowersDisk{private static final java.lang.String $0="awfy_towers.nrx";
+
+/* properties private */
+private int diskSize;
+private TowersDisk nextDisk;
+private boolean hasNextValue=false;
+
+@SuppressWarnings("unchecked") public TowersDisk(int size){super();
+diskSize=size;return;}
+
+@SuppressWarnings("unchecked") public int size(){
+return diskSize;}
+
+@SuppressWarnings("unchecked") public TowersDisk next(){
+return nextDisk;}
+
+@SuppressWarnings("unchecked") public boolean hasNext(){
+return hasNextValue;}
+
+@SuppressWarnings("unchecked") public void setNext(TowersDisk value){
+nextDisk=value;
+hasNextValue=true;return;}
+
+}class TowersBenchmark{private static final java.lang.String $0="awfy_towers.nrx";
+
+/* properties private */
+private TowersDisk piles[]=new TowersDisk[3];
+private boolean present[]=new boolean[3];
+private int movesDone=0;
+
+@SuppressWarnings("unchecked") public TowersBenchmark(){super();return;}
+
+@SuppressWarnings("unchecked") public int run(){
+buildTowerAt(0,13);
+movesDone=0;
+moveDisks(13,0,1);
+return movesDone;}
+
+@SuppressWarnings("unchecked") public void pushDisk(TowersDisk disk,int pile){TowersDisk top=null;
+if (present[pile]) {
+top=piles[pile];
+if ((disk.size())>=(top.size())) return;
+disk.setNext(top);
+}
+piles[pile]=disk;
+present[pile]=true;return;}
+
+@SuppressWarnings("unchecked") public TowersDisk popDiskFrom(int pile){TowersDisk top;
+top=piles[pile];
+if (top.hasNext()) piles[pile]=top.next();
+else present[pile]=false;
+return top;}
+
+@SuppressWarnings("unchecked") public void moveTopDisk(int fromPile,int toPile){TowersDisk disk;
+disk=popDiskFrom(fromPile);
+pushDisk(disk,toPile);
+movesDone++;return;}
+
+@SuppressWarnings("unchecked") public void buildTowerAt(int pile,int disks){int i=0;TowersDisk disk=null;
+{i=disks;i:for(;i>=0;i--){
+disk=new TowersDisk(i);
+pushDisk(disk,pile);
+}}/*i*/return;}
+
+@SuppressWarnings("unchecked") public void moveDisks(int disks,int fromPile,int toPile){int otherPile=0;
+if (disks==1) moveTopDisk(fromPile,toPile);
+else {
+otherPile=((3-fromPile))-toPile;
+moveDisks(disks-1,fromPile,otherPile);
+moveTopDisk(fromPile,toPile);
+moveDisks(disks-1,otherPile,toPile);
+}return;}}

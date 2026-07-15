@@ -1,0 +1,4 @@
+observation,reported_internal_seconds,cps,vm,mode,image_mode,workload
+1,11.9,843110,rxvm,opt,metadata-retained,rexxcps-2.2c-crexx
+2,11.7,853668,rxvm,opt,metadata-retained,rexxcps-2.2c-crexx
+3,11.9,840723,rxvm,opt,metadata-retained,rexxcps-2.2c-crexx

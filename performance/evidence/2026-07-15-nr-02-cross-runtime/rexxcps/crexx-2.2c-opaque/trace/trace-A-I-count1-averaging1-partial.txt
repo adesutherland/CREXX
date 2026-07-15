@@ -1,0 +1,3876 @@
+----- REXXCPS 2.2c-opaque -- Measuring cREXX clauses/second -----
+ cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g44dd4dbf3da6.dirty 20260715
+       System is: macOS
+TRACE_KERNEL_BEGIN
+   159 *-*     call time(\"R\")
+       >L>   "R"
+       >F>   "0.002505"
+   160 *-*     do count
+       >V>   "0"
+   162 *-*       flag = opaque_zero as .string; p0 = opaque_marker
+       >=>   "0"
+   162 *-*       flag = opaque_zero as .string; p0 = opaque_marker
+       >=>   "b"
+   163 *-*       do lvar = 1 to 14
+       >L>   "1"
+   163 *-*       do lvar = 1 to 14
+       >L>   "14"
+   200 *-*         text = \"This is an awfully boring program\"; parse var text p1 (p0) p5
+   201 *-*         text = \"is an awfully boring program This\"; parse var text p2 (p0) p6
+   202 *-*         text = \"an awfully boring program This is\"; parse var text p3 (p0) p7
+   203 *-*         text = \"awfully boring program This is an\"; parse var text p4 (p0) p8
+   200 *-*         text = \"This is an awfully boring program\"; parse var text p1 (p0) p5
+   201 *-*         text = \"is an awfully boring program This\"; parse var text p2 (p0) p6
+   202 *-*         text = \"an awfully boring program This is\"; parse var text p3 (p0) p7
+   203 *-*         text = \"awfully boring program This is an\"; parse var text p4 (p0) p8
+   195 *-*         parse value opaque_foo_bar with v1 +5 v2 .
+       >V>   "Key Bee"
+   165 *-*         key1 = opaque_key
+       >=>   "Key Bee"
+   166 *-*         acompound.key1.lvar = substr(opaque_digits, 6, 2)
+       >V>   "1"
+       >C>   "Key Bee.1"
+       >  >   substr.crexx
+    51 *-*   available = .int
+    52 *-*   copy_length = .int
+    48 *-*   pad_character = .int
+    47 *-*   pad_length = .int
+    53 *-*   padding_length = .int
+    50 *-*   start_offset = .int
+    46 *-*   string_length = .int
+       >V>   "12345678"
+       >  >   rexxcps_levelb_opaque.crexx
+   166 *-*         acompound.key1.lvar = substr(opaque_digits, 6, 2)
+       >=>   "12345678"
+       >L>   " "
+       >  >   substr.crexx
+    49 *-*   pad_index = 0
+       >L>   "0"
+    54 *-*   result = \"\"
+       >L>   ""
+    60 *-*   assembler strlen pad_length,pad
+       >V>   "1"
+       >O>   "0"
+       >V>   "0"
+    64 *-*   assembler strlen string_length,string
+    65 *-*   start_offset = start - 1
+       >L>   "5"
+    66 *-*   available = string_length - start_offset
+       >O>   "3"
+       >L>   "3"
+    78 *-*   copy_length = length
+       >L>   "2"
+       >=>   "2"
+       >O>   "1"
+       >V>   "5"
+       >O>   "0"
+       >O>   "0"
+       >O>   "0"
+       >V>   "12345678"
+    83 *-*     assembler setstrpos string,start_offset
+       >V>   ""
+    84 *-*     assembler substring result,string,copy_length
+       >V>   "2"
+    87 *-*   padding_length = length - copy_length
+       >O>   "0"
+       >V>   "67"
+    92 *-*   return result
+       >=>   "67"
+       >  >   rexxcps_levelb_opaque.crexx
+   167 *-*         if flag = acompound.key1.lvar then say \"Failed1\"
+       >V>   "1"
+       >C>   "Key Bee.1"
+       >V>   "67"
+       >O>   "0"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >L>   "2.2"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   169 *-*           if j > (acompound.key1.lvar as .decimal) then say \"Failed2\"
+       >V>   "1.1"
+       >V>   "1"
+       >C>   "Key Bee.1"
+       >V>   "67"
+       >O>   "0"
+       >V>   "1.1"
+   170 *-*           if 17 < length(j as .string) - 1 then say \"Failed3\"
+       >=>   "1.1"
+       >  >   length.crexx
+    42 *-*   result = 0
+       >L>   "0"
+    43 *-*   assembler strlen result,string
+       >V>   "3"
+    44 *-*   return result
+       >O>   "2"
+       >V>   "1.1"
+       >  >   rexxcps_levelb_opaque.crexx
+   171 *-*           if (j as .string) = opaque_failure then say \"Failed4\"
+       >V>   "foobar"
+       >O>   "0"
+       >  >   substr.crexx
+    51 *-*   available = .int
+    52 *-*   copy_length = .int
+    48 *-*   pad_character = .int
+    47 *-*   pad_length = .int
+    53 *-*   padding_length = .int
+    50 *-*   start_offset = .int
+    46 *-*   string_length = .int
+       >V>   "12345678"
+       >  >   rexxcps_levelb_opaque.crexx
+   172 *-*           if substr(opaque_digits, 1, 1) = opaque_nine then say \"Failed5\"
+       >=>   "12345678"
+       >L>   " "
+       >  >   substr.crexx
+    49 *-*   pad_index = 0
+       >L>   "0"
+    54 *-*   result = \"\"
+       >L>   ""
+    60 *-*   assembler strlen pad_length,pad
+       >V>   "1"
+       >O>   "0"
+       >V>   "0"
+    64 *-*   assembler strlen string_length,string
+    65 *-*   start_offset = start - 1
+       >L>   "0"
+    66 *-*   available = string_length - start_offset
+       >O>   "8"
+       >L>   "8"
+    78 *-*   copy_length = length
+       >L>   "1"
+       >=>   "1"
+       >O>   "1"
+       >V>   "0"
+       >O>   "1"
+       >V>   "1"
+       >O>   "0"
+       >O>   "0"
+       >V>   "12345678"
+    83 *-*     assembler setstrpos string,start_offset
+       >V>   ""
+    84 *-*     assembler substring result,string,copy_length
+       >V>   "1"
+    87 *-*   padding_length = length - copy_length
+       >O>   "0"
+       >V>   "1"
+    92 *-*   return result
+       >V>   "9"
+       >O>   "0"
+       >  >   word.crexx
+    48 *-*   string_length = .int
+       >V>   "Key Bee"
+       >  >   rexxcps_levelb_opaque.crexx
+   173 *-*           if word(key1, 1) = opaque_question then say \"Failed6\"
+       >=>   "Key Bee"
+       >  >   word.crexx
+    49 *-*   assembler strlen string_length,string
+       >V>   "7"
+       >O>   "0"
+    52 *-*   scan = 0
+       >L>   "0"
+    53 *-*   current_word = 0
+       >L>   "0"
+    54 *-*   word_start = 0
+       >L>   "0"
+    55 *-*   word_end = 0
+       >L>   "0"
+    56 *-*   word_length = 0
+       >L>   "0"
+    57 *-*   result = \"\"
+       >L>   ""
+    58 *-*   do while scan < string_length
+       >O>   "1"
+       >V>   "0"
+    59 *-*     assembler fndnblnk word_start,string,scan
+       >V>   "0"
+       >O>   "0"
+       >V>   "0"
+    61 *-*     current_word = current_word + 1
+       >O>   "1"
+    62 *-*     assembler fndblnk word_end,string,word_start
+       >V>   "1"
+       >O>   "1"
+       >V>   "3"
+       >O>   "0"
+       >=>   "3"
+    65 *-*       word_length = word_end - word_start
+       >O>   "3"
+    66 *-*       assembler setstrpos string,word_start
+       >V>   ""
+    67 *-*       assembler substring result,string,word_length
+       >V>   "Key"
+    68 *-*       return result
+       >V>   "?"
+       >O>   "0"
+       >V>   "1.1"
+       >  >   rexxcps_levelb_opaque.crexx
+   174 *-*           if j < 5 then do /* This path is taken. */
+       >O>   "1"
+       >V>   "Key Bee"
+   175 *-*             acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + 1) as .string
+       >V>   "1"
+       >C>   "Key Bee.1"
+       >V>   "1"
+       >C>   "Key Bee.1"
+       >V>   "67"
+       >O>   "67"
+       >=>   "68 "
+   176 *-*             if j = 2 then leave
+       >O>   "0"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   179 *-*         end /* j */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   169 *-*           if j > (acompound.key1.lvar as .decimal) then say \"Failed2\"
+       >V>   "1.1"
+       >V>   "1"
+       >C>   "Key Bee.1"
+       >V>   "68y"
+       >O>   "0"
+       >V>   "2.2"
+   170 *-*           if 17 < length(j as .string) - 1 then say \"Failed3\"
+       >=>   "2.2"
+       >  >   length.crexx
+    42 *-*   result = 0
+       >L>   "0"
+    43 *-*   assembler strlen result,string
+       >V>   "3"
+    44 *-*   return result
+       >O>   "2"
+       >V>   "2.2"
+       >  >   rexxcps_levelb_opaque.crexx
+   171 *-*           if (j as .string) = opaque_failure then say \"Failed4\"
+       >V>   "foobar"
+       >O>   "0"
+       >  >   substr.crexx
+    51 *-*   available = .int
+    52 *-*   copy_length = .int
+    48 *-*   pad_character = .int
+    47 *-*   pad_length = .int
+    53 *-*   padding_length = .int
+    50 *-*   start_offset = .int
+    46 *-*   string_length = .int
+       >V>   "12345678"
+       >  >   rexxcps_levelb_opaque.crexx
+   172 *-*           if substr(opaque_digits, 1, 1) = opaque_nine then say \"Failed5\"
+       >=>   "12345678"
+       >L>   " "
+       >  >   substr.crexx
+    49 *-*   pad_index = 0
+       >L>   "0"
+    54 *-*   result = \"\"
+       >L>   ""
+    60 *-*   assembler strlen pad_length,pad
+       >V>   "1"
+       >O>   "0"
+       >V>   "0"
+    64 *-*   assembler strlen string_length,string
+    65 *-*   start_offset = start - 1
+       >L>   "0"
+    66 *-*   available = string_length - start_offset
+       >O>   "8"
+       >L>   "8"
+    78 *-*   copy_length = length
+       >L>   "1"
+       >=>   "1"
+       >O>   "1"
+       >V>   "0"
+       >O>   "1"
+       >V>   "1"
+       >O>   "0"
+       >O>   "0"
+       >V>   "12345678"
+    83 *-*     assembler setstrpos string,start_offset
+       >V>   ""
+    84 *-*     assembler substring result,string,copy_length
+       >V>   "1"
+    87 *-*   padding_length = length - copy_length
+       >O>   "0"
+       >V>   "1"
+    92 *-*   return result
+       >V>   "9"
+       >O>   "0"
+       >  >   word.crexx
+    48 *-*   string_length = .int
+       >V>   "Key Bee"
+       >  >   rexxcps_levelb_opaque.crexx
+   173 *-*           if word(key1, 1) = opaque_question then say \"Failed6\"
+       >=>   "Key Bee"
+       >  >   word.crexx
+    49 *-*   assembler strlen string_length,string
+       >V>   "7"
+       >O>   "0"
+    52 *-*   scan = 0
+       >L>   "0"
+    53 *-*   current_word = 0
+       >L>   "0"
+    54 *-*   word_start = 0
+       >L>   "0"
+    55 *-*   word_end = 0
+       >L>   "0"
+    56 *-*   word_length = 0
+       >L>   "0"
+    57 *-*   result = \"\"
+       >L>   ""
+    58 *-*   do while scan < string_length
+       >O>   "1"
+       >V>   "0"
+    59 *-*     assembler fndnblnk word_start,string,scan
+       >V>   "0"
+       >O>   "0"
+       >V>   "0"
+    61 *-*     current_word = current_word + 1
+       >O>   "1"
+    62 *-*     assembler fndblnk word_end,string,word_start
+       >V>   "1"
+       >O>   "1"
+       >V>   "3"
+       >O>   "0"
+       >=>   "3"
+    65 *-*       word_length = word_end - word_start
+       >O>   "3"
+    66 *-*       assembler setstrpos string,word_start
+       >V>   ""
+    67 *-*       assembler substring result,string,word_length
+       >V>   "Key"
+    68 *-*       return result
+       >V>   "?"
+       >O>   "0"
+       >V>   "2.2"
+       >  >   rexxcps_levelb_opaque.crexx
+   174 *-*           if j < 5 then do /* This path is taken. */
+       >O>   "1"
+       >V>   "Key Bee"
+   175 *-*             acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + 1) as .string
+       >V>   "1"
+       >C>   "Key Bee.1"
+       >V>   "1"
+       >C>   "Key Bee.1"
+       >V>   "68y"
+       >O>   "68y"
+       >=>   "69 "
+   176 *-*             if j = 2 then leave
+       >O>   "0"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   179 *-*         end /* j */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >C>   "2.2"
+   180 *-*         avar. = \"1.0\" || lvar
+       >V>   "1"
+       >O>   "1.01"
+       >=>   "1.01"
+   181 *-*         select
+       >O>   "0"
+       >V>   "0"
+       >C>   "0.2"
+       >V>   "1.01"
+       >O>   "0"
+       >V>   "0"
+       >O>   "0"
+       >V>   "0"
+       >O>   "0"
+       >V>   "0"
+       >O>   "1"
+   186 *-*           when flag == \"0\" then flag = \"0\"
+       >L>   "0"
+   188 *-*         if opaque_one then flag = opaque_one as .string
+       >V>   "1"
+   188 *-*         if opaque_one then flag = opaque_one as .string
+       >=>   "1"
+   189 *-*         select
+       >O>   "0"
+       >V>   "1"
+       >C>   "1.3"
+       >V>   "1.01"
+       >O>   "0"
+       >V>   "1"
+       >O>   "1"
+   192 *-*           when flag <> \"0\" then avar.1.2 = ((avar.1.2 as .decimal) * 1.1) as .string
+       >C>   "1.2"
+       >C>   "1.2"
+       >V>   "1.01"
+       >O>   "1.01"
+       >=>   "1.111"
+       >L>   "1"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:v1;4,1:5;1,2:v2;6,10:{implicit};1,1:.;',' v1 + v2 .',0)
+       >V>   "Foo Bar"
+     2 *-* _source=opaque_foo_bar
+       >=>   "Foo Bar"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:v1;4,1:5;1,2:v2;6,10:{implicit};1,1:.;',' v1 + v2 .',0)
+       >L>   "3,1:1;1,2:v1;4,1:5;1,2:v2;6,10:{implicit};1,1:.;"
+       >L>   " v1 + v2 ."
+       >L>   "0"
+       >F>   ""
+     2 *-* v1=_parseResult[1
+       >V>   "Foo B"
+       >=>   "Foo B"
+     2 *-* v2=_parseResult[2
+       >V>   "ar"
+       >=>   "ar"
+     2 *-* call _trace_set(_trace_mode_from_option(_trace_current_mode
+       >F>   "I"
+       >F>   "I"
+       >F>   "I"
+     3 *-* __rxtrace_mode=_trace_current_mode
+       >F>   "I"
+     4 *-* call __rxtrace_reset_display_state
+       >  >   rexxcps_levelb_opaque.crexx
+   158 *-*     trace value tracevar
+       >L>   ""
+       >L>   ""
+       >F>   " v1 + v2 ."
+     5 *-* if __rxtrace_mode = \"OFF\"
+       >O>   "0"
+       >V>   "I"
+     6 *-* if _trace_needs_breakpoints(__rxtrace_mode) = 0
+       >F>   "1"
+       >O>   "0"
+     8 *-* sigcall __rxtrace_handler(),\"BREAKPOINT\"
+     9 *-* bpon
+     2 *-* rc=_address('value',addressenv() .environment_name(),_noredir(),_noredir(),_noredir
+       >L>   "value"
+     2 *-* rc=_address('value',addressenv() .environment_name(),_noredir(),_noredir(),_noredir
+       >L>   "value"
+       >F>   ""
+       >F>   "VALUE"
+       >  >   _address.crexx
+  1663 *-*     handle = .binary
+       >V>   ""
+  1664 *-*     return handle
+  1663 *-*     handle = .binary
+       >V>   ""
+  1664 *-*     return handle
+  1663 *-*     handle = .binary
+       >V>   ""
+  1664 *-*     return handle
+       >F>   "-3"
+       >  >   rexxcps_levelb_opaque.crexx
+   251 *-*   parse var a3 b1 b2 b3 .
+       >  >   upper.crexx
+    42 *-*   result = \"\"
+       >L>   ""
+    43 *-*   assembler strupper result,string
+       >V>   "WITH"
+    44 *-*   return result
+       >=>   "WITH"
+       >  >   rexxcps_levelb_opaque.crexx
+   250 *-*   arg a1 = .string, a2 = .string, a3 = .string, a4 = .string
+       >L>   "2"
+       >F>   "2"
+       >  >   upper.crexx
+    42 *-*   result = \"\"
+       >L>   ""
+    43 *-*   assembler strupper result,string
+       >V>   "ARGS"
+       >=>   "ARGS"
+       >  >   rexxcps_levelb_opaque.crexx
+   250 *-*   arg a1 = .string, a2 = .string, a3 = .string, a4 = .string
+       >V>   "1"
+       >O>   "(This is the second)1"
+       >O>   "(This is the second)1"
+       >V>   "1"
+       >O>   "(This is the second)11"
+       >F>   "(THIS IS THE SECOND)11"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:b1;6,10:{implicit};1,2:b2;6,10:{implicit};1,2:b3;6,10:{implicit};1,1:.;',' b1 b2 b3 .',0)
+       >V>   "ARGS"
+     2 *-* _source=a3
+       >=>   "ARGS"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:b1;6,10:{implicit};1,2:b2;6,10:{implicit};1,2:b3;6,10:{implicit};1,1:.;',' b1 b2 b3 .',0)
+       >L>   "3,1:1;1,2:b1;6,10:{implicit};1,2:b2;6,10:{implicit};1,2:b3;6,10:{implicit};1,1:.;"
+       >L>   " b1 b2 b3 ."
+       >L>   "0"
+       >F>   ""
+     2 *-* b1=_parseResult[1
+       >V>   "ARGS"
+       >=>   "ARGS"
+     2 *-* b2=_parseResult[2
+       >V>   ""
+       >=>   ""
+     2 *-* b3=_parseResult[3
+       >V>   ""
+       >=>   ""
+       >  >   rexxcps_levelb_opaque.crexx
+   252 *-*   do 1
+       >L>   "1"
+   254 *-*     parse var text c1 c2 c3
+       >V>   "WITH"
+   253 *-*     text = a1 || \" \" || a2 || \" \" || a3
+       >O>   "WITH "
+       >O>   "WITH 2"
+       >O>   "WITH 2 "
+       >O>   "WITH 2 ARGS"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:c1;6,10:{implicit};1,2:c2;6,10:{implicit};1,2:c3;',' c1 c2 c3',0)
+       >V>   "WITH 2 ARGS"
+     2 *-* _source=text
+       >=>   "WITH 2 ARGS"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:c1;6,10:{implicit};1,2:c2;6,10:{implicit};1,2:c3;',' c1 c2 c3',0)
+       >L>   "3,1:1;1,2:c1;6,10:{implicit};1,2:c2;6,10:{implicit};1,2:c3;"
+       >L>   " c1 c2 c3"
+       >L>   "0"
+       >F>   ""
+     2 *-* c1=_parseResult[1
+       >V>   "WITH"
+       >=>   "WITH"
+     2 *-* c2=_parseResult[2
+       >V>   "2"
+       >=>   "2"
+     2 *-* c3=_parseResult[3
+       >V>   "ARGS"
+       >=>   "ARGS"
+       >  >   rexxcps_levelb_opaque.crexx
+   255 *-*   end
+       >L>   "0"
+   252 *-*   do 1
+   200 *-*         text = \"This is an awfully boring program\"; parse var text p1 (p0) p5
+       >L>   "This is an awfully boring program"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p1;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p5;',' p1 ( p0 ) p5',0)
+       >V>   "This is an awfully boring program"
+     2 *-* _source=text
+       >=>   "This is an awfully boring program"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p1;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p5;',' p1 ( p0 ) p5',0)
+       >L>   "3,1:1;1,2:p1;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p5;"
+       >L>   " p1 ( p0 ) p5"
+       >L>   "0"
+       >F>   ""
+     2 *-* p1=_parseResult[1
+       >V>   "This"
+       >=>   "This"
+     2 *-* p0=_parseResult[2
+       >V>   "is"
+       >=>   "is"
+     2 *-* p5=_parseResult[3
+       >V>   "an awfully boring program"
+       >=>   "an awfully boring program"
+       >  >   rexxcps_levelb_opaque.crexx
+   201 *-*         text = \"is an awfully boring program This\"; parse var text p2 (p0) p6
+       >L>   "is an awfully boring program This"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p2;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p6;',' p2 ( p0 ) p6',0)
+       >V>   "is an awfully boring program This"
+     2 *-* _source=text
+       >=>   "is an awfully boring program This"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p2;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p6;',' p2 ( p0 ) p6',0)
+       >L>   "3,1:1;1,2:p2;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p6;"
+       >L>   " p2 ( p0 ) p6"
+       >L>   "0"
+       >F>   ""
+     2 *-* p2=_parseResult[1
+       >V>   "is"
+       >=>   "is"
+     2 *-* p0=_parseResult[2
+       >V>   "an"
+       >=>   "an"
+     2 *-* p6=_parseResult[3
+       >V>   "awfully boring program This"
+       >=>   "awfully boring program This"
+       >  >   rexxcps_levelb_opaque.crexx
+   202 *-*         text = \"an awfully boring program This is\"; parse var text p3 (p0) p7
+       >L>   "an awfully boring program This is"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p3;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p7;',' p3 ( p0 ) p7',0)
+       >V>   "an awfully boring program This is"
+     2 *-* _source=text
+       >=>   "an awfully boring program This is"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p3;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p7;',' p3 ( p0 ) p7',0)
+       >L>   "3,1:1;1,2:p3;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p7;"
+       >L>   " p3 ( p0 ) p7"
+       >L>   "0"
+       >F>   ""
+     2 *-* p3=_parseResult[1
+       >V>   "an"
+       >=>   "an"
+     2 *-* p0=_parseResult[2
+       >V>   "awfully"
+       >=>   "awfully"
+     2 *-* p7=_parseResult[3
+       >V>   "boring program This is"
+       >=>   "boring program This is"
+       >  >   rexxcps_levelb_opaque.crexx
+   203 *-*         text = \"awfully boring program This is an\"; parse var text p4 (p0) p8
+       >L>   "awfully boring program This is an"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p4;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p8;',' p4 ( p0 ) p8',0)
+       >V>   "awfully boring program This is an"
+     2 *-* _source=text
+       >=>   "awfully boring program This is an"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p4;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p8;',' p4 ( p0 ) p8',0)
+       >L>   "3,1:1;1,2:p4;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p8;"
+       >L>   " p4 ( p0 ) p8"
+       >L>   "0"
+       >F>   ""
+     2 *-* p4=_parseResult[1
+       >V>   "awfully"
+       >=>   "awfully"
+     2 *-* p0=_parseResult[2
+       >V>   "boring"
+       >=>   "boring"
+     2 *-* p8=_parseResult[3
+       >V>   "program This is an"
+       >=>   "program This is an"
+       >  >   rexxcps_levelb_opaque.crexx
+   204 *-*       end
+       >L>   "14"
+   163 *-*       do lvar = 1 to 14
+   200 *-*         text = \"This is an awfully boring program\"; parse var text p1 (p0) p5
+   201 *-*         text = \"is an awfully boring program This\"; parse var text p2 (p0) p6
+   202 *-*         text = \"an awfully boring program This is\"; parse var text p3 (p0) p7
+   203 *-*         text = \"awfully boring program This is an\"; parse var text p4 (p0) p8
+   200 *-*         text = \"This is an awfully boring program\"; parse var text p1 (p0) p5
+   201 *-*         text = \"is an awfully boring program This\"; parse var text p2 (p0) p6
+   202 *-*         text = \"an awfully boring program This is\"; parse var text p3 (p0) p7
+   203 *-*         text = \"awfully boring program This is an\"; parse var text p4 (p0) p8
+   195 *-*         parse value opaque_foo_bar with v1 +5 v2 .
+       >V>   "Key Bee"
+   165 *-*         key1 = opaque_key
+       >=>   "Key Bee"
+   166 *-*         acompound.key1.lvar = substr(opaque_digits, 6, 2)
+       >V>   "3"
+       >C>   "Key Bee.3"
+       >  >   substr.crexx
+    51 *-*   available = .int
+    52 *-*   copy_length = .int
+    48 *-*   pad_character = .int
+    47 *-*   pad_length = .int
+    53 *-*   padding_length = .int
+    50 *-*   start_offset = .int
+    46 *-*   string_length = .int
+       >V>   "12345678"
+       >  >   rexxcps_levelb_opaque.crexx
+   166 *-*         acompound.key1.lvar = substr(opaque_digits, 6, 2)
+       >=>   "12345678"
+       >L>   " "
+       >  >   substr.crexx
+    49 *-*   pad_index = 0
+       >L>   "0"
+    54 *-*   result = \"\"
+       >L>   ""
+    60 *-*   assembler strlen pad_length,pad
+       >V>   "1"
+       >O>   "0"
+       >V>   "0"
+    64 *-*   assembler strlen string_length,string
+    65 *-*   start_offset = start - 1
+       >L>   "5"
+    66 *-*   available = string_length - start_offset
+       >O>   "3"
+       >L>   "3"
+    78 *-*   copy_length = length
+       >L>   "2"
+       >=>   "2"
+       >O>   "1"
+       >V>   "5"
+       >O>   "0"
+       >O>   "0"
+       >O>   "0"
+       >V>   "12345678"
+    83 *-*     assembler setstrpos string,start_offset
+       >V>   ""
+    84 *-*     assembler substring result,string,copy_length
+       >V>   "2"
+    87 *-*   padding_length = length - copy_length
+       >O>   "0"
+       >V>   "67"
+    92 *-*   return result
+       >=>   "67"
+       >  >   rexxcps_levelb_opaque.crexx
+   167 *-*         if flag = acompound.key1.lvar then say \"Failed1\"
+       >V>   "3"
+       >C>   "Key Bee.3"
+       >V>   "67"
+       >O>   "0"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >L>   "2.2"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   169 *-*           if j > (acompound.key1.lvar as .decimal) then say \"Failed2\"
+       >V>   "1.1"
+       >V>   "3"
+       >C>   "Key Bee.3"
+       >V>   "67"
+       >O>   "0"
+       >V>   "1.1"
+   170 *-*           if 17 < length(j as .string) - 1 then say \"Failed3\"
+       >=>   "1.1"
+       >  >   length.crexx
+    42 *-*   result = 0
+       >L>   "0"
+    43 *-*   assembler strlen result,string
+       >V>   "3"
+    44 *-*   return result
+       >O>   "2"
+       >V>   "1.1"
+       >  >   rexxcps_levelb_opaque.crexx
+   171 *-*           if (j as .string) = opaque_failure then say \"Failed4\"
+       >V>   "foobar"
+       >O>   "0"
+       >  >   substr.crexx
+    51 *-*   available = .int
+    52 *-*   copy_length = .int
+    48 *-*   pad_character = .int
+    47 *-*   pad_length = .int
+    53 *-*   padding_length = .int
+    50 *-*   start_offset = .int
+    46 *-*   string_length = .int
+       >V>   "12345678"
+       >  >   rexxcps_levelb_opaque.crexx
+   172 *-*           if substr(opaque_digits, 1, 1) = opaque_nine then say \"Failed5\"
+       >=>   "12345678"
+       >L>   " "
+       >  >   substr.crexx
+    49 *-*   pad_index = 0
+       >L>   "0"
+    54 *-*   result = \"\"
+       >L>   ""
+    60 *-*   assembler strlen pad_length,pad
+       >V>   "1"
+       >O>   "0"
+       >V>   "0"
+    64 *-*   assembler strlen string_length,string
+    65 *-*   start_offset = start - 1
+       >L>   "0"
+    66 *-*   available = string_length - start_offset
+       >O>   "8"
+       >L>   "8"
+    78 *-*   copy_length = length
+       >L>   "1"
+       >=>   "1"
+       >O>   "1"
+       >V>   "0"
+       >O>   "1"
+       >V>   "1"
+       >O>   "0"
+       >O>   "0"
+       >V>   "12345678"
+    83 *-*     assembler setstrpos string,start_offset
+       >V>   ""
+    84 *-*     assembler substring result,string,copy_length
+       >V>   "1"
+    87 *-*   padding_length = length - copy_length
+       >O>   "0"
+       >V>   "1"
+    92 *-*   return result
+       >V>   "9"
+       >O>   "0"
+       >  >   word.crexx
+    48 *-*   string_length = .int
+       >V>   "Key Bee"
+       >  >   rexxcps_levelb_opaque.crexx
+   173 *-*           if word(key1, 1) = opaque_question then say \"Failed6\"
+       >=>   "Key Bee"
+       >  >   word.crexx
+    49 *-*   assembler strlen string_length,string
+       >V>   "7"
+       >O>   "0"
+    52 *-*   scan = 0
+       >L>   "0"
+    53 *-*   current_word = 0
+       >L>   "0"
+    54 *-*   word_start = 0
+       >L>   "0"
+    55 *-*   word_end = 0
+       >L>   "0"
+    56 *-*   word_length = 0
+       >L>   "0"
+    57 *-*   result = \"\"
+       >L>   ""
+    58 *-*   do while scan < string_length
+       >O>   "1"
+       >V>   "0"
+    59 *-*     assembler fndnblnk word_start,string,scan
+       >V>   "0"
+       >O>   "0"
+       >V>   "0"
+    61 *-*     current_word = current_word + 1
+       >O>   "1"
+    62 *-*     assembler fndblnk word_end,string,word_start
+       >V>   "1"
+       >O>   "1"
+       >V>   "3"
+       >O>   "0"
+       >=>   "3"
+    65 *-*       word_length = word_end - word_start
+       >O>   "3"
+    66 *-*       assembler setstrpos string,word_start
+       >V>   ""
+    67 *-*       assembler substring result,string,word_length
+       >V>   "Key"
+    68 *-*       return result
+       >V>   "?"
+       >O>   "0"
+       >V>   "1.1"
+       >  >   rexxcps_levelb_opaque.crexx
+   174 *-*           if j < 5 then do /* This path is taken. */
+       >O>   "1"
+       >V>   "Key Bee"
+   175 *-*             acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + 1) as .string
+       >V>   "3"
+       >C>   "Key Bee.3"
+       >V>   "3"
+       >C>   "Key Bee.3"
+       >V>   "67"
+       >O>   "67"
+       >=>   "68 "
+   176 *-*             if j = 2 then leave
+       >O>   "0"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   179 *-*         end /* j */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   169 *-*           if j > (acompound.key1.lvar as .decimal) then say \"Failed2\"
+       >V>   "1.1"
+       >V>   "3"
+       >C>   "Key Bee.3"
+       >V>   "68y"
+       >O>   "0"
+       >V>   "2.2"
+   170 *-*           if 17 < length(j as .string) - 1 then say \"Failed3\"
+       >=>   "2.2"
+       >  >   length.crexx
+    42 *-*   result = 0
+       >L>   "0"
+    43 *-*   assembler strlen result,string
+       >V>   "3"
+    44 *-*   return result
+       >O>   "2"
+       >V>   "2.2"
+       >  >   rexxcps_levelb_opaque.crexx
+   171 *-*           if (j as .string) = opaque_failure then say \"Failed4\"
+       >V>   "foobar"
+       >O>   "0"
+       >  >   substr.crexx
+    51 *-*   available = .int
+    52 *-*   copy_length = .int
+    48 *-*   pad_character = .int
+    47 *-*   pad_length = .int
+    53 *-*   padding_length = .int
+    50 *-*   start_offset = .int
+    46 *-*   string_length = .int
+       >V>   "12345678"
+       >  >   rexxcps_levelb_opaque.crexx
+   172 *-*           if substr(opaque_digits, 1, 1) = opaque_nine then say \"Failed5\"
+       >=>   "12345678"
+       >L>   " "
+       >  >   substr.crexx
+    49 *-*   pad_index = 0
+       >L>   "0"
+    54 *-*   result = \"\"
+       >L>   ""
+    60 *-*   assembler strlen pad_length,pad
+       >V>   "1"
+       >O>   "0"
+       >V>   "0"
+    64 *-*   assembler strlen string_length,string
+    65 *-*   start_offset = start - 1
+       >L>   "0"
+    66 *-*   available = string_length - start_offset
+       >O>   "8"
+       >L>   "8"
+    78 *-*   copy_length = length
+       >L>   "1"
+       >=>   "1"
+       >O>   "1"
+       >V>   "0"
+       >O>   "1"
+       >V>   "1"
+       >O>   "0"
+       >O>   "0"
+       >V>   "12345678"
+    83 *-*     assembler setstrpos string,start_offset
+       >V>   ""
+    84 *-*     assembler substring result,string,copy_length
+       >V>   "1"
+    87 *-*   padding_length = length - copy_length
+       >O>   "0"
+       >V>   "1"
+    92 *-*   return result
+       >V>   "9"
+       >O>   "0"
+       >  >   word.crexx
+    48 *-*   string_length = .int
+       >V>   "Key Bee"
+       >  >   rexxcps_levelb_opaque.crexx
+   173 *-*           if word(key1, 1) = opaque_question then say \"Failed6\"
+       >=>   "Key Bee"
+       >  >   word.crexx
+    49 *-*   assembler strlen string_length,string
+       >V>   "7"
+       >O>   "0"
+    52 *-*   scan = 0
+       >L>   "0"
+    53 *-*   current_word = 0
+       >L>   "0"
+    54 *-*   word_start = 0
+       >L>   "0"
+    55 *-*   word_end = 0
+       >L>   "0"
+    56 *-*   word_length = 0
+       >L>   "0"
+    57 *-*   result = \"\"
+       >L>   ""
+    58 *-*   do while scan < string_length
+       >O>   "1"
+       >V>   "0"
+    59 *-*     assembler fndnblnk word_start,string,scan
+       >V>   "0"
+       >O>   "0"
+       >V>   "0"
+    61 *-*     current_word = current_word + 1
+       >O>   "1"
+    62 *-*     assembler fndblnk word_end,string,word_start
+       >V>   "1"
+       >O>   "1"
+       >V>   "3"
+       >O>   "0"
+       >=>   "3"
+    65 *-*       word_length = word_end - word_start
+       >O>   "3"
+    66 *-*       assembler setstrpos string,word_start
+       >V>   ""
+    67 *-*       assembler substring result,string,word_length
+       >V>   "Key"
+    68 *-*       return result
+       >V>   "?"
+       >O>   "0"
+       >V>   "2.2"
+       >  >   rexxcps_levelb_opaque.crexx
+   174 *-*           if j < 5 then do /* This path is taken. */
+       >O>   "1"
+       >V>   "Key Bee"
+   175 *-*             acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + 1) as .string
+       >V>   "3"
+       >C>   "Key Bee.3"
+       >V>   "3"
+       >C>   "Key Bee.3"
+       >V>   "68y"
+       >O>   "68y"
+       >=>   "69 "
+   176 *-*             if j = 2 then leave
+       >O>   "0"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   179 *-*         end /* j */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >C>   "2.2"
+   180 *-*         avar. = \"1.0\" || lvar
+       >V>   "3"
+       >O>   "1.03"
+       >=>   "1.03"
+   181 *-*         select
+       >O>   "0"
+       >V>   "1"
+       >C>   "1.2"
+       >V>   "1.03"
+       >O>   "0"
+       >V>   "1"
+       >O>   "0"
+       >V>   "1"
+       >O>   "1"
+   185 *-*           when flag <> \"0\" then avar.1.2 = ((avar.1.2 as .decimal) * 1.1) as .string
+       >C>   "1.2"
+       >C>   "1.2"
+       >V>   "1.03"
+       >O>   "1.03"
+       >=>   "1.13"
+       >L>   "1"
+   188 *-*         if opaque_one then flag = opaque_one as .string
+       >V>   "1"
+   188 *-*         if opaque_one then flag = opaque_one as .string
+       >=>   "1"
+   189 *-*         select
+       >O>   "0"
+       >V>   "1"
+       >C>   "1.3"
+       >V>   "1.03"
+       >O>   "0"
+       >V>   "1"
+       >O>   "1"
+   192 *-*           when flag <> \"0\" then avar.1.2 = ((avar.1.2 as .decimal) * 1.1) as .string
+       >C>   "1.2"
+       >C>   "1.2"
+       >V>   "1.13"
+       >O>   "1.13"
+       >=>   "1"
+       >L>   "1"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:v1;4,1:5;1,2:v2;6,10:{implicit};1,1:.;',' v1 + v2 .',0)
+       >V>   "Foo Bar"
+     2 *-* _source=opaque_foo_bar
+       >=>   "Foo Bar"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:v1;4,1:5;1,2:v2;6,10:{implicit};1,1:.;',' v1 + v2 .',0)
+       >L>   "3,1:1;1,2:v1;4,1:5;1,2:v2;6,10:{implicit};1,1:.;"
+       >L>   " v1 + v2 ."
+       >L>   "0"
+       >F>   ""
+     2 *-* v1=_parseResult[1
+       >V>   "Foo B"
+       >=>   "Foo B"
+     2 *-* v2=_parseResult[2
+       >V>   "ar"
+       >=>   "ar"
+     2 *-* call _trace_set(_trace_mode_from_option(_trace_current_mode
+       >F>   "I"
+       >F>   "I"
+       >F>   "I"
+     3 *-* __rxtrace_mode=_trace_current_mode
+       >F>   "I"
+     4 *-* call __rxtrace_reset_display_state
+       >  >   rexxcps_levelb_opaque.crexx
+   158 *-*     trace value tracevar
+       >L>   ""
+       >L>   ""
+       >F>   " v1 + v2 ."
+     5 *-* if __rxtrace_mode = \"OFF\"
+       >O>   "0"
+       >V>   "I"
+     6 *-* if _trace_needs_breakpoints(__rxtrace_mode) = 0
+       >F>   "1"
+       >O>   "0"
+     8 *-* sigcall __rxtrace_handler(),\"BREAKPOINT\"
+     9 *-* bpon
+     2 *-* rc=_address('value',addressenv() .environment_name(),_noredir(),_noredir(),_noredir
+       >L>   "value"
+       >F>   ""
+       >F>   "VALUE"
+       >  >   _address.crexx
+  1663 *-*     handle = .binary
+       >V>   ""
+  1664 *-*     return handle
+  1663 *-*     handle = .binary
+       >V>   ""
+  1664 *-*     return handle
+  1663 *-*     handle = .binary
+       >V>   ""
+  1664 *-*     return handle
+       >F>   "-3"
+       >  >   rexxcps_levelb_opaque.crexx
+   251 *-*   parse var a3 b1 b2 b3 .
+       >  >   upper.crexx
+    42 *-*   result = \"\"
+       >L>   ""
+    43 *-*   assembler strupper result,string
+       >V>   "WITH"
+    44 *-*   return result
+       >=>   "WITH"
+       >  >   rexxcps_levelb_opaque.crexx
+   250 *-*   arg a1 = .string, a2 = .string, a3 = .string, a4 = .string
+       >L>   "2"
+       >F>   "2"
+       >  >   upper.crexx
+    42 *-*   result = \"\"
+       >L>   ""
+    43 *-*   assembler strupper result,string
+       >V>   "ARGS"
+       >=>   "ARGS"
+       >  >   rexxcps_levelb_opaque.crexx
+   250 *-*   arg a1 = .string, a2 = .string, a3 = .string, a4 = .string
+       >V>   "1"
+       >O>   "(This is the second)1"
+       >O>   "(This is the second)1"
+       >V>   "1"
+       >O>   "(This is the second)11"
+       >F>   "(THIS IS THE SECOND)11"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:b1;6,10:{implicit};1,2:b2;6,10:{implicit};1,2:b3;6,10:{implicit};1,1:.;',' b1 b2 b3 .',0)
+       >V>   "ARGS"
+     2 *-* _source=a3
+       >=>   "ARGS"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:b1;6,10:{implicit};1,2:b2;6,10:{implicit};1,2:b3;6,10:{implicit};1,1:.;',' b1 b2 b3 .',0)
+       >L>   "3,1:1;1,2:b1;6,10:{implicit};1,2:b2;6,10:{implicit};1,2:b3;6,10:{implicit};1,1:.;"
+       >L>   " b1 b2 b3 ."
+       >L>   "0"
+       >F>   ""
+     2 *-* b1=_parseResult[1
+       >V>   "ARGS"
+       >=>   "ARGS"
+     2 *-* b2=_parseResult[2
+       >V>   ""
+       >=>   ""
+     2 *-* b3=_parseResult[3
+       >V>   ""
+       >=>   ""
+       >  >   rexxcps_levelb_opaque.crexx
+   252 *-*   do 1
+       >L>   "1"
+   254 *-*     parse var text c1 c2 c3
+       >V>   "WITH"
+   253 *-*     text = a1 || \" \" || a2 || \" \" || a3
+       >O>   "WITH "
+       >O>   "WITH 2"
+       >O>   "WITH 2 "
+       >O>   "WITH 2 ARGS"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:c1;6,10:{implicit};1,2:c2;6,10:{implicit};1,2:c3;',' c1 c2 c3',0)
+       >V>   "WITH 2 ARGS"
+     2 *-* _source=text
+       >=>   "WITH 2 ARGS"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:c1;6,10:{implicit};1,2:c2;6,10:{implicit};1,2:c3;',' c1 c2 c3',0)
+       >L>   "3,1:1;1,2:c1;6,10:{implicit};1,2:c2;6,10:{implicit};1,2:c3;"
+       >L>   " c1 c2 c3"
+       >L>   "0"
+       >F>   ""
+     2 *-* c1=_parseResult[1
+       >V>   "WITH"
+       >=>   "WITH"
+     2 *-* c2=_parseResult[2
+       >V>   "2"
+       >=>   "2"
+     2 *-* c3=_parseResult[3
+       >V>   "ARGS"
+       >=>   "ARGS"
+       >  >   rexxcps_levelb_opaque.crexx
+   255 *-*   end
+       >L>   "0"
+   252 *-*   do 1
+   200 *-*         text = \"This is an awfully boring program\"; parse var text p1 (p0) p5
+       >L>   "This is an awfully boring program"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p1;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p5;',' p1 ( p0 ) p5',0)
+       >V>   "This is an awfully boring program"
+     2 *-* _source=text
+       >=>   "This is an awfully boring program"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p1;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p5;',' p1 ( p0 ) p5',0)
+       >L>   "3,1:1;1,2:p1;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p5;"
+       >L>   " p1 ( p0 ) p5"
+       >L>   "0"
+       >F>   ""
+     2 *-* p1=_parseResult[1
+       >V>   "This"
+       >=>   "This"
+     2 *-* p0=_parseResult[2
+       >V>   "is"
+       >=>   "is"
+     2 *-* p5=_parseResult[3
+       >V>   "an awfully boring program"
+       >=>   "an awfully boring program"
+       >  >   rexxcps_levelb_opaque.crexx
+   201 *-*         text = \"is an awfully boring program This\"; parse var text p2 (p0) p6
+       >L>   "is an awfully boring program This"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p2;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p6;',' p2 ( p0 ) p6',0)
+       >V>   "is an awfully boring program This"
+     2 *-* _source=text
+       >=>   "is an awfully boring program This"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p2;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p6;',' p2 ( p0 ) p6',0)
+       >L>   "3,1:1;1,2:p2;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p6;"
+       >L>   " p2 ( p0 ) p6"
+       >L>   "0"
+       >F>   ""
+     2 *-* p2=_parseResult[1
+       >V>   "is"
+       >=>   "is"
+     2 *-* p0=_parseResult[2
+       >V>   "an"
+       >=>   "an"
+     2 *-* p6=_parseResult[3
+       >V>   "awfully boring program This"
+       >=>   "awfully boring program This"
+       >  >   rexxcps_levelb_opaque.crexx
+   202 *-*         text = \"an awfully boring program This is\"; parse var text p3 (p0) p7
+       >L>   "an awfully boring program This is"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p3;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p7;',' p3 ( p0 ) p7',0)
+       >V>   "an awfully boring program This is"
+     2 *-* _source=text
+       >=>   "an awfully boring program This is"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p3;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p7;',' p3 ( p0 ) p7',0)
+       >L>   "3,1:1;1,2:p3;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p7;"
+       >L>   " p3 ( p0 ) p7"
+       >L>   "0"
+       >F>   ""
+     2 *-* p3=_parseResult[1
+       >V>   "an"
+       >=>   "an"
+     2 *-* p0=_parseResult[2
+       >V>   "awfully"
+       >=>   "awfully"
+     2 *-* p7=_parseResult[3
+       >V>   "boring program This is"
+       >=>   "boring program This is"
+       >  >   rexxcps_levelb_opaque.crexx
+   203 *-*         text = \"awfully boring program This is an\"; parse var text p4 (p0) p8
+       >L>   "awfully boring program This is an"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p4;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p8;',' p4 ( p0 ) p8',0)
+       >V>   "awfully boring program This is an"
+     2 *-* _source=text
+       >=>   "awfully boring program This is an"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p4;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p8;',' p4 ( p0 ) p8',0)
+       >L>   "3,1:1;1,2:p4;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p8;"
+       >L>   " p4 ( p0 ) p8"
+       >L>   "0"
+       >F>   ""
+     2 *-* p4=_parseResult[1
+       >V>   "awfully"
+       >=>   "awfully"
+     2 *-* p0=_parseResult[2
+       >V>   "boring"
+       >=>   "boring"
+     2 *-* p8=_parseResult[3
+       >V>   "program This is an"
+       >=>   "program This is an"
+       >  >   rexxcps_levelb_opaque.crexx
+   204 *-*       end
+       >L>   "14"
+   163 *-*       do lvar = 1 to 14
+   200 *-*         text = \"This is an awfully boring program\"; parse var text p1 (p0) p5
+   201 *-*         text = \"is an awfully boring program This\"; parse var text p2 (p0) p6
+   202 *-*         text = \"an awfully boring program This is\"; parse var text p3 (p0) p7
+   203 *-*         text = \"awfully boring program This is an\"; parse var text p4 (p0) p8
+   200 *-*         text = \"This is an awfully boring program\"; parse var text p1 (p0) p5
+   201 *-*         text = \"is an awfully boring program This\"; parse var text p2 (p0) p6
+   202 *-*         text = \"an awfully boring program This is\"; parse var text p3 (p0) p7
+   203 *-*         text = \"awfully boring program This is an\"; parse var text p4 (p0) p8
+   195 *-*         parse value opaque_foo_bar with v1 +5 v2 .
+       >V>   "Key Bee"
+   165 *-*         key1 = opaque_key
+       >=>   "Key Bee"
+   166 *-*         acompound.key1.lvar = substr(opaque_digits, 6, 2)
+       >V>   "4"
+       >C>   "Key Bee.4"
+       >  >   substr.crexx
+    51 *-*   available = .int
+    52 *-*   copy_length = .int
+    48 *-*   pad_character = .int
+    47 *-*   pad_length = .int
+    53 *-*   padding_length = .int
+    50 *-*   start_offset = .int
+    46 *-*   string_length = .int
+       >V>   "12345678"
+       >  >   rexxcps_levelb_opaque.crexx
+   166 *-*         acompound.key1.lvar = substr(opaque_digits, 6, 2)
+       >=>   "12345678"
+       >L>   " "
+       >  >   substr.crexx
+    49 *-*   pad_index = 0
+       >L>   "0"
+    54 *-*   result = \"\"
+       >L>   ""
+    60 *-*   assembler strlen pad_length,pad
+       >V>   "1"
+       >O>   "0"
+       >V>   "0"
+    64 *-*   assembler strlen string_length,string
+    65 *-*   start_offset = start - 1
+       >L>   "5"
+    66 *-*   available = string_length - start_offset
+       >O>   "3"
+       >L>   "3"
+    78 *-*   copy_length = length
+       >L>   "2"
+       >=>   "2"
+       >O>   "1"
+       >V>   "5"
+       >O>   "0"
+       >O>   "0"
+       >O>   "0"
+       >V>   "12345678"
+    83 *-*     assembler setstrpos string,start_offset
+       >V>   ""
+    84 *-*     assembler substring result,string,copy_length
+       >V>   "2"
+    87 *-*   padding_length = length - copy_length
+       >O>   "0"
+       >V>   "67"
+    92 *-*   return result
+       >=>   "67"
+       >  >   rexxcps_levelb_opaque.crexx
+   167 *-*         if flag = acompound.key1.lvar then say \"Failed1\"
+       >V>   "4"
+       >C>   "Key Bee.4"
+       >V>   "67"
+       >O>   "0"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >L>   "2.2"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   169 *-*           if j > (acompound.key1.lvar as .decimal) then say \"Failed2\"
+       >V>   "1.1"
+       >V>   "4"
+       >C>   "Key Bee.4"
+       >V>   "67"
+       >O>   "0"
+       >V>   "1.1"
+   170 *-*           if 17 < length(j as .string) - 1 then say \"Failed3\"
+       >=>   "1.1"
+       >  >   length.crexx
+    42 *-*   result = 0
+       >L>   "0"
+    43 *-*   assembler strlen result,string
+       >V>   "3"
+    44 *-*   return result
+       >O>   "2"
+       >V>   "1.1"
+       >  >   rexxcps_levelb_opaque.crexx
+   171 *-*           if (j as .string) = opaque_failure then say \"Failed4\"
+       >V>   "foobar"
+       >O>   "0"
+       >  >   substr.crexx
+    51 *-*   available = .int
+    52 *-*   copy_length = .int
+    48 *-*   pad_character = .int
+    47 *-*   pad_length = .int
+    53 *-*   padding_length = .int
+    50 *-*   start_offset = .int
+    46 *-*   string_length = .int
+       >V>   "12345678"
+       >  >   rexxcps_levelb_opaque.crexx
+   172 *-*           if substr(opaque_digits, 1, 1) = opaque_nine then say \"Failed5\"
+       >=>   "12345678"
+       >L>   " "
+       >  >   substr.crexx
+    49 *-*   pad_index = 0
+       >L>   "0"
+    54 *-*   result = \"\"
+       >L>   ""
+    60 *-*   assembler strlen pad_length,pad
+       >V>   "1"
+       >O>   "0"
+       >V>   "0"
+    64 *-*   assembler strlen string_length,string
+    65 *-*   start_offset = start - 1
+       >L>   "0"
+    66 *-*   available = string_length - start_offset
+       >O>   "8"
+       >L>   "8"
+    78 *-*   copy_length = length
+       >L>   "1"
+       >=>   "1"
+       >O>   "1"
+       >V>   "0"
+       >O>   "1"
+       >V>   "1"
+       >O>   "0"
+       >O>   "0"
+       >V>   "12345678"
+    83 *-*     assembler setstrpos string,start_offset
+       >V>   ""
+    84 *-*     assembler substring result,string,copy_length
+       >V>   "1"
+    87 *-*   padding_length = length - copy_length
+       >O>   "0"
+       >V>   "1"
+    92 *-*   return result
+       >V>   "9"
+       >O>   "0"
+       >  >   word.crexx
+    48 *-*   string_length = .int
+       >V>   "Key Bee"
+       >  >   rexxcps_levelb_opaque.crexx
+   173 *-*           if word(key1, 1) = opaque_question then say \"Failed6\"
+       >=>   "Key Bee"
+       >  >   word.crexx
+    49 *-*   assembler strlen string_length,string
+       >V>   "7"
+       >O>   "0"
+    52 *-*   scan = 0
+       >L>   "0"
+    53 *-*   current_word = 0
+       >L>   "0"
+    54 *-*   word_start = 0
+       >L>   "0"
+    55 *-*   word_end = 0
+       >L>   "0"
+    56 *-*   word_length = 0
+       >L>   "0"
+    57 *-*   result = \"\"
+       >L>   ""
+    58 *-*   do while scan < string_length
+       >O>   "1"
+       >V>   "0"
+    59 *-*     assembler fndnblnk word_start,string,scan
+       >V>   "0"
+       >O>   "0"
+       >V>   "0"
+    61 *-*     current_word = current_word + 1
+       >O>   "1"
+    62 *-*     assembler fndblnk word_end,string,word_start
+       >V>   "1"
+       >O>   "1"
+       >V>   "3"
+       >O>   "0"
+       >=>   "3"
+    65 *-*       word_length = word_end - word_start
+       >O>   "3"
+    66 *-*       assembler setstrpos string,word_start
+       >V>   ""
+    67 *-*       assembler substring result,string,word_length
+       >V>   "Key"
+    68 *-*       return result
+       >V>   "?"
+       >O>   "0"
+       >V>   "1.1"
+       >  >   rexxcps_levelb_opaque.crexx
+   174 *-*           if j < 5 then do /* This path is taken. */
+       >O>   "1"
+       >V>   "Key Bee"
+   175 *-*             acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + 1) as .string
+       >V>   "4"
+       >C>   "Key Bee.4"
+       >V>   "4"
+       >C>   "Key Bee.4"
+       >V>   "67"
+       >O>   "67"
+       >=>   "68 "
+   176 *-*             if j = 2 then leave
+       >O>   "0"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   179 *-*         end /* j */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   169 *-*           if j > (acompound.key1.lvar as .decimal) then say \"Failed2\"
+       >V>   "1.1"
+       >V>   "4"
+       >C>   "Key Bee.4"
+       >V>   "68y"
+       >O>   "0"
+       >V>   "2.2"
+   170 *-*           if 17 < length(j as .string) - 1 then say \"Failed3\"
+       >=>   "2.2"
+       >  >   length.crexx
+    42 *-*   result = 0
+       >L>   "0"
+    43 *-*   assembler strlen result,string
+       >V>   "3"
+    44 *-*   return result
+       >O>   "2"
+       >V>   "2.2"
+       >  >   rexxcps_levelb_opaque.crexx
+   171 *-*           if (j as .string) = opaque_failure then say \"Failed4\"
+       >V>   "foobar"
+       >O>   "0"
+       >  >   substr.crexx
+    51 *-*   available = .int
+    52 *-*   copy_length = .int
+    48 *-*   pad_character = .int
+    47 *-*   pad_length = .int
+    53 *-*   padding_length = .int
+    50 *-*   start_offset = .int
+    46 *-*   string_length = .int
+       >V>   "12345678"
+       >  >   rexxcps_levelb_opaque.crexx
+   172 *-*           if substr(opaque_digits, 1, 1) = opaque_nine then say \"Failed5\"
+       >=>   "12345678"
+       >L>   " "
+       >  >   substr.crexx
+    49 *-*   pad_index = 0
+       >L>   "0"
+    54 *-*   result = \"\"
+       >L>   ""
+    60 *-*   assembler strlen pad_length,pad
+       >V>   "1"
+       >O>   "0"
+       >V>   "0"
+    64 *-*   assembler strlen string_length,string
+    65 *-*   start_offset = start - 1
+       >L>   "0"
+    66 *-*   available = string_length - start_offset
+       >O>   "8"
+       >L>   "8"
+    78 *-*   copy_length = length
+       >L>   "1"
+       >=>   "1"
+       >O>   "1"
+       >V>   "0"
+       >O>   "1"
+       >V>   "1"
+       >O>   "0"
+       >O>   "0"
+       >V>   "12345678"
+    83 *-*     assembler setstrpos string,start_offset
+       >V>   ""
+    84 *-*     assembler substring result,string,copy_length
+       >V>   "1"
+    87 *-*   padding_length = length - copy_length
+       >O>   "0"
+       >V>   "1"
+    92 *-*   return result
+       >V>   "9"
+       >O>   "0"
+       >  >   word.crexx
+    48 *-*   string_length = .int
+       >V>   "Key Bee"
+       >  >   rexxcps_levelb_opaque.crexx
+   173 *-*           if word(key1, 1) = opaque_question then say \"Failed6\"
+       >=>   "Key Bee"
+       >  >   word.crexx
+    49 *-*   assembler strlen string_length,string
+       >V>   "7"
+       >O>   "0"
+    52 *-*   scan = 0
+       >L>   "0"
+    53 *-*   current_word = 0
+       >L>   "0"
+    54 *-*   word_start = 0
+       >L>   "0"
+    55 *-*   word_end = 0
+       >L>   "0"
+    56 *-*   word_length = 0
+       >L>   "0"
+    57 *-*   result = \"\"
+       >L>   ""
+    58 *-*   do while scan < string_length
+       >O>   "1"
+       >V>   "0"
+    59 *-*     assembler fndnblnk word_start,string,scan
+       >V>   "0"
+       >O>   "0"
+       >V>   "0"
+    61 *-*     current_word = current_word + 1
+       >O>   "1"
+    62 *-*     assembler fndblnk word_end,string,word_start
+       >V>   "1"
+       >O>   "1"
+       >V>   "3"
+       >O>   "0"
+       >=>   "3"
+    65 *-*       word_length = word_end - word_start
+       >O>   "3"
+    66 *-*       assembler setstrpos string,word_start
+       >V>   ""
+    67 *-*       assembler substring result,string,word_length
+       >V>   "Key"
+    68 *-*       return result
+       >V>   "?"
+       >O>   "0"
+       >V>   "2.2"
+       >  >   rexxcps_levelb_opaque.crexx
+   174 *-*           if j < 5 then do /* This path is taken. */
+       >O>   "1"
+       >V>   "Key Bee"
+   175 *-*             acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + 1) as .string
+       >V>   "4"
+       >C>   "Key Bee.4"
+       >V>   "4"
+       >C>   "Key Bee.4"
+       >V>   "68y"
+       >O>   "68y"
+       >=>   "69 "
+   176 *-*             if j = 2 then leave
+       >O>   "0"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   179 *-*         end /* j */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >C>   "2.2"
+   180 *-*         avar. = \"1.0\" || lvar
+       >V>   "4"
+       >O>   "1.04"
+       >=>   "1.04"
+   181 *-*         select
+       >O>   "0"
+       >V>   "1"
+       >C>   "1.2"
+       >V>   "1.04"
+       >O>   "0"
+       >V>   "1"
+       >O>   "0"
+       >V>   "1"
+       >O>   "1"
+   185 *-*           when flag <> \"0\" then avar.1.2 = ((avar.1.2 as .decimal) * 1.1) as .string
+       >C>   "1.2"
+       >C>   "1.2"
+       >V>   "1.04"
+       >O>   "1.04"
+       >=>   "1.14"
+       >L>   "1"
+   188 *-*         if opaque_one then flag = opaque_one as .string
+       >V>   "1"
+   188 *-*         if opaque_one then flag = opaque_one as .string
+       >=>   "1"
+   189 *-*         select
+       >O>   "0"
+       >V>   "1"
+       >C>   "1.3"
+       >V>   "1.04"
+       >O>   "0"
+       >V>   "1"
+       >O>   "1"
+   192 *-*           when flag <> \"0\" then avar.1.2 = ((avar.1.2 as .decimal) * 1.1) as .string
+       >C>   "1.2"
+       >C>   "1.2"
+       >V>   "1.14"
+       >O>   "1.14"
+       >=>   "1"
+       >L>   "1"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:v1;4,1:5;1,2:v2;6,10:{implicit};1,1:.;',' v1 + v2 .',0)
+       >V>   "Foo Bar"
+     2 *-* _source=opaque_foo_bar
+       >=>   "Foo Bar"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:v1;4,1:5;1,2:v2;6,10:{implicit};1,1:.;',' v1 + v2 .',0)
+       >L>   "3,1:1;1,2:v1;4,1:5;1,2:v2;6,10:{implicit};1,1:.;"
+       >L>   " v1 + v2 ."
+       >L>   "0"
+       >F>   ""
+     2 *-* v1=_parseResult[1
+       >V>   "Foo B"
+       >=>   "Foo B"
+     2 *-* v2=_parseResult[2
+       >V>   "ar"
+       >=>   "ar"
+     2 *-* call _trace_set(_trace_mode_from_option(_trace_current_mode
+       >F>   "I"
+       >F>   "I"
+       >F>   "I"
+     3 *-* __rxtrace_mode=_trace_current_mode
+       >F>   "I"
+     4 *-* call __rxtrace_reset_display_state
+       >  >   rexxcps_levelb_opaque.crexx
+   158 *-*     trace value tracevar
+       >L>   ""
+       >L>   ""
+       >F>   " v1 + v2 ."
+     5 *-* if __rxtrace_mode = \"OFF\"
+       >O>   "0"
+       >V>   "I"
+     6 *-* if _trace_needs_breakpoints(__rxtrace_mode) = 0
+       >F>   "1"
+       >O>   "0"
+     8 *-* sigcall __rxtrace_handler(),\"BREAKPOINT\"
+     9 *-* bpon
+     2 *-* rc=_address('value',addressenv() .environment_name(),_noredir(),_noredir(),_noredir
+       >L>   "value"
+       >F>   ""
+       >F>   "VALUE"
+       >  >   _address.crexx
+  1663 *-*     handle = .binary
+       >V>   ""
+  1664 *-*     return handle
+  1663 *-*     handle = .binary
+       >V>   ""
+  1664 *-*     return handle
+  1663 *-*     handle = .binary
+       >V>   ""
+  1664 *-*     return handle
+       >F>   "-3"
+       >  >   rexxcps_levelb_opaque.crexx
+   251 *-*   parse var a3 b1 b2 b3 .
+       >  >   upper.crexx
+    42 *-*   result = \"\"
+       >L>   ""
+    43 *-*   assembler strupper result,string
+       >V>   "WITH"
+    44 *-*   return result
+       >=>   "WITH"
+       >  >   rexxcps_levelb_opaque.crexx
+   250 *-*   arg a1 = .string, a2 = .string, a3 = .string, a4 = .string
+       >L>   "2"
+       >F>   "2"
+       >  >   upper.crexx
+    42 *-*   result = \"\"
+       >L>   ""
+    43 *-*   assembler strupper result,string
+       >V>   "ARGS"
+       >=>   "ARGS"
+       >  >   rexxcps_levelb_opaque.crexx
+   250 *-*   arg a1 = .string, a2 = .string, a3 = .string, a4 = .string
+       >V>   "1"
+       >O>   "(This is the second)1"
+       >O>   "(This is the second)1"
+       >V>   "1"
+       >O>   "(This is the second)11"
+       >F>   "(THIS IS THE SECOND)11"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:b1;6,10:{implicit};1,2:b2;6,10:{implicit};1,2:b3;6,10:{implicit};1,1:.;',' b1 b2 b3 .',0)
+       >V>   "ARGS"
+     2 *-* _source=a3
+       >=>   "ARGS"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:b1;6,10:{implicit};1,2:b2;6,10:{implicit};1,2:b3;6,10:{implicit};1,1:.;',' b1 b2 b3 .',0)
+       >L>   "3,1:1;1,2:b1;6,10:{implicit};1,2:b2;6,10:{implicit};1,2:b3;6,10:{implicit};1,1:.;"
+       >L>   " b1 b2 b3 ."
+       >L>   "0"
+       >F>   ""
+     2 *-* b1=_parseResult[1
+       >V>   "ARGS"
+       >=>   "ARGS"
+     2 *-* b2=_parseResult[2
+       >V>   ""
+       >=>   ""
+     2 *-* b3=_parseResult[3
+       >V>   ""
+       >=>   ""
+       >  >   rexxcps_levelb_opaque.crexx
+   252 *-*   do 1
+       >L>   "1"
+   254 *-*     parse var text c1 c2 c3
+       >V>   "WITH"
+   253 *-*     text = a1 || \" \" || a2 || \" \" || a3
+       >O>   "WITH "
+       >O>   "WITH 2"
+       >O>   "WITH 2 "
+       >O>   "WITH 2 ARGS"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:c1;6,10:{implicit};1,2:c2;6,10:{implicit};1,2:c3;',' c1 c2 c3',0)
+       >V>   "WITH 2 ARGS"
+     2 *-* _source=text
+       >=>   "WITH 2 ARGS"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:c1;6,10:{implicit};1,2:c2;6,10:{implicit};1,2:c3;',' c1 c2 c3',0)
+       >L>   "3,1:1;1,2:c1;6,10:{implicit};1,2:c2;6,10:{implicit};1,2:c3;"
+       >L>   " c1 c2 c3"
+       >L>   "0"
+       >F>   ""
+     2 *-* c1=_parseResult[1
+       >V>   "WITH"
+       >=>   "WITH"
+     2 *-* c2=_parseResult[2
+       >V>   "2"
+       >=>   "2"
+     2 *-* c3=_parseResult[3
+       >V>   "ARGS"
+       >=>   "ARGS"
+       >  >   rexxcps_levelb_opaque.crexx
+   255 *-*   end
+       >L>   "0"
+   252 *-*   do 1
+   200 *-*         text = \"This is an awfully boring program\"; parse var text p1 (p0) p5
+       >L>   "This is an awfully boring program"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p1;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p5;',' p1 ( p0 ) p5',0)
+       >V>   "This is an awfully boring program"
+     2 *-* _source=text
+       >=>   "This is an awfully boring program"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p1;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p5;',' p1 ( p0 ) p5',0)
+       >L>   "3,1:1;1,2:p1;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p5;"
+       >L>   " p1 ( p0 ) p5"
+       >L>   "0"
+       >F>   ""
+     2 *-* p1=_parseResult[1
+       >V>   "This"
+       >=>   "This"
+     2 *-* p0=_parseResult[2
+       >V>   "is"
+       >=>   "is"
+     2 *-* p5=_parseResult[3
+       >V>   "an awfully boring program"
+       >=>   "an awfully boring program"
+       >  >   rexxcps_levelb_opaque.crexx
+   201 *-*         text = \"is an awfully boring program This\"; parse var text p2 (p0) p6
+       >L>   "is an awfully boring program This"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p2;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p6;',' p2 ( p0 ) p6',0)
+       >V>   "is an awfully boring program This"
+     2 *-* _source=text
+       >=>   "is an awfully boring program This"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p2;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p6;',' p2 ( p0 ) p6',0)
+       >L>   "3,1:1;1,2:p2;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p6;"
+       >L>   " p2 ( p0 ) p6"
+       >L>   "0"
+       >F>   ""
+     2 *-* p2=_parseResult[1
+       >V>   "is"
+       >=>   "is"
+     2 *-* p0=_parseResult[2
+       >V>   "an"
+       >=>   "an"
+     2 *-* p6=_parseResult[3
+       >V>   "awfully boring program This"
+       >=>   "awfully boring program This"
+       >  >   rexxcps_levelb_opaque.crexx
+   202 *-*         text = \"an awfully boring program This is\"; parse var text p3 (p0) p7
+       >L>   "an awfully boring program This is"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p3;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p7;',' p3 ( p0 ) p7',0)
+       >V>   "an awfully boring program This is"
+     2 *-* _source=text
+       >=>   "an awfully boring program This is"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p3;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p7;',' p3 ( p0 ) p7',0)
+       >L>   "3,1:1;1,2:p3;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p7;"
+       >L>   " p3 ( p0 ) p7"
+       >L>   "0"
+       >F>   ""
+     2 *-* p3=_parseResult[1
+       >V>   "an"
+       >=>   "an"
+     2 *-* p0=_parseResult[2
+       >V>   "awfully"
+       >=>   "awfully"
+     2 *-* p7=_parseResult[3
+       >V>   "boring program This is"
+       >=>   "boring program This is"
+       >  >   rexxcps_levelb_opaque.crexx
+   203 *-*         text = \"awfully boring program This is an\"; parse var text p4 (p0) p8
+       >L>   "awfully boring program This is an"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p4;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p8;',' p4 ( p0 ) p8',0)
+       >V>   "awfully boring program This is an"
+     2 *-* _source=text
+       >=>   "awfully boring program This is an"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p4;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p8;',' p4 ( p0 ) p8',0)
+       >L>   "3,1:1;1,2:p4;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p8;"
+       >L>   " p4 ( p0 ) p8"
+       >L>   "0"
+       >F>   ""
+     2 *-* p4=_parseResult[1
+       >V>   "awfully"
+       >=>   "awfully"
+     2 *-* p0=_parseResult[2
+       >V>   "boring"
+       >=>   "boring"
+     2 *-* p8=_parseResult[3
+       >V>   "program This is an"
+       >=>   "program This is an"
+       >  >   rexxcps_levelb_opaque.crexx
+   204 *-*       end
+       >L>   "14"
+   163 *-*       do lvar = 1 to 14
+   200 *-*         text = \"This is an awfully boring program\"; parse var text p1 (p0) p5
+   201 *-*         text = \"is an awfully boring program This\"; parse var text p2 (p0) p6
+   202 *-*         text = \"an awfully boring program This is\"; parse var text p3 (p0) p7
+   203 *-*         text = \"awfully boring program This is an\"; parse var text p4 (p0) p8
+   200 *-*         text = \"This is an awfully boring program\"; parse var text p1 (p0) p5
+   201 *-*         text = \"is an awfully boring program This\"; parse var text p2 (p0) p6
+   202 *-*         text = \"an awfully boring program This is\"; parse var text p3 (p0) p7
+   203 *-*         text = \"awfully boring program This is an\"; parse var text p4 (p0) p8
+   195 *-*         parse value opaque_foo_bar with v1 +5 v2 .
+       >V>   "Key Bee"
+   165 *-*         key1 = opaque_key
+       >=>   "Key Bee"
+   166 *-*         acompound.key1.lvar = substr(opaque_digits, 6, 2)
+       >V>   "5"
+       >C>   "Key Bee.5"
+       >  >   substr.crexx
+    51 *-*   available = .int
+    52 *-*   copy_length = .int
+    48 *-*   pad_character = .int
+    47 *-*   pad_length = .int
+    53 *-*   padding_length = .int
+    50 *-*   start_offset = .int
+    46 *-*   string_length = .int
+       >V>   "12345678"
+       >  >   rexxcps_levelb_opaque.crexx
+   166 *-*         acompound.key1.lvar = substr(opaque_digits, 6, 2)
+       >=>   "12345678"
+       >L>   " "
+       >  >   substr.crexx
+    49 *-*   pad_index = 0
+       >L>   "0"
+    54 *-*   result = \"\"
+       >L>   ""
+    60 *-*   assembler strlen pad_length,pad
+       >V>   "1"
+       >O>   "0"
+       >V>   "0"
+    64 *-*   assembler strlen string_length,string
+    65 *-*   start_offset = start - 1
+       >L>   "5"
+    66 *-*   available = string_length - start_offset
+       >O>   "3"
+       >L>   "3"
+    78 *-*   copy_length = length
+       >L>   "2"
+       >=>   "2"
+       >O>   "1"
+       >V>   "5"
+       >O>   "0"
+       >O>   "0"
+       >O>   "0"
+       >V>   "12345678"
+    83 *-*     assembler setstrpos string,start_offset
+       >V>   ""
+    84 *-*     assembler substring result,string,copy_length
+       >V>   "2"
+    87 *-*   padding_length = length - copy_length
+       >O>   "0"
+       >V>   "67"
+    92 *-*   return result
+       >=>   "67"
+       >  >   rexxcps_levelb_opaque.crexx
+   167 *-*         if flag = acompound.key1.lvar then say \"Failed1\"
+       >V>   "5"
+       >C>   "Key Bee.5"
+       >V>   "67"
+       >O>   "0"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >L>   "2.2"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   169 *-*           if j > (acompound.key1.lvar as .decimal) then say \"Failed2\"
+       >V>   "1.1"
+       >V>   "5"
+       >C>   "Key Bee.5"
+       >V>   "67"
+       >O>   "0"
+       >V>   "1.1"
+   170 *-*           if 17 < length(j as .string) - 1 then say \"Failed3\"
+       >=>   "1.1"
+       >  >   length.crexx
+    42 *-*   result = 0
+       >L>   "0"
+    43 *-*   assembler strlen result,string
+       >V>   "3"
+    44 *-*   return result
+       >O>   "2"
+       >V>   "1.1"
+       >  >   rexxcps_levelb_opaque.crexx
+   171 *-*           if (j as .string) = opaque_failure then say \"Failed4\"
+       >V>   "foobar"
+       >O>   "0"
+       >  >   substr.crexx
+    51 *-*   available = .int
+    52 *-*   copy_length = .int
+    48 *-*   pad_character = .int
+    47 *-*   pad_length = .int
+    53 *-*   padding_length = .int
+    50 *-*   start_offset = .int
+    46 *-*   string_length = .int
+       >V>   "12345678"
+       >  >   rexxcps_levelb_opaque.crexx
+   172 *-*           if substr(opaque_digits, 1, 1) = opaque_nine then say \"Failed5\"
+       >=>   "12345678"
+       >L>   " "
+       >  >   substr.crexx
+    49 *-*   pad_index = 0
+       >L>   "0"
+    54 *-*   result = \"\"
+       >L>   ""
+    60 *-*   assembler strlen pad_length,pad
+       >V>   "1"
+       >O>   "0"
+       >V>   "0"
+    64 *-*   assembler strlen string_length,string
+    65 *-*   start_offset = start - 1
+       >L>   "0"
+    66 *-*   available = string_length - start_offset
+       >O>   "8"
+       >L>   "8"
+    78 *-*   copy_length = length
+       >L>   "1"
+       >=>   "1"
+       >O>   "1"
+       >V>   "0"
+       >O>   "1"
+       >V>   "1"
+       >O>   "0"
+       >O>   "0"
+       >V>   "12345678"
+    83 *-*     assembler setstrpos string,start_offset
+       >V>   ""
+    84 *-*     assembler substring result,string,copy_length
+       >V>   "1"
+    87 *-*   padding_length = length - copy_length
+       >O>   "0"
+       >V>   "1"
+    92 *-*   return result
+       >V>   "9"
+       >O>   "0"
+       >  >   word.crexx
+    48 *-*   string_length = .int
+       >V>   "Key Bee"
+       >  >   rexxcps_levelb_opaque.crexx
+   173 *-*           if word(key1, 1) = opaque_question then say \"Failed6\"
+       >=>   "Key Bee"
+       >  >   word.crexx
+    49 *-*   assembler strlen string_length,string
+       >V>   "7"
+       >O>   "0"
+    52 *-*   scan = 0
+       >L>   "0"
+    53 *-*   current_word = 0
+       >L>   "0"
+    54 *-*   word_start = 0
+       >L>   "0"
+    55 *-*   word_end = 0
+       >L>   "0"
+    56 *-*   word_length = 0
+       >L>   "0"
+    57 *-*   result = \"\"
+       >L>   ""
+    58 *-*   do while scan < string_length
+       >O>   "1"
+       >V>   "0"
+    59 *-*     assembler fndnblnk word_start,string,scan
+       >V>   "0"
+       >O>   "0"
+       >V>   "0"
+    61 *-*     current_word = current_word + 1
+       >O>   "1"
+    62 *-*     assembler fndblnk word_end,string,word_start
+       >V>   "1"
+       >O>   "1"
+       >V>   "3"
+       >O>   "0"
+       >=>   "3"
+    65 *-*       word_length = word_end - word_start
+       >O>   "3"
+    66 *-*       assembler setstrpos string,word_start
+       >V>   ""
+    67 *-*       assembler substring result,string,word_length
+       >V>   "Key"
+    68 *-*       return result
+       >V>   "?"
+       >O>   "0"
+       >V>   "1.1"
+       >  >   rexxcps_levelb_opaque.crexx
+   174 *-*           if j < 5 then do /* This path is taken. */
+       >O>   "1"
+       >V>   "Key Bee"
+   175 *-*             acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + 1) as .string
+       >V>   "5"
+       >C>   "Key Bee.5"
+       >V>   "5"
+       >C>   "Key Bee.5"
+       >V>   "67"
+       >O>   "67"
+       >=>   "68 "
+   176 *-*             if j = 2 then leave
+       >O>   "0"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   179 *-*         end /* j */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   169 *-*           if j > (acompound.key1.lvar as .decimal) then say \"Failed2\"
+       >V>   "1.1"
+       >V>   "5"
+       >C>   "Key Bee.5"
+       >V>   "68y"
+       >O>   "0"
+       >V>   "2.2"
+   170 *-*           if 17 < length(j as .string) - 1 then say \"Failed3\"
+       >=>   "2.2"
+       >  >   length.crexx
+    42 *-*   result = 0
+       >L>   "0"
+    43 *-*   assembler strlen result,string
+       >V>   "3"
+    44 *-*   return result
+       >O>   "2"
+       >V>   "2.2"
+       >  >   rexxcps_levelb_opaque.crexx
+   171 *-*           if (j as .string) = opaque_failure then say \"Failed4\"
+       >V>   "foobar"
+       >O>   "0"
+       >  >   substr.crexx
+    51 *-*   available = .int
+    52 *-*   copy_length = .int
+    48 *-*   pad_character = .int
+    47 *-*   pad_length = .int
+    53 *-*   padding_length = .int
+    50 *-*   start_offset = .int
+    46 *-*   string_length = .int
+       >V>   "12345678"
+       >  >   rexxcps_levelb_opaque.crexx
+   172 *-*           if substr(opaque_digits, 1, 1) = opaque_nine then say \"Failed5\"
+       >=>   "12345678"
+       >L>   " "
+       >  >   substr.crexx
+    49 *-*   pad_index = 0
+       >L>   "0"
+    54 *-*   result = \"\"
+       >L>   ""
+    60 *-*   assembler strlen pad_length,pad
+       >V>   "1"
+       >O>   "0"
+       >V>   "0"
+    64 *-*   assembler strlen string_length,string
+    65 *-*   start_offset = start - 1
+       >L>   "0"
+    66 *-*   available = string_length - start_offset
+       >O>   "8"
+       >L>   "8"
+    78 *-*   copy_length = length
+       >L>   "1"
+       >=>   "1"
+       >O>   "1"
+       >V>   "0"
+       >O>   "1"
+       >V>   "1"
+       >O>   "0"
+       >O>   "0"
+       >V>   "12345678"
+    83 *-*     assembler setstrpos string,start_offset
+       >V>   ""
+    84 *-*     assembler substring result,string,copy_length
+       >V>   "1"
+    87 *-*   padding_length = length - copy_length
+       >O>   "0"
+       >V>   "1"
+    92 *-*   return result
+       >V>   "9"
+       >O>   "0"
+       >  >   word.crexx
+    48 *-*   string_length = .int
+       >V>   "Key Bee"
+       >  >   rexxcps_levelb_opaque.crexx
+   173 *-*           if word(key1, 1) = opaque_question then say \"Failed6\"
+       >=>   "Key Bee"
+       >  >   word.crexx
+    49 *-*   assembler strlen string_length,string
+       >V>   "7"
+       >O>   "0"
+    52 *-*   scan = 0
+       >L>   "0"
+    53 *-*   current_word = 0
+       >L>   "0"
+    54 *-*   word_start = 0
+       >L>   "0"
+    55 *-*   word_end = 0
+       >L>   "0"
+    56 *-*   word_length = 0
+       >L>   "0"
+    57 *-*   result = \"\"
+       >L>   ""
+    58 *-*   do while scan < string_length
+       >O>   "1"
+       >V>   "0"
+    59 *-*     assembler fndnblnk word_start,string,scan
+       >V>   "0"
+       >O>   "0"
+       >V>   "0"
+    61 *-*     current_word = current_word + 1
+       >O>   "1"
+    62 *-*     assembler fndblnk word_end,string,word_start
+       >V>   "1"
+       >O>   "1"
+       >V>   "3"
+       >O>   "0"
+       >=>   "3"
+    65 *-*       word_length = word_end - word_start
+       >O>   "3"
+    66 *-*       assembler setstrpos string,word_start
+       >V>   ""
+    67 *-*       assembler substring result,string,word_length
+       >V>   "Key"
+    68 *-*       return result
+       >V>   "?"
+       >O>   "0"
+       >V>   "2.2"
+       >  >   rexxcps_levelb_opaque.crexx
+   174 *-*           if j < 5 then do /* This path is taken. */
+       >O>   "1"
+       >V>   "Key Bee"
+   175 *-*             acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + 1) as .string
+       >V>   "5"
+       >C>   "Key Bee.5"
+       >V>   "5"
+       >C>   "Key Bee.5"
+       >V>   "68y"
+       >O>   "68y"
+       >=>   "69 "
+   176 *-*             if j = 2 then leave
+       >O>   "0"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   179 *-*         end /* j */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >C>   "2.2"
+   180 *-*         avar. = \"1.0\" || lvar
+       >V>   "5"
+       >O>   "1.05"
+       >=>   "1.05"
+   181 *-*         select
+       >O>   "0"
+       >V>   "1"
+       >C>   "1.2"
+       >V>   "1.05"
+       >O>   "0"
+       >V>   "1"
+       >O>   "0"
+       >V>   "1"
+       >O>   "1"
+   185 *-*           when flag <> \"0\" then avar.1.2 = ((avar.1.2 as .decimal) * 1.1) as .string
+       >C>   "1.2"
+       >C>   "1.2"
+       >V>   "1.05"
+       >O>   "1.05"
+       >=>   "1.15"
+       >L>   "1"
+   188 *-*         if opaque_one then flag = opaque_one as .string
+       >V>   "1"
+   188 *-*         if opaque_one then flag = opaque_one as .string
+       >=>   "1"
+   189 *-*         select
+       >O>   "0"
+       >V>   "1"
+       >C>   "1.3"
+       >V>   "1.05"
+       >O>   "0"
+       >V>   "1"
+       >O>   "1"
+   192 *-*           when flag <> \"0\" then avar.1.2 = ((avar.1.2 as .decimal) * 1.1) as .string
+       >C>   "1.2"
+       >C>   "1.2"
+       >V>   "1.15"
+       >O>   "1.15"
+       >=>   "1"
+       >L>   "1"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:v1;4,1:5;1,2:v2;6,10:{implicit};1,1:.;',' v1 + v2 .',0)
+       >V>   "Foo Bar"
+     2 *-* _source=opaque_foo_bar
+       >=>   "Foo Bar"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:v1;4,1:5;1,2:v2;6,10:{implicit};1,1:.;',' v1 + v2 .',0)
+       >L>   "3,1:1;1,2:v1;4,1:5;1,2:v2;6,10:{implicit};1,1:.;"
+       >L>   " v1 + v2 ."
+       >L>   "0"
+       >F>   ""
+     2 *-* v1=_parseResult[1
+       >V>   "Foo B"
+       >=>   "Foo B"
+     2 *-* v2=_parseResult[2
+       >V>   "ar"
+       >=>   "ar"
+     2 *-* call _trace_set(_trace_mode_from_option(_trace_current_mode
+       >F>   "I"
+       >F>   "I"
+       >F>   "I"
+     3 *-* __rxtrace_mode=_trace_current_mode
+       >F>   "I"
+     4 *-* call __rxtrace_reset_display_state
+       >  >   rexxcps_levelb_opaque.crexx
+   158 *-*     trace value tracevar
+       >L>   ""
+       >L>   ""
+       >F>   " v1 + v2 ."
+     5 *-* if __rxtrace_mode = \"OFF\"
+       >O>   "0"
+       >V>   "I"
+     6 *-* if _trace_needs_breakpoints(__rxtrace_mode) = 0
+       >F>   "1"
+       >O>   "0"
+     8 *-* sigcall __rxtrace_handler(),\"BREAKPOINT\"
+     9 *-* bpon
+     2 *-* rc=_address('value',addressenv() .environment_name(),_noredir(),_noredir(),_noredir
+       >L>   "value"
+       >F>   ""
+       >F>   "VALUE"
+       >  >   _address.crexx
+  1663 *-*     handle = .binary
+       >V>   ""
+  1664 *-*     return handle
+  1663 *-*     handle = .binary
+       >V>   ""
+  1664 *-*     return handle
+  1663 *-*     handle = .binary
+       >V>   ""
+  1664 *-*     return handle
+       >F>   "-3"
+       >  >   rexxcps_levelb_opaque.crexx
+   251 *-*   parse var a3 b1 b2 b3 .
+       >  >   upper.crexx
+    42 *-*   result = \"\"
+       >L>   ""
+    43 *-*   assembler strupper result,string
+       >V>   "WITH"
+    44 *-*   return result
+       >=>   "WITH"
+       >  >   rexxcps_levelb_opaque.crexx
+   250 *-*   arg a1 = .string, a2 = .string, a3 = .string, a4 = .string
+       >L>   "2"
+       >F>   "2"
+       >  >   upper.crexx
+    42 *-*   result = \"\"
+       >L>   ""
+    43 *-*   assembler strupper result,string
+       >V>   "ARGS"
+       >=>   "ARGS"
+       >  >   rexxcps_levelb_opaque.crexx
+   250 *-*   arg a1 = .string, a2 = .string, a3 = .string, a4 = .string
+       >V>   "1"
+       >O>   "(This is the second)1"
+       >O>   "(This is the second)1"
+       >V>   "1"
+       >O>   "(This is the second)11"
+       >F>   "(THIS IS THE SECOND)11"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:b1;6,10:{implicit};1,2:b2;6,10:{implicit};1,2:b3;6,10:{implicit};1,1:.;',' b1 b2 b3 .',0)
+       >V>   "ARGS"
+     2 *-* _source=a3
+       >=>   "ARGS"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:b1;6,10:{implicit};1,2:b2;6,10:{implicit};1,2:b3;6,10:{implicit};1,1:.;',' b1 b2 b3 .',0)
+       >L>   "3,1:1;1,2:b1;6,10:{implicit};1,2:b2;6,10:{implicit};1,2:b3;6,10:{implicit};1,1:.;"
+       >L>   " b1 b2 b3 ."
+       >L>   "0"
+       >F>   ""
+     2 *-* b1=_parseResult[1
+       >V>   "ARGS"
+       >=>   "ARGS"
+     2 *-* b2=_parseResult[2
+       >V>   ""
+       >=>   ""
+     2 *-* b3=_parseResult[3
+       >V>   ""
+       >=>   ""
+       >  >   rexxcps_levelb_opaque.crexx
+   252 *-*   do 1
+       >L>   "1"
+   254 *-*     parse var text c1 c2 c3
+       >V>   "WITH"
+   253 *-*     text = a1 || \" \" || a2 || \" \" || a3
+       >O>   "WITH "
+       >O>   "WITH 2"
+       >O>   "WITH 2 "
+       >O>   "WITH 2 ARGS"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:c1;6,10:{implicit};1,2:c2;6,10:{implicit};1,2:c3;',' c1 c2 c3',0)
+       >V>   "WITH 2 ARGS"
+     2 *-* _source=text
+       >=>   "WITH 2 ARGS"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:c1;6,10:{implicit};1,2:c2;6,10:{implicit};1,2:c3;',' c1 c2 c3',0)
+       >L>   "3,1:1;1,2:c1;6,10:{implicit};1,2:c2;6,10:{implicit};1,2:c3;"
+       >L>   " c1 c2 c3"
+       >L>   "0"
+       >F>   ""
+     2 *-* c1=_parseResult[1
+       >V>   "WITH"
+       >=>   "WITH"
+     2 *-* c2=_parseResult[2
+       >V>   "2"
+       >=>   "2"
+     2 *-* c3=_parseResult[3
+       >V>   "ARGS"
+       >=>   "ARGS"
+       >  >   rexxcps_levelb_opaque.crexx
+   255 *-*   end
+       >L>   "0"
+   252 *-*   do 1
+   200 *-*         text = \"This is an awfully boring program\"; parse var text p1 (p0) p5
+       >L>   "This is an awfully boring program"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p1;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p5;',' p1 ( p0 ) p5',0)
+       >V>   "This is an awfully boring program"
+     2 *-* _source=text
+       >=>   "This is an awfully boring program"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p1;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p5;',' p1 ( p0 ) p5',0)
+       >L>   "3,1:1;1,2:p1;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p5;"
+       >L>   " p1 ( p0 ) p5"
+       >L>   "0"
+       >F>   ""
+     2 *-* p1=_parseResult[1
+       >V>   "This"
+       >=>   "This"
+     2 *-* p0=_parseResult[2
+       >V>   "is"
+       >=>   "is"
+     2 *-* p5=_parseResult[3
+       >V>   "an awfully boring program"
+       >=>   "an awfully boring program"
+       >  >   rexxcps_levelb_opaque.crexx
+   201 *-*         text = \"is an awfully boring program This\"; parse var text p2 (p0) p6
+       >L>   "is an awfully boring program This"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p2;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p6;',' p2 ( p0 ) p6',0)
+       >V>   "is an awfully boring program This"
+     2 *-* _source=text
+       >=>   "is an awfully boring program This"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p2;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p6;',' p2 ( p0 ) p6',0)
+       >L>   "3,1:1;1,2:p2;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p6;"
+       >L>   " p2 ( p0 ) p6"
+       >L>   "0"
+       >F>   ""
+     2 *-* p2=_parseResult[1
+       >V>   "is"
+       >=>   "is"
+     2 *-* p0=_parseResult[2
+       >V>   "an"
+       >=>   "an"
+     2 *-* p6=_parseResult[3
+       >V>   "awfully boring program This"
+       >=>   "awfully boring program This"
+       >  >   rexxcps_levelb_opaque.crexx
+   202 *-*         text = \"an awfully boring program This is\"; parse var text p3 (p0) p7
+       >L>   "an awfully boring program This is"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p3;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p7;',' p3 ( p0 ) p7',0)
+       >V>   "an awfully boring program This is"
+     2 *-* _source=text
+       >=>   "an awfully boring program This is"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p3;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p7;',' p3 ( p0 ) p7',0)
+       >L>   "3,1:1;1,2:p3;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p7;"
+       >L>   " p3 ( p0 ) p7"
+       >L>   "0"
+       >F>   ""
+     2 *-* p3=_parseResult[1
+       >V>   "an"
+       >=>   "an"
+     2 *-* p0=_parseResult[2
+       >V>   "awfully"
+       >=>   "awfully"
+     2 *-* p7=_parseResult[3
+       >V>   "boring program This is"
+       >=>   "boring program This is"
+       >  >   rexxcps_levelb_opaque.crexx
+   203 *-*         text = \"awfully boring program This is an\"; parse var text p4 (p0) p8
+       >L>   "awfully boring program This is an"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p4;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p8;',' p4 ( p0 ) p8',0)
+       >V>   "awfully boring program This is an"
+     2 *-* _source=text
+       >=>   "awfully boring program This is an"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p4;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p8;',' p4 ( p0 ) p8',0)
+       >L>   "3,1:1;1,2:p4;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p8;"
+       >L>   " p4 ( p0 ) p8"
+       >L>   "0"
+       >F>   ""
+     2 *-* p4=_parseResult[1
+       >V>   "awfully"
+       >=>   "awfully"
+     2 *-* p0=_parseResult[2
+       >V>   "boring"
+       >=>   "boring"
+     2 *-* p8=_parseResult[3
+       >V>   "program This is an"
+       >=>   "program This is an"
+       >  >   rexxcps_levelb_opaque.crexx
+   204 *-*       end
+       >L>   "14"
+   163 *-*       do lvar = 1 to 14
+   200 *-*         text = \"This is an awfully boring program\"; parse var text p1 (p0) p5
+   201 *-*         text = \"is an awfully boring program This\"; parse var text p2 (p0) p6
+   202 *-*         text = \"an awfully boring program This is\"; parse var text p3 (p0) p7
+   203 *-*         text = \"awfully boring program This is an\"; parse var text p4 (p0) p8
+   200 *-*         text = \"This is an awfully boring program\"; parse var text p1 (p0) p5
+   201 *-*         text = \"is an awfully boring program This\"; parse var text p2 (p0) p6
+   202 *-*         text = \"an awfully boring program This is\"; parse var text p3 (p0) p7
+   203 *-*         text = \"awfully boring program This is an\"; parse var text p4 (p0) p8
+   195 *-*         parse value opaque_foo_bar with v1 +5 v2 .
+       >V>   "Key Bee"
+   165 *-*         key1 = opaque_key
+       >=>   "Key Bee"
+   166 *-*         acompound.key1.lvar = substr(opaque_digits, 6, 2)
+       >V>   "6"
+       >C>   "Key Bee.6"
+       >  >   substr.crexx
+    51 *-*   available = .int
+    52 *-*   copy_length = .int
+    48 *-*   pad_character = .int
+    47 *-*   pad_length = .int
+    53 *-*   padding_length = .int
+    50 *-*   start_offset = .int
+    46 *-*   string_length = .int
+       >V>   "12345678"
+       >  >   rexxcps_levelb_opaque.crexx
+   166 *-*         acompound.key1.lvar = substr(opaque_digits, 6, 2)
+       >=>   "12345678"
+       >L>   " "
+       >  >   substr.crexx
+    49 *-*   pad_index = 0
+       >L>   "0"
+    54 *-*   result = \"\"
+       >L>   ""
+    60 *-*   assembler strlen pad_length,pad
+       >V>   "1"
+       >O>   "0"
+       >V>   "0"
+    64 *-*   assembler strlen string_length,string
+    65 *-*   start_offset = start - 1
+       >L>   "5"
+    66 *-*   available = string_length - start_offset
+       >O>   "3"
+       >L>   "3"
+    78 *-*   copy_length = length
+       >L>   "2"
+       >=>   "2"
+       >O>   "1"
+       >V>   "5"
+       >O>   "0"
+       >O>   "0"
+       >O>   "0"
+       >V>   "12345678"
+    83 *-*     assembler setstrpos string,start_offset
+       >V>   ""
+    84 *-*     assembler substring result,string,copy_length
+       >V>   "2"
+    87 *-*   padding_length = length - copy_length
+       >O>   "0"
+       >V>   "67"
+    92 *-*   return result
+       >=>   "67"
+       >  >   rexxcps_levelb_opaque.crexx
+   167 *-*         if flag = acompound.key1.lvar then say \"Failed1\"
+       >V>   "6"
+       >C>   "Key Bee.6"
+       >V>   "67"
+       >O>   "0"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >L>   "2.2"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   169 *-*           if j > (acompound.key1.lvar as .decimal) then say \"Failed2\"
+       >V>   "1.1"
+       >V>   "6"
+       >C>   "Key Bee.6"
+       >V>   "67"
+       >O>   "0"
+       >V>   "1.1"
+   170 *-*           if 17 < length(j as .string) - 1 then say \"Failed3\"
+       >=>   "1.1"
+       >  >   length.crexx
+    42 *-*   result = 0
+       >L>   "0"
+    43 *-*   assembler strlen result,string
+       >V>   "3"
+    44 *-*   return result
+       >O>   "2"
+       >V>   "1.1"
+       >  >   rexxcps_levelb_opaque.crexx
+   171 *-*           if (j as .string) = opaque_failure then say \"Failed4\"
+       >V>   "foobar"
+       >O>   "0"
+       >  >   substr.crexx
+    51 *-*   available = .int
+    52 *-*   copy_length = .int
+    48 *-*   pad_character = .int
+    47 *-*   pad_length = .int
+    53 *-*   padding_length = .int
+    50 *-*   start_offset = .int
+    46 *-*   string_length = .int
+       >V>   "12345678"
+       >  >   rexxcps_levelb_opaque.crexx
+   172 *-*           if substr(opaque_digits, 1, 1) = opaque_nine then say \"Failed5\"
+       >=>   "12345678"
+       >L>   " "
+       >  >   substr.crexx
+    49 *-*   pad_index = 0
+       >L>   "0"
+    54 *-*   result = \"\"
+       >L>   ""
+    60 *-*   assembler strlen pad_length,pad
+       >V>   "1"
+       >O>   "0"
+       >V>   "0"
+    64 *-*   assembler strlen string_length,string
+    65 *-*   start_offset = start - 1
+       >L>   "0"
+    66 *-*   available = string_length - start_offset
+       >O>   "8"
+       >L>   "8"
+    78 *-*   copy_length = length
+       >L>   "1"
+       >=>   "1"
+       >O>   "1"
+       >V>   "0"
+       >O>   "1"
+       >V>   "1"
+       >O>   "0"
+       >O>   "0"
+       >V>   "12345678"
+    83 *-*     assembler setstrpos string,start_offset
+       >V>   ""
+    84 *-*     assembler substring result,string,copy_length
+       >V>   "1"
+    87 *-*   padding_length = length - copy_length
+       >O>   "0"
+       >V>   "1"
+    92 *-*   return result
+       >V>   "9"
+       >O>   "0"
+       >  >   word.crexx
+    48 *-*   string_length = .int
+       >V>   "Key Bee"
+       >  >   rexxcps_levelb_opaque.crexx
+   173 *-*           if word(key1, 1) = opaque_question then say \"Failed6\"
+       >=>   "Key Bee"
+       >  >   word.crexx
+    49 *-*   assembler strlen string_length,string
+       >V>   "7"
+       >O>   "0"
+    52 *-*   scan = 0
+       >L>   "0"
+    53 *-*   current_word = 0
+       >L>   "0"
+    54 *-*   word_start = 0
+       >L>   "0"
+    55 *-*   word_end = 0
+       >L>   "0"
+    56 *-*   word_length = 0
+       >L>   "0"
+    57 *-*   result = \"\"
+       >L>   ""
+    58 *-*   do while scan < string_length
+       >O>   "1"
+       >V>   "0"
+    59 *-*     assembler fndnblnk word_start,string,scan
+       >V>   "0"
+       >O>   "0"
+       >V>   "0"
+    61 *-*     current_word = current_word + 1
+       >O>   "1"
+    62 *-*     assembler fndblnk word_end,string,word_start
+       >V>   "1"
+       >O>   "1"
+       >V>   "3"
+       >O>   "0"
+       >=>   "3"
+    65 *-*       word_length = word_end - word_start
+       >O>   "3"
+    66 *-*       assembler setstrpos string,word_start
+       >V>   ""
+    67 *-*       assembler substring result,string,word_length
+       >V>   "Key"
+    68 *-*       return result
+       >V>   "?"
+       >O>   "0"
+       >V>   "1.1"
+       >  >   rexxcps_levelb_opaque.crexx
+   174 *-*           if j < 5 then do /* This path is taken. */
+       >O>   "1"
+       >V>   "Key Bee"
+   175 *-*             acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + 1) as .string
+       >V>   "6"
+       >C>   "Key Bee.6"
+       >V>   "6"
+       >C>   "Key Bee.6"
+       >V>   "67"
+       >O>   "67"
+       >=>   "68 "
+   176 *-*             if j = 2 then leave
+       >O>   "0"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   179 *-*         end /* j */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   169 *-*           if j > (acompound.key1.lvar as .decimal) then say \"Failed2\"
+       >V>   "1.1"
+       >V>   "6"
+       >C>   "Key Bee.6"
+       >V>   "68y"
+       >O>   "0"
+       >V>   "2.2"
+   170 *-*           if 17 < length(j as .string) - 1 then say \"Failed3\"
+       >=>   "2.2"
+       >  >   length.crexx
+    42 *-*   result = 0
+       >L>   "0"
+    43 *-*   assembler strlen result,string
+       >V>   "3"
+    44 *-*   return result
+       >O>   "2"
+       >V>   "2.2"
+       >  >   rexxcps_levelb_opaque.crexx
+   171 *-*           if (j as .string) = opaque_failure then say \"Failed4\"
+       >V>   "foobar"
+       >O>   "0"
+       >  >   substr.crexx
+    51 *-*   available = .int
+    52 *-*   copy_length = .int
+    48 *-*   pad_character = .int
+    47 *-*   pad_length = .int
+    53 *-*   padding_length = .int
+    50 *-*   start_offset = .int
+    46 *-*   string_length = .int
+       >V>   "12345678"
+       >  >   rexxcps_levelb_opaque.crexx
+   172 *-*           if substr(opaque_digits, 1, 1) = opaque_nine then say \"Failed5\"
+       >=>   "12345678"
+       >L>   " "
+       >  >   substr.crexx
+    49 *-*   pad_index = 0
+       >L>   "0"
+    54 *-*   result = \"\"
+       >L>   ""
+    60 *-*   assembler strlen pad_length,pad
+       >V>   "1"
+       >O>   "0"
+       >V>   "0"
+    64 *-*   assembler strlen string_length,string
+    65 *-*   start_offset = start - 1
+       >L>   "0"
+    66 *-*   available = string_length - start_offset
+       >O>   "8"
+       >L>   "8"
+    78 *-*   copy_length = length
+       >L>   "1"
+       >=>   "1"
+       >O>   "1"
+       >V>   "0"
+       >O>   "1"
+       >V>   "1"
+       >O>   "0"
+       >O>   "0"
+       >V>   "12345678"
+    83 *-*     assembler setstrpos string,start_offset
+       >V>   ""
+    84 *-*     assembler substring result,string,copy_length
+       >V>   "1"
+    87 *-*   padding_length = length - copy_length
+       >O>   "0"
+       >V>   "1"
+    92 *-*   return result
+       >V>   "9"
+       >O>   "0"
+       >  >   word.crexx
+    48 *-*   string_length = .int
+       >V>   "Key Bee"
+       >  >   rexxcps_levelb_opaque.crexx
+   173 *-*           if word(key1, 1) = opaque_question then say \"Failed6\"
+       >=>   "Key Bee"
+       >  >   word.crexx
+    49 *-*   assembler strlen string_length,string
+       >V>   "7"
+       >O>   "0"
+    52 *-*   scan = 0
+       >L>   "0"
+    53 *-*   current_word = 0
+       >L>   "0"
+    54 *-*   word_start = 0
+       >L>   "0"
+    55 *-*   word_end = 0
+       >L>   "0"
+    56 *-*   word_length = 0
+       >L>   "0"
+    57 *-*   result = \"\"
+       >L>   ""
+    58 *-*   do while scan < string_length
+       >O>   "1"
+       >V>   "0"
+    59 *-*     assembler fndnblnk word_start,string,scan
+       >V>   "0"
+       >O>   "0"
+       >V>   "0"
+    61 *-*     current_word = current_word + 1
+       >O>   "1"
+    62 *-*     assembler fndblnk word_end,string,word_start
+       >V>   "1"
+       >O>   "1"
+       >V>   "3"
+       >O>   "0"
+       >=>   "3"
+    65 *-*       word_length = word_end - word_start
+       >O>   "3"
+    66 *-*       assembler setstrpos string,word_start
+       >V>   ""
+    67 *-*       assembler substring result,string,word_length
+       >V>   "Key"
+    68 *-*       return result
+       >V>   "?"
+       >O>   "0"
+       >V>   "2.2"
+       >  >   rexxcps_levelb_opaque.crexx
+   174 *-*           if j < 5 then do /* This path is taken. */
+       >O>   "1"
+       >V>   "Key Bee"
+   175 *-*             acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + 1) as .string
+       >V>   "6"
+       >C>   "Key Bee.6"
+       >V>   "6"
+       >C>   "Key Bee.6"
+       >V>   "68y"
+       >O>   "68y"
+       >=>   "69 "
+   176 *-*             if j = 2 then leave
+       >O>   "0"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   179 *-*         end /* j */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >C>   "2.2"
+   180 *-*         avar. = \"1.0\" || lvar
+       >V>   "6"
+       >O>   "1.06"
+       >=>   "1.06"
+   181 *-*         select
+       >O>   "0"
+       >V>   "1"
+       >C>   "1.2"
+       >V>   "1.06"
+       >O>   "0"
+       >V>   "1"
+       >O>   "0"
+       >V>   "1"
+       >O>   "1"
+   185 *-*           when flag <> \"0\" then avar.1.2 = ((avar.1.2 as .decimal) * 1.1) as .string
+       >C>   "1.2"
+       >C>   "1.2"
+       >V>   "1.06"
+       >O>   "1.06"
+       >=>   "1.16"
+       >L>   "1"
+   188 *-*         if opaque_one then flag = opaque_one as .string
+       >V>   "1"
+   188 *-*         if opaque_one then flag = opaque_one as .string
+       >=>   "1"
+   189 *-*         select
+       >O>   "0"
+       >V>   "1"
+       >C>   "1.3"
+       >V>   "1.06"
+       >O>   "0"
+       >V>   "1"
+       >O>   "1"
+   192 *-*           when flag <> \"0\" then avar.1.2 = ((avar.1.2 as .decimal) * 1.1) as .string
+       >C>   "1.2"
+       >C>   "1.2"
+       >V>   "1.16"
+       >O>   "1.16"
+       >=>   "1"
+       >L>   "1"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:v1;4,1:5;1,2:v2;6,10:{implicit};1,1:.;',' v1 + v2 .',0)
+       >V>   "Foo Bar"
+     2 *-* _source=opaque_foo_bar
+       >=>   "Foo Bar"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:v1;4,1:5;1,2:v2;6,10:{implicit};1,1:.;',' v1 + v2 .',0)
+       >L>   "3,1:1;1,2:v1;4,1:5;1,2:v2;6,10:{implicit};1,1:.;"
+       >L>   " v1 + v2 ."
+       >L>   "0"
+       >F>   ""
+     2 *-* v1=_parseResult[1
+       >V>   "Foo B"
+       >=>   "Foo B"
+     2 *-* v2=_parseResult[2
+       >V>   "ar"
+       >=>   "ar"
+     2 *-* call _trace_set(_trace_mode_from_option(_trace_current_mode
+       >F>   "I"
+       >F>   "I"
+       >F>   "I"
+     3 *-* __rxtrace_mode=_trace_current_mode
+       >F>   "I"
+     4 *-* call __rxtrace_reset_display_state
+       >  >   rexxcps_levelb_opaque.crexx
+   158 *-*     trace value tracevar
+       >L>   ""
+       >L>   ""
+       >F>   " v1 + v2 ."
+     5 *-* if __rxtrace_mode = \"OFF\"
+       >O>   "0"
+       >V>   "I"
+     6 *-* if _trace_needs_breakpoints(__rxtrace_mode) = 0
+       >F>   "1"
+       >O>   "0"
+     8 *-* sigcall __rxtrace_handler(),\"BREAKPOINT\"
+     9 *-* bpon
+     2 *-* rc=_address('value',addressenv() .environment_name(),_noredir(),_noredir(),_noredir
+       >L>   "value"
+       >F>   ""
+       >F>   "VALUE"
+       >  >   _address.crexx
+  1663 *-*     handle = .binary
+       >V>   ""
+  1664 *-*     return handle
+  1663 *-*     handle = .binary
+       >V>   ""
+  1664 *-*     return handle
+  1663 *-*     handle = .binary
+       >V>   ""
+  1664 *-*     return handle
+       >F>   "-3"
+       >  >   rexxcps_levelb_opaque.crexx
+   251 *-*   parse var a3 b1 b2 b3 .
+       >  >   upper.crexx
+    42 *-*   result = \"\"
+       >L>   ""
+    43 *-*   assembler strupper result,string
+       >V>   "WITH"
+    44 *-*   return result
+       >=>   "WITH"
+       >  >   rexxcps_levelb_opaque.crexx
+   250 *-*   arg a1 = .string, a2 = .string, a3 = .string, a4 = .string
+       >L>   "2"
+       >F>   "2"
+       >  >   upper.crexx
+    42 *-*   result = \"\"
+       >L>   ""
+    43 *-*   assembler strupper result,string
+       >V>   "ARGS"
+       >=>   "ARGS"
+       >  >   rexxcps_levelb_opaque.crexx
+   250 *-*   arg a1 = .string, a2 = .string, a3 = .string, a4 = .string
+       >V>   "1"
+       >O>   "(This is the second)1"
+       >O>   "(This is the second)1"
+       >V>   "1"
+       >O>   "(This is the second)11"
+       >F>   "(THIS IS THE SECOND)11"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:b1;6,10:{implicit};1,2:b2;6,10:{implicit};1,2:b3;6,10:{implicit};1,1:.;',' b1 b2 b3 .',0)
+       >V>   "ARGS"
+     2 *-* _source=a3
+       >=>   "ARGS"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:b1;6,10:{implicit};1,2:b2;6,10:{implicit};1,2:b3;6,10:{implicit};1,1:.;',' b1 b2 b3 .',0)
+       >L>   "3,1:1;1,2:b1;6,10:{implicit};1,2:b2;6,10:{implicit};1,2:b3;6,10:{implicit};1,1:.;"
+       >L>   " b1 b2 b3 ."
+       >L>   "0"
+       >F>   ""
+     2 *-* b1=_parseResult[1
+       >V>   "ARGS"
+       >=>   "ARGS"
+     2 *-* b2=_parseResult[2
+       >V>   ""
+       >=>   ""
+     2 *-* b3=_parseResult[3
+       >V>   ""
+       >=>   ""
+       >  >   rexxcps_levelb_opaque.crexx
+   252 *-*   do 1
+       >L>   "1"
+   254 *-*     parse var text c1 c2 c3
+       >V>   "WITH"
+   253 *-*     text = a1 || \" \" || a2 || \" \" || a3
+       >O>   "WITH "
+       >O>   "WITH 2"
+       >O>   "WITH 2 "
+       >O>   "WITH 2 ARGS"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:c1;6,10:{implicit};1,2:c2;6,10:{implicit};1,2:c3;',' c1 c2 c3',0)
+       >V>   "WITH 2 ARGS"
+     2 *-* _source=text
+       >=>   "WITH 2 ARGS"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:c1;6,10:{implicit};1,2:c2;6,10:{implicit};1,2:c3;',' c1 c2 c3',0)
+       >L>   "3,1:1;1,2:c1;6,10:{implicit};1,2:c2;6,10:{implicit};1,2:c3;"
+       >L>   " c1 c2 c3"
+       >L>   "0"
+       >F>   ""
+     2 *-* c1=_parseResult[1
+       >V>   "WITH"
+       >=>   "WITH"
+     2 *-* c2=_parseResult[2
+       >V>   "2"
+       >=>   "2"
+     2 *-* c3=_parseResult[3
+       >V>   "ARGS"
+       >=>   "ARGS"
+       >  >   rexxcps_levelb_opaque.crexx
+   255 *-*   end
+       >L>   "0"
+   252 *-*   do 1
+   200 *-*         text = \"This is an awfully boring program\"; parse var text p1 (p0) p5
+       >L>   "This is an awfully boring program"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p1;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p5;',' p1 ( p0 ) p5',0)
+       >V>   "This is an awfully boring program"
+     2 *-* _source=text
+       >=>   "This is an awfully boring program"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p1;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p5;',' p1 ( p0 ) p5',0)
+       >L>   "3,1:1;1,2:p1;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p5;"
+       >L>   " p1 ( p0 ) p5"
+       >L>   "0"
+       >F>   ""
+     2 *-* p1=_parseResult[1
+       >V>   "This"
+       >=>   "This"
+     2 *-* p0=_parseResult[2
+       >V>   "is"
+       >=>   "is"
+     2 *-* p5=_parseResult[3
+       >V>   "an awfully boring program"
+       >=>   "an awfully boring program"
+       >  >   rexxcps_levelb_opaque.crexx
+   201 *-*         text = \"is an awfully boring program This\"; parse var text p2 (p0) p6
+       >L>   "is an awfully boring program This"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p2;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p6;',' p2 ( p0 ) p6',0)
+       >V>   "is an awfully boring program This"
+     2 *-* _source=text
+       >=>   "is an awfully boring program This"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p2;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p6;',' p2 ( p0 ) p6',0)
+       >L>   "3,1:1;1,2:p2;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p6;"
+       >L>   " p2 ( p0 ) p6"
+       >L>   "0"
+       >F>   ""
+     2 *-* p2=_parseResult[1
+       >V>   "is"
+       >=>   "is"
+     2 *-* p0=_parseResult[2
+       >V>   "an"
+       >=>   "an"
+     2 *-* p6=_parseResult[3
+       >V>   "awfully boring program This"
+       >=>   "awfully boring program This"
+       >  >   rexxcps_levelb_opaque.crexx
+   202 *-*         text = \"an awfully boring program This is\"; parse var text p3 (p0) p7
+       >L>   "an awfully boring program This is"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p3;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p7;',' p3 ( p0 ) p7',0)
+       >V>   "an awfully boring program This is"
+     2 *-* _source=text
+       >=>   "an awfully boring program This is"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p3;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p7;',' p3 ( p0 ) p7',0)
+       >L>   "3,1:1;1,2:p3;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p7;"
+       >L>   " p3 ( p0 ) p7"
+       >L>   "0"
+       >F>   ""
+     2 *-* p3=_parseResult[1
+       >V>   "an"
+       >=>   "an"
+     2 *-* p0=_parseResult[2
+       >V>   "awfully"
+       >=>   "awfully"
+     2 *-* p7=_parseResult[3
+       >V>   "boring program This is"
+       >=>   "boring program This is"
+       >  >   rexxcps_levelb_opaque.crexx
+   203 *-*         text = \"awfully boring program This is an\"; parse var text p4 (p0) p8
+       >L>   "awfully boring program This is an"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p4;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p8;',' p4 ( p0 ) p8',0)
+       >V>   "awfully boring program This is an"
+     2 *-* _source=text
+       >=>   "awfully boring program This is an"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p4;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p8;',' p4 ( p0 ) p8',0)
+       >L>   "3,1:1;1,2:p4;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p8;"
+       >L>   " p4 ( p0 ) p8"
+       >L>   "0"
+       >F>   ""
+     2 *-* p4=_parseResult[1
+       >V>   "awfully"
+       >=>   "awfully"
+     2 *-* p0=_parseResult[2
+       >V>   "boring"
+       >=>   "boring"
+     2 *-* p8=_parseResult[3
+       >V>   "program This is an"
+       >=>   "program This is an"
+       >  >   rexxcps_levelb_opaque.crexx
+   204 *-*       end
+       >L>   "14"
+   163 *-*       do lvar = 1 to 14
+   200 *-*         text = \"This is an awfully boring program\"; parse var text p1 (p0) p5
+   201 *-*         text = \"is an awfully boring program This\"; parse var text p2 (p0) p6
+   202 *-*         text = \"an awfully boring program This is\"; parse var text p3 (p0) p7
+   203 *-*         text = \"awfully boring program This is an\"; parse var text p4 (p0) p8
+   200 *-*         text = \"This is an awfully boring program\"; parse var text p1 (p0) p5
+   201 *-*         text = \"is an awfully boring program This\"; parse var text p2 (p0) p6
+   202 *-*         text = \"an awfully boring program This is\"; parse var text p3 (p0) p7
+   203 *-*         text = \"awfully boring program This is an\"; parse var text p4 (p0) p8
+   195 *-*         parse value opaque_foo_bar with v1 +5 v2 .
+       >V>   "Key Bee"
+   165 *-*         key1 = opaque_key
+       >=>   "Key Bee"
+   166 *-*         acompound.key1.lvar = substr(opaque_digits, 6, 2)
+       >V>   "7"
+       >C>   "Key Bee.7"
+       >  >   substr.crexx
+    51 *-*   available = .int
+    52 *-*   copy_length = .int
+    48 *-*   pad_character = .int
+    47 *-*   pad_length = .int
+    53 *-*   padding_length = .int
+    50 *-*   start_offset = .int
+    46 *-*   string_length = .int
+       >V>   "12345678"
+       >  >   rexxcps_levelb_opaque.crexx
+   166 *-*         acompound.key1.lvar = substr(opaque_digits, 6, 2)
+       >=>   "12345678"
+       >L>   " "
+       >  >   substr.crexx
+    49 *-*   pad_index = 0
+       >L>   "0"
+    54 *-*   result = \"\"
+       >L>   ""
+    60 *-*   assembler strlen pad_length,pad
+       >V>   "1"
+       >O>   "0"
+       >V>   "0"
+    64 *-*   assembler strlen string_length,string
+    65 *-*   start_offset = start - 1
+       >L>   "5"
+    66 *-*   available = string_length - start_offset
+       >O>   "3"
+       >L>   "3"
+    78 *-*   copy_length = length
+       >L>   "2"
+       >=>   "2"
+       >O>   "1"
+       >V>   "5"
+       >O>   "0"
+       >O>   "0"
+       >O>   "0"
+       >V>   "12345678"
+    83 *-*     assembler setstrpos string,start_offset
+       >V>   ""
+    84 *-*     assembler substring result,string,copy_length
+       >V>   "2"
+    87 *-*   padding_length = length - copy_length
+       >O>   "0"
+       >V>   "67"
+    92 *-*   return result
+       >=>   "67"
+       >  >   rexxcps_levelb_opaque.crexx
+   167 *-*         if flag = acompound.key1.lvar then say \"Failed1\"
+       >V>   "7"
+       >C>   "Key Bee.7"
+       >V>   "67"
+       >O>   "0"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >L>   "2.2"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   169 *-*           if j > (acompound.key1.lvar as .decimal) then say \"Failed2\"
+       >V>   "1.1"
+       >V>   "7"
+       >C>   "Key Bee.7"
+       >V>   "67"
+       >O>   "0"
+       >V>   "1.1"
+   170 *-*           if 17 < length(j as .string) - 1 then say \"Failed3\"
+       >=>   "1.1"
+       >  >   length.crexx
+    42 *-*   result = 0
+       >L>   "0"
+    43 *-*   assembler strlen result,string
+       >V>   "3"
+    44 *-*   return result
+       >O>   "2"
+       >V>   "1.1"
+       >  >   rexxcps_levelb_opaque.crexx
+   171 *-*           if (j as .string) = opaque_failure then say \"Failed4\"
+       >V>   "foobar"
+       >O>   "0"
+       >  >   substr.crexx
+    51 *-*   available = .int
+    52 *-*   copy_length = .int
+    48 *-*   pad_character = .int
+    47 *-*   pad_length = .int
+    53 *-*   padding_length = .int
+    50 *-*   start_offset = .int
+    46 *-*   string_length = .int
+       >V>   "12345678"
+       >  >   rexxcps_levelb_opaque.crexx
+   172 *-*           if substr(opaque_digits, 1, 1) = opaque_nine then say \"Failed5\"
+       >=>   "12345678"
+       >L>   " "
+       >  >   substr.crexx
+    49 *-*   pad_index = 0
+       >L>   "0"
+    54 *-*   result = \"\"
+       >L>   ""
+    60 *-*   assembler strlen pad_length,pad
+       >V>   "1"
+       >O>   "0"
+       >V>   "0"
+    64 *-*   assembler strlen string_length,string
+    65 *-*   start_offset = start - 1
+       >L>   "0"
+    66 *-*   available = string_length - start_offset
+       >O>   "8"
+       >L>   "8"
+    78 *-*   copy_length = length
+       >L>   "1"
+       >=>   "1"
+       >O>   "1"
+       >V>   "0"
+       >O>   "1"
+       >V>   "1"
+       >O>   "0"
+       >O>   "0"
+       >V>   "12345678"
+    83 *-*     assembler setstrpos string,start_offset
+       >V>   ""
+    84 *-*     assembler substring result,string,copy_length
+       >V>   "1"
+    87 *-*   padding_length = length - copy_length
+       >O>   "0"
+       >V>   "1"
+    92 *-*   return result
+       >V>   "9"
+       >O>   "0"
+       >  >   word.crexx
+    48 *-*   string_length = .int
+       >V>   "Key Bee"
+       >  >   rexxcps_levelb_opaque.crexx
+   173 *-*           if word(key1, 1) = opaque_question then say \"Failed6\"
+       >=>   "Key Bee"
+       >  >   word.crexx
+    49 *-*   assembler strlen string_length,string
+       >V>   "7"
+       >O>   "0"
+    52 *-*   scan = 0
+       >L>   "0"
+    53 *-*   current_word = 0
+       >L>   "0"
+    54 *-*   word_start = 0
+       >L>   "0"
+    55 *-*   word_end = 0
+       >L>   "0"
+    56 *-*   word_length = 0
+       >L>   "0"
+    57 *-*   result = \"\"
+       >L>   ""
+    58 *-*   do while scan < string_length
+       >O>   "1"
+       >V>   "0"
+    59 *-*     assembler fndnblnk word_start,string,scan
+       >V>   "0"
+       >O>   "0"
+       >V>   "0"
+    61 *-*     current_word = current_word + 1
+       >O>   "1"
+    62 *-*     assembler fndblnk word_end,string,word_start
+       >V>   "1"
+       >O>   "1"
+       >V>   "3"
+       >O>   "0"
+       >=>   "3"
+    65 *-*       word_length = word_end - word_start
+       >O>   "3"
+    66 *-*       assembler setstrpos string,word_start
+       >V>   ""
+    67 *-*       assembler substring result,string,word_length
+       >V>   "Key"
+    68 *-*       return result
+       >V>   "?"
+       >O>   "0"
+       >V>   "1.1"
+       >  >   rexxcps_levelb_opaque.crexx
+   174 *-*           if j < 5 then do /* This path is taken. */
+       >O>   "1"
+       >V>   "Key Bee"
+   175 *-*             acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + 1) as .string
+       >V>   "7"
+       >C>   "Key Bee.7"
+       >V>   "7"
+       >C>   "Key Bee.7"
+       >V>   "67"
+       >O>   "67"
+       >=>   "68 "
+   176 *-*             if j = 2 then leave
+       >O>   "0"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   179 *-*         end /* j */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   169 *-*           if j > (acompound.key1.lvar as .decimal) then say \"Failed2\"
+       >V>   "1.1"
+       >V>   "7"
+       >C>   "Key Bee.7"
+       >V>   "68y"
+       >O>   "0"
+       >V>   "2.2"
+   170 *-*           if 17 < length(j as .string) - 1 then say \"Failed3\"
+       >=>   "2.2"
+       >  >   length.crexx
+    42 *-*   result = 0
+       >L>   "0"
+    43 *-*   assembler strlen result,string
+       >V>   "3"
+    44 *-*   return result
+       >O>   "2"
+       >V>   "2.2"
+       >  >   rexxcps_levelb_opaque.crexx
+   171 *-*           if (j as .string) = opaque_failure then say \"Failed4\"
+       >V>   "foobar"
+       >O>   "0"
+       >  >   substr.crexx
+    51 *-*   available = .int
+    52 *-*   copy_length = .int
+    48 *-*   pad_character = .int
+    47 *-*   pad_length = .int
+    53 *-*   padding_length = .int
+    50 *-*   start_offset = .int
+    46 *-*   string_length = .int
+       >V>   "12345678"
+       >  >   rexxcps_levelb_opaque.crexx
+   172 *-*           if substr(opaque_digits, 1, 1) = opaque_nine then say \"Failed5\"
+       >=>   "12345678"
+       >L>   " "
+       >  >   substr.crexx
+    49 *-*   pad_index = 0
+       >L>   "0"
+    54 *-*   result = \"\"
+       >L>   ""
+    60 *-*   assembler strlen pad_length,pad
+       >V>   "1"
+       >O>   "0"
+       >V>   "0"
+    64 *-*   assembler strlen string_length,string
+    65 *-*   start_offset = start - 1
+       >L>   "0"
+    66 *-*   available = string_length - start_offset
+       >O>   "8"
+       >L>   "8"
+    78 *-*   copy_length = length
+       >L>   "1"
+       >=>   "1"
+       >O>   "1"
+       >V>   "0"
+       >O>   "1"
+       >V>   "1"
+       >O>   "0"
+       >O>   "0"
+       >V>   "12345678"
+    83 *-*     assembler setstrpos string,start_offset
+       >V>   ""
+    84 *-*     assembler substring result,string,copy_length
+       >V>   "1"
+    87 *-*   padding_length = length - copy_length
+       >O>   "0"
+       >V>   "1"
+    92 *-*   return result
+       >V>   "9"
+       >O>   "0"
+       >  >   word.crexx
+    48 *-*   string_length = .int
+       >V>   "Key Bee"
+       >  >   rexxcps_levelb_opaque.crexx
+   173 *-*           if word(key1, 1) = opaque_question then say \"Failed6\"
+       >=>   "Key Bee"
+       >  >   word.crexx
+    49 *-*   assembler strlen string_length,string
+       >V>   "7"
+       >O>   "0"
+    52 *-*   scan = 0
+       >L>   "0"
+    53 *-*   current_word = 0
+       >L>   "0"
+    54 *-*   word_start = 0
+       >L>   "0"
+    55 *-*   word_end = 0
+       >L>   "0"
+    56 *-*   word_length = 0
+       >L>   "0"
+    57 *-*   result = \"\"
+       >L>   ""
+    58 *-*   do while scan < string_length
+       >O>   "1"
+       >V>   "0"
+    59 *-*     assembler fndnblnk word_start,string,scan
+       >V>   "0"
+       >O>   "0"
+       >V>   "0"
+    61 *-*     current_word = current_word + 1
+       >O>   "1"
+    62 *-*     assembler fndblnk word_end,string,word_start
+       >V>   "1"
+       >O>   "1"
+       >V>   "3"
+       >O>   "0"
+       >=>   "3"
+    65 *-*       word_length = word_end - word_start
+       >O>   "3"
+    66 *-*       assembler setstrpos string,word_start
+       >V>   ""
+    67 *-*       assembler substring result,string,word_length
+       >V>   "Key"
+    68 *-*       return result
+       >V>   "?"
+       >O>   "0"
+       >V>   "2.2"
+       >  >   rexxcps_levelb_opaque.crexx
+   174 *-*           if j < 5 then do /* This path is taken. */
+       >O>   "1"
+       >V>   "Key Bee"
+   175 *-*             acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + 1) as .string
+       >V>   "7"
+       >C>   "Key Bee.7"
+       >V>   "7"
+       >C>   "Key Bee.7"
+       >V>   "68y"
+       >O>   "68y"
+       >=>   "69 "
+   176 *-*             if j = 2 then leave
+       >O>   "0"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   179 *-*         end /* j */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >C>   "2.2"
+   180 *-*         avar. = \"1.0\" || lvar
+       >V>   "7"
+       >O>   "1.07"
+       >=>   "1.07"
+   181 *-*         select
+       >O>   "0"
+       >V>   "1"
+       >C>   "1.2"
+       >V>   "1.07"
+       >O>   "0"
+       >V>   "1"
+       >O>   "0"
+       >V>   "1"
+       >O>   "1"
+   185 *-*           when flag <> \"0\" then avar.1.2 = ((avar.1.2 as .decimal) * 1.1) as .string
+       >C>   "1.2"
+       >C>   "1.2"
+       >V>   "1.07"
+       >O>   "1.07"
+       >=>   "1.17"
+       >L>   "1"
+   188 *-*         if opaque_one then flag = opaque_one as .string
+       >V>   "1"
+   188 *-*         if opaque_one then flag = opaque_one as .string
+       >=>   "1"
+   189 *-*         select
+       >O>   "0"
+       >V>   "1"
+       >C>   "1.3"
+       >V>   "1.07"
+       >O>   "0"
+       >V>   "1"
+       >O>   "1"
+   192 *-*           when flag <> \"0\" then avar.1.2 = ((avar.1.2 as .decimal) * 1.1) as .string
+       >C>   "1.2"
+       >C>   "1.2"
+       >V>   "1.17"
+       >O>   "1.17"
+       >=>   "1"
+       >L>   "1"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:v1;4,1:5;1,2:v2;6,10:{implicit};1,1:.;',' v1 + v2 .',0)
+       >V>   "Foo Bar"
+     2 *-* _source=opaque_foo_bar
+       >=>   "Foo Bar"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:v1;4,1:5;1,2:v2;6,10:{implicit};1,1:.;',' v1 + v2 .',0)
+       >L>   "3,1:1;1,2:v1;4,1:5;1,2:v2;6,10:{implicit};1,1:.;"
+       >L>   " v1 + v2 ."
+       >L>   "0"
+       >F>   ""
+     2 *-* v1=_parseResult[1
+       >V>   "Foo B"
+       >=>   "Foo B"
+     2 *-* v2=_parseResult[2
+       >V>   "ar"
+       >=>   "ar"
+     2 *-* call _trace_set(_trace_mode_from_option(_trace_current_mode
+       >F>   "I"
+       >F>   "I"
+       >F>   "I"
+     3 *-* __rxtrace_mode=_trace_current_mode
+       >F>   "I"
+     4 *-* call __rxtrace_reset_display_state
+       >  >   rexxcps_levelb_opaque.crexx
+   158 *-*     trace value tracevar
+       >L>   ""
+       >L>   ""
+       >F>   " v1 + v2 ."
+     5 *-* if __rxtrace_mode = \"OFF\"
+       >O>   "0"
+       >V>   "I"
+     6 *-* if _trace_needs_breakpoints(__rxtrace_mode) = 0
+       >F>   "1"
+       >O>   "0"
+     8 *-* sigcall __rxtrace_handler(),\"BREAKPOINT\"
+     9 *-* bpon
+     2 *-* rc=_address('value',addressenv() .environment_name(),_noredir(),_noredir(),_noredir
+       >L>   "value"
+       >F>   ""
+       >F>   "VALUE"
+       >  >   _address.crexx
+  1663 *-*     handle = .binary
+       >V>   ""
+  1664 *-*     return handle
+  1663 *-*     handle = .binary
+       >V>   ""
+  1664 *-*     return handle
+  1663 *-*     handle = .binary
+       >V>   ""
+  1664 *-*     return handle
+       >F>   "-3"
+       >  >   rexxcps_levelb_opaque.crexx
+   251 *-*   parse var a3 b1 b2 b3 .
+       >  >   upper.crexx
+    42 *-*   result = \"\"
+       >L>   ""
+    43 *-*   assembler strupper result,string
+       >V>   "WITH"
+    44 *-*   return result
+       >=>   "WITH"
+       >  >   rexxcps_levelb_opaque.crexx
+   250 *-*   arg a1 = .string, a2 = .string, a3 = .string, a4 = .string
+       >L>   "2"
+       >F>   "2"
+       >  >   upper.crexx
+    42 *-*   result = \"\"
+       >L>   ""
+    43 *-*   assembler strupper result,string
+       >V>   "ARGS"
+       >=>   "ARGS"
+       >  >   rexxcps_levelb_opaque.crexx
+   250 *-*   arg a1 = .string, a2 = .string, a3 = .string, a4 = .string
+       >V>   "1"
+       >O>   "(This is the second)1"
+       >O>   "(This is the second)1"
+       >V>   "1"
+       >O>   "(This is the second)11"
+       >F>   "(THIS IS THE SECOND)11"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:b1;6,10:{implicit};1,2:b2;6,10:{implicit};1,2:b3;6,10:{implicit};1,1:.;',' b1 b2 b3 .',0)
+       >V>   "ARGS"
+     2 *-* _source=a3
+       >=>   "ARGS"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:b1;6,10:{implicit};1,2:b2;6,10:{implicit};1,2:b3;6,10:{implicit};1,1:.;',' b1 b2 b3 .',0)
+       >L>   "3,1:1;1,2:b1;6,10:{implicit};1,2:b2;6,10:{implicit};1,2:b3;6,10:{implicit};1,1:.;"
+       >L>   " b1 b2 b3 ."
+       >L>   "0"
+       >F>   ""
+     2 *-* b1=_parseResult[1
+       >V>   "ARGS"
+       >=>   "ARGS"
+     2 *-* b2=_parseResult[2
+       >V>   ""
+       >=>   ""
+     2 *-* b3=_parseResult[3
+       >V>   ""
+       >=>   ""
+       >  >   rexxcps_levelb_opaque.crexx
+   252 *-*   do 1
+       >L>   "1"
+   254 *-*     parse var text c1 c2 c3
+       >V>   "WITH"
+   253 *-*     text = a1 || \" \" || a2 || \" \" || a3
+       >O>   "WITH "
+       >O>   "WITH 2"
+       >O>   "WITH 2 "
+       >O>   "WITH 2 ARGS"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:c1;6,10:{implicit};1,2:c2;6,10:{implicit};1,2:c3;',' c1 c2 c3',0)
+       >V>   "WITH 2 ARGS"
+     2 *-* _source=text
+       >=>   "WITH 2 ARGS"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:c1;6,10:{implicit};1,2:c2;6,10:{implicit};1,2:c3;',' c1 c2 c3',0)
+       >L>   "3,1:1;1,2:c1;6,10:{implicit};1,2:c2;6,10:{implicit};1,2:c3;"
+       >L>   " c1 c2 c3"
+       >L>   "0"
+       >F>   ""
+     2 *-* c1=_parseResult[1
+       >V>   "WITH"
+       >=>   "WITH"
+     2 *-* c2=_parseResult[2
+       >V>   "2"
+       >=>   "2"
+     2 *-* c3=_parseResult[3
+       >V>   "ARGS"
+       >=>   "ARGS"
+       >  >   rexxcps_levelb_opaque.crexx
+   255 *-*   end
+       >L>   "0"
+   252 *-*   do 1
+   200 *-*         text = \"This is an awfully boring program\"; parse var text p1 (p0) p5
+       >L>   "This is an awfully boring program"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p1;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p5;',' p1 ( p0 ) p5',0)
+       >V>   "This is an awfully boring program"
+     2 *-* _source=text
+       >=>   "This is an awfully boring program"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p1;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p5;',' p1 ( p0 ) p5',0)
+       >L>   "3,1:1;1,2:p1;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p5;"
+       >L>   " p1 ( p0 ) p5"
+       >L>   "0"
+       >F>   ""
+     2 *-* p1=_parseResult[1
+       >V>   "This"
+       >=>   "This"
+     2 *-* p0=_parseResult[2
+       >V>   "is"
+       >=>   "is"
+     2 *-* p5=_parseResult[3
+       >V>   "an awfully boring program"
+       >=>   "an awfully boring program"
+       >  >   rexxcps_levelb_opaque.crexx
+   201 *-*         text = \"is an awfully boring program This\"; parse var text p2 (p0) p6
+       >L>   "is an awfully boring program This"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p2;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p6;',' p2 ( p0 ) p6',0)
+       >V>   "is an awfully boring program This"
+     2 *-* _source=text
+       >=>   "is an awfully boring program This"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p2;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p6;',' p2 ( p0 ) p6',0)
+       >L>   "3,1:1;1,2:p2;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p6;"
+       >L>   " p2 ( p0 ) p6"
+       >L>   "0"
+       >F>   ""
+     2 *-* p2=_parseResult[1
+       >V>   "is"
+       >=>   "is"
+     2 *-* p0=_parseResult[2
+       >V>   "an"
+       >=>   "an"
+     2 *-* p6=_parseResult[3
+       >V>   "awfully boring program This"
+       >=>   "awfully boring program This"
+       >  >   rexxcps_levelb_opaque.crexx
+   202 *-*         text = \"an awfully boring program This is\"; parse var text p3 (p0) p7
+       >L>   "an awfully boring program This is"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p3;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p7;',' p3 ( p0 ) p7',0)
+       >V>   "an awfully boring program This is"
+     2 *-* _source=text
+       >=>   "an awfully boring program This is"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p3;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p7;',' p3 ( p0 ) p7',0)
+       >L>   "3,1:1;1,2:p3;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p7;"
+       >L>   " p3 ( p0 ) p7"
+       >L>   "0"
+       >F>   ""
+     2 *-* p3=_parseResult[1
+       >V>   "an"
+       >=>   "an"
+     2 *-* p0=_parseResult[2
+       >V>   "awfully"
+       >=>   "awfully"
+     2 *-* p7=_parseResult[3
+       >V>   "boring program This is"
+       >=>   "boring program This is"
+       >  >   rexxcps_levelb_opaque.crexx
+   203 *-*         text = \"awfully boring program This is an\"; parse var text p4 (p0) p8
+       >L>   "awfully boring program This is an"
+       >  >   exit_fragment
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p4;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p8;',' p4 ( p0 ) p8',0)
+       >V>   "awfully boring program This is an"
+     2 *-* _source=text
+       >=>   "awfully boring program This is an"
+     2 *-* _parseResult=parseExec(_source,'3,1:1;1,2:p4;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p8;',' p4 ( p0 ) p8',0)
+       >L>   "3,1:1;1,2:p4;6,10:{implicit};1,2:p0;6,10:{implicit};1,2:p8;"
+       >L>   " p4 ( p0 ) p8"
+       >L>   "0"
+       >F>   ""
+     2 *-* p4=_parseResult[1
+       >V>   "awfully"
+       >=>   "awfully"
+     2 *-* p0=_parseResult[2
+       >V>   "boring"
+       >=>   "boring"
+     2 *-* p8=_parseResult[3
+       >V>   "program This is an"
+       >=>   "program This is an"
+       >  >   rexxcps_levelb_opaque.crexx
+   204 *-*       end
+       >L>   "14"
+   163 *-*       do lvar = 1 to 14
+   200 *-*         text = \"This is an awfully boring program\"; parse var text p1 (p0) p5
+   201 *-*         text = \"is an awfully boring program This\"; parse var text p2 (p0) p6
+   202 *-*         text = \"an awfully boring program This is\"; parse var text p3 (p0) p7
+   203 *-*         text = \"awfully boring program This is an\"; parse var text p4 (p0) p8
+   200 *-*         text = \"This is an awfully boring program\"; parse var text p1 (p0) p5
+   201 *-*         text = \"is an awfully boring program This\"; parse var text p2 (p0) p6
+   202 *-*         text = \"an awfully boring program This is\"; parse var text p3 (p0) p7
+   203 *-*         text = \"awfully boring program This is an\"; parse var text p4 (p0) p8
+   195 *-*         parse value opaque_foo_bar with v1 +5 v2 .
+       >V>   "Key Bee"
+   165 *-*         key1 = opaque_key
+       >=>   "Key Bee"
+   166 *-*         acompound.key1.lvar = substr(opaque_digits, 6, 2)
+       >V>   "8"
+       >C>   "Key Bee.8"
+       >  >   substr.crexx
+    51 *-*   available = .int
+    52 *-*   copy_length = .int
+    48 *-*   pad_character = .int
+    47 *-*   pad_length = .int
+    53 *-*   padding_length = .int
+    50 *-*   start_offset = .int
+    46 *-*   string_length = .int
+       >V>   "12345678"
+       >  >   rexxcps_levelb_opaque.crexx
+   166 *-*         acompound.key1.lvar = substr(opaque_digits, 6, 2)
+       >=>   "12345678"
+       >L>   " "
+       >  >   substr.crexx
+    49 *-*   pad_index = 0
+       >L>   "0"
+    54 *-*   result = \"\"
+       >L>   ""
+    60 *-*   assembler strlen pad_length,pad
+       >V>   "1"
+       >O>   "0"
+       >V>   "0"
+    64 *-*   assembler strlen string_length,string
+    65 *-*   start_offset = start - 1
+       >L>   "5"
+    66 *-*   available = string_length - start_offset
+       >O>   "3"
+       >L>   "3"
+    78 *-*   copy_length = length
+       >L>   "2"
+       >=>   "2"
+       >O>   "1"
+       >V>   "5"
+       >O>   "0"
+       >O>   "0"
+       >O>   "0"
+       >V>   "12345678"
+    83 *-*     assembler setstrpos string,start_offset
+       >V>   ""
+    84 *-*     assembler substring result,string,copy_length
+       >V>   "2"
+    87 *-*   padding_length = length - copy_length
+       >O>   "0"
+       >V>   "67"
+    92 *-*   return result
+       >=>   "67"
+       >  >   rexxcps_levelb_opaque.crexx
+   167 *-*         if flag = acompound.key1.lvar then say \"Failed1\"
+       >V>   "8"
+       >C>   "Key Bee.8"
+       >V>   "67"
+       >O>   "0"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >L>   "2.2"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   169 *-*           if j > (acompound.key1.lvar as .decimal) then say \"Failed2\"
+       >V>   "1.1"
+       >V>   "8"
+       >C>   "Key Bee.8"
+       >V>   "67"
+       >O>   "0"
+       >V>   "1.1"
+   170 *-*           if 17 < length(j as .string) - 1 then say \"Failed3\"
+       >=>   "1.1"
+       >  >   length.crexx
+    42 *-*   result = 0
+       >L>   "0"
+    43 *-*   assembler strlen result,string
+       >V>   "3"
+    44 *-*   return result
+       >O>   "2"
+       >V>   "1.1"
+       >  >   rexxcps_levelb_opaque.crexx
+   171 *-*           if (j as .string) = opaque_failure then say \"Failed4\"
+       >V>   "foobar"
+       >O>   "0"
+       >  >   substr.crexx
+    51 *-*   available = .int
+    52 *-*   copy_length = .int
+    48 *-*   pad_character = .int
+    47 *-*   pad_length = .int
+    53 *-*   padding_length = .int
+    50 *-*   start_offset = .int
+    46 *-*   string_length = .int
+       >V>   "12345678"
+       >  >   rexxcps_levelb_opaque.crexx
+   172 *-*           if substr(opaque_digits, 1, 1) = opaque_nine then say \"Failed5\"
+       >=>   "12345678"
+       >L>   " "
+       >  >   substr.crexx
+    49 *-*   pad_index = 0
+       >L>   "0"
+    54 *-*   result = \"\"
+       >L>   ""
+    60 *-*   assembler strlen pad_length,pad
+       >V>   "1"
+       >O>   "0"
+       >V>   "0"
+    64 *-*   assembler strlen string_length,string
+    65 *-*   start_offset = start - 1
+       >L>   "0"
+    66 *-*   available = string_length - start_offset
+       >O>   "8"
+       >L>   "8"
+    78 *-*   copy_length = length
+       >L>   "1"
+       >=>   "1"
+       >O>   "1"
+       >V>   "0"
+       >O>   "1"
+       >V>   "1"
+       >O>   "0"
+       >O>   "0"
+       >V>   "12345678"
+    83 *-*     assembler setstrpos string,start_offset
+       >V>   ""
+    84 *-*     assembler substring result,string,copy_length
+       >V>   "1"
+    87 *-*   padding_length = length - copy_length
+       >O>   "0"
+       >V>   "1"
+    92 *-*   return result
+       >V>   "9"
+       >O>   "0"
+       >  >   word.crexx
+    48 *-*   string_length = .int
+       >V>   "Key Bee"
+       >  >   rexxcps_levelb_opaque.crexx
+   173 *-*           if word(key1, 1) = opaque_question then say \"Failed6\"
+       >=>   "Key Bee"
+       >  >   word.crexx
+    49 *-*   assembler strlen string_length,string
+       >V>   "7"
+       >O>   "0"
+    52 *-*   scan = 0
+       >L>   "0"
+    53 *-*   current_word = 0
+       >L>   "0"
+    54 *-*   word_start = 0
+       >L>   "0"
+    55 *-*   word_end = 0
+       >L>   "0"
+    56 *-*   word_length = 0
+       >L>   "0"
+    57 *-*   result = \"\"
+       >L>   ""
+    58 *-*   do while scan < string_length
+       >O>   "1"
+       >V>   "0"
+    59 *-*     assembler fndnblnk word_start,string,scan
+       >V>   "0"
+       >O>   "0"
+       >V>   "0"
+    61 *-*     current_word = current_word + 1
+       >O>   "1"
+    62 *-*     assembler fndblnk word_end,string,word_start
+       >V>   "1"
+       >O>   "1"
+       >V>   "3"
+       >O>   "0"
+       >=>   "3"
+    65 *-*       word_length = word_end - word_start
+       >O>   "3"
+    66 *-*       assembler setstrpos string,word_start
+       >V>   ""
+    67 *-*       assembler substring result,string,word_length
+       >V>   "Key"
+    68 *-*       return result
+       >V>   "?"
+       >O>   "0"
+       >V>   "1.1"
+       >  >   rexxcps_levelb_opaque.crexx
+   174 *-*           if j < 5 then do /* This path is taken. */
+       >O>   "1"
+       >V>   "Key Bee"
+   175 *-*             acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + 1) as .string
+       >V>   "8"
+       >C>   "Key Bee.8"
+       >V>   "8"
+       >C>   "Key Bee.8"
+       >V>   "67"
+       >O>   "67"
+       >=>   "68 "
+   176 *-*             if j = 2 then leave
+       >O>   "0"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   179 *-*         end /* j */
+       >L>   "1.1"
+   168 *-*         do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+   169 *-*           if j > (acompound.key1.lvar as .decimal) then say \"Failed2\"
+       >V>   "1.1"
+       >V>   "8"
+       >C>   "Key Bee.8"
+       >V>   "68y"
+       >O>   "0"
+       >V>   "2.2"
+   170 *-*           if 17 < length(j as .string) - 1 then say \"Failed3\"
+       >=>   "2.2"
+       >  >   length.crexx
+    42 *-*   result = 0
+       >L>   "0"
+    43 *-*   assembler strlen result,string
+       >V>   "3"
+    44 *-*   return result
+       >O>   "2"
+       >V>   "2.2"
+       >  >   rexxcps_levelb_opaque.crexx
+   171 *-*           if (j as .string) = opaque_failure then say \"Failed4\"
+       >V>   "foobar"
+       >O>   "0"
+       >  >   substr.crexx
+    51 *-*   available = .int
+    52 *-*   copy_length = .int
+    48 *-*   pad_character = .int
+    47 *-*   pad_length = .int
+    53 *-*   padding_length = .int
+    50 *-*   s

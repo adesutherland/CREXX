@@ -1,0 +1,2 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+mandelbrot,oorexx,decimal-numeric-model-negative-size-500,process,recorded,1,22247065917,1,fail,,

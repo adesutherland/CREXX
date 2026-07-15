@@ -1,0 +1,7 @@
+----- REXXCPS 2.2 -- Measuring REXX clauses/second -----
+ REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+       System is: DARWIN
+        Averaged: 200 x 100 iterations of 1000 clauses (over 1.4s)
+
+     Performance: 14379706 REXX clauses per second
+

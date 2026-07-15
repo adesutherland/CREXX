@@ -1,0 +1,5016 @@
+----- REXXCPS 2.2-opaque -- Measuring REXX clauses/second -----
+ REXX version is: REXX-ooRexx_5.1.0(MT)_64-bit 6.05 2 May 2025
+       System is: DARWIN
+TRACE_KERNEL_BEGIN
+   138 *-*     call time 'R'
+       >L>       "R"
+       >A>       "R"
+       >>>       "0.000110"
+   139 *-*     do count;
+       >V>       COUNT => "1"
+       >K>       "FOR" => "1"
+   141 *-*       flag=opaquezero;
+       >V>         OPAQUEZERO => "0"
+       >>>         "0"
+       >=>         FLAG <= "0"
+   141 *-*       p0=opaquemarker
+       >V>         OPAQUEMARKER => "b"
+       >>>         "b"
+       >=>         P0 <= "b"
+   142 *-*       do loop=1 to 14
+       >L>         "1"
+       >L>         "14"
+       >K>         "TO" => "14"
+       >=>         LOOP <= "1"
+   144 *-*         key1=opaquekey
+       >V>           OPAQUEKEY => "Key Bee"
+       >>>           "Key Bee"
+       >=>           KEY1 <= "Key Bee"
+   145 *-*         acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>           OPAQUEDIGITS => "12345678"
+       >A>           "12345678"
+       >L>           "6"
+       >A>           "6"
+       >L>           "2"
+       >A>           "2"
+       >F>           SUBSTR => "67"
+       >>>           "67"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.1"
+       >=>           ACOMPOUND.KEY1.LOOP <= "67"
+   146 *-*         if flag=acompound.key1.loop 
+       >V>           FLAG => "0"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.1"
+       >V>           ACOMPOUND.KEY1.LOOP => "67"
+       >O>           "=" => "0"
+       >>>           "0"
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>           "1.1"
+       >L>           "2.2"
+       >K>           "TO" => "2.2"
+       >L>           "1.1"
+       >K>           "BY" => "1.1"
+       >=>           J <= "1.1"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "1.1"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.1"
+       >V>             ACOMPOUND.KEY1.LOOP => "67"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "1.1"
+       >A>             "1.1"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "1.1"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "1.1"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.1"
+       >V>                   ACOMPOUND.KEY1.LOOP => "67"
+       >L>                   "1"
+       >O>                   "+" => "68"
+       >>>                   "68"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.1"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "68"
+   155 *-*                 if j=2 
+       >V>                   J => "1.1"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "1.1"
+       >>>             "1.1"
+       >>>             "2.2"
+       >=>             J <= "2.2"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "2.2"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.1"
+       >V>             ACOMPOUND.KEY1.LOOP => "68"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "2.2"
+       >A>             "2.2"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "2.2"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "2.2"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.1"
+       >V>                   ACOMPOUND.KEY1.LOOP => "68"
+       >L>                   "1"
+       >O>                   "+" => "69"
+       >>>                   "69"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.1"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "69"
+   155 *-*                 if j=2 
+       >V>                   J => "2.2"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "2.2"
+       >>>             "2.2"
+       >>>             "3.3"
+       >=>             J <= "3.3"
+   159 *-*       avar.=1.0''loop
+       >L>         "1.0"
+       >L>         ""
+       >O>         "" => "1.0"
+       >V>         LOOP => "1"
+       >O>         "" => "1.01"
+       >>>         "1.01"
+       >=>         AVAR. <= "1.01"
+   160 *-*       select
+   161 *-*         when flag='string' 
+       >V>           FLAG => "0"
+       >L>           "string"
+       >O>           "=" => "0"
+       >>>           "0"
+   162 *-*         when avar.flag.2=0 
+       >C>           AVAR.FLAG.2 => "AVAR.0.2"
+       >V>           AVAR.FLAG.2 => "1.01"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   163 *-*         when flag=5+99.7   
+       >V>           FLAG => "0"
+       >L>           "5"
+       >L>           "99.7"
+       >O>           "+" => "104.7"
+       >O>           "=" => "0"
+       >>>           "0"
+   164 *-*         when flag          
+       >V>           FLAG => "0"
+       >>>           "0"
+   165 *-*         when flag==0       
+       >V>           FLAG => "0"
+       >L>           "0"
+       >O>           "==" => "1"
+       >>>           "1"
+   165 *-*           then
+   165 *-*             flag=0
+       >L>               "0"
+       >>>               "0"
+       >=>               FLAG <= "0"
+   167 *-*       if opaqueone 
+       >V>         OPAQUEONE => "1"
+       >>>         "1"
+   167 *-*         then
+   167 *-*           flag=opaqueone
+       >V>             OPAQUEONE => "1"
+       >>>             "1"
+       >=>             FLAG <= "1"
+   168 *-*       select
+   169 *-*         when flag=='ring'  
+       >V>           FLAG => "1"
+       >L>           "ring"
+       >O>           "==" => "0"
+       >>>           "0"
+   170 *-*         when avar.flag.3=0 
+       >C>           AVAR.FLAG.3 => "AVAR.1.3"
+       >V>           AVAR.FLAG.3 => "1.01"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   171 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   171 *-*           then
+   171 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.01"
+       >L>               "1.1"
+       >O>               "*" => "1.111"
+       >>>               "1.111"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.111"
+   174 *-*       parse value opaquefoobar with v1 +5 v2 .
+       >V>         OPAQUEFOOBAR => "Foo Bar"
+       >K>         "VALUE" => "Foo Bar"
+       >>>         "Foo Bar"
+       >L>         "5"
+       >>>         "5"
+       >=>         V1 <= "Foo B"
+       >=>         V2 <= "ar"
+       >.>         ""
+   175 *-*       trace value trace();
+       >F>         TRACE => "I"
+       >K>         "VALUE" => "I"
+   175 *-*       address value address()
+       >F>         ADDRESS => "sh"
+       >>>         "sh"
+   176 *-*       call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>         OPAQUEWITH => "with"
+       >L>         "2"
+       >O>         " " => "with 2"
+       >V>         OPAQUEARGS => "args"
+       >O>         " " => "with 2 args"
+       >A>         "with 2 args"
+       >L>         "(This is the second)"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)1"
+       >L>         ""
+       >O>         "" => "(This is the second)1"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)11"
+       >A>         "(This is the second)11"
+   236 *-*         subroutine:
+   237 *-*         parse upper arg a1 a2 a3 ., a4
+       >>>           "WITH 2 ARGS"
+       >=>           A1 <= "WITH"
+       >=>           A2 <= "2"
+       >=>           A3 <= "ARGS"
+       >.>           ""
+       >>>           "(THIS IS THE SECOND)11"
+       >=>           A4 <= "(THIS IS THE SECOND)11"
+   238 *-*         parse var a3 b1 b2 b3 .
+       >V>           A3 => "ARGS"
+       >K>           "VAR" => "ARGS"
+       >>>           "ARGS"
+       >=>           B1 <= "ARGS"
+       >=>           B2 <= ""
+       >=>           B3 <= ""
+       >.>           ""
+   239 *-*         do 1;
+       >L>           "1"
+       >K>           "FOR" => "1"
+   239 *-*           rc=a1 a2 a3;
+       >V>             A1 => "WITH"
+       >V>             A2 => "2"
+       >O>             " " => "WITH 2"
+       >V>             A3 => "ARGS"
+       >O>             " " => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             RC <= "WITH 2 ARGS"
+   239 *-*           parse var rc c1 c2 c3;
+       >V>             RC => "WITH 2 ARGS"
+       >K>             "VAR" => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             C1 <= "WITH"
+       >=>             C2 <= "2"
+       >=>             C3 <= "ARGS"
+   239 *-*         end
+   239 *-*         do 1;
+   240 *-*       return
+   177 *-*       rc='This is an awfully boring program';
+       >L>         "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >=>         RC <= "This is an awfully boring program"
+   177 *-*       parse var rc p1 (p0) p5
+       >V>         RC => "This is an awfully boring program"
+       >K>         "VAR" => "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P1 <= "This is an awfully "
+       >=>         P5 <= "oring program"
+   178 *-*       rc='is an awfully boring program This';
+       >L>         "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >=>         RC <= "is an awfully boring program This"
+   178 *-*       parse var rc p2 (p0) p6
+       >V>         RC => "is an awfully boring program This"
+       >K>         "VAR" => "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P2 <= "is an awfully "
+       >=>         P6 <= "oring program This"
+   179 *-*       rc='an awfully boring program This is';
+       >L>         "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >=>         RC <= "an awfully boring program This is"
+   179 *-*       parse var rc p3 (p0) p7
+       >V>         RC => "an awfully boring program This is"
+       >K>         "VAR" => "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P3 <= "an awfully "
+       >=>         P7 <= "oring program This is"
+   180 *-*       rc='awfully boring program This is an';
+       >L>         "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >=>         RC <= "awfully boring program This is an"
+   180 *-*       parse var rc p4 (p0) p8
+       >V>         RC => "awfully boring program This is an"
+       >K>         "VAR" => "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P4 <= "awfully "
+       >=>         P8 <= "oring program This is an"
+   181 *-*       end loop
+   142 *-*       do loop=1 to 14
+       >V>           LOOP => "1"
+       >>>           "1"
+       >>>           "2"
+       >=>           LOOP <= "2"
+   144 *-*         key1=opaquekey
+       >V>           OPAQUEKEY => "Key Bee"
+       >>>           "Key Bee"
+       >=>           KEY1 <= "Key Bee"
+   145 *-*         acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>           OPAQUEDIGITS => "12345678"
+       >A>           "12345678"
+       >L>           "6"
+       >A>           "6"
+       >L>           "2"
+       >A>           "2"
+       >F>           SUBSTR => "67"
+       >>>           "67"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.2"
+       >=>           ACOMPOUND.KEY1.LOOP <= "67"
+   146 *-*         if flag=acompound.key1.loop 
+       >V>           FLAG => "1"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.2"
+       >V>           ACOMPOUND.KEY1.LOOP => "67"
+       >O>           "=" => "0"
+       >>>           "0"
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>           "1.1"
+       >L>           "2.2"
+       >K>           "TO" => "2.2"
+       >L>           "1.1"
+       >K>           "BY" => "1.1"
+       >=>           J <= "1.1"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "1.1"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.2"
+       >V>             ACOMPOUND.KEY1.LOOP => "67"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "1.1"
+       >A>             "1.1"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "1.1"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "1.1"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.2"
+       >V>                   ACOMPOUND.KEY1.LOOP => "67"
+       >L>                   "1"
+       >O>                   "+" => "68"
+       >>>                   "68"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.2"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "68"
+   155 *-*                 if j=2 
+       >V>                   J => "1.1"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "1.1"
+       >>>             "1.1"
+       >>>             "2.2"
+       >=>             J <= "2.2"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "2.2"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.2"
+       >V>             ACOMPOUND.KEY1.LOOP => "68"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "2.2"
+       >A>             "2.2"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "2.2"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "2.2"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.2"
+       >V>                   ACOMPOUND.KEY1.LOOP => "68"
+       >L>                   "1"
+       >O>                   "+" => "69"
+       >>>                   "69"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.2"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "69"
+   155 *-*                 if j=2 
+       >V>                   J => "2.2"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "2.2"
+       >>>             "2.2"
+       >>>             "3.3"
+       >=>             J <= "3.3"
+   159 *-*       avar.=1.0''loop
+       >L>         "1.0"
+       >L>         ""
+       >O>         "" => "1.0"
+       >V>         LOOP => "2"
+       >O>         "" => "1.02"
+       >>>         "1.02"
+       >=>         AVAR. <= "1.02"
+   160 *-*       select
+   161 *-*         when flag='string' 
+       >V>           FLAG => "1"
+       >L>           "string"
+       >O>           "=" => "0"
+       >>>           "0"
+   162 *-*         when avar.flag.2=0 
+       >C>           AVAR.FLAG.2 => "AVAR.1.2"
+       >V>           AVAR.FLAG.2 => "1.02"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   163 *-*         when flag=5+99.7   
+       >V>           FLAG => "1"
+       >L>           "5"
+       >L>           "99.7"
+       >O>           "+" => "104.7"
+       >O>           "=" => "0"
+       >>>           "0"
+   164 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   164 *-*           then
+   164 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.02"
+       >L>               "1.1"
+       >O>               "*" => "1.122"
+       >>>               "1.122"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.122"
+   167 *-*       if opaqueone 
+       >V>         OPAQUEONE => "1"
+       >>>         "1"
+   167 *-*         then
+   167 *-*           flag=opaqueone
+       >V>             OPAQUEONE => "1"
+       >>>             "1"
+       >=>             FLAG <= "1"
+   168 *-*       select
+   169 *-*         when flag=='ring'  
+       >V>           FLAG => "1"
+       >L>           "ring"
+       >O>           "==" => "0"
+       >>>           "0"
+   170 *-*         when avar.flag.3=0 
+       >C>           AVAR.FLAG.3 => "AVAR.1.3"
+       >V>           AVAR.FLAG.3 => "1.02"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   171 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   171 *-*           then
+   171 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.122"
+       >L>               "1.1"
+       >O>               "*" => "1.2342"
+       >>>               "1.2342"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.2342"
+   174 *-*       parse value opaquefoobar with v1 +5 v2 .
+       >V>         OPAQUEFOOBAR => "Foo Bar"
+       >K>         "VALUE" => "Foo Bar"
+       >>>         "Foo Bar"
+       >L>         "5"
+       >>>         "5"
+       >=>         V1 <= "Foo B"
+       >=>         V2 <= "ar"
+       >.>         ""
+   175 *-*       trace value trace();
+       >F>         TRACE => "I"
+       >K>         "VALUE" => "I"
+   175 *-*       address value address()
+       >F>         ADDRESS => "sh"
+       >>>         "sh"
+   176 *-*       call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>         OPAQUEWITH => "with"
+       >L>         "2"
+       >O>         " " => "with 2"
+       >V>         OPAQUEARGS => "args"
+       >O>         " " => "with 2 args"
+       >A>         "with 2 args"
+       >L>         "(This is the second)"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)1"
+       >L>         ""
+       >O>         "" => "(This is the second)1"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)11"
+       >A>         "(This is the second)11"
+   236 *-*         subroutine:
+   237 *-*         parse upper arg a1 a2 a3 ., a4
+       >>>           "WITH 2 ARGS"
+       >=>           A1 <= "WITH"
+       >=>           A2 <= "2"
+       >=>           A3 <= "ARGS"
+       >.>           ""
+       >>>           "(THIS IS THE SECOND)11"
+       >=>           A4 <= "(THIS IS THE SECOND)11"
+   238 *-*         parse var a3 b1 b2 b3 .
+       >V>           A3 => "ARGS"
+       >K>           "VAR" => "ARGS"
+       >>>           "ARGS"
+       >=>           B1 <= "ARGS"
+       >=>           B2 <= ""
+       >=>           B3 <= ""
+       >.>           ""
+   239 *-*         do 1;
+       >L>           "1"
+       >K>           "FOR" => "1"
+   239 *-*           rc=a1 a2 a3;
+       >V>             A1 => "WITH"
+       >V>             A2 => "2"
+       >O>             " " => "WITH 2"
+       >V>             A3 => "ARGS"
+       >O>             " " => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             RC <= "WITH 2 ARGS"
+   239 *-*           parse var rc c1 c2 c3;
+       >V>             RC => "WITH 2 ARGS"
+       >K>             "VAR" => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             C1 <= "WITH"
+       >=>             C2 <= "2"
+       >=>             C3 <= "ARGS"
+   239 *-*         end
+   239 *-*         do 1;
+   240 *-*       return
+   177 *-*       rc='This is an awfully boring program';
+       >L>         "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >=>         RC <= "This is an awfully boring program"
+   177 *-*       parse var rc p1 (p0) p5
+       >V>         RC => "This is an awfully boring program"
+       >K>         "VAR" => "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P1 <= "This is an awfully "
+       >=>         P5 <= "oring program"
+   178 *-*       rc='is an awfully boring program This';
+       >L>         "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >=>         RC <= "is an awfully boring program This"
+   178 *-*       parse var rc p2 (p0) p6
+       >V>         RC => "is an awfully boring program This"
+       >K>         "VAR" => "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P2 <= "is an awfully "
+       >=>         P6 <= "oring program This"
+   179 *-*       rc='an awfully boring program This is';
+       >L>         "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >=>         RC <= "an awfully boring program This is"
+   179 *-*       parse var rc p3 (p0) p7
+       >V>         RC => "an awfully boring program This is"
+       >K>         "VAR" => "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P3 <= "an awfully "
+       >=>         P7 <= "oring program This is"
+   180 *-*       rc='awfully boring program This is an';
+       >L>         "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >=>         RC <= "awfully boring program This is an"
+   180 *-*       parse var rc p4 (p0) p8
+       >V>         RC => "awfully boring program This is an"
+       >K>         "VAR" => "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P4 <= "awfully "
+       >=>         P8 <= "oring program This is an"
+   181 *-*       end loop
+   142 *-*       do loop=1 to 14
+       >V>           LOOP => "2"
+       >>>           "2"
+       >>>           "3"
+       >=>           LOOP <= "3"
+   144 *-*         key1=opaquekey
+       >V>           OPAQUEKEY => "Key Bee"
+       >>>           "Key Bee"
+       >=>           KEY1 <= "Key Bee"
+   145 *-*         acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>           OPAQUEDIGITS => "12345678"
+       >A>           "12345678"
+       >L>           "6"
+       >A>           "6"
+       >L>           "2"
+       >A>           "2"
+       >F>           SUBSTR => "67"
+       >>>           "67"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.3"
+       >=>           ACOMPOUND.KEY1.LOOP <= "67"
+   146 *-*         if flag=acompound.key1.loop 
+       >V>           FLAG => "1"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.3"
+       >V>           ACOMPOUND.KEY1.LOOP => "67"
+       >O>           "=" => "0"
+       >>>           "0"
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>           "1.1"
+       >L>           "2.2"
+       >K>           "TO" => "2.2"
+       >L>           "1.1"
+       >K>           "BY" => "1.1"
+       >=>           J <= "1.1"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "1.1"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.3"
+       >V>             ACOMPOUND.KEY1.LOOP => "67"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "1.1"
+       >A>             "1.1"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "1.1"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "1.1"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.3"
+       >V>                   ACOMPOUND.KEY1.LOOP => "67"
+       >L>                   "1"
+       >O>                   "+" => "68"
+       >>>                   "68"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.3"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "68"
+   155 *-*                 if j=2 
+       >V>                   J => "1.1"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "1.1"
+       >>>             "1.1"
+       >>>             "2.2"
+       >=>             J <= "2.2"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "2.2"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.3"
+       >V>             ACOMPOUND.KEY1.LOOP => "68"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "2.2"
+       >A>             "2.2"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "2.2"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "2.2"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.3"
+       >V>                   ACOMPOUND.KEY1.LOOP => "68"
+       >L>                   "1"
+       >O>                   "+" => "69"
+       >>>                   "69"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.3"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "69"
+   155 *-*                 if j=2 
+       >V>                   J => "2.2"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "2.2"
+       >>>             "2.2"
+       >>>             "3.3"
+       >=>             J <= "3.3"
+   159 *-*       avar.=1.0''loop
+       >L>         "1.0"
+       >L>         ""
+       >O>         "" => "1.0"
+       >V>         LOOP => "3"
+       >O>         "" => "1.03"
+       >>>         "1.03"
+       >=>         AVAR. <= "1.03"
+   160 *-*       select
+   161 *-*         when flag='string' 
+       >V>           FLAG => "1"
+       >L>           "string"
+       >O>           "=" => "0"
+       >>>           "0"
+   162 *-*         when avar.flag.2=0 
+       >C>           AVAR.FLAG.2 => "AVAR.1.2"
+       >V>           AVAR.FLAG.2 => "1.03"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   163 *-*         when flag=5+99.7   
+       >V>           FLAG => "1"
+       >L>           "5"
+       >L>           "99.7"
+       >O>           "+" => "104.7"
+       >O>           "=" => "0"
+       >>>           "0"
+   164 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   164 *-*           then
+   164 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.03"
+       >L>               "1.1"
+       >O>               "*" => "1.133"
+       >>>               "1.133"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.133"
+   167 *-*       if opaqueone 
+       >V>         OPAQUEONE => "1"
+       >>>         "1"
+   167 *-*         then
+   167 *-*           flag=opaqueone
+       >V>             OPAQUEONE => "1"
+       >>>             "1"
+       >=>             FLAG <= "1"
+   168 *-*       select
+   169 *-*         when flag=='ring'  
+       >V>           FLAG => "1"
+       >L>           "ring"
+       >O>           "==" => "0"
+       >>>           "0"
+   170 *-*         when avar.flag.3=0 
+       >C>           AVAR.FLAG.3 => "AVAR.1.3"
+       >V>           AVAR.FLAG.3 => "1.03"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   171 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   171 *-*           then
+   171 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.133"
+       >L>               "1.1"
+       >O>               "*" => "1.2463"
+       >>>               "1.2463"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.2463"
+   174 *-*       parse value opaquefoobar with v1 +5 v2 .
+       >V>         OPAQUEFOOBAR => "Foo Bar"
+       >K>         "VALUE" => "Foo Bar"
+       >>>         "Foo Bar"
+       >L>         "5"
+       >>>         "5"
+       >=>         V1 <= "Foo B"
+       >=>         V2 <= "ar"
+       >.>         ""
+   175 *-*       trace value trace();
+       >F>         TRACE => "I"
+       >K>         "VALUE" => "I"
+   175 *-*       address value address()
+       >F>         ADDRESS => "sh"
+       >>>         "sh"
+   176 *-*       call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>         OPAQUEWITH => "with"
+       >L>         "2"
+       >O>         " " => "with 2"
+       >V>         OPAQUEARGS => "args"
+       >O>         " " => "with 2 args"
+       >A>         "with 2 args"
+       >L>         "(This is the second)"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)1"
+       >L>         ""
+       >O>         "" => "(This is the second)1"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)11"
+       >A>         "(This is the second)11"
+   236 *-*         subroutine:
+   237 *-*         parse upper arg a1 a2 a3 ., a4
+       >>>           "WITH 2 ARGS"
+       >=>           A1 <= "WITH"
+       >=>           A2 <= "2"
+       >=>           A3 <= "ARGS"
+       >.>           ""
+       >>>           "(THIS IS THE SECOND)11"
+       >=>           A4 <= "(THIS IS THE SECOND)11"
+   238 *-*         parse var a3 b1 b2 b3 .
+       >V>           A3 => "ARGS"
+       >K>           "VAR" => "ARGS"
+       >>>           "ARGS"
+       >=>           B1 <= "ARGS"
+       >=>           B2 <= ""
+       >=>           B3 <= ""
+       >.>           ""
+   239 *-*         do 1;
+       >L>           "1"
+       >K>           "FOR" => "1"
+   239 *-*           rc=a1 a2 a3;
+       >V>             A1 => "WITH"
+       >V>             A2 => "2"
+       >O>             " " => "WITH 2"
+       >V>             A3 => "ARGS"
+       >O>             " " => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             RC <= "WITH 2 ARGS"
+   239 *-*           parse var rc c1 c2 c3;
+       >V>             RC => "WITH 2 ARGS"
+       >K>             "VAR" => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             C1 <= "WITH"
+       >=>             C2 <= "2"
+       >=>             C3 <= "ARGS"
+   239 *-*         end
+   239 *-*         do 1;
+   240 *-*       return
+   177 *-*       rc='This is an awfully boring program';
+       >L>         "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >=>         RC <= "This is an awfully boring program"
+   177 *-*       parse var rc p1 (p0) p5
+       >V>         RC => "This is an awfully boring program"
+       >K>         "VAR" => "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P1 <= "This is an awfully "
+       >=>         P5 <= "oring program"
+   178 *-*       rc='is an awfully boring program This';
+       >L>         "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >=>         RC <= "is an awfully boring program This"
+   178 *-*       parse var rc p2 (p0) p6
+       >V>         RC => "is an awfully boring program This"
+       >K>         "VAR" => "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P2 <= "is an awfully "
+       >=>         P6 <= "oring program This"
+   179 *-*       rc='an awfully boring program This is';
+       >L>         "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >=>         RC <= "an awfully boring program This is"
+   179 *-*       parse var rc p3 (p0) p7
+       >V>         RC => "an awfully boring program This is"
+       >K>         "VAR" => "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P3 <= "an awfully "
+       >=>         P7 <= "oring program This is"
+   180 *-*       rc='awfully boring program This is an';
+       >L>         "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >=>         RC <= "awfully boring program This is an"
+   180 *-*       parse var rc p4 (p0) p8
+       >V>         RC => "awfully boring program This is an"
+       >K>         "VAR" => "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P4 <= "awfully "
+       >=>         P8 <= "oring program This is an"
+   181 *-*       end loop
+   142 *-*       do loop=1 to 14
+       >V>           LOOP => "3"
+       >>>           "3"
+       >>>           "4"
+       >=>           LOOP <= "4"
+   144 *-*         key1=opaquekey
+       >V>           OPAQUEKEY => "Key Bee"
+       >>>           "Key Bee"
+       >=>           KEY1 <= "Key Bee"
+   145 *-*         acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>           OPAQUEDIGITS => "12345678"
+       >A>           "12345678"
+       >L>           "6"
+       >A>           "6"
+       >L>           "2"
+       >A>           "2"
+       >F>           SUBSTR => "67"
+       >>>           "67"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.4"
+       >=>           ACOMPOUND.KEY1.LOOP <= "67"
+   146 *-*         if flag=acompound.key1.loop 
+       >V>           FLAG => "1"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.4"
+       >V>           ACOMPOUND.KEY1.LOOP => "67"
+       >O>           "=" => "0"
+       >>>           "0"
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>           "1.1"
+       >L>           "2.2"
+       >K>           "TO" => "2.2"
+       >L>           "1.1"
+       >K>           "BY" => "1.1"
+       >=>           J <= "1.1"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "1.1"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.4"
+       >V>             ACOMPOUND.KEY1.LOOP => "67"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "1.1"
+       >A>             "1.1"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "1.1"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "1.1"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.4"
+       >V>                   ACOMPOUND.KEY1.LOOP => "67"
+       >L>                   "1"
+       >O>                   "+" => "68"
+       >>>                   "68"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.4"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "68"
+   155 *-*                 if j=2 
+       >V>                   J => "1.1"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "1.1"
+       >>>             "1.1"
+       >>>             "2.2"
+       >=>             J <= "2.2"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "2.2"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.4"
+       >V>             ACOMPOUND.KEY1.LOOP => "68"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "2.2"
+       >A>             "2.2"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "2.2"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "2.2"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.4"
+       >V>                   ACOMPOUND.KEY1.LOOP => "68"
+       >L>                   "1"
+       >O>                   "+" => "69"
+       >>>                   "69"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.4"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "69"
+   155 *-*                 if j=2 
+       >V>                   J => "2.2"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "2.2"
+       >>>             "2.2"
+       >>>             "3.3"
+       >=>             J <= "3.3"
+   159 *-*       avar.=1.0''loop
+       >L>         "1.0"
+       >L>         ""
+       >O>         "" => "1.0"
+       >V>         LOOP => "4"
+       >O>         "" => "1.04"
+       >>>         "1.04"
+       >=>         AVAR. <= "1.04"
+   160 *-*       select
+   161 *-*         when flag='string' 
+       >V>           FLAG => "1"
+       >L>           "string"
+       >O>           "=" => "0"
+       >>>           "0"
+   162 *-*         when avar.flag.2=0 
+       >C>           AVAR.FLAG.2 => "AVAR.1.2"
+       >V>           AVAR.FLAG.2 => "1.04"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   163 *-*         when flag=5+99.7   
+       >V>           FLAG => "1"
+       >L>           "5"
+       >L>           "99.7"
+       >O>           "+" => "104.7"
+       >O>           "=" => "0"
+       >>>           "0"
+   164 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   164 *-*           then
+   164 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.04"
+       >L>               "1.1"
+       >O>               "*" => "1.144"
+       >>>               "1.144"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.144"
+   167 *-*       if opaqueone 
+       >V>         OPAQUEONE => "1"
+       >>>         "1"
+   167 *-*         then
+   167 *-*           flag=opaqueone
+       >V>             OPAQUEONE => "1"
+       >>>             "1"
+       >=>             FLAG <= "1"
+   168 *-*       select
+   169 *-*         when flag=='ring'  
+       >V>           FLAG => "1"
+       >L>           "ring"
+       >O>           "==" => "0"
+       >>>           "0"
+   170 *-*         when avar.flag.3=0 
+       >C>           AVAR.FLAG.3 => "AVAR.1.3"
+       >V>           AVAR.FLAG.3 => "1.04"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   171 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   171 *-*           then
+   171 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.144"
+       >L>               "1.1"
+       >O>               "*" => "1.2584"
+       >>>               "1.2584"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.2584"
+   174 *-*       parse value opaquefoobar with v1 +5 v2 .
+       >V>         OPAQUEFOOBAR => "Foo Bar"
+       >K>         "VALUE" => "Foo Bar"
+       >>>         "Foo Bar"
+       >L>         "5"
+       >>>         "5"
+       >=>         V1 <= "Foo B"
+       >=>         V2 <= "ar"
+       >.>         ""
+   175 *-*       trace value trace();
+       >F>         TRACE => "I"
+       >K>         "VALUE" => "I"
+   175 *-*       address value address()
+       >F>         ADDRESS => "sh"
+       >>>         "sh"
+   176 *-*       call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>         OPAQUEWITH => "with"
+       >L>         "2"
+       >O>         " " => "with 2"
+       >V>         OPAQUEARGS => "args"
+       >O>         " " => "with 2 args"
+       >A>         "with 2 args"
+       >L>         "(This is the second)"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)1"
+       >L>         ""
+       >O>         "" => "(This is the second)1"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)11"
+       >A>         "(This is the second)11"
+   236 *-*         subroutine:
+   237 *-*         parse upper arg a1 a2 a3 ., a4
+       >>>           "WITH 2 ARGS"
+       >=>           A1 <= "WITH"
+       >=>           A2 <= "2"
+       >=>           A3 <= "ARGS"
+       >.>           ""
+       >>>           "(THIS IS THE SECOND)11"
+       >=>           A4 <= "(THIS IS THE SECOND)11"
+   238 *-*         parse var a3 b1 b2 b3 .
+       >V>           A3 => "ARGS"
+       >K>           "VAR" => "ARGS"
+       >>>           "ARGS"
+       >=>           B1 <= "ARGS"
+       >=>           B2 <= ""
+       >=>           B3 <= ""
+       >.>           ""
+   239 *-*         do 1;
+       >L>           "1"
+       >K>           "FOR" => "1"
+   239 *-*           rc=a1 a2 a3;
+       >V>             A1 => "WITH"
+       >V>             A2 => "2"
+       >O>             " " => "WITH 2"
+       >V>             A3 => "ARGS"
+       >O>             " " => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             RC <= "WITH 2 ARGS"
+   239 *-*           parse var rc c1 c2 c3;
+       >V>             RC => "WITH 2 ARGS"
+       >K>             "VAR" => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             C1 <= "WITH"
+       >=>             C2 <= "2"
+       >=>             C3 <= "ARGS"
+   239 *-*         end
+   239 *-*         do 1;
+   240 *-*       return
+   177 *-*       rc='This is an awfully boring program';
+       >L>         "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >=>         RC <= "This is an awfully boring program"
+   177 *-*       parse var rc p1 (p0) p5
+       >V>         RC => "This is an awfully boring program"
+       >K>         "VAR" => "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P1 <= "This is an awfully "
+       >=>         P5 <= "oring program"
+   178 *-*       rc='is an awfully boring program This';
+       >L>         "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >=>         RC <= "is an awfully boring program This"
+   178 *-*       parse var rc p2 (p0) p6
+       >V>         RC => "is an awfully boring program This"
+       >K>         "VAR" => "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P2 <= "is an awfully "
+       >=>         P6 <= "oring program This"
+   179 *-*       rc='an awfully boring program This is';
+       >L>         "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >=>         RC <= "an awfully boring program This is"
+   179 *-*       parse var rc p3 (p0) p7
+       >V>         RC => "an awfully boring program This is"
+       >K>         "VAR" => "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P3 <= "an awfully "
+       >=>         P7 <= "oring program This is"
+   180 *-*       rc='awfully boring program This is an';
+       >L>         "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >=>         RC <= "awfully boring program This is an"
+   180 *-*       parse var rc p4 (p0) p8
+       >V>         RC => "awfully boring program This is an"
+       >K>         "VAR" => "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P4 <= "awfully "
+       >=>         P8 <= "oring program This is an"
+   181 *-*       end loop
+   142 *-*       do loop=1 to 14
+       >V>           LOOP => "4"
+       >>>           "4"
+       >>>           "5"
+       >=>           LOOP <= "5"
+   144 *-*         key1=opaquekey
+       >V>           OPAQUEKEY => "Key Bee"
+       >>>           "Key Bee"
+       >=>           KEY1 <= "Key Bee"
+   145 *-*         acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>           OPAQUEDIGITS => "12345678"
+       >A>           "12345678"
+       >L>           "6"
+       >A>           "6"
+       >L>           "2"
+       >A>           "2"
+       >F>           SUBSTR => "67"
+       >>>           "67"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.5"
+       >=>           ACOMPOUND.KEY1.LOOP <= "67"
+   146 *-*         if flag=acompound.key1.loop 
+       >V>           FLAG => "1"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.5"
+       >V>           ACOMPOUND.KEY1.LOOP => "67"
+       >O>           "=" => "0"
+       >>>           "0"
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>           "1.1"
+       >L>           "2.2"
+       >K>           "TO" => "2.2"
+       >L>           "1.1"
+       >K>           "BY" => "1.1"
+       >=>           J <= "1.1"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "1.1"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.5"
+       >V>             ACOMPOUND.KEY1.LOOP => "67"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "1.1"
+       >A>             "1.1"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "1.1"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "1.1"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.5"
+       >V>                   ACOMPOUND.KEY1.LOOP => "67"
+       >L>                   "1"
+       >O>                   "+" => "68"
+       >>>                   "68"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.5"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "68"
+   155 *-*                 if j=2 
+       >V>                   J => "1.1"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "1.1"
+       >>>             "1.1"
+       >>>             "2.2"
+       >=>             J <= "2.2"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "2.2"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.5"
+       >V>             ACOMPOUND.KEY1.LOOP => "68"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "2.2"
+       >A>             "2.2"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "2.2"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "2.2"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.5"
+       >V>                   ACOMPOUND.KEY1.LOOP => "68"
+       >L>                   "1"
+       >O>                   "+" => "69"
+       >>>                   "69"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.5"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "69"
+   155 *-*                 if j=2 
+       >V>                   J => "2.2"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "2.2"
+       >>>             "2.2"
+       >>>             "3.3"
+       >=>             J <= "3.3"
+   159 *-*       avar.=1.0''loop
+       >L>         "1.0"
+       >L>         ""
+       >O>         "" => "1.0"
+       >V>         LOOP => "5"
+       >O>         "" => "1.05"
+       >>>         "1.05"
+       >=>         AVAR. <= "1.05"
+   160 *-*       select
+   161 *-*         when flag='string' 
+       >V>           FLAG => "1"
+       >L>           "string"
+       >O>           "=" => "0"
+       >>>           "0"
+   162 *-*         when avar.flag.2=0 
+       >C>           AVAR.FLAG.2 => "AVAR.1.2"
+       >V>           AVAR.FLAG.2 => "1.05"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   163 *-*         when flag=5+99.7   
+       >V>           FLAG => "1"
+       >L>           "5"
+       >L>           "99.7"
+       >O>           "+" => "104.7"
+       >O>           "=" => "0"
+       >>>           "0"
+   164 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   164 *-*           then
+   164 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.05"
+       >L>               "1.1"
+       >O>               "*" => "1.155"
+       >>>               "1.155"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.155"
+   167 *-*       if opaqueone 
+       >V>         OPAQUEONE => "1"
+       >>>         "1"
+   167 *-*         then
+   167 *-*           flag=opaqueone
+       >V>             OPAQUEONE => "1"
+       >>>             "1"
+       >=>             FLAG <= "1"
+   168 *-*       select
+   169 *-*         when flag=='ring'  
+       >V>           FLAG => "1"
+       >L>           "ring"
+       >O>           "==" => "0"
+       >>>           "0"
+   170 *-*         when avar.flag.3=0 
+       >C>           AVAR.FLAG.3 => "AVAR.1.3"
+       >V>           AVAR.FLAG.3 => "1.05"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   171 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   171 *-*           then
+   171 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.155"
+       >L>               "1.1"
+       >O>               "*" => "1.2705"
+       >>>               "1.2705"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.2705"
+   174 *-*       parse value opaquefoobar with v1 +5 v2 .
+       >V>         OPAQUEFOOBAR => "Foo Bar"
+       >K>         "VALUE" => "Foo Bar"
+       >>>         "Foo Bar"
+       >L>         "5"
+       >>>         "5"
+       >=>         V1 <= "Foo B"
+       >=>         V2 <= "ar"
+       >.>         ""
+   175 *-*       trace value trace();
+       >F>         TRACE => "I"
+       >K>         "VALUE" => "I"
+   175 *-*       address value address()
+       >F>         ADDRESS => "sh"
+       >>>         "sh"
+   176 *-*       call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>         OPAQUEWITH => "with"
+       >L>         "2"
+       >O>         " " => "with 2"
+       >V>         OPAQUEARGS => "args"
+       >O>         " " => "with 2 args"
+       >A>         "with 2 args"
+       >L>         "(This is the second)"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)1"
+       >L>         ""
+       >O>         "" => "(This is the second)1"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)11"
+       >A>         "(This is the second)11"
+   236 *-*         subroutine:
+   237 *-*         parse upper arg a1 a2 a3 ., a4
+       >>>           "WITH 2 ARGS"
+       >=>           A1 <= "WITH"
+       >=>           A2 <= "2"
+       >=>           A3 <= "ARGS"
+       >.>           ""
+       >>>           "(THIS IS THE SECOND)11"
+       >=>           A4 <= "(THIS IS THE SECOND)11"
+   238 *-*         parse var a3 b1 b2 b3 .
+       >V>           A3 => "ARGS"
+       >K>           "VAR" => "ARGS"
+       >>>           "ARGS"
+       >=>           B1 <= "ARGS"
+       >=>           B2 <= ""
+       >=>           B3 <= ""
+       >.>           ""
+   239 *-*         do 1;
+       >L>           "1"
+       >K>           "FOR" => "1"
+   239 *-*           rc=a1 a2 a3;
+       >V>             A1 => "WITH"
+       >V>             A2 => "2"
+       >O>             " " => "WITH 2"
+       >V>             A3 => "ARGS"
+       >O>             " " => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             RC <= "WITH 2 ARGS"
+   239 *-*           parse var rc c1 c2 c3;
+       >V>             RC => "WITH 2 ARGS"
+       >K>             "VAR" => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             C1 <= "WITH"
+       >=>             C2 <= "2"
+       >=>             C3 <= "ARGS"
+   239 *-*         end
+   239 *-*         do 1;
+   240 *-*       return
+   177 *-*       rc='This is an awfully boring program';
+       >L>         "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >=>         RC <= "This is an awfully boring program"
+   177 *-*       parse var rc p1 (p0) p5
+       >V>         RC => "This is an awfully boring program"
+       >K>         "VAR" => "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P1 <= "This is an awfully "
+       >=>         P5 <= "oring program"
+   178 *-*       rc='is an awfully boring program This';
+       >L>         "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >=>         RC <= "is an awfully boring program This"
+   178 *-*       parse var rc p2 (p0) p6
+       >V>         RC => "is an awfully boring program This"
+       >K>         "VAR" => "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P2 <= "is an awfully "
+       >=>         P6 <= "oring program This"
+   179 *-*       rc='an awfully boring program This is';
+       >L>         "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >=>         RC <= "an awfully boring program This is"
+   179 *-*       parse var rc p3 (p0) p7
+       >V>         RC => "an awfully boring program This is"
+       >K>         "VAR" => "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P3 <= "an awfully "
+       >=>         P7 <= "oring program This is"
+   180 *-*       rc='awfully boring program This is an';
+       >L>         "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >=>         RC <= "awfully boring program This is an"
+   180 *-*       parse var rc p4 (p0) p8
+       >V>         RC => "awfully boring program This is an"
+       >K>         "VAR" => "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P4 <= "awfully "
+       >=>         P8 <= "oring program This is an"
+   181 *-*       end loop
+   142 *-*       do loop=1 to 14
+       >V>           LOOP => "5"
+       >>>           "5"
+       >>>           "6"
+       >=>           LOOP <= "6"
+   144 *-*         key1=opaquekey
+       >V>           OPAQUEKEY => "Key Bee"
+       >>>           "Key Bee"
+       >=>           KEY1 <= "Key Bee"
+   145 *-*         acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>           OPAQUEDIGITS => "12345678"
+       >A>           "12345678"
+       >L>           "6"
+       >A>           "6"
+       >L>           "2"
+       >A>           "2"
+       >F>           SUBSTR => "67"
+       >>>           "67"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.6"
+       >=>           ACOMPOUND.KEY1.LOOP <= "67"
+   146 *-*         if flag=acompound.key1.loop 
+       >V>           FLAG => "1"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.6"
+       >V>           ACOMPOUND.KEY1.LOOP => "67"
+       >O>           "=" => "0"
+       >>>           "0"
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>           "1.1"
+       >L>           "2.2"
+       >K>           "TO" => "2.2"
+       >L>           "1.1"
+       >K>           "BY" => "1.1"
+       >=>           J <= "1.1"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "1.1"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.6"
+       >V>             ACOMPOUND.KEY1.LOOP => "67"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "1.1"
+       >A>             "1.1"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "1.1"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "1.1"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.6"
+       >V>                   ACOMPOUND.KEY1.LOOP => "67"
+       >L>                   "1"
+       >O>                   "+" => "68"
+       >>>                   "68"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.6"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "68"
+   155 *-*                 if j=2 
+       >V>                   J => "1.1"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "1.1"
+       >>>             "1.1"
+       >>>             "2.2"
+       >=>             J <= "2.2"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "2.2"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.6"
+       >V>             ACOMPOUND.KEY1.LOOP => "68"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "2.2"
+       >A>             "2.2"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "2.2"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "2.2"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.6"
+       >V>                   ACOMPOUND.KEY1.LOOP => "68"
+       >L>                   "1"
+       >O>                   "+" => "69"
+       >>>                   "69"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.6"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "69"
+   155 *-*                 if j=2 
+       >V>                   J => "2.2"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "2.2"
+       >>>             "2.2"
+       >>>             "3.3"
+       >=>             J <= "3.3"
+   159 *-*       avar.=1.0''loop
+       >L>         "1.0"
+       >L>         ""
+       >O>         "" => "1.0"
+       >V>         LOOP => "6"
+       >O>         "" => "1.06"
+       >>>         "1.06"
+       >=>         AVAR. <= "1.06"
+   160 *-*       select
+   161 *-*         when flag='string' 
+       >V>           FLAG => "1"
+       >L>           "string"
+       >O>           "=" => "0"
+       >>>           "0"
+   162 *-*         when avar.flag.2=0 
+       >C>           AVAR.FLAG.2 => "AVAR.1.2"
+       >V>           AVAR.FLAG.2 => "1.06"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   163 *-*         when flag=5+99.7   
+       >V>           FLAG => "1"
+       >L>           "5"
+       >L>           "99.7"
+       >O>           "+" => "104.7"
+       >O>           "=" => "0"
+       >>>           "0"
+   164 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   164 *-*           then
+   164 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.06"
+       >L>               "1.1"
+       >O>               "*" => "1.166"
+       >>>               "1.166"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.166"
+   167 *-*       if opaqueone 
+       >V>         OPAQUEONE => "1"
+       >>>         "1"
+   167 *-*         then
+   167 *-*           flag=opaqueone
+       >V>             OPAQUEONE => "1"
+       >>>             "1"
+       >=>             FLAG <= "1"
+   168 *-*       select
+   169 *-*         when flag=='ring'  
+       >V>           FLAG => "1"
+       >L>           "ring"
+       >O>           "==" => "0"
+       >>>           "0"
+   170 *-*         when avar.flag.3=0 
+       >C>           AVAR.FLAG.3 => "AVAR.1.3"
+       >V>           AVAR.FLAG.3 => "1.06"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   171 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   171 *-*           then
+   171 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.166"
+       >L>               "1.1"
+       >O>               "*" => "1.2826"
+       >>>               "1.2826"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.2826"
+   174 *-*       parse value opaquefoobar with v1 +5 v2 .
+       >V>         OPAQUEFOOBAR => "Foo Bar"
+       >K>         "VALUE" => "Foo Bar"
+       >>>         "Foo Bar"
+       >L>         "5"
+       >>>         "5"
+       >=>         V1 <= "Foo B"
+       >=>         V2 <= "ar"
+       >.>         ""
+   175 *-*       trace value trace();
+       >F>         TRACE => "I"
+       >K>         "VALUE" => "I"
+   175 *-*       address value address()
+       >F>         ADDRESS => "sh"
+       >>>         "sh"
+   176 *-*       call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>         OPAQUEWITH => "with"
+       >L>         "2"
+       >O>         " " => "with 2"
+       >V>         OPAQUEARGS => "args"
+       >O>         " " => "with 2 args"
+       >A>         "with 2 args"
+       >L>         "(This is the second)"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)1"
+       >L>         ""
+       >O>         "" => "(This is the second)1"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)11"
+       >A>         "(This is the second)11"
+   236 *-*         subroutine:
+   237 *-*         parse upper arg a1 a2 a3 ., a4
+       >>>           "WITH 2 ARGS"
+       >=>           A1 <= "WITH"
+       >=>           A2 <= "2"
+       >=>           A3 <= "ARGS"
+       >.>           ""
+       >>>           "(THIS IS THE SECOND)11"
+       >=>           A4 <= "(THIS IS THE SECOND)11"
+   238 *-*         parse var a3 b1 b2 b3 .
+       >V>           A3 => "ARGS"
+       >K>           "VAR" => "ARGS"
+       >>>           "ARGS"
+       >=>           B1 <= "ARGS"
+       >=>           B2 <= ""
+       >=>           B3 <= ""
+       >.>           ""
+   239 *-*         do 1;
+       >L>           "1"
+       >K>           "FOR" => "1"
+   239 *-*           rc=a1 a2 a3;
+       >V>             A1 => "WITH"
+       >V>             A2 => "2"
+       >O>             " " => "WITH 2"
+       >V>             A3 => "ARGS"
+       >O>             " " => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             RC <= "WITH 2 ARGS"
+   239 *-*           parse var rc c1 c2 c3;
+       >V>             RC => "WITH 2 ARGS"
+       >K>             "VAR" => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             C1 <= "WITH"
+       >=>             C2 <= "2"
+       >=>             C3 <= "ARGS"
+   239 *-*         end
+   239 *-*         do 1;
+   240 *-*       return
+   177 *-*       rc='This is an awfully boring program';
+       >L>         "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >=>         RC <= "This is an awfully boring program"
+   177 *-*       parse var rc p1 (p0) p5
+       >V>         RC => "This is an awfully boring program"
+       >K>         "VAR" => "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P1 <= "This is an awfully "
+       >=>         P5 <= "oring program"
+   178 *-*       rc='is an awfully boring program This';
+       >L>         "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >=>         RC <= "is an awfully boring program This"
+   178 *-*       parse var rc p2 (p0) p6
+       >V>         RC => "is an awfully boring program This"
+       >K>         "VAR" => "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P2 <= "is an awfully "
+       >=>         P6 <= "oring program This"
+   179 *-*       rc='an awfully boring program This is';
+       >L>         "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >=>         RC <= "an awfully boring program This is"
+   179 *-*       parse var rc p3 (p0) p7
+       >V>         RC => "an awfully boring program This is"
+       >K>         "VAR" => "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P3 <= "an awfully "
+       >=>         P7 <= "oring program This is"
+   180 *-*       rc='awfully boring program This is an';
+       >L>         "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >=>         RC <= "awfully boring program This is an"
+   180 *-*       parse var rc p4 (p0) p8
+       >V>         RC => "awfully boring program This is an"
+       >K>         "VAR" => "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P4 <= "awfully "
+       >=>         P8 <= "oring program This is an"
+   181 *-*       end loop
+   142 *-*       do loop=1 to 14
+       >V>           LOOP => "6"
+       >>>           "6"
+       >>>           "7"
+       >=>           LOOP <= "7"
+   144 *-*         key1=opaquekey
+       >V>           OPAQUEKEY => "Key Bee"
+       >>>           "Key Bee"
+       >=>           KEY1 <= "Key Bee"
+   145 *-*         acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>           OPAQUEDIGITS => "12345678"
+       >A>           "12345678"
+       >L>           "6"
+       >A>           "6"
+       >L>           "2"
+       >A>           "2"
+       >F>           SUBSTR => "67"
+       >>>           "67"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.7"
+       >=>           ACOMPOUND.KEY1.LOOP <= "67"
+   146 *-*         if flag=acompound.key1.loop 
+       >V>           FLAG => "1"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.7"
+       >V>           ACOMPOUND.KEY1.LOOP => "67"
+       >O>           "=" => "0"
+       >>>           "0"
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>           "1.1"
+       >L>           "2.2"
+       >K>           "TO" => "2.2"
+       >L>           "1.1"
+       >K>           "BY" => "1.1"
+       >=>           J <= "1.1"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "1.1"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.7"
+       >V>             ACOMPOUND.KEY1.LOOP => "67"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "1.1"
+       >A>             "1.1"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "1.1"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "1.1"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.7"
+       >V>                   ACOMPOUND.KEY1.LOOP => "67"
+       >L>                   "1"
+       >O>                   "+" => "68"
+       >>>                   "68"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.7"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "68"
+   155 *-*                 if j=2 
+       >V>                   J => "1.1"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "1.1"
+       >>>             "1.1"
+       >>>             "2.2"
+       >=>             J <= "2.2"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "2.2"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.7"
+       >V>             ACOMPOUND.KEY1.LOOP => "68"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "2.2"
+       >A>             "2.2"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "2.2"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "2.2"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.7"
+       >V>                   ACOMPOUND.KEY1.LOOP => "68"
+       >L>                   "1"
+       >O>                   "+" => "69"
+       >>>                   "69"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.7"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "69"
+   155 *-*                 if j=2 
+       >V>                   J => "2.2"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "2.2"
+       >>>             "2.2"
+       >>>             "3.3"
+       >=>             J <= "3.3"
+   159 *-*       avar.=1.0''loop
+       >L>         "1.0"
+       >L>         ""
+       >O>         "" => "1.0"
+       >V>         LOOP => "7"
+       >O>         "" => "1.07"
+       >>>         "1.07"
+       >=>         AVAR. <= "1.07"
+   160 *-*       select
+   161 *-*         when flag='string' 
+       >V>           FLAG => "1"
+       >L>           "string"
+       >O>           "=" => "0"
+       >>>           "0"
+   162 *-*         when avar.flag.2=0 
+       >C>           AVAR.FLAG.2 => "AVAR.1.2"
+       >V>           AVAR.FLAG.2 => "1.07"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   163 *-*         when flag=5+99.7   
+       >V>           FLAG => "1"
+       >L>           "5"
+       >L>           "99.7"
+       >O>           "+" => "104.7"
+       >O>           "=" => "0"
+       >>>           "0"
+   164 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   164 *-*           then
+   164 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.07"
+       >L>               "1.1"
+       >O>               "*" => "1.177"
+       >>>               "1.177"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.177"
+   167 *-*       if opaqueone 
+       >V>         OPAQUEONE => "1"
+       >>>         "1"
+   167 *-*         then
+   167 *-*           flag=opaqueone
+       >V>             OPAQUEONE => "1"
+       >>>             "1"
+       >=>             FLAG <= "1"
+   168 *-*       select
+   169 *-*         when flag=='ring'  
+       >V>           FLAG => "1"
+       >L>           "ring"
+       >O>           "==" => "0"
+       >>>           "0"
+   170 *-*         when avar.flag.3=0 
+       >C>           AVAR.FLAG.3 => "AVAR.1.3"
+       >V>           AVAR.FLAG.3 => "1.07"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   171 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   171 *-*           then
+   171 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.177"
+       >L>               "1.1"
+       >O>               "*" => "1.2947"
+       >>>               "1.2947"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.2947"
+   174 *-*       parse value opaquefoobar with v1 +5 v2 .
+       >V>         OPAQUEFOOBAR => "Foo Bar"
+       >K>         "VALUE" => "Foo Bar"
+       >>>         "Foo Bar"
+       >L>         "5"
+       >>>         "5"
+       >=>         V1 <= "Foo B"
+       >=>         V2 <= "ar"
+       >.>         ""
+   175 *-*       trace value trace();
+       >F>         TRACE => "I"
+       >K>         "VALUE" => "I"
+   175 *-*       address value address()
+       >F>         ADDRESS => "sh"
+       >>>         "sh"
+   176 *-*       call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>         OPAQUEWITH => "with"
+       >L>         "2"
+       >O>         " " => "with 2"
+       >V>         OPAQUEARGS => "args"
+       >O>         " " => "with 2 args"
+       >A>         "with 2 args"
+       >L>         "(This is the second)"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)1"
+       >L>         ""
+       >O>         "" => "(This is the second)1"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)11"
+       >A>         "(This is the second)11"
+   236 *-*         subroutine:
+   237 *-*         parse upper arg a1 a2 a3 ., a4
+       >>>           "WITH 2 ARGS"
+       >=>           A1 <= "WITH"
+       >=>           A2 <= "2"
+       >=>           A3 <= "ARGS"
+       >.>           ""
+       >>>           "(THIS IS THE SECOND)11"
+       >=>           A4 <= "(THIS IS THE SECOND)11"
+   238 *-*         parse var a3 b1 b2 b3 .
+       >V>           A3 => "ARGS"
+       >K>           "VAR" => "ARGS"
+       >>>           "ARGS"
+       >=>           B1 <= "ARGS"
+       >=>           B2 <= ""
+       >=>           B3 <= ""
+       >.>           ""
+   239 *-*         do 1;
+       >L>           "1"
+       >K>           "FOR" => "1"
+   239 *-*           rc=a1 a2 a3;
+       >V>             A1 => "WITH"
+       >V>             A2 => "2"
+       >O>             " " => "WITH 2"
+       >V>             A3 => "ARGS"
+       >O>             " " => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             RC <= "WITH 2 ARGS"
+   239 *-*           parse var rc c1 c2 c3;
+       >V>             RC => "WITH 2 ARGS"
+       >K>             "VAR" => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             C1 <= "WITH"
+       >=>             C2 <= "2"
+       >=>             C3 <= "ARGS"
+   239 *-*         end
+   239 *-*         do 1;
+   240 *-*       return
+   177 *-*       rc='This is an awfully boring program';
+       >L>         "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >=>         RC <= "This is an awfully boring program"
+   177 *-*       parse var rc p1 (p0) p5
+       >V>         RC => "This is an awfully boring program"
+       >K>         "VAR" => "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P1 <= "This is an awfully "
+       >=>         P5 <= "oring program"
+   178 *-*       rc='is an awfully boring program This';
+       >L>         "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >=>         RC <= "is an awfully boring program This"
+   178 *-*       parse var rc p2 (p0) p6
+       >V>         RC => "is an awfully boring program This"
+       >K>         "VAR" => "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P2 <= "is an awfully "
+       >=>         P6 <= "oring program This"
+   179 *-*       rc='an awfully boring program This is';
+       >L>         "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >=>         RC <= "an awfully boring program This is"
+   179 *-*       parse var rc p3 (p0) p7
+       >V>         RC => "an awfully boring program This is"
+       >K>         "VAR" => "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P3 <= "an awfully "
+       >=>         P7 <= "oring program This is"
+   180 *-*       rc='awfully boring program This is an';
+       >L>         "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >=>         RC <= "awfully boring program This is an"
+   180 *-*       parse var rc p4 (p0) p8
+       >V>         RC => "awfully boring program This is an"
+       >K>         "VAR" => "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P4 <= "awfully "
+       >=>         P8 <= "oring program This is an"
+   181 *-*       end loop
+   142 *-*       do loop=1 to 14
+       >V>           LOOP => "7"
+       >>>           "7"
+       >>>           "8"
+       >=>           LOOP <= "8"
+   144 *-*         key1=opaquekey
+       >V>           OPAQUEKEY => "Key Bee"
+       >>>           "Key Bee"
+       >=>           KEY1 <= "Key Bee"
+   145 *-*         acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>           OPAQUEDIGITS => "12345678"
+       >A>           "12345678"
+       >L>           "6"
+       >A>           "6"
+       >L>           "2"
+       >A>           "2"
+       >F>           SUBSTR => "67"
+       >>>           "67"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.8"
+       >=>           ACOMPOUND.KEY1.LOOP <= "67"
+   146 *-*         if flag=acompound.key1.loop 
+       >V>           FLAG => "1"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.8"
+       >V>           ACOMPOUND.KEY1.LOOP => "67"
+       >O>           "=" => "0"
+       >>>           "0"
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>           "1.1"
+       >L>           "2.2"
+       >K>           "TO" => "2.2"
+       >L>           "1.1"
+       >K>           "BY" => "1.1"
+       >=>           J <= "1.1"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "1.1"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.8"
+       >V>             ACOMPOUND.KEY1.LOOP => "67"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "1.1"
+       >A>             "1.1"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "1.1"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "1.1"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.8"
+       >V>                   ACOMPOUND.KEY1.LOOP => "67"
+       >L>                   "1"
+       >O>                   "+" => "68"
+       >>>                   "68"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.8"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "68"
+   155 *-*                 if j=2 
+       >V>                   J => "1.1"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "1.1"
+       >>>             "1.1"
+       >>>             "2.2"
+       >=>             J <= "2.2"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "2.2"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.8"
+       >V>             ACOMPOUND.KEY1.LOOP => "68"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "2.2"
+       >A>             "2.2"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "2.2"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "2.2"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.8"
+       >V>                   ACOMPOUND.KEY1.LOOP => "68"
+       >L>                   "1"
+       >O>                   "+" => "69"
+       >>>                   "69"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.8"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "69"
+   155 *-*                 if j=2 
+       >V>                   J => "2.2"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "2.2"
+       >>>             "2.2"
+       >>>             "3.3"
+       >=>             J <= "3.3"
+   159 *-*       avar.=1.0''loop
+       >L>         "1.0"
+       >L>         ""
+       >O>         "" => "1.0"
+       >V>         LOOP => "8"
+       >O>         "" => "1.08"
+       >>>         "1.08"
+       >=>         AVAR. <= "1.08"
+   160 *-*       select
+   161 *-*         when flag='string' 
+       >V>           FLAG => "1"
+       >L>           "string"
+       >O>           "=" => "0"
+       >>>           "0"
+   162 *-*         when avar.flag.2=0 
+       >C>           AVAR.FLAG.2 => "AVAR.1.2"
+       >V>           AVAR.FLAG.2 => "1.08"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   163 *-*         when flag=5+99.7   
+       >V>           FLAG => "1"
+       >L>           "5"
+       >L>           "99.7"
+       >O>           "+" => "104.7"
+       >O>           "=" => "0"
+       >>>           "0"
+   164 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   164 *-*           then
+   164 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.08"
+       >L>               "1.1"
+       >O>               "*" => "1.188"
+       >>>               "1.188"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.188"
+   167 *-*       if opaqueone 
+       >V>         OPAQUEONE => "1"
+       >>>         "1"
+   167 *-*         then
+   167 *-*           flag=opaqueone
+       >V>             OPAQUEONE => "1"
+       >>>             "1"
+       >=>             FLAG <= "1"
+   168 *-*       select
+   169 *-*         when flag=='ring'  
+       >V>           FLAG => "1"
+       >L>           "ring"
+       >O>           "==" => "0"
+       >>>           "0"
+   170 *-*         when avar.flag.3=0 
+       >C>           AVAR.FLAG.3 => "AVAR.1.3"
+       >V>           AVAR.FLAG.3 => "1.08"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   171 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   171 *-*           then
+   171 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.188"
+       >L>               "1.1"
+       >O>               "*" => "1.3068"
+       >>>               "1.3068"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.3068"
+   174 *-*       parse value opaquefoobar with v1 +5 v2 .
+       >V>         OPAQUEFOOBAR => "Foo Bar"
+       >K>         "VALUE" => "Foo Bar"
+       >>>         "Foo Bar"
+       >L>         "5"
+       >>>         "5"
+       >=>         V1 <= "Foo B"
+       >=>         V2 <= "ar"
+       >.>         ""
+   175 *-*       trace value trace();
+       >F>         TRACE => "I"
+       >K>         "VALUE" => "I"
+   175 *-*       address value address()
+       >F>         ADDRESS => "sh"
+       >>>         "sh"
+   176 *-*       call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>         OPAQUEWITH => "with"
+       >L>         "2"
+       >O>         " " => "with 2"
+       >V>         OPAQUEARGS => "args"
+       >O>         " " => "with 2 args"
+       >A>         "with 2 args"
+       >L>         "(This is the second)"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)1"
+       >L>         ""
+       >O>         "" => "(This is the second)1"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)11"
+       >A>         "(This is the second)11"
+   236 *-*         subroutine:
+   237 *-*         parse upper arg a1 a2 a3 ., a4
+       >>>           "WITH 2 ARGS"
+       >=>           A1 <= "WITH"
+       >=>           A2 <= "2"
+       >=>           A3 <= "ARGS"
+       >.>           ""
+       >>>           "(THIS IS THE SECOND)11"
+       >=>           A4 <= "(THIS IS THE SECOND)11"
+   238 *-*         parse var a3 b1 b2 b3 .
+       >V>           A3 => "ARGS"
+       >K>           "VAR" => "ARGS"
+       >>>           "ARGS"
+       >=>           B1 <= "ARGS"
+       >=>           B2 <= ""
+       >=>           B3 <= ""
+       >.>           ""
+   239 *-*         do 1;
+       >L>           "1"
+       >K>           "FOR" => "1"
+   239 *-*           rc=a1 a2 a3;
+       >V>             A1 => "WITH"
+       >V>             A2 => "2"
+       >O>             " " => "WITH 2"
+       >V>             A3 => "ARGS"
+       >O>             " " => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             RC <= "WITH 2 ARGS"
+   239 *-*           parse var rc c1 c2 c3;
+       >V>             RC => "WITH 2 ARGS"
+       >K>             "VAR" => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             C1 <= "WITH"
+       >=>             C2 <= "2"
+       >=>             C3 <= "ARGS"
+   239 *-*         end
+   239 *-*         do 1;
+   240 *-*       return
+   177 *-*       rc='This is an awfully boring program';
+       >L>         "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >=>         RC <= "This is an awfully boring program"
+   177 *-*       parse var rc p1 (p0) p5
+       >V>         RC => "This is an awfully boring program"
+       >K>         "VAR" => "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P1 <= "This is an awfully "
+       >=>         P5 <= "oring program"
+   178 *-*       rc='is an awfully boring program This';
+       >L>         "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >=>         RC <= "is an awfully boring program This"
+   178 *-*       parse var rc p2 (p0) p6
+       >V>         RC => "is an awfully boring program This"
+       >K>         "VAR" => "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P2 <= "is an awfully "
+       >=>         P6 <= "oring program This"
+   179 *-*       rc='an awfully boring program This is';
+       >L>         "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >=>         RC <= "an awfully boring program This is"
+   179 *-*       parse var rc p3 (p0) p7
+       >V>         RC => "an awfully boring program This is"
+       >K>         "VAR" => "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P3 <= "an awfully "
+       >=>         P7 <= "oring program This is"
+   180 *-*       rc='awfully boring program This is an';
+       >L>         "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >=>         RC <= "awfully boring program This is an"
+   180 *-*       parse var rc p4 (p0) p8
+       >V>         RC => "awfully boring program This is an"
+       >K>         "VAR" => "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P4 <= "awfully "
+       >=>         P8 <= "oring program This is an"
+   181 *-*       end loop
+   142 *-*       do loop=1 to 14
+       >V>           LOOP => "8"
+       >>>           "8"
+       >>>           "9"
+       >=>           LOOP <= "9"
+   144 *-*         key1=opaquekey
+       >V>           OPAQUEKEY => "Key Bee"
+       >>>           "Key Bee"
+       >=>           KEY1 <= "Key Bee"
+   145 *-*         acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>           OPAQUEDIGITS => "12345678"
+       >A>           "12345678"
+       >L>           "6"
+       >A>           "6"
+       >L>           "2"
+       >A>           "2"
+       >F>           SUBSTR => "67"
+       >>>           "67"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.9"
+       >=>           ACOMPOUND.KEY1.LOOP <= "67"
+   146 *-*         if flag=acompound.key1.loop 
+       >V>           FLAG => "1"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.9"
+       >V>           ACOMPOUND.KEY1.LOOP => "67"
+       >O>           "=" => "0"
+       >>>           "0"
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>           "1.1"
+       >L>           "2.2"
+       >K>           "TO" => "2.2"
+       >L>           "1.1"
+       >K>           "BY" => "1.1"
+       >=>           J <= "1.1"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "1.1"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.9"
+       >V>             ACOMPOUND.KEY1.LOOP => "67"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "1.1"
+       >A>             "1.1"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "1.1"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "1.1"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.9"
+       >V>                   ACOMPOUND.KEY1.LOOP => "67"
+       >L>                   "1"
+       >O>                   "+" => "68"
+       >>>                   "68"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.9"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "68"
+   155 *-*                 if j=2 
+       >V>                   J => "1.1"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "1.1"
+       >>>             "1.1"
+       >>>             "2.2"
+       >=>             J <= "2.2"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "2.2"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.9"
+       >V>             ACOMPOUND.KEY1.LOOP => "68"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "2.2"
+       >A>             "2.2"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "2.2"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "2.2"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.9"
+       >V>                   ACOMPOUND.KEY1.LOOP => "68"
+       >L>                   "1"
+       >O>                   "+" => "69"
+       >>>                   "69"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.9"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "69"
+   155 *-*                 if j=2 
+       >V>                   J => "2.2"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "2.2"
+       >>>             "2.2"
+       >>>             "3.3"
+       >=>             J <= "3.3"
+   159 *-*       avar.=1.0''loop
+       >L>         "1.0"
+       >L>         ""
+       >O>         "" => "1.0"
+       >V>         LOOP => "9"
+       >O>         "" => "1.09"
+       >>>         "1.09"
+       >=>         AVAR. <= "1.09"
+   160 *-*       select
+   161 *-*         when flag='string' 
+       >V>           FLAG => "1"
+       >L>           "string"
+       >O>           "=" => "0"
+       >>>           "0"
+   162 *-*         when avar.flag.2=0 
+       >C>           AVAR.FLAG.2 => "AVAR.1.2"
+       >V>           AVAR.FLAG.2 => "1.09"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   163 *-*         when flag=5+99.7   
+       >V>           FLAG => "1"
+       >L>           "5"
+       >L>           "99.7"
+       >O>           "+" => "104.7"
+       >O>           "=" => "0"
+       >>>           "0"
+   164 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   164 *-*           then
+   164 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.09"
+       >L>               "1.1"
+       >O>               "*" => "1.199"
+       >>>               "1.199"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.199"
+   167 *-*       if opaqueone 
+       >V>         OPAQUEONE => "1"
+       >>>         "1"
+   167 *-*         then
+   167 *-*           flag=opaqueone
+       >V>             OPAQUEONE => "1"
+       >>>             "1"
+       >=>             FLAG <= "1"
+   168 *-*       select
+   169 *-*         when flag=='ring'  
+       >V>           FLAG => "1"
+       >L>           "ring"
+       >O>           "==" => "0"
+       >>>           "0"
+   170 *-*         when avar.flag.3=0 
+       >C>           AVAR.FLAG.3 => "AVAR.1.3"
+       >V>           AVAR.FLAG.3 => "1.09"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   171 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   171 *-*           then
+   171 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.199"
+       >L>               "1.1"
+       >O>               "*" => "1.3189"
+       >>>               "1.3189"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.3189"
+   174 *-*       parse value opaquefoobar with v1 +5 v2 .
+       >V>         OPAQUEFOOBAR => "Foo Bar"
+       >K>         "VALUE" => "Foo Bar"
+       >>>         "Foo Bar"
+       >L>         "5"
+       >>>         "5"
+       >=>         V1 <= "Foo B"
+       >=>         V2 <= "ar"
+       >.>         ""
+   175 *-*       trace value trace();
+       >F>         TRACE => "I"
+       >K>         "VALUE" => "I"
+   175 *-*       address value address()
+       >F>         ADDRESS => "sh"
+       >>>         "sh"
+   176 *-*       call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>         OPAQUEWITH => "with"
+       >L>         "2"
+       >O>         " " => "with 2"
+       >V>         OPAQUEARGS => "args"
+       >O>         " " => "with 2 args"
+       >A>         "with 2 args"
+       >L>         "(This is the second)"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)1"
+       >L>         ""
+       >O>         "" => "(This is the second)1"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)11"
+       >A>         "(This is the second)11"
+   236 *-*         subroutine:
+   237 *-*         parse upper arg a1 a2 a3 ., a4
+       >>>           "WITH 2 ARGS"
+       >=>           A1 <= "WITH"
+       >=>           A2 <= "2"
+       >=>           A3 <= "ARGS"
+       >.>           ""
+       >>>           "(THIS IS THE SECOND)11"
+       >=>           A4 <= "(THIS IS THE SECOND)11"
+   238 *-*         parse var a3 b1 b2 b3 .
+       >V>           A3 => "ARGS"
+       >K>           "VAR" => "ARGS"
+       >>>           "ARGS"
+       >=>           B1 <= "ARGS"
+       >=>           B2 <= ""
+       >=>           B3 <= ""
+       >.>           ""
+   239 *-*         do 1;
+       >L>           "1"
+       >K>           "FOR" => "1"
+   239 *-*           rc=a1 a2 a3;
+       >V>             A1 => "WITH"
+       >V>             A2 => "2"
+       >O>             " " => "WITH 2"
+       >V>             A3 => "ARGS"
+       >O>             " " => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             RC <= "WITH 2 ARGS"
+   239 *-*           parse var rc c1 c2 c3;
+       >V>             RC => "WITH 2 ARGS"
+       >K>             "VAR" => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             C1 <= "WITH"
+       >=>             C2 <= "2"
+       >=>             C3 <= "ARGS"
+   239 *-*         end
+   239 *-*         do 1;
+   240 *-*       return
+   177 *-*       rc='This is an awfully boring program';
+       >L>         "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >=>         RC <= "This is an awfully boring program"
+   177 *-*       parse var rc p1 (p0) p5
+       >V>         RC => "This is an awfully boring program"
+       >K>         "VAR" => "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P1 <= "This is an awfully "
+       >=>         P5 <= "oring program"
+   178 *-*       rc='is an awfully boring program This';
+       >L>         "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >=>         RC <= "is an awfully boring program This"
+   178 *-*       parse var rc p2 (p0) p6
+       >V>         RC => "is an awfully boring program This"
+       >K>         "VAR" => "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P2 <= "is an awfully "
+       >=>         P6 <= "oring program This"
+   179 *-*       rc='an awfully boring program This is';
+       >L>         "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >=>         RC <= "an awfully boring program This is"
+   179 *-*       parse var rc p3 (p0) p7
+       >V>         RC => "an awfully boring program This is"
+       >K>         "VAR" => "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P3 <= "an awfully "
+       >=>         P7 <= "oring program This is"
+   180 *-*       rc='awfully boring program This is an';
+       >L>         "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >=>         RC <= "awfully boring program This is an"
+   180 *-*       parse var rc p4 (p0) p8
+       >V>         RC => "awfully boring program This is an"
+       >K>         "VAR" => "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P4 <= "awfully "
+       >=>         P8 <= "oring program This is an"
+   181 *-*       end loop
+   142 *-*       do loop=1 to 14
+       >V>           LOOP => "9"
+       >>>           "9"
+       >>>           "10"
+       >=>           LOOP <= "10"
+   144 *-*         key1=opaquekey
+       >V>           OPAQUEKEY => "Key Bee"
+       >>>           "Key Bee"
+       >=>           KEY1 <= "Key Bee"
+   145 *-*         acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>           OPAQUEDIGITS => "12345678"
+       >A>           "12345678"
+       >L>           "6"
+       >A>           "6"
+       >L>           "2"
+       >A>           "2"
+       >F>           SUBSTR => "67"
+       >>>           "67"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.10"
+       >=>           ACOMPOUND.KEY1.LOOP <= "67"
+   146 *-*         if flag=acompound.key1.loop 
+       >V>           FLAG => "1"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.10"
+       >V>           ACOMPOUND.KEY1.LOOP => "67"
+       >O>           "=" => "0"
+       >>>           "0"
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>           "1.1"
+       >L>           "2.2"
+       >K>           "TO" => "2.2"
+       >L>           "1.1"
+       >K>           "BY" => "1.1"
+       >=>           J <= "1.1"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "1.1"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.10"
+       >V>             ACOMPOUND.KEY1.LOOP => "67"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "1.1"
+       >A>             "1.1"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "1.1"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "1.1"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.10"
+       >V>                   ACOMPOUND.KEY1.LOOP => "67"
+       >L>                   "1"
+       >O>                   "+" => "68"
+       >>>                   "68"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.10"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "68"
+   155 *-*                 if j=2 
+       >V>                   J => "1.1"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "1.1"
+       >>>             "1.1"
+       >>>             "2.2"
+       >=>             J <= "2.2"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "2.2"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.10"
+       >V>             ACOMPOUND.KEY1.LOOP => "68"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "2.2"
+       >A>             "2.2"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "2.2"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "2.2"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.10"
+       >V>                   ACOMPOUND.KEY1.LOOP => "68"
+       >L>                   "1"
+       >O>                   "+" => "69"
+       >>>                   "69"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.10"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "69"
+   155 *-*                 if j=2 
+       >V>                   J => "2.2"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "2.2"
+       >>>             "2.2"
+       >>>             "3.3"
+       >=>             J <= "3.3"
+   159 *-*       avar.=1.0''loop
+       >L>         "1.0"
+       >L>         ""
+       >O>         "" => "1.0"
+       >V>         LOOP => "10"
+       >O>         "" => "1.010"
+       >>>         "1.010"
+       >=>         AVAR. <= "1.010"
+   160 *-*       select
+   161 *-*         when flag='string' 
+       >V>           FLAG => "1"
+       >L>           "string"
+       >O>           "=" => "0"
+       >>>           "0"
+   162 *-*         when avar.flag.2=0 
+       >C>           AVAR.FLAG.2 => "AVAR.1.2"
+       >V>           AVAR.FLAG.2 => "1.010"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   163 *-*         when flag=5+99.7   
+       >V>           FLAG => "1"
+       >L>           "5"
+       >L>           "99.7"
+       >O>           "+" => "104.7"
+       >O>           "=" => "0"
+       >>>           "0"
+   164 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   164 *-*           then
+   164 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.010"
+       >L>               "1.1"
+       >O>               "*" => "1.1110"
+       >>>               "1.1110"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.1110"
+   167 *-*       if opaqueone 
+       >V>         OPAQUEONE => "1"
+       >>>         "1"
+   167 *-*         then
+   167 *-*           flag=opaqueone
+       >V>             OPAQUEONE => "1"
+       >>>             "1"
+       >=>             FLAG <= "1"
+   168 *-*       select
+   169 *-*         when flag=='ring'  
+       >V>           FLAG => "1"
+       >L>           "ring"
+       >O>           "==" => "0"
+       >>>           "0"
+   170 *-*         when avar.flag.3=0 
+       >C>           AVAR.FLAG.3 => "AVAR.1.3"
+       >V>           AVAR.FLAG.3 => "1.010"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   171 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   171 *-*           then
+   171 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.1110"
+       >L>               "1.1"
+       >O>               "*" => "1.22210"
+       >>>               "1.22210"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.22210"
+   174 *-*       parse value opaquefoobar with v1 +5 v2 .
+       >V>         OPAQUEFOOBAR => "Foo Bar"
+       >K>         "VALUE" => "Foo Bar"
+       >>>         "Foo Bar"
+       >L>         "5"
+       >>>         "5"
+       >=>         V1 <= "Foo B"
+       >=>         V2 <= "ar"
+       >.>         ""
+   175 *-*       trace value trace();
+       >F>         TRACE => "I"
+       >K>         "VALUE" => "I"
+   175 *-*       address value address()
+       >F>         ADDRESS => "sh"
+       >>>         "sh"
+   176 *-*       call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>         OPAQUEWITH => "with"
+       >L>         "2"
+       >O>         " " => "with 2"
+       >V>         OPAQUEARGS => "args"
+       >O>         " " => "with 2 args"
+       >A>         "with 2 args"
+       >L>         "(This is the second)"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)1"
+       >L>         ""
+       >O>         "" => "(This is the second)1"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)11"
+       >A>         "(This is the second)11"
+   236 *-*         subroutine:
+   237 *-*         parse upper arg a1 a2 a3 ., a4
+       >>>           "WITH 2 ARGS"
+       >=>           A1 <= "WITH"
+       >=>           A2 <= "2"
+       >=>           A3 <= "ARGS"
+       >.>           ""
+       >>>           "(THIS IS THE SECOND)11"
+       >=>           A4 <= "(THIS IS THE SECOND)11"
+   238 *-*         parse var a3 b1 b2 b3 .
+       >V>           A3 => "ARGS"
+       >K>           "VAR" => "ARGS"
+       >>>           "ARGS"
+       >=>           B1 <= "ARGS"
+       >=>           B2 <= ""
+       >=>           B3 <= ""
+       >.>           ""
+   239 *-*         do 1;
+       >L>           "1"
+       >K>           "FOR" => "1"
+   239 *-*           rc=a1 a2 a3;
+       >V>             A1 => "WITH"
+       >V>             A2 => "2"
+       >O>             " " => "WITH 2"
+       >V>             A3 => "ARGS"
+       >O>             " " => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             RC <= "WITH 2 ARGS"
+   239 *-*           parse var rc c1 c2 c3;
+       >V>             RC => "WITH 2 ARGS"
+       >K>             "VAR" => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             C1 <= "WITH"
+       >=>             C2 <= "2"
+       >=>             C3 <= "ARGS"
+   239 *-*         end
+   239 *-*         do 1;
+   240 *-*       return
+   177 *-*       rc='This is an awfully boring program';
+       >L>         "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >=>         RC <= "This is an awfully boring program"
+   177 *-*       parse var rc p1 (p0) p5
+       >V>         RC => "This is an awfully boring program"
+       >K>         "VAR" => "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P1 <= "This is an awfully "
+       >=>         P5 <= "oring program"
+   178 *-*       rc='is an awfully boring program This';
+       >L>         "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >=>         RC <= "is an awfully boring program This"
+   178 *-*       parse var rc p2 (p0) p6
+       >V>         RC => "is an awfully boring program This"
+       >K>         "VAR" => "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P2 <= "is an awfully "
+       >=>         P6 <= "oring program This"
+   179 *-*       rc='an awfully boring program This is';
+       >L>         "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >=>         RC <= "an awfully boring program This is"
+   179 *-*       parse var rc p3 (p0) p7
+       >V>         RC => "an awfully boring program This is"
+       >K>         "VAR" => "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P3 <= "an awfully "
+       >=>         P7 <= "oring program This is"
+   180 *-*       rc='awfully boring program This is an';
+       >L>         "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >=>         RC <= "awfully boring program This is an"
+   180 *-*       parse var rc p4 (p0) p8
+       >V>         RC => "awfully boring program This is an"
+       >K>         "VAR" => "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P4 <= "awfully "
+       >=>         P8 <= "oring program This is an"
+   181 *-*       end loop
+   142 *-*       do loop=1 to 14
+       >V>           LOOP => "10"
+       >>>           "10"
+       >>>           "11"
+       >=>           LOOP <= "11"
+   144 *-*         key1=opaquekey
+       >V>           OPAQUEKEY => "Key Bee"
+       >>>           "Key Bee"
+       >=>           KEY1 <= "Key Bee"
+   145 *-*         acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>           OPAQUEDIGITS => "12345678"
+       >A>           "12345678"
+       >L>           "6"
+       >A>           "6"
+       >L>           "2"
+       >A>           "2"
+       >F>           SUBSTR => "67"
+       >>>           "67"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.11"
+       >=>           ACOMPOUND.KEY1.LOOP <= "67"
+   146 *-*         if flag=acompound.key1.loop 
+       >V>           FLAG => "1"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.11"
+       >V>           ACOMPOUND.KEY1.LOOP => "67"
+       >O>           "=" => "0"
+       >>>           "0"
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>           "1.1"
+       >L>           "2.2"
+       >K>           "TO" => "2.2"
+       >L>           "1.1"
+       >K>           "BY" => "1.1"
+       >=>           J <= "1.1"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "1.1"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.11"
+       >V>             ACOMPOUND.KEY1.LOOP => "67"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "1.1"
+       >A>             "1.1"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "1.1"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "1.1"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.11"
+       >V>                   ACOMPOUND.KEY1.LOOP => "67"
+       >L>                   "1"
+       >O>                   "+" => "68"
+       >>>                   "68"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.11"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "68"
+   155 *-*                 if j=2 
+       >V>                   J => "1.1"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "1.1"
+       >>>             "1.1"
+       >>>             "2.2"
+       >=>             J <= "2.2"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "2.2"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.11"
+       >V>             ACOMPOUND.KEY1.LOOP => "68"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "2.2"
+       >A>             "2.2"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "2.2"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "2.2"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.11"
+       >V>                   ACOMPOUND.KEY1.LOOP => "68"
+       >L>                   "1"
+       >O>                   "+" => "69"
+       >>>                   "69"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.11"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "69"
+   155 *-*                 if j=2 
+       >V>                   J => "2.2"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "2.2"
+       >>>             "2.2"
+       >>>             "3.3"
+       >=>             J <= "3.3"
+   159 *-*       avar.=1.0''loop
+       >L>         "1.0"
+       >L>         ""
+       >O>         "" => "1.0"
+       >V>         LOOP => "11"
+       >O>         "" => "1.011"
+       >>>         "1.011"
+       >=>         AVAR. <= "1.011"
+   160 *-*       select
+   161 *-*         when flag='string' 
+       >V>           FLAG => "1"
+       >L>           "string"
+       >O>           "=" => "0"
+       >>>           "0"
+   162 *-*         when avar.flag.2=0 
+       >C>           AVAR.FLAG.2 => "AVAR.1.2"
+       >V>           AVAR.FLAG.2 => "1.011"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   163 *-*         when flag=5+99.7   
+       >V>           FLAG => "1"
+       >L>           "5"
+       >L>           "99.7"
+       >O>           "+" => "104.7"
+       >O>           "=" => "0"
+       >>>           "0"
+   164 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   164 *-*           then
+   164 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.011"
+       >L>               "1.1"
+       >O>               "*" => "1.1121"
+       >>>               "1.1121"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.1121"
+   167 *-*       if opaqueone 
+       >V>         OPAQUEONE => "1"
+       >>>         "1"
+   167 *-*         then
+   167 *-*           flag=opaqueone
+       >V>             OPAQUEONE => "1"
+       >>>             "1"
+       >=>             FLAG <= "1"
+   168 *-*       select
+   169 *-*         when flag=='ring'  
+       >V>           FLAG => "1"
+       >L>           "ring"
+       >O>           "==" => "0"
+       >>>           "0"
+   170 *-*         when avar.flag.3=0 
+       >C>           AVAR.FLAG.3 => "AVAR.1.3"
+       >V>           AVAR.FLAG.3 => "1.011"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   171 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   171 *-*           then
+   171 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.1121"
+       >L>               "1.1"
+       >O>               "*" => "1.22331"
+       >>>               "1.22331"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.22331"
+   174 *-*       parse value opaquefoobar with v1 +5 v2 .
+       >V>         OPAQUEFOOBAR => "Foo Bar"
+       >K>         "VALUE" => "Foo Bar"
+       >>>         "Foo Bar"
+       >L>         "5"
+       >>>         "5"
+       >=>         V1 <= "Foo B"
+       >=>         V2 <= "ar"
+       >.>         ""
+   175 *-*       trace value trace();
+       >F>         TRACE => "I"
+       >K>         "VALUE" => "I"
+   175 *-*       address value address()
+       >F>         ADDRESS => "sh"
+       >>>         "sh"
+   176 *-*       call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>         OPAQUEWITH => "with"
+       >L>         "2"
+       >O>         " " => "with 2"
+       >V>         OPAQUEARGS => "args"
+       >O>         " " => "with 2 args"
+       >A>         "with 2 args"
+       >L>         "(This is the second)"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)1"
+       >L>         ""
+       >O>         "" => "(This is the second)1"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)11"
+       >A>         "(This is the second)11"
+   236 *-*         subroutine:
+   237 *-*         parse upper arg a1 a2 a3 ., a4
+       >>>           "WITH 2 ARGS"
+       >=>           A1 <= "WITH"
+       >=>           A2 <= "2"
+       >=>           A3 <= "ARGS"
+       >.>           ""
+       >>>           "(THIS IS THE SECOND)11"
+       >=>           A4 <= "(THIS IS THE SECOND)11"
+   238 *-*         parse var a3 b1 b2 b3 .
+       >V>           A3 => "ARGS"
+       >K>           "VAR" => "ARGS"
+       >>>           "ARGS"
+       >=>           B1 <= "ARGS"
+       >=>           B2 <= ""
+       >=>           B3 <= ""
+       >.>           ""
+   239 *-*         do 1;
+       >L>           "1"
+       >K>           "FOR" => "1"
+   239 *-*           rc=a1 a2 a3;
+       >V>             A1 => "WITH"
+       >V>             A2 => "2"
+       >O>             " " => "WITH 2"
+       >V>             A3 => "ARGS"
+       >O>             " " => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             RC <= "WITH 2 ARGS"
+   239 *-*           parse var rc c1 c2 c3;
+       >V>             RC => "WITH 2 ARGS"
+       >K>             "VAR" => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             C1 <= "WITH"
+       >=>             C2 <= "2"
+       >=>             C3 <= "ARGS"
+   239 *-*         end
+   239 *-*         do 1;
+   240 *-*       return
+   177 *-*       rc='This is an awfully boring program';
+       >L>         "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >=>         RC <= "This is an awfully boring program"
+   177 *-*       parse var rc p1 (p0) p5
+       >V>         RC => "This is an awfully boring program"
+       >K>         "VAR" => "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P1 <= "This is an awfully "
+       >=>         P5 <= "oring program"
+   178 *-*       rc='is an awfully boring program This';
+       >L>         "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >=>         RC <= "is an awfully boring program This"
+   178 *-*       parse var rc p2 (p0) p6
+       >V>         RC => "is an awfully boring program This"
+       >K>         "VAR" => "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P2 <= "is an awfully "
+       >=>         P6 <= "oring program This"
+   179 *-*       rc='an awfully boring program This is';
+       >L>         "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >=>         RC <= "an awfully boring program This is"
+   179 *-*       parse var rc p3 (p0) p7
+       >V>         RC => "an awfully boring program This is"
+       >K>         "VAR" => "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P3 <= "an awfully "
+       >=>         P7 <= "oring program This is"
+   180 *-*       rc='awfully boring program This is an';
+       >L>         "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >=>         RC <= "awfully boring program This is an"
+   180 *-*       parse var rc p4 (p0) p8
+       >V>         RC => "awfully boring program This is an"
+       >K>         "VAR" => "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P4 <= "awfully "
+       >=>         P8 <= "oring program This is an"
+   181 *-*       end loop
+   142 *-*       do loop=1 to 14
+       >V>           LOOP => "11"
+       >>>           "11"
+       >>>           "12"
+       >=>           LOOP <= "12"
+   144 *-*         key1=opaquekey
+       >V>           OPAQUEKEY => "Key Bee"
+       >>>           "Key Bee"
+       >=>           KEY1 <= "Key Bee"
+   145 *-*         acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>           OPAQUEDIGITS => "12345678"
+       >A>           "12345678"
+       >L>           "6"
+       >A>           "6"
+       >L>           "2"
+       >A>           "2"
+       >F>           SUBSTR => "67"
+       >>>           "67"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.12"
+       >=>           ACOMPOUND.KEY1.LOOP <= "67"
+   146 *-*         if flag=acompound.key1.loop 
+       >V>           FLAG => "1"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.12"
+       >V>           ACOMPOUND.KEY1.LOOP => "67"
+       >O>           "=" => "0"
+       >>>           "0"
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>           "1.1"
+       >L>           "2.2"
+       >K>           "TO" => "2.2"
+       >L>           "1.1"
+       >K>           "BY" => "1.1"
+       >=>           J <= "1.1"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "1.1"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.12"
+       >V>             ACOMPOUND.KEY1.LOOP => "67"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "1.1"
+       >A>             "1.1"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "1.1"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "1.1"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.12"
+       >V>                   ACOMPOUND.KEY1.LOOP => "67"
+       >L>                   "1"
+       >O>                   "+" => "68"
+       >>>                   "68"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.12"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "68"
+   155 *-*                 if j=2 
+       >V>                   J => "1.1"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "1.1"
+       >>>             "1.1"
+       >>>             "2.2"
+       >=>             J <= "2.2"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "2.2"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.12"
+       >V>             ACOMPOUND.KEY1.LOOP => "68"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "2.2"
+       >A>             "2.2"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "2.2"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "2.2"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.12"
+       >V>                   ACOMPOUND.KEY1.LOOP => "68"
+       >L>                   "1"
+       >O>                   "+" => "69"
+       >>>                   "69"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.12"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "69"
+   155 *-*                 if j=2 
+       >V>                   J => "2.2"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "2.2"
+       >>>             "2.2"
+       >>>             "3.3"
+       >=>             J <= "3.3"
+   159 *-*       avar.=1.0''loop
+       >L>         "1.0"
+       >L>         ""
+       >O>         "" => "1.0"
+       >V>         LOOP => "12"
+       >O>         "" => "1.012"
+       >>>         "1.012"
+       >=>         AVAR. <= "1.012"
+   160 *-*       select
+   161 *-*         when flag='string' 
+       >V>           FLAG => "1"
+       >L>           "string"
+       >O>           "=" => "0"
+       >>>           "0"
+   162 *-*         when avar.flag.2=0 
+       >C>           AVAR.FLAG.2 => "AVAR.1.2"
+       >V>           AVAR.FLAG.2 => "1.012"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   163 *-*         when flag=5+99.7   
+       >V>           FLAG => "1"
+       >L>           "5"
+       >L>           "99.7"
+       >O>           "+" => "104.7"
+       >O>           "=" => "0"
+       >>>           "0"
+   164 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   164 *-*           then
+   164 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.012"
+       >L>               "1.1"
+       >O>               "*" => "1.1132"
+       >>>               "1.1132"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.1132"
+   167 *-*       if opaqueone 
+       >V>         OPAQUEONE => "1"
+       >>>         "1"
+   167 *-*         then
+   167 *-*           flag=opaqueone
+       >V>             OPAQUEONE => "1"
+       >>>             "1"
+       >=>             FLAG <= "1"
+   168 *-*       select
+   169 *-*         when flag=='ring'  
+       >V>           FLAG => "1"
+       >L>           "ring"
+       >O>           "==" => "0"
+       >>>           "0"
+   170 *-*         when avar.flag.3=0 
+       >C>           AVAR.FLAG.3 => "AVAR.1.3"
+       >V>           AVAR.FLAG.3 => "1.012"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   171 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   171 *-*           then
+   171 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.1132"
+       >L>               "1.1"
+       >O>               "*" => "1.22452"
+       >>>               "1.22452"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.22452"
+   174 *-*       parse value opaquefoobar with v1 +5 v2 .
+       >V>         OPAQUEFOOBAR => "Foo Bar"
+       >K>         "VALUE" => "Foo Bar"
+       >>>         "Foo Bar"
+       >L>         "5"
+       >>>         "5"
+       >=>         V1 <= "Foo B"
+       >=>         V2 <= "ar"
+       >.>         ""
+   175 *-*       trace value trace();
+       >F>         TRACE => "I"
+       >K>         "VALUE" => "I"
+   175 *-*       address value address()
+       >F>         ADDRESS => "sh"
+       >>>         "sh"
+   176 *-*       call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>         OPAQUEWITH => "with"
+       >L>         "2"
+       >O>         " " => "with 2"
+       >V>         OPAQUEARGS => "args"
+       >O>         " " => "with 2 args"
+       >A>         "with 2 args"
+       >L>         "(This is the second)"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)1"
+       >L>         ""
+       >O>         "" => "(This is the second)1"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)11"
+       >A>         "(This is the second)11"
+   236 *-*         subroutine:
+   237 *-*         parse upper arg a1 a2 a3 ., a4
+       >>>           "WITH 2 ARGS"
+       >=>           A1 <= "WITH"
+       >=>           A2 <= "2"
+       >=>           A3 <= "ARGS"
+       >.>           ""
+       >>>           "(THIS IS THE SECOND)11"
+       >=>           A4 <= "(THIS IS THE SECOND)11"
+   238 *-*         parse var a3 b1 b2 b3 .
+       >V>           A3 => "ARGS"
+       >K>           "VAR" => "ARGS"
+       >>>           "ARGS"
+       >=>           B1 <= "ARGS"
+       >=>           B2 <= ""
+       >=>           B3 <= ""
+       >.>           ""
+   239 *-*         do 1;
+       >L>           "1"
+       >K>           "FOR" => "1"
+   239 *-*           rc=a1 a2 a3;
+       >V>             A1 => "WITH"
+       >V>             A2 => "2"
+       >O>             " " => "WITH 2"
+       >V>             A3 => "ARGS"
+       >O>             " " => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             RC <= "WITH 2 ARGS"
+   239 *-*           parse var rc c1 c2 c3;
+       >V>             RC => "WITH 2 ARGS"
+       >K>             "VAR" => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             C1 <= "WITH"
+       >=>             C2 <= "2"
+       >=>             C3 <= "ARGS"
+   239 *-*         end
+   239 *-*         do 1;
+   240 *-*       return
+   177 *-*       rc='This is an awfully boring program';
+       >L>         "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >=>         RC <= "This is an awfully boring program"
+   177 *-*       parse var rc p1 (p0) p5
+       >V>         RC => "This is an awfully boring program"
+       >K>         "VAR" => "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P1 <= "This is an awfully "
+       >=>         P5 <= "oring program"
+   178 *-*       rc='is an awfully boring program This';
+       >L>         "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >=>         RC <= "is an awfully boring program This"
+   178 *-*       parse var rc p2 (p0) p6
+       >V>         RC => "is an awfully boring program This"
+       >K>         "VAR" => "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P2 <= "is an awfully "
+       >=>         P6 <= "oring program This"
+   179 *-*       rc='an awfully boring program This is';
+       >L>         "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >=>         RC <= "an awfully boring program This is"
+   179 *-*       parse var rc p3 (p0) p7
+       >V>         RC => "an awfully boring program This is"
+       >K>         "VAR" => "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P3 <= "an awfully "
+       >=>         P7 <= "oring program This is"
+   180 *-*       rc='awfully boring program This is an';
+       >L>         "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >=>         RC <= "awfully boring program This is an"
+   180 *-*       parse var rc p4 (p0) p8
+       >V>         RC => "awfully boring program This is an"
+       >K>         "VAR" => "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P4 <= "awfully "
+       >=>         P8 <= "oring program This is an"
+   181 *-*       end loop
+   142 *-*       do loop=1 to 14
+       >V>           LOOP => "12"
+       >>>           "12"
+       >>>           "13"
+       >=>           LOOP <= "13"
+   144 *-*         key1=opaquekey
+       >V>           OPAQUEKEY => "Key Bee"
+       >>>           "Key Bee"
+       >=>           KEY1 <= "Key Bee"
+   145 *-*         acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>           OPAQUEDIGITS => "12345678"
+       >A>           "12345678"
+       >L>           "6"
+       >A>           "6"
+       >L>           "2"
+       >A>           "2"
+       >F>           SUBSTR => "67"
+       >>>           "67"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.13"
+       >=>           ACOMPOUND.KEY1.LOOP <= "67"
+   146 *-*         if flag=acompound.key1.loop 
+       >V>           FLAG => "1"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.13"
+       >V>           ACOMPOUND.KEY1.LOOP => "67"
+       >O>           "=" => "0"
+       >>>           "0"
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>           "1.1"
+       >L>           "2.2"
+       >K>           "TO" => "2.2"
+       >L>           "1.1"
+       >K>           "BY" => "1.1"
+       >=>           J <= "1.1"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "1.1"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.13"
+       >V>             ACOMPOUND.KEY1.LOOP => "67"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "1.1"
+       >A>             "1.1"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "1.1"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "1.1"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.13"
+       >V>                   ACOMPOUND.KEY1.LOOP => "67"
+       >L>                   "1"
+       >O>                   "+" => "68"
+       >>>                   "68"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.13"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "68"
+   155 *-*                 if j=2 
+       >V>                   J => "1.1"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "1.1"
+       >>>             "1.1"
+       >>>             "2.2"
+       >=>             J <= "2.2"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "2.2"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.13"
+       >V>             ACOMPOUND.KEY1.LOOP => "68"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "2.2"
+       >A>             "2.2"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "2.2"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "2.2"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.13"
+       >V>                   ACOMPOUND.KEY1.LOOP => "68"
+       >L>                   "1"
+       >O>                   "+" => "69"
+       >>>                   "69"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.13"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "69"
+   155 *-*                 if j=2 
+       >V>                   J => "2.2"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "2.2"
+       >>>             "2.2"
+       >>>             "3.3"
+       >=>             J <= "3.3"
+   159 *-*       avar.=1.0''loop
+       >L>         "1.0"
+       >L>         ""
+       >O>         "" => "1.0"
+       >V>         LOOP => "13"
+       >O>         "" => "1.013"
+       >>>         "1.013"
+       >=>         AVAR. <= "1.013"
+   160 *-*       select
+   161 *-*         when flag='string' 
+       >V>           FLAG => "1"
+       >L>           "string"
+       >O>           "=" => "0"
+       >>>           "0"
+   162 *-*         when avar.flag.2=0 
+       >C>           AVAR.FLAG.2 => "AVAR.1.2"
+       >V>           AVAR.FLAG.2 => "1.013"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   163 *-*         when flag=5+99.7   
+       >V>           FLAG => "1"
+       >L>           "5"
+       >L>           "99.7"
+       >O>           "+" => "104.7"
+       >O>           "=" => "0"
+       >>>           "0"
+   164 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   164 *-*           then
+   164 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.013"
+       >L>               "1.1"
+       >O>               "*" => "1.1143"
+       >>>               "1.1143"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.1143"
+   167 *-*       if opaqueone 
+       >V>         OPAQUEONE => "1"
+       >>>         "1"
+   167 *-*         then
+   167 *-*           flag=opaqueone
+       >V>             OPAQUEONE => "1"
+       >>>             "1"
+       >=>             FLAG <= "1"
+   168 *-*       select
+   169 *-*         when flag=='ring'  
+       >V>           FLAG => "1"
+       >L>           "ring"
+       >O>           "==" => "0"
+       >>>           "0"
+   170 *-*         when avar.flag.3=0 
+       >C>           AVAR.FLAG.3 => "AVAR.1.3"
+       >V>           AVAR.FLAG.3 => "1.013"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   171 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   171 *-*           then
+   171 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.1143"
+       >L>               "1.1"
+       >O>               "*" => "1.22573"
+       >>>               "1.22573"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.22573"
+   174 *-*       parse value opaquefoobar with v1 +5 v2 .
+       >V>         OPAQUEFOOBAR => "Foo Bar"
+       >K>         "VALUE" => "Foo Bar"
+       >>>         "Foo Bar"
+       >L>         "5"
+       >>>         "5"
+       >=>         V1 <= "Foo B"
+       >=>         V2 <= "ar"
+       >.>         ""
+   175 *-*       trace value trace();
+       >F>         TRACE => "I"
+       >K>         "VALUE" => "I"
+   175 *-*       address value address()
+       >F>         ADDRESS => "sh"
+       >>>         "sh"
+   176 *-*       call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>         OPAQUEWITH => "with"
+       >L>         "2"
+       >O>         " " => "with 2"
+       >V>         OPAQUEARGS => "args"
+       >O>         " " => "with 2 args"
+       >A>         "with 2 args"
+       >L>         "(This is the second)"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)1"
+       >L>         ""
+       >O>         "" => "(This is the second)1"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)11"
+       >A>         "(This is the second)11"
+   236 *-*         subroutine:
+   237 *-*         parse upper arg a1 a2 a3 ., a4
+       >>>           "WITH 2 ARGS"
+       >=>           A1 <= "WITH"
+       >=>           A2 <= "2"
+       >=>           A3 <= "ARGS"
+       >.>           ""
+       >>>           "(THIS IS THE SECOND)11"
+       >=>           A4 <= "(THIS IS THE SECOND)11"
+   238 *-*         parse var a3 b1 b2 b3 .
+       >V>           A3 => "ARGS"
+       >K>           "VAR" => "ARGS"
+       >>>           "ARGS"
+       >=>           B1 <= "ARGS"
+       >=>           B2 <= ""
+       >=>           B3 <= ""
+       >.>           ""
+   239 *-*         do 1;
+       >L>           "1"
+       >K>           "FOR" => "1"
+   239 *-*           rc=a1 a2 a3;
+       >V>             A1 => "WITH"
+       >V>             A2 => "2"
+       >O>             " " => "WITH 2"
+       >V>             A3 => "ARGS"
+       >O>             " " => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             RC <= "WITH 2 ARGS"
+   239 *-*           parse var rc c1 c2 c3;
+       >V>             RC => "WITH 2 ARGS"
+       >K>             "VAR" => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             C1 <= "WITH"
+       >=>             C2 <= "2"
+       >=>             C3 <= "ARGS"
+   239 *-*         end
+   239 *-*         do 1;
+   240 *-*       return
+   177 *-*       rc='This is an awfully boring program';
+       >L>         "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >=>         RC <= "This is an awfully boring program"
+   177 *-*       parse var rc p1 (p0) p5
+       >V>         RC => "This is an awfully boring program"
+       >K>         "VAR" => "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P1 <= "This is an awfully "
+       >=>         P5 <= "oring program"
+   178 *-*       rc='is an awfully boring program This';
+       >L>         "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >=>         RC <= "is an awfully boring program This"
+   178 *-*       parse var rc p2 (p0) p6
+       >V>         RC => "is an awfully boring program This"
+       >K>         "VAR" => "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P2 <= "is an awfully "
+       >=>         P6 <= "oring program This"
+   179 *-*       rc='an awfully boring program This is';
+       >L>         "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >=>         RC <= "an awfully boring program This is"
+   179 *-*       parse var rc p3 (p0) p7
+       >V>         RC => "an awfully boring program This is"
+       >K>         "VAR" => "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P3 <= "an awfully "
+       >=>         P7 <= "oring program This is"
+   180 *-*       rc='awfully boring program This is an';
+       >L>         "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >=>         RC <= "awfully boring program This is an"
+   180 *-*       parse var rc p4 (p0) p8
+       >V>         RC => "awfully boring program This is an"
+       >K>         "VAR" => "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P4 <= "awfully "
+       >=>         P8 <= "oring program This is an"
+   181 *-*       end loop
+   142 *-*       do loop=1 to 14
+       >V>           LOOP => "13"
+       >>>           "13"
+       >>>           "14"
+       >=>           LOOP <= "14"
+   144 *-*         key1=opaquekey
+       >V>           OPAQUEKEY => "Key Bee"
+       >>>           "Key Bee"
+       >=>           KEY1 <= "Key Bee"
+   145 *-*         acompound.key1.loop=substr(opaquedigits,6,2)
+       >V>           OPAQUEDIGITS => "12345678"
+       >A>           "12345678"
+       >L>           "6"
+       >A>           "6"
+       >L>           "2"
+       >A>           "2"
+       >F>           SUBSTR => "67"
+       >>>           "67"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.14"
+       >=>           ACOMPOUND.KEY1.LOOP <= "67"
+   146 *-*         if flag=acompound.key1.loop 
+       >V>           FLAG => "1"
+       >C>           ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.14"
+       >V>           ACOMPOUND.KEY1.LOOP => "67"
+       >O>           "=" => "0"
+       >>>           "0"
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >L>           "1.1"
+       >L>           "2.2"
+       >K>           "TO" => "2.2"
+       >L>           "1.1"
+       >K>           "BY" => "1.1"
+       >=>           J <= "1.1"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "1.1"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.14"
+       >V>             ACOMPOUND.KEY1.LOOP => "67"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "1.1"
+       >A>             "1.1"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "1.1"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "1.1"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.14"
+       >V>                   ACOMPOUND.KEY1.LOOP => "67"
+       >L>                   "1"
+       >O>                   "+" => "68"
+       >>>                   "68"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.14"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "68"
+   155 *-*                 if j=2 
+       >V>                   J => "1.1"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "1.1"
+       >>>             "1.1"
+       >>>             "2.2"
+       >=>             J <= "2.2"
+   148 *-*           if j>acompound.key1.loop 
+       >V>             J => "2.2"
+       >C>             ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.14"
+       >V>             ACOMPOUND.KEY1.LOOP => "68"
+       >O>             ">" => "0"
+       >>>             "0"
+   149 *-*           if 17<length(j)-1        
+       >L>             "17"
+       >V>             J => "2.2"
+       >A>             "2.2"
+       >F>             LENGTH => "3"
+       >L>             "1"
+       >O>             "-" => "2"
+       >O>             "<" => "0"
+       >>>             "0"
+   150 *-*           if j=opaquefailure       
+       >V>             J => "2.2"
+       >V>             OPAQUEFAILURE => "foobar"
+       >O>             "=" => "0"
+       >>>             "0"
+   151 *-*           if substr(opaquedigits,1,1)=opaquenine 
+       >V>             OPAQUEDIGITS => "12345678"
+       >A>             "12345678"
+       >L>             "1"
+       >A>             "1"
+       >L>             "1"
+       >A>             "1"
+       >F>             SUBSTR => "1"
+       >V>             OPAQUENINE => "9"
+       >O>             "=" => "0"
+       >>>             "0"
+   152 *-*           if word(key1,1)=opaquequestion 
+       >V>             KEY1 => "Key Bee"
+       >A>             "Key Bee"
+       >L>             "1"
+       >A>             "1"
+       >F>             WORD => "Key"
+       >V>             OPAQUEQUESTION => "?"
+       >O>             "=" => "0"
+       >>>             "0"
+   153 *-*           if j<5 
+       >V>             J => "2.2"
+       >L>             "5"
+       >O>             "<" => "1"
+       >>>             "1"
+   153 *-*             then
+   153 *-*               do   /* This path taken */
+   154 *-*                 acompound.key1.loop=acompound.key1.loop+1
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.14"
+       >V>                   ACOMPOUND.KEY1.LOOP => "68"
+       >L>                   "1"
+       >O>                   "+" => "69"
+       >>>                   "69"
+       >C>                   ACOMPOUND.KEY1.LOOP => "ACOMPOUND.Key Bee.14"
+       >=>                   ACOMPOUND.KEY1.LOOP <= "69"
+   155 *-*                 if j=2 
+       >V>                   J => "2.2"
+       >L>                   "2"
+       >O>                   "=" => "0"
+       >>>                   "0"
+   156 *-*               end
+   157 *-*           iterate
+   147 *-*         do j=1.1 to 2.2 by 1.1   /* executed 28 times */
+       >V>             J => "2.2"
+       >>>             "2.2"
+       >>>             "3.3"
+       >=>             J <= "3.3"
+   159 *-*       avar.=1.0''loop
+       >L>         "1.0"
+       >L>         ""
+       >O>         "" => "1.0"
+       >V>         LOOP => "14"
+       >O>         "" => "1.014"
+       >>>         "1.014"
+       >=>         AVAR. <= "1.014"
+   160 *-*       select
+   161 *-*         when flag='string' 
+       >V>           FLAG => "1"
+       >L>           "string"
+       >O>           "=" => "0"
+       >>>           "0"
+   162 *-*         when avar.flag.2=0 
+       >C>           AVAR.FLAG.2 => "AVAR.1.2"
+       >V>           AVAR.FLAG.2 => "1.014"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   163 *-*         when flag=5+99.7   
+       >V>           FLAG => "1"
+       >L>           "5"
+       >L>           "99.7"
+       >O>           "+" => "104.7"
+       >O>           "=" => "0"
+       >>>           "0"
+   164 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   164 *-*           then
+   164 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.014"
+       >L>               "1.1"
+       >O>               "*" => "1.1154"
+       >>>               "1.1154"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.1154"
+   167 *-*       if opaqueone 
+       >V>         OPAQUEONE => "1"
+       >>>         "1"
+   167 *-*         then
+   167 *-*           flag=opaqueone
+       >V>             OPAQUEONE => "1"
+       >>>             "1"
+       >=>             FLAG <= "1"
+   168 *-*       select
+   169 *-*         when flag=='ring'  
+       >V>           FLAG => "1"
+       >L>           "ring"
+       >O>           "==" => "0"
+       >>>           "0"
+   170 *-*         when avar.flag.3=0 
+       >C>           AVAR.FLAG.3 => "AVAR.1.3"
+       >V>           AVAR.FLAG.3 => "1.014"
+       >L>           "0"
+       >O>           "=" => "0"
+       >>>           "0"
+   171 *-*         when flag          
+       >V>           FLAG => "1"
+       >>>           "1"
+   171 *-*           then
+   171 *-*             avar.1.2=avar.1.2*1.1
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >V>               AVAR.1.2 => "1.1154"
+       >L>               "1.1"
+       >O>               "*" => "1.22694"
+       >>>               "1.22694"
+       >C>               AVAR.1.2 => "AVAR.1.2"
+       >=>               AVAR.1.2 <= "1.22694"
+   174 *-*       parse value opaquefoobar with v1 +5 v2 .
+       >V>         OPAQUEFOOBAR => "Foo Bar"
+       >K>         "VALUE" => "Foo Bar"
+       >>>         "Foo Bar"
+       >L>         "5"
+       >>>         "5"
+       >=>         V1 <= "Foo B"
+       >=>         V2 <= "ar"
+       >.>         ""
+   175 *-*       trace value trace();
+       >F>         TRACE => "I"
+       >K>         "VALUE" => "I"
+   175 *-*       address value address()
+       >F>         ADDRESS => "sh"
+       >>>         "sh"
+   176 *-*       call subroutine opaquewith 2 opaqueargs, '(This is the second)'opaqueone''opaqueone
+       >V>         OPAQUEWITH => "with"
+       >L>         "2"
+       >O>         " " => "with 2"
+       >V>         OPAQUEARGS => "args"
+       >O>         " " => "with 2 args"
+       >A>         "with 2 args"
+       >L>         "(This is the second)"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)1"
+       >L>         ""
+       >O>         "" => "(This is the second)1"
+       >V>         OPAQUEONE => "1"
+       >O>         "" => "(This is the second)11"
+       >A>         "(This is the second)11"
+   236 *-*         subroutine:
+   237 *-*         parse upper arg a1 a2 a3 ., a4
+       >>>           "WITH 2 ARGS"
+       >=>           A1 <= "WITH"
+       >=>           A2 <= "2"
+       >=>           A3 <= "ARGS"
+       >.>           ""
+       >>>           "(THIS IS THE SECOND)11"
+       >=>           A4 <= "(THIS IS THE SECOND)11"
+   238 *-*         parse var a3 b1 b2 b3 .
+       >V>           A3 => "ARGS"
+       >K>           "VAR" => "ARGS"
+       >>>           "ARGS"
+       >=>           B1 <= "ARGS"
+       >=>           B2 <= ""
+       >=>           B3 <= ""
+       >.>           ""
+   239 *-*         do 1;
+       >L>           "1"
+       >K>           "FOR" => "1"
+   239 *-*           rc=a1 a2 a3;
+       >V>             A1 => "WITH"
+       >V>             A2 => "2"
+       >O>             " " => "WITH 2"
+       >V>             A3 => "ARGS"
+       >O>             " " => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             RC <= "WITH 2 ARGS"
+   239 *-*           parse var rc c1 c2 c3;
+       >V>             RC => "WITH 2 ARGS"
+       >K>             "VAR" => "WITH 2 ARGS"
+       >>>             "WITH 2 ARGS"
+       >=>             C1 <= "WITH"
+       >=>             C2 <= "2"
+       >=>             C3 <= "ARGS"
+   239 *-*         end
+   239 *-*         do 1;
+   240 *-*       return
+   177 *-*       rc='This is an awfully boring program';
+       >L>         "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >=>         RC <= "This is an awfully boring program"
+   177 *-*       parse var rc p1 (p0) p5
+       >V>         RC => "This is an awfully boring program"
+       >K>         "VAR" => "This is an awfully boring program"
+       >>>         "This is an awfully boring program"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P1 <= "This is an awfully "
+       >=>         P5 <= "oring program"
+   178 *-*       rc='is an awfully boring program This';
+       >L>         "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >=>         RC <= "is an awfully boring program This"
+   178 *-*       parse var rc p2 (p0) p6
+       >V>         RC => "is an awfully boring program This"
+       >K>         "VAR" => "is an awfully boring program This"
+       >>>         "is an awfully boring program This"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P2 <= "is an awfully "
+       >=>         P6 <= "oring program This"
+   179 *-*       rc='an awfully boring program This is';
+       >L>         "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >=>         RC <= "an awfully boring program This is"
+   179 *-*       parse var rc p3 (p0) p7
+       >V>         RC => "an awfully boring program This is"
+       >K>         "VAR" => "an awfully boring program This is"
+       >>>         "an awfully boring program This is"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P3 <= "an awfully "
+       >=>         P7 <= "oring program This is"
+   180 *-*       rc='awfully boring program This is an';
+       >L>         "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >=>         RC <= "awfully boring program This is an"
+   180 *-*       parse var rc p4 (p0) p8
+       >V>         RC => "awfully boring program This is an"
+       >K>         "VAR" => "awfully boring program This is an"
+       >>>         "awfully boring program This is an"
+       >V>         P0 => "b"
+       >>>         "b"
+       >=>         P4 <= "awfully "
+       >=>         P8 <= "oring program This is an"
+   181 *-*       end loop
+   142 *-*       do loop=1 to 14
+       >V>           LOOP => "14"
+       >>>           "14"
+       >>>           "15"
+       >=>           LOOP <= "15"
+   183 *-*     end
+   139 *-*     do count;
+   184 *-*   full=time('R')+full
+       >L>     "R"
+       >A>     "R"
+       >F>     TIME => "0.039965"
+       >V>     FULL => "0"
+       >O>     "+" => "0.039965"
+       >>>     "0.039965"
+       >=>     FULL <= "0.039965"
+   185 *-*   trace off
+TRACE_KERNEL_END
+        Averaged: 1 x 1 iterations of 1000 clauses (over 0.0s)
+
+Total (full DOs): 0.039965 secs (average of 1 measures of 1 iterations)
+Time for one iteration (1000 clauses) was: 0.039627 seconds
+
+     Performance: 25235 REXX clauses per second
+
+OBSERVED: A|1|69|1.22694
+PASS: RexxCPS 2.2 Classic opaque/result-observation diagnostic

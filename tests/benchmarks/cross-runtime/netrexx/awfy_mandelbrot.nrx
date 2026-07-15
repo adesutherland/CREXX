@@ -1,0 +1,87 @@
+/*
+ * NetRexx port of the Are We Fast Yet? Mandelbrot benchmark.
+ * Derived from the Computer Language Benchmarks Game version under the
+ * Revised BSD license; see ../../LICENSE-AWFY.md and ../../README.md.
+ */
+options binary
+
+class awfy_mandelbrot
+
+  method main(args=String[]) static
+    size=int 500
+    if args.length>=1 then size=Rexx args[0]
+    if size<1 then do
+      say 'FAIL: size must be positive'
+      exit 1
+    end
+
+    result=int mandelbrot(size)
+    expected=int -1
+    if size=1 then expected=128
+    if size=500 then expected=191
+    if size=750 then expected=50
+    if expected=-1 then do
+      say 'FAIL: no reference checksum for size' size
+      exit 1
+    end
+    if result\=expected then do
+      say 'FAIL: expected' expected', got' result
+      exit 1
+    end
+
+    say 'benchmark=awfy_mandelbrot size='size 'result='result
+    say 'PASS: AWFY Mandelbrot NetRexx port'
+
+  method mandelbrot(size=int) static binary returns int
+    checksum=int 0
+    byteAcc=int 0
+    bitNum=int 0
+
+    loop y=0 to size-1
+      ci=double (2.0*double(y)/double(size))-1.0
+      loop x=0 to size-1
+        zrzr=double 0.0
+        zi=double 0.0
+        zizi=double 0.0
+        cr=double (2.0*double(x)/double(size))-1.5
+        escape=int 0
+
+        loop z=0 to 49 while escape=0
+          zr=double zrzr-zizi+cr
+          zi=2.0*zr*zi+ci
+          zrzr=zr*zr
+          zizi=zi*zi
+          if zrzr+zizi>4.0 then escape=1
+        end
+
+        byteAcc=byteAcc*2+escape
+        bitNum=bitNum+1
+        if bitNum=8 then do
+          checksum=xorByte(checksum,byteAcc)
+          byteAcc=0
+          bitNum=0
+        end
+        else if x=size-1 then do
+          loop pad=bitNum+1 to 8
+            byteAcc=byteAcc*2
+          end
+          checksum=xorByte(checksum,byteAcc)
+          byteAcc=0
+          bitNum=0
+        end
+      end
+    end
+    return checksum
+
+  /* NetRexx source has no Java '^' spelling. Keep the byte-level XOR result
+     exact with an arithmetic helper and disclose its kernel cost in NR-02. */
+  method xorByte(left=int,right=int) static binary returns int
+    result=int 0
+    place=int 1
+    loop bit=1 to 8
+      if left//2\=right//2 then result=result+place
+      left=left%2
+      right=right%2
+      place=place*2
+    end
+    return result
