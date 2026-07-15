@@ -32,10 +32,15 @@ end
 second_elapsed = time("E") + 0
 reset_elapsed = time("R") + 0
 after_reset = time("E") + 0
+do index = 1 to 10000
+  scratch = index
+end
+next_reset_elapsed = time("R") + 0
 errors = errors + check_true(first_elapsed >= 0, "first elapsed")
 errors = errors + check_true(second_elapsed >= first_elapsed, "elapsed monotonic")
 errors = errors + check_true(reset_elapsed >= second_elapsed, "reset returns elapsed")
 errors = errors + check_true(after_reset >= 0, "elapsed after reset")
+errors = errors + check_true(next_reset_elapsed > 0, "reset starts the next interval")
 
 errors = errors + check_true(time("T") + 0 >= 0, "process ticks")
 errors = errors + check_true(time("TS") + 0 > 0, "ticks per second")

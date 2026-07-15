@@ -12,7 +12,7 @@ function(crexx_add_language_benchmark NAME SOURCE SMOKE_ARG PASS_REGEX)
             RUNTIME_ARGS ${LIBRPATH} -a ${SMOKE_ARG}
             TEST_LABELS "benchmark;language"
             REQUIRED_OUTPUT_REGEX "${PASS_REGEX}"
-            FORBIDDEN_OUTPUT_REGEX "FAIL:|PANIC:"
+            FORBIDDEN_OUTPUT_REGEX "FAIL:|Failed|PANIC:"
     )
 endfunction()
 
@@ -25,7 +25,7 @@ crexx_add_language_benchmark(benchmark_awfy_mandelbrot awfy_mandelbrot.crexx 1
 crexx_add_language_benchmark(benchmark_awfy_towers awfy_towers.crexx 1
         "PASS: AWFY Towers")
 crexx_add_language_benchmark(benchmark_rexxcps_levelb rexxcps_levelb.crexx 10
-        "PASS: RexxCPS Level B adaptation")
+        "PASS: RexxCPS 2.2c cREXX port")
 
 crexx_add_rexx_opt_matrix(
         NAME benchmark_runner

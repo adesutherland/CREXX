@@ -44,8 +44,11 @@ stem: class
   buckets = .int[256]
   keys = .string[]
   vals = .string[]
+  value_generations = .int[]
   next = .int[]
   count = .int
+  default_value = .string
+  default_generation = .int
 
  /**
   * Constructs an empty stem.
@@ -55,6 +58,8 @@ stem: class
   *: factory
     num_buckets = 256
     count = 0
+    default_value = ""
+    default_generation = 0
     return
 
  /**
@@ -83,7 +88,8 @@ stem: class
   * Retrieves the value associated with a key.
   *
   * @param key key to search for
-  * @return associated value, or an empty string if not found
+  * @return associated value, the assigned stem default, or an empty string if
+  *         neither exists
   */
   get: method = .string
     arg key = .string
@@ -92,11 +98,14 @@ stem: class
     idx = buckets[b]
     
     do while idx > 0
-      if keys[idx] == key then return vals[idx]
+      if keys[idx] == key then do
+        if value_generations[idx] = default_generation then return vals[idx]
+        return default_value
+      end
       idx = next[idx]
     end
     
-    return ""
+    return default_value
 
  /**
   * Adds or updates a key/value pair.
@@ -104,11 +113,21 @@ stem: class
   * If the key already exists, its value is replaced.
   * Otherwise a new entry is inserted.
   *
-  * @param key key to store
+  * An omitted key is the property-assignment form produced by `stem. = value`.
+  * It assigns the Classic stem default and replaces the values of existing
+  * tails. An explicitly supplied empty-string key remains a normal key.
+  *
+  * @param key optional key to store; omission assigns the stem default
   * @param value value to associate with the key
   */
   set: method = .void
-    arg key = .string, value = .string
+    arg key = "", value = .string
+
+    if \?key then do
+      default_value = value
+      default_generation = default_generation + 1
+      return
+    end
     
     b = hash(key)
     idx = buckets[b]
@@ -118,6 +137,7 @@ stem: class
     do while idx > 0
       if keys[idx] == key then do
         vals[idx] = value
+        value_generations[idx] = default_generation
         return
       end
       last_idx = idx
@@ -130,6 +150,7 @@ stem: class
     /* Insert at end of chain */
     keys[count] = key
     vals[count] = value
+    value_generations[count] = default_generation
     next[count] = 0
     
     if last_idx > 0 then do
@@ -172,6 +193,7 @@ stem: class
     arg kv = .int
     if kv < 1 | kv > count then
       assembler signal "INVALID_ARGUMENTS", "STEM value index is outside the stored range"
+    if value_generations[kv] <> default_generation then return default_value
     return vals[kv]
 
  /**
@@ -184,6 +206,7 @@ stem: class
     arg ix = .int
     if ix < 1 | ix > count then
       assembler signal "INVALID_ARGUMENTS", "STEM valueAt index is outside the stored range"
+    if value_generations[ix] <> default_generation then return default_value
     return vals[ix]
 
  /**
@@ -206,7 +229,8 @@ stem: class
   values: method = .string[]
     result = .string[]
     do i = 1 to count
-      result[i] = vals[i]
+      if value_generations[i] <> default_generation then result[i] = default_value
+      else result[i] = vals[i]
     end
     return result
 
@@ -329,7 +353,7 @@ stemIterator: class
     end
 
     stem = dereference stem_ref
-    return stem.get(current_tail_)
+    return stem.value(index_)
 
  /**
   * Returns the current iterator position.

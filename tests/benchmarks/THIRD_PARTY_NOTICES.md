@@ -59,6 +59,7 @@ without written permission. The program is provided without warranty and
 without liability for direct, indirect, incidental, special, exemplary, or
 consequential damages.
 
-The unmodified upstream source and complete header are available from the
-[ooRexx source repository](https://sourceforge.net/p/oorexx/code-0/HEAD/tree/main/trunk/samples/rexxcps.rex?format=raw),
+The complete upstream header is retained at the start of the port. The
+unmodified source is available from the [ooRexx source
+repository](https://sourceforge.net/p/oorexx/code-0/HEAD/tree/main/trunk/samples/rexxcps.rex?format=raw),
 and the full CPL 1.0 is included as `LICENSE-REXXCPS-CPL-1.0.txt`.

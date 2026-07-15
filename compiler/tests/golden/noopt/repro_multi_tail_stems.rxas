@@ -521,4 +521,4 @@ l246iffalse:
    .meta "rxfnsb.stem.get"="b" ".string" §rxfnsb.stem.get() "key=.string"
 
 §rxfnsb.stem.set() .expose=rxfnsb.stem.set
-   .meta "rxfnsb.stem.set"="b" ".void" §rxfnsb.stem.set() "key=.string,value=.string"
+   .meta "rxfnsb.stem.set"="b" ".void" §rxfnsb.stem.set() "?key=.string,value=.string"

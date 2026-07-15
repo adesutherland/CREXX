@@ -180,10 +180,8 @@ benchmark_command: procedure = .string[]
     when benchmark_name = "permute" then command[5] = "50"
     when benchmark_name = "mandelbrot" then command[5] = "500"
     when benchmark_name = "towers" then command[5] = "10"
-    when benchmark_name = "rexxcps" then do
-      command[5] = "100"
-      command[6] = "10"
-    end
+    /* RexxCPS uses its canonical 100 x 100 defaults and self-calibration. */
+    when benchmark_name = "rexxcps" then nop
   end
   return command
 

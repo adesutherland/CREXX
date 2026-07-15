@@ -84,7 +84,10 @@ time: procedure = .string
     elapsed_microseconds = _elapsed(today_microseconds)
     if elapsed_microseconds < 0 then
       elapsed_microseconds = elapsed_microseconds + day_microseconds
-    if normalized = "R" then ignored = _elapsed(0)
+    if normalized = "R" then do
+      ignored = _elapsed(0)
+      ignored = _elapsed(today_microseconds)
+    end
     elapsed_seconds = 0.0
     elapsed_seconds = elapsed_microseconds
     return elapsed_seconds / 1000000
@@ -155,5 +158,4 @@ time: procedure = .string
     divisor = divisor % 10
   end
   return result
-
 
