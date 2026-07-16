@@ -15,8 +15,7 @@ capture ideas that otherwise risk being lost.
 | Location | Purpose |
 | --- | --- |
 | `performance/ROADMAP.md` | P0/P1 status, work notes, decisions and idea ledger |
-| `performance/NR-03-WORKLIST.md` | Resumable NR-03 implementation and validation ledger |
-| `performance/manifests/nr03-proof-v1.txt` | Versioned exact-image proof manifest for NR-03 |
+| `performance/manifests/` | Versioned exact-image manifests, including the NR-03 proof set and NR-05 22-image call census |
 | `performance/portfolio/manifest.md` | Versioned seed workload and measurement contract |
 | `performance/portfolio/cross-runtime-plan.md` | Coverage targets and ooRexx/Regina/NetRexx/Java execution matrix |
 | `performance/evidence/benchmark-median-summary.md` | Master per-date/run median comparison with explicit exclusions and comparability markers |
@@ -44,7 +43,7 @@ outside the steady-state aggregate and emits one CSV row per runtime, phase and
 sequence. The final phase is named `load_first_result` because the public CLIs
 do not expose a consistent loaded-but-not-executed boundary.
 
-## NR-03 exact-image evidence bundle
+## Exact-image evidence bundles
 
 `tools/run_evidence_bundle.crexx` accepts a versioned explicit manifest; it
 does not discover or silently rebuild benchmark images. Each non-comment row
@@ -75,11 +74,27 @@ cmake-build-release/bin/crexx performance/tools/run_evidence_bundle.crexx \
   --force
 ```
 
+NR-05 reuses the same driver and exact-image contract, but requires schema-4
+profiles and writes the dynamic census rows to `summary/call-census.csv` plus
+a concise `summary/call-census.md` dashboard. Its versioned 22-image manifest
+covers all eleven current language workloads in noopt/opt form:
+
+```bash
+cmake-build-release/bin/crexx performance/tools/run_evidence_bundle.crexx \
+  --nokeep --args \
+  --manifest performance/manifests/nr05-call-census-v1.txt \
+  --release-build cmake-build-release \
+  --profile-build cmake-build-profile \
+  --output-dir performance/evidence/2026-07-16-nr-05-call-census \
+  --force
+```
+
 For every entry the driver keeps serial warmup and recorded stdout/stderr,
-exit/correctness/timing rows, a schema-3 profile CSV, and separate binary plus
+exit/correctness/timing rows, a schema-4 profile CSV, and separate binary plus
 decoded RXSEQ captures for N=2, N=3, and N=4. Product timing comes only from
 the ordinary Release `rxvm`; profile elapsed time is diagnostic and never
-enters the paired timing delta. Startup/lifecycle timing remains separate.
+enters the paired timing delta. NR-05 is a census, not a performance-win
+claim. Startup/lifecycle timing remains separate.
 
 The bundle root contains machine-readable repository, host, compiler, CMake,
 tool-version/hash, argv, sampling, correctness and interpretation provenance;
@@ -87,9 +102,12 @@ per-entry exact-image manifests; summary CSV/Markdown; a verification record;
 and a recursively verified `checksums.sha256`. Summary tables retain ranked
 instruction timing/count data, callable metrics including inclusive body,
 self, native child, entry/exit and unwind state, allocation/value/frame data,
-RXSEQ static sites/modules, and unprofiled baseline/candidate deltas. The raw
-profile CSV remains authoritative for transition, interrupt, overflow and
-degraded-tracking details.
+dynamic call path/arity/kind/frame/return/mechanics/unwind census data, RXSEQ
+static sites/modules, and unprofiled baseline/candidate deltas. The raw profile
+CSV remains authoritative for transition, interrupt, overflow and
+degraded-tracking details. Exact-image portfolio zeros mean “not observed in
+these bounded cells”; the profiler's focused fixtures cover native, dynamic,
+restoration, and signal-unwind cold paths separately.
 
 Run it through the Release driver, placing the workload command after `--`:
 

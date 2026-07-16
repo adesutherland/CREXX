@@ -3147,10 +3147,17 @@ static void free_external_entry_arguments(stack_frame *frame) {
  * displaced base pointer identifies the source register for the inverse swap.
  * Values are not copied or reset: arg expose and reference mutations survive. */
 static int rxvm_restore_call_argument_mapping(
-        stack_frame *caller, size_t arg_base, size_t arg_count) {
+        stack_frame *caller, size_t arg_base, size_t arg_count
+#ifdef CREXX_VM_PROFILING
+        , size_t *restored_slots
+#endif
+        ) {
     size_t arg;
     size_t source;
 
+#ifdef CREXX_VM_PROFILING
+    if (restored_slots) *restored_slots = 0;
+#endif
     if (!caller || !arg_count) return 1;
     if (arg_base > caller->number_locals ||
         arg_count > caller->number_locals - arg_base) return 0;
@@ -3171,30 +3178,55 @@ static int rxvm_restore_call_argument_mapping(
             value *mapped = caller->locals[slot];
             caller->locals[slot] = caller->locals[source];
             caller->locals[source] = mapped;
+#ifdef CREXX_VM_PROFILING
+            if (restored_slots) (*restored_slots)++;
+#endif
         }
     }
 
     return 1;
 }
 
-static int rxvm_restore_caller_call_argument_mapping(stack_frame *callee) {
+static int rxvm_restore_caller_call_argument_mapping(stack_frame *callee
+#ifdef CREXX_VM_PROFILING
+        , size_t *restored_slots
+#endif
+        ) {
+#ifdef CREXX_VM_PROFILING
+    if (restored_slots) *restored_slots = 0;
+#endif
     if (!callee || !callee->parent || callee->caller_arg_base == UINT32_MAX) return 1;
     return rxvm_restore_call_argument_mapping(callee->parent,
                                               (size_t)callee->caller_arg_base,
-                                              callee->number_args);
+                                              callee->number_args
+#ifdef CREXX_VM_PROFILING
+                                              ,
+                                              restored_slots);
+#else
+                                              );
+#endif
 }
 
 /* A native call has no child frame to carry caller_arg_base.  If a branch
  * handler remains in the interrupted frame, recover the call window from the
  * canonical CALL/DCALL operand only on that cold signal path. */
 static int rxsignal_restore_interrupted_call_argument_mapping(
-        stack_frame *frame, rxinteger interrupted_module, rxinteger interrupted_address) {
+        stack_frame *frame, rxinteger interrupted_module,
+        rxinteger interrupted_address
+#ifdef CREXX_VM_PROFILING
+        , int *window_observed, size_t *restored_slots
+#endif
+        ) {
     bin_space *space;
     size_t address;
     size_t count_reg;
     rxinteger count;
     int opcode;
 
+#ifdef CREXX_VM_PROFILING
+    if (window_observed) *window_observed = 0;
+    if (restored_slots) *restored_slots = 0;
+#endif
     if (!frame || !frame->procedure || !frame->procedure->binarySpace) return 1;
     space = frame->procedure->binarySpace;
     if (!space->module || interrupted_module != (rxinteger)space->module->module_number) return 1;
@@ -3204,6 +3236,9 @@ static int rxsignal_restore_interrupted_call_argument_mapping(
     if (address >= space->inst_size) return 0;
     opcode = space->binary[address].instruction.opcode;
     if (opcode != OP_CALL_REG_FUNC_REG && opcode != OP_DCALL_REG_REG_REG) return 1;
+#ifdef CREXX_VM_PROFILING
+    if (window_observed) *window_observed = 1;
+#endif
     if (space->inst_size - address < 4) return 0;
 
     count_reg = space->binary[address + 3].index;
@@ -3211,17 +3246,42 @@ static int rxsignal_restore_interrupted_call_argument_mapping(
     count = frame->locals[count_reg]->int_value;
     if (count < 0 || (uintmax_t)count > (uintmax_t)SIZE_MAX) return 0;
 
-    return rxvm_restore_call_argument_mapping(frame, count_reg + 1, (size_t)count);
+    return rxvm_restore_call_argument_mapping(frame, count_reg + 1,
+                                               (size_t)count
+#ifdef CREXX_VM_PROFILING
+                                               , restored_slots
+#endif
+                                               );
 }
 
 static void rxsignal_restore_branch_call_argument_mapping(
         stack_frame *current, const interrupt_entry *handler,
-        rxinteger interrupted_module, rxinteger interrupted_address) {
+        rxinteger interrupted_module, rxinteger interrupted_address
+#ifdef CREXX_VM_PROFILING
+        , rxvm_profile_state *profile
+#endif
+        ) {
     int mapping_restored;
+#ifdef CREXX_VM_PROFILING
+    int window_observed = 0;
+    size_t restored_slots = 0;
+#endif
 
     if (!current || !handler || current != handler->frame) return;
     mapping_restored = rxsignal_restore_interrupted_call_argument_mapping(
-            current, interrupted_module, interrupted_address);
+            current, interrupted_module, interrupted_address
+#ifdef CREXX_VM_PROFILING
+            ,
+            &window_observed, &restored_slots);
+#else
+            );
+#endif
+#ifdef CREXX_VM_PROFILING
+    if (profile && profile->enabled)
+        rxvm_profile_record_signal_native_restore_at(
+                profile, window_observed, (uint64_t)restored_slots,
+                !mapping_restored);
+#endif
     assert(mapping_restored);
     (void)mapping_restored;
 }
@@ -3234,6 +3294,10 @@ static stack_frame *rxsignal_unwind_to_frame(
         ) {
     stack_frame *discard;
 #ifdef CREXX_VM_PROFILING
+    uint64_t frames_discarded = 0;
+    uint64_t windows_restored = 0;
+    uint64_t slots_restored = 0;
+    int restoration_failed = 0;
     uint64_t unwind_time_ns = 0;
 #endif
 
@@ -3241,9 +3305,23 @@ static stack_frame *rxsignal_unwind_to_frame(
 
     while (current && current != target) {
         int mapping_restored;
+#ifdef CREXX_VM_PROFILING
+        size_t restored_slots = 0;
+#endif
         discard = current;
         current = current->parent;
-        mapping_restored = rxvm_restore_caller_call_argument_mapping(discard);
+        mapping_restored = rxvm_restore_caller_call_argument_mapping(
+                discard
+#ifdef CREXX_VM_PROFILING
+                , &restored_slots
+#endif
+                );
+#ifdef CREXX_VM_PROFILING
+        frames_discarded++;
+        if (discard->caller_arg_base != UINT32_MAX) windows_restored++;
+        slots_restored += restored_slots;
+        if (!mapping_restored) restoration_failed = 1;
+#endif
         assert(mapping_restored);
         (void)mapping_restored;
 #ifdef CREXX_VM_PROFILING
@@ -3254,6 +3332,13 @@ static stack_frame *rxsignal_unwind_to_frame(
 #endif
         free_frame(discard);
     }
+
+#ifdef CREXX_VM_PROFILING
+    if (profile && profile->enabled)
+        rxvm_profile_record_signal_unwind_at(
+                profile, frames_discarded, windows_restored, slots_restored,
+                restoration_failed);
+#endif
 
     return current ? current : target;
 }
@@ -3708,6 +3793,11 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             rc = RXSIGNAL_FAILURE;
             goto interprt_finished;
         }
+        RXVM_INSTRUMENTATION_CALL(
+                RXVM_PROFILE_CALL_EXTERNAL_ROOT, procedure, context->ext_argc,
+                RXVM_PROFILE_FRAME_LAST_ACTIVATION, RXVM_PROFILE_CALL_SUCCESS,
+                0, procedure->binarySpace->module->module_number,
+                procedure->start, 0, 0);
         VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_EXTERNAL_ENTRY);
         /* Arguments (passed as individual objects) */
         {
@@ -3726,6 +3816,11 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             rc = RXSIGNAL_FAILURE;
             goto interprt_finished;
         }
+        RXVM_INSTRUMENTATION_CALL(
+                RXVM_PROFILE_CALL_EXTERNAL_ROOT, procedure, 1,
+                RXVM_PROFILE_FRAME_LAST_ACTIVATION, RXVM_PROFILE_CALL_SUCCESS,
+                0, procedure->binarySpace->module->module_number,
+                procedure->start, 0, 0);
         VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_EXTERNAL_ENTRY);
         /* Arguments (passed in an array) */
         /* a0 is already set by frame_f() */
@@ -3872,7 +3967,8 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             rxsignal_restore_branch_call_argument_mapping(
                     current_frame, &signal_handler,
                     last_interrupted_module[last_interrupt],
-                    last_interrupted_address[last_interrupt]);
+                    last_interrupted_address[last_interrupt]
+                    RXVM_PROFILE_UNWIND_STATE);
             VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame
                                                        RXVM_PROFILE_UNWIND_STATE),
                               RXVM_TRANSITION_INTERRUPT_ENTRY);
@@ -3888,6 +3984,14 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             DEBUG("TRACE - INTR HANDLER -> CALL %s->%s()\n", interrupt_to_string(last_interrupt), intr_function->name);
 
             if (intr_function->start == SIZE_MAX) {
+                RXVM_INSTRUMENTATION_CALL(
+                        intr_function->binarySpace
+                            ? RXVM_PROFILE_CALL_SIGNAL_BYTECODE
+                            : RXVM_PROFILE_CALL_SIGNAL_NATIVE,
+                        intr_function, 1, RXVM_PROFILE_FRAME_NONE_FAILED,
+                        RXVM_PROFILE_CALL_UNRESOLVED, current_frame,
+                        current_module->module_number, VM_CANONICAL_INDEX(pc),
+                        0, 0);
                 SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, "Exception handler not exposed/linked")
                 DISPATCH;
             }
@@ -3901,6 +4005,12 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
 
             if (intr_function->binarySpace == 0) {
                 /* This is a native plugin function */
+                RXVM_INSTRUMENTATION_CALL(
+                        RXVM_PROFILE_CALL_SIGNAL_NATIVE, intr_function, 1,
+                        RXVM_PROFILE_FRAME_NO_CHILD_NATIVE,
+                        RXVM_PROFILE_CALL_SUCCESS, current_frame,
+                        current_module->module_number, VM_CANONICAL_INDEX(pc),
+                        0, 0);
                 RXVM_INSTRUMENTATION_NATIVE_BEGIN(intr_function);
                 rxvm_callfunc((void *) (intr_function->start), 1, &interrupt_arg, 0, signal_value);
                 RXVM_INSTRUMENTATION_NATIVE_END();
@@ -3917,9 +4027,22 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
                 if (action_aware) value_zero(interrupt_action_value);
                 temp_frame = frame_f(intr_function, 1, current_frame, pc, action_aware ? interrupt_action_value : 0);
                 if (!temp_frame) {
+                    RXVM_INSTRUMENTATION_CALL(
+                            RXVM_PROFILE_CALL_SIGNAL_BYTECODE, intr_function, 1,
+                            RXVM_PROFILE_FRAME_NONE_FAILED,
+                            RXVM_PROFILE_CALL_FRAME_FAILED, current_frame,
+                            current_module->module_number,
+                            VM_CANONICAL_INDEX(pc), 0, 0);
                     SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
                     DISPATCH;
                 }
+                RXVM_INSTRUMENTATION_CALL(
+                        RXVM_PROFILE_CALL_SIGNAL_BYTECODE, intr_function,
+                        temp_frame->number_args,
+                        RXVM_PROFILE_FRAME_LAST_ACTIVATION,
+                        RXVM_PROFILE_CALL_SUCCESS, current_frame,
+                        current_module->module_number, VM_CANONICAL_INDEX(pc),
+                        0, 0);
                 /* Prepare dispatch to procedure as early as possible */
                 VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_INTERRUPT_ENTRY);
                 VM_SELECT_INDEX(intr_function->start, RXVM_TRANSITION_INTERRUPT_ENTRY);
@@ -3943,7 +4066,8 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             rxsignal_restore_branch_call_argument_mapping(
                     current_frame, &signal_handler,
                     last_interrupted_module[last_interrupt],
-                    last_interrupted_address[last_interrupt]);
+                    last_interrupted_address[last_interrupt]
+                    RXVM_PROFILE_UNWIND_STATE);
             VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame
                                                        RXVM_PROFILE_UNWIND_STATE),
                               RXVM_TRANSITION_INTERRUPT_ENTRY);
@@ -3955,7 +4079,8 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
             rxsignal_restore_branch_call_argument_mapping(
                     current_frame, &signal_handler,
                     last_interrupted_module[last_interrupt],
-                    last_interrupted_address[last_interrupt]);
+                    last_interrupted_address[last_interrupt]
+                    RXVM_PROFILE_UNWIND_STATE);
             VM_ACTIVATE_FRAME(rxsignal_unwind_to_frame(current_frame, signal_handler.frame
                                                        RXVM_PROFILE_UNWIND_STATE),
                               RXVM_TRANSITION_INTERRUPT_ENTRY);
@@ -5786,11 +5911,25 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                 proc_runtime *called_function = PROC_OP(1);
                 DEBUG("TRACE - CALL %s()\n", called_function->name);
                 if (called_function->start == SIZE_MAX) {
+                    RXVM_INSTRUMENTATION_CALL(
+                            called_function->binarySpace
+                                ? RXVM_PROFILE_CALL_DIRECT_BYTECODE
+                                : RXVM_PROFILE_CALL_DIRECT_NATIVE,
+                            called_function, 0, RXVM_PROFILE_FRAME_NONE_FAILED,
+                            RXVM_PROFILE_CALL_UNRESOLVED, current_frame,
+                            current_module->module_number, VM_CANONICAL_INDEX(pc),
+                            0, 0);
                     SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, called_function->name)
                     DISPATCH;
                 }
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
+                    RXVM_INSTRUMENTATION_CALL(
+                            RXVM_PROFILE_CALL_DIRECT_NATIVE, called_function, 0,
+                            RXVM_PROFILE_FRAME_NO_CHILD_NATIVE,
+                            RXVM_PROFILE_CALL_SUCCESS, current_frame,
+                            current_module->module_number, VM_CANONICAL_INDEX(pc),
+                            0, 0);
                     RXVM_INSTRUMENTATION_NATIVE_BEGIN(called_function);
                     rxvm_callfunc((void *) (called_function->start), 0, NULL, NULL, signal_value);
                     RXVM_INSTRUMENTATION_NATIVE_END();
@@ -5799,9 +5938,22 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                     /* This is a CREXX Procedure */
                     temp_frame = frame_f(called_function, 0, current_frame, next_pc, 0);
                     if (!temp_frame) {
+                        RXVM_INSTRUMENTATION_CALL(
+                                RXVM_PROFILE_CALL_DIRECT_BYTECODE,
+                                called_function, 0,
+                                RXVM_PROFILE_FRAME_NONE_FAILED,
+                                RXVM_PROFILE_CALL_FRAME_FAILED, current_frame,
+                                current_module->module_number,
+                                VM_CANONICAL_INDEX(pc), 0, 0);
                         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
                         DISPATCH;
                     }
+                    RXVM_INSTRUMENTATION_CALL(
+                            RXVM_PROFILE_CALL_DIRECT_BYTECODE, called_function, 0,
+                            RXVM_PROFILE_FRAME_LAST_ACTIVATION,
+                            RXVM_PROFILE_CALL_SUCCESS, current_frame,
+                            current_module->module_number, VM_CANONICAL_INDEX(pc),
+                            0, 0);
                     /* Prepare dispatch to procedure as early as possible */
                     VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_CALL);
                     VM_SELECT_INDEX(called_function->start, RXVM_TRANSITION_CALL);
@@ -5820,12 +5972,26 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                 DEBUG("TRACE - CALL R%lu,%s()\n", REG_IDX(1), called_function->name);
 
                 if (called_function->start == SIZE_MAX) {
+                    RXVM_INSTRUMENTATION_CALL(
+                            called_function->binarySpace
+                                ? RXVM_PROFILE_CALL_DIRECT_BYTECODE
+                                : RXVM_PROFILE_CALL_DIRECT_NATIVE,
+                            called_function, 0, RXVM_PROFILE_FRAME_NONE_FAILED,
+                            RXVM_PROFILE_CALL_UNRESOLVED, current_frame,
+                            current_module->module_number, VM_CANONICAL_INDEX(pc),
+                            0, 0);
                     SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, called_function->name);
                     DISPATCH;
                 }
 
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
+                    RXVM_INSTRUMENTATION_CALL(
+                            RXVM_PROFILE_CALL_DIRECT_NATIVE, called_function, 0,
+                            RXVM_PROFILE_FRAME_NO_CHILD_NATIVE,
+                            RXVM_PROFILE_CALL_SUCCESS, current_frame,
+                            current_module->module_number, VM_CANONICAL_INDEX(pc),
+                            0, 0);
                     RXVM_INSTRUMENTATION_NATIVE_BEGIN(called_function);
                     rxvm_callfunc((void *) (called_function->start), 0, NULL, op1R, signal_value);
                     RXVM_INSTRUMENTATION_NATIVE_END();
@@ -5835,9 +6001,22 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                     /* New stackframe - grabbing a procedure object from the caller frame */
                     temp_frame = frame_f(called_function, 0, current_frame, next_pc, op1R);
                     if (!temp_frame) {
+                        RXVM_INSTRUMENTATION_CALL(
+                                RXVM_PROFILE_CALL_DIRECT_BYTECODE,
+                                called_function, 0,
+                                RXVM_PROFILE_FRAME_NONE_FAILED,
+                                RXVM_PROFILE_CALL_FRAME_FAILED, current_frame,
+                                current_module->module_number,
+                                VM_CANONICAL_INDEX(pc), 0, 0);
                         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
                         DISPATCH;
                     }
+                    RXVM_INSTRUMENTATION_CALL(
+                            RXVM_PROFILE_CALL_DIRECT_BYTECODE, called_function, 0,
+                            RXVM_PROFILE_FRAME_LAST_ACTIVATION,
+                            RXVM_PROFILE_CALL_SUCCESS, current_frame,
+                            current_module->module_number, VM_CANONICAL_INDEX(pc),
+                            0, 0);
                     /* Prepare dispatch to procedure as early as possible */
                     VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_CALL);
                     VM_SELECT_INDEX(called_function->start, RXVM_TRANSITION_CALL);
@@ -5852,12 +6031,28 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                 proc_runtime *called_function = PROC_OP(2);
                 DEBUG("TRACE - CALL R%lu,%s,R%lu\n", REG_IDX(1), called_function->name, REG_IDX(3));
                 if (called_function->start == SIZE_MAX) {
+                    RXVM_INSTRUMENTATION_CALL(
+                            called_function->binarySpace
+                                ? RXVM_PROFILE_CALL_DIRECT_BYTECODE
+                                : RXVM_PROFILE_CALL_DIRECT_NATIVE,
+                            called_function, op3R->int_value,
+                            RXVM_PROFILE_FRAME_NONE_FAILED,
+                            RXVM_PROFILE_CALL_UNRESOLVED, current_frame,
+                            current_module->module_number, VM_CANONICAL_INDEX(pc),
+                            REG_IDX(3) + 1, 1);
                     SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, called_function->name);
                     DISPATCH;
                 }
 
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
+                    RXVM_INSTRUMENTATION_CALL(
+                            RXVM_PROFILE_CALL_DIRECT_NATIVE, called_function,
+                            op3R->int_value,
+                            RXVM_PROFILE_FRAME_NO_CHILD_NATIVE,
+                            RXVM_PROFILE_CALL_SUCCESS, current_frame,
+                            current_module->module_number, VM_CANONICAL_INDEX(pc),
+                            REG_IDX(3) + 1, 1);
                     RXVM_INSTRUMENTATION_NATIVE_BEGIN(called_function);
                     rxvm_callfunc((void *) (called_function->start), op3R->int_value, (&(op3R)) + 1, op1R,
                                   signal_value);
@@ -5869,11 +6064,25 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                     size_t caller_arg_base = REG_IDX(3) + 1;
                     temp_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
                     if (!temp_frame) {
+                        RXVM_INSTRUMENTATION_CALL(
+                                RXVM_PROFILE_CALL_DIRECT_BYTECODE,
+                                called_function, op3R->int_value,
+                                RXVM_PROFILE_FRAME_NONE_FAILED,
+                                RXVM_PROFILE_CALL_FRAME_FAILED, current_frame,
+                                current_module->module_number,
+                                VM_CANONICAL_INDEX(pc), caller_arg_base, 1);
                         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
                         DISPATCH;
                     }
                     assert(caller_arg_base <= UINT32_MAX);
                     temp_frame->caller_arg_base = (uint32_t)caller_arg_base;
+                    RXVM_INSTRUMENTATION_CALL(
+                            RXVM_PROFILE_CALL_DIRECT_BYTECODE, called_function,
+                            temp_frame->number_args,
+                            RXVM_PROFILE_FRAME_LAST_ACTIVATION,
+                            RXVM_PROFILE_CALL_SUCCESS, current_frame,
+                            current_module->module_number, VM_CANONICAL_INDEX(pc),
+                            caller_arg_base, 1);
                     /* Prepare dispatch to procedure as early as possible */
                     VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_CALL);
                     VM_SELECT_INDEX(called_function->start, RXVM_TRANSITION_CALL);
@@ -5905,12 +6114,28 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                 proc_runtime *called_function = (proc_runtime *) op2R->int_value;
                 DEBUG("TRACE - DCALL R%lu,R%lu,R%lu\n", REG_IDX(1), REG_IDX(2), REG_IDX(3));
                 if (called_function->start == SIZE_MAX) {
+                    RXVM_INSTRUMENTATION_CALL(
+                            called_function->binarySpace
+                                ? RXVM_PROFILE_CALL_DYNAMIC_BYTECODE
+                                : RXVM_PROFILE_CALL_DYNAMIC_NATIVE,
+                            called_function, op3R->int_value,
+                            RXVM_PROFILE_FRAME_NONE_FAILED,
+                            RXVM_PROFILE_CALL_UNRESOLVED, current_frame,
+                            current_module->module_number, VM_CANONICAL_INDEX(pc),
+                            REG_IDX(3) + 1, 1);
                     SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, called_function->name);
                     DISPATCH;
                 }
 
                 if (called_function->binarySpace == 0) {
                     /* This is a native plugin function */
+                    RXVM_INSTRUMENTATION_CALL(
+                            RXVM_PROFILE_CALL_DYNAMIC_NATIVE, called_function,
+                            op3R->int_value,
+                            RXVM_PROFILE_FRAME_NO_CHILD_NATIVE,
+                            RXVM_PROFILE_CALL_SUCCESS, current_frame,
+                            current_module->module_number, VM_CANONICAL_INDEX(pc),
+                            REG_IDX(3) + 1, 1);
                     RXVM_INSTRUMENTATION_NATIVE_BEGIN(called_function);
                     rxvm_callfunc((void *) (called_function->start), op3R->int_value, (&(op3R)) + 1, op1R,
                                   signal_value);
@@ -5921,11 +6146,25 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                     size_t caller_arg_base = REG_IDX(3) + 1;
                     temp_frame = frame_f(called_function, (int) op3R->int_value, current_frame, next_pc, op1R);
                     if (!temp_frame) {
+                        RXVM_INSTRUMENTATION_CALL(
+                                RXVM_PROFILE_CALL_DYNAMIC_BYTECODE,
+                                called_function, op3R->int_value,
+                                RXVM_PROFILE_FRAME_NONE_FAILED,
+                                RXVM_PROFILE_CALL_FRAME_FAILED, current_frame,
+                                current_module->module_number,
+                                VM_CANONICAL_INDEX(pc), caller_arg_base, 1);
                         SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame")
                         DISPATCH;
                     }
                     assert(caller_arg_base <= UINT32_MAX);
                     temp_frame->caller_arg_base = (uint32_t)caller_arg_base;
+                    RXVM_INSTRUMENTATION_CALL(
+                            RXVM_PROFILE_CALL_DYNAMIC_BYTECODE, called_function,
+                            temp_frame->number_args,
+                            RXVM_PROFILE_FRAME_LAST_ACTIVATION,
+                            RXVM_PROFILE_CALL_SUCCESS, current_frame,
+                            current_module->module_number, VM_CANONICAL_INDEX(pc),
+                            caller_arg_base, 1);
                     /* Prepare dispatch to procedure as early as possible */
                     VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_CALL);
                     VM_SELECT_INDEX(called_function->start, RXVM_TRANSITION_CALL);
@@ -5950,6 +6189,10 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
         START_INSTRUCTION(RET)
             DEBUG("TRACE - RET\n");
             {
+                RXVM_INSTRUMENTATION_RETURN(
+                        current_frame->parent
+                            ? RXVM_PROFILE_RETURN_VOID
+                            : RXVM_PROFILE_RETURN_TERMINAL_EXTERNAL);
                 /* Where we return to */
                 next_pc = current_frame->return_pc;
                 unsigned char is_interrupt = current_frame->is_interrupt;
@@ -5997,6 +6240,21 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
         START_INSTRUCTION(RET_REG)
             DEBUG("TRACE - RET R%lu\n", REG_IDX(1));
             {
+                if (!current_frame->parent) {
+                    RXVM_INSTRUMENTATION_RETURN(
+                            RXVM_PROFILE_RETURN_TERMINAL_EXTERNAL);
+                } else if (!current_frame->return_reg) {
+                    RXVM_INSTRUMENTATION_RETURN(
+                            RXVM_PROFILE_RETURN_VALUE_IGNORED);
+                } else if (REG_IDX(1) >= current_frame->procedure->locals ||
+                           current_locals[REG_IDX(1)] !=
+                               current_frame->baselocals[REG_IDX(1)]) {
+                    RXVM_INSTRUMENTATION_RETURN(
+                            RXVM_PROFILE_RETURN_COPY_NONLOCAL);
+                } else {
+                    RXVM_INSTRUMENTATION_RETURN(
+                            RXVM_PROFILE_RETURN_MOVE_LOCAL);
+                }
                 /* Where we return to */
                 next_pc = current_frame->return_pc;
                 unsigned char is_interrupt = current_frame->is_interrupt;
@@ -6066,6 +6324,12 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
         START_INSTRUCTION(RET_INT)
             DEBUG("TRACE - RET %d\n", (int)op1I);
             {
+                RXVM_INSTRUMENTATION_RETURN(
+                        !current_frame->parent
+                            ? RXVM_PROFILE_RETURN_TERMINAL_EXTERNAL
+                            : (current_frame->return_reg
+                                ? RXVM_PROFILE_RETURN_IMMEDIATE
+                                : RXVM_PROFILE_RETURN_VALUE_IGNORED));
                 /* Where we return to */
                 next_pc = current_frame->return_pc;
                 unsigned char is_interrupt = current_frame->is_interrupt;
@@ -6127,6 +6391,12 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
         START_INSTRUCTION(RET_FLOAT)
             DEBUG("TRACE - RET %.15g\n", op1F);
             {
+                RXVM_INSTRUMENTATION_RETURN(
+                        !current_frame->parent
+                            ? RXVM_PROFILE_RETURN_TERMINAL_EXTERNAL
+                            : (current_frame->return_reg
+                                ? RXVM_PROFILE_RETURN_IMMEDIATE
+                                : RXVM_PROFILE_RETURN_VALUE_IGNORED));
                 /* Where we return to */
                 next_pc = current_frame->return_pc;
                 unsigned char is_interrupt = current_frame->is_interrupt;
@@ -6187,6 +6457,12 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
         START_INSTRUCTION(RET_STRING)
             DEBUG("TRACE - RET \"%.*s\"\n", (int)op1S->string_len, op1S->string);
             {
+                RXVM_INSTRUMENTATION_RETURN(
+                        !current_frame->parent
+                            ? RXVM_PROFILE_RETURN_TERMINAL_EXTERNAL
+                            : (current_frame->return_reg
+                                ? RXVM_PROFILE_RETURN_IMMEDIATE
+                                : RXVM_PROFILE_RETURN_VALUE_IGNORED));
                 /* Where we return to */
                 next_pc = current_frame->return_pc;
                 unsigned char is_interrupt = current_frame->is_interrupt;
@@ -6251,6 +6527,7 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                 v_temp = op1R;
                 op1R = op2R;
                 op2R = v_temp;
+                RXVM_INSTRUMENTATION_SWAP(current_frame, REG_IDX(1), REG_IDX(2));
             }
             DISPATCH;
 
@@ -11124,6 +11401,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
 
                 DEBUG("TRACE - SRCMETHODSEL R%lu,R%lu,\"%.*s\"\n", REG_IDX(1), REG_IDX(2),
                       (int) op3S->string_len, op3S->string);
+                RXVM_INSTRUMENTATION_DYNAMIC(
+                        RXVM_PROFILE_DYNAMIC_METHOD_SELECTION,
+                        RXVM_PROFILE_DYNAMIC_ATTEMPT);
 
                 if (value_is_uninitialized_object(op2R)) {
                     char *error_message = build_runtime_uninitialized_object_error(op2R);
@@ -11133,6 +11413,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     } else {
                         SET_SIGNAL(RXSIGNAL_OBJECT_NOT_INITIALIZED);
                     }
+                    RXVM_INSTRUMENTATION_DYNAMIC(
+                            RXVM_PROFILE_DYNAMIC_METHOD_SELECTION,
+                            RXVM_PROFILE_DYNAMIC_FAILURE);
                     DISPATCH;
                 }
 
@@ -11150,6 +11433,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     else {
                         SET_SIGNAL(RXSIGNAL_FAILURE);
                     }
+                    RXVM_INSTRUMENTATION_DYNAMIC(
+                            RXVM_PROFILE_DYNAMIC_METHOD_SELECTION,
+                            RXVM_PROFILE_DYNAMIC_FAILURE);
                     DISPATCH;
                 }
 
@@ -11163,15 +11449,24 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     descriptor_copy = dup_runtime_name(op3S->string, op3S->string_len);
                     if (!descriptor_copy) {
                         SET_SIGNAL(RXSIGNAL_FAILURE);
+                        RXVM_INSTRUMENTATION_DYNAMIC(
+                                RXVM_PROFILE_DYNAMIC_METHOD_SELECTION,
+                                RXVM_PROFILE_DYNAMIC_FAILURE);
                         DISPATCH;
                     }
                     SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, descriptor_copy);
                     free(descriptor_copy);
+                    RXVM_INSTRUMENTATION_DYNAMIC(
+                            RXVM_PROFILE_DYNAMIC_METHOD_SELECTION,
+                            RXVM_PROFILE_DYNAMIC_FAILURE);
                     DISPATCH;
                 }
 
                 value_zero(op1R);
                 op1R->int_value = (rxinteger) called_function;
+                RXVM_INSTRUMENTATION_DYNAMIC(
+                        RXVM_PROFILE_DYNAMIC_METHOD_SELECTION,
+                        RXVM_PROFILE_DYNAMIC_SUCCESS);
             }
             DISPATCH;
 
@@ -11182,6 +11477,9 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
 
                 DEBUG("TRACE - SRCFPROCSEL R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
                       (int) op2S->string_len, op2S->string, REG_IDX(3));
+                RXVM_INSTRUMENTATION_DYNAMIC(
+                        RXVM_PROFILE_DYNAMIC_FACTORY_SELECTION,
+                        RXVM_PROFILE_DYNAMIC_ATTEMPT);
 
                 called_function = 0;
                 error_message = 0;
@@ -11199,11 +11497,17 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     } else {
                         SET_SIGNAL(RXSIGNAL_FAILURE);
                     }
+                    RXVM_INSTRUMENTATION_DYNAMIC(
+                            RXVM_PROFILE_DYNAMIC_FACTORY_SELECTION,
+                            RXVM_PROFILE_DYNAMIC_FAILURE);
                     DISPATCH;
                 }
 
                 value_zero(op1R);
                 op1R->int_value = (rxinteger) called_function;
+                RXVM_INSTRUMENTATION_DYNAMIC(
+                        RXVM_PROFILE_DYNAMIC_FACTORY_SELECTION,
+                        RXVM_PROFILE_DYNAMIC_SUCCESS);
             }
             DISPATCH;
 

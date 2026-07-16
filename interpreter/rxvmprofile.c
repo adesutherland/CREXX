@@ -34,6 +34,42 @@ static const char *const rxvm_profile_allocation_names[RXVM_PROFILE_ALLOC_COUNT]
         "binary_buffers"
 };
 
+static const char *const rxvm_profile_call_path_names[RXVM_PROFILE_CALL_PATH_COUNT] = {
+        "direct_bytecode", "direct_native", "dynamic_bytecode",
+        "dynamic_native", "external_root", "signal_bytecode", "signal_native"
+};
+
+static const char *const rxvm_profile_census_kind_names[
+        RXVM_PROFILE_CENSUS_CALLABLE_KIND_COUNT] = {
+        "procedure", "method", "factory", "native", "unknown"
+};
+
+static const char *const rxvm_profile_frame_disposition_names[
+        RXVM_PROFILE_FRAME_DISPOSITION_COUNT] = {
+        "fresh", "reused", "no_child_native", "none_failed"
+};
+
+static const char *const rxvm_profile_call_outcome_names[
+        RXVM_PROFILE_CALL_OUTCOME_COUNT] = {
+        "success", "unresolved", "frame_failed", "invalid"
+};
+
+static const char *const rxvm_profile_return_placement_names[
+        RXVM_PROFILE_RETURN_PLACEMENT_COUNT] = {
+        "void", "ret_reg_move_local", "ret_reg_copy_nonlocal",
+        "value_ignored", "immediate", "terminal_external"
+};
+
+static const char *const rxvm_profile_dynamic_kind_names[
+        RXVM_PROFILE_DYNAMIC_KIND_COUNT] = {
+        "srcmethodsel", "srcfprocsel"
+};
+
+static const char *const rxvm_profile_dynamic_outcome_names[
+        RXVM_PROFILE_DYNAMIC_OUTCOME_COUNT] = {
+        "attempt", "success", "failure"
+};
+
 #if defined(_MSC_VER)
 #define RXVM_PROFILE_THREAD_LOCAL __declspec(thread)
 #else
@@ -76,6 +112,534 @@ void rxvm_profile_record_frame_activation(int reused, size_t frame_bytes,
 
 void rxvm_profile_record_frame_release(void) {
     rxvm_profile_frame_release_at(rxvm_active_allocation_profile);
+}
+
+#define RXVM_PROFILE_ATTR_SETUP_SWAP 1u
+#define RXVM_PROFILE_ATTR_RESTORE_SWAP 2u
+#define RXVM_PROFILE_ATTR_ARGUMENT_COPY 4u
+
+static rxvm_profile_activation *rxvm_profile_find_activation(
+        rxvm_profile_state *state, const void *frame) {
+    size_t i;
+    if (!state || !frame) return 0;
+    for (i = state->activation_count; i > 0; i--) {
+        if (state->activations[i - 1].frame == frame)
+            return &state->activations[i - 1];
+    }
+    return 0;
+}
+
+static void rxvm_profile_abandon_restoration(
+        rxvm_profile_activation *activation) {
+    if (!activation) return;
+    activation->restoration_mapping_count = 0;
+    activation->restoration_trace_count = 0;
+    activation->restoration_call_row = SIZE_MAX;
+    activation->restoration_pending = 0;
+    activation->restoration_ready = 0;
+}
+
+static int rxvm_profile_trace_reserve(rxvm_profile_state *state,
+                                      rxvm_profile_activation *activation) {
+    rxvm_profile_trace_record *replacement;
+    size_t capacity;
+    if (activation->trace_count < activation->trace_capacity) return 1;
+    capacity = activation->trace_capacity ? activation->trace_capacity * 2 : 32;
+    replacement = (rxvm_profile_trace_record *)realloc(
+            activation->trace, capacity * sizeof(*replacement));
+    if (!replacement) {
+        state->census_tracking_unavailable = 1;
+        rxvm_profile_increment(state, &state->attribution_degraded);
+        return 0;
+    }
+    activation->trace = replacement;
+    activation->trace_capacity = capacity;
+    return 1;
+}
+
+void rxvm_profile_trace_instruction_at(rxvm_profile_state *state,
+                                       const void *frame_pointer,
+                                       const bin_code *pc,
+                                       const Instruction *instruction_map,
+                                       size_t module_id,
+                                       size_t instruction_index,
+                                       int opcode) {
+    rxvm_profile_activation *activation;
+    rxvm_profile_trace_record *record;
+    RxOpEffects previous_effects;
+    const Instruction *instruction;
+    (void)module_id;
+    (void)instruction_index;
+    if (!state || !state->enabled || !frame_pointer || !pc ||
+            !instruction_map || opcode < 0 || opcode >= OP_MAX_INSTRUCTIONS)
+        return;
+    activation = rxvm_profile_find_activation(state, frame_pointer);
+    if (!activation) return;
+    if (activation->trace_count) {
+        previous_effects = rxop_effects(
+                activation->trace[activation->trace_count - 1].opcode);
+        if (previous_effects.flow != FLOW_NEXT ||
+                (previous_effects.semantics &
+                 (RXOP_SEM_CALL | RXOP_SEM_RETURN)) != 0) {
+            if (activation->restoration_ready &&
+                    activation->restoration_trace_count)
+                rxvm_profile_abandon_restoration(activation);
+            activation->trace_count = 0;
+        }
+    }
+    if (!rxvm_profile_trace_reserve(state, activation)) return;
+    record = &activation->trace[activation->trace_count++];
+    memset(record, 0, sizeof(*record));
+    record->opcode = opcode;
+    record->registers[0] = SIZE_MAX;
+    record->registers[1] = SIZE_MAX;
+    record->registers[2] = SIZE_MAX;
+    instruction = &instruction_map[opcode];
+    if (instruction->op1_type == OP_REG) {
+        record->register_mask |= RXOP_OP_1;
+        record->registers[0] = (pc + 1)->index;
+    }
+    if (instruction->op2_type == OP_REG) {
+        record->register_mask |= RXOP_OP_2;
+        record->registers[1] = (pc + 2)->index;
+    }
+    if (instruction->op3_type == OP_REG) {
+        record->register_mask |= RXOP_OP_3;
+        record->registers[2] = (pc + 3)->index;
+    }
+}
+
+static rxvm_profile_census_callable_kind rxvm_profile_census_kind(
+        const rxvm_profile_state *state, size_t procedure_id,
+        rxvm_profile_call_path path) {
+    if (path == RXVM_PROFILE_CALL_DIRECT_NATIVE ||
+            path == RXVM_PROFILE_CALL_DYNAMIC_NATIVE ||
+            path == RXVM_PROFILE_CALL_SIGNAL_NATIVE)
+        return RXVM_PROFILE_CENSUS_NATIVE;
+    if (!rxvm_profile_valid_procedure(state, procedure_id))
+        return RXVM_PROFILE_CENSUS_UNKNOWN;
+    if (state->procedures[procedure_id].kind == RXVM_PROFILE_FACTORY)
+        return RXVM_PROFILE_CENSUS_FACTORY;
+    if (state->procedures[procedure_id].kind == RXVM_PROFILE_METHOD)
+        return RXVM_PROFILE_CENSUS_METHOD;
+    return RXVM_PROFILE_CENSUS_PROCEDURE;
+}
+
+static size_t rxvm_profile_find_or_add_call_row(
+        rxvm_profile_state *state, rxvm_profile_call_path path,
+        rxvm_profile_census_callable_kind kind,
+        rxvm_profile_frame_disposition disposition,
+        rxvm_profile_call_outcome outcome, size_t procedure_id,
+        uint64_t arity, int arity_valid, size_t site_module,
+        size_t site_index) {
+    size_t i;
+    rxvm_profile_call_row *row;
+    for (i = 0; i < state->call_row_count; i++) {
+        row = &state->call_rows[i];
+        if (row->path == path && row->callable_kind == kind &&
+                row->frame_disposition == disposition &&
+                row->outcome == outcome &&
+                row->procedure_id == procedure_id && row->arity == arity &&
+                row->arity_valid == arity_valid &&
+                row->site_module == site_module && row->site_index == site_index)
+            return i;
+    }
+    if (state->call_row_count == state->call_row_capacity) {
+        size_t capacity = state->call_row_capacity
+                ? state->call_row_capacity * 2 : 64;
+        rxvm_profile_call_row *replacement =
+                (rxvm_profile_call_row *)realloc(
+                        state->call_rows, capacity * sizeof(*replacement));
+        if (!replacement) {
+            state->census_tracking_unavailable = 1;
+            return SIZE_MAX;
+        }
+        state->call_rows = replacement;
+        state->call_row_capacity = capacity;
+    }
+    row = &state->call_rows[state->call_row_count];
+    memset(row, 0, sizeof(*row));
+    row->path = path;
+    row->callable_kind = kind;
+    row->frame_disposition = disposition;
+    row->outcome = outcome;
+    row->procedure_id = procedure_id;
+    row->arity = arity;
+    row->arity_valid = arity_valid;
+    row->site_module = site_module;
+    row->site_index = site_index;
+    return state->call_row_count++;
+}
+
+static int rxvm_profile_mask_has(unsigned int mask, int operand) {
+    return (mask & (1u << (operand - 1))) != 0;
+}
+
+static void rxvm_profile_prepare_restoration(
+        rxvm_profile_state *state, rxvm_profile_activation *activation,
+        size_t row_index, uint64_t setup_swaps, const size_t *swap_pairs,
+        size_t register_count, int native_call) {
+    size_t *replacement;
+    size_t i;
+    int displaced = 0;
+    if (!setup_swaps) return;
+    rxvm_profile_abandon_restoration(activation);
+    if (register_count > SIZE_MAX / sizeof(*replacement)) {
+        state->census_tracking_unavailable = 1;
+        rxvm_profile_increment(state, &state->attribution_degraded);
+        return;
+    }
+    if (activation->restoration_mapping_capacity < register_count) {
+        replacement = (size_t *)realloc(
+                activation->restoration_mapping,
+                register_count * sizeof(*replacement));
+        if (!replacement) {
+            state->census_tracking_unavailable = 1;
+            rxvm_profile_increment(state, &state->attribution_degraded);
+            return;
+        }
+        activation->restoration_mapping = replacement;
+        activation->restoration_mapping_capacity = register_count;
+    }
+    for (i = 0; i < register_count; i++)
+        activation->restoration_mapping[i] = i;
+    for (i = (size_t)setup_swaps; i > 0; i--) {
+        size_t pair_index = (i - 1) * 2;
+        size_t first = swap_pairs[pair_index];
+        size_t second = swap_pairs[pair_index + 1];
+        size_t temporary;
+        if (first >= register_count || second >= register_count) {
+            state->census_tracking_unavailable = 1;
+            rxvm_profile_increment(state, &state->attribution_degraded);
+            rxvm_profile_abandon_restoration(activation);
+            return;
+        }
+        temporary = activation->restoration_mapping[first];
+        activation->restoration_mapping[first] =
+                activation->restoration_mapping[second];
+        activation->restoration_mapping[second] = temporary;
+    }
+    for (i = 0; i < register_count; i++) {
+        if (activation->restoration_mapping[i] != i) {
+            displaced = 1;
+            break;
+        }
+    }
+    if (!displaced) return;
+    activation->restoration_mapping_count = register_count;
+    activation->restoration_call_row = row_index;
+    activation->restoration_pending = 1;
+    activation->restoration_ready = native_call;
+}
+
+static void rxvm_profile_attribute_call_window(
+        rxvm_profile_state *state, rxvm_profile_activation *activation,
+        const stack_frame *frame, size_t argument_base, uint64_t arity,
+        size_t row_index, int native_call) {
+    unsigned char *needed;
+    size_t *restoration_swaps;
+    uint64_t setup_swaps = 0;
+    uint64_t copies = 0;
+    size_t i;
+    if (!activation || !frame || !arity) return;
+    if (arity > SIZE_MAX || argument_base > frame->number_locals ||
+            (size_t)arity > frame->number_locals - argument_base) {
+        state->census_tracking_unavailable = 1;
+        rxvm_profile_increment(state, &state->attribution_degraded);
+        return;
+    }
+    needed = (unsigned char *)calloc(frame->number_locals, 1);
+    if (activation->trace_count > SIZE_MAX / (2 * sizeof(*restoration_swaps))) {
+        free(needed);
+        state->census_tracking_unavailable = 1;
+        rxvm_profile_increment(state, &state->attribution_degraded);
+        return;
+    }
+    restoration_swaps = activation->trace_count
+            ? (size_t *)malloc(
+                    activation->trace_count * 2 * sizeof(*restoration_swaps))
+            : 0;
+    if (!needed || (activation->trace_count && !restoration_swaps)) {
+        free(needed);
+        free(restoration_swaps);
+        state->census_tracking_unavailable = 1;
+        rxvm_profile_increment(state, &state->attribution_degraded);
+        return;
+    }
+    for (i = 0; i < (size_t)arity; i++) needed[argument_base + i] = 1;
+    for (i = activation->trace_count; i > 0; i--) {
+        rxvm_profile_trace_record *record = &activation->trace[i - 1];
+        RxOpEffects effects = rxop_effects(record->opcode);
+        int operand;
+        if (i == activation->trace_count &&
+                (effects.semantics & RXOP_SEM_CALL) != 0)
+            continue;
+        if (record->opcode == OP_SWAP_REG_REG &&
+                (record->register_mask & RXOP_OP_12) == RXOP_OP_12) {
+            size_t first = record->registers[0];
+            size_t second = record->registers[1];
+            if (first < frame->number_locals && second < frame->number_locals &&
+                    (needed[first] || needed[second])) {
+                unsigned char temporary = needed[first];
+                if (!(record->attribution &
+                      (RXVM_PROFILE_ATTR_SETUP_SWAP |
+                       RXVM_PROFILE_ATTR_RESTORE_SWAP))) {
+                    record->attribution |= RXVM_PROFILE_ATTR_SETUP_SWAP;
+                    setup_swaps++;
+                    restoration_swaps[(size_t)(setup_swaps - 1) * 2] = first;
+                    restoration_swaps[
+                            (size_t)(setup_swaps - 1) * 2 + 1] = second;
+                }
+                needed[first] = needed[second];
+                needed[second] = temporary;
+            }
+        } else if (record->opcode == OP_COPY_REG_REG &&
+                   (record->register_mask & RXOP_OP_1) != 0 &&
+                   record->registers[0] < frame->number_locals &&
+                   needed[record->registers[0]]) {
+            if (!(record->attribution & RXVM_PROFILE_ATTR_ARGUMENT_COPY)) {
+                record->attribution |= RXVM_PROFILE_ATTR_ARGUMENT_COPY;
+                copies++;
+            }
+            needed[record->registers[0]] = 0;
+        } else if (effects.state == RXOP_EFFECT_CLASSIFIED) {
+            for (operand = 1; operand <= 3; operand++) {
+                size_t reg = record->registers[operand - 1];
+                if (rxvm_profile_mask_has(effects.kills, operand) &&
+                        (record->register_mask & (1u << (operand - 1))) != 0 &&
+                        reg < frame->number_locals)
+                    needed[reg] = 0;
+            }
+        } else {
+            break;
+        }
+        if (effects.flow != FLOW_NEXT ||
+                (effects.semantics & (RXOP_SEM_CALL | RXOP_SEM_RETURN)) != 0)
+            break;
+    }
+    rxvm_profile_add_total(state, &state->setup_swaps, setup_swaps);
+    rxvm_profile_add_total(state, &state->defensive_argument_copies, copies);
+    if (row_index < state->call_row_count) {
+        rxvm_profile_add_total(state,
+                &state->call_rows[row_index].setup_swaps, setup_swaps);
+        rxvm_profile_add_total(state,
+                &state->call_rows[row_index].defensive_argument_copies, copies);
+    }
+    rxvm_profile_prepare_restoration(state, activation, row_index, setup_swaps,
+                                     restoration_swaps, frame->number_locals,
+                                     native_call);
+    free(needed);
+    free(restoration_swaps);
+}
+
+void rxvm_profile_record_call_at(rxvm_profile_state *state,
+                                 rxvm_profile_call_path path,
+                                 size_t procedure_id,
+                                 int64_t arity,
+                                 rxvm_profile_frame_disposition disposition,
+                                 rxvm_profile_call_outcome outcome,
+                                 const void *caller_frame,
+                                 size_t site_module,
+                                 size_t site_index,
+                                 size_t argument_base,
+                                 int has_argument_window) {
+    rxvm_profile_census_callable_kind kind;
+    rxvm_profile_activation *activation;
+    size_t row_index;
+    uint64_t exact_arity = arity >= 0 ? (uint64_t)arity : 0;
+    int arity_valid = arity >= 0;
+    if (!state || !state->enabled) return;
+    if (path < 0 || path >= RXVM_PROFILE_CALL_PATH_COUNT ||
+            outcome < 0 || outcome >= RXVM_PROFILE_CALL_OUTCOME_COUNT) {
+        rxvm_profile_increment(state, &state->invalid_events);
+        state->census_tracking_unavailable = 1;
+        return;
+    }
+    if (disposition == RXVM_PROFILE_FRAME_LAST_ACTIVATION) {
+        if (state->last_frame_disposition_valid) {
+            disposition = state->last_frame_disposition;
+            state->last_frame_disposition_valid = 0;
+        } else {
+            disposition = RXVM_PROFILE_FRAME_NONE_FAILED;
+            state->census_tracking_unavailable = 1;
+        }
+    }
+    if (disposition < 0 || disposition >= RXVM_PROFILE_FRAME_DISPOSITION_COUNT)
+        disposition = RXVM_PROFILE_FRAME_NONE_FAILED;
+    if (!arity_valid) {
+        outcome = RXVM_PROFILE_CALL_INVALID;
+        state->census_tracking_unavailable = 1;
+    }
+    kind = rxvm_profile_census_kind(state, procedure_id, path);
+    row_index = rxvm_profile_find_or_add_call_row(
+            state, path, kind, disposition, outcome, procedure_id,
+            exact_arity, arity_valid, site_module, site_index);
+    rxvm_profile_increment(state, &state->call_path_totals[path]);
+    rxvm_profile_increment(state, &state->callable_kind_totals[kind]);
+    rxvm_profile_increment(state, &state->frame_disposition_totals[disposition]);
+    rxvm_profile_increment(state, &state->call_outcome_totals[outcome]);
+    if (row_index != SIZE_MAX)
+        rxvm_profile_increment(state, &state->call_rows[row_index].count);
+    if (outcome != RXVM_PROFILE_CALL_SUCCESS || !has_argument_window ||
+            !arity_valid || !exact_arity || row_index == SIZE_MAX)
+        return;
+    activation = rxvm_profile_find_activation(state, caller_frame);
+    rxvm_profile_attribute_call_window(
+            state, activation, (const stack_frame *)caller_frame,
+            argument_base, exact_arity, row_index,
+            disposition == RXVM_PROFILE_FRAME_NO_CHILD_NATIVE);
+}
+
+void rxvm_profile_record_return_at(rxvm_profile_state *state,
+                                   rxvm_profile_return_placement placement) {
+    if (!state || !state->enabled) return;
+    if (placement < 0 || placement >= RXVM_PROFILE_RETURN_PLACEMENT_COUNT) {
+        rxvm_profile_increment(state, &state->invalid_events);
+        state->census_tracking_unavailable = 1;
+        return;
+    }
+    rxvm_profile_increment(state, &state->return_placements[placement]);
+}
+
+void rxvm_profile_record_dynamic_at(rxvm_profile_state *state,
+                                    rxvm_profile_dynamic_kind kind,
+                                    rxvm_profile_dynamic_outcome outcome) {
+    if (!state || !state->enabled) return;
+    if (kind < 0 || kind >= RXVM_PROFILE_DYNAMIC_KIND_COUNT ||
+            outcome < 0 || outcome >= RXVM_PROFILE_DYNAMIC_OUTCOME_COUNT) {
+        rxvm_profile_increment(state, &state->invalid_events);
+        state->census_tracking_unavailable = 1;
+        return;
+    }
+    rxvm_profile_increment(state, &state->dynamic_resolution[kind][outcome]);
+}
+
+void rxvm_profile_record_swap_at(rxvm_profile_state *state,
+                                 const void *frame,
+                                 size_t register_1,
+                                 size_t register_2) {
+    rxvm_profile_activation *activation;
+    rxvm_profile_trace_record *record;
+    size_t *replacement;
+    size_t temporary;
+    size_t i;
+    int restored = 1;
+    if (!state || !state->enabled) return;
+    activation = rxvm_profile_find_activation(state, frame);
+    if (!activation || !activation->restoration_pending ||
+            !activation->restoration_ready)
+        return;
+    if (register_1 >= activation->restoration_mapping_count ||
+            register_2 >= activation->restoration_mapping_count) {
+        state->census_tracking_unavailable = 1;
+        rxvm_profile_increment(state, &state->attribution_degraded);
+        rxvm_profile_abandon_restoration(activation);
+        return;
+    }
+    if (!activation->trace_count) {
+        state->census_tracking_unavailable = 1;
+        rxvm_profile_increment(state, &state->attribution_degraded);
+        rxvm_profile_abandon_restoration(activation);
+        return;
+    }
+    if (activation->restoration_trace_count ==
+            activation->restoration_trace_capacity) {
+        size_t capacity;
+        if (activation->restoration_trace_capacity > SIZE_MAX / 2) {
+            state->census_tracking_unavailable = 1;
+            rxvm_profile_increment(state, &state->attribution_degraded);
+            rxvm_profile_abandon_restoration(activation);
+            return;
+        }
+        capacity = activation->restoration_trace_capacity
+                ? activation->restoration_trace_capacity * 2 : 8;
+        replacement = (size_t *)realloc(
+                activation->restoration_trace_indices,
+                capacity * sizeof(*replacement));
+        if (!replacement) {
+            state->census_tracking_unavailable = 1;
+            rxvm_profile_increment(state, &state->attribution_degraded);
+            rxvm_profile_abandon_restoration(activation);
+            return;
+        }
+        activation->restoration_trace_indices = replacement;
+        activation->restoration_trace_capacity = capacity;
+    }
+    activation->restoration_trace_indices[
+            activation->restoration_trace_count++] =
+            activation->trace_count - 1;
+    temporary = activation->restoration_mapping[register_1];
+    activation->restoration_mapping[register_1] =
+            activation->restoration_mapping[register_2];
+    activation->restoration_mapping[register_2] = temporary;
+    for (i = 0; i < activation->restoration_mapping_count; i++) {
+        if (activation->restoration_mapping[i] != i) {
+            restored = 0;
+            break;
+        }
+    }
+    if (!restored) return;
+    rxvm_profile_add_total(state, &state->normal_restoration_swaps,
+                           activation->restoration_trace_count);
+    if (activation->restoration_call_row < state->call_row_count)
+        rxvm_profile_add_total(
+                state,
+                &state->call_rows[activation->restoration_call_row]
+                     .normal_restoration_swaps,
+                activation->restoration_trace_count);
+    for (i = 0; i < activation->restoration_trace_count; i++) {
+        size_t trace_index = activation->restoration_trace_indices[i];
+        if (trace_index < activation->trace_count) {
+            record = &activation->trace[trace_index];
+            if (record->opcode == OP_SWAP_REG_REG)
+                record->attribution |= RXVM_PROFILE_ATTR_RESTORE_SWAP;
+        }
+    }
+    rxvm_profile_abandon_restoration(activation);
+}
+
+void rxvm_profile_record_signal_unwind_at(rxvm_profile_state *state,
+                                          uint64_t frames_discarded,
+                                          uint64_t windows_restored,
+                                          uint64_t slots_restored,
+                                          int restoration_failed) {
+    if (!state || !state->enabled) return;
+    rxvm_profile_increment(state, &state->signal_unwind_events);
+    rxvm_profile_add_total(state, &state->signal_bytecode_frames_discarded,
+                           frames_discarded);
+    rxvm_profile_add_total(state, &state->signal_argument_windows_restored,
+                           windows_restored);
+    rxvm_profile_add_total(state, &state->signal_argument_slots_restored,
+                           slots_restored);
+    if (restoration_failed) {
+        rxvm_profile_increment(state, &state->signal_restoration_failures);
+        state->census_tracking_unavailable = 1;
+    }
+    if (frames_discarded && state->activation_count) {
+        rxvm_profile_activation *target =
+                &state->activations[state->activation_count - 1];
+        rxvm_profile_abandon_restoration(target);
+    }
+}
+
+void rxvm_profile_record_signal_native_restore_at(rxvm_profile_state *state,
+                                                  int window_observed,
+                                                  uint64_t slots_restored,
+                                                  int restoration_failed) {
+    if (!state || !state->enabled) return;
+    if (window_observed)
+        rxvm_profile_increment(state, &state->signal_native_windows_restored);
+    rxvm_profile_add_total(state, &state->signal_native_slots_restored,
+                           slots_restored);
+    if (restoration_failed) {
+        rxvm_profile_increment(state, &state->signal_restoration_failures);
+        state->census_tracking_unavailable = 1;
+    }
+    if (window_observed && state->activation_count) {
+        rxvm_profile_activation *activation =
+                &state->activations[state->activation_count - 1];
+        rxvm_profile_abandon_restoration(activation);
+    }
 }
 
 static char *rxvm_profile_copy_string(const char *source, size_t length) {
@@ -288,6 +852,7 @@ void rxvm_profile_begin(rxvm_profile_state *state, int enabled,
     state->current_transition = RXVM_TRANSITION_SEQUENTIAL;
     state->instruction_activation_index = SIZE_MAX;
     state->native_procedure_id = SIZE_MAX;
+    state->context = context;
     if (!state->enabled) return;
 
     state->activations = (rxvm_profile_activation *)calloc(
@@ -321,13 +886,22 @@ void rxvm_profile_destroy(rxvm_profile_state *state) {
         free(state->procedures[i].args);
     }
     free(state->procedures);
+    for (i = 0; i < state->activation_count; i++) {
+        free(state->activations[i].trace);
+        free(state->activations[i].restoration_mapping);
+        free(state->activations[i].restoration_trace_indices);
+    }
     free(state->activations);
+    free(state->call_rows);
     state->procedures = 0;
     state->activations = 0;
+    state->call_rows = 0;
     state->procedure_count = 0;
     state->procedure_capacity = 0;
     state->activation_count = 0;
     state->activation_capacity = 0;
+    state->call_row_count = 0;
+    state->call_row_capacity = 0;
     if (rxvm_active_allocation_profile == state)
         rxvm_active_allocation_profile = state->previous_allocation_profile;
     state->previous_allocation_profile = 0;
@@ -510,6 +1084,72 @@ static void rxvm_profile_write_allocation_csv_row(
             bytes, max_bytes, high_water, status);
 }
 
+static const char *rxvm_profile_census_status(
+        const rxvm_profile_state *state) {
+    return state->overflowed || state->census_tracking_unavailable
+            ? "degraded" : "complete";
+}
+
+static void rxvm_profile_write_named_count_csv_row(
+        FILE *out, const char *section, const char *name, const char *value,
+        uint64_t count, const char *status) {
+    fprintf(out, "%s,", section);
+    rxvm_profile_csv_string(out, name);
+    fputc(',', out);
+    rxvm_profile_csv_string(out, value);
+    fprintf(out, ",,%" PRIu64 ",0,0,0,0,0", count);
+    fprintf(out, ",,,,,,,,,,,,,,");
+    rxvm_profile_csv_string(out, status);
+    fputc('\n', out);
+}
+
+static const char *rxvm_profile_call_target(
+        const rxvm_profile_state *state,
+        const rxvm_profile_call_row *row) {
+    if (row->procedure_id < state->procedure_count)
+        return state->procedures[row->procedure_id].name;
+    return "<unresolved>";
+}
+
+static const char *rxvm_profile_call_site_module(
+        const rxvm_profile_state *state,
+        const rxvm_profile_call_row *row) {
+    if (state->context && row->site_module > 0 &&
+            row->site_module <= state->context->num_modules &&
+            state->context->modules[row->site_module - 1] &&
+            state->context->modules[row->site_module - 1]->name)
+        return state->context->modules[row->site_module - 1]->name;
+    return "";
+}
+
+static void rxvm_profile_write_call_csv_row(
+        FILE *out, const rxvm_profile_state *state,
+        const rxvm_profile_call_row *row) {
+    fprintf(out, "call,");
+    rxvm_profile_csv_string(out, rxvm_profile_call_target(state, row));
+    fputc(',', out);
+    rxvm_profile_csv_string(out, rxvm_profile_call_path_names[row->path]);
+    fprintf(out, ",%zu,%" PRIu64 ",0,0,0,0,0,",
+            row->site_index, row->count);
+    if (row->arity_valid) fprintf(out, "%" PRIu64, row->arity);
+    fprintf(out, ",,,,");
+    rxvm_profile_csv_string(out, rxvm_profile_call_site_module(state, row));
+    fputc(',', out);
+    rxvm_profile_csv_string(
+            out, rxvm_profile_census_kind_names[row->callable_kind]);
+    fprintf(out, ",,,");
+    rxvm_profile_csv_string(
+            out, rxvm_profile_frame_disposition_names[row->frame_disposition]);
+    fputc(',', out);
+    rxvm_profile_csv_string(out,
+            rxvm_profile_call_outcome_names[row->outcome]);
+    fprintf(out, ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",",
+            row->setup_swaps, row->normal_restoration_swaps,
+            row->defensive_argument_copies);
+    rxvm_profile_csv_string(out, rxvm_profile_census_status(state));
+    fputc('\n', out);
+}
+
 static void rxvm_profile_write_csv(FILE *out,
                                    const rxvm_profile_state *state,
                                    const char *vm_mode,
@@ -524,7 +1164,7 @@ static void rxvm_profile_write_csv(FILE *out,
     int i;
 
     fprintf(out, "section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args,bytes,max_bytes,high_water,status\n");
-    fprintf(out, "summary,schema_version,3,,0,0,0,0,0,0,,,,,,,,,,,,,,\n");
+    fprintf(out, "summary,schema_version,4,,0,0,0,0,0,0,,,,,,,,,,,,,,\n");
     fprintf(out, "summary,vm_mode,%s,,0,0,0,0,0,0,,,,,,,,,,,,,,\n", vm_mode);
     fprintf(out, "summary,result,%d,,0,0,0,0,0,0,,,,,,,,,,,,,,\n", result);
     fprintf(out, "summary,timer_read_min_ns,%" PRIu64 ",,1,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",0,,,,,,,,,,,,,,\n",
@@ -542,6 +1182,8 @@ static void rxvm_profile_write_csv(FILE *out,
     fprintf(out, "summary,procedure_tracking_unavailable,%d,,0,0,0,0,0,0,,,,,,,,,,,,,,\n",
             state->procedure_tracking_unavailable);
     fprintf(out, "summary,allocation_tracking_unavailable,0,,0,0,0,0,0,0,,,,,,,,,,,,,,\n");
+    fprintf(out, "summary,census_tracking_unavailable,%d,,0,0,0,0,0,0,,,,,,,,,,,,,,\n",
+            state->census_tracking_unavailable);
 
     rxvm_profile_sort_instruction_indices(state, indices, &used);
     for (position = 0; position < used; position++) {
@@ -656,6 +1298,162 @@ static void rxvm_profile_write_csv(FILE *out,
     rxvm_profile_write_allocation_csv_row(
             out, "frame_reuses", state->frame_reuses, 0, 0, 0,
             rxvm_profile_counter_status(state));
+
+    for (i = 0; i < RXVM_PROFILE_CALL_PATH_COUNT; i++)
+        rxvm_profile_write_named_count_csv_row(
+                out, "census", "call_path",
+                rxvm_profile_call_path_names[i],
+                state->call_path_totals[i],
+                rxvm_profile_census_status(state));
+    {
+        size_t arity_row;
+        int invalid_emitted = 0;
+        for (arity_row = 0; arity_row < state->call_row_count; arity_row++) {
+            const rxvm_profile_call_row *row = &state->call_rows[arity_row];
+            uint64_t count = 0;
+            size_t earlier;
+            size_t other;
+            char exact_arity[32];
+            if (!row->arity_valid) {
+                if (invalid_emitted) continue;
+                invalid_emitted = 1;
+                for (other = arity_row; other < state->call_row_count; other++)
+                    if (!state->call_rows[other].arity_valid)
+                        count = UINT64_MAX - count <
+                                        state->call_rows[other].count
+                                ? UINT64_MAX
+                                : count + state->call_rows[other].count;
+                rxvm_profile_write_named_count_csv_row(
+                        out, "census", "arity", "invalid", count,
+                        rxvm_profile_census_status(state));
+                continue;
+            }
+            for (earlier = 0; earlier < arity_row; earlier++)
+                if (state->call_rows[earlier].arity_valid &&
+                        state->call_rows[earlier].arity == row->arity)
+                    break;
+            if (earlier != arity_row) continue;
+            for (other = arity_row; other < state->call_row_count; other++)
+                if (state->call_rows[other].arity_valid &&
+                        state->call_rows[other].arity == row->arity)
+                    count = UINT64_MAX - count <
+                                    state->call_rows[other].count
+                            ? UINT64_MAX
+                            : count + state->call_rows[other].count;
+            snprintf(exact_arity, sizeof(exact_arity), "%" PRIu64,
+                     row->arity);
+            rxvm_profile_write_named_count_csv_row(
+                    out, "census", "arity", exact_arity, count,
+                    rxvm_profile_census_status(state));
+        }
+    }
+    for (i = 0; i < RXVM_PROFILE_CENSUS_CALLABLE_KIND_COUNT; i++)
+        rxvm_profile_write_named_count_csv_row(
+                out, "census", "callable_kind",
+                rxvm_profile_census_kind_names[i],
+                state->callable_kind_totals[i],
+                rxvm_profile_census_status(state));
+    for (i = 0; i < RXVM_PROFILE_FRAME_DISPOSITION_COUNT; i++)
+        rxvm_profile_write_named_count_csv_row(
+                out, "census", "frame_disposition",
+                rxvm_profile_frame_disposition_names[i],
+                state->frame_disposition_totals[i],
+                rxvm_profile_census_status(state));
+    for (i = 0; i < RXVM_PROFILE_CALL_OUTCOME_COUNT; i++)
+        rxvm_profile_write_named_count_csv_row(
+                out, "census", "call_outcome",
+                rxvm_profile_call_outcome_names[i],
+                state->call_outcome_totals[i],
+                rxvm_profile_census_status(state));
+    for (i = 0; i < RXVM_PROFILE_RETURN_PLACEMENT_COUNT; i++)
+        rxvm_profile_write_named_count_csv_row(
+                out, "return", "placement",
+                rxvm_profile_return_placement_names[i],
+                state->return_placements[i],
+                rxvm_profile_census_status(state));
+    for (i = 0; i < RXVM_PROFILE_DYNAMIC_KIND_COUNT; i++) {
+        int outcome;
+        for (outcome = 0; outcome < RXVM_PROFILE_DYNAMIC_OUTCOME_COUNT;
+             outcome++)
+            rxvm_profile_write_named_count_csv_row(
+                    out, "dynamic",
+                    rxvm_profile_dynamic_kind_names[i],
+                    rxvm_profile_dynamic_outcome_names[outcome],
+                    state->dynamic_resolution[i][outcome],
+                    rxvm_profile_census_status(state));
+    }
+    {
+        uint64_t swap_total =
+                state->instructions[OP_SWAP_REG_REG].count;
+        uint64_t copy_total =
+                state->instructions[OP_COPY_REG_REG].count;
+        uint64_t classified_swaps = state->setup_swaps;
+        uint64_t unclassified_swaps;
+        uint64_t unclassified_copies;
+        if (UINT64_MAX - classified_swaps < state->normal_restoration_swaps)
+            classified_swaps = UINT64_MAX;
+        else
+            classified_swaps += state->normal_restoration_swaps;
+        unclassified_swaps = classified_swaps <= swap_total
+                ? swap_total - classified_swaps : 0;
+        unclassified_copies =
+                state->defensive_argument_copies <= copy_total
+                ? copy_total - state->defensive_argument_copies : 0;
+        rxvm_profile_write_named_count_csv_row(
+                out, "mechanics", "call_window", "setup_swaps",
+                state->setup_swaps, rxvm_profile_census_status(state));
+        rxvm_profile_write_named_count_csv_row(
+                out, "mechanics", "call_window", "normal_restoration_swaps",
+                state->normal_restoration_swaps,
+                rxvm_profile_census_status(state));
+        rxvm_profile_write_named_count_csv_row(
+                out, "mechanics", "call_window", "unclassified_swaps",
+                unclassified_swaps, rxvm_profile_census_status(state));
+        rxvm_profile_write_named_count_csv_row(
+                out, "mechanics", "call_window", "defensive_argument_copies",
+                state->defensive_argument_copies,
+                rxvm_profile_census_status(state));
+        rxvm_profile_write_named_count_csv_row(
+                out, "mechanics", "call_window", "unclassified_copies",
+                unclassified_copies, rxvm_profile_census_status(state));
+        rxvm_profile_write_named_count_csv_row(
+                out, "mechanics", "call_window", "attribution_degraded",
+                state->attribution_degraded,
+                rxvm_profile_census_status(state));
+    }
+    rxvm_profile_write_named_count_csv_row(
+            out, "unwind", "signal", "events",
+            state->signal_unwind_events, rxvm_profile_census_status(state));
+    rxvm_profile_write_named_count_csv_row(
+            out, "unwind", "signal", "bytecode_frames_discarded",
+            state->signal_bytecode_frames_discarded,
+            rxvm_profile_census_status(state));
+    rxvm_profile_write_named_count_csv_row(
+            out, "unwind", "signal", "argument_windows_restored",
+            state->signal_argument_windows_restored,
+            rxvm_profile_census_status(state));
+    rxvm_profile_write_named_count_csv_row(
+            out, "unwind", "signal", "argument_slots_restored",
+            state->signal_argument_slots_restored,
+            rxvm_profile_census_status(state));
+    rxvm_profile_write_named_count_csv_row(
+            out, "unwind", "signal", "interrupted_native_windows_restored",
+            state->signal_native_windows_restored,
+            rxvm_profile_census_status(state));
+    rxvm_profile_write_named_count_csv_row(
+            out, "unwind", "signal", "interrupted_native_slots_restored",
+            state->signal_native_slots_restored,
+            rxvm_profile_census_status(state));
+    rxvm_profile_write_named_count_csv_row(
+            out, "unwind", "signal", "restoration_failures",
+            state->signal_restoration_failures,
+            rxvm_profile_census_status(state));
+    {
+        size_t call_index;
+        for (call_index = 0; call_index < state->call_row_count; call_index++)
+            rxvm_profile_write_call_csv_row(
+                    out, state, &state->call_rows[call_index]);
+    }
 }
 
 static void rxvm_profile_write_table(FILE *out,
@@ -678,11 +1476,12 @@ static void rxvm_profile_write_table(FILE *out,
             state->timer_read_min_ns, state->timer_zero_deltas);
     fprintf(out,
             "Hot-loop interrupt polls=%" PRIu64 "; invalid events=%" PRIu64
-            "; counter overflow=%s; procedure tracking=%s; allocation tracking=%s\n",
+            "; counter overflow=%s; procedure tracking=%s; allocation tracking=%s; census tracking=%s\n",
             state->interrupt_polls, state->invalid_events,
             state->overflowed ? "yes" : "no",
             state->procedure_tracking_unavailable ? "degraded" : "complete",
-            state->active_frames ? "degraded" : "complete");
+            state->active_frames ? "degraded" : "complete",
+            rxvm_profile_census_status(state));
 
     fprintf(out, "\nInstructions (entry to retire/terminal)\n");
     fprintf(out, "%-30s %7s %14s %14s %12s %12s %8s\n",
@@ -806,6 +1605,124 @@ static void rxvm_profile_write_table(FILE *out,
             state->frame_high_water);
     fprintf(out, "%-30s %12" PRIu64 " %16s %16s %16s\n",
             "frame_reuses", state->frame_reuses, "-", "-", "-");
+
+    fprintf(out, "\nCall-path census (dynamic observations; zero categories retained in CSV)\n");
+    fprintf(out, "%-30s %12s\n", "call path", "attempts");
+    for (i = 0; i < RXVM_PROFILE_CALL_PATH_COUNT; i++)
+        fprintf(out, "%-30s %12" PRIu64 "\n",
+                rxvm_profile_call_path_names[i],
+                state->call_path_totals[i]);
+    fprintf(out, "%-30s %12s\n", "callable kind", "attempts");
+    for (i = 0; i < RXVM_PROFILE_CENSUS_CALLABLE_KIND_COUNT; i++)
+        fprintf(out, "%-30s %12" PRIu64 "\n",
+                rxvm_profile_census_kind_names[i],
+                state->callable_kind_totals[i]);
+    fprintf(out, "%-30s %12s\n", "frame disposition", "attempts");
+    for (i = 0; i < RXVM_PROFILE_FRAME_DISPOSITION_COUNT; i++)
+        fprintf(out, "%-30s %12" PRIu64 "\n",
+                rxvm_profile_frame_disposition_names[i],
+                state->frame_disposition_totals[i]);
+    fprintf(out, "%-30s %12s\n", "call outcome", "attempts");
+    for (i = 0; i < RXVM_PROFILE_CALL_OUTCOME_COUNT; i++)
+        fprintf(out, "%-30s %12" PRIu64 "\n",
+                rxvm_profile_call_outcome_names[i],
+                state->call_outcome_totals[i]);
+
+    fprintf(out, "\nObserved exact call rows\n");
+    fprintf(out,
+            "%-34s %-18s %7s %-10s %-16s %-12s %10s %8s %8s %8s\n",
+            "target", "path", "arity", "kind", "frame", "outcome",
+            "calls", "setup", "restore", "copies");
+    {
+        size_t call_index;
+        for (call_index = 0; call_index < state->call_row_count; call_index++) {
+            const rxvm_profile_call_row *row = &state->call_rows[call_index];
+            char arity[32];
+            if (row->arity_valid)
+                snprintf(arity, sizeof(arity), "%" PRIu64, row->arity);
+            else
+                snprintf(arity, sizeof(arity), "%s", "invalid");
+            fprintf(out,
+                    "%-34.34s %-18s %7s %-10s %-16s %-12s %10" PRIu64
+                    " %8" PRIu64 " %8" PRIu64 " %8" PRIu64 "\n",
+                    rxvm_profile_call_target(state, row),
+                    rxvm_profile_call_path_names[row->path], arity,
+                    rxvm_profile_census_kind_names[row->callable_kind],
+                    rxvm_profile_frame_disposition_names[
+                            row->frame_disposition],
+                    rxvm_profile_call_outcome_names[row->outcome],
+                    row->count, row->setup_swaps,
+                    row->normal_restoration_swaps,
+                    row->defensive_argument_copies);
+        }
+    }
+
+    fprintf(out, "\nReturn placement (dynamic opcode decisions)\n");
+    fprintf(out, "%-30s %12s\n", "placement", "count");
+    for (i = 0; i < RXVM_PROFILE_RETURN_PLACEMENT_COUNT; i++)
+        fprintf(out, "%-30s %12" PRIu64 "\n",
+                rxvm_profile_return_placement_names[i],
+                state->return_placements[i]);
+
+    fprintf(out, "\nDynamic selection (selection is separate from DCALL)\n");
+    fprintf(out, "%-30s %12s %12s %12s\n",
+            "selector", "attempt", "success", "failure");
+    for (i = 0; i < RXVM_PROFILE_DYNAMIC_KIND_COUNT; i++)
+        fprintf(out, "%-30s %12" PRIu64 " %12" PRIu64 " %12" PRIu64 "\n",
+                rxvm_profile_dynamic_kind_names[i],
+                state->dynamic_resolution[i][RXVM_PROFILE_DYNAMIC_ATTEMPT],
+                state->dynamic_resolution[i][RXVM_PROFILE_DYNAMIC_SUCCESS],
+                state->dynamic_resolution[i][RXVM_PROFILE_DYNAMIC_FAILURE]);
+
+    {
+        uint64_t swap_total = state->instructions[OP_SWAP_REG_REG].count;
+        uint64_t copy_total = state->instructions[OP_COPY_REG_REG].count;
+        uint64_t classified_swaps = state->setup_swaps;
+        uint64_t unclassified_swaps;
+        uint64_t unclassified_copies;
+        if (UINT64_MAX - classified_swaps < state->normal_restoration_swaps)
+            classified_swaps = UINT64_MAX;
+        else
+            classified_swaps += state->normal_restoration_swaps;
+        unclassified_swaps = classified_swaps <= swap_total
+                ? swap_total - classified_swaps : 0;
+        unclassified_copies =
+                state->defensive_argument_copies <= copy_total
+                ? copy_total - state->defensive_argument_copies : 0;
+        fprintf(out, "\nCall-window attribution (NR-04 effects-backed dynamic slice)\n");
+        fprintf(out, "%-34s %12s\n", "mechanic", "count");
+        fprintf(out, "%-34s %12" PRIu64 "\n", "setup swaps",
+                state->setup_swaps);
+        fprintf(out, "%-34s %12" PRIu64 "\n", "normal restoration swaps",
+                state->normal_restoration_swaps);
+        fprintf(out, "%-34s %12" PRIu64 "\n", "unclassified swaps",
+                unclassified_swaps);
+        fprintf(out, "%-34s %12" PRIu64 "\n", "defensive argument copies",
+                state->defensive_argument_copies);
+        fprintf(out, "%-34s %12" PRIu64 "\n", "unclassified copies",
+                unclassified_copies);
+        fprintf(out, "%-34s %12" PRIu64 "\n", "degraded attributions",
+                state->attribution_degraded);
+    }
+
+    fprintf(out, "\nSignal-unwind call-window restoration\n");
+    fprintf(out, "%-42s %12s\n", "counter", "count");
+    fprintf(out, "%-42s %12" PRIu64 "\n", "events",
+            state->signal_unwind_events);
+    fprintf(out, "%-42s %12" PRIu64 "\n", "bytecode frames discarded",
+            state->signal_bytecode_frames_discarded);
+    fprintf(out, "%-42s %12" PRIu64 "\n", "argument windows restored",
+            state->signal_argument_windows_restored);
+    fprintf(out, "%-42s %12" PRIu64 "\n", "argument slots restored",
+            state->signal_argument_slots_restored);
+    fprintf(out, "%-42s %12" PRIu64 "\n",
+            "interrupted native windows restored",
+            state->signal_native_windows_restored);
+    fprintf(out, "%-42s %12" PRIu64 "\n",
+            "interrupted native slots restored",
+            state->signal_native_slots_restored);
+    fprintf(out, "%-42s %12" PRIu64 "\n", "restoration failures",
+            state->signal_restoration_failures);
 
     fprintf(out, "\nInterrupt sub-phases\n");
     fprintf(out,

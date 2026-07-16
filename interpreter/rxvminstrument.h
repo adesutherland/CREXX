@@ -41,6 +41,12 @@ typedef enum rxvm_transition_reason {
 #define RXVM_INSTRUMENTATION_INTERRUPT_ENTRY(signal_, module_, index_) ((void)0)
 #define RXVM_INSTRUMENTATION_INTERRUPT_RESUME(signal_, module_, index_) ((void)0)
 #define RXVM_INSTRUMENTATION_INTERRUPT_TERMINAL(signal_, module_, index_) ((void)0)
+#define RXVM_INSTRUMENTATION_CALL(path_, procedure_, arity_, disposition_, outcome_, caller_, module_, index_, argument_base_, has_window_) ((void)0)
+#define RXVM_INSTRUMENTATION_RETURN(placement_) ((void)0)
+#define RXVM_INSTRUMENTATION_DYNAMIC(kind_, outcome_) ((void)0)
+#define RXVM_INSTRUMENTATION_SWAP(frame_, register_1_, register_2_) ((void)0)
+#define RXVM_INSTRUMENTATION_SIGNAL_UNWIND(frames_, windows_, slots_, failed_) ((void)0)
+#define RXVM_INSTRUMENTATION_SIGNAL_NATIVE_RESTORE(observed_, slots_, failed_) ((void)0)
 
 #else
 #include RXVM_INSTRUMENTATION_BACKEND

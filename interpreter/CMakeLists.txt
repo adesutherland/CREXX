@@ -45,6 +45,8 @@ set(RXVM_CORE_OBJECT_SOURCES
         rxvml/rxvm_run.c)
 if(CREXX_VM_PROFILING)
     list(APPEND RXVM_CORE_OBJECT_SOURCES
+            ../binutils/include/opdata.c
+            ../binutils/rxopmeta.c
             rxvmprofile.h
             rxvmprofile.c
             rxvminstrument_profile.h
@@ -246,7 +248,10 @@ if(BUILD_TESTING)
 endif()
 
 if(BUILD_TESTING AND CREXX_VM_PROFILING)
-    add_executable(test_rxvmprofile tests/test_rxvmprofile.c)
+    add_executable(test_rxvmprofile
+            tests/test_rxvmprofile.c
+            $<TARGET_OBJECTS:rxvm_core_objects>
+            $<TARGET_OBJECTS:rxvm_platform_objects>)
     target_include_directories(test_rxvmprofile PRIVATE
             .
             ../assembler
@@ -255,6 +260,9 @@ if(BUILD_TESTING AND CREXX_VM_PROFILING)
             ../avl_tree
             ${CMAKE_SOURCE_DIR}/rxpa)
     target_compile_definitions(test_rxvmprofile PRIVATE CREXX_VM_PROFILING=1)
+    target_link_libraries(test_rxvmprofile PRIVATE
+            rxvmplugin mc_decimal_manual avl_tree rxpa rxpashim rxvmref
+            ${CREXX_SOCKET_TARGET_LIBS})
     add_test(NAME rxvmprofileaccounting COMMAND test_rxvmprofile)
     set_tests_properties(rxvmprofileaccounting PROPERTIES
             LABELS "interpreter;profiling")
@@ -876,6 +884,7 @@ crexx_add_vm_dual_test(NAME rxasbasictests RXVM_ARGS tests_basic)
 if(BUILD_TESTING AND CREXX_VM_PROFILING)
     crexx_add_rxas_vm_binary(tests_sequence_profile "dynamic sequence profile")
     crexx_add_rxas_vm_binary(tests_procedure_profile "procedure timing profile")
+    crexx_add_rxas_vm_binary(tests_call_census "NR-05 call census")
 
     set(PROFILING_DOC_EXAMPLE
             ${CMAKE_SOURCE_DIR}/docs/books/crexx_programming_guide/examples/profiling_demo.rxas)
@@ -915,6 +924,33 @@ if(BUILD_TESTING AND CREXX_VM_PROFILING)
                     -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_vm_profile_csv.cmake)
     set_tests_properties(rxvmprofilecsv rxbvmprofilecsv PROPERTIES
             LABELS "interpreter;profiling")
+
+    function(crexx_add_vm_call_census_test NAME VM_TARGET INPUT_TARGET CASE)
+        add_test(
+                NAME ${NAME}
+                COMMAND ${CMAKE_COMMAND}
+                        "-DVM=$<TARGET_FILE:${VM_TARGET}>"
+                        "-DINPUT=${CMAKE_CURRENT_BINARY_DIR}/${INPUT_TARGET}.rxbin"
+                        "-DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/${NAME}.csv"
+                        "-DCASE=${CASE}"
+                        -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_vm_call_census.cmake)
+        set_tests_properties(${NAME} PROPERTIES
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                LABELS "interpreter;profiling;call-census")
+    endfunction()
+
+    crexx_add_vm_call_census_test(
+            rxvmcallcensus rxvm tests_call_census mechanics)
+    crexx_add_vm_call_census_test(
+            rxbvmcallcensus rxbvm tests_call_census mechanics)
+    crexx_add_vm_call_census_test(
+            rxvmcallcensusselectors rxvm tests_selector_descriptors selectors)
+    crexx_add_vm_call_census_test(
+            rxbvmcallcensusselectors rxbvm tests_selector_descriptors selectors)
+    crexx_add_vm_call_census_test(
+            rxvmcallcensussignalunwind rxvm tests_signal_call_unwind signal_unwind)
+    crexx_add_vm_call_census_test(
+            rxbvmcallcensussignalunwind rxbvm tests_signal_call_unwind signal_unwind)
 
     add_test(NAME rxvmsequence2
             COMMAND ${CMAKE_COMMAND}

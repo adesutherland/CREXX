@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "rxbin.h"
 #include "rxdefs.h"
 #include "rxsignal.h"
 #include "rxvalue.h"
@@ -59,6 +60,89 @@ typedef struct rxvm_profile_procedure {
     rxvm_profile_counter native_total;
 } rxvm_profile_procedure;
 
+typedef enum rxvm_profile_call_path {
+    RXVM_PROFILE_CALL_DIRECT_BYTECODE = 0,
+    RXVM_PROFILE_CALL_DIRECT_NATIVE,
+    RXVM_PROFILE_CALL_DYNAMIC_BYTECODE,
+    RXVM_PROFILE_CALL_DYNAMIC_NATIVE,
+    RXVM_PROFILE_CALL_EXTERNAL_ROOT,
+    RXVM_PROFILE_CALL_SIGNAL_BYTECODE,
+    RXVM_PROFILE_CALL_SIGNAL_NATIVE,
+    RXVM_PROFILE_CALL_PATH_COUNT
+} rxvm_profile_call_path;
+
+typedef enum rxvm_profile_census_callable_kind {
+    RXVM_PROFILE_CENSUS_PROCEDURE = 0,
+    RXVM_PROFILE_CENSUS_METHOD,
+    RXVM_PROFILE_CENSUS_FACTORY,
+    RXVM_PROFILE_CENSUS_NATIVE,
+    RXVM_PROFILE_CENSUS_UNKNOWN,
+    RXVM_PROFILE_CENSUS_CALLABLE_KIND_COUNT
+} rxvm_profile_census_callable_kind;
+
+typedef enum rxvm_profile_frame_disposition {
+    RXVM_PROFILE_FRAME_FRESH = 0,
+    RXVM_PROFILE_FRAME_REUSED,
+    RXVM_PROFILE_FRAME_NO_CHILD_NATIVE,
+    RXVM_PROFILE_FRAME_NONE_FAILED,
+    RXVM_PROFILE_FRAME_DISPOSITION_COUNT,
+    RXVM_PROFILE_FRAME_LAST_ACTIVATION = -1
+} rxvm_profile_frame_disposition;
+
+typedef enum rxvm_profile_call_outcome {
+    RXVM_PROFILE_CALL_SUCCESS = 0,
+    RXVM_PROFILE_CALL_UNRESOLVED,
+    RXVM_PROFILE_CALL_FRAME_FAILED,
+    RXVM_PROFILE_CALL_INVALID,
+    RXVM_PROFILE_CALL_OUTCOME_COUNT
+} rxvm_profile_call_outcome;
+
+typedef enum rxvm_profile_return_placement {
+    RXVM_PROFILE_RETURN_VOID = 0,
+    RXVM_PROFILE_RETURN_MOVE_LOCAL,
+    RXVM_PROFILE_RETURN_COPY_NONLOCAL,
+    RXVM_PROFILE_RETURN_VALUE_IGNORED,
+    RXVM_PROFILE_RETURN_IMMEDIATE,
+    RXVM_PROFILE_RETURN_TERMINAL_EXTERNAL,
+    RXVM_PROFILE_RETURN_PLACEMENT_COUNT
+} rxvm_profile_return_placement;
+
+typedef enum rxvm_profile_dynamic_kind {
+    RXVM_PROFILE_DYNAMIC_METHOD_SELECTION = 0,
+    RXVM_PROFILE_DYNAMIC_FACTORY_SELECTION,
+    RXVM_PROFILE_DYNAMIC_KIND_COUNT
+} rxvm_profile_dynamic_kind;
+
+typedef enum rxvm_profile_dynamic_outcome {
+    RXVM_PROFILE_DYNAMIC_ATTEMPT = 0,
+    RXVM_PROFILE_DYNAMIC_SUCCESS,
+    RXVM_PROFILE_DYNAMIC_FAILURE,
+    RXVM_PROFILE_DYNAMIC_OUTCOME_COUNT
+} rxvm_profile_dynamic_outcome;
+
+typedef struct rxvm_profile_trace_record {
+    int opcode;
+    size_t registers[3];
+    unsigned char register_mask;
+    unsigned char attribution;
+} rxvm_profile_trace_record;
+
+typedef struct rxvm_profile_call_row {
+    rxvm_profile_call_path path;
+    rxvm_profile_census_callable_kind callable_kind;
+    rxvm_profile_frame_disposition frame_disposition;
+    rxvm_profile_call_outcome outcome;
+    size_t procedure_id;
+    uint64_t arity;
+    int arity_valid;
+    size_t site_module;
+    size_t site_index;
+    uint64_t count;
+    uint64_t setup_swaps;
+    uint64_t normal_restoration_swaps;
+    uint64_t defensive_argument_copies;
+} rxvm_profile_call_row;
+
 typedef struct rxvm_profile_activation {
     const void *frame;
     size_t procedure_id;
@@ -67,6 +151,18 @@ typedef struct rxvm_profile_activation {
     uint64_t self_ns;
     uint64_t native_child_ns;
     int body_started;
+    rxvm_profile_trace_record *trace;
+    size_t trace_count;
+    size_t trace_capacity;
+    size_t *restoration_mapping;
+    size_t restoration_mapping_capacity;
+    size_t restoration_mapping_count;
+    size_t *restoration_trace_indices;
+    size_t restoration_trace_capacity;
+    size_t restoration_trace_count;
+    size_t restoration_call_row;
+    int restoration_pending;
+    int restoration_ready;
 } rxvm_profile_activation;
 
 typedef struct rxvm_profile_pending_exit {
@@ -96,6 +192,7 @@ typedef struct rxvm_profile_state {
     int enabled;
     int overflowed;
     int procedure_tracking_unavailable;
+    int census_tracking_unavailable;
     uint64_t invalid_events;
     uint64_t timer_read_min_ns;
     uint64_t timer_zero_deltas;
@@ -141,6 +238,31 @@ typedef struct rxvm_profile_state {
     uint64_t frame_reuses;
     uint64_t active_frames;
     uint64_t frame_high_water;
+    int last_frame_disposition_valid;
+    rxvm_profile_frame_disposition last_frame_disposition;
+
+    struct rxvm_context *context;
+    rxvm_profile_call_row *call_rows;
+    size_t call_row_count;
+    size_t call_row_capacity;
+    uint64_t call_path_totals[RXVM_PROFILE_CALL_PATH_COUNT];
+    uint64_t callable_kind_totals[RXVM_PROFILE_CENSUS_CALLABLE_KIND_COUNT];
+    uint64_t frame_disposition_totals[RXVM_PROFILE_FRAME_DISPOSITION_COUNT];
+    uint64_t call_outcome_totals[RXVM_PROFILE_CALL_OUTCOME_COUNT];
+    uint64_t return_placements[RXVM_PROFILE_RETURN_PLACEMENT_COUNT];
+    uint64_t dynamic_resolution[RXVM_PROFILE_DYNAMIC_KIND_COUNT]
+                               [RXVM_PROFILE_DYNAMIC_OUTCOME_COUNT];
+    uint64_t setup_swaps;
+    uint64_t normal_restoration_swaps;
+    uint64_t defensive_argument_copies;
+    uint64_t attribution_degraded;
+    uint64_t signal_unwind_events;
+    uint64_t signal_bytecode_frames_discarded;
+    uint64_t signal_argument_windows_restored;
+    uint64_t signal_argument_slots_restored;
+    uint64_t signal_native_windows_restored;
+    uint64_t signal_native_slots_restored;
+    uint64_t signal_restoration_failures;
 
     rxvm_profile_counter instructions[OP_MAX_INSTRUCTIONS];
     rxvm_profile_counter transitions[RXVM_TRANSITION_COUNT];
@@ -168,6 +290,42 @@ void rxvm_profile_record_allocation(rxvm_profile_allocation_kind kind,
 void rxvm_profile_record_frame_activation(int reused, size_t frame_bytes,
                                           size_t value_slots);
 void rxvm_profile_record_frame_release(void);
+void rxvm_profile_trace_instruction_at(rxvm_profile_state *state,
+                                       const void *frame,
+                                       const bin_code *pc,
+                                       const Instruction *instruction_map,
+                                       size_t module_id,
+                                       size_t instruction_index,
+                                       int opcode);
+void rxvm_profile_record_call_at(rxvm_profile_state *state,
+                                 rxvm_profile_call_path path,
+                                 size_t procedure_id,
+                                 int64_t arity,
+                                 rxvm_profile_frame_disposition disposition,
+                                 rxvm_profile_call_outcome outcome,
+                                 const void *caller_frame,
+                                 size_t site_module,
+                                 size_t site_index,
+                                 size_t argument_base,
+                                 int has_argument_window);
+void rxvm_profile_record_return_at(rxvm_profile_state *state,
+                                   rxvm_profile_return_placement placement);
+void rxvm_profile_record_dynamic_at(rxvm_profile_state *state,
+                                    rxvm_profile_dynamic_kind kind,
+                                    rxvm_profile_dynamic_outcome outcome);
+void rxvm_profile_record_swap_at(rxvm_profile_state *state,
+                                 const void *frame,
+                                 size_t register_1,
+                                 size_t register_2);
+void rxvm_profile_record_signal_unwind_at(rxvm_profile_state *state,
+                                          uint64_t frames_discarded,
+                                          uint64_t windows_restored,
+                                          uint64_t slots_restored,
+                                          int restoration_failed);
+void rxvm_profile_record_signal_native_restore_at(rxvm_profile_state *state,
+                                                  int window_observed,
+                                                  uint64_t slots_restored,
+                                                  int restoration_failed);
 
 RXVM_PROFILE_INLINE uint64_t rxvm_profile_elapsed(uint64_t start_ns,
                                                   uint64_t end_ns) {
@@ -244,11 +402,14 @@ RXVM_PROFILE_INLINE void rxvm_profile_frame_activation_at(
         state->frame_high_water = state->active_frames;
     if (reused) {
         rxvm_profile_increment(state, &state->frame_reuses);
+        state->last_frame_disposition = RXVM_PROFILE_FRAME_REUSED;
     } else {
         rxvm_profile_add_allocation_at(
                 state, RXVM_PROFILE_ALLOC_FRAME_BLOCK, frame_bytes,
                 value_slots);
+        state->last_frame_disposition = RXVM_PROFILE_FRAME_FRESH;
     }
+    state->last_frame_disposition_valid = 1;
 }
 
 RXVM_PROFILE_INLINE void rxvm_profile_frame_release_at(
@@ -377,6 +538,18 @@ RXVM_PROFILE_INLINE int rxvm_profile_push_activation(
     activation->self_ns = 0;
     activation->native_child_ns = 0;
     activation->body_started = 0;
+    activation->trace = 0;
+    activation->trace_count = 0;
+    activation->trace_capacity = 0;
+    activation->restoration_mapping = 0;
+    activation->restoration_mapping_capacity = 0;
+    activation->restoration_mapping_count = 0;
+    activation->restoration_trace_indices = 0;
+    activation->restoration_trace_capacity = 0;
+    activation->restoration_trace_count = 0;
+    activation->restoration_call_row = SIZE_MAX;
+    activation->restoration_pending = 0;
+    activation->restoration_ready = 0;
     rxvm_profile_increment(state, &state->procedures[procedure_id].calls);
     return 1;
 }
@@ -392,6 +565,9 @@ RXVM_PROFILE_INLINE void rxvm_profile_close_top_at(
     }
     activation = state->activations[state->activation_count - 1];
     state->activation_count--;
+    free(activation.trace);
+    free(activation.restoration_mapping);
+    free(activation.restoration_trace_indices);
     if (!rxvm_profile_valid_procedure(state, activation.procedure_id)) {
         rxvm_profile_increment(state, &state->invalid_events);
         return;
@@ -526,6 +702,10 @@ RXVM_PROFILE_INLINE void rxvm_profile_frame_activate_at(
             uint64_t body_end_ns = state->instruction_active
                     ? state->instruction_start_ns : now_ns;
             rxvm_profile_close_top_at(state, body_end_ns, now_ns, 1, 1);
+        }
+        if (state->activation_count &&
+                state->activations[state->activation_count - 1].restoration_pending) {
+            state->activations[state->activation_count - 1].restoration_ready = 1;
         }
         return;
     }

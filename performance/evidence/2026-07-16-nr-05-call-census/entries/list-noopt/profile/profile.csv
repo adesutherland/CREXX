@@ -1,0 +1,238 @@
+section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args,bytes,max_bytes,high_water,status
+summary,schema_version,4,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,vm_mode,rxvm,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,result,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,timer_read_min_ns,41,,1,41,41,41,41,0,,,,,,,,,,,,,,
+summary,timer_zero_deltas,755,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,interrupt_polls,86277733,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,invalid_events,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,counter_overflow,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,procedure_tracking_unavailable,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,allocation_tracking_unavailable,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,census_tracking_unavailable,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+instruction,CALL_REG_FUNC_REG,,46,4396100,476174113,108,41,151000,29.177043,,,,,,,,,,,,,,
+instruction,SWAP_REG_REG,,510,11618800,174884979,15,0,23417,10.715884,,,,,,,,,,,,,,
+instruction,RET_REG,,49,4393200,130291336,29,0,2981583,7.983458,,,,,,,,,,,,,,
+instruction,SETTP_REG_INT,,517,5803500,74304274,12,0,37834,4.552912,,,,,,,,,,,,,,
+instruction,ASSERTINITIALIZED_REG,,85,4392800,74235277,16,0,31583,4.548685,,,,,,,,,,,,,,
+instruction,LOAD_REG_INT,,1,4677403,57267360,12,0,15500,3.508994,,,,,,,,,,,,,,
+instruction,SETNUMCAS_INT,,255,4396101,55828327,12,0,21417,3.420819,,,,,,,,,,,,,,
+instruction,SETNUMSTD_INT,,258,4396101,55096997,12,0,18584,3.376008,,,,,,,,,,,,,,
+instruction,SETNUMDGTS_INT,,246,4396101,54830607,12,0,17333,3.359685,,,,,,,,,,,,,,
+instruction,SETNUMFRM_INT,,252,4396101,54211895,12,0,10416,3.321774,,,,,,,,,,,,,,
+instruction,SETNUMFUZ_INT,,249,4396101,53827399,12,0,20125,3.298214,,,,,,,,,,,,,,
+instruction,BRF_ID_REG,,38,4249602,53427156,12,0,18916,3.273690,,,,,,,,,,,,,,
+instruction,REFVALID_REG_REG,,198,3965200,53065404,13,0,46208,3.251524,,,,,,,,,,,,,,
+instruction,UNLINK_REG,,213,4281901,52136002,12,0,14666,3.194576,,,,,,,,,,,,,,
+instruction,LINKATTR1_REG_REG_INT,,203,3847101,49541001,12,0,19500,3.035570,,,,,,,,,,,,,,
+instruction,LINKREF_REG_REG,,196,3827800,48810955,12,0,35375,2.990837,,,,,,,,,,,,,,
+instruction,NULL_REG,,14,2254700,28804820,12,0,38542,1.764984,,,,,,,,,,,,,,
+instruction,IEQ_REG_REG_INT,,101,1879600,23818284,12,0,27292,1.459439,,,,,,,,,,,,,,
+instruction,BTOI_REG,,225,1876200,23012478,12,0,20000,1.410064,,,,,,,,,,,,,,
+instruction,BR_ID,,36,1805101,22574843,12,0,14542,1.383249,,,,,,,,,,,,,,
+instruction,COPY_REG_REG,,8,567701,8556144,15,0,9417,0.524268,,,,,,,,,,,,,,
+instruction,ENDLIFE_REG,,514,421402,5331735,12,0,14792,0.326696,,,,,,,,,,,,,,
+instruction,MKREF_REG_REG,,194,3400,1078856,317,0,14084,0.066106,,,,,,,,,,,,,,
+instruction,SETATTRS_REG_INT,,217,3300,267125,80,0,1083,0.016368,,,,,,,,,,,,,,
+instruction,MINATTRS_REG_REG_INT,,223,6200,149051,24,0,7500,0.009133,,,,,,,,,,,,,,
+instruction,LINKATTR1_REG_REG_REG,,202,6200,88057,14,0,500,0.005396,,,,,,,,,,,,,,
+instruction,ICOPY_REG_REG,,9,6301,87441,13,0,916,0.005358,,,,,,,,,,,,,,
+instruction,RET,,48,2800,68079,24,0,375,0.004171,,,,,,,,,,,,,,
+instruction,ISUB_REG_REG_INT,,18,3100,57878,18,0,9042,0.003546,,,,,,,,,,,,,,
+instruction,IADD_REG_REG_INT,,16,4000,55683,13,0,1000,0.003412,,,,,,,,,,,,,,
+instruction,SETOBJTYPE_REG_STRING,,56,3300,53962,16,0,583,0.003306,,,,,,,,,,,,,,
+instruction,SAY_REG,,450,1,13708,13708,13708,13708,0.000840,,,,,,,,,,,,,,
+instruction,ITOS_REG,,229,2,13083,6541,333,12750,0.000802,,,,,,,,,,,,,,
+instruction,IGT_REG_REG_REG,,104,101,8925,88,0,2250,0.000547,,,,,,,,,,,,,,
+instruction,RET_INT,,50,101,7993,79,0,417,0.000490,,,,,,,,,,,,,,
+instruction,INE_REG_REG_INT,,103,100,7665,76,0,750,0.000470,,,,,,,,,,,,,,
+instruction,INC_REG,,28,100,7129,71,0,500,0.000437,,,,,,,,,,,,,,
+instruction,BRT_ID_REG,,37,101,6793,67,0,500,0.000416,,,,,,,,,,,,,,
+instruction,IGTE_REG_REG_INT,,108,1,2416,2416,2416,2416,0.000148,,,,,,,,,,,,,,
+instruction,GETATTRS_REG_REG_INT,,215,1,2334,2334,2334,2334,0.000143,,,,,,,,,,,,,,
+instruction,STOI_REG,,237,1,1916,1916,1916,1916,0.000117,,,,,,,,,,,,,,
+instruction,BRTPANDT_ID_REG_INT,,524,1,1709,1709,1709,1709,0.000105,,,,,,,,,,,,,,
+instruction,ILT_REG_REG_INT,,111,1,958,958,958,958,0.000059,,,,,,,,,,,,,,
+instruction,SCONCAT_REG_REG_STRING,,138,1,917,917,917,917,0.000056,,,,,,,,,,,,,,
+instruction,MINATTRS_REG_INT,,222,1,917,917,917,917,0.000056,,,,,,,,,,,,,,
+instruction,SAY_STRING,,455,1,917,917,917,917,0.000056,,,,,,,,,,,,,,
+instruction,CONCAT_REG_REG_REG,,134,1,833,833,833,833,0.000051,,,,,,,,,,,,,,
+instruction,CONCAT_REG_STRING_REG,,136,1,625,625,625,625,0.000038,,,,,,,,,,,,,,
+transition,sequential_same_frame,,0,73449629,778537825,10,0,52666,85.484216,,,,,,,,,,,,,,
+transition,branch_same_frame,,1,4035903,43706198,10,0,885292,4.798983,,,,,,,,,,,,,,
+transition,call_enter_frame,,2,4396100,43384904,9,0,61417,4.763705,,,,,,,,,,,,,,
+transition,return_leave_frame,,3,4396100,45107050,10,0,15167,4.952798,,,,,,,,,,,,,,
+transition,external_entry,,6,1,2709,2709,2709,2709,0.000297,,,,,,,,,,,,,,
+transition,terminal,,7,1,0,0,0,0,0.000000,,,,,,,,,,,,,,
+interrupt,scan_all,,,0,0,0,0,0,0,,,,,,,,,,,,,,
+interrupt,scan_without_selection,,,0,0,0,0,0,0,,,,,,,,,,,,,,
+interrupt,mechanics_all,,,0,0,0,0,0,0,,,,,,,,,,,,,,
+procedure,"awfy_list.listbenchmark.tail","elapsed",,280900,25629890423,91242,6458,34743583,0,,,,,"benchmark_awfy_list_noopt",method,280900,0,"reference .listelement","x=reference .listelement,y=reference .listelement,z=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.tail","inclusive_body",,280900,25571979819,91035,6250,34743042,0,,,,,"benchmark_awfy_list_noopt",method,280900,0,"reference .listelement","x=reference .listelement,y=reference .listelement,z=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.tail","self",,280900,278658180,992,457,47376,0,,,,,"benchmark_awfy_list_noopt",method,280900,0,"reference .listelement","x=reference .listelement,y=reference .listelement,z=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.tail","native_child",,280900,0,0,0,0,0,,,,,"benchmark_awfy_list_noopt",method,280900,0,"reference .listelement","x=reference .listelement,y=reference .listelement,z=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.tail","entry_overhead",,280900,43610785,155,83,14750,0,,,,,"benchmark_awfy_list_noopt",method,280900,0,"reference .listelement","x=reference .listelement,y=reference .listelement,z=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.tail","exit_overhead",,280900,14299819,50,0,16042,0,,,,,"benchmark_awfy_list_noopt",method,280900,0,"reference .listelement","x=reference .listelement,y=reference .listelement,z=reference .listelement",,,,
+procedure,"awfy_list.main","elapsed",,1,2542755042,2542755042,2542755042,2542755042,0,,,,,"benchmark_awfy_list_noopt",procedure,1,0,".int","",,,,
+procedure,"awfy_list.main","inclusive_body",,1,2542752000,2542752000,2542752000,2542752000,0,,,,,"benchmark_awfy_list_noopt",procedure,1,0,".int","",,,,
+procedure,"awfy_list.main","self",,1,139710,139710,139710,139710,0,,,,,"benchmark_awfy_list_noopt",procedure,1,0,".int","",,,,
+procedure,"awfy_list.main","native_child",,1,0,0,0,0,0,,,,,"benchmark_awfy_list_noopt",procedure,1,0,".int","",,,,
+procedure,"awfy_list.main","entry_overhead",,1,2709,2709,2709,2709,0,,,,,"benchmark_awfy_list_noopt",procedure,1,0,".int","",,,,
+procedure,"awfy_list.main","exit_overhead",,1,333,333,333,333,0,,,,,"benchmark_awfy_list_noopt",procedure,1,0,".int","",,,,
+procedure,"awfy_list.listbenchmark.run","elapsed",,100,2542549334,25425493,24586042,34993417,0,,,,,"benchmark_awfy_list_noopt",method,100,0,".int","",,,,
+procedure,"awfy_list.listbenchmark.run","inclusive_body",,100,2542436545,25424365,24585167,34989250,0,,,,,"benchmark_awfy_list_noopt",method,100,0,".int","",,,,
+procedure,"awfy_list.listbenchmark.run","self",,100,153055,1530,1208,4666,0,,,,,"benchmark_awfy_list_noopt",method,100,0,".int","",,,,
+procedure,"awfy_list.listbenchmark.run","native_child",,100,0,0,0,0,0,,,,,"benchmark_awfy_list_noopt",method,100,0,".int","",,,,
+procedure,"awfy_list.listbenchmark.run","entry_overhead",,100,17462,174,83,750,0,,,,,"benchmark_awfy_list_noopt",method,100,0,".int","",,,,
+procedure,"awfy_list.listbenchmark.run","exit_overhead",,100,95327,953,666,4458,0,,,,,"benchmark_awfy_list_noopt",method,100,0,".int","",,,,
+procedure,"awfy_list.listbenchmark.isshorterthan","elapsed",,280900,2124237689,7562,5708,3001541,0,,,,,"benchmark_awfy_list_noopt",method,280900,0,".boolean","x=reference .listelement,y=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.isshorterthan","inclusive_body",,280900,2059325310,7331,5500,3001084,0,,,,,"benchmark_awfy_list_noopt",method,280900,0,".boolean","x=reference .listelement,y=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.isshorterthan","self",,280900,927615552,3302,2415,889708,0,,,,,"benchmark_awfy_list_noopt",method,280900,0,".boolean","x=reference .listelement,y=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.isshorterthan","native_child",,280900,0,0,0,0,0,,,,,"benchmark_awfy_list_noopt",method,280900,0,".boolean","x=reference .listelement,y=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.isshorterthan","entry_overhead",,280900,50729246,180,83,26291,0,,,,,"benchmark_awfy_list_noopt",method,280900,0,".boolean","x=reference .listelement,y=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.isshorterthan","exit_overhead",,280900,14183133,50,0,9500,0,,,,,"benchmark_awfy_list_noopt",method,280900,0,".boolean","x=reference .listelement,y=reference .listelement",,,,
+procedure,"awfy_list.listelement.next","elapsed",,3820600,1201646286,314,250,2983291,0,,,,,"benchmark_awfy_list_noopt",method,3820600,0,"reference .listelement","",,,,
+procedure,"awfy_list.listelement.next","inclusive_body",,3820600,632440353,165,83,53333,0,,,,,"benchmark_awfy_list_noopt",method,3820600,0,"reference .listelement","",,,,
+procedure,"awfy_list.listelement.next","self",,3820600,632440353,165,83,53333,0,,,,,"benchmark_awfy_list_noopt",method,3820600,0,"reference .listelement","",,,,
+procedure,"awfy_list.listelement.next","native_child",,3820600,0,0,0,0,0,,,,,"benchmark_awfy_list_noopt",method,3820600,0,"reference .listelement","",,,,
+procedure,"awfy_list.listelement.next","entry_overhead",,3820600,423320361,110,41,151083,0,,,,,"benchmark_awfy_list_noopt",method,3820600,0,"reference .listelement","",,,,
+procedure,"awfy_list.listelement.next","exit_overhead",,3820600,145885572,38,0,2983041,0,,,,,"benchmark_awfy_list_noopt",method,3820600,0,"reference .listelement","",,,,
+procedure,"awfy_list.listbenchmark.makelist","elapsed",,3400,68074600,20021,375,132958,0,,,,,"benchmark_awfy_list_noopt",method,3400,0,"reference .listelement","list_length=.int,arena_reference=reference .listarena",,,,
+procedure,"awfy_list.listbenchmark.makelist","inclusive_body",,3400,67403147,19824,209,132333,0,,,,,"benchmark_awfy_list_noopt",method,3400,0,"reference .listelement","list_length=.int,arena_reference=reference .listarena",,,,
+procedure,"awfy_list.listbenchmark.makelist","self",,3400,2896795,851,209,16707,0,,,,,"benchmark_awfy_list_noopt",method,3400,0,"reference .listelement","list_length=.int,arena_reference=reference .listarena",,,,
+procedure,"awfy_list.listbenchmark.makelist","native_child",,3400,0,0,0,0,0,,,,,"benchmark_awfy_list_noopt",method,3400,0,"reference .listelement","list_length=.int,arena_reference=reference .listarena",,,,
+procedure,"awfy_list.listbenchmark.makelist","entry_overhead",,3400,493575,145,83,8333,0,,,,,"benchmark_awfy_list_noopt",method,3400,0,"reference .listelement","list_length=.int,arena_reference=reference .listarena",,,,
+procedure,"awfy_list.listbenchmark.makelist","exit_overhead",,3400,177878,52,0,375,0,,,,,"benchmark_awfy_list_noopt",method,3400,0,"reference .listelement","list_length=.int,arena_reference=reference .listarena",,,,
+procedure,"awfy_list.listarena.allocate","elapsed",,3100,5905404,1904,1625,16167,0,,,,,"benchmark_awfy_list_noopt",method,3100,0,"reference .listelement","value=.int",,,,
+procedure,"awfy_list.listarena.allocate","inclusive_body",,3100,5375458,1734,1458,15667,0,,,,,"benchmark_awfy_list_noopt",method,3100,0,"reference .listelement","value=.int",,,,
+procedure,"awfy_list.listarena.allocate","self",,3100,3683102,1188,916,15167,0,,,,,"benchmark_awfy_list_noopt",method,3100,0,"reference .listelement","value=.int",,,,
+procedure,"awfy_list.listarena.allocate","native_child",,3100,0,0,0,0,0,,,,,"benchmark_awfy_list_noopt",method,3100,0,"reference .listelement","value=.int",,,,
+procedure,"awfy_list.listarena.allocate","entry_overhead",,3100,366951,118,41,3542,0,,,,,"benchmark_awfy_list_noopt",method,3100,0,"reference .listelement","value=.int",,,,
+procedure,"awfy_list.listarena.allocate","exit_overhead",,3100,162995,52,0,375,0,,,,,"benchmark_awfy_list_noopt",method,3100,0,"reference .listelement","value=.int",,,,
+procedure,"awfy_list.listelement.length","elapsed",,1000,3856671,3856,416,30333,0,,,,,"benchmark_awfy_list_noopt",method,1000,0,".int","",,,,
+procedure,"awfy_list.listelement.length","inclusive_body",,1000,3623670,3623,250,29459,0,,,,,"benchmark_awfy_list_noopt",method,1000,0,".int","",,,,
+procedure,"awfy_list.listelement.length","self",,1000,504045,504,250,11291,0,,,,,"benchmark_awfy_list_noopt",method,1000,0,".int","",,,,
+procedure,"awfy_list.listelement.length","native_child",,1000,0,0,0,0,0,,,,,"benchmark_awfy_list_noopt",method,1000,0,".int","",,,,
+procedure,"awfy_list.listelement.length","entry_overhead",,1000,178285,178,125,4500,0,,,,,"benchmark_awfy_list_noopt",method,1000,0,".int","",,,,
+procedure,"awfy_list.listelement.length","exit_overhead",,1000,54716,54,0,500,0,,,,,"benchmark_awfy_list_noopt",method,1000,0,".int","",,,,
+procedure,"awfy_list.listelement.§factory","elapsed",,3100,1692356,545,458,3958,0,,,,,"benchmark_awfy_list_noopt",factory,3100,0,".awfy_list..listelement","initial_value=.int",,,,
+procedure,"awfy_list.listelement.§factory","inclusive_body",,3100,923650,297,208,1708,0,,,,,"benchmark_awfy_list_noopt",factory,3100,0,".awfy_list..listelement","initial_value=.int",,,,
+procedure,"awfy_list.listelement.§factory","self",,3100,923650,297,208,1708,0,,,,,"benchmark_awfy_list_noopt",factory,3100,0,".awfy_list..listelement","initial_value=.int",,,,
+procedure,"awfy_list.listelement.§factory","native_child",,3100,0,0,0,0,0,,,,,"benchmark_awfy_list_noopt",factory,3100,0,".awfy_list..listelement","initial_value=.int",,,,
+procedure,"awfy_list.listelement.§factory","entry_overhead",,3100,487144,157,83,1500,0,,,,,"benchmark_awfy_list_noopt",factory,3100,0,".awfy_list..listelement","initial_value=.int",,,,
+procedure,"awfy_list.listelement.§factory","exit_overhead",,3100,281562,90,41,750,0,,,,,"benchmark_awfy_list_noopt",factory,3100,0,".awfy_list..listelement","initial_value=.int",,,,
+procedure,"awfy_list.listelement.setnext","elapsed",,2800,1038961,371,292,4375,0,,,,,"benchmark_awfy_list_noopt",method,2800,0,".void","element=reference .listelement",,,,
+procedure,"awfy_list.listelement.setnext","inclusive_body",,2800,615539,219,166,4041,0,,,,,"benchmark_awfy_list_noopt",method,2800,0,".void","element=reference .listelement",,,,
+procedure,"awfy_list.listelement.setnext","self",,2800,615539,219,166,4041,0,,,,,"benchmark_awfy_list_noopt",method,2800,0,".void","element=reference .listelement",,,,
+procedure,"awfy_list.listelement.setnext","native_child",,2800,0,0,0,0,0,,,,,"benchmark_awfy_list_noopt",method,2800,0,".void","element=reference .listelement",,,,
+procedure,"awfy_list.listelement.setnext","entry_overhead",,2800,327795,117,42,1083,0,,,,,"benchmark_awfy_list_noopt",method,2800,0,".void","element=reference .listelement",,,,
+procedure,"awfy_list.listelement.setnext","exit_overhead",,2800,95627,34,0,417,0,,,,,"benchmark_awfy_list_noopt",method,2800,0,".void","element=reference .listelement",,,,
+procedure,"awfy_list.listarena.§factory","elapsed",,100,290830,2908,1084,16291,0,,,,,"benchmark_awfy_list_noopt",factory,100,0,".awfy_list..listarena","",,,,
+procedure,"awfy_list.listarena.§factory","inclusive_body",,100,49042,490,333,2084,0,,,,,"benchmark_awfy_list_noopt",factory,100,0,".awfy_list..listarena","",,,,
+procedure,"awfy_list.listarena.§factory","self",,100,49042,490,333,2084,0,,,,,"benchmark_awfy_list_noopt",factory,100,0,".awfy_list..listarena","",,,,
+procedure,"awfy_list.listarena.§factory","native_child",,100,0,0,0,0,0,,,,,"benchmark_awfy_list_noopt",factory,100,0,".awfy_list..listarena","",,,,
+procedure,"awfy_list.listarena.§factory","entry_overhead",,100,10294,102,41,541,0,,,,,"benchmark_awfy_list_noopt",factory,100,0,".awfy_list..listarena","",,,,
+procedure,"awfy_list.listarena.§factory","exit_overhead",,100,231494,2314,125,14083,0,,,,,"benchmark_awfy_list_noopt",factory,100,0,".awfy_list..listarena","",,,,
+procedure,"awfy_list.listbenchmark.§factory","elapsed",,100,62956,629,292,4250,0,,,,,"benchmark_awfy_list_noopt",factory,100,0,".awfy_list..listbenchmark","",,,,
+procedure,"awfy_list.listbenchmark.§factory","inclusive_body",,100,39835,398,166,2250,0,,,,,"benchmark_awfy_list_noopt",factory,100,0,".awfy_list..listbenchmark","",,,,
+procedure,"awfy_list.listbenchmark.§factory","self",,100,39835,398,166,2250,0,,,,,"benchmark_awfy_list_noopt",factory,100,0,".awfy_list..listbenchmark","",,,,
+procedure,"awfy_list.listbenchmark.§factory","native_child",,100,0,0,0,0,0,,,,,"benchmark_awfy_list_noopt",factory,100,0,".awfy_list..listbenchmark","",,,,
+procedure,"awfy_list.listbenchmark.§factory","entry_overhead",,100,17119,171,83,1375,0,,,,,"benchmark_awfy_list_noopt",factory,100,0,".awfy_list..listbenchmark","",,,,
+procedure,"awfy_list.listbenchmark.§factory","exit_overhead",,100,6002,60,41,625,0,,,,,"benchmark_awfy_list_noopt",factory,100,0,".awfy_list..listbenchmark","",,,,
+allocation,frame_blocks,,,48,0,0,0,0,0,,,,,,,,,,,312848,10184,0,complete
+allocation,standalone_values,,,39,0,0,0,0,0,,,,,,,,,,,9984,256,0,complete
+allocation,attribute_value_blocks,,,6602,0,0,0,0,0,,,,,,,,,,,13725696,4096,0,complete
+allocation,attribute_pointer_storage,,,19606,0,0,0,0,0,,,,,,,,,,,1305984,256,0,complete
+allocation,string_buffers,,,3,0,0,0,0,0,,,,,,,,,,,192,64,0,complete
+allocation,binary_buffers,,,0,0,0,0,0,0,,,,,,,,,,,0,0,0,complete
+allocation,value_slots,,,54496,0,0,0,0,0,,,,,,,,,,,13950976,7936,0,complete
+allocation,frame_activations,,,4396101,0,0,0,0,0,,,,,,,,,,,0,0,19,complete
+allocation,frame_reuses,,,4396053,0,0,0,0,0,,,,,,,,,,,0,0,0,complete
+census,"call_path","direct_bytecode",,4396100,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","direct_native",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","dynamic_bytecode",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","dynamic_native",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","external_root",,1,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","signal_bytecode",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","signal_native",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"arity","1",,3824801,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"arity","0",,200,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"arity","3",,284300,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"arity","2",,5900,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"arity","4",,280900,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"callable_kind","procedure",,1,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"callable_kind","method",,4392800,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"callable_kind","factory",,3300,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"callable_kind","native",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"callable_kind","unknown",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"frame_disposition","fresh",,48,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"frame_disposition","reused",,4396053,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"frame_disposition","no_child_native",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"frame_disposition","none_failed",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_outcome","success",,4396101,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_outcome","unresolved",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_outcome","frame_failed",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_outcome","invalid",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","void",,2800,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","ret_reg_move_local",,361900,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","ret_reg_copy_nonlocal",,4031300,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","value_ignored",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","immediate",,100,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","terminal_external",,1,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcmethodsel","attempt",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcmethodsel","success",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcmethodsel","failure",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcfprocsel","attempt",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcfprocsel","success",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcfprocsel","failure",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","setup_swaps",,5809400,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","normal_restoration_swaps",,5809400,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","unclassified_swaps",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","defensive_argument_copies",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","unclassified_copies",,567701,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","attribution_degraded",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","events",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","bytecode_frames_discarded",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","argument_windows_restored",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","argument_slots_restored",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","interrupted_native_windows_restored",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","interrupted_native_slots_restored",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","restoration_failures",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+call,"awfy_list.main","external_root",0,1,0,0,0,0,0,1,,,,"benchmark_awfy_list_noopt","procedure",,,"fresh","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.§factory","direct_bytecode",88,1,0,0,0,0,0,0,,,,"benchmark_awfy_list_noopt","factory",,,"fresh","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.run","direct_bytecode",101,1,0,0,0,0,0,1,,,,"benchmark_awfy_list_noopt","method",,,"fresh","success",1,1,0,"complete"
+call,"awfy_list.listarena.§factory","direct_bytecode",480,1,0,0,0,0,0,0,,,,"benchmark_awfy_list_noopt","factory",,,"fresh","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.makelist","direct_bytecode",502,1,0,0,0,0,0,3,,,,"benchmark_awfy_list_noopt","method",,,"fresh","success",1,1,0,"complete"
+call,"awfy_list.listbenchmark.makelist","direct_bytecode",673,15,0,0,0,0,0,3,,,,"benchmark_awfy_list_noopt","method",,,"fresh","success",30,30,0,"complete"
+call,"awfy_list.listarena.allocate","direct_bytecode",700,1,0,0,0,0,0,2,,,,"benchmark_awfy_list_noopt","method",,,"fresh","success",2,2,0,"complete"
+call,"awfy_list.listelement.§factory","direct_bytecode",398,1,0,0,0,0,0,1,,,,"benchmark_awfy_list_noopt","factory",,,"fresh","success",1,1,0,"complete"
+call,"awfy_list.listarena.allocate","direct_bytecode",700,3099,0,0,0,0,0,2,,,,"benchmark_awfy_list_noopt","method",,,"reused","success",6198,6198,0,"complete"
+call,"awfy_list.listelement.§factory","direct_bytecode",398,3099,0,0,0,0,0,1,,,,"benchmark_awfy_list_noopt","factory",,,"reused","success",3099,3099,0,"complete"
+call,"awfy_list.listelement.setnext","direct_bytecode",736,1,0,0,0,0,0,2,,,,"benchmark_awfy_list_noopt","method",,,"fresh","success",2,2,0,"complete"
+call,"awfy_list.listelement.setnext","direct_bytecode",736,2799,0,0,0,0,0,2,,,,"benchmark_awfy_list_noopt","method",,,"reused","success",5598,5598,0,"complete"
+call,"awfy_list.listbenchmark.makelist","direct_bytecode",527,100,0,0,0,0,0,3,,,,"benchmark_awfy_list_noopt","method",,,"reused","success",100,100,0,"complete"
+call,"awfy_list.listbenchmark.makelist","direct_bytecode",673,3085,0,0,0,0,0,3,,,,"benchmark_awfy_list_noopt","method",,,"reused","success",6170,6170,0,"complete"
+call,"awfy_list.listbenchmark.makelist","direct_bytecode",552,100,0,0,0,0,0,3,,,,"benchmark_awfy_list_noopt","method",,,"reused","success",100,100,0,"complete"
+call,"awfy_list.listbenchmark.tail","direct_bytecode",586,1,0,0,0,0,0,4,,,,"benchmark_awfy_list_noopt","method",,,"fresh","success",4,4,0,"complete"
+call,"awfy_list.listbenchmark.isshorterthan","direct_bytecode",895,1,0,0,0,0,0,3,,,,"benchmark_awfy_list_noopt","method",,,"fresh","success",3,3,0,"complete"
+call,"awfy_list.listelement.next","direct_bytecode",812,1,0,0,0,0,0,1,,,,"benchmark_awfy_list_noopt","method",,,"fresh","success",1,1,0,"complete"
+call,"awfy_list.listelement.next","direct_bytecode",828,1805000,0,0,0,0,0,1,,,,"benchmark_awfy_list_noopt","method",,,"reused","success",1805000,1805000,0,"complete"
+call,"awfy_list.listelement.next","direct_bytecode",812,1804999,0,0,0,0,0,1,,,,"benchmark_awfy_list_noopt","method",,,"reused","success",1804999,1804999,0,"complete"
+call,"awfy_list.listelement.next","direct_bytecode",935,70200,0,0,0,0,0,1,,,,"benchmark_awfy_list_noopt","method",,,"reused","success",70200,70200,0,"complete"
+call,"awfy_list.listelement.next","direct_bytecode",951,70200,0,0,0,0,0,1,,,,"benchmark_awfy_list_noopt","method",,,"reused","success",70200,70200,0,"complete"
+call,"awfy_list.listelement.next","direct_bytecode",967,70200,0,0,0,0,0,1,,,,"benchmark_awfy_list_noopt","method",,,"reused","success",70200,70200,0,"complete"
+call,"awfy_list.listbenchmark.tail","direct_bytecode",1001,12,0,0,0,0,0,4,,,,"benchmark_awfy_list_noopt","method",,,"fresh","success",48,48,0,"complete"
+call,"awfy_list.listbenchmark.isshorterthan","direct_bytecode",895,280899,0,0,0,0,0,3,,,,"benchmark_awfy_list_noopt","method",,,"reused","success",842697,842697,0,"complete"
+call,"awfy_list.listbenchmark.tail","direct_bytecode",1044,70200,0,0,0,0,0,4,,,,"benchmark_awfy_list_noopt","method",,,"reused","success",280800,280800,0,"complete"
+call,"awfy_list.listbenchmark.tail","direct_bytecode",1087,70200,0,0,0,0,0,4,,,,"benchmark_awfy_list_noopt","method",,,"reused","success",280800,280800,0,"complete"
+call,"awfy_list.listbenchmark.tail","direct_bytecode",1130,70200,0,0,0,0,0,4,,,,"benchmark_awfy_list_noopt","method",,,"reused","success",280800,280800,0,"complete"
+call,"awfy_list.listbenchmark.tail","direct_bytecode",1001,70188,0,0,0,0,0,4,,,,"benchmark_awfy_list_noopt","method",,,"reused","success",280752,280752,0,"complete"
+call,"awfy_list.listelement.length","direct_bytecode",616,1,0,0,0,0,0,1,,,,"benchmark_awfy_list_noopt","method",,,"fresh","success",1,1,0,"complete"
+call,"awfy_list.listelement.length","direct_bytecode",260,9,0,0,0,0,0,1,,,,"benchmark_awfy_list_noopt","method",,,"fresh","success",9,9,0,"complete"
+call,"awfy_list.listbenchmark.§factory","direct_bytecode",88,99,0,0,0,0,0,0,,,,"benchmark_awfy_list_noopt","factory",,,"reused","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.run","direct_bytecode",101,99,0,0,0,0,0,1,,,,"benchmark_awfy_list_noopt","method",,,"reused","success",99,99,0,"complete"
+call,"awfy_list.listarena.§factory","direct_bytecode",480,99,0,0,0,0,0,0,,,,"benchmark_awfy_list_noopt","factory",,,"reused","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.makelist","direct_bytecode",502,99,0,0,0,0,0,3,,,,"benchmark_awfy_list_noopt","method",,,"reused","success",99,99,0,"complete"
+call,"awfy_list.listbenchmark.tail","direct_bytecode",586,99,0,0,0,0,0,4,,,,"benchmark_awfy_list_noopt","method",,,"reused","success",396,396,0,"complete"
+call,"awfy_list.listelement.length","direct_bytecode",616,99,0,0,0,0,0,1,,,,"benchmark_awfy_list_noopt","method",,,"reused","success",99,99,0,"complete"
+call,"awfy_list.listelement.length","direct_bytecode",260,891,0,0,0,0,0,1,,,,"benchmark_awfy_list_noopt","method",,,"reused","success",891,891,0,"complete"

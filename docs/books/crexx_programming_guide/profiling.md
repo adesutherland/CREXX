@@ -129,7 +129,7 @@ the monotonic-clock calibration, hot-loop interrupt-poll count, invalid-event
 count, counter-overflow state, and whether procedure and allocation tracking
 were complete.
 
-The report then contains five views of the run:
+The report then contains complementary views of the run:
 
 | Section | What it reports |
 |---|---|
@@ -138,6 +138,11 @@ The report then contains five views of the run:
 | **Procedures and methods** | Runtime calls and inclusive elapsed/body/self time for bytecode callables; call count and total observed time for native callables. |
 | **Call mechanics** | The measured VM work entering and leaving each bytecode callable. |
 | **Runtime allocation and value/frame storage** | Successful profiling-scope allocation requests, requested bytes, maximum request size, frame reuse, and active-frame high water. |
+| **Call-path census** | Dynamic call attempts by direct/dynamic/native/root/signal path, exact arity, callable kind, frame disposition, outcome, target, and site. |
+| **Return placement** | The actual runtime `RET_REG` local-move/non-local-copy decision plus void, ignored, immediate, and terminal returns. |
+| **Dynamic selection** | Method/factory selector attempts and their success/failure outcomes, kept separate from subsequent `DCALL` activity. |
+| **Call-window attribution** | Effects-backed setup swaps and defensive argument copies, completed mapping-recovery swap sequences, and all remaining unclassified `SWAP`/`COPY` executions. |
+| **Signal-unwind restoration** | Branch-unwind events, discarded bytecode frames, restored bytecode/native windows and slots, and restoration failures. |
 
 The final **Interrupt sub-phases** section separates interrupt scans from the
 mechanics of entering, resuming, or terminating an interrupt path. These
@@ -189,10 +194,48 @@ An inlined procedure or method creates no runtime frame and consequently does
 not appear as a separate callable row; its work belongs to the containing
 procedure and its executed instructions.
 
+### Call Census and Attribution Boundaries
+
+The census is entirely dynamic. A call row is recorded at the VM boundary
+where the opcode path, concrete target, actual argument count, caller site, and
+activation result are authoritative. `external_root`,
+`signal_bytecode`, and `signal_native` keep non-instruction
+entry distinct. Failed or unresolved attempts have an explicit outcome and
+`none_failed` frame disposition. Native calls use
+`no_child_native`; successful bytecode and root/signal frames use
+`fresh` or `reused`.
+
+Argument mechanics are not inferred from opcode adjacency. At each successful
+argument-bearing call, the profiler performs a backward slice of the executed
+straight-line trace from the actual call window. It uses the NR-04
+`rxop_effects()` overwrite/flow contract as the definition boundary.
+Only reached `SWAP_REG_REG` instructions are setup swaps and only
+reached whole-value `COPY_REG_REG` definitions are defensive
+argument copies. Normal restoration reconstructs the setup permutation and
+buffers subsequent swaps until their combined effect recovers the pre-call
+mapping. Only a completed recovery sequence is credited; a mapping carried
+into another call or to frame completion is not treated as a tracking failure.
+Every other executed `SWAP_REG_REG` or `COPY_REG_REG`
+remains explicitly unclassified.
+
+`RET_REG` placement is measured inside its real VM branch. A true
+local with unchanged base mapping is moved; an argument, global, linked/swapped
+local, or other non-local source is copied. This internal copy decision is not
+a `COPY_REG_REG` instruction and is therefore separate from
+call-window copy counts. Exceptional unwind is also separate from ordinary
+return placement.
+
+All counters saturate. Non-zero `census_tracking_unavailable`,
+`attribution_degraded`, `restoration_failures`, or an
+`overflowed`/`degraded` status means the affected census
+is incomplete. Zero-count categories remain in CSV so absence is not confused
+with parser loss.
+
 ### CSV Format
 
 CSV is the best input for spreadsheets, scripts, and comparisons between runs.
-The current format identifies itself as schema version 3 and starts with:
+The current format identifies itself as schema version 4 and preserves the
+schema-3 24-column header:
 
 ```text
 section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args,bytes,max_bytes,high_water,status
@@ -209,6 +252,12 @@ Columns that do not apply to a row are empty or zero. Interpret rows by their
 | `interrupt` | Scan totals and per-signal selection/entry/resume/terminal data. |
 | `procedure` | One or more metric rows per called procedure, method, factory, or native routine. |
 | `allocation` | One row per allocation/value/frame counter, including byte and high-water fields where they apply. |
+| `census` | Aggregate call path, exact arity, callable kind, frame disposition, and outcome rows; zero path/kind/disposition/outcome categories are retained. |
+| `call` | One dynamic target/site/path/arity/kind/frame/outcome row. `bytes`, `max_bytes`, and `high_water` carry setup swaps, normal restoration swaps, and defensive argument copies for this section only. |
+| `return` | Dynamic return-placement decisions. |
+| `dynamic` | Method/factory selection attempts, successes, and failures. |
+| `mechanics` | Global call-window setup/restoration/unclassified swap and defensive/unclassified copy counts. |
+| `unwind` | Signal-unwind frame/window/slot/restoration counters. |
 
 For a bytecode `procedure` row, `value` is one of `elapsed`,
 `inclusive_body`, `self`, `native_child`, `entry_overhead`, or

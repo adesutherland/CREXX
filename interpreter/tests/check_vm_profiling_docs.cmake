@@ -19,7 +19,7 @@ if(NOT table_rc EQUAL 0)
 endif()
 file(READ "${TABLE}" table_content)
 if(NOT table_content MATCHES
-        "Instructions.*Transitions.*Procedures and methods.*profiling_demo.worker[ ]+procedure[ ]+2[ ]+2[ ]+0.*Call mechanics.*Interrupt sub-phases")
+        "Instructions.*Transitions.*Procedures and methods.*profiling_demo.worker[ ]+procedure[ ]+2[ ]+2[ ]+0.*Call mechanics.*Call-path census.*Return placement.*Call-window attribution.*Signal-unwind call-window restoration.*Interrupt sub-phases")
     message(FATAL_ERROR "documented table profile is missing expected sections or procedure counts")
 endif()
 
@@ -37,9 +37,16 @@ if(NOT csv_content MATCHES
         "^section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args")
     message(FATAL_ERROR "documented timing CSV header changed")
 endif()
+if(NOT csv_content MATCHES "summary,schema_version,4")
+    message(FATAL_ERROR "documented timing CSV is not schema version 4")
+endif()
 if(NOT csv_content MATCHES
         "procedure,\"profiling_demo.worker\",\"elapsed\",,2,.*procedure,\"profiling_demo.worker\",\"entry_overhead\"")
     message(FATAL_ERROR "documented timing CSV is missing worker metrics")
+endif()
+if(NOT csv_content MATCHES
+        "census,\"call_path\",\"direct_bytecode\",,2,.*census,\"arity\",\"0\",,2,.*return,\"placement\".*mechanics,\"call_window\".*unwind,\"signal\"")
+    message(FATAL_ERROR "documented timing CSV is missing call-census sections")
 endif()
 
 execute_process(

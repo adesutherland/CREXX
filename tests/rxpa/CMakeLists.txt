@@ -194,6 +194,7 @@ set(FUNC_TESTS
         float_funcs
         array_push_funcs
         native_payload_funcs
+        native_unwind_funcs
 )
 set(OUTPUTS
         Signal
@@ -202,6 +203,7 @@ set(OUTPUTS
         OK
         OK
         OK
+        "PASS: Native Signal Call Mapping"
 )
 
 list(LENGTH FUNC_TESTS num_tests)
@@ -264,4 +266,22 @@ endforeach()
 crexx_label_smoke_tests(
         rxpa_signal_funcs_dynamic_noopt
         rxpa_native_payload_funcs_dynamic_noopt
+        rxpa_native_unwind_funcs_dynamic_noopt
 )
+
+if(CREXX_VM_PROFILING)
+    foreach(_vm_target rxvm rxbvm)
+        add_test(
+                NAME ${_vm_target}callcensusnativeunwind
+                COMMAND ${CMAKE_COMMAND}
+                        "-DVM=$<TARGET_FILE:${_vm_target}>"
+                        "-DINPUT=${CMAKE_CURRENT_BINARY_DIR}/rxpa_native_unwind_funcs_dynamic_noopt.rxbin"
+                        "-DOUTPUT=${CMAKE_CURRENT_BINARY_DIR}/${_vm_target}-call-census-native-unwind.csv"
+                        "-DCASE=native_unwind"
+                        "-DRUNTIME_ARGS=rx_testfuncs_dynamic;${CMAKE_BINARY_DIR}/bin/library"
+                        -P ${CMAKE_SOURCE_DIR}/interpreter/tests/check_vm_call_census.cmake)
+        set_tests_properties(${_vm_target}callcensusnativeunwind PROPERTIES
+                WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                LABELS "interpreter;profiling;call-census;rxpa")
+    endforeach()
+endif()

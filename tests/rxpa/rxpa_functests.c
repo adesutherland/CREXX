@@ -97,6 +97,14 @@ PROCEDURE(throw_signal)
     RETURNSIGNAL(SIGNAL_ERROR, "This is a test signal")
 }
 
+/* Argument-bearing signal source for call-window restoration tests. */
+PROCEDURE(throw_signal_arg)
+{
+    if (NUM_ARGS != 1)
+        RETURNSIGNAL(SIGNAL_INVALID_ARGUMENTS, "1 argument expected")
+    RETURNSIGNAL(SIGNAL_ERROR, "This is an argument-window test signal")
+}
+
 // string_concat
 PROCEDURE(string_concat)
 {
@@ -257,6 +265,7 @@ PROCEDURE(fill_push_arrays)
 LOADFUNCS
 //      C Function__,      REXX namespace & name,           Option_, Return Type_, Arguments
 ADDPROC(throw_signal,      "rxpatests.throw_signal",        "b",     ".void",      "");
+ADDPROC(throw_signal_arg,  "rxpatests.throw_signal_arg",    "b",     ".void",      "value = .string");
 ADDPROC(string_concat,     "rxpatests.string_concat",       "b",     ".string",    "s1 = .string, s2 = .string");
 ADDPROC(string_concat_ref, "rxpatests.string_concat_ref",   "b",     ".void",      "s1 = .string, s2 = .string, expose s3 = .string");
 ADDPROC(add_integers,      "rxpatests.add_integers",        "b",     ".int",       "i1 = .int, i2 = .int");

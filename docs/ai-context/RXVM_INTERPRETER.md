@@ -874,6 +874,30 @@ spans, not an estimate of the speed-up from inlining. External entry and
 terminal return are measured against their nearest available VM boundary.
 Dynamic calls are attributed to the concrete runtime procedure.
 
+The same profiling-only backend also records the NR-05 dynamic call census at
+authoritative VM boundaries. It distinguishes direct/dynamic bytecode and
+native calls, external/root entry, signal-handler entry, failed/unresolved
+attempts, exact actual arity, callable metadata kind, and fresh/reused/no-child
+frame disposition. `RET_REG` records its actual true-local move or
+non-local copy branch; void, ignored, immediate, terminal, and unwind domains
+remain distinct. `SRCMETHODSEL` and `SRCFPROCSEL` record
+attempt/success/failure separately from the later `DCALL`.
+
+Call-window attribution uses a dynamic backward slice of the executed
+straight-line trace, not source names or adjacency. The NR-04
+`rxop_effects()` kill/flow facts stop the slice at proven
+definitions. Reached `SWAP_REG_REG` operations are setup swaps and
+reached whole-value `COPY_REG_REG` definitions are defensive
+argument copies. For normal return, the profiler reconstructs the pointer
+permutation made by those setup swaps and buffers subsequent swaps until their
+combined effect recovers the pre-call mapping; only that completed restoration
+sequence receives credit. A setup whose mapping is deliberately carried into
+another call or to frame completion has no completed normal restoration, but
+does not by itself imply lost profiling data. All remaining executed
+swaps/copies stay unclassified. The cold signal paths report discarded frames, restored
+bytecode/native call windows, actual inverse pointer swaps, and restoration
+failures without changing the existing restoration algorithm.
+
 Native plugin calls are listed with call count and total time around
 `rxvm_callfunc`. Body/self and entry/exit breakdowns are intentionally omitted
 because the VM cannot observe the native implementation's internal phases.
@@ -890,9 +914,8 @@ to it. The no-pending poll itself remains inside ordinary transition time; the
 profiler intentionally does not add another pair of timer reads around that
 check.
 
-CSV output retains the original columns in their original order, appends
-callable and allocation metadata/status columns, and identifies the format as
-schema version 3. Its exact header is:
+CSV output retains the original columns in their original order and identifies
+the format as schema version 4. Schema 4 preserves the same 24-column header:
 
 ```text
 section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args,bytes,max_bytes,high_water,status
@@ -903,9 +926,19 @@ Procedure rows use `value` to distinguish `elapsed`, `inclusive_body`, `self`,
 There are multiple metric rows per bytecode callable rather than one
 denormalized row.
 
-Schema 3 also emits `allocation` rows. The counters are private profiling
-instrumentation, active only between profile begin/end, and count successful
-requests rather than live heap:
+Schema 4 retains the schema-3 `allocation` rows and adds
+`census` aggregates, exact `call` rows,
+`return` placement, `dynamic` selection,
+`mechanics` attribution, and `unwind` restoration rows.
+For `call` rows only, the existing `bytes`,
+`max_bytes`, and `high_water` columns carry setup swaps,
+normal restoration swaps, and defensive argument copies. Summary and row
+status expose overflow or degraded tracking; zero-count categories are
+retained.
+
+The allocation counters are private profiling instrumentation, active only
+between profile begin/end, and count successful requests rather than live
+heap:
 
 - `frame_blocks` counts fresh combined frame/pointer/local-value blocks;
   `frame_activations` counts fresh plus recycled activations, records maximum

@@ -26,8 +26,9 @@ import rxfnsb
 import rxjson
 
 /*
- * NR-03 exact-image evidence orchestration. Profiling and RXSEQ are deliberately
- * separate runs; only the ordinary Release VM supplies product timing.
+ * Exact-image performance evidence orchestration. Profiling and RXSEQ are
+ * deliberately separate runs; only the ordinary Release VM supplies product
+ * timing. Schema-4 profiles also feed the NR-05 call-census dashboard.
  */
 main: procedure = .int
   arg args = .string[]
@@ -115,6 +116,8 @@ main: procedure = .int
   sequences[1] = "entry,window,rank,count,sites,modules,symbols,status,pattern,mapping,example_module,example_start"
   profile_status = .string[]
   profile_status[1] = "entry,name,value"
+  call_census = .string[]
+  call_census[1] = "entry,section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args,bytes,max_bytes,high_water,status"
   timing_ids = .string[]
   timing_pairs = .string[]
   timing_variants = .string[]
@@ -129,7 +132,7 @@ main: procedure = .int
   do entry_index = 1 to manifest_rows[0]
     result = process_entry(manifest_rows[entry_index], repo_root, release_build, ,
         profile_build, entries_dir, samples, instructions, procedures, allocations, ,
-        sequences, profile_status, timing_ids, timing_pairs, timing_variants, ,
+        sequences, profile_status, call_census, timing_ids, timing_pairs, timing_variants, ,
         timing_modes, timing_medians)
     if result <> 0 then do
       completed_utc = timestamp_utc()
@@ -145,6 +148,9 @@ main: procedure = .int
   if write_lines(summary_dir || "/allocation-report.csv", allocations) <> 0 then return 1
   if write_lines(summary_dir || "/sequence-ranking.csv", sequences) <> 0 then return 1
   if write_lines(summary_dir || "/profile-status.csv", profile_status) <> 0 then return 1
+  if write_lines(summary_dir || "/call-census.csv", call_census) <> 0 then return 1
+  if write_call_census_markdown(summary_dir || "/call-census.md", ,
+      manifest_rows[0], call_census) <> 0 then return 1
 
   deltas = build_pair_deltas(timing_ids, timing_pairs, timing_variants, ,
       timing_modes, timing_medians)
@@ -159,9 +165,9 @@ main: procedure = .int
   verification[1] = "PASS: ordinary build is Release with CREXX_VM_PROFILING=OFF; profiling build is Release with CREXX_VM_PROFILING=ON"
   verification[2] = "PASS: every input image/module checksum matched the explicit manifest"
   verification[3] = "PASS: all warmups and recorded samples ran serially and retained stdout/stderr"
-  verification[4] = "PASS: every profile reported result=0, no counter overflow, and complete procedure/allocation tracking"
+  verification[4] = "PASS: every schema-4 profile reported result=0, no counter overflow, and complete procedure/allocation/census tracking"
   verification[5] = "PASS: RXSEQ N=2, N=3, and N=4 binary captures and decoded candidate CSVs were retained"
-  verification[6] = "PASS: generated summaries preserve procedure metrics and paired unprofiled timing deltas"
+  verification[6] = "PASS: generated summaries preserve procedure metrics, the dynamic call census, and paired unprofiled timing deltas"
   if write_lines(output_dir || "/verification.txt", verification) <> 0 then return 1
 
   completed_utc = timestamp_utc()
@@ -169,7 +175,7 @@ main: procedure = .int
       profile_build, output_dir, args, started_utc, completed_utc, "pass") <> 0 then return 1
   if write_and_verify_checksums(output_dir) <> 0 then return 1
 
-  say "PASS: NR-03 exact-image evidence bundle retained under" output_dir
+  say "PASS: exact-image evidence bundle retained under" output_dir
   return 0
 
 /* Manifest row fields:
@@ -182,6 +188,7 @@ process_entry: procedure = .int
       expose samples = .string[], expose instructions = .string[], ,
       expose procedures = .string[], expose allocations = .string[], ,
       expose sequences = .string[], expose profile_status = .string[], ,
+      expose call_census = .string[], ,
       expose timing_ids = .string[], expose timing_pairs = .string[], ,
       expose timing_variants = .string[], expose timing_modes = .string[], ,
       expose timing_medians = .int[]
@@ -284,7 +291,7 @@ process_entry: procedure = .int
       profile_dir || "/stderr.txt") <> 0 then
     return execution_error("profile run failed for " || entry_id)
   if collect_profile_summary(entry_id, profile_path, instructions, procedures, ,
-      allocations, profile_status) <> 0 then return 1
+      allocations, profile_status, call_census) <> 0 then return 1
 
   sequence_commands = .string[]
   do window = 2 to 4
@@ -476,8 +483,9 @@ read_input_manifest: procedure = .string[]
     line_number = line_number + 1
     if line = "" | left(strip(line), 1) = "#" then iterate
     if \header_seen then do
-      if line <> "crexx-nr03-image-manifest|1" then do
-        say "ERROR: expected crexx-nr03-image-manifest|1 at" path || ":" || line_number
+      if line <> "crexx-nr03-image-manifest|1" & ,
+          line <> "crexx-nr05-call-census-manifest|1" then do
+        say "ERROR: expected a supported exact-image manifest header at" path || ":" || line_number
         call linein path
         empty_rows = .string[]
         return empty_rows
@@ -663,7 +671,7 @@ parse_csv_line: procedure = .string[]
 collect_profile_summary: procedure = .int
   arg entry_id = .string, path = .string, expose instructions = .string[], ,
       expose procedures = .string[], expose allocations = .string[], ,
-      expose profile_status = .string[]
+      expose profile_status = .string[], expose call_census = .string[]
 
   instruction_names = .string[]
   instruction_counts = .int[]
@@ -677,6 +685,8 @@ collect_profile_summary: procedure = .int
   overflow_ok = 0
   procedure_ok = 0
   allocation_ok = 0
+  census_ok = 0
+  census_rows = 0
   allocation_rows = 0
   activation_high_water = 0
   procedure_rank = 0
@@ -702,11 +712,12 @@ collect_profile_summary: procedure = .int
     if section = "summary" then do
       profile_status[profile_status[0] + 1] = csv_field(entry_id) || "," || ,
           csv_field(fields[2]) || "," || csv_field(fields[3])
-      if fields[2] = "schema_version" & fields[3] = "3" then schema_ok = 1
+      if fields[2] = "schema_version" & fields[3] = "4" then schema_ok = 1
       if fields[2] = "result" & fields[3] = "0" then result_ok = 1
       if fields[2] = "counter_overflow" & fields[3] = "0" then overflow_ok = 1
       if fields[2] = "procedure_tracking_unavailable" & fields[3] = "0" then procedure_ok = 1
       if fields[2] = "allocation_tracking_unavailable" & fields[3] = "0" then allocation_ok = 1
+      if fields[2] = "census_tracking_unavailable" & fields[3] = "0" then census_ok = 1
     end
     else if section = "instruction" then do
       index = instruction_names[0] + 1
@@ -735,6 +746,16 @@ collect_profile_summary: procedure = .int
           "," || fields[22] || "," || fields[23] || "," || csv_field(fields[24])
       if fields[24] <> "complete" then allocation_ok = 0
       if fields[2] = "frame_activations" then activation_high_water = fields[23]
+    end
+    else if section = "census" | section = "call" | section = "return" | ,
+        section = "dynamic" | section = "mechanics" | section = "unwind" then do
+      census_row = csv_field(entry_id)
+      do column = 1 to 24
+        census_row = census_row || "," || csv_field(fields[column])
+      end
+      call_census[call_census[0] + 1] = census_row
+      census_rows = census_rows + 1
+      if fields[24] <> "complete" then census_ok = 0
     end
   end
   call linein path
@@ -789,7 +810,8 @@ collect_profile_summary: procedure = .int
   end
 
   if \header_seen | \schema_ok | \result_ok | \overflow_ok | \procedure_ok | ,
-      \allocation_ok | allocation_rows = 0 | activation_high_water < 1 then
+      \allocation_ok | \census_ok | allocation_rows = 0 | census_rows = 0 | ,
+      activation_high_water < 1 then
     return execution_error("profile completeness gate failed for " || entry_id)
   return 0
 
@@ -912,6 +934,170 @@ build_pair_deltas: procedure = .string[]
   end
   return output
 
+add_aggregate: procedure = .void
+  arg key = .string, count = .int, expose keys = .string[], ,
+      expose counts = .int[]
+  do i = 1 to keys[0]
+    if keys[i] = key then do
+      counts[i] = counts[i] + count
+      return
+    end
+  end
+  keys[keys[0] + 1] = key
+  counts[counts[0] + 1] = count
+  return
+
+aggregate_count: procedure = .int
+  arg key = .string, keys = .string[], counts = .int[]
+  do i = 1 to keys[0]
+    if keys[i] = key then return counts[i]
+  end
+  return 0
+
+ratio_text: procedure = .string
+  arg numerator = .int, denominator = .int
+  if denominator = 0 then return "n/a"
+  return strip(format((numerator as .float) / (denominator as .float), , 6))
+
+append_census_row: procedure = .void
+  arg expose output = .string[], label = .string, key = .string, ,
+      keys = .string[], counts = .int[]
+  output[output[0] + 1] = "| " || label || " | " || ,
+      aggregate_count(key, keys, counts) || " |"
+  return
+
+write_call_census_markdown: procedure = .int
+  arg path = .string, entry_count = .int, census = .string[]
+  keys = .string[]
+  counts = .int[]
+  do i = 2 to census[0]
+    fields = parse_csv_line(census[i])
+    if fields[0] <> 25 then
+      return execution_error("call-census summary row has the wrong width")
+    section = fields[2]
+    if section = "call" then iterate
+    key = section || "|" || fields[3] || "|" || fields[4]
+    call add_aggregate key, fields[6] as .int, keys, counts
+  end
+
+  direct_bytecode = aggregate_count("census|call_path|direct_bytecode", keys, counts)
+  direct_native = aggregate_count("census|call_path|direct_native", keys, counts)
+  dynamic_bytecode = aggregate_count("census|call_path|dynamic_bytecode", keys, counts)
+  dynamic_native = aggregate_count("census|call_path|dynamic_native", keys, counts)
+  instruction_calls = direct_bytecode + direct_native + dynamic_bytecode + dynamic_native
+  setup_swaps = aggregate_count("mechanics|call_window|setup_swaps", keys, counts)
+  restoration_swaps = aggregate_count("mechanics|call_window|normal_restoration_swaps", keys, counts)
+  defensive_copies = aggregate_count("mechanics|call_window|defensive_argument_copies", keys, counts)
+  fresh_frames = aggregate_count("census|frame_disposition|fresh", keys, counts)
+  reused_frames = aggregate_count("census|frame_disposition|reused", keys, counts)
+  moved_returns = aggregate_count("return|placement|ret_reg_move_local", keys, counts)
+  copied_returns = aggregate_count("return|placement|ret_reg_copy_nonlocal", keys, counts)
+  dynamic_selections = aggregate_count("dynamic|srcmethodsel|attempt", keys, counts) + ,
+      aggregate_count("dynamic|srcfprocsel|attempt", keys, counts)
+  unwind_events = aggregate_count("unwind|signal|events", keys, counts)
+
+  output = .string[]
+  output[1] = "# NR-05 call-path census dashboard"
+  output[2] = ""
+  output[3] = "Dynamic schema-4 observations aggregated across " || entry_count || ,
+      " exact images. Counts reflect each manifest cell's disclosed bounded argv; they are census evidence, not product timing or a performance-win claim."
+  output[4] = ""
+  output[5] = "## Calls by runtime path"
+  output[6] = ""
+  output[7] = "| Path | Calls |"
+  output[8] = "|---|---:|"
+  call append_census_row output, "direct bytecode", "census|call_path|direct_bytecode", keys, counts
+  call append_census_row output, "direct native", "census|call_path|direct_native", keys, counts
+  call append_census_row output, "dynamic bytecode", "census|call_path|dynamic_bytecode", keys, counts
+  call append_census_row output, "dynamic native", "census|call_path|dynamic_native", keys, counts
+  call append_census_row output, "external/root", "census|call_path|external_root", keys, counts
+  call append_census_row output, "signal bytecode", "census|call_path|signal_bytecode", keys, counts
+  call append_census_row output, "signal native", "census|call_path|signal_native", keys, counts
+
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "## Actual arity"
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "| Arity | Calls |"
+  output[output[0] + 1] = "|---:|---:|"
+  do i = 1 to keys[0]
+    if left(keys[i], length("census|arity|")) = "census|arity|" then do
+      arity = substr(keys[i], length("census|arity|") + 1)
+      output[output[0] + 1] = "| " || arity || " | " || counts[i] || " |"
+    end
+  end
+
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "## Callable and frame disposition"
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "| Category | Count |"
+  output[output[0] + 1] = "|---|---:|"
+  call append_census_row output, "procedure", "census|callable_kind|procedure", keys, counts
+  call append_census_row output, "method", "census|callable_kind|method", keys, counts
+  call append_census_row output, "factory", "census|callable_kind|factory", keys, counts
+  call append_census_row output, "native", "census|callable_kind|native", keys, counts
+  call append_census_row output, "unknown", "census|callable_kind|unknown", keys, counts
+  call append_census_row output, "fresh frames", "census|frame_disposition|fresh", keys, counts
+  call append_census_row output, "reused frames", "census|frame_disposition|reused", keys, counts
+  call append_census_row output, "native no-child", "census|frame_disposition|no_child_native", keys, counts
+  call append_census_row output, "failed/no frame", "census|frame_disposition|none_failed", keys, counts
+
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "## Call-window mechanics"
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "| Mechanic | Count | Per instruction call |"
+  output[output[0] + 1] = "|---|---:|---:|"
+  output[output[0] + 1] = "| setup swaps | " || setup_swaps || " | " || ,
+      ratio_text(setup_swaps, instruction_calls) || " |"
+  output[output[0] + 1] = "| normal restoration swaps | " || restoration_swaps || " | " || ,
+      ratio_text(restoration_swaps, instruction_calls) || " |"
+  output[output[0] + 1] = "| defensive argument copies | " || defensive_copies || " | " || ,
+      ratio_text(defensive_copies, instruction_calls) || " |"
+  output[output[0] + 1] = "| unclassified swaps | " || ,
+      aggregate_count("mechanics|call_window|unclassified_swaps", keys, counts) || " | n/a |"
+  output[output[0] + 1] = "| unclassified copies | " || ,
+      aggregate_count("mechanics|call_window|unclassified_copies", keys, counts) || " | n/a |"
+  output[output[0] + 1] = "| degraded attributions | " || ,
+      aggregate_count("mechanics|call_window|attribution_degraded", keys, counts) || " | n/a |"
+
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "## Return placement"
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "| Placement | Count |"
+  output[output[0] + 1] = "|---|---:|"
+  call append_census_row output, "void", "return|placement|void", keys, counts
+  call append_census_row output, "RET_REG local move", "return|placement|ret_reg_move_local", keys, counts
+  call append_census_row output, "RET_REG non-local copy", "return|placement|ret_reg_copy_nonlocal", keys, counts
+  call append_census_row output, "ignored value", "return|placement|value_ignored", keys, counts
+  call append_census_row output, "immediate", "return|placement|immediate", keys, counts
+  call append_census_row output, "terminal/external", "return|placement|terminal_external", keys, counts
+
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "## Dynamic selection and signal unwind"
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "| Counter | Count |"
+  output[output[0] + 1] = "|---|---:|"
+  call append_census_row output, "method selections", "dynamic|srcmethodsel|attempt", keys, counts
+  call append_census_row output, "method selection failures", "dynamic|srcmethodsel|failure", keys, counts
+  call append_census_row output, "factory selections", "dynamic|srcfprocsel|attempt", keys, counts
+  call append_census_row output, "factory selection failures", "dynamic|srcfprocsel|failure", keys, counts
+  call append_census_row output, "signal unwind events", "unwind|signal|events", keys, counts
+  call append_census_row output, "bytecode frames discarded", "unwind|signal|bytecode_frames_discarded", keys, counts
+  call append_census_row output, "bytecode windows restored", "unwind|signal|argument_windows_restored", keys, counts
+  call append_census_row output, "bytecode slots restored", "unwind|signal|argument_slots_restored", keys, counts
+  call append_census_row output, "native windows restored", "unwind|signal|interrupted_native_windows_restored", keys, counts
+  call append_census_row output, "native slots restored", "unwind|signal|interrupted_native_slots_restored", keys, counts
+  call append_census_row output, "restoration failures", "unwind|signal|restoration_failures", keys, counts
+
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "## NR-06 and NR-12 handoff"
+  output[output[0] + 1] = ""
+  output[output[0] + 1] = "- NR-06 call-window work should use the path and exact-arity distributions above, together with " || setup_swaps || " setup and " || restoration_swaps || " restoration swaps (" || ratio_text(setup_swaps + restoration_swaps, instruction_calls) || " combined per instruction call across this portfolio run)."
+  output[output[0] + 1] = "- Frame recycling supplied " || reused_frames || " of " || fresh_frames + reused_frames || " observed bytecode activations; preserve the per-workload rows before generalising from the aggregate."
+  output[output[0] + 1] = "- NR-12 should distinguish " || defensive_copies || " attributable argument-copy instructions from the unclassified copy population, and should treat " || copied_returns || " measured non-local RET_REG copies separately from " || moved_returns || " local moves."
+  output[output[0] + 1] = "- Dynamic selection occurred " || dynamic_selections || " times and signal unwind occurred " || unwind_events || " times. Zero values mean unobserved in these bounded portfolio cells, not unreachable VM paths; focused semantic fixtures cover the cold paths."
+  output[output[0] + 1] = "- These aggregate conclusions are portfolio-wide for the exact " || entry_count || "-image set. Workload-specific conclusions must be drawn from call-census.csv and the retained raw profile for that entry."
+  return write_lines(path, output)
+
 write_summary_markdown: procedure = .int
   arg path = .string, entry_count = .int, ids = .string[], pairs = .string[], ,
       variants = .string[], modes = .string[], medians = .int[], ,
@@ -919,7 +1105,7 @@ write_summary_markdown: procedure = .int
       sequence_rows = .int
   deltas = build_pair_deltas(ids, pairs, variants, modes, medians)
   output = .string[]
-  output[1] = "# NR-03 automated performance evidence summary"
+  output[1] = "# Exact-image performance evidence summary"
   output[2] = ""
   output[3] = "Product timings below come only from serial samples of the ordinary profiling-off Release VM. Profile elapsed times are diagnostic instrumentation evidence and are not throughput measurements. Startup/lifecycle evidence remains a separate programme surface."
   output[4] = ""
@@ -1175,5 +1361,16 @@ self_test: procedure = .int
   deltas = build_pair_deltas(ids, pairs, variants, modes, medians)
   if deltas[0] <> 2 | pos(",-20,-20.000", deltas[2]) = 0 then
     return execution_error("paired-delta self-test failed")
+  aggregate_keys = .string[]
+  aggregate_counts = .int[]
+  call add_aggregate "census|call_path|direct_bytecode", 2, ,
+      aggregate_keys, aggregate_counts
+  call add_aggregate "census|call_path|direct_bytecode", 3, ,
+      aggregate_keys, aggregate_counts
+  if aggregate_count("census|call_path|direct_bytecode", ,
+      aggregate_keys, aggregate_counts) <> 5 then
+    return execution_error("call-census aggregate self-test failed")
+  if ratio_text(1, 4) <> "0.250000" then
+    return execution_error("call-census ratio self-test failed")
   say "PASS: NR-03 evidence tool self-test"
   return 0

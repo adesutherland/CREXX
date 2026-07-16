@@ -1,6 +1,6 @@
 # cREXX performance roadmap
 
-Last updated: 2026-07-15
+Last updated: 2026-07-16
 
 This is the live performance-programme register. The definitions, evidence and
 exit criteria come from the dated
@@ -21,7 +21,7 @@ exit criterion is met.
 | NR-03 | Automated performance evidence bundle | complete | One Level B command retains exact-hash Release timing, schema-3 profile/allocation evidence, RXSEQ N=2/3/4, ranked reports and paired deltas; the verified proof bundle is `evidence/2026-07-15-nr-03-automated-proof/`. |
 | NR-04 | Opcode effects inventory | complete | All 641 opcode slots have ordered machine-readable effects; 539 source opcodes are classified or explicitly conservative and RXAS consumes the fail-closed API without new transforms. |
 | NR-04A | Kind-index runtime metadata and scan counters | queued | Remove ordinary type/ADDRESS traversal through source/TRACE records without losing diagnostics. |
-| NR-05 | Call-path census | queued | Portfolio counts by call kind/arity plus swaps, copies, return placement, frame reuse, selection and signal unwind. |
+| NR-05 | Call-path census | complete | Schema-4 dynamic census plus exact 22-image dashboard retained at `evidence/2026-07-16-nr-05-call-census/`; focused fixtures cover native/dynamic/signal cold paths absent from the bounded portfolio. |
 | NR-06 | Compiler call-window placement fast path | queued | Preserve the contiguous-window ABI and signal-unwind contract; schedule moves once and measure. |
 | NR-07 | Direct compare-to-branch lowering | queued | Typed single-use Boolean results only; retain RXAS fallback and source/debug semantics. |
 | NR-08 | Definite initialization and reference-lifetime facts | queued | Fail closed; prove dead `NULL`/`ENDLIFE` and copy removals with escape/reference tests. |
@@ -197,6 +197,38 @@ exit criterion is met.
   new transformation. Debug and Release metadata/optimizer tests passed 37/37;
   the rebuilt broad Debug suite passed 1840/1840. NR-04A, CFG/global data flow,
   dead NULL/ENDLIFE removal and RXBIN/public ABI changes remain out of scope.
+
+### NR-05 work notes
+
+- 2026-07-16: Completed profiling schema 4 with authoritative dynamic
+  path/site/actual-arity/kind/frame/outcome rows, actual return placement,
+  method/factory selection outcomes, and bytecode/native signal-unwind work.
+  NR-04 effects drive an executed backward slice for call-window setup swaps
+  and defensive argument copies; normal restoration is credited only when the
+  observed swap sequence recovers the reconstructed pre-call mapping. Every
+  executed `SWAP_REG_REG` and `COPY_REG_REG` remains mechanically partitioned,
+  with unproven work explicitly unclassified. The feature is compile-time
+  absent from ordinary Debug/Release and changes neither RXBIN nor public ABI.
+- 2026-07-16: The one-command, checksum-closed bundle at
+  `evidence/2026-07-16-nr-05-call-census/` covers all eleven current language
+  workloads in noopt/opt form (22 exact images). Across the disclosed bounded
+  argv it records 16,439,420 calls: 16,439,188 direct bytecode, 210 dynamic
+  bytecode and 22 external roots; arity 1 dominates at 8,767,984. Recycler
+  frames supply 16,438,977 activations versus 443 fresh. The dynamic mechanics
+  are 41,981,144 setup and 41,981,144 normal-restoration swaps (2.553691 each
+  per instruction call), 675,554 attributable defensive copies (0.041094 per
+  instruction call), 266 unclassified swaps and 13,603,218 unclassified
+  copies, with zero degraded attributions. Returns comprise 4,517,546 local
+  moves, 8,591,365 non-local copies, 2,028,919 void, 1,301,568 immediate and 22
+  terminal placements. The bounded portfolio observes 210 successful dynamic
+  selections and no signals/native calls; deterministic dual-VM fixtures
+  cover native calls, method/factory dispatch, frame failure domains, normal
+  restoration, multi-frame signal unwind and interrupted-native restoration.
+  All 541 recursive checksums and independent raw-profile reconciliations pass;
+  the broad Debug suite passes 1844/1844. NR-06 should use the path/arity and
+  5.107382 combined swaps-per-instruction-call evidence; NR-12 should keep the
+  675,554 attributable argument copies distinct from the 8,591,365 measured
+  `RET_REG` non-local copies and from the unclassified copy population.
 
 ## Cross-runtime portfolio execution order
 

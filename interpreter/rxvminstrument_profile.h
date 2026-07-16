@@ -31,6 +31,10 @@
         if (vm_profile.enabled)                                                 \
             rxvm_profile_instruction_begin_at(                                 \
                     &vm_profile, (int)(opcode_), rxvm_profile_now_ns());         \
+        if (vm_profile.enabled)                                                 \
+            rxvm_profile_trace_instruction_at(                                 \
+                    &vm_profile, current_frame, pc, meta_map,                   \
+                    (size_t)(module_), (size_t)(index_), (int)(opcode_));        \
         if (vm_sequence.enabled)                                                \
             rxvm_sequence_instruction_begin(                                   \
                     &vm_sequence, (size_t)(module_), (size_t)(index_));          \
@@ -143,6 +147,53 @@
             rxvm_profile_interrupt_terminal_at(                                \
                     &vm_profile, (unsigned char)(signal_),                      \
                     rxvm_profile_now_ns());                                     \
+    } while (0)
+
+#define RXVM_INSTRUMENTATION_CALL(path_, procedure_, arity_, disposition_, outcome_, caller_, module_, index_, argument_base_, has_window_) \
+    do {                                                                        \
+        if (vm_profile.enabled)                                                 \
+            rxvm_profile_record_call_at(                                       \
+                    &vm_profile, (path_),                                      \
+                    (procedure_) ? (procedure_)->profile_id : SIZE_MAX,         \
+                    (int64_t)(arity_), (disposition_), (outcome_),              \
+                    (const void *)(caller_), (size_t)(module_),                 \
+                    (size_t)(index_), (size_t)(argument_base_),                 \
+                    (has_window_));                                             \
+    } while (0)
+
+#define RXVM_INSTRUMENTATION_RETURN(placement_)                                \
+    do {                                                                        \
+        if (vm_profile.enabled)                                                 \
+            rxvm_profile_record_return_at(&vm_profile, (placement_));           \
+    } while (0)
+
+#define RXVM_INSTRUMENTATION_DYNAMIC(kind_, outcome_)                          \
+    do {                                                                        \
+        if (vm_profile.enabled)                                                 \
+            rxvm_profile_record_dynamic_at(&vm_profile, (kind_), (outcome_));   \
+    } while (0)
+
+#define RXVM_INSTRUMENTATION_SWAP(frame_, register_1_, register_2_)            \
+    do {                                                                        \
+        if (vm_profile.enabled)                                                 \
+            rxvm_profile_record_swap_at(                                       \
+                    &vm_profile, (const void *)(frame_),                        \
+                    (size_t)(register_1_), (size_t)(register_2_));               \
+    } while (0)
+
+#define RXVM_INSTRUMENTATION_SIGNAL_UNWIND(frames_, windows_, slots_, failed_) \
+    do {                                                                        \
+        if (vm_profile.enabled)                                                 \
+            rxvm_profile_record_signal_unwind_at(                              \
+                    &vm_profile, (uint64_t)(frames_), (uint64_t)(windows_),      \
+                    (uint64_t)(slots_), (failed_));                             \
+    } while (0)
+
+#define RXVM_INSTRUMENTATION_SIGNAL_NATIVE_RESTORE(observed_, slots_, failed_) \
+    do {                                                                        \
+        if (vm_profile.enabled)                                                 \
+            rxvm_profile_record_signal_native_restore_at(                      \
+                    &vm_profile, (observed_), (uint64_t)(slots_), (failed_));   \
     } while (0)
 
 #define RXVM_INSTRUMENTATION_VM_END(context_, result_)                         \

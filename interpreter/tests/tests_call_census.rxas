@@ -1,0 +1,109 @@
+/*
+ * Deterministic NR-05 call census fixture.
+ *
+ * The instruction shape is intentional: it covers exact arity, recycler
+ * reuse, return placement, setup/restoration swaps, defensive argument copies,
+ * unrelated copies/swaps, repeated actuals, recursion, globals, and links.
+ */
+
+.globals=1
+
+   .meta "call_census.main"="b" ".int" main() ""
+   .meta "call_census.zero"="b" ".void" zero() ""
+   .meta "call_census.local_result"="b" ".int" local_result() ""
+   .meta "call_census.ignored_result"="b" ".int" ignored_result() ""
+   .meta "call_census.immediate_result"="b" ".int" immediate_result() ""
+   .meta "call_census.return_argument"="b" ".string" return_argument() "value=.string"
+   .meta "call_census.consume_two"="b" ".void" consume_two() "left=.string,right=.string"
+   .meta "call_census.global_result"="b" ".object" global_result() ""
+   .meta "call_census.linked_result"="b" ".string" linked_result() ""
+   .meta "call_census.recurse"="b" ".int" recurse() "depth=.int"
+
+main() .locals=18
+    call zero()
+    call zero()
+
+    call r0,local_result()
+    call ignored_result()
+    call r0,immediate_result()
+
+    load r1,"argument"
+    load r2,1
+    swap r3,r1
+    call r4,return_argument(),r2
+    swap r1,r3
+
+    load r5,2
+    copy r6,r1
+    copy r7,r1
+    call r8,consume_two(),r5
+
+    /* These are deliberately outside a call window. */
+    copy r9,r1
+    load r10,"left"
+    load r11,"right"
+    swap r10,r11
+    seq r0,r10,"right"
+    brf fail,r0
+    swap r10,r11
+    seq r0,r10,"left"
+    brf fail,r0
+
+    setattrs g0,1
+    linkattr1 r15,g0,1
+    load r15,"linked"
+    unlink r15
+    call r4,global_result()
+    call r4,linked_result()
+
+    load r12,1
+    load r13,2
+    call r14,recurse(),r12
+    load r13,2
+    call r14,recurse(),r12
+
+    say "PASS: NR-05 Call Census"
+    ret 0
+
+fail:
+    say "FAIL: NR-05 Call Census"
+    ret 1
+
+zero() .locals=0
+    ret
+
+local_result() .locals=2
+    load r1,42
+    ret r1
+
+ignored_result() .locals=2
+    load r1,43
+    ret r1
+
+immediate_result() .locals=0
+    ret 44
+
+return_argument() .locals=1
+    ret a1
+
+consume_two() .locals=0
+    ret
+
+global_result() .locals=0
+    ret g0
+
+linked_result() .locals=2
+    linkattr1 r1,g0,1
+    ret r1
+
+recurse() .locals=4
+    igt r0,a1,0
+    brf recurse_base,r0
+    isub r1,a1,1
+    load r2,1
+    copy r3,r1
+    call r0,recurse(),r2
+    ret r0
+
+recurse_base:
+    ret 1
