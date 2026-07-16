@@ -22,4 +22,7 @@ if(BUILD_TESTING)
     add_executable(test_rxgraph tests/test_rxgraph.c)
     target_link_libraries(test_rxgraph PRIVATE rxbin)
     add_test(NAME rxgraph_unit COMMAND test_rxgraph)
+
+    add_executable(rxgraph_bench EXCLUDE_FROM_ALL tools/rxgraph_bench.c)
+    target_link_libraries(rxgraph_bench PRIVATE rxbin)
 endif()

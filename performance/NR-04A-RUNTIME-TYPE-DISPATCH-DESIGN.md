@@ -1,6 +1,8 @@
 # NR-04A runtime type and dispatch architecture options
 
-Status: T6 selected; RXBIN 007 semantic-graph design approved and documented
+Status: complete — T6/RXBIN 007, C3-style process-local views, process-wide
+callable/factory binding, generation-guarded site caches, and complete-section
+compression pass the selected correctness and performance gates
 
 Date: 2026-07-16
 
@@ -19,6 +21,18 @@ a slower design. Adrian selected T6 on 2026-07-16 and approved a coordinated,
 non-backward-compatible RXBIN 007 transition. The canonical implementation
 design is [RXBIN_007_SEMANTIC_GRAPH.md](../docs/ai-context/RXBIN_007_SEMANTIC_GRAPH.md).
 This note retains the option comparison and measurement rationale.
+
+The first directed repair keeps the six-section 007 seed and current consumers
+but materializes C3-style process-local descriptors and dense support/dispatch
+views inside `rxbin`. It replaces four object type fields with one descriptor
+pointer. Isolated descriptor support/dispatch is about 0.92-1.07 ns and the
+first integrated evidence is retained under
+`evidence/2026-07-16-nr-04a-c3-candidate/`. Portable callable-to-runtime
+procedure binding remains outside `rxbin`, as required, but is now materialized
+once in a VM-owned dense table for each semantic generation. Bound
+factory/provider rows, a two-way method-site cache, and factory
+bucket/direct-target site caches complete the selected sealed-image hot shape.
+Evidence is retained under `evidence/2026-07-16-nr-04a-bound-cache/`.
 
 ## Current language contract and deliberate future boundary
 
@@ -56,16 +70,17 @@ These surfaces do not justify an all-kind runtime index.
 
 ### Name/relationship-addressed and performance critical
 
-- `SRCMETHODSEL_REG_REG_STRING` receives a runtime object type-name string and a
-  member descriptor string. It binary-searches a sorted `(class, descriptor)`
-  registry, with a metadata-based fallback.
-- `SRCFPROCSEL_REG_STRING_REG` parses a descriptor string, binary-searches an
-  `(interface, factory)` provider bucket, checks signatures, invokes each
-  applicable user `match`, and selects by score/tie-break.
-- `ISTYPE` and `ASSERTTYPE` normalize a target string, identify class versus
-  interface, and test a class-to-interface relationship. The current focused
-  benchmark can issue 100,001 relationship misses and still examine 24
-  `META_IMPLEMENTS` records per query after generic kind indexing.
+- `SRCMETHODSEL_REG_REG_STRING` now receives a numeric member ID, reads the
+  receiver's `RxGraphTypeRef`, obtains a dense callable ID, and indexes a
+  VM-owned bound-target table. Its two-way instruction-site cache avoids even
+  that fallback for repeated receiver types.
+- `SRCFPROCSEL_REG_STRING_REG` now receives a numeric factory ID and caches the
+  VM-bound provider bucket. A single-provider/no-match bucket returns a direct
+  bound target; other buckets still invoke each required user `match` and
+  select by score/tie-break.
+- `ISTYPE` and successful `ASSERTTYPE` use descriptor identity or a precomputed
+  assignability bit. Name normalization and relationship traversal are cold
+  cross-graph/diagnostic fallbacks.
 - RXVML duplicates callable, signature, class-discovery, and implements
   queries rather than consuming one shared runtime semantic service.
 - Profiling classifies callables from the same semantic metadata, but this is
@@ -74,11 +89,14 @@ These surfaces do not justify an all-kind runtime index.
 
 ### Work already repeated across the linker and VM
 
-`rxlink` already discovers interfaces, implementations, members, callable
+`rxlink` discovers interfaces, implementations, members, callable
 symbols, factory/match functions, and signature compatibility while validating
-the selected linked image. After load, `rxvm_link()` rebuilds method and factory
-registries by walking the same relationships again. Late-loaded and native
-modules mark both registries dirty and currently cause complete rebuilds.
+the selected linked image. After load, `rxvm_link()` builds one process-bound
+callable view per graph and process-wide factory buckets that include compatible
+providers from every loaded graph. Late-loaded and native modules cause a
+complete coherent binding/legacy-registry rebuild and semantic-generation
+increment. An append-only incremental overlay is an optional future optimization,
+not a correctness or NR-04A completion dependency.
 
 ## Logical runtime model
 
@@ -280,7 +298,16 @@ Existing evidence already establishes:
 - candidate C still examined 2,400,024 `META_IMPLEMENTS` entries for 100,001
   negative relationship queries, so it does not measure the direct-map ceiling.
 
-The next bounded measurements select physical encodings within T6:
+The selected sealed-image runtime shape has now passed its bounded gate. The
+production descriptor/dispatch/factory primitives measure approximately
+control cost, final `SRCMETHODSEL`/`SRCFPROCSEL` attribution is about 14 ns per
+instruction, and the exact focused `rxvm` process is 70.54-76.05% faster than
+006. The operand audit also found and drove correction of a short/canonical
+factory-type remap that had forced every measured factory site through the
+legacy resolver. Detailed evidence is in
+`evidence/2026-07-16-nr-04a-bound-cache/`.
+
+The following are optional future refinements outside completed NR-04A:
 
 1. T2 relationship/type directory: direct TypeId plus assignability membership
    on the existing focused exact image; compare positive and negative tests.
@@ -295,19 +322,21 @@ The next bounded measurements select physical encodings within T6:
 5. Late-load overlay: cold update cost, affected rows, generation invalidations,
    first post-load miss, and steady state after refill.
 
-Only after these micro/structural cells discriminate the T6 sub-encodings
-should the selected implementation run the full canonical portfolio and both
-VM modes.
+The isolated/runtime and both-VM focused cells discriminate the sealed hot
+shape, and complete-section compression is selected and measured. NR-04A does
+not carry these optional refinements or additional platform/portfolio sweeps as
+unfinished closeout work.
 
 ## Decisions recorded for production implementation
 
 1. RXAS and RXLINK move atomically to RXBIN 007; all consumers move with them,
    reject 006, and rebuild their artifacts.
-2. Type, member, and factory instruction operands become graph IDs; object
-   values carry a runtime type ID.
+2. Type, member, and factory instruction operands are graph IDs; object values
+   carry one immutable runtime type-descriptor pointer.
 3. Per-instruction-site caches use a VM-owned side table, not mutable serialized
    instructions.
-4. Linked images are sealed seeds with an append-only open-world overlay.
+4. Linked images are sealed seeds with a generation-rebuilt process view for
+   open-world additions; an append-only overlay is a future optimization.
 5. Class-inherits-class and interface-extends-interface edges are representable.
    Their semantics remain a separate language decision.
 6. Canonical type text is retained once on a graph node; signatures and graph
@@ -315,6 +344,7 @@ VM modes.
    special nodes.
 7. The common graph builder/query/codec is a compiled binutils library shared by
    RXAS, RXLINK, the VM, and tools. It is structural and policy-neutral.
-8. NR-04A retains comparator evidence and now proceeds through bounded 007,
-   graph-layout, resolved-view, numeric-operand/cache, and overlay measurements
-   before production closeout.
+8. NR-04A retains comparator evidence. The resolved-view, sealed numeric
+   operand/cache, cross-image provider, complete-section compression, and broad
+   Debug gates pass. Compact graph scope and an append-only overlay are optional
+   future refinements.

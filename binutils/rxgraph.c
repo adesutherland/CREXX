@@ -164,6 +164,13 @@ struct RxGraph {
     RxGraphDispatchIndex *dispatch_index;
     RxGraphFactoryIndex *factory_index;
     RxGraphProviderIndex *provider_index;
+    uint64_t *assignability_view;
+    uint32_t assignability_word_count;
+    uint32_t *dispatch_view;
+    uint32_t *factory_view;
+    uint32_t *provider_first_by_factory;
+    uint32_t *provider_count_by_factory;
+    RxGraphTypeRef *runtime_types;
 };
 
 struct RxGraphBuilder {
@@ -358,6 +365,12 @@ static void rx_graph_destroy(RxGraph *graph) {
     free(graph->dispatch_index);
     free(graph->factory_index);
     free(graph->provider_index);
+    free(graph->assignability_view);
+    free(graph->dispatch_view);
+    free(graph->factory_view);
+    free(graph->provider_first_by_factory);
+    free(graph->provider_count_by_factory);
+    free(graph->runtime_types);
     free(graph);
 }
 
@@ -1041,6 +1054,181 @@ static void rx_graph_sort_provider_index(RxGraph *graph) {
     }
 }
 
+static void rx_graph_free_runtime_views(RxGraph *graph) {
+    if (!graph) return;
+    free(graph->assignability_view);
+    free(graph->dispatch_view);
+    free(graph->factory_view);
+    free(graph->provider_first_by_factory);
+    free(graph->provider_count_by_factory);
+    free(graph->runtime_types);
+    graph->assignability_view = 0;
+    graph->assignability_word_count = 0u;
+    graph->dispatch_view = 0;
+    graph->factory_view = 0;
+    graph->provider_first_by_factory = 0;
+    graph->provider_count_by_factory = 0;
+    graph->runtime_types = 0;
+}
+
+static int rx_graph_size_multiply(size_t left,
+                                  size_t right,
+                                  size_t *result) {
+    if (!result || (left && right > SIZE_MAX / left)) return 0;
+    *result = left * right;
+    return 1;
+}
+
+/* C3 process-local view: the serialized graph remains portable while rxbin
+   owns the precomputed representation reached through the existing API. */
+static int rx_graph_build_runtime_views(RxGraph *graph) {
+    size_t type_words;
+    size_t dense_entries;
+    size_t allocation_bytes;
+    uint32_t i;
+
+    if (!graph) return 0;
+    rx_graph_free_runtime_views(graph);
+
+    if (graph->type_count) {
+        graph->assignability_word_count =
+            graph->type_count / 64u + (graph->type_count % 64u != 0u);
+        if (!rx_graph_size_multiply((size_t)graph->type_count,
+                                    graph->assignability_word_count,
+                                    &type_words) ||
+            !rx_graph_size_multiply(type_words,
+                                    sizeof(*graph->assignability_view),
+                                    &allocation_bytes)) goto error;
+        graph->assignability_view = (uint64_t *)calloc(1u, allocation_bytes);
+        graph->runtime_types = (RxGraphTypeRef *)calloc(
+            graph->type_count, sizeof(*graph->runtime_types));
+        if (!graph->assignability_view || !graph->runtime_types) goto error;
+        for (i = 0u; i < graph->type_count; i++) {
+            size_t row;
+            row = (size_t)i * graph->assignability_word_count;
+            graph->runtime_types[i].name =
+                rx_graph_string(graph, graph->types[i].name_offset);
+            graph->runtime_types[i].name_length = graph->types[i].name_length;
+            graph->runtime_types[i].graph = graph;
+            graph->runtime_types[i].id = i;
+            graph->runtime_types[i].assignability_words =
+                graph->assignability_view + row;
+            graph->runtime_types[i].assignability_word_count =
+                graph->assignability_word_count;
+            if (!graph->runtime_types[i].name) goto error;
+            graph->assignability_view[row + i / 64u] |=
+                UINT64_C(1) << (i & 63u);
+        }
+        for (i = 0u; i < graph->edge_count; i++) {
+            const RxGraphEdgeRecord *edge;
+            size_t row;
+            edge = &graph->edges[i];
+            if (edge->from >= graph->type_count || edge->to >= graph->type_count ||
+                edge->relation < RX_GRAPH_REL_IMPLEMENTS ||
+                edge->relation > RX_GRAPH_REL_TYPE_ALIAS) goto error;
+            row = (size_t)edge->from * graph->assignability_word_count;
+            graph->assignability_view[row + edge->to / 64u] |=
+                UINT64_C(1) << (edge->to & 63u);
+        }
+        for (i = 0u; i < graph->type_count; i++) {
+            size_t source;
+            size_t closure_row;
+            closure_row = (size_t)i * graph->assignability_word_count;
+            for (source = 0u; source < graph->type_count; source++) {
+                uint64_t *row;
+                uint32_t word;
+                row = graph->assignability_view +
+                      source * graph->assignability_word_count;
+                if (!(row[i / 64u] & (UINT64_C(1) << (i & 63u)))) continue;
+                for (word = 0u; word < graph->assignability_word_count; word++) {
+                    row[word] |= graph->assignability_view[closure_row + word];
+                }
+            }
+        }
+    }
+
+    if (!rx_graph_size_multiply((size_t)graph->type_count,
+                                graph->member_count,
+                                &dense_entries) ||
+        !rx_graph_size_multiply(dense_entries,
+                                sizeof(*graph->dispatch_view),
+                                &allocation_bytes)) goto error;
+    if (dense_entries) {
+        graph->dispatch_view = (uint32_t *)malloc(allocation_bytes);
+        graph->factory_view = (uint32_t *)malloc(allocation_bytes);
+        if (!graph->dispatch_view || !graph->factory_view) goto error;
+        memset(graph->dispatch_view, 0xff, allocation_bytes);
+        memset(graph->factory_view, 0xff, allocation_bytes);
+    }
+    for (i = 0u; i < graph->type_count; i++) {
+        graph->runtime_types[i].dispatch_row = graph->dispatch_view
+            ? graph->dispatch_view + (size_t)i * graph->member_count
+            : 0;
+        graph->runtime_types[i].dispatch_member_count = graph->member_count;
+    }
+    for (i = 0u; i < graph->dispatch_count; i++) {
+        const RxGraphDispatchIndex *entry;
+        size_t slot;
+        entry = &graph->dispatch_index[i];
+        if (entry->owner >= graph->type_count ||
+            entry->member >= graph->member_count ||
+            entry->callable >= graph->callable_count) goto error;
+        slot = (size_t)entry->owner * graph->member_count + entry->member;
+        if (graph->dispatch_view[slot] == RX_GRAPH_NONE) {
+            graph->dispatch_view[slot] = entry->callable;
+        }
+    }
+    for (i = 0u; i < graph->factory_count; i++) {
+        const RxGraphFactoryIndex *entry;
+        size_t slot;
+        entry = &graph->factory_index[i];
+        if (entry->interface_type >= graph->type_count ||
+            entry->member >= graph->member_count ||
+            entry->factory >= graph->factory_count) goto error;
+        slot = (size_t)entry->interface_type * graph->member_count + entry->member;
+        if (graph->factory_view[slot] == RX_GRAPH_NONE) {
+            graph->factory_view[slot] = entry->factory;
+        }
+    }
+
+    if (graph->factory_count) {
+        graph->provider_first_by_factory = (uint32_t *)malloc(
+            (size_t)graph->factory_count *
+            sizeof(*graph->provider_first_by_factory));
+        graph->provider_count_by_factory = (uint32_t *)calloc(
+            graph->factory_count,
+            sizeof(*graph->provider_count_by_factory));
+        if (!graph->provider_first_by_factory ||
+            !graph->provider_count_by_factory) goto error;
+        memset(graph->provider_first_by_factory,
+               0xff,
+               (size_t)graph->factory_count *
+                   sizeof(*graph->provider_first_by_factory));
+    }
+    for (i = 0u; i < graph->provider_count; i++) {
+        const RxGraphProviderIndex *entry;
+        uint32_t factory;
+        size_t slot;
+        entry = &graph->provider_index[i];
+        if (entry->interface_type >= graph->type_count ||
+            entry->factory_member >= graph->member_count ||
+            entry->provider >= graph->provider_count) goto error;
+        slot = (size_t)entry->interface_type * graph->member_count +
+               entry->factory_member;
+        factory = graph->factory_view[slot];
+        if (factory == RX_GRAPH_NONE || factory >= graph->factory_count) goto error;
+        if (!graph->provider_count_by_factory[factory]) {
+            graph->provider_first_by_factory[factory] = i;
+        }
+        graph->provider_count_by_factory[factory]++;
+    }
+    return 1;
+
+error:
+    rx_graph_free_runtime_views(graph);
+    return 0;
+}
+
 static int rx_graph_build_indices(RxGraph *graph) {
     uint32_t i;
 
@@ -1198,7 +1386,8 @@ RxGraph *rx_graph_builder_finish(RxGraphBuilder *builder) {
 
     if (!builder) return 0;
     graph = builder->graph;
-    if (builder->failed || !rx_graph_build_indices(graph)) {
+    if (builder->failed || !rx_graph_build_indices(graph) ||
+        !rx_graph_build_runtime_views(graph)) {
         rx_graph_builder_free(builder);
         return 0;
     }
@@ -1250,6 +1439,11 @@ size_t rx_graph_relationship_count(const RxGraph *graph) {
 
 size_t rx_graph_declaration_total(const RxGraph *graph) {
     return graph ? graph->declaration_count : 0u;
+}
+
+const RxGraphTypeRef *rx_graph_type_ref(const RxGraph *graph, RxGraphId type) {
+    if (!graph || type >= graph->type_count || !graph->runtime_types) return 0;
+    return &graph->runtime_types[type];
 }
 
 static RxGraphId rx_graph_find_hash(const RxGraph *graph,
@@ -1462,32 +1656,12 @@ int rx_graph_callable(const RxGraph *graph,
 RxFactoryId rx_graph_find_factory(const RxGraph *graph,
                                   RxGraphId interface_type,
                                   RxMemberId member) {
-    uint32_t left;
-    uint32_t right;
-
-    if (!graph || interface_type >= graph->type_count || member >= graph->member_count) {
+    if (!graph || interface_type >= graph->type_count ||
+        member >= graph->member_count || !graph->factory_view) {
         return RX_GRAPH_NONE;
     }
-    left = 0u;
-    right = graph->factory_count;
-    while (left < right) {
-        uint32_t mid;
-        const RxGraphFactoryIndex *entry;
-        mid = left + ((right - left) >> 1u);
-        entry = &graph->factory_index[mid];
-        if (entry->interface_type < interface_type ||
-            (entry->interface_type == interface_type && entry->member < member)) {
-            left = mid + 1u;
-        } else {
-            right = mid;
-        }
-    }
-    if (left < graph->factory_count &&
-        graph->factory_index[left].interface_type == interface_type &&
-        graph->factory_index[left].member == member) {
-        return graph->factory_index[left].factory;
-    }
-    return RX_GRAPH_NONE;
+    return graph->factory_view[
+        (size_t)interface_type * graph->member_count + member];
 }
 
 int rx_graph_factory(const RxGraph *graph,
@@ -1578,94 +1752,23 @@ int rx_graph_edge(const RxGraph *graph,
 int rx_graph_type_supports(const RxGraph *graph,
                            RxGraphId concrete_type,
                            RxGraphId target_type) {
-    unsigned char *seen;
-    RxGraphId *queue;
-    uint32_t head;
-    uint32_t tail;
-    int result;
+    const uint64_t *row;
 
     if (!graph || concrete_type >= graph->type_count ||
-        target_type >= graph->type_count) return 0;
-    if (concrete_type == target_type) return 1;
-    seen = (unsigned char *)calloc(graph->type_count, 1u);
-    queue = (RxGraphId *)malloc((size_t)graph->type_count * sizeof(*queue));
-    if (!seen || !queue) {
-        free(seen);
-        free(queue);
-        return 0;
-    }
-    head = 0u;
-    tail = 0u;
-    seen[concrete_type] = 1u;
-    queue[tail++] = concrete_type;
-    result = 0;
-    while (head < tail && !result) {
-        RxGraphId current;
-        RxGraphRelation relations[4];
-        size_t relation_index;
-
-        current = queue[head++];
-        relations[0] = RX_GRAPH_REL_IMPLEMENTS;
-        relations[1] = RX_GRAPH_REL_INHERITS_CLASS;
-        relations[2] = RX_GRAPH_REL_EXTENDS_INTERFACE;
-        relations[3] = RX_GRAPH_REL_TYPE_ALIAS;
-        for (relation_index = 0u; relation_index < 4u && !result; relation_index++) {
-            uint32_t first;
-            uint32_t count;
-            uint32_t i;
-            rx_graph_edge_range(graph,
-                                current,
-                                relations[relation_index],
-                                0,
-                                &first,
-                                &count);
-            for (i = 0u; i < count; i++) {
-                RxGraphId next;
-                next = graph->outgoing_index[first + i].other;
-                if (next == target_type) {
-                    result = 1;
-                    break;
-                }
-                if (!seen[next]) {
-                    seen[next] = 1u;
-                    queue[tail++] = next;
-                }
-            }
-        }
-    }
-    free(seen);
-    free(queue);
-    return result;
+        target_type >= graph->type_count || !graph->assignability_view) return 0;
+    row = graph->assignability_view +
+          (size_t)concrete_type * graph->assignability_word_count;
+    return (row[target_type / 64u] &
+            (UINT64_C(1) << (target_type & 63u))) != 0u;
 }
 
 RxCallableId rx_graph_dispatch(const RxGraph *graph,
                                RxGraphId concrete_type,
                                RxMemberId member) {
-    uint32_t left;
-    uint32_t right;
-
     if (!graph || concrete_type >= graph->type_count ||
-        member >= graph->member_count) return RX_GRAPH_NONE;
-    left = 0u;
-    right = graph->dispatch_count;
-    while (left < right) {
-        uint32_t mid;
-        const RxGraphDispatchIndex *entry;
-        mid = left + ((right - left) >> 1u);
-        entry = &graph->dispatch_index[mid];
-        if (entry->owner < concrete_type ||
-            (entry->owner == concrete_type && entry->member < member)) {
-            left = mid + 1u;
-        } else {
-            right = mid;
-        }
-    }
-    if (left < graph->dispatch_count &&
-        graph->dispatch_index[left].owner == concrete_type &&
-        graph->dispatch_index[left].member == member) {
-        return graph->dispatch_index[left].callable;
-    }
-    return RX_GRAPH_NONE;
+        member >= graph->member_count || !graph->dispatch_view) return RX_GRAPH_NONE;
+    return graph->dispatch_view[
+        (size_t)concrete_type * graph->member_count + member];
 }
 
 static void rx_graph_provider_range(const RxGraph *graph,
@@ -1673,36 +1776,16 @@ static void rx_graph_provider_range(const RxGraph *graph,
                                     RxMemberId factory_member,
                                     uint32_t *first,
                                     uint32_t *count) {
-    uint32_t left;
-    uint32_t right;
-    uint32_t start;
+    RxFactoryId factory;
 
     *first = 0u;
     *count = 0u;
-    if (!graph || !graph->provider_count) return;
-    left = 0u;
-    right = graph->provider_count;
-    while (left < right) {
-        uint32_t mid;
-        const RxGraphProviderIndex *entry;
-        mid = left + ((right - left) >> 1u);
-        entry = &graph->provider_index[mid];
-        if (entry->interface_type < interface_type ||
-            (entry->interface_type == interface_type &&
-             entry->factory_member < factory_member)) {
-            left = mid + 1u;
-        } else {
-            right = mid;
-        }
-    }
-    start = left;
-    while (left < graph->provider_count &&
-           graph->provider_index[left].interface_type == interface_type &&
-           graph->provider_index[left].factory_member == factory_member) {
-        left++;
-    }
-    *first = start;
-    *count = left - start;
+    factory = rx_graph_find_factory(graph, interface_type, factory_member);
+    if (factory == RX_GRAPH_NONE || factory >= graph->factory_count ||
+        !graph->provider_first_by_factory ||
+        !graph->provider_count_by_factory) return;
+    *count = graph->provider_count_by_factory[factory];
+    if (*count) *first = graph->provider_first_by_factory[factory];
 }
 
 size_t rx_graph_provider_bucket_size(const RxGraph *graph,
@@ -2266,6 +2349,11 @@ RxGraph *rx_graph_deserialize(const unsigned char *data,
         goto error;
     }
     if (!rx_graph_validate(graph, error_message)) goto error;
+    if (!rx_graph_build_runtime_views(graph)) {
+        rx_graph_set_error(error_message,
+                           "out of memory building semantic graph runtime views");
+        goto error;
+    }
     return graph;
 
 truncated:
@@ -2300,6 +2388,154 @@ static int rx_graph_serial_fact_size(const RxGraph *graph, size_t *size) {
     RX_GRAPH_ADD_SERIAL_BYTES(graph->provider_count, 28u);
 #undef RX_GRAPH_ADD_SERIAL_BYTES
     *size = result;
+    return 1;
+}
+
+static int rx_graph_serial_index_size(const RxGraph *graph, size_t *size) {
+    size_t result;
+    size_t extra;
+
+    if (!graph || !size) return 0;
+    result = 40u;
+#define RX_GRAPH_ADD_INDEX_BYTES(count_, width_) \
+    do { \
+        if ((size_t)(count_) > SIZE_MAX / (size_t)(width_)) return 0; \
+        extra = (size_t)(count_) * (size_t)(width_); \
+        if (result > SIZE_MAX - extra) return 0; \
+        result += extra; \
+    } while (0)
+    RX_GRAPH_ADD_INDEX_BYTES(graph->type_count, 12u);
+    RX_GRAPH_ADD_INDEX_BYTES(graph->member_count, 12u);
+    RX_GRAPH_ADD_INDEX_BYTES(graph->callable_count, 12u);
+    RX_GRAPH_ADD_INDEX_BYTES(graph->edge_count, 32u);
+    RX_GRAPH_ADD_INDEX_BYTES(graph->declaration_count, 12u);
+    RX_GRAPH_ADD_INDEX_BYTES(graph->dispatch_count, 12u);
+    RX_GRAPH_ADD_INDEX_BYTES(graph->factory_count, 12u);
+    RX_GRAPH_ADD_INDEX_BYTES(graph->provider_count, 12u);
+#undef RX_GRAPH_ADD_INDEX_BYTES
+    *size = result;
+    return 1;
+}
+
+static int rx_graph_storage_add(size_t *total, size_t count, size_t width) {
+    size_t bytes;
+
+    if (!total || (count && width > SIZE_MAX / count)) return 0;
+    bytes = count * width;
+    if (*total > SIZE_MAX - bytes) return 0;
+    *total += bytes;
+    return 1;
+}
+
+int rx_graph_storage_stats(const RxGraph *graph, RxGraphStorageStats *stats) {
+    size_t retained;
+    size_t allocations;
+    size_t string_offset;
+    size_t type_words;
+    size_t dense_entries;
+
+    if (!graph || !stats) return 0;
+    if (!rx_graph_size_multiply((size_t)graph->type_count,
+                                graph->assignability_word_count,
+                                &type_words) ||
+        !rx_graph_size_multiply((size_t)graph->type_count,
+                                graph->member_count,
+                                &dense_entries)) return 0;
+    memset(stats, 0, sizeof(*stats));
+    retained = sizeof(*graph);
+    allocations = 1u;
+#define RX_GRAPH_ADD_RETAINED(pointer_, capacity_) \
+    do { \
+        if (!rx_graph_storage_add(&retained, \
+                                  (size_t)(capacity_), \
+                                  sizeof(*(pointer_)))) return 0; \
+        if ((pointer_)) allocations++; \
+    } while (0)
+    RX_GRAPH_ADD_RETAINED(graph->strings, graph->string_capacity);
+    RX_GRAPH_ADD_RETAINED(graph->types, graph->type_capacity);
+    RX_GRAPH_ADD_RETAINED(graph->members, graph->member_capacity);
+    RX_GRAPH_ADD_RETAINED(graph->parameters, graph->parameter_capacity);
+    RX_GRAPH_ADD_RETAINED(graph->edges, graph->edge_capacity);
+    RX_GRAPH_ADD_RETAINED(graph->declarations, graph->declaration_capacity);
+    RX_GRAPH_ADD_RETAINED(graph->callables, graph->callable_capacity);
+    RX_GRAPH_ADD_RETAINED(graph->dispatches, graph->dispatch_capacity);
+    RX_GRAPH_ADD_RETAINED(graph->factories, graph->factory_capacity);
+    RX_GRAPH_ADD_RETAINED(graph->providers, graph->provider_capacity);
+    RX_GRAPH_ADD_RETAINED(graph->type_index, graph->type_count);
+    RX_GRAPH_ADD_RETAINED(graph->member_index, graph->member_count);
+    RX_GRAPH_ADD_RETAINED(graph->callable_index, graph->callable_count);
+    RX_GRAPH_ADD_RETAINED(graph->outgoing_index, graph->edge_count);
+    RX_GRAPH_ADD_RETAINED(graph->incoming_index, graph->edge_count);
+    RX_GRAPH_ADD_RETAINED(graph->declaration_index, graph->declaration_count);
+    RX_GRAPH_ADD_RETAINED(graph->dispatch_index, graph->dispatch_count);
+    RX_GRAPH_ADD_RETAINED(graph->factory_index, graph->factory_count);
+    RX_GRAPH_ADD_RETAINED(graph->provider_index, graph->provider_count);
+    RX_GRAPH_ADD_RETAINED(graph->assignability_view, type_words);
+    RX_GRAPH_ADD_RETAINED(graph->dispatch_view, dense_entries);
+    RX_GRAPH_ADD_RETAINED(graph->factory_view, dense_entries);
+    RX_GRAPH_ADD_RETAINED(graph->provider_first_by_factory,
+                          graph->factory_count);
+    RX_GRAPH_ADD_RETAINED(graph->provider_count_by_factory,
+                          graph->factory_count);
+    RX_GRAPH_ADD_RETAINED(graph->runtime_types, graph->type_count);
+#undef RX_GRAPH_ADD_RETAINED
+    if (!rx_graph_serial_fact_size(graph, &stats->serialized_facts_bytes) ||
+        !rx_graph_serial_index_size(graph, &stats->serialized_indexes_bytes)) {
+        return 0;
+    }
+    stats->retained_bytes = retained;
+    stats->retained_allocations = allocations;
+    stats->string_bytes = graph->string_size;
+    string_offset = 0u;
+    while (string_offset < graph->string_size) {
+        const char *text;
+        const char *terminator;
+        size_t length;
+        size_t previous_offset;
+        int duplicate;
+
+        text = graph->strings + string_offset;
+        terminator = (const char *)memchr(text,
+                                         0,
+                                         graph->string_size - string_offset);
+        if (!terminator) return 0;
+        length = (size_t)(terminator - text) + 1u;
+        stats->string_count++;
+        duplicate = 0;
+        previous_offset = 0u;
+        while (previous_offset < string_offset) {
+            const char *previous;
+            const char *previous_terminator;
+            size_t previous_length;
+            previous = graph->strings + previous_offset;
+            previous_terminator = (const char *)memchr(
+                previous, 0, string_offset - previous_offset);
+            if (!previous_terminator) return 0;
+            previous_length = (size_t)(previous_terminator - previous) + 1u;
+            if (previous_length == length &&
+                memcmp(previous, text, length) == 0) {
+                duplicate = 1;
+                break;
+            }
+            previous_offset += previous_length;
+        }
+        if (!duplicate) {
+            stats->unique_string_count++;
+            if (!rx_graph_storage_add(&stats->unique_string_bytes, length, 1u)) {
+                return 0;
+            }
+        }
+        string_offset += length;
+    }
+    stats->type_count = graph->type_count;
+    stats->member_count = graph->member_count;
+    stats->parameter_count = graph->parameter_count;
+    stats->relationship_count = graph->edge_count;
+    stats->declaration_count = graph->declaration_count;
+    stats->callable_count = graph->callable_count;
+    stats->dispatch_count = graph->dispatch_count;
+    stats->factory_count = graph->factory_count;
+    stats->provider_count = graph->provider_count;
     return 1;
 }
 
@@ -3356,6 +3592,12 @@ static char *rx_graph_crexx_provider_symbol(const char *class_name,
 }
 
 static const char *rx_graph_descriptor_args(const char *descriptor);
+static RxFactoryId rx_graph_crexx_find_factory_signature(
+        const RxGraph *graph,
+        RxGraphId interface_type,
+        const char *member_name,
+        const rx_callable_signature *signature,
+        int require_provider);
 
 static const char *rx_graph_crexx_instruction_text(const module_file *module,
                                                    size_t offset) {
@@ -3408,6 +3650,7 @@ static int rx_graph_crexx_add_instruction_operand(RxGraphBuilder *builder,
         const char *member_name;
         char *interface_name;
         RxGraphId interface_type;
+        RxFactoryId existing_factory;
         RxMemberId member;
         int ok;
 
@@ -3423,6 +3666,18 @@ static int rx_graph_crexx_add_instruction_operand(RxGraphBuilder *builder,
                                         RX_GRAPH_TYPE_OPAQUE,
                                         0u)
             : RX_GRAPH_NONE;
+        existing_factory = interface_type != RX_GRAPH_NONE
+            ? rx_graph_crexx_find_factory_signature(builder->graph,
+                                                    interface_type,
+                                                    member_name,
+                                                    &signature,
+                                                    0)
+            : RX_GRAPH_NONE;
+        if (existing_factory != RX_GRAPH_NONE) {
+            free(interface_name);
+            rx_sig_free(&signature);
+            return 1;
+        }
         member = rx_graph_builder_add_member(builder,
                                              member_name,
                                              signature.return_type,
@@ -3534,6 +3789,53 @@ static int rx_graph_crexx_type_spelling_matches(const RxGraph *graph,
     }
     free(normalized);
     return matches;
+}
+
+static RxFactoryId rx_graph_crexx_find_factory_signature(
+        const RxGraph *graph,
+        RxGraphId interface_type,
+        const char *member_name,
+        const rx_callable_signature *signature,
+        int require_provider) {
+    RxFactoryId factory;
+
+    if (!graph || interface_type >= graph->type_count || !member_name ||
+        !signature) return RX_GRAPH_NONE;
+    for (factory = 0u; factory < graph->factory_count; factory++) {
+        const RxGraphFactoryRecord *factory_record;
+        const RxGraphMemberRecord *member_record;
+        const char *candidate_name;
+        const char *candidate_descriptor;
+        rx_callable_signature candidate;
+        int matches;
+
+        factory_record = &graph->factories[factory];
+        if (factory_record->interface_type != interface_type ||
+            factory_record->member >= graph->member_count) continue;
+        member_record = &graph->members[factory_record->member];
+        candidate_name = rx_graph_string(graph, member_record->name_offset);
+        candidate_descriptor = rx_graph_string(graph,
+                                               member_record->descriptor_offset);
+        if (!candidate_name || strcmp(candidate_name, member_name) != 0 ||
+            !candidate_descriptor ||
+            !rx_sig_parse_descriptor(candidate_descriptor, &candidate)) continue;
+        matches = rx_sig_args_match(&candidate, signature) &&
+                  (strcmp(candidate.return_type, signature->return_type) == 0 ||
+                   rx_graph_crexx_type_spelling_matches(graph,
+                                                        signature->return_type,
+                                                        interface_type) ||
+                   rx_graph_crexx_type_spelling_matches(graph,
+                                                        signature->return_type,
+                                                        member_record->return_type));
+        rx_sig_free(&candidate);
+        if (!matches) continue;
+        if (require_provider &&
+            rx_graph_provider_bucket_size(graph,
+                                          interface_type,
+                                          factory_record->member) == 0u) continue;
+        return factory;
+    }
+    return RX_GRAPH_NONE;
 }
 
 static int rx_graph_crexx_factory_signature_matches(const RxGraph *graph,
@@ -3791,12 +4093,9 @@ int rx_graph_resolve_operand(const RxGraph *graph,
     } else {
         rx_callable_signature signature;
         const char *separator;
-        const char *args;
         char *interface_name;
-        char *member_descriptor;
         const char *member_name;
         RxGraphId interface_type;
-        RxMemberId member;
 
         if (!rx_sig_parse_descriptor(text, &signature)) {
             rx_graph_set_error(error_message, "factory operand has an invalid descriptor");
@@ -3813,19 +4112,23 @@ int rx_graph_resolve_operand(const RxGraph *graph,
             ? rx_graph_strdup_range(signature.name,
                                     (size_t)(separator - signature.name))
             : rx_graph_strdup(signature.name);
-        args = rx_graph_descriptor_args(text);
-        member_descriptor = rx_sig_build_descriptor(member_name,
-                                                    signature.return_type,
-                                                    args ? args : "");
         interface_type = interface_name
             ? rx_graph_find_type(graph, interface_name) : RX_GRAPH_NONE;
-        member = member_descriptor
-            ? rx_graph_find_member(graph, member_descriptor) : RX_GRAPH_NONE;
-        if (interface_type != RX_GRAPH_NONE && member != RX_GRAPH_NONE) {
-            *id = rx_graph_find_factory(graph, interface_type, member);
+        if (interface_type != RX_GRAPH_NONE) {
+            *id = rx_graph_crexx_find_factory_signature(graph,
+                                                        interface_type,
+                                                        member_name,
+                                                        &signature,
+                                                        1);
+            if (*id == RX_GRAPH_NONE) {
+                *id = rx_graph_crexx_find_factory_signature(graph,
+                                                            interface_type,
+                                                            member_name,
+                                                            &signature,
+                                                            0);
+            }
         }
         free(interface_name);
-        free(member_descriptor);
         rx_sig_free(&signature);
     }
     if (*id == RX_GRAPH_NONE) {

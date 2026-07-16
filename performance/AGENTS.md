@@ -70,6 +70,44 @@ and cannot silently replace the canonical score.
 
 ## Implementation gates
 
+### Mandatory first Release verdict after a production performance edit
+
+This is a hard sequencing gate, not a late closeout check. A selected
+production implementation remains provisional and revertable until this gate
+is reviewed:
+
+1. Run only the minimum focused build and correctness checks needed to show the
+   changed path is safe and correct enough to benchmark. Do not wait for full
+   Debug CTest, sanitizer, install/package proof, cross-platform work, polished
+   documentation, or loose-end cleanup.
+2. Immediately freeze implementation work and build the ordinary,
+   profiling-off Release product.
+3. Run the smallest decisive end-to-end Release performance cells against
+   already-retained valid baseline evidence. Audit and reuse the baseline; do
+   not rerun it unless it is invalid or a bounded drift control is genuinely
+   required.
+4. Report the Release verdict to Adrian and stop for direction. Until Adrian
+   accepts the result or selects the next design step, do not continue with
+   representation tuning, harness improvements, follow-on PoCs, caches,
+   overlays, broad portfolio/validation sweeps, documentation polish, or other
+   completion work.
+5. If the result is neutral, negative, materially noisy, or exposes an
+   unrelated regression, treat rework or revert as live outcomes. Do not spend
+   further time completing an implementation whose design has not survived its
+   first Release performance gate.
+
+### Approved closeout path
+
+After Adrian accepts the Release verdict, keep closeout to the shortest path
+needed for the agreed scope: remove disposable PoCs and obsolete production
+code, rebuild the affected product, run focused checks plus the required broad
+CTest, retain the decisive benchmark evidence, update the live roadmap, review
+the diff, and commit when requested. Do not automatically add another 006
+audit, rerun valid baselines, expand the benchmark portfolio, repeat isolated
+harness measurements, rewrite historical reports, or add sanitizer,
+cross-platform, install/package, alternate-layout, or overlay work unless the
+selected scope, a failure, or Adrian explicitly requires it.
+
 - Prefer a minimal reproducer and dynamic-count/profile evidence before
   changing a hot path.
 - Before the first production-code performance edit for an activity, add an
@@ -83,6 +121,14 @@ and cannot silently replace the canonical score.
   teardown, late-load/plugin behavior, both VM modes, and effects on unrelated
   hot paths. A functionally complete first candidate is still a prototype until
   this comparison is retained.
+- Define the machine-level ceiling for every new hot primitive before
+  integration. If the intended operation is pointer/ID equality, a precomputed
+  bit test, or a direct bound-target load, build and measure that exact inline
+  control in the isolated harness. Allocation, graph traversal, name lookup,
+  portable-reference binding or a search on the success path fails the design
+  gate even when it improves substantially over the old implementation. Prove
+  the primitive at control cost first, then measure the integrated opcode and
+  finally the end-to-end workload.
 - Any new runtime cache, index, allocation, or preparation pass must explicitly
   compare eager, lazy/on-demand, and narrower purpose-built forms where they are
   plausible. Record ownership, invalidation/rebuild, failure, and cross-platform

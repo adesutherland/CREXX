@@ -75,11 +75,25 @@ rexxcps = "2.2c" /* REXXCPS cREXX port version */
 count = 100       /* Repetition count */
 averaging = 100   /* Averaging-over count */
 
-/* Optional cREXX smoke/regression overrides; omit them for the standard run. */
-if argv[0] >= 1 then count = argv[1]
-if argv[0] >= 2 then averaging = argv[2]
+/*
+ * The canonical baseline has no arguments. CTest may request a deliberately
+ * noncanonical short smoke run, but positional count overrides are rejected so
+ * a wrapper cannot silently turn a baseline into a smoke result.
+ */
+contract = "canonical-default"
+if argv[0] <> 0 then do
+  if argv[0] <> 2 then
+    return fail("use no arguments for the canonical run or --smoke-count COUNT")
+  if argv[1] <> "--smoke-count" then
+    return fail("unknown argument; use --smoke-count COUNT only for smoke tests")
+  if verify(argv[2], "0123456789") <> 0 then
+    return fail("--smoke-count must be a positive integer")
+  count = argv[2]
+  contract = "noncanonical-smoke"
+end
 if count < 1 then return fail("count must be positive")
-if averaging < 1 then return fail("averaging must be positive")
+initial_count = count
+calibrated = 0
 
 tracevar = "Off" /* Trace setting (for development and clause auditing). */
 
@@ -89,6 +103,12 @@ system = word(version_info, 1)
 say "----- REXXCPS" rexxcps "-- Measuring cREXX clauses/second -----"
 say " cREXX version is:" version_info
 say "       System is:" system
+say "REXXCPS-PROVENANCE contract=" || contract ,
+    "argv_count=" || argv[0] ,
+    "initial_count=" || initial_count ,
+    "averaging=" || averaging
+if count < 100 then
+  say "NONCANONICAL: RexxCPS smoke count is below the canonical minimum of 100"
 
 /* Level B makes the backing objects for Classic compound variables explicit. */
 acompound = .stem()
@@ -174,10 +194,16 @@ do trial = 1 to 2
   /* Bump count so the second run should take about one second. */
   if total = 0 then count = count * 100
   else count = (trunc(1 / total) + 1) * count
+  calibrated = 1
 end
 
 /* Show the counts. */
 say "        Averaged:" count "x" averaging "iterations of 1000 clauses (over" format(total, , 1) "s)"
+say "REXXCPS-EFFECTIVE contract=" || contract ,
+    "initial_count=" || initial_count ,
+    "effective_count=" || count ,
+    "averaging=" || averaging ,
+    "calibrated=" || calibrated
 
 /* Now display the statistics. */
 innertime = total / averaging - empty

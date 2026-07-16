@@ -41,6 +41,54 @@ typedef uint32_t RxCallableId;
 typedef uint32_t RxFactoryId;
 typedef uint32_t RxProviderId;
 
+struct RxGraph;
+
+/* Stable process-local type identity. The serialized graph contains only the
+   portable ID and text; rxbin materializes this descriptor after validation. */
+typedef struct RxGraphTypeRef {
+    const char *name;
+    size_t name_length;
+    const struct RxGraph *graph;
+    const uint64_t *assignability_words;
+    const uint32_t *dispatch_row;
+    RxGraphId id;
+    uint32_t assignability_word_count;
+    uint32_t dispatch_member_count;
+} RxGraphTypeRef;
+
+#if defined(_MSC_VER)
+#define RX_GRAPH_HOT_INLINE static __forceinline
+#elif defined(__GNUC__) || defined(__clang__)
+#define RX_GRAPH_HOT_INLINE static inline __attribute__((always_inline))
+#else
+#define RX_GRAPH_HOT_INLINE static inline
+#endif
+
+RX_GRAPH_HOT_INLINE int rx_graph_type_ref_supports(
+        const RxGraphTypeRef *concrete_type,
+        const RxGraphTypeRef *target_type) {
+    uint32_t word;
+
+    if (!concrete_type || !target_type) return 0;
+    if (concrete_type == target_type) return 1;
+    if (!concrete_type->graph || concrete_type->graph != target_type->graph ||
+        !concrete_type->assignability_words) return 0;
+    word = target_type->id / 64u;
+    if (word >= concrete_type->assignability_word_count) return 0;
+    return (concrete_type->assignability_words[word] &
+            (UINT64_C(1) << (target_type->id & 63u))) != 0u;
+}
+
+RX_GRAPH_HOT_INLINE RxCallableId rx_graph_type_ref_dispatch(
+        const RxGraphTypeRef *concrete_type,
+        RxMemberId member) {
+    if (!concrete_type || !concrete_type->dispatch_row ||
+        member >= concrete_type->dispatch_member_count) return RX_GRAPH_NONE;
+    return concrete_type->dispatch_row[member];
+}
+
+#undef RX_GRAPH_HOT_INLINE
+
 typedef enum RxGraphTypeKind {
     RX_GRAPH_TYPE_OPAQUE = 0,
     RX_GRAPH_TYPE_BUILTIN = 1,
@@ -138,6 +186,26 @@ typedef struct RxGraphFactoryView {
     uint32_t flags;
 } RxGraphFactoryView;
 
+typedef struct RxGraphStorageStats {
+    size_t retained_bytes;
+    size_t retained_allocations;
+    size_t serialized_facts_bytes;
+    size_t serialized_indexes_bytes;
+    size_t string_bytes;
+    size_t string_count;
+    size_t unique_string_bytes;
+    size_t unique_string_count;
+    size_t type_count;
+    size_t member_count;
+    size_t parameter_count;
+    size_t relationship_count;
+    size_t declaration_count;
+    size_t callable_count;
+    size_t dispatch_count;
+    size_t factory_count;
+    size_t provider_count;
+} RxGraphStorageStats;
+
 typedef struct RxGraph RxGraph;
 typedef struct RxGraphBuilder RxGraphBuilder;
 struct module_file;
@@ -209,6 +277,8 @@ size_t rx_graph_factory_count(const RxGraph *graph);
 size_t rx_graph_provider_count(const RxGraph *graph);
 size_t rx_graph_relationship_count(const RxGraph *graph);
 size_t rx_graph_declaration_total(const RxGraph *graph);
+int rx_graph_storage_stats(const RxGraph *graph, RxGraphStorageStats *stats);
+const RxGraphTypeRef *rx_graph_type_ref(const RxGraph *graph, RxGraphId type);
 
 RxGraphId rx_graph_find_type(const RxGraph *graph, const char *name);
 const char *rx_graph_type_name(const RxGraph *graph, RxGraphId type);

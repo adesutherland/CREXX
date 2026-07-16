@@ -1288,6 +1288,16 @@ static char *runtime_internal_type_to_source_name(const char *type_name, size_t 
     return source_name;
 }
 
+static const char *runtime_value_type_name(const value *object_value,
+                                           size_t *type_name_length) {
+    if (type_name_length) *type_name_length = 0u;
+    if (!object_value || !object_value->object_type) return 0;
+    if (type_name_length) {
+        *type_name_length = object_value->object_type->name_length;
+    }
+    return object_value->object_type->name;
+}
+
 typedef enum runtime_contract_kind {
     RUNTIME_CONTRACT_UNKNOWN = 0,
     RUNTIME_CONTRACT_CLASS,
@@ -1375,6 +1385,8 @@ static int runtime_value_matches_object_type(rxvm_context *context,
                                              const char *type_name,
                                              size_t type_name_length) {
     char *normalized_type_name;
+    const char *object_type_name;
+    size_t object_type_name_length;
     runtime_contract_kind kind;
     int matches;
 
@@ -1388,7 +1400,7 @@ static int runtime_value_matches_object_type(rxvm_context *context,
 
     if (runtime_type_name_is_object_contract(normalized_type_name, strlen(normalized_type_name))) {
         free(normalized_type_name);
-        return object_value->object_type_name && object_value->object_type_name_length > 0;
+        return object_value->object_type != 0;
     }
 
     if (runtime_type_name_is_builtin(normalized_type_name, strlen(normalized_type_name))) {
@@ -1397,18 +1409,20 @@ static int runtime_value_matches_object_type(rxvm_context *context,
     }
 
     matches = 0;
-    if (object_value->object_type_name && object_value->object_type_name_length > 0) {
+    object_type_name = runtime_value_type_name(object_value,
+                                               &object_type_name_length);
+    if (object_type_name && object_type_name_length > 0) {
         kind = runtime_lookup_contract_kind(context, normalized_type_name, strlen(normalized_type_name));
         if (kind == RUNTIME_CONTRACT_INTERFACE) {
             matches = runtime_class_implements_interface(context,
-                                                         object_value->object_type_name,
-                                                         object_value->object_type_name_length,
+                                                         object_type_name,
+                                                         object_type_name_length,
                                                          normalized_type_name,
                                                          strlen(normalized_type_name));
         } else {
-            matches = (object_value->object_type_name_length == strlen(normalized_type_name) &&
-                       memcmp(object_value->object_type_name, normalized_type_name,
-                              object_value->object_type_name_length) == 0);
+            matches = (object_type_name_length == strlen(normalized_type_name) &&
+                       memcmp(object_type_name, normalized_type_name,
+                              object_type_name_length) == 0);
         }
     }
 
@@ -1423,13 +1437,17 @@ static char *build_runtime_cast_error(value *object_value,
     char *source_type_name;
     char *buffer;
     size_t buffer_length;
+    const char *object_type_name;
+    size_t object_type_name_length;
 
     target_source_name = runtime_internal_type_to_source_name(target_type_name, target_type_name_length);
     if (!target_source_name) return 0;
 
-    if (object_value && object_value->object_type_name && object_value->object_type_name_length > 0) {
-        source_type_name = runtime_internal_type_to_source_name(object_value->object_type_name,
-                                                                object_value->object_type_name_length);
+    object_type_name = runtime_value_type_name(object_value,
+                                               &object_type_name_length);
+    if (object_type_name && object_type_name_length > 0) {
+        source_type_name = runtime_internal_type_to_source_name(object_type_name,
+                                                                object_type_name_length);
     } else {
         source_type_name = strdup(".object");
     }
@@ -1453,10 +1471,14 @@ static char *build_runtime_uninitialized_object_error(value *object_value) {
     char *source_type_name;
     char *buffer;
     size_t buffer_length;
+    const char *object_type_name;
+    size_t object_type_name_length;
 
-    if (object_value && object_value->object_type_name && object_value->object_type_name_length > 0) {
-        source_type_name = runtime_internal_type_to_source_name(object_value->object_type_name,
-                                                                object_value->object_type_name_length);
+    object_type_name = runtime_value_type_name(object_value,
+                                               &object_type_name_length);
+    if (object_type_name && object_type_name_length > 0) {
+        source_type_name = runtime_internal_type_to_source_name(object_type_name,
+                                                                object_type_name_length);
     } else {
         source_type_name = strdup(".object");
     }
@@ -2694,9 +2716,9 @@ static RxGraph *runtime_module_graph(module *mod) {
     return mod && mod->file ? mod->file->semantic_graph : 0;
 }
 
-static proc_runtime *runtime_graph_procedure(rxvm_context *context,
-                                             const RxGraph *graph,
-                                             RxCallableId callable) {
+static proc_runtime *runtime_graph_procedure_unbound(rxvm_context *context,
+                                                     const RxGraph *graph,
+                                                     RxCallableId callable) {
     RxGraphCallableView view;
     size_t module_index;
 
@@ -2719,28 +2741,374 @@ static proc_runtime *runtime_graph_procedure(rxvm_context *context,
     return 0;
 }
 
-static proc_runtime *resolve_runtime_graph_method(rxvm_context *context,
+static int runtime_graph_factory_entry_matches(
+        rxvm_context *context,
+        const rx_callable_signature *expected_signature,
+        const char *interface_name,
+        size_t interface_name_length,
+        const rxvm_interface_factory_entry *entry) {
+    if (!context || !expected_signature || !interface_name ||
+        !interface_name_length || !entry ||
+        !rx_sig_args_match(expected_signature, &entry->signature)) return 0;
+    if (expected_signature->return_type && entry->signature.return_type &&
+        strcmp(expected_signature->return_type,
+               entry->signature.return_type) == 0) return 1;
+    if (runtime_signature_type_assignable(context,
+                                          entry->signature.return_type,
+                                          expected_signature->return_type)) return 1;
+    return runtime_type_matches_contract_name(expected_signature->return_type,
+                                              interface_name,
+                                              interface_name_length) &&
+           runtime_type_matches_contract_name(entry->signature.return_type,
+                                              interface_name,
+                                              interface_name_length);
+}
+
+static size_t rxvm_bind_graph_factory(
+        rxvm_context *context,
+        rxvm_graph_binding *binding,
+        RxFactoryId factory,
+        rxvm_graph_provider_binding *providers,
+        size_t provider_capacity) {
+    RxGraphFactoryView factory_view;
+    RxGraphMemberView member_view;
+    rxvm_graph_factory_binding *factory_binding;
+    rx_callable_signature expected_signature;
+    const char *interface_name;
+    size_t interface_name_length;
+    size_t bucket_start;
+    size_t bucket_end;
+    size_t entry_index;
+    size_t provider_count;
+
+    if (!context || !binding || factory >= binding->factory_count ||
+        !binding->factory_bindings ||
+        !rx_graph_factory(binding->graph, factory, &factory_view) ||
+        !rx_graph_member(binding->graph, factory_view.member, &member_view)) {
+        return 0u;
+    }
+    factory_binding = &binding->factory_bindings[factory];
+    interface_name = rx_graph_type_name(binding->graph,
+                                        factory_view.interface_type);
+    if (!interface_name || !member_view.name || !member_view.descriptor) return 0u;
+    interface_name_length = strlen(interface_name);
+    factory_binding->interface_name = interface_name;
+    factory_binding->member_name = member_view.name;
+
+    if (!rx_sig_parse_descriptor(member_view.descriptor,
+                                 &expected_signature)) return 0u;
+    bucket_start = 0u;
+    bucket_end = context->num_interface_factories;
+    while (bucket_start < bucket_end) {
+        size_t middle;
+        int comparison;
+
+        middle = bucket_start + (bucket_end - bucket_start) / 2u;
+        comparison = compare_runtime_interface_factory_key(
+            interface_name, interface_name_length,
+            member_view.name, strlen(member_view.name),
+            &context->interface_factories[middle]);
+        if (comparison > 0) bucket_start = middle + 1u;
+        else bucket_end = middle;
+    }
+
+    provider_count = 0u;
+    for (entry_index = bucket_start;
+         entry_index < context->num_interface_factories;
+         entry_index++) {
+        const rxvm_interface_factory_entry *entry;
+        rxvm_graph_provider_binding *provider;
+
+        entry = &context->interface_factories[entry_index];
+        if (compare_runtime_interface_factory_key(
+                interface_name, interface_name_length,
+                member_view.name, strlen(member_view.name), entry) != 0) break;
+        if (!runtime_graph_factory_entry_matches(context,
+                                                 &expected_signature,
+                                                 interface_name,
+                                                 interface_name_length,
+                                                 entry)) continue;
+        if (providers && provider_count < provider_capacity) {
+            provider = &providers[provider_count];
+            provider->class_name = entry->class_name;
+            provider->factory_target = entry->factory_proc;
+            provider->match_target = entry->match_proc;
+            provider->requires_match = entry->match_proc != 0;
+        }
+        provider_count++;
+    }
+    rx_sig_free(&expected_signature);
+
+    if (providers && provider_count <= provider_capacity) {
+        factory_binding->providers = provider_count ? providers : 0;
+        factory_binding->provider_count = provider_count;
+        if (provider_count == 1u && !providers[0].requires_match) {
+            factory_binding->direct_target = providers[0].factory_target;
+        }
+    }
+    return provider_count;
+}
+
+void rxvm_free_graph_bindings(rxvm_context *context) {
+    size_t binding_index;
+    size_t module_index;
+
+    if (!context) return;
+    for (module_index = 0u; module_index < context->num_modules; module_index++) {
+        if (context->modules[module_index]) {
+            context->modules[module_index]->graph_binding = 0;
+        }
+    }
+    for (binding_index = 0u;
+         binding_index < context->graph_binding_count;
+         binding_index++) {
+        rxvm_graph_binding *binding;
+        binding = context->graph_bindings[binding_index];
+        if (!binding) continue;
+        free(binding->callable_targets);
+        free(binding->factory_bindings);
+        free(binding->provider_bindings);
+        free(binding);
+    }
+    free(context->graph_bindings);
+    context->graph_bindings = 0;
+    context->graph_binding_count = 0u;
+    context->graph_binding_capacity = 0u;
+}
+
+void rxvm_rebuild_graph_bindings(rxvm_context *context) {
+    size_t module_index;
+    size_t binding_index;
+
+    if (!context) return;
+    rxvm_free_graph_bindings(context);
+    for (module_index = 0u; module_index < context->num_modules; module_index++) {
+        module *mod;
+        RxGraph *graph;
+        rxvm_graph_binding *binding;
+
+        mod = context->modules[module_index];
+        graph = runtime_module_graph(mod);
+        if (!graph) continue;
+        binding = 0;
+        for (binding_index = 0u;
+             binding_index < context->graph_binding_count;
+             binding_index++) {
+            if (context->graph_bindings[binding_index]->graph == graph) {
+                binding = context->graph_bindings[binding_index];
+                break;
+            }
+        }
+        if (!binding) {
+            size_t callable_count;
+            size_t factory_count;
+            if (context->graph_binding_count == context->graph_binding_capacity) {
+                size_t new_capacity;
+                rxvm_graph_binding **new_bindings;
+                new_capacity = context->graph_binding_capacity
+                    ? context->graph_binding_capacity * 2u : 4u;
+                if (new_capacity < context->graph_binding_count ||
+                    new_capacity > SIZE_MAX / sizeof(*new_bindings)) {
+                    RX_PANIC_OOM("size rxvm graph bindings", (size_t)-1, mod->name);
+                }
+                new_bindings = (rxvm_graph_binding **)realloc(
+                    context->graph_bindings,
+                    new_capacity * sizeof(*new_bindings));
+                if (!new_bindings) {
+                    RX_PANIC_OOM("realloc rxvm graph bindings",
+                                 new_capacity * sizeof(*new_bindings),
+                                 mod->name);
+                }
+                context->graph_bindings = new_bindings;
+                context->graph_binding_capacity = new_capacity;
+            }
+            binding = (rxvm_graph_binding *)calloc(1u, sizeof(*binding));
+            if (!binding) {
+                RX_PANIC_OOM("calloc rxvm graph binding", sizeof(*binding), mod->name);
+            }
+            callable_count = rx_graph_callable_count(graph);
+            factory_count = rx_graph_factory_count(graph);
+            binding->graph = graph;
+            binding->callable_count = callable_count;
+            binding->factory_count = factory_count;
+            if (callable_count) {
+                if (callable_count > SIZE_MAX / sizeof(*binding->callable_targets)) {
+                    RX_PANIC_OOM("size rxvm callable bindings", (size_t)-1, mod->name);
+                }
+                binding->callable_targets = (proc_runtime **)calloc(
+                    callable_count, sizeof(*binding->callable_targets));
+                if (!binding->callable_targets) {
+                    RX_PANIC_OOM("calloc rxvm callable bindings",
+                                 callable_count * sizeof(*binding->callable_targets),
+                                 mod->name);
+                }
+            }
+            if (factory_count) {
+                if (factory_count > SIZE_MAX / sizeof(*binding->factory_bindings)) {
+                    RX_PANIC_OOM("size rxvm factory bindings", (size_t)-1, mod->name);
+                }
+                binding->factory_bindings = (rxvm_graph_factory_binding *)calloc(
+                    factory_count, sizeof(*binding->factory_bindings));
+                if (!binding->factory_bindings) {
+                    RX_PANIC_OOM("calloc rxvm factory bindings",
+                                 factory_count * sizeof(*binding->factory_bindings),
+                                 mod->name);
+                }
+            }
+            context->graph_bindings[context->graph_binding_count++] = binding;
+        }
+        mod->graph_binding = binding;
+    }
+    for (binding_index = 0u;
+         binding_index < context->graph_binding_count;
+         binding_index++) {
+        rxvm_graph_binding *binding;
+        RxCallableId callable;
+        binding = context->graph_bindings[binding_index];
+        for (callable = 0u; callable < binding->callable_count; callable++) {
+            binding->callable_targets[callable] =
+                runtime_graph_procedure_unbound(context,
+                                                binding->graph,
+                                                callable);
+        }
+        if (binding->factory_count) {
+            size_t provider_offset;
+            RxFactoryId factory;
+
+            binding->provider_count = 0u;
+            for (factory = 0u; factory < binding->factory_count; factory++) {
+                size_t count;
+                count = rxvm_bind_graph_factory(context,
+                                                binding,
+                                                factory,
+                                                0,
+                                                0u);
+                if (count > SIZE_MAX - binding->provider_count) {
+                    RX_PANIC_OOM("size rxvm provider bindings", (size_t)-1, 0);
+                }
+                binding->provider_count += count;
+            }
+            if (binding->provider_count) {
+                if (binding->provider_count >
+                    SIZE_MAX / sizeof(*binding->provider_bindings)) {
+                    RX_PANIC_OOM("size rxvm provider bindings", (size_t)-1, 0);
+                }
+                binding->provider_bindings =
+                    (rxvm_graph_provider_binding *)calloc(
+                        binding->provider_count,
+                        sizeof(*binding->provider_bindings));
+                if (!binding->provider_bindings) {
+                    RX_PANIC_OOM("calloc rxvm provider bindings",
+                                 binding->provider_count *
+                                     sizeof(*binding->provider_bindings),
+                                 0);
+                }
+            }
+            provider_offset = 0u;
+            for (factory = 0u; factory < binding->factory_count; factory++) {
+                size_t count;
+                if (provider_offset > binding->provider_count) {
+                    RX_PANIC_OOM("validate rxvm provider bindings", (size_t)-1, 0);
+                }
+                count = rxvm_bind_graph_factory(
+                    context,
+                    binding,
+                    factory,
+                    binding->provider_bindings
+                        ? binding->provider_bindings + provider_offset : 0,
+                    binding->provider_count - provider_offset);
+                if (count > binding->provider_count - provider_offset) {
+                    RX_PANIC_OOM("validate rxvm provider bindings", (size_t)-1, 0);
+                }
+                provider_offset += count;
+            }
+        }
+    }
+    context->semantic_generation = context->semantic_generation == UINT64_MAX
+        ? 1u : context->semantic_generation + 1u;
+}
+
+static proc_runtime *resolve_runtime_graph_method(
+                                                  const rxvm_graph_binding *binding,
                                                   value *object_value,
                                                   RxMemberId member) {
-    const RxGraph *graph;
     RxCallableId callable;
 
-    if (!object_value || !object_value->object_type_graph ||
-        object_value->object_type_id == RX_GRAPH_NONE) return 0;
-    graph = object_value->object_type_graph;
-    callable = rx_graph_dispatch(graph, object_value->object_type_id, member);
-    return runtime_graph_procedure(context, graph, callable);
+    if (!object_value || !object_value->object_type ||
+        !object_value->object_type->graph) return 0;
+    if (!binding || binding->graph != object_value->object_type->graph) return 0;
+    callable = rx_graph_type_ref_dispatch(object_value->object_type, member);
+    return rxvm_bound_graph_callable(binding, callable);
+}
+
+RX_INLINE proc_runtime *resolve_runtime_graph_method_cached(
+        rxvm_context *context,
+        const rxvm_graph_binding *binding,
+        rxvm_dynamic_site_cache *cache,
+        value *object_value,
+        RxMemberId member) {
+    proc_runtime *target;
+    uint32_t way;
+
+    if (!cache) return resolve_runtime_graph_method(binding,
+                                                    object_value,
+                                                    member);
+    if (cache->generation != context->semantic_generation) {
+        memset(&cache->value, 0, sizeof(cache->value));
+        cache->generation = context->semantic_generation;
+    }
+    for (way = 0u; way < RXVM_METHOD_CACHE_WAYS; way++) {
+        if (cache->value.method.types[way] == object_value->object_type) {
+            return cache->value.method.targets[way];
+        }
+    }
+    target = resolve_runtime_graph_method(binding, object_value, member);
+    if (target) {
+        way = cache->value.method.next_way++ % RXVM_METHOD_CACHE_WAYS;
+        cache->value.method.types[way] = object_value->object_type;
+        cache->value.method.targets[way] = target;
+    }
+    return target;
+}
+
+static char *build_runtime_graph_factory_error(
+        const char *prefix,
+        const rxvm_graph_factory_binding *binding) {
+    const char *member_name;
+    size_t interface_length;
+    size_t member_length;
+    char *selector;
+    char *message;
+
+    if (!prefix || !binding || !binding->interface_name) return 0;
+    member_name = binding->member_name;
+    interface_length = strlen(binding->interface_name);
+    if (!member_name || strcmp(member_name, "*") == 0) {
+        return build_interface_factory_error(prefix,
+                                             binding->interface_name,
+                                             interface_length);
+    }
+    member_length = strlen(member_name);
+    if (interface_length > SIZE_MAX - member_length - 3u) return 0;
+    selector = (char *)malloc(interface_length + member_length + 3u);
+    if (!selector) return 0;
+    memcpy(selector, binding->interface_name, interface_length);
+    selector[interface_length] = '.';
+    selector[interface_length + 1u] = '.';
+    memcpy(selector + interface_length + 2u, member_name, member_length + 1u);
+    message = build_interface_factory_error(prefix,
+                                            selector,
+                                            interface_length + member_length + 2u);
+    free(selector);
+    return message;
 }
 
 static int resolve_runtime_graph_factory(rxvm_context *context,
-                                         const RxGraph *graph,
-                                         RxFactoryId factory,
+                                         const rxvm_graph_factory_binding *binding,
                                          rxinteger argc,
                                          value **args,
                                          proc_runtime **factory_out,
                                          char **error_out) {
-    RxGraphFactoryView factory_view;
-    size_t count;
     size_t position;
     proc_runtime *best_factory;
     rxinteger best_score;
@@ -2749,51 +3117,47 @@ static int resolve_runtime_graph_factory(rxvm_context *context,
 
     if (factory_out) *factory_out = 0;
     if (error_out) *error_out = 0;
-    if (!context || !graph || !factory_out ||
-        !rx_graph_factory(graph, factory, &factory_view)) return -1;
-    count = rx_graph_provider_bucket_size(graph,
-                                          factory_view.interface_type,
-                                          factory_view.member);
-    if (!count) return -1;
+    if (!context || !binding || !factory_out ||
+        !binding->provider_count) return -1;
     best_factory = 0;
     best_score = 0;
     best_class_name = 0;
     saw_positive_score = 0;
-    for (position = 0u; position < count; position++) {
-        RxGraphProviderView provider;
-        proc_runtime *factory_proc;
-        proc_runtime *match_proc;
+    for (position = 0u; position < binding->provider_count; position++) {
+        const rxvm_graph_provider_binding *provider;
         rxinteger score;
-        const char *class_name;
 
-        if (!rx_graph_provider(graph,
-                               factory_view.interface_type,
-                               factory_view.member,
-                               position,
-                               &provider)) continue;
-        factory_proc = runtime_graph_procedure(context, graph, provider.factory_callable);
-        if (!factory_proc) continue;
-        match_proc = runtime_graph_procedure(context, graph, provider.match_callable);
+        provider = &binding->providers[position];
+        if (!provider->factory_target) continue;
         score = 1;
-        if (provider.match_callable != RX_GRAPH_NONE &&
-            (!match_proc ||
-             !invoke_runtime_factory_match(context, match_proc, argc, args, &score))) {
-            if (error_out) *error_out = strdup("Failed to evaluate interface factory match");
+        if (provider->requires_match &&
+            (!provider->match_target ||
+             !invoke_runtime_factory_match(context,
+                                           provider->match_target,
+                                           argc,
+                                           args,
+                                           &score))) {
+            if (error_out) {
+                *error_out = build_runtime_graph_factory_error(
+                    "Failed to evaluate interface factory match for ", binding);
+            }
             return 0;
         }
         if (score <= 0) continue;
         saw_positive_score = 1;
-        class_name = rx_graph_type_name(graph, provider.class_type);
         if (!best_factory || score > best_score ||
-            (score == best_score && class_name && best_class_name &&
-             strcmp(class_name, best_class_name) < 0)) {
-            best_factory = factory_proc;
+            (score == best_score && provider->class_name && best_class_name &&
+             strcmp(provider->class_name, best_class_name) < 0)) {
+            best_factory = provider->factory_target;
             best_score = score;
-            best_class_name = class_name;
+            best_class_name = provider->class_name;
         }
     }
     if (!saw_positive_score || !best_factory) {
-        if (error_out) *error_out = strdup("No matching interface factory provider");
+        if (error_out) {
+            *error_out = build_runtime_graph_factory_error(
+                "No matching interface factory provider for ", binding);
+        }
         return 0;
     }
     *factory_out = best_factory;
@@ -2805,18 +3169,19 @@ static int runtime_value_matches_graph_type(rxvm_context *context,
                                             const RxGraph *target_graph,
                                             RxGraphId target_type) {
     const char *target_name;
+    const RxGraphTypeRef *target_type_ref;
 
     if (!object_value || !target_graph) return 0;
-    target_name = rx_graph_type_name(target_graph, target_type);
-    if (!target_name) return 0;
+    target_type_ref = rx_graph_type_ref(target_graph, target_type);
+    if (!target_type_ref) return 0;
+    target_name = target_type_ref->name;
     if (runtime_type_name_is_object_contract(target_name, strlen(target_name))) {
-        return object_value->object_type_name && object_value->object_type_name_length > 0;
+        return object_value->object_type != 0;
     }
-    if (object_value->object_type_graph == target_graph &&
-        object_value->object_type_id != RX_GRAPH_NONE) {
-        return rx_graph_type_supports(target_graph,
-                                      object_value->object_type_id,
-                                      target_type);
+    if (object_value->object_type &&
+        object_value->object_type->graph == target_graph) {
+        return rx_graph_type_ref_supports(object_value->object_type,
+                                          target_type_ref);
     }
     return runtime_value_matches_object_type(context,
                                              object_value,
@@ -3498,12 +3863,15 @@ static void rxsignal_populate_raw_interrupt(value *raw,
 }
 
 static void rxsignal_populate_runtime_signal(value *dest, value *raw) {
-    static char runtime_signal_type[] = "rxfnsb.runtime_signal";
+    static const RxGraphTypeRef runtime_signal_type = {
+        .name = "rxfnsb.runtime_signal",
+        .name_length = sizeof("rxfnsb.runtime_signal") - 1u,
+        .id = RX_GRAPH_NONE
+    };
 
     value_zero(dest);
     set_num_attributes(dest, 6);
-    dest->object_type_name = runtime_signal_type;
-    dest->object_type_name_length = strlen(runtime_signal_type);
+    dest->object_type = &runtime_signal_type;
     dest->attributes[0]->int_value = 1;
     copy_value(dest->attributes[4], raw);
 }
@@ -7451,11 +7819,11 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                      rxinteger tm;
                      struct timeval tv;
                      struct tm *tmdata;
-                     ctime = time(NULL);
+                     gettimeofday(&tv, NULL);
+                     ctime = tv.tv_sec;
                      tmdata = localtime(&ctime);
                      tzset();
                      tm=((tmdata->tm_hour * 3600) + (tmdata->tm_min  * 60) + (tmdata->tm_sec))+timezone;
-                     gettimeofday(&tv, NULL);
                      op1R->int_value = tm*1000000+tv.tv_usec;
                      break;  // UTC Time
                 }
@@ -7475,12 +7843,12 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                 time_t	ctime;
                 struct tm *tmdata;
 
-                ctime = time(NULL);
+                gettimeofday(&tv, NULL);
+                ctime = tv.tv_sec;
                 tmdata = localtime(&ctime);
                 tm =
                         ((tmdata->tm_hour * 3600) + (tmdata->tm_min * 60) +
                         (tmdata->tm_sec));
-                gettimeofday(&tv, NULL);
                 REG_RETURN_INT(tm * 1000000 + tv.tv_usec)
             }
             DISPATCH;
@@ -11497,13 +11865,10 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             {
                 RxGraph *graph = runtime_module_graph(current_module);
                 RxGraphId type = (RxGraphId)(pc + 2)->index;
-                const char *type_name = rx_graph_type_name(graph, type);
+                const RxGraphTypeRef *type_ref = rx_graph_type_ref(graph, type);
                 DEBUG("TRACE - SETOBJTYPE R%lu,TYPE#%u(%s)\n",
-                      REG_IDX(1), type, type_name ? type_name : "?");
-                op1R->object_type_name = type_name;
-                op1R->object_type_name_length = type_name ? strlen(type_name) : 0u;
-                op1R->object_type_graph = graph;
-                op1R->object_type_id = type;
+                      REG_IDX(1), type, type_ref ? type_ref->name : "?");
+                op1R->object_type = type_ref;
             }
             clear_value_uninitialized_object(op1R);
             DISPATCH;
@@ -11512,14 +11877,11 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             {
                 RxGraph *graph = runtime_module_graph(current_module);
                 RxGraphId type = (RxGraphId)(pc + 2)->index;
-                const char *type_name = rx_graph_type_name(graph, type);
+                const RxGraphTypeRef *type_ref = rx_graph_type_ref(graph, type);
                 DEBUG("TRACE - SETOBJUNINIT R%lu,TYPE#%u(%s)\n",
-                      REG_IDX(1), type, type_name ? type_name : "?");
+                      REG_IDX(1), type, type_ref ? type_ref->name : "?");
                 value_zero(op1R);
-                op1R->object_type_name = type_name;
-                op1R->object_type_name_length = type_name ? strlen(type_name) : 0u;
-                op1R->object_type_graph = graph;
-                op1R->object_type_id = type;
+                op1R->object_type = type_ref;
             }
             mark_value_uninitialized_object(op1R);
             DISPATCH;
@@ -11552,10 +11914,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 RxGraph *graph;
                 RxMemberId member;
                 char *descriptor;
+                rxvm_dynamic_site_cache *site_cache;
 
                 graph = runtime_module_graph(current_module);
                 member = (RxMemberId)(pc + 3)->index;
                 descriptor = 0;
+                site_cache = rxvm_dynamic_cache_for_site(
+                    current_module, VM_CANONICAL_INDEX(pc));
                 DEBUG("TRACE - SRCMETHODSEL R%lu,R%lu,MEMBER#%u\n",
                       REG_IDX(1), REG_IDX(2), member);
                 RXVM_INSTRUMENTATION_DYNAMIC(
@@ -11576,8 +11941,8 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     DISPATCH;
                 }
 
-                class_name = op2R->object_type_name;
-                class_name_length = op2R->object_type_name_length;
+                class_name = runtime_value_type_name(op2R,
+                                                     &class_name_length);
                 called_function = 0;
 
                 if (!class_name || !class_name_length) {
@@ -11598,8 +11963,15 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     DISPATCH;
                 }
 
-                called_function = op2R->object_type_graph == graph
-                    ? resolve_runtime_graph_method(context, op2R, member) : 0;
+                called_function = op2R->object_type &&
+                                  op2R->object_type->graph == graph
+                    ? resolve_runtime_graph_method_cached(
+                          context,
+                          current_module->graph_binding,
+                          site_cache,
+                          op2R,
+                          member)
+                    : 0;
                 if (!called_function) {
                     descriptor = rx_graph_operand_text(graph,
                                                        OP_SRCMETHODSEL_REG_REG_STRING,
@@ -11646,9 +12018,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 RxGraph *graph;
                 RxFactoryId factory;
                 int graph_result;
+                rxvm_dynamic_site_cache *site_cache;
+                const rxvm_graph_factory_binding *factory_binding;
 
                 graph = runtime_module_graph(current_module);
                 factory = (RxFactoryId)(pc + 2)->index;
+                site_cache = rxvm_dynamic_cache_for_site(
+                    current_module, VM_CANONICAL_INDEX(pc));
                 DEBUG("TRACE - SRCFPROCSEL R%lu,FACTORY#%u,R%lu\n",
                       REG_IDX(1), factory, REG_IDX(3));
                 RXVM_INSTRUMENTATION_DYNAMIC(
@@ -11658,14 +12034,53 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 called_function = 0;
                 error_message = 0;
                 descriptor = 0;
+                factory_binding = 0;
 
-                graph_result = resolve_runtime_graph_factory(context,
-                                                             graph,
-                                                             factory,
-                                                             (rxinteger) op3R->int_value,
-                                                             (&(op3R)) + 1,
-                                                             &called_function,
-                                                             &error_message);
+                if (site_cache &&
+                    site_cache->generation != context->semantic_generation) {
+                    memset(&site_cache->value, 0, sizeof(site_cache->value));
+                    site_cache->generation = context->semantic_generation;
+                }
+                if (site_cache) {
+                    if (site_cache->value.factory.state ==
+                        RXVM_FACTORY_CACHE_UNKNOWN) {
+                        factory_binding = rxvm_bound_graph_factory(
+                            current_module->graph_binding, factory);
+                        site_cache->value.factory.binding = factory_binding;
+                        if (factory_binding && factory_binding->direct_target) {
+                            site_cache->value.factory.target =
+                                factory_binding->direct_target;
+                            site_cache->value.factory.state =
+                                RXVM_FACTORY_CACHE_DIRECT;
+                        } else {
+                            site_cache->value.factory.state =
+                                RXVM_FACTORY_CACHE_GENERAL;
+                        }
+                    } else {
+                        factory_binding = site_cache->value.factory.binding;
+                    }
+                    if (site_cache->value.factory.state ==
+                        RXVM_FACTORY_CACHE_DIRECT) {
+                        called_function = site_cache->value.factory.target;
+                    }
+                } else {
+                    factory_binding = rxvm_bound_graph_factory(
+                        current_module->graph_binding, factory);
+                    if (factory_binding) {
+                        called_function = factory_binding->direct_target;
+                    }
+                }
+                if (called_function) {
+                    graph_result = 1;
+                } else {
+                    graph_result = resolve_runtime_graph_factory(
+                        context,
+                        factory_binding,
+                        (rxinteger) op3R->int_value,
+                        (&(op3R)) + 1,
+                        &called_function,
+                        &error_message);
+                }
                 if (graph_result < 0) {
                     descriptor = rx_graph_operand_text(graph,
                                                        OP_SRCFPROCSEL_REG_STRING_REG,
@@ -11709,12 +12124,16 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
         START_INSTRUCTION(TYPEOF_REG_REG) VM_ADVANCE(2);
             {
                 char *type_name;
+                const char *internal_type_name;
+                size_t internal_type_name_length;
 
                 DEBUG("TRACE - TYPEOF R%lu,R%lu\n", REG_IDX(1), REG_IDX(2));
 
-                if (op2R->object_type_name && op2R->object_type_name_length > 0) {
-                    type_name = runtime_internal_type_to_source_name(op2R->object_type_name,
-                                                                     op2R->object_type_name_length);
+                internal_type_name = runtime_value_type_name(
+                    op2R, &internal_type_name_length);
+                if (internal_type_name && internal_type_name_length > 0) {
+                    type_name = runtime_internal_type_to_source_name(
+                        internal_type_name, internal_type_name_length);
                 } else {
                     type_name = strdup(".object");
                 }

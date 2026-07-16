@@ -1,0 +1,20 @@
+{
+  "schema": 2,
+  "capture_tool": "run_cross_runtime.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.gdb94bc9caebf.dirty 20260716",
+  "workload": "runtime-interface-lookup",
+  "runtime": "rxvm-007-bound-cache-remap",
+  "variant": "retained",
+  "lifecycle": "process",
+  "warmups": 2,
+  "recorded_runs": 7,
+  "sampling": "serial",
+  "correctness_expectation": "PASS: runtime interface lookup compare",
+  "metric_prefix": "method_us=",
+  "command": ["cmake-build-release/bin/rxvm","performance/evidence/2026-07-16-nr-04a-bound-cache/images/runtime-interface-retained.rxbin","-a","1000000","100000"],
+  "cwd": "/Users/adrian/CLionProjects/CREXX",
+  "host": "os=macos",
+  "started_utc": "2026-07-16T17:52:04+0000",
+  "completed_utc": "2026-07-16T17:52:05+0000",
+  "result": "pass"
+}

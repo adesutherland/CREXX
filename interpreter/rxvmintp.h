@@ -52,6 +52,55 @@ typedef struct proc_runtime {
 #endif
 } proc_runtime;
 
+typedef struct rxvm_graph_provider_binding {
+    const char *class_name;
+    proc_runtime *factory_target;
+    proc_runtime *match_target;
+    uint32_t requires_match;
+} rxvm_graph_provider_binding;
+
+typedef struct rxvm_graph_factory_binding {
+    const rxvm_graph_provider_binding *providers;
+    const char *interface_name;
+    const char *member_name;
+    size_t provider_count;
+    proc_runtime *direct_target;
+} rxvm_graph_factory_binding;
+
+typedef struct rxvm_graph_binding {
+    const RxGraph *graph;
+    proc_runtime **callable_targets;
+    size_t callable_count;
+    rxvm_graph_factory_binding *factory_bindings;
+    size_t factory_count;
+    rxvm_graph_provider_binding *provider_bindings;
+    size_t provider_count;
+} rxvm_graph_binding;
+
+#define RXVM_METHOD_CACHE_WAYS 2u
+
+typedef struct rxvm_dynamic_site_cache {
+    uint64_t generation;
+    union {
+        struct {
+            const RxGraphTypeRef *types[RXVM_METHOD_CACHE_WAYS];
+            proc_runtime *targets[RXVM_METHOD_CACHE_WAYS];
+            uint32_t next_way;
+        } method;
+        struct {
+            const rxvm_graph_factory_binding *binding;
+            proc_runtime *target;
+            uint32_t state;
+        } factory;
+    } value;
+} rxvm_dynamic_site_cache;
+
+enum rxvm_factory_cache_state {
+    RXVM_FACTORY_CACHE_UNKNOWN = 0,
+    RXVM_FACTORY_CACHE_DIRECT = 1,
+    RXVM_FACTORY_CACHE_GENERAL = 2
+};
+
 typedef struct proc_runtime_lookup_entry {
     size_t offset;
     proc_runtime *runtime;
@@ -78,7 +127,39 @@ struct module {
     proc_runtime_lookup_entry *proc_runtime_lookup; /* Sorted constant pool offsets -> runtime procedures */
     size_t proc_runtime_lookup_size;
     bin_code *execution_image; /* Owned computed-goto image; canonical segment.binary stays immutable */
+    rxvm_graph_binding *graph_binding; /* Shared process-local callable bindings for file->semantic_graph */
+    uint32_t *dynamic_site_cache_slots; /* Instruction-word index -> cache slot, or UINT32_MAX */
+    rxvm_dynamic_site_cache *dynamic_site_caches;
+    size_t dynamic_site_cache_count;
 };
+
+static inline proc_runtime *rxvm_bound_graph_callable(
+        const rxvm_graph_binding *binding,
+        RxCallableId callable) {
+    if (!binding || callable >= binding->callable_count ||
+        !binding->callable_targets) return 0;
+    return binding->callable_targets[callable];
+}
+
+static inline const rxvm_graph_factory_binding *rxvm_bound_graph_factory(
+        const rxvm_graph_binding *binding,
+        RxFactoryId factory) {
+    if (!binding || factory >= binding->factory_count ||
+        !binding->factory_bindings) return 0;
+    return &binding->factory_bindings[factory];
+}
+
+static inline rxvm_dynamic_site_cache *rxvm_dynamic_cache_for_site(
+        module *mod,
+        size_t instruction_index) {
+    uint32_t slot;
+
+    if (!mod || instruction_index >= mod->segment.inst_size ||
+        !mod->dynamic_site_cache_slots) return 0;
+    slot = mod->dynamic_site_cache_slots[instruction_index];
+    if (slot == UINT32_MAX || slot >= mod->dynamic_site_cache_count) return 0;
+    return &mod->dynamic_site_caches[slot];
+}
 
 static inline proc_runtime *rxvm_get_module_runtime_procedure(module *mod, size_t proc_offset) {
     size_t left;
@@ -429,6 +510,10 @@ typedef struct rxvm_context {
     rxvm_interface_method_entry *interface_methods;
     size_t num_interface_methods;
     size_t interface_method_capacity;
+    rxvm_graph_binding **graph_bindings;
+    size_t graph_binding_count;
+    size_t graph_binding_capacity;
+    uint64_t semantic_generation;
     struct rxvm_socket_registry *socket_registry;
     rxvm_reference_context references;
     char link_dirty;
@@ -464,6 +549,8 @@ void completely_free_frame(stack_frame *frame);
 void rxvm_link_module(rxvm_context *context, size_t module_number_to_link);
 void rxvm_rebuild_interface_factory_registry(rxvm_context *context);
 void rxvm_rebuild_interface_method_registry(rxvm_context *context);
+void rxvm_rebuild_graph_bindings(rxvm_context *context);
+void rxvm_free_graph_bindings(rxvm_context *context);
 
 /* Loads a new module
  * returns 0  - Error

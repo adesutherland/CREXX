@@ -32,6 +32,123 @@ static void write_u64le(unsigned char *bytes, uint64_t value) {
     for (i = 0u; i < 8u; i++) bytes[i] = (unsigned char)(value >> (i * 8u));
 }
 
+static int decompress_lzss(const unsigned char *input,
+                           size_t input_size,
+                           unsigned char *output,
+                           size_t output_size) {
+    size_t input_position = 0u;
+    size_t output_position = 0u;
+
+    while (output_position < output_size) {
+        unsigned char control;
+        unsigned int bit;
+
+        if (input_position >= input_size) return 0;
+        control = input[input_position++];
+        for (bit = 0u; bit < 8u && output_position < output_size; bit++) {
+            if (control & (unsigned char)(1u << bit)) {
+                size_t length;
+                size_t distance;
+                size_t copied;
+
+                if (input_size - input_position < 2u) return 0;
+                length = (size_t)((input[input_position] >> 4u) + 3u);
+                distance = (size_t)((((size_t)input[input_position] & 0x0fu) << 8u) |
+                                    input[input_position + 1u]) + 1u;
+                input_position += 2u;
+                if (!distance || distance > output_position ||
+                    length > output_size - output_position) return 0;
+                for (copied = 0u; copied < length; copied++) {
+                    output[output_position] = output[output_position - distance];
+                    output_position++;
+                }
+            } else {
+                if (input_position >= input_size) return 0;
+                output[output_position++] = input[input_position++];
+            }
+        }
+    }
+    return input_position == input_size;
+}
+
+static int expand_sections(const char *input,
+                           size_t input_size,
+                           char **output,
+                           size_t *output_size) {
+    size_t next_offset;
+    uint32_t section;
+
+    *output = 0;
+    *output_size = 0u;
+    if (!input || input_size < RXBIN007_HEADER_SIZE +
+                              RXBIN007_SECTION_COUNT * RXBIN007_DIRECTORY_ENTRY_SIZE) return 0;
+    next_offset = RXBIN007_HEADER_SIZE +
+                  RXBIN007_SECTION_COUNT * RXBIN007_DIRECTORY_ENTRY_SIZE;
+    for (section = 0u; section < RXBIN007_SECTION_COUNT; section++) {
+        const unsigned char *row;
+        uint64_t expanded_size;
+
+        row = (const unsigned char *)input + RXBIN007_HEADER_SIZE +
+              (size_t)section * RXBIN007_DIRECTORY_ENTRY_SIZE;
+        expanded_size = read_u64le(row + 32u);
+        next_offset = (next_offset + 7u) & ~(size_t)7u;
+        if (expanded_size > SIZE_MAX || (size_t)expanded_size > SIZE_MAX - next_offset) return 0;
+        next_offset += (size_t)expanded_size;
+    }
+    *output = (char *)calloc(1u, next_offset);
+    if (!*output) return 0;
+    *output_size = next_offset;
+    memcpy(*output,
+           input,
+           RXBIN007_HEADER_SIZE +
+           RXBIN007_SECTION_COUNT * RXBIN007_DIRECTORY_ENTRY_SIZE);
+    write_u64le((unsigned char *)*output + 16u, next_offset);
+    next_offset = RXBIN007_HEADER_SIZE +
+                  RXBIN007_SECTION_COUNT * RXBIN007_DIRECTORY_ENTRY_SIZE;
+    for (section = 0u; section < RXBIN007_SECTION_COUNT; section++) {
+        const unsigned char *input_row;
+        unsigned char *output_row;
+        uint32_t flags;
+        uint64_t input_offset;
+        uint64_t stored_size;
+        uint64_t expanded_size;
+
+        input_row = (const unsigned char *)input + RXBIN007_HEADER_SIZE +
+                    (size_t)section * RXBIN007_DIRECTORY_ENTRY_SIZE;
+        output_row = (unsigned char *)*output + RXBIN007_HEADER_SIZE +
+                     (size_t)section * RXBIN007_DIRECTORY_ENTRY_SIZE;
+        flags = read_u32le(input_row + 4u);
+        input_offset = read_u64le(input_row + 16u);
+        stored_size = read_u64le(input_row + 24u);
+        expanded_size = read_u64le(input_row + 32u);
+        next_offset = (next_offset + 7u) & ~(size_t)7u;
+        if (input_offset > input_size || stored_size > input_size - (size_t)input_offset ||
+            (flags != 0u && flags != RXBIN007_SECTION_LZSS)) goto error;
+        if (flags == RXBIN007_SECTION_LZSS) {
+            if (!decompress_lzss((const unsigned char *)input + (size_t)input_offset,
+                                 (size_t)stored_size,
+                                 (unsigned char *)*output + next_offset,
+                                 (size_t)expanded_size)) goto error;
+        } else {
+            if (stored_size != expanded_size) goto error;
+            memcpy(*output + next_offset,
+                   input + (size_t)input_offset,
+                   (size_t)stored_size);
+        }
+        write_u32le(output_row + 4u, 0u);
+        write_u64le(output_row + 16u, next_offset);
+        write_u64le(output_row + 24u, expanded_size);
+        next_offset += (size_t)expanded_size;
+    }
+    return 1;
+
+error:
+    free(*output);
+    *output = 0;
+    *output_size = 0u;
+    return 0;
+}
+
 static int find_record(const unsigned char *section,
                        size_t section_size,
                        uint32_t wanted_type,
@@ -204,8 +321,11 @@ int main(void) {
     module_file *from_file = 0;
     module_file *from_memory = 0;
     char *buffer = 0;
+    char *expanded_buffer = 0;
     char *cursor = 0;
     size_t buffer_size = 0;
+    size_t expanded_buffer_size = 0u;
+    size_t compressed_row = SIZE_MAX;
     bin_code *code = 0;
     uint64_t instruction_bytes = 0u;
 
@@ -234,18 +354,39 @@ int main(void) {
 
     {
         uint32_t section;
+        int saw_compressed = 0;
+        int saw_uncompressed = 0;
         for (section = 0u; section < RXBIN007_SECTION_COUNT; section++) {
             const unsigned char *row = directory +
                 (size_t)section * RXBIN007_DIRECTORY_ENTRY_SIZE;
+            uint32_t flags = read_u32le(row + 4u);
+            uint64_t stored_size = read_u64le(row + 24u);
+            uint64_t expanded_size = read_u64le(row + 32u);
             if (read_u32le(row) != section + 1u ||
-                read_u32le(row + 4u) != 0u ||
+                (flags != 0u && flags != RXBIN007_SECTION_LZSS) ||
                 read_u32le(row + 8u) != 8u ||
                 read_u32le(row + 12u) != 0u ||
-                read_u64le(row + 24u) != read_u64le(row + 32u)) {
+                (flags == RXBIN007_SECTION_LZSS
+                    ? stored_size >= expanded_size
+                    : stored_size != expanded_size)) {
                 fprintf(stderr, "RXBIN 007 base section directory is not canonical\n");
                 fclose(fp);
                 return 1;
             }
+            if (flags == RXBIN007_SECTION_LZSS) {
+                saw_compressed = 1;
+                if (compressed_row == SIZE_MAX) {
+                    compressed_row = RXBIN007_HEADER_SIZE +
+                                     (size_t)section * RXBIN007_DIRECTORY_ENTRY_SIZE;
+                }
+            } else {
+                saw_uncompressed = 1;
+            }
+        }
+        if (!saw_compressed || !saw_uncompressed) {
+            fprintf(stderr, "RXBIN 007 fixture did not exercise mixed section storage\n");
+            fclose(fp);
+            return 1;
         }
         instruction_bytes = read_u64le(
             directory + RXBIN007_DIRECTORY_ENTRY_SIZE + 24u);
@@ -328,6 +469,17 @@ int main(void) {
         return 1;
     }
 
+    if (!expand_sections(buffer,
+                         buffer_size,
+                         &expanded_buffer,
+                         &expanded_buffer_size)) {
+        fprintf(stderr, "Could not expand RXBIN 007 sections for corruption tests\n");
+        free_module(from_memory);
+        free(buffer);
+        free_module(from_file);
+        return 1;
+    }
+
     {
         size_t facts_row = RXBIN007_HEADER_SIZE +
             (RXBIN007_SECTION_GRAPH_FACTS - 1u) * RXBIN007_DIRECTORY_ENTRY_SIZE;
@@ -337,13 +489,13 @@ int main(void) {
             (RXBIN007_SECTION_METADATA - 1u) * RXBIN007_DIRECTORY_ENTRY_SIZE;
         size_t facts_offset = (size_t)read_u64le((const unsigned char *)buffer +
                                                  facts_row + 16u);
-        size_t constants_offset = (size_t)read_u64le((const unsigned char *)buffer +
+        size_t constants_offset = (size_t)read_u64le((const unsigned char *)expanded_buffer +
                                                      constants_row + 16u);
-        size_t constants_size = (size_t)read_u64le((const unsigned char *)buffer +
+        size_t constants_size = (size_t)read_u64le((const unsigned char *)expanded_buffer +
                                                    constants_row + 24u);
-        size_t metadata_offset = (size_t)read_u64le((const unsigned char *)buffer +
+        size_t metadata_offset = (size_t)read_u64le((const unsigned char *)expanded_buffer +
                                                     metadata_row + 16u);
-        size_t metadata_size = (size_t)read_u64le((const unsigned char *)buffer +
+        size_t metadata_size = (size_t)read_u64le((const unsigned char *)expanded_buffer +
                                                   metadata_row + 24u);
         uint32_t procedure_id;
         uint32_t ignored_id;
@@ -352,16 +504,16 @@ int main(void) {
         int found_wrong_kind_fixture;
 
         found_wrong_kind_fixture =
-            constants_offset <= buffer_size &&
-            constants_size <= buffer_size - constants_offset &&
-            metadata_offset <= buffer_size &&
-            metadata_size <= buffer_size - metadata_offset &&
-            find_record((const unsigned char *)buffer + constants_offset,
+            constants_offset <= expanded_buffer_size &&
+            constants_size <= expanded_buffer_size - constants_offset &&
+            metadata_offset <= expanded_buffer_size &&
+            metadata_size <= expanded_buffer_size - metadata_offset &&
+            find_record((const unsigned char *)expanded_buffer + constants_offset,
                         constants_size,
                         PROC_CONST,
                         &procedure_id,
                         &ignored_payload) &&
-            find_record((const unsigned char *)buffer + metadata_offset,
+            find_record((const unsigned char *)expanded_buffer + metadata_offset,
                         metadata_size,
                         META_FUNC,
                         &ignored_id,
@@ -387,6 +539,17 @@ int main(void) {
                                   1u,
                                   -1,
                                   "reserved-directory") ||
+            !mutation_u32_is_rejected(buffer,
+                                      buffer_size,
+                                      RXBIN007_HEADER_SIZE + 4u,
+                                      2u,
+                                      "unknown-section-compression") ||
+            !mutation_u64_is_rejected(
+                buffer,
+                buffer_size,
+                compressed_row + 32u,
+                read_u64le((const unsigned char *)buffer + compressed_row + 24u),
+                "compressed-section-without-size-reduction") ||
             !mutation_is_rejected(buffer,
                                   buffer_size,
                                   facts_offset,
@@ -399,11 +562,12 @@ int main(void) {
                                       32u,
                                       "undersized-declared-file") ||
             !found_wrong_kind_fixture ||
-            !mutation_u32_is_rejected(buffer,
-                                      buffer_size,
+            !mutation_u32_is_rejected(expanded_buffer,
+                                      expanded_buffer_size,
                                       metadata_offset + function_payload + 16u,
                                       procedure_id,
                                       "metadata-wrong-record-kind")) {
+            free(expanded_buffer);
             free_module(from_memory);
             free(buffer);
             free_module(from_file);
@@ -411,6 +575,7 @@ int main(void) {
         }
     }
 
+    free(expanded_buffer);
     free_module(from_memory);
     free(buffer);
     free_module(from_file);

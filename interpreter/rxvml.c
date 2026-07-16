@@ -113,6 +113,11 @@ enum {
 static const char RXVML_ADDRESS_BINDING_TYPE_NAME[] = "_rxsysb.addressbinding";
 static const char RXVML_STANDARD_ADDRESS_SANDBOX_TYPE_NAME[] = "_rxsysb.standardaddresssandbox";
 static const char RXVML_STANDARD_ADDRESS_STEM_TYPE_NAME[] = "_rxsysb.standardaddressstem";
+static const RxGraphTypeRef RXVML_ADDRESS_BINDING_TYPE = {
+    .name = RXVML_ADDRESS_BINDING_TYPE_NAME,
+    .name_length = sizeof(RXVML_ADDRESS_BINDING_TYPE_NAME) - 1u,
+    .id = RX_GRAPH_NONE
+};
 
 struct rxvml_context {
     rxvm_context vm;
@@ -589,11 +594,17 @@ static int rxvml_set_value_cstr(value* v, const char* s) {
     return set_null_string_validated(v, s ? s : "");
 }
 
+static const char* rxvml_object_type_name(const value* v, size_t* length) {
+    if (length) *length = 0u;
+    if (!v || !v->object_type) return NULL;
+    if (length) *length = v->object_type->name_length;
+    return v->object_type->name;
+}
+
 static int rxvml_populate_address_binding_value(value* binding_value, const rxvml_address_binding* binding) {
     clear_value(binding_value);
     value_init(binding_value);
-    binding_value->object_type_name = RXVML_ADDRESS_BINDING_TYPE_NAME;
-    binding_value->object_type_name_length = sizeof(RXVML_ADDRESS_BINDING_TYPE_NAME) - 1;
+    binding_value->object_type = &RXVML_ADDRESS_BINDING_TYPE;
     set_num_attributes(binding_value, RXVML_ADDRESS_BINDING_ATTR_COUNT);
 
     if (rxvml_set_value_cstr(binding_value->attributes[RXVML_ADDRESS_BINDING_EXTERNAL_ALIAS], binding ? binding->external_alias : "") != 0) return -1;
@@ -659,19 +670,27 @@ static int rxvml_address_name_equals(const char* left, const char* right) {
 }
 
 static int rxvml_is_standard_address_sandbox(value* sandbox) {
-    if (!sandbox || !sandbox->object_type_name) return 0;
-    return sandbox->object_type_name_length == sizeof(RXVML_STANDARD_ADDRESS_SANDBOX_TYPE_NAME) - 1 &&
-           memcmp(sandbox->object_type_name,
+    const char *type_name;
+    size_t type_name_length;
+
+    type_name = rxvml_object_type_name(sandbox, &type_name_length);
+    if (!type_name) return 0;
+    return type_name_length == sizeof(RXVML_STANDARD_ADDRESS_SANDBOX_TYPE_NAME) - 1 &&
+           memcmp(type_name,
                   RXVML_STANDARD_ADDRESS_SANDBOX_TYPE_NAME,
-                  sandbox->object_type_name_length) == 0;
+                  type_name_length) == 0;
 }
 
 static int rxvml_is_standard_address_stem(value* stem) {
-    if (!stem || !stem->object_type_name) return 0;
-    return stem->object_type_name_length == sizeof(RXVML_STANDARD_ADDRESS_STEM_TYPE_NAME) - 1 &&
-           memcmp(stem->object_type_name,
+    const char *type_name;
+    size_t type_name_length;
+
+    type_name = rxvml_object_type_name(stem, &type_name_length);
+    if (!type_name) return 0;
+    return type_name_length == sizeof(RXVML_STANDARD_ADDRESS_STEM_TYPE_NAME) - 1 &&
+           memcmp(type_name,
                   RXVML_STANDARD_ADDRESS_STEM_TYPE_NAME,
-                  stem->object_type_name_length) == 0;
+                  type_name_length) == 0;
 }
 
 static void rxvml_normalize_sandbox_key(const char* name, char* out, size_t out_size) {
@@ -801,6 +820,8 @@ int rxvml_address_sandbox_set(
 
     value* sandbox;
     char class_name[512];
+    const char* object_type_name;
+    size_t object_type_name_length;
     rxvml_value* name_arg;
     rxvml_value* value_arg;
     rxvml_value* args[2];
@@ -819,14 +840,16 @@ int rxvml_address_sandbox_set(
         return rc;
     }
 
-    if (!sandbox->object_type_name || sandbox->object_type_name_length == 0 ||
-        sandbox->object_type_name_length >= sizeof(class_name)) {
+    object_type_name = rxvml_object_type_name(sandbox,
+                                              &object_type_name_length);
+    if (!object_type_name || object_type_name_length == 0 ||
+        object_type_name_length >= sizeof(class_name)) {
         ctx->last_error = "ADDRESS sandbox object has no callable class name";
         return -2;
     }
 
-    memcpy(class_name, sandbox->object_type_name, sandbox->object_type_name_length);
-    class_name[sandbox->object_type_name_length] = 0;
+    memcpy(class_name, object_type_name, object_type_name_length);
+    class_name[object_type_name_length] = 0;
 
     name_arg = rxvml_value_new(ctx);
     value_arg = rxvml_value_new(ctx);
@@ -1004,6 +1027,8 @@ int rxvml_address_stem_set(
 
     value* stem = (value*)stem_value;
     char class_name[512];
+    const char* object_type_name;
+    size_t object_type_name_length;
     rxvml_value* name_arg;
     rxvml_value* value_arg;
     rxvml_value* args[2];
@@ -1021,14 +1046,16 @@ int rxvml_address_stem_set(
         return rc;
     }
 
-    if (!stem->object_type_name || stem->object_type_name_length == 0 ||
-        stem->object_type_name_length >= sizeof(class_name)) {
+    object_type_name = rxvml_object_type_name(stem,
+                                              &object_type_name_length);
+    if (!object_type_name || object_type_name_length == 0 ||
+        object_type_name_length >= sizeof(class_name)) {
         ctx->last_error = "ADDRESS stem object has no callable class name";
         return -2;
     }
 
-    memcpy(class_name, stem->object_type_name, stem->object_type_name_length);
-    class_name[stem->object_type_name_length] = 0;
+    memcpy(class_name, object_type_name, object_type_name_length);
+    class_name[object_type_name_length] = 0;
 
     name_arg = rxvml_value_new(ctx);
     value_arg = rxvml_value_new(ctx);

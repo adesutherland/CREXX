@@ -123,9 +123,12 @@ main: procedure = .int
   do benchmark_index = 1 to selected[0]
     benchmark_name = selected[benchmark_index]
     command = benchmark_command(build_dir, vm_name, mode, benchmark_name)
+    expected_provenance = ""
+    if benchmark_name = "rexxcps" then
+      expected_provenance = "REXXCPS-PROVENANCE contract=canonical-default"
 
     do warmup = 1 to warmups
-      elapsed_ns = run_once(command)
+      elapsed_ns = run_once(command, expected_provenance)
       if elapsed_ns < 0 then return 1
       sample_lines[sample_lines[0] + 1] = sample_csv_row(benchmark_name, vm_name, mode, ,
           "warmup", warmup, elapsed_ns, platform_name, crexx_version)
@@ -134,7 +137,7 @@ main: procedure = .int
     samples = .int[]
     total_ns = 0
     do run = 1 to runs
-      elapsed_ns = run_once(command)
+      elapsed_ns = run_once(command, expected_provenance)
       if elapsed_ns < 0 then return 1
       samples[run] = elapsed_ns
       total_ns = total_ns + elapsed_ns
@@ -222,7 +225,7 @@ benchmark_command: procedure = .string[]
   return command
 
 run_once: procedure = .int
-  arg command = .string[]
+  arg command = .string[], expected_provenance = .string
   child_output = .string[]
   child_error = .string[]
   started_us = .int
@@ -232,7 +235,8 @@ run_once: procedure = .int
   child_rc = rc
   ended_us = time("us")
 
-  if child_rc <> 0 | \has_pass_line(child_output) then do
+  if child_rc <> 0 | \has_pass_line(child_output) | ,
+      (expected_provenance <> "" & \has_line_fragment(child_output, expected_provenance)) then do
     say "ERROR: benchmark command failed; rc=" || child_rc
     say "argv:"
     do i = 1 to command[0]
@@ -260,6 +264,13 @@ has_pass_line: procedure = .int
   arg lines = .string[]
   do i = 1 to lines[0]
     if pos("PASS:", lines[i]) > 0 then return 1
+  end
+  return 0
+
+has_line_fragment: procedure = .int
+  arg lines = .string[], expected = .string
+  do i = 1 to lines[0]
+    if pos(expected, lines[i]) > 0 then return 1
   end
   return 0
 

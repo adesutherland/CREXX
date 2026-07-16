@@ -33,9 +33,15 @@ static int check_007_header(FILE *fp, uint32_t expected_modules) {
         fread(directory, 1u, sizeof(directory), fp) != sizeof(directory)) return 0;
     for (i = 0u; i < RXBIN007_SECTION_COUNT; i++) {
         const unsigned char *row = directory + (size_t)i * RXBIN007_DIRECTORY_ENTRY_SIZE;
-        if (read_u32le(row) != i + 1u || read_u32le(row + 4u) != 0u ||
+        uint32_t flags = read_u32le(row + 4u);
+        uint64_t stored_size = read_u64le(row + 24u);
+        uint64_t expanded_size = read_u64le(row + 32u);
+        if (read_u32le(row) != i + 1u ||
+            (flags != 0u && flags != RXBIN007_SECTION_LZSS) ||
             read_u32le(row + 8u) != 8u || read_u32le(row + 12u) != 0u ||
-            read_u64le(row + 24u) != read_u64le(row + 32u)) return 0;
+            (flags == RXBIN007_SECTION_LZSS
+                ? stored_size >= expanded_size
+                : stored_size != expanded_size)) return 0;
     }
     return 1;
 }

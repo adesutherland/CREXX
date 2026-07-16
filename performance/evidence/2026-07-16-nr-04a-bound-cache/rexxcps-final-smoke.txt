@@ -1,0 +1,12 @@
+command=cmake-build-release/bin/rxvm performance/evidence/2026-07-16-nr-04a-bound-cache/images/rexxcps-retained.rxbin
+binary_sha256=5db77b21a887c952292ab35d51322b5b59cdb07b3859ecc1e2821dd1411e7bf2
+image_sha256=d95cf5381b352aeac24b2857efc76efc2e1517fa26e81a1e3cbde5755a908ce0
+contract=canonical-default
+argv_count=0
+initial_count=100
+effective_count=100
+averaging=100
+calibrated=0
+elapsed_reported=8.8 s
+performance_cps=1132602
+result=pass

@@ -100,6 +100,7 @@ static void free_rxpa_context(rxpa_context *context);
 static void free_interface_factory_registry(rxvm_context *context);
 static void free_interface_method_registry(rxvm_context *context);
 static void build_module_runtime_procedures(module *mod);
+static void build_module_dynamic_site_caches(module *mod);
 
 // End of RXPA Declarations for this file
 
@@ -126,6 +127,10 @@ void rxinimod(rxvm_context *context) {
     context->interface_methods = 0;
     context->num_interface_methods = 0;
     context->interface_method_capacity = 0;
+    context->graph_bindings = 0;
+    context->graph_binding_count = 0;
+    context->graph_binding_capacity = 0;
+    context->semantic_generation = 1u;
     context->socket_registry = 0;
     rxvm_reference_context_init(&context->references);
     context->link_dirty = 0;
@@ -147,6 +152,7 @@ void rxfremod(rxvm_context *context) {
 
     free_interface_factory_registry(context);
     free_interface_method_registry(context);
+    rxvm_free_graph_bindings(context);
     rxvm_socket_free_registry(context);
 
     /* Free Symbol Search Trees */
@@ -191,6 +197,8 @@ void rxfremod(rxvm_context *context) {
             if (temp_dont_free) free(temp_dont_free);
         }
         if (context->modules[j]->execution_image) free(context->modules[j]->execution_image);
+        free(context->modules[j]->dynamic_site_cache_slots);
+        free(context->modules[j]->dynamic_site_caches);
         if (context->modules[j]->proc_runtime_lookup) free(context->modules[j]->proc_runtime_lookup);
         if (context->modules[j]->procedures) free(context->modules[j]->procedures);
         free(context->modules[j]);
@@ -380,6 +388,60 @@ static void build_module_runtime_procedures(module *mod) {
     }
 }
 
+static void build_module_dynamic_site_caches(module *mod) {
+    size_t instruction_index;
+    size_t cache_count;
+    size_t cache_slot;
+
+    if (!mod || !mod->segment.binary || !mod->segment.inst_size) return;
+    cache_count = 0u;
+    instruction_index = 0u;
+    while (instruction_index < mod->segment.inst_size) {
+        unsigned int opcode;
+        size_t operand_count;
+        opcode = (unsigned int)mod->segment.binary[instruction_index].instruction.opcode;
+        operand_count = (size_t)mod->segment.binary[instruction_index].instruction.no_ops;
+        if (opcode == OP_SRCMETHODSEL_REG_REG_STRING ||
+            opcode == OP_SRCFPROCSEL_REG_STRING_REG) cache_count++;
+        if (operand_count >= mod->segment.inst_size - instruction_index) break;
+        instruction_index += operand_count + 1u;
+    }
+    if (!cache_count) return;
+    if (cache_count > UINT32_MAX ||
+        mod->segment.inst_size > SIZE_MAX / sizeof(*mod->dynamic_site_cache_slots) ||
+        cache_count > SIZE_MAX / sizeof(*mod->dynamic_site_caches)) {
+        RX_PANIC_OOM("size rxvm dynamic-site caches", (size_t)-1, mod->name);
+    }
+    mod->dynamic_site_cache_slots = (uint32_t *)malloc(
+        mod->segment.inst_size * sizeof(*mod->dynamic_site_cache_slots));
+    mod->dynamic_site_caches = (rxvm_dynamic_site_cache *)calloc(
+        cache_count, sizeof(*mod->dynamic_site_caches));
+    if (!mod->dynamic_site_cache_slots || !mod->dynamic_site_caches) {
+        RX_PANIC_OOM("allocate rxvm dynamic-site caches",
+                     mod->segment.inst_size * sizeof(*mod->dynamic_site_cache_slots) +
+                         cache_count * sizeof(*mod->dynamic_site_caches),
+                     mod->name);
+    }
+    memset(mod->dynamic_site_cache_slots,
+           0xff,
+           mod->segment.inst_size * sizeof(*mod->dynamic_site_cache_slots));
+    mod->dynamic_site_cache_count = cache_count;
+    instruction_index = 0u;
+    cache_slot = 0u;
+    while (instruction_index < mod->segment.inst_size && cache_slot < cache_count) {
+        unsigned int opcode;
+        size_t operand_count;
+        opcode = (unsigned int)mod->segment.binary[instruction_index].instruction.opcode;
+        operand_count = (size_t)mod->segment.binary[instruction_index].instruction.no_ops;
+        if (opcode == OP_SRCMETHODSEL_REG_REG_STRING ||
+            opcode == OP_SRCFPROCSEL_REG_STRING_REG) {
+            mod->dynamic_site_cache_slots[instruction_index] = (uint32_t)cache_slot++;
+        }
+        if (operand_count >= mod->segment.inst_size - instruction_index) break;
+        instruction_index += operand_count + 1u;
+    }
+}
+
 /* Link a loaded module */
 void rxvm_link_module(rxvm_context *context, size_t module_number_to_link) {
     int i;
@@ -556,7 +618,12 @@ static size_t prep_and_link_module(rxvm_context *context, module_file *file_modu
     context->modules[n]->proc_runtime_lookup = 0;
     context->modules[n]->proc_runtime_lookup_size = 0;
     context->modules[n]->execution_image = 0;
+    context->modules[n]->graph_binding = 0;
+    context->modules[n]->dynamic_site_cache_slots = 0;
+    context->modules[n]->dynamic_site_caches = 0;
+    context->modules[n]->dynamic_site_cache_count = 0u;
     build_module_runtime_procedures(context->modules[n]);
+    build_module_dynamic_site_caches(context->modules[n]);
     context->link_dirty = 1;
     context->interface_method_registry_dirty = 1;
     context->interface_factory_registry_dirty = 1;

@@ -34,7 +34,15 @@ typedef struct rxbin007_section {
     uint32_t alignment;
     rxbin_byte_buffer bytes;
     uint64_t file_offset;
+    uint64_t expanded_size;
 } rxbin007_section;
+
+#define RXBIN007_LZSS_WINDOW 4096u
+#define RXBIN007_LZSS_HASH_SIZE 8192u
+#define RXBIN007_LZSS_MIN_MATCH 3u
+#define RXBIN007_LZSS_MAX_MATCH 18u
+#define RXBIN007_LZSS_MAX_CHAIN 64u
+#define RXBIN007_LZSS_PREV_SIZE (RXBIN007_LZSS_WINDOW + 1u)
 
 static char rxbin007_error[512];
 
@@ -76,6 +84,194 @@ static int rxbin007_u64(rxbin_byte_buffer *buffer, uint64_t value) {
 
 static int rxbin007_i32(rxbin_byte_buffer *buffer, int32_t value) {
     return rxbin007_u32(buffer, (uint32_t)value);
+}
+
+static int rxbin007_byte(rxbin_byte_buffer *buffer, unsigned char value) {
+    return rxbin_byte_buffer_append_bytes(buffer, &value, 1u);
+}
+
+static unsigned int rxbin007_lzss_hash(const unsigned char *input) {
+    return (unsigned int)(((unsigned int)input[0] * 251u +
+                           (unsigned int)input[1] * 11u +
+                           (unsigned int)input[2]) & (RXBIN007_LZSS_HASH_SIZE - 1u));
+}
+
+static size_t rxbin007_lzss_match_length(const unsigned char *input,
+                                         size_t input_size,
+                                         size_t left,
+                                         size_t right) {
+    size_t max_length;
+    size_t length;
+
+    max_length = input_size - right;
+    if (max_length > RXBIN007_LZSS_MAX_MATCH) max_length = RXBIN007_LZSS_MAX_MATCH;
+    length = 0u;
+    while (length < max_length && input[left + length] == input[right + length]) length++;
+    return length;
+}
+
+static void rxbin007_lzss_index_position(const unsigned char *input,
+                                         size_t input_size,
+                                         size_t position,
+                                         size_t *last_positions,
+                                         size_t *previous_positions) {
+    unsigned int hash;
+    size_t slot;
+
+    slot = position % RXBIN007_LZSS_PREV_SIZE;
+    if (position + RXBIN007_LZSS_MIN_MATCH > input_size) {
+        previous_positions[slot] = SIZE_MAX;
+        return;
+    }
+    hash = rxbin007_lzss_hash(input + position);
+    previous_positions[slot] = last_positions[hash];
+    last_positions[hash] = position;
+}
+
+static int rxbin007_lzss_compress(const unsigned char *input,
+                                  size_t input_size,
+                                  rxbin_byte_buffer *output) {
+    size_t *previous_positions;
+    size_t last_positions[RXBIN007_LZSS_HASH_SIZE];
+    size_t position;
+    size_t control_index;
+    unsigned char control;
+    unsigned int control_bit;
+    int group_open;
+    unsigned int i;
+
+    if (!input_size) return 1;
+    previous_positions = (size_t *)malloc(sizeof(size_t) * RXBIN007_LZSS_PREV_SIZE);
+    if (!previous_positions) return 0;
+    for (i = 0u; i < RXBIN007_LZSS_HASH_SIZE; i++) last_positions[i] = SIZE_MAX;
+    for (i = 0u; i < RXBIN007_LZSS_PREV_SIZE; i++) previous_positions[i] = SIZE_MAX;
+    position = 0u;
+    control_index = 0u;
+    control = 0u;
+    control_bit = 0u;
+    group_open = 0;
+
+    while (position < input_size) {
+        size_t best_length;
+        size_t best_distance;
+
+        best_length = 0u;
+        best_distance = 0u;
+        if (!group_open) {
+            if (!rxbin007_byte(output, 0u)) goto error;
+            control_index = output->size - 1u;
+            control = 0u;
+            control_bit = 0u;
+            group_open = 1;
+        }
+        if (position + RXBIN007_LZSS_MIN_MATCH <= input_size) {
+            unsigned int hash;
+            size_t candidate;
+            unsigned int chain;
+
+            hash = rxbin007_lzss_hash(input + position);
+            candidate = last_positions[hash];
+            chain = 0u;
+            while (candidate != SIZE_MAX && position > candidate &&
+                   position - candidate <= RXBIN007_LZSS_WINDOW &&
+                   chain < RXBIN007_LZSS_MAX_CHAIN) {
+                size_t candidate_length;
+
+                candidate_length = rxbin007_lzss_match_length(input,
+                                                               input_size,
+                                                               candidate,
+                                                               position);
+                if (candidate_length >= RXBIN007_LZSS_MIN_MATCH &&
+                    candidate_length > best_length) {
+                    best_length = candidate_length;
+                    best_distance = position - candidate;
+                    if (best_length == RXBIN007_LZSS_MAX_MATCH) break;
+                }
+                candidate = previous_positions[candidate % RXBIN007_LZSS_PREV_SIZE];
+                chain++;
+            }
+        }
+        if (best_length >= RXBIN007_LZSS_MIN_MATCH) {
+            unsigned char token_a;
+            unsigned char token_b;
+            size_t offset;
+
+            token_a = (unsigned char)(((best_length - RXBIN007_LZSS_MIN_MATCH) << 4u) |
+                                      (((best_distance - 1u) >> 8u) & 0x0fu));
+            token_b = (unsigned char)((best_distance - 1u) & 0xffu);
+            control |= (unsigned char)(1u << control_bit);
+            if (!rxbin007_byte(output, token_a) || !rxbin007_byte(output, token_b)) goto error;
+            for (offset = 0u; offset < best_length; offset++) {
+                rxbin007_lzss_index_position(input,
+                                             input_size,
+                                             position + offset,
+                                             last_positions,
+                                             previous_positions);
+            }
+            position += best_length;
+        } else {
+            if (!rxbin007_byte(output, input[position])) goto error;
+            rxbin007_lzss_index_position(input,
+                                         input_size,
+                                         position,
+                                         last_positions,
+                                         previous_positions);
+            position++;
+        }
+        control_bit++;
+        if (control_bit == 8u) {
+            output->data[control_index] = control;
+            group_open = 0;
+        }
+    }
+    if (group_open) output->data[control_index] = control;
+    free(previous_positions);
+    return 1;
+
+error:
+    free(previous_positions);
+    return 0;
+}
+
+static int rxbin007_lzss_decompress(const unsigned char *input,
+                                    size_t input_size,
+                                    unsigned char *output,
+                                    size_t output_size) {
+    size_t input_position;
+    size_t output_position;
+
+    input_position = 0u;
+    output_position = 0u;
+    while (output_position < output_size) {
+        unsigned char control;
+        unsigned int bit;
+
+        if (input_position >= input_size) return 0;
+        control = input[input_position++];
+        for (bit = 0u; bit < 8u && output_position < output_size; bit++) {
+            if (control & (unsigned char)(1u << bit)) {
+                size_t length;
+                size_t distance;
+                size_t copied;
+
+                if (input_size - input_position < 2u) return 0;
+                length = (size_t)((input[input_position] >> 4u) + RXBIN007_LZSS_MIN_MATCH);
+                distance = (size_t)((((size_t)input[input_position] & 0x0fu) << 8u) |
+                                    input[input_position + 1u]) + 1u;
+                input_position += 2u;
+                if (!distance || distance > output_position ||
+                    length > output_size - output_position) return 0;
+                for (copied = 0u; copied < length; copied++) {
+                    output[output_position] = output[output_position - distance];
+                    output_position++;
+                }
+            } else {
+                if (input_position >= input_size) return 0;
+                output[output_position++] = input[input_position++];
+            }
+        }
+    }
+    return input_position == input_size;
 }
 
 static int rxbin007_align(rxbin_byte_buffer *buffer, size_t alignment) {
@@ -719,6 +915,34 @@ static void rxbin007_free_sections(rxbin007_section *sections) {
     }
 }
 
+static int rxbin007_pack_sections(rxbin007_section *sections) {
+    uint32_t i;
+
+    for (i = 0u; i < RXBIN007_SECTION_COUNT; i++) {
+        rxbin_byte_buffer packed;
+
+        sections[i].expanded_size = sections[i].bytes.size;
+        if (!sections[i].bytes.size) continue;
+        rxbin_byte_buffer_init(&packed);
+        if (!rxbin007_lzss_compress(sections[i].bytes.data,
+                                    sections[i].bytes.size,
+                                    &packed)) {
+            rxbin_byte_buffer_free(&packed);
+            rxbin007_set_error("out of memory compressing RXBIN 007 section %lu",
+                               (unsigned long)sections[i].kind);
+            return 0;
+        }
+        if (packed.size < sections[i].bytes.size) {
+            rxbin_byte_buffer_free(&sections[i].bytes);
+            sections[i].bytes = packed;
+            sections[i].flags = RXBIN007_SECTION_LZSS;
+        } else {
+            rxbin_byte_buffer_free(&packed);
+        }
+    }
+    return 1;
+}
+
 static int rxbin007_write_container(rxbin007_section *sections,
                                     size_t module_count,
                                     FILE *file) {
@@ -728,6 +952,7 @@ static int rxbin007_write_container(rxbin007_section *sections,
     uint32_t i;
 
     rxbin_byte_buffer_init(&output);
+    if (!rxbin007_pack_sections(sections)) goto error;
     if (!rxbin_byte_buffer_append_bytes(&output, zeros, sizeof(zeros))) goto error;
     for (i = 0u; i < RXBIN007_SECTION_COUNT; i++) {
         if (!rxbin007_align(&output, sections[i].alignment)) goto error;
@@ -752,7 +977,7 @@ static int rxbin007_write_container(rxbin007_section *sections,
             !rxbin007_put_u32(&output, row + 8u, sections[i].alignment) ||
             !rxbin007_put_u64(&output, row + 16u, sections[i].file_offset) ||
             !rxbin007_put_u64(&output, row + 24u, sections[i].bytes.size) ||
-            !rxbin007_put_u64(&output, row + 32u, sections[i].bytes.size)) goto error;
+            !rxbin007_put_u64(&output, row + 32u, sections[i].expanded_size)) goto error;
     }
     if (fwrite(output.data, 1u, output.size, file) != output.size) {
         rxbin007_set_error("RXBIN 007 cannot write the output container");
@@ -941,7 +1166,15 @@ typedef struct rxbin007_reader_cursor {
 typedef struct rxbin007_section_view {
     const unsigned char *data;
     size_t size;
+    unsigned char *owned_data;
 } rxbin007_section_view;
+
+static void rxbin007_free_section_views(rxbin007_section_view *sections) {
+    uint32_t i;
+
+    if (!sections) return;
+    for (i = 0u; i < RXBIN007_SECTION_COUNT; i++) free(sections[i].owned_data);
+}
 
 typedef enum rxbin007_ref_kind {
     RXBIN007_REF_ANY,
@@ -1877,6 +2110,7 @@ static int rxbin007_parse_image(const unsigned char *image,
     char *graph_error;
     rxbin007_image_state *state;
 
+    if (state_out) *state_out = 0;
     if (!state_out || !image || image_size < RXBIN007_HEADER_SIZE ||
         memcmp(image, RXBIN007_MAGIC, 8u) != 0 ||
         rxbin007_read_u32_at(image + 8u) != RXBIN007_HEADER_SIZE ||
@@ -1892,6 +2126,11 @@ static int rxbin007_parse_image(const unsigned char *image,
         RXBIN007_SECTION_COUNT >
             (image_size - (size_t)directory_offset) / RXBIN007_DIRECTORY_ENTRY_SIZE) return 0;
     memset(sections, 0, sizeof(sections));
+    pools = 0;
+    pool_count = 0u;
+    graph = 0;
+    graph_error = 0;
+    state = 0;
     previous_end = RXBIN007_HEADER_SIZE +
                    RXBIN007_SECTION_COUNT * RXBIN007_DIRECTORY_ENTRY_SIZE;
     for (i = 0u; i < RXBIN007_SECTION_COUNT; i++) {
@@ -1913,27 +2152,51 @@ static int rxbin007_parse_image(const unsigned char *image,
         offset = rxbin007_read_u64_at(row + 16u);
         stored_size = rxbin007_read_u64_at(row + 24u);
         expanded_size = rxbin007_read_u64_at(row + 32u);
-        if (kind != i + 1u || flags || alignment != 8u || reserved ||
-            stored_size != expanded_size || offset > SIZE_MAX ||
-            stored_size > SIZE_MAX || (offset & 7u) ||
+        if (kind != i + 1u ||
+            (flags & ~RXBIN007_SECTION_LZSS) ||
+            alignment != 8u || reserved ||
+            offset > SIZE_MAX || stored_size > SIZE_MAX || expanded_size > SIZE_MAX ||
+            (offset & 7u) ||
             offset < previous_end || offset > image_size ||
             stored_size > image_size - (size_t)offset ||
             !rxbin007_zero_bytes(image + previous_end,
-                                 (size_t)offset - previous_end)) return 0;
-        sections[i].data = image + (size_t)offset;
-        sections[i].size = (size_t)stored_size;
+                                 (size_t)offset - previous_end)) goto error;
+        if (flags & RXBIN007_SECTION_LZSS) {
+            if (!stored_size || stored_size >= expanded_size ||
+                (stored_size <= UINT64_MAX / RXBIN007_LZSS_MAX_MATCH &&
+                 expanded_size > stored_size * RXBIN007_LZSS_MAX_MATCH)) goto error;
+            sections[i].owned_data = (unsigned char *)malloc((size_t)expanded_size);
+            if (!sections[i].owned_data) {
+                rxbin007_set_error("out of memory expanding RXBIN 007 section %lu",
+                                   (unsigned long)kind);
+                goto error;
+            }
+            if (!rxbin007_lzss_decompress(image + (size_t)offset,
+                                          (size_t)stored_size,
+                                          sections[i].owned_data,
+                                          (size_t)expanded_size)) {
+                rxbin007_set_error("RXBIN 007 section %lu has invalid compressed data",
+                                   (unsigned long)kind);
+                goto error;
+            }
+            sections[i].data = sections[i].owned_data;
+            sections[i].size = (size_t)expanded_size;
+        } else {
+            if (stored_size != expanded_size) goto error;
+            sections[i].data = image + (size_t)offset;
+            sections[i].size = (size_t)stored_size;
+        }
         previous_end = (size_t)offset + (size_t)stored_size;
     }
     if (previous_end != image_size || sections[RXBIN007_SECTION_CONSTANTS - 1u].size < 16u ||
-        sections[RXBIN007_SECTION_METADATA - 1u].size < 16u) return 0;
+        sections[RXBIN007_SECTION_METADATA - 1u].size < 16u) goto error;
     constant_records = rxbin007_read_u32_at(
         sections[RXBIN007_SECTION_CONSTANTS - 1u].data + 12u);
     metadata_records = rxbin007_read_u32_at(
         sections[RXBIN007_SECTION_METADATA - 1u].data + 12u);
     total_records = (uint64_t)constant_records + metadata_records;
-    if (total_records > UINT32_MAX) return 0;
+    if (total_records > UINT32_MAX) goto error;
 
-    graph_error = 0;
     graph = rx_graph_deserialize_sections(
         sections[RXBIN007_SECTION_GRAPH_FACTS - 1u].data,
         sections[RXBIN007_SECTION_GRAPH_FACTS - 1u].size,
@@ -1944,12 +2207,11 @@ static int rxbin007_parse_image(const unsigned char *image,
         rxbin007_set_error("RXBIN 007 semantic graph is invalid: %s",
                            graph_error ? graph_error : "unknown graph error");
         free(graph_error);
-        return 0;
+        graph_error = 0;
+        goto error;
     }
     free(graph_error);
-    pools = 0;
-    pool_count = 0u;
-    state = 0;
+    graph_error = 0;
     if (!rxbin007_parse_record_section(
             &sections[RXBIN007_SECTION_CONSTANTS - 1u],
             "RXC7",
@@ -1978,13 +2240,16 @@ static int rxbin007_parse_image(const unsigned char *image,
                                 &state)) goto error;
     rxbin007_free_pool_reads(pools, pool_count, 0);
     rx_graph_release(&graph);
+    rxbin007_free_section_views(sections);
     *state_out = state;
     return 1;
 
 error:
+    free(graph_error);
     rxbin007_free_image_state(state);
     rxbin007_free_pool_reads(pools, pool_count, 1);
     rx_graph_release(&graph);
+    rxbin007_free_section_views(sections);
     if (!rxbin007_error[0]) rxbin007_set_error("RXBIN 007 container validation failed");
     return 0;
 }

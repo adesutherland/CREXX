@@ -34,7 +34,8 @@ implementation detail, but the current model contains:
 - integer, floating-point, decimal, string, binary, and object storage
 - string and binary length/capacity fields
 - native payload hooks used by the plugin/runtime integration layer
-- object type-name and attribute storage used by the class/interface runtime
+- an immutable object type descriptor and attribute storage used by the
+  class/interface runtime
 
 The current implementation lives in `interpreter/rxvalue.h`. A simplified view
 is:
@@ -51,7 +52,7 @@ typedef struct value {
     char *binary_value;
     size_t binary_length;
     void *native_payload;
-    char *object_type_name;
+    const struct RxGraphTypeRef *object_type;
     struct value **attributes;
 } value;
 ```

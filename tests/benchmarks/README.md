@@ -50,9 +50,12 @@ cmake-build-release/bin/crexx --nokeep \
   tests/benchmarks/rexxcps_levelb.crexx
 ```
 
-The optional `count` and `averaging` arguments exist only for CTest and
-development diagnostics. Results produced with overrides should report those
-values and should not be compared with default community runs.
+The only accepted override is the explicit `--smoke-count COUNT` form used by
+CTest. It is always reported as `contract=noncanonical-smoke`; a count below
+100 also prints a `NONCANONICAL` warning. Positional overrides are rejected so
+a wrapper cannot silently change the baseline contract. Canonical retained
+evidence must show `contract=canonical-default`, `argv_count=0`, and the
+effective count/averaging provenance printed by the benchmark.
 
 The direct `crexx` command and `run_benchmarks.crexx` execute the program and
 library modules separately, retaining source/TRACE metadata. Optimized CTest
@@ -132,7 +135,10 @@ cmake-build-release/bin/crexx --nokeep tests/benchmarks/run_benchmarks.crexx \
 
 The runner itself is Level B cREXX. It records microsecond-resolution wall
 time as nanoseconds in the CSV columns, validates every child run by exit code
-and `PASS:` output, and identifies the runner with `crexx_version`.
+and `PASS:` output, and identifies the runner with `crexx_version`. For
+RexxCPS it additionally requires the child's
+`REXXCPS-PROVENANCE contract=canonical-default` marker, proving that the formal
+baseline path supplied no count override.
 
 For retained performance evidence, also request the serial sample stream:
 

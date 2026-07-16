@@ -1,0 +1,5 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+rexxcps,rxbvm-007-c3,2.2c-canonical-opt-retained,process,warmup,1,8879288000,0,pass,1127403,cREXX clauses per second
+rexxcps,rxbvm-007-c3,2.2c-canonical-opt-retained,process,recorded,1,9018843000,0,pass,1109859,cREXX clauses per second
+rexxcps,rxbvm-007-c3,2.2c-canonical-opt-retained,process,recorded,2,8937046000,0,pass,1119992,cREXX clauses per second
+rexxcps,rxbvm-007-c3,2.2c-canonical-opt-retained,process,recorded,3,9099163000,0,pass,1100017,cREXX clauses per second

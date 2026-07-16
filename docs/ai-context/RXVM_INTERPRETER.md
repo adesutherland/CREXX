@@ -52,14 +52,16 @@ module-local runtime walkers now follow `proc_head`, `expose_head`, and
 `meta_head` chains instead of sweeping the entire pool.
 
 Under RXBIN 007 the loader validates and retains the materialized sealed-image
-semantic graph and binds portable procedure references. Numeric
-type/member/factory operands and graph indexes avoid rediscovering those
-relationships by scanning canonical metadata. Generic, source/debug, RXVML,
-and cross-image/native compatibility paths continue to traverse the canonical
-module-local `meta_head` chain where needed; milestone 1 deliberately does not
-ship candidate A's eager per-module metadata-kind index and its unconditional
-load-time allocation. The T6 append-only overlay and generation-guarded site
-caches follow profiling.
+semantic graph. During linking it builds one process-local graph binding with a
+dense callable-ID-to-`proc_runtime *` array and bound factory/provider rows.
+Numeric type/member/factory operands and graph indexes avoid rediscovering
+those relationships by scanning canonical metadata. Modules also own compact
+side tables for dynamic method/factory instruction sites; their entries are
+guarded by the context semantic generation. Generic, source/debug, RXVML, and
+cross-image/native compatibility paths continue to traverse the canonical
+module-local `meta_head` chain where needed. The T6 append-only overlay remains
+future work; current late linking rebuilds the complete bindings and advances
+the generation coherently.
 
 `socket_registry` is the context-owned table for core TCP sockets. Rexx and
 RXAS code see small positive integer handles, not native descriptors. The
@@ -284,8 +286,7 @@ struct value {
     const rxvm_native_payload_ops *native_payload_ops;
     unsigned int native_payload_flags;
 
-    const char *object_type_name;    /* Runtime concrete class name */
-    size_t object_type_name_length;
+    const struct RxGraphTypeRef *object_type; /* Immutable runtime type */
     
     value **attributes;              /* For associative arrays/objects */
     size_t num_attributes;
@@ -362,9 +363,15 @@ cache for internal materialization, but arbitrary bytes belong on the `.binary`
 path. `CREXX_RXPA_DISABLE_UTF8_CHECKS=1` disables the RXPA post-call check for
 developer migration/debugging; normal builds should leave it enabled.
 
-The two `object_type_name` fields are the current Level B hook for interface
-dispatch. Class factories stamp object values with `setobjtype`, and later VM
-lookups use that concrete class identity when resolving interface member calls.
+The `object_type` descriptor pointer is the Level B hook for object identity,
+type tests and interface dispatch. Graph-backed descriptors are materialized by
+`rxbin` when a checked graph is built or loaded; they contain canonical
+name/length plus graph/ID identity and reach precomputed assignability and
+dispatch views. VM-only synthetic types use immutable static descriptors.
+Class factories stamp object values with `setobjtype`, and later VM lookups use
+that concrete descriptor when resolving interface member calls. Copy, move and
+zero operations therefore transfer or clear one pointer rather than duplicating
+name, length, graph and ID fields on every value.
 Bare object class defaults are represented as ordinary object type metadata plus
 the VM-private `RXFLAG_VM_OBJECT_UNINITIALIZED` flag. `setobjuninit` creates
 that state, while `setobjtype` clears it when a factory has produced an
@@ -407,9 +414,10 @@ instructions then raise that through the ordinary catchable VM signal path.
 ### Copy, Move, and Native Payloads
 
 Rexx objects are not user-visible native pointers. A Rexx object value is still
-a VM `value`: it may have attributes, a concrete `object_type_name`, scalar
-storage, and an optional binary payload. Class/interface dispatch is based on
-the stamped object type plus metadata, not on exposing a C pointer to Rexx code.
+a VM `value`: it may have attributes, a concrete `object_type` descriptor,
+scalar storage, and an optional binary payload. Class/interface dispatch is
+based on the stamped object type plus the semantic graph, not on exposing a C
+pointer to Rexx code.
 
 The VM has two distinct value-transfer paths:
 
@@ -1094,64 +1102,56 @@ buffer, while graph-bearing operands remain dense graph IDs.
 
 ## 4. Current Interface Dispatch in the VM
 
-The current Level B interface runtime slice adds three VM-facing pieces on top
+The current Level B interface runtime slice adds these VM-facing pieces on top
 of the older object model:
 
-- `SETOBJTYPE_REG_STRING` uses its serialized type ID to store a graph pointer,
-  type ID, and diagnostic/fallback class text on an object value
-- `SRCMETHODSEL_REG_REG_STRING` uses its member ID and the graph dispatch index
-  to resolve the effective method procedure
-- `SRCFPROCSEL_REG_STRING_REG` uses its factory-bucket ID and provider index to
-  enumerate candidate class factories
+- `SETOBJTYPE_REG_STRING` uses its serialized type ID to store one immutable
+  `RxGraphTypeRef *` on an object value
+- `SRCMETHODSEL_REG_REG_STRING` uses its member ID, the receiver descriptor's
+  dense dispatch row, the graph's bound callable array and a two-way
+  generation-guarded instruction-site cache
+- `SRCFPROCSEL_REG_STRING_REG` uses its factory-bucket ID and a cached bound
+  provider range; a single-provider/no-match bucket has a direct-target path
 - `TYPEOF_REG_REG` returns the canonical source type name of an object value
 - `ISTYPE_REG_REG_STRING` tests an object value against an interface, class,
   or `.object`
 - `ASSERTTYPE_REG_STRING` raises `CONVERSION_ERROR` on a failed object cast
 
 `srcmethodsel` and `srcfprocsel` both return a `proc_runtime *` in a normal
-register, and the existing `dcall` path performs the actual invocation. The
-selector string is a callable descriptor (`rxsig1|name|return_type|args`), so
-lookup is not name-only: the selected procedure must also match the expected
-signature.
+register, and the existing `dcall` path performs the actual invocation. Human
+RXAS/RXDAS uses callable descriptors (`rxsig1|name|return_type|args`), but a
+linked 007 instruction carries a numeric graph member/factory ID. Signatures
+are validated while the graph and bindings are built, not reparsed on the
+sealed success path.
 
 ### Current `srcmethodsel` semantics
 
-The current implementation is now:
+The current graph fast path is:
 
-- it rebuilds an interface-method registry only when newly loaded modules
-  invalidate that cache
-- registry rows are sorted by fully qualified concrete class name plus method
-  descriptor, and exact dispatch uses binary search without parsing the
-  descriptor on a registry hit
-- for each `class implements interface` link, the VM resolves the effective
-  procedure for each interface member during link and validates its metadata
-  signature
+- every graph callable is resolved to `proc_runtime *` once during a semantic-
+  generation binding rebuild
+- the receiver descriptor provides a dense member-to-callable row, and the
+  callable ID indexes the bound target array
+- a two-way site cache is keyed by receiver descriptor and semantic generation
 - if a concrete `class.member` procedure exists, that wins
 - otherwise, if the interface member kind is `method final`, the VM binds the
   interface's emitted default-body procedure instead
-- if no registry row exists, `srcmethodsel` still falls back to a direct
-  `class.member` lookup, but only accepts it when the descriptor matches
+- cross-graph/native compatibility may still use the legacy sorted registry,
+  but the sealed numeric path does not
 
 ### Current `srcfprocsel` semantics
 
-The current implementation is now:
+The current graph fast path is:
 
 - it handles both the default `*` interface factory surface and named factory
   selectors
-- it rebuilds a factory-provider registry only when newly loaded modules
-  invalidate that cache
-- registry rows are sorted by interface FQN plus factory member name, so
-  dispatch binary-searches the matching provider bucket instead of scanning
-  unrelated interfaces
-- each provider row owns a parsed callable signature built during registry
-  rebuild; dispatch parses the requested descriptor once and does not reparse
-  every candidate descriptor
-- for each candidate class, it resolves the concrete `§factory` or
-  `§factory.member` procedure through the existing metadata/procedure tables
-  and validates the factory signature
-- each candidate row may also carry an optional resolved `§match` or
-  `§match.member` procedure, which must match the factory arguments and return
-  `.int`
+- each factory ID indexes a prebound provider range; every row contains the
+  concrete class name, factory target, optional match target and match-required
+  flag
+- the instruction-site cache retains that binding across calls and is cleared
+  by semantic-generation mismatch
+- a one-provider bucket with no explicit `match` returns its direct target
+  without running the general scoring loop
 - `srcfprocsel` calls the effective `match` on every candidate with the same
   argument list that will later be passed to the selected factory, even when
   only one candidate exists
@@ -1161,6 +1161,12 @@ The current implementation is now:
 - the highest positive score wins
 - ties are broken alphabetically by fully qualified concrete class name
 - if no provider exists, the VM raises `FUNCTION_NOT_FOUND`
+
+Graph construction matches source-short and canonical class-type spellings in
+factory signatures. This prevents a valid source descriptor from creating a
+duplicate providerless factory bucket during RXAS/RXLINK remapping. The
+standalone graph harness audits the numeric IDs embedded in executable
+instructions in addition to measuring a known-valid bucket.
 
 Runtime module loading matters here as well. `METALOADMODULE` marks the
 VM link state dirty and immediately calls `rxvm_link()` after a successful

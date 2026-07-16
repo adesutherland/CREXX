@@ -65,6 +65,16 @@ evidence. The dated programme charter remains
 roadmap for live status and idea capture rather than editing historical findings
 into the charter.
 
+After an approved production performance edit, follow the mandatory first
+Release verdict in `performance/AGENTS.md` before doing broad closeout work.
+Once the minimum focused correctness checks needed for safe measurement pass,
+freeze implementation, build the ordinary profiling-off Release product, run
+the smallest decisive end-to-end comparison against retained valid baseline
+evidence, report it to Adrian, and stop for direction. The implementation
+remains provisional and revertable until that verdict is accepted. Full Debug
+CTest, sanitizer, install/package proof, harness refinement, follow-on PoCs,
+cleanup, and documentation polish come after this decision gate, not before it.
+
 ## Linux Install Notes
 
 - The default CMake install prefix is the user prefix, `$HOME/.local`, so a

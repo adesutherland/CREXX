@@ -134,6 +134,8 @@ typedef struct rxvm_native_payload_ops {
 } rxvm_native_payload_ops;
 #endif
 
+struct RxGraphTypeRef;
+
 typedef union {
     /* Register/value status flags. Masks are centralized in binutils/include/rxflags.h. */
     uint32_t all_type_flags;
@@ -165,10 +167,7 @@ struct value {
     unsigned int native_payload_flags;
     rxvm_reference_cell *reference_identity; // This value is a reference target
     rxvm_reference_cell *reference_payload; // This value is itself a reference
-    const char *object_type_name; // Runtime concrete class name, may point into a module constant pool
-    size_t object_type_name_length;
-    const struct RxGraph *object_type_graph; // Graph owning object_type_id; lifetime is the VM module image
-    uint32_t object_type_id;
+    const struct RxGraphTypeRef *object_type; // Stable immutable runtime type descriptor
     value **attributes;
     value **unlinked_attributes;
     value **attribute_buffers;

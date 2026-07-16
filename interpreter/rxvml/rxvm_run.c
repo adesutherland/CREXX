@@ -96,6 +96,11 @@ int rxvm_link(struct rxvm_context* ctx) {
         rxvm_rebuild_interface_factory_registry(ctx);
         ctx->interface_factory_registry_dirty = 0;
     }
+    if (linked_any) {
+        /* Factory bindings aggregate providers from every loaded image, so
+           build them after the process-wide compatibility registries. */
+        rxvm_rebuild_graph_bindings(ctx);
+    }
     return 0;
 }
 

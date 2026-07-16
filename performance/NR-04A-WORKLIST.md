@@ -1,7 +1,8 @@
 # NR-04A resumable worklist: kind-index runtime metadata and scan counters
 
-Status: T6/RXBIN 007 milestone 1 implemented and Debug-green; profiling and
-physical-layout PoCs next
+Status: complete — RXBIN 007, process-local graph views/bindings, site caches,
+section compression, retained Release evidence, cross-image provider behavior,
+and the full 1,846-test Debug closeout all pass
 
 Started: 2026-07-16
 
@@ -121,8 +122,13 @@ metadata index as the performance target while retaining A/C as comparators.
 - [x] Keep language selection policy outside the structural graph: the cREXX view
   admits signature-eligible candidates and the VM retains factory scoring and
   tie-break decisions.
-- [ ] Add the late/native append-only overlay and generation-guarded site caches.
-  Milestone 1 retains canonical-text compatibility across graph identities.
+- [x] Add generation-guarded method/factory instruction-site caches over the
+  sealed graph, with cache side tables owned by the runtime module.
+- [x] Preserve late/native correctness by rebuilding and coherently publishing
+  complete process-local callable/factory bindings after a successful late
+  link, with canonical-text compatibility across graph identities. An
+  append-only incremental overlay is a possible future optimization, not an
+  NR-04A completion requirement.
 - [x] Migrate RXAS, RXLINK, RXDAS, RXVM/RXBVM, compiler imports, RXSEQ, tests,
   native archives, and the installed `crexx`/`crxc`/`ccomp` native-link surfaces
   atomically to 007 with no 006 product fallback.
@@ -132,19 +138,91 @@ metadata index as the performance target while retaining A/C as comparators.
 
 ### T6 post-milestone measurement and closeout slices
 
-- [ ] Compare candidate name-hash, adjacency, declaration, callable, dispatch,
-  and provider layouts on construction time, lookup/traversal, and retained and
-  serialized bytes.
-- [ ] Measure 007 file size, RXAS/RXLINK time, validation/binding time, and
-  load-to-first-result against retained A/A-prime/C evidence.
-- [ ] Compare assignability and resolved dispatch-view encodings without moving
-  inheritance/override/default/provider selection rules into the graph library.
-- [ ] Compare cold numeric lookup plus monomorphic, bimorphic,
-  small-polymorphic, and megamorphic site caches in both VM modes.
-- [ ] Measure the late/native overlay's publish/rebuild cost, generation
-  invalidation, first miss, and refilled steady state.
-- [ ] Run sanitizer, Release, lifecycle, exact-image, full portfolio, and
-  cross-platform validation before production performance closeout.
+- [x] Correct the split-read `MTIME` measurement defect and make the CTest-only
+  RexxCPS count override explicit and noncanonical.
+- [x] Take an early end-to-end RXBIN 007 measurement against audited retained
+  baseline evidence; stop for direction before physical-layout, cache, overlay,
+  or graph-harness refinement.
+- [x] After Adrian requested attribution, build the standalone `rxgraph_bench`
+  target over production `rxbin`, exercise retained linked images and a fresh
+  RXAS image, and retain serial primitive/size measurements.
+- [x] Review graph population, codec/load copies, VM `ProcRef` binding,
+  relationship/dispatch/factory hot paths, generic `value` growth, and 006/007
+  section-size attribution.
+- [x] Record C1/C2/C3 `TYPE_CONST` versus descriptor-table layouts and R0-R4
+  repair options in `NR-04A-RXBIN-007-IMPLEMENTATION-REVIEW.md`.
+- [x] Obtain Adrian's selection before changing the production representation:
+  retain RXBIN 007 and the existing call sites, use a C3-style process-local
+  descriptor/view owned by `rxbin`, and take an immediate baseline before
+  changing VM procedure binding.
+- [x] Implement Adrian's selected one-time dense callable binding plus caches:
+  bind every portable callable ID to `proc_runtime *` during semantic-generation
+  rebuild, materialize bound factory/provider rows, use a two-way method-site
+  cache, and cache factory buckets/direct single-provider targets.
+- [x] Extend the isolated harness from selecting a known-valid graph factory to
+  auditing every graph-bearing operand in a real executable image. It exposed
+  two providerless factory operands in the first 007 image.
+- [x] Fix source-short versus canonical factory return-type remapping in the
+  graph builder/linker. The rebuilt image has 24 provider-backed factories
+  rather than 25 buckets / 24 providers, and the operand audit reports zero
+  providerless sites.
+- [x] Run the immediate focused Release gate. Final `rxvm` retained process,
+  method and factory-region medians are 48.965 ms, 37,044 us and 7,905 us,
+  versus 204.432 ms, 45,591 us and 152,985 us at exact pre-007 commit
+  `7a599906b`. Focused Debug coverage is 82/82 green.
+- [x] Audit runtime-relevant changes from 006 to current. The rejected
+  per-query `runtime_graph_procedure()` scan was new in 007; 006 stored bound
+  procedure pointers in its registries. The current scan is cold rebuild-only,
+  graph hot helpers are inline, and `value` is 248 bytes versus 256 in 006.
+- [x] Prototype canonical-section compression in isolation using the former
+  006 LZSS codec. On fresh linked retained images it reduces interface from
+  126,972 to 56,316 bytes and RexxCPS from 869,908 to 349,292 bytes without
+  changing the graph representation; compressing every current section reaches
+  37,458 and 273,858 bytes respectively.
+- [x] Prototype and semantically validate a compact/narrow graph seed. The
+  linkable full form plus compressed non-graph sections reaches 31,880 bytes for
+  interface and 259,144 for RexxCPS; the terminal dynamic form reaches
+  31,624/254,832. Both rebuild the production graph and keep its control-cost
+  hot view, but dynamic generic-builder reconstruction costs 267 us and 3.349
+  ms on those linked images (full costs 279 us/3.913 ms).
+- [x] Prototype and semantically validate a minimal link-resolved runtime seed
+  with constant-pool string references plus inline fallback, direct
+  relationship/declaration walks, dynamic procedure references, assignability,
+  dispatch, ordered factory/provider data, direct walk ranges and name indexes.
+  It reaches 29,384 bytes for interface and 247,848 for RexxCPS, materializes in
+  5 us/28 us including seed unpack, and preserves approximately 0.9 ns
+  dispatch/factory/type primitives. Relationship bucket lookup is 0.86-0.90 ns
+  and positive type-name search is 15-26 ns.
+- [x] Measure the unrefined full-general-plus-resolved combination. It reaches
+  33,340 bytes for interface and 262,762 for RexxCPS while allowing the runtime
+  to decode only the 5-us/28-us resolved section. This is an upper bound because
+  it duplicates runtime facts; a selected split design would need a narrower
+  tooling/policy residual PoC.
+- [x] Regenerate standalone and retained linked fixtures through real RXAS and
+  RXLINK invocations and retain exact hashes, sizes, commands, section results,
+  decoder equivalence checks and hot measurements in
+  `evidence/2026-07-16-nr-04a-rxbin-size-options/`.
+- [x] Obtain Adrian's physical-format selection before changing production
+  serialization. Adrian selected the closest current shape: keep complete,
+  equivalent, re-linkable RXAS/RXLINK images and add transparent compression
+  to the shared 007 section codec. Compact/split graph seeds remain optional
+  follow-on designs rather than this slice.
+- [x] Implement deterministic per-section compression in shared `rxbin`, retain
+  a raw section when compression is not smaller, validate bounded exact
+  expansion, and cover mixed/corrupt directory and stream cases.
+- [x] Rebuild real RXAS/RXLINK images, prove linked output can be linked again
+  byte-for-byte, run both VMs, and take the immediate Release gate. Retained
+  interface falls from 126,972 to 37,458 bytes and RexxCPS from 869,908 to
+  273,858 bytes with no end-to-end timing regression.
+The authoritative bound/cache evidence is
+`evidence/2026-07-16-nr-04a-bound-cache/`; the subsequent independent physical
+layout comparison is
+`evidence/2026-07-16-nr-04a-rxbin-size-options/`. The selected production
+compression result is in
+`evidence/2026-07-16-nr-04a-rxbin-007-compression/`. The runtime and gross
+serialized-size gates pass. Compact graph seeds and an incremental append-only
+overlay remain evidence for separately scheduled optional refinements, not
+unfinished NR-04A work.
 
 ## `meta_head` traversal inventory before migration
 
@@ -250,6 +328,10 @@ Proposed operation vocabulary (adjust only to match audited call boundaries):
 `source_context`, `metadata_introspection`, and `profile_catalog`.
 
 ## Baseline ledger
+
+This and the following implementation/test/validation ledgers describe the
+superseded candidate-A path. Their unchecked items are historical and are not
+active NR-04A closeout work.
 
 Evidence root: `performance/evidence/2026-07-16-nr-04a-kind-index/`
 
@@ -359,3 +441,150 @@ Evidence root: `performance/evidence/2026-07-16-nr-04a-kind-index/`
 - No T6 performance profile, physical-layout comparison, Release portfolio, or
   sanitizer claim is made by this checkpoint. Those are the next directed
   milestone, not prerequisites for the requested design/build/CTest gate.
+
+## 2026-07-16 T6 early measurement checkpoint
+
+- Fixed `MTIME` and `XTIME "U"` to derive seconds and microseconds from one
+  `gettimeofday()` snapshot. RexxCPS now rejects positional overrides, marks
+  `--smoke-count` as noncanonical, prints effective provenance, and the formal
+  runner requires the canonical no-argument marker.
+- The focused Debug build and seven focused/fixture tests passed: both `TIME`
+  tests, both explicit RexxCPS smoke tests, both canonical runner tests, and the
+  linked optimized artifact fixture.
+- Audited existing raw evidence and found no retained 86,400-second process
+  sample or 6/12-CPS RexxCPS signature. Existing pre-007 samples therefore
+  remain input. No new 006 control was retained; three cells that had already
+  completed when the unnecessary rerun was stopped were removed.
+- The 007 `rxvm` interface benchmark regressed 81.7% retained and 76.9%
+  stripped in process time; its method/factory timed regions regressed
+  71.0-95.8%. Canonical RexxCPS fell 14.0% against the retained clean O3
+  baseline. Linked image size grew 3.24-4.64x in the measured cells.
+- Exact 007 samples, raw output, provenance, images, and interpretation are in
+  `evidence/2026-07-16-nr-04a-rxbin-007-early-baseline/`. The result triggers
+  the early stop/replan gate; no graph-layout harness, cache/layout PoC,
+  overlay, full portfolio rerun, sanitizer sweep, or production closeout
+  follows without Adrian's direction.
+
+## 2026-07-16 RXBIN 007 implementation review checkpoint
+
+- Adrian directed a full design/size review and a seconds-scale isolated
+  harness before any further integrated work. `rxgraph_bench` now links only
+  production `rxbin`, builds independently, loads real retained/RXAS 007
+  images, and reports primitive latency plus serialized and retained size.
+- Serial isolated measurements show exact support at 0.9-1.2 ns, but positive
+  transitive support at 32-38 ns and negative support at 49-73 ns. The
+  implementation allocates and breadth-first-walks relationships for every
+  query. A scratch precomputed bit test measures 0.85-0.98 ns and a direct
+  bound-target load 0.94 ns, proving the intended effectively-control-cost
+  shape. Numeric dispatch/factory graph primitives are 3-5 ns, but the VM then
+  scans modules and procedures to bind each portable callable on every
+  selection.
+- `value` grew from 256 to 272 bytes and gained graph/ID stores in zero/copy/
+  move paths. This is an unrelated-hot-path risk consistent with the RexxCPS
+  warning and must be removed or disproved.
+- The 3.24-4.64x file increase is mostly explained by 007 storing the formerly
+  compressed constant/metadata pool expanded. The graph is still materially
+  over-broad: all `META_FUNC` records become callables and graph-local text
+  repeats canonical semantic text.
+- The review recommends one context-canonical type pointer, inline equality/
+  assignability-bit tests, already-bound dispatch rows, and direct factory
+  buckets. It retains three portable/runtime ownership choices: a
+  `TYPE_CONST` that is the descriptor, a `TYPE_CONST` pointing to a context
+  descriptor, or a separate compact seed and descriptor table. No choice has
+  been implemented.
+- Full findings, performance gates and R0-R4 repair options are in
+  `NR-04A-RXBIN-007-IMPLEMENTATION-REVIEW.md`; retained exploratory results are
+  under
+  `evidence/2026-07-16-nr-04a-rxbin-007-early-baseline/isolated-rxgraph/`.
+
+## 2026-07-16 C3-style/R1 candidate checkpoint
+
+- Adrian selected the shortest repair that preserves the current 007
+  integration: keep the six-section seed and existing consumers, but replace
+  the `rxbin` process-local lookup shape and value identity before measuring
+  any VM-specific target-binding optimization.
+- `rxbin` now materializes a dense transitive assignability bitset, dense
+  `uint32_t` dispatch/factory views, direct provider ranges and stable immutable
+  type descriptors after build or checked deserialization. Numeric support is
+  0.69-0.70 ns and the actual descriptor path is 0.92-1.07 ns in the retained
+  interface/RexxCPS images. Descriptor dispatch is about 0.92-0.93 ns.
+- A VM `value` now stores one `RxGraphTypeRef *`; name, length, graph and ID live
+  in the descriptor. `sizeof(value)` is 248 bytes, down from the rejected 272
+  bytes and below the pre-graph 256 bytes. Zero/copy/move each perform one type
+  pointer store rather than four field stores.
+- The unchanged RXBIN images prove this is a process-local implementation
+  comparison. Runtime graph memory rises from 27,023 to 50,703 bytes for the
+  interface image and from 81,576 to 150,048 bytes for RexxCPS, principally
+  from the two dense type-by-member `uint32_t` views; serialized size is
+  unchanged.
+- The first integrated `rxvm` interface medians are now +5.3% retained and
+  +7.0% stripped versus exact pre-007 evidence, rather than +81.7%/+76.9%.
+  Method time is still +9.9%/+13.2%, while factory time is +5.7%/+4.6%.
+  Canonical RexxCPS reaches 1,129,206 CPS, +31.7% versus the retained clean O3
+  comparator and +53.1% versus the first 007 gate.
+- Release graph/direct workload checks pass. The focused Debug graph,
+  interface, late-load and RXVML sweep passes 81/81. Raw serial results and
+  provenance are in `evidence/2026-07-16-nr-04a-c3-candidate/`.
+- The deliberate stop leaves `runtime_graph_procedure()` unchanged. The next
+  decision is the process-local callable-to-`proc_runtime *` binding shape;
+  no site cache, compression, graph-scope reduction or closeout work has begun.
+
+## 2026-07-16 bound/cache and factory-remap checkpoint
+
+- Adrian selected one-time dense callable/factory bindings plus caches. The VM
+  builds those process-local tables only when a semantic generation changes;
+  sealed method/factory selection no longer scans modules or procedures.
+- A two-way method-site cache and factory bucket/direct-target site cache are
+  VM-owned and generation guarded. Portable RXBIN data contains no process
+  pointers and serialized instructions remain immutable.
+- The enhanced graph harness found that both executable factory sites in the
+  first 007 linked image referenced a duplicate providerless factory. A valid
+  source-short return type had not matched its canonical declared class type.
+  Semantic signature matching fixes the producer/remap and the rebuilt image
+  reports zero providerless factory sites.
+- Final profiling-off `rxvm` retained medians are 48.965 ms process, 37,044 us
+  method and 7,905 us factory-region, versus 204.432 ms, 45,591 us and
+  152,985 us in exact pre-007 evidence. `SRCMETHODSEL`/`SRCFPROCSEL` attribution
+  is about 14 ns each; 006 was 21 ns/448 ns. Focused Debug coverage passes
+  82/82 and the final canonical RexxCPS smoke reports 1,132,602 CPS.
+- Runtime performance passes this focused gate. The subsequent disposable
+  size PoCs prove the dominant compression recovery and compare two graph
+  shapes on fresh RXAS/RXLINK fixtures. Compression plus a compact dynamic seed
+  reaches 31,624 bytes for retained interface and 254,832 for linked RexxCPS;
+  compression plus a minimal resolved runtime seed reaches 29,384/247,848 with
+  5-us/28-us materialization and control-cost hot access. Keeping the current
+  full compact seed beside it costs 33,340/262,762 before residual deduplication.
+- The next action is Adrian's choice between a compact general graph and a
+  separate resolved runtime plus tooling/policy representation. Do not rebuild
+  the integrated compiler/VM, run broad closeout, or write final NR-04A reports
+  before that format/scope selection.
+
+## 2026-07-16 selected RXBIN 007 compression checkpoint
+
+- Adrian selected the closest current shape: RXAS and RXLINK retain the same
+  complete, executable, re-linkable six-section image, while shared `rxbin`
+  compresses each finished section only when the stored form is smaller.
+- Production output matches the PoC prediction exactly. Retained interface is
+  37,458 bytes and retained RexxCPS is 273,858 bytes, reductions of 70.50% and
+  68.52% from the fresh uncompressed 007 images. A retained interface image
+  re-links byte-for-byte and runs under both VMs.
+- Median complete interface-image load/materialization is 106 us versus 79 us
+  uncompressed. Descriptor support/dispatch and factory/provider access remain
+  approximately 1 ns. Same-cell process, method, and factory medians move by at
+  most 0.85% except a 2-3% stripped `rxvm` improvement. Canonical RexxCPS is
+  1,120,626 CPS for `rxvm` and 1,135,200 for `rxbvm`.
+- Focused Debug format/graph/link/RXDAS/interface coverage passes 8/8. The
+  obsolete size and alternate-seed PoC target/sources are removed;
+  `rxgraph_bench` remains an `EXCLUDE_FROM_ALL` production-library regression
+  harness.
+- Raw evidence and the selected-format verdict are in
+  `evidence/2026-07-16-nr-04a-rxbin-007-compression/`. The physical-format stop
+  is resolved; compact graph seeds are optional future refinement evidence.
+- Final closeout found that a graph-local factory binding could select a
+  catch-all provider before considering a higher-scoring provider from another
+  loaded 007 image. Factory bindings now aggregate the validated process-wide
+  provider registry after linking. The minimal CMS reproducer, all six ADDRESS
+  integration fixtures, and the LLM fixture under `rxbvm` pass.
+- The final Debug rebuild succeeds and the broad suite passes 1,846/1,846.
+  This closes NR-04A; no append-only overlay, alternate graph seed, sanitizer,
+  cross-platform, or additional portfolio sweep is carried as required work.

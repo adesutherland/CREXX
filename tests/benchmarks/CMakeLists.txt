@@ -3,15 +3,25 @@ set(LIBRPATH ${CMAKE_BINARY_DIR}/bin/library)
 add_custom_target(language_benchmarks ALL)
 
 function(crexx_add_language_benchmark NAME SOURCE SMOKE_ARG PASS_REGEX)
+    set(_runtime_args ${LIBRPATH} -a ${SMOKE_ARG})
+    set(_test_labels "benchmark;language")
+    set(_required_output_regex "${PASS_REGEX}")
+    if(NAME STREQUAL "benchmark_rexxcps_levelb")
+        set(_runtime_args ${LIBRPATH} -a --smoke-count ${SMOKE_ARG})
+        list(APPEND _test_labels "rexxcps-smoke" "noncanonical")
+        list(APPEND _required_output_regex
+                "REXXCPS-PROVENANCE contract=noncanonical-smoke"
+                "NONCANONICAL: RexxCPS smoke count is below the canonical minimum of 100")
+    endif()
     crexx_add_rexx_opt_matrix(
             NAME ${NAME}
             SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/${SOURCE}
             TARGET_GROUP language_benchmarks
             IMPORT_PATHS ${CMAKE_BINARY_DIR}/bin
             DEPENDS library compiler_exit_bin
-            RUNTIME_ARGS ${LIBRPATH} -a ${SMOKE_ARG}
-            TEST_LABELS "benchmark;language"
-            REQUIRED_OUTPUT_REGEX "${PASS_REGEX}"
+            RUNTIME_ARGS ${_runtime_args}
+            TEST_LABELS ${_test_labels}
+            REQUIRED_OUTPUT_REGEX ${_required_output_regex}
             FORBIDDEN_OUTPUT_REGEX "FAIL:|Failed|PANIC:"
     )
 endfunction()
@@ -63,9 +73,11 @@ crexx_add_rexx_opt_matrix(
                 --mode opt
                 --warmups 0
                 --runs 1
-                --benchmark sieve
-        TEST_LABELS "benchmark;runner"
-        REQUIRED_OUTPUT_REGEX "benchmark,vm,mode,runs,min_ns,median_ns,mean_ns,max_ns,platform,crexx_version"
+                --benchmark rexxcps
+        TEST_LABELS "benchmark;runner;canonical-contract"
+        REQUIRED_OUTPUT_REGEX
+                "benchmark,vm,mode,runs,min_ns,median_ns,mean_ns,max_ns,platform,crexx_version"
+                "rexxcps,rxvm,opt,1"
         FORBIDDEN_OUTPUT_REGEX "ERROR:|FAIL:|PANIC:"
 )
 

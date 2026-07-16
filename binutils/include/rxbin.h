@@ -60,6 +60,10 @@ enum rxbin007_section_kind {
     RXBIN007_SECTION_GRAPH_INDEXES = 6
 };
 
+enum rxbin007_section_flags {
+    RXBIN007_SECTION_LZSS = 1u << 0
+};
+
 typedef struct bin_space bin_space;
 
 /* cREXX Instruction Coding */

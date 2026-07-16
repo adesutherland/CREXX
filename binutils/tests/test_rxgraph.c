@@ -31,6 +31,9 @@ int main(void) {
     RxGraphProcRef procedure;
     RxGraphCallableView callable_view;
     RxGraphDeclarationView declaration_view;
+    const RxGraphTypeRef *box_type_ref;
+    const RxGraphTypeRef *shape_type_ref;
+    const RxGraphTypeRef *asset_type_ref;
     unsigned char *bytes;
     unsigned char *corrupt;
     unsigned char *facts;
@@ -80,7 +83,7 @@ int main(void) {
                                            RX_GRAPH_MEMBER_METHOD);
     factory_member = rx_graph_builder_add_member(builder,
                                                  "*",
-                                                 ".shape",
+                                                 ".graph_test..shape",
                                                  "",
                                                  RX_GRAPH_MEMBER_FACTORY);
     procedure.module_index = 3u;
@@ -166,6 +169,15 @@ int main(void) {
                   "link source-qualified type spelling to declared node");
     ok &= require(rx_graph_type_supports(graph, derived_box, asset),
                   "walk class and interface inheritance transitively");
+    box_type_ref = rx_graph_type_ref(graph, box);
+    shape_type_ref = rx_graph_type_ref(graph, shape);
+    asset_type_ref = rx_graph_type_ref(graph, asset);
+    ok &= require(box_type_ref && shape_type_ref && asset_type_ref &&
+                  box_type_ref->graph == graph && box_type_ref->id == box &&
+                  strcmp(box_type_ref->name, "graph_test.box") == 0 &&
+                  rx_graph_type_ref_supports(box_type_ref, shape_type_ref) &&
+                  rx_graph_type_ref_supports(box_type_ref, asset_type_ref),
+                  "materialize stable type descriptors and direct support view");
     ok &= require(descriptor && rx_graph_find_member(graph, descriptor) == describe,
                   "find member by descriptor");
     ok &= require(rx_graph_declaration_count(graph, shape) == 2u &&
@@ -174,6 +186,8 @@ int main(void) {
                   "enumerate declarations by owner index");
     ok &= require(rx_graph_dispatch(graph, box, describe) == callable,
                   "resolve dispatch");
+    ok &= require(rx_graph_type_ref_dispatch(box_type_ref, describe) == callable,
+                  "resolve dispatch through stable type descriptor");
     ok &= require(rx_graph_callable(graph, callable, &callable_view) &&
                   callable_view.procedure.module_index == 3u &&
                   callable_view.procedure.procedure_offset == 1234u,
@@ -186,7 +200,8 @@ int main(void) {
                                          1u,
                                          factory);
     ok &= require(factory_text &&
-                  strcmp(factory_text, "rxsig1|graph_test.shape|.shape|") == 0,
+                  strcmp(factory_text,
+                         "rxsig1|graph_test.shape|.graph_test..shape|") == 0,
                   "render factory operand text");
     if (factory_text) {
         uint32_t resolved_factory = RX_GRAPH_NONE;
@@ -201,6 +216,20 @@ int main(void) {
         free(error);
         error = 0;
     }
+    {
+        uint32_t resolved_factory = RX_GRAPH_NONE;
+        ok &= require(rx_graph_resolve_operand(
+                          graph,
+                          OP_SRCFPROCSEL_REG_STRING_REG,
+                          1u,
+                          "rxsig1|graph_test.shape|.shape|",
+                          &resolved_factory,
+                          &error) &&
+                      resolved_factory == factory,
+                      "resolve source-short factory return type to declared bucket");
+        free(error);
+        error = 0;
+    }
     free(factory_text);
     free(descriptor);
 
@@ -211,9 +240,16 @@ int main(void) {
     if (copy) {
         RxGraphId copied_box = rx_graph_find_type(copy, "graph_test.box");
         RxGraphId copied_shape = rx_graph_find_type(copy, "graph_test.shape");
+        const RxGraphTypeRef *copied_box_ref = rx_graph_type_ref(copy, copied_box);
+        const RxGraphTypeRef *copied_shape_ref = rx_graph_type_ref(copy, copied_shape);
         ok &= require(copied_box != RX_GRAPH_NONE && copied_shape != RX_GRAPH_NONE &&
-                      rx_graph_type_supports(copy, copied_box, copied_shape),
-                      "query deserialized graph");
+                      rx_graph_type_supports(copy, copied_box, copied_shape) &&
+                      copied_box_ref && copied_shape_ref &&
+                      rx_graph_type_ref_supports(copied_box_ref,
+                                                 copied_shape_ref) &&
+                      rx_graph_type_ref_dispatch(copied_box_ref,
+                                                 describe) == callable,
+                      "rebuild runtime views for deserialized graph");
         rx_graph_release(&copy);
     }
     free(error);
