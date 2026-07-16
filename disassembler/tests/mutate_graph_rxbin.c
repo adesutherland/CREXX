@@ -8,6 +8,16 @@
 #define RXBIN007_HEADER_SIZE 64u
 #define RXBIN007_DIRECTORY_ENTRY_SIZE 40u
 #define RXBIN007_GRAPH_FACTS_SECTION 5u
+#define RXBIN007_SECTION_LZSS 1u
+
+static uint32_t read_u32le(const unsigned char *bytes) {
+    uint32_t value;
+    unsigned int i;
+
+    value = 0u;
+    for (i = 0u; i < 4u; i++) value |= (uint32_t)bytes[i] << (i * 8u);
+    return value;
+}
 
 static uint64_t read_u64le(const unsigned char *bytes) {
     uint64_t value;
@@ -24,7 +34,10 @@ int main(int argc, char **argv) {
     unsigned char *bytes;
     long length;
     size_t facts_row;
+    size_t magic_offset;
+    uint32_t facts_flags;
     uint64_t facts_offset;
+    uint64_t facts_stored_size;
     int result;
 
     if (argc != 3) return 2;
@@ -48,12 +61,30 @@ int main(int argc, char **argv) {
         free(bytes);
         return 6;
     }
+    facts_flags = read_u32le(bytes + facts_row + 4u);
     facts_offset = read_u64le(bytes + facts_row + 16u);
-    if (facts_offset >= (uint64_t)length) {
+    facts_stored_size = read_u64le(bytes + facts_row + 24u);
+    if ((facts_flags & ~RXBIN007_SECTION_LZSS) ||
+        facts_offset > (uint64_t)length ||
+        facts_stored_size > (uint64_t)length - facts_offset ||
+        facts_stored_size == 0u) {
         free(bytes);
         return 7;
     }
-    bytes[(size_t)facts_offset] = (unsigned char)'X';
+    magic_offset = (size_t)facts_offset;
+    if (facts_flags & RXBIN007_SECTION_LZSS) {
+        /* The first decoded byte must be a literal following the control byte. */
+        if (facts_stored_size < 2u || (bytes[magic_offset] & 1u)) {
+            free(bytes);
+            return 7;
+        }
+        magic_offset++;
+    }
+    if (bytes[magic_offset] != (unsigned char)'R') {
+        free(bytes);
+        return 7;
+    }
+    bytes[magic_offset] = (unsigned char)'X';
     output = fopen(argv[2], "wb");
     if (!output) {
         free(bytes);
