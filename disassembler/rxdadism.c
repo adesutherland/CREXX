@@ -450,14 +450,56 @@ static size_t format_float_literal(char *buffer, size_t buffer_len, double value
  *
  * Returns the number of characters that would have been written assuming the
  * buffer was big enough - like snprintf() */
-static size_t disassemble_operand(bin_space *pgm, char* buffer, size_t buffer_len,
-                                  OperandType type, size_t index, int globals, int locals) {
+static size_t disassemble_operand(bin_space *pgm,
+                                  module_file *module,
+                                  int opcode,
+                                  unsigned int operand_index,
+                                  char* buffer,
+                                  size_t buffer_len,
+                                  OperandType type,
+                                  size_t index,
+                                  int globals,
+                                  int locals) {
 
     size_t out_len;
     size_t ix;
     char *c;
     size_t sz;
     int r;
+
+    if (module && module->graph_operands &&
+        rx_graph_operand_kind(opcode, operand_index) != RX_GRAPH_OPERAND_NONE) {
+        char *text;
+        size_t encoded;
+
+        text = rx_graph_operand_text(module->semantic_graph,
+                                     opcode,
+                                     operand_index,
+                                     (uint32_t)pgm->binary[index].index);
+        if (!text) return (size_t)snprintf(buffer, buffer_len, "*INVALID_GRAPH_ID*");
+        out_len = 1u;
+        if (buffer_len) {
+            *buffer++ = '"';
+            buffer_len--;
+        }
+        encoded = encode_print(buffer, buffer_len, text, strlen(text));
+        out_len += encoded;
+        if (encoded < buffer_len) {
+            buffer += encoded;
+            buffer_len -= encoded;
+        } else {
+            buffer += buffer_len;
+            buffer_len = 0u;
+        }
+        out_len++;
+        if (buffer_len) {
+            *buffer++ = '"';
+            buffer_len--;
+            *buffer = 0;
+        }
+        free(text);
+        return out_len;
+    }
 
     switch(type) {
         case OP_ID:
@@ -1849,7 +1891,16 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
                         continue;
                     }
                 }
-                line_len += disassemble_operand(pgm, line_buffer + line_buffer_offset(line_len), line_buffer_remaining(line_len), types[k], i++, globals, locals);
+                line_len += disassemble_operand(pgm,
+                                                module,
+                                                source[j].op->opcode,
+                                                (unsigned int)k,
+                                                line_buffer + line_buffer_offset(line_len),
+                                                line_buffer_remaining(line_len),
+                                                types[k],
+                                                i++,
+                                                globals,
+                                                locals);
             }
         }
         fprintf(stream, "%-45s * 0x%.6lx:%.4x %s\n", line_buffer, j, source[j].op->opcode, source[j].comment);

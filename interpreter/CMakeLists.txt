@@ -35,7 +35,6 @@ set(RXVM_CORE_OBJECT_SOURCES
         rxsignal.h
         ../utf8/utf.h
         ../binutils/include/rxbin.h
-        ../binutils/rxsignature.c
         ../binutils/include/rxsignature.h
         rxspawn.c
         rxcrexxcmd.c
@@ -224,6 +223,7 @@ target_compile_definitions(rxbvm PRIVATE NTHREADED=1)
 # Offline second-stage analyser for dynamic instruction-sequence profiles.
 add_executable(rxseq rxseqmain.c rxseqfile.c)
 target_include_directories(rxseq PRIVATE . ../binutils/include ../platform ../inc)
+target_link_libraries(rxseq PRIVATE rxbin)
 
 if(BUILD_TESTING)
     add_executable(test_rxseqfile tests/test_rxseqfile.c rxseqfile.c)
@@ -327,7 +327,7 @@ function(crexx_enable_vm_platform target_name)
 endfunction()
 
 foreach(_rxvm_core_target rxvm rxbvm rxvme rxbvme rxvml rxbvml)
-    target_link_libraries(${_rxvm_core_target} rxvmref)
+    target_link_libraries(${_rxvm_core_target} rxvmref rxbin)
     crexx_enable_vm_platform(${_rxvm_core_target})
     if(CREXX_VM_PROFILING)
         target_compile_definitions(${_rxvm_core_target} PRIVATE CREXX_VM_PROFILING=1)
@@ -345,14 +345,14 @@ if(BUILD_TESTING)
 endif()
 if(BUILD_TESTING)
     foreach(_rxvm_instrumented_target rxvm_instrumented rxbvm_instrumented)
-        target_link_libraries(${_rxvm_instrumented_target} rxvmref)
+        target_link_libraries(${_rxvm_instrumented_target} rxvmref rxbin)
         crexx_enable_vm_platform(${_rxvm_instrumented_target})
     endforeach()
 endif()
 
 # libcrexxsaa is intentionally thin and shared. On ELF platforms, every static
 # archive pulled into it must be compiled as PIC.
-foreach(_crexxsaa_static_dep rxvml rxvmref rxvmplugin mc_decimal_manual avl_tree rxpa platform decnumber)
+foreach(_crexxsaa_static_dep rxvml rxvmref rxvmplugin mc_decimal_manual avl_tree rxpa rxbin platform decnumber)
     if(TARGET ${_crexxsaa_static_dep})
         set_target_properties(${_crexxsaa_static_dep} PROPERTIES POSITION_INDEPENDENT_CODE ON)
     endif()
@@ -416,6 +416,7 @@ add_executable(test_signal_mask tests/test_signal_mask.c rxsignal.h)
 target_include_directories(test_signal_mask PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_executable(mutate_jtable_rxbin tests/mutate_jtable_rxbin.c)
+target_link_libraries(mutate_jtable_rxbin PRIVATE rxbin)
 target_include_directories(mutate_jtable_rxbin PRIVATE
         ../binutils/include
         ../platform)
@@ -1049,19 +1050,20 @@ add_custom_target(run_tests_float_pool ALL DEPENDS tests_float_pool.rxbin)
 crexx_add_vm_dual_test(NAME rxasfloatpooltests RXVM_ARGS tests_float_pool)
 
 add_executable(test_float_pool_format tests/test_float_pool_format.c)
+target_link_libraries(test_float_pool_format PRIVATE rxbin)
 target_include_directories(test_float_pool_format PRIVATE
         ${CMAKE_SOURCE_DIR}/platform
         ${CMAKE_SOURCE_DIR}/binutils/include)
 add_dependencies(test_float_pool_format run_tests_float_pool)
 add_test(NAME float_pool_format_check COMMAND test_float_pool_format WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
 
-# Packed RXBIN Format Tests
+# Portable RXBIN 007 compact-instruction format tests
 add_custom_command(
         OUTPUT tests_compact_format.rxbin
         COMMAND $<TARGET_FILE:rxas> -o tests_compact_format ${CMAKE_CURRENT_SOURCE_DIR}/tests/tests_compact_format
         DEPENDS tests/tests_compact_format.rxas rxas rxvm mc_decimal_dynamic
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "cREXX RXBIN packed-format tests ..."
+        COMMENT "cREXX RXBIN 007 portable-format tests ..."
 )
 
 add_custom_target(run_tests_compact_format ALL DEPENDS tests_compact_format.rxbin)
@@ -1069,6 +1071,7 @@ add_custom_target(run_tests_compact_format ALL DEPENDS tests_compact_format.rxbi
 crexx_add_vm_dual_test(NAME rxascompactformattests RXVM_ARGS tests_compact_format)
 
 add_executable(test_compact_format tests/test_compact_format.c)
+target_link_libraries(test_compact_format PRIVATE rxbin)
 target_include_directories(test_compact_format PRIVATE
         ${CMAKE_SOURCE_DIR}/platform
         ${CMAKE_SOURCE_DIR}/binutils/include)
@@ -1315,6 +1318,7 @@ add_custom_command(
                 $<TARGET_FILE:rxpashim>
                 $<TARGET_FILE:rxvmplugin>
                 $<TARGET_FILE:rxvmref>
+                $<TARGET_FILE:rxbin>
                 $<TARGET_FILE:platform>
                 $<TARGET_FILE:decnumber>
                 $<TARGET_FILE:avl_tree>
@@ -1329,6 +1333,7 @@ add_custom_command(
                 rxpashim
                 rxvmplugin
                 rxvmref
+                rxbin
                 platform
                 decnumber
                 avl_tree

@@ -312,6 +312,7 @@ install(FILES "${CREXX_VERSION_FILE_PATH}" "${CREXX_BUILDINFO_PATH}" DESTINATION
 add_subdirectory(platform)
 add_subdirectory(avl_tree)
 add_subdirectory(cpacker)
+add_subdirectory(binutils)
 add_subdirectory(assembler)
 add_subdirectory(compiler)
 add_subdirectory(linker)

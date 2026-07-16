@@ -5,11 +5,39 @@
 #include "platform.h"
 #include "rxbin.h"
 
-static int skip_record_payload(FILE *fp, const module_header *header) {
-    size_t skip = header->name_size + header->description_size +
-                  header->instruction_stored_size + header->constant_stored_size;
-    if (!skip) return 1;
-    return fseek(fp, (long)skip, SEEK_CUR) == 0;
+static uint32_t read_u32le(const unsigned char *bytes) {
+    return (uint32_t)bytes[0] |
+           ((uint32_t)bytes[1] << 8u) |
+           ((uint32_t)bytes[2] << 16u) |
+           ((uint32_t)bytes[3] << 24u);
+}
+
+static uint64_t read_u64le(const unsigned char *bytes) {
+    uint64_t value = 0u;
+    unsigned int i;
+    for (i = 0u; i < 8u; i++) value |= (uint64_t)bytes[i] << (i * 8u);
+    return value;
+}
+
+static int check_007_header(FILE *fp, uint32_t expected_modules) {
+    unsigned char header[RXBIN007_HEADER_SIZE];
+    unsigned char directory[RXBIN007_SECTION_COUNT * RXBIN007_DIRECTORY_ENTRY_SIZE];
+    uint32_t i;
+
+    if (fread(header, 1u, sizeof(header), fp) != sizeof(header) ||
+        memcmp(header, RXBIN007_MAGIC, 8u) != 0 ||
+        read_u32le(header + 8u) != RXBIN007_HEADER_SIZE ||
+        read_u32le(header + 24u) != RXBIN007_SECTION_COUNT ||
+        read_u32le(header + 28u) != expected_modules ||
+        read_u64le(header + 32u) != RXBIN007_HEADER_SIZE ||
+        fread(directory, 1u, sizeof(directory), fp) != sizeof(directory)) return 0;
+    for (i = 0u; i < RXBIN007_SECTION_COUNT; i++) {
+        const unsigned char *row = directory + (size_t)i * RXBIN007_DIRECTORY_ENTRY_SIZE;
+        if (read_u32le(row) != i + 1u || read_u32le(row + 4u) != 0u ||
+            read_u32le(row + 8u) != 8u || read_u32le(row + 12u) != 0u ||
+            read_u64le(row + 24u) != read_u64le(row + 32u)) return 0;
+    }
+    return 1;
 }
 
 static void free_loaded_modules(module_file **modules, size_t count) {
@@ -58,9 +86,6 @@ static int module_has_inline_metadata(const module_file *module) {
 
 static int check_linked_success_format(void) {
     FILE *fp;
-    module_header header;
-    module_header second;
-    module_header third;
     rxbin_reader reader;
     module_file *module_a = 0;
     module_file *module_b = 0;
@@ -74,30 +99,8 @@ static int check_linked_success_format(void) {
         return 0;
     }
 
-    if (fread(&header, sizeof(header), 1, fp) != 1) {
-        fprintf(stderr, "Failed to read first linked record header\n");
-        goto done;
-    }
-    if (header.record_type != RXBIN_RECORD_POOL_SHARED || header.instruction_size != 0 || header.constant_size == 0) {
-        fprintf(stderr, "First linked record is not a shared pool\n");
-        goto done;
-    }
-    if (!skip_record_payload(fp, &header)) {
-        fprintf(stderr, "Failed to skip shared pool payload\n");
-        goto done;
-    }
-
-    if (fread(&second, sizeof(second), 1, fp) != 1 || second.record_type != RXBIN_RECORD_MODULE_SHARED) {
-        fprintf(stderr, "Second linked record is not a shared-backed module\n");
-        goto done;
-    }
-    if (!skip_record_payload(fp, &second)) {
-        fprintf(stderr, "Failed to skip first module payload\n");
-        goto done;
-    }
-
-    if (fread(&third, sizeof(third), 1, fp) != 1 || third.record_type != RXBIN_RECORD_MODULE_SHARED) {
-        fprintf(stderr, "Third linked record is not a shared-backed module\n");
+    if (!check_007_header(fp, 2u)) {
+        fprintf(stderr, "Linked image is not a canonical two-module RXBIN 007 container\n");
         goto done;
     }
 
@@ -119,6 +122,11 @@ static int check_linked_success_format(void) {
     if (module_a->shared_constant_pool != module_b->shared_constant_pool ||
         module_a->constant != module_b->constant) {
         fprintf(stderr, "Linked modules do not share the same pool in memory\n");
+        goto done;
+    }
+    if (!module_a->semantic_graph ||
+        module_a->semantic_graph != module_b->semantic_graph) {
+        fprintf(stderr, "Linked modules do not share the image semantic graph\n");
         goto done;
     }
 
@@ -258,8 +266,9 @@ static int check_record_stream_concatenation(void) {
         goto done;
     }
 
-    if (modules[0]->shared_constant_pool || modules[3]->shared_constant_pool) {
-        fprintf(stderr, "Local records unexpectedly reused a shared pool\n");
+    if (!modules[0]->shared_constant_pool || !modules[3]->shared_constant_pool ||
+        modules[0]->shared_constant_pool == modules[3]->shared_constant_pool) {
+        fprintf(stderr, "Standalone RXBIN 007 containers did not retain distinct pool ownership\n");
         goto done;
     }
 
@@ -275,6 +284,12 @@ static int check_record_stream_concatenation(void) {
 
     if (modules[1]->shared_constant_pool == modules[4]->shared_constant_pool) {
         fprintf(stderr, "Concatenated linked images incorrectly reused the previous shared pool\n");
+        goto done;
+    }
+    if (modules[1]->semantic_graph != modules[2]->semantic_graph ||
+        modules[4]->semantic_graph != modules[5]->semantic_graph ||
+        modules[1]->semantic_graph == modules[4]->semantic_graph) {
+        fprintf(stderr, "Concatenated RXBIN 007 containers have invalid graph ownership boundaries\n");
         goto done;
     }
 

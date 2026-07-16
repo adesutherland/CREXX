@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "capture_tool": "performance/tools/run_evidence_bundle.crexx",
+  "capture_tool_sha256": "eb0239d7faa1a26c541cad454ea00d23cc85e5f4a9c247ef09d90fc651d63c59",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g7a599906b353.dirty 20260716",
+  "result": "pass",
+  "started_utc": "2026-07-16T09:58:13+0000",
+  "completed_utc": "2026-07-16T09:58:18+0000",
+  "repository": {"branch":"develop","commit":"7a599906b353abbbea5ed9601adf3acd681f2615","dirty_scope":[" M docs/ai-context/RXVM_INTERPRETER.md"," M docs/books/crexx_programming_guide/profiling.md"," M interpreter/CMakeLists.txt"," M interpreter/rxvmintp.c"," M interpreter/rxvmintp.h"," M interpreter/rxvml.c"," M interpreter/rxvmload.c"," M interpreter/rxvmprofile.c"," M interpreter/rxvmprofile.h"," M interpreter/tests/check_vm_call_census.cmake"," M interpreter/tests/check_vm_profile_csv.cmake"," M interpreter/tests/check_vm_profiling_docs.cmake"," M interpreter/tests/test_rxvmprofile.c"," M performance/README.md"," M performance/tools/run_evidence_bundle.crexx"," M tests/benchmarks/README.md","?? interpreter/rxvmmeta.c","?? interpreter/rxvmmeta.h","?? interpreter/tests/test_rxvmmeta.c","?? performance/NR-04A-WORKLIST.md","?? performance/evidence/2026-07-16-nr-04a-kind-index/","?? performance/manifests/nr04a-fixed-count-heavy-v1.txt","?? performance/manifests/nr04a-fixed-count-v1.txt","?? performance/manifests/nr04a-kind-index-baseline-v1.txt"]},
+  "host": {"os":"Darwin 25.5.0 arm64","cpu":"Apple M5"},
+  "driver_arguments": ["--manifest","performance/manifests/nr04a-fixed-count-heavy-v1.txt","--release-build","cmake-build-release","--profile-build","cmake-build-profile","--output-dir","performance/evidence/2026-07-16-nr-04a-kind-index/heavy-candidate-b","--skip-rxseq","--force"],
+  "input_manifest": {"path":"/Users/adrian/CLionProjects/CREXX/performance/manifests/nr04a-fixed-count-heavy-v1.txt","sha256":"e57eff17c2d825c2007cb94df2fb818fa0ec9844ae207fad17091a142e1c479b"},
+  "ordinary_release": {"build":"/Users/adrian/CLionProjects/CREXX/cmake-build-release","generator":"Ninja","build_type":"Release","c_flags_release":"-O3 -DNDEBUG","profiling":"OFF","rxvm_version":"crexx-1.0.0-beta.3+local.g7a599906b353.dirty (Threaded Mode)","rxvm_sha256":"c4a7be443b8655dc9f6db0565c814544527ee453a4e787cc17e61637e79c6804"},
+  "profile_release": {"build":"/Users/adrian/CLionProjects/CREXX/cmake-build-profile","generator":"Ninja","build_type":"Release","c_flags_release":"-O3 -DNDEBUG","profiling":"ON","rxvm_version":"crexx-1.0.0-beta.3+local.g7a599906b353.dirty (Threaded Mode)","rxvm_sha256":"6b8492145a5edd72d0ffd2a83bc7dd0f98c43b23c3fac219e32b27f95b677841","rxseq_sha256":"89b5af20515f40400d52d4f2ff09fc408c2e527a1a70404c78428b727fea576f"},
+  "toolchain": {"cmake":"cmake version 4.3.2","compiler_path":"/usr/bin/cc","compiler":"Apple clang version 21.0.0 (clang-2100.1.1.101)"},
+  "policies": {"sampling":"serial","product_timing":"ordinary Release rxvm only","profile_timing":"diagnostic only; never throughput","rxseq":"explicitly skipped; out of scope for this bundle","startup_lifecycle":"out of scope; retained separately","source_trace":"declared per exact-image manifest entry"},
+  "output_directory": "/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-04a-kind-index/heavy-candidate-b"
+}

@@ -170,6 +170,42 @@ char *callable_effective_return_type(ASTNode *node) {
     if (!node) return strdup(".void");
     context = node->context;
 
+    /*
+     * A factory's source contract has no explicit return type: it always
+     * returns its owning class or interface.  Derive that identity directly
+     * from the owner before consulting the callable symbol.  In particular,
+     * imported stubs for same-named classes in different namespaces can have
+     * a transient value_class binding that must not leak into metadata.
+     */
+    if (node->node_type == FACTORY) {
+        ASTNode *owner = node->parent;
+        while (owner && owner->node_type != CLASS_DEF && owner->node_type != INTERFACE_DEF) {
+            owner = owner->parent;
+        }
+        if (owner) {
+            const char *name = 0;
+            char *normalized = 0;
+            char *result;
+
+            if (owner->symbolNode && owner->symbolNode->symbol && owner->symbolNode->symbol->name) {
+                normalized = sym_frnm(owner->symbolNode->symbol);
+                name = normalized;
+            } else if (owner->node_string) {
+                normalized = rxcp_normalize_source_symbol_name(owner->node_string,
+                                                               owner->node_string_length,
+                                                               0,
+                                                               1);
+                name = normalized;
+            }
+            if (name && name[0]) {
+                result = metadata_type_string(context, TP_OBJECT, 0, 0, 0, name);
+                free(normalized);
+                return result;
+            }
+            free(normalized);
+        }
+    }
+
     if (node->symbolNode && node->symbolNode->symbol &&
         (node->symbolNode->symbol->type != TP_UNKNOWN ||
          node->symbolNode->symbol->value_class ||
@@ -186,37 +222,6 @@ char *callable_effective_return_type(ASTNode *node) {
 
     return_node = ast_type_child(node);
     if (!return_node) return strdup(".void");
-    if (node->node_type == FACTORY && return_node && return_node->node_type == VOID) {
-        ASTNode *owner = node->parent;
-        while (owner && owner->node_type != CLASS_DEF && owner->node_type != INTERFACE_DEF) {
-            owner = owner->parent;
-        }
-        if (owner) {
-            const char *name = 0;
-            char *normalized = 0;
-            char *result;
-
-            if (owner->symbolNode && owner->symbolNode->symbol && owner->symbolNode->symbol->name) {
-                normalized = sym_frnm(owner->symbolNode->symbol);
-                name = normalized;
-            }
-            else if (owner->node_string) {
-                normalized = rxcp_normalize_source_symbol_name(owner->node_string,
-                                                               owner->node_string_length,
-                                                               0,
-                                                               1);
-                name = normalized;
-            }
-
-            if (name && name[0]) {
-                result = metadata_type_string(context, TP_OBJECT, 0, 0, 0, name);
-                if (normalized) free(normalized);
-                return result;
-            }
-            if (normalized) free(normalized);
-        }
-    }
-
     if (context) {
         size_t dims = 0;
         int *dim_base = 0;

@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "entry": "towers-opt-retained-candidate-vm",
+  "pair": "Towers-retained-vm",
+  "workload": "Towers",
+  "variant": "candidate",
+  "optimization_mode": "opt-retained-candidate-vm",
+  "image": {"path":"/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/towers-retained.rxbin","sha256":"12fd73d57ab734a209c24ef4286eea7cc83edf457ade33e2ec8ebbbbceda4392"},
+  "modules": [],
+  "arguments": ["10"],
+  "correctness_expectation": "PASS: AWFY Towers",
+  "source_trace_retention": "linked;source_TRACE=retained",
+  "warmups": 2,
+  "recorded_runs": 7,
+  "sampling": "serial",
+  "timing_source": "ordinary Release rxvm only",
+  "timing_vm": {"path":"/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm","sha256":"c4a7be443b8655dc9f6db0565c814544527ee453a4e787cc17e61637e79c6804"},
+  "profile_timing_interpretation": "diagnostic only; never throughput",
+  "timing_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/towers-retained.rxbin","-a","10"],
+  "profile_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm","--profile-output","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-04a-kind-index/interleaved-four-cell/entries/towers-opt-retained-candidate-vm/profile/profile.csv","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/towers-retained.rxbin","-a","10"],
+  "sequence_commands": [],
+  "median_elapsed_ns": 781997000
+}

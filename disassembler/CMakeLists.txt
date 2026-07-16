@@ -11,7 +11,7 @@ add_executable(rxdas rxdamain.c rxdadism.h rxdadism.c ../binutils/include/rxbin.
 
 add_dependencies(rxdas avl_tree platform)
 
-target_link_libraries(rxdas avl_tree platform)
+target_link_libraries(rxdas avl_tree rxbin platform)
 
 target_include_directories(rxdas PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ../assembler ../platform ../binutils/include)
 
@@ -93,6 +93,28 @@ crexx_add_rxdas_roundtrip(
         SOURCE ${CMAKE_SOURCE_DIR}/interpreter/tests/tests_compact_format.rxas
 )
 
+add_executable(mutate_graph_rxbin tests/mutate_graph_rxbin.c)
+set_target_properties(mutate_graph_rxbin PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+set(_crexx_corrupt_graph_rxbin
+        "${CMAKE_CURRENT_BINARY_DIR}/tests_compact_format_corrupt_graph.rxbin")
+add_custom_command(
+        OUTPUT ${_crexx_corrupt_graph_rxbin}
+        COMMAND $<TARGET_FILE:mutate_graph_rxbin>
+                ${CMAKE_CURRENT_BINARY_DIR}/tests_compact_format.rxbin
+                ${_crexx_corrupt_graph_rxbin}
+        DEPENDS rxdas_roundtrip_compact_format_artifact mutate_graph_rxbin
+        VERBATIM
+        COMMENT "cREXX RXDAS invalid semantic-graph fixture ...")
+add_custom_target(rxdas_graph_error_artifact ALL DEPENDS ${_crexx_corrupt_graph_rxbin})
+add_dependencies(rxdas_graph_error_artifact rxdas)
+add_test(
+        NAME rxdas_graph_error
+        COMMAND ${CMAKE_COMMAND}
+                -DRXDAS=$<TARGET_FILE:rxdas>
+                -DINPUT_RXBIN=${_crexx_corrupt_graph_rxbin}
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/check_graph_error.cmake)
+
 crexx_add_rxdas_roundtrip(
         NAME rxdas_roundtrip_interfaces
         SOURCE ${CMAKE_SOURCE_DIR}/interpreter/tests/tests_interfaces.rxas
@@ -143,7 +165,7 @@ crexx_add_rxdas_roundtrip(
 
 add_executable(test_disassembler_dump tests/test_disassembler_dump.c rxdadism.c)
 add_dependencies(test_disassembler_dump avl_tree platform rxdas_test_prereqs)
-target_link_libraries(test_disassembler_dump avl_tree platform)
+target_link_libraries(test_disassembler_dump avl_tree rxbin platform)
 target_include_directories(test_disassembler_dump PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ../assembler
@@ -163,5 +185,6 @@ add_test(
 crexx_label_smoke_tests(
         rxdas_roundtrip_basic
         rxdas_roundtrip_interfaces
+        rxdas_graph_error
         rxdas_dump_support
 )

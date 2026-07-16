@@ -1,0 +1,2 @@
+result=6765
+PASS: Lifecycle Probe cREXX

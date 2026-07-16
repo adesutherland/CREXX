@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "entry": "runtime-interface-stripped-c",
+  "pair": "runtime-interface-stripped-C",
+  "workload": "Runtime interface lookup",
+  "variant": "candidate",
+  "optimization_mode": "opt-stripped-candidate-c-first",
+  "image": {"path":"/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/focused/runtime-interface-stripped.rxbin","sha256":"545258dda20df85dfcb723b6ea2c8cdabeb48c5f69c2c95d022f2eafbbabbea6"},
+  "modules": [],
+  "arguments": ["1000000","100000"],
+  "correctness_expectation": "PASS: runtime interface lookup compare",
+  "source_trace_retention": "linked;source_TRACE=stripped;candidate=C",
+  "warmups": 2,
+  "recorded_runs": 7,
+  "sampling": "serial",
+  "timing_source": "ordinary Release rxvm only",
+  "timing_vm": {"path":"/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/options/candidate-c/bin/rxvm","sha256":"46cccfe4f453290d8ff22c0d4b70cf997326bb919b37c928ca852e5ddd56706c"},
+  "profile_timing_interpretation": "diagnostic only; never throughput",
+  "timing_command": ["/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/options/candidate-c/bin/rxvm","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/focused/runtime-interface-stripped.rxbin","-a","1000000","100000"],
+  "profile_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm","--profile-output","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-04a-kind-index/options/candidate-c/entries/runtime-interface-stripped-c/profile/profile.csv","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/focused/runtime-interface-stripped.rxbin","-a","1000000","100000"],
+  "sequence_commands": [],
+  "median_elapsed_ns": 108491000
+}

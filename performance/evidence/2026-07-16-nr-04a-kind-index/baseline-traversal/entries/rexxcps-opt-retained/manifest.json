@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "entry": "rexxcps-opt-retained",
+  "pair": "rexxcps-opt-metadata",
+  "workload": "RexxCPS",
+  "variant": "baseline",
+  "optimization_mode": "opt-retained",
+  "image": {"path":"/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/rexxcps-retained.rxbin","sha256":"11a97ac3deebc65392c9de266fb6dd782492dcdab9b1d60fb2003ca0b8423af6"},
+  "modules": [],
+  "arguments": ["1","1"],
+  "correctness_expectation": "PASS: RexxCPS 2.2c cREXX port",
+  "source_trace_retention": "linked;source_TRACE=retained;bounded_overrides=1,1",
+  "warmups": 2,
+  "recorded_runs": 7,
+  "sampling": "serial",
+  "timing_source": "ordinary Release rxvm only",
+  "profile_timing_interpretation": "diagnostic only; never throughput",
+  "timing_command": ["/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/product/bin/rxvm","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/rexxcps-retained.rxbin","-a","1","1"],
+  "profile_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm","--profile-output","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-04a-kind-index/baseline-traversal/entries/rexxcps-opt-retained/profile/profile.csv","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/rexxcps-retained.rxbin","-a","1","1"],
+  "sequence_commands": [],
+  "median_elapsed_ns": 592540000
+}

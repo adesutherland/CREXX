@@ -19,16 +19,33 @@ first and then pass that linked image to `rxcpack`.
 
 ## Output Format
 
-The linker writes a `006`-format record stream:
+RXLINK reads and writes only RXBIN 007. The complete toolchain moved atomically;
+006 inputs are rejected and rebuilt rather than decoded through a compatibility
+path. The format and semantic graph design are in
+[RXBIN_007_SEMANTIC_GRAPH.md](RXBIN_007_SEMANTIC_GRAPH.md).
 
-1. one `RXBIN_RECORD_POOL_SHARED` record containing the shared constant pool
-2. one `RXBIN_RECORD_MODULE_SHARED` record per selected module
+The 007 output is one fixed-width sectioned container with a module directory,
+module instruction ranges, shared constant/canonical metadata data, and one
+image-wide semantic graph. The current shared-pool/module record stream is not
+carried forward.
 
-Each shared-backed module keeps its own instruction stream, header values, and module name/description, but borrows constants from the shared pool.
+Milestone 1 retains metadata-driven module selection. For the selected modules
+RXLINK rebuilds canonical text-backed type/member/callable/factory
+nodes, preserves declaration origin, assigns new image-local dense IDs,
+rewrites graph-bearing instruction references, and rebuilds every adjacency,
+name, declaration, dispatch, callable, factory, and provider index. It never
+concatenates module-local indexes.
+
+The common `rxbin` graph library owns structural merge, remap, validation, and
+fast rule-neutral traversal. Future language-policy adapters may decide
+inheritance, assignability, override/default conflicts, and provider selection
+without embedding those language rules in RXBIN itself.
 
 ## Selection Model
 
-Inputs are read as a record stream, so one input file may contain multiple module records. Module selection then happens in this order:
+Inputs are read as a container stream, so one input file may contain a linked
+multi-module container or concatenated standalone library containers. Module
+selection then happens in this order:
 
 1. apply `OMIT`
 2. apply `INCLUDE`

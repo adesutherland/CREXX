@@ -167,6 +167,8 @@ struct value {
     rxvm_reference_cell *reference_payload; // This value is itself a reference
     const char *object_type_name; // Runtime concrete class name, may point into a module constant pool
     size_t object_type_name_length;
+    const struct RxGraph *object_type_graph; // Graph owning object_type_id; lifetime is the VM module image
+    uint32_t object_type_id;
     value **attributes;
     value **unlinked_attributes;
     value **attribute_buffers;

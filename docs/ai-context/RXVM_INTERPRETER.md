@@ -1,12 +1,12 @@
 # cREXX Virtual Machine (Interpreter) Architecture
 
-The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loads, links, and executes the compiled `.rxbin` bytecode. Its design supports direct threaded code (computed gotos), aggressive stack frame recycling, and an optimized value struct to handle REXX dynamic typing. The current `.rxbin` format is `006`; since format `003`, serialized module data and runtime-only execution state are explicitly separated, and serialized instruction/constant sections may be compacted on disk before being expanded during load.
+The `rxvm` interpreter is the runtime component of the `crexx` toolchain. It loads, links, and executes the compiled `.rxbin` bytecode. Its design supports direct threaded code (computed gotos), aggressive stack frame recycling, and an optimized value struct to handle REXX dynamic typing. The current `.rxbin` format is `007`, a coordinated compatibility break with no 006 reader. Its linker-sealed, text-backed/numeric-ID semantic graph, rule-neutral query surface, numeric type/member/factory operands, and follow-on cache/overlay design are specified in [RXBIN_007_SEMANTIC_GRAPH.md](RXBIN_007_SEMANTIC_GRAPH.md).
 
 ## 1. VM Lifecycle
 
 The execution of a program within `rxvm` is handled in discrete phases (as defined in `inc/rxvm.h`):
 1. **Creation**: `rxvm_create()` allocates the root `rxvm_context`.
-2. **Loading**: `rxvm_load()` ingests a `.rxbin` binary file, reads the section flags and stored sizes, expands any packed instruction/constant sections back into normal buffers, and then loads the result into an internal `module` struct. In the current `006` layout the reader accepts three record kinds: `MODULE_LOCAL`, `POOL_SHARED`, and `MODULE_SHARED`. Shared-backed modules borrow the current shared pool in memory rather than copying it.
+2. **Loading**: `rxvm_load()` ingests one or more 007 containers, validates the fixed header and six sections, materializes portable constants/metadata and the semantic graph, expands variable-integer instructions into the normal runtime image, and loads each module directory entry into an internal `module` struct. A linked container shares one materialized pool and graph across its modules; concatenated archive containers remain independently owned.
 3. **Linking**: `rxvm_link()` traverses newly loaded modules to resolve exports and external imports into a unified memory map. The call is now dirty-checked, so repeated bridge/runtime entry points become fast no-ops when no module state changed.
 4. **Preparation**: `rxvm_prepare()` builds an owned per-module runtime
    instruction image for computed-goto execution. Operand cells are copied
@@ -50,6 +50,16 @@ repeated `rxvm_link()` calls cheap while still supporting late module loading.
 Because linked images may share one constant pool across multiple modules,
 module-local runtime walkers now follow `proc_head`, `expose_head`, and
 `meta_head` chains instead of sweeping the entire pool.
+
+Under RXBIN 007 the loader validates and retains the materialized sealed-image
+semantic graph and binds portable procedure references. Numeric
+type/member/factory operands and graph indexes avoid rediscovering those
+relationships by scanning canonical metadata. Generic, source/debug, RXVML,
+and cross-image/native compatibility paths continue to traverse the canonical
+module-local `meta_head` chain where needed; milestone 1 deliberately does not
+ship candidate A's eager per-module metadata-kind index and its unconditional
+load-time allocation. The T6 append-only overlay and generation-guarded site
+caches follow profiling.
 
 `socket_registry` is the context-owned table for core TCP sockets. Rexx and
 RXAS code see small positive integer handles, not native descriptors. The
@@ -1076,28 +1086,23 @@ operand slot now contains an index into a `FLOAT_CONST` record in
 `const_pool`, and the interpreter resolves that record when a float operand is
 read.
 
-As of the current `006` layout, the loader is also responsible for undoing the
-two stage-2 section codecs before execution begins:
-
-- the instruction section may arrive as a packed logical token stream with
-  operand counts reconstructed from the opcode table
-- the constant pool may arrive as a compressed LZSS blob
-
-Neither codec is visible inside the execution loop. By the time `run()` starts,
-the module again looks like a normal `bin_code[]` plus raw constant-pool
-buffer.
+In RXBIN 007 the loader decodes the canonical variable-integer instruction
+section and portable constant/metadata records before execution. The base
+format deliberately does not compress sections. By the time `run()` starts,
+the module again presents a normal `bin_code[]` plus native constant-pool
+buffer, while graph-bearing operands remain dense graph IDs.
 
 ## 4. Current Interface Dispatch in the VM
 
 The current Level B interface runtime slice adds three VM-facing pieces on top
 of the older object model:
 
-- `SETOBJTYPE_REG_STRING` stores a concrete class name on an object value
-- `SRCMETHODSEL_REG_REG_STRING` resolves the effective method procedure from
-  `object_type_name + descriptor`
-- `SRCFPROCSEL_REG_STRING_REG` resolves an interface factory provider from a
-  descriptor whose name is either `interface_name` or
-  `interface_name..factory_name`
+- `SETOBJTYPE_REG_STRING` uses its serialized type ID to store a graph pointer,
+  type ID, and diagnostic/fallback class text on an object value
+- `SRCMETHODSEL_REG_REG_STRING` uses its member ID and the graph dispatch index
+  to resolve the effective method procedure
+- `SRCFPROCSEL_REG_STRING_REG` uses its factory-bucket ID and provider index to
+  enumerate candidate class factories
 - `TYPEOF_REG_REG` returns the canonical source type name of an object value
 - `ISTYPE_REG_REG_STRING` tests an object value against an interface, class,
   or `.object`

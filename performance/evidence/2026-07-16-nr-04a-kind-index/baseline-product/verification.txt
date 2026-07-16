@@ -1,0 +1,6 @@
+PASS: ordinary build is Release with CREXX_VM_PROFILING=OFF; profiling build is Release with CREXX_VM_PROFILING=ON
+PASS: every input image/module checksum matched the explicit manifest
+PASS: all warmups and recorded samples ran serially and retained stdout/stderr
+PASS: every schema-4 profile reported result=0, no counter overflow, and complete procedure/allocation/census tracking
+PASS: RXSEQ capture was explicitly skipped for this non-sequence evidence bundle
+PASS: generated summaries preserve procedure metrics, the dynamic call census, and paired unprofiled timing deltas

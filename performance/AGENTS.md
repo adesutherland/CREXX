@@ -72,6 +72,31 @@ and cannot silently replace the canonical score.
 
 - Prefer a minimal reproducer and dynamic-count/profile evidence before
   changing a hot path.
+- Before the first production-code performance edit for an activity, add an
+  explicit design-selection section to its worklist or decision record. Start
+  with the status quo and enumerate at least two plausible implementation
+  approaches when two exist; if only one is viable, record why the alternatives
+  were rejected before coding.
+- Time-box lightweight prototypes in isolated builds before selecting the
+  production approach. Compare the same exact inputs and ordinary Release
+  binaries, and include steady-state benefit, startup/load cost, memory,
+  teardown, late-load/plugin behavior, both VM modes, and effects on unrelated
+  hot paths. A functionally complete first candidate is still a prototype until
+  this comparison is retained.
+- Any new runtime cache, index, allocation, or preparation pass must explicitly
+  compare eager, lazy/on-demand, and narrower purpose-built forms where they are
+  plausible. Record ownership, invalidation/rebuild, failure, and cross-platform
+  costs for each option.
+- Select the production design from the comparative evidence and retain both
+  the chosen and rejected options with reasons. If a candidate exposes a new
+  portfolio or lifecycle regression, pause production closeout and investigate
+  it; do not let sunk implementation effort substitute for the selection gate.
+- Optimize for the activity's stated performance objective, not for the
+  smallest production-code, file-format, or subsystem blast radius. Treat
+  implementation scope, compatibility, migration, and maintenance as measured
+  decision costs; do not use them to exclude a plausibly faster architecture
+  before it is compared. Architectural or format changes still require Adrian's
+  explicit selection before production implementation.
 - Confirm instrumented findings with paired, unprofiled Release wall-clock
   measurements; profiling elapsed time is not a benchmark result.
 - Preserve existing ISA/ABI/signal/reference/debug contracts for P0 no-regrets

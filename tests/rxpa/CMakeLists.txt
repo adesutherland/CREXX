@@ -77,7 +77,7 @@ configure_linker_for_static_lib(testvm _rxpalink)
 enable_rxpa_test_vm_platform(testvm)
 # Add the dependencies and link libraries
 add_dependencies(testvm avl_tree rxpa platform _rxpalink_static)
-target_link_libraries(testvm rxvmplugin rxvmref mc_decimal_manual avl_tree rxpa rxpashim _rxpalink_static)
+target_link_libraries(testvm rxvmplugin rxvmref rxbin mc_decimal_manual avl_tree rxpa rxpashim _rxpalink_static)
 target_include_directories(testvm PRIVATE
         ${CMAKE_SOURCE_DIR}/interpreter
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin
@@ -174,7 +174,7 @@ configure_linker_for_static_lib(funcvm _testfuncs)
 enable_rxpa_test_vm_platform(funcvm)
 # Add the dependencies and link libraries
 add_dependencies(funcvm avl_tree rxpa platform _testfuncs_static)
-target_link_libraries(funcvm rxvmplugin rxvmref mc_decimal_manual avl_tree rxpa rxpashim _testfuncs_static)
+target_link_libraries(funcvm rxvmplugin rxvmref rxbin mc_decimal_manual avl_tree rxpa rxpashim _testfuncs_static)
 target_include_directories(funcvm PRIVATE
         ${CMAKE_SOURCE_DIR}/interpreter
         ${CMAKE_SOURCE_DIR}/interpreter/rxvmplugin

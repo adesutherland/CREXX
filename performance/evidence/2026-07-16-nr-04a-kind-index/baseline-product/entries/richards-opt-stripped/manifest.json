@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "entry": "richards-opt-stripped",
+  "pair": "richards-opt-metadata",
+  "workload": "Richards",
+  "variant": "candidate",
+  "optimization_mode": "opt-stripped",
+  "image": {"path":"/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/richards-stripped.rxbin","sha256":"cbf86dc009316a8f7e1bd0207b9aa7857cd067dc09955131bce5093dd11729ff"},
+  "modules": [],
+  "arguments": ["1"],
+  "correctness_expectation": "PASS: AWFY Richards",
+  "source_trace_retention": "linked;source_TRACE=stripped",
+  "warmups": 2,
+  "recorded_runs": 7,
+  "sampling": "serial",
+  "timing_source": "ordinary Release rxvm only",
+  "profile_timing_interpretation": "diagnostic only; never throughput",
+  "timing_command": ["/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/product/bin/rxvm","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/richards-stripped.rxbin","-a","1"],
+  "profile_command": ["/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/profile/bin/rxvm","--profile-output","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-04a-kind-index/baseline-product/entries/richards-opt-stripped/profile/profile.csv","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/richards-stripped.rxbin","-a","1"],
+  "sequence_commands": [],
+  "median_elapsed_ns": 680317000
+}

@@ -83,6 +83,7 @@ typedef struct const_map_entry {
 
 typedef struct rxlink_output_module {
     module_file *module;
+    module_file *source_module;
     const_map_entry *maps;
     size_t map_count;
     size_t map_capacity;
@@ -210,6 +211,23 @@ static const char *module_string_constant(module_file *module, size_t offset) {
     value = (string_constant *)((unsigned char *)module->constant + offset);
     if (value->base.type != STRING_CONST) return 0;
     return value->string;
+}
+
+static char *module_instruction_string(module_file *module,
+                                       int opcode,
+                                       unsigned int operand_index,
+                                       size_t value) {
+    const char *text;
+
+    if (module && module->graph_operands &&
+        rx_graph_operand_kind(opcode, operand_index) != RX_GRAPH_OPERAND_NONE) {
+        return rx_graph_operand_text(module->semantic_graph,
+                                     opcode,
+                                     operand_index,
+                                     (uint32_t)value);
+    }
+    text = module_string_constant(module, value);
+    return text ? strdup(text) : 0;
 }
 
 static int append_method_name_from_symbol(string_list *list, const char *symbol) {
@@ -885,7 +903,7 @@ static int load_module_metadata(link_module_info *info) {
             for (operand_index = 0; operand_index < operand_count; operand_index++) {
                 if (types[operand_index] == OP_STRING) {
                     size_t descriptor_offset;
-                    string_constant *descriptor;
+                    char *descriptor;
                     const char *separator;
                     size_t interface_length;
                     char *interface_name;
@@ -893,10 +911,16 @@ static int load_module_metadata(link_module_info *info) {
                     rx_callable_signature signature;
 
                     descriptor_offset = ((bin_code *)module->instructions)[code_index + (size_t)operand_index + 1].index;
-                    if (descriptor_offset >= module->header.constant_size) return 0;
-                    descriptor = (string_constant *)((unsigned char *)module->constant + descriptor_offset);
-                    if (descriptor->base.type != STRING_CONST) return 0;
-                    if (!rx_sig_parse_descriptor(descriptor->string, &signature)) return 0;
+                    descriptor = module_instruction_string(module,
+                                                           opcode,
+                                                           (unsigned int)operand_index,
+                                                           descriptor_offset);
+                    if (!descriptor) return 0;
+                    if (!rx_sig_parse_descriptor(descriptor, &signature)) {
+                        free(descriptor);
+                        return 0;
+                    }
+                    free(descriptor);
 
                     separator = strstr(signature.name, "..");
                     interface_length = separator ? (size_t)(separator - signature.name) : strlen(signature.name);
@@ -924,15 +948,21 @@ static int load_module_metadata(link_module_info *info) {
             for (operand_index = 0; operand_index < operand_count; operand_index++) {
                 if (types[operand_index] == OP_STRING) {
                     size_t descriptor_offset;
-                    string_constant *descriptor;
+                    char *descriptor;
                     rx_callable_signature signature;
                     int ok;
 
                     descriptor_offset = ((bin_code *)module->instructions)[code_index + (size_t)operand_index + 1].index;
-                    if (descriptor_offset >= module->header.constant_size) return 0;
-                    descriptor = (string_constant *)((unsigned char *)module->constant + descriptor_offset);
-                    if (descriptor->base.type != STRING_CONST) return 0;
-                    if (!rx_sig_parse_descriptor(descriptor->string, &signature)) return 0;
+                    descriptor = module_instruction_string(module,
+                                                           opcode,
+                                                           (unsigned int)operand_index,
+                                                           descriptor_offset);
+                    if (!descriptor) return 0;
+                    if (!rx_sig_parse_descriptor(descriptor, &signature)) {
+                        free(descriptor);
+                        return 0;
+                    }
+                    free(descriptor);
                     ok = string_list_append_unique(&info->referenced_methods, signature.name);
                     rx_sig_free(&signature);
                     if (!ok) {
@@ -1940,6 +1970,10 @@ static int rewrite_module_code(rxlink_build_context *context, rxlink_output_modu
         return 0;
     }
     init_module(output_module->module);
+    output_module->source_module = input;
+    output_module->module->graph_operands = 1u;
+    output_module->module->semantic_graph = input->semantic_graph;
+    rx_graph_retain(output_module->module->semantic_graph);
     output_module->module->fromfile = 1;
     output_module->module->header.record_type = RXBIN_RECORD_MODULE_SHARED;
     output_module->module->name = strdup(input->name ? input->name : "");
@@ -2003,6 +2037,10 @@ static int rewrite_module_code(rxlink_build_context *context, rxlink_output_modu
         operand_count = rxbin_get_operand_types(rxbin_opcode_format(input_code[index].instruction.opcode), types);
         for (operand_index = 0; operand_index < operand_count; operand_index++) {
             bin_code *operand = &output_code[index + (size_t)operand_index + 1];
+            if (rx_graph_operand_kind(input_code[index].instruction.opcode,
+                                      (unsigned int)operand_index) != RX_GRAPH_OPERAND_NONE) {
+                continue;
+            }
             switch (types[operand_index]) {
                 case OP_FUNC:
                 case OP_FLOAT:
@@ -2072,45 +2110,146 @@ static int write_map_file(const module_list *modules, const link_config *config)
     return 1;
 }
 
+static void detach_linked_pool(rxlink_output_list *outputs) {
+    size_t i;
+    for (i = 0; i < outputs->count; i++) {
+        outputs->items[i].module->constant = 0;
+        outputs->items[i].module->header.constant_size = 0;
+        outputs->items[i].module->header.constant_stored_size = 0;
+    }
+}
+
+static RxGraph *prepare_linked_graph(rxlink_build_context *context,
+                                     rxlink_output_list *outputs) {
+    module_file **modules;
+    RxGraph *graph;
+    char *graph_error;
+    size_t i;
+
+    if (!outputs->count) return 0;
+    modules = (module_file **)calloc(outputs->count, sizeof(*modules));
+    if (!modules) return 0;
+    for (i = 0; i < outputs->count; i++) {
+        modules[i] = outputs->items[i].module;
+        modules[i]->constant = context->shared_pool.data;
+        modules[i]->header.constant_size = context->shared_pool.size;
+        modules[i]->header.constant_stored_size = context->shared_pool.size;
+    }
+    graph_error = 0;
+    graph = rx_graph_build_crexx(modules, outputs->count, &graph_error);
+    free(modules);
+    if (!graph) {
+        fprintf(stderr, "ERROR: rebuilding linked semantic graph: %s\n",
+                graph_error ? graph_error : "unknown graph error");
+        free(graph_error);
+        return 0;
+    }
+    free(graph_error);
+    for (i = 0; i < outputs->count; i++) {
+        module_file *source;
+        module_file *output;
+        bin_code *source_code;
+        bin_code *output_code;
+        size_t code_index;
+
+        source = outputs->items[i].source_module;
+        output = outputs->items[i].module;
+        source_code = (bin_code *)source->instructions;
+        output_code = (bin_code *)output->instructions;
+        code_index = 0u;
+        while (code_index < output->header.instruction_size) {
+            OperandType types[3];
+            int opcode;
+            int operand_count;
+            int operand_index;
+
+            opcode = output_code[code_index].instruction.opcode;
+            operand_count = rxbin_get_operand_types(rxbin_opcode_format(opcode), types);
+            for (operand_index = 0; operand_index < operand_count; operand_index++) {
+                uint32_t graph_id;
+                char *text;
+                char *resolve_error;
+
+                if (rx_graph_operand_kind(opcode, (unsigned int)operand_index) ==
+                    RX_GRAPH_OPERAND_NONE) continue;
+                text = module_instruction_string(
+                    source,
+                    opcode,
+                    (unsigned int)operand_index,
+                    source_code[code_index + (size_t)operand_index + 1u].index);
+                if (!text) {
+                    fprintf(stderr,
+                            "ERROR: reading graph operand %d:%d from module %s\n",
+                            opcode,
+                            operand_index,
+                            source->name ? source->name : "<unnamed>");
+                    rx_graph_release(&graph);
+                    return 0;
+                }
+                resolve_error = 0;
+                if (!rx_graph_resolve_operand(graph,
+                                              opcode,
+                                              (unsigned int)operand_index,
+                                              text,
+                                              &graph_id,
+                                              &resolve_error)) {
+                    fprintf(stderr,
+                            "ERROR: resolving linked graph operand %s: %s\n",
+                            text,
+                            resolve_error ? resolve_error : "unknown graph error");
+                    free(resolve_error);
+                    free(text);
+                    rx_graph_release(&graph);
+                    return 0;
+                }
+                free(resolve_error);
+                free(text);
+                output_code[code_index + (size_t)operand_index + 1u].index = graph_id;
+            }
+            code_index += (size_t)operand_count + 1u;
+        }
+        output->graph_operands = 1u;
+    }
+    return graph;
+}
+
 static int write_linked_image(const link_config *config, rxlink_build_context *context, rxlink_output_list *outputs) {
     FILE *fp;
-    module_file shared_pool_record;
+    module_file **modules;
+    RxGraph *graph;
     size_t i;
+    int ok;
+
+    graph = prepare_linked_graph(context, outputs);
+    if (!graph) {
+        detach_linked_pool(outputs);
+        return 0;
+    }
+    modules = (module_file **)calloc(outputs->count, sizeof(*modules));
+    if (!modules) {
+        rx_graph_release(&graph);
+        detach_linked_pool(outputs);
+        return 0;
+    }
+    for (i = 0; i < outputs->count; i++) modules[i] = outputs->items[i].module;
     fp = openfile(config->output_path, "rxbin", config->location, "wb");
     if (!fp) {
         fprintf(stderr, "ERROR: opening output %s\n", config->output_path);
+        free(modules);
+        rx_graph_release(&graph);
+        detach_linked_pool(outputs);
         return 0;
     }
-
-    init_module(&shared_pool_record);
-    shared_pool_record.header.record_type = RXBIN_RECORD_POOL_SHARED;
-    shared_pool_record.header.name_size = 0;
-    shared_pool_record.header.description_size = 0;
-    shared_pool_record.header.instruction_size = 0;
-    shared_pool_record.header.constant_size = context->shared_pool.size;
-    shared_pool_record.header.globals = 0;
-    shared_pool_record.header.proc_head = -1;
-    shared_pool_record.header.expose_head = -1;
-    shared_pool_record.header.meta_head = -1;
-    shared_pool_record.name = "";
-    shared_pool_record.description = "";
-    shared_pool_record.instructions = 0;
-    shared_pool_record.constant = context->shared_pool.data;
-
-    if (write_module(&shared_pool_record, fp) != 0) {
-        fclose(fp);
-        return 0;
+    ok = write_modules(modules, outputs->count, graph, fp) == 0;
+    if (!ok) {
+        fprintf(stderr, "ERROR: writing linked RXBIN 007 image: %s\n",
+                rxbin_last_error() ? rxbin_last_error() : "unknown RXBIN error");
     }
-
-    for (i = 0; i < outputs->count; i++) {
-        if (write_module(outputs->items[i].module, fp) != 0) {
-            fclose(fp);
-            return 0;
-        }
-    }
-
     fclose(fp);
-    return 1;
+    free(modules);
+    rx_graph_release(&graph);
+    detach_linked_pool(outputs);
+    return ok;
 }
 
 static void print_help(void) {

@@ -46,6 +46,7 @@ static void help() {
             "  -c              Copyright & license details\n"
             "  -v              Version\n"
             "  -p              all constant Pool\n"
+            "  -g              semantic graph summary\n"
             "  -l location     working Location (directory)\n"
             "  -o output_file  Output file (default is stdout)\n";
 
@@ -75,6 +76,7 @@ int main(int argc, char *argv[]) {
     FILE *output = stdout;
     int i;
     int print_all_constant_pool = 0;
+    int print_semantic_graph = 0;
     module_file *module;
     size_t modules_processed = 0;
 
@@ -124,6 +126,10 @@ int main(int argc, char *argv[]) {
 
             case 'p': /* constant Pool */
                 print_all_constant_pool = 1;
+                break;
+
+            case 'g': /* semantic graph summary */
+                print_semantic_graph = 1;
                 break;
 
             default:
@@ -176,6 +182,31 @@ int main(int argc, char *argv[]) {
         module = 0;
         switch (i = read_module(&module, fp)) {
             case 0: /* Success */
+                {
+                    char *graph_error = 0;
+                    if (!module->semantic_graph ||
+                        !rx_graph_validate(module->semantic_graph, &graph_error)) {
+                        fprintf(stderr, "ERROR: invalid RXBIN 007 semantic graph in %s: %s\n",
+                                module->name ? module->name : file_name,
+                                graph_error ? graph_error : "missing semantic graph");
+                        free(graph_error);
+                        free_module(module);
+                        fclose(fp);
+                        exit(-1);
+                    }
+                    free(graph_error);
+                    if (print_semantic_graph) {
+                        fprintf(output,
+                                "* RXBIN 007 GRAPH types=%lu relationships=%lu members=%lu declarations=%lu callables=%lu factories=%lu providers=%lu\n",
+                                (unsigned long)rx_graph_type_count(module->semantic_graph),
+                                (unsigned long)rx_graph_relationship_count(module->semantic_graph),
+                                (unsigned long)rx_graph_member_count(module->semantic_graph),
+                                (unsigned long)rx_graph_declaration_total(module->semantic_graph),
+                                (unsigned long)rx_graph_callable_count(module->semantic_graph),
+                                (unsigned long)rx_graph_factory_count(module->semantic_graph),
+                                (unsigned long)rx_graph_provider_count(module->semantic_graph));
+                    }
+                }
                 pgm.globals = module->header.globals;
                 pgm.inst_size = module->header.instruction_size;
                 pgm.const_size = module->header.constant_size;
@@ -197,7 +228,9 @@ int main(int argc, char *argv[]) {
 
             default: /* error */
                 if (module) free_module(module);
-                fprintf(stderr, "ERROR: reading file %s\n", file_name);
+                fprintf(stderr, "ERROR: reading file %s: %s\n",
+                        file_name,
+                        rxbin_last_error() ? rxbin_last_error() : "unknown RXBIN error");
                 exit(-1);
         }
     }

@@ -626,6 +626,7 @@ do i=1 to filenames[0]
       call appendArrayValue ccArgs, '-lrxpashim'
       call appendArrayValue ccArgs, '-lrxvmplugin'
       call appendArrayValue ccArgs, '-lrxvmref'
+      call appendArrayValue ccArgs, '-lrxbin'
       call appendArrayValue ccArgs, '-lplatform'
       call appendArrayValue ccArgs, decstat
       call appendArrayValue ccArgs, '-ldecnumber'
@@ -643,6 +644,7 @@ do i=1 to filenames[0]
       call appendArrayValue ccArgs, '-lrxpashim'
       call appendArrayValue ccArgs, '-lrxvmplugin'
       call appendArrayValue ccArgs, '-lrxvmref'
+      call appendArrayValue ccArgs, '-lrxbin'
       call appendArrayValue ccArgs, '-lplatform'
       call appendArrayValue ccArgs, decstat
       call appendArrayValue ccArgs, '-ldecnumber'

@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "entry": "towers-opt-retained",
+  "pair": "towers-opt-metadata",
+  "workload": "Towers",
+  "variant": "baseline",
+  "optimization_mode": "opt-retained",
+  "image": {"path":"/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/towers-retained.rxbin","sha256":"12fd73d57ab734a209c24ef4286eea7cc83edf457ade33e2ec8ebbbbceda4392"},
+  "modules": [],
+  "arguments": ["10"],
+  "correctness_expectation": "PASS: AWFY Towers",
+  "source_trace_retention": "linked;source_TRACE=retained",
+  "warmups": 2,
+  "recorded_runs": 7,
+  "sampling": "serial",
+  "timing_source": "ordinary Release rxvm only",
+  "profile_timing_interpretation": "diagnostic only; never throughput",
+  "timing_command": ["/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/product/bin/rxvm","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/towers-retained.rxbin","-a","10"],
+  "profile_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm","--profile-output","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-04a-kind-index/baseline-traversal/entries/towers-opt-retained/profile/profile.csv","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/towers-retained.rxbin","-a","10"],
+  "sequence_commands": [],
+  "median_elapsed_ns": 759697000
+}

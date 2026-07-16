@@ -20,7 +20,7 @@ exit criterion is met.
 | NR-02 | Portfolio equivalence and optimizer-resistance ledger | complete | All approved steady-state/runtime cells and the lifecycle lane have correctness, equivalence, generated-form and retained-pilot evidence or an explicit `not comparable` disposition. |
 | NR-03 | Automated performance evidence bundle | complete | One Level B command retains exact-hash Release timing, schema-3 profile/allocation evidence, RXSEQ N=2/3/4, ranked reports and paired deltas; the verified proof bundle is `evidence/2026-07-15-nr-03-automated-proof/`. |
 | NR-04 | Opcode effects inventory | complete | All 641 opcode slots have ordered machine-readable effects; 539 source opcodes are classified or explicitly conservative and RXAS consumes the fail-closed API without new transforms. |
-| NR-04A | Kind-index runtime metadata and scan counters | queued | Remove ordinary type/ADDRESS traversal through source/TRACE records without losing diagnostics. |
+| NR-04A | Runtime type/dispatch architecture and metadata scan evidence | in progress | T6/RXBIN 007 milestone 1 is implemented: dedicated `rxbin` library, RXAS graph, RXLINK-rebuilt sealed image graph, numeric operands, runtime identities, RXDAS validation, and all 1,846 Debug CTests green. A/A-prime/C remain comparator evidence; layout, caches, late/native overlay, Release/portfolio and sanitizer measurement precede production closeout. |
 | NR-05 | Call-path census | complete | Schema-4 dynamic census plus exact 22-image dashboard retained at `evidence/2026-07-16-nr-05-call-census/`; focused fixtures cover native/dynamic/signal cold paths absent from the bounded portfolio. |
 | NR-06 | Compiler call-window placement fast path | queued | Preserve the contiguous-window ABI and signal-unwind contract; schedule moves once and measure. |
 | NR-07 | Direct compare-to-branch lowering | queued | Typed single-use Boolean results only; retain RXAS fallback and source/debug semantics. |
@@ -230,6 +230,62 @@ exit criterion is met.
   675,554 attributable argument copies distinct from the 8,591,365 measured
   `RET_REG` non-local copies and from the unclassified copy population.
 
+### NR-04A work notes
+
+- 2026-07-16: Paused before commit and before declaring the first
+  production-runtime performance change complete. The implemented eager
+  runtime-only per-module kind index proves the target path is real: normalized
+  `contract_kind` and `contract_implements` record visits fall by more than
+  99%, and the existing interface-registry benchmark improves strongly on exact
+  retained and stripped images. However, the first alternating portfolio pass
+  and repeats also exposed unrelated stripped JSON and small/noisy lifecycle
+  regressions. The programme had required evidence before hot-path changes but
+  had not explicitly required an alternatives list and comparative lightweight
+  prototypes before choosing a production design. `performance/AGENTS.md` now
+  adds that gate. Treat the eager implementation and its retained bundle as
+  candidate A. The option set now also includes link-produced runtime-critical
+  tables, constant-pool seeds, split runtime/debug metadata, and hybrid seed plus
+  legacy/direct/native fallback; clean serialized forms cross the RXBIN decision
+  boundary and therefore remain design/PoC work until Adrian approves adoption.
+  Compare viable candidates on the same images, file and retained memory size,
+  link/load/teardown, late-load/plugin behavior, and both VM modes before
+  selection or further production closeout.
+- 2026-07-16: The full consumer audit showed that a generic kind index is not
+  the final performance abstraction. Execution/procedure/source paths are
+  already position- or head-addressed; the genuinely dynamic surface is the
+  callable/type/class/interface/member/factory relationship model. Candidate
+  A-prime isolated an unrelated code-layout regression, and candidate C proved
+  that only the semantic kinds need retention while still performing 2,400,024
+  implements-record visits for 100,001 negative relationship queries. The
+  decision packet proposes a dense type universe, assignability and dispatch
+  tables, factory buckets, per-site polymorphic caches, linker/RXAS seeds, and a
+  generation-based late-load overlay, with future inheritance edges supported
+  structurally but no inheritance semantics selected. Evidence is summarized in
+  `evidence/2026-07-16-nr-04a-kind-index/options/MEASUREMENTS.md`; architecture
+  options are in `NR-04A-RUNTIME-TYPE-DISPATCH-DESIGN.md`.
+- 2026-07-16: Adrian selected T6 and approved an atomic RXBIN 007 break with no
+  006 compatibility path. RXAS will emit a text-backed, dense-ID module graph;
+  RXLINK will merge/reassign/reindex it into one sealed image graph and may use
+  it during selection/validation; RXVM/RXBVM will borrow that seed and add a
+  generation-published late/native overlay. Parameter/return type text lives on
+  type nodes, signatures and hot relationships use local IDs, and built-ins
+  such as `.float` are normal special nodes. A compiled common binutils library
+  owns format/graph structure and fast traversal while language policy owns
+  inheritance, assignability, override/default, and provider rules. The
+  canonical design is `docs/ai-context/RXBIN_007_SEMANTIC_GRAPH.md`.
+- 2026-07-16: Completed T6 milestone 1 without starting the performance-profile
+  phase. RXAS and RXLINK now write only the fixed-width little-endian 007
+  container; RXLINK rebuilds one sealed semantic graph and rewrites graph-bearing
+  operands to linked IDs. The dedicated `rxbin` library owns checked format,
+  signature, graph, and index code; `platform` remains OS-specific. RXDAS
+  validates graph/container errors, both VMs consume numeric type/member/factory
+  identities, and native/package surfaces—including installed `crexx`, `crxc`,
+  and `ccomp`—link `librxbin.a`. A final 1,182-step Debug rebuild and all
+  1,846 CTests passed; an installed-prefix `crexx -native` proof built and ran
+  `explicit_header`. The next gate is measurement-led selection of physical
+  layouts, site caches, and the late/native overlay, followed by Release,
+  portfolio, sanitizer, and cross-platform closeout.
+
 ## Cross-runtime portfolio execution order
 
 The target is to run every approved Tier A workload on CREXX, ooRexx and
@@ -284,6 +340,65 @@ These are time-boxed evidence activities, not production commitments.
 
 Ideas remain here until assessed, even when rejected. An idea can inform more
 than one `NR-*` activity and does not alter their priority by itself.
+
+### IDEA-META-01 — Link-produced runtime-critical metadata table
+
+- Status: subsumed by selected T6/RXBIN 007 semantic graph
+- Related activities: NR-04A, Strand 8 link/load work
+- Hypothesis: `rxlink` already traverses and rewrites every selected metadata
+  record, so it can emit compact per-module runtime kind spans/offsets/ordinals
+  more cheaply than making every VM rediscover them at load.
+- Semantic boundary: preserve the canonical metadata chain and its ordering,
+  duplicates, first-match behavior, source/TRACE diagnostics, and generic
+  introspection. Shared-pool modules need distinct per-module descriptors.
+- Compatibility boundary: format 006 has no extension directory or seed pointer
+  and rejects unknown record types/flags. RXBIN 007 is now approved as an atomic
+  break; old images are rebuilt, while late-load and native definitions enter
+  the common T6 overlay.
+- Evidence needed: linked file-size delta, link time, load-to-first-result,
+  runtime allocation/retained bytes, exact hot lookup cells, stripped unrelated
+  cells, both VM modes, 006 rejection/rebuild coverage, rxdas/tool support, and
+  native/late overlay behavior.
+
+### IDEA-META-02 — Constant-pool seed and hybrid metadata index
+
+- Status: rejected as the primary shape; separate 007 graph sections selected
+- Related activities: NR-04A, IDEA-META-01
+- Hypothesis: store a compact index payload with the constant-pool lifetime and
+  let a module point directly to it, avoiding a runtime copy/allocation; use a
+  runtime-built fallback only where no seed exists.
+- Design variants: a clean new header pointer/new constant type; assembler seed
+  rewritten by `rxlink`; link-only seed; or a 006-compatible reserved metadata
+  convention. The last variant is suspect because it leaks a hidden reserved
+  record into canonical introspection and still needs discovery.
+- Evidence needed: fixed-width/cross-platform encoding, validation cost,
+  compressed/shared-pool size, zero-copy feasibility after decompression,
+  fallback equivalence, and the same performance/lifecycle matrix as
+  IDEA-META-01.
+
+### IDEA-DISPATCH-01 — Runtime type universe and polymorphic dispatch tables
+
+- Status: selected as T6 under NR-04A; milestone 1 implemented, physical-layout
+  and overlay/cache PoCs pending
+- Related activities: NR-04A, IDEA-META-01, IDEA-META-02, Strand 8 link/load work
+- Hypothesis: a linker-seeded type universe with dense TypeId/MemberId identities,
+  assignability data, class/interface dispatch rows, factory provider buckets,
+  and per-instruction-site late-binding caches will outperform generic metadata
+  indexing while providing one coherent foundation for polymorphism and future
+  inheritance.
+- Affected surfaces: RXAS/RXLINK semantic validation, RXBIN runtime-data
+  serialization, loader binding, object runtime type identity, ISTYPE/ASSERTTYPE,
+  dynamic method/factory selector opcodes, RXVML, native/late load, profiling,
+  and both VM modes.
+- Semantic risks: current multi-interface/default/factory scoring and tie-break
+  rules; duplicate/module ordering; future inheritance/override/default-conflict
+  rules; generation and publication during late/native load; and complete 006
+  artifact rejection/rebuild coverage.
+- Evidence needed: direct assignability, monomorphic/polymorphic/megamorphic
+  dispatch, factory bucket/match, seed size/load/bind, late-load invalidation,
+  retained memory, and full exact portfolio results. Separate required user
+  `match` execution from avoidable lookup/descriptor overhead.
+- Design record: `performance/NR-04A-RUNTIME-TYPE-DISPATCH-DESIGN.md`.
 
 ### IDEA-CALL-01 — Read-only by-value formal invariant and call-flag simplification
 

@@ -1,0 +1,2 @@
+benchmark=awfy_mandelbrot size=500 result=191
+PASS: AWFY Mandelbrot

@@ -1,0 +1,6 @@
+pair,baseline_entry,candidate_entry,baseline_mode,candidate_mode,baseline_median_ns,candidate_median_ns,delta_ns,delta_percent
+runtime-interface-retained-C,runtime-interface-retained-baseline,runtime-interface-retained-c,opt-retained-baseline-second,opt-retained-candidate-c-first,221466000,98789000,-122677000,-55.393
+runtime-interface-stripped-C,runtime-interface-stripped-baseline,runtime-interface-stripped-c,opt-stripped-baseline-second,opt-stripped-candidate-c-first,202647000,108491000,-94156000,-46.463
+lifecycle-retained-C,lifecycle-retained-baseline,lifecycle-retained-c,retained-baseline-second,retained-candidate-c-first,3589000,3929000,340000,9.473
+lifecycle-stripped-C,lifecycle-stripped-baseline,lifecycle-stripped-c,stripped-baseline-second,stripped-candidate-c-first,3634000,3710000,76000,2.091
+JSON-stripped-C,json-stripped-baseline,json-stripped-c,opt-stripped-baseline-second,opt-stripped-candidate-c-first,403927000,387765000,-16162000,-4.001

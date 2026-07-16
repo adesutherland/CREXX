@@ -2690,6 +2690,140 @@ static int resolve_runtime_factory(rxvm_context *context,
     return 1;
 }
 
+static RxGraph *runtime_module_graph(module *mod) {
+    return mod && mod->file ? mod->file->semantic_graph : 0;
+}
+
+static proc_runtime *runtime_graph_procedure(rxvm_context *context,
+                                             const RxGraph *graph,
+                                             RxCallableId callable) {
+    RxGraphCallableView view;
+    size_t module_index;
+
+    if (!context || !graph || callable == RX_GRAPH_NONE ||
+        !rx_graph_callable(graph, callable, &view)) return 0;
+    for (module_index = 0u; module_index < context->num_modules; module_index++) {
+        module *mod;
+        size_t proc_index;
+
+        mod = context->modules[module_index];
+        if (!mod || !mod->file || mod->file->semantic_graph != graph ||
+            mod->file->semantic_module_index != view.procedure.module_index) continue;
+        for (proc_index = 0u; proc_index < mod->procedure_count; proc_index++) {
+            if (mod->procedures[proc_index].start == view.procedure.procedure_offset) {
+                return &mod->procedures[proc_index];
+            }
+        }
+        return 0;
+    }
+    return 0;
+}
+
+static proc_runtime *resolve_runtime_graph_method(rxvm_context *context,
+                                                  value *object_value,
+                                                  RxMemberId member) {
+    const RxGraph *graph;
+    RxCallableId callable;
+
+    if (!object_value || !object_value->object_type_graph ||
+        object_value->object_type_id == RX_GRAPH_NONE) return 0;
+    graph = object_value->object_type_graph;
+    callable = rx_graph_dispatch(graph, object_value->object_type_id, member);
+    return runtime_graph_procedure(context, graph, callable);
+}
+
+static int resolve_runtime_graph_factory(rxvm_context *context,
+                                         const RxGraph *graph,
+                                         RxFactoryId factory,
+                                         rxinteger argc,
+                                         value **args,
+                                         proc_runtime **factory_out,
+                                         char **error_out) {
+    RxGraphFactoryView factory_view;
+    size_t count;
+    size_t position;
+    proc_runtime *best_factory;
+    rxinteger best_score;
+    const char *best_class_name;
+    int saw_positive_score;
+
+    if (factory_out) *factory_out = 0;
+    if (error_out) *error_out = 0;
+    if (!context || !graph || !factory_out ||
+        !rx_graph_factory(graph, factory, &factory_view)) return -1;
+    count = rx_graph_provider_bucket_size(graph,
+                                          factory_view.interface_type,
+                                          factory_view.member);
+    if (!count) return -1;
+    best_factory = 0;
+    best_score = 0;
+    best_class_name = 0;
+    saw_positive_score = 0;
+    for (position = 0u; position < count; position++) {
+        RxGraphProviderView provider;
+        proc_runtime *factory_proc;
+        proc_runtime *match_proc;
+        rxinteger score;
+        const char *class_name;
+
+        if (!rx_graph_provider(graph,
+                               factory_view.interface_type,
+                               factory_view.member,
+                               position,
+                               &provider)) continue;
+        factory_proc = runtime_graph_procedure(context, graph, provider.factory_callable);
+        if (!factory_proc) continue;
+        match_proc = runtime_graph_procedure(context, graph, provider.match_callable);
+        score = 1;
+        if (provider.match_callable != RX_GRAPH_NONE &&
+            (!match_proc ||
+             !invoke_runtime_factory_match(context, match_proc, argc, args, &score))) {
+            if (error_out) *error_out = strdup("Failed to evaluate interface factory match");
+            return 0;
+        }
+        if (score <= 0) continue;
+        saw_positive_score = 1;
+        class_name = rx_graph_type_name(graph, provider.class_type);
+        if (!best_factory || score > best_score ||
+            (score == best_score && class_name && best_class_name &&
+             strcmp(class_name, best_class_name) < 0)) {
+            best_factory = factory_proc;
+            best_score = score;
+            best_class_name = class_name;
+        }
+    }
+    if (!saw_positive_score || !best_factory) {
+        if (error_out) *error_out = strdup("No matching interface factory provider");
+        return 0;
+    }
+    *factory_out = best_factory;
+    return 1;
+}
+
+static int runtime_value_matches_graph_type(rxvm_context *context,
+                                            value *object_value,
+                                            const RxGraph *target_graph,
+                                            RxGraphId target_type) {
+    const char *target_name;
+
+    if (!object_value || !target_graph) return 0;
+    target_name = rx_graph_type_name(target_graph, target_type);
+    if (!target_name) return 0;
+    if (runtime_type_name_is_object_contract(target_name, strlen(target_name))) {
+        return object_value->object_type_name && object_value->object_type_name_length > 0;
+    }
+    if (object_value->object_type_graph == target_graph &&
+        object_value->object_type_id != RX_GRAPH_NONE) {
+        return rx_graph_type_supports(target_graph,
+                                      object_value->object_type_id,
+                                      target_type);
+    }
+    return runtime_value_matches_object_type(context,
+                                             object_value,
+                                             target_name,
+                                             strlen(target_name));
+}
+
 /* Constant to get create the compile time data in ta "iso" like format */
 /* __DATE__ format "Mmm dd yyyy" -> Convert to yyyymmdd */
 const char compile_date[8+1] =
@@ -4662,7 +4796,8 @@ START_OF_INSTRUCTIONS
                 /* Clear return object */
                 value_zero(op1R);
 
-                /* Find the start of the metadata @ address */
+                /* Find the start of the metadata at this address. Generic
+                 * introspection deliberately preserves the canonical chain. */
                 while (i != -1) {
                     meta = (meta_entry *) (pool + i);
                     if (meta->address < op3R->int_value) i = meta->next;
@@ -4674,7 +4809,7 @@ START_OF_INSTRUCTIONS
                 }
                 int start = i;
 
-                /* How many entries */
+                /* Count the canonical-order records at this address. */
                 size = 0;
                 while (i != -1) {
                     meta = (meta_entry *) (pool + i);
@@ -11359,17 +11494,33 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             goto interprt_finished;
 
         START_INSTRUCTION(SETOBJTYPE_REG_STRING) VM_ADVANCE(2);
-            DEBUG("TRACE - SETOBJTYPE R%lu,\"%.*s\"\n", REG_IDX(1), (int) op2S->string_len, op2S->string);
-            op1R->object_type_name = op2S->string;
-            op1R->object_type_name_length = op2S->string_len;
+            {
+                RxGraph *graph = runtime_module_graph(current_module);
+                RxGraphId type = (RxGraphId)(pc + 2)->index;
+                const char *type_name = rx_graph_type_name(graph, type);
+                DEBUG("TRACE - SETOBJTYPE R%lu,TYPE#%u(%s)\n",
+                      REG_IDX(1), type, type_name ? type_name : "?");
+                op1R->object_type_name = type_name;
+                op1R->object_type_name_length = type_name ? strlen(type_name) : 0u;
+                op1R->object_type_graph = graph;
+                op1R->object_type_id = type;
+            }
             clear_value_uninitialized_object(op1R);
             DISPATCH;
 
         START_INSTRUCTION(SETOBJUNINIT_REG_STRING) VM_ADVANCE(2);
-            DEBUG("TRACE - SETOBJUNINIT R%lu,\"%.*s\"\n", REG_IDX(1), (int) op2S->string_len, op2S->string);
-            value_zero(op1R);
-            op1R->object_type_name = op2S->string;
-            op1R->object_type_name_length = op2S->string_len;
+            {
+                RxGraph *graph = runtime_module_graph(current_module);
+                RxGraphId type = (RxGraphId)(pc + 2)->index;
+                const char *type_name = rx_graph_type_name(graph, type);
+                DEBUG("TRACE - SETOBJUNINIT R%lu,TYPE#%u(%s)\n",
+                      REG_IDX(1), type, type_name ? type_name : "?");
+                value_zero(op1R);
+                op1R->object_type_name = type_name;
+                op1R->object_type_name_length = type_name ? strlen(type_name) : 0u;
+                op1R->object_type_graph = graph;
+                op1R->object_type_id = type;
+            }
             mark_value_uninitialized_object(op1R);
             DISPATCH;
 
@@ -11398,9 +11549,15 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 proc_runtime *called_function;
                 const char *class_name;
                 size_t class_name_length;
+                RxGraph *graph;
+                RxMemberId member;
+                char *descriptor;
 
-                DEBUG("TRACE - SRCMETHODSEL R%lu,R%lu,\"%.*s\"\n", REG_IDX(1), REG_IDX(2),
-                      (int) op3S->string_len, op3S->string);
+                graph = runtime_module_graph(current_module);
+                member = (RxMemberId)(pc + 3)->index;
+                descriptor = 0;
+                DEBUG("TRACE - SRCMETHODSEL R%lu,R%lu,MEMBER#%u\n",
+                      REG_IDX(1), REG_IDX(2), member);
                 RXVM_INSTRUMENTATION_DYNAMIC(
                         RXVM_PROFILE_DYNAMIC_METHOD_SELECTION,
                         RXVM_PROFILE_DYNAMIC_ATTEMPT);
@@ -11424,11 +11581,13 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                 called_function = 0;
 
                 if (!class_name || !class_name_length) {
-                    char *descriptor_copy;
-                    descriptor_copy = dup_runtime_name(op3S->string, op3S->string_len);
-                    if (descriptor_copy) {
-                        SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, descriptor_copy);
-                        free(descriptor_copy);
+                    descriptor = rx_graph_operand_text(graph,
+                                                       OP_SRCMETHODSEL_REG_REG_STRING,
+                                                       2u,
+                                                       member);
+                    if (descriptor) {
+                        SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, descriptor);
+                        free(descriptor);
                     }
                     else {
                         SET_SIGNAL(RXSIGNAL_FAILURE);
@@ -11439,28 +11598,37 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     DISPATCH;
                 }
 
-                called_function = resolve_runtime_method(context,
-                                                         class_name,
-                                                         class_name_length,
-                                                         op3S->string,
-                                                         op3S->string_len);
+                called_function = op2R->object_type_graph == graph
+                    ? resolve_runtime_graph_method(context, op2R, member) : 0;
                 if (!called_function) {
-                    char *descriptor_copy;
-                    descriptor_copy = dup_runtime_name(op3S->string, op3S->string_len);
-                    if (!descriptor_copy) {
+                    descriptor = rx_graph_operand_text(graph,
+                                                       OP_SRCMETHODSEL_REG_REG_STRING,
+                                                       2u,
+                                                       member);
+                    if (descriptor) {
+                        called_function = resolve_runtime_method(context,
+                                                                 class_name,
+                                                                 class_name_length,
+                                                                 descriptor,
+                                                                 strlen(descriptor));
+                    }
+                }
+                if (!called_function) {
+                    if (!descriptor) {
                         SET_SIGNAL(RXSIGNAL_FAILURE);
                         RXVM_INSTRUMENTATION_DYNAMIC(
                                 RXVM_PROFILE_DYNAMIC_METHOD_SELECTION,
                                 RXVM_PROFILE_DYNAMIC_FAILURE);
                         DISPATCH;
                     }
-                    SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, descriptor_copy);
-                    free(descriptor_copy);
+                    SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, descriptor);
+                    free(descriptor);
                     RXVM_INSTRUMENTATION_DYNAMIC(
                             RXVM_PROFILE_DYNAMIC_METHOD_SELECTION,
                             RXVM_PROFILE_DYNAMIC_FAILURE);
                     DISPATCH;
                 }
+                free(descriptor);
 
                 value_zero(op1R);
                 op1R->int_value = (rxinteger) called_function;
@@ -11474,23 +11642,50 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             {
                 proc_runtime *called_function;
                 char *error_message;
+                char *descriptor;
+                RxGraph *graph;
+                RxFactoryId factory;
+                int graph_result;
 
-                DEBUG("TRACE - SRCFPROCSEL R%lu,\"%.*s\",R%lu\n", REG_IDX(1),
-                      (int) op2S->string_len, op2S->string, REG_IDX(3));
+                graph = runtime_module_graph(current_module);
+                factory = (RxFactoryId)(pc + 2)->index;
+                DEBUG("TRACE - SRCFPROCSEL R%lu,FACTORY#%u,R%lu\n",
+                      REG_IDX(1), factory, REG_IDX(3));
                 RXVM_INSTRUMENTATION_DYNAMIC(
                         RXVM_PROFILE_DYNAMIC_FACTORY_SELECTION,
                         RXVM_PROFILE_DYNAMIC_ATTEMPT);
 
                 called_function = 0;
                 error_message = 0;
+                descriptor = 0;
 
-                if (!resolve_runtime_factory(context,
-                                             op2S->string,
-                                             op2S->string_len,
-                                             (rxinteger) op3R->int_value,
-                                             (&(op3R)) + 1,
-                                             &called_function,
-                                             &error_message)) {
+                graph_result = resolve_runtime_graph_factory(context,
+                                                             graph,
+                                                             factory,
+                                                             (rxinteger) op3R->int_value,
+                                                             (&(op3R)) + 1,
+                                                             &called_function,
+                                                             &error_message);
+                if (graph_result < 0) {
+                    descriptor = rx_graph_operand_text(graph,
+                                                       OP_SRCFPROCSEL_REG_STRING_REG,
+                                                       1u,
+                                                       factory);
+                    if (descriptor &&
+                        resolve_runtime_factory(context,
+                                                descriptor,
+                                                strlen(descriptor),
+                                                (rxinteger) op3R->int_value,
+                                                (&(op3R)) + 1,
+                                                &called_function,
+                                                &error_message)) {
+                        graph_result = 1;
+                    } else {
+                        graph_result = 0;
+                    }
+                }
+                free(descriptor);
+                if (!graph_result) {
                     if (error_message) {
                         SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, error_message);
                         free(error_message);
@@ -11536,20 +11731,30 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             DISPATCH;
 
         START_INSTRUCTION(ISTYPE_REG_REG_STRING) VM_ADVANCE(3);
-            DEBUG("TRACE - ISTYPE R%lu,R%lu,\"%.*s\"\n", REG_IDX(1), REG_IDX(2),
-                  (int) op3S->string_len, op3S->string);
-            value_zero(op1R);
-            set_int(op1R, runtime_value_matches_object_type(context,
-                                                            op2R,
-                                                            op3S->string,
-                                                            op3S->string_len));
+            {
+                RxGraph *graph = runtime_module_graph(current_module);
+                RxGraphId type = (RxGraphId)(pc + 3)->index;
+                DEBUG("TRACE - ISTYPE R%lu,R%lu,TYPE#%u\n",
+                      REG_IDX(1), REG_IDX(2), type);
+                value_zero(op1R);
+                set_int(op1R, runtime_value_matches_graph_type(context,
+                                                               op2R,
+                                                               graph,
+                                                               type));
+            }
             DISPATCH;
 
         START_INSTRUCTION(ASSERTTYPE_REG_STRING) VM_ADVANCE(2);
-            DEBUG("TRACE - ASSERTTYPE R%lu,\"%.*s\"\n", REG_IDX(1),
-                  (int) op2S->string_len, op2S->string);
-            if (!runtime_value_matches_object_type(context, op1R, op2S->string, op2S->string_len)) {
-                char *error_message = build_runtime_cast_error(op1R, op2S->string, op2S->string_len);
+            {
+                RxGraph *graph = runtime_module_graph(current_module);
+                RxGraphId type = (RxGraphId)(pc + 2)->index;
+                const char *type_name = rx_graph_type_name(graph, type);
+                DEBUG("TRACE - ASSERTTYPE R%lu,TYPE#%u(%s)\n",
+                      REG_IDX(1), type, type_name ? type_name : "?");
+                if (!runtime_value_matches_graph_type(context, op1R, graph, type)) {
+                char *error_message = build_runtime_cast_error(op1R,
+                                                               type_name ? type_name : "?",
+                                                               type_name ? strlen(type_name) : 1u);
                 if (error_message) {
                     SET_SIGNAL_MSG(RXSIGNAL_CONVERSION_ERROR, error_message);
                     free(error_message);
@@ -11557,6 +11762,7 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
                     SET_SIGNAL(RXSIGNAL_CONVERSION_ERROR);
                 }
                 DISPATCH;
+                }
             }
             DISPATCH;
 

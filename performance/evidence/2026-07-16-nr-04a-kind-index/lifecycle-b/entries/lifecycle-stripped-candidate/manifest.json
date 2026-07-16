@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "entry": "lifecycle-stripped-candidate",
+  "pair": "lifecycle-stripped-vm",
+  "workload": "Lifecycle probe",
+  "variant": "candidate",
+  "optimization_mode": "stripped-candidate-vm",
+  "image": {"path":"/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/lifecycle/lifecycle-stripped.rxbin","sha256":"ff94639f0ca40f2e9246d8c3529a5d7ab6f57e5055f7ea54ebbbbc1776c0eab3"},
+  "modules": [],
+  "arguments": [],
+  "correctness_expectation": "PASS: Lifecycle Probe cREXX",
+  "source_trace_retention": "linked;source_TRACE=stripped;load_to_first_result",
+  "warmups": 3,
+  "recorded_runs": 31,
+  "sampling": "serial",
+  "timing_source": "ordinary Release rxvm only",
+  "timing_vm": {"path":"/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm","sha256":"c4a7be443b8655dc9f6db0565c814544527ee453a4e787cc17e61637e79c6804"},
+  "profile_timing_interpretation": "diagnostic only; never throughput",
+  "timing_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/lifecycle/lifecycle-stripped.rxbin"],
+  "profile_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm","--profile-output","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-04a-kind-index/lifecycle-b/entries/lifecycle-stripped-candidate/profile/profile.csv","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/lifecycle/lifecycle-stripped.rxbin"],
+  "sequence_commands": [],
+  "median_elapsed_ns": 5136000
+}

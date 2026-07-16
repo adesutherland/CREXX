@@ -351,17 +351,17 @@ When the `EOF` is reached, the `backptch(Assembler_Context *context)` function o
 
 ## 4. Binary Emission (`.rxbin`)
 
-Once parsing and backpatching conclude without errors, the assembler flushes the `Assembler_Context` state into a packed `.rxbin` file.
+Once parsing and backpatching conclude without errors, the assembler flushes the `Assembler_Context` state into an RXBIN 007 container.
 
 The structural output consists of:
 
 1. **Magic Header & Version**: Validates the file format.
 
-2. **Global Counters and Section Sizes**: e.g., Number of global registers (`context->binary.globals`), expanded section sizes, stored section sizes, and section flags.
+2. **Module Directory and Section Sizes**: the module identity, global-register count (`context->binary.globals`), six fixed section ranges, and exact stored sizes.
 
-3. **The Constant Pool**: The assembled `context->binary.const_pool`, optionally blob-compressed on disk if that reduces size.
+3. **Portable Constants and Metadata**: the native in-memory pool is converted to fixed-width, little-endian, ID-linked records.
 
-4. **The Bytecode Stream**: The resolved `context->binary.binary` instruction slots, optionally packed on disk as a logical opcode/operand token stream.
+4. **Bytecode and Semantic Graph**: the resolved instruction slots are variable-integer encoded, constant operands become record IDs, graph-bearing operands become dense graph IDs, and graph facts/indexes occupy their own sections.
 
 As of format version `002` and later, float operands are no longer stored inline as raw
 `double` payloads in operand slots. Instead, the operand slot carries an index
@@ -372,14 +372,25 @@ significant digits to distinguish binary64 values that would otherwise share a
 six-decimal rendering, while keeping integer-looking values parseable as RXAS
 float tokens (for example, `-0.0` rather than `-0`).
 
-As of the current `006` layout, `rxas` still builds the normal in-memory
-`bin_code[]` and raw constant pool first. The section compaction step happens
-when `write_module()` serializes the module:
+RXAS still builds the normal in-memory `bin_code[]` and raw constant pool first.
+`write_module()` then emits only 007: signed integers use ZigZag variable
+integers, portable records replace native pool layouts, and the base sections
+are uncompressed. There is no legacy-output mode; 006 is rejected and repository
+artifacts are rebuilt. The 007 container and semantic graph are specified in
+[RXBIN_007_SEMANTIC_GRAPH.md](RXBIN_007_SEMANTIC_GRAPH.md).
 
-- instruction slots are packed as logical opcode/operand tokens
-- signed integer operands are ZigZag encoded in that packed stream
-- the constant pool is optionally compressed with the lightweight in-tree LZSS codec
-- the file header stores both the stored byte counts and the expanded target sizes
+RXAS feeds the common `rxbin` graph builder from class, interface,
+implements, member, callable, factory, and signature facts. After ordinary
+backpatching it resolves local procedure references, finalizes the indexed
+module graph, and emits the same sectioned 007 container used for linked images,
+with a one-entry module directory. Unknown external type/member references are
+complete opaque nodes, not dangling strings.
+
+Parameter and return types remain canonical text on type nodes, including
+preseeded built-in nodes such as `.float`; signatures refer to those nodes with
+module-local dense IDs. Type-, member-, and factory-bearing serialized
+instruction operands also use module-local graph IDs. RXAS/RXDAS text syntax
+remains human-readable and descriptor based.
 
 ## 5. Current Interface-Dispatch Additions
 

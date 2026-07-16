@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "entry": "bounce-opt-stripped",
+  "pair": "bounce-opt-metadata",
+  "workload": "Bounce",
+  "variant": "candidate",
+  "optimization_mode": "opt-stripped",
+  "image": {"path":"/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/bounce-stripped.rxbin","sha256":"5a67f667a694c80bea9df9058d15f1d3aec372d32870d43309bd46ff1da49714"},
+  "modules": [],
+  "arguments": ["100"],
+  "correctness_expectation": "PASS: AWFY Bounce",
+  "source_trace_retention": "linked;source_TRACE=stripped",
+  "warmups": 2,
+  "recorded_runs": 7,
+  "sampling": "serial",
+  "timing_source": "ordinary Release rxvm only",
+  "profile_timing_interpretation": "diagnostic only; never throughput",
+  "timing_command": ["/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/product/bin/rxvm","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/bounce-stripped.rxbin","-a","100"],
+  "profile_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm","--profile-output","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-04a-kind-index/baseline-traversal/entries/bounce-opt-stripped/profile/profile.csv","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/bounce-stripped.rxbin","-a","100"],
+  "sequence_commands": [],
+  "median_elapsed_ns": 421850000
+}

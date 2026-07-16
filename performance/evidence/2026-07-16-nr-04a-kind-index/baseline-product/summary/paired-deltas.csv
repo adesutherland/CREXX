@@ -1,0 +1,14 @@
+pair,baseline_entry,candidate_entry,baseline_mode,candidate_mode,baseline_median_ns,candidate_median_ns,delta_ns,delta_percent
+sieve-opt-metadata,sieve-opt-retained,sieve-opt-stripped,opt-retained,opt-stripped,13948000,16443000,2495000,17.888
+permute-opt-metadata,permute-opt-retained,permute-opt-stripped,opt-retained,opt-stripped,87609000,89632000,2023000,2.309
+mandelbrot-opt-metadata,mandelbrot-opt-retained,mandelbrot-opt-stripped,opt-retained,opt-stripped,175275000,183057000,7782000,4.440
+towers-opt-metadata,towers-opt-retained,towers-opt-stripped,opt-retained,opt-stripped,690320000,681495000,-8825000,-1.278
+bounce-opt-metadata,bounce-opt-retained,bounce-opt-stripped,opt-retained,opt-stripped,355066000,381639000,26573000,7.484
+storage-opt-metadata,storage-opt-retained,storage-opt-stripped,opt-retained,opt-stripped,2135576000,2138409000,2833000,0.133
+list-opt-metadata,list-opt-retained,list-opt-stripped,opt-retained,opt-stripped,236939000,229176000,-7763000,-3.276
+richards-opt-metadata,richards-opt-retained,richards-opt-stripped,opt-retained,opt-stripped,677811000,680317000,2506000,0.370
+json-opt-metadata,json-opt-retained,json-opt-stripped,opt-retained,opt-stripped,339703000,342571000,2868000,0.844
+base64-opt-metadata,base64-opt-retained,base64-opt-stripped,opt-retained,opt-stripped,408471000,444719000,36248000,8.874
+rexxcps-opt-metadata,rexxcps-opt-retained,rexxcps-opt-stripped,opt-retained,opt-stripped,583522000,664883000,81361000,13.943
+sieve-noopt-metadata,sieve-noopt-retained,sieve-noopt-stripped,noopt-retained,noopt-stripped,16842000,21120000,4278000,25.401
+rexxcps-noopt-metadata,rexxcps-noopt-retained,rexxcps-noopt-stripped,noopt-retained,noopt-stripped,608116000,728136000,120020000,19.736

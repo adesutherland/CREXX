@@ -5,8 +5,8 @@ project(Linker C)
 set(CMAKE_C_STANDARD 99)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
-add_executable(rxlink rxlinkmain.c ../binutils/rxsignature.c ../binutils/include/rxbin.h ../binutils/include/rxsignature.h)
-target_link_libraries(rxlink platform)
+add_executable(rxlink rxlinkmain.c ../binutils/include/rxbin.h ../binutils/include/rxsignature.h)
+target_link_libraries(rxlink rxbin platform)
 target_include_directories(rxlink PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
         ../platform
@@ -189,6 +189,7 @@ crexx_add_vm_dual_test(
 )
 
 add_executable(test_linked_format tests/test_linked_format.c)
+target_link_libraries(test_linked_format PRIVATE rxbin)
 target_include_directories(test_linked_format PRIVATE
         ${CMAKE_SOURCE_DIR}/platform
         ${CMAKE_SOURCE_DIR}/binutils/include)

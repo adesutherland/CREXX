@@ -6,6 +6,67 @@
 #include "rxbin.h"
 #include "rxdefs.h"
 
+static uint32_t read_u32le(const unsigned char *bytes) {
+    return (uint32_t)bytes[0] |
+           ((uint32_t)bytes[1] << 8u) |
+           ((uint32_t)bytes[2] << 16u) |
+           ((uint32_t)bytes[3] << 24u);
+}
+
+static uint64_t read_u64le(const unsigned char *bytes) {
+    uint64_t value = 0u;
+    unsigned int i;
+    for (i = 0u; i < 8u; i++) value |= (uint64_t)bytes[i] << (i * 8u);
+    return value;
+}
+
+static void write_u32le(unsigned char *bytes, uint32_t value) {
+    bytes[0] = (unsigned char)value;
+    bytes[1] = (unsigned char)(value >> 8u);
+    bytes[2] = (unsigned char)(value >> 16u);
+    bytes[3] = (unsigned char)(value >> 24u);
+}
+
+static void write_u64le(unsigned char *bytes, uint64_t value) {
+    unsigned int i;
+    for (i = 0u; i < 8u; i++) bytes[i] = (unsigned char)(value >> (i * 8u));
+}
+
+static int find_record(const unsigned char *section,
+                       size_t section_size,
+                       uint32_t wanted_type,
+                       uint32_t *id,
+                       size_t *payload_offset) {
+    uint32_t record_count;
+    uint32_t record_index;
+    size_t offset;
+
+    if (!section || section_size < 16u || !id || !payload_offset) return 0;
+    record_count = read_u32le(section + 12u);
+    offset = 16u;
+    for (record_index = 0u; record_index < record_count; record_index++) {
+        uint32_t record_id;
+        uint32_t type;
+        uint64_t payload_size;
+        size_t next;
+
+        if (offset > section_size || section_size - offset < 24u) return 0;
+        record_id = read_u32le(section + offset + 4u);
+        type = read_u32le(section + offset + 8u);
+        payload_size = read_u64le(section + offset + 16u);
+        if (payload_size > SIZE_MAX ||
+            (size_t)payload_size > section_size - offset - 24u) return 0;
+        if (type == wanted_type) {
+            *id = record_id;
+            *payload_offset = offset + 24u;
+            return 1;
+        }
+        next = offset + 24u + (size_t)payload_size;
+        offset = (next + 7u) & ~(size_t)7u;
+    }
+    return 0;
+}
+
 static int read_entire_file(const char *path, char **buffer, size_t *size) {
     FILE *fp;
     long length;
@@ -51,15 +112,102 @@ static int read_entire_file(const char *path, char **buffer, size_t *size) {
     return 1;
 }
 
+static int mutation_is_rejected(const char *buffer,
+                                size_t buffer_size,
+                                size_t offset,
+                                unsigned char replacement,
+                                int expected_rc,
+                                const char *description) {
+    char *copy;
+    char *cursor;
+    module_file *module;
+    int rc;
+
+    if (offset >= buffer_size) return 0;
+    copy = (char *)malloc(buffer_size);
+    if (!copy) return 0;
+    memcpy(copy, buffer, buffer_size);
+    copy[offset] = (char)replacement;
+    cursor = copy;
+    module = 0;
+    rc = read_module_mem(&module, &cursor, copy + buffer_size);
+    if (module) free_module(module);
+    free(copy);
+    if (rc != expected_rc) {
+        fprintf(stderr, "%s mutation returned %d, expected %d\n",
+                description, rc, expected_rc);
+        return 0;
+    }
+    return 1;
+}
+
+static int mutation_u32_is_rejected(const char *buffer,
+                                    size_t buffer_size,
+                                    size_t offset,
+                                    uint32_t replacement,
+                                    const char *description) {
+    char *copy;
+    char *cursor;
+    module_file *module;
+    int rc;
+
+    if (offset > buffer_size || buffer_size - offset < 4u) return 0;
+    copy = (char *)malloc(buffer_size);
+    if (!copy) return 0;
+    memcpy(copy, buffer, buffer_size);
+    write_u32le((unsigned char *)copy + offset, replacement);
+    cursor = copy;
+    module = 0;
+    rc = read_module_mem(&module, &cursor, copy + buffer_size);
+    if (module) free_module(module);
+    free(copy);
+    if (rc != -1) {
+        fprintf(stderr, "%s mutation returned %d, expected -1\n",
+                description, rc);
+        return 0;
+    }
+    return 1;
+}
+
+static int mutation_u64_is_rejected(const char *buffer,
+                                    size_t buffer_size,
+                                    size_t offset,
+                                    uint64_t replacement,
+                                    const char *description) {
+    char *copy;
+    char *cursor;
+    module_file *module;
+    int rc;
+
+    if (offset > buffer_size || buffer_size - offset < 8u) return 0;
+    copy = (char *)malloc(buffer_size);
+    if (!copy) return 0;
+    memcpy(copy, buffer, buffer_size);
+    write_u64le((unsigned char *)copy + offset, replacement);
+    cursor = copy;
+    module = 0;
+    rc = read_module_mem(&module, &cursor, copy + buffer_size);
+    if (module) free_module(module);
+    free(copy);
+    if (rc != -1) {
+        fprintf(stderr, "%s mutation returned %d, expected -1\n",
+                description, rc);
+        return 0;
+    }
+    return 1;
+}
+
 int main(void) {
     FILE *fp = 0;
-    module_header raw_header;
+    unsigned char raw_header[RXBIN007_HEADER_SIZE];
+    unsigned char directory[RXBIN007_SECTION_COUNT * RXBIN007_DIRECTORY_ENTRY_SIZE];
     module_file *from_file = 0;
     module_file *from_memory = 0;
     char *buffer = 0;
     char *cursor = 0;
     size_t buffer_size = 0;
     bin_code *code = 0;
+    uint64_t instruction_bytes = 0u;
 
     fp = fopen("tests_compact_format.rxbin", "rb");
     if (!fp) {
@@ -67,34 +215,40 @@ int main(void) {
         return 1;
     }
 
-    if (fread(&raw_header, sizeof(raw_header), 1, fp) != 1) {
-        fprintf(stderr, "Failed to read compact-format module header\n");
+    if (fread(raw_header, 1u, sizeof(raw_header), fp) != sizeof(raw_header) ||
+        fread(directory, 1u, sizeof(directory), fp) != sizeof(directory)) {
+        fprintf(stderr, "Failed to read RXBIN 007 header and directory\n");
         fclose(fp);
         return 1;
     }
 
-    if ((raw_header.section_flags & RXBIN_SECTION_INST_PACKED) == 0) {
-        fprintf(stderr, "Instruction section was not written in packed form\n");
+    if (memcmp(raw_header, RXBIN007_MAGIC, 8u) != 0 ||
+        read_u32le(raw_header + 8u) != RXBIN007_HEADER_SIZE ||
+        read_u32le(raw_header + 12u) != 0u ||
+        read_u32le(raw_header + 24u) != RXBIN007_SECTION_COUNT ||
+        read_u32le(raw_header + 28u) != 1u) {
+        fprintf(stderr, "Fixture does not use the canonical RXBIN 007 container\n");
         fclose(fp);
         return 1;
     }
 
-    if ((raw_header.section_flags & RXBIN_SECTION_CONST_PACKED) == 0) {
-        fprintf(stderr, "Constant pool was not written in compressed form\n");
-        fclose(fp);
-        return 1;
-    }
-
-    if (raw_header.instruction_stored_size >= raw_header.instruction_size * sizeof(bin_code)) {
-        fprintf(stderr, "Packed instruction section is not smaller than raw slots\n");
-        fclose(fp);
-        return 1;
-    }
-
-    if (raw_header.constant_stored_size >= raw_header.constant_size) {
-        fprintf(stderr, "Compressed constant pool is not smaller than raw bytes\n");
-        fclose(fp);
-        return 1;
+    {
+        uint32_t section;
+        for (section = 0u; section < RXBIN007_SECTION_COUNT; section++) {
+            const unsigned char *row = directory +
+                (size_t)section * RXBIN007_DIRECTORY_ENTRY_SIZE;
+            if (read_u32le(row) != section + 1u ||
+                read_u32le(row + 4u) != 0u ||
+                read_u32le(row + 8u) != 8u ||
+                read_u32le(row + 12u) != 0u ||
+                read_u64le(row + 24u) != read_u64le(row + 32u)) {
+                fprintf(stderr, "RXBIN 007 base section directory is not canonical\n");
+                fclose(fp);
+                return 1;
+            }
+        }
+        instruction_bytes = read_u64le(
+            directory + RXBIN007_DIRECTORY_ENTRY_SIZE + 24u);
     }
 
     rewind(fp);
@@ -104,6 +258,13 @@ int main(void) {
         return 1;
     }
     fclose(fp);
+
+    if (instruction_bytes >=
+        8u + from_file->header.instruction_size * sizeof(bin_code)) {
+        fprintf(stderr, "Canonical variable-integer instruction stream is not compact\n");
+        free_module(from_file);
+        return 1;
+    }
 
     code = (bin_code *)from_file->instructions;
     if (code[0].instruction.opcode != OP_LOAD_REG_INT || code[2].iconst != -1) {
@@ -165,6 +326,89 @@ int main(void) {
         free(buffer);
         free_module(from_file);
         return 1;
+    }
+
+    {
+        size_t facts_row = RXBIN007_HEADER_SIZE +
+            (RXBIN007_SECTION_GRAPH_FACTS - 1u) * RXBIN007_DIRECTORY_ENTRY_SIZE;
+        size_t constants_row = RXBIN007_HEADER_SIZE +
+            (RXBIN007_SECTION_CONSTANTS - 1u) * RXBIN007_DIRECTORY_ENTRY_SIZE;
+        size_t metadata_row = RXBIN007_HEADER_SIZE +
+            (RXBIN007_SECTION_METADATA - 1u) * RXBIN007_DIRECTORY_ENTRY_SIZE;
+        size_t facts_offset = (size_t)read_u64le((const unsigned char *)buffer +
+                                                 facts_row + 16u);
+        size_t constants_offset = (size_t)read_u64le((const unsigned char *)buffer +
+                                                     constants_row + 16u);
+        size_t constants_size = (size_t)read_u64le((const unsigned char *)buffer +
+                                                   constants_row + 24u);
+        size_t metadata_offset = (size_t)read_u64le((const unsigned char *)buffer +
+                                                    metadata_row + 16u);
+        size_t metadata_size = (size_t)read_u64le((const unsigned char *)buffer +
+                                                  metadata_row + 24u);
+        uint32_t procedure_id;
+        uint32_t ignored_id;
+        size_t ignored_payload;
+        size_t function_payload;
+        int found_wrong_kind_fixture;
+
+        found_wrong_kind_fixture =
+            constants_offset <= buffer_size &&
+            constants_size <= buffer_size - constants_offset &&
+            metadata_offset <= buffer_size &&
+            metadata_size <= buffer_size - metadata_offset &&
+            find_record((const unsigned char *)buffer + constants_offset,
+                        constants_size,
+                        PROC_CONST,
+                        &procedure_id,
+                        &ignored_payload) &&
+            find_record((const unsigned char *)buffer + metadata_offset,
+                        metadata_size,
+                        META_FUNC,
+                        &ignored_id,
+                        &function_payload);
+        if (!found_wrong_kind_fixture) {
+            fprintf(stderr, "Could not locate PROC/META_FUNC wrong-kind fixture records\n");
+        }
+        if (!mutation_is_rejected(buffer,
+                                  buffer_size,
+                                  7u,
+                                  (unsigned char)'6',
+                                  2,
+                                  "legacy-version") ||
+            !mutation_is_rejected(buffer,
+                                  buffer_size,
+                                  40u,
+                                  1u,
+                                  -1,
+                                  "reserved-header") ||
+            !mutation_is_rejected(buffer,
+                                  buffer_size,
+                                  RXBIN007_HEADER_SIZE + 12u,
+                                  1u,
+                                  -1,
+                                  "reserved-directory") ||
+            !mutation_is_rejected(buffer,
+                                  buffer_size,
+                                  facts_offset,
+                                  (unsigned char)'X',
+                                  -1,
+                                  "graph-facts") ||
+            !mutation_u64_is_rejected(buffer,
+                                      buffer_size,
+                                      16u,
+                                      32u,
+                                      "undersized-declared-file") ||
+            !found_wrong_kind_fixture ||
+            !mutation_u32_is_rejected(buffer,
+                                      buffer_size,
+                                      metadata_offset + function_payload + 16u,
+                                      procedure_id,
+                                      "metadata-wrong-record-kind")) {
+            free_module(from_memory);
+            free(buffer);
+            free_module(from_file);
+            return 1;
+        }
     }
 
     free_module(from_memory);

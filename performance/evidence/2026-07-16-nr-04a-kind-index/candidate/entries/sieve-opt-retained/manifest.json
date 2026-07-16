@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "entry": "sieve-opt-retained",
+  "pair": "sieve-opt-metadata",
+  "workload": "Sieve",
+  "variant": "baseline",
+  "optimization_mode": "opt-retained",
+  "image": {"path":"/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/sieve-retained.rxbin","sha256":"2924b1e9274abd017f4b9fc146adb95575a8709ee9bde91d3d07a24f5b1bb18f"},
+  "modules": [],
+  "arguments": ["50"],
+  "correctness_expectation": "PASS: AWFY Sieve",
+  "source_trace_retention": "linked;source_TRACE=retained",
+  "warmups": 2,
+  "recorded_runs": 7,
+  "sampling": "serial",
+  "timing_source": "ordinary Release rxvm only",
+  "profile_timing_interpretation": "diagnostic only; never throughput",
+  "timing_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/sieve-retained.rxbin","-a","50"],
+  "profile_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm","--profile-output","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-04a-kind-index/candidate/entries/sieve-opt-retained/profile/profile.csv","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/sieve-retained.rxbin","-a","50"],
+  "sequence_commands": [],
+  "median_elapsed_ns": 14054000
+}

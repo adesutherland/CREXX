@@ -301,8 +301,19 @@ int rxasoutf(Assembler_Context *scanner) {
         module.description = scanner->file_name;
         module.instructions = pgm->binary;
         module.constant = pgm->const_pool;
-        write_module(&module,outFile);
-        fclose(outFile);
+        if (write_module(&module,outFile) != 0) {
+            fprintf(stderr, "Can't write RXBIN 007 output %s: %s\n",
+                    effective_output_file_name,
+                    rxbin_last_error() ? rxbin_last_error() : "unknown RXBIN error");
+            fclose(outFile);
+            if (allocated_output_file_name) free(allocated_output_file_name);
+            return -1;
+        }
+        if (fclose(outFile) != 0) {
+            fprintf(stderr, "Can't close output file: %s\n", effective_output_file_name);
+            if (allocated_output_file_name) free(allocated_output_file_name);
+            return -1;
+        }
         if (allocated_output_file_name) free(allocated_output_file_name);
     }
     else {

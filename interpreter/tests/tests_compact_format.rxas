@@ -1,12 +1,14 @@
 /*
  * interpreter/tests/tests_compact_format.rxas
  *
- * This fixture forces both stage-2 section codecs:
- * - small opcodes/registers/signed ints in the packed code stream
- * - multiple similar long strings in the constant pool
+ * This fixture exercises RXBIN 007 variable integers and portable records:
+ * - small opcodes/registers/signed integers in the instruction section
+ * - multiple similar long strings in the constant section
  */
 
 .globals=0
+
+    .meta "tests_compact_format.main"="b" ".int" main() ""
 
 main() .locals=12
     load r1, -1

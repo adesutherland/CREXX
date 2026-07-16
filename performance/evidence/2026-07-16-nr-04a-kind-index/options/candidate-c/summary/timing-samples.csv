@@ -1,0 +1,225 @@
+entry,pair,workload,variant,mode,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness
+runtime-interface-retained-c,runtime-interface-retained-C,Runtime interface lookup,candidate,opt-retained-candidate-c-first,process,warmup,1,105947000,0,pass
+runtime-interface-retained-c,runtime-interface-retained-C,Runtime interface lookup,candidate,opt-retained-candidate-c-first,process,warmup,2,99216000,0,pass
+runtime-interface-retained-c,runtime-interface-retained-C,Runtime interface lookup,candidate,opt-retained-candidate-c-first,process,recorded,1,110694000,0,pass
+runtime-interface-retained-c,runtime-interface-retained-C,Runtime interface lookup,candidate,opt-retained-candidate-c-first,process,recorded,2,103410000,0,pass
+runtime-interface-retained-c,runtime-interface-retained-C,Runtime interface lookup,candidate,opt-retained-candidate-c-first,process,recorded,3,95908000,0,pass
+runtime-interface-retained-c,runtime-interface-retained-C,Runtime interface lookup,candidate,opt-retained-candidate-c-first,process,recorded,4,98568000,0,pass
+runtime-interface-retained-c,runtime-interface-retained-C,Runtime interface lookup,candidate,opt-retained-candidate-c-first,process,recorded,5,94932000,0,pass
+runtime-interface-retained-c,runtime-interface-retained-C,Runtime interface lookup,candidate,opt-retained-candidate-c-first,process,recorded,6,98789000,0,pass
+runtime-interface-retained-c,runtime-interface-retained-C,Runtime interface lookup,candidate,opt-retained-candidate-c-first,process,recorded,7,122551000,0,pass
+runtime-interface-retained-baseline,runtime-interface-retained-C,Runtime interface lookup,baseline,opt-retained-baseline-second,process,warmup,1,226515000,0,pass
+runtime-interface-retained-baseline,runtime-interface-retained-C,Runtime interface lookup,baseline,opt-retained-baseline-second,process,warmup,2,268115000,0,pass
+runtime-interface-retained-baseline,runtime-interface-retained-C,Runtime interface lookup,baseline,opt-retained-baseline-second,process,recorded,1,242398000,0,pass
+runtime-interface-retained-baseline,runtime-interface-retained-C,Runtime interface lookup,baseline,opt-retained-baseline-second,process,recorded,2,215318000,0,pass
+runtime-interface-retained-baseline,runtime-interface-retained-C,Runtime interface lookup,baseline,opt-retained-baseline-second,process,recorded,3,218610000,0,pass
+runtime-interface-retained-baseline,runtime-interface-retained-C,Runtime interface lookup,baseline,opt-retained-baseline-second,process,recorded,4,236966000,0,pass
+runtime-interface-retained-baseline,runtime-interface-retained-C,Runtime interface lookup,baseline,opt-retained-baseline-second,process,recorded,5,292356000,0,pass
+runtime-interface-retained-baseline,runtime-interface-retained-C,Runtime interface lookup,baseline,opt-retained-baseline-second,process,recorded,6,221466000,0,pass
+runtime-interface-retained-baseline,runtime-interface-retained-C,Runtime interface lookup,baseline,opt-retained-baseline-second,process,recorded,7,214016000,0,pass
+runtime-interface-stripped-c,runtime-interface-stripped-C,Runtime interface lookup,candidate,opt-stripped-candidate-c-first,process,warmup,1,111545000,0,pass
+runtime-interface-stripped-c,runtime-interface-stripped-C,Runtime interface lookup,candidate,opt-stripped-candidate-c-first,process,warmup,2,111271000,0,pass
+runtime-interface-stripped-c,runtime-interface-stripped-C,Runtime interface lookup,candidate,opt-stripped-candidate-c-first,process,recorded,1,108486000,0,pass
+runtime-interface-stripped-c,runtime-interface-stripped-C,Runtime interface lookup,candidate,opt-stripped-candidate-c-first,process,recorded,2,108489000,0,pass
+runtime-interface-stripped-c,runtime-interface-stripped-C,Runtime interface lookup,candidate,opt-stripped-candidate-c-first,process,recorded,3,107542000,0,pass
+runtime-interface-stripped-c,runtime-interface-stripped-C,Runtime interface lookup,candidate,opt-stripped-candidate-c-first,process,recorded,4,109174000,0,pass
+runtime-interface-stripped-c,runtime-interface-stripped-C,Runtime interface lookup,candidate,opt-stripped-candidate-c-first,process,recorded,5,108491000,0,pass
+runtime-interface-stripped-c,runtime-interface-stripped-C,Runtime interface lookup,candidate,opt-stripped-candidate-c-first,process,recorded,6,109000000,0,pass
+runtime-interface-stripped-c,runtime-interface-stripped-C,Runtime interface lookup,candidate,opt-stripped-candidate-c-first,process,recorded,7,110435000,0,pass
+runtime-interface-stripped-baseline,runtime-interface-stripped-C,Runtime interface lookup,baseline,opt-stripped-baseline-second,process,warmup,1,187743000,0,pass
+runtime-interface-stripped-baseline,runtime-interface-stripped-C,Runtime interface lookup,baseline,opt-stripped-baseline-second,process,warmup,2,203191000,0,pass
+runtime-interface-stripped-baseline,runtime-interface-stripped-C,Runtime interface lookup,baseline,opt-stripped-baseline-second,process,recorded,1,237783000,0,pass
+runtime-interface-stripped-baseline,runtime-interface-stripped-C,Runtime interface lookup,baseline,opt-stripped-baseline-second,process,recorded,2,194025000,0,pass
+runtime-interface-stripped-baseline,runtime-interface-stripped-C,Runtime interface lookup,baseline,opt-stripped-baseline-second,process,recorded,3,186752000,0,pass
+runtime-interface-stripped-baseline,runtime-interface-stripped-C,Runtime interface lookup,baseline,opt-stripped-baseline-second,process,recorded,4,184225000,0,pass
+runtime-interface-stripped-baseline,runtime-interface-stripped-C,Runtime interface lookup,baseline,opt-stripped-baseline-second,process,recorded,5,205313000,0,pass
+runtime-interface-stripped-baseline,runtime-interface-stripped-C,Runtime interface lookup,baseline,opt-stripped-baseline-second,process,recorded,6,223205000,0,pass
+runtime-interface-stripped-baseline,runtime-interface-stripped-C,Runtime interface lookup,baseline,opt-stripped-baseline-second,process,recorded,7,202647000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,warmup,1,4281000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,warmup,2,16055000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,warmup,3,4907000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,1,4778000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,2,4017000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,3,3929000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,4,4656000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,5,3971000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,6,3991000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,7,4038000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,8,4261000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,9,3813000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,10,4090000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,11,4387000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,12,3649000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,13,3625000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,14,4431000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,15,3820000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,16,3656000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,17,4207000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,18,3727000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,19,3451000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,20,3900000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,21,4048000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,22,3490000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,23,3559000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,24,4124000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,25,3779000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,26,3603000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,27,3933000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,28,3921000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,29,3652000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,30,3925000,0,pass
+lifecycle-retained-c,lifecycle-retained-C,Lifecycle probe,candidate,retained-candidate-c-first,process,recorded,31,4180000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,warmup,1,4153000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,warmup,2,3470000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,warmup,3,3322000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,1,3892000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,2,4178000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,3,3306000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,4,3589000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,5,4028000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,6,3536000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,7,3494000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,8,3716000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,9,4023000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,10,3311000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,11,3449000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,12,3880000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,13,3557000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,14,3355000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,15,3566000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,16,4021000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,17,3539000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,18,3510000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,19,3609000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,20,4184000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,21,3431000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,22,3633000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,23,4317000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,24,3544000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,25,3478000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,26,3676000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,27,4142000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,28,3404000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,29,3570000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,30,3835000,0,pass
+lifecycle-retained-baseline,lifecycle-retained-C,Lifecycle probe,baseline,retained-baseline-second,process,recorded,31,3682000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,warmup,1,4078000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,warmup,2,3473000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,warmup,3,3598000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,1,4126000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,2,3766000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,3,3607000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,4,3980000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,5,3601000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,6,3497000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,7,3716000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,8,4135000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,9,3497000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,10,3418000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,11,3945000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,12,3826000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,13,3773000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,14,4001000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,15,4265000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,16,3511000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,17,3700000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,18,4086000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,19,3628000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,20,3573000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,21,3891000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,22,4172000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,23,3475000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,24,3538000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,25,4080000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,26,3710000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,27,3537000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,28,3693000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,29,4395000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,30,3589000,0,pass
+lifecycle-stripped-c,lifecycle-stripped-C,Lifecycle probe,candidate,stripped-candidate-c-first,process,recorded,31,3584000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,warmup,1,3651000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,warmup,2,3885000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,warmup,3,3763000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,1,3604000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,2,3634000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,3,4110000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,4,3738000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,5,3363000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,6,3640000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,7,3874000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,8,3412000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,9,3673000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,10,3856000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,11,3501000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,12,3399000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,13,3810000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,14,4023000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,15,3345000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,16,3324000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,17,3786000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,18,3780000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,19,3437000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,20,3502000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,21,4261000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,22,3648000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,23,3455000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,24,3521000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,25,4043000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,26,3388000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,27,3781000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,28,3705000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,29,3605000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,30,3253000,0,pass
+lifecycle-stripped-baseline,lifecycle-stripped-C,Lifecycle probe,baseline,stripped-baseline-second,process,recorded,31,3306000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,warmup,1,360632000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,warmup,2,393229000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,warmup,3,358554000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,warmup,4,350722000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,warmup,5,402287000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,recorded,1,367283000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,recorded,2,429310000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,recorded,3,447631000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,recorded,4,369968000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,recorded,5,428566000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,recorded,6,521533000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,recorded,7,387765000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,recorded,8,388978000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,recorded,9,391912000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,recorded,10,366617000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,recorded,11,368077000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,recorded,12,409310000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,recorded,13,354839000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,recorded,14,346302000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,recorded,15,423863000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,recorded,16,348326000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,recorded,17,357905000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,recorded,18,418614000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,recorded,19,350401000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,recorded,20,345669000,0,pass
+json-stripped-c,JSON-stripped-C,JSON,candidate,opt-stripped-candidate-c-first,process,recorded,21,414545000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,warmup,1,315231000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,warmup,2,322673000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,warmup,3,325213000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,warmup,4,441372000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,warmup,5,386296000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,recorded,1,359943000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,recorded,2,366695000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,recorded,3,430798000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,recorded,4,355107000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,recorded,5,367963000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,recorded,6,472077000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,recorded,7,430816000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,recorded,8,723515000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,recorded,9,420227000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,recorded,10,384994000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,recorded,11,403927000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,recorded,12,413391000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,recorded,13,380284000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,recorded,14,397002000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,recorded,15,421785000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,recorded,16,383167000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,recorded,17,431157000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,recorded,18,445808000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,recorded,19,374840000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,recorded,20,383798000,0,pass
+json-stripped-baseline,JSON-stripped-C,JSON,baseline,opt-stripped-baseline-second,process,recorded,21,460796000,0,pass

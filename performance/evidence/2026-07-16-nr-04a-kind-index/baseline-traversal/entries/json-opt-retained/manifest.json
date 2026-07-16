@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "entry": "json-opt-retained",
+  "pair": "json-opt-metadata",
+  "workload": "JSON",
+  "variant": "baseline",
+  "optimization_mode": "opt-retained",
+  "image": {"path":"/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/json-retained.rxbin","sha256":"7f093e4a31b7c0200561451c679f785143b9767cadfeee474db9174158fe992a"},
+  "modules": [],
+  "arguments": ["5000"],
+  "correctness_expectation": "PASS: JSON Parser",
+  "source_trace_retention": "linked;source_TRACE=retained",
+  "warmups": 2,
+  "recorded_runs": 7,
+  "sampling": "serial",
+  "timing_source": "ordinary Release rxvm only",
+  "profile_timing_interpretation": "diagnostic only; never throughput",
+  "timing_command": ["/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/product/bin/rxvm","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/json-retained.rxbin","-a","5000"],
+  "profile_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm","--profile-output","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-04a-kind-index/baseline-traversal/entries/json-opt-retained/profile/profile.csv","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/json-retained.rxbin","-a","5000"],
+  "sequence_commands": [],
+  "median_elapsed_ns": 359075000
+}

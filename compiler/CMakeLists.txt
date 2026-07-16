@@ -63,7 +63,7 @@ add_library(rxclib STATIC
         rxcp_remap.c rxcp_remap.h rxcp_remap_build.c rxcp_remap_build.h rxcp_levelc_lower.c rxcp_levelc_lower.h rxcp_inline_internal.h rxcp_inline.c rxcp_inline_rules.c
         rxcp_inline_bind.c rxcp_inline_clone.c rxcp_inline_rewrite.c rxcp_inline_analysis.c rxcp_inline_payload.c
         rxcpdary.h rxcpemit.c rxcp_emit_core.c rxcp_emit_reg.c rxcp_emit_expr.c rxcp_emit_flow.c rxcp_emit_proc.c rxcp_emit_meta.c rxcp_emit.h rxcp_opt.c rxcp_dispatch.c rxcp_dispatch.h
-        ../binutils/rxsignature.c ../binutils/include/rxsignature.h
+        ../binutils/include/rxsignature.h
         ../platform/platform.h ../platform/platform.c ../platform/rxinteger.h ../platform/rxinteger.c
         ../utf8/utf.h rxcpfunc.c rxcp_exit.c
         rxcp_instr.c
@@ -71,7 +71,7 @@ add_library(rxclib STATIC
 
 add_dependencies(rxclib re2c lemon avl_tree platform rxaslib rxpa)
 
-target_link_libraries(rxclib rxaslib rxbvml)
+target_link_libraries(rxclib rxaslib rxbvml rxbin)
 
 target_include_directories(rxclib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_BINARY_DIR}
         ${CMAKE_SOURCE_DIR}/assembler ${CMAKE_SOURCE_DIR}/avl_tree

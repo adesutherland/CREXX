@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "entry": "json-stripped-candidate-repeat",
+  "pair": "JSON-stripped-repeat",
+  "workload": "JSON",
+  "variant": "candidate",
+  "optimization_mode": "opt-stripped-candidate-first",
+  "image": {"path":"/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/json-stripped.rxbin","sha256":"94d3149c2a5ba1c9dab894b19bfbec64ded16826ae4d3048e7f35fece5114ba8"},
+  "modules": [],
+  "arguments": ["5000"],
+  "correctness_expectation": "PASS: JSON Parser",
+  "source_trace_retention": "linked;source_TRACE=stripped;candidate_first_repeat",
+  "warmups": 5,
+  "recorded_runs": 21,
+  "sampling": "serial",
+  "timing_source": "ordinary Release rxvm only",
+  "timing_vm": {"path":"/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm","sha256":"c4a7be443b8655dc9f6db0565c814544527ee453a4e787cc17e61637e79c6804"},
+  "profile_timing_interpretation": "diagnostic only; never throughput",
+  "timing_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/json-stripped.rxbin","-a","5000"],
+  "profile_command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm","--profile-output","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-16-nr-04a-kind-index/stripped-regression-check/entries/json-stripped-candidate-repeat/profile/profile.csv","/Users/adrian/CLionProjects/CREXX-NR04A-baseline-7a599906b/images/opt/json-stripped.rxbin","-a","5000"],
+  "sequence_commands": [],
+  "median_elapsed_ns": 383215000
+}
