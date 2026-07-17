@@ -1,0 +1,41 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/** Level B binary64 sign. @docType runtime-function @see lib/rxfnsb/rexx/floatsign.md */
+options levelb
+namespace rxfnsb expose floatsign
+
+/**
+ * Return the sign of a binary64 value.
+ *
+ * @param number binary64 value
+ * @return -1, 0 or 1; both signed zeros return 0
+ * @signal INVALID_ARGUMENTS number is NaN
+ */
+floatsign: procedure = .int
+  arg number = .float
+  if number <> number then assembler signal "INVALID_ARGUMENTS","FLOATSIGN does not accept NaN"
+  if number > 0.0 then return 1
+  if number < 0.0 then return -1
+  return 0

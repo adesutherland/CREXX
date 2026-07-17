@@ -39,7 +39,7 @@ NR-01. Source, license and detailed provenance remain beside the programs in
 | `permute` | `tests/benchmarks/awfy_permute.crexx`; `benchmark_awfy_permute_{opt,noopt}.rxbin` | Are We Fast Yet?/SOM; recursion, method calls and array mutation | `50` | `PASS: AWFY Permute` |
 | `mandelbrot` | `tests/benchmarks/awfy_mandelbrot.crexx`; `benchmark_awfy_mandelbrot_{opt,noopt}.rxbin` | AWFY/Benchmarks Game; floating point, branches and bit operations | `500` | `PASS: AWFY Mandelbrot` |
 | `towers` | `tests/benchmarks/awfy_towers.crexx`; `benchmark_awfy_towers_{opt,noopt}.rxbin` | Are We Fast Yet?/SOM; allocation, attributes and recursion | `10` | `PASS: AWFY Towers` |
-| `rexxcps` | `tests/benchmarks/rexxcps_levelb.crexx`; `benchmark_rexxcps_levelb_{opt,noopt}.rxbin` | RexxCPS 2.2c for cREXX; Classic clause mix through Level B surfaces | canonical defaults (`100 x 100` and self-calibration) | `PASS: RexxCPS 2.2c cREXX port` |
+| `rexxcps` | `tests/benchmarks/rexxcps_levelb.crexx`; `benchmark_rexxcps_levelb_{opt,noopt}.rxbin` | RexxCPS 2.2d for cREXX; Classic clause mix under explicit digits 9 through Level B surfaces | canonical defaults (`100 x 100` and self-calibration) | `PASS: RexxCPS 2.2d cREXX port` |
 
 ## Runner contract
 

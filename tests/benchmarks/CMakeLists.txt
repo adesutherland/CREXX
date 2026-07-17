@@ -47,7 +47,7 @@ crexx_add_language_benchmark(benchmark_json_parser json_parser.crexx 1
 crexx_add_language_benchmark(benchmark_base64_roundtrip base64_roundtrip.crexx 1
         "PASS: Base64 Roundtrip")
 crexx_add_language_benchmark(benchmark_rexxcps_levelb rexxcps_levelb.crexx 10
-        "PASS: RexxCPS 2.2c cREXX port")
+        "PASS: RexxCPS 2.2d cREXX port")
 
 crexx_add_rexx_opt_matrix(
         NAME benchmark_rexxcps_levelb_opaque
@@ -57,7 +57,7 @@ crexx_add_rexx_opt_matrix(
         DEPENDS library compiler_exit_bin
         RUNTIME_ARGS ${LIBRPATH} -a A Off 1 1
         TEST_LABELS "benchmark;language;optimizer-resistance"
-        REQUIRED_OUTPUT_REGEX "PASS: RexxCPS 2.2c cREXX opaque/result-observation diagnostic"
+        REQUIRED_OUTPUT_REGEX "PASS: RexxCPS 2.2d cREXX opaque/result-observation diagnostic"
         FORBIDDEN_OUTPUT_REGEX "FAIL:|Failed|PANIC:"
 )
 

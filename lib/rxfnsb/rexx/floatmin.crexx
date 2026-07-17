@@ -1,0 +1,44 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/** Level B binary64 minimum. @docType runtime-function @see lib/rxfnsb/rexx/floatmin.md */
+options levelb
+namespace rxfnsb expose floatmin
+
+/**
+ * Return the least of one or more binary64 values.
+ *
+ * @param first first binary64 value
+ * @param ... additional binary64 values
+ * @return first occurrence of the least value
+ * @signal INVALID_ARGUMENTS any argument is NaN
+ */
+floatmin: procedure = .float
+  arg first = .float, ... = .float
+  if first <> first then assembler signal "INVALID_ARGUMENTS","FLOATMIN does not accept NaN"
+  do i = 1 to arg[0]
+    if arg[i] <> arg[i] then assembler signal "INVALID_ARGUMENTS","FLOATMIN does not accept NaN"
+    if arg[i] < first then first = arg[i]
+  end
+  return first

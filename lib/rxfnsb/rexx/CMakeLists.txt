@@ -8,8 +8,11 @@ set(BIFS
 		_dateo
 		_ftrunc
 		_itrunc
+		_typedformat
 		abbrev
 		abs
+		intabs
+		floatabs
 		b2x
 		b2d
 		binary
@@ -30,6 +33,8 @@ set(BIFS
 		fileio
 		filter
 		format
+		intformat
+		floatformat
 		fnv
 #		global
 		getenv
@@ -39,7 +44,11 @@ set(BIFS
 		loadmodule
 		lower
 		max
+		intmax
+		floatmax
 		min
+		intmin
+		floatmin
 		numeric
 		overlay
 		pos
@@ -60,6 +69,8 @@ set(BIFS
 		signal
 		trace
 		sign
+		intsign
+		floatsign
 		space
 		strip
 		substr
@@ -68,6 +79,7 @@ set(BIFS
 		time
 		translate
 		trunc
+		floattrunc
 		upper
 		value
 		verify
@@ -156,7 +168,9 @@ foreach(_binfile ${REXXBINS})
 	if("${_basename}" STREQUAL "_datei" OR
 	   "${_basename}" STREQUAL "_dateo" OR
 	   "${_basename}" STREQUAL "date" OR
-	   "${_basename}" STREQUAL "parse")
+	   "${_basename}" STREQUAL "parse" OR
+	   "${_basename}" STREQUAL "intformat" OR
+	   "${_basename}" STREQUAL "floatformat")
 		set(_rxc_import_args -i ${CMAKE_CURRENT_BINARY_DIR})
 	endif()
 	add_custom_command(

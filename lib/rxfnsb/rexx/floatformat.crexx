@@ -1,0 +1,57 @@
+/*
+ * cREXX License (MIT)
+ *
+ * Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+
+/** Level B binary64 FORMAT. @docType runtime-function @see lib/rxfnsb/rexx/floatformat.md */
+options levelb comments_dash numeric_classic
+namespace rxfnsb expose floatformat
+import _rxsysb
+
+/**
+ * Format a finite binary64 value using Classic FORMAT controls.
+ *
+ * @param number finite binary64 value
+ * @param before optional non-negative integer-part width
+ * @param after optional non-negative fractional width
+ * @param expp optional non-negative exponent width
+ * @param expt optional non-negative exponent trigger
+ * @return formatted numeric text
+ * @signal CONVERSION_ERROR a supplied value cannot convert to its typed parameter
+ * @signal INVALID_ARGUMENTS number is non-finite, a control is negative, or a field cannot fit
+ */
+floatformat: procedure = .string
+  numeric digits inherited
+  numeric form inherited
+  numeric case inherited
+  arg number = .float, before = 0, after = 0, expp = 0, expt = 0
+  before_exists = ?before
+  after_exists = ?after
+  expp_exists = ?expp
+  expt_exists = ?expt
+  number_text = number as .string
+  if number_text == "NAN" | number_text == "nan" | ,
+     number_text == "INF" | number_text == "inf" | ,
+     number_text == "-INF" | number_text == "-inf" then
+    assembler signal "INVALID_ARGUMENTS","FLOATFORMAT requires a finite number"
+  return _typedformat(number_text,before,before_exists,after,after_exists, ,
+      expp,expp_exists,expt,expt_exists)

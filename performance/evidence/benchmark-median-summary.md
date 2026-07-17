@@ -55,6 +55,8 @@ bundle's scope or no valid observation exists.
 | 2026-07-15 / lifecycle pilot | compile / translate | process ms | 74.7 (3) | 4.72 (3) | — | 428 (3) |
 | 2026-07-15 / lifecycle pilot | assemble | process ms | 6.90 (3) | — | — | — |
 | 2026-07-15 / lifecycle pilot | load to first result | process ms | 3.22 (3) | 8.79 (3) | — | 28.0 (3) |
+| 2026-07-17 / NUMERIC-01 accepted | RexxCPS 2.2d / canonical `rxvm` | native MCPS | 1.15 (3) | — | — | — |
+| 2026-07-17 / NUMERIC-01 accepted | RexxCPS 2.2d / canonical `rxbvm` | native MCPS | 1.11 (3) | — | — | — |
 
 † NetRexx Mandelbrot has a disclosed timed arithmetic-XOR/padding adaptation;
 its aggregate equivalence review remains open.
@@ -121,6 +123,8 @@ later established, add its sample id and reason here before changing the table.
   all-five runner pass and AC-only repeats
 - `2026-07-15-nr-02-portfolio-expansion/` for the six added workload pilots,
   generated runtime forms and separate lifecycle phase samples
+- `2026-07-17-numeric-01-first-release-verdict/accepted-c/` for the accepted
+  exact-hash RexxCPS 2.2d canonical `rxvm`/`rxbvm` samples
 
 Do not combine rows from different dates/bundles into one median. Add a new row
 for each future benchmark/run so environment drift remains visible.

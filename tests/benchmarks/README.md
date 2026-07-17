@@ -9,7 +9,7 @@ timed I/O in their kernels.
 
 | Program | Provenance | Main pressure |
 | --- | --- | --- |
-| `rexxcps_levelb.crexx` | RexxCPS 2.2c, the cREXX Level B port of Mike Cowlishaw's RexxCPS 2.2 | A historically representative classic Rexx clause mix |
+| `rexxcps_levelb.crexx` | RexxCPS 2.2d, the cREXX Level B port of Mike Cowlishaw's RexxCPS 2.2 | A historically representative classic Rexx clause mix |
 | `awfy_sieve.crexx` | Are We Fast Yet? / SOM | integer arrays, indexed access, nested loops |
 | `awfy_permute.crexx` | Are We Fast Yet? / SOM | recursion, method calls, array mutation |
 | `awfy_mandelbrot.crexx` | Are We Fast Yet? / Benchmarks Game | floating-point arithmetic, branches, bit operations |
@@ -35,11 +35,24 @@ well-typed workloads and comparable code structure.
 
 RexxCPS is different: it reconstructs a dynamic mix derived from about 2.5
 million lines of traced Rexx programs and reports clauses per second. Version
-2.2c is a source port rather than a newly designed workload: its control flow,
+2.2d is a source port rather than a newly designed workload: its control flow,
 1,000-clause dynamic mix, calibration, defaults, reporting shape, and stem-
 default assignment follow upstream 2.2. The Level B type system still requires
-the substitutions audited below. Quote its result as **RexxCPS 2.2c for
+the substitutions audited below. Quote its result as **RexxCPS 2.2d for
 cREXX**, never as an unchanged RexxCPS 2.2 result.
+
+The 2.2d numeric representation is explicit and intentional:
+
+| Path | cREXX representation | Reason |
+| --- | --- | --- |
+| Authored benchmark procedures | `numeric digits 9` | Matches the Classic REXX default selected implicitly by upstream 2.2; generated trace handlers and imported modules keep their own contexts. |
+| Counts, indices, loop controls, lengths and exact bounds | `.int` end to end | These paths are semantically integral and use native integer operations. |
+| `j`, its 1.1-step loop and compound-variable arithmetic | `.decimal` plus explicit string storage conversions | This is genuine Classic decimal workload arithmetic, including the benchmark's intended string/number conversion exercise. |
+| `time()` results, elapsed time and rate calculations | `.float` after the string-returning timer boundary | Disclosed cREXX port adaptation for binary64 timing; it does not replace clause-workload decimal arithmetic. |
+| Timer calibration and display text | `floattrunc` / `floatformat`, then an explicit `.int` conversion where calibration needs a count | Preserves Classic textual BIF contracts without routing binary64 values through `.decimal`. |
+
+NetRexx's separate 2.2n port continues to select 20 digits explicitly. The
+2.2d cREXX decision does not alter that port or its historical evidence.
 
 Run the canonical benchmark without arguments so it uses the upstream `100 x
 100` defaults and one-second self-calibration:
@@ -72,11 +85,11 @@ clauses” by RexxCPS. Counts come from the unchanged loop/select paths, not fro
 wall-clock inference. “Preserved” means the source clause count and intended
 value effect are the same; it does not claim identical VM instructions.
 
-| Upstream RexxCPS 2.2 | cREXX 2.2c port | Executions | Assessment |
+| Upstream RexxCPS 2.2 | cREXX 2.2d port | Executions | Assessment |
 | --- | --- | ---: | --- |
 | `flag=0` | `flag = "0"` | 1 | Preserved; the explicit string spelling fixes the Level B type. |
 | `do loop=1 to 14` | `do lvar = 1 to 14` | 1 loop / 14 bodies | Preserved; `loop` is a Level B statement keyword, so only the identifier changes. |
-| Implicit conversions in comparisons and arithmetic | Local `as .decimal` / `as .string` conversions in the same clauses | 28 inner-loop bodies; 27 stem multiplications | Clause counts and value effects preserved; typed conversion work is necessarily explicit. |
+| Implicit conversions in comparisons and arithmetic | Decimal `j` under digits 9 plus local `as .decimal` / `as .string` conversions in the same clauses | 28 inner-loop bodies; 27 stem multiplications | Clause counts and value effects preserved; the explicit conversions retain the Classic string/decimal exercise. |
 | `avar.=1.0''loop` | `avar. = "1.0" \|\| lvar` | 14 | Preserved, including the Classic operation that replaces existing tail values and establishes the new default. `.stem` implements this reset in constant time using generations. |
 | `when flag` | `when flag <> "0"` | 28 predicate checks / 27 true paths | Preserved truth test; Level B requires a Boolean expression. |
 | `trace value trace()` | `trace value _trace_current_mode()` | 14 | Preserved query/set clause; uses the Level B trace-state surface. |

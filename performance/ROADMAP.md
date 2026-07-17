@@ -24,6 +24,7 @@ exit criterion is met.
 | NR-05 | Call-path census | complete | Schema-4 dynamic census plus exact 22-image dashboard retained at `evidence/2026-07-16-nr-05-call-census/`; focused fixtures cover native/dynamic/signal cold paths absent from the bounded portfolio. |
 | NR-06 | Compiler call-window placement fast path | complete | Typed scalar copying was rejected and removed. The retained affinity-guided numbering path removes 58/423 static portfolio swaps and 248,362 executed swaps in the bounded hot cells without adding runtime instructions. The direct cost is too small for material product speedup, but Adrian accepted the verified work reduction; Debug/Release focused checks and final Debug CTest 1,849/1,849 pass. See `NR-06-07-WORKLIST.md`. |
 | NR-07 | Direct compare-to-branch and loop lowering | rejected | Interleaved Release evidence found no practical gain from either the direct-condition or specialist-loop paths, and RXAS already emitted the tested `BCTP` product forms. Both compiler changes and their dedicated fixtures are removed; exact rejected patches and evidence are retained. See `NR-06-07-WORKLIST.md`. |
+| NUMERIC-01 | Native typed Level B numeric surface and RexxCPS type fidelity | complete | Eleven native integer/float BIFs are accepted; standard benchmarks are decimal-free except RexxCPS's intentional Classic workload. RexxCPS 2.2d uses explicit digits 9, honest decimal/int/float paths and typed text BIFs. Accepted medians are 1.15 MCPS (`rxvm`) and 1.11 MCPS (`rxbvm`); final Debug CTest is 1,851/1,851. |
 | NR-08 | Definite initialization and reference-lifetime facts | queued | Fail closed; prove dead `NULL`/`ENDLIFE` and copy removals with escape/reference tests. |
 | NR-09 | RXSEQ candidate ledger | queued | Rank by workload, static site and module; record semantic status and measured disposition. |
 | NR-10 | Cross-runtime forensic baselines | queued | Run the formal CREXX/ooRexx/NetRexx portfolio matrix incrementally as each NR-02 workload clears equivalence; include Regina for RexxCPS only and retain selected Java/C controls. |
@@ -312,6 +313,34 @@ exit criterion is met.
   passed 1,849/1,849. NR-06 is complete; NR-07 is rejected and removed. No
   sanitizer, package/install, cross-platform or additional timing work was
   added beyond the approved shortest closeout path.
+
+### NUMERIC-01 work notes
+
+- 2026-07-17: Completed the approved native numeric-surface and benchmark type
+  audit from clean `develop` at `e23d44e58`. Added native `int`/`float`
+  siblings for the appropriate `ABS`, `MIN`, `MAX`, `SIGN`, `TRUNC` and
+  `FORMAT` surfaces without changing existing decimal contracts, VM opcodes,
+  RXBIN or ABI. Corrected Bounce's integer `ABS` calls and float formatting in
+  the evidence tool; all other standard cREXX benchmarks are decimal-free,
+  while Mandelbrot's binary64 work is intentional.
+- Adrian accepted candidate C. Canonical and opaque RexxCPS are now versioned
+  2.2d: genuine Classic arithmetic is decimal under explicit digits 9,
+  semantically integral paths stay integer, and timer/rate work is a disclosed
+  binary64 adaptation using `floattrunc`/`floatformat`. Historical 2.2c and
+  A/B candidate evidence remains separate.
+
+| Verdict | Accepted result |
+| --- | --- |
+| Focused correctness | 17/17 numeric and 9/9 benchmark/tool/RexxCPS Release checks pass |
+| Classic fidelity | Opaque result `1|69|1.22694` matches retained Classic evidence; authored procedures select digits 9 |
+| Generated purity | Final optimized/no-opt canonical and opaque RXAS has zero `ftod`, `itod` and `ftoi`; remaining conversions are semantic |
+| First Release comparison | C versus A mean observation: +1.621% `rxvm`, +1.069% `rxbvm`; C versus B neutral/noisy and not claimed as a BIF speedup |
+| Accepted exact-hash baseline | Median 1,145,721 CPS / 8.74 s on `rxvm`; 1,114,685 CPS / 8.99 s on `rxbvm`, three recorded runs each |
+| Broad validation | Full Debug build and CTest `--parallel 30`: 1,851/1,851 pass |
+
+Evidence: `evidence/2026-07-17-numeric-01-first-release-verdict/`. The final
+canonical source SHA-256 is
+`2970c3d73fe2537ec8f81295c585495c4668b442d5b9a2335b1ee453a13bbdd6`.
 
 ### NR-04A work notes
 
@@ -639,6 +668,37 @@ than one `NR-*` activity and does not alter their priority by itself.
 - Decision gate: first assess as a compiler-only copy/signalling simplification
   preserving the current ABI. Any language, public ABI or signal-unwind change
   requires Adrian's explicit approval.
+
+### IDEA-NUMERIC-01 — Native typed Level B numeric siblings and RexxCPS type fidelity
+
+- Status: complete; promoted to the P0 no-regrets register as NUMERIC-01
+- Related activities: NR-01, NR-02, NR-10, NR-13
+- Hypothesis: native `.int` and `.float` siblings for the appropriate decimal
+  value and formatting BIFs can remove avoidable decimal crossings, while an
+  explicit 9-digit Classic numeric context and a semantic type audit can make
+  the cREXX RexxCPS port more faithful. Correctness, Classic fidelity and
+  performance remain three independent verdicts.
+- Affected surfaces: the public `rxfnsb` numeric surface and documentation,
+  focused optimized/unoptimized library tests, canonical and opaque RexxCPS
+  sources, generated RXAS/RXBIN inspection, and exact-hash benchmark evidence.
+- Semantic risks: public naming without polymorphism; homogeneous variadics;
+  signed-integer minimum absolute value; float signed zero, NaN and infinity;
+  `TRUNC`/`FORMAT` text contracts; and preserving genuine Classic decimal
+  arithmetic under `NUMERIC DIGITS 9` instead of selecting a faster type.
+- Evidence needed: approved signature/semantics matrix; isolated A/B/C/D
+  candidate cells; source/image hashes; numeric-context, opcode, conversion and
+  call counts; focused correctness on both VMs; and the mandatory profiling-off
+  Release verdict with benchmark-native CPS kept separate from process time.
+- Resumable control plane: `performance/NUMERIC-01-WORKLIST.md`.
+- First Release evidence:
+  `performance/evidence/2026-07-17-numeric-01-first-release-verdict/`. Focused
+  correctness and Classic fidelity pass; C removes avoidable decimal BIF
+  crossings. B/C versus A has a small positive mean on both VMs but overlapping
+  ranges; C versus B is neutral/noisy because those calls sit outside the
+  default timed clause loop. The native surface remains independently useful.
+- Decision: Adrian accepted C. RexxCPS 2.2d, the native Level B surface and the
+  standard-benchmark purity fixes completed focused, exact-hash Release and
+  full Debug closeout; positive and neutral findings remain separate above.
 
 ## Architecture selection gate backlog
 

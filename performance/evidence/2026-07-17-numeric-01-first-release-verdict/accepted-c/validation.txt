@@ -1,0 +1,39 @@
+NUMERIC-01 accepted candidate C / RexxCPS 2.2d closeout
+Date: 2026-07-17
+Source base: develop e23d44e58ce597720bb4437b1b2ee5aef6be4eee
+
+Release rebuild
+  cmake --build cmake-build-release --parallel 10
+  PASS
+
+Focused numeric contracts
+  ctest --test-dir cmake-build-release --output-on-failure -R '^ts_(abs|min|max|min_max|sign|trunc|format|typed_numeric)_(noopt|opt)$'
+  PASS 17/17
+
+Focused benchmarks, evidence tool and RexxCPS
+  ctest --test-dir cmake-build-release --output-on-failure -R '^(benchmark_awfy_bounce_(noopt|opt)|nr03_evidence_tool_selftest_(noopt|opt)|benchmark_rexxcps_levelb(_opaque)?_(noopt|opt))$'
+  PASS 9/9
+
+Generated canonical/opaque RXAS
+  Authored main/cps_subroutine/fail procedures: setnumdgts 9
+  Generated trace handlers: setnumdgts 18
+  Optimized and no-opt ftod=0, itod=0, ftoi=0
+  Calls: floattrunc once, floatformat twice
+
+Debug rebuild
+  cmake --build cmake-build-debug --parallel 10
+  PASS
+
+Full Debug CTest
+  ctest --test-dir cmake-build-debug --parallel 30 --output-on-failure
+  PASS 1851/1851
+  Real time 285.71 seconds
+
+Documentation/RexxDoc audit
+  Eleven public sources have matching Markdown, @docType, @return,
+  namespace exposure and CMake wiring.
+  PASS
+
+Whitespace validation
+  git diff --check
+  PASS

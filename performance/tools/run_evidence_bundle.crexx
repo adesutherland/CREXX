@@ -925,7 +925,7 @@ build_pair_deltas: procedure = .string[]
     if baseline = 0 | candidate = 0 then iterate
     delta_ns = medians[candidate] - medians[baseline]
     if medians[baseline] = 0 then delta_percent = ""
-    else delta_percent = strip(format(((delta_ns as .float) * 100.0) / ,
+    else delta_percent = strip(floatformat(((delta_ns as .float) * 100.0) / ,
         (medians[baseline] as .float), , 3))
     output[output[0] + 1] = csv_field(pairs[i]) || "," || csv_field(ids[baseline]) || ,
         "," || csv_field(ids[candidate]) || "," || csv_field(modes[baseline]) || ,
@@ -957,7 +957,7 @@ aggregate_count: procedure = .int
 ratio_text: procedure = .string
   arg numerator = .int, denominator = .int
   if denominator = 0 then return "n/a"
-  return strip(format((numerator as .float) / (denominator as .float), , 6))
+  return strip(floatformat((numerator as .float) / (denominator as .float), , 6))
 
 append_census_row: procedure = .void
   arg expose output = .string[], label = .string, key = .string, ,

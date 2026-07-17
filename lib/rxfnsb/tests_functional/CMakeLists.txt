@@ -11,6 +11,7 @@ set(REXXBINS
         tlinesz.rxbin
         ts_abbrev.rxbin
 	ts_abs.rxbin
+	        ts_typed_numeric.rxbin
 	        ts_address_protocol.rxbin
 	ts_address.rxbin
         ts_address_crexx.rxbin

@@ -52,7 +52,7 @@ the common CREXX/ooRexx/NetRexx comparison, not to Regina.
 
 | Coverage category | Current seed | Planned completion work |
 | --- | --- | --- |
-| Classic mixed semantics | RexxCPS 2.2c for cREXX | Canonical/ported RexxCPS plus optimizer-resistance family across runtimes |
+| Classic mixed semantics | RexxCPS 2.2d for cREXX | Canonical/ported RexxCPS plus optimizer-resistance family across runtimes |
 | Integer arrays and indexing | AWFY Sieve | Add another array/iteration workload if the expanded set does not provide one |
 | Calls, recursion and return handling | AWFY Permute; Towers | Add direct calls/recursion and larger application-call-graph coverage |
 | Floating point, branches and bit operations | AWFY Mandelbrot | Retain; add only if cross-runtime comparability exposes a gap |
@@ -79,7 +79,7 @@ as part of NR-01 and NR-02.
 
 | Workload | CREXX | ooRexx | Regina | NetRexx | Java/control |
 | --- | --- | --- | --- | --- | --- |
-| RexxCPS | qualified 2.2c disclosed adaptation | qualified canonical 2.2 plus A/B diagnostics | qualified canonical 2.2 plus A/B diagnostics | qualified disclosed 2.2n adaptation; unchanged 2.1n retained/excluded | mechanical/dynamic C ceilings remain optional; Java only if a defensible port is added |
+| RexxCPS | qualified 2.2d disclosed adaptation; prior 2.2c evidence remains historical | qualified canonical 2.2 plus A/B diagnostics | qualified canonical 2.2 plus A/B diagnostics | qualified disclosed 2.2n adaptation; unchanged 2.1n retained/excluded | mechanical/dynamic C ceilings remain optional; Java only if a defensible port is added |
 | AWFY Sieve | qualified equivalent port | qualified equivalent Classic/stem port | out of scope: RexxCPS only | qualified equivalent port | inventory/provenance review required |
 | AWFY Permute | qualified equivalent port | qualified equivalent procedural port | out of scope: RexxCPS only | qualified equivalent object port | inventory/provenance review required |
 | AWFY Mandelbrot | qualified equivalent port | `not comparable`: decimal numerics fail common checksums at sizes 500/750 | out of scope: RexxCPS only | disclosed arithmetic-XOR adaptation; aggregate review open | inventory/provenance review required |

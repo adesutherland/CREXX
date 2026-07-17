@@ -62,14 +62,20 @@
 /*                  retains the 1,000-clause dynamic mix. Port substitutions  */
 /*                  are audited in README.md and this score is quotable only  */
 /*                  as RexxCPS 2.2c, not as unchanged RexxCPS 2.2.            */
+/* 2.2d 17 Jul 2026 Select Classic's default 9 digits explicitly; keep the   */
+/*                  clause workload's arithmetic decimal, integral controls  */
+/*                  native integer, and the disclosed timer adaptation       */
+/*                  binary64 with matching typed text BIFs. This revision is  */
+/*                  quotable only as RexxCPS 2.2d for cREXX.                  */
 /*----------------------------------------------------------------------------*/
 
 options levelb comments_dash numeric_classic
 import rxfnsb
 
+numeric digits 9
 arg argv = .string[]
 
-rexxcps = "2.2c" /* REXXCPS cREXX port version */
+rexxcps = "2.2d" /* REXXCPS cREXX port version */
 
 /* Loop counts; these are auto-adjusted so total run time is over one second. */
 count = 100       /* Repetition count */
@@ -120,6 +126,13 @@ full = 0.0
 total = 0.0
 innertime = 0.0
 thousand = 0.0
+j = .decimal
+classic_one = "1" as .decimal
+classic_two = "2" as .decimal
+classic_one_point_one = "1.1" as .decimal
+classic_two_point_two = "2.2" as .decimal
+classic_five = "5" as .decimal
+classic_ninety_nine_point_seven = "99.7" as .decimal
 
 /* Calibrate for the empty do-loop. */
 do i = 1 to averaging
@@ -127,7 +140,7 @@ do i = 1 to averaging
   do count; end
   empty = (time("R") as .float) + empty
 end
-empty = empty / averaging
+empty = empty / (averaging as .float)
 
 /* Measure twice; the first trial is used to increase short-run counts. */
 do trial = 1 to 2
@@ -145,15 +158,15 @@ do trial = 1 to 2
         key1 = "Key Bee"
         acompound.key1.lvar = substr(1234 "5678", 6, 2)
         if flag = acompound.key1.lvar then say "Failed1"
-        do j = 1.1 to 2.2 by 1.1 /* executed 28 times */
+        do j = classic_one_point_one to classic_two_point_two by classic_one_point_one /* executed 28 times */
           if j > (acompound.key1.lvar as .decimal) then say "Failed2"
           if 17 < length(j as .string) - 1 then say "Failed3"
           if (j as .string) = "foobar" then say "Failed4"
           if substr(1234, 1, 1) = "9" then say "Failed5"
           if word(key1, 1) = "?" then say "Failed6"
-          if j < 5 then do /* This path is taken. */
-            acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + 1) as .string
-            if j = 2 then leave
+          if j < classic_five then do /* This path is taken. */
+            acompound.key1.lvar = ((acompound.key1.lvar as .decimal) + classic_one) as .string
+            if j = classic_two then leave
           end
           iterate
         end /* j */
@@ -161,15 +174,15 @@ do trial = 1 to 2
         select
           when flag = "string" then say "FailedS1"
           when avar.flag.2 = "0" then say "FailedS2"
-          when flag = ((5 + 99.7) as .string) then say "FailedS3"
-          when flag <> "0" then avar.1.2 = ((avar.1.2 as .decimal) * 1.1) as .string
+          when flag = ((classic_five + classic_ninety_nine_point_seven) as .string) then say "FailedS3"
+          when flag <> "0" then avar.1.2 = ((avar.1.2 as .decimal) * classic_one_point_one) as .string
           when flag == "0" then flag = "0"
         end
         if 1 then flag = "1"
         select
           when flag == "ring" then say "FailedT1"
           when avar.flag.3 = "0" then say "FailedT2"
-          when flag <> "0" then avar.1.2 = ((avar.1.2 as .decimal) * 1.1) as .string
+          when flag <> "0" then avar.1.2 = ((avar.1.2 as .decimal) * classic_one_point_one) as .string
           when flag == "0" then flag = "1"
         end
         parse value "Foo Bar" with v1 +5 v2 .
@@ -189,16 +202,16 @@ do trial = 1 to 2
   total = full /* total time */
 
   /* If total is over one second it is usable; trial 2 is always final. */
-  if total > 1 | trial = 2 then leave
+  if total > 1.0 | trial = 2 then leave
 
   /* Bump count so the second run should take about one second. */
-  if total = 0 then count = count * 100
-  else count = (trunc(1 / total) + 1) * count
+  if total = 0.0 then count = count * 100
+  else count = ((floattrunc(1.0 / total) as .int) + 1) * count
   calibrated = 1
 end
 
 /* Show the counts. */
-say "        Averaged:" count "x" averaging "iterations of 1000 clauses (over" format(total, , 1) "s)"
+say "        Averaged:" count "x" averaging "iterations of 1000 clauses (over" floatformat(total, , 1) "s)"
 say "REXXCPS-EFFECTIVE contract=" || contract ,
     "initial_count=" || initial_count ,
     "effective_count=" || count ,
@@ -206,8 +219,8 @@ say "REXXCPS-EFFECTIVE contract=" || contract ,
     "calibrated=" || calibrated
 
 /* Now display the statistics. */
-innertime = total / averaging - empty
-thousand = innertime / count
+innertime = total / (averaging as .float) - empty
+thousand = innertime / (count as .float)
 
 /* Developer's statistics. */
 if left(tracevar, 1) = "O" then nop
@@ -219,14 +232,15 @@ end
 
 /* And finally, the result. */
 say
-say "     Performance:" format(1000 / thousand, , 0) "cREXX clauses per second"
+say "     Performance:" floatformat(1000.0 / thousand, , 0) "cREXX clauses per second"
 say
-say "PASS: RexxCPS 2.2c cREXX port"
+say "PASS: RexxCPS 2.2d cREXX port"
 return 0
 
 
 /* Target routine for the timed CALL - called 14 times. */
 cps_subroutine: procedure = .void
+  numeric digits 9
   arg a1 = .string, a2 = .string, a3 = .string, a4 = .string
   parse var a3 b1 b2 b3 .
   do 1
@@ -237,6 +251,7 @@ cps_subroutine: procedure = .void
 
 
 fail: procedure = .int
+  numeric digits 9
   arg message = .string
   say "FAIL:" message
   return 1
