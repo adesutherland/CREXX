@@ -4,7 +4,7 @@
 
 .globals=0
 
-main() .locals=9
+main() .locals=6
    .meta "inline_test_ref_vararg_runtime.main"="b" ".int" main() ""
    .srcstep 15 15 17 "inline_test_ref_vararg_runtime.crexx" 3 1 23 "main: procedure = .int"
    setnumdgts 18
@@ -13,110 +13,86 @@ main() .locals=9
    setnumcas 1
    setnumstd 1
    .srcstep 1 1 17 "inline_test_ref_vararg_runtime.crexx" 4 3 13 "  first = 10"
-   .meta "inline_test_ref_vararg_runtime.main.first"="b" ".int" r0
-   load r0,10
-   .traceevent "L" 4 "R" "I" "r" 0 1 1 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 0 1 1 0 "first" ""
+   .meta "inline_test_ref_vararg_runtime.main.first"="b" ".int" r2
+   load r2,10
+   .traceevent "L" 4 "R" "I" "r" 2 1 1 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 1 1 0 "first" ""
    .srcstep 2 2 17 "inline_test_ref_vararg_runtime.crexx" 5 3 14 "  second = 20"
-   .meta "inline_test_ref_vararg_runtime.main.second"="b" ".int" r1
-   load r1,20
-   .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "second" ""
+   .meta "inline_test_ref_vararg_runtime.main.second"="b" ".int" r3
+   load r3,20
+   .traceevent "L" 4 "R" "I" "r" 3 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 2 2 0 "second" ""
    .srcstep 3 3 17 "inline_test_ref_vararg_runtime.crexx" 6 3 13 "  third = 30"
-   .meta "inline_test_ref_vararg_runtime.main.third"="b" ".int" r2
-   load r2,30
-   .traceevent "L" 4 "R" "I" "r" 2 3 3 0 "" ""
-   .traceevent "A" 6 "R" "I" "r" 2 3 3 0 "third" ""
+   .meta "inline_test_ref_vararg_runtime.main.third"="b" ".int" r4
+   load r4,30
+   .traceevent "L" 4 "R" "I" "r" 4 3 3 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 3 3 0 "third" ""
    .srcstep 6 6 17 "inline_test_ref_vararg_runtime.crexx" 8 3 38 "  say countTail(first, second, third)"
    .srcstep 5 5 17 "inline_test_ref_vararg_runtime.crexx" 8 7 16 "  say countTail(first, second, third)"
    .srcstep 4 4 17 "inline_test_ref_vararg_runtime.crexx" 20 3 13 "  return arg[]"
-   load r3,3
-   .traceevent "L" 4 "R" "I" "r" 3 6 6 0 "" ""
-   icopy r4,r3
+   load r1,3
+   .traceevent "L" 4 "R" "I" "r" 1 6 6 0 "" ""
+   icopy r0,r1
    br l124bexprend
 l124bexprend:
-   itos r4
-   say r4
-   .srcstep 7 7 17 "inline_test_ref_vararg_runtime.crexx" 9 3 40 "  say readTail(2, first, second, third)"
-   load r4,2
-   .traceevent "L" 4 "R" "I" "r" 4 7 7 0 "" ""
-   .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "first" ""
-   .traceevent "V" 6 "R" "I" "r" 1 7 7 0 "second" ""
-   .traceevent "V" 6 "R" "I" "r" 2 7 7 0 "third" ""
-   load r3,4
-   swap r5,r0
-   swap r6,r1
-   swap r7,r2
-   call r8,readTail(),r3
-   swap r0,r5
-   swap r1,r6
-   swap r2,r7
-   itos r8
-   .traceevent "F" 4 "R" "S" "r" 8 7 7 0 "readtail" ""
-   say r8
-   .srcstep 8 8 17 "inline_test_ref_vararg_runtime.crexx" 10 3 39 "  say hasTail(2, first, second, third)"
-   load r5,2
-   .traceevent "L" 4 "R" "I" "r" 5 8 8 0 "" ""
-   .traceevent "V" 6 "R" "I" "r" 0 8 8 0 "first" ""
-   .traceevent "V" 6 "R" "I" "r" 1 8 8 0 "second" ""
-   .traceevent "V" 6 "R" "I" "r" 2 8 8 0 "third" ""
-   load r4,4
-   swap r6,r0
-   swap r7,r1
-   swap r8,r2
-   call r3,hasTail(),r4
-   swap r0,r6
-   swap r1,r7
-   swap r2,r8
-   itos r3
-   .traceevent "F" 4 "R" "S" "r" 3 8 8 0 "hastail" ""
-   say r3
-   .srcstep 9 9 17 "inline_test_ref_vararg_runtime.crexx" 11 3 39 "  say hasTail(5, first, second, third)"
-   load r5,5
-   .traceevent "L" 4 "R" "I" "r" 5 9 9 0 "" ""
-   .traceevent "V" 6 "R" "I" "r" 0 9 9 0 "first" ""
-   .traceevent "V" 6 "R" "I" "r" 1 9 9 0 "second" ""
-   .traceevent "V" 6 "R" "I" "r" 2 9 9 0 "third" ""
-   load r4,4
-   swap r6,r0
-   swap r7,r1
-   swap r8,r2
-   call r3,hasTail(),r4
-   swap r0,r6
-   swap r1,r7
-   swap r2,r8
-   itos r3
-   .traceevent "F" 4 "R" "S" "r" 3 9 9 0 "hastail" ""
-   say r3
-   .srcstep 10 10 17 "inline_test_ref_vararg_runtime.crexx" 12 3 50 "  say mutateTailIndirect(2, first, second, third)"
-   load r5,2
-   .traceevent "L" 4 "R" "I" "r" 5 10 10 0 "" ""
-   .traceevent "V" 6 "R" "I" "r" 0 10 10 0 "first" ""
-   .traceevent "V" 6 "R" "I" "r" 1 10 10 0 "second" ""
-   .traceevent "V" 6 "R" "I" "r" 2 10 10 0 "third" ""
-   load r4,4
-   swap r6,r0
-   swap r7,r1
-   swap r8,r2
-   call r3,mutateTailIndirect(),r4
-   swap r0,r6
-   swap r1,r7
-   swap r2,r8
-   itos r3
-   .traceevent "F" 4 "R" "S" "r" 3 10 10 0 "mutatetailindirect" ""
-   say r3
-   .srcstep 11 11 17 "inline_test_ref_vararg_runtime.crexx" 13 3 12 "  say first"
    itos r0
-   .traceevent "V" 6 "R" "S" "r" 0 11 11 0 "first" ""
    say r0
-   .srcstep 12 12 17 "inline_test_ref_vararg_runtime.crexx" 14 3 13 "  say second"
-   itos r1
-   .traceevent "V" 6 "R" "S" "r" 1 12 12 0 "second" ""
-   say r1
-   .srcstep 13 13 17 "inline_test_ref_vararg_runtime.crexx" 15 3 12 "  say third"
+   .srcstep 7 7 17 "inline_test_ref_vararg_runtime.crexx" 9 3 40 "  say readTail(2, first, second, third)"
+   load r1,2
+   .traceevent "L" 4 "R" "I" "r" 1 7 7 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 2 7 7 0 "first" ""
+   .traceevent "V" 6 "R" "I" "r" 3 7 7 0 "second" ""
+   .traceevent "V" 6 "R" "I" "r" 4 7 7 0 "third" ""
+   load r0,4
+   call r5,readTail(),r0
+   itos r5
+   .traceevent "F" 4 "R" "S" "r" 5 7 7 0 "readtail" ""
+   say r5
+   .srcstep 8 8 17 "inline_test_ref_vararg_runtime.crexx" 10 3 39 "  say hasTail(2, first, second, third)"
+   load r1,2
+   .traceevent "L" 4 "R" "I" "r" 1 8 8 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 2 8 8 0 "first" ""
+   .traceevent "V" 6 "R" "I" "r" 3 8 8 0 "second" ""
+   .traceevent "V" 6 "R" "I" "r" 4 8 8 0 "third" ""
+   load r0,4
+   call r5,hasTail(),r0
+   itos r5
+   .traceevent "F" 4 "R" "S" "r" 5 8 8 0 "hastail" ""
+   say r5
+   .srcstep 9 9 17 "inline_test_ref_vararg_runtime.crexx" 11 3 39 "  say hasTail(5, first, second, third)"
+   load r1,5
+   .traceevent "L" 4 "R" "I" "r" 1 9 9 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 2 9 9 0 "first" ""
+   .traceevent "V" 6 "R" "I" "r" 3 9 9 0 "second" ""
+   .traceevent "V" 6 "R" "I" "r" 4 9 9 0 "third" ""
+   load r0,4
+   call r5,hasTail(),r0
+   itos r5
+   .traceevent "F" 4 "R" "S" "r" 5 9 9 0 "hastail" ""
+   say r5
+   .srcstep 10 10 17 "inline_test_ref_vararg_runtime.crexx" 12 3 50 "  say mutateTailIndirect(2, first, second, third)"
+   load r1,2
+   .traceevent "L" 4 "R" "I" "r" 1 10 10 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 2 10 10 0 "first" ""
+   .traceevent "V" 6 "R" "I" "r" 3 10 10 0 "second" ""
+   .traceevent "V" 6 "R" "I" "r" 4 10 10 0 "third" ""
+   load r0,4
+   call r5,mutateTailIndirect(),r0
+   itos r5
+   .traceevent "F" 4 "R" "S" "r" 5 10 10 0 "mutatetailindirect" ""
+   say r5
+   .srcstep 11 11 17 "inline_test_ref_vararg_runtime.crexx" 13 3 12 "  say first"
    itos r2
-   .traceevent "V" 6 "R" "S" "r" 2 13 13 0 "third" ""
+   .traceevent "V" 6 "R" "S" "r" 2 11 11 0 "first" ""
    say r2
+   .srcstep 12 12 17 "inline_test_ref_vararg_runtime.crexx" 14 3 13 "  say second"
+   itos r3
+   .traceevent "V" 6 "R" "S" "r" 3 12 12 0 "second" ""
+   say r3
+   .srcstep 13 13 17 "inline_test_ref_vararg_runtime.crexx" 15 3 12 "  say third"
+   itos r4
+   .traceevent "V" 6 "R" "S" "r" 4 13 13 0 "third" ""
+   say r4
    .srcstep 14 14 17 "inline_test_ref_vararg_runtime.crexx" 16 3 11 "  return 0"
    ret 0
    .meta "inline_test_ref_vararg_runtime.main.first"

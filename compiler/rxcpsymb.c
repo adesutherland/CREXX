@@ -334,6 +334,35 @@ int get_reg_perm(Scope *scope) {
     return (int)((rs->num_registers)++);
 }
 
+static int reg_in_array(dpa *array, int reg);
+
+/* Reserve one exact free register without disturbing other free registers. */
+int take_reg_exact(Scope *scope, int reg) {
+    dpa *free_array;
+    dpa *deferred_array;
+    Scope *rs = scope->reg_scope ? scope->reg_scope : scope;
+    size_t i;
+
+    if (reg < 0) return 0;
+    free_array = (dpa*)(rs->free_registers_array);
+    deferred_array = (dpa*)(rs->deferred_registers_array);
+    if (reg_in_array(deferred_array, reg)) return 0;
+
+    if (reg == (int)rs->num_registers) {
+        rs->num_registers++;
+        return 1;
+    }
+    if (reg > (int)rs->num_registers) return 0;
+
+    for (i = 0; i < free_array->size; i++) {
+        if (reg == (int)(size_t)free_array->pointers[i]) {
+            dpa_del(free_array, i);
+            return 1;
+        }
+    }
+    return 0;
+}
+
 static int reg_in_array(dpa *array, int reg) {
     size_t i;
 

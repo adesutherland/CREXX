@@ -208,6 +208,161 @@ static int use_symbol_reg(ASTNode* node) {
     else return 0;
 }
 
+static Scope *effective_register_scope(Scope *scope) {
+    return scope && scope->reg_scope ? scope->reg_scope : scope;
+}
+
+static int is_call_node(ASTNode *node) {
+    return node && (node->node_type == FUNCTION ||
+                    node->node_type == MEMBER_CALL ||
+                    node->node_type == FACTORY_CALL);
+}
+
+static int is_callable_definition(ASTNode *node) {
+    return node && (node->node_type == PROCEDURE ||
+                    node->node_type == METHOD ||
+                    node->node_type == FACTORY ||
+                    node->node_type == MATCH);
+}
+
+static Symbol *call_affinity_symbol(ASTNode *argument, Scope *procedure_scope) {
+    Symbol *symbol;
+
+    if (!argument || !use_symbol_reg(argument) ||
+        !argument->symbolNode || !argument->symbolNode->symbol) return 0;
+    symbol = argument->symbolNode->symbol;
+    if (symbol->symbol_type != VARIABLE_SYMBOL ||
+        symbol->scope != procedure_scope ||
+        symbol->exposed || symbol->is_this || symbol->is_factory ||
+        (symbol->is_arg && (symbol->is_ref_arg || symbol->is_const_arg))) return 0;
+    return symbol;
+}
+
+static int symbol_precedes_argument(ASTNode *first, ASTNode *argument, Symbol *symbol) {
+    ASTNode *current;
+
+    for (current = first; current && current != argument; current = current->sibling) {
+        if (current->symbolNode && current->symbolNode->symbol == symbol) return 1;
+    }
+    return 0;
+}
+
+static void preassign_call_affinity_group(ASTNode *call, Scope *procedure_scope) {
+    ASTNode *argument;
+    int arity = 0;
+    int eligible = 0;
+    int base;
+    int position;
+
+    if (!is_call_node(call)) return;
+    for (argument = call->child; argument; argument = argument->sibling) {
+        Symbol *symbol = call_affinity_symbol(argument, procedure_scope);
+        arity++;
+        if (symbol && symbol->register_num == UNSET_REGISTER &&
+            !symbol_precedes_argument(call->child, argument, symbol)) eligible++;
+    }
+    if (!arity || !eligible) return;
+
+    base = get_reg_perm(procedure_scope);
+    for (position = 1; position <= arity; position++) {
+        int allocated = get_reg_perm(procedure_scope);
+        (void)allocated;
+    }
+    ret_reg(procedure_scope, base); /* argument count */
+
+    position = 1;
+    for (argument = call->child; argument; argument = argument->sibling, position++) {
+        Symbol *symbol = call_affinity_symbol(argument, procedure_scope);
+        int slot = base + position;
+
+        if (symbol && symbol->register_num == UNSET_REGISTER &&
+            !symbol_precedes_argument(call->child, argument, symbol)) {
+            symbol->register_num = slot;
+            symbol->register_type = 'r';
+        } else {
+            ret_reg(procedure_scope, slot);
+        }
+    }
+}
+
+static void preassign_call_affinities_in_tree(ASTNode *node, Scope *procedure_scope) {
+    ASTNode *current;
+
+    for (current = node; current; current = current->sibling) {
+        if (is_callable_definition(current)) continue;
+        if (is_call_node(current) &&
+            effective_register_scope(current->scope) == effective_register_scope(procedure_scope)) {
+            preassign_call_affinity_group(current, procedure_scope);
+        }
+        if (current->child) preassign_call_affinities_in_tree(current->child, procedure_scope);
+    }
+}
+
+static void preassign_call_affinity_registers(ASTNode *owner) {
+    if (!owner || !owner->context || !owner->context->optimise || !owner->scope) return;
+    preassign_call_affinities_in_tree(owner->child, owner->scope);
+}
+
+static int call_argument_symbol_register(ASTNode *argument) {
+    Symbol *symbol;
+
+    if (!argument || !use_symbol_reg(argument) ||
+        !argument->symbolNode || !argument->symbolNode->symbol) return UNSET_REGISTER;
+    symbol = argument->symbolNode->symbol;
+    if (symbol->register_type != 'r' || symbol->register_num < 0) return UNSET_REGISTER;
+    return symbol->register_num;
+}
+
+static int reserve_call_window_at(ASTNode *call, int base) {
+    ASTNode *argument;
+    int *reserved;
+    int reserved_count = 0;
+    int position = 1;
+    int slot;
+
+    if (!call || base < 0 || call->num_additional_registers <= 0) return 0;
+    reserved = malloc(sizeof(int) * call->num_additional_registers);
+    if (!reserved) return 0;
+
+    if (!take_reg_exact(call->scope, base)) goto failed;
+    reserved[reserved_count++] = base;
+
+    for (argument = call->child; argument; argument = argument->sibling, position++) {
+        slot = base + position;
+        if (call_argument_symbol_register(argument) == slot) continue;
+        if (!take_reg_exact(call->scope, slot)) goto failed;
+        reserved[reserved_count++] = slot;
+    }
+
+    free(reserved);
+    return 1;
+
+failed:
+    while (reserved_count) ret_reg(call->scope, reserved[--reserved_count]);
+    free(reserved);
+    return 0;
+}
+
+static int get_call_window(ASTNode *call) {
+    ASTNode *argument;
+    int position = 1;
+    int previous_base = -1;
+
+    if (call && call->context && call->context->optimise) {
+        for (argument = call->child; argument; argument = argument->sibling, position++) {
+            int symbol_register = call_argument_symbol_register(argument);
+            int base;
+
+            if (symbol_register < 0) continue;
+            base = symbol_register - position;
+            if (base == previous_base) continue;
+            previous_base = base;
+            if (reserve_call_window_at(call, base)) return base;
+        }
+    }
+    return get_regs(call->scope, call->num_additional_registers);
+}
+
 static int defer_reg_return(ASTNode* node);
 
 static int node_is_block_expr_leave(ASTNode *node) {
@@ -514,8 +669,11 @@ walker_result register_walker(walker_direction direction,
                 c = ast_type_child(node);
                 if (c) c->register_num = DONT_ASSIGN_REGISTER;
 
-                /* Pre-assign procedure locals; eligible SCOPE_LOCAL blocks allocate on entry. */
-                if (node->scope) assign_registers_in_scope(node->scope, payload);
+                /* Pre-assign call-affinity groups before ordinary procedure locals. */
+                if (node->scope) {
+                    preassign_call_affinity_registers(node);
+                    assign_registers_in_scope(node->scope, payload);
+                }
 
                 if (node->node_type == FACTORY) {
                     /* Assign r_this from symbol §factory */
@@ -631,7 +789,7 @@ walker_result register_walker(walker_direction direction,
                     c = c->sibling;
                 }
                 node->num_additional_registers = i + 1;
-                node->additional_registers = get_regs(node->scope, node->num_additional_registers);
+                node->additional_registers = get_call_window(node);
 
                 /* The children register need to be assigned */
                 if (node->node_type == MEMBER_CALL) {

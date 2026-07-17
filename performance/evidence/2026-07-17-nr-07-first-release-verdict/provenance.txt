@@ -1,0 +1,29 @@
+captured_utc=2026-07-17T08:52:05Z
+branch=develop
+head=5e5e3b397be81424cf943c959722b79dd6a83be3
+status_begin
+ M compiler/rxcp_emit.h
+ M compiler/rxcp_emit_expr.c
+ M compiler/rxcp_emit_flow.c
+ M compiler/tests/CMakeLists.txt
+ M performance/ROADMAP.md
+?? compiler/tests/golden/run/nr06_call_window_scalar.out
+?? compiler/tests/golden/run/nr07_direct_compare_branch.out
+?? compiler/tests/nr0607_codegen_contract.cmake
+?? compiler/tests/rexx_src/nr06_call_window_scalar.crexx
+?? compiler/tests/rexx_src/nr07_direct_compare_branch.crexx
+?? performance/NR-06-07-WORKLIST.md
+?? performance/evidence/2026-07-17-nr-06-first-release-verdict/
+?? performance/evidence/2026-07-17-nr-07-first-release-verdict/
+status_end
+Darwin 25.5.0 arm64
+Apple M5
+10
+cmake version 4.3.2
+1.13.2
+Apple clang version 21.0.0 (clang-2100.1.1.101)
+CMAKE_BUILD_TYPE:STRING=Release
+CMAKE_C_COMPILER:STRING=/usr/bin/cc
+CREXX_VM_PROFILING:BOOL=OFF
+crexx-1.0.0-beta.3+local.g5e5e3b397be8.dirty
+crexx-1.0.0-beta.3+local.g5e5e3b397be8.dirty (Threaded Mode)

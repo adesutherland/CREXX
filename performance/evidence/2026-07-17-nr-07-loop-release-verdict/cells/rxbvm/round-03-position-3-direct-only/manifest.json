@@ -1,0 +1,20 @@
+{
+  "schema": 2,
+  "capture_tool": "run_cross_runtime.crexx",
+  "crexx_version": "macOS 64 crexx-1.0.0-beta.3+local.g5e5e3b397be8.dirty 20260717",
+  "workload": "rexxcps",
+  "runtime": "rxbvm",
+  "variant": "direct-only",
+  "lifecycle": "process",
+  "warmups": 0,
+  "recorded_runs": 1,
+  "sampling": "serial",
+  "correctness_expectation": "PASS: RexxCPS 2.2c cREXX port",
+  "metric_prefix": "Performance:",
+  "command": ["/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxbvm","/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/images/rexxcps-direct-only-linked.rxbin"],
+  "cwd": "/Users/adrian/CLionProjects/CREXX",
+  "host": "os=macos",
+  "started_utc": "2026-07-17T09:45:58+0000",
+  "completed_utc": "2026-07-17T09:46:07+0000",
+  "result": "pass"
+}

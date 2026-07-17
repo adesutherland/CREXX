@@ -1,0 +1,12 @@
+workload,runtime,variant,lifecycle,phase,sequence,elapsed_ns,exit_code,correctness,benchmark_metric,benchmark_unit
+AWFY Permute x50,rxvm,baseline,process,warmup,1,81683000,0,pass,,
+AWFY Permute x50,rxvm,baseline,process,warmup,2,81229000,0,pass,,
+AWFY Permute x50,rxvm,baseline,process,recorded,1,80574000,0,pass,,
+AWFY Permute x50,rxvm,baseline,process,recorded,2,80555000,0,pass,,
+AWFY Permute x50,rxvm,baseline,process,recorded,3,81823000,0,pass,,
+AWFY Permute x50,rxvm,baseline,process,recorded,4,81885000,0,pass,,
+AWFY Permute x50,rxvm,baseline,process,recorded,5,82596000,0,pass,,
+AWFY Permute x50,rxvm,baseline,process,recorded,6,82647000,0,pass,,
+AWFY Permute x50,rxvm,baseline,process,recorded,7,84513000,0,pass,,
+AWFY Permute x50,rxvm,baseline,process,recorded,8,87453000,0,pass,,
+AWFY Permute x50,rxvm,baseline,process,recorded,9,82497000,0,pass,,

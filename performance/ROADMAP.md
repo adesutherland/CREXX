@@ -1,6 +1,6 @@
 # cREXX performance roadmap
 
-Last updated: 2026-07-16
+Last updated: 2026-07-17
 
 This is the live performance-programme register. The definitions, evidence and
 exit criteria come from the dated
@@ -22,8 +22,8 @@ exit criterion is met.
 | NR-04 | Opcode effects inventory | complete | All 641 opcode slots have ordered machine-readable effects; 539 source opcodes are classified or explicitly conservative and RXAS consumes the fail-closed API without new transforms. |
 | NR-04A | Runtime type/dispatch architecture and metadata scan evidence | complete | Complete re-linkable RXBIN 007 images, process-local graph views/bindings, site caches, and transparent section compression pass. Retained interface is 37,458 B and RexxCPS 273,858 B; hot graph access remains approximately 1 ns with no focused end-to-end regression. Cross-image factory providers are aggregated correctly, RXAS output re-links byte-for-byte, both VMs pass, and final Debug CTest is 1,846/1,846. Evidence: `evidence/2026-07-16-nr-04a-rxbin-007-compression/`. |
 | NR-05 | Call-path census | complete | Schema-4 dynamic census plus exact 22-image dashboard retained at `evidence/2026-07-16-nr-05-call-census/`; focused fixtures cover native/dynamic/signal cold paths absent from the bounded portfolio. |
-| NR-06 | Compiler call-window placement fast path | queued | Preserve the contiguous-window ABI and signal-unwind contract; schedule moves once and measure. |
-| NR-07 | Direct compare-to-branch lowering | queued | Typed single-use Boolean results only; retain RXAS fallback and source/debug semantics. |
+| NR-06 | Compiler call-window placement fast path | complete | Typed scalar copying was rejected and removed. The retained affinity-guided numbering path removes 58/423 static portfolio swaps and 248,362 executed swaps in the bounded hot cells without adding runtime instructions. The direct cost is too small for material product speedup, but Adrian accepted the verified work reduction; Debug/Release focused checks and final Debug CTest 1,849/1,849 pass. See `NR-06-07-WORKLIST.md`. |
+| NR-07 | Direct compare-to-branch and loop lowering | rejected | Interleaved Release evidence found no practical gain from either the direct-condition or specialist-loop paths, and RXAS already emitted the tested `BCTP` product forms. Both compiler changes and their dedicated fixtures are removed; exact rejected patches and evidence are retained. See `NR-06-07-WORKLIST.md`. |
 | NR-08 | Definite initialization and reference-lifetime facts | queued | Fail closed; prove dead `NULL`/`ENDLIFE` and copy removals with escape/reference tests. |
 | NR-09 | RXSEQ candidate ledger | queued | Rank by workload, static site and module; record semantic status and measured disposition. |
 | NR-10 | Cross-runtime forensic baselines | queued | Run the formal CREXX/ooRexx/NetRexx portfolio matrix incrementally as each NR-02 workload clears equivalence; include Regina for RexxCPS only and retain selected Java/C controls. |
@@ -229,6 +229,89 @@ exit criterion is met.
   5.107382 combined swaps-per-instruction-call evidence; NR-12 should keep the
   675,554 attributable argument copies distinct from the 8,591,365 measured
   `RET_REG` non-local copies and from the unclassified copy population.
+
+### NR-06/NR-07 work notes
+
+- 2026-07-16: Started the approved compiler fast-path PoC batch at clean
+  `develop` commit `6e52ef872`. The shared worklist records separate design
+  selection and proof gates. NR-06 will first compare typed Boolean/integer/
+  float argument copies in the unchanged contiguous window with the current
+  setup/restoration swap pair; every reference, optional and non-scalar case
+  fails closed. NR-07 will first lower optimized direct integer conditions to
+  existing branch opcodes while preserving no-opt, type/cleanup fallbacks and
+  authored source steps. Iteration is restricted to target-only `rxc` builds
+  and focused fixtures before either production Release verdict.
+- 2026-07-17: Revalidated the in-progress batch after the unrelated
+  datatype-source hot-fix advanced `develop` to `5e5e3b397`; no batch file or
+  compiler surface overlapped the hot-fix.
+- 2026-07-17: The shared PoC found 30 NR-06 typed-scalar copy sites and 283
+  NR-07 direct-condition sites across the 11 optimized portfolio sources.
+  NR-06 was isolated for the mandatory first Release verdict. Permute x50 was
+  neutral under `rxbvm` (-0.252%) and materially noisy/adverse under `rxvm`
+  (+3.369% median, with high-side outliers), so NR-06 is not yet an accepted
+  performance win and remains provisional/revertable. NR-07's validated PoC
+  lowering remains held out pending direction. Evidence:
+  `evidence/2026-07-17-nr-06-first-release-verdict/`.
+- 2026-07-17: Adrian rejected the NR-06 typed-scalar copy candidate, so that
+  production lowering was removed. A separate static register-placement idea
+  is now explicit in the worklist: order distinct named registers from
+  call-site affinities and choose/reserve a compatible contiguous window with
+  exact symbol occupants. A uniform final permutation cannot reduce swaps, but
+  this preassignment form does not merge live ranges and need not wait for the
+  NR-08 destructive-placement proof. It still requires focused allocation,
+  result/count-slot, repeated-source, reference and signal-unwind validation.
+- 2026-07-17: Restored the validated NR-07 lowering byte-for-byte, passed the
+  focused structural and dual-VM fixture, completed the ordinary profiling-off
+  Release build, and ran canonical RexxCPS with one warmup plus three recorded
+  serial samples per image/VM. Candidate median CPS regressed 11.139% in
+  `rxvm` and 5.573% in `rxbvm`; reversed `rxbvm` ordering did not remove the
+  regression. All 16 runs passed. NR-07 is not an accepted win and stops at
+  the decision gate. Evidence:
+  `evidence/2026-07-17-nr-07-first-release-verdict/`.
+- 2026-07-17: Re-ran NR-07 with original, direct-only and full specialist-loop
+  images in five round-interleaved samples per image/VM. The earlier large
+  direct-only regression did not reproduce, but full loops versus direct-only
+  remained neutral/adverse at -0.099% CPS in `rxvm` and -0.293% in `rxbvm`.
+  Disassembly showed the direct `BCTP` emission duplicated an existing RXAS
+  fold. Adrian rejected and removed the specialist extension because no
+  practical performance improvement justified the added compiler complexity.
+  Evidence: `evidence/2026-07-17-nr-07-loop-release-verdict/`. NR-06 now moves
+  to the approved affinity-guided register/window-placement PoC.
+- 2026-07-17: The bounded NR-06 affinity PoC preassigned distinct local
+  symbols into lexical call groups and reused a call window only when occupied
+  slots matched exactly and all other slots were free. The exact 11-source
+  Release comparison removed 58/423 static swaps with five extra summed local
+  slots; RexxCPS removed 44/121 swaps and reduced its local sum by one. The
+  profiling-off full Release build and 25/25 focused Release checks passed.
+  Six order-balanced interleaved RexxCPS rounds then split: paired median CPS
+  was -1.928% in `rxvm` and +1.676% in `rxbvm`, amid much larger host drift.
+  No reliable practical win is demonstrated, so the production candidate
+  remains provisional at the first verdict gate. Evidence:
+  `evidence/2026-07-17-nr-06-register-affinity-verdict/`.
+- 2026-07-17: Follow-up causal audit verified the exact distinct binaries and
+  RXAS/link path. RexxCPS's 44 static removals are all in the unexecuted trace
+  handler, so its baseline and candidate both execute 484,376 swaps. List,
+  Richards, Storage and Base64 do remove 248,362 executed swaps at the retained
+  argv. A direct 100,000,000-iteration profiling-off Release diagnostic prices
+  one swap at 0.434 ns in `rxvm` and 0.706 ns in `rxbvm`, implying only
+  0.000108%--0.040474% end-to-end opportunity. Storage also demonstrates that
+  numbering can change later RXAS selection: moving its loop counter to `r1`
+  makes the fixed `INC1` rule pre-empt 40 existing `BCTP` folds. The practical
+  product benefit is therefore very small, but Adrian selected the bounded
+  affinity implementation for retention because it verifiably removes static
+  and executed swaps without adding runtime instructions. The rejected NR-07
+  direct-condition lowering remains removed; exact patches, fixtures, profiles
+  and timings are retained. The constant/by-value flag and branch backlog
+  remains a separate item.
+- 2026-07-17: Completed the approved NR-06/NR-07 batch closeout. Retained NR-06
+  passed 26/26 focused selections, including the linked-runtime fixture, in
+  both Debug and ordinary profiling-off Release.
+  Seven intentional optimized golden changes removed another 86 static swaps;
+  all matching runnable fixtures passed and the focused acceptance set passed
+  16/16. The full Debug build then passed and final high-parallel Debug CTest
+  passed 1,849/1,849. NR-06 is complete; NR-07 is rejected and removed. No
+  sanitizer, package/install, cross-platform or additional timing work was
+  added beyond the approved shortest closeout path.
 
 ### NR-04A work notes
 

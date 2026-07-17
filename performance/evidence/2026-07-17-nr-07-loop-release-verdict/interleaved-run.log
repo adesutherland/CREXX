@@ -1,0 +1,60 @@
+capture vm=rxvm round=01 position=1 variant=original warmups=1
+PASS: retained 2 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxvm/round-01-position-1-original
+capture vm=rxvm round=01 position=2 variant=direct-only warmups=1
+PASS: retained 2 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxvm/round-01-position-2-direct-only
+capture vm=rxvm round=01 position=3 variant=full warmups=1
+PASS: retained 2 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxvm/round-01-position-3-full
+capture vm=rxbvm round=01 position=1 variant=full warmups=1
+PASS: retained 2 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxbvm/round-01-position-1-full
+capture vm=rxbvm round=01 position=2 variant=direct-only warmups=1
+PASS: retained 2 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxbvm/round-01-position-2-direct-only
+capture vm=rxbvm round=01 position=3 variant=original warmups=1
+PASS: retained 2 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxbvm/round-01-position-3-original
+capture vm=rxvm round=02 position=1 variant=full warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxvm/round-02-position-1-full
+capture vm=rxvm round=02 position=2 variant=original warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxvm/round-02-position-2-original
+capture vm=rxvm round=02 position=3 variant=direct-only warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxvm/round-02-position-3-direct-only
+capture vm=rxbvm round=02 position=1 variant=direct-only warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxbvm/round-02-position-1-direct-only
+capture vm=rxbvm round=02 position=2 variant=original warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxbvm/round-02-position-2-original
+capture vm=rxbvm round=02 position=3 variant=full warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxbvm/round-02-position-3-full
+capture vm=rxvm round=03 position=1 variant=direct-only warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxvm/round-03-position-1-direct-only
+capture vm=rxvm round=03 position=2 variant=full warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxvm/round-03-position-2-full
+capture vm=rxvm round=03 position=3 variant=original warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxvm/round-03-position-3-original
+capture vm=rxbvm round=03 position=1 variant=original warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxbvm/round-03-position-1-original
+capture vm=rxbvm round=03 position=2 variant=full warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxbvm/round-03-position-2-full
+capture vm=rxbvm round=03 position=3 variant=direct-only warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxbvm/round-03-position-3-direct-only
+capture vm=rxvm round=04 position=1 variant=original warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxvm/round-04-position-1-original
+capture vm=rxvm round=04 position=2 variant=full warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxvm/round-04-position-2-full
+capture vm=rxvm round=04 position=3 variant=direct-only warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxvm/round-04-position-3-direct-only
+capture vm=rxbvm round=04 position=1 variant=direct-only warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxbvm/round-04-position-1-direct-only
+capture vm=rxbvm round=04 position=2 variant=full warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxbvm/round-04-position-2-full
+capture vm=rxbvm round=04 position=3 variant=original warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxbvm/round-04-position-3-original
+capture vm=rxvm round=05 position=1 variant=full warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxvm/round-05-position-1-full
+capture vm=rxvm round=05 position=2 variant=direct-only warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxvm/round-05-position-2-direct-only
+capture vm=rxvm round=05 position=3 variant=original warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxvm/round-05-position-3-original
+capture vm=rxbvm round=05 position=1 variant=original warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxbvm/round-05-position-1-original
+capture vm=rxbvm round=05 position=2 variant=direct-only warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxbvm/round-05-position-2-direct-only
+capture vm=rxbvm round=05 position=3 variant=full warmups=0
+PASS: retained 1 serial samples under /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-07-loop-release-verdict/cells/rxbvm/round-05-position-3-full

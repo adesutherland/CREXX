@@ -146,6 +146,10 @@ int get_reg(Scope *scope);
 /* Get a permanent register from scope (not reused) */
 int get_reg_perm(Scope *scope);
 
+/* Reserve one specific register only if it is currently free (or is the next
+ * unused register). Returns non-zero on success. */
+int take_reg_exact(Scope *scope, int reg);
+
 /* Return a no longer used register to the scope */
 void ret_reg(Scope *scope, int reg);
 

@@ -1,0 +1,47 @@
+NR-06/NR-07 formal batch closeout
+date=2026-07-17
+branch=develop
+head=5e5e3b397be81424cf943c959722b79dd6a83be3
+host=Darwin 25.5.0 arm64
+logical_cpus=10
+cmake=4.3.2
+ninja=1.13.2
+compiler=Apple clang 21.0.0 (clang-2100.1.1.101)
+debug_build_type=Debug
+release_build_type=Release
+release_CREXX_VM_PROFILING=OFF
+
+Final production boundary:
+- retain NR-06 affinity-guided register numbering and exact compatible
+  call-window reservation;
+- retain the NR-06 structural and runtime fixtures and seven intentional
+  optimized golden updates;
+- remove NR-07 direct-condition and specialist-loop production changes and
+  their dedicated fixtures.
+
+Validation:
+- cmake --build cmake-build-debug --target rxc --parallel 32
+  result=pass log=accepted-debug-rxc-build.log
+- focused Debug CTest
+  result=26/26 pass log=accepted-debug-focused-ctest.log
+- cmake --build cmake-build-release --target rxc --parallel 32
+  result=pass log=accepted-release-rxc-build.log
+- focused Release CTest
+  result=26/26 pass log=accepted-release-focused-ctest.log
+- first full Debug CTest
+  result=1842/1849 pass; seven intentional optimized golden mismatches
+  log=final-debug-ctest-initial.log
+- documented crexx_test_driver --update-gold for seven optimized outputs
+  result=pass log=accepted-golden-update.log
+- focused golden/runtime acceptance CTest
+  result=16/16 pass log=accepted-golden-focused-ctest.log
+- cmake --build cmake-build-debug --parallel 32
+  result=pass log=final-debug-build.log
+- ctest --test-dir cmake-build-debug --parallel 30 --output-on-failure
+  result=1849/1849 pass duration=331.21s log=final-debug-ctest.log
+
+Approved closeout exclusions:
+- no sanitizer run;
+- no install/package proof;
+- no cross-platform run;
+- no additional benchmark or baseline campaign.

@@ -1,0 +1,59 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/25 Test    #1: linked_opt_runtime_artifacts_build ..................   Passed    0.07 sec
+      Start  384: object_reference_regression_run_opt
+      Start  566: function_arg_method_call_run_noopt
+      Start  383: object_reference_regression_run_noopt
+      Start  446: optional_arg_presence_copy_run_opt
+      Start  445: optional_arg_presence_copy_run_noopt
+      Start  567: function_arg_method_call_run_opt
+      Start  480: interface_method_object_arg_same_module_run_opt
+      Start  418: repro_duplicate_call_argument_run_opt
+      Start  417: repro_duplicate_call_argument_run_noopt
+      Start  478: interface_method_arg_same_module_run_opt
+      Start  477: interface_method_arg_same_module_run_noopt
+      Start  207: object_reference_regression_opt
+      Start  479: interface_method_object_arg_same_module_run_noopt
+      Start   78: repro_duplicate_call_argument_opt
+      Start  206: object_reference_regression_noopt
+      Start   77: repro_duplicate_call_argument_noopt
+      Start 1826: rxpa_native_unwind_funcs_static_opt
+      Start 1824: rxpa_native_unwind_funcs_dynamic_opt
+      Start 1823: rxpa_native_unwind_funcs_dynamic_noopt
+      Start 1825: rxpa_native_unwind_funcs_static_noopt
+      Start 1075: rxassignalcallunwindtests-rxbvm
+      Start 1074: rxassignalcallunwindtests
+      Start  419: nr06_call_window_scalar_run_noopt
+      Start  420: nr06_call_window_scalar_run_opt
+ 2/25 Test #1075: rxassignalcallunwindtests-rxbvm .....................   Passed    0.03 sec
+ 3/25 Test #1074: rxassignalcallunwindtests ...........................   Passed    0.02 sec
+ 4/25 Test #1823: rxpa_native_unwind_funcs_dynamic_noopt ..............   Passed    0.08 sec
+ 5/25 Test #1824: rxpa_native_unwind_funcs_dynamic_opt ................   Passed    0.14 sec
+ 6/25 Test #1826: rxpa_native_unwind_funcs_static_opt .................   Passed    0.28 sec
+ 7/25 Test #1825: rxpa_native_unwind_funcs_static_noopt ...............   Passed    0.28 sec
+ 8/25 Test   #78: repro_duplicate_call_argument_opt ...................   Passed    0.55 sec
+ 9/25 Test  #478: interface_method_arg_same_module_run_opt ............   Passed    0.56 sec
+10/25 Test   #77: repro_duplicate_call_argument_noopt .................   Passed    0.57 sec
+11/25 Test  #383: object_reference_regression_run_noopt ...............   Passed    0.58 sec
+12/25 Test  #206: object_reference_regression_noopt ...................   Passed    0.58 sec
+13/25 Test  #566: function_arg_method_call_run_noopt ..................   Passed    0.62 sec
+14/25 Test  #567: function_arg_method_call_run_opt ....................   Passed    0.63 sec
+15/25 Test  #417: repro_duplicate_call_argument_run_noopt .............   Passed    0.65 sec
+16/25 Test  #207: object_reference_regression_opt .....................   Passed    0.65 sec
+17/25 Test  #384: object_reference_regression_run_opt .................   Passed    0.66 sec
+18/25 Test  #446: optional_arg_presence_copy_run_opt ..................   Passed    0.66 sec
+19/25 Test  #418: repro_duplicate_call_argument_run_opt ...............   Passed    0.67 sec
+20/25 Test  #477: interface_method_arg_same_module_run_noopt ..........   Passed    0.67 sec
+21/25 Test  #479: interface_method_object_arg_same_module_run_noopt ...   Passed    0.69 sec
+22/25 Test  #445: optional_arg_presence_copy_run_noopt ................   Passed    0.70 sec
+23/25 Test  #480: interface_method_object_arg_same_module_run_opt .....   Passed    0.72 sec
+24/25 Test  #420: nr06_call_window_scalar_run_opt .....................   Passed    0.68 sec
+25/25 Test  #419: nr06_call_window_scalar_run_noopt ...................   Passed    0.70 sec
+
+100% tests passed, 0 tests failed out of 25
+
+Label Time Summary:
+linked_opt    =   5.01 sec*proc (9 tests)
+smoke         =   0.78 sec*proc (2 tests)
+
+Total Test time (real) =   0.85 sec

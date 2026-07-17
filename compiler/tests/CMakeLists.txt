@@ -1088,6 +1088,16 @@ add_crexx_compiler_test(inline_test_binary_arg_return rexx_src/inline_test_binar
 add_crexx_compiler_test(inline_test_block_expr_live_sibling rexx_src/inline_test_block_expr_live_sibling.crexx)
 add_crexx_compiler_test(inline_test_class_methods rexx_src/inline_test_class_methods.crexx)
 
+add_test(NAME nr06_codegen_contract
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr06_codegen_contract_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/nr06_codegen_contract.cmake)
+set_tests_properties(nr06_codegen_contract PROPERTIES
+        LABELS "compiler;performance")
+
 # Macro to add a run test
 macro(add_crexx_run_test NAME SOURCE_FILE)
     set(RUNTIME_MODULES ${ARGN})
@@ -1682,6 +1692,7 @@ add_crexx_run_test(select_dispatch_mixed rexx_src/select_dispatch_mixed.crexx)
 add_crexx_run_test(select_dispatch_general rexx_src/select_dispatch_general.crexx)
 add_crexx_run_test(select_dispatch_strings rexx_src/select_dispatch_strings.crexx)
 add_crexx_run_test(repro_duplicate_call_argument rexx_src/repro_duplicate_call_argument.crexx)
+add_crexx_run_test(nr06_call_window_scalar rexx_src/nr06_call_window_scalar.crexx)
 add_crexx_run_test(13_stems rexx_src/13_stems.crexx)
 add_crexx_run_test(repro_multi_tail_stems rexx_src/repro_multi_tail_stems.crexx)
 add_crexx_run_test(repro_rexx_compare_method rexx_src/repro_rexx_compare_method.crexx "${CMAKE_BINARY_DIR}/bin/classlib.rxbin")

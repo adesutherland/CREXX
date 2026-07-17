@@ -1,0 +1,14 @@
+workload,baseline_swaps,candidate_swaps,removed,baseline_locals_sum,candidate_locals_sum
+awfy_bounce,3,3,0,63,63
+awfy_list,83,79,4,119,122
+awfy_mandelbrot,0,0,0,26,26
+awfy_permute,17,15,2,92,92
+awfy_richards,107,103,4,439,441
+awfy_sieve,1,1,0,16,16
+awfy_storage,27,25,2,93,92
+awfy_towers,61,61,0,196,198
+base64_roundtrip,2,0,2,83,83
+json_parser,1,1,0,9,9
+rexxcps_levelb,121,77,44,181,180
+total,423,365,58,1317,1322
+

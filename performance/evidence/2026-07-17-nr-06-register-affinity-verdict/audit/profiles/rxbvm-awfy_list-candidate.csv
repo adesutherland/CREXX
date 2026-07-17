@@ -1,0 +1,221 @@
+section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args,bytes,max_bytes,high_water,status
+summary,schema_version,4,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,vm_mode,rxbvm,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,result,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,timer_read_min_ns,41,,1,41,41,41,41,0,,,,,,,,,,,,,,
+summary,timer_zero_deltas,762,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,interrupt_polls,83973431,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,invalid_events,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,counter_overflow,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,procedure_tracking_unavailable,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,allocation_tracking_unavailable,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,census_tracking_unavailable,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+instruction,CALL_REG_FUNC_REG,,46,4395900,538449757,122,41,503708,29.843356,,,,,,,,,,,,,,
+instruction,SWAP_REG_REG,,510,11476600,199181386,17,0,79584,11.039546,,,,,,,,,,,,,,
+instruction,RET_REG,,49,4112100,132916242,32,0,307125,7.366828,,,,,,,,,,,,,,
+instruction,ASSERTINITIALIZED_REG,,85,4392800,83775033,19,0,32583,4.643197,,,,,,,,,,,,,,
+instruction,SETTP_REG_INT,,517,5803500,81891267,14,0,1832625,4.538790,,,,,,,,,,,,,,
+instruction,LOAD_REG_INT,,1,4396303,62917261,14,0,1127458,3.487163,,,,,,,,,,,,,,
+instruction,SETNUMCAS_INT,,255,4395901,61437962,13,0,63000,3.405174,,,,,,,,,,,,,,
+instruction,SETNUMSTD_INT,,258,4395901,61362933,13,0,30541,3.401015,,,,,,,,,,,,,,
+instruction,SETNUMDGTS_INT,,246,4395901,61033906,13,0,32458,3.382779,,,,,,,,,,,,,,
+instruction,SETNUMFRM_INT,,252,4395901,60645760,13,0,73875,3.361266,,,,,,,,,,,,,,
+instruction,SETNUMFUZ_INT,,249,4395901,60093056,13,0,363458,3.330633,,,,,,,,,,,,,,
+instruction,UNLINK_REG,,213,4281901,58448054,13,0,37666,3.239459,,,,,,,,,,,,,,
+instruction,REFVALID_REG_REG,,198,3965200,57856606,14,0,266292,3.206679,,,,,,,,,,,,,,
+instruction,LINKREF_REG_REG,,196,3827800,57748005,15,0,3405959,3.200659,,,,,,,,,,,,,,
+instruction,LINKATTR1_REG_REG_INT,,203,3847101,55247308,14,0,255166,3.062059,,,,,,,,,,,,,,
+instruction,BRF_ID_REG,,38,2369900,32798105,13,0,80458,1.817821,,,,,,,,,,,,,,
+instruction,NULL_REG,,14,2254700,32789995,14,0,25000,1.817372,,,,,,,,,,,,,,
+instruction,BTOI_REG,,225,1876200,25933713,13,0,18291,1.437365,,,,,,,,,,,,,,
+instruction,BNE_ID_REG_INT,,43,1879600,25805644,13,0,70666,1.430267,,,,,,,,,,,,,,
+instruction,BR_ID,,36,1805001,25027488,13,0,32458,1.387138,,,,,,,,,,,,,,
+instruction,COPY_REG_REG,,8,567901,9863345,17,0,27875,0.546672,,,,,,,,,,,,,,
+instruction,RET_INT,,50,281001,9848332,35,0,20041,0.545840,,,,,,,,,,,,,,
+instruction,ENDLIFE_REG,,514,421402,6218930,14,0,107500,0.344682,,,,,,,,,,,,,,
+instruction,MKREF_REG_REG,,194,3400,1288717,379,0,4916,0.071427,,,,,,,,,,,,,,
+instruction,SETATTRS_REG_INT,,217,3300,404998,122,0,8750,0.022447,,,,,,,,,,,,,,
+instruction,MINATTRS_REG_REG_INT,,223,6200,378144,60,0,5917,0.020958,,,,,,,,,,,,,,
+instruction,ICOPY_REG_REG,,9,6301,110800,17,0,542,0.006141,,,,,,,,,,,,,,
+instruction,IADD_REG_REG_INT,,16,4000,108094,27,0,916,0.005991,,,,,,,,,,,,,,
+instruction,RET,,48,2800,106418,38,0,916,0.005898,,,,,,,,,,,,,,
+instruction,SETOBJTYPE_REG_STRING,,56,3300,104219,31,0,4500,0.005776,,,,,,,,,,,,,,
+instruction,LINKATTR1_REG_REG_REG,,202,6200,104024,16,0,541,0.005765,,,,,,,,,,,,,,
+instruction,SAY_REG,,450,1,65167,65167,65167,65167,0.003612,,,,,,,,,,,,,,
+instruction,BCTP_ID_REG,,349,100,64125,641,375,4000,0.003554,,,,,,,,,,,,,,
+instruction,ISUB_REG_REG_INT,,18,3100,63424,20,0,625,0.003515,,,,,,,,,,,,,,
+instruction,BRT_ID_REG,,37,101,53455,529,292,1750,0.002963,,,,,,,,,,,,,,
+instruction,IGT_REG_REG_REG,,104,101,50459,499,125,1541,0.002797,,,,,,,,,,,,,,
+instruction,BEQ_ID_REG_INT,,41,100,39121,391,41,708,0.002168,,,,,,,,,,,,,,
+instruction,SAY_STRING,,455,1,4250,4250,4250,4250,0.000236,,,,,,,,,,,,,,
+instruction,ITOS_REG,,229,2,3958,1979,83,3875,0.000219,,,,,,,,,,,,,,
+instruction,MINATTRS_REG_INT,,222,1,3125,3125,3125,3125,0.000173,,,,,,,,,,,,,,
+instruction,BLT_ID_REG_INT,,357,1,2667,2667,2667,2667,0.000148,,,,,,,,,,,,,,
+instruction,STOI_REG,,237,1,2250,2250,2250,2250,0.000125,,,,,,,,,,,,,,
+instruction,CONCAT_REG_STRING_REG,,136,1,2000,2000,2000,2000,0.000111,,,,,,,,,,,,,,
+instruction,BRTPANDT_ID_REG_INT,,524,1,1625,1625,1625,1625,0.000090,,,,,,,,,,,,,,
+instruction,GETATTRS_REG_REG_INT,,215,1,1208,1208,1208,1208,0.000067,,,,,,,,,,,,,,
+instruction,SCONCAT_REG_REG_STRING,,138,1,417,417,417,417,0.000023,,,,,,,,,,,,,,
+instruction,APPEND_REG_REG,,143,1,417,417,417,417,0.000023,,,,,,,,,,,,,,
+instruction,BGE_ID_REG_INT,,355,1,208,208,208,208,0.000012,,,,,,,,,,,,,,
+transition,sequential_same_frame,,0,71145727,862533109,12,0,9420042,85.201123,,,,,,,,,,,,,,
+transition,branch_same_frame,,1,4035903,50856507,12,0,1634250,5.023612,,,,,,,,,,,,,,
+transition,call_enter_frame,,2,4395900,48923566,11,0,18084,4.832676,,,,,,,,,,,,,,
+transition,return_leave_frame,,3,4395900,50033649,11,0,53209,4.942330,,,,,,,,,,,,,,
+transition,external_entry,,6,1,2625,2625,2625,2625,0.000259,,,,,,,,,,,,,,
+transition,terminal,,7,1,0,0,0,0,0.000000,,,,,,,,,,,,,,
+interrupt,scan_all,,,0,0,0,0,0,0,,,,,,,,,,,,,,
+interrupt,scan_without_selection,,,0,0,0,0,0,0,,,,,,,,,,,,,,
+interrupt,mechanics_all,,,0,0,0,0,0,0,,,,,,,,,,,,,,
+procedure,"awfy_list.listbenchmark.tail","elapsed",,280900,28380578492,101034,6333,42601958,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,280900,0,"reference .listelement","x=reference .listelement,y=reference .listelement,z=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.tail","inclusive_body",,280900,28310235171,100784,6125,42600958,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,280900,0,"reference .listelement","x=reference .listelement,y=reference .listelement,z=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.tail","self",,280900,314170082,1118,458,1132792,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,280900,0,"reference .listelement","x=reference .listelement,y=reference .listelement,z=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.tail","native_child",,280900,0,0,0,0,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,280900,0,"reference .listelement","x=reference .listelement,y=reference .listelement,z=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.tail","entry_overhead",,280900,52175758,185,83,161416,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,280900,0,"reference .listelement","x=reference .listelement,y=reference .listelement,z=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.tail","exit_overhead",,280900,18167563,64,0,308375,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,280900,0,"reference .listelement","x=reference .listelement,y=reference .listelement,z=reference .listelement",,,,
+procedure,"awfy_list.main","elapsed",,1,2816602834,2816602834,2816602834,2816602834,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",procedure,1,0,".int","",,,,
+procedure,"awfy_list.main","inclusive_body",,1,2816600084,2816600084,2816600084,2816600084,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",procedure,1,0,".int","",,,,
+procedure,"awfy_list.main","self",,1,562417,562417,562417,562417,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",procedure,1,0,".int","",,,,
+procedure,"awfy_list.main","native_child",,1,0,0,0,0,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",procedure,1,0,".int","",,,,
+procedure,"awfy_list.main","entry_overhead",,1,2625,2625,2625,2625,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",procedure,1,0,".int","",,,,
+procedure,"awfy_list.main","exit_overhead",,1,125,125,125,125,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",procedure,1,0,".int","",,,,
+procedure,"awfy_list.listbenchmark.run","elapsed",,100,2816037667,28160376,25800041,42762750,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,100,0,".int","",,,,
+procedure,"awfy_list.listbenchmark.run","inclusive_body",,100,2815647959,28156479,25796875,42759000,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,100,0,".int","",,,,
+procedure,"awfy_list.listbenchmark.run","self",,100,449834,4498,3249,9751,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,100,0,".int","",,,,
+procedure,"awfy_list.listbenchmark.run","native_child",,100,0,0,0,0,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,100,0,".int","",,,,
+procedure,"awfy_list.listbenchmark.run","entry_overhead",,100,39417,394,166,3375,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,100,0,".int","",,,,
+procedure,"awfy_list.listbenchmark.run","exit_overhead",,100,350291,3502,2208,14584,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,100,0,".int","",,,,
+procedure,"awfy_list.listbenchmark.isshorterthan","elapsed",,280900,2339871264,8329,5625,9442459,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,280900,0,".boolean","x=reference .listelement,y=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.isshorterthan","inclusive_body",,280900,2270170588,8081,5416,9441958,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,280900,0,".boolean","x=reference .listelement,y=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.isshorterthan","self",,280900,991054394,3528,2251,3429669,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,280900,0,".boolean","x=reference .listelement,y=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.isshorterthan","native_child",,280900,0,0,0,0,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,280900,0,".boolean","x=reference .listelement,y=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.isshorterthan","entry_overhead",,280900,56727704,201,125,33416,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,280900,0,".boolean","x=reference .listelement,y=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.isshorterthan","exit_overhead",,280900,12972972,46,0,23584,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,280900,0,".boolean","x=reference .listelement,y=reference .listelement",,,,
+procedure,"awfy_list.listelement.next","elapsed",,3820600,1356421188,355,208,9425292,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,3820600,0,"reference .listelement","",,,,
+procedure,"awfy_list.listelement.next","inclusive_body",,3820600,720142628,188,83,9422875,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,3820600,0,"reference .listelement","",,,,
+procedure,"awfy_list.listelement.next","self",,3820600,720142628,188,83,9422875,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,3820600,0,"reference .listelement","",,,,
+procedure,"awfy_list.listelement.next","native_child",,3820600,0,0,0,0,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,3820600,0,"reference .listelement","",,,,
+procedure,"awfy_list.listelement.next","entry_overhead",,3820600,475887893,124,41,503916,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,3820600,0,"reference .listelement","",,,,
+procedure,"awfy_list.listelement.next","exit_overhead",,3820600,160390667,41,0,53250,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,3820600,0,"reference .listelement","",,,,
+procedure,"awfy_list.listbenchmark.makelist","elapsed",,3400,83549680,24573,375,166291,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,3400,0,"reference .listelement","list_length=.int,arena_reference=reference .listarena",,,,
+procedure,"awfy_list.listbenchmark.makelist","inclusive_body",,3400,82469539,24255,208,164167,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,3400,0,"reference .listelement","list_length=.int,arena_reference=reference .listarena",,,,
+procedure,"awfy_list.listbenchmark.makelist","self",,3400,3188886,937,208,38165,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,3400,0,"reference .listelement","list_length=.int,arena_reference=reference .listarena",,,,
+procedure,"awfy_list.listbenchmark.makelist","native_child",,3400,0,0,0,0,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,3400,0,"reference .listelement","list_length=.int,arena_reference=reference .listarena",,,,
+procedure,"awfy_list.listbenchmark.makelist","entry_overhead",,3400,815227,239,83,11333,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,3400,0,"reference .listelement","list_length=.int,arena_reference=reference .listarena",,,,
+procedure,"awfy_list.listbenchmark.makelist","exit_overhead",,3400,264914,77,41,45083,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,3400,0,"reference .listelement","list_length=.int,arena_reference=reference .listarena",,,,
+procedure,"awfy_list.listarena.allocate","elapsed",,3100,7121971,2297,1708,39583,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,3100,0,"reference .listelement","value=.int",,,,
+procedure,"awfy_list.listarena.allocate","inclusive_body",,3100,6461676,2084,1541,38959,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,3100,0,"reference .listelement","value=.int",,,,
+procedure,"awfy_list.listarena.allocate","self",,3100,4422039,1426,999,35000,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,3100,0,"reference .listelement","value=.int",,,,
+procedure,"awfy_list.listarena.allocate","native_child",,3100,0,0,0,0,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,3100,0,"reference .listelement","value=.int",,,,
+procedure,"awfy_list.listarena.allocate","entry_overhead",,3100,441960,142,83,4041,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,3100,0,"reference .listelement","value=.int",,,,
+procedure,"awfy_list.listarena.allocate","exit_overhead",,3100,218335,70,41,1375,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,3100,0,"reference .listelement","value=.int",,,,
+procedure,"awfy_list.listelement.length","elapsed",,1000,4484079,4484,375,44083,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,1000,0,".int","",,,,
+procedure,"awfy_list.listelement.length","inclusive_body",,1000,4121382,4121,250,39375,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,1000,0,".int","",,,,
+procedure,"awfy_list.listelement.length","self",,1000,528760,528,250,8541,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,1000,0,".int","",,,,
+procedure,"awfy_list.listelement.length","native_child",,1000,0,0,0,0,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,1000,0,".int","",,,,
+procedure,"awfy_list.listelement.length","entry_overhead",,1000,298907,298,83,5375,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,1000,0,".int","",,,,
+procedure,"awfy_list.listelement.length","exit_overhead",,1000,63790,63,0,625,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,1000,0,".int","",,,,
+procedure,"awfy_list.listelement.§factory","elapsed",,3100,2039637,657,458,33584,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",factory,3100,0,".awfy_list..listelement","initial_value=.int",,,,
+procedure,"awfy_list.listelement.§factory","inclusive_body",,3100,1121074,361,250,32125,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",factory,3100,0,".awfy_list..listelement","initial_value=.int",,,,
+procedure,"awfy_list.listelement.§factory","self",,3100,1121074,361,250,32125,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",factory,3100,0,".awfy_list..listelement","initial_value=.int",,,,
+procedure,"awfy_list.listelement.§factory","native_child",,3100,0,0,0,0,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",factory,3100,0,".awfy_list..listelement","initial_value=.int",,,,
+procedure,"awfy_list.listelement.§factory","entry_overhead",,3100,584314,188,125,4750,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",factory,3100,0,".awfy_list..listelement","initial_value=.int",,,,
+procedure,"awfy_list.listelement.§factory","exit_overhead",,3100,334249,107,41,3000,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",factory,3100,0,".awfy_list..listelement","initial_value=.int",,,,
+procedure,"awfy_list.listelement.setnext","elapsed",,2800,1226009,437,333,5834,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,2800,0,".void","element=reference .listelement",,,,
+procedure,"awfy_list.listelement.setnext","inclusive_body",,2800,682131,243,208,5625,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,2800,0,".void","element=reference .listelement",,,,
+procedure,"awfy_list.listelement.setnext","self",,2800,682131,243,208,5625,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,2800,0,".void","element=reference .listelement",,,,
+procedure,"awfy_list.listelement.setnext","native_child",,2800,0,0,0,0,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,2800,0,".void","element=reference .listelement",,,,
+procedure,"awfy_list.listelement.setnext","entry_overhead",,2800,402143,143,83,1750,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,2800,0,".void","element=reference .listelement",,,,
+procedure,"awfy_list.listelement.setnext","exit_overhead",,2800,141735,50,0,4291,0,,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas",method,2800,0,".void","element=reference .listelement",,,,
+allocation,frame_blocks,,,46,0,0,0,0,0,,,,,,,,,,,312384,10992,0,complete
+allocation,standalone_values,,,39,0,0,0,0,0,,,,,,,,,,,9672,248,0,complete
+allocation,attribute_value_blocks,,,6207,0,0,0,0,0,,,,,,,,,,,12316672,3968,0,complete
+allocation,attribute_pointer_storage,,,18619,0,0,0,0,0,,,,,,,,,,,1192128,256,0,complete
+allocation,string_buffers,,,2,0,0,0,0,0,,,,,,,,,,,128,64,0,complete
+allocation,binary_buffers,,,0,0,0,0,0,0,,,,,,,,,,,0,0,0,complete
+allocation,value_slots,,,50581,0,0,0,0,0,,,,,,,,,,,12544088,8680,0,complete
+allocation,frame_activations,,,4395901,0,0,0,0,0,,,,,,,,,,,0,0,19,complete
+allocation,frame_reuses,,,4395855,0,0,0,0,0,,,,,,,,,,,0,0,0,complete
+census,"call_path","direct_bytecode",,4395900,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","direct_native",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","dynamic_bytecode",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","dynamic_native",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","external_root",,1,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","signal_bytecode",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","signal_native",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"arity","1",,3824801,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"arity","3",,284300,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"arity","2",,5900,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"arity","4",,280900,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"callable_kind","procedure",,1,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"callable_kind","method",,4392800,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"callable_kind","factory",,3100,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"callable_kind","native",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"callable_kind","unknown",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"frame_disposition","fresh",,46,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"frame_disposition","reused",,4395855,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"frame_disposition","no_child_native",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"frame_disposition","none_failed",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_outcome","success",,4395901,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_outcome","unresolved",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_outcome","frame_failed",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_outcome","invalid",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","void",,2800,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","ret_reg_move_local",,80800,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","ret_reg_copy_nonlocal",,4031300,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","value_ignored",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","immediate",,281000,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","terminal_external",,1,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcmethodsel","attempt",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcmethodsel","success",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcmethodsel","failure",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcfprocsel","attempt",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcfprocsel","success",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcfprocsel","failure",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","setup_swaps",,5738300,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","normal_restoration_swaps",,5738300,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","unclassified_swaps",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","defensive_argument_copies",,100,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","unclassified_copies",,567801,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","attribution_degraded",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","events",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","bytecode_frames_discarded",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","argument_windows_restored",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","argument_slots_restored",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","interrupted_native_windows_restored",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","interrupted_native_slots_restored",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","restoration_failures",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+call,"awfy_list.main","external_root",0,1,0,0,0,0,0,1,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","procedure",,,"fresh","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.run","direct_bytecode",94,1,0,0,0,0,0,1,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"fresh","success",1,1,1,"complete"
+call,"awfy_list.listbenchmark.makelist","direct_bytecode",483,1,0,0,0,0,0,3,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"fresh","success",1,1,0,"complete"
+call,"awfy_list.listbenchmark.makelist","direct_bytecode",651,15,0,0,0,0,0,3,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"fresh","success",30,30,0,"complete"
+call,"awfy_list.listarena.allocate","direct_bytecode",678,1,0,0,0,0,0,2,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"fresh","success",2,2,0,"complete"
+call,"awfy_list.listelement.§factory","direct_bytecode",365,1,0,0,0,0,0,1,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","factory",,,"fresh","success",1,1,0,"complete"
+call,"awfy_list.listarena.allocate","direct_bytecode",678,3099,0,0,0,0,0,2,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"reused","success",6198,6198,0,"complete"
+call,"awfy_list.listelement.§factory","direct_bytecode",365,3099,0,0,0,0,0,1,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","factory",,,"reused","success",3099,3099,0,"complete"
+call,"awfy_list.listelement.setnext","direct_bytecode",714,1,0,0,0,0,0,2,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"fresh","success",2,2,0,"complete"
+call,"awfy_list.listelement.setnext","direct_bytecode",714,2799,0,0,0,0,0,2,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"reused","success",5598,5598,0,"complete"
+call,"awfy_list.listbenchmark.makelist","direct_bytecode",508,100,0,0,0,0,0,3,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"reused","success",100,100,0,"complete"
+call,"awfy_list.listbenchmark.makelist","direct_bytecode",651,3085,0,0,0,0,0,3,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"reused","success",6170,6170,0,"complete"
+call,"awfy_list.listbenchmark.makelist","direct_bytecode",533,100,0,0,0,0,0,3,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"reused","success",100,100,0,"complete"
+call,"awfy_list.listbenchmark.tail","direct_bytecode",567,1,0,0,0,0,0,4,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"fresh","success",4,4,0,"complete"
+call,"awfy_list.listbenchmark.isshorterthan","direct_bytecode",864,1,0,0,0,0,0,3,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"fresh","success",3,3,0,"complete"
+call,"awfy_list.listelement.next","direct_bytecode",784,1,0,0,0,0,0,1,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"fresh","success",1,1,0,"complete"
+call,"awfy_list.listelement.next","direct_bytecode",800,1805000,0,0,0,0,0,1,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"reused","success",1805000,1805000,0,"complete"
+call,"awfy_list.listelement.next","direct_bytecode",784,1804999,0,0,0,0,0,1,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"reused","success",1804999,1804999,0,"complete"
+call,"awfy_list.listelement.next","direct_bytecode",904,70200,0,0,0,0,0,1,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"reused","success",70200,70200,0,"complete"
+call,"awfy_list.listelement.next","direct_bytecode",920,70200,0,0,0,0,0,1,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"reused","success",70200,70200,0,"complete"
+call,"awfy_list.listelement.next","direct_bytecode",933,70200,0,0,0,0,0,1,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"reused","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.tail","direct_bytecode",964,12,0,0,0,0,0,4,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"fresh","success",48,48,0,"complete"
+call,"awfy_list.listbenchmark.isshorterthan","direct_bytecode",864,280899,0,0,0,0,0,3,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"reused","success",842697,842697,0,"complete"
+call,"awfy_list.listbenchmark.tail","direct_bytecode",1007,70200,0,0,0,0,0,4,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"reused","success",280800,280800,0,"complete"
+call,"awfy_list.listbenchmark.tail","direct_bytecode",1050,70200,0,0,0,0,0,4,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"reused","success",280800,280800,0,"complete"
+call,"awfy_list.listbenchmark.tail","direct_bytecode",1093,70200,0,0,0,0,0,4,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"reused","success",280800,280800,0,"complete"
+call,"awfy_list.listbenchmark.tail","direct_bytecode",964,70188,0,0,0,0,0,4,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"reused","success",280752,280752,0,"complete"
+call,"awfy_list.listelement.length","direct_bytecode",597,1,0,0,0,0,0,1,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"fresh","success",1,1,0,"complete"
+call,"awfy_list.listelement.length","direct_bytecode",230,9,0,0,0,0,0,1,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"fresh","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.run","direct_bytecode",94,99,0,0,0,0,0,1,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"reused","success",99,99,99,"complete"
+call,"awfy_list.listbenchmark.makelist","direct_bytecode",483,99,0,0,0,0,0,3,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"reused","success",99,99,0,"complete"
+call,"awfy_list.listbenchmark.tail","direct_bytecode",567,99,0,0,0,0,0,4,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"reused","success",396,396,0,"complete"
+call,"awfy_list.listelement.length","direct_bytecode",597,99,0,0,0,0,0,1,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"reused","success",99,99,0,"complete"
+call,"awfy_list.listelement.length","direct_bytecode",230,891,0,0,0,0,0,1,,,,"performance/evidence/2026-07-17-nr-06-register-affinity-verdict/portfolio/candidate/awfy_list.rxas","method",,,"reused","success",0,0,0,"complete"

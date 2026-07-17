@@ -1,0 +1,63 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/26 Test    #1: linked_opt_runtime_artifacts_build ..................   Passed   76.79 sec
+      Start  384: object_reference_regression_run_opt
+      Start  564: function_arg_method_call_run_noopt
+      Start  383: object_reference_regression_run_noopt
+      Start  478: interface_method_object_arg_same_module_run_opt
+      Start  565: function_arg_method_call_run_opt
+      Start  443: optional_arg_presence_copy_run_noopt
+      Start  444: optional_arg_presence_copy_run_opt
+      Start  418: repro_duplicate_call_argument_run_opt
+      Start  476: interface_method_arg_same_module_run_opt
+      Start  417: repro_duplicate_call_argument_run_noopt
+      Start  475: interface_method_arg_same_module_run_noopt
+      Start  207: object_reference_regression_opt
+      Start  477: interface_method_object_arg_same_module_run_noopt
+      Start  206: object_reference_regression_noopt
+      Start   78: repro_duplicate_call_argument_opt
+      Start   77: repro_duplicate_call_argument_noopt
+      Start  419: nr06_call_window_scalar_run_noopt
+      Start  420: nr06_call_window_scalar_run_opt
+      Start 1824: rxpa_native_unwind_funcs_static_opt
+      Start 1823: rxpa_native_unwind_funcs_static_noopt
+      Start 1822: rxpa_native_unwind_funcs_dynamic_opt
+      Start 1821: rxpa_native_unwind_funcs_dynamic_noopt
+      Start 1073: rxassignalcallunwindtests-rxbvm
+      Start 1072: rxassignalcallunwindtests
+      Start  336: nr06_codegen_contract
+ 2/26 Test #1073: rxassignalcallunwindtests-rxbvm .....................   Passed    0.01 sec
+ 3/26 Test #1072: rxassignalcallunwindtests ...........................   Passed    0.01 sec
+ 4/26 Test #1824: rxpa_native_unwind_funcs_static_opt .................   Passed    0.12 sec
+ 5/26 Test #1821: rxpa_native_unwind_funcs_dynamic_noopt ..............   Passed    0.07 sec
+ 6/26 Test #1823: rxpa_native_unwind_funcs_static_noopt ...............   Passed    0.10 sec
+ 7/26 Test #1822: rxpa_native_unwind_funcs_dynamic_opt ................   Passed    0.08 sec
+ 8/26 Test  #206: object_reference_regression_noopt ...................   Passed    0.92 sec
+ 9/26 Test  #443: optional_arg_presence_copy_run_noopt ................   Passed    1.00 sec
+10/26 Test   #78: repro_duplicate_call_argument_opt ...................   Passed    0.99 sec
+11/26 Test  #383: object_reference_regression_run_noopt ...............   Passed    1.03 sec
+12/26 Test  #565: function_arg_method_call_run_opt ....................   Passed    1.03 sec
+13/26 Test  #418: repro_duplicate_call_argument_run_opt ...............   Passed    1.03 sec
+14/26 Test  #564: function_arg_method_call_run_noopt ..................   Passed    1.04 sec
+15/26 Test  #207: object_reference_regression_opt .....................   Passed    1.03 sec
+16/26 Test  #384: object_reference_regression_run_opt .................   Passed    1.05 sec
+17/26 Test  #478: interface_method_object_arg_same_module_run_opt .....   Passed    1.07 sec
+18/26 Test  #444: optional_arg_presence_copy_run_opt ..................   Passed    1.07 sec
+19/26 Test   #77: repro_duplicate_call_argument_noopt .................   Passed    1.06 sec
+20/26 Test  #417: repro_duplicate_call_argument_run_noopt .............   Passed    1.13 sec
+21/26 Test  #475: interface_method_arg_same_module_run_noopt ..........   Passed    1.14 sec
+22/26 Test  #477: interface_method_object_arg_same_module_run_noopt ...   Passed    1.14 sec
+23/26 Test  #476: interface_method_arg_same_module_run_opt ............   Passed    1.20 sec
+24/26 Test  #419: nr06_call_window_scalar_run_noopt ...................   Passed    1.17 sec
+25/26 Test  #420: nr06_call_window_scalar_run_opt .....................   Passed    1.19 sec
+26/26 Test  #336: nr06_codegen_contract ...............................   Passed    1.33 sec
+
+100% tests passed, 0 tests failed out of 26
+
+Label Time Summary:
+compiler       =   1.33 sec*proc (1 test)
+linked_opt     =   7.82 sec*proc (9 tests)
+performance    =   1.33 sec*proc (1 test)
+smoke          =   1.06 sec*proc (2 tests)
+
+Total Test time (real) =  78.31 sec

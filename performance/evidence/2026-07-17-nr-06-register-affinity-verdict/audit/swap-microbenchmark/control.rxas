@@ -1,0 +1,18 @@
+/*
+ * NR-06 diagnostic control: 100,000,000 loop iterations with no SWAP.
+ * This is retained evidence, not a product test or source-language change.
+ */
+
+.globals=0
+
+main() .locals=4
+   load r0,0
+   load r1,100000000
+   load r2,1
+   load r3,2
+l_loop:
+   iadd r0,r0,1
+   blt l_loop,r0,r1
+   load r0,0
+   ret r0
+

@@ -1,0 +1,6 @@
+vm,variant,median_elapsed_ns,min_elapsed_ns,max_elapsed_ns,median_metric,min_metric,max_metric,cell_median_elapsed_change_percent,cell_median_metric_change_percent,paired_median_elapsed_change_percent,paired_median_metric_change_percent
+rxvm,baseline,9478459500.0,8641484000,11047219000,1056523.5,906085,1158376,,,,
+rxvm,candidate,9914016000.0,8653000000,11010649000,1011738.0,910549,1156942,+4.595225,-4.238950,+1.962342,-1.928189
+rxbvm,baseline,10547034000.0,9282794000,12236523000,955212.5,818007,1078296,,,,
+rxbvm,candidate,10392724500.0,9313260000,11707554000,970319.0,854913,1074761,-1.463061,+1.581481,-1.646529,+1.676361
+
