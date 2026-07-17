@@ -1,0 +1,12 @@
+captured_utc=2026-07-17T16:42:09Z
+branch=develop
+head=e748621d1f9242f68f30fe8aa3f58fb804be68fb
+baseline_revision=rexxcps-2.2d-baseline-e748621d1
+candidate_revision=rexxcps-2.2d-nr08-63743eb90e97
+nr08_patch_sha256=63743eb90e9768f211843609408039e7f9037420d098704c9eac8e1536f75dfa
+historical_rows=14009
+current_rows=10311
+1351ed7706b5e2fef8c8786b7a0f804b51b7db6fdbd93e477f35b51ac46f58d9  /Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxvm
+25514b5883afc58f64361c4ff7c074ec7f05ffe573899f7536c947a7c35c7831  /Users/adrian/CLionProjects/CREXX/cmake-build-profile/bin/rxseq
+1651236e433ec825161f00f207e5036a3d8eed3a471bd327e882646324551aa3  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-09-sequence-ledger-poc/entry-metadata.txt
+30981837da6ff8b2e2b28ab65b19cee2f2a84deb48b03121306c821de3c76e04  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-09-sequence-ledger-poc/current/sequence-ranking.csv

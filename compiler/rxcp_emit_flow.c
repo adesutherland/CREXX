@@ -203,10 +203,53 @@ static void flow_emit_scope_dereference_unlinks(OutputFragment *output, Scope *s
 
 static int flow_symbol_owns_scope_lifetime(Symbol *symbol) {
     if (!symbol || symbol->symbol_type != VARIABLE_SYMBOL) return 0;
-    if (symbol->exposed || symbol->is_arg || symbol->is_this || symbol->is_factory) return 0;
+    if (symbol->exposed || symbol->is_arg || symbol->is_ref_arg ||
+        symbol->is_this || symbol->is_factory) return 0;
     if (symbol->register_type != 'r' || symbol->register_num < 0) return 0;
     if (symbol->name && strncmp(symbol->name, "__inline", 8) == 0) return 0;
     return 1;
+}
+
+static int flow_scope_is_generated_lifetime_boundary(Scope *scope) {
+    Scope *current;
+
+    for (current = scope; current; current = current->parent) {
+        if (current->type != SCOPE_PROCEDURE) continue;
+        if (!current->name) return 0;
+        return strncmp(current->name, "__inline", 8) == 0 ||
+               strncmp(current->name, "__rxtrace", 9) == 0;
+    }
+    return 0;
+}
+
+static int flow_symbol_is_reference_lifetime_free_scalar(Symbol *symbol) {
+    size_t i;
+
+    if (!symbol || symbol->symbol_type != VARIABLE_SYMBOL) return 0;
+    if (!symbol->scope || symbol->scope->type != SCOPE_LOCAL) return 0;
+    if (symbol->exposed || symbol->is_arg || symbol->is_ref_arg ||
+        symbol->is_this || symbol->is_factory) return 0;
+    if (symbol->register_type != 'r' || symbol->register_num < 0) return 0;
+    if (symbol->has_reference_target || symbol->value_dims != 0) return 0;
+    if (flow_scope_is_generated_lifetime_boundary(symbol->scope)) return 0;
+    if (symbol->name && (strncmp(symbol->name, "__inline", 8) == 0 ||
+                         strncmp(symbol->name, "__rxtrace", 9) == 0)) return 0;
+
+    /* A dereference local is an alias even when its resolved value type is scalar. */
+    for (i = 0; i < scp_dereference_symbol_count(symbol->scope); i++) {
+        if (scp_dereference_symbol_at(symbol->scope, i) == symbol) return 0;
+    }
+
+    switch (symbol->type) {
+        case TP_BOOLEAN:
+        case TP_INTEGER:
+        case TP_FLOAT:
+        case TP_DECIMAL:
+        case TP_STRING:
+            return 1;
+        default:
+            return 0;
+    }
 }
 
 void emit_scope_reference_lifetimes(ASTNode *node) {
@@ -223,7 +266,7 @@ void emit_scope_reference_lifetimes(ASTNode *node) {
         char *line;
 
         if (!flow_symbol_owns_scope_lifetime(symbol)) continue;
-
+        if (flow_symbol_is_reference_lifetime_free_scalar(symbol)) continue;
         line = mprintf("   endlife %c%d\n", symbol->register_type, symbol->register_num);
         output_append_text(node->output, line);
         free(line);

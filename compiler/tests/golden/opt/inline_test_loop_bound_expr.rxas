@@ -80,7 +80,6 @@ l16doinc:
    .srcstep 19 19 17 "inline_test_loop_bound_expr.crexx" 12 3 6 "  end"
    br l16dostart
 l16doend:
-   endlife r1
    .meta "inline_test_loop_bound_expr.main.i"
    .srcstep 20 20 17 "inline_test_loop_bound_expr.crexx" 14 3 41 "  say \"Loop bound inline test finished.\""
    say "Loop bound inline test finished."

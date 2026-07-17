@@ -30,7 +30,6 @@ main() .locals=9
    icopy r3,r2
    br l151bexprend
 l151bexprend:
-   endlife r1
    itos r3
    concat r3,"int-read=",r3
    .traceevent "O" 4 "R" "S" "r" 3 5 5 0 "" ""
@@ -51,7 +50,6 @@ l151bexprend:
    icopy r2,r3
    br l160bexprend
 l160bexprend:
-   endlife r3
    itos r2
    concat r3,"int-mut=",r2
    .traceevent "O" 4 "R" "S" "r" 3 10 10 0 "" ""
@@ -111,7 +109,6 @@ l188bexprend:
    scopy r1,r2
    br l197bexprend
 l197bexprend:
-   endlife r3
    concat r3,"str-mut=",r1
    .traceevent "O" 4 "R" "S" "r" 3 24 24 0 "" ""
    say r3
@@ -142,7 +139,6 @@ l197bexprend:
    scopy r1,r2
    br l216bexprend
 l216bexprend:
-   endlife r3
    concat r3,"str-temp=",r1
    .traceevent "O" 4 "R" "S" "r" 3 32 32 0 "" ""
    say r3

@@ -50,7 +50,6 @@ l48iffalse:
    scopy r5,r3
    br l43bexprend
 l43bexprend:
-   endlife r3
    say r5
 l8doinc:
    .srcstep 4 4 17 "inline_test_say_expr_negative.crexx" 5 6 7 "  do i = 1 to 3"
@@ -58,7 +57,6 @@ l8doinc:
    .srcstep 13 13 17 "inline_test_say_expr_negative.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
    .meta "inline_test_say_expr_negative.main.i"
    .srcstep 14 14 17 "inline_test_say_expr_negative.crexx" 8 3 43 "  say \"Say inline negative test finished.\""
    say "Say inline negative test finished."

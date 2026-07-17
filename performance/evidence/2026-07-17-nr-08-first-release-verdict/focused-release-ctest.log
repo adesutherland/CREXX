@@ -1,0 +1,19 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+    Start    1: linked_opt_runtime_artifacts_build
+1/4 Test    #1: linked_opt_runtime_artifacts_build ...   Passed    0.10 sec
+    Start   23: rxc_scoped_register_reuse
+2/4 Test   #23: rxc_scoped_register_reuse ............   Passed    0.17 sec
+    Start 1453: ts_stem_noopt
+3/4 Test #1453: ts_stem_noopt ........................   Passed    0.02 sec
+    Start 1454: ts_stem_opt
+4/4 Test #1454: ts_stem_opt ..........................   Passed    0.02 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+compiler      =   0.17 sec*proc (1 test)
+linked_opt    =   0.02 sec*proc (1 test)
+registers     =   0.17 sec*proc (1 test)
+smoke         =   0.02 sec*proc (1 test)
+
+Total Test time (real) =   0.36 sec

@@ -42,7 +42,6 @@ l8dostart:
    icopy r6,r5
    br l72bexprend
 l72bexprend:
-   endlife r4
    icopy r3,r6
    .traceevent "A" 6 "R" "I" "r" 3 8 8 0 "val" ""
    .srcstep 9 9 17 "inline_test_expr_negative.crexx" 14 3 13 "  return val"
@@ -50,7 +49,6 @@ l72bexprend:
    icopy r6,r3
    br l68bexprend
 l68bexprend:
-   endlife r3
    brf l28iffalse,r6
    .srcstep 14 14 17 "inline_test_expr_negative.crexx" 6 28 29 "    if identity(addOne(i)) | 0 then say \"truthy\" i"
    .srcstep 11 11 17 "inline_test_expr_negative.crexx" 6 37 51 "    if identity(addOne(i)) | 0 then say \"truthy\" i"
@@ -75,7 +73,6 @@ l8doinc:
    .srcstep 17 17 17 "inline_test_expr_negative.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
    .meta "inline_test_expr_negative.main.i"
    .srcstep 18 18 17 "inline_test_expr_negative.crexx" 9 3 60 "  say \"Nested short-circuit inline negative test finished.\""
    say "Nested short-circuit inline negative test finished."

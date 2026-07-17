@@ -71,7 +71,6 @@ main() .locals=6
    icopy r2,r1
    br l169bexprend
 l169bexprend:
-   endlife r1
    itos r2
    sconcat r2,"LargeProc result:",r2
    .traceevent "O" 4 "R" "S" "r" 2 14 14 0 "" ""

@@ -41,7 +41,6 @@ l8doinc:
    .srcstep 7 7 17 "inline_test_say_expr_negative.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
    .meta "inline_test_say_expr_negative.main.i"
    .srcstep 8 8 17 "inline_test_say_expr_negative.crexx" 8 3 43 "  say \"Say inline negative test finished.\""
    say "Say inline negative test finished."

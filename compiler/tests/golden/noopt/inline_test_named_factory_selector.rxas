@@ -103,7 +103,6 @@ assignedNamed() .locals=4
    load r2,1
    .traceevent "L" 4 "R" "I" "r" 2 10 10 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 2 10 10 0 "marker" ""
-   endlife r2
    .meta "inline_test_named_factory_selector.assignednamed.marker"
 l47iffalse:
    .srcstep 13 13 17 "inline_test_named_factory_selector.crexx" 19 3 17 "  return current"

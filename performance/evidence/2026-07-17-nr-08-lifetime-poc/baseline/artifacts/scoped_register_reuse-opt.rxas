@@ -1,0 +1,91 @@
+/*
+ * SOURCE                 : scoped_register_reuse.crexx
+ */
+
+.meta "scoped_register_reuse.box"="b" ".unknown" .class
+.meta "scoped_register_reuse.box.value"="b" ".int" .attr 1
+.globals=0
+
+main() .locals=4
+   .meta "scoped_register_reuse.main"="b" ".int" main() ""
+   .srcstep 17 17 17 "scoped_register_reuse.crexx" 4 1 23 "main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "scoped_register_reuse.main.total"="b" ".int" r0
+   .srcstep 1 1 17 "scoped_register_reuse.crexx" 5 3 15 "  total = .int"
+   null r0
+   .srcstep 2 2 17 "scoped_register_reuse.crexx" 6 3 12 "  total = 0"
+   load r0,0
+   .traceevent "L" 4 "R" "I" "r" 0 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "total" ""
+   .srcstep 3 3 17 "scoped_register_reuse.crexx" 11 5 25 "    total = total + left"
+   .meta "scoped_register_reuse.main.left"="b" ".int" "10"
+   .traceevent "V" 6 "R" "I" "r" 0 3 3 0 "total" ""
+   iadd r0,r0,10
+   .traceevent "O" 4 "R" "I" "r" 0 3 3 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 3 3 0 "total" ""
+   .meta "scoped_register_reuse.main.left"
+   .srcstep 4 4 17 "scoped_register_reuse.crexx" 17 5 26 "    total = total + right"
+   .meta "scoped_register_reuse.main.right"="b" ".int" "32"
+   .traceevent "V" 6 "R" "I" "r" 0 4 4 0 "total" ""
+   iadd r0,r0,32
+   .traceevent "O" 4 "R" "I" "r" 0 4 4 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 4 4 0 "total" ""
+   .meta "scoped_register_reuse.main.right"
+   .meta "scoped_register_reuse.main.object_left"="b" ".box" r1
+   .srcstep 5 5 17 "scoped_register_reuse.crexx" 21 5 23 "    object_left = .Box"
+   null r1
+   setobjuninit r1,"box"
+   endlife r1
+   .meta "scoped_register_reuse.main.object_left"
+   .meta "scoped_register_reuse.main.object_right"="b" ".box" r1
+   .srcstep 6 6 17 "scoped_register_reuse.crexx" 25 5 24 "    object_right = .Box"
+   null r1
+   setobjuninit r1,"box"
+   endlife r1
+   .meta "scoped_register_reuse.main.object_right"
+   .meta "scoped_register_reuse.main.reference_left"="b" "reference .int" r1
+   .srcstep 7 7 17 "scoped_register_reuse.crexx" 29 5 36 "    reference_left = reference .int"
+   null r1
+   endlife r1
+   .meta "scoped_register_reuse.main.reference_left"
+   .meta "scoped_register_reuse.main.reference_right"="b" "reference .int" r1
+   .srcstep 8 8 17 "scoped_register_reuse.crexx" 33 5 37 "    reference_right = reference .int"
+   null r1
+   endlife r1
+   .meta "scoped_register_reuse.main.reference_right"
+   .meta "scoped_register_reuse.main.binary_left"="b" ".binary" r1
+   .srcstep 9 9 17 "scoped_register_reuse.crexx" 37 5 26 "    binary_left = .binary"
+   null r1
+   endlife r1
+   .meta "scoped_register_reuse.main.binary_left"
+   .meta "scoped_register_reuse.main.binary_right"="b" ".binary" r1
+   .srcstep 10 10 17 "scoped_register_reuse.crexx" 41 5 27 "    binary_right = .binary"
+   null r1
+   endlife r1
+   .meta "scoped_register_reuse.main.binary_right"
+   .meta "scoped_register_reuse.main.array_left"="b" ".int[2]" r1
+   .srcstep 11 11 17 "scoped_register_reuse.crexx" 45 5 24 "    array_left = .int[2]"
+   null r1
+   endlife r1
+   .meta "scoped_register_reuse.main.array_left"
+   .meta "scoped_register_reuse.main.array_right"="b" ".int[2]" r1
+   .srcstep 12 12 17 "scoped_register_reuse.crexx" 49 5 25 "    array_right = .int[2]"
+   null r1
+   endlife r1
+   .meta "scoped_register_reuse.main.array_right"
+   .srcstep 14 14 17 "scoped_register_reuse.crexx" 52 3 17 "  if total <> 42 then return 1"
+   .traceevent "V" 6 "R" "I" "r" 0 14 14 0 "total" ""
+   ine r1,r0,42
+   .traceevent "O" 4 "R" "B" "r" 1 14 14 0 "" ""
+   brf l83iffalse,r1
+   .srcstep 15 15 17 "scoped_register_reuse.crexx" 52 18 22 "  if total <> 42 then return 1"
+   .srcstep 13 13 17 "scoped_register_reuse.crexx" 52 23 31 "  if total <> 42 then return 1"
+   ret 1
+l83iffalse:
+   .srcstep 16 16 17 "scoped_register_reuse.crexx" 53 3 11 "  return 0"
+   ret 0
+   .meta "scoped_register_reuse.main.total"

@@ -71,7 +71,6 @@ l25dostart:
    icopy r4,r2
    br l117bexprend
 l117bexprend:
-   endlife r3
    brf l25doend,r4
    .srcstep 21 21 17 "inline_test_condition_contexts.crexx" 14 5 18 "    say \"while\" i"
    itos r0
@@ -121,7 +120,6 @@ l43doinc:
    icopy r2,r3
    br l126bexprend
 l126bexprend:
-   endlife r4
    brt l43doend,r2
    .srcstep 33 33 17 "inline_test_condition_contexts.crexx" 22 3 6 "  end"
    br l43dostart

@@ -54,8 +54,6 @@ l8doinc:
    .srcstep 8 8 17 "inline_test1.crexx" 10 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
-   endlife r1
    .meta "inline_test1.main.i"
    .meta "inline_test1.main.result"
    .srcstep 9 9 17 "inline_test1.crexx" 11 3 23 "  say \"Loop finished.\""

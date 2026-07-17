@@ -119,7 +119,6 @@ l486dispatchend:
    icopy r13,r14
    br l251bexprend
 l251bexprend:
-   endlife r4
    itos r13
    say r13
    .srcstep 36 36 17 "select_dispatch_integer.crexx" 10 5 22 "    say no_default(i)"
@@ -176,7 +175,6 @@ l331ifend:
    icopy r12,r13
    br l319bexprend
 l319bexprend:
-   endlife r14
    itos r12
    say r12
    .srcstep 64 64 17 "select_dispatch_integer.crexx" 11 5 34 "    say nested_classify(i, inner)"
@@ -292,8 +290,6 @@ l367ifend:
    icopy r12,r18
    br l352bexprend
 l352bexprend:
-   endlife r14
-   endlife r13
    itos r12
    say r12
 l12doinc:

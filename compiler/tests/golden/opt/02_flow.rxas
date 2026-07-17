@@ -37,7 +37,6 @@ l15doinc:
    .srcstep 7 7 17 "02_flow.crexx" 9 1 4 "end"
    br l15dostart
 l15doend:
-   endlife r0
    .meta "02_flow.main.i"
    .srcstep 8 8 1 "02_flow.crexx" 7 10 10 "    say i"
    ret

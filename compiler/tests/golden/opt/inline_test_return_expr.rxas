@@ -43,7 +43,6 @@ l8dostart:
    icopy r5,r6
    br l49bexprend
 l49bexprend:
-   endlife r3
    itos r5
    say r5
 l8doinc:
@@ -52,7 +51,6 @@ l8doinc:
    .srcstep 10 10 17 "inline_test_return_expr.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
    .meta "inline_test_return_expr.main.i"
    .srcstep 11 11 17 "inline_test_return_expr.crexx" 8 3 42 "  say \"Return inline expr test finished.\""
    say "Return inline expr test finished."

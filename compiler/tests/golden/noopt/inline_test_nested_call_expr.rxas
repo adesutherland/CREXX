@@ -45,7 +45,6 @@ l8doinc:
    .srcstep 7 7 17 "inline_test_nested_call_expr.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
    .meta "inline_test_nested_call_expr.main.i"
    .srcstep 8 8 17 "inline_test_nested_call_expr.crexx" 8 3 47 "  say \"Nested call inline expr test finished.\""
    say "Nested call inline expr test finished."

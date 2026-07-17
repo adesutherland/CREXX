@@ -41,7 +41,6 @@ l8dostart:
    icopy r6,r5
    br l46bexprend
 l46bexprend:
-   endlife r4
    iadd r1,r6,10
    .traceevent "O" 4 "R" "I" "r" 1 8 8 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 1 8 8 0 "result" ""
@@ -57,8 +56,6 @@ l8doinc:
    .srcstep 11 11 17 "inline_test_expr.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
-   endlife r1
    .meta "inline_test_expr.main.i"
    .meta "inline_test_expr.main.result"
    .srcstep 12 12 17 "inline_test_expr.crexx" 9 3 35 "  say \"Inline expr test finished.\""

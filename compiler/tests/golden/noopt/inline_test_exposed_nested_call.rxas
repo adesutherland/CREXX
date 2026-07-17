@@ -48,8 +48,6 @@ l8doinc:
    .srcstep 8 8 17 "inline_test_exposed_nested_call.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
-   endlife r1
    .meta "inline_test_exposed_nested_call.main.i"
    .meta "inline_test_exposed_nested_call.main.result"
    .srcstep 9 9 17 "inline_test_exposed_nested_call.crexx" 9 3 50 "  say \"Exposed nested call inline test finished.\""

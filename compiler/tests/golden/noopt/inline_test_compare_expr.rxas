@@ -60,7 +60,6 @@ l8doinc:
    .srcstep 11 11 17 "inline_test_compare_expr.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
    .meta "inline_test_compare_expr.main.i"
    .srcstep 12 12 17 "inline_test_compare_expr.crexx" 9 3 43 "  say \"Compare inline expr test finished.\""
    say "Compare inline expr test finished."

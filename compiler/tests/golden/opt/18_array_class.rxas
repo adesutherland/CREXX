@@ -135,9 +135,7 @@ l196doinc:
    .srcstep 31 31 17 "18_array_class_main.crexx" 29 5 8 "    end"
    br l196dostart
 l196doend:
-   endlife r9
    endlife r8
-   endlife r7
    .srcstep 32 32 17 "18_array_class_main.crexx" 30 5 15 "    return val"
    .traceevent "V" 6 "R" "S" "r" 6 34 34 0 "val" ""
    scopy r14,r6
@@ -145,7 +143,6 @@ l196doend:
 l165bexprend:
    endlife r3
    endlife r5
-   endlife r6
    say r14
    .srcstep 35 35 17 "18_array_class_main.crexx" 14 1 11 "say \"Done\""
    say "Done"

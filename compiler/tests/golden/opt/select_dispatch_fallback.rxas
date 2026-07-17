@@ -89,7 +89,6 @@ l138ifend:
    icopy r10,r11
    br l126bexprend
 l126bexprend:
-   endlife r3
    itos r10
    say r10
    .srcstep 37 37 17 "select_dispatch_fallback.crexx" 8 5 32 "    say dynamic_case(i, i + 10)"
@@ -161,8 +160,6 @@ l179ifend:
    icopy r9,r13
    br l162bexprend
 l162bexprend:
-   endlife r11
-   endlife r10
    itos r9
    say r9
 l9doinc:

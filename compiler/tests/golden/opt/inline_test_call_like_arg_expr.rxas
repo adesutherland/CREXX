@@ -47,7 +47,6 @@ l8dostart:
    icopy r8,r7
    br l94bexprend
 l94bexprend:
-   endlife r6
    icopy r4,r8
    .traceevent "A" 6 "R" "I" "r" 4 10 10 0 "initialvalue" ""
    .srcstep 11 11 17 "inline_test_call_like_arg_expr.crexx" 21 5 23 "    val = initialValue"
@@ -79,7 +78,6 @@ l94bexprend:
    icopy r10,r6
    br l125bexprend
 l125bexprend:
-   endlife r7
    icopy r8,r10
    .traceevent "A" 6 "R" "I" "r" 8 18 18 0 "amount" ""
    .srcstep 19 19 17 "inline_test_call_like_arg_expr.crexx" 26 5 24 "    return val + amount"
@@ -92,7 +90,6 @@ l125bexprend:
    icopy r6,r7
    br l118bexprend
 l118bexprend:
-   endlife r8
    itos r6
    say r6
 l8doinc:
@@ -102,7 +99,6 @@ l8doinc:
    br l8dostart
 l8doend:
    endlife r0
-   endlife r1
    .meta "inline_test_call_like_arg_expr.main.box"
    .meta "inline_test_call_like_arg_expr.main.i"
    .srcstep 24 24 17 "inline_test_call_like_arg_expr.crexx" 9 3 49 "  say \"Call-like arg inline expr test finished.\""

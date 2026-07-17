@@ -148,9 +148,7 @@ l70doinc:
    .srcstep 27 27 17 "18_array_class_main.crexx" 29 5 8 "    end"
    br l70dostart
 l70doend:
-   endlife r4
    endlife r3
-   endlife r5
    .meta "18_array_class_main.process.i"
    .meta "18_array_class_main.process.it_i"
    .meta "18_array_class_main.process.val_i"

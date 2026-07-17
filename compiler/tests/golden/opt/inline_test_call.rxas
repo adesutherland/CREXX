@@ -57,7 +57,6 @@ l8doinc:
    .srcstep 10 10 17 "inline_test_call.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
    .meta "inline_test_call.main.i"
    .srcstep 11 11 17 "inline_test_call.crexx" 8 3 35 "  say \"Inline call test finished.\""
    say "Inline call test finished."

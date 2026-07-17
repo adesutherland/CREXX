@@ -48,7 +48,6 @@ l157iffalse:
    icopy r2,r3
    br l141bexprend
 l141bexprend:
-   endlife r1
    iadd r0,r0,r2
    .traceevent "O" 4 "R" "I" "r" 0 11 11 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 11 11 0 "errors" ""
@@ -83,7 +82,6 @@ l192iffalse:
    icopy r1,r2
    br l176bexprend
 l176bexprend:
-   endlife r3
    iadd r0,r0,r1
    .traceevent "O" 4 "R" "I" "r" 0 21 21 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 21 21 0 "errors" ""
@@ -118,7 +116,6 @@ l227iffalse:
    icopy r1,r2
    br l211bexprend
 l211bexprend:
-   endlife r3
    iadd r0,r0,r1
    .traceevent "O" 4 "R" "I" "r" 0 31 31 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 31 31 0 "errors" ""
@@ -153,7 +150,6 @@ l262iffalse:
    icopy r1,r2
    br l246bexprend
 l246bexprend:
-   endlife r3
    iadd r0,r0,r1
    .traceevent "O" 4 "R" "I" "r" 0 41 41 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 41 41 0 "errors" ""
@@ -188,7 +184,6 @@ l297iffalse:
    icopy r1,r2
    br l281bexprend
 l281bexprend:
-   endlife r3
    iadd r0,r0,r1
    .traceevent "O" 4 "R" "I" "r" 0 51 51 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 51 51 0 "errors" ""
@@ -223,7 +218,6 @@ l332iffalse:
    icopy r1,r2
    br l316bexprend
 l316bexprend:
-   endlife r3
    iadd r0,r0,r1
    .traceevent "O" 4 "R" "I" "r" 0 61 61 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 61 61 0 "errors" ""
@@ -258,7 +252,6 @@ l367iffalse:
    icopy r1,r2
    br l351bexprend
 l351bexprend:
-   endlife r3
    iadd r0,r0,r1
    .traceevent "O" 4 "R" "I" "r" 0 71 71 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 71 71 0 "errors" ""
@@ -293,7 +286,6 @@ l402iffalse:
    icopy r1,r2
    br l386bexprend
 l386bexprend:
-   endlife r3
    iadd r0,r0,r1
    .traceevent "O" 4 "R" "I" "r" 0 81 81 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 81 81 0 "errors" ""
@@ -328,7 +320,6 @@ l437iffalse:
    icopy r1,r2
    br l421bexprend
 l421bexprend:
-   endlife r3
    iadd r0,r0,r1
    .traceevent "O" 4 "R" "I" "r" 0 91 91 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 91 91 0 "errors" ""
@@ -363,7 +354,6 @@ l472iffalse:
    icopy r1,r2
    br l456bexprend
 l456bexprend:
-   endlife r3
    iadd r0,r0,r1
    .traceevent "O" 4 "R" "I" "r" 0 101 101 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 101 101 0 "errors" ""

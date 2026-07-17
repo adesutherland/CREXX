@@ -107,7 +107,6 @@ l937dispatchend:
    icopy r11,r12
    br l522bexprend
 l522bexprend:
-   endlife r3
    itos r11
    say r11
    .srcstep 32 32 17 "select_dispatch_general.crexx" 10 5 32 "    say classic_classify(index)"
@@ -189,7 +188,6 @@ l955dispatchend:
    icopy r10,r11
    br l583bexprend
 l583bexprend:
-   endlife r12
    itos r10
    say r10
    .srcstep 69 69 17 "select_dispatch_general.crexx" 11 5 31 "    say strict_classify(index)"
@@ -336,7 +334,6 @@ l649ifend:
    icopy r19,r20
    br l644bexprend
 l644bexprend:
-   endlife r12
    itos r19
    say r19
    .srcstep 95 95 17 "select_dispatch_general.crexx" 12 5 36 "    say mixed_if(index + 11, index)"
@@ -435,8 +432,6 @@ l715ifend:
    icopy r17,r18
    br l705bexprend
 l705bexprend:
-   endlife r20
-   endlife r19
    itos r17
    say r17
 l20doinc:

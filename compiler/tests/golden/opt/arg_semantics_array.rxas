@@ -81,7 +81,6 @@ l184bexprend:
    scopy r1,r3
    br l329bexprend
 l329bexprend:
-   endlife r3
    scopy r4,r1
    .traceevent "A" 6 "R" "S" "r" 4 13 13 0 "value" ""
    unlink r4
@@ -187,7 +186,6 @@ l250bexprend:
    scopy r1,r4
    br l343bexprend
 l343bexprend:
-   endlife r4
    scopy r5,r1
    .traceevent "A" 6 "R" "S" "r" 5 31 31 0 "value" ""
    unlink r5
@@ -249,7 +247,6 @@ l244bexprend:
    scopy r4,r7
    br l357bexprend
 l357bexprend:
-   endlife r7
    scopy r10,r4
    .traceevent "A" 6 "R" "S" "r" 10 41 41 0 "arr" ""
    unlink r10
@@ -309,7 +306,6 @@ l82d:
    scopy r5,r2
    br l301bexprend
 l301bexprend:
-   endlife r2
    scopy r1,r5
    .traceevent "A" 6 "R" "S" "r" 1 53 53 0 "value" ""
    unlink r1
@@ -375,7 +371,6 @@ mutateArrayRef() .locals=6
    scopy r5,r1
    br l315bexprend
 l315bexprend:
-   endlife r1
    scopy r2,r5
    .traceevent "A" 6 "R" "S" "r" 2 63 63 0 "value" ""
    unlink r2

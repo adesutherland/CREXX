@@ -96,7 +96,6 @@ l29doinc:
    .srcstep 15 15 17 "inline_test_vararg_dynamic_loop.crexx" 12 33 34 "    if arg[i] > m then m = arg[i]"
    br l29dostart
 l29doend:
-   endlife r1
    .meta "inline_test_vararg_dynamic_loop.localmax.i"
    .srcstep 16 16 17 "inline_test_vararg_dynamic_loop.crexx" 14 1 9 "return m"
    .traceevent "V" 6 "R" "F" "r" 0 16 16 0 "m" ""

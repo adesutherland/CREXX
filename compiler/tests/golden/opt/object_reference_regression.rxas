@@ -70,7 +70,6 @@ l417doinc:
    .srcstep 10 10 17 "object_reference_regression.crexx" 71 5 8 "    end"
    br l417dostart
 l417doend:
-   endlife r4
    .srcstep 11 11 17 "object_reference_regression.crexx" 72 5 22 "    values = t_values"
    .traceevent "V" 6 "R" "S" "r" 2 11 11 0 "t_values" ""
    linkattr1 r9,r3,11
@@ -203,7 +202,6 @@ l417doend:
    scopy r17,r6
    br l749bexprend
 l749bexprend:
-   endlife r9
    concat r17,"factory-summary=",r17
    .traceevent "O" 4 "R" "S" "r" 17 33 33 0 "" ""
    say r17
@@ -327,7 +325,6 @@ l836doinc:
    .srcstep 56 56 17 "object_reference_regression.crexx" 71 5 8 "    end"
    br l836dostart
 l836doend:
-   endlife r17
    .srcstep 57 57 17 "object_reference_regression.crexx" 72 5 22 "    values = t_values"
    .traceevent "V" 6 "R" "S" "r" 20 57 57 0 "t_values" ""
    linkattr1 r17,r21,11
@@ -459,7 +456,6 @@ l836doend:
    scopy r26,r13
    br l991bexprend
 l991bexprend:
-   endlife r17
    concat r26,"ref-rebind=",r26
    .traceevent "O" 4 "R" "S" "r" 26 80 80 0 "" ""
    say r26
@@ -585,7 +581,6 @@ l991bexprend:
    scopy r4,r30
    br l1069bexprend
 l1069bexprend:
-   endlife r32
    concat r32,"ref-mutate=",r4
    .traceevent "O" 4 "R" "S" "r" 32 99 99 0 "" ""
    say r32
@@ -637,7 +632,6 @@ l1130doinc:
    .srcstep 110 110 17 "object_reference_regression.crexx" 71 5 8 "    end"
    br l1130dostart
 l1130doend:
-   endlife r32
    .srcstep 111 111 17 "object_reference_regression.crexx" 72 5 22 "    values = t_values"
    .traceevent "V" 6 "R" "S" "r" 36 111 111 0 "t_values" ""
    linkattr1 r32,r37,11
@@ -769,7 +763,6 @@ l1130doend:
    scopy r42,r13
    br l1213bexprend
 l1213bexprend:
-   endlife r32
    copy r0,r42
    .traceevent "A" 6 "R" "S" "r" 0 133 133 0 "local_summary" ""
    .srcstep 135 135 17 "object_reference_regression.crexx" 16 3 40 "  say \"local-replace=\" || local_summary"
@@ -836,7 +829,6 @@ l1213bexprend:
    scopy r4,r32
    br l1245bexprend
 l1245bexprend:
-   endlife r42
    concat r42,"local-after=",r4
    .traceevent "O" 4 "R" "S" "r" 42 142 142 0 "" ""
    say r42
@@ -962,7 +954,6 @@ l191doinc:
    .srcstep 246 246 17 "object_reference_regression.crexx" 71 5 8 "    end"
    br l191dostart
 l191doend:
-   endlife r3
    .meta "object_reference_regression.largepayload.§factory.i"
    .srcstep 247 247 17 "object_reference_regression.crexx" 72 5 22 "    values = t_values"
    .traceevent "V" 6 "R" "S" "r" 1 247 247 0 "t_values" ""

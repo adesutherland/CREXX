@@ -42,7 +42,6 @@ l8doinc:
    .srcstep 7 7 17 "inline_test_nested_scope_if_do.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
    .meta "inline_test_nested_scope_if_do.main.i"
    .srcstep 8 8 17 "inline_test_nested_scope_if_do.crexx" 8 3 49 "  say \"Nested scope if-do inline test finished.\""
    say "Nested scope if-do inline test finished."
@@ -76,7 +75,6 @@ classify() .locals=3
    .srcstep 14 14 17 "inline_test_nested_scope_if_do.crexx" 16 5 15 "    return tmp"
    .traceevent "V" 6 "R" "I" "r" 2 14 14 0 "tmp" ""
    ret r2
-   endlife r2
    .meta "inline_test_nested_scope_if_do.classify.tmp"
 l43iffalse:
    .srcstep 17 17 17 "inline_test_nested_scope_if_do.crexx" 18 3 13 "  return val"

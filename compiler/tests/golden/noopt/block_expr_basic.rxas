@@ -38,7 +38,6 @@ l16iffalse:
    icopy r3,r4
    br l19bexprend
 l19bexprend:
-   endlife r2
    .meta "block_expr_basic.main.a"
    iadd r1,r3,10
    .traceevent "O" 4 "R" "I" "r" 1 7 7 0 "" ""
@@ -74,7 +73,6 @@ l36iffalse:
    icopy r2,r3
    br l39bexprend
 l39bexprend:
-   endlife r4
    .meta "block_expr_basic.main.x"
    iadd r4,r2,100
    .traceevent "O" 4 "R" "I" "r" 4 17 17 0 "" ""
@@ -99,7 +97,6 @@ l43bexprend:
    icopy r3,r4
    br l54bexprend
 l54bexprend:
-   endlife r4
    .meta "block_expr_basic.main.y"
    iadd r4,r3,1
    itos r4

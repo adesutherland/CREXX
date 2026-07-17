@@ -725,11 +725,36 @@ foreach(_mode IN ITEMS noopt)
            "list(LENGTH left_meta_entries left_meta_count)\n"
            "if(NOT left_meta_count EQUAL 2)\n"
            "  message(FATAL_ERROR \"Expected definition and clear metadata records for left scoped local in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
-           "endif()\n"
-           "if(NOT rxas_${_mode}_out MATCHES \"endlife r${RXAS_DIAG_DOLLAR}{left_reg}\")\n"
-           "  message(FATAL_ERROR \"Scoped local reference lifetime cleanup missing before register reuse in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
            "endif()\n")
 endforeach()
+string(APPEND RXC_SCOPED_REGISTER_REUSE_CONTENT
+       "function(assert_scope_lifetime symbol reg expected)\n"
+       "  set(definition \".meta \\\"scoped_register_reuse.main.${RXAS_DIAG_DOLLAR}{symbol}\\\"=\\\"b\\\"\")\n"
+       "  set(clear \"\\n   .meta \\\"scoped_register_reuse.main.${RXAS_DIAG_DOLLAR}{symbol}\\\"\\n\")\n"
+       "  string(FIND \"${RXAS_DIAG_DOLLAR}{rxas_noopt_out}\" \"${RXAS_DIAG_DOLLAR}{definition}\" scope_start)\n"
+       "  string(FIND \"${RXAS_DIAG_DOLLAR}{rxas_noopt_out}\" \"${RXAS_DIAG_DOLLAR}{clear}\" scope_end)\n"
+       "  if(scope_start EQUAL -1 OR scope_end EQUAL -1 OR NOT scope_end GREATER scope_start)\n"
+       "    message(FATAL_ERROR \"Could not isolate scoped lifetime block for ${RXAS_DIAG_DOLLAR}{symbol}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_noopt_out}\")\n"
+       "  endif()\n"
+       "  math(EXPR scope_length \"${RXAS_DIAG_DOLLAR}{scope_end} - ${RXAS_DIAG_DOLLAR}{scope_start}\")\n"
+       "  string(SUBSTRING \"${RXAS_DIAG_DOLLAR}{rxas_noopt_out}\" ${RXAS_DIAG_DOLLAR}{scope_start} ${RXAS_DIAG_DOLLAR}{scope_length} scope_block)\n"
+       "  string(FIND \"${RXAS_DIAG_DOLLAR}{scope_block}\" \"endlife r${RXAS_DIAG_DOLLAR}{reg}\" endlife_pos)\n"
+       "  if(expected STREQUAL \"absent\" AND NOT endlife_pos EQUAL -1)\n"
+       "    message(FATAL_ERROR \"Reference-lifetime-free scalar ${RXAS_DIAG_DOLLAR}{symbol} retained endlife.\\nBlock:\\n${RXAS_DIAG_DOLLAR}{scope_block}\")\n"
+       "  elseif(expected STREQUAL \"present\" AND endlife_pos EQUAL -1)\n"
+       "    message(FATAL_ERROR \"Reference-capable scoped local ${RXAS_DIAG_DOLLAR}{symbol} lost endlife.\\nBlock:\\n${RXAS_DIAG_DOLLAR}{scope_block}\")\n"
+       "  endif()\n"
+       "endfunction()\n"
+       "assert_scope_lifetime(left ${RXAS_DIAG_DOLLAR}{left_reg} absent)\n"
+       "assert_scope_lifetime(right ${RXAS_DIAG_DOLLAR}{right_reg} absent)\n"
+       "assert_scope_lifetime(object_left ${RXAS_DIAG_DOLLAR}{object_left_reg} present)\n"
+       "assert_scope_lifetime(object_right ${RXAS_DIAG_DOLLAR}{object_right_reg} present)\n"
+       "assert_scope_lifetime(reference_left ${RXAS_DIAG_DOLLAR}{reference_left_reg} present)\n"
+       "assert_scope_lifetime(reference_right ${RXAS_DIAG_DOLLAR}{reference_right_reg} present)\n"
+       "assert_scope_lifetime(binary_left ${RXAS_DIAG_DOLLAR}{binary_left_reg} present)\n"
+       "assert_scope_lifetime(binary_right ${RXAS_DIAG_DOLLAR}{binary_right_reg} present)\n"
+       "assert_scope_lifetime(array_left ${RXAS_DIAG_DOLLAR}{array_left_reg} present)\n"
+       "assert_scope_lifetime(array_right ${RXAS_DIAG_DOLLAR}{array_right_reg} present)\n")
 file(GENERATE OUTPUT "${RXC_SCOPED_REGISTER_REUSE_SCRIPT}" CONTENT "${RXC_SCOPED_REGISTER_REUSE_CONTENT}")
 
 add_test(NAME rxc_scoped_register_reuse

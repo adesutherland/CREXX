@@ -38,8 +38,6 @@ main() .locals=14
    icopy r2,r0
    br l338bexprend
 l338bexprend:
-   endlife r0
-   endlife r1
    itos r2
    say r2
    .srcstep 36 36 17 "basic_strings.crexx" 12 1 20 "say substr(c, 1, 5)"
@@ -193,17 +191,6 @@ l513iffalse:
    scopy r13,r7
    br l351bexprend
 l351bexprend:
-   endlife r2
-   endlife r1
-   endlife r0
-   endlife r3
-   endlife r4
-   endlife r5
-   endlife r6
-   endlife r7
-   endlife r8
-   endlife r9
-   endlife r10
    .meta "basic_strings.main.available"
    .meta "basic_strings.main.copy_length"
    .meta "basic_strings.main.pad_character"
@@ -255,9 +242,6 @@ l549iffalse:
    icopy r9,r13
    br l528bexprend
 l528bexprend:
-   endlife r13
-   endlife r11
-   endlife r10
    .meta "basic_strings.main.found_position"
    itos r9
    say r9

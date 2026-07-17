@@ -63,7 +63,6 @@ l66iffalse:
    icopy r5,r6
    br l54bexprend
 l54bexprend:
-   endlife r4
    icopy r1,r5
    .traceevent "A" 6 "R" "I" "r" 1 14 14 0 "result" ""
    .srcstep 15 15 17 "inline_test_multi_return_assign.crexx" 7 5 15 "    say result"
@@ -76,8 +75,6 @@ l8doinc:
    .srcstep 17 17 17 "inline_test_multi_return_assign.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
-   endlife r1
    .meta "inline_test_multi_return_assign.main.i"
    .meta "inline_test_multi_return_assign.main.result"
    .srcstep 18 18 17 "inline_test_multi_return_assign.crexx" 9 3 50 "  say \"Multi return assign inline test finished.\""

@@ -410,7 +410,6 @@ l749dispatchend:
    icopy r32,r33
    br l331bexprend
 l331bexprend:
-   endlife r6
    itos r32
    say r32
    .srcstep 86 86 17 "select_dispatch_mixed.crexx" 20 5 16 "    say counter"

@@ -1,0 +1,3 @@
+command=/Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxdas -o <temporary-disassembly> /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-08-lifetime-poc/candidate/artifacts/library.rxbin
+8a04559e19a6b73bca54cfa1e232d898b9aa1a549fb201a3b045d23600914d17  /Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxdas
+6d1ae40af463fd53633f44603a57cc2291aaa3149bb4ef0d04a67511ea04cf13  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-08-lifetime-poc/candidate/artifacts/library.rxbin

@@ -45,7 +45,6 @@ l8dostart:
    .traceevent "V" 6 "R" "I" "r" 4 11 11 0 "step" ""
    icopy r5,r4
    br l48bexprend
-   endlife r4
    .meta "inline_test_nested_scope_do.main.step"
    .srcstep 9 9 17 "inline_test_nested_scope_do.crexx" 18 3 11 "  return 0"
    load r4,0
@@ -53,7 +52,6 @@ l8dostart:
    icopy r5,r4
    br l48bexprend
 l48bexprend:
-   endlife r3
    itos r5
    say r5
 l8doinc:
@@ -62,7 +60,6 @@ l8doinc:
    .srcstep 13 13 17 "inline_test_nested_scope_do.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
    .meta "inline_test_nested_scope_do.main.i"
    .srcstep 14 14 17 "inline_test_nested_scope_do.crexx" 8 3 46 "  say \"Nested scope do inline test finished.\""
    say "Nested scope do inline test finished."

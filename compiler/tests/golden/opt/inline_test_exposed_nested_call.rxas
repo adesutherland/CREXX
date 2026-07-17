@@ -45,7 +45,6 @@ l8dostart:
    icopy r7,r6
    br l75bexprend
 l75bexprend:
-   endlife r5
    iadd r1,r7,10
    .traceevent "O" 4 "R" "I" "r" 1 9 9 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 1 9 9 0 "result" ""
@@ -62,8 +61,6 @@ l8doinc:
    .srcstep 13 13 17 "inline_test_exposed_nested_call.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
-   endlife r1
    .meta "inline_test_exposed_nested_call.main.i"
    .meta "inline_test_exposed_nested_call.main.result"
    .srcstep 14 14 17 "inline_test_exposed_nested_call.crexx" 9 3 50 "  say \"Exposed nested call inline test finished.\""

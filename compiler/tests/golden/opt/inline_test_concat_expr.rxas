@@ -40,7 +40,6 @@ l8dostart:
    scopy r5,r4
    br l42bexprend
 l42bexprend:
-   endlife r4
    concat r1,"Value=",r5
    .traceevent "O" 4 "R" "S" "r" 1 8 8 0 "" ""
    .traceevent "A" 6 "R" "S" "r" 1 8 8 0 "msg" ""
@@ -53,8 +52,6 @@ l8doinc:
    .srcstep 11 11 17 "inline_test_concat_expr.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
-   endlife r1
    .meta "inline_test_concat_expr.main.i"
    .meta "inline_test_concat_expr.main.msg"
    .srcstep 12 12 17 "inline_test_concat_expr.crexx" 9 3 42 "  say \"Concat inline expr test finished.\""

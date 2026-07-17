@@ -344,7 +344,6 @@ l191doinc:
    .srcstep 46 46 17 "object_reference_regression.crexx" 71 5 8 "    end"
    br l191dostart
 l191doend:
-   endlife r3
    .meta "object_reference_regression.largepayload.§factory.i"
    .srcstep 47 47 17 "object_reference_regression.crexx" 72 5 22 "    values = t_values"
    .traceevent "V" 6 "R" "S" "r" 1 47 47 0 "t_values" ""

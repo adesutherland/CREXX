@@ -64,7 +64,6 @@ l7doinc:
    .srcstep 12 12 17 "basic_loops.crexx" 7 1 4 "end"
    br l7dostart
 l7doend:
-   endlife r3
    .meta "basic_loops.main.i"
    .srcstep 13 13 17 "basic_loops.crexx" 9 1 6 "j = 3"
    .meta "basic_loops.main.j"="b" ".int" r1
