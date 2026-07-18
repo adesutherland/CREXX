@@ -6,11 +6,7 @@
 
 main() .locals=6
    .meta "repro_array_arg.main"="b" ".int" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "repro_array_arg.main.s"="b" ".string[*]" r2
    .srcstep 1 1 17 "repro_array_arg.crexx" 4 1 14 "s.1 = \"first\""
    null r2

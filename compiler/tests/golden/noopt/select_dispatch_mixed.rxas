@@ -7,11 +7,7 @@
 main() .locals=10
    .meta "select_dispatch_mixed.main"="b" ".int" main() ""
    .srcstep 24 24 17 "select_dispatch_mixed.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "select_dispatch_mixed.main.counter"="b" ".int" r0
    .srcstep 1 1 17 "select_dispatch_mixed.crexx" 4 3 17 "  counter = .int"
    null r0
@@ -167,11 +163,7 @@ l50doend:
 mixed_classify() .locals=17
    .meta "select_dispatch_mixed.mixed_classify"="b" ".int" mixed_classify() "value=.int,expose counter=.int"
    .srcstep 76 76 17 "select_dispatch_mixed.crexx" 27 1 33 "mixed_classify: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 25 25 17 "select_dispatch_mixed.crexx" 28 7 19 "  arg value = .int, expose counter = .int"
    .meta "select_dispatch_mixed.mixed_classify.value"="b" ".int" a1
    .srcstep 26 26 17 "select_dispatch_mixed.crexx" 28 21 42 "  arg value = .int, expose counter = .int"
@@ -383,11 +375,7 @@ l331dispatchend:
 otherwise_if() .locals=9
    .meta "select_dispatch_mixed.otherwise_if"="b" ".int" otherwise_if() "value=.int,probe=.int"
    .srcstep 96 96 17 "select_dispatch_mixed.crexx" 55 1 31 "otherwise_if: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 77 77 17 "select_dispatch_mixed.crexx" 56 7 19 "  arg value = .int, probe = .int"
    .meta "select_dispatch_mixed.otherwise_if.value"="b" ".int" a1
    .srcstep 78 78 17 "select_dispatch_mixed.crexx" 56 21 33 "  arg value = .int, probe = .int"
@@ -459,11 +447,7 @@ l322ifend:
 dynamic_key() .locals=2
    .meta "select_dispatch_mixed.dynamic_key"="b" ".int" dynamic_key() "expose counter=.int,key=.int"
    .srcstep 101 101 17 "select_dispatch_mixed.crexx" 68 1 30 "dynamic_key: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 97 97 17 "select_dispatch_mixed.crexx" 69 7 28 "  arg expose counter = .int, key = .int"
    .meta "select_dispatch_mixed.dynamic_key.counter"="b" ".int" a1
    .srcstep 98 98 17 "select_dispatch_mixed.crexx" 69 30 40 "  arg expose counter = .int, key = .int"

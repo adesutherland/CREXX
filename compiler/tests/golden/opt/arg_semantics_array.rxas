@@ -7,11 +7,7 @@
 main() .locals=13
    .meta "arg_semantics_array.main"="b" ".int" main() ""
    .srcstep 45 45 17 "arg_semantics_array.crexx" 4 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "arg_semantics_array.main.arr"="b" ".string[*]" r0
    .srcstep 1 1 17 "arg_semantics_array.crexx" 5 3 16 "  arr = .string[]"
    null r0
@@ -273,11 +269,7 @@ l357bexprend:
 mutateArrayLocal() .locals=6
    .meta "arg_semantics_array.mutatearraylocal"="b" ".string" mutateArrayLocal() "value=.string[*]"
    .srcstep 56 56 17 "arg_semantics_array.crexx" 21 1 38 "mutateArrayLocal: procedure = .string"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 48 48 17 "arg_semantics_array.crexx" 22 7 22 "  arg value = .string[]"
    .meta "arg_semantics_array.mutatearraylocal.value"="b" ".string[*]" r0
    brtpandt l82c,a1,512
@@ -336,11 +328,7 @@ l301bexprend:
 mutateArrayRef() .locals=6
    .meta "arg_semantics_array.mutatearrayref"="b" ".void" mutateArrayRef() "expose value=.string[*]"
    .srcstep 65 65 17 "arg_semantics_array.crexx" 27 1 34 "mutateArrayRef: procedure = .void"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 57 57 17 "arg_semantics_array.crexx" 28 7 29 "  arg expose value = .string[]"
    .meta "arg_semantics_array.mutatearrayref.value"="b" ".string[*]" a1
    .srcstep 58 58 17 "arg_semantics_array.crexx" 29 3 19 "  value[1] = \"ref\""

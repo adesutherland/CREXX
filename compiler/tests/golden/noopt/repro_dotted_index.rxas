@@ -6,11 +6,7 @@
 
 main() .locals=4
    .meta "repro_dotted_index.main"="b" ".int" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "repro_dotted_index.main.outbuf"="b" ".string[10]" r1
    .srcstep 1 1 17 "repro_dotted_index.crexx" 2 1 20 "outbuf = .string[10]"
    null r1

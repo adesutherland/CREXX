@@ -7,11 +7,7 @@
 main() .locals=8
    .meta "inline_test_array_multi_return_assign.main"="b" ".int" main() ""
    .srcstep 57 57 17 "inline_test_array_multi_return_assign.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "inline_test_array_multi_return_assign.main.left"="b" ".string[*]" r0
    .srcstep 1 1 17 "inline_test_array_multi_return_assign.crexx" 5 3 25 "  left = selectArray(-1)"
    null r0

@@ -21,11 +21,7 @@
 main() .locals=7
    .meta "object_reference_regression.main"="b" ".int" main() ""
    .srcstep 12 12 17 "object_reference_regression.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "object_reference_regression.crexx" 4 3 34 "  payload = .LargePayload(\"seed\")"
    .meta "object_reference_regression.main.payload"="b" ".largepayload" r1
    load r3,"seed"
@@ -136,11 +132,7 @@ main() .locals=7
 replacePayloadRef() .locals=4
    .meta "object_reference_regression.replacepayloadref"="b" ".void" replacePayloadRef() "expose item=.largepayload,label=.string"
    .srcstep 17 17 17 "object_reference_regression.crexx" 21 1 37 "replacePayloadRef: procedure = .void"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 13 13 17 "object_reference_regression.crexx" 22 7 34 "  arg expose item = .LargePayload, label = .string"
    .meta "object_reference_regression.replacepayloadref.item"="b" ".largepayload" a1
    .srcstep 14 14 17 "object_reference_regression.crexx" 22 36 51 "  arg expose item = .LargePayload, label = .string"
@@ -162,11 +154,7 @@ replacePayloadRef() .locals=4
 mutatePayloadRef() .locals=6
    .meta "object_reference_regression.mutatepayloadref"="b" ".void" mutatePayloadRef() "expose item=.largepayload,label=.string"
    .srcstep 22 22 17 "object_reference_regression.crexx" 26 1 36 "mutatePayloadRef: procedure = .void"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 18 18 17 "object_reference_regression.crexx" 27 7 34 "  arg expose item = .LargePayload, label = .string"
    .meta "object_reference_regression.mutatepayloadref.item"="b" ".largepayload" a1
    .srcstep 19 19 17 "object_reference_regression.crexx" 27 36 51 "  arg expose item = .LargePayload, label = .string"
@@ -191,11 +179,7 @@ mutatePayloadRef() .locals=6
 replacePayloadLocal() .locals=5
    .meta "object_reference_regression.replacepayloadlocal"="b" ".string" replacePayloadLocal() "item=.largepayload,label=.string"
    .srcstep 27 27 17 "object_reference_regression.crexx" 31 1 41 "replacePayloadLocal: procedure = .string"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 23 23 17 "object_reference_regression.crexx" 32 7 27 "  arg item = .LargePayload, label = .string"
    .meta "object_reference_regression.replacepayloadlocal.item"="b" ".largepayload" r0
    brtpandt l95c,a1,512
@@ -232,11 +216,7 @@ l95d:
    .srcstep 31 31 17 "object_reference_regression.crexx" 39 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"object_reference_regression.smallpayload"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 28 28 17 "object_reference_regression.crexx" 40 9 24 "    arg label = .string"
    .meta "object_reference_regression.smallpayload.§factory.label"="b" ".string" a1
    .meta "object_reference_regression.smallpayload.§factory.§factory"="b" ".smallpayload" r1
@@ -255,11 +235,7 @@ l95d:
    .meta "object_reference_regression.smallpayload.getname"="b" ".string" §object_reference_regression.smallpayload.getname() ""
    .srcstep 33 33 17 "object_reference_regression.crexx" 44 3 28 "  getName: method = .string"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 32 32 17 "object_reference_regression.crexx" 45 5 16 "    return name"
    .meta "object_reference_regression.smallpayload.getname.§this"="b" ".smallpayload" a1
    linkattr1 r1,a1,1
@@ -271,11 +247,7 @@ l95d:
    .meta "object_reference_regression.smallpayload.setname"="b" ".void" §object_reference_regression.smallpayload.setname() "label=.string"
    .srcstep 37 37 17 "object_reference_regression.crexx" 47 3 26 "  setName: method = .void"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 34 34 17 "object_reference_regression.crexx" 48 9 24 "    arg label = .string"
    .meta "object_reference_regression.smallpayload.setname.label"="b" ".string" a2
    .meta "object_reference_regression.smallpayload.setname.§this"="b" ".smallpayload" a1
@@ -294,11 +266,7 @@ l95d:
    .srcstep 58 58 17 "object_reference_regression.crexx" 65 3 13 "  *: factory"
    setattrs r2,12
    setobjtype r2,"object_reference_regression.largepayload"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 38 38 17 "object_reference_regression.crexx" 66 9 24 "    arg label = .string"
    .meta "object_reference_regression.largepayload.§factory.label"="b" ".string" a1
    .meta "object_reference_regression.largepayload.§factory.§factory"="b" ".largepayload" r2
@@ -428,11 +396,7 @@ l191doend:
    .meta "object_reference_regression.largepayload.rename"="b" ".void" §object_reference_regression.largepayload.rename() "label=.string"
    .srcstep 69 69 17 "object_reference_regression.crexx" 84 3 25 "  rename: method = .void"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 59 59 17 "object_reference_regression.crexx" 85 9 24 "    arg label = .string"
    .meta "object_reference_regression.largepayload.rename.label"="b" ".string" a2
    .meta "object_reference_regression.largepayload.rename.§this"="b" ".largepayload" a1
@@ -504,11 +468,7 @@ l191doend:
    .meta "object_reference_regression.largepayload.summary"="b" ".string" §object_reference_regression.largepayload.summary() ""
    .srcstep 72 72 17 "object_reference_regression.crexx" 95 3 28 "  summary: method = .string"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 70 70 17 "object_reference_regression.crexx" 96 5 31 "    child_name = child.getName()"
    .meta "object_reference_regression.largepayload.summary.child_name"="b" ".string" r0
    .meta "object_reference_regression.largepayload.summary.§this"="b" ".largepayload" a1
@@ -566,11 +526,7 @@ l191doend:
    .meta "object_reference_regression.largepayload.check"="b" ".string" §object_reference_regression.largepayload.check() ""
    .srcstep 83 83 17 "object_reference_regression.crexx" 99 3 26 "  check: method = .string"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 74 74 17 "object_reference_regression.crexx" 100 5 35 "    if values[17] \\= name || \":17\" then return \"bad-17\""
    linkattr1 r2,a1,11
    minattrs r2,17

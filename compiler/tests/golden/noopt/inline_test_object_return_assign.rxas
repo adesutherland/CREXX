@@ -9,11 +9,7 @@
 main() .locals=6
    .meta "inline_test_object_return_assign.main"="b" ".int" main() ""
    .srcstep 10 10 17 "inline_test_object_return_assign.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_object_return_assign.crexx" 4 3 53 "  say \"Starting object return assign inline test...\""
    say "Starting object return assign inline test..."
    .srcstep 2 2 17 "inline_test_object_return_assign.crexx" 5 3 25 "  box = buildBox(\"seed\")"
@@ -78,11 +74,7 @@ main() .locals=6
 buildBox() .locals=4
    .meta "inline_test_object_return_assign.buildbox"="b" ".inline_test_object_return_assign..box" buildBox() "initial=.string"
    .srcstep 14 14 17 "inline_test_object_return_assign.crexx" 14 1 27 "buildBox: procedure = .Box"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 11 11 17 "inline_test_object_return_assign.crexx" 15 7 24 "  arg initial = .string"
    .meta "inline_test_object_return_assign.buildbox.initial"="b" ".string" a1
    .srcstep 12 12 17 "inline_test_object_return_assign.crexx" 16 3 24 "  value = .Box(initial)"
@@ -104,11 +96,7 @@ buildBox() .locals=4
 describeBox() .locals=4
    .meta "inline_test_object_return_assign.describebox"="b" ".string" describeBox() "value=.box"
    .srcstep 17 17 17 "inline_test_object_return_assign.crexx" 19 1 33 "describeBox: procedure = .string"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 15 15 17 "inline_test_object_return_assign.crexx" 20 7 19 "  arg value = .Box"
    .meta "inline_test_object_return_assign.describebox.value"="b" ".box" a1
    .srcstep 16 16 17 "inline_test_object_return_assign.crexx" 21 3 23 "  return value.getName()"
@@ -125,11 +113,7 @@ describeBox() .locals=4
 replaceBoxRef() .locals=3
    .meta "inline_test_object_return_assign.replaceboxref"="b" ".void" replaceBoxRef() "expose value=.box"
    .srcstep 21 21 17 "inline_test_object_return_assign.crexx" 23 1 33 "replaceBoxRef: procedure = .void"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 18 18 17 "inline_test_object_return_assign.crexx" 24 7 26 "  arg expose value = .Box"
    .meta "inline_test_object_return_assign.replaceboxref.value"="b" ".box" a1
    .srcstep 19 19 17 "inline_test_object_return_assign.crexx" 25 3 22 "  value = .Box(\"ref\")"
@@ -149,11 +133,7 @@ replaceBoxRef() .locals=3
    .srcstep 25 25 17 "inline_test_object_return_assign.crexx" 31 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_object_return_assign.box"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 22 22 17 "inline_test_object_return_assign.crexx" 32 9 26 "    arg initial = .string"
    .meta "inline_test_object_return_assign.box.§factory.initial"="b" ".string" a1
    .meta "inline_test_object_return_assign.box.§factory.§factory"="b" ".box" r1
@@ -172,11 +152,7 @@ replaceBoxRef() .locals=3
    .meta "inline_test_object_return_assign.box.getname"="b" ".string" §inline_test_object_return_assign.box.getname() ""
    .srcstep 27 27 17 "inline_test_object_return_assign.crexx" 36 3 28 "  getName: method = .string"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 26 26 17 "inline_test_object_return_assign.crexx" 37 5 16 "    return name"
    .meta "inline_test_object_return_assign.box.getname.§this"="b" ".box" a1
    linkattr1 r1,a1,1

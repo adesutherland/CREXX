@@ -6,11 +6,7 @@
 
 main() .locals=7
    .meta "array_mutation_statements.main"="b" ".void" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "array_mutation_statements.main.ints"="b" ".int[*]" r0
    .srcstep 1 1 17 "array_mutation_statements.crexx" 26 1 12 "ints = .int[]"
    null r0

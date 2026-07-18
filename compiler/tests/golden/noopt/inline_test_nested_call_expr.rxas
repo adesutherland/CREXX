@@ -7,11 +7,7 @@
 main() .locals=7
    .meta "inline_test_nested_call_expr.main"="b" ".int" main() ""
    .srcstep 10 10 17 "inline_test_nested_call_expr.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_nested_call_expr.crexx" 4 3 49 "  say \"Starting nested call inline expr test...\""
    say "Starting nested call inline expr test..."
    .srcstep 6 6 17 "inline_test_nested_call_expr.crexx" 5 3 5 "  do i = 1 to 3"
@@ -54,11 +50,7 @@ l8doend:
 identity() .locals=1
    .meta "inline_test_nested_call_expr.identity"="b" ".int" identity() "val=.int"
    .srcstep 13 13 17 "inline_test_nested_call_expr.crexx" 11 1 27 "identity: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 11 11 17 "inline_test_nested_call_expr.crexx" 12 7 17 "  arg val = .int"
    .meta "inline_test_nested_call_expr.identity.val"="b" ".int" a1
    .srcstep 12 12 17 "inline_test_nested_call_expr.crexx" 13 3 13 "  return val"
@@ -69,11 +61,7 @@ identity() .locals=1
 addOne() .locals=2
    .meta "inline_test_nested_call_expr.addone"="b" ".int" addOne() "val=.int"
    .srcstep 16 16 17 "inline_test_nested_call_expr.crexx" 15 1 25 "addOne: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 14 14 17 "inline_test_nested_call_expr.crexx" 16 7 17 "  arg val = .int"
    .meta "inline_test_nested_call_expr.addone.val"="b" ".int" a1
    .srcstep 15 15 17 "inline_test_nested_call_expr.crexx" 17 3 17 "  return val + 1"

@@ -7,11 +7,7 @@
 main() .locals=6
    .meta "arg_semantics_scalar.main"="b" ".int" main() ""
    .srcstep 13 13 17 "arg_semantics_scalar.crexx" 4 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "arg_semantics_scalar.crexx" 5 3 8 "  i = 7"
    .meta "arg_semantics_scalar.main.i"="b" ".int" r0
    load r0,7
@@ -108,11 +104,7 @@ main() .locals=6
 inspectInt() .locals=2
    .meta "arg_semantics_scalar.inspectint"="b" ".int" inspectInt() "value=.int"
    .srcstep 16 16 17 "arg_semantics_scalar.crexx" 19 1 29 "inspectInt: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 14 14 17 "arg_semantics_scalar.crexx" 20 7 19 "  arg value = .int"
    .meta "arg_semantics_scalar.inspectint.value"="b" ".int" a1
    .srcstep 15 15 17 "arg_semantics_scalar.crexx" 21 3 19 "  return value + 1"
@@ -125,11 +117,7 @@ inspectInt() .locals=2
 addTen() .locals=1
    .meta "arg_semantics_scalar.addten"="b" ".int" addTen() "value=.int"
    .srcstep 20 20 17 "arg_semantics_scalar.crexx" 23 1 25 "addTen: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 17 17 17 "arg_semantics_scalar.crexx" 24 7 19 "  arg value = .int"
    .meta "arg_semantics_scalar.addten.value"="b" ".int" r0
    icopy r0,a1
@@ -146,11 +134,7 @@ addTen() .locals=1
 addOneRef() .locals=1
    .meta "arg_semantics_scalar.addoneref"="b" ".void" addOneRef() "expose value=.int"
    .srcstep 24 24 17 "arg_semantics_scalar.crexx" 28 1 29 "addOneRef: procedure = .void"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 21 21 17 "arg_semantics_scalar.crexx" 29 7 26 "  arg expose value = .int"
    .meta "arg_semantics_scalar.addoneref.value"="b" ".int" a1
    .srcstep 22 22 17 "arg_semantics_scalar.crexx" 30 3 20 "  value = value + 1"
@@ -165,11 +149,7 @@ addOneRef() .locals=1
 readText() .locals=2
    .meta "arg_semantics_scalar.readtext"="b" ".string" readText() "text=.string"
    .srcstep 27 27 17 "arg_semantics_scalar.crexx" 33 1 30 "readText: procedure = .string"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 25 25 17 "arg_semantics_scalar.crexx" 34 7 21 "  arg text = .string"
    .meta "arg_semantics_scalar.readtext.text"="b" ".string" a1
    .srcstep 26 26 17 "arg_semantics_scalar.crexx" 35 3 25 "  return text || \":read\""
@@ -182,11 +162,7 @@ readText() .locals=2
 shoutText() .locals=3
    .meta "arg_semantics_scalar.shouttext"="b" ".string" shoutText() "text=.string"
    .srcstep 31 31 17 "arg_semantics_scalar.crexx" 37 1 31 "shoutText: procedure = .string"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 28 28 17 "arg_semantics_scalar.crexx" 38 7 21 "  arg text = .string"
    .meta "arg_semantics_scalar.shouttext.text"="b" ".string" r0
    brtpandt l103c,a1,512

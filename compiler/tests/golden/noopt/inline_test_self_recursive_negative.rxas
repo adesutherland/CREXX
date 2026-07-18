@@ -7,11 +7,7 @@
 main() .locals=3
    .meta "inline_test_self_recursive_negative.main"="b" ".int" main() ""
    .srcstep 5 5 17 "inline_test_self_recursive_negative.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_self_recursive_negative.crexx" 4 3 56 "  say \"Starting self recursive inline negative test...\""
    say "Starting self recursive inline negative test..."
    .srcstep 2 2 17 "inline_test_self_recursive_negative.crexx" 5 3 17 "  say recurse(3)"
@@ -30,11 +26,7 @@ main() .locals=3
 recurse() .locals=4
    .meta "inline_test_self_recursive_negative.recurse"="b" ".int" recurse() "val=.int"
    .srcstep 8 8 17 "inline_test_self_recursive_negative.crexx" 9 1 26 "recurse: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 6 6 17 "inline_test_self_recursive_negative.crexx" 10 7 17 "  arg val = .int"
    .meta "inline_test_self_recursive_negative.recurse.val"="b" ".int" a1
    .srcstep 7 7 17 "inline_test_self_recursive_negative.crexx" 11 3 26 "  return recurse(val - 1)"

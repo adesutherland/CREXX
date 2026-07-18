@@ -1,0 +1,38 @@
+NR-09 Rule 1 accepted-closeout golden audit
+Date: 2026-07-18
+
+Initial broad Debug CTest:
+- total: 1,852
+- failed: 226
+- compiler RXAS golden mismatches: 222 (111 no-opt, 111 optimized)
+- RXPA signal-address expectation mismatches: 4
+
+Before updating any golden, each failed generated RXAS was compared with the
+corresponding retained golden after applying only this exact transformation:
+
+  setnumdgts D
+  setnumfuz 0
+  setnumfrm 1
+  setnumcas C
+  setnumstd S
+
+became:
+
+  numsci D,C,S
+
+The replay matched all 222 generated files byte-for-byte. It identified 517
+five-instruction blocks, all scientific, and zero unrelated changes.
+
+Post-update git-diff audit:
+- changed golden files: 222
+- added lines: 517, all NUMSCI D,C,S
+- removed lines: 2,585, all SETNUMDGTS/SETNUMFUZ/SETNUMFRM/SETNUMCAS/SETNUMSTD
+- unexpected added or removed lines: 0
+
+The four RXPA signal tests still raised SIGNAL ERROR at signal_funcs.crexx
+line 10. Their expected bytecode address changed from 15 (0xf) to 9 (0x9)
+because of the shorter generated prologue.
+
+Validation after the audited updates:
+- rerun-failed selection: 227/227 pass (includes linked fixture)
+- final broad Debug CTest: 1,852/1,852 pass in 205.57 seconds

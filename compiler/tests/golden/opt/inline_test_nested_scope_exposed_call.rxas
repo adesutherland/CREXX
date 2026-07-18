@@ -7,11 +7,7 @@
 main() .locals=7
    .meta "inline_test_nested_scope_exposed_call.main"="b" ".int" main() ""
    .srcstep 18 18 17 "inline_test_nested_scope_exposed_call.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_nested_scope_exposed_call.crexx" 4 3 58 "  say \"Starting nested scope exposed call inline test...\""
    say "Starting nested scope exposed call inline test..."
    .srcstep 14 14 17 "inline_test_nested_scope_exposed_call.crexx" 5 3 5 "  do i = 1 to 3"

@@ -9,11 +9,7 @@
 main() .locals=17
    .meta "inline_test_object_return_assign.main"="b" ".int" main() ""
    .srcstep 40 40 17 "inline_test_object_return_assign.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_object_return_assign.crexx" 4 3 53 "  say \"Starting object return assign inline test...\""
    say "Starting object return assign inline test..."
    .srcstep 8 8 17 "inline_test_object_return_assign.crexx" 5 3 25 "  box = buildBox(\"seed\")"
@@ -140,11 +136,7 @@ l225bexprend:
    .srcstep 64 64 17 "inline_test_object_return_assign.crexx" 31 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_object_return_assign.box"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 61 61 17 "inline_test_object_return_assign.crexx" 32 9 26 "    arg initial = .string"
    .meta "inline_test_object_return_assign.box.§factory.initial"="b" ".string" a1
    .meta "inline_test_object_return_assign.box.§factory.§factory"="b" ".box" r1
@@ -163,11 +155,7 @@ l225bexprend:
    .meta "inline_test_object_return_assign.box.getname"="b" ".string" §inline_test_object_return_assign.box.getname() ""
    .srcstep 66 66 17 "inline_test_object_return_assign.crexx" 36 3 28 "  getName: method = .string"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 65 65 17 "inline_test_object_return_assign.crexx" 37 5 16 "    return name"
    .meta "inline_test_object_return_assign.box.getname.§this"="b" ".box" a1
    linkattr1 r1,a1,1

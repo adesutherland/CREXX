@@ -7,11 +7,7 @@
 main() .locals=10
    .meta "inline_test_vararg_negative.main"="b" ".int" main() ""
    .srcstep 10 10 17 "inline_test_vararg_negative.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_vararg_negative.crexx" 4 3 48 "  say \"Starting vararg inline negative test...\""
    say "Starting vararg inline negative test..."
    .srcstep 2 2 17 "inline_test_vararg_negative.crexx" 5 3 10 "  idx = 2"
@@ -79,11 +75,7 @@ main() .locals=10
 dynamicPick() .locals=2
    .meta "inline_test_vararg_negative.dynamicpick"="b" ".int" dynamicPick() "which=.int,...=.int"
    .srcstep 14 14 17 "inline_test_vararg_negative.crexx" 14 1 30 "dynamicPick: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 11 11 17 "inline_test_vararg_negative.crexx" 15 7 19 "  arg which = .int, ... = .int"
    .meta "inline_test_vararg_negative.dynamicpick.which"="b" ".int" a1
    .srcstep 12 12 17 "inline_test_vararg_negative.crexx" 15 21 31 "  arg which = .int, ... = .int"
@@ -98,11 +90,7 @@ dynamicPick() .locals=2
 refTailCount() .locals=1
    .meta "inline_test_vararg_negative.reftailcount"="b" ".int" refTailCount() "expose ...=.int"
    .srcstep 17 17 17 "inline_test_vararg_negative.crexx" 18 1 31 "refTailCount: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 15 15 17 "inline_test_vararg_negative.crexx" 19 14 24 "  arg expose ... = .int"
    .srcstep 16 16 17 "inline_test_vararg_negative.crexx" 20 3 13 "  return arg[]"
    icopy r0,a0

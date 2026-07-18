@@ -1,0 +1,8 @@
+opcode,baseline_static,candidate_static,delta
+SETNUMDGTS_INT,5,0,-5
+SETNUMFUZ_INT,5,0,-5
+SETNUMFRM_INT,5,0,-5
+SETNUMCAS_INT,5,0,-5
+SETNUMSTD_INT,5,0,-5
+NUMSCI_INT_INT_INT,0,5,+5
+numeric_setup_total,25,5,-20

@@ -6,11 +6,7 @@
 
 main() .locals=6
    .meta "04_literals.main"="b" ".void" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "04_literals.crexx" 3 1 8 "a = 123             /* Decimal */"
    .meta "04_literals.main.a"="b" ".int" r0
    load r0,123

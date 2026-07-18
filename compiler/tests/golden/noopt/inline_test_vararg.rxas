@@ -7,11 +7,7 @@
 main() .locals=6
    .meta "inline_test_vararg.main"="b" ".int" main() ""
    .srcstep 11 11 17 "inline_test_vararg.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_vararg.crexx" 4 3 39 "  say \"Starting vararg inline test...\""
    say "Starting vararg inline test..."
    .srcstep 2 2 17 "inline_test_vararg.crexx" 5 3 20 "  say tailCount(10)"
@@ -93,11 +89,7 @@ main() .locals=6
 tailCount() .locals=2
    .meta "inline_test_vararg.tailcount"="b" ".int" tailCount() "base=.int,...=.int"
    .srcstep 15 15 17 "inline_test_vararg.crexx" 15 1 28 "tailCount: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 12 12 17 "inline_test_vararg.crexx" 16 7 18 "  arg base = .int, ... = .int"
    .meta "inline_test_vararg.tailcount.base"="b" ".int" a1
    .srcstep 13 13 17 "inline_test_vararg.crexx" 16 20 30 "  arg base = .int, ... = .int"
@@ -113,11 +105,7 @@ tailCount() .locals=2
 secondOnly() .locals=3
    .meta "inline_test_vararg.secondonly"="b" ".int" secondOnly() "base=.int,...=.int"
    .srcstep 19 19 17 "inline_test_vararg.crexx" 19 1 29 "secondOnly: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 16 16 17 "inline_test_vararg.crexx" 20 7 18 "  arg base = .int, ... = .int"
    .meta "inline_test_vararg.secondonly.base"="b" ".int" a1
    .srcstep 17 17 17 "inline_test_vararg.crexx" 20 20 30 "  arg base = .int, ... = .int"
@@ -136,11 +124,7 @@ secondOnly() .locals=3
 hasThird() .locals=1
    .meta "inline_test_vararg.hasthird"="b" ".int" hasThird() "...=.int"
    .srcstep 22 22 17 "inline_test_vararg.crexx" 23 1 27 "hasThird: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 20 20 17 "inline_test_vararg.crexx" 24 7 17 "  arg ... = .int"
    .srcstep 21 21 17 "inline_test_vararg.crexx" 25 3 24 "  return <argexists>(3)"
    icopy r0,a0
@@ -151,11 +135,7 @@ hasThird() .locals=1
 logSecond() .locals=3
    .meta "inline_test_vararg.logsecond"="b" ".int" logSecond() "base=.int,...=.int"
    .srcstep 27 27 17 "inline_test_vararg.crexx" 27 1 28 "logSecond: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 23 23 17 "inline_test_vararg.crexx" 28 7 18 "  arg base = .int, ... = .int"
    .meta "inline_test_vararg.logsecond.base"="b" ".int" a1
    .srcstep 24 24 17 "inline_test_vararg.crexx" 28 20 30 "  arg base = .int, ... = .int"

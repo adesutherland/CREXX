@@ -6,11 +6,7 @@
 
 main() .locals=16
    .meta "18_array_class_main.main"="b" ".int" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "18_array_class_main.main.ary"="b" ".item[1]" r0
    .srcstep 1 1 17 "18_array_class_main.crexx" 8 1 14 "ary = .Item[1]"
    null r0

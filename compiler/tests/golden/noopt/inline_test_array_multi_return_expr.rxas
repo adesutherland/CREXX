@@ -7,11 +7,7 @@
 main() .locals=5
    .meta "inline_test_array_multi_return_expr.main"="b" ".int" main() ""
    .srcstep 7 7 17 "inline_test_array_multi_return_expr.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_array_multi_return_expr.crexx" 4 3 56 "  say \"Starting array multi return expr inline test...\""
    say "Starting array multi return expr inline test..."
    .srcstep 2 2 17 "inline_test_array_multi_return_expr.crexx" 5 3 35 "  say renderArray(selectArray(-1))"
@@ -57,11 +53,7 @@ main() .locals=5
 selectArray() .locals=6
    .meta "inline_test_array_multi_return_expr.selectarray"="b" ".string[*]" selectArray() "flag=.int"
    .srcstep 25 25 17 "inline_test_array_multi_return_expr.crexx" 11 1 35 "selectArray: procedure = .string[]"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 8 8 17 "inline_test_array_multi_return_expr.crexx" 12 7 18 "  arg flag = .int"
    .meta "inline_test_array_multi_return_expr.selectarray.flag"="b" ".int" a1
    .meta "inline_test_array_multi_return_expr.selectarray.neg"="b" ".string[*]" r1
@@ -152,11 +144,7 @@ l87iffalse:
 renderArray() .locals=4
    .meta "inline_test_array_multi_return_expr.renderarray"="b" ".string" renderArray() "value=.string[*]"
    .srcstep 28 28 17 "inline_test_array_multi_return_expr.crexx" 26 1 33 "renderArray: procedure = .string"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 26 26 17 "inline_test_array_multi_return_expr.crexx" 27 7 22 "  arg value = .string[]"
    .meta "inline_test_array_multi_return_expr.renderarray.value"="b" ".string[*]" a1
    .srcstep 27 27 17 "inline_test_array_multi_return_expr.crexx" 28 3 36 "  return value[1] || \":\" || value[2]"

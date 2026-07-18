@@ -49,6 +49,21 @@ static int node_is_runtime_callable_reference(ASTNode *node) {
            node->node_type == FUNC_SYMBOL;
 }
 
+static int numeric_context_can_use_combined_setup(const numeric_context *context) {
+    if (!context) return 0;
+
+    /* NUMSCI/NUMENG have a historical digits >= 5 contract, while the
+       individual setter accepts every compiler-valid positive value. */
+    return context->digits >= 5 &&
+           context->fuzz == 0 &&
+           (context->form == NUMERIC_FORM_SCIENTIFIC ||
+            context->form == NUMERIC_FORM_ENGINEERING) &&
+           (context->casetype == CASE_LOWER ||
+            context->casetype == CASE_UPPER) &&
+           (context->standard == NUMERIC_STANDARD_COMMON ||
+            context->standard == NUMERIC_STANDARD_CLASSIC);
+}
+
 static int imported_declaration_has_runtime_reference(ASTNode *node) {
     Symbol *symbol;
     size_t i;
@@ -402,34 +417,50 @@ void emit_proc(ASTNode *node, void *pl) {
                     free(temp1);
                 }
 
-                /* If numeric options have non-inherited values, set them */
-                if (node->scope->num_context.digits > -1) {
-                    temp1 = mprintf("   setnumdgts %d\n", node->scope->num_context.digits);
+                /* Use the existing complete fuzz-zero setup only when every
+                   effective field is a compatible compile-time constant. */
+                if (numeric_context_can_use_combined_setup(&node->scope->num_context)) {
+                    const char *instruction =
+                            node->scope->num_context.form == NUMERIC_FORM_SCIENTIFIC
+                            ? "numsci" : "numeng";
+                    temp1 = mprintf("   %s %d,%d,%d\n",
+                                    instruction,
+                                    node->scope->num_context.digits,
+                                    node->scope->num_context.casetype,
+                                    node->scope->num_context.standard);
                     output_append_text(node->output, temp1);
                     free(temp1);
                 }
-                if (node->scope->num_context.fuzz > -1) {
-                    temp1 = mprintf("   setnumfuz %d\n", node->scope->num_context.fuzz);
-                    output_append_text(node->output, temp1);
-                    free(temp1);
-                }
-                if (node->scope->num_context.form > 0) {
-                    /* 1 = SCIENTIFIC, 2 = ENGINEERING */
-                    temp1 = mprintf("   setnumfrm %d\n", node->scope->num_context.form);
-                    output_append_text(node->output, temp1);
-                    free(temp1);
-                }
-                if (node->scope->num_context.casetype > 0) {
-                    /* 1 = LOWER, 2 = UPPER */
-                    temp1 = mprintf("   setnumcas %d\n", node->scope->num_context.casetype);
-                    output_append_text(node->output, temp1);
-                    free(temp1);
-                }
-                if (node->scope->num_context.standard > 0) {
-                    /* 1 = COMMON, 2 = CLASSIC[REXX] */
-                    temp1 = mprintf("   setnumstd %d\n", node->scope->num_context.standard);
-                    output_append_text(node->output, temp1);
-                    free(temp1);
+                else {
+                    /* If numeric options have non-inherited values, set them. */
+                    if (node->scope->num_context.digits > -1) {
+                        temp1 = mprintf("   setnumdgts %d\n", node->scope->num_context.digits);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    }
+                    if (node->scope->num_context.fuzz > -1) {
+                        temp1 = mprintf("   setnumfuz %d\n", node->scope->num_context.fuzz);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    }
+                    if (node->scope->num_context.form > 0) {
+                        /* 1 = SCIENTIFIC, 2 = ENGINEERING */
+                        temp1 = mprintf("   setnumfrm %d\n", node->scope->num_context.form);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    }
+                    if (node->scope->num_context.casetype > 0) {
+                        /* 1 = LOWER, 2 = UPPER */
+                        temp1 = mprintf("   setnumcas %d\n", node->scope->num_context.casetype);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    }
+                    if (node->scope->num_context.standard > 0) {
+                        /* 1 = COMMON, 2 = CLASSIC[REXX] */
+                        temp1 = mprintf("   setnumstd %d\n", node->scope->num_context.standard);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    }
                 }
 
                 n = child2;

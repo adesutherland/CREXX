@@ -7,11 +7,7 @@
 main() .locals=4
    .meta "inline_test_array_return_temp.main"="b" ".int" main() ""
    .srcstep 8 8 17 "inline_test_array_return_temp.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "inline_test_array_return_temp.main.pair"="b" ".int[2]" r0
    .srcstep 1 1 17 "inline_test_array_return_temp.crexx" 4 3 16 "  pair = .int[2]"
    null r0
@@ -49,11 +45,7 @@ l69bexprend:
 buildPair() .locals=4
    .meta "inline_test_array_return_temp.buildpair"="b" ".int[2]" buildPair() "seed=.int"
    .srcstep 22 22 17 "inline_test_array_return_temp.crexx" 14 1 31 "buildPair: procedure = .int[2]"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 17 17 17 "inline_test_array_return_temp.crexx" 15 7 18 "  arg seed = .int"
    .meta "inline_test_array_return_temp.buildpair.seed"="b" ".int" a1
    .meta "inline_test_array_return_temp.buildpair.pair"="b" ".int[2]" r0

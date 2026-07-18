@@ -1,0 +1,8 @@
+opcode,baseline_count,candidate_count,delta
+SETNUMDGTS,622,4,-618
+SETNUMFUZ,627,9,-618
+SETNUMFRM,623,5,-618
+SETNUMCAS,624,6,-618
+SETNUMSTD,627,9,-618
+NUMSCI,0,618,618
+numeric_setup_total,3123,651,-2472

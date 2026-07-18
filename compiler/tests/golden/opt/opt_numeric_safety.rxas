@@ -6,11 +6,7 @@
 
 main() .locals=4
    .meta "opt_numeric_safety.main"="b" ".void" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "opt_numeric_safety.crexx" 4 1 15 "call ScenarioA"
    load r0,0
    call r1,ScenarioA(),r0
@@ -38,11 +34,7 @@ main() .locals=4
 ScenarioA() .locals=1
    .meta "opt_numeric_safety.scenarioa"="b" ".void" ScenarioA() ""
    .srcstep 9 9 17 "opt_numeric_safety.crexx" 10 1 21 "ScenarioA: procedure"
-   setnumdgts 5
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 2
-   setnumstd 1
+   numsci 5,2,1
    .srcstep 7 7 17 "opt_numeric_safety.crexx" 16 5 15 "    say 1.0d/3"
    say "0.33333"
    .srcstep 8 8 17 "opt_numeric_safety.crexx" 17 5 11 "    return"

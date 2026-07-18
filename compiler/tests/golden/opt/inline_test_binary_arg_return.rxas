@@ -7,11 +7,7 @@
 main() .locals=5
    .meta "inline_test_binary_arg_return.main"="b" ".int" main() ""
    .srcstep 12 12 17 "inline_test_binary_arg_return.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "inline_test_binary_arg_return.main.data"="b" ".binary" r0
    .srcstep 1 1 17 "inline_test_binary_arg_return.crexx" 4 3 17 "  data = .binary"
    null r0

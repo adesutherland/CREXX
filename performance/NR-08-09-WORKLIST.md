@@ -1,7 +1,8 @@
 # NR-08/NR-09 resumable design and bounded-PoC worklist
 
-Status: **NR-08 accepted and fully closed out; NR-09 expanded production scope
-is recorded and queued next**
+Status: **NR-08 accepted and fully closed out; NR-09 Rule 1 existing
+`NUMSCI`/`NUMENG` accepted and fully closed out; broad low-risk instruction
+batch is the next production unit**
 
 Started: 2026-07-17
 
@@ -504,7 +505,8 @@ move on rather than manufacturing a benchmark-specific case.
 
 - The NR-08 acceptance/closeout prerequisite is now satisfied. On resumption,
   establish a post-NR-08 exact baseline first.
-- Implement and verdict the obvious rules above one at a time.
+- Treat the remaining low-risk mappings as one predeclared instruction batch,
+  not as an instruction-by-instruction sequence of production verdicts.
 - Produce a measured comparison for numeric-context procedure setup covering
   the existing combined instruction, a generalized synthesized instruction and
   procedure-owned default context.
@@ -513,6 +515,276 @@ move on rather than manufacturing a benchmark-specific case.
 - NR-09 is complete only when the obvious queue is exhausted and the remaining
   synthesized-instruction register is sufficiently evidenced and prioritized
   for Adrian's design selections.
+
+### NR-09 production resumption: Rule 1 numeric setup
+
+Started: 2026-07-17
+
+#### Exact post-NR-08 baseline
+
+- Branch `develop` was clean at
+  `7b93bef73267ee1542295616db5a0148e7766a43`, exactly equal to
+  `origin/develop`, before the NR-09 resumption record was added.
+- The ordinary profiling-off Release artifacts already in
+  `cmake-build-release` were audited rather than silently treated as current.
+  Their `rxc` output, RXBIN, linked library, `rxvm` and `rxbvm` SHA-256 values
+  exactly match the retained accepted NR-08 candidate values. This proves the
+  starting product is the accepted post-NR-08 implementation, not historical
+  NR-05 or the pre-NR-08 ledger baseline.
+- The exact canonical optimized RexxCPS source remains 2.2d at SHA-256
+  `2970c3d73fe2537ec8f81295c585495c4668b442d5b9a2335b1ee453a13bbdd6`.
+  Its post-NR-08 optimized RXAS/RXBIN sizes are 226,793/79,853 bytes. The
+  linked library is 881,192 bytes.
+- The canonical optimized RXAS contains five `SETNUMDGTS`, five `SETNUMFUZ`,
+  five `SETNUMFRM`, five `SETNUMCAS` and five `SETNUMSTD` sites: 25 static
+  procedure-entry setters and no `NUMSCI`/`NUMENG`.
+- The retained exact post-NR-08 schema-4 profiles execute 542,500 numeric
+  setters on `rxvm` and 542,500 on `rxbvm`. The accepted ordinary Release
+  timing baseline remains the NR-08 candidate median: 1,195,649 CPS / 8.38 s
+  on `rxvm` and 1,180,487 CPS / 8.48 s on `rxbvm`, three recorded serial
+  samples per VM after one warmup. It remains valid and must not be merged
+  with historical NR-05/pre-NR-08 evidence.
+- Baseline record:
+  `evidence/2026-07-17-nr-09-numctx-first-release-verdict/`.
+
+#### Status quo and plausible implementation designs
+
+**Status quo.** `rxc` emits up to five immediate procedure-entry setters in
+digits, fuzz, form, case, standard order. Each VM setter validates its one
+field, updates the frame context and synchronizes the loaded decimal plugin.
+Inherited fields omit only their corresponding setter. The existing RXBIN 007
+`NUMSCI digits,case,standard` and `NUMENG digits,case,standard` handlers validate
+digits/case/standard, install fuzz zero plus the selected form, and synchronize
+the plugin once, but `NUMSCI`/`NUMENG` require digits >= 5 while the individual
+digits setter and Level B validator accept digits >= 1.
+
+**Design A - compiler-owned existing-instruction lowering.** At procedure
+emission, use `NUMSCI` or `NUMENG` only when digits, fuzz, form, case and
+standard are all non-inherited compile-time values; fuzz is zero; digits is at
+least 5; and form/case/standard are valid existing enum values. Otherwise emit
+the current per-field setters unchanged.
+
+- Advantages: one dispatch and one plugin synchronization; typed procedure
+  context is already available; no new ISA, RXBIN, ABI or runtime contract;
+  applies equally to optimized and no-opt compiler output.
+- Risks/controls: digits 1-4 must retain setters because the combined opcode
+  has a stricter historical validation contract; any inherited or nonzero-fuzz
+  case fails closed; generated structural tests keep exact operands visible;
+  runtime tests cover scientific/engineering, inherited, nonzero-fuzz and both
+  decimal plugins on both VMs.
+
+**Design B - RXAS five-instruction peephole.** Recognize the exact immediate
+setter sequence and replace it during assembly.
+
+- Advantages: could also optimize hand-written RXAS and keeps emitter code
+  unchanged.
+- Rejected for Rule 1: RXAS has less direct evidence that the sequence is the
+  compiler-owned effective procedure context, must reconstruct source/TRACE
+  and exceptional-boundary obligations, and would transform arbitrary authored
+  sequences. It is wider than the mechanically proved compiler lowering.
+
+**Design C - generalized full-context opcode.** Add one instruction carrying
+digits, fuzz, form, case and standard so nonzero fuzz can also use one semantic
+operation.
+
+- Advantage: covers every fully constant context and retains a single plugin
+  synchronization.
+- Deferred at the Rule 1 decision point because it changes the canonical
+  ISA/RXBIN contract. Adrian subsequently selected new large instructions as
+  the intended NR-09 mechanism on 2026-07-18; this full-context form is now in
+  the 67-mapping batch below.
+
+**Design D - procedure-owned frame-entry default.** Store a non-inherited
+context with procedure/runtime metadata and install it during frame activation.
+
+- Advantage: removes executable prologue dispatch entirely.
+- Deferred: it changes procedure/frame architecture and must first compare
+  recycled frames, inherited fields, inline compatibility, plugin ownership,
+  late loading, source coordinates and both VM modes. Production adoption
+  requires Adrian's explicit selection.
+
+**Design E - private runtime synthesis.** Quickening or link/load preparation
+could replace canonical setter sequences only in the private execution image.
+
+- Advantage: leaves serialized RXBIN unchanged and could cover non-compiler
+  producers.
+- Deferred: preparation/startup, dequickening, source-coordinate and late-load
+  costs are unjustified until the compiler-owned existing-opcode ceiling is
+  measured.
+
+#### Rule 1 selection and proof boundary
+
+Select Design A for the first independently verdictable production candidate.
+This is the user-directed no-new-ISA fast path and does not select Designs C-E.
+The stricter `digits >= 5` gate is mandatory for existing-handler equivalence.
+Compiler validation already proves fuzz zero, form and enum values valid, so
+the removed fuzz/form setter validations cannot signal; the combined handler
+preserves the remaining digits/case/standard validation order and performs the
+same final context update before execution of the authored body. Reducing five
+procedure-entry dispatch/interrupt boundaries to the existing combined
+instruction's one boundary is the intended existing ISA contract and will be
+tested in both VM modes.
+
+Rule 1 remains provisional and revertable. After generated structure,
+scientific/engineering context, inherited, nonzero-fuzz, digits-1-to-4 and
+decimal-plugin controls pass, capture exact static/dynamic instruction and
+image-size deltas, freeze production edits, and run the mandatory ordinary
+profiling-off Release verdict. Stop for Adrian immediately after reporting it.
+
+#### Rule 1 focused proof and mandatory first Release verdict
+
+Status: **accepted and fully closed out**.
+
+The first-verdict candidate was frozen. The new generated contract covers
+optimized and no-opt structure; exact scientific/engineering operands;
+inherited digits; nonzero fuzz; digits 1-4; both VM modes; and default,
+`mc_decimal` and `db_decimal` plugin execution. The focused Debug selection
+passes 12/12, including existing RXAS combined-opcode, decimal and
+numeric-library tests. The focused ordinary Release contract passes 1/1. No
+broad CTest, sanitizer, package/install, cross-platform, golden refresh, next
+candidate or synthesized design implementation had run at the mandatory stop
+point.
+
+Exact post-NR-08 to Rule 1 deltas for canonical optimized RexxCPS:
+
+| Dimension | Baseline | Candidate | Delta |
+| --- | ---: | ---: | ---: |
+| static numeric setup instructions | 25 setters | 5 `NUMSCI` | -20 (-80.000%) |
+| dynamic numeric setup, `rxvm` | 542,500 | 108,508 | -433,992 (-80.000% rounded) |
+| dynamic numeric setup, `rxbvm` | 542,500 | 108,508 | -433,992 (-80.000% rounded) |
+| optimized RXAS bytes | 226,793 | 226,493 | -300 |
+| optimized RXBIN bytes | 79,853 | 79,861 | +8 |
+| linked library bytes | 881,192 | 880,384 | -808 |
+
+The candidate dynamic total is 108,498 `NUMSCI`, four residual `SETNUMFUZ`,
+two residual `SETNUMCAS` and four residual `SETNUMSTD` executions in each VM;
+the exact candidate profile image and library hashes equal the ordinary
+Release candidate hashes. The retained library disassembly changes 3,123
+numeric setup instructions (622 digits, 627 fuzz, 623 form, 624 case and 627
+standard) to 651 (618 `NUMSCI` plus 33 residual setters), a reduction of 2,472.
+The standalone optimized RXBIN grows by eight bytes despite the instruction
+reduction; the full linked library shrinks, so no broader code-size claim is
+made.
+
+Ordinary profiling-off Release timing reuses the exact accepted NR-08
+candidate as baseline and runs one candidate warmup plus three serial recorded
+candidate samples per VM. Higher CPS and lower elapsed time are better:
+
+| VM | Baseline median CPS (range) | Candidate median CPS (range) | CPS delta | Baseline/candidate median elapsed | Elapsed delta |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `rxvm` | 1,195,649 (1,180,932-1,203,585) | 1,203,145 (1,194,385-1,213,159) | +0.627% | 8.38 s / 8.33 s | -0.597% |
+| `rxbvm` | 1,180,487 (1,179,414-1,184,294) | 1,183,390 (1,176,634-1,189,443) | +0.246% | 8.48 s / 8.46 s | -0.236% |
+
+All samples pass, native CPS and process elapsed agree in direction, but both
+candidate ranges overlap their retained baselines and the median changes are
+small. This is neutral-to-slightly-positive evidence, not a material product
+win. Adrian accepted that improvement on 2026-07-18. Evidence:
+`evidence/2026-07-17-nr-09-numctx-first-release-verdict/`.
+
+#### Rule 1 accepted closeout
+
+The complete Debug build passed. Initial broad CTest reported 226 failures:
+222 compiler RXAS goldens (111 no-opt and 111 optimized) and four RXPA
+signal-address expectations. An exact pre-update replay proved that every
+generated/golden difference was one or more five-setter-to-`NUMSCI`
+substitutions: 517 substitutions across 222 files and no unrelated changes.
+The documented golden driver updated those files. Post-update diff audit found
+517 added `NUMSCI` lines and 2,585 removed `SETNUM*` lines, with no other added
+or removed lines.
+
+The four RXPA cases retained the same `SIGNAL ERROR` and source location; the
+shorter prologue moved the expected bytecode address from 15 (`0xf`) to 9
+(`0x9`). The rerun-failed selection passed 227/227 including its linked
+fixture. Final `ctest --test-dir cmake-build-debug --parallel 30
+--output-on-failure` passed 1,852/1,852 in 205.57 seconds. No sanitizer,
+install/package, cross-platform or additional timing campaign was added. No
+commit or push was performed.
+
+### NR-09 low-risk mapping batch selected by Adrian
+
+Recorded 2026-07-18. “Low risk” is a semantic-proof classification, not a
+no-new-ISA restriction:
+
+1. **Class 1 / RXAS-backed:** RXAS can prove the exact bounded dataflow, such
+   as a destination being overwritten before any read, or can replace an
+   effect-clean adjacent sequence while preserving its final register state.
+   RXAS is the required backstop. rxc may also emit the large instruction
+   directly when the complete mapping belongs naturally to one AST-node
+   emission; it should not add cross-node coordination merely because two AST
+   nodes happen to emit adjacent instructions.
+2. **Class 2 / rxc-owned:** rxc knows that an intermediate register or alias is
+   compiler-temporary and that otherwise visible intermediate state, cleanup
+   or side effects are irrelevant to the authored program. The emitted large
+   instruction must retain any relevant validation, failure ordering and final
+   state.
+
+Adding new, larger instructions is the intended NR-09 mechanism, not a design
+disadvantage. Exact opcode operands/effects and owner still have to be recorded
+before production editing, but the batch is not constrained to existing ISA
+forms. The 76 selected stable patterns in the retained ledger classify as:
+
+| Disposition | Patterns | Meaning |
+| --- | ---: | --- |
+| Class 1 | 20 | RXAS/keyhole proof is plausible; four are the already-measured and rejected NR-07 compare/branch family. |
+| Class 2 | 51 | Requires rxc temporary/alias/side-effect knowledge. |
+| Not low risk | 5 | Three `ENDLIFE` families are NR-08-subsumed/reference-observable; two branch-into-alias/capacity families retain observable control/throw boundaries. |
+
+The active queue is therefore **67 low-risk mappings**: 16 Class 1 plus all 51
+Class 2 after removing the four already-rejected NR-07 mappings. N=2/3/4 rows
+overlap and their counts must not be summed. For implementation the 67 rows
+collapse into 12 coherent families. The exact stable-ID register, including
+all active, rejected and deferred mappings, is
+[`NR-09-MAPPING-REGISTER.md`](NR-09-MAPPING-REGISTER.md).
+
+| Active mapping family | Class | Selected patterns | Leading retained observation | Intended batch direction |
+| --- | --- | ---: | ---: | --- |
+| Numeric-context prologue | 2 | 9 | 16,434,838 | General full-context operation; Rule 1 is the accepted fuzz-zero subset. |
+| Multi-swap | 1 | 3 | 40,867,553 | Two/three/four-pair or descriptor-backed swap unit. |
+| Call-window preparation | 1 | 7 | 26,311,205 | Combine `LOAD`/`SETTP`/`SWAP` setup sequences. |
+| Call-window through call | 2 | 3 | 14,787,936 | rxc-owned prepared/mapped call instruction. |
+| Multi-null | 1 | 3 | 12,521,800 | Clear two/three/four proved destinations per dispatch. |
+| Constant load and direct destination | 1 | 3 | 3,380,680 | Multi-load and load-direct-to-final-destination mappings. |
+| Unlink/cleanup chains | 2 | 7 | 10,866,847 | rxc-owned cleanup unit for compiler-created aliases/temporaries. |
+| Attribute/index/link scaffolding | 2 | 23 | 7,113,611 | Replace compiler-generated capacity/index/link/read/write scaffolding by complete semantic operations. |
+| Typed conversion/copy | 2 | 3 | 1,002,000 | Convert directly into the required final result(s). |
+| Arithmetic chains | 2 | 3 | 501,000 | Preserve per-step arithmetic semantics inside one handler. |
+| String conversion/concatenation | 2 | 2 | 14,000 | Consume compiler-temporary text conversions directly. |
+| Load/get-attributes | 2 | 1 | 14,012 | Combine the compiler-owned temporary load/access sequence. |
+
+The four NR-07 compare/branch patterns remain visible but rejected; their
+prior Release evidence must not be rerun under a new name. The three
+`ENDLIFE` rows and the two branch/alias-capacity rows remain explicit deferred
+controls rather than silently disappearing.
+
+#### Batch execution rule
+
+- **Stage 1 - instructions and direct tests.** Define the exact canonical
+  instruction names, operand forms, effects metadata and VM handlers for all
+  selected families. Add direct assembler/VM instruction tests before any
+  automatic producer uses them. Deduplicate overlapping windows and choose
+  non-explosive operand forms.
+- **Stage 2 - RXAS.** Implement every Class 1 mapping in RXAS, with positive
+  and negative peephole tests. RXAS remains the backstop even where rxc can
+  emit the new instruction directly.
+- **Stage 3 - rxc.** Add direct Class 1 rxc emission only where
+  one AST node already owns the complete semantic unit and doing so is simpler
+  than emitting the expanded sequence. When a mapping spans two merely
+  adjacent AST nodes, keep rxc simple and rely on the RXAS backstop. Then add
+  the rxc-owned Class 2 lowerings, proving compiler-temporary/alias facts and
+  retaining structural compiler coverage.
+- Implement the selected Class 1 and Class 2 mappings as one coherent
+  production batch. Do not stop for a Release verdict after each instruction.
+- Keep per-mapping static/dynamic deltas and positive/negative structural
+  controls so a neutral or bad family can be identified within the batch.
+- **Stage 4 - verdict gate.** Once the batch's minimum focused correctness
+  passes, freeze it and run one mandatory ordinary profiling-off Release
+  verdict against this accepted Rule 1 product baseline. Stop for Adrian at
+  that batch verdict.
+- **Stage 5 - accepted closeout and full QA.** After Adrian accepts the batch
+  verdict, run the proportional full QA, audit any required golden refresh,
+  retain final evidence and commit when requested.
+- Procedure-owned numeric defaults remain a separate architectural comparison;
+  they are not silently folded into this mapping batch.
 
 ## Evidence locations
 
@@ -543,3 +815,8 @@ move on rather than manufacturing a benchmark-specific case.
   pass, and the intentional 71-golden/170-`ENDLIFE` audit is retained.
 - [x] NR-08 is closed out and staged without commit or push; NR-09's obvious
   candidate and synthesized/procedure-default scope is queued next.
+- [x] Adrian accepted NR-09 Rule 1; audited 222-golden/four-address closeout and
+  final Debug CTest 1,852/1,852 pass.
+- [x] The remaining selected ledger is reclassified as 67 active low-risk
+  mappings across 12 batch families; new large instructions are the intended
+  mechanism and the next verdict is batch-level, not instruction-level.

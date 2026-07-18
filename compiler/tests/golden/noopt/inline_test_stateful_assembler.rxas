@@ -6,11 +6,7 @@
 
 main() .locals=8
    .meta "inline_test_stateful_assembler.main"="b" ".void" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_stateful_assembler.crexx" 3 1 13 "s = \"abc123\""
    .meta "inline_test_stateful_assembler.main.s"="b" ".string" r0
    load r0,"abc123"
@@ -89,11 +85,7 @@ main() .locals=8
 char_at() .locals=5
    .meta "inline_test_stateful_assembler.char_at"="b" ".string" char_at() "text=.string,posn=.int"
    .srcstep 17 17 17 "inline_test_stateful_assembler.crexx" 12 1 29 "char_at: procedure = .string"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 9 9 17 "inline_test_stateful_assembler.crexx" 13 7 21 "  arg text = .string, posn = .int"
    .meta "inline_test_stateful_assembler.char_at.text"="b" ".string" r4
    brtpandt l43c,a1,512
@@ -139,11 +131,7 @@ l43d:
 left_copy() .locals=2
    .meta "inline_test_stateful_assembler.left_copy"="b" ".string" left_copy() "text=.string,len=.int"
    .srcstep 22 22 17 "inline_test_stateful_assembler.crexx" 21 1 31 "left_copy: procedure = .string"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 18 18 17 "inline_test_stateful_assembler.crexx" 22 7 21 "  arg text = .string, len = .int"
    .meta "inline_test_stateful_assembler.left_copy.text"="b" ".string" r1
    brtpandt l72c,a1,512

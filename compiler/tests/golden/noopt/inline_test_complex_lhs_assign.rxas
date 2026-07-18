@@ -7,11 +7,7 @@
 main() .locals=7
    .meta "inline_test_complex_lhs_assign.main"="b" ".int" main() ""
    .srcstep 7 7 17 "inline_test_complex_lhs_assign.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "inline_test_complex_lhs_assign.main.ix"="b" ".int" r0
    .srcstep 1 1 17 "inline_test_complex_lhs_assign.crexx" 5 3 12 "  ix = .int"
    null r0
@@ -52,11 +48,7 @@ main() .locals=7
 addOne() .locals=2
    .meta "inline_test_complex_lhs_assign.addone"="b" ".int" addOne() "value=.int"
    .srcstep 10 10 17 "inline_test_complex_lhs_assign.crexx" 11 1 25 "addOne: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 8 8 17 "inline_test_complex_lhs_assign.crexx" 12 7 19 "  arg value = .int"
    .meta "inline_test_complex_lhs_assign.addone.value"="b" ".int" a1
    .srcstep 9 9 17 "inline_test_complex_lhs_assign.crexx" 13 3 19 "  return value + 1"

@@ -6,11 +6,7 @@
 
 main() .locals=4
    .meta "02_flow.main"="b" ".void" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "02_flow.crexx" 3 1 6 "a = 5"
    .meta "02_flow.main.a"="b" ".int" r0
    load r0,5

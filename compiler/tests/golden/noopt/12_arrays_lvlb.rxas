@@ -6,11 +6,7 @@
 
 main() .locals=3
    .meta "12_arrays_lvlb.main"="b" ".void" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "12_arrays_lvlb.main.ary"="b" ".int[5]" r0
    .srcstep 1 1 17 "12_arrays_lvlb.crexx" 3 1 13 "ary = .int[5]"
    null r0

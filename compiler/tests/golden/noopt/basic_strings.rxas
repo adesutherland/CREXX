@@ -6,11 +6,7 @@
 
 main() .locals=10
    .meta "basic_strings.main"="b" ".void" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "basic_strings.crexx" 3 1 12 "a = \"Hello\""
    .meta "basic_strings.main.a"="b" ".string" r0
    load r0,"Hello"

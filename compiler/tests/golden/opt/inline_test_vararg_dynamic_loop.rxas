@@ -7,11 +7,7 @@
 main() .locals=4
    .meta "inline_test_vararg_dynamic_loop.main"="b" ".int" main() ""
    .srcstep 5 5 17 "inline_test_vararg_dynamic_loop.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_vararg_dynamic_loop.crexx" 4 3 21 "  say localmax(1, 2)"
    load r1,1.0
    .traceevent "L" 4 "R" "F" "r" 1 1 1 0 "" ""
@@ -48,11 +44,7 @@ main() .locals=4
 localmax() .locals=7
    .meta "inline_test_vararg_dynamic_loop.localmax"="b" ".float" localmax() "m=.float,...=.float"
    .srcstep 17 17 17 "inline_test_vararg_dynamic_loop.crexx" 9 1 29 "localmax: procedure = .float"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 6 6 17 "inline_test_vararg_dynamic_loop.crexx" 10 7 17 "  arg m = .float, ... = .float"
    .meta "inline_test_vararg_dynamic_loop.localmax.m"="b" ".float" r0
    fcopy r0,a1

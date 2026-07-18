@@ -7,11 +7,7 @@
 main() .locals=6
    .meta "inline_test_compare_expr.main"="b" ".int" main() ""
    .srcstep 14 14 17 "inline_test_compare_expr.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_compare_expr.crexx" 4 3 45 "  say \"Starting compare inline expr test...\""
    say "Starting compare inline expr test..."
    .srcstep 10 10 17 "inline_test_compare_expr.crexx" 5 3 5 "  do i = 1 to 4"
@@ -69,11 +65,7 @@ l8doend:
 addOne() .locals=2
    .meta "inline_test_compare_expr.addone"="b" ".int" addOne() "val=.int"
    .srcstep 17 17 17 "inline_test_compare_expr.crexx" 12 1 25 "addOne: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 15 15 17 "inline_test_compare_expr.crexx" 13 7 17 "  arg val = .int"
    .meta "inline_test_compare_expr.addone.val"="b" ".int" a1
    .srcstep 16 16 17 "inline_test_compare_expr.crexx" 14 3 17 "  return val + 1"

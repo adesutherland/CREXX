@@ -6,11 +6,7 @@
 
 main() .locals=5
    .meta "block_expr_basic.main"="b" ".void" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 7 7 17 "block_expr_basic.crexx" 3 1 16 "total = 10 + do"
    .srcstep 6 6 17 "block_expr_basic.crexx" 3 14 16 "total = 10 + do"
    .srcstep 1 1 17 "block_expr_basic.crexx" 4 3 8 "  a = 5"

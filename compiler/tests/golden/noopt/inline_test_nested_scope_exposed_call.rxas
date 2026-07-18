@@ -7,11 +7,7 @@
 main() .locals=6
    .meta "inline_test_nested_scope_exposed_call.main"="b" ".int" main() ""
    .srcstep 10 10 17 "inline_test_nested_scope_exposed_call.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_nested_scope_exposed_call.crexx" 4 3 58 "  say \"Starting nested scope exposed call inline test...\""
    say "Starting nested scope exposed call inline test..."
    .srcstep 6 6 17 "inline_test_nested_scope_exposed_call.crexx" 5 3 5 "  do i = 1 to 3"
@@ -51,11 +47,7 @@ l8doend:
 outer() .locals=4
    .meta "inline_test_nested_scope_exposed_call.outer"="b" ".int" outer() "val=.int"
    .srcstep 16 16 17 "inline_test_nested_scope_exposed_call.crexx" 11 1 24 "outer: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 11 11 17 "inline_test_nested_scope_exposed_call.crexx" 12 7 17 "  arg val = .int"
    .meta "inline_test_nested_scope_exposed_call.outer.val"="b" ".int" a1
    .meta "inline_test_nested_scope_exposed_call.outer.tmp"="b" ".int" r1
@@ -82,11 +74,7 @@ outer() .locals=4
 addOne() .locals=2
    .meta "inline_test_nested_scope_exposed_call.addone"="b" ".int" addOne() "val=.int"
    .srcstep 19 19 17 "inline_test_nested_scope_exposed_call.crexx" 20 1 25 "addOne: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 17 17 17 "inline_test_nested_scope_exposed_call.crexx" 21 7 17 "  arg val = .int"
    .meta "inline_test_nested_scope_exposed_call.addone.val"="b" ".int" a1
    .srcstep 18 18 17 "inline_test_nested_scope_exposed_call.crexx" 22 3 17 "  return val + 1"

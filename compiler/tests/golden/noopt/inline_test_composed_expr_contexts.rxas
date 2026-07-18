@@ -7,11 +7,7 @@
 main() .locals=7
    .meta "inline_test_composed_expr_contexts.main"="b" ".int" main() ""
    .srcstep 28 28 17 "inline_test_composed_expr_contexts.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_composed_expr_contexts.crexx" 4 3 50 "  say \"Starting composed inline contexts test...\""
    say "Starting composed inline contexts test..."
    .srcstep 2 2 17 "inline_test_composed_expr_contexts.crexx" 6 3 35 "  say leftValue(3) + rightValue(4)"
@@ -188,11 +184,7 @@ l81ifend:
 leftValue() .locals=2
    .meta "inline_test_composed_expr_contexts.leftvalue"="b" ".int" leftValue() "value=.int"
    .srcstep 31 31 17 "inline_test_composed_expr_contexts.crexx" 26 1 28 "leftValue: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 29 29 17 "inline_test_composed_expr_contexts.crexx" 27 7 19 "  arg value = .int"
    .meta "inline_test_composed_expr_contexts.leftvalue.value"="b" ".int" a1
    .srcstep 30 30 17 "inline_test_composed_expr_contexts.crexx" 28 3 20 "  return value * 10"
@@ -205,11 +197,7 @@ leftValue() .locals=2
 rightValue() .locals=2
    .meta "inline_test_composed_expr_contexts.rightvalue"="b" ".int" rightValue() "value=.int"
    .srcstep 34 34 17 "inline_test_composed_expr_contexts.crexx" 30 1 29 "rightValue: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 32 32 17 "inline_test_composed_expr_contexts.crexx" 31 7 19 "  arg value = .int"
    .meta "inline_test_composed_expr_contexts.rightvalue.value"="b" ".int" a1
    .srcstep 33 33 17 "inline_test_composed_expr_contexts.crexx" 32 3 19 "  return value + 7"
@@ -222,11 +210,7 @@ rightValue() .locals=2
 rightText() .locals=1
    .meta "inline_test_composed_expr_contexts.righttext"="b" ".string" rightText() "value=.int"
    .srcstep 37 37 17 "inline_test_composed_expr_contexts.crexx" 34 1 31 "rightText: procedure = .string"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 35 35 17 "inline_test_composed_expr_contexts.crexx" 35 7 19 "  arg value = .int"
    .meta "inline_test_composed_expr_contexts.righttext.value"="b" ".int" a1
    .srcstep 36 36 17 "inline_test_composed_expr_contexts.crexx" 36 3 15 "  return value"
@@ -238,11 +222,7 @@ rightText() .locals=1
 labelFor() .locals=2
    .meta "inline_test_composed_expr_contexts.labelfor"="b" ".string" labelFor() "value=.int"
    .srcstep 40 40 17 "inline_test_composed_expr_contexts.crexx" 38 1 30 "labelFor: procedure = .string"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 38 38 17 "inline_test_composed_expr_contexts.crexx" 39 7 19 "  arg value = .int"
    .meta "inline_test_composed_expr_contexts.labelfor.value"="b" ".int" a1
    .srcstep 39 39 17 "inline_test_composed_expr_contexts.crexx" 40 3 29 "  return \"[\" || value || \"]\""
@@ -258,11 +238,7 @@ labelFor() .locals=2
 combine() .locals=3
    .meta "inline_test_composed_expr_contexts.combine"="b" ".int" combine() "left=.int,right=.int"
    .srcstep 44 44 17 "inline_test_composed_expr_contexts.crexx" 42 1 26 "combine: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 41 41 17 "inline_test_composed_expr_contexts.crexx" 43 7 18 "  arg left = .int, right = .int"
    .meta "inline_test_composed_expr_contexts.combine.left"="b" ".int" a1
    .srcstep 42 42 17 "inline_test_composed_expr_contexts.crexx" 43 20 32 "  arg left = .int, right = .int"
@@ -279,33 +255,21 @@ combine() .locals=3
 zero() .locals=0
    .meta "inline_test_composed_expr_contexts.zero"="b" ".int" zero() ""
    .srcstep 46 46 17 "inline_test_composed_expr_contexts.crexx" 46 1 23 "zero: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 45 45 17 "inline_test_composed_expr_contexts.crexx" 47 3 11 "  return 0"
    ret 0
 
 one() .locals=0
    .meta "inline_test_composed_expr_contexts.one"="b" ".int" one() ""
    .srcstep 48 48 17 "inline_test_composed_expr_contexts.crexx" 49 1 22 "one: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 47 47 17 "inline_test_composed_expr_contexts.crexx" 50 3 11 "  return 1"
    ret 1
 
 bump() .locals=1
    .meta "inline_test_composed_expr_contexts.bump"="b" ".int" bump() "expose count=.int"
    .srcstep 52 52 17 "inline_test_composed_expr_contexts.crexx" 52 1 23 "bump: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 49 49 17 "inline_test_composed_expr_contexts.crexx" 53 7 26 "  arg expose count = .int"
    .meta "inline_test_composed_expr_contexts.bump.count"="b" ".int" a1
    .srcstep 50 50 17 "inline_test_composed_expr_contexts.crexx" 54 3 20 "  count = count + 1"

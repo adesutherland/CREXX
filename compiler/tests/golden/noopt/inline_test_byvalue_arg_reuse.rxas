@@ -7,11 +7,7 @@
 main() .locals=6
    .meta "inline_test_byvalue_arg_reuse.main"="b" ".int" main() ""
    .srcstep 16 16 17 "inline_test_byvalue_arg_reuse.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_byvalue_arg_reuse.crexx" 4 3 13 "  errors = 0"
    .meta "inline_test_byvalue_arg_reuse.main.errors"="b" ".int" r0
    load r0,0
@@ -194,11 +190,7 @@ l94iffalse:
 same() .locals=2
    .meta "inline_test_byvalue_arg_reuse.same"="b" ".boolean" same() "value=.int"
    .srcstep 19 19 17 "inline_test_byvalue_arg_reuse.crexx" 20 1 27 "same: procedure = .boolean"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 17 17 17 "inline_test_byvalue_arg_reuse.crexx" 21 7 19 "  arg value = .int"
    .meta "inline_test_byvalue_arg_reuse.same.value"="b" ".int" a1
    .srcstep 18 18 17 "inline_test_byvalue_arg_reuse.crexx" 22 3 23 "  return value = value"
@@ -212,11 +204,7 @@ same() .locals=2
 check() .locals=3
    .meta "inline_test_byvalue_arg_reuse.check"="b" ".int" check() "passed=.boolean,label=.string"
    .srcstep 27 27 17 "inline_test_byvalue_arg_reuse.crexx" 24 1 24 "check: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 20 20 17 "inline_test_byvalue_arg_reuse.crexx" 25 7 24 "  arg passed = .boolean, label = .string"
    .meta "inline_test_byvalue_arg_reuse.check.passed"="b" ".boolean" a1
    .srcstep 21 21 17 "inline_test_byvalue_arg_reuse.crexx" 25 26 41 "  arg passed = .boolean, label = .string"

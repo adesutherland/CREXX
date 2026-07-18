@@ -9,11 +9,7 @@
 main() .locals=3
    .meta "inline_test_object_expr_arg.main"="b" ".int" main() ""
    .srcstep 3 3 17 "inline_test_object_expr_arg.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_object_expr_arg.crexx" 4 3 24 "  say renameBox(makeBox())"
    load r2,0
    call r1,makeBox(),r2
@@ -29,11 +25,7 @@ main() .locals=3
 renameBox() .locals=5
    .meta "inline_test_object_expr_arg.renamebox"="b" ".string" renameBox() "box=.box"
    .srcstep 7 7 17 "inline_test_object_expr_arg.crexx" 7 1 31 "renameBox: procedure = .string"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 4 4 17 "inline_test_object_expr_arg.crexx" 8 7 17 "  arg box = .Box"
    .meta "inline_test_object_expr_arg.renamebox.box"="b" ".box" a1
    .srcstep 5 5 17 "inline_test_object_expr_arg.crexx" 9 3 30 "  call box.setName(\"changed\")"
@@ -61,11 +53,7 @@ renameBox() .locals=5
 makeBox() .locals=3
    .meta "inline_test_object_expr_arg.makebox"="b" ".inline_test_object_expr_arg..box" makeBox() ""
    .srcstep 10 10 17 "inline_test_object_expr_arg.crexx" 12 1 26 "makeBox: procedure = .Box"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 8 8 17 "inline_test_object_expr_arg.crexx" 13 3 21 "  box = .Box(\"seed\")"
    .meta "inline_test_object_expr_arg.makebox.box"="b" ".box" r0
    load r2,"seed"
@@ -85,11 +73,7 @@ makeBox() .locals=3
    .srcstep 14 14 17 "inline_test_object_expr_arg.crexx" 19 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_object_expr_arg.box"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 11 11 17 "inline_test_object_expr_arg.crexx" 20 9 26 "    arg initial = .string"
    .meta "inline_test_object_expr_arg.box.§factory.initial"="b" ".string" a1
    .meta "inline_test_object_expr_arg.box.§factory.§factory"="b" ".box" r1
@@ -108,11 +92,7 @@ makeBox() .locals=3
    .meta "inline_test_object_expr_arg.box.setname"="b" ".void" §inline_test_object_expr_arg.box.setname() "value=.string"
    .srcstep 18 18 17 "inline_test_object_expr_arg.crexx" 24 3 18 "  setName: method"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 15 15 17 "inline_test_object_expr_arg.crexx" 25 9 24 "    arg value = .string"
    .meta "inline_test_object_expr_arg.box.setname.value"="b" ".string" a2
    .meta "inline_test_object_expr_arg.box.setname.§this"="b" ".box" a1
@@ -130,11 +110,7 @@ makeBox() .locals=3
    .meta "inline_test_object_expr_arg.box.getname"="b" ".string" §inline_test_object_expr_arg.box.getname() ""
    .srcstep 20 20 17 "inline_test_object_expr_arg.crexx" 29 3 28 "  getName: method = .string"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 19 19 17 "inline_test_object_expr_arg.crexx" 30 5 16 "    return name"
    .meta "inline_test_object_expr_arg.box.getname.§this"="b" ".box" a1
    linkattr1 r1,a1,1

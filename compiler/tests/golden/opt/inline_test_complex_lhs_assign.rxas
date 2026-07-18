@@ -7,11 +7,7 @@
 main() .locals=4
    .meta "inline_test_complex_lhs_assign.main"="b" ".int" main() ""
    .srcstep 7 7 17 "inline_test_complex_lhs_assign.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "inline_test_complex_lhs_assign.main.values"="b" ".int[3]" r0
    .srcstep 1 1 17 "inline_test_complex_lhs_assign.crexx" 4 3 18 "  values = .int[3]"
    null r0

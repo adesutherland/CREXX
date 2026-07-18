@@ -7,11 +7,7 @@
 main() .locals=19
    .meta "inline_test_vararg.main"="b" ".int" main() ""
    .srcstep 38 38 17 "inline_test_vararg.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_vararg.crexx" 4 3 39 "  say \"Starting vararg inline test...\""
    say "Starting vararg inline test..."
    .srcstep 4 4 17 "inline_test_vararg.crexx" 5 3 20 "  say tailCount(10)"

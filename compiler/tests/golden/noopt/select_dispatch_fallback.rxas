@@ -7,11 +7,7 @@
 main() .locals=7
    .meta "select_dispatch_fallback.main"="b" ".int" main() ""
    .srcstep 10 10 17 "select_dispatch_fallback.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "select_dispatch_fallback.main.i"="b" ".int" r0
    .srcstep 1 1 17 "select_dispatch_fallback.crexx" 4 3 11 "  i = .int"
    null r0
@@ -61,11 +57,7 @@ l9doend:
 duplicate_case() .locals=7
    .meta "select_dispatch_fallback.duplicate_case"="b" ".int" duplicate_case() "value=.int"
    .srcstep 25 25 17 "select_dispatch_fallback.crexx" 12 1 33 "duplicate_case: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 11 11 17 "select_dispatch_fallback.crexx" 13 7 19 "  arg value = .int"
    .meta "select_dispatch_fallback.duplicate_case.value"="b" ".int" a1
    .meta "select_dispatch_fallback.duplicate_case.select_tmp"="b" ".int" r1
@@ -122,11 +114,7 @@ l102ifend:
 dynamic_case() .locals=8
    .meta "select_dispatch_fallback.dynamic_case"="b" ".int" dynamic_case() "value=.int,dynamic=.int"
    .srcstep 41 41 17 "select_dispatch_fallback.crexx" 23 1 31 "dynamic_case: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 26 26 17 "select_dispatch_fallback.crexx" 24 7 19 "  arg value = .int, dynamic = .int"
    .meta "select_dispatch_fallback.dynamic_case.value"="b" ".int" a1
    .srcstep 27 27 17 "select_dispatch_fallback.crexx" 24 21 35 "  arg value = .int, dynamic = .int"

@@ -9,11 +9,7 @@
 main() .locals=10
    .meta "inline_test_member_receiver_expr.main"="b" ".int" main() ""
    .srcstep 24 24 17 "inline_test_member_receiver_expr.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_member_receiver_expr.crexx" 4 3 48 "  say \"Starting member receiver inline test...\""
    say "Starting member receiver inline test..."
    .srcstep 11 11 17 "inline_test_member_receiver_expr.crexx" 5 3 31 "  say buildBox(\"seed\").getName()"
@@ -86,11 +82,7 @@ l71bexprend:
    .srcstep 36 36 17 "inline_test_member_receiver_expr.crexx" 18 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_member_receiver_expr.box"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 33 33 17 "inline_test_member_receiver_expr.crexx" 19 9 26 "    arg initial = .string"
    .meta "inline_test_member_receiver_expr.box.§factory.initial"="b" ".string" a1
    .meta "inline_test_member_receiver_expr.box.§factory.§factory"="b" ".box" r1
@@ -109,11 +101,7 @@ l71bexprend:
    .meta "inline_test_member_receiver_expr.box.getname"="b" ".string" §inline_test_member_receiver_expr.box.getname() ""
    .srcstep 38 38 17 "inline_test_member_receiver_expr.crexx" 23 3 28 "  getName: method = .string"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 37 37 17 "inline_test_member_receiver_expr.crexx" 24 5 16 "    return name"
    .meta "inline_test_member_receiver_expr.box.getname.§this"="b" ".box" a1
    linkattr1 r1,a1,1

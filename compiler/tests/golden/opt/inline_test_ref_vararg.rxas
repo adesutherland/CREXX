@@ -7,11 +7,7 @@
 main() .locals=3
    .meta "inline_test_ref_vararg.main"="b" ".int" main() ""
    .srcstep 21 21 17 "inline_test_ref_vararg.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_ref_vararg.crexx" 5 3 14 "  second = 20"
    .meta "inline_test_ref_vararg.main.first"="b" ".int" "10"
    .meta "inline_test_ref_vararg.main.second"="b" ".int" r1
@@ -87,11 +83,7 @@ l141bexprend:
 bumpOne() .locals=1
    .meta "inline_test_ref_vararg.bumpone"="b" ".int" bumpOne() "expose value=.int"
    .srcstep 33 33 17 "inline_test_ref_vararg.crexx" 34 1 26 "bumpOne: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 30 30 17 "inline_test_ref_vararg.crexx" 35 7 26 "  arg expose value = .int"
    .meta "inline_test_ref_vararg.bumpone.value"="b" ".int" a1
    .srcstep 31 31 17 "inline_test_ref_vararg.crexx" 36 3 20 "  value = value + 7"

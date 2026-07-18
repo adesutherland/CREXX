@@ -7,11 +7,7 @@
 main() .locals=5
    .meta "inline_test_condition_contexts.main"="b" ".int" main() ""
    .srcstep 26 26 17 "inline_test_condition_contexts.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_condition_contexts.crexx" 4 3 50 "  say \"Starting condition context inline test...\""
    say "Starting condition context inline test..."
    .srcstep 4 4 17 "inline_test_condition_contexts.crexx" 6 3 14 "  if isOne(1) then say \"if-yes\""
@@ -116,11 +112,7 @@ l43doend:
 isOne() .locals=2
    .meta "inline_test_condition_contexts.isone"="b" ".int" isOne() "value=.int"
    .srcstep 29 29 17 "inline_test_condition_contexts.crexx" 27 1 24 "isOne: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 27 27 17 "inline_test_condition_contexts.crexx" 28 7 19 "  arg value = .int"
    .meta "inline_test_condition_contexts.isone.value"="b" ".int" a1
    .srcstep 28 28 17 "inline_test_condition_contexts.crexx" 29 3 19 "  return value = 1"
@@ -134,11 +126,7 @@ isOne() .locals=2
 belowTwo() .locals=2
    .meta "inline_test_condition_contexts.belowtwo"="b" ".int" belowTwo() "value=.int"
    .srcstep 32 32 17 "inline_test_condition_contexts.crexx" 31 1 27 "belowTwo: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 30 30 17 "inline_test_condition_contexts.crexx" 32 7 19 "  arg value = .int"
    .meta "inline_test_condition_contexts.belowtwo.value"="b" ".int" a1
    .srcstep 31 31 17 "inline_test_condition_contexts.crexx" 33 3 19 "  return value < 2"
@@ -152,11 +140,7 @@ belowTwo() .locals=2
 atLeastTwo() .locals=2
    .meta "inline_test_condition_contexts.atleasttwo"="b" ".int" atLeastTwo() "value=.int"
    .srcstep 35 35 17 "inline_test_condition_contexts.crexx" 35 1 29 "atLeastTwo: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 33 33 17 "inline_test_condition_contexts.crexx" 36 7 19 "  arg value = .int"
    .meta "inline_test_condition_contexts.atleasttwo.value"="b" ".int" a1
    .srcstep 34 34 17 "inline_test_condition_contexts.crexx" 37 3 20 "  return value >= 2"

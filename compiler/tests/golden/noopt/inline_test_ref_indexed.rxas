@@ -8,11 +8,7 @@ g1 .expose=refidx.values
 
 main() .locals=4
    .meta "refidx.main"="b" ".int" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_ref_indexed.crexx" 4 1 42 "say \"Starting indexed ref inline test...\""
    say "Starting indexed ref inline test..."
    .srcstep 2 2 17 "inline_test_ref_indexed.crexx" 6 1 8 "idx = 1"
@@ -71,11 +67,7 @@ main() .locals=4
 refBump() .locals=1
    .meta "refidx.refbump"="b" ".int" refBump() "expose value=.int"
    .srcstep 14 14 17 "inline_test_ref_indexed.crexx" 16 1 26 "refBump: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 10 10 17 "inline_test_ref_indexed.crexx" 17 7 26 "  arg expose value = .int"
    .meta "refidx.refbump.value"="b" ".int" a1
    .srcstep 11 11 17 "inline_test_ref_indexed.crexx" 18 3 16 "  idx = idx + 1"

@@ -26,7 +26,7 @@ exit criterion is met.
 | NR-07 | Direct compare-to-branch and loop lowering | rejected | Interleaved Release evidence found no practical gain from either the direct-condition or specialist-loop paths, and RXAS already emitted the tested `BCTP` product forms. Both compiler changes and their dedicated fixtures are removed; exact rejected patches and evidence are retained. See `NR-06-07-WORKLIST.md`. |
 | NUMERIC-01 | Native typed Level B numeric surface and RexxCPS type fidelity | complete | Eleven native integer/float BIFs are accepted; standard benchmarks are decimal-free except RexxCPS's intentional Classic workload. RexxCPS 2.2d uses explicit digits 9, honest decimal/int/float paths and typed text BIFs. Accepted medians are 1.15 MCPS (`rxvm`) and 1.11 MCPS (`rxbvm`); final Debug CTest is 1,851/1,851. |
 | NR-08 | Definite initialization and reference-lifetime facts | complete | Adrian accepted Gate A after canonical RexxCPS improved by 4.358% (`rxvm`) and 5.903% (`rxbvm`). The corrected library audit changes only `ENDLIFE`, 8,006 to 151. Complete Debug build and final CTest 1,851/1,851 pass; the 71 intentional goldens remove exactly 170 additional scalar `ENDLIFE`s and no other lines. Evidence: `evidence/2026-07-17-nr-08-first-release-verdict/`. |
-| NR-09 | RXSEQ-guided lowering and instruction synthesis | queued | NR-08's prerequisite closeout is complete. The 11,332-row ledger is input, not completion: implement the obvious exact candidates, retain dispositions for the rest, and compare existing `NUMSCI`/`NUMENG` with synthesized numeric-context instructions and procedure-owned defaults. |
+| NR-09 | RXSEQ-guided lowering and instruction synthesis | in progress | Adrian accepted Rule 1 (+0.627% `rxvm`, +0.246% `rxbvm`); final Debug CTest is 1,852/1,852. The next production unit is one 67-mapping/12-family Class 1+2 large-instruction batch with a single combined Release verdict, not instruction-by-instruction work. |
 | NR-10 | Cross-runtime forensic baselines | queued | Run the formal CREXX/ooRexx/NetRexx portfolio matrix incrementally as each NR-02 workload clears equivalence; include Regina for RexxCPS only and retain selected Java/C controls. |
 | NR-11 | Performance governance and scorecard | queued | Agree Tier A/B, geometric-mean and outlier policies, regression budget and publication format. |
 
@@ -410,6 +410,55 @@ canonical source SHA-256 is
   passed 71/71 and final Debug CTest passed 1,851/1,851 in 217.35 seconds. No
   sanitizer, package/install, cross-platform or extra timing campaign was
   added. NR-08 is complete and NR-09 is the next queued activity.
+- 2026-07-17: Resumed NR-09 at clean `develop` commit `7b93bef73`, exactly
+  equal to `origin/develop`. The existing ordinary Release product hashes
+  exactly match the accepted NR-08 candidate, establishing an exact
+  post-NR-08 rather than NR-05/pre-NR-08 baseline. Canonical optimized
+  RexxCPS has 25 static procedure-entry setters and its retained exact-image
+  profiles execute 542,500 setters on each VM. The worklist now compares five
+  designs. Rule 1 selects compiler-owned existing `NUMSCI`/`NUMENG` emission
+  with a mandatory digits >= 5 compatibility gate; RXAS peepholing is rejected
+  for this rule, while generalized opcode, procedure-default and private-image
+  synthesis remain deferred design comparisons requiring their stated gates.
+  Evidence starts at
+  `evidence/2026-07-17-nr-09-numctx-first-release-verdict/`.
+- 2026-07-17: Froze Rule 1 after focused Debug 12/12 and focused Release 1/1
+  passed. Canonical optimized RexxCPS changes 25 static setters to five
+  `NUMSCI` operations and 542,500 dynamic setup instructions to 108,508 on
+  each VM (-433,992). RXAS shrinks 300 bytes, standalone RXBIN grows 8 bytes,
+  and the linked library shrinks 808 bytes; retained library setup sites fall
+  3,123 to 651. Against the valid accepted NR-08 baseline, median CPS changes
+  +0.627% on `rxvm` and +0.246% on `rxbvm`, with elapsed changes -0.597% and
+  -0.236%. Both ranges overlap, so the verdict is neutral-to-slightly-positive,
+  not material. The candidate remains provisional/revertable and NR-09 stops
+  for Adrian before broad validation, cleanup or Rule 2. Evidence:
+  `evidence/2026-07-17-nr-09-numctx-first-release-verdict/`.
+- 2026-07-18: Adrian accepted NR-09 Rule 1 as a small improvement. Exact
+  pre-update audit proved 222 compiler goldens contained only 517 replacements
+  of five setters by `NUMSCI`; four RXPA tests retained the same signal/source
+  and moved only their expected bytecode address from 15 to 9. The failed
+  selection passed 227/227 and final Debug CTest passed 1,852/1,852 in 205.57
+  seconds. Rule 1 is retained and fully closed out.
+- 2026-07-18: Adrian clarified that NR-09 low risk means RXAS-provable bounded
+  dataflow (Class 1) or rxc-known compiler temporaries with irrelevant
+  intermediate effects (Class 2), and that adding large instructions is the
+  aim. The 76 selected patterns classify as 20 Class 1, 51 Class 2 and five
+  deferred. Four Class 1 compare/branch mappings remain rejected by NR-07,
+  leaving 67 active mappings across 12 coherent families. They will be
+  designed and implemented as one attributable batch with one combined first
+  Release verdict; overlapping RXSEQ windows are not additive.
+- 2026-07-18: Class 1 ownership is RXAS-backed, not RXAS-exclusive. Every
+  Class 1 mapping gets an RXAS peephole backstop. rxc may emit the large
+  instruction directly when one AST-node emission naturally owns the whole
+  mapping; mappings that would require coordination across merely adjacent AST
+  nodes stay expanded in rxc and are collected by RXAS.
+- 2026-07-18: The exact 76-ID disposition is retained in
+  `NR-09-MAPPING-REGISTER.md`: 67 active, four prior NR-07 rejections and five
+  deferred controls. Adrian selected one ordered batch: first add the large
+  canonical instructions and direct tests, then RXAS Class 1 backstops, then
+  simple single-AST rxc Class 1 emission plus rxc-owned Class 2 lowering. After
+  focused proof, run one combined Release verdict and stop; full QA follows an
+  accepted verdict under the programme gate.
 
 ### NR-04A work notes
 
