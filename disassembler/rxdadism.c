@@ -29,6 +29,7 @@
 #include <string.h>
 #include <stdint.h>
 #include <inttypes.h>
+#include <limits.h>
 #include <math.h>
 #include <ctype.h>
 #include "platform.h"
@@ -41,70 +42,6 @@
 /* Max buffer size - todo change to a dynamic solution */
 #define MAX_LINE_SIZE 5000
 #include "../binutils/include/opdata.c"
-
-static size_t line_buffer_offset(size_t used) {
-    return used < MAX_LINE_SIZE ? used : MAX_LINE_SIZE - 1;
-}
-
-static size_t line_buffer_remaining(size_t used) {
-    return used < MAX_LINE_SIZE ? MAX_LINE_SIZE - used : 0;
-}
-
-static int get_operand_types(OpFormat format, OperandType *types) {
-    switch (format) {
-        case FMT_EMPTY: return 0;
-        case FMT_B: types[0] = OP_BINARY; return 1;
-        case FMT_C: types[0] = OP_CHAR; return 1;
-        case FMT_F: types[0] = OP_FLOAT; return 1;
-        case FMT_I: types[0] = OP_INT; return 1;
-        case FMT_I_I: types[0] = OP_INT; types[1] = OP_INT; return 2;
-        case FMT_I_I_I: types[0] = OP_INT; types[1] = OP_INT; types[2] = OP_INT; return 3;
-        case FMT_I_I_R: types[0] = OP_INT; types[1] = OP_INT; types[2] = OP_REG; return 3;
-        case FMT_I_R: types[0] = OP_INT; types[1] = OP_REG; return 2;
-        case FMT_I_R_R: types[0] = OP_INT; types[1] = OP_REG; types[2] = OP_REG; return 3;
-        case FMT_L: types[0] = OP_ID; return 1;
-        case FMT_L_L_R: types[0] = OP_ID; types[1] = OP_ID; types[2] = OP_REG; return 3;
-        case FMT_L_P_S: types[0] = OP_ID; types[1] = OP_FUNC; types[2] = OP_STRING; return 3;
-        case FMT_L_R: types[0] = OP_ID; types[1] = OP_REG; return 2;
-        case FMT_L_R_I: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_INT; return 3;
-        case FMT_L_R_R: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_REG; return 3;
-        case FMT_L_S: types[0] = OP_ID; types[1] = OP_STRING; return 2;
-        case FMT_P: types[0] = OP_FUNC; return 1;
-        case FMT_P_S: types[0] = OP_FUNC; types[1] = OP_STRING; return 2;
-        case FMT_R: types[0] = OP_REG; return 1;
-        case FMT_R_B: types[0] = OP_REG; types[1] = OP_BINARY; return 2;
-        case FMT_R_B_B: types[0] = OP_REG; types[1] = OP_BINARY; types[2] = OP_BINARY; return 3;
-        case FMT_R_B_R: types[0] = OP_REG; types[1] = OP_BINARY; types[2] = OP_REG; return 3;
-        case FMT_R_B_S: types[0] = OP_REG; types[1] = OP_BINARY; types[2] = OP_STRING; return 3;
-        case FMT_R_C: types[0] = OP_REG; types[1] = OP_CHAR; return 2;
-        case FMT_R_D: types[0] = OP_REG; types[1] = OP_DECIMAL; return 2;
-        case FMT_R_D_R: types[0] = OP_REG; types[1] = OP_DECIMAL; types[2] = OP_REG; return 3;
-        case FMT_R_F: types[0] = OP_REG; types[1] = OP_FLOAT; return 2;
-        case FMT_R_F_I: types[0] = OP_REG; types[1] = OP_FLOAT; types[2] = OP_INT; return 3;
-        case FMT_R_F_R: types[0] = OP_REG; types[1] = OP_FLOAT; types[2] = OP_REG; return 3;
-        case FMT_R_I: types[0] = OP_REG; types[1] = OP_INT; return 2;
-        case FMT_R_I_I: types[0] = OP_REG; types[1] = OP_INT; types[2] = OP_INT; return 3;
-        case FMT_R_I_R: types[0] = OP_REG; types[1] = OP_INT; types[2] = OP_REG; return 3;
-        case FMT_R_P: types[0] = OP_REG; types[1] = OP_FUNC; return 2;
-        case FMT_R_P_R: types[0] = OP_REG; types[1] = OP_FUNC; types[2] = OP_REG; return 3;
-        case FMT_R_R: types[0] = OP_REG; types[1] = OP_REG; return 2;
-        case FMT_R_R_B: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_BINARY; return 3;
-        case FMT_R_R_D: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_DECIMAL; return 3;
-        case FMT_R_R_F: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_FLOAT; return 3;
-        case FMT_R_R_I: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_INT; return 3;
-        case FMT_R_R_R: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_REG; return 3;
-        case FMT_R_R_S: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_STRING; return 3;
-        case FMT_R_S: types[0] = OP_REG; types[1] = OP_STRING; return 2;
-        case FMT_R_S_I: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_INT; return 3;
-        case FMT_R_S_R: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_REG; return 3;
-        case FMT_R_S_S: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_STRING; return 3;
-        case FMT_S: types[0] = OP_STRING; return 1;
-        case FMT_S_R: types[0] = OP_STRING; types[1] = OP_REG; return 2;
-        case FMT_S_S: types[0] = OP_STRING; types[1] = OP_STRING; return 2;
-        case FMT_S_S_R: types[0] = OP_STRING; types[1] = OP_STRING; types[2] = OP_REG; return 3;
-        default: return 0;
-    }
-}
 
 static void get_mnemonic(char *dest, const char *name) {
     int i = 0;
@@ -825,8 +762,7 @@ static rxda_jtable *rxda_collect_jtables(bin_space *pgm, code_line *source) {
     while (i < pgm->inst_size) {
         size_t instruction = i;
         const OpInfo *op = &op_table[pgm->binary[i++].instruction.opcode];
-        OperandType types[3];
-        int operand_count = get_operand_types(op->format, types);
+        size_t operand_count = rxop_format_operand_count(op->format);
         enum rxda_jtable_mode mode;
         int table_operand;
 
@@ -1477,7 +1413,7 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
     proc_constant* pentry;
     expose_proc_constant* eentry;
     char line_buffer[MAX_LINE_SIZE];
-    size_t line_len;
+    size_t displayed_mnemonic_length;
     rxda_jtable *jump_tables;
 
     /* Prepare to Print Code */
@@ -1496,16 +1432,17 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
         j = i;
         int opcode = pgm->binary[i++].instruction.opcode;
         const OpInfo *op = &op_table[opcode];
-        OperandType types[3];
-        int num_ops = get_operand_types(op->format, types);
-        int k;
+        size_t num_ops = rxop_format_operand_count(op->format);
+        size_t k;
 
         if (num_ops != pgm->binary[j].instruction.no_ops) {
             printf("BINARY ERROR - Instruction operand count mismatch @ 0x%.6x\n",(int)j);
         }
 
         for (k = 0; k < num_ops; k++) {
-            if (types[k] == OP_ID) source[pgm->binary[i].index].flags = show_label;
+            if (rxop_format_operand_type(op->format, k) == OP_ID) {
+                source[pgm->binary[i].index].flags = show_label;
+            }
             i++;
         }
         source[j].op = op;
@@ -1866,44 +1803,45 @@ void disassemble(bin_space *pgm, module_file *module, FILE *stream, int print_al
         {
             char mnemonic[MAX_LINE_SIZE];
             get_mnemonic(mnemonic, source[j].op->mnemonic);
-            line_len = snprintf(line_buffer, MAX_LINE_SIZE, " %s ", mnemonic);
+            displayed_mnemonic_length = strlen(mnemonic);
+            fprintf(stream, " %s ", mnemonic);
+            line_buffer[0] = 0;
         }
 
         {
-            OperandType types[3];
-            int num_ops = get_operand_types(source[j].op->format, types);
+            size_t num_ops = rxop_format_operand_count(source[j].op->format);
+            size_t instruction_width = 2 + displayed_mnemonic_length;
             enum rxda_jtable_mode jump_mode;
             int table_operand = -1;
-            int k;
+            size_t k;
             (void)rxda_jump_info(source[j].op, &jump_mode, &table_operand);
             for (k = 0; k < num_ops; k++) {
                 if (k > 0) {
-                    line_len += snprintf(line_buffer + line_buffer_offset(line_len), line_buffer_remaining(line_len), ",");
+                    fputc(',', stream);
+                    instruction_width++;
                 }
                 if (k == table_operand) {
                     size_t pool_index = pgm->binary[i].index;
                     rxda_jtable *table = rxda_find_jtable(jump_tables, pool_index);
                     if (table && table->valid) {
-                        line_len += snprintf(line_buffer + line_buffer_offset(line_len),
-                                             line_buffer_remaining(line_len),
-                                             "jtable_%lx", (unsigned long)pool_index);
+                        size_t length = (size_t)snprintf(line_buffer, MAX_LINE_SIZE,
+                                                        "jtable_%lx", (unsigned long)pool_index);
+                        fputs(line_buffer, stream);
+                        instruction_width += length;
                         i++;
                         continue;
                     }
                 }
-                line_len += disassemble_operand(pgm,
-                                                module,
-                                                source[j].op->opcode,
-                                                (unsigned int)k,
-                                                line_buffer + line_buffer_offset(line_len),
-                                                line_buffer_remaining(line_len),
-                                                types[k],
-                                                i++,
-                                                globals,
-                                                locals);
+                instruction_width += disassemble_operand(
+                        pgm, module, source[j].op->opcode, (unsigned int)k,
+                        line_buffer, MAX_LINE_SIZE,
+                        rxop_format_operand_type(source[j].op->format, k),
+                        i++, globals, locals);
+                fputs(line_buffer, stream);
             }
+            while (instruction_width++ < 45) fputc(' ', stream);
         }
-        fprintf(stream, "%-45s * 0x%.6lx:%.4x %s\n", line_buffer, j, source[j].op->opcode, source[j].comment);
+        fprintf(stream, " * 0x%.6lx:%.4x %s\n", j, source[j].op->opcode, source[j].comment);
     }
 
     /* Final Meta entries at the code address + 1 */

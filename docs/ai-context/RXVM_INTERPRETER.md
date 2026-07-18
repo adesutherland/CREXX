@@ -797,6 +797,11 @@ In this example:
 - `REG_RETURN_INT` maps the result back into the memory of Operand 1.
 - `DISPATCH` safely jumps the Program Counter (`pc`) to the next instruction.
 
+`VM_ADVANCE(n)` and `REG_OP(n)` accept any operand position represented by the
+opcode signature; handlers are not restricted to the traditional three named
+operand aliases. `CNOP_REG_REG_REG_REG_REG_REG_REG_REG_REG` is the focused
+nine-operand execution and tooling regression.
+
 ### Opcode effects inventory
 
 The VM handlers are also the semantic evidence for the machine-readable opcode
@@ -1070,10 +1075,9 @@ IADD_REG_REG_REG(R17,R5,R9) | COPY_REG_REG(R5,R22)
 
 Sites with the same normalised pattern are clustered, and their dynamic counts
 are summed. The report includes execution count, static site count, module
-count, one concrete mapping/example, and a `candidate` or
-`over_3_symbols` status. The current combined-opcode candidate filter accepts
-at most three distinct normalised register/constant symbols; larger patterns
-remain visible but are screened out at this stage. This is only candidate
+count, one concrete mapping/example, and `candidate` status. Operand
+normalisation and mapping text are dynamically sized, so candidates are no
+longer screened out merely for having more than three distinct symbols. This is only candidate
 extraction: control-flow, liveness, aliasing, exceptions, interrupt behaviour,
 and other transformation safety must be reviewed separately before defining a
 combined opcode or optimiser rule. The table heading also reports the window

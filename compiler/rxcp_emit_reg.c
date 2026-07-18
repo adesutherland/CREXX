@@ -845,9 +845,11 @@ walker_result register_walker(walker_direction direction,
                 /*
                 * Constants do not need a register
                 */
-                if (child1 && (child1->node_type == FUNC_SYMBOL || is_constant(child1))) child1->register_num = DONT_ASSIGN_REGISTER;
-                if (child2 && (child2->node_type == FUNC_SYMBOL || is_constant(child2))) child2->register_num = DONT_ASSIGN_REGISTER;
-                if (child3 && (child3->node_type == FUNC_SYMBOL || is_constant(child3))) child3->register_num = DONT_ASSIGN_REGISTER;
+                for (c = node->child; c; c = c->sibling) {
+                    if (c->node_type == FUNC_SYMBOL || is_constant(c)) {
+                        c->register_num = DONT_ASSIGN_REGISTER;
+                    }
+                }
                 break;
 
                 /* The order of the operands of these instructions are not order

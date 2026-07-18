@@ -93,6 +93,12 @@ crexx_add_rxdas_roundtrip(
         SOURCE ${CMAKE_SOURCE_DIR}/interpreter/tests/tests_compact_format.rxas
 )
 
+crexx_add_rxdas_roundtrip(
+        NAME rxdas_roundtrip_wide_operands
+        SOURCE ${CMAKE_SOURCE_DIR}/interpreter/tests/tests_wide_operands.rxas
+        EXPECT_DISASSEMBLY_TEXT_1 "cnop r0,r1,r2,r3,r4,r5,r6,r7,r8"
+)
+
 add_executable(mutate_graph_rxbin tests/mutate_graph_rxbin.c)
 set_target_properties(mutate_graph_rxbin PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})

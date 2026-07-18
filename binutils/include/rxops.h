@@ -109,7 +109,7 @@ X(SOCKCONNECTTLS_REG_REG_REG, 83, FMT_R_R_R, FLOW_NEXT, FLG_OPT_BARRIER, "Connec
 X(SETOBJUNINIT_REG_STRING, 84, FMT_R_S, FLOW_NEXT, 0, "Set runtime object type metadata on op1 and mark it uninitialized")
 X(ASSERTINITIALIZED_REG, 85, FMT_R, FLOW_NEXT, FLG_OPT_BARRIER, "Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED")
 X(ISINITIALIZED_REG_REG, 86, FMT_R_R, FLOW_NEXT, 0, "Set op1 boolean if op2 is initialized")
-X(RESERVED_087, 87, FMT_EMPTY, FLOW_NEXT, 0, "Reserved")
+X(CNOP_REG_REG_REG_REG_REG_REG_REG_REG_REG, 87, "RRRRRRRRR", FLOW_NEXT, 0, "No operation with nine register inputs")
 X(RESERVED_088, 88, FMT_EMPTY, FLOW_NEXT, 0, "Reserved")
 X(RESERVED_089, 89, FMT_EMPTY, FLOW_NEXT, 0, "Reserved")
 X(RESERVED_090, 90, FMT_EMPTY, FLOW_NEXT, 0, "Reserved")

@@ -4124,61 +4124,9 @@ RXVM_LABEL_OWNER RX_FLATTEN int run(rxvm_context *context, int argc, char *argv[
     /*
      * Instruction database - loaded from a generated header file
      */
-#define FMT_EMPTY_MAP 0, OP_NONE, OP_NONE, OP_NONE
-#define FMT_B_MAP 1, OP_BINARY, OP_NONE, OP_NONE
-#define FMT_C_MAP 1, OP_CHAR, OP_NONE, OP_NONE
-#define FMT_F_MAP 1, OP_FLOAT, OP_NONE, OP_NONE
-#define FMT_I_MAP 1, OP_INT, OP_NONE, OP_NONE
-#define FMT_I_I_MAP 2, OP_INT, OP_INT, OP_NONE
-#define FMT_I_I_I_MAP 3, OP_INT, OP_INT, OP_INT
-#define FMT_I_I_R_MAP 3, OP_INT, OP_INT, OP_REG
-#define FMT_I_R_MAP 2, OP_INT, OP_REG, OP_NONE
-#define FMT_I_R_R_MAP 3, OP_INT, OP_REG, OP_REG
-#define FMT_L_MAP 1, OP_ID, OP_NONE, OP_NONE
-#define FMT_L_L_R_MAP 3, OP_ID, OP_ID, OP_REG
-#define FMT_L_P_S_MAP 3, OP_ID, OP_FUNC, OP_STRING
-#define FMT_L_R_MAP 2, OP_ID, OP_REG, OP_NONE
-#define FMT_L_R_I_MAP 3, OP_ID, OP_REG, OP_INT
-#define FMT_L_R_R_MAP 3, OP_ID, OP_REG, OP_REG
-#define FMT_L_R_S_MAP 3, OP_ID, OP_REG, OP_STRING
-#define FMT_L_S_MAP 2, OP_ID, OP_STRING, OP_NONE
-#define FMT_P_MAP 1, OP_FUNC, OP_NONE, OP_NONE
-#define FMT_P_S_MAP 2, OP_FUNC, OP_STRING, OP_NONE
-#define FMT_R_MAP 1, OP_REG, OP_NONE, OP_NONE
-#define FMT_R_B_MAP 2, OP_REG, OP_BINARY, OP_NONE
-#define FMT_R_B_B_MAP 3, OP_REG, OP_BINARY, OP_BINARY
-#define FMT_R_B_R_MAP 3, OP_REG, OP_BINARY, OP_REG
-#define FMT_R_B_S_MAP 3, OP_REG, OP_BINARY, OP_STRING
-#define FMT_R_C_MAP 2, OP_REG, OP_CHAR, OP_NONE
-#define FMT_R_D_MAP 2, OP_REG, OP_DECIMAL, OP_NONE
-#define FMT_R_D_R_MAP 3, OP_REG, OP_DECIMAL, OP_REG
-#define FMT_R_F_MAP 2, OP_REG, OP_FLOAT, OP_NONE
-#define FMT_R_F_I_MAP 3, OP_REG, OP_FLOAT, OP_INT
-#define FMT_R_F_R_MAP 3, OP_REG, OP_FLOAT, OP_REG
-#define FMT_R_I_MAP 2, OP_REG, OP_INT, OP_NONE
-#define FMT_R_I_I_MAP 3, OP_REG, OP_INT, OP_INT
-#define FMT_R_I_R_MAP 3, OP_REG, OP_INT, OP_REG
-#define FMT_R_P_MAP 2, OP_REG, OP_FUNC, OP_NONE
-#define FMT_R_P_R_MAP 3, OP_REG, OP_FUNC, OP_REG
-#define FMT_R_R_MAP 2, OP_REG, OP_REG, OP_NONE
-#define FMT_R_R_B_MAP 3, OP_REG, OP_REG, OP_BINARY
-#define FMT_R_R_D_MAP 3, OP_REG, OP_REG, OP_DECIMAL
-#define FMT_R_R_F_MAP 3, OP_REG, OP_REG, OP_FLOAT
-#define FMT_R_R_I_MAP 3, OP_REG, OP_REG, OP_INT
-#define FMT_R_R_R_MAP 3, OP_REG, OP_REG, OP_REG
-#define FMT_R_R_S_MAP 3, OP_REG, OP_REG, OP_STRING
-#define FMT_R_S_MAP 2, OP_REG, OP_STRING, OP_NONE
-#define FMT_R_S_I_MAP 3, OP_REG, OP_STRING, OP_INT
-#define FMT_R_S_R_MAP 3, OP_REG, OP_STRING, OP_REG
-#define FMT_R_S_S_MAP 3, OP_REG, OP_STRING, OP_STRING
-#define FMT_S_MAP 1, OP_STRING, OP_NONE, OP_NONE
-#define FMT_S_R_MAP 2, OP_STRING, OP_REG, OP_NONE
-#define FMT_S_S_MAP 2, OP_STRING, OP_STRING, OP_NONE
-#define FMT_S_S_R_MAP 3, OP_STRING, OP_STRING, OP_REG
-
 const Instruction meta_map[OP_MAX_INSTRUCTIONS] = {
 #define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) \
-    { OPCODE, #NAME, DESC, FMT##_MAP },
+    { OPCODE, #NAME, DESC, sizeof(FMT) - 1u, FMT },
 #include "../binutils/include/rxops.h"
 #undef X
 };
@@ -5094,18 +5042,31 @@ START_OF_INSTRUCTIONS
         START_INSTRUCTION(METADECODEINST_REG_REG) VM_ADVANCE(2);
             DEBUG("TRACE - METADECODEINST R%d,R%d\n", (int) REG_IDX(1), (int) REG_IDX(2));
 
-            /* The target register is turned into an object with 7 attributes */
+            /*
+             * Preserve the historical seven-attribute object for callers that
+             * read all three legacy type slots, then extend it for wide forms.
+             */
             value_zero(op1R);
-            set_num_attributes(op1R, 7);
+            set_num_attributes(op1R, (size_t)4 +
+                    (meta_map[op2R->int_value].operands < 3
+                         ? 3
+                         : meta_map[op2R->int_value].operands));
 
             /* Populate the object */
             op1R->attributes[0]->int_value = meta_map[op2R->int_value].opcode;
             set_null_string(op1R->attributes[1], meta_map[op2R->int_value].instruction);
             set_null_string(op1R->attributes[2], meta_map[op2R->int_value].desc);
-            op1R->attributes[3]->int_value = meta_map[op2R->int_value].operands;
-            op1R->attributes[4]->int_value = meta_map[op2R->int_value].op1_type;
-            op1R->attributes[5]->int_value = meta_map[op2R->int_value].op2_type;
-            op1R->attributes[6]->int_value = meta_map[op2R->int_value].op3_type;
+            op1R->attributes[3]->int_value = (rxinteger)meta_map[op2R->int_value].operands;
+            {
+                size_t operand_index;
+                for (operand_index = 0;
+                     operand_index < meta_map[op2R->int_value].operands;
+                     operand_index++) {
+                    op1R->attributes[4 + operand_index]->int_value =
+                            rxop_format_operand_type(meta_map[op2R->int_value].format,
+                                                     operand_index);
+                }
+            }
             DISPATCH;
 
             /* Load Integer/Index Operand (op1 = (int)op2[op3]) */
@@ -12295,7 +12256,11 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
             rxvm_socket_connect_tls(context, op1R->int_value, op2R, op3R->int_value);
             DISPATCH;
 
-        RESERVED_IMPL(RESERVED_087)
+        START_INSTRUCTION(CNOP_REG_REG_REG_REG_REG_REG_REG_REG_REG) VM_ADVANCE(9);
+            DEBUG("TRACE - CNOP R%lu,R%lu,R%lu,R%lu,R%lu,R%lu,R%lu,R%lu,R%lu\n",
+                  REG_IDX(1), REG_IDX(2), REG_IDX(3), REG_IDX(4), REG_IDX(5),
+                  REG_IDX(6), REG_IDX(7), REG_IDX(8), REG_IDX(9));
+            DISPATCH;
         RESERVED_IMPL(RESERVED_088)
         RESERVED_IMPL(RESERVED_089)
         RESERVED_IMPL(RESERVED_090)

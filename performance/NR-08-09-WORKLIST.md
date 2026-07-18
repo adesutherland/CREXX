@@ -716,7 +716,11 @@ no-new-ISA restriction:
    compiler-temporary and that otherwise visible intermediate state, cleanup
    or side effects are irrelevant to the authored program. The emitted large
    instruction must retain any relevant validation, failure ordering and final
-   state.
+   state. Direct rxc lowering should prefer the compact semantic form: omit
+   irrelevant intermediate side effects and do not allocate or assign dead
+   result registers merely to mirror the expanded RXAS sequence. A separate
+   wider RXAS form may retain intermediate writes when the keyhole proof shows
+   that they are overwritten before any read.
 
 Adding new, larger instructions is the intended NR-09 mechanism, not a design
 disadvantage. Exact opcode operands/effects and owner still have to be recorded

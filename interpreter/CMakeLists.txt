@@ -1275,6 +1275,8 @@ crexx_add_vm_dual_test(NAME rxasstresstests RXVM_ARGS tests_stress)
 # Focused deterministic coverage for remaining RXAS instruction families
 crexx_add_rxas_vm_binary(tests_instruction_gaps "remaining deterministic instruction gaps")
 crexx_add_vm_dual_test(NAME rxasinstructiongaptests RXVM_ARGS tests_instruction_gaps PASS_REGULAR_EXPRESSION "PASS: RXAS Instruction Gap Coverage")
+crexx_add_rxas_vm_binary(tests_wide_operands "arbitrary operand pipeline")
+crexx_add_vm_dual_test(NAME rxaswideoperandtests RXVM_ARGS tests_wide_operands PASS_REGULAR_EXPRESSION "PASS: Arbitrary Operand Pipeline")
 
 # Re-entrancy Test
 add_custom_command(

@@ -96,6 +96,11 @@ Structured constants are rewritten into the shared pool with all referenced offs
 - metadata entries
 - instruction operands that point into the pool
 
+Instruction rewriting derives its operand count and kind from the canonical
+variable-length opcode signature. Linker scans and remaps therefore have no
+three-operand format switch; wide instructions retain every inline operand
+while constant and graph references are rewritten normally.
+
 ## Strip Support
 
 Current conservative strip support has two independent axes:

@@ -11,6 +11,7 @@
 
 #include <errno.h>
 #include <inttypes.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -154,16 +155,16 @@ static int audit_graph_operands(const ImageModules *image,
         instructions = (const bin_code *)module->instructions;
         instruction_index = 0u;
         while (instruction_index < module->header.instruction_size) {
-            OperandType types[3];
             int opcode;
-            int operand_count;
-            int operand_index;
+            size_t operand_count;
+            size_t operand_index;
 
             opcode = instructions[instruction_index].instruction.opcode;
             if (opcode < 0 || opcode >= OP_MAX_INSTRUCTIONS) return 0;
-            operand_count = rxbin_get_operand_types(rxbin_opcode_format(opcode), types);
-            if (instructions[instruction_index].instruction.no_ops != operand_count ||
-                instruction_index + (size_t)operand_count >=
+            operand_count = rxop_format_operand_count(rxbin_opcode_format(opcode));
+            if (operand_count > INT_MAX ||
+                instructions[instruction_index].instruction.no_ops != operand_count ||
+                instruction_index + operand_count >=
                     module->header.instruction_size) return 0;
             for (operand_index = 0; operand_index < operand_count; operand_index++) {
                 RxGraphOperandKind kind;
@@ -201,7 +202,7 @@ static int audit_graph_operands(const ImageModules *image,
                     }
                 }
             }
-            instruction_index += (size_t)operand_count + 1u;
+            instruction_index += operand_count + 1u;
         }
     }
     return audit->invalid_sites == 0u;

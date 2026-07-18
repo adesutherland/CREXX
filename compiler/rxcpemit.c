@@ -1322,7 +1322,9 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case ASSEMBLER: {
-                char *arg1 = 0, *arg2 = 0, *arg3 = 0;
+                ASTNode *operand;
+                char *line;
+                int first_operand = 1;
 
                 /* Add source metadata */
                 comment_meta = get_metaline(node);
@@ -1344,70 +1346,40 @@ static walker_result emit_walker(walker_direction direction,
                     inst[l] = (char)tolower(inst[l]);
                 }
 
-                /* Argument 1 */
-                if (child1) {
-                    if (child1->node_type == FUNC_SYMBOL) {
-                        arg1 = mprintf("%.*s()", printf_string_precision(child1->node_string_length), child1->node_string);
+                line = inst;
+                inst = 0;
+                for (operand = node->child; operand; operand = operand->sibling) {
+                    char *arg;
+                    char *next_line;
+                    if (operand->node_type == FUNC_SYMBOL) {
+                        arg = mprintf("%.*s()",
+                                      printf_string_precision(operand->node_string_length),
+                                      operand->node_string);
+                    } else if (operand->register_num == DONT_ASSIGN_REGISTER) {
+                        arg = format_constant(operand->target_type, operand);
+                    } else {
+                        output_concat(node->output, operand->output);
+                        arg = mprintf("%c%d", operand->register_type, operand->register_num);
                     }
-                    else if (child1->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
-                        arg1 = format_constant(child1->target_type, child1);
-                    } else { /* A register */
-                        output_concat(node->output, child1->output);
-                        arg1 = mprintf("%c%d",
-                                       child1->register_type,
-                                       child1->register_num);
-                    }
+                    next_line = mprintf("%s%s%s", line, first_operand ? " " : ",", arg);
+                    free(line);
+                    free(arg);
+                    line = next_line;
+                    first_operand = 0;
                 }
-
-                /* Argument 2 */
-                if (child2) {
-                    if (child2->node_type == FUNC_SYMBOL) {
-                        arg2 = mprintf("%.*s()", printf_string_precision(child2->node_string_length), child2->node_string);
-                    }
-                    else if (child2->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
-                        arg2 = format_constant(child2->target_type, child2);
-                    } else { /* A register */
-                        output_concat(node->output, child2->output);
-                        arg2 = mprintf("%c%d",
-                                       child2->register_type,
-                                       child2->register_num);
-                    }
-                }
-
-                /* Argument 3 */
-                if (child3) {
-                    if (child3->node_type == FUNC_SYMBOL) {
-                        arg3 = mprintf("%.*s()", printf_string_precision(child3->node_string_length), child3->node_string);
-                    }
-                    else if (child3->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
-                        arg3 = format_constant(child3->target_type, child3);
-                    } else { /* A register */
-                        output_concat(node->output, child3->output);
-                        arg3 = mprintf("%c%d",
-                                       child3->register_type,
-                                       child3->register_num);
-                    }
-                }
-
-                /* Create the whole instruction */
-                if (arg3) temp1 = mprintf("%s %s,%s,%s\n", inst, arg1, arg2, arg3);
-                else if (arg2) temp1 = mprintf("%s %s,%s\n", inst, arg1, arg2);
-                else if (arg1) temp1 = mprintf("%s %s\n", inst, arg1);
-                else temp1 = mprintf("%s\n", inst);
+                temp1 = mprintf("%s\n", line);
+                free(line);
 
                 /* Finally, append it to the output */
                 output_append_text(node->output, temp1);
 
-                if (child1 && child1->cleanup) output_concat(node->output, child1->cleanup);
-                if (child2 && child2->cleanup) output_concat(node->output, child2->cleanup);
-                if (child3 && child3->cleanup) output_concat(node->output, child3->cleanup);
+                for (operand = node->child; operand; operand = operand->sibling) {
+                    if (operand->cleanup) output_concat(node->output, operand->cleanup);
+                }
 
                 /* Clean up */
                 free(temp1);
                 free(inst);
-                if (arg1) free(arg1);
-                if (arg2) free(arg2);
-                if (arg3) free(arg3);
             }
             break;
 

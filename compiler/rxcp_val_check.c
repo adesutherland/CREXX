@@ -147,7 +147,9 @@ static int assembler_has_unresolved_symbol_operand(ASTNode *node) {
 
 static void validate_assembler_node(Context *context, ASTNode *node) {
     ASTNode *child;
-    OperandType type1, type2, type3;
+    OperandType *types = 0;
+    size_t operand_count = 0;
+    size_t operand_index = 0;
     char *buffer;
     char *c;
 
@@ -157,25 +159,16 @@ static void validate_assembler_node(Context *context, ASTNode *node) {
         return;
     }
 
-    child = node->child;
-    if (child) {
-        type1 = node_to_assembler_operandtype(child);
-        child = child->sibling;
-        if (child) {
-            type2 = node_to_assembler_operandtype(child);
-            child = child->sibling;
-            if (child) type3 = node_to_assembler_operandtype(child);
-            else type3 = OP_NONE;
+    for (child = node->child; child; child = child->sibling) operand_count++;
+    if (operand_count) {
+        types = malloc(operand_count * sizeof(*types));
+        if (!types) {
+            mknd_err_unique(node, "OUT_OF_MEMORY");
+            return;
         }
-        else {
-            type2 = OP_NONE;
-            type3 = OP_NONE;
+        for (child = node->child; child; child = child->sibling) {
+            types[operand_index++] = node_to_assembler_operandtype(child);
         }
-    }
-    else {
-        type1 = OP_NONE;
-        type2 = OP_NONE;
-        type3 = OP_NONE;
     }
 
     /* We need to copy it to a null terminated buffer and lowercase it! */
@@ -184,13 +177,15 @@ static void validate_assembler_node(Context *context, ASTNode *node) {
     buffer[node->node_string_length] = 0;
     for (c = buffer; *c; ++c) *c = (char) tolower(*c);
 
-    if (!src_inst(buffer, type1, type2, type3)) {
+    if (!src_instv(buffer, types, operand_count)) {
         if (!context->is_final_pass && assembler_has_unresolved_symbol_operand(node)) {
+            free(types);
             free(buffer);
             return;
         }
         mknd_err_unique(node, "INVALID_ASSEMBLER");
     }
+    free(types);
     free(buffer);
 }
 

@@ -19,6 +19,9 @@ The assembler processes source files through a pipelined, pseudo-two-pass archit
    - Grammar defined in `assembler/rxasgrmr.y`.
    - Enforces the structural integrity of the `.rxas` file (headers, function definitions, variable declarations, and instruction sequences).
    - The parser actions invoke Builder API functions directly (e.g., `rxasgen*`, `rxaslabl`, `rxasproc`), translating syntax rules into buffered internal data structures.
+   - Instruction operands are parsed as a recursive comma-separated list.
+     `rxasquev()` and `rxasgenv()` carry the resulting variable-length token
+     vector; there is no three-operand grammar or queue limit.
    - Instruction names are derived from `binutils/include/rxops.h`, with a
      public-source filter for bytecode/runtime-only entries. `RESERVED_*`,
      `INULL`, `INTERRUPT`, and `IUNKNOWN` remain opcode-table entries but are
@@ -42,6 +45,13 @@ The state of the assembler is held within the `Assembler_Context` struct, specif
 ### Instruction Stream
 
 Instructions are flattened into an array of unions called `bin_code` (defined in `binutils/include/rxdefs.h`). An instruction is represented by an opcode element, immediately followed by elements representing its operands.
+
+The canonical operand format in `rxops.h` is a NUL-terminated signature: one
+kind code (`R`, `I`, `S`, `L`, and so on) per operand. Consumers iterate that
+signature instead of switching over a closed `FMT_*` enum. The in-memory
+`no_ops` field remains a 32-bit `int`, preserving the eight-byte `bin_code`
+cell; the practical operand-count bound is therefore the bytecode stream's
+existing `INT_MAX`, not a small instruction-format ceiling.
 
 ```c
 // Example buffer size handling in gen_instr()
@@ -462,16 +472,20 @@ inventory size.
 - `state` is `CLASSIFIED`, `CONSERVATIVE`, `RESERVED`, or `INTERNAL`.
   Conservative, reserved, internal and unknown/out-of-range queries are
   optimizer barriers and never claim a kill.
-- `reads` and `writes` are conservative possible-access masks over explicit
-  operand positions 1-3. A consumer must account for two positions naming the
-  same physical register.
-- `kills` is a proof mask: every named operand is definitely overwritten
+- `reads` and `writes` are conservative possible-access sets over explicit
+  operand positions. Existing instructions retain the compact three-bit masks;
+  wider instructions use one-bit-per-operand signature strings. Consumers use
+  `rxop_effect_reads_operand()` and `rxop_effect_writes_operand()` rather than
+  interpreting either representation directly. A consumer must account for
+  two positions naming the same physical register.
+- `kills` is a proof set: every named operand is definitely overwritten
   without reading its previous value. It is always a subset of `writes` and is
   deliberately narrower than possible writes.
 - `implicit` covers fixed local-register read/modify/write, integer-coded local
   copy/target registers, argument-register indexes and the runtime-sized local
   range after operand 3 used by `call`, `dcall`, and `srcfprocsel`.
-- `branch_targets` identifies explicit label operands. Packed jump-table
+- `branch_targets` identifies explicit label operands through the same generic
+  query representation. Packed jump-table
   instructions instead carry `RXOP_SEM_INDIRECT_BRANCH`.
 - `semantics` covers possible signal/error transfer, direct and dynamic call
   boundaries, returns, alias creation/release, reference creation/read/write/
@@ -481,8 +495,8 @@ inventory size.
   derived from the canonical `rxops.h` flow/flags. A non-classified state also
   forces the returned barrier bit.
 
-The current inventory has 641 entries: 539 source opcodes (533 classified and
-six explicitly conservative process/redirect operations), 99 reserved slots
+The current inventory has 641 entries: 540 source opcodes (534 classified and
+six explicitly conservative process/redirect operations), 98 reserved slots
 and three internal handlers. Coverage is not inferred from an instruction name
 or format. The audit used the VM handlers between `START_OF_INSTRUCTIONS` and
 `END_OF_INSTRUCTIONS`, the assembler/compiler behavior described here, and
@@ -531,6 +545,13 @@ Optimiser rule operands use lowercase `r` for a captured register. Uppercase
 `R`, `G`, and `A` match literal local/global/argument register numbers. The
 assembler uses this to express rules such as `inc r0 -> inc0` without adding
 mnemonic-specific C code to the optimiser engine.
+
+Legacy rules retain three inline operand pairs for source compatibility. New
+superinstruction rules select a variable-length operand-pattern side table;
+matching and output generation iterate the whole pattern, and captured values
+are stored in a dynamically grown map rather than ten fixed slots. The wide
+`cnop` regression exercises nine captured input and output operands through
+this path.
 
 `typeof`, `istype`, and `asserttype` are object-contract operations. Compiler
 generated code uses them for object casts/tests/introspection; scalar

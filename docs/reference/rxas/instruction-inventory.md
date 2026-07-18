@@ -3,7 +3,7 @@
 This inventory is for coverage validation. Every mnemonic from `rxas -i` should appear exactly once with its current primary skeleton section.
 
 - Unique mnemonics: 342
-- Opcode/form rows: 539
+- Opcode/form rows: 540
 
 ## Section Counts
 
@@ -93,7 +93,7 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `btos` | 1 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#btos) |
 | `bupdate` | 1 | [Binary Memory](instructions/07-binary-memory.md#bupdate) |
 | `call` | 3 | [Program Control And Calls](instructions/01-program-control.md#call) |
-| `cnop` | 1 | [Program Control And Calls](instructions/01-program-control.md#cnop) |
+| `cnop` | 2 | [Program Control And Calls](instructions/01-program-control.md#cnop) |
 | `concat` | 3 | [Strings And Characters](instructions/06-strings-and-characters.md#concat) |
 | `concchar` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#concchar) |
 | `copy` | 1 | [Data Movement And Conversion](instructions/02-data-movement-and-conversion.md#copy) |

@@ -18,91 +18,45 @@ static void check(int condition, const char *message, const OpInfo *op) {
 }
 
 static unsigned int format_register_mask(OpFormat format) {
-    switch (format) {
-        case FMT_I_I_R:
-        case FMT_S_S_R:
-            return RXOP_OP_3;
-        case FMT_I_R:
-        case FMT_L_R:
-        case FMT_L_R_I:
-        case FMT_L_R_S:
-        case FMT_S_R:
-            return RXOP_OP_2;
-        case FMT_I_R_R:
-        case FMT_L_R_R:
-            return RXOP_OP_23;
-        case FMT_L_L_R:
-            return RXOP_OP_3;
-        case FMT_R:
-        case FMT_R_B:
-        case FMT_R_B_B:
-        case FMT_R_B_S:
-        case FMT_R_C:
-        case FMT_R_D:
-        case FMT_R_F:
-        case FMT_R_F_I:
-        case FMT_R_I:
-        case FMT_R_I_I:
-        case FMT_R_P:
-        case FMT_R_S:
-        case FMT_R_S_I:
-        case FMT_R_S_S:
-            return RXOP_OP_1;
-        case FMT_R_B_R:
-        case FMT_R_D_R:
-        case FMT_R_F_R:
-        case FMT_R_I_R:
-        case FMT_R_P_R:
-        case FMT_R_S_R:
-            return RXOP_OP_13;
-        case FMT_R_R:
-        case FMT_R_R_B:
-        case FMT_R_R_D:
-        case FMT_R_R_F:
-        case FMT_R_R_I:
-        case FMT_R_R_S:
-            return RXOP_OP_12;
-        case FMT_R_R_R:
-            return RXOP_OP_ALL;
-        case FMT_EMPTY:
-        case FMT_B:
-        case FMT_C:
-        case FMT_F:
-        case FMT_I:
-        case FMT_I_I:
-        case FMT_I_I_I:
-        case FMT_L:
-        case FMT_L_P_S:
-        case FMT_L_S:
-        case FMT_P:
-        case FMT_P_S:
-        case FMT_S:
-        case FMT_S_S:
-            return RXOP_OP_NONE;
-        default:
-            return RXOP_OP_ALL;
+    unsigned int mask = RXOP_OP_NONE;
+    size_t i;
+    size_t count = rxop_format_operand_count(format);
+    for (i = 0; i < count && i < 3; i++) {
+        if (rxop_format_operand_type(format, i) == OP_REG) mask |= 1u << i;
     }
+    return mask;
 }
 
 static unsigned int format_label_mask(OpFormat format) {
-    switch (format) {
-        case FMT_L_L_R:
-            return RXOP_OP_12;
-        case FMT_L:
-        case FMT_L_P_S:
-        case FMT_L_R:
-        case FMT_L_R_I:
-        case FMT_L_R_R:
-        case FMT_L_R_S:
-        case FMT_L_S:
-            return RXOP_OP_1;
-        default:
-            return RXOP_OP_NONE;
+    unsigned int mask = RXOP_OP_NONE;
+    size_t i;
+    size_t count = rxop_format_operand_count(format);
+    for (i = 0; i < count && i < 3; i++) {
+        if (rxop_format_operand_type(format, i) == OP_ID) mask |= 1u << i;
     }
+    return mask;
 }
 
 static int is_internal_opcode(int opcode) {
     return opcode == OP_INULL || opcode == OP_INTERRUPT || opcode == OP_IUNKNOWN;
+}
+
+static int effect_has_any_branch_target(const RxOpEffects *effects, OpFormat format) {
+    size_t i;
+    for (i = 0; i < rxop_format_operand_count(format); i++) {
+        if (rxop_effect_branch_target_operand(effects, i)) return 1;
+    }
+    return 0;
+}
+
+static int valid_effect_signature(const char *signature, size_t operand_count) {
+    size_t i;
+    if (!signature) return 1;
+    if (strlen(signature) != operand_count) return 0;
+    for (i = 0; i < operand_count; i++) {
+        if (signature[i] != '0' && signature[i] != '1') return 0;
+    }
+    return 1;
 }
 
 static void check_unknown_effects(int opcode) {
@@ -153,6 +107,7 @@ int main(void) {
         RXOP_SEM_OPAQUE;
 
     for (i = 0; op_table[i].mnemonic != NULL; i++) {
+        size_t operand_index;
         op = &op_table[i];
         effects = rxop_effects(op->opcode);
         legal_registers = format_register_mask(op->format);
@@ -175,6 +130,40 @@ int main(void) {
               "branch-target mask names a non-label operand", op);
         check((effects.semantics & ~legal_semantics) == 0,
               "effect has unknown semantic flags", op);
+        check(valid_effect_signature(effects.reads_signature,
+                                     rxop_format_operand_count(op->format)) &&
+              valid_effect_signature(effects.writes_signature,
+                                     rxop_format_operand_count(op->format)) &&
+              valid_effect_signature(effects.kills_signature,
+                                     rxop_format_operand_count(op->format)) &&
+              valid_effect_signature(effects.branch_targets_signature,
+                                     rxop_format_operand_count(op->format)),
+              "wide effect signature length or bit is invalid", op);
+        check((!effects.reads_signature || effects.reads == RXOP_OP_NONE) &&
+              (!effects.writes_signature || effects.writes == RXOP_OP_NONE) &&
+              (!effects.kills_signature || effects.kills == RXOP_OP_NONE) &&
+              (!effects.branch_targets_signature ||
+                   effects.branch_targets == RXOP_OP_NONE),
+              "wide effect signature also carries a legacy mask", op);
+        for (operand_index = 0;
+             operand_index < rxop_format_operand_count(op->format);
+             operand_index++) {
+            OperandType type = rxop_format_operand_type(op->format, operand_index);
+            int reads = rxop_effect_reads_operand(&effects, operand_index);
+            int writes = rxop_effect_writes_operand(&effects, operand_index);
+            int kills = rxop_effect_kills_operand(&effects, operand_index);
+            int branch = rxop_effect_branch_target_operand(&effects, operand_index);
+            check(!reads || type == OP_REG,
+                  "read effect names a non-register operand", op);
+            check(!writes || type == OP_REG,
+                  "write effect names a non-register operand", op);
+            check(!kills || writes,
+                  "kill effect is not a subset of writes", op);
+            check(!kills || !reads,
+                  "definite kill also claims to read the same operand", op);
+            check(!branch || type == OP_ID,
+                  "branch effect names a non-label operand", op);
+        }
         check(!(effects.semantics & RXOP_SEM_DYNAMIC_CALL) ||
                   (effects.semantics & RXOP_SEM_CALL),
               "dynamic call is not classified as a call", op);
@@ -185,19 +174,20 @@ int main(void) {
                   (effects.implicit != RXOP_IMPLICIT_NONE),
               "implicit-register flag and effect metadata disagree", op);
         if (effects.implicit == RXOP_IMPLICIT_LOCAL_RANGE_AFTER_OP3) {
-            check(op->format == FMT_R_P_R || op->format == FMT_R_R_R ||
-                      op->format == FMT_R_S_R,
+            check(strcmp(op->format, FMT_R_P_R) == 0 ||
+                      strcmp(op->format, FMT_R_R_R) == 0 ||
+                      strcmp(op->format, FMT_R_S_R) == 0,
                   "runtime register range requires register operand 3", op);
             check(effects.optimizer_barrier,
                   "runtime register range must remain an optimizer barrier", op);
         }
 
         if (op->flow == FLOW_JUMP) {
-            check(effects.branch_targets != RXOP_OP_NONE,
+            check(effect_has_any_branch_target(&effects, op->format),
                   "unconditional jump lacks a branch target", op);
         }
         if (op->flow == FLOW_COND) {
-            check(effects.branch_targets != RXOP_OP_NONE ||
+            check(effect_has_any_branch_target(&effects, op->format) ||
                       (effects.semantics & RXOP_SEM_INDIRECT_BRANCH),
                   "conditional flow lacks explicit or indirect targets", op);
         }
@@ -358,9 +348,18 @@ int main(void) {
               effects.optimizer_barrier,
           "opaque process effect must remain conservative",
           &op_table[OP_SPAWN_REG_REG_REG]);
-    effects = rxop_effects(OP_RESERVED_087);
+    effects = rxop_effects(OP_CNOP_REG_REG_REG_REG_REG_REG_REG_REG_REG);
+    check(rxop_format_operand_count(
+              op_table[OP_CNOP_REG_REG_REG_REG_REG_REG_REG_REG_REG].format) == 9 &&
+              rxop_effect_reads_operand(&effects, 0) &&
+              rxop_effect_reads_operand(&effects, 8) &&
+              !rxop_effect_writes_operand(&effects, 8) &&
+              !rxop_effect_reads_operand(&effects, 9),
+          "wide operand signature/effects regression",
+          &op_table[OP_CNOP_REG_REG_REG_REG_REG_REG_REG_REG_REG]);
+    effects = rxop_effects(OP_RESERVED_088);
     check(effects.state == RXOP_EFFECT_RESERVED && effects.optimizer_barrier,
-          "reserved opcode must fail closed", &op_table[OP_RESERVED_087]);
+          "reserved opcode must fail closed", &op_table[OP_RESERVED_088]);
 
     check_unknown_effects(-1);
     check_unknown_effects(OP_MAX_INSTRUCTIONS);

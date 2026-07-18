@@ -326,12 +326,18 @@ int rxasoutf(Assembler_Context *scanner) {
 
 /* Clear and Free Assembler Context */
 void rxasclrc(Assembler_Context *scanner) {
+    size_t i;
     /* Deallocate Binary */
     if (scanner->binary.binary) free(scanner->binary.binary);
     if (scanner->binary.const_pool) free(scanner->binary.const_pool);
 
     /* Free Optimiser Queue */
-    if (scanner->optimiser_queue) free(scanner->optimiser_queue);
+    if (scanner->optimiser_queue) {
+        for (i = 0; i < scanner->optimiser_queue_items; i++) {
+            rxas_free_queue_item(&scanner->optimiser_queue[i]);
+        }
+        free(scanner->optimiser_queue);
+    }
 
     /* Free Assembler Work Data */
     freeasbl(scanner);

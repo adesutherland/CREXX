@@ -669,12 +669,15 @@ points, or deliberately retained instruction positions.
 
 | Opcode | Form | Effect |
 | --- | --- | --- |
+| `0x0057` | `cnop rA,rB,rC,rD,rE,rF,rG,rH,rI` | Consume nine register inputs and advance without changing VM state. |
 | `0x021c` | `cnop` | Advance to the next instruction without changing VM state. |
 
 ### Operands And Semantics
 
-There are no operands. Registers, cursors, flags, frames, and control metadata
-remain unchanged except for normal program-counter advance.
+The zero-operand form has no inputs. The nine-operand form records explicit
+register reads for optimiser liveness but intentionally leaves the register
+values unchanged. Cursors, flags, frames, and control metadata remain unchanged
+except for normal program-counter advance.
 
 ### Signals
 
@@ -686,8 +689,17 @@ This instruction does not signal.
 ```rxas
 .globals=0
 
-main() .locals=0
-    cnop
+main() .locals=9
+    load r0,0
+    load r1,1
+    load r2,2
+    load r3,3
+    load r4,4
+    load r5,5
+    load r6,6
+    load r7,7
+    load r8,8
+    cnop r0,r1,r2,r3,r4,r5,r6,r7,r8
     ret
 ```
 

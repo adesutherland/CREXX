@@ -85,6 +85,7 @@ insert into instruction values('0x0053','sockconnecttls',' {REG,REG,REG}      ',
 insert into instruction values('0x0054','setobjuninit',' {REG,STRING}       ',' Set runtime object type metadata on op1 and mark it uninitialized');
 insert into instruction values('0x0055','assertinitialized',' {REG}              ',' Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED');
 insert into instruction values('0x0056','isinitialized',' {REG,REG}          ',' Set op1 boolean if op2 is initialized');
+insert into instruction values('0x0057','cnop',' {REG,REG,REG,REG,REG,REG,REG,REG,REG} ',' no operation with nine register inputs');
 insert into instruction values('0x0064','ieq',' {REG,REG,REG}      ',' Int Equals op1=(op2==op3)');
 insert into instruction values('0x0065','ieq',' {REG,REG,INT}      ',' Int Equals op1=(op2==op3)');
 insert into instruction values('0x0066','ine',' {REG,REG,REG}      ',' Int Not equals op1=(op2!=op3)');

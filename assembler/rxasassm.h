@@ -33,6 +33,10 @@
 #include "rxasgrmr.h"
 
 /* Queue code for the keyhole optimiser */
+void rxasquev(Assembler_Context *context, Assembler_Token *instrToken,
+              Assembler_Token *const *operandTokens, size_t operandCount);
+void rxasque_span(Assembler_Context *context, Assembler_Token *instrToken,
+                  Assembler_Token *lastOperandToken);
 void rxasque0(Assembler_Context *context, Assembler_Token *instrToken);
 void rxasque1(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token);
 void rxasque2(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
@@ -73,14 +77,18 @@ void rxasqmcl(Assembler_Context *context, Assembler_Token *symbol);
 void flushopt(Assembler_Context *context);
 
 /* Generate code for an instructions */
+void rxasgenv(Assembler_Context *context, Assembler_Token *instrToken,
+              Assembler_Token *const *operandTokens, size_t operandCount);
+void promote_floats_to_decimalsv(Assembler_Token *instrToken,
+                                 Assembler_Token *const *operandTokens,
+                                 size_t operandCount);
 void rxasgen0(Assembler_Context *context, Assembler_Token *instrToken);
 void rxasgen1(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token);
 void rxasgen2(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
               Assembler_Token *operand2Token);
 void rxasgen3(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
               Assembler_Token *operand2Token, Assembler_Token *operand3Token);
-/** Generate code for an instruction with up to three operands
- *  NULLS in the operandToken's are used to detect the number of operands */
+/** Compatibility wrapper for instruction producers that emit up to three operands. */
 void rxasgen(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
              Assembler_Token *operand2Token, Assembler_Token *operand3Token);
 void rxasproc(Assembler_Context *context, Assembler_Token *funcToken, Assembler_Token *localsToken);

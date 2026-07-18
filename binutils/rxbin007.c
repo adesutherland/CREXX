@@ -6,6 +6,7 @@
 
 #include "rxbin.h"
 
+#include <limits.h>
 #include <stdarg.h>
 
 typedef struct rxbin007_pool_entry {
@@ -737,16 +738,17 @@ static int rxbin007_encode_instructions(const module_file *module,
     index = 0u;
     rxbin_var_writer_init(&writer, output);
     while (index < module->header.instruction_size) {
-        OperandType types[3];
+        OpFormat format;
         int opcode;
-        int operand_count;
-        int operand_index;
+        size_t operand_count;
+        size_t operand_index;
 
         opcode = instructions[index].instruction.opcode;
         if (opcode < 0 || opcode >= OP_MAX_INSTRUCTIONS) return 0;
-        operand_count = rxbin_get_operand_types(rxbin_opcode_format(opcode), types);
+        format = rxbin_opcode_format(opcode);
+        operand_count = rxop_format_operand_count(format);
         if (instructions[index].instruction.no_ops != operand_count ||
-            index + (size_t)operand_count >= module->header.instruction_size ||
+            index + operand_count >= module->header.instruction_size ||
             !rxbin_var_writer_write(&writer, (uint64_t)opcode)) return 0;
         for (operand_index = 0; operand_index < operand_count; operand_index++) {
             const bin_code *operand;
@@ -761,15 +763,15 @@ static int rxbin007_encode_instructions(const module_file *module,
                 uint32_t constant_id;
                 char *graph_error;
 
-                if (!graph || types[operand_index] != OP_STRING) {
-                    rxbin007_set_error("RXBIN 007 graph operand %d:%d has no semantic graph",
+                if (!graph || rxop_format_operand_type(format, operand_index) != OP_STRING) {
+                    rxbin007_set_error("RXBIN 007 graph operand %d:%zu has no semantic graph",
                                        opcode, operand_index);
                     return 0;
                 }
                 if (module->graph_operands) {
                     char *graph_text;
                     if (operand->index > UINT32_MAX) {
-                        rxbin007_set_error("RXBIN 007 graph operand %d:%d is out of range",
+                        rxbin007_set_error("RXBIN 007 graph operand %d:%zu is out of range",
                                            opcode, operand_index);
                         return 0;
                     }
@@ -779,7 +781,7 @@ static int rxbin007_encode_instructions(const module_file *module,
                                                        (unsigned int)operand_index,
                                                        graph_id);
                     if (!graph_text) {
-                        rxbin007_set_error("RXBIN 007 graph operand %d:%d has invalid ID %u",
+                        rxbin007_set_error("RXBIN 007 graph operand %d:%zu has invalid ID %u",
                                            opcode, operand_index, graph_id);
                         return 0;
                     }
@@ -791,7 +793,7 @@ static int rxbin007_encode_instructions(const module_file *module,
                 if (!rxbin007_pool_find_id(pool, operand->index, &constant_id) ||
                     constant_id >= pool->entry_count ||
                     pool->entries[constant_id].entry->type != STRING_CONST) {
-                    rxbin007_set_error("RXBIN 007 graph operand %d:%d is not a string constant",
+                    rxbin007_set_error("RXBIN 007 graph operand %d:%zu is not a string constant",
                                        opcode, operand_index);
                     return 0;
                 }
@@ -812,18 +814,18 @@ static int rxbin007_encode_instructions(const module_file *module,
                 }
                 free(graph_error);
                 token = graph_id;
-            } else if (rxbin007_pool_operand_type(types[operand_index])) {
+            } else if (rxbin007_pool_operand_type(rxop_format_operand_type(format, operand_index))) {
                 uint32_t constant_id;
                 if (!rxbin007_pool_find_id(pool, operand->index, &constant_id)) {
                     rxbin007_set_error("RXBIN 007 instruction has an invalid constant offset");
                     return 0;
                 }
                 token = constant_id;
-            } else if (types[operand_index] == OP_INT) {
+            } else if (rxop_format_operand_type(format, operand_index) == OP_INT) {
                 token = (((uint64_t)operand->iconst) << 1u) ^
                         (uint64_t)(operand->iconst >>
                                    ((sizeof(rxinteger) * CHAR_BIT) - 1u));
-            } else if (types[operand_index] == OP_CHAR) {
+            } else if (rxop_format_operand_type(format, operand_index) == OP_CHAR) {
                 token = (uint64_t)(unsigned char)operand->cconst;
             } else {
                 token = (uint64_t)operand->index;
@@ -1852,17 +1854,18 @@ static int rxbin007_decode_instructions(const unsigned char *data,
     rxbin_var_reader_init(&reader, data, byte_size);
     index = 0u;
     while (index < word_count) {
-        OperandType types[3];
+        OpFormat format;
         uint64_t opcode_token;
-        int operand_count;
-        int operand_index;
+        size_t operand_count;
+        size_t operand_index;
 
         if (!rxbin_var_reader_read(&reader, &opcode_token) ||
             opcode_token >= (uint64_t)OP_MAX_INSTRUCTIONS) goto error;
-        operand_count = rxbin_get_operand_types(rxbin_opcode_format((int)opcode_token), types);
-        if (operand_count < 0 || index + (size_t)operand_count >= word_count) goto error;
+        format = rxbin_opcode_format((int)opcode_token);
+        operand_count = rxop_format_operand_count(format);
+        if (operand_count > INT_MAX || index + operand_count >= word_count) goto error;
         instructions[index].instruction.opcode = (int)opcode_token;
-        instructions[index].instruction.no_ops = operand_count;
+        instructions[index].instruction.no_ops = (int)operand_count;
         for (operand_index = 0; operand_index < operand_count; operand_index++) {
             bin_code *operand;
             RxGraphOperandKind graph_kind;
@@ -1879,17 +1882,17 @@ static int rxbin007_decode_instructions(const unsigned char *data,
                                              (unsigned int)operand_index,
                                              (uint32_t)token)) goto error;
                 operand->index = (size_t)token;
-            } else if (rxbin007_pool_operand_type(types[operand_index])) {
+            } else if (rxbin007_pool_operand_type(rxop_format_operand_type(format, operand_index))) {
                 if (token > UINT32_MAX ||
                     !rxbin007_pool_operand_id_valid(pool,
-                                                    types[operand_index],
+                                                    rxop_format_operand_type(format, operand_index),
                                                     (uint32_t)token)) goto error;
                 operand->index = pool->offsets[(uint32_t)token];
-            } else if (types[operand_index] == OP_INT) {
+            } else if (rxop_format_operand_type(format, operand_index) == OP_INT) {
                 uint64_t magnitude;
                 magnitude = (token >> 1u) ^ (UINT64_C(0) - (token & 1u));
                 operand->iconst = (rxinteger)magnitude;
-            } else if (types[operand_index] == OP_CHAR) {
+            } else if (rxop_format_operand_type(format, operand_index) == OP_CHAR) {
                 if (token > UCHAR_MAX) goto error;
                 operand->cconst = (char)(unsigned char)token;
             } else {

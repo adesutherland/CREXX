@@ -86,6 +86,10 @@ typedef union bin_code {
 } bin_code;
 #pragma pack(pop)
 
+/* Preserve the eight-byte VM/RXBIN cell while operand counts become unbounded. */
+typedef char rxbin_code_entry_must_remain_eight_bytes[
+        sizeof(bin_code) == 8 ? 1 : -1];
+
 /* cREXX Binary Program */
 #pragma pack(push,4)
 struct bin_space {
@@ -384,7 +388,6 @@ typedef struct rxbin_var_reader {
 } rxbin_var_reader;
 
 void init_module(module_file *module);
-int rxbin_get_operand_types(OpFormat format, OperandType *types);
 OpFormat rxbin_opcode_format(int opcode);
 void rxbin_byte_buffer_init(rxbin_byte_buffer *buffer);
 void rxbin_byte_buffer_free(rxbin_byte_buffer *buffer);
