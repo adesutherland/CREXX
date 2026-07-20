@@ -33,11 +33,15 @@ NetRexx distribution also carries its bundled `LICENSE` (ICU license).
 
 ## Expanded portfolio ports
 
-`netrexx/` contains the seed and expanded workload ports. NetRexx uses its
-class surface for Bounce/List/Storage, a common state-machine representation
-for Richards, a parser backed by Java collections for JSON, and a Java `byte[]`
-for Base64. Generated Java/classes, disassembly and pilot output belong in the
-dated NR-02 evidence bundle rather than beside these versioned `.nrx` sources.
+`netrexx/` contains the seed and expanded workload ports. The formal common
+Sieve, Permute, Bounce, Richards and Base64 sources use `options nobinary
+decimal`; their timed arithmetic, loop/state values and numeric arrays use
+NetRexx `Rexx` semantics. Generated Java and the default HotSpot JIT are the
+ordinary NetRexx implementation/runtime substrate. Base64 separately discloses
+Java `byte[]` storage while retaining decimal `Rexx` arithmetic. The remaining
+`options binary` expanded ports are binary/JVM diagnostics, not fair Rexx
+aggregate inputs. Generated Java/classes, disassembly and pilot output belong
+in dated evidence bundles rather than beside these versioned `.nrx` sources.
 
 `oorexx/` contains object-native Bounce/List/Storage ports, the common Richards
 state-machine port, a supplied `json.cls` DOM consumer, and a byte-string
@@ -55,7 +59,8 @@ visible in the equivalence ledger.
 
 Base64 uses the same RFC 4648 arithmetic in all three ports. cREXX builds the
 encoded output in a pre-sized `.binary`, ooRexx uses its byte-string surface,
-and NetRexx uses Java `byte[]`; all validate length, byte equality and checksum.
+and NetRexx uses Java `byte[]` storage with decimal `Rexx` index/byte arithmetic;
+all validate length, byte equality and checksum.
 
 ## Classic seed ports
 
@@ -78,4 +83,6 @@ and is `not comparable` for the common object/allocation score.
 cold load-to-first-result; ooRexx translate and cold load-to-first-result; and
 NetRexx compile and JVM load-to-first-result. A load-only CLI boundary is not
 available consistently, so the final phase is explicitly combined rather than
-being presented as pure loader time.
+being presented as pure loader time. The NetRexx probe uses `options nobinary
+decimal` and `Rexx` arithmetic; the default HotSpot JIT remains part of the
+canonical runtime mode.

@@ -2,7 +2,9 @@
 
 Manifest version: 1
 
-Status: active seed, not yet an approved Tier A/Tier B Release 1 portfolio
+Status: retained seed measurement contract; the approved Tier A scope and
+common aggregate are governed by `cross-runtime-plan.md` and
+`../PERFORMANCE-GOVERNANCE.md`
 
 This manifest versions the initial correctness-gated language workloads used by
 NR-01. Source, license and detailed provenance remain beside the programs in
@@ -59,10 +61,15 @@ phase labels. The two files must come from the same runner invocation.
 
 ## Known coverage gaps
 
-This seed is intentionally incomplete. NR-01 remains in progress until the
-programme selects broader Classic Rexx, parser/text, calls/recursion,
-allocation/object, binary, collections, startup and application workloads and
-provides a distinct steady-state measurement mode. Tier assignment and
-portfolio aggregation policy belong to NR-11. Cross-runtime coverage, port
-status and the proposed portfolio-size range are maintained in
-[`cross-runtime-plan.md`](cross-runtime-plan.md).
+This version-1 manifest remains the five-workload seed contract. The programme
+has since approved the broader 12-item Tier A coverage portfolio and the
+separate five-workload common aggregate. Current scope, port status and
+comparability are maintained in [`cross-runtime-plan.md`](cross-runtime-plan.md);
+formal sampling, aggregation and publication rules are in
+[`../PERFORMANCE-GOVERNANCE.md`](../PERFORMANCE-GOVERNANCE.md).
+
+The formal common NetRexx contract is deliberately narrower than this retained
+seed manifest: use `options nobinary decimal`, keep timed arithmetic/state in
+NetRexx `Rexx` values, and record generated Java plus the default HotSpot JIT as
+the implementation substrate. Binary-typed NetRexx ports are controls, not
+inputs to the common Rexx aggregate.

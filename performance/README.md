@@ -15,6 +15,8 @@ capture ideas that otherwise risk being lost.
 | Location | Purpose |
 | --- | --- |
 | `performance/ROADMAP.md` | P0/P1 status, work notes, decisions and idea ledger |
+| `performance/PERFORMANCE-GOVERNANCE.md` | Normative portfolio, sampling, aggregation, regression and claim policy |
+| `performance/templates/performance-scorecard.md` | Standard publication structure |
 | `performance/manifests/` | Versioned exact-image manifests, including the NR-03 proof set and NR-05 22-image call census |
 | `performance/portfolio/manifest.md` | Versioned seed workload and measurement contract |
 | `performance/portfolio/cross-runtime-plan.md` | Coverage targets and ooRexx/Regina/NetRexx/Java execution matrix |
@@ -23,6 +25,8 @@ capture ideas that otherwise risk being lost.
 | `performance/tools/run_cross_runtime.crexx` | Level B serial capture tool for one workload/runtime cell |
 | `performance/tools/run_lifecycle.crexx` | Level B compile/translate and cold load-to-first-result capture across the three portfolio runtimes |
 | `performance/tools/run_evidence_bundle.crexx` | Level B exact-image timing/profile/RXSEQ bundle orchestration and reporting |
+| `performance/tools/run_cross_runtime_matrix.crexx` | Level B compact formal timing/RSS matrix capture, summary and aggregate reporting |
+| `performance/tools/inventory_performance_artifacts.crexx` | Level B hash/size inventory for versioned performance artifact manifests |
 | `performance/tools/report_nr09_macro_timings.zsh` | NR-09 all-form component/macro timing and review-ledger report from paired schema-4 profiles |
 | `performance/capability-gaps.md` | Audited missing surfaces and candidates uncovered by portfolio ports |
 | `tests/benchmarks/` | Portable, correctness-gated language workloads and runner |
@@ -42,7 +46,38 @@ benchmark-native metric, and writes the exact argv and cREXX version to
 `tools/run_lifecycle.crexx` is also Level B cREXX. It keeps lifecycle phases
 outside the steady-state aggregate and emits one CSV row per runtime, phase and
 sequence. The final phase is named `load_first_result` because the public CLIs
-do not expose a consistent loaded-but-not-executed boundary.
+do not expose a consistent loaded-but-not-executed boundary. Formal captures use
+`--crexx-vm both`, share the compile/assemble rows, retain separate `rxvm` and
+`rxbvm` load rows, and write the same median/IQR/MAD/noise summary fields as the
+matrix driver.
+`--append` preserves existing lifecycle rows, continues sequence numbering, and
+refreshes the summary after a policy-required noise append.
+
+`tools/run_cross_runtime_matrix.crexx` is the formal NR-10 matrix driver. Its
+versioned manifest groups runtime cells by workload, and the driver rotates the
+cell order per warmup and recorded round. It writes consolidated sample and
+output tables, per-cell median/IQR/MAD/noise summaries, higher-is-better ratios,
+and the four separately named common-portfolio geometric means. RSS capture
+uses the same manifest with zero warmups and remains separate from timing. For
+an aggregate row, `work` must be a positive integer and the timing summary uses
+process-inclusive `work / elapsed` normalized throughput; raw elapsed time and
+the exact work count remain in `samples.csv`. `--summary-only` with one or more
+`--samples PATH` arguments refreshes the summary/ratio/geomean files from an
+initial capture plus policy-required append blocks without changing the raw
+captures.
+
+Formal campaigns and publications follow
+[`PERFORMANCE-GOVERNANCE.md`](PERFORMANCE-GOVERNANCE.md). Qualification pilots
+do not become formal baselines merely by appearing in the result index. Use the
+scorecard template, keep `rxvm`/`rxbvm` separate, publish the exact aggregate
+membership, and retain one compact checksum-closed bundle with consolidated
+raw tables rather than one output file per successful sample.
+
+Canonical NetRexx common cells use `options nobinary decimal` with timed
+numeric work held in NetRexx `Rexx` values. The generated Java and default
+HotSpot JIT are the normal implementation substrate, not a reason to disable
+JIT compilation. Record that substrate in the scorecard and keep any
+`options binary`/primitive-Java result as an explicitly excluded control.
 
 `tools/report_nr09_macro_timings.zsh` consumes paired `canonical-opt-rxvm.csv`
 and `canonical-opt-rxbvm.csv` schema-4 profile directories plus the versioned
@@ -139,11 +174,11 @@ cmake-build-release/bin/crexx performance/tools/run_cross_runtime.crexx \
 5. Repeat the same correctness and unprofiled measurements, then update the
    roadmap with the result, including a neutral or negative result.
 
-The first active slice is `NR-01`: the existing five language workloads are a
-seed portfolio, the runner can retain serial samples, and the first retained
-bundle is under `performance/evidence/2026-07-15-seed-portfolio/`. NR-01 stays
-in progress until the portfolio and separate startup/steady-state reporting
-meet the charter's full exit criterion.
+`NR-01` began with the five-workload seed bundle under
+`performance/evidence/2026-07-15-seed-portfolio/` and is now complete. The
+approved portfolio, serial correctness-gated raw capture, machine/build
+provenance and separate steady-state/lifecycle reports are proved by the NR-10
+formal bundle; the NR-11 governance and scorecard define future publication.
 
 Cross-runtime work is deliberately staged rather than deferred to one final
 comparison: NR-01 fills the workload coverage matrix; NR-02 ports, qualifies

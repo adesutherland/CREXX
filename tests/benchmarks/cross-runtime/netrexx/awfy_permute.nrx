@@ -1,21 +1,21 @@
 /*
- * NetRexx port of the Are We Fast Yet? Permute benchmark.
+ * Decimal-semantics NetRexx port of the Are We Fast Yet? Permute benchmark.
  * Derived from the SOM benchmark suite under the MIT license; see
  * ../../LICENSE-SOM-MIT.txt and ../../README.md.
  */
-options binary
+options nobinary decimal
 
 class awfy_permute
 
   method main(args=String[]) static
-    repetitions=int 1
+    repetitions=1
     if args.length>=1 then repetitions=Rexx args[0]
     if repetitions<1 then do
       say 'FAIL: repetitions must be positive'
       exit 1
     end
 
-    result=int 0
+    result=0
     loop iteration=1 to repetitions
       benchmark=PermuteBenchmark()
       result=benchmark.run()
@@ -26,22 +26,25 @@ class awfy_permute
     end
 
     say 'benchmark=awfy_permute repetitions='repetitions 'result='result
-    say 'PASS: AWFY Permute NetRexx port'
+    say 'PASS: AWFY Permute NetRexx decimal port'
 
 class PermuteBenchmark
 
   properties private
-    count=int 0
-    values=int[6]
+    count=0
+    values=Rexx[6]
 
   method PermuteBenchmark()
+    loop i=0 to 5
+      values[i]=0
+    end
 
-  method run() binary returns int
+  method run() returns Rexx
     count=0
     permute(6)
     return count
 
-  method permute(n=int) binary
+  method permute(n=Rexx)
     count=count+1
     if n\=0 then do
       n1=n-1
@@ -53,7 +56,7 @@ class PermuteBenchmark
       end
     end
 
-  method swap(i=int,j=int) binary
-    temporary=int values[i]
+  method swap(i=Rexx,j=Rexx)
+    temporary=values[i]
     values[i]=values[j]
     values[j]=temporary

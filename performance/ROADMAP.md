@@ -16,7 +16,7 @@ exit criterion is met.
 
 | ID | Activity | Status | Current note / next gate |
 | --- | --- | --- | --- |
-| NR-01 | Reproducible benchmark portfolio and runner | in progress | Approved workload coverage, serial raw-sample retention and the separate lifecycle lane are implemented; remaining exit work is machine-capturable full provenance and NR-11 publication policy. |
+| NR-01 | Reproducible benchmark portfolio and runner | complete | The approved portfolio, serial correctness-gated raw capture, compact machine/build provenance, separate lifecycle reporting and NR-11 publication policy are all implemented and proved by the NR-10 formal bundle. |
 | NR-02 | Portfolio equivalence and optimizer-resistance ledger | complete | All approved steady-state/runtime cells and the lifecycle lane have correctness, equivalence, generated-form and retained-pilot evidence or an explicit `not comparable` disposition. |
 | NR-03 | Automated performance evidence bundle | complete | One Level B command retains exact-hash Release timing, schema-3 profile/allocation evidence, RXSEQ N=2/3/4, ranked reports and paired deltas; the verified proof bundle is `evidence/2026-07-15-nr-03-automated-proof/`. |
 | NR-04 | Opcode effects inventory | complete | All 641 opcode slots have ordered machine-readable effects; 539 source opcodes are classified or explicitly conservative and RXAS consumes the fail-closed API without new transforms. |
@@ -27,8 +27,8 @@ exit criterion is met.
 | NUMERIC-01 | Native typed Level B numeric surface and RexxCPS type fidelity | complete | Eleven native integer/float BIFs are accepted; standard benchmarks are decimal-free except RexxCPS's intentional Classic workload. RexxCPS 2.2d uses explicit digits 9, honest decimal/int/float paths and typed text BIFs. Accepted medians are 1.15 MCPS (`rxvm`) and 1.11 MCPS (`rxbvm`); final Debug CTest is 1,851/1,851. |
 | NR-08 | Definite initialization and reference-lifetime facts | complete | Adrian accepted Gate A after canonical RexxCPS improved by 4.358% (`rxvm`) and 5.903% (`rxbvm`). The corrected library audit changes only `ENDLIFE`, 8,006 to 151. Complete Debug build and final CTest 1,851/1,851 pass; the 71 intentional goldens remove exactly 170 additional scalar `ENDLIFE`s and no other lines. Evidence: `evidence/2026-07-17-nr-08-first-release-verdict/`. |
 | NR-09 | RXSEQ-guided lowering and instruction synthesis | complete | Rule 1 and the corrected 34-form public batch are accepted and closed. The batch withdraws 26 forms behind stable reserved IDs, promotes three masked hot forms and narrows two-register `ITOF`; two rejected side-effect-preserving replacements remain future design ideas and do not block completion. Broad QA passes: Debug 1,864/1,864, supported ASan clean after locking one shared-file test race, isolated install and exact old-RXBIN execution in both VMs. Documentation covers all 574 forms/367 mnemonics and all 373 tagged examples assemble. The final 78/78 Release refresh is +1.385%/+2.868% complete-product paired median CPS (`rxvm`/`rxbvm`); only the `rxbvm` interval is wholly positive. |
-| NR-10 | Cross-runtime forensic baselines | queued | Run the formal CREXX/ooRexx/NetRexx portfolio matrix incrementally as each NR-02 workload clears equivalence; include Regina for RexxCPS only and retain selected Java/C controls. |
-| NR-11 | Performance governance and scorecard | queued | Agree Tier A/B, geometric-mean and outlier policies, regression budget and publication format. |
+| NR-10 | Cross-runtime forensic baselines | complete | The corrected same-host common baseline uses equal work and decimal-semantics NetRexx on the default HotSpot JIT. Its 500 timing/RSS/lifecycle rows and 24 labelled native-C control rows pass; the initial binary-typed NetRexx matrix is retained only as an excluded audit/non-common diagnostic source at `evidence/2026-07-20-nr-10-formal-baseline/`. |
+| NR-11 | Performance governance and scorecard | complete | Approved policy is normative in `PERFORMANCE-GOVERNANCE.md`; the standard template is proved by the NR-10 scorecard with four named N=5 aggregates, explicit noisy cells and no unmatched regression claim. |
 
 ### NR-01 work notes
 
@@ -54,10 +54,10 @@ exit criterion is met.
   optimizer-resistance evidence and an initial retained run. Regina is limited
   to RexxCPS. NR-10 receives each qualified workload for formal baseline and
   forensic capture.
-- Remaining exit work: make full build/machine provenance machine-capturable
-  and define the publication scorecard, common subset and regression policy
-  under NR-11. The approved coverage categories and separate lifecycle lane
-  are now implemented.
+- 2026-07-20: Closed NR-01 through the approved NR-10/NR-11 campaign. The
+  formal bundle proves serial correctness-gated capture, machine/build/runtime
+  provenance, separate steady-state and lifecycle reports, compact raw-sample
+  retention and the standard publication scorecard for the approved portfolio.
 
 ### NR-02 work notes
 
@@ -756,6 +756,60 @@ canonical source SHA-256 is
   `rxbvm` pass; the final Debug rebuild and 1,846/1,846 CTests pass. Adrian
   removed append-only-overlay, alternate-seed, sanitizer, cross-platform, and
   additional portfolio work from this activity's required closeout.
+
+### NR-10/NR-11 work notes
+
+- 2026-07-20 equal-work calibration found that the approved common work counts
+  leave NetRexx at 0.050-0.272 seconds while the slowest cells are already
+  2.330-15.569 seconds. Scaling the fastest cell to one second would breach the
+  30-second cap for multiple workloads. Formal capture is paused before any
+  retained samples pending an explicit normalized-throughput contract; see
+  `NR-10-11-WORKLIST.md`.
+- 2026-07-20 Adrian approved the bounded normalized-throughput exception:
+  per-cell integer work targeting 3-10 seconds, two calibration points within
+  5%, process-inclusive `work / elapsed`, and the unchanged formal sample and
+  aggregation rules.
+- 2026-07-20: Superseded that exception for the NR-10 common baseline after
+  finding that the version-1 NetRexx ports used `options binary`. Corrected
+  `options nobinary decimal`/`Rexx` ports qualify one equal argument per
+  workload: fastest pilot medians are 1.062-1.182 seconds and slowest are
+  1.614-16.061 seconds. The default HotSpot JIT remains canonical and fair.
+
+- 2026-07-20: Started the combined resumable control plane at
+  `NR-10-11-WORKLIST.md` from clean `develop` commit `1596d7c8c`, three local
+  commits ahead of `origin/develop`. The NR-02 audit found 498 retained files,
+  172 sample rows and 41/41 verified generated-form checksums. Its provenance,
+  equivalence, opaque-input, ooRexx trace and NetRexx generated-form evidence
+  remains reusable, but the bundles explicitly contain small non-formal pilots
+  from older dirty cREXX states and do not provide formal power, uncertainty,
+  RSS, complete artifact or native-C-ceiling evidence. A current bounded
+  same-host campaign is required for factual NR-10 completion. The worklist
+  records an evidence-backed NR-11 policy proposal and stops for Adrian before
+  any threshold becomes normative or any formal run begins. Adrian confirmed
+  that any new or changed performance tooling must be cREXX Level B, not
+  Python; the Level B authoring guide is therefore a mandatory pre-edit gate.
+  The final NR-10 evidence must also be compact: one consolidated bundle,
+  existing NR-02 forensics reused by reference, and no repository retention of
+  calibration, superseded scratch runs or reproducible duplicate build output.
+- 2026-07-20: Adrian approved the policy proposal as drafted. The normative
+  authority is `PERFORMANCE-GOVERNANCE.md`; mandatory future-agent rules are in
+  `AGENTS.md`, operational navigation is in `README.md`, portfolio/comparability
+  ownership is in `portfolio/cross-runtime-plan.md`, and the publication shape
+  is `templates/performance-scorecard.md`. The approved initial common
+  aggregate is Sieve, Permute, Bounce, Richards and Base64. Formal capture and
+  a template-proving scorecard remain before NR-10/NR-11 completion.
+- 2026-07-20: Closed NR-10 and NR-11 on the corrected Apple M5/macOS formal
+  bundle at `evidence/2026-07-20-nr-10-formal-baseline/`. The canonical common
+  and lifecycle paths retain 270 equal-work timing, 70 equal-work RSS and 160
+  decimal-lifecycle rows with zero correctness failures; 24 labelled native-C
+  control rows also pass. Required noise appends retain every extreme. The N=5
+  equal-work geometric means are 0.883021/0.327772 for `rxvm` versus
+  ooRexx/decimal NetRexx and 0.872707/0.323944 for `rxbvm`. The original
+  0.006220/0.006149 NetRexx ratios are withdrawn as binary/JVM controls. The
+  bundle inventories 101 artifacts, reuses NR-02 forensics by reference and
+  removes reproducible C binaries plus the superseded unequal-work decimal
+  capture. The Level B inventory writes and verifies 70 recursive checksums;
+  final Release benchmark validation is 35/35.
 
 ## Cross-runtime portfolio execution order
 

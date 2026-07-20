@@ -1,7 +1,7 @@
 # Benchmark median summary
 
-Status: live comparison index; qualification pilots and initial seed evidence,
-not an NR-10 formal baseline
+Status: live comparison index; qualification pilots, historical evidence and
+the 2026-07-20 NR-10 formal absolute baseline
 
 This master table gives one row per dated evidence bundle and benchmark/run.
 Platform cells are `median (recorded sample count)`. Process-time rows are in
@@ -59,12 +59,30 @@ bundle's scope or no valid observation exists.
 | 2026-07-17 / NUMERIC-01 accepted | RexxCPS 2.2d / canonical `rxbvm` | native MCPS | 1.11 (3) | — | — | — |
 | 2026-07-19 / NR-09 final QA refresh | RexxCPS 2.2d / final canonical `rxvm` | native MCPS | 1.21 (12) | — | — | — |
 | 2026-07-19 / NR-09 final QA refresh | RexxCPS 2.2d / final canonical `rxbvm` | native MCPS | 1.21 (12) | — | — | — |
+| 2026-07-20 / NR-10 corrected equal-work | Sieve | work/s | 5,040 / 4,980 (10) | 714 (10) | — | 2,710 (10) |
+| 2026-07-20 / NR-10 corrected equal-work | Permute | work/s | 647 / 642 (10) | 315 (10) | — | 4,350 (20) |
+| 2026-07-20 / NR-10 corrected equal-work | Bounce | work/s | 328 / 323 (10) | 993 (10) | — | 2,010 (10) |
+| 2026-07-20 / NR-10 corrected equal-work | Richards | work/s | 1.73 / 1.72 (10) | 11.4 (10) | — | 17.7 (10) |
+| 2026-07-20 / NR-10 corrected equal-work | Base64 | work/s | 1,580 / 1,550 (20) | 2,130 (10) | — | 1,840 (10) |
+| 2026-07-20 / NR-10 formal | RexxCPS | native MCPS | 1.23 / 1.22 (10) | 39.9 (10) | 33.2 (10) | 48.1 (10) |
 
 The NR-09 rows are the final corrected-product Cell C medians: 1,211,556 CPS
 for `rxvm` and 1,208,420.5 CPS for `rxbvm`. In the same-session paired
 complete-product comparison against Cell A, the medians are +1.385% and
 +2.868%, respectively; the `rxvm` 95% interval crosses zero, while the
 `rxbvm` interval is wholly positive.
+
+The NR-10 CREXX cells show `rxvm / rxbvm`. The five corrected common workloads
+use one equal work argument per workload across all four cells. NetRexx uses
+`options nobinary decimal`, timed `Rexx` numeric state and the default HotSpot
+JIT; Base64 separately discloses its Java `byte[]` storage. NetRexx Permute and
+both CREXX Base64 cells received the required ten-sample timing append and
+remain labelled noisy in the scorecard. The original 0.006220/0.006149
+CREXX/NetRexx aggregates used `options binary` and are withdrawn as Rexx
+results; the raw version-1 files remain binary/JVM controls. The four corrected
+N=5 geometric means and all separate lifecycle, RSS, artifact and control
+results are in
+`2026-07-20-nr-10-formal-baseline/scorecard.md`.
 
 † NetRexx Mandelbrot has a disclosed timed arithmetic-XOR/padding adaptation;
 its aggregate equivalence review remains open.
@@ -136,6 +154,8 @@ later established, add its sample id and reason here before changing the table.
 - `2026-07-18-nr-09-large-instruction-batch-first-release-verdict/finalrun01/`
   for the final same-session A/B/C campaign, Cell C medians and paired
   complete-product comparisons
+- `2026-07-20-nr-10-formal-baseline/` for the formal normalized-throughput,
+  RexxCPS, lifecycle, peak-RSS, artifact and labelled native-C control evidence
 
 Do not combine rows from different dates/bundles into one median. Add a new row
 for each future benchmark/run so environment drift remains visible.

@@ -23,9 +23,16 @@ Comparative work is a pipeline, not one late milestone:
 3. **NR-10 records formal baselines.** As soon as a workload clears NR-02, run
    its same-host implementation matrix and retain raw results and runtime
    forensics. NR-10 therefore overlaps later NR-01/NR-02 expansion.
-4. **NR-11 defines aggregation.** Only the common qualified CREXX/ooRexx/
-   NetRexx subset contributes to the cross-runtime portfolio aggregate.
-   Regina's RexxCPS result and other controls remain visible separately.
+4. **NR-11 defines aggregation.** The approved common qualified CREXX/ooRexx/
+   NetRexx aggregate contains Sieve, Permute, Bounce, Richards and Base64.
+   Regina's RexxCPS result and other controls remain visible separately. The
+   normative formula, sampling and missing-cell policy is in
+   `../PERFORMANCE-GOVERNANCE.md`.
+
+For those five NetRexx cells, `qualified` means `options nobinary decimal`
+with timed numeric state expressed as NetRexx `Rexx` values. Generated Java and
+the default HotSpot JIT are the ordinary NetRexx substrate. Binary-typed ports
+remain useful Java/JVM controls, but they are not fair Rexx aggregate inputs.
 
 ## NR-02 exit criterion
 
@@ -71,6 +78,12 @@ DeltaBlue, Havlak, filesystem-I/O workloads and focused Classic-semantics probes
 remain Tier B/reserve work. They are not silently included in the Tier A
 aggregate.
 
+The 12-item Tier A list is a coverage and reporting portfolio, not an assertion
+that all 11 steady-state workloads are aggregate-compatible. The initial common
+aggregate is the five-workload intersection named above. RexxCPS, Mandelbrot,
+Towers, Storage, List and JSON remain visible outside it under their current
+canonical/adaptation/comparability labels.
+
 ## Initial implementation matrix
 
 `Inventory/port required` means no result should be published until the source,
@@ -80,17 +93,17 @@ as part of NR-01 and NR-02.
 | Workload | CREXX | ooRexx | Regina | NetRexx | Java/control |
 | --- | --- | --- | --- | --- | --- |
 | RexxCPS | qualified 2.2d disclosed adaptation; prior 2.2c evidence remains historical | qualified canonical 2.2 plus A/B diagnostics | qualified canonical 2.2 plus A/B diagnostics | qualified disclosed 2.2n adaptation; unchanged 2.1n retained/excluded | mechanical/dynamic C ceilings remain optional; Java only if a defensible port is added |
-| AWFY Sieve | qualified equivalent port | qualified equivalent Classic/stem port | out of scope: RexxCPS only | qualified equivalent port | inventory/provenance review required |
-| AWFY Permute | qualified equivalent port | qualified equivalent procedural port | out of scope: RexxCPS only | qualified equivalent object port | inventory/provenance review required |
+| AWFY Sieve | qualified equivalent port | qualified equivalent Classic/stem port | out of scope: RexxCPS only | qualified decimal-`Rexx` equivalent port | prior binary-typed form retained only as control |
+| AWFY Permute | qualified equivalent port | qualified equivalent procedural port | out of scope: RexxCPS only | qualified decimal-`Rexx` object port | prior binary-typed form retained only as control |
 | AWFY Mandelbrot | qualified equivalent port | `not comparable`: decimal numerics fail common checksums at sizes 500/750 | out of scope: RexxCPS only | disclosed arithmetic-XOR adaptation; aggregate review open | inventory/provenance review required |
 | AWFY Towers | qualified equivalent object port | correct procedural diagnostic but `not comparable` for object/allocation scoring | out of scope: RexxCPS only | qualified equivalent object port | inventory/provenance review required |
-| AWFY Bounce | qualified equivalent reference/object port | qualified equivalent object port | out of scope: RexxCPS only | qualified equivalent object port | upstream Java reference available |
+| AWFY Bounce | qualified equivalent reference/object port | qualified equivalent object port | out of scope: RexxCPS only | qualified decimal-`Rexx` object port | upstream Java reference available; binary form is control-only |
 | AWFY Storage | correct disclosed node-wrapper diagnostic; `not comparable` for allocation score | qualified equivalent object/array port | out of scope: RexxCPS only | qualified equivalent object/array port | upstream Java reference available |
 | AWFY List | qualified disclosed weak-reference arena; aggregate review open | qualified equivalent object port | out of scope: RexxCPS only | qualified equivalent object port | upstream Java reference available |
-| AWFY Richards | qualified common state-machine adaptation | qualified common state-machine adaptation | out of scope: RexxCPS only | qualified common state-machine adaptation | upstream queue/hold result retained |
+| AWFY Richards | qualified common state-machine adaptation | qualified common state-machine adaptation | out of scope: RexxCPS only | qualified decimal-`Rexx` common state-machine adaptation | upstream queue/hold result retained; binary form is control-only |
 | JSON capability probe | correct path/count diagnostic; `not comparable` to DOM cells | correct supplied-DOM diagnostic | out of scope: RexxCPS only | correct Java-collections-DOM diagnostic | common correctness only; no common timing score |
-| RFC 4648 Base64 | qualified preallocated `.binary` port | qualified byte-string port | out of scope: RexxCPS only | qualified Java `byte[]` port | exact round-trip/length/checksum contract |
-| Compile/load/first-result | qualified compile/assemble/load-first-result capture | qualified translate/load-first-result capture | out of scope: RexxCPS only | qualified compile/JVM-load-first-result capture | reported separately; no load-only CLI boundary |
+| RFC 4648 Base64 | qualified preallocated `.binary` port | qualified byte-string port | out of scope: RexxCPS only | qualified decimal-arithmetic port with disclosed Java `byte[]` storage | exact round-trip/length/checksum contract; binary arithmetic form is control-only |
+| Compile/load/first-result | qualified compile/assemble/load-first-result capture | qualified translate/load-first-result capture | out of scope: RexxCPS only | qualified decimal-`Rexx` compile/JVM-load-first-result capture | reported separately; default HotSpot JIT; no load-only CLI boundary |
 
 The port exercise's confirmed capability gaps and accuracy checks are retained
 in `performance/capability-gaps.md`. In particular, references and binary-safe
@@ -117,3 +130,18 @@ Classic runtimes do not need to imitate cREXX classes merely to fill a cell.
 Use an algorithmically equivalent procedural representation when it preserves
 the intended measured work; otherwise mark the workload not comparable and
 exclude it from the common aggregate.
+
+## Formal baseline entry
+
+A qualified cell enters a formal baseline only when it has the exact source and
+runtime provenance, deterministic correctness contract, canonical execution
+mode, approved work contract and formal samples required by
+`../PERFORMANCE-GOVERNANCE.md`. The five common aggregate workloads use one
+equal integer argument per workload across CREXX, ooRexx and decimal NetRexx;
+the qualified NR-10 arguments keep the fastest median above one second and the
+slowest below 30 seconds. Qualification pilots, unequal-work observations and
+binary-typed NetRexx controls remain outside the aggregate.
+
+Do not impute a missing/failed cell or change an aggregate's membership in
+place. Tier B promotion or a new common member needs explicit approval,
+NR-02-equivalent qualification and a new versioned formal baseline.

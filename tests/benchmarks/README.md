@@ -28,6 +28,11 @@ ports preserve deterministic arguments/results and document every material
 language-required representation or operation substitution in
 `cross-runtime/README.md` and `performance/NR-02-WORKLIST.md`.
 
+For the formal common comparison, NetRexx uses `options nobinary decimal` and
+NetRexx `Rexx` numeric state; generated Java plus the default HotSpot JIT are
+the normal substrate. Binary-typed NetRexx portfolio ports are labelled JVM
+controls and do not enter the common Rexx aggregate.
+
 The Are We Fast Yet? suite was published with the DLS 2016 paper
 “Cross-Language Compiler Benchmarking—Are We Fast Yet?” (DOI
 `10.1145/2989225.2989232`). Its porting rules prioritize deterministic,
