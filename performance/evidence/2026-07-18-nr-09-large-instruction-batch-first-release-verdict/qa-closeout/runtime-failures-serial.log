@@ -1,0 +1,114 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+    Start    1: linked_opt_runtime_artifacts_build
+1/7 Test    #1: linked_opt_runtime_artifacts_build .......   Passed    0.09 sec
+    Start 1573: testRexxClassicBifC2d_noopt
+2/7 Test #1573: testRexxClassicBifC2d_noopt ..............***Failed    0.32 sec
+FAIL: C2D 01  expected 1 got   
+FAIL: C2D FF  expected 255 got   
+FAIL: C2D FF 1 expected -1 got -  
+FAIL: C2D FF 2 expected 255 got   
+FAIL: C2D 0081  expected 129 got   
+FAIL: C2D 0081 1 expected -127 got -  
+FAIL: C2D 0081 2 expected 129 got   
+FAIL: C2D FFFFFFFFFFFFFFFF  expected 18446744073709551615 got 000000000000000000  
+FAIL: C2D FFFFFFFFFFFFFFFF 8 expected -1 got -  
+FAIL: C2D expected error RXC-LC-40.35 got  
+
+    Start 1574: testRexxClassicBifC2d_opt
+3/7 Test #1574: testRexxClassicBifC2d_opt ................***Failed    0.25 sec
+FAIL: C2D 01  expected 1 got   
+FAIL: C2D FF  expected 255 got   
+FAIL: C2D FF 1 expected -1 got -  
+FAIL: C2D FF 2 expected 255 got   
+FAIL: C2D 0081  expected 129 got   
+FAIL: C2D 0081 1 expected -127 got -  
+FAIL: C2D 0081 2 expected 129 got   
+FAIL: C2D FFFFFFFFFFFFFFFF  expected 18446744073709551615 got 000000000000000000  
+FAIL: C2D FFFFFFFFFFFFFFFF 8 expected -1 got -  
+FAIL: C2D expected error RXC-LC-40.35 got  
+CMake Error at /Users/adrian/CLionProjects/CREXX/cmake/CrexxLinkedRuntime.cmake:215 (message):
+  runner failed for testRexxClassicBifC2d_opt with exit code 1
+Call Stack (most recent call first):
+  testRexxClassicBifC2d_opt_linked_runtime.cmake:6 (crexx_link_and_run)
+
+
+
+    Start 1665: testRexxClassicBifX2d_noopt
+4/7 Test #1665: testRexxClassicBifX2d_noopt ..............***Failed    0.32 sec
+FAIL: X2D 0E  expected 14 got   
+FAIL: X2D 81  expected 129 got   
+FAIL: X2D F81  expected 3969 got   
+FAIL: X2D FF 81  expected 65409 got   
+FAIL: X2D FFFFFFFFFFFFFFFF  expected 18446744073709551615 got 000000000000000000  
+FAIL: X2D FFFFFFFFFFFFFFFFFFFFFFFF  expected 79228162514264337593543950335 got 000000000000000000000000000  
+FAIL: X2D 81 2 expected -127 got -  
+FAIL: X2D 81 4 expected 129 got   
+FAIL: X2D F081 4 expected -3967 got -  
+FAIL: X2D F081 3 expected 129 got   
+FAIL: X2D F081 2 expected -127 got -  
+FAIL: X2D F081 1 expected 1 got   
+FAIL: X2D A 1 expected -6 got -  
+FAIL: X2D a 1 expected -6 got -  
+FAIL: X2D ABC 999999999999999999999999 expected 2748 got   
+FAIL: X2D F 0000000001 expected -1 got -  
+FAIL: X2D FFFFFFFFFFFFFFFFFFFFFFFF 24 expected -1 got -  
+FAIL: X2D F081  + 3 expected 129 got   
+FAIL: X2D expected error RXC-LC-40.35 got 000000000  
+FAIL: X2D omitted optional length got   
+
+    Start 1666: testRexxClassicBifX2d_opt
+5/7 Test #1666: testRexxClassicBifX2d_opt ................***Failed    0.27 sec
+FAIL: X2D 0E  expected 14 got   
+FAIL: X2D 81  expected 129 got   
+FAIL: X2D F81  expected 3969 got   
+FAIL: X2D FF 81  expected 65409 got   
+FAIL: X2D FFFFFFFFFFFFFFFF  expected 18446744073709551615 got 000000000000000000  
+FAIL: X2D FFFFFFFFFFFFFFFFFFFFFFFF  expected 79228162514264337593543950335 got 000000000000000000000000000  
+FAIL: X2D 81 2 expected -127 got -  
+FAIL: X2D 81 4 expected 129 got   
+FAIL: X2D F081 4 expected -3967 got -  
+FAIL: X2D F081 3 expected 129 got   
+FAIL: X2D F081 2 expected -127 got -  
+FAIL: X2D F081 1 expected 1 got   
+FAIL: X2D A 1 expected -6 got -  
+FAIL: X2D a 1 expected -6 got -  
+FAIL: X2D ABC 999999999999999999999999 expected 2748 got   
+FAIL: X2D F 0000000001 expected -1 got -  
+FAIL: X2D FFFFFFFFFFFFFFFFFFFFFFFF 24 expected -1 got -  
+FAIL: X2D F081  + 3 expected 129 got   
+FAIL: X2D expected error RXC-LC-40.35 got 000000000  
+FAIL: X2D omitted optional length got   
+CMake Error at /Users/adrian/CLionProjects/CREXX/cmake/CrexxLinkedRuntime.cmake:215 (message):
+  runner failed for testRexxClassicBifX2d_opt with exit code 1
+Call Stack (most recent call first):
+  testRexxClassicBifX2d_opt_linked_runtime.cmake:6 (crexx_link_and_run)
+
+
+
+    Start 1836: rxpa_native_unwind_funcs_dynamic_noopt
+6/7 Test #1836: rxpa_native_unwind_funcs_dynamic_noopt ...***Failed  Required regular expression not found. Regex=[.*PASS: Native Signal Call Mapping.*
+]  0.13 sec
+FAIL: native signal call mapping
+
+    Start 1838: rxpa_native_unwind_funcs_static_noopt
+7/7 Test #1838: rxpa_native_unwind_funcs_static_noopt ....***Failed  Required regular expression not found. Regex=[.*PASS: Native Signal Call Mapping.*
+]  0.13 sec
+FAIL: native signal call mapping
+
+
+14% tests passed, 6 tests failed out of 7
+
+Label Time Summary:
+linked_opt    =   0.52 sec*proc (2 tests)
+smoke         =   0.13 sec*proc (1 test)
+
+Total Test time (real) =   1.55 sec
+
+The following tests FAILED:
+	1573 - testRexxClassicBifC2d_noopt (Failed)
+	1574 - testRexxClassicBifC2d_opt (Failed)                linked_opt
+	1665 - testRexxClassicBifX2d_noopt (Failed)
+	1666 - testRexxClassicBifX2d_opt (Failed)                linked_opt
+	1836 - rxpa_native_unwind_funcs_dynamic_noopt (Failed)   smoke
+	1838 - rxpa_native_unwind_funcs_static_noopt (Failed)
+Errors while running CTest

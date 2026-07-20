@@ -27,8 +27,7 @@ l8dostart:
    .meta "inline_test_expr.main.result"="b" ".int" r1
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
    load r4,1
-   swap r5,r0
-   call r6,addOne(),r4
+   swapcall r6,addOne(),r4,r0,r5
    swap r0,r5
    .traceevent "F" 4 "R" "I" "r" 6 5 5 0 "addone" ""
    iadd r1,r6,10

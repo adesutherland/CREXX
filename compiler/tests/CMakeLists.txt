@@ -110,6 +110,12 @@ enable_testing()
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxLinkedRuntime.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
 
+add_executable(test_rxcp_super_combiner test_rxcp_super_combiner.c)
+target_link_libraries(test_rxcp_super_combiner PRIVATE rxclib)
+target_include_directories(test_rxcp_super_combiner PRIVATE ${CMAKE_SOURCE_DIR}/compiler)
+add_test(NAME rxcp_super_combiner COMMAND test_rxcp_super_combiner)
+set_tests_properties(rxcp_super_combiner PROPERTIES LABELS "compiler;performance;nr09")
+
 # Compiler flags for optimization levels
 # Based on rxcpmain.c: -n is for No Optimising, and it's on by default.
 set(COMPILER_NOOPT_FLAG "-n")
@@ -1135,6 +1141,20 @@ add_test(NAME nr09_numeric_context_contract
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/nr09_numeric_context_contract.cmake)
 set_tests_properties(nr09_numeric_context_contract PROPERTIES
         LABELS "compiler;performance;numeric")
+
+add_test(NAME nr09_codegen_contract
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DBENCH_DIR=${CMAKE_SOURCE_DIR}/tests/benchmarks
+                 -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr09_codegen_contract_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/nr09_codegen_contract.cmake)
+set_tests_properties(nr09_codegen_contract PROPERTIES
+        LABELS "compiler;performance")
 
 # Macro to add a run test
 macro(add_crexx_run_test NAME SOURCE_FILE)

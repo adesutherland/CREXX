@@ -34,9 +34,7 @@ main() .locals=6
 l78bexprend:
    endlife r2
    load r0,1
-   settp r4,768
-   swap r1,r4
-   call r2,renameBox(),r0
+   settpswapcall r2,renameBox(),r0,r4,768,r1
    swap r4,r1
    .traceevent "F" 4 "R" "S" "r" 2 8 8 0 "renamebox" ""
    say r2
@@ -73,8 +71,7 @@ renameBox() .locals=6
    linkattr1 r2,r4,1
    .traceevent "V" 6 "R" "S" "r" 2 19 19 0 "name" ""
    scopy r5,r2
-   unlink r2
-   br l137bexprend
+   unlinkbr r2,l137bexprend
 l137bexprend:
    ret r5
    .meta "inline_test_object_expr_arg.renamebox.box"

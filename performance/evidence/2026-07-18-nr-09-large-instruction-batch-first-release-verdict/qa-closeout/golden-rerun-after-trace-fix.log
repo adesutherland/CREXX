@@ -1,0 +1,778 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debug
+        Start  50: address_expose_noopt
+        Start  68: select_dispatch_integer_noopt
+        Start  70: select_dispatch_fallback_noopt
+        Start  72: select_dispatch_mixed_noopt
+        Start  73: select_dispatch_mixed_opt
+        Start  74: select_dispatch_general_noopt
+        Start  76: select_dispatch_strings_noopt
+        Start  78: repro_duplicate_call_argument_noopt
+        Start  86: 12_arrays_lvlb_noopt
+        Start  87: 12_arrays_lvlb_opt
+        Start  88: array_mutation_statements_noopt
+        Start  89: array_mutation_statements_opt
+        Start  90: 13_stems_noopt
+        Start  91: 13_stems_opt
+        Start  92: repro_multi_tail_stems_noopt
+        Start  93: repro_multi_tail_stems_opt
+        Start  98: 18_array_class_noopt
+        Start  99: 18_array_class_opt
+        Start 110: class_import_noopt
+        Start 111: class_import_opt
+        Start 193: repro_dotted_index_noopt
+        Start 194: repro_dotted_index_opt
+        Start 197: repro_array_arg_noopt
+        Start 198: repro_array_arg_opt
+        Start 199: repro_opt_args_noopt
+        Start 201: arg_semantics_scalar_noopt
+        Start 203: arg_semantics_array_noopt
+        Start 204: arg_semantics_array_opt
+        Start 205: arg_semantics_object_noopt
+        Start 206: arg_semantics_object_opt
+  1/110 Test  #89: array_mutation_statements_opt .................***Failed    3.37 sec
+Mismatch at lines 51/51:
+Gen: [minlinkattr1 r2,r1,1]
+Gold: [minattrs r1,1]
+
+        Start 207: object_reference_regression_noopt
+  2/110 Test  #78: repro_duplicate_call_argument_noopt ...........***Failed    3.40 sec
+Mismatch at lines 39/39:
+Gen: [settpcall r2,combine_text(),r3,r5,256]
+Gold: [settp r5,256]
+
+        Start 208: object_reference_regression_opt
+  3/110 Test  #72: select_dispatch_mixed_noopt ...................***Failed    3.42 sec
+Mismatch at lines 21/21:
+Gen: [isetunlink r3,r4]
+Gold: [icopy r3,r4]
+
+        Start 211: basic_strings_noopt
+  4/110 Test  #76: select_dispatch_strings_noopt .................***Failed    3.42 sec
+Mismatch at lines 11/11:
+Gen: [settpcall r2,c_padded(),r0,r1,768]
+Gold: [settp r1,768]
+
+        Start 213: basic_arrays_noopt
+  5/110 Test  #92: repro_multi_tail_stems_noopt ..................***Failed    3.44 sec
+Mismatch at lines 30/30:
+Gen: [settpcall r9,§rxfnsb.stem.set(),r5,r8,768]
+Gold: [settp r8,768]
+
+        Start 214: basic_arrays_opt
+  6/110 Test #206: arg_semantics_object_opt ......................***Failed    3.44 sec
+Mismatch at lines 37/37:
+Gen: [unlinkbr r5,l171bexprend]
+Gold: [unlink r5]
+
+        Start 219: inline_test1_noopt
+  7/110 Test #201: arg_semantics_scalar_noopt ....................***Failed    3.47 sec
+Mismatch at lines 15/15:
+Gen: [swapcall r4,inspectInt(),r2,r0,r3]
+Gold: [swap r3,r0]
+
+        Start 221: inline_test2_noopt
+  8/110 Test #198: repro_array_arg_opt ...........................***Failed    3.48 sec
+Mismatch at lines 10/10:
+Gen: [minlinkattr1 r2,r1,1]
+Gold: [minattrs r1,1]
+
+        Start 223: inline_test_call_noopt
+  9/110 Test  #90: 13_stems_noopt ................................***Failed    3.50 sec
+Mismatch at lines 24/24:
+Gen: [settpcall r5,§rxfnsb.stem.get(),r2,r4,768]
+Gold: [settp r4,768]
+
+        Start 225: inline_test_expr_noopt
+ 10/110 Test #193: repro_dotted_index_noopt ......................***Failed    3.51 sec
+Mismatch at lines 22/22:
+Gen: [setlinkattr1 r2,r1,10,r0]
+Gold: [setattrs r1,10]
+
+        Start 227: inline_test_expr_negative_noopt
+ 11/110 Test  #86: 12_arrays_lvlb_noopt ..........................***Failed    3.53 sec
+Mismatch at lines 14/14:
+Gen: [isetunlink r1,r2]
+Gold: [icopy r1,r2]
+
+        Start 229: inline_test_nested_call_expr_noopt
+ 12/110 Test  #93: repro_multi_tail_stems_opt ....................***Failed    3.56 sec
+Mismatch at lines 27/27:
+Gen: [settpcall r5,§rxfnsb.stem.set(),r0,r3,768]
+Gold: [settp r3,768]
+
+        Start 231: inline_test_concat_expr_noopt
+ 13/110 Test #197: repro_array_arg_noopt .........................***Failed    3.57 sec
+Mismatch at lines 10/10:
+Gen: [minlinkattr1 r3,r2,1]
+Gold: [minattrs r2,1]
+
+        Start 233: inline_test_say_expr_noopt
+ 14/110 Test #194: repro_dotted_index_opt ........................***Failed    3.58 sec
+Mismatch at lines 22/22:
+Gen: [setlinkattr1 r2,r1,10,r0]
+Gold: [setattrs r1,10]
+
+        Start 235: inline_test_say_expr_negative_noopt
+ 15/110 Test  #91: 13_stems_opt ..................................***Failed    3.59 sec
+Mismatch at lines 23/23:
+Gen: [settpcall r4,§rxfnsb.stem.get(),r0,r2,768]
+Gold: [settp r2,768]
+
+        Start 237: inline_test_return_expr_noopt
+ 16/110 Test #205: arg_semantics_object_noopt ....................***Failed    3.60 sec
+Mismatch at lines 14/14:
+Gen: [settpcall r0,§arg_semantics_object.box.§factory(),r1,r2,768]
+Gold: [settp r2,768]
+
+        Start 238: inline_test_return_expr_opt
+ 17/110 Test  #73: select_dispatch_mixed_opt .....................***Failed    3.64 sec
+Mismatch at lines 21/21:
+Gen: [isetunlink r3,r4]
+Gold: [icopy r3,r4]
+
+        Start 239: inline_test_unary_expr_noopt
+ 18/110 Test  #74: select_dispatch_general_noopt .................***Failed    3.64 sec
+Mismatch at lines 30/30:
+Gen: [swapcall r7,if_classify(),r5,r1,r6]
+Gold: [swap r6,r1]
+
+        Start 241: inline_test_compare_expr_noopt
+ 19/110 Test  #70: select_dispatch_fallback_noopt ................***Failed    3.65 sec
+Mismatch at lines 25/25:
+Gen: [swapcall r5,duplicate_case(),r3,r0,r4]
+Gold: [swap r4,r0]
+
+        Start 243: inline_test_call_arg_expr_noopt
+ 20/110 Test #199: repro_opt_args_noopt ..........................***Failed    3.68 sec
+Mismatch at lines 14/14:
+Gen: [settpcall r4,test_opt(),r0,r3,256]
+Gold: [settp r3,256]
+
+        Start 245: inline_test_call_like_arg_expr_noopt
+ 21/110 Test  #87: 12_arrays_lvlb_opt ............................***Failed    3.69 sec
+Mismatch at lines 14/14:
+Gen: [isetunlink r1,r2]
+Gold: [icopy r1,r2]
+
+        Start 246: inline_test_call_like_arg_expr_opt
+ 22/110 Test  #68: select_dispatch_integer_noopt .................***Failed    3.71 sec
+Mismatch at lines 34/34:
+Gen: [swapcall r2,classify(),r5,r0,r6]
+Gold: [swap r6,r0]
+
+        Start 247: inline_test_short_circuit_expr_noopt
+ 23/110 Test  #98: 18_array_class_noopt ..........................***Failed    3.74 sec
+Mismatch at lines 18/18:
+Gen: [settpcall r1,§array_class_lib.item.§factory(),r2,r3,768]
+Gold: [settp r3,768]
+
+        Start 249: inline_test_composed_expr_contexts_noopt
+ 24/110 Test  #50: address_expose_noopt ..........................***Failed    3.79 sec
+Mismatch at lines 38/38:
+Gen: [swapcall r0,_rxsysb._address(),r2,r1,r9]
+Gold: [swap r9,r1]
+
+        Start 251: inline_test_byvalue_arg_reuse_noopt
+ 25/110 Test #203: arg_semantics_array_noopt .....................***Failed    3.82 sec
+Mismatch at lines 11/11:
+Gen: [minlinkattr1 r1,r0,1]
+Gold: [minattrs r0,1]
+
+        Start 255: inline_test_condition_contexts_noopt
+ 26/110 Test  #88: array_mutation_statements_noopt ...............***Failed    3.87 sec
+Mismatch at lines 51/51:
+Gen: [minlinkattr1 r2,r1,1]
+Gold: [minattrs r1,1]
+
+        Start 259: inline_test_member_receiver_expr_noopt
+ 27/110 Test #204: arg_semantics_array_opt .......................***Failed    3.92 sec
+Mismatch at lines 11/11:
+Gen: [minlinkattr1 r1,r0,1]
+Gold: [minattrs r0,1]
+
+        Start 260: inline_test_member_receiver_expr_opt
+ 28/110 Test #110: class_import_noopt ............................***Failed    3.95 sec
+Mismatch at lines 15/15:
+Gen: [settpswapcall r3,§class_import_lib.counter.inc(),r1,r0,256,r2]
+Gold: [settp r0,256]
+
+        Start 261: inline_test_named_factory_selector_noopt
+ 29/110 Test #111: class_import_opt ..............................***Failed    3.97 sec
+Mismatch at lines 14/14:
+Gen: [isetattr1 r1,1,r3]
+Gold: [linkattr1 r2,r1,1]
+
+        Start 262: inline_test_named_factory_selector_opt
+ 30/110 Test  #99: 18_array_class_opt ............................***Failed    4.13 sec
+Mismatch at lines 71/71:
+Gen: [minlinkattr1 r9,r5,1]
+Gold: [minattrs r5,1]
+
+        Start 263: inline_test_ref_opt_noopt
+ 31/110 Test #213: basic_arrays_noopt ............................***Failed    2.77 sec
+Mismatch at lines 25/25:
+Gen: [setlinkattr1 r5,r1,10,r2]
+Gold: [setattrs r1,10]
+
+        Start 265: inline_test_ref_indexed_noopt
+ 32/110 Test #219: inline_test1_noopt ............................***Failed    2.75 sec
+Mismatch at lines 26/26:
+Gen: [swapcall r1,multiplyByTwo(),r4,r0,r5]
+Gold: [swap r5,r0]
+
+        Start 266: inline_test_ref_indexed_opt
+ 33/110 Test #225: inline_test_expr_noopt ........................***Failed    2.77 sec
+Mismatch at lines 26/26:
+Gen: [swapcall r6,addOne(),r4,r0,r5]
+Gold: [swap r5,r0]
+
+        Start 267: inline_test_ref_stem_noopt
+ 34/110 Test #208: object_reference_regression_opt ...............***Failed    2.88 sec
+Mismatch at lines 50/50:
+Gen: [setlinkattr1 r8,r2,64,r4]
+Gold: [setattrs r2,64]
+
+        Start 268: inline_test_ref_stem_opt
+ 35/110 Test #223: inline_test_call_noopt ........................***Failed    2.81 sec
+Mismatch at lines 25/25:
+Gen: [swapcall r5,logDouble(),r3,r0,r4]
+Gold: [swap r4,r0]
+
+        Start 269: inline_test_ref_computed_noopt
+ 36/110 Test #207: object_reference_regression_noopt .............***Failed    2.94 sec
+Mismatch at lines 26/26:
+Gen: [settpcall r1,§object_reference_regression.largepayload.§factory(),r2,r3,768]
+Gold: [settp r3,768]
+
+        Start 270: inline_test_ref_computed_opt
+ 37/110 Test #211: basic_strings_noopt ...........................***Failed    2.92 sec
+Mismatch at lines 43/43:
+Gen: [settpswapcall r6,rxfnsb.length(),r4,r2,256,r5]
+Gold: [settp r2,256]
+
+        Start 271: inline_test_ref_vararg_noopt
+ 38/110 Test #214: basic_arrays_opt ..............................***Failed    2.90 sec
+Mismatch at lines 25/25:
+Gen: [setlinkattr1 r4,r0,10,r1]
+Gold: [setattrs r0,10]
+
+        Start 273: inline_test_ref_vararg_runtime_noopt
+ 39/110 Test #247: inline_test_short_circuit_expr_noopt ..........***Failed    2.64 sec
+Mismatch at lines 22/22:
+Gen: [swapcall r0,probe(),r1,r0,r3]
+Gold: [swap r3,r0]
+
+        Start 274: inline_test_ref_vararg_runtime_opt
+ 40/110 Test #235: inline_test_say_expr_negative_noopt ...........***Failed    2.80 sec
+Mismatch at lines 25/25:
+Gen: [swapcall r5,asString(),r3,r0,r4]
+Gold: [swap r4,r0]
+
+        Start 275: inline_test_ref_negative_noopt
+ 41/110 Test #249: inline_test_composed_expr_contexts_noopt ......***Failed    2.70 sec
+Mismatch at lines 73/73:
+Gen: [swapcall r0,bump(),r5,r0,r6]
+Gold: [swap r6,r0]
+
+        Start 276: inline_test_ref_negative_opt
+ 42/110 Test #231: inline_test_concat_expr_noopt .................***Failed    2.89 sec
+Mismatch at lines 26/26:
+Gen: [swapcall r6,asString(),r4,r0,r5]
+Gold: [swap r5,r0]
+
+        Start 277: inline_test_bool_expr_negative_noopt
+ 43/110 Test #221: inline_test2_noopt ............................***Failed    2.99 sec
+Mismatch at lines 158/158:
+Gen: [swapcall r3,helper(),r1,a1,r2]
+Gold: [swap r2,a1]
+
+        Start 280: inline_test_vararg_opt
+ 44/110 Test #245: inline_test_call_like_arg_expr_noopt ..........***Failed    2.83 sec
+Mismatch at lines 28/28:
+Gen: [swapcall r5,addOne(),r6,r1,r7]
+Gold: [swap r7,r1]
+
+        Start 285: inline_test_vararg_negative_noopt
+ 45/110 Test #239: inline_test_unary_expr_noopt ..................***Failed    2.89 sec
+Mismatch at lines 25/25:
+Gen: [swapcall r5,addOne(),r3,r0,r4]
+Gold: [swap r4,r0]
+
+        Start 287: inline_test_exposed_nested_call_noopt
+ 46/110 Test #246: inline_test_call_like_arg_expr_opt ............***Failed    2.86 sec
+Mismatch at lines 46/46:
+Gen: [isetattr1 r5,1,r4]
+Gold: [linkattr1 r8,r5,1]
+
+        Start 293: inline_test_nested_scope_do_noopt
+ 47/110 Test #241: inline_test_compare_expr_noopt ................***Failed    2.92 sec
+Mismatch at lines 25/25:
+Gen: [swapcall r5,addOne(),r3,r0,r4]
+Gold: [swap r4,r0]
+
+ 48/110 Test #260: inline_test_member_receiver_expr_opt ..........***Failed    2.63 sec
+Mismatch at lines 37/37:
+Gen: [unlinkbr r3,l63bexprend]
+Gold: [unlink r3]
+
+        Start 295: inline_test_nested_scope_if_do_noopt
+        Start 297: inline_test_nested_scope_exposed_call_noopt
+ 49/110 Test #237: inline_test_return_expr_noopt .................***Failed    2.97 sec
+Mismatch at lines 25/25:
+Gen: [swapcall r5,wrap(),r3,r0,r4]
+Gold: [swap r4,r0]
+
+ 50/110 Test #243: inline_test_call_arg_expr_noopt ...............***Failed    2.91 sec
+Mismatch at lines 25/25:
+Gen: [swapcall r4,addOne(),r5,r0,r6]
+Gold: [swap r6,r0]
+
+        Start 299: inline_test_multi_return_assign_noopt
+        Start 301: inline_test_multi_return_expr_noopt
+ 51/110 Test #233: inline_test_say_expr_noopt ....................***Failed    2.98 sec
+Mismatch at lines 25/25:
+Gen: [swapcall r5,asString(),r3,r0,r4]
+Gold: [swap r4,r0]
+
+        Start 303: inline_test_multi_return_call_noopt
+ 52/110 Test #262: inline_test_named_factory_selector_opt ........***Failed    2.59 sec
+Mismatch at lines 28/28:
+Gen: [settpcall r2,assignedNamed(),r3,r4,768]
+Gold: [settp r4,768]
+
+        Start 307: inline_test_array_return_assign_noopt
+ 53/110 Test #227: inline_test_expr_negative_noopt ...............***Failed    3.09 sec
+Mismatch at lines 25/25:
+Gen: [swapcall r4,addOne(),r5,r0,r6]
+Gold: [swap r6,r0]
+
+        Start 308: inline_test_array_return_assign_opt
+ 54/110 Test #251: inline_test_byvalue_arg_reuse_noopt ...........***Failed    2.85 sec
+Mismatch at lines 22/22:
+Gen: [settpcall r5,check(),r1,r3,768]
+Gold: [settp r3,768]
+
+        Start 309: inline_test_array_return_expr_noopt
+ 55/110 Test #261: inline_test_named_factory_selector_noopt ......***Failed    2.73 sec
+Mismatch at lines 28/28:
+Gen: [settpcall r2,assignedNamed(),r3,r4,768]
+Gold: [settp r4,768]
+
+        Start 310: inline_test_array_return_expr_opt
+ 56/110 Test #259: inline_test_member_receiver_expr_noopt ........***Failed    2.87 sec
+Mismatch at lines 15/15:
+Gen: [settpcall r1,buildBox(),r2,r3,768]
+Gold: [settp r3,768]
+
+        Start 311: inline_test_array_multi_return_expr_noopt
+ 57/110 Test #238: inline_test_return_expr_opt ...................***Failed    3.14 sec
+Mismatch at lines 31/31:
+Gen: [swapcall r6,addOne(),r4,r3,r5]
+Gold: [swap r5,r3]
+
+        Start 312: inline_test_array_multi_return_expr_opt
+ 58/110 Test #263: inline_test_ref_opt_noopt .....................***Failed    2.65 sec
+Mismatch at lines 17/17:
+Gen: [swapcall r3,refBump(),r1,r0,r2]
+Gold: [swap r2,r0]
+
+        Start 313: inline_test_array_multi_return_assign_noopt
+ 59/110 Test #255: inline_test_condition_contexts_noopt ..........***Failed    2.96 sec
+Mismatch at lines 51/51:
+Gen: [swapcall r2,belowTwo(),r3,r0,r4]
+Gold: [swap r4,r0]
+
+        Start 314: inline_test_array_multi_return_assign_opt
+ 60/110 Test #229: inline_test_nested_call_expr_noopt ............***Failed    3.27 sec
+Mismatch at lines 25/25:
+Gen: [swapcall r4,addOne(),r5,r0,r6]
+Gold: [swap r6,r0]
+
+        Start 315: inline_test_object_return_assign_noopt
+ 61/110 Test #265: inline_test_ref_indexed_noopt .................***Failed    2.79 sec
+Mismatch at lines 19/19:
+Gen: [isetunlink r0,r1]
+Gold: [icopy r0,r1]
+
+        Start 316: inline_test_object_return_assign_opt
+ 62/110 Test #268: inline_test_ref_stem_opt ......................***Failed    2.74 sec
+Mismatch at lines 11/11:
+Gen: [minlinkattr1 r0,g1,2]
+Gold: [minattrs g1,2]
+
+        Start 317: inline_test_object_return_expr_noopt
+ 63/110 Test #266: inline_test_ref_indexed_opt ...................***Failed    2.84 sec
+Mismatch at lines 19/19:
+Gen: [isetunlink r0,r1]
+Gold: [icopy r0,r1]
+
+        Start 318: inline_test_object_return_expr_opt
+ 64/110 Test #269: inline_test_ref_computed_noopt ................***Failed    2.79 sec
+Mismatch at lines 20/20:
+Gen: [isetunlink r1,r2]
+Gold: [icopy r1,r2]
+
+        Start 319: inline_test_object_const_arg_mutation_noopt
+ 65/110 Test #270: inline_test_ref_computed_opt ..................***Failed    2.80 sec
+Mismatch at lines 20/20:
+Gen: [isetunlink r1,r2]
+Gold: [icopy r1,r2]
+
+        Start 320: inline_test_object_const_arg_mutation_opt
+ 66/110 Test #267: inline_test_ref_stem_noopt ....................***Failed    2.89 sec
+Mismatch at lines 11/11:
+Gen: [minlinkattr1 r0,g1,2]
+Gold: [minattrs g1,2]
+
+        Start 321: inline_test_object_writable_arg_noopt
+ 67/110 Test #271: inline_test_ref_vararg_noopt ..................***Failed    2.83 sec
+Mismatch at lines 29/29:
+Gen: [swapcall r7,countTail(),r3,r2,r6]
+Gold: [swap r6,r2]
+
+        Start 322: inline_test_object_writable_arg_opt
+ 68/110 Test #280: inline_test_vararg_opt ........................***Failed    2.80 sec
+Mismatch at lines 32/32:
+Gen: [isetunlink r3,r2]
+Gold: [icopy r3,r2]
+
+        Start 323: inline_test_array_expr_arg_noopt
+ 69/110 Test #275: inline_test_ref_negative_noopt ................***Failed    2.89 sec
+Mismatch at lines 19/19:
+Gen: [isetunlink r0,r1]
+Gold: [icopy r0,r1]
+
+        Start 324: inline_test_array_expr_arg_opt
+ 70/110 Test #274: inline_test_ref_vararg_runtime_opt ............***Failed    2.95 sec
+Mismatch at lines 151/151:
+Gen: [swapcall r4,bumpOne(),r1,r3,r2]
+Gold: [swap r2,r3]
+
+        Start 325: inline_test_object_expr_arg_noopt
+ 71/110 Test #301: inline_test_multi_return_expr_noopt ...........***Failed    2.78 sec
+Mismatch at lines 27/27:
+Gen: [swapcall r6,classify(),r4,r0,r5]
+Gold: [swap r5,r0]
+
+        Start 326: inline_test_object_expr_arg_opt
+ 72/110 Test #307: inline_test_array_return_assign_noopt .........***Failed    2.80 sec
+Mismatch at lines 22/22:
+Gen: [settpcall r1,buildArray(),r2,r4,768]
+Gold: [settp r4,768]
+
+        Start 327: inline_test_array_return_temp_noopt
+ 73/110 Test #273: inline_test_ref_vararg_runtime_noopt ..........***Failed    3.02 sec
+Mismatch at lines 29/29:
+Gen: [swapcall r7,countTail(),r3,r2,r6]
+Gold: [swap r6,r2]
+
+        Start 328: inline_test_array_return_temp_opt
+ 74/110 Test #295: inline_test_nested_scope_if_do_noopt ..........***Failed    2.81 sec
+Mismatch at lines 25/25:
+Gen: [swapcall r5,classify(),r3,r0,r4]
+Gold: [swap r4,r0]
+
+        Start 329: inline_test_complex_lhs_assign_noopt
+ 75/110 Test #277: inline_test_bool_expr_negative_noopt ..........***Failed    2.95 sec
+Mismatch at lines 25/25:
+Gen: [swapcall r0,isTwo(),r3,r0,r4]
+Gold: [swap r4,r0]
+
+        Start 330: inline_test_complex_lhs_assign_opt
+ 76/110 Test #303: inline_test_multi_return_call_noopt ...........***Failed    2.89 sec
+Mismatch at lines 25/25:
+Gen: [swapcall r5,maybeLog(),r3,r0,r4]
+Gold: [swap r4,r0]
+
+        Start 331: inline_test_binary_arg_return_noopt
+ 77/110 Test #285: inline_test_vararg_negative_noopt .............***Failed    2.94 sec
+Mismatch at lines 38/38:
+Gen: [swapcall r9,dynamicPick(),r4,r2,r8]
+Gold: [swap r8,r2]
+
+        Start 333: inline_test_block_expr_live_sibling_noopt
+ 78/110 Test #310: inline_test_array_return_expr_opt .............***Failed    2.78 sec
+Mismatch at lines 20/20:
+Gen: [minlinkattr1 r3,r2,1]
+Gold: [minattrs r2,1]
+
+        Start 334: inline_test_block_expr_live_sibling_opt
+ 79/110 Test #297: inline_test_nested_scope_exposed_call_noopt ...***Failed    2.94 sec
+Mismatch at lines 25/25:
+Gen: [swapcall r5,outer(),r3,r0,r4]
+Gold: [swap r4,r0]
+
+        Start 335: inline_test_class_methods_noopt
+ 80/110 Test #308: inline_test_array_return_assign_opt ...........***Failed    2.89 sec
+Mismatch at lines 21/21:
+Gen: [minlinkattr1 r3,r2,1]
+Gold: [minattrs r2,1]
+
+        Start 336: inline_test_class_methods_opt
+ 81/110 Test #299: inline_test_multi_return_assign_noopt .........***Failed    2.94 sec
+Mismatch at lines 28/28:
+Gen: [swapcall r1,classify(),r5,r0,r6]
+Gold: [swap r6,r0]
+
+ 82/110 Test #314: inline_test_array_multi_return_assign_opt .....***Failed    2.73 sec
+Mismatch at lines 30/30:
+Gen: [minlinkattr1 r6,r3,1]
+Gold: [minattrs r3,1]
+
+ 83/110 Test #309: inline_test_array_return_expr_noopt ...........***Failed    2.89 sec
+Mismatch at lines 16/16:
+Gen: [settpcall r1,buildArray(),r2,r4,768]
+Gold: [settp r4,768]
+
+ 84/110 Test #313: inline_test_array_multi_return_assign_noopt ...***Failed    2.76 sec
+Mismatch at lines 30/30:
+Gen: [settpswapcall r3,renderArray(),r4,r0,256,r5]
+Gold: [settp r0,256]
+
+ 85/110 Test #293: inline_test_nested_scope_do_noopt .............***Failed    3.02 sec
+Mismatch at lines 25/25:
+Gen: [swapcall r5,scopedAdd(),r3,r0,r4]
+Gold: [swap r4,r0]
+
+ 86/110 Test #276: inline_test_ref_negative_opt ..................***Failed    3.15 sec
+Mismatch at lines 19/19:
+Gen: [isetunlink r0,r1]
+Gold: [icopy r0,r1]
+
+ 87/110 Test #315: inline_test_object_return_assign_noopt ........***Failed    2.82 sec
+Mismatch at lines 16/16:
+Gen: [settpcall r0,buildBox(),r2,r3,768]
+Gold: [settp r3,768]
+
+ 88/110 Test #287: inline_test_exposed_nested_call_noopt .........***Failed    3.11 sec
+Mismatch at lines 26/26:
+Gen: [swapcall r1,compute(),r4,r0,r5]
+Gold: [swap r5,r0]
+
+ 89/110 Test #312: inline_test_array_multi_return_expr_opt .......***Failed    2.94 sec
+Mismatch at lines 26/26:
+Gen: [minlinkattr1 r5,r2,1]
+Gold: [minattrs r2,1]
+
+ 90/110 Test #311: inline_test_array_multi_return_expr_noopt .....***Failed    2.97 sec
+Mismatch at lines 18/18:
+Gen: [settpcall r3,renderArray(),r0,r1,256]
+Gold: [settp r1,256]
+
+ 91/110 Test #316: inline_test_object_return_assign_opt ..........***Failed    2.01 sec
+Mismatch at lines 44/44:
+Gen: [unlinkbr r7,l168bexprend]
+Gold: [unlink r7]
+
+ 92/110 Test #317: inline_test_object_return_expr_noopt ..........***Failed    2.00 sec
+Mismatch at lines 15/15:
+Gen: [settpcall r1,buildBox(),r2,r3,768]
+Gold: [settp r3,768]
+
+ 93/110 Test #322: inline_test_object_writable_arg_opt ...........***Failed    1.90 sec
+Mismatch at lines 50/50:
+Gen: [settpswapcall r5,§inline_test_object_writable_arg.box.getname(),r7,r2,256,r8]
+Gold: [settp r2,256]
+
+ 94/110 Test #318: inline_test_object_return_expr_opt ............***Failed    2.04 sec
+Mismatch at lines 35/35:
+Gen: [settpswapcall r2,describeBox(),r0,r4,768,r1]
+Gold: [settp r4,768]
+
+ 95/110 Test #320: inline_test_object_const_arg_mutation_opt .....***Failed    1.97 sec
+Mismatch at lines 52/52:
+Gen: [unlinkbr r2,l121bexprend]
+Gold: [unlink r2]
+
+ 96/110 Test #319: inline_test_object_const_arg_mutation_noopt ...***Failed    2.03 sec
+Mismatch at lines 16/16:
+Gen: [settpcall r0,§inline_test_object_const_arg_mutation.box.§factory(),r1,r2,768]
+Gold: [settp r2,768]
+
+ 97/110 Test #321: inline_test_object_writable_arg_noopt .........***Failed    1.99 sec
+Mismatch at lines 16/16:
+Gen: [settpcall r0,§inline_test_object_writable_arg.box.§factory(),r1,r2,768]
+Gold: [settp r2,768]
+
+ 98/110 Test #324: inline_test_array_expr_arg_opt ................***Failed    1.88 sec
+Mismatch at lines 22/22:
+Gen: [isetunlink r3,r4]
+Gold: [icopy r3,r4]
+
+ 99/110 Test #325: inline_test_object_expr_arg_noopt .............***Failed    1.88 sec
+Mismatch at lines 14/14:
+Gen: [settpcall r2,renameBox(),r0,r1,256]
+Gold: [settp r1,256]
+
+100/110 Test #323: inline_test_array_expr_arg_noopt ..............***Failed    1.90 sec
+Mismatch at lines 12/12:
+Gen: [settpcall r2,bumpFirst(),r0,r1,256]
+Gold: [settp r1,256]
+
+101/110 Test #327: inline_test_array_return_temp_noopt ...........***Failed    1.82 sec
+Mismatch at lines 43/43:
+Gen: [swapcall r3,buildPair(),r1,a1,r2]
+Gold: [swap r2,a1]
+
+102/110 Test #335: inline_test_class_methods_noopt ...............***Failed    1.72 sec
+Mismatch at lines 14/14:
+Gen: [settpcall r0,§inline_test_class_methods.box.§factory(),r2,r3,768]
+Gold: [settp r3,768]
+
+103/110 Test #329: inline_test_complex_lhs_assign_noopt ..........***Failed    1.85 sec
+Mismatch at lines 22/22:
+Gen: [setlinkiload r3,r1,3,r2,r5,4]
+Gold: [setattrs r1,3]
+
+104/110 Test #326: inline_test_object_expr_arg_opt ...............***Failed    1.89 sec
+Mismatch at lines 33/33:
+Gen: [settpswapcall r2,renameBox(),r0,r4,768,r1]
+Gold: [settp r4,768]
+
+105/110 Test #330: inline_test_complex_lhs_assign_opt ............***Failed    1.82 sec
+Mismatch at lines 21/21:
+Gen: [isetunlink r1,r3]
+Gold: [icopy r1,r3]
+
+106/110 Test #331: inline_test_binary_arg_return_noopt ...........***Failed    1.78 sec
+Mismatch at lines 15/15:
+Gen: [settpcall r0,relayBinary(),r1,r2,256]
+Gold: [settp r2,256]
+
+107/110 Test #328: inline_test_array_return_temp_opt .............***Failed    1.89 sec
+Mismatch at lines 53/53:
+Gen: [isetunlink r2,a1]
+Gold: [icopy r2,a1]
+
+108/110 Test #333: inline_test_block_expr_live_sibling_noopt .....***Failed    1.80 sec
+Mismatch at lines 19/19:
+Gen: [settpcall r0,§inline_test_block_expr_live_sibling.holder.§factory(),r1,r2,768]
+Gold: [settp r2,768]
+
+109/110 Test #336: inline_test_class_methods_opt .................***Failed    1.76 sec
+Mismatch at lines 35/35:
+Gen: [unlinkbr r3,l196bexprend]
+Gold: [unlink r3]
+
+110/110 Test #334: inline_test_block_expr_live_sibling_opt .......***Failed    1.81 sec
+Mismatch at lines 93/93:
+Gen: [unlinkbr r9,l232bexprend]
+Gold: [unlink r9]
+
+
+0% tests passed, 110 tests failed out of 110
+
+Total Test time (real) =  11.31 sec
+
+The following tests FAILED:
+	 50 - address_expose_noopt (Failed)
+	 68 - select_dispatch_integer_noopt (Failed)
+	 70 - select_dispatch_fallback_noopt (Failed)
+	 72 - select_dispatch_mixed_noopt (Failed)
+	 73 - select_dispatch_mixed_opt (Failed)
+	 74 - select_dispatch_general_noopt (Failed)
+	 76 - select_dispatch_strings_noopt (Failed)
+	 78 - repro_duplicate_call_argument_noopt (Failed)
+	 86 - 12_arrays_lvlb_noopt (Failed)
+	 87 - 12_arrays_lvlb_opt (Failed)
+	 88 - array_mutation_statements_noopt (Failed)
+	 89 - array_mutation_statements_opt (Failed)
+	 90 - 13_stems_noopt (Failed)
+	 91 - 13_stems_opt (Failed)
+	 92 - repro_multi_tail_stems_noopt (Failed)
+	 93 - repro_multi_tail_stems_opt (Failed)
+	 98 - 18_array_class_noopt (Failed)
+	 99 - 18_array_class_opt (Failed)
+	110 - class_import_noopt (Failed)
+	111 - class_import_opt (Failed)
+	193 - repro_dotted_index_noopt (Failed)
+	194 - repro_dotted_index_opt (Failed)
+	197 - repro_array_arg_noopt (Failed)
+	198 - repro_array_arg_opt (Failed)
+	199 - repro_opt_args_noopt (Failed)
+	201 - arg_semantics_scalar_noopt (Failed)
+	203 - arg_semantics_array_noopt (Failed)
+	204 - arg_semantics_array_opt (Failed)
+	205 - arg_semantics_object_noopt (Failed)
+	206 - arg_semantics_object_opt (Failed)
+	207 - object_reference_regression_noopt (Failed)
+	208 - object_reference_regression_opt (Failed)
+	211 - basic_strings_noopt (Failed)
+	213 - basic_arrays_noopt (Failed)
+	214 - basic_arrays_opt (Failed)
+	219 - inline_test1_noopt (Failed)
+	221 - inline_test2_noopt (Failed)
+	223 - inline_test_call_noopt (Failed)
+	225 - inline_test_expr_noopt (Failed)
+	227 - inline_test_expr_negative_noopt (Failed)
+	229 - inline_test_nested_call_expr_noopt (Failed)
+	231 - inline_test_concat_expr_noopt (Failed)
+	233 - inline_test_say_expr_noopt (Failed)
+	235 - inline_test_say_expr_negative_noopt (Failed)
+	237 - inline_test_return_expr_noopt (Failed)
+	238 - inline_test_return_expr_opt (Failed)
+	239 - inline_test_unary_expr_noopt (Failed)
+	241 - inline_test_compare_expr_noopt (Failed)
+	243 - inline_test_call_arg_expr_noopt (Failed)
+	245 - inline_test_call_like_arg_expr_noopt (Failed)
+	246 - inline_test_call_like_arg_expr_opt (Failed)
+	247 - inline_test_short_circuit_expr_noopt (Failed)
+	249 - inline_test_composed_expr_contexts_noopt (Failed)
+	251 - inline_test_byvalue_arg_reuse_noopt (Failed)
+	255 - inline_test_condition_contexts_noopt (Failed)
+	259 - inline_test_member_receiver_expr_noopt (Failed)
+	260 - inline_test_member_receiver_expr_opt (Failed)
+	261 - inline_test_named_factory_selector_noopt (Failed)
+	262 - inline_test_named_factory_selector_opt (Failed)
+	263 - inline_test_ref_opt_noopt (Failed)
+	265 - inline_test_ref_indexed_noopt (Failed)
+	266 - inline_test_ref_indexed_opt (Failed)
+	267 - inline_test_ref_stem_noopt (Failed)
+	268 - inline_test_ref_stem_opt (Failed)
+	269 - inline_test_ref_computed_noopt (Failed)
+	270 - inline_test_ref_computed_opt (Failed)
+	271 - inline_test_ref_vararg_noopt (Failed)
+	273 - inline_test_ref_vararg_runtime_noopt (Failed)
+	274 - inline_test_ref_vararg_runtime_opt (Failed)
+	275 - inline_test_ref_negative_noopt (Failed)
+	276 - inline_test_ref_negative_opt (Failed)
+	277 - inline_test_bool_expr_negative_noopt (Failed)
+	280 - inline_test_vararg_opt (Failed)
+	285 - inline_test_vararg_negative_noopt (Failed)
+	287 - inline_test_exposed_nested_call_noopt (Failed)
+	293 - inline_test_nested_scope_do_noopt (Failed)
+	295 - inline_test_nested_scope_if_do_noopt (Failed)
+	297 - inline_test_nested_scope_exposed_call_noopt (Failed)
+	299 - inline_test_multi_return_assign_noopt (Failed)
+	301 - inline_test_multi_return_expr_noopt (Failed)
+	303 - inline_test_multi_return_call_noopt (Failed)
+	307 - inline_test_array_return_assign_noopt (Failed)
+	308 - inline_test_array_return_assign_opt (Failed)
+	309 - inline_test_array_return_expr_noopt (Failed)
+	310 - inline_test_array_return_expr_opt (Failed)
+	311 - inline_test_array_multi_return_expr_noopt (Failed)
+	312 - inline_test_array_multi_return_expr_opt (Failed)
+	313 - inline_test_array_multi_return_assign_noopt (Failed)
+	314 - inline_test_array_multi_return_assign_opt (Failed)
+	315 - inline_test_object_return_assign_noopt (Failed)
+	316 - inline_test_object_return_assign_opt (Failed)
+	317 - inline_test_object_return_expr_noopt (Failed)
+	318 - inline_test_object_return_expr_opt (Failed)
+	319 - inline_test_object_const_arg_mutation_noopt (Failed)
+	320 - inline_test_object_const_arg_mutation_opt (Failed)
+	321 - inline_test_object_writable_arg_noopt (Failed)
+	322 - inline_test_object_writable_arg_opt (Failed)
+	323 - inline_test_array_expr_arg_noopt (Failed)
+	324 - inline_test_array_expr_arg_opt (Failed)
+	325 - inline_test_object_expr_arg_noopt (Failed)
+	326 - inline_test_object_expr_arg_opt (Failed)
+	327 - inline_test_array_return_temp_noopt (Failed)
+	328 - inline_test_array_return_temp_opt (Failed)
+	329 - inline_test_complex_lhs_assign_noopt (Failed)
+	330 - inline_test_complex_lhs_assign_opt (Failed)
+	331 - inline_test_binary_arg_return_noopt (Failed)
+	333 - inline_test_block_expr_live_sibling_noopt (Failed)
+	334 - inline_test_block_expr_live_sibling_opt (Failed)
+	335 - inline_test_class_methods_noopt (Failed)
+	336 - inline_test_class_methods_opt (Failed)
+Errors while running CTest

@@ -19,8 +19,7 @@ main() .locals=5
    call r1,selectArray(),r2
    .traceevent "F" 4 "R" "S" "r" 1 2 2 0 "selectarray" ""
    load r0,1
-   settp r1,256
-   call r3,renderArray(),r0
+   settpcall r3,renderArray(),r0,r1,256
    .traceevent "F" 4 "R" "S" "r" 3 2 2 0 "renderarray" ""
    say r3
    .srcstep 3 3 17 "inline_test_array_multi_return_expr.crexx" 6 3 34 "  say renderArray(selectArray(0))"
@@ -30,8 +29,7 @@ main() .locals=5
    call r4,selectArray(),r1
    .traceevent "F" 4 "R" "S" "r" 4 3 3 0 "selectarray" ""
    load r3,1
-   settp r4,256
-   call r2,renderArray(),r3
+   settpcall r2,renderArray(),r3,r4,256
    .traceevent "F" 4 "R" "S" "r" 2 3 3 0 "renderarray" ""
    say r2
    .srcstep 4 4 17 "inline_test_array_multi_return_expr.crexx" 7 3 34 "  say renderArray(selectArray(1))"
@@ -41,8 +39,7 @@ main() .locals=5
    call r4,selectArray(),r1
    .traceevent "F" 4 "R" "S" "r" 4 4 4 0 "selectarray" ""
    load r3,1
-   settp r4,256
-   call r2,renderArray(),r3
+   settpcall r2,renderArray(),r3,r4,256
    .traceevent "F" 4 "R" "S" "r" 2 4 4 0 "renderarray" ""
    say r2
    .srcstep 5 5 17 "inline_test_array_multi_return_expr.crexx" 8 3 54 "  say \"Array multi return expr inline test finished.\""
@@ -66,48 +63,42 @@ selectArray() .locals=6
    .srcstep 11 11 17 "inline_test_array_multi_return_expr.crexx" 14 3 17 "  zero = .string[]"
    null r3
    .srcstep 12 12 17 "inline_test_array_multi_return_expr.crexx" 16 3 17 "  neg[1] = \"neg\""
-   minattrs r1,1
-   linkattr1 r4,r1,1
+   minlinkattr1 r4,r1,1
    load r5,"neg"
    .traceevent "L" 4 "R" "S" "r" 5 12 12 0 "" ""
    scopy r4,r5
    .traceevent "A" 6 "R" "S" "r" 4 12 12 0 "neg" ""
    unlink r4
    .srcstep 13 13 17 "inline_test_array_multi_return_expr.crexx" 17 3 18 "  neg[2] = \"path\""
-   minattrs r1,2
-   linkattr1 r5,r1,2
+   minlinkattr1 r5,r1,2
    load r4,"path"
    .traceevent "L" 4 "R" "S" "r" 4 13 13 0 "" ""
    scopy r5,r4
    .traceevent "A" 6 "R" "S" "r" 5 13 13 0 "neg" ""
    unlink r5
    .srcstep 14 14 17 "inline_test_array_multi_return_expr.crexx" 18 3 19 "  zero[1] = \"zero\""
-   minattrs r3,1
-   linkattr1 r5,r3,1
+   minlinkattr1 r5,r3,1
    load r4,"zero"
    .traceevent "L" 4 "R" "S" "r" 4 14 14 0 "" ""
    scopy r5,r4
    .traceevent "A" 6 "R" "S" "r" 5 14 14 0 "zero" ""
    unlink r5
    .srcstep 15 15 17 "inline_test_array_multi_return_expr.crexx" 19 3 19 "  zero[2] = \"path\""
-   minattrs r3,2
-   linkattr1 r5,r3,2
+   minlinkattr1 r5,r3,2
    load r4,"path"
    .traceevent "L" 4 "R" "S" "r" 4 15 15 0 "" ""
    scopy r5,r4
    .traceevent "A" 6 "R" "S" "r" 5 15 15 0 "zero" ""
    unlink r5
    .srcstep 16 16 17 "inline_test_array_multi_return_expr.crexx" 20 3 17 "  pos[1] = \"pos\""
-   minattrs r2,1
-   linkattr1 r5,r2,1
+   minlinkattr1 r5,r2,1
    load r4,"pos"
    .traceevent "L" 4 "R" "S" "r" 4 16 16 0 "" ""
    scopy r5,r4
    .traceevent "A" 6 "R" "S" "r" 5 16 16 0 "pos" ""
    unlink r5
    .srcstep 17 17 17 "inline_test_array_multi_return_expr.crexx" 21 3 18 "  pos[2] = \"path\""
-   minattrs r2,2
-   linkattr1 r5,r2,2
+   minlinkattr1 r5,r2,2
    load r4,"path"
    .traceevent "L" 4 "R" "S" "r" 4 17 17 0 "" ""
    scopy r5,r4
@@ -148,14 +139,12 @@ renderArray() .locals=4
    .srcstep 26 26 17 "inline_test_array_multi_return_expr.crexx" 27 7 22 "  arg value = .string[]"
    .meta "inline_test_array_multi_return_expr.renderarray.value"="b" ".string[*]" a1
    .srcstep 27 27 17 "inline_test_array_multi_return_expr.crexx" 28 3 36 "  return value[1] || \":\" || value[2]"
-   minattrs a1,1
-   linkattr1 r1,a1,1
+   minlinkattr1 r1,a1,1
    .traceevent "V" 6 "R" "S" "r" 1 27 27 0 "value" ""
    concat r2,r1,":"
    unlink r1
    .traceevent "O" 4 "R" "S" "r" 2 27 27 0 "" ""
-   minattrs a1,2
-   linkattr1 r3,a1,2
+   minlinkattr1 r3,a1,2
    .traceevent "V" 6 "R" "S" "r" 3 27 27 0 "value" ""
    concat r2,r2,r3
    unlink r3

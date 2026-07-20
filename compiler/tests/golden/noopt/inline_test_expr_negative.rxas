@@ -26,8 +26,7 @@ l8dostart:
    .srcstep 7 7 17 "inline_test_expr_negative.crexx" 6 5 31 "    if identity(addOne(i)) | 0 then say \"truthy\" i"
    .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "i" ""
    load r5,1
-   swap r6,r0
-   call r4,addOne(),r5
+   swapcall r4,addOne(),r5,r0,r6
    swap r0,r6
    .traceevent "F" 4 "R" "I" "r" 4 7 7 0 "addone" ""
    load r3,1

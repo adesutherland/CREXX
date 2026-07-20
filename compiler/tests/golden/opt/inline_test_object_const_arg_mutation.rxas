@@ -53,8 +53,7 @@ main() .locals=9
    linkattr1 r2,r7,1
    .traceevent "V" 6 "R" "S" "r" 2 15 15 0 "name" ""
    scopy r8,r2
-   unlink r2
-   br l121bexprend
+   unlinkbr r2,l121bexprend
 l121bexprend:
    say r8
    .srcstep 16 16 17 "inline_test_object_const_arg_mutation.crexx" 8 3 56 "  say \"Object const-arg mutation inline test finished.\""

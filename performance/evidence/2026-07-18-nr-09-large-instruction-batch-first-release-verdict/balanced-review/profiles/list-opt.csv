@@ -1,0 +1,225 @@
+section,name,value,id,count,total_ns,average_ns,min_ns,max_ns,percent,selected,entries,resumes,terminals,module,kind,completed,unwound,return_type,args,bytes,max_bytes,high_water,status
+summary,schema_version,4,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,vm_mode,rxvm,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,result,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,timer_read_min_ns,41,,1,41,41,41,41,0,,,,,,,,,,,,,,
+summary,timer_zero_deltas,756,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,interrupt_polls,54231122,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,invalid_events,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,counter_overflow,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,procedure_tracking_unavailable,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,allocation_tracking_unavailable,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+summary,census_tracking_unavailable,0,,0,0,0,0,0,0,,,,,,,,,,,,,,
+instruction,SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG,,281,4318300,464438054,107,41,45458,38.235478,,,,,,,,,,,,,,
+instruction,RET_REG,,49,4112100,134076394,32,0,42916,11.038017,,,,,,,,,,,,,,
+instruction,ASSERTINITIALIZED_REG,,85,4392800,70738479,16,0,17583,5.823639,,,,,,,,,,,,,,
+instruction,NUMSCI_INT_INT_INT,,260,4395901,55680946,12,0,32791,4.584008,,,,,,,,,,,,,,
+instruction,SWAP_REG_REG,,510,3754000,55394797,14,0,37792,4.560450,,,,,,,,,,,,,,
+instruction,BRF_ID_REG,,38,4248602,51743431,12,0,35750,4.259847,,,,,,,,,,,,,,
+instruction,REFVALID_REG_REG,,198,3965200,50343682,12,0,31208,4.144610,,,,,,,,,,,,,,
+instruction,UNLINK_REG,,213,3841800,49794642,12,0,3795000,4.099410,,,,,,,,,,,,,,
+instruction,LINKREF_REG_REG,,196,3827800,47818435,12,0,33834,3.936716,,,,,,,,,,,,,,
+instruction,LINKATTR1_REG_REG_INT,,203,3840800,47384564,12,0,33250,3.900997,,,,,,,,,,,,,,
+instruction,LOAD_REG_INT,,1,3825203,45676223,11,0,25042,3.760356,,,,,,,,,,,,,,
+instruction,IEQ_REG_REG_INT,,101,1878600,23814806,12,0,17833,1.960585,,,,,,,,,,,,,,
+instruction,BTOI_REG,,225,1876200,22857888,12,0,15542,1.881806,,,,,,,,,,,,,,
+instruction,BR_ID,,36,1805001,21897793,12,0,16250,1.802765,,,,,,,,,,,,,,
+instruction,RET_INT,,50,281001,9714356,34,0,15542,0.799747,,,,,,,,,,,,,,
+instruction,COPY_REG_REG,,8,567901,8205830,14,0,9375,0.675556,,,,,,,,,,,,,,
+instruction,LOADSETTPSWAP_REG_INT_REG_INT_REG,,269,571100,7997499,14,0,14208,0.658405,,,,,,,,,,,,,,
+instruction,SETTPCALL_REG_FUNC_REG_REG_INT,,282,71400,7469261,104,41,7875,0.614917,,,,,,,,,,,,,,
+instruction,NULLN_REG_REG,,274,565200,7343315,12,0,4959,0.604548,,,,,,,,,,,,,,
+instruction,ENDLIFE_REG,,514,421401,5431902,12,0,15333,0.447189,,,,,,,,,,,,,,
+instruction,SWAPN_REG_REG_REG_REG_REG_REG_REG_REG,,266,280900,4628329,16,0,8208,0.381033,,,,,,,,,,,,,,
+instruction,SWAPN_REG_REG_REG_REG_REG_REG,,265,280900,4235572,15,0,10500,0.348699,,,,,,,,,,,,,,
+instruction,NULLN_REG_REG_REG_REG,,276,281000,4176804,14,0,8958,0.343861,,,,,,,,,,,,,,
+instruction,SETTPSWAPSETTPSWAP_REG_INT_REG_REG_REG,,273,280900,4067491,14,0,12541,0.334862,,,,,,,,,,,,,,
+instruction,SETTPSWAP_REG_INT_REG,,267,280900,3724448,13,0,11667,0.306620,,,,,,,,,,,,,,
+instruction,UNLINKN_REG_REG,,283,216900,3013691,13,0,17042,0.248106,,,,,,,,,,,,,,
+instruction,MKREF_REG_REG,,194,3400,1014523,298,0,1334,0.083522,,,,,,,,,,,,,,
+instruction,SWAPCALL_REG_FUNC_REG_REG_REG,,280,6200,897348,144,83,4875,0.073875,,,,,,,,,,,,,,
+instruction,MINLINKATTR1_REG_REG_REG_INT,,294,6200,260486,42,0,583,0.021445,,,,,,,,,,,,,,
+instruction,SETATTRS_REG_INT,,217,3300,243874,73,0,1125,0.020077,,,,,,,,,,,,,,
+instruction,SWAPN_REG_REG_REG_REG,,264,9000,135785,15,0,458,0.011179,,,,,,,,,,,,,,
+instruction,RET,,48,2800,88312,31,0,4666,0.007270,,,,,,,,,,,,,,
+instruction,ISETATTR1_REG_INT_REG,,406,6300,83180,13,0,1041,0.006848,,,,,,,,,,,,,,
+instruction,IADD_REG_REG_INT,,16,4000,57123,14,0,208,0.004703,,,,,,,,,,,,,,
+instruction,SETOBJTYPE_REG_STRING,,56,3300,54453,16,0,3667,0.004483,,,,,,,,,,,,,,
+instruction,SAY_REG,,450,1,49958,49958,49958,49958,0.004113,,,,,,,,,,,,,,
+instruction,ISUB_REG_REG_INT,,18,3100,42516,13,0,958,0.003500,,,,,,,,,,,,,,
+instruction,BNE_ID_REG_INT,,43,1000,17088,17,0,625,0.001407,,,,,,,,,,,,,,
+instruction,BRTPANDT_ID_REG_INT,,524,1,13208,13208,13208,13208,0.001087,,,,,,,,,,,,,,
+instruction,IGT_REG_REG_REG,,104,101,10712,106,0,1667,0.000882,,,,,,,,,,,,,,
+instruction,INE_REG_REG_INT,,103,100,7090,70,0,500,0.000584,,,,,,,,,,,,,,
+instruction,NULL_REG,,14,300,6886,22,0,209,0.000567,,,,,,,,,,,,,,
+instruction,BRT_ID_REG,,37,101,5865,58,0,416,0.000483,,,,,,,,,,,,,,
+instruction,BCTP_ID_REG,,349,100,5788,57,0,333,0.000477,,,,,,,,,,,,,,
+instruction,SAY_STRING,,455,1,4000,4000,4000,4000,0.000329,,,,,,,,,,,,,,
+instruction,ITOSCONCAT_REG_STRING_REG,,401,1,3083,3083,3083,3083,0.000254,,,,,,,,,,,,,,
+instruction,GETATTRS_REG_REG_INT,,215,1,3000,3000,3000,3000,0.000247,,,,,,,,,,,,,,
+instruction,ILT_REG_REG_INT,,111,1,1500,1500,1500,1500,0.000123,,,,,,,,,,,,,,
+instruction,IGTE_REG_REG_INT,,108,1,1334,1334,1334,1334,0.000110,,,,,,,,,,,,,,
+instruction,MINSTOIATTR1_REG_REG_INT,,420,1,1292,1292,1292,1292,0.000106,,,,,,,,,,,,,,
+instruction,SCONCATITOS_REG_STRING_REG,,402,1,750,750,750,750,0.000062,,,,,,,,,,,,,,
+instruction,APPEND_REG_REG,,143,1,500,500,500,500,0.000041,,,,,,,,,,,,,,
+transition,sequential_same_frame,,0,41403418,435397290,10,0,35334,77.169464,,,,,,,,,,,,,,
+transition,branch_same_frame,,1,4035903,42301027,10,0,16833,7.497400,,,,,,,,,,,,,,
+transition,call_enter_frame,,2,4395900,43126281,9,0,78584,7.643667,,,,,,,,,,,,,,
+transition,return_leave_frame,,3,4395900,43381241,9,0,39500,7.688856,,,,,,,,,,,,,,
+transition,external_entry,,6,1,3459,3459,3459,3459,0.000613,,,,,,,,,,,,,,
+transition,terminal,,7,1,0,0,0,0,0.000000,,,,,,,,,,,,,,
+interrupt,scan_all,,,0,0,0,0,0,0,,,,,,,,,,,,,,
+interrupt,scan_without_selection,,,0,0,0,0,0,0,,,,,,,,,,,,,,
+interrupt,mechanics_all,,,0,0,0,0,0,0,,,,,,,,,,,,,,
+procedure,"awfy_list.listbenchmark.tail","elapsed",,280900,17962839615,63947,4625,23883750,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,280900,0,"reference .listelement","x=reference .listelement,y=reference .listelement,z=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.tail","inclusive_body",,280900,17908787441,63755,4416,23883167,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,280900,0,"reference .listelement","x=reference .listelement,y=reference .listelement,z=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.tail","self",,280900,96684300,344,124,26169,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,280900,0,"reference .listelement","x=reference .listelement,y=reference .listelement,z=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.tail","native_child",,280900,0,0,0,0,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,280900,0,"reference .listelement","x=reference .listelement,y=reference .listelement,z=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.tail","entry_overhead",,280900,41102017,146,83,27500,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,280900,0,"reference .listelement","x=reference .listelement,y=reference .listelement,z=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.tail","exit_overhead",,280900,12950157,46,0,28208,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,280900,0,"reference .listelement","x=reference .listelement,y=reference .listelement,z=reference .listelement",,,,
+procedure,"awfy_list.main","elapsed",,1,1778887584,1778887584,1778887584,1778887584,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",procedure,1,0,".int","",,,,
+procedure,"awfy_list.main","inclusive_body",,1,1778883833,1778883833,1778883833,1778883833,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",procedure,1,0,".int","",,,,
+procedure,"awfy_list.main","self",,1,192128,192128,192128,192128,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",procedure,1,0,".int","",,,,
+procedure,"awfy_list.main","native_child",,1,0,0,0,0,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",procedure,1,0,".int","",,,,
+procedure,"awfy_list.main","entry_overhead",,1,3459,3459,3459,3459,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",procedure,1,0,".int","",,,,
+procedure,"awfy_list.main","exit_overhead",,1,292,292,292,292,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",procedure,1,0,".int","",,,,
+procedure,"awfy_list.listbenchmark.run","elapsed",,100,1778691705,17786917,17474125,23968625,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,100,0,".int","",,,,
+procedure,"awfy_list.listbenchmark.run","inclusive_body",,100,1778551750,17785517,17473167,23965750,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,100,0,".int","",,,,
+procedure,"awfy_list.listbenchmark.run","self",,100,149908,1499,1083,8498,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,100,0,".int","",,,,
+procedure,"awfy_list.listbenchmark.run","native_child",,100,0,0,0,0,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,100,0,".int","",,,,
+procedure,"awfy_list.listbenchmark.run","entry_overhead",,100,31831,318,166,5167,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,100,0,".int","",,,,
+procedure,"awfy_list.listbenchmark.run","exit_overhead",,100,108124,1081,750,3833,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,100,0,".int","",,,,
+procedure,"awfy_list.listbenchmark.isshorterthan","elapsed",,280900,1568236708,5582,4250,3826584,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,280900,0,".boolean","x=reference .listelement,y=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.isshorterthan","inclusive_body",,280900,1510865939,5378,4041,3825500,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,280900,0,".boolean","x=reference .listelement,y=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.isshorterthan","self",,280900,696270566,2478,1791,3807000,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,280900,0,".boolean","x=reference .listelement,y=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.isshorterthan","native_child",,280900,0,0,0,0,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,280900,0,".boolean","x=reference .listelement,y=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.isshorterthan","entry_overhead",,280900,44871310,159,83,35250,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,280900,0,".boolean","x=reference .listelement,y=reference .listelement",,,,
+procedure,"awfy_list.listbenchmark.isshorterthan","exit_overhead",,280900,12499459,44,0,15542,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,280900,0,".boolean","x=reference .listelement,y=reference .listelement",,,,
+procedure,"awfy_list.listelement.next","elapsed",,3820600,865987777,226,166,81833,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,3820600,0,"reference .listelement","",,,,
+procedure,"awfy_list.listelement.next","inclusive_body",,3820600,277009626,72,0,33375,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,3820600,0,"reference .listelement","",,,,
+procedure,"awfy_list.listelement.next","self",,3820600,277009626,72,0,33375,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,3820600,0,"reference .listelement","",,,,
+procedure,"awfy_list.listelement.next","native_child",,3820600,0,0,0,0,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,3820600,0,"reference .listelement","",,,,
+procedure,"awfy_list.listelement.next","entry_overhead",,3820600,428070327,112,41,78875,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,3820600,0,"reference .listelement","",,,,
+procedure,"awfy_list.listelement.next","exit_overhead",,3820600,160907824,42,0,46375,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,3820600,0,"reference .listelement","",,,,
+procedure,"awfy_list.listbenchmark.makelist","elapsed",,3400,48463284,14253,291,82167,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,3400,0,"reference .listelement","list_length=.int,arena_reference=reference .listarena",,,,
+procedure,"awfy_list.listbenchmark.makelist","inclusive_body",,3400,47837727,14069,125,79625,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,3400,0,"reference .listelement","list_length=.int,arena_reference=reference .listarena",,,,
+procedure,"awfy_list.listbenchmark.makelist","self",,3400,1384426,407,125,5041,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,3400,0,"reference .listelement","list_length=.int,arena_reference=reference .listarena",,,,
+procedure,"awfy_list.listbenchmark.makelist","native_child",,3400,0,0,0,0,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,3400,0,"reference .listelement","list_length=.int,arena_reference=reference .listarena",,,,
+procedure,"awfy_list.listbenchmark.makelist","entry_overhead",,3400,448913,132,41,2500,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,3400,0,"reference .listelement","list_length=.int,arena_reference=reference .listarena",,,,
+procedure,"awfy_list.listbenchmark.makelist","exit_overhead",,3400,176644,51,41,4083,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,3400,0,"reference .listelement","list_length=.int,arena_reference=reference .listarena",,,,
+procedure,"awfy_list.listarena.allocate","elapsed",,3100,4735196,1527,1292,9500,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,3100,0,"reference .listelement","value=.int",,,,
+procedure,"awfy_list.listarena.allocate","inclusive_body",,3100,4163456,1343,1083,9250,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,3100,0,"reference .listelement","value=.int",,,,
+procedure,"awfy_list.listarena.allocate","self",,3100,2842847,917,708,8750,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,3100,0,"reference .listelement","value=.int",,,,
+procedure,"awfy_list.listarena.allocate","native_child",,3100,0,0,0,0,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,3100,0,"reference .listelement","value=.int",,,,
+procedure,"awfy_list.listarena.allocate","entry_overhead",,3100,421036,135,83,1541,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,3100,0,"reference .listelement","value=.int",,,,
+procedure,"awfy_list.listarena.allocate","exit_overhead",,3100,150704,48,41,167,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,3100,0,"reference .listelement","value=.int",,,,
+procedure,"awfy_list.listelement.length","elapsed",,1000,2634743,2634,291,9917,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,1000,0,".int","",,,,
+procedure,"awfy_list.listelement.length","inclusive_body",,1000,2422373,2422,125,9334,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,1000,0,".int","",,,,
+procedure,"awfy_list.listelement.length","self",,1000,302007,302,125,1167,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,1000,0,".int","",,,,
+procedure,"awfy_list.listelement.length","native_child",,1000,0,0,0,0,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,1000,0,".int","",,,,
+procedure,"awfy_list.listelement.length","entry_overhead",,1000,162498,162,83,3042,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,1000,0,".int","",,,,
+procedure,"awfy_list.listelement.length","exit_overhead",,1000,49872,49,0,167,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,1000,0,".int","",,,,
+procedure,"awfy_list.listelement.§factory","elapsed",,3100,1320609,426,375,5375,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",factory,3100,0,".awfy_list..listelement","initial_value=.int",,,,
+procedure,"awfy_list.listelement.§factory","inclusive_body",,3100,483287,155,84,625,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",factory,3100,0,".awfy_list..listelement","initial_value=.int",,,,
+procedure,"awfy_list.listelement.§factory","self",,3100,483287,155,84,625,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",factory,3100,0,".awfy_list..listelement","initial_value=.int",,,,
+procedure,"awfy_list.listelement.§factory","native_child",,3100,0,0,0,0,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",factory,3100,0,".awfy_list..listelement","initial_value=.int",,,,
+procedure,"awfy_list.listelement.§factory","entry_overhead",,3100,536524,173,125,4875,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",factory,3100,0,".awfy_list..listelement","initial_value=.int",,,,
+procedure,"awfy_list.listelement.§factory","exit_overhead",,3100,300798,97,83,5042,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",factory,3100,0,".awfy_list..listelement","initial_value=.int",,,,
+procedure,"awfy_list.listelement.setnext","elapsed",,2800,776700,277,208,17500,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,2800,0,".void","element=reference .listelement",,,,
+procedure,"awfy_list.listelement.setnext","inclusive_body",,2800,373783,133,83,17125,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,2800,0,".void","element=reference .listelement",,,,
+procedure,"awfy_list.listelement.setnext","self",,2800,373783,133,83,17125,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,2800,0,".void","element=reference .listelement",,,,
+procedure,"awfy_list.listelement.setnext","native_child",,2800,0,0,0,0,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,2800,0,".void","element=reference .listelement",,,,
+procedure,"awfy_list.listelement.setnext","entry_overhead",,2800,286488,102,42,4542,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,2800,0,".void","element=reference .listelement",,,,
+procedure,"awfy_list.listelement.setnext","exit_overhead",,2800,116429,41,0,4666,0,,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas",method,2800,0,".void","element=reference .listelement",,,,
+allocation,frame_blocks,,,46,0,0,0,0,0,,,,,,,,,,,312384,10992,0,complete
+allocation,standalone_values,,,39,0,0,0,0,0,,,,,,,,,,,9672,248,0,complete
+allocation,attribute_value_blocks,,,6207,0,0,0,0,0,,,,,,,,,,,12316672,3968,0,complete
+allocation,attribute_pointer_storage,,,18619,0,0,0,0,0,,,,,,,,,,,1192128,256,0,complete
+allocation,string_buffers,,,2,0,0,0,0,0,,,,,,,,,,,128,64,0,complete
+allocation,binary_buffers,,,0,0,0,0,0,0,,,,,,,,,,,0,0,0,complete
+allocation,value_slots,,,50581,0,0,0,0,0,,,,,,,,,,,12544088,8680,0,complete
+allocation,frame_activations,,,4395901,0,0,0,0,0,,,,,,,,,,,0,0,19,complete
+allocation,frame_reuses,,,4395855,0,0,0,0,0,,,,,,,,,,,0,0,0,complete
+census,"call_path","direct_bytecode",,4395900,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","direct_native",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","dynamic_bytecode",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","dynamic_native",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","external_root",,1,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","signal_bytecode",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_path","signal_native",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"arity","1",,3824801,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"arity","3",,284300,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"arity","2",,5900,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"arity","4",,280900,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"callable_kind","procedure",,1,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"callable_kind","method",,4392800,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"callable_kind","factory",,3100,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"callable_kind","native",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"callable_kind","unknown",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"frame_disposition","fresh",,46,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"frame_disposition","reused",,4395855,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"frame_disposition","no_child_native",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"frame_disposition","none_failed",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_outcome","success",,4395901,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_outcome","unresolved",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_outcome","frame_failed",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+census,"call_outcome","invalid",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","void",,2800,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","ret_reg_move_local",,80800,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","ret_reg_copy_nonlocal",,4031300,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","value_ignored",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","immediate",,281000,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+return,"placement","terminal_external",,1,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcmethodsel","attempt",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcmethodsel","success",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcmethodsel","failure",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcfprocsel","attempt",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcfprocsel","success",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+dynamic,"srcfprocsel","failure",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","setup_swaps",,1875400,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","normal_restoration_swaps",,200,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","unclassified_swaps",,1878400,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","defensive_argument_copies",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","unclassified_copies",,567901,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+mechanics,"call_window","attribution_degraded",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","events",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","bytecode_frames_discarded",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","argument_windows_restored",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","argument_slots_restored",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","interrupted_native_windows_restored",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","interrupted_native_slots_restored",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+unwind,"signal","restoration_failures",,0,0,0,0,0,0,,,,,,,,,,,,,,"complete"
+call,"awfy_list.main","external_root",0,1,0,0,0,0,0,1,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","procedure",,,"fresh","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.run","direct_bytecode",78,1,0,0,0,0,0,1,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"fresh","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.makelist","direct_bytecode",376,1,0,0,0,0,0,3,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"fresh","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.makelist","direct_bytecode",507,15,0,0,0,0,0,3,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"fresh","success",0,0,0,"complete"
+call,"awfy_list.listarena.allocate","direct_bytecode",530,1,0,0,0,0,0,2,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"fresh","success",0,0,0,"complete"
+call,"awfy_list.listelement.§factory","direct_bytecode",287,1,0,0,0,0,0,1,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","factory",,,"fresh","success",0,0,0,"complete"
+call,"awfy_list.listarena.allocate","direct_bytecode",530,3099,0,0,0,0,0,2,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"reused","success",0,0,0,"complete"
+call,"awfy_list.listelement.§factory","direct_bytecode",287,3099,0,0,0,0,0,1,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","factory",,,"reused","success",0,0,0,"complete"
+call,"awfy_list.listelement.setnext","direct_bytecode",558,1,0,0,0,0,0,2,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"fresh","success",0,0,0,"complete"
+call,"awfy_list.listelement.setnext","direct_bytecode",558,2799,0,0,0,0,0,2,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"reused","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.makelist","direct_bytecode",397,100,0,0,0,0,0,3,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"reused","success",100,100,0,"complete"
+call,"awfy_list.listbenchmark.makelist","direct_bytecode",507,3085,0,0,0,0,0,3,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"reused","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.makelist","direct_bytecode",418,100,0,0,0,0,0,3,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"reused","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.tail","direct_bytecode",439,1,0,0,0,0,0,4,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"fresh","success",1,1,0,"complete"
+call,"awfy_list.listbenchmark.isshorterthan","direct_bytecode",678,1,0,0,0,0,0,3,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"fresh","success",0,0,0,"complete"
+call,"awfy_list.listelement.next","direct_bytecode",620,1,0,0,0,0,0,1,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"fresh","success",0,0,0,"complete"
+call,"awfy_list.listelement.next","direct_bytecode",633,1805000,0,0,0,0,0,1,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"reused","success",1805000,0,0,"complete"
+call,"awfy_list.listelement.next","direct_bytecode",620,1804999,0,0,0,0,0,1,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"reused","success",0,0,0,"complete"
+call,"awfy_list.listelement.next","direct_bytecode",713,70200,0,0,0,0,0,1,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"reused","success",0,0,0,"complete"
+call,"awfy_list.listelement.next","direct_bytecode",726,70200,0,0,0,0,0,1,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"reused","success",70200,0,0,"complete"
+call,"awfy_list.listelement.next","direct_bytecode",739,70200,0,0,0,0,0,1,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"reused","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.tail","direct_bytecode",757,12,0,0,0,0,0,4,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"fresh","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.isshorterthan","direct_bytecode",678,280899,0,0,0,0,0,3,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"reused","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.tail","direct_bytecode",785,70200,0,0,0,0,0,4,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"reused","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.tail","direct_bytecode",813,70200,0,0,0,0,0,4,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"reused","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.tail","direct_bytecode",841,70200,0,0,0,0,0,4,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"reused","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.tail","direct_bytecode",757,70188,0,0,0,0,0,4,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"reused","success",0,0,0,"complete"
+call,"awfy_list.listelement.length","direct_bytecode",463,1,0,0,0,0,0,1,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"fresh","success",0,0,0,"complete"
+call,"awfy_list.listelement.length","direct_bytecode",190,9,0,0,0,0,0,1,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"fresh","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.run","direct_bytecode",78,99,0,0,0,0,0,1,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"reused","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.makelist","direct_bytecode",376,99,0,0,0,0,0,3,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"reused","success",0,0,0,"complete"
+call,"awfy_list.listbenchmark.tail","direct_bytecode",439,99,0,0,0,0,0,4,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"reused","success",99,99,0,"complete"
+call,"awfy_list.listelement.length","direct_bytecode",463,99,0,0,0,0,0,1,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"reused","success",0,0,0,"complete"
+call,"awfy_list.listelement.length","direct_bytecode",190,891,0,0,0,0,0,1,,,,"/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_list-opt.rxas","method",,,"reused","success",0,0,0,"complete"

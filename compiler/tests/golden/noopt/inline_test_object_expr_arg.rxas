@@ -15,8 +15,7 @@ main() .locals=3
    call r1,makeBox(),r2
    .traceevent "F" 4 "R" "O" "r" 1 1 1 0 "makebox" ""
    load r0,1
-   settp r1,256
-   call r2,renameBox(),r0
+   settpcall r2,renameBox(),r0,r1,256
    .traceevent "F" 4 "R" "S" "r" 2 1 1 0 "renamebox" ""
    say r2
    .srcstep 2 2 17 "inline_test_object_expr_arg.crexx" 5 3 11 "  return 0"
@@ -35,16 +34,13 @@ renameBox() .locals=5
    load r1,2
    settp a1,256
    swap r2,a1
-   settp r3,768
-   call r4,§inline_test_object_expr_arg.box.setname(),r1
+   settpcall r4,§inline_test_object_expr_arg.box.setname(),r1,r3,768
    swap a1,r2
    .traceevent "F" 4 "R" "V" "r" 4 5 5 0 "setname" ""
    .srcstep 6 6 17 "inline_test_object_expr_arg.crexx" 10 3 21 "  return box.getName()"
    .traceevent "V" 6 "R" "O" "a" 1 6 6 0 "box" ""
    load r2,1
-   settp a1,256
-   swap r3,a1
-   call r1,§inline_test_object_expr_arg.box.getname(),r2
+   settpswapcall r1,§inline_test_object_expr_arg.box.getname(),r2,a1,256,r3
    swap a1,r3
    .traceevent "F" 4 "R" "S" "r" 1 6 6 0 "getname" ""
    ret r1
@@ -59,8 +55,7 @@ makeBox() .locals=3
    load r2,"seed"
    .traceevent "L" 4 "R" "S" "r" 2 8 8 0 "" ""
    load r1,1
-   settp r2,768
-   call r0,§inline_test_object_expr_arg.box.§factory(),r1
+   settpcall r0,§inline_test_object_expr_arg.box.§factory(),r1,r2,768
    .traceevent "F" 4 "R" "O" "r" 0 8 8 0 "§factory" ""
    .traceevent "A" 6 "R" "O" "r" 0 8 8 0 "box" ""
    .srcstep 9 9 17 "inline_test_object_expr_arg.crexx" 14 3 13 "  return box"

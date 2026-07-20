@@ -16,17 +16,13 @@ main() .locals=5
    .srcstep 2 2 17 "class_import_main.crexx" 6 1 11 "call c.inc()"
    .traceevent "V" 6 "R" "O" "r" 0 2 2 0 "c" ""
    load r1,1
-   settp r0,256
-   swap r2,r0
-   call r3,§class_import_lib.counter.inc(),r1
+   settpswapcall r3,§class_import_lib.counter.inc(),r1,r0,256,r2
    swap r0,r2
    .traceevent "F" 4 "R" "V" "r" 3 2 2 0 "inc" ""
    .srcstep 3 3 17 "class_import_main.crexx" 7 1 12 "say c.value()"
    .traceevent "V" 6 "R" "O" "r" 0 3 3 0 "c" ""
    load r1,1
-   settp r0,256
-   swap r2,r0
-   call r4,§class_import_lib.counter.value(),r1
+   settpswapcall r4,§class_import_lib.counter.value(),r1,r0,256,r2
    swap r0,r2
    itos r4
    .traceevent "F" 4 "R" "S" "r" 4 3 3 0 "value" ""

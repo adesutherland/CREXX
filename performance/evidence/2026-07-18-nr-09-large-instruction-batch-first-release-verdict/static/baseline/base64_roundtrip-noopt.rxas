@@ -1,0 +1,1032 @@
+/*
+ * SOURCE                 : base64_roundtrip.crexx
+ */
+
+.globals=0
+
+main() .locals=12
+   .meta "base64_roundtrip.main"="b" ".int" main() ""
+   numsci 18,1,1
+   .meta "base64_roundtrip.main.decoded"="b" ".binary" r2
+   .srcstep 1 1 17 "base64_roundtrip.crexx" 19 1 18 "decoded = .binary"
+   null r2
+   .srcstep 2 2 17 "base64_roundtrip.crexx" 11 5 19 "arg argv = .string[]"
+   .meta "base64_roundtrip.main.argv"="b" ".string[*]" r0
+   brtpandt l6c,a1,512
+   copy r0,a1
+   br l6d
+l6c:
+   swap r0,a1
+l6d:
+   .srcstep 3 3 17 "base64_roundtrip.crexx" 13 1 16 "repetitions = 1"
+   .meta "base64_roundtrip.main.repetitions"="b" ".int" r5
+   load r5,1
+   .traceevent "L" 4 "R" "I" "r" 5 3 3 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 3 3 0 "repetitions" ""
+   .srcstep 5 5 17 "base64_roundtrip.crexx" 14 1 16 "if argv[0] >= 1 then repetitions = argv[1]"
+   .traceevent "C" 4 "R" "V" "r" 6 5 5 0 "argv" ""
+   getattrs r7,r0,0
+   .traceevent "V" 6 "R" "I" "r" 7 5 5 0 "argv" ""
+   igte r7,r7,1
+   .traceevent "O" 4 "R" "B" "r" 7 5 5 0 "" ""
+   brf l25iffalse,r7
+   .srcstep 6 6 17 "base64_roundtrip.crexx" 14 17 21 "if argv[0] >= 1 then repetitions = argv[1]"
+   .srcstep 4 4 17 "base64_roundtrip.crexx" 14 22 42 "if argv[0] >= 1 then repetitions = argv[1]"
+   minattrs r0,1
+   linkattr1 r8,r0,1
+   stoi r8
+   .traceevent "V" 6 "R" "I" "r" 8 4 4 0 "argv" ""
+   icopy r5,r8
+   .traceevent "A" 6 "R" "I" "r" 5 4 4 0 "repetitions" ""
+   unlink r8
+l25iffalse:
+   .srcstep 8 8 17 "base64_roundtrip.crexx" 15 1 19 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .traceevent "V" 6 "R" "I" "r" 5 8 8 0 "repetitions" ""
+   ilt r8,r5,1
+   .traceevent "O" 4 "R" "B" "r" 8 8 8 0 "" ""
+   brf l32iffalse,r8
+   .srcstep 9 9 17 "base64_roundtrip.crexx" 15 20 24 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .srcstep 7 7 17 "base64_roundtrip.crexx" 15 25 68 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   load r7,"repetitions must be positive"
+   .traceevent "L" 4 "R" "S" "r" 7 7 7 0 "" ""
+   load r6,1
+   settp r7,768
+   call r9,fail(),r6
+   .traceevent "F" 4 "R" "I" "r" 9 7 7 0 "fail" ""
+   ret r9
+l32iffalse:
+   .srcstep 10 10 17 "base64_roundtrip.crexx" 17 1 19 "input = make_input()"
+   .meta "base64_roundtrip.main.input"="b" ".binary" r4
+   load r9,0
+   call r4,make_input(),r9
+   .traceevent "F" 4 "R" "X" "r" 4 10 10 0 "make_input" ""
+   .traceevent "A" 6 "R" "X" "r" 4 10 10 0 "input" ""
+   .srcstep 11 11 17 "base64_roundtrip.crexx" 18 1 13 "encoded = \"\""
+   .meta "base64_roundtrip.main.encoded"="b" ".string" r3
+   load r3,""
+   .traceevent "L" 4 "R" "S" "r" 3 11 11 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 3 11 11 0 "encoded" ""
+   .srcstep 17 17 17 "base64_roundtrip.crexx" 20 1 3 "do iteration = 1 to repetitions"
+   .srcstep 12 12 17 "base64_roundtrip.crexx" 20 4 17 "do iteration = 1 to repetitions"
+   .meta "base64_roundtrip.main.iteration"="b" ".int" r9
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 12 12 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 9 12 12 0 "iteration" ""
+   .srcstep 13 13 17 "base64_roundtrip.crexx" 20 18 32 "do iteration = 1 to repetitions"
+   .traceevent "V" 6 "R" "I" "r" 5 0 0 0 "repetitions" ""
+l43dostart:
+   .srcstep 13 13 17 "base64_roundtrip.crexx" 20 18 32 "do iteration = 1 to repetitions"
+   igt r8,r9,r5
+   brt l43doend,r8
+   .srcstep 15 15 17 "base64_roundtrip.crexx" 21 3 33 "  encoded = base64_encode(input)"
+   .traceevent "V" 6 "R" "X" "r" 4 15 15 0 "input" ""
+   load r6,1
+   settp r4,256
+   swap r7,r4
+   call r3,base64_encode(),r6
+   swap r4,r7
+   .traceevent "F" 4 "R" "S" "r" 3 15 15 0 "base64_encode" ""
+   .traceevent "A" 6 "R" "S" "r" 3 15 15 0 "encoded" ""
+   .srcstep 16 16 17 "base64_roundtrip.crexx" 22 3 35 "  decoded = base64_decode(encoded)"
+   .traceevent "V" 6 "R" "S" "r" 3 16 16 0 "encoded" ""
+   load r6,1
+   settp r3,256
+   swap r7,r3
+   call r2,base64_decode(),r6
+   swap r3,r7
+   .traceevent "F" 4 "R" "X" "r" 2 16 16 0 "base64_decode" ""
+   .traceevent "A" 6 "R" "X" "r" 2 16 16 0 "decoded" ""
+l43doinc:
+   .srcstep 14 14 17 "base64_roundtrip.crexx" 20 4 13 "do iteration = 1 to repetitions"
+   inc r9
+   .srcstep 18 18 17 "base64_roundtrip.crexx" 23 1 4 "end"
+   br l43dostart
+l43doend:
+   .meta "base64_roundtrip.main.iteration"
+   .srcstep 20 20 17 "base64_roundtrip.crexx" 25 1 27 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+   .traceevent "V" 6 "R" "S" "r" 3 20 20 0 "encoded" ""
+   load r8,1
+   settp r3,256
+   swap r9,r3
+   call r7,rxfnsb.length(),r8
+   swap r3,r9
+   .traceevent "F" 4 "R" "I" "r" 7 20 20 0 "length" ""
+   ine r9,r7,1368
+   .traceevent "O" 4 "R" "B" "r" 9 20 20 0 "" ""
+   brf l69iffalse,r9
+   .srcstep 21 21 17 "base64_roundtrip.crexx" 25 28 32 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+   .srcstep 19 19 17 "base64_roundtrip.crexx" 25 33 101 "if length(encoded) <> 1368 then return fail(\"expected encoded length 1368, got \" || length(encoded))"
+   .traceevent "V" 6 "R" "S" "r" 3 19 19 0 "encoded" ""
+   load r10,1
+   settp r3,256
+   swap r11,r3
+   call r6,rxfnsb.length(),r10
+   swap r3,r11
+   itos r6
+   .traceevent "F" 4 "R" "S" "r" 6 19 19 0 "length" ""
+   concat r8,"expected encoded length 1368, got ",r6
+   .traceevent "O" 4 "R" "S" "r" 8 19 19 0 "" ""
+   load r7,1
+   settp r8,768
+   call r11,fail(),r7
+   .traceevent "F" 4 "R" "I" "r" 11 19 19 0 "fail" ""
+   ret r11
+l69iffalse:
+   .srcstep 23 23 17 "base64_roundtrip.crexx" 26 1 35 "if bincompare(input, decoded) <> 0 then return fail(\"decoded bytes differ from input\")"
+   .traceevent "V" 6 "R" "X" "r" 4 23 23 0 "input" ""
+   .traceevent "V" 6 "R" "X" "r" 2 23 23 0 "decoded" ""
+   load r9,2
+   settp r4,256
+   swap r10,r4
+   settp r2,256
+   swap r11,r2
+   call r8,rxfnsb.bincompare(),r9
+   swap r4,r10
+   swap r2,r11
+   .traceevent "F" 4 "R" "I" "r" 8 23 23 0 "bincompare" ""
+   ine r11,r8,0
+   .traceevent "O" 4 "R" "B" "r" 11 23 23 0 "" ""
+   brf l78iffalse,r11
+   .srcstep 24 24 17 "base64_roundtrip.crexx" 26 36 40 "if bincompare(input, decoded) <> 0 then return fail(\"decoded bytes differ from input\")"
+   .srcstep 22 22 17 "base64_roundtrip.crexx" 26 41 87 "if bincompare(input, decoded) <> 0 then return fail(\"decoded bytes differ from input\")"
+   load r10,"decoded bytes differ from input"
+   .traceevent "L" 4 "R" "S" "r" 10 22 22 0 "" ""
+   load r9,1
+   settp r10,768
+   call r8,fail(),r9
+   .traceevent "F" 4 "R" "I" "r" 8 22 22 0 "fail" ""
+   ret r8
+l78iffalse:
+   .srcstep 25 25 17 "base64_roundtrip.crexx" 28 1 34 "checksum = byte_checksum(decoded)"
+   .meta "base64_roundtrip.main.checksum"="b" ".int" r1
+   .traceevent "V" 6 "R" "X" "r" 2 25 25 0 "decoded" ""
+   load r10,1
+   settp r2,256
+   swap r11,r2
+   call r1,byte_checksum(),r10
+   swap r2,r11
+   .traceevent "F" 4 "R" "I" "r" 1 25 25 0 "byte_checksum" ""
+   .traceevent "A" 6 "R" "I" "r" 1 25 25 0 "checksum" ""
+   .srcstep 27 27 17 "base64_roundtrip.crexx" 29 1 22 "if checksum <> 130560 then return fail(\"expected checksum 130560, got \" || checksum)"
+   .traceevent "V" 6 "R" "I" "r" 1 27 27 0 "checksum" ""
+   ine r11,r1,130560
+   .traceevent "O" 4 "R" "B" "r" 11 27 27 0 "" ""
+   brf l91iffalse,r11
+   .srcstep 28 28 17 "base64_roundtrip.crexx" 29 23 27 "if checksum <> 130560 then return fail(\"expected checksum 130560, got \" || checksum)"
+   .srcstep 26 26 17 "base64_roundtrip.crexx" 29 28 85 "if checksum <> 130560 then return fail(\"expected checksum 130560, got \" || checksum)"
+   itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 26 26 0 "checksum" ""
+   concat r10,"expected checksum 130560, got ",r1
+   .traceevent "O" 4 "R" "S" "r" 10 26 26 0 "" ""
+   load r9,1
+   settp r10,768
+   call r8,fail(),r9
+   .traceevent "F" 4 "R" "I" "r" 8 26 26 0 "fail" ""
+   ret r8
+l91iffalse:
+   .srcstep 29 29 17 "base64_roundtrip.crexx" 31 1 110 "say \"benchmark=base64_roundtrip repetitions=\"repetitions \"encoded_length=\"length(encoded) \"checksum=\"checksum"
+   itos r5
+   .traceevent "V" 6 "R" "S" "r" 5 29 29 0 "repetitions" ""
+   concat r11,"benchmark=base64_roundtrip repetitions=",r5
+   .traceevent "O" 4 "R" "S" "r" 11 29 29 0 "" ""
+   sconcat r11,r11,"encoded_length="
+   .traceevent "O" 4 "R" "S" "r" 11 29 29 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 3 29 29 0 "encoded" ""
+   load r9,1
+   settp r3,256
+   swap r10,r3
+   call r8,rxfnsb.length(),r9
+   swap r3,r10
+   itos r8
+   .traceevent "F" 4 "R" "S" "r" 8 29 29 0 "length" ""
+   concat r11,r11,r8
+   .traceevent "O" 4 "R" "S" "r" 11 29 29 0 "" ""
+   sconcat r11,r11,"checksum="
+   .traceevent "O" 4 "R" "S" "r" 11 29 29 0 "" ""
+   itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 29 29 0 "checksum" ""
+   concat r11,r11,r1
+   .traceevent "O" 4 "R" "S" "r" 11 29 29 0 "" ""
+   say r11
+   .srcstep 30 30 17 "base64_roundtrip.crexx" 32 1 29 "say \"PASS: Base64 Roundtrip\""
+   say "PASS: Base64 Roundtrip"
+   .srcstep 31 31 17 "base64_roundtrip.crexx" 33 1 9 "return 0"
+   ret 0
+   .meta "base64_roundtrip.main.argv"
+   .meta "base64_roundtrip.main.checksum"
+   .meta "base64_roundtrip.main.decoded"
+   .meta "base64_roundtrip.main.encoded"
+   .meta "base64_roundtrip.main.input"
+   .meta "base64_roundtrip.main.repetitions"
+
+make_input() .locals=6
+   .meta "base64_roundtrip.make_input"="b" ".binary" make_input() ""
+   .srcstep 41 41 17 "base64_roundtrip.crexx" 35 1 32 "make_input: procedure = .binary"
+   numsci 18,1,1
+   .meta "base64_roundtrip.make_input.data"="b" ".binary" r0
+   .srcstep 32 32 17 "base64_roundtrip.crexx" 36 3 17 "  data = .binary"
+   null r0
+   .srcstep 33 33 17 "base64_roundtrip.crexx" 37 3 28 "  call binresize data, 1024"
+   .traceevent "V" 6 "R" "X" "r" 0 33 33 0 "data" ""
+   load r3,1024
+   .traceevent "L" 4 "R" "I" "r" 3 33 33 0 "" ""
+   load r1,2
+   swap r2,r0
+   call r4,rxfnsb.binresize(),r1
+   swap r0,r2
+   .traceevent "F" 4 "R" "I" "r" 4 33 33 0 "binresize" ""
+   .srcstep 38 38 17 "base64_roundtrip.crexx" 38 3 5 "  do offset = 0 to 1023"
+   .srcstep 34 34 17 "base64_roundtrip.crexx" 38 6 16 "  do offset = 0 to 1023"
+   .meta "base64_roundtrip.make_input.offset"="b" ".int" r3
+   load r3,0
+   .traceevent "L" 4 "R" "I" "r" 3 34 34 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 34 34 0 "offset" ""
+   .srcstep 35 35 17 "base64_roundtrip.crexx" 38 17 24 "  do offset = 0 to 1023"
+   load r2,1023
+   .traceevent "L" 4 "R" "I" "r" 2 0 0 0 "" ""
+l118dostart:
+   .srcstep 35 35 17 "base64_roundtrip.crexx" 38 17 24 "  do offset = 0 to 1023"
+   igt r1,r3,r2
+   brt l118doend,r1
+   .srcstep 37 37 17 "base64_roundtrip.crexx" 39 5 56 "    <at..u8>(offset) data = (offset * 31 + 7) <mod> 256"
+   .traceevent "V" 6 "R" "X" "r" 0 37 37 0 "data" ""
+   .traceevent "V" 6 "R" "I" "r" 3 37 37 0 "offset" ""
+   .traceevent "V" 6 "R" "I" "r" 3 37 37 0 "offset" ""
+   imult r5,r3,31
+   .traceevent "O" 4 "R" "I" "r" 5 37 37 0 "" ""
+   iadd r5,r5,7
+   .traceevent "O" 4 "R" "I" "r" 5 37 37 0 "" ""
+   imod r5,r5,256
+   .traceevent "O" 4 "R" "I" "r" 5 37 37 0 "" ""
+   bsetu8 r0,r3,r5
+l118doinc:
+   .srcstep 36 36 17 "base64_roundtrip.crexx" 38 6 12 "  do offset = 0 to 1023"
+   inc r3
+   .srcstep 39 39 17 "base64_roundtrip.crexx" 40 3 6 "  end"
+   br l118dostart
+l118doend:
+   .meta "base64_roundtrip.make_input.offset"
+   .srcstep 40 40 17 "base64_roundtrip.crexx" 41 3 14 "  return data"
+   .traceevent "V" 6 "R" "X" "r" 0 40 40 0 "data" ""
+   ret r0
+   .meta "base64_roundtrip.make_input.data"
+
+base64_encode() .locals=22
+   .meta "base64_roundtrip.base64_encode"="b" ".string" base64_encode() "data=.binary"
+   .srcstep 82 82 17 "base64_roundtrip.crexx" 43 1 35 "base64_encode: procedure = .string"
+   numsci 18,1,1
+   .srcstep 42 42 17 "base64_roundtrip.crexx" 44 7 21 "  arg data = .binary"
+   .meta "base64_roundtrip.base64_encode.data"="b" ".binary" a1
+   .meta "base64_roundtrip.base64_encode.result"="b" ".binary" r6
+   .srcstep 43 43 17 "base64_roundtrip.crexx" 48 3 19 "  result = .binary"
+   null r6
+   .srcstep 44 44 17 "base64_roundtrip.crexx" 45 3 91 "  alphabet = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\" as .binary"
+   .meta "base64_roundtrip.base64_encode.alphabet"="b" ".binary" r0
+   load r7,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+   .traceevent "L" 4 "R" "S" "r" 7 44 44 0 "" ""
+   scopy r0,r7
+   stobin r0
+   .traceevent "A" 6 "R" "X" "r" 0 44 44 0 "alphabet" ""
+   .srcstep 45 45 17 "base64_roundtrip.crexx" 46 3 33 "  input_length = binlength(data)"
+   .meta "base64_roundtrip.base64_encode.input_length"="b" ".int" r3
+   .traceevent "V" 6 "R" "X" "a" 1 45 45 0 "data" ""
+   load r7,1
+   settp a1,256
+   swap r8,a1
+   call r3,rxfnsb.binlength(),r7
+   swap a1,r8
+   .traceevent "F" 4 "R" "I" "r" 3 45 45 0 "binlength" ""
+   .traceevent "A" 6 "R" "I" "r" 3 45 45 0 "input_length" ""
+   .srcstep 46 46 17 "base64_roundtrip.crexx" 47 3 53 "  encoded_length = ((input_length + 2) <idiv> 3) * 4"
+   .meta "base64_roundtrip.base64_encode.encoded_length"="b" ".int" r2
+   .traceevent "V" 6 "R" "I" "r" 3 46 46 0 "input_length" ""
+   iadd r8,r3,2
+   .traceevent "O" 4 "R" "I" "r" 8 46 46 0 "" ""
+   idiv r8,r8,3
+   .traceevent "O" 4 "R" "I" "r" 8 46 46 0 "" ""
+   imult r2,r8,4
+   .traceevent "O" 4 "R" "I" "r" 2 46 46 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 46 46 0 "encoded_length" ""
+   .srcstep 47 47 17 "base64_roundtrip.crexx" 49 3 40 "  call binresize result, encoded_length"
+   .traceevent "V" 6 "R" "X" "r" 6 47 47 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 2 47 47 0 "encoded_length" ""
+   load r7,2
+   swap r8,r6
+   swap r9,r2
+   call r10,rxfnsb.binresize(),r7
+   swap r6,r8
+   swap r2,r9
+   .traceevent "F" 4 "R" "I" "r" 10 47 47 0 "binresize" ""
+   .srcstep 48 48 17 "base64_roundtrip.crexx" 50 3 19 "  input_offset = 0"
+   .meta "base64_roundtrip.base64_encode.input_offset"="b" ".int" r4
+   load r4,0
+   .traceevent "L" 4 "R" "I" "r" 4 48 48 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 48 48 0 "input_offset" ""
+   .srcstep 49 49 17 "base64_roundtrip.crexx" 51 3 20 "  output_offset = 0"
+   .meta "base64_roundtrip.base64_encode.output_offset"="b" ".int" r5
+   load r5,0
+   .traceevent "L" 4 "R" "I" "r" 5 49 49 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 49 49 0 "output_offset" ""
+   .srcstep 79 79 17 "base64_roundtrip.crexx" 52 3 5 "  do while input_offset < input_length"
+l182dostart:
+   .srcstep 50 50 17 "base64_roundtrip.crexx" 52 6 39 "  do while input_offset < input_length"
+   .traceevent "V" 6 "R" "I" "r" 4 0 0 0 "input_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 3 0 0 0 "input_length" ""
+   ilt r16,r4,r3
+   .traceevent "O" 4 "R" "B" "r" 16 0 0 0 "" ""
+   brf l182doend,r16
+   .srcstep 51 51 17 "base64_roundtrip.crexx" 53 5 44 "    remaining = input_length - input_offset"
+   .meta "base64_roundtrip.base64_encode.remaining"="b" ".int" r15
+   .traceevent "V" 6 "R" "I" "r" 3 51 51 0 "input_length" ""
+   .traceevent "V" 6 "R" "I" "r" 4 51 51 0 "input_offset" ""
+   isub r15,r3,r4
+   .traceevent "O" 4 "R" "I" "r" 15 51 51 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 15 51 51 0 "remaining" ""
+   .srcstep 52 52 17 "base64_roundtrip.crexx" 54 5 40 "    byte1 = <at..u8>(input_offset) data"
+   .meta "base64_roundtrip.base64_encode.byte1"="b" ".int" r9
+   .traceevent "V" 6 "R" "X" "a" 1 52 52 0 "data" ""
+   .traceevent "V" 6 "R" "I" "r" 4 52 52 0 "input_offset" ""
+   bgetu8 r9,a1,r4
+   .traceevent "A" 6 "R" "I" "r" 9 52 52 0 "byte1" ""
+   .srcstep 53 53 17 "base64_roundtrip.crexx" 55 5 14 "    byte2 = 0"
+   .meta "base64_roundtrip.base64_encode.byte2"="b" ".int" r8
+   load r8,0
+   .traceevent "L" 4 "R" "I" "r" 8 53 53 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 8 53 53 0 "byte2" ""
+   .srcstep 54 54 17 "base64_roundtrip.crexx" 56 5 14 "    byte3 = 0"
+   .meta "base64_roundtrip.base64_encode.byte3"="b" ".int" r7
+   load r7,0
+   .traceevent "L" 4 "R" "I" "r" 7 54 54 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 7 54 54 0 "byte3" ""
+   .srcstep 56 56 17 "base64_roundtrip.crexx" 57 5 21 "    if remaining > 1 then byte2 = <at..u8>(input_offset + 1) data"
+   .traceevent "V" 6 "R" "I" "r" 15 56 56 0 "remaining" ""
+   igt r17,r15,1
+   .traceevent "O" 4 "R" "B" "r" 17 56 56 0 "" ""
+   brf l226iffalse,r17
+   .srcstep 57 57 17 "base64_roundtrip.crexx" 57 22 26 "    if remaining > 1 then byte2 = <at..u8>(input_offset + 1) data"
+   .srcstep 55 55 17 "base64_roundtrip.crexx" 57 27 66 "    if remaining > 1 then byte2 = <at..u8>(input_offset + 1) data"
+   .traceevent "V" 6 "R" "X" "a" 1 55 55 0 "data" ""
+   .traceevent "V" 6 "R" "I" "r" 4 55 55 0 "input_offset" ""
+   iadd r18,r4,1
+   .traceevent "O" 4 "R" "I" "r" 18 55 55 0 "" ""
+   bgetu8 r8,a1,r18
+   .traceevent "A" 6 "R" "I" "r" 8 55 55 0 "byte2" ""
+l226iffalse:
+   .srcstep 59 59 17 "base64_roundtrip.crexx" 58 5 21 "    if remaining > 2 then byte3 = <at..u8>(input_offset + 2) data"
+   .traceevent "V" 6 "R" "I" "r" 15 59 59 0 "remaining" ""
+   igt r18,r15,2
+   .traceevent "O" 4 "R" "B" "r" 18 59 59 0 "" ""
+   brf l243iffalse,r18
+   .srcstep 60 60 17 "base64_roundtrip.crexx" 58 22 26 "    if remaining > 2 then byte3 = <at..u8>(input_offset + 2) data"
+   .srcstep 58 58 17 "base64_roundtrip.crexx" 58 27 66 "    if remaining > 2 then byte3 = <at..u8>(input_offset + 2) data"
+   .traceevent "V" 6 "R" "X" "a" 1 58 58 0 "data" ""
+   .traceevent "V" 6 "R" "I" "r" 4 58 58 0 "input_offset" ""
+   iadd r17,r4,2
+   .traceevent "O" 4 "R" "I" "r" 17 58 58 0 "" ""
+   bgetu8 r7,a1,r17
+   .traceevent "A" 6 "R" "I" "r" 7 58 58 0 "byte3" ""
+l243iffalse:
+   .srcstep 61 61 17 "base64_roundtrip.crexx" 60 5 28 "    digit1 = byte1 <idiv> 4"
+   .meta "base64_roundtrip.base64_encode.digit1"="b" ".int" r11
+   .traceevent "V" 6 "R" "I" "r" 9 61 61 0 "byte1" ""
+   idiv r11,r9,4
+   .traceevent "O" 4 "R" "I" "r" 11 61 61 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 11 61 61 0 "digit1" ""
+   .srcstep 62 62 17 "base64_roundtrip.crexx" 61 5 52 "    digit2 = (byte1 <mod> 4) * 16 + byte2 <idiv> 16"
+   .meta "base64_roundtrip.base64_encode.digit2"="b" ".int" r12
+   .traceevent "V" 6 "R" "I" "r" 9 62 62 0 "byte1" ""
+   imod r18,r9,4
+   .traceevent "O" 4 "R" "I" "r" 18 62 62 0 "" ""
+   imult r18,r18,16
+   .traceevent "O" 4 "R" "I" "r" 18 62 62 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 8 62 62 0 "byte2" ""
+   idiv r17,r8,16
+   .traceevent "O" 4 "R" "I" "r" 17 62 62 0 "" ""
+   iadd r12,r18,r17
+   .traceevent "O" 4 "R" "I" "r" 12 62 62 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 12 62 62 0 "digit2" ""
+   .srcstep 63 63 17 "base64_roundtrip.crexx" 62 5 52 "    digit3 = (byte2 <mod> 16) * 4 + byte3 <idiv> 64"
+   .meta "base64_roundtrip.base64_encode.digit3"="b" ".int" r13
+   .traceevent "V" 6 "R" "I" "r" 8 63 63 0 "byte2" ""
+   imod r18,r8,16
+   .traceevent "O" 4 "R" "I" "r" 18 63 63 0 "" ""
+   imult r18,r18,4
+   .traceevent "O" 4 "R" "I" "r" 18 63 63 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 7 63 63 0 "byte3" ""
+   idiv r17,r7,64
+   .traceevent "O" 4 "R" "I" "r" 17 63 63 0 "" ""
+   iadd r13,r18,r17
+   .traceevent "O" 4 "R" "I" "r" 13 63 63 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 13 63 63 0 "digit3" ""
+   .srcstep 64 64 17 "base64_roundtrip.crexx" 63 5 28 "    digit4 = byte3 <mod> 64"
+   .meta "base64_roundtrip.base64_encode.digit4"="b" ".int" r14
+   .traceevent "V" 6 "R" "I" "r" 7 64 64 0 "byte3" ""
+   imod r14,r7,64
+   .traceevent "O" 4 "R" "I" "r" 14 64 64 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 64 64 0 "digit4" ""
+   .srcstep 65 65 17 "base64_roundtrip.crexx" 65 5 63 "    <at..u8>(output_offset) result = <at..u8>(digit1) alphabet"
+   .traceevent "V" 6 "R" "X" "r" 6 65 65 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 5 65 65 0 "output_offset" ""
+   .traceevent "V" 6 "R" "X" "r" 0 65 65 0 "alphabet" ""
+   .traceevent "V" 6 "R" "I" "r" 11 65 65 0 "digit1" ""
+   bgetu8 r18,r0,r11
+   bsetu8 r6,r5,r18
+   .srcstep 66 66 17 "base64_roundtrip.crexx" 66 5 67 "    <at..u8>(output_offset + 1) result = <at..u8>(digit2) alphabet"
+   .traceevent "V" 6 "R" "X" "r" 6 66 66 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 5 66 66 0 "output_offset" ""
+   iadd r18,r5,1
+   .traceevent "O" 4 "R" "I" "r" 18 66 66 0 "" ""
+   .traceevent "V" 6 "R" "X" "r" 0 66 66 0 "alphabet" ""
+   .traceevent "V" 6 "R" "I" "r" 12 66 66 0 "digit2" ""
+   bgetu8 r17,r0,r12
+   bsetu8 r6,r18,r17
+   .srcstep 69 69 17 "base64_roundtrip.crexx" 67 5 21 "    if remaining > 1 then <at..u8>(output_offset + 2) result = <at..u8>(digit3) alphabet"
+   .traceevent "V" 6 "R" "I" "r" 15 69 69 0 "remaining" ""
+   igt r18,r15,1
+   .traceevent "O" 4 "R" "B" "r" 18 69 69 0 "" ""
+   brf l353iffalse,r18
+   .srcstep 70 70 17 "base64_roundtrip.crexx" 67 22 26 "    if remaining > 1 then <at..u8>(output_offset + 2) result = <at..u8>(digit3) alphabet"
+   .srcstep 67 67 17 "base64_roundtrip.crexx" 67 27 89 "    if remaining > 1 then <at..u8>(output_offset + 2) result = <at..u8>(digit3) alphabet"
+   .traceevent "V" 6 "R" "X" "r" 6 67 67 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 5 67 67 0 "output_offset" ""
+   iadd r17,r5,2
+   .traceevent "O" 4 "R" "I" "r" 17 67 67 0 "" ""
+   .traceevent "V" 6 "R" "X" "r" 0 67 67 0 "alphabet" ""
+   .traceevent "V" 6 "R" "I" "r" 13 67 67 0 "digit3" ""
+   bgetu8 r19,r0,r13
+   bsetu8 r6,r17,r19
+   br l353ifend
+   .srcstep 71 71 17 "base64_roundtrip.crexx" 68 5 9 "    else <at..u8>(output_offset + 2) result = 61"
+l353iffalse:
+   .srcstep 68 68 17 "base64_roundtrip.crexx" 68 10 49 "    else <at..u8>(output_offset + 2) result = 61"
+   .traceevent "V" 6 "R" "X" "r" 6 68 68 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 5 68 68 0 "output_offset" ""
+   iadd r20,r5,2
+   .traceevent "O" 4 "R" "I" "r" 20 68 68 0 "" ""
+   load r21,61
+   .traceevent "L" 4 "R" "I" "r" 21 68 68 0 "" ""
+   bsetu8 r6,r20,r21
+l353ifend:
+   .srcstep 74 74 17 "base64_roundtrip.crexx" 69 5 21 "    if remaining > 2 then <at..u8>(output_offset + 3) result = <at..u8>(digit4) alphabet"
+   .traceevent "V" 6 "R" "I" "r" 15 74 74 0 "remaining" ""
+   igt r21,r15,2
+   .traceevent "O" 4 "R" "B" "r" 21 74 74 0 "" ""
+   brf l391iffalse,r21
+   .srcstep 75 75 17 "base64_roundtrip.crexx" 69 22 26 "    if remaining > 2 then <at..u8>(output_offset + 3) result = <at..u8>(digit4) alphabet"
+   .srcstep 72 72 17 "base64_roundtrip.crexx" 69 27 89 "    if remaining > 2 then <at..u8>(output_offset + 3) result = <at..u8>(digit4) alphabet"
+   .traceevent "V" 6 "R" "X" "r" 6 72 72 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 5 72 72 0 "output_offset" ""
+   iadd r20,r5,3
+   .traceevent "O" 4 "R" "I" "r" 20 72 72 0 "" ""
+   .traceevent "V" 6 "R" "X" "r" 0 72 72 0 "alphabet" ""
+   .traceevent "V" 6 "R" "I" "r" 14 72 72 0 "digit4" ""
+   bgetu8 r19,r0,r14
+   bsetu8 r6,r20,r19
+   br l391ifend
+   .srcstep 76 76 17 "base64_roundtrip.crexx" 70 5 9 "    else <at..u8>(output_offset + 3) result = 61"
+l391iffalse:
+   .srcstep 73 73 17 "base64_roundtrip.crexx" 70 10 49 "    else <at..u8>(output_offset + 3) result = 61"
+   .traceevent "V" 6 "R" "X" "r" 6 73 73 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 5 73 73 0 "output_offset" ""
+   iadd r18,r5,3
+   .traceevent "O" 4 "R" "I" "r" 18 73 73 0 "" ""
+   load r17,61
+   .traceevent "L" 4 "R" "I" "r" 17 73 73 0 "" ""
+   bsetu8 r6,r18,r17
+l391ifend:
+   .srcstep 77 77 17 "base64_roundtrip.crexx" 71 5 36 "    input_offset = input_offset + 3"
+   .traceevent "V" 6 "R" "I" "r" 4 77 77 0 "input_offset" ""
+   iadd r4,r4,3
+   .traceevent "O" 4 "R" "I" "r" 4 77 77 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 77 77 0 "input_offset" ""
+   .srcstep 78 78 17 "base64_roundtrip.crexx" 72 5 38 "    output_offset = output_offset + 4"
+   .traceevent "V" 6 "R" "I" "r" 5 78 78 0 "output_offset" ""
+   iadd r5,r5,4
+   .traceevent "O" 4 "R" "I" "r" 5 78 78 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 78 78 0 "output_offset" ""
+l182doinc:
+   .srcstep 80 80 17 "base64_roundtrip.crexx" 73 3 6 "  end"
+   br l182dostart
+l182doend:
+   .meta "base64_roundtrip.base64_encode.byte1"
+   .meta "base64_roundtrip.base64_encode.byte2"
+   .meta "base64_roundtrip.base64_encode.byte3"
+   .meta "base64_roundtrip.base64_encode.digit1"
+   .meta "base64_roundtrip.base64_encode.digit2"
+   .meta "base64_roundtrip.base64_encode.digit3"
+   .meta "base64_roundtrip.base64_encode.digit4"
+   .meta "base64_roundtrip.base64_encode.remaining"
+   .srcstep 81 81 17 "base64_roundtrip.crexx" 74 3 27 "  return result as .string"
+   .traceevent "V" 6 "R" "X" "r" 6 81 81 0 "result" ""
+   bcopy r21,r6
+   bintos r21
+   ret r21
+   .meta "base64_roundtrip.base64_encode.alphabet"
+   .meta "base64_roundtrip.base64_encode.data"
+   .meta "base64_roundtrip.base64_encode.encoded_length"
+   .meta "base64_roundtrip.base64_encode.input_length"
+   .meta "base64_roundtrip.base64_encode.input_offset"
+   .meta "base64_roundtrip.base64_encode.output_offset"
+   .meta "base64_roundtrip.base64_encode.result"
+
+base64_decode() .locals=24
+   .meta "base64_roundtrip.base64_decode"="b" ".binary" base64_decode() "encoded=.string"
+   .srcstep 125 125 17 "base64_roundtrip.crexx" 76 1 35 "base64_decode: procedure = .binary"
+   numsci 18,1,1
+   .srcstep 83 83 17 "base64_roundtrip.crexx" 77 7 24 "  arg encoded = .string"
+   .meta "base64_roundtrip.base64_decode.encoded"="b" ".string" a1
+   .meta "base64_roundtrip.base64_decode.result"="b" ".binary" r7
+   .srcstep 84 84 17 "base64_roundtrip.crexx" 84 3 19 "  result = .binary"
+   null r7
+   .srcstep 85 85 17 "base64_roundtrip.crexx" 78 3 80 "  alphabet = \"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/\""
+   .meta "base64_roundtrip.base64_decode.alphabet"="b" ".string" r0
+   load r0,"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+   .traceevent "L" 4 "R" "S" "r" 0 85 85 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 0 85 85 0 "alphabet" ""
+   .srcstep 86 86 17 "base64_roundtrip.crexx" 79 3 35 "  encoded_length = length(encoded)"
+   .meta "base64_roundtrip.base64_decode.encoded_length"="b" ".int" r2
+   .traceevent "V" 6 "R" "S" "a" 1 86 86 0 "encoded" ""
+   load r8,1
+   settp a1,256
+   swap r9,a1
+   call r2,rxfnsb.length(),r8
+   swap a1,r9
+   .traceevent "F" 4 "R" "I" "r" 2 86 86 0 "length" ""
+   .traceevent "A" 6 "R" "I" "r" 2 86 86 0 "encoded_length" ""
+   .srcstep 87 87 17 "base64_roundtrip.crexx" 80 3 14 "  padding = 0"
+   .meta "base64_roundtrip.base64_decode.padding"="b" ".int" r6
+   load r6,0
+   .traceevent "L" 4 "R" "I" "r" 6 87 87 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 6 87 87 0 "padding" ""
+   .srcstep 89 89 17 "base64_roundtrip.crexx" 81 3 46 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+   .traceevent "V" 6 "R" "S" "a" 1 89 89 0 "encoded" ""
+   .traceevent "V" 6 "R" "I" "r" 2 89 89 0 "encoded_length" ""
+   load r11,1
+   .traceevent "L" 4 "R" "I" "r" 11 89 89 0 "" ""
+   load r8,4
+   settp a1,256
+   swap r9,a1
+   swap r10,r2
+   settp r11,256
+   settp r12,512
+   call r13,rxfnsb.substr(),r8
+   swap a1,r9
+   swap r2,r10
+   .traceevent "F" 4 "R" "S" "r" 13 89 89 0 "substr" ""
+   req r13,r13,"="
+   .traceevent "O" 4 "R" "B" "r" 13 89 89 0 "" ""
+   brf l434iffalse,r13
+   .srcstep 90 90 17 "base64_roundtrip.crexx" 81 47 51 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+   .srcstep 88 88 17 "base64_roundtrip.crexx" 81 52 73 "  if substr(encoded, encoded_length, 1) = \"=\" then padding = padding + 1"
+   .traceevent "V" 6 "R" "I" "r" 6 88 88 0 "padding" ""
+   iadd r6,r6,1
+   .traceevent "O" 4 "R" "I" "r" 6 88 88 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 6 88 88 0 "padding" ""
+l434iffalse:
+   .srcstep 92 92 17 "base64_roundtrip.crexx" 82 3 50 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+   .traceevent "V" 6 "R" "S" "a" 1 92 92 0 "encoded" ""
+   .traceevent "V" 6 "R" "I" "r" 2 92 92 0 "encoded_length" ""
+   isub r11,r2,1
+   .traceevent "O" 4 "R" "I" "r" 11 92 92 0 "" ""
+   load r12,1
+   .traceevent "L" 4 "R" "I" "r" 12 92 92 0 "" ""
+   load r9,4
+   settp a1,256
+   swap r10,a1
+   settp r12,256
+   settp r13,512
+   call r8,rxfnsb.substr(),r9
+   swap a1,r10
+   .traceevent "F" 4 "R" "S" "r" 8 92 92 0 "substr" ""
+   req r13,r8,"="
+   .traceevent "O" 4 "R" "B" "r" 13 92 92 0 "" ""
+   brf l448iffalse,r13
+   .srcstep 93 93 17 "base64_roundtrip.crexx" 82 51 55 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+   .srcstep 91 91 17 "base64_roundtrip.crexx" 82 56 77 "  if substr(encoded, encoded_length - 1, 1) = \"=\" then padding = padding + 1"
+   .traceevent "V" 6 "R" "I" "r" 6 91 91 0 "padding" ""
+   iadd r6,r6,1
+   .traceevent "O" 4 "R" "I" "r" 6 91 91 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 6 91 91 0 "padding" ""
+l448iffalse:
+   .srcstep 94 94 17 "base64_roundtrip.crexx" 83 3 58 "  output_length = (encoded_length <idiv> 4) * 3 - padding"
+   .meta "base64_roundtrip.base64_decode.output_length"="b" ".int" r4
+   .traceevent "V" 6 "R" "I" "r" 2 94 94 0 "encoded_length" ""
+   idiv r13,r2,4
+   .traceevent "O" 4 "R" "I" "r" 13 94 94 0 "" ""
+   imult r13,r13,3
+   .traceevent "O" 4 "R" "I" "r" 13 94 94 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 6 94 94 0 "padding" ""
+   isub r4,r13,r6
+   .traceevent "O" 4 "R" "I" "r" 4 94 94 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 94 94 0 "output_length" ""
+   .srcstep 95 95 17 "base64_roundtrip.crexx" 85 3 39 "  call binresize result, output_length"
+   .traceevent "V" 6 "R" "X" "r" 7 95 95 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 4 95 95 0 "output_length" ""
+   load r11,2
+   swap r12,r7
+   swap r13,r4
+   call r10,rxfnsb.binresize(),r11
+   swap r7,r12
+   swap r4,r13
+   .traceevent "F" 4 "R" "I" "r" 10 95 95 0 "binresize" ""
+   .srcstep 96 96 17 "base64_roundtrip.crexx" 87 3 19 "  input_offset = 1"
+   .meta "base64_roundtrip.base64_decode.input_offset"="b" ".int" r3
+   load r3,1
+   .traceevent "L" 4 "R" "I" "r" 3 96 96 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 96 96 0 "input_offset" ""
+   .srcstep 97 97 17 "base64_roundtrip.crexx" 88 3 20 "  output_offset = 0"
+   .meta "base64_roundtrip.base64_decode.output_offset"="b" ".int" r5
+   load r5,0
+   .traceevent "L" 4 "R" "I" "r" 5 97 97 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 97 97 0 "output_offset" ""
+   .srcstep 122 122 17 "base64_roundtrip.crexx" 89 3 5 "  do while input_offset <= encoded_length"
+l471dostart:
+   .srcstep 98 98 17 "base64_roundtrip.crexx" 89 6 42 "  do while input_offset <= encoded_length"
+   .traceevent "V" 6 "R" "I" "r" 3 0 0 0 "input_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "encoded_length" ""
+   ilte r15,r3,r2
+   .traceevent "O" 4 "R" "B" "r" 15 0 0 0 "" ""
+   brf l471doend,r15
+   .srcstep 99 99 17 "base64_roundtrip.crexx" 90 5 70 "    digit1 = base64_digit(substr(encoded, input_offset, 1), alphabet)"
+   .meta "base64_roundtrip.base64_decode.digit1"="b" ".int" r11
+   .traceevent "V" 6 "R" "S" "a" 1 99 99 0 "encoded" ""
+   .traceevent "V" 6 "R" "I" "r" 3 99 99 0 "input_offset" ""
+   load r22,1
+   .traceevent "L" 4 "R" "I" "r" 22 99 99 0 "" ""
+   load r19,4
+   settp a1,256
+   swap r20,a1
+   swap r21,r3
+   settp r22,256
+   settp r23,512
+   call r17,rxfnsb.substr(),r19
+   swap a1,r20
+   swap r3,r21
+   .traceevent "F" 4 "R" "S" "r" 17 99 99 0 "substr" ""
+   .traceevent "V" 6 "R" "S" "r" 0 99 99 0 "alphabet" ""
+   load r16,2
+   settp r17,256
+   settp r0,256
+   swap r18,r0
+   call r11,base64_digit(),r16
+   swap r0,r18
+   .traceevent "F" 4 "R" "I" "r" 11 99 99 0 "base64_digit" ""
+   .traceevent "A" 6 "R" "I" "r" 11 99 99 0 "digit1" ""
+   .srcstep 100 100 17 "base64_roundtrip.crexx" 91 5 74 "    digit2 = base64_digit(substr(encoded, input_offset + 1, 1), alphabet)"
+   .meta "base64_roundtrip.base64_decode.digit2"="b" ".int" r9
+   .traceevent "V" 6 "R" "S" "a" 1 100 100 0 "encoded" ""
+   .traceevent "V" 6 "R" "I" "r" 3 100 100 0 "input_offset" ""
+   iadd r18,r3,1
+   .traceevent "O" 4 "R" "I" "r" 18 100 100 0 "" ""
+   load r19,1
+   .traceevent "L" 4 "R" "I" "r" 19 100 100 0 "" ""
+   load r16,4
+   settp a1,256
+   swap r17,a1
+   settp r19,256
+   settp r20,512
+   call r22,rxfnsb.substr(),r16
+   swap a1,r17
+   .traceevent "F" 4 "R" "S" "r" 22 100 100 0 "substr" ""
+   .traceevent "V" 6 "R" "S" "r" 0 100 100 0 "alphabet" ""
+   load r21,2
+   settp r22,256
+   settp r0,256
+   swap r23,r0
+   call r9,base64_digit(),r21
+   swap r0,r23
+   .traceevent "F" 4 "R" "I" "r" 9 100 100 0 "base64_digit" ""
+   .traceevent "A" 6 "R" "I" "r" 9 100 100 0 "digit2" ""
+   .srcstep 101 101 17 "base64_roundtrip.crexx" 92 5 49 "    char3 = substr(encoded, input_offset + 2, 1)"
+   .meta "base64_roundtrip.base64_decode.char3"="b" ".string" r13
+   .traceevent "V" 6 "R" "S" "a" 1 101 101 0 "encoded" ""
+   .traceevent "V" 6 "R" "I" "r" 3 101 101 0 "input_offset" ""
+   iadd r21,r3,2
+   .traceevent "O" 4 "R" "I" "r" 21 101 101 0 "" ""
+   load r22,1
+   .traceevent "L" 4 "R" "I" "r" 22 101 101 0 "" ""
+   load r19,4
+   settp a1,256
+   swap r20,a1
+   settp r22,256
+   settp r23,512
+   call r13,rxfnsb.substr(),r19
+   swap a1,r20
+   .traceevent "F" 4 "R" "S" "r" 13 101 101 0 "substr" ""
+   .traceevent "A" 6 "R" "S" "r" 13 101 101 0 "char3" ""
+   .srcstep 102 102 17 "base64_roundtrip.crexx" 93 5 49 "    char4 = substr(encoded, input_offset + 3, 1)"
+   .meta "base64_roundtrip.base64_decode.char4"="b" ".string" r12
+   .traceevent "V" 6 "R" "S" "a" 1 102 102 0 "encoded" ""
+   .traceevent "V" 6 "R" "I" "r" 3 102 102 0 "input_offset" ""
+   iadd r21,r3,3
+   .traceevent "O" 4 "R" "I" "r" 21 102 102 0 "" ""
+   load r22,1
+   .traceevent "L" 4 "R" "I" "r" 22 102 102 0 "" ""
+   load r19,4
+   settp a1,256
+   swap r20,a1
+   settp r22,256
+   settp r23,512
+   call r12,rxfnsb.substr(),r19
+   swap a1,r20
+   .traceevent "F" 4 "R" "S" "r" 12 102 102 0 "substr" ""
+   .traceevent "A" 6 "R" "S" "r" 12 102 102 0 "char4" ""
+   .srcstep 103 103 17 "base64_roundtrip.crexx" 94 5 15 "    digit3 = 0"
+   .meta "base64_roundtrip.base64_decode.digit3"="b" ".int" r8
+   load r8,0
+   .traceevent "L" 4 "R" "I" "r" 8 103 103 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 8 103 103 0 "digit3" ""
+   .srcstep 104 104 17 "base64_roundtrip.crexx" 95 5 15 "    digit4 = 0"
+   .meta "base64_roundtrip.base64_decode.digit4"="b" ".int" r14
+   load r14,0
+   .traceevent "L" 4 "R" "I" "r" 14 104 104 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 14 104 104 0 "digit4" ""
+   .srcstep 106 106 17 "base64_roundtrip.crexx" 96 5 20 "    if char3 <> \"=\" then digit3 = base64_digit(char3, alphabet)"
+   .traceevent "V" 6 "R" "S" "r" 13 106 106 0 "char3" ""
+   rne r23,r13,"="
+   .traceevent "O" 4 "R" "B" "r" 23 106 106 0 "" ""
+   brf l525iffalse,r23
+   .srcstep 107 107 17 "base64_roundtrip.crexx" 96 21 25 "    if char3 <> \"=\" then digit3 = base64_digit(char3, alphabet)"
+   .srcstep 105 105 17 "base64_roundtrip.crexx" 96 26 64 "    if char3 <> \"=\" then digit3 = base64_digit(char3, alphabet)"
+   .traceevent "V" 6 "R" "S" "r" 13 105 105 0 "char3" ""
+   .traceevent "V" 6 "R" "S" "r" 0 105 105 0 "alphabet" ""
+   load r20,2
+   settp r13,256
+   swap r21,r13
+   settp r0,256
+   swap r22,r0
+   call r8,base64_digit(),r20
+   swap r13,r21
+   swap r0,r22
+   .traceevent "F" 4 "R" "I" "r" 8 105 105 0 "base64_digit" ""
+   .traceevent "A" 6 "R" "I" "r" 8 105 105 0 "digit3" ""
+l525iffalse:
+   .srcstep 109 109 17 "base64_roundtrip.crexx" 97 5 20 "    if char4 <> \"=\" then digit4 = base64_digit(char4, alphabet)"
+   .traceevent "V" 6 "R" "S" "r" 12 109 109 0 "char4" ""
+   rne r23,r12,"="
+   .traceevent "O" 4 "R" "B" "r" 23 109 109 0 "" ""
+   brf l534iffalse,r23
+   .srcstep 110 110 17 "base64_roundtrip.crexx" 97 21 25 "    if char4 <> \"=\" then digit4 = base64_digit(char4, alphabet)"
+   .srcstep 108 108 17 "base64_roundtrip.crexx" 97 26 64 "    if char4 <> \"=\" then digit4 = base64_digit(char4, alphabet)"
+   .traceevent "V" 6 "R" "S" "r" 12 108 108 0 "char4" ""
+   .traceevent "V" 6 "R" "S" "r" 0 108 108 0 "alphabet" ""
+   load r20,2
+   settp r12,256
+   swap r21,r12
+   settp r0,256
+   swap r22,r0
+   call r14,base64_digit(),r20
+   swap r12,r21
+   swap r0,r22
+   .traceevent "F" 4 "R" "I" "r" 14 108 108 0 "base64_digit" ""
+   .traceevent "A" 6 "R" "I" "r" 14 108 108 0 "digit4" ""
+l534iffalse:
+   .srcstep 111 111 17 "base64_roundtrip.crexx" 99 5 67 "    <at..u8>(output_offset) result = digit1 * 4 + digit2 <idiv> 16"
+   .traceevent "V" 6 "R" "X" "r" 7 111 111 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 5 111 111 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 11 111 111 0 "digit1" ""
+   imult r23,r11,4
+   .traceevent "O" 4 "R" "I" "r" 23 111 111 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 9 111 111 0 "digit2" ""
+   idiv r22,r9,16
+   .traceevent "O" 4 "R" "I" "r" 22 111 111 0 "" ""
+   iadd r23,r23,r22
+   .traceevent "O" 4 "R" "I" "r" 23 111 111 0 "" ""
+   bsetu8 r7,r5,r23
+   .srcstep 112 112 17 "base64_roundtrip.crexx" 100 5 38 "    output_offset = output_offset + 1"
+   .traceevent "V" 6 "R" "I" "r" 5 112 112 0 "output_offset" ""
+   iadd r5,r5,1
+   .traceevent "O" 4 "R" "I" "r" 5 112 112 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 112 112 0 "output_offset" ""
+   .srcstep 115 115 17 "base64_roundtrip.crexx" 101 5 56 "    if output_offset < output_length + 1 & char3 <> \"=\" then do"
+   .traceevent "V" 6 "R" "I" "r" 5 115 115 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 4 115 115 0 "output_length" ""
+   iadd r23,r4,1
+   .traceevent "O" 4 "R" "I" "r" 23 115 115 0 "" ""
+   ilt r23,r5,r23
+   .traceevent "O" 4 "R" "B" "r" 23 115 115 0 "" ""
+   brf l565andend,r23
+   .traceevent "V" 6 "R" "S" "r" 13 115 115 0 "char3" ""
+   rne r23,r13,"="
+   .traceevent "O" 4 "R" "B" "r" 23 115 115 0 "" ""
+l565andend:
+   .traceevent "O" 4 "R" "B" "r" 23 115 115 0 "" ""
+   brf l591iffalse,r23
+   .srcstep 116 116 17 "base64_roundtrip.crexx" 101 57 61 "    if output_offset < output_length + 1 & char3 <> \"=\" then do"
+   .srcstep 113 113 17 "base64_roundtrip.crexx" 102 7 80 "      <at..u8>(output_offset) result = (digit2 <mod> 16) * 16 + digit3 <idiv> 4"
+   .traceevent "V" 6 "R" "X" "r" 7 113 113 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 5 113 113 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 9 113 113 0 "digit2" ""
+   imod r22,r9,16
+   .traceevent "O" 4 "R" "I" "r" 22 113 113 0 "" ""
+   imult r22,r22,16
+   .traceevent "O" 4 "R" "I" "r" 22 113 113 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 8 113 113 0 "digit3" ""
+   idiv r21,r8,4
+   .traceevent "O" 4 "R" "I" "r" 21 113 113 0 "" ""
+   iadd r22,r22,r21
+   .traceevent "O" 4 "R" "I" "r" 22 113 113 0 "" ""
+   bsetu8 r7,r5,r22
+   .srcstep 114 114 17 "base64_roundtrip.crexx" 103 7 40 "      output_offset = output_offset + 1"
+   .traceevent "V" 6 "R" "I" "r" 5 114 114 0 "output_offset" ""
+   iadd r5,r5,1
+   .traceevent "O" 4 "R" "I" "r" 5 114 114 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 114 114 0 "output_offset" ""
+l591iffalse:
+   .srcstep 119 119 17 "base64_roundtrip.crexx" 105 5 56 "    if output_offset < output_length + 1 & char4 <> \"=\" then do"
+   .traceevent "V" 6 "R" "I" "r" 5 119 119 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 4 119 119 0 "output_length" ""
+   iadd r23,r4,1
+   .traceevent "O" 4 "R" "I" "r" 23 119 119 0 "" ""
+   ilt r23,r5,r23
+   .traceevent "O" 4 "R" "B" "r" 23 119 119 0 "" ""
+   brf l600andend,r23
+   .traceevent "V" 6 "R" "S" "r" 12 119 119 0 "char4" ""
+   rne r23,r12,"="
+   .traceevent "O" 4 "R" "B" "r" 23 119 119 0 "" ""
+l600andend:
+   .traceevent "O" 4 "R" "B" "r" 23 119 119 0 "" ""
+   brf l624iffalse,r23
+   .srcstep 120 120 17 "base64_roundtrip.crexx" 105 57 61 "    if output_offset < output_length + 1 & char4 <> \"=\" then do"
+   .srcstep 117 117 17 "base64_roundtrip.crexx" 106 7 70 "      <at..u8>(output_offset) result = (digit3 <mod> 4) * 64 + digit4"
+   .traceevent "V" 6 "R" "X" "r" 7 117 117 0 "result" ""
+   .traceevent "V" 6 "R" "I" "r" 5 117 117 0 "output_offset" ""
+   .traceevent "V" 6 "R" "I" "r" 8 117 117 0 "digit3" ""
+   imod r22,r8,4
+   .traceevent "O" 4 "R" "I" "r" 22 117 117 0 "" ""
+   imult r22,r22,64
+   .traceevent "O" 4 "R" "I" "r" 22 117 117 0 "" ""
+   .traceevent "V" 6 "R" "I" "r" 14 117 117 0 "digit4" ""
+   iadd r22,r22,r14
+   .traceevent "O" 4 "R" "I" "r" 22 117 117 0 "" ""
+   bsetu8 r7,r5,r22
+   .srcstep 118 118 17 "base64_roundtrip.crexx" 107 7 40 "      output_offset = output_offset + 1"
+   .traceevent "V" 6 "R" "I" "r" 5 118 118 0 "output_offset" ""
+   iadd r5,r5,1
+   .traceevent "O" 4 "R" "I" "r" 5 118 118 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 118 118 0 "output_offset" ""
+l624iffalse:
+   .srcstep 121 121 17 "base64_roundtrip.crexx" 109 5 36 "    input_offset = input_offset + 4"
+   .traceevent "V" 6 "R" "I" "r" 3 121 121 0 "input_offset" ""
+   iadd r3,r3,4
+   .traceevent "O" 4 "R" "I" "r" 3 121 121 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 121 121 0 "input_offset" ""
+l471doinc:
+   .srcstep 123 123 17 "base64_roundtrip.crexx" 110 3 6 "  end"
+   br l471dostart
+l471doend:
+   .meta "base64_roundtrip.base64_decode.char3"
+   .meta "base64_roundtrip.base64_decode.char4"
+   .meta "base64_roundtrip.base64_decode.digit1"
+   .meta "base64_roundtrip.base64_decode.digit2"
+   .meta "base64_roundtrip.base64_decode.digit3"
+   .meta "base64_roundtrip.base64_decode.digit4"
+   .srcstep 124 124 17 "base64_roundtrip.crexx" 111 3 16 "  return result"
+   .traceevent "V" 6 "R" "X" "r" 7 124 124 0 "result" ""
+   ret r7
+   .meta "base64_roundtrip.base64_decode.alphabet"
+   .meta "base64_roundtrip.base64_decode.encoded"
+   .meta "base64_roundtrip.base64_decode.encoded_length"
+   .meta "base64_roundtrip.base64_decode.input_offset"
+   .meta "base64_roundtrip.base64_decode.output_length"
+   .meta "base64_roundtrip.base64_decode.output_offset"
+   .meta "base64_roundtrip.base64_decode.padding"
+   .meta "base64_roundtrip.base64_decode.result"
+
+base64_digit() .locals=8
+   .meta "base64_roundtrip.base64_digit"="b" ".int" base64_digit() "character=.string,alphabet=.string"
+   .srcstep 133 133 17 "base64_roundtrip.crexx" 113 1 31 "base64_digit: procedure = .int"
+   numsci 18,1,1
+   .srcstep 126 126 17 "base64_roundtrip.crexx" 114 7 26 "  arg character = .string, alphabet = .string"
+   .meta "base64_roundtrip.base64_digit.character"="b" ".string" a1
+   .srcstep 127 127 17 "base64_roundtrip.crexx" 114 28 46 "  arg character = .string, alphabet = .string"
+   .meta "base64_roundtrip.base64_digit.alphabet"="b" ".string" a2
+   .srcstep 128 128 17 "base64_roundtrip.crexx" 115 3 39 "  digit = pos(character, alphabet) - 1"
+   .meta "base64_roundtrip.base64_digit.digit"="b" ".int" r2
+   .traceevent "V" 6 "R" "S" "a" 1 128 128 0 "character" ""
+   .traceevent "V" 6 "R" "S" "a" 2 128 128 0 "alphabet" ""
+   load r3,3
+   settp a1,256
+   swap r4,a1
+   settp a2,256
+   swap r5,a2
+   settp r6,0
+   call r7,rxfnsb.pos(),r3
+   swap a1,r4
+   swap a2,r5
+   .traceevent "F" 4 "R" "I" "r" 7 128 128 0 "pos" ""
+   isub r2,r7,1
+   .traceevent "O" 4 "R" "I" "r" 2 128 128 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 128 128 0 "digit" ""
+   .srcstep 130 130 17 "base64_roundtrip.crexx" 116 3 15 "  if digit < 0 then return 0"
+   .traceevent "V" 6 "R" "I" "r" 2 130 130 0 "digit" ""
+   ilt r7,r2,0
+   .traceevent "O" 4 "R" "B" "r" 7 130 130 0 "" ""
+   brf l654iffalse,r7
+   .srcstep 131 131 17 "base64_roundtrip.crexx" 116 16 20 "  if digit < 0 then return 0"
+   .srcstep 129 129 17 "base64_roundtrip.crexx" 116 21 29 "  if digit < 0 then return 0"
+   ret 0
+l654iffalse:
+   .srcstep 132 132 17 "base64_roundtrip.crexx" 117 3 15 "  return digit"
+   .traceevent "V" 6 "R" "I" "r" 2 132 132 0 "digit" ""
+   ret r2
+   .meta "base64_roundtrip.base64_digit.alphabet"
+   .meta "base64_roundtrip.base64_digit.character"
+   .meta "base64_roundtrip.base64_digit.digit"
+
+byte_checksum() .locals=6
+   .meta "base64_roundtrip.byte_checksum"="b" ".int" byte_checksum() "data=.binary"
+   .srcstep 143 143 17 "base64_roundtrip.crexx" 119 1 32 "byte_checksum: procedure = .int"
+   numsci 18,1,1
+   .srcstep 134 134 17 "base64_roundtrip.crexx" 120 7 21 "  arg data = .binary"
+   .meta "base64_roundtrip.byte_checksum.data"="b" ".binary" a1
+   .srcstep 135 135 17 "base64_roundtrip.crexx" 121 3 15 "  checksum = 0"
+   .meta "base64_roundtrip.byte_checksum.checksum"="b" ".int" r0
+   load r0,0
+   .traceevent "L" 4 "R" "I" "r" 0 135 135 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 135 135 0 "checksum" ""
+   .srcstep 140 140 17 "base64_roundtrip.crexx" 122 3 5 "  do offset = 0 to binlength(data) - 1"
+   .srcstep 136 136 17 "base64_roundtrip.crexx" 122 6 16 "  do offset = 0 to binlength(data) - 1"
+   .meta "base64_roundtrip.byte_checksum.offset"="b" ".int" r2
+   load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 136 136 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 136 136 0 "offset" ""
+   .srcstep 137 137 17 "base64_roundtrip.crexx" 122 17 39 "  do offset = 0 to binlength(data) - 1"
+   .traceevent "V" 6 "R" "X" "a" 1 0 0 0 "data" ""
+   load r3,1
+   settp a1,256
+   swap r4,a1
+   call r5,rxfnsb.binlength(),r3
+   swap a1,r4
+   .traceevent "F" 4 "R" "I" "r" 5 0 0 0 "binlength" ""
+   isub r5,r5,1
+   .traceevent "O" 4 "R" "I" "r" 5 0 0 0 "" ""
+l666dostart:
+   .srcstep 137 137 17 "base64_roundtrip.crexx" 122 17 39 "  do offset = 0 to binlength(data) - 1"
+   igt r4,r2,r5
+   brt l666doend,r4
+   .srcstep 139 139 17 "base64_roundtrip.crexx" 123 5 48 "    checksum = checksum + <at..u8>(offset) data"
+   .traceevent "V" 6 "R" "I" "r" 0 139 139 0 "checksum" ""
+   .traceevent "V" 6 "R" "X" "a" 1 139 139 0 "data" ""
+   .traceevent "V" 6 "R" "I" "r" 2 139 139 0 "offset" ""
+   bgetu8 r3,a1,r2
+   iadd r0,r0,r3
+   .traceevent "O" 4 "R" "I" "r" 0 139 139 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 139 139 0 "checksum" ""
+l666doinc:
+   .srcstep 138 138 17 "base64_roundtrip.crexx" 122 6 12 "  do offset = 0 to binlength(data) - 1"
+   inc r2
+   .srcstep 141 141 17 "base64_roundtrip.crexx" 124 3 6 "  end"
+   br l666dostart
+l666doend:
+   .meta "base64_roundtrip.byte_checksum.offset"
+   .srcstep 142 142 17 "base64_roundtrip.crexx" 125 3 18 "  return checksum"
+   .traceevent "V" 6 "R" "I" "r" 0 142 142 0 "checksum" ""
+   ret r0
+   .meta "base64_roundtrip.byte_checksum.checksum"
+   .meta "base64_roundtrip.byte_checksum.data"
+
+fail() .locals=2
+   .meta "base64_roundtrip.fail"="b" ".int" fail() "message=.string"
+   .srcstep 147 147 17 "base64_roundtrip.crexx" 127 1 23 "fail: procedure = .int"
+   numsci 18,1,1
+   .srcstep 144 144 17 "base64_roundtrip.crexx" 128 7 24 "  arg message = .string"
+   .meta "base64_roundtrip.fail.message"="b" ".string" a1
+   .srcstep 145 145 17 "base64_roundtrip.crexx" 129 3 22 "  say \"FAIL:\" message"
+   .traceevent "V" 6 "R" "S" "a" 1 145 145 0 "message" ""
+   sconcat r1,"FAIL:",a1
+   .traceevent "O" 4 "R" "S" "r" 1 145 145 0 "" ""
+   say r1
+   .srcstep 146 146 17 "base64_roundtrip.crexx" 130 3 11 "  return 1"
+   ret 1
+   .meta "base64_roundtrip.fail.message"
+
+/* Imported Declaration from file: length@library.rxbin */
+
+rxfnsb.length() .expose=rxfnsb.length
+   .meta "rxfnsb.length"="b" ".int" rxfnsb.length() "string=.string"
+
+/* Imported Declaration from file: binary@library.rxbin */
+
+rxfnsb.bincompare() .expose=rxfnsb.bincompare
+   .meta "rxfnsb.bincompare"="b" ".int" rxfnsb.bincompare() "left=.binary,right=.binary"
+
+/* Imported Declaration from file: binary@library.rxbin */
+
+rxfnsb.binresize() .expose=rxfnsb.binresize
+   .meta "rxfnsb.binresize"="b" ".int" rxfnsb.binresize() "expose data=.binary,length=.int"
+
+/* Imported Declaration from file: binary@library.rxbin */
+
+rxfnsb.binlength() .expose=rxfnsb.binlength
+   .meta "rxfnsb.binlength"="b" ".int" rxfnsb.binlength() "data=.binary"
+
+/* Imported Declaration from file: substr@library.rxbin */
+
+rxfnsb.substr() .expose=rxfnsb.substr
+   .meta "rxfnsb.substr"="b" ".string" rxfnsb.substr() "string=.string,start=.int,?length=.int,?pad=.string"
+
+/* Imported Declaration from file: pos@library.rxbin */
+
+rxfnsb.pos() .expose=rxfnsb.pos
+   .meta "rxfnsb.pos"="b" ".int" rxfnsb.pos() "needle=.string,haystack=.string,?start=.int"

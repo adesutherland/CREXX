@@ -15,8 +15,7 @@ main() .locals=7
    load r0,3
    settp r1,256
    settp r2,0
-   settp r3,256
-   call r4,test_opt(),r0
+   settpcall r4,test_opt(),r0,r3,256
    .traceevent "F" 4 "R" "V" "r" 4 1 1 0 "test_opt" ""
    .srcstep 2 2 17 "repro_opt_args.crexx" 4 1 19 "call test_opt 1, 2"
    load r1,1
@@ -26,8 +25,7 @@ main() .locals=7
    load r0,3
    settp r1,256
    settp r2,256
-   settp r3,0
-   call r5,test_opt(),r0
+   settpcall r5,test_opt(),r0,r3,0
    .traceevent "F" 4 "R" "V" "r" 5 2 2 0 "test_opt" ""
    .srcstep 3 3 17 "repro_opt_args.crexx" 5 1 21 "call test_opt , 2, 3"
    load r2,2
@@ -37,8 +35,7 @@ main() .locals=7
    load r0,3
    settp r1,0
    settp r2,256
-   settp r3,256
-   call r6,test_opt(),r0
+   settpcall r6,test_opt(),r0,r3,256
    .traceevent "F" 4 "R" "V" "r" 6 3 3 0 "test_opt" ""
    .srcstep 4 4 17 "repro_opt_args.crexx" 6 1 9 "return 0"
    ret 0

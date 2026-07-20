@@ -23,8 +23,7 @@ main() .locals=6
    load r3,"one"
    .traceevent "L" 4 "R" "S" "r" 3 2 2 0 "" ""
    load r1,2
-   settp r3,768
-   call r5,check(),r1
+   settpcall r5,check(),r1,r3,768
    .traceevent "F" 4 "R" "I" "r" 5 2 2 0 "check" ""
    iadd r0,r0,r5
    .traceevent "O" 4 "R" "I" "r" 0 2 2 0 "" ""
@@ -39,8 +38,7 @@ main() .locals=6
    load r5,"two"
    .traceevent "L" 4 "R" "S" "r" 5 3 3 0 "" ""
    load r3,2
-   settp r5,768
-   call r2,check(),r3
+   settpcall r2,check(),r3,r5,768
    .traceevent "F" 4 "R" "I" "r" 2 3 3 0 "check" ""
    iadd r0,r0,r2
    .traceevent "O" 4 "R" "I" "r" 0 3 3 0 "" ""
@@ -55,8 +53,7 @@ main() .locals=6
    load r5,"three"
    .traceevent "L" 4 "R" "S" "r" 5 4 4 0 "" ""
    load r3,2
-   settp r5,768
-   call r2,check(),r3
+   settpcall r2,check(),r3,r5,768
    .traceevent "F" 4 "R" "I" "r" 2 4 4 0 "check" ""
    iadd r0,r0,r2
    .traceevent "O" 4 "R" "I" "r" 0 4 4 0 "" ""
@@ -71,8 +68,7 @@ main() .locals=6
    load r5,"four"
    .traceevent "L" 4 "R" "S" "r" 5 5 5 0 "" ""
    load r3,2
-   settp r5,768
-   call r2,check(),r3
+   settpcall r2,check(),r3,r5,768
    .traceevent "F" 4 "R" "I" "r" 2 5 5 0 "check" ""
    iadd r0,r0,r2
    .traceevent "O" 4 "R" "I" "r" 0 5 5 0 "" ""
@@ -87,8 +83,7 @@ main() .locals=6
    load r5,"five"
    .traceevent "L" 4 "R" "S" "r" 5 6 6 0 "" ""
    load r3,2
-   settp r5,768
-   call r2,check(),r3
+   settpcall r2,check(),r3,r5,768
    .traceevent "F" 4 "R" "I" "r" 2 6 6 0 "check" ""
    iadd r0,r0,r2
    .traceevent "O" 4 "R" "I" "r" 0 6 6 0 "" ""
@@ -103,8 +98,7 @@ main() .locals=6
    load r5,"six"
    .traceevent "L" 4 "R" "S" "r" 5 7 7 0 "" ""
    load r3,2
-   settp r5,768
-   call r2,check(),r3
+   settpcall r2,check(),r3,r5,768
    .traceevent "F" 4 "R" "I" "r" 2 7 7 0 "check" ""
    iadd r0,r0,r2
    .traceevent "O" 4 "R" "I" "r" 0 7 7 0 "" ""
@@ -119,8 +113,7 @@ main() .locals=6
    load r5,"seven"
    .traceevent "L" 4 "R" "S" "r" 5 8 8 0 "" ""
    load r3,2
-   settp r5,768
-   call r2,check(),r3
+   settpcall r2,check(),r3,r5,768
    .traceevent "F" 4 "R" "I" "r" 2 8 8 0 "check" ""
    iadd r0,r0,r2
    .traceevent "O" 4 "R" "I" "r" 0 8 8 0 "" ""
@@ -135,8 +128,7 @@ main() .locals=6
    load r5,"eight"
    .traceevent "L" 4 "R" "S" "r" 5 9 9 0 "" ""
    load r3,2
-   settp r5,768
-   call r2,check(),r3
+   settpcall r2,check(),r3,r5,768
    .traceevent "F" 4 "R" "I" "r" 2 9 9 0 "check" ""
    iadd r0,r0,r2
    .traceevent "O" 4 "R" "I" "r" 0 9 9 0 "" ""
@@ -151,8 +143,7 @@ main() .locals=6
    load r5,"nine"
    .traceevent "L" 4 "R" "S" "r" 5 10 10 0 "" ""
    load r3,2
-   settp r5,768
-   call r2,check(),r3
+   settpcall r2,check(),r3,r5,768
    .traceevent "F" 4 "R" "I" "r" 2 10 10 0 "check" ""
    iadd r0,r0,r2
    .traceevent "O" 4 "R" "I" "r" 0 10 10 0 "" ""
@@ -167,8 +158,7 @@ main() .locals=6
    load r5,"ten"
    .traceevent "L" 4 "R" "S" "r" 5 11 11 0 "" ""
    load r3,2
-   settp r5,768
-   call r2,check(),r3
+   settpcall r2,check(),r3,r5,768
    .traceevent "F" 4 "R" "I" "r" 2 11 11 0 "check" ""
    iadd r0,r0,r2
    .traceevent "O" 4 "R" "I" "r" 0 11 11 0 "" ""

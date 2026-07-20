@@ -52,8 +52,7 @@ l25dostart:
    .srcstep 13 13 17 "inline_test_condition_contexts.crexx" 13 6 23 "  do while belowTwo(i)"
    .traceevent "V" 6 "R" "I" "r" 0 0 0 0 "i" ""
    load r3,1
-   swap r4,r0
-   call r2,belowTwo(),r3
+   swapcall r2,belowTwo(),r3,r0,r4
    swap r0,r4
    .traceevent "F" 4 "R" "B" "r" 2 0 0 0 "belowtwo" ""
    brf l25doend,r2
@@ -94,8 +93,7 @@ l43doinc:
    .srcstep 19 19 17 "inline_test_condition_contexts.crexx" 19 6 25 "  do until atLeastTwo(j)"
    .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "j" ""
    load r3,1
-   swap r4,r1
-   call r2,atLeastTwo(),r3
+   swapcall r2,atLeastTwo(),r3,r1,r4
    swap r1,r4
    .traceevent "F" 4 "R" "B" "r" 2 0 0 0 "atleasttwo" ""
    brt l43doend,r2

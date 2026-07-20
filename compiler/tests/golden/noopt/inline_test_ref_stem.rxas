@@ -12,8 +12,7 @@ main() .locals=4
    .srcstep 1 1 17 "inline_test_ref_stem.crexx" 4 1 39 "say \"Starting stem ref inline test...\""
    say "Starting stem ref inline test..."
    .srcstep 2 2 17 "inline_test_ref_stem.crexx" 6 1 24 "outbuf[2] = \"untouched\""
-   minattrs g1,2
-   linkattr1 r0,g1,2
+   minlinkattr1 r0,g1,2
    load r1,"untouched"
    .traceevent "L" 4 "R" "S" "r" 1 2 2 0 "" ""
    scopy r0,r1
@@ -26,24 +25,20 @@ main() .locals=4
    .srcstep 4 4 17 "inline_test_ref_stem.crexx" 9 1 27 "call fillSlot(outbuf.lino)"
    .traceevent "V" 6 "R" "I" "g" 0 4 4 0 "lino" ""
    .traceevent "C" 4 "R" "I" "g" 0 4 4 0 "outbuf" ""
-   minattrs g1,g0,0
-   linkattr1 r2,g1,g0
+   minlinkattr1 r2,g1,g0,0
    .traceevent "V" 6 "R" "S" "r" 2 4 4 0 "outbuf" ""
    load r0,1
-   swap r1,r2
-   call r3,fillSlot(),r0
+   swapcall r3,fillSlot(),r0,r2,r1
    swap r2,r1
    unlink r2
    .traceevent "F" 4 "R" "V" "r" 3 4 4 0 "fillslot" ""
    .srcstep 5 5 17 "inline_test_ref_stem.crexx" 10 1 13 "say outbuf[1]"
-   minattrs g1,1
-   linkattr1 r2,g1,1
+   minlinkattr1 r2,g1,1
    .traceevent "V" 6 "R" "S" "r" 2 5 5 0 "outbuf" ""
    say r2
    unlink r2
    .srcstep 6 6 17 "inline_test_ref_stem.crexx" 11 1 13 "say outbuf[2]"
-   minattrs g1,2
-   linkattr1 r2,g1,2
+   minlinkattr1 r2,g1,2
    .traceevent "V" 6 "R" "S" "r" 2 6 6 0 "outbuf" ""
    say r2
    unlink r2

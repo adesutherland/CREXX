@@ -39,8 +39,7 @@ main() .locals=10
    swap r5,r3
    swap r6,r0
    swap r7,r1
-   swap r8,r2
-   call r9,dynamicPick(),r4
+   swapcall r9,dynamicPick(),r4,r2,r8
    swap r3,r5
    swap r0,r6
    swap r1,r7
@@ -55,8 +54,7 @@ main() .locals=10
    load r6,3
    swap r7,r0
    swap r8,r1
-   swap r9,r2
-   call r5,refTailCount(),r6
+   swapcall r5,refTailCount(),r6,r2,r9
    swap r0,r7
    swap r1,r8
    swap r2,r9

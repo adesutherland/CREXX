@@ -30,8 +30,7 @@ main() .locals=8
    load r3,3
    swap r4,r0
    swap r5,r1
-   swap r6,r2
-   call r7,countTail(),r3
+   swapcall r7,countTail(),r3,r2,r6
    swap r0,r4
    swap r1,r5
    swap r2,r6
@@ -45,8 +44,7 @@ main() .locals=8
    load r4,3
    swap r5,r0
    swap r6,r1
-   swap r7,r2
-   call r3,pickSecond(),r4
+   swapcall r3,pickSecond(),r4,r2,r7
    swap r0,r5
    swap r1,r6
    swap r2,r7
@@ -60,8 +58,7 @@ main() .locals=8
    load r4,3
    swap r5,r0
    swap r6,r1
-   swap r7,r2
-   call r3,hasSecond(),r4
+   swapcall r3,hasSecond(),r4,r2,r7
    swap r0,r5
    swap r1,r6
    swap r2,r7
@@ -75,8 +72,7 @@ main() .locals=8
    load r4,3
    swap r5,r0
    swap r6,r1
-   swap r7,r2
-   call r3,hasFifth(),r4
+   swapcall r3,hasFifth(),r4,r2,r7
    swap r0,r5
    swap r1,r6
    swap r2,r7
@@ -90,8 +86,7 @@ main() .locals=8
    load r4,3
    swap r5,r0
    swap r6,r1
-   swap r7,r2
-   call r3,mutateSecond(),r4
+   swapcall r3,mutateSecond(),r4,r2,r7
    swap r0,r5
    swap r1,r6
    swap r2,r7
@@ -187,8 +182,7 @@ mutateSecond() .locals=4
    ichkrng 2,1,r2
    linkarg r2,2
    load r0,1
-   swap r1,r2
-   call r3,bumpOne(),r0
+   swapcall r3,bumpOne(),r0,r2,r1
    swap r2,r1
    unlink r2
    .traceevent "F" 4 "R" "I" "r" 3 31 31 0 "bumpone" ""

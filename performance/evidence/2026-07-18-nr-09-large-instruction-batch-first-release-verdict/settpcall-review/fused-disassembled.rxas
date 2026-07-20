@@ -1,0 +1,27 @@
+*******************************************************************************
+* MODULE - performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/settpcall-review/fused.rxas
+* DESCRIPTION - performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/settpcall-review/fused.rxas
+
+* CONSTANT POOL - Size 0x68.  Dump of EXPOSED entries only (option -p not used):
+
+
+* CODE SEGMENT - Size 0x21
+
+.globals=0
+
+main()          .locals=16
+                load r0,20000000                             * 0x000000:0001 Load op1 with op2
+                load r10,1                                   * 0x000003:0001 Load op1 with op2
+                load r11,43                                  * 0x000006:0001 Load op1 with op2
+lb_9:           settpcall r1,return_arg(),r10,r11,512        * 0x000009:011a Set op4 status then call op2 with count/window op3
+                dec r0                                       * 0x00000f:001d Decrement Int (op1--)
+                brt lb_9,r0                                  * 0x000011:0025 Branch to op1 if op2 true
+                ine r2,r1,43                                 * 0x000014:0067 Int Not equals op1=(op2!=op3)
+                brt lb_1d,r2                                 * 0x000018:0025 Branch to op1 if op2 true
+                ret 0                                        * 0x00001b:0032 Return op1
+lb_1d:          ret 1                                        * 0x00001d:0032 Return op1
+
+return_arg()    .locals=0
+                ret a1 /* aka r1 */                          * 0x00001f:0031 Return op1
+*******************************************************************************
+

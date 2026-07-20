@@ -2,8 +2,8 @@
 
 This inventory is for coverage validation. Every mnemonic from `rxas -i` should appear exactly once with its current primary skeleton section.
 
-- Unique mnemonics: 342
-- Opcode/form rows: 540
+- Unique mnemonics: 367
+- Opcode/form rows: 574
 
 ## Section Counts
 
@@ -20,6 +20,7 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md) | 44 |
 | [Signals, Breakpoints, And Runtime](instructions/10-signals-breakpoints-and-runtime.md) | 19 |
 | [Metadata And Introspection](instructions/11-metadata-and-introspection.md) | 23 |
+| [Large And Fused Instructions](instructions/12-large-instructions.md) | 25 |
 | [Uncategorized Review](instructions/99-uncategorized-review.md) | 0 |
 
 ## Mnemonic Index
@@ -138,6 +139,7 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `fclose` | 1 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md#fclose) |
 | `fcopy` | 1 | [Floating Point](instructions/04-floating-point.md#fcopy) |
 | `fdiv` | 3 | [Floating Point](instructions/04-floating-point.md#fdiv) |
+| `fdivsub` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#fdivsub) |
 | `feof` | 1 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md#feof) |
 | `feq` | 2 | [Floating Point](instructions/04-floating-point.md#feq) |
 | `ferror` | 1 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md#ferror) |
@@ -153,6 +155,7 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `flte` | 3 | [Floating Point](instructions/04-floating-point.md#flte) |
 | `fmod` | 3 | [Floating Point](instructions/04-floating-point.md#fmod) |
 | `fmult` | 2 | [Floating Point](instructions/04-floating-point.md#fmult) |
+| `fmulticopy` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#fmulticopy) |
 | `fndblnk` | 1 | [Floating Point](instructions/04-floating-point.md#fndblnk) |
 | `fndnblnk` | 1 | [Floating Point](instructions/04-floating-point.md#fndnblnk) |
 | `fne` | 2 | [Floating Point](instructions/04-floating-point.md#fne) |
@@ -192,12 +195,15 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `icopy` | 1 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#icopy) |
 | `idiv` | 3 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#idiv) |
 | `ieq` | 2 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#ieq) |
+| `igetunlink` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#igetunlink) |
 | `igt` | 3 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#igt) |
 | `igtbr` | 1 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#igtbr) |
 | `igte` | 3 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#igte) |
 | `ilt` | 3 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#ilt) |
 | `iltbr` | 1 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#iltbr) |
 | `ilte` | 3 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#ilte) |
+| `iloadsetunlink` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#iloadsetunlink) |
+| `iloadsetunlinkn` | 2 | [Large And Fused Instructions](instructions/12-large-instructions.md#iloadsetunlinkn) |
 | `imod` | 3 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#imod) |
 | `imult` | 2 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#imult) |
 | `inc` | 1 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#inc) |
@@ -212,6 +218,9 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `ipow` | 3 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#ipow) |
 | `irand` | 2 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#irand) |
 | `isex` | 1 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#isex) |
+| `isetattr1` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#isetattr1) |
+| `isetunlink` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#isetunlink) |
+| `isetunlinkn` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#isetunlinkn) |
 | `ishl` | 2 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#ishl) |
 | `ishr` | 2 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#ishr) |
 | `isinitialized` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#isinitialized) |
@@ -219,7 +228,7 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `isub` | 3 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#isub) |
 | `itob` | 1 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#itob) |
 | `itod` | 1 | [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md#itod) |
-| `itof` | 1 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#itof) |
+| `itof` | 2 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#itof) |
 | `itos` | 1 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#itos) |
 | `ixor` | 2 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#ixor) |
 | `jumpb` | 1 | [Program Control And Calls](instructions/01-program-control.md#jumpb) |
@@ -233,10 +242,13 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `linkattr` | 2 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#linkattr) |
 | `linkattr1` | 2 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#linkattr1) |
 | `linkref` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#linkref) |
+| `linksetattrslinkadd` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#linksetattrslinkadd) |
 | `linktoattr` | 2 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#linktoattr) |
 | `linktoattr1` | 2 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#linktoattr1) |
 | `load` | 8 | [Data Movement And Conversion](instructions/02-data-movement-and-conversion.md#load) |
 | `loadsettp` | 3 | [Data Movement And Conversion](instructions/02-data-movement-and-conversion.md#loadsettp) |
+| `loadsettp2` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#loadsettp2) |
+| `loadsettpswap` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#loadsettpswap) |
 | `metadecodeinst` | 1 | [Metadata And Introspection](instructions/11-metadata-and-introspection.md#metadecodeinst) |
 | `metalinkpreg` | 1 | [Metadata And Introspection](instructions/11-metadata-and-introspection.md#metalinkpreg) |
 | `metaloadcalleraddr` | 1 | [Metadata And Introspection](instructions/11-metadata-and-introspection.md#metaloadcalleraddr) |
@@ -251,11 +263,13 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `metaloadpoperand` | 1 | [Metadata And Introspection](instructions/11-metadata-and-introspection.md#metaloadpoperand) |
 | `metaloadsoperand` | 1 | [Metadata And Introspection](instructions/11-metadata-and-introspection.md#metaloadsoperand) |
 | `minattrs` | 4 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#minattrs) |
+| `minlinkattr1` | 2 | [Large And Fused Instructions](instructions/12-large-instructions.md#minlinkattr1) |
 | `mkref` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#mkref) |
 | `move` | 1 | [Data Movement And Conversion](instructions/02-data-movement-and-conversion.md#move) |
 | `mtime` | 1 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md#mtime) |
 | `not` | 1 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#not) |
 | `null` | 1 | [Data Movement And Conversion](instructions/02-data-movement-and-conversion.md#null) |
+| `nulln` | 3 | [Large And Fused Instructions](instructions/12-large-instructions.md#nulln) |
 | `nullredir` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#nullredir) |
 | `numeng` | 1 | [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md#numeng) |
 | `numsci` | 1 | [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md#numsci) |
@@ -285,6 +299,8 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `setattrs` | 4 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#setattrs) |
 | `setbinpos` | 1 | [Binary Memory](instructions/07-binary-memory.md#setbinpos) |
 | `setbyte` | 1 | [Binary Memory](instructions/07-binary-memory.md#setbyte) |
+| `setlinkattr1` | 2 | [Large And Fused Instructions](instructions/12-large-instructions.md#setlinkattr1) |
+| `setlinkiload` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#setlinkiload) |
 | `setnumcas` | 2 | [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md#setnumcas) |
 | `setnumdgts` | 2 | [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md#setnumdgts) |
 | `setnumfrm` | 2 | [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md#setnumfrm) |
@@ -296,7 +312,11 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `setref` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#setref) |
 | `setstrpos` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#setstrpos) |
 | `settp` | 1 | [Metadata And Introspection](instructions/11-metadata-and-introspection.md#settp) |
+| `settpcall` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#settpcall) |
 | `settpmask` | 1 | [Metadata And Introspection](instructions/11-metadata-and-introspection.md#settpmask) |
+| `settpswap` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#settpswap) |
+| `settpswapcall` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#settpswapcall) |
+| `settpswapsettpswap` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#settpswapsettpswap) |
 | `sget` | 1 | [Binary Memory](instructions/07-binary-memory.md#sget) |
 | `sgt` | 3 | [Strings And Characters](instructions/06-strings-and-characters.md#sgt) |
 | `sgte` | 3 | [Strings And Characters](instructions/06-strings-and-characters.md#sgte) |
@@ -346,7 +366,7 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `stobin` | 1 | [Binary Memory](instructions/07-binary-memory.md#stobin) |
 | `stod` | 1 | [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md#stod) |
 | `stof` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#stof) |
-| `stoi` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#stoi) |
+| `stoi` | 2 | [Strings And Characters](instructions/06-strings-and-characters.md#stoi) |
 | `str2redir` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#str2redir) |
 | `strchar` | 2 | [Strings And Characters](instructions/06-strings-and-characters.md#strchar) |
 | `strlen` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#strlen) |
@@ -357,6 +377,10 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `substr` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#substr) |
 | `substring` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#substring) |
 | `swap` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#swap) |
+| `swapcall` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#swapcall) |
+| `swapn` | 3 | [Large And Fused Instructions](instructions/12-large-instructions.md#swapn) |
+| `swapsettp` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#swapsettp) |
+| `swapsettpswap` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#swapsettpswap) |
 | `time` | 1 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md#time) |
 | `transchar` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#transchar) |
 | `triml` | 2 | [Strings And Characters](instructions/06-strings-and-characters.md#triml) |
@@ -366,5 +390,7 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `unlink` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#unlink) |
 | `unlinkattr` | 2 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#unlinkattr) |
 | `unlinkattr1` | 2 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#unlinkattr1) |
+| `unlinkbr` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#unlinkbr) |
+| `unlinkn` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#unlinkn) |
 | `unref` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#unref) |
 | `xtime` | 1 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md#xtime) |

@@ -47,9 +47,7 @@ l94bexprend:
    .traceevent "A" 6 "R" "I" "r" 4 10 10 0 "initialvalue" ""
    .srcstep 11 11 17 "inline_test_call_like_arg_expr.crexx" 21 5 23 "    val = initialValue"
    .traceevent "V" 6 "R" "I" "r" 4 11 11 0 "initialvalue" ""
-   linkattr1 r8,r5,1
-   icopy r8,r4
-   unlink r8
+   isetattr1 r5,1,r4
    .srcstep 12 12 33 "inline_test_call_like_arg_expr.crexx" 22 5 11 "    return"
    .traceevent "V" 6 "R" "O" "r" 5 12 12 0 "§factory" ""
    copy r0,r5
@@ -113,9 +111,7 @@ l8doend:
    .meta "inline_test_call_like_arg_expr.box.§factory.§factory"="b" ".box" r1
    .srcstep 30 30 17 "inline_test_call_like_arg_expr.crexx" 21 5 23 "    val = initialValue"
    .traceevent "V" 6 "R" "I" "a" 1 30 30 0 "initialvalue" ""
-   linkattr1 r2,r1,1
-   icopy r2,a1
-   unlink r2
+   isetattr1 r1,1,a1
    .srcstep 31 31 17 "inline_test_call_like_arg_expr.crexx" 22 5 11 "    return"
    .traceevent "V" 6 "R" "O" "r" 1 31 31 0 "§factory" ""
    ret r1

@@ -57,6 +57,14 @@ bundle's scope or no valid observation exists.
 | 2026-07-15 / lifecycle pilot | load to first result | process ms | 3.22 (3) | 8.79 (3) | — | 28.0 (3) |
 | 2026-07-17 / NUMERIC-01 accepted | RexxCPS 2.2d / canonical `rxvm` | native MCPS | 1.15 (3) | — | — | — |
 | 2026-07-17 / NUMERIC-01 accepted | RexxCPS 2.2d / canonical `rxbvm` | native MCPS | 1.11 (3) | — | — | — |
+| 2026-07-19 / NR-09 final QA refresh | RexxCPS 2.2d / final canonical `rxvm` | native MCPS | 1.21 (12) | — | — | — |
+| 2026-07-19 / NR-09 final QA refresh | RexxCPS 2.2d / final canonical `rxbvm` | native MCPS | 1.21 (12) | — | — | — |
+
+The NR-09 rows are the final corrected-product Cell C medians: 1,211,556 CPS
+for `rxvm` and 1,208,420.5 CPS for `rxbvm`. In the same-session paired
+complete-product comparison against Cell A, the medians are +1.385% and
++2.868%, respectively; the `rxvm` 95% interval crosses zero, while the
+`rxbvm` interval is wholly positive.
 
 † NetRexx Mandelbrot has a disclosed timed arithmetic-XOR/padding adaptation;
 its aggregate equivalence review remains open.
@@ -125,6 +133,9 @@ later established, add its sample id and reason here before changing the table.
   generated runtime forms and separate lifecycle phase samples
 - `2026-07-17-numeric-01-first-release-verdict/accepted-c/` for the accepted
   exact-hash RexxCPS 2.2d canonical `rxvm`/`rxbvm` samples
+- `2026-07-18-nr-09-large-instruction-batch-first-release-verdict/finalrun01/`
+  for the final same-session A/B/C campaign, Cell C medians and paired
+  complete-product comparisons
 
 Do not combine rows from different dates/bundles into one median. Add a new row
 for each future benchmark/run so environment drift remains visible.

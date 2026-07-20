@@ -12,8 +12,7 @@ main() .locals=4
    load r1,"beta   "
    .traceevent "L" 4 "R" "S" "r" 1 1 1 0 "" ""
    load r0,1
-   settp r1,768
-   call r2,c_padded(),r0
+   settpcall r2,c_padded(),r0,r1,768
    itos r2
    .traceevent "F" 4 "R" "S" "r" 2 1 1 0 "c_padded" ""
    say r2
@@ -21,8 +20,7 @@ main() .locals=4
    load r2,"02.00"
    .traceevent "L" 4 "R" "S" "r" 2 2 2 0 "" ""
    load r1,1
-   settp r2,768
-   call r0,c_numeric(),r1
+   settpcall r0,c_numeric(),r1,r2,768
    itos r0
    .traceevent "F" 4 "R" "S" "r" 0 2 2 0 "c_numeric" ""
    say r0
@@ -30,8 +28,7 @@ main() .locals=4
    load r2,"03.0"
    .traceevent "L" 4 "R" "S" "r" 2 3 3 0 "" ""
    load r1,1
-   settp r2,768
-   call r0,c_mixed(),r1
+   settpcall r0,c_mixed(),r1,r2,768
    itos r0
    .traceevent "F" 4 "R" "S" "r" 0 3 3 0 "c_mixed" ""
    say r0
@@ -39,8 +36,7 @@ main() .locals=4
    load r2,"green "
    .traceevent "L" 4 "R" "S" "r" 2 4 4 0 "" ""
    load r1,1
-   settp r2,768
-   call r0,c_mixed(),r1
+   settpcall r0,c_mixed(),r1,r2,768
    itos r0
    .traceevent "F" 4 "R" "S" "r" 0 4 4 0 "c_mixed" ""
    say r0
@@ -48,8 +44,7 @@ main() .locals=4
    load r2,"beta"
    .traceevent "L" 4 "R" "S" "r" 2 5 5 0 "" ""
    load r1,1
-   settp r2,768
-   call r0,strict_string(),r1
+   settpcall r0,strict_string(),r1,r2,768
    itos r0
    .traceevent "F" 4 "R" "S" "r" 0 5 5 0 "strict_string" ""
    say r0
@@ -57,8 +52,7 @@ main() .locals=4
    load r2,"beta "
    .traceevent "L" 4 "R" "S" "r" 2 6 6 0 "" ""
    load r1,1
-   settp r2,768
-   call r0,strict_string(),r1
+   settpcall r0,strict_string(),r1,r2,768
    itos r0
    .traceevent "F" 4 "R" "S" "r" 0 6 6 0 "strict_string" ""
    say r0
@@ -66,8 +60,7 @@ main() .locals=4
    load r2,"gamma   "
    .traceevent "L" 4 "R" "S" "r" 2 7 7 0 "" ""
    load r1,1
-   settp r2,768
-   call r0,padded_string(),r1
+   settpcall r0,padded_string(),r1,r2,768
    itos r0
    .traceevent "F" 4 "R" "S" "r" 0 7 7 0 "padded_string" ""
    say r0
@@ -75,8 +68,7 @@ main() .locals=4
    load r2,"003.000"
    .traceevent "L" 4 "R" "S" "r" 2 8 8 0 "" ""
    load r1,1
-   settp r2,768
-   call r0,numeric_string(),r1
+   settpcall r0,numeric_string(),r1,r2,768
    itos r0
    .traceevent "F" 4 "R" "S" "r" 0 8 8 0 "numeric_string" ""
    say r0
@@ -84,8 +76,7 @@ main() .locals=4
    load r2,"nan"
    .traceevent "L" 4 "R" "S" "r" 2 9 9 0 "" ""
    load r1,1
-   settp r2,768
-   call r0,numeric_string(),r1
+   settpcall r0,numeric_string(),r1,r2,768
    itos r0
    .traceevent "F" 4 "R" "S" "r" 0 9 9 0 "numeric_string" ""
    say r0
@@ -93,8 +84,7 @@ main() .locals=4
    load r2,"02.0"
    .traceevent "L" 4 "R" "S" "r" 2 10 10 0 "" ""
    load r1,1
-   settp r2,768
-   call r0,mixed_string(),r1
+   settpcall r0,mixed_string(),r1,r2,768
    itos r0
    .traceevent "F" 4 "R" "S" "r" 0 10 10 0 "mixed_string" ""
    say r0
@@ -102,8 +92,7 @@ main() .locals=4
    load r2,"blue   "
    .traceevent "L" 4 "R" "S" "r" 2 11 11 0 "" ""
    load r1,1
-   settp r2,768
-   call r0,mixed_string(),r1
+   settpcall r0,mixed_string(),r1,r2,768
    itos r0
    .traceevent "F" 4 "R" "S" "r" 0 11 11 0 "mixed_string" ""
    say r0
@@ -111,8 +100,7 @@ main() .locals=4
    load r2,"same "
    .traceevent "L" 4 "R" "S" "r" 2 12 12 0 "" ""
    load r1,1
-   settp r2,768
-   call r0,duplicate_padded(),r1
+   settpcall r0,duplicate_padded(),r1,r2,768
    itos r0
    .traceevent "F" 4 "R" "S" "r" 0 12 12 0 "duplicate_padded" ""
    say r0
@@ -120,8 +108,7 @@ main() .locals=4
    load r2,"01.0"
    .traceevent "L" 4 "R" "S" "r" 2 13 13 0 "" ""
    load r1,1
-   settp r2,768
-   call r0,duplicate_numeric(),r1
+   settpcall r0,duplicate_numeric(),r1,r2,768
    itos r0
    .traceevent "F" 4 "R" "S" "r" 0 13 13 0 "duplicate_numeric" ""
    say r0
@@ -130,8 +117,7 @@ main() .locals=4
    .traceevent "L" 4 "R" "X" "r" 0 14 14 0 "" ""
    bcopy r2,r0
    load r1,1
-   settp r2,768
-   call r3,binary_select(),r1
+   settpcall r3,binary_select(),r1,r2,768
    itos r3
    .traceevent "F" 4 "R" "S" "r" 3 14 14 0 "binary_select" ""
    say r3
@@ -140,8 +126,7 @@ main() .locals=4
    .traceevent "L" 4 "R" "X" "r" 1 15 15 0 "" ""
    bcopy r3,r1
    load r2,1
-   settp r3,768
-   call r0,binary_short(),r2
+   settpcall r0,binary_short(),r2,r3,768
    itos r0
    .traceevent "F" 4 "R" "S" "r" 0 15 15 0 "binary_short" ""
    say r0
@@ -150,8 +135,7 @@ main() .locals=4
    .traceevent "L" 4 "R" "X" "r" 1 16 16 0 "" ""
    bcopy r3,r1
    load r2,1
-   settp r3,768
-   call r0,binary_short(),r2
+   settpcall r0,binary_short(),r2,r3,768
    itos r0
    .traceevent "F" 4 "R" "S" "r" 0 16 16 0 "binary_short" ""
    say r0
@@ -159,8 +143,7 @@ main() .locals=4
    load r3,"2"
    .traceevent "L" 4 "R" "S" "r" 3 17 17 0 "" ""
    load r2,1
-   settp r3,768
-   call r1,nan_key(),r2
+   settpcall r1,nan_key(),r2,r3,768
    itos r1
    .traceevent "F" 4 "R" "S" "r" 1 17 17 0 "nan_key" ""
    say r1
@@ -168,8 +151,7 @@ main() .locals=4
    load r3,"second "
    .traceevent "L" 4 "R" "S" "r" 3 18 18 0 "" ""
    load r2,1
-   settp r3,768
-   call r1,padded_two(),r2
+   settpcall r1,padded_two(),r2,r3,768
    itos r1
    .traceevent "F" 4 "R" "S" "r" 1 18 18 0 "padded_two" ""
    say r1
@@ -177,8 +159,7 @@ main() .locals=4
    load r3,"02.0"
    .traceevent "L" 4 "R" "S" "r" 3 19 19 0 "" ""
    load r2,1
-   settp r3,768
-   call r1,numeric_two(),r2
+   settpcall r1,numeric_two(),r2,r3,768
    itos r1
    .traceevent "F" 4 "R" "S" "r" 1 19 19 0 "numeric_two" ""
    say r1

@@ -94,8 +94,7 @@ main() .locals=13
    linkattr1 r9,r10,1
    .traceevent "V" 6 "R" "S" "r" 9 22 22 0 "name" ""
    scopy r8,r9
-   unlink r9
-   br l232bexprend
+   unlinkbr r9,l232bexprend
 l232bexprend:
    concat r8,r7,r8
    .traceevent "O" 4 "R" "S" "r" 8 22 22 0 "" ""
@@ -206,8 +205,7 @@ l199bexprend:
    linkattr1 r4,r5,1
    .traceevent "V" 6 "R" "S" "r" 4 43 43 0 "name" ""
    scopy r3,r4
-   unlink r4
-   br l225bexprend
+   unlinkbr r4,l225bexprend
 l225bexprend:
    concat r3,r1,r3
    .traceevent "O" 4 "R" "S" "r" 3 43 43 0 "" ""

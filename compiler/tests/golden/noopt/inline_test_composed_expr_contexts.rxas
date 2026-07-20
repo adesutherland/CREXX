@@ -74,8 +74,7 @@ main() .locals=7
    brf l38andend,r6
    .traceevent "V" 6 "R" "I" "r" 0 8 8 0 "calls" ""
    load r5,1
-   swap r6,r0
-   call r0,bump(),r5
+   swapcall r0,bump(),r5,r0,r6
    swap r0,r6
    .traceevent "F" 4 "R" "B" "r" 6 8 8 0 "bump" ""
 l38andend:
@@ -101,8 +100,7 @@ l45ifend:
    brt l50orend,r6
    .traceevent "V" 6 "R" "I" "r" 0 13 13 0 "calls" ""
    load r5,1
-   swap r6,r0
-   call r0,bump(),r5
+   swapcall r0,bump(),r5,r0,r6
    swap r0,r6
    .traceevent "F" 4 "R" "B" "r" 6 13 13 0 "bump" ""
 l50orend:
@@ -128,8 +126,7 @@ l57ifend:
    brf l62andend,r6
    .traceevent "V" 6 "R" "I" "r" 0 18 18 0 "calls" ""
    load r5,1
-   swap r6,r0
-   call r0,bump(),r5
+   swapcall r0,bump(),r5,r0,r6
    swap r0,r6
    .traceevent "F" 4 "R" "B" "r" 6 18 18 0 "bump" ""
 l62andend:
@@ -155,8 +152,7 @@ l69ifend:
    brt l74orend,r6
    .traceevent "V" 6 "R" "I" "r" 0 23 23 0 "calls" ""
    load r5,1
-   swap r6,r0
-   call r0,bump(),r5
+   swapcall r0,bump(),r5,r0,r6
    swap r0,r6
    .traceevent "F" 4 "R" "B" "r" 6 23 23 0 "bump" ""
 l74orend:

@@ -174,9 +174,8 @@ int main(void) {
                   (effects.implicit != RXOP_IMPLICIT_NONE),
               "implicit-register flag and effect metadata disagree", op);
         if (effects.implicit == RXOP_IMPLICIT_LOCAL_RANGE_AFTER_OP3) {
-            check(strcmp(op->format, FMT_R_P_R) == 0 ||
-                      strcmp(op->format, FMT_R_R_R) == 0 ||
-                      strcmp(op->format, FMT_R_S_R) == 0,
+            check(rxop_format_operand_count(op->format) >= 3 &&
+                      rxop_format_operand_type(op->format, 2) == OP_REG,
                   "runtime register range requires register operand 3", op);
             check(effects.optimizer_barrier,
                   "runtime register range must remain an optimizer barrier", op);

@@ -1,0 +1,3051 @@
+--- compiler/tests/golden/noopt/address_expose.rxas	2026-07-18 07:24:18
++++ cmake-build-debug/compiler/tests/address_expose_noopt.rxas	2026-07-19 20:35:17
+@@ -42,2 +42 @@
+-   swap r9,r1
+-   call r0,_rxsysb._address(),r2
++   swapcall r0,_rxsysb._address(),r2,r1,r9
+--- compiler/tests/golden/noopt/select_dispatch_integer.rxas	2026-07-18 07:24:27
++++ cmake-build-debug/compiler/tests/select_dispatch_integer_noopt.rxas	2026-07-19 20:36:04
+@@ -38,2 +38 @@
+-   swap r6,r0
+-   call r2,classify(),r5
++   swapcall r2,classify(),r5,r0,r6
+@@ -47,2 +46 @@
+-   swap r6,r0
+-   call r2,no_default(),r5
++   swapcall r2,no_default(),r5,r0,r6
+@@ -58,2 +56 @@
+-   swap r7,r1
+-   call r2,nested_classify(),r5
++   swapcall r2,nested_classify(),r5,r1,r7
+--- compiler/tests/golden/noopt/select_dispatch_fallback.rxas	2026-07-18 07:24:29
++++ cmake-build-debug/compiler/tests/select_dispatch_fallback_noopt.rxas	2026-07-19 20:35:34
+@@ -29,2 +29 @@
+-   swap r4,r0
+-   call r5,duplicate_case(),r3
++   swapcall r5,duplicate_case(),r3,r0,r4
+--- compiler/tests/golden/noopt/select_dispatch_mixed.rxas	2026-07-18 07:24:30
++++ cmake-build-debug/compiler/tests/select_dispatch_mixed_noopt.rxas	2026-07-19 20:35:34
+@@ -25,3 +25,2 @@
+-   icopy r3,r4
+-   .traceevent "A" 6 "R" "I" "r" 3 4 4 0 "values" ""
+-   unlink r3
++   isetunlink r3,r4
++   .traceevent "A" 6 "R" "I" "r" 3 4 4 0 "2" ""
+@@ -33,3 +32,2 @@
+-   icopy r4,r3
+-   .traceevent "A" 6 "R" "I" "r" 4 5 5 0 "values" ""
+-   unlink r4
++   isetunlink r4,r3
++   .traceevent "A" 6 "R" "I" "r" 4 5 5 0 "9" ""
+@@ -41,3 +39,2 @@
+-   icopy r4,r3
+-   .traceevent "A" 6 "R" "I" "r" 4 6 6 0 "values" ""
+-   unlink r4
++   isetunlink r4,r3
++   .traceevent "A" 6 "R" "I" "r" 4 6 6 0 "11" ""
+@@ -49,3 +46,2 @@
+-   icopy r4,r3
+-   .traceevent "A" 6 "R" "I" "r" 4 7 7 0 "values" ""
+-   unlink r4
++   isetunlink r4,r3
++   .traceevent "A" 6 "R" "I" "r" 4 7 7 0 "25" ""
+@@ -57,3 +53,2 @@
+-   icopy r4,r3
+-   .traceevent "A" 6 "R" "I" "r" 4 8 8 0 "values" ""
+-   unlink r4
++   isetunlink r4,r3
++   .traceevent "A" 6 "R" "I" "r" 4 8 8 0 "21" ""
+@@ -65,3 +60,2 @@
+-   icopy r4,r3
+-   .traceevent "A" 6 "R" "I" "r" 4 9 9 0 "values" ""
+-   unlink r4
++   isetunlink r4,r3
++   .traceevent "A" 6 "R" "I" "r" 4 9 9 0 "30" ""
+@@ -73,3 +67,2 @@
+-   icopy r4,r3
+-   .traceevent "A" 6 "R" "I" "r" 4 10 10 0 "values" ""
+-   unlink r4
++   isetunlink r4,r3
++   .traceevent "A" 6 "R" "I" "r" 4 10 10 0 "99" ""
+@@ -81,3 +74,2 @@
+-   icopy r4,r3
+-   .traceevent "A" 6 "R" "I" "r" 4 11 11 0 "values" ""
+-   unlink r4
++   isetunlink r4,r3
++   .traceevent "A" 6 "R" "I" "r" 4 11 11 0 "15" ""
+@@ -103,2 +95 @@
+-   setattrs r2,8
+-   linkattr1 r8,r2,r1
++   setlinkiload r8,r2,8,r1,r5,2
+@@ -107 +97,0 @@
+-   load r5,2
+@@ -109,2 +99 @@
+-   swap r7,r0
+-   call r9,mixed_classify(),r5
++   swapcall r9,mixed_classify(),r5,r0,r7
+--- compiler/tests/golden/opt/select_dispatch_mixed.rxas	2026-07-18 07:24:31
++++ cmake-build-debug/compiler/tests/select_dispatch_mixed_opt.rxas	2026-07-19 20:35:27
+@@ -25,3 +25,2 @@
+-   icopy r3,r4
+-   .traceevent "A" 6 "R" "I" "r" 3 4 4 0 "values" ""
+-   unlink r3
++   isetunlink r3,r4
++   .traceevent "A" 6 "R" "I" "r" 3 4 4 0 "2" ""
+@@ -33,3 +32,2 @@
+-   icopy r4,r3
+-   .traceevent "A" 6 "R" "I" "r" 4 5 5 0 "values" ""
+-   unlink r4
++   isetunlink r4,r3
++   .traceevent "A" 6 "R" "I" "r" 4 5 5 0 "9" ""
+@@ -41,3 +39,2 @@
+-   icopy r4,r3
+-   .traceevent "A" 6 "R" "I" "r" 4 6 6 0 "values" ""
+-   unlink r4
++   isetunlink r4,r3
++   .traceevent "A" 6 "R" "I" "r" 4 6 6 0 "11" ""
+@@ -49,3 +46,2 @@
+-   icopy r4,r3
+-   .traceevent "A" 6 "R" "I" "r" 4 7 7 0 "values" ""
+-   unlink r4
++   isetunlink r4,r3
++   .traceevent "A" 6 "R" "I" "r" 4 7 7 0 "25" ""
+@@ -57,3 +53,2 @@
+-   icopy r4,r3
+-   .traceevent "A" 6 "R" "I" "r" 4 8 8 0 "values" ""
+-   unlink r4
++   isetunlink r4,r3
++   .traceevent "A" 6 "R" "I" "r" 4 8 8 0 "21" ""
+@@ -65,3 +60,2 @@
+-   icopy r4,r3
+-   .traceevent "A" 6 "R" "I" "r" 4 9 9 0 "values" ""
+-   unlink r4
++   isetunlink r4,r3
++   .traceevent "A" 6 "R" "I" "r" 4 9 9 0 "30" ""
+@@ -73,3 +67,2 @@
+-   icopy r4,r3
+-   .traceevent "A" 6 "R" "I" "r" 4 10 10 0 "values" ""
+-   unlink r4
++   isetunlink r4,r3
++   .traceevent "A" 6 "R" "I" "r" 4 10 10 0 "99" ""
+@@ -81,3 +74,2 @@
+-   icopy r4,r3
+-   .traceevent "A" 6 "R" "I" "r" 4 11 11 0 "values" ""
+-   unlink r4
++   isetunlink r4,r3
++   .traceevent "A" 6 "R" "I" "r" 4 11 11 0 "15" ""
+@@ -105,2 +97 @@
+-   setattrs r2,8
+-   linkattr1 r7,r2,r1
++   setlinkattr1 r7,r2,8,r1
+@@ -108 +99 @@
+-   icopy r6,r7
++   igetunlink r6,r7
+@@ -110 +100,0 @@
+-   unlink r7
+--- compiler/tests/golden/noopt/select_dispatch_general.rxas	2026-07-18 07:24:31
++++ cmake-build-debug/compiler/tests/select_dispatch_general_noopt.rxas	2026-07-19 20:35:54
+@@ -34,2 +34 @@
+-   swap r6,r1
+-   call r7,if_classify(),r5
++   swapcall r7,if_classify(),r5,r1,r6
+@@ -43,2 +42 @@
+-   swap r7,r1
+-   call r5,classic_classify(),r6
++   swapcall r5,classic_classify(),r6,r1,r7
+@@ -52,2 +50 @@
+-   swap r7,r1
+-   call r5,strict_classify(),r6
++   swapcall r5,strict_classify(),r6,r1,r7
+@@ -64,2 +61 @@
+-   swap r7,r1
+-   call r2,mixed_if(),r5
++   swapcall r2,mixed_if(),r5,r1,r7
+@@ -101,2 +97 @@
+-   swap r7,r0
+-   call r5,exposed_if(),r6
++   swapcall r5,exposed_if(),r6,r0,r7
+@@ -115,2 +110 @@
+-   settp r7,768
+-   call r5,string_if(),r6
++   settpcall r5,string_if(),r6,r7,768
+--- compiler/tests/golden/noopt/select_dispatch_strings.rxas	2026-07-18 07:24:33
++++ cmake-build-debug/compiler/tests/select_dispatch_strings_noopt.rxas	2026-07-19 20:36:05
+@@ -15,2 +15 @@
+-   settp r1,768
+-   call r2,c_padded(),r0
++   settpcall r2,c_padded(),r0,r1,768
+@@ -24,2 +23 @@
+-   settp r2,768
+-   call r0,c_numeric(),r1
++   settpcall r0,c_numeric(),r1,r2,768
+@@ -33,2 +31 @@
+-   settp r2,768
+-   call r0,c_mixed(),r1
++   settpcall r0,c_mixed(),r1,r2,768
+@@ -42,2 +39 @@
+-   settp r2,768
+-   call r0,c_mixed(),r1
++   settpcall r0,c_mixed(),r1,r2,768
+@@ -51,2 +47 @@
+-   settp r2,768
+-   call r0,strict_string(),r1
++   settpcall r0,strict_string(),r1,r2,768
+@@ -60,2 +55 @@
+-   settp r2,768
+-   call r0,strict_string(),r1
++   settpcall r0,strict_string(),r1,r2,768
+@@ -69,2 +63 @@
+-   settp r2,768
+-   call r0,padded_string(),r1
++   settpcall r0,padded_string(),r1,r2,768
+@@ -78,2 +71 @@
+-   settp r2,768
+-   call r0,numeric_string(),r1
++   settpcall r0,numeric_string(),r1,r2,768
+@@ -87,2 +79 @@
+-   settp r2,768
+-   call r0,numeric_string(),r1
++   settpcall r0,numeric_string(),r1,r2,768
+@@ -96,2 +87 @@
+-   settp r2,768
+-   call r0,mixed_string(),r1
++   settpcall r0,mixed_string(),r1,r2,768
+@@ -105,2 +95 @@
+-   settp r2,768
+-   call r0,mixed_string(),r1
++   settpcall r0,mixed_string(),r1,r2,768
+@@ -114,2 +103 @@
+-   settp r2,768
+-   call r0,duplicate_padded(),r1
++   settpcall r0,duplicate_padded(),r1,r2,768
+@@ -123,2 +111 @@
+-   settp r2,768
+-   call r0,duplicate_numeric(),r1
++   settpcall r0,duplicate_numeric(),r1,r2,768
+@@ -133,2 +120 @@
+-   settp r2,768
+-   call r3,binary_select(),r1
++   settpcall r3,binary_select(),r1,r2,768
+@@ -143,2 +129 @@
+-   settp r3,768
+-   call r0,binary_short(),r2
++   settpcall r0,binary_short(),r2,r3,768
+@@ -153,2 +138 @@
+-   settp r3,768
+-   call r0,binary_short(),r2
++   settpcall r0,binary_short(),r2,r3,768
+@@ -162,2 +146 @@
+-   settp r3,768
+-   call r1,nan_key(),r2
++   settpcall r1,nan_key(),r2,r3,768
+@@ -171,2 +154 @@
+-   settp r3,768
+-   call r1,padded_two(),r2
++   settpcall r1,padded_two(),r2,r3,768
+@@ -180,2 +162 @@
+-   settp r3,768
+-   call r1,numeric_two(),r2
++   settpcall r1,numeric_two(),r2,r3,768
+--- compiler/tests/golden/noopt/repro_duplicate_call_argument.rxas	2026-07-18 07:24:34
++++ cmake-build-debug/compiler/tests/repro_duplicate_call_argument_noopt.rxas	2026-07-19 20:36:11
+@@ -43,2 +43 @@
+-   settp r5,256
+-   call r2,combine_text(),r3
++   settpcall r2,combine_text(),r3,r5,256
+--- compiler/tests/golden/noopt/12_arrays_lvlb.rxas	2026-07-18 07:24:38
++++ cmake-build-debug/compiler/tests/12_arrays_lvlb_noopt.rxas	2026-07-19 20:35:26
+@@ -18,3 +18,2 @@
+-   icopy r1,r2
+-   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "ary" ""
+-   unlink r1
++   isetunlink r1,r2
++   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "10" ""
+--- compiler/tests/golden/opt/12_arrays_lvlb.rxas	2026-07-18 07:24:39
++++ cmake-build-debug/compiler/tests/12_arrays_lvlb_opt.rxas	2026-07-19 20:35:54
+@@ -18,3 +18,2 @@
+-   icopy r1,r2
+-   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "ary" ""
+-   unlink r1
++   isetunlink r1,r2
++   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "10" ""
+--- compiler/tests/golden/noopt/array_mutation_statements.rxas	2026-07-18 07:24:39
++++ cmake-build-debug/compiler/tests/array_mutation_statements_noopt.rxas	2026-07-19 20:35:29
+@@ -55,2 +55 @@
+-   minattrs r1,1
+-   linkattr1 r2,r1,1
++   minlinkattr1 r2,r1,1
+@@ -63,2 +62 @@
+-   minattrs r1,2
+-   linkattr1 r5,r1,2
++   minlinkattr1 r5,r1,2
+@@ -71,2 +69 @@
+-   minattrs r1,3
+-   linkattr1 r6,r1,3
++   minlinkattr1 r6,r1,3
+@@ -92,2 +89 @@
+-   minattrs r1,1
+-   linkattr1 r4,r1,1
++   minlinkattr1 r4,r1,1
+@@ -100,2 +96 @@
+-   minattrs r1,2
+-   linkattr1 r3,r1,2
++   minlinkattr1 r3,r1,2
+@@ -143,2 +138 @@
+-   minattrs r1,1
+-   linkattr1 r4,r1,1
++   minlinkattr1 r4,r1,1
+@@ -151,2 +145 @@
+-   minattrs r1,2
+-   linkattr1 r3,r1,2
++   minlinkattr1 r3,r1,2
+@@ -209,2 +202 @@
+-   minattrs r1,1
+-   linkattr1 r4,r1,1
++   minlinkattr1 r4,r1,1
+@@ -217,2 +209 @@
+-   minattrs r1,2
+-   linkattr1 r3,r1,2
++   minlinkattr1 r3,r1,2
+@@ -225,2 +216 @@
+-   minattrs r1,3
+-   linkattr1 r2,r1,3
++   minlinkattr1 r2,r1,3
+@@ -251,2 +241 @@
+-   icopy r5,r6
+-   unlink r5
++   isetunlink r5,r6
+@@ -261,2 +250 @@
+-   icopy r5,r6
+-   unlink r5
++   isetunlink r5,r6
+@@ -271,2 +259 @@
+-   icopy r4,r6
+-   unlink r4
++   isetunlink r4,r6
+@@ -286,2 +273 @@
+-   icopy r5,r6
+-   unlink r5
++   isetunlink r5,r6
+@@ -309,2 +295 @@
+-   minattrs r0,1
+-   linkattr1 r4,r0,1
++   minlinkattr1 r4,r0,1
+@@ -318,2 +303 @@
+-   minattrs r0,2
+-   linkattr1 r3,r0,2
++   minlinkattr1 r3,r0,2
+@@ -327,2 +311 @@
+-   minattrs r0,3
+-   linkattr1 r2,r0,3
++   minlinkattr1 r2,r0,3
+@@ -351,2 +334 @@
+-   minattrs r0,1
+-   linkattr1 r4,r0,1
++   minlinkattr1 r4,r0,1
+--- compiler/tests/golden/opt/array_mutation_statements.rxas	2026-07-18 07:24:40
++++ cmake-build-debug/compiler/tests/array_mutation_statements_opt.rxas	2026-07-19 20:35:38
+@@ -55,2 +55 @@
+-   minattrs r1,1
+-   linkattr1 r2,r1,1
++   minlinkattr1 r2,r1,1
+@@ -63,2 +62 @@
+-   minattrs r1,2
+-   linkattr1 r5,r1,2
++   minlinkattr1 r5,r1,2
+@@ -71,2 +69 @@
+-   minattrs r1,3
+-   linkattr1 r6,r1,3
++   minlinkattr1 r6,r1,3
+@@ -92,2 +89 @@
+-   minattrs r1,1
+-   linkattr1 r4,r1,1
++   minlinkattr1 r4,r1,1
+@@ -100,2 +96 @@
+-   minattrs r1,2
+-   linkattr1 r3,r1,2
++   minlinkattr1 r3,r1,2
+@@ -143,2 +138 @@
+-   minattrs r1,1
+-   linkattr1 r4,r1,1
++   minlinkattr1 r4,r1,1
+@@ -151,2 +145 @@
+-   minattrs r1,2
+-   linkattr1 r3,r1,2
++   minlinkattr1 r3,r1,2
+@@ -209,2 +202 @@
+-   minattrs r1,1
+-   linkattr1 r4,r1,1
++   minlinkattr1 r4,r1,1
+@@ -217,2 +209 @@
+-   minattrs r1,2
+-   linkattr1 r3,r1,2
++   minlinkattr1 r3,r1,2
+@@ -225,2 +216 @@
+-   minattrs r1,3
+-   linkattr1 r2,r1,3
++   minlinkattr1 r2,r1,3
+@@ -251,2 +241 @@
+-   icopy r5,r6
+-   unlink r5
++   isetunlink r5,r6
+@@ -261,2 +250 @@
+-   icopy r5,r6
+-   unlink r5
++   isetunlink r5,r6
+@@ -271,2 +259 @@
+-   icopy r4,r6
+-   unlink r4
++   isetunlink r4,r6
+@@ -286,2 +273 @@
+-   icopy r5,r6
+-   unlink r5
++   isetunlink r5,r6
+@@ -309,2 +295 @@
+-   minattrs r0,1
+-   linkattr1 r4,r0,1
++   minlinkattr1 r4,r0,1
+@@ -318,2 +303 @@
+-   minattrs r0,2
+-   linkattr1 r3,r0,2
++   minlinkattr1 r3,r0,2
+@@ -327,2 +311 @@
+-   minattrs r0,3
+-   linkattr1 r2,r0,3
++   minlinkattr1 r2,r0,3
+@@ -351,2 +334 @@
+-   minattrs r0,1
+-   linkattr1 r4,r0,1
++   minlinkattr1 r4,r0,1
+--- compiler/tests/golden/noopt/13_stems.rxas	2026-07-18 07:24:41
++++ cmake-build-debug/compiler/tests/13_stems_noopt.rxas	2026-07-19 20:36:04
+@@ -28,2 +28 @@
+-   settp r4,768
+-   call r5,§rxfnsb.stem.get(),r2
++   settpcall r5,§rxfnsb.stem.get(),r2,r4,768
+@@ -47,2 +46 @@
+-   settp r4,768
+-   call r6,§rxfnsb.stem.get(),r2
++   settpcall r6,§rxfnsb.stem.get(),r2,r4,768
+@@ -65,2 +63 @@
+-   settp r6,768
+-   call r2,§rxfnsb.stem.set(),r3
++   settpcall r2,§rxfnsb.stem.set(),r3,r6,768
+@@ -79,2 +76 @@
+-   settp r6,768
+-   call r7,§rxfnsb.stem.set(),r3
++   settpcall r7,§rxfnsb.stem.set(),r3,r6,768
+@@ -92,2 +88 @@
+-   settp r6,768
+-   call r8,§rxfnsb.stem.set(),r3
++   settpcall r8,§rxfnsb.stem.set(),r3,r6,768
+@@ -102,2 +97 @@
+-   settp r6,768
+-   call r3,§rxfnsb.stem.get(),r4
++   settpcall r3,§rxfnsb.stem.get(),r4,r6,768
+@@ -121,2 +115 @@
+-   settp r5,768
+-   call r9,§rxfnsb.stem.get(),r3
++   settpcall r9,§rxfnsb.stem.get(),r3,r5,768
+@@ -135,2 +128 @@
+-   settp r11,768
+-   call r6,§rxfnsb.stem.get(),r9
++   settpcall r6,§rxfnsb.stem.get(),r9,r11,768
+@@ -154,2 +146 @@
+-   settp r14,768
+-   call r10,§rxfnsb.stem.get(),r12
++   settpcall r10,§rxfnsb.stem.get(),r12,r14,768
+@@ -171,2 +162 @@
+-   settp r14,768
+-   call r10,§rxfnsb.stem.set(),r11
++   settpcall r10,§rxfnsb.stem.set(),r11,r14,768
+@@ -181,2 +171 @@
+-   settp r14,768
+-   call r11,§rxfnsb.stem.get(),r12
++   settpcall r11,§rxfnsb.stem.get(),r12,r14,768
+@@ -200,2 +189 @@
+-   settp r13,768
+-   call r9,§rxfnsb.stem.get(),r11
++   settpcall r9,§rxfnsb.stem.get(),r11,r13,768
+--- compiler/tests/golden/opt/13_stems.rxas	2026-07-18 07:24:41
++++ cmake-build-debug/compiler/tests/13_stems_opt.rxas	2026-07-19 20:36:17
+@@ -27,2 +27 @@
+-   settp r2,768
+-   call r4,§rxfnsb.stem.get(),r0
++   settpcall r4,§rxfnsb.stem.get(),r0,r2,768
+@@ -44,2 +43 @@
+-   settp r2,768
+-   call r5,§rxfnsb.stem.get(),r0
++   settpcall r5,§rxfnsb.stem.get(),r0,r2,768
+@@ -61,2 +59 @@
+-   settp r7,768
+-   call r2,§rxfnsb.stem.set(),r4
++   settpcall r2,§rxfnsb.stem.set(),r4,r7,768
+@@ -75,2 +72 @@
+-   settp r7,768
+-   call r0,§rxfnsb.stem.set(),r4
++   settpcall r0,§rxfnsb.stem.set(),r4,r7,768
+@@ -88,2 +84 @@
+-   settp r7,768
+-   call r8,§rxfnsb.stem.set(),r4
++   settpcall r8,§rxfnsb.stem.set(),r4,r7,768
+@@ -98,2 +93 @@
+-   settp r7,768
+-   call r4,§rxfnsb.stem.get(),r5
++   settpcall r4,§rxfnsb.stem.get(),r5,r7,768
+@@ -117,2 +111 @@
+-   settp r6,768
+-   call r9,§rxfnsb.stem.get(),r4
++   settpcall r9,§rxfnsb.stem.get(),r4,r6,768
+@@ -131,2 +124 @@
+-   settp r11,768
+-   call r7,§rxfnsb.stem.get(),r9
++   settpcall r7,§rxfnsb.stem.get(),r9,r11,768
+@@ -150,2 +142 @@
+-   settp r14,768
+-   call r10,§rxfnsb.stem.get(),r12
++   settpcall r10,§rxfnsb.stem.get(),r12,r14,768
+@@ -167,2 +158 @@
+-   settp r14,768
+-   call r10,§rxfnsb.stem.set(),r11
++   settpcall r10,§rxfnsb.stem.set(),r11,r14,768
+@@ -177,2 +167 @@
+-   settp r14,768
+-   call r11,§rxfnsb.stem.get(),r12
++   settpcall r11,§rxfnsb.stem.get(),r12,r14,768
+@@ -196,2 +185 @@
+-   settp r13,768
+-   call r9,§rxfnsb.stem.get(),r11
++   settpcall r9,§rxfnsb.stem.get(),r11,r13,768
+--- compiler/tests/golden/noopt/repro_multi_tail_stems.rxas	2026-07-18 07:24:42
++++ cmake-build-debug/compiler/tests/repro_multi_tail_stems_noopt.rxas	2026-07-19 20:35:50
+@@ -34,2 +34 @@
+-   settp r8,768
+-   call r9,§rxfnsb.stem.set(),r5
++   settpcall r9,§rxfnsb.stem.set(),r5,r8,768
+@@ -46,2 +45 @@
+-   settp r8,768
+-   call r5,§rxfnsb.stem.get(),r6
++   settpcall r5,§rxfnsb.stem.get(),r6,r8,768
+@@ -67,2 +65 @@
+-   settp r7,768
+-   call r10,§rxfnsb.stem.get(),r5
++   settpcall r10,§rxfnsb.stem.get(),r5,r7,768
+@@ -82,2 +79 @@
+-   settp r12,768
+-   call r8,§rxfnsb.stem.get(),r10
++   settpcall r8,§rxfnsb.stem.get(),r10,r12,768
+@@ -102,2 +98 @@
+-   settp r15,768
+-   call r11,§rxfnsb.stem.get(),r13
++   settpcall r11,§rxfnsb.stem.get(),r13,r15,768
+@@ -124,2 +119 @@
+-   settp r15,768
+-   call r11,§rxfnsb.stem.set(),r12
++   settpcall r11,§rxfnsb.stem.set(),r12,r15,768
+@@ -142,2 +136 @@
+-   settp r15,768
+-   call r10,§rxfnsb.stem.set(),r12
++   settpcall r10,§rxfnsb.stem.set(),r12,r15,768
+@@ -157,2 +150 @@
+-   settp r15,768
+-   call r12,§rxfnsb.stem.get(),r13
++   settpcall r12,§rxfnsb.stem.get(),r13,r15,768
+@@ -181,2 +173 @@
+-   settp r14,768
+-   call r8,§rxfnsb.stem.get(),r12
++   settpcall r8,§rxfnsb.stem.get(),r12,r14,768
+@@ -196,2 +187 @@
+-   settp r15,768
+-   call r12,§rxfnsb.stem.get(),r13
++   settpcall r12,§rxfnsb.stem.get(),r13,r15,768
+@@ -216,2 +206 @@
+-   settp r14,768
+-   call r8,§rxfnsb.stem.get(),r12
++   settpcall r8,§rxfnsb.stem.get(),r12,r14,768
+@@ -231,2 +220 @@
+-   settp r15,768
+-   call r12,§rxfnsb.stem.get(),r13
++   settpcall r12,§rxfnsb.stem.get(),r13,r15,768
+@@ -251,2 +239 @@
+-   settp r14,768
+-   call r8,§rxfnsb.stem.get(),r12
++   settpcall r8,§rxfnsb.stem.get(),r12,r14,768
+@@ -291,2 +278 @@
+-   settp r15,768
+-   call r8,§rxfnsb.stem.set(),r12
++   settpcall r8,§rxfnsb.stem.set(),r12,r15,768
+@@ -303,2 +289 @@
+-   settp r15,768
+-   call r12,§rxfnsb.stem.get(),r13
++   settpcall r12,§rxfnsb.stem.get(),r13,r15,768
+@@ -325,2 +310 @@
+-   settp r14,768
+-   call r7,§rxfnsb.stem.get(),r12
++   settpcall r7,§rxfnsb.stem.get(),r12,r14,768
+@@ -340,2 +324 @@
+-   settp r15,768
+-   call r12,§rxfnsb.stem.get(),r13
++   settpcall r12,§rxfnsb.stem.get(),r13,r15,768
+@@ -369,2 +352 @@
+-   settp r15,768
+-   call r7,§rxfnsb.stem.set(),r12
++   settpcall r7,§rxfnsb.stem.set(),r12,r15,768
+@@ -386,2 +368 @@
+-   settp r15,768
+-   call r6,§rxfnsb.stem.set(),r12
++   settpcall r6,§rxfnsb.stem.set(),r12,r15,768
+@@ -397,2 +378 @@
+-   settp r15,768
+-   call r12,§rxfnsb.stem.get(),r13
++   settpcall r12,§rxfnsb.stem.get(),r13,r15,768
+@@ -417,2 +397 @@
+-   settp r14,768
+-   call r5,§rxfnsb.stem.get(),r12
++   settpcall r5,§rxfnsb.stem.get(),r12,r14,768
+@@ -432,2 +411 @@
+-   settp r15,768
+-   call r12,§rxfnsb.stem.get(),r13
++   settpcall r12,§rxfnsb.stem.get(),r13,r15,768
+@@ -452,2 +430 @@
+-   settp r14,768
+-   call r5,§rxfnsb.stem.get(),r12
++   settpcall r5,§rxfnsb.stem.get(),r12,r14,768
+@@ -467,2 +444 @@
+-   settp r15,768
+-   call r12,§rxfnsb.stem.get(),r13
++   settpcall r12,§rxfnsb.stem.get(),r13,r15,768
+--- compiler/tests/golden/opt/repro_multi_tail_stems.rxas	2026-07-18 07:24:43
++++ cmake-build-debug/compiler/tests/repro_multi_tail_stems_opt.rxas	2026-07-19 20:36:16
+@@ -31,2 +31 @@
+-   settp r3,768
+-   call r5,§rxfnsb.stem.set(),r0
++   settpcall r5,§rxfnsb.stem.set(),r0,r3,768
+@@ -39,2 +38 @@
+-   settp r2,768
+-   call r3,§rxfnsb.stem.get(),r0
++   settpcall r3,§rxfnsb.stem.get(),r0,r2,768
+@@ -56,2 +54 @@
+-   settp r2,768
+-   call r6,§rxfnsb.stem.get(),r0
++   settpcall r6,§rxfnsb.stem.get(),r0,r2,768
+@@ -69,2 +66 @@
+-   settp r2,768
+-   call r6,§rxfnsb.stem.get(),r0
++   settpcall r6,§rxfnsb.stem.get(),r0,r2,768
+@@ -87,2 +83 @@
+-   settp r2,768
+-   call r3,§rxfnsb.stem.get(),r0
++   settpcall r3,§rxfnsb.stem.get(),r0,r2,768
+@@ -102,2 +97 @@
+-   settp r3,768
+-   call r6,§rxfnsb.stem.set(),r0
++   settpcall r6,§rxfnsb.stem.set(),r0,r3,768
+@@ -113,2 +107 @@
+-   settp r3,768
+-   call r7,§rxfnsb.stem.set(),r0
++   settpcall r7,§rxfnsb.stem.set(),r0,r3,768
+@@ -121,2 +114 @@
+-   settp r2,768
+-   call r3,§rxfnsb.stem.get(),r0
++   settpcall r3,§rxfnsb.stem.get(),r0,r2,768
+@@ -138,2 +130 @@
+-   settp r2,768
+-   call r8,§rxfnsb.stem.get(),r0
++   settpcall r8,§rxfnsb.stem.get(),r0,r2,768
+@@ -151,2 +142 @@
+-   settp r2,768
+-   call r8,§rxfnsb.stem.get(),r0
++   settpcall r8,§rxfnsb.stem.get(),r0,r2,768
+@@ -169,2 +159 @@
+-   settp r2,768
+-   call r3,§rxfnsb.stem.get(),r0
++   settpcall r3,§rxfnsb.stem.get(),r0,r2,768
+@@ -182,2 +171 @@
+-   settp r2,768
+-   call r8,§rxfnsb.stem.get(),r0
++   settpcall r8,§rxfnsb.stem.get(),r0,r2,768
+@@ -200,2 +188 @@
+-   settp r2,768
+-   call r3,§rxfnsb.stem.get(),r0
++   settpcall r3,§rxfnsb.stem.get(),r0,r2,768
+@@ -220,2 +207 @@
+-   settp r3,768
+-   call r8,§rxfnsb.stem.set(),r0
++   settpcall r8,§rxfnsb.stem.set(),r0,r3,768
+@@ -230,2 +216 @@
+-   settp r2,768
+-   call r3,§rxfnsb.stem.get(),r0
++   settpcall r3,§rxfnsb.stem.get(),r0,r2,768
+@@ -250,2 +235 @@
+-   settp r2,768
+-   call r9,§rxfnsb.stem.get(),r0
++   settpcall r9,§rxfnsb.stem.get(),r0,r2,768
+@@ -263,2 +247 @@
+-   settp r2,768
+-   call r9,§rxfnsb.stem.get(),r0
++   settpcall r9,§rxfnsb.stem.get(),r0,r2,768
+@@ -286,2 +269 @@
+-   settp r3,768
+-   call r9,§rxfnsb.stem.set(),r0
++   settpcall r9,§rxfnsb.stem.set(),r0,r3,768
+@@ -297,2 +279 @@
+-   settp r3,768
+-   call r10,§rxfnsb.stem.set(),r0
++   settpcall r10,§rxfnsb.stem.set(),r0,r3,768
+@@ -306,2 +287 @@
+-   settp r2,768
+-   call r3,§rxfnsb.stem.get(),r0
++   settpcall r3,§rxfnsb.stem.get(),r0,r2,768
+@@ -324,2 +304 @@
+-   settp r2,768
+-   call r11,§rxfnsb.stem.get(),r0
++   settpcall r11,§rxfnsb.stem.get(),r0,r2,768
+@@ -337,2 +316 @@
+-   settp r2,768
+-   call r11,§rxfnsb.stem.get(),r0
++   settpcall r11,§rxfnsb.stem.get(),r0,r2,768
+@@ -355,2 +333 @@
+-   settp r2,768
+-   call r3,§rxfnsb.stem.get(),r0
++   settpcall r3,§rxfnsb.stem.get(),r0,r2,768
+@@ -368,2 +345 @@
+-   settp r2,768
+-   call r11,§rxfnsb.stem.get(),r0
++   settpcall r11,§rxfnsb.stem.get(),r0,r2,768
+--- compiler/tests/golden/noopt/18_array_class.rxas	2026-07-18 07:24:46
++++ cmake-build-debug/compiler/tests/18_array_class_noopt.rxas	2026-07-19 20:34:38
+@@ -22,2 +22 @@
+-   settp r3,768
+-   call r1,§array_class_lib.item.§factory(),r2
++   settpcall r1,§array_class_lib.item.§factory(),r2,r3,768
+@@ -44,3 +43 @@
+-   settp r0,256
+-   swap r3,r0
+-   call r4,process(),r2
++   settpswapcall r4,process(),r2,r0,256,r3
+@@ -84,2 +81 @@
+-   minattrs a1,1
+-   linkattr1 r4,a1,1
++   minlinkattr1 r4,a1,1
+@@ -94,3 +90 @@
+-   settp r0,256
+-   swap r4,r0
+-   call r2,§array_class_lib.item.get_val(),r3
++   settpswapcall r2,§array_class_lib.item.get_val(),r3,r0,256,r4
+@@ -118,2 +112 @@
+-   minattrs a1,r4,0
+-   linkattr1 r9,a1,r4
++   minlinkattr1 r9,a1,r4,0
+@@ -128,3 +121 @@
+-   settp r3,256
+-   swap r10,r3
+-   call r5,§array_class_lib.item.get_val(),r9
++   settpswapcall r5,§array_class_lib.item.get_val(),r9,r3,256,r10
+--- compiler/tests/golden/opt/18_array_class.rxas	2026-07-18 07:24:46
++++ cmake-build-debug/compiler/tests/18_array_class_opt.rxas	2026-07-19 20:34:38
+@@ -75,2 +75 @@
+-   minattrs r5,1
+-   linkattr1 r9,r5,1
++   minlinkattr1 r9,r5,1
+@@ -108,2 +107 @@
+-   minattrs r5,r9,0
+-   linkattr1 r14,r5,r9
++   minlinkattr1 r14,r5,r9,0
+--- compiler/tests/golden/noopt/class_import.rxas	2026-07-18 07:24:53
++++ cmake-build-debug/compiler/tests/class_import_noopt.rxas	2026-07-19 20:34:37
+@@ -19,3 +19 @@
+-   settp r0,256
+-   swap r2,r0
+-   call r3,§class_import_lib.counter.inc(),r1
++   settpswapcall r3,§class_import_lib.counter.inc(),r1,r0,256,r2
+@@ -27,3 +25 @@
+-   settp r0,256
+-   swap r2,r0
+-   call r4,§class_import_lib.counter.value(),r1
++   settpswapcall r4,§class_import_lib.counter.value(),r1,r0,256,r2
+--- compiler/tests/golden/opt/class_import.rxas	2026-07-18 07:24:54
++++ cmake-build-debug/compiler/tests/class_import_opt.rxas	2026-07-19 20:34:37
+@@ -18,3 +18 @@
+-   linkattr1 r2,r1,1
+-   icopy r2,r3
+-   unlink r2
++   isetattr1 r1,1,r3
+@@ -35,3 +33 @@
+-   linkattr1 r3,r4,1
+-   icopy r3,r5
+-   unlink r3
++   isetattr1 r4,1,r5
+@@ -51,2 +47 @@
+-   icopy r3,r5
+-   unlink r5
++   igetunlink r3,r5
+--- compiler/tests/golden/noopt/repro_dotted_index.rxas	2026-07-18 07:24:55
++++ cmake-build-debug/compiler/tests/repro_dotted_index_noopt.rxas	2026-07-19 20:35:24
+@@ -26,2 +26 @@
+-   setattrs r1,10
+-   linkattr1 r2,r1,r0
++   setlinkattr1 r2,r1,10,r0
+@@ -41,2 +40 @@
+-   setattrs r1,10
+-   linkattr1 r3,r1,r0
++   setlinkattr1 r3,r1,10,r0
+--- compiler/tests/golden/opt/repro_dotted_index.rxas	2026-07-18 07:24:55
++++ cmake-build-debug/compiler/tests/repro_dotted_index_opt.rxas	2026-07-19 20:35:33
+@@ -26,2 +26 @@
+-   setattrs r1,10
+-   linkattr1 r2,r1,r0
++   setlinkattr1 r2,r1,10,r0
+@@ -41,2 +40 @@
+-   setattrs r1,10
+-   linkattr1 r3,r1,r0
++   setlinkattr1 r3,r1,10,r0
+--- compiler/tests/golden/noopt/repro_array_arg.rxas	2026-07-18 07:24:57
++++ cmake-build-debug/compiler/tests/repro_array_arg_noopt.rxas	2026-07-19 20:35:55
+@@ -14,2 +14 @@
+-   minattrs r2,1
+-   linkattr1 r3,r2,1
++   minlinkattr1 r3,r2,1
+@@ -29,2 +28 @@
+-   minattrs r2,r1,0
+-   linkattr1 r4,r2,r1
++   minlinkattr1 r4,r2,r1,0
+@@ -42,2 +40 @@
+-   minattrs r2,r1,0
+-   linkattr1 r5,r2,r1
++   minlinkattr1 r5,r2,r1,0
+@@ -46,2 +43 @@
+-   swap r4,r5
+-   call r0,rxfnsb.upper(),r3
++   swapcall r0,rxfnsb.upper(),r3,r5,r4
+@@ -62,2 +58 @@
+-   minattrs r2,r1,0
+-   linkattr1 r5,r2,r1
++   minlinkattr1 r5,r2,r1,0
+@@ -74,2 +69 @@
+-   minattrs r2,r1,0
+-   linkattr1 r5,r2,r1
++   minlinkattr1 r5,r2,r1,0
+--- compiler/tests/golden/opt/repro_array_arg.rxas	2026-07-18 07:24:58
++++ cmake-build-debug/compiler/tests/repro_array_arg_opt.rxas	2026-07-19 20:35:33
+@@ -14,2 +14 @@
+-   minattrs r1,1
+-   linkattr1 r2,r1,1
++   minlinkattr1 r2,r1,1
+@@ -23,2 +22 @@
+-   minattrs r1,1
+-   linkattr1 r3,r1,1
++   minlinkattr1 r3,r1,1
+@@ -39,2 +37 @@
+-   minattrs r1,1
+-   linkattr1 r3,r1,1
++   minlinkattr1 r3,r1,1
+@@ -56,2 +53 @@
+-   minattrs r1,1
+-   linkattr1 r2,r1,1
++   minlinkattr1 r2,r1,1
+@@ -66,2 +62 @@
+-   minattrs r1,1
+-   linkattr1 r6,r1,1
++   minlinkattr1 r6,r1,1
+--- compiler/tests/golden/noopt/repro_opt_args.rxas	2026-07-18 07:24:59
++++ cmake-build-debug/compiler/tests/repro_opt_args_noopt.rxas	2026-07-19 20:35:29
+@@ -18,2 +18 @@
+-   settp r3,256
+-   call r4,test_opt(),r0
++   settpcall r4,test_opt(),r0,r3,256
+@@ -29,2 +28 @@
+-   settp r3,0
+-   call r5,test_opt(),r0
++   settpcall r5,test_opt(),r0,r3,0
+@@ -40,2 +38 @@
+-   settp r3,256
+-   call r6,test_opt(),r0
++   settpcall r6,test_opt(),r0,r3,256
+--- compiler/tests/golden/noopt/arg_semantics_scalar.rxas	2026-07-18 07:25:00
++++ cmake-build-debug/compiler/tests/arg_semantics_scalar_noopt.rxas	2026-07-19 20:35:28
+@@ -19,2 +19 @@
+-   swap r3,r0
+-   call r4,inspectInt(),r2
++   swapcall r4,inspectInt(),r2,r0,r3
+@@ -30,2 +29 @@
+-   swap r4,r0
+-   call r2,addTen(),r3
++   swapcall r2,addTen(),r3,r0,r4
+@@ -47,2 +45 @@
+-   swap r4,r0
+-   call r2,addOneRef(),r3
++   swapcall r2,addOneRef(),r3,r0,r4
+@@ -65,3 +62 @@
+-   settp r1,256
+-   swap r4,r1
+-   call r5,readText(),r3
++   settpswapcall r5,readText(),r3,r1,256,r4
+@@ -76,3 +71 @@
+-   settp r1,256
+-   swap r5,r1
+-   call r3,shoutText(),r4
++   settpswapcall r3,shoutText(),r4,r1,256,r5
+@@ -93,2 +86 @@
+-   settp r5,768
+-   call r3,shoutText(),r4
++   settpcall r3,shoutText(),r4,r5,768
+@@ -177,2 +169 @@
+-   swap r2,r0
+-   call r2,rxfnsb.upper(),r1
++   swapcall r2,rxfnsb.upper(),r1,r0,r2
+--- compiler/tests/golden/noopt/arg_semantics_array.rxas	2026-07-18 07:25:01
++++ cmake-build-debug/compiler/tests/arg_semantics_array_noopt.rxas	2026-07-19 20:36:08
+@@ -15,2 +15 @@
+-   minattrs r0,1
+-   linkattr1 r1,r0,1
++   minlinkattr1 r1,r0,1
+@@ -23,2 +22 @@
+-   minattrs r0,2
+-   linkattr1 r2,r0,2
++   minlinkattr1 r2,r0,2
+@@ -33,3 +31 @@
+-   settp r0,256
+-   swap r2,r0
+-   call r3,readArray(),r1
++   settpswapcall r3,readArray(),r1,r0,256,r2
+@@ -44,3 +40 @@
+-   settp r0,256
+-   swap r3,r0
+-   call r1,mutateArrayLocal(),r2
++   settpswapcall r1,mutateArrayLocal(),r2,r0,256,r3
+@@ -53,2 +47 @@
+-   minattrs r0,1
+-   linkattr1 r3,r0,1
++   minlinkattr1 r3,r0,1
+@@ -61,2 +54 @@
+-   minattrs r0,2
+-   linkattr1 r1,r0,2
++   minlinkattr1 r1,r0,2
+@@ -73,2 +65 @@
+-   settp r3,256
+-   call r1,mutateArrayLocal(),r2
++   settpcall r1,mutateArrayLocal(),r2,r3,256
+@@ -82,2 +73 @@
+-   swap r3,r0
+-   call r1,mutateArrayRef(),r2
++   swapcall r1,mutateArrayRef(),r2,r0,r3
+@@ -87,2 +77 @@
+-   minattrs r0,1
+-   linkattr1 r3,r0,1
++   minlinkattr1 r3,r0,1
+@@ -95,2 +84 @@
+-   minattrs r0,2
+-   linkattr1 r4,r0,2
++   minlinkattr1 r4,r0,2
+@@ -113,2 +101 @@
+-   minattrs a1,1
+-   linkattr1 r1,a1,1
++   minlinkattr1 r1,a1,1
+@@ -119,2 +106 @@
+-   minattrs a1,2
+-   linkattr1 r3,a1,2
++   minlinkattr1 r3,a1,2
+@@ -141,4 +127,2 @@
+-   minattrs r0,1
+-   linkattr1 r1,r0,1
+-   minattrs r0,1
+-   linkattr1 r4,r0,1
++   minlinkattr1 r1,r0,1
++   minlinkattr1 r4,r0,1
+@@ -147,2 +131 @@
+-   swap r3,r4
+-   call r5,rxfnsb.upper(),r2
++   swapcall r5,rxfnsb.upper(),r2,r4,r3
+@@ -156,2 +139 @@
+-   minattrs r0,2
+-   linkattr1 r5,r0,2
++   minlinkattr1 r5,r0,2
+@@ -164,2 +146 @@
+-   minattrs r0,1
+-   linkattr1 r5,r0,1
++   minlinkattr1 r5,r0,1
+@@ -170,2 +151 @@
+-   minattrs r0,2
+-   linkattr1 r3,r0,2
++   minlinkattr1 r3,r0,2
+@@ -186,2 +166 @@
+-   minattrs a1,1
+-   linkattr1 r1,a1,1
++   minlinkattr1 r1,a1,1
+@@ -194,4 +173,2 @@
+-   minattrs a1,2
+-   linkattr1 r2,a1,2
+-   minattrs a1,2
+-   linkattr1 r1,a1,2
++   minlinkattr1 r2,a1,2
++   minlinkattr1 r1,a1,2
+@@ -200,2 +177 @@
+-   swap r4,r1
+-   call r5,rxfnsb.upper(),r3
++   swapcall r5,rxfnsb.upper(),r3,r1,r4
+@@ -220,2 +196 @@
+-   minattrs r0,1
+-   linkattr1 r1,r0,1
++   minlinkattr1 r1,r0,1
+@@ -228,2 +203 @@
+-   minattrs r0,2
+-   linkattr1 r2,r0,2
++   minlinkattr1 r2,r0,2
+--- compiler/tests/golden/opt/arg_semantics_array.rxas	2026-07-18 07:25:02
++++ cmake-build-debug/compiler/tests/arg_semantics_array_opt.rxas	2026-07-19 20:35:55
+@@ -15,2 +15 @@
+-   minattrs r0,1
+-   linkattr1 r1,r0,1
++   minlinkattr1 r1,r0,1
+@@ -23,2 +22 @@
+-   minattrs r0,2
+-   linkattr1 r2,r0,2
++   minlinkattr1 r2,r0,2
+@@ -36,2 +34 @@
+-   minattrs r2,1
+-   linkattr1 r1,r2,1
++   minlinkattr1 r1,r2,1
+@@ -42,2 +39 @@
+-   minattrs r2,2
+-   linkattr1 r4,r2,2
++   minlinkattr1 r4,r2,2
+@@ -61,2 +57 @@
+-   minattrs r5,1
+-   linkattr1 r4,r5,1
++   minlinkattr1 r4,r5,1
+@@ -70,2 +65 @@
+-   minattrs r5,1
+-   linkattr1 r2,r5,1
++   minlinkattr1 r2,r5,1
+@@ -84,2 +78 @@
+-   minattrs r5,2
+-   linkattr1 r4,r5,2
++   minlinkattr1 r4,r5,2
+@@ -92,2 +85 @@
+-   minattrs r5,1
+-   linkattr1 r4,r5,1
++   minlinkattr1 r4,r5,1
+@@ -98,2 +90 @@
+-   minattrs r5,2
+-   linkattr1 r1,r5,2
++   minlinkattr1 r1,r5,2
+@@ -112,2 +103 @@
+-   minattrs r0,1
+-   linkattr1 r7,r0,1
++   minlinkattr1 r7,r0,1
+@@ -120,2 +110 @@
+-   minattrs r0,2
+-   linkattr1 r4,r0,2
++   minlinkattr1 r4,r0,2
+@@ -138,2 +127 @@
+-   minattrs r5,1
+-   linkattr1 r4,r5,1
++   minlinkattr1 r4,r5,1
+@@ -146,2 +134 @@
+-   minattrs r5,2
+-   linkattr1 r4,r5,2
++   minlinkattr1 r4,r5,2
+@@ -166,2 +153 @@
+-   minattrs r7,1
+-   linkattr1 r5,r7,1
++   minlinkattr1 r5,r7,1
+@@ -175,2 +161 @@
+-   minattrs r7,1
+-   linkattr1 r3,r7,1
++   minlinkattr1 r3,r7,1
+@@ -189,2 +174 @@
+-   minattrs r7,2
+-   linkattr1 r5,r7,2
++   minlinkattr1 r5,r7,2
+@@ -197,2 +181 @@
+-   minattrs r7,1
+-   linkattr1 r5,r7,1
++   minlinkattr1 r5,r7,1
+@@ -203,2 +186 @@
+-   minattrs r7,2
+-   linkattr1 r1,r7,2
++   minlinkattr1 r1,r7,2
+@@ -219,2 +201 @@
+-   minattrs r0,1
+-   linkattr1 r10,r0,1
++   minlinkattr1 r10,r0,1
+@@ -227,2 +208 @@
+-   minattrs r0,2
+-   linkattr1 r10,r0,2
++   minlinkattr1 r10,r0,2
+@@ -236,2 +216 @@
+-   minattrs r0,2
+-   linkattr1 r5,r0,2
++   minlinkattr1 r5,r0,2
+@@ -250,2 +229 @@
+-   minattrs r0,1
+-   linkattr1 r10,r0,1
++   minlinkattr1 r10,r0,1
+@@ -258,2 +236 @@
+-   minattrs r0,2
+-   linkattr1 r4,r0,2
++   minlinkattr1 r4,r0,2
+@@ -282,2 +259 @@
+-   minattrs r0,1
+-   linkattr1 r1,r0,1
++   minlinkattr1 r1,r0,1
+@@ -291,2 +267 @@
+-   minattrs r0,1
+-   linkattr1 r4,r0,1
++   minlinkattr1 r4,r0,1
+@@ -305,2 +280 @@
+-   minattrs r0,2
+-   linkattr1 r5,r0,2
++   minlinkattr1 r5,r0,2
+@@ -313,2 +287 @@
+-   minattrs r0,1
+-   linkattr1 r5,r0,1
++   minlinkattr1 r5,r0,1
+@@ -319,2 +292 @@
+-   minattrs r0,2
+-   linkattr1 r1,r0,2
++   minlinkattr1 r1,r0,2
+@@ -335,2 +307 @@
+-   minattrs a1,1
+-   linkattr1 r1,a1,1
++   minlinkattr1 r1,a1,1
+@@ -343,2 +314 @@
+-   minattrs a1,2
+-   linkattr1 r2,a1,2
++   minlinkattr1 r2,a1,2
+@@ -352,2 +322 @@
+-   minattrs a1,2
+-   linkattr1 r4,a1,2
++   minlinkattr1 r4,a1,2
+--- compiler/tests/golden/noopt/arg_semantics_object.rxas	2026-07-18 07:25:02
++++ cmake-build-debug/compiler/tests/arg_semantics_object_noopt.rxas	2026-07-19 20:36:00
+@@ -18,2 +18 @@
+-   settp r2,768
+-   call r0,§arg_semantics_object.box.§factory(),r1
++   settpcall r0,§arg_semantics_object.box.§factory(),r1,r2,768
+@@ -25,3 +24 @@
+-   settp r0,256
+-   swap r2,r0
+-   call r3,readBox(),r1
++   settpswapcall r3,readBox(),r1,r0,256,r2
+@@ -36,3 +33 @@
+-   settp r0,256
+-   swap r3,r0
+-   call r1,replaceBox(),r2
++   settpswapcall r1,replaceBox(),r2,r0,256,r3
+@@ -47,3 +42 @@
+-   settp r0,256
+-   swap r3,r0
+-   call r1,§arg_semantics_object.box.getname(),r2
++   settpswapcall r1,§arg_semantics_object.box.getname(),r2,r0,256,r3
+@@ -59,2 +52 @@
+-   settp r5,768
+-   call r3,§arg_semantics_object.box.§factory(),r4
++   settpcall r3,§arg_semantics_object.box.§factory(),r4,r5,768
+@@ -63,2 +55 @@
+-   settp r3,256
+-   call r5,replaceBox(),r2
++   settpcall r5,replaceBox(),r2,r3,256
+@@ -72,2 +63 @@
+-   swap r5,r0
+-   call r3,replaceBoxRef(),r4
++   swapcall r3,replaceBoxRef(),r4,r0,r5
+@@ -79,3 +69 @@
+-   settp r0,256
+-   swap r5,r0
+-   call r2,§arg_semantics_object.box.getname(),r4
++   settpswapcall r2,§arg_semantics_object.box.getname(),r4,r0,256,r5
+@@ -100,3 +88 @@
+-   settp a1,256
+-   swap r2,a1
+-   call r3,§arg_semantics_object.box.getname(),r1
++   settpswapcall r3,§arg_semantics_object.box.getname(),r1,a1,256,r2
+@@ -124,2 +110 @@
+-   settp r2,768
+-   call r0,§arg_semantics_object.box.§factory(),r1
++   settpcall r0,§arg_semantics_object.box.§factory(),r1,r2,768
+@@ -131,3 +116 @@
+-   settp r0,256
+-   swap r2,r0
+-   call r3,§arg_semantics_object.box.getname(),r1
++   settpswapcall r3,§arg_semantics_object.box.getname(),r1,r0,256,r2
+@@ -149,2 +132 @@
+-   settp r2,768
+-   call a1,§arg_semantics_object.box.§factory(),r1
++   settpcall a1,§arg_semantics_object.box.§factory(),r1,r2,768
+--- compiler/tests/golden/opt/arg_semantics_object.rxas	2026-07-18 07:25:03
++++ cmake-build-debug/compiler/tests/arg_semantics_object_opt.rxas	2026-07-19 20:36:16
+@@ -41,2 +41 @@
+-   unlink r5
+-   br l171bexprend
++   unlinkbr r5,l171bexprend
+@@ -74,2 +73 @@
+-   settp r7,256
+-   call r2,§arg_semantics_object.box.getname(),r6
++   settpcall r2,§arg_semantics_object.box.getname(),r6,r7,256
+@@ -94,2 +92 @@
+-   unlink r7
+-   br l205bexprend
++   unlinkbr r7,l205bexprend
+@@ -142,2 +139 @@
+-   settp r7,256
+-   call r14,§arg_semantics_object.box.getname(),r6
++   settpcall r14,§arg_semantics_object.box.getname(),r6,r7,256
+@@ -178,2 +174 @@
+-   unlink r14
+-   br l297bexprend
++   unlinkbr r14,l297bexprend
+--- compiler/tests/golden/noopt/object_reference_regression.rxas	2026-07-18 07:25:04
++++ cmake-build-debug/compiler/tests/object_reference_regression_noopt.rxas	2026-07-19 20:36:15
+@@ -30,2 +30 @@
+-   settp r3,768
+-   call r1,§object_reference_regression.largepayload.§factory(),r2
++   settpcall r1,§object_reference_regression.largepayload.§factory(),r2,r3,768
+@@ -37,3 +36 @@
+-   settp r1,256
+-   swap r3,r1
+-   call r4,§object_reference_regression.largepayload.summary(),r2
++   settpswapcall r4,§object_reference_regression.largepayload.summary(),r2,r1,256,r3
+@@ -48,3 +45 @@
+-   settp r1,256
+-   swap r4,r1
+-   call r2,§object_reference_regression.largepayload.check(),r3
++   settpswapcall r2,§object_reference_regression.largepayload.check(),r3,r1,256,r4
+@@ -62,2 +57 @@
+-   settp r4,768
+-   call r5,replacePayloadRef(),r2
++   settpcall r5,replacePayloadRef(),r2,r4,768
+@@ -69,3 +63 @@
+-   settp r1,256
+-   swap r4,r1
+-   call r2,§object_reference_regression.largepayload.summary(),r3
++   settpswapcall r2,§object_reference_regression.largepayload.summary(),r3,r1,256,r4
+@@ -83,2 +75 @@
+-   settp r4,768
+-   call r6,mutatePayloadRef(),r2
++   settpcall r6,mutatePayloadRef(),r2,r4,768
+@@ -90,3 +81 @@
+-   settp r1,256
+-   swap r4,r1
+-   call r2,§object_reference_regression.largepayload.summary(),r3
++   settpswapcall r2,§object_reference_regression.largepayload.summary(),r3,r1,256,r4
+@@ -106,2 +95 @@
+-   settp r4,768
+-   call r0,replacePayloadLocal(),r2
++   settpcall r0,replacePayloadLocal(),r2,r4,768
+@@ -119,3 +107 @@
+-   settp r1,256
+-   swap r4,r1
+-   call r2,§object_reference_regression.largepayload.summary(),r3
++   settpswapcall r2,§object_reference_regression.largepayload.summary(),r3,r1,256,r4
+@@ -143,3 +129 @@
+-   settp a2,256
+-   swap r3,a2
+-   call a1,§object_reference_regression.largepayload.§factory(),r2
++   settpswapcall a1,§object_reference_regression.largepayload.§factory(),r2,a2,256,r3
+@@ -168,3 +152 @@
+-   settp a2,256
+-   swap r4,a2
+-   call r5,§object_reference_regression.largepayload.rename(),r2
++   settpswapcall r5,§object_reference_regression.largepayload.rename(),r2,a2,256,r4
+@@ -196,3 +178 @@
+-   settp a2,256
+-   swap r3,a2
+-   call r0,§object_reference_regression.largepayload.§factory(),r2
++   settpswapcall r0,§object_reference_regression.largepayload.§factory(),r2,a2,256,r3
+@@ -205,3 +185 @@
+-   settp r0,256
+-   swap r3,r0
+-   call r4,§object_reference_regression.largepayload.summary(),r2
++   settpswapcall r4,§object_reference_regression.largepayload.summary(),r2,r0,256,r3
+@@ -297,2 +275 @@
+-   setattrs r1,64
+-   linkattr1 r6,r1,r3
++   setlinkattr1 r6,r1,64,r3
+@@ -326,2 +303 @@
+-   settp r6,768
+-   call r4,§object_reference_regression.smallpayload.§factory(),r5
++   settpcall r4,§object_reference_regression.smallpayload.§factory(),r5,r6,768
+@@ -418,2 +394 @@
+-   minattrs r1,1
+-   linkattr1 r3,r1,1
++   minlinkattr1 r3,r1,1
+@@ -427,2 +402 @@
+-   minattrs r1,40
+-   linkattr1 r4,r1,40
++   minlinkattr1 r4,r1,40
+@@ -449,2 +423 @@
+-   settp r5,768
+-   call r7,§object_reference_regression.smallpayload.setname(),r3
++   settpcall r7,§object_reference_regression.smallpayload.setname(),r3,r5,768
+@@ -478,3 +451 @@
+-   settp r4,256
+-   swap r3,r4
+-   call r0,§object_reference_regression.smallpayload.getname(),r2
++   settpswapcall r0,§object_reference_regression.smallpayload.getname(),r2,r4,256,r3
+@@ -492,2 +463 @@
+-   minattrs r6,1
+-   linkattr1 r5,r6,1
++   minlinkattr1 r5,r6,1
+@@ -496,2 +466 @@
+-   unlink r5
+-   unlink r6
++   unlinkn r5,r6
+@@ -502,2 +471 @@
+-   minattrs r8,40
+-   linkattr1 r7,r8,40
++   minlinkattr1 r7,r8,40
+@@ -506,2 +474 @@
+-   unlink r7
+-   unlink r8
++   unlinkn r7,r8
+@@ -532,2 +499 @@
+-   minattrs r2,17
+-   linkattr1 r1,r2,17
++   minlinkattr1 r1,r2,17
+@@ -541,2 +507 @@
+-   unlink r1
+-   unlink r2
++   unlinkn r1,r2
+--- compiler/tests/golden/opt/object_reference_regression.rxas	2026-07-18 07:25:04
++++ cmake-build-debug/compiler/tests/object_reference_regression_opt.rxas	2026-07-19 20:35:42
+@@ -54,2 +54 @@
+-   setattrs r2,64
+-   linkattr1 r8,r2,r4
++   setlinkattr1 r8,r2,64,r4
+@@ -169,2 +168 @@
+-   minattrs r13,1
+-   linkattr1 r4,r13,1
++   minlinkattr1 r4,r13,1
+@@ -173,2 +171 @@
+-   unlink r4
+-   unlink r13
++   unlinkn r4,r13
+@@ -179,2 +176 @@
+-   minattrs r15,40
+-   linkattr1 r14,r15,40
++   minlinkattr1 r14,r15,40
+@@ -183,2 +179 @@
+-   unlink r14
+-   unlink r15
++   unlinkn r14,r15
+@@ -212,2 +207 @@
+-   minattrs r16,17
+-   linkattr1 r17,r16,17
++   minlinkattr1 r17,r16,17
+@@ -221,2 +215 @@
+-   unlink r17
+-   unlink r16
++   unlinkn r17,r16
+@@ -309,2 +302 @@
+-   setattrs r20,64
+-   linkattr1 r13,r20,r17
++   setlinkattr1 r13,r20,64,r17
+@@ -423,2 +415 @@
+-   minattrs r7,1
+-   linkattr1 r9,r7,1
++   minlinkattr1 r9,r7,1
+@@ -427,2 +418 @@
+-   unlink r9
+-   unlink r7
++   unlinkn r9,r7
+@@ -433,2 +423 @@
+-   minattrs r4,40
+-   linkattr1 r6,r4,40
++   minlinkattr1 r6,r4,40
+@@ -437,2 +426 @@
+-   unlink r6
+-   unlink r4
++   unlinkn r6,r4
+@@ -480,2 +468 @@
+-   minattrs r28,1
+-   linkattr1 r26,r28,1
++   minlinkattr1 r26,r28,1
+@@ -488,2 +475 @@
+-   minattrs r28,40
+-   linkattr1 r26,r28,40
++   minlinkattr1 r26,r28,40
+@@ -508,2 +494 @@
+-   settp r32,768
+-   call r17,§object_reference_regression.smallpayload.setname(),r30
++   settpcall r17,§object_reference_regression.smallpayload.setname(),r30,r32,768
+@@ -548,2 +533 @@
+-   minattrs r13,1
+-   linkattr1 r14,r13,1
++   minlinkattr1 r14,r13,1
+@@ -552,2 +536 @@
+-   unlink r14
+-   unlink r13
++   unlinkn r14,r13
+@@ -558,2 +541 @@
+-   minattrs r7,40
+-   linkattr1 r9,r7,40
++   minlinkattr1 r9,r7,40
+@@ -562,2 +544 @@
+-   unlink r9
+-   unlink r7
++   unlinkn r9,r7
+@@ -616,2 +597 @@
+-   setattrs r36,64
+-   linkattr1 r13,r36,r32
++   setlinkattr1 r13,r36,64,r32
+@@ -730,2 +710 @@
+-   minattrs r7,1
+-   linkattr1 r9,r7,1
++   minlinkattr1 r9,r7,1
+@@ -734,2 +713 @@
+-   unlink r9
+-   unlink r7
++   unlinkn r9,r7
+@@ -740,2 +718 @@
+-   minattrs r4,40
+-   linkattr1 r6,r4,40
++   minlinkattr1 r6,r4,40
+@@ -744,2 +721 @@
+-   unlink r6
+-   unlink r4
++   unlinkn r6,r4
+@@ -796,2 +772 @@
+-   minattrs r13,1
+-   linkattr1 r14,r13,1
++   minlinkattr1 r14,r13,1
+@@ -800,2 +775 @@
+-   unlink r14
+-   unlink r13
++   unlinkn r14,r13
+@@ -806,2 +780 @@
+-   minattrs r7,40
+-   linkattr1 r9,r7,40
++   minlinkattr1 r9,r7,40
+@@ -810,2 +783 @@
+-   unlink r9
+-   unlink r7
++   unlinkn r9,r7
+@@ -919,2 +891 @@
+-   setattrs r1,64
+-   linkattr1 r6,r1,r3
++   setlinkattr1 r6,r1,64,r3
+@@ -1049,2 +1020 @@
+-   minattrs r1,1
+-   linkattr1 r3,r1,1
++   minlinkattr1 r3,r1,1
+@@ -1058,2 +1028 @@
+-   minattrs r1,40
+-   linkattr1 r4,r1,40
++   minlinkattr1 r4,r1,40
+@@ -1080,2 +1049 @@
+-   settp r5,768
+-   call r7,§object_reference_regression.smallpayload.setname(),r3
++   settpcall r7,§object_reference_regression.smallpayload.setname(),r3,r5,768
+@@ -1125,2 +1093 @@
+-   minattrs r6,1
+-   linkattr1 r5,r6,1
++   minlinkattr1 r5,r6,1
+@@ -1129,2 +1096 @@
+-   unlink r5
+-   unlink r6
++   unlinkn r5,r6
+@@ -1135,2 +1101 @@
+-   minattrs r8,40
+-   linkattr1 r7,r8,40
++   minlinkattr1 r7,r8,40
+@@ -1139,2 +1104 @@
+-   unlink r7
+-   unlink r8
++   unlinkn r7,r8
+@@ -1165,2 +1129 @@
+-   minattrs r2,17
+-   linkattr1 r1,r2,17
++   minlinkattr1 r1,r2,17
+@@ -1174,2 +1137 @@
+-   unlink r1
+-   unlink r2
++   unlinkn r1,r2
+--- compiler/tests/golden/noopt/basic_strings.rxas	2026-07-18 07:25:06
++++ cmake-build-debug/compiler/tests/basic_strings_noopt.rxas	2026-07-19 20:35:20
+@@ -47,3 +47 @@
+-   settp r2,256
+-   swap r5,r2
+-   call r6,rxfnsb.length(),r4
++   settpswapcall r6,rxfnsb.length(),r4,r2,256,r5
+@@ -64,2 +62 @@
+-   settp r8,512
+-   call r9,rxfnsb.substr(),r4
++   settpcall r9,rxfnsb.substr(),r4,r8,512
+@@ -77,2 +74 @@
+-   settp r9,0
+-   call r5,rxfnsb.pos(),r6
++   settpcall r5,rxfnsb.pos(),r6,r9,0
+--- compiler/tests/golden/noopt/basic_arrays.rxas	2026-07-18 07:25:08
++++ cmake-build-debug/compiler/tests/basic_arrays_noopt.rxas	2026-07-19 20:35:49
+@@ -29,2 +29 @@
+-   setattrs r1,10
+-   linkattr1 r5,r1,r2
++   setlinkattr1 r5,r1,10,r2
+@@ -67,2 +66 @@
+-   setattrs r1,10
+-   linkattr1 r2,r1,r6
++   setlinkattr1 r2,r1,10,r6
+@@ -89,2 +87 @@
+-   setattrs r1,10
+-   linkattr1 r6,r1,r0
++   setlinkattr1 r6,r1,10,r0
+--- compiler/tests/golden/opt/basic_arrays.rxas	2026-07-18 07:25:08
++++ cmake-build-debug/compiler/tests/basic_arrays_opt.rxas	2026-07-19 20:36:12
+@@ -29,2 +29 @@
+-   setattrs r0,10
+-   linkattr1 r4,r0,r1
++   setlinkattr1 r4,r0,10,r1
+@@ -67,2 +66 @@
+-   setattrs r0,10
+-   linkattr1 r1,r0,r5
++   setlinkattr1 r1,r0,10,r5
+--- compiler/tests/golden/noopt/inline_test1.rxas	2026-07-18 07:25:12
++++ cmake-build-debug/compiler/tests/inline_test1_noopt.rxas	2026-07-19 20:35:59
+@@ -30,2 +30 @@
+-   swap r5,r0
+-   call r1,multiplyByTwo(),r4
++   swapcall r1,multiplyByTwo(),r4,r0,r5
+--- compiler/tests/golden/noopt/inline_test2.rxas	2026-07-18 07:25:13
++++ cmake-build-debug/compiler/tests/inline_test2_noopt.rxas	2026-07-19 20:35:25
+@@ -164,2 +164 @@
+-   swap r2,a1
+-   call r3,helper(),r1
++   swapcall r3,helper(),r1,a1,r2
+--- compiler/tests/golden/noopt/inline_test_call.rxas	2026-07-18 07:25:14
++++ cmake-build-debug/compiler/tests/inline_test_call_noopt.rxas	2026-07-19 20:35:29
+@@ -29,2 +29 @@
+-   swap r4,r0
+-   call r5,logDouble(),r3
++   swapcall r5,logDouble(),r3,r0,r4
+--- compiler/tests/golden/noopt/inline_test_expr.rxas	2026-07-18 07:25:16
++++ cmake-build-debug/compiler/tests/inline_test_expr_noopt.rxas	2026-07-19 20:36:10
+@@ -30,2 +30 @@
+-   swap r5,r0
+-   call r6,addOne(),r4
++   swapcall r6,addOne(),r4,r0,r5
+--- compiler/tests/golden/noopt/inline_test_expr_negative.rxas	2026-07-18 07:25:17
++++ cmake-build-debug/compiler/tests/inline_test_expr_negative_noopt.rxas	2026-07-19 20:36:14
+@@ -29,2 +29 @@
+-   swap r6,r0
+-   call r4,addOne(),r5
++   swapcall r4,addOne(),r5,r0,r6
+--- compiler/tests/golden/noopt/inline_test_nested_call_expr.rxas	2026-07-18 07:25:18
++++ cmake-build-debug/compiler/tests/inline_test_nested_call_expr_noopt.rxas	2026-07-19 20:35:27
+@@ -29,2 +29 @@
+-   swap r6,r0
+-   call r4,addOne(),r5
++   swapcall r4,addOne(),r5,r0,r6
+--- compiler/tests/golden/noopt/inline_test_concat_expr.rxas	2026-07-18 07:25:19
++++ cmake-build-debug/compiler/tests/inline_test_concat_expr_noopt.rxas	2026-07-19 20:35:54
+@@ -30,2 +30 @@
+-   swap r5,r0
+-   call r6,asString(),r4
++   swapcall r6,asString(),r4,r0,r5
+--- compiler/tests/golden/noopt/inline_test_say_expr.rxas	2026-07-18 07:25:21
++++ cmake-build-debug/compiler/tests/inline_test_say_expr_noopt.rxas	2026-07-19 20:35:53
+@@ -29,2 +29 @@
+-   swap r4,r0
+-   call r5,asString(),r3
++   swapcall r5,asString(),r3,r0,r4
+--- compiler/tests/golden/noopt/inline_test_say_expr_negative.rxas	2026-07-18 07:25:22
++++ cmake-build-debug/compiler/tests/inline_test_say_expr_negative_noopt.rxas	2026-07-19 20:36:15
+@@ -29,2 +29 @@
+-   swap r4,r0
+-   call r5,asString(),r3
++   swapcall r5,asString(),r3,r0,r4
+--- compiler/tests/golden/noopt/inline_test_return_expr.rxas	2026-07-18 07:25:23
++++ cmake-build-debug/compiler/tests/inline_test_return_expr_noopt.rxas	2026-07-19 20:35:49
+@@ -29,2 +29 @@
+-   swap r4,r0
+-   call r5,wrap(),r3
++   swapcall r5,wrap(),r3,r0,r4
+@@ -56,2 +55 @@
+-   swap r2,a1
+-   call r3,addOne(),r1
++   swapcall r3,addOne(),r1,a1,r2
+--- compiler/tests/golden/opt/inline_test_return_expr.rxas	2026-07-18 07:25:24
++++ cmake-build-debug/compiler/tests/inline_test_return_expr_opt.rxas	2026-07-19 20:35:32
+@@ -35,2 +35 @@
+-   swap r5,r3
+-   call r6,addOne(),r4
++   swapcall r6,addOne(),r4,r3,r5
+--- compiler/tests/golden/noopt/inline_test_unary_expr.rxas	2026-07-18 07:25:25
++++ cmake-build-debug/compiler/tests/inline_test_unary_expr_noopt.rxas	2026-07-19 20:36:15
+@@ -29,2 +29 @@
+-   swap r4,r0
+-   call r5,addOne(),r3
++   swapcall r5,addOne(),r3,r0,r4
+@@ -40,2 +39 @@
+-   swap r5,r0
+-   call r3,addOne(),r4
++   swapcall r3,addOne(),r4,r0,r5
+--- compiler/tests/golden/noopt/inline_test_compare_expr.rxas	2026-07-18 07:25:26
++++ cmake-build-debug/compiler/tests/inline_test_compare_expr_noopt.rxas	2026-07-19 20:35:39
+@@ -29,2 +29 @@
+-   swap r4,r0
+-   call r5,addOne(),r3
++   swapcall r5,addOne(),r3,r0,r4
+--- compiler/tests/golden/noopt/inline_test_call_arg_expr.rxas	2026-07-18 07:25:28
++++ cmake-build-debug/compiler/tests/inline_test_call_arg_expr_noopt.rxas	2026-07-19 20:36:14
+@@ -29,2 +29 @@
+-   swap r6,r0
+-   call r4,addOne(),r5
++   swapcall r4,addOne(),r5,r0,r6
+--- compiler/tests/golden/noopt/inline_test_call_like_arg_expr.rxas	2026-07-18 07:25:29
++++ cmake-build-debug/compiler/tests/inline_test_call_like_arg_expr_noopt.rxas	2026-07-19 20:36:10
+@@ -32,2 +32 @@
+-   swap r7,r1
+-   call r5,addOne(),r6
++   swapcall r5,addOne(),r6,r1,r7
+@@ -44,2 +43 @@
+-   swap r9,r1
+-   call r7,addOne(),r8
++   swapcall r7,addOne(),r8,r1,r9
+@@ -94,3 +92 @@
+-   linkattr1 r2,r1,1
+-   icopy r2,a1
+-   unlink r2
++   isetattr1 r1,1,a1
+--- compiler/tests/golden/opt/inline_test_call_like_arg_expr.rxas	2026-07-18 07:25:30
++++ cmake-build-debug/compiler/tests/inline_test_call_like_arg_expr_opt.rxas	2026-07-19 20:35:51
+@@ -50,3 +50 @@
+-   linkattr1 r8,r5,1
+-   icopy r8,r4
+-   unlink r8
++   isetattr1 r5,1,r4
+@@ -116,3 +114 @@
+-   linkattr1 r2,r1,1
+-   icopy r2,a1
+-   unlink r2
++   isetattr1 r1,1,a1
+--- compiler/tests/golden/noopt/inline_test_short_circuit_expr.rxas	2026-07-18 07:25:30
++++ cmake-build-debug/compiler/tests/inline_test_short_circuit_expr_noopt.rxas	2026-07-19 20:36:04
+@@ -26,2 +26 @@
+-   swap r3,r0
+-   call r0,probe(),r1
++   swapcall r0,probe(),r1,r0,r3
+@@ -54,2 +53 @@
+-   swap r3,r0
+-   call r0,probe(),r1
++   swapcall r0,probe(),r1,r0,r3
+@@ -79,2 +77 @@
+-   swap r3,r0
+-   call r4,probe(),r1
++   swapcall r4,probe(),r1,r0,r3
+@@ -107,2 +104 @@
+-   swap r4,r0
+-   call r0,probe(),r2
++   swapcall r0,probe(),r2,r0,r4
+@@ -135,2 +131 @@
+-   swap r4,r0
+-   call r0,probe(),r2
++   swapcall r0,probe(),r2,r0,r4
+--- compiler/tests/golden/noopt/inline_test_composed_expr_contexts.rxas	2026-07-18 07:25:32
++++ cmake-build-debug/compiler/tests/inline_test_composed_expr_contexts_noopt.rxas	2026-07-19 20:35:38
+@@ -77,2 +77 @@
+-   swap r6,r0
+-   call r0,bump(),r5
++   swapcall r0,bump(),r5,r0,r6
+@@ -104,2 +103 @@
+-   swap r6,r0
+-   call r0,bump(),r5
++   swapcall r0,bump(),r5,r0,r6
+@@ -131,2 +129 @@
+-   swap r6,r0
+-   call r0,bump(),r5
++   swapcall r0,bump(),r5,r0,r6
+@@ -158,2 +155 @@
+-   swap r6,r0
+-   call r0,bump(),r5
++   swapcall r0,bump(),r5,r0,r6
+--- compiler/tests/golden/noopt/inline_test_byvalue_arg_reuse.rxas	2026-07-18 07:25:33
++++ cmake-build-debug/compiler/tests/inline_test_byvalue_arg_reuse_noopt.rxas	2026-07-19 20:35:21
+@@ -26,2 +26 @@
+-   settp r3,768
+-   call r5,check(),r1
++   settpcall r5,check(),r1,r3,768
+@@ -42,2 +41 @@
+-   settp r5,768
+-   call r2,check(),r3
++   settpcall r2,check(),r3,r5,768
+@@ -58,2 +56 @@
+-   settp r5,768
+-   call r2,check(),r3
++   settpcall r2,check(),r3,r5,768
+@@ -74,2 +71 @@
+-   settp r5,768
+-   call r2,check(),r3
++   settpcall r2,check(),r3,r5,768
+@@ -90,2 +86 @@
+-   settp r5,768
+-   call r2,check(),r3
++   settpcall r2,check(),r3,r5,768
+@@ -106,2 +101 @@
+-   settp r5,768
+-   call r2,check(),r3
++   settpcall r2,check(),r3,r5,768
+@@ -122,2 +116 @@
+-   settp r5,768
+-   call r2,check(),r3
++   settpcall r2,check(),r3,r5,768
+@@ -138,2 +131 @@
+-   settp r5,768
+-   call r2,check(),r3
++   settpcall r2,check(),r3,r5,768
+@@ -154,2 +146 @@
+-   settp r5,768
+-   call r2,check(),r3
++   settpcall r2,check(),r3,r5,768
+@@ -170,2 +161 @@
+-   settp r5,768
+-   call r2,check(),r3
++   settpcall r2,check(),r3,r5,768
+--- compiler/tests/golden/noopt/inline_test_condition_contexts.rxas	2026-07-18 07:25:36
++++ cmake-build-debug/compiler/tests/inline_test_condition_contexts_noopt.rxas	2026-07-19 20:36:13
+@@ -55,2 +55 @@
+-   swap r4,r0
+-   call r2,belowTwo(),r3
++   swapcall r2,belowTwo(),r3,r0,r4
+@@ -97,2 +96 @@
+-   swap r4,r1
+-   call r2,atLeastTwo(),r3
++   swapcall r2,atLeastTwo(),r3,r1,r4
+--- compiler/tests/golden/noopt/inline_test_member_receiver_expr.rxas	2026-07-18 07:25:38
++++ cmake-build-debug/compiler/tests/inline_test_member_receiver_expr_noopt.rxas	2026-07-19 20:35:30
+@@ -19,2 +19 @@
+-   settp r3,768
+-   call r1,buildBox(),r2
++   settpcall r1,buildBox(),r2,r3,768
+@@ -23,2 +22 @@
+-   settp r1,256
+-   call r3,§inline_test_member_receiver_expr.box.getname(),r0
++   settpcall r3,§inline_test_member_receiver_expr.box.getname(),r0,r1,256
+@@ -31,2 +29 @@
+-   settp r1,768
+-   call r3,buildBox(),r0
++   settpcall r3,buildBox(),r0,r1,768
+@@ -35,2 +32 @@
+-   settp r3,256
+-   call r1,§inline_test_member_receiver_expr.box.getname(),r2
++   settpcall r1,§inline_test_member_receiver_expr.box.getname(),r2,r3,256
+@@ -54,3 +50 @@
+-   settp a1,256
+-   swap r3,a1
+-   call r1,§inline_test_member_receiver_expr.box.§factory(),r2
++   settpswapcall r1,§inline_test_member_receiver_expr.box.§factory(),r2,a1,256,r3
+--- compiler/tests/golden/opt/inline_test_member_receiver_expr.rxas	2026-07-18 07:25:39
++++ cmake-build-debug/compiler/tests/inline_test_member_receiver_expr_opt.rxas	2026-07-19 20:35:28
+@@ -41,2 +41 @@
+-   unlink r3
+-   br l63bexprend
++   unlinkbr r3,l63bexprend
+@@ -71,2 +70 @@
+-   unlink r5
+-   br l71bexprend
++   unlinkbr r5,l71bexprend
+--- compiler/tests/golden/noopt/inline_test_named_factory_selector.rxas	2026-07-18 07:25:40
++++ cmake-build-debug/compiler/tests/inline_test_named_factory_selector_noopt.rxas	2026-07-19 20:35:53
+@@ -32,2 +32 @@
+-   settp r4,768
+-   call r2,assignedNamed(),r3
++   settpcall r2,assignedNamed(),r3,r4,768
+@@ -45,2 +44 @@
+-   settp r4,768
+-   call r2,describedNamed(),r3
++   settpcall r2,describedNamed(),r3,r4,768
+--- compiler/tests/golden/opt/inline_test_named_factory_selector.rxas	2026-07-18 07:25:40
++++ cmake-build-debug/compiler/tests/inline_test_named_factory_selector_opt.rxas	2026-07-19 20:36:16
+@@ -32,2 +32 @@
+-   settp r4,768
+-   call r2,assignedNamed(),r3
++   settpcall r2,assignedNamed(),r3,r4,768
+--- compiler/tests/golden/noopt/inline_test_ref_opt.rxas	2026-07-18 07:25:41
++++ cmake-build-debug/compiler/tests/inline_test_ref_opt_noopt.rxas	2026-07-19 20:35:33
+@@ -21,2 +21 @@
+-   swap r2,r0
+-   call r3,refBump(),r1
++   swapcall r3,refBump(),r1,r0,r2
+@@ -34,2 +33 @@
+-   settp r3,0
+-   call r4,optAdd(),r1
++   settpcall r4,optAdd(),r1,r3,0
+@@ -44,2 +42 @@
+-   settp r4,0
+-   call r1,optAdd(),r2
++   settpcall r1,optAdd(),r2,r4,0
+--- compiler/tests/golden/noopt/inline_test_ref_indexed.rxas	2026-07-18 07:25:42
++++ cmake-build-debug/compiler/tests/inline_test_ref_indexed_noopt.rxas	2026-07-19 20:35:22
+@@ -23,3 +23,2 @@
+-   icopy r0,r1
+-   .traceevent "A" 6 "R" "I" "r" 0 3 3 0 "values" ""
+-   unlink r0
++   isetunlink r0,r1
++   .traceevent "A" 6 "R" "I" "r" 0 3 3 0 "10" ""
+@@ -31,3 +30,2 @@
+-   icopy r1,r0
+-   .traceevent "A" 6 "R" "I" "r" 1 4 4 0 "values" ""
+-   unlink r1
++   isetunlink r1,r0
++   .traceevent "A" 6 "R" "I" "r" 1 4 4 0 "20" ""
+@@ -37,2 +35 @@
+-   setattrs g1,3
+-   linkattr1 r2,g1,g0
++   setlinkiload r2,g1,3,g0,r0,1
+@@ -40,3 +37 @@
+-   load r0,1
+-   swap r1,r2
+-   call r3,refBump(),r0
++   swapcall r3,refBump(),r0,r2,r1
+--- compiler/tests/golden/opt/inline_test_ref_indexed.rxas	2026-07-18 07:25:43
++++ cmake-build-debug/compiler/tests/inline_test_ref_indexed_opt.rxas	2026-07-19 20:35:28
+@@ -23,3 +23,2 @@
+-   icopy r0,r1
+-   .traceevent "A" 6 "R" "I" "r" 0 3 3 0 "values" ""
+-   unlink r0
++   isetunlink r0,r1
++   .traceevent "A" 6 "R" "I" "r" 0 3 3 0 "10" ""
+@@ -31,3 +30,2 @@
+-   icopy r1,r0
+-   .traceevent "A" 6 "R" "I" "r" 1 4 4 0 "values" ""
+-   unlink r1
++   isetunlink r1,r0
++   .traceevent "A" 6 "R" "I" "r" 1 4 4 0 "20" ""
+@@ -48,2 +46 @@
+-   setattrs g1,3
+-   linkattr1 r1,g1,r2
++   setlinkattr1 r1,g1,3,r2
+@@ -52,2 +49 @@
+-   setattrs g1,3
+-   linkattr1 r0,g1,r2
++   setlinkattr1 r0,g1,3,r2
+@@ -58,3 +54,2 @@
+-   icopy r1,r4
+-   .traceevent "A" 6 "R" "I" "r" 1 7 7 0 "values" ""
+-   unlink r1
++   isetunlink r1,r4
++   .traceevent "A" 6 "R" "I" "r" 1 7 7 0 "+" ""
+@@ -64,2 +59 @@
+-   setattrs g1,3
+-   linkattr1 r4,g1,r2
++   setlinkattr1 r4,g1,3,r2
+@@ -67,2 +61 @@
+-   icopy r1,r4
+-   unlink r4
++   igetunlink r1,r4
+--- compiler/tests/golden/noopt/inline_test_ref_stem.rxas	2026-07-18 07:25:44
++++ cmake-build-debug/compiler/tests/inline_test_ref_stem_noopt.rxas	2026-07-19 20:35:37
+@@ -15,2 +15 @@
+-   minattrs g1,2
+-   linkattr1 r0,g1,2
++   minlinkattr1 r0,g1,2
+@@ -29,2 +28 @@
+-   minattrs g1,g0,0
+-   linkattr1 r2,g1,g0
++   minlinkattr1 r2,g1,g0,0
+@@ -33,2 +31 @@
+-   swap r1,r2
+-   call r3,fillSlot(),r0
++   swapcall r3,fillSlot(),r0,r2,r1
+@@ -39,2 +36 @@
+-   minattrs g1,1
+-   linkattr1 r2,g1,1
++   minlinkattr1 r2,g1,1
+@@ -45,2 +41 @@
+-   minattrs g1,2
+-   linkattr1 r2,g1,2
++   minlinkattr1 r2,g1,2
+--- compiler/tests/golden/opt/inline_test_ref_stem.rxas	2026-07-18 07:25:44
++++ cmake-build-debug/compiler/tests/inline_test_ref_stem_opt.rxas	2026-07-19 20:36:09
+@@ -15,2 +15 @@
+-   minattrs g1,2
+-   linkattr1 r0,g1,2
++   minlinkattr1 r0,g1,2
+@@ -39,2 +38 @@
+-   minattrs g1,r2,0
+-   linkattr1 r1,g1,r2
++   minlinkattr1 r1,g1,r2,0
+@@ -47,2 +45 @@
+-   minattrs g1,1
+-   linkattr1 r1,g1,1
++   minlinkattr1 r1,g1,1
+@@ -53,2 +50 @@
+-   minattrs g1,2
+-   linkattr1 r1,g1,2
++   minlinkattr1 r1,g1,2
+--- compiler/tests/golden/noopt/inline_test_ref_computed.rxas	2026-07-18 07:25:45
++++ cmake-build-debug/compiler/tests/inline_test_ref_computed_noopt.rxas	2026-07-19 20:35:23
+@@ -24,3 +24,2 @@
+-   icopy r1,r2
+-   .traceevent "A" 6 "R" "I" "r" 1 3 3 0 "values" ""
+-   unlink r1
++   isetunlink r1,r2
++   .traceevent "A" 6 "R" "I" "r" 1 3 3 0 "10" ""
+@@ -32,3 +31,2 @@
+-   icopy r2,r1
+-   .traceevent "A" 6 "R" "I" "r" 2 4 4 0 "values" ""
+-   unlink r2
++   isetunlink r2,r1
++   .traceevent "A" 6 "R" "I" "r" 2 4 4 0 "20" ""
+@@ -42,2 +40 @@
+-   setattrs r0,3
+-   linkattr1 r4,r0,r3
++   setlinkiload r4,r0,3,r3,r1,1
+@@ -45,3 +42 @@
+-   load r1,1
+-   swap r2,r4
+-   call r5,bump(),r1
++   swapcall r5,bump(),r1,r4,r2
+--- compiler/tests/golden/opt/inline_test_ref_computed.rxas	2026-07-18 07:25:46
++++ cmake-build-debug/compiler/tests/inline_test_ref_computed_opt.rxas	2026-07-19 20:35:28
+@@ -24,3 +24,2 @@
+-   icopy r1,r2
+-   .traceevent "A" 6 "R" "I" "r" 1 3 3 0 "values" ""
+-   unlink r1
++   isetunlink r1,r2
++   .traceevent "A" 6 "R" "I" "r" 1 3 3 0 "10" ""
+@@ -32,3 +31,2 @@
+-   icopy r2,r1
+-   .traceevent "A" 6 "R" "I" "r" 2 4 4 0 "values" ""
+-   unlink r2
++   isetunlink r2,r1
++   .traceevent "A" 6 "R" "I" "r" 2 4 4 0 "20" ""
+@@ -52,2 +50 @@
+-   setattrs r0,3
+-   linkattr1 r2,r0,r3
++   setlinkattr1 r2,r0,3,r3
+@@ -56,2 +53 @@
+-   setattrs r0,3
+-   linkattr1 r1,r0,r3
++   setlinkattr1 r1,r0,3,r3
+@@ -63,3 +59,2 @@
+-   icopy r2,r5
+-   .traceevent "A" 6 "R" "I" "r" 2 7 7 0 "values" ""
+-   unlink r2
++   isetunlink r2,r5
++   .traceevent "A" 6 "R" "I" "r" 2 7 7 0 "+" ""
+@@ -69,2 +64 @@
+-   setattrs r0,3
+-   linkattr1 r5,r0,r3
++   setlinkattr1 r5,r0,3,r3
+@@ -72,2 +66 @@
+-   icopy r2,r5
+-   unlink r5
++   igetunlink r2,r5
+--- compiler/tests/golden/noopt/inline_test_ref_vararg.rxas	2026-07-18 07:25:46
++++ cmake-build-debug/compiler/tests/inline_test_ref_vararg_noopt.rxas	2026-07-19 20:35:33
+@@ -33,2 +33 @@
+-   swap r6,r2
+-   call r7,countTail(),r3
++   swapcall r7,countTail(),r3,r2,r6
+@@ -48,2 +47 @@
+-   swap r7,r2
+-   call r3,pickSecond(),r4
++   swapcall r3,pickSecond(),r4,r2,r7
+@@ -63,2 +61 @@
+-   swap r7,r2
+-   call r3,hasSecond(),r4
++   swapcall r3,hasSecond(),r4,r2,r7
+@@ -78,2 +75 @@
+-   swap r7,r2
+-   call r3,hasFifth(),r4
++   swapcall r3,hasFifth(),r4,r2,r7
+@@ -93,2 +89 @@
+-   swap r7,r2
+-   call r3,mutateSecond(),r4
++   swapcall r3,mutateSecond(),r4,r2,r7
+@@ -190,2 +185 @@
+-   swap r1,r2
+-   call r3,bumpOne(),r0
++   swapcall r3,bumpOne(),r0,r2,r1
+--- compiler/tests/golden/noopt/inline_test_ref_vararg_runtime.rxas	2026-07-18 07:25:48
++++ cmake-build-debug/compiler/tests/inline_test_ref_vararg_runtime_noopt.rxas	2026-07-19 20:35:34
+@@ -33,2 +33 @@
+-   swap r6,r2
+-   call r7,countTail(),r3
++   swapcall r7,countTail(),r3,r2,r6
+@@ -50,2 +49 @@
+-   swap r7,r2
+-   call r8,readTail(),r3
++   swapcall r8,readTail(),r3,r2,r7
+@@ -67,2 +65 @@
+-   swap r8,r2
+-   call r3,hasTail(),r4
++   swapcall r3,hasTail(),r4,r2,r8
+@@ -84,2 +81 @@
+-   swap r8,r2
+-   call r3,hasTail(),r4
++   swapcall r3,hasTail(),r4,r2,r8
+@@ -101,2 +97 @@
+-   swap r8,r2
+-   call r3,mutateTailIndirect(),r4
++   swapcall r3,mutateTailIndirect(),r4,r2,r8
+@@ -198,2 +193 @@
+-   swap r2,r3
+-   call r4,bumpOne(),r1
++   swapcall r4,bumpOne(),r1,r3,r2
+--- compiler/tests/golden/opt/inline_test_ref_vararg_runtime.rxas	2026-07-18 07:25:48
++++ cmake-build-debug/compiler/tests/inline_test_ref_vararg_runtime_opt.rxas	2026-07-19 20:36:16
+@@ -159,2 +159 @@
+-   swap r2,r3
+-   call r4,bumpOne(),r1
++   swapcall r4,bumpOne(),r1,r3,r2
+--- compiler/tests/golden/noopt/inline_test_ref_negative.rxas	2026-07-18 07:25:49
++++ cmake-build-debug/compiler/tests/inline_test_ref_negative_noopt.rxas	2026-07-19 20:35:23
+@@ -23,3 +23,2 @@
+-   icopy r0,r1
+-   .traceevent "A" 6 "R" "I" "r" 0 3 3 0 "values" ""
+-   unlink r0
++   isetunlink r0,r1
++   .traceevent "A" 6 "R" "I" "r" 0 3 3 0 "10" ""
+@@ -31,3 +30,2 @@
+-   icopy r1,r0
+-   .traceevent "A" 6 "R" "I" "r" 1 4 4 0 "values" ""
+-   unlink r1
++   isetunlink r1,r0
++   .traceevent "A" 6 "R" "I" "r" 1 4 4 0 "20" ""
+@@ -37,2 +35 @@
+-   setattrs g1,3
+-   linkattr1 r2,g1,g0
++   setlinkiload r2,g1,3,g0,r0,1
+@@ -40,3 +37 @@
+-   load r0,1
+-   swap r1,r2
+-   call r2,refBump(),r0
++   swapcall r2,refBump(),r0,r2,r1
+--- compiler/tests/golden/opt/inline_test_ref_negative.rxas	2026-07-18 07:25:50
++++ cmake-build-debug/compiler/tests/inline_test_ref_negative_opt.rxas	2026-07-19 20:35:18
+@@ -23,3 +23,2 @@
+-   icopy r0,r1
+-   .traceevent "A" 6 "R" "I" "r" 0 3 3 0 "values" ""
+-   unlink r0
++   isetunlink r0,r1
++   .traceevent "A" 6 "R" "I" "r" 0 3 3 0 "10" ""
+@@ -31,3 +30,2 @@
+-   icopy r1,r0
+-   .traceevent "A" 6 "R" "I" "r" 1 4 4 0 "values" ""
+-   unlink r1
++   isetunlink r1,r0
++   .traceevent "A" 6 "R" "I" "r" 1 4 4 0 "20" ""
+@@ -48,2 +46 @@
+-   setattrs g1,3
+-   linkattr1 r1,g1,r2
++   setlinkattr1 r1,g1,3,r2
+@@ -52,2 +49 @@
+-   setattrs g1,3
+-   linkattr1 r0,g1,r2
++   setlinkattr1 r0,g1,3,r2
+@@ -58,3 +54,2 @@
+-   icopy r1,r4
+-   .traceevent "A" 6 "R" "I" "r" 1 7 7 0 "values" ""
+-   unlink r1
++   isetunlink r1,r4
++   .traceevent "A" 6 "R" "I" "r" 1 7 7 0 "+" ""
+@@ -64,2 +59 @@
+-   setattrs g1,3
+-   linkattr1 r4,g1,r2
++   setlinkattr1 r4,g1,3,r2
+@@ -67,2 +61 @@
+-   icopy r1,r4
+-   unlink r4
++   igetunlink r1,r4
+--- compiler/tests/golden/noopt/inline_test_bool_expr_negative.rxas	2026-07-18 07:25:50
++++ cmake-build-debug/compiler/tests/inline_test_bool_expr_negative_noopt.rxas	2026-07-19 20:36:09
+@@ -29,2 +29 @@
+-   swap r4,r0
+-   call r0,isTwo(),r3
++   swapcall r0,isTwo(),r3,r0,r4
+--- compiler/tests/golden/opt/inline_test_vararg.rxas	2026-07-18 07:25:52
++++ cmake-build-debug/compiler/tests/inline_test_vararg_opt.rxas	2026-07-19 20:35:24
+@@ -36,3 +36,2 @@
+-   icopy r3,r2
+-   .traceevent "A" 6 "R" "I" "r" 3 6 6 0 "__inline_varg_array_50" ""
+-   unlink r3
++   isetunlink r3,r2
++   .traceevent "A" 6 "R" "I" "r" 3 6 6 0 "__inline_varg_50_0" ""
+@@ -44,3 +43,2 @@
+-   icopy r3,r5
+-   .traceevent "A" 6 "R" "I" "r" 3 7 7 0 "__inline_varg_array_50" ""
+-   unlink r3
++   isetunlink r3,r5
++   .traceevent "A" 6 "R" "I" "r" 3 7 7 0 "__inline_varg_50_1" ""
+@@ -67,3 +65,2 @@
+-   icopy r6,r3
+-   .traceevent "A" 6 "R" "I" "r" 6 12 12 0 "__inline_varg_array_64" ""
+-   unlink r6
++   isetunlink r6,r3
++   .traceevent "A" 6 "R" "I" "r" 6 12 12 0 "__inline_varg_64_0" ""
+@@ -75,3 +72,2 @@
+-   icopy r6,r8
+-   .traceevent "A" 6 "R" "I" "r" 6 13 13 0 "__inline_varg_array_64" ""
+-   unlink r6
++   isetunlink r6,r8
++   .traceevent "A" 6 "R" "I" "r" 6 13 13 0 "__inline_varg_64_1" ""
+@@ -102,3 +98,2 @@
+-   icopy r9,r6
+-   .traceevent "A" 6 "R" "I" "r" 9 19 19 0 "__inline_varg_array_74" ""
+-   unlink r9
++   isetunlink r9,r6
++   .traceevent "A" 6 "R" "I" "r" 9 19 19 0 "__inline_varg_74_0" ""
+@@ -110,3 +105,2 @@
+-   icopy r9,r11
+-   .traceevent "A" 6 "R" "I" "r" 9 20 20 0 "__inline_varg_array_74" ""
+-   unlink r9
++   isetunlink r9,r11
++   .traceevent "A" 6 "R" "I" "r" 9 20 20 0 "__inline_varg_74_1" ""
+@@ -132,3 +126,2 @@
+-   icopy r12,r9
+-   .traceevent "A" 6 "R" "I" "r" 12 25 25 0 "__inline_varg_array_74" ""
+-   unlink r12
++   isetunlink r12,r9
++   .traceevent "A" 6 "R" "I" "r" 12 25 25 0 "__inline_varg_74_0" ""
+@@ -140,3 +133,2 @@
+-   icopy r12,r14
+-   .traceevent "A" 6 "R" "I" "r" 12 26 26 0 "__inline_varg_array_74" ""
+-   unlink r12
++   isetunlink r12,r14
++   .traceevent "A" 6 "R" "I" "r" 12 26 26 0 "__inline_varg_74_1" ""
+@@ -148,3 +140,2 @@
+-   icopy r12,r15
+-   .traceevent "A" 6 "R" "I" "r" 12 27 27 0 "__inline_varg_array_74" ""
+-   unlink r12
++   isetunlink r12,r15
++   .traceevent "A" 6 "R" "I" "r" 12 27 27 0 "__inline_varg_74_2" ""
+@@ -169,3 +160,2 @@
+-   icopy r16,r12
+-   .traceevent "A" 6 "R" "I" "r" 16 32 32 0 "__inline_varg_array_91" ""
+-   unlink r16
++   isetunlink r16,r12
++   .traceevent "A" 6 "R" "I" "r" 16 32 32 0 "__inline_varg_91_0" ""
+@@ -177,3 +167,2 @@
+-   icopy r16,r18
+-   .traceevent "A" 6 "R" "I" "r" 16 33 33 0 "__inline_varg_array_91" ""
+-   unlink r16
++   isetunlink r16,r18
++   .traceevent "A" 6 "R" "I" "r" 16 33 33 0 "__inline_varg_91_1" ""
+--- compiler/tests/golden/noopt/inline_test_vararg_negative.rxas	2026-07-18 07:25:56
++++ cmake-build-debug/compiler/tests/inline_test_vararg_negative_noopt.rxas	2026-07-19 20:35:22
+@@ -42,2 +42 @@
+-   swap r8,r2
+-   call r9,dynamicPick(),r4
++   swapcall r9,dynamicPick(),r4,r2,r8
+@@ -58,2 +57 @@
+-   swap r9,r2
+-   call r5,refTailCount(),r6
++   swapcall r5,refTailCount(),r6,r2,r9
+--- compiler/tests/golden/noopt/inline_test_exposed_nested_call.rxas	2026-07-18 07:25:57
++++ cmake-build-debug/compiler/tests/inline_test_exposed_nested_call_noopt.rxas	2026-07-19 20:35:32
+@@ -30,2 +30 @@
+-   swap r5,r0
+-   call r1,compute(),r4
++   swapcall r1,compute(),r4,r0,r5
+@@ -63,2 +62 @@
+-   swap r2,a1
+-   call r3,addOne(),r1
++   swapcall r3,addOne(),r1,a1,r2
+--- compiler/tests/golden/noopt/inline_test_nested_scope_do.rxas	2026-07-18 07:26:01
++++ cmake-build-debug/compiler/tests/inline_test_nested_scope_do_noopt.rxas	2026-07-19 20:35:53
+@@ -29,2 +29 @@
+-   swap r4,r0
+-   call r5,scopedAdd(),r3
++   swapcall r5,scopedAdd(),r3,r0,r4
+--- compiler/tests/golden/noopt/inline_test_nested_scope_if_do.rxas	2026-07-18 07:26:02
++++ cmake-build-debug/compiler/tests/inline_test_nested_scope_if_do_noopt.rxas	2026-07-19 20:36:15
+@@ -29,2 +29 @@
+-   swap r4,r0
+-   call r5,classify(),r3
++   swapcall r5,classify(),r3,r0,r4
+--- compiler/tests/golden/noopt/inline_test_nested_scope_exposed_call.rxas	2026-07-18 07:26:04
++++ cmake-build-debug/compiler/tests/inline_test_nested_scope_exposed_call_noopt.rxas	2026-07-19 20:36:16
+@@ -29,2 +29 @@
+-   swap r4,r0
+-   call r5,outer(),r3
++   swapcall r5,outer(),r3,r0,r4
+@@ -59,2 +58 @@
+-   swap r3,a1
+-   call r1,addOne(),r2
++   swapcall r1,addOne(),r2,a1,r3
+--- compiler/tests/golden/noopt/inline_test_multi_return_assign.rxas	2026-07-18 07:26:05
++++ cmake-build-debug/compiler/tests/inline_test_multi_return_assign_noopt.rxas	2026-07-19 20:36:10
+@@ -32,2 +32 @@
+-   swap r6,r0
+-   call r1,classify(),r5
++   swapcall r1,classify(),r5,r0,r6
+--- compiler/tests/golden/noopt/inline_test_multi_return_expr.rxas	2026-07-18 07:26:06
++++ cmake-build-debug/compiler/tests/inline_test_multi_return_expr_noopt.rxas	2026-07-19 20:36:08
+@@ -31,2 +31 @@
+-   swap r5,r0
+-   call r6,classify(),r4
++   swapcall r6,classify(),r4,r0,r5
+--- compiler/tests/golden/noopt/inline_test_multi_return_call.rxas	2026-07-18 07:26:08
++++ cmake-build-debug/compiler/tests/inline_test_multi_return_call_noopt.rxas	2026-07-19 20:36:12
+@@ -29,2 +29 @@
+-   swap r4,r0
+-   call r5,maybeLog(),r3
++   swapcall r5,maybeLog(),r3,r0,r4
+--- compiler/tests/golden/noopt/inline_test_array_return_assign.rxas	2026-07-18 07:26:10
++++ cmake-build-debug/compiler/tests/inline_test_array_return_assign_noopt.rxas	2026-07-19 20:35:44
+@@ -26,2 +26 @@
+-   settp r4,768
+-   call r1,buildArray(),r2
++   settpcall r1,buildArray(),r2,r4,768
+@@ -31,2 +30 @@
+-   minattrs r1,1
+-   linkattr1 r4,r1,1
++   minlinkattr1 r4,r1,1
+@@ -37,2 +35 @@
+-   minattrs r1,2
+-   linkattr1 r2,r1,2
++   minlinkattr1 r2,r1,2
+@@ -51,2 +48 @@
+-   settp r4,768
+-   call r0,buildArray(),r2
++   settpcall r0,buildArray(),r2,r4,768
+@@ -58,3 +54 @@
+-   settp r0,256
+-   swap r4,r0
+-   call r2,renderArray(),r3
++   settpswapcall r2,renderArray(),r3,r0,256,r4
+@@ -83,2 +77 @@
+-   minattrs r2,1
+-   linkattr1 r3,r2,1
++   minlinkattr1 r3,r2,1
+@@ -90,2 +83 @@
+-   minattrs r2,2
+-   linkattr1 r3,r2,2
++   minlinkattr1 r3,r2,2
+@@ -110,2 +102 @@
+-   minattrs a1,1
+-   linkattr1 r1,a1,1
++   minlinkattr1 r1,a1,1
+@@ -116,2 +107 @@
+-   minattrs a1,2
+-   linkattr1 r3,a1,2
++   minlinkattr1 r3,a1,2
+--- compiler/tests/golden/opt/inline_test_array_return_assign.rxas	2026-07-18 07:26:11
++++ cmake-build-debug/compiler/tests/inline_test_array_return_assign_opt.rxas	2026-07-19 20:36:04
+@@ -25,2 +25 @@
+-   minattrs r2,1
+-   linkattr1 r3,r2,1
++   minlinkattr1 r3,r2,1
+@@ -33,2 +32 @@
+-   minattrs r2,2
+-   linkattr1 r3,r2,2
++   minlinkattr1 r3,r2,2
+@@ -50,2 +48 @@
+-   minattrs r1,1
+-   linkattr1 r3,r1,1
++   minlinkattr1 r3,r1,1
+@@ -56,2 +53 @@
+-   minattrs r1,2
+-   linkattr1 r6,r1,2
++   minlinkattr1 r6,r1,2
+@@ -69,2 +65 @@
+-   minattrs r6,1
+-   linkattr1 r3,r6,1
++   minlinkattr1 r3,r6,1
+@@ -77,2 +72 @@
+-   minattrs r6,2
+-   linkattr1 r3,r6,2
++   minlinkattr1 r3,r6,2
+@@ -99,2 +93 @@
+-   minattrs r6,1
+-   linkattr1 r3,r6,1
++   minlinkattr1 r3,r6,1
+@@ -105,2 +98 @@
+-   minattrs r6,2
+-   linkattr1 r9,r6,2
++   minlinkattr1 r9,r6,2
+--- compiler/tests/golden/noopt/inline_test_array_return_expr.rxas	2026-07-18 07:26:12
++++ cmake-build-debug/compiler/tests/inline_test_array_return_expr_noopt.rxas	2026-07-19 20:35:59
+@@ -20,2 +20 @@
+-   settp r4,768
+-   call r1,buildArray(),r2
++   settpcall r1,buildArray(),r2,r4,768
+@@ -24,2 +23 @@
+-   settp r1,256
+-   call r4,renderArray(),r0
++   settpcall r4,renderArray(),r0,r1,256
+@@ -35,2 +33 @@
+-   settp r2,768
+-   call r4,buildArray(),r0
++   settpcall r4,buildArray(),r0,r2,768
+@@ -39,2 +36 @@
+-   settp r4,256
+-   call r2,renderArray(),r3
++   settpcall r2,renderArray(),r3,r4,256
+@@ -60,2 +56 @@
+-   minattrs r2,1
+-   linkattr1 r3,r2,1
++   minlinkattr1 r3,r2,1
+@@ -67,2 +62 @@
+-   minattrs r2,2
+-   linkattr1 r3,r2,2
++   minlinkattr1 r3,r2,2
+@@ -87,2 +81 @@
+-   minattrs a1,1
+-   linkattr1 r1,a1,1
++   minlinkattr1 r1,a1,1
+@@ -93,2 +86 @@
+-   minattrs a1,2
+-   linkattr1 r3,a1,2
++   minlinkattr1 r3,a1,2
+--- compiler/tests/golden/opt/inline_test_array_return_expr.rxas	2026-07-18 07:26:12
++++ cmake-build-debug/compiler/tests/inline_test_array_return_expr_opt.rxas	2026-07-19 20:36:04
+@@ -24,2 +24 @@
+-   minattrs r2,1
+-   linkattr1 r3,r2,1
++   minlinkattr1 r3,r2,1
+@@ -32,2 +31 @@
+-   minattrs r2,2
+-   linkattr1 r3,r2,2
++   minlinkattr1 r3,r2,2
+@@ -52,2 +50 @@
+-   minattrs r1,1
+-   linkattr1 r3,r1,1
++   minlinkattr1 r3,r1,1
+@@ -58,2 +55 @@
+-   minattrs r1,2
+-   linkattr1 r6,r1,2
++   minlinkattr1 r6,r1,2
+@@ -81,2 +77 @@
+-   minattrs r6,1
+-   linkattr1 r3,r6,1
++   minlinkattr1 r3,r6,1
+@@ -89,2 +84 @@
+-   minattrs r6,2
+-   linkattr1 r3,r6,2
++   minlinkattr1 r3,r6,2
+@@ -109,2 +103 @@
+-   minattrs r7,1
+-   linkattr1 r6,r7,1
++   minlinkattr1 r6,r7,1
+@@ -115,2 +108 @@
+-   minattrs r7,2
+-   linkattr1 r9,r7,2
++   minlinkattr1 r9,r7,2
+--- compiler/tests/golden/noopt/inline_test_array_multi_return_expr.rxas	2026-07-18 07:30:29
++++ cmake-build-debug/compiler/tests/inline_test_array_multi_return_expr_noopt.rxas	2026-07-19 20:35:23
+@@ -22,2 +22 @@
+-   settp r1,256
+-   call r3,renderArray(),r0
++   settpcall r3,renderArray(),r0,r1,256
+@@ -33,2 +32 @@
+-   settp r4,256
+-   call r2,renderArray(),r3
++   settpcall r2,renderArray(),r3,r4,256
+@@ -44,2 +42 @@
+-   settp r4,256
+-   call r2,renderArray(),r3
++   settpcall r2,renderArray(),r3,r4,256
+@@ -69,2 +66 @@
+-   minattrs r1,1
+-   linkattr1 r4,r1,1
++   minlinkattr1 r4,r1,1
+@@ -77,2 +73 @@
+-   minattrs r1,2
+-   linkattr1 r5,r1,2
++   minlinkattr1 r5,r1,2
+@@ -85,2 +80 @@
+-   minattrs r3,1
+-   linkattr1 r5,r3,1
++   minlinkattr1 r5,r3,1
+@@ -93,2 +87 @@
+-   minattrs r3,2
+-   linkattr1 r5,r3,2
++   minlinkattr1 r5,r3,2
+@@ -101,2 +94 @@
+-   minattrs r2,1
+-   linkattr1 r5,r2,1
++   minlinkattr1 r5,r2,1
+@@ -109,2 +101 @@
+-   minattrs r2,2
+-   linkattr1 r5,r2,2
++   minlinkattr1 r5,r2,2
+@@ -151,2 +142 @@
+-   minattrs a1,1
+-   linkattr1 r1,a1,1
++   minlinkattr1 r1,a1,1
+@@ -157,2 +147 @@
+-   minattrs a1,2
+-   linkattr1 r3,a1,2
++   minlinkattr1 r3,a1,2
+--- compiler/tests/golden/opt/inline_test_array_multi_return_expr.rxas	2026-07-18 07:30:30
++++ cmake-build-debug/compiler/tests/inline_test_array_multi_return_expr_opt.rxas	2026-07-19 20:35:22
+@@ -30,2 +30 @@
+-   minattrs r2,1
+-   linkattr1 r5,r2,1
++   minlinkattr1 r5,r2,1
+@@ -38,2 +37 @@
+-   minattrs r2,2
+-   linkattr1 r6,r2,2
++   minlinkattr1 r6,r2,2
+@@ -46,2 +44 @@
+-   minattrs r4,1
+-   linkattr1 r6,r4,1
++   minlinkattr1 r6,r4,1
+@@ -54,2 +51 @@
+-   minattrs r4,2
+-   linkattr1 r6,r4,2
++   minlinkattr1 r6,r4,2
+@@ -62,2 +58 @@
+-   minattrs r3,1
+-   linkattr1 r6,r3,1
++   minlinkattr1 r6,r3,1
+@@ -70,2 +65 @@
+-   minattrs r3,2
+-   linkattr1 r6,r3,2
++   minlinkattr1 r6,r3,2
+@@ -98,2 +92 @@
+-   minattrs r1,1
+-   linkattr1 r6,r1,1
++   minlinkattr1 r6,r1,1
+@@ -104,2 +97 @@
+-   minattrs r1,2
+-   linkattr1 r4,r1,2
++   minlinkattr1 r4,r1,2
+@@ -133,2 +125 @@
+-   minattrs r5,1
+-   linkattr1 r2,r5,1
++   minlinkattr1 r2,r5,1
+@@ -141,2 +132 @@
+-   minattrs r5,2
+-   linkattr1 r2,r5,2
++   minlinkattr1 r2,r5,2
+@@ -149,2 +139 @@
+-   minattrs r3,1
+-   linkattr1 r2,r3,1
++   minlinkattr1 r2,r3,1
+@@ -157,2 +146 @@
+-   minattrs r3,2
+-   linkattr1 r2,r3,2
++   minlinkattr1 r2,r3,2
+@@ -165,2 +153 @@
+-   minattrs r4,1
+-   linkattr1 r2,r4,1
++   minlinkattr1 r2,r4,1
+@@ -173,2 +160 @@
+-   minattrs r4,2
+-   linkattr1 r2,r4,2
++   minlinkattr1 r2,r4,2
+@@ -197,2 +183 @@
+-   minattrs r6,1
+-   linkattr1 r5,r6,1
++   minlinkattr1 r5,r6,1
+@@ -203,2 +188 @@
+-   minattrs r6,2
+-   linkattr1 r3,r6,2
++   minlinkattr1 r3,r6,2
+@@ -232,2 +216 @@
+-   minattrs r5,1
+-   linkattr1 r2,r5,1
++   minlinkattr1 r2,r5,1
+@@ -240,2 +223 @@
+-   minattrs r5,2
+-   linkattr1 r2,r5,2
++   minlinkattr1 r2,r5,2
+@@ -248,2 +230 @@
+-   minattrs r3,1
+-   linkattr1 r2,r3,1
++   minlinkattr1 r2,r3,1
+@@ -256,2 +237 @@
+-   minattrs r3,2
+-   linkattr1 r2,r3,2
++   minlinkattr1 r2,r3,2
+@@ -264,2 +244 @@
+-   minattrs r4,1
+-   linkattr1 r2,r4,1
++   minlinkattr1 r2,r4,1
+@@ -272,2 +251 @@
+-   minattrs r4,2
+-   linkattr1 r2,r4,2
++   minlinkattr1 r2,r4,2
+@@ -300,2 +278 @@
+-   minattrs r6,1
+-   linkattr1 r5,r6,1
++   minlinkattr1 r5,r6,1
+@@ -306,2 +283 @@
+-   minattrs r6,2
+-   linkattr1 r3,r6,2
++   minlinkattr1 r3,r6,2
+--- compiler/tests/golden/noopt/inline_test_array_multi_return_assign.rxas	2026-07-18 07:30:30
++++ cmake-build-debug/compiler/tests/inline_test_array_multi_return_assign_noopt.rxas	2026-07-19 20:35:32
+@@ -34,3 +34 @@
+-   settp r0,256
+-   swap r5,r0
+-   call r3,renderArray(),r4
++   settpswapcall r3,renderArray(),r4,r0,256,r5
+@@ -50,3 +48 @@
+-   settp r1,256
+-   swap r5,r1
+-   call r3,renderArray(),r4
++   settpswapcall r3,renderArray(),r4,r1,256,r5
+@@ -66,3 +62 @@
+-   settp r2,256
+-   swap r5,r2
+-   call r3,renderArray(),r4
++   settpswapcall r3,renderArray(),r4,r2,256,r5
+@@ -96,2 +90 @@
+-   minattrs r1,1
+-   linkattr1 r4,r1,1
++   minlinkattr1 r4,r1,1
+@@ -104,2 +97 @@
+-   minattrs r1,2
+-   linkattr1 r5,r1,2
++   minlinkattr1 r5,r1,2
+@@ -112,2 +104 @@
+-   minattrs r3,1
+-   linkattr1 r5,r3,1
++   minlinkattr1 r5,r3,1
+@@ -120,2 +111 @@
+-   minattrs r3,2
+-   linkattr1 r5,r3,2
++   minlinkattr1 r5,r3,2
+@@ -128,2 +118 @@
+-   minattrs r2,1
+-   linkattr1 r5,r2,1
++   minlinkattr1 r5,r2,1
+@@ -136,2 +125 @@
+-   minattrs r2,2
+-   linkattr1 r5,r2,2
++   minlinkattr1 r5,r2,2
+@@ -178,2 +166 @@
+-   minattrs a1,1
+-   linkattr1 r1,a1,1
++   minlinkattr1 r1,a1,1
+@@ -184,2 +171 @@
+-   minattrs a1,2
+-   linkattr1 r3,a1,2
++   minlinkattr1 r3,a1,2
+--- compiler/tests/golden/opt/inline_test_array_multi_return_assign.rxas	2026-07-18 07:30:31
++++ cmake-build-debug/compiler/tests/inline_test_array_multi_return_assign_opt.rxas	2026-07-19 20:35:22
+@@ -34,2 +34 @@
+-   minattrs r3,1
+-   linkattr1 r6,r3,1
++   minlinkattr1 r6,r3,1
+@@ -42,2 +41 @@
+-   minattrs r3,2
+-   linkattr1 r7,r3,2
++   minlinkattr1 r7,r3,2
+@@ -50,2 +48 @@
+-   minattrs r5,1
+-   linkattr1 r7,r5,1
++   minlinkattr1 r7,r5,1
+@@ -58,2 +55 @@
+-   minattrs r5,2
+-   linkattr1 r7,r5,2
++   minlinkattr1 r7,r5,2
+@@ -66,2 +62 @@
+-   minattrs r4,1
+-   linkattr1 r7,r4,1
++   minlinkattr1 r7,r4,1
+@@ -74,2 +69 @@
+-   minattrs r4,2
+-   linkattr1 r7,r4,2
++   minlinkattr1 r7,r4,2
+@@ -104,2 +98 @@
+-   minattrs r7,1
+-   linkattr1 r6,r7,1
++   minlinkattr1 r6,r7,1
+@@ -110,2 +103 @@
+-   minattrs r7,2
+-   linkattr1 r4,r7,2
++   minlinkattr1 r4,r7,2
+@@ -133,2 +125 @@
+-   minattrs r7,1
+-   linkattr1 r4,r7,1
++   minlinkattr1 r4,r7,1
+@@ -141,2 +132 @@
+-   minattrs r7,2
+-   linkattr1 r4,r7,2
++   minlinkattr1 r4,r7,2
+@@ -149,2 +139 @@
+-   minattrs r5,1
+-   linkattr1 r4,r5,1
++   minlinkattr1 r4,r5,1
+@@ -157,2 +146 @@
+-   minattrs r5,2
+-   linkattr1 r4,r5,2
++   minlinkattr1 r4,r5,2
+@@ -165,2 +153 @@
+-   minattrs r6,1
+-   linkattr1 r4,r6,1
++   minlinkattr1 r4,r6,1
+@@ -173,2 +160 @@
+-   minattrs r6,2
+-   linkattr1 r4,r6,2
++   minlinkattr1 r4,r6,2
+@@ -199,2 +185 @@
+-   minattrs r7,1
+-   linkattr1 r6,r7,1
++   minlinkattr1 r6,r7,1
+@@ -205,2 +190 @@
+-   minattrs r7,2
+-   linkattr1 r4,r7,2
++   minlinkattr1 r4,r7,2
+@@ -228,2 +212 @@
+-   minattrs r7,1
+-   linkattr1 r4,r7,1
++   minlinkattr1 r4,r7,1
+@@ -236,2 +219 @@
+-   minattrs r7,2
+-   linkattr1 r4,r7,2
++   minlinkattr1 r4,r7,2
+@@ -244,2 +226 @@
+-   minattrs r5,1
+-   linkattr1 r4,r5,1
++   minlinkattr1 r4,r5,1
+@@ -252,2 +233 @@
+-   minattrs r5,2
+-   linkattr1 r4,r5,2
++   minlinkattr1 r4,r5,2
+@@ -260,2 +240 @@
+-   minattrs r6,1
+-   linkattr1 r4,r6,1
++   minlinkattr1 r4,r6,1
+@@ -268,2 +247 @@
+-   minattrs r6,2
+-   linkattr1 r4,r6,2
++   minlinkattr1 r4,r6,2
+@@ -298,2 +276 @@
+-   minattrs r7,1
+-   linkattr1 r6,r7,1
++   minlinkattr1 r6,r7,1
+@@ -304,2 +281 @@
+-   minattrs r7,2
+-   linkattr1 r4,r7,2
++   minlinkattr1 r4,r7,2
+--- compiler/tests/golden/noopt/inline_test_object_return_assign.rxas	2026-07-18 07:30:31
++++ cmake-build-debug/compiler/tests/inline_test_object_return_assign_noopt.rxas	2026-07-19 20:35:28
+@@ -20,2 +20 @@
+-   settp r3,768
+-   call r0,buildBox(),r2
++   settpcall r0,buildBox(),r2,r3,768
+@@ -27,3 +26 @@
+-   settp r0,256
+-   swap r3,r0
+-   call r4,describeBox(),r2
++   settpswapcall r4,describeBox(),r2,r0,256,r3
+@@ -38,2 +35 @@
+-   settp r4,768
+-   call r1,buildBox(),r3
++   settpcall r1,buildBox(),r3,r4,768
+@@ -45,3 +41 @@
+-   settp r1,256
+-   swap r4,r1
+-   call r2,describeBox(),r3
++   settpswapcall r2,describeBox(),r3,r1,256,r4
+@@ -54,2 +48 @@
+-   swap r4,r0
+-   call r2,replaceBoxRef(),r3
++   swapcall r2,replaceBoxRef(),r3,r0,r4
+@@ -61,3 +54 @@
+-   settp r0,256
+-   swap r4,r0
+-   call r5,§inline_test_object_return_assign.box.getname(),r3
++   settpswapcall r5,§inline_test_object_return_assign.box.getname(),r3,r0,256,r4
+@@ -84,3 +75 @@
+-   settp a1,256
+-   swap r3,a1
+-   call r1,§inline_test_object_return_assign.box.§factory(),r2
++   settpswapcall r1,§inline_test_object_return_assign.box.§factory(),r2,a1,256,r3
+@@ -105,3 +94 @@
+-   settp a1,256
+-   swap r2,a1
+-   call r3,§inline_test_object_return_assign.box.getname(),r1
++   settpswapcall r3,§inline_test_object_return_assign.box.getname(),r1,a1,256,r2
+@@ -123,2 +110 @@
+-   settp r2,768
+-   call a1,§inline_test_object_return_assign.box.§factory(),r1
++   settpcall a1,§inline_test_object_return_assign.box.§factory(),r1,r2,768
+--- compiler/tests/golden/opt/inline_test_object_return_assign.rxas	2026-07-18 07:30:32
++++ cmake-build-debug/compiler/tests/inline_test_object_return_assign_opt.rxas	2026-07-19 20:35:33
+@@ -48,2 +48 @@
+-   unlink r7
+-   br l168bexprend
++   unlinkbr r7,l168bexprend
+@@ -89,2 +88 @@
+-   unlink r7
+-   br l201bexprend
++   unlinkbr r7,l201bexprend
+@@ -123,2 +121 @@
+-   unlink r13
+-   br l225bexprend
++   unlinkbr r13,l225bexprend
+--- compiler/tests/golden/noopt/inline_test_object_return_expr.rxas	2026-07-18 07:30:32
++++ cmake-build-debug/compiler/tests/inline_test_object_return_expr_noopt.rxas	2026-07-19 20:36:02
+@@ -19,2 +19 @@
+-   settp r3,768
+-   call r1,buildBox(),r2
++   settpcall r1,buildBox(),r2,r3,768
+@@ -23,2 +22 @@
+-   settp r1,256
+-   call r3,describeBox(),r0
++   settpcall r3,describeBox(),r0,r1,256
+@@ -31,2 +29 @@
+-   settp r1,768
+-   call r3,buildBox(),r0
++   settpcall r3,buildBox(),r0,r1,768
+@@ -35,2 +32 @@
+-   settp r3,256
+-   call r1,describeBox(),r2
++   settpcall r1,describeBox(),r2,r3,256
+@@ -54,3 +50 @@
+-   settp a1,256
+-   swap r3,a1
+-   call r1,§inline_test_object_return_expr.box.§factory(),r2
++   settpswapcall r1,§inline_test_object_return_expr.box.§factory(),r2,a1,256,r3
+@@ -75,3 +69 @@
+-   settp a1,256
+-   swap r2,a1
+-   call r3,§inline_test_object_return_expr.box.getname(),r1
++   settpswapcall r3,§inline_test_object_return_expr.box.getname(),r1,a1,256,r2
+--- compiler/tests/golden/opt/inline_test_object_return_expr.rxas	2026-07-18 07:30:33
++++ cmake-build-debug/compiler/tests/inline_test_object_return_expr_opt.rxas	2026-07-19 20:35:23
+@@ -39,3 +39 @@
+-   settp r4,768
+-   swap r1,r4
+-   call r2,describeBox(),r0
++   settpswapcall r2,describeBox(),r0,r4,768,r1
+@@ -69,3 +67 @@
+-   settp r2,768
+-   swap r7,r2
+-   call r4,describeBox(),r6
++   settpswapcall r4,describeBox(),r6,r2,768,r7
+@@ -96,2 +92 @@
+-   unlink r2
+-   br l115bexprend
++   unlinkbr r2,l115bexprend
+--- compiler/tests/golden/noopt/inline_test_object_const_arg_mutation.rxas	2026-07-18 07:30:33
++++ cmake-build-debug/compiler/tests/inline_test_object_const_arg_mutation_noopt.rxas	2026-07-19 20:35:28
+@@ -20,2 +20 @@
+-   settp r2,768
+-   call r0,§inline_test_object_const_arg_mutation.box.§factory(),r1
++   settpcall r0,§inline_test_object_const_arg_mutation.box.§factory(),r1,r2,768
+@@ -27,3 +26 @@
+-   settp r0,256
+-   swap r2,r0
+-   call r3,mutateBox(),r1
++   settpswapcall r3,mutateBox(),r1,r0,256,r2
+@@ -35,3 +32 @@
+-   settp r0,256
+-   swap r2,r0
+-   call r4,§inline_test_object_const_arg_mutation.box.getname(),r1
++   settpswapcall r4,§inline_test_object_const_arg_mutation.box.getname(),r1,r0,256,r2
+@@ -60,2 +55 @@
+-   settp r3,768
+-   call r4,§inline_test_object_const_arg_mutation.box.setname(),r1
++   settpcall r4,§inline_test_object_const_arg_mutation.box.setname(),r1,r3,768
+--- compiler/tests/golden/opt/inline_test_object_const_arg_mutation.rxas	2026-07-18 07:30:34
++++ cmake-build-debug/compiler/tests/inline_test_object_const_arg_mutation_opt.rxas	2026-07-19 20:35:17
+@@ -56,2 +56 @@
+-   unlink r2
+-   br l121bexprend
++   unlinkbr r2,l121bexprend
+--- compiler/tests/golden/noopt/inline_test_object_writable_arg.rxas	2026-07-18 07:30:34
++++ cmake-build-debug/compiler/tests/inline_test_object_writable_arg_noopt.rxas	2026-07-19 20:35:47
+@@ -20,2 +20 @@
+-   settp r2,768
+-   call r0,§inline_test_object_writable_arg.box.§factory(),r1
++   settpcall r0,§inline_test_object_writable_arg.box.§factory(),r1,r2,768
+@@ -27,3 +26 @@
+-   settp r0,256
+-   swap r2,r0
+-   call r3,replaceBox(),r1
++   settpswapcall r3,replaceBox(),r1,r0,256,r2
+@@ -36,3 +33 @@
+-   settp r0,256
+-   swap r3,r0
+-   call r1,§inline_test_object_writable_arg.box.getname(),r2
++   settpswapcall r1,§inline_test_object_writable_arg.box.getname(),r2,r0,256,r3
+@@ -64,2 +59 @@
+-   settp r2,768
+-   call r0,§inline_test_object_writable_arg.box.§factory(),r1
++   settpcall r0,§inline_test_object_writable_arg.box.§factory(),r1,r2,768
+@@ -71,3 +65 @@
+-   settp r0,256
+-   swap r2,r0
+-   call r3,§inline_test_object_writable_arg.box.getname(),r1
++   settpswapcall r3,§inline_test_object_writable_arg.box.getname(),r1,r0,256,r2
+--- compiler/tests/golden/opt/inline_test_object_writable_arg.rxas	2026-07-18 07:30:35
++++ cmake-build-debug/compiler/tests/inline_test_object_writable_arg_opt.rxas	2026-07-19 20:35:54
+@@ -54,3 +54 @@
+-   settp r2,256
+-   swap r8,r2
+-   call r5,§inline_test_object_writable_arg.box.getname(),r7
++   settpswapcall r5,§inline_test_object_writable_arg.box.getname(),r7,r2,256,r8
+@@ -74,2 +72 @@
+-   unlink r8
+-   br l127bexprend
++   unlinkbr r8,l127bexprend
+--- compiler/tests/golden/noopt/inline_test_array_expr_arg.rxas	2026-07-18 07:30:35
++++ cmake-build-debug/compiler/tests/inline_test_array_expr_arg_noopt.rxas	2026-07-19 20:36:09
+@@ -16,2 +16 @@
+-   settp r1,256
+-   call r2,bumpFirst(),r0
++   settpcall r2,bumpFirst(),r0,r1,256
+@@ -45,3 +44,2 @@
+-   icopy r1,r3
+-   .traceevent "A" 6 "R" "I" "r" 1 5 5 0 "pair" ""
+-   unlink r1
++   isetunlink r1,r3
++   .traceevent "A" 6 "R" "I" "r" 1 5 5 0 "+" ""
+@@ -114,3 +112,2 @@
+-   icopy r7,r8
+-   .traceevent "A" 6 "R" "I" "r" 7 21 21 0 "pair" ""
+-   unlink r7
++   isetunlink r7,r8
++   .traceevent "A" 6 "R" "I" "r" 7 21 21 0 "7" ""
+@@ -122,3 +119,2 @@
+-   icopy r8,r7
+-   .traceevent "A" 6 "R" "I" "r" 8 22 22 0 "pair" ""
+-   unlink r8
++   isetunlink r8,r7
++   .traceevent "A" 6 "R" "I" "r" 8 22 22 0 "9" ""
+--- compiler/tests/golden/opt/inline_test_array_expr_arg.rxas	2026-07-18 07:30:36
++++ cmake-build-debug/compiler/tests/inline_test_array_expr_arg_opt.rxas	2026-07-19 20:35:24
+@@ -26,3 +26,2 @@
+-   icopy r3,r4
+-   .traceevent "A" 6 "R" "I" "r" 3 3 3 0 "pair" ""
+-   unlink r3
++   isetunlink r3,r4
++   .traceevent "A" 6 "R" "I" "r" 3 3 3 0 "7" ""
+@@ -34,3 +33,2 @@
+-   icopy r4,r3
+-   .traceevent "A" 6 "R" "I" "r" 4 4 4 0 "pair" ""
+-   unlink r4
++   isetunlink r4,r3
++   .traceevent "A" 6 "R" "I" "r" 4 4 4 0 "9" ""
+@@ -58,3 +56,2 @@
+-   icopy r4,r2
+-   .traceevent "A" 6 "R" "I" "r" 4 9 9 0 "pair" ""
+-   unlink r4
++   isetunlink r4,r2
++   .traceevent "A" 6 "R" "I" "r" 4 9 9 0 "+" ""
+@@ -65,2 +62 @@
+-   icopy r3,r4
+-   unlink r4
++   igetunlink r3,r4
+--- compiler/tests/golden/noopt/inline_test_object_expr_arg.rxas	2026-07-18 07:30:36
++++ cmake-build-debug/compiler/tests/inline_test_object_expr_arg_noopt.rxas	2026-07-19 20:35:49
+@@ -18,2 +18 @@
+-   settp r1,256
+-   call r2,renameBox(),r0
++   settpcall r2,renameBox(),r0,r1,256
+@@ -38,2 +37 @@
+-   settp r3,768
+-   call r4,§inline_test_object_expr_arg.box.setname(),r1
++   settpcall r4,§inline_test_object_expr_arg.box.setname(),r1,r3,768
+@@ -45,3 +43 @@
+-   settp a1,256
+-   swap r3,a1
+-   call r1,§inline_test_object_expr_arg.box.getname(),r2
++   settpswapcall r1,§inline_test_object_expr_arg.box.getname(),r2,a1,256,r3
+@@ -62,2 +58 @@
+-   settp r2,768
+-   call r0,§inline_test_object_expr_arg.box.§factory(),r1
++   settpcall r0,§inline_test_object_expr_arg.box.§factory(),r1,r2,768
+--- compiler/tests/golden/opt/inline_test_object_expr_arg.rxas	2026-07-18 07:30:37
++++ cmake-build-debug/compiler/tests/inline_test_object_expr_arg_opt.rxas	2026-07-19 20:35:43
+@@ -37,3 +37 @@
+-   settp r4,768
+-   swap r1,r4
+-   call r2,renameBox(),r0
++   settpswapcall r2,renameBox(),r0,r4,768,r1
+@@ -76,2 +74 @@
+-   unlink r2
+-   br l137bexprend
++   unlinkbr r2,l137bexprend
+--- compiler/tests/golden/noopt/inline_test_array_return_temp.rxas	2026-07-18 07:30:37
++++ cmake-build-debug/compiler/tests/inline_test_array_return_temp_noopt.rxas	2026-07-19 20:35:29
+@@ -48,2 +48 @@
+-   swap r2,a1
+-   call r3,buildPair(),r1
++   swapcall r3,buildPair(),r1,a1,r2
+@@ -68,3 +67,2 @@
+-   icopy r2,a1
+-   .traceevent "A" 6 "R" "I" "r" 2 12 12 0 "pair" ""
+-   unlink r2
++   isetunlink r2,a1
++   .traceevent "A" 6 "R" "I" "r" 2 12 12 0 "seed" ""
+@@ -77,3 +75,2 @@
+-   icopy r2,r3
+-   .traceevent "A" 6 "R" "I" "r" 2 13 13 0 "pair" ""
+-   unlink r2
++   isetunlink r2,r3
++   .traceevent "A" 6 "R" "I" "r" 2 13 13 0 "+" ""
+--- compiler/tests/golden/opt/inline_test_array_return_temp.rxas	2026-07-18 07:30:38
++++ cmake-build-debug/compiler/tests/inline_test_array_return_temp_opt.rxas	2026-07-19 20:35:48
+@@ -58,3 +58,2 @@
+-   icopy r2,a1
+-   .traceevent "A" 6 "R" "I" "r" 2 19 19 0 "pair" ""
+-   unlink r2
++   isetunlink r2,a1
++   .traceevent "A" 6 "R" "I" "r" 2 19 19 0 "seed" ""
+@@ -67,3 +66,2 @@
+-   icopy r2,r3
+-   .traceevent "A" 6 "R" "I" "r" 2 20 20 0 "pair" ""
+-   unlink r2
++   isetunlink r2,r3
++   .traceevent "A" 6 "R" "I" "r" 2 20 20 0 "+" ""
+--- compiler/tests/golden/noopt/inline_test_complex_lhs_assign.rxas	2026-07-18 07:30:38
++++ cmake-build-debug/compiler/tests/inline_test_complex_lhs_assign_noopt.rxas	2026-07-19 20:36:14
+@@ -26,3 +26 @@
+-   setattrs r1,3
+-   linkattr1 r3,r1,r2
+-   load r5,4
++   setlinkiload r3,r1,3,r2,r5,4
+@@ -33,3 +31,2 @@
+-   icopy r3,r6
+-   .traceevent "A" 6 "R" "I" "r" 3 4 4 0 "values" ""
+-   unlink r3
++   isetunlink r3,r6
++   .traceevent "A" 6 "R" "I" "r" 3 4 4 0 "addone" ""
+--- compiler/tests/golden/opt/inline_test_complex_lhs_assign.rxas	2026-07-18 07:30:39
++++ cmake-build-debug/compiler/tests/inline_test_complex_lhs_assign_opt.rxas	2026-07-19 20:35:58
+@@ -25,3 +25,2 @@
+-   icopy r1,r3
+-   .traceevent "A" 6 "R" "I" "r" 1 4 4 0 "values" ""
+-   unlink r1
++   isetunlink r1,r3
++   .traceevent "A" 6 "R" "I" "r" 1 4 4 0 "do" ""
+--- compiler/tests/golden/noopt/inline_test_binary_arg_return.rxas	2026-07-18 07:30:39
++++ cmake-build-debug/compiler/tests/inline_test_binary_arg_return_noopt.rxas	2026-07-19 20:36:15
+@@ -19,2 +19 @@
+-   settp r2,256
+-   call r0,relayBinary(),r1
++   settpcall r0,relayBinary(),r1,r2,256
+--- compiler/tests/golden/noopt/inline_test_block_expr_live_sibling.rxas	2026-07-18 07:30:40
++++ cmake-build-debug/compiler/tests/inline_test_block_expr_live_sibling_noopt.rxas	2026-07-19 20:35:44
+@@ -23,2 +23 @@
+-   settp r2,768
+-   call r0,§inline_test_block_expr_live_sibling.holder.§factory(),r1
++   settpcall r0,§inline_test_block_expr_live_sibling.holder.§factory(),r1,r2,768
+@@ -30,3 +29 @@
+-   settp r0,256
+-   swap r2,r0
+-   call r3,§inline_test_block_expr_live_sibling.holder.summary(),r1
++   settpswapcall r3,§inline_test_block_expr_live_sibling.holder.summary(),r1,r0,256,r2
+@@ -73,2 +70 @@
+-   settp r5,768
+-   call r2,§inline_test_block_expr_live_sibling.child.§factory(),r4
++   settpcall r2,§inline_test_block_expr_live_sibling.child.§factory(),r4,r5,768
+@@ -107,3 +103 @@
+-   settp r6,256
+-   swap r5,r6
+-   call r7,§inline_test_block_expr_live_sibling.child.getname(),r4
++   settpswapcall r7,§inline_test_block_expr_live_sibling.child.getname(),r4,r6,256,r5
+--- compiler/tests/golden/opt/inline_test_block_expr_live_sibling.rxas	2026-07-18 07:30:41
++++ cmake-build-debug/compiler/tests/inline_test_block_expr_live_sibling_opt.rxas	2026-07-19 20:35:41
+@@ -97,2 +97 @@
+-   unlink r9
+-   br l232bexprend
++   unlinkbr r9,l232bexprend
+@@ -209,2 +208 @@
+-   unlink r4
+-   br l225bexprend
++   unlinkbr r4,l225bexprend
+--- compiler/tests/golden/noopt/inline_test_class_methods.rxas	2026-07-18 07:30:41
++++ cmake-build-debug/compiler/tests/inline_test_class_methods_noopt.rxas	2026-07-19 20:35:44
+@@ -18,2 +18 @@
+-   settp r3,768
+-   call r0,§inline_test_class_methods.box.§factory(),r2
++   settpcall r0,§inline_test_class_methods.box.§factory(),r2,r3,768
+@@ -25,3 +24 @@
+-   settp r0,256
+-   swap r3,r0
+-   call r4,§inline_test_class_methods.box.label(),r2
++   settpswapcall r4,§inline_test_class_methods.box.label(),r2,r0,256,r3
+@@ -38,2 +35 @@
+-   settp r4,768
+-   call r5,§inline_test_class_methods.box.setlabel(),r2
++   settpcall r5,§inline_test_class_methods.box.setlabel(),r2,r4,768
+@@ -45,3 +41 @@
+-   settp r0,256
+-   swap r4,r0
+-   call r2,§inline_test_class_methods.box.label(),r3
++   settpswapcall r2,§inline_test_class_methods.box.label(),r3,r0,256,r4
+@@ -58,2 +52 @@
+-   settp r4,768
+-   call r6,§inline_test_class_methods.box.prefix(),r2
++   settpcall r6,§inline_test_class_methods.box.prefix(),r2,r4,768
+@@ -70,2 +63 @@
+-   settp r8,768
+-   call r4,update(),r6
++   settpcall r4,update(),r6,r8,768
+@@ -77,3 +69 @@
+-   settp r0,256
+-   swap r8,r0
+-   call r6,§inline_test_class_methods.box.label(),r7
++   settpswapcall r6,§inline_test_class_methods.box.label(),r7,r0,256,r8
+@@ -91,2 +81 @@
+-   settp r8,768
+-   call r1,§inline_test_class_methods.box.setandreport(),r6
++   settpcall r1,§inline_test_class_methods.box.setandreport(),r6,r8,768
+@@ -102,3 +91 @@
+-   settp r0,256
+-   swap r8,r0
+-   call r6,§inline_test_class_methods.box.label(),r7
++   settpswapcall r6,§inline_test_class_methods.box.label(),r7,r0,256,r8
+@@ -115,2 +102 @@
+-   settp r8,768
+-   call r3,§inline_test_class_methods.box.setandreport(),r6
++   settpcall r3,§inline_test_class_methods.box.setandreport(),r6,r8,768
+@@ -123,3 +109 @@
+-   settp r0,256
+-   swap r8,r0
+-   call r6,§inline_test_class_methods.box.label(),r7
++   settpswapcall r6,§inline_test_class_methods.box.label(),r7,r0,256,r8
+@@ -133,2 +117 @@
+-   settp r3,768
+-   call r7,§inline_test_class_methods.box.§factory(),r2
++   settpcall r7,§inline_test_class_methods.box.§factory(),r2,r3,768
+@@ -140,2 +123 @@
+-   settp r8,768
+-   call r3,§inline_test_class_methods.box.prefix(),r6
++   settpcall r3,§inline_test_class_methods.box.prefix(),r6,r8,768
+@@ -163,3 +145 @@
+-   settp a2,256
+-   swap r4,a2
+-   call r5,§inline_test_class_methods.box.setlabel(),r2
++   settpswapcall r5,§inline_test_class_methods.box.setlabel(),r2,a2,256,r4
+@@ -238,3 +218 @@
+-   settp a1,256
+-   swap r4,a1
+-   call r5,§inline_test_class_methods.box.label(),r3
++   settpswapcall r5,§inline_test_class_methods.box.label(),r3,a1,256,r4
+--- compiler/tests/golden/opt/inline_test_class_methods.rxas	2026-07-18 07:30:42
++++ cmake-build-debug/compiler/tests/inline_test_class_methods_opt.rxas	2026-07-19 20:35:58
+@@ -39,2 +39 @@
+-   unlink r3
+-   br l196bexprend
++   unlinkbr r3,l196bexprend
+@@ -67,2 +66 @@
+-   unlink r6
+-   br l225bexprend
++   unlinkbr r6,l225bexprend
+@@ -89,2 +87 @@
+-   unlink r9
+-   br l251bexprend
++   unlinkbr r9,l251bexprend
+@@ -126,2 +123 @@
+-   unlink r13
+-   br l275bexprend
++   unlinkbr r13,l275bexprend
+@@ -168,2 +164 @@
+-   unlink r13
+-   br l303bexprend
++   unlinkbr r13,l303bexprend
+@@ -209,2 +204 @@
+-   unlink r13
+-   br l332bexprend
++   unlinkbr r13,l332bexprend
+@@ -242,2 +236 @@
+-   unlink r23
+-   br l359bexprend
++   unlinkbr r23,l359bexprend
+@@ -335,2 +328 @@
+-   unlink r4
+-   br l218bexprend
++   unlinkbr r4,l218bexprend

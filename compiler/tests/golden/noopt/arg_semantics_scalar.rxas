@@ -16,8 +16,7 @@ main() .locals=6
    .srcstep 2 2 17 "arg_semantics_scalar.crexx" 6 3 35 "  say \"int-read=\" || inspectInt(i)"
    .traceevent "V" 6 "R" "I" "r" 0 2 2 0 "i" ""
    load r2,1
-   swap r3,r0
-   call r4,inspectInt(),r2
+   swapcall r4,inspectInt(),r2,r0,r3
    swap r0,r3
    itos r4
    .traceevent "F" 4 "R" "S" "r" 4 2 2 0 "inspectint" ""
@@ -27,8 +26,7 @@ main() .locals=6
    .srcstep 3 3 17 "arg_semantics_scalar.crexx" 7 3 30 "  say \"int-mut=\" || addTen(i)"
    .traceevent "V" 6 "R" "I" "r" 0 3 3 0 "i" ""
    load r3,1
-   swap r4,r0
-   call r2,addTen(),r3
+   swapcall r2,addTen(),r3,r0,r4
    swap r0,r4
    itos r2
    .traceevent "F" 4 "R" "S" "r" 2 3 3 0 "addten" ""
@@ -44,8 +42,7 @@ main() .locals=6
    .srcstep 5 5 17 "arg_semantics_scalar.crexx" 9 3 20 "  call addOneRef(i)"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
    load r3,1
-   swap r4,r0
-   call r2,addOneRef(),r3
+   swapcall r2,addOneRef(),r3,r0,r4
    swap r0,r4
    .traceevent "F" 4 "R" "V" "r" 2 5 5 0 "addoneref" ""
    .srcstep 6 6 17 "arg_semantics_scalar.crexx" 10 3 22 "  say \"int-ref=\" || i"
@@ -62,9 +59,7 @@ main() .locals=6
    .srcstep 8 8 17 "arg_semantics_scalar.crexx" 13 3 36 "  say \"str-read=\" || readText(text)"
    .traceevent "V" 6 "R" "S" "r" 1 8 8 0 "text" ""
    load r3,1
-   settp r1,256
-   swap r4,r1
-   call r5,readText(),r3
+   settpswapcall r5,readText(),r3,r1,256,r4
    swap r1,r4
    .traceevent "F" 4 "R" "S" "r" 5 8 8 0 "readtext" ""
    concat r5,"str-read=",r5
@@ -73,9 +68,7 @@ main() .locals=6
    .srcstep 9 9 17 "arg_semantics_scalar.crexx" 14 3 36 "  say \"str-mut=\" || shoutText(text)"
    .traceevent "V" 6 "R" "S" "r" 1 9 9 0 "text" ""
    load r4,1
-   settp r1,256
-   swap r5,r1
-   call r3,shoutText(),r4
+   settpswapcall r3,shoutText(),r4,r1,256,r5
    swap r1,r5
    .traceevent "F" 4 "R" "S" "r" 3 9 9 0 "shouttext" ""
    concat r5,"str-mut=",r3
@@ -90,8 +83,7 @@ main() .locals=6
    load r5,"temp"
    .traceevent "L" 4 "R" "S" "r" 5 11 11 0 "" ""
    load r4,1
-   settp r5,768
-   call r3,shoutText(),r4
+   settpcall r3,shoutText(),r4,r5,768
    .traceevent "F" 4 "R" "S" "r" 3 11 11 0 "shouttext" ""
    concat r5,"str-temp=",r3
    .traceevent "O" 4 "R" "S" "r" 5 11 11 0 "" ""
@@ -174,8 +166,7 @@ l103d:
    .srcstep 29 29 17 "arg_semantics_scalar.crexx" 39 3 21 "  text = upper(text)"
    .traceevent "V" 6 "R" "S" "r" 0 29 29 0 "text" ""
    load r1,1
-   swap r2,r0
-   call r2,rxfnsb.upper(),r1
+   swapcall r2,rxfnsb.upper(),r1,r0,r2
    swap r0,r2
    .traceevent "F" 4 "R" "S" "r" 0 29 29 0 "upper" ""
    .traceevent "A" 6 "R" "S" "r" 0 29 29 0 "text" ""

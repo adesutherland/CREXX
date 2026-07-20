@@ -21,17 +21,15 @@ main() .locals=6
    linkattr1 r1,r0,1
    load r2,10
    .traceevent "L" 4 "R" "I" "r" 2 3 3 0 "" ""
-   icopy r1,r2
-   .traceevent "A" 6 "R" "I" "r" 1 3 3 0 "values" ""
-   unlink r1
+   isetunlink r1,r2
+   .traceevent "A" 6 "R" "I" "r" 2 3 3 0 "values" ""
    .srcstep 4 4 17 "inline_test_ref_computed.crexx" 8 3 17 "  values[2] = 20"
    setattrs r0,3
    linkattr1 r2,r0,2
    load r1,20
    .traceevent "L" 4 "R" "I" "r" 1 4 4 0 "" ""
-   icopy r2,r1
-   .traceevent "A" 6 "R" "I" "r" 2 4 4 0 "values" ""
-   unlink r2
+   isetunlink r2,r1
+   .traceevent "A" 6 "R" "I" "r" 1 4 4 0 "values" ""
    .srcstep 5 5 17 "inline_test_ref_computed.crexx" 10 3 30 "  say bump(values[idx + 0 + 1])"
    .traceevent "V" 6 "R" "I" "g" 0 5 5 0 "idx" ""
    iadd r3,g0,0
@@ -39,12 +37,9 @@ main() .locals=6
    iadd r3,r3,1
    .traceevent "O" 4 "R" "I" "r" 3 5 5 0 "" ""
    .traceevent "C" 4 "R" "I" "r" 3 5 5 0 "values" ""
-   setattrs r0,3
-   linkattr1 r4,r0,r3
+   setlinkiload r4,r0,3,r3,r1,1
    .traceevent "V" 6 "R" "I" "r" 4 5 5 0 "values" ""
-   load r1,1
-   swap r2,r4
-   call r5,bump(),r1
+   swapcall r5,bump(),r1,r4,r2
    swap r4,r2
    unlink r4
    itos r5

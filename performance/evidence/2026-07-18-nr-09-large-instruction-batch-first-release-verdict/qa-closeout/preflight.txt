@@ -1,0 +1,14 @@
+preflight_utc=2026-07-19T19:18:25Z
+branch=develop
+head=32bf7e76f3fe4b776ee30eb60e85af7ca1e22b46
+upstream=7b93bef73267ee1542295616db5a0148e7766a43
+rxas_forms=574
+rxas_mnemonics=367
+instruction_text_forms=564
+instruction_db_forms=564
+preexisting_catalog_gap=0x0277-0x0280 (10 forms; present in clean HEAD rxas, absent from clean HEAD catalog)
+nr09_retained_rows=34
+nr09_removed_reserved_slots=26
+debug_build_type=Debug profiling=OFF generator=Ninja
+asan_build_type=Debug profiling=OFF generator=Ninja
+release_build_type=Release cflags=-O3_-DNDEBUG profiling=OFF generator=Ninja

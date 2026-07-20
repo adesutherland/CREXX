@@ -38,8 +38,7 @@ main() .locals=18
    linkattr1 r5,r4,1
    .traceevent "V" 6 "R" "S" "r" 5 11 11 0 "name" ""
    scopy r6,r5
-   unlink r5
-   br l171bexprend
+   unlinkbr r5,l171bexprend
 l171bexprend:
    scopy r7,r6
    br l168bexprend
@@ -71,8 +70,7 @@ l168bexprend:
    .srcstep 18 18 17 "arg_semantics_object.crexx" 20 3 23 "  return value.getName()"
    .traceevent "V" 6 "R" "O" "r" 7 20 20 0 "value" ""
    load r6,1
-   settp r7,256
-   call r2,§arg_semantics_object.box.getname(),r6
+   settpcall r2,§arg_semantics_object.box.getname(),r6,r7,256
    .traceevent "F" 4 "R" "S" "r" 2 20 20 0 "getname" ""
    scopy r6,r2
    br l178bexprend
@@ -91,8 +89,7 @@ l178bexprend:
    linkattr1 r7,r9,1
    .traceevent "V" 6 "R" "S" "r" 7 24 24 0 "name" ""
    scopy r6,r7
-   unlink r7
-   br l205bexprend
+   unlinkbr r7,l205bexprend
 l205bexprend:
    concat r6,"object-after=",r6
    .traceevent "O" 4 "R" "S" "r" 6 24 24 0 "" ""
@@ -139,8 +136,7 @@ l234bexprend:
    .srcstep 37 37 17 "arg_semantics_object.crexx" 20 3 23 "  return value.getName()"
    .traceevent "V" 6 "R" "O" "r" 7 39 39 0 "value" ""
    load r6,1
-   settp r7,256
-   call r14,§arg_semantics_object.box.getname(),r6
+   settpcall r14,§arg_semantics_object.box.getname(),r6,r7,256
    .traceevent "F" 4 "R" "S" "r" 14 39 39 0 "getname" ""
    scopy r6,r14
    br l228bexprend
@@ -175,8 +171,7 @@ l228bexprend:
    linkattr1 r14,r17,1
    .traceevent "V" 6 "R" "S" "r" 14 49 49 0 "name" ""
    scopy r6,r14
-   unlink r14
-   br l297bexprend
+   unlinkbr r14,l297bexprend
 l297bexprend:
    concat r6,"object-ref=",r6
    .traceevent "O" 4 "R" "S" "r" 6 49 49 0 "" ""

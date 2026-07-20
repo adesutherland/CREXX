@@ -1,0 +1,18 @@
+[0/2] Re-checking globbed directories...
+[1/18] Building token.rxbin
+[2/18] Building Dump.rxbin
+[3/18] Building Msay.rxbin
+[4/18] Building Query.rxbin
+[5/18] Building Fsay.rxbin
+[6/18] Building Sort.rxbin
+[7/18] Building Add.rxbin
+[8/18] Building Sortx.rxbin
+[9/18] Building Dummy.rxbin
+[10/18] Building Execio.rxbin
+[11/18] Building Substr.rxbin
+[12/18] Building RexxScript.rxbin
+[13/18] Building Parse.rxbin
+[14/18] Building Signal.rxbin
+[15/18] Building Address.rxbin
+[16/18] Building Trace.rxbin
+[17/18] Building rxcexits.rxbin (bundled via concatenation)

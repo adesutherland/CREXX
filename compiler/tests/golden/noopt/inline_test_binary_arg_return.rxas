@@ -16,8 +16,7 @@ main() .locals=4
    call r2,makeBinary(),r3
    .traceevent "F" 4 "R" "X" "r" 2 2 2 0 "makebinary" ""
    load r1,1
-   settp r2,256
-   call r0,relayBinary(),r1
+   settpcall r0,relayBinary(),r1,r2,256
    .traceevent "F" 4 "R" "X" "r" 0 2 2 0 "relaybinary" ""
    .traceevent "A" 6 "R" "X" "r" 0 2 2 0 "data" ""
    .srcstep 3 3 17 "inline_test_binary_arg_return.crexx" 6 3 11 "  say \"ok\""

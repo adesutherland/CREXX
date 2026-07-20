@@ -188,6 +188,7 @@ static void emit_dispatch(ASTNode *node) {
 
 static void flow_emit_scope_dereference_unlinks(OutputFragment *output, Scope *scope) {
     size_t i;
+    Symbol *pending = 0;
 
     if (!output || !scope) return;
     for (i = scp_dereference_symbol_count(scope); i > 0; i--) {
@@ -195,7 +196,20 @@ static void flow_emit_scope_dereference_unlinks(OutputFragment *output, Scope *s
         char *line;
 
         if (!symbol || symbol->register_num < 0 || symbol->register_type != 'r') continue;
-        line = mprintf("   unlink %c%d\n", symbol->register_type, symbol->register_num);
+        if (!pending) {
+            pending = symbol;
+        } else {
+            line = mprintf("   unlinkn %c%d,%c%d\n",
+                           pending->register_type, pending->register_num,
+                           symbol->register_type, symbol->register_num);
+            output_append_text(output, line);
+            free(line);
+            pending = 0;
+        }
+    }
+    if (pending) {
+        char *line = mprintf("   unlink %c%d\n",
+                             pending->register_type, pending->register_num);
         output_append_text(output, line);
         free(line);
     }

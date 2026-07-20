@@ -1,0 +1,518 @@
+*******************************************************************************
+* MODULE - /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_bounce-noopt.rxas
+* DESCRIPTION - /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_bounce-noopt.rxas
+
+* CONSTANT POOL - Size 0x76b8.  Dump of EXPOSED entries only (option -p not used):
+
+* 0x0075e0 EXPOSED-PROC rxfnsb.intabs() <-- as rxfnsb.intabs
+
+* CODE SEGMENT - Size 0x2af
+
+.globals=0
+rxfnsb.intabs() .expose=rxfnsb.intabs
+.meta "rxfnsb.intabs"="b" ".int" rxfnsb.intabs() "number=.int"
+                .meta "awfy_bounce.awfyrandom"="b" ".unknown" .class
+                .meta "awfy_bounce.awfyrandom.seed_value"="b" ".int" .attr 1
+                .meta "awfy_bounce.bounceball"="b" ".unknown" .class
+                .meta "awfy_bounce.bounceball.x"="b" ".int" .attr 1
+                .meta "awfy_bounce.bounceball.x_velocity"="b" ".int" .attr 2
+                .meta "awfy_bounce.bounceball.y"="b" ".int" .attr 3
+                .meta "awfy_bounce.bounceball.y_velocity"="b" ".int" .attr 4
+                .meta "awfy_bounce.bouncebenchmark"="b" ".unknown" .class
+
+main()          .locals=11
+                .meta "awfy_bounce.main"="b" ".int" main() ""
+                numsci 18,1,1                                * 0x000000:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 1 1 17 "awfy_bounce.crexx" 9 5 19 "arg argv = .string[]"
+                .meta "awfy_bounce.main.argv"="b" ".string[*]" r0
+                brtpandt lb_d,a1 /* aka r12 */,512           * 0x000004:020c if op2 readable status flags & op3 true then goto op1
+                copy r0,a1 /* aka r12 */                     * 0x000008:0008 Copy op2 to op1
+                br lb_10                                     * 0x00000b:0024 Branch to op1
+lb_d:           swap r0,a1 /* aka r12 */                     * 0x00000d:01fe Swap op1 and op2
+                .srcstep 2 2 17 "awfy_bounce.crexx" 11 1 16 "repetitions = 1"
+                .meta "awfy_bounce.main.repetitions"="b" ".int" r1
+lb_10:          load r1,1                                    * 0x000010:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "repetitions" ""
+                .srcstep 4 4 17 "awfy_bounce.crexx" 12 1 16 "if argv[0] >= 1 then repetitions = argv[1]"
+                .traceevent "C" 4 "R" "V" "r" 3 4 4 0 "argv" ""
+                getattrs r4,r0,0                             * 0x000013:00d7 get number attributes op1 = op2.num_attributes + op3
+                .traceevent "V" 6 "R" "I" "r" 4 4 4 0 "argv" ""
+                igte r4,r4,1                                 * 0x000017:006c Int Greater than equals op1=(op2>=op3)
+                .traceevent "O" 4 "R" "B" "r" 4 4 4 0 "" ""
+                brf lb_22,r4                                 * 0x00001b:0026 Branch to op1 if op2 false
+                .srcstep 5 5 17 "awfy_bounce.crexx" 12 17 21 "if argv[0] >= 1 then repetitions = argv[1]"
+                .srcstep 3 3 17 "awfy_bounce.crexx" 12 22 42 "if argv[0] >= 1 then repetitions = argv[1]"
+                minstoiattr1 r1,r0,1                         * 0x00001e:01a4 Ensure and convert one-based string attribute op3 of op2 directly into integer op1
+                .traceevent "V" 6 "R" "I" "r" 1 3 3 0 "argv" ""
+                .traceevent "A" 6 "R" "I" "r" 1 3 3 0 "repetitions" ""
+                .srcstep 7 7 17 "awfy_bounce.crexx" 13 1 19 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .traceevent "V" 6 "R" "I" "r" 1 7 7 0 "repetitions" ""
+lb_22:          ilt r5,r1,1                                  * 0x000022:006f Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 5 7 7 0 "" ""
+                brf lb_37,r5                                 * 0x000026:0026 Branch to op1 if op2 false
+                .srcstep 8 8 17 "awfy_bounce.crexx" 13 20 24 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .srcstep 6 6 17 "awfy_bounce.crexx" 13 25 68 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                load r4,"repetitions must be positive"       * 0x000029:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 4 6 6 0 "" ""
+                load r3,1                                    * 0x00002c:0001 Load op1 with op2
+                settpcall r6,fail(),r3,r4,768                * 0x00002f:011a Set op4 status then call op2 with count/window op3
+                .traceevent "F" 4 "R" "I" "r" 6 6 6 0 "fail" ""
+                ret r6                                       * 0x000035:0031 Return op1
+                .srcstep 9 9 17 "awfy_bounce.crexx" 15 1 11 "result = 0"
+                .meta "awfy_bounce.main.result"="b" ".int" r2
+lb_37:          load r2,0                                    * 0x000037:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 2 9 9 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 2 9 9 0 "result" ""
+                .srcstep 18 18 17 "awfy_bounce.crexx" 16 1 3 "do iteration = 1 to repetitions"
+                .srcstep 10 10 17 "awfy_bounce.crexx" 16 4 17 "do iteration = 1 to repetitions"
+                .meta "awfy_bounce.main.iteration"="b" ".int" r5
+                load r5,1                                    * 0x00003a:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 5 10 10 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 5 10 10 0 "iteration" ""
+                .srcstep 11 11 17 "awfy_bounce.crexx" 16 18 32 "do iteration = 1 to repetitions"
+                .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "repetitions" ""
+                .srcstep 11 11 17 "awfy_bounce.crexx" 16 18 32 "do iteration = 1 to repetitions"
+lb_3d:          igt r4,r5,r1                                 * 0x00003d:0068 Int Greater than op1=(op2>op3)
+                brt lb_71,r4                                 * 0x000041:0025 Branch to op1 if op2 true
+                .srcstep 13 13 17 "awfy_bounce.crexx" 17 3 31 "  benchmark = .BounceBenchmark()"
+                .meta "awfy_bounce.main.benchmark"="b" ".bouncebenchmark" r6
+                load r3,0                                    * 0x000044:0001 Load op1 with op2
+                call r6,§awfy_bounce.bouncebenchmark.§factory(),r3 * 0x000047:002e Call procedure (op1=op2(op3...) )
+                .traceevent "F" 4 "R" "O" "r" 6 13 13 0 "§factory" ""
+                .traceevent "A" 6 "R" "O" "r" 6 13 13 0 "benchmark" ""
+                .srcstep 14 14 17 "awfy_bounce.crexx" 18 3 25 "  result = benchmark.run()"
+                .traceevent "V" 6 "R" "O" "r" 6 14 14 0 "benchmark" ""
+                load r7,1                                    * 0x00004b:0001 Load op1 with op2
+                settpswapcall r2,§awfy_bounce.bouncebenchmark.run(),r7,r6,256,r8 * 0x00004e:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r6,r8                                   * 0x000055:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "I" "r" 2 14 14 0 "run" ""
+                .traceevent "A" 6 "R" "I" "r" 2 14 14 0 "result" ""
+                .srcstep 16 16 17 "awfy_bounce.crexx" 19 3 20 "  if result <> 1331 then return fail(\"expected 1331 bounces, got \" || result)"
+                .traceevent "V" 6 "R" "I" "r" 2 16 16 0 "result" ""
+                ine r8,r2,1331                               * 0x000058:0067 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 8 16 16 0 "" ""
+                brf lb_6e,r8                                 * 0x00005c:0026 Branch to op1 if op2 false
+                .srcstep 17 17 17 "awfy_bounce.crexx" 19 21 25 "  if result <> 1331 then return fail(\"expected 1331 bounces, got \" || result)"
+                .srcstep 15 15 17 "awfy_bounce.crexx" 19 26 78 "  if result <> 1331 then return fail(\"expected 1331 bounces, got \" || result)"
+                itosconcat r10,"expected 1331 bounces, got ",r2 * 0x00005f:0191 Convert integer op3 in place and concatenate it after constant op2 into op1
+                .traceevent "V" 6 "R" "S" "r" 2 15 15 0 "result" ""
+                .traceevent "O" 4 "R" "S" "r" 10 15 15 0 "" ""
+                load r9,1                                    * 0x000063:0001 Load op1 with op2
+                settpcall r7,fail(),r9,r10,768               * 0x000066:011a Set op4 status then call op2 with count/window op3
+                .traceevent "F" 4 "R" "I" "r" 7 15 15 0 "fail" ""
+                ret r7                                       * 0x00006c:0031 Return op1
+                .srcstep 12 12 17 "awfy_bounce.crexx" 16 4 13 "do iteration = 1 to repetitions"
+                .srcstep 19 19 17 "awfy_bounce.crexx" 20 1 4 "end"
+lb_6e:          bctp lb_3d,r5                                * 0x00006e:015d inc op2; goto op1
+lb_71:          endlife r6                                   * 0x000071:0202 End storage reference lifetime for op1
+                .meta "awfy_bounce.main.benchmark"
+                .meta "awfy_bounce.main.iteration"
+                .srcstep 20 20 17 "awfy_bounce.crexx" 22 1 68 "say \"benchmark=awfy_bounce repetitions=\"repetitions \"result=\"result"
+                itosconcat r10,"benchmark=awfy_bounce repetitions=",r1 * 0x000073:0191 Convert integer op3 in place and concatenate it after constant op2 into op1
+                .traceevent "V" 6 "R" "S" "r" 1 20 20 0 "repetitions" ""
+                .traceevent "O" 4 "R" "S" "r" 10 20 20 0 "" ""
+                sconcatitos r10,"result=",r2                 * 0x000077:0192 Space-concatenate op2 onto op1 then convert integer op3 to string
+                .traceevent "O" 4 "R" "S" "r" 10 20 20 0 "" ""
+                .traceevent "V" 6 "R" "S" "r" 2 20 20 0 "result" ""
+                append r10,r2                                * 0x00007b:008f String Append (op1=op1||op2)
+                .traceevent "O" 4 "R" "S" "r" 10 20 20 0 "" ""
+                say r10                                      * 0x00007e:01c2 Say op1
+                .srcstep 21 21 17 "awfy_bounce.crexx" 23 1 24 "say \"PASS: AWFY Bounce\""
+                say "PASS: AWFY Bounce"                      * 0x000080:01c7 Say op1
+                .srcstep 22 22 17 "awfy_bounce.crexx" 24 1 9 "return 0"
+                ret 0                                        * 0x000082:0032 Return op1
+                .meta "awfy_bounce.main.argv"
+                .meta "awfy_bounce.main.repetitions"
+                .meta "awfy_bounce.main.result"
+
+fail()          .locals=2
+                .meta "awfy_bounce.fail"="b" ".int" fail() "message=.string"
+                .srcstep 26 26 17 "awfy_bounce.crexx" 26 1 23 "fail: procedure = .int"
+                numsci 18,1,1                                * 0x000084:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 23 23 17 "awfy_bounce.crexx" 27 7 24 "  arg message = .string"
+                .meta "awfy_bounce.fail.message"="b" ".string" a1 /* aka r3 */
+                .srcstep 24 24 17 "awfy_bounce.crexx" 28 3 22 "  say \"FAIL:\" message"
+                .traceevent "V" 6 "R" "S" "a" 1 24 24 0 "message" ""
+                sconcat r1,"FAIL:",a1 /* aka r3 */           * 0x000088:008b String Concat with space (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 1 24 24 0 "" ""
+                say r1                                       * 0x00008c:01c2 Say op1
+                .srcstep 25 25 17 "awfy_bounce.crexx" 29 3 11 "  return 1"
+                ret 1                                        * 0x00008e:0032 Return op1
+                .meta "awfy_bounce.fail.message"
+
+§awfy_bounce.awfyrandom.§factory() .locals=3
+                .meta "awfy_bounce.awfyrandom.§factory"="b" ".awfy_bounce..awfyrandom" §awfy_bounce.awfyrandom.§factory() ""
+                .srcstep 29 29 17 "awfy_bounce.crexx" 34 3 13 "  *: factory"
+                setattrs r0,2                                * 0x000090:00d9 set number attributes op1.num_attributes = op2
+                setobjtype r0,"awfy_bounce.awfyrandom"       * 0x000093:0038 Set runtime concrete object type metadata on op1
+                numsci 18,1,1                                * 0x000096:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 27 27 17 "awfy_bounce.crexx" 35 5 23 "    seed_value = 74755"
+                .meta "awfy_bounce.awfyrandom.§factory.§factory"="b" ".awfyrandom" r0
+                load r2,74755                                * 0x00009a:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 2 27 27 0 "" ""
+                isetattr1 r0,1,r2                            * 0x00009d:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 28 28 17 "awfy_bounce.crexx" 36 5 11 "    return"
+                .traceevent "V" 6 "R" "O" "r" 0 28 28 0 "§factory" ""
+                ret r0                                       * 0x0000a1:0031 Return op1
+                .meta "awfy_bounce.awfyrandom.§factory.§factory"
+
+§awfy_bounce.awfyrandom.next() .locals=4
+                .meta "awfy_bounce.awfyrandom.next"="b" ".int" §awfy_bounce.awfyrandom.next() ""
+                .srcstep 32 32 17 "awfy_bounce.crexx" 38 3 22 "  next: method = .int"
+                assertinitialized a1 /* aka r5 */            * 0x0000a3:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x0000a5:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 30 30 17 "awfy_bounce.crexx" 39 5 59 "    seed_value = ((seed_value * 1309) + 13849) <mod> 65536"
+                .meta "awfy_bounce.awfyrandom.next.§this"="b" ".awfyrandom" a1 /* aka r5 */
+                linkattr1 r2,a1 /* aka r5 */,1               * 0x0000a9:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 2 30 30 0 "seed_value" ""
+                imult r3,r2,1309                             * 0x0000ad:0015 Integer Multiply (op1=op2*op3)
+                unlink r2                                    * 0x0000b1:00d5 Unlink op1
+                .traceevent "O" 4 "R" "I" "r" 3 30 30 0 "" ""
+                iadd r3,r3,13849                             * 0x0000b3:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 3 30 30 0 "" ""
+                imod r3,r3,65536                             * 0x0000b7:001a Integer Modulo (op1=op2%op3)
+                .traceevent "O" 4 "R" "I" "r" 3 30 30 0 "" ""
+                isetattr1 a1 /* aka r5 */,1,r3               * 0x0000bb:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 31 31 17 "awfy_bounce.crexx" 40 5 22 "    return seed_value"
+                linkattr1 r3,a1 /* aka r5 */,1               * 0x0000bf:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 3 31 31 0 "seed_value" ""
+                ret r3                                       * 0x0000c3:0031 Return op1
+                .meta "awfy_bounce.awfyrandom.next.§this"
+
+§awfy_bounce.bounceball.§factory() .locals=8
+                .meta "awfy_bounce.bounceball.§factory"="b" ".awfy_bounce..bounceball" §awfy_bounce.bounceball.§factory() "random_ref=reference .awfyrandom"
+                .srcstep 40 40 17 "awfy_bounce.crexx" 48 3 13 "  *: factory"
+                setattrs r2,5                                * 0x0000c5:00d9 set number attributes op1.num_attributes = op2
+                setobjtype r2,"awfy_bounce.bounceball"       * 0x0000c8:0038 Set runtime concrete object type metadata on op1
+                numsci 18,1,1                                * 0x0000cb:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 33 33 17 "awfy_bounce.crexx" 49 9 43 "    arg random_ref = reference .AwfyRandom"
+                .meta "awfy_bounce.bounceball.§factory.random_ref"="b" "reference .awfyrandom" a1 /* aka r9 */
+                .meta "awfy_bounce.bounceball.§factory.§factory"="b" ".bounceball" r2
+                .srcstep 34 34 17 "awfy_bounce.crexx" 50 5 36 "    random = dereference random_ref"
+                .meta "awfy_bounce.bounceball.§factory.random"="b" ".awfyrandom" r0
+                .traceevent "V" 6 "R" "R" "a" 1 34 34 0 "random_ref" ""
+                unlink r0                                    * 0x0000cf:00d5 Unlink op1
+                linkref r0,a1 /* aka r9 */                   * 0x0000d1:00c4 Link op1 to referenced storage op2
+                .traceevent "A" 6 "R" "O" "r" 0 34 34 0 "random" ""
+                .srcstep 35 35 17 "awfy_bounce.crexx" 51 5 32 "    x = random.next() <mod> 500"
+                .traceevent "V" 6 "R" "O" "r" 0 35 35 0 "random" ""
+                load r5,1                                    * 0x0000d4:0001 Load op1 with op2
+                settpswapcall r7,§awfy_bounce.awfyrandom.next(),r5,r0,256,r6 * 0x0000d7:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r0,r6                                   * 0x0000de:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "I" "r" 7 35 35 0 "next" ""
+                imod r7,r7,500                               * 0x0000e1:001a Integer Modulo (op1=op2%op3)
+                .traceevent "O" 4 "R" "I" "r" 7 35 35 0 "" ""
+                isetattr1 r2,1,r7                            * 0x0000e5:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 36 36 17 "awfy_bounce.crexx" 52 5 32 "    y = random.next() <mod> 500"
+                .traceevent "V" 6 "R" "O" "r" 0 36 36 0 "random" ""
+                load r5,1                                    * 0x0000e9:0001 Load op1 with op2
+                settpswapcall r4,§awfy_bounce.awfyrandom.next(),r5,r0,256,r6 * 0x0000ec:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r0,r6                                   * 0x0000f3:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "I" "r" 4 36 36 0 "next" ""
+                imod r6,r4,500                               * 0x0000f6:001a Integer Modulo (op1=op2%op3)
+                .traceevent "O" 4 "R" "I" "r" 6 36 36 0 "" ""
+                isetattr1 r2,3,r6                            * 0x0000fa:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 37 37 17 "awfy_bounce.crexx" 53 5 49 "    x_velocity = (random.next() <mod> 300) - 150"
+                .traceevent "V" 6 "R" "O" "r" 0 37 37 0 "random" ""
+                load r5,1                                    * 0x0000fe:0001 Load op1 with op2
+                settpswapcall r4,§awfy_bounce.awfyrandom.next(),r5,r0,256,r6 * 0x000101:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r0,r6                                   * 0x000108:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "I" "r" 4 37 37 0 "next" ""
+                imod r6,r4,300                               * 0x00010b:001a Integer Modulo (op1=op2%op3)
+                .traceevent "O" 4 "R" "I" "r" 6 37 37 0 "" ""
+                isub r6,r6,150                               * 0x00010f:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 6 37 37 0 "" ""
+                isetattr1 r2,2,r6                            * 0x000113:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 38 38 17 "awfy_bounce.crexx" 54 5 49 "    y_velocity = (random.next() <mod> 300) - 150"
+                .traceevent "V" 6 "R" "O" "r" 0 38 38 0 "random" ""
+                load r5,1                                    * 0x000117:0001 Load op1 with op2
+                settpswapcall r4,§awfy_bounce.awfyrandom.next(),r5,r0,256,r6 * 0x00011a:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r0,r6                                   * 0x000121:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "I" "r" 4 38 38 0 "next" ""
+                imod r6,r4,300                               * 0x000124:001a Integer Modulo (op1=op2%op3)
+                .traceevent "O" 4 "R" "I" "r" 6 38 38 0 "" ""
+                isub r6,r6,150                               * 0x000128:0012 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 6 38 38 0 "" ""
+                isetattr1 r2,4,r6                            * 0x00012c:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 39 39 17 "awfy_bounce.crexx" 55 5 11 "    return"
+                .traceevent "V" 6 "R" "O" "r" 2 39 39 0 "§factory" ""
+                ret r2                                       * 0x000130:0031 Return op1
+                .meta "awfy_bounce.bounceball.§factory.random"
+                .meta "awfy_bounce.bounceball.§factory.random_ref"
+                .meta "awfy_bounce.bounceball.§factory.§factory"
+
+§awfy_bounce.bounceball.bounce() .locals=8
+                .meta "awfy_bounce.bounceball.bounce"="b" ".boolean" §awfy_bounce.bounceball.bounce() ""
+                .srcstep 65 65 17 "awfy_bounce.crexx" 57 3 28 "  bounce: method = .boolean"
+                assertinitialized a1 /* aka r9 */            * 0x000132:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x000134:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 41 41 17 "awfy_bounce.crexx" 58 5 16 "    bounced = 0"
+                .meta "awfy_bounce.bounceball.bounce.bounced"="b" ".int" r0
+                .meta "awfy_bounce.bounceball.bounce.§this"="b" ".bounceball" a1 /* aka r9 */
+                load r0,0                                    * 0x000138:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 0 41 41 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 0 41 41 0 "bounced" ""
+                .srcstep 42 42 17 "awfy_bounce.crexx" 59 5 23 "    x = x + x_velocity"
+                linkattr1 r3,a1 /* aka r9 */,1               * 0x00013b:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 3 42 42 0 "x" ""
+                linkattr1 r4,a1 /* aka r9 */,2               * 0x00013f:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 4 42 42 0 "x_velocity" ""
+                iadd r5,r3,r4                                * 0x000143:000f Integer Add (op1=op2+op3)
+                unlinkn r4,r3                                * 0x000147:011b Restore two registers to their frame-owned storage
+                .traceevent "O" 4 "R" "I" "r" 5 42 42 0 "" ""
+                isetattr1 a1 /* aka r9 */,1,r5               * 0x00014a:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 43 43 17 "awfy_bounce.crexx" 60 5 23 "    y = y + y_velocity"
+                linkattr1 r4,a1 /* aka r9 */,3               * 0x00014e:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 4 43 43 0 "y" ""
+                linkattr1 r3,a1 /* aka r9 */,4               * 0x000152:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 3 43 43 0 "y_velocity" ""
+                iadd r2,r4,r3                                * 0x000156:000f Integer Add (op1=op2+op3)
+                unlinkn r3,r4                                * 0x00015a:011b Restore two registers to their frame-owned storage
+                .traceevent "O" 4 "R" "I" "r" 2 43 43 0 "" ""
+                isetattr1 a1 /* aka r9 */,3,r2               * 0x00015d:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 47 47 17 "awfy_bounce.crexx" 62 5 15 "    if x > 500 then do"
+                linkattr1 r5,a1 /* aka r9 */,1               * 0x000161:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 5 47 47 0 "x" ""
+                igt r4,r5,500                                * 0x000165:0069 Int Greater than op1=(op2>op3)
+                unlink r5                                    * 0x000169:00d5 Unlink op1
+                .traceevent "O" 4 "R" "B" "r" 4 47 47 0 "" ""
+                brf lb_192,r4                                * 0x00016b:0026 Branch to op1 if op2 false
+                .srcstep 48 48 17 "awfy_bounce.crexx" 62 16 20 "    if x > 500 then do"
+                .srcstep 44 44 17 "awfy_bounce.crexx" 63 7 14 "      x = 500"
+                load r2,500                                  * 0x00016e:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 2 44 44 0 "" ""
+                isetattr1 a1 /* aka r9 */,1,r2               * 0x000171:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 45 45 17 "awfy_bounce.crexx" 64 7 42 "      x_velocity = 0 - intabs(x_velocity)"
+                linkattr1 r6,a1 /* aka r9 */,2               * 0x000175:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 6 45 45 0 "x_velocity" ""
+                load r2,1                                    * 0x000179:0001 Load op1 with op2
+                swapcall r7,rxfnsb.intabs(),r2,r6,r3         * 0x00017c:0118 Swap op4/op5 then call op2 with count/window op3 and result op1
+                swap r6,r3                                   * 0x000182:01fe Swap op1 and op2
+                unlink r6                                    * 0x000185:00d5 Unlink op1
+                .traceevent "F" 4 "R" "I" "r" 7 45 45 0 "intabs" ""
+                isub r7,0,r7                                 * 0x000187:0013 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 7 45 45 0 "" ""
+                isetattr1 a1 /* aka r9 */,2,r7               * 0x00018b:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 46 46 17 "awfy_bounce.crexx" 65 7 18 "      bounced = 1"
+                load r0,1                                    * 0x00018f:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 0 46 46 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 0 46 46 0 "bounced" ""
+                .srcstep 52 52 17 "awfy_bounce.crexx" 67 5 13 "    if x < 0 then do"
+lb_192:         linkattr1 r7,a1 /* aka r9 */,1               * 0x000192:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 7 52 52 0 "x" ""
+                ilt r6,r7,0                                  * 0x000196:006f Int Less than op1=(op2<op3)
+                unlink r7                                    * 0x00019a:00d5 Unlink op1
+                .traceevent "O" 4 "R" "B" "r" 6 52 52 0 "" ""
+                brf lb_1bf,r6                                * 0x00019c:0026 Branch to op1 if op2 false
+                .srcstep 53 53 17 "awfy_bounce.crexx" 67 14 18 "    if x < 0 then do"
+                .srcstep 49 49 17 "awfy_bounce.crexx" 68 7 12 "      x = 0"
+                load r4,0                                    * 0x00019f:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 4 49 49 0 "" ""
+                isetattr1 a1 /* aka r9 */,1,r4               * 0x0001a2:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 50 50 17 "awfy_bounce.crexx" 69 7 38 "      x_velocity = intabs(x_velocity)"
+                linkattr1 r3,a1 /* aka r9 */,2               * 0x0001a6:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 3 50 50 0 "x_velocity" ""
+                load r4,1                                    * 0x0001aa:0001 Load op1 with op2
+                swapcall r2,rxfnsb.intabs(),r4,r3,r5         * 0x0001ad:0118 Swap op4/op5 then call op2 with count/window op3 and result op1
+                swap r3,r5                                   * 0x0001b3:01fe Swap op1 and op2
+                unlink r3                                    * 0x0001b6:00d5 Unlink op1
+                .traceevent "F" 4 "R" "I" "r" 2 50 50 0 "intabs" ""
+                isetattr1 a1 /* aka r9 */,2,r2               * 0x0001b8:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 51 51 17 "awfy_bounce.crexx" 70 7 18 "      bounced = 1"
+                load r0,1                                    * 0x0001bc:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 0 51 51 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 0 51 51 0 "bounced" ""
+                .srcstep 57 57 17 "awfy_bounce.crexx" 72 5 15 "    if y > 500 then do"
+lb_1bf:         linkattr1 r7,a1 /* aka r9 */,3               * 0x0001bf:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 7 57 57 0 "y" ""
+                igt r6,r7,500                                * 0x0001c3:0069 Int Greater than op1=(op2>op3)
+                unlink r7                                    * 0x0001c7:00d5 Unlink op1
+                .traceevent "O" 4 "R" "B" "r" 6 57 57 0 "" ""
+                brf lb_1f0,r6                                * 0x0001c9:0026 Branch to op1 if op2 false
+                .srcstep 58 58 17 "awfy_bounce.crexx" 72 16 20 "    if y > 500 then do"
+                .srcstep 54 54 17 "awfy_bounce.crexx" 73 7 14 "      y = 500"
+                load r4,500                                  * 0x0001cc:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 4 54 54 0 "" ""
+                isetattr1 a1 /* aka r9 */,3,r4               * 0x0001cf:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 55 55 17 "awfy_bounce.crexx" 74 7 42 "      y_velocity = 0 - intabs(y_velocity)"
+                linkattr1 r3,a1 /* aka r9 */,4               * 0x0001d3:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 3 55 55 0 "y_velocity" ""
+                load r4,1                                    * 0x0001d7:0001 Load op1 with op2
+                swapcall r2,rxfnsb.intabs(),r4,r3,r5         * 0x0001da:0118 Swap op4/op5 then call op2 with count/window op3 and result op1
+                swap r3,r5                                   * 0x0001e0:01fe Swap op1 and op2
+                unlink r3                                    * 0x0001e3:00d5 Unlink op1
+                .traceevent "F" 4 "R" "I" "r" 2 55 55 0 "intabs" ""
+                isub r5,0,r2                                 * 0x0001e5:0013 Integer Subtract (op1=op2-op3)
+                .traceevent "O" 4 "R" "I" "r" 5 55 55 0 "" ""
+                isetattr1 a1 /* aka r9 */,4,r5               * 0x0001e9:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 56 56 17 "awfy_bounce.crexx" 75 7 18 "      bounced = 1"
+                load r0,1                                    * 0x0001ed:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 0 56 56 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 0 56 56 0 "bounced" ""
+                .srcstep 62 62 17 "awfy_bounce.crexx" 77 5 13 "    if y < 0 then do"
+lb_1f0:         linkattr1 r7,a1 /* aka r9 */,3               * 0x0001f0:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 7 62 62 0 "y" ""
+                ilt r6,r7,0                                  * 0x0001f4:006f Int Less than op1=(op2<op3)
+                unlink r7                                    * 0x0001f8:00d5 Unlink op1
+                .traceevent "O" 4 "R" "B" "r" 6 62 62 0 "" ""
+                brf lb_21d,r6                                * 0x0001fa:0026 Branch to op1 if op2 false
+                .srcstep 63 63 17 "awfy_bounce.crexx" 77 14 18 "    if y < 0 then do"
+                .srcstep 59 59 17 "awfy_bounce.crexx" 78 7 12 "      y = 0"
+                load r4,0                                    * 0x0001fd:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 4 59 59 0 "" ""
+                isetattr1 a1 /* aka r9 */,3,r4               * 0x000200:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 60 60 17 "awfy_bounce.crexx" 79 7 38 "      y_velocity = intabs(y_velocity)"
+                linkattr1 r3,a1 /* aka r9 */,4               * 0x000204:00cb Link attribute op3 (1 base) of op2 to op1
+                .traceevent "V" 6 "R" "I" "r" 3 60 60 0 "y_velocity" ""
+                load r4,1                                    * 0x000208:0001 Load op1 with op2
+                swapcall r2,rxfnsb.intabs(),r4,r3,r5         * 0x00020b:0118 Swap op4/op5 then call op2 with count/window op3 and result op1
+                swap r3,r5                                   * 0x000211:01fe Swap op1 and op2
+                unlink r3                                    * 0x000214:00d5 Unlink op1
+                .traceevent "F" 4 "R" "I" "r" 2 60 60 0 "intabs" ""
+                isetattr1 a1 /* aka r9 */,4,r2               * 0x000216:0196 Copy integer op3 directly into one-based attribute op2 of op1
+                .srcstep 61 61 17 "awfy_bounce.crexx" 80 7 18 "      bounced = 1"
+                load r0,1                                    * 0x00021a:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 0 61 61 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 0 61 61 0 "bounced" ""
+                .srcstep 64 64 17 "awfy_bounce.crexx" 82 5 19 "    return bounced"
+                .traceevent "V" 6 "R" "B" "r" 0 64 64 0 "bounced" ""
+lb_21d:         ret r0                                       * 0x00021d:0031 Return op1
+                .meta "awfy_bounce.bounceball.bounce.bounced"
+                .meta "awfy_bounce.bounceball.bounce.§this"
+
+§awfy_bounce.bouncebenchmark.§factory() .locals=1
+                .meta "awfy_bounce.bouncebenchmark.§factory"="b" ".awfy_bounce..bouncebenchmark" §awfy_bounce.bouncebenchmark.§factory() ""
+                .srcstep 67 67 17 "awfy_bounce.crexx" 85 3 13 "  *: factory"
+                setattrs r0,0                                * 0x00021f:00d9 set number attributes op1.num_attributes = op2
+                setobjtype r0,"awfy_bounce.bouncebenchmark"  * 0x000222:0038 Set runtime concrete object type metadata on op1
+                numsci 18,1,1                                * 0x000225:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 66 66 17 "awfy_bounce.crexx" 86 5 11 "    return"
+                .meta "awfy_bounce.bouncebenchmark.§factory.§factory"="b" ".bouncebenchmark" r0
+                .traceevent "V" 6 "R" "O" "r" 0 66 66 0 "§factory" ""
+                ret r0                                       * 0x000229:0031 Return op1
+                .meta "awfy_bounce.bouncebenchmark.§factory.§factory"
+
+§awfy_bounce.bouncebenchmark.run() .locals=15
+                .meta "awfy_bounce.bouncebenchmark.run"="b" ".int" §awfy_bounce.bouncebenchmark.run() ""
+                .srcstep 93 93 17 "awfy_bounce.crexx" 88 3 21 "  run: method = .int"
+                assertinitialized a1 /* aka r16 */           * 0x00022b:0055 Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+                numsci 18,1,1                                * 0x00022d:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .meta "awfy_bounce.bouncebenchmark.run.balls"="b" ".bounceball[*]" r0
+                .srcstep 68 68 17 "awfy_bounce.crexx" 90 5 24 "    balls = .BounceBall[]"
+                null r0                                      * 0x000231:000e Null (clear) op1
+                .srcstep 69 69 17 "awfy_bounce.crexx" 89 5 25 "    random = .AwfyRandom()"
+                .meta "awfy_bounce.bouncebenchmark.run.random"="b" ".awfyrandom" r2
+                .meta "awfy_bounce.bouncebenchmark.run.§this"="b" ".bouncebenchmark" a1 /* aka r16 */
+                load r4,0                                    * 0x000233:0001 Load op1 with op2
+                call r2,§awfy_bounce.awfyrandom.§factory(),r4 * 0x000236:002e Call procedure (op1=op2(op3...) )
+                .traceevent "F" 4 "R" "O" "r" 2 69 69 0 "§factory" ""
+                .traceevent "A" 6 "R" "O" "r" 2 69 69 0 "random" ""
+                .srcstep 74 74 17 "awfy_bounce.crexx" 91 5 7 "    do i = 1 to 100"
+                .srcstep 70 70 17 "awfy_bounce.crexx" 91 8 13 "    do i = 1 to 100"
+                .meta "awfy_bounce.bouncebenchmark.run.i"="b" ".int" r4
+                load r4,1                                    * 0x00023a:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 4 70 70 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 4 70 70 0 "i" ""
+                .srcstep 71 71 17 "awfy_bounce.crexx" 91 14 20 "    do i = 1 to 100"
+                load r5,100                                  * 0x00023d:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 5 0 0 0 "" ""
+                .srcstep 71 71 17 "awfy_bounce.crexx" 91 14 20 "    do i = 1 to 100"
+lb_240:         igt r6,r4,r5                                 * 0x000240:0068 Int Greater than op1=(op2>op3)
+                brt lb_260,r6                                * 0x000244:0025 Branch to op1 if op2 true
+                .srcstep 73 73 17 "awfy_bounce.crexx" 92 7 47 "      balls[i] = .BounceBall(reference random)"
+                .traceevent "V" 6 "R" "I" "r" 4 73 73 0 "i" ""
+                .traceevent "C" 4 "R" "I" "r" 4 73 73 0 "balls" ""
+                minlinkattr1 r7,r0,r4,0                      * 0x000247:0126 Ensure and link one-based attribute op3 plus op4 of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 2 73 73 0 "random" ""
+                mkref r9,r2                                  * 0x00024c:00c2 Create reference value op1 to storage op2
+                load r8,1                                    * 0x00024f:0001 Load op1 with op2
+                settpcall r10,§awfy_bounce.bounceball.§factory(),r8,r9,768 * 0x000252:011a Set op4 status then call op2 with count/window op3
+                .traceevent "F" 4 "R" "O" "r" 10 73 73 0 "§factory" ""
+                copy r7,r10                                  * 0x000258:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "O" "r" 7 73 73 0 "balls" ""
+                unlink r7                                    * 0x00025b:00d5 Unlink op1
+                .srcstep 72 72 17 "awfy_bounce.crexx" 91 8 9 "    do i = 1 to 100"
+                .srcstep 75 75 17 "awfy_bounce.crexx" 93 5 8 "    end"
+                bctp lb_240,r4                               * 0x00025d:015d inc op2; goto op1
+                .meta "awfy_bounce.bouncebenchmark.run.i"
+                .srcstep 76 76 17 "awfy_bounce.crexx" 95 5 16 "    bounces = 0"
+                .meta "awfy_bounce.bouncebenchmark.run.bounces"="b" ".int" r1
+lb_260:         load r1,0                                    * 0x000260:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 1 76 76 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 1 76 76 0 "bounces" ""
+                .srcstep 90 90 17 "awfy_bounce.crexx" 96 5 7 "    do step = 1 to 50"
+                .srcstep 77 77 17 "awfy_bounce.crexx" 96 8 16 "    do step = 1 to 50"
+                .meta "awfy_bounce.bouncebenchmark.run.step"="b" ".int" r10
+                load r10,1                                   * 0x000263:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 10 77 77 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 10 77 77 0 "step" ""
+                .srcstep 78 78 17 "awfy_bounce.crexx" 96 17 22 "    do step = 1 to 50"
+                load r9,50                                   * 0x000266:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 9 0 0 0 "" ""
+                .srcstep 78 78 17 "awfy_bounce.crexx" 96 17 22 "    do step = 1 to 50"
+lb_269:         igt r8,r10,r9                                * 0x000269:0068 Int Greater than op1=(op2>op3)
+                brt lb_2ad,r8                                * 0x00026d:0025 Branch to op1 if op2 true
+                .srcstep 88 88 17 "awfy_bounce.crexx" 97 7 9 "      do i = 1 to balls[0]"
+                .srcstep 80 80 17 "awfy_bounce.crexx" 97 10 15 "      do i = 1 to balls[0]"
+                .meta "awfy_bounce.bouncebenchmark.run.i"="b" ".int" r5
+                load r5,1                                    * 0x000270:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 5 80 80 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 5 80 80 0 "i" ""
+                .srcstep 81 81 17 "awfy_bounce.crexx" 97 16 26 "      do i = 1 to balls[0]"
+                .traceevent "C" 4 "R" "V" "r" 4 0 0 0 "balls" ""
+                getattrs r11,r0,0                            * 0x000273:00d7 get number attributes op1 = op2.num_attributes + op3
+                .traceevent "V" 6 "R" "I" "r" 11 0 0 0 "balls" ""
+                .srcstep 81 81 17 "awfy_bounce.crexx" 97 16 26 "      do i = 1 to balls[0]"
+lb_277:         igt r12,r5,r11                               * 0x000277:0068 Int Greater than op1=(op2>op3)
+                brt lb_2a4,r12                               * 0x00027b:0025 Branch to op1 if op2 true
+                .srcstep 83 83 17 "awfy_bounce.crexx" 98 9 37 "        ball_ref = reference balls[i]"
+                .meta "awfy_bounce.bouncebenchmark.run.ball_ref"="b" "reference .bounceball" r6
+                .traceevent "V" 6 "R" "I" "r" 5 83 83 0 "i" ""
+                .traceevent "C" 4 "R" "I" "r" 5 83 83 0 "balls" ""
+                minlinkattr1 r13,r0,r5,0                     * 0x00027e:0126 Ensure and link one-based attribute op3 plus op4 of op2 to op1
+                .traceevent "V" 6 "R" "O" "r" 13 83 83 0 "balls" ""
+                mkref r6,r13                                 * 0x000283:00c2 Create reference value op1 to storage op2
+                unlink r13                                   * 0x000286:00d5 Unlink op1
+                .traceevent "A" 6 "R" "R" "r" 6 83 83 0 "ball_ref" ""
+                .srcstep 84 84 17 "awfy_bounce.crexx" 99 9 36 "        ball = dereference ball_ref"
+                .meta "awfy_bounce.bouncebenchmark.run.ball"="b" ".bounceball" r7
+                .traceevent "V" 6 "R" "R" "r" 6 84 84 0 "ball_ref" ""
+                unlink r7                                    * 0x000288:00d5 Unlink op1
+                linkref r7,r6                                * 0x00028a:00c4 Link op1 to referenced storage op2
+                .traceevent "A" 6 "R" "O" "r" 7 84 84 0 "ball" ""
+                .srcstep 86 86 17 "awfy_bounce.crexx" 100 9 23 "        if ball.bounce() then bounces = bounces + 1"
+                .traceevent "V" 6 "R" "O" "r" 7 86 86 0 "ball" ""
+                load r13,1                                   * 0x00028d:0001 Load op1 with op2
+                settpswapcall r4,§awfy_bounce.bounceball.bounce(),r13,r7,256,r14 * 0x000290:0119 Set op4 status, swap op4/op6, then call op2 with count/window op3
+                swap r7,r14                                  * 0x000297:01fe Swap op1 and op2
+                .traceevent "F" 4 "R" "B" "r" 4 86 86 0 "bounce" ""
+                brf lb_2a1,r4                                * 0x00029a:0026 Branch to op1 if op2 false
+                .srcstep 87 87 17 "awfy_bounce.crexx" 100 23 24 "        if ball.bounce() then bounces = bounces + 1"
+                .srcstep 85 85 17 "awfy_bounce.crexx" 100 31 52 "        if ball.bounce() then bounces = bounces + 1"
+                .traceevent "V" 6 "R" "I" "r" 1 85 85 0 "bounces" ""
+                iadd r1,r1,1                                 * 0x00029d:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 1 85 85 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 1 85 85 0 "bounces" ""
+                .srcstep 82 82 17 "awfy_bounce.crexx" 97 10 11 "      do i = 1 to balls[0]"
+                .srcstep 89 89 17 "awfy_bounce.crexx" 101 7 10 "      end"
+lb_2a1:         bctp lb_277,r5                               * 0x0002a1:015d inc op2; goto op1
+lb_2a4:         unlink r7                                    * 0x0002a4:00d5 Unlink op1
+                endlife r7                                   * 0x0002a6:0202 End storage reference lifetime for op1
+                endlife r6                                   * 0x0002a8:0202 End storage reference lifetime for op1
+                .meta "awfy_bounce.bouncebenchmark.run.ball"
+                .meta "awfy_bounce.bouncebenchmark.run.ball_ref"
+                .meta "awfy_bounce.bouncebenchmark.run.i"
+                .srcstep 79 79 17 "awfy_bounce.crexx" 96 8 12 "    do step = 1 to 50"
+                .srcstep 91 91 17 "awfy_bounce.crexx" 101 7 10 "      end"
+                bctp lb_269,r10                              * 0x0002aa:015d inc op2; goto op1
+                .meta "awfy_bounce.bouncebenchmark.run.step"
+                .srcstep 92 92 17 "awfy_bounce.crexx" 103 5 19 "    return bounces"
+                .traceevent "V" 6 "R" "I" "r" 1 92 92 0 "bounces" ""
+lb_2ad:         ret r1                                       * 0x0002ad:0031 Return op1
+                .meta "awfy_bounce.bouncebenchmark.run.balls"
+                .meta "awfy_bounce.bouncebenchmark.run.bounces"
+                .meta "awfy_bounce.bouncebenchmark.run.random"
+                .meta "awfy_bounce.bouncebenchmark.run.§this"
+*******************************************************************************
+

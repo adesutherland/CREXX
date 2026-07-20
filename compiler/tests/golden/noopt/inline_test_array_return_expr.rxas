@@ -17,12 +17,10 @@ main() .locals=5
    .traceevent "L" 4 "R" "S" "r" 4 2 2 0 "" ""
    load r2,2
    settp r3,768
-   settp r4,768
-   call r1,buildArray(),r2
+   settpcall r1,buildArray(),r2,r4,768
    .traceevent "F" 4 "R" "S" "r" 1 2 2 0 "buildarray" ""
    load r0,1
-   settp r1,256
-   call r4,renderArray(),r0
+   settpcall r4,renderArray(),r0,r1,256
    .traceevent "F" 4 "R" "S" "r" 4 2 2 0 "renderarray" ""
    say r4
    .srcstep 3 3 17 "inline_test_array_return_expr.crexx" 6 3 47 "  say renderArray(buildArray(\"green\", \"gold\"))"
@@ -32,12 +30,10 @@ main() .locals=5
    .traceevent "L" 4 "R" "S" "r" 2 3 3 0 "" ""
    load r0,2
    settp r1,768
-   settp r2,768
-   call r4,buildArray(),r0
+   settpcall r4,buildArray(),r0,r2,768
    .traceevent "F" 4 "R" "S" "r" 4 3 3 0 "buildarray" ""
    load r3,1
-   settp r4,256
-   call r2,renderArray(),r3
+   settpcall r2,renderArray(),r3,r4,256
    .traceevent "F" 4 "R" "S" "r" 2 3 3 0 "renderarray" ""
    say r2
    .srcstep 4 4 17 "inline_test_array_return_expr.crexx" 7 3 48 "  say \"Array return expr inline test finished.\""
@@ -57,15 +53,13 @@ buildArray() .locals=4
    .srcstep 9 9 17 "inline_test_array_return_expr.crexx" 12 3 17 "  temp = .string[]"
    null r2
    .srcstep 10 10 17 "inline_test_array_return_expr.crexx" 13 3 17 "  temp[1] = left"
-   minattrs r2,1
-   linkattr1 r3,r2,1
+   minlinkattr1 r3,r2,1
    .traceevent "V" 6 "R" "S" "a" 1 10 10 0 "left" ""
    scopy r3,a1
    .traceevent "A" 6 "R" "S" "r" 3 10 10 0 "temp" ""
    unlink r3
    .srcstep 11 11 17 "inline_test_array_return_expr.crexx" 14 3 18 "  temp[2] = right"
-   minattrs r2,2
-   linkattr1 r3,r2,2
+   minlinkattr1 r3,r2,2
    .traceevent "V" 6 "R" "S" "a" 2 11 11 0 "right" ""
    scopy r3,a2
    .traceevent "A" 6 "R" "S" "r" 3 11 11 0 "temp" ""
@@ -84,14 +78,12 @@ renderArray() .locals=4
    .srcstep 14 14 17 "inline_test_array_return_expr.crexx" 18 7 22 "  arg value = .string[]"
    .meta "inline_test_array_return_expr.renderarray.value"="b" ".string[*]" a1
    .srcstep 15 15 17 "inline_test_array_return_expr.crexx" 19 3 36 "  return value[1] || \":\" || value[2]"
-   minattrs a1,1
-   linkattr1 r1,a1,1
+   minlinkattr1 r1,a1,1
    .traceevent "V" 6 "R" "S" "r" 1 15 15 0 "value" ""
    concat r2,r1,":"
    unlink r1
    .traceevent "O" 4 "R" "S" "r" 2 15 15 0 "" ""
-   minattrs a1,2
-   linkattr1 r3,a1,2
+   minlinkattr1 r3,a1,2
    .traceevent "V" 6 "R" "S" "r" 3 15 15 0 "value" ""
    concat r2,r2,r3
    unlink r3

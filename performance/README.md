@@ -23,6 +23,7 @@ capture ideas that otherwise risk being lost.
 | `performance/tools/run_cross_runtime.crexx` | Level B serial capture tool for one workload/runtime cell |
 | `performance/tools/run_lifecycle.crexx` | Level B compile/translate and cold load-to-first-result capture across the three portfolio runtimes |
 | `performance/tools/run_evidence_bundle.crexx` | Level B exact-image timing/profile/RXSEQ bundle orchestration and reporting |
+| `performance/tools/report_nr09_macro_timings.zsh` | NR-09 all-form component/macro timing and review-ledger report from paired schema-4 profiles |
 | `performance/capability-gaps.md` | Audited missing surfaces and candidates uncovered by portfolio ports |
 | `tests/benchmarks/` | Portable, correctness-gated language workloads and runner |
 | `tests/performance/` | Focused internal microbenchmarks and implementation comparisons |
@@ -42,6 +43,14 @@ benchmark-native metric, and writes the exact argv and cREXX version to
 outside the steady-state aggregate and emits one CSV row per runtime, phase and
 sequence. The final phase is named `load_first_result` because the public CLIs
 do not expose a consistent loaded-but-not-executed boundary.
+
+`tools/report_nr09_macro_timings.zsh` consumes paired `canonical-opt-rxvm.csv`
+and `canonical-opt-rxbvm.csv` schema-4 profile directories plus the versioned
+`manifests/nr09-macro-review-v1.tsv`. It emits exact component rows, per-form
+handler and transition-aware estimates, and a 60-form review ledger covering
+coherence, temporary-register policy and implementation/decision status.
+Profile timing remains diagnostic; ordinary profiling-off Release isolation
+is the decision source.
 
 ## Exact-image evidence bundles
 

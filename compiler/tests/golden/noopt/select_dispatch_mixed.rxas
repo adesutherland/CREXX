@@ -22,65 +22,57 @@ main() .locals=10
    linkattr1 r3,r2,1
    load r4,2
    .traceevent "L" 4 "R" "I" "r" 4 4 4 0 "" ""
-   icopy r3,r4
-   .traceevent "A" 6 "R" "I" "r" 3 4 4 0 "values" ""
-   unlink r3
+   isetunlink r3,r4
+   .traceevent "A" 6 "R" "I" "r" 4 4 4 0 "values" ""
    .srcstep 5 5 17 "select_dispatch_mixed.crexx" 9 3 16 "  values[2] = 9"
    setattrs r2,8
    linkattr1 r4,r2,2
    load r3,9
    .traceevent "L" 4 "R" "I" "r" 3 5 5 0 "" ""
-   icopy r4,r3
-   .traceevent "A" 6 "R" "I" "r" 4 5 5 0 "values" ""
-   unlink r4
+   isetunlink r4,r3
+   .traceevent "A" 6 "R" "I" "r" 3 5 5 0 "values" ""
    .srcstep 6 6 17 "select_dispatch_mixed.crexx" 10 3 17 "  values[3] = 11"
    setattrs r2,8
    linkattr1 r4,r2,3
    load r3,11
    .traceevent "L" 4 "R" "I" "r" 3 6 6 0 "" ""
-   icopy r4,r3
-   .traceevent "A" 6 "R" "I" "r" 4 6 6 0 "values" ""
-   unlink r4
+   isetunlink r4,r3
+   .traceevent "A" 6 "R" "I" "r" 3 6 6 0 "values" ""
    .srcstep 7 7 17 "select_dispatch_mixed.crexx" 11 3 17 "  values[4] = 25"
    setattrs r2,8
    linkattr1 r4,r2,4
    load r3,25
    .traceevent "L" 4 "R" "I" "r" 3 7 7 0 "" ""
-   icopy r4,r3
-   .traceevent "A" 6 "R" "I" "r" 4 7 7 0 "values" ""
-   unlink r4
+   isetunlink r4,r3
+   .traceevent "A" 6 "R" "I" "r" 3 7 7 0 "values" ""
    .srcstep 8 8 17 "select_dispatch_mixed.crexx" 12 3 17 "  values[5] = 21"
    setattrs r2,8
    linkattr1 r4,r2,5
    load r3,21
    .traceevent "L" 4 "R" "I" "r" 3 8 8 0 "" ""
-   icopy r4,r3
-   .traceevent "A" 6 "R" "I" "r" 4 8 8 0 "values" ""
-   unlink r4
+   isetunlink r4,r3
+   .traceevent "A" 6 "R" "I" "r" 3 8 8 0 "values" ""
    .srcstep 9 9 17 "select_dispatch_mixed.crexx" 13 3 17 "  values[6] = 30"
    setattrs r2,8
    linkattr1 r4,r2,6
    load r3,30
    .traceevent "L" 4 "R" "I" "r" 3 9 9 0 "" ""
-   icopy r4,r3
-   .traceevent "A" 6 "R" "I" "r" 4 9 9 0 "values" ""
-   unlink r4
+   isetunlink r4,r3
+   .traceevent "A" 6 "R" "I" "r" 3 9 9 0 "values" ""
    .srcstep 10 10 17 "select_dispatch_mixed.crexx" 14 3 17 "  values[7] = 99"
    setattrs r2,8
    linkattr1 r4,r2,7
    load r3,99
    .traceevent "L" 4 "R" "I" "r" 3 10 10 0 "" ""
-   icopy r4,r3
-   .traceevent "A" 6 "R" "I" "r" 4 10 10 0 "values" ""
-   unlink r4
+   isetunlink r4,r3
+   .traceevent "A" 6 "R" "I" "r" 3 10 10 0 "values" ""
    .srcstep 11 11 17 "select_dispatch_mixed.crexx" 15 3 17 "  values[8] = 15"
    setattrs r2,8
    linkattr1 r4,r2,8
    load r3,15
    .traceevent "L" 4 "R" "I" "r" 3 11 11 0 "" ""
-   icopy r4,r3
-   .traceevent "A" 6 "R" "I" "r" 4 11 11 0 "values" ""
-   unlink r4
+   isetunlink r4,r3
+   .traceevent "A" 6 "R" "I" "r" 3 11 11 0 "values" ""
    .srcstep 18 18 17 "select_dispatch_mixed.crexx" 17 3 5 "  do index = 1 to 8"
    .srcstep 12 12 17 "select_dispatch_mixed.crexx" 17 6 15 "  do index = 1 to 8"
    load r1,1
@@ -100,14 +92,11 @@ l50dostart:
    .srcstep 16 16 17 "select_dispatch_mixed.crexx" 19 5 47 "    say mixed_classify(values[index], counter)"
    .traceevent "V" 6 "R" "I" "r" 1 16 16 0 "index" ""
    .traceevent "C" 4 "R" "I" "r" 1 16 16 0 "values" ""
-   setattrs r2,8
-   linkattr1 r8,r2,r1
+   setlinkiload r8,r2,8,r1,r5,2
    .traceevent "V" 6 "R" "I" "r" 8 16 16 0 "values" ""
    .traceevent "V" 6 "R" "I" "r" 0 16 16 0 "counter" ""
-   load r5,2
    swap r6,r8
-   swap r7,r0
-   call r9,mixed_classify(),r5
+   swapcall r9,mixed_classify(),r5,r0,r7
    swap r8,r6
    unlink r8
    swap r0,r7

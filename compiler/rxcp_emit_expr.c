@@ -183,6 +183,48 @@ static int semantic_context_is_internal_operand(ASTSemanticContextKind kind) {
     return kind == AST_SEMANTIC_CONTEXT_INTERNAL_OPERAND;
 }
 
+enum direct_call_prep_kind {
+    DIRECT_CALL_PREP_NONE,
+    DIRECT_CALL_PREP_SWAP,
+    DIRECT_CALL_PREP_SETTP_SWAP,
+    DIRECT_CALL_PREP_SETTP
+};
+
+static char *format_direct_call_instruction(char ret_type,
+                                            int ret_num,
+                                            const char *call_name,
+                                            int count_register,
+                                            enum direct_call_prep_kind prep_kind,
+                                            char prep_type,
+                                            int prep_num,
+                                            int prep_flags,
+                                            int prep_window) {
+    switch (prep_kind) {
+        case DIRECT_CALL_PREP_SWAP:
+            return mprintf("   swapcall %c%d,%s(),r%d,%c%d,r%d\n",
+                           ret_type, ret_num, call_name, count_register,
+                           prep_type, prep_num, prep_window);
+        case DIRECT_CALL_PREP_SETTP_SWAP:
+            return mprintf("   settpswapcall %c%d,%s(),r%d,%c%d,%d,r%d\n",
+                           ret_type, ret_num, call_name, count_register,
+                           prep_type, prep_num, prep_flags, prep_window);
+        case DIRECT_CALL_PREP_SETTP:
+            return mprintf("   settpcall %c%d,%s(),r%d,r%d,%d\n",
+                           ret_type, ret_num, call_name, count_register,
+                           prep_window, prep_flags);
+        case DIRECT_CALL_PREP_NONE:
+        default:
+            return mprintf("   call %c%d,%s(),r%d\n",
+                           ret_type, ret_num, call_name, count_register);
+    }
+}
+
+static int same_register(const ASTNode *left, const ASTNode *right) {
+    return left && right &&
+           left->register_type == right->register_type &&
+           left->register_num == right->register_num;
+}
+
 static void append_semantic_compound_trace_event(OutputFragment *output,
                                                  ASTNode *receiver_node,
                                                  ASTNode *tail_node) {
@@ -494,6 +536,11 @@ void emit_expression(ASTNode *node, void *payload) {
     int loose_string_compare = 0;
     char ret_type;
     int ret_num;
+    enum direct_call_prep_kind direct_prep_kind = DIRECT_CALL_PREP_NONE;
+    char direct_prep_type = 'r';
+    int direct_prep_num = -1;
+    int direct_prep_flags = 0;
+    int direct_prep_window = -1;
     ASTNode *child1 = node->child;
     ASTNode *child2 = node->child ? node->child->sibling : 0;
     ASTNode *child3 = node->child && node->child->sibling ? node->child->sibling->sibling : 0;
@@ -504,6 +551,10 @@ void emit_expression(ASTNode *node, void *payload) {
         case FACTORY_CALL:
         case MEMBER_CALL:
         case FUNCTION:
+            {
+            int can_fuse_direct_call =
+                    !is_interface_member_call(node) &&
+                    !is_interface_factory_call(node);
             /* Return Registers */
             ret_type = node->register_type;
             ret_num = node->register_num;
@@ -572,6 +623,9 @@ void emit_expression(ASTNode *node, void *payload) {
                 int staged_duplicate = primary && primary != n;
                 char marshalled_type = staged_duplicate ? 'r' : n->register_type;
                 int marshalled_num = staged_duplicate ? i : n->register_num;
+                int needs_swap = !staged_duplicate &&
+                                 (n->register_type != 'r' || n->register_num != i);
+                int can_fuse_this_prep = can_fuse_direct_call && !n->sibling;
                 k = 0; /* 1 if we need to settp */
                 j = 0; /* The required value of settp */
 
@@ -592,7 +646,21 @@ void emit_expression(ASTNode *node, void *payload) {
                 if (n->is_opt_arg) {
                     k = 1; /* means we have to settp */
                 }
-                if (k) { /* We need to settp */
+                if (can_fuse_this_prep && (k || needs_swap)) {
+                    direct_prep_type = marshalled_type;
+                    direct_prep_num = marshalled_num;
+                    direct_prep_flags = j;
+                    direct_prep_window = i;
+                    if (k && needs_swap) {
+                        direct_prep_kind = DIRECT_CALL_PREP_SETTP_SWAP;
+                    } else if (needs_swap) {
+                        direct_prep_kind = DIRECT_CALL_PREP_SWAP;
+                    } else {
+                        direct_prep_kind = DIRECT_CALL_PREP_SETTP;
+                    }
+                }
+
+                if (k && direct_prep_kind == DIRECT_CALL_PREP_NONE) { /* We need to settp */
                     temp1 = mprintf("   settp %c%d,%d\n",
                                     marshalled_type,
                                     marshalled_num,
@@ -601,13 +669,14 @@ void emit_expression(ASTNode *node, void *payload) {
                     free(temp1);
                 }
 
-                if (!staged_duplicate &&
-                    (n->register_type != 'r' || n->register_num != i)) {
+                if (needs_swap) {
                     /* We need to swap registers to get it right for the call */
-                    temp1 = mprintf("   swap r%d,%c%d\n",
-                                    i, n->register_type, n->register_num);
-                    output_append_text(node->output, temp1);
-                    free(temp1);
+                    if (direct_prep_kind == DIRECT_CALL_PREP_NONE) {
+                        temp1 = mprintf("   swap r%d,%c%d\n",
+                                        i, n->register_type, n->register_num);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    }
 
                     /* Map the call result through the restore-swap sequence so
                      * it lands in the node's final register after marshalling
@@ -711,16 +780,30 @@ void emit_expression(ASTNode *node, void *payload) {
                         } else call_name = strdup(node->symbolNode->symbol->name);
                     }
                 }
-                temp1 = mprintf("   call %c%d,%s(),r%d\n",
-                                ret_type, ret_num,
-                                call_name,
-                                node->additional_registers);
+                temp1 = format_direct_call_instruction(ret_type,
+                                                       ret_num,
+                                                       call_name,
+                                                       node->additional_registers,
+                                                       direct_prep_kind,
+                                                       direct_prep_type,
+                                                       direct_prep_num,
+                                                       direct_prep_flags,
+                                                       direct_prep_window);
                 free(call_name);
             } else {
-                temp1 = mprintf("   call %c%d,%.*s(),r%d\n",
-                                ret_type, ret_num,
-                                (int) node->node_string_length, node->node_string,
-                                node->additional_registers);
+                char *call_name = mprintf("%.*s",
+                                          (int)node->node_string_length,
+                                          node->node_string);
+                temp1 = format_direct_call_instruction(ret_type,
+                                                       ret_num,
+                                                       call_name,
+                                                       node->additional_registers,
+                                                       direct_prep_kind,
+                                                       direct_prep_type,
+                                                       direct_prep_num,
+                                                       direct_prep_flags,
+                                                       direct_prep_window);
+                free(call_name);
             }
             output_append_text(node->output, temp1);
             free(temp1);
@@ -766,6 +849,7 @@ void emit_expression(ASTNode *node, void *payload) {
 	                if (symbol_name) free(symbol_name);
 	            }
 	            break;
+            }
 
         case OP_CONCAT:
             op="concat";
@@ -793,6 +877,7 @@ void emit_expression(ASTNode *node, void *payload) {
 	                                                  node);
 	            break;
             }
+
             /* One or other of the operands may be a constant */
             /* If the register is not set then the child is a constant */
             if (child1->register_num == DONT_ASSIGN_REGISTER) {
@@ -964,6 +1049,53 @@ void emit_expression(ASTNode *node, void *payload) {
             if (!op) op="mod";
 
             if (!node->output) node->output = output_f();
+
+            /* The float expression (a / b) - constant commonly reuses b as
+             * the compiler-only division destination. Preserve that
+             * intermediate write for source TRACE, but execute the complete
+             * arithmetic unit in one dispatch. */
+            if (node->node_type == OP_MINUS &&
+                node->target_type == TP_FLOAT &&
+                child1->node_type == OP_DIV &&
+                child1->target_type == TP_FLOAT &&
+                child1->child && child1->child->sibling &&
+                same_register(child1, child1->child->sibling) &&
+                child2->register_num == DONT_ASSIGN_REGISTER) {
+                ASTNode *numerator = child1->child;
+                ASTNode *divisor = child1->child->sibling;
+                char *constant = format_constant(TP_FLOAT, child2);
+                char *old_div = mprintf("   fdiv %c%d,%c%d,%c%d\n",
+                                        child1->register_type,
+                                        child1->register_num,
+                                        numerator->register_type,
+                                        numerator->register_num,
+                                        divisor->register_type,
+                                        divisor->register_num);
+                char *new_div = mprintf("   fdivsub %c%d,%c%d,%c%d,%s\n",
+                                        node->register_type,
+                                        node->register_num,
+                                        numerator->register_type,
+                                        numerator->register_num,
+                                        divisor->register_type,
+                                        divisor->register_num,
+                                        constant);
+                int replaced = output_replace_text_once(child1->output,
+                                                        old_div,
+                                                        new_div);
+                free(constant);
+                free(old_div);
+                free(new_div);
+                if (replaced) {
+                    output_concat(node->output, child1->output);
+                    if (child1->cleanup) output_concat(node->output, child1->cleanup);
+                    type_promotion(node);
+                    append_semantic_operation_trace_event(node->output,
+                                                          RXBIN_TRACE_KIND_BINARY_OP,
+                                                          semantic_kind,
+                                                          node);
+                    break;
+                }
+            }
 
             /* One or other of the operands may be a constant */
             /* If the register is not set then the child is a constant */
@@ -1510,6 +1642,27 @@ void emit_expression(ASTNode *node, void *payload) {
             temp2 = 0;
             if (!node->output) node->output = output_f();
             if (child1->output) output_concat(node->output, child1->output);
+
+            if (node->target_type != TP_OBJECT &&
+                (node->register_type != child1->register_type ||
+                 node->register_num != child1->register_num) &&
+                ((child1->value_type == TP_INTEGER && node->target_type == TP_FLOAT) ||
+                 (child1->value_type == TP_STRING && node->target_type == TP_INTEGER))) {
+                const char *direct_promotion =
+                        emit_promotion[child1->value_type][node->target_type];
+                if (direct_promotion) {
+                    temp1 = mprintf("   %s %c%d,%c%d\n",
+                                    direct_promotion,
+                                    node->register_type,
+                                    node->register_num,
+                                    child1->register_type,
+                                    child1->register_num);
+                    output_append_text(node->output, temp1);
+                    free(temp1);
+                    if (child1->cleanup) output_concat(node->output, child1->cleanup);
+                    break;
+                }
+            }
 
             if (node->register_type != child1->register_type ||
                 node->register_num != child1->register_num) {

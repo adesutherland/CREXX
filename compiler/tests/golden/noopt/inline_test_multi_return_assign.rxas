@@ -29,8 +29,7 @@ l8dostart:
    .meta "inline_test_multi_return_assign.main.result"="b" ".int" r1
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
    load r5,1
-   swap r6,r0
-   call r1,classify(),r5
+   swapcall r1,classify(),r5,r0,r6
    swap r0,r6
    .traceevent "F" 4 "R" "I" "r" 1 5 5 0 "classify" ""
    .traceevent "A" 6 "R" "I" "r" 1 5 5 0 "result" ""

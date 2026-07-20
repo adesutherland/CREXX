@@ -39,8 +39,7 @@ main() .locals=11
    settp r5,256
    settp r6,256
    settp r7,256
-   swap r9,r1
-   call r0,_rxsysb._address(),r2
+   swapcall r0,_rxsysb._address(),r2,r1,r9
    swap r1,r9
    .traceevent "F" 4 "R" "I" "r" 0 3 3 0 "_address" ""
    .traceevent "A" 6 "R" "I" "r" 0 3 3 0 "rc" ""

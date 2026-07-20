@@ -3708,7 +3708,7 @@ static int rxvm_restore_caller_call_argument_mapping(stack_frame *callee
 
 /* A native call has no child frame to carry caller_arg_base.  If a branch
  * handler remains in the interrupted frame, recover the call window from the
- * canonical CALL/DCALL operand only on that cold signal path. */
+ * canonical CALL/DCALL or fused-call count operand on that cold signal path. */
 static int rxsignal_restore_interrupted_call_argument_mapping(
         stack_frame *frame, rxinteger interrupted_module,
         rxinteger interrupted_address
@@ -3734,7 +3734,11 @@ static int rxsignal_restore_interrupted_call_argument_mapping(
     address = (size_t)interrupted_address;
     if (address >= space->inst_size) return 0;
     opcode = space->binary[address].instruction.opcode;
-    if (opcode != OP_CALL_REG_FUNC_REG && opcode != OP_DCALL_REG_REG_REG) return 1;
+    if (opcode != OP_CALL_REG_FUNC_REG &&
+        opcode != OP_DCALL_REG_REG_REG &&
+        opcode != OP_SWAPCALL_REG_FUNC_REG_REG_REG &&
+        opcode != OP_SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG &&
+        opcode != OP_SETTPCALL_REG_FUNC_REG_REG_INT) return 1;
 #ifdef CREXX_VM_PROFILING
     if (window_observed) *window_observed = 1;
 #endif
@@ -4336,6 +4340,14 @@ const void *address_map[OP_MAX_INSTRUCTIONS] = {
      */
 
 #define RESERVED_IMPL(name) START_INSTRUCTION(name) SET_SIGNAL(RXSIGNAL_UNKNOWN_INSTRUCTION); DISPATCH;
+#define RXVM_SWAP_PAIR(first_, second_)                                        \
+        do {                                                                   \
+            value *swap_value__ = REG_OP(first_);                              \
+            REG_OP(first_) = REG_OP(second_);                                  \
+            REG_OP(second_) = swap_value__;                                    \
+            RXVM_INSTRUMENTATION_SWAP(current_frame, REG_IDX(first_),          \
+                                      REG_IDX(second_));                        \
+        } while (0)
 
     /* Signal Interrupt Support - this is only used/called when interrupts are pending */
     START_INTERRUPT;
@@ -6489,6 +6501,76 @@ START_INSTRUCTION(SETNUMFUZ_INT) VM_ADVANCE(1);
                 }
             }
             DISPATCH;
+
+#define RXVM_MAPPED_CALL_BODY(RESULT_, FUNCTION_, ARG_COUNT_, ARG_BASE_)         \
+        do {                                                                    \
+            proc_runtime *mapped_called__ = (FUNCTION_);                        \
+            value *mapped_result__ = (RESULT_);                                 \
+            int mapped_arg_count__ = (int)(ARG_COUNT_);                         \
+            size_t mapped_arg_base__ = (size_t)(ARG_BASE_);                     \
+            value **mapped_args__ = current_locals + mapped_arg_base__;         \
+            if (mapped_called__->start == SIZE_MAX) {                           \
+                RXVM_INSTRUMENTATION_CALL(                                      \
+                        mapped_called__->binarySpace                            \
+                            ? RXVM_PROFILE_CALL_DIRECT_BYTECODE                 \
+                            : RXVM_PROFILE_CALL_DIRECT_NATIVE,                  \
+                        mapped_called__, mapped_arg_count__,                    \
+                        RXVM_PROFILE_FRAME_NONE_FAILED,                         \
+                        RXVM_PROFILE_CALL_UNRESOLVED, current_frame,            \
+                        current_module->module_number, VM_CANONICAL_INDEX(pc),  \
+                        mapped_arg_base__, 1);                                  \
+                SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, mapped_called__->name); \
+                DISPATCH;                                                       \
+            }                                                                   \
+            if (mapped_called__->binarySpace == 0) {                            \
+                RXVM_INSTRUMENTATION_CALL(                                      \
+                        RXVM_PROFILE_CALL_DIRECT_NATIVE, mapped_called__,       \
+                        mapped_arg_count__, RXVM_PROFILE_FRAME_NO_CHILD_NATIVE, \
+                        RXVM_PROFILE_CALL_SUCCESS, current_frame,               \
+                        current_module->module_number, VM_CANONICAL_INDEX(pc),  \
+                        mapped_arg_base__, 1);                                  \
+                RXVM_INSTRUMENTATION_NATIVE_BEGIN(mapped_called__);             \
+                rxvm_callfunc((void *)mapped_called__->start,                   \
+                              mapped_arg_count__, mapped_args__,                \
+                              mapped_result__, signal_value);                   \
+                RXVM_INSTRUMENTATION_NATIVE_END();                              \
+                INTERRUPT_FROM_RXPA_SIGNAL(signal_value);                       \
+            } else {                                                            \
+                size_t mapped_j__;                                              \
+                size_t mapped_i__;                                              \
+                temp_frame = frame_f(mapped_called__, mapped_arg_count__,       \
+                                     current_frame, next_pc, mapped_result__);   \
+                if (!temp_frame) {                                              \
+                    RXVM_INSTRUMENTATION_CALL(                                  \
+                            RXVM_PROFILE_CALL_DIRECT_BYTECODE, mapped_called__, \
+                            mapped_arg_count__, RXVM_PROFILE_FRAME_NONE_FAILED, \
+                            RXVM_PROFILE_CALL_FRAME_FAILED, current_frame,      \
+                            current_module->module_number,                      \
+                            VM_CANONICAL_INDEX(pc), mapped_arg_base__, 1);       \
+                    SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame"); \
+                    DISPATCH;                                                   \
+                }                                                               \
+                assert(mapped_arg_base__ <= UINT32_MAX);                        \
+                temp_frame->caller_arg_base = (uint32_t)mapped_arg_base__;      \
+                RXVM_INSTRUMENTATION_CALL(                                      \
+                        RXVM_PROFILE_CALL_DIRECT_BYTECODE, mapped_called__,     \
+                        temp_frame->number_args,                                \
+                        RXVM_PROFILE_FRAME_LAST_ACTIVATION,                     \
+                        RXVM_PROFILE_CALL_SUCCESS, current_frame,               \
+                        current_module->module_number, VM_CANONICAL_INDEX(pc),  \
+                        mapped_arg_base__, 1);                                  \
+                VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_CALL);            \
+                VM_SELECT_INDEX(mapped_called__->start, RXVM_TRANSITION_CALL);  \
+                mapped_j__ = current_frame->procedure->binarySpace->globals +   \
+                             current_frame->procedure->locals + 1;              \
+                for (mapped_i__ = 0; mapped_i__ < (size_t)mapped_arg_count__;   \
+                     mapped_i__++, mapped_j__++) {                              \
+                    current_frame->baselocals[mapped_j__] =                     \
+                            current_frame->parent->locals[mapped_arg_base__ + mapped_i__]; \
+                    current_locals[mapped_j__] = current_frame->baselocals[mapped_j__]; \
+                }                                                               \
+            }                                                                   \
+        } while (0)
 
         START_INSTRUCTION(CALL_REG_FUNC_REG) VM_ADVANCE(3);
             {
@@ -12274,64 +12356,311 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
         RESERVED_IMPL(RESERVED_098)
         RESERVED_IMPL(RESERVED_099)
         RESERVED_IMPL(RESERVED_263)
-        RESERVED_IMPL(RESERVED_264)
-        RESERVED_IMPL(RESERVED_265)
-        RESERVED_IMPL(RESERVED_266)
-        RESERVED_IMPL(RESERVED_267)
-        RESERVED_IMPL(RESERVED_268)
-        RESERVED_IMPL(RESERVED_269)
-        RESERVED_IMPL(RESERVED_270)
-        RESERVED_IMPL(RESERVED_271)
+
+        START_INSTRUCTION(SWAPN_REG_REG_REG_REG) VM_ADVANCE(4);
+            RXVM_SWAP_PAIR(1, 2);
+            RXVM_SWAP_PAIR(3, 4);
+            DISPATCH;
+
+        START_INSTRUCTION(SWAPN_REG_REG_REG_REG_REG_REG) VM_ADVANCE(6);
+            RXVM_SWAP_PAIR(1, 2);
+            RXVM_SWAP_PAIR(3, 4);
+            RXVM_SWAP_PAIR(5, 6);
+            DISPATCH;
+
+        START_INSTRUCTION(SWAPN_REG_REG_REG_REG_REG_REG_REG_REG) VM_ADVANCE(8);
+            RXVM_SWAP_PAIR(1, 2);
+            RXVM_SWAP_PAIR(3, 4);
+            RXVM_SWAP_PAIR(5, 6);
+            RXVM_SWAP_PAIR(7, 8);
+            DISPATCH;
+
+        START_INSTRUCTION(SETTPSWAP_REG_INT_REG) VM_ADVANCE(3);
+            REG_OP(1)->status.all_type_flags =
+                    RXFLAGS_PUBLIC_WRITE(REG_OP(1)->status.all_type_flags,
+                                         (uint32_t)INT_OP(2));
+            RXVM_SWAP_PAIR(1, 3);
+            DISPATCH;
+
+        START_INSTRUCTION(LOADSETTP2_REG_INT_REG_INT) VM_ADVANCE(4);
+            set_int(REG_OP(1), INT_OP(2));
+            REG_OP(3)->status.all_type_flags =
+                    RXFLAGS_PUBLIC_WRITE(REG_OP(3)->status.all_type_flags,
+                                         (uint32_t)INT_OP(4));
+            DISPATCH;
+
+        START_INSTRUCTION(LOADSETTPSWAP_REG_INT_REG_INT_REG) VM_ADVANCE(5);
+            set_int(REG_OP(1), INT_OP(2));
+            REG_OP(3)->status.all_type_flags =
+                    RXFLAGS_PUBLIC_WRITE(REG_OP(3)->status.all_type_flags,
+                                         (uint32_t)INT_OP(4));
+            RXVM_SWAP_PAIR(3, 5);
+            DISPATCH;
+
+        START_INSTRUCTION(SWAPSETTP_REG_REG_REG_INT) VM_ADVANCE(4);
+            RXVM_SWAP_PAIR(1, 2);
+            REG_OP(3)->status.all_type_flags =
+                    RXFLAGS_PUBLIC_WRITE(REG_OP(3)->status.all_type_flags,
+                                         (uint32_t)INT_OP(4));
+            DISPATCH;
+
+        START_INSTRUCTION(SWAPSETTPSWAP_REG_REG_REG_INT_REG) VM_ADVANCE(5);
+            RXVM_SWAP_PAIR(1, 2);
+            REG_OP(3)->status.all_type_flags =
+                    RXFLAGS_PUBLIC_WRITE(REG_OP(3)->status.all_type_flags,
+                                         (uint32_t)INT_OP(4));
+            RXVM_SWAP_PAIR(3, 5);
+            DISPATCH;
+
         RESERVED_IMPL(RESERVED_272)
-        RESERVED_IMPL(RESERVED_273)
-        RESERVED_IMPL(RESERVED_274)
-        RESERVED_IMPL(RESERVED_275)
-        RESERVED_IMPL(RESERVED_276)
+
+        START_INSTRUCTION(SETTPSWAPSETTPSWAP_REG_INT_REG_REG_REG) VM_ADVANCE(5);
+            REG_OP(1)->status.all_type_flags =
+                    RXFLAGS_PUBLIC_WRITE(REG_OP(1)->status.all_type_flags,
+                                         (uint32_t)INT_OP(2));
+            RXVM_SWAP_PAIR(1, 3);
+            REG_OP(4)->status.all_type_flags =
+                    RXFLAGS_PUBLIC_WRITE(REG_OP(4)->status.all_type_flags,
+                                         (uint32_t)INT_OP(2));
+            RXVM_SWAP_PAIR(4, 5);
+            DISPATCH;
+
+        START_INSTRUCTION(NULLN_REG_REG) VM_ADVANCE(2);
+            value_zero(REG_OP(1));
+            value_zero(REG_OP(2));
+            DISPATCH;
+
+        START_INSTRUCTION(NULLN_REG_REG_REG) VM_ADVANCE(3);
+            value_zero(REG_OP(1));
+            value_zero(REG_OP(2));
+            value_zero(REG_OP(3));
+            DISPATCH;
+
+        START_INSTRUCTION(NULLN_REG_REG_REG_REG) VM_ADVANCE(4);
+            value_zero(REG_OP(1));
+            value_zero(REG_OP(2));
+            value_zero(REG_OP(3));
+            value_zero(REG_OP(4));
+            DISPATCH;
+
         RESERVED_IMPL(RESERVED_277)
         RESERVED_IMPL(RESERVED_278)
         RESERVED_IMPL(RESERVED_279)
-        RESERVED_IMPL(RESERVED_280)
-        RESERVED_IMPL(RESERVED_281)
-        RESERVED_IMPL(RESERVED_282)
-        RESERVED_IMPL(RESERVED_283)
-        RESERVED_IMPL(RESERVED_284)
-        RESERVED_IMPL(RESERVED_285)
-        RESERVED_IMPL(RESERVED_286)
-        RESERVED_IMPL(RESERVED_287)
-        RESERVED_IMPL(RESERVED_288)
-        RESERVED_IMPL(RESERVED_289)
+
+        START_INSTRUCTION(SWAPCALL_REG_FUNC_REG_REG_REG) VM_ADVANCE(5);
+            RXVM_SWAP_PAIR(4, 5);
+            RXVM_MAPPED_CALL_BODY(REG_OP(1), PROC_OP(2),
+                                  REG_OP(3)->int_value, REG_IDX(3) + 1);
+            DISPATCH;
+
+        START_INSTRUCTION(SETTPSWAPCALL_REG_FUNC_REG_REG_INT_REG) VM_ADVANCE(6);
+            REG_OP(4)->status.all_type_flags =
+                    RXFLAGS_PUBLIC_WRITE(REG_OP(4)->status.all_type_flags,
+                                         (uint32_t)INT_OP(5));
+            RXVM_SWAP_PAIR(4, 6);
+            RXVM_MAPPED_CALL_BODY(REG_OP(1), PROC_OP(2),
+                                  REG_OP(3)->int_value, REG_IDX(3) + 1);
+            DISPATCH;
+
+        START_INSTRUCTION(SETTPCALL_REG_FUNC_REG_REG_INT) VM_ADVANCE(5);
+            REG_OP(4)->status.all_type_flags =
+                    RXFLAGS_PUBLIC_WRITE(REG_OP(4)->status.all_type_flags,
+                                         (uint32_t)INT_OP(5));
+            RXVM_MAPPED_CALL_BODY(REG_OP(1), PROC_OP(2),
+                                  REG_OP(3)->int_value, REG_IDX(3) + 1);
+            DISPATCH;
+
+        START_INSTRUCTION(UNLINKN_REG_REG) VM_ADVANCE(2);
+            REG_OP(1) = current_frame->baselocals[REG_IDX(1)];
+            REG_OP(2) = current_frame->baselocals[REG_IDX(2)];
+            DISPATCH;
+
+        START_INSTRUCTION(ISETUNLINK_REG_REG) VM_ADVANCE(2);
+            REG_OP(1)->int_value = REG_OP(2)->int_value;
+            REG_OP(1) = current_frame->baselocals[REG_IDX(1)];
+            DISPATCH;
+
+        START_INSTRUCTION(IGETUNLINK_REG_REG) VM_ADVANCE(2);
+            {
+                rxinteger saved_value = REG_OP(2)->int_value;
+                REG_OP(2) = current_frame->baselocals[REG_IDX(2)];
+                REG_OP(1)->int_value = saved_value;
+            }
+            DISPATCH;
+
+        START_INSTRUCTION(ILOADSETUNLINK_REG_INT) VM_ADVANCE(2);
+            set_int(REG_OP(1), INT_OP(2));
+            REG_OP(1) = current_frame->baselocals[REG_IDX(1)];
+            DISPATCH;
+
+        START_INSTRUCTION(ISETUNLINKN_REG_REG_REG) VM_ADVANCE(3);
+            REG_OP(1)->int_value = REG_OP(2)->int_value;
+            REG_OP(1) = current_frame->baselocals[REG_IDX(1)];
+            REG_OP(3) = current_frame->baselocals[REG_IDX(3)];
+            DISPATCH;
+
+        START_INSTRUCTION(UNLINKBR_REG_ID)
+            REG_OP(1) = current_frame->baselocals[REG_IDX(1)];
+            VM_SELECT_INDEX((pc + 2)->index, RXVM_TRANSITION_BRANCH);
+            DISPATCH;
+
+        START_INSTRUCTION(ILOADSETUNLINKN_REG_INT_REG) VM_ADVANCE(3);
+            set_int(REG_OP(1), INT_OP(2));
+            REG_OP(1) = current_frame->baselocals[REG_IDX(1)];
+            REG_OP(3) = current_frame->baselocals[REG_IDX(3)];
+            DISPATCH;
+
         RESERVED_IMPL(RESERVED_290)
-        RESERVED_IMPL(RESERVED_291)
-        RESERVED_IMPL(RESERVED_292)
-        RESERVED_IMPL(RESERVED_293)
-        RESERVED_IMPL(RESERVED_294)
-        RESERVED_IMPL(RESERVED_295)
-        RESERVED_IMPL(RESERVED_296)
-        RESERVED_IMPL(RESERVED_297)
-        RESERVED_IMPL(RESERVED_298)
+
+        START_INSTRUCTION(SETLINKATTR1_REG_REG_INT_REG) VM_ADVANCE(4);
+            set_num_attributes(REG_OP(2), INT_OP(3));
+            if (REG_OP(4)->int_value < 1 ||
+                REG_OP(4)->int_value > REG_OP(2)->num_attributes) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH;
+            }
+            REG_OP(1) = REG_OP(2)->attributes[REG_OP(4)->int_value - 1];
+            DISPATCH;
+
+        START_INSTRUCTION(SETLINKATTR1_REG_REG_INT_REG_INT) VM_ADVANCE(5);
+            {
+                rxinteger index;
+                set_num_attributes(REG_OP(2), INT_OP(3));
+                if (!rxinteger_checked_add(REG_OP(4)->int_value, INT_OP(5), &index)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                    DISPATCH;
+                }
+                if (index < 1 || index > REG_OP(2)->num_attributes) {
+                    SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                    DISPATCH;
+                }
+                REG_OP(1) = REG_OP(2)->attributes[index - 1];
+            }
+            DISPATCH;
+
+        START_INSTRUCTION(MINLINKATTR1_REG_REG_INT) VM_ADVANCE(3);
+            if (INT_OP(3) > REG_OP(2)->num_attributes) {
+                set_num_attributes(REG_OP(2), INT_OP(3));
+            }
+            if (INT_OP(3) < 1 || INT_OP(3) > REG_OP(2)->num_attributes) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH;
+            }
+            REG_OP(1) = REG_OP(2)->attributes[INT_OP(3) - 1];
+            DISPATCH;
+
+        START_INSTRUCTION(MINLINKATTR1_REG_REG_REG_INT) VM_ADVANCE(4);
+            {
+                rxinteger index;
+                if (!rxinteger_checked_add(REG_OP(3)->int_value, INT_OP(4), &index)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                    DISPATCH;
+                }
+                if (index > REG_OP(2)->num_attributes) {
+                    set_num_attributes(REG_OP(2), index);
+                }
+                if (index < 1 || index > REG_OP(2)->num_attributes) {
+                    SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                    DISPATCH;
+                }
+                REG_OP(1) = REG_OP(2)->attributes[index - 1];
+            }
+            DISPATCH;
+
+        START_INSTRUCTION(ITOF_REG_REG) VM_ADVANCE(2);
+            REG_OP(1)->int_value = REG_OP(2)->int_value;
+            REG_OP(1)->float_value = (double)REG_OP(2)->int_value;
+            DISPATCH;
+
+        START_INSTRUCTION(STOI_REG_REG) VM_ADVANCE(2);
+            if (string2integer(&REG_OP(1)->int_value,
+                               REG_OP(2)->string_value,
+                               REG_OP(2)->string_length)) {
+                SET_SIGNAL(RXSIGNAL_CONVERSION_ERROR);
+            }
+            DISPATCH;
+
+        START_INSTRUCTION(FDIVSUB_REG_REG_REG_FLOAT) VM_ADVANCE(4);
+            REG_OP(3)->float_value = REG_OP(2)->float_value / REG_OP(3)->float_value;
+            REG_OP(1)->float_value = REG_OP(3)->float_value - FLOAT_OP(4);
+            DISPATCH;
+
+        START_INSTRUCTION(FMULTICOPY_REG_FLOAT_REG_REG) VM_ADVANCE(4);
+            REG_OP(1)->float_value *= FLOAT_OP(2);
+            REG_OP(3)->int_value = REG_OP(4)->int_value;
+            DISPATCH;
+
         RESERVED_IMPL(RESERVED_299)
+
         RESERVED_IMPL(RESERVED_401)
         RESERVED_IMPL(RESERVED_402)
         RESERVED_IMPL(RESERVED_403)
         RESERVED_IMPL(RESERVED_404)
         RESERVED_IMPL(RESERVED_405)
-        RESERVED_IMPL(RESERVED_406)
+
+        START_INSTRUCTION(ISETATTR1_REG_INT_REG) VM_ADVANCE(3);
+            if (INT_OP(2) < 1 || INT_OP(2) > REG_OP(1)->num_attributes) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH;
+            }
+            REG_OP(1)->attributes[INT_OP(2) - 1]->int_value = REG_OP(3)->int_value;
+            DISPATCH;
+
         RESERVED_IMPL(RESERVED_407)
         RESERVED_IMPL(RESERVED_408)
         RESERVED_IMPL(RESERVED_409)
         RESERVED_IMPL(RESERVED_410)
         RESERVED_IMPL(RESERVED_411)
-        RESERVED_IMPL(RESERVED_412)
+
+        START_INSTRUCTION(LINKSETATTRSLINKADD_REG_REG_INT_INT_REG_REG_INT) VM_ADVANCE(7);
+            {
+                rxinteger index;
+                if (INT_OP(3) < 1 || INT_OP(3) > REG_OP(2)->num_attributes) {
+                    SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                    DISPATCH;
+                }
+                REG_OP(1) = REG_OP(2)->attributes[INT_OP(3) - 1];
+                set_num_attributes(REG_OP(1), INT_OP(4));
+                if (!rxinteger_checked_add(REG_OP(6)->int_value, INT_OP(7), &index)) {
+                    SET_SIGNAL(RXSIGNAL_OVERFLOW_UNDERFLOW);
+                    DISPATCH;
+                }
+                if (index < 1 || index > REG_OP(1)->num_attributes) {
+                    SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                    DISPATCH;
+                }
+                REG_OP(5) = REG_OP(1)->attributes[index - 1];
+            }
+            DISPATCH;
+
         RESERVED_IMPL(RESERVED_413)
         RESERVED_IMPL(RESERVED_414)
-        RESERVED_IMPL(RESERVED_415)
+
+        START_INSTRUCTION(SETLINKILOAD_REG_REG_INT_REG_REG_INT) VM_ADVANCE(6);
+            set_num_attributes(REG_OP(2), INT_OP(3));
+            if (REG_OP(4)->int_value < 1 ||
+                REG_OP(4)->int_value > REG_OP(2)->num_attributes) {
+                SET_SIGNAL(RXSIGNAL_OUT_OF_RANGE);
+                DISPATCH;
+            }
+            REG_OP(1) = REG_OP(2)->attributes[REG_OP(4)->int_value - 1];
+            set_int(REG_OP(5), INT_OP(6));
+            DISPATCH;
+
         RESERVED_IMPL(RESERVED_416)
         RESERVED_IMPL(RESERVED_417)
         RESERVED_IMPL(RESERVED_418)
         RESERVED_IMPL(RESERVED_419)
         RESERVED_IMPL(RESERVED_420)
         RESERVED_IMPL(RESERVED_421)
-        RESERVED_IMPL(RESERVED_422)
+
+        START_INSTRUCTION(ILOADSETUNLINKN_REG_REG_INT_REG) VM_ADVANCE(4);
+            set_int(REG_OP(1), INT_OP(3));
+            REG_OP(2)->int_value = REG_OP(1)->int_value;
+            REG_OP(2) = current_frame->baselocals[REG_IDX(2)];
+            REG_OP(4) = current_frame->baselocals[REG_IDX(4)];
+            DISPATCH;
+
         RESERVED_IMPL(RESERVED_423)
         RESERVED_IMPL(RESERVED_424)
         RESERVED_IMPL(RESERVED_425)

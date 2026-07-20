@@ -29,8 +29,7 @@ l8dostart:
    .meta "inline_test_call_like_arg_expr.main.box"="b" ".box" r0
    .traceevent "V" 6 "R" "I" "r" 1 5 5 0 "i" ""
    load r6,1
-   swap r7,r1
-   call r5,addOne(),r6
+   swapcall r5,addOne(),r6,r1,r7
    swap r1,r7
    .traceevent "F" 4 "R" "I" "r" 5 5 5 0 "addone" ""
    load r4,1
@@ -41,8 +40,7 @@ l8dostart:
    .traceevent "V" 6 "R" "O" "r" 0 6 6 0 "box" ""
    .traceevent "V" 6 "R" "I" "r" 1 6 6 0 "i" ""
    load r8,1
-   swap r9,r1
-   call r7,addOne(),r8
+   swapcall r7,addOne(),r8,r1,r9
    swap r1,r9
    .traceevent "F" 4 "R" "I" "r" 7 6 6 0 "addone" ""
    load r5,2
@@ -91,9 +89,7 @@ addOne() .locals=2
    .meta "inline_test_call_like_arg_expr.box.§factory.§factory"="b" ".box" r1
    .srcstep 16 16 17 "inline_test_call_like_arg_expr.crexx" 21 5 23 "    val = initialValue"
    .traceevent "V" 6 "R" "I" "a" 1 16 16 0 "initialvalue" ""
-   linkattr1 r2,r1,1
-   icopy r2,a1
-   unlink r2
+   isetattr1 r1,1,a1
    .srcstep 17 17 17 "inline_test_call_like_arg_expr.crexx" 22 5 11 "    return"
    .traceevent "V" 6 "R" "O" "r" 1 17 17 0 "§factory" ""
    ret r1

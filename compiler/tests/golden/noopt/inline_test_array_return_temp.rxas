@@ -45,8 +45,7 @@ forwardPair() .locals=4
    .srcstep 8 8 17 "inline_test_array_return_temp.crexx" 12 3 25 "  return buildPair(seed)"
    .traceevent "V" 6 "R" "I" "a" 1 8 8 0 "seed" ""
    load r1,1
-   swap r2,a1
-   call r3,buildPair(),r1
+   swapcall r3,buildPair(),r1,a1,r2
    swap a1,r2
    .traceevent "F" 4 "R" "I" "r" 3 8 8 0 "buildpair" ""
    ret r3
@@ -63,20 +62,17 @@ buildPair() .locals=4
    null r0
    .srcstep 12 12 17 "inline_test_array_return_temp.crexx" 17 3 17 "  pair[1] = seed"
    setattrs r0,2
-   linkattr1 r2,r0,1
+   isetattr1 r0,1,a1
    .traceevent "V" 6 "R" "I" "a" 1 12 12 0 "seed" ""
-   icopy r2,a1
-   .traceevent "A" 6 "R" "I" "r" 2 12 12 0 "pair" ""
-   unlink r2
+   .traceevent "A" 6 "R" "I" "a" 1 12 12 0 "pair" ""
    .srcstep 13 13 17 "inline_test_array_return_temp.crexx" 18 3 21 "  pair[2] = seed + 1"
    setattrs r0,2
    linkattr1 r2,r0,2
    .traceevent "V" 6 "R" "I" "a" 1 13 13 0 "seed" ""
    iadd r3,a1,1
    .traceevent "O" 4 "R" "I" "r" 3 13 13 0 "" ""
-   icopy r2,r3
-   .traceevent "A" 6 "R" "I" "r" 2 13 13 0 "pair" ""
-   unlink r2
+   isetunlink r2,r3
+   .traceevent "A" 6 "R" "I" "r" 3 13 13 0 "pair" ""
    .srcstep 14 14 17 "inline_test_array_return_temp.crexx" 19 3 14 "  return pair"
    .traceevent "V" 6 "R" "I" "r" 0 14 14 0 "pair" ""
    ret r0

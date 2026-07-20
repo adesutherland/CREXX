@@ -18,8 +18,7 @@ main() .locals=5
    .srcstep 3 3 17 "inline_test_ref_opt.crexx" 6 3 17 "  say refBump(x)"
    .traceevent "V" 6 "R" "I" "r" 0 3 3 0 "x" ""
    load r1,1
-   swap r2,r0
-   call r3,refBump(),r1
+   swapcall r3,refBump(),r1,r0,r2
    swap r0,r2
    itos r3
    .traceevent "F" 4 "R" "S" "r" 3 3 3 0 "refbump" ""
@@ -31,8 +30,7 @@ main() .locals=5
    .srcstep 5 5 17 "inline_test_ref_opt.crexx" 8 3 13 "  say optAdd()"
    load r1,2
    settp r2,0
-   settp r3,0
-   call r4,optAdd(),r1
+   settpcall r4,optAdd(),r1,r3,0
    itos r4
    .traceevent "F" 4 "R" "S" "r" 4 5 5 0 "optadd" ""
    say r4
@@ -41,8 +39,7 @@ main() .locals=5
    .traceevent "L" 4 "R" "I" "r" 3 6 6 0 "" ""
    load r2,2
    settp r3,256
-   settp r4,0
-   call r1,optAdd(),r2
+   settpcall r1,optAdd(),r2,r4,0
    itos r1
    .traceevent "F" 4 "R" "S" "r" 1 6 6 0 "optadd" ""
    say r1

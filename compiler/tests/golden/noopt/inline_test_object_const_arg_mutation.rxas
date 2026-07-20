@@ -17,24 +17,19 @@ main() .locals=5
    load r2,"seed"
    .traceevent "L" 4 "R" "S" "r" 2 2 2 0 "" ""
    load r1,1
-   settp r2,768
-   call r0,§inline_test_object_const_arg_mutation.box.§factory(),r1
+   settpcall r0,§inline_test_object_const_arg_mutation.box.§factory(),r1,r2,768
    .traceevent "F" 4 "R" "O" "r" 0 2 2 0 "§factory" ""
    .traceevent "A" 6 "R" "O" "r" 0 2 2 0 "box" ""
    .srcstep 3 3 17 "inline_test_object_const_arg_mutation.crexx" 6 3 22 "  call mutateBox(box)"
    .traceevent "V" 6 "R" "O" "r" 0 3 3 0 "box" ""
    load r1,1
-   settp r0,256
-   swap r2,r0
-   call r3,mutateBox(),r1
+   settpswapcall r3,mutateBox(),r1,r0,256,r2
    swap r0,r2
    .traceevent "F" 4 "R" "V" "r" 3 3 3 0 "mutatebox" ""
    .srcstep 4 4 17 "inline_test_object_const_arg_mutation.crexx" 7 3 18 "  say box.getName()"
    .traceevent "V" 6 "R" "O" "r" 0 4 4 0 "box" ""
    load r1,1
-   settp r0,256
-   swap r2,r0
-   call r4,§inline_test_object_const_arg_mutation.box.getname(),r1
+   settpswapcall r4,§inline_test_object_const_arg_mutation.box.getname(),r1,r0,256,r2
    swap r0,r2
    .traceevent "F" 4 "R" "S" "r" 4 4 4 0 "getname" ""
    say r4
@@ -57,8 +52,7 @@ mutateBox() .locals=5
    load r1,2
    settp a1,256
    swap r2,a1
-   settp r3,768
-   call r4,§inline_test_object_const_arg_mutation.box.setname(),r1
+   settpcall r4,§inline_test_object_const_arg_mutation.box.setname(),r1,r3,768
    swap a1,r2
    .traceevent "F" 4 "R" "V" "r" 4 9 9 0 "setname" ""
    .srcstep 10 10 17 "inline_test_object_const_arg_mutation.crexx" 14 3 9 "  return"

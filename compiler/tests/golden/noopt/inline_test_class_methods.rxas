@@ -15,16 +15,13 @@ main() .locals=9
    load r3,"alpha"
    .traceevent "L" 4 "R" "S" "r" 3 1 1 0 "" ""
    load r2,1
-   settp r3,768
-   call r0,§inline_test_class_methods.box.§factory(),r2
+   settpcall r0,§inline_test_class_methods.box.§factory(),r2,r3,768
    .traceevent "F" 4 "R" "O" "r" 0 1 1 0 "§factory" ""
    .traceevent "A" 6 "R" "O" "r" 0 1 1 0 "box" ""
    .srcstep 2 2 17 "inline_test_class_methods.crexx" 6 3 16 "  say box.label()"
    .traceevent "V" 6 "R" "O" "r" 0 2 2 0 "box" ""
    load r2,1
-   settp r0,256
-   swap r3,r0
-   call r4,§inline_test_class_methods.box.label(),r2
+   settpswapcall r4,§inline_test_class_methods.box.label(),r2,r0,256,r3
    swap r0,r3
    .traceevent "F" 4 "R" "S" "r" 4 2 2 0 "label" ""
    say r4
@@ -35,16 +32,13 @@ main() .locals=9
    load r2,2
    settp r0,256
    swap r3,r0
-   settp r4,768
-   call r5,§inline_test_class_methods.box.setlabel(),r2
+   settpcall r5,§inline_test_class_methods.box.setlabel(),r2,r4,768
    swap r0,r3
    .traceevent "F" 4 "R" "V" "r" 5 3 3 0 "setlabel" ""
    .srcstep 4 4 17 "inline_test_class_methods.crexx" 8 3 16 "  say box.label()"
    .traceevent "V" 6 "R" "O" "r" 0 4 4 0 "box" ""
    load r3,1
-   settp r0,256
-   swap r4,r0
-   call r2,§inline_test_class_methods.box.label(),r3
+   settpswapcall r2,§inline_test_class_methods.box.label(),r3,r0,256,r4
    swap r0,r4
    .traceevent "F" 4 "R" "S" "r" 2 4 4 0 "label" ""
    say r2
@@ -55,8 +49,7 @@ main() .locals=9
    load r2,2
    settp r0,256
    swap r3,r0
-   settp r4,768
-   call r6,§inline_test_class_methods.box.prefix(),r2
+   settpcall r6,§inline_test_class_methods.box.prefix(),r2,r4,768
    swap r0,r3
    .traceevent "F" 4 "R" "S" "r" 6 5 5 0 "prefix" ""
    say r6
@@ -67,16 +60,13 @@ main() .locals=9
    load r6,2
    settp r0,256
    swap r7,r0
-   settp r8,768
-   call r4,update(),r6
+   settpcall r4,update(),r6,r8,768
    swap r0,r7
    .traceevent "F" 4 "R" "V" "r" 4 6 6 0 "update" ""
    .srcstep 7 7 17 "inline_test_class_methods.crexx" 11 3 16 "  say box.label()"
    .traceevent "V" 6 "R" "O" "r" 0 7 7 0 "box" ""
    load r7,1
-   settp r0,256
-   swap r8,r0
-   call r6,§inline_test_class_methods.box.label(),r7
+   settpswapcall r6,§inline_test_class_methods.box.label(),r7,r0,256,r8
    swap r0,r8
    .traceevent "F" 4 "R" "S" "r" 6 7 7 0 "label" ""
    say r6
@@ -88,8 +78,7 @@ main() .locals=9
    load r6,2
    settp r0,256
    swap r7,r0
-   settp r8,768
-   call r1,§inline_test_class_methods.box.setandreport(),r6
+   settpcall r1,§inline_test_class_methods.box.setandreport(),r6,r8,768
    swap r0,r7
    .traceevent "F" 4 "R" "S" "r" 1 8 8 0 "setandreport" ""
    .traceevent "A" 6 "R" "S" "r" 1 8 8 0 "saved" ""
@@ -99,9 +88,7 @@ main() .locals=9
    .srcstep 10 10 17 "inline_test_class_methods.crexx" 14 3 16 "  say box.label()"
    .traceevent "V" 6 "R" "O" "r" 0 10 10 0 "box" ""
    load r7,1
-   settp r0,256
-   swap r8,r0
-   call r6,§inline_test_class_methods.box.label(),r7
+   settpswapcall r6,§inline_test_class_methods.box.label(),r7,r0,256,r8
    swap r0,r8
    .traceevent "F" 4 "R" "S" "r" 6 10 10 0 "label" ""
    say r6
@@ -112,17 +99,14 @@ main() .locals=9
    load r6,2
    settp r0,256
    swap r7,r0
-   settp r8,768
-   call r3,§inline_test_class_methods.box.setandreport(),r6
+   settpcall r3,§inline_test_class_methods.box.setandreport(),r6,r8,768
    swap r0,r7
    .traceevent "F" 4 "R" "S" "r" 3 11 11 0 "setandreport" ""
    say r3
    .srcstep 12 12 17 "inline_test_class_methods.crexx" 16 3 16 "  say box.label()"
    .traceevent "V" 6 "R" "O" "r" 0 12 12 0 "box" ""
    load r7,1
-   settp r0,256
-   swap r8,r0
-   call r6,§inline_test_class_methods.box.label(),r7
+   settpswapcall r6,§inline_test_class_methods.box.label(),r7,r0,256,r8
    swap r0,r8
    .traceevent "F" 4 "R" "S" "r" 6 12 12 0 "label" ""
    say r6
@@ -130,15 +114,13 @@ main() .locals=9
    load r3,"direct"
    .traceevent "L" 4 "R" "S" "r" 3 13 13 0 "" ""
    load r2,1
-   settp r3,768
-   call r7,§inline_test_class_methods.box.§factory(),r2
+   settpcall r7,§inline_test_class_methods.box.§factory(),r2,r3,768
    .traceevent "F" 4 "R" "O" "r" 7 13 13 0 "§factory" ""
    load r8,"q"
    .traceevent "L" 4 "R" "S" "r" 8 13 13 0 "" ""
    load r6,2
    settp r7,256
-   settp r8,768
-   call r3,§inline_test_class_methods.box.prefix(),r6
+   settpcall r3,§inline_test_class_methods.box.prefix(),r6,r8,768
    .traceevent "F" 4 "R" "S" "r" 3 13 13 0 "prefix" ""
    say r3
    .srcstep 14 14 17 "inline_test_class_methods.crexx" 18 3 11 "  return 0"
@@ -160,9 +142,7 @@ update() .locals=6
    load r2,2
    settp a1,256
    swap r3,a1
-   settp a2,256
-   swap r4,a2
-   call r5,§inline_test_class_methods.box.setlabel(),r2
+   settpswapcall r5,§inline_test_class_methods.box.setlabel(),r2,a2,256,r4
    swap a1,r3
    swap a2,r4
    .traceevent "F" 4 "R" "V" "r" 5 18 18 0 "setlabel" ""
@@ -235,9 +215,7 @@ update() .locals=6
    .traceevent "O" 4 "R" "S" "r" 2 32 32 0 "" ""
    .traceevent "V" 6 "R" "O" "a" 1 32 32 0 "§this" ""
    load r3,1
-   settp a1,256
-   swap r4,a1
-   call r5,§inline_test_class_methods.box.label(),r3
+   settpswapcall r5,§inline_test_class_methods.box.label(),r3,a1,256,r4
    swap a1,r4
    .traceevent "F" 4 "R" "S" "r" 5 32 32 0 "label" ""
    concat r5,r2,r5

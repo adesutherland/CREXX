@@ -51,9 +51,7 @@ main() .locals=10
    .srcstep 13 13 17 "inline_test_object_writable_arg.crexx" 14 3 23 "  return value.getName()"
    .traceevent "V" 6 "R" "O" "r" 2 15 15 0 "value" ""
    load r7,1
-   settp r2,256
-   swap r8,r2
-   call r5,§inline_test_object_writable_arg.box.getname(),r7
+   settpswapcall r5,§inline_test_object_writable_arg.box.getname(),r7,r2,256,r8
    swap r2,r8
    .traceevent "F" 4 "R" "S" "r" 5 15 15 0 "getname" ""
    scopy r8,r5
@@ -71,8 +69,7 @@ l100bexprend:
    linkattr1 r8,r9,1
    .traceevent "V" 6 "R" "S" "r" 8 19 19 0 "name" ""
    scopy r7,r8
-   unlink r8
-   br l127bexprend
+   unlinkbr r8,l127bexprend
 l127bexprend:
    say r7
    .srcstep 20 20 17 "inline_test_object_writable_arg.crexx" 8 3 50 "  say \"Object writable-arg inline test finished.\""

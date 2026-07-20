@@ -553,6 +553,20 @@ are stored in a dynamically grown map rather than ten fixed slots. The wide
 `cnop` regression exercises nine captured input and output operands through
 this path.
 
+Opcode arity is likewise defined by the complete format string rather than a
+three-operand ceiling. RXAS parsing, RXBIN writing and reading, disassembly,
+link relocation, VM decoding, metadata inspection, compiler emission, and the
+`rxc` `ASSEMBLE` path all iterate that declared operand sequence. The NR-09
+large-instruction batch uses forms up to eight operands; adding another arity
+does not require a new fixed-width transport structure.
+
+The NR-09 fused instructions are catalogued in
+`docs/reference/rxas/instructions/12-large-instructions.md`. They preserve the
+ordered state changes and signals of their component sequence, including an
+intermediate write where that write is part of the public instruction contract.
+Compiler-owned rewrites may instead choose a result-only form when the removed
+temporary has no source-level observation.
+
 `typeof`, `istype`, and `asserttype` are object-contract operations. Compiler
 generated code uses them for object casts/tests/introspection; scalar
 `typeof`/`is` cases are folded earlier by `rxc`.

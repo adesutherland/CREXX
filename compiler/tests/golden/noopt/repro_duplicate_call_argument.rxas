@@ -40,8 +40,7 @@ main() .locals=6
    copy r5,r1
    settp r1,256
    swap r4,r1
-   settp r5,256
-   call r2,combine_text(),r3
+   settpcall r2,combine_text(),r3,r5,256
    swap r1,r4
    .traceevent "F" 4 "R" "S" "r" 2 5 5 0 "combine_text" ""
    say r2

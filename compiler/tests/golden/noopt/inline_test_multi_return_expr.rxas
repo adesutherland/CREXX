@@ -28,8 +28,7 @@ l8dostart:
    .srcstep 5 5 17 "inline_test_multi_return_expr.crexx" 6 5 25 "    say 10 + classify(i)"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
    load r4,1
-   swap r5,r0
-   call r6,classify(),r4
+   swapcall r6,classify(),r4,r0,r5
    swap r0,r5
    .traceevent "F" 4 "R" "I" "r" 6 5 5 0 "classify" ""
    iadd r6,r6,10

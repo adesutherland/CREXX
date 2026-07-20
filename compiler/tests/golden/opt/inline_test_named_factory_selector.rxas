@@ -29,8 +29,7 @@ main() .locals=5
    load r4,"beta"
    .traceevent "L" 4 "R" "S" "r" 4 2 2 0 "" ""
    load r3,1
-   settp r4,768
-   call r2,assignedNamed(),r3
+   settpcall r2,assignedNamed(),r3,r4,768
    .traceevent "F" 4 "R" "O" "r" 2 2 2 0 "assignednamed" ""
    load r1,1
    settp r2,256

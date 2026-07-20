@@ -19,8 +19,7 @@ main() .locals=5
    load r3,"Hello"
    .traceevent "L" 4 "R" "S" "r" 3 4 4 0 "" ""
    load r2,1
-   settp r3,768
-   call r1,§array_class_lib.item.§factory(),r2
+   settpcall r1,§array_class_lib.item.§factory(),r2,r3,768
    .traceevent "F" 4 "R" "O" "r" 1 4 4 0 "§factory" ""
    .traceevent "A" 6 "R" "O" "r" 1 4 4 0 "it1" ""
    .srcstep 5 5 17 "18_array_class_main.crexx" 7 1 18 "say \"Created it1\""
@@ -41,9 +40,7 @@ main() .locals=5
    .srcstep 10 10 17 "18_array_class_main.crexx" 13 1 17 "say process(ary)"
    .traceevent "V" 6 "R" "O" "r" 0 10 10 0 "ary" ""
    load r2,1
-   settp r0,256
-   swap r3,r0
-   call r4,process(),r2
+   settpswapcall r4,process(),r2,r0,256,r3
    swap r0,r3
    .traceevent "F" 4 "R" "S" "r" 4 10 10 0 "process" ""
    say r4
@@ -81,8 +78,7 @@ process() .locals=11
 l59iffalse:
    .srcstep 18 18 17 "18_array_class_main.crexx" 22 5 17 "    it = items.1"
    .meta "18_array_class_main.process.it"="b" ".item" r0
-   minattrs a1,1
-   linkattr1 r4,a1,1
+   minlinkattr1 r4,a1,1
    .traceevent "V" 6 "R" "O" "r" 4 18 18 0 "items" ""
    copy r0,r4
    .traceevent "A" 6 "R" "O" "r" 0 18 18 0 "it" ""
@@ -91,9 +87,7 @@ l59iffalse:
    .meta "18_array_class_main.process.val"="b" ".string" r2
    .traceevent "V" 6 "R" "O" "r" 0 19 19 0 "it" ""
    load r3,1
-   settp r0,256
-   swap r4,r0
-   call r2,§array_class_lib.item.get_val(),r3
+   settpswapcall r2,§array_class_lib.item.get_val(),r3,r0,256,r4
    swap r0,r4
    .traceevent "F" 4 "R" "S" "r" 2 19 19 0 "get_val" ""
    .traceevent "A" 6 "R" "S" "r" 2 19 19 0 "val" ""
@@ -115,8 +109,7 @@ l70dostart:
    .meta "18_array_class_main.process.it_i"="b" ".item" r3
    .traceevent "V" 6 "R" "I" "r" 4 23 23 0 "i" ""
    .traceevent "C" 4 "R" "I" "r" 4 23 23 0 "items" ""
-   minattrs a1,r4,0
-   linkattr1 r9,a1,r4
+   minlinkattr1 r9,a1,r4,0
    .traceevent "V" 6 "R" "O" "r" 9 23 23 0 "items" ""
    copy r3,r9
    .traceevent "A" 6 "R" "O" "r" 3 23 23 0 "it_i" ""
@@ -125,9 +118,7 @@ l70dostart:
    .meta "18_array_class_main.process.val_i"="b" ".string" r5
    .traceevent "V" 6 "R" "O" "r" 3 24 24 0 "it_i" ""
    load r9,1
-   settp r3,256
-   swap r10,r3
-   call r5,§array_class_lib.item.get_val(),r9
+   settpswapcall r5,§array_class_lib.item.get_val(),r9,r3,256,r10
    swap r3,r10
    .traceevent "F" 4 "R" "S" "r" 5 24 24 0 "get_val" ""
    .traceevent "A" 6 "R" "S" "r" 5 24 24 0 "val_i" ""

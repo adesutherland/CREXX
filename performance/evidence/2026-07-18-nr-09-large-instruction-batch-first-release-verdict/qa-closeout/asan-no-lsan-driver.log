@@ -1,0 +1,167 @@
+ASan run directory: performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/qa-closeout/asan/20260719-205848-full
+==> build
+    log: performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/qa-closeout/asan/20260719-205848-full/build.log
+==> build passed
+[1219/1299] Generating benchmark_awfy_towers_noopt.rxbin
+[1220/1299] Generating benchmark_awfy_towers_opt.rxbin
+[1221/1299] Generating benchmark_awfy_bounce_noopt.rxbin
+[1222/1299] Generating benchmark_awfy_storage_noopt.rxbin
+[1223/1299] Generating benchmark_awfy_bounce_opt.rxbin
+[1224/1299] Generating benchmark_awfy_storage_opt.rxbin
+[1225/1299] Generating benchmark_awfy_list_noopt.rxbin
+[1226/1299] Generating benchmark_awfy_list_opt.rxbin
+[1227/1299] Generating benchmark_awfy_richards_noopt.rxbin
+[1228/1299] Generating benchmark_json_parser_noopt.rxbin
+[1229/1299] Generating benchmark_awfy_richards_opt.rxbin
+[1230/1299] Generating benchmark_json_parser_opt.rxbin
+[1231/1299] Generating benchmark_base64_roundtrip_noopt.rxbin
+[1232/1299] Generating benchmark_base64_roundtrip_opt.rxbin
+[1233/1299] Generating benchmark_rexxcps_levelb_noopt.rxbin
+[1234/1299] Generating benchmark_rexxcps_levelb_opaque_noopt.rxbin
+[1235/1299] Generating benchmark_rexxcps_levelb_opt.rxbin
+[1236/1299] Generating benchmark_runner_noopt.rxbin
+[1237/1299] Generating benchmark_rexxcps_levelb_opaque_opt.rxbin
+[1238/1299] Generating benchmark_runner_opt.rxbin
+[1239/1299] Generating inlining_simple_noopt.rxbin
+[1240/1299] Generating inlining_simple_opt.rxbin
+[1241/1299] Generating nr03_evidence_tool_selftest_noopt.rxbin
+[1242/1299] Generating reference_iterator_compare_rxvm_noopt.rxbin
+[1243/1299] Generating reference_iterator_compare_rxvm_opt.rxbin
+[1244/1299] Generating reference_iterator_compare_rxbvm_noopt.rxbin
+[1245/1299] Generating reference_iterator_compare_rxbvm_opt.rxbin
+[1246/1299] Generating stringarraylist_iterator_compare_rxvm_noopt.rxbin
+[1247/1299] Generating stringarraylist_iterator_compare_rxvm_opt.rxbin
+[1248/1299] Generating stringarraylist_iterator_compare_rxbvm_noopt.rxbin
+[1249/1299] Generating stringarraylist_iterator_compare_rxbvm_opt.rxbin
+[1250/1299] Generating stringtreemap_insert_compare_noopt.rxbin
+[1251/1299] Generating stringtreemap_insert_compare_opt.rxbin
+[1252/1299] Generating binary_fastpath_compare_noopt.rxbin
+[1253/1299] Generating binary_fastpath_compare_opt.rxbin
+[1254/1299] Generating rxjson_parser_compare_noopt.rxbin
+[1255/1299] Generating tinyexpr_dispatch_compare_noopt.rxbin
+[1256/1299] Generating rxjson_parser_compare_opt.rxbin
+[1257/1299] Generating tinyexpr_dispatch_compare_opt.rxbin
+[1258/1299] Generating jump_dispatch_compare_noopt.rxbin
+[1259/1299] Generating runtime_interface_lookup_compare_noopt.rxbin
+[1260/1299] Generating jump_dispatch_compare_opt.rxbin
+[1261/1299] Generating runtime_interface_lookup_compare_opt.rxbin
+[1262/1299] Generating inlining_complex_noopt.rxbin
+[1263/1299] Generating inlining_complex_opt.rxbin
+[1264/1299] Generating rxpa_dynlink_run_noopt.rxbin
+[1265/1299] Generating rxpa_dynlink_run_opt.rxbin
+[1266/1299] Generating rxpa_staticlink_run_noopt.rxbin
+[1267/1299] Generating rxpa_signal_funcs_dynamic_noopt.rxbin
+[1268/1299] Generating rxpa_staticlink_run_opt.rxbin
+[1269/1299] Generating rxpa_signal_funcs_dynamic_opt.rxbin
+[1270/1299] Generating nr03_evidence_tool_selftest_opt.rxbin
+[1271/1299] Generating rxpa_signal_funcs_static_noopt.rxbin
+[1272/1299] Generating rxpa_signal_funcs_static_opt.rxbin
+[1273/1299] Generating rxpa_string_funcs_dynamic_noopt.rxbin
+[1274/1299] Generating rxpa_string_funcs_dynamic_opt.rxbin
+[1275/1299] Generating rxpa_string_funcs_static_noopt.rxbin
+[1276/1299] Generating rxpa_string_funcs_static_opt.rxbin
+[1277/1299] Generating rxpa_int_funcs_dynamic_noopt.rxbin
+[1278/1299] Generating rxpa_int_funcs_static_noopt.rxbin
+[1279/1299] Generating rxpa_int_funcs_dynamic_opt.rxbin
+[1280/1299] Generating rxpa_int_funcs_static_opt.rxbin
+[1281/1299] Generating rxpa_float_funcs_dynamic_noopt.rxbin
+[1282/1299] Generating rxpa_float_funcs_dynamic_opt.rxbin
+[1283/1299] Generating rxpa_float_funcs_static_noopt.rxbin
+[1284/1299] Generating rxpa_float_funcs_static_opt.rxbin
+[1285/1299] Generating rxpa_array_push_funcs_dynamic_noopt.rxbin
+[1286/1299] Generating rxpa_array_push_funcs_dynamic_opt.rxbin
+[1287/1299] Generating rxpa_array_push_funcs_static_noopt.rxbin
+[1288/1299] Generating rxpa_array_push_funcs_static_opt.rxbin
+[1289/1299] Generating rxpa_native_payload_funcs_dynamic_noopt.rxbin
+[1290/1299] Generating rxpa_native_payload_funcs_dynamic_opt.rxbin
+[1291/1299] Generating rxpa_native_payload_funcs_static_noopt.rxbin
+[1292/1299] Generating rxpa_native_payload_funcs_static_opt.rxbin
+[1293/1299] Generating rxpa_native_unwind_funcs_dynamic_noopt.rxbin
+[1294/1299] Generating rxpa_native_unwind_funcs_static_noopt.rxbin
+[1295/1299] Generating rxpa_native_unwind_funcs_dynamic_opt.rxbin
+[1296/1299] Generating rxpa_native_unwind_funcs_static_opt.rxbin
+[1297/1299] Generating rxpa_mult_test_noopt.rxbin
+[1298/1299] Generating rxpa_mult_test_opt.rxbin
+==> ctest
+    log: performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/qa-closeout/asan/20260719-205848-full/ctest.log
+==> ctest failed with rc 8
+99% tests passed, 1 tests failed out of 1864
+
+Label Time Summary:
+abi                     =   0.51 sec*proc (1 test)
+address                 =   1.04 sec*proc (1 test)
+benchmark               = 541.40 sec*proc (28 tests)
+binary                  =   3.80 sec*proc (2 tests)
+breakpoint              =   2.84 sec*proc (2 tests)
+canonical-contract      = 420.38 sec*proc (2 tests)
+classlib                =  52.24 sec*proc (14 tests)
+cmake                   =   0.05 sec*proc (1 test)
+compiler                = 679.40 sec*proc (163 tests)
+corruption              =   2.34 sec*proc (14 tests)
+coverage                =   0.02 sec*proc (1 test)
+deprecated              =   1.82 sec*proc (2 tests)
+diagnostics             = 118.54 sec*proc (7 tests)
+dispatch                =  24.53 sec*proc (4 tests)
+docs                    =   4.77 sec*proc (1 test)
+driver                  =   9.25 sec*proc (1 test)
+extensions              =  24.04 sec*proc (4 tests)
+imports                 =  52.18 sec*proc (9 tests)
+inline                  =   1.37 sec*proc (2 tests)
+inlining                = 142.35 sec*proc (4 tests)
+instrumentation         =   5.98 sec*proc (4 tests)
+integer                 =   0.85 sec*proc (3 tests)
+interfaces              =  12.59 sec*proc (5 tests)
+interpreter             =  19.15 sec*proc (49 tests)
+json                    =   6.03 sec*proc (2 tests)
+jtable                  =   7.08 sec*proc (35 tests)
+language                = 118.58 sec*proc (24 tests)
+late-load               =  10.77 sec*proc (3 tests)
+level-l                 =  19.88 sec*proc (3 tests)
+levelc                  = 204.69 sec*proc (86 tests)
+library                 =   1.61 sec*proc (3 tests)
+linked_opt              = 1604.04 sec*proc (471 tests)
+metadata                =   0.39 sec*proc (1 test)
+native-adapter          =   5.52 sec*proc (6 tests)
+native_signal           =   1.79 sec*proc (6 tests)
+negative                =   0.40 sec*proc (3 tests)
+noncanonical            =  72.01 sec*proc (2 tests)
+nr09                    =   0.70 sec*proc (1 test)
+numeric                 =  16.93 sec*proc (1 test)
+optimizer               =   9.26 sec*proc (40 tests)
+optimizer-resistance    =   2.01 sec*proc (2 tests)
+performance             = 335.98 sec*proc (34 tests)
+platform                =   0.51 sec*proc (1 test)
+plugin_arrays           =   1.82 sec*proc (2 tests)
+preprocessor            =  47.87 sec*proc (5 tests)
+profiling               =   0.57 sec*proc (1 test)
+reference               = 117.32 sec*proc (44 tests)
+registers               =   4.47 sec*proc (2 tests)
+rexxcps-smoke           =  72.01 sec*proc (2 tests)
+runner                  = 422.82 sec*proc (4 tests)
+runtime                 =   1.04 sec*proc (1 test)
+rxas                    =  21.95 sec*proc (93 tests)
+rxpa                    =   1.45 sec*proc (1 test)
+rxvml                   =   1.08 sec*proc (1 test)
+sequence                =   0.57 sec*proc (1 test)
+signal                  =   4.65 sec*proc (3 tests)
+slow                    =   1.82 sec*proc (2 tests)
+smoke                   = 547.58 sec*proc (124 tests)
+source                  = 102.42 sec*proc (24 tests)
+srcmap                  =  24.72 sec*proc (3 tests)
+stage0                  =  41.24 sec*proc (11 tests)
+stage1                  =  95.93 sec*proc (52 tests)
+stage2                  =   2.42 sec*proc (1 test)
+stage3                  =  39.31 sec*proc (13 tests)
+stage4                  =  15.15 sec*proc (3 tests)
+stage5                  =  13.90 sec*proc (2 tests)
+syntax_highlighting     = 175.11 sec*proc (70 tests)
+system                  =   2.35 sec*proc (8 tests)
+treemap                 =  35.81 sec*proc (2 tests)
+utf                     =   3.71 sec*proc (6 tests)
+vm                      =   3.34 sec*proc (4 tests)
+
+Total Test time (real) = 753.90 sec
+
+The following tests FAILED:
+	1133 - rxasbinarylegacytests-rxbvm (Failed)
+Errors while running CTest

@@ -26,8 +26,7 @@ l8dostart:
    .srcstep 5 5 17 "inline_test_nested_scope_exposed_call.crexx" 6 5 17 "    say outer(i)"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
    load r3,1
-   swap r4,r0
-   call r5,outer(),r3
+   swapcall r5,outer(),r3,r0,r4
    swap r0,r4
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 5 5 0 "outer" ""
@@ -56,8 +55,7 @@ outer() .locals=4
    .srcstep 13 13 17 "inline_test_nested_scope_exposed_call.crexx" 15 5 22 "    tmp = addOne(val)"
    .traceevent "V" 6 "R" "I" "a" 1 13 13 0 "val" ""
    load r2,1
-   swap r3,a1
-   call r1,addOne(),r2
+   swapcall r1,addOne(),r2,a1,r3
    swap a1,r3
    .traceevent "F" 4 "R" "I" "r" 1 13 13 0 "addone" ""
    .traceevent "A" 6 "R" "I" "r" 1 13 13 0 "tmp" ""

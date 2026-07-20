@@ -1,0 +1,23 @@
+id	workload	mode	image	args	expect
+sieve-noopt	sieve	noopt	awfy_sieve-noopt.rxbin	50	PASS: AWFY Sieve
+sieve-opt	sieve	opt	awfy_sieve-opt.rxbin	50	PASS: AWFY Sieve
+permute-noopt	permute	noopt	awfy_permute-noopt.rxbin	50	PASS: AWFY Permute
+permute-opt	permute	opt	awfy_permute-opt.rxbin	50	PASS: AWFY Permute
+mandelbrot-noopt	mandelbrot	noopt	awfy_mandelbrot-noopt.rxbin	500	PASS: AWFY Mandelbrot
+mandelbrot-opt	mandelbrot	opt	awfy_mandelbrot-opt.rxbin	500	PASS: AWFY Mandelbrot
+towers-noopt	towers	noopt	awfy_towers-noopt.rxbin	10	PASS: AWFY Towers
+towers-opt	towers	opt	awfy_towers-opt.rxbin	10	PASS: AWFY Towers
+bounce-noopt	bounce	noopt	awfy_bounce-noopt.rxbin	100	PASS: AWFY Bounce
+bounce-opt	bounce	opt	awfy_bounce-opt.rxbin	100	PASS: AWFY Bounce
+storage-noopt	storage	noopt	awfy_storage-noopt.rxbin	10	PASS: AWFY Storage
+storage-opt	storage	opt	awfy_storage-opt.rxbin	10	PASS: AWFY Storage
+list-noopt	list	noopt	awfy_list-noopt.rxbin	100	PASS: AWFY List
+list-opt	list	opt	awfy_list-opt.rxbin	100	PASS: AWFY List
+richards-noopt	richards	noopt	awfy_richards-noopt.rxbin	1	PASS: AWFY Richards
+richards-opt	richards	opt	awfy_richards-opt.rxbin	1	PASS: AWFY Richards
+json-noopt	json	noopt	json_parser-noopt.rxbin	5000	PASS: JSON Parser
+json-opt	json	opt	json_parser-opt.rxbin	5000	PASS: JSON Parser
+base64-noopt	base64	noopt	base64_roundtrip-noopt.rxbin	500	PASS: Base64 Roundtrip
+base64-opt	base64	opt	base64_roundtrip-opt.rxbin	500	PASS: Base64 Roundtrip
+rexxcps-noopt	rexxcps	noopt	rexxcps_levelb-noopt.rxbin	--smoke-count 1	PASS: RexxCPS 2.2d cREXX port
+rexxcps-opt	rexxcps	opt	rexxcps_levelb-opt.rxbin	--smoke-count 1	PASS: RexxCPS 2.2d cREXX port

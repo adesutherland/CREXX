@@ -36,8 +36,7 @@ main() .locals=30
    linkattr1 r3,r5,1
    .traceevent "V" 6 "R" "S" "r" 3 9 9 0 "name" ""
    scopy r6,r3
-   unlink r3
-   br l196bexprend
+   unlinkbr r3,l196bexprend
 l196bexprend:
    say r6
    .srcstep 13 13 17 "inline_test_class_methods.crexx" 7 3 28 "  call box.setLabel(\"beta\")"
@@ -64,8 +63,7 @@ l196bexprend:
    linkattr1 r6,r8,1
    .traceevent "V" 6 "R" "S" "r" 6 17 17 0 "name" ""
    scopy r9,r6
-   unlink r6
-   br l225bexprend
+   unlinkbr r6,l225bexprend
 l225bexprend:
    say r9
    .srcstep 26 26 17 "inline_test_class_methods.crexx" 9 3 22 "  say box.prefix(\"p\")"
@@ -86,8 +84,7 @@ l225bexprend:
    linkattr1 r9,r11,1
    .traceevent "V" 6 "R" "S" "r" 9 26 26 0 "name" ""
    scopy r6,r9
-   unlink r9
-   br l251bexprend
+   unlinkbr r9,l251bexprend
 l251bexprend:
    concat r6,"p:",r6
    .traceevent "O" 4 "R" "S" "r" 6 26 26 0 "" ""
@@ -123,8 +120,7 @@ l232bexprend:
    linkattr1 r13,r16,1
    .traceevent "V" 6 "R" "S" "r" 13 35 35 0 "name" ""
    scopy r9,r13
-   unlink r13
-   br l275bexprend
+   unlinkbr r13,l275bexprend
 l275bexprend:
    say r9
    .srcstep 41 41 17 "inline_test_class_methods.crexx" 12 3 36 "  saved = box.setAndReport(\"delta\")"
@@ -165,8 +161,7 @@ l275bexprend:
    linkattr1 r13,r19,1
    .traceevent "V" 6 "R" "S" "r" 13 46 46 0 "name" ""
    scopy r6,r13
-   unlink r13
-   br l303bexprend
+   unlinkbr r13,l303bexprend
 l303bexprend:
    say r6
    .srcstep 53 53 17 "inline_test_class_methods.crexx" 15 3 34 "  say box.setAndReport(\"epsilon\")"
@@ -206,8 +201,7 @@ l310bexprend:
    linkattr1 r13,r22,1
    .traceevent "V" 6 "R" "S" "r" 13 57 57 0 "name" ""
    scopy r23,r13
-   unlink r13
-   br l332bexprend
+   unlinkbr r13,l332bexprend
 l332bexprend:
    say r23
    .srcstep 70 70 17 "inline_test_class_methods.crexx" 17 3 33 "  say .Box(\"direct\").prefix(\"q\")"
@@ -239,8 +233,7 @@ l332bexprend:
    linkattr1 r23,r26,1
    .traceevent "V" 6 "R" "S" "r" 23 70 70 0 "name" ""
    scopy r27,r23
-   unlink r23
-   br l359bexprend
+   unlinkbr r23,l359bexprend
 l359bexprend:
    concat r27,"q:",r27
    .traceevent "O" 4 "R" "S" "r" 27 70 70 0 "" ""
@@ -332,8 +325,7 @@ l339bexprend:
    linkattr1 r4,r3,1
    .traceevent "V" 6 "R" "S" "r" 4 98 98 0 "name" ""
    scopy r5,r4
-   unlink r4
-   br l218bexprend
+   unlinkbr r4,l218bexprend
 l218bexprend:
    concat r5,r2,r5
    .traceevent "O" 4 "R" "S" "r" 5 98 98 0 "" ""

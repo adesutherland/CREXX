@@ -59,6 +59,8 @@ void output_insert_after(OutputFragment* existing, OutputFragment* after);
 void output_concat(OutputFragment* before, OutputFragment* after);
 void output_append_text(OutputFragment* before, char* after);
 void output_prepend_text(char* before, OutputFragment* after);
+int output_replace_text_once(OutputFragment* output, const char* old_text, const char* new_text);
+char *rxcp_combine_superinstructions(const char *text);
 void print_output(FILE* file, OutputFragment* existing);
 
 char* get_metaline(ASTNode *node);

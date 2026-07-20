@@ -117,16 +117,18 @@ foreach(image IN ITEMS nr09_opt nr09_noopt)
                  "${image} combined scientific contexts")
     assert_count(${image} "\n[ \t]+numeng " 1
                  "${image} combined engineering contexts")
+    assert_count(${image} "\n[ \t]+numctx " 0
+                 "${image} withdrawn complete-context instruction")
     assert_count(${image} "\n[ \t]+setnumdgts " 2
-                 "${image} unfused digits controls")
+                 "${image} expanded digits controls")
     assert_count(${image} "\n[ \t]+setnumfuz " 3
-                 "${image} unfused fuzz controls")
+                 "${image} expanded fuzz controls")
     assert_count(${image} "\n[ \t]+setnumfrm " 3
-                 "${image} unfused form controls")
+                 "${image} expanded form controls")
     assert_count(${image} "\n[ \t]+setnumcas " 3
-                 "${image} unfused case controls")
+                 "${image} expanded case controls")
     assert_count(${image} "\n[ \t]+setnumstd " 3
-                 "${image} unfused standard controls")
+                 "${image} expanded standard controls")
 
     assert_count(${image} "\n[ \t]+numsci 18,1,1" 2
                  "${image} default combined contexts")
@@ -151,8 +153,8 @@ foreach(image IN ITEMS nr09_opt nr09_noopt)
                        "${image} engineering legacy setters")
     assert_matches(fuzz_block
                    "\n[ \t]+setnumdgts 6\n[ \t]+setnumfuz 2\n[ \t]+setnumfrm 1\n[ \t]+setnumcas 1\n[ \t]+setnumstd 1\n"
-                   "${image} nonzero-fuzz fail-closed prologue")
-    assert_not_matches(fuzz_block "\n[ \t]+num(sci|eng)"
+                   "${image} nonzero-fuzz expanded prologue")
+    assert_not_matches(fuzz_block "\n[ \t]+num(sci|eng|ctx)"
                        "${image} nonzero-fuzz combined context")
     assert_matches(inherited_block
                    "\n[ \t]+setnumfuz 0\n[ \t]+setnumfrm 1\n[ \t]+setnumcas 1\n[ \t]+setnumstd 1\n"
@@ -161,9 +163,9 @@ foreach(image IN ITEMS nr09_opt nr09_noopt)
                        "${image} inherited-digits overwrite")
     assert_matches(small_block
                    "\n[ \t]+setnumdgts 4\n[ \t]+setnumfuz 0\n[ \t]+setnumfrm 1\n[ \t]+setnumcas 1\n[ \t]+setnumstd 1\n"
-                   "${image} digits-below-five compatibility prologue")
-    assert_not_matches(small_block "\n[ \t]+num(sci|eng)"
-                       "${image} invalid combined digits contract")
+                   "${image} digits-below-five expanded prologue")
+    assert_not_matches(small_block "\n[ \t]+num(sci|eng|ctx)"
+                       "${image} digits-below-five combined context")
 
     assemble_rxbin(${image})
     foreach(runner_name IN ITEMS rxvm rxbvm)

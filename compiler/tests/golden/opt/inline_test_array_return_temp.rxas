@@ -53,20 +53,17 @@ buildPair() .locals=4
    null r0
    .srcstep 19 19 17 "inline_test_array_return_temp.crexx" 17 3 17 "  pair[1] = seed"
    setattrs r0,2
-   linkattr1 r2,r0,1
+   isetattr1 r0,1,a1
    .traceevent "V" 6 "R" "I" "a" 1 19 19 0 "seed" ""
-   icopy r2,a1
-   .traceevent "A" 6 "R" "I" "r" 2 19 19 0 "pair" ""
-   unlink r2
+   .traceevent "A" 6 "R" "I" "a" 1 19 19 0 "pair" ""
    .srcstep 20 20 17 "inline_test_array_return_temp.crexx" 18 3 21 "  pair[2] = seed + 1"
    setattrs r0,2
    linkattr1 r2,r0,2
    .traceevent "V" 6 "R" "I" "a" 1 20 20 0 "seed" ""
    iadd r3,a1,1
    .traceevent "O" 4 "R" "I" "r" 3 20 20 0 "" ""
-   icopy r2,r3
-   .traceevent "A" 6 "R" "I" "r" 2 20 20 0 "pair" ""
-   unlink r2
+   isetunlink r2,r3
+   .traceevent "A" 6 "R" "I" "r" 3 20 20 0 "pair" ""
    .srcstep 21 21 17 "inline_test_array_return_temp.crexx" 19 3 14 "  return pair"
    .traceevent "V" 6 "R" "I" "r" 0 21 21 0 "pair" ""
    ret r0

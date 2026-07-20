@@ -38,8 +38,7 @@ main() .locals=10
    linkattr1 r3,r0,1
    .traceevent "V" 6 "R" "S" "r" 3 11 11 0 "name" ""
    scopy r5,r3
-   unlink r3
-   br l63bexprend
+   unlinkbr r3,l63bexprend
 l63bexprend:
    say r5
    .srcstep 21 21 17 "inline_test_member_receiver_expr.crexx" 6 3 31 "  say buildBox(\"temp\").getName()"
@@ -68,8 +67,7 @@ l63bexprend:
    linkattr1 r5,r6,1
    .traceevent "V" 6 "R" "S" "r" 5 21 21 0 "name" ""
    scopy r9,r5
-   unlink r5
-   br l71bexprend
+   unlinkbr r5,l71bexprend
 l71bexprend:
    say r9
    .srcstep 22 22 17 "inline_test_member_receiver_expr.crexx" 7 3 46 "  say \"Member receiver inline test finished.\""

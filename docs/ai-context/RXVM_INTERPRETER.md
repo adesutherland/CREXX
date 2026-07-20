@@ -154,9 +154,13 @@ It finds each displaced call-slot base pointer in the caller's active map and
 performs the inverse pointer swap, preserving mutations and pre-call links
 instead of resetting values. The base pointer may be frame-owned local storage
 or an incoming argument's recorded entry pointer; neither case copies the
-value. Native calls have no child frame;
-their cold branch path recovers the same window from the interrupted CALL or
-DCALL instruction.
+value. Native calls have no child frame; their cold branch path recovers the
+same window from the interrupted `CALL`, `DCALL`, `SWAPCALL`,
+`SETTPSWAPCALL`, or `SETTPCALL` instruction. All five forms carry the
+argument-count register at operand position three, so the fixed runtime image
+supplies the window base without a generic operand scan. Any future
+call-bearing fused opcode must be added to this cold decoder as part of its
+signal/unwind contract.
 
 ### Signal / Interrupt Handling
 The VM signal model is implemented directly in the interpreter loop. Each

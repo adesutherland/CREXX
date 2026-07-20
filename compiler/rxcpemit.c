@@ -1169,58 +1169,50 @@ static walker_result emit_walker(walker_direction direction,
                             }
                         } else temp2 = 0;
 
-                        /* Make sure there are enough attributes */
-                        if (node->symbolNode->symbol->dim_elements[ast_chdi(child1)]) {
-                            /* Fixed array set to the dimension size - later linkattr1 might throw a signal if out of range by design */
-                            temp1 = mprintf("   setattrs %c%d,%d\n",
-                                            from_reg_type, from_reg_num,
-                                            node->symbolNode->symbol->dim_elements[ast_chdi(child1)]);
-                        } else if (child1->node_type == INTEGER || child1->node_type == CONSTANT || child1->node_type == STRING) {
-                            /* Variable array and constant parameter - set min attributes which gives a growth buffer */
-                            if (child1->value_type != TP_INTEGER) {
-                                // This should never happen - print an in fatal internal error to stderr and bail
-                                fprintf(stderr, "INTERNAL ERROR: non-integer constant used as array index\n");
-                                exit(1);
-                            }
-                            temp1 = mprintf("   minattrs %c%d,%s\n",
-                                            from_reg_type, from_reg_num,
-                                            temp2);
-                        } else {
-                            /* Variable array set min attributes which gives a growth buffer */
-                            temp1 = mprintf("   minattrs %c%d,%c%d,%d\n",
-                                            from_reg_type, from_reg_num,
-                                            child1->register_type, child1->register_num,
-                                            1 - base);
-                        }
-                        output_append_text(node->output, temp1);
-                        free(temp1);
-
-                        /* Link Array element */
-                        if (child1->node_type == INTEGER || child1->node_type == CONSTANT || child1->node_type == STRING) {
-                            /* Constant Parameter */
+                        /* Capacity and one-based link are one semantic array access.
+                         * Keep the compiler-only adjusted index out of the emitted
+                         * register file and let the VM perform the unit directly. */
+                        if (child1->node_type == INTEGER ||
+                            child1->node_type == CONSTANT ||
+                            child1->node_type == STRING) {
                             if (child1->value_type != TP_INTEGER) {
                                 mknd_err(child1, "BAD_CONVERSION");
                             }
-                            temp1 = mprintf("   linkattr1 r%d,%c%d,%s\n",
-                                            node->register_num,
-                                            from_reg_type, from_reg_num,
-                                            temp2);
-                        } else if (base == 1) {
-                            /* Already 1 base - simpler */
-                            temp1 = mprintf("   linkattr1 r%d,%c%d,%c%d\n",
-                                            node->register_num,
-                                            from_reg_type, from_reg_num,
-                                            child1->register_type, child1->register_num);
+                            if (node->symbolNode->symbol->dim_elements[ast_chdi(child1)]) {
+                                temp1 = mprintf("   setattrs %c%d,%d\n"
+                                                "   linkattr1 r%d,%c%d,%s\n",
+                                                from_reg_type, from_reg_num,
+                                                node->symbolNode->symbol->dim_elements[ast_chdi(child1)],
+                                                node->register_num,
+                                                from_reg_type, from_reg_num,
+                                                temp2);
+                            } else {
+                                temp1 = mprintf("   minlinkattr1 r%d,%c%d,%s\n",
+                                                node->register_num,
+                                                from_reg_type, from_reg_num,
+                                                temp2);
+                            }
+                        } else if (node->symbolNode->symbol->dim_elements[ast_chdi(child1)]) {
+                            if (base == 1) {
+                                temp1 = mprintf("   setlinkattr1 r%d,%c%d,%d,%c%d\n",
+                                                node->register_num,
+                                                from_reg_type, from_reg_num,
+                                                node->symbolNode->symbol->dim_elements[ast_chdi(child1)],
+                                                child1->register_type, child1->register_num);
+                            } else {
+                                temp1 = mprintf("   setlinkattr1 r%d,%c%d,%d,%c%d,%d\n",
+                                                node->register_num,
+                                                from_reg_type, from_reg_num,
+                                                node->symbolNode->symbol->dim_elements[ast_chdi(child1)],
+                                                child1->register_type, child1->register_num,
+                                                1 - base);
+                            }
                         } else {
-                            /* Need to make it 1 base */
-                            temp1 = mprintf("   iadd r%d,%c%d,%d\n"
-                                            "   linkattr1 r%d,%c%d,r%d\n",
-                                            math_reg,
-                                            child1->register_type, child1->register_num,
-                                            1 - base,
+                            temp1 = mprintf("   minlinkattr1 r%d,%c%d,%c%d,%d\n",
                                             node->register_num,
                                             from_reg_type, from_reg_num,
-                                            math_reg);
+                                            child1->register_type, child1->register_num,
+                                            1 - base);
                         }
 
                         unlink_needed = 1; /* We will need to define a cleanup action to unlink */
@@ -1520,6 +1512,11 @@ static walker_result emit_walker(walker_direction direction,
                                             child2->register_type, child2->register_num,
                                             child1->register_type, child1->register_num);
                         }
+                    } else if (strcmp(tp_prefix, "i") == 0) {
+                        temp1 = mprintf("   isetattr1 %c%d,%d,%c%d\n",
+                                        this_type, this_num,
+                                        index,
+                                        child2->register_type, child2->register_num);
                     } else {
                         if (class_attribute_is_complex(child1->symbolNode->symbol)) {
                             temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n"

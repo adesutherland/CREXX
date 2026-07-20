@@ -31,8 +31,7 @@ l20dostart:
    .srcstep 6 6 17 "select_dispatch_general.crexx" 9 5 27 "    say if_classify(index)"
    .traceevent "V" 6 "R" "I" "r" 1 6 6 0 "index" ""
    load r5,1
-   swap r6,r1
-   call r7,if_classify(),r5
+   swapcall r7,if_classify(),r5,r1,r6
    swap r1,r6
    itos r7
    .traceevent "F" 4 "R" "S" "r" 7 6 6 0 "if_classify" ""
@@ -40,8 +39,7 @@ l20dostart:
    .srcstep 7 7 17 "select_dispatch_general.crexx" 10 5 32 "    say classic_classify(index)"
    .traceevent "V" 6 "R" "I" "r" 1 7 7 0 "index" ""
    load r6,1
-   swap r7,r1
-   call r5,classic_classify(),r6
+   swapcall r5,classic_classify(),r6,r1,r7
    swap r1,r7
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 7 7 0 "classic_classify" ""
@@ -49,8 +47,7 @@ l20dostart:
    .srcstep 8 8 17 "select_dispatch_general.crexx" 11 5 31 "    say strict_classify(index)"
    .traceevent "V" 6 "R" "I" "r" 1 8 8 0 "index" ""
    load r6,1
-   swap r7,r1
-   call r5,strict_classify(),r6
+   swapcall r5,strict_classify(),r6,r1,r7
    swap r1,r7
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 8 8 0 "strict_classify" ""
@@ -61,8 +58,7 @@ l20dostart:
    .traceevent "O" 4 "R" "I" "r" 6 9 9 0 "" ""
    .traceevent "V" 6 "R" "I" "r" 1 9 9 0 "index" ""
    load r5,2
-   swap r7,r1
-   call r2,mixed_if(),r5
+   swapcall r2,mixed_if(),r5,r1,r7
    swap r1,r7
    itos r2
    .traceevent "F" 4 "R" "S" "r" 2 9 9 0 "mixed_if" ""
@@ -98,8 +94,7 @@ l20doend:
    .srcstep 15 15 17 "select_dispatch_general.crexx" 18 3 32 "  say exposed_if(exposed_value)"
    .traceevent "V" 6 "R" "I" "r" 0 15 15 0 "exposed_value" ""
    load r6,1
-   swap r7,r0
-   call r5,exposed_if(),r6
+   swapcall r5,exposed_if(),r6,r0,r7
    swap r0,r7
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 15 15 0 "exposed_if" ""
@@ -112,8 +107,7 @@ l20doend:
    load r7,"b"
    .traceevent "L" 4 "R" "S" "r" 7 17 17 0 "" ""
    load r6,1
-   settp r7,768
-   call r5,string_if(),r6
+   settpcall r5,string_if(),r6,r7,768
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 17 17 0 "string_if" ""
    say r5

@@ -32,8 +32,7 @@ l8dostart:
    .srcstep 6 6 17 "inline_test_return_expr.crexx" 13 3 21 "  return addOne(val)"
    .traceevent "V" 6 "R" "I" "r" 3 8 8 0 "val" ""
    load r4,1
-   swap r5,r3
-   call r6,addOne(),r4
+   swapcall r6,addOne(),r4,r3,r5
    swap r3,r5
    .traceevent "F" 4 "R" "I" "r" 6 8 8 0 "addone" ""
    icopy r5,r6

@@ -156,8 +156,7 @@ mutateTailIndirect() .locals=5
    ichkrng a1,1,r3
    linkarg r3,a1,1
    load r1,1
-   swap r2,r3
-   call r4,bumpOne(),r1
+   swapcall r4,bumpOne(),r1,r3,r2
    swap r3,r2
    unlink r3
    .traceevent "F" 4 "R" "I" "r" 4 32 32 0 "bumpone" ""

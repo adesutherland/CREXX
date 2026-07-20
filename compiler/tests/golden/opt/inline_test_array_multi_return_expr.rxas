@@ -27,48 +27,42 @@ main() .locals=9
    .srcstep 5 5 17 "inline_test_array_multi_return_expr.crexx" 14 3 17 "  zero = .string[]"
    null r4
    .srcstep 6 6 17 "inline_test_array_multi_return_expr.crexx" 16 3 17 "  neg[1] = \"neg\""
-   minattrs r2,1
-   linkattr1 r5,r2,1
+   minlinkattr1 r5,r2,1
    load r6,"neg"
    .traceevent "L" 4 "R" "S" "r" 6 6 6 0 "" ""
    scopy r5,r6
    .traceevent "A" 6 "R" "S" "r" 5 6 6 0 "neg" ""
    unlink r5
    .srcstep 7 7 17 "inline_test_array_multi_return_expr.crexx" 17 3 18 "  neg[2] = \"path\""
-   minattrs r2,2
-   linkattr1 r6,r2,2
+   minlinkattr1 r6,r2,2
    load r5,"path"
    .traceevent "L" 4 "R" "S" "r" 5 7 7 0 "" ""
    scopy r6,r5
    .traceevent "A" 6 "R" "S" "r" 6 7 7 0 "neg" ""
    unlink r6
    .srcstep 8 8 17 "inline_test_array_multi_return_expr.crexx" 18 3 19 "  zero[1] = \"zero\""
-   minattrs r4,1
-   linkattr1 r6,r4,1
+   minlinkattr1 r6,r4,1
    load r5,"zero"
    .traceevent "L" 4 "R" "S" "r" 5 8 8 0 "" ""
    scopy r6,r5
    .traceevent "A" 6 "R" "S" "r" 6 8 8 0 "zero" ""
    unlink r6
    .srcstep 9 9 17 "inline_test_array_multi_return_expr.crexx" 19 3 19 "  zero[2] = \"path\""
-   minattrs r4,2
-   linkattr1 r6,r4,2
+   minlinkattr1 r6,r4,2
    load r5,"path"
    .traceevent "L" 4 "R" "S" "r" 5 9 9 0 "" ""
    scopy r6,r5
    .traceevent "A" 6 "R" "S" "r" 6 9 9 0 "zero" ""
    unlink r6
    .srcstep 10 10 17 "inline_test_array_multi_return_expr.crexx" 20 3 17 "  pos[1] = \"pos\""
-   minattrs r3,1
-   linkattr1 r6,r3,1
+   minlinkattr1 r6,r3,1
    load r5,"pos"
    .traceevent "L" 4 "R" "S" "r" 5 10 10 0 "" ""
    scopy r6,r5
    .traceevent "A" 6 "R" "S" "r" 6 10 10 0 "pos" ""
    unlink r6
    .srcstep 11 11 17 "inline_test_array_multi_return_expr.crexx" 21 3 18 "  pos[2] = \"path\""
-   minattrs r3,2
-   linkattr1 r6,r3,2
+   minlinkattr1 r6,r3,2
    load r5,"path"
    .traceevent "L" 4 "R" "S" "r" 5 11 11 0 "" ""
    scopy r6,r5
@@ -95,14 +89,12 @@ l181bexprend:
    .traceevent "V" 6 "R" "S" "r" 0 19 19 0 "__inline_bind_113_0" ""
    copy r1,r0
    .srcstep 17 17 17 "inline_test_array_multi_return_expr.crexx" 28 3 36 "  return value[1] || \":\" || value[2]"
-   minattrs r1,1
-   linkattr1 r6,r1,1
+   minlinkattr1 r6,r1,1
    .traceevent "V" 6 "R" "S" "r" 6 19 19 0 "value" ""
    concat r5,r6,":"
    unlink r6
    .traceevent "O" 4 "R" "S" "r" 5 19 19 0 "" ""
-   minattrs r1,2
-   linkattr1 r4,r1,2
+   minlinkattr1 r4,r1,2
    .traceevent "V" 6 "R" "S" "r" 4 19 19 0 "value" ""
    concat r5,r5,r4
    unlink r4
@@ -130,48 +122,42 @@ l175bexprend:
    .srcstep 23 23 17 "inline_test_array_multi_return_expr.crexx" 14 3 17 "  zero = .string[]"
    null r3
    .srcstep 24 24 17 "inline_test_array_multi_return_expr.crexx" 16 3 17 "  neg[1] = \"neg\""
-   minattrs r5,1
-   linkattr1 r2,r5,1
+   minlinkattr1 r2,r5,1
    load r1,"neg"
    .traceevent "L" 4 "R" "S" "r" 1 24 24 0 "" ""
    scopy r2,r1
    .traceevent "A" 6 "R" "S" "r" 2 24 24 0 "neg" ""
    unlink r2
    .srcstep 25 25 17 "inline_test_array_multi_return_expr.crexx" 17 3 18 "  neg[2] = \"path\""
-   minattrs r5,2
-   linkattr1 r2,r5,2
+   minlinkattr1 r2,r5,2
    load r1,"path"
    .traceevent "L" 4 "R" "S" "r" 1 25 25 0 "" ""
    scopy r2,r1
    .traceevent "A" 6 "R" "S" "r" 2 25 25 0 "neg" ""
    unlink r2
    .srcstep 26 26 17 "inline_test_array_multi_return_expr.crexx" 18 3 19 "  zero[1] = \"zero\""
-   minattrs r3,1
-   linkattr1 r2,r3,1
+   minlinkattr1 r2,r3,1
    load r1,"zero"
    .traceevent "L" 4 "R" "S" "r" 1 26 26 0 "" ""
    scopy r2,r1
    .traceevent "A" 6 "R" "S" "r" 2 26 26 0 "zero" ""
    unlink r2
    .srcstep 27 27 17 "inline_test_array_multi_return_expr.crexx" 19 3 19 "  zero[2] = \"path\""
-   minattrs r3,2
-   linkattr1 r2,r3,2
+   minlinkattr1 r2,r3,2
    load r1,"path"
    .traceevent "L" 4 "R" "S" "r" 1 27 27 0 "" ""
    scopy r2,r1
    .traceevent "A" 6 "R" "S" "r" 2 27 27 0 "zero" ""
    unlink r2
    .srcstep 28 28 17 "inline_test_array_multi_return_expr.crexx" 20 3 17 "  pos[1] = \"pos\""
-   minattrs r4,1
-   linkattr1 r2,r4,1
+   minlinkattr1 r2,r4,1
    load r1,"pos"
    .traceevent "L" 4 "R" "S" "r" 1 28 28 0 "" ""
    scopy r2,r1
    .traceevent "A" 6 "R" "S" "r" 2 28 28 0 "pos" ""
    unlink r2
    .srcstep 29 29 17 "inline_test_array_multi_return_expr.crexx" 21 3 18 "  pos[2] = \"path\""
-   minattrs r4,2
-   linkattr1 r2,r4,2
+   minlinkattr1 r2,r4,2
    load r1,"path"
    .traceevent "L" 4 "R" "S" "r" 1 29 29 0 "" ""
    scopy r2,r1
@@ -194,14 +180,12 @@ l322bexprend:
    .traceevent "V" 6 "R" "S" "r" 7 36 36 0 "__inline_bind_255_0" ""
    copy r6,r7
    .srcstep 34 34 17 "inline_test_array_multi_return_expr.crexx" 28 3 36 "  return value[1] || \":\" || value[2]"
-   minattrs r6,1
-   linkattr1 r5,r6,1
+   minlinkattr1 r5,r6,1
    .traceevent "V" 6 "R" "S" "r" 5 36 36 0 "value" ""
    concat r4,r5,":"
    unlink r5
    .traceevent "O" 4 "R" "S" "r" 4 36 36 0 "" ""
-   minattrs r6,2
-   linkattr1 r3,r6,2
+   minlinkattr1 r3,r6,2
    .traceevent "V" 6 "R" "S" "r" 3 36 36 0 "value" ""
    concat r4,r4,r3
    unlink r3
@@ -229,48 +213,42 @@ l316bexprend:
    .srcstep 40 40 17 "inline_test_array_multi_return_expr.crexx" 14 3 17 "  zero = .string[]"
    null r3
    .srcstep 41 41 17 "inline_test_array_multi_return_expr.crexx" 16 3 17 "  neg[1] = \"neg\""
-   minattrs r5,1
-   linkattr1 r2,r5,1
+   minlinkattr1 r2,r5,1
    load r1,"neg"
    .traceevent "L" 4 "R" "S" "r" 1 41 41 0 "" ""
    scopy r2,r1
    .traceevent "A" 6 "R" "S" "r" 2 41 41 0 "neg" ""
    unlink r2
    .srcstep 42 42 17 "inline_test_array_multi_return_expr.crexx" 17 3 18 "  neg[2] = \"path\""
-   minattrs r5,2
-   linkattr1 r2,r5,2
+   minlinkattr1 r2,r5,2
    load r1,"path"
    .traceevent "L" 4 "R" "S" "r" 1 42 42 0 "" ""
    scopy r2,r1
    .traceevent "A" 6 "R" "S" "r" 2 42 42 0 "neg" ""
    unlink r2
    .srcstep 43 43 17 "inline_test_array_multi_return_expr.crexx" 18 3 19 "  zero[1] = \"zero\""
-   minattrs r3,1
-   linkattr1 r2,r3,1
+   minlinkattr1 r2,r3,1
    load r1,"zero"
    .traceevent "L" 4 "R" "S" "r" 1 43 43 0 "" ""
    scopy r2,r1
    .traceevent "A" 6 "R" "S" "r" 2 43 43 0 "zero" ""
    unlink r2
    .srcstep 44 44 17 "inline_test_array_multi_return_expr.crexx" 19 3 19 "  zero[2] = \"path\""
-   minattrs r3,2
-   linkattr1 r2,r3,2
+   minlinkattr1 r2,r3,2
    load r1,"path"
    .traceevent "L" 4 "R" "S" "r" 1 44 44 0 "" ""
    scopy r2,r1
    .traceevent "A" 6 "R" "S" "r" 2 44 44 0 "zero" ""
    unlink r2
    .srcstep 45 45 17 "inline_test_array_multi_return_expr.crexx" 20 3 17 "  pos[1] = \"pos\""
-   minattrs r4,1
-   linkattr1 r2,r4,1
+   minlinkattr1 r2,r4,1
    load r1,"pos"
    .traceevent "L" 4 "R" "S" "r" 1 45 45 0 "" ""
    scopy r2,r1
    .traceevent "A" 6 "R" "S" "r" 2 45 45 0 "pos" ""
    unlink r2
    .srcstep 46 46 17 "inline_test_array_multi_return_expr.crexx" 21 3 18 "  pos[2] = \"path\""
-   minattrs r4,2
-   linkattr1 r2,r4,2
+   minlinkattr1 r2,r4,2
    load r1,"path"
    .traceevent "L" 4 "R" "S" "r" 1 46 46 0 "" ""
    scopy r2,r1
@@ -297,14 +275,12 @@ l462bexprend:
    .traceevent "V" 6 "R" "S" "r" 8 54 54 0 "__inline_bind_395_0" ""
    copy r6,r8
    .srcstep 52 52 17 "inline_test_array_multi_return_expr.crexx" 28 3 36 "  return value[1] || \":\" || value[2]"
-   minattrs r6,1
-   linkattr1 r5,r6,1
+   minlinkattr1 r5,r6,1
    .traceevent "V" 6 "R" "S" "r" 5 54 54 0 "value" ""
    concat r4,r5,":"
    unlink r5
    .traceevent "O" 4 "R" "S" "r" 4 54 54 0 "" ""
-   minattrs r6,2
-   linkattr1 r3,r6,2
+   minlinkattr1 r3,r6,2
    .traceevent "V" 6 "R" "S" "r" 3 54 54 0 "value" ""
    concat r4,r4,r3
    unlink r3

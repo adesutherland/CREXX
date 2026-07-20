@@ -17,16 +17,13 @@ main() .locals=6
    load r3,"seed"
    .traceevent "L" 4 "R" "S" "r" 3 2 2 0 "" ""
    load r2,1
-   settp r3,768
-   call r0,buildBox(),r2
+   settpcall r0,buildBox(),r2,r3,768
    .traceevent "F" 4 "R" "O" "r" 0 2 2 0 "buildbox" ""
    .traceevent "A" 6 "R" "O" "r" 0 2 2 0 "box" ""
    .srcstep 3 3 17 "inline_test_object_return_assign.crexx" 6 3 23 "  say describeBox(box)"
    .traceevent "V" 6 "R" "O" "r" 0 3 3 0 "box" ""
    load r2,1
-   settp r0,256
-   swap r3,r0
-   call r4,describeBox(),r2
+   settpswapcall r4,describeBox(),r2,r0,256,r3
    swap r0,r3
    .traceevent "F" 4 "R" "S" "r" 4 3 3 0 "describebox" ""
    say r4
@@ -35,32 +32,26 @@ main() .locals=6
    load r4,"temp"
    .traceevent "L" 4 "R" "S" "r" 4 4 4 0 "" ""
    load r3,1
-   settp r4,768
-   call r1,buildBox(),r3
+   settpcall r1,buildBox(),r3,r4,768
    .traceevent "F" 4 "R" "O" "r" 1 4 4 0 "buildbox" ""
    .traceevent "A" 6 "R" "O" "r" 1 4 4 0 "other" ""
    .srcstep 5 5 17 "inline_test_object_return_assign.crexx" 8 3 25 "  say describeBox(other)"
    .traceevent "V" 6 "R" "O" "r" 1 5 5 0 "other" ""
    load r3,1
-   settp r1,256
-   swap r4,r1
-   call r2,describeBox(),r3
+   settpswapcall r2,describeBox(),r3,r1,256,r4
    swap r1,r4
    .traceevent "F" 4 "R" "S" "r" 2 5 5 0 "describebox" ""
    say r2
    .srcstep 6 6 17 "inline_test_object_return_assign.crexx" 9 3 26 "  call replaceBoxRef(box)"
    .traceevent "V" 6 "R" "O" "r" 0 6 6 0 "box" ""
    load r3,1
-   swap r4,r0
-   call r2,replaceBoxRef(),r3
+   swapcall r2,replaceBoxRef(),r3,r0,r4
    swap r0,r4
    .traceevent "F" 4 "R" "V" "r" 2 6 6 0 "replaceboxref" ""
    .srcstep 7 7 17 "inline_test_object_return_assign.crexx" 10 3 18 "  say box.getName()"
    .traceevent "V" 6 "R" "O" "r" 0 7 7 0 "box" ""
    load r3,1
-   settp r0,256
-   swap r4,r0
-   call r5,§inline_test_object_return_assign.box.getname(),r3
+   settpswapcall r5,§inline_test_object_return_assign.box.getname(),r3,r0,256,r4
    swap r0,r4
    .traceevent "F" 4 "R" "S" "r" 5 7 7 0 "getname" ""
    say r5
@@ -81,9 +72,7 @@ buildBox() .locals=4
    .meta "inline_test_object_return_assign.buildbox.value"="b" ".box" r1
    .traceevent "V" 6 "R" "S" "a" 1 12 12 0 "initial" ""
    load r2,1
-   settp a1,256
-   swap r3,a1
-   call r1,§inline_test_object_return_assign.box.§factory(),r2
+   settpswapcall r1,§inline_test_object_return_assign.box.§factory(),r2,a1,256,r3
    swap a1,r3
    .traceevent "F" 4 "R" "O" "r" 1 12 12 0 "§factory" ""
    .traceevent "A" 6 "R" "O" "r" 1 12 12 0 "value" ""
@@ -102,9 +91,7 @@ describeBox() .locals=4
    .srcstep 16 16 17 "inline_test_object_return_assign.crexx" 21 3 23 "  return value.getName()"
    .traceevent "V" 6 "R" "O" "a" 1 16 16 0 "value" ""
    load r1,1
-   settp a1,256
-   swap r2,a1
-   call r3,§inline_test_object_return_assign.box.getname(),r1
+   settpswapcall r3,§inline_test_object_return_assign.box.getname(),r1,a1,256,r2
    swap a1,r2
    .traceevent "F" 4 "R" "S" "r" 3 16 16 0 "getname" ""
    ret r3
@@ -120,8 +107,7 @@ replaceBoxRef() .locals=3
    load r2,"ref"
    .traceevent "L" 4 "R" "S" "r" 2 19 19 0 "" ""
    load r1,1
-   settp r2,768
-   call a1,§inline_test_object_return_assign.box.§factory(),r1
+   settpcall a1,§inline_test_object_return_assign.box.§factory(),r1,r2,768
    .traceevent "F" 4 "R" "O" "a" 1 19 19 0 "§factory" ""
    .traceevent "A" 6 "R" "O" "a" 1 19 19 0 "value" ""
    .srcstep 20 20 17 "inline_test_object_return_assign.crexx" 26 3 9 "  return"

@@ -118,13 +118,63 @@ typedef struct extended_instruction_pattern {
  * in the first pair selects a variable-length pattern from this side table. */
 #define EXTENDED_PATTERN '*'
 
+enum extended_pattern_id {
+    EXT_WIDE_CNOP,
+    EXT_RRRR,
+    EXT_RRRRRR,
+    EXT_RRRRRRRR,
+    EXT_RIRI,
+    EXT_RIRIR,
+    EXT_RRRI,
+    EXT_RRRIR,
+    EXT_RIRR,
+    EXT_RIRRR
+};
+
 static const operand_pattern wide_cnop_pattern[] = {
     {'r', 0}, {'r', 1}, {'r', 2}, {'r', 3}, {'r', 4},
     {'r', 5}, {'r', 6}, {'r', 7}, {'r', 8}
 };
+static const operand_pattern pattern_rrrr[] = {
+    {'r', 0}, {'r', 1}, {'r', 2}, {'r', 3}
+};
+static const operand_pattern pattern_rrrrrr[] = {
+    {'r', 0}, {'r', 1}, {'r', 2}, {'r', 3}, {'r', 4}, {'r', 5}
+};
+static const operand_pattern pattern_rrrrrrrr[] = {
+    {'r', 0}, {'r', 1}, {'r', 2}, {'r', 3},
+    {'r', 4}, {'r', 5}, {'r', 6}, {'r', 7}
+};
+static const operand_pattern pattern_riri[] = {
+    {'r', 0}, {'i', 10}, {'r', 1}, {'i', 11}
+};
+static const operand_pattern pattern_ririr[] = {
+    {'r', 0}, {'i', 10}, {'r', 1}, {'i', 11}, {'r', 2}
+};
+static const operand_pattern pattern_rrri[] = {
+    {'r', 0}, {'r', 1}, {'r', 2}, {'i', 10}
+};
+static const operand_pattern pattern_rrrir[] = {
+    {'r', 0}, {'r', 1}, {'r', 2}, {'i', 10}, {'r', 3}
+};
+static const operand_pattern pattern_rirr[] = {
+    {'r', 0}, {'i', 10}, {'r', 1}, {'r', 2}
+};
+static const operand_pattern pattern_rirrr[] = {
+    {'r', 0}, {'i', 10}, {'r', 1}, {'r', 2}, {'r', 3}
+};
 
 static const extended_instruction_pattern extended_patterns[] = {
-    {wide_cnop_pattern, sizeof(wide_cnop_pattern) / sizeof(wide_cnop_pattern[0])}
+    {wide_cnop_pattern, sizeof(wide_cnop_pattern) / sizeof(wide_cnop_pattern[0])},
+    {pattern_rrrr, sizeof(pattern_rrrr) / sizeof(pattern_rrrr[0])},
+    {pattern_rrrrrr, sizeof(pattern_rrrrrr) / sizeof(pattern_rrrrrr[0])},
+    {pattern_rrrrrrrr, sizeof(pattern_rrrrrrrr) / sizeof(pattern_rrrrrrrr[0])},
+    {pattern_riri, sizeof(pattern_riri) / sizeof(pattern_riri[0])},
+    {pattern_ririr, sizeof(pattern_ririr) / sizeof(pattern_ririr[0])},
+    {pattern_rrri, sizeof(pattern_rrri) / sizeof(pattern_rrri[0])},
+    {pattern_rrrir, sizeof(pattern_rrrir) / sizeof(pattern_rrrir[0])},
+    {pattern_rirr, sizeof(pattern_rirr) / sizeof(pattern_rirr[0])},
+    {pattern_rirrr, sizeof(pattern_rirrr) / sizeof(pattern_rirrr[0])}
 };
 
 static size_t pattern_operand_count(const instruction_pattern *pattern) {
@@ -521,8 +571,8 @@ rule rules[] =
 
             /* A following zero-operand CNOP is redundant.  This harmless rule
              * is also the rule-engine regression for wide input/output maps. */
-            {NO_GAP, OP_CODE,"cnop", EXTENDED_PATTERN, 0, 0, 0, 0, 0,
-                     OP_CODE,"cnop", EXTENDED_PATTERN, 0, 0, 0, 0, 0},
+            {NO_GAP, OP_CODE,"cnop", EXTENDED_PATTERN, EXT_WIDE_CNOP, 0, 0, 0, 0,
+                     OP_CODE,"cnop", EXTENDED_PATTERN, EXT_WIDE_CNOP, 0, 0, 0, 0},
             {NO_GAP, OP_CODE,"cnop", 0, 0, 0, 0, 0, 0,
                      0},
             {END_OF_RULE},
@@ -539,6 +589,81 @@ rule rules[] =
                          0},
             {NO_HAZARD, OP_CODE,"swap", 'r', 1, 'r', 0, 0, 0,
                          0},
+            {END_OF_RULE},
+
+            /* NR-09 Class 1: collect adjacent independent swaps. */
+            {NO_GAP, OP_CODE,"swap", 'r', 0, 'r', 1, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"swap", 'r', 2, 'r', 3, 0, 0,
+                         OP_CODE,"swapn", EXTENDED_PATTERN, EXT_RRRR, 0, 0, 0, 0},
+            {END_OF_RULE},
+
+            {NO_GAP, OP_CODE,"swapn", EXTENDED_PATTERN, EXT_RRRR, 0, 0, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"swap", 'r', 4, 'r', 5, 0, 0,
+                         OP_CODE,"swapn", EXTENDED_PATTERN, EXT_RRRRRR, 0, 0, 0, 0},
+            {END_OF_RULE},
+
+            {NO_GAP, OP_CODE,"swapn", EXTENDED_PATTERN, EXT_RRRRRR, 0, 0, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"swap", 'r', 6, 'r', 7, 0, 0,
+                         OP_CODE,"swapn", EXTENDED_PATTERN, EXT_RRRRRRRR, 0, 0, 0, 0},
+            {END_OF_RULE},
+
+            /* NR-09 Class 1: call-window preparation. */
+            {NO_GAP, OP_CODE,"settp", 'r', 0, 'i', 10, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"swap", 'r', 1, 'r', 0, 0, 0,
+                         OP_CODE,"settpswap", 'r', 0, 'i', 10, 'r', 1},
+            {END_OF_RULE},
+
+            {NO_GAP, OP_CODE,"load", 'r', 0, 'i', 10, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"settp", 'r', 1, 'i', 11, 0, 0,
+                         OP_CODE,"loadsettp2", EXTENDED_PATTERN, EXT_RIRI, 0, 0, 0, 0},
+            {END_OF_RULE},
+
+            {NO_GAP, OP_CODE,"loadsettp2", EXTENDED_PATTERN, EXT_RIRI, 0, 0, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"swap", 'r', 2, 'r', 1, 0, 0,
+                         OP_CODE,"loadsettpswap", EXTENDED_PATTERN, EXT_RIRIR, 0, 0, 0, 0},
+            {END_OF_RULE},
+
+            {NO_GAP, OP_CODE,"swap", 'r', 0, 'r', 1, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"settp", 'r', 2, 'i', 10, 0, 0,
+                         OP_CODE,"swapsettp", EXTENDED_PATTERN, EXT_RRRI, 0, 0, 0, 0},
+            {END_OF_RULE},
+
+            {NO_GAP, OP_CODE,"swapsettp", EXTENDED_PATTERN, EXT_RRRI, 0, 0, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"swap", 'r', 3, 'r', 2, 0, 0,
+                         OP_CODE,"swapsettpswap", EXTENDED_PATTERN, EXT_RRRIR, 0, 0, 0, 0},
+            {END_OF_RULE},
+
+            {NO_GAP, OP_CODE,"settpswap", 'r', 0, 'i', 10, 'r', 1,
+                         0},
+            {NO_GAP, OP_CODE,"settpswap", 'r', 2, 'i', 10, 'r', 3,
+                         OP_CODE,"settpswapsettpswap", EXTENDED_PATTERN, EXT_RIRRR, 0, 0, 0, 0},
+            {END_OF_RULE},
+
+            /* NR-09 Class 1: collect clears and constant loads. */
+            {NO_GAP, OP_CODE,"null", 'r', 0, 0, 0, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"null", 'r', 1, 0, 0, 0, 0,
+                         OP_CODE,"nulln", 'r', 0, 'r', 1, 0, 0},
+            {END_OF_RULE},
+
+            {NO_GAP, OP_CODE,"nulln", 'r', 0, 'r', 1, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"null", 'r', 2, 0, 0, 0, 0,
+                         OP_CODE,"nulln", 'r', 0, 'r', 1, 'r', 2},
+            {END_OF_RULE},
+
+            {NO_GAP, OP_CODE,"nulln", 'r', 0, 'r', 1, 'r', 2,
+                         0},
+            {NO_GAP, OP_CODE,"null", 'r', 3, 0, 0, 0, 0,
+                         OP_CODE,"nulln", EXTENDED_PATTERN, EXT_RRRR, 0, 0, 0, 0},
             {END_OF_RULE},
 
             /* Full copy already copies status flags; drop redundant acopy. */

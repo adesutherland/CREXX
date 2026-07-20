@@ -807,7 +807,7 @@ argument block is not bounds-checked by the instruction.
 
 main() .locals=2
     load r1,0
-    srcfprocsel r0,"example.Factory.create",r1
+    srcfprocsel r0,"rxsig1|example.Factory.create|.example.Factory|",r1
     ret
 ```
 
@@ -847,7 +847,7 @@ does not provide the descriptor. A diagnostic-allocation failure raises
 
 main() .locals=2
     setobjtype r1,"example.Widget"
-    srcmethodsel r0,r1,"example.Widget.method"
+    srcmethodsel r0,r1,"rxsig1|method|.unknown|"
     ret
 ```
 

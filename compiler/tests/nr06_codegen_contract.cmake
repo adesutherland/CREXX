@@ -59,7 +59,7 @@ assert_count(nr06_opt "\n[ \t]+(icopy|fcopy) " 0
              "NR-06 optimized typed call-window copies")
 assert_count(nr06_opt "\n[ \t]+copy " 1
              "NR-06 optimized repeated-source snapshot")
-assert_count(nr06_noopt "\n[ \t]+swap " 20
+assert_count(nr06_noopt "\n[ \t]+swap " 14
              "NR-06 no-opt baseline swaps")
 assert_count(nr06_noopt "\n[ \t]+(icopy|fcopy) " 0
              "NR-06 no-opt typed call-window copies")
@@ -79,10 +79,10 @@ assert_count(nr06_opt
              2
              "NR-06 exact two-argument call windows")
 assert_matches(nr06_opt
-               "\n[ \t]+settp r1,256\n[ \t]+call [^\n]*,optionalInt\\(\\),r0"
+               "\n[ \t]+settpcall [^\n]*,optionalInt\\(\\),r0,r1,256"
                "NR-06 exact optional argument window")
 assert_matches(nr06_opt
-               "\n[ \t]+settp r8,256\n[ \t]+call [^\n]*,echoText\\(\\),r7"
+               "\n[ \t]+settpcall [^\n]*,echoText\\(\\),r7,r8,256"
                "NR-06 exact string argument window")
 assert_matches(nr06_opt
                "\n[ \t]+load r0,1\n[ \t]+call [^\n]*,incrementRef\\(\\),r0"
@@ -100,11 +100,11 @@ assert_not_matches(nr06_opt
                "\n[ \t]+swap r[0-9]+,r[0-9]+\n[ \t]+call [^\n]*,incrementRef\\(\\),r[0-9]+\n[ \t]+swap r[0-9]+,r[0-9]+"
                "NR-06 optimized reference swap pair")
 assert_matches(nr06_noopt
-               "\n[ \t]+swap r[0-9]+,r[0-9]+\n[ \t]+call [^\n]*,optionalInt\\(\\),r[0-9]+\n[ \t]+swap r[0-9]+,r[0-9]+"
-               "NR-06 no-opt optional fallback restore pair")
+               "\n[ \t]+settpswapcall [^\n]*,optionalInt\\(\\),r[0-9]+,r[0-9]+,256,r[0-9]+\n[ \t]+swap r[0-9]+,r[0-9]+"
+               "NR-06 no-opt optional fused preparation and restore")
 assert_matches(nr06_noopt
-               "\n[ \t]+swap r[0-9]+,r[0-9]+\n[ \t]+call [^\n]*,echoText\\(\\),r[0-9]+\n[ \t]+swap r[0-9]+,r[0-9]+"
-               "NR-06 no-opt string fallback restore pair")
+               "\n[ \t]+settpswapcall [^\n]*,echoText\\(\\),r[0-9]+,r[0-9]+,256,r[0-9]+\n[ \t]+swap r[0-9]+,r[0-9]+"
+               "NR-06 no-opt string fused preparation and restore")
 assert_matches(nr06_noopt
-               "\n[ \t]+swap r[0-9]+,r[0-9]+\n[ \t]+call [^\n]*,incrementRef\\(\\),r[0-9]+\n[ \t]+swap r[0-9]+,r[0-9]+"
-               "NR-06 no-opt reference fallback restore pair")
+               "\n[ \t]+swapcall [^\n]*,incrementRef\\(\\),r[0-9]+,r[0-9]+,r[0-9]+\n[ \t]+swap r[0-9]+,r[0-9]+"
+               "NR-06 no-opt reference fused preparation and restore")

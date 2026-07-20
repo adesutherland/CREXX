@@ -26,8 +26,7 @@ l9dostart:
    .srcstep 5 5 17 "select_dispatch_fallback.crexx" 7 5 26 "    say duplicate_case(i)"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
    load r3,1
-   swap r4,r0
-   call r5,duplicate_case(),r3
+   swapcall r5,duplicate_case(),r3,r0,r4
    swap r0,r4
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 5 5 0 "duplicate_case" ""

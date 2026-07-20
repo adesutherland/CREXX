@@ -20,17 +20,15 @@ main() .locals=5
    linkattr1 r0,g1,1
    load r1,10
    .traceevent "L" 4 "R" "I" "r" 1 3 3 0 "" ""
-   icopy r0,r1
-   .traceevent "A" 6 "R" "I" "r" 0 3 3 0 "values" ""
-   unlink r0
+   isetunlink r0,r1
+   .traceevent "A" 6 "R" "I" "r" 1 3 3 0 "values" ""
    .srcstep 4 4 17 "inline_test_ref_indexed.crexx" 8 1 15 "values[2] = 20"
    setattrs g1,3
    linkattr1 r1,g1,2
    load r0,20
    .traceevent "L" 4 "R" "I" "r" 0 4 4 0 "" ""
-   icopy r1,r0
-   .traceevent "A" 6 "R" "I" "r" 1 4 4 0 "values" ""
-   unlink r1
+   isetunlink r1,r0
+   .traceevent "A" 6 "R" "I" "r" 0 4 4 0 "values" ""
    .srcstep 10 10 17 "inline_test_ref_indexed.crexx" 10 1 23 "say refBump(values[idx])"
    .srcstep 9 9 17 "inline_test_ref_indexed.crexx" 10 5 12 "say refBump(values[idx])"
    .srcstep 5 5 33 "inline_test_ref_indexed.crexx" 10 20 23 "say refBump(values[idx])"
@@ -45,27 +43,22 @@ main() .locals=5
    .srcstep 7 7 17 "inline_test_ref_indexed.crexx" 19 3 20 "  value = value + 1"
    .traceevent "V" 6 "R" "I" "r" 2 7 7 0 "__inline_ref_28_0" ""
    .traceevent "C" 4 "R" "I" "r" 2 7 7 0 "values" ""
-   setattrs g1,3
-   linkattr1 r1,g1,r2
+   setlinkattr1 r1,g1,3,r2
    .traceevent "V" 6 "R" "I" "r" 2 7 7 0 "__inline_ref_28_0" ""
    .traceevent "C" 4 "R" "I" "r" 2 7 7 0 "values" ""
-   setattrs g1,3
-   linkattr1 r0,g1,r2
+   setlinkattr1 r0,g1,3,r2
    .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "values" ""
    iadd r4,r0,1
    unlink r0
    .traceevent "O" 4 "R" "I" "r" 4 7 7 0 "" ""
-   icopy r1,r4
-   .traceevent "A" 6 "R" "I" "r" 1 7 7 0 "values" ""
-   unlink r1
+   isetunlink r1,r4
+   .traceevent "A" 6 "R" "I" "r" 4 7 7 0 "values" ""
    .srcstep 8 8 17 "inline_test_ref_indexed.crexx" 20 3 15 "  return value"
    .traceevent "V" 6 "R" "I" "r" 2 10 10 0 "__inline_ref_28_0" ""
    .traceevent "C" 4 "R" "I" "r" 2 10 10 0 "values" ""
-   setattrs g1,3
-   linkattr1 r4,g1,r2
+   setlinkattr1 r4,g1,3,r2
    .traceevent "V" 6 "R" "I" "r" 4 10 10 0 "values" ""
-   icopy r1,r4
-   unlink r4
+   igetunlink r1,r4
    br l67bexprend
 l67bexprend:
    itos r1

@@ -72,8 +72,7 @@ main() .locals=16
    br l165bexprend
 l178iffalse:
    .srcstep 18 18 17 "18_array_class_main.crexx" 22 5 17 "    it = items.1"
-   minattrs r5,1
-   linkattr1 r9,r5,1
+   minlinkattr1 r9,r5,1
    .traceevent "V" 6 "R" "O" "r" 9 18 18 0 "items" ""
    copy r3,r9
    .traceevent "A" 6 "R" "O" "r" 3 18 18 0 "it" ""
@@ -105,8 +104,7 @@ l196dostart:
    .srcstep 25 25 17 "18_array_class_main.crexx" 26 9 23 "        it_i = items[i]"
    .traceevent "V" 6 "R" "I" "r" 9 25 25 0 "i" ""
    .traceevent "C" 4 "R" "I" "r" 9 25 25 0 "items" ""
-   minattrs r5,r9,0
-   linkattr1 r14,r5,r9
+   minlinkattr1 r14,r5,r9,0
    .traceevent "V" 6 "R" "O" "r" 14 25 25 0 "items" ""
    copy r8,r14
    .traceevent "A" 6 "R" "O" "r" 8 25 25 0 "it_i" ""

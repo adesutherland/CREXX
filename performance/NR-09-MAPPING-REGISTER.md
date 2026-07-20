@@ -1,8 +1,10 @@
 # NR-09 exact mapping register
 
-Status: **approved implementation register; no batch production edit started**
+Status: **corrected pruning implemented and broad QA complete; final ordinary
+Release refresh shows no regression; production-batch commit pending**
 
 Recorded: 2026-07-18
+Updated: 2026-07-20
 
 Source ledger: `performance/evidence/2026-07-17-nr-09-sequence-ledger-poc/retained-rxvm/sequence-ledger.csv`
 
@@ -11,6 +13,93 @@ RXSEQ decision view. Counts are bounded observations from revision-labelled
 N=2/3/4 windows. Windows overlap, so counts must not be added to estimate a
 dispatch reduction. Exact current-image occurrences and operands must be
 re-mined before instruction forms are frozen.
+
+## Approved corrected production disposition
+
+Adrian approved the overlap-corrected disposition on 2026-07-19. The
+production edit removes these 26 forms while preserving each numeric opcode as
+a fail-safe reserved slot, so existing RXBIN numbering does not move:
+
+- `NUMCTX_INT_INT_INT_INT_INT`
+- `SETTPSWAPSETTP_REG_INT_REG_REG`
+- `ILOADCOPY_REG_REG_INT`
+- `ILOADN_REG_INT_REG_INT`
+- `ILOADN_REG_REG_INT`
+- `FSUBILOAD_REG_REG_FLOAT_REG_INT`
+- `ITOSCONCAT_REG_STRING_REG`
+- `SCONCATITOS_REG_STRING_REG`
+- `ILOADGETATTRS_REG_INT_REG_REG_INT`
+- `IGETATTR1_REG_REG_INT`
+- `MINIGETATTR1_REG_REG_INT`
+- `ISETATTR1_REG_INT_INT`
+- `RELINKATTR1_REG_REG_INT`
+- `UNLINKRELINKATTR1_REG_REG_REG_INT`
+- `LINKSETATTRS_REG_REG_INT_INT`
+- `LINKSETATTRSADD_REG_REG_INT_INT_REG_REG_INT`
+- `SETATTRSADD_REG_INT_REG_REG_INT`
+- `LINKILOAD_REG_REG_REG_REG_INT`
+- `UNLINKLINKATTR1_REG_REG_REG_INT`
+- `LINKATTR1ADD_REG_REG_REG_INT`
+- `ISETATTR1_REG_REG_INT`
+- `STOIATTR1_REG_REG_INT`
+- `MINSTOIATTR1_REG_REG_INT`
+- `ILOADSETUNLINK_REG_REG_INT`
+- `LINKILOADSETUNLINK_REG_REG_REG_REG_INT`
+- `SETLINKATTR1_REG_REG_INT_INT`
+
+The corrected mapping order retains four forms that the first all-enabled
+census had masked:
+
+- narrow `ITOF_REG_REG` selection to the measured arithmetic chain;
+- select `FMULTICOPY_REG_FLOAT_REG_REG` for that chain;
+- promote `LINK + SETLINKATTR1` to
+  `LINKSETATTRSLINKADD_REG_REG_INT_INT_REG_REG_INT`;
+- promote `SETLINKATTR1 + LOAD` to
+  `SETLINKILOAD_REG_REG_INT_REG_REG_INT`.
+
+The two ugly caller-temporary forms remain present unchanged in this edit, but
+only as design candidates for a later separately measured replacement. They
+are not approval to preserve their side effects indefinitely.
+
+## Selected clean replacement designs (not implemented)
+
+### Result-only `FDIVSUB`
+
+The current form implements `fdiv quotient,numerator,quotient` followed by
+`fsub result,quotient,constant` and therefore asks generated code to expose the
+quotient register. The preferred replacement keeps the four logical inputs
+but changes the contract to:
+
+```text
+quotient = numerator.float / divisor.float
+result.float = quotient - constant
+```
+
+Only `result` is written; `numerator` and `divisor` are unchanged. The VM
+handler should hold `quotient` in a C local so no bytecode register exists for
+the intermediate. rxc may select the form only when compiler liveness proves
+the original quotient result is dead after the subtraction and no generated
+TRACE event requires that intermediate write. Otherwise it must leave the two
+instructions expanded. This is Class 2 compiler knowledge and must not become
+an RXAS adjacency inference. The evidence justifying a replacement PoC is
+501,000 bounded executions and +34.379%/+23.874% isolated cell speedup on
+`rxvm`/`rxbvm`.
+
+### Compact TRACE-correct `ILOADSETUNLINKN`
+
+The current wide form represents `LOAD temporary,constant; ICOPY
+alias,temporary; UNLINK alias; UNLINK other` and exposes `temporary` only to
+preserve a generated TRACE write. The preferred lowering uses the existing
+compact `ILOADSETUNLINKN_REG_INT_REG` form (`alias,constant,other`) when rxc
+proves that the temporary has no later semantic read and can retarget any
+generated TRACE observation to the equal value stored through `alias` at the
+same source step. If that TRACE proof is unavailable, the sequence remains
+expanded; it must not retain or invent a pointless caller operand. RXAS must
+not infer this compiler-owned fact. A replacement PoC must include positive
+TRACE retargeting plus negative later-read, relevant-TRACE and alias/cleanup
+cases before retiring the wide form. The evidence justifying the PoC is
+364,203 bounded executions and +11.793%/+18.185% isolated cell speedup on
+`rxvm`/`rxbvm`.
 
 ## Ownership
 
@@ -36,9 +125,62 @@ re-mined before instruction forms are frozen.
 5. Stop for Adrian. After the batch verdict is accepted, run the proportional
    full QA closeout, refresh only audited goldens, and commit when requested.
 
-## Active mappings
+## Selected mapping input
 
-Active total: **67** (Class 1: **16**; Class 2: **51**) across **12** families.
+Selected input total: **67** (Class 1: **16**; Class 2: **51**) across **12**
+families. This is the approved mapping queue recorded below, not the final
+source-visible opcode-form count after evidence-led pruning.
+
+## Implemented batch shape
+
+The first complete candidate represented the selected mappings with 60
+canonical instruction forms: 57 mapping forms plus three wider forms that
+preserved TRACE-visible intermediate writes. The approved balanced review then
+withdrew 26 source-visible forms and kept their numeric opcode slots reserved.
+The final public addition is **34 forms**: 32 forms under the 25 mnemonics in
+`docs/reference/rxas/instructions/12-large-instructions.md`, plus the
+two-register `ITOF` and `STOI` forms in their existing reference chapters.
+
+All retained Class 1 mappings have RXAS backstops. rxc emits a large
+instruction directly only when one emission site owns and fixes the complete
+semantic unit. Alias/copy/cleanup Class 2 combinations are selected from the
+actual final typed instruction stream, not AST provenance; an actual `ICOPY`
+must be present before an integer cleanup form can be selected. Source steps
+and labels remain barriers. TRACE references are retargeted only to a
+proved-equal retained register, and authored RXAS never gains compiler-only
+temporary/alias assumptions.
+
+The operand-transport prerequisite is isolated in commit `32bf7e76f`. **38 of
+the 67 mappings require more than three operands:** 11/16 Class 1 and 27/51
+Class 2. Without arbitrary operand transport, all 11 wide Class 1 backstops and
+up to 38 exact selected mappings would be blocked or require descriptor/partial
+alternatives. The three trace-preserving production forms also use wide
+transport. The prerequisite extends the instruction table, assembler,
+disassembler, linker and relocation, VM decode, rxc `ASSEMBLE`, metadata,
+instruction database and their tests without changing RXBIN 007.
+
+The original 60-form focused gate passed 9/9 selected CTests and reported
+600 forms/388 unique mnemonics. Those figures describe the retained
+pre-pruning candidate evidence, not the final product. The final assembler and
+human reference agree on **574 forms/367 unique mnemonics**, and the final
+instruction source/database addition is exactly **34 rows**.
+
+The initial unmatched-session Release comparison appeared negative at
+-2.233%/-2.289% median CPS (`rxvm`/`rxbvm`). A same-session rebaseline proved
+that sign was baseline drift, not a reproduced VM or fused-product regression.
+After the approved 26-form pruning, the first equal-path verdict was
++0.262%/+0.937%. The post-QA 78/78 refresh records complete-product paired
+median CPS of **+1.385%/+2.868%**; the `rxvm` interval crosses zero and the
+`rxbvm` interval is wholly positive.
+
+Broad closeout passes full Debug CTest 1,864/1,864, an audited 110-golden
+refresh, supported Apple ASan with no sanitizer diagnostic, an isolated
+112-file install, and both installed VMs against the exact accepted old RXBIN
+and library. Apple ASan does not support leak detection on this host. The QA
+also added the three retained fused call forms to native cold signal-window
+restore. Evidence is under
+`performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/qa-closeout/`
+and `finalrun01/`.
 
 
 ### Numeric-context prologue (9)

@@ -161,8 +161,7 @@ nestedCallProc() .locals=4
    .srcstep 27 27 17 "inline_test2.crexx" 39 3 21 "  return helper(val)"
    .traceevent "V" 6 "R" "I" "a" 1 27 27 0 "val" ""
    load r1,1
-   swap r2,a1
-   call r3,helper(),r1
+   swapcall r3,helper(),r1,a1,r2
    swap a1,r2
    .traceevent "F" 4 "R" "I" "r" 3 27 27 0 "helper" ""
    ret r3

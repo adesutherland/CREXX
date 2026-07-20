@@ -23,8 +23,7 @@ main() .locals=5
    .traceevent "L" 4 "R" "I" "r" 2 5 5 0 "" ""
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "calls" ""
    load r1,2
-   swap r3,r0
-   call r0,probe(),r1
+   swapcall r0,probe(),r1,r0,r3
    swap r0,r3
    .traceevent "F" 4 "R" "B" "r" 3 5 5 0 "probe" ""
 l15andend:
@@ -51,8 +50,7 @@ l20ifend:
    .traceevent "L" 4 "R" "I" "r" 2 11 11 0 "" ""
    .traceevent "V" 6 "R" "I" "r" 0 11 11 0 "calls" ""
    load r1,2
-   swap r3,r0
-   call r0,probe(),r1
+   swapcall r0,probe(),r1,r0,r3
    swap r0,r3
    .traceevent "F" 4 "R" "B" "r" 3 11 11 0 "probe" ""
 l27orend:
@@ -76,8 +74,7 @@ l32ifend:
    .traceevent "L" 4 "R" "I" "r" 2 17 17 0 "" ""
    .traceevent "V" 6 "R" "I" "r" 0 17 17 0 "calls" ""
    load r1,2
-   swap r3,r0
-   call r4,probe(),r1
+   swapcall r4,probe(),r1,r0,r3
    swap r0,r3
    .traceevent "F" 4 "R" "B" "r" 4 17 17 0 "probe" ""
    not r3,r4
@@ -104,8 +101,7 @@ l43ifend:
    .traceevent "L" 4 "R" "I" "r" 3 23 23 0 "" ""
    .traceevent "V" 6 "R" "I" "r" 0 23 23 0 "calls" ""
    load r2,2
-   swap r4,r0
-   call r0,probe(),r2
+   swapcall r0,probe(),r2,r0,r4
    swap r0,r4
    .traceevent "F" 4 "R" "B" "r" 4 23 23 0 "probe" ""
 l50andend:
@@ -132,8 +128,7 @@ l55ifend:
    .traceevent "L" 4 "R" "I" "r" 3 29 29 0 "" ""
    .traceevent "V" 6 "R" "I" "r" 0 29 29 0 "calls" ""
    load r2,2
-   swap r4,r0
-   call r0,probe(),r2
+   swapcall r0,probe(),r2,r0,r4
    swap r0,r4
    .traceevent "F" 4 "R" "B" "r" 4 29 29 0 "probe" ""
 l62orend:

@@ -1,6 +1,6 @@
 # cREXX Emitter Architecture
 
-This document describes the architecture and internal logic of the modular code generator for the cREXX compiler (`rxc`), which is split into six functional modules.
+This document describes the architecture and internal logic of the modular code generator for the cREXX compiler (`rxc`), which is split into functional modules.
 
 ## 1. High-Level Execution Flow
 
@@ -22,7 +22,7 @@ The emission process transforms the validated Abstract Syntax Tree (AST) into cR
 - **Logic**:
     - **Top-Down (`in`)**: Used for block-level initialization (e.g., `INSTRUCTIONS` node triggers `add_scope_initiators` in `rxcp_emit_proc.c`).
     - **Bottom-Up (`out`)**: Each node type generates its corresponding assembly by concatenating fragments from its children and adding its own instructions.
-    - **Finalization**: The root node (`REXX_UNIVERSE`) calls `print_output()` during its `out` phase, which writes the entire concatenated fragment chain to the output file.
+    - **Finalization**: The root node (`REXX_UNIVERSE`) calls `print_output()` during its `out` phase. Finalization flattens the fragment chain, applies compiler-owned exact-template combinations, and writes the resulting assembly to the output file.
 
 ## 2. State Map
 
@@ -65,6 +65,34 @@ The emitter avoids most global variables by storing state directly in the `ASTNo
 - **Functionality**: Emitting `.meta` directives and symbol-related metadata.
 - **Key Functions**: `meta_set_symbol`, `add_global_variable_metadata`, `meta_narg`.
 
+### Compiler-owned large instructions (`rxcp_emit_super.c`)
+
+- **Functionality**: Combines exact generated templates whose intermediate
+  registers, aliases, cleanup, or overwritten side effects are known to be
+  compiler-owned. These are the NR-09 Class 2 transformations that RXAS cannot
+  safely infer from arbitrary authored assembly.
+- **Boundary**: This pass runs only over rxc's completed output. Source-step
+  directives and labels are hard barriers. Metadata and trace directives may
+  remain between component instructions only where the combiner preserves
+  their ordering and retargets a trace reference when the removed temporary
+  instruction was its subject.
+- **Typed-input rule**: A combination is selected from the actual parsed
+  emitted mnemonic and operands, not from an AST node's declared type,
+  provenance, target history, or expected lowering. For example, alias cleanup
+  fusion requires an emitted `icopy`; integer provenance is not proof that the
+  completed output contains an integer copy. This boundary prevents string
+  conversion paths such as C2d/X2d from being rewritten as integer operations.
+- **Preference**: Emit a large instruction directly in the owning AST-node
+  path only when that node owns the complete semantic unit and the exact
+  emitted operation type is already fixed. Alias/copy/cleanup combinations
+  remain in the final typed-instruction combiner. The combiner is also the
+  bounded fallback for generated templates that span emitter fragments or
+  adjacent AST nodes.
+- **Non-goal**: This is not a general assembly peephole. Effect-clean Class 1
+  sequences remain RXAS-owned backstops, so authored assembly receives the
+  same safe optimization without relying on compiler provenance.
+- **Key Function**: `rxcp_combine_superinstructions`.
+
 ## 4. Register Allocation (`rxcp_emit_reg.c`)
 
 The register allocation logic is isolated in `rxcp_emit_reg.c`. It performs the first pass over the AST to ensure every node that requires a virtual register has one assigned before code emission begins.
@@ -96,6 +124,7 @@ This is semantic copy elision, not a change in language semantics. Any optimisat
 | **Label Collisions** | Relies on `node_number` and suffix conventions. | Formalize label generation into a dedicated utility. |
 | **Duplication** | Operator emission is duplicated for constant vs. register cases. | Refactor into a unified `emit_op(op, target, left, right)` helper. |
 | **Register Assignment Pressure** | Inlining and future callable-lifetime attribute locals need a clearer register lifetime model than per-node temporaries alone. | TODO: reserve long-lived locals explicitly, keep call-frame temporaries from clobbering them, and add diagnostics explaining register growth. |
+| **Typed Emission Drift** | AST provenance or an expected target type can differ from the operation actually emitted after conversion. | Match large-instruction templates only against the final parsed typed mnemonic/operands; require direct AST emission sites to own and fix the complete operation. |
 
 ## 6. AST Assumptions
 The Emitter operates on a "clean" AST. Following the validation finalization phase, the tree is guaranteed to have:

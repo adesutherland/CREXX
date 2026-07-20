@@ -45,8 +45,7 @@ main() .locals=17
    linkattr1 r7,r6,1
    .traceevent "V" 6 "R" "S" "r" 7 14 14 0 "name" ""
    scopy r8,r7
-   unlink r7
-   br l168bexprend
+   unlinkbr r7,l168bexprend
 l168bexprend:
    scopy r9,r8
    br l165bexprend
@@ -86,8 +85,7 @@ l165bexprend:
    linkattr1 r7,r12,1
    .traceevent "V" 6 "R" "S" "r" 7 27 27 0 "name" ""
    scopy r4,r7
-   unlink r7
-   br l201bexprend
+   unlinkbr r7,l201bexprend
 l201bexprend:
    scopy r13,r4
    br l198bexprend
@@ -120,8 +118,7 @@ l198bexprend:
    linkattr1 r13,r16,1
    .traceevent "V" 6 "R" "S" "r" 13 37 37 0 "name" ""
    scopy r7,r13
-   unlink r13
-   br l225bexprend
+   unlinkbr r13,l225bexprend
 l225bexprend:
    say r7
    .srcstep 38 38 17 "inline_test_object_return_assign.crexx" 11 3 51 "  say \"Object return assign inline test finished.\""

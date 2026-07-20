@@ -35,8 +35,7 @@ l12dostart:
    .srcstep 7 7 17 "select_dispatch_integer.crexx" 9 5 20 "    say classify(i)"
    .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "i" ""
    load r5,1
-   swap r6,r0
-   call r2,classify(),r5
+   swapcall r2,classify(),r5,r0,r6
    swap r0,r6
    itos r2
    .traceevent "F" 4 "R" "S" "r" 2 7 7 0 "classify" ""
@@ -44,8 +43,7 @@ l12dostart:
    .srcstep 8 8 17 "select_dispatch_integer.crexx" 10 5 22 "    say no_default(i)"
    .traceevent "V" 6 "R" "I" "r" 0 8 8 0 "i" ""
    load r5,1
-   swap r6,r0
-   call r2,no_default(),r5
+   swapcall r2,no_default(),r5,r0,r6
    swap r0,r6
    itos r2
    .traceevent "F" 4 "R" "S" "r" 2 8 8 0 "no_default" ""
@@ -55,8 +53,7 @@ l12dostart:
    .traceevent "V" 6 "R" "I" "r" 1 9 9 0 "inner" ""
    load r5,2
    swap r6,r0
-   swap r7,r1
-   call r2,nested_classify(),r5
+   swapcall r2,nested_classify(),r5,r1,r7
    swap r0,r6
    swap r1,r7
    itos r2

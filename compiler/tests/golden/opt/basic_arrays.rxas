@@ -26,8 +26,7 @@ l10dostart:
    .srcstep 5 5 17 "basic_arrays.crexx" 4 3 22 "  s[i] = \"Item \" || i"
    .traceevent "V" 6 "R" "I" "r" 1 5 5 0 "i" ""
    .traceevent "C" 4 "R" "I" "r" 1 5 5 0 "s" ""
-   setattrs r0,10
-   linkattr1 r4,r0,r1
+   setlinkattr1 r4,r0,10,r1
    itos r1
    .traceevent "V" 6 "R" "S" "r" 1 5 5 0 "i" ""
    concat r5,"Item ",r1
@@ -64,8 +63,7 @@ l24dostart:
    .traceevent "O" 4 "R" "S" "r" 2 11 11 0 "" ""
    .traceevent "V" 6 "R" "I" "r" 5 11 11 0 "i" ""
    .traceevent "C" 4 "R" "I" "r" 5 11 11 0 "s" ""
-   setattrs r0,10
-   linkattr1 r1,r0,r5
+   setlinkattr1 r1,r0,10,r5
    .traceevent "V" 6 "R" "S" "r" 1 11 11 0 "s" ""
    concat r2,r2,r1
    unlink r1

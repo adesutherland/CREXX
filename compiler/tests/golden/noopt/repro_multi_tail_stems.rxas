@@ -31,8 +31,7 @@ main() .locals=16
    settp r4,256
    swap r6,r4
    settp r7,768
-   settp r8,768
-   call r9,§rxfnsb.stem.set(),r5
+   settpcall r9,§rxfnsb.stem.set(),r5,r8,768
    swap r4,r6
    .traceevent "A" 6 "R" "S" "r" 8 3 3 0 "root" ""
    .srcstep 6 6 17 "repro_multi_tail_stems.crexx" 8 1 31 "if root.tail1.tail2 \\= \"Jenny\" then do"
@@ -43,8 +42,7 @@ main() .locals=16
    load r6,2
    settp r4,256
    swap r7,r4
-   settp r8,768
-   call r5,§rxfnsb.stem.get(),r6
+   settpcall r5,§rxfnsb.stem.get(),r6,r8,768
    swap r4,r7
    .traceevent "V" 6 "R" "S" "r" 5 6 6 0 "root" ""
    rne r8,r5,"Jenny"
@@ -64,8 +62,7 @@ main() .locals=16
    load r5,2
    settp r4,256
    swap r6,r4
-   settp r7,768
-   call r10,§rxfnsb.stem.get(),r5
+   settpcall r10,§rxfnsb.stem.get(),r5,r7,768
    swap r4,r6
    .traceevent "V" 6 "R" "S" "r" 10 5 5 0 "root" ""
    sconcat r10,"Literal multi-tail lookup mismatch:",r10
@@ -79,8 +76,7 @@ l35iffalse:
    load r10,2
    settp r4,256
    swap r11,r4
-   settp r12,768
-   call r8,§rxfnsb.stem.get(),r10
+   settpcall r8,§rxfnsb.stem.get(),r10,r12,768
    swap r4,r11
    .traceevent "F" 4 "R" "S" "r" 8 10 10 0 "get" ""
    rne r12,r8,"Jenny"
@@ -99,8 +95,7 @@ l35iffalse:
    load r13,2
    settp r4,256
    swap r14,r4
-   settp r15,768
-   call r11,§rxfnsb.stem.get(),r13
+   settpcall r11,§rxfnsb.stem.get(),r13,r15,768
    swap r4,r14
    .traceevent "F" 4 "R" "S" "r" 11 9 9 0 "get" ""
    sconcat r15,"Literal multi-tail key mismatch:",r11
@@ -121,8 +116,7 @@ l55iffalse:
    settp r4,256
    swap r13,r4
    settp r14,768
-   settp r15,768
-   call r11,§rxfnsb.stem.set(),r12
+   settpcall r11,§rxfnsb.stem.set(),r12,r15,768
    swap r4,r13
    .traceevent "A" 6 "R" "S" "r" 15 12 12 0 "root" ""
    .srcstep 13 13 6 "repro_multi_tail_stems.crexx" 18 1 30 "root.12.345 = \"numeric-right\""
@@ -139,8 +133,7 @@ l55iffalse:
    settp r4,256
    swap r13,r4
    settp r14,768
-   settp r15,768
-   call r10,§rxfnsb.stem.set(),r12
+   settpcall r10,§rxfnsb.stem.set(),r12,r15,768
    swap r4,r13
    .traceevent "A" 6 "R" "S" "r" 15 13 13 0 "root" ""
    .srcstep 16 16 17 "repro_multi_tail_stems.crexx" 19 1 33 "if root.123.45 \\= \"numeric-left\" then do"
@@ -154,8 +147,7 @@ l55iffalse:
    load r13,2
    settp r4,256
    swap r14,r4
-   settp r15,768
-   call r12,§rxfnsb.stem.get(),r13
+   settpcall r12,§rxfnsb.stem.get(),r13,r15,768
    swap r4,r14
    .traceevent "V" 6 "R" "S" "r" 12 16 16 0 "root" ""
    rne r15,r12,"numeric-left"
@@ -178,8 +170,7 @@ l55iffalse:
    load r12,2
    settp r4,256
    swap r13,r4
-   settp r14,768
-   call r8,§rxfnsb.stem.get(),r12
+   settpcall r8,§rxfnsb.stem.get(),r12,r14,768
    swap r4,r13
    .traceevent "V" 6 "R" "S" "r" 8 15 15 0 "root" ""
    sconcat r14,"Numeric multi-tail lookup mismatch:",r8
@@ -193,8 +184,7 @@ l83iffalse:
    load r13,2
    settp r4,256
    swap r14,r4
-   settp r15,768
-   call r12,§rxfnsb.stem.get(),r13
+   settpcall r12,§rxfnsb.stem.get(),r13,r15,768
    swap r4,r14
    .traceevent "F" 4 "R" "S" "r" 12 20 20 0 "get" ""
    rne r15,r12,"numeric-left"
@@ -213,8 +203,7 @@ l83iffalse:
    load r12,2
    settp r4,256
    swap r13,r4
-   settp r14,768
-   call r8,§rxfnsb.stem.get(),r12
+   settpcall r8,§rxfnsb.stem.get(),r12,r14,768
    swap r4,r13
    .traceevent "F" 4 "R" "S" "r" 8 19 19 0 "get" ""
    sconcat r14,"Numeric separator key mismatch:",r8
@@ -228,8 +217,7 @@ l103iffalse:
    load r13,2
    settp r4,256
    swap r14,r4
-   settp r15,768
-   call r12,§rxfnsb.stem.get(),r13
+   settpcall r12,§rxfnsb.stem.get(),r13,r15,768
    swap r4,r14
    .traceevent "F" 4 "R" "S" "r" 12 24 24 0 "get" ""
    rne r15,r12,"numeric-right"
@@ -248,8 +236,7 @@ l103iffalse:
    load r12,2
    settp r4,256
    swap r13,r4
-   settp r14,768
-   call r8,§rxfnsb.stem.get(),r12
+   settpcall r8,§rxfnsb.stem.get(),r12,r14,768
    swap r4,r13
    .traceevent "F" 4 "R" "S" "r" 8 23 23 0 "get" ""
    sconcat r14,"Numeric adjacent key mismatch:",r8
@@ -288,8 +275,7 @@ l123iffalse:
    settp r4,256
    swap r13,r4
    settp r14,768
-   settp r15,768
-   call r8,§rxfnsb.stem.set(),r12
+   settpcall r8,§rxfnsb.stem.set(),r12,r15,768
    swap r4,r13
    .traceevent "A" 6 "R" "S" "r" 15 29 29 0 "root" ""
    .srcstep 32 32 17 "repro_multi_tail_stems.crexx" 36 1 46 "if root.get(\"acme.2026.05.total\") \\= \"149.95\" then do"
@@ -300,8 +286,7 @@ l123iffalse:
    load r13,2
    settp r4,256
    swap r14,r4
-   settp r15,768
-   call r12,§rxfnsb.stem.get(),r13
+   settpcall r12,§rxfnsb.stem.get(),r13,r15,768
    swap r4,r14
    .traceevent "F" 4 "R" "S" "r" 12 32 32 0 "get" ""
    rne r15,r12,"149.95"
@@ -322,8 +307,7 @@ l123iffalse:
    load r12,2
    settp r4,256
    swap r13,r4
-   settp r14,768
-   call r7,§rxfnsb.stem.get(),r12
+   settpcall r7,§rxfnsb.stem.get(),r12,r14,768
    swap r4,r13
    .traceevent "F" 4 "R" "S" "r" 7 31 31 0 "get" ""
    sconcat r14,"Variable multi-tail key mismatch:",r7
@@ -337,8 +321,7 @@ l158iffalse:
    load r13,2
    settp r4,256
    swap r14,r4
-   settp r15,768
-   call r12,§rxfnsb.stem.get(),r13
+   settpcall r12,§rxfnsb.stem.get(),r13,r15,768
    swap r4,r14
    .traceevent "F" 4 "R" "S" "r" 12 36 36 0 "get" ""
    rne r15,r12,""
@@ -366,8 +349,7 @@ l173iffalse:
    settp r4,256
    swap r13,r4
    settp r14,768
-   settp r15,768
-   call r7,§rxfnsb.stem.set(),r12
+   settpcall r7,§rxfnsb.stem.set(),r12,r15,768
    swap r4,r13
    .traceevent "A" 6 "R" "S" "r" 15 38 38 0 "root" ""
    .srcstep 39 39 6 "repro_multi_tail_stems.crexx" 46 1 57 "root.address.usc.a = \"University of Southern California\""
@@ -383,8 +365,7 @@ l173iffalse:
    settp r4,256
    swap r13,r4
    settp r14,768
-   settp r15,768
-   call r6,§rxfnsb.stem.set(),r12
+   settpcall r6,§rxfnsb.stem.set(),r12,r15,768
    swap r4,r13
    .traceevent "A" 6 "R" "S" "r" 15 39 39 0 "root" ""
    .srcstep 42 42 17 "repro_multi_tail_stems.crexx" 47 1 45 "if root.get(\"address.us.ca\") \\= \"California\" then do"
@@ -394,8 +375,7 @@ l173iffalse:
    load r13,2
    settp r4,256
    swap r14,r4
-   settp r15,768
-   call r12,§rxfnsb.stem.get(),r13
+   settpcall r12,§rxfnsb.stem.get(),r13,r15,768
    swap r4,r14
    .traceevent "F" 4 "R" "S" "r" 12 42 42 0 "get" ""
    rne r15,r12,"California"
@@ -414,8 +394,7 @@ l173iffalse:
    load r12,2
    settp r4,256
    swap r13,r4
-   settp r14,768
-   call r5,§rxfnsb.stem.get(),r12
+   settpcall r5,§rxfnsb.stem.get(),r12,r14,768
    swap r4,r13
    .traceevent "F" 4 "R" "S" "r" 5 41 41 0 "get" ""
    sconcat r14,"Hierarchical key mismatch:",r5
@@ -429,8 +408,7 @@ l205iffalse:
    load r13,2
    settp r4,256
    swap r14,r4
-   settp r15,768
-   call r12,§rxfnsb.stem.get(),r13
+   settpcall r12,§rxfnsb.stem.get(),r13,r15,768
    swap r4,r14
    .traceevent "F" 4 "R" "S" "r" 12 46 46 0 "get" ""
    rne r15,r12,"University of Southern California"
@@ -449,8 +427,7 @@ l205iffalse:
    load r12,2
    settp r4,256
    swap r13,r4
-   settp r14,768
-   call r5,§rxfnsb.stem.get(),r12
+   settpcall r5,§rxfnsb.stem.get(),r12,r14,768
    swap r4,r13
    .traceevent "F" 4 "R" "S" "r" 5 45 45 0 "get" ""
    sconcat r14,"Hierarchical adjacent key mismatch:",r5
@@ -464,8 +441,7 @@ l225iffalse:
    load r13,2
    settp r4,256
    swap r14,r4
-   settp r15,768
-   call r12,§rxfnsb.stem.get(),r13
+   settpcall r12,§rxfnsb.stem.get(),r13,r15,768
    swap r4,r14
    .traceevent "F" 4 "R" "S" "r" 12 50 50 0 "get" ""
    rne r15,r12,""

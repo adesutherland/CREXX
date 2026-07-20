@@ -22,9 +22,8 @@ main() .locals=4
    icopy r3,r2
    br l45bexprend
 l45bexprend:
-   icopy r1,r3
-   .traceevent "A" 6 "R" "I" "r" 1 4 4 0 "values" ""
-   unlink r1
+   isetunlink r1,r3
+   .traceevent "A" 6 "R" "I" "r" 3 4 4 0 "values" ""
    .srcstep 5 5 17 "inline_test_complex_lhs_assign.crexx" 8 3 15 "  say values[2]"
    setattrs r0,3
    linkattr1 r3,r0,2

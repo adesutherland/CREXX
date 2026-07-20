@@ -26,8 +26,7 @@ l8dostart:
    .srcstep 5 5 17 "inline_test_say_expr.crexx" 6 5 20 "    say asString(i)"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
    load r3,1
-   swap r4,r0
-   call r5,asString(),r3
+   swapcall r5,asString(),r3,r0,r4
    swap r0,r4
    .traceevent "F" 4 "R" "S" "r" 5 5 5 0 "asstring" ""
    say r5

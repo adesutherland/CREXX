@@ -1,0 +1,207 @@
+*******************************************************************************
+* MODULE - /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_sieve-opt.rxas
+* DESCRIPTION - /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/awfy_sieve-opt.rxas
+
+* CONSTANT POOL - Size 0x3038.  Dump of EXPOSED entries only (option -p not used):
+
+
+* CODE SEGMENT - Size 0xdd
+
+.globals=0
+
+main()          .locals=16
+                .meta "awfy_sieve.main"="b" ".int" main() ""
+                numsci 18,1,1                                * 0x000000:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 1 1 17 "awfy_sieve.crexx" 8 5 19 "arg argv = .string[]"
+                .meta "awfy_sieve.main.argv"="b" ".string[*]" r0
+                brtpandt lb_d,a1 /* aka r17 */,512           * 0x000004:020c if op2 readable status flags & op3 true then goto op1
+                copy r0,a1 /* aka r17 */                     * 0x000008:0008 Copy op2 to op1
+                br lb_10                                     * 0x00000b:0024 Branch to op1
+lb_d:           swap r0,a1 /* aka r17 */                     * 0x00000d:01fe Swap op1 and op2
+                .srcstep 2 2 17 "awfy_sieve.crexx" 10 1 16 "repetitions = 1"
+                .meta "awfy_sieve.main.repetitions"="b" ".int" r1
+lb_10:          load r1,1                                    * 0x000010:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "repetitions" ""
+                .srcstep 4 4 17 "awfy_sieve.crexx" 11 1 16 "if argv[0] >= 1 then repetitions = argv[1]"
+                .traceevent "C" 4 "R" "V" "r" 3 4 4 0 "argv" ""
+                getattrs r4,r0,0                             * 0x000013:00d7 get number attributes op1 = op2.num_attributes + op3
+                .traceevent "V" 6 "R" "I" "r" 4 4 4 0 "argv" ""
+                igte r4,r4,1                                 * 0x000017:006c Int Greater than equals op1=(op2>=op3)
+                .traceevent "O" 4 "R" "B" "r" 4 4 4 0 "" ""
+                brf lb_22,r4                                 * 0x00001b:0026 Branch to op1 if op2 false
+                .srcstep 5 5 17 "awfy_sieve.crexx" 11 17 21 "if argv[0] >= 1 then repetitions = argv[1]"
+                .srcstep 3 3 17 "awfy_sieve.crexx" 11 22 42 "if argv[0] >= 1 then repetitions = argv[1]"
+                minstoiattr1 r1,r0,1                         * 0x00001e:01a4 Ensure and convert one-based string attribute op3 of op2 directly into integer op1
+                .traceevent "V" 6 "R" "I" "r" 1 3 3 0 "argv" ""
+                .traceevent "A" 6 "R" "I" "r" 1 3 3 0 "repetitions" ""
+                .srcstep 10 10 17 "awfy_sieve.crexx" 12 1 19 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .traceevent "V" 6 "R" "I" "r" 1 10 10 0 "repetitions" ""
+lb_22:          ilt r5,r1,1                                  * 0x000022:006f Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 5 10 10 0 "" ""
+                brf lb_35,r5                                 * 0x000026:0026 Branch to op1 if op2 false
+                .srcstep 11 11 17 "awfy_sieve.crexx" 12 20 24 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .srcstep 9 9 17 "awfy_sieve.crexx" 12 25 68 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .srcstep 8 8 17 "awfy_sieve.crexx" 12 32 36 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .srcstep 6 6 17 "awfy_sieve.crexx" 43 3 22 "  say \"FAIL:\" message"
+                say "FAIL: repetitions must be positive"     * 0x000029:01c7 Say op1
+                .srcstep 7 7 17 "awfy_sieve.crexx" 44 3 11 "  return 1"
+                load r4,1                                    * 0x00002b:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 4 9 9 0 "" ""
+                icopy r3,r4                                  * 0x00002e:0009 Copy Integer op2 to op1
+                br lb_33                                     * 0x000031:0024 Branch to op1
+lb_33:          ret r3                                       * 0x000033:0031 Return op1
+                .srcstep 12 12 17 "awfy_sieve.crexx" 14 1 11 "result = 0"
+                .meta "awfy_sieve.main.result"="b" ".int" r2
+lb_35:          load r2,0                                    * 0x000035:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 2 12 12 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 2 12 12 0 "result" ""
+                .srcstep 47 47 17 "awfy_sieve.crexx" 15 1 3 "do iteration = 1 to repetitions"
+                .srcstep 13 13 17 "awfy_sieve.crexx" 15 4 17 "do iteration = 1 to repetitions"
+                .meta "awfy_sieve.main.iteration"="b" ".int" r5
+                load r5,1                                    * 0x000038:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 5 13 13 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 5 13 13 0 "iteration" ""
+                .srcstep 14 14 17 "awfy_sieve.crexx" 15 18 32 "do iteration = 1 to repetitions"
+                .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "repetitions" ""
+                .srcstep 14 14 17 "awfy_sieve.crexx" 15 18 32 "do iteration = 1 to repetitions"
+lb_3b:          igt r4,r5,r1                                 * 0x00003b:0068 Int Greater than op1=(op2>op3)
+                brt lb_cc,r4                                 * 0x00003f:0025 Branch to op1 if op2 true
+                .srcstep 39 39 17 "awfy_sieve.crexx" 16 3 22 "  result = sieve_once()"
+                .meta "awfy_sieve.main.flags"="b" ".int[5000]" r6
+                .srcstep 16 16 17 "awfy_sieve.crexx" 25 3 20 "  flags = .int[5000]"
+                null r6                                      * 0x000042:000e Null (clear) op1
+                .srcstep 21 21 17 "awfy_sieve.crexx" 26 3 5 "  do i = 1 to 5000"
+                .srcstep 17 17 17 "awfy_sieve.crexx" 26 6 11 "  do i = 1 to 5000"
+                load r3,1                                    * 0x000044:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 3 17 17 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 3 17 17 0 "i" ""
+                .srcstep 18 18 17 "awfy_sieve.crexx" 26 12 19 "  do i = 1 to 5000"
+                load r8,5000                                 * 0x000047:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 8 0 0 0 "" ""
+                .srcstep 18 18 17 "awfy_sieve.crexx" 26 12 19 "  do i = 1 to 5000"
+lb_4a:          igt r9,r3,r8                                 * 0x00004a:0068 Int Greater than op1=(op2>op3)
+                brt lb_5f,r9                                 * 0x00004e:0025 Branch to op1 if op2 true
+                .srcstep 20 20 17 "awfy_sieve.crexx" 27 5 17 "    flags[i] = 1"
+                .traceevent "V" 6 "R" "I" "r" 3 20 20 0 "i" ""
+                .traceevent "C" 4 "R" "I" "r" 3 20 20 0 "flags" ""
+                setlinkattr1 r10,r6,5000,r3                  * 0x000051:0123 Set op2 attribute count to op3 then link one-based register attribute op4 to op1
+                load r11,1                                   * 0x000056:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 11 20 20 0 "" ""
+                isetunlink r10,r11                           * 0x000059:011c Copy integer op2 through alias op1 then unlink op1
+                .traceevent "A" 6 "R" "I" "r" 10 20 20 0 "1" ""
+                .srcstep 19 19 17 "awfy_sieve.crexx" 26 6 7 "  do i = 1 to 5000"
+                .srcstep 22 22 17 "awfy_sieve.crexx" 28 3 6 "  end"
+                bctp lb_4a,r3                                * 0x00005c:015d inc op2; goto op1
+                .srcstep 23 23 17 "awfy_sieve.crexx" 30 3 18 "  prime_count = 0"
+lb_5f:          load r7,0                                    * 0x00005f:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 7 23 23 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 7 23 23 0 "prime_count" ""
+                .srcstep 36 36 17 "awfy_sieve.crexx" 31 3 5 "  do i = 2 to 5000"
+                .srcstep 24 24 17 "awfy_sieve.crexx" 31 6 11 "  do i = 2 to 5000"
+                load r11,2                                   * 0x000062:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 11 24 24 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 11 24 24 0 "i" ""
+                .srcstep 25 25 17 "awfy_sieve.crexx" 31 12 19 "  do i = 2 to 5000"
+                load r10,5000                                * 0x000065:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 10 0 0 0 "" ""
+                .srcstep 25 25 17 "awfy_sieve.crexx" 31 12 19 "  do i = 2 to 5000"
+lb_68:          igt r9,r11,r10                               * 0x000068:0068 Int Greater than op1=(op2>op3)
+                brt lb_ab,r9                                 * 0x00006c:0025 Branch to op1 if op2 true
+                .srcstep 34 34 17 "awfy_sieve.crexx" 32 5 15 "    if flags[i] then do"
+                .traceevent "V" 6 "R" "I" "r" 11 34 34 0 "i" ""
+                .traceevent "C" 4 "R" "I" "r" 11 34 34 0 "flags" ""
+                setlinkattr1 r8,r6,5000,r11                  * 0x00006f:0123 Set op2 attribute count to op3 then link one-based register attribute op4 to op1
+                .traceevent "V" 6 "R" "B" "r" 8 34 34 0 "flags" ""
+                brf lb_a6,r8                                 * 0x000074:0026 Branch to op1 if op2 false
+                .srcstep 35 35 17 "awfy_sieve.crexx" 32 15 16 "    if flags[i] then do"
+                .srcstep 27 27 17 "awfy_sieve.crexx" 33 7 36 "      prime_count = prime_count + 1"
+                .traceevent "V" 6 "R" "I" "r" 7 27 27 0 "prime_count" ""
+                iadd r7,r7,1                                 * 0x000077:0010 Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 7 27 27 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 7 27 27 0 "prime_count" ""
+                .srcstep 32 32 17 "awfy_sieve.crexx" 34 7 9 "      do k = i + i to 5000 by i"
+                .srcstep 28 28 17 "awfy_sieve.crexx" 34 10 19 "      do k = i + i to 5000 by i"
+                .traceevent "V" 6 "R" "I" "r" 11 28 28 0 "i" ""
+                .traceevent "V" 6 "R" "I" "r" 11 28 28 0 "i" ""
+                iadd r3,r11,r11                              * 0x00007b:000f Integer Add (op1=op2+op3)
+                .traceevent "O" 4 "R" "I" "r" 3 28 28 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 3 28 28 0 "k" ""
+                .srcstep 29 29 17 "awfy_sieve.crexx" 34 20 27 "      do k = i + i to 5000 by i"
+                load r12,5000                                * 0x00007f:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 12 0 0 0 "" ""
+                .srcstep 30 30 17 "awfy_sieve.crexx" 34 28 32 "      do k = i + i to 5000 by i"
+                .traceevent "V" 6 "R" "I" "r" 11 0 0 0 "i" ""
+                .srcstep 29 29 17 "awfy_sieve.crexx" 34 20 27 "      do k = i + i to 5000 by i"
+lb_82:          blt lb_8e,r11,0                              * 0x000082:0165 if op2<op3 then goto op1
+                igt r13,r3,r12                               * 0x000086:0068 Int Greater than op1=(op2>op3)
+                brtf lb_a6,lb_95,r13                         * 0x00008a:0027 Branch to op1 if op3 true, otherwise branch to op2
+lb_8e:          ilt r13,r3,r12                               * 0x00008e:006e Int Less than op1=(op2<op3)
+                brt lb_a6,r13                                * 0x000092:0025 Branch to op1 if op2 true
+                .srcstep 31 31 17 "awfy_sieve.crexx" 35 9 21 "        flags[k] = 0"
+                .traceevent "V" 6 "R" "I" "r" 3 31 31 0 "k" ""
+                .traceevent "C" 4 "R" "I" "r" 3 31 31 0 "flags" ""
+lb_95:          setlinkattr1 r14,r6,5000,r3                  * 0x000095:0123 Set op2 attribute count to op3 then link one-based register attribute op4 to op1
+                load r15,0                                   * 0x00009a:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 15 31 31 0 "" ""
+                isetunlink r14,r15                           * 0x00009d:011c Copy integer op2 through alias op1 then unlink op1
+                .traceevent "A" 6 "R" "I" "r" 14 31 31 0 "0" ""
+                .srcstep 30 30 17 "awfy_sieve.crexx" 34 28 32 "      do k = i + i to 5000 by i"
+                iadd r3,r11,r3                               * 0x0000a0:000f Integer Add (op1=op2+op3)
+                .srcstep 33 33 17 "awfy_sieve.crexx" 36 7 10 "      end"
+                br lb_82                                     * 0x0000a4:0024 Branch to op1
+lb_a6:          unlink r8                                    * 0x0000a6:00d5 Unlink op1
+                .srcstep 26 26 17 "awfy_sieve.crexx" 31 6 7 "  do i = 2 to 5000"
+                .srcstep 37 37 17 "awfy_sieve.crexx" 36 7 10 "      end"
+                bctp lb_68,r11                               * 0x0000a8:015d inc op2; goto op1
+                .srcstep 38 38 33 "awfy_sieve.crexx" 39 3 9 "  return prime_count"
+                .traceevent "V" 6 "R" "I" "r" 7 38 38 0 "prime_count" ""
+lb_ab:          copy r2,r7                                   * 0x0000ab:0008 Copy op2 to op1
+                .traceevent "A" 6 "R" "I" "r" 2 38 38 0 "result" ""
+                .srcstep 45 45 17 "awfy_sieve.crexx" 17 3 19 "  if result <> 669 then return fail(\"expected 669 primes, got \" || result)"
+                .traceevent "V" 6 "R" "I" "r" 2 45 45 0 "result" ""
+                ine r15,r2,669                               * 0x0000ae:0067 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 15 45 45 0 "" ""
+                brf lb_c9,r15                                * 0x0000b2:0026 Branch to op1 if op2 false
+                .srcstep 46 46 17 "awfy_sieve.crexx" 17 20 24 "  if result <> 669 then return fail(\"expected 669 primes, got \" || result)"
+                .srcstep 44 44 17 "awfy_sieve.crexx" 17 25 75 "  if result <> 669 then return fail(\"expected 669 primes, got \" || result)"
+                .srcstep 43 43 17 "awfy_sieve.crexx" 17 32 36 "  if result <> 669 then return fail(\"expected 669 primes, got \" || result)"
+                .srcstep 40 40 33 "awfy_sieve.crexx" 42 7 14 "  arg message = .string"
+                itosconcat r14,"expected 669 primes, got ",r2 * 0x0000b5:0191 Convert integer op3 in place and concatenate it after constant op2 into op1
+                .traceevent "V" 6 "R" "S" "r" 2 40 40 0 "result" ""
+                .traceevent "O" 4 "R" "S" "r" 14 40 40 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 14 40 40 0 "message" ""
+                .srcstep 41 41 17 "awfy_sieve.crexx" 43 3 22 "  say \"FAIL:\" message"
+                .traceevent "V" 6 "R" "S" "r" 14 41 41 0 "message" ""
+                sconcat r13,"FAIL:",r14                      * 0x0000b9:008b String Concat with space (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 13 41 41 0 "" ""
+                say r13                                      * 0x0000bd:01c2 Say op1
+                .srcstep 42 42 17 "awfy_sieve.crexx" 44 3 11 "  return 1"
+                load r13,1                                   * 0x0000bf:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 13 44 44 0 "" ""
+                icopy r12,r13                                * 0x0000c2:0009 Copy Integer op2 to op1
+                br lb_c7                                     * 0x0000c5:0024 Branch to op1
+lb_c7:          ret r12                                      * 0x0000c7:0031 Return op1
+                .srcstep 15 15 17 "awfy_sieve.crexx" 15 4 13 "do iteration = 1 to repetitions"
+                .srcstep 48 48 17 "awfy_sieve.crexx" 18 1 4 "end"
+lb_c9:          bctp lb_3b,r5                                * 0x0000c9:015d inc op2; goto op1
+                .meta "awfy_sieve.main.iteration"
+                .srcstep 49 49 17 "awfy_sieve.crexx" 20 1 67 "say \"benchmark=awfy_sieve repetitions=\"repetitions \"result=\"result"
+lb_cc:          itosconcat r15,"benchmark=awfy_sieve repetitions=",r1 * 0x0000cc:0191 Convert integer op3 in place and concatenate it after constant op2 into op1
+                .traceevent "V" 6 "R" "S" "r" 1 49 49 0 "repetitions" ""
+                .traceevent "O" 4 "R" "S" "r" 15 49 49 0 "" ""
+                sconcatitos r15,"result=",r2                 * 0x0000d0:0192 Space-concatenate op2 onto op1 then convert integer op3 to string
+                .traceevent "O" 4 "R" "S" "r" 15 49 49 0 "" ""
+                .traceevent "V" 6 "R" "S" "r" 2 49 49 0 "result" ""
+                append r15,r2                                * 0x0000d4:008f String Append (op1=op1||op2)
+                .traceevent "O" 4 "R" "S" "r" 15 49 49 0 "" ""
+                say r15                                      * 0x0000d7:01c2 Say op1
+                .srcstep 50 50 17 "awfy_sieve.crexx" 21 1 23 "say \"PASS: AWFY Sieve\""
+                say "PASS: AWFY Sieve"                       * 0x0000d9:01c7 Say op1
+                .srcstep 51 51 17 "awfy_sieve.crexx" 22 1 9 "return 0"
+                ret 0                                        * 0x0000db:0032 Return op1
+                .meta "awfy_sieve.main.argv"
+                .meta "awfy_sieve.main.repetitions"
+                .meta "awfy_sieve.main.result"
+*******************************************************************************
+

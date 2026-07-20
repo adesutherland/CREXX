@@ -36,9 +36,7 @@ main() .locals=9
 l73bexprend:
    endlife r2
    load r0,1
-   settp r4,768
-   swap r1,r4
-   call r2,describeBox(),r0
+   settpswapcall r2,describeBox(),r0,r4,768,r1
    swap r4,r1
    .traceevent "F" 4 "R" "S" "r" 2 9 9 0 "describebox" ""
    say r2
@@ -66,9 +64,7 @@ l73bexprend:
 l86bexprend:
    endlife r4
    load r6,1
-   settp r2,768
-   swap r7,r2
-   call r4,describeBox(),r6
+   settpswapcall r4,describeBox(),r6,r2,768,r7
    swap r2,r7
    .traceevent "F" 4 "R" "S" "r" 4 17 17 0 "describebox" ""
    say r4
@@ -93,8 +89,7 @@ describeBox() .locals=4
    linkattr1 r2,r1,1
    .traceevent "V" 6 "R" "S" "r" 2 33 33 0 "name" ""
    scopy r3,r2
-   unlink r2
-   br l115bexprend
+   unlinkbr r2,l115bexprend
 l115bexprend:
    ret r3
    .meta "inline_test_object_return_expr.describebox.value"
