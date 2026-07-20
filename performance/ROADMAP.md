@@ -840,7 +840,7 @@ coverage gaps are in
 | ID | Activity | Status | Current note / boundary |
 | --- | --- | --- | --- |
 | NR-12 | Extend read-only by-value and return copy coalescing | deferred | RXAS inspection is complete: never-written real formals already alias `aN`; unconditional overwrite exposes DSE, but conditional/loop isolation needs the forthcoming flow analysis. No implementation is selected; see `NR-12-21-WORKLIST.md`. |
-| NR-13 | Redundant numeric-context setup elimination | queued | Existing `NUMSCI`/`NUMENG` lowering completed under NR-09; future work may compare a full synthesized context operation and procedure-owned frame-entry default. Effective inherited context must remain identical. |
+| NR-13 | Redundant numeric-context setup elimination | complete | Accepted NR-09 Rule 1 satisfies the NR-13 exit criterion: the compiler uses existing `NUMSCI`/`NUMENG` only for an identical fully constant non-inherited effective context, focused cross-procedure/plugin coverage passes in both modes and VMs, and dynamic setup fell from 542,500 to 108,508 per VM. General full-context and procedure-owned-default experiments remain optional NR-23/NR-24 work, not unfinished NR-13 scope. |
 | NR-14 | Static/frozen `PARSE` lowering fast path | queued | General supported templates only; retain `parseExec` fallback. |
 | NR-15 | General stem default/reset fast path | queued | Preserve generation/default/drop/tail semantics. |
 | NR-16 | TRACE-off and same-ADDRESS-environment fast paths | queued | Preserve hooks, signals, mode changes and host callbacks. |
@@ -918,8 +918,8 @@ than one `NR-*` activity and does not alter their priority by itself.
 
 ### IDEA-NR09-NUMCTX-01 — Procedure-entry numeric-context synthesis
 
-- Status: existing `NUMSCI`/`NUMENG` lowering completed in NR-09; wider
-  variants remain queued under NR-13, NR-23 and NR-24
+- Status: NR-13 complete through accepted existing `NUMSCI`/`NUMENG` lowering;
+  wider variants remain optional architecture work under NR-23 and NR-24
 - Related activities: NR-09, NR-13, NR-23, NR-24
 - Hypothesis: repeated procedure-entry numeric setup should be performed once
   as a semantic unit, or installed as the procedure's frame-entry default,
@@ -937,13 +937,20 @@ than one `NR-*` activity and does not alter their priority by itself.
 - Semantic risks: explicit `INHERITED`, invalid-value signal ordering, decimal
   plugin ownership/synchronization, recycled frames, inline compatibility,
   source-step/TRACE coordinates, late loading and both VM modes.
-- Evidence needed: exact prologue/dynamic setter counts across the post-NR-08
-  portfolio; focused inherited/explicit/fuzz/form/case/standard/plugin tests;
-  dispatch, code-size and startup comparisons; then an ordinary profiling-off
-  Release verdict for each production candidate.
-- Decision gate: existing `NUMSCI`/`NUMENG` is the first no-new-ISA candidate.
-  A canonical opcode, RXBIN metadata contract or frame-activation architecture
-  is implemented only after Adrian selects it from comparative evidence.
+- NR-13 evidence: accepted Rule 1 proves identical-effective-context
+  eligibility, inherited/nonzero-fuzz/small-digits fallback, cross-procedure
+  behavior, both optimization modes, both VMs, all three decimal-plugin modes,
+  and an exact dynamic setup reduction from 542,500 to 108,508 per VM. Its
+  broad closeout passed 1,852/1,852; the current post-NR-21 suite passes
+  1,871/1,871.
+- Remaining decision gate: a canonical full-context opcode, RXBIN metadata
+  contract, procedure-owned frame default or private-runtime synthesis is a
+  separate NR-23/NR-24 architecture choice. It requires comparative evidence
+  and Adrian's selection but does not keep NR-13 open.
+- 2026-07-20 closure review: the historical NR-13 exit criterion requires
+  identical effective context, cross-procedure numeric tests and dynamic-count
+  reduction. Accepted NR-09 Rule 1 supplies all three, so Adrian's requested
+  review marks NR-13 complete without another implementation or timing run.
 
 ### IDEA-META-01 — Link-produced runtime-critical metadata table
 
