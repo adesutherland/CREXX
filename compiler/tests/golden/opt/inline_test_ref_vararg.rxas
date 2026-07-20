@@ -58,8 +58,7 @@ l137bexprend:
    .srcstep 15 15 17 "inline_test_ref_vararg.crexx" 12 7 19 "  say mutateSecond(first, second, third)"
    .srcstep 14 14 17 "inline_test_ref_vararg.crexx" 41 3 23 "  return bumpOne(arg[2])"
    .traceevent "V" 6 "R" "I" "r" 1 16 16 0 "second" ""
-   load r0,1
-   call r2,bumpOne(),r0
+   call1 r2,bumpOne(),r1
    .traceevent "F" 4 "R" "I" "r" 2 16 16 0 "bumpone" ""
    icopy r0,r2
    br l141bexprend

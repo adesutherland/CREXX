@@ -16,8 +16,7 @@ main() .locals=5
    .srcstep 5 5 17 "inline_test_named_factory_selector.crexx" 4 1 23 "main: procedure = .int"
    numsci 18,1,1
    .srcstep 1 1 17 "inline_test_named_factory_selector.crexx" 5 3 29 "  say directNamed().describe()"
-   load r2,0
-   call r1,directNamed(),r2
+   call r1,directNamed()
    .traceevent "F" 4 "R" "O" "r" 1 1 1 0 "directnamed" ""
    load r0,1
    settp r1,256
@@ -28,8 +27,8 @@ main() .locals=5
    .srcstep 2 2 17 "inline_test_named_factory_selector.crexx" 6 3 37 "  say assignedNamed(\"beta\").describe()"
    load r4,"beta"
    .traceevent "L" 4 "R" "S" "r" 4 2 2 0 "" ""
-   load r3,1
-   settpcall r2,assignedNamed(),r3,r4,768
+   settp r4,768
+   call1 r2,assignedNamed(),r4
    .traceevent "F" 4 "R" "O" "r" 2 2 2 0 "assignednamed" ""
    load r1,1
    settp r2,256
@@ -40,8 +39,8 @@ main() .locals=5
    .srcstep 3 3 17 "inline_test_named_factory_selector.crexx" 7 3 30 "  say describedNamed(\"gamma\")"
    load r4,"gamma"
    .traceevent "L" 4 "R" "S" "r" 4 3 3 0 "" ""
-   load r3,1
-   settpcall r2,describedNamed(),r3,r4,768
+   settp r4,768
+   call1 r2,describedNamed(),r4
    .traceevent "F" 4 "R" "S" "r" 2 3 3 0 "describednamed" ""
    say r2
    .srcstep 4 4 17 "inline_test_named_factory_selector.crexx" 8 3 11 "  return 0"

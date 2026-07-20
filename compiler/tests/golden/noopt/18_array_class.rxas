@@ -39,9 +39,8 @@ main() .locals=5
    say "Calling process"
    .srcstep 10 10 17 "18_array_class_main.crexx" 13 1 17 "say process(ary)"
    .traceevent "V" 6 "R" "O" "r" 0 10 10 0 "ary" ""
-   load r2,1
-   settpswapcall r4,process(),r2,r0,256,r3
-   swap r0,r3
+   settp r0,256
+   call1 r4,process(),r0
    .traceevent "F" 4 "R" "S" "r" 4 10 10 0 "process" ""
    say r4
    .srcstep 11 11 17 "18_array_class_main.crexx" 14 1 11 "say \"Done\""

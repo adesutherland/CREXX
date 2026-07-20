@@ -488,11 +488,9 @@ l991bexprend:
    .traceevent "V" 6 "R" "O" "r" 26 88 88 0 "child" ""
    load r32,"mutated:child"
    .traceevent "L" 4 "R" "S" "r" 32 88 88 0 "" ""
-   load r30,2
    settp r26,256
-   swap r31,r26
-   settpcall r17,§object_reference_regression.smallpayload.setname(),r30,r32,768
-   swap r26,r31
+   settp r32,768
+   call2 r17,§object_reference_regression.smallpayload.setname(),r26,r32
    unlink r26
    .traceevent "F" 4 "R" "V" "r" 17 88 88 0 "setname" ""
    .srcstep 89 89 17 "object_reference_regression.crexx" 92 5 29 "    marker8 = label || \":m8\""
@@ -1043,11 +1041,9 @@ l191doend:
    .traceevent "V" 6 "R" "S" "a" 2 271 271 0 "label" ""
    concat r5,a2,":child"
    .traceevent "O" 4 "R" "S" "r" 5 271 271 0 "" ""
-   load r3,2
    settp r6,256
-   swap r4,r6
-   settpcall r7,§object_reference_regression.smallpayload.setname(),r3,r5,768
-   swap r6,r4
+   settp r5,768
+   call2 r7,§object_reference_regression.smallpayload.setname(),r6,r5
    unlink r6
    .traceevent "F" 4 "R" "V" "r" 7 271 271 0 "setname" ""
    .srcstep 272 272 17 "object_reference_regression.crexx" 92 5 29 "    marker8 = label || \":m8\""

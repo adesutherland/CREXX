@@ -37,10 +37,9 @@ main() .locals=6
    iadd r3,r3,1
    .traceevent "O" 4 "R" "I" "r" 3 5 5 0 "" ""
    .traceevent "C" 4 "R" "I" "r" 3 5 5 0 "values" ""
-   setlinkiload r4,r0,3,r3,r1,1
+   setlinkattr1 r4,r0,3,r3
    .traceevent "V" 6 "R" "I" "r" 4 5 5 0 "values" ""
-   swapcall r5,bump(),r1,r4,r2
-   swap r4,r2
+   call1 r5,bump(),r4
    unlink r4
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 5 5 0 "bump" ""

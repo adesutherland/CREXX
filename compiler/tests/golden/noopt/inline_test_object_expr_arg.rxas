@@ -11,11 +11,10 @@ main() .locals=3
    .srcstep 3 3 17 "inline_test_object_expr_arg.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
    .srcstep 1 1 17 "inline_test_object_expr_arg.crexx" 4 3 24 "  say renameBox(makeBox())"
-   load r2,0
-   call r1,makeBox(),r2
+   call r1,makeBox()
    .traceevent "F" 4 "R" "O" "r" 1 1 1 0 "makebox" ""
-   load r0,1
-   settpcall r2,renameBox(),r0,r1,256
+   settp r1,256
+   call1 r2,renameBox(),r1
    .traceevent "F" 4 "R" "S" "r" 2 1 1 0 "renamebox" ""
    say r2
    .srcstep 2 2 17 "inline_test_object_expr_arg.crexx" 5 3 11 "  return 0"
@@ -31,17 +30,14 @@ renameBox() .locals=5
    .traceevent "V" 6 "R" "O" "a" 1 5 5 0 "box" ""
    load r3,"changed"
    .traceevent "L" 4 "R" "S" "r" 3 5 5 0 "" ""
-   load r1,2
    settp a1,256
-   swap r2,a1
-   settpcall r4,§inline_test_object_expr_arg.box.setname(),r1,r3,768
-   swap a1,r2
+   settp r3,768
+   call2 r4,§inline_test_object_expr_arg.box.setname(),a1,r3
    .traceevent "F" 4 "R" "V" "r" 4 5 5 0 "setname" ""
    .srcstep 6 6 17 "inline_test_object_expr_arg.crexx" 10 3 21 "  return box.getName()"
    .traceevent "V" 6 "R" "O" "a" 1 6 6 0 "box" ""
-   load r2,1
-   settpswapcall r1,§inline_test_object_expr_arg.box.getname(),r2,a1,256,r3
-   swap a1,r3
+   settp a1,256
+   call1 r1,§inline_test_object_expr_arg.box.getname(),a1
    .traceevent "F" 4 "R" "S" "r" 1 6 6 0 "getname" ""
    ret r1
    .meta "inline_test_object_expr_arg.renamebox.box"
@@ -54,8 +50,8 @@ makeBox() .locals=3
    .meta "inline_test_object_expr_arg.makebox.box"="b" ".box" r0
    load r2,"seed"
    .traceevent "L" 4 "R" "S" "r" 2 8 8 0 "" ""
-   load r1,1
-   settpcall r0,§inline_test_object_expr_arg.box.§factory(),r1,r2,768
+   settp r2,768
+   call1 r0,§inline_test_object_expr_arg.box.§factory(),r2
    .traceevent "F" 4 "R" "O" "r" 0 8 8 0 "§factory" ""
    .traceevent "A" 6 "R" "O" "r" 0 8 8 0 "box" ""
    .srcstep 9 9 17 "inline_test_object_expr_arg.crexx" 14 3 13 "  return box"

@@ -26,24 +26,22 @@ main() .locals=7
    .meta "object_reference_regression.main.payload"="b" ".largepayload" r1
    load r3,"seed"
    .traceevent "L" 4 "R" "S" "r" 3 1 1 0 "" ""
-   load r2,1
-   settpcall r1,§object_reference_regression.largepayload.§factory(),r2,r3,768
+   settp r3,768
+   call1 r1,§object_reference_regression.largepayload.§factory(),r3
    .traceevent "F" 4 "R" "O" "r" 1 1 1 0 "§factory" ""
    .traceevent "A" 6 "R" "O" "r" 1 1 1 0 "payload" ""
    .srcstep 2 2 17 "object_reference_regression.crexx" 6 3 44 "  say \"factory-summary=\" || payload.summary()"
    .traceevent "V" 6 "R" "O" "r" 1 2 2 0 "payload" ""
-   load r2,1
-   settpswapcall r4,§object_reference_regression.largepayload.summary(),r2,r1,256,r3
-   swap r1,r3
+   settp r1,256
+   call1 r4,§object_reference_regression.largepayload.summary(),r1
    .traceevent "F" 4 "R" "S" "r" 4 2 2 0 "summary" ""
    concat r4,"factory-summary=",r4
    .traceevent "O" 4 "R" "S" "r" 4 2 2 0 "" ""
    say r4
    .srcstep 3 3 17 "object_reference_regression.crexx" 7 3 40 "  say \"factory-check=\" || payload.check()"
    .traceevent "V" 6 "R" "O" "r" 1 3 3 0 "payload" ""
-   load r3,1
-   settpswapcall r2,§object_reference_regression.largepayload.check(),r3,r1,256,r4
-   swap r1,r4
+   settp r1,256
+   call1 r2,§object_reference_regression.largepayload.check(),r1
    .traceevent "F" 4 "R" "S" "r" 2 3 3 0 "check" ""
    concat r4,"factory-check=",r2
    .traceevent "O" 4 "R" "S" "r" 4 3 3 0 "" ""
@@ -52,16 +50,13 @@ main() .locals=7
    .traceevent "V" 6 "R" "O" "r" 1 4 4 0 "payload" ""
    load r4,"rebound"
    .traceevent "L" 4 "R" "S" "r" 4 4 4 0 "" ""
-   load r2,2
-   swap r3,r1
-   settpcall r5,replacePayloadRef(),r2,r4,768
-   swap r1,r3
+   settp r4,768
+   call2 r5,replacePayloadRef(),r1,r4
    .traceevent "F" 4 "R" "V" "r" 5 4 4 0 "replacepayloadref" ""
    .srcstep 5 5 17 "object_reference_regression.crexx" 10 3 39 "  say \"ref-rebind=\" || payload.summary()"
    .traceevent "V" 6 "R" "O" "r" 1 5 5 0 "payload" ""
-   load r3,1
-   settpswapcall r2,§object_reference_regression.largepayload.summary(),r3,r1,256,r4
-   swap r1,r4
+   settp r1,256
+   call1 r2,§object_reference_regression.largepayload.summary(),r1
    .traceevent "F" 4 "R" "S" "r" 2 5 5 0 "summary" ""
    concat r4,"ref-rebind=",r2
    .traceevent "O" 4 "R" "S" "r" 4 5 5 0 "" ""
@@ -70,16 +65,13 @@ main() .locals=7
    .traceevent "V" 6 "R" "O" "r" 1 6 6 0 "payload" ""
    load r4,"mutated"
    .traceevent "L" 4 "R" "S" "r" 4 6 6 0 "" ""
-   load r2,2
-   swap r3,r1
-   settpcall r6,mutatePayloadRef(),r2,r4,768
-   swap r1,r3
+   settp r4,768
+   call2 r6,mutatePayloadRef(),r1,r4
    .traceevent "F" 4 "R" "V" "r" 6 6 6 0 "mutatepayloadref" ""
    .srcstep 7 7 17 "object_reference_regression.crexx" 13 3 39 "  say \"ref-mutate=\" || payload.summary()"
    .traceevent "V" 6 "R" "O" "r" 1 7 7 0 "payload" ""
-   load r3,1
-   settpswapcall r2,§object_reference_regression.largepayload.summary(),r3,r1,256,r4
-   swap r1,r4
+   settp r1,256
+   call1 r2,§object_reference_regression.largepayload.summary(),r1
    .traceevent "F" 4 "R" "S" "r" 2 7 7 0 "summary" ""
    concat r4,"ref-mutate=",r2
    .traceevent "O" 4 "R" "S" "r" 4 7 7 0 "" ""
@@ -89,11 +81,9 @@ main() .locals=7
    .traceevent "V" 6 "R" "O" "r" 1 8 8 0 "payload" ""
    load r4,"local"
    .traceevent "L" 4 "R" "S" "r" 4 8 8 0 "" ""
-   load r2,2
    settp r1,256
-   swap r3,r1
-   settpcall r0,replacePayloadLocal(),r2,r4,768
-   swap r1,r3
+   settp r4,768
+   call2 r0,replacePayloadLocal(),r1,r4
    .traceevent "F" 4 "R" "S" "r" 0 8 8 0 "replacepayloadlocal" ""
    .traceevent "A" 6 "R" "S" "r" 0 8 8 0 "local_summary" ""
    .srcstep 9 9 17 "object_reference_regression.crexx" 16 3 40 "  say \"local-replace=\" || local_summary"
@@ -103,9 +93,8 @@ main() .locals=7
    say r4
    .srcstep 10 10 17 "object_reference_regression.crexx" 17 3 40 "  say \"local-after=\" || payload.summary()"
    .traceevent "V" 6 "R" "O" "r" 1 10 10 0 "payload" ""
-   load r3,1
-   settpswapcall r2,§object_reference_regression.largepayload.summary(),r3,r1,256,r4
-   swap r1,r4
+   settp r1,256
+   call1 r2,§object_reference_regression.largepayload.summary(),r1
    .traceevent "F" 4 "R" "S" "r" 2 10 10 0 "summary" ""
    concat r4,"local-after=",r2
    .traceevent "O" 4 "R" "S" "r" 4 10 10 0 "" ""
@@ -125,9 +114,8 @@ replacePayloadRef() .locals=4
    .meta "object_reference_regression.replacepayloadref.label"="b" ".string" a2
    .srcstep 15 15 17 "object_reference_regression.crexx" 23 3 30 "  item = .LargePayload(label)"
    .traceevent "V" 6 "R" "S" "a" 2 15 15 0 "label" ""
-   load r2,1
-   settpswapcall a1,§object_reference_regression.largepayload.§factory(),r2,a2,256,r3
-   swap a2,r3
+   settp a2,256
+   call1 a1,§object_reference_regression.largepayload.§factory(),a2
    .traceevent "F" 4 "R" "O" "a" 1 15 15 0 "§factory" ""
    .traceevent "A" 6 "R" "O" "a" 1 15 15 0 "item" ""
    .srcstep 16 16 17 "object_reference_regression.crexx" 24 3 9 "  return"
@@ -146,12 +134,9 @@ mutatePayloadRef() .locals=6
    .srcstep 20 20 17 "object_reference_regression.crexx" 28 3 26 "  call item.rename(label)"
    .traceevent "V" 6 "R" "O" "a" 1 20 20 0 "item" ""
    .traceevent "V" 6 "R" "S" "a" 2 20 20 0 "label" ""
-   load r2,2
    settp a1,256
-   swap r3,a1
-   settpswapcall r5,§object_reference_regression.largepayload.rename(),r2,a2,256,r4
-   swap a1,r3
-   swap a2,r4
+   settp a2,256
+   call2 r5,§object_reference_regression.largepayload.rename(),a1,a2
    .traceevent "F" 4 "R" "V" "r" 5 20 20 0 "rename" ""
    .srcstep 21 21 17 "object_reference_regression.crexx" 29 3 9 "  return"
    ret
@@ -174,16 +159,14 @@ l95d:
    .meta "object_reference_regression.replacepayloadlocal.label"="b" ".string" a2
    .srcstep 25 25 17 "object_reference_regression.crexx" 33 3 30 "  item = .LargePayload(label)"
    .traceevent "V" 6 "R" "S" "a" 2 25 25 0 "label" ""
-   load r2,1
-   settpswapcall r0,§object_reference_regression.largepayload.§factory(),r2,a2,256,r3
-   swap a2,r3
+   settp a2,256
+   call1 r0,§object_reference_regression.largepayload.§factory(),a2
    .traceevent "F" 4 "R" "O" "r" 0 25 25 0 "§factory" ""
    .traceevent "A" 6 "R" "O" "r" 0 25 25 0 "item" ""
    .srcstep 26 26 17 "object_reference_regression.crexx" 34 3 22 "  return item.summary()"
    .traceevent "V" 6 "R" "O" "r" 0 26 26 0 "item" ""
-   load r2,1
-   settpswapcall r4,§object_reference_regression.largepayload.summary(),r2,r0,256,r3
-   swap r0,r3
+   settp r0,256
+   call1 r4,§object_reference_regression.largepayload.summary(),r0
    .traceevent "F" 4 "R" "S" "r" 4 26 26 0 "summary" ""
    ret r4
    .meta "object_reference_regression.replacepayloadlocal.item"
@@ -299,8 +282,8 @@ l191doend:
    .traceevent "V" 6 "R" "S" "a" 1 48 48 0 "label" ""
    concat r6,a1,":child"
    .traceevent "O" 4 "R" "S" "r" 6 48 48 0 "" ""
-   load r5,1
-   settpcall r4,§object_reference_regression.smallpayload.§factory(),r5,r6,768
+   settp r6,768
+   call1 r4,§object_reference_regression.smallpayload.§factory(),r6
    .traceevent "F" 4 "R" "O" "r" 4 48 48 0 "§factory" ""
    linkattr1 r7,r2,1
    copy r7,r4
@@ -417,11 +400,9 @@ l191doend:
    .traceevent "V" 6 "R" "S" "a" 2 66 66 0 "label" ""
    concat r5,a2,":child"
    .traceevent "O" 4 "R" "S" "r" 5 66 66 0 "" ""
-   load r3,2
    settp r6,256
-   swap r4,r6
-   settpcall r7,§object_reference_regression.smallpayload.setname(),r3,r5,768
-   swap r6,r4
+   settp r5,768
+   call2 r7,§object_reference_regression.smallpayload.setname(),r6,r5
    unlink r6
    .traceevent "F" 4 "R" "V" "r" 7 66 66 0 "setname" ""
    .srcstep 67 67 17 "object_reference_regression.crexx" 92 5 29 "    marker8 = label || \":m8\""
@@ -447,9 +428,8 @@ l191doend:
    .meta "object_reference_regression.largepayload.summary.§this"="b" ".largepayload" a1
    linkattr1 r4,a1,1
    .traceevent "V" 6 "R" "O" "r" 4 70 70 0 "child" ""
-   load r2,1
-   settpswapcall r0,§object_reference_regression.smallpayload.getname(),r2,r4,256,r3
-   swap r4,r3
+   settp r4,256
+   call1 r0,§object_reference_regression.smallpayload.getname(),r4
    unlink r4
    .traceevent "F" 4 "R" "S" "r" 0 70 70 0 "getname" ""
    .traceevent "A" 6 "R" "S" "r" 0 70 70 0 "child_name" ""

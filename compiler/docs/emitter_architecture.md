@@ -113,6 +113,37 @@ Current rules:
 
 This is semantic copy elision, not a change in language semantics. Any optimisation is valid only if the caller still observes pass-by-value behaviour.
 
+## 4.2 Direct Call Lowering
+
+The emitter has two direct-bytecode call paths with the same callee-visible
+contract:
+
+- a locally defined bytecode procedure, method, factory, or match with one to
+  four actuals may use `CALL1` through `CALL4`, naming each actual register
+  explicitly;
+- the existing two-operand `CALL` remains the zero-argument form; and
+- imported/native, dynamic/interface-selected, higher-arity, and unsupported
+  repeated-status sites retain the counted contiguous-window path.
+
+The fixed forms capture the named caller value pointers before frame
+activation and bind them as the ordinary callee `a1...aN` registers. Procedure
+code therefore cannot determine which call form entered it and must continue
+to rely only on the established argument-register and status contract.
+`REGTP_VAL` and `REGTP_NOTSYM` setup remains required and is emitted as
+standalone `SETTP` work for fixed calls. If repeated actuals share one physical
+register but need independent per-formal status, the emitter falls back to the
+counted path and its snapshots. Fixed calls do not change NR-06 register
+affinity, frame allocation/recycling, pass-by-value isolation, `.ref`, optional
+argument, signal, or return semantics.
+
+The serialized forms require RXBIN 007 feature bit
+`RXBIN007_FEATURE_FIXED_CALLS`. RXAS/RXLINK derive that bit from the emitted
+instruction stream, and readers reject a fixed-call opcode without it. See
+`docs/ai-context/RXAS_ASSEMBLER.md`,
+`docs/ai-context/RXBIN_007_SEMANTIC_GRAPH.md`, and
+`docs/ai-context/RXVM_INTERPRETER.md` for the assembler, format, and runtime
+contracts.
+
 ## 5. Risk Registry
 
 | Risk | Description | Mitigation |

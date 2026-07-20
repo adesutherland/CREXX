@@ -389,6 +389,12 @@ are uncompressed. There is no legacy-output mode; 006 is rejected and repository
 artifacts are rebuilt. The 007 container and semantic graph are specified in
 [RXBIN_007_SEMANTIC_GRAPH.md](RXBIN_007_SEMANTIC_GRAPH.md).
 
+The fixed direct-bytecode call forms `call1` through `call4` name each caller
+argument register explicitly. RXAS sets `RXBIN007_FEATURE_FIXED_CALLS` whenever
+one is present; `call` with a count register remains the general fallback for
+higher arity, imported/native and dynamically selected targets. The existing
+two-operand `call result,procedure()` remains the zero-argument direct form.
+
 RXAS feeds the common `rxbin` graph builder from class, interface,
 implements, member, callable, factory, and signature facts. After ordinary
 backpatching it resolves local procedure references, finalizes the indexed

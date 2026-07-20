@@ -14,33 +14,30 @@ main() .locals=6
    .meta "arg_semantics_object.main.box"="b" ".box" r0
    load r2,"alpha"
    .traceevent "L" 4 "R" "S" "r" 2 1 1 0 "" ""
-   load r1,1
-   settpcall r0,§arg_semantics_object.box.§factory(),r1,r2,768
+   settp r2,768
+   call1 r0,§arg_semantics_object.box.§factory(),r2
    .traceevent "F" 4 "R" "O" "r" 0 1 1 0 "§factory" ""
    .traceevent "A" 6 "R" "O" "r" 0 1 1 0 "box" ""
    .srcstep 2 2 17 "arg_semantics_object.crexx" 5 3 37 "  say \"object-read=\" || readBox(box)"
    .traceevent "V" 6 "R" "O" "r" 0 2 2 0 "box" ""
-   load r1,1
-   settpswapcall r3,readBox(),r1,r0,256,r2
-   swap r0,r2
+   settp r0,256
+   call1 r3,readBox(),r0
    .traceevent "F" 4 "R" "S" "r" 3 2 2 0 "readbox" ""
    concat r3,"object-read=",r3
    .traceevent "O" 4 "R" "S" "r" 3 2 2 0 "" ""
    say r3
    .srcstep 3 3 17 "arg_semantics_object.crexx" 6 3 39 "  say \"object-mut=\" || replaceBox(box)"
    .traceevent "V" 6 "R" "O" "r" 0 3 3 0 "box" ""
-   load r2,1
-   settpswapcall r1,replaceBox(),r2,r0,256,r3
-   swap r0,r3
+   settp r0,256
+   call1 r1,replaceBox(),r0
    .traceevent "F" 4 "R" "S" "r" 1 3 3 0 "replacebox" ""
    concat r3,"object-mut=",r1
    .traceevent "O" 4 "R" "S" "r" 3 3 3 0 "" ""
    say r3
    .srcstep 4 4 17 "arg_semantics_object.crexx" 7 3 37 "  say \"object-after=\" || box.getName()"
    .traceevent "V" 6 "R" "O" "r" 0 4 4 0 "box" ""
-   load r2,1
-   settpswapcall r1,§arg_semantics_object.box.getname(),r2,r0,256,r3
-   swap r0,r3
+   settp r0,256
+   call1 r1,§arg_semantics_object.box.getname(),r0
    .traceevent "F" 4 "R" "S" "r" 1 4 4 0 "getname" ""
    concat r3,"object-after=",r1
    .traceevent "O" 4 "R" "S" "r" 3 4 4 0 "" ""
@@ -48,26 +45,23 @@ main() .locals=6
    .srcstep 5 5 17 "arg_semantics_object.crexx" 8 3 49 "  say \"object-temp=\" || replaceBox(.Box(\"temp\"))"
    load r5,"temp"
    .traceevent "L" 4 "R" "S" "r" 5 5 5 0 "" ""
-   load r4,1
-   settpcall r3,§arg_semantics_object.box.§factory(),r4,r5,768
+   settp r5,768
+   call1 r3,§arg_semantics_object.box.§factory(),r5
    .traceevent "F" 4 "R" "O" "r" 3 5 5 0 "§factory" ""
-   load r2,1
-   settpcall r5,replaceBox(),r2,r3,256
+   settp r3,256
+   call1 r5,replaceBox(),r3
    .traceevent "F" 4 "R" "S" "r" 5 5 5 0 "replacebox" ""
    concat r5,"object-temp=",r5
    .traceevent "O" 4 "R" "S" "r" 5 5 5 0 "" ""
    say r5
    .srcstep 6 6 17 "arg_semantics_object.crexx" 9 3 26 "  call replaceBoxRef(box)"
    .traceevent "V" 6 "R" "O" "r" 0 6 6 0 "box" ""
-   load r4,1
-   swapcall r3,replaceBoxRef(),r4,r0,r5
-   swap r0,r5
+   call1 r3,replaceBoxRef(),r0
    .traceevent "F" 4 "R" "V" "r" 3 6 6 0 "replaceboxref" ""
    .srcstep 7 7 17 "arg_semantics_object.crexx" 10 3 35 "  say \"object-ref=\" || box.getName()"
    .traceevent "V" 6 "R" "O" "r" 0 7 7 0 "box" ""
-   load r4,1
-   settpswapcall r2,§arg_semantics_object.box.getname(),r4,r0,256,r5
-   swap r0,r5
+   settp r0,256
+   call1 r2,§arg_semantics_object.box.getname(),r0
    .traceevent "F" 4 "R" "S" "r" 2 7 7 0 "getname" ""
    concat r5,"object-ref=",r2
    .traceevent "O" 4 "R" "S" "r" 5 7 7 0 "" ""
@@ -84,9 +78,8 @@ readBox() .locals=4
    .meta "arg_semantics_object.readbox.value"="b" ".box" a1
    .srcstep 11 11 17 "arg_semantics_object.crexx" 15 3 23 "  return value.getName()"
    .traceevent "V" 6 "R" "O" "a" 1 11 11 0 "value" ""
-   load r1,1
-   settpswapcall r3,§arg_semantics_object.box.getname(),r1,a1,256,r2
-   swap a1,r2
+   settp a1,256
+   call1 r3,§arg_semantics_object.box.getname(),a1
    .traceevent "F" 4 "R" "S" "r" 3 11 11 0 "getname" ""
    ret r3
    .meta "arg_semantics_object.readbox.value"
@@ -106,15 +99,14 @@ l58d:
    .srcstep 14 14 17 "arg_semantics_object.crexx" 19 3 24 "  value = .Box(\"local\")"
    load r2,"local"
    .traceevent "L" 4 "R" "S" "r" 2 14 14 0 "" ""
-   load r1,1
-   settpcall r0,§arg_semantics_object.box.§factory(),r1,r2,768
+   settp r2,768
+   call1 r0,§arg_semantics_object.box.§factory(),r2
    .traceevent "F" 4 "R" "O" "r" 0 14 14 0 "§factory" ""
    .traceevent "A" 6 "R" "O" "r" 0 14 14 0 "value" ""
    .srcstep 15 15 17 "arg_semantics_object.crexx" 20 3 23 "  return value.getName()"
    .traceevent "V" 6 "R" "O" "r" 0 15 15 0 "value" ""
-   load r1,1
-   settpswapcall r3,§arg_semantics_object.box.getname(),r1,r0,256,r2
-   swap r0,r2
+   settp r0,256
+   call1 r3,§arg_semantics_object.box.getname(),r0
    .traceevent "F" 4 "R" "S" "r" 3 15 15 0 "getname" ""
    ret r3
    .meta "arg_semantics_object.replacebox.value"
@@ -128,8 +120,8 @@ replaceBoxRef() .locals=3
    .srcstep 18 18 17 "arg_semantics_object.crexx" 24 3 22 "  value = .Box(\"ref\")"
    load r2,"ref"
    .traceevent "L" 4 "R" "S" "r" 2 18 18 0 "" ""
-   load r1,1
-   settpcall a1,§arg_semantics_object.box.§factory(),r1,r2,768
+   settp r2,768
+   call1 a1,§arg_semantics_object.box.§factory(),r2
    .traceevent "F" 4 "R" "O" "a" 1 18 18 0 "§factory" ""
    .traceevent "A" 6 "R" "O" "a" 1 18 18 0 "value" ""
    .srcstep 19 19 17 "arg_semantics_object.crexx" 25 3 9 "  return"

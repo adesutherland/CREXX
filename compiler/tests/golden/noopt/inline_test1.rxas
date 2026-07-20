@@ -26,9 +26,7 @@ l8dostart:
    .srcstep 5 5 17 "inline_test1.crexx" 8 5 30 "    result = multiplyByTwo(i)"
    .meta "inline_test1.main.result"="b" ".int" r1
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   load r4,1
-   swapcall r1,multiplyByTwo(),r4,r0,r5
-   swap r0,r5
+   call1 r1,multiplyByTwo(),r0
    .traceevent "F" 4 "R" "I" "r" 1 5 5 0 "multiplybytwo" ""
    .traceevent "A" 6 "R" "I" "r" 1 5 5 0 "result" ""
    .srcstep 6 6 17 "inline_test1.crexx" 9 5 52 "    say \"Result of multiplyByTwo for\" i \"is\" result"

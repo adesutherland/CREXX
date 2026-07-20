@@ -25,9 +25,7 @@ l8dostart:
    brt l8doend,r2
    .srcstep 5 5 17 "inline_test_nested_scope_exposed_call.crexx" 6 5 17 "    say outer(i)"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   load r3,1
-   swapcall r5,outer(),r3,r0,r4
-   swap r0,r4
+   call1 r5,outer(),r0
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 5 5 0 "outer" ""
    say r5
@@ -54,9 +52,7 @@ outer() .locals=4
    null r1
    .srcstep 13 13 17 "inline_test_nested_scope_exposed_call.crexx" 15 5 22 "    tmp = addOne(val)"
    .traceevent "V" 6 "R" "I" "a" 1 13 13 0 "val" ""
-   load r2,1
-   swapcall r1,addOne(),r2,a1,r3
-   swap a1,r3
+   call1 r1,addOne(),a1
    .traceevent "F" 4 "R" "I" "r" 1 13 13 0 "addone" ""
    .traceevent "A" 6 "R" "I" "r" 1 13 13 0 "tmp" ""
    .srcstep 14 14 17 "inline_test_nested_scope_exposed_call.crexx" 16 5 19 "    return tmp * 2"

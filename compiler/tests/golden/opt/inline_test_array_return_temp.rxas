@@ -16,8 +16,7 @@ main() .locals=4
    .srcstep 2 2 17 "inline_test_array_return_temp.crexx" 12 3 25 "  return buildPair(seed)"
    load r2,3
    .traceevent "L" 4 "R" "I" "r" 2 4 4 0 "" ""
-   load r1,1
-   call r3,buildPair(),r1
+   call1 r3,buildPair(),r2
    .traceevent "F" 4 "R" "I" "r" 3 4 4 0 "buildpair" ""
    copy r2,r3
    br l69bexprend

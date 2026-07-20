@@ -15,31 +15,28 @@ main() .locals=5
    .traceevent "L" 4 "R" "I" "r" 4 2 2 0 "" ""
    isub r3,0,r4
    .traceevent "P" 4 "R" "I" "r" 3 2 2 0 "" ""
-   load r2,1
-   call r1,selectArray(),r2
+   call1 r1,selectArray(),r3
    .traceevent "F" 4 "R" "S" "r" 1 2 2 0 "selectarray" ""
-   load r0,1
-   settpcall r3,renderArray(),r0,r1,256
+   settp r1,256
+   call1 r3,renderArray(),r1
    .traceevent "F" 4 "R" "S" "r" 3 2 2 0 "renderarray" ""
    say r3
    .srcstep 3 3 17 "inline_test_array_multi_return_expr.crexx" 6 3 34 "  say renderArray(selectArray(0))"
    load r2,0
    .traceevent "L" 4 "R" "I" "r" 2 3 3 0 "" ""
-   load r1,1
-   call r4,selectArray(),r1
+   call1 r4,selectArray(),r2
    .traceevent "F" 4 "R" "S" "r" 4 3 3 0 "selectarray" ""
-   load r3,1
-   settpcall r2,renderArray(),r3,r4,256
+   settp r4,256
+   call1 r2,renderArray(),r4
    .traceevent "F" 4 "R" "S" "r" 2 3 3 0 "renderarray" ""
    say r2
    .srcstep 4 4 17 "inline_test_array_multi_return_expr.crexx" 7 3 34 "  say renderArray(selectArray(1))"
    load r2,1
    .traceevent "L" 4 "R" "I" "r" 2 4 4 0 "" ""
-   load r1,1
-   call r4,selectArray(),r1
+   call1 r4,selectArray(),r2
    .traceevent "F" 4 "R" "S" "r" 4 4 4 0 "selectarray" ""
-   load r3,1
-   settpcall r2,renderArray(),r3,r4,256
+   settp r4,256
+   call1 r2,renderArray(),r4
    .traceevent "F" 4 "R" "S" "r" 2 4 4 0 "renderarray" ""
    say r2
    .srcstep 5 5 17 "inline_test_array_multi_return_expr.crexx" 8 3 54 "  say \"Array multi return expr inline test finished.\""

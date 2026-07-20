@@ -14,8 +14,7 @@ main() .locals=3
    .srcstep 2 2 17 "inline_test_array_return_temp.crexx" 5 3 24 "  pair = forwardPair(3)"
    load r2,3
    .traceevent "L" 4 "R" "I" "r" 2 2 2 0 "" ""
-   load r1,1
-   call r0,forwardPair(),r1
+   call1 r0,forwardPair(),r2
    .traceevent "F" 4 "R" "I" "r" 0 2 2 0 "forwardpair" ""
    .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "pair" ""
    .srcstep 3 3 17 "inline_test_array_return_temp.crexx" 6 3 13 "  say pair[1]"
@@ -44,9 +43,7 @@ forwardPair() .locals=4
    .meta "inline_test_array_return_temp.forwardpair.seed"="b" ".int" a1
    .srcstep 8 8 17 "inline_test_array_return_temp.crexx" 12 3 25 "  return buildPair(seed)"
    .traceevent "V" 6 "R" "I" "a" 1 8 8 0 "seed" ""
-   load r1,1
-   swapcall r3,buildPair(),r1,a1,r2
-   swap a1,r2
+   call1 r3,buildPair(),a1
    .traceevent "F" 4 "R" "I" "r" 3 8 8 0 "buildpair" ""
    ret r3
    .meta "inline_test_array_return_temp.forwardpair.seed"

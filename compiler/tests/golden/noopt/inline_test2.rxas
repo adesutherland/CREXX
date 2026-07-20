@@ -32,8 +32,7 @@ main() .locals=8
    .srcstep 3 3 17 "inline_test2.crexx" 10 3 50 "  say \"NestedCallProc result:\" nestedCallProc(10)"
    load r7,10
    .traceevent "L" 4 "R" "I" "r" 7 3 3 0 "" ""
-   load r6,1
-   call r5,nestedCallProc(),r6
+   call1 r5,nestedCallProc(),r7
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 3 3 0 "nestedcallproc" ""
    sconcat r7,"NestedCallProc result:",r5
@@ -41,19 +40,15 @@ main() .locals=8
    say r7
    .srcstep 4 4 17 "inline_test2.crexx" 13 3 15 "  o = .MyClass()"
    .meta "inline_test2.main.o"="b" ".myclass" r0
-   load r7,0
-   call r0,§inline_test2.myclass.§factory(),r7
+   call r0,§inline_test2.myclass.§factory()
    .traceevent "F" 4 "R" "O" "r" 0 4 4 0 "§factory" ""
    .traceevent "A" 6 "R" "O" "r" 0 4 4 0 "o" ""
    .srcstep 5 5 17 "inline_test2.crexx" 14 3 38 "  say \"Method result:\" o.myMethod(20)"
    .traceevent "V" 6 "R" "O" "r" 0 5 5 0 "o" ""
    load r7,20
    .traceevent "L" 4 "R" "I" "r" 7 5 5 0 "" ""
-   load r5,2
    settp r0,256
-   swap r6,r0
-   call r4,§inline_test2.myclass.mymethod(),r5
-   swap r0,r6
+   call2 r4,§inline_test2.myclass.mymethod(),r0,r7
    itos r4
    .traceevent "F" 4 "R" "S" "r" 4 5 5 0 "mymethod" ""
    sconcat r7,"Method result:",r4
@@ -62,8 +57,7 @@ main() .locals=8
    .srcstep 6 6 17 "inline_test2.crexx" 17 3 43 "  say \"MultiReturn result:\" multiReturn(1)"
    load r7,1
    .traceevent "L" 4 "R" "I" "r" 7 6 6 0 "" ""
-   load r6,1
-   call r5,multiReturn(),r6
+   call1 r5,multiReturn(),r7
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 6 6 0 "multireturn" ""
    sconcat r7,"MultiReturn result:",r5
@@ -160,9 +154,7 @@ nestedCallProc() .locals=4
    .meta "inline_test2.nestedcallproc.val"="b" ".int" a1
    .srcstep 27 27 17 "inline_test2.crexx" 39 3 21 "  return helper(val)"
    .traceevent "V" 6 "R" "I" "a" 1 27 27 0 "val" ""
-   load r1,1
-   swapcall r3,helper(),r1,a1,r2
-   swap a1,r2
+   call1 r3,helper(),a1
    .traceevent "F" 4 "R" "I" "r" 3 27 27 0 "helper" ""
    ret r3
    .meta "inline_test2.nestedcallproc.val"

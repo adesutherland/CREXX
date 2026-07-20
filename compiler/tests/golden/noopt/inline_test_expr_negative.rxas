@@ -25,12 +25,9 @@ l8dostart:
    brt l8doend,r2
    .srcstep 7 7 17 "inline_test_expr_negative.crexx" 6 5 31 "    if identity(addOne(i)) | 0 then say \"truthy\" i"
    .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "i" ""
-   load r5,1
-   swapcall r4,addOne(),r5,r0,r6
-   swap r0,r6
+   call1 r4,addOne(),r0
    .traceevent "F" 4 "R" "I" "r" 4 7 7 0 "addone" ""
-   load r3,1
-   call r6,identity(),r3
+   call1 r6,identity(),r4
    .traceevent "F" 4 "R" "B" "r" 6 7 7 0 "identity" ""
    brt l19orend,r6
    load r6,0

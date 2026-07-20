@@ -12,6 +12,8 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # The test driver itself must be compiled as strict C90
 add_executable(crexx_test_driver src/test_driver.c)
 
+add_executable(mutate_rxbin_feature mutate_rxbin_feature.c)
+
 # Ensure the driver is built when tests are built
 add_dependencies(crexx_test_driver rxc)
 
@@ -1128,6 +1130,23 @@ add_test(NAME nr06_codegen_contract
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/nr06_codegen_contract.cmake)
 set_tests_properties(nr06_codegen_contract PROPERTIES
         LABELS "compiler;performance")
+
+add_test(NAME nr21_fixed_call_contract
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXLINK=$<TARGET_FILE:rxlink>
+                 -DRXDAS=$<TARGET_FILE:rxdas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DMUTATE_FEATURE=$<TARGET_FILE:mutate_rxbin_feature>
+                 -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                 -DBASIC_RXAS=${CMAKE_SOURCE_DIR}/interpreter/tests/tests_basic.rxas
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr21_fixed_call_contract_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/nr21_fixed_call_contract.cmake)
+set_tests_properties(nr21_fixed_call_contract PROPERTIES
+        LABELS "compiler;performance;rxbin")
 
 add_test(NAME nr09_numeric_context_contract
          COMMAND ${CMAKE_COMMAND}

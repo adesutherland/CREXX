@@ -33,9 +33,8 @@ main() .locals=6
    br l78bexprend
 l78bexprend:
    endlife r2
-   load r0,1
-   settpswapcall r2,renameBox(),r0,r4,768,r1
-   swap r4,r1
+   settp r4,768
+   call1 r2,renameBox(),r4
    .traceevent "F" 4 "R" "S" "r" 2 8 8 0 "renamebox" ""
    say r2
    .srcstep 9 9 17 "inline_test_object_expr_arg.crexx" 5 3 11 "  return 0"

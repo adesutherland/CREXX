@@ -25,9 +25,7 @@ l9dostart:
    brt l9doend,r2
    .srcstep 5 5 17 "select_dispatch_fallback.crexx" 7 5 26 "    say duplicate_case(i)"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   load r3,1
-   swapcall r5,duplicate_case(),r3,r0,r4
-   swap r0,r4
+   call1 r5,duplicate_case(),r0
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 5 5 0 "duplicate_case" ""
    say r5
@@ -36,10 +34,7 @@ l9dostart:
    .traceevent "V" 6 "R" "I" "r" 0 6 6 0 "i" ""
    iadd r5,r0,10
    .traceevent "O" 4 "R" "I" "r" 5 6 6 0 "" ""
-   load r3,2
-   swap r4,r0
-   call r6,dynamic_case(),r3
-   swap r0,r4
+   call2 r6,dynamic_case(),r0,r5
    itos r6
    .traceevent "F" 4 "R" "S" "r" 6 6 6 0 "dynamic_case" ""
    say r6

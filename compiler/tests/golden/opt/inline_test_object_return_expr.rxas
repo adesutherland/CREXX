@@ -35,9 +35,8 @@ main() .locals=9
    br l73bexprend
 l73bexprend:
    endlife r2
-   load r0,1
-   settpswapcall r2,describeBox(),r0,r4,768,r1
-   swap r4,r1
+   settp r4,768
+   call1 r2,describeBox(),r4
    .traceevent "F" 4 "R" "S" "r" 2 9 9 0 "describebox" ""
    say r2
    .srcstep 17 17 17 "inline_test_object_return_expr.crexx" 6 3 36 "  say describeBox(buildBox(\"temp\"))"
@@ -63,9 +62,8 @@ l73bexprend:
    br l86bexprend
 l86bexprend:
    endlife r4
-   load r6,1
-   settpswapcall r4,describeBox(),r6,r2,768,r7
-   swap r2,r7
+   settp r2,768
+   call1 r4,describeBox(),r2
    .traceevent "F" 4 "R" "S" "r" 4 17 17 0 "describebox" ""
    say r4
    .srcstep 18 18 17 "inline_test_object_return_expr.crexx" 7 3 49 "  say \"Object return expr inline test finished.\""

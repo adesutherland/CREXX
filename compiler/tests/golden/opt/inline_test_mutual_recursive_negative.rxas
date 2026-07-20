@@ -15,8 +15,7 @@ main() .locals=3
    .srcstep 2 2 17 "inline_test_mutual_recursive_negative.crexx" 11 3 24 "  return right(val - 1)"
    load r1,2
    .traceevent "L" 4 "R" "I" "r" 1 4 4 0 "" ""
-   load r0,1
-   call r2,right(),r0
+   call1 r2,right(),r1
    .traceevent "F" 4 "R" "I" "r" 2 4 4 0 "right" ""
    icopy r1,r2
    br l43bexprend
@@ -38,8 +37,7 @@ left() .locals=4
    .traceevent "V" 6 "R" "I" "a" 1 9 9 0 "val" ""
    isub r2,a1,1
    .traceevent "O" 4 "R" "I" "r" 2 9 9 0 "" ""
-   load r1,1
-   call r3,right(),r1
+   call1 r3,right(),r2
    .traceevent "F" 4 "R" "I" "r" 3 9 9 0 "right" ""
    ret r3
    .meta "inline_test_mutual_recursive_negative.left.val"
@@ -54,8 +52,7 @@ right() .locals=4
    .traceevent "V" 6 "R" "I" "a" 1 12 12 0 "val" ""
    isub r2,a1,1
    .traceevent "O" 4 "R" "I" "r" 2 12 12 0 "" ""
-   load r1,1
-   call r3,left(),r1
+   call1 r3,left(),r2
    .traceevent "F" 4 "R" "I" "r" 3 12 12 0 "left" ""
    ret r3
    .meta "inline_test_mutual_recursive_negative.right.val"

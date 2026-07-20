@@ -17,11 +17,8 @@ main() .locals=8
    .traceevent "V" 6 "R" "S" "r" 0 2 2 0 "s" ""
    load r7,4
    .traceevent "L" 4 "R" "I" "r" 7 2 2 0 "" ""
-   load r5,2
    settp r0,256
-   swap r6,r0
-   call r2,char_at(),r5
-   swap r0,r6
+   call2 r2,char_at(),r0,r7
    .traceevent "F" 4 "R" "S" "r" 2 2 2 0 "char_at" ""
    .traceevent "A" 6 "R" "S" "r" 2 2 2 0 "x" ""
    .srcstep 3 3 17 "inline_test_stateful_assembler.crexx" 5 1 18 "y = char_at(s, 1)"
@@ -29,11 +26,8 @@ main() .locals=8
    .traceevent "V" 6 "R" "S" "r" 0 3 3 0 "s" ""
    load r7,1
    .traceevent "L" 4 "R" "I" "r" 7 3 3 0 "" ""
-   load r5,2
    settp r0,256
-   swap r6,r0
-   call r3,char_at(),r5
-   swap r0,r6
+   call2 r3,char_at(),r0,r7
    .traceevent "F" 4 "R" "S" "r" 3 3 3 0 "char_at" ""
    .traceevent "A" 6 "R" "S" "r" 3 3 3 0 "y" ""
    .srcstep 4 4 17 "inline_test_stateful_assembler.crexx" 6 1 14 "say x':'y':'s"
@@ -59,11 +53,8 @@ main() .locals=8
    .traceevent "V" 6 "R" "S" "r" 1 6 6 0 "s2" ""
    load r7,3
    .traceevent "L" 4 "R" "I" "r" 7 6 6 0 "" ""
-   load r5,2
    settp r1,256
-   swap r6,r1
-   call r4,left_copy(),r5
-   swap r1,r6
+   call2 r4,left_copy(),r1,r7
    .traceevent "F" 4 "R" "S" "r" 4 6 6 0 "left_copy" ""
    .traceevent "A" 6 "R" "S" "r" 4 6 6 0 "z" ""
    .srcstep 7 7 17 "inline_test_stateful_assembler.crexx" 10 1 11 "say z':'s2"

@@ -219,6 +219,95 @@ static char *format_direct_call_instruction(char ret_type,
     }
 }
 
+static int fixed_call_local_bytecode(ASTNode *node) {
+    Symbol *symbol;
+    SymbolNode *definition;
+    ASTNode *body;
+
+    if (!node || !node->symbolNode || !node->symbolNode->symbol ||
+        is_interface_member_call(node) || is_interface_factory_call(node)) return 0;
+    symbol = node->symbolNode->symbol;
+    if (sym_nond(symbol) <= 0) return 0;
+    definition = sym_trnd(symbol, 0);
+    if (!definition || !definition->node) return 0;
+    switch (definition->node->node_type) {
+        case PROCEDURE:
+        case METHOD:
+        case FACTORY:
+        case MATCH:
+            break;
+        default:
+            return 0;
+    }
+    body = ast_chld(definition->node, INSTRUCTIONS, NOP);
+    return body && body->node_type != NOP;
+}
+
+static int fixed_call_argument_status(ASTNode *argument, int *flags) {
+    int needs_status = 0;
+    int status = 0;
+
+    if (!argument) return 0;
+    if (argument->node_type != NOVAL) status |= REGTP_VAL;
+    if (!argument->is_ref_arg &&
+        (argument->value_dims || argument->target_type == TP_STRING ||
+         argument->target_type == TP_OBJECT ||
+         argument->target_type == TP_BINARY ||
+         argument->target_type == TP_REFERENCE)) {
+        needs_status = 1;
+        if (!argument->symbolNode) status |= REGTP_NOTSYM;
+    }
+    if (argument->is_opt_arg) needs_status = 1;
+    if (flags) *flags = status;
+    return needs_status;
+}
+
+static int fixed_call_eligible(ASTNode *node) {
+    ASTNode *argument;
+    ASTNode *earlier;
+    int arity = 0;
+
+    if (!fixed_call_local_bytecode(node)) return 0;
+    for (argument = node->child; argument; argument = argument->sibling) {
+        arity++;
+        if (arity > 4) return 0;
+        for (earlier = node->child; earlier != argument; earlier = earlier->sibling) {
+            if (earlier->register_type == argument->register_type &&
+                earlier->register_num == argument->register_num &&
+                (fixed_call_argument_status(earlier, 0) ||
+                 fixed_call_argument_status(argument, 0))) {
+                /* One physical value cannot simultaneously carry independent
+                 * per-formal status. Keep the existing snapshot/window path. */
+                return 0;
+            }
+        }
+    }
+    return 1;
+}
+
+static char *format_fixed_call_instruction(char ret_type,
+                                           int ret_num,
+                                           const char *call_name,
+                                           ASTNode *arguments) {
+    ASTNode *argument;
+    char *line;
+    char *next;
+    int arity = 0;
+
+    for (argument = arguments; argument; argument = argument->sibling) arity++;
+    if (!arity) return mprintf("   call %c%d,%s()\n", ret_type, ret_num, call_name);
+
+    line = mprintf("   call%d %c%d,%s()", arity, ret_type, ret_num, call_name);
+    for (argument = arguments; argument; argument = argument->sibling) {
+        next = mprintf("%s,%c%d", line, argument->register_type, argument->register_num);
+        free(line);
+        line = next;
+    }
+    next = mprintf("%s\n", line);
+    free(line);
+    return next;
+}
+
 static int same_register(const ASTNode *left, const ASTNode *right) {
     return left && right &&
            left->register_type == right->register_type &&
@@ -555,6 +644,7 @@ void emit_expression(ASTNode *node, void *payload) {
             int can_fuse_direct_call =
                     !is_interface_member_call(node) &&
                     !is_interface_factory_call(node);
+            int use_fixed_call = fixed_call_eligible(node);
             /* Return Registers */
             ret_type = node->register_type;
             ret_num = node->register_num;
@@ -584,21 +674,39 @@ void emit_expression(ASTNode *node, void *payload) {
                 n = n->sibling;
             }
 
+            /* Fixed calls keep the existing per-argument status contract.
+             * They separate SETTP from the call instead of fusing it with
+             * contiguous-window marshalling. */
+            if (use_fixed_call) {
+                for (n = child1; n; n = n->sibling) {
+                    if (fixed_call_argument_status(n, &j)) {
+                        temp1 = mprintf("   settp %c%d,%d\n",
+                                        n->register_type,
+                                        n->register_num,
+                                        j);
+                        output_append_text(node->output, temp1);
+                        free(temp1);
+                    }
+                }
+            }
+
             /* Number of arguments. Keep this after argument expression
              * evaluation: inlined argument blocks may use temporary
              * registers from the call frame before marshalling starts. */
-            temp1 = mprintf("   load r%d,%d\n",
-                            node->additional_registers,
-                            node->num_additional_registers - 1);
-            output_append_text(node->output, temp1);
-            free(temp1);
+            if (!use_fixed_call) {
+                temp1 = mprintf("   load r%d,%d\n",
+                                node->additional_registers,
+                                node->num_additional_registers - 1);
+                output_append_text(node->output, temp1);
+                free(temp1);
+            }
 
             /* A repeated source register is not a permutation and cannot be
              * marshalled by destructive swaps alone. Snapshot every
              * non-primary occurrence into its final call-frame slot first. */
             n = child1;
             i = node->additional_registers + 1;
-            while (n) {
+            while (!use_fixed_call && n) {
                 ASTNode *primary = call_argument_group_primary(child1,
                                                                n,
                                                                node->additional_registers + 1);
@@ -616,7 +724,7 @@ void emit_expression(ASTNode *node, void *payload) {
              * setting argument flags as required */
             n = child1;
             i = node->additional_registers + 1; /* The first one is the number of arguments */
-            while (n) {
+            while (!use_fixed_call && n) {
                 ASTNode *primary = call_argument_group_primary(child1,
                                                                n,
                                                                node->additional_registers + 1);
@@ -695,7 +803,39 @@ void emit_expression(ASTNode *node, void *payload) {
             }
 
             /* Actual Call */
-            if (is_interface_member_call(node)) {
+            if (use_fixed_call) {
+                char *call_name;
+                Symbol *fsym = node->symbolNode->symbol;
+                SymbolNode *defsn = sym_trnd(fsym, 0);
+                int use_mangled = defsn && defsn->node &&
+                                  (defsn->node->node_type == METHOD ||
+                                   defsn->node->node_type == FACTORY ||
+                                   defsn->node->node_type == MATCH);
+                if (use_mangled) call_name = sym_mngd_frnm(fsym);
+                else if (node->node_string &&
+                         rxcp_source_symbol_is_qualified(node->node_string,
+                                                         node->node_string_length)) {
+                    call_name = strdup(fsym->name);
+                } else if (node->node_string) {
+                    size_t start = 0;
+                    size_t len = node->node_string_length;
+                    if (len >= 2 &&
+                        (node->node_string[0] == '\'' || node->node_string[0] == '"') &&
+                        node->node_string[len - 1] == node->node_string[0]) {
+                        start = 1;
+                        len -= 2;
+                    }
+                    call_name = malloc(len + 1);
+                    memcpy(call_name, node->node_string + start, len);
+                    call_name[len] = 0;
+                } else call_name = strdup(fsym->name);
+                temp1 = format_fixed_call_instruction(ret_type,
+                                                      ret_num,
+                                                      call_name,
+                                                      child1);
+                free(call_name);
+            }
+            else if (is_interface_member_call(node)) {
                 Symbol *fsym = node->symbolNode->symbol;
                 char *descriptor = build_dynamic_callable_descriptor(fsym, fsym->name);
 
@@ -816,7 +956,7 @@ void emit_expression(ASTNode *node, void *payload) {
                                                                n,
                                                                node->additional_registers + 1);
                 int staged_duplicate = primary && primary != n;
-                if (!staged_duplicate &&
+                if (!use_fixed_call && !staged_duplicate &&
                     (n->register_type != 'r' || n->register_num != i)) {
                     /* We need to swap registers */
                     /* I have reversed arguments just for readability */

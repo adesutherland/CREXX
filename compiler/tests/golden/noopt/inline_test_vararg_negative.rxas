@@ -35,15 +35,7 @@ main() .locals=10
    .traceevent "V" 6 "R" "I" "r" 0 6 6 0 "a" ""
    .traceevent "V" 6 "R" "I" "r" 1 6 6 0 "b" ""
    .traceevent "V" 6 "R" "I" "r" 2 6 6 0 "c" ""
-   load r4,4
-   swap r5,r3
-   swap r6,r0
-   swap r7,r1
-   swapcall r9,dynamicPick(),r4,r2,r8
-   swap r3,r5
-   swap r0,r6
-   swap r1,r7
-   swap r2,r8
+   call4 r9,dynamicPick(),r3,r0,r1,r2
    itos r9
    .traceevent "F" 4 "R" "S" "r" 9 6 6 0 "dynamicpick" ""
    say r9
@@ -51,13 +43,7 @@ main() .locals=10
    .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "a" ""
    .traceevent "V" 6 "R" "I" "r" 1 7 7 0 "b" ""
    .traceevent "V" 6 "R" "I" "r" 2 7 7 0 "c" ""
-   load r6,3
-   swap r7,r0
-   swap r8,r1
-   swapcall r5,refTailCount(),r6,r2,r9
-   swap r0,r7
-   swap r1,r8
-   swap r2,r9
+   call3 r5,refTailCount(),r0,r1,r2
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 7 7 0 "reftailcount" ""
    say r5

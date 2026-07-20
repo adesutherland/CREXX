@@ -25,9 +25,7 @@ l8dostart:
    brt l8doend,r2
    .srcstep 5 5 17 "inline_test_return_expr.crexx" 6 5 16 "    say wrap(i)"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   load r3,1
-   swapcall r5,wrap(),r3,r0,r4
-   swap r0,r4
+   call1 r5,wrap(),r0
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 5 5 0 "wrap" ""
    say r5
@@ -51,9 +49,7 @@ wrap() .locals=4
    .meta "inline_test_return_expr.wrap.val"="b" ".int" a1
    .srcstep 12 12 17 "inline_test_return_expr.crexx" 13 3 21 "  return addOne(val)"
    .traceevent "V" 6 "R" "I" "a" 1 12 12 0 "val" ""
-   load r1,1
-   swapcall r3,addOne(),r1,a1,r2
-   swap a1,r2
+   call1 r3,addOne(),a1
    .traceevent "F" 4 "R" "I" "r" 3 12 12 0 "addone" ""
    ret r3
    .meta "inline_test_return_expr.wrap.val"

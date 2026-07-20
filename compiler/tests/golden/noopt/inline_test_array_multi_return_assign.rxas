@@ -24,43 +24,37 @@ main() .locals=6
    .traceevent "L" 4 "R" "I" "r" 5 5 5 0 "" ""
    isub r4,0,r5
    .traceevent "P" 4 "R" "I" "r" 4 5 5 0 "" ""
-   load r3,1
-   call r0,selectArray(),r3
+   call1 r0,selectArray(),r4
    .traceevent "F" 4 "R" "S" "r" 0 5 5 0 "selectarray" ""
    .traceevent "A" 6 "R" "S" "r" 0 5 5 0 "left" ""
    .srcstep 6 6 17 "inline_test_array_multi_return_assign.crexx" 6 3 24 "  say renderArray(left)"
    .traceevent "V" 6 "R" "S" "r" 0 6 6 0 "left" ""
-   load r4,1
-   settpswapcall r3,renderArray(),r4,r0,256,r5
-   swap r0,r5
+   settp r0,256
+   call1 r3,renderArray(),r0
    .traceevent "F" 4 "R" "S" "r" 3 6 6 0 "renderarray" ""
    say r3
    .srcstep 7 7 17 "inline_test_array_multi_return_assign.crexx" 7 3 23 "  mid = selectArray(0)"
    load r5,0
    .traceevent "L" 4 "R" "I" "r" 5 7 7 0 "" ""
-   load r4,1
-   call r1,selectArray(),r4
+   call1 r1,selectArray(),r5
    .traceevent "F" 4 "R" "S" "r" 1 7 7 0 "selectarray" ""
    .traceevent "A" 6 "R" "S" "r" 1 7 7 0 "mid" ""
    .srcstep 8 8 17 "inline_test_array_multi_return_assign.crexx" 8 3 23 "  say renderArray(mid)"
    .traceevent "V" 6 "R" "S" "r" 1 8 8 0 "mid" ""
-   load r4,1
-   settpswapcall r3,renderArray(),r4,r1,256,r5
-   swap r1,r5
+   settp r1,256
+   call1 r3,renderArray(),r1
    .traceevent "F" 4 "R" "S" "r" 3 8 8 0 "renderarray" ""
    say r3
    .srcstep 9 9 17 "inline_test_array_multi_return_assign.crexx" 9 3 25 "  right = selectArray(1)"
    load r5,1
    .traceevent "L" 4 "R" "I" "r" 5 9 9 0 "" ""
-   load r4,1
-   call r2,selectArray(),r4
+   call1 r2,selectArray(),r5
    .traceevent "F" 4 "R" "S" "r" 2 9 9 0 "selectarray" ""
    .traceevent "A" 6 "R" "S" "r" 2 9 9 0 "right" ""
    .srcstep 10 10 17 "inline_test_array_multi_return_assign.crexx" 10 3 25 "  say renderArray(right)"
    .traceevent "V" 6 "R" "S" "r" 2 10 10 0 "right" ""
-   load r4,1
-   settpswapcall r3,renderArray(),r4,r2,256,r5
-   swap r2,r5
+   settp r2,256
+   call1 r3,renderArray(),r2
    .traceevent "F" 4 "R" "S" "r" 3 10 10 0 "renderarray" ""
    say r3
    .srcstep 11 11 17 "inline_test_array_multi_return_assign.crexx" 11 3 56 "  say \"Array multi return assign inline test finished.\""

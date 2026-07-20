@@ -13,8 +13,7 @@ main() .locals=6
    .srcstep 2 2 17 "inline_test_vararg.crexx" 5 3 20 "  say tailCount(10)"
    load r2,10
    .traceevent "L" 4 "R" "I" "r" 2 2 2 0 "" ""
-   load r1,1
-   call r3,tailCount(),r1
+   call1 r3,tailCount(),r2
    itos r3
    .traceevent "F" 4 "R" "S" "r" 3 2 2 0 "tailcount" ""
    say r3
@@ -25,8 +24,7 @@ main() .locals=6
    .traceevent "L" 4 "R" "I" "r" 3 3 3 0 "" ""
    load r4,30
    .traceevent "L" 4 "R" "I" "r" 4 3 3 0 "" ""
-   load r1,3
-   call r5,tailCount(),r1
+   call3 r5,tailCount(),r2,r3,r4
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 3 3 0 "tailcount" ""
    say r5
@@ -38,8 +36,7 @@ main() .locals=6
    .traceevent "L" 4 "R" "I" "r" 4 4 4 0 "" ""
    load r5,11
    .traceevent "L" 4 "R" "I" "r" 5 4 4 0 "" ""
-   load r2,3
-   call r1,secondOnly(),r2
+   call3 r1,secondOnly(),r3,r4,r5
    .traceevent "F" 4 "R" "I" "r" 1 4 4 0 "secondonly" ""
    iadd r0,r1,1
    .traceevent "O" 4 "R" "I" "r" 0 4 4 0 "" ""
@@ -53,8 +50,7 @@ main() .locals=6
    .traceevent "L" 4 "R" "I" "r" 4 6 6 0 "" ""
    load r5,2
    .traceevent "L" 4 "R" "I" "r" 5 6 6 0 "" ""
-   load r3,2
-   call r2,hasThird(),r3
+   call2 r2,hasThird(),r4,r5
    itos r2
    .traceevent "F" 4 "R" "S" "r" 2 6 6 0 "hasthird" ""
    say r2
@@ -65,8 +61,7 @@ main() .locals=6
    .traceevent "L" 4 "R" "I" "r" 4 7 7 0 "" ""
    load r5,3
    .traceevent "L" 4 "R" "I" "r" 5 7 7 0 "" ""
-   load r2,3
-   call r1,hasThird(),r2
+   call3 r1,hasThird(),r3,r4,r5
    itos r1
    .traceevent "F" 4 "R" "S" "r" 1 7 7 0 "hasthird" ""
    say r1
@@ -77,8 +72,7 @@ main() .locals=6
    .traceevent "L" 4 "R" "I" "r" 4 8 8 0 "" ""
    load r5,12
    .traceevent "L" 4 "R" "I" "r" 5 8 8 0 "" ""
-   load r2,3
-   call r1,logSecond(),r2
+   call3 r1,logSecond(),r3,r4,r5
    .traceevent "F" 4 "R" "I" "r" 1 8 8 0 "logsecond" ""
    .srcstep 9 9 17 "inline_test_vararg.crexx" 12 3 37 "  say \"Vararg inline test finished.\""
    say "Vararg inline test finished."

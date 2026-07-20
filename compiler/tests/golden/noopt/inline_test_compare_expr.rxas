@@ -25,9 +25,7 @@ l8dostart:
    brt l8doend,r2
    .srcstep 7 7 17 "inline_test_compare_expr.crexx" 6 5 21 "    if addOne(i) = 3 then say \"matched\" i"
    .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "i" ""
-   load r3,1
-   swapcall r5,addOne(),r3,r0,r4
-   swap r0,r4
+   call1 r5,addOne(),r0
    .traceevent "F" 4 "R" "I" "r" 5 7 7 0 "addone" ""
    ieq r5,r5,3
    .traceevent "O" 4 "R" "B" "r" 5 7 7 0 "" ""

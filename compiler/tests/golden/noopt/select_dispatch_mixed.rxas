@@ -92,14 +92,11 @@ l50dostart:
    .srcstep 16 16 17 "select_dispatch_mixed.crexx" 19 5 47 "    say mixed_classify(values[index], counter)"
    .traceevent "V" 6 "R" "I" "r" 1 16 16 0 "index" ""
    .traceevent "C" 4 "R" "I" "r" 1 16 16 0 "values" ""
-   setlinkiload r8,r2,8,r1,r5,2
+   setlinkattr1 r8,r2,8,r1
    .traceevent "V" 6 "R" "I" "r" 8 16 16 0 "values" ""
    .traceevent "V" 6 "R" "I" "r" 0 16 16 0 "counter" ""
-   swap r6,r8
-   swapcall r9,mixed_classify(),r5,r0,r7
-   swap r8,r6
+   call2 r9,mixed_classify(),r8,r0
    unlink r8
-   swap r0,r7
    itos r9
    .traceevent "F" 4 "R" "S" "r" 9 16 16 0 "mixed_classify" ""
    say r9
@@ -118,8 +115,7 @@ l50doend:
    .traceevent "L" 4 "R" "I" "r" 8 20 20 0 "" ""
    load r9,40
    .traceevent "L" 4 "R" "I" "r" 9 20 20 0 "" ""
-   load r7,2
-   call r6,otherwise_if(),r7
+   call2 r6,otherwise_if(),r8,r9
    itos r6
    .traceevent "F" 4 "R" "S" "r" 6 20 20 0 "otherwise_if" ""
    say r6
@@ -128,8 +124,7 @@ l50doend:
    .traceevent "L" 4 "R" "I" "r" 8 21 21 0 "" ""
    load r9,40
    .traceevent "L" 4 "R" "I" "r" 9 21 21 0 "" ""
-   load r7,2
-   call r6,otherwise_if(),r7
+   call2 r6,otherwise_if(),r8,r9
    itos r6
    .traceevent "F" 4 "R" "S" "r" 6 21 21 0 "otherwise_if" ""
    say r6
@@ -138,8 +133,7 @@ l50doend:
    .traceevent "L" 4 "R" "I" "r" 8 22 22 0 "" ""
    load r9,0
    .traceevent "L" 4 "R" "I" "r" 9 22 22 0 "" ""
-   load r7,2
-   call r6,otherwise_if(),r7
+   call2 r6,otherwise_if(),r8,r9
    itos r6
    .traceevent "F" 4 "R" "S" "r" 6 22 22 0 "otherwise_if" ""
    say r6
@@ -205,10 +199,7 @@ l331dispatchdefault:
    .traceevent "V" 6 "R" "I" "a" 2 72 72 0 "counter" ""
    load r5,9
    .traceevent "L" 4 "R" "I" "r" 5 72 72 0 "" ""
-   load r3,2
-   swap r4,a2
-   call r6,dynamic_key(),r3
-   swap a2,r4
+   call2 r6,dynamic_key(),a2,r5
    .traceevent "F" 4 "R" "I" "r" 6 72 72 0 "dynamic_key" ""
    ieq r6,r2,r6
    .traceevent "O" 4 "R" "B" "r" 6 72 72 0 "" ""
@@ -258,10 +249,7 @@ l292iffalse:
    .traceevent "V" 6 "R" "I" "a" 2 62 62 0 "counter" ""
    load r10,25
    .traceevent "L" 4 "R" "I" "r" 10 62 62 0 "" ""
-   load r8,2
-   swap r9,a2
-   call r11,dynamic_key(),r8
-   swap a2,r9
+   call2 r11,dynamic_key(),a2,r10
    .traceevent "F" 4 "R" "I" "r" 11 62 62 0 "dynamic_key" ""
    ieq r11,r2,r11
    .traceevent "O" 4 "R" "B" "r" 11 62 62 0 "" ""
@@ -302,10 +290,7 @@ l304iffalse:
    .traceevent "V" 6 "R" "I" "a" 2 54 54 0 "counter" ""
    load r14,40
    .traceevent "L" 4 "R" "I" "r" 14 54 54 0 "" ""
-   load r12,2
-   swap r13,a2
-   call r15,dynamic_key(),r12
-   swap a2,r13
+   call2 r15,dynamic_key(),a2,r14
    .traceevent "F" 4 "R" "I" "r" 15 54 54 0 "dynamic_key" ""
    ieq r15,r2,r15
    .traceevent "O" 4 "R" "B" "r" 15 54 54 0 "" ""

@@ -26,9 +26,7 @@ l8dostart:
    .srcstep 5 5 17 "inline_test_exposed_nested_call.crexx" 6 5 24 "    result = compute(i)"
    .meta "inline_test_exposed_nested_call.main.result"="b" ".int" r1
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   load r4,1
-   swapcall r1,compute(),r4,r0,r5
-   swap r0,r5
+   call1 r1,compute(),r0
    .traceevent "F" 4 "R" "I" "r" 1 5 5 0 "compute" ""
    .traceevent "A" 6 "R" "I" "r" 1 5 5 0 "result" ""
    .srcstep 6 6 17 "inline_test_exposed_nested_call.crexx" 7 5 26 "    say \"Computed\" result"
@@ -58,9 +56,7 @@ compute() .locals=4
    .meta "inline_test_exposed_nested_call.compute.val"="b" ".int" a1
    .srcstep 13 13 17 "inline_test_exposed_nested_call.crexx" 14 3 26 "  return 10 + addOne(val)"
    .traceevent "V" 6 "R" "I" "a" 1 13 13 0 "val" ""
-   load r1,1
-   swapcall r3,addOne(),r1,a1,r2
-   swap a1,r2
+   call1 r3,addOne(),a1
    .traceevent "F" 4 "R" "I" "r" 3 13 13 0 "addone" ""
    iadd r3,r3,10
    .traceevent "O" 4 "R" "I" "r" 3 13 13 0 "" ""

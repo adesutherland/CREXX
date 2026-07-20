@@ -9,11 +9,10 @@ main() .locals=3
    .srcstep 3 3 17 "inline_test_array_expr_arg.crexx" 3 1 23 "main: procedure = .int"
    numsci 18,1,1
    .srcstep 1 1 17 "inline_test_array_expr_arg.crexx" 4 3 25 "  say bumpFirst(makePair())"
-   load r2,0
-   call r1,makePair(),r2
+   call r1,makePair()
    .traceevent "F" 4 "R" "I" "r" 1 1 1 0 "makepair" ""
-   load r0,1
-   settpcall r2,bumpFirst(),r0,r1,256
+   settp r1,256
+   call1 r2,bumpFirst(),r1
    itos r2
    .traceevent "F" 4 "R" "S" "r" 2 1 1 0 "bumpfirst" ""
    say r2

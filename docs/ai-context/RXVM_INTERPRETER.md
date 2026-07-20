@@ -145,22 +145,33 @@ cleanup, and any VM plugin instance cleanup when a frame is finally destroyed.
 The `SAFE_RECYCLED_STACKFRAMES` build-time debug guard can additionally zero
 locals on reuse.
 
-Argument-bearing bytecode calls also record the first register in the caller's
-contiguous call window. Normal return still executes the compiler-emitted
-reverse swaps and pays no restoration scan. If a branch-style signal handler
-discards the callee before those instructions run, the unwind path uses that
-one index plus `number_args` to restore the caller's active pointer permutation.
-It finds each displaced call-slot base pointer in the caller's active map and
-performs the inverse pointer swap, preserving mutations and pre-call links
-instead of resetting values. The base pointer may be frame-owned local storage
-or an incoming argument's recorded entry pointer; neither case copies the
-value. Native calls have no child frame; their cold branch path recovers the
-same window from the interrupted `CALL`, `DCALL`, `SWAPCALL`,
-`SETTPSWAPCALL`, or `SETTPCALL` instruction. All five forms carry the
-argument-count register at operand position three, so the fixed runtime image
-supplies the window base without a generic operand scan. Any future
-call-bearing fused opcode must be added to this cold decoder as part of its
-signal/unwind contract.
+Counted argument-bearing bytecode calls record the first register in the
+caller's contiguous call window. Normal return still executes the
+compiler-emitted reverse swaps and pays no restoration scan. If a branch-style
+signal handler discards the callee before those instructions run, the unwind
+path uses that one index plus `number_args` to restore the caller's active
+pointer permutation. It finds each displaced call-slot base pointer in the
+caller's active map and performs the inverse pointer swap, preserving mutations
+and pre-call links instead of resetting values. The base pointer may be
+frame-owned local storage or an incoming argument's recorded entry pointer;
+neither case copies the value.
+
+`CALL1` through `CALL4` are direct-bytecode alternatives for the common fixed
+arities. They capture their explicitly named caller value pointers before
+frame activation and bind them as the callee's ordinary `a1...aN` entries. No
+caller pointer permutation exists, so their child frame deliberately has no
+`caller_arg_base` restoration work; the callee cannot distinguish the call
+form. Argument status is still established by the caller before entry. These
+forms require `RXBIN007_FEATURE_FIXED_CALLS` and do not target native
+procedures; compiler-generated imported/native, dynamic and higher-arity calls
+retain the counted path.
+
+Native calls have no child frame; their cold branch path recovers the counted
+window from the interrupted `CALL`, `DCALL`, `SWAPCALL`, `SETTPSWAPCALL`, or
+`SETTPCALL` instruction. All five forms carry the argument-count register at
+operand position three, so the fixed runtime image supplies the window base
+without a generic operand scan. Any future call-bearing fused opcode must be
+added to this cold decoder as part of its signal/unwind contract.
 
 ### Signal / Interrupt Handling
 The VM signal model is implemented directly in the interpreter loop. Each

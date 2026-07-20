@@ -15,8 +15,7 @@ main() .locals=3
    .srcstep 2 2 17 "inline_test_self_recursive_negative.crexx" 11 3 26 "  return recurse(val - 1)"
    load r1,2
    .traceevent "L" 4 "R" "I" "r" 1 4 4 0 "" ""
-   load r0,1
-   call r2,recurse(),r0
+   call1 r2,recurse(),r1
    .traceevent "F" 4 "R" "I" "r" 2 4 4 0 "recurse" ""
    icopy r1,r2
    br l31bexprend
@@ -38,8 +37,7 @@ recurse() .locals=4
    .traceevent "V" 6 "R" "I" "a" 1 9 9 0 "val" ""
    isub r2,a1,1
    .traceevent "O" 4 "R" "I" "r" 2 9 9 0 "" ""
-   load r1,1
-   call r3,recurse(),r1
+   call1 r3,recurse(),r2
    .traceevent "F" 4 "R" "I" "r" 3 9 9 0 "recurse" ""
    ret r3
    .meta "inline_test_self_recursive_negative.recurse.val"

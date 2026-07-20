@@ -12592,10 +12592,87 @@ START_INSTRUCTION(DMOD_REG_REG_REG) VM_ADVANCE(3);
 
         RESERVED_IMPL(RESERVED_299)
 
-        RESERVED_IMPL(RESERVED_401)
-        RESERVED_IMPL(RESERVED_402)
-        RESERVED_IMPL(RESERVED_403)
-        RESERVED_IMPL(RESERVED_404)
+#define RXVM_FIXED_CALL_BODY(ARITY_)                                           \
+        do {                                                                    \
+            proc_runtime *explicit_called__ = PROC_OP(2);                      \
+            value *explicit_result__ = REG_OP(1);                              \
+            value *explicit_args__[4];                                         \
+            size_t explicit_i__;                                               \
+            size_t explicit_j__;                                               \
+            if ((ARITY_) > 0) explicit_args__[0] = REG_OP(3);                  \
+            if ((ARITY_) > 1) explicit_args__[1] = REG_OP(4);                  \
+            if ((ARITY_) > 2) explicit_args__[2] = REG_OP(5);                  \
+            if ((ARITY_) > 3) explicit_args__[3] = REG_OP(6);                  \
+            if (explicit_called__->start == SIZE_MAX) {                        \
+                RXVM_INSTRUMENTATION_CALL(                                      \
+                        RXVM_PROFILE_CALL_DIRECT_BYTECODE, explicit_called__,  \
+                        (ARITY_), RXVM_PROFILE_FRAME_NONE_FAILED,               \
+                        RXVM_PROFILE_CALL_UNRESOLVED, current_frame,            \
+                        current_module->module_number, VM_CANONICAL_INDEX(pc),  \
+                        0, 0);                                                  \
+                SET_SIGNAL_MSG(RXSIGNAL_FUNCTION_NOT_FOUND, explicit_called__->name); \
+                DISPATCH;                                                       \
+            }                                                                   \
+            if (!explicit_called__->binarySpace) {                             \
+                RXVM_INSTRUMENTATION_CALL(                                      \
+                        RXVM_PROFILE_CALL_DIRECT_NATIVE, explicit_called__,    \
+                        (ARITY_), RXVM_PROFILE_FRAME_NONE_FAILED,               \
+                        RXVM_PROFILE_CALL_INVALID, current_frame,               \
+                        current_module->module_number, VM_CANONICAL_INDEX(pc),  \
+                        0, 0);                                                  \
+                SET_SIGNAL_MSG(RXSIGNAL_NOT_IMPLEMENTED,                       \
+                               "fixed direct calls require a bytecode target"); \
+                DISPATCH;                                                       \
+            }                                                                   \
+            temp_frame = frame_f(explicit_called__, (ARITY_), current_frame,   \
+                                 next_pc, explicit_result__);                   \
+            if (!temp_frame) {                                                  \
+                RXVM_INSTRUMENTATION_CALL(                                      \
+                        RXVM_PROFILE_CALL_DIRECT_BYTECODE, explicit_called__,  \
+                        (ARITY_), RXVM_PROFILE_FRAME_NONE_FAILED,               \
+                        RXVM_PROFILE_CALL_FRAME_FAILED, current_frame,          \
+                        current_module->module_number, VM_CANONICAL_INDEX(pc),  \
+                        0, 0);                                                  \
+                SET_SIGNAL_MSG(RXSIGNAL_FAILURE, "Unable to allocate stack frame"); \
+                DISPATCH;                                                       \
+            }                                                                   \
+            RXVM_INSTRUMENTATION_CALL(                                          \
+                    RXVM_PROFILE_CALL_DIRECT_BYTECODE, explicit_called__,      \
+                    temp_frame->number_args,                                   \
+                    RXVM_PROFILE_FRAME_LAST_ACTIVATION,                        \
+                    RXVM_PROFILE_CALL_SUCCESS, current_frame,                  \
+                    current_module->module_number, VM_CANONICAL_INDEX(pc),      \
+                    0, 0);                                                      \
+            VM_ACTIVATE_FRAME(temp_frame, RXVM_TRANSITION_CALL);                \
+            VM_SELECT_INDEX(explicit_called__->start, RXVM_TRANSITION_CALL);    \
+            explicit_j__ = current_frame->procedure->binarySpace->globals +    \
+                           current_frame->procedure->locals + 1;                \
+            for (explicit_i__ = 0; explicit_i__ < (size_t)(ARITY_);            \
+                 explicit_i__++, explicit_j__++) {                             \
+                current_frame->baselocals[explicit_j__] =                      \
+                        explicit_args__[explicit_i__];                         \
+                current_locals[explicit_j__] =                                 \
+                        current_frame->baselocals[explicit_j__];               \
+            }                                                                   \
+        } while (0)
+
+        START_INSTRUCTION(CALL1_REG_FUNC_REG) VM_ADVANCE(3);
+            RXVM_FIXED_CALL_BODY(1);
+            DISPATCH;
+
+        START_INSTRUCTION(CALL2_REG_FUNC_REG_REG) VM_ADVANCE(4);
+            RXVM_FIXED_CALL_BODY(2);
+            DISPATCH;
+
+        START_INSTRUCTION(CALL3_REG_FUNC_REG_REG_REG) VM_ADVANCE(5);
+            RXVM_FIXED_CALL_BODY(3);
+            DISPATCH;
+
+        START_INSTRUCTION(CALL4_REG_FUNC_REG_REG_REG_REG) VM_ADVANCE(6);
+            RXVM_FIXED_CALL_BODY(4);
+            DISPATCH;
+
+#undef RXVM_FIXED_CALL_BODY
         RESERVED_IMPL(RESERVED_405)
 
         START_INSTRUCTION(ISETATTR1_REG_INT_REG) VM_ADVANCE(3);

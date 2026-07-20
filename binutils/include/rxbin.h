@@ -64,6 +64,11 @@ enum rxbin007_section_flags {
     RXBIN007_SECTION_LZSS = 1u << 0
 };
 
+enum rxbin007_feature_flags {
+    RXBIN007_FEATURE_FIXED_CALLS = 1u << 0,
+    RXBIN007_SUPPORTED_FEATURES = RXBIN007_FEATURE_FIXED_CALLS
+};
+
 typedef struct bin_space bin_space;
 
 /* cREXX Instruction Coding */

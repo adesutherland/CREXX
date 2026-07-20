@@ -76,8 +76,7 @@ l169bexprend:
    .srcstep 15 15 17 "inline_test2.crexx" 39 3 21 "  return helper(val)"
    load r2,10
    .traceevent "L" 4 "R" "I" "r" 2 17 17 0 "" ""
-   load r1,1
-   call r3,helper(),r1
+   call1 r3,helper(),r2
    .traceevent "F" 4 "R" "I" "r" 3 17 17 0 "helper" ""
    icopy r2,r3
    br l238bexprend

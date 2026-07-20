@@ -25,8 +25,7 @@ main() .locals=7
    .traceevent "C" 4 "R" "I" "r" 2 4 4 0 "values" ""
    setlinkiload r3,r1,3,r2,r5,4
    .traceevent "L" 4 "R" "I" "r" 5 4 4 0 "" ""
-   load r4,1
-   call r6,addOne(),r4
+   call1 r6,addOne(),r5
    .traceevent "F" 4 "R" "I" "r" 6 4 4 0 "addone" ""
    isetunlink r3,r6
    .traceevent "A" 6 "R" "I" "r" 6 4 4 0 "values" ""

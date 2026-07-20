@@ -15,8 +15,7 @@ main() .locals=4
    load r2,2
    itof r2
    .traceevent "L" 4 "R" "F" "r" 2 1 1 0 "" ""
-   load r0,2
-   call r3,localmax(),r0
+   call2 r3,localmax(),r1,r2
    ftos r3
    .traceevent "F" 4 "R" "S" "r" 3 1 1 0 "localmax" ""
    say r3
@@ -27,8 +26,7 @@ main() .locals=4
    load r3,0
    itof r3
    .traceevent "L" 4 "R" "F" "r" 3 2 2 0 "" ""
-   load r1,2
-   call r0,localmax(),r1
+   call2 r0,localmax(),r2,r3
    ftos r0
    .traceevent "F" 4 "R" "S" "r" 0 2 2 0 "localmax" ""
    say r0
@@ -39,8 +37,7 @@ main() .locals=4
    load r3,5
    itof r3
    .traceevent "L" 4 "R" "F" "r" 3 3 3 0 "" ""
-   load r1,2
-   call r0,localmax(),r1
+   call2 r0,localmax(),r2,r3
    ftos r0
    .traceevent "F" 4 "R" "S" "r" 0 3 3 0 "localmax" ""
    say r0

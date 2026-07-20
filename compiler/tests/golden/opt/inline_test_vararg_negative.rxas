@@ -23,8 +23,7 @@ main() .locals=6
    .traceevent "L" 4 "R" "I" "r" 3 2 2 0 "" ""
    load r4,30
    .traceevent "L" 4 "R" "I" "r" 4 2 2 0 "" ""
-   load r0,4
-   call r5,dynamicPick(),r0
+   call4 r5,dynamicPick(),r1,r2,r3,r4
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 2 2 0 "dynamicpick" ""
    say r5

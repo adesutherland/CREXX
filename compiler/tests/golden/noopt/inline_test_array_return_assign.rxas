@@ -21,9 +21,9 @@ main() .locals=5
    .traceevent "L" 4 "R" "S" "r" 3 4 4 0 "" ""
    load r4,"blue"
    .traceevent "L" 4 "R" "S" "r" 4 4 4 0 "" ""
-   load r2,2
    settp r3,768
-   settpcall r1,buildArray(),r2,r4,768
+   settp r4,768
+   call2 r1,buildArray(),r3,r4
    .traceevent "F" 4 "R" "S" "r" 1 4 4 0 "buildarray" ""
    .traceevent "A" 6 "R" "S" "r" 1 4 4 0 "values" ""
    .srcstep 5 5 17 "inline_test_array_return_assign.crexx" 6 3 35 "  say values[1] || \":\" || values[2]"
@@ -43,16 +43,15 @@ main() .locals=5
    .traceevent "L" 4 "R" "S" "r" 3 6 6 0 "" ""
    load r4,"gold"
    .traceevent "L" 4 "R" "S" "r" 4 6 6 0 "" ""
-   load r2,2
    settp r3,768
-   settpcall r0,buildArray(),r2,r4,768
+   settp r4,768
+   call2 r0,buildArray(),r3,r4
    .traceevent "F" 4 "R" "S" "r" 0 6 6 0 "buildarray" ""
    .traceevent "A" 6 "R" "S" "r" 0 6 6 0 "more" ""
    .srcstep 7 7 17 "inline_test_array_return_assign.crexx" 8 3 24 "  say renderArray(more)"
    .traceevent "V" 6 "R" "S" "r" 0 7 7 0 "more" ""
-   load r3,1
-   settpswapcall r2,renderArray(),r3,r0,256,r4
-   swap r0,r4
+   settp r0,256
+   call1 r2,renderArray(),r0
    .traceevent "F" 4 "R" "S" "r" 2 7 7 0 "renderarray" ""
    say r2
    .srcstep 8 8 17 "inline_test_array_return_assign.crexx" 9 3 50 "  say \"Array return assign inline test finished.\""

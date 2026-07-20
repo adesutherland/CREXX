@@ -25,9 +25,7 @@ l8dostart:
    brt l8doend,r2
    .srcstep 5 5 17 "inline_test_nested_scope_do.crexx" 6 5 21 "    say scopedAdd(i)"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   load r3,1
-   swapcall r5,scopedAdd(),r3,r0,r4
-   swap r0,r4
+   call1 r5,scopedAdd(),r0
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 5 5 0 "scopedadd" ""
    say r5

@@ -454,8 +454,7 @@ l751bexprend:
    .srcstep 102 102 17 "select_dispatch_general.crexx" 16 3 23 "  say referenced_if(2)"
    load r20,2
    .traceevent "L" 4 "R" "I" "r" 20 102 102 0 "" ""
-   load r19,1
-   call r18,referenced_if(),r19
+   call1 r18,referenced_if(),r20
    itos r18
    .traceevent "F" 4 "R" "S" "r" 18 102 102 0 "referenced_if" ""
    say r18

@@ -39,8 +39,7 @@ l124bexprend:
    .traceevent "V" 6 "R" "I" "r" 2 7 7 0 "first" ""
    .traceevent "V" 6 "R" "I" "r" 3 7 7 0 "second" ""
    .traceevent "V" 6 "R" "I" "r" 4 7 7 0 "third" ""
-   load r0,4
-   call r5,readTail(),r0
+   call4 r5,readTail(),r1,r2,r3,r4
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 7 7 0 "readtail" ""
    say r5
@@ -50,8 +49,7 @@ l124bexprend:
    .traceevent "V" 6 "R" "I" "r" 2 8 8 0 "first" ""
    .traceevent "V" 6 "R" "I" "r" 3 8 8 0 "second" ""
    .traceevent "V" 6 "R" "I" "r" 4 8 8 0 "third" ""
-   load r0,4
-   call r5,hasTail(),r0
+   call4 r5,hasTail(),r1,r2,r3,r4
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 8 8 0 "hastail" ""
    say r5
@@ -61,8 +59,7 @@ l124bexprend:
    .traceevent "V" 6 "R" "I" "r" 2 9 9 0 "first" ""
    .traceevent "V" 6 "R" "I" "r" 3 9 9 0 "second" ""
    .traceevent "V" 6 "R" "I" "r" 4 9 9 0 "third" ""
-   load r0,4
-   call r5,hasTail(),r0
+   call4 r5,hasTail(),r1,r2,r3,r4
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 9 9 0 "hastail" ""
    say r5
@@ -72,8 +69,7 @@ l124bexprend:
    .traceevent "V" 6 "R" "I" "r" 2 10 10 0 "first" ""
    .traceevent "V" 6 "R" "I" "r" 3 10 10 0 "second" ""
    .traceevent "V" 6 "R" "I" "r" 4 10 10 0 "third" ""
-   load r0,4
-   call r5,mutateTailIndirect(),r0
+   call4 r5,mutateTailIndirect(),r1,r2,r3,r4
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 10 10 0 "mutatetailindirect" ""
    say r5
@@ -155,9 +151,7 @@ mutateTailIndirect() .locals=5
    isub r3,r3,1
    ichkrng a1,1,r3
    linkarg r3,a1,1
-   load r1,1
-   swapcall r4,bumpOne(),r1,r3,r2
-   swap r3,r2
+   call1 r4,bumpOne(),r3
    unlink r3
    .traceevent "F" 4 "R" "I" "r" 4 32 32 0 "bumpone" ""
    ret r4

@@ -32,10 +32,9 @@ main() .locals=4
    .srcstep 5 5 17 "inline_test_ref_indexed.crexx" 10 1 23 "say refBump(values[idx])"
    .traceevent "V" 6 "R" "I" "g" 0 5 5 0 "idx" ""
    .traceevent "C" 4 "R" "I" "g" 0 5 5 0 "values" ""
-   setlinkiload r2,g1,3,g0,r0,1
+   setlinkattr1 r2,g1,3,g0
    .traceevent "V" 6 "R" "I" "r" 2 5 5 0 "values" ""
-   swapcall r3,refBump(),r0,r2,r1
-   swap r2,r1
+   call1 r3,refBump(),r2
    unlink r2
    itos r3
    .traceevent "F" 4 "R" "S" "r" 3 5 5 0 "refbump" ""

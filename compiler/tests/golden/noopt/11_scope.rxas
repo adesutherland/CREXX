@@ -13,8 +13,7 @@ main() .locals=3
    .traceevent "L" 4 "R" "I" "r" 0 1 1 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 1 1 0 "a" ""
    .srcstep 2 2 17 "11_scope.crexx" 4 1 11 "call Inner"
-   load r1,0
-   call r2,Inner(),r1
+   call r2,Inner()
    .traceevent "F" 4 "R" "V" "r" 2 2 2 0 "inner" ""
    .srcstep 5 5 17 "11_scope.crexx" 5 1 10 "if a = 50 then say \"Outer A Preserved\""
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "a" ""

@@ -50,9 +50,8 @@ main() .locals=10
    .traceevent "A" 6 "R" "O" "r" 2 11 11 0 "value" ""
    .srcstep 13 13 17 "inline_test_object_writable_arg.crexx" 14 3 23 "  return value.getName()"
    .traceevent "V" 6 "R" "O" "r" 2 15 15 0 "value" ""
-   load r7,1
-   settpswapcall r5,§inline_test_object_writable_arg.box.getname(),r7,r2,256,r8
-   swap r2,r8
+   settp r2,256
+   call1 r5,§inline_test_object_writable_arg.box.getname(),r2
    .traceevent "F" 4 "R" "S" "r" 5 15 15 0 "getname" ""
    scopy r8,r5
    br l100bexprend

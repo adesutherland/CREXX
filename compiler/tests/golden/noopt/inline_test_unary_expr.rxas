@@ -25,9 +25,7 @@ l8dostart:
    brt l8doend,r2
    .srcstep 5 5 17 "inline_test_unary_expr.crexx" 6 5 19 "    say -addOne(i)"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   load r3,1
-   swapcall r5,addOne(),r3,r0,r4
-   swap r0,r4
+   call1 r5,addOne(),r0
    .traceevent "F" 4 "R" "I" "r" 5 5 5 0 "addone" ""
    isub r4,0,r5
    itos r4
@@ -35,9 +33,7 @@ l8dostart:
    say r4
    .srcstep 6 6 17 "inline_test_unary_expr.crexx" 7 5 19 "    say +addOne(i)"
    .traceevent "V" 6 "R" "I" "r" 0 6 6 0 "i" ""
-   load r4,1
-   swapcall r3,addOne(),r4,r0,r5
-   swap r0,r5
+   call1 r3,addOne(),r0
    .traceevent "F" 4 "R" "I" "r" 3 6 6 0 "addone" ""
    icopy r5,r3
    itos r5

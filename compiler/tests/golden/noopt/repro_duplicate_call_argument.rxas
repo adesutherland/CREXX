@@ -21,11 +21,7 @@ main() .locals=6
    .srcstep 3 3 17 "repro_duplicate_call_argument.crexx" 7 3 38 "  say combine_numbers(number, number)"
    .traceevent "V" 6 "R" "I" "r" 0 3 3 0 "number" ""
    .traceevent "V" 6 "R" "I" "r" 0 3 3 0 "number" ""
-   load r2,2
-   copy r4,r0
-   swap r3,r0
-   call r5,combine_numbers(),r2
-   swap r0,r3
+   call2 r5,combine_numbers(),r0,r0
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 3 3 0 "combine_numbers" ""
    say r5

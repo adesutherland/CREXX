@@ -32,10 +32,9 @@ main() .locals=3
    .srcstep 6 6 17 "inline_test_ref_negative.crexx" 10 1 28 "if refBump(values[idx]) & 1 then say \"branch\""
    .traceevent "V" 6 "R" "I" "g" 0 6 6 0 "idx" ""
    .traceevent "C" 4 "R" "I" "g" 0 6 6 0 "values" ""
-   setlinkiload r2,g1,3,g0,r0,1
+   setlinkattr1 r2,g1,3,g0
    .traceevent "V" 6 "R" "I" "r" 2 6 6 0 "values" ""
-   swapcall r2,refBump(),r0,r2,r1
-   swap r2,r1
+   call1 r1,refBump(),r2
    unlink r2
    .traceevent "F" 4 "R" "B" "r" 1 6 6 0 "refbump" ""
    brf l32andend,r1

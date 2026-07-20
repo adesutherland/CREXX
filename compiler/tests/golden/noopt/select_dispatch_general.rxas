@@ -30,25 +30,19 @@ l20dostart:
    brt l20doend,r4
    .srcstep 6 6 17 "select_dispatch_general.crexx" 9 5 27 "    say if_classify(index)"
    .traceevent "V" 6 "R" "I" "r" 1 6 6 0 "index" ""
-   load r5,1
-   swapcall r7,if_classify(),r5,r1,r6
-   swap r1,r6
+   call1 r7,if_classify(),r1
    itos r7
    .traceevent "F" 4 "R" "S" "r" 7 6 6 0 "if_classify" ""
    say r7
    .srcstep 7 7 17 "select_dispatch_general.crexx" 10 5 32 "    say classic_classify(index)"
    .traceevent "V" 6 "R" "I" "r" 1 7 7 0 "index" ""
-   load r6,1
-   swapcall r5,classic_classify(),r6,r1,r7
-   swap r1,r7
+   call1 r5,classic_classify(),r1
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 7 7 0 "classic_classify" ""
    say r5
    .srcstep 8 8 17 "select_dispatch_general.crexx" 11 5 31 "    say strict_classify(index)"
    .traceevent "V" 6 "R" "I" "r" 1 8 8 0 "index" ""
-   load r6,1
-   swapcall r5,strict_classify(),r6,r1,r7
-   swap r1,r7
+   call1 r5,strict_classify(),r1
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 8 8 0 "strict_classify" ""
    say r5
@@ -57,9 +51,7 @@ l20dostart:
    iadd r6,r1,11
    .traceevent "O" 4 "R" "I" "r" 6 9 9 0 "" ""
    .traceevent "V" 6 "R" "I" "r" 1 9 9 0 "index" ""
-   load r5,2
-   swapcall r2,mixed_if(),r5,r1,r7
-   swap r1,r7
+   call2 r2,mixed_if(),r6,r1
    itos r2
    .traceevent "F" 4 "R" "S" "r" 2 9 9 0 "mixed_if" ""
    say r2
@@ -74,16 +66,14 @@ l20doend:
    .traceevent "L" 4 "R" "I" "r" 6 12 12 0 "" ""
    load r7,99
    .traceevent "L" 4 "R" "I" "r" 7 12 12 0 "" ""
-   load r5,2
-   call r4,mixed_if(),r5
+   call2 r4,mixed_if(),r6,r7
    itos r4
    .traceevent "F" 4 "R" "S" "r" 4 12 12 0 "mixed_if" ""
    say r4
    .srcstep 13 13 17 "select_dispatch_general.crexx" 16 3 23 "  say referenced_if(2)"
    load r7,2
    .traceevent "L" 4 "R" "I" "r" 7 13 13 0 "" ""
-   load r6,1
-   call r5,referenced_if(),r6
+   call1 r5,referenced_if(),r7
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 13 13 0 "referenced_if" ""
    say r5
@@ -93,9 +83,7 @@ l20doend:
    .traceevent "A" 6 "R" "I" "r" 0 14 14 0 "exposed_value" ""
    .srcstep 15 15 17 "select_dispatch_general.crexx" 18 3 32 "  say exposed_if(exposed_value)"
    .traceevent "V" 6 "R" "I" "r" 0 15 15 0 "exposed_value" ""
-   load r6,1
-   swapcall r5,exposed_if(),r6,r0,r7
-   swap r0,r7
+   call1 r5,exposed_if(),r0
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 15 15 0 "exposed_if" ""
    say r5
@@ -106,32 +94,29 @@ l20doend:
    .srcstep 17 17 17 "select_dispatch_general.crexx" 20 3 21 "  say string_if(\"b\")"
    load r7,"b"
    .traceevent "L" 4 "R" "S" "r" 7 17 17 0 "" ""
-   load r6,1
-   settpcall r5,string_if(),r6,r7,768
+   settp r7,768
+   call1 r5,string_if(),r7
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 17 17 0 "string_if" ""
    say r5
    .srcstep 18 18 17 "select_dispatch_general.crexx" 21 3 18 "  say short_if(2)"
    load r7,2
    .traceevent "L" 4 "R" "I" "r" 7 18 18 0 "" ""
-   load r6,1
-   call r5,short_if(),r6
+   call1 r5,short_if(),r7
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 18 18 0 "short_if" ""
    say r5
    .srcstep 19 19 17 "select_dispatch_general.crexx" 22 3 19 "  say public_if(2)"
    load r7,2
    .traceevent "L" 4 "R" "I" "r" 7 19 19 0 "" ""
-   load r6,1
-   call r5,public_if(),r6
+   call1 r5,public_if(),r7
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 19 19 0 "public_if" ""
    say r5
    .srcstep 20 20 17 "select_dispatch_general.crexx" 23 3 22 "  say duplicate_if(1)"
    load r7,1
    .traceevent "L" 4 "R" "I" "r" 7 20 20 0 "" ""
-   load r6,1
-   call r5,duplicate_if(),r6
+   call1 r5,duplicate_if(),r7
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 20 20 0 "duplicate_if" ""
    say r5

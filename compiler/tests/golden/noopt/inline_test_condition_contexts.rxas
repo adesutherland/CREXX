@@ -13,8 +13,7 @@ main() .locals=5
    .srcstep 4 4 17 "inline_test_condition_contexts.crexx" 6 3 14 "  if isOne(1) then say \"if-yes\""
    load r3,1
    .traceevent "L" 4 "R" "I" "r" 3 4 4 0 "" ""
-   load r2,1
-   call r4,isOne(),r2
+   call1 r4,isOne(),r3
    .traceevent "F" 4 "R" "B" "r" 4 4 4 0 "isone" ""
    brf l14iffalse,r4
    .srcstep 5 5 17 "inline_test_condition_contexts.crexx" 6 15 19 "  if isOne(1) then say \"if-yes\""
@@ -29,8 +28,7 @@ l14ifend:
    .srcstep 9 9 17 "inline_test_condition_contexts.crexx" 9 3 14 "  if isOne(2) then say \"bad-if-no\""
    load r4,2
    .traceevent "L" 4 "R" "I" "r" 4 9 9 0 "" ""
-   load r3,1
-   call r2,isOne(),r3
+   call1 r2,isOne(),r4
    .traceevent "F" 4 "R" "B" "r" 2 9 9 0 "isone" ""
    brf l21iffalse,r2
    .srcstep 10 10 17 "inline_test_condition_contexts.crexx" 9 15 19 "  if isOne(2) then say \"bad-if-no\""
@@ -51,9 +49,7 @@ l21ifend:
 l25dostart:
    .srcstep 13 13 17 "inline_test_condition_contexts.crexx" 13 6 23 "  do while belowTwo(i)"
    .traceevent "V" 6 "R" "I" "r" 0 0 0 0 "i" ""
-   load r3,1
-   swapcall r2,belowTwo(),r3,r0,r4
-   swap r0,r4
+   call1 r2,belowTwo(),r0
    .traceevent "F" 4 "R" "B" "r" 2 0 0 0 "belowtwo" ""
    brf l25doend,r2
    .srcstep 14 14 17 "inline_test_condition_contexts.crexx" 14 5 18 "    say \"while\" i"
@@ -92,9 +88,7 @@ l43dostart:
 l43doinc:
    .srcstep 19 19 17 "inline_test_condition_contexts.crexx" 19 6 25 "  do until atLeastTwo(j)"
    .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "j" ""
-   load r3,1
-   swapcall r2,atLeastTwo(),r3,r1,r4
-   swap r1,r4
+   call1 r2,atLeastTwo(),r1
    .traceevent "F" 4 "R" "B" "r" 2 0 0 0 "atleasttwo" ""
    brt l43doend,r2
    .srcstep 23 23 17 "inline_test_condition_contexts.crexx" 22 3 6 "  end"

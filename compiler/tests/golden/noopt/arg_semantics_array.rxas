@@ -27,18 +27,16 @@ main() .locals=5
    unlink r2
    .srcstep 4 4 17 "arg_semantics_array.crexx" 9 3 38 "  say \"array-read=\" || readArray(arr)"
    .traceevent "V" 6 "R" "S" "r" 0 4 4 0 "arr" ""
-   load r1,1
-   settpswapcall r3,readArray(),r1,r0,256,r2
-   swap r0,r2
+   settp r0,256
+   call1 r3,readArray(),r0
    .traceevent "F" 4 "R" "S" "r" 3 4 4 0 "readarray" ""
    concat r3,"array-read=",r3
    .traceevent "O" 4 "R" "S" "r" 3 4 4 0 "" ""
    say r3
    .srcstep 5 5 17 "arg_semantics_array.crexx" 10 3 44 "  say \"array-mut=\" || mutateArrayLocal(arr)"
    .traceevent "V" 6 "R" "S" "r" 0 5 5 0 "arr" ""
-   load r2,1
-   settpswapcall r1,mutateArrayLocal(),r2,r0,256,r3
-   swap r0,r3
+   settp r0,256
+   call1 r1,mutateArrayLocal(),r0
    .traceevent "F" 4 "R" "S" "r" 1 5 5 0 "mutatearraylocal" ""
    concat r3,"array-mut=",r1
    .traceevent "O" 4 "R" "S" "r" 3 5 5 0 "" ""
@@ -58,20 +56,17 @@ main() .locals=5
    .traceevent "O" 4 "R" "S" "r" 2 6 6 0 "" ""
    say r2
    .srcstep 7 7 17 "arg_semantics_array.crexx" 12 3 50 "  say \"array-temp=\" || mutateArrayLocal(makeArray())"
-   load r1,0
-   call r3,makeArray(),r1
+   call r3,makeArray()
    .traceevent "F" 4 "R" "S" "r" 3 7 7 0 "makearray" ""
-   load r2,1
-   settpcall r1,mutateArrayLocal(),r2,r3,256
+   settp r3,256
+   call1 r1,mutateArrayLocal(),r3
    .traceevent "F" 4 "R" "S" "r" 1 7 7 0 "mutatearraylocal" ""
    concat r3,"array-temp=",r1
    .traceevent "O" 4 "R" "S" "r" 3 7 7 0 "" ""
    say r3
    .srcstep 8 8 17 "arg_semantics_array.crexx" 13 3 27 "  call mutateArrayRef(arr)"
    .traceevent "V" 6 "R" "S" "r" 0 8 8 0 "arr" ""
-   load r2,1
-   swapcall r1,mutateArrayRef(),r2,r0,r3
-   swap r0,r3
+   call1 r1,mutateArrayRef(),r0
    .traceevent "F" 4 "R" "V" "r" 1 8 8 0 "mutatearrayref" ""
    .srcstep 9 9 17 "arg_semantics_array.crexx" 14 3 45 "  say \"array-ref=\" || arr[1] || \":\" || arr[2]"
    minlinkattr1 r3,r0,1

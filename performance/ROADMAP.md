@@ -839,7 +839,7 @@ coverage gaps are in
 
 | ID | Activity | Status | Current note / boundary |
 | --- | --- | --- | --- |
-| NR-12 | Extend read-only by-value and return copy coalescing | queued | No weakening of by-value isolation or reference semantics; see IDEA-CALL-01. |
+| NR-12 | Extend read-only by-value and return copy coalescing | deferred | RXAS inspection is complete: never-written real formals already alias `aN`; unconditional overwrite exposes DSE, but conditional/loop isolation needs the forthcoming flow analysis. No implementation is selected; see `NR-12-21-WORKLIST.md`. |
 | NR-13 | Redundant numeric-context setup elimination | queued | Existing `NUMSCI`/`NUMENG` lowering completed under NR-09; future work may compare a full synthesized context operation and procedure-owned frame-entry default. Effective inherited context must remain identical. |
 | NR-14 | Static/frozen `PARSE` lowering fast path | queued | General supported templates only; retain `parseExec` fallback. |
 | NR-15 | General stem default/reset fast path | queued | Preserve generation/default/drop/tail semantics. |
@@ -855,13 +855,63 @@ These are time-boxed evidence activities, not production commitments.
 
 | ID | Prototype | Status | Adoption question |
 | --- | --- | --- | --- |
-| NR-21 | Mapped-call descriptor | queued | Does it materially beat compiler placement while preserving aliases and cold unwind? |
+| NR-21 | Mapped-call descriptor | complete | Adrian accepted permanent `CALL1...CALL4` with enforced RXBIN 007 feature bit 0 after the first Release verdict improved List about 6% and Permute 3-4% in both VMs, with neutral Richards, no JSON control regression and smaller images. The descriptor alternative was rejected; complete Debug build, focused 17/17 and final broad CTest 1,871/1,871 pass. NR-12 remains deferred. See `NR-12-21-WORKLIST.md`. |
 | NR-22 | Compact runtime execution stream | queued | Does it improve total portfolio time on at least two architectures with canonical RXBIN unchanged? |
 | NR-23 | Runtime quickening/superinstructions | queued | Use the completed NR-09 evidence when comparing private-runtime synthesis with canonical new opcodes; can dequickening, signals, TRACE/debug, late load and both VM modes remain correct? |
 | NR-24 | Profile-selected fusion | queued | Extend the completed NR-09 evidence only where RXSEQ-selected semantic units repeat across the portfolio without code-size explosion and beat compiler lowering or procedure defaults. |
 | NR-25 | Value hot/cold split or pool allocator | queued | Do cache/allocation counters justify the ownership and complexity cost? |
 
 ## Idea ledger
+
+### NR-12 / bounded NR-21 work notes
+
+- 2026-07-20: Started the ordered call-convention investigation from clean
+  `develop` commit `5626d6b87`. The retained NR-05 CSV reproduces 14,959,323
+  arity-zero-through-four calls out of 16,439,420 (90.996659% overall,
+  87.792028% optimized and 92.868653% unoptimized). JSON deliberately remains
+  the high-arity fallback/non-regression case. The resumable audit, design,
+  guarded-PoC, protected-input and inlining gates are in
+  `NR-12-21-WORKLIST.md`. No public opcode, serialized RXBIN, ABI or
+  architectural change is selected by starting this work.
+- 2026-07-20: The default-off fixed-arity direct-bytecode PoC passed the
+  opt/no-opt two-VM portfolio, focused arity/repeated/overlap/status/reference/
+  signal tests, effects metadata and assembler/linker/disassembler round-trip.
+  It preserves the ordinary callee `a1...aN` contract and status flags while
+  removing eligible call-window marshalling. The 11-source static portfolio
+  falls 262 optimized and 333 no-opt executable instructions with identical
+  `.locals`, register ceilings, copy counts and non-marshalling opcode choices.
+  A bounded Release capture is clearly positive for List and Permute in both
+  VMs and neutral/noisy elsewhere; this is design-selection evidence, not the
+  mandatory production verdict. NR-12 implementation is deferred to flow
+  analysis, and inline formal/result scaffolding remains a separate follow-on.
+- 2026-07-20: Adrian approved the fixed direct-bytecode design and explicit
+  RXBIN compatibility policy. The provisional production implementation uses
+  `CALL1...CALL4` at IDs 401-404 and enforced
+  `RXBIN007_FEATURE_FIXED_CALLS`; zero-feature RXBIN 007 remains readable and
+  unsupported/missing features fail closed. NR-06 affinity, dynamic/native
+  calls, NR-12 and inline lowering remain out of scope. The implementation is
+  frozen after minimum focused correctness for the mandatory ordinary-Release
+  verdict.
+- 2026-07-20: The frozen ordinary profiling-off Release comparison passed
+  focused Debug CTest 17/17 and the pre-timing smoke matrix 16/16. Across 12
+  recorded paired rounds, List improved 6.015%/5.784% and Permute
+  3.849%/3.224% in `rxvm`/`rxbvm`; Richards was neutral and the high-arity JSON
+  control improved 0.904%/1.983%. All candidate linked images were smaller and
+  every timing cell declined a rerun. First production verdict: **ACCEPT**.
+  Exact evidence is retained in
+  `evidence/2026-07-20-nr-21-first-release-verdict/`. Work stops here pending
+  Adrian's direction; NR-12 remains deferred for flow analysis.
+- 2026-07-20: Adrian accepted the first production verdict and approved the
+  shortest QA/documentation closeout plus a local commit. The complete Debug
+  product and focused 17/17 set passed. Broad CTest first exposed 96 expected
+  compiler golden mismatches; the documented refresh changed only fixed-call
+  lowering, standalone status setup and four consequent unfused link forms,
+  with no `.locals`, metadata, source/TRACE or unrelated opcode drift. Final
+  high-parallel Debug CTest passed 1,871/1,871. Compiler, RXAS, RXBIN and VM
+  documentation now agree on selection, feature enforcement, expected status
+  flags and the ordinary callee `a1...aN` view. NR-21 is complete; NR-12 stays
+  deferred for flow analysis. QA evidence is under
+  `evidence/2026-07-20-nr-21-first-release-verdict/qa-closeout/`.
 
 Ideas remain here until assessed, even when rejected. An idea can inform more
 than one `NR-*` activity and does not alter their priority by itself.
@@ -954,9 +1004,9 @@ than one `NR-*` activity and does not alter their priority by itself.
   `match` execution from avoidable lookup/descriptor overhead.
 - Design record: `performance/NR-04A-RUNTIME-TYPE-DISPATCH-DESIGN.md`.
 
-### IDEA-CALL-01 — Read-only by-value formal invariant and call-flag simplification
+### IDEA-CALL-01 — Protected by-value input and call-flag simplification
 
-- Status: captured; assessment not started
+- Status: assessed; implementation deferred pending flow analysis
 - Related activities: NR-05, NR-06, NR-12
 - Hypothesis: strengthen the compiler invariant so a by-value formal proved
   read-only is never the destination of compiler-generated writes and always
@@ -969,6 +1019,10 @@ than one `NR-*` activity and does not alter their priority by itself.
   sets `is_const_arg` for provably read-only by-value formals in optimized and
   no-opt builds. `compiler/rxcpemit.c` already avoids their defensive copy, and
   inlining has matching read-only/writable handling.
+- Inspection result: real never-written formals already bind directly to the
+  incoming `aN`. Write-before-read has a genuine dead eager copy; read-then-write
+  only moves it; conditional/loop writes require path-correct binding and join
+  facts. Adrian selected postponement until the forthcoming flow analysis.
 - Important distinction: `REGTP_VAL` also signals that an optional argument was
   supplied, while `REGTP_NOTSYM` lets a writable large-value formal reuse a
   temporary not backed by a caller-visible symbol. The current flags therefore

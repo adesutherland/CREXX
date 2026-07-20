@@ -28,9 +28,7 @@ l8dostart:
    .srcstep 5 5 17 "inline_test_multi_return_assign.crexx" 6 5 25 "    result = classify(i)"
    .meta "inline_test_multi_return_assign.main.result"="b" ".int" r1
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   load r5,1
-   swapcall r1,classify(),r5,r0,r6
-   swap r0,r6
+   call1 r1,classify(),r0
    .traceevent "F" 4 "R" "I" "r" 1 5 5 0 "classify" ""
    .traceevent "A" 6 "R" "I" "r" 1 5 5 0 "result" ""
    .srcstep 6 6 17 "inline_test_multi_return_assign.crexx" 7 5 15 "    say result"

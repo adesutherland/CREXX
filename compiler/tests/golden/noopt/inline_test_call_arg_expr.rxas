@@ -25,12 +25,9 @@ l8dostart:
    brt l8doend,r2
    .srcstep 5 5 17 "inline_test_call_arg_expr.crexx" 6 5 29 "    say keepValue(addOne(i))"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   load r5,1
-   swapcall r4,addOne(),r5,r0,r6
-   swap r0,r6
+   call1 r4,addOne(),r0
    .traceevent "F" 4 "R" "I" "r" 4 5 5 0 "addone" ""
-   load r3,1
-   call r6,keepValue(),r3
+   call1 r6,keepValue(),r4
    itos r6
    .traceevent "F" 4 "R" "S" "r" 6 5 5 0 "keepvalue" ""
    say r6

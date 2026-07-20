@@ -27,9 +27,7 @@ main() .locals=4
    .traceevent "C" 4 "R" "I" "g" 0 4 4 0 "outbuf" ""
    minlinkattr1 r2,g1,g0,0
    .traceevent "V" 6 "R" "S" "r" 2 4 4 0 "outbuf" ""
-   load r0,1
-   swapcall r3,fillSlot(),r0,r2,r1
-   swap r2,r1
+   call1 r3,fillSlot(),r2
    unlink r2
    .traceevent "F" 4 "R" "V" "r" 3 4 4 0 "fillslot" ""
    .srcstep 5 5 17 "inline_test_ref_stem.crexx" 10 1 13 "say outbuf[1]"

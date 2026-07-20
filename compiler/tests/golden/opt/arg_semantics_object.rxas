@@ -69,8 +69,8 @@ l168bexprend:
    .traceevent "A" 6 "R" "O" "r" 7 16 16 0 "value" ""
    .srcstep 18 18 17 "arg_semantics_object.crexx" 20 3 23 "  return value.getName()"
    .traceevent "V" 6 "R" "O" "r" 7 20 20 0 "value" ""
-   load r6,1
-   settpcall r2,§arg_semantics_object.box.getname(),r6,r7,256
+   settp r7,256
+   call1 r2,§arg_semantics_object.box.getname(),r7
    .traceevent "F" 4 "R" "S" "r" 2 20 20 0 "getname" ""
    scopy r6,r2
    br l178bexprend
@@ -135,8 +135,8 @@ l234bexprend:
    .traceevent "A" 6 "R" "O" "r" 7 35 35 0 "value" ""
    .srcstep 37 37 17 "arg_semantics_object.crexx" 20 3 23 "  return value.getName()"
    .traceevent "V" 6 "R" "O" "r" 7 39 39 0 "value" ""
-   load r6,1
-   settpcall r14,§arg_semantics_object.box.getname(),r6,r7,256
+   settp r7,256
+   call1 r14,§arg_semantics_object.box.getname(),r7
    .traceevent "F" 4 "R" "S" "r" 14 39 39 0 "getname" ""
    scopy r6,r14
    br l228bexprend

@@ -725,15 +725,29 @@ static int rxbin007_pool_operand_type(OperandType type) {
            type == OP_DECIMAL || type == OP_BINARY;
 }
 
+static uint32_t rxbin007_opcode_features(int opcode) {
+    switch (opcode) {
+        case OP_CALL1_REG_FUNC_REG:
+        case OP_CALL2_REG_FUNC_REG_REG:
+        case OP_CALL3_REG_FUNC_REG_REG_REG:
+        case OP_CALL4_REG_FUNC_REG_REG_REG_REG:
+            return RXBIN007_FEATURE_FIXED_CALLS;
+        default:
+            return 0u;
+    }
+}
+
 static int rxbin007_encode_instructions(const module_file *module,
                                         const rxbin007_pool *pool,
                                         const RxGraph *graph,
-                                        rxbin_byte_buffer *output) {
+                                        rxbin_byte_buffer *output,
+                                        uint32_t *feature_flags) {
     const bin_code *instructions;
     rxbin_var_writer writer;
     size_t index;
 
-    if (!module || (module->header.instruction_size && !module->instructions)) return 0;
+    if (!module || !feature_flags ||
+        (module->header.instruction_size && !module->instructions)) return 0;
     instructions = (const bin_code *)module->instructions;
     index = 0u;
     rxbin_var_writer_init(&writer, output);
@@ -745,6 +759,7 @@ static int rxbin007_encode_instructions(const module_file *module,
 
         opcode = instructions[index].instruction.opcode;
         if (opcode < 0 || opcode >= OP_MAX_INSTRUCTIONS) return 0;
+        *feature_flags |= rxbin007_opcode_features(opcode);
         format = rxbin_opcode_format(opcode);
         operand_count = rxop_format_operand_count(format);
         if (instructions[index].instruction.no_ops != operand_count ||
@@ -947,6 +962,7 @@ static int rxbin007_pack_sections(rxbin007_section *sections) {
 
 static int rxbin007_write_container(rxbin007_section *sections,
                                     size_t module_count,
+                                    uint32_t feature_flags,
                                     FILE *file) {
     rxbin_byte_buffer output;
     static const unsigned char zeros[304] = {0};
@@ -966,7 +982,7 @@ static int rxbin007_write_container(rxbin007_section *sections,
     file_size = output.size;
     memcpy(output.data, RXBIN007_MAGIC, 8u);
     if (!rxbin007_put_u32(&output, 8u, RXBIN007_HEADER_SIZE) ||
-        !rxbin007_put_u32(&output, 12u, 0u) ||
+        !rxbin007_put_u32(&output, 12u, feature_flags) ||
         !rxbin007_put_u64(&output, 16u, file_size) ||
         !rxbin007_put_u32(&output, 24u, RXBIN007_SECTION_COUNT) ||
         !rxbin007_put_u32(&output, 28u, (uint32_t)module_count) ||
@@ -1008,6 +1024,7 @@ int write_modules(module_file *const *input_modules,
     size_t graph_facts_size;
     size_t graph_indexes_size;
     size_t i;
+    uint32_t feature_flags;
     int ok;
 
     rxbin007_clear_error();
@@ -1066,6 +1083,7 @@ int write_modules(module_file *const *input_modules,
     }
 
     memset(sections, 0, sizeof(sections));
+    feature_flags = 0u;
     for (i = 0u; i < RXBIN007_SECTION_COUNT; i++) {
         sections[i].kind = (uint32_t)i + 1u;
         sections[i].alignment = 8u;
@@ -1080,7 +1098,8 @@ int write_modules(module_file *const *input_modules,
         if (!rxbin007_encode_instructions(modules[i].module,
                                           &pools[modules[i].pool_index],
                                           semantic_graph,
-                                          &sections[1].bytes)) goto section_error;
+                                          &sections[1].bytes,
+                                          &feature_flags)) goto section_error;
         modules[i].instruction_size = sections[1].bytes.size -
                                       (size_t)modules[i].instruction_offset;
     }
@@ -1114,7 +1133,10 @@ int write_modules(module_file *const *input_modules,
     }
     free(graph_facts);
     free(graph_indexes);
-    ok = rxbin007_write_container(sections, module_count, outFile);
+    ok = rxbin007_write_container(sections,
+                                  module_count,
+                                  feature_flags,
+                                  outFile);
     rxbin007_free_sections(sections);
     rx_graph_release(&built_graph);
     rxbin007_free_pools(pools, pool_count);
@@ -1840,6 +1862,7 @@ static int rxbin007_decode_instructions(const unsigned char *data,
                                         size_t word_count,
                                         const rxbin007_pool_read *pool,
                                         const RxGraph *graph,
+                                        uint32_t feature_flags,
                                         bin_code **instructions_out) {
     rxbin_var_reader reader;
     bin_code *instructions;
@@ -1861,6 +1884,14 @@ static int rxbin007_decode_instructions(const unsigned char *data,
 
         if (!rxbin_var_reader_read(&reader, &opcode_token) ||
             opcode_token >= (uint64_t)OP_MAX_INSTRUCTIONS) goto error;
+        if ((rxbin007_opcode_features((int)opcode_token) & feature_flags) !=
+            rxbin007_opcode_features((int)opcode_token)) {
+            rxbin007_set_error(
+                    "RXBIN 007 opcode %llu requires feature flag 0x%08x",
+                    (unsigned long long)opcode_token,
+                    (unsigned int)rxbin007_opcode_features((int)opcode_token));
+            goto error;
+        }
         format = rxbin_opcode_format((int)opcode_token);
         operand_count = rxop_format_operand_count(format);
         if (operand_count > INT_MAX || index + operand_count >= word_count) goto error;
@@ -1951,6 +1982,7 @@ static int rxbin007_parse_modules(const rxbin007_section_view *module_section,
                                   rxbin007_pool_read *pools,
                                   uint32_t pool_count,
                                   RxGraph *graph,
+                                  uint32_t feature_flags,
                                   rxbin007_image_state **state_out) {
     rxbin007_image_state *state;
     uint32_t schema;
@@ -2051,6 +2083,7 @@ static int rxbin007_parse_modules(const rxbin007_section_view *module_section,
                                           (size_t)instruction_words,
                                           &pools[pool_index],
                                           graph,
+                                          feature_flags,
                                           (bin_code **)&module->instructions)) {
             free_module(module);
             goto error;
@@ -2100,6 +2133,7 @@ static int rxbin007_parse_image(const unsigned char *image,
     rxbin007_section_view sections[RXBIN007_SECTION_COUNT];
     uint64_t declared_file_size;
     uint64_t directory_offset;
+    uint32_t feature_flags;
     uint32_t section_count;
     uint32_t module_count;
     size_t previous_end;
@@ -2117,8 +2151,14 @@ static int rxbin007_parse_image(const unsigned char *image,
     if (!state_out || !image || image_size < RXBIN007_HEADER_SIZE ||
         memcmp(image, RXBIN007_MAGIC, 8u) != 0 ||
         rxbin007_read_u32_at(image + 8u) != RXBIN007_HEADER_SIZE ||
-        rxbin007_read_u32_at(image + 12u) != 0u ||
         !rxbin007_zero_bytes(image + 40u, 24u)) return 0;
+    feature_flags = rxbin007_read_u32_at(image + 12u);
+    if (feature_flags & ~RXBIN007_SUPPORTED_FEATURES) {
+        rxbin007_set_error("RXBIN 007 has unsupported feature flags 0x%08x",
+                           (unsigned int)(feature_flags &
+                                          ~RXBIN007_SUPPORTED_FEATURES));
+        return 0;
+    }
     declared_file_size = rxbin007_read_u64_at(image + 16u);
     section_count = rxbin007_read_u32_at(image + 24u);
     module_count = rxbin007_read_u32_at(image + 28u);
@@ -2240,6 +2280,7 @@ static int rxbin007_parse_image(const unsigned char *image,
                                 pools,
                                 pool_count,
                                 graph,
+                                feature_flags,
                                 &state)) goto error;
     rxbin007_free_pool_reads(pools, pool_count, 0);
     rx_graph_release(&graph);

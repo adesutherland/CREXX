@@ -16,8 +16,7 @@ main() .locals=3
    .srcstep 3 3 17 "interface_default_codegen.crexx" 4 1 16 "main: procedure"
    numsci 18,1,1
    .srcstep 1 1 17 "interface_default_codegen.crexx" 5 3 22 "  say .box().describe()"
-   load r2,0
-   call r1,§interface_default_codegen.box.§factory(),r2
+   call r1,§interface_default_codegen.box.§factory()
    .traceevent "F" 4 "R" "O" "r" 1 1 1 0 "§factory" ""
    load r0,1
    settp r1,256

@@ -26,9 +26,7 @@ l8dostart:
    .srcstep 5 5 17 "inline_test_concat_expr.crexx" 6 5 34 "    msg = \"Value=\" || asString(i)"
    .meta "inline_test_concat_expr.main.msg"="b" ".string" r1
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   load r4,1
-   swapcall r6,asString(),r4,r0,r5
-   swap r0,r5
+   call1 r6,asString(),r0
    .traceevent "F" 4 "R" "S" "r" 6 5 5 0 "asstring" ""
    concat r1,"Value=",r6
    .traceevent "O" 4 "R" "S" "r" 1 5 5 0 "" ""

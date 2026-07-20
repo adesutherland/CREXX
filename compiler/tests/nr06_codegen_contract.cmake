@@ -53,18 +53,18 @@ foreach(image IN ITEMS nr06_opt nr06_noopt)
     file(READ "${WORK_DIR}/${image}.rxas" ${image})
 endforeach()
 
-assert_count(nr06_opt "\n[ \t]+swap " 2
-             "NR-06 optimized swaps after exact placement")
+assert_count(nr06_opt "\n[ \t]+swap " 0
+             "fixed-call optimized call-window swaps")
 assert_count(nr06_opt "\n[ \t]+(icopy|fcopy) " 0
-             "NR-06 optimized typed call-window copies")
-assert_count(nr06_opt "\n[ \t]+copy " 1
-             "NR-06 optimized repeated-source snapshot")
-assert_count(nr06_noopt "\n[ \t]+swap " 14
-             "NR-06 no-opt baseline swaps")
+             "fixed-call optimized typed call-window copies")
+assert_count(nr06_opt "\n[ \t]+copy " 0
+             "fixed-call optimized repeated-source snapshots")
+assert_count(nr06_noopt "\n[ \t]+swap " 0
+             "fixed-call no-opt call-window swaps")
 assert_count(nr06_noopt "\n[ \t]+(icopy|fcopy) " 0
-             "NR-06 no-opt typed call-window copies")
-assert_count(nr06_noopt "\n[ \t]+copy " 1
-             "NR-06 no-opt repeated-source snapshot")
+             "fixed-call no-opt typed call-window copies")
+assert_count(nr06_noopt "\n[ \t]+copy " 0
+             "fixed-call no-opt repeated-source snapshots")
 
 assert_matches(nr06_opt "\nmain\\(\\) \\.locals=11\n"
                "NR-06 optimized main register high-water mark")
@@ -74,37 +74,32 @@ assert_matches(nr06_noopt "\nmain\\(\\) \\.locals=9\n"
                "NR-06 no-opt main register high-water mark")
 assert_matches(nr06_noopt "\nconflictCases\\(\\) \\.locals=9\n"
                "NR-06 no-opt fallback register high-water mark")
-assert_count(nr06_opt
-             "\n[ \t]+load r0,2\n[ \t]+call [^\n]*,add\\(\\),r0"
-             2
-             "NR-06 exact two-argument call windows")
+assert_count(nr06_opt "\n[ \t]+call1 " 7
+             "fixed arity-one optimized calls")
+assert_count(nr06_opt "\n[ \t]+call2 " 4
+             "fixed arity-two optimized calls")
+assert_count(nr06_noopt "\n[ \t]+call1 " 7
+             "fixed arity-one no-opt calls")
+assert_count(nr06_noopt "\n[ \t]+call2 " 4
+             "fixed arity-two no-opt calls")
 assert_matches(nr06_opt
-               "\n[ \t]+settpcall [^\n]*,optionalInt\\(\\),r0,r1,256"
-               "NR-06 exact optional argument window")
+               "\n[ \t]+settp r1,256\n[ \t]+call1 [^\n]*,optionalInt\\(\\),r1"
+               "fixed-call optional argument status")
 assert_matches(nr06_opt
-               "\n[ \t]+settpcall [^\n]*,echoText\\(\\),r7,r8,256"
-               "NR-06 exact string argument window")
+               "\n[ \t]+settp r8,256\n[ \t]+call1 [^\n]*,echoText\\(\\),r8"
+               "fixed-call string argument status")
 assert_matches(nr06_opt
-               "\n[ \t]+load r0,1\n[ \t]+call [^\n]*,incrementRef\\(\\),r0"
-               "NR-06 exact reference argument window")
+               "\n[ \t]+call1 [^\n]*,incrementRef\\(\\),r1"
+               "fixed-call reference argument")
 assert_matches(nr06_opt
-               "\n[ \t]+copy r[0-9]+,r[0-9]+\n[ \t]+swap r[0-9]+,r[0-9]+\n[ \t]+call [^\n]*,add\\(\\),r[0-9]+\n[ \t]+swap r[0-9]+,r[0-9]+"
-               "NR-06 repeated-source incompatible-window fallback")
-assert_not_matches(nr06_opt
-               "\n[ \t]+swap r[0-9]+,r[0-9]+\n[ \t]+call [^\n]*,optionalInt\\(\\),r[0-9]+\n[ \t]+swap r[0-9]+,r[0-9]+"
-               "NR-06 optimized optional swap pair")
-assert_not_matches(nr06_opt
-               "\n[ \t]+swap r[0-9]+,r[0-9]+\n[ \t]+call [^\n]*,echoText\\(\\),r[0-9]+\n[ \t]+swap r[0-9]+,r[0-9]+"
-               "NR-06 optimized string swap pair")
-assert_not_matches(nr06_opt
-               "\n[ \t]+swap r[0-9]+,r[0-9]+\n[ \t]+call [^\n]*,incrementRef\\(\\),r[0-9]+\n[ \t]+swap r[0-9]+,r[0-9]+"
-               "NR-06 optimized reference swap pair")
+               "\n[ \t]+call2 [^\n]*,add\\(\\),r1,r1"
+               "fixed-call repeated scalar register")
 assert_matches(nr06_noopt
-               "\n[ \t]+settpswapcall [^\n]*,optionalInt\\(\\),r[0-9]+,r[0-9]+,256,r[0-9]+\n[ \t]+swap r[0-9]+,r[0-9]+"
-               "NR-06 no-opt optional fused preparation and restore")
+               "\n[ \t]+settp r1,256\n[ \t]+call1 [^\n]*,optionalInt\\(\\),r1"
+               "fixed-call no-opt optional argument status")
 assert_matches(nr06_noopt
-               "\n[ \t]+settpswapcall [^\n]*,echoText\\(\\),r[0-9]+,r[0-9]+,256,r[0-9]+\n[ \t]+swap r[0-9]+,r[0-9]+"
-               "NR-06 no-opt string fused preparation and restore")
+               "\n[ \t]+settp r3,256\n[ \t]+call1 [^\n]*,echoText\\(\\),r3"
+               "fixed-call no-opt string argument status")
 assert_matches(nr06_noopt
-               "\n[ \t]+swapcall [^\n]*,incrementRef\\(\\),r[0-9]+,r[0-9]+,r[0-9]+\n[ \t]+swap r[0-9]+,r[0-9]+"
-               "NR-06 no-opt reference fused preparation and restore")
+               "\n[ \t]+call2 [^\n]*,add\\(\\),r2,r2"
+               "fixed-call no-opt repeated scalar register")
