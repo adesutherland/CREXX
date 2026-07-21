@@ -1148,6 +1148,22 @@ add_test(NAME nr21_fixed_call_contract
 set_tests_properties(nr21_fixed_call_contract PROPERTIES
         LABELS "compiler;performance;rxbin")
 
+add_test(NAME nr14_frozen_parse_contract
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXLINK=$<TARGET_FILE:rxlink>
+                 -DRXDAS=$<TARGET_FILE:rxdas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DMUTATE_FEATURE=$<TARGET_FILE:mutate_rxbin_feature>
+                 -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr14_frozen_parse_contract_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/nr14_frozen_parse_contract.cmake)
+set_tests_properties(nr14_frozen_parse_contract PROPERTIES
+        LABELS "compiler;performance;rxbin;parse")
+
 add_test(NAME nr09_numeric_context_contract
          COMMAND ${CMAKE_COMMAND}
                  -DRXC=$<TARGET_FILE:rxc>

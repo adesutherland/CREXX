@@ -36,6 +36,14 @@ parseexit: class
     _template = .string
     _wanttrim = .int
     _into = .string
+    _direct_kind = .string
+    _direct_target1 = .string
+    _direct_target2 = .string
+    _direct_target3 = .string
+    _direct_split = .int
+    _direct_count = .int
+    _prepared_plan_hex = .string
+    _prepared_result_count = .int
 
     *: factory
         arg nid = .int
@@ -46,6 +54,14 @@ parseexit: class
         _template = ""
         _wanttrim = 0
         _into = ""
+        _direct_kind = ""
+        _direct_target1 = ""
+        _direct_target2 = ""
+        _direct_target3 = ""
+        _direct_split = 0
+        _direct_count = 0
+        _prepared_plan_hex = ""
+        _prepared_result_count = 0
 
     describe: method = .exitdescriptor
         desc = .exitdescriptor
@@ -72,6 +88,14 @@ pre_process: method = .exitplan
   trace_enabled=0
   _wanttrim=0
   _into=''
+  _direct_kind=''
+  _direct_target1=''
+  _direct_target2=''
+  _direct_target3=''
+  _direct_split=0
+  _direct_count=0
+  _prepared_plan_hex=''
+  _prepared_result_count=0
  /* -------------------------------------------------------------------------------------------------------------------
   * Scan leading PARSE modifiers and source selector:
   * UPPER, LOWER, LOG, TRACE, TRIM, INTO, VALUE, VAR, ARG.
@@ -427,19 +451,145 @@ token_end = tokens.0
   _template_texttab=""
   do i = 1 to plan_count
      _template_kindtab = _template_kindtab' 'pkind[i]
-     if strip(ptext[i])='' then ptext[i]='?'
-     _template_texttab = _template_texttab' 'ptext[i]
+     tab_text=ptext[i]
+     if strip(tab_text)='' then tab_text='?'
+     _template_texttab = _template_texttab' 'tab_text
   end
 
   _replacement=''
   if source_kind = "ARG" then parse_string = build_parse_arg_source_expr()
   else parse_string =source_expr
 
-  if _into='' then _into='_parseResult'
+  explicit_into = _into
   if case_mode='UPPER' then _replacement = _replacement"; _source=upper("parse_string")"
   else if case_mode='LOWER' then _replacement = _replacement"; _source=lower("parse_string")"
   else _replacement = _replacement"; _source="parse_string
-  _replacement = _replacement || '; ' || _into || '=parseExec(_source,' || quote_rexx_string(plan) || ',' || quote_rexx_string(_template) || ',' || log_level || ')'
+
+  /*
+   * NR-14 exact lowering is deliberately fail-closed. Only the three immutable
+   * shapes proven hot in RexxCPS are selected here. The generic frozen-plan
+   * path below covers other mechanically prepared forms, and parseExec retains
+   * logging/TRACE and explicit-INTO semantics. Every assisted form first copies
+   * the source to an internal typed string, preserving source/target aliasing
+   * and the existing source string-conversion boundary.
+   */
+  if explicit_into='' & _wanttrim=0 & case_mode='' & log_level=0 &,
+     source_kind \= 'ARG' & source_start_ix=source_end_ix then do
+     if words(_template_kindtab)=6 then do
+        target1=word(_template_texttab,2)
+        target2=word(_template_texttab,4)
+        target3=word(_template_texttab,6)
+        simple_targets=isSimpleDirectTarget(target1,target2,target3)
+        if simple_targets then do
+           if word(_template_kindtab,1)='3' & word(_template_texttab,1)='1' &,
+              word(_template_kindtab,2)='1' & word(_template_kindtab,3)='6' &,
+              word(_template_kindtab,4)='1' & word(_template_kindtab,5)='6' &,
+              word(_template_kindtab,6)='1' then do
+              _direct_kind='WORDS3'
+              _direct_target1=target1
+              _direct_target2=target2
+              _direct_target3=target3
+           end
+        end
+        if _direct_kind='' & target1 \= '.' & target2 \= '.' & target3='.' &,
+           isSimpleDirectTarget(target1,target2,'__drop') then do
+           if word(_template_kindtab,1)='3' & word(_template_texttab,1)='1' &,
+              word(_template_kindtab,2)='1' & word(_template_kindtab,3)='4' &,
+              word(_template_kindtab,4)='1' & word(_template_kindtab,5)='6' &,
+              word(_template_kindtab,6)='1' then do
+              _direct_split=word(_template_texttab,3)
+              if _direct_split > 0 then do
+                 _direct_kind='POSITION2'
+                 _direct_target1=target1
+                 _direct_target2=target2
+              end
+           end
+        end
+     end
+     if _direct_kind='' & words(_template_kindtab)=8 then do
+        target1=word(_template_texttab,2)
+        target2=word(_template_texttab,4)
+        target3=word(_template_texttab,6)
+        if word(_template_texttab,8)='.' & isSimpleDirectTarget(target1,target2,target3) then do
+           if word(_template_kindtab,1)='3' & word(_template_texttab,1)='1' &,
+              word(_template_kindtab,2)='1' & word(_template_kindtab,3)='6' &,
+              word(_template_kindtab,4)='1' & word(_template_kindtab,5)='6' &,
+              word(_template_kindtab,6)='1' & word(_template_kindtab,7)='6' &,
+              word(_template_kindtab,8)='1' then do
+              _direct_kind='WORDS3DROP'
+              _direct_target1=target1
+              _direct_target2=target2
+              _direct_target3=target3
+           end
+        end
+     end
+  end
+
+  /*
+   * Longer odd-sized implicit-word templates can use the exact primitive as a
+   * chain: each instruction commits two word fields and carries the remaining
+   * tail forward; the final odd field is that tail. This preserves the last
+   * target's PARSE-tail semantics and is materially faster than a result-vector
+   * descriptor for this class. Even target counts cannot use this transform
+   * because their final target is a tail, not merely the next word.
+   */
+  if _direct_kind='' & explicit_into='' & log_level=0 then do
+     implicit_count=implicitWordPlanTargetCount(pkind,ptext,plan_count)
+     implicit_pairs=implicit_count/2
+     if implicit_count >= 3 & implicit_pairs*2+1=implicit_count then do
+        _direct_kind='WORDSCHAIN'
+        _direct_count=implicit_count
+     end
+  end
+
+  /* All other mechanically frozen, non-logging plans use one compact binary
+   * descriptor. Explicit INTO retains parseExec until its observable array
+   * assignment/alias contract has a dedicated proof. */
+  if _direct_kind='' & explicit_into='' & log_level=0 then do
+     prepared=compile_prepared_plan_hex(pkind,ptext,plan_count)
+     if substr(prepared,1,8) \= '>>>ERROR' then do
+        _prepared_plan_hex=prepared
+        _prepared_result_count=preparedResultCount(pkind,ptext,plan_count)
+     end
+  end
+
+  if _direct_kind='' & _prepared_plan_hex='' then do
+     if _into='' then _into='_parseResult'
+     _replacement = _replacement || '; ' || _into || '=parseExec(_source,' || quote_rexx_string(plan) || ',' || quote_rexx_string(_template) || ',' || log_level || ')'
+  end
+  else do
+     direct_source='__rxcpx_parse_source_' || _node_id
+     call compile_plan.add_binding("var", direct_source, "", ".string", 0, "parse_direct_source", "")
+     if _prepared_plan_hex \= '' then do
+        prepared_results='__rxcpx_parse_prepared_' || _node_id
+        call compile_plan.add_binding("var", prepared_results, "", ".string", 1, "parse_prepared_results", "")
+     end
+     else if _direct_kind='WORDSCHAIN' then do
+        pair_count=(_direct_count-1)/2
+        do i=1 to _direct_count-1
+           direct_field='__rxcpx_parse_word_' || _node_id || '_' || i
+           call compile_plan.add_binding("var", direct_field, "", ".string", 0, "parse_direct_result", "")
+        end
+        do i=1 to pair_count
+           direct_tail='__rxcpx_parse_tail_' || _node_id || '_' || i
+           call compile_plan.add_binding("var", direct_tail, "", ".string", 0, "parse_direct_tail", "")
+        end
+     end
+     else do
+        direct1='__rxcpx_parse_direct1_' || _node_id
+        direct2='__rxcpx_parse_direct2_' || _node_id
+        call compile_plan.add_binding("var", direct1, "", ".string", 0, "parse_direct_result", "")
+        call compile_plan.add_binding("var", direct2, "", ".string", 0, "parse_direct_result", "")
+        if _direct_kind='WORDS3' | _direct_kind='WORDS3DROP' then do
+           direct3='__rxcpx_parse_direct3_' || _node_id
+           call compile_plan.add_binding("var", direct3, "", ".string", 0, "parse_direct_result", "")
+        end
+     end
+     fast_source=parse_string
+     if case_mode='UPPER' then fast_source='upper(' || parse_string || ')'
+     else if case_mode='LOWER' then fast_source='lower(' || parse_string || ')'
+     _replacement = '; ' || direct_source || '=(' || fast_source || ') as .string'
+  end
 return compile_plan
 
 /* -------------------------------------------------------------------------------------------------------------------
@@ -450,14 +600,14 @@ return compile_plan
  *   1. Rejects token streams that are too short to be a PARSE statement.
  *   2. Verifies that every token type is supported by this exit.
  *   3. Ensures pre_process() has already built replacement code.
- *   4. Appends assignments from the parseExec() result array to each PARSE
- *      target variable.
+ *   4. Emits the selected exact/prepared runtime assist, or appends assignments
+ *      from the parseExec() result array on the generic fallback.
  *   5. Applies STRIP() to target assignments when PARSE TRIM was requested.
  *
  * Target assignment mapping:
  *
  *   _template_kindtab entries with kind 1 represent PARSE targets.
- *   Each target maps to the next parseExec() result slot:
+ *   On the fallback, each target maps to the next parseExec() result slot:
  *
  *       target = _into[n]
  *
@@ -493,6 +643,89 @@ process: method = .exitresult
     end
 
     replacement = _replacement
+    if _direct_kind='WORDS3' | _direct_kind='WORDS3DROP' then do
+       direct_source='__rxcpx_parse_source_' || _node_id
+       direct1='__rxcpx_parse_direct1_' || _node_id
+       direct2='__rxcpx_parse_direct2_' || _node_id
+       direct3='__rxcpx_parse_direct3_' || _node_id
+       if _direct_kind='WORDS3' then
+          replacement = replacement || '; assembler parsewords3 ' || direct1 || ',' || direct2 || ',' || direct3 || ',' || direct_source
+       else
+          replacement = replacement || '; assembler parsewords3d ' || direct1 || ',' || direct2 || ',' || direct3 || ',' || direct_source
+       replacement = replacement || '; ' || _direct_target1 || '=' || direct1
+       replacement = replacement || '; ' || _direct_target2 || '=' || direct2
+       replacement = replacement || '; ' || _direct_target3 || '=' || direct3
+       call result.set_status("REPLACE")
+       call result.add_replacement_line(replacement)
+       return result
+    end
+    if _direct_kind='POSITION2' then do
+       direct_source='__rxcpx_parse_source_' || _node_id
+       direct1='__rxcpx_parse_direct1_' || _node_id
+       direct2='__rxcpx_parse_direct2_' || _node_id
+       replacement = replacement || '; assembler parsepos2 ' || direct1 || ',' || direct2 || ',' || direct_source || ',' || _direct_split
+       replacement = replacement || '; ' || _direct_target1 || '=' || direct1
+       replacement = replacement || '; ' || _direct_target2 || '=' || direct2
+       call result.set_status("REPLACE")
+       call result.add_replacement_line(replacement)
+       return result
+    end
+    if _direct_kind='WORDSCHAIN' then do
+       direct_source='__rxcpx_parse_source_' || _node_id
+       pair_count=(_direct_count-1)/2
+       do pair_index=1 to pair_count
+          field_index=pair_index*2-1
+          direct1='__rxcpx_parse_word_' || _node_id || '_' || field_index
+          direct2='__rxcpx_parse_word_' || _node_id || '_' || (field_index+1)
+          direct_tail='__rxcpx_parse_tail_' || _node_id || '_' || pair_index
+          if pair_index=1 then chain_source=direct_source
+          else chain_source='__rxcpx_parse_tail_' || _node_id || '_' || (pair_index-1)
+          replacement = replacement || '; assembler parsewords3 ' || direct1 || ',' || direct2 || ',' || direct_tail || ',' || chain_source
+       end
+       do target_index=1 to _direct_count
+          var=word(_template_texttab,target_index*2)
+          if var='.' then iterate
+          if isVar(var)=0 then do
+             call result.set_error(1, "PARSE invalid variable name=" || var)
+             return result
+          end
+          if target_index=_direct_count then
+             direct_value='__rxcpx_parse_tail_' || _node_id || '_' || pair_count
+          else
+             direct_value='__rxcpx_parse_word_' || _node_id || '_' || target_index
+          if _wanttrim=0 then replacement = replacement || '; ' || var || '=' || direct_value
+          else replacement = replacement || '; ' || var || '=strip(' || direct_value || ')'
+       end
+       call result.set_status("REPLACE")
+       call result.add_replacement_line(replacement)
+       return result
+    end
+    if _prepared_plan_hex \= '' then do
+       direct_source='__rxcpx_parse_source_' || _node_id
+       prepared_results='__rxcpx_parse_prepared_' || _node_id
+       replacement = replacement || '; assembler parseplan ' || prepared_results || ',' || direct_source || ',"' || _prepared_plan_hex || '"x'
+       prepared_index=0
+       wrds=words(_template_kindtab)
+       do i=1 to wrds
+          if word(_template_kindtab,i) \= '1' then iterate
+          var=word(_template_texttab,i)
+          if var='.' then iterate
+          prepared_index=prepared_index+1
+          if isVar(var)=0 then do
+             call result.set_error(1, "PARSE invalid variable name=" || var)
+             return result
+          end
+          if _wanttrim=0 then replacement = replacement || '; ' || var || '=' || prepared_results || '[' || prepared_index || ']'
+          else replacement = replacement || '; ' || var || '=strip(' || prepared_results || '[' || prepared_index || '])'
+       end
+       if prepared_index \= _prepared_result_count then do
+          call result.set_error(1, "PARSE prepared result count mismatch")
+          return result
+       end
+       call result.set_status("REPLACE")
+       call result.add_replacement_line(replacement)
+       return result
+    end
     j = 0
     wrds = words(_template_kindtab)
     do i = 1 to wrds
@@ -572,6 +805,148 @@ compile_parse_plan: procedure = .string
      planStr = planStr || k || "," || length(t) || ":" || t || ";"
   end
 return planStr
+
+/* Return the target count for the canonical ABS(1), target, implicit-word...
+ * shape, or zero for any other prepared template. */
+implicitWordPlanTargetCount: procedure = .int
+  arg pkind=.int[],ptext=.string[],plan_count=.int
+  target_count=plan_count/2
+  if plan_count < 2 | target_count*2 \= plan_count then return 0
+  if pkind[1] \= 3 | ptext[1] \= '1' then return 0
+  do target_index=1 to target_count
+     plan_index=target_index*2
+     if pkind[plan_index] \= 1 then return 0
+     if target_index < target_count then do
+        if pkind[plan_index+1] \= 6 | ptext[plan_index+1] \= '{implicit}' then return 0
+     end
+  end
+return target_count
+
+preparedResultCount: procedure = .int
+  arg pkind=.int[],ptext=.string[],plan_count=.int
+  result_count=0
+  do i=1 to plan_count
+     if pkind[i]=1 & ptext[i] \= '.' then result_count=result_count+1
+  end
+return result_count
+
+/* Compile the already validated PARSE stream to the directly executable
+ * little-endian descriptor consumed by PARSEPLAN. Target names are replaced by
+ * a one-byte store/drop flag; literal byte and character lengths are retained. */
+compile_prepared_plan_hex: procedure = .string
+  arg pkind=.int[],ptext=.string[],plan_count=.int
+  if plan_count < 1 | plan_count > 65535 then return '>>>ERROR prepared PARSE item count'
+  result_count=preparedResultCount(pkind,ptext,plan_count)
+  if result_count > 65535 then return '>>>ERROR prepared PARSE result count'
+
+  descriptor='5001' || preparedLittleEndianHex(8,2) ||,
+             preparedLittleEndianHex(plan_count,2) ||,
+             preparedLittleEndianHex(result_count,2)
+  do i=1 to plan_count
+     kind=pkind[i]
+     text=ptext[i]
+     flags=0
+     if kind=1 then do
+        if text \= '.' then flags=1
+        descriptor=descriptor || preparedHexByte(kind) || preparedHexByte(flags)
+     end
+     else if kind=2 then do
+        literal_hex=preparedUtf8Hex(text)
+        literal_bytes=length(literal_hex)/2
+        if literal_bytes > 4294967295 | length(text) > 4294967295 then
+           return '>>>ERROR prepared PARSE literal length'
+        descriptor=descriptor || preparedHexByte(kind) || '00' ||,
+                   preparedLittleEndianHex(literal_bytes,4) ||,
+                   preparedLittleEndianHex(length(text),4) || literal_hex
+     end
+     else if kind=3 | kind=4 | kind=5 then do
+        if \preparedNativeInteger(text) then return '>>>ERROR prepared PARSE numeric position'
+        numeric_value=text
+        /* parseExec removes the final ABS in an ABS/LIT/ABS pre-target overlay
+         * only when the two original spellings are identical. Record that
+         * compile-time normalization without a runtime text comparison. */
+        if kind=3 & i>=4 & i<plan_count then do
+           if pkind[i-3]=3 & pkind[i-2]=1 & pkind[i-1]=2 &,
+              pkind[i+1]=1 & ptext[i-3]=text then flags=1
+        end
+        descriptor=descriptor || preparedHexByte(kind) || preparedHexByte(flags) ||,
+                   preparedLittleEndianHex(numeric_value,8)
+     end
+     else if kind=6 then do
+        descriptor=descriptor || preparedHexByte(kind) || '00'
+     end
+     else return '>>>ERROR prepared PARSE kind'
+  end
+return descriptor
+
+preparedNativeInteger: procedure = .int
+  arg text=.string
+  if text='' | length(text)>19 then return 0
+  limit='9223372036854775807'
+  do i=1 to length(text)
+     ch=substr(text,i,1)
+     if pos(ch,'0123456789')=0 then return 0
+  end
+  if length(text)<19 then return 1
+  do i=1 to 19
+     ch=substr(text,i,1)
+     limit_ch=substr(limit,i,1)
+     if ch<limit_ch then return 1
+     if ch>limit_ch then return 0
+  end
+return 1
+
+preparedLittleEndianHex: procedure = .string
+  arg number=.int,width=.int
+  big_endian=d2x(number,width*2)
+  little_endian=''
+  do byte_index=width to 1 by -1
+     little_endian=little_endian || substr(big_endian,(byte_index-1)*2+1,2)
+  end
+return little_endian
+
+preparedHexByte: procedure = .string
+  arg number=.int
+return d2x(number,2)
+
+/* Encode the literal's actual UTF-8 bytes. C2X intentionally exposes the
+ * established character-byte view, so descriptor generation spells out the
+ * UTF-8 encoding for non-ASCII code points. */
+preparedUtf8Hex: procedure = .string
+  arg text=.string
+  encoded=''
+  codepoint=.int
+  part1=.int
+  part2=.int
+  part3=.int
+  part4=.int
+  do char_index=0 to length(text)-1
+     assembler strchar codepoint,text,char_index
+     if codepoint<=127 then encoded=encoded || preparedHexByte(codepoint)
+     else if codepoint<=2047 then do
+        assembler ishr part1,codepoint,6
+        assembler iand part2,codepoint,63
+        encoded=encoded || preparedHexByte(192+part1) || preparedHexByte(128+part2)
+     end
+     else if codepoint<=65535 then do
+        assembler ishr part1,codepoint,12
+        assembler ishr part2,codepoint,6
+        assembler iand part2,part2,63
+        assembler iand part3,codepoint,63
+        encoded=encoded || preparedHexByte(224+part1) || preparedHexByte(128+part2) || preparedHexByte(128+part3)
+     end
+     else do
+        assembler ishr part1,codepoint,18
+        assembler ishr part2,codepoint,12
+        assembler iand part2,part2,63
+        assembler ishr part3,codepoint,6
+        assembler iand part3,part3,63
+        assembler iand part4,codepoint,63
+        encoded=encoded || preparedHexByte(240+part1) || preparedHexByte(128+part2) ||,
+                preparedHexByte(128+part3) || preparedHexByte(128+part4)
+     end
+  end
+return encoded
 
 /* -------------------------------------------------------------------------------------------------------------------
  * Builds a CREXX expression that concatenates all arguments passed to the
@@ -674,6 +1049,16 @@ isVar: procedure=.int
      c = substr(varname, i, 1)
      if pos(c, 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_.') = 0 then return 0
   end
+return 1
+
+/* Exact NR-14 direct opcodes accept three distinct scalar identifiers only. */
+isSimpleDirectTarget: procedure=.int
+  arg target1=.string,target2=.string,target3=.string
+  if target1='' | target2='' | target3='' then return 0
+  if target1='.' | target2='.' | target3='.' then return 0
+  if pos('.',target1)>0 | pos('.',target2)>0 | pos('.',target3)>0 then return 0
+  if target1=target2 | target1=target3 | target2=target3 then return 0
+  if isVar(target1)=0 | isVar(target2)=0 | isVar(target3)=0 then return 0
 return 1
 
 /* -------------------------------------------------------------------------------------------------------------------

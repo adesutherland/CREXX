@@ -504,6 +504,166 @@ main() .locals=4
 
 `null`, `erase`.
 
+## `parseplan`
+
+Execute a compiler-prepared frozen PARSE descriptor without decoding the
+generic textual plan at runtime.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x019a` | `parseplan rResults,rSource,"descriptor"` | Populate the reusable result vector from `rSource`. |
+
+### Operands And Semantics
+
+`rResults` receives one attribute per stored target; dropped fields do not
+consume an attribute. The string constant is the versioned compact descriptor
+emitted by `rxc`, not PARSE source text and not the generic decimal/length plan
+accepted by `parseExec`. Version 1 stores item kinds and flags, literal byte and
+character lengths, numeric movements, item count, and result count in a
+portable little-endian payload.
+
+The VM validates the header and each item boundary before using it. It reuses
+the result vector's attribute storage across executions where possible. Normal
+compiler lowering evaluates and copies the source first and then assigns vector
+elements to source targets in order.
+
+### Signals
+
+Raises `INVALID_ARGUMENTS` for a malformed, truncated, unsupported-version, or
+internally inconsistent descriptor. Allocation failure is fatal.
+
+### Example
+
+`parseplan` is intended for compiler output. The final operand below is an
+illustrative hex-string placeholder, not a complete hand-authored descriptor:
+
+```rxas
+    parseplan r0,r1,"<versioned-descriptor-bytes>"x
+```
+
+### Related
+
+`parsepos2`, `parsewords3`, `parsewords3d`.
+
+## `parsepos2`
+
+Split a source at a fixed PARSE character position and capture the next
+blank-delimited word.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x0198` | `parsepos2 rPrefix,rWord,rSource,split` | Write the fixed prefix and the next word. |
+
+### Operands And Semantics
+
+`split` is the number of source characters placed in `rPrefix`. The VM then
+skips ASCII blanks and writes the following blank-delimited word to `rWord`;
+the remainder is discarded. Character counting is by Unicode code point in
+UTF builds and by byte in non-UTF builds. Source/output aliasing is supported.
+
+### Signals
+
+If an aliased source must be snapshotted and allocation fails, the VM raises
+`FAILURE`. Ordinary empty or short input produces empty/truncated fields rather
+than a signal.
+
+### Example
+
+<!-- rxas-example name="large-parsepos2" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    load r2,"abcde next remainder"
+    parsepos2 r0,r1,r2,5
+    ret
+```
+
+### Related
+
+`parseplan`, `parsewords3`, `parsewords3d`.
+
+## `parsewords3`
+
+Capture two blank-delimited words and the unparsed remaining tail directly
+into three registers.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x0195` | `parsewords3 rFirst,rSecond,rTail,rSource` | Write two words and the remaining tail. |
+
+### Operands And Semantics
+
+The VM skips leading ASCII blanks before each of the first two fields. It then
+writes the rest of the source, unchanged, to `rTail`. The instruction is also
+the chaining primitive for longer eligible implicit-word templates. Any output
+may alias the source; the VM snapshots source bytes before ordered writes when
+needed.
+
+### Signals
+
+If an aliased source snapshot cannot be allocated, the VM raises `FAILURE`.
+Empty or short input yields empty fields without a signal.
+
+### Example
+
+<!-- rxas-example name="large-parsewords3" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=4
+    load r3,"one two three four"
+    parsewords3 r0,r1,r2,r3
+    ret
+```
+
+### Related
+
+`parseplan`, `parsepos2`, `parsewords3d`.
+
+## `parsewords3d`
+
+Capture three blank-delimited words and discard the remaining tail.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x0199` | `parsewords3d rFirst,rSecond,rThird,rSource` | Write three words and discard the tail. |
+
+### Operands And Semantics
+
+Leading ASCII blanks are skipped before every captured word. Text after the
+third word is ignored. Any output may alias the source; the VM snapshots source
+bytes before ordered writes when needed.
+
+### Signals
+
+If an aliased source snapshot cannot be allocated, the VM raises `FAILURE`.
+Empty or short input yields empty fields without a signal.
+
+### Example
+
+<!-- rxas-example name="large-parsewords3d" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=4
+    load r3,"one two three ignored"
+    parsewords3d r0,r1,r2,r3
+    ret
+```
+
+### Related
+
+`parseplan`, `parsepos2`, `parsewords3`.
+
 ## `setlinkattr1`
 
 Set exact attribute capacity and link a one-based attribute.

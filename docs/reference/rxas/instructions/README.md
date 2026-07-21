@@ -41,7 +41,7 @@ explicitly marks it as a fragment.
 
 | Section | Mnemonics | File |
 | --- | ---: | --- |
-| Program Control And Calls | 26 | [01-program-control.md](01-program-control.md) |
+| Program Control And Calls | 30 | [01-program-control.md](01-program-control.md) |
 | Data Movement And Conversion | 7 | [02-data-movement-and-conversion.md](02-data-movement-and-conversion.md) |
 | Integer, Logical, And Boolean | 44 | [03-integer-logical-and-boolean.md](03-integer-logical-and-boolean.md) |
 | Floating Point | 24 | [04-floating-point.md](04-floating-point.md) |
@@ -52,5 +52,5 @@ explicitly marks it as a fragment.
 | I/O, Sockets, Processes, And Time | 44 | [09-io-sockets-processes-and-time.md](09-io-sockets-processes-and-time.md) |
 | Signals, Breakpoints, And Runtime | 19 | [10-signals-breakpoints-and-runtime.md](10-signals-breakpoints-and-runtime.md) |
 | Metadata And Introspection | 23 | [11-metadata-and-introspection.md](11-metadata-and-introspection.md) |
-| Large And Fused Instructions | 25 | [12-large-instructions.md](12-large-instructions.md) |
+| Large And Fused Instructions | 29 | [12-large-instructions.md](12-large-instructions.md) |
 | Uncategorized Review | 0 | [99-uncategorized-review.md](99-uncategorized-review.md) |

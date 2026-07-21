@@ -732,6 +732,11 @@ static uint32_t rxbin007_opcode_features(int opcode) {
         case OP_CALL3_REG_FUNC_REG_REG_REG:
         case OP_CALL4_REG_FUNC_REG_REG_REG_REG:
             return RXBIN007_FEATURE_FIXED_CALLS;
+        case OP_PARSEWORDS3_REG_REG_REG_REG:
+        case OP_PARSEPOS2_REG_REG_REG_INT:
+        case OP_PARSEWORDS3D_REG_REG_REG_REG:
+        case OP_PARSEPLAN_REG_REG_STRING:
+            return RXBIN007_FEATURE_FROZEN_PARSE;
         default:
             return 0u;
     }

@@ -1,0 +1,37 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-nr14-candidate
+      Start    1: linked_opt_runtime_artifacts_build
+ 1/11 Test    #1: linked_opt_runtime_artifacts_build ...   Passed    0.51 sec
+      Start  922: test_parse_bin_build
+ 2/11 Test  #922: test_parse_bin_build .................   Passed    0.65 sec
+      Start  925: test_parse_direct_bin_build
+ 3/11 Test  #925: test_parse_direct_bin_build ..........   Passed    0.36 sec
+      Start  339: nr14_frozen_parse_contract
+      Start  338: nr21_fixed_call_contract
+      Start  923: test_parse_direct_noopt
+      Start  924: test_parse_direct_opt
+      Start  920: test_parse_noopt
+      Start  921: test_parse_opt
+      Start 1758: benchmark_parse_frozen_noopt
+      Start 1759: benchmark_parse_frozen_opt
+ 4/11 Test  #921: test_parse_opt .......................   Passed    0.02 sec
+ 5/11 Test #1758: benchmark_parse_frozen_noopt .........   Passed    0.02 sec
+ 6/11 Test  #920: test_parse_noopt .....................   Passed    0.03 sec
+ 7/11 Test #1759: benchmark_parse_frozen_opt ...........   Passed    0.03 sec
+ 8/11 Test  #923: test_parse_direct_noopt ..............   Passed    0.07 sec
+ 9/11 Test  #924: test_parse_direct_opt ................   Passed    0.07 sec
+10/11 Test  #338: nr21_fixed_call_contract .............   Passed    0.33 sec
+11/11 Test  #339: nr14_frozen_parse_contract ...........   Passed    0.36 sec
+
+100% tests passed, 0 tests failed out of 11
+
+Label Time Summary:
+benchmark      =   0.05 sec*proc (2 tests)
+compiler       =   0.69 sec*proc (2 tests)
+language       =   0.05 sec*proc (2 tests)
+linked_opt     =   0.03 sec*proc (1 test)
+parse          =   0.36 sec*proc (1 test)
+performance    =   0.69 sec*proc (2 tests)
+rxbin          =   0.69 sec*proc (2 tests)
+smoke          =   0.03 sec*proc (1 test)
+
+Total Test time (real) =   1.91 sec

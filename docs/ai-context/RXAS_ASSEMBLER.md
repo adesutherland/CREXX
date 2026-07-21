@@ -573,6 +573,15 @@ intermediate write where that write is part of the public instruction contract.
 Compiler-owned rewrites may instead choose a result-only form when the removed
 temporary has no source-level observation.
 
+The NR-14 frozen-PARSE instructions are catalogued on the same reference page.
+`parsewords3`, `parsepos2`, and `parsewords3d` encode complete exact plans in
+their opcode identities; `parseplan` carries a compiler-generated versioned
+descriptor in an ordinary string-constant operand. RXBIN 007 writers set
+`RXBIN007_FEATURE_FROZEN_PARSE` when any of the four opcodes is present. Readers
+reject an image that uses one without that feature bit, and older readers reject
+the unknown feature bit, so a provisional image cannot be silently decoded with
+different semantics. The descriptor adds no RXBIN section or relocation form.
+
 `typeof`, `istype`, and `asserttype` are object-contract operations. Compiler
 generated code uses them for object casts/tests/introspection; scalar
 `typeof`/`is` cases are folded earlier by `rxc`.

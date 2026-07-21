@@ -1,0 +1,125 @@
+/*
+ * Generic static/frozen PARSE workload for NR-14.
+ *
+ * `prepared` exercises longer implicit-word, literal, absolute-position and
+ * compact-drop templates that cannot use the three exact hot-shape opcodes.
+ * `chain` exercises longer odd implicit-word templates for which repeated
+ * parsewords3 instructions are the measured faster representation. `all` is
+ * the functional smoke and combined end-to-end lane.
+ */
+options levelb comments_dash
+arg argv = .string[]
+
+repetitions = 1
+mode = "all"
+if argv[0] >= 1 then repetitions = argv[1]
+if argv[0] >= 2 then mode = lower(argv[2])
+if repetitions < 1 then return fail("repetitions must be positive")
+if mode <> "all" & mode <> "prepared" & mode <> "chain" then
+  return fail("mode must be all, prepared, or chain")
+
+even_source = "one two three four five six seven eight nine ten"
+literal_source = "aa,bbb,cccc,ddddd,eeeeee,fffffff,gggggggg,tail,rest"
+position_source = "ABCDEFGHIJKLMNO"
+drop_source = "red|green|blue|amber|violet"
+odd_source = "one two three four five six seven eight nine ten"
+odd_source2 = "alpha beta gamma delta epsilon zeta eta theta"
+checksum = 0
+
+e1 = .string
+e2 = .string
+e3 = .string
+e4 = .string
+e5 = .string
+e6 = .string
+e7 = .string
+e8 = .string
+l1 = .string
+l2 = .string
+l3 = .string
+l4 = .string
+l5 = .string
+l6 = .string
+l7 = .string
+l8 = .string
+p1 = .string
+p2 = .string
+p3 = .string
+p4 = .string
+d1 = .string
+d3 = .string
+d5 = .string
+o1 = .string
+o2 = .string
+o3 = .string
+o4 = .string
+o5 = .string
+o6 = .string
+o7 = .string
+q1 = .string
+q2 = .string
+q3 = .string
+q4 = .string
+q5 = .string
+q6 = .string
+q7 = .string
+
+if mode = "all" | mode = "prepared" then do
+  do iteration = 1 to repetitions
+    parse var even_source e1 e2 e3 e4 e5 e6 e7 e8
+    parse var literal_source l1 ',' l2 ',' l3 ',' l4 ',' l5 ',' l6 ',' l7 ',' l8
+    parse var position_source p1 4 p2 8 p3 12 p4
+    parse var drop_source d1 '|' . '|' d3 '|' . '|' d5
+
+    checksum = checksum + length(e1) + length(e2) + length(e3) + length(e4)
+    checksum = checksum + length(e5) + length(e6) + length(e7) + length(e8)
+    checksum = checksum + length(l1) + length(l2) + length(l3) + length(l4)
+    checksum = checksum + length(l5) + length(l6) + length(l7) + length(l8)
+    checksum = checksum + length(p1) + length(p2) + length(p3) + length(p4)
+    checksum = checksum + length(d1) + length(d3) + length(d5)
+  end
+end
+
+if mode = "all" | mode = "chain" then do
+  do iteration = 1 to repetitions
+    parse var odd_source o1 o2 o3 o4 o5 o6 o7
+    parse var odd_source2 q1 q2 q3 q4 q5 q6 q7
+
+    checksum = checksum + length(o1) + length(o2) + length(o3) + length(o4)
+    checksum = checksum + length(o5) + length(o6) + length(o7)
+    checksum = checksum + length(q1) + length(q2) + length(q3) + length(q4)
+    checksum = checksum + length(q5) + length(q6) + length(q7)
+  end
+end
+
+expected = repetitions * 194
+if mode = "prepared" then expected = repetitions * 113
+else if mode = "chain" then expected = repetitions * 81
+if checksum <> expected then return fail("kernel checksum mismatch: " || checksum)
+
+if mode = "all" | mode = "prepared" then do
+  if e1 <> "one" | e7 <> "seven" | e8 <> "eight nine ten" then
+    return fail("even implicit-word result mismatch")
+  if l1 <> "aa" | l7 <> "gggggggg" | l8 <> "tail,rest" then
+    return fail("literal result mismatch")
+  if p1 <> "ABC" | p2 <> "DEFG" | p3 <> "HIJK" | p4 <> "LMNO" then
+    return fail("absolute-position result mismatch")
+  if d1 <> "red" | d3 <> "blue" | d5 <> "violet" then
+    return fail("drop result mismatch")
+end
+
+if mode = "all" | mode = "chain" then do
+  if o1 <> "one" | o6 <> "six" | o7 <> "seven eight nine ten" then
+    return fail("odd implicit-word result mismatch")
+  if q1 <> "alpha" | q6 <> "zeta" | q7 <> "eta theta" then
+    return fail("second odd implicit-word result mismatch")
+end
+
+say "benchmark=parse_frozen_generic mode="mode "repetitions="repetitions "checksum="checksum
+say "PASS: Generic Frozen PARSE"
+return 0
+
+fail: procedure = .int
+  arg message = .string
+  say "FAIL:" message
+  return 1

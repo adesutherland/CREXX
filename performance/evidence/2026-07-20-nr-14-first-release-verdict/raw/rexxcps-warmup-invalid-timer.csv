@@ -1,0 +1,6 @@
+round,vm,order,image,elapsed_seconds,cps,correct
+1,rxvm,1,baseline,0.000000000,1256969,1
+1,rxvm,2,candidate,0.000000000,1810273,1
+1,rxbvm,1,baseline,0.000000000,1217258,1
+1,rxbvm,2,candidate,0.000000000,1783380,1
+2,rxvm,1,candidate,0.000000000,1792659,1

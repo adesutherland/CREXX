@@ -1104,6 +1104,30 @@ human-readable report format. Candidate CSV uses:
 rank,count,sites,modules,symbols,status,pattern,mapping,example_module,example_start
 ```
 
+### Frozen PARSE execution
+
+NR-14 adds four canonical RXBIN 007 instructions behind
+`RXBIN007_FEATURE_FROZEN_PARSE`. `parsewords3`, `parsepos2`, and
+`parsewords3d` implement exact common plans with direct register results; their
+handlers preserve source/output aliasing by snapshotting source bytes before
+the first write. `parsewords3` is also a chain primitive for eligible longer
+implicit-word templates.
+
+`parseplan` executes a version-1 compact descriptor from a string constant into
+a reusable result vector. The descriptor stores only item kinds, store/drop
+flags, literal bytes plus character lengths, fixed-width numeric movement, and
+the declared item/result counts. The handler bounds-checks the header and every
+item, rejects trailing or structurally inconsistent data, and raises
+`INVALID_ARGUMENTS`. It uses Unicode code-point positions in UTF builds and has
+no load-time cache or private prepared representation.
+
+Compiler eligibility remains fail-closed: exact forms use the direct
+instructions, other mechanically frozen templates may use `parseplan`, and
+logging/TRACE, explicit `INTO`, or unsupported forms continue through
+`parseExec`. Ordered source-level assignments remain outside the VM primitive,
+preserving repeated and compound targets, source aliases, trimming, and TRACE
+metadata.
+
 ### Pooled float operands
 
 As of `rxbin` format `002` and later, float literals are loaded from the constant pool

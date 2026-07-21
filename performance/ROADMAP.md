@@ -841,7 +841,7 @@ coverage gaps are in
 | --- | --- | --- | --- |
 | NR-12 | Extend read-only by-value and return copy coalescing | deferred | RXAS inspection is complete: never-written real formals already alias `aN`; unconditional overwrite exposes DSE, but conditional/loop isolation needs the forthcoming flow analysis. No implementation is selected; see `NR-12-21-WORKLIST.md`. |
 | NR-13 | Redundant numeric-context setup elimination | complete | Accepted NR-09 Rule 1 satisfies the NR-13 exit criterion: the compiler uses existing `NUMSCI`/`NUMENG` only for an identical fully constant non-inherited effective context, focused cross-procedure/plugin coverage passes in both modes and VMs, and dynamic setup fell from 542,500 to 108,508 per VM. General full-context and procedure-owned-default experiments remain optional NR-23/NR-24 work, not unfinished NR-13 scope. |
-| NR-14 | Static/frozen `PARSE` lowering fast path | queued | General supported templates only; retain `parseExec` fallback. |
+| NR-14 | Static/frozen `PARSE` lowering fast path | complete | Adrian accepted the frozen hybrid and the +249,179 B/+20.579% compiler-exit artifact trade-off. The three exact opcodes remain preferred, `parsewords3` chains eligible longer odd word templates, compact opcode 410 `parseplan` covers remaining mechanically frozen plans, logging/TRACE/INTO fall back, and regex is untouched. Generic elapsed is -90.757%/-90.744%, exact elapsed -97.262%/-97.423%, and RexxCPS CPS +45.249%/+45.499%; capped byte-identical Richards is neutral. Closeout passed focused Debug/ASan 15/15, full Debug 1,876/1,876, and isolated installed/native-package proof. See `NR-14-WORKLIST.md` and `evidence/2026-07-21-nr-14-hybrid-first-release-verdict/`. |
 | NR-15 | General stem default/reset fast path | queued | Preserve generation/default/drop/tail semantics. |
 | NR-16 | TRACE-off and same-ADDRESS-environment fast paths | queued | Preserve hooks, signals, mode changes and host callbacks. |
 | NR-17 | Link-time direct provider/call resolution | queued | Preserve late-load and plugin fallback. |
@@ -913,8 +913,75 @@ These are time-boxed evidence activities, not production commitments.
   deferred for flow analysis. QA evidence is under
   `evidence/2026-07-20-nr-21-first-release-verdict/qa-closeout/`.
 
+### NR-14 work notes
+
+- 2026-07-20: Started the static/frozen PARSE investigation from clean local
+  `develop` commit `8424587f2`, intentionally two commits ahead of
+  `origin/develop`. `NR-14-WORKLIST.md` records the semantic inventory,
+  retained-evidence audit, machine-level ceiling and guarded A-E comparison.
+  Adrian explicitly authorized runtime-assist RXAS/RXBIN/linker/disassembler
+  and both-VM PoCs and productionization of the fastest validated NR-14 design;
+  generic `parseExec` remains the complete unsupported/dynamic fallback. No
+  production design is selected by starting the work.
+- 2026-07-20: The A-E comparison selected D, three exact direct-result opcodes
+  with RXBIN 007 feature bit 1 and fail-closed compiler eligibility. Focused
+  Debug and candidate Release checks pass 11/11. In 12 paired profiling-off
+  Release rounds, canonical RexxCPS native CPS improved by 45.965%/45.826% and
+  focused frozen-PARSE elapsed fell by 97.248%/97.445%, favorable in every pair
+  on both VMs. The byte-identical Richards control is neutral/noisy on `rxvm`
+  at the 36-pair cap and slightly favorable on `rxbvm`; sub-5 ms lifecycle is
+  noisy/inconclusive, while RSS is slightly lower. First verdict recommends
+  **ACCEPT**, but the 131,483-byte/10.859% `rxcexits.rxbin` increase crosses the
+  artifact guard and needs Adrian's explicit trade-off decision. Evidence is
+  `evidence/2026-07-20-nr-14-first-release-verdict/`. Work stops here with the
+  implementation provisional; no broad closeout, commit or push has run.
+- 2026-07-21: Adrian required generic mechanically frozen coverage while
+  retaining benchmark-fast exact paths. Implemented the hybrid with opcode 410
+  `parseplan`, a compact portable descriptor/reusable vector, and exact
+  `parsewords3` chaining where faster; regex remains untouched. Six balanced
+  PoC rounds select prepared over `parseExec` and exact chaining over prepared
+  for the eligible odd-word class. Focused Debug and Release pass 13/13. The
+  new first Release verdict records -90.757%/-90.744% generic elapsed,
+  -97.262%/-97.423% exact elapsed and +45.249%/+45.499% RexxCPS CPS, all 12/12
+  favorable; byte-identical Richards is neutral at 36 pairs. ACCEPT is
+  recommended, pending explicit approval of the +249,179 B/+20.579%
+  `rxcexits.rxbin` increase. Evidence:
+  `evidence/2026-07-21-nr-14-hybrid-first-release-verdict/`.
+- 2026-07-21: Adrian accepted the hybrid verdict and explicitly approved the
+  compiler-exit/RXAS artifact trade-off, full closeout and a local commit, with
+  no push. Disposable PoCs were removed and the four instructions documented.
+  Focused Debug including RXAS reference examples passes 15/15; the full Debug
+  suite passes 1,876/1,876. The complete supported Apple ASan build passes and
+  the same focused surface passes 15/15; Apple ASan rejects leak detection, so
+  LSan is not claimed. The ordinary Release product rebuilt, isolated install
+  placed 131 files, installed native `hello` packaging executed successfully,
+  and installed `rxvm`/`rxbvm` both pass the generic frozen-PARSE workload.
+  NR-14 is complete; `qa-closeout/` records the final gate.
+
 Ideas remain here until assessed, even when rejected. An idea can inform more
 than one `NR-*` activity and does not alter their priority by itself.
+
+### IDEA-PARSE-01 - Compiled immutable PARSE execution
+
+- Status: complete; accepted hybrid under NR-14
+- Related activities: NR-14, NR-22, NR-23, NR-24
+- Hypothesis: mechanically eligible frozen PARSE templates can execute close to
+  direct string-scan/assignment cost when the runtime consumes a compact
+  immutable plan or exact hot primitive, avoiding plan-text interpretation,
+  name lookup, generic descriptor traversal and avoidable result allocation.
+- Variants: compiler expansion into existing operations; specialized
+  `parseExec`; a canonical compiled-plan opcode; direct explicit-target
+  instruction forms; and linker/load-time private preparation compared with
+  serialized RXBIN assistance.
+- Semantic risks: source/modifier evaluation order, literal and positional
+  template edge cases, empty/unmatched fields, repeated targets, source/target
+  aliasing, dynamic patterns, Unicode/string behavior, error ordering, TRACE,
+  source coordinates, late load and dual-VM parity.
+- Evidence needed: supported/fallback population, exact machine-level ceilings,
+  focused optimized/no-opt dual-VM semantics, assembler/linker/disassembler and
+  compatibility proof where applicable, paired RexxCPS plus another PARSE
+  workload, unrelated control, startup/load, allocation/RSS and artifact cost.
+- Resumable control plane: `performance/NR-14-WORKLIST.md`.
 
 ### IDEA-NR09-NUMCTX-01 — Procedure-entry numeric-context synthesis
 

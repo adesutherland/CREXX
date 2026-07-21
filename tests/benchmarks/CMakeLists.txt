@@ -46,6 +46,10 @@ crexx_add_language_benchmark(benchmark_json_parser json_parser.crexx 1
         "PASS: JSON Parser")
 crexx_add_language_benchmark(benchmark_base64_roundtrip base64_roundtrip.crexx 1
         "PASS: Base64 Roundtrip")
+crexx_add_language_benchmark(benchmark_parse_frozen parse_frozen.crexx 1
+        "PASS: Frozen PARSE")
+crexx_add_language_benchmark(benchmark_parse_frozen_generic parse_frozen_generic.crexx 1
+        "PASS: Generic Frozen PARSE")
 crexx_add_language_benchmark(benchmark_rexxcps_levelb rexxcps_levelb.crexx 10
         "PASS: RexxCPS 2.2d cREXX port")
 
@@ -140,6 +144,7 @@ crexx_label_smoke_tests(
         benchmark_awfy_richards_opt
         benchmark_json_parser_opt
         benchmark_base64_roundtrip_opt
+        benchmark_parse_frozen_opt
         benchmark_rexxcps_levelb_opt
         benchmark_rexxcps_levelb_opaque_opt
         benchmark_runner_opt

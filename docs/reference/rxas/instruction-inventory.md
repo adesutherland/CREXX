@@ -2,14 +2,14 @@
 
 This inventory is for coverage validation. Every mnemonic from `rxas -i` should appear exactly once with its current primary skeleton section.
 
-- Unique mnemonics: 367
-- Opcode/form rows: 574
+- Unique mnemonics: 375
+- Opcode/form rows: 582
 
 ## Section Counts
 
 | Section | Mnemonics |
 | --- | ---: |
-| [Program Control And Calls](instructions/01-program-control.md) | 26 |
+| [Program Control And Calls](instructions/01-program-control.md) | 30 |
 | [Data Movement And Conversion](instructions/02-data-movement-and-conversion.md) | 7 |
 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md) | 44 |
 | [Floating Point](instructions/04-floating-point.md) | 24 |
@@ -20,7 +20,7 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md) | 44 |
 | [Signals, Breakpoints, And Runtime](instructions/10-signals-breakpoints-and-runtime.md) | 19 |
 | [Metadata And Introspection](instructions/11-metadata-and-introspection.md) | 23 |
-| [Large And Fused Instructions](instructions/12-large-instructions.md) | 25 |
+| [Large And Fused Instructions](instructions/12-large-instructions.md) | 29 |
 | [Uncategorized Review](instructions/99-uncategorized-review.md) | 0 |
 
 ## Mnemonic Index
@@ -94,6 +94,10 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `btos` | 1 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#btos) |
 | `bupdate` | 1 | [Binary Memory](instructions/07-binary-memory.md#bupdate) |
 | `call` | 3 | [Program Control And Calls](instructions/01-program-control.md#call) |
+| `call1` | 1 | [Program Control And Calls](instructions/01-program-control.md#call1) |
+| `call2` | 1 | [Program Control And Calls](instructions/01-program-control.md#call2) |
+| `call3` | 1 | [Program Control And Calls](instructions/01-program-control.md#call3) |
+| `call4` | 1 | [Program Control And Calls](instructions/01-program-control.md#call4) |
 | `cnop` | 2 | [Program Control And Calls](instructions/01-program-control.md#cnop) |
 | `concat` | 3 | [Strings And Characters](instructions/06-strings-and-characters.md#concat) |
 | `concchar` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#concchar) |
@@ -275,6 +279,10 @@ This inventory is for coverage validation. Every mnemonic from `rxas -i` should 
 | `numsci` | 1 | [Decimal And Numeric Settings](instructions/05-decimal-and-numeric-settings.md#numsci) |
 | `or` | 1 | [Integer, Logical, And Boolean](instructions/03-integer-logical-and-boolean.md#or) |
 | `padstr` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#padstr) |
+| `parseplan` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#parseplan) |
+| `parsepos2` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#parsepos2) |
+| `parsewords3` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#parsewords3) |
+| `parsewords3d` | 1 | [Large And Fused Instructions](instructions/12-large-instructions.md#parsewords3d) |
 | `poschar` | 1 | [Strings And Characters](instructions/06-strings-and-characters.md#poschar) |
 | `readline` | 1 | [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md#readline) |
 | `redir2arr` | 1 | [Arrays, Attributes, References, And Objects](instructions/08-arrays-attributes-references-and-objects.md#redir2arr) |
