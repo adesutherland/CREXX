@@ -9,11 +9,7 @@
 main() .locals=6
    .meta "inline_test_object_expr_arg.main"="b" ".int" main() ""
    .srcstep 10 10 17 "inline_test_object_expr_arg.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 8 8 17 "inline_test_object_expr_arg.crexx" 4 3 24 "  say renameBox(makeBox())"
    .srcstep 7 7 17 "inline_test_object_expr_arg.crexx" 4 17 24 "  say renameBox(makeBox())"
    .srcstep 5 5 17 "inline_test_object_expr_arg.crexx" 13 3 21 "  box = .Box(\"seed\")"
@@ -37,11 +33,8 @@ main() .locals=6
    br l78bexprend
 l78bexprend:
    endlife r2
-   load r0,1
    settp r4,768
-   swap r1,r4
-   call r2,renameBox(),r0
-   swap r4,r1
+   call1 r2,renameBox(),r4
    .traceevent "F" 4 "R" "S" "r" 2 8 8 0 "renamebox" ""
    say r2
    .srcstep 9 9 17 "inline_test_object_expr_arg.crexx" 5 3 11 "  return 0"
@@ -50,11 +43,7 @@ l78bexprend:
 renameBox() .locals=6
    .meta "inline_test_object_expr_arg.renamebox"="b" ".string" renameBox() "box=.box"
    .srcstep 20 20 17 "inline_test_object_expr_arg.crexx" 7 1 31 "renameBox: procedure = .string"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 11 11 17 "inline_test_object_expr_arg.crexx" 8 7 17 "  arg box = .Box"
    .meta "inline_test_object_expr_arg.renamebox.box"="b" ".box" a1
    .srcstep 15 15 17 "inline_test_object_expr_arg.crexx" 9 3 30 "  call box.setName(\"changed\")"
@@ -81,8 +70,7 @@ renameBox() .locals=6
    linkattr1 r2,r4,1
    .traceevent "V" 6 "R" "S" "r" 2 19 19 0 "name" ""
    scopy r5,r2
-   unlink r2
-   br l137bexprend
+   unlinkbr r2,l137bexprend
 l137bexprend:
    ret r5
    .meta "inline_test_object_expr_arg.renamebox.box"
@@ -92,11 +80,7 @@ l137bexprend:
    .srcstep 30 30 17 "inline_test_object_expr_arg.crexx" 19 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_object_expr_arg.box"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 27 27 17 "inline_test_object_expr_arg.crexx" 20 9 26 "    arg initial = .string"
    .meta "inline_test_object_expr_arg.box.§factory.initial"="b" ".string" a1
    .meta "inline_test_object_expr_arg.box.§factory.§factory"="b" ".box" r1
@@ -115,11 +99,7 @@ l137bexprend:
    .meta "inline_test_object_expr_arg.box.setname"="b" ".void" §inline_test_object_expr_arg.box.setname() "value=.string"
    .srcstep 34 34 17 "inline_test_object_expr_arg.crexx" 24 3 18 "  setName: method"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 31 31 17 "inline_test_object_expr_arg.crexx" 25 9 24 "    arg value = .string"
    .meta "inline_test_object_expr_arg.box.setname.value"="b" ".string" a2
    .meta "inline_test_object_expr_arg.box.setname.§this"="b" ".box" a1
@@ -137,11 +117,7 @@ l137bexprend:
    .meta "inline_test_object_expr_arg.box.getname"="b" ".string" §inline_test_object_expr_arg.box.getname() ""
    .srcstep 36 36 17 "inline_test_object_expr_arg.crexx" 29 3 28 "  getName: method = .string"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 35 35 17 "inline_test_object_expr_arg.crexx" 30 5 16 "    return name"
    .meta "inline_test_object_expr_arg.box.getname.§this"="b" ".box" a1
    linkattr1 r1,a1,1

@@ -1,0 +1,5 @@
+vm,image,pass,effective_count,stdout,stderr
+rxvm,canonical-noopt,1,1,compatibility/raw/rxvm-noopt-smoke.stdout.txt,compatibility/raw/rxvm-noopt-smoke.stderr.txt
+rxvm,canonical-opt,1,1,compatibility/raw/rxvm-opt-smoke.stdout.txt,compatibility/raw/rxvm-opt-smoke.stderr.txt
+rxbvm,canonical-noopt,1,1,compatibility/raw/rxbvm-noopt-smoke.stdout.txt,compatibility/raw/rxbvm-noopt-smoke.stderr.txt
+rxbvm,canonical-opt,1,1,compatibility/raw/rxbvm-opt-smoke.stdout.txt,compatibility/raw/rxbvm-opt-smoke.stderr.txt

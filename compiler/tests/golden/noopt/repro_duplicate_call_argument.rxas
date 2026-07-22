@@ -7,11 +7,7 @@
 main() .locals=6
    .meta "repro_duplicate_call_argument.main"="b" ".int" main() ""
    .srcstep 8 8 17 "repro_duplicate_call_argument.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "repro_duplicate_call_argument.crexx" 4 3 13 "  number = 7"
    .meta "repro_duplicate_call_argument.main.number"="b" ".int" r0
    load r0,7
@@ -25,11 +21,7 @@ main() .locals=6
    .srcstep 3 3 17 "repro_duplicate_call_argument.crexx" 7 3 38 "  say combine_numbers(number, number)"
    .traceevent "V" 6 "R" "I" "r" 0 3 3 0 "number" ""
    .traceevent "V" 6 "R" "I" "r" 0 3 3 0 "number" ""
-   load r2,2
-   copy r4,r0
-   swap r3,r0
-   call r5,combine_numbers(),r2
-   swap r0,r3
+   call2 r5,combine_numbers(),r0,r0
    itos r5
    .traceevent "F" 4 "R" "S" "r" 5 3 3 0 "combine_numbers" ""
    say r5
@@ -44,8 +36,7 @@ main() .locals=6
    copy r5,r1
    settp r1,256
    swap r4,r1
-   settp r5,256
-   call r2,combine_text(),r3
+   settpcall r2,combine_text(),r3,r5,256
    swap r1,r4
    .traceevent "F" 4 "R" "S" "r" 2 5 5 0 "combine_text" ""
    say r2
@@ -60,11 +51,7 @@ main() .locals=6
 combine_numbers() .locals=3
    .meta "repro_duplicate_call_argument.combine_numbers"="b" ".int" combine_numbers() "left=.int,right=.int"
    .srcstep 12 12 17 "repro_duplicate_call_argument.crexx" 13 1 34 "combine_numbers: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 9 9 17 "repro_duplicate_call_argument.crexx" 14 7 18 "  arg left = .int, right = .int"
    .meta "repro_duplicate_call_argument.combine_numbers.left"="b" ".int" a1
    .srcstep 10 10 17 "repro_duplicate_call_argument.crexx" 14 20 32 "  arg left = .int, right = .int"
@@ -83,11 +70,7 @@ combine_numbers() .locals=3
 combine_text() .locals=3
    .meta "repro_duplicate_call_argument.combine_text"="b" ".string" combine_text() "left=.string,right=.string"
    .srcstep 16 16 17 "repro_duplicate_call_argument.crexx" 17 1 34 "combine_text: procedure = .string"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 13 13 17 "repro_duplicate_call_argument.crexx" 18 7 21 "  arg left = .string, right = .string"
    .meta "repro_duplicate_call_argument.combine_text.left"="b" ".string" a1
    .srcstep 14 14 17 "repro_duplicate_call_argument.crexx" 18 23 38 "  arg left = .string, right = .string"

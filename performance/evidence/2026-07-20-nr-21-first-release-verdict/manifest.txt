@@ -1,0 +1,17 @@
+crexx-cross-runtime-matrix|1
+list-rxvm-baseline|List|crexx|rxvm|baseline|A|no|no|100|PASS: AWFY List||/tmp/crexx-nr21-baseline-build.kzJjZz/bin/rxvm;/tmp/crexx-nr21-production-verdict.Qby90w/baseline/awfy_list-linked.rxbin;-a;100
+list-rxvm-candidate|List|crexx|rxvm|candidate|A|no|no|100|PASS: AWFY List||/tmp/crexx-nr21-candidate-build.bR2xbW/bin/rxvm;/tmp/crexx-nr21-production-verdict.Qby90w/candidate/awfy_list-linked.rxbin;-a;100
+list-rxbvm-baseline|List|crexx|rxbvm|baseline|A|no|no|100|PASS: AWFY List||/tmp/crexx-nr21-baseline-build.kzJjZz/bin/rxbvm;/tmp/crexx-nr21-production-verdict.Qby90w/baseline/awfy_list-linked.rxbin;-a;100
+list-rxbvm-candidate|List|crexx|rxbvm|candidate|A|no|no|100|PASS: AWFY List||/tmp/crexx-nr21-candidate-build.bR2xbW/bin/rxbvm;/tmp/crexx-nr21-production-verdict.Qby90w/candidate/awfy_list-linked.rxbin;-a;100
+permute-rxvm-baseline|Permute|crexx|rxvm|baseline|A|no|no|50|PASS: AWFY Permute||/tmp/crexx-nr21-baseline-build.kzJjZz/bin/rxvm;/tmp/crexx-nr21-production-verdict.Qby90w/baseline/awfy_permute-linked.rxbin;-a;50
+permute-rxvm-candidate|Permute|crexx|rxvm|candidate|A|no|no|50|PASS: AWFY Permute||/tmp/crexx-nr21-candidate-build.bR2xbW/bin/rxvm;/tmp/crexx-nr21-production-verdict.Qby90w/candidate/awfy_permute-linked.rxbin;-a;50
+permute-rxbvm-baseline|Permute|crexx|rxbvm|baseline|A|no|no|50|PASS: AWFY Permute||/tmp/crexx-nr21-baseline-build.kzJjZz/bin/rxbvm;/tmp/crexx-nr21-production-verdict.Qby90w/baseline/awfy_permute-linked.rxbin;-a;50
+permute-rxbvm-candidate|Permute|crexx|rxbvm|candidate|A|no|no|50|PASS: AWFY Permute||/tmp/crexx-nr21-candidate-build.bR2xbW/bin/rxbvm;/tmp/crexx-nr21-production-verdict.Qby90w/candidate/awfy_permute-linked.rxbin;-a;50
+richards-rxvm-baseline|Richards|crexx|rxvm|baseline|A|no|no|1|PASS: AWFY Richards||/tmp/crexx-nr21-baseline-build.kzJjZz/bin/rxvm;/tmp/crexx-nr21-production-verdict.Qby90w/baseline/awfy_richards-linked.rxbin;-a;1
+richards-rxvm-candidate|Richards|crexx|rxvm|candidate|A|no|no|1|PASS: AWFY Richards||/tmp/crexx-nr21-candidate-build.bR2xbW/bin/rxvm;/tmp/crexx-nr21-production-verdict.Qby90w/candidate/awfy_richards-linked.rxbin;-a;1
+richards-rxbvm-baseline|Richards|crexx|rxbvm|baseline|A|no|no|1|PASS: AWFY Richards||/tmp/crexx-nr21-baseline-build.kzJjZz/bin/rxbvm;/tmp/crexx-nr21-production-verdict.Qby90w/baseline/awfy_richards-linked.rxbin;-a;1
+richards-rxbvm-candidate|Richards|crexx|rxbvm|candidate|A|no|no|1|PASS: AWFY Richards||/tmp/crexx-nr21-candidate-build.bR2xbW/bin/rxbvm;/tmp/crexx-nr21-production-verdict.Qby90w/candidate/awfy_richards-linked.rxbin;-a;1
+json-rxvm-baseline|JSON|crexx|rxvm|baseline|A|no|no|5000|PASS: JSON Parser||/tmp/crexx-nr21-baseline-build.kzJjZz/bin/rxvm;/tmp/crexx-nr21-production-verdict.Qby90w/baseline/json_parser-linked.rxbin;-a;5000
+json-rxvm-candidate|JSON|crexx|rxvm|candidate|A|no|no|5000|PASS: JSON Parser||/tmp/crexx-nr21-candidate-build.bR2xbW/bin/rxvm;/tmp/crexx-nr21-production-verdict.Qby90w/candidate/json_parser-linked.rxbin;-a;5000
+json-rxbvm-baseline|JSON|crexx|rxbvm|baseline|A|no|no|5000|PASS: JSON Parser||/tmp/crexx-nr21-baseline-build.kzJjZz/bin/rxbvm;/tmp/crexx-nr21-production-verdict.Qby90w/baseline/json_parser-linked.rxbin;-a;5000
+json-rxbvm-candidate|JSON|crexx|rxbvm|candidate|A|no|no|5000|PASS: JSON Parser||/tmp/crexx-nr21-candidate-build.bR2xbW/bin/rxbvm;/tmp/crexx-nr21-production-verdict.Qby90w/candidate/json_parser-linked.rxbin;-a;5000

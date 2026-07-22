@@ -1,0 +1,577 @@
+
+* REXX Assembly Instruction List
+0x0001 load       {REG,INT}            Load op1 with op2
+0x0002 load       {REG,FLOAT}          Load op1 with op2
+0x0003 load       {REG,STRING}         Load op1 with op2
+0x0004 load       {REG,REG}            Load op1 with op2
+0x0005 load       {REG,DECIMAL}        Load op1 with op2
+0x0006 load       {INT,INT}            Load op1 with op2 (non symbolic registers)
+0x0007 load       {INT,REG}            Load op1 with op2 (non symbolic registers)
+0x0008 copy       {REG,REG}            Copy op2 to op1
+0x0009 icopy      {REG,REG}            Copy Integer op2 to op1
+0x000a fcopy      {REG,REG}            Copy Float op2 to op1
+0x000b scopy      {REG,REG}            Copy String op2 to op1
+0x000c dcopy      {REG,REG}            Copy Decimal op2 to op1
+0x000d acopy      {REG,REG}            Copy status Attributes op2 to op1
+0x000e null       {REG}                Null (clear) op1
+0x000f iadd       {REG,REG,REG}        Integer Add (op1=op2+op3)
+0x0010 iadd       {REG,REG,INT}        Integer Add (op1=op2+op3)
+0x0011 isub       {REG,REG,REG}        Integer Subtract (op1=op2-op3)
+0x0012 isub       {REG,REG,INT}        Integer Subtract (op1=op2-op3)
+0x0013 isub       {REG,INT,REG}        Integer Subtract (op1=op2-op3)
+0x0014 imult      {REG,REG,REG}        Integer Multiply (op1=op2*op3)
+0x0015 imult      {REG,REG,INT}        Integer Multiply (op1=op2*op3)
+0x0016 idiv       {REG,REG,REG}        Integer Divide (op1=op2/op3)
+0x0017 idiv       {REG,REG,INT}        Integer Divide (op1=op2/op3)
+0x0018 idiv       {REG,INT,REG}        Integer Divide (op1=op2/op3)
+0x0019 imod       {REG,REG,REG}        Integer Modulo (op1=op2%op3)
+0x001a imod       {REG,REG,INT}        Integer Modulo (op1=op2%op3)
+0x001b imod       {REG,INT,REG}        Integer Modulo (op1=op2&op3)
+0x001c inc        {REG}                Increment Int (op1++)
+0x001d dec        {REG}                Decrement Int (op1--)
+0x001e inc0       no operand           Increment R0++ Int
+0x001f dec0       no operand           Decrement R0-- Int
+0x0020 inc1       no operand           Increment R1++ Int
+0x0021 dec1       no operand           Decrement R1-- Int
+0x0022 inc2       no operand           Increment R2++ Int
+0x0023 dec2       no operand           Decrement R2-- Int
+0x0024 br         {ID}                 Branch to op1
+0x0025 brt        {ID,REG}             Branch to op1 if op2 true
+0x0026 brf        {ID,REG}             Branch to op1 if op2 false
+0x0027 brtf       {ID,ID,REG}          Branch to op1 if op3 true, otherwise branch to op2
+0x0028 beq        {ID,REG,REG}         if op2==op3 then goto op1
+0x0029 beq        {ID,REG,INT}         if op2==op3 then goto op1
+0x002a bne        {ID,REG,REG}         if op2!=op3 then goto op1
+0x002b bne        {ID,REG,INT}         if op2!=op3 then goto op1
+0x002c call       {FUNC}               Call procedure (op1())
+0x002d call       {REG,FUNC}           Call procedure (op1=op2())
+0x002e call       {REG,FUNC,REG}       Call procedure (op1=op2(op3...) )
+0x002f dcall      {REG,REG,REG}        Dynamic call procedure (op1=op2(op3...) )
+0x0030 ret        no operand           Return VOID
+0x0031 ret        {REG}                Return op1
+0x0032 ret        {INT}                Return op1
+0x0033 ret        {FLOAT}              Return op1
+0x0034 ret        {STRING}             Return op1
+0x0035 exit       no operand           Exit
+0x0036 exit       {REG}                Exit op1
+0x0037 exit       {INT}                Exit op1
+0x0038 setobjtype {REG,STRING}         Set runtime concrete object type metadata on op1
+0x0039 srcmethodsel {REG,REG,STRING}     Resolve a concrete method procedure from object op2 and descriptor op3 into op1
+0x003a srcfprocsel {REG,STRING,REG}     Resolve an interface factory procedure from descriptor op2 and argument list op3 into op1
+0x003b typeof     {REG,REG}            Resolve the canonical source type name of op2 into string register op1
+0x003c istype     {REG,REG,STRING}     Set op1 boolean if op2 matches the requested type name op3
+0x003d asserttype {REG,STRING}         Assert op1 matches the requested type name op2, else signal CONVERSION_ERROR
+0x003e socknew    {REG}                Create a VM-managed TCP socket handle
+0x003f sockclose  {REG,REG}            Close op2 socket handle, rc in op1
+0x0040 sockconnect {REG,REG,REG}        Connect op1 socket handle to host op2 and port op3
+0x0041 sockbind   {REG,REG,REG}        Bind op1 socket handle to host op2 and port op3
+0x0042 socklisten {REG,REG,REG}        Listen on op2 socket handle with backlog op3, rc in op1
+0x0043 sockaccept {REG,REG}            Accept connection from op2 server handle, client handle in op1
+0x0044 sockshutdown {REG,REG,REG}        Shutdown op2 socket handle mode op3, rc in op1
+0x0045 socksend   {REG,REG,REG}        Send string op3 on op2 socket handle, bytes in op1
+0x0046 socksendb  {REG,REG,REG}        Send binary op3 on op2 socket handle, bytes in op1
+0x0047 sockrecv   {REG,REG,REG}        Receive up to op3 bytes from op2 socket handle as string into op1
+0x0048 sockrecvb  {REG,REG,REG}        Receive up to op3 bytes from op2 socket handle as binary into op1
+0x0049 sockpending {REG,REG}            Query pending bytes on op2 socket handle into op1
+0x004a socktimeout {REG,REG,REG}        Set op2 socket timeout in milliseconds op3, rc in op1
+0x004b sockblocking {REG,REG,REG}        Set op2 socket blocking flag op3, rc in op1
+0x004c socknodelay {REG,REG,REG}        Set op2 socket TCP_NODELAY flag op3, rc in op1
+0x004d sockkeepalive {REG,REG,REG}        Set op2 socket SO_KEEPALIVE flag op3, rc in op1
+0x004e sockpeer   {REG,REG}            Format op2 socket peer endpoint into op1
+0x004f socklocal  {REG,REG}            Format op2 socket local endpoint into op1
+0x0050 sockstatus {REG,REG}            Read last socket status for op2 into op1
+0x0051 sockerror  {REG,REG}            Read last socket error text for op2 into op1
+0x0052 sockstarttls {REG,REG,REG}        Start client TLS on op2 socket handle using host op3, rc in op1
+0x0053 sockconnecttls {REG,REG,REG}        Connect op1 socket handle to host op2 and port op3 with client TLS
+0x0054 setobjuninit {REG,STRING}         Set runtime object type metadata on op1 and mark it uninitialized
+0x0055 assertinitialized {REG}                Assert op1 is initialized, else signal OBJECT_NOT_INITIALIZED
+0x0056 isinitialized {REG,REG}            Set op1 boolean if op2 is initialized
+0x0057 cnop       {REG,REG,REG,REG,REG,REG,REG,REG,REG} No operation with nine register inputs
+0x0064 ieq        {REG,REG,REG}        Int Equals op1=(op2==op3)
+0x0065 ieq        {REG,REG,INT}        Int Equals op1=(op2==op3)
+0x0066 ine        {REG,REG,REG}        Int Not equals op1=(op2!=op3)
+0x0067 ine        {REG,REG,INT}        Int Not equals op1=(op2!=op3)
+0x0068 igt        {REG,REG,REG}        Int Greater than op1=(op2>op3)
+0x0069 igt        {REG,REG,INT}        Int Greater than op1=(op2>op3)
+0x006a igt        {REG,INT,REG}        Int Greater than op1=(op2>op3)
+0x006b igte       {REG,REG,REG}        Int Greater than equals op1=(op2>=op3)
+0x006c igte       {REG,REG,INT}        Int Greater than equals op1=(op2>=op3)
+0x006d igte       {REG,INT,REG}        Int Greater than equals op1=(op2>=op3)
+0x006e ilt        {REG,REG,REG}        Int Less than op1=(op2<op3)
+0x006f ilt        {REG,REG,INT}        Int Less than op1=(op2<op3)
+0x0070 ilt        {REG,INT,REG}        Int Less than op1=(op2<op3)
+0x0071 ilte       {REG,REG,REG}        Int Less than equals op1=(op2<=op3)
+0x0072 ilte       {REG,REG,INT}        Int Less than equals op1=(op2<=op3)
+0x0073 ilte       {REG,INT,REG}        Int Less than equals op1=(op2<=op3)
+0x0074 seq        {REG,REG,REG}        String Equals op1=(op2==op3)
+0x0075 seq        {REG,REG,STRING}     String Equals op1=(op2==op3)
+0x0076 rseq       {REG,REG,REG}        non strict String Equals op1=(op2=op3)
+0x0077 rseq       {REG,REG,STRING}     non strict String Equals op1=(op2=op3)
+0x0078 sne        {REG,REG,REG}        String Not equals op1=(op2!=op3)
+0x0079 sne        {REG,REG,STRING}     String Not equals op1=(op2!=op3)
+0x007a sgt        {REG,REG,REG}        String Greater than op1=(op2>op3)
+0x007b sgt        {REG,REG,STRING}     String Greater than op1=(op2>op3)
+0x007c sgt        {REG,STRING,REG}     String Greater than op1=(op2>op3)
+0x007d sgte       {REG,REG,REG}        String Greater than equals op1=(op2>=op3)
+0x007e sgte       {REG,REG,STRING}     String Greater than equals op1=(op2>=op3)
+0x007f sgte       {REG,STRING,REG}     String Greater than equals op1=(op2>=op3)
+0x0080 slt        {REG,REG,REG}        String Less than op1=(op2<op3)
+0x0081 slt        {REG,REG,STRING}     String Less than op1=(op2<op3)
+0x0082 slt        {REG,STRING,REG}     String Less than op1=(op2<op3)
+0x0083 slte       {REG,REG,REG}        String Less than equals op1=(op2<=op3)
+0x0084 slte       {REG,REG,STRING}     String Less than equals op1=(op2<=op3)
+0x0085 slte       {REG,STRING,REG}     String Less than equals op1=(op2<=op3)
+0x0086 concat     {REG,REG,REG}        String Concat (op1=op2||op3)
+0x0087 concat     {REG,REG,STRING}     String Concat (op1=op2||op3)
+0x0088 concat     {REG,STRING,REG}     String Concat (op1=op2||op3)
+0x0089 sconcat    {REG,REG,REG}        String Concat with space (op1=op2||op3)
+0x008a sconcat    {REG,REG,STRING}     String Concat with space (op1=op2||op3)
+0x008b sconcat    {REG,STRING,REG}     String Concat with space (op1=op2||op3)
+0x008c appendchar {REG,REG}            Append Concat Char op2 (as int) on op1
+0x008d concchar   {REG,REG,REG}        Concat Char op1 from op2 position op3
+0x008e sappend    {REG,REG}            String Append with space (op1=op1||op2)
+0x008f append     {REG,REG}            String Append (op1=op1||op2)
+0x0090 triml      {REG,REG}            Trim String (op1) from Left by (op2) Chars
+0x0091 trimr      {REG,REG}            Trim String (op1) from Right by (op2) Chars
+0x0092 triml      {REG,REG,REG}        Trim String (op2) from Left by (op3) Chars into op1
+0x0093 trimr      {REG,REG,REG}        Trim String (op2) from Right by (op3) Chars into op1
+0x0094 trunc      {REG,REG,REG}        Trunc String (op2) to (op3) Chars into op1
+0x0095 strlen     {REG,REG}            String Length op1 = length(op2)
+0x0096 strchar    {REG,REG,REG}        op1 (as int) = op2[op3]
+0x0097 strchar    {REG,REG}            op1 (as int) = op2[charpos]
+0x0098 hexchar    {REG,REG,REG}        op1 (as hex) = op2[op3]
+0x0099 poschar    {REG,REG,REG}        op1 = position of op3 in op2
+0x009a setstrpos  {REG,REG}            Set String (op1) charpos set to op2
+0x009b getstrpos  {REG,REG}            Get String (op2) charpos into op1
+0x009c substr     {REG,REG,REG}        op1 = op2[charpos]...op2[charpos+op3-1]
+0x009d strlower   {REG,REG}            Set string to lower case value
+0x009e strupper   {REG,REG}            Set string to upper case value
+0x009f transchar  {REG,REG,REG}        replace op1 if it is in op3-list by char in op2-list
+0x00a0 dropchar   {REG,REG,REG}        set op1 from op2 after dropping all chars from op3
+0x00a1 substring  {REG,REG,REG}        set op1=substr(op2,op3) remaining string
+0x00a2 substcut   {REG,REG}            set op1=substr(op1,,op2) cuts off op1 after position op3
+0x00a3 padstr     {REG,REG,REG}        set op1=op2[repeated op3 times]
+0x00a4 strpos     {REG,REG,REG}        op1 is position of op2 in op3
+0x00a5 fndblnk    {REG,REG,REG}        op1 = find next blank in op2[op3] and behind
+0x00a6 fndnblnk   {REG,REG,REG}        op1 = find next next non blank in op2[op3] and behind
+0x00a7 getbyte    {REG,REG,REG}        get byte  (op1=op2(op3)
+0x00a8 iand       {REG,REG,REG}        bit wise and of 2 integers (op1=op2&op3)
+0x00a9 iand       {REG,REG,INT}        bit wise and of 2 integers (op1=op2&op3)
+0x00aa ior        {REG,REG,REG}        bit wise or of 2 integers (op1=op2|op3)
+0x00ab ior        {REG,REG,INT}        bit wise or of 2 integers (op1=op2|op3)
+0x00ac ixor       {REG,REG,REG}        bit wise exclusive OR of 2 integers (op1=op2^op3)
+0x00ad ixor       {REG,REG,INT}        bit wise exclusive OR of 2 integers (op1=op2^op3)
+0x00ae ishl       {REG,REG,REG}        bit wise shift logical left of integer (op1=op2<<op3)
+0x00af ishl       {REG,REG,INT}        bit wise shift logical left of integer (op1=op2<<op3)
+0x00b0 ishr       {REG,REG,REG}        bit wise shift logical right of integer (op1=op2>>op3)
+0x00b1 ishr       {REG,REG,INT}        bit wise shift logical right of integer (op1=op2>>op3)
+0x00b2 inot       {REG,REG}            inverts all bits of an integer (op1=~op2)
+0x00b3 inot       {REG,INT}            inverts all bits of an integer (op1=~op2)
+0x00b4 and        {REG,REG,REG}        Logical (int) and op1=(op2 && op3)
+0x00b5 or         {REG,REG,REG}        Logical (int) or op1=(op2 || op3)
+0x00b6 not        {REG,REG}            Logical (int) not op1=!op2
+0x00b7 load       {REG,BINARY}         Load binary literal op2 into op1
+0x00b8 blen       {REG,REG}            Binary byte length op1 = length(op2)
+0x00b9 setbyte    {REG,REG,REG}        Set binary byte op1[op2] = op3
+0x00ba bconcat    {REG,REG,REG}        Binary concat op1 = op2 || op3
+0x00bb bappend    {REG,REG}            Append binary op2 to op1
+0x00bc setbinpos  {REG,REG}            Set binary byte cursor on op1 from op2
+0x00bd getbinpos  {REG,REG}            Get binary byte cursor from op2 into op1
+0x00be bslice     {REG,REG,REG}        Binary slice op1 = op2[cursor..cursor+op3)
+0x00bf bupdate    {REG,REG,REG}        Overlay binary op3 into op1 at byte offset op2
+0x00c0 stobin     {REG}                Convert string register bytes to binary bytes
+0x00c1 bintos     {REG}                Convert binary register bytes to string bytes after UTF-8 validation
+0x00c2 mkref      {REG,REG}            Create reference value op1 to storage op2
+0x00c3 deref      {REG,REG}            Copy referenced storage op2 into op1
+0x00c4 linkref    {REG,REG}            Link op1 to referenced storage op2
+0x00c5 setref     {REG,REG}            Copy op2 into referenced storage op1
+0x00c6 refvalid   {REG,REG}            Set op1 to 1 if reference op2 is valid, else 0
+0x00c7 unref      {REG}                Clear reference value op1
+0x00c8 linkattr   {REG,REG,REG}        Link attribute op3 of op2 to op1
+0x00c9 linkattr   {REG,REG,INT}        Link attribute op3 of op2 to op1
+0x00ca linkattr1  {REG,REG,REG}        Link attribute op3 (1 base) of op2 to op1
+0x00cb linkattr1  {REG,REG,INT}        Link attribute op3 (1 base) of op2 to op1
+0x00cc linktoattr {REG,REG,REG}        Link op3 to attribute op1 of op2 
+0x00cd linktoattr {INT,REG,REG}        Link op3 to attribute op1 of op2 
+0x00ce linktoattr1 {REG,REG,REG}        Link op3 to attribute op1 (1 base) of op2 
+0x00cf linktoattr1 {INT,REG,REG}        Link op3 to attribute op1 (1 base) of op2 
+0x00d0 unlinkattr {REG,REG}            Unlink attribute op1 of op2
+0x00d1 unlinkattr {INT,REG}            Unlink attribute op1 of op2
+0x00d2 unlinkattr1 {REG,REG}            Unlink attribute op1 (1 base) of op2
+0x00d3 unlinkattr1 {INT,REG}            Unlink attribute op1 (1 base) of op2
+0x00d4 link       {REG,REG}            Link op2 to op1
+0x00d5 unlink     {REG}                Unlink op1
+0x00d6 getattrs   {REG,REG}            get number attributes op1 = op2.num_attributes
+0x00d7 getattrs   {REG,REG,INT}        get number attributes op1 = op2.num_attributes + op3
+0x00d8 setattrs   {REG,REG}            set number attributes op1.num_attributes = op2
+0x00d9 setattrs   {REG,INT}            set number attributes op1.num_attributes = op2
+0x00da setattrs   {REG,REG,INT}        set number attributes op1.num_attributes = op2 + op3
+0x00db setattrs   {REG,INT,INT}        set number attributes op1.num_attributes = op2 + op3
+0x00dc getabufs   {REG,REG}            get attribute buffer size op1 = op2.max_attributes
+0x00dd minattrs   {REG,REG}            ensure min number attributes op1.num_attributes >= op2
+0x00de minattrs   {REG,INT}            ensure min number attributes op1.num_attributes >= op2
+0x00df minattrs   {REG,REG,INT}        ensure min number attributes op1.num_attributes >= op2 + op3
+0x00e0 minattrs   {REG,INT,INT}        ensure min number attributes op1.num_attributes >= op2 + op3
+0x00e1 btoi       {REG}                Set register integer value from its boolean value
+0x00e2 btod       {REG}                Set register decimal value from its boolean value
+0x00e3 btof       {REG}                Set register float value from its boolean value
+0x00e4 btos       {REG}                Set register string value from its boolean value
+0x00e5 itos       {REG}                Set register string value from its int value
+0x00e6 ftos       {REG}                Set register string value from its float value
+0x00e7 itof       {REG}                Set register float value from its int value
+0x00e8 ftoi       {REG}                Set register int value from its float value
+0x00e9 ftob       {REG}                Set register boolean (int 1 or 0) value from its float value
+0x00ea itob       {REG}                Set register boolean (int 1 or 0) value from its integer value
+0x00eb stob       {REG}                Set register boolean (int 1 or 0) value from its string value
+0x00ec stof       {REG}                Set register float value from its string value
+0x00ed stoi       {REG}                Set register int value from its string value
+0x00ee stod       {REG}                Convert Decimal String to Decimal Number op1=s2dec(op2)
+0x00ef dtos       {REG}                Convert Decimal Number to Decimal String op1=dec2s(op2)
+0x00f0 dtoi       {REG}                Convert Decimal Number to Integer op1=dec2s(op2)
+0x00f1 dtob       {REG}                Convert Decimal Number to Boolean op1=dec2s(op2)
+0x00f2 itod       {REG}                Convert Integer to Decimal Number op1=s2dec(op2)
+0x00f3 ftod       {REG}                Convert Float to Decimal Number op1=f2dec(op2)
+0x00f4 dtof       {REG}                Convert Decimal Number to Float op1=f2dec(op2)
+0x00f5 setnumdgts {REG}                Set Numeric Digits digits=op1 (>4)
+0x00f6 setnumdgts {INT}                Set Numeric Digits digits=op1 (>4)
+0x00f7 getnumdgts {REG}                Get Numeric Digits op1=digits
+0x00f8 setnumfuz  {REG}                Set Numeric Fuzz digits=op1 (>=0)
+0x00f9 setnumfuz  {INT}                Set Numeric Fuzz digits=op1 (>=0)
+0x00fa getnumfuz  {REG}                Get Numeric Fuzz op1=digits
+0x00fb setnumfrm  {REG}                Set Numeric Form=op1 (1=sci,2=eng)
+0x00fc setnumfrm  {INT}                Set Numeric Form=op1 (1=sci,2=eng)
+0x00fd getnumfrm  {REG}                Get Numeric Form=op1 (1=sci,2=eng)
+0x00fe setnumcas  {REG}                Set Numeric Case=op1 (1=lower,2=upper)
+0x00ff setnumcas  {INT}                Set Numeric Case=op1 (1=lower,2=upper)
+0x0100 getnumcas  {REG}                Get Numeric Case=op1 (1=lower,2=upper)
+0x0101 setnumstd  {REG}                Set Numeric Standard=op1 (1=common,2=classic)
+0x0102 setnumstd  {INT}                Set Numeric Standard=op1 (1=common,2=classic)
+0x0103 getnumstd  {REG}                Get Numeric Standard=op1 (1=common,2=classic)
+0x0104 numsci     {INT,INT,INT}        Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+0x0105 numeng     {INT,INT,INT}        Setup Engineering Numeric digits=op1, case=op2, std=op3, fuzz=0, form=eng
+0x0106 fformat    {REG,REG,REG}        DEPRECATED use fextr. Set string value from float value using a format string
+0x0108 swapn      {REG,REG,REG,REG}    Swap two register pairs in operand order
+0x0109 swapn      {REG,REG,REG,REG,REG,REG} Swap three register pairs in operand order
+0x010a swapn      {REG,REG,REG,REG,REG,REG,REG,REG} Swap four register pairs in operand order
+0x010b settpswap  {REG,INT,REG}        Set op1 status flags then swap op1 and op3
+0x010c loadsettp2 {REG,INT,REG,INT}    Load op1 integer and set op3 status flags
+0x010d loadsettpswap {REG,INT,REG,INT,REG} Load op1, set op3 status flags, then swap op3 and op5
+0x010e swapsettp  {REG,REG,REG,INT}    Swap op1/op2 then set op3 status flags
+0x010f swapsettpswap {REG,REG,REG,INT,REG} Swap op1/op2, set op3 status flags, then swap op3/op5
+0x0111 settpswapsettpswap {REG,INT,REG,REG,REG} Set/swap two call-window registers with one status value
+0x0112 nulln      {REG,REG}            Clear two registers
+0x0113 nulln      {REG,REG,REG}        Clear three registers
+0x0114 nulln      {REG,REG,REG,REG}    Clear four registers
+0x0118 swapcall   {REG,FUNC,REG,REG,REG} Swap op4/op5 then call op2 with count/window op3 and result op1
+0x0119 settpswapcall {REG,FUNC,REG,REG,INT,REG} Set op4 status, swap op4/op6, then call op2 with count/window op3
+0x011a settpcall  {REG,FUNC,REG,REG,INT} Set op4 status then call op2 with count/window op3
+0x011b unlinkn    {REG,REG}            Restore two registers to their frame-owned storage
+0x011c isetunlink {REG,REG}            Copy integer op2 through alias op1 then unlink op1
+0x011d igetunlink {REG,REG}            Copy integer from alias op2 to op1 then unlink op2
+0x011e iloadsetunlink {REG,INT}            Store an integer through alias op1 then unlink op1
+0x011f isetunlinkn {REG,REG,REG}        Copy integer op2 through alias op1 then unlink op1 and op3
+0x0120 unlinkbr   {REG,ID}             Unlink op1 then branch to op2
+0x0121 iloadsetunlinkn {REG,INT,REG}        Store integer through alias op1 then unlink op1 and op3
+0x0123 setlinkattr1 {REG,REG,INT,REG}    Set op2 attribute count to op3 then link one-based register attribute op4 to op1
+0x0124 setlinkattr1 {REG,REG,INT,REG,INT} Set op2 attribute count then link one-based attribute op4 plus op5 to op1
+0x0125 minlinkattr1 {REG,REG,INT}        Ensure op2 has op3 attributes then link one-based attribute op3 to op1
+0x0126 minlinkattr1 {REG,REG,REG,INT}    Ensure and link one-based attribute op3 plus op4 of op2 to op1
+0x0127 itof       {REG,REG}            Convert integer op2 directly to float op1
+0x0128 stoi       {REG,REG}            Convert string op2 directly to integer op1
+0x0129 fdivsub    {REG,REG,REG,FLOAT}  Set op3 to op2 divided by op3, then set op1 to op3 minus op4
+0x012a fmulticopy {REG,FLOAT,REG,REG}  Multiply op1 by op2 and integer-copy op4 to op3
+0x012c fadd       {REG,REG,REG}        Float Add (op1=op2+op3)
+0x012d fadd       {REG,REG,FLOAT}      Float Add (op1=op2+op3)
+0x012e fsub       {REG,REG,REG}        Float Subtract (op1=op2-op3)
+0x012f fsub       {REG,REG,FLOAT}      Float Subtract (op1=op2-op3)
+0x0130 fsub       {REG,FLOAT,REG}      Float Subtract (op1=op2-op3)
+0x0131 fmult      {REG,REG,REG}        Float Multiply (op1=op2*op3)
+0x0132 fmult      {REG,REG,FLOAT}      Float Multiply (op1=op2*op3)
+0x0133 fdiv       {REG,REG,REG}        Float Divide (op1=op2/op3)
+0x0134 fdiv       {REG,REG,FLOAT}      Float Divide (op1=op2/op3)
+0x0135 fdiv       {REG,FLOAT,REG}      Float Divide (op1=op2/op3)
+0x0136 fidiv      {REG,REG,REG}        Integer Divide with Floats (op1=op2/op3)
+0x0137 fidiv      {REG,REG,FLOAT}      Integer Divide with Floats (op1=op2/op3)
+0x0138 fidiv      {REG,FLOAT,REG}      Integer Divide with Floats (op1=op2/op3)
+0x0139 fmod       {REG,REG,REG}        Float Modulo (op1=op2%op3)
+0x013a fmod       {REG,REG,FLOAT}      Float Modulo (op1=op2%op3)
+0x013b fmod       {REG,FLOAT,REG}      Float Modulo (op1=op2&op3)
+0x013c feq        {REG,REG,REG}        Float Equals op1=(op2==op3)
+0x013d feq        {REG,REG,FLOAT}      Float Equals op1=(op2==op3)
+0x013e fne        {REG,REG,REG}        Float Not equals op1=(op2!=op3)
+0x013f fne        {REG,REG,FLOAT}      Float Not equals op1=(op2!=op3)
+0x0140 fgt        {REG,REG,REG}        Float Greater than op1=(op2>op3)
+0x0141 fgt        {REG,REG,FLOAT}      Float Greater than op1=(op2>op3)
+0x0142 fgt        {REG,FLOAT,REG}      Float Greater than op1=(op2>op3)
+0x0143 fgte       {REG,REG,REG}        Float Greater than equals op1=(op2>=op3)
+0x0144 fgte       {REG,REG,FLOAT}      Float Greater than equals op1=(op2>=op3)
+0x0145 fgte       {REG,FLOAT,REG}      Float Greater than equals op1=(op2>=op3)
+0x0146 flt        {REG,REG,REG}        Float Less than op1=(op2<op3)
+0x0147 flt        {REG,REG,FLOAT}      Float Less than op1=(op2<op3)
+0x0148 flt        {REG,FLOAT,REG}      Float Less than op1=(op2<op3)
+0x0149 flte       {REG,REG,REG}        Float Less than equals op1=(op2<=op3)
+0x014a flte       {REG,REG,FLOAT}      Float Less than equals op1=(op2<=op3)
+0x014b flte       {REG,FLOAT,REG}      Float Less than equals op1=(op2<=op3)
+0x014c fgtbr      {ID,REG,REG}         Float Greater than if (op2>op3) goto op1
+0x014d fltbr      {ID,REG,REG}         Float Less than if (op2<op3) goto op1
+0x014e fpow       {REG,REG,REG}        op1=op2**op3
+0x014f fpow       {REG,REG,FLOAT}      op1=op2**op3
+0x0150 fpow       {REG,FLOAT,REG}      op1=op2**op3
+0x0151 fsex       {REG}                float op1 = -op1 (sign change)
+0x0152 fextr      {REG,REG,REG}        op3 float extracted to op1 string coefficient and op2 int decimal exponent
+0x0153 ipow       {REG,REG,REG}        op1=op2**op3
+0x0154 ipow       {REG,REG,INT}        op1=op2**op3
+0x0155 ipow       {REG,INT,REG}        op1=op2**op3
+0x0156 isex       {REG}                dec op1 = -op1 (sign change)
+0x0157 igtbr      {ID,REG,REG}         Int Greater than if (op2>op3) goto op1
+0x0158 iltbr      {ID,REG,REG}         Int Less than if (op2<op3) goto op1
+0x0159 bct        {ID,REG}             dec op2; if op2>0; goto op1(if true)
+0x015a bct        {ID,REG,REG}         dec op2; inc op3, if op2>0; goto op1(if true)
+0x015b bctnm      {ID,REG}             dec op2; if op2>=0; goto op1(if true)
+0x015c bctnm      {ID,REG,REG}         dec op2; inc op3, if op2>=0; goto op1(if true)
+0x015d bctp       {ID,REG}             inc op2; goto op1
+0x015e bcf        {ID,REG}             if op2=0 goto op1(if false) else dec op2
+0x015f bcf        {ID,REG,REG}         if op2=0 goto op1(if false) else dec op2 and inc op3
+0x0160 bgt        {ID,REG,REG}         if op2>op3 then goto op1
+0x0161 bgt        {ID,REG,INT}         if op2>op3 then goto op1
+0x0162 bge        {ID,REG,REG}         if op2>=op3 then goto op1
+0x0163 bge        {ID,REG,INT}         if op2>=op3 then goto op1
+0x0164 blt        {ID,REG,REG}         if op2<op3 then goto op1
+0x0165 blt        {ID,REG,INT}         if op2<op3 then goto op1
+0x0166 ble        {ID,REG,REG}         if op2<=op3 then goto op1
+0x0167 ble        {ID,REG,INT}         if op2<=op3 then goto op1
+0x0168 dadd       {REG,REG,REG}        Decimal Add (op1=op2-op3)
+0x0169 dadd       {REG,REG,DECIMAL}    Decimal Add (op1=op2-op3)
+0x016a dsub       {REG,REG,REG}        Decimal Subtract (op1=op2-op3)
+0x016b dsub       {REG,REG,DECIMAL}    Decimal Subtract (op1=op2-op3)
+0x016c dsub       {REG,DECIMAL,REG}    Decimal Subtract (op1=op2-op3)
+0x016d dmult      {REG,REG,REG}        Decimal Multiply (op1=op2*op3)
+0x016e dmult      {REG,REG,DECIMAL}    Decimal Multiply (op1=op2*op3)
+0x016f ddiv       {REG,REG,REG}        Decimal Divide (op1=op2/op3)
+0x0170 ddiv       {REG,REG,DECIMAL}    Decimal Divide (op1=op2/op3)
+0x0171 ddiv       {REG,DECIMAL,REG}    Decimal Divide (op1=op2/op3)
+0x0172 didiv      {REG,REG,REG}        Integer Divide with Decimals (op1=op2/op3)
+0x0173 didiv      {REG,REG,DECIMAL}    Integer Divide with Decimals (op1=op2/op3)
+0x0174 didiv      {REG,DECIMAL,REG}    Integer Divide with Decimals (op1=op2/op3)
+0x0175 dmod       {REG,REG,REG}        Decimal Modulo (op1=op2%op3)
+0x0176 dmod       {REG,REG,DECIMAL}    Decimal Modulo (op1=op2%op3)
+0x0177 dmod       {REG,DECIMAL,REG}    Decimal Modulo (op1=op2&op3)
+0x0178 deq        {REG,REG,REG}        Decimal Equals op1=(op2==op3)
+0x0179 deq        {REG,REG,DECIMAL}    Decimal Equals op1=(op2==op3)
+0x017a dne        {REG,REG,REG}        Decimal Not equals op1=(op2!=op3)
+0x017b dne        {REG,REG,DECIMAL}    Decimal Not equals op1=(op2!=op3)
+0x017c dgt        {REG,REG,REG}        Decimal Greater than op1=(op2>op3)
+0x017d dgt        {REG,REG,DECIMAL}    Decimal Greater than op1=(op2>op3)
+0x017e dgt        {REG,DECIMAL,REG}    Decimal Greater than op1=(op2>op3)
+0x017f dgte       {REG,REG,REG}        Decimal Greater than equals op1=(op2>=op3)
+0x0180 dgte       {REG,REG,DECIMAL}    Decimal Greater than equals op1=(op2>=op3)
+0x0181 dgte       {REG,DECIMAL,REG}    Decimal Greater than equals op1=(op2>=op3)
+0x0182 dlt        {REG,REG,REG}        Decimal Less than op1=(op2<op3)
+0x0183 dlt        {REG,REG,DECIMAL}    Decimal Less than op1=(op2<op3)
+0x0184 dlt        {REG,DECIMAL,REG}    Decimal Less than op1=(op2<op3)
+0x0185 dlte       {REG,REG,REG}        Decimal Less than equals op1=(op2<=op3)
+0x0186 dlte       {REG,REG,DECIMAL}    Decimal Less than equals op1=(op2<=op3)
+0x0187 dlte       {REG,DECIMAL,REG}    Decimal Less than equals op1=(op2<=op3)
+0x0188 dgtbr      {ID,REG,REG}         Decimal Greater than if (op2>op3) goto op1
+0x0189 dltbr      {ID,REG,REG}         Decimal Less than if (op2<op3) goto op1
+0x018a deqbr      {ID,REG,REG}         Decimal Equal if (op2=op3) goto op1
+0x018b dpow       {REG,REG,REG}        op1=op2**op3
+0x018c dpow       {REG,REG,DECIMAL}    op1=op2**op3
+0x018d dpow       {REG,DECIMAL,REG}    op1=op2**op3
+0x018e dsex       {REG}                Decimal op1 = -op1 (sign change)
+0x018f dextr      {REG,REG,REG}        op3 decimal extracted to op1 string coefficient and op2 int decimal exponent
+0x0190 decplnm    {REG,REG,REG}        Get Decimal Plugin Name op1=name op2=description op3=version
+0x0196 isetattr1  {REG,INT,REG}        Copy integer op3 directly into one-based attribute op2 of op1
+0x019c linksetattrslinkadd {REG,REG,INT,INT,REG,REG,INT} Link/set attributes then link a nested one-based index
+0x019f setlinkiload {REG,REG,INT,REG,REG,INT} Set/link an attribute and load an independent integer register
+0x01a6 iloadsetunlinkn {REG,REG,INT,REG}    Load op1, store through alias op2, then unlink op2 and op4
+0x01c2 say        {REG}                Say op1
+0x01c3 sayx       {REG}                Say op1 without line feed
+0x01c4 sayx       {STRING}             Say op1 (as string) without line feed
+0x01c5 say        {INT}                Say op1
+0x01c6 say        {FLOAT}              Say op1
+0x01c7 say        {STRING}             Say op1
+0x01c8 say        {CHAR}               Say op1
+0x01c9 readline   {REG}                Read Line to op1
+0x01ca time       {REG}                Put time into op1
+0x01cb mtime      {REG}                Put time in microseconds into op1
+0x01cc xtime      {REG,STRING}         put special time properties into op1
+0x01cd rxvers     {REG}                get version, op1=version details
+0x01ce getenv     {REG,REG}            get environment variable, op1=env[op2]
+0x01cf getenv     {REG,STRING}         get environment variable, op1=env[op2]
+0x01d0 irand      {REG,REG}            random number random, op1=irand(op2)
+0x01d1 irand      {REG,INT}            random number random, op1=irand(op2)
+0x01d2 spawn      {REG,REG,REG}        Spawn Process op1 = exec op2 redirect op3
+0x01d3 redir2str  {REG,REG}            Redirect op1 -> string op2
+0x01d4 redir2arr  {REG,REG}            Redirect op1 -> array op2
+0x01d5 str2redir  {REG,REG}            Redirect op1 <- string op2
+0x01d6 arr2redir  {REG,REG}            Redirect op1 <- array op2
+0x01d7 nullredir  {REG}                Redirect op1 = to/from null
+0x01d8 fopen      {REG,REG,REG}        op1 file*(int) = fopen filename op2(string) mode op3(string)
+0x01d9 fclose     {REG,REG}            op1 rc(int) = fclose op2 file*(int)
+0x01da fflush     {REG,REG}            op1 rc(int) = fflush op2 file*(int)
+0x01db freadb     {REG,REG,REG}        op1(binary) = fread op2 file*(int) op3 bytes(int)
+0x01dc freadline  {REG,REG}            op1 (string) = read until newline op2 file*(int)
+0x01dd freadbyte  {REG,REG}            op1 (int) = read byte op2 file*(int)
+0x01de freadcdpt  {REG,REG}            op1 (string and int) = read codepoint op2 file*(int)
+0x01df fwrite     {REG,REG}            fwrite to op1 file*(int) from op2(string)
+0x01e0 fwriteb    {REG,REG}            fwrite to op1 file*(int) from op2(binary)
+0x01e1 fwritebyte {REG,REG}            write byte to op1 file*(int) op2 source(int)
+0x01e2 fwritecdpt {REG,REG}            write codepoint to op1 file*(int) op2 source(int)
+0x01e3 fclearerr  {REG}                clearerr op1 file*(int)
+0x01e4 feof       {REG,REG}            op1 rc(int) = feof op2 file*(int)
+0x01e5 ferror     {REG,REG}            op1 rc(int) = ferror op2 file*(int)
+0x01e6 signal     {STRING}             Signal type op1
+0x01e7 signalt    {STRING,REG}         Signal type op1 if op2 true
+0x01e8 signalf    {STRING,REG}         Signal type op1 if op2 false
+0x01e9 signal     {STRING,STRING}      Signal type op1 (message op2)
+0x01ea signal     {STRING,REG}         Signal type op1 (payload op2)
+0x01eb signalt    {STRING,STRING,REG}  Signal type op1 (message op2) if op3 true
+0x01ec signalf    {STRING,STRING,REG}  Signal type op1 (message op2) if op3 false
+0x01ed bpon       {FUNC}               Enable Breakpoints with op1 handler
+0x01ee bpon       no operand           Enable Breakpoints with existing handler
+0x01ef bpoff      no operand           Disable Breakpoints
+0x01f0 sigignore  {STRING}             Set Signal op1 Handle to Ignore
+0x01f1 sighalt    {STRING}             Set Signal op1 Handle to Halt
+0x01f2 sigshalt   {STRING}             Set Signal op1 Handle to Silent Halt
+0x01f3 sigbr      {ID,STRING}          Set Signal op2 Handle to Branch to op1
+0x01f4 sigcall    {FUNC,STRING}        Set Signal op2 Handle to Call op1
+0x01f5 sigcallbr  {ID,FUNC,STRING}     Set Signal op3 Handle to Call op2 returning to op1
+0x01f6 sigret     {STRING}             Set Signal op1 Handle to Return
+0x01f7 ichkrng    {REG,INT,INT}        if op1<op2 | op1>op3 signal OUT_OF_RANGE
+0x01f8 ichkrng    {REG,INT,REG}        if op1<op2 | op1>op3 signal OUT_OF_RANGE
+0x01f9 ichkrng    {REG,REG,REG}        if op1<op2 | op1>op3 signal OUT_OF_RANGE
+0x01fa ichkrng    {INT,INT,REG}        if op1<op2 | op1>op3 signal OUT_OF_RANGE
+0x01fb ichkrng    {INT,REG,REG}        if op1<op2 | op1>op3 signal OUT_OF_RANGE
+0x01fc erase      {REG}                erases register contents
+0x01fd move       {REG,REG}            Move op2 to op1
+0x01fe swap       {REG,REG}            Swap op1 and op2
+0x01ff linkarg    {REG,INT}            Link args[op2] to op1
+0x0200 linkarg    {REG,REG,INT}        Link args[op2+op3] to op1
+0x0201 rxhash     {REG,REG,REG}        returns hash value, etc, op1=hash(op2,len(op3))
+0x0202 endlife    {REG}                End storage reference lifetime for op1
+0x0203 settpmask  {REG,REG,INT}        masked replace of source-writable status flags (op1.flags=(op1.flags&~op3)|(op2&op3))
+0x0204 gettp      {REG,REG}            gets the readable register status flags (op1 = op2.flags)
+0x0205 settp      {REG,INT}            sets externally writable register status flags, preserving VM-private flags
+0x0206 loadsettp  {REG,INT,INT}        load register and sets externally writable status flags load op1=op2 (op1.flags = op3)
+0x0207 loadsettp  {REG,FLOAT,INT}      load register and sets externally writable status flags load op1=op2 (op1.flags = op3)
+0x0208 loadsettp  {REG,STRING,INT}     load register and sets externally writable status flags load op1=op2 (op1.flags = op3)
+0x0209 setortp    {REG,INT}            or externally writable register status flags (op1.flags = op1.flags | op2)
+0x020a getandtp   {REG,REG,INT}        get readable register status flags with mask (op1(int) = op2.flags & op3)
+0x020b brtpt      {ID,REG}             if op2 has externally writable status flags then goto op1
+0x020c brtpandt   {ID,REG,INT}         if op2 readable status flags & op3 true then goto op1
+0x020d metaloadmodule {REG,REG}            Load Module (op1 = module num of last loaded module in rxbin op2)
+0x020e metaloadedmodules {REG}                Loaded Modules (op1 = array loaded modules)
+0x020f metaloadedprocs {REG,REG}            Loaded Procedures (op1 = array procedures in module op2)
+0x0210 metaloadedeprocs {REG,REG}            Loaded Exposed Procedures (op1 = array procedures in module op2)
+0x0211 metaloadinst {REG,REG,REG}        Load Instruction Code (op1 = (inst)op2[op3])
+0x0212 metadecodeinst {REG,REG}            Decode opcode (op1 decoded op2)
+0x0213 metaloadioperand {REG,REG,REG}        Load Integer/Index Operand (op1 = (int)op2[op3])
+0x0214 metaloadfoperand {REG,REG,REG}        Load Float Operand (op1 = (float)op2[op3])
+0x0215 metaloadsoperand {REG,REG,REG}        Load String Operand (op1 = (string)op2[op3])
+0x0216 metaloadpoperand {REG,REG,REG}        Load Procedure Operand (op1 = (proc)op2[op3])
+0x0217 metaloaddata {REG,REG,REG}        Load Metadata (op1 = (metadata)op2[op3])
+0x0218 metalinkpreg {REG,REG}            Link parent-frame-register[op2] to op1
+0x0219 metaloadcalleraddr {REG}                Load caller address object to op1
+0x021c cnop       no operand           no operation
+0x021d sigcalla   {FUNC,STRING}        Set Signal op2 Handle to action-aware Call op1
+0x021e signal     {REG}                Signal type from op1 string register
+0x021f signal     {REG,REG}            Signal type from op1 string register with payload op2
+0x0220 sigpush    {STRING}             Push current Signal op1 handler on the current frame handler stack
+0x0221 sigpop     {STRING}             Pop and restore current Signal op1 handler from the current frame handler stack
+0x0222 sigbrv     {ID,REG,STRING}      Set Signal op3 Handle to Branch to op1 and bind signal object to op2
+0x0223 insattrs   {REG,REG,REG}        Insert op3 attributes into op1 before zero-based index op2
+0x0224 insattrs   {REG,REG,INT}        Insert op3 attributes into op1 before zero-based index op2
+0x0225 insattrs   {REG,INT,REG}        Insert op3 attributes into op1 before zero-based index op2
+0x0226 insattrs   {REG,INT,INT}        Insert op3 attributes into op1 before zero-based index op2
+0x0227 insattrs1  {REG,REG,REG}        Insert op3 attributes into op1 before one-based index op2
+0x0228 insattrs1  {REG,REG,INT}        Insert op3 attributes into op1 before one-based index op2
+0x0229 insattrs1  {REG,INT,REG}        Insert op3 attributes into op1 before one-based index op2
+0x022a insattrs1  {REG,INT,INT}        Insert op3 attributes into op1 before one-based index op2
+0x022b delattrs   {REG,REG,REG}        Delete op3 attributes from op1 starting at zero-based index op2
+0x022c delattrs   {REG,REG,INT}        Delete op3 attributes from op1 starting at zero-based index op2
+0x022d delattrs   {REG,INT,REG}        Delete op3 attributes from op1 starting at zero-based index op2
+0x022e delattrs   {REG,INT,INT}        Delete op3 attributes from op1 starting at zero-based index op2
+0x022f delattrs1  {REG,REG,REG}        Delete op3 attributes from op1 starting at one-based index op2
+0x0230 delattrs1  {REG,REG,INT}        Delete op3 attributes from op1 starting at one-based index op2
+0x0231 delattrs1  {REG,INT,REG}        Delete op3 attributes from op1 starting at one-based index op2
+0x0232 delattrs1  {REG,INT,INT}        Delete op3 attributes from op1 starting at one-based index op2
+0x0233 req        {REG,REG,REG}        Loose REXX Equals op1=(op2=op3)
+0x0234 req        {REG,REG,STRING}     Loose REXX Equals op1=(op2=op3)
+0x0235 req        {REG,STRING,REG}     Loose REXX Equals op1=(op2=op3)
+0x0236 rne        {REG,REG,REG}        Loose REXX Not equals op1=(op2<>op3)
+0x0237 rne        {REG,REG,STRING}     Loose REXX Not equals op1=(op2<>op3)
+0x0238 rne        {REG,STRING,REG}     Loose REXX Not equals op1=(op2<>op3)
+0x0239 rgt        {REG,REG,REG}        Loose REXX Greater than op1=(op2>op3)
+0x023a rgt        {REG,REG,STRING}     Loose REXX Greater than op1=(op2>op3)
+0x023b rgt        {REG,STRING,REG}     Loose REXX Greater than op1=(op2>op3)
+0x023c rgte       {REG,REG,REG}        Loose REXX Greater than equals op1=(op2>=op3)
+0x023d rgte       {REG,REG,STRING}     Loose REXX Greater than equals op1=(op2>=op3)
+0x023e rgte       {REG,STRING,REG}     Loose REXX Greater than equals op1=(op2>=op3)
+0x023f rlt        {REG,REG,REG}        Loose REXX Less than op1=(op2<op3)
+0x0240 rlt        {REG,REG,STRING}     Loose REXX Less than op1=(op2<op3)
+0x0241 rlt        {REG,STRING,REG}     Loose REXX Less than op1=(op2<op3)
+0x0242 rlte       {REG,REG,REG}        Loose REXX Less than equals op1=(op2<=op3)
+0x0243 rlte       {REG,REG,STRING}     Loose REXX Less than equals op1=(op2<=op3)
+0x0244 rlte       {REG,STRING,REG}     Loose REXX Less than equals op1=(op2<=op3)
+0x0245 bcopy      {REG,REG}            Copy Binary op2 to op1
+0x0246 bresize    {REG,REG}            Resize binary op1 to op2 bytes, zero-fill growth
+0x0247 bclear     {REG}                Clear binary op1 length
+0x0248 bfill      {REG,REG}            Fill binary op1 with byte op2
+0x0249 bgetu8     {REG,REG,REG}        Unsigned 8-bit little-endian binary read op1=op2[op3]
+0x024a bgeti8     {REG,REG,REG}        Signed 8-bit little-endian binary read op1=op2[op3]
+0x024b bgetu16    {REG,REG,REG}        Unsigned 16-bit little-endian binary read op1=op2[op3]
+0x024c bgeti16    {REG,REG,REG}        Signed 16-bit little-endian binary read op1=op2[op3]
+0x024d bgetu32    {REG,REG,REG}        Unsigned 32-bit little-endian binary read op1=op2[op3]
+0x024e bgeti32    {REG,REG,REG}        Signed 32-bit little-endian binary read op1=op2[op3]
+0x024f bgetf64    {REG,REG,REG}        Float64 little-endian binary read op1=op2[op3]
+0x0250 bsetu8     {REG,REG,REG}        Unsigned 8-bit little-endian binary write op1[op2]=op3
+0x0251 bseti8     {REG,REG,REG}        Signed 8-bit little-endian binary write op1[op2]=op3
+0x0252 bsetu16    {REG,REG,REG}        Unsigned 16-bit little-endian binary write op1[op2]=op3
+0x0253 bseti16    {REG,REG,REG}        Signed 16-bit little-endian binary write op1[op2]=op3
+0x0254 bsetu32    {REG,REG,REG}        Unsigned 32-bit little-endian binary write op1[op2]=op3
+0x0255 bseti32    {REG,REG,REG}        Signed 32-bit little-endian binary write op1[op2]=op3
+0x0256 bsetf64    {REG,REG,REG}        Float64 little-endian binary write op1[op2]=op3
+0x0257 bcheckrange {REG,REG,REG}        Check binary range op1[op2..op2+op3)
+0x0258 blen       {REG,BINARY}         Binary constant length op1=len(op2)
+0x0259 bcopy      {REG,REG,REG}        Copy op1 length bytes from binary op2 at byte offset op3 into op1
+0x025a bcopy      {REG,BINARY,REG}     Copy op1 length bytes from binary constant op2 at byte offset op3 into op1
+0x025b bgetu8     {REG,BINARY,REG}     Unsigned 8-bit little-endian binary constant read op1=op2[op3]
+0x025c bgeti8     {REG,BINARY,REG}     Signed 8-bit little-endian binary constant read op1=op2[op3]
+0x025d bgetu16    {REG,BINARY,REG}     Unsigned 16-bit little-endian binary constant read op1=op2[op3]
+0x025e bgeti16    {REG,BINARY,REG}     Signed 16-bit little-endian binary constant read op1=op2[op3]
+0x025f bgetu32    {REG,BINARY,REG}     Unsigned 32-bit little-endian binary constant read op1=op2[op3]
+0x0260 bgeti32    {REG,BINARY,REG}     Signed 32-bit little-endian binary constant read op1=op2[op3]
+0x0261 bgetf64    {REG,BINARY,REG}     Float64 little-endian binary constant read op1=op2[op3]
+0x0262 bgeti64    {REG,REG,REG}        Signed 64-bit little-endian binary read op1=op2[op3]
+0x0263 bgeti64    {REG,BINARY,REG}     Signed 64-bit little-endian binary constant read op1=op2[op3]
+0x0264 bgetf32    {REG,REG,REG}        Float32 little-endian binary read op1=op2[op3]
+0x0265 bgetf32    {REG,BINARY,REG}     Float32 little-endian binary constant read op1=op2[op3]
+0x0266 bseti64    {REG,REG,REG}        Signed 64-bit little-endian binary write op1[op2]=op3
+0x0267 bsetf32    {REG,REG,REG}        Float32 little-endian binary write op1[op2]=op3
+0x0268 bgets      {REG,REG,REG}        Zero-terminated UTF-8 binary string read op1=op2[op3]
+0x0269 bgets      {REG,BINARY,REG}     Zero-terminated UTF-8 binary constant string read op1=op2[op3]
+0x026a bsets      {REG,REG,REG}        Write string register op3 as UTF-8 plus NUL to binary op1[op2]
+0x026b bsets      {REG,REG,STRING}     Write string constant op3 as UTF-8 plus NUL to binary op1[op2]
+0x026c sget       {REG,STRING,REG}     Copy op1 codepoints from string constant op2 at byte offset op3 into op1
+0x026d bmove      {REG,REG,REG}        Copy op3 bytes from binary op2 offset op2.int to binary op1 offset op1.int
+0x026e bmemmove   {REG,REG,REG}        Move op3 bytes within binary op1 from source offset op1.int to destination offset op2.int
+0x026f bcmpb      {REG,REG,REG}        Compare binary register op2 slice at offset op1 with binary register op3
+0x0270 bcmpb      {REG,BINARY,REG}     Compare binary constant op2 slice at offset op1 with binary register op3
+0x0271 bcmpb      {REG,REG,BINARY}     Compare binary register op2 slice at offset op1 with binary constant op3
+0x0272 bcmpb      {REG,BINARY,BINARY}  Compare binary constant op2 slice at offset op1 with binary constant op3
+0x0273 bcmps      {REG,REG,REG}        Compare zero-terminated UTF-8 string from binary register op2 at offset op1 with string register op3
+0x0274 bcmps      {REG,REG,STRING}     Compare zero-terminated UTF-8 string from binary register op2 at offset op1 with string constant op3
+0x0275 bcmps      {REG,BINARY,REG}     Compare zero-terminated UTF-8 string from binary constant op2 at offset op1 with string register op3
+0x0276 bcmps      {REG,BINARY,STRING}  Compare zero-terminated UTF-8 string from binary constant op2 at offset op1 with string constant op3
+0x0277 jumps      {REG,BINARY}         Jump through table op2 using string register op1
+0x0278 jumpb      {REG,BINARY}         Jump through table op2 using binary register op1
+0x0279 jumpbs     {REG,REG,BINARY}     Jump through fixed-width table op3 using binary register op1 at byte offset op2
+0x027a jumpi      {REG,BINARY}         Jump through table op2 using integer register op1
+0x027b jumpr      {REG,BINARY}         Jump through table op2 using blank-padded Rexx string register op1
+0x027c jumpn      {REG,BINARY}         Jump through table op2 using numeric string register op1
+0x027d bineq      {REG,REG,REG}        Whole binary equals op1=(op2==op3)
+0x027e bineq      {REG,REG,BINARY}     Whole binary equals op1=(op2==op3)
+0x027f binne      {REG,REG,REG}        Whole binary not equals op1=(op2!=op3)
+0x0280 binne      {REG,REG,BINARY}     Whole binary not equals op1=(op2!=op3)
+

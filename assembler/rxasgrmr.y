@@ -184,21 +184,14 @@ decl_instruction ::= KW_META(T) error NEWLINE. {rxaseaft(context, T, "Expecting 
 
 // operation/instruction
 instr ::= ID(IN). {rxasque0(context,IN);}
-instr ::= ID(IN) operand(OP1). {rxasque1(context,IN,OP1);}
-instr ::= ID(IN) operand(OP1) COMMA operand(OP2). {rxasque2(context,IN,OP1,OP2);}
-instr ::= ID(IN) operand(OP1) COMMA operand(OP2) COMMA operand(OP3).
-          {rxasque3(context,IN,OP1,OP2,OP3);}
+instr ::= ID(IN) operands(LAST). {rxasque_span(context,IN,LAST);}
+operands(LAST) ::= operand(OP). {LAST=OP;}
+operands(LAST) ::= operands COMMA operand(OP). {LAST=OP;}
 
 // instr error messages
 instr ::= ID ANYTHING(T) error NEWLINE. {rxaserat(context, T, "Expecting {operand} or {newline}");}
-instr ::= ID operand ANYTHING(T) error NEWLINE. {rxaserat(context, T, "Expecting {operand} or {newline}");}
-instr ::= ID operand COMMA(T) ANYTHING error NEWLINE. {rxaseaft(context, T, "Expecting {operand}");}
-instr ::= ID operand COMMA operand ANYTHING(T) error NEWLINE.
-          {rxaserat(context, T, "Expecting {operand} or {newline}");}
-instr ::= ID operand COMMA operand COMMA(T) ANYTHING error NEWLINE.
-          {rxaseaft(context, T, "Expecting {operand}");}
-instr ::= ID operand COMMA operand COMMA operand ANYTHING(T) error NEWLINE.
-          {rxaserat(context, T, "Expecting {newline} - max 3 operands");}
+instr ::= ID operands ANYTHING(T) error NEWLINE. {rxaserat(context, T, "Expecting comma or newline");}
+instr ::= ID operands COMMA(T) error NEWLINE. {rxaseaft(context, T, "Expecting {operand}");}
 
 // Register Types
 reg ::= RREG.

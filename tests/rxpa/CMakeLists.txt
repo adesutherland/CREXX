@@ -216,10 +216,10 @@ foreach(idx RANGE 0 ${num_tests})  # Iterate from 0 to len-1
     if(_rexxtest STREQUAL "signal_funcs")
         list(APPEND _runtime_expectations
                 EXPECTED_EXIT_CODE 3
-                EXPECTED_FAILURE_DESCRIPTION "SIGNAL ERROR at bytecode address 15"
+                EXPECTED_FAILURE_DESCRIPTION "SIGNAL ERROR at bytecode address 9"
                 REQUIRED_OUTPUT_REGEX
                     "PANIC: \\(SIGNAL ERROR\\)"
-                    "address 15 \\(0xf\\)"
+                    "address 9 \\(0x9\\)"
                 FORBIDDEN_OUTPUT_REGEX
                     "Error - should not reach here"
         )

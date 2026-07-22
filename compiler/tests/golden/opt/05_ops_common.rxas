@@ -6,11 +6,7 @@
 
 main() .locals=0
    .meta "05_ops_common.main"="b" ".void" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "05_ops_common.crexx" 8 1 14 "say res1 res2"
    .meta "05_ops_common.main.res1"="b" ".int" "-9"
    .meta "05_ops_common.main.res2"="b" ".int" "256"

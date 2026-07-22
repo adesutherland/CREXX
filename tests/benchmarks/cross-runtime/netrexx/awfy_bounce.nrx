@@ -1,21 +1,21 @@
 /*
- * NetRexx port of the Are We Fast Yet? Bounce benchmark.
+ * Decimal-semantics NetRexx port of the Are We Fast Yet? Bounce benchmark.
  * Derived from the SOM benchmark suite under the MIT license; see
  * ../../LICENSE-SOM-MIT.txt and ../../README.md.
  */
-options binary
+options nobinary decimal
 
 class awfy_bounce
 
   method main(args=String[]) static
-    repetitions=int 1
+    repetitions=1
     if args.length>=1 then repetitions=Rexx args[0]
     if repetitions<1 then do
       say 'FAIL: repetitions must be positive'
       exit 1
     end
 
-    result=int 0
+    result=0
     loop iteration=1 to repetitions
       result=BounceBenchmark().run()
       if result\=1331 then do
@@ -25,22 +25,22 @@ class awfy_bounce
     end
 
     say 'benchmark=awfy_bounce repetitions='repetitions 'result='result
-    say 'PASS: AWFY Bounce NetRexx port'
+    say 'PASS: AWFY Bounce NetRexx decimal port'
 
 class BounceRandom
   properties private
-    seedValue=int 74755
+    seedValue=74755
 
-  method next() binary returns int
+  method next() returns Rexx
     seedValue=((seedValue*1309)+13849)//65536
     return seedValue
 
 class BounceBall
   properties private
-    x=int
-    y=int
-    xVelocity=int
-    yVelocity=int
+    x=0
+    y=0
+    xVelocity=0
+    yVelocity=0
 
   method BounceBall(random=BounceRandom)
     x=random.next()//500
@@ -48,40 +48,40 @@ class BounceBall
     xVelocity=(random.next()//300)-150
     yVelocity=(random.next()//300)-150
 
-  method bounce() binary returns boolean
-    bounced=boolean 0
+  method bounce() returns Rexx
+    bounced=0
     x=x+xVelocity
     y=y+yVelocity
     if x>500 then do
       x=500
-      xVelocity=-Math.abs(xVelocity)
+      if xVelocity>0 then xVelocity=0-xVelocity
       bounced=1
     end
     if x<0 then do
       x=0
-      xVelocity=Math.abs(xVelocity)
+      if xVelocity<0 then xVelocity=0-xVelocity
       bounced=1
     end
     if y>500 then do
       y=500
-      yVelocity=-Math.abs(yVelocity)
+      if yVelocity>0 then yVelocity=0-yVelocity
       bounced=1
     end
     if y<0 then do
       y=0
-      yVelocity=Math.abs(yVelocity)
+      if yVelocity<0 then yVelocity=0-yVelocity
       bounced=1
     end
     return bounced
 
 class BounceBenchmark
-  method run() binary returns int
+  method run() returns Rexx
     random=BounceRandom()
     balls=BounceBall[100]
     loop i=0 to 99
       balls[i]=BounceBall(random)
     end
-    bounces=int 0
+    bounces=0
     loop step=1 to 50
       loop i=0 to 99
         if balls[i].bounce() then bounces=bounces+1

@@ -1,0 +1,201 @@
+/*
+ * SOURCE                 : reference_source_block_lifetime.crexx
+ */
+
+.meta "reference_source_block_lifetime.box"="b" ".unknown" .class
+.meta "reference_source_block_lifetime.box.value"="b" ".int" .attr 1
+.globals=0
+
+main() .locals=11
+   .meta "reference_source_block_lifetime.main"="b" ".int" main() ""
+   .srcstep 44 44 17 "reference_source_block_lifetime.crexx" 4 1 23 "main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "reference_source_block_lifetime.main.attr_ref"="b" "reference .int" r0
+   .srcstep 1 1 17 "reference_source_block_lifetime.crexx" 15 3 28 "  attr_ref = reference .int"
+   null r0
+   .meta "reference_source_block_lifetime.main.local_ref"="b" "reference .int" r1
+   .srcstep 2 2 17 "reference_source_block_lifetime.crexx" 5 3 29 "  local_ref = reference .int"
+   null r1
+   .meta "reference_source_block_lifetime.main.value"="b" ".int" r3
+   .srcstep 3 3 17 "reference_source_block_lifetime.crexx" 7 5 17 "    value = .int"
+   null r3
+   .srcstep 4 4 17 "reference_source_block_lifetime.crexx" 8 5 15 "    value = 12"
+   load r3,12
+   .traceevent "L" 4 "R" "I" "r" 3 4 4 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 4 4 0 "value" ""
+   .srcstep 5 5 17 "reference_source_block_lifetime.crexx" 9 5 32 "    local_ref = reference value"
+   .traceevent "V" 6 "R" "I" "r" 3 5 5 0 "value" ""
+   mkref r1,r3
+   .traceevent "A" 6 "R" "R" "r" 1 5 5 0 "local_ref" ""
+   .srcstep 10 10 17 "reference_source_block_lifetime.crexx" 10 5 33 "    if <refvalid>(local_ref) = 0 then return fail(\"block reference initially live\")"
+   .traceevent "V" 6 "R" "R" "r" 1 10 10 0 "local_ref" ""
+   refvalid r4,r1
+   btoi r4
+   ieq r4,r4,0
+   .traceevent "O" 4 "R" "B" "r" 4 10 10 0 "" ""
+   brf l34iffalse,r4
+   .srcstep 11 11 17 "reference_source_block_lifetime.crexx" 10 34 38 "    if <refvalid>(local_ref) = 0 then return fail(\"block reference initially live\")"
+   .srcstep 9 9 17 "reference_source_block_lifetime.crexx" 10 39 84 "    if <refvalid>(local_ref) = 0 then return fail(\"block reference initially live\")"
+   .srcstep 8 8 17 "reference_source_block_lifetime.crexx" 10 46 50 "    if <refvalid>(local_ref) = 0 then return fail(\"block reference initially live\")"
+   .srcstep 6 6 17 "reference_source_block_lifetime.crexx" 28 3 20 "  say \"FAIL:\" label"
+   say "FAIL: block reference initially live"
+   .srcstep 7 7 17 "reference_source_block_lifetime.crexx" 29 3 11 "  return 1"
+   load r5,1
+   .traceevent "L" 4 "R" "I" "r" 5 9 9 0 "" ""
+   icopy r6,r5
+   br l137bexprend
+l137bexprend:
+   ret r6
+l34iffalse:
+   .srcstep 16 16 17 "reference_source_block_lifetime.crexx" 11 5 32 "    if snapshot local_ref <> 12 then return fail(\"block reference value\")"
+   .traceevent "V" 6 "R" "R" "r" 1 16 16 0 "local_ref" ""
+   deref r6,r1
+   ine r6,r6,12
+   .traceevent "O" 4 "R" "B" "r" 6 16 16 0 "" ""
+   brf l42iffalse,r6
+   .srcstep 17 17 17 "reference_source_block_lifetime.crexx" 11 33 37 "    if snapshot local_ref <> 12 then return fail(\"block reference value\")"
+   .srcstep 15 15 17 "reference_source_block_lifetime.crexx" 11 38 74 "    if snapshot local_ref <> 12 then return fail(\"block reference value\")"
+   .srcstep 14 14 17 "reference_source_block_lifetime.crexx" 11 45 49 "    if snapshot local_ref <> 12 then return fail(\"block reference value\")"
+   .srcstep 12 12 17 "reference_source_block_lifetime.crexx" 28 3 20 "  say \"FAIL:\" label"
+   say "FAIL: block reference value"
+   .srcstep 13 13 17 "reference_source_block_lifetime.crexx" 29 3 11 "  return 1"
+   load r5,1
+   .traceevent "L" 4 "R" "I" "r" 5 15 15 0 "" ""
+   icopy r4,r5
+   br l148bexprend
+l148bexprend:
+   ret r4
+l42iffalse:
+   endlife r3
+   .meta "reference_source_block_lifetime.main.value"
+   .srcstep 22 22 17 "reference_source_block_lifetime.crexx" 13 3 27 "  if <refvalid>(local_ref) then return fail(\"block reference invalid after do\")"
+   .traceevent "V" 6 "R" "R" "r" 1 22 22 0 "local_ref" ""
+   refvalid r6,r1
+   brf l52iffalse,r6
+   .srcstep 23 23 17 "reference_source_block_lifetime.crexx" 13 28 32 "  if <refvalid>(local_ref) then return fail(\"block reference invalid after do\")"
+   .srcstep 21 21 17 "reference_source_block_lifetime.crexx" 13 33 80 "  if <refvalid>(local_ref) then return fail(\"block reference invalid after do\")"
+   .srcstep 20 20 17 "reference_source_block_lifetime.crexx" 13 40 44 "  if <refvalid>(local_ref) then return fail(\"block reference invalid after do\")"
+   .srcstep 18 18 17 "reference_source_block_lifetime.crexx" 28 3 20 "  say \"FAIL:\" label"
+   say "FAIL: block reference invalid after do"
+   .srcstep 19 19 17 "reference_source_block_lifetime.crexx" 29 3 11 "  return 1"
+   load r5,1
+   .traceevent "L" 4 "R" "I" "r" 5 21 21 0 "" ""
+   icopy r4,r5
+   br l159bexprend
+l159bexprend:
+   ret r4
+l52iffalse:
+   .srcstep 28 28 17 "reference_source_block_lifetime.crexx" 17 5 18 "    box = .Box(5)"
+   .srcstep 24 24 6 "reference_source_block_lifetime.crexx" 34 3 13 "  *: factory"
+   setattrs r7,2
+   .srcstep 25 25 6 "reference_source_block_lifetime.crexx" 34 3 13 "  *: factory"
+   setobjtype r7,"reference_source_block_lifetime.box"
+   .srcstep 26 26 17 "reference_source_block_lifetime.crexx" 36 5 17 "    value = seed"
+   load r8,5
+   .traceevent "L" 4 "R" "I" "r" 8 26 26 0 "" ""
+   linkattr1 r4,r7,1
+   icopy r4,r8
+   unlink r4
+   .srcstep 27 27 33 "reference_source_block_lifetime.crexx" 37 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 7 27 27 0 "§factory" ""
+   copy r5,r7
+   .traceevent "A" 6 "R" "O" "r" 5 27 27 0 "box" ""
+   .srcstep 29 29 17 "reference_source_block_lifetime.crexx" 18 5 28 "    attr_ref = box.valueRef()"
+   .meta "reference_source_block_lifetime.main.box"="b" ".box" r5
+   .traceevent "V" 6 "R" "O" "r" 5 29 29 0 "box" ""
+   load r4,1
+   settp r5,256
+   call r0,§reference_source_block_lifetime.box.valueref(),r4
+   .traceevent "F" 4 "R" "R" "r" 0 29 29 0 "valueref" ""
+   .traceevent "A" 6 "R" "R" "r" 0 29 29 0 "attr_ref" ""
+   .srcstep 34 34 17 "reference_source_block_lifetime.crexx" 19 5 32 "    if <refvalid>(attr_ref) = 0 then return fail(\"block attribute reference initially live\")"
+   .traceevent "V" 6 "R" "R" "r" 0 34 34 0 "attr_ref" ""
+   refvalid r4,r0
+   btoi r4
+   ieq r4,r4,0
+   .traceevent "O" 4 "R" "B" "r" 4 34 34 0 "" ""
+   brf l79iffalse,r4
+   .srcstep 35 35 17 "reference_source_block_lifetime.crexx" 19 33 37 "    if <refvalid>(attr_ref) = 0 then return fail(\"block attribute reference initially live\")"
+   .srcstep 33 33 17 "reference_source_block_lifetime.crexx" 19 38 93 "    if <refvalid>(attr_ref) = 0 then return fail(\"block attribute reference initially live\")"
+   .srcstep 32 32 17 "reference_source_block_lifetime.crexx" 19 45 49 "    if <refvalid>(attr_ref) = 0 then return fail(\"block attribute reference initially live\")"
+   .srcstep 30 30 17 "reference_source_block_lifetime.crexx" 28 3 20 "  say \"FAIL:\" label"
+   say "FAIL: block attribute reference initially live"
+   .srcstep 31 31 17 "reference_source_block_lifetime.crexx" 29 3 11 "  return 1"
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 33 33 0 "" ""
+   icopy r10,r9
+   br l197bexprend
+l197bexprend:
+   ret r10
+l79iffalse:
+   endlife r5
+   .meta "reference_source_block_lifetime.main.box"
+   .srcstep 40 40 17 "reference_source_block_lifetime.crexx" 21 3 26 "  if <refvalid>(attr_ref) then return fail(\"block attribute reference invalid after do\")"
+   .traceevent "V" 6 "R" "R" "r" 0 40 40 0 "attr_ref" ""
+   refvalid r10,r0
+   brf l89iffalse,r10
+   .srcstep 41 41 17 "reference_source_block_lifetime.crexx" 21 27 31 "  if <refvalid>(attr_ref) then return fail(\"block attribute reference invalid after do\")"
+   .srcstep 39 39 17 "reference_source_block_lifetime.crexx" 21 32 89 "  if <refvalid>(attr_ref) then return fail(\"block attribute reference invalid after do\")"
+   .srcstep 38 38 17 "reference_source_block_lifetime.crexx" 21 39 43 "  if <refvalid>(attr_ref) then return fail(\"block attribute reference invalid after do\")"
+   .srcstep 36 36 17 "reference_source_block_lifetime.crexx" 28 3 20 "  say \"FAIL:\" label"
+   say "FAIL: block attribute reference invalid after do"
+   .srcstep 37 37 17 "reference_source_block_lifetime.crexx" 29 3 11 "  return 1"
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 39 39 0 "" ""
+   icopy r5,r9
+   br l186bexprend
+l186bexprend:
+   ret r5
+l89iffalse:
+   .srcstep 42 42 17 "reference_source_block_lifetime.crexx" 23 3 46 "  say \"PASS: Reference Source Block Lifetime\""
+   say "PASS: Reference Source Block Lifetime"
+   .srcstep 43 43 17 "reference_source_block_lifetime.crexx" 24 3 11 "  return 0"
+   ret 0
+   .meta "reference_source_block_lifetime.main.attr_ref"
+   .meta "reference_source_block_lifetime.main.local_ref"
+
+§reference_source_block_lifetime.box.§factory() .locals=3
+   .meta "reference_source_block_lifetime.box.§factory"="b" ".reference_source_block_lifetime..box" §reference_source_block_lifetime.box.§factory() "seed=.int"
+   .srcstep 51 51 17 "reference_source_block_lifetime.crexx" 34 3 13 "  *: factory"
+   setattrs r1,2
+   setobjtype r1,"reference_source_block_lifetime.box"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 48 48 17 "reference_source_block_lifetime.crexx" 35 9 20 "    arg seed = .int"
+   .meta "reference_source_block_lifetime.box.§factory.seed"="b" ".int" a1
+   .meta "reference_source_block_lifetime.box.§factory.§factory"="b" ".box" r1
+   .srcstep 49 49 17 "reference_source_block_lifetime.crexx" 36 5 17 "    value = seed"
+   .traceevent "V" 6 "R" "I" "a" 1 49 49 0 "seed" ""
+   linkattr1 r2,r1,1
+   icopy r2,a1
+   unlink r2
+   .srcstep 50 50 17 "reference_source_block_lifetime.crexx" 37 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 1 50 50 0 "§factory" ""
+   ret r1
+   .meta "reference_source_block_lifetime.box.§factory.seed"
+   .meta "reference_source_block_lifetime.box.§factory.§factory"
+
+§reference_source_block_lifetime.box.valueref() .locals=4
+   .meta "reference_source_block_lifetime.box.valueref"="b" "reference .int" §reference_source_block_lifetime.box.valueref() ""
+   .srcstep 53 53 17 "reference_source_block_lifetime.crexx" 39 3 36 "  valueRef: method = reference .int"
+   assertinitialized a1
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 52 52 17 "reference_source_block_lifetime.crexx" 40 5 27 "    return reference value"
+   .meta "reference_source_block_lifetime.box.valueref.§this"="b" ".box" a1
+   linkattr1 r2,a1,1
+   .traceevent "V" 6 "R" "I" "r" 2 52 52 0 "value" ""
+   mkref r3,r2
+   unlink r2
+   ret r3
+   .meta "reference_source_block_lifetime.box.valueref.§this"

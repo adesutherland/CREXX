@@ -7,11 +7,7 @@
 main() .locals=13
    .meta "address_expose.main"="b" ".void" main() ""
    .srcstep 14 14 17 "address_expose.crexx" 3 1 16 "main: procedure"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "address_expose.main.rc"="b" ".int" r8
    .srcstep 1 1 6 "address_expose.crexx" 5 3 48 "  address system \"echo EXPOSE_OK\" expose userid"
    null r8

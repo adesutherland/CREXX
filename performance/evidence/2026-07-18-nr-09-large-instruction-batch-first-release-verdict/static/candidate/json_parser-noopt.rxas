@@ -1,0 +1,160 @@
+/*
+ * SOURCE                 : json_parser.crexx
+ */
+
+.globals=0
+
+main() .locals=11
+   .meta "json_parser.main"="b" ".int" main() ""
+   numsci 18,1,1
+   .srcstep 1 1 17 "json_parser.crexx" 9 5 19 "arg argv = .string[]"
+   .meta "json_parser.main.argv"="b" ".string[*]" r0
+   brtpandt l6c,a1,512
+   copy r0,a1
+   br l6d
+l6c:
+   swap r0,a1
+l6d:
+   .srcstep 2 2 17 "json_parser.crexx" 11 1 16 "repetitions = 1"
+   .meta "json_parser.main.repetitions"="b" ".int" r2
+   load r2,1
+   .traceevent "L" 4 "R" "I" "r" 2 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 2 2 0 "repetitions" ""
+   .srcstep 4 4 17 "json_parser.crexx" 12 1 16 "if argv[0] >= 1 then repetitions = argv[1]"
+   .traceevent "C" 4 "R" "V" "r" 4 4 4 0 "argv" ""
+   getattrs r5,r0,0
+   .traceevent "V" 6 "R" "I" "r" 5 4 4 0 "argv" ""
+   igte r5,r5,1
+   .traceevent "O" 4 "R" "B" "r" 5 4 4 0 "" ""
+   brf l25iffalse,r5
+   .srcstep 5 5 17 "json_parser.crexx" 12 17 21 "if argv[0] >= 1 then repetitions = argv[1]"
+   .srcstep 3 3 17 "json_parser.crexx" 12 22 42 "if argv[0] >= 1 then repetitions = argv[1]"
+   minstoiattr1 r2,r0,1
+   .traceevent "V" 6 "R" "I" "r" 2 3 3 0 "argv" ""
+   .traceevent "A" 6 "R" "I" "r" 2 3 3 0 "repetitions" ""
+l25iffalse:
+   .srcstep 7 7 17 "json_parser.crexx" 13 1 19 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .traceevent "V" 6 "R" "I" "r" 2 7 7 0 "repetitions" ""
+   ilt r6,r2,1
+   .traceevent "O" 4 "R" "B" "r" 6 7 7 0 "" ""
+   brf l32iffalse,r6
+   .srcstep 8 8 17 "json_parser.crexx" 13 20 24 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .srcstep 6 6 17 "json_parser.crexx" 13 25 68 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   load r5,"repetitions must be positive"
+   .traceevent "L" 4 "R" "S" "r" 5 6 6 0 "" ""
+   load r4,1
+   settpcall r7,fail(),r4,r5,768
+   .traceevent "F" 4 "R" "I" "r" 7 6 6 0 "fail" ""
+   ret r7
+l32iffalse:
+   .srcstep 9 9 17 "json_parser.crexx" 15 1 71 "payload = '{\"head\":{\"requestCounter\":4,\"ok\":true},\"operations\":[' || ,"
+   .meta "json_parser.main.payload"="b" ".string" r1
+   load r7,"[\"destroy\",\"w54\"],"
+   .traceevent "L" 4 "R" "S" "r" 7 9 9 0 "" ""
+   concat r7,"{\"head\":{\"requestCounter\":4,\"ok\":true},\"operations\":[",r7
+   .traceevent "O" 4 "R" "S" "r" 7 9 9 0 "" ""
+   concat r7,r7,"[\"set\",\"w2\",{\"activeControl\":\"w99\"}],"
+   .traceevent "O" 4 "R" "S" "r" 7 9 9 0 "" ""
+   concat r7,r7,"[\"set\",\"w21\",{\"customVariant\":\"variant_navigation\"}],"
+   .traceevent "O" 4 "R" "S" "r" 7 9 9 0 "" ""
+   concat r7,r7,"[\"create\",\"w95\",\"rwt.widgets.Composite\",{\"parent\":\"w53\",\"bounds\":[0,0,1008,586],\"children\":[\"w96\",\"w97\"],\"tabIndex\":-1}],"
+   .traceevent "O" 4 "R" "S" "r" 7 9 9 0 "" ""
+   concat r7,r7,"[\"create\",\"w96\",\"rwt.widgets.Label\",{\"parent\":\"w95\",\"bounds\":[10,30,112,26],\"text\":\"TableViewer\"}],"
+   .traceevent "O" 4 "R" "S" "r" 7 9 9 0 "" ""
+   concat r7,r7,"[\"listen\",\"w98\",{\"KeyDown\":true,\"Modify\":true}],"
+   .traceevent "O" 4 "R" "S" "r" 7 9 9 0 "" ""
+   concat r7,r7,"[\"set\",\"w99\",{\"itemCount\":118,\"headerVisible\":true,\"selection\":[\"w108\"]}],"
+   .traceevent "O" 4 "R" "S" "r" 7 9 9 0 "" ""
+   concat r7,r7,"[\"call\",\"rwt.client.BrowserNavigation\",\"addToHistory\",{\"entries\":[[\"tableviewer\",\"TableViewer\"]]}]"
+   .traceevent "O" 4 "R" "S" "r" 7 9 9 0 "" ""
+   concat r1,r7,"]}"
+   .traceevent "O" 4 "R" "S" "r" 1 9 9 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 1 9 9 0 "payload" ""
+   .srcstep 10 10 17 "json_parser.crexx" 26 1 11 "result = 0"
+   .meta "json_parser.main.result"="b" ".int" r3
+   load r3,0
+   .traceevent "L" 4 "R" "I" "r" 3 10 10 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 10 10 0 "result" ""
+   .srcstep 18 18 17 "json_parser.crexx" 27 1 3 "do iteration = 1 to repetitions"
+   .srcstep 11 11 17 "json_parser.crexx" 27 4 17 "do iteration = 1 to repetitions"
+   .meta "json_parser.main.iteration"="b" ".int" r7
+   load r7,1
+   .traceevent "L" 4 "R" "I" "r" 7 11 11 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 7 11 11 0 "iteration" ""
+   .srcstep 12 12 17 "json_parser.crexx" 27 18 32 "do iteration = 1 to repetitions"
+   .traceevent "V" 6 "R" "I" "r" 2 0 0 0 "repetitions" ""
+l57dostart:
+   .srcstep 12 12 17 "json_parser.crexx" 27 18 32 "do iteration = 1 to repetitions"
+   igt r6,r7,r2
+   brt l57doend,r6
+   .srcstep 14 14 17 "json_parser.crexx" 28 3 44 "  result = jsoncount(payload, \"operations\")"
+   .traceevent "V" 6 "R" "S" "r" 1 14 14 0 "payload" ""
+   load r10,"operations"
+   .traceevent "L" 4 "R" "S" "r" 10 14 14 0 "" ""
+   load r8,2
+   settp r1,256
+   swap r9,r1
+   settpcall r3,rxjson.jsoncount(),r8,r10,768
+   swap r1,r9
+   .traceevent "F" 4 "R" "I" "r" 3 14 14 0 "jsoncount" ""
+   .traceevent "A" 6 "R" "I" "r" 3 14 14 0 "result" ""
+   .srcstep 16 16 17 "json_parser.crexx" 29 3 17 "  if result <> 8 then return fail(\"expected 8 operations, got \" || result)"
+   .traceevent "V" 6 "R" "I" "r" 3 16 16 0 "result" ""
+   ine r10,r3,8
+   .traceevent "O" 4 "R" "B" "r" 10 16 16 0 "" ""
+   brf l78iffalse,r10
+   .srcstep 17 17 17 "json_parser.crexx" 29 18 22 "  if result <> 8 then return fail(\"expected 8 operations, got \" || result)"
+   .srcstep 15 15 17 "json_parser.crexx" 29 23 75 "  if result <> 8 then return fail(\"expected 8 operations, got \" || result)"
+   itosconcat r9,"expected 8 operations, got ",r3
+   .traceevent "V" 6 "R" "S" "r" 3 15 15 0 "result" ""
+   .traceevent "O" 4 "R" "S" "r" 9 15 15 0 "" ""
+   load r8,1
+   settpcall r5,fail(),r8,r9,768
+   .traceevent "F" 4 "R" "I" "r" 5 15 15 0 "fail" ""
+   ret r5
+l78iffalse:
+l57doinc:
+   .srcstep 13 13 17 "json_parser.crexx" 27 4 13 "do iteration = 1 to repetitions"
+   inc r7
+   .srcstep 19 19 17 "json_parser.crexx" 30 1 4 "end"
+   br l57dostart
+l57doend:
+   .meta "json_parser.main.iteration"
+   .srcstep 20 20 17 "json_parser.crexx" 32 1 72 "say \"benchmark=json_parser repetitions=\"repetitions \"operations=\"result"
+   itosconcat r10,"benchmark=json_parser repetitions=",r2
+   .traceevent "V" 6 "R" "S" "r" 2 20 20 0 "repetitions" ""
+   .traceevent "O" 4 "R" "S" "r" 10 20 20 0 "" ""
+   sconcatitos r10,"operations=",r3
+   .traceevent "O" 4 "R" "S" "r" 10 20 20 0 "" ""
+   .traceevent "V" 6 "R" "S" "r" 3 20 20 0 "result" ""
+   concat r10,r10,r3
+   .traceevent "O" 4 "R" "S" "r" 10 20 20 0 "" ""
+   say r10
+   .srcstep 21 21 17 "json_parser.crexx" 33 1 24 "say \"PASS: JSON Parser\""
+   say "PASS: JSON Parser"
+   .srcstep 22 22 17 "json_parser.crexx" 34 1 9 "return 0"
+   ret 0
+   .meta "json_parser.main.argv"
+   .meta "json_parser.main.payload"
+   .meta "json_parser.main.repetitions"
+   .meta "json_parser.main.result"
+
+fail() .locals=2
+   .meta "json_parser.fail"="b" ".int" fail() "message=.string"
+   .srcstep 26 26 17 "json_parser.crexx" 36 1 23 "fail: procedure = .int"
+   numsci 18,1,1
+   .srcstep 23 23 17 "json_parser.crexx" 37 7 24 "  arg message = .string"
+   .meta "json_parser.fail.message"="b" ".string" a1
+   .srcstep 24 24 17 "json_parser.crexx" 38 3 22 "  say \"FAIL:\" message"
+   .traceevent "V" 6 "R" "S" "a" 1 24 24 0 "message" ""
+   sconcat r1,"FAIL:",a1
+   .traceevent "O" 4 "R" "S" "r" 1 24 24 0 "" ""
+   say r1
+   .srcstep 25 25 17 "json_parser.crexx" 39 3 11 "  return 1"
+   ret 1
+   .meta "json_parser.fail.message"
+
+/* Imported Declaration from file: rxjson@library.rxbin */
+
+rxjson.jsoncount() .expose=rxjson.jsoncount
+   .meta "rxjson.jsoncount"="b" ".int" rxjson.jsoncount() "json=.string,path=.string"

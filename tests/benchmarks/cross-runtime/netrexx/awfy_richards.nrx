@@ -1,20 +1,21 @@
 /*
- * NetRexx state-machine port of the Are We Fast Yet? Richards benchmark.
+ * Decimal-semantics NetRexx state-machine port of the Are We Fast Yet?
+ * Richards benchmark.
  * Derived from the SOM/Java Richards benchmark; see ../../THIRD_PARTY_NOTICES.md.
  * The task-kind dispatch matches the cREXX and ooRexx ports.
  */
-options binary
+options nobinary decimal
 
 class awfy_richards
   method main(args=String[]) static
-    repetitions=int 1
+    repetitions=1
     if args.length>=1 then repetitions=Rexx args[0]
     if repetitions<1 then do
       say 'FAIL: repetitions must be positive'
       exit 1
     end
-    queueCount=int 0
-    holdCount=int 0
+    queueCount=0
+    holdCount=0
     loop iteration=1 to repetitions
       scheduler=RichardsScheduler()
       if \scheduler.run() then do
@@ -25,41 +26,48 @@ class awfy_richards
       holdCount=scheduler.holdCount()
     end
     say 'benchmark=awfy_richards repetitions='repetitions 'queue_packets='queueCount 'holds='holdCount
-    say 'PASS: AWFY Richards NetRexx port'
+    say 'PASS: AWFY Richards NetRexx decimal port'
 
 class RichardsScheduler
   properties private
-    taskLink=int[6]
-    taskPriority=int[6]
-    taskInput=int[6]
-    taskPending=boolean[6]
-    taskWaiting=boolean[6]
-    taskHolding=boolean[6]
-    handlerWork=int[6]
-    handlerDevice=int[6]
-    devicePending=int[6]
-    packetLink=int[16]
-    packetIdentity=int[16]
-    packetKind=int[16]
-    packetDatum=int[16]
-    packetData0=int[16]
-    packetData1=int[16]
-    packetData2=int[16]
-    packetData3=int[16]
-    taskList=int -1
-    currentTask=int -1
-    currentIdentity=int 0
-    packetCount=int 0
-    queuePacketCount=int 0
-    holds=int 0
-    idleControl=int 1
-    idleCount=int 10000
-    workerDestination=int 2
-    workerCount=int 0
+    taskLink=Rexx[6]
+    taskPriority=Rexx[6]
+    taskInput=Rexx[6]
+    taskPending=Rexx[6]
+    taskWaiting=Rexx[6]
+    taskHolding=Rexx[6]
+    handlerWork=Rexx[6]
+    handlerDevice=Rexx[6]
+    devicePending=Rexx[6]
+    packetLink=Rexx[16]
+    packetIdentity=Rexx[16]
+    packetKind=Rexx[16]
+    packetDatum=Rexx[16]
+    packetData0=Rexx[16]
+    packetData1=Rexx[16]
+    packetData2=Rexx[16]
+    packetData3=Rexx[16]
+    taskList=-1
+    currentTask=-1
+    currentIdentity=0
+    packetCount=0
+    queuePacketCount=0
+    holds=0
+    idleControl=1
+    idleCount=10000
+    workerDestination=2
+    workerCount=0
 
-  method run() binary returns boolean
+  method RichardsScheduler()
+    loop i=0 to 5
+      handlerWork[i]=0
+      handlerDevice[i]=0
+      devicePending[i]=0
+    end
+
+  method run() returns Rexx
     createTask(0,0,0,0,0,0)
-    workQueue=int createPacket(0,1,1)
+    workQueue=createPacket(0,1,1)
     workQueue=createPacket(workQueue,1,1)
     createTask(1,1000,workQueue,1,1,0)
     workQueue=createPacket(0,4,0)
@@ -75,13 +83,13 @@ class RichardsScheduler
     schedule()
     return queuePacketCount=23246 & holds=9297
 
-  method queueCount() binary returns int
+  method queueCount() returns Rexx
     return queuePacketCount
 
-  method holdCount() binary returns int
+  method holdCount() returns Rexx
     return holds
 
-  method createTask(identity=int,priority=int,input=int,pending=boolean,waiting=boolean,holding=boolean) private binary
+  method createTask(identity=Rexx,priority=Rexx,input=Rexx,pending=Rexx,waiting=Rexx,holding=Rexx) private
     taskLink[identity]=taskList
     taskPriority[identity]=priority
     taskInput[identity]=input
@@ -90,7 +98,7 @@ class RichardsScheduler
     taskHolding[identity]=holding
     taskList=identity
 
-  method createPacket(link=int,identity=int,kind=int) private binary returns int
+  method createPacket(link=Rexx,identity=Rexx,kind=Rexx) private returns Rexx
     packetCount=packetCount+1
     packetLink[packetCount]=link
     packetIdentity[packetCount]=identity
@@ -102,11 +110,11 @@ class RichardsScheduler
     packetData3[packetCount]=0
     return packetCount
 
-  method appendPacket(packet=int,queueHead=int) private binary returns int
+  method appendPacket(packet=Rexx,queueHead=Rexx) private returns Rexx
     packetLink[packet]=0
     if queueHead=0 then return packet
-    mouse=int queueHead
-    link=int packetLink[mouse]
+    mouse=queueHead
+    link=packetLink[mouse]
     loop while link\=0
       mouse=link
       link=packetLink[mouse]
@@ -114,23 +122,23 @@ class RichardsScheduler
     packetLink[mouse]=packet
     return queueHead
 
-  method setRunning(identity=int) private binary
+  method setRunning(identity=Rexx) private
     taskPending[identity]=0
     taskWaiting[identity]=0
     taskHolding[identity]=0
 
-  method setPacketPending(identity=int) private binary
+  method setPacketPending(identity=Rexx) private
     taskPending[identity]=1
     taskWaiting[identity]=0
     taskHolding[identity]=0
 
-  method isHoldingOrWaiting(identity=int) private binary returns boolean
+  method isHoldingOrWaiting(identity=Rexx) private returns Rexx
     return taskHolding[identity] | (\taskPending[identity] & taskWaiting[identity])
 
-  method isWaitingWithPacket(identity=int) private binary returns boolean
+  method isWaitingWithPacket(identity=Rexx) private returns Rexx
     return taskPending[identity] & taskWaiting[identity] & \taskHolding[identity]
 
-  method addInput(identity=int,packet=int,oldTask=int) private binary returns int
+  method addInput(identity=Rexx,packet=Rexx,oldTask=Rexx) private returns Rexx
     if taskInput[identity]=0 then do
       taskInput[identity]=packet
       taskPending[identity]=1
@@ -139,29 +147,29 @@ class RichardsScheduler
     else taskInput[identity]=appendPacket(packet,taskInput[identity])
     return oldTask
 
-  method holdSelf() private binary returns int
+  method holdSelf() private returns Rexx
     holds=holds+1
     taskHolding[currentTask]=1
     return taskLink[currentTask]
 
-  method markWaiting() private binary returns int
+  method markWaiting() private returns Rexx
     taskWaiting[currentTask]=1
     return currentTask
 
-  method release(identity=int) private binary returns int
+  method release(identity=Rexx) private returns Rexx
     taskHolding[identity]=0
     if taskPriority[identity]>taskPriority[currentTask] then return identity
     return currentTask
 
-  method queuePacket(packet=int) private binary returns int
-    task=int packetIdentity[packet]
+  method queuePacket(packet=Rexx) private returns Rexx
+    task=packetIdentity[packet]
     queuePacketCount=queuePacketCount+1
     packetLink[packet]=0
     packetIdentity[packet]=currentIdentity
     return addInput(task,packet,currentTask)
 
-  method runTask(identity=int) private binary returns int
-    message=int 0
+  method runTask(identity=Rexx) private returns Rexx
+    message=0
     if isWaitingWithPacket(identity) then do
       message=taskInput[identity]
       taskInput[identity]=packetLink[message]
@@ -176,7 +184,7 @@ class RichardsScheduler
       otherwise return -1
     end
 
-  method runIdler() private binary returns int
+  method runIdler() private returns Rexx
     idleCount=idleCount-1
     if idleCount=0 then return holdSelf()
     if idleControl//2=0 then do
@@ -186,9 +194,9 @@ class RichardsScheduler
     idleControl=xorInt(idleControl%2,53256)
     return release(5)
 
-  method xorInt(left=int,right=int) private static binary returns int
-    result=int 0
-    place=int 1
+  method xorInt(left=Rexx,right=Rexx) private static returns Rexx
+    result=0
+    place=1
     loop i=1 to 16
       if left//2\=right//2 then result=result+place
       left=left%2
@@ -197,7 +205,7 @@ class RichardsScheduler
     end
     return result
 
-  method runWorker(work=int) private binary returns int
+  method runWorker(work=Rexx) private returns Rexx
     if work=0 then return markWaiting()
     if workerDestination=2 then workerDestination=3
     else workerDestination=2
@@ -206,7 +214,7 @@ class RichardsScheduler
     loop i=0 to 3
       workerCount=workerCount+1
       if workerCount>26 then workerCount=1
-      value=int 65+workerCount-1
+      value=65+workerCount-1
       if i=0 then packetData0[work]=value
       else if i=1 then packetData1[work]=value
       else if i=2 then packetData2[work]=value
@@ -214,19 +222,19 @@ class RichardsScheduler
     end
     return queuePacket(work)
 
-  method runHandler(identity=int,work=int) private binary returns int
+  method runHandler(identity=Rexx,work=Rexx) private returns Rexx
     if work\=0 then do
       if packetKind[work]=1 then handlerWork[identity]=appendPacket(work,handlerWork[identity])
       else handlerDevice[identity]=appendPacket(work,handlerDevice[identity])
     end
-    workPacket=int handlerWork[identity]
+    workPacket=handlerWork[identity]
     if workPacket=0 then return markWaiting()
-    count=int packetDatum[workPacket]
+    count=packetDatum[workPacket]
     if count>=4 then do
       handlerWork[identity]=packetLink[workPacket]
       return queuePacket(workPacket)
     end
-    devicePacket=int handlerDevice[identity]
+    devicePacket=handlerDevice[identity]
     if devicePacket=0 then return markWaiting()
     handlerDevice[identity]=packetLink[devicePacket]
     if count=0 then packetDatum[devicePacket]=packetData0[workPacket]
@@ -236,9 +244,9 @@ class RichardsScheduler
     packetDatum[workPacket]=count+1
     return queuePacket(devicePacket)
 
-  method runDevice(identity=int,work=int) private binary returns int
+  method runDevice(identity=Rexx,work=Rexx) private returns Rexx
     if work=0 then do
-      pending=int devicePending[identity]
+      pending=devicePending[identity]
       if pending=0 then return markWaiting()
       devicePending[identity]=0
       return queuePacket(pending)
@@ -246,7 +254,7 @@ class RichardsScheduler
     devicePending[identity]=work
     return holdSelf()
 
-  method schedule() private binary
+  method schedule() private
     currentTask=taskList
     loop while currentTask>=0
       if isHoldingOrWaiting(currentTask) then currentTask=taskLink[currentTask]

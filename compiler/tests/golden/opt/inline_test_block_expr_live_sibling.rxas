@@ -14,11 +14,7 @@
 main() .locals=13
    .meta "inline_test_block_expr_live_sibling.main"="b" ".int" main() ""
    .srcstep 24 24 17 "inline_test_block_expr_live_sibling.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 12 12 17 "inline_test_block_expr_live_sibling.crexx" 4 3 27 "  holder = .Holder(\"seed\")"
    .srcstep 1 1 6 "inline_test_block_expr_live_sibling.crexx" 14 3 13 "  *: factory"
    setattrs r1,5
@@ -98,8 +94,7 @@ main() .locals=13
    linkattr1 r9,r10,1
    .traceevent "V" 6 "R" "S" "r" 9 22 22 0 "name" ""
    scopy r8,r9
-   unlink r9
-   br l232bexprend
+   unlinkbr r9,l232bexprend
 l232bexprend:
    concat r8,r7,r8
    .traceevent "O" 4 "R" "S" "r" 8 22 22 0 "" ""
@@ -126,11 +121,7 @@ l199bexprend:
    .srcstep 36 36 17 "inline_test_block_expr_live_sibling.crexx" 14 3 13 "  *: factory"
    setattrs r1,5
    setobjtype r1,"inline_test_block_expr_live_sibling.holder"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 25 25 17 "inline_test_block_expr_live_sibling.crexx" 15 9 24 "    arg label = .string"
    .meta "inline_test_block_expr_live_sibling.holder.§factory.label"="b" ".string" a1
    .meta "inline_test_block_expr_live_sibling.holder.§factory.§factory"="b" ".holder" r1
@@ -183,11 +174,7 @@ l199bexprend:
    .meta "inline_test_block_expr_live_sibling.holder.summary"="b" ".string" §inline_test_block_expr_live_sibling.holder.summary() ""
    .srcstep 44 44 17 "inline_test_block_expr_live_sibling.crexx" 22 3 28 "  summary: method = .string"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 43 43 17 "inline_test_block_expr_live_sibling.crexx" 23 5 73 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
    .meta "inline_test_block_expr_live_sibling.holder.summary.§this"="b" ".holder" a1
    .srcstep 42 42 17 "inline_test_block_expr_live_sibling.crexx" 23 12 16 "    return name || \"|\" || left || \"|\" || child.getName() || \"|\" || right"
@@ -218,8 +205,7 @@ l199bexprend:
    linkattr1 r4,r5,1
    .traceevent "V" 6 "R" "S" "r" 4 43 43 0 "name" ""
    scopy r3,r4
-   unlink r4
-   br l225bexprend
+   unlinkbr r4,l225bexprend
 l225bexprend:
    concat r3,r1,r3
    .traceevent "O" 4 "R" "S" "r" 3 43 43 0 "" ""
@@ -241,11 +227,7 @@ l165bexprend:
    .srcstep 48 48 17 "inline_test_block_expr_live_sibling.crexx" 28 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_block_expr_live_sibling.child"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 45 45 17 "inline_test_block_expr_live_sibling.crexx" 29 9 24 "    arg label = .string"
    .meta "inline_test_block_expr_live_sibling.child.§factory.label"="b" ".string" a1
    .meta "inline_test_block_expr_live_sibling.child.§factory.§factory"="b" ".child" r1
@@ -264,11 +246,7 @@ l165bexprend:
    .meta "inline_test_block_expr_live_sibling.child.getname"="b" ".string" §inline_test_block_expr_live_sibling.child.getname() ""
    .srcstep 50 50 17 "inline_test_block_expr_live_sibling.crexx" 33 3 28 "  getName: method = .string"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 49 49 17 "inline_test_block_expr_live_sibling.crexx" 34 5 16 "    return name"
    .meta "inline_test_block_expr_live_sibling.child.getname.§this"="b" ".child" a1
    linkattr1 r1,a1,1

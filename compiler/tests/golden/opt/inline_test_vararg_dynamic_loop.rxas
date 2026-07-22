@@ -7,18 +7,13 @@
 main() .locals=4
    .meta "inline_test_vararg_dynamic_loop.main"="b" ".int" main() ""
    .srcstep 5 5 17 "inline_test_vararg_dynamic_loop.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_vararg_dynamic_loop.crexx" 4 3 21 "  say localmax(1, 2)"
    load r1,1.0
    .traceevent "L" 4 "R" "F" "r" 1 1 1 0 "" ""
    load r2,2.0
    .traceevent "L" 4 "R" "F" "r" 2 1 1 0 "" ""
-   load r0,2
-   call r3,localmax(),r0
+   call2 r3,localmax(),r1,r2
    ftos r3
    .traceevent "F" 4 "R" "S" "r" 3 1 1 0 "localmax" ""
    say r3
@@ -27,8 +22,7 @@ main() .locals=4
    .traceevent "L" 4 "R" "F" "r" 2 2 2 0 "" ""
    load r3,0.0
    .traceevent "L" 4 "R" "F" "r" 3 2 2 0 "" ""
-   load r1,2
-   call r0,localmax(),r1
+   call2 r0,localmax(),r2,r3
    ftos r0
    .traceevent "F" 4 "R" "S" "r" 0 2 2 0 "localmax" ""
    say r0
@@ -37,8 +31,7 @@ main() .locals=4
    .traceevent "L" 4 "R" "F" "r" 2 3 3 0 "" ""
    load r3,5.0
    .traceevent "L" 4 "R" "F" "r" 3 3 3 0 "" ""
-   load r1,2
-   call r0,localmax(),r1
+   call2 r0,localmax(),r2,r3
    ftos r0
    .traceevent "F" 4 "R" "S" "r" 0 3 3 0 "localmax" ""
    say r0
@@ -48,11 +41,7 @@ main() .locals=4
 localmax() .locals=7
    .meta "inline_test_vararg_dynamic_loop.localmax"="b" ".float" localmax() "m=.float,...=.float"
    .srcstep 17 17 17 "inline_test_vararg_dynamic_loop.crexx" 9 1 29 "localmax: procedure = .float"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 6 6 17 "inline_test_vararg_dynamic_loop.crexx" 10 7 17 "  arg m = .float, ... = .float"
    .meta "inline_test_vararg_dynamic_loop.localmax.m"="b" ".float" r0
    fcopy r0,a1
@@ -96,7 +85,6 @@ l29doinc:
    .srcstep 15 15 17 "inline_test_vararg_dynamic_loop.crexx" 12 33 34 "    if arg[i] > m then m = arg[i]"
    br l29dostart
 l29doend:
-   endlife r1
    .meta "inline_test_vararg_dynamic_loop.localmax.i"
    .srcstep 16 16 17 "inline_test_vararg_dynamic_loop.crexx" 14 1 9 "return m"
    .traceevent "V" 6 "R" "F" "r" 0 16 16 0 "m" ""

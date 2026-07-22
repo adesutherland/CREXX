@@ -1,0 +1,2 @@
+benchmark=parse_frozen repetitions=100000 checksum=8300000
+PASS: Frozen PARSE

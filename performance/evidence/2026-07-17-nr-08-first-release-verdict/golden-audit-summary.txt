@@ -1,0 +1,24 @@
+NR-08 accepted-closeout compiler golden audit
+date=2026-07-17
+initial_full_ctest=1780/1851
+initial_failed_tests=71
+failed_test_class=compiler RXAS generated-versus-golden mismatch
+matching_runtime_tests=pass
+pre_update_removed_endlife_lines=170
+pre_update_added_endlife_lines=0
+pre_update_unrelated_changed_lines=0
+update_method=compiler/docs/testing.md crexx_test_driver --update-gold
+updated_golden_files=71
+post_update_added_lines=0
+post_update_deleted_lines=170
+post_update_deleted_line_class=ENDLIFE only
+failed_selection_rerun=71/71 pass
+final_full_ctest=1851/1851 pass
+final_full_ctest_seconds=217.35
+
+The pre-update comparison diffed each generated RXAS named by
+cmake-build-debug/Testing/Temporary/LastTestsFailed.log against its exact
+compiler/tests/golden/{noopt,opt} counterpart. The post-update git diff was
+audited with the same line classifier. golden-update.log identifies every
+updated file; debug-ctest.log and debug-ctest-final.log retain the initial and
+final broad results.

@@ -7,11 +7,7 @@
 main() .locals=9
    .meta "arg_semantics_scalar.main"="b" ".int" main() ""
    .srcstep 34 34 17 "arg_semantics_scalar.crexx" 4 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "arg_semantics_scalar.crexx" 5 3 8 "  i = 7"
    .meta "arg_semantics_scalar.main.i"="b" ".int" r0
    load r0,7
@@ -30,7 +26,6 @@ main() .locals=9
    icopy r3,r2
    br l151bexprend
 l151bexprend:
-   endlife r1
    itos r3
    concat r3,"int-read=",r3
    .traceevent "O" 4 "R" "S" "r" 3 5 5 0 "" ""
@@ -51,7 +46,6 @@ l151bexprend:
    icopy r2,r3
    br l160bexprend
 l160bexprend:
-   endlife r3
    itos r2
    concat r3,"int-mut=",r2
    .traceevent "O" 4 "R" "S" "r" 3 10 10 0 "" ""
@@ -111,7 +105,6 @@ l188bexprend:
    scopy r1,r2
    br l197bexprend
 l197bexprend:
-   endlife r3
    concat r3,"str-mut=",r1
    .traceevent "O" 4 "R" "S" "r" 3 24 24 0 "" ""
    say r3
@@ -142,7 +135,6 @@ l197bexprend:
    scopy r1,r2
    br l216bexprend
 l216bexprend:
-   endlife r3
    concat r3,"str-temp=",r1
    .traceevent "O" 4 "R" "S" "r" 3 32 32 0 "" ""
    say r3

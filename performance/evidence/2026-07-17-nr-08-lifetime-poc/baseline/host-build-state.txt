@@ -1,0 +1,17 @@
+captured_utc=2026-07-17T16:16:40Z
+phase=baseline
+branch=develop
+head=e748621d1f9242f68f30fe8aa3f58fb804be68fb
+upstream=e748621d1f9242f68f30fe8aa3f58fb804be68fb
+status_begin
+ M performance/ROADMAP.md
+?? performance/NR-08-09-WORKLIST.md
+?? performance/evidence/2026-07-17-nr-08-lifetime-poc/
+status_end
+host=Darwin 25.5.0 arm64
+release_build_type=Release
+release_profiling=OFF
+profile_build_type=Release
+profile_profiling=ON
+crexx-1.0.0-beta.3+local.ge748621d1f92.dirty (Threaded Mode)
+crexx-1.0.0-beta.3+local.ge748621d1f92.dirty (Bytecode Mode)

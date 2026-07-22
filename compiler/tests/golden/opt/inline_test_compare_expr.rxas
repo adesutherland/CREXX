@@ -7,11 +7,7 @@
 main() .locals=7
    .meta "inline_test_compare_expr.main"="b" ".int" main() ""
    .srcstep 17 17 17 "inline_test_compare_expr.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_compare_expr.crexx" 4 3 45 "  say \"Starting compare inline expr test...\""
    say "Starting compare inline expr test..."
    .srcstep 13 13 17 "inline_test_compare_expr.crexx" 5 3 5 "  do i = 1 to 4"
@@ -40,7 +36,6 @@ l8dostart:
    icopy r5,r4
    br l49bexprend
 l49bexprend:
-   endlife r3
    ieq r5,r5,3
    .traceevent "O" 4 "R" "B" "r" 5 10 10 0 "" ""
    brf l27iffalse,r5
@@ -67,7 +62,6 @@ l8doinc:
    .srcstep 14 14 17 "inline_test_compare_expr.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
    .meta "inline_test_compare_expr.main.i"
    .srcstep 15 15 17 "inline_test_compare_expr.crexx" 9 3 43 "  say \"Compare inline expr test finished.\""
    say "Compare inline expr test finished."

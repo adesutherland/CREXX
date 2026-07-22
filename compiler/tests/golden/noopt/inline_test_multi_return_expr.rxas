@@ -7,11 +7,7 @@
 main() .locals=7
    .meta "inline_test_multi_return_expr.main"="b" ".int" main() ""
    .srcstep 10 10 17 "inline_test_multi_return_expr.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_multi_return_expr.crexx" 4 3 50 "  say \"Starting multi return expr inline test...\""
    say "Starting multi return expr inline test..."
    .srcstep 6 6 17 "inline_test_multi_return_expr.crexx" 5 3 5 "  do i = -1 to 1"
@@ -31,10 +27,7 @@ l8dostart:
    brt l8doend,r3
    .srcstep 5 5 17 "inline_test_multi_return_expr.crexx" 6 5 25 "    say 10 + classify(i)"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   load r4,1
-   swap r5,r0
-   call r6,classify(),r4
-   swap r0,r5
+   call1 r6,classify(),r0
    .traceevent "F" 4 "R" "I" "r" 6 5 5 0 "classify" ""
    iadd r6,r6,10
    itos r6
@@ -46,7 +39,6 @@ l8doinc:
    .srcstep 7 7 17 "inline_test_multi_return_expr.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
    .meta "inline_test_multi_return_expr.main.i"
    .srcstep 8 8 17 "inline_test_multi_return_expr.crexx" 8 3 48 "  say \"Multi return expr inline test finished.\""
    say "Multi return expr inline test finished."
@@ -56,11 +48,7 @@ l8doend:
 classify() .locals=4
    .meta "inline_test_multi_return_expr.classify"="b" ".int" classify() "val=.int"
    .srcstep 19 19 17 "inline_test_multi_return_expr.crexx" 11 1 27 "classify: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 11 11 17 "inline_test_multi_return_expr.crexx" 12 7 17 "  arg val = .int"
    .meta "inline_test_multi_return_expr.classify.val"="b" ".int" a1
    .srcstep 13 13 17 "inline_test_multi_return_expr.crexx" 13 3 13 "  if val < 0 then return -1"

@@ -7,11 +7,7 @@
 main() .locals=7
    .meta "inline_test_expr_negative.main"="b" ".int" main() ""
    .srcstep 20 20 17 "inline_test_expr_negative.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_expr_negative.crexx" 4 3 62 "  say \"Starting nested short-circuit inline negative test...\""
    say "Starting nested short-circuit inline negative test..."
    .srcstep 16 16 17 "inline_test_expr_negative.crexx" 5 3 5 "  do i = 1 to 3"
@@ -42,7 +38,6 @@ l8dostart:
    icopy r6,r5
    br l72bexprend
 l72bexprend:
-   endlife r4
    icopy r3,r6
    .traceevent "A" 6 "R" "I" "r" 3 8 8 0 "val" ""
    .srcstep 9 9 17 "inline_test_expr_negative.crexx" 14 3 13 "  return val"
@@ -50,7 +45,6 @@ l72bexprend:
    icopy r6,r3
    br l68bexprend
 l68bexprend:
-   endlife r3
    brf l28iffalse,r6
    .srcstep 14 14 17 "inline_test_expr_negative.crexx" 6 28 29 "    if identity(addOne(i)) | 0 then say \"truthy\" i"
    .srcstep 11 11 17 "inline_test_expr_negative.crexx" 6 37 51 "    if identity(addOne(i)) | 0 then say \"truthy\" i"
@@ -75,7 +69,6 @@ l8doinc:
    .srcstep 17 17 17 "inline_test_expr_negative.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
    .meta "inline_test_expr_negative.main.i"
    .srcstep 18 18 17 "inline_test_expr_negative.crexx" 9 3 60 "  say \"Nested short-circuit inline negative test finished.\""
    say "Nested short-circuit inline negative test finished."

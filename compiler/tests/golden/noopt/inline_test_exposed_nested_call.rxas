@@ -7,11 +7,7 @@
 main() .locals=6
    .meta "inline_test_exposed_nested_call.main"="b" ".int" main() ""
    .srcstep 11 11 17 "inline_test_exposed_nested_call.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_exposed_nested_call.crexx" 4 3 52 "  say \"Starting exposed nested call inline test...\""
    say "Starting exposed nested call inline test..."
    .srcstep 7 7 17 "inline_test_exposed_nested_call.crexx" 5 3 5 "  do i = 1 to 4"
@@ -30,10 +26,7 @@ l8dostart:
    .srcstep 5 5 17 "inline_test_exposed_nested_call.crexx" 6 5 24 "    result = compute(i)"
    .meta "inline_test_exposed_nested_call.main.result"="b" ".int" r1
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   load r4,1
-   swap r5,r0
-   call r1,compute(),r4
-   swap r0,r5
+   call1 r1,compute(),r0
    .traceevent "F" 4 "R" "I" "r" 1 5 5 0 "compute" ""
    .traceevent "A" 6 "R" "I" "r" 1 5 5 0 "result" ""
    .srcstep 6 6 17 "inline_test_exposed_nested_call.crexx" 7 5 26 "    say \"Computed\" result"
@@ -48,8 +41,6 @@ l8doinc:
    .srcstep 8 8 17 "inline_test_exposed_nested_call.crexx" 8 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
-   endlife r1
    .meta "inline_test_exposed_nested_call.main.i"
    .meta "inline_test_exposed_nested_call.main.result"
    .srcstep 9 9 17 "inline_test_exposed_nested_call.crexx" 9 3 50 "  say \"Exposed nested call inline test finished.\""
@@ -60,19 +51,12 @@ l8doend:
 compute() .locals=4
    .meta "inline_test_exposed_nested_call.compute"="b" ".int" compute() "val=.int"
    .srcstep 14 14 17 "inline_test_exposed_nested_call.crexx" 12 1 26 "compute: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 12 12 17 "inline_test_exposed_nested_call.crexx" 13 7 17 "  arg val = .int"
    .meta "inline_test_exposed_nested_call.compute.val"="b" ".int" a1
    .srcstep 13 13 17 "inline_test_exposed_nested_call.crexx" 14 3 26 "  return 10 + addOne(val)"
    .traceevent "V" 6 "R" "I" "a" 1 13 13 0 "val" ""
-   load r1,1
-   swap r2,a1
-   call r3,addOne(),r1
-   swap a1,r2
+   call1 r3,addOne(),a1
    .traceevent "F" 4 "R" "I" "r" 3 13 13 0 "addone" ""
    iadd r3,r3,10
    .traceevent "O" 4 "R" "I" "r" 3 13 13 0 "" ""
@@ -82,11 +66,7 @@ compute() .locals=4
 addOne() .locals=2
    .meta "inline_test_exposed_nested_call.addone"="b" ".int" addOne() "val=.int"
    .srcstep 17 17 17 "inline_test_exposed_nested_call.crexx" 16 1 25 "addOne: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 15 15 17 "inline_test_exposed_nested_call.crexx" 17 7 17 "  arg val = .int"
    .meta "inline_test_exposed_nested_call.addone.val"="b" ".int" a1
    .srcstep 16 16 17 "inline_test_exposed_nested_call.crexx" 18 3 17 "  return val + 1"

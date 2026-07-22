@@ -45,6 +45,7 @@ typedef struct SymbolNode SymbolNode;
 typedef struct Context Context;
 typedef struct OutputFragment OutputFragment;
 typedef struct RxcpSrcMap RxcpSrcMap;
+typedef struct RxcpFlowProgram RxcpFlowProgram;
 typedef struct importable_file importable_file;
 typedef struct imported_func imported_func;
 

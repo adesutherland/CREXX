@@ -29,60 +29,70 @@
 #include <stdint.h>
 #include <string.h>
 
-/* Operand Formats */
-typedef enum {
-    FMT_EMPTY,
-    FMT_B,
-    FMT_C,
-    FMT_F,
-    FMT_I,
-    FMT_I_I,
-    FMT_I_I_I,
-    FMT_I_I_R,
-    FMT_I_R,
-    FMT_I_R_R,
-    FMT_L,
-    FMT_L_L_R,
-    FMT_L_P_S,
-    FMT_L_R,
-    FMT_L_R_I,
-    FMT_L_R_R,
-    FMT_L_R_S,
-    FMT_L_S,
-    FMT_P,
-    FMT_P_S,
-    FMT_R,
-    FMT_R_B,
-    FMT_R_B_B,
-    FMT_R_B_R,
-    FMT_R_B_S,
-    FMT_R_C,
-    FMT_R_D,
-    FMT_R_D_R,
-    FMT_R_F,
-    FMT_R_F_I,
-    FMT_R_F_R,
-    FMT_R_I,
-    FMT_R_I_I,
-    FMT_R_I_R,
-    FMT_R_P,
-    FMT_R_P_R,
-    FMT_R_R,
-    FMT_R_R_B,
-    FMT_R_R_D,
-    FMT_R_R_F,
-    FMT_R_R_I,
-    FMT_R_R_R,
-    FMT_R_R_S,
-    FMT_R_S,
-    FMT_R_S_I,
-    FMT_R_S_R,
-    FMT_R_S_S,
-    FMT_S,
-    FMT_S_R,
-    FMT_S_S,
-    FMT_S_S_R
-} OpFormat;
+/*
+ * Operand signatures.
+ *
+ * An opcode's format is a NUL-terminated sequence of operand-kind codes, one
+ * code per operand.  It deliberately has no small format-specific ceiling:
+ * consumers must iterate the signature rather than copying it into a fixed
+ * array.  The bytecode stream retains its existing INT_MAX cell-count bound.
+ * The named forms below preserve the readable spelling used by the existing
+ * instruction database; new instructions may use either a named form or a
+ * signature literal.
+ */
+typedef const char *OpFormat;
+
+#define FMT_EMPTY ""
+#define FMT_B "B"
+#define FMT_C "C"
+#define FMT_F "F"
+#define FMT_I "I"
+#define FMT_I_I "II"
+#define FMT_I_I_I "III"
+#define FMT_I_I_R "IIR"
+#define FMT_I_R "IR"
+#define FMT_I_R_R "IRR"
+#define FMT_L "L"
+#define FMT_L_L_R "LLR"
+#define FMT_L_P_S "LPS"
+#define FMT_L_R "LR"
+#define FMT_L_R_I "LRI"
+#define FMT_L_R_R "LRR"
+#define FMT_L_R_S "LRS"
+#define FMT_L_S "LS"
+#define FMT_P "P"
+#define FMT_P_S "PS"
+#define FMT_R "R"
+#define FMT_R_B "RB"
+#define FMT_R_B_B "RBB"
+#define FMT_R_B_R "RBR"
+#define FMT_R_B_S "RBS"
+#define FMT_R_C "RC"
+#define FMT_R_D "RD"
+#define FMT_R_D_R "RDR"
+#define FMT_R_F "RF"
+#define FMT_R_F_I "RFI"
+#define FMT_R_F_R "RFR"
+#define FMT_R_I "RI"
+#define FMT_R_I_I "RII"
+#define FMT_R_I_R "RIR"
+#define FMT_R_P "RP"
+#define FMT_R_P_R "RPR"
+#define FMT_R_R "RR"
+#define FMT_R_R_B "RRB"
+#define FMT_R_R_D "RRD"
+#define FMT_R_R_F "RRF"
+#define FMT_R_R_I "RRI"
+#define FMT_R_R_R "RRR"
+#define FMT_R_R_S "RRS"
+#define FMT_R_S "RS"
+#define FMT_R_S_I "RSI"
+#define FMT_R_S_R "RSR"
+#define FMT_R_S_S "RSS"
+#define FMT_S "S"
+#define FMT_S_R "SR"
+#define FMT_S_S "SS"
+#define FMT_S_S_R "SSR"
 
 /* Flow Control Types */
 typedef enum {
@@ -107,16 +117,48 @@ typedef enum
     OP_BINARY = 9
 } OperandType;
 
+static inline size_t rxop_format_operand_count(OpFormat format) {
+    return format ? strlen(format) : 0;
+}
+
+static inline OperandType rxop_format_operand_type(OpFormat format,
+                                                   size_t operand_index) {
+    char code;
+    if (!format || operand_index >= strlen(format)) return OP_NONE;
+    code = format[operand_index];
+    switch (code) {
+        case 'B': return OP_BINARY;
+        case 'C': return OP_CHAR;
+        case 'D': return OP_DECIMAL;
+        case 'F': return OP_FLOAT;
+        case 'I': return OP_INT;
+        case 'L': return OP_ID;
+        case 'P': return OP_FUNC;
+        case 'R': return OP_REG;
+        case 'S': return OP_STRING;
+        default: return OP_NONE;
+    }
+}
+
+static inline int rxop_format_matches(OpFormat format,
+                                      const OperandType *operands,
+                                      size_t operand_count) {
+    size_t i;
+    if (rxop_format_operand_count(format) != operand_count) return 0;
+    for (i = 0; i < operand_count; i++) {
+        if (!operands || rxop_format_operand_type(format, i) != operands[i]) return 0;
+    }
+    return 1;
+}
+
 /* Instruction Definition (Legacy machine/rxvminst.h) */
 typedef struct Instruction
 {
     int opcode;
     char *instruction;
     char *desc;
-    int operands;
-    OperandType op1_type;
-    OperandType op2_type;
-    OperandType op3_type;
+    size_t operands;
+    OpFormat format;
 } Instruction;
 
 /* Instruction Flags */
@@ -182,6 +224,11 @@ typedef struct {
     unsigned int writes;
     unsigned int kills;
     unsigned int branch_targets;
+    /* Optional one-character-per-operand bit strings for wide instructions. */
+    const char *reads_signature;
+    const char *writes_signature;
+    const char *kills_signature;
+    const char *branch_targets_signature;
     RxOpImplicitEffect implicit;
     unsigned int semantics;
     FlowType flow;
@@ -218,7 +265,12 @@ typedef enum {
 
 RxOpEffects rxop_effects(int opcode);
 size_t rxop_effect_count(void);
+int rxop_effect_reads_operand(const RxOpEffects *effects, size_t operand_index);
+int rxop_effect_writes_operand(const RxOpEffects *effects, size_t operand_index);
+int rxop_effect_kills_operand(const RxOpEffects *effects, size_t operand_index);
+int rxop_effect_branch_target_operand(const RxOpEffects *effects, size_t operand_index);
 
 void *src_inst(const char* name, OperandType op1, OperandType op2, OperandType op3);
+void *src_instv(const char *name, const OperandType *operands, size_t operand_count);
 
 #endif // RXDEFS_H

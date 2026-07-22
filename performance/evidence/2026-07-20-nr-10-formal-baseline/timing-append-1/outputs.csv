@@ -1,0 +1,141 @@
+sample_id,stream,line_number,text
+timing-Permute-permute-oorexx-recorded-1,stdout,1,benchmark=awfy_permute repetitions=1500 result=8660
+timing-Permute-permute-oorexx-recorded-1,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-oorexx-recorded-2,stdout,1,benchmark=awfy_permute repetitions=1500 result=8660
+timing-Permute-permute-oorexx-recorded-2,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-oorexx-recorded-3,stdout,1,benchmark=awfy_permute repetitions=1500 result=8660
+timing-Permute-permute-oorexx-recorded-3,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-oorexx-recorded-4,stdout,1,benchmark=awfy_permute repetitions=1500 result=8660
+timing-Permute-permute-oorexx-recorded-4,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-oorexx-recorded-5,stdout,1,benchmark=awfy_permute repetitions=1500 result=8660
+timing-Permute-permute-oorexx-recorded-5,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-oorexx-recorded-6,stdout,1,benchmark=awfy_permute repetitions=1500 result=8660
+timing-Permute-permute-oorexx-recorded-6,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-oorexx-recorded-7,stdout,1,benchmark=awfy_permute repetitions=1500 result=8660
+timing-Permute-permute-oorexx-recorded-7,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-oorexx-recorded-8,stdout,1,benchmark=awfy_permute repetitions=1500 result=8660
+timing-Permute-permute-oorexx-recorded-8,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-oorexx-recorded-9,stdout,1,benchmark=awfy_permute repetitions=1500 result=8660
+timing-Permute-permute-oorexx-recorded-9,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Permute-permute-oorexx-recorded-10,stdout,1,benchmark=awfy_permute repetitions=1500 result=8660
+timing-Permute-permute-oorexx-recorded-10,stdout,2,PASS: AWFY Permute Classic procedural port
+timing-Base64-base64-rxvm-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=7000 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-recorded-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=7000 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-recorded-1,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=7000 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-recorded-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=7000 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-recorded-2,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=7000 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-recorded-3,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=7000 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-recorded-3,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-recorded-4,stdout,1,benchmark=base64_roundtrip repetitions=7000 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-recorded-4,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-recorded-4,stdout,1,benchmark=base64_roundtrip repetitions=7000 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-recorded-4,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-recorded-5,stdout,1,benchmark=base64_roundtrip repetitions=7000 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-recorded-5,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-recorded-5,stdout,1,benchmark=base64_roundtrip repetitions=7000 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-recorded-5,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-recorded-6,stdout,1,benchmark=base64_roundtrip repetitions=7000 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-recorded-6,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-recorded-6,stdout,1,benchmark=base64_roundtrip repetitions=7000 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-recorded-6,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-recorded-7,stdout,1,benchmark=base64_roundtrip repetitions=7000 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-recorded-7,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-recorded-7,stdout,1,benchmark=base64_roundtrip repetitions=7000 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-recorded-7,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-recorded-8,stdout,1,benchmark=base64_roundtrip repetitions=7000 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-recorded-8,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-recorded-8,stdout,1,benchmark=base64_roundtrip repetitions=7000 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-recorded-8,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-recorded-9,stdout,1,benchmark=base64_roundtrip repetitions=7000 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-recorded-9,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-recorded-9,stdout,1,benchmark=base64_roundtrip repetitions=7000 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-recorded-9,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxbvm-recorded-10,stdout,1,benchmark=base64_roundtrip repetitions=7000 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxbvm-recorded-10,stdout,2,PASS: Base64 Roundtrip
+timing-Base64-base64-rxvm-recorded-10,stdout,1,benchmark=base64_roundtrip repetitions=7000 encoded_length=1368 checksum=130560
+timing-Base64-base64-rxvm-recorded-10,stdout,2,PASS: Base64 Roundtrip
+timing-Towers-towers-oorexx-recorded-1,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-towers-oorexx-recorded-1,stdout,2,PASS: AWFY Towers Classic procedural adaptation
+timing-Towers-towers-netrexx-recorded-1,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-towers-netrexx-recorded-1,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-netrexx-recorded-2,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-towers-netrexx-recorded-2,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-oorexx-recorded-2,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-towers-oorexx-recorded-2,stdout,2,PASS: AWFY Towers Classic procedural adaptation
+timing-Towers-towers-oorexx-recorded-3,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-towers-oorexx-recorded-3,stdout,2,PASS: AWFY Towers Classic procedural adaptation
+timing-Towers-towers-netrexx-recorded-3,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-towers-netrexx-recorded-3,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-netrexx-recorded-4,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-towers-netrexx-recorded-4,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-oorexx-recorded-4,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-towers-oorexx-recorded-4,stdout,2,PASS: AWFY Towers Classic procedural adaptation
+timing-Towers-towers-oorexx-recorded-5,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-towers-oorexx-recorded-5,stdout,2,PASS: AWFY Towers Classic procedural adaptation
+timing-Towers-towers-netrexx-recorded-5,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-towers-netrexx-recorded-5,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-netrexx-recorded-6,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-towers-netrexx-recorded-6,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-oorexx-recorded-6,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-towers-oorexx-recorded-6,stdout,2,PASS: AWFY Towers Classic procedural adaptation
+timing-Towers-towers-oorexx-recorded-7,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-towers-oorexx-recorded-7,stdout,2,PASS: AWFY Towers Classic procedural adaptation
+timing-Towers-towers-netrexx-recorded-7,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-towers-netrexx-recorded-7,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-netrexx-recorded-8,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-towers-netrexx-recorded-8,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-oorexx-recorded-8,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-towers-oorexx-recorded-8,stdout,2,PASS: AWFY Towers Classic procedural adaptation
+timing-Towers-towers-oorexx-recorded-9,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-towers-oorexx-recorded-9,stdout,2,PASS: AWFY Towers Classic procedural adaptation
+timing-Towers-towers-netrexx-recorded-9,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-towers-netrexx-recorded-9,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-netrexx-recorded-10,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-towers-netrexx-recorded-10,stdout,2,PASS: AWFY Towers NetRexx port
+timing-Towers-towers-oorexx-recorded-10,stdout,1,benchmark=awfy_towers repetitions=10 result=8191
+timing-Towers-towers-oorexx-recorded-10,stdout,2,PASS: AWFY Towers Classic procedural adaptation
+timing-Storage-storage-oorexx-recorded-1,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-storage-oorexx-recorded-1,stdout,2,PASS: AWFY Storage ooRexx object port
+timing-Storage-storage-oorexx-recorded-2,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-storage-oorexx-recorded-2,stdout,2,PASS: AWFY Storage ooRexx object port
+timing-Storage-storage-oorexx-recorded-3,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-storage-oorexx-recorded-3,stdout,2,PASS: AWFY Storage ooRexx object port
+timing-Storage-storage-oorexx-recorded-4,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-storage-oorexx-recorded-4,stdout,2,PASS: AWFY Storage ooRexx object port
+timing-Storage-storage-oorexx-recorded-5,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-storage-oorexx-recorded-5,stdout,2,PASS: AWFY Storage ooRexx object port
+timing-Storage-storage-oorexx-recorded-6,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-storage-oorexx-recorded-6,stdout,2,PASS: AWFY Storage ooRexx object port
+timing-Storage-storage-oorexx-recorded-7,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-storage-oorexx-recorded-7,stdout,2,PASS: AWFY Storage ooRexx object port
+timing-Storage-storage-oorexx-recorded-8,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-storage-oorexx-recorded-8,stdout,2,PASS: AWFY Storage ooRexx object port
+timing-Storage-storage-oorexx-recorded-9,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-storage-oorexx-recorded-9,stdout,2,PASS: AWFY Storage ooRexx object port
+timing-Storage-storage-oorexx-recorded-10,stdout,1,benchmark=awfy_storage repetitions=10 result=5461
+timing-Storage-storage-oorexx-recorded-10,stdout,2,PASS: AWFY Storage ooRexx object port
+timing-JSON-json-netrexx-recorded-1,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-netrexx-recorded-1,stdout,2,PASS: JSON Parser NetRexx port
+timing-JSON-json-netrexx-recorded-2,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-netrexx-recorded-2,stdout,2,PASS: JSON Parser NetRexx port
+timing-JSON-json-netrexx-recorded-3,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-netrexx-recorded-3,stdout,2,PASS: JSON Parser NetRexx port
+timing-JSON-json-netrexx-recorded-4,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-netrexx-recorded-4,stdout,2,PASS: JSON Parser NetRexx port
+timing-JSON-json-netrexx-recorded-5,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-netrexx-recorded-5,stdout,2,PASS: JSON Parser NetRexx port
+timing-JSON-json-netrexx-recorded-6,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-netrexx-recorded-6,stdout,2,PASS: JSON Parser NetRexx port
+timing-JSON-json-netrexx-recorded-7,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-netrexx-recorded-7,stdout,2,PASS: JSON Parser NetRexx port
+timing-JSON-json-netrexx-recorded-8,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-netrexx-recorded-8,stdout,2,PASS: JSON Parser NetRexx port
+timing-JSON-json-netrexx-recorded-9,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-netrexx-recorded-9,stdout,2,PASS: JSON Parser NetRexx port
+timing-JSON-json-netrexx-recorded-10,stdout,1,benchmark=json_parser repetitions=5000 operations=8
+timing-JSON-json-netrexx-recorded-10,stdout,2,PASS: JSON Parser NetRexx port

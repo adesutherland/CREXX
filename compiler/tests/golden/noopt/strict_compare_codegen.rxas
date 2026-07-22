@@ -7,11 +7,7 @@
 main() .locals=3
    .meta "strict_compare_codegen.main"="b" ".int" main() ""
    .srcstep 12 12 17 "strict_compare_codegen.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "strict_compare_codegen.main.left"="b" ".int" r0
    .srcstep 1 1 17 "strict_compare_codegen.crexx" 4 3 14 "  left = .int"
    null r0

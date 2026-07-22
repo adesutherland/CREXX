@@ -7,11 +7,7 @@
 main() .locals=7
    .meta "inline_test_nested_scope_exposed_call.main"="b" ".int" main() ""
    .srcstep 18 18 17 "inline_test_nested_scope_exposed_call.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_nested_scope_exposed_call.crexx" 4 3 58 "  say \"Starting nested scope exposed call inline test...\""
    say "Starting nested scope exposed call inline test..."
    .srcstep 14 14 17 "inline_test_nested_scope_exposed_call.crexx" 5 3 5 "  do i = 1 to 3"
@@ -52,7 +48,6 @@ l8dostart:
    .traceevent "O" 4 "R" "I" "r" 6 13 13 0 "" ""
    icopy r4,r6
    br l60bexprend
-   endlife r4
    .meta "inline_test_nested_scope_exposed_call.main.tmp"
    .srcstep 11 11 17 "inline_test_nested_scope_exposed_call.crexx" 18 3 11 "  return 0"
    load r6,0
@@ -60,7 +55,6 @@ l8dostart:
    icopy r4,r6
    br l60bexprend
 l60bexprend:
-   endlife r3
    itos r4
    say r4
 l8doinc:
@@ -69,7 +63,6 @@ l8doinc:
    .srcstep 15 15 17 "inline_test_nested_scope_exposed_call.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
    .meta "inline_test_nested_scope_exposed_call.main.i"
    .srcstep 16 16 17 "inline_test_nested_scope_exposed_call.crexx" 8 3 56 "  say \"Nested scope exposed call inline test finished.\""
    say "Nested scope exposed call inline test finished."

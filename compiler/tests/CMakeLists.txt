@@ -12,6 +12,8 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 # The test driver itself must be compiled as strict C90
 add_executable(crexx_test_driver src/test_driver.c)
 
+add_executable(mutate_rxbin_feature mutate_rxbin_feature.c)
+
 # Ensure the driver is built when tests are built
 add_dependencies(crexx_test_driver rxc)
 
@@ -109,6 +111,12 @@ endif()
 enable_testing()
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxLinkedRuntime.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/CrexxSmokeTests.cmake)
+
+add_executable(test_rxcp_super_combiner test_rxcp_super_combiner.c)
+target_link_libraries(test_rxcp_super_combiner PRIVATE rxclib)
+target_include_directories(test_rxcp_super_combiner PRIVATE ${CMAKE_SOURCE_DIR}/compiler)
+add_test(NAME rxcp_super_combiner COMMAND test_rxcp_super_combiner)
+set_tests_properties(rxcp_super_combiner PROPERTIES LABELS "compiler;performance;nr09")
 
 # Compiler flags for optimization levels
 # Based on rxcpmain.c: -n is for No Optimising, and it's on by default.
@@ -725,11 +733,36 @@ foreach(_mode IN ITEMS noopt)
            "list(LENGTH left_meta_entries left_meta_count)\n"
            "if(NOT left_meta_count EQUAL 2)\n"
            "  message(FATAL_ERROR \"Expected definition and clear metadata records for left scoped local in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
-           "endif()\n"
-           "if(NOT rxas_${_mode}_out MATCHES \"endlife r${RXAS_DIAG_DOLLAR}{left_reg}\")\n"
-           "  message(FATAL_ERROR \"Scoped local reference lifetime cleanup missing before register reuse in ${_mode}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_${_mode}_out}\")\n"
            "endif()\n")
 endforeach()
+string(APPEND RXC_SCOPED_REGISTER_REUSE_CONTENT
+       "function(assert_scope_lifetime symbol reg expected)\n"
+       "  set(definition \".meta \\\"scoped_register_reuse.main.${RXAS_DIAG_DOLLAR}{symbol}\\\"=\\\"b\\\"\")\n"
+       "  set(clear \"\\n   .meta \\\"scoped_register_reuse.main.${RXAS_DIAG_DOLLAR}{symbol}\\\"\\n\")\n"
+       "  string(FIND \"${RXAS_DIAG_DOLLAR}{rxas_noopt_out}\" \"${RXAS_DIAG_DOLLAR}{definition}\" scope_start)\n"
+       "  string(FIND \"${RXAS_DIAG_DOLLAR}{rxas_noopt_out}\" \"${RXAS_DIAG_DOLLAR}{clear}\" scope_end)\n"
+       "  if(scope_start EQUAL -1 OR scope_end EQUAL -1 OR NOT scope_end GREATER scope_start)\n"
+       "    message(FATAL_ERROR \"Could not isolate scoped lifetime block for ${RXAS_DIAG_DOLLAR}{symbol}.\\nRXAS:\\n${RXAS_DIAG_DOLLAR}{rxas_noopt_out}\")\n"
+       "  endif()\n"
+       "  math(EXPR scope_length \"${RXAS_DIAG_DOLLAR}{scope_end} - ${RXAS_DIAG_DOLLAR}{scope_start}\")\n"
+       "  string(SUBSTRING \"${RXAS_DIAG_DOLLAR}{rxas_noopt_out}\" ${RXAS_DIAG_DOLLAR}{scope_start} ${RXAS_DIAG_DOLLAR}{scope_length} scope_block)\n"
+       "  string(FIND \"${RXAS_DIAG_DOLLAR}{scope_block}\" \"endlife r${RXAS_DIAG_DOLLAR}{reg}\" endlife_pos)\n"
+       "  if(expected STREQUAL \"absent\" AND NOT endlife_pos EQUAL -1)\n"
+       "    message(FATAL_ERROR \"Reference-lifetime-free scalar ${RXAS_DIAG_DOLLAR}{symbol} retained endlife.\\nBlock:\\n${RXAS_DIAG_DOLLAR}{scope_block}\")\n"
+       "  elseif(expected STREQUAL \"present\" AND endlife_pos EQUAL -1)\n"
+       "    message(FATAL_ERROR \"Reference-capable scoped local ${RXAS_DIAG_DOLLAR}{symbol} lost endlife.\\nBlock:\\n${RXAS_DIAG_DOLLAR}{scope_block}\")\n"
+       "  endif()\n"
+       "endfunction()\n"
+       "assert_scope_lifetime(left ${RXAS_DIAG_DOLLAR}{left_reg} absent)\n"
+       "assert_scope_lifetime(right ${RXAS_DIAG_DOLLAR}{right_reg} absent)\n"
+       "assert_scope_lifetime(object_left ${RXAS_DIAG_DOLLAR}{object_left_reg} present)\n"
+       "assert_scope_lifetime(object_right ${RXAS_DIAG_DOLLAR}{object_right_reg} present)\n"
+       "assert_scope_lifetime(reference_left ${RXAS_DIAG_DOLLAR}{reference_left_reg} present)\n"
+       "assert_scope_lifetime(reference_right ${RXAS_DIAG_DOLLAR}{reference_right_reg} present)\n"
+       "assert_scope_lifetime(binary_left ${RXAS_DIAG_DOLLAR}{binary_left_reg} present)\n"
+       "assert_scope_lifetime(binary_right ${RXAS_DIAG_DOLLAR}{binary_right_reg} present)\n"
+       "assert_scope_lifetime(array_left ${RXAS_DIAG_DOLLAR}{array_left_reg} present)\n"
+       "assert_scope_lifetime(array_right ${RXAS_DIAG_DOLLAR}{array_right_reg} present)\n")
 file(GENERATE OUTPUT "${RXC_SCOPED_REGISTER_REUSE_SCRIPT}" CONTENT "${RXC_SCOPED_REGISTER_REUSE_CONTENT}")
 
 add_test(NAME rxc_scoped_register_reuse
@@ -1097,6 +1130,79 @@ add_test(NAME nr06_codegen_contract
                  -P ${CMAKE_CURRENT_SOURCE_DIR}/nr06_codegen_contract.cmake)
 set_tests_properties(nr06_codegen_contract PROPERTIES
         LABELS "compiler;performance")
+
+add_test(NAME nr21_fixed_call_contract
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXLINK=$<TARGET_FILE:rxlink>
+                 -DRXDAS=$<TARGET_FILE:rxdas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DMUTATE_FEATURE=$<TARGET_FILE:mutate_rxbin_feature>
+                 -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                 -DBASIC_RXAS=${CMAKE_SOURCE_DIR}/interpreter/tests/tests_basic.rxas
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr21_fixed_call_contract_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/nr21_fixed_call_contract.cmake)
+set_tests_properties(nr21_fixed_call_contract PROPERTIES
+        LABELS "compiler;performance;rxbin")
+
+add_test(NAME nr14_frozen_parse_contract
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXLINK=$<TARGET_FILE:rxlink>
+                 -DRXDAS=$<TARGET_FILE:rxdas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DMUTATE_FEATURE=$<TARGET_FILE:mutate_rxbin_feature>
+                 -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr14_frozen_parse_contract_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/nr14_frozen_parse_contract.cmake)
+set_tests_properties(nr14_frozen_parse_contract PROPERTIES
+        LABELS "compiler;performance;rxbin;parse")
+
+add_test(NAME nr09_numeric_context_contract
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr09_numeric_context_contract_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/nr09_numeric_context_contract.cmake)
+set_tests_properties(nr09_numeric_context_contract PROPERTIES
+        LABELS "compiler;performance;numeric")
+
+add_test(NAME nr09_codegen_contract
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DBENCH_DIR=${CMAKE_SOURCE_DIR}/tests/benchmarks
+                 -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr09_codegen_contract_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/nr09_codegen_contract.cmake)
+set_tests_properties(nr09_codegen_contract PROPERTIES
+        LABELS "compiler;performance")
+
+add_test(NAME nr26_flow_contract
+         COMMAND ${CMAKE_COMMAND}
+                 -DRXC=$<TARGET_FILE:rxc>
+                 -DRXAS=$<TARGET_FILE:rxas>
+                 -DRXVM=$<TARGET_FILE:rxvm>
+                 -DRXBVM=$<TARGET_FILE:rxbvm>
+                 -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
+                 -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
+                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr26_flow_contract_ws
+                 -P ${CMAKE_CURRENT_SOURCE_DIR}/nr26_flow_contract.cmake)
+set_tests_properties(nr26_flow_contract PROPERTIES
+        LABELS "compiler;performance;flow")
 
 # Macro to add a run test
 macro(add_crexx_run_test NAME SOURCE_FILE)
@@ -2271,6 +2377,7 @@ add_crexx_run_test(inline_test_short_circuit_expr rexx_src/inline_test_short_cir
 add_crexx_run_test(inline_test_composed_expr_contexts rexx_src/inline_test_composed_expr_contexts.crexx)
 add_crexx_run_test(inline_test_byvalue_arg_reuse rexx_src/inline_test_byvalue_arg_reuse.crexx)
 add_crexx_run_test(inline_test_stateful_assembler rexx_src/inline_test_stateful_assembler.crexx)
+add_crexx_run_test(assembler_wide_operands rexx_src/assembler_wide_operands.crexx)
 add_crexx_run_test(inline_test_condition_contexts rexx_src/inline_test_condition_contexts.crexx)
 add_crexx_run_test(inline_test_loop_bound_expr rexx_src/inline_test_loop_bound_expr.crexx)
 add_crexx_run_test(inline_test_member_receiver_expr rexx_src/inline_test_member_receiver_expr.crexx)

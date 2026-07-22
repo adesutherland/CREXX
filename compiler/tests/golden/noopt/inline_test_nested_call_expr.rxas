@@ -7,11 +7,7 @@
 main() .locals=7
    .meta "inline_test_nested_call_expr.main"="b" ".int" main() ""
    .srcstep 10 10 17 "inline_test_nested_call_expr.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_nested_call_expr.crexx" 4 3 49 "  say \"Starting nested call inline expr test...\""
    say "Starting nested call inline expr test..."
    .srcstep 6 6 17 "inline_test_nested_call_expr.crexx" 5 3 5 "  do i = 1 to 3"
@@ -29,13 +25,9 @@ l8dostart:
    brt l8doend,r2
    .srcstep 5 5 17 "inline_test_nested_call_expr.crexx" 6 5 28 "    say identity(addOne(i))"
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "i" ""
-   load r5,1
-   swap r6,r0
-   call r4,addOne(),r5
-   swap r0,r6
+   call1 r4,addOne(),r0
    .traceevent "F" 4 "R" "I" "r" 4 5 5 0 "addone" ""
-   load r3,1
-   call r6,identity(),r3
+   call1 r6,identity(),r4
    itos r6
    .traceevent "F" 4 "R" "S" "r" 6 5 5 0 "identity" ""
    say r6
@@ -45,7 +37,6 @@ l8doinc:
    .srcstep 7 7 17 "inline_test_nested_call_expr.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
    .meta "inline_test_nested_call_expr.main.i"
    .srcstep 8 8 17 "inline_test_nested_call_expr.crexx" 8 3 47 "  say \"Nested call inline expr test finished.\""
    say "Nested call inline expr test finished."
@@ -55,11 +46,7 @@ l8doend:
 identity() .locals=1
    .meta "inline_test_nested_call_expr.identity"="b" ".int" identity() "val=.int"
    .srcstep 13 13 17 "inline_test_nested_call_expr.crexx" 11 1 27 "identity: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 11 11 17 "inline_test_nested_call_expr.crexx" 12 7 17 "  arg val = .int"
    .meta "inline_test_nested_call_expr.identity.val"="b" ".int" a1
    .srcstep 12 12 17 "inline_test_nested_call_expr.crexx" 13 3 13 "  return val"
@@ -70,11 +57,7 @@ identity() .locals=1
 addOne() .locals=2
    .meta "inline_test_nested_call_expr.addone"="b" ".int" addOne() "val=.int"
    .srcstep 16 16 17 "inline_test_nested_call_expr.crexx" 15 1 25 "addOne: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 14 14 17 "inline_test_nested_call_expr.crexx" 16 7 17 "  arg val = .int"
    .meta "inline_test_nested_call_expr.addone.val"="b" ".int" a1
    .srcstep 15 15 17 "inline_test_nested_call_expr.crexx" 17 3 17 "  return val + 1"

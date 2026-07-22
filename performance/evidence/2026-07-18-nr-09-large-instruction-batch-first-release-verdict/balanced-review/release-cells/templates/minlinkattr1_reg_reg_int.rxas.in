@@ -1,0 +1,63 @@
+/* Generated matched Release cell for MINLINKATTR1_REG_REG_INT. */
+
+.globals=0
+
+main() .locals=8
+    load r5,5
+    load r6,0
+pair:
+    brt reverse_order,r6
+forward_order:
+    say "expanded_us"
+    call r1,measure_expanded_minlinkattr1_reg_reg_int()
+    say "fused_us"
+    call r1,measure_fused_minlinkattr1_reg_reg_int()
+    load r6,1
+    br pair_done
+reverse_order:
+    say "fused_us"
+    call r1,measure_fused_minlinkattr1_reg_reg_int()
+    say "expanded_us"
+    call r1,measure_expanded_minlinkattr1_reg_reg_int()
+    load r6,0
+pair_done:
+    dec r5
+    brt pair,r5
+    ret 0
+
+measure_expanded_minlinkattr1_reg_reg_int() .locals=24
+
+    mtime r22
+    load r0,500000
+minlinkattr1_reg_reg_int_expanded_loop:
+
+    minattrs r1,5
+    linkattr1 r2,r1,5
+minlinkattr1_reg_reg_int_expanded_body_done:
+    dec r0
+    brt minlinkattr1_reg_reg_int_expanded_loop,r0
+    mtime r23
+    isub r1,r23,r22
+    itos r1
+    say r1
+    ret r1
+
+measure_fused_minlinkattr1_reg_reg_int() .locals=24
+@PADDING@
+
+    mtime r22
+    load r0,500000
+minlinkattr1_reg_reg_int_fused_loop:
+
+    minlinkattr1 r2,r1,5
+minlinkattr1_reg_reg_int_fused_body_done:
+    dec r0
+    brt minlinkattr1_reg_reg_int_fused_loop,r0
+    mtime r23
+    isub r1,r23,r22
+    itos r1
+    say r1
+    ret r1
+
+return_arg() .locals=0
+    ret a1

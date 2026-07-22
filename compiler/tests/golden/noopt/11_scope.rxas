@@ -6,19 +6,14 @@
 
 main() .locals=3
    .meta "11_scope.main"="b" ".void" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "11_scope.crexx" 3 1 7 "a = 50"
    .meta "11_scope.main.a"="b" ".int" r0
    load r0,50
    .traceevent "L" 4 "R" "I" "r" 0 1 1 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 0 1 1 0 "a" ""
    .srcstep 2 2 17 "11_scope.crexx" 4 1 11 "call Inner"
-   load r1,0
-   call r2,Inner(),r1
+   call r2,Inner()
    .traceevent "F" 4 "R" "V" "r" 2 2 2 0 "inner" ""
    .srcstep 5 5 17 "11_scope.crexx" 5 1 10 "if a = 50 then say \"Outer A Preserved\""
    .traceevent "V" 6 "R" "I" "r" 0 5 5 0 "a" ""
@@ -41,11 +36,7 @@ l17ifend:
 Inner() .locals=2
    .meta "11_scope.inner"="b" ".void" Inner() ""
    .srcstep 12 12 17 "11_scope.crexx" 9 1 17 "Inner: procedure"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 9 9 17 "11_scope.crexx" 10 3 9 "  a = 10"
    .meta "11_scope.inner.a"="b" ".int" r0
    load r0,10

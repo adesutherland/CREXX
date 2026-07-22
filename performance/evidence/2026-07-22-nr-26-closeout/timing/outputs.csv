@@ -1,0 +1,521 @@
+sample_id,stream,line_number,text
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-warmup-1,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-warmup-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.8 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-warmup-1,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-warmup-1,stdout,8,     Performance: 1731185 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-warmup-1,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-warmup-1,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-warmup-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-warmup-1,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-warmup-1,stdout,8,     Performance: 1784931 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-warmup-1,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-warmup-1,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-warmup-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.7 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-warmup-1,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-warmup-1,stdout,8,     Performance: 1765496 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-warmup-1,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-warmup-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-warmup-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-warmup-1,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-warmup-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-warmup-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-warmup-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-warmup-1,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-warmup-1,stdout,8,     Performance: 1772678 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-warmup-1,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-warmup-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-1,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-1,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-1,stdout,8,     Performance: 1786043 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-1,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-1,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-1,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-1,stdout,8,     Performance: 1787495 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-1,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-1,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.7 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-1,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-1,stdout,8,     Performance: 1762559 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-1,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-1,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-1,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-1,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-1,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-1,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-1,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-1,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-1,stdout,8,     Performance: 1770131 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-1,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-1,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-2,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-2,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-2,stdout,8,     Performance: 1784111 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-2,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-2,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.7 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-2,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-2,stdout,8,     Performance: 1766775 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-2,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-2,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-2,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-2,stdout,8,     Performance: 1775607 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-2,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-2,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-2,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-2,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-2,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-2,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-2,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-2,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-2,stdout,8,     Performance: 1785970 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-2,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-2,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-3,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-3,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.8 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-3,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-3,stdout,8,     Performance: 1733863 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-3,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-3,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-3,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.9 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-3,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-3,stdout,8,     Performance: 1689851 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-3,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-3,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-3,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-3,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-3,stdout,8,     Performance: 1771467 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-3,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-3,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-3,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-3,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-3,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-3,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.7 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-3,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-3,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-3,stdout,8,     Performance: 1766869 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-3,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-3,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-4,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-4,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.7 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-4,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-4,stdout,8,     Performance: 1758981 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-4,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-4,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-4,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-4,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-4,stdout,8,     Performance: 1772476 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-4,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-4,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-4,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.7 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-4,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-4,stdout,8,     Performance: 1761905 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-4,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-4,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-4,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-4,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-4,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-4,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.7 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-4,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-4,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-4,stdout,8,     Performance: 1757782 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-4,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-4,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-5,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-5,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-5,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.7 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-5,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-5,stdout,8,     Performance: 1753349 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-5,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-5,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-5,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-5,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.7 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-5,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-5,stdout,8,     Performance: 1766189 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-5,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-5,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-5,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-5,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.8 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-5,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-5,stdout,8,     Performance: 1732818 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-5,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-5,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-5,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-5,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-5,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-5,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.8 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-5,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-5,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-5,stdout,8,     Performance: 1735288 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-5,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-5,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-6,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-6,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-6,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-6,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-6,stdout,8,     Performance: 1771598 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-6,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-6,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-6,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-6,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.8 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-6,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-6,stdout,8,     Performance: 1737613 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-6,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-6,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-6,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-6,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.9 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-6,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-6,stdout,8,     Performance: 1709023 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-6,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-6,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-6,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-6,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-6,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-6,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-6,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-6,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-6,stdout,8,     Performance: 1786394 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-6,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-6,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-7,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-7,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-7,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-7,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-7,stdout,8,     Performance: 1772307 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-7,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-7,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-7,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-7,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-7,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-7,stdout,8,     Performance: 1780398 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-7,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-7,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-7,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-7,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.7 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-7,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-7,stdout,8,     Performance: 1758276 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-7,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-7,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-7,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-7,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-7,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-7,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-7,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-7,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-7,stdout,8,     Performance: 1799737 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-7,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-7,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-8,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-8,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-8,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-8,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-8,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-8,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-8,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-8,stdout,8,     Performance: 1773435 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-8,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-8,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-8,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-8,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-8,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-8,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-8,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-8,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-8,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-8,stdout,8,     Performance: 1801572 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-8,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-8,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-8,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-8,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-8,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-8,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-8,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-8,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-8,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-8,stdout,8,     Performance: 1789760 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-8,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-8,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-8,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-8,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-8,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-8,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-8,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.7 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-8,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-8,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-8,stdout,8,     Performance: 1764852 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-8,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-8,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-9,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-9,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-9,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-9,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-9,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-9,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-9,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-9,stdout,8,     Performance: 1785634 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-9,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-9,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-9,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-9,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-9,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-9,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-9,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-9,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-9,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-9,stdout,8,     Performance: 1791265 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-9,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-9,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-9,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-9,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-9,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-9,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-9,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-9,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-9,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-9,stdout,8,     Performance: 1781069 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-9,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-9,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-9,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-9,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-9,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-9,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-9,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-9,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-9,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-9,stdout,8,     Performance: 1775005 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-9,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-9,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-10,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-10,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-10,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-10,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-10,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-10,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-10,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-10,stdout,8,     Performance: 1780543 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-10,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-10,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-10,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-10,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-10,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-10,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-10,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.7 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-10,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-10,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-10,stdout,8,     Performance: 1749897 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-10,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-10,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-10,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-10,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-10,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-10,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-10,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-10,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-10,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-10,stdout,8,     Performance: 1775462 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-10,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-10,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-10,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-10,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-10,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-10,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-10,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-10,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-10,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-10,stdout,8,     Performance: 1790609 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-10,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-10,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-11,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-11,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-11,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-11,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-11,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.7 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-11,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-11,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-11,stdout,8,     Performance: 1765607 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-11,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-11,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-11,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-11,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-11,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-11,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-11,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-11,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-11,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-11,stdout,8,     Performance: 1783930 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-11,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-11,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-11,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-11,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-11,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-11,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-11,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-11,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-11,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-11,stdout,8,     Performance: 1795407 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-11,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-11,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-11,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-11,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-11,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-11,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-11,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-11,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-11,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-11,stdout,8,     Performance: 1796417 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-11,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-11,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-12,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-12,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-12,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-12,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-12,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-12,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-12,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-12,stdout,8,     Performance: 1782086 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-12,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxbvm-recorded-12,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-12,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-12,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-12,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-12,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-12,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-12,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-12,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-12,stdout,8,     Performance: 1795460 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-12,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxvm-recorded-12,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-12,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-12,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-12,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-12,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-12,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.6 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-12,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-12,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-12,stdout,8,     Performance: 1792373 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-12,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-corrected-rexxcps-rxvm-recorded-12,stdout,10,PASS: RexxCPS 2.2d cREXX port
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-12,stdout,1,----- REXXCPS 2.2d -- Measuring cREXX clauses/second -----
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-12,stdout,2, cREXX version is: macOS 64 crexx-1.0.0-beta.3+local.g4ab5f3d8da67.dirty 20260721
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-12,stdout,3,       System is: macOS
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-12,stdout,4,REXXCPS-PROVENANCE contract=canonical-default argv_count=0 initial_count=100 averaging=100
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-12,stdout,5,        Averaged: 100 x 100 iterations of 1000 clauses (over 5.7 s)
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-12,stdout,6,REXXCPS-EFFECTIVE contract=canonical-default initial_count=100 effective_count=100 averaging=100 calibrated=0
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-12,stdout,7,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-12,stdout,8,     Performance: 1754020 cREXX clauses per second
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-12,stdout,9,
+timing-RexxCPS-NR26-closeout-nr26-closeout-preqa-rexxcps-rxbvm-recorded-12,stdout,10,PASS: RexxCPS 2.2d cREXX port

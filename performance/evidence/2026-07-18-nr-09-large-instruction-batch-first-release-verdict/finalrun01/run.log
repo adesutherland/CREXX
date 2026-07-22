@@ -1,0 +1,96 @@
+001-rxvm-warmup-r00-p1-cellA cps=1204113 real=8.32
+002-rxvm-warmup-r00-p2-cellB cps=1211566 real=8.54
+003-rxvm-warmup-r00-p3-cellC cps=1197160 real=8.37
+004-rxbvm-warmup-r00-p1-cellC cps=1205695 real=8.59
+005-rxbvm-warmup-r00-p2-cellB cps=1170884 real=8.55
+006-rxbvm-warmup-r00-p3-cellA cps=1167715 real=8.58
+007-rxvm-recorded-r01-p1-cellA cps=1179707 real=8.49
+008-rxvm-recorded-r01-p2-cellB cps=1168354 real=8.57
+009-rxvm-recorded-r01-p3-cellC cps=1195713 real=8.38
+010-rxbvm-recorded-r01-p1-cellA cps=1149793 real=8.71
+011-rxbvm-recorded-r01-p2-cellB cps=1160858 real=8.63
+012-rxbvm-recorded-r01-p3-cellC cps=1152563 real=8.69
+013-rxbvm-recorded-r02-p1-cellB cps=1141059 real=8.78
+014-rxbvm-recorded-r02-p2-cellC cps=1164323 real=8.60
+015-rxbvm-recorded-r02-p3-cellA cps=1130809 real=8.86
+016-rxvm-recorded-r02-p1-cellB cps=1143032 real=8.76
+017-rxvm-recorded-r02-p2-cellC cps=1102613 real=9.08
+018-rxvm-recorded-r02-p3-cellA cps=1000464 real=10.01
+019-rxvm-recorded-r03-p1-cellC cps=1147750 real=8.73
+020-rxvm-recorded-r03-p2-cellA cps=1172045 real=8.55
+021-rxvm-recorded-r03-p3-cellB cps=1225873 real=8.17
+022-rxbvm-recorded-r03-p1-cellC cps=1157631 real=8.65
+023-rxbvm-recorded-r03-p2-cellA cps=1181851 real=8.48
+024-rxbvm-recorded-r03-p3-cellB cps=1134405 real=8.83
+025-rxbvm-recorded-r04-p1-cellC cps=1151361 real=8.70
+026-rxbvm-recorded-r04-p2-cellB cps=1214423 real=8.25
+027-rxbvm-recorded-r04-p3-cellA cps=1191692 real=8.41
+028-rxvm-recorded-r04-p1-cellC cps=1233211 real=8.13
+029-rxvm-recorded-r04-p2-cellB cps=1200801 real=8.34
+030-rxvm-recorded-r04-p3-cellA cps=1217561 real=8.23
+031-rxvm-recorded-r05-p1-cellA cps=1194593 real=8.38
+032-rxvm-recorded-r05-p2-cellC cps=1229462 real=8.15
+033-rxvm-recorded-r05-p3-cellB cps=1185879 real=8.45
+034-rxbvm-recorded-r05-p1-cellA cps=1177056 real=8.51
+035-rxbvm-recorded-r05-p2-cellC cps=1221439 real=8.20
+036-rxbvm-recorded-r05-p3-cellB cps=1187197 real=8.44
+037-rxbvm-recorded-r06-p1-cellB cps=1199841 real=8.35
+038-rxbvm-recorded-r06-p2-cellA cps=1180785 real=8.49
+039-rxbvm-recorded-r06-p3-cellC cps=1229302 real=8.15
+040-rxvm-recorded-r06-p1-cellB cps=1197362 real=8.37
+041-rxvm-recorded-r06-p2-cellA cps=1210379 real=8.28
+042-rxvm-recorded-r06-p3-cellC cps=1203832 real=8.32
+043-rxvm-recorded-r07-p1-cellB cps=1209540 real=8.28
+044-rxvm-recorded-r07-p2-cellA cps=1230318 real=8.14
+045-rxvm-recorded-r07-p3-cellC cps=1197536 real=8.36
+046-rxbvm-recorded-r07-p1-cellB cps=1203492 real=8.32
+047-rxbvm-recorded-r07-p2-cellA cps=1177477 real=8.51
+048-rxbvm-recorded-r07-p3-cellC cps=1229551 real=8.15
+049-rxbvm-recorded-r08-p1-cellA cps=1185159 real=8.45
+050-rxbvm-recorded-r08-p2-cellC cps=1218021 real=8.22
+051-rxbvm-recorded-r08-p3-cellB cps=1163343 real=8.61
+052-rxvm-recorded-r08-p1-cellA cps=1195673 real=8.38
+053-rxvm-recorded-r08-p2-cellC cps=1219552 real=8.22
+054-rxvm-recorded-r08-p3-cellB cps=1200893 real=8.34
+055-rxvm-recorded-r09-p1-cellC cps=1204867 real=8.31
+056-rxvm-recorded-r09-p2-cellB cps=1199560 real=8.35
+057-rxvm-recorded-r09-p3-cellA cps=1229274 real=8.15
+058-rxbvm-recorded-r09-p1-cellC cps=1202260 real=8.33
+059-rxbvm-recorded-r09-p2-cellB cps=1198740 real=8.36
+060-rxbvm-recorded-r09-p3-cellA cps=1180176 real=8.49
+061-rxbvm-recorded-r10-p1-cellC cps=1194157 real=8.39
+062-rxbvm-recorded-r10-p2-cellA cps=1201962 real=8.33
+063-rxbvm-recorded-r10-p3-cellB cps=1189108 real=8.42
+064-rxvm-recorded-r10-p1-cellC cps=1232494 real=8.13
+065-rxvm-recorded-r10-p2-cellA cps=1193709 real=8.39
+066-rxvm-recorded-r10-p3-cellB cps=1212127 real=8.26
+067-rxvm-recorded-r11-p1-cellB cps=1193972 real=8.39
+068-rxvm-recorded-r11-p2-cellC cps=1225284 real=8.18
+069-rxvm-recorded-r11-p3-cellA cps=1208215 real=8.29
+070-rxbvm-recorded-r11-p1-cellB cps=1171349 real=8.55
+071-rxbvm-recorded-r11-p2-cellC cps=1214581 real=8.25
+072-rxbvm-recorded-r11-p3-cellA cps=1153963 real=8.68
+073-rxbvm-recorded-r12-p1-cellA cps=1188541 real=8.43
+074-rxbvm-recorded-r12-p2-cellB cps=1174587 real=8.53
+075-rxbvm-recorded-r12-p3-cellC cps=1231946 real=8.13
+076-rxvm-recorded-r12-p1-cellA cps=1196199 real=8.37
+077-rxvm-recorded-r12-p2-cellB cps=1204558 real=8.32
+078-rxvm-recorded-r12-p3-cellC cps=1218245 real=8.22
+
+Cell summary:
+vm_mode,cell,n,native_cps_median,native_cps_mean,native_cps_min,native_cps_max,process_real_median_s,process_real_mean_s,process_real_min_s,process_real_max_s
+rxvm,A,12,1195936.000,1185678.083,1000464,1230318,8.375,8.472,8.14,10.01
+rxvm,B,12,1200180.500,1195162.583,1143032,1225873,8.345,8.383,8.17,8.76
+rxvm,C,12,1211556.000,1200879.917,1102613,1233211,8.265,8.351,8.13,9.08
+rxbvm,A,12,1180480.500,1174938.667,1130809,1201962,8.490,8.529,8.33,8.86
+rxbvm,B,12,1180892.000,1178200.167,1134405,1214423,8.485,8.506,8.25,8.83
+rxbvm,C,12,1208420.500,1197261.250,1151361,1231946,8.290,8.372,8.13,8.70
+
+Paired summary:
+vm_mode,comparison,n,native_cps_delta_median_percent,native_cps_delta_mean_percent,native_cps_delta_ci95_low_percent,native_cps_delta_ci95_high_percent,native_cps_delta_q1_percent,native_cps_delta_q3_percent,native_cps_favorable_count,native_cps_delta_min_percent,native_cps_delta_max_percent,process_real_delta_median_percent,process_real_delta_mean_percent,process_real_delta_ci95_low_percent,process_real_delta_ci95_high_percent,process_real_delta_q1_percent,process_real_delta_q3_percent,process_real_favorable_count,process_real_delta_min_percent,process_real_delta_max_percent
+rxvm,infrastructure_B_vs_A,12,-0.845905,+1.007707,-1.895286,+3.910700,-1.228265,+0.909828,5,-2.417199,+14.250188,+0.888804,-0.831235,-3.439534,+1.777064,-0.835395,+1.238848,5,-12.487512,+2.453988
+rxvm,corrected_product_C_vs_B,12,+1.345013,+0.482502,-1.349770,+2.314774,+0.083698,+2.411879,9,-6.372846,+3.675164,-1.320386,-0.383820,-2.262746,+1.495106,-2.288522,-0.117736,9,-3.550296,+6.854345
+rxvm,overall_C_vs_A,12,+1.384761,+1.417451,-0.747566,+3.582468,-0.902049,+2.227564,8,-2.664514,+10.210162,-1.311271,-1.284921,-3.305429,+0.735587,-2.118138,+0.853117,8,-9.290709,+2.702703
+rxbvm,infrastructure_B_vs_A,12,+0.934389,+0.286822,-0.915643,+1.489286,-1.095575,+1.583200,8,-4.014550,+2.209385,-0.910710,-0.264128,-1.484858,+0.956603,-1.560659,+1.106884,8,-2.232667,+4.127358
+rxbvm,corrected_product_C_vs_B,12,+2.106349,+1.639693,-0.099542,+3.378929,+0.391863,+3.085901,10,-5.192754,+4.883333,-2.046692,-1.555314,-3.296817,+0.186188,-3.009895,-0.358213,10,-4.689332,+5.454545
+rxbvm,overall_C_vs_A,12,+2.868256,+1.914391,+0.161543,+3.667239,+0.018346,+3.855228,9,-3.384348,+5.253028,-2.828215,-1.832315,-3.547645,-0.116985,-3.733258,+0.007856,9,-4.953917,+3.448276

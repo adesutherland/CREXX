@@ -94,6 +94,7 @@ struct Symbol {
     struct Symbol *shadowed_symbol; /* Pointer to the symbol being shadowed */
     char is_global_var; /* Set if this symbol is an exposed global variable */
     char has_reference_target; /* Storage was the target of a reference expression */
+    char flow_skip_default_initiation; /* NR-26: every first read is preceded by a safe source write */
     char is_inlinable;  /* Set if this procedure is inlinable */
     ASTNode *ast_template; /* AST template for inlining */
     int creation_ordinal; /* Ordinal value when the symbol was first created */

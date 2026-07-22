@@ -6,6 +6,7 @@
 
 #include "rxbin.h"
 
+#include <limits.h>
 #include <stdarg.h>
 
 typedef struct rxbin007_pool_entry {
@@ -724,29 +725,50 @@ static int rxbin007_pool_operand_type(OperandType type) {
            type == OP_DECIMAL || type == OP_BINARY;
 }
 
+static uint32_t rxbin007_opcode_features(int opcode) {
+    switch (opcode) {
+        case OP_CALL1_REG_FUNC_REG:
+        case OP_CALL2_REG_FUNC_REG_REG:
+        case OP_CALL3_REG_FUNC_REG_REG_REG:
+        case OP_CALL4_REG_FUNC_REG_REG_REG_REG:
+            return RXBIN007_FEATURE_FIXED_CALLS;
+        case OP_PARSEWORDS3_REG_REG_REG_REG:
+        case OP_PARSEPOS2_REG_REG_REG_INT:
+        case OP_PARSEWORDS3D_REG_REG_REG_REG:
+        case OP_PARSEPLAN_REG_REG_STRING:
+            return RXBIN007_FEATURE_FROZEN_PARSE;
+        default:
+            return 0u;
+    }
+}
+
 static int rxbin007_encode_instructions(const module_file *module,
                                         const rxbin007_pool *pool,
                                         const RxGraph *graph,
-                                        rxbin_byte_buffer *output) {
+                                        rxbin_byte_buffer *output,
+                                        uint32_t *feature_flags) {
     const bin_code *instructions;
     rxbin_var_writer writer;
     size_t index;
 
-    if (!module || (module->header.instruction_size && !module->instructions)) return 0;
+    if (!module || !feature_flags ||
+        (module->header.instruction_size && !module->instructions)) return 0;
     instructions = (const bin_code *)module->instructions;
     index = 0u;
     rxbin_var_writer_init(&writer, output);
     while (index < module->header.instruction_size) {
-        OperandType types[3];
+        OpFormat format;
         int opcode;
-        int operand_count;
-        int operand_index;
+        size_t operand_count;
+        size_t operand_index;
 
         opcode = instructions[index].instruction.opcode;
         if (opcode < 0 || opcode >= OP_MAX_INSTRUCTIONS) return 0;
-        operand_count = rxbin_get_operand_types(rxbin_opcode_format(opcode), types);
+        *feature_flags |= rxbin007_opcode_features(opcode);
+        format = rxbin_opcode_format(opcode);
+        operand_count = rxop_format_operand_count(format);
         if (instructions[index].instruction.no_ops != operand_count ||
-            index + (size_t)operand_count >= module->header.instruction_size ||
+            index + operand_count >= module->header.instruction_size ||
             !rxbin_var_writer_write(&writer, (uint64_t)opcode)) return 0;
         for (operand_index = 0; operand_index < operand_count; operand_index++) {
             const bin_code *operand;
@@ -761,15 +783,15 @@ static int rxbin007_encode_instructions(const module_file *module,
                 uint32_t constant_id;
                 char *graph_error;
 
-                if (!graph || types[operand_index] != OP_STRING) {
-                    rxbin007_set_error("RXBIN 007 graph operand %d:%d has no semantic graph",
+                if (!graph || rxop_format_operand_type(format, operand_index) != OP_STRING) {
+                    rxbin007_set_error("RXBIN 007 graph operand %d:%zu has no semantic graph",
                                        opcode, operand_index);
                     return 0;
                 }
                 if (module->graph_operands) {
                     char *graph_text;
                     if (operand->index > UINT32_MAX) {
-                        rxbin007_set_error("RXBIN 007 graph operand %d:%d is out of range",
+                        rxbin007_set_error("RXBIN 007 graph operand %d:%zu is out of range",
                                            opcode, operand_index);
                         return 0;
                     }
@@ -779,7 +801,7 @@ static int rxbin007_encode_instructions(const module_file *module,
                                                        (unsigned int)operand_index,
                                                        graph_id);
                     if (!graph_text) {
-                        rxbin007_set_error("RXBIN 007 graph operand %d:%d has invalid ID %u",
+                        rxbin007_set_error("RXBIN 007 graph operand %d:%zu has invalid ID %u",
                                            opcode, operand_index, graph_id);
                         return 0;
                     }
@@ -791,7 +813,7 @@ static int rxbin007_encode_instructions(const module_file *module,
                 if (!rxbin007_pool_find_id(pool, operand->index, &constant_id) ||
                     constant_id >= pool->entry_count ||
                     pool->entries[constant_id].entry->type != STRING_CONST) {
-                    rxbin007_set_error("RXBIN 007 graph operand %d:%d is not a string constant",
+                    rxbin007_set_error("RXBIN 007 graph operand %d:%zu is not a string constant",
                                        opcode, operand_index);
                     return 0;
                 }
@@ -812,18 +834,18 @@ static int rxbin007_encode_instructions(const module_file *module,
                 }
                 free(graph_error);
                 token = graph_id;
-            } else if (rxbin007_pool_operand_type(types[operand_index])) {
+            } else if (rxbin007_pool_operand_type(rxop_format_operand_type(format, operand_index))) {
                 uint32_t constant_id;
                 if (!rxbin007_pool_find_id(pool, operand->index, &constant_id)) {
                     rxbin007_set_error("RXBIN 007 instruction has an invalid constant offset");
                     return 0;
                 }
                 token = constant_id;
-            } else if (types[operand_index] == OP_INT) {
+            } else if (rxop_format_operand_type(format, operand_index) == OP_INT) {
                 token = (((uint64_t)operand->iconst) << 1u) ^
                         (uint64_t)(operand->iconst >>
                                    ((sizeof(rxinteger) * CHAR_BIT) - 1u));
-            } else if (types[operand_index] == OP_CHAR) {
+            } else if (rxop_format_operand_type(format, operand_index) == OP_CHAR) {
                 token = (uint64_t)(unsigned char)operand->cconst;
             } else {
                 token = (uint64_t)operand->index;
@@ -945,6 +967,7 @@ static int rxbin007_pack_sections(rxbin007_section *sections) {
 
 static int rxbin007_write_container(rxbin007_section *sections,
                                     size_t module_count,
+                                    uint32_t feature_flags,
                                     FILE *file) {
     rxbin_byte_buffer output;
     static const unsigned char zeros[304] = {0};
@@ -964,7 +987,7 @@ static int rxbin007_write_container(rxbin007_section *sections,
     file_size = output.size;
     memcpy(output.data, RXBIN007_MAGIC, 8u);
     if (!rxbin007_put_u32(&output, 8u, RXBIN007_HEADER_SIZE) ||
-        !rxbin007_put_u32(&output, 12u, 0u) ||
+        !rxbin007_put_u32(&output, 12u, feature_flags) ||
         !rxbin007_put_u64(&output, 16u, file_size) ||
         !rxbin007_put_u32(&output, 24u, RXBIN007_SECTION_COUNT) ||
         !rxbin007_put_u32(&output, 28u, (uint32_t)module_count) ||
@@ -1006,6 +1029,7 @@ int write_modules(module_file *const *input_modules,
     size_t graph_facts_size;
     size_t graph_indexes_size;
     size_t i;
+    uint32_t feature_flags;
     int ok;
 
     rxbin007_clear_error();
@@ -1064,6 +1088,7 @@ int write_modules(module_file *const *input_modules,
     }
 
     memset(sections, 0, sizeof(sections));
+    feature_flags = 0u;
     for (i = 0u; i < RXBIN007_SECTION_COUNT; i++) {
         sections[i].kind = (uint32_t)i + 1u;
         sections[i].alignment = 8u;
@@ -1078,7 +1103,8 @@ int write_modules(module_file *const *input_modules,
         if (!rxbin007_encode_instructions(modules[i].module,
                                           &pools[modules[i].pool_index],
                                           semantic_graph,
-                                          &sections[1].bytes)) goto section_error;
+                                          &sections[1].bytes,
+                                          &feature_flags)) goto section_error;
         modules[i].instruction_size = sections[1].bytes.size -
                                       (size_t)modules[i].instruction_offset;
     }
@@ -1112,7 +1138,10 @@ int write_modules(module_file *const *input_modules,
     }
     free(graph_facts);
     free(graph_indexes);
-    ok = rxbin007_write_container(sections, module_count, outFile);
+    ok = rxbin007_write_container(sections,
+                                  module_count,
+                                  feature_flags,
+                                  outFile);
     rxbin007_free_sections(sections);
     rx_graph_release(&built_graph);
     rxbin007_free_pools(pools, pool_count);
@@ -1838,6 +1867,7 @@ static int rxbin007_decode_instructions(const unsigned char *data,
                                         size_t word_count,
                                         const rxbin007_pool_read *pool,
                                         const RxGraph *graph,
+                                        uint32_t feature_flags,
                                         bin_code **instructions_out) {
     rxbin_var_reader reader;
     bin_code *instructions;
@@ -1852,17 +1882,26 @@ static int rxbin007_decode_instructions(const unsigned char *data,
     rxbin_var_reader_init(&reader, data, byte_size);
     index = 0u;
     while (index < word_count) {
-        OperandType types[3];
+        OpFormat format;
         uint64_t opcode_token;
-        int operand_count;
-        int operand_index;
+        size_t operand_count;
+        size_t operand_index;
 
         if (!rxbin_var_reader_read(&reader, &opcode_token) ||
             opcode_token >= (uint64_t)OP_MAX_INSTRUCTIONS) goto error;
-        operand_count = rxbin_get_operand_types(rxbin_opcode_format((int)opcode_token), types);
-        if (operand_count < 0 || index + (size_t)operand_count >= word_count) goto error;
+        if ((rxbin007_opcode_features((int)opcode_token) & feature_flags) !=
+            rxbin007_opcode_features((int)opcode_token)) {
+            rxbin007_set_error(
+                    "RXBIN 007 opcode %llu requires feature flag 0x%08x",
+                    (unsigned long long)opcode_token,
+                    (unsigned int)rxbin007_opcode_features((int)opcode_token));
+            goto error;
+        }
+        format = rxbin_opcode_format((int)opcode_token);
+        operand_count = rxop_format_operand_count(format);
+        if (operand_count > INT_MAX || index + operand_count >= word_count) goto error;
         instructions[index].instruction.opcode = (int)opcode_token;
-        instructions[index].instruction.no_ops = operand_count;
+        instructions[index].instruction.no_ops = (int)operand_count;
         for (operand_index = 0; operand_index < operand_count; operand_index++) {
             bin_code *operand;
             RxGraphOperandKind graph_kind;
@@ -1879,17 +1918,17 @@ static int rxbin007_decode_instructions(const unsigned char *data,
                                              (unsigned int)operand_index,
                                              (uint32_t)token)) goto error;
                 operand->index = (size_t)token;
-            } else if (rxbin007_pool_operand_type(types[operand_index])) {
+            } else if (rxbin007_pool_operand_type(rxop_format_operand_type(format, operand_index))) {
                 if (token > UINT32_MAX ||
                     !rxbin007_pool_operand_id_valid(pool,
-                                                    types[operand_index],
+                                                    rxop_format_operand_type(format, operand_index),
                                                     (uint32_t)token)) goto error;
                 operand->index = pool->offsets[(uint32_t)token];
-            } else if (types[operand_index] == OP_INT) {
+            } else if (rxop_format_operand_type(format, operand_index) == OP_INT) {
                 uint64_t magnitude;
                 magnitude = (token >> 1u) ^ (UINT64_C(0) - (token & 1u));
                 operand->iconst = (rxinteger)magnitude;
-            } else if (types[operand_index] == OP_CHAR) {
+            } else if (rxop_format_operand_type(format, operand_index) == OP_CHAR) {
                 if (token > UCHAR_MAX) goto error;
                 operand->cconst = (char)(unsigned char)token;
             } else {
@@ -1948,6 +1987,7 @@ static int rxbin007_parse_modules(const rxbin007_section_view *module_section,
                                   rxbin007_pool_read *pools,
                                   uint32_t pool_count,
                                   RxGraph *graph,
+                                  uint32_t feature_flags,
                                   rxbin007_image_state **state_out) {
     rxbin007_image_state *state;
     uint32_t schema;
@@ -2048,6 +2088,7 @@ static int rxbin007_parse_modules(const rxbin007_section_view *module_section,
                                           (size_t)instruction_words,
                                           &pools[pool_index],
                                           graph,
+                                          feature_flags,
                                           (bin_code **)&module->instructions)) {
             free_module(module);
             goto error;
@@ -2097,6 +2138,7 @@ static int rxbin007_parse_image(const unsigned char *image,
     rxbin007_section_view sections[RXBIN007_SECTION_COUNT];
     uint64_t declared_file_size;
     uint64_t directory_offset;
+    uint32_t feature_flags;
     uint32_t section_count;
     uint32_t module_count;
     size_t previous_end;
@@ -2114,8 +2156,14 @@ static int rxbin007_parse_image(const unsigned char *image,
     if (!state_out || !image || image_size < RXBIN007_HEADER_SIZE ||
         memcmp(image, RXBIN007_MAGIC, 8u) != 0 ||
         rxbin007_read_u32_at(image + 8u) != RXBIN007_HEADER_SIZE ||
-        rxbin007_read_u32_at(image + 12u) != 0u ||
         !rxbin007_zero_bytes(image + 40u, 24u)) return 0;
+    feature_flags = rxbin007_read_u32_at(image + 12u);
+    if (feature_flags & ~RXBIN007_SUPPORTED_FEATURES) {
+        rxbin007_set_error("RXBIN 007 has unsupported feature flags 0x%08x",
+                           (unsigned int)(feature_flags &
+                                          ~RXBIN007_SUPPORTED_FEATURES));
+        return 0;
+    }
     declared_file_size = rxbin007_read_u64_at(image + 16u);
     section_count = rxbin007_read_u32_at(image + 24u);
     module_count = rxbin007_read_u32_at(image + 28u);
@@ -2237,6 +2285,7 @@ static int rxbin007_parse_image(const unsigned char *image,
                                 pools,
                                 pool_count,
                                 graph,
+                                feature_flags,
                                 &state)) goto error;
     rxbin007_free_pool_reads(pools, pool_count, 0);
     rx_graph_release(&graph);

@@ -1,0 +1,4 @@
+started_utc=2026-07-19T19:20:39Z
+command=ctest --test-dir cmake-build-debug --parallel 30 --output-on-failure
+ended_utc=2026-07-19T19:23:54Z
+exit_code=8

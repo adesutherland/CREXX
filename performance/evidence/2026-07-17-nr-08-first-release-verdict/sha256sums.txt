@@ -1,0 +1,12 @@
+2970c3d73fe2537ec8f81295c585495c4668b442d5b9a2335b1ee453a13bbdd6  /Users/adrian/CLionProjects/CREXX/tests/benchmarks/rexxcps_levelb.crexx
+05aa58c27041adc4f86cfc0224f7c0803836f982d19a5c4f6cea1e4887173f4a  /Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxas
+466de7f06414148e4a3f63337e716ce332e1c082363297974240f4b3cc9cabbe  /Users/adrian/CLionProjects/CREXX/cmake-build-release/tests/benchmarks/benchmark_rexxcps_levelb_opt.rxbin
+6d1ae40af463fd53633f44603a57cc2291aaa3149bb4ef0d04a67511ea04cf13  /Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/library.rxbin
+7e92a7d08efe828768985603fb4b6d65afbbbe64ebe5b6c8f3ef4ff6483d6b44  /Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxvm
+9b5920e1b7b4a84d8167e1fde04003632869551224017118e46b9b10be54a29a  /Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxbvm
+24c7f48c1dc950dc8d1e60297ec5097a03c54da3b7b50056b91e072382b2c6a2  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-numeric-01-first-release-verdict/accepted-c/samples.csv
+c71245b36b10c823906221c05d509b23dc521168001be49c70763960752a1076  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-numeric-01-first-release-verdict/accepted-c/summary.csv
+b6d5f87bc0b14601cc1ed92bec26b1cce0dd711c9751e35eb571a68160959834  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-08-first-release-verdict/candidate-samples.csv
+ec8541d4aceae294271c926bb3d5e6d563aa037e267b65583cfdee59459f2d96  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-08-first-release-verdict/candidate-summary.csv
+4e8a8bcf6d438483f0e9eb6acdc3b91b80024ac95ea532159dbca3b2cfcce223  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-08-first-release-verdict/comparison.csv
+13b408c97733c1310d9b39c7922e34ec9e1bd4ba826e92d8e7aa6b3b742e6647  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-08-first-release-verdict/provenance.txt

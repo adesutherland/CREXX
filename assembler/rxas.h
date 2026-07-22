@@ -51,6 +51,10 @@ enum queue_item_type {
 typedef struct instruction_queue {
     enum queue_item_type instrType;
     Assembler_Token *instrToken;
+    /* OP_CODE operands are owned by the queue and have no fixed limit. */
+    Assembler_Token **operandTokens;
+    size_t operandCount;
+    /* Legacy named slots remain for optimiser rules and metadata records. */
     Assembler_Token *operand1Token;
     Assembler_Token *operand2Token;
     Assembler_Token *operand3Token;
@@ -235,8 +239,10 @@ int rxasoutf(Assembler_Context *scanner);
 /* Clear and Free Assembler Context */
 void rxasclrc(Assembler_Context *scanner);
 
-/* Convert FLOAT tokens to a DECIMAL tokens as defined by the instruction types */
-void promote_floats_to_decimals(Assembler_Token *instrToken,
-                                Assembler_Token *operand1Token, Assembler_Token *operand2Token, Assembler_Token *operand3Token);
+/* Return an opcode operand from its variable-length queue representation. */
+Assembler_Token *rxas_queue_operand(const instruction_queue *item, size_t operand_index);
+
+/* Release any variable-length operands owned by a queued opcode. */
+void rxas_free_queue_item(instruction_queue *item);
 
 #endif //CREXX_RXSA_H

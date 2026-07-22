@@ -1,0 +1,7 @@
+baseline_procedures=629
+candidate_procedures=629
+changed_procedures=263
+endlife_delta=-7855
+non_endlife_changes=0
+endlife_increases=0
+analysis=label-aware; an instruction following a branch label is parsed from field 2

@@ -182,6 +182,15 @@ The 64-byte file header is:
 | 32 | 8 | section-directory offset | initially `64` |
 | 40 | 24 | reserved | zero |
 
+Defined file feature bits are:
+
+- bit 0, `RXBIN007_FEATURE_FIXED_CALLS`: the instruction section may contain
+  the fixed direct-bytecode call opcodes `CALL1` through `CALL4` (401-404).
+  The writer derives this bit from the emitted instructions. A reader rejects
+  one of those opcodes when the bit is absent and rejects every unknown feature
+  bit, so the header is an enforced compatibility declaration rather than a
+  hint. Zero-feature RXBIN 007 images remain valid and readable.
+
 Each 40-byte directory row contains `kind:u32`, `flags:u32`,
 `alignment:u32`, `reserved:u32`, `file_offset:u64`, `stored_size:u64`, and
 `expanded_size:u64`. Directory rows are sorted by kind and initially contain

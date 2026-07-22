@@ -669,11 +669,76 @@ void output_prepend_text(char* before, OutputFragment* after) {
     }
 }
 
-void print_output(FILE* file, OutputFragment* existing) {
-    while (existing) {
-        if (existing->output) fputs(existing->output, file);
-        existing = existing->after;
+int output_replace_text_once(OutputFragment* output,
+                             const char* old_text,
+                             const char* new_text) {
+    OutputFragment *fragment;
+    size_t old_length;
+    size_t new_length;
+
+    if (!output || !old_text || !old_text[0] || !new_text) return 0;
+    old_length = strlen(old_text);
+    new_length = strlen(new_text);
+
+    fragment = output;
+    while (fragment->before) fragment = fragment->before;
+    while (fragment) {
+        char *match;
+        if (!fragment->output) {
+            fragment = fragment->after;
+            continue;
+        }
+        match = strstr(fragment->output, old_text);
+        if (match) {
+            size_t prefix_length = (size_t)(match - fragment->output);
+            size_t suffix_length = strlen(match + old_length);
+            char *replacement = malloc(prefix_length + new_length + suffix_length + 1);
+            if (!replacement) {
+                RX_PANIC_OOM("malloc compiler output replacement",
+                             prefix_length + new_length + suffix_length + 1,
+                             0);
+            }
+            memcpy(replacement, fragment->output, prefix_length);
+            memcpy(replacement + prefix_length, new_text, new_length);
+            memcpy(replacement + prefix_length + new_length,
+                   match + old_length,
+                   suffix_length + 1);
+            free(fragment->output);
+            fragment->output = replacement;
+            return 1;
+        }
+        fragment = fragment->after;
     }
+    return 0;
+}
+
+void print_output(FILE* file, OutputFragment* existing) {
+    OutputFragment *fragment;
+    char *flat;
+    char *combined;
+    size_t length;
+
+    if (!existing) return;
+    while (existing->before) existing = existing->before;
+    length = 0;
+    fragment = existing;
+    while (fragment) {
+        if (fragment->output) length += strlen(fragment->output);
+        fragment = fragment->after;
+    }
+    flat = malloc(length + 1);
+    if (!flat) RX_PANIC_OOM("malloc compiler flattened output", length + 1, 0);
+    flat[0] = 0;
+    fragment = existing;
+    while (fragment) {
+        if (fragment->output) strcat(flat, fragment->output);
+        fragment = fragment->after;
+    }
+    combined = rxcp_combine_superinstructions(flat);
+    free(flat);
+    if (!combined) return;
+    fputs(combined, file);
+    free(combined);
 }
 
 static char *get_source_node_metaline(SourceNode *node) {

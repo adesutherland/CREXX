@@ -167,7 +167,6 @@ void rxvm_profile_trace_instruction_at(rxvm_profile_state *state,
     rxvm_profile_activation *activation;
     rxvm_profile_trace_record *record;
     RxOpEffects previous_effects;
-    const Instruction *instruction;
     (void)module_id;
     (void)instruction_index;
     if (!state || !state->enabled || !frame_pointer || !pc ||
@@ -191,22 +190,7 @@ void rxvm_profile_trace_instruction_at(rxvm_profile_state *state,
     record = &activation->trace[activation->trace_count++];
     memset(record, 0, sizeof(*record));
     record->opcode = opcode;
-    record->registers[0] = SIZE_MAX;
-    record->registers[1] = SIZE_MAX;
-    record->registers[2] = SIZE_MAX;
-    instruction = &instruction_map[opcode];
-    if (instruction->op1_type == OP_REG) {
-        record->register_mask |= RXOP_OP_1;
-        record->registers[0] = (pc + 1)->index;
-    }
-    if (instruction->op2_type == OP_REG) {
-        record->register_mask |= RXOP_OP_2;
-        record->registers[1] = (pc + 2)->index;
-    }
-    if (instruction->op3_type == OP_REG) {
-        record->register_mask |= RXOP_OP_3;
-        record->registers[2] = (pc + 3)->index;
-    }
+    record->pc = pc;
 }
 
 static rxvm_profile_census_callable_kind rxvm_profile_census_kind(
@@ -269,10 +253,6 @@ static size_t rxvm_profile_find_or_add_call_row(
     row->site_module = site_module;
     row->site_index = site_index;
     return state->call_row_count++;
-}
-
-static int rxvm_profile_mask_has(unsigned int mask, int operand) {
-    return (mask & (1u << (operand - 1))) != 0;
 }
 
 static void rxvm_profile_prepare_restoration(
@@ -370,14 +350,14 @@ static void rxvm_profile_attribute_call_window(
     for (i = activation->trace_count; i > 0; i--) {
         rxvm_profile_trace_record *record = &activation->trace[i - 1];
         RxOpEffects effects = rxop_effects(record->opcode);
-        int operand;
+        size_t operand;
+        size_t operand_count;
         if (i == activation->trace_count &&
                 (effects.semantics & RXOP_SEM_CALL) != 0)
             continue;
-        if (record->opcode == OP_SWAP_REG_REG &&
-                (record->register_mask & RXOP_OP_12) == RXOP_OP_12) {
-            size_t first = record->registers[0];
-            size_t second = record->registers[1];
+        if (record->opcode == OP_SWAP_REG_REG && record->pc) {
+            size_t first = (record->pc + 1)->index;
+            size_t second = (record->pc + 2)->index;
             if (first < frame->number_locals && second < frame->number_locals &&
                     (needed[first] || needed[second])) {
                 unsigned char temporary = needed[first];
@@ -393,20 +373,20 @@ static void rxvm_profile_attribute_call_window(
                 needed[first] = needed[second];
                 needed[second] = temporary;
             }
-        } else if (record->opcode == OP_COPY_REG_REG &&
-                   (record->register_mask & RXOP_OP_1) != 0 &&
-                   record->registers[0] < frame->number_locals &&
-                   needed[record->registers[0]]) {
+        } else if (record->opcode == OP_COPY_REG_REG && record->pc &&
+                   (record->pc + 1)->index < frame->number_locals &&
+                   needed[(record->pc + 1)->index]) {
             if (!(record->attribution & RXVM_PROFILE_ATTR_ARGUMENT_COPY)) {
                 record->attribution |= RXVM_PROFILE_ATTR_ARGUMENT_COPY;
                 copies++;
             }
-            needed[record->registers[0]] = 0;
+            needed[(record->pc + 1)->index] = 0;
         } else if (effects.state == RXOP_EFFECT_CLASSIFIED) {
-            for (operand = 1; operand <= 3; operand++) {
-                size_t reg = record->registers[operand - 1];
-                if (rxvm_profile_mask_has(effects.kills, operand) &&
-                        (record->register_mask & (1u << (operand - 1))) != 0 &&
+            operand_count = rxop_format_operand_count(rxbin_opcode_format(record->opcode));
+            for (operand = 0; record->pc && operand < operand_count; operand++) {
+                size_t reg = (record->pc + operand + 1)->index;
+                if (rxop_effect_kills_operand(&effects, operand) &&
+                        rxop_format_operand_type(rxbin_opcode_format(record->opcode), operand) == OP_REG &&
                         reg < frame->number_locals)
                     needed[reg] = 0;
             }

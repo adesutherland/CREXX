@@ -417,7 +417,7 @@ contains:
 | `Sites` | Number of distinct starting sites with the normalized pattern. |
 | `Modules` | Number of modules containing those sites. |
 | `Args` | Number of distinct normalized register/constant symbols. |
-| `Status` | `candidate` for at most three symbols; otherwise `over_3_symbols`. |
+| `Status` | `candidate` when the window decoded successfully. |
 | `Pattern` | Normalized instruction and operand-reuse pattern. |
 | `mapping` / `example` | One concrete operand mapping and module/start-slot location. |
 

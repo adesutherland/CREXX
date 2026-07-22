@@ -97,9 +97,10 @@ linker. They do not contain normal RXAS instructions.
 
 ## Instructions
 
-Instructions use a mnemonic followed by zero, one, two, or three operands. The
-first operand follows the mnemonic directly; later operands are separated by
-commas:
+Instructions use a mnemonic followed by the number of operands declared by its
+opcode form. The first operand follows the mnemonic directly; later operands
+are separated by commas. The grammar does not impose a small fixed operand
+limit:
 
 ```rxas
 ret
@@ -108,9 +109,9 @@ bgetu8 r2,table,r0
 add r3,r1,r2
 ```
 
-The assembler checks the mnemonic and operand types against the instruction
-table. Unknown mnemonics, too many operands, missing operands, and illegal
-operand forms are syntax or assembly errors.
+The assembler checks the mnemonic, operand count, and operand types against the
+instruction table. Unknown mnemonics, mismatched counts, missing operands, and
+illegal operand forms are syntax or assembly errors.
 
 Labels are written as `name:`. A label may stand on its own line or immediately
 precede another instruction. Branch and jump instructions refer to labels by

@@ -15,8 +15,8 @@ documentation pipeline.
 
 ## Current Inventory
 
-- Source-accepted unique mnemonics: 342
-- Source-accepted opcode/form rows: 539
+- Source-accepted unique mnemonics: 367
+- Source-accepted opcode/form rows: 574
 - Authoritative database: `binutils/include/rxops.h`, filtered by
   `rxop_is_source_mnemonic()` in `binutils/include/rxdefs.h`
 - Human-readable inventory source: `rxas -i`, which applies the same filter
@@ -32,8 +32,8 @@ because they lack prose or examples.
 
 ### Skeleton Comparison
 
-The authoritative filtered database currently has 342 unique mnemonics and 539
-form rows. The section files contain 342 exact single-mnemonic headings, with
+The authoritative filtered database currently has 367 unique mnemonics and 574
+form rows. The section files contain 367 exact single-mnemonic headings, with
 no missing, unknown, or duplicate mnemonic headings.
 
 ## Source Syntax
@@ -53,6 +53,7 @@ no missing, unknown, or duplicate mnemonic headings.
 - [I/O, Sockets, Processes, And Time](instructions/09-io-sockets-processes-and-time.md): 44 mnemonics
 - [Signals, Breakpoints, And Runtime](instructions/10-signals-breakpoints-and-runtime.md): 19 mnemonics
 - [Metadata And Introspection](instructions/11-metadata-and-introspection.md): 23 mnemonics
+- [Large And Fused Instructions](instructions/12-large-instructions.md): 25 mnemonics
 - [Uncategorized Review](instructions/99-uncategorized-review.md): 0 mnemonics
 
 ## Review Notes

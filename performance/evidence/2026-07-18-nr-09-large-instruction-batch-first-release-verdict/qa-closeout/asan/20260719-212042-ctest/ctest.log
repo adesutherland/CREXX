@@ -1,0 +1,10 @@
+Command: ctest --test-dir cmake-build-debugasan --output-on-failure -R \^rxasbinarylegacytests-rxbvm\$ --parallel 1
+ASAN_OPTIONS=detect_leaks=0
+
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-debugasan
+    Start 1133: rxasbinarylegacytests-rxbvm
+1/1 Test #1133: rxasbinarylegacytests-rxbvm ......   Passed    0.10 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   0.13 sec

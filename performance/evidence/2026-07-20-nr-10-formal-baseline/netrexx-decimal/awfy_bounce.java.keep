@@ -1,0 +1,90 @@
+/* Generated from 'awfy_bounce.nrx' 20 Jul 2026 14:09:08 [v5.10] *//* Options: Annotations Decimal Implicituses Java Logo Trace2 Verbose3 */
+
+
+
+
+
+
+public class awfy_bounce{private static final netrexx.lang.Rexx $01=new netrexx.lang.Rexx(1);private static final netrexx.lang.Rexx $02=new netrexx.lang.Rexx(1331);private static final netrexx.lang.Rexx $03=netrexx.lang.Rexx.toRexx("result=");private static final java.lang.String $0="awfy_bounce.nrx";
+
+@SuppressWarnings("unchecked") public static void main(java.lang.String args[]){netrexx.lang.Rexx repetitions;netrexx.lang.Rexx result;netrexx.lang.Rexx iteration=null;
+repetitions=new netrexx.lang.Rexx((byte)1);
+if (new netrexx.lang.Rexx(args.length).OpGtEq(null,$01)) repetitions=netrexx.lang.Rexx.toRexx(args[0]);
+if (repetitions.OpLt(null,$01)) {
+netrexx.lang.RexxIO.Say("FAIL: repetitions must be positive");
+{System.exit(1);return;}
+}
+
+result=new netrexx.lang.Rexx((byte)0);
+{netrexx.lang.Rexx $1=repetitions;iteration=new netrexx.lang.Rexx((byte)1);iteration:for(;iteration.OpLtEq(null,$1);iteration=iteration.OpAdd(null,new netrexx.lang.Rexx(1))){
+result=(new BounceBenchmark()).run();
+if (result.OpNotEq(null,$02)) {
+netrexx.lang.RexxIO.Say(netrexx.lang.Rexx.toRexx("FAIL: expected 1331 bounces, got").OpCcblank(null,result));
+{System.exit(1);return;}
+}
+}}/*iteration*/
+
+netrexx.lang.RexxIO.Say(((netrexx.lang.Rexx.toRexx("benchmark=awfy_bounce repetitions=").OpCc(null,repetitions)).OpCcblank(null,$03)).OpCc(null,result));
+netrexx.lang.RexxIO.Say("PASS: AWFY Bounce NetRexx decimal port");return;}
+
+private awfy_bounce(){return;}}class BounceRandom{private static final netrexx.lang.Rexx $01=new netrexx.lang.Rexx(1309);private static final netrexx.lang.Rexx $02=new netrexx.lang.Rexx(13849);private static final netrexx.lang.Rexx $03=new netrexx.lang.Rexx(65536);private static final java.lang.String $0="awfy_bounce.nrx";
+/* properties private */
+private netrexx.lang.Rexx seedValue=new netrexx.lang.Rexx(74755);
+
+@SuppressWarnings("unchecked") public netrexx.lang.Rexx next(){
+seedValue=((((seedValue.OpMult(null,$01))).OpAdd(null,$02))).OpRem(null,$03);
+return seedValue;}
+
+public BounceRandom(){return;}}class BounceBall{private static final netrexx.lang.Rexx $01=new netrexx.lang.Rexx(500);private static final netrexx.lang.Rexx $02=new netrexx.lang.Rexx(300);private static final netrexx.lang.Rexx $03=new netrexx.lang.Rexx(150);private static final netrexx.lang.Rexx $04=new netrexx.lang.Rexx(0);private static final java.lang.String $0="awfy_bounce.nrx";
+/* properties private */
+private netrexx.lang.Rexx x=new netrexx.lang.Rexx((byte)0);
+private netrexx.lang.Rexx y=new netrexx.lang.Rexx((byte)0);
+private netrexx.lang.Rexx xVelocity=new netrexx.lang.Rexx((byte)0);
+private netrexx.lang.Rexx yVelocity=new netrexx.lang.Rexx((byte)0);
+
+@SuppressWarnings("unchecked") public BounceBall(BounceRandom random){super();
+x=(random.next()).OpRem(null,$01);
+y=(random.next()).OpRem(null,$01);
+xVelocity=(((random.next()).OpRem(null,$02))).OpSub(null,$03);
+yVelocity=(((random.next()).OpRem(null,$02))).OpSub(null,$03);return;}
+
+@SuppressWarnings("unchecked") public netrexx.lang.Rexx bounce(){netrexx.lang.Rexx bounced;
+bounced=new netrexx.lang.Rexx((byte)0);
+x=x.OpAdd(null,xVelocity);
+y=y.OpAdd(null,yVelocity);
+if (x.OpGt(null,$01)) {
+x=new netrexx.lang.Rexx((short)500);
+if (xVelocity.OpGt(null,$04)) xVelocity=$04.OpSub(null,xVelocity);
+bounced=new netrexx.lang.Rexx((byte)1);
+}
+if (x.OpLt(null,$04)) {
+x=new netrexx.lang.Rexx((byte)0);
+if (xVelocity.OpLt(null,$04)) xVelocity=$04.OpSub(null,xVelocity);
+bounced=new netrexx.lang.Rexx((byte)1);
+}
+if (y.OpGt(null,$01)) {
+y=new netrexx.lang.Rexx((short)500);
+if (yVelocity.OpGt(null,$04)) yVelocity=$04.OpSub(null,yVelocity);
+bounced=new netrexx.lang.Rexx((byte)1);
+}
+if (y.OpLt(null,$04)) {
+y=new netrexx.lang.Rexx((byte)0);
+if (yVelocity.OpLt(null,$04)) yVelocity=$04.OpSub(null,yVelocity);
+bounced=new netrexx.lang.Rexx((byte)1);
+}
+return bounced;}
+
+}class BounceBenchmark{private static final netrexx.lang.Rexx $01=new netrexx.lang.Rexx((byte)99);private static final netrexx.lang.Rexx $02=new netrexx.lang.Rexx((byte)50);private static final netrexx.lang.Rexx $03=new netrexx.lang.Rexx(1);private static final java.lang.String $0="awfy_bounce.nrx";
+@SuppressWarnings("unchecked") public netrexx.lang.Rexx run(){BounceRandom random;BounceBall balls[];netrexx.lang.Rexx i=null;netrexx.lang.Rexx bounces;netrexx.lang.Rexx step=null;
+random=new BounceRandom();
+balls=new BounceBall[100];
+{i=new netrexx.lang.Rexx((byte)0);i:for(;i.OpLtEq(null,$01);i=i.OpAdd(null,new netrexx.lang.Rexx(1))){
+balls[i.toint()]=new BounceBall(random);
+}}/*i*/
+bounces=new netrexx.lang.Rexx((byte)0);
+{step=new netrexx.lang.Rexx((byte)1);step:for(;step.OpLtEq(null,$02);step=step.OpAdd(null,new netrexx.lang.Rexx(1))){
+{i=new netrexx.lang.Rexx((byte)0);i:for(;i.OpLtEq(null,$01);i=i.OpAdd(null,new netrexx.lang.Rexx(1))){
+if ((balls[i.toint()].bounce()).toboolean()) bounces=bounces.OpAdd(null,$03);
+}}/*i*/
+}}/*step*/
+return bounces;}public BounceBenchmark(){return;}}

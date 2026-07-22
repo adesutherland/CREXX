@@ -6,11 +6,7 @@
 
 main() .locals=7
    .meta "array_mutation_statements.main"="b" ".void" main() ""
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "array_mutation_statements.main.ints"="b" ".int[*]" r0
    .srcstep 1 1 17 "array_mutation_statements.crexx" 26 1 12 "ints = .int[]"
    null r0
@@ -56,24 +52,21 @@ main() .locals=7
    .traceevent "O" 4 "R" "S" "r" 3 6 6 0 "" ""
    concat r3,r3,":"
    .traceevent "O" 4 "R" "S" "r" 3 6 6 0 "" ""
-   minattrs r1,1
-   linkattr1 r2,r1,1
+   minlinkattr1 r2,r1,1
    .traceevent "V" 6 "R" "S" "r" 2 6 6 0 "strings" ""
    concat r3,r3,r2
    unlink r2
    .traceevent "O" 4 "R" "S" "r" 3 6 6 0 "" ""
    concat r3,r3,":"
    .traceevent "O" 4 "R" "S" "r" 3 6 6 0 "" ""
-   minattrs r1,2
-   linkattr1 r5,r1,2
+   minlinkattr1 r5,r1,2
    .traceevent "V" 6 "R" "S" "r" 5 6 6 0 "strings" ""
    concat r3,r3,r5
    unlink r5
    .traceevent "O" 4 "R" "S" "r" 3 6 6 0 "" ""
    concat r3,r3,":"
    .traceevent "O" 4 "R" "S" "r" 3 6 6 0 "" ""
-   minattrs r1,3
-   linkattr1 r6,r1,3
+   minlinkattr1 r6,r1,3
    .traceevent "V" 6 "R" "S" "r" 6 6 6 0 "strings" ""
    concat r3,r3,r6
    unlink r6
@@ -93,16 +86,14 @@ main() .locals=7
    .traceevent "O" 4 "R" "S" "r" 5 8 8 0 "" ""
    concat r5,r5,":"
    .traceevent "O" 4 "R" "S" "r" 5 8 8 0 "" ""
-   minattrs r1,1
-   linkattr1 r4,r1,1
+   minlinkattr1 r4,r1,1
    .traceevent "V" 6 "R" "S" "r" 4 8 8 0 "strings" ""
    concat r5,r5,r4
    unlink r4
    .traceevent "O" 4 "R" "S" "r" 5 8 8 0 "" ""
    concat r5,r5,":"
    .traceevent "O" 4 "R" "S" "r" 5 8 8 0 "" ""
-   minattrs r1,2
-   linkattr1 r3,r1,2
+   minlinkattr1 r3,r1,2
    .traceevent "V" 6 "R" "S" "r" 3 8 8 0 "strings" ""
    concat r5,r5,r3
    unlink r3
@@ -144,16 +135,14 @@ main() .locals=7
    .traceevent "O" 4 "R" "S" "r" 5 12 12 0 "" ""
    concat r5,r5,":"
    .traceevent "O" 4 "R" "S" "r" 5 12 12 0 "" ""
-   minattrs r1,1
-   linkattr1 r4,r1,1
+   minlinkattr1 r4,r1,1
    .traceevent "V" 6 "R" "S" "r" 4 12 12 0 "strings" ""
    concat r5,r5,r4
    unlink r4
    .traceevent "O" 4 "R" "S" "r" 5 12 12 0 "" ""
    concat r5,r5,":"
    .traceevent "O" 4 "R" "S" "r" 5 12 12 0 "" ""
-   minattrs r1,2
-   linkattr1 r3,r1,2
+   minlinkattr1 r3,r1,2
    .traceevent "V" 6 "R" "S" "r" 3 12 12 0 "strings" ""
    concat r5,r5,r3
    unlink r3
@@ -210,24 +199,21 @@ l95arrayremoveend:
    .traceevent "O" 4 "R" "S" "r" 5 17 17 0 "" ""
    concat r5,r5,":"
    .traceevent "O" 4 "R" "S" "r" 5 17 17 0 "" ""
-   minattrs r1,1
-   linkattr1 r4,r1,1
+   minlinkattr1 r4,r1,1
    .traceevent "V" 6 "R" "S" "r" 4 17 17 0 "strings" ""
    concat r5,r5,r4
    unlink r4
    .traceevent "O" 4 "R" "S" "r" 5 17 17 0 "" ""
    concat r5,r5,":"
    .traceevent "O" 4 "R" "S" "r" 5 17 17 0 "" ""
-   minattrs r1,2
-   linkattr1 r3,r1,2
+   minlinkattr1 r3,r1,2
    .traceevent "V" 6 "R" "S" "r" 3 17 17 0 "strings" ""
    concat r5,r5,r3
    unlink r3
    .traceevent "O" 4 "R" "S" "r" 5 17 17 0 "" ""
    concat r5,r5,":"
    .traceevent "O" 4 "R" "S" "r" 5 17 17 0 "" ""
-   minattrs r1,3
-   linkattr1 r2,r1,3
+   minlinkattr1 r2,r1,3
    .traceevent "V" 6 "R" "S" "r" 2 17 17 0 "strings" ""
    concat r5,r5,r2
    unlink r2
@@ -252,8 +238,7 @@ l95arrayremoveend:
    iadd r4,r4,1
    insattrs1 r0,r4,1
    linkattr1 r5,r0,r4
-   icopy r5,r6
-   unlink r5
+   isetunlink r5,r6
    .srcstep 21 21 17 "array_mutation_statements.crexx" 28 1 20 "append ints with 30"
    .traceevent "V" 6 "R" "I" "r" 0 21 21 0 "ints" ""
    load r6,30
@@ -262,8 +247,7 @@ l95arrayremoveend:
    iadd r4,r4,1
    insattrs1 r0,r4,1
    linkattr1 r5,r0,r4
-   icopy r5,r6
-   unlink r5
+   isetunlink r5,r6
    .srcstep 22 22 17 "array_mutation_statements.crexx" 29 1 25 "insert ints with 20 at 2"
    .traceevent "V" 6 "R" "I" "r" 0 22 22 0 "ints" ""
    load r6,20
@@ -272,8 +256,7 @@ l95arrayremoveend:
    .traceevent "L" 4 "R" "I" "r" 5 22 22 0 "" ""
    insattrs1 r0,r5,1
    linkattr1 r4,r0,r5
-   icopy r4,r6
-   unlink r4
+   isetunlink r4,r6
    .srcstep 23 23 17 "array_mutation_statements.crexx" 30 1 17 "remove ints at 1"
    .traceevent "V" 6 "R" "I" "r" 0 23 23 0 "ints" ""
    load r6,1
@@ -287,8 +270,7 @@ l95arrayremoveend:
    iadd r4,r4,1
    insattrs1 r0,r4,1
    linkattr1 r5,r0,r4
-   icopy r5,r6
-   unlink r5
+   isetunlink r5,r6
    .srcstep 25 25 17 "array_mutation_statements.crexx" 32 1 22 "remove ints at 2 to 1"
    .traceevent "V" 6 "R" "I" "r" 0 25 25 0 "ints" ""
    load r6,2
@@ -310,8 +292,7 @@ l148arrayremoveend:
    .traceevent "O" 4 "R" "S" "r" 5 26 26 0 "" ""
    concat r5,r5,":"
    .traceevent "O" 4 "R" "S" "r" 5 26 26 0 "" ""
-   minattrs r0,1
-   linkattr1 r4,r0,1
+   minlinkattr1 r4,r0,1
    itos r4
    .traceevent "V" 6 "R" "S" "r" 4 26 26 0 "ints" ""
    concat r5,r5,r4
@@ -319,8 +300,7 @@ l148arrayremoveend:
    .traceevent "O" 4 "R" "S" "r" 5 26 26 0 "" ""
    concat r5,r5,":"
    .traceevent "O" 4 "R" "S" "r" 5 26 26 0 "" ""
-   minattrs r0,2
-   linkattr1 r3,r0,2
+   minlinkattr1 r3,r0,2
    itos r3
    .traceevent "V" 6 "R" "S" "r" 3 26 26 0 "ints" ""
    concat r5,r5,r3
@@ -328,8 +308,7 @@ l148arrayremoveend:
    .traceevent "O" 4 "R" "S" "r" 5 26 26 0 "" ""
    concat r5,r5,":"
    .traceevent "O" 4 "R" "S" "r" 5 26 26 0 "" ""
-   minattrs r0,3
-   linkattr1 r2,r0,3
+   minlinkattr1 r2,r0,3
    itos r2
    .traceevent "V" 6 "R" "S" "r" 2 26 26 0 "ints" ""
    concat r5,r5,r2
@@ -352,8 +331,7 @@ l148arrayremoveend:
    .traceevent "O" 4 "R" "S" "r" 5 28 28 0 "" ""
    concat r5,r5,":"
    .traceevent "O" 4 "R" "S" "r" 5 28 28 0 "" ""
-   minattrs r0,1
-   linkattr1 r4,r0,1
+   minlinkattr1 r4,r0,1
    itos r4
    .traceevent "V" 6 "R" "S" "r" 4 28 28 0 "ints" ""
    concat r5,r5,r4

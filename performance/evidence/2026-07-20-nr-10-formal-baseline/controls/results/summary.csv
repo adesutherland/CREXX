@@ -1,0 +1,3 @@
+cell_id,workload,runtime,vm,variant,tier,aggregate,lifecycle,work,metric,n,min,q1,median,q3,max,mad,relative_mad_percent,span_percent,rerun_recommended
+native-c-mechanical,Native-C-mechanical,native-c,native-c,mechanical-scalar-control,control,no,no,1000-nominal-ops,benchmark_rate,10,519131159.000000,519415777.000000,519512228.000000,519525406.750000,519553002.000000,37479.000000,0.007214,0.081200,no
+native-c-dynamic,Native-C-dynamic,native-c,native-c,tagged-dynamic-value-control,control,no,no,1000-nominal-ops,benchmark_rate,10,47174212.000000,47813976.250000,47998607.500000,48516787.500000,49789222.000000,496340.500000,1.034073,5.448096,no

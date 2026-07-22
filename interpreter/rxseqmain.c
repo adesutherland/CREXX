@@ -43,7 +43,7 @@ typedef struct rxseq_loaded_modules {
 typedef struct rxseq_symbol {
     OperandType type;
     uint64_t value;
-    unsigned int ordinal;
+    size_t ordinal;
     char kind;
 } rxseq_symbol;
 
@@ -52,7 +52,7 @@ typedef struct rxseq_candidate {
     char *mapping;
     char *example_module;
     size_t example_start;
-    unsigned int symbols;
+    size_t symbols;
     uint64_t count;
     uint64_t sites;
     uint64_t modules;
@@ -296,117 +296,174 @@ static const char *rxseq_operand_type_name(OperandType type) {
     }
 }
 
-static unsigned int rxseq_symbol_for(rxseq_symbol *symbols,
-                                     unsigned int *symbol_count,
-                                     unsigned int *register_count,
-                                     unsigned int *constant_count,
-                                     OperandType type,
-                                     uint64_t value) {
-    unsigned int i;
+static int rxseq_symbol_for(rxseq_symbol **symbols,
+                            size_t *symbol_count,
+                            size_t *symbol_capacity,
+                            size_t *register_count,
+                            size_t *constant_count,
+                            OperandType type,
+                            uint64_t value,
+                            size_t *symbol_out) {
+    size_t i;
     char kind = type == OP_REG ? 'r' : 'c';
     for (i = 0; i < *symbol_count; i++) {
-        if (symbols[i].type == type && symbols[i].value == value)
-            return i;
+        if ((*symbols)[i].type == type && (*symbols)[i].value == value) {
+            *symbol_out = i;
+            return 1;
+        }
+    }
+    if (*symbol_count == *symbol_capacity) {
+        size_t capacity = *symbol_capacity ? *symbol_capacity * 2 : 16;
+        rxseq_symbol *replacement;
+        if (capacity < *symbol_capacity || capacity > SIZE_MAX / sizeof(*replacement)) return 0;
+        replacement = realloc(*symbols, capacity * sizeof(*replacement));
+        if (!replacement) return 0;
+        *symbols = replacement;
+        *symbol_capacity = capacity;
     }
     i = (*symbol_count)++;
-    symbols[i].type = type;
-    symbols[i].value = value;
-    symbols[i].kind = kind;
-    symbols[i].ordinal = kind == 'r' ? ++(*register_count) : ++(*constant_count);
-    return i;
+    (*symbols)[i].type = type;
+    (*symbols)[i].value = value;
+    (*symbols)[i].kind = kind;
+    (*symbols)[i].ordinal = kind == 'r' ? ++(*register_count) : ++(*constant_count);
+    *symbol_out = i;
+    return 1;
 }
 
-static int rxseq_append(char *buffer, size_t size, size_t *used,
-                        const char *format, ...) {
+typedef struct rxseq_text {
+    char *data;
+    size_t used;
+    size_t capacity;
+} rxseq_text;
+
+static int rxseq_append(rxseq_text *text, const char *format, ...) {
     int written;
     va_list args;
-    if (*used >= size) return 0;
+    va_list measure;
+    size_t required;
+
     va_start(args, format);
-    written = vsnprintf(buffer + *used, size - *used, format, args);
+    va_copy(measure, args);
+    written = vsnprintf(0, 0, format, measure);
+    va_end(measure);
+    if (written < 0 || (size_t)written > SIZE_MAX - text->used - 1) {
+        va_end(args);
+        return 0;
+    }
+    required = text->used + (size_t)written + 1;
+    if (required > text->capacity) {
+        size_t capacity = text->capacity ? text->capacity : 128;
+        char *replacement;
+        while (capacity < required) {
+            if (capacity > SIZE_MAX / 2) {
+                capacity = required;
+                break;
+            }
+            capacity *= 2;
+        }
+        replacement = realloc(text->data, capacity);
+        if (!replacement) {
+            va_end(args);
+            return 0;
+        }
+        text->data = replacement;
+        text->capacity = capacity;
+    }
+    vsnprintf(text->data + text->used, text->capacity - text->used, format, args);
     va_end(args);
-    if (written < 0 || (size_t)written >= size - *used) return 0;
-    *used += (size_t)written;
+    text->used += (size_t)written;
     return 1;
 }
 
 static int rxseq_describe_site(const rxseq_profile *profile,
                                const rxseq_site *site,
-                               char *pattern,
-                               size_t pattern_size,
-                               char *mapping,
-                               size_t mapping_size,
-                               unsigned int *symbol_count_out) {
+                               char **pattern_out,
+                               char **mapping_out,
+                               size_t *symbol_count_out) {
     const rxseq_profile_module *profile_module = &profile->modules[site->module_id - 1];
     const module_file *module = profile_module->loaded;
     const bin_code *binary = (const bin_code *)module->instructions;
     size_t index = site->start;
-    size_t pattern_used = 0, mapping_used = 0;
-    rxseq_symbol symbols[12];
-    unsigned int symbol_count = 0, register_count = 0, constant_count = 0;
+    rxseq_text pattern = {0};
+    rxseq_text mapping = {0};
+    rxseq_symbol *symbols = 0;
+    size_t symbol_count = 0, symbol_capacity = 0;
+    size_t register_count = 0, constant_count = 0;
     unsigned int instruction_number;
+
+    *pattern_out = 0;
+    *mapping_out = 0;
     for (instruction_number = 0; instruction_number < profile->length;
             instruction_number++) {
         int opcode;
-        int operand_count;
-        OperandType types[3] = {OP_NONE, OP_NONE, OP_NONE};
-        int operand;
+        int encoded_operand_count;
+        size_t operand_count;
+        size_t operand;
         const OpInfo *info;
-        if (index >= module->header.instruction_size) return 0;
+        if (index >= module->header.instruction_size) goto fail;
         opcode = binary[index].instruction.opcode;
-        operand_count = binary[index].instruction.no_ops;
+        encoded_operand_count = binary[index].instruction.no_ops;
+        if (encoded_operand_count < 0) goto fail;
+        operand_count = (size_t)encoded_operand_count;
         if (opcode < 0 || opcode >= OP_MAX_INSTRUCTIONS ||
-                !rxseq_ops[opcode].mnemonic || operand_count < 0 ||
-                operand_count > 3 || index + (size_t)operand_count >=
+                !rxseq_ops[opcode].mnemonic ||
+                index + (size_t)operand_count >=
                     module->header.instruction_size)
-            return 0;
+            goto fail;
         info = &rxseq_ops[opcode];
-        if (rxbin_get_operand_types(info->format, types) != operand_count)
-            return 0;
-        if (instruction_number &&
-                !rxseq_append(pattern, pattern_size, &pattern_used, " | "))
-            return 0;
-        if (!rxseq_append(pattern, pattern_size, &pattern_used, "%s(", info->mnemonic))
-            return 0;
+        if (rxop_format_operand_count(info->format) != operand_count)
+            goto fail;
+        if (instruction_number && !rxseq_append(&pattern, " | ")) goto fail;
+        if (!rxseq_append(&pattern, "%s(", info->mnemonic)) goto fail;
         for (operand = 0; operand < operand_count; operand++) {
-            unsigned int symbol = rxseq_symbol_for(symbols, &symbol_count,
-                    &register_count, &constant_count, types[operand],
-                    rxseq_operand_value(&binary[index + (size_t)operand + 1],
-                                        types[operand]));
-            if (operand && !rxseq_append(pattern, pattern_size, &pattern_used, ","))
-                return 0;
-            if (!rxseq_append(pattern, pattern_size, &pattern_used, "%c%u",
-                              symbols[symbol].kind, symbols[symbol].ordinal))
-                return 0;
+            size_t symbol;
+            if (!rxseq_symbol_for(&symbols, &symbol_count, &symbol_capacity,
+                    &register_count, &constant_count,
+                    rxop_format_operand_type(info->format, operand),
+                    rxseq_operand_value(&binary[index + operand + 1],
+                                        rxop_format_operand_type(info->format, operand)),
+                    &symbol)) goto fail;
+            if (operand && !rxseq_append(&pattern, ",")) goto fail;
+            if (!rxseq_append(&pattern, "%c%zu",
+                              symbols[symbol].kind, symbols[symbol].ordinal)) goto fail;
         }
-        if (!rxseq_append(pattern, pattern_size, &pattern_used, ")")) return 0;
-        index += (size_t)operand_count + 1;
+        if (!rxseq_append(&pattern, ")")) goto fail;
+        index += operand_count + 1;
     }
     {
-        unsigned int i;
+        size_t i;
         for (i = 0; i < symbol_count; i++) {
-            if (i && !rxseq_append(mapping, mapping_size, &mapping_used, ";"))
-                return 0;
+            if (i && !rxseq_append(&mapping, ";")) goto fail;
             if (symbols[i].kind == 'r') {
-                if (!rxseq_append(mapping, mapping_size, &mapping_used,
-                        "r%u=R%" PRIu64, symbols[i].ordinal, symbols[i].value))
-                    return 0;
+                if (!rxseq_append(&mapping, "r%zu=R%" PRIu64,
+                                  symbols[i].ordinal, symbols[i].value)) goto fail;
             } else {
                 if (symbols[i].type == OP_INT) {
-                    if (!rxseq_append(mapping, mapping_size, &mapping_used,
-                            "c%u=int:%" PRId64, symbols[i].ordinal,
-                            (int64_t)symbols[i].value))
-                        return 0;
-                } else if (!rxseq_append(mapping, mapping_size, &mapping_used,
-                        "c%u=%s@%" PRIu64, symbols[i].ordinal,
+                    if (!rxseq_append(&mapping, "c%zu=int:%" PRId64,
+                                      symbols[i].ordinal,
+                                      (int64_t)symbols[i].value)) goto fail;
+                } else if (!rxseq_append(&mapping, "c%zu=%s@%" PRIu64,
+                        symbols[i].ordinal,
                         rxseq_operand_type_name(symbols[i].type),
                         symbols[i].value)) {
-                    return 0;
+                    goto fail;
                 }
             }
         }
     }
+    if (!pattern.data && !rxseq_append(&pattern, "")) goto fail;
+    if (!mapping.data && !rxseq_append(&mapping, "")) goto fail;
+    *pattern_out = pattern.data;
+    *mapping_out = mapping.data;
     *symbol_count_out = symbol_count;
+    free(symbols);
     return 1;
+
+fail:
+    free(pattern.data);
+    free(mapping.data);
+    free(symbols);
+    return 0;
 }
 
 static int rxseq_add_candidate(rxseq_candidate **items,
@@ -416,7 +473,7 @@ static int rxseq_add_candidate(rxseq_candidate **items,
                                const rxseq_site *site,
                                const char *pattern,
                                const char *mapping,
-                               unsigned int symbols) {
+                               size_t symbols) {
     size_t i;
     rxseq_candidate *candidate = 0;
     for (i = 0; i < *count; i++) {
@@ -496,10 +553,10 @@ static void rxseq_write_report(FILE *out,
         fprintf(out, "rank,count,sites,modules,symbols,status,pattern,mapping,example_module,example_start\n");
         for (i = 0; i < count; i++) {
             const rxseq_candidate *candidate = &candidates[i];
-            fprintf(out, "%zu,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%u,%s,",
+            fprintf(out, "%zu,%" PRIu64 ",%" PRIu64 ",%" PRIu64 ",%zu,%s,",
                     i + 1, candidate->count, candidate->sites,
                     candidate->modules, candidate->symbols,
-                    candidate->symbols <= 3 ? "candidate" : "over_3_symbols");
+                    "candidate");
             rxseq_csv_text(out, candidate->pattern);
             fputc(',', out);
             rxseq_csv_text(out, candidate->mapping);
@@ -515,10 +572,10 @@ static void rxseq_write_report(FILE *out,
         for (i = 0; i < count; i++) {
             const rxseq_candidate *candidate = &candidates[i];
             fprintf(out, "%-11" PRIu64 " %-5" PRIu64 " %-7" PRIu64
-                    " %-4u %-15s %s\n",
+                    " %-4zu %-15s %s\n",
                     candidate->count, candidate->sites, candidate->modules,
                     candidate->symbols,
-                    candidate->symbols <= 3 ? "candidate" : "over_3_symbols",
+                    "candidate",
                     candidate->pattern);
             fprintf(out, "  mapping: %s; example: %s@%zu\n",
                     candidate->mapping, candidate->example_module,
@@ -600,12 +657,11 @@ int main(int argc, char **argv) {
     if (!rc) {
         size_t site_index;
         for (site_index = 0; site_index < profile.site_count; site_index++) {
-            char pattern[2048] = {0};
-            char mapping[2048] = {0};
-            unsigned int symbols = 0;
+            char *pattern = 0;
+            char *mapping = 0;
+            size_t symbols = 0;
             const rxseq_site *site = &profile.sites[site_index];
-            if (!rxseq_describe_site(&profile, site, pattern, sizeof(pattern),
-                                     mapping, sizeof(mapping), &symbols)) {
+            if (!rxseq_describe_site(&profile, site, &pattern, &mapping, &symbols)) {
                 rc = rxseq_fail("profile site does not decode as a sequential window",
                                 profile.modules[site->module_id - 1].name);
                 break;
@@ -613,9 +669,13 @@ int main(int argc, char **argv) {
             if (!rxseq_add_candidate(&candidates, &candidate_count,
                     &candidate_capacity, &profile, site, pattern, mapping,
                     symbols)) {
+                free(pattern);
+                free(mapping);
                 rc = rxseq_fail("out of memory clustering RXSEQ sites", 0);
                 break;
             }
+            free(pattern);
+            free(mapping);
         }
     }
     if (!rc) {

@@ -1,0 +1,645 @@
+/*
+ * SOURCE                 : awfy_storage.crexx
+ */
+
+.meta "awfy_storage.storagebenchmark"="b" ".unknown" .class
+.meta "awfy_storage.storagebenchmark.allocation_count"="b" ".int" .attr 1
+.meta "awfy_storage.storagenode"="b" ".unknown" .class
+.meta "awfy_storage.storagenode.child_count"="b" ".int" .attr 1
+.meta "awfy_storage.storagenode.children"="b" ".object[*]" .attr 2
+.meta "awfy_storage.storagerandom"="b" ".unknown" .class
+.meta "awfy_storage.storagerandom.seed_value"="b" ".int" .attr 1
+.globals=0
+
+main() .locals=11
+   .meta "awfy_storage.main"="b" ".int" main() ""
+   numsci 18,1,1
+   .srcstep 1 1 17 "awfy_storage.crexx" 9 5 19 "arg argv = .string[]"
+   .meta "awfy_storage.main.argv"="b" ".string[*]" r0
+   brtpandt l6c,a1,512
+   copy r0,a1
+   br l6d
+l6c:
+   swap r0,a1
+l6d:
+   .srcstep 2 2 17 "awfy_storage.crexx" 11 1 16 "repetitions = 1"
+   .meta "awfy_storage.main.repetitions"="b" ".int" r1
+   load r1,1
+   .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "repetitions" ""
+   .srcstep 4 4 17 "awfy_storage.crexx" 12 1 16 "if argv[0] >= 1 then repetitions = argv[1]"
+   .traceevent "C" 4 "R" "V" "r" 3 4 4 0 "argv" ""
+   getattrs r4,r0,0
+   .traceevent "V" 6 "R" "I" "r" 4 4 4 0 "argv" ""
+   igte r4,r4,1
+   .traceevent "O" 4 "R" "B" "r" 4 4 4 0 "" ""
+   brf l25iffalse,r4
+   .srcstep 5 5 17 "awfy_storage.crexx" 12 17 21 "if argv[0] >= 1 then repetitions = argv[1]"
+   .srcstep 3 3 17 "awfy_storage.crexx" 12 22 42 "if argv[0] >= 1 then repetitions = argv[1]"
+   minattrs r0,1
+   linkattr1 r5,r0,1
+   stoi r5
+   .traceevent "V" 6 "R" "I" "r" 5 3 3 0 "argv" ""
+   icopy r1,r5
+   .traceevent "A" 6 "R" "I" "r" 1 3 3 0 "repetitions" ""
+   unlink r5
+l25iffalse:
+   .srcstep 10 10 17 "awfy_storage.crexx" 13 1 19 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .traceevent "V" 6 "R" "I" "r" 1 10 10 0 "repetitions" ""
+   ilt r5,r1,1
+   .traceevent "O" 4 "R" "B" "r" 5 10 10 0 "" ""
+   brf l32iffalse,r5
+   .srcstep 11 11 17 "awfy_storage.crexx" 13 20 24 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .srcstep 9 9 17 "awfy_storage.crexx" 13 25 68 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .srcstep 8 8 17 "awfy_storage.crexx" 13 32 36 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+   .srcstep 6 6 17 "awfy_storage.crexx" 28 3 22 "  say \"FAIL:\" message"
+   say "FAIL: repetitions must be positive"
+   .srcstep 7 7 17 "awfy_storage.crexx" 29 3 11 "  return 1"
+   load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 9 9 0 "" ""
+   icopy r3,r4
+   br l318bexprend
+l318bexprend:
+   ret r3
+l32iffalse:
+   .srcstep 12 12 17 "awfy_storage.crexx" 15 1 11 "result = 0"
+   .meta "awfy_storage.main.result"="b" ".int" r2
+   load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 12 12 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 12 12 0 "result" ""
+   .srcstep 29 29 17 "awfy_storage.crexx" 16 1 3 "do iteration = 1 to repetitions"
+   .srcstep 13 13 17 "awfy_storage.crexx" 16 4 17 "do iteration = 1 to repetitions"
+   .meta "awfy_storage.main.iteration"="b" ".int" r4
+   load r4,1
+   .traceevent "L" 4 "R" "I" "r" 4 13 13 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 4 13 13 0 "iteration" ""
+   .srcstep 14 14 17 "awfy_storage.crexx" 16 18 32 "do iteration = 1 to repetitions"
+   .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "repetitions" ""
+l36dostart:
+   .srcstep 14 14 17 "awfy_storage.crexx" 16 18 32 "do iteration = 1 to repetitions"
+   igt r3,r4,r1
+   brt l36doend,r3
+   .srcstep 20 20 17 "awfy_storage.crexx" 17 3 32 "  benchmark = .StorageBenchmark()"
+   .srcstep 16 16 6 "awfy_storage.crexx" 45 3 13 "  *: factory"
+   setattrs r6,2
+   .srcstep 17 17 6 "awfy_storage.crexx" 45 3 13 "  *: factory"
+   setobjtype r6,"awfy_storage.storagebenchmark"
+   .srcstep 18 18 17 "awfy_storage.crexx" 46 5 25 "    allocation_count = 0"
+   load r8,0
+   .traceevent "L" 4 "R" "I" "r" 8 18 18 0 "" ""
+   linkattr1 r7,r6,1
+   icopy r7,r8
+   unlink r7
+   .srcstep 19 19 33 "awfy_storage.crexx" 47 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 6 19 19 0 "§factory" ""
+   copy r5,r6
+   .traceevent "A" 6 "R" "O" "r" 5 19 19 0 "benchmark" ""
+   .srcstep 21 21 17 "awfy_storage.crexx" 18 3 25 "  result = benchmark.run()"
+   .meta "awfy_storage.main.benchmark"="b" ".storagebenchmark" r5
+   .traceevent "V" 6 "R" "O" "r" 5 21 21 0 "benchmark" ""
+   load r7,1
+   settp r5,256
+   swap r8,r5
+   call r2,§awfy_storage.storagebenchmark.run(),r7
+   swap r5,r8
+   .traceevent "F" 4 "R" "I" "r" 2 21 21 0 "run" ""
+   .traceevent "A" 6 "R" "I" "r" 2 21 21 0 "result" ""
+   .srcstep 27 27 17 "awfy_storage.crexx" 19 3 20 "  if result <> 5461 then return fail(\"expected 5461 allocations, got \" || result)"
+   .traceevent "V" 6 "R" "I" "r" 2 27 27 0 "result" ""
+   ine r8,r2,5461
+   .traceevent "O" 4 "R" "B" "r" 8 27 27 0 "" ""
+   brf l62iffalse,r8
+   .srcstep 28 28 17 "awfy_storage.crexx" 19 21 25 "  if result <> 5461 then return fail(\"expected 5461 allocations, got \" || result)"
+   .srcstep 26 26 17 "awfy_storage.crexx" 19 26 82 "  if result <> 5461 then return fail(\"expected 5461 allocations, got \" || result)"
+   .srcstep 25 25 17 "awfy_storage.crexx" 19 33 37 "  if result <> 5461 then return fail(\"expected 5461 allocations, got \" || result)"
+   .srcstep 22 22 33 "awfy_storage.crexx" 27 7 14 "  arg message = .string"
+   itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 22 22 0 "result" ""
+   concat r7,"expected 5461 allocations, got ",r2
+   .traceevent "O" 4 "R" "S" "r" 7 22 22 0 "" ""
+   .traceevent "A" 6 "R" "S" "r" 7 22 22 0 "message" ""
+   .srcstep 23 23 17 "awfy_storage.crexx" 28 3 22 "  say \"FAIL:\" message"
+   .traceevent "V" 6 "R" "S" "r" 7 23 23 0 "message" ""
+   sconcat r9,"FAIL:",r7
+   .traceevent "O" 4 "R" "S" "r" 9 23 23 0 "" ""
+   say r9
+   .srcstep 24 24 17 "awfy_storage.crexx" 29 3 11 "  return 1"
+   load r9,1
+   .traceevent "L" 4 "R" "I" "r" 9 26 26 0 "" ""
+   icopy r10,r9
+   br l368bexprend
+l368bexprend:
+   ret r10
+l62iffalse:
+l36doinc:
+   .srcstep 15 15 17 "awfy_storage.crexx" 16 4 13 "do iteration = 1 to repetitions"
+   inc r4
+   .srcstep 30 30 17 "awfy_storage.crexx" 20 1 4 "end"
+   br l36dostart
+l36doend:
+   endlife r5
+   .meta "awfy_storage.main.benchmark"
+   .meta "awfy_storage.main.iteration"
+   .srcstep 31 31 17 "awfy_storage.crexx" 22 1 69 "say \"benchmark=awfy_storage repetitions=\"repetitions \"result=\"result"
+   itos r1
+   .traceevent "V" 6 "R" "S" "r" 1 31 31 0 "repetitions" ""
+   concat r10,"benchmark=awfy_storage repetitions=",r1
+   .traceevent "O" 4 "R" "S" "r" 10 31 31 0 "" ""
+   sconcat r10,r10,"result="
+   .traceevent "O" 4 "R" "S" "r" 10 31 31 0 "" ""
+   itos r2
+   .traceevent "V" 6 "R" "S" "r" 2 31 31 0 "result" ""
+   concat r10,r10,r2
+   .traceevent "O" 4 "R" "S" "r" 10 31 31 0 "" ""
+   say r10
+   .srcstep 32 32 17 "awfy_storage.crexx" 23 1 25 "say \"PASS: AWFY Storage\""
+   say "PASS: AWFY Storage"
+   .srcstep 33 33 17 "awfy_storage.crexx" 24 1 9 "return 0"
+   ret 0
+   .meta "awfy_storage.main.argv"
+   .meta "awfy_storage.main.repetitions"
+   .meta "awfy_storage.main.result"
+
+§awfy_storage.storagerandom.§factory() .locals=3
+   .meta "awfy_storage.storagerandom.§factory"="b" ".awfy_storage..storagerandom" §awfy_storage.storagerandom.§factory() ""
+   .srcstep 39 39 17 "awfy_storage.crexx" 34 3 13 "  *: factory"
+   setattrs r0,2
+   setobjtype r0,"awfy_storage.storagerandom"
+   numsci 18,1,1
+   .srcstep 37 37 17 "awfy_storage.crexx" 35 5 23 "    seed_value = 74755"
+   .meta "awfy_storage.storagerandom.§factory.§factory"="b" ".storagerandom" r0
+   load r2,74755
+   .traceevent "L" 4 "R" "I" "r" 2 37 37 0 "" ""
+   linkattr1 r1,r0,1
+   icopy r1,r2
+   unlink r1
+   .srcstep 38 38 17 "awfy_storage.crexx" 36 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 0 38 38 0 "§factory" ""
+   ret r0
+   .meta "awfy_storage.storagerandom.§factory.§factory"
+
+§awfy_storage.storagerandom.next() .locals=4
+   .meta "awfy_storage.storagerandom.next"="b" ".int" §awfy_storage.storagerandom.next() ""
+   .srcstep 42 42 17 "awfy_storage.crexx" 38 3 22 "  next: method = .int"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 40 40 17 "awfy_storage.crexx" 39 5 59 "    seed_value = ((seed_value * 1309) + 13849) <mod> 65536"
+   .meta "awfy_storage.storagerandom.next.§this"="b" ".storagerandom" a1
+   linkattr1 r2,a1,1
+   .traceevent "V" 6 "R" "I" "r" 2 40 40 0 "seed_value" ""
+   imult r3,r2,1309
+   unlink r2
+   .traceevent "O" 4 "R" "I" "r" 3 40 40 0 "" ""
+   iadd r3,r3,13849
+   .traceevent "O" 4 "R" "I" "r" 3 40 40 0 "" ""
+   imod r3,r3,65536
+   .traceevent "O" 4 "R" "I" "r" 3 40 40 0 "" ""
+   linkattr1 r1,a1,1
+   icopy r1,r3
+   unlink r1
+   .srcstep 41 41 17 "awfy_storage.crexx" 40 5 22 "    return seed_value"
+   linkattr1 r3,a1,1
+   .traceevent "V" 6 "R" "I" "r" 3 41 41 0 "seed_value" ""
+   ret r3
+   .meta "awfy_storage.storagerandom.next.§this"
+
+§awfy_storage.storagebenchmark.§factory() .locals=3
+   .meta "awfy_storage.storagebenchmark.§factory"="b" ".awfy_storage..storagebenchmark" §awfy_storage.storagebenchmark.§factory() ""
+   .srcstep 45 45 17 "awfy_storage.crexx" 45 3 13 "  *: factory"
+   setattrs r0,2
+   setobjtype r0,"awfy_storage.storagebenchmark"
+   numsci 18,1,1
+   .srcstep 43 43 17 "awfy_storage.crexx" 46 5 25 "    allocation_count = 0"
+   .meta "awfy_storage.storagebenchmark.§factory.§factory"="b" ".storagebenchmark" r0
+   load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 43 43 0 "" ""
+   linkattr1 r1,r0,1
+   icopy r1,r2
+   unlink r1
+   .srcstep 44 44 17 "awfy_storage.crexx" 47 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 0 44 44 0 "§factory" ""
+   ret r0
+   .meta "awfy_storage.storagebenchmark.§factory.§factory"
+
+§awfy_storage.storagebenchmark.run() .locals=24
+   .meta "awfy_storage.storagebenchmark.run"="b" ".int" §awfy_storage.storagebenchmark.run() ""
+   .srcstep 80 80 17 "awfy_storage.crexx" 49 3 21 "  run: method = .int"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 50 50 17 "awfy_storage.crexx" 50 5 28 "    random = .StorageRandom()"
+   .srcstep 46 46 6 "awfy_storage.crexx" 34 3 13 "  *: factory"
+   setattrs r6,2
+   .srcstep 47 47 6 "awfy_storage.crexx" 34 3 13 "  *: factory"
+   setobjtype r6,"awfy_storage.storagerandom"
+   .srcstep 48 48 17 "awfy_storage.crexx" 35 5 23 "    seed_value = 74755"
+   load r1,74755
+   .traceevent "L" 4 "R" "I" "r" 1 48 48 0 "" ""
+   linkattr1 r2,r6,1
+   icopy r2,r1
+   unlink r2
+   .srcstep 49 49 33 "awfy_storage.crexx" 36 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 6 49 49 0 "§factory" ""
+   copy r3,r6
+   .traceevent "A" 6 "R" "O" "r" 3 49 49 0 "random" ""
+   .srcstep 51 51 17 "awfy_storage.crexx" 51 5 25 "    allocation_count = 0"
+   .meta "awfy_storage.storagebenchmark.run.random"="b" ".storagerandom" r3
+   .meta "awfy_storage.storagebenchmark.run.§this"="b" ".storagebenchmark" a1
+   load r1,0
+   .traceevent "L" 4 "R" "I" "r" 1 51 51 0 "" ""
+   linkattr1 r2,a1,1
+   icopy r2,r1
+   unlink r2
+   .srcstep 72 72 17 "awfy_storage.crexx" 52 5 37 "    tree = buildTreeDepth(7, random)"
+   .srcstep 52 52 33 "awfy_storage.crexx" 52 12 26 "    tree = buildTreeDepth(7, random)"
+   .traceevent "V" 6 "R" "O" "a" 1 52 52 0 "§this" ""
+   copy r10,a1
+   .traceevent "A" 6 "R" "O" "r" 10 52 52 0 "§this" ""
+   .srcstep 53 53 17 "awfy_storage.crexx" 58 5 44 "    allocation_count = allocation_count + 1"
+   linkattr1 r1,r10,1
+   .traceevent "V" 6 "R" "I" "r" 1 53 53 0 "allocation_count" ""
+   iadd r0,r1,1
+   unlink r1
+   .traceevent "O" 4 "R" "I" "r" 0 53 53 0 "" ""
+   linkattr1 r2,r10,1
+   icopy r2,r0
+   unlink r2
+   .srcstep 58 58 17 "awfy_storage.crexx" 59 5 24 "    node = .StorageNode()"
+   .srcstep 54 54 6 "awfy_storage.crexx" 84 3 13 "  *: factory"
+   setattrs r11,3
+   .srcstep 55 55 6 "awfy_storage.crexx" 84 3 13 "  *: factory"
+   setobjtype r11,"awfy_storage.storagenode"
+   .srcstep 56 56 17 "awfy_storage.crexx" 85 5 20 "    child_count = 0"
+   load r1,0
+   .traceevent "L" 4 "R" "I" "r" 1 56 56 0 "" ""
+   linkattr1 r2,r11,1
+   icopy r2,r1
+   unlink r2
+   .srcstep 57 57 33 "awfy_storage.crexx" 86 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 11 57 57 0 "§factory" ""
+   copy r8,r11
+   .traceevent "A" 6 "R" "O" "r" 8 57 57 0 "node" ""
+   .srcstep 67 67 17 "awfy_storage.crexx" 65 7 9 "      do i = 1 to 4"
+   .srcstep 59 59 17 "awfy_storage.crexx" 65 10 15 "      do i = 1 to 4"
+   load r1,1
+   .traceevent "L" 4 "R" "I" "r" 1 59 59 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 1 59 59 0 "i" ""
+   .srcstep 60 60 17 "awfy_storage.crexx" 65 16 20 "      do i = 1 to 4"
+   load r0,4
+   .traceevent "L" 4 "R" "I" "r" 0 0 0 0 "" ""
+l427dostart:
+   .srcstep 60 60 17 "awfy_storage.crexx" 65 16 20 "      do i = 1 to 4"
+   igt r12,r1,r0
+   brt l427doend,r12
+   .srcstep 62 62 17 "awfy_storage.crexx" 66 9 50 "        child = buildTreeDepth(depth - 1, random)"
+   .traceevent "V" 6 "R" "O" "r" 10 62 62 0 "§this" ""
+   load r15,6
+   .traceevent "L" 4 "R" "I" "r" 15 62 62 0 "" ""
+   .traceevent "V" 6 "R" "O" "r" 3 62 62 0 "random" ""
+   load r13,3
+   settp r10,256
+   swap r14,r10
+   settp r3,256
+   swap r16,r3
+   call r2,§awfy_storage.storagebenchmark.buildtreedepth(),r13
+   swap r10,r14
+   swap r3,r16
+   .traceevent "F" 4 "R" "O" "r" 2 62 62 0 "buildtreedepth" ""
+   .traceevent "A" 6 "R" "O" "r" 2 62 62 0 "child" ""
+   .srcstep 66 66 17 "awfy_storage.crexx" 67 9 34 "        call node.addChild(child)"
+   .srcstep 63 63 33 "awfy_storage.crexx" 67 14 18 "        call node.addChild(child)"
+   .traceevent "V" 6 "R" "O" "r" 8 63 63 0 "node" ""
+   copy r18,r8
+   .traceevent "A" 6 "R" "O" "r" 18 63 63 0 "§this" ""
+   .srcstep 64 64 17 "awfy_storage.crexx" 95 5 64 "    child_count = objectarrayappend(children, child as .object)"
+   linkattr1 r15,r18,2
+   .traceevent "V" 6 "R" "O" "r" 15 64 64 0 "children" ""
+   .traceevent "V" 6 "R" "O" "r" 2 64 64 0 "child" ""
+   copy r21,r2
+   load r19,3
+   swap r20,r15
+   settp r21,768
+   settp r22,0
+   call r14,rxfnsb.objectarrayappend(),r19
+   swap r15,r20
+   unlink r15
+   .traceevent "F" 4 "R" "I" "r" 14 64 64 0 "objectarrayappend" ""
+   linkattr1 r16,r18,1
+   icopy r16,r14
+   unlink r16
+   .srcstep 65 65 6 "awfy_storage.crexx" 67 14 34 "        call node.addChild(child)"
+   .traceevent "V" 6 "R" "O" "r" 18 0 0 0 "§this" ""
+   copy r8,r18
+l427doinc:
+   .srcstep 61 61 17 "awfy_storage.crexx" 65 10 11 "      do i = 1 to 4"
+   inc r1
+   .srcstep 68 68 17 "awfy_storage.crexx" 68 7 10 "      end"
+   br l427dostart
+l427doend:
+   endlife r2
+   .srcstep 69 69 33 "awfy_storage.crexx" 70 12 16 "    return node"
+   .traceevent "V" 6 "R" "O" "r" 8 69 69 0 "node" ""
+   copy r7,r8
+   .traceevent "A" 6 "R" "O" "r" 7 69 69 0 "__inline_ret_207_208" ""
+   .srcstep 70 70 6 "awfy_storage.crexx" 52 12 37 "    tree = buildTreeDepth(7, random)"
+   .traceevent "V" 6 "R" "O" "r" 10 0 0 0 "§this" ""
+   copy a1,r10
+   .srcstep 71 71 33 "awfy_storage.crexx" 70 5 11 "    return node"
+   .traceevent "V" 6 "R" "O" "r" 7 71 71 0 "__inline_ret_207_208" ""
+   copy r4,r7
+   .traceevent "A" 6 "R" "O" "r" 4 71 71 0 "tree" ""
+   .srcstep 77 77 17 "awfy_storage.crexx" 53 5 23 "    if tree.size() = 0 then return 0"
+   .srcstep 75 75 17 "awfy_storage.crexx" 53 8 12 "    if tree.size() = 0 then return 0"
+   .srcstep 73 73 33 "awfy_storage.crexx" 53 8 12 "    if tree.size() = 0 then return 0"
+   .traceevent "V" 6 "R" "O" "r" 4 73 73 0 "tree" ""
+   copy r23,r4
+   .traceevent "A" 6 "R" "O" "r" 23 73 73 0 "§this" ""
+   .srcstep 74 74 17 "awfy_storage.crexx" 99 5 23 "    return child_count"
+   linkattr1 r22,r23,1
+   .traceevent "V" 6 "R" "I" "r" 22 77 77 0 "child_count" ""
+   icopy r21,r22
+   unlink r22
+   br l557bexprend
+l557bexprend:
+   ieq r21,r21,0
+   .traceevent "O" 4 "R" "B" "r" 21 77 77 0 "" ""
+   brf l142iffalse,r21
+   .srcstep 78 78 17 "awfy_storage.crexx" 53 24 28 "    if tree.size() = 0 then return 0"
+   .srcstep 76 76 17 "awfy_storage.crexx" 53 29 37 "    if tree.size() = 0 then return 0"
+   .meta "awfy_storage.storagebenchmark.run.tree"="b" ".storagenode" r4
+   ret 0
+l142iffalse:
+   .srcstep 79 79 17 "awfy_storage.crexx" 54 5 28 "    return allocation_count"
+   linkattr1 r22,a1,1
+   .traceevent "V" 6 "R" "I" "r" 22 79 79 0 "allocation_count" ""
+   ret r22
+   .meta "awfy_storage.storagebenchmark.run.random"
+   .meta "awfy_storage.storagebenchmark.run.tree"
+   .meta "awfy_storage.storagebenchmark.run.§this"
+
+§awfy_storage.storagebenchmark.buildtreedepth() .locals=23
+   .meta "awfy_storage.storagebenchmark.buildtreedepth"="b" ".awfy_storage..storagenode" §awfy_storage.storagebenchmark.buildtreedepth() "depth=.int,random=.storagerandom"
+   .srcstep 111 111 17 "awfy_storage.crexx" 56 3 40 "  buildTreeDepth: method = .StorageNode"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 81 81 17 "awfy_storage.crexx" 57 9 21 "    arg depth = .int, random = .StorageRandom"
+   .meta "awfy_storage.storagebenchmark.buildtreedepth.depth"="b" ".int" a2
+   .meta "awfy_storage.storagebenchmark.buildtreedepth.§this"="b" ".storagebenchmark" a1
+   .srcstep 82 82 17 "awfy_storage.crexx" 57 23 46 "    arg depth = .int, random = .StorageRandom"
+   .meta "awfy_storage.storagebenchmark.buildtreedepth.random"="b" ".storagerandom" a3
+   .srcstep 83 83 17 "awfy_storage.crexx" 58 5 44 "    allocation_count = allocation_count + 1"
+   linkattr1 r5,a1,1
+   .traceevent "V" 6 "R" "I" "r" 5 83 83 0 "allocation_count" ""
+   iadd r4,r5,1
+   unlink r5
+   .traceevent "O" 4 "R" "I" "r" 4 83 83 0 "" ""
+   linkattr1 r6,a1,1
+   icopy r6,r4
+   unlink r6
+   .srcstep 88 88 17 "awfy_storage.crexx" 59 5 24 "    node = .StorageNode()"
+   .srcstep 84 84 6 "awfy_storage.crexx" 84 3 13 "  *: factory"
+   setattrs r10,3
+   .srcstep 85 85 6 "awfy_storage.crexx" 84 3 13 "  *: factory"
+   setobjtype r10,"awfy_storage.storagenode"
+   .srcstep 86 86 17 "awfy_storage.crexx" 85 5 20 "    child_count = 0"
+   load r5,0
+   .traceevent "L" 4 "R" "I" "r" 5 86 86 0 "" ""
+   linkattr1 r6,r10,1
+   icopy r6,r5
+   unlink r6
+   .srcstep 87 87 33 "awfy_storage.crexx" 86 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 10 87 87 0 "§factory" ""
+   copy r1,r10
+   .traceevent "A" 6 "R" "O" "r" 1 87 87 0 "node" ""
+   .srcstep 107 107 17 "awfy_storage.crexx" 60 5 17 "    if depth = 1 then do"
+   .traceevent "V" 6 "R" "I" "a" 2 107 107 0 "depth" ""
+   ieq r6,a2,1
+   .traceevent "O" 4 "R" "B" "r" 6 107 107 0 "" ""
+   brf l206iffalse,r6
+   .srcstep 108 108 17 "awfy_storage.crexx" 60 18 22 "    if depth = 1 then do"
+   .srcstep 95 95 17 "awfy_storage.crexx" 61 7 47 "      leaf_size = (random.next() <mod> 10) + 1"
+   .meta "awfy_storage.storagebenchmark.buildtreedepth.leaf_size"="b" ".int" r5
+   .meta "awfy_storage.storagebenchmark.buildtreedepth.node"="b" ".storagenode" r1
+   .srcstep 94 94 17 "awfy_storage.crexx" 61 20 26 "      leaf_size = (random.next() <mod> 10) + 1"
+   .srcstep 89 89 33 "awfy_storage.crexx" 61 20 26 "      leaf_size = (random.next() <mod> 10) + 1"
+   .traceevent "V" 6 "R" "O" "a" 3 89 89 0 "random" ""
+   copy r12,a3
+   .traceevent "A" 6 "R" "O" "r" 12 89 89 0 "§this" ""
+   .srcstep 90 90 17 "awfy_storage.crexx" 39 5 59 "    seed_value = ((seed_value * 1309) + 13849) <mod> 65536"
+   linkattr1 r3,r12,1
+   .traceevent "V" 6 "R" "I" "r" 3 90 90 0 "seed_value" ""
+   imult r2,r3,1309
+   unlink r3
+   .traceevent "O" 4 "R" "I" "r" 2 90 90 0 "" ""
+   iadd r2,r2,13849
+   .traceevent "O" 4 "R" "I" "r" 2 90 90 0 "" ""
+   imod r2,r2,65536
+   .traceevent "O" 4 "R" "I" "r" 2 90 90 0 "" ""
+   linkattr1 r4,r12,1
+   icopy r4,r2
+   unlink r4
+   .srcstep 91 91 33 "awfy_storage.crexx" 40 12 22 "    return seed_value"
+   linkattr1 r4,r12,1
+   .traceevent "V" 6 "R" "I" "r" 4 91 91 0 "seed_value" ""
+   icopy r11,r4
+   .traceevent "A" 6 "R" "I" "r" 11 91 91 0 "__inline_leave_474_473" ""
+   unlink r4
+   .srcstep 92 92 6 "awfy_storage.crexx" 40 5 22 "    return seed_value"
+   .traceevent "V" 6 "R" "O" "r" 12 95 95 0 "§this" ""
+   copy a3,r12
+   .srcstep 93 93 17 "awfy_storage.crexx" 40 5 22 "    return seed_value"
+   .traceevent "V" 6 "R" "I" "r" 11 95 95 0 "__inline_leave_474_473" ""
+   icopy r4,r11
+   br l459bexprend
+l459bexprend:
+   imod r4,r4,10
+   .traceevent "O" 4 "R" "I" "r" 4 95 95 0 "" ""
+   iadd r5,r4,1
+   .traceevent "O" 4 "R" "I" "r" 5 95 95 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 5 95 95 0 "leaf_size" ""
+   .srcstep 96 96 17 "awfy_storage.crexx" 62 7 58 "      call node.allocateLeaf(leaf_size, random as .object)"
+   .traceevent "V" 6 "R" "O" "r" 1 96 96 0 "node" ""
+   .traceevent "V" 6 "R" "I" "r" 5 96 96 0 "leaf_size" ""
+   .traceevent "V" 6 "R" "O" "a" 3 96 96 0 "random" ""
+   copy r3,a3
+   load r0,3
+   settp r1,256
+   swap r2,r5
+   settp r3,768
+   call r4,§awfy_storage.storagenode.allocateleaf(),r0
+   swap r5,r2
+   .traceevent "F" 4 "R" "V" "r" 4 96 96 0 "allocateleaf" ""
+   .meta "awfy_storage.storagebenchmark.buildtreedepth.leaf_size"
+   br l206ifend
+   .srcstep 109 109 17 "awfy_storage.crexx" 62 58 59 "      call node.allocateLeaf(leaf_size, random as .object)"
+l206iffalse:
+   .srcstep 105 105 17 "awfy_storage.crexx" 65 7 9 "      do i = 1 to 4"
+   .srcstep 97 97 17 "awfy_storage.crexx" 65 10 15 "      do i = 1 to 4"
+   .meta "awfy_storage.storagebenchmark.buildtreedepth.i"="b" ".int" r3
+   load r3,1
+   .traceevent "L" 4 "R" "I" "r" 3 97 97 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 3 97 97 0 "i" ""
+   .srcstep 98 98 17 "awfy_storage.crexx" 65 16 20 "      do i = 1 to 4"
+   load r2,4
+   .traceevent "L" 4 "R" "I" "r" 2 0 0 0 "" ""
+l185dostart:
+   .srcstep 98 98 17 "awfy_storage.crexx" 65 16 20 "      do i = 1 to 4"
+   igt r0,r3,r2
+   brt l185doend,r0
+   .srcstep 100 100 17 "awfy_storage.crexx" 66 9 50 "        child = buildTreeDepth(depth - 1, random)"
+   .meta "awfy_storage.storagebenchmark.buildtreedepth.child"="b" ".storagenode" r5
+   .traceevent "V" 6 "R" "O" "a" 1 100 100 0 "§this" ""
+   .traceevent "V" 6 "R" "I" "a" 2 100 100 0 "depth" ""
+   isub r15,a2,1
+   .traceevent "O" 4 "R" "I" "r" 15 100 100 0 "" ""
+   .traceevent "V" 6 "R" "O" "a" 3 100 100 0 "random" ""
+   load r13,3
+   settp a1,256
+   swap r14,a1
+   settp a3,256
+   swap r16,a3
+   call r5,§awfy_storage.storagebenchmark.buildtreedepth(),r13
+   swap a1,r14
+   swap a3,r16
+   .traceevent "F" 4 "R" "O" "r" 5 100 100 0 "buildtreedepth" ""
+   .traceevent "A" 6 "R" "O" "r" 5 100 100 0 "child" ""
+   .srcstep 104 104 17 "awfy_storage.crexx" 67 9 34 "        call node.addChild(child)"
+   .srcstep 101 101 33 "awfy_storage.crexx" 67 14 18 "        call node.addChild(child)"
+   .traceevent "V" 6 "R" "O" "r" 1 101 101 0 "node" ""
+   copy r18,r1
+   .traceevent "A" 6 "R" "O" "r" 18 101 101 0 "§this" ""
+   .srcstep 102 102 17 "awfy_storage.crexx" 95 5 64 "    child_count = objectarrayappend(children, child as .object)"
+   linkattr1 r15,r18,2
+   .traceevent "V" 6 "R" "O" "r" 15 102 102 0 "children" ""
+   .traceevent "V" 6 "R" "O" "r" 5 102 102 0 "child" ""
+   copy r21,r5
+   load r19,3
+   swap r20,r15
+   settp r21,768
+   settp r22,0
+   call r14,rxfnsb.objectarrayappend(),r19
+   swap r15,r20
+   unlink r15
+   .traceevent "F" 4 "R" "I" "r" 14 102 102 0 "objectarrayappend" ""
+   linkattr1 r16,r18,1
+   icopy r16,r14
+   unlink r16
+   .srcstep 103 103 6 "awfy_storage.crexx" 67 14 34 "        call node.addChild(child)"
+   .traceevent "V" 6 "R" "O" "r" 18 0 0 0 "§this" ""
+   copy r1,r18
+l185doinc:
+   .srcstep 99 99 17 "awfy_storage.crexx" 65 10 11 "      do i = 1 to 4"
+   inc r3
+   .srcstep 106 106 17 "awfy_storage.crexx" 68 7 10 "      end"
+   br l185dostart
+l185doend:
+   endlife r5
+   .meta "awfy_storage.storagebenchmark.buildtreedepth.child"
+   .meta "awfy_storage.storagebenchmark.buildtreedepth.i"
+l206ifend:
+   .srcstep 110 110 17 "awfy_storage.crexx" 70 5 16 "    return node"
+   .traceevent "V" 6 "R" "O" "r" 1 110 110 0 "node" ""
+   ret r1
+   .meta "awfy_storage.storagebenchmark.buildtreedepth.depth"
+   .meta "awfy_storage.storagebenchmark.buildtreedepth.node"
+   .meta "awfy_storage.storagebenchmark.buildtreedepth.random"
+   .meta "awfy_storage.storagebenchmark.buildtreedepth.§this"
+
+§awfy_storage.storagenode.§factory() .locals=3
+   .meta "awfy_storage.storagenode.§factory"="b" ".awfy_storage..storagenode" §awfy_storage.storagenode.§factory() ""
+   .srcstep 114 114 17 "awfy_storage.crexx" 84 3 13 "  *: factory"
+   setattrs r0,3
+   setobjtype r0,"awfy_storage.storagenode"
+   numsci 18,1,1
+   .srcstep 112 112 17 "awfy_storage.crexx" 85 5 20 "    child_count = 0"
+   .meta "awfy_storage.storagenode.§factory.§factory"="b" ".storagenode" r0
+   load r2,0
+   .traceevent "L" 4 "R" "I" "r" 2 112 112 0 "" ""
+   linkattr1 r1,r0,1
+   icopy r1,r2
+   unlink r1
+   .srcstep 113 113 17 "awfy_storage.crexx" 86 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 0 113 113 0 "§factory" ""
+   ret r0
+   .meta "awfy_storage.storagenode.§factory.§factory"
+
+§awfy_storage.storagenode.allocateleaf() .locals=10
+   .meta "awfy_storage.storagenode.allocateleaf"="b" ".void" §awfy_storage.storagenode.allocateleaf() "leaf_size=.int,marker=.object"
+   .srcstep 119 119 17 "awfy_storage.crexx" 88 3 31 "  allocateLeaf: method = .void"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 115 115 17 "awfy_storage.crexx" 89 9 25 "    arg leaf_size = .int, marker = .object"
+   .meta "awfy_storage.storagenode.allocateleaf.leaf_size"="b" ".int" a2
+   .meta "awfy_storage.storagenode.allocateleaf.§this"="b" ".storagenode" a1
+   .srcstep 116 116 17 "awfy_storage.crexx" 89 27 43 "    arg leaf_size = .int, marker = .object"
+   .meta "awfy_storage.storagenode.allocateleaf.marker"="b" ".object" a3
+   .srcstep 117 117 17 "awfy_storage.crexx" 90 5 65 "    child_count = objectarrayappend(children, marker, leaf_size)"
+   linkattr1 r0,a1,2
+   .traceevent "V" 6 "R" "O" "r" 0 117 117 0 "children" ""
+   .traceevent "V" 6 "R" "O" "a" 3 117 117 0 "marker" ""
+   .traceevent "V" 6 "R" "I" "a" 2 117 117 0 "leaf_size" ""
+   load r5,3
+   swap r6,r0
+   settp a3,256
+   swap r7,a3
+   settp a2,256
+   swap r8,a2
+   call r9,rxfnsb.objectarrayappend(),r5
+   swap r0,r6
+   unlink r0
+   swap a3,r7
+   swap a2,r8
+   .traceevent "F" 4 "R" "I" "r" 9 117 117 0 "objectarrayappend" ""
+   linkattr1 r1,a1,1
+   icopy r1,r9
+   unlink r1
+   .srcstep 118 118 17 "awfy_storage.crexx" 91 5 11 "    return"
+   ret
+   .meta "awfy_storage.storagenode.allocateleaf.leaf_size"
+   .meta "awfy_storage.storagenode.allocateleaf.marker"
+   .meta "awfy_storage.storagenode.allocateleaf.§this"
+
+§awfy_storage.storagenode.addchild() .locals=9
+   .meta "awfy_storage.storagenode.addchild"="b" ".void" §awfy_storage.storagenode.addchild() "child=.storagenode"
+   .srcstep 123 123 17 "awfy_storage.crexx" 93 3 27 "  addChild: method = .void"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 120 120 17 "awfy_storage.crexx" 94 9 29 "    arg child = .StorageNode"
+   .meta "awfy_storage.storagenode.addchild.child"="b" ".storagenode" a2
+   .meta "awfy_storage.storagenode.addchild.§this"="b" ".storagenode" a1
+   .srcstep 121 121 17 "awfy_storage.crexx" 95 5 64 "    child_count = objectarrayappend(children, child as .object)"
+   linkattr1 r7,a1,2
+   .traceevent "V" 6 "R" "O" "r" 7 121 121 0 "children" ""
+   .traceevent "V" 6 "R" "O" "a" 2 121 121 0 "child" ""
+   copy r5,a2
+   load r3,3
+   swap r4,r7
+   settp r5,768
+   settp r6,0
+   call r8,rxfnsb.objectarrayappend(),r3
+   swap r7,r4
+   unlink r7
+   .traceevent "F" 4 "R" "I" "r" 8 121 121 0 "objectarrayappend" ""
+   linkattr1 r2,a1,1
+   icopy r2,r8
+   unlink r2
+   .srcstep 122 122 17 "awfy_storage.crexx" 96 5 11 "    return"
+   ret
+   .meta "awfy_storage.storagenode.addchild.child"
+   .meta "awfy_storage.storagenode.addchild.§this"
+
+§awfy_storage.storagenode.size() .locals=2
+   .meta "awfy_storage.storagenode.size"="b" ".int" §awfy_storage.storagenode.size() ""
+   .srcstep 125 125 17 "awfy_storage.crexx" 98 3 22 "  size: method = .int"
+   assertinitialized a1
+   numsci 18,1,1
+   .srcstep 124 124 17 "awfy_storage.crexx" 99 5 23 "    return child_count"
+   .meta "awfy_storage.storagenode.size.§this"="b" ".storagenode" a1
+   linkattr1 r1,a1,1
+   .traceevent "V" 6 "R" "I" "r" 1 124 124 0 "child_count" ""
+   ret r1
+   .meta "awfy_storage.storagenode.size.§this"
+
+/* Imported Declaration from file: objectarrayappend@library.rxbin */
+
+rxfnsb.objectarrayappend() .expose=rxfnsb.objectarrayappend
+   .meta "rxfnsb.objectarrayappend"="b" ".int" rxfnsb.objectarrayappend() "expose array=.object[*],value=.object,?count=.int"

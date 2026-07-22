@@ -1,6 +1,6 @@
 # cREXX performance roadmap
 
-Last updated: 2026-07-17
+Last updated: 2026-07-22
 
 This is the live performance-programme register. The definitions, evidence and
 exit criteria come from the dated
@@ -16,7 +16,7 @@ exit criterion is met.
 
 | ID | Activity | Status | Current note / next gate |
 | --- | --- | --- | --- |
-| NR-01 | Reproducible benchmark portfolio and runner | in progress | Approved workload coverage, serial raw-sample retention and the separate lifecycle lane are implemented; remaining exit work is machine-capturable full provenance and NR-11 publication policy. |
+| NR-01 | Reproducible benchmark portfolio and runner | complete | The approved portfolio, serial correctness-gated raw capture, compact machine/build provenance, separate lifecycle reporting and NR-11 publication policy are all implemented and proved by the NR-10 formal bundle. |
 | NR-02 | Portfolio equivalence and optimizer-resistance ledger | complete | All approved steady-state/runtime cells and the lifecycle lane have correctness, equivalence, generated-form and retained-pilot evidence or an explicit `not comparable` disposition. |
 | NR-03 | Automated performance evidence bundle | complete | One Level B command retains exact-hash Release timing, schema-3 profile/allocation evidence, RXSEQ N=2/3/4, ranked reports and paired deltas; the verified proof bundle is `evidence/2026-07-15-nr-03-automated-proof/`. |
 | NR-04 | Opcode effects inventory | complete | All 641 opcode slots have ordered machine-readable effects; 539 source opcodes are classified or explicitly conservative and RXAS consumes the fail-closed API without new transforms. |
@@ -25,10 +25,10 @@ exit criterion is met.
 | NR-06 | Compiler call-window placement fast path | complete | Typed scalar copying was rejected and removed. The retained affinity-guided numbering path removes 58/423 static portfolio swaps and 248,362 executed swaps in the bounded hot cells without adding runtime instructions. The direct cost is too small for material product speedup, but Adrian accepted the verified work reduction; Debug/Release focused checks and final Debug CTest 1,849/1,849 pass. See `NR-06-07-WORKLIST.md`. |
 | NR-07 | Direct compare-to-branch and loop lowering | rejected | Interleaved Release evidence found no practical gain from either the direct-condition or specialist-loop paths, and RXAS already emitted the tested `BCTP` product forms. Both compiler changes and their dedicated fixtures are removed; exact rejected patches and evidence are retained. See `NR-06-07-WORKLIST.md`. |
 | NUMERIC-01 | Native typed Level B numeric surface and RexxCPS type fidelity | complete | Eleven native integer/float BIFs are accepted; standard benchmarks are decimal-free except RexxCPS's intentional Classic workload. RexxCPS 2.2d uses explicit digits 9, honest decimal/int/float paths and typed text BIFs. Accepted medians are 1.15 MCPS (`rxvm`) and 1.11 MCPS (`rxbvm`); final Debug CTest is 1,851/1,851. |
-| NR-08 | Definite initialization and reference-lifetime facts | queued | Fail closed; prove dead `NULL`/`ENDLIFE` and copy removals with escape/reference tests. |
-| NR-09 | RXSEQ candidate ledger | queued | Rank by workload, static site and module; record semantic status and measured disposition. |
-| NR-10 | Cross-runtime forensic baselines | queued | Run the formal CREXX/ooRexx/NetRexx portfolio matrix incrementally as each NR-02 workload clears equivalence; include Regina for RexxCPS only and retain selected Java/C controls. |
-| NR-11 | Performance governance and scorecard | queued | Agree Tier A/B, geometric-mean and outlier policies, regression budget and publication format. |
+| NR-08 | Definite initialization and reference-lifetime facts | complete | Adrian accepted Gate A after canonical RexxCPS improved by 4.358% (`rxvm`) and 5.903% (`rxbvm`). The corrected library audit changes only `ENDLIFE`, 8,006 to 151. Complete Debug build and final CTest 1,851/1,851 pass; the 71 intentional goldens remove exactly 170 additional scalar `ENDLIFE`s and no other lines. Evidence: `evidence/2026-07-17-nr-08-first-release-verdict/`. |
+| NR-09 | RXSEQ-guided lowering and instruction synthesis | complete | Rule 1 and the corrected 34-form public batch are accepted and closed. The batch withdraws 26 forms behind stable reserved IDs, promotes three masked hot forms and narrows two-register `ITOF`; two rejected side-effect-preserving replacements remain future design ideas and do not block completion. Broad QA passes: Debug 1,864/1,864, supported ASan clean after locking one shared-file test race, isolated install and exact old-RXBIN execution in both VMs. Documentation covers all 574 forms/367 mnemonics and all 373 tagged examples assemble. The final 78/78 Release refresh is +1.385%/+2.868% complete-product paired median CPS (`rxvm`/`rxbvm`); only the `rxbvm` interval is wholly positive. |
+| NR-10 | Cross-runtime forensic baselines | complete | The corrected same-host common baseline uses equal work and decimal-semantics NetRexx on the default HotSpot JIT. Its 500 timing/RSS/lifecycle rows and 24 labelled native-C control rows pass; the initial binary-typed NetRexx matrix is retained only as an excluded audit/non-common diagnostic source at `evidence/2026-07-20-nr-10-formal-baseline/`. |
+| NR-11 | Performance governance and scorecard | complete | Approved policy is normative in `PERFORMANCE-GOVERNANCE.md`; the standard template is proved by the NR-10 scorecard with four named N=5 aggregates, explicit noisy cells and no unmatched regression claim. |
 
 ### NR-01 work notes
 
@@ -54,10 +54,10 @@ exit criterion is met.
   optimizer-resistance evidence and an initial retained run. Regina is limited
   to RexxCPS. NR-10 receives each qualified workload for formal baseline and
   forensic capture.
-- Remaining exit work: make full build/machine provenance machine-capturable
-  and define the publication scorecard, common subset and regression policy
-  under NR-11. The approved coverage categories and separate lifecycle lane
-  are now implemented.
+- 2026-07-20: Closed NR-01 through the approved NR-10/NR-11 campaign. The
+  formal bundle proves serial correctness-gated capture, machine/build/runtime
+  provenance, separate steady-state and lifecycle reports, compact raw-sample
+  retention and the standard publication scorecard for the approved portfolio.
 
 ### NR-02 work notes
 
@@ -342,6 +342,249 @@ Evidence: `evidence/2026-07-17-numeric-01-first-release-verdict/`. The final
 canonical source SHA-256 is
 `2970c3d73fe2537ec8f81295c585495c4668b442d5b9a2335b1ee453a13bbdd6`.
 
+### NR-08/NR-09 work notes
+
+- 2026-07-17: Started the ordered combined design/PoC session at clean
+  `develop` commit `e748621d1`, exactly equal to `origin/develop`. The resumable
+  control plane is `NR-08-09-WORKLIST.md`. NR-08 is active; NR-09 remains
+  queued until the NR-08 PoC result is frozen so removed lifecycle sequences
+  cannot be promoted as fusion candidates.
+- The status quo distinguishes the operations mechanically: `NULL` is a
+  whole-value clear and proven kill, while `ENDLIFE` preserves ordinary
+  contents but invalidates reference identity and remains a read/write,
+  reference-release, lifetime-end, may-throw opaque barrier. The first bounded
+  design therefore considers only a symbol-local, fail-closed `ENDLIFE` gate;
+  `NULL` and copies remain unchanged without their own dataflow proofs.
+- The current compiler already excludes exposed/argument/receiver/factory,
+  reference-target, inline-generated and TRACE-generated locals from scoped
+  register recycling, but lifetime emission is broader and emits `endlife` for
+  every ordinary general-register local in a recyclable scope. Exact current
+  canonical/opaque, optimized/unoptimized RexxCPS 2.2d inventory and dynamic
+  counts are the next gate; historical NR-05 RexxCPS 2.2c counts are not a
+  current baseline.
+- 2026-07-17: Froze the NR-08 bounded candidate. Gate A omits `ENDLIFE` only
+  for exact eligible scalar locals and leaves `NULL`, copies, effects and ISA
+  unchanged. Focused final reference/structural checks are 26/26 and stem
+  checks 3/3; byte-identical reference controls retain cleanup. Canonical
+  dynamic `ENDLIFE` falls from 1,301,489/1,301,497 to 1,516 no-opt and from
+  1,379,697/1,379,705 to 5,616 opt on `rxvm`/`rxbvm`. The recommendation is
+  provisional advance only; imported-library NULL/copy DCE cascade must be
+  audited if selected for the formal Release verdict.
+- 2026-07-17: Froze the NR-09 pipeline PoC. The separate Level B processor
+  keeps three exact revisions distinct, mechanically joins all 641 opcode
+  effects, emits 11,332 ledger rows, and selects 76 stable identities from the
+  global/per-workload bounded slice. Repeated `rxvm`/`rxbvm` processing is
+  byte-identical and exact representative source counts reconcile. Statuses
+  are 9,928 reviewed, 1,404 unreviewed, 9,558 unsafe, 322 subsumed and 48
+  candidate. This advances the evidence pipeline only; no fusion/opcode is
+  authorized before Adrian selects one stable family and its semantic proof.
+- 2026-07-17: Adrian expanded NR-09 before selecting NR-08 for its formal
+  verdict. NR-09 must implement mechanically obvious exact-operand rules and
+  use the ledger to retain/prioritize the remainder; it is not complete at the
+  mining pipeline. The first explicit queue is (1) use existing `NUMSCI` or
+  `NUMENG` instead of five compatible constant procedure-entry `SETNUM*`
+  instructions, (2) direct `LOAD_REG_INT | ICOPY_REG_REG` destination lowering
+  with dead-temporary proof, and (3) exact identity-copy/dead-load/same-pair
+  swap cases that actually occur. The architectural comparison must include a
+  generalized synthesized numeric-context instruction and installing a
+  non-inherited procedure default during frame activation, not just fusing
+  adjacent existing opcodes. Canonical ISA/RXBIN or architectural selection
+  remains an explicit Adrian decision. Full scope and proof gates are in
+  `NR-08-09-WORKLIST.md`; work resumes after accepted NR-08 closeout.
+- 2026-07-17: NR-08 passed the mandatory first ordinary profiling-off Release
+  verdict and stopped. The full Release build and focused 4/4 CTest pass. Using
+  the retained exact-source NUMERIC-01 accepted baseline, canonical optimized
+  RexxCPS median CPS improves from 1,145,721 to 1,195,649 on `rxvm` (+4.358%)
+  and from 1,114,685 to 1,180,487 on `rxbvm` (+5.903%); median process elapsed
+  falls 4.119% and 5.673%, respectively. All eight candidate runs pass and the
+  candidate ranges do not overlap the retained baseline ranges. The required
+  library audit exposed a counting-script defect, not a generated-code DCE
+  cascade: label-aware replay changes `ENDLIFE` 8,006 to 151 across 263/629
+  procedures while `NULL` stays 4,293, copies 8,478, unlink 1,758 and reference
+  ops 7. Evidence:
+  `evidence/2026-07-17-nr-08-first-release-verdict/`.
+- 2026-07-17: Adrian accepted NR-08 and approved the shortest closeout. The
+  complete Debug build passed. Initial broad CTest exposed 71 expected-output
+  mismatches; exact audit found only 170 removed scalar `ENDLIFE`s and no other
+  changed lines. After the documented golden refresh, the failed selection
+  passed 71/71 and final Debug CTest passed 1,851/1,851 in 217.35 seconds. No
+  sanitizer, package/install, cross-platform or extra timing campaign was
+  added. NR-08 is complete and NR-09 is the next queued activity.
+- 2026-07-17: Resumed NR-09 at clean `develop` commit `7b93bef73`, exactly
+  equal to `origin/develop`. The existing ordinary Release product hashes
+  exactly match the accepted NR-08 candidate, establishing an exact
+  post-NR-08 rather than NR-05/pre-NR-08 baseline. Canonical optimized
+  RexxCPS has 25 static procedure-entry setters and its retained exact-image
+  profiles execute 542,500 setters on each VM. The worklist now compares five
+  designs. Rule 1 selects compiler-owned existing `NUMSCI`/`NUMENG` emission
+  with a mandatory digits >= 5 compatibility gate; RXAS peepholing is rejected
+  for this rule, while generalized opcode, procedure-default and private-image
+  synthesis remain deferred design comparisons requiring their stated gates.
+  Evidence starts at
+  `evidence/2026-07-17-nr-09-numctx-first-release-verdict/`.
+- 2026-07-17: Froze Rule 1 after focused Debug 12/12 and focused Release 1/1
+  passed. Canonical optimized RexxCPS changes 25 static setters to five
+  `NUMSCI` operations and 542,500 dynamic setup instructions to 108,508 on
+  each VM (-433,992). RXAS shrinks 300 bytes, standalone RXBIN grows 8 bytes,
+  and the linked library shrinks 808 bytes; retained library setup sites fall
+  3,123 to 651. Against the valid accepted NR-08 baseline, median CPS changes
+  +0.627% on `rxvm` and +0.246% on `rxbvm`, with elapsed changes -0.597% and
+  -0.236%. Both ranges overlap, so the verdict is neutral-to-slightly-positive,
+  not material. The candidate remains provisional/revertable and NR-09 stops
+  for Adrian before broad validation, cleanup or Rule 2. Evidence:
+  `evidence/2026-07-17-nr-09-numctx-first-release-verdict/`.
+- 2026-07-18: Adrian accepted NR-09 Rule 1 as a small improvement. Exact
+  pre-update audit proved 222 compiler goldens contained only 517 replacements
+  of five setters by `NUMSCI`; four RXPA tests retained the same signal/source
+  and moved only their expected bytecode address from 15 to 9. The failed
+  selection passed 227/227 and final Debug CTest passed 1,852/1,852 in 205.57
+  seconds. Rule 1 is retained and fully closed out.
+- 2026-07-18: Adrian clarified that NR-09 low risk means RXAS-provable bounded
+  dataflow (Class 1) or rxc-known compiler temporaries with irrelevant
+  intermediate effects (Class 2), and that adding large instructions is the
+  aim. The 76 selected patterns classify as 20 Class 1, 51 Class 2 and five
+  deferred. Four Class 1 compare/branch mappings remain rejected by NR-07,
+  leaving 67 active mappings across 12 coherent families. They will be
+  designed and implemented as one attributable batch with one combined first
+  Release verdict; overlapping RXSEQ windows are not additive.
+- 2026-07-18: Class 1 ownership is RXAS-backed, not RXAS-exclusive. Every
+  Class 1 mapping gets an RXAS peephole backstop. rxc may emit the large
+  instruction directly when one AST-node emission naturally owns the whole
+  mapping; mappings that would require coordination across merely adjacent AST
+  nodes stay expanded in rxc and are collected by RXAS.
+- 2026-07-18: The exact 76-ID disposition is retained in
+  `NR-09-MAPPING-REGISTER.md`: 67 active, four prior NR-07 rejections and five
+  deferred controls. Adrian selected one ordered batch: first add the large
+  canonical instructions and direct tests, then RXAS Class 1 backstops, then
+  simple single-AST rxc Class 1 emission plus rxc-owned Class 2 lowering. After
+  focused proof, run one combined Release verdict and stop; full QA follows an
+  accepted verdict under the programme gate.
+- 2026-07-18: Froze the complete 67-mapping implementation after focused
+  correctness and ran its combined first Release verdict. The 22 generated
+  images lose 2,561 instructions (-19.851%); canonical matched profiles lose
+  1,525,282/1,525,312 dispatches (-8.595%), but median CPS regresses 2.233% on
+  `rxvm` and 2.289% on `rxbvm`. New VMs running exact retained old RXBINs are
+  neutral (-0.060%/-0.069% CPS), so this originally appeared specific to the
+  fused product rather than the larger VM core or arbitrary-operand decode.
+  This cross-session interpretation is superseded by the 2026-07-19 rebaseline
+  below. Stopped before broad QA, golden refresh or production-batch commit. Evidence:
+  `evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/`.
+- 2026-07-19: Added a rerunnable all-form profile report and decision ledger.
+  It covers all 60 forms, observes 28 in the canonical profile and models
+  1,525,298 retired dispatches, within +16/-14 of the exact VM count drops.
+  Most observed forms have an instrumented saving signal; `SETTPCALL` is the
+  first material possible-slowdown candidate at 56,968 calls and estimated
+  +15.026%/+6.676% transition-aware cost. These profiler-biased estimates only
+  prioritize the required ordinary-Release per-form review; they are not
+  product verdicts. The ledger separately flags temporary-register-passing and
+  independent-effect forms for a clear-advantage test.
+- 2026-07-19: Completed the focused `SETTPCALL_REG_FUNC_REG_REG_INT` review.
+  RXBIN/load/runtime inspection rejects a generic five-operand decode cost;
+  the fused code segment is one eight-byte cell smaller and both VMs use fixed
+  operand accesses. The former +15.026%/+6.676% signal compared this macro's
+  calls with a population-mixed global `CALL` average and is not a valid
+  classification. A balanced 16-offset ordinary-Release sweep (64 samples and
+  5,000,000 calls per sample per VM) finds fused savings of 0.129 ns/call
+  (-0.458%) in `rxvm` and 0.418 ns/call (-1.507%) in `rxbvm`. Individual
+  `rxvm` layouts vary because the one-cell compaction shifts the post-call
+  runtime-image address. A specialised call-body trial was slower in both VMs
+  and was reverted; no production VM change survives. The standard report now
+  marks call-bearing forms `exact-cell-required`, and the ledger retains
+  `SETTPCALL` as coherent and implementation-reviewed.
+- 2026-07-19: Reconstructed accepted commit `847e62f04` and reran the complete
+  batch in a drift-controlled three-cell campaign: accepted VM/image (A),
+  current VM/accepted image (B), and current VM/fused image (C). All 78 runs
+  pass; 12 recorded rounds use every A/B/C permutation twice on each VM. The
+  original -2.233%/-2.289% result does not reproduce. Complete-product paired
+  median CPS is +0.586%/+0.671%, with elapsed direction agreeing and 95%
+  intervals crossing zero. Infrastructure B/A is neutral at -0.152%/+0.022%;
+  fusion C/B is slightly positive at +0.617%/+0.805%. The old candidate
+  medians reproduce within +0.165%/-0.120%, while the old accepted baseline
+  was 2.577%/2.364% faster than its rerun. The apparent slowdown was therefore
+  unmatched-session baseline drift, not a reproduced VM or fused-product
+  regression. Corrected verdict: neutral-to-slightly-positive; stop for Adrian
+  before broad QA or production commit. Evidence:
+  `evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/rebaseline/`.
+- 2026-07-19: Completed the fact-based balanced review of all 60 provisional
+  forms. The 22 optimized/no-opt images execute 76,122,675 combined
+  instructions and exercise 33 forms. Thirty-two new profiling-off Release
+  cells plus the retained `SETTPCALL` cell give every exercised form a dual-VM
+  result; each new form/VM result contains 192 post-warm-up paired comparisons
+  across all 16 eight-byte runtime-image positions and three fresh processes.
+  The scorecard proposes 30 outright removals, two clean replacements and 28
+  retained forms. All six caller/trace-temporary forms are removed or replaced:
+  `FDIVSUB` and wide `ILOADSETUNLINKN` alone have double-digit evidence strong
+  enough to justify redesign without their intermediate side effects. Swap/call
+  retention is based on current evidence and explicitly discounted after the
+  wider calling convention reduces swap demand. No production edit has been
+  made; stopped for Adrian's approval. Evidence:
+  `evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/balanced-review/`.
+- 2026-07-19: Corrected the per-form review after Adrian challenged the
+  no-usage inference. Both the source RXSEQ list and candidate census are
+  post-RXAS, but runtime RXSEQ adjacency is not proof of static adjacency and
+  an all-enabled zero can be caused by mapping order. Replaying the current
+  combiner plus optimizing RXAS over the accepted 22-image pre-batch compiler
+  RXAS recovers 501,000 `FMULTICOPY`, 5,569,610
+  `LINKSETATTRSLINKADD`, 1,606,900 `SETLINKILOAD`, 1,652,680
+  `UNLINKLINKATTR1` and 1,218 `LINKSETATTRS` executions. The last two remain
+  valid overlaps with stronger retained forms. Alignment-balanced ordinary-
+  Release head-to-head cells show the first three alternatives faster in both
+  VMs; removing the remaining two-register `ITOF` from the selected arithmetic
+  chain is slower in both. Revised proposal: 26 outright removals, two clean
+  replacements and 32 retained forms. Production remains frozen for revised
+  approval. Evidence: `evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/balanced-review/overlap-review/`.
+- 2026-07-19: Adrian approved the corrected production pruning and design-only
+  replacements. Removed 26 source-visible forms while preserving their numeric
+  opcode slots as fail-safe reserved entries; selected the measured
+  `FMULTICOPY`, `LINKSETATTRSLINKADD` and `SETLINKILOAD` paths and narrowed
+  two-register `ITOF` to the winning arithmetic chain. Target-scoped Debug
+  runtime regeneration and the focused 9/9 selection pass, as does the
+  standalone example on both VMs. Both new Debug VMs also run the retained
+  accepted old RexxCPS RXBIN and library successfully. Result-only `FDIVSUB`
+  and compact TRACE-correct `ILOADSETUNLINKN` are recorded but not implemented.
+  The corrected implementation is frozen for the mandatory ordinary-Release
+  verdict before broad QA or commit.
+- 2026-07-19: Completed the mandatory corrected-batch ordinary-Release verdict
+  with equal-length accepted/candidate RXAS paths after retaining a first
+  unequal-path pilot as non-decisive. All six warmups and 72 recorded samples
+  pass. Corrected product C/B paired median CPS is +0.376%/+0.836%; complete
+  C/A is +0.262%/+0.937%, with elapsed direction agreeing. The `rxbvm` C/B
+  interval is wholly positive; both complete-product intervals cross zero.
+  Verdict: no regression, neutral-to-slightly-positive. Stopped for Adrian
+  before broad QA or commit. Evidence:
+  `evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/prunedrun1/`.
+- 2026-07-19: Completed accepted-batch QA. The broad compiler run exposed and
+  fixed two semantic-boundary defects before golden refresh: an AST-side
+  integer-alias shortcut could fuse a string copy in C2d/X2d, and native
+  signal/unwind restore did not recognize the retained fused call forms. Alias
+  cleanup fusion now occurs only over actual final typed instructions, with
+  unit-proved TRACE retargeting; fused calls are included in cold restore.
+  Full Debug CTest passes 1,864/1,864. The supported full Apple ASan run has no
+  sanitizer finding; its one failure was a shared fixed-filename test race,
+  corrected with a resource lock and a 2/2 parallel ASan rerun. Apple ASan
+  rejects leak detection as unsupported. A 112-file isolated install executes
+  the shipped example and both installed VMs pass against the exact accepted
+  old RXBIN/library. The final same-session 78/78 Release refresh records
+  complete-product paired median CPS +1.385%/+2.868%; `rxvm` uncertainty still
+  crosses zero while `rxbvm` is wholly positive. Evidence:
+  `evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/qa-closeout/`
+  and `finalrun01/`. Production-batch commit remains pending.
+- 2026-07-20: Audited final NR-09 documentation against the live assembler and
+  corrected the remaining drift. The human reference now has exact coverage
+  for 574 forms/367 mnemonics, including one standard section and validated
+  example for each of the 25 large/fused mnemonics. All 373 tagged examples
+  assemble; 328 execute and 45 are intentionally assemble-only. The compiler
+  guide now requires matching actual final typed instructions rather than AST
+  provenance, the VM guide includes all three fused calls in native cold
+  unwind, and the mapping register records the final 34-form surface and broad
+  QA state.
+- 2026-07-20: Adrian marked NR-09 complete. The benchmark median index now
+  records the final corrected-product Cell C medians of 1,211,556 CPS (`rxvm`)
+  and 1,208,420.5 CPS (`rxbvm`) from the 12-round final QA refresh. There is no
+  remaining NR-09 implementation, evidence, documentation or QA gate; the two
+  rejected side-effect-preserving replacements remain separately recorded as
+  future design ideas.
+
 ### NR-04A work notes
 
 - 2026-07-16: Paused before commit and before declaring the first
@@ -514,6 +757,60 @@ canonical source SHA-256 is
   removed append-only-overlay, alternate-seed, sanitizer, cross-platform, and
   additional portfolio work from this activity's required closeout.
 
+### NR-10/NR-11 work notes
+
+- 2026-07-20 equal-work calibration found that the approved common work counts
+  leave NetRexx at 0.050-0.272 seconds while the slowest cells are already
+  2.330-15.569 seconds. Scaling the fastest cell to one second would breach the
+  30-second cap for multiple workloads. Formal capture is paused before any
+  retained samples pending an explicit normalized-throughput contract; see
+  `NR-10-11-WORKLIST.md`.
+- 2026-07-20 Adrian approved the bounded normalized-throughput exception:
+  per-cell integer work targeting 3-10 seconds, two calibration points within
+  5%, process-inclusive `work / elapsed`, and the unchanged formal sample and
+  aggregation rules.
+- 2026-07-20: Superseded that exception for the NR-10 common baseline after
+  finding that the version-1 NetRexx ports used `options binary`. Corrected
+  `options nobinary decimal`/`Rexx` ports qualify one equal argument per
+  workload: fastest pilot medians are 1.062-1.182 seconds and slowest are
+  1.614-16.061 seconds. The default HotSpot JIT remains canonical and fair.
+
+- 2026-07-20: Started the combined resumable control plane at
+  `NR-10-11-WORKLIST.md` from clean `develop` commit `1596d7c8c`, three local
+  commits ahead of `origin/develop`. The NR-02 audit found 498 retained files,
+  172 sample rows and 41/41 verified generated-form checksums. Its provenance,
+  equivalence, opaque-input, ooRexx trace and NetRexx generated-form evidence
+  remains reusable, but the bundles explicitly contain small non-formal pilots
+  from older dirty cREXX states and do not provide formal power, uncertainty,
+  RSS, complete artifact or native-C-ceiling evidence. A current bounded
+  same-host campaign is required for factual NR-10 completion. The worklist
+  records an evidence-backed NR-11 policy proposal and stops for Adrian before
+  any threshold becomes normative or any formal run begins. Adrian confirmed
+  that any new or changed performance tooling must be cREXX Level B, not
+  Python; the Level B authoring guide is therefore a mandatory pre-edit gate.
+  The final NR-10 evidence must also be compact: one consolidated bundle,
+  existing NR-02 forensics reused by reference, and no repository retention of
+  calibration, superseded scratch runs or reproducible duplicate build output.
+- 2026-07-20: Adrian approved the policy proposal as drafted. The normative
+  authority is `PERFORMANCE-GOVERNANCE.md`; mandatory future-agent rules are in
+  `AGENTS.md`, operational navigation is in `README.md`, portfolio/comparability
+  ownership is in `portfolio/cross-runtime-plan.md`, and the publication shape
+  is `templates/performance-scorecard.md`. The approved initial common
+  aggregate is Sieve, Permute, Bounce, Richards and Base64. Formal capture and
+  a template-proving scorecard remain before NR-10/NR-11 completion.
+- 2026-07-20: Closed NR-10 and NR-11 on the corrected Apple M5/macOS formal
+  bundle at `evidence/2026-07-20-nr-10-formal-baseline/`. The canonical common
+  and lifecycle paths retain 270 equal-work timing, 70 equal-work RSS and 160
+  decimal-lifecycle rows with zero correctness failures; 24 labelled native-C
+  control rows also pass. Required noise appends retain every extreme. The N=5
+  equal-work geometric means are 0.883021/0.327772 for `rxvm` versus
+  ooRexx/decimal NetRexx and 0.872707/0.323944 for `rxbvm`. The original
+  0.006220/0.006149 NetRexx ratios are withdrawn as binary/JVM controls. The
+  bundle inventories 101 artifacts, reuses NR-02 forensics by reference and
+  removes reproducible C binaries plus the superseded unequal-work decimal
+  capture. The Level B inventory writes and verifies 70 recursive checksums;
+  final Release benchmark validation is 35/35.
+
 ## Cross-runtime portfolio execution order
 
 The target is to run every approved Tier A workload on CREXX, ooRexx and
@@ -542,15 +839,16 @@ coverage gaps are in
 
 | ID | Activity | Status | Current note / boundary |
 | --- | --- | --- | --- |
-| NR-12 | Extend read-only by-value and return copy coalescing | queued | No weakening of by-value isolation or reference semantics; see IDEA-CALL-01. |
-| NR-13 | Redundant numeric-context setup elimination | queued | Effective procedure context must be identical. |
-| NR-14 | Static/frozen `PARSE` lowering fast path | queued | General supported templates only; retain `parseExec` fallback. |
+| NR-12 | Extend read-only by-value and return copy coalescing | deferred | RXAS inspection is complete: never-written real formals already alias `aN`; unconditional overwrite exposes DSE, but conditional/loop isolation needs the forthcoming flow analysis. No implementation is selected; see `NR-12-21-WORKLIST.md`. |
+| NR-13 | Redundant numeric-context setup elimination | complete | Accepted NR-09 Rule 1 satisfies the NR-13 exit criterion: the compiler uses existing `NUMSCI`/`NUMENG` only for an identical fully constant non-inherited effective context, focused cross-procedure/plugin coverage passes in both modes and VMs, and dynamic setup fell from 542,500 to 108,508 per VM. General full-context and procedure-owned-default experiments remain optional NR-23/NR-24 work, not unfinished NR-13 scope. |
+| NR-14 | Static/frozen `PARSE` lowering fast path | complete | Adrian accepted the frozen hybrid and the +249,179 B/+20.579% compiler-exit artifact trade-off. The three exact opcodes remain preferred, `parsewords3` chains eligible longer odd word templates, compact opcode 410 `parseplan` covers remaining mechanically frozen plans, logging/TRACE/INTO fall back, and regex is untouched. Generic elapsed is -90.757%/-90.744%, exact elapsed -97.262%/-97.423%, and RexxCPS CPS +45.249%/+45.499%; capped byte-identical Richards is neutral. Closeout passed focused Debug/ASan 15/15, full Debug 1,876/1,876, and isolated installed/native-package proof. See `NR-14-WORKLIST.md` and `evidence/2026-07-21-nr-14-hybrid-first-release-verdict/`. |
 | NR-15 | General stem default/reset fast path | queued | Preserve generation/default/drop/tail semantics. |
 | NR-16 | TRACE-off and same-ADDRESS-environment fast paths | queued | Preserve hooks, signals, mode changes and host callbacks. |
 | NR-17 | Link-time direct provider/call resolution | queued | Preserve late-load and plugin fallback. |
-| NR-18 | Safe RXAS rule harvest | queued | Require opcode effects/liveness proof and generated rule tests. |
+| NR-18 | Safe RXAS rule harvest | queued | Continue beyond the completed NR-09 batch only with opcode effects/liveness proof and generated rule tests, retaining rejected/deferred ledger entries. |
 | NR-19 | Optional C LTO/PGO/code-layout experiment | queued | Optional build feature; adopt only with repeatable supported-platform evidence. |
 | NR-20 | Value/frame allocation counters and targeted pooling | queued | Gather counters first; preserve ownership and sanitizer gates. |
+| NR-26 | Typed semantic flow analysis in `rxc` | complete | Adrian accepted the F1/F2/P1 panel on the correctness-plus-instructions gate. Final focused 8/8 and broad Debug 1877/1877 pass; the exact 19-image census remains 50,965 to 50,924 instructions (`copy -11`, `icopy -30`). The corrected RexxCPS artifact passes a narrow same-session drift control with no 3% guard hit. No RXAS annotations, ISA, RXBIN or ABI change. See `NR-26-WORKLIST.md`. |
 
 ## P1 architecture-neutral prototypes
 
@@ -558,16 +856,230 @@ These are time-boxed evidence activities, not production commitments.
 
 | ID | Prototype | Status | Adoption question |
 | --- | --- | --- | --- |
-| NR-21 | Mapped-call descriptor | queued | Does it materially beat compiler placement while preserving aliases and cold unwind? |
+| NR-21 | Mapped-call descriptor | complete | Adrian accepted permanent `CALL1...CALL4` with enforced RXBIN 007 feature bit 0 after the first Release verdict improved List about 6% and Permute 3-4% in both VMs, with neutral Richards, no JSON control regression and smaller images. The descriptor alternative was rejected; complete Debug build, focused 17/17 and final broad CTest 1,871/1,871 pass. NR-12 remains deferred. See `NR-12-21-WORKLIST.md`. |
 | NR-22 | Compact runtime execution stream | queued | Does it improve total portfolio time on at least two architectures with canonical RXBIN unchanged? |
-| NR-23 | Runtime quickening/superinstructions | queued | Can dequickening, signals, TRACE/debug, late load and both VM modes remain correct? |
-| NR-24 | Profile-selected fusion | queued | Do RXSEQ-selected fusions repeat across the portfolio without code-size explosion? |
+| NR-23 | Runtime quickening/superinstructions | queued | Use the completed NR-09 evidence when comparing private-runtime synthesis with canonical new opcodes; can dequickening, signals, TRACE/debug, late load and both VM modes remain correct? |
+| NR-24 | Profile-selected fusion | queued | Extend the completed NR-09 evidence only where RXSEQ-selected semantic units repeat across the portfolio without code-size explosion and beat compiler lowering or procedure defaults. |
 | NR-25 | Value hot/cold split or pool allocator | queued | Do cache/allocation counters justify the ownership and complexity cost? |
 
 ## Idea ledger
 
+### NR-12 / bounded NR-21 work notes
+
+- 2026-07-20: Started the ordered call-convention investigation from clean
+  `develop` commit `5626d6b87`. The retained NR-05 CSV reproduces 14,959,323
+  arity-zero-through-four calls out of 16,439,420 (90.996659% overall,
+  87.792028% optimized and 92.868653% unoptimized). JSON deliberately remains
+  the high-arity fallback/non-regression case. The resumable audit, design,
+  guarded-PoC, protected-input and inlining gates are in
+  `NR-12-21-WORKLIST.md`. No public opcode, serialized RXBIN, ABI or
+  architectural change is selected by starting this work.
+- 2026-07-20: The default-off fixed-arity direct-bytecode PoC passed the
+  opt/no-opt two-VM portfolio, focused arity/repeated/overlap/status/reference/
+  signal tests, effects metadata and assembler/linker/disassembler round-trip.
+  It preserves the ordinary callee `a1...aN` contract and status flags while
+  removing eligible call-window marshalling. The 11-source static portfolio
+  falls 262 optimized and 333 no-opt executable instructions with identical
+  `.locals`, register ceilings, copy counts and non-marshalling opcode choices.
+  A bounded Release capture is clearly positive for List and Permute in both
+  VMs and neutral/noisy elsewhere; this is design-selection evidence, not the
+  mandatory production verdict. NR-12 implementation is deferred to flow
+  analysis, and inline formal/result scaffolding remains a separate follow-on.
+- 2026-07-20: Adrian approved the fixed direct-bytecode design and explicit
+  RXBIN compatibility policy. The provisional production implementation uses
+  `CALL1...CALL4` at IDs 401-404 and enforced
+  `RXBIN007_FEATURE_FIXED_CALLS`; zero-feature RXBIN 007 remains readable and
+  unsupported/missing features fail closed. NR-06 affinity, dynamic/native
+  calls, NR-12 and inline lowering remain out of scope. The implementation is
+  frozen after minimum focused correctness for the mandatory ordinary-Release
+  verdict.
+- 2026-07-20: The frozen ordinary profiling-off Release comparison passed
+  focused Debug CTest 17/17 and the pre-timing smoke matrix 16/16. Across 12
+  recorded paired rounds, List improved 6.015%/5.784% and Permute
+  3.849%/3.224% in `rxvm`/`rxbvm`; Richards was neutral and the high-arity JSON
+  control improved 0.904%/1.983%. All candidate linked images were smaller and
+  every timing cell declined a rerun. First production verdict: **ACCEPT**.
+  Exact evidence is retained in
+  `evidence/2026-07-20-nr-21-first-release-verdict/`. Work stops here pending
+  Adrian's direction; NR-12 remains deferred for flow analysis.
+- 2026-07-20: Adrian accepted the first production verdict and approved the
+  shortest QA/documentation closeout plus a local commit. The complete Debug
+  product and focused 17/17 set passed. Broad CTest first exposed 96 expected
+  compiler golden mismatches; the documented refresh changed only fixed-call
+  lowering, standalone status setup and four consequent unfused link forms,
+  with no `.locals`, metadata, source/TRACE or unrelated opcode drift. Final
+  high-parallel Debug CTest passed 1,871/1,871. Compiler, RXAS, RXBIN and VM
+  documentation now agree on selection, feature enforcement, expected status
+  flags and the ordinary callee `a1...aN` view. NR-21 is complete; NR-12 stays
+  deferred for flow analysis. QA evidence is under
+  `evidence/2026-07-20-nr-21-first-release-verdict/qa-closeout/`.
+
+### NR-14 work notes
+
+- 2026-07-20: Started the static/frozen PARSE investigation from clean local
+  `develop` commit `8424587f2`, intentionally two commits ahead of
+  `origin/develop`. `NR-14-WORKLIST.md` records the semantic inventory,
+  retained-evidence audit, machine-level ceiling and guarded A-E comparison.
+  Adrian explicitly authorized runtime-assist RXAS/RXBIN/linker/disassembler
+  and both-VM PoCs and productionization of the fastest validated NR-14 design;
+  generic `parseExec` remains the complete unsupported/dynamic fallback. No
+  production design is selected by starting the work.
+- 2026-07-20: The A-E comparison selected D, three exact direct-result opcodes
+  with RXBIN 007 feature bit 1 and fail-closed compiler eligibility. Focused
+  Debug and candidate Release checks pass 11/11. In 12 paired profiling-off
+  Release rounds, canonical RexxCPS native CPS improved by 45.965%/45.826% and
+  focused frozen-PARSE elapsed fell by 97.248%/97.445%, favorable in every pair
+  on both VMs. The byte-identical Richards control is neutral/noisy on `rxvm`
+  at the 36-pair cap and slightly favorable on `rxbvm`; sub-5 ms lifecycle is
+  noisy/inconclusive, while RSS is slightly lower. First verdict recommends
+  **ACCEPT**, but the 131,483-byte/10.859% `rxcexits.rxbin` increase crosses the
+  artifact guard and needs Adrian's explicit trade-off decision. Evidence is
+  `evidence/2026-07-20-nr-14-first-release-verdict/`. Work stops here with the
+  implementation provisional; no broad closeout, commit or push has run.
+- 2026-07-21: Adrian required generic mechanically frozen coverage while
+  retaining benchmark-fast exact paths. Implemented the hybrid with opcode 410
+  `parseplan`, a compact portable descriptor/reusable vector, and exact
+  `parsewords3` chaining where faster; regex remains untouched. Six balanced
+  PoC rounds select prepared over `parseExec` and exact chaining over prepared
+  for the eligible odd-word class. Focused Debug and Release pass 13/13. The
+  new first Release verdict records -90.757%/-90.744% generic elapsed,
+  -97.262%/-97.423% exact elapsed and +45.249%/+45.499% RexxCPS CPS, all 12/12
+  favorable; byte-identical Richards is neutral at 36 pairs. ACCEPT is
+  recommended, pending explicit approval of the +249,179 B/+20.579%
+  `rxcexits.rxbin` increase. Evidence:
+  `evidence/2026-07-21-nr-14-hybrid-first-release-verdict/`.
+- 2026-07-21: Adrian accepted the hybrid verdict and explicitly approved the
+  compiler-exit/RXAS artifact trade-off, full closeout and a local commit, with
+  no push. Disposable PoCs were removed and the four instructions documented.
+  Focused Debug including RXAS reference examples passes 15/15; the full Debug
+  suite passes 1,876/1,876. The complete supported Apple ASan build passes and
+  the same focused surface passes 15/15; Apple ASan rejects leak detection, so
+  LSan is not claimed. The ordinary Release product rebuilt, isolated install
+  placed 131 files, installed native `hello` packaging executed successfully,
+  and installed `rxvm`/`rxbvm` both pass the generic frozen-PARSE workload.
+  NR-14 is complete; `qa-closeout/` records the final gate.
+
+### NR-26 work notes
+
+- 2026-07-21: Started NR-26 from clean `develop` commit `4ab5f3d8d`, exactly
+  equal to `origin/develop`. The design comparison selected a procedure-local
+  CFG overlay over the final typed AST: direct AST annotations do not provide
+  a reusable join model, while a new lowering IR or SSA would add machinery
+  not justified by the first transformations. The initial bounded production
+  batch will share one must-write-before-read proof between scalar default
+  initialization removal and NR-12 scalar by-value entry-copy removal. The
+  layer will retain separate source-symbol, compiler-symbol/temporary and
+  eventual physical-register identities, reject uncertainty only for the
+  affected value/site, and emit ordinary self-contained RXAS. The resumable
+  design, proof and mandatory first-Release stop are in `NR-26-WORKLIST.md`.
+- 2026-07-21: The first F1/F2 Release result was directionally favorable but
+  noisy/inconclusive at the governed 36-pair cap. Adrian selected REVISE and
+  directed NR-26 to build a stronger transformation panel under correctness
+  plus exact instruction-avoidance gates, deferring the next formal performance
+  sweep until the panel is complete. Discovery now prioritizes the retained
+  compact `ILOADSETUNLINKN` opportunity, compiler-owned dead/copy scaffolding
+  and flow-sensitive constant/copy propagation; result-only `FDIVSUB` remains
+  a separate ISA/RXBIN semantic decision.
+- 2026-07-21: Stronger panel slice P1 now passes the construction gate. Exact
+  small-scalar must-copy propagation, dead-copy fixed point and guarded
+  incoming-slot sharing avoid 41 instructions across the bounded 19 optimized
+  images: 35 in five benchmark workloads and six in three tool selftests, with
+  the complete mnemonic delta limited to `copy -11` and `icopy -30`. Focused
+  optimized/no-opt and both-VM correctness pass, as do the 11 changed or
+  retargeted Release images in both VMs. Compact `ILOADSETUNLINKN` is deferred
+  because its loaded operand is presently required by register-backed literal
+  TRACE after alias unlink; immediate constants have the same observation
+  boundary, and `FDIVSUB` still needs an ISA decision. Counted-loop count-copy
+  reuse exposes only four static setup copies and is not selected for this
+  panel because it adds a new destructive loop-state proof surface. F1, F2 and
+  P1/F3 are now the frozen three-transformation no-architecture panel; the one
+  combined formal performance sweep is next. Exact construction evidence is under
+  `evidence/2026-07-21-nr-26-panel-construction/`.
+- 2026-07-21: The frozen three-transformation panel's combined ordinary
+  profiling-off Release sweep completed at the governed 36-pair cap over the
+  five instruction-changing benchmarks plus canonical RexxCPS, under both
+  current VMs. All 888 executions pass. Permute/rxbvm is clearly favorable
+  (paired median -0.662%, mean 95% interval -2.438% to -0.375%); all other
+  intervals are noisy/inconclusive, none is wholly unfavorable, no 3%
+  per-workload guard is hit, and every candidate linked image is smaller.
+  ACCEPT is recommended on Adrian's selected correctness-plus-instructions
+  gate without making a release-wide speedup claim. NR-26 remains frozen,
+  provisional and uncommitted at the mandatory decision stop. Evidence:
+  `evidence/2026-07-21-nr-26-panel-first-release-verdict/`.
+- 2026-07-22: Adrian accepted the panel and authorized the shortest local
+  gate-to-commit closeout. Broad validation exposed and corrected two
+  fail-closed boundaries before landing: counted-loop traversal is now kept
+  within exact CFG block ownership, and generated semantic `VAR_REFERENCE`
+  selector nodes are always treated as real reads. Focused regressions cover a
+  backedge kill and opaque jump dispatch; the final focused set passes 8/8 and
+  full Debug CTest passes 1877/1877. All 19 optimized source-RXAS images retain
+  the exact 41-instruction reduction. A 24-byte RexxCPS linked-image change
+  from the corrected standard library was controlled in a same-session
+  old/corrected run under both VMs: all 52 executions pass, both paired
+  intervals cross zero and no 3% guard is hit. Final evidence is under
+  `evidence/2026-07-22-nr-26-closeout/`; NR-26 is complete with no new
+  release-wide speed claim.
+
 Ideas remain here until assessed, even when rejected. An idea can inform more
 than one `NR-*` activity and does not alter their priority by itself.
+
+### IDEA-PARSE-01 - Compiled immutable PARSE execution
+
+- Status: complete; accepted hybrid under NR-14
+- Related activities: NR-14, NR-22, NR-23, NR-24
+- Hypothesis: mechanically eligible frozen PARSE templates can execute close to
+  direct string-scan/assignment cost when the runtime consumes a compact
+  immutable plan or exact hot primitive, avoiding plan-text interpretation,
+  name lookup, generic descriptor traversal and avoidable result allocation.
+- Variants: compiler expansion into existing operations; specialized
+  `parseExec`; a canonical compiled-plan opcode; direct explicit-target
+  instruction forms; and linker/load-time private preparation compared with
+  serialized RXBIN assistance.
+- Semantic risks: source/modifier evaluation order, literal and positional
+  template edge cases, empty/unmatched fields, repeated targets, source/target
+  aliasing, dynamic patterns, Unicode/string behavior, error ordering, TRACE,
+  source coordinates, late load and dual-VM parity.
+- Evidence needed: supported/fallback population, exact machine-level ceilings,
+  focused optimized/no-opt dual-VM semantics, assembler/linker/disassembler and
+  compatibility proof where applicable, paired RexxCPS plus another PARSE
+  workload, unrelated control, startup/load, allocation/RSS and artifact cost.
+- Resumable control plane: `performance/NR-14-WORKLIST.md`.
+
+### IDEA-NR09-NUMCTX-01 — Procedure-entry numeric-context synthesis
+
+- Status: NR-13 complete through accepted existing `NUMSCI`/`NUMENG` lowering;
+  wider variants remain optional architecture work under NR-23 and NR-24
+- Related activities: NR-09, NR-13, NR-23, NR-24
+- Hypothesis: repeated procedure-entry numeric setup should be performed once
+  as a semantic unit, or installed as the procedure's frame-entry default,
+  instead of dispatching five independent setters on every activation.
+- Current leverage: `rxc` emits up to five constant `SETNUM*` instructions for
+  non-inherited values, while RXBIN 007 and both VMs already implement
+  `NUMSCI`/`NUMENG` for the common fuzz-zero scientific/engineering cases. A
+  child frame first copies the caller numeric context and the prologue then
+  overwrites declared settings; each setter also resynchronizes the decimal
+  plugin.
+- Variants: emit existing `NUMSCI`/`NUMENG`; add a full five-field synthesized
+  operation; install non-inherited context from procedure/runtime metadata at
+  frame activation; synthesize only in the private runtime image while keeping
+  canonical RXBIN unchanged.
+- Semantic risks: explicit `INHERITED`, invalid-value signal ordering, decimal
+  plugin ownership/synchronization, recycled frames, inline compatibility,
+  source-step/TRACE coordinates, late loading and both VM modes.
+- NR-13 evidence: accepted Rule 1 proves identical-effective-context
+  eligibility, inherited/nonzero-fuzz/small-digits fallback, cross-procedure
+  behavior, both optimization modes, both VMs, all three decimal-plugin modes,
+  and an exact dynamic setup reduction from 542,500 to 108,508 per VM. Its
+  broad closeout passed 1,852/1,852; the current post-NR-21 suite passes
+  1,871/1,871.
+- Remaining decision gate: a canonical full-context opcode, RXBIN metadata
+  contract, procedure-owned frame default or private-runtime synthesis is a
+  separate NR-23/NR-24 architecture choice. It requires comparative evidence
+  and Adrian's selection but does not keep NR-13 open.
+- 2026-07-20 closure review: the historical NR-13 exit criterion requires
+  identical effective context, cross-procedure numeric tests and dynamic-count
+  reduction. Accepted NR-09 Rule 1 supplies all three, so Adrian's requested
+  review marks NR-13 complete without another implementation or timing run.
 
 ### IDEA-META-01 — Link-produced runtime-critical metadata table
 
@@ -628,9 +1140,9 @@ than one `NR-*` activity and does not alter their priority by itself.
   `match` execution from avoidable lookup/descriptor overhead.
 - Design record: `performance/NR-04A-RUNTIME-TYPE-DISPATCH-DESIGN.md`.
 
-### IDEA-CALL-01 — Read-only by-value formal invariant and call-flag simplification
+### IDEA-CALL-01 — Protected by-value input and call-flag simplification
 
-- Status: captured; assessment not started
+- Status: assessed; implementation deferred pending flow analysis
 - Related activities: NR-05, NR-06, NR-12
 - Hypothesis: strengthen the compiler invariant so a by-value formal proved
   read-only is never the destination of compiler-generated writes and always
@@ -643,6 +1155,10 @@ than one `NR-*` activity and does not alter their priority by itself.
   sets `is_const_arg` for provably read-only by-value formals in optimized and
   no-opt builds. `compiler/rxcpemit.c` already avoids their defensive copy, and
   inlining has matching read-only/writable handling.
+- Inspection result: real never-written formals already bind directly to the
+  incoming `aN`. Write-before-read has a genuine dead eager copy; read-then-write
+  only moves it; conditional/loop writes require path-correct binding and join
+  facts. Adrian selected postponement until the forthcoming flow analysis.
 - Important distinction: `REGTP_VAL` also signals that an optional argument was
   supplied, while `REGTP_NOTSYM` lets a writable large-value formal reuse a
   temporary not backed by a caller-visible symbol. The current flags therefore

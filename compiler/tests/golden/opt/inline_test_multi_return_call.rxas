@@ -7,11 +7,7 @@
 main() .locals=7
    .meta "inline_test_multi_return_call.main"="b" ".int" main() ""
    .srcstep 18 18 17 "inline_test_multi_return_call.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_multi_return_call.crexx" 4 3 50 "  say \"Starting multi return call inline test...\""
    say "Starting multi return call inline test..."
    .srcstep 14 14 17 "inline_test_multi_return_call.crexx" 5 3 5 "  do i = 0 to 2"
@@ -58,7 +54,6 @@ l51iffalse:
    icopy r5,r6
    br l46bexprend
 l46bexprend:
-   endlife r4
    icopy r3,r5
    .traceevent "A" 6 "R" "I" "r" 3 12 12 0 "__inline_unused_17" ""
 l8doinc:
@@ -67,7 +62,6 @@ l8doinc:
    .srcstep 15 15 17 "inline_test_multi_return_call.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
    .meta "inline_test_multi_return_call.main.i"
    .srcstep 16 16 17 "inline_test_multi_return_call.crexx" 8 3 48 "  say \"Multi return call inline test finished.\""
    say "Multi return call inline test finished."

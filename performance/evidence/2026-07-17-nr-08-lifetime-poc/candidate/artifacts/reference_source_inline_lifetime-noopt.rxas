@@ -1,0 +1,342 @@
+/*
+ * SOURCE                 : reference_source_inline_lifetime.crexx
+ */
+
+.meta "reference_source_inline_lifetime.refholder"="b" ".unknown" .class
+.meta "reference_source_inline_lifetime.refholder.value_ref"="b" "reference .int" .attr 1
+.meta "reference_source_inline_lifetime.snapshotholder"="b" ".unknown" .class
+.meta "reference_source_inline_lifetime.snapshotholder.value_copy"="b" ".int" .attr 1
+.globals=0
+
+main() .locals=6
+   .meta "reference_source_inline_lifetime.main"="b" ".int" main() ""
+   .srcstep 17 17 17 "reference_source_inline_lifetime.crexx" 4 1 23 "main: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 1 1 17 "reference_source_inline_lifetime.crexx" 5 3 25 "  holder = makeRefHolder()"
+   .meta "reference_source_inline_lifetime.main.holder"="b" ".refholder" r0
+   load r2,0
+   call r0,makeRefHolder(),r2
+   .traceevent "F" 4 "R" "O" "r" 0 1 1 0 "makerefholder" ""
+   .traceevent "A" 6 "R" "O" "r" 0 1 1 0 "holder" ""
+   .srcstep 3 3 17 "reference_source_inline_lifetime.crexx" 6 3 26 "  if holder.isLive() <> 0 then return fail(\"returned local reference is still live\")"
+   .traceevent "V" 6 "R" "O" "r" 0 3 3 0 "holder" ""
+   load r2,1
+   settp r0,256
+   swap r3,r0
+   call r4,§reference_source_inline_lifetime.refholder.islive(),r2
+   swap r0,r3
+   .traceevent "F" 4 "R" "I" "r" 4 3 3 0 "islive" ""
+   ine r4,r4,0
+   .traceevent "O" 4 "R" "B" "r" 4 3 3 0 "" ""
+   brf l21iffalse,r4
+   .srcstep 4 4 17 "reference_source_inline_lifetime.crexx" 6 27 31 "  if holder.isLive() <> 0 then return fail(\"returned local reference is still live\")"
+   .srcstep 2 2 17 "reference_source_inline_lifetime.crexx" 6 32 85 "  if holder.isLive() <> 0 then return fail(\"returned local reference is still live\")"
+   load r3,"returned local reference is still live"
+   .traceevent "L" 4 "R" "S" "r" 3 2 2 0 "" ""
+   load r2,1
+   settp r3,768
+   call r5,fail(),r2
+   .traceevent "F" 4 "R" "I" "r" 5 2 2 0 "fail" ""
+   ret r5
+l21iffalse:
+   .srcstep 6 6 17 "reference_source_inline_lifetime.crexx" 7 3 37 "  if holder.invalidReadCaught() <> 1 then return fail(\"returned local reference is not catchably invalid\")"
+   .traceevent "V" 6 "R" "O" "r" 0 6 6 0 "holder" ""
+   load r4,1
+   settp r0,256
+   swap r5,r0
+   call r3,§reference_source_inline_lifetime.refholder.invalidreadcaught(),r4
+   swap r0,r5
+   .traceevent "F" 4 "R" "I" "r" 3 6 6 0 "invalidreadcaught" ""
+   ine r5,r3,1
+   .traceevent "O" 4 "R" "B" "r" 5 6 6 0 "" ""
+   brf l31iffalse,r5
+   .srcstep 7 7 17 "reference_source_inline_lifetime.crexx" 7 38 42 "  if holder.invalidReadCaught() <> 1 then return fail(\"returned local reference is not catchably invalid\")"
+   .srcstep 5 5 17 "reference_source_inline_lifetime.crexx" 7 43 107 "  if holder.invalidReadCaught() <> 1 then return fail(\"returned local reference is not catchably invalid\")"
+   load r4,"returned local reference is not catchably invalid"
+   .traceevent "L" 4 "R" "S" "r" 4 5 5 0 "" ""
+   load r3,1
+   settp r4,768
+   call r2,fail(),r3
+   .traceevent "F" 4 "R" "I" "r" 2 5 5 0 "fail" ""
+   ret r2
+l31iffalse:
+   .srcstep 8 8 17 "reference_source_inline_lifetime.crexx" 9 3 39 "  snapshot_holder = makeSnapshotHolder()"
+   .meta "reference_source_inline_lifetime.main.snapshot_holder"="b" ".snapshotholder" r1
+   load r5,0
+   call r1,makeSnapshotHolder(),r5
+   .traceevent "F" 4 "R" "O" "r" 1 8 8 0 "makesnapshotholder" ""
+   .traceevent "A" 6 "R" "O" "r" 1 8 8 0 "snapshot_holder" ""
+   .srcstep 10 10 17 "reference_source_inline_lifetime.crexx" 10 3 35 "  if snapshot_holder.isLive() <> 1 then return fail(\"snapshot holder live\")"
+   .traceevent "V" 6 "R" "O" "r" 1 10 10 0 "snapshot_holder" ""
+   load r4,1
+   settp r1,256
+   swap r5,r1
+   call r3,§reference_source_inline_lifetime.snapshotholder.islive(),r4
+   swap r1,r5
+   .traceevent "F" 4 "R" "I" "r" 3 10 10 0 "islive" ""
+   ine r5,r3,1
+   .traceevent "O" 4 "R" "B" "r" 5 10 10 0 "" ""
+   brf l45iffalse,r5
+   .srcstep 11 11 17 "reference_source_inline_lifetime.crexx" 10 36 40 "  if snapshot_holder.isLive() <> 1 then return fail(\"snapshot holder live\")"
+   .srcstep 9 9 17 "reference_source_inline_lifetime.crexx" 10 41 76 "  if snapshot_holder.isLive() <> 1 then return fail(\"snapshot holder live\")"
+   load r4,"snapshot holder live"
+   .traceevent "L" 4 "R" "S" "r" 4 9 9 0 "" ""
+   load r3,1
+   settp r4,768
+   call r2,fail(),r3
+   .traceevent "F" 4 "R" "I" "r" 2 9 9 0 "fail" ""
+   ret r2
+l45iffalse:
+   .srcstep 13 13 17 "reference_source_inline_lifetime.crexx" 11 3 35 "  if snapshot_holder.value() <> 42 then return fail(\"snapshot holder value\")"
+   .traceevent "V" 6 "R" "O" "r" 1 13 13 0 "snapshot_holder" ""
+   load r4,1
+   settp r1,256
+   swap r5,r1
+   call r3,§reference_source_inline_lifetime.snapshotholder.value(),r4
+   swap r1,r5
+   .traceevent "F" 4 "R" "I" "r" 3 13 13 0 "value" ""
+   ine r5,r3,42
+   .traceevent "O" 4 "R" "B" "r" 5 13 13 0 "" ""
+   brf l55iffalse,r5
+   .srcstep 14 14 17 "reference_source_inline_lifetime.crexx" 11 36 40 "  if snapshot_holder.value() <> 42 then return fail(\"snapshot holder value\")"
+   .srcstep 12 12 17 "reference_source_inline_lifetime.crexx" 11 41 77 "  if snapshot_holder.value() <> 42 then return fail(\"snapshot holder value\")"
+   load r4,"snapshot holder value"
+   .traceevent "L" 4 "R" "S" "r" 4 12 12 0 "" ""
+   load r3,1
+   settp r4,768
+   call r2,fail(),r3
+   .traceevent "F" 4 "R" "I" "r" 2 12 12 0 "fail" ""
+   ret r2
+l55iffalse:
+   .srcstep 15 15 17 "reference_source_inline_lifetime.crexx" 13 3 47 "  say \"PASS: Reference Source Inline Lifetime\""
+   say "PASS: Reference Source Inline Lifetime"
+   .srcstep 16 16 17 "reference_source_inline_lifetime.crexx" 14 3 11 "  return 0"
+   ret 0
+   .meta "reference_source_inline_lifetime.main.holder"
+   .meta "reference_source_inline_lifetime.main.snapshot_holder"
+
+makeRefHolder() .locals=4
+   .meta "reference_source_inline_lifetime.makerefholder"="b" ".reference_source_inline_lifetime..refholder" makeRefHolder() ""
+   .srcstep 21 21 17 "reference_source_inline_lifetime.crexx" 16 1 38 "makeRefHolder: procedure = .RefHolder"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "reference_source_inline_lifetime.makerefholder.value"="b" ".int" r0
+   .srcstep 18 18 17 "reference_source_inline_lifetime.crexx" 17 3 15 "  value = .int"
+   null r0
+   .srcstep 19 19 17 "reference_source_inline_lifetime.crexx" 18 3 13 "  value = 41"
+   load r0,41
+   .traceevent "L" 4 "R" "I" "r" 0 19 19 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 19 19 0 "value" ""
+   .srcstep 20 20 17 "reference_source_inline_lifetime.crexx" 19 3 37 "  return .RefHolder(reference value)"
+   .traceevent "V" 6 "R" "I" "r" 0 20 20 0 "value" ""
+   mkref r2,r0
+   load r1,1
+   settp r2,768
+   call r3,§reference_source_inline_lifetime.refholder.§factory(),r1
+   .traceevent "F" 4 "R" "O" "r" 3 20 20 0 "§factory" ""
+   ret r3
+   .meta "reference_source_inline_lifetime.makerefholder.value"
+
+makeSnapshotHolder() .locals=4
+   .meta "reference_source_inline_lifetime.makesnapshotholder"="b" ".reference_source_inline_lifetime..snapshotholder" makeSnapshotHolder() ""
+   .srcstep 25 25 17 "reference_source_inline_lifetime.crexx" 21 1 48 "makeSnapshotHolder: procedure = .SnapshotHolder"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .meta "reference_source_inline_lifetime.makesnapshotholder.value"="b" ".int" r0
+   .srcstep 22 22 17 "reference_source_inline_lifetime.crexx" 22 3 15 "  value = .int"
+   null r0
+   .srcstep 23 23 17 "reference_source_inline_lifetime.crexx" 23 3 13 "  value = 42"
+   load r0,42
+   .traceevent "L" 4 "R" "I" "r" 0 23 23 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 23 23 0 "value" ""
+   .srcstep 24 24 17 "reference_source_inline_lifetime.crexx" 24 3 42 "  return .SnapshotHolder(reference value)"
+   .traceevent "V" 6 "R" "I" "r" 0 24 24 0 "value" ""
+   mkref r2,r0
+   load r1,1
+   settp r2,768
+   call r3,§reference_source_inline_lifetime.snapshotholder.§factory(),r1
+   .traceevent "F" 4 "R" "O" "r" 3 24 24 0 "§factory" ""
+   ret r3
+   .meta "reference_source_inline_lifetime.makesnapshotholder.value"
+
+fail() .locals=2
+   .meta "reference_source_inline_lifetime.fail"="b" ".int" fail() "label=.string"
+   .srcstep 29 29 17 "reference_source_inline_lifetime.crexx" 26 1 23 "fail: procedure = .int"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 26 26 17 "reference_source_inline_lifetime.crexx" 27 7 22 "  arg label = .string"
+   .meta "reference_source_inline_lifetime.fail.label"="b" ".string" a1
+   .srcstep 27 27 17 "reference_source_inline_lifetime.crexx" 28 3 20 "  say \"FAIL:\" label"
+   .traceevent "V" 6 "R" "S" "a" 1 27 27 0 "label" ""
+   sconcat r1,"FAIL:",a1
+   .traceevent "O" 4 "R" "S" "r" 1 27 27 0 "" ""
+   say r1
+   .srcstep 28 28 17 "reference_source_inline_lifetime.crexx" 29 3 11 "  return 1"
+   ret 1
+   .meta "reference_source_inline_lifetime.fail.label"
+
+§reference_source_inline_lifetime.refholder.§factory() .locals=4
+   .meta "reference_source_inline_lifetime.refholder.§factory"="b" ".reference_source_inline_lifetime..refholder" §reference_source_inline_lifetime.refholder.§factory() "value=reference .int"
+   .srcstep 33 33 17 "reference_source_inline_lifetime.crexx" 34 3 13 "  *: factory"
+   setattrs r1,2
+   setobjtype r1,"reference_source_inline_lifetime.refholder"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 30 30 17 "reference_source_inline_lifetime.crexx" 35 9 31 "    arg value = reference .int"
+   .meta "reference_source_inline_lifetime.refholder.§factory.value"="b" "reference .int" a1
+   .meta "reference_source_inline_lifetime.refholder.§factory.§factory"="b" ".refholder" r1
+   .srcstep 31 31 17 "reference_source_inline_lifetime.crexx" 36 5 22 "    value_ref = value"
+   .traceevent "V" 6 "R" "R" "a" 1 31 31 0 "value" ""
+   linkattr1 r3,r1,1
+   copy r3,a1
+   unlink r3
+   .srcstep 32 32 17 "reference_source_inline_lifetime.crexx" 37 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 1 32 32 0 "§factory" ""
+   ret r1
+   .meta "reference_source_inline_lifetime.refholder.§factory.value"
+   .meta "reference_source_inline_lifetime.refholder.§factory.§factory"
+
+§reference_source_inline_lifetime.refholder.islive() .locals=3
+   .meta "reference_source_inline_lifetime.refholder.islive"="b" ".int" §reference_source_inline_lifetime.refholder.islive() ""
+   .srcstep 38 38 17 "reference_source_inline_lifetime.crexx" 39 3 24 "  isLive: method = .int"
+   assertinitialized a1
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 35 35 17 "reference_source_inline_lifetime.crexx" 40 5 29 "    if <refvalid>(value_ref) then return 1"
+   linkattr1 r1,a1,1
+   .traceevent "V" 6 "R" "R" "r" 1 35 35 0 "value_ref" ""
+   refvalid r2,r1
+   unlink r1
+   brf l122iffalse,r2
+   .srcstep 36 36 17 "reference_source_inline_lifetime.crexx" 40 30 34 "    if <refvalid>(value_ref) then return 1"
+   .srcstep 34 34 17 "reference_source_inline_lifetime.crexx" 40 35 43 "    if <refvalid>(value_ref) then return 1"
+   .meta "reference_source_inline_lifetime.refholder.islive.§this"="b" ".refholder" a1
+   ret 1
+l122iffalse:
+   .srcstep 37 37 17 "reference_source_inline_lifetime.crexx" 41 5 13 "    return 0"
+   ret 0
+   .meta "reference_source_inline_lifetime.refholder.islive.§this"
+
+§reference_source_inline_lifetime.refholder.invalidreadcaught() .locals=4
+   .meta "reference_source_inline_lifetime.refholder.invalidreadcaught"="b" ".int" §reference_source_inline_lifetime.refholder.invalidreadcaught() ""
+   .srcstep 45 45 17 "reference_source_inline_lifetime.crexx" 43 3 35 "  invalidReadCaught: method = .int"
+   assertinitialized a1
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 39 39 17 "reference_source_inline_lifetime.crexx" 44 5 15 "    caught = 0"
+   .meta "reference_source_inline_lifetime.refholder.invalidreadcaught.caught"="b" ".int" r0
+   .meta "reference_source_inline_lifetime.refholder.invalidreadcaught.§this"="b" ".refholder" a1
+   load r0,0
+   .traceevent "L" 4 "R" "I" "r" 0 39 39 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 39 39 0 "caught" ""
+   .srcstep 43 43 17 "reference_source_inline_lifetime.crexx" 45 5 7 "    do"
+   sigpush "REFERENCE_INVALID"
+   sigbr l148signalhandler0,"REFERENCE_INVALID"
+   .srcstep 40 40 17 "reference_source_inline_lifetime.crexx" 46 7 37 "      linked = dereference value_ref"
+   .meta "reference_source_inline_lifetime.refholder.invalidreadcaught.linked"="b" ".int" r2
+   linkattr1 r3,a1,1
+   .traceevent "V" 6 "R" "R" "r" 3 40 40 0 "value_ref" ""
+   unlink r2
+   linkref r2,r3
+   unlink r3
+   .traceevent "A" 6 "R" "I" "r" 2 40 40 0 "linked" ""
+   .srcstep 41 41 17 "reference_source_inline_lifetime.crexx" 47 7 26 "      linked = linked + 1"
+   .traceevent "V" 6 "R" "I" "r" 2 41 41 0 "linked" ""
+   iadd r2,r2,1
+   .traceevent "O" 4 "R" "I" "r" 2 41 41 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 2 41 41 0 "linked" ""
+   sigpop "REFERENCE_INVALID"
+   br l148signalend
+l148signalhandler0:
+   sigpop "REFERENCE_INVALID"
+   .srcstep 42 42 17 "reference_source_inline_lifetime.crexx" 49 7 17 "      caught = 1"
+   load r0,1
+   .traceevent "L" 4 "R" "I" "r" 0 42 42 0 "" ""
+   .traceevent "A" 6 "R" "I" "r" 0 42 42 0 "caught" ""
+   br l148signalend
+l148signalend:
+   unlink r2
+   endlife r2
+   .meta "reference_source_inline_lifetime.refholder.invalidreadcaught.linked"
+   .srcstep 44 44 17 "reference_source_inline_lifetime.crexx" 51 5 18 "    return caught"
+   .traceevent "V" 6 "R" "I" "r" 0 44 44 0 "caught" ""
+   ret r0
+   .meta "reference_source_inline_lifetime.refholder.invalidreadcaught.caught"
+   .meta "reference_source_inline_lifetime.refholder.invalidreadcaught.§this"
+
+§reference_source_inline_lifetime.snapshotholder.§factory() .locals=5
+   .meta "reference_source_inline_lifetime.snapshotholder.§factory"="b" ".reference_source_inline_lifetime..snapshotholder" §reference_source_inline_lifetime.snapshotholder.§factory() "value=reference .int"
+   .srcstep 49 49 17 "reference_source_inline_lifetime.crexx" 56 3 13 "  *: factory"
+   setattrs r1,2
+   setobjtype r1,"reference_source_inline_lifetime.snapshotholder"
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 46 46 17 "reference_source_inline_lifetime.crexx" 57 9 31 "    arg value = reference .int"
+   .meta "reference_source_inline_lifetime.snapshotholder.§factory.value"="b" "reference .int" a1
+   .meta "reference_source_inline_lifetime.snapshotholder.§factory.§factory"="b" ".snapshotholder" r1
+   .srcstep 47 47 17 "reference_source_inline_lifetime.crexx" 58 5 32 "    value_copy = snapshot value"
+   .traceevent "V" 6 "R" "R" "a" 1 47 47 0 "value" ""
+   deref r4,a1
+   linkattr1 r3,r1,1
+   icopy r3,r4
+   unlink r3
+   .srcstep 48 48 17 "reference_source_inline_lifetime.crexx" 59 5 11 "    return"
+   .traceevent "V" 6 "R" "O" "r" 1 48 48 0 "§factory" ""
+   ret r1
+   .meta "reference_source_inline_lifetime.snapshotholder.§factory.value"
+   .meta "reference_source_inline_lifetime.snapshotholder.§factory.§factory"
+
+§reference_source_inline_lifetime.snapshotholder.islive() .locals=1
+   .meta "reference_source_inline_lifetime.snapshotholder.islive"="b" ".int" §reference_source_inline_lifetime.snapshotholder.islive() ""
+   .srcstep 51 51 17 "reference_source_inline_lifetime.crexx" 61 3 24 "  isLive: method = .int"
+   assertinitialized a1
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 50 50 17 "reference_source_inline_lifetime.crexx" 62 5 13 "    return 1"
+   .meta "reference_source_inline_lifetime.snapshotholder.islive.§this"="b" ".snapshotholder" a1
+   ret 1
+   .meta "reference_source_inline_lifetime.snapshotholder.islive.§this"
+
+§reference_source_inline_lifetime.snapshotholder.value() .locals=2
+   .meta "reference_source_inline_lifetime.snapshotholder.value"="b" ".int" §reference_source_inline_lifetime.snapshotholder.value() ""
+   .srcstep 53 53 17 "reference_source_inline_lifetime.crexx" 64 3 23 "  value: method = .int"
+   assertinitialized a1
+   setnumdgts 18
+   setnumfuz 0
+   setnumfrm 1
+   setnumcas 1
+   setnumstd 1
+   .srcstep 52 52 17 "reference_source_inline_lifetime.crexx" 65 5 22 "    return value_copy"
+   .meta "reference_source_inline_lifetime.snapshotholder.value.§this"="b" ".snapshotholder" a1
+   linkattr1 r1,a1,1
+   .traceevent "V" 6 "R" "I" "r" 1 52 52 0 "value_copy" ""
+   ret r1
+   .meta "reference_source_inline_lifetime.snapshotholder.value.§this"

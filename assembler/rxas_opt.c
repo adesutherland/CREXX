@@ -30,7 +30,67 @@
 #include "rxdefs.h"
 
 #include <ctype.h>
+#include <stdlib.h>
 #include "string.h"
+
+Assembler_Token *rxas_queue_operand(const instruction_queue *item, size_t operand_index) {
+    if (!item) return 0;
+    if (item->instrType == OP_CODE && item->operandTokens) {
+        return operand_index < item->operandCount ? item->operandTokens[operand_index] : 0;
+    }
+    switch (operand_index) {
+        case 0: return item->operand1Token;
+        case 1: return item->operand2Token;
+        case 2: return item->operand3Token;
+        case 3: return item->operand4Token;
+        case 4: return item->operand5Token;
+        case 5: return item->operand6Token;
+        case 6: return item->operand7Token;
+        case 7: return item->operand8Token;
+        case 8: return item->operand9Token;
+        case 9: return item->operand10Token;
+        default: return 0;
+    }
+}
+
+void rxas_free_queue_item(instruction_queue *item) {
+    if (!item) return;
+    free(item->operandTokens);
+    item->operandTokens = 0;
+    item->operandCount = 0;
+}
+
+static void set_named_opcode_operands(instruction_queue *item) {
+    item->operand1Token = rxas_queue_operand(item, 0);
+    item->operand2Token = rxas_queue_operand(item, 1);
+    item->operand3Token = rxas_queue_operand(item, 2);
+    item->operand4Token = rxas_queue_operand(item, 3);
+    item->operand5Token = rxas_queue_operand(item, 4);
+    item->operand6Token = rxas_queue_operand(item, 5);
+    item->operand7Token = rxas_queue_operand(item, 6);
+    item->operand8Token = rxas_queue_operand(item, 7);
+    item->operand9Token = rxas_queue_operand(item, 8);
+    item->operand10Token = rxas_queue_operand(item, 9);
+}
+
+static void set_opcode_operands(Assembler_Context *context,
+                                instruction_queue *item,
+                                Assembler_Token *const *operandTokens,
+                                size_t operandCount) {
+    rxas_free_queue_item(item);
+    if (operandCount) {
+        item->operandTokens = malloc(operandCount * sizeof(*item->operandTokens));
+        if (!item->operandTokens) {
+            RX_PANIC_OOM("malloc rxas queued opcode operands",
+                         operandCount * sizeof(*item->operandTokens),
+                         context && context->file_name ? context->file_name : 0);
+        }
+        memcpy(item->operandTokens, operandTokens,
+               operandCount * sizeof(*item->operandTokens));
+    }
+    item->operandCount = operandCount;
+    set_named_opcode_operands(item);
+}
 
 /* This defines an instruction to be searched for or as a template output */
 typedef struct instruction_pattern {
@@ -43,6 +103,109 @@ typedef struct instruction_pattern {
     char optype3;
     size_t opnum3;
 } instruction_pattern;
+
+typedef struct operand_pattern {
+    char type;
+    size_t number;
+} operand_pattern;
+
+typedef struct extended_instruction_pattern {
+    const operand_pattern *operands;
+    size_t operand_count;
+} extended_instruction_pattern;
+
+/* Existing rule initializers retain their three inline operand pairs.  A '*'
+ * in the first pair selects a variable-length pattern from this side table. */
+#define EXTENDED_PATTERN '*'
+
+enum extended_pattern_id {
+    EXT_WIDE_CNOP,
+    EXT_RRRR,
+    EXT_RRRRRR,
+    EXT_RRRRRRRR,
+    EXT_RIRI,
+    EXT_RIRIR,
+    EXT_RRRI,
+    EXT_RRRIR,
+    EXT_RIRR,
+    EXT_RIRRR
+};
+
+static const operand_pattern wide_cnop_pattern[] = {
+    {'r', 0}, {'r', 1}, {'r', 2}, {'r', 3}, {'r', 4},
+    {'r', 5}, {'r', 6}, {'r', 7}, {'r', 8}
+};
+static const operand_pattern pattern_rrrr[] = {
+    {'r', 0}, {'r', 1}, {'r', 2}, {'r', 3}
+};
+static const operand_pattern pattern_rrrrrr[] = {
+    {'r', 0}, {'r', 1}, {'r', 2}, {'r', 3}, {'r', 4}, {'r', 5}
+};
+static const operand_pattern pattern_rrrrrrrr[] = {
+    {'r', 0}, {'r', 1}, {'r', 2}, {'r', 3},
+    {'r', 4}, {'r', 5}, {'r', 6}, {'r', 7}
+};
+static const operand_pattern pattern_riri[] = {
+    {'r', 0}, {'i', 10}, {'r', 1}, {'i', 11}
+};
+static const operand_pattern pattern_ririr[] = {
+    {'r', 0}, {'i', 10}, {'r', 1}, {'i', 11}, {'r', 2}
+};
+static const operand_pattern pattern_rrri[] = {
+    {'r', 0}, {'r', 1}, {'r', 2}, {'i', 10}
+};
+static const operand_pattern pattern_rrrir[] = {
+    {'r', 0}, {'r', 1}, {'r', 2}, {'i', 10}, {'r', 3}
+};
+static const operand_pattern pattern_rirr[] = {
+    {'r', 0}, {'i', 10}, {'r', 1}, {'r', 2}
+};
+static const operand_pattern pattern_rirrr[] = {
+    {'r', 0}, {'i', 10}, {'r', 1}, {'r', 2}, {'r', 3}
+};
+
+static const extended_instruction_pattern extended_patterns[] = {
+    {wide_cnop_pattern, sizeof(wide_cnop_pattern) / sizeof(wide_cnop_pattern[0])},
+    {pattern_rrrr, sizeof(pattern_rrrr) / sizeof(pattern_rrrr[0])},
+    {pattern_rrrrrr, sizeof(pattern_rrrrrr) / sizeof(pattern_rrrrrr[0])},
+    {pattern_rrrrrrrr, sizeof(pattern_rrrrrrrr) / sizeof(pattern_rrrrrrrr[0])},
+    {pattern_riri, sizeof(pattern_riri) / sizeof(pattern_riri[0])},
+    {pattern_ririr, sizeof(pattern_ririr) / sizeof(pattern_ririr[0])},
+    {pattern_rrri, sizeof(pattern_rrri) / sizeof(pattern_rrri[0])},
+    {pattern_rrrir, sizeof(pattern_rrrir) / sizeof(pattern_rrrir[0])},
+    {pattern_rirr, sizeof(pattern_rirr) / sizeof(pattern_rirr[0])},
+    {pattern_rirrr, sizeof(pattern_rirrr) / sizeof(pattern_rirrr[0])}
+};
+
+static size_t pattern_operand_count(const instruction_pattern *pattern) {
+    if (pattern->optype1 == EXTENDED_PATTERN) {
+        return extended_patterns[pattern->opnum1].operand_count;
+    }
+    if (pattern->optype3) return 3;
+    if (pattern->optype2) return 2;
+    if (pattern->optype1) return 1;
+    return 0;
+}
+
+static operand_pattern pattern_operand(const instruction_pattern *pattern,
+                                       size_t operand_index) {
+    operand_pattern operand = {0, 0};
+    if (pattern->optype1 == EXTENDED_PATTERN) {
+        const extended_instruction_pattern *extended =
+                &extended_patterns[pattern->opnum1];
+        if (operand_index < extended->operand_count) {
+            return extended->operands[operand_index];
+        }
+        return operand;
+    }
+    switch (operand_index) {
+        case 0: operand.type = pattern->optype1; operand.number = pattern->opnum1; break;
+        case 1: operand.type = pattern->optype2; operand.number = pattern->opnum2; break;
+        case 2: operand.type = pattern->optype3; operand.number = pattern->opnum3; break;
+        default: break;
+    }
+    return operand;
+}
 
 /* This defines the rule flag */
 typedef enum
@@ -62,40 +225,86 @@ typedef struct rule {
     instruction_pattern out2;
 } rule;
 
-/* We can only have 10 (0..9) operands of each type in our rules */
-#define MAX_OP_MAP 10
+typedef struct op_capture {
+   size_t reg;
+   char regtp;
+   rxinteger integer;
+   unsigned char *string;
+   unsigned char character;
+   double real;
+   char *branch;
+   char *label;
+   char *proc;
+
+   Assembler_Token *reg_token;
+   Assembler_Token *integer_token;
+   Assembler_Token *string_token;
+   Assembler_Token *binary_token;
+   Assembler_Token *decimal_token;
+   Assembler_Token *character_token;
+   Assembler_Token *real_token;
+   Assembler_Token *branch_token;
+   Assembler_Token *label_token;
+   Assembler_Token *proc_token;
+} op_capture;
+
+typedef struct literal_register_capture {
+   Assembler_Token *token;
+   size_t reg;
+   char regtp;
+} literal_register_capture;
 
 /* Rules Operands Mapping */
 typedef struct op_map {
-   /* Holds the mapped values */
-   size_t reg[MAX_OP_MAP];
-   char regtp[MAX_OP_MAP]; /* register type: r,g or a */
-   rxinteger integer[MAX_OP_MAP];
-   unsigned char *string[MAX_OP_MAP];
-   unsigned char character[MAX_OP_MAP];
-   double real[MAX_OP_MAP];
-   char* branch[MAX_OP_MAP]; /* Branch IDs */
-   char* label[MAX_OP_MAP]; /* Branch LABELs */
-   char* proc[MAX_OP_MAP]; /* Procedure IDs */
-
-   /* Tokens to show what maps are set and the holding the defining token */
-   Assembler_Token *reg_token[MAX_OP_MAP];
-   Assembler_Token *integer_token[MAX_OP_MAP];
-   Assembler_Token *string_token[MAX_OP_MAP];
-   Assembler_Token *binary_token[MAX_OP_MAP];
-   Assembler_Token *decimal_token[MAX_OP_MAP];
-   Assembler_Token *character_token[MAX_OP_MAP];
-   Assembler_Token *real_token[MAX_OP_MAP];
-   Assembler_Token *branch_token[MAX_OP_MAP];
-   Assembler_Token *label_token[MAX_OP_MAP];
-   Assembler_Token *proc_token[MAX_OP_MAP];
-   Assembler_Token *literal_reg_token[MAX_OP_MAP];
-   size_t literal_reg[MAX_OP_MAP];
-   char literal_regtp[MAX_OP_MAP];
+   op_capture *captures;
+   size_t capture_count;
+   size_t capture_capacity;
+   literal_register_capture *literal_registers;
+   size_t literal_register_count;
+   size_t literal_register_capacity;
 
    /* Instructions matched in the rules */
    rule *inst_mapped[OPTIMISER_TARGET_MAX_QUEUE_SIZE + OPTIMISER_QUEUE_EXTRA_BUFFER_SIZE];
 } op_map;
+
+static op_capture *op_map_capture(op_map *map, size_t capture_number) {
+    size_t required = capture_number + 1;
+    if (required > map->capture_capacity) {
+        size_t new_capacity = map->capture_capacity ? map->capture_capacity : 8;
+        op_capture *new_captures;
+        while (new_capacity < required) new_capacity *= 2;
+        new_captures = realloc(map->captures, new_capacity * sizeof(*new_captures));
+        if (!new_captures) {
+            RX_PANIC_OOM("realloc rxas optimiser captures",
+                         new_capacity * sizeof(*new_captures), 0);
+        }
+        memset(new_captures + map->capture_capacity, 0,
+               (new_capacity - map->capture_capacity) * sizeof(*new_captures));
+        map->captures = new_captures;
+        map->capture_capacity = new_capacity;
+    }
+    if (required > map->capture_count) {
+        memset(map->captures + map->capture_count, 0,
+               (required - map->capture_count) * sizeof(*map->captures));
+        map->capture_count = required;
+    }
+    return &map->captures[capture_number];
+}
+
+static void op_map_reset(op_map *map) {
+    if (map->capture_count) {
+        memset(map->captures, 0, map->capture_count * sizeof(*map->captures));
+    }
+    map->capture_count = 0;
+    map->literal_register_count = 0;
+    memset(map->inst_mapped, 0, sizeof(map->inst_mapped));
+}
+
+static void op_map_free(op_map *map) {
+    free(map->captures);
+    free(map->literal_registers);
+    memset(map, 0, sizeof(*map));
+}
 
 /* The COVID-Opt Keyhole Optimiser Rules
  *
@@ -360,6 +569,14 @@ rule rules[] =
                         OP_CODE,"dec2", 0, 0, 0, 0, 0, 0},
             {END_OF_RULE},
 
+            /* A following zero-operand CNOP is redundant.  This harmless rule
+             * is also the rule-engine regression for wide input/output maps. */
+            {NO_GAP, OP_CODE,"cnop", EXTENDED_PATTERN, EXT_WIDE_CNOP, 0, 0, 0, 0,
+                     OP_CODE,"cnop", EXTENDED_PATTERN, EXT_WIDE_CNOP, 0, 0, 0, 0},
+            {NO_GAP, OP_CODE,"cnop", 0, 0, 0, 0, 0, 0,
+                     0},
+            {END_OF_RULE},
+
             /* Two swaps cancelling out: swap r0,r1; swap r0,r1 */
             {NO_HAZARD, OP_CODE,"swap", 'r', 0, 'r', 1, 0, 0,
                          0},
@@ -372,6 +589,81 @@ rule rules[] =
                          0},
             {NO_HAZARD, OP_CODE,"swap", 'r', 1, 'r', 0, 0, 0,
                          0},
+            {END_OF_RULE},
+
+            /* NR-09 Class 1: collect adjacent independent swaps. */
+            {NO_GAP, OP_CODE,"swap", 'r', 0, 'r', 1, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"swap", 'r', 2, 'r', 3, 0, 0,
+                         OP_CODE,"swapn", EXTENDED_PATTERN, EXT_RRRR, 0, 0, 0, 0},
+            {END_OF_RULE},
+
+            {NO_GAP, OP_CODE,"swapn", EXTENDED_PATTERN, EXT_RRRR, 0, 0, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"swap", 'r', 4, 'r', 5, 0, 0,
+                         OP_CODE,"swapn", EXTENDED_PATTERN, EXT_RRRRRR, 0, 0, 0, 0},
+            {END_OF_RULE},
+
+            {NO_GAP, OP_CODE,"swapn", EXTENDED_PATTERN, EXT_RRRRRR, 0, 0, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"swap", 'r', 6, 'r', 7, 0, 0,
+                         OP_CODE,"swapn", EXTENDED_PATTERN, EXT_RRRRRRRR, 0, 0, 0, 0},
+            {END_OF_RULE},
+
+            /* NR-09 Class 1: call-window preparation. */
+            {NO_GAP, OP_CODE,"settp", 'r', 0, 'i', 10, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"swap", 'r', 1, 'r', 0, 0, 0,
+                         OP_CODE,"settpswap", 'r', 0, 'i', 10, 'r', 1},
+            {END_OF_RULE},
+
+            {NO_GAP, OP_CODE,"load", 'r', 0, 'i', 10, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"settp", 'r', 1, 'i', 11, 0, 0,
+                         OP_CODE,"loadsettp2", EXTENDED_PATTERN, EXT_RIRI, 0, 0, 0, 0},
+            {END_OF_RULE},
+
+            {NO_GAP, OP_CODE,"loadsettp2", EXTENDED_PATTERN, EXT_RIRI, 0, 0, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"swap", 'r', 2, 'r', 1, 0, 0,
+                         OP_CODE,"loadsettpswap", EXTENDED_PATTERN, EXT_RIRIR, 0, 0, 0, 0},
+            {END_OF_RULE},
+
+            {NO_GAP, OP_CODE,"swap", 'r', 0, 'r', 1, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"settp", 'r', 2, 'i', 10, 0, 0,
+                         OP_CODE,"swapsettp", EXTENDED_PATTERN, EXT_RRRI, 0, 0, 0, 0},
+            {END_OF_RULE},
+
+            {NO_GAP, OP_CODE,"swapsettp", EXTENDED_PATTERN, EXT_RRRI, 0, 0, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"swap", 'r', 3, 'r', 2, 0, 0,
+                         OP_CODE,"swapsettpswap", EXTENDED_PATTERN, EXT_RRRIR, 0, 0, 0, 0},
+            {END_OF_RULE},
+
+            {NO_GAP, OP_CODE,"settpswap", 'r', 0, 'i', 10, 'r', 1,
+                         0},
+            {NO_GAP, OP_CODE,"settpswap", 'r', 2, 'i', 10, 'r', 3,
+                         OP_CODE,"settpswapsettpswap", EXTENDED_PATTERN, EXT_RIRRR, 0, 0, 0, 0},
+            {END_OF_RULE},
+
+            /* NR-09 Class 1: collect clears and constant loads. */
+            {NO_GAP, OP_CODE,"null", 'r', 0, 0, 0, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"null", 'r', 1, 0, 0, 0, 0,
+                         OP_CODE,"nulln", 'r', 0, 'r', 1, 0, 0},
+            {END_OF_RULE},
+
+            {NO_GAP, OP_CODE,"nulln", 'r', 0, 'r', 1, 0, 0,
+                         0},
+            {NO_GAP, OP_CODE,"null", 'r', 2, 0, 0, 0, 0,
+                         OP_CODE,"nulln", 'r', 0, 'r', 1, 'r', 2},
+            {END_OF_RULE},
+
+            {NO_GAP, OP_CODE,"nulln", 'r', 0, 'r', 1, 'r', 2,
+                         0},
+            {NO_GAP, OP_CODE,"null", 'r', 3, 0, 0, 0, 0,
+                         OP_CODE,"nulln", EXTENDED_PATTERN, EXT_RRRR, 0, 0, 0, 0},
             {END_OF_RULE},
 
             /* Full copy already copies status flags; drop redundant acopy. */
@@ -737,30 +1029,36 @@ static int can_map_literal_register(Assembler_Token *opToken, char op_type, size
 }
 
 static int map_literal_register(op_map *map, Assembler_Token *opToken, char op_type, size_t op_num) {
-    int i;
+    size_t i;
     char regtp;
 
     if (!can_map_literal_register(opToken, op_type, op_num)) return 0;
 
     regtp = literal_reg_type(op_type);
-    for (i = 0; i < MAX_OP_MAP; i++) {
-        if (map->literal_reg_token[i] &&
-            map->literal_regtp[i] == regtp &&
-            map->literal_reg[i] == op_num) {
+    for (i = 0; i < map->literal_register_count; i++) {
+        if (map->literal_registers[i].regtp == regtp &&
+            map->literal_registers[i].reg == op_num) {
             return 1;
         }
     }
 
-    for (i = 0; i < MAX_OP_MAP; i++) {
-        if (!map->literal_reg_token[i]) {
-            map->literal_reg_token[i] = opToken;
-            map->literal_regtp[i] = regtp;
-            map->literal_reg[i] = op_num;
-            return 1;
+    if (map->literal_register_count == map->literal_register_capacity) {
+        size_t new_capacity = map->literal_register_capacity
+                ? map->literal_register_capacity * 2 : 8;
+        literal_register_capture *new_registers = realloc(
+                map->literal_registers, new_capacity * sizeof(*new_registers));
+        if (!new_registers) {
+            RX_PANIC_OOM("realloc rxas optimiser literal registers",
+                         new_capacity * sizeof(*new_registers), 0);
         }
+        map->literal_registers = new_registers;
+        map->literal_register_capacity = new_capacity;
     }
-
-    return 0;
+    map->literal_registers[map->literal_register_count].token = opToken;
+    map->literal_registers[map->literal_register_count].regtp = regtp;
+    map->literal_registers[map->literal_register_count].reg = op_num;
+    map->literal_register_count++;
+    return 1;
 }
 
 static OperandType operand_type(Assembler_Token *opToken) {
@@ -792,15 +1090,15 @@ static OperandType operand_type(Assembler_Token *opToken) {
     }
 }
 
-static int op_operands_match(OpFormat format, OperandType t1, OperandType t2, OperandType t3, int actual_operands) {
-    OperandType types[3];
-    int expected_operands;
+static int op_operands_match(OpFormat format,
+                             Assembler_Token *const *operandTokens,
+                             size_t operandCount) {
+    size_t i;
 
-    expected_operands = rxbin_get_operand_types(format, types);
-    if (expected_operands != actual_operands) return 0;
-    if (actual_operands > 0 && types[0] != t1) return 0;
-    if (actual_operands > 1 && types[1] != t2) return 0;
-    if (actual_operands > 2 && types[2] != t3) return 0;
+    if (rxop_format_operand_count(format) != operandCount) return 0;
+    for (i = 0; i < operandCount; i++) {
+        if (rxop_format_operand_type(format, i) != operand_type(operandTokens[i])) return 0;
+    }
     return 1;
 }
 
@@ -814,31 +1112,19 @@ static int mnemonic_matches(const char *mnemonic, const char *table_name) {
     return 0;
 }
 
-static const OpInfo *find_optimiser_opcode(Assembler_Token *instrToken,
-                                           Assembler_Token *operand1Token,
-                                           Assembler_Token *operand2Token,
-                                           Assembler_Token *operand3Token) {
+static const OpInfo *find_optimiser_opcode(const instruction_queue *instruction) {
     const char *mnemonic;
-    OperandType t1;
-    OperandType t2;
-    OperandType t3;
-    int actual_operands;
     int i;
 
-    if (!instrToken) return 0;
+    if (!instruction || !instruction->instrToken || instruction->instrType != OP_CODE) return 0;
 
-    mnemonic = (const char *) instrToken->token_value.string;
-    t1 = operand_type(operand1Token);
-    t2 = operand_type(operand2Token);
-    t3 = operand_type(operand3Token);
-    actual_operands = 0;
-    if (operand1Token) actual_operands = 1;
-    if (operand2Token) actual_operands = 2;
-    if (operand3Token) actual_operands = 3;
+    mnemonic = (const char *) instruction->instrToken->token_value.string;
 
     for (i = 0; op_table[i].mnemonic != NULL; i++) {
         if (!rxop_is_source_mnemonic(op_table[i].mnemonic)) continue;
-        if (op_operands_match(op_table[i].format, t1, t2, t3, actual_operands) &&
+        if (op_operands_match(op_table[i].format,
+                              instruction->operandTokens,
+                              instruction->operandCount) &&
             mnemonic_matches(mnemonic, op_table[i].mnemonic)) {
             return &op_table[i];
         }
@@ -848,48 +1134,42 @@ static const OpInfo *find_optimiser_opcode(Assembler_Token *instrToken,
 }
 
 /* Check if a skipped instruction is a hard barrier for NO_HAZARD rules. */
-static int is_rule_barrier(enum queue_item_type type, Assembler_Token *instrToken, Assembler_Token *operand1Token,
-                           Assembler_Token *operand2Token, Assembler_Token *operand3Token) {
+static int is_rule_barrier(const instruction_queue *instruction) {
     const OpInfo *op_info;
+    size_t i;
 
-    if (type == OP_CODE) {
-        op_info = find_optimiser_opcode(instrToken, operand1Token, operand2Token, operand3Token);
+    if (instruction->instrType == OP_CODE) {
+        op_info = find_optimiser_opcode(instruction);
         if (op_info) {
             if (op_info->flow != FLOW_NEXT) return 1;
             if (op_info->flags & FLG_OPT_BARRIER) return 1;
         }
 
         /* Calls or branches */
-        if (operand1Token &&
-            (operand1Token->token_type == ID || operand1Token->token_type == FUNC))
-            return 1;
-
-        if (operand2Token &&
-            (operand2Token->token_type == ID || operand2Token->token_type == FUNC))
-            return 1;
-
-        if (operand3Token &&
-            (operand3Token->token_type == ID || operand3Token->token_type == FUNC))
-            return 1;
+        for (i = 0; i < instruction->operandCount; i++) {
+            Assembler_Token *operand = rxas_queue_operand(instruction, i);
+            if (operand && (operand->token_type == ID || operand->token_type == FUNC)) return 1;
+        }
     }
 
-    else if (type == ASM_LABEL) return 1;
+    else if (instruction->instrType == ASM_LABEL) return 1;
 
     return 0;
 }
 
 static int map_has_register(op_map *map, char reg_type, size_t reg_num) {
-    int i;
+    size_t i;
 
-    for (i = 0; i < MAX_OP_MAP; i++) {
-        if (map->reg_token[i] &&
-            map->regtp[i] == reg_type &&
-            map->reg[i] == reg_num) {
+    for (i = 0; i < map->capture_count; i++) {
+        if (map->captures[i].reg_token &&
+            map->captures[i].regtp == reg_type &&
+            map->captures[i].reg == reg_num) {
             return 1;
         }
-        if (map->literal_reg_token[i] &&
-            map->literal_regtp[i] == reg_type &&
-            map->literal_reg[i] == reg_num) {
+    }
+    for (i = 0; i < map->literal_register_count; i++) {
+        if (map->literal_registers[i].regtp == reg_type &&
+            map->literal_registers[i].reg == reg_num) {
             return 1;
         }
     }
@@ -906,22 +1186,23 @@ static int implicit_int_register_relevant(op_map *map, Assembler_Token *token, c
 static int implicit_register_range_relevant(op_map *map, Assembler_Token *base_token) {
     char base_type;
     size_t base_number;
-    int i;
+    size_t i;
 
     if (!base_token) return 0;
     base_type = reg_type(base_token);
     if (!base_type) return 0;
     base_number = (size_t)base_token->token_value.integer;
 
-    for (i = 0; i < MAX_OP_MAP; i++) {
-        if (map->reg_token[i] &&
-            map->regtp[i] == base_type &&
-            map->reg[i] > base_number) {
+    for (i = 0; i < map->capture_count; i++) {
+        if (map->captures[i].reg_token &&
+            map->captures[i].regtp == base_type &&
+            map->captures[i].reg > base_number) {
             return 1;
         }
-        if (map->literal_reg_token[i] &&
-            map->literal_regtp[i] == base_type &&
-            map->literal_reg[i] > base_number) {
+    }
+    for (i = 0; i < map->literal_register_count; i++) {
+        if (map->literal_registers[i].regtp == base_type &&
+            map->literal_registers[i].reg > base_number) {
             return 1;
         }
     }
@@ -1014,18 +1295,20 @@ static int instruction_is_relevant(op_map *map, instruction_queue *instruction) 
         }
     }
 
-    if (is_relevant(map, instruction->operand1Token) ||
-        is_relevant(map, instruction->operand2Token) ||
-        is_relevant(map, instruction->operand3Token)) {
+    if (instruction->instrType == OP_CODE) {
+        size_t i;
+        for (i = 0; i < instruction->operandCount; i++) {
+            if (is_relevant(map, rxas_queue_operand(instruction, i))) return 1;
+        }
+    } else if (is_relevant(map, instruction->operand1Token) ||
+               is_relevant(map, instruction->operand2Token) ||
+               is_relevant(map, instruction->operand3Token)) {
         return 1;
     }
 
     if (instruction->instrType != OP_CODE) return 0;
 
-    op_info = find_optimiser_opcode(instruction->instrToken,
-                                    instruction->operand1Token,
-                                    instruction->operand2Token,
-                                    instruction->operand3Token);
+    op_info = find_optimiser_opcode(instruction);
     return implicit_register_relevant(map,
                                       op_info,
                                       instruction->operand1Token,
@@ -1068,19 +1351,19 @@ static int instruction_reads_register_before_kill(instruction_queue *instruction
     RxOpEffects effects;
     char range_type;
     size_t range_base;
+    size_t i;
 
     if (instruction->instrType != OP_CODE) return 0;
     if (!op_info) return 1;
     effects = rxop_effects(op_info->opcode);
     if (effects.state != RXOP_EFFECT_CLASSIFIED) return 1;
 
-    if (((effects.reads & RXOP_OP_1) &&
-         token_matches_register(instruction->operand1Token, register_type, register_number)) ||
-        ((effects.reads & RXOP_OP_2) &&
-         token_matches_register(instruction->operand2Token, register_type, register_number)) ||
-        ((effects.reads & RXOP_OP_3) &&
-         token_matches_register(instruction->operand3Token, register_type, register_number))) {
-        return 1;
+    for (i = 0; i < instruction->operandCount; i++) {
+        if (rxop_effect_reads_operand(&effects, i) &&
+            token_matches_register(rxas_queue_operand(instruction, i),
+                                   register_type, register_number)) {
+            return 1;
+        }
     }
 
     if (effects.implicit != RXOP_IMPLICIT_NONE) {
@@ -1128,18 +1411,18 @@ static int instruction_kills_register(instruction_queue *instruction,
                                       char register_type,
                                       size_t register_number) {
     RxOpEffects effects;
+    size_t i;
 
     if (instruction->instrType != OP_CODE || !op_info) return 0;
     effects = rxop_effects(op_info->opcode);
     if (effects.state != RXOP_EFFECT_CLASSIFIED) return 0;
 
-    if (((effects.kills & RXOP_OP_1) &&
-         token_matches_register(instruction->operand1Token, register_type, register_number)) ||
-        ((effects.kills & RXOP_OP_2) &&
-         token_matches_register(instruction->operand2Token, register_type, register_number)) ||
-        ((effects.kills & RXOP_OP_3) &&
-         token_matches_register(instruction->operand3Token, register_type, register_number))) {
-        return 1;
+    for (i = 0; i < instruction->operandCount; i++) {
+        if (rxop_effect_kills_operand(&effects, i) &&
+            token_matches_register(rxas_queue_operand(instruction, i),
+                                   register_type, register_number)) {
+            return 1;
+        }
     }
 
     if ((effects.implicit == RXOP_IMPLICIT_LOCAL_COPY ||
@@ -1192,10 +1475,7 @@ static int path_uses_register_before_kill(Assembler_Context *context,
         instruction = &context->optimiser_queue[index];
         if (instruction->instrType != OP_CODE) continue;
 
-        op_info = find_optimiser_opcode(instruction->instrToken,
-                                        instruction->operand1Token,
-                                        instruction->operand2Token,
-                                        instruction->operand3Token);
+        op_info = find_optimiser_opcode(instruction);
 
         if (instruction_reads_register_before_kill(instruction, op_info, register_type, register_number)) {
             return 1;
@@ -1232,7 +1512,7 @@ static int path_uses_register_before_kill(Assembler_Context *context,
                 return 1;
             }
 
-            if (op_info->format == FMT_L_L_R) {
+            if (strcmp(op_info->format, FMT_L_L_R) == 0) {
                 alternate_index = find_label_index(context, instruction->operand2Token);
                 if (alternate_index < 0) return 1;
                 return path_uses_register_before_kill(context,
@@ -1253,6 +1533,8 @@ static int compare_branch_result_is_dead(Assembler_Context *context, op_map *map
     int target_index;
     size_t i;
     unsigned char visited[OPTIMISER_TARGET_MAX_QUEUE_SIZE + OPTIMISER_QUEUE_EXTRA_BUFFER_SIZE];
+    op_capture *result_capture;
+    op_capture *branch_capture;
 
     branch_index = -1;
     for (i = 0; i < context->optimiser_queue_items; i++) {
@@ -1265,26 +1547,28 @@ static int compare_branch_result_is_dead(Assembler_Context *context, op_map *map
     }
 
     if (branch_index < 0) return 1;
-    if (!map->reg_token[4] || !map->branch_token[3]) return 0;
+    result_capture = op_map_capture(map, 4);
+    branch_capture = op_map_capture(map, 3);
+    if (!result_capture->reg_token || !branch_capture->branch_token) return 0;
 
     memset(visited, 0, sizeof(visited));
     if (path_uses_register_before_kill(context,
                                        branch_index + 1,
-                                       map->regtp[4],
-                                       map->reg[4],
+                                       result_capture->regtp,
+                                       result_capture->reg,
                                        visited,
                                        0)) {
         return 0;
     }
 
-    target_index = find_label_index(context, map->branch_token[3]);
+    target_index = find_label_index(context, branch_capture->branch_token);
     if (target_index < 0) return 0;
 
     memset(visited, 0, sizeof(visited));
     return !path_uses_register_before_kill(context,
                                            target_index + 1,
-                                           map->regtp[4],
-                                           map->reg[4],
+                                           result_capture->regtp,
+                                           result_capture->reg,
                                            visited,
                                            0);
 }
@@ -1297,11 +1581,13 @@ static int trace_event_matches_mapped_register(op_map *map,
     Assembler_Token *register_type_token;
     Assembler_Token *value_ref;
     char register_type;
+    op_capture *capture;
 
     if (instruction->instrType != TRACE_EVENT) return 0;
     if (op_type == 0) return 1;
     if (op_type != 'r') return 0;
-    if (!map->reg_token[op_num]) return 0;
+    capture = op_map_capture(map, op_num);
+    if (!capture->reg_token) return 0;
 
     value_source = instruction->operand2Token;
     register_type_token = instruction->operand4Token;
@@ -1316,8 +1602,8 @@ static int trace_event_matches_mapped_register(op_map *map,
     }
 
     register_type = (char)tolower((unsigned char)register_type_token->token_value.string[0]);
-    return map->regtp[op_num] == register_type &&
-           map->reg[op_num] == (size_t)value_ref->token_value.integer;
+    return capture->regtp == register_type &&
+           capture->reg == (size_t)value_ref->token_value.integer;
 }
 
 /* Checks if a instrToken can map against an op_type
@@ -1326,11 +1612,13 @@ static int trace_event_matches_mapped_register(op_map *map,
  * NOTE: The *map structure is NOT updated
  * See map_operand() */
 static int can_map_operand(op_map *map, Assembler_Token *opToken, char op_type, size_t op_num) {
+    op_capture *capture;
 
     if (!opToken) {
         if (op_type) return 0;
         else return 1;
     }
+    capture = op_map_capture(map, op_num);
 
     switch(op_type) {
         case 'r': /* Register */
@@ -1338,9 +1626,9 @@ static int can_map_operand(op_map *map, Assembler_Token *opToken, char op_type, 
                    opToken->token_type == GREG ||
                    opToken->token_type == AREG ) ) return 0; /* Wrong Type */
 
-            if (map->reg_token[op_num]) { /* Already Mapped - checked consistent */
-                if (map->regtp[op_num] != reg_type(opToken) ||
-                    map->reg[op_num] != opToken->token_value.integer)
+            if (capture->reg_token) { /* Already Mapped - checked consistent */
+                if (capture->regtp != reg_type(opToken) ||
+                    capture->reg != opToken->token_value.integer)
                     return 0; /* Wrong register */
             }
             return 1;
@@ -1352,48 +1640,48 @@ static int can_map_operand(op_map *map, Assembler_Token *opToken, char op_type, 
 
         case 'i': /* Integer */
             if (opToken->token_type != INT ) return 0; /* Wrong Type */
-            if (map->integer_token[op_num]) { /* Already Mapped - checked consistent */
-                if (map->integer[op_num] != opToken->token_value.integer)
+            if (capture->integer_token) { /* Already Mapped - checked consistent */
+                if (capture->integer != opToken->token_value.integer)
                     return 0; /* Wrong value */
             }
             return 1;
 
         case 's': /* String */
             if (opToken->token_type != STRING ) return 0; /* Wrong Type */
-            if (map->string_token[op_num]) { /* Already Mapped - checked consistent */
-                if (map->string[op_num] != opToken->token_value.string) // TODO - Shouldn't this be strcmp?
+            if (capture->string_token) { /* Already Mapped - checked consistent */
+                if (capture->string != opToken->token_value.string) // TODO - Shouldn't this be strcmp?
                     return 0; /* Wrong value */
             }
             return 1;
 
         case 'h': /* Hex (Binary) */
             if (opToken->token_type != HEX ) return 0; /* Wrong Type */
-            if (map->binary_token[op_num]) { /* Already Mapped - checked consistent */
-                if (map->string[op_num] != opToken->token_value.string) // TODO - Shouldn't this be strcmp?
+            if (capture->binary_token) { /* Already Mapped - checked consistent */
+                if (capture->string != opToken->token_value.string) // TODO - Shouldn't this be strcmp?
                     return 0; /* Wrong value */
             }
             return 1;
 
         case 'd': /* Decimal */
             if (opToken->token_type != DECIMAL ) return 0; /* Wrong Type */
-            if (map->decimal_token[op_num]) { /* Already Mapped - checked consistent */
-                if (map->string[op_num] != opToken->token_value.string) // TODO - Shouldn't this be strcmp?
+            if (capture->decimal_token) { /* Already Mapped - checked consistent */
+                if (capture->string != opToken->token_value.string) // TODO - Shouldn't this be strcmp?
                     return 0; /* Wrong value */
             }
             return 1;
 
         case 'c': /* Char */
             if (opToken->token_type != CHAR ) return 0; /* Wrong Type */
-            if (map->character_token[op_num]) { /* Already Mapped - checked consistent */
-                if (map->character[op_num] != opToken->token_value.character)
+            if (capture->character_token) { /* Already Mapped - checked consistent */
+                if (capture->character != opToken->token_value.character)
                     return 0; /* Wrong value */
             }
             return 1;
 
         case 'f': /* Float */
             if (opToken->token_type != FLOAT ) return 0; /* Wrong Type */
-            if (map->real_token[op_num]) { /* Already Mapped - checked consistent */
-                if (map->real[op_num] != opToken->token_value.real)
+            if (capture->real_token) { /* Already Mapped - checked consistent */
+                if (capture->real != opToken->token_value.real)
                     return 0; /* Wrong value */
             }
             return 1;
@@ -1402,12 +1690,12 @@ static int can_map_operand(op_map *map, Assembler_Token *opToken, char op_type, 
             /* The l and b tokens are intrinsically linked - "quantum!" - different
              * token types but have matching values */
             if (opToken->token_type != LABEL ) return 0; /* Wrong Type */
-            if (map->label_token[op_num]) { /* Already Mapped - checked consistent */
-                if (strcmp(map->label[op_num], (char*)opToken->token_value.string) != 0)
+            if (capture->label_token) { /* Already Mapped - checked consistent */
+                if (strcmp(capture->label, (char*)opToken->token_value.string) != 0)
                     return 0; /* Wrong value */
             }
-            else if (map->branch_token[op_num]) { /* Already Mapped branch - checked consistent */
-                if (strcmp(map->branch[op_num], (char*)opToken->token_value.string) != 0)
+            else if (capture->branch_token) { /* Already Mapped branch - checked consistent */
+                if (strcmp(capture->branch, (char*)opToken->token_value.string) != 0)
                     return 0; /* Wrong value */
             }
 
@@ -1417,20 +1705,20 @@ static int can_map_operand(op_map *map, Assembler_Token *opToken, char op_type, 
             /* The l and b tokens are intrinsically linked - "quantum!" - different
              * token types but have matching values */
             if (opToken->token_type != ID ) return 0; /* Wrong Type */
-            if (map->branch_token[op_num]) { /* Already Mapped - checked consistent */
-                if (strcmp(map->branch[op_num], (char*)opToken->token_value.string) != 0)
+            if (capture->branch_token) { /* Already Mapped - checked consistent */
+                if (strcmp(capture->branch, (char*)opToken->token_value.string) != 0)
                     return 0; /* Wrong value */
             }
-            else if (map->label_token[op_num]) { /* Already Mapped - checked consistent */
-                if (strcmp(map->label[op_num], (char*)opToken->token_value.string) != 0)
+            else if (capture->label_token) { /* Already Mapped - checked consistent */
+                if (strcmp(capture->label, (char*)opToken->token_value.string) != 0)
                     return 0; /* Wrong value */
             }
             return 1;
 
         case 'p': /* PROCEDURE */
             if (opToken->token_type != FUNC ) return 0; /* Wrong Type */
-            if (map->proc_token[op_num]) { /* Already Mapped - checked consistent */
-                if (strcmp(map->proc[op_num], (char*)opToken->token_value.string) != 0)
+            if (capture->proc_token) { /* Already Mapped - checked consistent */
+                if (strcmp(capture->proc, (char*)opToken->token_value.string) != 0)
                     return 0; /* Wrong value */
             }
             return 1;
@@ -1447,11 +1735,13 @@ static int can_map_operand(op_map *map, Assembler_Token *opToken, char op_type, 
  * NOTE: if it does map the *map structure is updated
  * See can_map_operand() */
 static int map_operand(op_map *map, Assembler_Token *opToken, char op_type, size_t op_num) {
+    op_capture *capture;
 
     if (!opToken) {
         if (op_type) return 0;
         else return 1;
     }
+    capture = op_map_capture(map, op_num);
 
     switch(op_type) {
         case 'r': /* Register */
@@ -1459,15 +1749,15 @@ static int map_operand(op_map *map, Assembler_Token *opToken, char op_type, size
                    opToken->token_type == GREG ||
                    opToken->token_type == AREG ) ) return 0; /* Wrong Type */
 
-            if (map->reg_token[op_num]) { /* Already Mapped - checked consistent */
-                if (map->regtp[op_num] != reg_type(opToken) ||
-                    map->reg[op_num] != opToken->token_value.integer)
+            if (capture->reg_token) { /* Already Mapped - checked consistent */
+                if (capture->regtp != reg_type(opToken) ||
+                    capture->reg != opToken->token_value.integer)
                     return 0; /* Wrong register */
             }
             else { /* Not mapped yet - map it */
-                map->reg_token[op_num] = opToken;
-                map->regtp[op_num] = reg_type(opToken);
-                map->reg[op_num] = opToken->token_value.integer;
+                capture->reg_token = opToken;
+                capture->regtp = reg_type(opToken);
+                capture->reg = opToken->token_value.integer;
             }
             return 1;
 
@@ -1478,73 +1768,73 @@ static int map_operand(op_map *map, Assembler_Token *opToken, char op_type, size
 
         case 'i': /* Integer */
             if (opToken->token_type != INT ) return 0; /* Wrong Type */
-            if (map->integer_token[op_num]) { /* Already Mapped - checked consistent */
-                if (map->integer[op_num] != opToken->token_value.integer)
+            if (capture->integer_token) { /* Already Mapped - checked consistent */
+                if (capture->integer != opToken->token_value.integer)
                     return 0; /* Wrong value */
             }
             else { /* Not mapped yet - map it */
-                map->integer_token[op_num] = opToken;
-                map->integer[op_num] = opToken->token_value.integer;
+                capture->integer_token = opToken;
+                capture->integer = opToken->token_value.integer;
             }
             return 1;
 
         case 's': /* String */
             if (opToken->token_type != STRING ) return 0; /* Wrong Type */
-            if (map->string_token[op_num]) { /* Already Mapped - checked consistent */
-                if (map->string[op_num] != opToken->token_value.string) // TODO - Shouldn't this be strcmp?
+            if (capture->string_token) { /* Already Mapped - checked consistent */
+                if (capture->string != opToken->token_value.string) // TODO - Shouldn't this be strcmp?
                     return 0; /* Wrong value */
             }
             else { /* Not mapped yet - map it */
-                map->string_token[op_num] = opToken;
-                map->string[op_num] = opToken->token_value.string;
+                capture->string_token = opToken;
+                capture->string = opToken->token_value.string;
             }
             return 1;
 
         case 'h': /* Hex (Binary) */
             if (opToken->token_type != HEX ) return 0; /* Wrong Type */
-            if (map->binary_token[op_num]) { /* Already Mapped - checked consistent */
-                if (map->string[op_num] != opToken->token_value.string) // TODO - Shouldn't this be strcmp?
+            if (capture->binary_token) { /* Already Mapped - checked consistent */
+                if (capture->string != opToken->token_value.string) // TODO - Shouldn't this be strcmp?
                     return 0; /* Wrong value */
             }
             else { /* Not mapped yet - map it */
-                map->binary_token[op_num] = opToken;
-                map->string[op_num] = opToken->token_value.string;
+                capture->binary_token = opToken;
+                capture->string = opToken->token_value.string;
             }
             return 1;
 
         case 'd': /* Decimal */
             if (opToken->token_type != DECIMAL ) return 0; /* Wrong Type */
-            if (map->decimal_token[op_num]) { /* Already Mapped - checked consistent */
-                if (map->string[op_num] != opToken->token_value.string) // TODO - Shouldn't this be strcmp?
+            if (capture->decimal_token) { /* Already Mapped - checked consistent */
+                if (capture->string != opToken->token_value.string) // TODO - Shouldn't this be strcmp?
                     return 0; /* Wrong value */
             }
             else { /* Not mapped yet - map it */
-                map->decimal_token[op_num] = opToken;
-                map->string[op_num] = opToken->token_value.string;
+                capture->decimal_token = opToken;
+                capture->string = opToken->token_value.string;
             }
             return 1;
 
         case 'c': /* Char */
             if (opToken->token_type != CHAR ) return 0; /* Wrong Type */
-            if (map->character_token[op_num]) { /* Already Mapped - checked consistent */
-                if (map->character[op_num] != opToken->token_value.character)
+            if (capture->character_token) { /* Already Mapped - checked consistent */
+                if (capture->character != opToken->token_value.character)
                     return 0; /* Wrong value */
             }
             else { /* Not mapped yet - map it */
-                map->character_token[op_num] = opToken;
-                map->character[op_num] = opToken->token_value.character;
+                capture->character_token = opToken;
+                capture->character = opToken->token_value.character;
             }
             return 1;
 
         case 'f': /* Float */
             if (opToken->token_type != FLOAT ) return 0; /* Wrong Type */
-            if (map->real_token[op_num]) { /* Already Mapped - checked consistent */
-                if (map->real[op_num] != opToken->token_value.real)
+            if (capture->real_token) { /* Already Mapped - checked consistent */
+                if (capture->real != opToken->token_value.real)
                     return 0; /* Wrong value */
             }
             else { /* Not mapped yet - map it */
-                map->real_token[op_num] = opToken;
-                map->real[op_num] = opToken->token_value.real;
+                capture->real_token = opToken;
+                capture->real = opToken->token_value.real;
             }
             return 1;
 
@@ -1552,17 +1842,17 @@ static int map_operand(op_map *map, Assembler_Token *opToken, char op_type, size
             /* The l and b tokens are intrinsically linked - "quantum!" - different
              * token types but have matching values */
             if (opToken->token_type != LABEL ) return 0; /* Wrong Type */
-            if (map->label_token[op_num]) { /* Already Mapped - checked consistent */
-                if (strcmp(map->label[op_num], (char*)opToken->token_value.string) != 0)
+            if (capture->label_token) { /* Already Mapped - checked consistent */
+                if (strcmp(capture->label, (char*)opToken->token_value.string) != 0)
                     return 0; /* Wrong value */
             }
             else { /* Not mapped yet - map it */
-                if (map->branch_token[op_num]) { /* Already Mapped branch - checked consistent */
-                    if (strcmp(map->branch[op_num], (char*)opToken->token_value.string) != 0)
+                if (capture->branch_token) { /* Already Mapped branch - checked consistent */
+                    if (strcmp(capture->branch, (char*)opToken->token_value.string) != 0)
                         return 0; /* Wrong value */
                 }
-                map->label_token[op_num] = opToken;
-                map->label[op_num] = (char*)opToken->token_value.string;
+                capture->label_token = opToken;
+                capture->label = (char*)opToken->token_value.string;
             }
             return 1;
 
@@ -1570,29 +1860,29 @@ static int map_operand(op_map *map, Assembler_Token *opToken, char op_type, size
             /* The l and b tokens are intrinsically linked - "quantum!" - different
              * token types but have matching values */
             if (opToken->token_type != ID ) return 0; /* Wrong Type */
-            if (map->branch_token[op_num]) { /* Already Mapped - checked consistent */
-                if (strcmp(map->branch[op_num], (char*)opToken->token_value.string) != 0)
+            if (capture->branch_token) { /* Already Mapped - checked consistent */
+                if (strcmp(capture->branch, (char*)opToken->token_value.string) != 0)
                     return 0; /* Wrong value */
             }
             else { /* Not mapped yet - map it */
-                if (map->label_token[op_num]) { /* Already Mapped - checked consistent */
-                    if (strcmp(map->label[op_num], (char*)opToken->token_value.string) != 0)
+                if (capture->label_token) { /* Already Mapped - checked consistent */
+                    if (strcmp(capture->label, (char*)opToken->token_value.string) != 0)
                         return 0; /* Wrong value */
                 }
-                map->branch_token[op_num] = opToken;
-                map->branch[op_num] = (char*)opToken->token_value.string;
+                capture->branch_token = opToken;
+                capture->branch = (char*)opToken->token_value.string;
             }
             return 1;
 
         case 'p': /* PROCEDURE */
             if (opToken->token_type != FUNC ) return 0; /* Wrong Type */
-            if (map->proc_token[op_num]) { /* Already Mapped - checked consistent */
-                if (strcmp(map->proc[op_num], (char*)opToken->token_value.string) != 0)
+            if (capture->proc_token) { /* Already Mapped - checked consistent */
+                if (strcmp(capture->proc, (char*)opToken->token_value.string) != 0)
                     return 0; /* Wrong value */
             }
             else { /* Not mapped yet - map it */
-                map->proc_token[op_num] = opToken;
-                map->proc[op_num] = (char*)opToken->token_value.string;
+                capture->proc_token = opToken;
+                capture->proc = (char*)opToken->token_value.string;
             }
             return 1;
 
@@ -1605,6 +1895,8 @@ static int map_operand(op_map *map, Assembler_Token *opToken, char op_type, size
 /* Checks if an instruction can map a rule
  * return 1 if it can map, 0 otherwise */
 static int can_map_instruction(op_map *map, instruction_queue *instruction, rule *rule) {
+    size_t operand_count;
+    size_t operand_index;
 
     switch (rule->in.inst_type) {
         case OP_CODE:
@@ -1614,14 +1906,14 @@ static int can_map_instruction(op_map *map, instruction_queue *instruction, rule
             if (strcmp((char *) (instruction->instrToken->token_value.string), rule->in.instruction) != 0)
                 return 0; /* Not the right instruction */
 
-            if (!can_map_operand(map, instruction->operand1Token, rule->in.optype1, rule->in.opnum1))
-                return 0; /* Not the right operand (or mapping inconsistency */
-
-            if (!can_map_operand(map, instruction->operand2Token, rule->in.optype2, rule->in.opnum2))
-                return 0;
-
-            if (!can_map_operand(map, instruction->operand3Token, rule->in.optype3, rule->in.opnum3))
-                return 0;
+            operand_count = pattern_operand_count(&rule->in);
+            if (instruction->operandCount != operand_count) return 0;
+            for (operand_index = 0; operand_index < operand_count; operand_index++) {
+                operand_pattern operand = pattern_operand(&rule->in, operand_index);
+                if (!can_map_operand(map,
+                                     rxas_queue_operand(instruction, operand_index),
+                                     operand.type, operand.number)) return 0;
+            }
 
             return 1;
 
@@ -1645,6 +1937,8 @@ static int can_map_instruction(op_map *map, instruction_queue *instruction, rule
 /* Maps an instruction against a rule
  * Returns 1 on success, 0 if the map fails. *map may be changed on either case */
 static int map_instruction(op_map *map, instruction_queue *instruction, rule *rule) {
+    size_t operand_count;
+    size_t operand_index;
 
     switch (rule->in.inst_type) {
         case OP_CODE:
@@ -1654,14 +1948,14 @@ static int map_instruction(op_map *map, instruction_queue *instruction, rule *ru
             if (strcmp((char *) (instruction->instrToken->token_value.string), rule->in.instruction) != 0)
                 return 0; /* Not the right instruction */
 
-            if (!map_operand(map, instruction->operand1Token, rule->in.optype1, rule->in.opnum1))
-                return 0; /* Not the right operand (or mapping inconsistency */
-
-            if (!map_operand(map, instruction->operand2Token, rule->in.optype2, rule->in.opnum2))
-                return 0;
-
-            if (!map_operand(map, instruction->operand3Token, rule->in.optype3, rule->in.opnum3))
-                return 0;
+            operand_count = pattern_operand_count(&rule->in);
+            if (instruction->operandCount != operand_count) return 0;
+            for (operand_index = 0; operand_index < operand_count; operand_index++) {
+                operand_pattern operand = pattern_operand(&rule->in, operand_index);
+                if (!map_operand(map,
+                                 rxas_queue_operand(instruction, operand_index),
+                                 operand.type, operand.number)) return 0;
+            }
 
             return 1;
 
@@ -1685,39 +1979,40 @@ static int map_instruction(op_map *map, instruction_queue *instruction, rule *ru
 /* Returns the mapped token for a rule */
 static Assembler_Token* mapped_token(Assembler_Context *context, op_map *map, char op_type, size_t op_num) {
     Assembler_Token *t;
+    op_capture *capture = op_map_capture(map, op_num);
     char buffer[20];
 
     switch(op_type) {
         case 'r': /* Register */
-            return map->reg_token[op_num];
+            return capture->reg_token;
 
         case 'i': /* Integer */
-            return map->integer_token[op_num];
+            return capture->integer_token;
 
         case 's': /* String */
-            return map->string_token[op_num];
+            return capture->string_token;
 
         case 'h': /* Hex (Binary) */
-            return map->binary_token[op_num];
+            return capture->binary_token;
 
         case 'd': /* Decimal */
-            return map->decimal_token[op_num];
+            return capture->decimal_token;
 
         case 'c': /* Char */
-            return map->character_token[op_num];
+            return capture->character_token;
 
         case 'f': /* Float */
-            return map->real_token[op_num];
+            return capture->real_token;
 
         case 'l': /* Label == Branch */
-            t = map->label_token[op_num];
+            t = capture->label_token;
             if (t == 0) {
                 /* Special functionality for labels / branches
                  * if label has not been defined in an input rule then a
                  * unique label token is created */
 
                 /* If the intrinsically linked branch id is set make a pair */
-                t = map->branch_token[op_num];
+                t = capture->branch_token;
                 if (t) t = rxas_tid(context, t, (char *) t->token_value.string);
 
                     /* Otherwise make a unique label - note that as it does not start with
@@ -1729,19 +2024,19 @@ static Assembler_Token* mapped_token(Assembler_Context *context, op_map *map, ch
                 }
                 /* Store the created token */
                 t->token_type = LABEL;
-                map->label_token[op_num] = t;
+                capture->label_token = t;
             }
             return t;
 
         case 'b': /* Branch == Label */
-            t = map->branch_token[op_num];
+            t = capture->branch_token;
             if (t == 0) {
                 /* Special functionality for labels / branches
                  * if branch id has not been defined in an input rule then a
                  * unique branch token is created */
 
                 /* If the intrinsically linked label is set make a pair */
-                t = map->label_token[op_num];
+                t = capture->label_token;
                 if (t) t = rxas_tid(context, t, (char *) t->token_value.string);
 
                 /* Otherwise make a unique label - note that as it does not start with
@@ -1752,17 +2047,40 @@ static Assembler_Token* mapped_token(Assembler_Context *context, op_map *map, ch
                     t = rxas_tid(context, NULL, buffer);
                 }
                 /* Store the created token */
-                map->branch_token[op_num] = t;
+                capture->branch_token = t;
             }
             return t;
 
         case 'p': /* Procedure */
-            return map->proc_token[op_num];
+            return capture->proc_token;
 
         case 0:   /* Check nulls match */
         default:  /* Something wrong */
             return 0;
     }
+}
+
+static Assembler_Token **mapped_pattern_tokens(Assembler_Context *context,
+                                               op_map *map,
+                                               const instruction_pattern *pattern,
+                                               size_t *operand_count_out) {
+    size_t operand_count = pattern_operand_count(pattern);
+    Assembler_Token **tokens = 0;
+    size_t i;
+
+    if (operand_count) {
+        tokens = malloc(operand_count * sizeof(*tokens));
+        if (!tokens) {
+            RX_PANIC_OOM("malloc rxas optimiser output operands",
+                         operand_count * sizeof(*tokens), 0);
+        }
+        for (i = 0; i < operand_count; i++) {
+            operand_pattern operand = pattern_operand(pattern, i);
+            tokens[i] = mapped_token(context, map, operand.type, operand.number);
+        }
+    }
+    *operand_count_out = operand_count;
+    return tokens;
 }
 
 /* Optimise a rule starting from a specific instruction
@@ -1771,7 +2089,7 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
     int inst_no2;
 
     /* Clear Map */
-    memset(map, 0, sizeof(*map));
+    op_map_reset(map);
 
     /* First check if the current instruction maps to the first rule  */
     if (map_instruction(map, &context->optimiser_queue[inst_no], r) != 1)
@@ -1803,12 +2121,7 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
                     if (r->flag == NO_GAP) return 0; /* No gap allowed! */
                     if (r->flag == NO_HAZARD) {
                         /* Is it a barrier instruction like a branch or procedure call? */
-                        if (is_rule_barrier(
-                                context->optimiser_queue[inst_no].instrType,
-                                context->optimiser_queue[inst_no].instrToken,
-                                context->optimiser_queue[inst_no].operand1Token,
-                                context->optimiser_queue[inst_no].operand2Token,
-                                context->optimiser_queue[inst_no].operand3Token))
+                        if (is_rule_barrier(&context->optimiser_queue[inst_no]))
                             return 0;
 
                         /* Is the instruction relevant (using some of the mapped registers) this
@@ -1837,30 +2150,35 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
                  */
                 switch (r->out.inst_type) {
                     case OP_CODE:
+                    {
+                        Assembler_Token **replacementOperands;
+                        size_t replacementOperandCount;
                         context->optimiser_queue[inst_no].instrType = OP_CODE;
                         context->optimiser_queue[inst_no].instrToken =
                                 rxas_tid(context,
                                          context->optimiser_queue[inst_no].instrToken,
                                          r->out.instruction);
-                        context->optimiser_queue[inst_no].operand1Token =
-                                mapped_token(context, map, r->out.optype1, r->out.opnum1);
-                        context->optimiser_queue[inst_no].operand2Token =
-                                mapped_token(context, map, r->out.optype2, r->out.opnum2);
-                        context->optimiser_queue[inst_no].operand3Token =
-                                mapped_token(context, map, r->out.optype3, r->out.opnum3);
+                        replacementOperands = mapped_pattern_tokens(
+                                context, map, &r->out, &replacementOperandCount);
+                        set_opcode_operands(context, &context->optimiser_queue[inst_no],
+                                            replacementOperands, replacementOperandCount);
+                        free(replacementOperands);
                         break;
+                    }
 
                     case ASM_LABEL:
+                    {
+                        Assembler_Token *labelToken = mapped_token(context, map, 'l', r->out.opnum1);
+                        rxas_free_queue_item(&context->optimiser_queue[inst_no]);
+                        memset(&context->optimiser_queue[inst_no], 0, sizeof(instruction_queue));
                         context->optimiser_queue[inst_no].instrType = ASM_LABEL;
-                        context->optimiser_queue[inst_no].instrToken =
-                                mapped_token(context, map, 'l', r->out.opnum1);
-                        context->optimiser_queue[inst_no].operand1Token = 0;
-                        context->optimiser_queue[inst_no].operand2Token = 0;
-                        context->optimiser_queue[inst_no].operand3Token = 0;
+                        context->optimiser_queue[inst_no].instrToken = labelToken;
                         break;
+                    }
 
                     default:
                         /* No - output rule so remove instruction from the queue */
+                        rxas_free_queue_item(&context->optimiser_queue[inst_no]);
                         if ((int)context->optimiser_queue_items - (int)inst_no - 1 > 0) {
                             memmove(&context->optimiser_queue[inst_no],
                                     &context->optimiser_queue[inst_no + 1],
@@ -1869,11 +2187,17 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
                         }
                         /* One less instruction in the queue */
                         context->optimiser_queue_items--;
+                        memset(&context->optimiser_queue[context->optimiser_queue_items], 0,
+                               sizeof(instruction_queue));
                 }
 
                 /* Secondary output instruction */
                 switch (r->out2.inst_type) {
                     case OP_CODE:
+                    {
+                        Assembler_Token *baseToken = context->optimiser_queue[inst_no].instrToken;
+                        Assembler_Token **replacementOperands;
+                        size_t replacementOperandCount;
                         /* Insert instruction in the queue */
                         inst_no2 = inst_no + 1;
                         if ((int)context->optimiser_queue_items - inst_no2 > 0) {
@@ -1885,20 +2209,21 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
                         context->optimiser_queue_items++;
 
                         /* Add the instruction */
+                        memset(&context->optimiser_queue[inst_no2], 0, sizeof(instruction_queue));
                         context->optimiser_queue[inst_no2].instrType = OP_CODE;
                         context->optimiser_queue[inst_no2].instrToken =
-                                rxas_tid(context,
-                                         context->optimiser_queue[inst_no2].instrToken,
-                                         r->out2.instruction);
-                        context->optimiser_queue[inst_no2].operand1Token =
-                                mapped_token(context, map, r->out2.optype1, r->out2.opnum1);
-                        context->optimiser_queue[inst_no2].operand2Token =
-                                mapped_token(context, map, r->out2.optype2, r->out2.opnum2);
-                        context->optimiser_queue[inst_no2].operand3Token =
-                                mapped_token(context, map, r->out2.optype3, r->out2.opnum3);
+                                rxas_tid(context, baseToken, r->out2.instruction);
+                        replacementOperands = mapped_pattern_tokens(
+                                context, map, &r->out2, &replacementOperandCount);
+                        set_opcode_operands(context, &context->optimiser_queue[inst_no2],
+                                            replacementOperands, replacementOperandCount);
+                        free(replacementOperands);
                         break;
+                    }
 
                     case ASM_LABEL:
+                    {
+                        Assembler_Token *labelToken = mapped_token(context, map, 'l', r->out2.opnum1);
                         /* Insert instruction in the queue */
                         inst_no2 = inst_no + 1;
                         if ((int)context->optimiser_queue_items - inst_no2 > 0) {
@@ -1910,13 +2235,11 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
                         context->optimiser_queue_items++;
 
                         /* Add the instruction */
+                        memset(&context->optimiser_queue[inst_no2], 0, sizeof(instruction_queue));
                         context->optimiser_queue[inst_no2].instrType = ASM_LABEL;
-                        context->optimiser_queue[inst_no2].instrToken =
-                                mapped_token(context, map, 'l', r->out2.opnum1);
-                        context->optimiser_queue[inst_no2].operand1Token = 0;
-                        context->optimiser_queue[inst_no2].operand2Token = 0;
-                        context->optimiser_queue[inst_no2].operand3Token = 0;
+                        context->optimiser_queue[inst_no2].instrToken = labelToken;
                         break;
+                    }
 
                     default: ; /* No secondary instruction - nothing to be done */
                 }
@@ -1935,7 +2258,7 @@ static int optimise_rule(Assembler_Context *context, op_map *map, rule *r, int i
  * returns 1 if the rule was successfully applied */
 static int optimise_rule_in_queue(Assembler_Context *context, rule **r ) {
     int i;
-    op_map map;
+    op_map map = {0};
     int result = 0;
 
     /* Work down each instruction as a start point */
@@ -1953,6 +2276,7 @@ static int optimise_rule_in_queue(Assembler_Context *context, rule **r ) {
     while ((*r)->flag != END_OF_RULE) (*r)++;
     (*r)++;
 
+    op_map_free(&map);
     return result;
 }
 
@@ -1975,10 +2299,7 @@ static void executeQueuedItem(Assembler_Context *context, instruction_queue *ite
             rxaslabl(context, item->instrToken);
             break;
         case OP_CODE:
-            rxasgen(context, item->instrToken,
-                    item->operand1Token,
-                    item->operand2Token,
-                    item->operand3Token);
+            rxasgenv(context, item->instrToken, item->operandTokens, item->operandCount);
             break;
         case FUNC_META:
             /* Queue Function Metadata */
@@ -2047,6 +2368,7 @@ static void queue_instruction_ext_full(Assembler_Context *context, enum queue_it
     /* Note that instruction rules can add instructions to the queue  */
     while (context->optimiser_queue_items >= OPTIMISER_TARGET_MAX_QUEUE_SIZE) {
         executeQueuedItem(context, context->optimiser_queue);
+        rxas_free_queue_item(context->optimiser_queue);
 
         /* Move the queue */
         memmove(&context->optimiser_queue[0],
@@ -2055,9 +2377,13 @@ static void queue_instruction_ext_full(Assembler_Context *context, enum queue_it
 
         /* One less instruction in the queue */
         context->optimiser_queue_items--;
+        memset(&context->optimiser_queue[context->optimiser_queue_items], 0,
+               sizeof(instruction_queue));
     }
 
     /* Add to the end of the queue */
+    memset(&context->optimiser_queue[context->optimiser_queue_items], 0,
+           sizeof(instruction_queue));
     context->optimiser_queue[context->optimiser_queue_items].instrType = type;
     context->optimiser_queue[context->optimiser_queue_items].instrToken = instrToken;
     context->optimiser_queue[context->optimiser_queue_items].operand1Token = operand1Token;
@@ -2073,6 +2399,31 @@ static void queue_instruction_ext_full(Assembler_Context *context, enum queue_it
     context->optimiser_queue_items++;
 
     /* Optimise */
+    optimise(context);
+}
+
+static void queue_opcode(Assembler_Context *context,
+                         Assembler_Token *instrToken,
+                         Assembler_Token *const *operandTokens,
+                         size_t operandCount) {
+    instruction_queue *item;
+
+    while (context->optimiser_queue_items >= OPTIMISER_TARGET_MAX_QUEUE_SIZE) {
+        executeQueuedItem(context, context->optimiser_queue);
+        rxas_free_queue_item(context->optimiser_queue);
+        memmove(&context->optimiser_queue[0],
+                &context->optimiser_queue[1],
+                sizeof(instruction_queue) * (context->optimiser_queue_items - 1));
+        context->optimiser_queue_items--;
+        memset(&context->optimiser_queue[context->optimiser_queue_items], 0,
+               sizeof(instruction_queue));
+    }
+
+    item = &context->optimiser_queue[context->optimiser_queue_items++];
+    memset(item, 0, sizeof(*item));
+    item->instrType = OP_CODE;
+    item->instrToken = instrToken;
+    set_opcode_operands(context, item, operandTokens, operandCount);
     optimise(context);
 }
 
@@ -2105,44 +2456,70 @@ static void queue_instruction(Assembler_Context *context, enum queue_item_type t
 }
 
 /* Queue code for the keyhole optimiser */
+void rxasquev(Assembler_Context *context, Assembler_Token *instrToken,
+              Assembler_Token *const *operandTokens, size_t operandCount) {
+    promote_floats_to_decimalsv(instrToken, operandTokens, operandCount);
+    if (context->optimise) {
+        queue_opcode(context, instrToken, operandTokens, operandCount);
+    } else {
+        rxasgenv(context, instrToken, operandTokens, operandCount);
+    }
+}
+
+void rxasque_span(Assembler_Context *context, Assembler_Token *instrToken,
+                  Assembler_Token *lastOperandToken) {
+    Assembler_Token **operands = 0;
+    Assembler_Token *operand = instrToken ? instrToken->token_next : 0;
+    size_t operandCount = 0;
+    size_t capacity = 0;
+
+    while (operand) {
+        if (operandCount == capacity) {
+            size_t newCapacity = capacity ? capacity * 2 : 4;
+            Assembler_Token **newOperands = realloc(operands,
+                                                     newCapacity * sizeof(*newOperands));
+            if (!newOperands) {
+                free(operands);
+                RX_PANIC_OOM("realloc rxas parsed operands",
+                             newCapacity * sizeof(*newOperands),
+                             context && context->file_name ? context->file_name : 0);
+            }
+            operands = newOperands;
+            capacity = newCapacity;
+        }
+        operands[operandCount++] = operand;
+        if (operand == lastOperandToken) break;
+        operand = operand->token_next;
+        if (operand) operand = operand->token_next; /* Skip the comma. */
+    }
+
+    rxasquev(context, instrToken, operands, operandCount);
+    free(operands);
+}
+
 /* Queue opcode  */
 void rxasque0(Assembler_Context *context, Assembler_Token *instrToken) {
-    if (context->optimise) {
-        queue_instruction( context, OP_CODE, instrToken, 0, 0, 0, 0, 0);
-    }
-    else rxasgen0(context, instrToken);
+    rxasquev(context, instrToken, 0, 0);
 }
 
 /* Queue opcode  */
 void rxasque1(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token) {
-    // Convert any FLOATS to DECIMALS
-    promote_floats_to_decimals(instrToken, operand1Token, 0, 0);
-    if (context->optimise) {
-        queue_instruction(context, OP_CODE, instrToken, operand1Token, 0, 0, 0, 0);
-    }
-    else rxasgen1(context, instrToken, operand1Token);
+    Assembler_Token *operands[] = {operand1Token};
+    rxasquev(context, instrToken, operands, 1);
 }
 
 /* Queue opcode  */
 void rxasque2(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
               Assembler_Token *operand2Token) {
-    // Convert any FLOATS to DECIMALS
-    promote_floats_to_decimals(instrToken, operand1Token, operand2Token, 0);
-    if (context->optimise) {
-        queue_instruction(context, OP_CODE, instrToken, operand1Token, operand2Token, 0, 0, 0);
-    }
-    else rxasgen2(context, instrToken, operand1Token, operand2Token);
+    Assembler_Token *operands[] = {operand1Token, operand2Token};
+    rxasquev(context, instrToken, operands, 2);
 }
 
 /* Queue opcode  */
 void rxasque3(Assembler_Context *context, Assembler_Token *instrToken, Assembler_Token *operand1Token,
               Assembler_Token *operand2Token, Assembler_Token *operand3Token) {
-    // Convert any FLOATS to DECIMALS
-    promote_floats_to_decimals(instrToken, operand1Token, operand2Token, operand3Token);
-    if (context->optimise) {
-        queue_instruction(context, OP_CODE, instrToken, operand1Token, operand2Token, operand3Token, 0, 0);
-    }
-    else rxasgen3(context, instrToken, operand1Token, operand2Token, operand3Token);
+    Assembler_Token *operands[] = {operand1Token, operand2Token, operand3Token};
+    rxasquev(context, instrToken, operands, 3);
 }
 
 /* Queue Label */
@@ -2260,6 +2637,7 @@ void flushopt(Assembler_Context *context) {
         /* Output the queue */
         for (i=0; i<context->optimiser_queue_items; i++) {
             executeQueuedItem(context, context->optimiser_queue +  i);
+            rxas_free_queue_item(context->optimiser_queue + i);
         }
         context->optimiser_queue_items = 0;
     }

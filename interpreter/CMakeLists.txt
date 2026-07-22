@@ -868,6 +868,10 @@ crexx_add_vm_dual_test(NAME rxassignalbrvrawtests RXVM_ARGS tests_signal_branch_
 crexx_add_vm_dual_test(NAME rxassignalbrvnametests RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-name: OTHER.*brv-payload: value payload")
 crexx_add_vm_dual_test(NAME rxassignalbrvpayloadtests RXVM_ARGS tests_signal_branch_value PASS_REGULAR_EXPRESSION "brv-payload: value payload")
 
+# NR-09 large-instruction batch
+crexx_add_rxas_vm_binary(tests_nr09_superinstructions "NR-09 large instructions")
+crexx_add_vm_dual_test(NAME rxasnr09superinstructiontests RXVM_ARGS tests_nr09_superinstructions PASS_REGULAR_EXPRESSION "PASS: NR-09 Superinstructions")
+
 # Basic Instruction Tests
 add_custom_command(
 		OUTPUT tests_basic.rxbin
@@ -1123,6 +1127,11 @@ crexx_add_vm_dual_test(NAME rxassystemiotests RXVM_ARGS tests_system_io)
 # Binary Buffer, I/O, and legacy cursor instruction tests
 crexx_add_rxas_vm_binary(tests_binary "binary buffer and I/O")
 crexx_add_vm_dual_test(NAME rxasbinarylegacytests RXVM_ARGS tests_binary PASS_REGULAR_EXPRESSION "PASS: Binary Buffer IO and Legacy Cursor Ops")
+# Both VM variants execute in this directory and the authored RXAS uses the
+# same fixed scratch filenames.  Keep the pair from truncating each other's
+# files when CTest runs them concurrently under slower instrumented builds.
+set_tests_properties(rxasbinarylegacytests rxasbinarylegacytests-rxbvm PROPERTIES
+        RESOURCE_LOCK rxas_binary_legacy_scratch)
 crexx_add_rxas_vm_binary(tests_binary_memory "typed binary memory operations")
 crexx_add_vm_dual_test(NAME rxasbinarymemorytests RXVM_ARGS tests_binary_memory PASS_REGULAR_EXPRESSION "PASS: Binary Memory Typed Ops")
 crexx_add_rxas_vm_binary(tests_jump_table "linear jump table dispatch")
@@ -1275,6 +1284,8 @@ crexx_add_vm_dual_test(NAME rxasstresstests RXVM_ARGS tests_stress)
 # Focused deterministic coverage for remaining RXAS instruction families
 crexx_add_rxas_vm_binary(tests_instruction_gaps "remaining deterministic instruction gaps")
 crexx_add_vm_dual_test(NAME rxasinstructiongaptests RXVM_ARGS tests_instruction_gaps PASS_REGULAR_EXPRESSION "PASS: RXAS Instruction Gap Coverage")
+crexx_add_rxas_vm_binary(tests_wide_operands "arbitrary operand pipeline")
+crexx_add_vm_dual_test(NAME rxaswideoperandtests RXVM_ARGS tests_wide_operands PASS_REGULAR_EXPRESSION "PASS: Arbitrary Operand Pipeline")
 
 # Re-entrancy Test
 add_custom_command(

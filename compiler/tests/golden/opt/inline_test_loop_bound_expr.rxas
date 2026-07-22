@@ -7,11 +7,7 @@
 main() .locals=9
    .meta "inline_test_loop_bound_expr.main"="b" ".int" main() ""
    .srcstep 22 22 17 "inline_test_loop_bound_expr.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_loop_bound_expr.crexx" 4 3 43 "  say \"Starting loop bound inline test...\""
    say "Starting loop bound inline test..."
    .srcstep 6 6 17 "inline_test_loop_bound_expr.crexx" 6 3 5 "  do repeatCount(2)"
@@ -80,7 +76,6 @@ l16doinc:
    .srcstep 19 19 17 "inline_test_loop_bound_expr.crexx" 12 3 6 "  end"
    br l16dostart
 l16doend:
-   endlife r1
    .meta "inline_test_loop_bound_expr.main.i"
    .srcstep 20 20 17 "inline_test_loop_bound_expr.crexx" 14 3 41 "  say \"Loop bound inline test finished.\""
    say "Loop bound inline test finished."

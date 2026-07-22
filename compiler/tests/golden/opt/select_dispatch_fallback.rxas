@@ -7,11 +7,7 @@
 main() .locals=14
    .meta "select_dispatch_fallback.main"="b" ".int" main() ""
    .srcstep 41 41 17 "select_dispatch_fallback.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "select_dispatch_fallback.main.i"="b" ".int" r0
    .srcstep 1 1 17 "select_dispatch_fallback.crexx" 4 3 11 "  i = .int"
    null r0
@@ -89,7 +85,6 @@ l138ifend:
    icopy r10,r11
    br l126bexprend
 l126bexprend:
-   endlife r3
    itos r10
    say r10
    .srcstep 37 37 17 "select_dispatch_fallback.crexx" 8 5 32 "    say dynamic_case(i, i + 10)"
@@ -161,8 +156,6 @@ l179ifend:
    icopy r9,r13
    br l162bexprend
 l162bexprend:
-   endlife r11
-   endlife r10
    itos r9
    say r9
 l9doinc:

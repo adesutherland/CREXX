@@ -7,11 +7,7 @@
 main() .locals=19
    .meta "inline_test_composed_expr_contexts.main"="b" ".int" main() ""
    .srcstep 72 72 17 "inline_test_composed_expr_contexts.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_composed_expr_contexts.crexx" 4 3 50 "  say \"Starting composed inline contexts test...\""
    say "Starting composed inline contexts test..."
    .srcstep 9 9 17 "inline_test_composed_expr_contexts.crexx" 6 3 35 "  say leftValue(3) + rightValue(4)"
@@ -67,7 +63,6 @@ l238bexprend:
    scopy r2,r3
    br l234bexprend
 l234bexprend:
-   endlife r4
    concat r4,"prefix:",r2
    .traceevent "O" 4 "R" "S" "r" 4 15 15 0 "" ""
    concat r5,r4,":"
@@ -113,8 +108,6 @@ l274bexprend:
    icopy r6,r7
    br l270bexprend
 l270bexprend:
-   endlife r3
-   endlife r2
    itos r6
    say r6
    .srcstep 29 29 17 "inline_test_composed_expr_contexts.crexx" 10 3 12 "  calls = 0"

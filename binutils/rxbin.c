@@ -14,63 +14,6 @@ void init_module(module_file *module) {
     module->fromfile = 0;
 }
 
-int rxbin_get_operand_types(OpFormat format, OperandType *types) {
-    switch (format) {
-        case FMT_EMPTY: return 0;
-        case FMT_B: types[0] = OP_BINARY; return 1;
-        case FMT_C: types[0] = OP_CHAR; return 1;
-        case FMT_F: types[0] = OP_FLOAT; return 1;
-        case FMT_I: types[0] = OP_INT; return 1;
-        case FMT_I_I: types[0] = OP_INT; types[1] = OP_INT; return 2;
-        case FMT_I_I_I: types[0] = OP_INT; types[1] = OP_INT; types[2] = OP_INT; return 3;
-        case FMT_I_I_R: types[0] = OP_INT; types[1] = OP_INT; types[2] = OP_REG; return 3;
-        case FMT_I_R: types[0] = OP_INT; types[1] = OP_REG; return 2;
-        case FMT_I_R_R: types[0] = OP_INT; types[1] = OP_REG; types[2] = OP_REG; return 3;
-        case FMT_L: types[0] = OP_ID; return 1;
-        case FMT_L_L_R: types[0] = OP_ID; types[1] = OP_ID; types[2] = OP_REG; return 3;
-        case FMT_L_P_S: types[0] = OP_ID; types[1] = OP_FUNC; types[2] = OP_STRING; return 3;
-        case FMT_L_R: types[0] = OP_ID; types[1] = OP_REG; return 2;
-        case FMT_L_R_I: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_INT; return 3;
-        case FMT_L_R_R: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_REG; return 3;
-        case FMT_L_R_S: types[0] = OP_ID; types[1] = OP_REG; types[2] = OP_STRING; return 3;
-        case FMT_L_S: types[0] = OP_ID; types[1] = OP_STRING; return 2;
-        case FMT_P: types[0] = OP_FUNC; return 1;
-        case FMT_P_S: types[0] = OP_FUNC; types[1] = OP_STRING; return 2;
-        case FMT_R: types[0] = OP_REG; return 1;
-        case FMT_R_B: types[0] = OP_REG; types[1] = OP_BINARY; return 2;
-        case FMT_R_B_B: types[0] = OP_REG; types[1] = OP_BINARY; types[2] = OP_BINARY; return 3;
-        case FMT_R_B_R: types[0] = OP_REG; types[1] = OP_BINARY; types[2] = OP_REG; return 3;
-        case FMT_R_B_S: types[0] = OP_REG; types[1] = OP_BINARY; types[2] = OP_STRING; return 3;
-        case FMT_R_C: types[0] = OP_REG; types[1] = OP_CHAR; return 2;
-        case FMT_R_D: types[0] = OP_REG; types[1] = OP_DECIMAL; return 2;
-        case FMT_R_D_R: types[0] = OP_REG; types[1] = OP_DECIMAL; types[2] = OP_REG; return 3;
-        case FMT_R_F: types[0] = OP_REG; types[1] = OP_FLOAT; return 2;
-        case FMT_R_F_I: types[0] = OP_REG; types[1] = OP_FLOAT; types[2] = OP_INT; return 3;
-        case FMT_R_F_R: types[0] = OP_REG; types[1] = OP_FLOAT; types[2] = OP_REG; return 3;
-        case FMT_R_I: types[0] = OP_REG; types[1] = OP_INT; return 2;
-        case FMT_R_I_I: types[0] = OP_REG; types[1] = OP_INT; types[2] = OP_INT; return 3;
-        case FMT_R_I_R: types[0] = OP_REG; types[1] = OP_INT; types[2] = OP_REG; return 3;
-        case FMT_R_P: types[0] = OP_REG; types[1] = OP_FUNC; return 2;
-        case FMT_R_P_R: types[0] = OP_REG; types[1] = OP_FUNC; types[2] = OP_REG; return 3;
-        case FMT_R_R: types[0] = OP_REG; types[1] = OP_REG; return 2;
-        case FMT_R_R_B: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_BINARY; return 3;
-        case FMT_R_R_D: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_DECIMAL; return 3;
-        case FMT_R_R_F: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_FLOAT; return 3;
-        case FMT_R_R_I: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_INT; return 3;
-        case FMT_R_R_R: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_REG; return 3;
-        case FMT_R_R_S: types[0] = OP_REG; types[1] = OP_REG; types[2] = OP_STRING; return 3;
-        case FMT_R_S: types[0] = OP_REG; types[1] = OP_STRING; return 2;
-        case FMT_R_S_I: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_INT; return 3;
-        case FMT_R_S_R: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_REG; return 3;
-        case FMT_R_S_S: types[0] = OP_REG; types[1] = OP_STRING; types[2] = OP_STRING; return 3;
-        case FMT_S: types[0] = OP_STRING; return 1;
-        case FMT_S_R: types[0] = OP_STRING; types[1] = OP_REG; return 2;
-        case FMT_S_S: types[0] = OP_STRING; types[1] = OP_STRING; return 2;
-        case FMT_S_S_R: types[0] = OP_STRING; types[1] = OP_STRING; types[2] = OP_REG; return 3;
-        default: return 0;
-    }
-}
-
 OpFormat rxbin_opcode_format(int opcode) {
     static const OpFormat opcode_formats[OP_MAX_INSTRUCTIONS] = {
 #define X(NAME, OPCODE, FMT, FLOW, FLAGS, DESC) [OPCODE] = FMT,

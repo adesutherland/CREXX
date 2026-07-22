@@ -1,0 +1,27 @@
+captured_utc=2026-07-18T17:22:31Z
+head=32bf7e76f3fe4b776ee30eb60e85af7ca1e22b46
+accepted_timing_bundle=/Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-17-nr-09-numctx-first-release-verdict
+b65c0ceb433c97f4c67be8c1159c1192fc3e0372892ecad0b56ebee88b3e55af  /Users/adrian/CLionProjects/CREXX/cmake-build-release/bin/rxc
+crexx-1.0.0-beta.3+local.g847e62f0433c.dirty
+bc8f2e4be40756c05bf8fe79620f243cc5b810a3958360038e9e1af53caa570d  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/awfy_bounce-noopt.rxas
+b9b0924ca22252ea9437aa4b88ddd474b0b4d1539df5246efe99690066fe71f5  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/awfy_bounce-opt.rxas
+18ad4a441741b02d742a2be6eecf930a41ca26ad4e4bab5f7f96dfbce76cee7a  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/awfy_list-noopt.rxas
+3e79f4f99a606c7a9f2ca249db148ba0fc22774a5b25ecc345829ca46d0ba0e2  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/awfy_list-opt.rxas
+9da19cdb6ce8189e9edccbf524311006a7552f06ab5927c34c91c403c32e21a5  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/awfy_mandelbrot-noopt.rxas
+98e40d7633fef11f2edcbf91adb91cae401e46fe2f43ee313e290d30cdf5c851  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/awfy_mandelbrot-opt.rxas
+fb717f52ce0e7fb2f609831646ed4510ad68bfadaa5fa8672ca903b9eaf342a3  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/awfy_permute-noopt.rxas
+59f4e24c4b47188a529639894a5a97089d1f631b70c504d938ec4cc58de7bf24  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/awfy_permute-opt.rxas
+a873cf508fc83adbb5998a7f154c61354f7d0f8713a428bcb2b4bdac1208857f  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/awfy_richards-noopt.rxas
+ccb606c359fff56115bffc1fa301cfc0c00b46b3581e6323805625bb685ee03b  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/awfy_richards-opt.rxas
+7b6b79c7a75d057d3e70fe2dc029ef88676788dcede0eaae8edfba79b551901a  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/awfy_sieve-noopt.rxas
+1da42840e297e192c2eada9a3810183fe5aefcb0bc6c74358dec8896e653a701  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/awfy_sieve-opt.rxas
+1c4d051562413c342c704c27aa2d4d26e05bf928fe22b057fb6376a2563f0e7f  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/awfy_storage-noopt.rxas
+d1b2c698404ebc741e147dcc03187917b070d2ee0ea8dff8e7e41dbb488ed9c8  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/awfy_storage-opt.rxas
+24805e9a37447d45787dc3e5ae1a7a7afbadef7cf64ebe6a6d366e1dfd9719ae  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/awfy_towers-noopt.rxas
+328caa4873065e594502e9739e5354ccfeb55661d43a0514f5860475b97bb8d0  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/awfy_towers-opt.rxas
+d7c90e75b56e09c76961d5e089cc602c6f359ee04f2d4fbbf04cb396e491f090  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/base64_roundtrip-noopt.rxas
+515ea0b8cadedb20a12ef806d3474f91dac8556f98db2b9bf1052d0cb3e59380  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/base64_roundtrip-opt.rxas
+a44079928f128c092954ddd82861b9441cf2fced665be0a8f5dba2eb8b565f4c  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/json_parser-noopt.rxas
+bdb236b1c87ab80c464b39595544dce95b82aa894dd12da46fc8aa9465ad5562  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/json_parser-opt.rxas
+2045dccd572eecfc96960e842fc8ddcd2285f07553916f9ba0111a40d587e701  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/rexxcps_levelb-noopt.rxas
+868fb7fdac2b387dca9ba227d0ca949431e51ea87ebb06928e874360592ee515  /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/baseline/rexxcps_levelb-opt.rxas

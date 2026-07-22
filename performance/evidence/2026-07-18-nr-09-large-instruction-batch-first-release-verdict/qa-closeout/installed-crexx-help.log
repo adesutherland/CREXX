@@ -1,0 +1,42 @@
+[33mCREXX compiler driver [34mcrexx-1.0.0-beta.3+local.g32bf7e76f3fe.dirty [0m (macOS 64 20260719)
+cREXX License (MIT)
+Copyright (c) 2020-2026 Adrian Sutherland, Peter Jacob, René Jansen
+See https://github.com/adesutherland/CREXX for project details
+
+Arguments are: in_file_specification... [--option]...
+
+The following options are available:
+
+-help              -- display (this) help info
+-args              -- pass remaining argv entries to the program (final option)
+-version           -- display the version number
+-exec              -- execute the compiled rxbin (default)
+-noexec            -- compile only; do not execute with rxvme
+-compile           -- enable compilation to rxbin (default)
+-nocompile         -- skip rxc/rxas and reuse an existing .rxbin
+-native            -- package a native executable from the compiled program
+-nonative          -- disable native packaging (default)
+-verbose[0-4]      -- report on progress; default verbose0
+-[no]colo[u]r      -- enable or disable colo[u]r output
+-[no]optimi[s|z]e  -- enable or disable optimization
+-keep              -- keep compile/link intermediates (default)
+-nokeep            -- delete compile/link intermediates after the run
+-decimal           -- use decimal arithmetic
+-l[library path]   -- exact library file path, or packaged name under CREXX_HOME/bin
+-s[path]           -- additional source import root for the rxc phase
+-i[path]           -- additional raw binary import root for the rxc phase
+--import-rxas      -- allow the rxc phase to auto-import .rxas from binary roots
+--diagnostics mode -- rxc diagnostics: localized or raw
+--diagnostic-locale locale -- diagnostic locale such as en_GB or en_US
+--no-localisation  -- use raw diagnostic code/parameter rendering
+--linkmap path     -- write an rxlink map file when using -native
+--link-keep-source -- keep source/TRACE debug metadata in the linked native image
+--link-keep-inline -- keep inline-body metadata in the linked native image
+
+Source files without OPTIONS use rxc file-type defaults: .rexx is Level C
+and .crexx/.crx are Level G.
+Options -s, -i and --import-rxas affect compilation only; runtime/native loading uses -l.
+Native packaging uses rxlink before rxcpack; plugin/static libraries are linked natively
+with platform-appropriate linker flags.
+
+all options can also be prefixed with --

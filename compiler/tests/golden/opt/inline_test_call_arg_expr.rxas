@@ -7,11 +7,7 @@
 main() .locals=7
    .meta "inline_test_call_arg_expr.main"="b" ".int" main() ""
    .srcstep 19 19 17 "inline_test_call_arg_expr.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_call_arg_expr.crexx" 4 3 46 "  say \"Starting call arg inline expr test...\""
    say "Starting call arg inline expr test..."
    .srcstep 15 15 17 "inline_test_call_arg_expr.crexx" 5 3 5 "  do i = 1 to 4"
@@ -42,7 +38,6 @@ l8dostart:
    icopy r6,r5
    br l68bexprend
 l68bexprend:
-   endlife r4
    icopy r3,r6
    .traceevent "A" 6 "R" "I" "r" 3 8 8 0 "val" ""
    .srcstep 10 10 17 "inline_test_call_arg_expr.crexx" 13 3 15 "  if val > 100 then return 100"
@@ -62,7 +57,6 @@ l77iffalse:
    icopy r6,r3
    br l64bexprend
 l64bexprend:
-   endlife r3
    itos r6
    say r6
 l8doinc:
@@ -71,7 +65,6 @@ l8doinc:
    .srcstep 16 16 17 "inline_test_call_arg_expr.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
    .meta "inline_test_call_arg_expr.main.i"
    .srcstep 17 17 17 "inline_test_call_arg_expr.crexx" 8 3 44 "  say \"Call arg inline expr test finished.\""
    say "Call arg inline expr test finished."

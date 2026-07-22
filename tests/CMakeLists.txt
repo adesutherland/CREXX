@@ -111,6 +111,9 @@ crexx_add_rxas_optimizer_check(barrier_dgtbr barrier_dgtbr.rxas barrier_dgtbr)
 crexx_add_rxas_optimizer_check(barrier_dltbr barrier_dltbr.rxas barrier_dltbr)
 crexx_add_rxas_optimizer_check(barrier_deqbr barrier_deqbr.rxas barrier_deqbr)
 crexx_add_rxas_optimizer_check(barrier_metaloadmodule barrier_metaloadmodule.rxas barrier_metaloadmodule)
+crexx_add_rxas_optimizer_check(nr09_class1 nr09_class1.rxas nr09_class1)
+crexx_add_rxas_optimizer_check(nr09_class1_noopt nr09_class1.rxas nr09_class1_noopt RXAS_FLAGS -n)
+crexx_add_rxas_optimizer_check(nr09_class1_boundaries nr09_class1_boundaries.rxas nr09_class1_boundaries)
 
 crexx_label_smoke_tests(rxas_optimizer_copy_acopy_opt)
 

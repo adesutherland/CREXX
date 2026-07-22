@@ -7,11 +7,7 @@
 main() .locals=8
    .meta "inline_test_short_circuit_expr.main"="b" ".int" main() ""
    .srcstep 36 36 17 "inline_test_short_circuit_expr.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_short_circuit_expr.crexx" 4 3 46 "  say \"Starting short circuit inline test...\""
    say "Starting short circuit inline test..."
    .srcstep 2 2 17 "inline_test_short_circuit_expr.crexx" 5 3 12 "  calls = 0"

@@ -1,0 +1,130 @@
+*******************************************************************************
+* MODULE - /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/json_parser-opt.rxas
+* DESCRIPTION - /Users/adrian/CLionProjects/CREXX/performance/evidence/2026-07-18-nr-09-large-instruction-batch-first-release-verdict/static/candidate/json_parser-opt.rxas
+
+* CONSTANT POOL - Size 0x2150.  Dump of EXPOSED entries only (option -p not used):
+
+* 0x002058 EXPOSED-PROC rxjson.jsoncount() <-- as rxjson.jsoncount
+
+* CODE SEGMENT - Size 0x82
+
+.globals=0
+rxjson.jsoncount() .expose=rxjson.jsoncount
+.meta "rxjson.jsoncount"="b" ".int" rxjson.jsoncount() "json=.string,path=.string"
+
+main()          .locals=9
+                .meta "json_parser.main"="b" ".int" main() ""
+                numsci 18,1,1                                * 0x000000:0104 Setup Scientific Numeric digits=op1, case=op2, std=op3, fuzz=0, form=sci
+                .srcstep 1 1 17 "json_parser.crexx" 9 5 19 "arg argv = .string[]"
+                .meta "json_parser.main.argv"="b" ".string[*]" r0
+                brtpandt lb_d,a1 /* aka r10 */,512           * 0x000004:020c if op2 readable status flags & op3 true then goto op1
+                copy r0,a1 /* aka r10 */                     * 0x000008:0008 Copy op2 to op1
+                br lb_10                                     * 0x00000b:0024 Branch to op1
+lb_d:           swap r0,a1 /* aka r10 */                     * 0x00000d:01fe Swap op1 and op2
+                .srcstep 2 2 17 "json_parser.crexx" 11 1 16 "repetitions = 1"
+                .meta "json_parser.main.repetitions"="b" ".int" r1
+lb_10:          load r1,1                                    * 0x000010:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 1 2 2 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 1 2 2 0 "repetitions" ""
+                .srcstep 4 4 17 "json_parser.crexx" 12 1 16 "if argv[0] >= 1 then repetitions = argv[1]"
+                .traceevent "C" 4 "R" "V" "r" 3 4 4 0 "argv" ""
+                getattrs r4,r0,0                             * 0x000013:00d7 get number attributes op1 = op2.num_attributes + op3
+                .traceevent "V" 6 "R" "I" "r" 4 4 4 0 "argv" ""
+                igte r4,r4,1                                 * 0x000017:006c Int Greater than equals op1=(op2>=op3)
+                .traceevent "O" 4 "R" "B" "r" 4 4 4 0 "" ""
+                brf lb_22,r4                                 * 0x00001b:0026 Branch to op1 if op2 false
+                .srcstep 5 5 17 "json_parser.crexx" 12 17 21 "if argv[0] >= 1 then repetitions = argv[1]"
+                .srcstep 3 3 17 "json_parser.crexx" 12 22 42 "if argv[0] >= 1 then repetitions = argv[1]"
+                minstoiattr1 r1,r0,1                         * 0x00001e:01a4 Ensure and convert one-based string attribute op3 of op2 directly into integer op1
+                .traceevent "V" 6 "R" "I" "r" 1 3 3 0 "argv" ""
+                .traceevent "A" 6 "R" "I" "r" 1 3 3 0 "repetitions" ""
+                .srcstep 10 10 17 "json_parser.crexx" 13 1 19 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .traceevent "V" 6 "R" "I" "r" 1 10 10 0 "repetitions" ""
+lb_22:          ilt r5,r1,1                                  * 0x000022:006f Int Less than op1=(op2<op3)
+                .traceevent "O" 4 "R" "B" "r" 5 10 10 0 "" ""
+                brf lb_35,r5                                 * 0x000026:0026 Branch to op1 if op2 false
+                .srcstep 11 11 17 "json_parser.crexx" 13 20 24 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .srcstep 9 9 17 "json_parser.crexx" 13 25 68 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .srcstep 8 8 17 "json_parser.crexx" 13 32 36 "if repetitions < 1 then return fail(\"repetitions must be positive\")"
+                .srcstep 6 6 17 "json_parser.crexx" 38 3 22 "  say \"FAIL:\" message"
+                say "FAIL: repetitions must be positive"     * 0x000029:01c7 Say op1
+                .srcstep 7 7 17 "json_parser.crexx" 39 3 11 "  return 1"
+                load r4,1                                    * 0x00002b:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 4 9 9 0 "" ""
+                icopy r3,r4                                  * 0x00002e:0009 Copy Integer op2 to op1
+                br lb_33                                     * 0x000031:0024 Branch to op1
+lb_33:          ret r3                                       * 0x000033:0031 Return op1
+                .srcstep 12 12 17 "json_parser.crexx" 26 1 11 "result = 0"
+                .meta "json_parser.main.payload"="b" ".string" "{\"head\":{\"requestCounter\":4,\"ok\":true},\"operations\":[[\"destroy\",\"w54\"],[\"set\",\"w2\",{\"activeControl\":\"w99\"}],[\"set\",\"w21\",{\"customVariant\":\"variant_navigation\"}],[\"create\",\"w95\",\"rwt.widgets.Composite\",{\"parent\":\"w53\",\"bounds\":[0,0,1008,586],\"children\":[\"w96\",\"w97\"],\"tabIndex\":-1}],[\"create\",\"w96\",\"rwt.widgets.Label\",{\"parent\":\"w95\",\"bounds\":[10,30,112,26],\"text\":\"TableViewer\"}],[\"listen\",\"w98\",{\"KeyDown\":true,\"Modify\":true}],[\"set\",\"w99\",{\"itemCount\":118,\"headerVisible\":true,\"selection\":[\"w108\"]}],[\"call\",\"rwt.client.BrowserNavigation\",\"addToHistory\",{\"entries\":[[\"tableviewer\",\"TableViewer\"]]}]]}"
+                .meta "json_parser.main.result"="b" ".int" r2
+lb_35:          load r2,0                                    * 0x000035:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 2 12 12 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 2 12 12 0 "result" ""
+                .srcstep 24 24 17 "json_parser.crexx" 27 1 3 "do iteration = 1 to repetitions"
+                .srcstep 13 13 17 "json_parser.crexx" 27 4 17 "do iteration = 1 to repetitions"
+                .meta "json_parser.main.iteration"="b" ".int" r5
+                load r5,1                                    * 0x000038:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 5 13 13 0 "" ""
+                .traceevent "A" 6 "R" "I" "r" 5 13 13 0 "iteration" ""
+                .srcstep 14 14 17 "json_parser.crexx" 27 18 32 "do iteration = 1 to repetitions"
+                .traceevent "V" 6 "R" "I" "r" 1 0 0 0 "repetitions" ""
+                .srcstep 14 14 17 "json_parser.crexx" 27 18 32 "do iteration = 1 to repetitions"
+lb_3b:          igt r4,r5,r1                                 * 0x00003b:0068 Int Greater than op1=(op2>op3)
+                brt lb_71,r4                                 * 0x00003f:0025 Branch to op1 if op2 true
+                .srcstep 16 16 17 "json_parser.crexx" 28 3 44 "  result = jsoncount(payload, \"operations\")"
+                load r7,"{\"head\":{\"requestCounter\":4,\"ok\":true},\"operations\":[[\"destroy\",\"w54\"],[\"set\",\"w2\",{\"activeControl\":\"w99\"}],[\"set\",\"w21\",{\"customVariant\":\"variant_navigation\"}],[\"create\",\"w95\",\"rwt.widgets.Composite\",{\"parent\":\"w53\",\"bounds\":[0,0,1008,586],\"children\":[\"w96\",\"w97\"],\"tabIndex\":-1}],[\"create\",\"w96\",\"rwt.widgets.Label\",{\"parent\":\"w95\",\"bounds\":[10,30,112,26],\"text\":\"TableViewer\"}],[\"listen\",\"w98\",{\"KeyDown\":true,\"Modify\":true}],[\"set\",\"w99\",{\"itemCount\":118,\"headerVisible\":true,\"selection\":[\"w108\"]}],[\"call\",\"rwt.client.BrowserNavigation\",\"addToHistory\",{\"entries\":[[\"tableviewer\",\"TableViewer\"]]}]]}" * 0x000042:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 7 16 16 0 "" ""
+                load r8,"operations"                         * 0x000045:0003 Load op1 with op2
+                .traceevent "L" 4 "R" "S" "r" 8 16 16 0 "" ""
+                loadsettp2 r6,2,r7,256                       * 0x000048:010c Load op1 integer and set op3 status flags
+                settpcall r2,rxjson.jsoncount(),r6,r8,768    * 0x00004d:011a Set op4 status then call op2 with count/window op3
+                .traceevent "F" 4 "R" "I" "r" 2 16 16 0 "jsoncount" ""
+                .traceevent "A" 6 "R" "I" "r" 2 16 16 0 "result" ""
+                .srcstep 22 22 17 "json_parser.crexx" 29 3 17 "  if result <> 8 then return fail(\"expected 8 operations, got \" || result)"
+                .traceevent "V" 6 "R" "I" "r" 2 22 22 0 "result" ""
+                ine r8,r2,8                                  * 0x000053:0067 Int Not equals op1=(op2!=op3)
+                .traceevent "O" 4 "R" "B" "r" 8 22 22 0 "" ""
+                brf lb_6e,r8                                 * 0x000057:0026 Branch to op1 if op2 false
+                .srcstep 23 23 17 "json_parser.crexx" 29 18 22 "  if result <> 8 then return fail(\"expected 8 operations, got \" || result)"
+                .srcstep 21 21 17 "json_parser.crexx" 29 23 75 "  if result <> 8 then return fail(\"expected 8 operations, got \" || result)"
+                .srcstep 20 20 17 "json_parser.crexx" 29 30 34 "  if result <> 8 then return fail(\"expected 8 operations, got \" || result)"
+                .srcstep 17 17 33 "json_parser.crexx" 37 7 14 "  arg message = .string"
+                itosconcat r7,"expected 8 operations, got ",r2 * 0x00005a:0191 Convert integer op3 in place and concatenate it after constant op2 into op1
+                .traceevent "V" 6 "R" "S" "r" 2 17 17 0 "result" ""
+                .traceevent "O" 4 "R" "S" "r" 7 17 17 0 "" ""
+                .traceevent "A" 6 "R" "S" "r" 7 17 17 0 "message" ""
+                .srcstep 18 18 17 "json_parser.crexx" 38 3 22 "  say \"FAIL:\" message"
+                .traceevent "V" 6 "R" "S" "r" 7 18 18 0 "message" ""
+                sconcat r6,"FAIL:",r7                        * 0x00005e:008b String Concat with space (op1=op2||op3)
+                .traceevent "O" 4 "R" "S" "r" 6 18 18 0 "" ""
+                say r6                                       * 0x000062:01c2 Say op1
+                .srcstep 19 19 17 "json_parser.crexx" 39 3 11 "  return 1"
+                load r6,1                                    * 0x000064:0001 Load op1 with op2
+                .traceevent "L" 4 "R" "I" "r" 6 21 21 0 "" ""
+                icopy r3,r6                                  * 0x000067:0009 Copy Integer op2 to op1
+                br lb_6c                                     * 0x00006a:0024 Branch to op1
+lb_6c:          ret r3                                       * 0x00006c:0031 Return op1
+                .srcstep 15 15 17 "json_parser.crexx" 27 4 13 "do iteration = 1 to repetitions"
+                .srcstep 25 25 17 "json_parser.crexx" 30 1 4 "end"
+lb_6e:          bctp lb_3b,r5                                * 0x00006e:015d inc op2; goto op1
+                .meta "json_parser.main.iteration"
+                .srcstep 26 26 17 "json_parser.crexx" 32 1 72 "say \"benchmark=json_parser repetitions=\"repetitions \"operations=\"result"
+lb_71:          itosconcat r8,"benchmark=json_parser repetitions=",r1 * 0x000071:0191 Convert integer op3 in place and concatenate it after constant op2 into op1
+                .traceevent "V" 6 "R" "S" "r" 1 26 26 0 "repetitions" ""
+                .traceevent "O" 4 "R" "S" "r" 8 26 26 0 "" ""
+                sconcatitos r8,"operations=",r2              * 0x000075:0192 Space-concatenate op2 onto op1 then convert integer op3 to string
+                .traceevent "O" 4 "R" "S" "r" 8 26 26 0 "" ""
+                .traceevent "V" 6 "R" "S" "r" 2 26 26 0 "result" ""
+                append r8,r2                                 * 0x000079:008f String Append (op1=op1||op2)
+                .traceevent "O" 4 "R" "S" "r" 8 26 26 0 "" ""
+                say r8                                       * 0x00007c:01c2 Say op1
+                .srcstep 27 27 17 "json_parser.crexx" 33 1 24 "say \"PASS: JSON Parser\""
+                say "PASS: JSON Parser"                      * 0x00007e:01c7 Say op1
+                .srcstep 28 28 17 "json_parser.crexx" 34 1 9 "return 0"
+                ret 0                                        * 0x000080:0032 Return op1
+                .meta "json_parser.main.argv"
+                .meta "json_parser.main.payload"
+                .meta "json_parser.main.repetitions"
+                .meta "json_parser.main.result"
+*******************************************************************************
+

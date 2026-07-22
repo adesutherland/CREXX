@@ -1,0 +1,293 @@
+/* Direct execution coverage for every retained NR-09 instruction form. */
+
+.globals=0
+
+main() .locals=8
+    call r1,test_core()
+    brf fail,r1
+    call r1,test_calls()
+    brf fail,r1
+    call r1,test_cleanup()
+    brf fail,r1
+    call r1,test_attributes()
+    brf fail,r1
+    call r1,test_values()
+    brf fail,r1
+    say "PASS: NR-09 Superinstructions"
+    ret 0
+
+fail:
+    say "FAIL: NR-09 Superinstructions"
+    ret 1
+
+test_core() .locals=20
+    load r1,1
+    load r2,2
+    load r3,3
+    load r4,4
+    swapn r1,r2,r3,r4
+    ine r0,r1,2
+    brt core_fail,r0
+    ine r0,r3,4
+    brt core_fail,r0
+
+    load r5,5
+    load r6,6
+    swapn r1,r2,r3,r4,r5,r6
+    ine r0,r5,6
+    brt core_fail,r0
+
+    load r7,7
+    load r8,8
+    swapn r1,r2,r3,r4,r5,r6,r7,r8
+    ine r0,r7,8
+    brt core_fail,r0
+
+    settpswap r1,256,r2
+    gettp r9,r2
+    ine r0,r9,256
+    brt core_fail,r0
+
+    loadsettp2 r1,11,r2,512
+    ine r0,r1,11
+    brt core_fail,r0
+    gettp r9,r2
+    ine r0,r9,512
+    brt core_fail,r0
+
+    loadsettpswap r1,12,r2,256,r3
+    gettp r9,r3
+    ine r0,r9,256
+    brt core_fail,r0
+
+    swapsettp r1,r2,r3,512
+    gettp r9,r3
+    ine r0,r9,512
+    brt core_fail,r0
+
+    swapsettpswap r1,r2,r3,256,r4
+    gettp r9,r4
+    ine r0,r9,256
+    brt core_fail,r0
+
+    settpswapsettpswap r1,512,r2,r3,r4
+    gettp r9,r4
+    ine r0,r9,512
+    brt core_fail,r0
+
+    load r1,"a"
+    load r2,"b"
+    nulln r1,r2
+    sne r0,r1,""
+    brt core_fail,r0
+    sne r0,r2,""
+    brt core_fail,r0
+
+    load r1,"a"
+    load r2,"b"
+    load r3,"c"
+    nulln r1,r2,r3
+    sne r0,r3,""
+    brt core_fail,r0
+
+    load r1,"a"
+    load r2,"b"
+    load r3,"c"
+    load r4,"d"
+    nulln r1,r2,r3,r4
+    sne r0,r4,""
+    brt core_fail,r0
+    ret 1
+
+core_fail:
+    say "FAIL: NR-09 core"
+    ret 0
+
+test_calls() .locals=16
+    load r10,1
+    load r11,0
+    load r12,41
+    swapcall r1,return_arg(),r10,r11,r12
+    ine r0,r1,41
+    brt calls_fail,r0
+
+    load r11,0
+    load r12,42
+    settpswapcall r1,return_arg(),r10,r12,256,r11
+    ine r0,r1,42
+    brt calls_fail,r0
+
+    load r11,43
+    settpcall r1,return_arg(),r10,r11,512
+    ine r0,r1,43
+    brt calls_fail,r0
+    ret 1
+
+calls_fail:
+    say "FAIL: NR-09 calls"
+    ret 0
+
+return_arg() .locals=0
+    ret a1
+
+test_cleanup() .locals=16
+    setattrs r1,3
+    linkattr1 r2,r1,1
+    linkattr1 r3,r1,2
+    load r2,10
+    load r3,11
+    unlinkn r2,r3
+
+    linkattr1 r2,r1,1
+    load r4,20
+    isetunlink r2,r4
+    linkattr1 r6,r1,1
+    igetunlink r5,r6
+    ine r0,r5,20
+    brt cleanup_fail,r0
+
+    linkattr1 r2,r1,1
+    igetunlink r5,r2
+    ine r0,r5,20
+    brt cleanup_fail,r0
+
+    linkattr1 r2,r1,1
+    iloadsetunlink r2,21
+    linkattr1 r6,r1,1
+    igetunlink r5,r6
+    ine r0,r5,21
+    brt cleanup_fail,r0
+
+    linkattr1 r2,r1,1
+    linkattr1 r3,r1,2
+    load r4,22
+    isetunlinkn r2,r4,r3
+    linkattr1 r6,r1,1
+    igetunlink r5,r6
+    ine r0,r5,22
+    brt cleanup_fail,r0
+
+    linkattr1 r2,r1,1
+    unlinkbr r2,cleanup_branch
+    br cleanup_fail
+cleanup_branch:
+
+    linkattr1 r2,r1,1
+    linkattr1 r3,r1,2
+    iloadsetunlinkn r2,23,r3
+    linkattr1 r6,r1,1
+    igetunlink r5,r6
+    ine r0,r5,23
+    brt cleanup_fail,r0
+
+    linkattr1 r2,r1,1
+    linkattr1 r3,r1,2
+    iloadsetunlinkn r4,r2,25,r3
+    ine r0,r4,25
+    brt cleanup_fail,r0
+    linkattr1 r6,r1,1
+    igetunlink r5,r6
+    ine r0,r5,25
+    brt cleanup_fail,r0
+    ret 1
+
+cleanup_fail:
+    say "FAIL: NR-09 cleanup"
+    ret 0
+
+test_attributes() .locals=24
+    setattrs r1,8
+
+    load r4,3
+    setlinkattr1 r2,r1,8,r4
+    load r2,31
+    linkattr1 r6,r1,3
+    igetunlink r5,r6
+    ine r0,r5,31
+    brt attributes_fail,r0
+
+    load r4,2
+    setlinkattr1 r2,r1,8,r4,2
+    load r2,32
+    linkattr1 r6,r1,4
+    igetunlink r5,r6
+    ine r0,r5,32
+    brt attributes_fail,r0
+
+    minlinkattr1 r2,r1,7
+    load r2,33
+    linkattr1 r6,r1,7
+    igetunlink r5,r6
+    ine r0,r5,33
+    brt attributes_fail,r0
+
+    load r4,7
+    minlinkattr1 r2,r1,r4,1
+    load r2,34
+    linkattr1 r6,r1,8
+    igetunlink r5,r6
+    ine r0,r5,34
+    brt attributes_fail,r0
+
+    load r3,35
+    isetattr1 r1,1,r3
+    linkattr1 r6,r1,1
+    igetunlink r5,r6
+    ine r0,r5,35
+    brt attributes_fail,r0
+
+    setattrs r9,1
+    load r12,2
+    linksetattrslinkadd r10,r9,1,3,r14,r12,1
+    load r14,41
+    linkattr1 r6,r10,3
+    igetunlink r5,r6
+    ine r0,r5,41
+    brt attributes_fail,r0
+
+    load r12,2
+    setlinkiload r14,r10,4,r12,r13,43
+    ine r0,r13,43
+    brt attributes_fail,r0
+    load r14,42
+    linkattr1 r6,r10,2
+    igetunlink r5,r6
+    ine r0,r5,42
+    brt attributes_fail,r0
+    ret 1
+
+attributes_fail:
+    say "FAIL: NR-09 attributes"
+    ret 0
+
+test_values() .locals=16
+    load r1,7
+    itof r2,r1
+    feq r0,r2,7.0
+    brf values_fail,r0
+
+    load r1,"81"
+    stoi r2,r1
+    ine r0,r2,81
+    brt values_fail,r0
+
+    load r1,8.0
+    load r2,2.0
+    fdivsub r3,r1,r2,1.5
+    feq r0,r3,2.5
+    brf values_fail,r0
+    feq r0,r2,4.0
+    brf values_fail,r0
+
+    load r1,4.0
+    load r4,82
+    fmulticopy r1,2.5,r2,r4
+    feq r0,r1,10.0
+    brf values_fail,r0
+    ine r0,r2,82
+    brt values_fail,r0
+    ret 1
+
+values_fail:
+    say "FAIL: NR-09 values"
+    ret 0

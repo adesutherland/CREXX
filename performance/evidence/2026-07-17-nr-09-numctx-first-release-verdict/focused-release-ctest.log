@@ -1,0 +1,12 @@
+Test project /Users/adrian/CLionProjects/CREXX/cmake-build-release
+    Start 337: nr09_numeric_context_contract
+1/1 Test #337: nr09_numeric_context_contract ....   Passed    0.47 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+compiler       =   0.47 sec*proc (1 test)
+numeric        =   0.47 sec*proc (1 test)
+performance    =   0.47 sec*proc (1 test)
+
+Total Test time (real) =   0.51 sec

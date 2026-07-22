@@ -610,7 +610,8 @@ static walker_result emit_walker(walker_direction direction,
                                 free(temp1);
                             }
                         }
-                    } else if (!(node->is_ref_arg || node->is_const_arg)) {
+                    } else if (!(node->is_ref_arg || node->is_const_arg ||
+                                 node->flow_skip_arg_copy || node->flow_share_arg_input)) {
                         /* Writable by-value formals may need a defensive copy;
                          * read-only by-value formals were already marked
                          * `is_const_arg` by semantic analysis. */
@@ -1169,58 +1170,50 @@ static walker_result emit_walker(walker_direction direction,
                             }
                         } else temp2 = 0;
 
-                        /* Make sure there are enough attributes */
-                        if (node->symbolNode->symbol->dim_elements[ast_chdi(child1)]) {
-                            /* Fixed array set to the dimension size - later linkattr1 might throw a signal if out of range by design */
-                            temp1 = mprintf("   setattrs %c%d,%d\n",
-                                            from_reg_type, from_reg_num,
-                                            node->symbolNode->symbol->dim_elements[ast_chdi(child1)]);
-                        } else if (child1->node_type == INTEGER || child1->node_type == CONSTANT || child1->node_type == STRING) {
-                            /* Variable array and constant parameter - set min attributes which gives a growth buffer */
-                            if (child1->value_type != TP_INTEGER) {
-                                // This should never happen - print an in fatal internal error to stderr and bail
-                                fprintf(stderr, "INTERNAL ERROR: non-integer constant used as array index\n");
-                                exit(1);
-                            }
-                            temp1 = mprintf("   minattrs %c%d,%s\n",
-                                            from_reg_type, from_reg_num,
-                                            temp2);
-                        } else {
-                            /* Variable array set min attributes which gives a growth buffer */
-                            temp1 = mprintf("   minattrs %c%d,%c%d,%d\n",
-                                            from_reg_type, from_reg_num,
-                                            child1->register_type, child1->register_num,
-                                            1 - base);
-                        }
-                        output_append_text(node->output, temp1);
-                        free(temp1);
-
-                        /* Link Array element */
-                        if (child1->node_type == INTEGER || child1->node_type == CONSTANT || child1->node_type == STRING) {
-                            /* Constant Parameter */
+                        /* Capacity and one-based link are one semantic array access.
+                         * Keep the compiler-only adjusted index out of the emitted
+                         * register file and let the VM perform the unit directly. */
+                        if (child1->node_type == INTEGER ||
+                            child1->node_type == CONSTANT ||
+                            child1->node_type == STRING) {
                             if (child1->value_type != TP_INTEGER) {
                                 mknd_err(child1, "BAD_CONVERSION");
                             }
-                            temp1 = mprintf("   linkattr1 r%d,%c%d,%s\n",
-                                            node->register_num,
-                                            from_reg_type, from_reg_num,
-                                            temp2);
-                        } else if (base == 1) {
-                            /* Already 1 base - simpler */
-                            temp1 = mprintf("   linkattr1 r%d,%c%d,%c%d\n",
-                                            node->register_num,
-                                            from_reg_type, from_reg_num,
-                                            child1->register_type, child1->register_num);
+                            if (node->symbolNode->symbol->dim_elements[ast_chdi(child1)]) {
+                                temp1 = mprintf("   setattrs %c%d,%d\n"
+                                                "   linkattr1 r%d,%c%d,%s\n",
+                                                from_reg_type, from_reg_num,
+                                                node->symbolNode->symbol->dim_elements[ast_chdi(child1)],
+                                                node->register_num,
+                                                from_reg_type, from_reg_num,
+                                                temp2);
+                            } else {
+                                temp1 = mprintf("   minlinkattr1 r%d,%c%d,%s\n",
+                                                node->register_num,
+                                                from_reg_type, from_reg_num,
+                                                temp2);
+                            }
+                        } else if (node->symbolNode->symbol->dim_elements[ast_chdi(child1)]) {
+                            if (base == 1) {
+                                temp1 = mprintf("   setlinkattr1 r%d,%c%d,%d,%c%d\n",
+                                                node->register_num,
+                                                from_reg_type, from_reg_num,
+                                                node->symbolNode->symbol->dim_elements[ast_chdi(child1)],
+                                                child1->register_type, child1->register_num);
+                            } else {
+                                temp1 = mprintf("   setlinkattr1 r%d,%c%d,%d,%c%d,%d\n",
+                                                node->register_num,
+                                                from_reg_type, from_reg_num,
+                                                node->symbolNode->symbol->dim_elements[ast_chdi(child1)],
+                                                child1->register_type, child1->register_num,
+                                                1 - base);
+                            }
                         } else {
-                            /* Need to make it 1 base */
-                            temp1 = mprintf("   iadd r%d,%c%d,%d\n"
-                                            "   linkattr1 r%d,%c%d,r%d\n",
-                                            math_reg,
-                                            child1->register_type, child1->register_num,
-                                            1 - base,
+                            temp1 = mprintf("   minlinkattr1 r%d,%c%d,%c%d,%d\n",
                                             node->register_num,
                                             from_reg_type, from_reg_num,
-                                            math_reg);
+                                            child1->register_type, child1->register_num,
+                                            1 - base);
                         }
 
                         unlink_needed = 1; /* We will need to define a cleanup action to unlink */
@@ -1322,7 +1315,9 @@ static walker_result emit_walker(walker_direction direction,
                 break;
 
             case ASSEMBLER: {
-                char *arg1 = 0, *arg2 = 0, *arg3 = 0;
+                ASTNode *operand;
+                char *line;
+                int first_operand = 1;
 
                 /* Add source metadata */
                 comment_meta = get_metaline(node);
@@ -1344,70 +1339,40 @@ static walker_result emit_walker(walker_direction direction,
                     inst[l] = (char)tolower(inst[l]);
                 }
 
-                /* Argument 1 */
-                if (child1) {
-                    if (child1->node_type == FUNC_SYMBOL) {
-                        arg1 = mprintf("%.*s()", printf_string_precision(child1->node_string_length), child1->node_string);
+                line = inst;
+                inst = 0;
+                for (operand = node->child; operand; operand = operand->sibling) {
+                    char *arg;
+                    char *next_line;
+                    if (operand->node_type == FUNC_SYMBOL) {
+                        arg = mprintf("%.*s()",
+                                      printf_string_precision(operand->node_string_length),
+                                      operand->node_string);
+                    } else if (operand->register_num == DONT_ASSIGN_REGISTER) {
+                        arg = format_constant(operand->target_type, operand);
+                    } else {
+                        output_concat(node->output, operand->output);
+                        arg = mprintf("%c%d", operand->register_type, operand->register_num);
                     }
-                    else if (child1->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
-                        arg1 = format_constant(child1->target_type, child1);
-                    } else { /* A register */
-                        output_concat(node->output, child1->output);
-                        arg1 = mprintf("%c%d",
-                                       child1->register_type,
-                                       child1->register_num);
-                    }
+                    next_line = mprintf("%s%s%s", line, first_operand ? " " : ",", arg);
+                    free(line);
+                    free(arg);
+                    line = next_line;
+                    first_operand = 0;
                 }
-
-                /* Argument 2 */
-                if (child2) {
-                    if (child2->node_type == FUNC_SYMBOL) {
-                        arg2 = mprintf("%.*s()", printf_string_precision(child2->node_string_length), child2->node_string);
-                    }
-                    else if (child2->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
-                        arg2 = format_constant(child2->target_type, child2);
-                    } else { /* A register */
-                        output_concat(node->output, child2->output);
-                        arg2 = mprintf("%c%d",
-                                       child2->register_type,
-                                       child2->register_num);
-                    }
-                }
-
-                /* Argument 3 */
-                if (child3) {
-                    if (child3->node_type == FUNC_SYMBOL) {
-                        arg3 = mprintf("%.*s()", printf_string_precision(child3->node_string_length), child3->node_string);
-                    }
-                    else if (child3->register_num == DONT_ASSIGN_REGISTER) { /* A constant */
-                        arg3 = format_constant(child3->target_type, child3);
-                    } else { /* A register */
-                        output_concat(node->output, child3->output);
-                        arg3 = mprintf("%c%d",
-                                       child3->register_type,
-                                       child3->register_num);
-                    }
-                }
-
-                /* Create the whole instruction */
-                if (arg3) temp1 = mprintf("%s %s,%s,%s\n", inst, arg1, arg2, arg3);
-                else if (arg2) temp1 = mprintf("%s %s,%s\n", inst, arg1, arg2);
-                else if (arg1) temp1 = mprintf("%s %s\n", inst, arg1);
-                else temp1 = mprintf("%s\n", inst);
+                temp1 = mprintf("%s\n", line);
+                free(line);
 
                 /* Finally, append it to the output */
                 output_append_text(node->output, temp1);
 
-                if (child1 && child1->cleanup) output_concat(node->output, child1->cleanup);
-                if (child2 && child2->cleanup) output_concat(node->output, child2->cleanup);
-                if (child3 && child3->cleanup) output_concat(node->output, child3->cleanup);
+                for (operand = node->child; operand; operand = operand->sibling) {
+                    if (operand->cleanup) output_concat(node->output, operand->cleanup);
+                }
 
                 /* Clean up */
                 free(temp1);
                 free(inst);
-                if (arg1) free(arg1);
-                if (arg2) free(arg2);
-                if (arg3) free(arg3);
             }
             break;
 
@@ -1548,6 +1513,11 @@ static walker_result emit_walker(walker_direction direction,
                                             child2->register_type, child2->register_num,
                                             child1->register_type, child1->register_num);
                         }
+                    } else if (strcmp(tp_prefix, "i") == 0) {
+                        temp1 = mprintf("   isetattr1 %c%d,%d,%c%d\n",
+                                        this_type, this_num,
+                                        index,
+                                        child2->register_type, child2->register_num);
                     } else {
                         if (class_attribute_is_complex(child1->symbolNode->symbol)) {
                             temp1 = mprintf("   linkattr1 %c%d,%c%d,%d\n"
@@ -1576,8 +1546,9 @@ static walker_result emit_walker(walker_direction direction,
                     output_append_text(node->output, temp1);
                     free(temp1);
                     trace_assignment_event = 0;
-	                } else if (child1->register_num != child2->register_num ||
-                    child1->register_type != child2->register_type) {
+	                } else if (!node->flow_skip_assignment_store &&
+                    (child1->register_num != child2->register_num ||
+                     child1->register_type != child2->register_type)) {
                     int aggregate_assign =
                             !child1->child &&
                             (child1->value_dims > 0 || child1->target_dims > 0 ||
@@ -1607,7 +1578,7 @@ static walker_result emit_walker(walker_direction direction,
 	                                              RXBIN_TRACE_KIND_ASSIGNMENT,
 	                                              RXBIN_TRACE_MODE_R | RXBIN_TRACE_MODE_I,
 	                                              child1,
-	                                              child1,
+	                                              node->flow_skip_assignment_store ? child2 : child1,
 	                                              trace_step_id,
 	                                              trace_clause_id);
 	                }

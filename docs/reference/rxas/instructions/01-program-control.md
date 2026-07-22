@@ -660,6 +660,178 @@ worker() .locals=0
 
 `ret`, `dcall`, `linkarg`.
 
+## `call1`
+
+Call a bytecode procedure with one explicit caller register as its argument.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x0191` | `call1 rResult,procedure(),rArg1` | Call with `rArg1` visible as `a1`. |
+
+### Operands And Semantics
+
+The callee receives the explicit register through the ordinary `a1` view and
+returns through `rResult`. Caller-side status/copy preparation remains separate
+and unchanged. This fixed form is for resolved bytecode targets; imported,
+native, dynamic, or unsupported calls retain the general `call` path.
+
+### Signals
+
+Raises `FUNCTION_NOT_FOUND` for an unresolved target, `NOT_IMPLEMENTED` for a
+native target, and `FAILURE` if the bytecode frame cannot be allocated. Callee
+signals propagate normally.
+
+### Example
+
+<!-- rxas-example name="control-call1" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=2
+    load r1,7
+    call1 r0,identity(),r1
+    ret
+
+identity() .locals=0
+    ret a1
+```
+
+### Related
+
+`call`, `call2`, `ret`.
+
+## `call2`
+
+Call a bytecode procedure with two explicit caller registers as its arguments.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x0192` | `call2 rResult,procedure(),rArg1,rArg2` | Call with arguments visible as `a1` and `a2`. |
+
+### Operands And Semantics
+
+The two explicit registers become the callee's ordinary `a1` and `a2` views;
+the return value is written through `rResult`. Caller-side status/copy
+preparation remains separate. Only resolved bytecode targets use this form.
+
+### Signals
+
+Raises `FUNCTION_NOT_FOUND` for an unresolved target, `NOT_IMPLEMENTED` for a
+native target, and `FAILURE` if the bytecode frame cannot be allocated. Callee
+signals propagate normally.
+
+### Example
+
+<!-- rxas-example name="control-call2" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=3
+    load r1,7
+    load r2,8
+    call2 r0,second(),r1,r2
+    ret
+
+second() .locals=0
+    ret a2
+```
+
+### Related
+
+`call`, `call1`, `call3`, `ret`.
+
+## `call3`
+
+Call a bytecode procedure with three explicit caller registers as its arguments.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x0193` | `call3 rResult,procedure(),rArg1,rArg2,rArg3` | Call with arguments visible as `a1` through `a3`. |
+
+### Operands And Semantics
+
+The explicit registers map in order to the callee's ordinary argument views;
+the return value is written through `rResult`. Caller-side status/copy
+preparation remains separate. Only resolved bytecode targets use this form.
+
+### Signals
+
+Raises `FUNCTION_NOT_FOUND` for an unresolved target, `NOT_IMPLEMENTED` for a
+native target, and `FAILURE` if the bytecode frame cannot be allocated. Callee
+signals propagate normally.
+
+### Example
+
+<!-- rxas-example name="control-call3" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=4
+    load r1,7
+    load r2,8
+    load r3,9
+    call3 r0,third(),r1,r2,r3
+    ret
+
+third() .locals=0
+    ret a3
+```
+
+### Related
+
+`call`, `call2`, `call4`, `ret`.
+
+## `call4`
+
+Call a bytecode procedure with four explicit caller registers as its arguments.
+
+### Forms
+
+| Opcode | Form | Effect |
+| --- | --- | --- |
+| `0x0194` | `call4 rResult,procedure(),rArg1,rArg2,rArg3,rArg4` | Call with arguments visible as `a1` through `a4`. |
+
+### Operands And Semantics
+
+The explicit registers map in order to the callee's ordinary argument views;
+the return value is written through `rResult`. Caller-side status/copy
+preparation remains separate. Higher arities and non-bytecode targets retain
+the general counted `call` form.
+
+### Signals
+
+Raises `FUNCTION_NOT_FOUND` for an unresolved target, `NOT_IMPLEMENTED` for a
+native target, and `FAILURE` if the bytecode frame cannot be allocated. Callee
+signals propagate normally.
+
+### Example
+
+<!-- rxas-example name="control-call4" test="run" -->
+```rxas
+.globals=0
+
+main() .locals=5
+    load r1,7
+    load r2,8
+    load r3,9
+    load r4,10
+    call4 r0,fourth(),r1,r2,r3,r4
+    ret
+
+fourth() .locals=0
+    ret a4
+```
+
+### Related
+
+`call`, `call3`, `ret`.
+
 ## `cnop`
 
 Execute an explicit no-operation instruction, primarily for tests, patch
@@ -669,12 +841,15 @@ points, or deliberately retained instruction positions.
 
 | Opcode | Form | Effect |
 | --- | --- | --- |
+| `0x0057` | `cnop rA,rB,rC,rD,rE,rF,rG,rH,rI` | Consume nine register inputs and advance without changing VM state. |
 | `0x021c` | `cnop` | Advance to the next instruction without changing VM state. |
 
 ### Operands And Semantics
 
-There are no operands. Registers, cursors, flags, frames, and control metadata
-remain unchanged except for normal program-counter advance.
+The zero-operand form has no inputs. The nine-operand form records explicit
+register reads for optimiser liveness but intentionally leaves the register
+values unchanged. Cursors, flags, frames, and control metadata remain unchanged
+except for normal program-counter advance.
 
 ### Signals
 
@@ -686,8 +861,17 @@ This instruction does not signal.
 ```rxas
 .globals=0
 
-main() .locals=0
-    cnop
+main() .locals=9
+    load r0,0
+    load r1,1
+    load r2,2
+    load r3,3
+    load r4,4
+    load r5,5
+    load r6,6
+    load r7,7
+    load r8,8
+    cnop r0,r1,r2,r3,r4,r5,r6,r7,r8
     ret
 ```
 

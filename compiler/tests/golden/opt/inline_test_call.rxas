@@ -7,11 +7,7 @@
 main() .locals=7
    .meta "inline_test_call.main"="b" ".int" main() ""
    .srcstep 13 13 17 "inline_test_call.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_call.crexx" 4 3 37 "  say \"Starting inline call test...\""
    say "Starting inline call test..."
    .srcstep 9 9 17 "inline_test_call.crexx" 5 3 5 "  do i = 1 to 3"
@@ -39,16 +35,16 @@ l8dostart:
    .traceevent "O" 4 "R" "S" "r" 5 6 6 0 "" ""
    sconcat r5,r5,"is"
    .traceevent "O" 4 "R" "S" "r" 5 6 6 0 "" ""
-   .traceevent "V" 6 "R" "I" "r" 4 6 6 0 "val" ""
-   imult r6,r4,2
+   .traceevent "V" 6 "R" "I" "r" 0 6 6 0 "val" ""
+   imult r6,r0,2
    itos r6
    .traceevent "O" 4 "R" "S" "r" 6 6 6 0 "" ""
    sconcat r6,r5,r6
    .traceevent "O" 4 "R" "S" "r" 6 6 6 0 "" ""
    say r6
    .srcstep 7 7 33 "inline_test_call.crexx" 14 3 9 "  return val * 2"
-   .traceevent "V" 6 "R" "I" "r" 4 7 7 0 "val" ""
-   imult r3,r4,2
+   .traceevent "V" 6 "R" "I" "r" 0 7 7 0 "val" ""
+   imult r3,r0,2
    .traceevent "O" 4 "R" "I" "r" 3 7 7 0 "" ""
    .traceevent "A" 6 "R" "I" "r" 3 7 7 0 "__inline_unused_42" ""
 l8doinc:
@@ -57,7 +53,6 @@ l8doinc:
    .srcstep 10 10 17 "inline_test_call.crexx" 7 3 6 "  end"
    br l8dostart
 l8doend:
-   endlife r0
    .meta "inline_test_call.main.i"
    .srcstep 11 11 17 "inline_test_call.crexx" 8 3 35 "  say \"Inline call test finished.\""
    say "Inline call test finished."

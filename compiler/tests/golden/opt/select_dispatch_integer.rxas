@@ -7,11 +7,7 @@
 main() .locals=19
    .meta "select_dispatch_integer.main"="b" ".int" main() ""
    .srcstep 72 72 17 "select_dispatch_integer.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .meta "select_dispatch_integer.main.i"="b" ".int" r0
    .srcstep 1 1 17 "select_dispatch_integer.crexx" 4 3 11 "  i = .int"
    null r0
@@ -119,7 +115,6 @@ l486dispatchend:
    icopy r13,r14
    br l251bexprend
 l251bexprend:
-   endlife r4
    itos r13
    say r13
    .srcstep 36 36 17 "select_dispatch_integer.crexx" 10 5 22 "    say no_default(i)"
@@ -176,7 +171,6 @@ l331ifend:
    icopy r12,r13
    br l319bexprend
 l319bexprend:
-   endlife r14
    itos r12
    say r12
    .srcstep 64 64 17 "select_dispatch_integer.crexx" 11 5 34 "    say nested_classify(i, inner)"
@@ -292,8 +286,6 @@ l367ifend:
    icopy r12,r18
    br l352bexprend
 l352bexprend:
-   endlife r14
-   endlife r13
    itos r12
    say r12
 l12doinc:

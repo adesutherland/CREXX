@@ -1,0 +1,356 @@
+diff --git a/compiler/rxcp_emit_proc.c b/compiler/rxcp_emit_proc.c
+index c27f231ca..ff0cb1362 100644
+--- a/compiler/rxcp_emit_proc.c
++++ b/compiler/rxcp_emit_proc.c
+@@ -51,0 +52,15 @@ static int node_is_runtime_callable_reference(ASTNode *node) {
++static int numeric_context_can_use_combined_setup(const numeric_context *context) {
++    if (!context) return 0;
++
++    /* NUMSCI/NUMENG have a historical digits >= 5 contract, while the
++       individual setter accepts every compiler-valid positive value. */
++    return context->digits >= 5 &&
++           context->fuzz == 0 &&
++           (context->form == NUMERIC_FORM_SCIENTIFIC ||
++            context->form == NUMERIC_FORM_ENGINEERING) &&
++           (context->casetype == CASE_LOWER ||
++            context->casetype == CASE_UPPER) &&
++           (context->standard == NUMERIC_STANDARD_COMMON ||
++            context->standard == NUMERIC_STANDARD_CLASSIC);
++}
++
+@@ -405,14 +420,11 @@ void emit_proc(ASTNode *node, void *pl) {
+-                /* If numeric options have non-inherited values, set them */
+-                if (node->scope->num_context.digits > -1) {
+-                    temp1 = mprintf("   setnumdgts %d\n", node->scope->num_context.digits);
+-                    output_append_text(node->output, temp1);
+-                    free(temp1);
+-                }
+-                if (node->scope->num_context.fuzz > -1) {
+-                    temp1 = mprintf("   setnumfuz %d\n", node->scope->num_context.fuzz);
+-                    output_append_text(node->output, temp1);
+-                    free(temp1);
+-                }
+-                if (node->scope->num_context.form > 0) {
+-                    /* 1 = SCIENTIFIC, 2 = ENGINEERING */
+-                    temp1 = mprintf("   setnumfrm %d\n", node->scope->num_context.form);
++                /* Use the existing complete fuzz-zero setup only when every
++                   effective field is a compatible compile-time constant. */
++                if (numeric_context_can_use_combined_setup(&node->scope->num_context)) {
++                    const char *instruction =
++                            node->scope->num_context.form == NUMERIC_FORM_SCIENTIFIC
++                            ? "numsci" : "numeng";
++                    temp1 = mprintf("   %s %d,%d,%d\n",
++                                    instruction,
++                                    node->scope->num_context.digits,
++                                    node->scope->num_context.casetype,
++                                    node->scope->num_context.standard);
+@@ -422,11 +434,30 @@ void emit_proc(ASTNode *node, void *pl) {
+-                if (node->scope->num_context.casetype > 0) {
+-                    /* 1 = LOWER, 2 = UPPER */
+-                    temp1 = mprintf("   setnumcas %d\n", node->scope->num_context.casetype);
+-                    output_append_text(node->output, temp1);
+-                    free(temp1);
+-                }
+-                if (node->scope->num_context.standard > 0) {
+-                    /* 1 = COMMON, 2 = CLASSIC[REXX] */
+-                    temp1 = mprintf("   setnumstd %d\n", node->scope->num_context.standard);
+-                    output_append_text(node->output, temp1);
+-                    free(temp1);
++                else {
++                    /* If numeric options have non-inherited values, set them. */
++                    if (node->scope->num_context.digits > -1) {
++                        temp1 = mprintf("   setnumdgts %d\n", node->scope->num_context.digits);
++                        output_append_text(node->output, temp1);
++                        free(temp1);
++                    }
++                    if (node->scope->num_context.fuzz > -1) {
++                        temp1 = mprintf("   setnumfuz %d\n", node->scope->num_context.fuzz);
++                        output_append_text(node->output, temp1);
++                        free(temp1);
++                    }
++                    if (node->scope->num_context.form > 0) {
++                        /* 1 = SCIENTIFIC, 2 = ENGINEERING */
++                        temp1 = mprintf("   setnumfrm %d\n", node->scope->num_context.form);
++                        output_append_text(node->output, temp1);
++                        free(temp1);
++                    }
++                    if (node->scope->num_context.casetype > 0) {
++                        /* 1 = LOWER, 2 = UPPER */
++                        temp1 = mprintf("   setnumcas %d\n", node->scope->num_context.casetype);
++                        output_append_text(node->output, temp1);
++                        free(temp1);
++                    }
++                    if (node->scope->num_context.standard > 0) {
++                        /* 1 = COMMON, 2 = CLASSIC[REXX] */
++                        temp1 = mprintf("   setnumstd %d\n", node->scope->num_context.standard);
++                        output_append_text(node->output, temp1);
++                        free(temp1);
++                    }
+diff --git a/compiler/tests/CMakeLists.txt b/compiler/tests/CMakeLists.txt
+index 97cf95faa..17f771c83 100644
+--- a/compiler/tests/CMakeLists.txt
++++ b/compiler/tests/CMakeLists.txt
+@@ -1125,0 +1126,13 @@ set_tests_properties(nr06_codegen_contract PROPERTIES
++add_test(NAME nr09_numeric_context_contract
++         COMMAND ${CMAKE_COMMAND}
++                 -DRXC=$<TARGET_FILE:rxc>
++                 -DRXAS=$<TARGET_FILE:rxas>
++                 -DRXVM=$<TARGET_FILE:rxvm>
++                 -DRXBVM=$<TARGET_FILE:rxbvm>
++                 -DBIN_DIR=${CMAKE_BINARY_DIR}/bin
++                 -DSOURCE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/rexx_src
++                 -DWORK_DIR=${CMAKE_CURRENT_BINARY_DIR}/nr09_numeric_context_contract_ws
++                 -P ${CMAKE_CURRENT_SOURCE_DIR}/nr09_numeric_context_contract.cmake)
++set_tests_properties(nr09_numeric_context_contract PROPERTIES
++        LABELS "compiler;performance;numeric")
++
+diff --git a/compiler/tests/nr09_numeric_context_contract.cmake b/compiler/tests/nr09_numeric_context_contract.cmake
+new file mode 100644
+index 000000000..da5c79d29
+--- /dev/null
++++ b/compiler/tests/nr09_numeric_context_contract.cmake
+@@ -0,0 +1,181 @@
++cmake_minimum_required(VERSION 3.20)
++
++foreach(required IN ITEMS RXC RXAS RXVM RXBVM BIN_DIR SOURCE_DIR WORK_DIR)
++    if(NOT DEFINED ${required} OR "${${required}}" STREQUAL "")
++        message(FATAL_ERROR "Missing required -D${required}=...")
++    endif()
++endforeach()
++
++file(REMOVE_RECURSE "${WORK_DIR}")
++file(MAKE_DIRECTORY "${WORK_DIR}")
++
++function(compile_rxas output_stem)
++    execute_process(
++            COMMAND "${RXC}" -i "${BIN_DIR}" ${ARGN}
++                    -o "${WORK_DIR}/${output_stem}"
++                    "${SOURCE_DIR}/nr09_numeric_context.crexx"
++            OUTPUT_VARIABLE out
++            ERROR_VARIABLE err
++            RESULT_VARIABLE result)
++    if(NOT result EQUAL 0)
++        message(FATAL_ERROR
++                "rxc failed for ${output_stem}:\n${out}${err}")
++    endif()
++endfunction()
++
++function(assert_count variable pattern expected description)
++    string(REGEX MATCHALL "${pattern}" matches "${${variable}}")
++    list(LENGTH matches actual)
++    if(NOT actual EQUAL expected)
++        message(FATAL_ERROR
++                "${description}: expected ${expected} matches, found ${actual}")
++    endif()
++endfunction()
++
++function(assert_matches variable pattern description)
++    string(REGEX MATCH "${pattern}" match "${${variable}}")
++    if(match STREQUAL "")
++        message(FATAL_ERROR "${description}: expected pattern was absent")
++    endif()
++endfunction()
++
++function(assert_not_matches variable pattern description)
++    string(REGEX MATCH "${pattern}" match "${${variable}}")
++    if(NOT match STREQUAL "")
++        message(FATAL_ERROR "${description}: unexpected pattern was present")
++    endif()
++endfunction()
++
++function(extract_procedure input_variable procedure next_procedure output_variable)
++    string(FIND "${${input_variable}}" "\n${procedure}() " start)
++    if(start EQUAL -1)
++        message(FATAL_ERROR "Procedure ${procedure} was absent")
++    endif()
++    string(SUBSTRING "${${input_variable}}" ${start} -1 tail)
++    if(next_procedure STREQUAL "")
++        set(block "${tail}")
++    else()
++        string(FIND "${tail}" "\n${next_procedure}() " finish)
++        if(finish EQUAL -1)
++            message(FATAL_ERROR
++                    "Procedure boundary ${next_procedure} after ${procedure} was absent")
++        endif()
++        string(SUBSTRING "${tail}" 0 ${finish} block)
++    endif()
++    set(${output_variable} "${block}" PARENT_SCOPE)
++endfunction()
++
++function(assemble_rxbin input_stem)
++    execute_process(
++            COMMAND "${RXAS}"
++                    -o "${WORK_DIR}/${input_stem}.rxbin"
++                    "${WORK_DIR}/${input_stem}.rxas"
++            OUTPUT_VARIABLE out
++            ERROR_VARIABLE err
++            RESULT_VARIABLE result)
++    if(NOT result EQUAL 0)
++        message(FATAL_ERROR
++                "rxas failed for ${input_stem}:\n${out}${err}")
++    endif()
++endfunction()
++
++set(expected_output
++"default 18 0 scientific lower common\nscientific 9 0 scientific upper classic 0.333333333\nengineering 6 0 engineering lower common 0.333333\nnonzero-fuzz 6 2 scientific lower common\ninherited-digits 18 0 scientific lower common\nsmall-digits 4 0 scientific lower common 0.3333\n")
++
++function(run_contract image runner runner_name plugin plugin_name)
++    set(plugin_args)
++    if(NOT plugin STREQUAL "")
++        list(APPEND plugin_args -p "${plugin}")
++    endif()
++    execute_process(
++            COMMAND "${runner}" ${plugin_args}
++                    "${BIN_DIR}/library.rxbin"
++                    "${WORK_DIR}/${image}.rxbin"
++            WORKING_DIRECTORY "${BIN_DIR}"
++            OUTPUT_VARIABLE out
++            ERROR_VARIABLE err
++            RESULT_VARIABLE result)
++    if(NOT result EQUAL 0)
++        message(FATAL_ERROR
++                "${runner_name}/${plugin_name}/${image} failed (${result}):\n${out}${err}")
++    endif()
++    string(REPLACE "\r\n" "\n" out "${out}")
++    if(NOT out STREQUAL expected_output)
++        message(FATAL_ERROR
++                "${runner_name}/${plugin_name}/${image} output mismatch:\n"
++                "Expected:\n${expected_output}\nActual:\n${out}\nStderr:\n${err}")
++    endif()
++endfunction()
++
++compile_rxas(nr09_opt)
++compile_rxas(nr09_noopt -n)
++
++foreach(image IN ITEMS nr09_opt nr09_noopt)
++    file(READ "${WORK_DIR}/${image}.rxas" ${image})
++
++    assert_count(${image} "\n[ \t]+numsci " 3
++                 "${image} combined scientific contexts")
++    assert_count(${image} "\n[ \t]+numeng " 1
++                 "${image} combined engineering contexts")
++    assert_count(${image} "\n[ \t]+setnumdgts " 2
++                 "${image} unfused digits controls")
++    assert_count(${image} "\n[ \t]+setnumfuz " 3
++                 "${image} unfused fuzz controls")
++    assert_count(${image} "\n[ \t]+setnumfrm " 3
++                 "${image} unfused form controls")
++    assert_count(${image} "\n[ \t]+setnumcas " 3
++                 "${image} unfused case controls")
++    assert_count(${image} "\n[ \t]+setnumstd " 3
++                 "${image} unfused standard controls")
++
++    assert_count(${image} "\n[ \t]+numsci 18,1,1" 2
++                 "${image} default combined contexts")
++    assert_count(${image} "\n[ \t]+numsci 9,2,2" 1
++                 "${image} explicit scientific context")
++    assert_count(${image} "\n[ \t]+numeng 6,1,1" 1
++                 "${image} explicit engineering context")
++
++    extract_procedure(${image} scientificContext engineeringContext scientific_block)
++    extract_procedure(${image} engineeringContext nonzeroFuzzContext engineering_block)
++    extract_procedure(${image} nonzeroFuzzContext inheritedDigitsContext fuzz_block)
++    extract_procedure(${image} inheritedDigitsContext smallDigitsContext inherited_block)
++    extract_procedure(${image} smallDigitsContext "" small_block)
++
++    assert_matches(scientific_block "\n[ \t]+numsci 9,2,2\n"
++                   "${image} scientific prologue")
++    assert_not_matches(scientific_block "\n[ \t]+setnum"
++                       "${image} scientific legacy setters")
++    assert_matches(engineering_block "\n[ \t]+numeng 6,1,1\n"
++                   "${image} engineering prologue")
++    assert_not_matches(engineering_block "\n[ \t]+setnum"
++                       "${image} engineering legacy setters")
++    assert_matches(fuzz_block
++                   "\n[ \t]+setnumdgts 6\n[ \t]+setnumfuz 2\n[ \t]+setnumfrm 1\n[ \t]+setnumcas 1\n[ \t]+setnumstd 1\n"
++                   "${image} nonzero-fuzz fail-closed prologue")
++    assert_not_matches(fuzz_block "\n[ \t]+num(sci|eng)"
++                       "${image} nonzero-fuzz combined context")
++    assert_matches(inherited_block
++                   "\n[ \t]+setnumfuz 0\n[ \t]+setnumfrm 1\n[ \t]+setnumcas 1\n[ \t]+setnumstd 1\n"
++                   "${image} inherited-digits fail-closed prologue")
++    assert_not_matches(inherited_block "\n[ \t]+(setnumdgts|num(sci|eng))"
++                       "${image} inherited-digits overwrite")
++    assert_matches(small_block
++                   "\n[ \t]+setnumdgts 4\n[ \t]+setnumfuz 0\n[ \t]+setnumfrm 1\n[ \t]+setnumcas 1\n[ \t]+setnumstd 1\n"
++                   "${image} digits-below-five compatibility prologue")
++    assert_not_matches(small_block "\n[ \t]+num(sci|eng)"
++                       "${image} invalid combined digits contract")
++
++    assemble_rxbin(${image})
++    foreach(runner_name IN ITEMS rxvm rxbvm)
++        if(runner_name STREQUAL "rxvm")
++            set(runner "${RXVM}")
++        else()
++            set(runner "${RXBVM}")
++        endif()
++        run_contract(${image} "${runner}" "${runner_name}" "" default)
++        run_contract(${image} "${runner}" "${runner_name}"
++                     rxvm_mc_decimal mc_decimal)
++        run_contract(${image} "${runner}" "${runner_name}"
++                     rxvm_db_decimal db_decimal)
++    endforeach()
++endforeach()
+diff --git a/compiler/tests/rexx_src/nr09_numeric_context.crexx b/compiler/tests/rexx_src/nr09_numeric_context.crexx
+new file mode 100644
+index 000000000..e3e23af61
+--- /dev/null
++++ b/compiler/tests/rexx_src/nr09_numeric_context.crexx
+@@ -0,0 +1,57 @@
++options levelb
++namespace nr09_numeric_context
++import rxfnsb
++
++nr09_numeric_context_constants: procedure expose NR09_NO_INLINE
++  constant NR09_NO_INLINE = 0
++  return
++
++main: procedure = .int
++  say "default" digits() fuzz() form() numcase() standard()
++  call scientificContext
++  call engineeringContext
++  call nonzeroFuzzContext
++  call inheritedDigitsContext
++  call smallDigitsContext
++  return 0
++
++scientificContext: procedure = .void expose NR09_NO_INLINE
++  numeric digits 9
++  numeric fuzz 0
++  numeric form scientific
++  numeric case upper
++  numeric standard classic
++  say "scientific" digits() fuzz() form() numcase() standard() (1.0d / 3 as .string)
++  return
++
++engineeringContext: procedure = .void expose NR09_NO_INLINE
++  numeric digits 6
++  numeric fuzz 0
++  numeric form engineering
++  numeric case lower
++  numeric standard common
++  say "engineering" digits() fuzz() form() numcase() standard() (1.0d / 3 as .string)
++  return
++
++nonzeroFuzzContext: procedure = .void expose NR09_NO_INLINE
++  numeric digits 6
++  numeric fuzz 2
++  numeric form scientific
++  numeric case lower
++  numeric standard common
++  say "nonzero-fuzz" digits() fuzz() form() numcase() standard()
++  return
++
++inheritedDigitsContext: procedure = .void expose NR09_NO_INLINE
++  numeric digits inherited
++  say "inherited-digits" digits() fuzz() form() numcase() standard()
++  return
++
++smallDigitsContext: procedure = .void expose NR09_NO_INLINE
++  numeric digits 4
++  numeric fuzz 0
++  numeric form scientific
++  numeric case lower
++  numeric standard common
++  say "small-digits" digits() fuzz() form() numcase() standard() (1.0d / 3 as .string)
++  return

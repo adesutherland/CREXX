@@ -1,0 +1,16 @@
+run_date=2026-07-20
+run_utc=16:33-16:35
+os=Darwin 25.5
+arch=arm64
+cpu=Apple M5
+logical_cpus=10
+power_source=AC Power
+battery_percent=100
+low_power_mode=0
+thermal_warning=none
+performance_warning=none
+load_average_before=3.07 2.97 2.55
+load_average_after=2.75 2.94 2.60
+sampling=serial rotated by workload
+warmups=1
+recorded_rounds=12

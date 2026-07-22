@@ -7,11 +7,7 @@
 main() .locals=5
    .meta "inline_test_ref_opt.main"="b" ".int" main() ""
    .srcstep 9 9 17 "inline_test_ref_opt.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_ref_opt.crexx" 4 3 40 "  say \"Starting ref/opt inline test...\""
    say "Starting ref/opt inline test..."
    .srcstep 2 2 17 "inline_test_ref_opt.crexx" 5 3 9 "  x = 10"
@@ -21,10 +17,7 @@ main() .locals=5
    .traceevent "A" 6 "R" "I" "r" 0 2 2 0 "x" ""
    .srcstep 3 3 17 "inline_test_ref_opt.crexx" 6 3 17 "  say refBump(x)"
    .traceevent "V" 6 "R" "I" "r" 0 3 3 0 "x" ""
-   load r1,1
-   swap r2,r0
-   call r3,refBump(),r1
-   swap r0,r2
+   call1 r3,refBump(),r0
    itos r3
    .traceevent "F" 4 "R" "S" "r" 3 3 3 0 "refbump" ""
    say r3
@@ -33,20 +26,18 @@ main() .locals=5
    .traceevent "V" 6 "R" "S" "r" 0 4 4 0 "x" ""
    say r0
    .srcstep 5 5 17 "inline_test_ref_opt.crexx" 8 3 13 "  say optAdd()"
-   load r1,2
    settp r2,0
    settp r3,0
-   call r4,optAdd(),r1
+   call2 r4,optAdd(),r2,r3
    itos r4
    .traceevent "F" 4 "R" "S" "r" 4 5 5 0 "optadd" ""
    say r4
    .srcstep 6 6 17 "inline_test_ref_opt.crexx" 9 3 16 "  say optAdd(3)"
    load r3,3
    .traceevent "L" 4 "R" "I" "r" 3 6 6 0 "" ""
-   load r2,2
    settp r3,256
    settp r4,0
-   call r1,optAdd(),r2
+   call2 r1,optAdd(),r3,r4
    itos r1
    .traceevent "F" 4 "R" "S" "r" 1 6 6 0 "optadd" ""
    say r1
@@ -59,11 +50,7 @@ main() .locals=5
 refBump() .locals=1
    .meta "inline_test_ref_opt.refbump"="b" ".int" refBump() "expose value=.int"
    .srcstep 13 13 17 "inline_test_ref_opt.crexx" 13 1 26 "refBump: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 10 10 17 "inline_test_ref_opt.crexx" 14 7 26 "  arg expose value = .int"
    .meta "inline_test_ref_opt.refbump.value"="b" ".int" a1
    .srcstep 11 11 17 "inline_test_ref_opt.crexx" 15 3 20 "  value = value + 1"
@@ -79,11 +66,7 @@ refBump() .locals=1
 optAdd() .locals=3
    .meta "inline_test_ref_opt.optadd"="b" ".int" optAdd() "?a=.int,?b=.int"
    .srcstep 17 17 17 "inline_test_ref_opt.crexx" 18 1 25 "optAdd: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 14 14 17 "inline_test_ref_opt.crexx" 19 8 14 "  arg ?a = 10, ?b = 5"
    .meta "inline_test_ref_opt.optadd.a"="b" ".int" a1
    brtpandt l41a,a1,256

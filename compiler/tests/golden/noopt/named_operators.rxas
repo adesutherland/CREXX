@@ -7,11 +7,7 @@
 main() .locals=5
    .meta "named_operators.main"="b" ".int" main() ""
    .srcstep 21 21 17 "named_operators.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "named_operators.crexx" 4 3 12 "  flags = 0"
    .meta "named_operators.main.flags"="b" ".int" r1
    load r1,0

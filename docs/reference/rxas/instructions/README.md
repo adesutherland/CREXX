@@ -41,15 +41,16 @@ explicitly marks it as a fragment.
 
 | Section | Mnemonics | File |
 | --- | ---: | --- |
-| Program Control And Calls | 20 | [01-program-control.md](01-program-control.md) |
+| Program Control And Calls | 30 | [01-program-control.md](01-program-control.md) |
 | Data Movement And Conversion | 7 | [02-data-movement-and-conversion.md](02-data-movement-and-conversion.md) |
 | Integer, Logical, And Boolean | 44 | [03-integer-logical-and-boolean.md](03-integer-logical-and-boolean.md) |
 | Floating Point | 24 | [04-floating-point.md](04-floating-point.md) |
 | Decimal And Numeric Settings | 46 | [05-decimal-and-numeric-settings.md](05-decimal-and-numeric-settings.md) |
 | Strings And Characters | 34 | [06-strings-and-characters.md](06-strings-and-characters.md) |
-| Binary Memory | 41 | [07-binary-memory.md](07-binary-memory.md) |
+| Binary Memory | 43 | [07-binary-memory.md](07-binary-memory.md) |
 | Arrays, Attributes, References, And Objects | 32 | [08-arrays-attributes-references-and-objects.md](08-arrays-attributes-references-and-objects.md) |
 | I/O, Sockets, Processes, And Time | 44 | [09-io-sockets-processes-and-time.md](09-io-sockets-processes-and-time.md) |
 | Signals, Breakpoints, And Runtime | 19 | [10-signals-breakpoints-and-runtime.md](10-signals-breakpoints-and-runtime.md) |
 | Metadata And Introspection | 23 | [11-metadata-and-introspection.md](11-metadata-and-introspection.md) |
+| Large And Fused Instructions | 29 | [12-large-instructions.md](12-large-instructions.md) |
 | Uncategorized Review | 0 | [99-uncategorized-review.md](99-uncategorized-review.md) |

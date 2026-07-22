@@ -1605,13 +1605,18 @@
 \clearpage
 \begin{description}
 \item[\texttt{CNOP}]  - No Operation\index{cnop}\\
-\item[\texttt{Syntax}] - form \\
+\item[\texttt{Syntax}] - variants\\
 \fontspec{IBM Plex Mono}
 \includesvg{../../svg/cnop.gv}
 \fontspec{Minion Pro}
 \item[\texttt{Operation}]
 \IfFileExists{operation/cnop.operation}{\input{operation/cnop.operation}}{}
 \item[\texttt{}]
+\item[\texttt{0x0057}]\fontspec{IBM Plex Sans Condensed} no operation with nine register inputs REGREGREGREGREGREGREGREGREG\\
+\fontspec{Minion Pro}
+\IfFileExists{../../examples/cnopREGREGREGREGREGREGREGREGREG.def}{\input{../../examples/cnopREGREGREGREGREGREGREGREGREG.def}}{}
+\IfFileExists{../../examples/cnopREGREGREGREGREGREGREGREGREG.rexx}{\splice{rxc ../../examples/cnopREGREGREGREGREGREGREGREGREG}}{}
+\IfFileExists{../../examples/cnopREGREGREGREGREGREGREGREGREG.rxas}{\lstinputlisting[language=rxas,label=cnop,caption=cnop example.]{../../examples/cnopREGREGREGREGREGREGREGREGREG.rxas} \splice{rxas ../../examples/cnopREGREGREGREGREGREGREGREGREG} \obeylines \begin{terminaloutput} \fontspec{IBM Plex Mono}[Scale=0.7] \splice{rxvme  ../../examples/cnopREGREGREGREGREGREGREGREGREG} \end{terminaloutput}}{}
 \item[\texttt{0x021c}]\fontspec{IBM Plex Sans Condensed} no operation no\\
 \fontspec{Minion Pro}
 \IfFileExists{../../examples/cnopno.def}{\input{../../examples/cnopno.def}}{}

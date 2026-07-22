@@ -1,0 +1,711 @@
+sample_id,stream,line_number,text
+rss-Sieve-sieve-netrexx-recorded-1,stdout,1,benchmark=awfy_sieve repetitions=1000000 result=669
+rss-Sieve-sieve-netrexx-recorded-1,stdout,2,PASS: AWFY Sieve NetRexx port
+rss-Sieve-sieve-netrexx-recorded-1,stderr,1,        6.90 real         6.86 user         0.05 sys
+rss-Sieve-sieve-netrexx-recorded-1,stderr,2,           163774464  maximum resident set size
+rss-Sieve-sieve-netrexx-recorded-1,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-netrexx-recorded-1,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-netrexx-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-netrexx-recorded-1,stderr,6,               12669  page reclaims
+rss-Sieve-sieve-netrexx-recorded-1,stderr,7,                   1  page faults
+rss-Sieve-sieve-netrexx-recorded-1,stderr,8,                   0  swaps
+rss-Sieve-sieve-netrexx-recorded-1,stderr,9,                   0  block input operations
+rss-Sieve-sieve-netrexx-recorded-1,stderr,10,                   0  block output operations
+rss-Sieve-sieve-netrexx-recorded-1,stderr,11,                   0  messages sent
+rss-Sieve-sieve-netrexx-recorded-1,stderr,12,                   0  messages received
+rss-Sieve-sieve-netrexx-recorded-1,stderr,13,                   2  signals received
+rss-Sieve-sieve-netrexx-recorded-1,stderr,14,                   2  voluntary context switches
+rss-Sieve-sieve-netrexx-recorded-1,stderr,15,                9183  involuntary context switches
+rss-Sieve-sieve-netrexx-recorded-1,stderr,16,        174721676566  instructions retired
+rss-Sieve-sieve-netrexx-recorded-1,stderr,17,         29997983471  cycles elapsed
+rss-Sieve-sieve-netrexx-recorded-1,stderr,18,           140460992  peak memory footprint
+rss-Sieve-sieve-netrexx-recorded-2,stdout,1,benchmark=awfy_sieve repetitions=1000000 result=669
+rss-Sieve-sieve-netrexx-recorded-2,stdout,2,PASS: AWFY Sieve NetRexx port
+rss-Sieve-sieve-netrexx-recorded-2,stderr,1,        6.97 real         6.94 user         0.05 sys
+rss-Sieve-sieve-netrexx-recorded-2,stderr,2,           163790848  maximum resident set size
+rss-Sieve-sieve-netrexx-recorded-2,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-netrexx-recorded-2,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-netrexx-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-netrexx-recorded-2,stderr,6,               12662  page reclaims
+rss-Sieve-sieve-netrexx-recorded-2,stderr,7,                   1  page faults
+rss-Sieve-sieve-netrexx-recorded-2,stderr,8,                   0  swaps
+rss-Sieve-sieve-netrexx-recorded-2,stderr,9,                   0  block input operations
+rss-Sieve-sieve-netrexx-recorded-2,stderr,10,                   0  block output operations
+rss-Sieve-sieve-netrexx-recorded-2,stderr,11,                   0  messages sent
+rss-Sieve-sieve-netrexx-recorded-2,stderr,12,                   0  messages received
+rss-Sieve-sieve-netrexx-recorded-2,stderr,13,                   2  signals received
+rss-Sieve-sieve-netrexx-recorded-2,stderr,14,                   0  voluntary context switches
+rss-Sieve-sieve-netrexx-recorded-2,stderr,15,                8921  involuntary context switches
+rss-Sieve-sieve-netrexx-recorded-2,stderr,16,        174716652806  instructions retired
+rss-Sieve-sieve-netrexx-recorded-2,stderr,17,         30263622580  cycles elapsed
+rss-Sieve-sieve-netrexx-recorded-2,stderr,18,           140477376  peak memory footprint
+rss-Sieve-sieve-netrexx-recorded-3,stdout,1,benchmark=awfy_sieve repetitions=1000000 result=669
+rss-Sieve-sieve-netrexx-recorded-3,stdout,2,PASS: AWFY Sieve NetRexx port
+rss-Sieve-sieve-netrexx-recorded-3,stderr,1,        6.94 real         6.90 user         0.05 sys
+rss-Sieve-sieve-netrexx-recorded-3,stderr,2,           163840000  maximum resident set size
+rss-Sieve-sieve-netrexx-recorded-3,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-netrexx-recorded-3,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-netrexx-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-netrexx-recorded-3,stderr,6,               12664  page reclaims
+rss-Sieve-sieve-netrexx-recorded-3,stderr,7,                   1  page faults
+rss-Sieve-sieve-netrexx-recorded-3,stderr,8,                   0  swaps
+rss-Sieve-sieve-netrexx-recorded-3,stderr,9,                   0  block input operations
+rss-Sieve-sieve-netrexx-recorded-3,stderr,10,                   0  block output operations
+rss-Sieve-sieve-netrexx-recorded-3,stderr,11,                   0  messages sent
+rss-Sieve-sieve-netrexx-recorded-3,stderr,12,                   0  messages received
+rss-Sieve-sieve-netrexx-recorded-3,stderr,13,                   2  signals received
+rss-Sieve-sieve-netrexx-recorded-3,stderr,14,                   0  voluntary context switches
+rss-Sieve-sieve-netrexx-recorded-3,stderr,15,                8979  involuntary context switches
+rss-Sieve-sieve-netrexx-recorded-3,stderr,16,        174706322566  instructions retired
+rss-Sieve-sieve-netrexx-recorded-3,stderr,17,         29981404811  cycles elapsed
+rss-Sieve-sieve-netrexx-recorded-3,stderr,18,           140559344  peak memory footprint
+rss-Sieve-sieve-netrexx-recorded-4,stdout,1,benchmark=awfy_sieve repetitions=1000000 result=669
+rss-Sieve-sieve-netrexx-recorded-4,stdout,2,PASS: AWFY Sieve NetRexx port
+rss-Sieve-sieve-netrexx-recorded-4,stderr,1,        6.98 real         6.94 user         0.05 sys
+rss-Sieve-sieve-netrexx-recorded-4,stderr,2,           197705728  maximum resident set size
+rss-Sieve-sieve-netrexx-recorded-4,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-netrexx-recorded-4,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-netrexx-recorded-4,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-netrexx-recorded-4,stderr,6,               14744  page reclaims
+rss-Sieve-sieve-netrexx-recorded-4,stderr,7,                   1  page faults
+rss-Sieve-sieve-netrexx-recorded-4,stderr,8,                   0  swaps
+rss-Sieve-sieve-netrexx-recorded-4,stderr,9,                   0  block input operations
+rss-Sieve-sieve-netrexx-recorded-4,stderr,10,                   0  block output operations
+rss-Sieve-sieve-netrexx-recorded-4,stderr,11,                   0  messages sent
+rss-Sieve-sieve-netrexx-recorded-4,stderr,12,                   0  messages received
+rss-Sieve-sieve-netrexx-recorded-4,stderr,13,                   2  signals received
+rss-Sieve-sieve-netrexx-recorded-4,stderr,14,                   1  voluntary context switches
+rss-Sieve-sieve-netrexx-recorded-4,stderr,15,                8602  involuntary context switches
+rss-Sieve-sieve-netrexx-recorded-4,stderr,16,        174737457665  instructions retired
+rss-Sieve-sieve-netrexx-recorded-4,stderr,17,         30293225393  cycles elapsed
+rss-Sieve-sieve-netrexx-recorded-4,stderr,18,           174425072  peak memory footprint
+rss-Sieve-sieve-netrexx-recorded-5,stdout,1,benchmark=awfy_sieve repetitions=1000000 result=669
+rss-Sieve-sieve-netrexx-recorded-5,stdout,2,PASS: AWFY Sieve NetRexx port
+rss-Sieve-sieve-netrexx-recorded-5,stderr,1,        6.96 real         6.93 user         0.05 sys
+rss-Sieve-sieve-netrexx-recorded-5,stderr,2,           197541888  maximum resident set size
+rss-Sieve-sieve-netrexx-recorded-5,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-netrexx-recorded-5,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-netrexx-recorded-5,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-netrexx-recorded-5,stderr,6,               14720  page reclaims
+rss-Sieve-sieve-netrexx-recorded-5,stderr,7,                   1  page faults
+rss-Sieve-sieve-netrexx-recorded-5,stderr,8,                   0  swaps
+rss-Sieve-sieve-netrexx-recorded-5,stderr,9,                   0  block input operations
+rss-Sieve-sieve-netrexx-recorded-5,stderr,10,                   0  block output operations
+rss-Sieve-sieve-netrexx-recorded-5,stderr,11,                   0  messages sent
+rss-Sieve-sieve-netrexx-recorded-5,stderr,12,                   0  messages received
+rss-Sieve-sieve-netrexx-recorded-5,stderr,13,                   2  signals received
+rss-Sieve-sieve-netrexx-recorded-5,stderr,14,                   0  voluntary context switches
+rss-Sieve-sieve-netrexx-recorded-5,stderr,15,                8560  involuntary context switches
+rss-Sieve-sieve-netrexx-recorded-5,stderr,16,        174723207137  instructions retired
+rss-Sieve-sieve-netrexx-recorded-5,stderr,17,         30213292234  cycles elapsed
+rss-Sieve-sieve-netrexx-recorded-5,stderr,18,           174261232  peak memory footprint
+rss-Sieve-sieve-netrexx-recorded-6,stdout,1,benchmark=awfy_sieve repetitions=1000000 result=669
+rss-Sieve-sieve-netrexx-recorded-6,stdout,2,PASS: AWFY Sieve NetRexx port
+rss-Sieve-sieve-netrexx-recorded-6,stderr,1,        7.48 real         7.45 user         0.05 sys
+rss-Sieve-sieve-netrexx-recorded-6,stderr,2,           198803456  maximum resident set size
+rss-Sieve-sieve-netrexx-recorded-6,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-netrexx-recorded-6,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-netrexx-recorded-6,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-netrexx-recorded-6,stderr,6,               14827  page reclaims
+rss-Sieve-sieve-netrexx-recorded-6,stderr,7,                   1  page faults
+rss-Sieve-sieve-netrexx-recorded-6,stderr,8,                   0  swaps
+rss-Sieve-sieve-netrexx-recorded-6,stderr,9,                   0  block input operations
+rss-Sieve-sieve-netrexx-recorded-6,stderr,10,                   0  block output operations
+rss-Sieve-sieve-netrexx-recorded-6,stderr,11,                   0  messages sent
+rss-Sieve-sieve-netrexx-recorded-6,stderr,12,                   0  messages received
+rss-Sieve-sieve-netrexx-recorded-6,stderr,13,                   2  signals received
+rss-Sieve-sieve-netrexx-recorded-6,stderr,14,                   0  voluntary context switches
+rss-Sieve-sieve-netrexx-recorded-6,stderr,15,                9090  involuntary context switches
+rss-Sieve-sieve-netrexx-recorded-6,stderr,16,        174772518175  instructions retired
+rss-Sieve-sieve-netrexx-recorded-6,stderr,17,         32460104655  cycles elapsed
+rss-Sieve-sieve-netrexx-recorded-6,stderr,18,           175539208  peak memory footprint
+rss-Sieve-sieve-netrexx-recorded-7,stdout,1,benchmark=awfy_sieve repetitions=1000000 result=669
+rss-Sieve-sieve-netrexx-recorded-7,stdout,2,PASS: AWFY Sieve NetRexx port
+rss-Sieve-sieve-netrexx-recorded-7,stderr,1,        6.91 real         6.88 user         0.05 sys
+rss-Sieve-sieve-netrexx-recorded-7,stderr,2,           163872768  maximum resident set size
+rss-Sieve-sieve-netrexx-recorded-7,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-netrexx-recorded-7,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-netrexx-recorded-7,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-netrexx-recorded-7,stderr,6,               12677  page reclaims
+rss-Sieve-sieve-netrexx-recorded-7,stderr,7,                   1  page faults
+rss-Sieve-sieve-netrexx-recorded-7,stderr,8,                   0  swaps
+rss-Sieve-sieve-netrexx-recorded-7,stderr,9,                   0  block input operations
+rss-Sieve-sieve-netrexx-recorded-7,stderr,10,                   0  block output operations
+rss-Sieve-sieve-netrexx-recorded-7,stderr,11,                   0  messages sent
+rss-Sieve-sieve-netrexx-recorded-7,stderr,12,                   0  messages received
+rss-Sieve-sieve-netrexx-recorded-7,stderr,13,                   2  signals received
+rss-Sieve-sieve-netrexx-recorded-7,stderr,14,                   0  voluntary context switches
+rss-Sieve-sieve-netrexx-recorded-7,stderr,15,                9095  involuntary context switches
+rss-Sieve-sieve-netrexx-recorded-7,stderr,16,        174697372765  instructions retired
+rss-Sieve-sieve-netrexx-recorded-7,stderr,17,         29983414513  cycles elapsed
+rss-Sieve-sieve-netrexx-recorded-7,stderr,18,           140608496  peak memory footprint
+rss-Sieve-sieve-netrexx-recorded-8,stdout,1,benchmark=awfy_sieve repetitions=1000000 result=669
+rss-Sieve-sieve-netrexx-recorded-8,stdout,2,PASS: AWFY Sieve NetRexx port
+rss-Sieve-sieve-netrexx-recorded-8,stderr,1,        6.94 real         6.90 user         0.05 sys
+rss-Sieve-sieve-netrexx-recorded-8,stderr,2,           197574656  maximum resident set size
+rss-Sieve-sieve-netrexx-recorded-8,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-netrexx-recorded-8,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-netrexx-recorded-8,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-netrexx-recorded-8,stderr,6,               14731  page reclaims
+rss-Sieve-sieve-netrexx-recorded-8,stderr,7,                   1  page faults
+rss-Sieve-sieve-netrexx-recorded-8,stderr,8,                   0  swaps
+rss-Sieve-sieve-netrexx-recorded-8,stderr,9,                   0  block input operations
+rss-Sieve-sieve-netrexx-recorded-8,stderr,10,                   0  block output operations
+rss-Sieve-sieve-netrexx-recorded-8,stderr,11,                   0  messages sent
+rss-Sieve-sieve-netrexx-recorded-8,stderr,12,                   0  messages received
+rss-Sieve-sieve-netrexx-recorded-8,stderr,13,                   2  signals received
+rss-Sieve-sieve-netrexx-recorded-8,stderr,14,                   0  voluntary context switches
+rss-Sieve-sieve-netrexx-recorded-8,stderr,15,                8798  involuntary context switches
+rss-Sieve-sieve-netrexx-recorded-8,stderr,16,        174757713790  instructions retired
+rss-Sieve-sieve-netrexx-recorded-8,stderr,17,         30099982015  cycles elapsed
+rss-Sieve-sieve-netrexx-recorded-8,stderr,18,           174261184  peak memory footprint
+rss-Sieve-sieve-netrexx-recorded-9,stdout,1,benchmark=awfy_sieve repetitions=1000000 result=669
+rss-Sieve-sieve-netrexx-recorded-9,stdout,2,PASS: AWFY Sieve NetRexx port
+rss-Sieve-sieve-netrexx-recorded-9,stderr,1,        6.93 real         6.90 user         0.05 sys
+rss-Sieve-sieve-netrexx-recorded-9,stderr,2,           163856384  maximum resident set size
+rss-Sieve-sieve-netrexx-recorded-9,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-netrexx-recorded-9,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-netrexx-recorded-9,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-netrexx-recorded-9,stderr,6,               12414  page reclaims
+rss-Sieve-sieve-netrexx-recorded-9,stderr,7,                   1  page faults
+rss-Sieve-sieve-netrexx-recorded-9,stderr,8,                   0  swaps
+rss-Sieve-sieve-netrexx-recorded-9,stderr,9,                   0  block input operations
+rss-Sieve-sieve-netrexx-recorded-9,stderr,10,                   0  block output operations
+rss-Sieve-sieve-netrexx-recorded-9,stderr,11,                   0  messages sent
+rss-Sieve-sieve-netrexx-recorded-9,stderr,12,                   0  messages received
+rss-Sieve-sieve-netrexx-recorded-9,stderr,13,                   2  signals received
+rss-Sieve-sieve-netrexx-recorded-9,stderr,14,                   0  voluntary context switches
+rss-Sieve-sieve-netrexx-recorded-9,stderr,15,                8981  involuntary context switches
+rss-Sieve-sieve-netrexx-recorded-9,stderr,16,        174743534174  instructions retired
+rss-Sieve-sieve-netrexx-recorded-9,stderr,17,         30071352089  cycles elapsed
+rss-Sieve-sieve-netrexx-recorded-9,stderr,18,           140542912  peak memory footprint
+rss-Sieve-sieve-netrexx-recorded-10,stdout,1,benchmark=awfy_sieve repetitions=1000000 result=669
+rss-Sieve-sieve-netrexx-recorded-10,stdout,2,PASS: AWFY Sieve NetRexx port
+rss-Sieve-sieve-netrexx-recorded-10,stderr,1,        6.96 real         6.93 user         0.05 sys
+rss-Sieve-sieve-netrexx-recorded-10,stderr,2,           163872768  maximum resident set size
+rss-Sieve-sieve-netrexx-recorded-10,stderr,3,                   0  average shared memory size
+rss-Sieve-sieve-netrexx-recorded-10,stderr,4,                   0  average unshared data size
+rss-Sieve-sieve-netrexx-recorded-10,stderr,5,                   0  average unshared stack size
+rss-Sieve-sieve-netrexx-recorded-10,stderr,6,               12670  page reclaims
+rss-Sieve-sieve-netrexx-recorded-10,stderr,7,                   1  page faults
+rss-Sieve-sieve-netrexx-recorded-10,stderr,8,                   0  swaps
+rss-Sieve-sieve-netrexx-recorded-10,stderr,9,                   0  block input operations
+rss-Sieve-sieve-netrexx-recorded-10,stderr,10,                   0  block output operations
+rss-Sieve-sieve-netrexx-recorded-10,stderr,11,                   0  messages sent
+rss-Sieve-sieve-netrexx-recorded-10,stderr,12,                   0  messages received
+rss-Sieve-sieve-netrexx-recorded-10,stderr,13,                   2  signals received
+rss-Sieve-sieve-netrexx-recorded-10,stderr,14,                   0  voluntary context switches
+rss-Sieve-sieve-netrexx-recorded-10,stderr,15,                8758  involuntary context switches
+rss-Sieve-sieve-netrexx-recorded-10,stderr,16,        174717928707  instructions retired
+rss-Sieve-sieve-netrexx-recorded-10,stderr,17,         30188223285  cycles elapsed
+rss-Sieve-sieve-netrexx-recorded-10,stderr,18,           140592112  peak memory footprint
+rss-Base64-base64-netrexx-recorded-1,stdout,1,benchmark=base64_roundtrip repetitions=250000 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-1,stdout,2,PASS: Base64 Roundtrip NetRexx port
+rss-Base64-base64-netrexx-recorded-1,stderr,1,        4.53 real         4.56 user         0.06 sys
+rss-Base64-base64-netrexx-recorded-1,stderr,2,           203866112  maximum resident set size
+rss-Base64-base64-netrexx-recorded-1,stderr,3,                   0  average shared memory size
+rss-Base64-base64-netrexx-recorded-1,stderr,4,                   0  average unshared data size
+rss-Base64-base64-netrexx-recorded-1,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-netrexx-recorded-1,stderr,6,               14066  page reclaims
+rss-Base64-base64-netrexx-recorded-1,stderr,7,                   1  page faults
+rss-Base64-base64-netrexx-recorded-1,stderr,8,                   0  swaps
+rss-Base64-base64-netrexx-recorded-1,stderr,9,                   0  block input operations
+rss-Base64-base64-netrexx-recorded-1,stderr,10,                   0  block output operations
+rss-Base64-base64-netrexx-recorded-1,stderr,11,                   0  messages sent
+rss-Base64-base64-netrexx-recorded-1,stderr,12,                   0  messages received
+rss-Base64-base64-netrexx-recorded-1,stderr,13,                   0  signals received
+rss-Base64-base64-netrexx-recorded-1,stderr,14,                   1  voluntary context switches
+rss-Base64-base64-netrexx-recorded-1,stderr,15,               13663  involuntary context switches
+rss-Base64-base64-netrexx-recorded-1,stderr,16,        152879687226  instructions retired
+rss-Base64-base64-netrexx-recorded-1,stderr,17,         19919343812  cycles elapsed
+rss-Base64-base64-netrexx-recorded-1,stderr,18,           179635136  peak memory footprint
+rss-Base64-base64-netrexx-recorded-2,stdout,1,benchmark=base64_roundtrip repetitions=250000 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-2,stdout,2,PASS: Base64 Roundtrip NetRexx port
+rss-Base64-base64-netrexx-recorded-2,stderr,1,        4.57 real         4.60 user         0.09 sys
+rss-Base64-base64-netrexx-recorded-2,stderr,2,           307871744  maximum resident set size
+rss-Base64-base64-netrexx-recorded-2,stderr,3,                   0  average shared memory size
+rss-Base64-base64-netrexx-recorded-2,stderr,4,                   0  average unshared data size
+rss-Base64-base64-netrexx-recorded-2,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-netrexx-recorded-2,stderr,6,               20390  page reclaims
+rss-Base64-base64-netrexx-recorded-2,stderr,7,                   1  page faults
+rss-Base64-base64-netrexx-recorded-2,stderr,8,                   0  swaps
+rss-Base64-base64-netrexx-recorded-2,stderr,9,                   0  block input operations
+rss-Base64-base64-netrexx-recorded-2,stderr,10,                   0  block output operations
+rss-Base64-base64-netrexx-recorded-2,stderr,11,                   0  messages sent
+rss-Base64-base64-netrexx-recorded-2,stderr,12,                   0  messages received
+rss-Base64-base64-netrexx-recorded-2,stderr,13,                   0  signals received
+rss-Base64-base64-netrexx-recorded-2,stderr,14,                   0  voluntary context switches
+rss-Base64-base64-netrexx-recorded-2,stderr,15,               12912  involuntary context switches
+rss-Base64-base64-netrexx-recorded-2,stderr,16,        152889916868  instructions retired
+rss-Base64-base64-netrexx-recorded-2,stderr,17,         20078658175  cycles elapsed
+rss-Base64-base64-netrexx-recorded-2,stderr,18,           283722808  peak memory footprint
+rss-Base64-base64-netrexx-recorded-3,stdout,1,benchmark=base64_roundtrip repetitions=250000 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-3,stdout,2,PASS: Base64 Roundtrip NetRexx port
+rss-Base64-base64-netrexx-recorded-3,stderr,1,        4.72 real         4.75 user         0.05 sys
+rss-Base64-base64-netrexx-recorded-3,stderr,2,           168935424  maximum resident set size
+rss-Base64-base64-netrexx-recorded-3,stderr,3,                   0  average shared memory size
+rss-Base64-base64-netrexx-recorded-3,stderr,4,                   0  average unshared data size
+rss-Base64-base64-netrexx-recorded-3,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-netrexx-recorded-3,stderr,6,               11905  page reclaims
+rss-Base64-base64-netrexx-recorded-3,stderr,7,                   1  page faults
+rss-Base64-base64-netrexx-recorded-3,stderr,8,                   0  swaps
+rss-Base64-base64-netrexx-recorded-3,stderr,9,                   0  block input operations
+rss-Base64-base64-netrexx-recorded-3,stderr,10,                   0  block output operations
+rss-Base64-base64-netrexx-recorded-3,stderr,11,                   0  messages sent
+rss-Base64-base64-netrexx-recorded-3,stderr,12,                   0  messages received
+rss-Base64-base64-netrexx-recorded-3,stderr,13,                   1  signals received
+rss-Base64-base64-netrexx-recorded-3,stderr,14,                   1  voluntary context switches
+rss-Base64-base64-netrexx-recorded-3,stderr,15,               14438  involuntary context switches
+rss-Base64-base64-netrexx-recorded-3,stderr,16,        152882700394  instructions retired
+rss-Base64-base64-netrexx-recorded-3,stderr,17,         20794816707  cycles elapsed
+rss-Base64-base64-netrexx-recorded-3,stderr,18,           144737264  peak memory footprint
+rss-Base64-base64-netrexx-recorded-4,stdout,1,benchmark=base64_roundtrip repetitions=250000 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-4,stdout,2,PASS: Base64 Roundtrip NetRexx port
+rss-Base64-base64-netrexx-recorded-4,stderr,1,        4.53 real         4.57 user         0.05 sys
+rss-Base64-base64-netrexx-recorded-4,stderr,2,           168804352  maximum resident set size
+rss-Base64-base64-netrexx-recorded-4,stderr,3,                   0  average shared memory size
+rss-Base64-base64-netrexx-recorded-4,stderr,4,                   0  average unshared data size
+rss-Base64-base64-netrexx-recorded-4,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-netrexx-recorded-4,stderr,6,               11896  page reclaims
+rss-Base64-base64-netrexx-recorded-4,stderr,7,                   1  page faults
+rss-Base64-base64-netrexx-recorded-4,stderr,8,                   0  swaps
+rss-Base64-base64-netrexx-recorded-4,stderr,9,                   0  block input operations
+rss-Base64-base64-netrexx-recorded-4,stderr,10,                   0  block output operations
+rss-Base64-base64-netrexx-recorded-4,stderr,11,                   0  messages sent
+rss-Base64-base64-netrexx-recorded-4,stderr,12,                   0  messages received
+rss-Base64-base64-netrexx-recorded-4,stderr,13,                   0  signals received
+rss-Base64-base64-netrexx-recorded-4,stderr,14,                   0  voluntary context switches
+rss-Base64-base64-netrexx-recorded-4,stderr,15,               14402  involuntary context switches
+rss-Base64-base64-netrexx-recorded-4,stderr,16,        152876864772  instructions retired
+rss-Base64-base64-netrexx-recorded-4,stderr,17,         19943023387  cycles elapsed
+rss-Base64-base64-netrexx-recorded-4,stderr,18,           144573376  peak memory footprint
+rss-Base64-base64-netrexx-recorded-5,stdout,1,benchmark=base64_roundtrip repetitions=250000 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-5,stdout,2,PASS: Base64 Roundtrip NetRexx port
+rss-Base64-base64-netrexx-recorded-5,stderr,1,        4.67 real         4.69 user         0.07 sys
+rss-Base64-base64-netrexx-recorded-5,stderr,2,           204013568  maximum resident set size
+rss-Base64-base64-netrexx-recorded-5,stderr,3,                   0  average shared memory size
+rss-Base64-base64-netrexx-recorded-5,stderr,4,                   0  average unshared data size
+rss-Base64-base64-netrexx-recorded-5,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-netrexx-recorded-5,stderr,6,               14077  page reclaims
+rss-Base64-base64-netrexx-recorded-5,stderr,7,                   1  page faults
+rss-Base64-base64-netrexx-recorded-5,stderr,8,                   0  swaps
+rss-Base64-base64-netrexx-recorded-5,stderr,9,                   0  block input operations
+rss-Base64-base64-netrexx-recorded-5,stderr,10,                   0  block output operations
+rss-Base64-base64-netrexx-recorded-5,stderr,11,                   0  messages sent
+rss-Base64-base64-netrexx-recorded-5,stderr,12,                   0  messages received
+rss-Base64-base64-netrexx-recorded-5,stderr,13,                   1  signals received
+rss-Base64-base64-netrexx-recorded-5,stderr,14,                   0  voluntary context switches
+rss-Base64-base64-netrexx-recorded-5,stderr,15,               13510  involuntary context switches
+rss-Base64-base64-netrexx-recorded-5,stderr,16,        152999288231  instructions retired
+rss-Base64-base64-netrexx-recorded-5,stderr,17,         20583094253  cycles elapsed
+rss-Base64-base64-netrexx-recorded-5,stderr,18,           179782592  peak memory footprint
+rss-Base64-base64-netrexx-recorded-6,stdout,1,benchmark=base64_roundtrip repetitions=250000 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-6,stdout,2,PASS: Base64 Roundtrip NetRexx port
+rss-Base64-base64-netrexx-recorded-6,stderr,1,        4.62 real         4.65 user         0.06 sys
+rss-Base64-base64-netrexx-recorded-6,stderr,2,           203685888  maximum resident set size
+rss-Base64-base64-netrexx-recorded-6,stderr,3,                   0  average shared memory size
+rss-Base64-base64-netrexx-recorded-6,stderr,4,                   0  average unshared data size
+rss-Base64-base64-netrexx-recorded-6,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-netrexx-recorded-6,stderr,6,               14047  page reclaims
+rss-Base64-base64-netrexx-recorded-6,stderr,7,                   1  page faults
+rss-Base64-base64-netrexx-recorded-6,stderr,8,                   0  swaps
+rss-Base64-base64-netrexx-recorded-6,stderr,9,                   0  block input operations
+rss-Base64-base64-netrexx-recorded-6,stderr,10,                   0  block output operations
+rss-Base64-base64-netrexx-recorded-6,stderr,11,                   0  messages sent
+rss-Base64-base64-netrexx-recorded-6,stderr,12,                   0  messages received
+rss-Base64-base64-netrexx-recorded-6,stderr,13,                   0  signals received
+rss-Base64-base64-netrexx-recorded-6,stderr,14,                   0  voluntary context switches
+rss-Base64-base64-netrexx-recorded-6,stderr,15,               13560  involuntary context switches
+rss-Base64-base64-netrexx-recorded-6,stderr,16,        152876995451  instructions retired
+rss-Base64-base64-netrexx-recorded-6,stderr,17,         20322068884  cycles elapsed
+rss-Base64-base64-netrexx-recorded-6,stderr,18,           179487728  peak memory footprint
+rss-Base64-base64-netrexx-recorded-7,stdout,1,benchmark=base64_roundtrip repetitions=250000 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-7,stdout,2,PASS: Base64 Roundtrip NetRexx port
+rss-Base64-base64-netrexx-recorded-7,stderr,1,        4.56 real         4.59 user         0.06 sys
+rss-Base64-base64-netrexx-recorded-7,stderr,2,           203866112  maximum resident set size
+rss-Base64-base64-netrexx-recorded-7,stderr,3,                   0  average shared memory size
+rss-Base64-base64-netrexx-recorded-7,stderr,4,                   0  average unshared data size
+rss-Base64-base64-netrexx-recorded-7,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-netrexx-recorded-7,stderr,6,               14072  page reclaims
+rss-Base64-base64-netrexx-recorded-7,stderr,7,                   1  page faults
+rss-Base64-base64-netrexx-recorded-7,stderr,8,                   0  swaps
+rss-Base64-base64-netrexx-recorded-7,stderr,9,                   0  block input operations
+rss-Base64-base64-netrexx-recorded-7,stderr,10,                   0  block output operations
+rss-Base64-base64-netrexx-recorded-7,stderr,11,                   0  messages sent
+rss-Base64-base64-netrexx-recorded-7,stderr,12,                   0  messages received
+rss-Base64-base64-netrexx-recorded-7,stderr,13,                   0  signals received
+rss-Base64-base64-netrexx-recorded-7,stderr,14,                   0  voluntary context switches
+rss-Base64-base64-netrexx-recorded-7,stderr,15,               13530  involuntary context switches
+rss-Base64-base64-netrexx-recorded-7,stderr,16,        152990989137  instructions retired
+rss-Base64-base64-netrexx-recorded-7,stderr,17,         20079312565  cycles elapsed
+rss-Base64-base64-netrexx-recorded-7,stderr,18,           179684360  peak memory footprint
+rss-Base64-base64-netrexx-recorded-8,stdout,1,benchmark=base64_roundtrip repetitions=250000 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-8,stdout,2,PASS: Base64 Roundtrip NetRexx port
+rss-Base64-base64-netrexx-recorded-8,stderr,1,        4.87 real         4.90 user         0.05 sys
+rss-Base64-base64-netrexx-recorded-8,stderr,2,           168902656  maximum resident set size
+rss-Base64-base64-netrexx-recorded-8,stderr,3,                   0  average shared memory size
+rss-Base64-base64-netrexx-recorded-8,stderr,4,                   0  average unshared data size
+rss-Base64-base64-netrexx-recorded-8,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-netrexx-recorded-8,stderr,6,               11908  page reclaims
+rss-Base64-base64-netrexx-recorded-8,stderr,7,                   1  page faults
+rss-Base64-base64-netrexx-recorded-8,stderr,8,                   0  swaps
+rss-Base64-base64-netrexx-recorded-8,stderr,9,                   0  block input operations
+rss-Base64-base64-netrexx-recorded-8,stderr,10,                   0  block output operations
+rss-Base64-base64-netrexx-recorded-8,stderr,11,                   0  messages sent
+rss-Base64-base64-netrexx-recorded-8,stderr,12,                   0  messages received
+rss-Base64-base64-netrexx-recorded-8,stderr,13,                   0  signals received
+rss-Base64-base64-netrexx-recorded-8,stderr,14,                   0  voluntary context switches
+rss-Base64-base64-netrexx-recorded-8,stderr,15,               14396  involuntary context switches
+rss-Base64-base64-netrexx-recorded-8,stderr,16,        154782542142  instructions retired
+rss-Base64-base64-netrexx-recorded-8,stderr,17,         21279267618  cycles elapsed
+rss-Base64-base64-netrexx-recorded-8,stderr,18,           144704496  peak memory footprint
+rss-Base64-base64-netrexx-recorded-9,stdout,1,benchmark=base64_roundtrip repetitions=250000 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-9,stdout,2,PASS: Base64 Roundtrip NetRexx port
+rss-Base64-base64-netrexx-recorded-9,stderr,1,        4.60 real         4.64 user         0.06 sys
+rss-Base64-base64-netrexx-recorded-9,stderr,2,           203767808  maximum resident set size
+rss-Base64-base64-netrexx-recorded-9,stderr,3,                   0  average shared memory size
+rss-Base64-base64-netrexx-recorded-9,stderr,4,                   0  average unshared data size
+rss-Base64-base64-netrexx-recorded-9,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-netrexx-recorded-9,stderr,6,               14064  page reclaims
+rss-Base64-base64-netrexx-recorded-9,stderr,7,                   1  page faults
+rss-Base64-base64-netrexx-recorded-9,stderr,8,                   0  swaps
+rss-Base64-base64-netrexx-recorded-9,stderr,9,                   0  block input operations
+rss-Base64-base64-netrexx-recorded-9,stderr,10,                   0  block output operations
+rss-Base64-base64-netrexx-recorded-9,stderr,11,                   0  messages sent
+rss-Base64-base64-netrexx-recorded-9,stderr,12,                   0  messages received
+rss-Base64-base64-netrexx-recorded-9,stderr,13,                   0  signals received
+rss-Base64-base64-netrexx-recorded-9,stderr,14,                   0  voluntary context switches
+rss-Base64-base64-netrexx-recorded-9,stderr,15,               13498  involuntary context switches
+rss-Base64-base64-netrexx-recorded-9,stderr,16,        152987232562  instructions retired
+rss-Base64-base64-netrexx-recorded-9,stderr,17,         20235542203  cycles elapsed
+rss-Base64-base64-netrexx-recorded-9,stderr,18,           179586056  peak memory footprint
+rss-Base64-base64-netrexx-recorded-10,stdout,1,benchmark=base64_roundtrip repetitions=250000 encoded_length=1368 checksum=130560
+rss-Base64-base64-netrexx-recorded-10,stdout,2,PASS: Base64 Roundtrip NetRexx port
+rss-Base64-base64-netrexx-recorded-10,stderr,1,        4.65 real         4.68 user         0.06 sys
+rss-Base64-base64-netrexx-recorded-10,stderr,2,           203735040  maximum resident set size
+rss-Base64-base64-netrexx-recorded-10,stderr,3,                   0  average shared memory size
+rss-Base64-base64-netrexx-recorded-10,stderr,4,                   0  average unshared data size
+rss-Base64-base64-netrexx-recorded-10,stderr,5,                   0  average unshared stack size
+rss-Base64-base64-netrexx-recorded-10,stderr,6,               14053  page reclaims
+rss-Base64-base64-netrexx-recorded-10,stderr,7,                   1  page faults
+rss-Base64-base64-netrexx-recorded-10,stderr,8,                   0  swaps
+rss-Base64-base64-netrexx-recorded-10,stderr,9,                   0  block input operations
+rss-Base64-base64-netrexx-recorded-10,stderr,10,                   0  block output operations
+rss-Base64-base64-netrexx-recorded-10,stderr,11,                   0  messages sent
+rss-Base64-base64-netrexx-recorded-10,stderr,12,                   0  messages received
+rss-Base64-base64-netrexx-recorded-10,stderr,13,                   0  signals received
+rss-Base64-base64-netrexx-recorded-10,stderr,14,                   1  voluntary context switches
+rss-Base64-base64-netrexx-recorded-10,stderr,15,               13555  involuntary context switches
+rss-Base64-base64-netrexx-recorded-10,stderr,16,        152873773061  instructions retired
+rss-Base64-base64-netrexx-recorded-10,stderr,17,         20467524991  cycles elapsed
+rss-Base64-base64-netrexx-recorded-10,stderr,18,           179504064  peak memory footprint
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,4,          Averaging: 100 measures of 300 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,5,                       of 1000 clauses (over 0.605714707    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,7,Total (full DOs): 0.605714707 secs (average of 100 measures of 300 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,8,Time for one iteration (1000 clauses) was: 0.0000201856373 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,10,     Performance: 49_540_175 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,11,                ( 49.540E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,1,        1.00 real         1.30 user         0.06 sys
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,2,           553926656  maximum resident set size
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,3,                   0  average shared memory size
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,4,                   0  average unshared data size
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,5,                   0  average unshared stack size
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,6,               35464  page reclaims
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,7,                   1  page faults
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,8,                   0  swaps
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,9,                   0  block input operations
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,10,                   0  block output operations
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,11,                   0  messages sent
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,12,                   0  messages received
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,13,                   3  signals received
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,14,                   0  voluntary context switches
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,15,                2854  involuntary context switches
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,16,         27794655474  instructions retired
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,17,          5775403301  cycles elapsed
+rss-RexxCPS-rexxcps-netrexx-recorded-1,stderr,18,           529302872  peak memory footprint
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,4,          Averaging: 100 measures of 400 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,5,                       of 1000 clauses (over 0.819560118    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,7,Total (full DOs): 0.819560118 secs (average of 100 measures of 400 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,8,Time for one iteration (1000 clauses) was: 0.000020484805125 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,10,     Performance: 48_816_671 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,11,                ( 48.817E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,1,        1.18 real         1.44 user         0.05 sys
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,2,           396394496  maximum resident set size
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,3,                   0  average shared memory size
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,4,                   0  average unshared data size
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,5,                   0  average unshared stack size
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,6,               25775  page reclaims
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,7,                  34  page faults
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,8,                   0  swaps
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,9,                   0  block input operations
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,10,                   0  block output operations
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,11,                   0  messages sent
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,12,                   0  messages received
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,13,                   3  signals received
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,14,                   2  voluntary context switches
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,15,                4376  involuntary context switches
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,16,         32298246344  instructions retired
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,17,          6264315644  cycles elapsed
+rss-RexxCPS-rexxcps-netrexx-recorded-2,stderr,18,           371606632  peak memory footprint
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,4,          Averaging: 100 measures of 400 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,5,                       of 1000 clauses (over 0.832341581    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,7,Total (full DOs): 0.832341581 secs (average of 100 measures of 400 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,8,Time for one iteration (1000 clauses) was: 0.000020804778175 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,10,     Performance: 48_065_881 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,11,                ( 48.066E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,1,        1.19 real         1.56 user         0.05 sys
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,2,           405716992  maximum resident set size
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,3,                   0  average shared memory size
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,4,                   0  average unshared data size
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,5,                   0  average unshared stack size
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,6,               26375  page reclaims
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,7,                   1  page faults
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,8,                   0  swaps
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,9,                   0  block input operations
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,10,                   0  block output operations
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,11,                   0  messages sent
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,12,                   0  messages received
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,13,                   3  signals received
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,14,                   0  voluntary context switches
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,15,                4057  involuntary context switches
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,16,         33888035680  instructions retired
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,17,          6756876832  cycles elapsed
+rss-RexxCPS-rexxcps-netrexx-recorded-3,stderr,18,           380978328  peak memory footprint
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,4,          Averaging: 100 measures of 400 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,5,                       of 1000 clauses (over 0.865839748    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,7,Total (full DOs): 0.865839748 secs (average of 100 measures of 400 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,8,Time for one iteration (1000 clauses) was: 0.000021642372725 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,10,     Performance: 46_205_655 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,11,                ( 46.206E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,1,        1.23 real         1.55 user         0.05 sys
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,2,           362315776  maximum resident set size
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,3,                   0  average shared memory size
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,4,                   0  average unshared data size
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,5,                   0  average unshared stack size
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,6,               23711  page reclaims
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,7,                   1  page faults
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,8,                   0  swaps
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,9,                   0  block input operations
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,10,                   0  block output operations
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,11,                   0  messages sent
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,12,                   0  messages received
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,13,                   4  signals received
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,14,                   0  voluntary context switches
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,15,                4411  involuntary context switches
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,16,         33361893921  instructions retired
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,17,          6726118622  cycles elapsed
+rss-RexxCPS-rexxcps-netrexx-recorded-4,stderr,18,           337577112  peak memory footprint
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,4,          Averaging: 100 measures of 300 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,5,                       of 1000 clauses (over 0.610917877    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,7,Total (full DOs): 0.610917877 secs (average of 100 measures of 300 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,8,Time for one iteration (1000 clauses) was: 0.000020358983333333333333 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,10,     Performance: 49_118_366 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,11,                ( 49.118E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,1,        1.00 real         1.31 user         0.05 sys
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,2,           553975808  maximum resident set size
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,3,                   0  average shared memory size
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,4,                   0  average unshared data size
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,5,                   0  average unshared stack size
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,6,               35438  page reclaims
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,7,                   1  page faults
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,8,                   0  swaps
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,9,                   0  block input operations
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,10,                   0  block output operations
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,11,                   0  messages sent
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,12,                   0  messages received
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,13,                   3  signals received
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,14,                   0  voluntary context switches
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,15,                2851  involuntary context switches
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,16,         27831656147  instructions retired
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,17,          5720650800  cycles elapsed
+rss-RexxCPS-rexxcps-netrexx-recorded-5,stderr,18,           529335592  peak memory footprint
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,4,          Averaging: 100 measures of 300 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,5,                       of 1000 clauses (over 0.623211673    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,7,Total (full DOs): 0.623211673 secs (average of 100 measures of 300 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,8,Time for one iteration (1000 clauses) was: 0.000020768764066666666667 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,10,     Performance: 48_149_230 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,11,                ( 48.149E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,1,        0.99 real         1.32 user         0.05 sys
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,2,           406339584  maximum resident set size
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,3,                   0  average shared memory size
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,4,                   0  average unshared data size
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,5,                   0  average unshared stack size
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,6,               26416  page reclaims
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,7,                   1  page faults
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,8,                   0  swaps
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,9,                   0  block input operations
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,10,                   0  block output operations
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,11,                   0  messages sent
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,12,                   0  messages received
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,13,                   3  signals received
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,14,                   0  voluntary context switches
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,15,                3456  involuntary context switches
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,16,         27701238968  instructions retired
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,17,          5663645632  cycles elapsed
+rss-RexxCPS-rexxcps-netrexx-recorded-6,stderr,18,           381617328  peak memory footprint
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,4,          Averaging: 100 measures of 300 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,5,                       of 1000 clauses (over 0.631699791    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,7,Total (full DOs): 0.631699791 secs (average of 100 measures of 300 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,8,Time for one iteration (1000 clauses) was: 0.0000210515207 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,10,     Performance: 47_502_507 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,11,                ( 47.503E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,1,        1.00 real         1.32 user         0.05 sys
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,2,           554156032  maximum resident set size
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,3,                   0  average shared memory size
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,4,                   0  average unshared data size
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,5,                   0  average unshared stack size
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,6,               35769  page reclaims
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,7,                   1  page faults
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,8,                   0  swaps
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,9,                   0  block input operations
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,10,                   0  block output operations
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,11,                   0  messages sent
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,12,                   0  messages received
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,13,                   4  signals received
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,14,                   0  voluntary context switches
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,15,                2923  involuntary context switches
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,16,         27858992346  instructions retired
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,17,          5743539683  cycles elapsed
+rss-RexxCPS-rexxcps-netrexx-recorded-7,stderr,18,           530056464  peak memory footprint
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,4,          Averaging: 100 measures of 400 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,5,                       of 1000 clauses (over 0.877600416    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,7,Total (full DOs): 0.877600416 secs (average of 100 measures of 400 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,8,Time for one iteration (1000 clauses) was: 0.000021936345775 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,10,     Performance: 45_586_444 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,11,                ( 45.586E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,1,        1.23 real         1.53 user         0.04 sys
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,2,           281722880  maximum resident set size
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,3,                   0  average shared memory size
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,4,                   0  average unshared data size
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,5,                   0  average unshared stack size
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,6,               18817  page reclaims
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,7,                   1  page faults
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,8,                   0  swaps
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,9,                   0  block input operations
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,10,                   0  block output operations
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,11,                   0  messages sent
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,12,                   0  messages received
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,13,                   5  signals received
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,14,                   0  voluntary context switches
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,15,                4172  involuntary context switches
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,16,         33389682879  instructions retired
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,17,          6572912907  cycles elapsed
+rss-RexxCPS-rexxcps-netrexx-recorded-8,stderr,18,           256902176  peak memory footprint
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,4,          Averaging: 100 measures of 300 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,5,                       of 1000 clauses (over 0.641121248    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,7,Total (full DOs): 0.641121248 secs (average of 100 measures of 300 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,8,Time for one iteration (1000 clauses) was: 0.00002136585 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,10,     Performance: 46_803_661 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,11,                ( 46.804E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,1,        1.03 real         1.28 user         0.05 sys
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,2,           547553280  maximum resident set size
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,3,                   0  average shared memory size
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,4,                   0  average unshared data size
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,5,                   0  average unshared stack size
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,6,               35608  page reclaims
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,7,                   1  page faults
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,8,                   0  swaps
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,9,                   0  block input operations
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,10,                   0  block output operations
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,11,                   0  messages sent
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,12,                   0  messages received
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,13,                   4  signals received
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,14,                   0  voluntary context switches
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,15,                2879  involuntary context switches
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,16,         26752619010  instructions retired
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,17,          5588061815  cycles elapsed
+rss-RexxCPS-rexxcps-netrexx-recorded-9,stderr,18,           523420896  peak memory footprint
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,1,----- REXXCPS 2.2n -- Measuring NetRexx clauses/second -----
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,2, NetRexx version is: NetRexx 5.10 20 Mar 2026
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,3,          System is: Java
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,4,          Averaging: 100 measures of 400 iterations
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,5,                       of 1000 clauses (over 0.844584127    s)
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,6,
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,7,Total (full DOs): 0.844584127 secs (average of 100 measures of 400 iterations)
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,8,Time for one iteration (1000 clauses) was: 0.00002111078345 seconds
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,9,
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,10,     Performance: 47_369_156 NetRexx clauses per second
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,11,                ( 47.369E+6 cps)
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,12,
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stdout,13,PASS: RexxCPS 2.2n NetRexx disclosed adaptation
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,1,        1.20 real         1.56 user         0.05 sys
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,2,           437272576  maximum resident set size
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,3,                   0  average shared memory size
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,4,                   0  average unshared data size
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,5,                   0  average unshared stack size
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,6,               28305  page reclaims
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,7,                   1  page faults
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,8,                   0  swaps
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,9,                   0  block input operations
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,10,                   0  block output operations
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,11,                   0  messages sent
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,12,                   0  messages received
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,13,                   4  signals received
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,14,                   0  voluntary context switches
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,15,                3993  involuntary context switches
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,16,         34268331569  instructions retired
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,17,          6673632810  cycles elapsed
+rss-RexxCPS-rexxcps-netrexx-recorded-10,stderr,18,           412566752  peak memory footprint

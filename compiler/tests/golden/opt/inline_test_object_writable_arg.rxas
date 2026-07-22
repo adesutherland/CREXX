@@ -9,11 +9,7 @@
 main() .locals=10
    .meta "inline_test_object_writable_arg.main"="b" ".int" main() ""
    .srcstep 22 22 17 "inline_test_object_writable_arg.crexx" 3 1 23 "main: procedure = .int"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 1 1 17 "inline_test_object_writable_arg.crexx" 4 3 52 "  say \"Starting object writable-arg inline test...\""
    say "Starting object writable-arg inline test..."
    .srcstep 6 6 17 "inline_test_object_writable_arg.crexx" 5 3 22 "  box = .Box(\"alpha\")"
@@ -54,11 +50,8 @@ main() .locals=10
    .traceevent "A" 6 "R" "O" "r" 2 11 11 0 "value" ""
    .srcstep 13 13 17 "inline_test_object_writable_arg.crexx" 14 3 23 "  return value.getName()"
    .traceevent "V" 6 "R" "O" "r" 2 15 15 0 "value" ""
-   load r7,1
    settp r2,256
-   swap r8,r2
-   call r5,§inline_test_object_writable_arg.box.getname(),r7
-   swap r2,r8
+   call1 r5,§inline_test_object_writable_arg.box.getname(),r2
    .traceevent "F" 4 "R" "S" "r" 5 15 15 0 "getname" ""
    scopy r8,r5
    br l100bexprend
@@ -75,8 +68,7 @@ l100bexprend:
    linkattr1 r8,r9,1
    .traceevent "V" 6 "R" "S" "r" 8 19 19 0 "name" ""
    scopy r7,r8
-   unlink r8
-   br l127bexprend
+   unlinkbr r8,l127bexprend
 l127bexprend:
    say r7
    .srcstep 20 20 17 "inline_test_object_writable_arg.crexx" 8 3 50 "  say \"Object writable-arg inline test finished.\""
@@ -90,11 +82,7 @@ l127bexprend:
    .srcstep 36 36 17 "inline_test_object_writable_arg.crexx" 19 3 13 "  *: factory"
    setattrs r1,2
    setobjtype r1,"inline_test_object_writable_arg.box"
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 33 33 17 "inline_test_object_writable_arg.crexx" 20 9 26 "    arg initial = .string"
    .meta "inline_test_object_writable_arg.box.§factory.initial"="b" ".string" a1
    .meta "inline_test_object_writable_arg.box.§factory.§factory"="b" ".box" r1
@@ -113,11 +101,7 @@ l127bexprend:
    .meta "inline_test_object_writable_arg.box.getname"="b" ".string" §inline_test_object_writable_arg.box.getname() ""
    .srcstep 38 38 17 "inline_test_object_writable_arg.crexx" 24 3 28 "  getName: method = .string"
    assertinitialized a1
-   setnumdgts 18
-   setnumfuz 0
-   setnumfrm 1
-   setnumcas 1
-   setnumstd 1
+   numsci 18,1,1
    .srcstep 37 37 17 "inline_test_object_writable_arg.crexx" 25 5 16 "    return name"
    .meta "inline_test_object_writable_arg.box.getname.§this"="b" ".box" a1
    linkattr1 r1,a1,1

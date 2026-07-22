@@ -1,0 +1,26 @@
+/*
+ * Focused SETTP + CALL reference for the SETTPCALL regression review.
+ * Keep this file instruction-for-instruction identical to fused.rxas except
+ * for the two instructions under review.
+ */
+
+.globals=0
+
+main() .locals=16
+    load r0,20000000
+    load r10,1
+    load r11,43
+loop:
+    settp r11,512
+    call r1,return_arg(),r10
+    dec r0
+    brt loop,r0
+    ine r2,r1,43
+    brt fail,r2
+    ret 0
+
+fail:
+    ret 1
+
+return_arg() .locals=0
+    ret a1

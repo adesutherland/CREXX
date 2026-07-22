@@ -1,0 +1,20 @@
+NR-10 corrected equal-work decimal-NetRexx baseline post-run environment
+captured_utc=2026-07-20T14:23:23Z
+repository_branch=develop
+repository_head=1596d7c8cbbfd360b66d50423ef4ea80320fd885
+host=Darwin 25.5.0 arm64
+cpu=Apple M5
+logical_cpus=10
+power_source=AC Power
+battery=100 percent charged
+low_power_mode=0
+thermal_warning=none recorded
+performance_warning=none recorded
+cpu_power_warning=none recorded
+uptime=6 days 8 hours 31 minutes
+load_averages=1.60 1.35 1.36
+formal_timing_rows=270; 240 initial plus 30 policy append; zero failures
+formal_rss_rows=70; 60 initial plus 10 policy append; zero failures
+outlier_disposition=no observation removed
+timing_noise_after_append=Permute NetRexx; Base64 rxvm; Base64 rxbvm
+rss_noise_after_append=Base64 NetRexx
